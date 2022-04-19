@@ -2,35 +2,35 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12DF1C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75568C38A2B
 	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:46:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237117AbiDSQtA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Apr 2022 12:49:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55490 "EHLO
+        id S242857AbiDSQtE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Apr 2022 12:49:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355031AbiDSQqZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:46:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D47A3AA66;
-        Tue, 19 Apr 2022 09:43:42 -0700 (PDT)
+        with ESMTP id S1346236AbiDSQpr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:45:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9863339692;
+        Tue, 19 Apr 2022 09:43:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DF11B61879;
-        Tue, 19 Apr 2022 16:43:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D32AC385A7;
-        Tue, 19 Apr 2022 16:43:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2247C61853;
+        Tue, 19 Apr 2022 16:43:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41ECDC385AD;
+        Tue, 19 Apr 2022 16:42:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650386621;
-        bh=/Prqr04i1fpscHVDuVcgCmngsY3hyx249dIBGFreq2Y=;
+        s=k20201202; t=1650386582;
+        bh=XMfk0O3QBhz94b688wif9fT9MesrG60MJQFx6+JOR7A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Y3PA1gNBpWemWTKgXNfQE6gZ2lkQ2OFkd5OEDO01xwY7wK6BGc9IgzXVFUA0bOzmZ
-         IdxCFkit5T5OsWlQE5O+YIuaAvNKouAQPTTolrYkcjfQij7Q0LwfC8hhcM+pUKrArL
-         jV+yRfNhU4PQ+WoL1zX7EbhPcVQ14Zq9MQGKIATzI5hPOS5KUZWHKSLomaqNqAoJ56
-         IDOxvX2ZFZltZq/w38uCesi0fdH8Nymt/I05daQ0ly4mZIZ+Mu5zj4YzGfVJGkUh2W
-         5EvHWtWx1sIW2sQh+QuJzgReXLIELwok/SAnSo1kypQDxD/mQa+4Sz3q3cq7wQQ5sQ
-         /4GyTOFmHOlXQ==
+        b=OyQ0i3+beAWzJBfVtjzbEbEG6UQmG0elXn7H/64gtW2jdmo85cTny3DFofm4YWk26
+         resGDEVxeYXDCEBoi+Mx+bHuhMlafP63G9kgkQD0pmbNlpXrgmphdLMFmSTDHKODM1
+         jUS2PLlKyzCtItMP5m8BWr2O7h90mAv4o3gzr2csamszwUDnuuc/49xNa8395GBqWJ
+         9gvv3KVEqBr8Fw340rBJDxyqUfV46LB5NeT2qOAhAiNk4ddchKUbBQTdHYcwd/MEej
+         ov5g41F+UxI/Qn/rxpRwVLD2MlH238KoEwdQas8Sb+V8WiQeUGVN3Vz4ZKQ+DKjHlg
+         vxdDK+bIiTV/Q==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
@@ -59,9 +59,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
         linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         alsa-devel@alsa-project.org
-Subject: [PATCH 37/48] ARM: pxa: move smemc register access from clk to platform
-Date:   Tue, 19 Apr 2022 18:37:59 +0200
-Message-Id: <20220419163810.2118169-38-arnd@kernel.org>
+Subject: [PATCH 32/48] ASoC: pxa: ac97: use normal MMIO accessors
+Date:   Tue, 19 Apr 2022 18:37:54 +0200
+Message-Id: <20220419163810.2118169-33-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220419163810.2118169-1-arnd@kernel.org>
 References: <20220419163810.2118169-1-arnd@kernel.org>
@@ -73,350 +73,469 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The get_sdram_rows() and get_memclkdiv() helpers need smemc
-register that are separate from the clk registers, move
-them out of the clk driver, and use an extern declaration
-instead.
+To avoid dereferencing hardwired constant pointers from a global header
+file, change the driver to use devm_platform_ioremap_resource for getting
+an __iomem pointer, and then using readl/writel on that.
 
-Cc: Michael Turquette <mturquette@baylibre.com>
-Cc: Stephen Boyd <sboyd@kernel.org>
-Cc: linux-clk@vger.kernel.org
-Link: https://lore.kernel.org/lkml/87pnielzo4.fsf@belgarion.home/
+Each pointer dereference gets changed by a search&replace, which leads
+to a few overlong lines, but seems less risky than trying to clean up
+the code at the same time.
+
+Cc: alsa-devel@alsa-project.org
+Acked-by: Robert Jarzmik <robert.jarzmik@free.fr>
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/arm/mach-pxa/generic.c   |  6 ++++++
- arch/arm/mach-pxa/pxa2xx.c    | 25 +++++++++++++++++++++++++
- arch/arm/mach-pxa/pxa3xx.c    |  4 ++++
- arch/arm/mach-pxa/smemc.c     |  9 +++++++++
- drivers/clk/pxa/clk-pxa.c     |  4 +++-
- drivers/clk/pxa/clk-pxa.h     |  5 +++--
- drivers/clk/pxa/clk-pxa25x.c  | 30 +++---------------------------
- drivers/clk/pxa/clk-pxa27x.c  | 31 +++----------------------------
- drivers/clk/pxa/clk-pxa3xx.c  |  8 +++-----
- include/linux/soc/pxa/smemc.h |  3 +++
- 10 files changed, 62 insertions(+), 63 deletions(-)
+ sound/arm/pxa2xx-ac97-lib.c                   | 124 ++++++++++--------
+ .../arm/pxa2xx-ac97-regs.h                    |  42 +++---
+ sound/arm/pxa2xx-ac97.c                       |   1 -
+ 3 files changed, 92 insertions(+), 75 deletions(-)
+ rename arch/arm/mach-pxa/include/mach/regs-ac97.h => sound/arm/pxa2xx-ac97-regs.h (71%)
 
-diff --git a/arch/arm/mach-pxa/generic.c b/arch/arm/mach-pxa/generic.c
-index 2c2c82fcf9cb..971d25e95a1a 100644
---- a/arch/arm/mach-pxa/generic.c
-+++ b/arch/arm/mach-pxa/generic.c
-@@ -18,6 +18,7 @@
- #include <linux/kernel.h>
- #include <linux/init.h>
- #include <linux/soc/pxa/cpu.h>
-+#include <linux/soc/pxa/smemc.h>
+diff --git a/sound/arm/pxa2xx-ac97-lib.c b/sound/arm/pxa2xx-ac97-lib.c
+index 572b73d73762..e55c0421718b 100644
+--- a/sound/arm/pxa2xx-ac97-lib.c
++++ b/sound/arm/pxa2xx-ac97-lib.c
+@@ -21,15 +21,17 @@
  
- #include <asm/mach/map.h>
- #include <asm/mach-types.h>
-@@ -84,6 +85,11 @@ void pxa_smemc_set_pcmcia_socket(int nr)
+ #include <sound/pxa2xx-lib.h>
+ 
+-#include <mach/regs-ac97.h>
+ #include <linux/platform_data/asoc-pxa.h>
+ 
++#include "pxa2xx-ac97-regs.h"
++
+ static DEFINE_MUTEX(car_mutex);
+ static DECLARE_WAIT_QUEUE_HEAD(gsr_wq);
+ static volatile long gsr_bits;
+ static struct clk *ac97_clk;
+ static struct clk *ac97conf_clk;
+ static int reset_gpio;
++static void __iomem *ac97_reg_base;
+ 
+ extern void pxa27x_configure_ac97reset(int reset_gpio, bool to_gpio);
+ 
+@@ -46,7 +48,7 @@ extern void pxa27x_configure_ac97reset(int reset_gpio, bool to_gpio);
+ int pxa2xx_ac97_read(int slot, unsigned short reg)
+ {
+ 	int val = -ENODEV;
+-	volatile u32 *reg_addr;
++	u32 __iomem *reg_addr;
+ 
+ 	if (slot > 0)
+ 		return -ENODEV;
+@@ -55,31 +57,33 @@ int pxa2xx_ac97_read(int slot, unsigned short reg)
+ 
+ 	/* set up primary or secondary codec space */
+ 	if (cpu_is_pxa25x() && reg == AC97_GPIO_STATUS)
+-		reg_addr = slot ? &SMC_REG_BASE : &PMC_REG_BASE;
++		reg_addr = ac97_reg_base +
++			   (slot ? SMC_REG_BASE : PMC_REG_BASE);
+ 	else
+-		reg_addr = slot ? &SAC_REG_BASE : &PAC_REG_BASE;
++		reg_addr = ac97_reg_base +
++			   (slot ? SAC_REG_BASE : PAC_REG_BASE);
+ 	reg_addr += (reg >> 1);
+ 
+ 	/* start read access across the ac97 link */
+-	GSR = GSR_CDONE | GSR_SDONE;
++	writel(GSR_CDONE | GSR_SDONE, ac97_reg_base + GSR);
+ 	gsr_bits = 0;
+-	val = (*reg_addr & 0xffff);
++	val = (readl(reg_addr) & 0xffff);
+ 	if (reg == AC97_GPIO_STATUS)
+ 		goto out;
+-	if (wait_event_timeout(gsr_wq, (GSR | gsr_bits) & GSR_SDONE, 1) <= 0 &&
+-	    !((GSR | gsr_bits) & GSR_SDONE)) {
++	if (wait_event_timeout(gsr_wq, (readl(ac97_reg_base + GSR) | gsr_bits) & GSR_SDONE, 1) <= 0 &&
++	    !((readl(ac97_reg_base + GSR) | gsr_bits) & GSR_SDONE)) {
+ 		printk(KERN_ERR "%s: read error (ac97_reg=%d GSR=%#lx)\n",
+-				__func__, reg, GSR | gsr_bits);
++				__func__, reg, readl(ac97_reg_base + GSR) | gsr_bits);
+ 		val = -ETIMEDOUT;
+ 		goto out;
+ 	}
+ 
+ 	/* valid data now */
+-	GSR = GSR_CDONE | GSR_SDONE;
++	writel(GSR_CDONE | GSR_SDONE, ac97_reg_base + GSR);
+ 	gsr_bits = 0;
+-	val = (*reg_addr & 0xffff);
++	val = (readl(reg_addr) & 0xffff);
+ 	/* but we've just started another cycle... */
+-	wait_event_timeout(gsr_wq, (GSR | gsr_bits) & GSR_SDONE, 1);
++	wait_event_timeout(gsr_wq, (readl(ac97_reg_base + GSR) | gsr_bits) & GSR_SDONE, 1);
+ 
+ out:	mutex_unlock(&car_mutex);
+ 	return val;
+@@ -88,25 +92,27 @@ EXPORT_SYMBOL_GPL(pxa2xx_ac97_read);
+ 
+ int pxa2xx_ac97_write(int slot, unsigned short reg, unsigned short val)
+ {
+-	volatile u32 *reg_addr;
++	u32 __iomem *reg_addr;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&car_mutex);
+ 
+ 	/* set up primary or secondary codec space */
+ 	if (cpu_is_pxa25x() && reg == AC97_GPIO_STATUS)
+-		reg_addr = slot ? &SMC_REG_BASE : &PMC_REG_BASE;
++		reg_addr = ac97_reg_base +
++			   (slot ? SMC_REG_BASE : PMC_REG_BASE);
+ 	else
+-		reg_addr = slot ? &SAC_REG_BASE : &PAC_REG_BASE;
++		reg_addr = ac97_reg_base +
++			   (slot ? SAC_REG_BASE : PAC_REG_BASE);
+ 	reg_addr += (reg >> 1);
+ 
+-	GSR = GSR_CDONE | GSR_SDONE;
++	writel(GSR_CDONE | GSR_SDONE, ac97_reg_base + GSR);
+ 	gsr_bits = 0;
+-	*reg_addr = val;
+-	if (wait_event_timeout(gsr_wq, (GSR | gsr_bits) & GSR_CDONE, 1) <= 0 &&
+-	    !((GSR | gsr_bits) & GSR_CDONE)) {
++	writel(val, reg_addr);
++	if (wait_event_timeout(gsr_wq, (readl(ac97_reg_base + GSR) | gsr_bits) & GSR_CDONE, 1) <= 0 &&
++	    !((readl(ac97_reg_base + GSR) | gsr_bits) & GSR_CDONE)) {
+ 		printk(KERN_ERR "%s: write error (ac97_reg=%d GSR=%#lx)\n",
+-				__func__, reg, GSR | gsr_bits);
++				__func__, reg, readl(ac97_reg_base + GSR) | gsr_bits);
+ 		ret = -EIO;
+ 	}
+ 
+@@ -120,17 +126,17 @@ static inline void pxa_ac97_warm_pxa25x(void)
+ {
+ 	gsr_bits = 0;
+ 
+-	GCR |= GCR_WARM_RST;
++	writel(readl(ac97_reg_base + GCR) | (GCR_WARM_RST), ac97_reg_base + GCR);
  }
- EXPORT_SYMBOL_GPL(pxa_smemc_set_pcmcia_socket);
  
-+void __iomem *pxa_smemc_get_mdrefr(void)
-+{
-+	return MDREFR;
-+}
-+
- /*
-  * Intel PXA2xx internal register mapping.
-  *
-diff --git a/arch/arm/mach-pxa/pxa2xx.c b/arch/arm/mach-pxa/pxa2xx.c
-index ac72acb43e26..f583759ac00d 100644
---- a/arch/arm/mach-pxa/pxa2xx.c
-+++ b/arch/arm/mach-pxa/pxa2xx.c
-@@ -15,6 +15,7 @@
- #include <mach/pxa2xx-regs.h>
- #include "mfp-pxa25x.h"
- #include <mach/reset.h>
-+#include <mach/smemc.h>
- #include <linux/platform_data/irda-pxaficp.h>
+ static inline void pxa_ac97_cold_pxa25x(void)
+ {
+-	GCR &=  GCR_COLD_RST;  /* clear everything but nCRST */
+-	GCR &= ~GCR_COLD_RST;  /* then assert nCRST */
++	writel(readl(ac97_reg_base + GCR) & ( GCR_COLD_RST), ac97_reg_base + GCR);  /* clear everything but nCRST */
++	writel(readl(ac97_reg_base + GCR) & (~GCR_COLD_RST), ac97_reg_base + GCR);  /* then assert nCRST */
  
- void pxa2xx_clear_reset_status(unsigned int mask)
-@@ -50,3 +51,27 @@ void pxa2xx_transceiver_mode(struct device *dev, int mode)
- 		BUG();
+ 	gsr_bits = 0;
+ 
+-	GCR = GCR_COLD_RST;
++	writel(GCR_COLD_RST, ac97_reg_base + GCR);
  }
- EXPORT_SYMBOL_GPL(pxa2xx_transceiver_mode);
-+
-+#define MDCNFG_DRAC2(mdcnfg)	(((mdcnfg) >> 21) & 0x3)
-+#define MDCNFG_DRAC0(mdcnfg)	(((mdcnfg) >> 5) & 0x3)
-+
-+int pxa2xx_smemc_get_sdram_rows(void)
-+{
-+	static int sdram_rows;
-+	unsigned int drac2 = 0, drac0 = 0;
-+	u32 mdcnfg;
-+
-+	if (sdram_rows)
-+		return sdram_rows;
-+
-+	mdcnfg = readl_relaxed(MDCNFG);
-+
-+	if (mdcnfg & (MDCNFG_DE2 | MDCNFG_DE3))
-+		drac2 = MDCNFG_DRAC2(mdcnfg);
-+
-+	if (mdcnfg & (MDCNFG_DE0 | MDCNFG_DE1))
-+		drac0 = MDCNFG_DRAC0(mdcnfg);
-+
-+	sdram_rows = 1 << (11 + max(drac0, drac2));
-+	return sdram_rows;
-+}
-diff --git a/arch/arm/mach-pxa/pxa3xx.c b/arch/arm/mach-pxa/pxa3xx.c
-index f4657f4edb3b..d486efb79dcd 100644
---- a/arch/arm/mach-pxa/pxa3xx.c
-+++ b/arch/arm/mach-pxa/pxa3xx.c
-@@ -52,6 +52,10 @@ extern void __init pxa_dt_irq_init(int (*fn)(struct irq_data *, unsigned int));
- #define NDCR_ND_ARB_EN		(1 << 12)
- #define NDCR_ND_ARB_CNTL	(1 << 19)
+ #endif
  
-+#define CKEN_BOOT  		11      /* < Boot rom clock enable */
-+#define CKEN_TPM   		19      /* < TPM clock enable */
-+#define CKEN_HSIO2 		41      /* < HSIO2 clock enable */
-+
+@@ -142,15 +148,15 @@ static inline void pxa_ac97_warm_pxa27x(void)
+ 	/* warm reset broken on Bulverde, so manually keep AC97 reset high */
+ 	pxa27x_configure_ac97reset(reset_gpio, true);
+ 	udelay(10);
+-	GCR |= GCR_WARM_RST;
++	writel(readl(ac97_reg_base + GCR) | (GCR_WARM_RST), ac97_reg_base + GCR);
+ 	pxa27x_configure_ac97reset(reset_gpio, false);
+ 	udelay(500);
+ }
+ 
+ static inline void pxa_ac97_cold_pxa27x(void)
+ {
+-	GCR &=  GCR_COLD_RST;  /* clear everything but nCRST */
+-	GCR &= ~GCR_COLD_RST;  /* then assert nCRST */
++	writel(readl(ac97_reg_base + GCR) & ( GCR_COLD_RST), ac97_reg_base + GCR);  /* clear everything but nCRST */
++	writel(readl(ac97_reg_base + GCR) & (~GCR_COLD_RST), ac97_reg_base + GCR);  /* then assert nCRST */
+ 
+ 	gsr_bits = 0;
+ 
+@@ -158,7 +164,7 @@ static inline void pxa_ac97_cold_pxa27x(void)
+ 	clk_prepare_enable(ac97conf_clk);
+ 	udelay(5);
+ 	clk_disable_unprepare(ac97conf_clk);
+-	GCR = GCR_COLD_RST | GCR_WARM_RST;
++	writel(GCR_COLD_RST | GCR_WARM_RST, ac97_reg_base + GCR);
+ }
+ #endif
+ 
+@@ -168,26 +174,26 @@ static inline void pxa_ac97_warm_pxa3xx(void)
+ 	gsr_bits = 0;
+ 
+ 	/* Can't use interrupts */
+-	GCR |= GCR_WARM_RST;
++	writel(readl(ac97_reg_base + GCR) | (GCR_WARM_RST), ac97_reg_base + GCR);
+ }
+ 
+ static inline void pxa_ac97_cold_pxa3xx(void)
+ {
+ 	/* Hold CLKBPB for 100us */
+-	GCR = 0;
+-	GCR = GCR_CLKBPB;
++	writel(0, ac97_reg_base + GCR);
++	writel(GCR_CLKBPB, ac97_reg_base + GCR);
+ 	udelay(100);
+-	GCR = 0;
++	writel(0, ac97_reg_base + GCR);
+ 
+-	GCR &=  GCR_COLD_RST;  /* clear everything but nCRST */
+-	GCR &= ~GCR_COLD_RST;  /* then assert nCRST */
++	writel(readl(ac97_reg_base + GCR) & ( GCR_COLD_RST), ac97_reg_base + GCR);  /* clear everything but nCRST */
++	writel(readl(ac97_reg_base + GCR) & (~GCR_COLD_RST), ac97_reg_base + GCR);  /* then assert nCRST */
+ 
+ 	gsr_bits = 0;
+ 
+ 	/* Can't use interrupts on PXA3xx */
+-	GCR &= ~(GCR_PRIRDY_IEN|GCR_SECRDY_IEN);
++	writel(readl(ac97_reg_base + GCR) & (~(GCR_PRIRDY_IEN|GCR_SECRDY_IEN)), ac97_reg_base + GCR);
+ 
+-	GCR = GCR_WARM_RST | GCR_COLD_RST;
++	writel(GCR_WARM_RST | GCR_COLD_RST, ac97_reg_base + GCR);
+ }
+ #endif
+ 
+@@ -213,10 +219,10 @@ bool pxa2xx_ac97_try_warm_reset(void)
+ #endif
+ 		snd_BUG();
+ 
+-	while (!((GSR | gsr_bits) & (GSR_PCR | GSR_SCR)) && timeout--)
++	while (!((readl(ac97_reg_base + GSR) | gsr_bits) & (GSR_PCR | GSR_SCR)) && timeout--)
+ 		mdelay(1);
+ 
+-	gsr = GSR | gsr_bits;
++	gsr = readl(ac97_reg_base + GSR) | gsr_bits;
+ 	if (!(gsr & (GSR_PCR | GSR_SCR))) {
+ 		printk(KERN_INFO "%s: warm reset timeout (GSR=%#lx)\n",
+ 				 __func__, gsr);
+@@ -250,10 +256,10 @@ bool pxa2xx_ac97_try_cold_reset(void)
+ #endif
+ 		snd_BUG();
+ 
+-	while (!((GSR | gsr_bits) & (GSR_PCR | GSR_SCR)) && timeout--)
++	while (!((readl(ac97_reg_base + GSR) | gsr_bits) & (GSR_PCR | GSR_SCR)) && timeout--)
+ 		mdelay(1);
+ 
+-	gsr = GSR | gsr_bits;
++	gsr = readl(ac97_reg_base + GSR) | gsr_bits;
+ 	if (!(gsr & (GSR_PCR | GSR_SCR))) {
+ 		printk(KERN_INFO "%s: cold reset timeout (GSR=%#lx)\n",
+ 				 __func__, gsr);
+@@ -268,8 +274,10 @@ EXPORT_SYMBOL_GPL(pxa2xx_ac97_try_cold_reset);
+ 
+ void pxa2xx_ac97_finish_reset(void)
+ {
+-	GCR &= ~(GCR_PRIRDY_IEN|GCR_SECRDY_IEN);
+-	GCR |= GCR_SDONE_IE|GCR_CDONE_IE;
++	u32 gcr = readl(ac97_reg_base + GCR);
++	gcr &= ~(GCR_PRIRDY_IEN|GCR_SECRDY_IEN);
++	gcr |= GCR_SDONE_IE|GCR_CDONE_IE;
++	writel(gcr, ac97_reg_base + GCR);
+ }
+ EXPORT_SYMBOL_GPL(pxa2xx_ac97_finish_reset);
+ 
+@@ -277,9 +285,9 @@ static irqreturn_t pxa2xx_ac97_irq(int irq, void *dev_id)
+ {
+ 	long status;
+ 
+-	status = GSR;
++	status = readl(ac97_reg_base + GSR);
+ 	if (status) {
+-		GSR = status;
++		writel(status, ac97_reg_base + GSR);
+ 		gsr_bits |= status;
+ 		wake_up(&gsr_wq);
+ 
+@@ -287,9 +295,9 @@ static irqreturn_t pxa2xx_ac97_irq(int irq, void *dev_id)
+ 		   since they tend to spuriously trigger when MMC is used
+ 		   (hardware bug? go figure)... */
+ 		if (cpu_is_pxa27x()) {
+-			MISR = MISR_EOC;
+-			PISR = PISR_EOC;
+-			MCSR = MCSR_EOC;
++			writel(MISR_EOC, ac97_reg_base + MISR);
++			writel(PISR_EOC, ac97_reg_base + PISR);
++			writel(MCSR_EOC, ac97_reg_base + MCSR);
+ 		}
+ 
+ 		return IRQ_HANDLED;
+@@ -301,7 +309,7 @@ static irqreturn_t pxa2xx_ac97_irq(int irq, void *dev_id)
  #ifdef CONFIG_PM
- 
- #define ISRAM_START	0x5c000000
-diff --git a/arch/arm/mach-pxa/smemc.c b/arch/arm/mach-pxa/smemc.c
-index 47b99549d616..da0eeafdb5a0 100644
---- a/arch/arm/mach-pxa/smemc.c
-+++ b/arch/arm/mach-pxa/smemc.c
-@@ -69,4 +69,13 @@ static int __init smemc_init(void)
+ int pxa2xx_ac97_hw_suspend(void)
+ {
+-	GCR |= GCR_ACLINK_OFF;
++	writel(readl(ac97_reg_base + GCR) | (GCR_ACLINK_OFF), ac97_reg_base + GCR);
+ 	clk_disable_unprepare(ac97_clk);
  	return 0;
  }
- subsys_initcall(smemc_init);
+@@ -321,6 +329,12 @@ int pxa2xx_ac97_hw_probe(struct platform_device *dev)
+ 	int irq;
+ 	pxa2xx_audio_ops_t *pdata = dev->dev.platform_data;
+ 
++	ac97_reg_base = devm_platform_ioremap_resource(dev, 0);
++	if (IS_ERR(ac97_reg_base)) {
++		dev_err(&dev->dev, "Missing MMIO resource\n");
++		return PTR_ERR(ac97_reg_base);
++	}
 +
+ 	if (pdata) {
+ 		switch (pdata->reset_gpio) {
+ 		case 95:
+@@ -398,7 +412,7 @@ int pxa2xx_ac97_hw_probe(struct platform_device *dev)
+ 	return 0;
+ 
+ err_irq:
+-	GCR |= GCR_ACLINK_OFF;
++	writel(readl(ac97_reg_base + GCR) | (GCR_ACLINK_OFF), ac97_reg_base + GCR);
+ err_clk2:
+ 	clk_put(ac97_clk);
+ 	ac97_clk = NULL;
+@@ -416,7 +430,7 @@ void pxa2xx_ac97_hw_remove(struct platform_device *dev)
+ {
+ 	if (cpu_is_pxa27x())
+ 		gpio_free(reset_gpio);
+-	GCR |= GCR_ACLINK_OFF;
++	writel(readl(ac97_reg_base + GCR) | (GCR_ACLINK_OFF), ac97_reg_base + GCR);
+ 	free_irq(platform_get_irq(dev, 0), NULL);
+ 	if (ac97conf_clk) {
+ 		clk_put(ac97conf_clk);
+@@ -430,13 +444,19 @@ EXPORT_SYMBOL_GPL(pxa2xx_ac97_hw_remove);
+ 
+ u32 pxa2xx_ac97_read_modr(void)
+ {
+-	return MODR;
++	if (!ac97_reg_base)
++		return 0;
++
++	return readl(ac97_reg_base + MODR);
+ }
+ EXPORT_SYMBOL_GPL(pxa2xx_ac97_read_modr);
+ 
+ u32 pxa2xx_ac97_read_misr(void)
+ {
+-	return MISR;
++	if (!ac97_reg_base)
++		return 0;
++
++	return readl(ac97_reg_base + MISR);
+ }
+ EXPORT_SYMBOL_GPL(pxa2xx_ac97_read_misr);
+ 
+diff --git a/arch/arm/mach-pxa/include/mach/regs-ac97.h b/sound/arm/pxa2xx-ac97-regs.h
+similarity index 71%
+rename from arch/arm/mach-pxa/include/mach/regs-ac97.h
+rename to sound/arm/pxa2xx-ac97-regs.h
+index ec09b9635e25..ae638a1b919b 100644
+--- a/arch/arm/mach-pxa/include/mach/regs-ac97.h
++++ b/sound/arm/pxa2xx-ac97-regs.h
+@@ -2,25 +2,23 @@
+ #ifndef __ASM_ARCH_REGS_AC97_H
+ #define __ASM_ARCH_REGS_AC97_H
+ 
+-#include "pxa-regs.h"
+-
+ /*
+  * AC97 Controller registers
+  */
+ 
+-#define POCR		__REG(0x40500000)  /* PCM Out Control Register */
++#define POCR		(0x0000)  	/* PCM Out Control Register */
+ #define POCR_FEIE	(1 << 3)	/* FIFO Error Interrupt Enable */
+ #define POCR_FSRIE	(1 << 1)	/* FIFO Service Request Interrupt Enable */
+ 
+-#define PICR		__REG(0x40500004)  /* PCM In Control Register */
++#define PICR		(0x0004) 	/* PCM In Control Register */
+ #define PICR_FEIE	(1 << 3)	/* FIFO Error Interrupt Enable */
+ #define PICR_FSRIE	(1 << 1)	/* FIFO Service Request Interrupt Enable */
+ 
+-#define MCCR		__REG(0x40500008)  /* Mic In Control Register */
++#define MCCR		(0x0008)  	/* Mic In Control Register */
+ #define MCCR_FEIE	(1 << 3)	/* FIFO Error Interrupt Enable */
+ #define MCCR_FSRIE	(1 << 1)	/* FIFO Service Request Interrupt Enable */
+ 
+-#define GCR		__REG(0x4050000C)  /* Global Control Register */
++#define GCR		(0x000C) 	 /* Global Control Register */
+ #ifdef CONFIG_PXA3xx
+ #define GCR_CLKBPB	(1 << 31)	/* Internal clock enable */
  #endif
-+
-+static const unsigned int df_clkdiv[4] = { 1, 2, 4, 1 };
-+unsigned int pxa3xx_smemc_get_memclkdiv(void)
-+{
-+	unsigned long memclkcfg = __raw_readl(MEMCLKCFG);
-+
-+	return	df_clkdiv[(memclkcfg >> 16) & 0x3];
-+}
-diff --git a/drivers/clk/pxa/clk-pxa.c b/drivers/clk/pxa/clk-pxa.c
-index cfc79f942b07..831180360069 100644
---- a/drivers/clk/pxa/clk-pxa.c
-+++ b/drivers/clk/pxa/clk-pxa.c
-@@ -11,6 +11,7 @@
- #include <linux/clkdev.h>
- #include <linux/io.h>
- #include <linux/of.h>
-+#include <linux/soc/pxa/smemc.h>
+@@ -36,21 +34,21 @@
+ #define GCR_COLD_RST	(1 << 1)	/* AC'97 Cold Reset (0 = active) */
+ #define GCR_GIE		(1 << 0)	/* Codec GPI Interrupt Enable */
  
- #include <dt-bindings/clock/pxa-clock.h>
- #include "clk-pxa.h"
-@@ -150,12 +151,13 @@ void pxa2xx_core_turbo_switch(bool on)
- }
+-#define POSR		__REG(0x40500010)  /* PCM Out Status Register */
++#define POSR		(0x0010)  	/* PCM Out Status Register */
+ #define POSR_FIFOE	(1 << 4)	/* FIFO error */
+ #define POSR_FSR	(1 << 2)	/* FIFO Service Request */
  
- void pxa2xx_cpll_change(struct pxa2xx_freq *freq,
--			u32 (*mdrefr_dri)(unsigned int), void __iomem *mdrefr,
-+			u32 (*mdrefr_dri)(unsigned int),
- 			void __iomem *cccr)
- {
- 	unsigned int clkcfg = freq->clkcfg;
- 	unsigned int unused, preset_mdrefr, postset_mdrefr;
- 	unsigned long flags;
-+	void __iomem *mdrefr = pxa_smemc_get_mdrefr();
+-#define PISR		__REG(0x40500014)  /* PCM In Status Register */
++#define PISR		(0x0014)  	/* PCM In Status Register */
+ #define PISR_FIFOE	(1 << 4)	/* FIFO error */
+ #define PISR_EOC	(1 << 3)	/* DMA End-of-Chain (exclusive clear) */
+ #define PISR_FSR	(1 << 2)	/* FIFO Service Request */
  
- 	local_irq_save(flags);
+-#define MCSR		__REG(0x40500018)  /* Mic In Status Register */
++#define MCSR		(0x0018)  	/* Mic In Status Register */
+ #define MCSR_FIFOE	(1 << 4)	/* FIFO error */
+ #define MCSR_EOC	(1 << 3)	/* DMA End-of-Chain (exclusive clear) */
+ #define MCSR_FSR	(1 << 2)	/* FIFO Service Request */
  
-diff --git a/drivers/clk/pxa/clk-pxa.h b/drivers/clk/pxa/clk-pxa.h
-index 5768e0f728ce..bd688fdb7ecc 100644
---- a/drivers/clk/pxa/clk-pxa.h
-+++ b/drivers/clk/pxa/clk-pxa.h
-@@ -146,12 +146,13 @@ static inline int dummy_clk_set_parent(struct clk_hw *hw, u8 index)
+-#define GSR		__REG(0x4050001C)  /* Global Status Register */
++#define GSR		(0x001C)  	/* Global Status Register */
+ #define GSR_CDONE	(1 << 19)	/* Command Done */
+ #define GSR_SDONE	(1 << 18)	/* Status Done */
+ #define GSR_RDCS	(1 << 15)	/* Read Completion Status */
+@@ -69,34 +67,34 @@
+ #define GSR_MIINT	(1 << 1)	/* Modem In Interrupt */
+ #define GSR_GSCI	(1 << 0)	/* Codec GPI Status Change Interrupt */
  
- extern void clkdev_pxa_register(int ckid, const char *con_id,
- 				const char *dev_id, struct clk *clk);
--extern int clk_pxa_cken_init(const struct desc_clk_cken *clks, int nb_clks);
-+extern int clk_pxa_cken_init(const struct desc_clk_cken *clks,
-+			     int nb_clks);
- void clk_pxa_dt_common_init(struct device_node *np);
+-#define CAR		__REG(0x40500020)  /* CODEC Access Register */
++#define CAR		(0x0020)  	/* CODEC Access Register */
+ #define CAR_CAIP	(1 << 0)	/* Codec Access In Progress */
  
- void pxa2xx_core_turbo_switch(bool on);
- void pxa2xx_cpll_change(struct pxa2xx_freq *freq,
--			u32 (*mdrefr_dri)(unsigned int), void __iomem *mdrefr,
-+			u32 (*mdrefr_dri)(unsigned int),
- 			void __iomem *cccr);
- int pxa2xx_determine_rate(struct clk_rate_request *req,
- 			  struct pxa2xx_freq *freqs,  int nb_freqs);
-diff --git a/drivers/clk/pxa/clk-pxa25x.c b/drivers/clk/pxa/clk-pxa25x.c
-index d0f957996acb..0837d59d7a67 100644
---- a/drivers/clk/pxa/clk-pxa25x.c
-+++ b/drivers/clk/pxa/clk-pxa25x.c
-@@ -15,7 +15,7 @@
- #include <linux/io.h>
- #include <linux/of.h>
- #include <mach/pxa2xx-regs.h>
--#include <mach/smemc.h>
-+#include <linux/soc/pxa/smemc.h>
+-#define PCDR		__REG(0x40500040)  /* PCM FIFO Data Register */
+-#define MCDR		__REG(0x40500060)  /* Mic-in FIFO Data Register */
++#define PCDR		(0x0040)  	/* PCM FIFO Data Register */
++#define MCDR		(0x0060)  	/* Mic-in FIFO Data Register */
  
- #include <dt-bindings/clock/pxa-clock.h>
- #include "clk-pxa.h"
-@@ -33,9 +33,6 @@ enum {
- 	 ((T) ? CLKCFG_TURBO : 0))
- #define PXA25x_CCCR(N2, M, L) (N2 << 7 | M << 5 | L)
+-#define MOCR		__REG(0x40500100)  /* Modem Out Control Register */
++#define MOCR		(0x0100)  	/* Modem Out Control Register */
+ #define MOCR_FEIE	(1 << 3)	/* FIFO Error */
+ #define MOCR_FSRIE	(1 << 1)	/* FIFO Service Request Interrupt Enable */
  
--#define MDCNFG_DRAC2(mdcnfg)	(((mdcnfg) >> 21) & 0x3)
--#define MDCNFG_DRAC0(mdcnfg)	(((mdcnfg) >> 5) & 0x3)
--
- /* Define the refresh period in mSec for the SDRAM and the number of rows */
- #define SDRAM_TREF	64	/* standard 64ms SDRAM */
+-#define MICR		__REG(0x40500108)  /* Modem In Control Register */
++#define MICR		(0x0108)  	/* Modem In Control Register */
+ #define MICR_FEIE	(1 << 3)	/* FIFO Error */
+ #define MICR_FSRIE	(1 << 1)	/* FIFO Service Request Interrupt Enable */
  
-@@ -57,30 +54,9 @@ static const char * const get_freq_khz[] = {
- 	"core", "run", "cpll", "memory"
- };
+-#define MOSR		__REG(0x40500110)  /* Modem Out Status Register */
++#define MOSR		(0x0110)  	/* Modem Out Status Register */
+ #define MOSR_FIFOE	(1 << 4)	/* FIFO error */
+ #define MOSR_FSR	(1 << 2)	/* FIFO Service Request */
  
--static int get_sdram_rows(void)
--{
--	static int sdram_rows;
--	unsigned int drac2 = 0, drac0 = 0;
--	u32 mdcnfg;
--
--	if (sdram_rows)
--		return sdram_rows;
--
--	mdcnfg = readl_relaxed(MDCNFG);
--
--	if (mdcnfg & (MDCNFG_DE2 | MDCNFG_DE3))
--		drac2 = MDCNFG_DRAC2(mdcnfg);
--
--	if (mdcnfg & (MDCNFG_DE0 | MDCNFG_DE1))
--		drac0 = MDCNFG_DRAC0(mdcnfg);
--
--	sdram_rows = 1 << (11 + max(drac0, drac2));
--	return sdram_rows;
--}
--
- static u32 mdrefr_dri(unsigned int freq_khz)
- {
--	u32 interval = freq_khz * SDRAM_TREF / get_sdram_rows();
-+	u32 interval = freq_khz * SDRAM_TREF / pxa2xx_smemc_get_sdram_rows();
+-#define MISR		__REG(0x40500118)  /* Modem In Status Register */
++#define MISR		(0x0118)  	/* Modem In Status Register */
+ #define MISR_FIFOE	(1 << 4)	/* FIFO error */
+ #define MISR_EOC	(1 << 3)	/* DMA End-of-Chain (exclusive clear) */
+ #define MISR_FSR	(1 << 2)	/* FIFO Service Request */
  
- 	return interval / 32;
- }
-@@ -268,7 +244,7 @@ static int clk_pxa25x_cpll_set_rate(struct clk_hw *hw, unsigned long rate,
- 	if (i >= ARRAY_SIZE(pxa25x_freqs))
- 		return -EINVAL;
+-#define MODR		__REG(0x40500140)  /* Modem FIFO Data Register */
++#define MODR		(0x0140)  	/* Modem FIFO Data Register */
  
--	pxa2xx_cpll_change(&pxa25x_freqs[i], mdrefr_dri, MDREFR, CCCR);
-+	pxa2xx_cpll_change(&pxa25x_freqs[i], mdrefr_dri, CCCR);
+-#define PAC_REG_BASE	__REG(0x40500200)  /* Primary Audio Codec */
+-#define SAC_REG_BASE	__REG(0x40500300)  /* Secondary Audio Codec */
+-#define PMC_REG_BASE	__REG(0x40500400)  /* Primary Modem Codec */
+-#define SMC_REG_BASE	__REG(0x40500500)  /* Secondary Modem Codec */
++#define PAC_REG_BASE	(0x0200)  	/* Primary Audio Codec */
++#define SAC_REG_BASE	(0x0300)  	/* Secondary Audio Codec */
++#define PMC_REG_BASE	(0x0400)  	/* Primary Modem Codec */
++#define SMC_REG_BASE	(0x0500)  	/* Secondary Modem Codec */
  
- 	return 0;
- }
-diff --git a/drivers/clk/pxa/clk-pxa27x.c b/drivers/clk/pxa/clk-pxa27x.c
-index 7b123105b5de..ba3aa63f2447 100644
---- a/drivers/clk/pxa/clk-pxa27x.c
-+++ b/drivers/clk/pxa/clk-pxa27x.c
-@@ -12,8 +12,7 @@
- #include <linux/clk.h>
- #include <linux/clkdev.h>
- #include <linux/of.h>
--
--#include <mach/smemc.h>
-+#include <linux/soc/pxa/smemc.h>
+ #endif /* __ASM_ARCH_REGS_AC97_H */
+diff --git a/sound/arm/pxa2xx-ac97.c b/sound/arm/pxa2xx-ac97.c
+index 57c3e12e6629..c162086455ad 100644
+--- a/sound/arm/pxa2xx-ac97.c
++++ b/sound/arm/pxa2xx-ac97.c
+@@ -21,7 +21,6 @@
+ #include <sound/pxa2xx-lib.h>
+ #include <sound/dmaengine_pcm.h>
  
- #include <dt-bindings/clock/pxa-clock.h>
- #include "clk-pxa.h"
-@@ -50,9 +49,6 @@ enum {
- 	 ((T)  ? CLKCFG_TURBO : 0))
- #define PXA27x_CCCR(A, L, N2) (A << 25 | N2 << 7 | L)
+-#include <mach/regs-ac97.h>
+ #include <linux/platform_data/asoc-pxa.h>
  
--#define MDCNFG_DRAC2(mdcnfg)	(((mdcnfg) >> 21) & 0x3)
--#define MDCNFG_DRAC0(mdcnfg)	(((mdcnfg) >> 5) & 0x3)
--
- /* Define the refresh period in mSec for the SDRAM and the number of rows */
- #define SDRAM_TREF	64	/* standard 64ms SDRAM */
- 
-@@ -61,30 +57,9 @@ static const char * const get_freq_khz[] = {
- 	"system_bus"
- };
- 
--static int get_sdram_rows(void)
--{
--	static int sdram_rows;
--	unsigned int drac2 = 0, drac0 = 0;
--	u32 mdcnfg;
--
--	if (sdram_rows)
--		return sdram_rows;
--
--	mdcnfg = readl_relaxed(MDCNFG);
--
--	if (mdcnfg & (MDCNFG_DE2 | MDCNFG_DE3))
--		drac2 = MDCNFG_DRAC2(mdcnfg);
--
--	if (mdcnfg & (MDCNFG_DE0 | MDCNFG_DE1))
--		drac0 = MDCNFG_DRAC0(mdcnfg);
--
--	sdram_rows = 1 << (11 + max(drac0, drac2));
--	return sdram_rows;
--}
--
- static u32 mdrefr_dri(unsigned int freq_khz)
- {
--	u32 interval = freq_khz * SDRAM_TREF / get_sdram_rows();
-+	u32 interval = freq_khz * SDRAM_TREF / pxa2xx_smemc_get_sdram_rows();
- 
- 	return (interval - 31) / 32;
- }
-@@ -260,7 +235,7 @@ static int clk_pxa27x_cpll_set_rate(struct clk_hw *hw, unsigned long rate,
- 	if (i >= ARRAY_SIZE(pxa27x_freqs))
- 		return -EINVAL;
- 
--	pxa2xx_cpll_change(&pxa27x_freqs[i], mdrefr_dri, MDREFR, CCCR);
-+	pxa2xx_cpll_change(&pxa27x_freqs[i], mdrefr_dri, CCCR);
- 	return 0;
- }
- 
-diff --git a/drivers/clk/pxa/clk-pxa3xx.c b/drivers/clk/pxa/clk-pxa3xx.c
-index 60a0db4f3790..08594fc899e2 100644
---- a/drivers/clk/pxa/clk-pxa3xx.c
-+++ b/drivers/clk/pxa/clk-pxa3xx.c
-@@ -15,7 +15,7 @@
- #include <linux/clkdev.h>
- #include <linux/of.h>
- #include <linux/soc/pxa/cpu.h>
--#include <mach/smemc.h>
-+#include <linux/soc/pxa/smemc.h>
- #include <linux/clk/pxa.h>
- #include <mach/pxa3xx-regs.h>
- 
-@@ -41,8 +41,6 @@ static unsigned char hss_mult[4] = { 8, 12, 16, 24 };
- 
- /* crystal frequency to static memory controller multiplier (SMCFS) */
- static unsigned int smcfs_mult[8] = { 6, 0, 8, 0, 0, 16, };
--static unsigned int df_clkdiv[4] = { 1, 2, 4, 1 };
--
- static const char * const get_freq_khz[] = {
- 	"core", "ring_osc_60mhz", "run", "cpll", "system_bus"
- };
-@@ -118,10 +116,10 @@ static unsigned long clk_pxa3xx_smemc_get_rate(struct clk_hw *hw,
- 					      unsigned long parent_rate)
- {
- 	unsigned long acsr = ACSR;
--	unsigned long memclkcfg = __raw_readl(MEMCLKCFG);
- 
- 	return (parent_rate / 48)  * smcfs_mult[(acsr >> 23) & 0x7] /
--		df_clkdiv[(memclkcfg >> 16) & 0x3];
-+		pxa3xx_smemc_get_memclkdiv();
-+
- }
- PARENTS(clk_pxa3xx_smemc) = { "spll_624mhz" };
- RATE_RO_OPS(clk_pxa3xx_smemc, "smemc");
-diff --git a/include/linux/soc/pxa/smemc.h b/include/linux/soc/pxa/smemc.h
-index cbf1a2d8af29..f1ffea236c15 100644
---- a/include/linux/soc/pxa/smemc.h
-+++ b/include/linux/soc/pxa/smemc.h
-@@ -6,5 +6,8 @@
- 
- void pxa_smemc_set_pcmcia_timing(int sock, u32 mcmem, u32 mcatt, u32 mcio);
- void pxa_smemc_set_pcmcia_socket(int nr);
-+int pxa2xx_smemc_get_sdram_rows(void);
-+unsigned int pxa3xx_smemc_get_memclkdiv(void);
-+void __iomem *pxa_smemc_get_mdrefr(void);
- 
- #endif
+ static void pxa2xx_ac97_legacy_reset(struct snd_ac97 *ac97)
 -- 
 2.29.2
 
