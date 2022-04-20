@@ -2,125 +2,98 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFC48C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 20 Apr 2022 12:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDFE9C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 20 Apr 2022 12:21:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353041AbiDTMSF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 20 Apr 2022 08:18:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58850 "EHLO
+        id S1353156AbiDTMYg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 20 Apr 2022 08:24:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244556AbiDTMSF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 20 Apr 2022 08:18:05 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C25C167F4;
-        Wed, 20 Apr 2022 05:15:18 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id q12so1427733pgj.13;
-        Wed, 20 Apr 2022 05:15:18 -0700 (PDT)
+        with ESMTP id S1353164AbiDTMYc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 20 Apr 2022 08:24:32 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D10E31DC4;
+        Wed, 20 Apr 2022 05:21:46 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id p3so438719pfw.0;
+        Wed, 20 Apr 2022 05:21:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YbcYiKXfCytla+BW4m2NKTI4lgOrUp85w6nmM+TEXIw=;
-        b=Z0jvUNK8/qSRcR9etARXOLLU5B+2xz3X6wOCfHECJfGbT3gLbiJ13mZruISUgE3FMG
-         JwxvK4kvsmkIPtHmrHtcE9mu71jkG+4eSi4adiwCm85XTdbGBL9aYTE7Y5Yks93NDP/v
-         yT/pymRk/On1pQFIqvzpGNKrJKxfI6qjx0C17FVpL+7ErX2kvIY+khOUPGB4ZUAGio/r
-         IqHpb2rNvHePX9QLSlM2eyDp0hh5f/KdrBysbGbI+SqwXqeXWb0HNyOuWhX3bIEiN4uG
-         J0b2qj94ba21wttJ9LONUB/CB8/RDXgauhgjEU9FuTlo6ScO1ZjlJUbu+/U9w10Aq6z4
-         /0KA==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=PnY2RV2uT4v9sH336lb/RKV9xcdjUoGG2IsZ0A8hZGA=;
+        b=NyxvwoA0HdhUbVFKo9pXR5aK1iHlUBqWbkgmQ9X/YcB5oA/dCnltiFNfCliSGglHp6
+         ZlpzzoQa81EGUrgVeDD0bms5/g0ArBFtf51rRV+AH7cyLWVVl6SSpCS3UCMmS/MNy/p9
+         ABm61uCOBfNfUbIMHvQHzDzBcnr3kF95b27ey6dAYvNa1FIhcg+D+691QyVx5cmO7HHZ
+         +R0eNaw2/KEHmhIpPI5PafYjP4SvkdqTp26+0qE4IGupcJKV4mBQwJk1XCxlZZKj11B6
+         G/LhdFR23rOepiNJH6CShm4EOVt7IKgFOJKymTD0jZLAlUYL840mV3AbrzAL42dactjY
+         fSSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YbcYiKXfCytla+BW4m2NKTI4lgOrUp85w6nmM+TEXIw=;
-        b=OBI4HNQSkFH+QSuwXq2+Ky8eiGDYBC7wcCad7ee2fOApAxblXQrzrtDW2mTnqJ/Xjg
-         KM/tRPzhbQoNdvFlPx6cooDaMTSIACzYi10tZzUbYvti1kSD2A9v1pofyVKyQxYbOmlg
-         BI3kr89vQiqt4mdAsUXNR9UeWFZ8dPUL6cSAhDKx69yf35SxgsaA1vvAKFoUqUgVdqC0
-         yf2bY6wkGgN25ESpEI6FF4lHgd9Xp14e6HEGXqPsMv2eai7kYkRAzJFKpO1EB+Dsn0Kn
-         lUUC1sJw+rs+YQgmFT4riSm2au9pPcyP55gxh20IWZIm0G7vQl0G+aeYTW65rgOdPWFQ
-         A3OA==
-X-Gm-Message-State: AOAM533oyB8QHVCT+WHgH3v5jVGn3fSPBN+v8Es/Tj+jfzv9RM8fxg19
-        TqI8zjHmMfAI5byjC/AA2vXNn4fCBwbjnIdFTVv3iIGkbOWP
-X-Google-Smtp-Source: ABdhPJyZ+PcwvhxxbxJOT+h82qW3FnSblF7avVFdG6+aRm4zvELC8w+IzdSN0zx7uwAcdfqzChII1d/w6xflu3Rxb6c=
-X-Received: by 2002:a63:ce45:0:b0:399:1124:fbfe with SMTP id
- r5-20020a63ce45000000b003991124fbfemr19430118pgi.542.1650456918078; Wed, 20
- Apr 2022 05:15:18 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAMhUBjkVME8D5KsHvT=uddBsW_Bh6wr7qeXS=UpQD4LgPmHffQ@mail.gmail.com>
- <05433153-0424-ab66-1573-993d0490c5bc@opensource.wdc.com> <CAMhUBj=JsiHnnQzrqPKzA=Z2+589Ju_HE0cFKyon58Fk0waeAQ@mail.gmail.com>
- <3045fde1-2d5b-e731-ef18-6cf3f0987259@opensource.wdc.com> <CAMhUBjnG75XANF1E5KUyigKSmhxzvJytfapieC6_jpKdiFwzSg@mail.gmail.com>
- <e7bd823c-c387-00e7-3060-97f224df6da4@opensource.wdc.com>
-In-Reply-To: <e7bd823c-c387-00e7-3060-97f224df6da4@opensource.wdc.com>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=PnY2RV2uT4v9sH336lb/RKV9xcdjUoGG2IsZ0A8hZGA=;
+        b=FelATS8AW9UpgzAABW3YKwX7nahHqhh2aOUd6PnKrryRjsezrgWGCn34k4HhJga5Cl
+         ArTYUsftg/k0WaNeUT8n31k+L3vy8Xc0SWn4/NEWho42+VctUj10ys9nBDrMP4TYvp1i
+         zjrM7y4ZThtJ+B9GXkgkjER4svJk9suTzKHAn4zL3akibpOaoDVzjqcPnmeLJE4j/wDT
+         Gl80tVf1r/1xUkXz9T0724VuvMZxzU8lwlI3lW7QQkVzca67KaQyg3aGNTZfbdf085O1
+         g1p2lg43Nxf3bKc87YXo40neSq6UBn/0bWydQb2e+GVr0zfdMF8P3zyYUj0Pt9M/pRwW
+         dQsQ==
+X-Gm-Message-State: AOAM5325SM391jqQ9FbmUOWxV1Zq02H6TdBcpYajrwW3AkpngQk0QPas
+        OVpqdj8c2TI22zK0Tpgy2QybczUlO9shccw=
+X-Google-Smtp-Source: ABdhPJyvCM410O7a/VsEoNc/ZVVieOGoOtu06BpBKyGtxUvTkqN1o9XGktLIG7VFqgBsnMGACXG1yw==
+X-Received: by 2002:a63:224f:0:b0:399:4a1a:b01f with SMTP id t15-20020a63224f000000b003994a1ab01fmr19521638pgm.123.1650457306034;
+        Wed, 20 Apr 2022 05:21:46 -0700 (PDT)
+Received: from localhost.localdomain ([144.202.91.207])
+        by smtp.gmail.com with ESMTPSA id u7-20020aa78487000000b00505d9277cb3sm19480063pfn.38.2022.04.20.05.21.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Apr 2022 05:21:45 -0700 (PDT)
 From:   Zheyu Ma <zheyuma97@gmail.com>
-Date:   Wed, 20 Apr 2022 20:15:07 +0800
-Message-ID: <CAMhUBjmz1rCDDps3guWBXyOREB6K-dZDg0xQ78FJ18WQvWtejA@mail.gmail.com>
-Subject: Re: [BUG] ata: pata_marvell: Warning when probing the module
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+To:     s.shtylyov@omp.ru, damien.lemoal@opensource.wdc.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Zheyu Ma <zheyuma97@gmail.com>
+Subject: [PATCH] ata: pata_marvell: Check the 'bmdma_addr' beforing reading
+Date:   Wed, 20 Apr 2022 20:21:34 +0800
+Message-Id: <20220420122134.430997-1-zheyuma97@gmail.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Apr 20, 2022 at 11:07 AM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> On 4/20/22 11:21, Zheyu Ma wrote:
-> > On Wed, Apr 13, 2022 at 11:42 AM Damien Le Moal
-> > <damien.lemoal@opensource.wdc.com> wrote:
-> >>
-> >> On 4/12/22 15:34, Zheyu Ma wrote:
-> >>> On Mon, Apr 11, 2022 at 7:53 AM Damien Le Moal
-> >>> <damien.lemoal@opensource.wdc.com> wrote:
-> >>>>
-> >>>> On 4/10/22 15:30, Zheyu Ma wrote:
-> >>>>> Hello,
-> >>>>>
-> >>>>> I found a bug in the pata_marvell module.
-> >>>>> When probing the driver, it seems to trigger the error path and
-> >>>>> executes the function marvell_cable_detect(), but the
-> >>>>> 'ap->ioaddr.bmdma_addr' is not initialized, which causes a warning.
-> >>>>
-> >>>> I do not have this hardware so I cannot debug this. Please debug it and
-> >>>> send a patch. bmdma_addr is normally set in ata_pci_bmdma_init(), but some
-> >>>> drivers set it manually in their probe functions. No idea about the
-> >>>> marvell driver, I have not checked it.
-> >>>
-> >>> To be honest I don't have a good solution to this problem, because
-> >>> other drivers don't have similar behavior. The marvell driver doesn't
-> >>> even initialize 'bmdma_addr' before calling 'cable_detect'.
-> >>
-> >> Then this is the bug that needs to be fixed, no ?
-> >>
-> >>> So a simple idea I have is to check if 'bmdma_addr' is 0 before
-> >>> reading it and if so return the error code ATA_CBL_NONE.
-> >>
-> >> And if indeed, even after it is initialized it is still 0, then yes, this
-> >> change seems sensible.
-> >
-> > Sorry for the late reply, I found the root cause of this issue.
-> > The marvell driver execute the ata_pci_bmdma_init() function, but the
-> > driver just returned at the following code snippet.
-> >
-> > if (pci_resource_start(pdev, 4) == 0) {
-> >       ata_bmdma_nodma(host, "BAR4 is zero");
-> >       return;
-> > }
-> >
-> > So the driver didn't initialize the 'bmdma_addr' but used it in the
-> > cable_detect() function.
-> > It seems that the problem is caused by the hardware, is this a bug
-> > that we should fix?
->
-> So it looks like your adapter is saying: I do not support DMA.
-> In that case, having bmdma_addr as 0 should be expected and
-> pata_marvel_cable_detect() should check the address before attempting an
-> ioread8(). It is weird that the cable information is in that bar though...
->
-> In any case, you should check the adapter specs to verify how the cable
-> type can be detected. And if unknown when bmdma_addr is 0, then just
-> return ATA_CBL_PATA_UNK.
+Before detecting the cable type on the dma bar, the driver should check
+whether the 'bmdma_addr' is zero, which means the adapter does not
+support DMA, otherwise we will get the following error:
 
-Thank you very much for your detailed explanation, it helped me a lot :)
+[    5.146634] Bad IO access at port 0x1 (return inb(port))
+[    5.147206] WARNING: CPU: 2 PID: 303 at lib/iomap.c:44 ioread8+0x4a/0x60
+[    5.150856] RIP: 0010:ioread8+0x4a/0x60
+[    5.160238] Call Trace:
+[    5.160470]  <TASK>
+[    5.160674]  marvell_cable_detect+0x6e/0xc0 [pata_marvell]
+[    5.161728]  ata_eh_recover+0x3520/0x6cc0
+[    5.168075]  ata_do_eh+0x49/0x3c0
 
-Zheyu Ma
+Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+---
+ drivers/ata/pata_marvell.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index 0c5a51970fbf..d2922699be5e 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -77,7 +77,9 @@ static int marvell_cable_detect(struct ata_port *ap)
+ 	switch(ap->port_no)
+ 	{
+ 	case 0:
+-		if (ioread8(ap->ioaddr.bmdma_addr + 1) & 1)
++		if (!ap->ioaddr.bmdma_addr)
++			return ATA_CBL_PATA_UNK;
++		else if (ioread8(ap->ioaddr.bmdma_addr + 1) & 1)
+ 			return ATA_CBL_PATA40;
+ 		return ATA_CBL_PATA80;
+ 	case 1: /* Legacy SATA port */
+-- 
+2.25.1
+
