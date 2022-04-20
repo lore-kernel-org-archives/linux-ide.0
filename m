@@ -2,230 +2,112 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E600C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 23:55:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 099B7C433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 20 Apr 2022 02:21:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347787AbiDSX6f (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Apr 2022 19:58:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45280 "EHLO
+        id S229791AbiDTCYL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Apr 2022 22:24:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343702AbiDSX6e (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 19:58:34 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB7411D325
-        for <linux-ide@vger.kernel.org>; Tue, 19 Apr 2022 16:55:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1650412550; x=1681948550;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=KKbVILJHDOZ2N6m0wCdUFAHCkLkQrMH0aZI7ADXChcU=;
-  b=SvegSOFN21sX9MOAObq6gv+/kaf4UCErQxBcAUX+WzU8ERMyN+gC0zZJ
-   jTRxnEPWYsJQSqi1yAJB4ABA39mwoioHHTsSAxsnj1bGkDXvA6Cegx87s
-   zkh7pS2Geiy29gJGNAf3BZZTjjMgPUPs6t7/j+Cf14Xxet35OM7lxlcBx
-   XsMfGBW6VjMOkpRxLnTJZcK2KQED7+oeJoNqrLv2iPof3LgW6125OFrun
-   IM6xQCYWHhTA8DIRbh8nMHbThJ/2CWdl8Qp2+bOp3x76w4e4gDiLy9oNv
-   wS78e6HHYcLX5rhDGLshvktYqsHQmYpC0KV99UlicDk6JUaU9fxMrhapG
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,274,1643644800"; 
-   d="scan'208";a="302502772"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Apr 2022 07:55:48 +0800
-IronPort-SDR: r8lAVJLyB8m8pbkUGA6j/D+QdOJnGEFoHyc6yk4foWuCCSdBFkbgsP/QGPmZs7aGyr92Y3pejP
- KsClZbdNmMyAyFEQfgBI552Sh7K80TWYTj1e7YYtKvLmtwj7ief80c1K59Yaa5jUozO4ChHT3K
- rAHXgA/1Ra2zscF/5lApbAPEid8pTLX+G0ux2Psv77eSAO4AYUivO9tjGdD4R9p27FlfNylR3I
- PLZfFCNISjIZH9oY3VPblQx5zPbIYehWVoynj7F4Ym0i8+EcXiSP7Z4Ik6sKxBeLRKtm/sgBjz
- 6QY3PzcjjHeLQZsj3H4v6EeB
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Apr 2022 16:26:53 -0700
-IronPort-SDR: OtzJiEpLIBfrkELHYJdu2HN8IEMgVOYU8FW2R3oVghbzp6v2THAhSYj3xDAqAW7QiqAl3FpUX4
- c1uAyeAmIbwOPc75qdPv/UhYRGGQkSYwcb/PCPmfRHLYtCXM/9TrgPSpTcshat8nQxebMIR/Vq
- 2YZmruhDhtJNUiwjLI7SHaFNK4+DoxQY86iz6k0D2QAp2HpzAlEhBuHZ1tljfM8xrSBiDcOgLf
- Ji0F1yklWosZ7wD7xvxGO4J+NHItk56dwarTXBTRGIZdrJDKkxgxSsL/v8gck0zVvYcM/G7NNm
- fEw=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Apr 2022 16:55:49 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Kjgfq5xPcz1SVp1
-        for <linux-ide@vger.kernel.org>; Tue, 19 Apr 2022 16:55:47 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1650412546; x=1653004547; bh=KKbVILJHDOZ2N6m0wCdUFAHCkLkQrMH0aZI
-        7ADXChcU=; b=LCqvtKdjRzDf5W/dOuU4+TSqtj4jJ6smpVH8RFQjhPvD0oWKSgK
-        VNbKgZqe7cD95Wa4oWwwzQwFfFjHRTAt35h60/w1of/oOG9jfbrw4iqvuZS7dtTe
-        aZtfiNytQfRTWGOEMs2tAcmlOzwo+vE0kys3+zkyflfi5RxJfbaxotJUsG4D0jJy
-        WojFgUn199a5v964YoPbv5FCMw8NXqS+6upFcwqh5wpiQQtGpdju9BDzMHfoMB6A
-        m60tmCvI2wmQoTXA6bLHrqCEivcB876f24T7gNJPXqdWy6pTqCQua5gzTqx0/f/H
-        kRzjX0Tbt6TjZYydknqyZIUM109PRCFtLhg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ZTnFKPiZ56k1 for <linux-ide@vger.kernel.org>;
-        Tue, 19 Apr 2022 16:55:46 -0700 (PDT)
-Received: from [10.225.163.14] (unknown [10.225.163.14])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Kjgff0k5zz1Rvlx;
-        Tue, 19 Apr 2022 16:55:37 -0700 (PDT)
-Message-ID: <56f889d7-2305-ba7a-42af-9580d8f7df93@opensource.wdc.com>
-Date:   Wed, 20 Apr 2022 08:55:36 +0900
+        with ESMTP id S1356849AbiDTCYK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 22:24:10 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CEDE2C64E;
+        Tue, 19 Apr 2022 19:21:26 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id z16so593263pfh.3;
+        Tue, 19 Apr 2022 19:21:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=g71afBe03kBYuxiT9CusOK+qbu46m0CphYm7CF5fRTQ=;
+        b=oA7X0J5wj1JyA7Pva/Rylb7Gvkt1hdiEl92H4JvGgufP2ViDVvxtwuh8qRawYrpAcy
+         XzFHjcS8ChQdptHrFyA//Ma1wo4UoOXQFCY7PA83PIbVE2h360oSOwhZbeC48vgJNmAa
+         Y9tylgfh/mY4MwcfljQ5q+Id9w2z0z7O0fisqY/Kulu6BMEBLwAEdNC7I+sSr9MCYmEp
+         Q1BigWesesQP9OkmRLHFGeqEFrolFOb1O4MFEDvTTktrgXIc7BTfFfU2WMY4EQ/bV+Gh
+         gHKLWF5R9nus9QwdY5/MMd/iPjVWk2/oMEMT348v1Y4qqCfaMcu7zmV466MJOGh93asZ
+         1USQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=g71afBe03kBYuxiT9CusOK+qbu46m0CphYm7CF5fRTQ=;
+        b=wtzqZgrZN0PjorSqePX8oRmuYTZyvy/BoYBW8maaMCpJOOtISJo3v5wmqq6D+Whzge
+         xPoxiZ+QTgBpFwcGM4MAqOikM4z5jRtuRZ4QlH8euI/SZsVpFv6q2nISQp3gyRfsWdEF
+         vt1tM0xOdiWCsS4PHQAB66+pQb45gEWsOsHSq9OGXjR+GCcVPPN//EYmgYA7ujCu1G25
+         9k1FYXCwEiWKRhciw2S/BVtPehVNuZhfvEGXzczMwl/M180pA5zzrM/rJSyuy8zx+k57
+         zOzT7IHs1NFnzDBQNa3aLnayppI9kDq7ivNXz9Tffndumb3y24IFDYA7SAPMpyiWXJNk
+         briA==
+X-Gm-Message-State: AOAM531iP8LBE49UuZc3KXsbHhiDeau+z1ZIbcEjaNDAIsrwaoqJGdjI
+        wHFaPhGhksCIPRuDX0G29tLGWXApgJ8ZUBrSqQ==
+X-Google-Smtp-Source: ABdhPJxdhiqCMbSuciWgIU0XOlbdgGSS7iKlAAMJ7MpBmeJRWin2AJ41Z/DwmoMHHj4EayThMxJYFg0TorvHa4sa8Hc=
+X-Received: by 2002:a63:ce45:0:b0:399:1124:fbfe with SMTP id
+ r5-20020a63ce45000000b003991124fbfemr17587195pgi.542.1650421286100; Tue, 19
+ Apr 2022 19:21:26 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH 13/48] ARM: pxa: use pdev resource for palmld mmio
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>, robert.jarzmik@free.fr,
-        linux-arm-kernel@lists.infradead.org
-Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Philipp Zabel <philipp.zabel@gmail.com>,
-        Lubomir Rintel <lkundrak@v3.sk>,
-        Paul Parsons <lost.distance@yahoo.com>,
-        Tomas Cech <sleep_walker@suse.com>,
-        Sergey Lapin <slapin@ossfans.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-input@vger.kernel.org,
-        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        alsa-devel@alsa-project.org, Jens Axboe <axboe@kernel.dk>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-References: <20220419163810.2118169-1-arnd@kernel.org>
- <20220419163810.2118169-14-arnd@kernel.org>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220419163810.2118169-14-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <CAMhUBjkVME8D5KsHvT=uddBsW_Bh6wr7qeXS=UpQD4LgPmHffQ@mail.gmail.com>
+ <05433153-0424-ab66-1573-993d0490c5bc@opensource.wdc.com> <CAMhUBj=JsiHnnQzrqPKzA=Z2+589Ju_HE0cFKyon58Fk0waeAQ@mail.gmail.com>
+ <3045fde1-2d5b-e731-ef18-6cf3f0987259@opensource.wdc.com>
+In-Reply-To: <3045fde1-2d5b-e731-ef18-6cf3f0987259@opensource.wdc.com>
+From:   Zheyu Ma <zheyuma97@gmail.com>
+Date:   Wed, 20 Apr 2022 10:21:14 +0800
+Message-ID: <CAMhUBjnG75XANF1E5KUyigKSmhxzvJytfapieC6_jpKdiFwzSg@mail.gmail.com>
+Subject: Re: [BUG] ata: pata_marvell: Warning when probing the module
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/20/22 01:37, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> The palmld header is almost unused in drivers, the only
-> remaining thing now is the PATA device address, which should
-> really be passed as a resource.
-> 
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: linux-ide@vger.kernel.org
-> Acked-by: Robert Jarzmik <robert.jarzmik@free.fr>
-> Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  arch/arm/mach-pxa/palmld-pcmcia.c             |  3 ++-
->  arch/arm/mach-pxa/palmld.c                    | 12 +++++++++---
->  arch/arm/mach-pxa/{include/mach => }/palmld.h |  2 +-
->  drivers/ata/pata_palmld.c                     |  3 +--
->  4 files changed, 13 insertions(+), 7 deletions(-)
->  rename arch/arm/mach-pxa/{include/mach => }/palmld.h (98%)
-> 
-> diff --git a/arch/arm/mach-pxa/palmld-pcmcia.c b/arch/arm/mach-pxa/palmld-pcmcia.c
-> index 07e0f7438db1..720294a50864 100644
-> --- a/arch/arm/mach-pxa/palmld-pcmcia.c
-> +++ b/arch/arm/mach-pxa/palmld-pcmcia.c
-> @@ -13,9 +13,10 @@
->  #include <linux/gpio.h>
->  
->  #include <asm/mach-types.h>
-> -#include <mach/palmld.h>
->  #include <pcmcia/soc_common.h>
->  
-> +#include "palmld.h"
-> +
->  static struct gpio palmld_pcmcia_gpios[] = {
->  	{ GPIO_NR_PALMLD_PCMCIA_POWER,	GPIOF_INIT_LOW,	"PCMCIA Power" },
->  	{ GPIO_NR_PALMLD_PCMCIA_RESET,	GPIOF_INIT_HIGH,"PCMCIA Reset" },
-> diff --git a/arch/arm/mach-pxa/palmld.c b/arch/arm/mach-pxa/palmld.c
-> index d85146957004..d821606ce0b5 100644
-> --- a/arch/arm/mach-pxa/palmld.c
-> +++ b/arch/arm/mach-pxa/palmld.c
-> @@ -29,8 +29,8 @@
->  #include <asm/mach/map.h>
->  
->  #include "pxa27x.h"
-> +#include "palmld.h"
->  #include <linux/platform_data/asoc-pxa.h>
-> -#include <mach/palmld.h>
->  #include <linux/platform_data/mmc-pxamci.h>
->  #include <linux/platform_data/video-pxafb.h>
->  #include <linux/platform_data/irda-pxaficp.h>
-> @@ -279,9 +279,15 @@ static inline void palmld_leds_init(void) {}
->   * HDD
->   ******************************************************************************/
->  #if defined(CONFIG_PATA_PALMLD) || defined(CONFIG_PATA_PALMLD_MODULE)
-> +static struct resource palmld_ide_resources[] = {
-> +	DEFINE_RES_MEM(PALMLD_IDE_PHYS, 0x1000),
-> +};
-> +
->  static struct platform_device palmld_ide_device = {
-> -	.name	= "pata_palmld",
-> -	.id	= -1,
-> +	.name		= "pata_palmld",
-> +	.id		= -1,
-> +	.resource	= palmld_ide_resources,
-> +	.num_resources	= ARRAY_SIZE(palmld_ide_resources),
->  };
->  
->  static struct gpiod_lookup_table palmld_ide_gpio_table = {
-> diff --git a/arch/arm/mach-pxa/include/mach/palmld.h b/arch/arm/mach-pxa/palmld.h
-> similarity index 98%
-> rename from arch/arm/mach-pxa/include/mach/palmld.h
-> rename to arch/arm/mach-pxa/palmld.h
-> index 99a6d8b3a1e3..ee3bc15b71a2 100644
-> --- a/arch/arm/mach-pxa/include/mach/palmld.h
-> +++ b/arch/arm/mach-pxa/palmld.h
-> @@ -9,7 +9,7 @@
->  #ifndef _INCLUDE_PALMLD_H_
->  #define _INCLUDE_PALMLD_H_
->  
-> -#include "irqs.h" /* PXA_GPIO_TO_IRQ */
-> +#include <mach/irqs.h> /* PXA_GPIO_TO_IRQ */
->  
->  /** HERE ARE GPIOs **/
->  
-> diff --git a/drivers/ata/pata_palmld.c b/drivers/ata/pata_palmld.c
-> index 2448441571ed..400e65190904 100644
-> --- a/drivers/ata/pata_palmld.c
-> +++ b/drivers/ata/pata_palmld.c
-> @@ -25,7 +25,6 @@
->  #include <linux/gpio/consumer.h>
->  
->  #include <scsi/scsi_host.h>
-> -#include <mach/palmld.h>
->  
->  #define DRV_NAME "pata_palmld"
->  
-> @@ -63,7 +62,7 @@ static int palmld_pata_probe(struct platform_device *pdev)
->  		return -ENOMEM;
->  
->  	/* remap drive's physical memory address */
-> -	mem = devm_ioremap(dev, PALMLD_IDE_PHYS, 0x1000);
-> +	mem = devm_platform_ioremap_resource(pdev, 0);
->  	if (!mem)
->  		return -ENOMEM;
->  
+On Wed, Apr 13, 2022 at 11:42 AM Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
+>
+> On 4/12/22 15:34, Zheyu Ma wrote:
+> > On Mon, Apr 11, 2022 at 7:53 AM Damien Le Moal
+> > <damien.lemoal@opensource.wdc.com> wrote:
+> >>
+> >> On 4/10/22 15:30, Zheyu Ma wrote:
+> >>> Hello,
+> >>>
+> >>> I found a bug in the pata_marvell module.
+> >>> When probing the driver, it seems to trigger the error path and
+> >>> executes the function marvell_cable_detect(), but the
+> >>> 'ap->ioaddr.bmdma_addr' is not initialized, which causes a warning.
+> >>
+> >> I do not have this hardware so I cannot debug this. Please debug it and
+> >> send a patch. bmdma_addr is normally set in ata_pci_bmdma_init(), but some
+> >> drivers set it manually in their probe functions. No idea about the
+> >> marvell driver, I have not checked it.
+> >
+> > To be honest I don't have a good solution to this problem, because
+> > other drivers don't have similar behavior. The marvell driver doesn't
+> > even initialize 'bmdma_addr' before calling 'cable_detect'.
+>
+> Then this is the bug that needs to be fixed, no ?
+>
+> > So a simple idea I have is to check if 'bmdma_addr' is 0 before
+> > reading it and if so return the error code ATA_CBL_NONE.
+>
+> And if indeed, even after it is initialized it is still 0, then yes, this
+> change seems sensible.
 
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Sorry for the late reply, I found the root cause of this issue.
+The marvell driver execute the ata_pci_bmdma_init() function, but the
+driver just returned at the following code snippet.
 
--- 
-Damien Le Moal
-Western Digital Research
+if (pci_resource_start(pdev, 4) == 0) {
+      ata_bmdma_nodma(host, "BAR4 is zero");
+      return;
+}
+
+So the driver didn't initialize the 'bmdma_addr' but used it in the
+cable_detect() function.
+It seems that the problem is caused by the hardware, is this a bug
+that we should fix?
+
+Zheyu Ma
+
+
+Zheyu Ma
