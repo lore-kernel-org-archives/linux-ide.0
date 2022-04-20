@@ -2,56 +2,70 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA52C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 20 Apr 2022 07:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A4EAC433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 20 Apr 2022 08:32:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376469AbiDTHxy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 20 Apr 2022 03:53:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49560 "EHLO
+        id S1358550AbiDTIfb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 20 Apr 2022 04:35:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376446AbiDTHxk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 20 Apr 2022 03:53:40 -0400
-X-Greylist: delayed 460 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 20 Apr 2022 00:50:38 PDT
-Received: from mail.fixingbiz.pl (mail.fixingbiz.pl [217.61.22.139])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05D283BBEF
-        for <linux-ide@vger.kernel.org>; Wed, 20 Apr 2022 00:50:38 -0700 (PDT)
-Received: by mail.fixingbiz.pl (Postfix, from userid 1001)
-        id A6376A23DD; Wed, 20 Apr 2022 08:41:57 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fixingbiz.pl; s=mail;
-        t=1650440542; bh=FDuFY3XQoq0gMX1b2gxgT7Py2p4Sxl0PJZYZ4NVaPho=;
-        h=Date:From:To:Subject:From;
-        b=kcdHqBpo5oy2iaHZemrENujG5mB2sT1e2e4zK2IaOz6WXqmolhss+TX8Zjsweef+6
-         tjnYwO4zj5EBRNV8ZHX6XcH0WHcaC5TrmPhbssmKC3XW1bVuDB2vvAVtCopqoUCBYC
-         ccDEbuLdcmtkwv68cWRLQZETp5QVooomK+zw0R63hcjZ3y9M60cwHseqEAs5qeWZ8Q
-         4VmQ85UZantRQIV+ZnoYK8DErHNZGT6tUQdqZUZbEUEQZkPpK+bdvGvq5l0jqXBZjM
-         cXBRx29jsbiEjMCU/lF3vqqX4OWh5mKVbtQ3XSo4Zzz4rGX8UvQu71KnwWk0AWM+di
-         NDV+yoRWY4HUQ==
-Received: by mail.fixingbiz.pl for <linux-ide@vger.kernel.org>; Wed, 20 Apr 2022 07:40:53 GMT
-Message-ID: <20220420074501-0.1.1x.6u90.0.5o1c00i9a8@fixingbiz.pl>
-Date:   Wed, 20 Apr 2022 07:40:53 GMT
-From:   =?UTF-8?Q? "Przemys=C5=82aw_Wr=C3=B3blewski" ?= 
-        <przemyslaw.wroblewski@fixingbiz.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.fixingbiz.pl
+        with ESMTP id S234390AbiDTIfa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 20 Apr 2022 04:35:30 -0400
+Received: from ms.lwn.net (ms.lwn.net [IPv6:2600:3c01:e000:3a1::42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61BD112608;
+        Wed, 20 Apr 2022 01:32:44 -0700 (PDT)
+Received: from localhost (mdns.lwn.net [45.79.72.68])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ms.lwn.net (Postfix) with ESMTPSA id 0C778536;
+        Wed, 20 Apr 2022 08:32:42 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 0C778536
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1650443564; bh=EeEpIfdigfffg8NaEbRzW8uYlyB3A0q+DgF2ulwWiUo=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=LAdYtryJ4UJZWBLSyRVsevByEqqkkmGoaT9+bXQBI1eIKjNW9uFGKs1CAdF20NOfP
+         Jf9Nc5prp9OQ2bSfaAVxXcXUYNEzO1KqaCswMj4z7A7ygnbISENf36Zehr1RZTJ5rK
+         B/7eUV5V60IvYqU6sEng67XPNfd5jQSaaJc7liHOynFtPYpBcbnqeQt7GIBpUXpDM7
+         xq2MtFdNkCauI4/akd5SfsysjdjqcrnmbKXikN4ozg6dNS49AZ8kZv14pmbO2YJ8JJ
+         4GlxBLj7wmmfaybwyjqfH71+gyDpRx4534/e7FvrWk6g0bnBtEYOc2E3b78UGqyNZp
+         b+JgeK8sDi1mQ==
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Randy Dunlap <rdunlap@infradead.org>, linux-doc@vger.kernel.org
+Cc:     patches@lists.linux.dev, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org
+Subject: Re: [PATCH] Drop Documentation/ide/
+In-Reply-To: <851c5e50-920e-579a-717d-10284abd4d0a@opensource.wdc.com>
+References: <20220419011021.15527-1-rdunlap@infradead.org>
+ <7991758d-16b4-c9c4-0425-c2ec41943db8@opensource.wdc.com>
+ <87ilr5zgj2.fsf@meer.lwn.net>
+ <851c5e50-920e-579a-717d-10284abd4d0a@opensource.wdc.com>
+Date:   Wed, 20 Apr 2022 02:32:39 -0600
+Message-ID: <87k0bk40k8.fsf@meer.lwn.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Damien Le Moal <damien.lemoal@opensource.wdc.com> writes:
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
+>>> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>>>
+>>> Jonathan,
+>>>
+>>> Are you going to take this patch or do you want me to queue it through the
+>>> libata tree ?
+>> 
+>> I'll take it, unless you want to carry it for some reason - just let me
+>> know.
+>
+> No particular reason for me to take it. Just checking :)
+> Please take it.
 
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+Done.
 
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
+Thanks,
 
-
-Pozdrawiam,
-Przemys=C5=82aw Wr=C3=B3blewski
+jon
