@@ -2,123 +2,131 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4421EC4167B
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Apr 2022 15:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB1EEC433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Apr 2022 23:40:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1390094AbiDUPcM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Apr 2022 11:32:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58464 "EHLO
+        id S1442613AbiDUXng (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Apr 2022 19:43:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1390087AbiDUPcL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 11:32:11 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 772EB33A32;
-        Thu, 21 Apr 2022 08:29:21 -0700 (PDT)
-Received: from mail-wr1-f41.google.com ([209.85.221.41]) by
- mrelayeu.kundenserver.de (mreue011 [213.165.67.97]) with ESMTPSA (Nemesis) id
- 1MkYLW-1oBuQD30Nq-00m5ng; Thu, 21 Apr 2022 17:29:19 +0200
-Received: by mail-wr1-f41.google.com with SMTP id x18so7248616wrc.0;
-        Thu, 21 Apr 2022 08:29:19 -0700 (PDT)
-X-Gm-Message-State: AOAM532F1OQBCsQtktVjZKRSJK64LtqU9nFHY6KcFd2iVZkNYZEmagbp
-        C3L8OX7rHNS0jY7BBOIrve6JXjLvwveEHNE0VcU=
-X-Google-Smtp-Source: ABdhPJxKpospiPlAgrLUewrHWmh0snRbQc7E1OFrJMr7NkFWoVWNdjC/+qxZuhyVxJOjyOGXkiqrvZW6ZgPa03gRamE=
-X-Received: by 2002:adf:e106:0:b0:20a:b31b:213d with SMTP id
- t6-20020adfe106000000b0020ab31b213dmr199757wrz.219.1650554959163; Thu, 21 Apr
- 2022 08:29:19 -0700 (PDT)
+        with ESMTP id S1442612AbiDUXnf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 19:43:35 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE72465CF
+        for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2022 16:40:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1650584444; x=1682120444;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=DTD+QUfq+qyQqjpjS3+49IUYM4AhsnTjMugrXbtLUzg=;
+  b=S2v8LIpbR0hmTF/hyNvl9Xxo7Fx0Q1h9iR9lZK3aTcdQMlqnrVErjXd+
+   F0tZzDN1spsOMdFzpognCdXATyqogg5stm9vG65lXYl/ca+uMCLT2zMDz
+   c7cXx9i5Aybb50fA0MiQCtMIeEXhCG8S7SAK2jeLLO23ljrVKvJWnjG70
+   oKREjUuc7nNCAX/tlyVPu9kgdP52KNfhyGwwCYCvjzFvchc1yAokMcpEY
+   YpKtERQIISXiK+Qv54Kn+0HjL5/Gj0myqd6J+SmYDv0pwntB9J1NBYHPa
+   RHzOQVg5lEdSgiABH2kxei3dVcAkVor8MT2qfsUdprRH4QhGPU4EgB+Y4
+   w==;
+X-IronPort-AV: E=Sophos;i="5.90,280,1643644800"; 
+   d="scan'208";a="310479414"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 22 Apr 2022 07:40:44 +0800
+IronPort-SDR: 2AKy6u+bQnPwDL6FmsR2gJt0SemopHa0cWIKQvHCWiSDCsGjgHmpzWbMtPGGI1pL80YQO3NvSc
+ pgJqAC6J0LAmsCnONLVQYmzyaAJpwmZnTpOT4xLz/r5wEZR8QxjV2hNzBawlUjenjPew/HJaKR
+ FDYfV7wRXmWgA8eSBULrs9YaJ7IAwwMJEu6HmOlEp3zjV0zBsoax/hilLhZ9bn26oe5gZtgEpn
+ sI6Urb0Dq4dYTqPIDj/o8qo8U1gW4uwQgqCICiBNFugB3jOlalp5P71Lu8YJJazccjZIS1mw15
+ oNdK9qICeBHOGpbSp3XeDzpS
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Apr 2022 16:11:01 -0700
+IronPort-SDR: VCDkvxmcNjFv2dISfrveN2N33loiFs1jQNLZISadWHzdEcy5VnFE6hj22MGCxFBYGypa0H0B+7
+ yTTumvH7AA3tIM6CzOtqEXpws1LMbwkZJdVA+XZCfiwVjriAdnUxO0u6axEHgZb5Dg5SPxbOCj
+ wDqUQ6aMSlPmTBJRMV2+T9CztqxUx7WyNQ/2a47HrJNKMBZS+MNL72TKGOkNQF1dtz9vi0ZtoP
+ vZ5p9QVy35rXgUUfyIUiec3V16UfOxP/pxIecvl2XVEHxIVfMoIBRy2tilXPt0irMeMt4foCqz
+ R6c=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Apr 2022 16:40:44 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KkvDW5fppz1SVp0
+        for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2022 16:40:43 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1650584443; x=1653176444; bh=DTD+QUfq+qyQqjpjS3+49IUYM4AhsnTjMug
+        rXbtLUzg=; b=NNIvtNP+5Qq/VG9YN2OnL/VFWEMVnWb52HiOHjLsA1x5FPOcUFq
+        UQ6XC9lYTQZP8N6FJrfSl9jFRt/7DU9A3CEAYtdRQrAGPkPi+VJKNoArWjqCr4HM
+        aOV0sjS+fUpqom4HHbwTfuqmP85A0yqlgPVfxcI6kU3/F4EtAywC/CgQlHFMBYFe
+        v4wluF8FzaEewlYJg4oHE7xVcuhjBeO2p9wqBlNcG4N0IKRuhJc7mA0pmZQ9JIly
+        0/ho27N8WXmlxz+VKKRj9MSa1XACdmWMSPBdMK+sP2NT6FsWL8peUC4G3e3Ky3Zj
+        P/6JlH7VvMbD6xsoGcKpwVxDUASjNcHVzZg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id ZIrtjB-hi7K7 for <linux-ide@vger.kernel.org>;
+        Thu, 21 Apr 2022 16:40:43 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KkvDV2pRFz1Rvlx;
+        Thu, 21 Apr 2022 16:40:42 -0700 (PDT)
+Message-ID: <1adc3cfc-f7e4-7bec-5308-2fc45a0b3361@opensource.wdc.com>
+Date:   Fri, 22 Apr 2022 08:40:41 +0900
 MIME-Version: 1.0
-References: <20220419163810.2118169-1-arnd@kernel.org>
-In-Reply-To: <20220419163810.2118169-1-arnd@kernel.org>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Thu, 21 Apr 2022 17:29:03 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a1s_8_hfZdFN9-H_PoCMQSjhYcaS3peDqc7LWBUj_YqbA@mail.gmail.com>
-Message-ID: <CAK8P3a1s_8_hfZdFN9-H_PoCMQSjhYcaS3peDqc7LWBUj_YqbA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/48] ARM: PXA multiplatform support
-To:     Robert Jarzmik <robert.jarzmik@free.fr>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Philipp Zabel <philipp.zabel@gmail.com>,
-        Lubomir Rintel <lkundrak@v3.sk>,
-        Paul Parsons <lost.distance@yahoo.com>,
-        Sergey Lapin <slapin@ossfans.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        linux-clk <linux-clk@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
-        linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:VpvU5C0aiwrphWSBK+To00JHYs2UD49gYqNafJvfmZ6SA8ouFSO
- Y6orZvpb50igM1GRNMF7jP4c1XA3zImGl9kE7VRPtd6EnE6T3xvEgBnF455ZBSFYazNTVSu
- ix0ABxZLwEjWNNGvv65fRXWFI9L2Qgko/G/zLwyoU3QLdq0N/zn0kEXH2OtVT4MWwTRl0B5
- ZKm4Y5B08EkUvTiozMtdA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:8YtkNir8MkE=:4uPl7TslyU5ucHsASQ+olD
- pZLSr3VniYuw2pteQB/wHqdtkRjP1q0ozN13VXFJUZ36ue+Ltx/Iv1QdPhcgFDjhWyftQZAyi
- QbrRHd8Icn26U2FsiJGuhKxZ5Zl4grMoxjbaUlWo3HIt/BYxzif5nSCj1vsUvEAKJfmQFPqtg
- zEy7uiZSDhTJ/u8AqlWQyOwNk2cIe9c98NAlZYCcaa2p3fBn4HlP0XbujgUpvw3P0NUKq3Pj6
- wFcAHbgLdroT0seYpCaXaCdG3qsd5c1FtSLYVMVYLJdwdHs5b6aO7AbexVik6YF5Z4KeTsuYr
- h/mtpp/IAwIDEpKKwe1tNHxMmq8On5foB5wV9p6KIQ5fkKnArVVoOoUWBlG4mv6jYFQFXvKdL
- PAe3fkzncoHT9mw0vlt05SzEVb+UXvHCwZlwmYnmzYRt9g19u0X9ojfjMIRUUc9usnI3gtUPf
- 4J4YlT2TrS2S0W13C2GDXNvaqhN0pBWiAVNVj+tIefAcedlxCxp9FXvaxn97FXDOX798qwNI7
- WFo6pfGwkguGVV0nmlAmtvgaQz9j7jZ5vsOeYy9IktMajvrt6LfAYATxKdGAoTpYE2c1eZZzE
- kVWJZ2233QpTxSpWIqQXnVj8ubPhZqC8iwicuam/2v++KSX6S8SL+RswyTSEJagejDCkUXrwT
- XcqgF7UdkZZQaJ95peTH6t+xJ3aLKZOMt2cEd4H4rKgHvVSJ3PQQytl7NaxTZpJPpvF7tYXLF
- OJhYozDyLF42ds0ozPclYzSVNPW1V4xeupHCw10USUu41VHVUzPivTF7ztkRcO9RE+SbFv1NB
- T86l3zXv563Min5axBE9nVemp+mM1mTcppUh3rQbcwnFexQtrI=
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH] ahci: Add a generic 'controller2' RAID id
+Content-Language: en-US
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-ide@vger.kernel.org
+References: <165051164674.3740862.4706111262486927842.stgit@dwillia2-desk3.amr.corp.intel.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <165051164674.3740862.4706111262486927842.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 19, 2022 at 6:37 PM Arnd Bergmann <arnd@kernel.org> wrote:
->
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> This revisits a series I sent a few years ago:
->
-> https://lore.kernel.org/lkml/20191018154052.1276506-1-arnd@arndb.de/
->
-> All the other ARMv5 conversions are under way now, with
-> OMAP1 being the only one still not in linux-next yet,
-> and PXA completing the set.
->
-> Most of the patches are unchanged from before, furtunately
-> the PXA code is fairly stable. I addressed Robert's comments,
-> pulled in two patches from Dmitry, and added the last a the
-> final four patches to finish off the multiplatform conversion.
->
-> I hope someone is left to test these on PXA: if this works,
-> I'd like to merge it for 5.19. A git tree with these is available
-> for testing at
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git/log/?h=pxa-multiplatform-5.18
+On 4/21/22 12:27, Dan Williams wrote:
+> Intel server platforms that support 'RAID', i.e. have platform firmware
+> support for software-RAID metadata + features that the kernel also
+> understands, maintain the same device-ids for RAID from generation to
+> generation. This is in contrast to client platforms that have tended to
+> roll new device-ids every platform generation. However, even though
+> server platform keep the ids there are still unique device-ids per
+> controller instance. To date there have only been 2 controllers on these
+> platforms, but platforms code named Emmitsburg add a third controller.
+> 
+> Add the device-id for this third controller and collect it with the
+> other generic server RAID ids.
+> 
+> As mentioned here [1], the pain of continuing add new and different
+> device-ids for RAID mode to this file [2] has been heard. Ideally this
+> device-id would not matter and the class code would remain
+> PCI_CLASS_STORAGE_SATA_AHCI regardless of the RAID mode, but other
+> operating systems depend on the class code *not* being AHCI when the
+> device is in RAID mode. That said, going forward there is little reason
+> for new server RAID ids to be added as they can simply reuse one of the
+> existing ids even for a new controller. Server software RAID features
+> continue to be supported on Linux. Client software RAID features
+> continue to be not supported and the recommendation there remains to set
+> the device to AHCI mode in platform firmware.
+> 
+> Link: https://lore.kernel.org/all/8e61fb0104422e8d70701e2ddc7b1ca53f009797.camel@intel.com [1]
+> Link: https://lore.kernel.org/all/20201119165022.GA3582@infradead.org/ [2]
+> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-I have updated the branch based on the feedback I got, and
-done a preliminary merge into the for-next branch, so this work
-should show up in linux-next. I expect to rebase this particular
-branch before the merge window, to add further Acks or
-fix regressions in place. (I don't do this for the other branches).
+Applied to for-5.19. Thanks !
 
-Let me know if there are any show-stoppers or patches that need
-more work. I realize that this is a lot to review and that there is
-limited reviewer bandwidth as most of the original developers
-have moved on from PXA a long time ago.
 
-       Arnd
+-- 
+Damien Le Moal
+Western Digital Research
