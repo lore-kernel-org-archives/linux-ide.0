@@ -2,103 +2,66 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16CA2C433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Apr 2022 08:44:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83C7DC4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Apr 2022 09:45:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229769AbiDUIrJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Apr 2022 04:47:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56594 "EHLO
+        id S1387849AbiDUJsf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Apr 2022 05:48:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245396AbiDUIrI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 04:47:08 -0400
-Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03EC1183BF;
-        Thu, 21 Apr 2022 01:44:20 -0700 (PDT)
-Received: by mail-qt1-x82c.google.com with SMTP id fu34so2762737qtb.8;
-        Thu, 21 Apr 2022 01:44:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=R0CH1Evld8HOQJZRIBGp4ICwl2H4Qn/SiHpW53g4anA=;
-        b=dyqFh3cLLvYBsbeeoUA1jYq+gKW2g+cohG6mSxt60xHBf73Rv9yg/stwYRuqxLLt4n
-         vfInvkFFsYEgZKp2ec70FK2o3yNh2sMXAj+MPVGVZxbkH9i3uEEPfkFBs9p6yYLcJqJ5
-         YKeltbgO2VNFu8XDUJaRuGgHaZE3TNIHk/YOs8KmTpc6JaBfI/9uetWl0LDbqXzORfKl
-         027aGJa5w4yUi8kGs/gIYchNNQMXUaTOGPcnNALl54OAd+Q3fu+Ave4IKO29UvCMugqI
-         JgLYg4+0TEuB4y1lEvZgTcMTCN8spMVc+NLt/XF1aMir+K/AglGNrnXfZz5ihFURCva4
-         q68g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=R0CH1Evld8HOQJZRIBGp4ICwl2H4Qn/SiHpW53g4anA=;
-        b=kAYY/Vl4rDBlD6bysRvLKgLVQwaYQSGD0GFAWErRJSoesqq44d2S+RViRC6FfJtdGo
-         O9qef3x3kH0w8vdydhDysPZbSpfPYR4J7z3h8b1ncREnTZZVQrPEzLKAECSl/RH4cavI
-         uEHDQ53+CNmIVGMCLmLlPkZROCm+pOroQzIK8uMTuTBY7V4sM/rgHhT2vGQkTJb25SvS
-         9mCI9aI96pSGiU6RL5dQ3VJRWRw1+TUr4eTqdU1HWtO5/z9Y9ZVLRDXIEQKGVrzgCo9b
-         MpAXnuuNsacaz63vB3Zi1W+l1atIIEkNCd1WhcU70Pk2YW10dO6WrGoLapl+vEz2gZ13
-         cOww==
-X-Gm-Message-State: AOAM531QeXrwxK+QsNUY74jNXTeBHMy2+syBU3gQvZubyi723yFmeaoN
-        zMfmvOXW8a0iPwnz1qeVHn8svpTnbMc=
-X-Google-Smtp-Source: ABdhPJxAHXEn4TzgTnmqUB3vImqCTD+QIjmk4AuzhppJDBu/lz49sPKpFmQY17iGK1x75OwdvZMmgA==
-X-Received: by 2002:ac8:5d89:0:b0:2e2:74e:f1bb with SMTP id d9-20020ac85d89000000b002e2074ef1bbmr16538786qtx.219.1650530659026;
-        Thu, 21 Apr 2022 01:44:19 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id c13-20020a37e10d000000b0069c268c37f1sm2646557qkm.23.2022.04.21.01.44.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Apr 2022 01:44:18 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: lv.ruyi@zte.com.cn
-To:     linus.walleij@linaro.org, damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lv Ruyi <lv.ruyi@zte.com.cn>, Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] ata: Make use of the helper function devm_platform_ioremap_resource()
-Date:   Thu, 21 Apr 2022 08:44:12 +0000
-Message-Id: <20220421084412.2615081-1-lv.ruyi@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S1387889AbiDUJse (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 05:48:34 -0400
+X-Greylist: delayed 62 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 21 Apr 2022 02:45:44 PDT
+Received: from ZXBJCAS.zhaoxin.com (zxbjcas.zhaoxin.com [124.127.214.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25DD224BFF;
+        Thu, 21 Apr 2022 02:45:44 -0700 (PDT)
+Received: from zxbjmbx1.zhaoxin.com (10.29.252.163) by ZXBJCAS.zhaoxin.com
+ (10.29.252.3) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Thu, 21 Apr
+ 2022 17:43:37 +0800
+Received: from zx-HX001EM1.zhaoxin.com (10.29.8.9) by zxbjmbx1.zhaoxin.com
+ (10.29.252.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Thu, 21 Apr
+ 2022 17:43:37 +0800
+From:   Runa Guo-oc <RunaGuo-oc@zhaoxin.com>
+To:     <damien.lemoal@opensource.wdc.com>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH 0/2] ahci: Add some controls on actual LPM capability
+Date:   Thu, 21 Apr 2022 17:43:35 +0800
+Message-ID: <1650534217-14052-1-git-send-email-RunaGuo-oc@zhaoxin.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.29.8.9]
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ zxbjmbx1.zhaoxin.com (10.29.252.163)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Lv Ruyi <lv.ruyi@zte.com.cn>
+On some platform, when OS enables LPM by default (eg, min_power),
+then, PhyRdy Change cannot be detected if ahci supports no LPM;
+DIPM Slumber request cannot be disallowed if ahci's CAP.PSC is
+set to '1' and CAP.SSC is cleared to '0', which may cause ahci
+to be an uncertain state (same for Partial).
 
-Use the devm_platform_ioremap_resource() helper instead of calling
-platform_get_resource() and devm_ioremap_resource() separately.Make the
-code simpler without functional changes.
+In ahci spec, PhyRdy Change cannot coexist with LPM;
+when CAP.PSC/SSC is cleared to '0', the PxSCTL.IPM
+field must be programmed to disallow device initiated
+Partial/Slumber request.
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Lv Ruyi <lv.ruyi@zte.com.cn>
----
- drivers/ata/sata_gemini.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+Adds suports to control these cases on actual LPM capability.
 
-diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
-index 00e1c7941d0e..b729e9919bb0 100644
---- a/drivers/ata/sata_gemini.c
-+++ b/drivers/ata/sata_gemini.c
-@@ -318,7 +318,6 @@ static int gemini_sata_probe(struct platform_device *pdev)
- 	struct device_node *np = dev->of_node;
- 	struct sata_gemini *sg;
- 	struct regmap *map;
--	struct resource *res;
- 	enum gemini_muxmode muxmode;
- 	u32 gmode;
- 	u32 gmask;
-@@ -329,11 +328,7 @@ static int gemini_sata_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	sg->dev = dev;
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!res)
--		return -ENODEV;
--
--	sg->base = devm_ioremap_resource(dev, res);
-+	sg->base = devm_platform_ioremap_resource(pdev, 0);
- 	if (IS_ERR(sg->base))
- 		return PTR_ERR(sg->base);
- 
+Runa Guo-oc (2):
+  ahci: Add PhyRdy Change control on actual LPM capability
+  ahci: Add PxSCTL.IPM control on actual LPM capability
+
+ drivers/ata/ahci.c        |  9 +++++++++
+ drivers/ata/libata-eh.c   |  4 ++++
+ drivers/ata/libata-sata.c | 12 +++++++++++-
+ include/linux/libata.h    |  4 ++++
+ 4 files changed, 28 insertions(+), 1 deletion(-)
+
 -- 
-2.25.1
+2.7.4
 
