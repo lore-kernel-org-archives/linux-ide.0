@@ -2,87 +2,123 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7792BC433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Apr 2022 15:24:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4421EC4167B
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Apr 2022 15:29:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351585AbiDUP1Y (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Apr 2022 11:27:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55778 "EHLO
+        id S1390094AbiDUPcM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Apr 2022 11:32:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232403AbiDUP1X (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 11:27:23 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56AE543AC0
-        for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2022 08:24:33 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id n8so5205728plh.1
-        for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2022 08:24:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2JlTE8rVe4wrB+PjFdFtyIEmw0WzZvH7ugv0zmVajeo=;
-        b=hn2gQPEtkGhTGkqg3FeJ7nomTp49/BXpWEsw/znzdWHSv1nHP6kv+np9TFHksjAIU+
-         ik40c2z0uGsQUyoCsevdh80baYLwJzdHZFXoOljhaiOV/pyOY7z/Q+0Wkxzd7T6sl+M7
-         cOkYiT4P8UWDCn5M1rPKAkoxVNzZiq73g1/bhJZjA3H44vBXW1XcDN6/v5ra7SoG+nbD
-         LA0G4DWrH10nroCGkKpCOeM4NcYn10Od3bueSIi+t8P85RMH3dk64TZvXa+JB7lzmIc8
-         SRkYJAd/C0pvTOPiA1zXuEPskVvMvrEAJc9AjH5ba9fLG+cxXA5rXiAQPQKPWLOlxpnz
-         CF+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=2JlTE8rVe4wrB+PjFdFtyIEmw0WzZvH7ugv0zmVajeo=;
-        b=ITXfBsVytOnG/U+5Qg9ARSr1j6Mulj93h+2RbpAPf2YaaE83sj+ZaTcDgGvr25fKB7
-         cbeOxLiNnL3qCZDp6AND6Z966Hhy2olwWuaUtKPPwcpsrZ/EeAuqWANOig6mfRVQyLqm
-         EPR8FYV1KegfmUP11KCHXs0EdrFzytioOw5R5W8GyggCUCrt5hEEhzahZ+k2mcdaD8hg
-         i+Zyyyhu6p9K09fusgJ5yFZ6vn7rFjXLr5/ObRwaohGv9+rXV/bM+fXUNGVWN1rwJ6xT
-         QOCTyMA+y9GTE+QwmzgXTgBm90n/UVNLSyzZKgpy4JHM8c31SDCVdSWWQeuyKM9DrVUk
-         6BPg==
-X-Gm-Message-State: AOAM531XHXurwFlUznW8vaQHpVpgZ8Umvz8kfqBnNbeMP/+5ZL56Rjg3
-        pKgA/ZUe8wA4cQmJ2xSGK4G1dOqz+mV64wLNhXVr2g==
-X-Google-Smtp-Source: ABdhPJyzqnAbQClIHgqFidaycjDNd4gSgRzlpuSxHm5xQi92PJ3O//c4YeewlDtFDN21k0oyH0sho4hOp8DNbQu9dlY=
-X-Received: by 2002:a17:90b:1e0e:b0:1d2:8906:cffe with SMTP id
- pg14-20020a17090b1e0e00b001d28906cffemr192690pjb.220.1650554672791; Thu, 21
- Apr 2022 08:24:32 -0700 (PDT)
+        with ESMTP id S1390087AbiDUPcL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 11:32:11 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 772EB33A32;
+        Thu, 21 Apr 2022 08:29:21 -0700 (PDT)
+Received: from mail-wr1-f41.google.com ([209.85.221.41]) by
+ mrelayeu.kundenserver.de (mreue011 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1MkYLW-1oBuQD30Nq-00m5ng; Thu, 21 Apr 2022 17:29:19 +0200
+Received: by mail-wr1-f41.google.com with SMTP id x18so7248616wrc.0;
+        Thu, 21 Apr 2022 08:29:19 -0700 (PDT)
+X-Gm-Message-State: AOAM532F1OQBCsQtktVjZKRSJK64LtqU9nFHY6KcFd2iVZkNYZEmagbp
+        C3L8OX7rHNS0jY7BBOIrve6JXjLvwveEHNE0VcU=
+X-Google-Smtp-Source: ABdhPJxKpospiPlAgrLUewrHWmh0snRbQc7E1OFrJMr7NkFWoVWNdjC/+qxZuhyVxJOjyOGXkiqrvZW6ZgPa03gRamE=
+X-Received: by 2002:adf:e106:0:b0:20a:b31b:213d with SMTP id
+ t6-20020adfe106000000b0020ab31b213dmr199757wrz.219.1650554959163; Thu, 21 Apr
+ 2022 08:29:19 -0700 (PDT)
 MIME-Version: 1.0
-References: <165051164674.3740862.4706111262486927842.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20220421055041.GB20772@lst.de>
-In-Reply-To: <20220421055041.GB20772@lst.de>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Thu, 21 Apr 2022 08:24:21 -0700
-Message-ID: <CAPcyv4j84kdh9yunQ+BnQJL=BKB1kCOw4bhkEqWnBQf+YPt+Dg@mail.gmail.com>
-Subject: Re: [PATCH] ahci: Add a generic 'controller2' RAID id
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     damien.lemoal@opensource.wdc.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "IDE/ATA development list" <linux-ide@vger.kernel.org>
+References: <20220419163810.2118169-1-arnd@kernel.org>
+In-Reply-To: <20220419163810.2118169-1-arnd@kernel.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Thu, 21 Apr 2022 17:29:03 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a1s_8_hfZdFN9-H_PoCMQSjhYcaS3peDqc7LWBUj_YqbA@mail.gmail.com>
+Message-ID: <CAK8P3a1s_8_hfZdFN9-H_PoCMQSjhYcaS3peDqc7LWBUj_YqbA@mail.gmail.com>
+Subject: Re: [PATCH v2 00/48] ARM: PXA multiplatform support
+To:     Robert Jarzmik <robert.jarzmik@free.fr>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Philipp Zabel <philipp.zabel@gmail.com>,
+        Lubomir Rintel <lkundrak@v3.sk>,
+        Paul Parsons <lost.distance@yahoo.com>,
+        Sergey Lapin <slapin@ossfans.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        IDE-ML <linux-ide@vger.kernel.org>,
+        linux-clk <linux-clk@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
+        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>
 Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:VpvU5C0aiwrphWSBK+To00JHYs2UD49gYqNafJvfmZ6SA8ouFSO
+ Y6orZvpb50igM1GRNMF7jP4c1XA3zImGl9kE7VRPtd6EnE6T3xvEgBnF455ZBSFYazNTVSu
+ ix0ABxZLwEjWNNGvv65fRXWFI9L2Qgko/G/zLwyoU3QLdq0N/zn0kEXH2OtVT4MWwTRl0B5
+ ZKm4Y5B08EkUvTiozMtdA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:8YtkNir8MkE=:4uPl7TslyU5ucHsASQ+olD
+ pZLSr3VniYuw2pteQB/wHqdtkRjP1q0ozN13VXFJUZ36ue+Ltx/Iv1QdPhcgFDjhWyftQZAyi
+ QbrRHd8Icn26U2FsiJGuhKxZ5Zl4grMoxjbaUlWo3HIt/BYxzif5nSCj1vsUvEAKJfmQFPqtg
+ zEy7uiZSDhTJ/u8AqlWQyOwNk2cIe9c98NAlZYCcaa2p3fBn4HlP0XbujgUpvw3P0NUKq3Pj6
+ wFcAHbgLdroT0seYpCaXaCdG3qsd5c1FtSLYVMVYLJdwdHs5b6aO7AbexVik6YF5Z4KeTsuYr
+ h/mtpp/IAwIDEpKKwe1tNHxMmq8On5foB5wV9p6KIQ5fkKnArVVoOoUWBlG4mv6jYFQFXvKdL
+ PAe3fkzncoHT9mw0vlt05SzEVb+UXvHCwZlwmYnmzYRt9g19u0X9ojfjMIRUUc9usnI3gtUPf
+ 4J4YlT2TrS2S0W13C2GDXNvaqhN0pBWiAVNVj+tIefAcedlxCxp9FXvaxn97FXDOX798qwNI7
+ WFo6pfGwkguGVV0nmlAmtvgaQz9j7jZ5vsOeYy9IktMajvrt6LfAYATxKdGAoTpYE2c1eZZzE
+ kVWJZ2233QpTxSpWIqQXnVj8ubPhZqC8iwicuam/2v++KSX6S8SL+RswyTSEJagejDCkUXrwT
+ XcqgF7UdkZZQaJ95peTH6t+xJ3aLKZOMt2cEd4H4rKgHvVSJ3PQQytl7NaxTZpJPpvF7tYXLF
+ OJhYozDyLF42ds0ozPclYzSVNPW1V4xeupHCw10USUu41VHVUzPivTF7ztkRcO9RE+SbFv1NB
+ T86l3zXv563Min5axBE9nVemp+mM1mTcppUh3rQbcwnFexQtrI=
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Apr 20, 2022 at 10:50 PM Christoph Hellwig <hch@lst.de> wrote:
+On Tue, Apr 19, 2022 at 6:37 PM Arnd Bergmann <arnd@kernel.org> wrote:
 >
-> On Wed, Apr 20, 2022 at 08:27:26PM -0700, Dan Williams wrote:
-> > As mentioned here [1], the pain of continuing add new and different
-> > device-ids for RAID mode to this file [2] has been heard. Ideally this
-> > device-id would not matter and the class code would remain
-> > PCI_CLASS_STORAGE_SATA_AHCI regardless of the RAID mode, but other
-> > operating systems depend on the class code *not* being AHCI when the
-> > device is in RAID mode. That said, going forward there is little reason
-> > for new server RAID ids to be added as they can simply reuse one of the
-> > existing ids even for a new controller. Server software RAID features
-> > continue to be supported on Linux. Client software RAID features
-> > continue to be not supported and the recommendation there remains to set
-> > the device to AHCI mode in platform firmware.
+> From: Arnd Bergmann <arnd@arndb.de>
 >
-> I thought client switched to vmd as well now?
-
-Yes, I believe so, but the RAID metadata and features like caching etc
-are still forked.
-
-> Either way the patch itself looks good:
+> This revisits a series I sent a few years ago:
 >
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> https://lore.kernel.org/lkml/20191018154052.1276506-1-arnd@arndb.de/
+>
+> All the other ARMv5 conversions are under way now, with
+> OMAP1 being the only one still not in linux-next yet,
+> and PXA completing the set.
+>
+> Most of the patches are unchanged from before, furtunately
+> the PXA code is fairly stable. I addressed Robert's comments,
+> pulled in two patches from Dmitry, and added the last a the
+> final four patches to finish off the multiplatform conversion.
+>
+> I hope someone is left to test these on PXA: if this works,
+> I'd like to merge it for 5.19. A git tree with these is available
+> for testing at
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git/log/?h=pxa-multiplatform-5.18
 
-Thanks.
+I have updated the branch based on the feedback I got, and
+done a preliminary merge into the for-next branch, so this work
+should show up in linux-next. I expect to rebase this particular
+branch before the merge window, to add further Acks or
+fix regressions in place. (I don't do this for the other branches).
+
+Let me know if there are any show-stoppers or patches that need
+more work. I realize that this is a lot to review and that there is
+limited reviewer bandwidth as most of the original developers
+have moved on from PXA a long time ago.
+
+       Arnd
