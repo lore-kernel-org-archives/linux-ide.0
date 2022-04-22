@@ -2,44 +2,42 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 891FFC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Apr 2022 09:57:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69AD0C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Apr 2022 09:58:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1446100AbiDVKAR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Apr 2022 06:00:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40378 "EHLO
+        id S1446321AbiDVKBZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Apr 2022 06:01:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379948AbiDVKAQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2022 06:00:16 -0400
+        with ESMTP id S1379948AbiDVKBY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2022 06:01:24 -0400
 Received: from ZXBJCAS.zhaoxin.com (zxbjcas.zhaoxin.com [124.127.214.139])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0700653E1C;
-        Fri, 22 Apr 2022 02:57:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35978541A5;
+        Fri, 22 Apr 2022 02:58:30 -0700 (PDT)
 Received: from zxbjmbx1.zhaoxin.com (10.29.252.163) by ZXBJCAS.zhaoxin.com
  (10.29.252.3) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Fri, 22 Apr
- 2022 17:57:19 +0800
+ 2022 17:58:29 +0800
 Received: from [10.29.8.9] (10.29.8.9) by zxbjmbx1.zhaoxin.com (10.29.252.163)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Fri, 22 Apr
- 2022 17:57:19 +0800
-Subject: Re: [PATCH 1/2] ahci: Add PhyRdy Change control on actual LPM
- capability
+ 2022 17:58:29 +0800
+Subject: Re: [PATCH 2/2] ahci: Add PxSCTL.IPM control on actual LPM capability
 References: <1650534217-14052-1-git-send-email-RunaGuo-oc@zhaoxin.com>
- <1650534217-14052-2-git-send-email-RunaGuo-oc@zhaoxin.com>
- <244f0c98-13f4-1ac4-9ebe-facdad4ae8b6@opensource.wdc.com>
+ <1650534217-14052-3-git-send-email-RunaGuo-oc@zhaoxin.com>
+ <2a91c02d-4f7c-535b-e047-889df87ebebd@opensource.wdc.com>
 From:   RunaGuo-oc <RunaGuo-oc@zhaoxin.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Mario Limonciello" <mario.limonciello@amd.com>,
         Cobe Chen <CobeChen@zhaoxin.com>, Tim Guo <TimGuo@zhaoxin.com>,
         TonyW Wang <TonyWWang@zhaoxin.com>,
         Leo Liu <LeoLiu@zhaoxin.com>
-Message-ID: <af0571fe-a8f4-cb0a-323f-4dc0c4e7517d@zhaoxin.com>
-Date:   Fri, 22 Apr 2022 17:57:19 +0800
+Message-ID: <74749fd5-82ae-ab40-69e8-bd93503cdafa@zhaoxin.com>
+Date:   Fri, 22 Apr 2022 17:58:28 +0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <244f0c98-13f4-1ac4-9ebe-facdad4ae8b6@opensource.wdc.com>
+In-Reply-To: <2a91c02d-4f7c-535b-e047-889df87ebebd@opensource.wdc.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
@@ -50,85 +48,96 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/4/21 18:39, Damien Le Moal wrote:
+On 2022/4/21 18:53, Damien Le Moal wrote:
 > On 4/21/22 18:43, Runa Guo-oc wrote:
 >> On some platform, when OS enables LPM by default (eg, min_power),
->> then, PhyRdy Change cannot be detected if ahci supports no LPM.
-> Do you mean "...if the ahci adapter does not support LPM." ?
-
-Yes.
-
-> If that is what you mean, then min_power should not be set.
-
-Yes, I agree with you. But, as we know, link_power_management
-is a user policy which can be modified, if some users are not
-familiar with ahci spec, then the above case may happen.
-
->   Mario has patches to fix that.
-
-  
-Hmm. How to patch this case ?
-
->> In ahci spec, PhyRdy Change cannot coexist with LPM.
+>> then, DIPM slumber request cannot be disallowed if ahci's CAP.PSC
+>> is set to '1' and CAP.SSC is cleared to '0', which may cause ahci
+>> to be an uncertain state (same for Partial).
+>>
+>> In ahci spec, when CAP.PSC/SSC is cleared to '0', the PxSCTL.IPM
+>> field must be programmed to disallow device initiated Partial/
+>> Slumber request.
 >>
 >> Adds support to control this case on actual LPM capability.
->>
+> s/Adds/Add
+
+Sorry, here should use 'Add' instead of 'Adds'.
+
+> Overall, I need to reread the specs to confirm all this.
+
+Ok.
+
 >> Signed-off-by: Runa Guo-oc <RunaGuo-oc@zhaoxin.com>
 >> ---
->>   drivers/ata/ahci.c      | 9 +++++++++
->>   drivers/ata/libata-eh.c | 4 ++++
->>   include/linux/libata.h  | 4 ++++
->>   3 files changed, 17 insertions(+)
+>>   drivers/ata/libata-sata.c | 12 +++++++++++-
+>>   1 file changed, 11 insertions(+), 1 deletion(-)
 >>
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index 397dfd2..03f0cb3 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -1870,6 +1870,15 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>   	else
->>   		dev_info(&pdev->dev, "SSS flag set, parallel bus scan disabled\n");
->>   
->> +	if (hpriv->cap & HOST_CAP_PART)
->> +		host->flags |= ATA_HOST_PART;
->> +
->> +	if (hpriv->cap & HOST_CAP_SSC)
->> +		host->flags |= ATA_HOST_SSC;
->> +
->> +	if (hpriv->cap2 & HOST_CAP2_SDS)
->> +		host->flags |= ATA_HOST_DEVSLP;
->> +
->>   	if (pi.flags & ATA_FLAG_EM)
->>   		ahci_reset_em(host);
->>   
->> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
->> index 3307ed4..05b1043 100644
->> --- a/drivers/ata/libata-eh.c
->> +++ b/drivers/ata/libata-eh.c
->> @@ -3246,6 +3246,10 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->>   	unsigned int err_mask;
->>   	int rc;
->>   
->> +	/* if controller does not support lpm, then sets no LPM flags*/
->> +	if (!(ap->host->flags & (ATA_HOST_PART | ATA_HOST_SSC | ATA_HOST_DEVSLP)))
->> +		link->flags |= ATA_LFLAG_NO_LPM;
->> +
->>   	/* if the link or host doesn't do LPM, noop */
->>   	if (!IS_ENABLED(CONFIG_SATA_HOST) ||
->>   	    (link->flags & ATA_LFLAG_NO_LPM) || (ap && !ap->ops->set_lpm))
->> diff --git a/include/linux/libata.h b/include/linux/libata.h
->> index 732de90..7a243f4 100644
->> --- a/include/linux/libata.h
->> +++ b/include/linux/libata.h
->> @@ -216,6 +216,10 @@ enum {
->>   	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
->>   	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
->>   
->> +	ATA_HOST_PART		= (1 << 4), /* Host support partial.*/
->> +	ATA_HOST_SSC		= (1 << 5), /* Host support slumber.*/
->> +	ATA_HOST_DEVSLP		= (1 << 6), /* Host support devslp.*/
->> +
->>   	/* bits 24:31 of host->flags are reserved for LLD specific flags */
->>   
->>   	/* various lengths of time */
+>> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+>> index 7a5fe41..e6195cf 100644
+>> --- a/drivers/ata/libata-sata.c
+>> +++ b/drivers/ata/libata-sata.c
+>> @@ -394,9 +394,19 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>>   	case ATA_LPM_MED_POWER_WITH_DIPM:
+>>   	case ATA_LPM_MIN_POWER_WITH_PARTIAL:
+>>   	case ATA_LPM_MIN_POWER:
+>> -		if (ata_link_nr_enabled(link) > 0)
+>> +		if (ata_link_nr_enabled(link) > 0) {
+>>   			/* no restrictions on LPM transitions */>  			scontrol &= ~(0x7 << 8);
+> Given that the added code below adds restrictions, this comment is
+> strange. Better change it to something like:
 >
+> 			/* Assume no restrictions on LPM transitions */
+>
+>> +
+>> +			/* if controller does not support partial, then disallows it,
+>> +			 * the same for slumber
+>> +			 */
+> Please correctly format the comment and check the grammar. Some like below
+> is easier to read.
+>
+> 			/*
+> 			 * If the controller does not support partial or
+> 			 * slumber then disallow these transitions.
+> 			 */
+>
+>> +			if (!(link->ap->host->flags & ATA_HOST_PART))
+>> +				scontrol |= (0x1 << 8);
+>> +
+>> +			if (!(link->ap->host->flags & ATA_HOST_SSC))
+>> +				scontrol |= (0x2 << 8);
+>> +		}
+>>   		else {
+> Please do not leave this else here. Put it on the same line as the closing
+> bracket and enclose the below statements in brackets too.
+>
+>>   			/* empty port, power off */
+>>   			scontrol &= ~0xf;
+> 		} else {
+> 			/* empty port, power off */
+>   			scontrol &= ~0xf;
+> 		}
+
+  
+I'll change it like below,
++		if (ata_link_nr_enabled(link) > 0) {
+-			/* no restrictions on LPM transitions */
++			/* Assume no restrictions on LPM transitions */
+			scontrol &= ~(0x7 << 8);
+  
++			/*
++			 * If the controller does not support partial or
++			 * slumber then disallow these transitions.
++			 */
+
++			if (!(link->ap->host->flags & ATA_HOST_PART))
++				scontrol |= (0x1 << 8);
++
++			if (!(link->ap->host->flags & ATA_HOST_SSC))
++				scontrol |= (0x2 << 8);
+
+		} else {
+			/* empty port, power off */
+  			scontrol &= ~0xf;
+		}
 
