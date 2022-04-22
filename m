@@ -2,120 +2,114 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C9E2C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Apr 2022 22:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C4FC433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Apr 2022 22:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232625AbiDVWTw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Apr 2022 18:19:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57040 "EHLO
+        id S233184AbiDVWyn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Apr 2022 18:54:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233728AbiDVWSo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2022 18:18:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16A044705E;
-        Fri, 22 Apr 2022 15:04:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9EC42B83272;
-        Fri, 22 Apr 2022 22:04:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 502FFC385AB;
-        Fri, 22 Apr 2022 22:04:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650665089;
-        bh=zuNw6j1TShfoNbLYYIZxrZxreBGq9IdbmgqrCDzwCoE=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=GJHnYGm7kS7OYKfkAu61QcQIzQsPpKgiX8ZwFOEZB2cc8bdXfKuICeePb/LdLDWns
-         VNg0u6qUYqau/LeOFrayBulaQJxkihHPe/A2FqLymKPNdePaoUDSIGdGevpo7L/zJM
-         aFPhStRd09KzzfNR1joe6PwVDpjMzpbeziX7fgPmvokEvCi/0oFrjnwBTaaGfP/BOU
-         IUNNTQDtVNPw7mpJSpA99kiRdBDjanYdKye5l82yB0eqq3zLotqrujW7fvCIf2Ejkd
-         dAqJEF/tV2gwSfcpwtPVTrB+Lh9rnVah9UvWO9BhrH9MflpU1vh20qiOa/U8KRRaYH
-         giaZNTf1zCHIw==
-Received: by mail-wm1-f47.google.com with SMTP id q20so5841606wmq.1;
-        Fri, 22 Apr 2022 15:04:49 -0700 (PDT)
-X-Gm-Message-State: AOAM5316G1Qpk56Wu+UcOt6hj2nx1VfttOXlwvZpmLGd7jHRHONmsW3f
-        STOnEHKSTHIV4MExAz+NGq4VoEiQvcmEOpiQ/uQ=
-X-Google-Smtp-Source: ABdhPJxxyzPCyBaxXq4e/OKv6ds/3UgnpcR0jFo6uX7QoEAMCxGf0GP6zkRcnylbgWRsSBmj2Bdv9puvN/pDeVMDIcQ=
-X-Received: by 2002:a05:600c:4ed4:b0:392:90a5:b7e6 with SMTP id
- g20-20020a05600c4ed400b0039290a5b7e6mr15508304wmq.33.1650665087477; Fri, 22
- Apr 2022 15:04:47 -0700 (PDT)
+        with ESMTP id S234107AbiDVWyb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2022 18:54:31 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AB8F23D476
+        for <linux-ide@vger.kernel.org>; Fri, 22 Apr 2022 15:17:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1650665863; x=1682201863;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=roLKYIw+XMquY1AwtQW0eGBYwFUcaX4UJuMj3l3rV78=;
+  b=NYsXpj6wdOYlMafrhXcsGFdgAIXhgqFBBykah6RzZx9Ro17167fEVTlo
+   6fgKdW0nkHUOIAoB03vS6EMmLIvn8gKFIUR/MHaQQOf42zbzHHrxJmIl9
+   yf1I/ygDsXwVP2G9kCjpAF0XsTIAYEEjo8UCXBguTZdgrlANukEoVsQc6
+   5WcZen2qdFDgVtYxm8OZ+TI1MPNpXn+0b2gnoa3KqkrSt7WfbE7OMgiMA
+   B8s10YWOhjeCdVq55Y+oLUeClBMlEdqVNp8mRH3ytAYZbVVoLdAc259Ao
+   FVh9GNzjU9VLW6aF3KGcOCEyTbEjAK9ypu7rTAfqqNBeeVT70d+r+qNoW
+   A==;
+X-IronPort-AV: E=Sophos;i="5.90,282,1643644800"; 
+   d="scan'208";a="203473646"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 23 Apr 2022 06:17:11 +0800
+IronPort-SDR: R45O2KP0DSlMcLypYNcLoFFVeCdKr4P8oNempoPxFkL+jiF8fxe4Ro7GLslzteQcQTMqC+ja/x
+ i8fdCJT3SyGk/Ay46GTaYd5EuKSNi5WppzKyrFe90bXyNtTL4ILMEONR/KEoMm2I/UWVJYEYug
+ 0ix0UZXCFOiOR5rKN5x/56dAuPwJPubdjyFtBkQnCD6d6Z+c5HSMJ25r4e3QXjcAo6jT9NwovX
+ bJHeEPET67B+wdVN9ZH9dGgXUOhaLQ32pYJZ7LrFmHGAmAY7vyDw5pytFH/lPxZnPxdWzRgzxi
+ omfQsmRDDaYYwQ8a7xirXM2H
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Apr 2022 14:48:11 -0700
+IronPort-SDR: fqkGsuELmPM097TZieyQv8YsghVBY61UAl4Aj6oxfG60F1zMpFLMNcWd6OzY25ETHPex/uSniQ
+ x2Py6nmG8dJxBAWOlbX1RBGculafxCdYN6K/ss9MSDqQAv6Dq71qixkxeGBe2vbg2O2hI2eta+
+ sJpLI+kxdK3gy0a7aY/9ZG5y1qBiB89gPU3t0B6ZvjKhbVsp7OJauVi3lSM9Gwe66X0GvX/127
+ Dn8TE2EGuOKtBeUXUcV2vuCtAyubS/XaDImy7+UQn9JLZr2Ka1OZx7BpUOhxz+omybZeMv4JTJ
+ DzI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Apr 2022 15:17:12 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KlTKg68Kvz1Rwrw
+        for <linux-ide@vger.kernel.org>; Fri, 22 Apr 2022 15:17:11 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1650665831;
+         x=1653257832; bh=roLKYIw+XMquY1AwtQW0eGBYwFUcaX4UJuMj3l3rV78=; b=
+        M/lMyv6ZLo8Xyw5yYzDPo/Mhs6uSLnDx6DdDg0rN73JAGdhDn1uRM3UUFmaZBi87
+        6ZgLnAGDXE9rCNQxVZ1OT+Qw1ZQ31Vw1vaOL5JdsjmzfCOqJXz4XWmGkyZm0qKgW
+        tGxg6v3+KqttNJb4v3W9DRV5Hiaji7PeNyXzzqP6uDrcs6Ztw0sEUF5/ycaD0j9J
+        NM23qr7jYE9f8ZFlhVmxbQ8j/lWQK8TsBhwB9xIxzHvYXu/Ai8Y6QPYSbWCFt/j9
+        RDK/oDF9gecCMoA77GuYtluWgto+k9Qe2jcIvuGOFmRD1X1hL1LjTKGVdnZiuJXa
+        fwNz7JpnJ9PZ9pjFE6kQLg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id KJhyfJ4k-gde for <linux-ide@vger.kernel.org>;
+        Fri, 22 Apr 2022 15:17:11 -0700 (PDT)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KlTKg0hRqz1Rvlx;
+        Fri, 22 Apr 2022 15:17:10 -0700 (PDT)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Subject: [GIT PULL] ata fixes for 5.18-rc4
+Date:   Sat, 23 Apr 2022 07:17:09 +0900
+Message-Id: <20220422221709.3776774-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-References: <20220419163810.2118169-1-arnd@kernel.org> <20220422170530.GA2338209@roeck-us.net>
- <CAK8P3a3V=qxUqYT3Yt=dpXVv58-Y+HVi952wO6D4LPN5NNphGA@mail.gmail.com> <8b36d3a4-ec85-2f9f-e4b7-734d8ddd3d8f@roeck-us.net>
-In-Reply-To: <8b36d3a4-ec85-2f9f-e4b7-734d8ddd3d8f@roeck-us.net>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Sat, 23 Apr 2022 00:04:31 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a0R9cpEb1d2=e9KnGSbi_uRv48RWfCu_J4DDak_cGZSuw@mail.gmail.com>
-Message-ID: <CAK8P3a0R9cpEb1d2=e9KnGSbi_uRv48RWfCu_J4DDak_cGZSuw@mail.gmail.com>
-Subject: Re: [PATCH v2 00/48] ARM: PXA multiplatform support
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     Robert Jarzmik <robert.jarzmik@free.fr>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Philipp Zabel <philipp.zabel@gmail.com>,
-        Lubomir Rintel <lkundrak@v3.sk>,
-        Paul Parsons <lost.distance@yahoo.com>,
-        Tomas Cech <sleep_walker@suse.com>,
-        Sergey Lapin <slapin@ossfans.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        linux-clk <linux-clk@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
-        linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Apr 22, 2022 at 10:55 PM Guenter Roeck <linux@roeck-us.net> wrote:
-> On 4/22/22 12:16, Arnd Bergmann wrote:
-> > On Fri, Apr 22, 2022 at 7:05 PM Guenter Roeck <linux@roeck-us.net> wrote:
-> >
-> > Which machine did you hit this on? Is this on hardware or in qemu?
-> >
-> qemu, as always. borzoi, spitz, terrier, tosa, z2, and sx1 fail.
-> Also, I just noticed that the failure is not always the same.
-> z2 fails to boot from initrd, and sx1 fails to boot completely.
+Linus,
 
-That's a lot of machines failing, I hope at least we got the same bugs more
-than once here.
+The following changes since commit 55b014159ee7af63770cd7f2b6fe926f6dd993=
+35:
 
-For the I/O space, I found now that PXA was not using the standard
-virtual I/O address yet, but instead used a NULL-based offset.
+  ata: ahci: Rename CONFIG_SATA_LPM_POLICY configuration item back (2022-=
+04-06 11:08:04 +0900)
 
-I'm not entirely happy with this patch, but this is an outline of what
-I think we need to fix that: https://pastebin.com/3nVgQsEw
-This one is probably incomplete, at least it breaks sa1100 for now,
-and it adds a bogus CONFIG_PCI dependency. I'm also not sure
-in what way the last patch in the series triggers it, rather than the
-one that removed mach/io.h.
+are available in the Git repository at:
 
-I had sx1 booting in qemu at least, with the omap1 multiplatform series only.
-If you have a custom config for this one, make sure you get the right
-DEBUG_LL address.
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
+ags/ata-5.18-rc4
 
-> I'll do another round of bisects.
+for you to fetch changes up to aafa9f958342db36c17ac2a7f1b841032c96feb4:
 
-Thanks!
+  ata: pata_marvell: Check the 'bmdma_addr' beforing reading (2022-04-22 =
+08:45:06 +0900)
 
-       Arnd
+----------------------------------------------------------------
+ATA fixes for 5.18-rc4
+
+A single fix to avoid a NULL pointer dereference in the pata_marvell
+driver with adapters not supporting DMA, from Zheyu.
+
+----------------------------------------------------------------
+Zheyu Ma (1):
+      ata: pata_marvell: Check the 'bmdma_addr' beforing reading
+
+ drivers/ata/pata_marvell.c | 2 ++
+ 1 file changed, 2 insertions(+)
