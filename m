@@ -2,78 +2,88 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0097BC433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Apr 2022 00:29:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5C8C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Apr 2022 01:50:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382345AbiDVAcX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Apr 2022 20:32:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42124 "EHLO
+        id S1443163AbiDVBxg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Apr 2022 21:53:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229784AbiDVAcW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 20:32:22 -0400
-Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 537C12182B
-        for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2022 17:29:31 -0700 (PDT)
-Received: by mail-wm1-x332.google.com with SMTP id r187-20020a1c44c4000000b0038ccb70e239so6917506wma.3
-        for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2022 17:29:31 -0700 (PDT)
+        with ESMTP id S1443166AbiDVBx3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2022 21:53:29 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C69D49F2E;
+        Thu, 21 Apr 2022 18:50:36 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id j8so7602263pll.11;
+        Thu, 21 Apr 2022 18:50:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=/VVXlpLZ+Fq+rGdj3zWntBmgAH60/fMUJiGhk005mR0=;
-        b=GYjODota80O9coFk0PbNQluugFkcv7KR+cdU00z7BsUX6Cwn5YJdYnXQol4SC9IvLW
-         IKs+Jadjf6xxL5/znWPiFOQUnbNinPGrAUtdUe/kkPJvNDb6xwOhKE2muFX+bOgHyyqW
-         KUuqxJDNe9u6PGikEvYCR/2wV2UmIWE0I65Oqg5+BOyvOfT8rfkFShqkytSzAaLpAg0K
-         mswRvwk6RcsEmgfqSkv6OSV9GlhshnhXRomfX/v6/NdlheR9HtjN+R0+J+RQPuMcyp8c
-         2uPPUPw9xDFQjD//5nUwV7NXuYaQBjXeSsoUsrIrz5TxCNbxL39tLftq7cffu9IOSORy
-         hfdQ==
+        bh=Jd8Ly/ph96mf7X+NwD7zXOhWISN9bw3fhFaRCxJaylQ=;
+        b=HTZlNHA565L8PrjjxafmaWmKu+60zBekwv5Opg3E/3vK3bmjIJzYkj7lH5eAzNPGag
+         wT5OCcvw/sBCWuD/hXMBIF+wUJptxgFmmtTyVmQl1JCjFyHxwl81as/Wprsx5nHk2ooB
+         J5IUvlN7B/6ZN07MKmgG020GpXb5n8qjvoWtXEV6FW7DDvLimd/xEAjKXTZPdPcIVHHd
+         vO72aUGa9xMUWFGLRM3gQkuGaQhxn0TcDOawisOcr7VfCJmwQWErvMNBLWMjhjTtvyx8
+         AEyZxaHDwrxP67VgZoEdJd0zg5MZjzpGsD847SqqSbdTGIGW987ajt4jborHvHDzuRgh
+         Q5Hw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=/VVXlpLZ+Fq+rGdj3zWntBmgAH60/fMUJiGhk005mR0=;
-        b=yrPX25tGSg3aMuLRg1bfomojDOaKvBufBFEuby7f3u1SWw2iyl0Dm3iVvTuvTFzZKm
-         MzTctulsKA0+iac85LKYm3dP1iEIapsZwMgT8TA7BNhjvZ0bxcTF3BEsnP6GrtyG3qrV
-         +HIV+KwxysJfvpfCfZJQe3k/6nqBrLA+GKjarSvM6Cvxj7YWQvFLtRC2mE+SBNI6NSA4
-         Asob03NFixHpBIooz/GHai2Kww2MWmpOKqNrRoFP0MgTQuhNX+9U8LaXldTa5rEv22P7
-         IJpA5GAApltcQSl+1N8gSVWIKlT0p1nNKWwYRmV903VXfKyAb/tf5gjspnd4wEvY1KiX
-         dx2g==
-X-Gm-Message-State: AOAM532JNvYUIZ8hmx+GqM4UocYb8iQ4+Zdjb/44cenU7w1JsM8jkRTP
-        9kQKPauclQDCoxZ5Mb5baPQlyB5d6/16dT2aeeBYGyTgaAA=
-X-Google-Smtp-Source: ABdhPJybURvwAWfcAC8/nLqribFxUx6aV3cRy1ViGa1gak5qPA3Ec/BDo1sqrk2+hLakkk+jj4caEFcAsvX/4NOU6cs=
-X-Received: by 2002:a7b:c844:0:b0:38e:7c92:a9e3 with SMTP id
- c4-20020a7bc844000000b0038e7c92a9e3mr1554080wml.140.1650587369581; Thu, 21
- Apr 2022 17:29:29 -0700 (PDT)
+        bh=Jd8Ly/ph96mf7X+NwD7zXOhWISN9bw3fhFaRCxJaylQ=;
+        b=wRMMvez97W+Lvm/7OMgKkQR+LLwsfI8TvTjpvjjiu843P+TkV2URQM4kbQBkgX7W+5
+         DbB1bybGasmsEPpSCDd0wazMgf8Xd7wJ+NTvbAU1lSis6fkIbxDx4J7WebCBBIPgPmIT
+         cCEYLSCGdlCLrQ38PrNkaUdnCnC/x5yjENxh0gyVOjmBGJpXTqflxPqqdGjgJOduY9r5
+         o77YbM+UqoL58TSw61hLfSCe8zNZIm3A2T4pJs5KHBHiC+CErT7Kq/h+nxjUsH+p25Rq
+         gAtofUbP4k0rhpFVF2vpcNVuEgP9r39AKDUJdPfuun8mer7vNbbQmZC0kUlr1xG06Kw1
+         uPgg==
+X-Gm-Message-State: AOAM532gkqL86K5IidB2xBt+G26b86iPsQWzu9730wh9mng/ViT3nfGA
+        E8lMvUTTeCDvfOkg9Q2QSJ2DAw2MRynAS+c40ZCsB2SJfuov
+X-Google-Smtp-Source: ABdhPJzF3tIp3t1iNv1N5Y22Vt5A02uJXxBsiS/K7ujVI90PiOgqsLnKojL1UDMWDPhr1qwQfJkoKgKB8bvtxP4JtJY=
+X-Received: by 2002:a17:90b:1807:b0:1d5:540d:4b6a with SMTP id
+ lw7-20020a17090b180700b001d5540d4b6amr2654482pjb.240.1650592236018; Thu, 21
+ Apr 2022 18:50:36 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220421045423.17821-1-diego.viola@gmail.com> <b2850508-5f61-0688-74df-930a1447df0c@opensource.wdc.com>
-In-Reply-To: <b2850508-5f61-0688-74df-930a1447df0c@opensource.wdc.com>
-From:   Diego Viola <diego.viola@gmail.com>
-Date:   Thu, 21 Apr 2022 21:29:18 -0300
-Message-ID: <CA+ToGPHmeXj_wYkRt8G6fNSofeR=JyWSA=TZpDbs=5Mq-1mXOA@mail.gmail.com>
-Subject: Re: [PATCH] ata: libata-core: replace "its" with "it is"
+References: <20220421013920.3503034-1-zheyuma97@gmail.com> <e29fd64e-62ea-746e-f0fb-02ce86b4e61e@opensource.wdc.com>
+In-Reply-To: <e29fd64e-62ea-746e-f0fb-02ce86b4e61e@opensource.wdc.com>
+From:   Zheyu Ma <zheyuma97@gmail.com>
+Date:   Fri, 22 Apr 2022 09:50:24 +0800
+Message-ID: <CAMhUBj=fpQi1uvkSQg7vuefLOsxxEgM5fTfsNu1w2sWmvybO0Q@mail.gmail.com>
+Subject: Re: [PATCH v2] ata: pata_marvell: Check the 'bmdma_addr' beforing reading
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Apr 21, 2022 at 8:41 PM Damien Le Moal
+On Fri, Apr 22, 2022 at 7:48 AM Damien Le Moal
 <damien.lemoal@opensource.wdc.com> wrote:
 >
-> On 4/21/22 13:54, Diego Viola wrote:
-> > and "isn't" with "is not". The former fixes the typo while the latter
-> > just uses the same formal language.
+> On 4/21/22 10:39, Zheyu Ma wrote:
+> > Before detecting the cable type on the dma bar, the driver should check
+> > whether the 'bmdma_addr' is zero, which means the adapter does not
+> > support DMA, otherwise we will get the following error:
 > >
-> > Signed-off-by: Diego Viola <diego.viola@gmail.com>
+> > [    5.146634] Bad IO access at port 0x1 (return inb(port))
+> > [    5.147206] WARNING: CPU: 2 PID: 303 at lib/iomap.c:44 ioread8+0x4a/0x60
+> > [    5.150856] RIP: 0010:ioread8+0x4a/0x60
+> > [    5.160238] Call Trace:
+> > [    5.160470]  <TASK>
+> > [    5.160674]  marvell_cable_detect+0x6e/0xc0 [pata_marvell]
+> > [    5.161728]  ata_eh_recover+0x3520/0x6cc0
+> > [    5.168075]  ata_do_eh+0x49/0x3c0
+> >
+> > Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+> > ---Changes in v2:
+> >      - Delete the useless 'else'
 >
-> Applied to for-5.19. Thanks !
+> Note for future contributions: The change log should be placed *after*
+> the "---" that comes before the "diff" line below. Otherwise, the change
+> log pollutes the commit message.
 
-Thank you, I really appreciate it.
+Thank you for the reminder, I'll pay attention to this problem next time!
 
->
-> --
-> Damien Le Moal
-> Western Digital Research
-
-Diego
+Zheyu Ma
