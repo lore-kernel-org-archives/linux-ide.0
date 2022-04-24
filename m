@@ -2,43 +2,42 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF04C433F5
-	for <linux-ide@archiver.kernel.org>; Sun, 24 Apr 2022 16:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC94EC433F5
+	for <linux-ide@archiver.kernel.org>; Sun, 24 Apr 2022 17:29:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235859AbiDXQ63 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 24 Apr 2022 12:58:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51412 "EHLO
+        id S232338AbiDXRcR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 24 Apr 2022 13:32:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236133AbiDXQ6U (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 12:58:20 -0400
-Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5245513D55;
-        Sun, 24 Apr 2022 09:55:15 -0700 (PDT)
+        with ESMTP id S229539AbiDXRcR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 13:32:17 -0400
+Received: from mxout01.lancloud.ru (mxout01.lancloud.ru [45.84.86.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BD4F15045E
+        for <linux-ide@vger.kernel.org>; Sun, 24 Apr 2022 10:29:15 -0700 (PDT)
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 20BF5209D7EB
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru 3B8D620D8B79
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
-Subject: Re: [PATCH -next] ata: palmld: fix return value check in
- palmld_pata_probe()
-To:     Yang Yingliang <yangyingliang@huawei.com>,
-        <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>
-CC:     <damien.lemoal@opensource.wdc.com>, <arnd@arndb.de>,
-        <b.zolnierkie@samsung.com>, <robert.jarzmik@free.fr>
-References: <20220424093420.2129779-1-yangyingliang@huawei.com>
+Subject: Re: [PATCH 1/5] ata: libata-core: cleanup ata_device_blacklist
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>,
+        <linux-doc@vger.kernel.org>
+References: <20220407123748.1170212-1-damien.lemoal@opensource.wdc.com>
+ <20220407123748.1170212-2-damien.lemoal@opensource.wdc.com>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <24916b73-15dc-1ab7-7d5d-532d177fecec@omp.ru>
-Date:   Sun, 24 Apr 2022 19:55:11 +0300
+Message-ID: <3ca894a2-eafd-ea75-dcae-e6299e65937c@omp.ru>
+Date:   Sun, 24 Apr 2022 20:29:12 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <20220424093420.2129779-1-yangyingliang@huawei.com>
+In-Reply-To: <20220407123748.1170212-2-damien.lemoal@opensource.wdc.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
  LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -46,17 +45,19 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Hello!
 
-   You should CC: me on the PATA driver patches, not Bart -- he no longer maintains
-the PATA drivers.
+On 4/7/22 3:37 PM, Damien Le Moal wrote:
 
-On 4/24/22 12:34 PM, Yang Yingliang wrote:
-
-> If devm_platform_ioremap_resource() fails, it never return
-> NULL pointer, replace the check with IS_ERR().
+> Remove the unneeded comma after the last field of the array entries.
 > 
-> Fixes: 57bf0f5a162d ("ARM: pxa: use pdev resource for palmld mmio")
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
+>  drivers/ata/libata-core.c | 96 +++++++++++++++++++--------------------
+>  1 file changed, 48 insertions(+), 48 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index cceedde51126..bc59c77b99b6 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
 [...]
 
 Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
