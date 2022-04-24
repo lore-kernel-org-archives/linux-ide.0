@@ -2,42 +2,42 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A26D7C433F5
-	for <linux-ide@archiver.kernel.org>; Sun, 24 Apr 2022 18:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D849C433EF
+	for <linux-ide@archiver.kernel.org>; Sun, 24 Apr 2022 18:17:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236851AbiDXSER (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 24 Apr 2022 14:04:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40190 "EHLO
+        id S232215AbiDXSUm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 24 Apr 2022 14:20:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232215AbiDXSEQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 14:04:16 -0400
-Received: from mxout03.lancloud.ru (mxout03.lancloud.ru [45.84.86.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD7CFBFD;
-        Sun, 24 Apr 2022 11:01:11 -0700 (PDT)
+        with ESMTP id S229929AbiDXSUl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 14:20:41 -0400
+Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55B106AA64;
+        Sun, 24 Apr 2022 11:17:30 -0700 (PDT)
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru E52C820ED8D0
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 6E0992323C3E
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
-Subject: Re: [PATCH 3/5] ata: libata-core: Improve link flags forced settings
+Subject: Re: [PATCH 4/5] ata: libata-core: Allow forcing most horkage flags
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-ide@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>,
         <linux-doc@vger.kernel.org>
 References: <20220407123748.1170212-1-damien.lemoal@opensource.wdc.com>
- <20220407123748.1170212-4-damien.lemoal@opensource.wdc.com>
+ <20220407123748.1170212-5-damien.lemoal@opensource.wdc.com>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <d5440596-d599-06df-ad9f-96edee5bf514@omp.ru>
-Date:   Sun, 24 Apr 2022 21:01:07 +0300
+Message-ID: <b74cbd2a-c9a2-2f3a-3421-3a79098ca3fd@omp.ru>
+Date:   Sun, 24 Apr 2022 21:17:27 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <20220407123748.1170212-4-damien.lemoal@opensource.wdc.com>
+In-Reply-To: <20220407123748.1170212-5-damien.lemoal@opensource.wdc.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
  LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -45,39 +45,41 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 On 4/7/22 3:37 PM, Damien Le Moal wrote:
 
-> Similarly to the horkage flags, introduce the force_lflag_onoff() macro
-> to define struct ata_force_param entries of the force_tbl array that
-> allow turning on or off a link flag using the libata.force boot
-> parameter. Using this new helper macro, define a new force_tbl entry
-> for the ATA_LFLAG_NO_DEBOUNCE_DELAY link flag, thus allowing testing if
-> an adapter requires a link debounce delay or not.
+> To facilitate debugging of drive issues in the field without kernel
+> changes (e.g. temporary test patches), add an entry for most horkage
+> flags in the force_tbl array to allow controlling these horkage
+> settings with the libata.force kernel boot parameter.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > ---
->  drivers/ata/libata-core.c | 22 +++++++++++++++++-----
->  1 file changed, 17 insertions(+), 5 deletions(-)
+>  drivers/ata/libata-core.c | 22 ++++++++++++++++++++--
+>  1 file changed, 20 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index c0cf42ffcc38..75856f4210d7 100644
+> index 75856f4210d7..121cb55a219a 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
-[...]
-> @@ -6154,7 +6161,11 @@ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
->  	{ # mode,	.xfer_mask	= (1UL << (shift)) }
+> @@ -6230,9 +6230,27 @@ static const struct ata_force_param force_tbl[] __initconst = {
+>  	force_horkage_onoff(ncqtrim,	ATA_HORKAGE_NO_NCQ_TRIM),
+>  	force_horkage_onoff(ncqati,	ATA_HORKAGE_NO_NCQ_ON_ATI),
 >  
->  #define force_lflag_on(name, flags)			\
-> -	{ # name,	.lflags		= (flags) }
-> +	{ # name,	.lflags_on	= (flags) }
-
-   The same comment about #name...
-
+> -	force_horkage_on(dump_id,	ATA_HORKAGE_DUMP_ID),
+> +	force_horkage_onoff(trim,	ATA_HORKAGE_NOTRIM),
+> +	force_horkage_onoff(trim_zero,	ATA_HORKAGE_ZERO_AFTER_TRIM),
+> +	force_horkage_on(max_trim_128m, ATA_HORKAGE_MAX_TRIM_128M),
 > +
-> +#define force_lflag_onoff(name, flags)			\
-> +	{ "no" # name,	.lflags_on	= (flags) },	\
-> +	{ # name,	.lflags_off	= (flags) }
->  
->  #define force_horkage_on(name, flag)			\
->  	{ # name,	.horkage_on	= (flag) }
+> +	force_horkage_onoff(dma,	ATA_HORKAGE_NODMA),
+>  	force_horkage_on(atapi_dmadir,	ATA_HORKAGE_ATAPI_DMADIR),
+> -	force_horkage_on(disable,	ATA_HORKAGE_DISABLE)
+> +	force_horkage_on(atapi_mod16_dma, ATA_HORKAGE_ATAPI_MOD16_DMA),
+> +
+> +	force_horkage_onoff(dma_log,	ATA_HORKAGE_NO_DMA_LOG),
+> +	force_horkage_onoff(id_dev_log,	ATA_HORKAGE_NO_ID_DEV_LOG),
+> +	force_horkage_onoff(log_dir,	ATA_HORKAGE_NO_LOG_DIR),
+
+   Underscores in the names with "no" (without underscore) would look inconsistent,
+wouldn't they? Maybe drop the underscores here?
+
 [...]
 
 Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
