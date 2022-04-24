@@ -2,86 +2,141 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D849C433EF
-	for <linux-ide@archiver.kernel.org>; Sun, 24 Apr 2022 18:17:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7311AC433FE
+	for <linux-ide@archiver.kernel.org>; Sun, 24 Apr 2022 18:49:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232215AbiDXSUm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 24 Apr 2022 14:20:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42174 "EHLO
+        id S237157AbiDXSwB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 24 Apr 2022 14:52:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229929AbiDXSUl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 14:20:41 -0400
-Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55B106AA64;
-        Sun, 24 Apr 2022 11:17:30 -0700 (PDT)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 6E0992323C3E
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH 4/5] ata: libata-core: Allow forcing most horkage flags
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>,
-        <linux-doc@vger.kernel.org>
-References: <20220407123748.1170212-1-damien.lemoal@opensource.wdc.com>
- <20220407123748.1170212-5-damien.lemoal@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <b74cbd2a-c9a2-2f3a-3421-3a79098ca3fd@omp.ru>
-Date:   Sun, 24 Apr 2022 21:17:27 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229929AbiDXSwA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 14:52:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 848D813F51;
+        Sun, 24 Apr 2022 11:48:58 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B01276124F;
+        Sun, 24 Apr 2022 18:48:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12B0CC385B1;
+        Sun, 24 Apr 2022 18:48:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650826137;
+        bh=ipl3oSa3DODJXFqNROBx1CoqGwslciyjMuC+i+Saf6s=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=BOkM82fII90m6hiFZrsM+S6NoOx/9JSXO645uDox3wouyvV5cDVRWJxz7xq/cB9au
+         LYrBwqxSBkhIKBzBNs0hwtCBHRO1gixAqGnRtxVTd+01UzyFfxHSDne9WN6ttlm+rb
+         jcQBniXrkaKqn2jBmZOb15DeGZFcd9PAC8aU0sErmt9X3VJ12+DgM2/0JBOHnN/nNw
+         G4IIFddQ3lsrPoLfBPfhYi7wy7+MEYhHtnQkavlIidm5fb5N3XrXiQ6swPnyQws0/W
+         CtU43okgiFy2OpjRFiWX3gSYz6BOM2afEEdzeBOnonvAaXEfnmyinRGY3cRVziG/FD
+         TihvS5WssHAGA==
+Received: by mail-wm1-f49.google.com with SMTP id n126-20020a1c2784000000b0038e8af3e788so8339736wmn.1;
+        Sun, 24 Apr 2022 11:48:56 -0700 (PDT)
+X-Gm-Message-State: AOAM532dCbbuPtNLiFWY0oLFZs8XVfrMBbWkSdIYLtsNfBb72iV3o7bU
+        it6YCv5pHi/kxy42HhEx37g9WQ8uhZLw+EPMKaw=
+X-Google-Smtp-Source: ABdhPJy0bXzhrJhOMZ1X8kbnkslFxEyAGa0Ih/9fgvnO3mTuzgN7/0kU+dSPN2u/9dZRAXnrV+Nc5ftINsUw3V0d/rc=
+X-Received: by 2002:a05:600c:4e4a:b0:392:88e1:74a7 with SMTP id
+ e10-20020a05600c4e4a00b0039288e174a7mr22771106wmq.174.1650826135238; Sun, 24
+ Apr 2022 11:48:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20220407123748.1170212-5-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+References: <20220419163810.2118169-1-arnd@kernel.org> <20220422170530.GA2338209@roeck-us.net>
+ <CAK8P3a3V=qxUqYT3Yt=dpXVv58-Y+HVi952wO6D4LPN5NNphGA@mail.gmail.com>
+ <8b36d3a4-ec85-2f9f-e4b7-734d8ddd3d8f@roeck-us.net> <CAK8P3a0R9cpEb1d2=e9KnGSbi_uRv48RWfCu_J4DDak_cGZSuw@mail.gmail.com>
+ <20220422234150.GA3442771@roeck-us.net> <CAK8P3a3qZdEqnJ2nTOKwDMossngOgCpEvZq4cQMPQjSsUoU=6g@mail.gmail.com>
+ <3b4046ed-fd75-13ea-fac3-06469172806c@roeck-us.net> <CAK8P3a1LzEG1vo+5nMrnL3TOMcbSKJ3u=StcfY8dajV2raUBjA@mail.gmail.com>
+ <3df135a2-17f5-d6c6-b4a8-e1a60e254297@roeck-us.net>
+In-Reply-To: <3df135a2-17f5-d6c6-b4a8-e1a60e254297@roeck-us.net>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Sun, 24 Apr 2022 20:48:39 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a2EHMQPN4ny9sXXuReFG0jN0hyRV7h9v_AR_0pqpOU41w@mail.gmail.com>
+Message-ID: <CAK8P3a2EHMQPN4ny9sXXuReFG0jN0hyRV7h9v_AR_0pqpOU41w@mail.gmail.com>
+Subject: Re: [PATCH v2 00/48] ARM: PXA multiplatform support
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     Robert Jarzmik <robert.jarzmik@free.fr>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Philipp Zabel <philipp.zabel@gmail.com>,
+        Lubomir Rintel <lkundrak@v3.sk>,
+        Paul Parsons <lost.distance@yahoo.com>,
+        Tomas Cech <sleep_walker@suse.com>,
+        Sergey Lapin <slapin@ossfans.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        IDE-ML <linux-ide@vger.kernel.org>,
+        linux-clk <linux-clk@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
+        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/7/22 3:37 PM, Damien Le Moal wrote:
+On Sun, Apr 24, 2022 at 5:28 PM Guenter Roeck <linux@roeck-us.net> wrote:
+> On 4/24/22 01:52, Arnd Bergmann wrote:
+> > On Sun, Apr 24, 2022 at 4:09 AM Guenter Roeck <linux@roeck-us.net> wrote:
+> > into the defconfig file, otherwise the multiplatform target defaults to
+> > an ARMv7 instead of ARMv5 build. For an OMAP15xx as in the SX1,
+> > you also need to enable CONFIG_ARCH_MULTI_V4T.
+> >
+> > This is slightly unfortunate, but I don't see any way to avoid it, and the
+> > modified defconfig will still work fine with older kernel trees.
+> >
+>
+> Yes, that works. I changed it in my configuration.
 
-> To facilitate debugging of drive issues in the field without kernel
-> changes (e.g. temporary test patches), add an entry for most horkage
-> flags in the force_tbl array to allow controlling these horkage
-> settings with the libata.force kernel boot parameter.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->  drivers/ata/libata-core.c | 22 ++++++++++++++++++++--
->  1 file changed, 20 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 75856f4210d7..121cb55a219a 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -6230,9 +6230,27 @@ static const struct ata_force_param force_tbl[] __initconst = {
->  	force_horkage_onoff(ncqtrim,	ATA_HORKAGE_NO_NCQ_TRIM),
->  	force_horkage_onoff(ncqati,	ATA_HORKAGE_NO_NCQ_ON_ATI),
->  
-> -	force_horkage_on(dump_id,	ATA_HORKAGE_DUMP_ID),
-> +	force_horkage_onoff(trim,	ATA_HORKAGE_NOTRIM),
-> +	force_horkage_onoff(trim_zero,	ATA_HORKAGE_ZERO_AFTER_TRIM),
-> +	force_horkage_on(max_trim_128m, ATA_HORKAGE_MAX_TRIM_128M),
-> +
-> +	force_horkage_onoff(dma,	ATA_HORKAGE_NODMA),
->  	force_horkage_on(atapi_dmadir,	ATA_HORKAGE_ATAPI_DMADIR),
-> -	force_horkage_on(disable,	ATA_HORKAGE_DISABLE)
-> +	force_horkage_on(atapi_mod16_dma, ATA_HORKAGE_ATAPI_MOD16_DMA),
-> +
-> +	force_horkage_onoff(dma_log,	ATA_HORKAGE_NO_DMA_LOG),
-> +	force_horkage_onoff(id_dev_log,	ATA_HORKAGE_NO_ID_DEV_LOG),
-> +	force_horkage_onoff(log_dir,	ATA_HORKAGE_NO_LOG_DIR),
+Ok, great!. I managed to boot the z2 machine with PCMCIA support
+and it gets around the issue with my patch, correctly detecting the
+CF card.
 
-   Underscores in the names with "no" (without underscore) would look inconsistent,
-wouldn't they? Maybe drop the underscores here?
+> >>> One thing I keep having to apply myself is this snippet:
+> >>>
+> >>> diff --git a/arch/arm/mm/proc-arm925.S b/arch/arm/mm/proc-arm925.S
+> >>> index 0bfad62ea858..87c695703580 100644
+> >>> --- a/arch/arm/mm/proc-arm925.S
+> >>> +++ b/arch/arm/mm/proc-arm925.S
+> >>> @@ -441,7 +441,6 @@ __arm925_setup:
+> >>>
+> >>>    #ifdef CONFIG_CPU_DCACHE_WRITETHROUGH
+> >>>           mov     r0, #4                          @ disable write-back
+> >>> on caches explicitly
+> >>> -       mcr     p15, 7, r0, c15, c0, 0
+> >>>    #endif
+> >>
+> >> it does not have CONFIG_CPU_DCACHE_WRITETHROUGH enabled.
+> >
+> > Maybe it was disabled explicitly for the sx1_defconfig because of this
+> > bug. I would think that this is required for actual sx1 hardware because the
+> > option is default-enabled for ARM925T, and that CPU core is exclusively
+> > used in OMAP15xx.
+> >
+>
+> That looks like a bug in qemu. ARM925T instruction support is limited to V4T
+> instructions. qemu doesn't have explicit 5T support. It is either V4T
+> or V5.
 
-[...]
+I'm not entirely sure what instructions the CPU supports, but Linux
+treats it as ARMv4T as well, and qemu supports some of the 925t
+specific instructions as "ti925t" in target/arm/cpu_tcg.c, it just seems
+it's missing some others.
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
-MBR, Sergey
+      Arnd
