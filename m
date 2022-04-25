@@ -2,141 +2,155 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7311AC433FE
-	for <linux-ide@archiver.kernel.org>; Sun, 24 Apr 2022 18:49:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77244C433FE
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Apr 2022 00:38:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237157AbiDXSwB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 24 Apr 2022 14:52:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44386 "EHLO
+        id S240020AbiDYAl3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 24 Apr 2022 20:41:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229929AbiDXSwA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 14:52:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 848D813F51;
-        Sun, 24 Apr 2022 11:48:58 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B01276124F;
-        Sun, 24 Apr 2022 18:48:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12B0CC385B1;
-        Sun, 24 Apr 2022 18:48:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650826137;
-        bh=ipl3oSa3DODJXFqNROBx1CoqGwslciyjMuC+i+Saf6s=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=BOkM82fII90m6hiFZrsM+S6NoOx/9JSXO645uDox3wouyvV5cDVRWJxz7xq/cB9au
-         LYrBwqxSBkhIKBzBNs0hwtCBHRO1gixAqGnRtxVTd+01UzyFfxHSDne9WN6ttlm+rb
-         jcQBniXrkaKqn2jBmZOb15DeGZFcd9PAC8aU0sErmt9X3VJ12+DgM2/0JBOHnN/nNw
-         G4IIFddQ3lsrPoLfBPfhYi7wy7+MEYhHtnQkavlIidm5fb5N3XrXiQ6swPnyQws0/W
-         CtU43okgiFy2OpjRFiWX3gSYz6BOM2afEEdzeBOnonvAaXEfnmyinRGY3cRVziG/FD
-         TihvS5WssHAGA==
-Received: by mail-wm1-f49.google.com with SMTP id n126-20020a1c2784000000b0038e8af3e788so8339736wmn.1;
-        Sun, 24 Apr 2022 11:48:56 -0700 (PDT)
-X-Gm-Message-State: AOAM532dCbbuPtNLiFWY0oLFZs8XVfrMBbWkSdIYLtsNfBb72iV3o7bU
-        it6YCv5pHi/kxy42HhEx37g9WQ8uhZLw+EPMKaw=
-X-Google-Smtp-Source: ABdhPJy0bXzhrJhOMZ1X8kbnkslFxEyAGa0Ih/9fgvnO3mTuzgN7/0kU+dSPN2u/9dZRAXnrV+Nc5ftINsUw3V0d/rc=
-X-Received: by 2002:a05:600c:4e4a:b0:392:88e1:74a7 with SMTP id
- e10-20020a05600c4e4a00b0039288e174a7mr22771106wmq.174.1650826135238; Sun, 24
- Apr 2022 11:48:55 -0700 (PDT)
+        with ESMTP id S240007AbiDYAl2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Apr 2022 20:41:28 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B00805AA65
+        for <linux-ide@vger.kernel.org>; Sun, 24 Apr 2022 17:38:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1650847106; x=1682383106;
+  h=message-id:date:mime-version:subject:from:to:cc:
+   references:in-reply-to:content-transfer-encoding;
+  bh=3GKo3akmPmbsoMGomkRR004mzFEvzpwtTzal1nbSqPE=;
+  b=r21I9EtbYWbHGg8Ii3kXXdbhXr+d06g9Jxx/F9NqM3i65NPe69iSGWh4
+   VIb74Jq8czaZRSP6DqiqQPHL88oGzDbfDYPkajS7mg3lUA7GTg007luWb
+   LaAc9kQXHxjTYMX/RyiUJk5HT1yKmBsey8r+1q0NVFv3IWGg73k0bheCt
+   9qMlxiP+OFUWhJxRStDe8GpMu8pPtYOYUZIHSk1vqM5I0hJszFR9KqbN0
+   R4Tp49HOmymlBUxxxYhOdY+uQHE1v3y6sTzLEak4ZTnkW/RIFMNe/t554
+   Vl1cgiN9n1xJjsOnAzzwHzxXzfF4PTfT4ZWvahOJUG7nlwtJzo9OnqBWw
+   A==;
+X-IronPort-AV: E=Sophos;i="5.90,287,1643644800"; 
+   d="scan'208";a="302912981"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Apr 2022 08:38:23 +0800
+IronPort-SDR: CdbiPqNXllwmH9x6HIA9U5aspCASHytHAgcuxSagecCph5sqJauNdHrDtrUpKEU/wB1+e+QGfg
+ MdKlrKiTDwL7qHwMq81+PyblPFJ89FUL7SITJdrU8xWF9Au1juhZeGKkM73qtgvesOEvfZEyg3
+ alFY7Z+OtN+cgwpgXlN+4FGlt44cbqy32RctQXM5Nssc24K2DSKzwRCXJweUK67JaeC8jZHBga
+ Fxeqon8RlS/L1So8ptNAUeYZtBjBvmE/BctqICUaOt3MXyfBt16Pv/UquQvyTDE4KxpcByMbmU
+ Q35F+AgV4xKTYLCQLvsGWz2h
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Apr 2022 17:09:19 -0700
+IronPort-SDR: lXXMjmLA6wcaHOp8KwcXa2zF130Fko5Syw8vw6gnyjkzVxWxTiS7gztB37SV5nv86PzgqEPVXg
+ f8kO60jyIRQfIK7BALGnUKZ06MyKcMdagD7PKaT883dL6yNho3OXJMfB/EHGLn22OAuTtmskH8
+ SbrKdlYj9lMuL65TiqfknOGcro7gRlSF4nPzvRY1jNqIN0imw0hjjy66gc+oiW0mmMM1ueiulR
+ 7P4Wl21+ZNt+DTOVhUf3S2hj20cNCB+ZF/4px5nFe02GzuTXx8tfr0FVmiRyfY4lZCanZx8Bng
+ Krw=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Apr 2022 17:38:20 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KmmMb4bhGz1SVnx
+        for <linux-ide@vger.kernel.org>; Sun, 24 Apr 2022 17:38:19 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:references:to:from:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1650847099; x=1653439100; bh=3GKo3akmPmbsoMGomkRR004mzFEvzpwtTza
+        l1nbSqPE=; b=XepVK9VKtgWYgdcctEgyewN+KILSteQzCsBEdPkefIX7d4Xn5OJ
+        9WZbhMCJKuxJ1wl9zDgJGJRA4JcM/IiL+52W6UpthgH3zuw+hossAjuwpSKJ4BY3
+        0zMdQQdv7eInw8iW7nIQeWiVuoMWZl810eUgR87vqv1o6AA6nehNM5gFvaN52GyT
+        sqUUWx++daxof40d2swOYDVUR1lsRWW4bq8BXFplq9zRZkEvsxeUKhtiVHTmoT/u
+        eXvxQH6JlbgKRLkLAkZyB7K8ZpTAJ7Gir3Td6ICTotCcIkyGMTtvCg5RZZFkXHtg
+        dEHvxWd3/itbRB2vT5Exg5kN6mb0eMG+yqA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id nHrgd4JOXfE9 for <linux-ide@vger.kernel.org>;
+        Sun, 24 Apr 2022 17:38:19 -0700 (PDT)
+Received: from [10.225.163.24] (unknown [10.225.163.24])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KmmMZ2YmVz1Rvlx;
+        Sun, 24 Apr 2022 17:38:18 -0700 (PDT)
+Message-ID: <39f1ac3d-d8d8-1585-360f-ab534dac2a00@opensource.wdc.com>
+Date:   Mon, 25 Apr 2022 09:38:17 +0900
 MIME-Version: 1.0
-References: <20220419163810.2118169-1-arnd@kernel.org> <20220422170530.GA2338209@roeck-us.net>
- <CAK8P3a3V=qxUqYT3Yt=dpXVv58-Y+HVi952wO6D4LPN5NNphGA@mail.gmail.com>
- <8b36d3a4-ec85-2f9f-e4b7-734d8ddd3d8f@roeck-us.net> <CAK8P3a0R9cpEb1d2=e9KnGSbi_uRv48RWfCu_J4DDak_cGZSuw@mail.gmail.com>
- <20220422234150.GA3442771@roeck-us.net> <CAK8P3a3qZdEqnJ2nTOKwDMossngOgCpEvZq4cQMPQjSsUoU=6g@mail.gmail.com>
- <3b4046ed-fd75-13ea-fac3-06469172806c@roeck-us.net> <CAK8P3a1LzEG1vo+5nMrnL3TOMcbSKJ3u=StcfY8dajV2raUBjA@mail.gmail.com>
- <3df135a2-17f5-d6c6-b4a8-e1a60e254297@roeck-us.net>
-In-Reply-To: <3df135a2-17f5-d6c6-b4a8-e1a60e254297@roeck-us.net>
-From:   Arnd Bergmann <arnd@kernel.org>
-Date:   Sun, 24 Apr 2022 20:48:39 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a2EHMQPN4ny9sXXuReFG0jN0hyRV7h9v_AR_0pqpOU41w@mail.gmail.com>
-Message-ID: <CAK8P3a2EHMQPN4ny9sXXuReFG0jN0hyRV7h9v_AR_0pqpOU41w@mail.gmail.com>
-Subject: Re: [PATCH v2 00/48] ARM: PXA multiplatform support
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     Robert Jarzmik <robert.jarzmik@free.fr>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Philipp Zabel <philipp.zabel@gmail.com>,
-        Lubomir Rintel <lkundrak@v3.sk>,
-        Paul Parsons <lost.distance@yahoo.com>,
-        Tomas Cech <sleep_walker@suse.com>,
-        Sergey Lapin <slapin@ossfans.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        linux-clk <linux-clk@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
-        linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v2] ata: pata_marvell: Check the 'bmdma_addr' beforing
+ reading
+Content-Language: en-US
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Zheyu Ma <zheyuma97@gmail.com>, s.shtylyov@omp.ru
+Cc:     linux-ide@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+References: <20220421013920.3503034-1-zheyuma97@gmail.com>
+ <e29fd64e-62ea-746e-f0fb-02ce86b4e61e@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <e29fd64e-62ea-746e-f0fb-02ce86b4e61e@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, Apr 24, 2022 at 5:28 PM Guenter Roeck <linux@roeck-us.net> wrote:
-> On 4/24/22 01:52, Arnd Bergmann wrote:
-> > On Sun, Apr 24, 2022 at 4:09 AM Guenter Roeck <linux@roeck-us.net> wrote:
-> > into the defconfig file, otherwise the multiplatform target defaults to
-> > an ARMv7 instead of ARMv5 build. For an OMAP15xx as in the SX1,
-> > you also need to enable CONFIG_ARCH_MULTI_V4T.
-> >
-> > This is slightly unfortunate, but I don't see any way to avoid it, and the
-> > modified defconfig will still work fine with older kernel trees.
-> >
->
-> Yes, that works. I changed it in my configuration.
+On 4/22/22 08:47, Damien Le Moal wrote:
+> On 4/21/22 10:39, Zheyu Ma wrote:
+>> Before detecting the cable type on the dma bar, the driver should check
+>> whether the 'bmdma_addr' is zero, which means the adapter does not
+>> support DMA, otherwise we will get the following error:
+>>
+>> [    5.146634] Bad IO access at port 0x1 (return inb(port))
+>> [    5.147206] WARNING: CPU: 2 PID: 303 at lib/iomap.c:44 ioread8+0x4a/0x60
+>> [    5.150856] RIP: 0010:ioread8+0x4a/0x60
+>> [    5.160238] Call Trace:
+>> [    5.160470]  <TASK>
+>> [    5.160674]  marvell_cable_detect+0x6e/0xc0 [pata_marvell]
+>> [    5.161728]  ata_eh_recover+0x3520/0x6cc0
+>> [    5.168075]  ata_do_eh+0x49/0x3c0
+>>
+>> Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+>> ---Changes in v2:
+>>      - Delete the useless 'else'
+> 
+> Note for future contributions: The change log should be placed *after* 
+> the "---" that comes before the "diff" line below. Otherwise, the change 
+> log pollutes the commit message.
+> 
+> I fixed that and applied to for-5.18-fixes. Thanks.
 
-Ok, great!. I managed to boot the z2 machine with PCMCIA support
-and it gets around the issue with my patch, correctly detecting the
-CF card.
+I completely overlooked that this needs a CC stable...
 
-> >>> One thing I keep having to apply myself is this snippet:
-> >>>
-> >>> diff --git a/arch/arm/mm/proc-arm925.S b/arch/arm/mm/proc-arm925.S
-> >>> index 0bfad62ea858..87c695703580 100644
-> >>> --- a/arch/arm/mm/proc-arm925.S
-> >>> +++ b/arch/arm/mm/proc-arm925.S
-> >>> @@ -441,7 +441,6 @@ __arm925_setup:
-> >>>
-> >>>    #ifdef CONFIG_CPU_DCACHE_WRITETHROUGH
-> >>>           mov     r0, #4                          @ disable write-back
-> >>> on caches explicitly
-> >>> -       mcr     p15, 7, r0, c15, c0, 0
-> >>>    #endif
-> >>
-> >> it does not have CONFIG_CPU_DCACHE_WRITETHROUGH enabled.
-> >
-> > Maybe it was disabled explicitly for the sx1_defconfig because of this
-> > bug. I would think that this is required for actual sx1 hardware because the
-> > option is default-enabled for ARM925T, and that CPU core is exclusively
-> > used in OMAP15xx.
-> >
->
-> That looks like a bug in qemu. ARM925T instruction support is limited to V4T
-> instructions. qemu doesn't have explicit 5T support. It is either V4T
-> or V5.
+Greg,
 
-I'm not entirely sure what instructions the CPU supports, but Linux
-treats it as ARMv4T as well, and qemu supports some of the 925t
-specific instructions as "ti925t" in target/arm/cpu_tcg.c, it just seems
-it's missing some others.
+Could you please pickup this commit for stable ?
+In Linus tree/rc4, it is:
 
-      Arnd
+aafa9f958342 ("ata: pata_marvell: Check the 'bmdma_addr' beforing reading")
+
+Thanks !
+
+> 
+>> ---
+>>   drivers/ata/pata_marvell.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+>> index 0c5a51970fbf..014ccb0f45dc 100644
+>> --- a/drivers/ata/pata_marvell.c
+>> +++ b/drivers/ata/pata_marvell.c
+>> @@ -77,6 +77,8 @@ static int marvell_cable_detect(struct ata_port *ap)
+>>   	switch(ap->port_no)
+>>   	{
+>>   	case 0:
+>> +		if (!ap->ioaddr.bmdma_addr)
+>> +			return ATA_CBL_PATA_UNK;
+>>   		if (ioread8(ap->ioaddr.bmdma_addr + 1) & 1)
+>>   			return ATA_CBL_PATA40;
+>>   		return ATA_CBL_PATA80;
+> 
+> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
