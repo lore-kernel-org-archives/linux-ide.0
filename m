@@ -2,153 +2,87 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFD9CC433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Apr 2022 06:44:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D54C433FE
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Apr 2022 10:19:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241360AbiDYGr0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 25 Apr 2022 02:47:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48764 "EHLO
+        id S236425AbiDYKWK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 25 Apr 2022 06:22:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236952AbiDYGrN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Apr 2022 02:47:13 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE04B33EAD;
-        Sun, 24 Apr 2022 23:44:07 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S239647AbiDYKWD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Apr 2022 06:22:03 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D7384338C;
+        Mon, 25 Apr 2022 03:18:58 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 7CAB0210F3;
-        Mon, 25 Apr 2022 06:44:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1650869046; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AzFUCTouMzGK1LvggZxibKpXYFAUXPi7HtPz//nN0kE=;
-        b=yqy/e06AwAjELWmwL/ConAvSCSNxi8zdvZ8PUeKkDGWj/4Idcmsmh0MHsVBpNOv2gG+vBw
-        iaIxViiT1dEX/vF4bSRdeHDJLoodzhUpsXR2zLuumLpGyUa/fa1mM4DPK8Z+OGBCUZg5Qj
-        Vva7bStKuMg7k+shunhkTw5Oi+j96Hw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1650869046;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AzFUCTouMzGK1LvggZxibKpXYFAUXPi7HtPz//nN0kE=;
-        b=LI7aCPOWQYTzX/uBFlZhkXqDMhytbozF9lHac/sjS4IBRjsGDwLMPsET+xd2TDiIjNgEbM
-        LcmPSOXhd9ciuBAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5254513AE1;
-        Mon, 25 Apr 2022 06:44:06 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id GtZXETZDZmIeUgAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 25 Apr 2022 06:44:06 +0000
-Message-ID: <a884fec0-7ef7-6b89-f445-356d86999647@suse.de>
-Date:   Mon, 25 Apr 2022 08:44:05 +0200
+        by ams.source.kernel.org (Postfix) with ESMTPS id A9886B8124E;
+        Mon, 25 Apr 2022 10:18:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B9CFC385A4;
+        Mon, 25 Apr 2022 10:18:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1650881935;
+        bh=zBGvsRPqhpWLS8YHP3rMEZJgIcc0A1DxjtWg5qIlo9A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=wH0y173E9KeZTUupJGYpeZIR3RO52eGg+sN4/HyEOZk6lXxBVaQ853IJjwuTvT0ub
+         xzAOuGDcacoDLCU7ItteurGT4GBX1PnaPpQbY0DlDu1xhL35FQfWgkk8AZrS1AYv00
+         bIAnzEn/I04oRU0zr8QGLlMUQk48SaqGYELTYP1o=
+Date:   Mon, 25 Apr 2022 12:18:51 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Zheyu Ma <zheyuma97@gmail.com>, s.shtylyov@omp.ru,
+        linux-ide@vger.kernel.org,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v2] ata: pata_marvell: Check the 'bmdma_addr' beforing
+ reading
+Message-ID: <YmZ1i0QYqlMdgck4@kroah.com>
+References: <20220421013920.3503034-1-zheyuma97@gmail.com>
+ <e29fd64e-62ea-746e-f0fb-02ce86b4e61e@opensource.wdc.com>
+ <39f1ac3d-d8d8-1585-360f-ab534dac2a00@opensource.wdc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linux-doc@vger.kernel.org
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
-References: <20220425013417.3947791-1-damien.lemoal@opensource.wdc.com>
- <20220425013417.3947791-5-damien.lemoal@opensource.wdc.com>
- <b64df936-681c-c88e-9f44-ab71e810584f@suse.de>
- <71a4a301-ca96-e1a3-aeee-fd69b8f1eb7b@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 4/5] ata: libata-core: Allow forcing most horkage flags
-In-Reply-To: <71a4a301-ca96-e1a3-aeee-fd69b8f1eb7b@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <39f1ac3d-d8d8-1585-360f-ab534dac2a00@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/25/22 08:15, Damien Le Moal wrote:
-> On 4/25/22 15:00, Hannes Reinecke wrote:
->> On 4/25/22 03:34, Damien Le Moal wrote:
->>> To facilitate debugging of drive issues in the field without kernel
->>> changes (e.g. temporary test patches), add an entry for most horkage
->>> flags in the force_tbl array to allow controlling these horkage
->>> settings with the libata.force kernel boot parameter.
->>>
->>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>> ---
->>>    drivers/ata/libata-core.c | 22 ++++++++++++++++++++--
->>>    1 file changed, 20 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index e5a0e73b39d3..f68cb5639ec4 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -6230,9 +6230,27 @@ static const struct ata_force_param force_tbl[] __initconst = {
->>>    	force_horkage_onoff(ncqtrim,	ATA_HORKAGE_NO_NCQ_TRIM),
->>>    	force_horkage_onoff(ncqati,	ATA_HORKAGE_NO_NCQ_ON_ATI),
->>>    
->>> -	force_horkage_on(dump_id,	ATA_HORKAGE_DUMP_ID),
->>> +	force_horkage_onoff(trim,	ATA_HORKAGE_NOTRIM),
->>> +	force_horkage_on(trim_zero,	ATA_HORKAGE_ZERO_AFTER_TRIM),
->>> +	force_horkage_on(max_trim_128m, ATA_HORKAGE_MAX_TRIM_128M),
->>> +
->>> +	force_horkage_onoff(dma,	ATA_HORKAGE_NODMA),
->>>    	force_horkage_on(atapi_dmadir,	ATA_HORKAGE_ATAPI_DMADIR),
->>> -	force_horkage_on(disable,	ATA_HORKAGE_DISABLE)
->>> +	force_horkage_on(atapi_mod16_dma, ATA_HORKAGE_ATAPI_MOD16_DMA),
->>> +
->>> +	force_horkage_onoff(dmalog,	ATA_HORKAGE_NO_DMA_LOG),
->>> +	force_horkage_onoff(iddevlog,	ATA_HORKAGE_NO_ID_DEV_LOG),
->>> +	force_horkage_onoff(logdir,	ATA_HORKAGE_NO_LOG_DIR),
->>> +
->>> +	force_horkage_on(max_sec_128,	ATA_HORKAGE_MAX_SEC_128),
->>> +	force_horkage_on(max_sec_1024,	ATA_HORKAGE_MAX_SEC_1024),
->>> +	force_horkage_on(max_sec_lba48,	ATA_HORKAGE_MAX_SEC_LBA48),
->>> +
->>> +	force_horkage_onoff(lpm,	ATA_HORKAGE_NOLPM),
->>> +	force_horkage_onoff(setxfer,	ATA_HORKAGE_NOSETXFER),
->>> +	force_horkage_on(dump_id,	ATA_HORKAGE_DUMP_ID),
->>> +
->>> +	force_horkage_on(disable,	ATA_HORKAGE_DISABLE),
->>
->> ... and this exemplifies my concerns with the 'onoff' mechanism:
->> Why is 'disable' just marked as 'on' ?
+On Mon, Apr 25, 2022 at 09:38:17AM +0900, Damien Le Moal wrote:
+> On 4/22/22 08:47, Damien Le Moal wrote:
+> > On 4/21/22 10:39, Zheyu Ma wrote:
+> >> Before detecting the cable type on the dma bar, the driver should check
+> >> whether the 'bmdma_addr' is zero, which means the adapter does not
+> >> support DMA, otherwise we will get the following error:
+> >>
+> >> [    5.146634] Bad IO access at port 0x1 (return inb(port))
+> >> [    5.147206] WARNING: CPU: 2 PID: 303 at lib/iomap.c:44 ioread8+0x4a/0x60
+> >> [    5.150856] RIP: 0010:ioread8+0x4a/0x60
+> >> [    5.160238] Call Trace:
+> >> [    5.160470]  <TASK>
+> >> [    5.160674]  marvell_cable_detect+0x6e/0xc0 [pata_marvell]
+> >> [    5.161728]  ata_eh_recover+0x3520/0x6cc0
+> >> [    5.168075]  ata_do_eh+0x49/0x3c0
+> >>
+> >> Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+> >> ---Changes in v2:
+> >>      - Delete the useless 'else'
+> > 
+> > Note for future contributions: The change log should be placed *after* 
+> > the "---" that comes before the "diff" line below. Otherwise, the change 
+> > log pollutes the commit message.
+> > 
+> > I fixed that and applied to for-5.18-fixes. Thanks.
 > 
-> Yeah, I can add the off side of it too. Fairly useless though as these are
-> off by default, except for the few cases where we already know that the
-> flag is needed, in which case turning it off would be a bad idea. So I do
-> not allow it by having the "on" only.
+> I completely overlooked that this needs a CC stable...
 > 
->> Sure we can set it to 'off' (we have to, otherwise that flag would
->> always be set). And if we can set it to 'off', where's the different to
->> 'onoff' ?
+> Greg,
 > 
-> Because of the reversed definition of the flag. E.g. nodmalog means *set*
-> ATA_HORKAGE_NO_DMA_LOG flags. so the "no" option means set. If we add the
-> off version for non reversed flags, then the "no" option would clear the
-> flag, not set it. It is a mess. That is the cleanest way I could think of
-> without making things even more messy.
+> Could you please pickup this commit for stable ?
+> In Linus tree/rc4, it is:
 > 
-> At best, we can allow everything to be set/cleared using 2 macros:
-> onoff and offon, depending on the flag meaning polarity (i.e. a NO flag or
-> not).
-> 
+> aafa9f958342 ("ata: pata_marvell: Check the 'bmdma_addr' beforing reading")
 
-Hmm. Yeah, I see. Ugly, but probably the easiest for now.
+Now queued up, thanks.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+greg k-h
