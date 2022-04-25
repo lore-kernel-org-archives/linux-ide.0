@@ -2,198 +2,172 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE184C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Apr 2022 06:11:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF11FC433FE
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Apr 2022 06:15:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232398AbiDYGN7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 25 Apr 2022 02:13:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47288 "EHLO
+        id S231631AbiDYGSo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 25 Apr 2022 02:18:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230164AbiDYGN4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Apr 2022 02:13:56 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0E9A3A73E;
-        Sun, 24 Apr 2022 23:10:52 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7D8921F37D;
-        Mon, 25 Apr 2022 06:10:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1650867051; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ACDWi+HZXq+GD9B+UOultTxflFHqIy8rAZAnx6UeF2c=;
-        b=OupT5VFdpE8CryhSF+5BdgtWsFc4bFxeBWe1FvoJRjMSRPr7ZPlaikjHhHvPEWdLt+eVnT
-        vc9hVl1QtSDUmGPhjIv8zSod0TGG/2OGSl8kmwGtNraFV1Nh0/yQO39d3qZvg9YuW9H6UN
-        oEbrfm7F5iZaSxJqM2pvc54ZKJJ9oKE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1650867051;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ACDWi+HZXq+GD9B+UOultTxflFHqIy8rAZAnx6UeF2c=;
-        b=io6eTgfj9MhHsl/1vMNHK6+nIZOV4BukyDxTTpnK+LhAfPBe28AY8Tj53/zPo6jTp3ojvP
-        yYJiHJ5Z9SuSriDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 38BE813AED;
-        Mon, 25 Apr 2022 06:10:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id KoHHC2s7ZmLKSQAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 25 Apr 2022 06:10:51 +0000
-Message-ID: <b7c875e8-0870-8795-fc78-671387a66b69@suse.de>
-Date:   Mon, 25 Apr 2022 08:10:49 +0200
+        with ESMTP id S237674AbiDYGSi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Apr 2022 02:18:38 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1795F1401D
+        for <linux-ide@vger.kernel.org>; Sun, 24 Apr 2022 23:15:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1650867335; x=1682403335;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=hVM1Wj4nHDkPexEOec7X52T3CLZ3gZGOXYqVoR7klFU=;
+  b=CXDJD1hk15awU+Pr8uxqlWy/sYkiIMHG2vkJ6nyiYmyrq+DtQKmaspgN
+   YC1bb5okm+yg1WFqbllb7dZEN6RadBEZ4+Ex1fmANoQbY9T8qspw/9yiY
+   0R7BwtYfPn97txmUE2br20Ue/CV6UpwBRbH+xas/mj3x4rg1TPvGuacae
+   kt2wQfcfCZDZwEh1Xu1JemCHBL8S8ObMFYshT1I3xpWBpPVtYtV0Q+DbO
+   AgawIEpUI8uWegRbANLtlWwGKSY3i43BV27pUIjuVQjsuYsXb7ZD38lWY
+   AW73Rv2bc2KbADktpZXY4FZVT6kKFBSu7Rzv4QqBvNbNp6JUUQaBQkvou
+   g==;
+X-IronPort-AV: E=Sophos;i="5.90,287,1643644800"; 
+   d="scan'208";a="302936077"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Apr 2022 14:15:34 +0800
+IronPort-SDR: W8wa9jMSsoGD/rBauCmt+f8fJuiCCPLzottX0aYsGWgMnYW6VIUoCnoLZB7OLlrOsNzijXvUQu
+ YVzfJ0RGJS5ADHXpLJfllplaXeRytmCY06/ekV02KddF4StznNvNw7QH92v1S8W9cCTo2n09ct
+ bs/w3YdliRtJHZP3KQsibO8llhKbQQw8JWd/eP80WZpm2wR0asWomgf5OpH9+9+H7R7J1D8NjQ
+ MjsvwSxIda3JnE+Eg9EpCMVpW3hxPdpyKdnKVBkXuA/kUV1kultWa2hoqqu/tfuwqDzuKHzLqx
+ utKqCmIKxDcr//pEKR97WbXo
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Apr 2022 22:46:30 -0700
+IronPort-SDR: SEzKwo+oYmOXhTkeZV3rAbk7oQz4sSk4ude4rLSXDklHvfb7iDspqKREBiJTiCJsZVcupRaMVS
+ K+4wYw41Xzqf8BmjrJ2TXVxjKvvPsIGrNPWVwB7wXJosgmiFgciuh3bP3gs6mRiTSCUeFmI9V2
+ A6LBK7YzfP+GuU6pU2qJkB2cjiaXxNlDSZRolJo2CtRWYe28Vk4ick8NEHeDcieie/cumoQUwC
+ 7LpXMj+Pf5a+5DjrrXLoHJQXq1iOw0pB8/1Lrpr3tRzU030tLMPJbZQ3XoULf0+0YUXbJE7eh0
+ VU0=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Apr 2022 23:15:34 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Kmvrj5Ntvz1SHwl
+        for <linux-ide@vger.kernel.org>; Sun, 24 Apr 2022 23:15:33 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1650867333; x=1653459334; bh=hVM1Wj4nHDkPexEOec7X52T3CLZ3gZGOXYq
+        VoR7klFU=; b=sJcmh3mz5LiAiLC51APRQvegJ7YJZW+o/IaX8RBIiJJYlviqeuP
+        S8RgFmhKjJJnY1qsyfz2DjWLuYyC1Asetr6UE7r9hEMtjaTOKQhTLZs+DNPOuUK1
+        qTE58TyTbU/K5TlAqQzNSBZ2tlvmXKdg0Wi91FUurdgS+bi82dpatNhjq4LmwI8R
+        I8lEFUK3NJZFYzedHVM2yFoiyO1WJLqxU8pChhoX7IpAi2kWVoXpxmTUnXN6ABqZ
+        hvx2i2dlsoQ7kfxUsICp7jZxI39Lil0qg84AIgumvGcHCbwjFUnuVbdxjr1Ufr7Q
+        XcwDuET75SN/7zBZGwaBeUHXSlCO1t/tEtg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 4K3xVPcbmZPj for <linux-ide@vger.kernel.org>;
+        Sun, 24 Apr 2022 23:15:33 -0700 (PDT)
+Received: from [10.225.163.24] (unknown [10.225.163.24])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Kmvrh3f6Tz1Rvlx;
+        Sun, 24 Apr 2022 23:15:32 -0700 (PDT)
+Message-ID: <71a4a301-ca96-e1a3-aeee-fd69b8f1eb7b@opensource.wdc.com>
+Date:   Mon, 25 Apr 2022 15:15:31 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v2 3/5] ata: libata-core: Improve link flags forced
- settings
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v2 4/5] ata: libata-core: Allow forcing most horkage flags
 Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        linux-doc@vger.kernel.org
+To:     Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
+        Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
 Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
 References: <20220425013417.3947791-1-damien.lemoal@opensource.wdc.com>
- <20220425013417.3947791-4-damien.lemoal@opensource.wdc.com>
- <21b1ef5b-aaf6-6baa-6580-52f3c35d2d67@suse.de>
- <f1185514-a4de-5430-b4a0-b172e22009e8@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <f1185514-a4de-5430-b4a0-b172e22009e8@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <20220425013417.3947791-5-damien.lemoal@opensource.wdc.com>
+ <b64df936-681c-c88e-9f44-ab71e810584f@suse.de>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <b64df936-681c-c88e-9f44-ab71e810584f@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/25/22 08:08, Damien Le Moal wrote:
-> On 4/25/22 14:56, Hannes Reinecke wrote:
->> On 4/25/22 03:34, Damien Le Moal wrote:
->>> Similarly to the horkage flags, introduce the force_lflag_onoff() macro
->>> to define struct ata_force_param entries of the force_tbl array that
->>> allow turning on or off a link flag using the libata.force boot
->>> parameter. To be consistent with naming, the macro force_lflag() is
->>> renamed to force_lflag_on().
->>>
->>> Using force_lflag_onoff(), define a new force_tbl entry for the
->>> ATA_LFLAG_NO_DEBOUNCE_DELAY link flag, thus allowing testing if an
->>> adapter requires a link debounce delay or not.
->>>
->>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>> ---
->>>    drivers/ata/libata-core.c | 32 ++++++++++++++++++++++----------
->>>    1 file changed, 22 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index dfdb23c2bbd6..e5a0e73b39d3 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -96,7 +96,8 @@ struct ata_force_param {
->>>    	unsigned long	xfer_mask;
->>>    	unsigned int	horkage_on;
->>>    	unsigned int	horkage_off;
->>> -	u16		lflags;
->>> +	u16		lflags_on;
->>> +	u16		lflags_off;
->>>    };
->>>    
->>>    struct ata_force_ent {
->>> @@ -386,11 +387,17 @@ static void ata_force_link_limits(struct ata_link *link)
->>>    		}
->>>    
->>>    		/* let lflags stack */
->>> -		if (fe->param.lflags) {
->>> -			link->flags |= fe->param.lflags;
->>> +		if (fe->param.lflags_on) {
->>> +			link->flags |= fe->param.lflags_on;
->>>    			ata_link_notice(link,
->>>    					"FORCE: link flag 0x%x forced -> 0x%x\n",
->>> -					fe->param.lflags, link->flags);
->>> +					fe->param.lflags_on, link->flags);
->>> +		}
->>> +		if (fe->param.lflags_off) {
->>> +			link->flags &= ~fe->param.lflags_off;
->>> +			ata_link_notice(link,
->>> +				"FORCE: link flag 0x%x cleared -> 0x%x\n",
->>> +				fe->param.lflags_off, link->flags);
->>>    		}
->>>    	}
->>>    }
->>> @@ -6153,8 +6160,12 @@ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
->>>    #define force_xfer(mode, shift)				\
->>>    	{ #mode,	.xfer_mask	= (1UL << (shift)) }
->>>    
->>> -#define force_lflag(name, flags)			\
->>> -	{ #name,	.lflags		= (flags) }
->>> +#define force_lflag_on(name, flags)			\
->>> +	{ #name,	.lflags_on	= (flags) }
->>> +
->>> +#define force_lflag_onoff(name, flags)			\
->>> +	{ "no" #name,	.lflags_on	= (flags) },	\
->>> +	{ #name,	.lflags_off	= (flags) }
->>>    
->>>    #define force_horkage_on(name, flag)			\
->>>    	{ #name,	.horkage_on	= (flag) }
->>> @@ -6209,10 +6220,11 @@ static const struct ata_force_param force_tbl[] __initconst = {
->>>    	force_xfer(udma/133,		ATA_SHIFT_UDMA + 6),
->>>    	force_xfer(udma7,		ATA_SHIFT_UDMA + 7),
->>>    
->>> -	force_lflag(nohrst,		ATA_LFLAG_NO_HRST),
->>> -	force_lflag(nosrst,		ATA_LFLAG_NO_SRST),
->>> -	force_lflag(norst,		ATA_LFLAG_NO_HRST | ATA_LFLAG_NO_SRST),
->>> -	force_lflag(rstonce,		ATA_LFLAG_RST_ONCE),
->>> +	force_lflag_on(nohrst,		ATA_LFLAG_NO_HRST),
->>> +	force_lflag_on(nosrst,		ATA_LFLAG_NO_SRST),
->>> +	force_lflag_on(norst,		ATA_LFLAG_NO_HRST | ATA_LFLAG_NO_SRST),
->>> +	force_lflag_on(rstonce,		ATA_LFLAG_RST_ONCE),
->>> +	force_lflag_onoff(dbdelay,	ATA_LFLAG_NO_DEBOUNCE_DELAY),
->>>    
->>>    	force_horkage_onoff(ncq,	ATA_HORKAGE_NONCQ),
->>>    	force_horkage_onoff(ncqtrim,	ATA_HORKAGE_NO_NCQ_TRIM),
+On 4/25/22 15:00, Hannes Reinecke wrote:
+> On 4/25/22 03:34, Damien Le Moal wrote:
+>> To facilitate debugging of drive issues in the field without kernel
+>> changes (e.g. temporary test patches), add an entry for most horkage
+>> flags in the force_tbl array to allow controlling these horkage
+>> settings with the libata.force kernel boot parameter.
 >>
->> Hmm.
+>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>> ---
+>>   drivers/ata/libata-core.c | 22 ++++++++++++++++++++--
+>>   1 file changed, 20 insertions(+), 2 deletions(-)
 >>
->> Personally, I'm not a fan of distinct 'flags_on' and 'flags_off'; I
->> always wonder what does happen if one sets the same value for both ...
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index e5a0e73b39d3..f68cb5639ec4 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -6230,9 +6230,27 @@ static const struct ata_force_param force_tbl[] __initconst = {
+>>   	force_horkage_onoff(ncqtrim,	ATA_HORKAGE_NO_NCQ_TRIM),
+>>   	force_horkage_onoff(ncqati,	ATA_HORKAGE_NO_NCQ_ON_ATI),
+>>   
+>> -	force_horkage_on(dump_id,	ATA_HORKAGE_DUMP_ID),
+>> +	force_horkage_onoff(trim,	ATA_HORKAGE_NOTRIM),
+>> +	force_horkage_on(trim_zero,	ATA_HORKAGE_ZERO_AFTER_TRIM),
+>> +	force_horkage_on(max_trim_128m, ATA_HORKAGE_MAX_TRIM_128M),
+>> +
+>> +	force_horkage_onoff(dma,	ATA_HORKAGE_NODMA),
+>>   	force_horkage_on(atapi_dmadir,	ATA_HORKAGE_ATAPI_DMADIR),
+>> -	force_horkage_on(disable,	ATA_HORKAGE_DISABLE)
+>> +	force_horkage_on(atapi_mod16_dma, ATA_HORKAGE_ATAPI_MOD16_DMA),
+>> +
+>> +	force_horkage_onoff(dmalog,	ATA_HORKAGE_NO_DMA_LOG),
+>> +	force_horkage_onoff(iddevlog,	ATA_HORKAGE_NO_ID_DEV_LOG),
+>> +	force_horkage_onoff(logdir,	ATA_HORKAGE_NO_LOG_DIR),
+>> +
+>> +	force_horkage_on(max_sec_128,	ATA_HORKAGE_MAX_SEC_128),
+>> +	force_horkage_on(max_sec_1024,	ATA_HORKAGE_MAX_SEC_1024),
+>> +	force_horkage_on(max_sec_lba48,	ATA_HORKAGE_MAX_SEC_LBA48),
+>> +
+>> +	force_horkage_onoff(lpm,	ATA_HORKAGE_NOLPM),
+>> +	force_horkage_onoff(setxfer,	ATA_HORKAGE_NOSETXFER),
+>> +	force_horkage_on(dump_id,	ATA_HORKAGE_DUMP_ID),
+>> +
+>> +	force_horkage_on(disable,	ATA_HORKAGE_DISABLE),
 > 
-> Problem is that when parsing the options and gathering the horkages/flags
-> about the drive, nothing is known about it yet, so we do not have the link
-> flags to directly modify based on the option name. So we have to keep the
-> information about which flag to set and which to reset. Generating a
-> "flags_mask" variable with all the correct flags set based on the option
-> is easy, but we still need to know the operation to do with that mask on
-> the device/link flags.
-> 
->>
->> And do we really need this? All settings above are just simple flags
->> which can be set or unset.
->> Sure, some flags are inverted, but still they are flags.
->> So why do we need the separation here?
->> Isn't it rather cosmetical?
-> 
-> For the existing libata.force option, yes, all this is cosmetic.
-> For the new flags, we still have to deal with the reversed flags (the
-> ATA_XXX_NO_...). And for these, the onoff is definitely reversed from the
-> non reversed flags. And given that some of the reversed flags can already
-> be set with libata.force, I find this way the cleanest to add new flags
-> without breaking the manipulation of existing ones.
-> 
-Ok.
+> ... and this exemplifies my concerns with the 'onoff' mechanism:
+> Why is 'disable' just marked as 'on' ?
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Yeah, I can add the off side of it too. Fairly useless though as these are
+off by default, except for the few cases where we already know that the
+flag is needed, in which case turning it off would be a bad idea. So I do
+not allow it by having the "on" only.
 
-Cheers,
+> Sure we can set it to 'off' (we have to, otherwise that flag would 
+> always be set). And if we can set it to 'off', where's the different to 
+> 'onoff' ?
 
-Hannes
+Because of the reversed definition of the flag. E.g. nodmalog means *set*
+ATA_HORKAGE_NO_DMA_LOG flags. so the "no" option means set. If we add the
+off version for non reversed flags, then the "no" option would clear the
+flag, not set it. It is a mess. That is the cleanest way I could think of
+without making things even more messy.
+
+At best, we can allow everything to be set/cleared using 2 macros:
+onoff and offon, depending on the flag meaning polarity (i.e. a NO flag or
+not).
+
+> 
+> Style-differences apart it looks good.
+> 
+> Cheers,
+> 
+> Hannes
+
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Damien Le Moal
+Western Digital Research
