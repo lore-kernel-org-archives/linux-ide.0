@@ -2,85 +2,91 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD4BC433FE
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Apr 2022 12:11:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B558FC433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Apr 2022 19:02:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240254AbiDYMOI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 25 Apr 2022 08:14:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53578 "EHLO
+        id S1351034AbiDZTFY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Apr 2022 15:05:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239766AbiDYMOE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Apr 2022 08:14:04 -0400
-Received: from mxout01.lancloud.ru (mxout01.lancloud.ru [45.84.86.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE502165A0;
-        Mon, 25 Apr 2022 05:10:55 -0700 (PDT)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru 1465620AC3D5
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH 5/5] doc: admin-guide: Update libata kernel parameters
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>,
-        <linux-doc@vger.kernel.org>
-References: <20220407123748.1170212-1-damien.lemoal@opensource.wdc.com>
- <20220407123748.1170212-6-damien.lemoal@opensource.wdc.com>
-Organization: Open Mobile Platform
-Message-ID: <1a50f793-251e-7971-7b92-0990d91f4815@omp.ru>
-Date:   Mon, 25 Apr 2022 15:10:51 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S1353566AbiDZTFX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2022 15:05:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CC7819980A;
+        Tue, 26 Apr 2022 12:02:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 17B02B82255;
+        Tue, 26 Apr 2022 19:02:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD3FAC385A0;
+        Tue, 26 Apr 2022 19:02:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650999732;
+        bh=bhcTaYPRLV0hNcgkYJuqUvx1eMg2fIgsHQn4g5BEF+A=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=iQWIvvpwjHyr+StywINvdL4s69CtlYeXlCsd/XvL69rL+IXbUiieWgk+F59SA92Un
+         DHgZdHw+C68zlDrHaaPuB/hzJ6Bdt1UhQdIEOA+KRWr7weJCUXsqpTPgi00D6NkCBm
+         mx72JFUDhbBqVgJC+QQd+/MzOtpW17irl/bpVNjaw0jAh606lRZfhgRHy901n13lFY
+         6/g3WjOzGEL7kOa+V8ZMwT4ikUqBp5wQyywR7OwoCnO+aYr5xP6eLJB92wEFL9fsAL
+         aNsfYXgb+ofbqMP3elrLXWSSFJ1WCtvWAwkGaOP7SMeryHzGvXjciP/QYwWq3/h5ZH
+         v2xQyFt9SXHKw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Zheyu Ma <zheyuma97@gmail.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 20/22] ata: pata_marvell: Check the 'bmdma_addr' beforing reading
+Date:   Tue, 26 Apr 2022 15:01:43 -0400
+Message-Id: <20220426190145.2351135-20-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220426190145.2351135-1-sashal@kernel.org>
+References: <20220426190145.2351135-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20220407123748.1170212-6-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/7/22 3:37 PM, Damien Le Moal wrote:
+From: Zheyu Ma <zheyuma97@gmail.com>
 
-> Cleanup the text text describing the libata.force boot parameter and
-                   ^^^^           
-   Once is enough. :-)
+[ Upstream commit aafa9f958342db36c17ac2a7f1b841032c96feb4 ]
 
-> update the list of the values to include all supported horkage and link
-> flag that can be forced.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->  .../admin-guide/kernel-parameters.txt         | 71 ++++++++++++++-----
->  1 file changed, 55 insertions(+), 16 deletions(-)
-> 
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index 3f1cc5e317ed..30734a610b92 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-[...]
-> @@ -2639,7 +2639,7 @@
->  			host link and device attached to it.
->  
->  			The VAL specifies the configuration to force.  As long
-> -			as there's no ambiguity shortcut notation is allowed.
-> +			as there is no ambiguity, shortcut notation is allowed.
+Before detecting the cable type on the dma bar, the driver should check
+whether the 'bmdma_addr' is zero, which means the adapter does not
+support DMA, otherwise we will get the following error:
 
-   Dunno what you have against more informal style in the kernel... :-)
+[    5.146634] Bad IO access at port 0x1 (return inb(port))
+[    5.147206] WARNING: CPU: 2 PID: 303 at lib/iomap.c:44 ioread8+0x4a/0x60
+[    5.150856] RIP: 0010:ioread8+0x4a/0x60
+[    5.160238] Call Trace:
+[    5.160470]  <TASK>
+[    5.160674]  marvell_cable_detect+0x6e/0xc0 [pata_marvell]
+[    5.161728]  ata_eh_recover+0x3520/0x6cc0
+[    5.168075]  ata_do_eh+0x49/0x3c0
 
-[...]
-> @@ -2652,19 +2652,58 @@
-[...]
-> -			* dump_id: dump IDENTIFY data.
-> +			* [no]setxfer: Indicate if transfer speed mode setting
-> +			  should be skipped.
-                                ^ (not)
+Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/pata_marvell.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-[...]
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index 0c5a51970fbf..014ccb0f45dc 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -77,6 +77,8 @@ static int marvell_cable_detect(struct ata_port *ap)
+ 	switch(ap->port_no)
+ 	{
+ 	case 0:
++		if (!ap->ioaddr.bmdma_addr)
++			return ATA_CBL_PATA_UNK;
+ 		if (ioread8(ap->ioaddr.bmdma_addr + 1) & 1)
+ 			return ATA_CBL_PATA40;
+ 		return ATA_CBL_PATA80;
+-- 
+2.35.1
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
-MBR, Sergey
