@@ -2,46 +2,46 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DFEC433FE
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Apr 2022 19:03:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9250DC43219
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Apr 2022 19:03:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353870AbiDZTGM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Apr 2022 15:06:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41870 "EHLO
+        id S1353934AbiDZTG0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Apr 2022 15:06:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353780AbiDZTFl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2022 15:05:41 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FA951999F2;
-        Tue, 26 Apr 2022 12:02:31 -0700 (PDT)
+        with ESMTP id S1353809AbiDZTFx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2022 15:05:53 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CE5219AD8D;
+        Tue, 26 Apr 2022 12:02:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 51E77B82255;
-        Tue, 26 Apr 2022 19:02:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECA7CC385A4;
-        Tue, 26 Apr 2022 19:02:28 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 6B478CE1CA4;
+        Tue, 26 Apr 2022 19:02:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A405FC385A0;
+        Tue, 26 Apr 2022 19:02:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650999749;
-        bh=FnVPTjM3GsvuIrMku4njjNTlaunmQHwQbRF+hj+sgnQ=;
+        s=k20201202; t=1650999761;
+        bh=OHTg+xiRClRmND9KQSuB7CsN17t/zbL4VTawcUn5Ao8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HY3mI/ammsFNlZBLWvS4Bz0Ej6br7d3Hyc3QA5Mn398PS/Ng+8QCnlDHYvNxQqhzY
-         N+gwef6aCq1w1d96Nm1diT19fl1P2Q82yazjVUWQslIRauAHXFN8sEyIp8W1TSBYfD
-         zYDJNQHYcYkBLqKs6h2kZk/igajpgUHMcEAc1tEx0/QWQohOGMHlhRNKHkjEe19J3I
-         AOryZq6cLbZe500woTGQLW7vd+LJ8B8slDKa2SC5Q98+f4sp8whTSrdaqLGQNsdJrI
-         DgC/5c8K6vNDxgajvEAWrnMZVitM+C7s0GBQNFbhr6GoqHWx+lNVeWBNNaEJ/DKx29
-         IOZ4hGLxDKecw==
+        b=BJHcQ8d2kMYsmYwsbFRNJMB6w6mCLpXL/TKv0B5MQPbKocmxgFncztqmIK/nELxJk
+         GGKgQpdgoE0Dr/LLEYLazBRRLPAeuu/IOndudf2UKv6vCTMcqGlu9dY8ez5W6N3TxU
+         f0kxRYGoRErjVlLjBQECwbyNWtomOpiUPfUfoXmIbZBucIn99DNBvp33GwOK+Ww4eJ
+         qDV1m7E8HGbTJAqxR6nX8knNvnV5afEMzZoL/j2zqOqNPcBVPbPMtfoOdRMWF1kc+q
+         PaluiR6hW7uxWxRlzRcjJj5XHpcp1VnwPBzHCUNZqqNTdbrkyUoQCDha/VPHXDDZ8b
+         viZhA5ukwgNwg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zheyu Ma <zheyuma97@gmail.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 13/15] ata: pata_marvell: Check the 'bmdma_addr' beforing reading
-Date:   Tue, 26 Apr 2022 15:02:12 -0400
-Message-Id: <20220426190216.2351413-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 9/9] ata: pata_marvell: Check the 'bmdma_addr' beforing reading
+Date:   Tue, 26 Apr 2022 15:02:30 -0400
+Message-Id: <20220426190232.2351606-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220426190216.2351413-1-sashal@kernel.org>
-References: <20220426190216.2351413-1-sashal@kernel.org>
+In-Reply-To: <20220426190232.2351606-1-sashal@kernel.org>
+References: <20220426190232.2351606-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -75,7 +75,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index 361597d14c56..d45a75bfc016 100644
+index b066809ba9a1..c56f4043b0cc 100644
 --- a/drivers/ata/pata_marvell.c
 +++ b/drivers/ata/pata_marvell.c
 @@ -83,6 +83,8 @@ static int marvell_cable_detect(struct ata_port *ap)
