@@ -2,91 +2,55 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE518C433FE
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Apr 2022 19:03:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC7EFC433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 27 Apr 2022 07:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351390AbiDZTHB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Apr 2022 15:07:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41850 "EHLO
+        id S1358785AbiD0Hbm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 27 Apr 2022 03:31:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353916AbiDZTGY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2022 15:06:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1600419A48F;
-        Tue, 26 Apr 2022 12:03:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 84F9D61A04;
-        Tue, 26 Apr 2022 19:03:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6CF0C385B2;
-        Tue, 26 Apr 2022 19:03:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650999786;
-        bh=mptsVlstBe9PgiegdjZZsGPgQatHpBsJM0+b0sy31Is=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RgNX0khZqqBfR/mbD9tASrHelk4oeNR5hjundNRBkVC0aSQojftOPVFWbUKDWpcpQ
-         bsTsCkkYUuCp1zLsxX2wBOW7xm/httwsET1uMz0GtjlVZMBkXZERF0vXGFZuayLEDu
-         LDwXUfgYfsybu04j/RuNAZKlLAWXU4Dij8P2eGhmHxn7k+Z4Lnwe9aQT3HPS2KZbvf
-         VE1bNz77BCRKuLWRwMHLZkOmEYv8Ap8NpgboyoYFhRSX3f7ZaDtftpXogGSsV8Adn/
-         bRoVQdLaBvr/7WfT5QeV5/98XTfrX7Ehqbh6QnIXvG4PAKB1Iw+mQsV0hfi8mRYBPa
-         LW8mSkuY81now==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zheyu Ma <zheyuma97@gmail.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 3/3] ata: pata_marvell: Check the 'bmdma_addr' beforing reading
-Date:   Tue, 26 Apr 2022 15:03:03 -0400
-Message-Id: <20220426190304.2351976-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220426190304.2351976-1-sashal@kernel.org>
-References: <20220426190304.2351976-1-sashal@kernel.org>
+        with ESMTP id S1358783AbiD0Hbj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 27 Apr 2022 03:31:39 -0400
+Received: from mail.fixingbiz.pl (mail.fixingbiz.pl [217.61.22.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E114D6EC7A
+        for <linux-ide@vger.kernel.org>; Wed, 27 Apr 2022 00:28:29 -0700 (PDT)
+Received: by mail.fixingbiz.pl (Postfix, from userid 1001)
+        id 12435A4DD9; Wed, 27 Apr 2022 08:28:18 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fixingbiz.pl; s=mail;
+        t=1651044507; bh=FDuFY3XQoq0gMX1b2gxgT7Py2p4Sxl0PJZYZ4NVaPho=;
+        h=Date:From:To:Subject:From;
+        b=Fbav4J2xRF6eXLhbUb/OV2g5/spr+6u57LgRC1H7mgL/tkqaFPsDABEKivfWUvymH
+         t9C0pZEExm9LTA2HQ8MbgYkXwFu1GwCEpykQHiT81bofSjg6ddpoi5o2GGM0irrdQk
+         Tl9kFl46uVWx+bK6b54wq83IrWQy/eeM2mkGAN2ra3vyn00erzaWJ1tat7jZfWLAFG
+         CN53Wc8RclZ434oLrVt3aZS5OUJFQxPXT+ZS5/Dd50tPdcTS/V6KTcZOy7UubPJ8D8
+         Cq0vKT6w1x86TAJRdqAuh2mIMSuswSz6HxeYc84G1Mboylkw2hTW/LCVTHnF5lvxOd
+         Nh4VR6NQ/cS9A==
+Received: by mail.fixingbiz.pl for <linux-ide@vger.kernel.org>; Wed, 27 Apr 2022 07:28:09 GMT
+Message-ID: <20220427073002-0.1.22.ahzc.0.w3ag7v5ehv@fixingbiz.pl>
+Date:   Wed, 27 Apr 2022 07:28:09 GMT
+From:   =?UTF-8?Q? "Przemys=C5=82aw_Wr=C3=B3blewski" ?= 
+        <przemyslaw.wroblewski@fixingbiz.pl>
+To:     <linux-ide@vger.kernel.org>
+Subject: Wycena paneli fotowoltaicznych
+X-Mailer: mail.fixingbiz.pl
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Zheyu Ma <zheyuma97@gmail.com>
+Dzie=C5=84 dobry,
 
-[ Upstream commit aafa9f958342db36c17ac2a7f1b841032c96feb4 ]
+dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
+irm=C4=85.
 
-Before detecting the cable type on the dma bar, the driver should check
-whether the 'bmdma_addr' is zero, which means the adapter does not
-support DMA, otherwise we will get the following error:
+=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
+ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
 
-[    5.146634] Bad IO access at port 0x1 (return inb(port))
-[    5.147206] WARNING: CPU: 2 PID: 303 at lib/iomap.c:44 ioread8+0x4a/0x60
-[    5.150856] RIP: 0010:ioread8+0x4a/0x60
-[    5.160238] Call Trace:
-[    5.160470]  <TASK>
-[    5.160674]  marvell_cable_detect+0x6e/0xc0 [pata_marvell]
-[    5.161728]  ata_eh_recover+0x3520/0x6cc0
-[    5.168075]  ata_do_eh+0x49/0x3c0
+Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
+ropozycji?
 
-Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/pata_marvell.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index ff468a6fd8dd..677f582cf3d6 100644
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -82,6 +82,8 @@ static int marvell_cable_detect(struct ata_port *ap)
- 	switch(ap->port_no)
- 	{
- 	case 0:
-+		if (!ap->ioaddr.bmdma_addr)
-+			return ATA_CBL_PATA_UNK;
- 		if (ioread8(ap->ioaddr.bmdma_addr + 1) & 1)
- 			return ATA_CBL_PATA40;
- 		return ATA_CBL_PATA80;
--- 
-2.35.1
-
+Pozdrawiam,
+Przemys=C5=82aw Wr=C3=B3blewski
