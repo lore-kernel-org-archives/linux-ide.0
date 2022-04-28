@@ -2,198 +2,128 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E1D1C433FE
-	for <linux-ide@archiver.kernel.org>; Wed, 27 Apr 2022 10:56:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BDEC433FE
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Apr 2022 13:45:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231183AbiD0K7b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 27 Apr 2022 06:59:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33712 "EHLO
+        id S233789AbiD1NsY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Apr 2022 09:48:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231458AbiD0K7D (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 27 Apr 2022 06:59:03 -0400
-X-Greylist: delayed 904 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 27 Apr 2022 03:36:13 PDT
-Received: from ZXSHCAS2.zhaoxin.com (zxshcas2.zhaoxin.com [180.169.121.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16CD64ABC57
-        for <linux-ide@vger.kernel.org>; Wed, 27 Apr 2022 03:36:12 -0700 (PDT)
-Received: from zxbjmbx1.zhaoxin.com (10.29.252.163) by ZXSHCAS2.zhaoxin.com
- (10.28.252.162) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Wed, 27 Apr
- 2022 18:18:54 +0800
-Received: from [10.29.8.9] (10.29.8.9) by zxbjmbx1.zhaoxin.com (10.29.252.163)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Wed, 27 Apr
- 2022 18:18:53 +0800
-Subject: Re: [PATCH 1/2] ahci: Add PhyRdy Change control on actual LPM
- capability
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>,
-        Mario Limonciello <mario.limonciello@amd.com>,
-        Cobe Chen <CobeChen@zhaoxin.com>, Tim Guo <TimGuo@zhaoxin.com>,
-        TonyW Wang <TonyWWang@zhaoxin.com>,
-        Leo Liu <LeoLiu@zhaoxin.com>
-References: <1650534217-14052-1-git-send-email-RunaGuo-oc@zhaoxin.com>
- <1650534217-14052-2-git-send-email-RunaGuo-oc@zhaoxin.com>
- <244f0c98-13f4-1ac4-9ebe-facdad4ae8b6@opensource.wdc.com>
- <af0571fe-a8f4-cb0a-323f-4dc0c4e7517d@zhaoxin.com>
- <ffc33fd4-a676-167d-ec2c-18e8211f2858@opensource.wdc.com>
-From:   Runa Guo-oc <RunaGuo-oc@zhaoxin.com>
-Message-ID: <349b0922-7efd-99e9-7bc8-b18ed98d94f8@zhaoxin.com>
-Date:   Wed, 27 Apr 2022 18:18:53 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S1347594AbiD1NsX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Apr 2022 09:48:23 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 613661009;
+        Thu, 28 Apr 2022 06:45:07 -0700 (PDT)
+Received: from mail-yw1-f172.google.com ([209.85.128.172]) by
+ mrelayeu.kundenserver.de (mreue106 [213.165.67.113]) with ESMTPSA (Nemesis)
+ id 1Mbj7g-1oHTX51Pwc-00dBzt; Thu, 28 Apr 2022 15:45:05 +0200
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-2f16645872fso53520157b3.4;
+        Thu, 28 Apr 2022 06:45:04 -0700 (PDT)
+X-Gm-Message-State: AOAM531rqS3TMANA9dj5PbXHgYaYSabwGuCiqYz/vsc+5F15FvO6r45T
+        WzYb45HYkZmr2LEKIEQie8lnR4wtPfawCBHHv8E=
+X-Google-Smtp-Source: ABdhPJzhKdbLezBOw+onlWys2HjSNrb5hSb6f6j0ogYNPd9ax1npbHyo1Y6CrpuYIOWED3Pgr1SGQ4YvAKDaJmP/tmM=
+X-Received: by 2002:a0d:fc83:0:b0:2e5:b0f4:c125 with SMTP id
+ m125-20020a0dfc83000000b002e5b0f4c125mr33063062ywf.347.1651153503029; Thu, 28
+ Apr 2022 06:45:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <ffc33fd4-a676-167d-ec2c-18e8211f2858@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Originating-IP: [10.29.8.9]
-X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
- zxbjmbx1.zhaoxin.com (10.29.252.163)
+References: <20220419163810.2118169-1-arnd@kernel.org> <20220422170530.GA2338209@roeck-us.net>
+ <CAK8P3a3V=qxUqYT3Yt=dpXVv58-Y+HVi952wO6D4LPN5NNphGA@mail.gmail.com>
+ <8b36d3a4-ec85-2f9f-e4b7-734d8ddd3d8f@roeck-us.net> <CAK8P3a0R9cpEb1d2=e9KnGSbi_uRv48RWfCu_J4DDak_cGZSuw@mail.gmail.com>
+ <20220422234150.GA3442771@roeck-us.net> <CAK8P3a3qZdEqnJ2nTOKwDMossngOgCpEvZq4cQMPQjSsUoU=6g@mail.gmail.com>
+ <3b4046ed-fd75-13ea-fac3-06469172806c@roeck-us.net> <CAK8P3a1LzEG1vo+5nMrnL3TOMcbSKJ3u=StcfY8dajV2raUBjA@mail.gmail.com>
+ <3df135a2-17f5-d6c6-b4a8-e1a60e254297@roeck-us.net> <CAK8P3a2EHMQPN4ny9sXXuReFG0jN0hyRV7h9v_AR_0pqpOU41w@mail.gmail.com>
+In-Reply-To: <CAK8P3a2EHMQPN4ny9sXXuReFG0jN0hyRV7h9v_AR_0pqpOU41w@mail.gmail.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Thu, 28 Apr 2022 15:44:47 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a09+nFS3g1rgvTW9da3tMiAhHjkjZVs1QOJOj8TJ-9MDg@mail.gmail.com>
+Message-ID: <CAK8P3a09+nFS3g1rgvTW9da3tMiAhHjkjZVs1QOJOj8TJ-9MDg@mail.gmail.com>
+Subject: Re: [PATCH v2 00/48] ARM: PXA multiplatform support
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     Robert Jarzmik <robert.jarzmik@free.fr>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Philipp Zabel <philipp.zabel@gmail.com>,
+        Lubomir Rintel <lkundrak@v3.sk>,
+        Paul Parsons <lost.distance@yahoo.com>,
+        Sergey Lapin <slapin@ossfans.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        IDE-ML <linux-ide@vger.kernel.org>,
+        linux-clk <linux-clk@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
+        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Provags-ID: V03:K1:FlIDVPKXj9nzRwbk/wtccBdWDayg3PeTGiQuZ0/K42Bc7lGmPdy
+ zssQcyDZ/DvWHSLnMLZ2c9c0/R8//Ct6Le7VOKueD5Qrh1XSkN/immCrCQM54OpPKR7UGyt
+ rQR8FQFtM5HLTQupvDTlwrysBtqfjlwTZD25pEF/Z42s6fyHy6hxD7eWpHSPUujdYwhn8pQ
+ hp2z24g1g13nAlk8lrHHQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:bRWqGE+N+ZY=:1iRjrIl6V157UK5O78TAoc
+ 5W5zmo/RxHt6piZZQJR7bHPk8veJW7G/eD5jO6ABZaX8NSxlHXJ4TP5x5uFoaOWveTMuY2YNB
+ E/S7IJzqQcjMpAVq0rBO649N779tX8wy6iezjQHdAX7O/6l7dHbxrLeGuJGtVvy5SPmFPsnuF
+ 7hnbUhs94zbUsLMYQRcLlnGNptZ7bFxfi+PlNYB3jQQh0+wXdJS+P/EHPJK8UZHs5BjQBv+Qa
+ EX048TdTH+63xTL5zzrwgKZLFucF2PiHs68Y/WDhFOvULFD5XwxnpC8QYME42zx9V0NjnR5nN
+ Zars/a9a2hpnBBVlPLxle2k0Ttww//0frPo+wnR8G+aU3Z16D9IvAlHwSrOB4KMSHfQcLKCXw
+ tPZA1Y7PpVtBkQv7lmHrlSCe1xcRYAXOza/mWm2Xjc8xgk76wXvHvzBr1oDGBEonkVw+bOSVk
+ vREnB57Ovs/1UlfpUFpyy1eB8Q7JaktAGlKXASPtn19bnV5rt2G4I4ntfhaJQgAmDnlzlZpC5
+ Evd5+7v4S1X/iOOX+m+Ahkho8f4fM1ugsUVvQaHKOghqQBb6nN0eAvrdXIURg56QmTfn7UwPn
+ N0bxJ5G7FH8Br9CiO+tOZBKs/TdaV+aEaEj9KMO4yP5VYEF6IpBEitkf9ifUTwFwihqSEjEM8
+ bFcGWSSCC9/0KLlTg8Gh5+db6LA5cg7itMKXDE5C7XsBAI9Hm3mx1p5yWo7HLHsbXHmzeASA2
+ rpwe5iV2gi/30EyX8gsnnoe4xEtOTZhUuWGdwxWCA0Vb4Q0oLDG+gyWlREBg6vyV7SR9Ag7iE
+ yckvS97oNG9rtf98GBy9xysVb2+4/y8JObMv6+5+lQPd284ay4=
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-On 2022/4/23 6:37, Damien Le Moal wrote:
-> On 4/22/22 18:57, RunaGuo-oc wrote:
->> On 2022/4/21 18:39, Damien Le Moal wrote:
->>> On 4/21/22 18:43, Runa Guo-oc wrote:
->>>> On some platform, when OS enables LPM by default (eg, min_power),
->>>> then, PhyRdy Change cannot be detected if ahci supports no LPM.
->>> Do you mean "...if the ahci adapter does not support LPM." ?
->> Yes.
->>
->>> If that is what you mean, then min_power should not be set.
->> Yes, I agree with you. But, as we know, link_power_management
->> is a user policy which can be modified, if some users are not
->> familiar with ahci spec, then the above case may happen.
-> Users should *never* need to be aware of the HW specs and what can or
-> cannot be done with a particular adapter/drive. User actions trying to
-> enable an unsupported feature should be failed, always.
+On Sun, Apr 24, 2022 at 8:48 PM Arnd Bergmann <arnd@kernel.org> wrote:
+> On Sun, Apr 24, 2022 at 5:28 PM Guenter Roeck <linux@roeck-us.net> wrote:
+> > On 4/24/22 01:52, Arnd Bergmann wrote:
+> > > On Sun, Apr 24, 2022 at 4:09 AM Guenter Roeck <linux@roeck-us.net> wrote:
+> > > into the defconfig file, otherwise the multiplatform target defaults to
+> > > an ARMv7 instead of ARMv5 build. For an OMAP15xx as in the SX1,
+> > > you also need to enable CONFIG_ARCH_MULTI_V4T.
+> > >
+> > > This is slightly unfortunate, but I don't see any way to avoid it, and the
+> > > modified defconfig will still work fine with older kernel trees.
+> > >
+> >
+> > Yes, that works. I changed it in my configuration.
 >
-> In your case though, quickly checking the AHCI specs, the scontrol
-> register bits you change seem to be for preventing *device* initiated
-> power mode transitions, not user/host initiated operations. Your commit
-> message should clearly mention that. But I still need to spend more time
-> re-reading the specs to confirm. Will do that next week.
->
-> Since you added the CAP flags, these flags should be used to detect low
-> power policies that can be allowed for user actions.
->
-> Mario,
->
-> Please rebase and repost your patches ! I rebased the for-5.19 branch on
-> rc3 to have the LPM config name revert. We need to fix this LPM mess :)
->
->>>    Mario has patches to fix that.
->>    
->> Hmm. How to patch this case ?
-> Mario's patches modify the beginning of the sata_link_scr_lpm() function
-> to prevent setting an LPM policy that the adapter/drive does not support.
-> This together with the correct bits set/reset in the scr register will
-> only allow LPM transitions that are supported.
->
-> It may also be good to revisit ata_scsi_lpm_store() to prevent the user
-> from setting an unsupported policy. Currently, that uselessly triggers an
-> EH sequence.
+> Ok, great!. I managed to boot the z2 machine with PCMCIA support
+> and it gets around the issue with my patch, correctly detecting the
+> CF card.
 
-To avoid some confusion in this patch set, I want to explain it here.
-The patch set involves two LPM related issues, one for the ahci adapter
-does not support LPM (no partial & slumber & devslp), the other for
-ahci adapter supports part of LPM(eg, only partial, no slumber & devslp).
+Hi Guenter,
 
-The former case is what I metioned in this mail thread. Namely, when LPM is
-enabled, actions trying to enable this unsupported feature will be failed,
-but will disable PORT_IRQ_PHYRDY bit at the beginning of the ahci_set_lpm()
-function, which would make PhyRdy Changed cannot be detected. So I add flags
-in the ata_eh_set_lpm() function which will not go to the disable operation.
+I have now sent out a fix that I'm happy with, and applied it to the
+pxa-multiplatform-5.18 branch of the soc tree as well as the
+combined arm/multiplatform tree.
 
-The latter case is what I metioned in "PATCH[2/2]". Namely, if the ahci
-adapter only supports partial (no slumber & devslp), then when LPM is enabled
-(eg, min_power), *device* initiated power mode transitions will be enabled
-with the scontrol register bits setting to indicate no restrictions on LPM
-transitions. After that, if SSD/HDD sends a DIPM slumber request, it cannot
-be disallowed by ahci adpter for driver not setting scontrol register bits
-properly. So I add flags to control it.
+I have not merged this new version into the for-next branch
+since I would like to see if there are any other regressions first.
 
-Therefore, Mario's patches in the sata_link_scr_lpm() function may fix the
-issue in "PATCH[2/2]".
+Can you run your boot tests on the arm/multiplatform branch
+and let me know if that fixes everything you found? If that
+takes a lot of manual steps on your side, I'd just wait for the
+build bots and merge it after all there are no new compile-time
+issues.
 
-Revisit ata_scsi_lpm_store() to prevent the user from setting an unsupported
-policy may be a way to fix the issue in "PATCH[1/2]", but there may be another
-case where some operating system manufacturers setting LPM default enable in
-driver, like the following code in the ahci_init_one() function, also need to
-control.
-
-	if (ap->flags & ATA_FLAG_EM)
-		ap->em_message_type = hpriv->em_msg_type;
-
-+        ap->target_lpm_policy = ATA_LPM_MIN_POWER;
-	 ahci_update_initial_lpm_policy(ap, hpriv);
-
-According to my current understanding, the currently submitted patches can
-solve the above problems, and definitely not the best. I haven't figured out
-good way to use CAP flags to patch. Hope you can give me some advice, thanks.
-
->>>> In ahci spec, PhyRdy Change cannot coexist with LPM.
->>>>
->>>> Adds support to control this case on actual LPM capability.
->>>>
->>>> Signed-off-by: Runa Guo-oc <RunaGuo-oc@zhaoxin.com>
->>>> ---
->>>>    drivers/ata/ahci.c      | 9 +++++++++
->>>>    drivers/ata/libata-eh.c | 4 ++++
->>>>    include/linux/libata.h  | 4 ++++
->>>>    3 files changed, 17 insertions(+)
->>>>
->>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>>> index 397dfd2..03f0cb3 100644
->>>> --- a/drivers/ata/ahci.c
->>>> +++ b/drivers/ata/ahci.c
->>>> @@ -1870,6 +1870,15 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>>>    	else
->>>>    		dev_info(&pdev->dev, "SSS flag set, parallel bus scan disabled\n");
->>>>    
->>>> +	if (hpriv->cap & HOST_CAP_PART)
->>>> +		host->flags |= ATA_HOST_PART;
->>>> +
->>>> +	if (hpriv->cap & HOST_CAP_SSC)
->>>> +		host->flags |= ATA_HOST_SSC;
->>>> +
->>>> +	if (hpriv->cap2 & HOST_CAP2_SDS)
->>>> +		host->flags |= ATA_HOST_DEVSLP;
->>>> +
->>>>    	if (pi.flags & ATA_FLAG_EM)
->>>>    		ahci_reset_em(host);
->>>>    
->>>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
->>>> index 3307ed4..05b1043 100644
->>>> --- a/drivers/ata/libata-eh.c
->>>> +++ b/drivers/ata/libata-eh.c
->>>> @@ -3246,6 +3246,10 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->>>>    	unsigned int err_mask;
->>>>    	int rc;
->>>>    
->>>> +	/* if controller does not support lpm, then sets no LPM flags*/
->>>> +	if (!(ap->host->flags & (ATA_HOST_PART | ATA_HOST_SSC | ATA_HOST_DEVSLP)))
->>>> +		link->flags |= ATA_LFLAG_NO_LPM;
->>>> +
->>>>    	/* if the link or host doesn't do LPM, noop */
->>>>    	if (!IS_ENABLED(CONFIG_SATA_HOST) ||
->>>>    	    (link->flags & ATA_LFLAG_NO_LPM) || (ap && !ap->ops->set_lpm))
->>>> diff --git a/include/linux/libata.h b/include/linux/libata.h
->>>> index 732de90..7a243f4 100644
->>>> --- a/include/linux/libata.h
->>>> +++ b/include/linux/libata.h
->>>> @@ -216,6 +216,10 @@ enum {
->>>>    	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
->>>>    	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
->>>>    
->>>> +	ATA_HOST_PART		= (1 << 4), /* Host support partial.*/
->>>> +	ATA_HOST_SSC		= (1 << 5), /* Host support slumber.*/
->>>> +	ATA_HOST_DEVSLP		= (1 << 6), /* Host support devslp.*/
->>>> +
->>>>    	/* bits 24:31 of host->flags are reserved for LLD specific flags */
->>>>    
->>>>    	/* various lengths of time */
->
+       Arnd
