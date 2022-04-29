@@ -2,152 +2,107 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB907C4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Apr 2022 16:49:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A422C43219
+	for <linux-ide@archiver.kernel.org>; Fri, 29 Apr 2022 13:51:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350353AbiD1Qw5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Apr 2022 12:52:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46522 "EHLO
+        id S1376403AbiD2Nym (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 29 Apr 2022 09:54:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344849AbiD1Qw4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Apr 2022 12:52:56 -0400
-Received: from mail-oa1-x2b.google.com (mail-oa1-x2b.google.com [IPv6:2001:4860:4864:20::2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82B05B53E6;
-        Thu, 28 Apr 2022 09:49:41 -0700 (PDT)
-Received: by mail-oa1-x2b.google.com with SMTP id 586e51a60fabf-e5e433d66dso5707062fac.5;
-        Thu, 28 Apr 2022 09:49:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:message-id:date:mime-version:user-agent:content-language:to
-         :cc:references:from:subject:in-reply-to:content-transfer-encoding;
-        bh=XISky4EfFFruGvnkmI6B4SFkxFQ52ohN9Fu2cRfYJfw=;
-        b=OkCy3r1S0ZpJd0xw0VfvdODlVptYGtGD/s68vjFfu+cv5VfksDwVTELspFMjzyqn2l
-         o3HoJm03XsZQdwbEbRWjI+Lb63jSRMQLNDN7FFeOkhyetGmz/gAbkEhkV3TcaKgGRG82
-         vuwvRZEQI4XV6kVyb9AK1+aJWoE9PIAQbe2raaE3M+WY6coymTsE71a+p721Tp/oJ1tu
-         En+rQbHzGa1KawncckJtHDkTWA14zP+YTiLHoNAAclpt3pPZZQzCVaSg0pgbdjB43usw
-         AxIfxdOHjkKVb6pAsbdhR1cE59eZyAmq6cI4Gd58mfC+2jQzc1Zta0D378ut2yf8lfbd
-         NqrQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:message-id:date:mime-version:user-agent
-         :content-language:to:cc:references:from:subject:in-reply-to
-         :content-transfer-encoding;
-        bh=XISky4EfFFruGvnkmI6B4SFkxFQ52ohN9Fu2cRfYJfw=;
-        b=dOwkGtw9dzdMd240ouokfJ4dl8tjhaloPKw1nqE++5hoRiCFTpENqlsfi1mg3Ls4wI
-         xNnEZM1iKXU53rnxp3MocydBbnoFRWtpSI0zT45CGCsgJhQwFQQtfIADkMfUemDBG8DU
-         pscUPvNhybZQ2ZqjUTFqi201/nbeOLGbjKP0IFH6JwbBmX+LOCb31UFAgn9JPHJ9bDRp
-         7bbHsthT0/ioa6oB7tDeBKTR6U/rZaMZjpk803fdXhybT2D5ZmpkmPQdqjAzPAKLvhkO
-         tOeIpK7DHaG5QmPgvwEAFlBAKlEHsd0+SxqzEwZBitZ8AUMcFZi0DgmkVooUr8TdPkpE
-         ZPZA==
-X-Gm-Message-State: AOAM533GaflZGPmbY4D3fPd7Q2nhlECfkZgiV8DzhzGR90HRc0jbmLDc
-        5K+CiJ64HwZsPVWUYcNN5OQ=
-X-Google-Smtp-Source: ABdhPJzrsKYpUtqCt/iZ06NVVnsLxq83abuM+0rz/PmqCRR+0Jas/OQpo6w5mfl9KOVI8b7KjTk3bw==
-X-Received: by 2002:a05:6870:3289:b0:e9:1a82:c010 with SMTP id q9-20020a056870328900b000e91a82c010mr11417956oac.25.1651164580861;
-        Thu, 28 Apr 2022 09:49:40 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id p17-20020a4a3651000000b0035d9b838f21sm205539ooe.10.2022.04.28.09.49.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Apr 2022 09:49:40 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <dd3ac1fa-67c2-8bdf-f275-9210a9e23054@roeck-us.net>
-Date:   Thu, 28 Apr 2022 09:49:36 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Content-Language: en-US
+        with ESMTP id S1352209AbiD2Nyl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Apr 2022 09:54:41 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13AE056415;
+        Fri, 29 Apr 2022 06:51:23 -0700 (PDT)
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TCOSUc013952;
+        Fri, 29 Apr 2022 13:51:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=5dgPlb1Riino9LwWNiwefYKwfM8FCUXTSZxjFS+frQ0=;
+ b=Pgw0zfUfqsxy5HXozDo+NM46YjrH6X0AFHsNcrDVogytESY5pXcSlb5pkrIpX7pIUHMi
+ veXXlzt91J+RL+R0TD75DD6MtVnsaasdoNPgFqo5h+AuG4DiXIusOynpy4IonYbbwNK3
+ qy2EQfZ5fU3/dhe7sEuTDyJ/1lg6F9V5jGPKEemnkX0KliPVvc3Ks/eOZevFe1YzhN8o
+ zYmzRAT+KnbjCXVKXXybiUMy+ZD/B/2qwiiJWijUeKxxlZs2vrgHmpzgiwZrrVvqlzJu
+ YGSHcwkRiud7MOWZXXE/aQ+WIiVcrB4lzpQx2I/FH5641oLFGyh8PD4OskW3mAsuA++d FA== 
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqs3npu97-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 13:51:17 +0000
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDRpJ2004523;
+        Fri, 29 Apr 2022 13:51:15 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma06ams.nl.ibm.com with ESMTP id 3fm8qj988r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 13:51:15 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpDwD53805354
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 29 Apr 2022 13:51:13 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 39C714C04A;
+        Fri, 29 Apr 2022 13:51:13 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id DEF804C040;
+        Fri, 29 Apr 2022 13:51:12 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Fri, 29 Apr 2022 13:51:12 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Robert Jarzmik <robert.jarzmik@free.fr>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Philipp Zabel <philipp.zabel@gmail.com>,
-        Lubomir Rintel <lkundrak@v3.sk>,
-        Paul Parsons <lost.distance@yahoo.com>,
-        Sergey Lapin <slapin@ossfans.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        linux-clk <linux-clk@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
-        linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>
-References: <20220419163810.2118169-1-arnd@kernel.org>
- <20220422170530.GA2338209@roeck-us.net>
- <CAK8P3a3V=qxUqYT3Yt=dpXVv58-Y+HVi952wO6D4LPN5NNphGA@mail.gmail.com>
- <8b36d3a4-ec85-2f9f-e4b7-734d8ddd3d8f@roeck-us.net>
- <CAK8P3a0R9cpEb1d2=e9KnGSbi_uRv48RWfCu_J4DDak_cGZSuw@mail.gmail.com>
- <20220422234150.GA3442771@roeck-us.net>
- <CAK8P3a3qZdEqnJ2nTOKwDMossngOgCpEvZq4cQMPQjSsUoU=6g@mail.gmail.com>
- <3b4046ed-fd75-13ea-fac3-06469172806c@roeck-us.net>
- <CAK8P3a1LzEG1vo+5nMrnL3TOMcbSKJ3u=StcfY8dajV2raUBjA@mail.gmail.com>
- <3df135a2-17f5-d6c6-b4a8-e1a60e254297@roeck-us.net>
- <CAK8P3a2EHMQPN4ny9sXXuReFG0jN0hyRV7h9v_AR_0pqpOU41w@mail.gmail.com>
- <CAK8P3a09+nFS3g1rgvTW9da3tMiAhHjkjZVs1QOJOj8TJ-9MDg@mail.gmail.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH v2 00/48] ARM: PXA multiplatform support
-In-Reply-To: <CAK8P3a09+nFS3g1rgvTW9da3tMiAhHjkjZVs1QOJOj8TJ-9MDg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers))
+Subject: [RFC v2 03/39] ata: add HAS_IOPORT dependencies
+Date:   Fri, 29 Apr 2022 15:50:03 +0200
+Message-Id: <20220429135108.2781579-6-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
+References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: tjFf3wyR6acEEqSAI5Ys6CbS7noEnYRh
+X-Proofpoint-ORIG-GUID: tjFf3wyR6acEEqSAI5Ys6CbS7noEnYRh
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=918
+ suspectscore=0 lowpriorityscore=0 spamscore=0 phishscore=0 adultscore=0
+ priorityscore=1501 clxscore=1015 mlxscore=0 malwarescore=0 impostorscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204290078
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/28/22 06:44, Arnd Bergmann wrote:
-> On Sun, Apr 24, 2022 at 8:48 PM Arnd Bergmann <arnd@kernel.org> wrote:
->> On Sun, Apr 24, 2022 at 5:28 PM Guenter Roeck <linux@roeck-us.net> wrote:
->>> On 4/24/22 01:52, Arnd Bergmann wrote:
->>>> On Sun, Apr 24, 2022 at 4:09 AM Guenter Roeck <linux@roeck-us.net> wrote:
->>>> into the defconfig file, otherwise the multiplatform target defaults to
->>>> an ARMv7 instead of ARMv5 build. For an OMAP15xx as in the SX1,
->>>> you also need to enable CONFIG_ARCH_MULTI_V4T.
->>>>
->>>> This is slightly unfortunate, but I don't see any way to avoid it, and the
->>>> modified defconfig will still work fine with older kernel trees.
->>>>
->>>
->>> Yes, that works. I changed it in my configuration.
->>
->> Ok, great!. I managed to boot the z2 machine with PCMCIA support
->> and it gets around the issue with my patch, correctly detecting the
->> CF card.
-> 
-> Hi Guenter,
-> 
-> I have now sent out a fix that I'm happy with, and applied it to the
-> pxa-multiplatform-5.18 branch of the soc tree as well as the
-> combined arm/multiplatform tree.
-> 
-> I have not merged this new version into the for-next branch
-> since I would like to see if there are any other regressions first.
-> 
-> Can you run your boot tests on the arm/multiplatform branch
-> and let me know if that fixes everything you found? If that
-> takes a lot of manual steps on your side, I'd just wait for the
-> build bots and merge it after all there are no new compile-time
-> issues.
-> 
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
--next is pretty badly broken right now due to a series of less than
-perfect mm patches, so testing there won't do any good.
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+ drivers/ata/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-I'll see if I can dig up the multiplatform branch and push it into
-my 'testing' branch.
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index bb45a9c00514..a2dea866b086 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -332,6 +332,7 @@ endif # HAS_DMA
+ 
+ config ATA_SFF
+ 	bool "ATA SFF support (for legacy IDE and PATA)"
++	depends on HAS_IOPORT
+ 	default y
+ 	help
+ 	  This option adds support for ATA controllers with SFF
+-- 
+2.32.0
 
-Guenter
