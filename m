@@ -2,55 +2,55 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EC8BC4332F
-	for <linux-ide@archiver.kernel.org>; Sun,  1 May 2022 21:34:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC33C433FE
+	for <linux-ide@archiver.kernel.org>; Sun,  1 May 2022 21:35:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355153AbiEAVhy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 1 May 2022 17:37:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44062 "EHLO
+        id S1355263AbiEAVjI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 1 May 2022 17:39:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355119AbiEAVhx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 1 May 2022 17:37:53 -0400
-Received: from mail-yb1-xb34.google.com (mail-yb1-xb34.google.com [IPv6:2607:f8b0:4864:20::b34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B05D43C71B
-        for <linux-ide@vger.kernel.org>; Sun,  1 May 2022 14:34:26 -0700 (PDT)
-Received: by mail-yb1-xb34.google.com with SMTP id w187so23313328ybe.2
-        for <linux-ide@vger.kernel.org>; Sun, 01 May 2022 14:34:26 -0700 (PDT)
+        with ESMTP id S1355112AbiEAVjG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 1 May 2022 17:39:06 -0400
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F33C3D490
+        for <linux-ide@vger.kernel.org>; Sun,  1 May 2022 14:35:38 -0700 (PDT)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-2f7ca2ce255so131433427b3.7
+        for <linux-ide@vger.kernel.org>; Sun, 01 May 2022 14:35:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=XHDe8NwwI9SjN9yPCfdFZVh4P/kcPQDXEmbvi28Ry+g=;
-        b=UhniDGJRP7jnhKBKyFEU7Wm1oj19NfJgHgLTwiUZocIMzFuZcy6/C6VzBVOL++cBvj
-         LrIdaNUAfF6A3gJNASrFvHnAKvQMpgaI3a+ALVbDTJ8eikxSpYzLlQUmI4nPbtXjDg4D
-         61l+wu6AHbkliq+H0f8Ajl6wMDIrIDWbHXSKpPcelWQXQMMNGkpdczkhdkUi7iNKqqom
-         f4kY22N5GzwsoRBTgxLB4z0sMMH1XkpdSeUqQXDWgVrNldazzOzczD605y1f7K81V1C4
-         4ugAXmyrIfWO1yaViycscWtZgLZGrFY+/HbQHeYpwIpBVHoKMccEQ7oDjW2RE/A2D6ol
-         0zew==
+        bh=T254pOQ0OrSDi8zN/59MRP0JPU9NfQ5B5Rmbgtdrkko=;
+        b=wlpA+CfyvX91ALnfVCMPP166Rc0Mpatt42DsMvCkWJmeZUVRfB6mnUYecnMGRNYbhI
+         ld8YsssomjW9oCtQmr15blAmBLS+t4KouSWHxbIZVjnsq1DnJlp8Fx6XNCVuGUF0GS/N
+         6klXRU6dGXOQupaFrwlX9Yah5rEs29v06x/UCbuJ/f0GQoJQPiBvrEccSjVf/VH42K7p
+         RwLGlqfP5o3h1uwBR8xQuBvPKaAX5Sq4RHEUwFvP/y5fx9owfyl5p9sMhmOT/ahPJUD6
+         7q+tV1u5MOsspWP4YhNR748kjKGgc9lX4NNszXKAVeEM0jxtUxFRG3LYR6gGsd4NYws0
+         Yv1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=XHDe8NwwI9SjN9yPCfdFZVh4P/kcPQDXEmbvi28Ry+g=;
-        b=lrWkOsOUfyQOlnoahKjF6Obcc9Akwad8pu7qJRPH+xZi1r1mqg3ifR2Hm/8KjqPej8
-         2N1icoXZYJhuz1wSkWQcHFiPHoYP9aC6/5cdGJBszPemWspEPX2ICY39o+emHfMLuexe
-         YEWlBdwk4nYwB8sFFbWKxlIwXWWjafKx+Ckli7YNhpW1OIrLczfxVhGtvGmsLKV52xU6
-         SY9kzpUxq/GtweTz4osgfl08eXWd5MYgX3Gs7QrIlJJiSSD3jTNQUIAnY74Urj9AuIUe
-         WiqzuxTGDXCve0Z0C91h6PDn8qBkDvJdvS2MI4Xs8biHrT/QvN4sYYh0vm+pHCbZVLCQ
-         ia0g==
-X-Gm-Message-State: AOAM531lnqXFuCowDchjYqQaZic5JPjeJVNBh4UEinqAmpgarv6XHp+d
-        72OA5ab9U/YIi+mc4OFHHbdfBnSffghjT2TuXTESdg==
-X-Google-Smtp-Source: ABdhPJwyu4GO9ZTopFM1Qtp9g0AYWW/G2gCL2Rkf2k0emOIuL58PKSUnjfCPuXZtMMqa2spe4DyjerPL+kd11/8NfmU=
-X-Received: by 2002:a25:aa94:0:b0:648:62f2:ef4e with SMTP id
- t20-20020a25aa94000000b0064862f2ef4emr8160978ybi.626.1651440865094; Sun, 01
- May 2022 14:34:25 -0700 (PDT)
+        bh=T254pOQ0OrSDi8zN/59MRP0JPU9NfQ5B5Rmbgtdrkko=;
+        b=VSFYyF6rC5ai8pMRixrQP/S9wKQuJC3oXHmymyuHJqIPyAukPigM+OKV6A1URRuGvo
+         v7sQmTnLbZhaMmoOQ0k5EVxxecKoSBuAeH7sGWrbJZAKm26Q/u9lllUQyzXcRN5od5/I
+         UHd/JZlghKalXzkCPInPgOIpUqMrFWnGADnpGMiPU3mmPBlcDr020gwjPPNDWjB7xoIa
+         S5h7fZ1br1oWsAOJ9GdMMdaZVnZhKgHAXcxdV2hY52mGAaZLOg6rZETnxo3DiFw/cM/p
+         DgXnBWjT3xHafh4iXzfLXUThhcwmjtI3A2503OKG04Q0FdTcTaW5seY3XCtIhOmIrLp2
+         MpSA==
+X-Gm-Message-State: AOAM530r+QjC8M9BVlBiLuDkj4Hb7JYA3Xw9cydujnl2DsCJZIh8OmsZ
+        oSmTrCnKJ6LkYGH1qFvoLyRyAXzggH5tnPbYnSWFLw==
+X-Google-Smtp-Source: ABdhPJyiNIf7FX2G9hbcHdCnWtNprAICIXfmTZ2O7M9XljL3Duwj1WbWX/AgvgI1z1Nmh9oOd4l1d7OyIUiw7QC5qEY=
+X-Received: by 2002:a0d:ddc6:0:b0:2f8:a506:a5c0 with SMTP id
+ g189-20020a0dddc6000000b002f8a506a5c0mr9543818ywe.140.1651440937377; Sun, 01
+ May 2022 14:35:37 -0700 (PDT)
 MIME-Version: 1.0
-References: <20220419163810.2118169-1-arnd@kernel.org> <20220419163810.2118169-16-arnd@kernel.org>
-In-Reply-To: <20220419163810.2118169-16-arnd@kernel.org>
+References: <20220419163810.2118169-1-arnd@kernel.org> <20220419163810.2118169-18-arnd@kernel.org>
+In-Reply-To: <20220419163810.2118169-18-arnd@kernel.org>
 From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Sun, 1 May 2022 23:34:13 +0200
-Message-ID: <CACRpkdbdCzeWgLOhQfEPVz6fYMqDeTYtqQ3uunj1MK+RGcZZKA@mail.gmail.com>
-Subject: Re: [PATCH 15/48] ARM: pxa: tosa: use gpio descriptor for audio
+Date:   Sun, 1 May 2022 23:35:26 +0200
+Message-ID: <CACRpkda10Cv9W07FjO4Ww58V_cgP05Thz-7cv6aF=QC8iW2vDA@mail.gmail.com>
+Subject: Re: [PATCH 17/48] ARM: pxa: corgi: use gpio descriptors for audio
 To:     Arnd Bergmann <arnd@kernel.org>
 Cc:     robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org,
         Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
@@ -83,7 +83,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 19, 2022 at 6:40 PM Arnd Bergmann <arnd@kernel.org> wrote:
+On Tue, Apr 19, 2022 at 6:41 PM Arnd Bergmann <arnd@kernel.org> wrote:
 
 > From: Arnd Bergmann <arnd@arndb.de>
 >
@@ -91,8 +91,8 @@ On Tue, Apr 19, 2022 at 6:40 PM Arnd Bergmann <arnd@kernel.org> wrote:
 > from the header. Change it to use a lookup table.
 >
 > Acked-by: Mark Brown <broonie@kernel.org>
-> Acked-by: Robert Jarzmik <robert.jarzmik@free.fr>
 > Cc: alsa-devel@alsa-project.org
+> Acked-by: Robert Jarzmik <robert.jarzmik@free.fr>
 > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
 Looks good to me!
