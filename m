@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA645C433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:15:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD25C433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:15:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234960AbiECUT3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S235013AbiECUT3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 3 May 2022 16:19:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60844 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242028AbiECUTF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:05 -0400
+        with ESMTP id S240962AbiECUTD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:03 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 584AF2AC41
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E099C286EF
+        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:25 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id CB77116DF;
-        Tue,  3 May 2022 23:10:41 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru CB77116DF
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 6DECD1E019;
+        Tue,  3 May 2022 23:10:44 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 6DECD1E019
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608641;
-        bh=99+QgVY0zCV7jNTyccztfB8TN/d7Y8hNJt1G0Gv/SeE=;
+        d=baikalelectronics.ru; s=mail; t=1651608644;
+        bh=oH7lfkiEYXF2C7OEv0pADf3awSH8hsOXvowsTPSKNLA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=chDHaAfSPV1C+vQttZPpO3TgzNi4q0J79abS5TDkjluFhzhUCpZo8Lxo4KzQwaigC
-         vGyjmrY51sDwNke686hQJzwWIGJuIcEWp4NhL1PllqGqDmvwnhdvrrLNexdjomqtST
-         1bS4EuyhWeinzs4MzV4dSLX4H+VH0ekx/sY2f06A=
+        b=IOXlkGPi1WfxdIOz/nJyq1abhez5oz2c4BTAhgu87BfLW8em6pcTjbAd6M7vfvk76
+         INGFzl0K2eruwt0JftSgcWhafYmbhqpJRwbWhp5G/VmyujXk1ZCawuzILPR/80sxmb
+         MetUNG0Zx293IaiRHYJzbiDJqX4AY8gQTcfdFUQ0=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:07 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:10 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 09/23] ata: libahci_platform: Sanity check the DT child nodes number
-Date:   Tue, 3 May 2022 23:09:24 +0300
-Message-ID: <20220503200938.18027-10-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 11/23] ata: libahci_platform: Introduce reset assertion/deassertion methods
+Date:   Tue, 3 May 2022 23:09:26 +0300
+Message-ID: <20220503200938.18027-12-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,64 +50,179 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Having greater than (AHCI_MAX_PORTS = 32) ports detected isn't that
-critical from the further AHCI-platform initialization point of view since
-exceeding the ports upper limit will cause allocating more resources than
-will be used afterwards. But detecting too many child DT-nodes doesn't
-seem right since it's very unlikely to have it on an ordinary platform. In
-accordance with the AHCI specification there can't be more than 32 ports
-implemented at least due to having the CAP.NP field of 4 bits wide and the
-PI register of dword size. Thus if such situation is found the DTB must
-have been corrupted and the data read from it shouldn't be reliable. Let's
-consider that as an erroneous situation and halt further resources
-allocation.
+Currently the ACHI-platform library supports only the assert and deassert
+reset signals and ignores the platforms with self-deasserting reset lines.
+That prone to having the platforms with self-deasserting reset method
+misbehaviour when it comes to resuming from sleep state after the clocks
+have been fully disabled. For such cases the controller needs to be fully
+reset all over after the reference clocks are enabled and stable,
+otherwise the controller state machine might be in an undetermined state.
 
-Note it's logically more correct to have the nports set only after the
-initialization value is checked for being sane. So while at it let's make
-sure nports is assigned with a correct value.
+The best solution would be to auto-detect which reset method is supported
+by the particular platform and use it implicitly in the framework of the
+ahci_platform_enable_resources()/ahci_platform_disable_resources()
+methods. Alas it can't be implemented due to the AHCI-platform library
+already supporting the shared reset control lines. As [1] says in such
+case we have to use only one of the next methods:
++ reset_control_assert()/reset_control_deassert();
++ reset_control_reset()/reset_control_rearm().
+If the driver had an exclusive control over the reset lines we could have
+been able to manipulate the lines with no much limitation and just used
+the combination of the methods above to cover all the possible
+reset-control cases. Since the shared reset control has already been
+advertised and couldn't be changed with no risk to breaking the platforms
+relying on it, we have no choice but to make the platform drivers to
+determine which reset methods the platform reset system supports.
+
+In order to implement both types of reset control support we suggest to
+introduce the new AHCI-platform flag: AHCI_PLATFORM_RST_TRIGGER, which
+when passed to the ahci_platform_get_resources() method together with the
+AHCI_PLATFORM_GET_RESETS flag will indicate that the reset lines are
+self-deasserting thus the reset_control_reset()/reset_control_rearm() will
+be used to control the reset state. Otherwise the
+reset_control_deassert()/reset_control_assert() methods will be utilized.
+
+[1] Documentation/driver-api/reset.rst
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
 Changelog v2:
-- Drop the else word from the child_nodes value checking if-else-if
-  statement (@Damien) and convert the after-else part into the ternary
-  operator-based statement.
+- Convert the ahci_platform_assert_rsts() method to returning int status
+  (@Damien).
+- Fix some grammar mistakes in the ahci_platform_deassert_rsts() doc
+  (@Damien).
 ---
- drivers/ata/libahci_platform.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/ata/ahci.h             |  1 +
+ drivers/ata/libahci_platform.c | 50 ++++++++++++++++++++++++++++++----
+ include/linux/ahci_platform.h  |  5 +++-
+ 3 files changed, 50 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index c3770a19781b..7d834deefeb9 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -340,6 +340,7 @@ struct ahci_host_priv {
+ 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+ 	unsigned int		n_clks;
+ 	struct clk_bulk_data	*clks;		/* Optional */
++	unsigned int		f_rsts;
+ 	struct reset_control	*rsts;		/* Optional */
+ 	struct regulator	**target_pwrs;	/* Optional */
+ 	struct regulator	*ahci_regulator;/* Optional */
 diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 7ff6626fd569..4e54e19f07b2 100644
+index f7f9cac10cb1..f5ee2f9d014b 100644
 --- a/drivers/ata/libahci_platform.c
 +++ b/drivers/ata/libahci_platform.c
-@@ -480,15 +480,22 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+@@ -150,6 +150,44 @@ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
+ }
+ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+ 
++/**
++ * ahci_platform_deassert_rsts - Deassert/trigger platform resets
++ * @hpriv: host private area to store config values
++ *
++ * This function deasserts or triggers all the reset lines found for
++ * the AHCI device.
++ *
++ * RETURNS:
++ * 0 on success otherwise a negative error code
++ */
++int ahci_platform_deassert_rsts(struct ahci_host_priv *hpriv)
++{
++	if (hpriv->f_rsts & AHCI_PLATFORM_RST_TRIGGER)
++		return reset_control_reset(hpriv->rsts);
++
++	return reset_control_deassert(hpriv->rsts);
++}
++EXPORT_SYMBOL_GPL(ahci_platform_deassert_rsts);
++
++/**
++ * ahci_platform_assert_rsts - Assert/rearm platform resets
++ * @hpriv: host private area to store config values
++ *
++ * This function asserts or rearms (for self-deasserting resets) all
++ * the reset controls found for the AHCI device.
++ *
++ * RETURNS:
++ * 0 on success otherwise a negative error code
++ */
++int ahci_platform_assert_rsts(struct ahci_host_priv *hpriv)
++{
++	if (hpriv->f_rsts & AHCI_PLATFORM_RST_TRIGGER)
++		return reset_control_rearm(hpriv->rsts);
++
++	return reset_control_assert(hpriv->rsts);
++}
++EXPORT_SYMBOL_GPL(ahci_platform_assert_rsts);
++
+ /**
+  * ahci_platform_enable_regulators - Enable regulators
+  * @hpriv: host private area to store config values
+@@ -247,18 +285,18 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
+ 	if (rc)
+ 		goto disable_regulator;
+ 
+-	rc = reset_control_deassert(hpriv->rsts);
++	rc = ahci_platform_deassert_rsts(hpriv);
+ 	if (rc)
+ 		goto disable_clks;
+ 
+ 	rc = ahci_platform_enable_phys(hpriv);
+ 	if (rc)
+-		goto disable_resets;
++		goto disable_rsts;
+ 
+ 	return 0;
+ 
+-disable_resets:
+-	reset_control_assert(hpriv->rsts);
++disable_rsts:
++	ahci_platform_assert_rsts(hpriv);
+ 
+ disable_clks:
+ 	ahci_platform_disable_clks(hpriv);
+@@ -285,7 +323,7 @@ void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
+ {
+ 	ahci_platform_disable_phys(hpriv);
+ 
+-	reset_control_assert(hpriv->rsts);
++	ahci_platform_assert_rsts(hpriv);
+ 
+ 	ahci_platform_disable_clks(hpriv);
+ 
+@@ -478,6 +516,8 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 			rc = PTR_ERR(hpriv->rsts);
+ 			goto err_out;
  		}
++
++		hpriv->f_rsts = flags & AHCI_PLATFORM_RST_TRIGGER;
  	}
  
--	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
-+	/*
-+	 * Too many sub-nodes most likely means having something wrong with
-+	 * the firmware.
-+	 */
-+	child_nodes = of_get_child_count(dev->of_node);
-+	if (child_nodes > AHCI_MAX_PORTS) {
-+		rc = -EINVAL;
-+		goto err_out;
-+	}
- 
  	/*
- 	 * If no sub-node was found, we still need to set nports to
- 	 * one in order to be able to use the
- 	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
- 	 */
--	if (!child_nodes)
--		hpriv->nports = 1;
-+	hpriv->nports = child_nodes ?: 1;
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index fd964e6a68d6..3418980b0341 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -26,6 +26,8 @@ struct clk *
+ ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id);
+ int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
+ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
++int ahci_platform_deassert_rsts(struct ahci_host_priv *hpriv);
++int ahci_platform_assert_rsts(struct ahci_host_priv *hpriv);
+ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv);
+ void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv);
+ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
+@@ -44,6 +46,7 @@ int ahci_platform_resume_host(struct device *dev);
+ int ahci_platform_suspend(struct device *dev);
+ int ahci_platform_resume(struct device *dev);
  
- 	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
- 	if (!hpriv->phys) {
+-#define AHCI_PLATFORM_GET_RESETS	0x01
++#define AHCI_PLATFORM_GET_RESETS	BIT(0)
++#define AHCI_PLATFORM_RST_TRIGGER	BIT(1)
+ 
+ #endif /* _AHCI_PLATFORM_H */
 -- 
 2.35.1
 
