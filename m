@@ -2,46 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C820C433F5
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6896C433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:21:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232168AbiECUYo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:24:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37382 "EHLO
+        id S236939AbiECUYq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:24:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237630AbiECUYE (ORCPT
+        with ESMTP id S237691AbiECUYE (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:24:04 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8230C1838D
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B512522BDD
         for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:20:29 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id F177ABC7;
-        Tue,  3 May 2022 23:10:53 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru F177ABC7
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 74FA316A9;
+        Tue,  3 May 2022 23:10:32 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 74FA316A9
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608653;
-        bh=JOMEm6g6eWeozoVB76D9aA5f5pDIgnUYwyU5xZ4hAu8=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=nO88eZLg66iirViRiPnPWO6n+mVPW57lx/sF59hJricXArXbr3SAoheopgVf0txqT
-         hu8ICt+Xuw2WveWuNYsdyvzwb4qODPMjbtrl8MMb44CNSY3+rxmFYXWGjZpgzzA2gU
-         IFbQu/rVlDKp7KCwzji/ETFmUw+h8kWacS5oK3KM=
+        d=baikalelectronics.ru; s=mail; t=1651608632;
+        bh=SI1UGIEHr2dWnfOJ45khNRnRyk+pcEawFDodCwwGz9g=;
+        h=From:To:CC:Subject:Date:From;
+        b=KNYBrFovjOF7P/5PgcS29gSLuC4P3y6TLyHQDzEG4Obrgnu2N62IsD1Of0Ku2GsDa
+         QBpo+zrNsY84corPOSi5iFxe/xVUjZSPybF2hJHhd1VdpQyVUndZfairnVqAqhMetR
+         IjyOXzpGMoUQbiYv3xmS2gHBvu4LABfcrV5kHjO8=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:19 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:09:58 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Serge Semin <fancer.lancer@gmail.com>
+        Jens Axboe <axboe@kernel.dk>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 19/23] ata: ahci: Add DWC AHCI SATA controller support
-Date:   Tue, 3 May 2022 23:09:34 +0300
-Message-ID: <20220503200938.18027-20-Sergey.Semin@baikalelectronics.ru>
-In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
-References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 00/23] ata: ahci: Add DWC/Baikal-T1 AHCI SATA support
+Date:   Tue, 3 May 2022 23:09:15 +0300
+Message-ID: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -50,529 +48,193 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Synopsys AHCI SATA controller can work pretty under with the generic
-AHCI-platform driver control. But there are vendor-specific peculiarities
-which can tune the device performance up and which may need to be fixed up
-for proper device functioning. In addition some DWC AHCI-based controllers
-may require small platform-specific fixups, so adding them in the generic
-AHCI driver would have ruined the code simplicity. Shortly speaking in
-order to keep the generic AHCI-platform code clean and have DWC AHCI
-SATA-specific features supported we suggest to add a dedicated DWC AHCI
-SATA device driver. Aside with the standard AHCI-platform resources
-getting, enabling/disabling and the controller registration the new driver
-performs the next actions.
+The main goal of this patchset was to add Baikal-T1 AHCI SATA specifics
+support into the kernel AHCI subsystem. On the way of doing that we
+figured out that mainly these specifics are actually DWC AHCI SATA
+controller features, but still there were some Baikal-T1 SoC platform
+peculiarities which we had to take into account. So the patchset
+introduces two AHCI SATA controllers support and one AHCI SATA driver
+with a series of preparation, optimization and cleanup patches.
 
-First of all there is a way to verify whether the HBA/ports capabilities
-activated in OF are correct. Almost all features availability is reflected
-in the vendor-specific parameters registers. So the DWC AHCI driver does
-the capabilities sanity check based on the corresponding fields state.
+The series starts used to start with converting the legacy AHCI SATA
+controllers text-based DT-bindings to the DT-schema. But turned out that
+has already been done in kernel v5.17. So instead we suggest to improve
+the bindings usability by splitting up the AHCI DT bindings into two
+schemas: one common AHCI SATA controller yaml-file, which can be reused by
+any AHCI-compatible controller utilizing the kernel AHCI library
+functions, and DT-bindings for the generic AHCI SATA devices indicated by
+the "generic-ahci" compatible string and implemented in the
+ahci_platform.c driver. Note after doing that we had to fix the
+sata-common.yaml file SATA port IDs constraint.
 
-Secondly if either the Command Completion Coalescing or the Device Sleep
-feature is enabled the DWC AHCI-specific internal 1ms timer must be fixed
-in accordance with the application clock signal frequency. In particular
-the timer value must be set to be Fapp * 1000. Normally the SoC designers
-pre-configure the TIMER1MS register to contain a correct value by default.
-But the platforms can support the application clock rate change. If that
-happens the 1ms timer value must be accordingly updated otherwise the
-dependent features won't work as expected. In the DWC AHCI driver we
-suggest to rely on the "aclk" reference clock rate to set the timer
-interval up. That clock source is supposed to be the AHCI SATA application
-clock in accordance with the DT bindings.
+Then a series of generic preparations-cleanups goes. First of all it
+concerns the device-managed methods usage in the framework of the CSR
+space remapping and the clocks requesting and enabling. Note since the
+clocks handlers are requested and kept in the generic AHCI library it
+seemed a good idea to add an AHCI-platform generic method to find and get
+a particular clock handler from the pool of the requested ones. It was
+used later in the series in the DWC/Baikal-T1-specific code. Secondly we
+suggested to at least sanity check the number of SATA ports DT-sub-nodes
+before using it further.  Thirdly the ports-implemented DT-property
+parsing was moved from the AHCI platform-driver to the AHCI-library so to
+be used by the non-generic AHCI drivers if required (DT-schema is
+accordingly fixed too). Finally due to having the shared-reset control
+support we had to add a new AHCI-resource getter flag -
+AHCI_PLATFORM_RST_TRIGGER, which indicated using a trigger-like reset
+control. For such platforms the controller reset will be performed by
+means of the reset_control_reset() and reset_control_rearm() methods.
+AHCI-library reset functions encapsulating the way the reset procedure is
+performed have been also added.
 
-Finally DWC AHCI SATA controller AXI/AHB bus DMA-engine can be tuned up to
-transfer up to 1024 * FIFO words at a time by setting the Tx/Rx
-transaction size in the DMA control register. The maximum value depends on
-the DMA data bus and AXI/AHB bus maximum burst length. In most of the
-cases it's better to set the maximum possible value to reach the best AHCI
-SATA controller performance. But sometimes in order to improve the system
-interconnect responsiveness, transferring in smaller data chunks may be
-more preferable. For such cases and for the case when the default value
-doesn't provide the best DMA bus performance we suggest to use the new
-HBA-port specific DT-properties "snps,{tx,rx}-ts-max" to tune the DMA
-transactions size up.
+After that goes a patches series with the platform-specific
+AHCI-capabilities initialization. The suggested functionality will be
+useful for the platforms with no BIOS, comprehensive bootloader/firmware
+installed. In that case the AHCI-related platform-specifics like drive
+staggered spin-up, mechanical presence switch attached or FIS-based
+switching capability usage, etc will be left uninitialized with no generic
+way to be indicated as available if required. We suggested to use the AHCI
+device tree node and its ports sub-nodes for that. AHCI-platform library
+will be responsible fo the corresponding DT-properties parsing and
+pre-initialization of the internal capability registers cache, which will
+be then flashed back to the corresponding CSR after HBA reset. Thus a
+supposed to be firmware-work will be done by means of the AHCI-library and
+the DT-data. A set of the preparations/cleanups required to be done before
+introducing the feature.  First the DT-properties indicating the
+corresponding capability availability were described in the common AHCI
+DT-binding schema. Second we needed to add the enum items with the AHCI
+Port CMD fields, which hadn't been added so far. Thirdly we suggested to
+discard one of the port-map internal storage (force_port_map) in favor of
+re-using another one (save_port_map) in order to simplify the port-map
+initialization interface a bit by getting rid from a redundant variable.
+Finally after discarding the double AHCI-version read procedure and
+changing the __ahci_port_base() method prototype the platform
+firmware-specific caps initialization functionality was introduced.
 
-After all the settings denoted above are handled the DWC AHCI SATA driver
-proceeds further with the standard AHCI-platform host initializations.
+The main part of the series goes afterwards. A dedicated DWC AHCI SATA
+controller driver was introduced together with the corresponding
+DT-binding schema pre-patch. Note the driver built mode is activated
+synchronously with the generic AHCI-platform driver by default so
+automatically to be integrated into the kernel for the DWC AHCI-based
+platforms which relied on activating the generic AHCI SATA controller
+driver. Aside with the generic resources getting and AHCI-host
+initialization, the driver implements the DWC-specific setups. In
+particular it checks whether the platform capabilities activated by the
+firmware (see the functionality described above) are actually supported by
+the controller. It's done by means of the vendor-specific registers. Then
+it makes sure that the embedded 1ms timer interval, which is used for the
+DevSleep and CCC features, is correctly initialized based on the
+application clock rate.  The last but not least the driver provides a way
+to tune the DMA-interface performance up by setting the Tx/Rx transactions
+maximum size up. The required values are specified by means of the
+"snps,tx-ts-max" and snps,rx-ts-max" DT-properties.
 
-Note since DWC AHCI controller is now have a dedicated driver we can
-discard the corresponding compatible string from the ahci-platform.c
-module. The same concerns "snps,spear-ahci" compatible string, which is
-also based on the DWC AHCI IP-core.
+Finally we suggest to extend the DWC AHCI SATA controller driver
+functionality with a way to add the DWC-AHCI-based platform-specific
+quirks. Indeed there are many DWC AHCI-based controllers and just a few of
+them are diverged too much to be handled by a dedicated AHCI-driver. The
+rest of them most likely can work well either with a generic version of
+the driver or require a simple normally platform-specific quirk to get up
+and running. Such platforms can define a platform-data in the DWC AHCI
+driver with a set of the controller-specific flags and initialization
+functions. Those functions will be called at the corresponding stages of
+the device probe/resume/remove procedures so to be performing the platform
+setups/cleanups.
+
+After the denoted above functionality is added we can finally introduce
+the Baikal-T1 AHCI SATA controller support into the DWC AHCI SATA driver.
+The controller is based on the DWC AHCI SATA IP-core v4.10a and can work
+well with the generic DWC AHCI driver. The only peculiarity of it is
+connected with the SATA Ports reference clock source. It can be supplied
+either from the internal SoC PLL or from the chip pads. Currently we have
+to prefer selecting the signal coming from the pads if the corresponding
+clock source is specified because the link doesn't get stably established
+when the internal clock signal is activated. In addition the platform has
+trigger-based reset signals so the corresponding flag must be passed to
+the generic AHCI-resource getter.
+
+Link: https://lore.kernel.org/linux-ide/20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru/
+Changelog v2:
+- Rebase from kernel v5.17 to v5.18-rc3. (@Rob)
+- Rebase onto the already available AHCI DT schema. As a result two more
+  patches have been added. (@Rob)
+- Rename 'syscon' property to 'baikal,bt1-syscon'. (@Rob)
+- Replace min/max constraints of the snps,{tx,rx}-ts-max property with
+  enum [ 1, 2, 4, ..., 1024 ]. (@Rob)
+- Use dlemoal/libata.git git tree for the LIBATA SATA AHCI SYNOPSYS
+  DWC driver (@Damien).
+- Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_',
+  from 'bt1_ahci_' to 'ahci_bt1_'. (@Damien)
+- Use LLDD term in place of 'glue-driver'. (@Damien)
+- Convert the ahci_platform_assert_rsts() method to returning int status
+  (@Damien).
+- Drop the else word from the DT child_nodes value checking if-else-if
+  statement (@Damien) and convert the after-else part into the ternary
+  operator-based statement.
+- Convert to checking the error-case first in the devm_clk_bulk_get_all()
+  method invocation. (@Damien)
+- Drop the rc variable initialization in the ahci_platform_get_resources()
+  method. (@Damien)
+- Add comma and replace "channel" with "SATA port" in the reg property
+  description of the sata-common.yaml schema. (@Damien)
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
+Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: devicetree@vger.kernel.org
 
----
+Serge Semin (23):
+  dt-bindings: ata: ahci-platform: Drop dma-coherent property
+    declaration
+  dt-bindings: ata: ahci-platform: Detach common AHCI bindings
+  dt-bindings: ata: ahci-platform: Clarify common AHCI props constraints
+  dt-bindings: ata: sata: Extend number of SATA ports
+  ata: libahci_platform: Explicitly set rc on devres_alloc failure
+  ata: libahci_platform: Convert to using platform devm-ioremap methods
+  ata: libahci_platform: Convert to using devm bulk clocks API
+  ata: libahci_platform: Add function returning a clock-handle by id
+  ata: libahci_platform: Sanity check the DT child nodes number
+  ata: libahci_platform: Parse ports-implemented property in resources
+    getter
+  ata: libahci_platform: Introduce reset assertion/deassertion methods
+  dt-bindings: ata: ahci: Add platform capability properties
+  ata: libahci: Extend port-cmd flags set with port capabilities
+  ata: libahci: Discard redundant force_port_map parameter
+  ata: libahci: Don't read AHCI version twice in the save-config method
+  ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
+  ata: ahci: Introduce firmware-specific caps initialization
+  dt-bindings: ata: ahci: Add DWC AHCI SATA controller DT schema
+  ata: ahci: Add DWC AHCI SATA controller support
+  dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA controller DT schema
+  ata: ahci-dwc: Add platform-specific quirks support
+  ata: ahci-dwc: Add Baikal-T1 AHCI SATA interface support
+  MAINTAINERS: Add maintainers for DWC AHCI SATA driver
 
-Note there are three more AHCI SATA drivers which have been created for
-the devices based on the DWC AHCI SATA IP-core. It's AHCI SunXi, St and
-iMX drivers. Mostly they don't support the features implemented in this
-driver. So hopefully sometime in future they can be converted to be based
-on the generic DWC AHCI SATA driver and just perform some
-subvendor-specific setups in their own LLDD (glue) driver code. But for
-now let's leave the generic DWC AHCI SATA code as is. Hopefully the new
-DWC AHCI-based device drivers will try at least to re-use a part of the
-DWC AHCI driver methods if not being able to be integrated in the generic
-DWC driver code.
-
-Changelog v2:
-- Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_'.
-  (@Damien)
----
- drivers/ata/Kconfig         |  10 +
- drivers/ata/Makefile        |   1 +
- drivers/ata/ahci_dwc.c      | 395 ++++++++++++++++++++++++++++++++++++
- drivers/ata/ahci_platform.c |   2 -
- 4 files changed, 406 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/ata/ahci-common.yaml  | 188 +++++++
+ .../bindings/ata/ahci-platform.yaml           |  89 +--
+ .../bindings/ata/baikal,bt1-ahci.yaml         | 127 +++++
+ .../devicetree/bindings/ata/sata-common.yaml  |   7 +-
+ .../bindings/ata/snps,dwc-ahci.yaml           | 123 ++++
+ MAINTAINERS                                   |   9 +
+ drivers/ata/Kconfig                           |  11 +
+ drivers/ata/Makefile                          |   1 +
+ drivers/ata/ahci.c                            |   4 +-
+ drivers/ata/ahci.h                            |  21 +-
+ drivers/ata/ahci_dwc.c                        | 526 ++++++++++++++++++
+ drivers/ata/ahci_mtk.c                        |   2 -
+ drivers/ata/ahci_platform.c                   |   5 -
+ drivers/ata/ahci_st.c                         |   3 -
+ drivers/ata/libahci.c                         |  63 ++-
+ drivers/ata/libahci_platform.c                | 236 ++++++--
+ include/linux/ahci_platform.h                 |   8 +-
+ 17 files changed, 1258 insertions(+), 165 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
+ create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
+ create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
  create mode 100644 drivers/ata/ahci_dwc.c
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index bb45a9c00514..95e0e022b5bb 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -176,6 +176,16 @@ config AHCI_DM816
- 
- 	  If unsure, say N.
- 
-+config AHCI_DWC
-+	tristate "Synopsys DWC AHCI SATA support"
-+	select SATA_HOST
-+	default SATA_AHCI_PLATFORM
-+	help
-+	  This option enables support for the Synopsys DWC AHCI SATA
-+	  controller implementation.
-+
-+	  If unsure, say N.
-+
- config AHCI_ST
- 	tristate "ST AHCI SATA support"
- 	depends on ARCH_STI
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index b8aebfb14e82..34623365d9a6 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -17,6 +17,7 @@ obj-$(CONFIG_AHCI_BRCM)		+= ahci_brcm.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_CEVA)		+= ahci_ceva.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_DM816)	+= ahci_dm816.o libahci.o libahci_platform.o
-+obj-$(CONFIG_AHCI_DWC)		+= ahci_dwc.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_MTK)		+= ahci_mtk.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
-diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-new file mode 100644
-index 000000000000..73380aaaebab
---- /dev/null
-+++ b/drivers/ata/ahci_dwc.c
-@@ -0,0 +1,395 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * DWC AHCI SATA Platform driver
-+ *
-+ * Copyright (C) 2021 BAIKAL ELECTRONICS, JSC
-+ */
-+
-+#include <linux/ahci_platform.h>
-+#include <linux/bitfield.h>
-+#include <linux/bits.h>
-+#include <linux/clk.h>
-+#include <linux/device.h>
-+#include <linux/kernel.h>
-+#include <linux/libata.h>
-+#include <linux/log2.h>
-+#include <linux/module.h>
-+#include <linux/of_device.h>
-+#include <linux/platform_device.h>
-+#include <linux/pm.h>
-+
-+#include "ahci.h"
-+
-+#define DRV_NAME "ahci-dwc"
-+
-+#define AHCI_DWC_FBS_PMPN_MAX		15
-+
-+/* DWC AHCI SATA controller specific registers */
-+#define AHCI_DWC_HOST_OOBR		0xbc
-+#define AHCI_DWC_HOST_OOB_WE		BIT(31)
-+#define AHCI_DWC_HOST_CWMIN_MASK	GENMASK(30, 24)
-+#define AHCI_DWC_HOST_CWMAX_MASK	GENMASK(23, 16)
-+#define AHCI_DWC_HOST_CIMIN_MASK	GENMASK(15, 8)
-+#define AHCI_DWC_HOST_CIMAX_MASK	GENMASK(7, 0)
-+
-+#define AHCI_DWC_HOST_GPCR		0xd0
-+#define AHCI_DWC_HOST_GPSR		0xd4
-+
-+#define AHCI_DWC_HOST_TIMER1MS		0xe0
-+#define AHCI_DWC_HOST_TIMV_MASK		GENMASK(19, 0)
-+
-+#define AHCI_DWC_HOST_GPARAM1R		0xe8
-+#define AHCI_DWC_HOST_ALIGN_M		BIT(31)
-+#define AHCI_DWC_HOST_RX_BUFFER		BIT(30)
-+#define AHCI_DWC_HOST_PHY_DATA_MASK	GENMASK(29, 28)
-+#define AHCI_DWC_HOST_PHY_RST		BIT(27)
-+#define AHCI_DWC_HOST_PHY_CTRL_MASK	GENMASK(26, 21)
-+#define AHCI_DWC_HOST_PHY_STAT_MASK	GENMASK(20, 15)
-+#define AHCI_DWC_HOST_LATCH_M		BIT(14)
-+#define AHCI_DWC_HOST_PHY_TYPE_MASK	GENMASK(13, 11)
-+#define AHCI_DWC_HOST_RET_ERR		BIT(10)
-+#define AHCI_DWC_HOST_AHB_ENDIAN_MASK	GENMASK(9, 8)
-+#define AHCI_DWC_HOST_S_HADDR		BIT(7)
-+#define AHCI_DWC_HOST_M_HADDR		BIT(6)
-+#define AHCI_DWC_HOST_S_HDATA_MASK	GENMASK(5, 3)
-+#define AHCI_DWC_HOST_M_HDATA_MASK	GENMASK(2, 0)
-+
-+#define AHCI_DWC_HOST_GPARAM2R		0xec
-+#define AHCI_DWC_HOST_FBS_MEM_S		BIT(19)
-+#define AHCI_DWC_HOST_FBS_PMPN_MASK	GENMASK(17, 16)
-+#define AHCI_DWC_HOST_FBS_SUP		BIT(15)
-+#define AHCI_DWC_HOST_DEV_CP		BIT(14)
-+#define AHCI_DWC_HOST_DEV_MP		BIT(13)
-+#define AHCI_DWC_HOST_ENCODE_M		BIT(12)
-+#define AHCI_DWC_HOST_RXOOB_CLK_M	BIT(11)
-+#define AHCI_DWC_HOST_RXOOB_M		BIT(10)
-+#define AHCI_DWC_HOST_TXOOB_M		BIT(9)
-+#define AHCI_DWC_HOST_RXOOB_M		BIT(10)
-+#define AHCI_DWC_HOST_RXOOB_CLK_MASK	GENMASK(8, 0)
-+
-+#define AHCI_DWC_HOST_PPARAMR		0xf0
-+#define AHCI_DWC_HOST_TX_MEM_M		BIT(11)
-+#define AHCI_DWC_HOST_TX_MEM_S		BIT(10)
-+#define AHCI_DWC_HOST_RX_MEM_M		BIT(9)
-+#define AHCI_DWC_HOST_RX_MEM_S		BIT(8)
-+#define AHCI_DWC_HOST_TXFIFO_DEPTH	GENMASK(7, 4)
-+#define AHCI_DWC_HOST_RXFIFO_DEPTH	GENMASK(3, 0)
-+
-+#define AHCI_DWC_HOST_TESTR		0xf4
-+#define AHCI_DWC_HOST_PSEL_MASK		GENMASK(18, 16)
-+#define AHCI_DWC_HOST_TEST_IF		BIT(0)
-+
-+#define AHCI_DWC_HOST_VERSIONR		0xf8
-+#define AHCI_DWC_HOST_IDR		0xfc
-+
-+#define AHCI_DWC_PORT_DMACR		0x70
-+#define AHCI_DWC_PORT_RXABL_MASK	GENMASK(15, 12)
-+#define AHCI_DWC_PORT_TXABL_MASK	GENMASK(11, 8)
-+#define AHCI_DWC_PORT_RXTS_MASK		GENMASK(7, 4)
-+#define AHCI_DWC_PORT_TXTS_MASK		GENMASK(3, 0)
-+#define AHCI_DWC_PORT_PHYCR		0x74
-+#define AHCI_DWC_PORT_PHYSR		0x78
-+
-+struct ahci_dwc_host_priv {
-+	struct platform_device *pdev;
-+
-+	u32 timv;
-+	u32 dmacr[AHCI_MAX_PORTS];
-+};
-+
-+static struct ahci_host_priv *ahci_dwc_get_resources(struct platform_device *pdev)
-+{
-+	struct ahci_dwc_host_priv *dpriv;
-+	struct ahci_host_priv *hpriv;
-+
-+	dpriv = devm_kzalloc(&pdev->dev, sizeof(*dpriv), GFP_KERNEL);
-+	if (!dpriv)
-+		return ERR_PTR(-ENOMEM);
-+
-+	dpriv->pdev = pdev;
-+
-+	hpriv = ahci_platform_get_resources(pdev, AHCI_PLATFORM_GET_RESETS);
-+	if (IS_ERR(hpriv))
-+		return hpriv;
-+
-+	hpriv->plat_data = (void *)dpriv;
-+
-+	return hpriv;
-+}
-+
-+static void ahci_dwc_check_cap(struct ahci_host_priv *hpriv)
-+{
-+	unsigned long port_map = hpriv->saved_port_map | hpriv->mask_port_map;
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
-+	bool dev_mp, dev_cp, fbs_sup;
-+	unsigned int fbs_pmp;
-+	u32 param;
-+	int i;
-+
-+	param = readl(hpriv->mmio + AHCI_DWC_HOST_GPARAM2R);
-+	dev_mp = !!(param & AHCI_DWC_HOST_DEV_MP);
-+	dev_cp = !!(param & AHCI_DWC_HOST_DEV_CP);
-+	fbs_sup = !!(param & AHCI_DWC_HOST_FBS_SUP);
-+	fbs_pmp = 5 * FIELD_GET(AHCI_DWC_HOST_FBS_PMPN_MASK, param);
-+
-+	if (!dev_mp && hpriv->saved_cap & HOST_CAP_MPS) {
-+		dev_warn(&dpriv->pdev->dev, "MPS is unsupported\n");
-+		hpriv->saved_cap &= ~HOST_CAP_MPS;
-+	}
-+
-+
-+	if (fbs_sup && fbs_pmp < AHCI_DWC_FBS_PMPN_MAX) {
-+		dev_warn(&dpriv->pdev->dev, "PMPn is limited up to %u ports\n",
-+			 fbs_pmp);
-+	}
-+
-+	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
-+		if (!dev_mp && hpriv->saved_port_cap[i] & PORT_CMD_MPSP) {
-+			dev_warn(&dpriv->pdev->dev, "MPS incapable port %d\n", i);
-+			hpriv->saved_port_cap[i] &= ~PORT_CMD_MPSP;
-+		}
-+
-+		if (!dev_cp && hpriv->saved_port_cap[i] & PORT_CMD_CPD) {
-+			dev_warn(&dpriv->pdev->dev, "CPD incapable port %d\n", i);
-+			hpriv->saved_port_cap[i] &= ~PORT_CMD_CPD;
-+		}
-+
-+		if (!fbs_sup && hpriv->saved_port_cap[i] & PORT_CMD_FBSCP) {
-+			dev_warn(&dpriv->pdev->dev, "FBS incapable port %d\n", i);
-+			hpriv->saved_port_cap[i] &= ~PORT_CMD_FBSCP;
-+		}
-+	}
-+}
-+
-+static void ahci_dwc_init_timer(struct ahci_host_priv *hpriv)
-+{
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
-+	unsigned long rate;
-+	struct clk *aclk;
-+	u32 cap, cap2;
-+
-+	/* 1ms tick is generated only for the CCC or DevSleep features */
-+	cap = readl(hpriv->mmio + HOST_CAP);
-+	cap2 = readl(hpriv->mmio + HOST_CAP2);
-+	if (!(cap & HOST_CAP_CCC) && !(cap2 & HOST_CAP2_SDS))
-+		return;
-+
-+	/*
-+	 * Tick is generated based on the AXI/AHB application clocks signal
-+	 * so we need to be sure in the clock we are going to use.
-+	 */
-+	aclk = ahci_platform_find_clk(hpriv, "aclk");
-+	if (!aclk)
-+		return;
-+
-+	/* 1ms timer interval is set as TIMV = AMBA_FREQ[MHZ] * 1000 */
-+	dpriv->timv = readl(hpriv->mmio + AHCI_DWC_HOST_TIMER1MS);
-+	dpriv->timv = FIELD_GET(AHCI_DWC_HOST_TIMV_MASK, dpriv->timv);
-+	rate = clk_get_rate(aclk) / 1000UL;
-+	if (rate == dpriv->timv)
-+		return;
-+
-+	dev_info(&dpriv->pdev->dev, "Update CCC/DevSlp timer for Fapp %lu MHz\n",
-+		 rate / 1000UL);
-+	dpriv->timv = FIELD_PREP(AHCI_DWC_HOST_TIMV_MASK, rate);
-+	writel(dpriv->timv, hpriv->mmio + AHCI_DWC_HOST_TIMER1MS);
-+}
-+
-+static int ahci_dwc_init_dmacr(struct ahci_host_priv *hpriv)
-+{
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
-+	struct device_node *child;
-+	void __iomem *port_mmio;
-+	u32 port, dmacr, ts;
-+
-+	/*
-+	 * Update the DMA Tx/Rx transaction sizes in accordance with the
-+	 * platform setup. Note values exceeding maximal or minimal limits will
-+	 * be automatically clamped. Also note the register isn't affected by
-+	 * the HBA global reset so we can freely initialize it once until the
-+	 * next system reset.
-+	 */
-+	for_each_child_of_node(dpriv->pdev->dev.of_node, child) {
-+		if (!of_device_is_available(child))
-+			continue;
-+
-+		if (of_property_read_u32(child, "reg", &port)) {
-+			of_node_put(child);
-+			return -EINVAL;
-+		}
-+
-+		port_mmio = __ahci_port_base(hpriv, port);
-+		dmacr = readl(port_mmio + AHCI_DWC_PORT_DMACR);
-+
-+		if (!of_property_read_u32(child, "snps,tx-ts-max", &ts)) {
-+			ts = ilog2(ts);
-+			dmacr &= ~AHCI_DWC_PORT_TXTS_MASK;
-+			dmacr |= FIELD_PREP(AHCI_DWC_PORT_TXTS_MASK, ts);
-+		}
-+
-+		if (!of_property_read_u32(child, "snps,rx-ts-max", &ts)) {
-+			ts = ilog2(ts);
-+			dmacr &= ~AHCI_DWC_PORT_RXTS_MASK;
-+			dmacr |= FIELD_PREP(AHCI_DWC_PORT_RXTS_MASK, ts);
-+		}
-+
-+		writel(dmacr, port_mmio + AHCI_DWC_PORT_DMACR);
-+		dpriv->dmacr[port] = dmacr;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ahci_dwc_init_host(struct ahci_host_priv *hpriv)
-+{
-+	int rc;
-+
-+	rc = ahci_platform_enable_resources(hpriv);
-+	if (rc)
-+		return rc;
-+
-+	ahci_dwc_check_cap(hpriv);
-+
-+	ahci_dwc_init_timer(hpriv);
-+
-+	rc = ahci_dwc_init_dmacr(hpriv);
-+	if (rc)
-+		goto err_disable_resources;
-+
-+	return 0;
-+
-+err_disable_resources:
-+	ahci_platform_disable_resources(hpriv);
-+
-+	return rc;
-+}
-+
-+static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
-+{
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
-+	unsigned long port_map = hpriv->port_map;
-+	void __iomem *port_mmio;
-+	int i, rc;
-+
-+	rc = ahci_platform_enable_resources(hpriv);
-+	if (rc)
-+		return rc;
-+
-+	writel(dpriv->timv, hpriv->mmio + AHCI_DWC_HOST_TIMER1MS);
-+
-+	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
-+		port_mmio = __ahci_port_base(hpriv, i);
-+		writel(dpriv->dmacr[i], port_mmio + AHCI_DWC_PORT_DMACR);
-+	}
-+
-+	return 0;
-+}
-+
-+static void ahci_dwc_clear_host(struct ahci_host_priv *hpriv)
-+{
-+	ahci_platform_disable_resources(hpriv);
-+}
-+
-+static void ahci_dwc_stop_host(struct ata_host *host)
-+{
-+	struct ahci_host_priv *hpriv = host->private_data;
-+
-+	ahci_dwc_clear_host(hpriv);
-+}
-+
-+static struct ata_port_operations ahci_dwc_port_ops = {
-+	.inherits	= &ahci_platform_ops,
-+	.host_stop	= ahci_dwc_stop_host,
-+};
-+
-+static const struct ata_port_info ahci_dwc_port_info = {
-+	.flags		= AHCI_FLAG_COMMON,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_dwc_port_ops,
-+};
-+
-+static struct scsi_host_template ahci_dwc_scsi_info = {
-+	AHCI_SHT(DRV_NAME),
-+};
-+
-+static int ahci_dwc_probe(struct platform_device *pdev)
-+{
-+	struct ahci_host_priv *hpriv;
-+	int rc;
-+
-+	hpriv = ahci_dwc_get_resources(pdev);
-+	if (IS_ERR(hpriv))
-+		return PTR_ERR(hpriv);
-+
-+	rc = ahci_dwc_init_host(hpriv);
-+	if (rc)
-+		return rc;
-+
-+	rc = ahci_platform_init_host(pdev, hpriv, &ahci_dwc_port_info,
-+				     &ahci_dwc_scsi_info);
-+	if (rc)
-+		goto err_clear_host;
-+
-+	return 0;
-+
-+err_clear_host:
-+	ahci_dwc_clear_host(hpriv);
-+
-+	return rc;
-+}
-+
-+#ifdef CONFIG_PM_SLEEP
-+static int ahci_dwc_suspend(struct device *dev)
-+{
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	int rc;
-+
-+	rc = ahci_platform_suspend_host(dev);
-+	if (rc)
-+		return rc;
-+
-+	ahci_dwc_clear_host(hpriv);
-+
-+	return 0;
-+}
-+
-+static int ahci_dwc_resume(struct device *dev)
-+{
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	int rc;
-+
-+	rc = ahci_dwc_reinit_host(hpriv);
-+	if (rc)
-+		return rc;
-+
-+	return ahci_platform_resume_host(dev);
-+}
-+#endif
-+
-+static SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend, ahci_dwc_resume);
-+
-+static const struct of_device_id ahci_dwc_of_match[] = {
-+	{ .compatible = "snps,dwc-ahci", },
-+	{ .compatible = "snps,spear-ahci", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, ahci_dwc_of_match);
-+
-+static struct platform_driver ahci_dwc_driver = {
-+	.probe = ahci_dwc_probe,
-+	.remove = ata_platform_remove_one,
-+	.shutdown = ahci_platform_shutdown,
-+	.driver = {
-+		.name = DRV_NAME,
-+		.of_match_table = ahci_dwc_of_match,
-+		.pm = &ahci_dwc_pm_ops,
-+	},
-+};
-+module_platform_driver(ahci_dwc_driver);
-+
-+MODULE_DESCRIPTION("DWC AHCI SATA platform driver");
-+MODULE_AUTHOR("Serge Semin <Sergey.Semin@baikalelectronics.ru>");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 9b56490ecbc3..8f5572a9f8f1 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -80,9 +80,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "generic-ahci", },
- 	/* Keep the following compatibles for device tree compatibility */
--	{ .compatible = "snps,spear-ahci", },
- 	{ .compatible = "ibm,476gtr-ahci", },
--	{ .compatible = "snps,dwc-ahci", },
- 	{ .compatible = "hisilicon,hisi-ahci", },
- 	{ .compatible = "cavium,octeon-7130-ahci", },
- 	{ /* sentinel */ }
 -- 
 2.35.1
 
