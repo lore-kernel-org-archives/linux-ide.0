@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 847C4C43219
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 383ECC433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:21:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236290AbiECUYn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:24:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37192 "EHLO
+        id S236354AbiECUYo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:24:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237386AbiECUYB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:24:01 -0400
+        with ESMTP id S237539AbiECUYD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:24:03 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E939117AAA
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:20:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1AD271705D
+        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:20:28 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id B2BEA16DD;
-        Tue,  3 May 2022 23:10:39 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru B2BEA16DD
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 1A4E2BC5;
+        Tue,  3 May 2022 23:10:51 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 1A4E2BC5
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608639;
-        bh=zKezT2raf/30MCXyCrv1wGmz6C1hlsPO5tnzqrLIqrU=;
+        d=baikalelectronics.ru; s=mail; t=1651608651;
+        bh=0tT5W6mH0DshKtIGdNRZiGpshDPCxzFMGC1c/gF5izc=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=VQ78ZayvJS3dXGQ4IrW5hl7sb9rcurKZQR00wFXdsWeAPLDEf1B9calIq80lvEsvF
-         BoTrD4/1OXVPPsX3wo1NQTuP3fX/g3kiBzmsZglxDvXJXn4CuwCK6ZONn/jhccRZme
-         rPWGh/5gdf/uPPlhSSAZffFFNXn13tkFgsO4pUcA=
+        b=lV1bY1EIAzHsrnVnT+6kVHGNr+pJhX/H2Zlahk7GmA8giDbxA2EHxyHUVBUKFew7Z
+         5b7GxF1joAFIhf2JLPe17IOk4pHnNb2mtf2R+d5C9qc3IvKDtluXIf48qKN59obADn
+         a/J8HQPi5fWjM0xObezowBxexmaowaBUbS31xV2A=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:05 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:17 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 07/23] ata: libahci_platform: Convert to using devm bulk clocks API
-Date:   Tue, 3 May 2022 23:09:22 +0300
-Message-ID: <20220503200938.18027-8-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 17/23] ata: ahci: Introduce firmware-specific caps initialization
+Date:   Tue, 3 May 2022 23:09:32 +0300
+Message-ID: <20220503200938.18027-18-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,233 +50,273 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In order to simplify the clock-related code there is a way to convert the
-current fixed clocks array into using the common bulk clocks kernel API
-with dynamic set of the clock handlers and device-managed clock-resource
-tracking. It's a bit tricky due to the complication coming from the
-requirement to support the platforms (da850, spear13xx) with the
-non-OF-based clock source, but still doable.
+There are systems with no BIOS or comprehensive embedded firmware which
+could be able to properly initialize the SATA AHCI controller
+platform-specific capabilities. In that case a good alternative to having
+a clever bootloader is to create a device tree node with the properties
+well describing all the AHCI-related platform specifics. All the settings
+which are normally detected and marked as available in the HBA and its
+ports capabilities fields [1] could be defined in the platform DTB by
+means of a set of the dedicated properties. Such approach perfectly fits
+to the DTB-philosophy - to provide hardware/platform description.
 
-Before this modification there are two methods have been used to get the
-clocks connected to an AHCI device: clk_get() - to get the very first
-clock in the list and of_clk_get() - to get the rest of them. Basically
-the platforms with non-OF-based clocks definition could specify only a
-single reference clock source. The platforms with OF-hw clocks have been
-luckier and could setup up to AHCI_MAX_CLKS clocks. Such semantic can be
-retained with using devm_clk_bulk_get_all() to retrieve the clocks defined
-via the DT firmware and devm_clk_get_optional() otherwise. In both cases
-using the device-managed version of the methods will cause the automatic
-resources deallocation on the AHCI device removal event. The only
-complicated part in the suggested approach is the explicit allocation and
-initialization of the clk_bulk_data structure instance for the non-OF
-reference clocks. It's required in order to use the Bulk Clocks API for
-the both denoted cases of the clocks definition.
+So here we suggest to extend the SATA AHCI device tree bindings with the
+next set of additional DT boolean properties:
+1) hba-sss - Controller supports Staggered Spin-up.
+2) hba-smps - Mechanical Presence Switch is support by controller.
+3) hba-hpcp - Hot Plug Capable Port.
+4) hba-mpsp - Mechanical Presence Switch Attached to Port.
+5) hba-cpd - Cold Presence Detection.
+6) hba-esp - External SATA Port.
+7) hba-fbscp - FIS-based Switching Capable Port.
+All of these capabilities require to have a corresponding hardware
+configuration. Thus it's ok to have them defined in DTB.
 
-Note aside with the clock-related code reduction and natural
-simplification, there are several bonuses the suggested modification
-provides. First of all the limitation of having no greater than
-AHCI_MAX_CLKS clocks is now removed, since the devm_clk_bulk_get_all()
-method will allocate as many reference clocks data descriptors as there
-are clocks specified for the device. Secondly the clock names are
-auto-detected. So the LLDD (glue) drivers can make sure that the required
-clocks are specified just by checking the clock IDs in the clk_bulk_data
-array.  Thirdly using the handy Bulk Clocks kernel API improves the
-clocks-handling code readability. And the last but not least this
-modification implements a true optional clocks support to the
-ahci_platform_get_resources() method. Indeed the previous clocks getting
-procedure just stopped getting the clocks on any errors (aside from
-non-critical -EPROBE_DEFER) in a way so the callee wasn't even informed
-about abnormal loop termination. The new implementation lacks of such
-problem. The ahci_platform_get_resources() will return an error code if
-the corresponding clocks getting method ends execution abnormally.
+Even though the driver currently takes into account the state of the ESP
+and FBSCP flags state only, there is nothing wrong with having all them
+supported by the generic AHCI library in order to have a complete OF-based
+platform-capabilities initialization procedure. These properties will be
+parsed in the ahci_platform_get_resources() method and their values will
+be stored in the saved_* fields of the ahci_host_priv structure, which in
+its turn then will be used to restore the H.CAP, H.PI and P#.CMD
+capability fields on device init and after HBA reset.
+
+Please note this modification concerns the HW-init HBA and its ports flags
+only, which are by specification [1] are supposed to be initialized by the
+BIOS/platform firmware/expansion ROM and which are normally declared in
+the one-time-writable-after-reset register fields. Even though these flags
+aren't supposed to be cleared after HBA reset some AHCI instances may
+violate that rule so we still need to perform the fields resetting after
+each reset. Luckily the corresponding functionality has already been
+partly implemented in the framework of the ahci_save_initial_config() and
+ahci_restore_initial_config() methods.
+
+[1] Serial ATA AHCI 1.3.1 Specification, p. 103
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-
 ---
-
-Changelog v2:
-- Convert to checking the error-case first in the devm_clk_bulk_get_all()
-  method invocation. (@Damien)
-- Fix some grammar mistakes in the comments.
----
- drivers/ata/ahci.h             |  4 +-
- drivers/ata/libahci_platform.c | 84 ++++++++++++++++------------------
- 2 files changed, 41 insertions(+), 47 deletions(-)
+ drivers/ata/ahci.h             |  1 +
+ drivers/ata/libahci.c          | 51 ++++++++++++++++++++++++++++------
+ drivers/ata/libahci_platform.c | 51 ++++++++++++++++++++++++++++++++--
+ 3 files changed, 92 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index ad11a4c52fbe..c3770a19781b 100644
+index 8b9826533ae5..0de221055961 100644
 --- a/drivers/ata/ahci.h
 +++ b/drivers/ata/ahci.h
-@@ -38,7 +38,6 @@
- 
- enum {
- 	AHCI_MAX_PORTS		= 32,
--	AHCI_MAX_CLKS		= 5,
- 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
- 	AHCI_DMA_BOUNDARY	= 0xffffffff,
- 	AHCI_MAX_CMDS		= 32,
-@@ -339,7 +338,8 @@ struct ahci_host_priv {
+@@ -337,6 +337,7 @@ struct ahci_host_priv {
+ 	u32			saved_cap;	/* saved initial cap */
+ 	u32			saved_cap2;	/* saved initial cap2 */
+ 	u32			saved_port_map;	/* saved initial port_map */
++	u32			saved_port_cap[AHCI_MAX_PORTS]; /* saved port_cap */
+ 	u32 			em_loc; /* enclosure management location */
+ 	u32			em_buf_sz;	/* EM buffer size in byte */
  	u32			em_msg_type;	/* EM message type */
- 	u32			remapped_nvme;	/* NVMe remapped device count */
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
--	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
-+	unsigned int		n_clks;
-+	struct clk_bulk_data	*clks;		/* Optional */
- 	struct reset_control	*rsts;		/* Optional */
- 	struct regulator	**target_pwrs;	/* Optional */
- 	struct regulator	*ahci_regulator;/* Optional */
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 8c9fbcc3043b..3cff86c225fd 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -8,6 +8,7 @@
-  *   Anton Vorontsov <avorontsov@ru.mvista.com>
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 1ffaa5f5f21a..763ff1058da6 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -16,6 +16,7 @@
+  * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
   */
  
-+#include <linux/clk-provider.h>
- #include <linux/clk.h>
++#include <linux/bitops.h>
  #include <linux/kernel.h>
  #include <linux/gfp.h>
-@@ -97,28 +98,14 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
-  * ahci_platform_enable_clks - Enable platform clocks
-  * @hpriv: host private area to store config values
-  *
-- * This function enables all the clks found in hpriv->clks, starting at
-- * index 0. If any clk fails to enable it disables all the clks already
-- * enabled in reverse order, and then returns an error.
-+ * This function enables all the clks found for the AHCI device.
-  *
-  * RETURNS:
-  * 0 on success otherwise a negative error code
-  */
- int ahci_platform_enable_clks(struct ahci_host_priv *hpriv)
+ #include <linux/module.h>
+@@ -443,16 +444,28 @@ static ssize_t ahci_show_em_supported(struct device *dev,
+ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
  {
--	int c, rc;
--
--	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++) {
--		rc = clk_prepare_enable(hpriv->clks[c]);
--		if (rc)
--			goto disable_unprepare_clk;
--	}
--	return 0;
--
--disable_unprepare_clk:
--	while (--c >= 0)
--		clk_disable_unprepare(hpriv->clks[c]);
--	return rc;
-+	return clk_bulk_prepare_enable(hpriv->n_clks, hpriv->clks);
- }
- EXPORT_SYMBOL_GPL(ahci_platform_enable_clks);
+ 	void __iomem *mmio = hpriv->mmio;
+-	u32 cap, cap2, vers, port_map;
++	void __iomem *port_mmio;
++	unsigned long port_map;
++	u32 cap, cap2, vers;
+ 	int i;
  
-@@ -126,16 +113,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_clks);
-  * ahci_platform_disable_clks - Disable platform clocks
-  * @hpriv: host private area to store config values
-  *
-- * This function disables all the clks found in hpriv->clks, in reverse
-- * order of ahci_platform_enable_clks (starting at the end of the array).
-+ * This function disables all the clocks enabled before
-+ * (bulk-clocks-disable function is supposed to do that in reverse
-+ * from the enabling procedure order).
-  */
- void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
- {
--	int c;
--
--	for (c = AHCI_MAX_CLKS - 1; c >= 0; c--)
--		if (hpriv->clks[c])
--			clk_disable_unprepare(hpriv->clks[c]);
-+	clk_bulk_disable_unprepare(hpriv->n_clks, hpriv->clks);
- }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+ 	/* make sure AHCI mode is enabled before accessing CAP */
+ 	ahci_enable_ahci(mmio);
  
-@@ -292,8 +276,6 @@ static void ahci_platform_put_resources(struct device *dev, void *res)
- 		pm_runtime_disable(dev);
+-	/* Values prefixed with saved_ are written back to host after
+-	 * reset.  Values without are used for driver operation.
++	/*
++	 * Values prefixed with saved_ are written back to the HBA and ports
++	 * registers after reset. Values without are used for driver operation.
++	 */
++
++	/*
++	 * Override HW-init HBA capability fields with platform-specific values.
++	 * The rest of the HBA capabilities are defined with strictly RO flags
++	 * and can't be modified in CSR anyway.
+ 	 */
+-	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
++	cap = readl(mmio + HOST_CAP);
++	if (hpriv->saved_cap)
++		cap = (cap & ~(HOST_CAP_SSS | HOST_CAP_MPS)) | hpriv->saved_cap;
++	hpriv->saved_cap = cap;
+ 
+ 	/* CAP2 register is only defined for AHCI 1.2 and later */
+ 	vers = readl(mmio + HOST_VERSION);
+@@ -519,7 +532,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 	/* Override the HBA ports mapping if the platform needs it */
+ 	port_map = readl(mmio + HOST_PORTS_IMPL);
+ 	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
+-		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
++		dev_info(dev, "forcing port_map 0x%lx -> 0x%x\n",
+ 			 port_map, hpriv->saved_port_map);
+ 		port_map = hpriv->saved_port_map;
+ 	} else {
+@@ -527,7 +540,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
  	}
  
--	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++)
--		clk_put(hpriv->clks[c]);
- 	/*
- 	 * The regulators are tied to child node device and not to the
- 	 * SATA device itself. So we can't use devm for automatically
-@@ -374,8 +356,8 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
-  * 1) mmio registers (IORESOURCE_MEM 0, mandatory)
-  * 2) regulator for controlling the targets power (optional)
-  *    regulator for controlling the AHCI controller (optional)
-- * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree node,
-- *    or for non devicetree enabled platforms a single clock
-+ * 3) all clocks specified in the devicetree node, or a single
-+ *    clock for non-OF platforms (optional)
-  * 4) resets, if flags has AHCI_PLATFORM_GET_RESETS (optional)
-  * 5) phys (optional)
-  *
-@@ -385,11 +367,10 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
- struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 						   unsigned int flags)
- {
-+	int rc, child_nodes, enabled_ports = 0;
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
--	struct clk *clk;
- 	struct device_node *child;
--	int i, enabled_ports = 0, rc, child_nodes;
- 	u32 mask_port_map = 0;
+ 	if (hpriv->mask_port_map) {
+-		dev_warn(dev, "masking port_map 0x%x -> 0x%x\n",
++		dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
+ 			port_map,
+ 			port_map & hpriv->mask_port_map);
+ 		port_map &= hpriv->mask_port_map;
+@@ -546,7 +559,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 		 */
+ 		if (map_ports > ahci_nr_ports(cap)) {
+ 			dev_warn(dev,
+-				 "implemented port map (0x%x) contains more ports than nr_ports (%u), using nr_ports\n",
++				 "implemented port map (0x%lx) contains more ports than nr_ports (%u), using nr_ports\n",
+ 				 port_map, ahci_nr_ports(cap));
+ 			port_map = 0;
+ 		}
+@@ -555,12 +568,26 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 	/* fabricate port_map from cap.nr_ports for < AHCI 1.3 */
+ 	if (!port_map && vers < 0x10300) {
+ 		port_map = (1 << ahci_nr_ports(cap)) - 1;
+-		dev_warn(dev, "forcing PORTS_IMPL to 0x%x\n", port_map);
++		dev_warn(dev, "forcing PORTS_IMPL to 0x%lx\n", port_map);
  
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-@@ -417,25 +398,38 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		/* write the fixed up value to the PI register */
+ 		hpriv->saved_port_map = port_map;
+ 	}
+ 
++	/*
++	 * Preserve the ports capabilities defined by the platform. Note there
++	 * is no need in storing the rest of the P#.CMD fields since they are
++	 * volatile.
++	 */
++	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
++		if (hpriv->saved_port_cap[i])
++			continue;
++
++		port_mmio = __ahci_port_base(hpriv, i);
++		hpriv->saved_port_cap[i] =
++			readl(port_mmio + PORT_CMD) & PORT_CMD_CAP;
++	}
++
+ 	/* record values to use during operation */
+ 	hpriv->cap = cap;
+ 	hpriv->cap2 = cap2;
+@@ -590,13 +617,21 @@ EXPORT_SYMBOL_GPL(ahci_save_initial_config);
+ static void ahci_restore_initial_config(struct ata_host *host)
+ {
+ 	struct ahci_host_priv *hpriv = host->private_data;
++	unsigned long port_map = hpriv->port_map;
+ 	void __iomem *mmio = hpriv->mmio;
++	void __iomem *port_mmio;
++	int i;
+ 
+ 	writel(hpriv->saved_cap, mmio + HOST_CAP);
+ 	if (hpriv->saved_cap2)
+ 		writel(hpriv->saved_cap2, mmio + HOST_CAP2);
+ 	writel(hpriv->saved_port_map, mmio + HOST_PORTS_IMPL);
+ 	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
++
++	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
++		port_mmio = __ahci_port_base(hpriv, i);
++		writel(hpriv->saved_port_cap[i], port_mmio + PORT_CMD);
++	}
+ }
+ 
+ static unsigned ahci_scr_offset(struct ata_port *ap, unsigned int sc_reg)
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 56aced7a76cd..dece57364a3d 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -23,6 +23,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/of_platform.h>
+ #include <linux/reset.h>
++
+ #include "ahci.h"
+ 
+ static void ahci_host_stop(struct ata_host *host);
+@@ -410,6 +411,44 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+ 	return rc;
+ }
+ 
++static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
++				      struct device *dev)
++{
++	struct device_node *child;
++	u32 port;
++
++	of_property_read_u32(dev->of_node,
++			     "ports-implemented", &hpriv->saved_port_map);
++
++	if (of_property_read_bool(dev->of_node, "hba-sss"))
++		hpriv->saved_cap |= HOST_CAP_SSS;
++	if (of_property_read_bool(dev->of_node, "hba-smps"))
++		hpriv->saved_cap |= HOST_CAP_MPS;
++
++	for_each_child_of_node(dev->of_node, child) {
++		if (!of_device_is_available(child))
++			continue;
++
++		if (of_property_read_u32(child, "reg", &port)) {
++			of_node_put(child);
++			return -EINVAL;
++		}
++
++		if (of_property_read_bool(child, "hba-hpcp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_HPCP;
++		if (of_property_read_bool(child, "hba-mpsp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_MPSP;
++		if (of_property_read_bool(child, "hba-cpd"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_CPD;
++		if (of_property_read_bool(child, "hba-esp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_ESP;
++		if (of_property_read_bool(child, "hba-fbscp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_FBSCP;
++	}
++
++	return 0;
++}
++
+ /**
+  * ahci_platform_get_resources - Get platform resources
+  * @pdev: platform device to get resources for
+@@ -552,9 +591,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
  		goto err_out;
  	}
  
--	for (i = 0; i < AHCI_MAX_CLKS; i++) {
+-	of_property_read_u32(dev->of_node,
+-			     "ports-implemented", &hpriv->saved_port_map);
+-
+ 	if (child_nodes) {
+ 		for_each_child_of_node(dev->of_node, child) {
+ 			u32 port;
+@@ -619,6 +655,15 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		if (rc == -EPROBE_DEFER)
+ 			goto err_out;
+ 	}
++
 +	/*
-+	 * Bulk clocks getting procedure can fail to find any clock due to
-+	 * running on a non-OF platform or due to the clocks being defined in
-+	 * bypass of the DT firmware (like da850, spear13xx). In that case we
-+	 * fallback to getting a single clock source right from the dev clocks
-+	 * list.
++	 * Retrieve firmware-specific flags which then will be used to set
++	 * the HW-init fields of HBA and its ports
 +	 */
-+	rc = devm_clk_bulk_get_all(dev, &hpriv->clks);
-+	if (rc < 0)
++	rc = ahci_platform_get_firmware(hpriv, dev);
++	if (rc)
 +		goto err_out;
 +
-+	if (rc > 0) {
-+		/* Got clocks in bulk */
-+		hpriv->n_clks = rc;
-+	} else {
- 		/*
--		 * For now we must use clk_get(dev, NULL) for the first clock,
--		 * because some platforms (da850, spear13xx) are not yet
--		 * converted to use devicetree for clocks.  For new platforms
--		 * this is equivalent to of_clk_get(dev->of_node, 0).
-+		 * No clock bulk found: fallback to manually getting
-+		 * the optional clock.
- 		 */
--		if (i == 0)
--			clk = clk_get(dev, NULL);
--		else
--			clk = of_clk_get(dev->of_node, i);
--
--		if (IS_ERR(clk)) {
--			rc = PTR_ERR(clk);
--			if (rc == -EPROBE_DEFER)
--				goto err_out;
--			break;
-+		hpriv->clks = devm_kzalloc(dev, sizeof(*hpriv->clks), GFP_KERNEL);
-+		if (!hpriv->clks) {
-+			rc = -ENOMEM;
-+			goto err_out;
-+		}
-+		hpriv->clks->clk = devm_clk_get_optional(dev, NULL);
-+		if (IS_ERR(hpriv->clks->clk)) {
-+			rc = PTR_ERR(hpriv->clks->clk);
-+			goto err_out;
-+		} else if (hpriv->clks->clk) {
-+			hpriv->clks->id = __clk_get_name(hpriv->clks->clk);
-+			hpriv->n_clks = 1;
- 		}
--		hpriv->clks[i] = clk;
- 	}
- 
- 	hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
+ 	pm_runtime_enable(dev);
+ 	pm_runtime_get_sync(dev);
+ 	hpriv->got_runtime_pm = true;
 -- 
 2.35.1
 
