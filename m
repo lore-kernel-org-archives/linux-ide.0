@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E53C4332F
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:16:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F67AC433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:16:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235378AbiECUTh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:19:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60848 "EHLO
+        id S235678AbiECUTr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:19:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242069AbiECUTF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:05 -0400
+        with ESMTP id S241821AbiECUTE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:04 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EC71C286FA
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C5B4428992
+        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:30 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id CB411BC2;
-        Tue,  3 May 2022 23:10:47 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru CB411BC2
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 8F2A916DC;
+        Tue,  3 May 2022 23:10:38 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 8F2A916DC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608647;
-        bh=jCdYikKW5d7lD5eqc9AjF8QycAGAXvdMRkyDuad2vIQ=;
+        d=baikalelectronics.ru; s=mail; t=1651608638;
+        bh=ghQlSwR0k/fSp9BKKIsDgiCPjiVeG/HGpUtiHAxSYNU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=KeyjznIt6Wfs29n8CGlxuCGXESIgXDahjFeEo3sFQ98FCfmVMewxRD+37Qji3aqhR
-         qOdDtZpDVRsKP+e0PSkGQQtFw+2TyhL+ZFBveRZlkJwshfWzqbqGQjPE5LFM/jYoKQ
-         R8Y0SchDZKIHIKwsYOfS8UCBLqWXpdW5WA3240gc=
+        b=meW5KMaUHdkH6n4Q5WaAJPSKTyJTtY1DhwNuCc42mQ/Z1UyLkp9+TR31Dwi4PVgzU
+         4af7/zxv3af+2xGg9Z7N5ZkDfSFJfgAw3fa/MwMXqbKQCqA9RM3q0RrofOnDshZCJY
+         MJCoyziFowwKTbERXUB6f+pRte0daUZLy4EOoP0c=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:13 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:04 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 14/23] ata: libahci: Discard redundant force_port_map parameter
-Date:   Tue, 3 May 2022 23:09:29 +0300
-Message-ID: <20220503200938.18027-15-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 06/23] ata: libahci_platform: Convert to using platform devm-ioremap methods
+Date:   Tue, 3 May 2022 23:09:21 +0300
+Message-ID: <20220503200938.18027-7-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,104 +50,52 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Currently there are four port-map-related fields declared in the
-ahci_host_priv structure and used to setup the HBA ports mapping. First
-the ports-mapping is read from the PI register and immediately stored in
-the saved_port_map field. If forced_port_map is initialized with non-zero
-value then its value will have greater priority over the value read from
-PI, thus it will override the saved_port_map field. That value will be
-then masked by a non-zero mask_port_map field and after some sanity checks
-it will be stored in the ahci_host_priv.port_map field as a final port
-mapping.
+Currently the IOMEM AHCI registers space is mapped by means of the
+two functions invocation: platform_get_resource() is used to get the very
+first memory resource and devm_ioremap_resource() is called to remap that
+resource. Device-managed kernel API provides a handy wrapper to perform
+the same in single function call: devm_platform_ioremap_resource().
 
-As you can see the logic is a bit too complicated for such a simple task.
-We can freely get rid from at least one of the fields with no change to
-the implemented semantic. The force_port_map field can be replaced with
-taking non-zero saved_port_map value into account. So if saved_port_map is
-pre-initialized by the low level drivers (platform drivers) then it will
-have greater priority over the value read from PI register and will be
-used as actual HBA ports mapping later on. Thus the ports map forcing task
-will be just transferred from the force_port_map to saved_port_map field.
-
-This modification will perfectly fit into the feature of having OF-based
-initialization of the HW-init HBA CSR fields we are about to introduce in
-the next commit.
+While at it seeing many AHCI platform drivers rely on having the AHCI CSR
+space marked with "ahci" name let's first try to find and remap the CSR
+IO-mem with that name and only if it fails fallback to getting the very
+first registers space platform resource.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
----
- drivers/ata/ahci.c             |  2 +-
- drivers/ata/ahci.h             |  1 -
- drivers/ata/libahci.c          | 10 ++++++----
- drivers/ata/libahci_platform.c |  2 +-
- 4 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 397dfd27c90d..9bc8fa77e92f 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -656,7 +656,7 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- {
- 	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
- 		dev_info(&pdev->dev, "JMB361 has only one port\n");
--		hpriv->force_port_map = 1;
-+		hpriv->saved_port_map = 1;
- 	}
- 
- 	/*
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index f501531bd1b3..0e66446a5883 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -327,7 +327,6 @@ struct ahci_port_priv {
- struct ahci_host_priv {
- 	/* Input fields */
- 	unsigned int		flags;		/* AHCI_HFLAG_* */
--	u32			force_port_map;	/* force port map */
- 	u32			mask_port_map;	/* mask out particular bits */
- 
- 	void __iomem *		mmio;		/* bus-independent mem map */
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index cf8c7fd59ada..000a7072614f 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -453,7 +453,6 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 	 * reset.  Values without are used for driver operation.
- 	 */
- 	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
--	hpriv->saved_port_map = port_map = readl(mmio + HOST_PORTS_IMPL);
- 
- 	/* CAP2 register is only defined for AHCI 1.2 and later */
- 	vers = readl(mmio + HOST_VERSION);
-@@ -517,10 +516,13 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		cap &= ~HOST_CAP_SXS;
- 	}
- 
--	if (hpriv->force_port_map && port_map != hpriv->force_port_map) {
-+	/* Override the HBA ports mapping if the platform needs it */
-+	port_map = readl(mmio + HOST_PORTS_IMPL);
-+	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
- 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
--			 port_map, hpriv->force_port_map);
--		port_map = hpriv->force_port_map;
-+			 port_map, hpriv->saved_port_map);
-+		port_map = hpriv->saved_port_map;
-+	} else {
- 		hpriv->saved_port_map = port_map;
- 	}
- 
+---
+
+Changelog v2:
+- Check whether there is "ahhi" reg resource before using the
+  devm_platform_ioremap_resource_byname() method in order to prevent a
+  false error message printed in the log (@Damien)
+- Slightly update the patch title due to the change above and to be more
+  specific that the platform device managed methods are utilized.
+---
+ drivers/ata/libahci_platform.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
 diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index f5ee2f9d014b..56aced7a76cd 100644
+index f7f9bfcfc164..8c9fbcc3043b 100644
 --- a/drivers/ata/libahci_platform.c
 +++ b/drivers/ata/libahci_platform.c
-@@ -553,7 +553,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 	}
+@@ -404,8 +404,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
  
- 	of_property_read_u32(dev->of_node,
--			     "ports-implemented", &hpriv->force_port_map);
-+			     "ports-implemented", &hpriv->saved_port_map);
+ 	devres_add(dev, hpriv);
  
- 	if (child_nodes) {
- 		for_each_child_of_node(dev->of_node, child) {
+-	hpriv->mmio = devm_ioremap_resource(dev,
+-			      platform_get_resource(pdev, IORESOURCE_MEM, 0));
++	/*
++	 * If the DT provided an "ahci" named resource, use it. Otherwise,
++	 * fallback to using the default first resource for the device node.
++	 */
++	if (platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci"))
++		hpriv->mmio = devm_platform_ioremap_resource_byname(pdev, "ahci");
++	else
++		hpriv->mmio = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(hpriv->mmio)) {
+ 		rc = PTR_ERR(hpriv->mmio);
+ 		goto err_out;
 -- 
 2.35.1
 
