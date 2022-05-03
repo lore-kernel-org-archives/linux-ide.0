@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD25C433F5
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:15:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC49C433FE
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:15:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235013AbiECUT3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:19:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60666 "EHLO
+        id S235057AbiECUTa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:19:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240962AbiECUTD (ORCPT
+        with ESMTP id S238113AbiECUTD (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:03 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E099C286EF
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E17FC286FB
         for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:25 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 6DECD1E019;
-        Tue,  3 May 2022 23:10:44 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 6DECD1E019
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id D759E16DE;
+        Tue,  3 May 2022 23:10:40 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru D759E16DE
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608644;
-        bh=oH7lfkiEYXF2C7OEv0pADf3awSH8hsOXvowsTPSKNLA=;
+        d=baikalelectronics.ru; s=mail; t=1651608640;
+        bh=6HMO+sQEG0eDggOCw6HtXOnAgHhA4OiT4KgL3s0gPcs=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=IOXlkGPi1WfxdIOz/nJyq1abhez5oz2c4BTAhgu87BfLW8em6pcTjbAd6M7vfvk76
-         INGFzl0K2eruwt0JftSgcWhafYmbhqpJRwbWhp5G/VmyujXk1ZCawuzILPR/80sxmb
-         MetUNG0Zx293IaiRHYJzbiDJqX4AY8gQTcfdFUQ0=
+        b=kQYuIWdEZhdQzY0Q7MIEq0udyTHAxSDmDL5hKSD55Zbst4pfmdEt1NVgoSodBDCIh
+         rcjVd3V0RmC6RjgIP4M2RQBWXe5zLORMxpL8e0N5MNaEZb43e0VeD5cKIKQfw2xNC6
+         E68zGMYsRKqkn0LXeWt1SlLMzgVJcwY+sJuDPprM=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:10 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:06 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 11/23] ata: libahci_platform: Introduce reset assertion/deassertion methods
-Date:   Tue, 3 May 2022 23:09:26 +0300
-Message-ID: <20220503200938.18027-12-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 08/23] ata: libahci_platform: Add function returning a clock-handle by id
+Date:   Tue, 3 May 2022 23:09:23 +0300
+Message-ID: <20220503200938.18027-9-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,179 +50,87 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Currently the ACHI-platform library supports only the assert and deassert
-reset signals and ignores the platforms with self-deasserting reset lines.
-That prone to having the platforms with self-deasserting reset method
-misbehaviour when it comes to resuming from sleep state after the clocks
-have been fully disabled. For such cases the controller needs to be fully
-reset all over after the reference clocks are enabled and stable,
-otherwise the controller state machine might be in an undetermined state.
-
-The best solution would be to auto-detect which reset method is supported
-by the particular platform and use it implicitly in the framework of the
-ahci_platform_enable_resources()/ahci_platform_disable_resources()
-methods. Alas it can't be implemented due to the AHCI-platform library
-already supporting the shared reset control lines. As [1] says in such
-case we have to use only one of the next methods:
-+ reset_control_assert()/reset_control_deassert();
-+ reset_control_reset()/reset_control_rearm().
-If the driver had an exclusive control over the reset lines we could have
-been able to manipulate the lines with no much limitation and just used
-the combination of the methods above to cover all the possible
-reset-control cases. Since the shared reset control has already been
-advertised and couldn't be changed with no risk to breaking the platforms
-relying on it, we have no choice but to make the platform drivers to
-determine which reset methods the platform reset system supports.
-
-In order to implement both types of reset control support we suggest to
-introduce the new AHCI-platform flag: AHCI_PLATFORM_RST_TRIGGER, which
-when passed to the ahci_platform_get_resources() method together with the
-AHCI_PLATFORM_GET_RESETS flag will indicate that the reset lines are
-self-deasserting thus the reset_control_reset()/reset_control_rearm() will
-be used to control the reset state. Otherwise the
-reset_control_deassert()/reset_control_assert() methods will be utilized.
-
-[1] Documentation/driver-api/reset.rst
+Since all the clocks are retrieved by the method
+ahci_platform_get_resources() there is no need for the LLD (glue) drivers
+to be looking for some particular of them in the kernel clocks table
+again. Instead we suggest to add a simple method returning a
+device-specific clock with passed connection ID if it is managed to be
+found. Otherwise the function will return NULL. Thus the glue-drivers
+won't need to either manually touching the hpriv->clks array or calling
+clk_get()-friends. The AHCI platform drivers will be able to use the new
+function right after the ahci_platform_get_resources() method invocation
+and up to the device removal.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
 Changelog v2:
-- Convert the ahci_platform_assert_rsts() method to returning int status
-  (@Damien).
-- Fix some grammar mistakes in the ahci_platform_deassert_rsts() doc
-  (@Damien).
+- Fix some grammar mistakes in the method description.
 ---
- drivers/ata/ahci.h             |  1 +
- drivers/ata/libahci_platform.c | 50 ++++++++++++++++++++++++++++++----
- include/linux/ahci_platform.h  |  5 +++-
- 3 files changed, 50 insertions(+), 6 deletions(-)
+ drivers/ata/libahci_platform.c | 27 +++++++++++++++++++++++++++
+ include/linux/ahci_platform.h  |  3 +++
+ 2 files changed, 30 insertions(+)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index c3770a19781b..7d834deefeb9 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -340,6 +340,7 @@ struct ahci_host_priv {
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
- 	unsigned int		n_clks;
- 	struct clk_bulk_data	*clks;		/* Optional */
-+	unsigned int		f_rsts;
- 	struct reset_control	*rsts;		/* Optional */
- 	struct regulator	**target_pwrs;	/* Optional */
- 	struct regulator	*ahci_regulator;/* Optional */
 diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index f7f9cac10cb1..f5ee2f9d014b 100644
+index 3cff86c225fd..7ff6626fd569 100644
 --- a/drivers/ata/libahci_platform.c
 +++ b/drivers/ata/libahci_platform.c
-@@ -150,6 +150,44 @@ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
+@@ -94,6 +94,33 @@ void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
  }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+ EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
  
 +/**
-+ * ahci_platform_deassert_rsts - Deassert/trigger platform resets
++ * ahci_platform_find_clk - Find platform clock
 + * @hpriv: host private area to store config values
++ * @con_id: clock connection ID
 + *
-+ * This function deasserts or triggers all the reset lines found for
-+ * the AHCI device.
++ * This function returns a pointer to the clock descriptor of the clock with
++ * the passed ID.
 + *
 + * RETURNS:
-+ * 0 on success otherwise a negative error code
++ * Pointer to the clock descriptor on success otherwise NULL
 + */
-+int ahci_platform_deassert_rsts(struct ahci_host_priv *hpriv)
++struct clk *ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id)
 +{
-+	if (hpriv->f_rsts & AHCI_PLATFORM_RST_TRIGGER)
-+		return reset_control_reset(hpriv->rsts);
++	struct clk *clk = NULL;
++	int i;
 +
-+	return reset_control_deassert(hpriv->rsts);
++	for (i = 0; i < hpriv->n_clks; i++) {
++		if (!strcmp(hpriv->clks[i].id, con_id)) {
++			clk = hpriv->clks[i].clk;
++			break;
++		}
++	}
++
++	return clk;
 +}
-+EXPORT_SYMBOL_GPL(ahci_platform_deassert_rsts);
-+
-+/**
-+ * ahci_platform_assert_rsts - Assert/rearm platform resets
-+ * @hpriv: host private area to store config values
-+ *
-+ * This function asserts or rearms (for self-deasserting resets) all
-+ * the reset controls found for the AHCI device.
-+ *
-+ * RETURNS:
-+ * 0 on success otherwise a negative error code
-+ */
-+int ahci_platform_assert_rsts(struct ahci_host_priv *hpriv)
-+{
-+	if (hpriv->f_rsts & AHCI_PLATFORM_RST_TRIGGER)
-+		return reset_control_rearm(hpriv->rsts);
-+
-+	return reset_control_assert(hpriv->rsts);
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_assert_rsts);
++EXPORT_SYMBOL_GPL(ahci_platform_find_clk);
 +
  /**
-  * ahci_platform_enable_regulators - Enable regulators
+  * ahci_platform_enable_clks - Enable platform clocks
   * @hpriv: host private area to store config values
-@@ -247,18 +285,18 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
- 	if (rc)
- 		goto disable_regulator;
- 
--	rc = reset_control_deassert(hpriv->rsts);
-+	rc = ahci_platform_deassert_rsts(hpriv);
- 	if (rc)
- 		goto disable_clks;
- 
- 	rc = ahci_platform_enable_phys(hpriv);
- 	if (rc)
--		goto disable_resets;
-+		goto disable_rsts;
- 
- 	return 0;
- 
--disable_resets:
--	reset_control_assert(hpriv->rsts);
-+disable_rsts:
-+	ahci_platform_assert_rsts(hpriv);
- 
- disable_clks:
- 	ahci_platform_disable_clks(hpriv);
-@@ -285,7 +323,7 @@ void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
- {
- 	ahci_platform_disable_phys(hpriv);
- 
--	reset_control_assert(hpriv->rsts);
-+	ahci_platform_assert_rsts(hpriv);
- 
- 	ahci_platform_disable_clks(hpriv);
- 
-@@ -478,6 +516,8 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 			rc = PTR_ERR(hpriv->rsts);
- 			goto err_out;
- 		}
-+
-+		hpriv->f_rsts = flags & AHCI_PLATFORM_RST_TRIGGER;
- 	}
- 
- 	/*
 diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index fd964e6a68d6..3418980b0341 100644
+index 49e5383d4222..fd964e6a68d6 100644
 --- a/include/linux/ahci_platform.h
 +++ b/include/linux/ahci_platform.h
-@@ -26,6 +26,8 @@ struct clk *
- ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id);
+@@ -13,6 +13,7 @@
+ 
+ #include <linux/compiler.h>
+ 
++struct clk;
+ struct device;
+ struct ata_port_info;
+ struct ahci_host_priv;
+@@ -21,6 +22,8 @@ struct scsi_host_template;
+ 
+ int ahci_platform_enable_phys(struct ahci_host_priv *hpriv);
+ void ahci_platform_disable_phys(struct ahci_host_priv *hpriv);
++struct clk *
++ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id);
  int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
  void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
-+int ahci_platform_deassert_rsts(struct ahci_host_priv *hpriv);
-+int ahci_platform_assert_rsts(struct ahci_host_priv *hpriv);
  int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv);
- int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
-@@ -44,6 +46,7 @@ int ahci_platform_resume_host(struct device *dev);
- int ahci_platform_suspend(struct device *dev);
- int ahci_platform_resume(struct device *dev);
- 
--#define AHCI_PLATFORM_GET_RESETS	0x01
-+#define AHCI_PLATFORM_GET_RESETS	BIT(0)
-+#define AHCI_PLATFORM_RST_TRIGGER	BIT(1)
- 
- #endif /* _AHCI_PLATFORM_H */
 -- 
 2.35.1
 
