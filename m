@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 504FAC433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 675B6C433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:15:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234537AbiECUT0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:19:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60850 "EHLO
+        id S234735AbiECUT1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:19:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242064AbiECUTF (ORCPT
+        with ESMTP id S242011AbiECUTF (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:05 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4F5E7286EF
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5807D286C9
+        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:30 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 90D5EBC0;
-        Tue,  3 May 2022 23:10:45 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 90D5EBC0
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 8DE3616D6;
+        Tue,  3 May 2022 23:10:34 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 8DE3616D6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608645;
-        bh=zyEGv+36zyeeJ4S0Wls9R252Y4Cs1w7GDhpbUZted1Q=;
+        d=baikalelectronics.ru; s=mail; t=1651608634;
+        bh=6/S6VEzKvH8TW9AMi9YN/4HI8ctvdYhCP7Lpu5MwfW8=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=g6jrVKhZ7nju7RpINdXasQHUXXpaDxZ3bhf4C1Uq9WLVQn+xFQF2sIELjGYsi1aGB
-         GG3O2BU5JrLX7YnVn+G26nL+f68CijLeAb9heTE5aA3/dhhdD2Hi21ixj8t6ZBT8Ua
-         /PRCzyrgsdaxTxTub2OyUy5dIrpFGC+fRyhg3+Jg=
+        b=aBNelTNji0cPnRAo2ZharhYi6S5vjqsNC2xDAFaOWlbKDNTHw8QGW7CJ6YOrGmlh5
+         Lk8YtQ9p9V5NaNcEoOwW/m7uZq7pwllCl0Xrg/Oknvg0b+kJHiPm7mflYE4yFH651v
+         y5NNVbnEB3ws9G6xG7uBjlczHhNZnIQP6LoP9gd4=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:11 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:00 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -38,166 +38,287 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>
-Subject: [PATCH v2 12/23] dt-bindings: ata: ahci: Add platform capability properties
-Date:   Tue, 3 May 2022 23:09:27 +0300
-Message-ID: <20220503200938.18027-13-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 02/23] dt-bindings: ata: ahci-platform: Detach common AHCI bindings
+Date:   Tue, 3 May 2022 23:09:17 +0300
+Message-ID: <20220503200938.18027-3-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In case if the platform doesn't have BIOS or a comprehensive firmware
-installed then the HBA capability flags will be left uninitialized. As a
-good alternative we can define a set AHCI DT-node properties to describe
-all of HW-init capabilities flags. Luckily there aren't too many of them.
-SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
-support determine the corresponding feature availability for whole HBA by
-means of the "hba-sss" and "hba-smps" properties.  Each port can have the
-"hba-{hpcp,mpsp,cpd,esp,fbscp}" defined indicatating that the port
-supports the next functionality: HPCP - HotPlug capable port, MPSP -
-Mechanical Presence Switch attached to a port, CPD - Cold Plug detection,
-ESP - External SATA Port (eSATA), FBSCP - FIS-based switching capable
-port.
+In order to create a more sophisticated AHCI controller DT bindings let's
+divide the already available generic AHCI platform YAML schema into the
+platform part and a set of the common AHCI properties. The former part
+will be used to evaluate the AHCI DT nodes mainly compatible with the
+generic AHCI controller while the later schema will be used for more
+thorough AHCI DT nodes description. For instance such YAML schemas design
+will be useful for our DW AHCI SATA controller derivative with four clock
+sources, two reset lines, one system controller reference and specific
+max Rx/Tx DMA xfers size constraints.
+
+Note the phys and target-supply property requirement is preserved in the
+generic AHCI platform bindings because some platforms can lack of the
+explicitly specified PHYs or target device power regulators.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
-Alternatively we could define them as a bitfield, but having a set of
-boolean properties seemed a better idea since in that case we can
-implement a simple inter-dependency rules for them, which can't be done
-should we take the bitfields path.
+Folks, I don't really see why the phys/target-supply requirement has been
+added to the generic AHCI DT schema in the first place. Probably just to
+imply some meaning for the sub-nodes definition. Anyway in one of the
+further patches I am adding the DW AHCI SATA controller DT bindings which
+won't require having these properties specified in the sub-nodes, but will
+describe additional port-specific properties. That's why I get to keep the
+constraints in the ahci-platform.yaml schema instead of moving them to the
+common schema.
+
+Changelog v2:
+- This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 ---
- .../devicetree/bindings/ata/ahci-common.yaml  | 66 +++++++++++++++++++
- .../bindings/ata/ahci-platform.yaml           | 11 ++++
- 2 files changed, 77 insertions(+)
+ .../devicetree/bindings/ata/ahci-common.yaml  | 117 ++++++++++++++++++
+ .../bindings/ata/ahci-platform.yaml           |  68 +---------
+ 2 files changed, 123 insertions(+), 62 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
 
 diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-index 70f915748270..371f5bd90639 100644
---- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
+new file mode 100644
+index 000000000000..72e24b246040
+--- /dev/null
 +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-@@ -75,6 +75,19 @@ properties:
-   phy-names:
-     const: sata-phy
- 
-+  hba-sss:
-+    type: boolean
+@@ -0,0 +1,117 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/ahci-common.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Common Properties for Serial ATA AHCI controllers
++
++maintainers:
++  - Hans de Goede <hdegoede@redhat.com>
++  - Jens Axboe <axboe@kernel.dk>
++
++description:
++  This document defines device tree properties for a common AHCI SATA
++  controller implementation. It's hardware interface is supposed to
++  conform to the technical standard defined by Intel (see Serial ATA
++  Advanced Host Controller Interface specification for details). The
++  document doesn't constitute a DT-node binding by itself but merely
++  defines a set of common properties for the AHCI-compatible devices.
++
++select: false
++
++allOf:
++  - $ref: sata-common.yaml#
++
++properties:
++  reg:
 +    description:
-+      Staggered Spin-up Support. Indicates whether the HBA supports the
-+      staggered spin-up on its ports, for use in balancing power spikes.
++      Generic AHCI registers space conforming to the Serial ATA AHCI
++      specification.
 +
-+  hba-smps:
-+    type: boolean
++  reg-names:
++    description: CSR space IDs
++
++  interrupts:
 +    description:
-+      Mechanical Presence Switch Support. Indicates whether the HBA supports
-+      mechanical presence switches on its ports for use in hot plug
-+      operations.
++      Generic AHCI state change interrupt. Can be implemented either as a
++      single line attached to the controller as a set of the dedicated signals
++      for the global and particular port events.
 +
-   ports-implemented:
-     $ref: '/schemas/types.yaml#/definitions/uint32'
-     description:
-@@ -97,6 +110,40 @@ patternProperties:
-         minimum: 0
-         maximum: 31
- 
-+      hba-hpcp:
-+        type: boolean
-+        description:
-+          Hot Plug Capable Port. Indicates that this port’s signal and power
-+          connectors are externally accessible via a joint signal and power
-+          connector for blindmate device hot plug. It is mutually exclusive
-+          with the ESP feature.
++  clocks:
++    description:
++      List of all the reference clocks connected to the controller.
 +
-+      hba-mpsp:
-+        type: boolean
-+        description:
-+          Mechanical Presence Switch Attached to Port. Indicates whether
-+          the platform an mechanical presence switch attached to this
-+          port.
++  clock-names:
++    description: Reference clocks IDs
 +
-+      hba-cpd:
-+        type: boolean
-+        description:
-+          Cold Presence Detection. Indicates whether the platform supports
-+          cold presence detection on this port.
++  resets:
++    description:
++      List of the reset control lines to reset the controller clock
++      domains.
 +
-+      hba-esp:
-+        type: boolean
-+        description:
-+          External SATA Port. Indicates that this port’s signal connector
-+          is externally accessible on a signal only connector (e.g. eSATA
-+          connector).
++  reset-names:
++    description: Reset line IDs
 +
-+      hba-fbscp:
-+        type: boolean
-+        description:
-+          FIS-based Switching Capable Port. Indicates whether this port
-+          supports Port Multiplier FIS-based switching.
++  power-domains:
++    description:
++      List of the power domain the AHCI controller being a part of.
 +
-       phys:
-         description: Individual AHCI SATA port PHY
-         maxItems: 1
-@@ -111,6 +158,25 @@ patternProperties:
-     required:
-       - reg
- 
-+    # eSATA can't be enabled together with the HotPlug capability
-+    oneOf:
-+      - required:
-+          - hba-hpcp
-+      - required:
-+          - hba-esp
-+      - not:
-+          anyOf:
-+            - required:
-+                - hba-hpcp
-+            - required:
-+                - hba-esp
++  ahci-supply:
++    description: Power regulator for AHCI controller
 +
-+    # HotPlug capability must be enabled together with Cold Plug
-+    # Detection and Mechanical Presence Switching.
-+    dependencies:
-+      hba-cpd: ["hba-hpcp"]
-+      hba-mpsp: ["hba-hpcp"]
++  target-supply:
++    description: Power regulator for SATA target device
 +
-     additionalProperties: true
- 
- required:
++  phy-supply:
++    description: Power regulator for SATA PHY
++
++  phys:
++    description: Reference to the SATA PHY node
++    maxItems: 1
++
++  phy-names:
++    maxItems: 1
++
++  ports-implemented:
++    $ref: '/schemas/types.yaml#/definitions/uint32'
++    description:
++      Mask that indicates which ports the HBA supports. Useful if PI is not
++      programmed by the BIOS, which is true for some embedded SoC's.
++    maximum: 0x1f
++
++patternProperties:
++  "^sata-port@[0-9a-f]+$":
++    type: object
++    description:
++      It is optionally possible to describe the ports as sub-nodes so
++      to enable each port independently when dealing with multiple PHYs.
++
++    properties:
++      reg:
++        description: AHCI SATA port identifier
++        maxItems: 1
++
++      phys:
++        description: Individual AHCI SATA port PHY
++        maxItems: 1
++
++      phy-names:
++        description: AHCI SATA port PHY ID
++        maxItems: 1
++
++      target-supply:
++        description: Power regulator for SATA port target device
++
++    required:
++      - reg
++
++    additionalProperties: true
++
++required:
++  - reg
++  - interrupts
++
++additionalProperties: true
++
++...
 diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-index 76075d3c8987..6cad7e86f3bb 100644
+index 9304e4731965..76075d3c8987 100644
 --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
 +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-@@ -117,14 +117,25 @@ examples:
-         #address-cells = <1>;
-         #size-cells = <0>;
+@@ -36,8 +36,7 @@ select:
+     - compatible
  
-+        hba-smps;
-+
-         sata0: sata-port@0 {
-             reg = <0>;
-+
-+            hba-fbscp;
-+            hba-esp;
-+
-             phys = <&sata_phy 0>;
-             target-supply = <&reg_sata0>;
-         };
+ allOf:
+-  - $ref: "sata-common.yaml#"
+-
++  - $ref: "ahci-common.yaml#"
  
-         sata1: sata-port@1 {
-             reg = <1>;
+ properties:
+   compatible:
+@@ -69,90 +68,35 @@ properties:
+     maxItems: 1
+ 
+   clocks:
+-    description:
+-      Clock IDs array as required by the controller.
+     minItems: 1
+     maxItems: 3
+ 
+   clock-names:
+-    description:
+-      Names of clocks corresponding to IDs in the clock property.
+     minItems: 1
+     maxItems: 3
+ 
+   interrupts:
+     maxItems: 1
+ 
+-  ahci-supply:
+-    description:
+-      regulator for AHCI controller
+-
+-  phy-supply:
+-    description:
+-      regulator for PHY power
+-
+-  phys:
+-    description:
+-      List of all PHYs on this controller
+-    maxItems: 1
+-
+-  phy-names:
+-    description:
+-      Name specifier for the PHYs
+-    maxItems: 1
+-
+-  ports-implemented:
+-    $ref: '/schemas/types.yaml#/definitions/uint32'
+-    description: |
+-      Mask that indicates which ports that the HBA supports
+-      are available for software to use. Useful if PORTS_IMPL
+-      is not programmed by the BIOS, which is true with
+-      some embedded SoCs.
+-    maximum: 0x1f
+-
+   power-domains:
+     maxItems: 1
+ 
+   resets:
+     maxItems: 1
+ 
+-  target-supply:
+-    description:
+-      regulator for SATA target power
+-
+-required:
+-  - compatible
+-  - reg
+-  - interrupts
+-
+ patternProperties:
+   "^sata-port@[0-9a-f]+$":
+     type: object
+-    additionalProperties: false
+-    description:
+-      Subnode with configuration of the Ports.
+-
+-    properties:
+-      reg:
+-        maxItems: 1
+-
+-      phys:
+-        maxItems: 1
+-
+-      phy-names:
+-        maxItems: 1
+-
+-      target-supply:
+-        description:
+-          regulator for SATA target power
+-
+-    required:
+-      - reg
+ 
+     anyOf:
+       - required: [ phys ]
+       - required: [ target-supply ]
+ 
++required:
++  - compatible
++  - reg
++  - interrupts
 +
-+            hba-fbscp;
-+            hba-hpcp;
-+            hba-mpsp;
-+
-             phys = <&sata_phy 1>;
-             target-supply = <&reg_sata1>;
-         };
+ unevaluatedProperties: false
+ 
+ examples:
 -- 
 2.35.1
 
