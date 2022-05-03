@@ -2,75 +2,202 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82949C43219
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 14:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 504FAC433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:15:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237519AbiECO7R convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 10:59:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52854 "EHLO
+        id S234537AbiECUT0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:19:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237560AbiECO7I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 10:59:08 -0400
-X-Greylist: delayed 382 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 03 May 2022 07:55:35 PDT
-Received: from mail.megasoftsol.com (mail.megasoftsol.com [43.231.250.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A71CF18384
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 07:55:35 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by mail.megasoftsol.com (Postfix) with ESMTP id 5204E90EA04
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 20:16:41 +0530 (IST)
-Received: from mail.megasoftsol.com ([127.0.0.1])
-        by localhost (mail.megasoftsol.com [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id oB2ygmo1SLqN for <linux-ide@vger.kernel.org>;
-        Tue,  3 May 2022 20:16:40 +0530 (IST)
-Received: from localhost (localhost [127.0.0.1])
-        by mail.megasoftsol.com (Postfix) with ESMTP id D508690EA05
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 20:16:40 +0530 (IST)
-X-Virus-Scanned: amavisd-new at megasoftsol.com
-Received: from mail.megasoftsol.com ([127.0.0.1])
-        by localhost (mail.megasoftsol.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 4RVPyhuYWk9a for <linux-ide@vger.kernel.org>;
-        Tue,  3 May 2022 20:16:40 +0530 (IST)
-Received: from asda.co.uk (unknown [20.97.211.134])
-        (Authenticated sender: admin)
-        by mail.megasoftsol.com (Postfix) with ESMTPSA id 0D3EF90E9D6
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 20:16:39 +0530 (IST)
-Reply-To: sales@asdaa.uk
-From:   ASDA Stores Limited <Hanes.Thomas23877@asda.co.uk>
-To:     linux-ide@vger.kernel.org
-Subject: 2nd Quater puchase request
-Date:   03 May 2022 14:49:06 +0000
-Message-ID: <20220503092157.D8B5E8565CC046BD@asda.co.uk>
+        with ESMTP id S242064AbiECUTF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:05 -0400
+Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4F5E7286EF
+        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:32 -0700 (PDT)
+Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 90D5EBC0;
+        Tue,  3 May 2022 23:10:45 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 90D5EBC0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baikalelectronics.ru; s=mail; t=1651608645;
+        bh=zyEGv+36zyeeJ4S0Wls9R252Y4Cs1w7GDhpbUZted1Q=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=g6jrVKhZ7nju7RpINdXasQHUXXpaDxZ3bhf4C1Uq9WLVQn+xFQF2sIELjGYsi1aGB
+         GG3O2BU5JrLX7YnVn+G26nL+f68CijLeAb9heTE5aA3/dhhdD2Hi21ixj8t6ZBT8Ua
+         /PRCzyrgsdaxTxTub2OyUy5dIrpFGC+fRyhg3+Jg=
+Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:11 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+Subject: [PATCH v2 12/23] dt-bindings: ata: ahci: Add platform capability properties
+Date:   Tue, 3 May 2022 23:09:27 +0300
+Message-ID: <20220503200938.18027-13-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dear linux-ide
+In case if the platform doesn't have BIOS or a comprehensive firmware
+installed then the HBA capability flags will be left uninitialized. As a
+good alternative we can define a set AHCI DT-node properties to describe
+all of HW-init capabilities flags. Luckily there aren't too many of them.
+SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
+support determine the corresponding feature availability for whole HBA by
+means of the "hba-sss" and "hba-smps" properties.  Each port can have the
+"hba-{hpcp,mpsp,cpd,esp,fbscp}" defined indicatating that the port
+supports the next functionality: HPCP - HotPlug capable port, MPSP -
+Mechanical Presence Switch attached to a port, CPD - Cold Plug detection,
+ESP - External SATA Port (eSATA), FBSCP - FIS-based switching capable
+port.
 
-We are interested in having some of your hot selling product in 
-our stores and outlets spread all over United Kingdom, Northern 
-Island and Africa. ASDA Stores Limited is one of the highest-
-ranking Wholesale & Retail outlets in the United Kingdom. 
-  
-We shall furnish our detailed company profile in our next 
-correspondent. However, it would be appreciated if you can send 
-us your catalog through email to learn more about your company's 
-products and wholesale quote. It is hopeful that we can start a 
-viable long-lasting business relationship (partnership) with you.  
-  
-  
-Your prompt response would be delightfully appreciated. 
-  
-Best Wishes 
-  
-  
-Hanes S. Thomas 
-Procurement Office. 
-ASDA Stores Limited 
-Tel:  + 44 - 7451271650 
-WhatsApp: + 44 – 7441440360 
-Website: www.asda.co.uk
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+
+---
+
+Alternatively we could define them as a bitfield, but having a set of
+boolean properties seemed a better idea since in that case we can
+implement a simple inter-dependency rules for them, which can't be done
+should we take the bitfields path.
+---
+ .../devicetree/bindings/ata/ahci-common.yaml  | 66 +++++++++++++++++++
+ .../bindings/ata/ahci-platform.yaml           | 11 ++++
+ 2 files changed, 77 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+index 70f915748270..371f5bd90639 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+@@ -75,6 +75,19 @@ properties:
+   phy-names:
+     const: sata-phy
+ 
++  hba-sss:
++    type: boolean
++    description:
++      Staggered Spin-up Support. Indicates whether the HBA supports the
++      staggered spin-up on its ports, for use in balancing power spikes.
++
++  hba-smps:
++    type: boolean
++    description:
++      Mechanical Presence Switch Support. Indicates whether the HBA supports
++      mechanical presence switches on its ports for use in hot plug
++      operations.
++
+   ports-implemented:
+     $ref: '/schemas/types.yaml#/definitions/uint32'
+     description:
+@@ -97,6 +110,40 @@ patternProperties:
+         minimum: 0
+         maximum: 31
+ 
++      hba-hpcp:
++        type: boolean
++        description:
++          Hot Plug Capable Port. Indicates that this port’s signal and power
++          connectors are externally accessible via a joint signal and power
++          connector for blindmate device hot plug. It is mutually exclusive
++          with the ESP feature.
++
++      hba-mpsp:
++        type: boolean
++        description:
++          Mechanical Presence Switch Attached to Port. Indicates whether
++          the platform an mechanical presence switch attached to this
++          port.
++
++      hba-cpd:
++        type: boolean
++        description:
++          Cold Presence Detection. Indicates whether the platform supports
++          cold presence detection on this port.
++
++      hba-esp:
++        type: boolean
++        description:
++          External SATA Port. Indicates that this port’s signal connector
++          is externally accessible on a signal only connector (e.g. eSATA
++          connector).
++
++      hba-fbscp:
++        type: boolean
++        description:
++          FIS-based Switching Capable Port. Indicates whether this port
++          supports Port Multiplier FIS-based switching.
++
+       phys:
+         description: Individual AHCI SATA port PHY
+         maxItems: 1
+@@ -111,6 +158,25 @@ patternProperties:
+     required:
+       - reg
+ 
++    # eSATA can't be enabled together with the HotPlug capability
++    oneOf:
++      - required:
++          - hba-hpcp
++      - required:
++          - hba-esp
++      - not:
++          anyOf:
++            - required:
++                - hba-hpcp
++            - required:
++                - hba-esp
++
++    # HotPlug capability must be enabled together with Cold Plug
++    # Detection and Mechanical Presence Switching.
++    dependencies:
++      hba-cpd: ["hba-hpcp"]
++      hba-mpsp: ["hba-hpcp"]
++
+     additionalProperties: true
+ 
+ required:
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+index 76075d3c8987..6cad7e86f3bb 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+@@ -117,14 +117,25 @@ examples:
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
++        hba-smps;
++
+         sata0: sata-port@0 {
+             reg = <0>;
++
++            hba-fbscp;
++            hba-esp;
++
+             phys = <&sata_phy 0>;
+             target-supply = <&reg_sata0>;
+         };
+ 
+         sata1: sata-port@1 {
+             reg = <1>;
++
++            hba-fbscp;
++            hba-hpcp;
++            hba-mpsp;
++
+             phys = <&sata_phy 1>;
+             target-supply = <&reg_sata1>;
+         };
+-- 
+2.35.1
+
