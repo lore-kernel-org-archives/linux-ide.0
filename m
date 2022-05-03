@@ -2,44 +2,48 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF59EC433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:21:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF877C433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:21:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232086AbiECUYd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:24:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37100 "EHLO
+        id S231405AbiECUYk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:24:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237161AbiECUYA (ORCPT
+        with ESMTP id S237176AbiECUYA (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:24:00 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B87CA1705D
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E947A17E05
         for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:20:25 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 036DCBC9;
-        Tue,  3 May 2022 23:10:56 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 036DCBC9
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 30DDA1DFF8;
+        Tue,  3 May 2022 23:10:43 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 30DDA1DFF8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608656;
-        bh=0oMK30WdtHcOYdp8lm9r9navitmXPLaU64ebdlFu5B0=;
+        d=baikalelectronics.ru; s=mail; t=1651608643;
+        bh=kAvAo0Xyh3tr65Bbm2f0YNCTB8PUXE60W2QC7FBw7fk=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=JSsvCTWxmhFDcy2G8qd5vHEfld8nHrGtMk/HYMXaW+uysHrsmC7c3LyDxEPf8IUPG
-         //+JE5K1kkgMeaI1Fsv6sKP0bGrG311R0bUZPbekCdE7EkYx1ofQ9ZfBu3ZByX2R6B
-         ce6eaBsnuHeZo3cTuHc2e88GXf2/PuQ/zRpu5lYc=
+        b=BXNqjfrowSppsCXS/eEP5oiCtRHrkp7J5zx8sF1YZJW5+CrDLPITMNPUP/7FO4VEo
+         7zPkkNjM0fLqUbG5puihgYgAl7YGF5iCyRNSvmuUpDcIsSqSK2+5mM4dpwnCLn0coP
+         387ayr7TmHmrUsQHgzMnNQVyNBeJ6Q6PNMEd0kac=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:22 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:09 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>,
-        Serge Semin <fancer.lancer@gmail.com>
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Patrice Chotard <patrice.chotard@foss.st.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v2 21/23] ata: ahci-dwc: Add platform-specific quirks support
-Date:   Tue, 3 May 2022 23:09:36 +0300
-Message-ID: <20220503200938.18027-22-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v2 10/23] ata: libahci_platform: Parse ports-implemented property in resources getter
+Date:   Tue, 3 May 2022 23:09:25 +0300
+Message-ID: <20220503200938.18027-11-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,149 +54,79 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Some DWC AHCI SATA IP-core derivatives require to perform small platform
-or IP-core specific setups. They are too small to be placed in a dedicated
-driver. It's just much easier to have a set of quirks for them right in
-the DWC AHCI driver code. Since we are about to add such platform support,
-as a pre-requisite we introduce a platform-data based DWC AHCI quirks API.
-The platform data can be used to define the flags passed to the
-ahci_platform_get_resources() method, additional AHCI host-flags and a set
-of callbacks to initialize, re-initialize and clear the platform settings.
+The ports-implemented property is mainly used on the OF-based platforms
+with no ports mapping initialized by a bootloader/BIOS firmware. Seeing
+the same of_property_read_u32()-based pattern has already been implemented
+in the generic AHCI LLDD (glue) driver and in the Mediatek, St AHCI
+drivers let's move the property read procedure to the generic
+ahci_platform_get_resources() method. Thus we'll have the forced ports
+mapping feature supported for each OF-based platform which requires that,
+and stop re-implementing the same pattern in there a bit simplifying the
+code.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-
 ---
+ drivers/ata/ahci_mtk.c         | 2 --
+ drivers/ata/ahci_platform.c    | 3 ---
+ drivers/ata/ahci_st.c          | 3 ---
+ drivers/ata/libahci_platform.c | 3 +++
+ 4 files changed, 3 insertions(+), 8 deletions(-)
 
-Changelog v2:
-- Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_'.
-  (@Damien)
----
- drivers/ata/ahci_dwc.c | 52 ++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 48 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-index 73380aaaebab..f987efa1ad59 100644
---- a/drivers/ata/ahci_dwc.c
-+++ b/drivers/ata/ahci_dwc.c
-@@ -90,7 +90,16 @@
- #define AHCI_DWC_PORT_PHYCR		0x74
- #define AHCI_DWC_PORT_PHYSR		0x78
- 
-+struct ahci_dwc_plat_data {
-+	unsigned int pflags;
-+	unsigned int hflags;
-+	int (*init)(struct ahci_host_priv *hpriv);
-+	int (*reinit)(struct ahci_host_priv *hpriv);
-+	void (*clear)(struct ahci_host_priv *hpriv);
-+};
-+
- struct ahci_dwc_host_priv {
-+	const struct ahci_dwc_plat_data *pdata;
- 	struct platform_device *pdev;
- 
- 	u32 timv;
-@@ -107,11 +116,15 @@ static struct ahci_host_priv *ahci_dwc_get_resources(struct platform_device *pde
- 		return ERR_PTR(-ENOMEM);
- 
- 	dpriv->pdev = pdev;
-+	dpriv->pdata = device_get_match_data(&pdev->dev);
-+	if (!dpriv->pdata)
-+		return ERR_PTR(-EINVAL);
- 
--	hpriv = ahci_platform_get_resources(pdev, AHCI_PLATFORM_GET_RESETS);
-+	hpriv = ahci_platform_get_resources(pdev, dpriv->pdata->pflags);
- 	if (IS_ERR(hpriv))
- 		return hpriv;
- 
-+	hpriv->flags |= dpriv->pdata->hflags;
- 	hpriv->plat_data = (void *)dpriv;
- 
- 	return hpriv;
-@@ -242,22 +255,33 @@ static int ahci_dwc_init_dmacr(struct ahci_host_priv *hpriv)
- 
- static int ahci_dwc_init_host(struct ahci_host_priv *hpriv)
- {
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
- 	int rc;
- 
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
- 		return rc;
- 
-+	if (dpriv->pdata->init) {
-+		rc = dpriv->pdata->init(hpriv);
-+		if (rc)
-+			goto err_disable_resources;
-+	}
-+
- 	ahci_dwc_check_cap(hpriv);
- 
- 	ahci_dwc_init_timer(hpriv);
- 
- 	rc = ahci_dwc_init_dmacr(hpriv);
- 	if (rc)
--		goto err_disable_resources;
-+		goto err_clear_platform;
- 
- 	return 0;
- 
-+err_clear_platform:
-+	if (dpriv->pdata->clear)
-+		dpriv->pdata->clear(hpriv);
-+
- err_disable_resources:
- 	ahci_platform_disable_resources(hpriv);
- 
-@@ -275,6 +299,12 @@ static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
- 	if (rc)
- 		return rc;
- 
-+	if (dpriv->pdata->reinit) {
-+		rc = dpriv->pdata->reinit(hpriv);
-+		if (rc)
-+			goto err_disable_resources;
-+	}
-+
- 	writel(dpriv->timv, hpriv->mmio + AHCI_DWC_HOST_TIMER1MS);
- 
- 	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
-@@ -283,10 +313,20 @@ static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
+diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
+index 1f6c85fde983..c056378e3e72 100644
+--- a/drivers/ata/ahci_mtk.c
++++ b/drivers/ata/ahci_mtk.c
+@@ -118,8 +118,6 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
+ 				   SYS_CFG_SATA_EN);
  	}
  
+-	of_property_read_u32(np, "ports-implemented", &hpriv->force_port_map);
+-
  	return 0;
-+
-+err_disable_resources:
-+	ahci_platform_disable_resources(hpriv);
-+
-+	return rc;
  }
  
- static void ahci_dwc_clear_host(struct ahci_host_priv *hpriv)
- {
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
-+
-+	if (dpriv->pdata->clear)
-+		dpriv->pdata->clear(hpriv);
-+
- 	ahci_platform_disable_resources(hpriv);
- }
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 28a8de5b48b9..9b56490ecbc3 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -56,9 +56,6 @@ static int ahci_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		return rc;
  
-@@ -371,9 +411,13 @@ static int ahci_dwc_resume(struct device *dev)
+-	of_property_read_u32(dev->of_node,
+-			     "ports-implemented", &hpriv->force_port_map);
+-
+ 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+ 		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
  
- static SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend, ahci_dwc_resume);
+diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+index 7526653c843b..068621099c00 100644
+--- a/drivers/ata/ahci_st.c
++++ b/drivers/ata/ahci_st.c
+@@ -168,9 +168,6 @@ static int st_ahci_probe(struct platform_device *pdev)
  
-+struct ahci_dwc_plat_data ahci_dwc_plat = {
-+	.pflags = AHCI_PLATFORM_GET_RESETS,
-+};
+ 	st_ahci_configure_oob(hpriv->mmio);
+ 
+-	of_property_read_u32(dev->of_node,
+-			     "ports-implemented", &hpriv->force_port_map);
+-
+ 	err = ahci_platform_init_host(pdev, hpriv, &st_ahci_port_info,
+ 				      &ahci_platform_sht);
+ 	if (err) {
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 4e54e19f07b2..f7f9cac10cb1 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -512,6 +512,9 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		goto err_out;
+ 	}
+ 
++	of_property_read_u32(dev->of_node,
++			     "ports-implemented", &hpriv->force_port_map);
 +
- static const struct of_device_id ahci_dwc_of_match[] = {
--	{ .compatible = "snps,dwc-ahci", },
--	{ .compatible = "snps,spear-ahci", },
-+	{ .compatible = "snps,dwc-ahci", &ahci_dwc_plat },
-+	{ .compatible = "snps,spear-ahci", &ahci_dwc_plat },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_dwc_of_match);
+ 	if (child_nodes) {
+ 		for_each_child_of_node(dev->of_node, child) {
+ 			u32 port;
 -- 
 2.35.1
 
