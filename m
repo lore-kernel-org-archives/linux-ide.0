@@ -2,45 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07AA7C433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:16:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1777DC433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:16:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235020AbiECUTb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:19:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60846 "EHLO
+        id S235240AbiECUTc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 May 2022 16:19:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242056AbiECUTF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:05 -0400
+        with ESMTP id S237919AbiECUTD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:19:03 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EC86E286FB
-        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E1661286FA
+        for <linux-ide@vger.kernel.org>; Tue,  3 May 2022 13:15:25 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 9251816D7;
-        Tue,  3 May 2022 23:10:35 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 9251816D7
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id DE794BC4;
+        Tue,  3 May 2022 23:10:49 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru DE794BC4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651608635;
-        bh=zLhukAHC2GoB4OyffhzcxrjjCB9eEsqKuyWm1zWzpKo=;
+        d=baikalelectronics.ru; s=mail; t=1651608649;
+        bh=uSCjkMj4dYFheq+/FSKGiwDai6D+f5d7WfzOKA5SOcI=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=RUcU3XG8AypmuaBysNk004Mw3w4uVIiAYvMsRaF5MmCEDuH73CJJs73aToP5Wem7i
-         4+n5mjyBjnjy8yn/ordeo/qSs+YKKOokMvITFOGaLncR8Ua1brUoBvKr+MvDe1Q/4T
-         2yQaGdIWcVRAC6acnjU+RtKlggr85DafPKKPx+NM=
+        b=RnMux7JW7Wut0lQXqcFdmwDPAUAUhSLlms5pL4hm/jK2VaoYPx/ymSeiDM3td05LY
+         s7CO1RMWnIdGTZA14lRL/+ynORBxkWWLU2CRxxA8C4ItVsHmGx9Di5xawr+XtevCLv
+         Fvl47otQAj4vrp/cLrG2qw7KamBUZI5VKxb1vlEQ=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:01 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 3 May 2022 23:10:15 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+        Jens Axboe <axboe@kernel.dk>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-Subject: [PATCH v2 03/23] dt-bindings: ata: ahci-platform: Clarify common AHCI props constraints
-Date:   Tue, 3 May 2022 23:09:18 +0300
-Message-ID: <20220503200938.18027-4-Sergey.Semin@baikalelectronics.ru>
+        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH v2 16/23] ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
+Date:   Tue, 3 May 2022 23:09:31 +0300
+Message-ID: <20220503200938.18027-17-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -51,73 +50,60 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Indeed in accordance with what is imeplemtned in the AHCI paltform driver
-and the way the AHCI DT nodes are defined in the DT files we can add the
-next AHCI DT properties constraints: AHCI CSR ID is fixed to 'ahci', PHY
-name is fixed to 'sata-phy', AHCI controller can't have more than 32 ports
-by design.
+It may get required to retrieve the port-base address even before the
+ata_host instance is initialized and activated, for instance in the
+ahci_save_initial_config() method which we about to update (consider this
+modification as a preparation for that one). Seeing the __ahci_port_base()
+function isn't used much it's the best candidate to provide the required
+functionality. So let's convert it to accepting the ahci_host_priv
+structure pointer.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-
-Changelog v2:
-- This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 ---
- .../devicetree/bindings/ata/ahci-common.yaml      | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/ata/ahci.c | 2 +-
+ drivers/ata/ahci.h | 7 ++++---
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-index 72e24b246040..70f915748270 100644
---- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-@@ -31,6 +31,8 @@ properties:
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9bc8fa77e92f..d14d74649e0e 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -689,7 +689,7 @@ static void ahci_pci_init_controller(struct ata_host *host)
+ 			mv = 2;
+ 		else
+ 			mv = 4;
+-		port_mmio = __ahci_port_base(host, mv);
++		port_mmio = __ahci_port_base(hpriv, mv);
  
-   reg-names:
-     description: CSR space IDs
-+    contains:
-+      const: ahci
+ 		writel(0, port_mmio + PORT_IRQ_MASK);
  
-   interrupts:
-     description:
-@@ -71,14 +73,13 @@ properties:
-     maxItems: 1
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 0e66446a5883..8b9826533ae5 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -431,10 +431,9 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht);
+ void ahci_error_handler(struct ata_port *ap);
+ u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked);
  
-   phy-names:
--    maxItems: 1
-+    const: sata-phy
+-static inline void __iomem *__ahci_port_base(struct ata_host *host,
++static inline void __iomem *__ahci_port_base(struct ahci_host_priv *hpriv,
+ 					     unsigned int port_no)
+ {
+-	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *mmio = hpriv->mmio;
  
-   ports-implemented:
-     $ref: '/schemas/types.yaml#/definitions/uint32'
-     description:
-       Mask that indicates which ports the HBA supports. Useful if PI is not
-       programmed by the BIOS, which is true for some embedded SoC's.
--    maximum: 0x1f
+ 	return mmio + 0x100 + (port_no * 0x80);
+@@ -442,7 +441,9 @@ static inline void __iomem *__ahci_port_base(struct ata_host *host,
  
- patternProperties:
-   "^sata-port@[0-9a-f]+$":
-@@ -89,8 +90,12 @@ patternProperties:
+ static inline void __iomem *ahci_port_base(struct ata_port *ap)
+ {
+-	return __ahci_port_base(ap->host, ap->port_no);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	return __ahci_port_base(hpriv, ap->port_no);
+ }
  
-     properties:
-       reg:
--        description: AHCI SATA port identifier
--        maxItems: 1
-+        description:
-+          AHCI SATA port identifier. By design AHCI controller can't have
-+          more than 32 ports due to the CAP.NP fields and PI register size
-+          constraints.
-+        minimum: 0
-+        maximum: 31
- 
-       phys:
-         description: Individual AHCI SATA port PHY
-@@ -98,7 +103,7 @@ patternProperties:
- 
-       phy-names:
-         description: AHCI SATA port PHY ID
--        maxItems: 1
-+        const: sata-phy
- 
-       target-supply:
-         description: Power regulator for SATA port target device
+ static inline int ahci_nr_ports(u32 cap)
 -- 
 2.35.1
 
