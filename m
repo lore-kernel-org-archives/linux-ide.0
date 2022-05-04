@@ -2,50 +2,37 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E87DC4321E
-	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 13:55:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D7D5C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 14:09:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350940AbiEDN7Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 May 2022 09:59:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46824 "EHLO
+        id S1351108AbiEDONO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 May 2022 10:13:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350941AbiEDN7L (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 09:59:11 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10A891EEF5;
-        Wed,  4 May 2022 06:55:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651672535; x=1683208535;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=VFRSvvAnvwFGIGd0aLNekAxiY2K03BO+iR35H1EOHsc=;
-  b=hFvGydlCmIOHe7w4JMCpH2kH+nMZornELLVC91kGO7gfK2x8LVaNMoEg
-   tsqYCUqq5RA0OmY+PYeHvU5+t/iNNtG6o8XLdbLC7jz+SnSGljORjJXGJ
-   hxDcxLa8jha7kHWiGYxVoy+Jw3CcszIgYnQ+IOFzk6kypaNwmu0tlGd1A
-   u0AbxhzxdosxpreGK+QhYpHjYbuqHS01sofRBbldRIo2y99wnvkHz958x
-   FKlw0mj8mvmn9j1qhjYvTRAjp1yk3ejGK2oCkdb1LWWMwT/9CatB3XZZn
-   GJX4Akg/1eYSQ7DsRVujLn3HlDooG+8eKp8KhPdonp4/gnMkrycvh6Miz
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10337"; a="267653578"
-X-IronPort-AV: E=Sophos;i="5.91,198,1647327600"; 
-   d="scan'208";a="267653578"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 May 2022 06:55:34 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,198,1647327600"; 
-   d="scan'208";a="536841297"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga006.jf.intel.com with ESMTP; 04 May 2022 06:55:28 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 39228115; Wed,  4 May 2022 16:55:29 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        with ESMTP id S238088AbiEDONK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 10:13:10 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDB77419AE
+        for <linux-ide@vger.kernel.org>; Wed,  4 May 2022 07:09:34 -0700 (PDT)
+Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=bjornoya.blackshift.org)
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <mkl@pengutronix.de>)
+        id 1nmFgM-0000h2-LG; Wed, 04 May 2022 16:08:46 +0200
+Received: from pengutronix.de (unknown [IPv6:2a00:20:7019:a9b6:6aae:fc9e:d3ef:96db])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        (Authenticated sender: mkl-all@blackshift.org)
+        by smtp.blackshift.org (Postfix) with ESMTPSA id 347A975CE1;
+        Wed,  4 May 2022 14:08:34 +0000 (UTC)
+Date:   Wed, 4 May 2022 16:08:33 +0200
+From:   Marc Kleine-Budde <mkl@pengutronix.de>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Wolfram Sang <wsa@kernel.org>,
         Chris Packham <chris.packham@alliedtelesis.co.nz>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
         "David S. Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -53,8 +40,8 @@ To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org,
         linux-can@vger.kernel.org, netdev@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
-Cc:     Michael Ellerman <mpe@ellerman.id.au>,
+        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org,
+        Michael Ellerman <mpe@ellerman.id.au>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Paul Mackerras <paulus@samba.org>,
         Anatolij Gustschin <agust@denx.de>,
@@ -63,89 +50,75 @@ Cc:     Michael Ellerman <mpe@ellerman.id.au>,
         Paolo Abeni <pabeni@redhat.com>,
         Pantelis Antoniou <pantelis.antoniou@gmail.com>,
         Mark Brown <broonie@kernel.org>
-Subject: [PATCH v1 3/4] powerpc/52xx: Get rid of of_node assignment
-Date:   Wed,  4 May 2022 16:44:48 +0300
-Message-Id: <20220504134449.64473-3-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220504134449.64473-1-andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH v1 2/4] powerpc/mpc5xxx: Switch
+ mpc5xxx_get_bus_frequency() to use fwnode
+Message-ID: <20220504140833.b2itvapuqlssm74k@pengutronix.de>
 References: <20220504134449.64473-1-andriy.shevchenko@linux.intel.com>
+ <20220504134449.64473-2-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="vz3cm7jicnfhqyjt"
+Content-Disposition: inline
+In-Reply-To: <20220504134449.64473-2-andriy.shevchenko@linux.intel.com>
+X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
+X-SA-Exim-Mail-From: mkl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Let GPIO library assign of_node from the parent device.
-This allows to move GPIO library and drivers to use fwnode
-APIs instead of being stuck with OF-only interfaces.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/powerpc/platforms/52xx/mpc52xx_gpt.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+--vz3cm7jicnfhqyjt
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-index 8f896a42d7d8..0831f28345af 100644
---- a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-+++ b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-@@ -58,6 +58,7 @@
- #include <linux/of_platform.h>
- #include <linux/of_gpio.h>
- #include <linux/kernel.h>
-+#include <linux/property.h>
- #include <linux/slab.h>
- #include <linux/fs.h>
- #include <linux/watchdog.h>
-@@ -314,17 +315,15 @@ mpc52xx_gpt_gpio_dir_out(struct gpio_chip *gc, unsigned int gpio, int val)
- 	return 0;
- }
- 
--static void
--mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt, struct device_node *node)
-+static void mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt)
- {
- 	int rc;
- 
--	/* Only setup GPIO if the device tree claims the GPT is
--	 * a GPIO controller */
--	if (!of_find_property(node, "gpio-controller", NULL))
-+	/* Only setup GPIO if the device claims the GPT is a GPIO controller */
-+	if (!device_property_present(gpt->dev, "gpio-controller"))
- 		return;
- 
--	gpt->gc.label = kasprintf(GFP_KERNEL, "%pOF", node);
-+	gpt->gc.label = kasprintf(GFP_KERNEL, "%pfw", dev_fwnode(gpt->dev));
- 	if (!gpt->gc.label) {
- 		dev_err(gpt->dev, "out of memory\n");
- 		return;
-@@ -336,7 +335,7 @@ mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt, struct device_node *node)
- 	gpt->gc.get = mpc52xx_gpt_gpio_get;
- 	gpt->gc.set = mpc52xx_gpt_gpio_set;
- 	gpt->gc.base = -1;
--	gpt->gc.of_node = node;
-+	gpt->gc.parent = gpt->dev;
- 
- 	/* Setup external pin in GPIO mode */
- 	clrsetbits_be32(&gpt->regs->mode, MPC52xx_GPT_MODE_MS_MASK,
-@@ -349,8 +348,7 @@ mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt, struct device_node *node)
- 	dev_dbg(gpt->dev, "%s() complete.\n", __func__);
- }
- #else /* defined(CONFIG_GPIOLIB) */
--static void
--mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *p, struct device_node *np) { }
-+static void mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt) { }
- #endif /* defined(CONFIG_GPIOLIB) */
- 
- /***********************************************************************
-@@ -727,7 +725,7 @@ static int mpc52xx_gpt_probe(struct platform_device *ofdev)
- 
- 	dev_set_drvdata(&ofdev->dev, gpt);
- 
--	mpc52xx_gpt_gpio_setup(gpt, ofdev->dev.of_node);
-+	mpc52xx_gpt_gpio_setup(gpt);
- 	mpc52xx_gpt_irq_setup(gpt, ofdev->dev.of_node);
- 
- 	mutex_lock(&mpc52xx_gpt_list_mutex);
--- 
-2.35.1
+On 04.05.2022 16:44:47, Andy Shevchenko wrote:
+> Switch mpc5xxx_get_bus_frequency() to use fwnode in order to help
+> cleaning up other parts of the kernel from OF specific code.
+>=20
+> No functional change intended.
+>=20
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  arch/powerpc/include/asm/mpc5xxx.h            |  9 +++-
+>  arch/powerpc/platforms/52xx/mpc52xx_gpt.c     |  2 +-
+>  arch/powerpc/sysdev/mpc5xxx_clocks.c          | 41 ++++++++++---------
+>  drivers/ata/pata_mpc52xx.c                    |  2 +-
+>  drivers/i2c/busses/i2c-mpc.c                  |  7 ++--
+>  drivers/net/can/mscan/mpc5xxx_can.c           |  2 +-
+>  drivers/net/ethernet/freescale/fec_mpc52xx.c  |  2 +-
+>  .../net/ethernet/freescale/fec_mpc52xx_phy.c  |  3 +-
+>  .../net/ethernet/freescale/fs_enet/mii-fec.c  |  4 +-
+>  drivers/spi/spi-mpc52xx.c                     |  2 +-
+>  drivers/tty/serial/mpc52xx_uart.c             |  4 +-
+>  11 files changed, 44 insertions(+), 34 deletions(-)
 
+Acked-by: Marc Kleine-Budde <mkl@pengutronix.de> # for mscan/mpc5xxx_can
+
+regards,
+Marc
+
+--=20
+Pengutronix e.K.                 | Marc Kleine-Budde           |
+Embedded Linux                   | https://www.pengutronix.de  |
+Vertretung West/Dortmund         | Phone: +49-231-2826-924     |
+Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-5555 |
+
+--vz3cm7jicnfhqyjt
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEBsvAIBsPu6mG7thcrX5LkNig010FAmJyiN4ACgkQrX5LkNig
+010OIAf8CBk7q4SlnkqYRtXPIROz3oNFhMidCM6GZg2jjdclJJWBQBKZcqVIqVOE
+d8lOgUvYv1HV6YvQfoaTflFSAabkzzrzJHOzvrPjpQN8m/g/jQWrtgnLsnXR6DQ8
++IlS6l/ePviEK1b1wBflbpnXNDvqyuZ1JI6raS33OtF23UfR9i3okaA7vtWhBH2p
+w/pqkLeh9WHNBneeJaf9q5ag2Z99PothsCek8lEUrwJYaw9/bn0is0JWC8Zjze4C
+skOkxpOERxfSedvx4WSFuU7U+CNYXk4/BkWQa/1dcLbzFuW/WdgAJDKFOtWTOI9C
+od+uCAGiK4UNsWkGX3PG24Mrvry9iw==
+=o7Bz
+-----END PGP SIGNATURE-----
+
+--vz3cm7jicnfhqyjt--
