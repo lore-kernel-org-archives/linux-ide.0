@@ -2,52 +2,52 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA33AC433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 04:16:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA01C433FE
+	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 04:27:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234380AbiEDEUS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 May 2022 00:20:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47190 "EHLO
+        id S1344574AbiEDEa2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 May 2022 00:30:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231736AbiEDEUR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 00:20:17 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 899DB1EAFB;
-        Tue,  3 May 2022 21:16:41 -0700 (PDT)
+        with ESMTP id S1344542AbiEDEaQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 00:30:16 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7990527CD3;
+        Tue,  3 May 2022 21:26:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651637801; x=1683173801;
+  t=1651638401; x=1683174401;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=w95RztZI123By603Xio5Fchn8GzUX2eg2YngFCbfwFs=;
-  b=GJMxH/d9k+2DeFKjaKHZ2G+G6d/sRMu2PZC9sT+NpQpdBijIiPjed9NI
-   ++Z6zseRoGOZKqB89WCLxQE2a5wyFHy6LXjyjdDDJ+XCF0fH17YclFPnb
-   RUSA0vp/60VZa4rrsWeLCCk/ha5P5fDwEe+RKjcPSrgpAZJBiuQDNLgsm
-   UToj+470EaaQRMcN+XHo3l1UKrHbTinTIOZXYHHQEvWLQlFBEB1NllTc4
-   5CNd77PIE7Xh46MEqthBPh1y1BFqCYrgmajohvScI9HYZ6SooZ3JFtQMa
-   n1Q+ieNGQ0xZgmrw0ZvB9JDsIwNuNXdclpfcvQu15naK0u7kJ5syjIfGL
+  bh=KL0VQr9q7v/ilrpm5D5wFlNTKVUad7oBMkfv8Plpj90=;
+  b=Xxy5MJqT735nBEKQ3ckKDwXtOeaDZ1PflpNmn2i5uobHWea0lLFhjR+U
+   leCSp9xiAq4YeZFKvKK5IO30GagbA93aQrVBFEQ8DglTfD/rL0LrDTgBo
+   L68kdCHcGq3e29/GmLsF24BFEuZodKlbc/0gV79/SgkDzCAHBpw3+jwbs
+   jXSO1He6kO0alZOUlXA4Jz5fBdhXk75zhWi6n1rgvZFwVm2x5VErccROM
+   bjKM89OJ5FbbbGMnmhBe+BhRIQ1Q2eY6cvvY5wla/UaAjgA7KF9eCtY5Z
+   PPN/3H0hE2T/AncpIFX54iWji9WCut7HmB+scem9RFiR1JJBR3OD7olgv
    Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10336"; a="330644282"
+X-IronPort-AV: E=McAfee;i="6400,9594,10336"; a="354097572"
 X-IronPort-AV: E=Sophos;i="5.91,196,1647327600"; 
-   d="scan'208";a="330644282"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2022 21:16:41 -0700
+   d="scan'208";a="354097572"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2022 21:26:41 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.91,196,1647327600"; 
-   d="scan'208";a="599363824"
+   d="scan'208";a="653556113"
 Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 03 May 2022 21:16:38 -0700
+  by FMSMGA003.fm.intel.com with ESMTP; 03 May 2022 21:26:38 -0700
 Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
         (envelope-from <lkp@intel.com>)
-        id 1nm6RJ-000B43-CM;
-        Wed, 04 May 2022 04:16:37 +0000
-Date:   Wed, 4 May 2022 12:16:20 +0800
+        id 1nm6az-000B4N-HH;
+        Wed, 04 May 2022 04:26:37 +0000
+Date:   Wed, 4 May 2022 12:26:36 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>
-Cc:     kbuild-all@lists.01.org,
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
         Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
@@ -55,7 +55,7 @@ Cc:     kbuild-all@lists.01.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 Subject: Re: [PATCH v2 07/23] ata: libahci_platform: Convert to using devm
  bulk clocks API
-Message-ID: <202205041253.SPLfX1oi-lkp@intel.com>
+Message-ID: <202205041215.o6Ubib6t-lkp@intel.com>
 References: <20220503200938.18027-8-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -77,65 +77,59 @@ https://git-scm.com/docs/git-format-patch]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220504-041431
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-config: microblaze-randconfig-r031-20220501 (https://download.01.org/0day-ci/archive/20220504/202205041253.SPLfX1oi-lkp@intel.com/config)
-compiler: microblaze-linux-gcc (GCC) 11.3.0
+config: arm64-randconfig-r034-20220501 (https://download.01.org/0day-ci/archive/20220504/202205041215.o6Ubib6t-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 363b3a645a1e30011cc8da624f13dac5fd915628)
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
+        # install arm64 cross compiling tool for clang build
+        # apt-get install binutils-aarch64-linux-gnu
         # https://github.com/intel-lab-lkp/linux/commit/2aa1a2fe25d3757c2c3a6c59ec00c135ba17fe96
         git remote add linux-review https://github.com/intel-lab-lkp/linux
         git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220504-041431
         git checkout 2aa1a2fe25d3757c2c3a6c59ec00c135ba17fe96
         # save the config file
         mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=microblaze SHELL=/bin/bash drivers/ata/
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm64 SHELL=/bin/bash drivers/ata/
 
 If you fix the issue, kindly add following tag as appropriate
 Reported-by: kernel test robot <lkp@intel.com>
 
 All errors (new ones prefixed by >>):
 
-   drivers/ata/ahci_da850.c: In function 'ahci_da850_probe':
->> drivers/ata/ahci_da850.c:181:13: error: wrong type argument to unary exclamation mark
-     181 |         if (!hpriv->clks[0]) {
-         |             ^
->> drivers/ata/ahci_da850.c:186:34: error: incompatible types when assigning to type 'struct clk_bulk_data' from type 'struct clk *'
-     186 |                 hpriv->clks[0] = clk;
-         |                                  ^~~
-   drivers/ata/ahci_da850.c:194:13: error: wrong type argument to unary exclamation mark
-     194 |         if (!hpriv->clks[1]) {
-         |             ^
-   drivers/ata/ahci_da850.c:201:34: error: incompatible types when assigning to type 'struct clk_bulk_data' from type 'struct clk *'
-     201 |                 hpriv->clks[1] = clk;
-         |                                  ^~~
->> drivers/ata/ahci_da850.c:204:64: error: incompatible type for argument 1 of 'clk_get_rate'
-     204 |         mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
-         |                                                     ~~~~~~~~~~~^~~
-         |                                                                |
-         |                                                                struct clk_bulk_data
-   In file included from drivers/ata/ahci.h:23,
-                    from drivers/ata/ahci_da850.c:13:
-   include/linux/clk.h:584:40: note: expected 'struct clk *' but argument is of type 'struct clk_bulk_data'
-     584 | unsigned long clk_get_rate(struct clk *clk);
-         |                            ~~~~~~~~~~~~^~~
+>> drivers/ata/ahci_da850.c:181:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
+           if (!hpriv->clks[0]) {
+               ^~~~~~~~~~~~~~~
+>> drivers/ata/ahci_da850.c:186:18: error: assigning to 'struct clk_bulk_data' from incompatible type 'struct clk *'
+                   hpriv->clks[0] = clk;
+                                  ^ ~~~
+   drivers/ata/ahci_da850.c:194:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
+           if (!hpriv->clks[1]) {
+               ^~~~~~~~~~~~~~~
+   drivers/ata/ahci_da850.c:201:18: error: assigning to 'struct clk_bulk_data' from incompatible type 'struct clk *'
+                   hpriv->clks[1] = clk;
+                                  ^ ~~~
+>> drivers/ata/ahci_da850.c:204:46: error: passing 'struct clk_bulk_data' to parameter of incompatible type 'struct clk *'
+           mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
+                                                       ^~~~~~~~~~~~~~
+   include/linux/clk.h:584:40: note: passing argument to parameter 'clk' here
+   unsigned long clk_get_rate(struct clk *clk);
+                                          ^
+   5 errors generated.
 --
-   drivers/ata/ahci_dm816.c: In function 'ahci_dm816_phy_init':
->> drivers/ata/ahci_dm816.c:72:13: error: wrong type argument to unary exclamation mark
-      72 |         if (!hpriv->clks[1]) {
-         |             ^
->> drivers/ata/ahci_dm816.c:77:47: error: incompatible type for argument 1 of 'clk_get_rate'
-      77 |         refclk_rate = clk_get_rate(hpriv->clks[1]);
-         |                                    ~~~~~~~~~~~^~~
-         |                                               |
-         |                                               struct clk_bulk_data
-   In file included from drivers/ata/ahci.h:23,
-                    from drivers/ata/ahci_dm816.c:16:
-   include/linux/clk.h:584:40: note: expected 'struct clk *' but argument is of type 'struct clk_bulk_data'
-     584 | unsigned long clk_get_rate(struct clk *clk);
-         |                            ~~~~~~~~~~~~^~~
+>> drivers/ata/ahci_dm816.c:72:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
+           if (!hpriv->clks[1]) {
+               ^~~~~~~~~~~~~~~
+>> drivers/ata/ahci_dm816.c:77:29: error: passing 'struct clk_bulk_data' to parameter of incompatible type 'struct clk *'
+           refclk_rate = clk_get_rate(hpriv->clks[1]);
+                                      ^~~~~~~~~~~~~~
+   include/linux/clk.h:584:40: note: passing argument to parameter 'clk' here
+   unsigned long clk_get_rate(struct clk *clk);
+                                          ^
+   2 errors generated.
 
 
-vim +186 drivers/ata/ahci_da850.c
+vim +181 drivers/ata/ahci_da850.c
 
 018d5ef2048fca Akinobu Mita              2015-01-29  159  
 ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  160  static int ahci_da850_probe(struct platform_device *pdev)
