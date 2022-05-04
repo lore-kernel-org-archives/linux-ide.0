@@ -2,98 +2,89 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CD0C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 15:03:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 339FFC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 16:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351824AbiEDPH0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 May 2022 11:07:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56318 "EHLO
+        id S1343692AbiEDQsa convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 May 2022 12:48:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351542AbiEDPHX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 11:07:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F39692AE23;
-        Wed,  4 May 2022 08:03:47 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8E93161B6B;
-        Wed,  4 May 2022 15:03:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2E58C385AA;
-        Wed,  4 May 2022 15:03:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651676626;
-        bh=gS9cgRft2gHupLhQNBtsqLQ0zVLeGAsSN5zeFP4h4k0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sBTekUaifCimlhjajkdL2NZyWiN3UFz7vjqLSot0sBDx9tF8DMYExUV2qDoaPNn5b
-         KYO/QdA7xVibP7boWTEEtGaJGWb+tPRd3xB1YLqOwY7orcA7r6m4ILsbaf7rmMCy1e
-         zIvneMbbhxbXioMm7LBxTjne2J0GLD4i525V1CTJMxU8AM94aF2R9HWSPxK43y80Xt
-         rFOOsJnWrxpu7lJszvL6UPaFYbQ7mCfcQCdphzeLNRJwC3Qb9dAJoV3siInlSIlqVf
-         2EedtYa8TST1srSugZyIjH+iBTS0FYtdUhxy14vaJEjJKP2wDfRWRZuwDo5V8Hk3xh
-         SLciCY6XIkF2A==
-Date:   Wed, 4 May 2022 16:03:38 +0100
-From:   Mark Brown <broonie@kernel.org>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Wolfram Sang <wsa@kernel.org>,
-        Chris Packham <chris.packham@alliedtelesis.co.nz>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-can@vger.kernel.org, netdev@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Anatolij Gustschin <agust@denx.de>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Pantelis Antoniou <pantelis.antoniou@gmail.com>
-Subject: Re: [PATCH v1 2/4] powerpc/mpc5xxx: Switch
- mpc5xxx_get_bus_frequency() to use fwnode
-Message-ID: <YnKVytydpZeNWsBP@sirena.org.uk>
-References: <20220504134449.64473-1-andriy.shevchenko@linux.intel.com>
- <20220504134449.64473-2-andriy.shevchenko@linux.intel.com>
+        with ESMTP id S1353586AbiEDQs2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 12:48:28 -0400
+X-Greylist: delayed 1451 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 04 May 2022 09:44:48 PDT
+Received: from mail.megasoftsol.com (mail.megasoftsol.com [43.231.250.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFEF54667A
+        for <linux-ide@vger.kernel.org>; Wed,  4 May 2022 09:44:48 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mail.megasoftsol.com (Postfix) with ESMTP id 12228907403
+        for <linux-ide@vger.kernel.org>; Wed,  4 May 2022 21:38:50 +0530 (IST)
+Received: from mail.megasoftsol.com ([127.0.0.1])
+        by localhost (mail.megasoftsol.com [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id QwzNPwemgFdc for <linux-ide@vger.kernel.org>;
+        Wed,  4 May 2022 21:38:49 +0530 (IST)
+Received: from localhost (localhost [127.0.0.1])
+        by mail.megasoftsol.com (Postfix) with ESMTP id 6157990740C
+        for <linux-ide@vger.kernel.org>; Wed,  4 May 2022 21:38:49 +0530 (IST)
+X-Virus-Scanned: amavisd-new at megasoftsol.com
+Received: from mail.megasoftsol.com ([127.0.0.1])
+        by localhost (mail.megasoftsol.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id VGsnCER4gpkm for <linux-ide@vger.kernel.org>;
+        Wed,  4 May 2022 21:38:49 +0530 (IST)
+Received: from johnlewis.com (unknown [20.97.211.134])
+        (Authenticated sender: admin)
+        by mail.megasoftsol.com (Postfix) with ESMTPSA id 83157907400
+        for <linux-ide@vger.kernel.org>; Wed,  4 May 2022 21:38:48 +0530 (IST)
+Reply-To: robert_turner@johnlewis-trades.com
+From:   John Lewis & Partnersip <robert.turner44@johnlewis.com>
+To:     linux-ide@vger.kernel.org
+Subject: 5/04/2022 Product Inquiry (JL)
+Date:   04 May 2022 16:11:16 +0000
+Message-ID: <20220504123943.8F418C7E32B01675@johnlewis.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="YyVuIp0t4l9kBDGR"
-Content-Disposition: inline
-In-Reply-To: <20220504134449.64473-2-andriy.shevchenko@linux.intel.com>
-X-Cookie: Mother is the invention of necessity.
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
---YyVuIp0t4l9kBDGR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Wed, May 04, 2022 at 04:44:47PM +0300, Andy Shevchenko wrote:
-> Switch mpc5xxx_get_bus_frequency() to use fwnode in order to help
-> cleaning up other parts of the kernel from OF specific code.
-
-Acked-by: Mark Brown <broonie@kernel.org>
-
---YyVuIp0t4l9kBDGR
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmJylckACgkQJNaLcl1U
-h9BYbQf/d+R2/K8I9P6XsFeNBBDkbkBKu4u+dnvyBvda1uA0bN681S7UN/+65MPC
-sNd9OZXoE0bx/AnrXyZlW+IJC2jWyLcwL9rGR4hrIkW1w50MqD6WWl6XRe+cmYSF
-W+/goNVZ9EcqhviJXuhSTy7Cu14LU7V4uFUWR/MOcjmFD0hxnUJNub6xJsdUsf8I
-pAEjZJB7TEiPpN6SXvENzukmdyQewPL6RqLTTIki9dUXE9fn1ixsvQX0bBd5yY1e
-vWYnszaplvlFBXwDLftPDtQ+880HVZK0VrXJpCfPW2MqfFsDovNNQyZdlR4T0W9w
-rUS8W2LQXMCfj7BSLZ+tUgPA+OoNKg==
-=mP8/
------END PGP SIGNATURE-----
-
---YyVuIp0t4l9kBDGR--
+Dear linux-ide
+ 
+ 
+The famous brand John Lewis & Partners, is UK's largest multi-
+channel retailer with over 126 shops and multiple expansion in 
+Africa furnished by European/Asian/American products. We are 
+sourcing new products to attract new customers and also retain 
+our existing ones, create new partnerships with companies dealing 
+with different kinds of goods globally.
+ 
+Your company's products are of interest to our market as we have 
+an amazing market for your products.
+ 
+Provide us your current catalog through email to review more. We 
+hope to be able to order with you and start a long-term friendly, 
+respectable and solid business partnership. Please we would 
+appreciate it if you could send us your stock availability via 
+email if any.
+ 
+ 
+Our payment terms are 15 days net in Europe, 30 days Net in UK 
+and 30 days net in Asia/USA as we have operated with over 5297 
+suppliers around the globe for the past 50 years now. For 
+immediate response Send your reply to "robert_turner@johnlewis-
+trades.com" for us to be able to treat with care and urgency.
+ 
+ 
+ 
+Best Regards
+ 
+ 
+Rob Turner
+Head Of Procurement Operations
+John Lewis & Partners.
+robert_turner@johnlewis-trades.com
+Tel: +44-7451-274090
+WhatsApp: +447497483925
+www.johnlewis.com
+REGISTERED OFFICE: 171 VICTORIA STREET, LONDON SW1E 5NN
