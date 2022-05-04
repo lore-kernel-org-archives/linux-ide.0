@@ -2,20 +2,20 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB11CC433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 08:51:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 017D1C433FE
+	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 08:51:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347230AbiEDIym (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 May 2022 04:54:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52332 "EHLO
+        id S237777AbiEDIy5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 May 2022 04:54:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346716AbiEDIxY (ORCPT
+        with ESMTP id S1346721AbiEDIxY (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 04:53:24 -0400
-Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 983CE2529B
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1E5C925588
         for <linux-ide@vger.kernel.org>; Wed,  4 May 2022 01:49:21 -0700 (PDT)
 Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
-        by 156.147.23.53 with ESMTP; 4 May 2022 17:19:20 +0900
+        by 156.147.23.51 with ESMTP; 4 May 2022 17:19:20 +0900
 X-Original-SENDERIP: 156.147.1.125
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com
-Subject: [PATCH RFC v6 10/21] dept: Introduce split map concept and new APIs for them
-Date:   Wed,  4 May 2022 17:17:38 +0900
-Message-Id: <1651652269-15342-11-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH RFC v6 06/21] dept: Apply Dept to wait_for_completion()/complete()
+Date:   Wed,  4 May 2022 17:17:34 +0900
+Message-Id: <1651652269-15342-7-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1651652269-15342-1-git-send-email-byungchul.park@lge.com>
 References: <1651652269-15342-1-git-send-email-byungchul.park@lge.com>
@@ -56,286 +56,139 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There is a case where total maps for its wait/event is so large in size.
-For instance, struct page for PG_locked and PG_writeback is the case.
-The additional memory size for the maps would be 'the # of pages *
-sizeof(struct dept_map)' if each struct page keeps its map all the way,
-which might be too big to accept in some systems.
-
-It'd better have split map. One is for each instance and the other is
-for what is commonly used. So split map and added new APIs for them.
+Makes Dept able to track dependencies by
+wait_for_completion()/complete().
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/dept.h     |  78 ++++++++++++++++++-------
- kernel/dependency/dept.c | 146 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 203 insertions(+), 21 deletions(-)
+ include/linux/completion.h | 44 ++++++++++++++++++++++++++++++++++++++++++--
+ kernel/sched/completion.c  | 12 ++++++++++--
+ 2 files changed, 52 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/dept.h b/include/linux/dept.h
-index c498060..9698134 100644
---- a/include/linux/dept.h
-+++ b/include/linux/dept.h
-@@ -367,6 +367,30 @@ struct dept_map {
- 	.nocheck = false,						\
+diff --git a/include/linux/completion.h b/include/linux/completion.h
+index 51d9ab0..358c656 100644
+--- a/include/linux/completion.h
++++ b/include/linux/completion.h
+@@ -26,14 +26,45 @@
+ struct completion {
+ 	unsigned int done;
+ 	struct swait_queue_head wait;
++	struct dept_map dmap;
+ };
+ 
++#ifdef CONFIG_DEPT
++#define dept_wfc_nocheck(m)			dept_map_nocheck(m)
++#define dept_wfc_init(m, k, s, n)		dept_map_init(m, k, s, n)
++#define dept_wfc_reinit(m)			dept_map_reinit(m)
++#define dept_wfc_wait(m, ip)						\
++do {									\
++	dept_ask_event(m);						\
++	dept_wait(m, 1UL, ip, __func__, 0);				\
++} while (0)
++#define dept_wfc_complete(m, ip)		dept_event(m, 1UL, ip, __func__)
++#define dept_wfc_enter(m, ip)			dept_ecxt_enter(m, 1UL, ip, "completion_context_enter", "complete", 0)
++#define dept_wfc_exit(m, ip)			dept_ecxt_exit(m, 1UL, ip)
++#else
++#define dept_wfc_nocheck(m)			do { } while (0)
++#define dept_wfc_init(m, k, s, n)		do { (void)(n); (void)(k); } while (0)
++#define dept_wfc_reinit(m)			do { } while (0)
++#define dept_wfc_wait(m, ip)			do { } while (0)
++#define dept_wfc_complete(m, ip)		do { } while (0)
++#define dept_wfc_enter(m, ip)			do { } while (0)
++#define dept_wfc_exit(m, ip)			do { } while (0)
++#endif
++
++#define init_completion_nocheck(x) __init_completion(x, NULL, #x, false)
++#define init_completion(x)					\
++	do {							\
++		static struct dept_key __dkey;			\
++		__init_completion(x, &__dkey, #x, true);	\
++	} while (0)
++
+ #define init_completion_map(x, m) init_completion(x)
+ static inline void complete_acquire(struct completion *x) {}
+ static inline void complete_release(struct completion *x) {}
+ 
+ #define COMPLETION_INITIALIZER(work) \
+-	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
++	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), \
++	  .dmap = DEPT_MAP_INITIALIZER(work) }
+ 
+ #define COMPLETION_INITIALIZER_ONSTACK_MAP(work, map) \
+ 	(*({ init_completion_map(&(work), &(map)); &(work); }))
+@@ -81,9 +112,17 @@ static inline void complete_release(struct completion *x) {}
+  * This inline function will initialize a dynamically created completion
+  * structure.
+  */
+-static inline void init_completion(struct completion *x)
++static inline void __init_completion(struct completion *x,
++				     struct dept_key *dkey,
++				     const char *name, bool check)
+ {
+ 	x->done = 0;
++
++	if (check)
++		dept_wfc_init(&x->dmap, dkey, 0, name);
++	else
++		dept_wfc_nocheck(&x->dmap);
++
+ 	init_swait_queue_head(&x->wait);
  }
  
-+struct dept_map_each {
-+	/*
-+	 * wait timestamp associated to this map
-+	 */
-+	unsigned int wgen;
-+};
-+
-+struct dept_map_common {
-+	const char *name;
-+	struct dept_key *keys;
-+	int sub_usr;
-+
-+	/*
-+	 * It's local copy for fast acces to the associated classes. And
-+	 * Also used for dept_key instance for statically defined map.
-+	 */
-+	struct dept_key keys_local;
-+
-+	/*
-+	 * whether this map should be going to be checked or not
-+	 */
-+	bool nocheck;
-+};
-+
- struct dept_task {
- 	/*
- 	 * all event contexts that have entered and before exiting
-@@ -468,6 +492,11 @@ struct dept_task {
- extern void dept_ask_event(struct dept_map *m);
- extern void dept_event(struct dept_map *m, unsigned long e_f, unsigned long ip, const char *e_fn);
- extern void dept_ecxt_exit(struct dept_map *m, unsigned long e_f, unsigned long ip);
-+extern void dept_split_map_each_init(struct dept_map_each *me);
-+extern void dept_split_map_common_init(struct dept_map_common *mc, struct dept_key *k, const char *n);
-+extern void dept_wait_split_map(struct dept_map_each *me, struct dept_map_common *mc, unsigned long ip, const char *w_fn, int ne);
-+extern void dept_event_split_map(struct dept_map_each *me, struct dept_map_common *mc, unsigned long ip, const char *e_fn);
-+extern void dept_ask_event_split_map(struct dept_map_each *me, struct dept_map_common *mc);
- 
- static inline void dept_ecxt_enter_nokeep(struct dept_map *m)
+@@ -97,6 +136,7 @@ static inline void init_completion(struct completion *x)
+ static inline void reinit_completion(struct completion *x)
  {
-@@ -490,32 +519,39 @@ static inline void dept_ecxt_enter_nokeep(struct dept_map *m)
- #else /* !CONFIG_DEPT */
- struct dept_key  { };
- struct dept_map  { };
-+struct dept_map_each    { };
-+struct dept_map_commmon { };
- struct dept_task { };
- 
- #define DEPT_MAP_INITIALIZER(n) { }
- #define DEPT_TASK_INITIALIZER(t) { }
- 
--#define dept_on()				do { } while (0)
--#define dept_off()				do { } while (0)
--#define dept_init()				do { } while (0)
--#define dept_task_init(t)			do { } while (0)
--#define dept_task_exit(t)			do { } while (0)
--#define dept_free_range(s, sz)			do { } while (0)
--#define dept_map_init(m, k, s, n)		do { (void)(n); (void)(k); } while (0)
--#define dept_map_reinit(m)			do { } while (0)
--#define dept_map_nocheck(m)			do { } while (0)
--
--#define dept_wait(m, w_f, ip, w_fn, ne)		do { (void)(w_fn); } while (0)
--#define dept_stage_wait(m, w_f, w_fn, ne)	do { (void)(w_fn); } while (0)
--#define dept_ask_event_wait_commit(ip)		do { } while (0)
--#define dept_clean_stage()			do { } while (0)
--#define dept_ecxt_enter(m, e_f, ip, c_fn, e_fn, ne) do { (void)(c_fn); (void)(e_fn); } while (0)
--#define dept_ask_event(m)			do { } while (0)
--#define dept_event(m, e_f, ip, e_fn)		do { (void)(e_fn); } while (0)
--#define dept_ecxt_exit(m, e_f, ip)		do { } while (0)
--#define dept_ecxt_enter_nokeep(m)		do { } while (0)
--#define dept_key_init(k)			do { (void)(k); } while (0)
--#define dept_key_destroy(k)			do { (void)(k); } while (0)
-+#define dept_on()					do { } while (0)
-+#define dept_off()					do { } while (0)
-+#define dept_init()					do { } while (0)
-+#define dept_task_init(t)				do { } while (0)
-+#define dept_task_exit(t)				do { } while (0)
-+#define dept_free_range(s, sz)				do { } while (0)
-+#define dept_map_init(m, k, s, n)			do { (void)(n); (void)(k); } while (0)
-+#define dept_map_reinit(m)				do { } while (0)
-+#define dept_map_nocheck(m)				do { } while (0)
-+
-+#define dept_wait(m, w_f, ip, w_fn, ne)			do { (void)(w_fn); } while (0)
-+#define dept_stage_wait(m, w_f, w_fn, ne)		do { (void)(w_fn); } while (0)
-+#define dept_ask_event_wait_commit(ip)			do { } while (0)
-+#define dept_clean_stage()				do { } while (0)
-+#define dept_ecxt_enter(m, e_f, ip, c_fn, e_fn, ne)	do { (void)(c_fn); (void)(e_fn); } while (0)
-+#define dept_ask_event(m)				do { } while (0)
-+#define dept_event(m, e_f, ip, e_fn)			do { (void)(e_fn); } while (0)
-+#define dept_ecxt_exit(m, e_f, ip)			do { } while (0)
-+#define dept_split_map_each_init(me)			do { } while (0)
-+#define dept_split_map_common_init(mc, k, n)		do { (void)(n); (void)(k); } while (0)
-+#define dept_wait_split_map(me, mc, ip, w_fn, ne)	do { } while (0)
-+#define dept_event_split_map(me, mc, ip, e_fn)		do { } while (0)
-+#define dept_ask_event_split_map(me, mc)		do { } while (0)
-+#define dept_ecxt_enter_nokeep(m)			do { } while (0)
-+#define dept_key_init(k)				do { (void)(k); } while (0)
-+#define dept_key_destroy(k)				do { (void)(k); } while (0)
- 
- #define dept_softirq_enter()				do { } while (0)
- #define dept_hardirq_enter()				do { } while (0)
-diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-index 4670eec..a0413f1 100644
---- a/kernel/dependency/dept.c
-+++ b/kernel/dependency/dept.c
-@@ -2427,6 +2427,152 @@ void dept_ecxt_exit(struct dept_map *m, unsigned long e_f,
+ 	x->done = 0;
++	dept_wfc_reinit(&x->dmap);
  }
- EXPORT_SYMBOL_GPL(dept_ecxt_exit);
  
-+void dept_split_map_each_init(struct dept_map_each *me)
-+{
-+	unsigned long flags;
-+
-+	if (unlikely(READ_ONCE(dept_stop) || in_nmi()))
-+		return;
-+
-+	/*
-+	 * Allow recursive entrance.
-+	 */
-+	flags = dept_enter_recursive();
-+
-+	me->wgen = 0U;
-+
-+	dept_exit_recursive(flags);
-+}
-+EXPORT_SYMBOL_GPL(dept_split_map_each_init);
-+
-+void dept_split_map_common_init(struct dept_map_common *mc,
-+				struct dept_key *k, const char *n)
-+{
-+	unsigned long flags;
-+
-+	if (unlikely(READ_ONCE(dept_stop) || in_nmi()))
-+		return;
-+
-+	/*
-+	 * Allow recursive entrance.
-+	 */
-+	flags = dept_enter_recursive();
-+
-+	clean_classes_cache(&mc->keys_local);
-+
-+	/*
-+	 * sub_usr is not used with split map.
-+	 */
-+	mc->sub_usr = 0;
-+	mc->keys = k;
-+	mc->name = n;
-+	mc->nocheck = false;
-+
-+	dept_exit_recursive(flags);
-+}
-+EXPORT_SYMBOL_GPL(dept_split_map_common_init);
-+
-+void dept_wait_split_map(struct dept_map_each *me,
-+			 struct dept_map_common *mc,
-+			 unsigned long ip, const char *w_fn, int ne)
-+{
-+	struct dept_task *dt = dept_task();
-+	struct dept_class *c;
-+	struct dept_key *k;
-+	unsigned long flags;
-+
-+	if (unlikely(READ_ONCE(dept_stop) || in_nmi()))
-+		return;
-+
-+	if (dt->recursive)
-+		return;
-+
-+	if (mc->nocheck)
-+		return;
-+
-+	flags = dept_enter();
-+
-+	k = mc->keys ?: &mc->keys_local;
-+	c = check_new_class(&mc->keys_local, k, 0, mc->name);
-+	if (c)
-+		add_wait(c, ip, w_fn, ne);
-+
-+	dept_exit(flags);
-+}
-+EXPORT_SYMBOL_GPL(dept_wait_split_map);
-+
-+void dept_ask_event_split_map(struct dept_map_each *me,
-+			      struct dept_map_common *mc)
-+{
-+	unsigned int wg;
-+	unsigned long flags;
-+
-+	if (unlikely(READ_ONCE(dept_stop) || in_nmi()))
-+		return;
-+
-+	if (mc->nocheck)
-+		return;
-+
-+	/*
-+	 * Allow recursive entrance.
-+	 */
-+	flags = dept_enter_recursive();
-+
-+	/*
-+	 * Avoid zero wgen.
-+	 */
-+	wg = atomic_inc_return(&wgen) ?: atomic_inc_return(&wgen);
-+	WRITE_ONCE(me->wgen, wg);
-+
-+	dept_exit_recursive(flags);
-+}
-+EXPORT_SYMBOL_GPL(dept_ask_event_split_map);
-+
-+void dept_event_split_map(struct dept_map_each *me,
-+			  struct dept_map_common *mc,
-+			  unsigned long ip, const char *e_fn)
-+{
-+	struct dept_task *dt = dept_task();
-+	struct dept_class *c;
-+	struct dept_key *k;
-+	unsigned long flags;
-+
-+	if (unlikely(READ_ONCE(dept_stop) || in_nmi()))
-+		return;
-+
-+	if (dt->recursive) {
-+		/*
-+		 * Dept won't work with this map even though anyway an
-+		 * event has been just triggered. Don't make it confused
-+		 * at that time handling the next event. Disable it
-+		 * until the next real case.
-+		 */
-+		WRITE_ONCE(me->wgen, 0U);
-+		return;
-+	}
-+
-+	if (mc->nocheck)
-+		return;
-+
-+	flags = dept_enter();
-+
-+	k = mc->keys ?: &mc->keys_local;
-+	c = check_new_class(&mc->keys_local, k, 0, mc->name);
-+
-+	if (c && add_ecxt((void *)me, c, 0UL, NULL, e_fn, 0)) {
-+		do_event((void *)me, c, READ_ONCE(me->wgen), ip);
-+		pop_ecxt((void *)me, c);
-+	}
-+
-+	/*
-+	 * Keep the map diabled until the next sleep.
-+	 */
-+	WRITE_ONCE(me->wgen, 0U);
-+
-+	dept_exit(flags);
-+}
-+EXPORT_SYMBOL_GPL(dept_event_split_map);
-+
- void dept_task_exit(struct task_struct *t)
+ extern void wait_for_completion(struct completion *);
+diff --git a/kernel/sched/completion.c b/kernel/sched/completion.c
+index 35f15c2..4cf0cfe 100644
+--- a/kernel/sched/completion.c
++++ b/kernel/sched/completion.c
+@@ -29,6 +29,7 @@ void complete(struct completion *x)
  {
- 	struct dept_task *dt = &t->dept_task;
+ 	unsigned long flags;
+ 
++	dept_wfc_complete(&x->dmap, _RET_IP_);
+ 	raw_spin_lock_irqsave(&x->wait.lock, flags);
+ 
+ 	if (x->done != UINT_MAX)
+@@ -58,6 +59,7 @@ void complete_all(struct completion *x)
+ {
+ 	unsigned long flags;
+ 
++	dept_wfc_complete(&x->dmap, _RET_IP_);
+ 	lockdep_assert_RT_in_threaded_ctx();
+ 
+ 	raw_spin_lock_irqsave(&x->wait.lock, flags);
+@@ -112,17 +114,23 @@ void complete_all(struct completion *x)
+ }
+ 
+ static long __sched
+-wait_for_common(struct completion *x, long timeout, int state)
++_wait_for_common(struct completion *x, long timeout, int state)
+ {
+ 	return __wait_for_common(x, schedule_timeout, timeout, state);
+ }
+ 
+ static long __sched
+-wait_for_common_io(struct completion *x, long timeout, int state)
++_wait_for_common_io(struct completion *x, long timeout, int state)
+ {
+ 	return __wait_for_common(x, io_schedule_timeout, timeout, state);
+ }
+ 
++#define wait_for_common(x, t, s)					\
++({ dept_wfc_wait(&(x)->dmap, _RET_IP_); _wait_for_common(x, t, s); })
++
++#define wait_for_common_io(x, t, s)					\
++({ dept_wfc_wait(&(x)->dmap, _RET_IP_); _wait_for_common_io(x, t, s); })
++
+ /**
+  * wait_for_completion: - waits for completion of a task
+  * @x:  holds the state of this particular completion
 -- 
 1.9.1
 
