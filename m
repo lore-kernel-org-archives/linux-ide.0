@@ -2,358 +2,222 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73201C433FE
-	for <linux-ide@archiver.kernel.org>; Tue,  3 May 2022 20:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA33AC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 04:16:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236382AbiECUrO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 May 2022 16:47:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53704 "EHLO
+        id S234380AbiEDEUS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 May 2022 00:20:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231410AbiECUrN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2022 16:47:13 -0400
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1C0E2C114;
-        Tue,  3 May 2022 13:43:39 -0700 (PDT)
-Received: by mail-lj1-x229.google.com with SMTP id q14so23455047ljc.12;
-        Tue, 03 May 2022 13:43:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=tpAiOFcuu3dIHbvSksLXy2Po/tDlC0C+LeabTLxnH8o=;
-        b=mG8h06ua9lMXysgqojZl1ocM78F910whL6WsFVG5yhBzYzVQ/LXVbvt7PdO1sPzW6z
-         zS6BsMRRlKDtMbnGtJj2TaSUiOLh3egm5QdoCDUqgFOUQ2ntvh2ga++UWVRtLBbZStlW
-         k+rlHjUwmb6OLhJllDC/j49noYyaLR68ZCQfxDWtPWRjud1lqIoOJDP2df3swPdL9wo2
-         dbzlNQOWntw3ZnDgbv4C17/Uybu4caH+StQiHYCeekCOSTyi1lPIKaULSc0m4GCefzgU
-         tAp6O20MlW7PfB2T09q+DPhHUqh2m4NSdoLOaNBhPnlu+Ci9yi8Egag1k+4wVpka3DIk
-         x3Xg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=tpAiOFcuu3dIHbvSksLXy2Po/tDlC0C+LeabTLxnH8o=;
-        b=1ncLYujtqbz2qlXDEV2IP08EBnHl00M64UNBBzPGqHVyYoP1c3JZugX6RaHKlQ/V9X
-         uEk8FNUVBSmqVb4JAI+dPYwkjP1CJLln8ilYILpehgfJ53OMBWOVEPEKNiVjh8JxuPjI
-         205vPM6B8c8OoIgslBq97o0dtIE2kGD3+iSbloEM9NjwF1MZ7EHDohnhvRHjIrso4N9K
-         wlOCEx3PcG7mKhDOg0+uYLMRnDuehpbPuCx6uAjY1cb7GnAqsCGgFQv8ccr04FiB+ZQl
-         3hLDgA/i6AMd5wPnxto7b72buY6MZ2Z8s/xw6MfwJcahl6Ds5c0Hj2RcZ/DQjO4Kdtnm
-         o/Sg==
-X-Gm-Message-State: AOAM533fM/LwKcXmld1zwJ4xD5nYoj+KBI+nvYkPPdKOpzsiRUzYwXhM
-        u6IX96Ec40c64IP0+hBSN8Q=
-X-Google-Smtp-Source: ABdhPJyEa4QMlArKeeC93tabJlLXCfVH1R372maz70XNgN+ky32Bbi+4S/7Mof1XKiidge8mS3s48A==
-X-Received: by 2002:a2e:94ce:0:b0:24b:3811:b242 with SMTP id r14-20020a2e94ce000000b0024b3811b242mr10940644ljh.197.1651610617820;
-        Tue, 03 May 2022 13:43:37 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id e27-20020ac2547b000000b0047255d21160sm1024118lfn.143.2022.05.03.13.43.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 May 2022 13:43:37 -0700 (PDT)
-Date:   Tue, 3 May 2022 23:43:34 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        with ESMTP id S231736AbiEDEUR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 00:20:17 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 899DB1EAFB;
+        Tue,  3 May 2022 21:16:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651637801; x=1683173801;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=w95RztZI123By603Xio5Fchn8GzUX2eg2YngFCbfwFs=;
+  b=GJMxH/d9k+2DeFKjaKHZ2G+G6d/sRMu2PZC9sT+NpQpdBijIiPjed9NI
+   ++Z6zseRoGOZKqB89WCLxQE2a5wyFHy6LXjyjdDDJ+XCF0fH17YclFPnb
+   RUSA0vp/60VZa4rrsWeLCCk/ha5P5fDwEe+RKjcPSrgpAZJBiuQDNLgsm
+   UToj+470EaaQRMcN+XHo3l1UKrHbTinTIOZXYHHQEvWLQlFBEB1NllTc4
+   5CNd77PIE7Xh46MEqthBPh1y1BFqCYrgmajohvScI9HYZ6SooZ3JFtQMa
+   n1Q+ieNGQ0xZgmrw0ZvB9JDsIwNuNXdclpfcvQu15naK0u7kJ5syjIfGL
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10336"; a="330644282"
+X-IronPort-AV: E=Sophos;i="5.91,196,1647327600"; 
+   d="scan'208";a="330644282"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2022 21:16:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,196,1647327600"; 
+   d="scan'208";a="599363824"
+Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 03 May 2022 21:16:38 -0700
+Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nm6RJ-000B43-CM;
+        Wed, 04 May 2022 04:16:37 +0000
+Date:   Wed, 4 May 2022 12:16:20 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     kbuild-all@lists.01.org,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 02/23] dt-bindings: ata: ahci-platform: Detach common
- AHCI bindings
-Message-ID: <20220503204334.tbmpcdfozylubrjn@mobilestation>
-References: <20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru>
- <20220503200938.18027-3-Sergey.Semin@baikalelectronics.ru>
- <773f5323-43af-6764-ea74-2a3bac2022e8@opensource.wdc.com>
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 07/23] ata: libahci_platform: Convert to using devm
+ bulk clocks API
+Message-ID: <202205041253.SPLfX1oi-lkp@intel.com>
+References: <20220503200938.18027-8-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <773f5323-43af-6764-ea74-2a3bac2022e8@opensource.wdc.com>
+In-Reply-To: <20220503200938.18027-8-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, May 04, 2022 at 05:29:23AM +0900, Damien Le Moal wrote:
-> On 2022/05/04 5:09, Serge Semin wrote:
-> > In order to create a more sophisticated AHCI controller DT bindings let's
-> > divide the already available generic AHCI platform YAML schema into the
-> > platform part and a set of the common AHCI properties. The former part
-> > will be used to evaluate the AHCI DT nodes mainly compatible with the
-> > generic AHCI controller while the later schema will be used for more
-> > thorough AHCI DT nodes description. For instance such YAML schemas design
-> > will be useful for our DW AHCI SATA controller derivative with four clock
-> > sources, two reset lines, one system controller reference and specific
-> > max Rx/Tx DMA xfers size constraints.
-> > 
-> > Note the phys and target-supply property requirement is preserved in the
-> > generic AHCI platform bindings because some platforms can lack of the
-> > explicitly specified PHYs or target device power regulators.
-> > 
-> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > 
-> > ---
-> > 
-> > Folks, I don't really see why the phys/target-supply requirement has been
-> > added to the generic AHCI DT schema in the first place. Probably just to
-> > imply some meaning for the sub-nodes definition. Anyway in one of the
-> > further patches I am adding the DW AHCI SATA controller DT bindings which
-> > won't require having these properties specified in the sub-nodes, but will
-> > describe additional port-specific properties. That's why I get to keep the
-> > constraints in the ahci-platform.yaml schema instead of moving them to the
-> > common schema.
-> > 
-> > Changelog v2:
-> > - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
-> > ---
-> >  .../devicetree/bindings/ata/ahci-common.yaml  | 117 ++++++++++++++++++
-> >  .../bindings/ata/ahci-platform.yaml           |  68 +---------
-> >  2 files changed, 123 insertions(+), 62 deletions(-)
-> >  create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > new file mode 100644
-> > index 000000000000..72e24b246040
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > @@ -0,0 +1,117 @@
-> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/ata/ahci-common.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > +
-> > +title: Common Properties for Serial ATA AHCI controllers
-> > +
-> > +maintainers:
-> > +  - Hans de Goede <hdegoede@redhat.com>
-> > +  - Jens Axboe <axboe@kernel.dk>
-> 
+Hi Serge,
 
-> This should probably be me rather than Jens since Jens is no longer maintaining
-> libata/ahci.
+I love your patch! Yet something to improve:
 
-Ok. I'll replace his email address with yours in v3.
+[auto build test ERROR on axboe-block/for-next]
+[also build test ERROR on robh/for-next linus/master v5.18-rc5 next-20220503]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
--Sergey
+url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220504-041431
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+config: microblaze-randconfig-r031-20220501 (https://download.01.org/0day-ci/archive/20220504/202205041253.SPLfX1oi-lkp@intel.com/config)
+compiler: microblaze-linux-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/2aa1a2fe25d3757c2c3a6c59ec00c135ba17fe96
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220504-041431
+        git checkout 2aa1a2fe25d3757c2c3a6c59ec00c135ba17fe96
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=microblaze SHELL=/bin/bash drivers/ata/
 
-> 
-> > +
-> > +description:
-> > +  This document defines device tree properties for a common AHCI SATA
-> > +  controller implementation. It's hardware interface is supposed to
-> > +  conform to the technical standard defined by Intel (see Serial ATA
-> > +  Advanced Host Controller Interface specification for details). The
-> > +  document doesn't constitute a DT-node binding by itself but merely
-> > +  defines a set of common properties for the AHCI-compatible devices.
-> > +
-> > +select: false
-> > +
-> > +allOf:
-> > +  - $ref: sata-common.yaml#
-> > +
-> > +properties:
-> > +  reg:
-> > +    description:
-> > +      Generic AHCI registers space conforming to the Serial ATA AHCI
-> > +      specification.
-> > +
-> > +  reg-names:
-> > +    description: CSR space IDs
-> > +
-> > +  interrupts:
-> > +    description:
-> > +      Generic AHCI state change interrupt. Can be implemented either as a
-> > +      single line attached to the controller as a set of the dedicated signals
-> > +      for the global and particular port events.
-> > +
-> > +  clocks:
-> > +    description:
-> > +      List of all the reference clocks connected to the controller.
-> > +
-> > +  clock-names:
-> > +    description: Reference clocks IDs
-> > +
-> > +  resets:
-> > +    description:
-> > +      List of the reset control lines to reset the controller clock
-> > +      domains.
-> > +
-> > +  reset-names:
-> > +    description: Reset line IDs
-> > +
-> > +  power-domains:
-> > +    description:
-> > +      List of the power domain the AHCI controller being a part of.
-> > +
-> > +  ahci-supply:
-> > +    description: Power regulator for AHCI controller
-> > +
-> > +  target-supply:
-> > +    description: Power regulator for SATA target device
-> > +
-> > +  phy-supply:
-> > +    description: Power regulator for SATA PHY
-> > +
-> > +  phys:
-> > +    description: Reference to the SATA PHY node
-> > +    maxItems: 1
-> > +
-> > +  phy-names:
-> > +    maxItems: 1
-> > +
-> > +  ports-implemented:
-> > +    $ref: '/schemas/types.yaml#/definitions/uint32'
-> > +    description:
-> > +      Mask that indicates which ports the HBA supports. Useful if PI is not
-> > +      programmed by the BIOS, which is true for some embedded SoC's.
-> > +    maximum: 0x1f
-> > +
-> > +patternProperties:
-> > +  "^sata-port@[0-9a-f]+$":
-> > +    type: object
-> > +    description:
-> > +      It is optionally possible to describe the ports as sub-nodes so
-> > +      to enable each port independently when dealing with multiple PHYs.
-> > +
-> > +    properties:
-> > +      reg:
-> > +        description: AHCI SATA port identifier
-> > +        maxItems: 1
-> > +
-> > +      phys:
-> > +        description: Individual AHCI SATA port PHY
-> > +        maxItems: 1
-> > +
-> > +      phy-names:
-> > +        description: AHCI SATA port PHY ID
-> > +        maxItems: 1
-> > +
-> > +      target-supply:
-> > +        description: Power regulator for SATA port target device
-> > +
-> > +    required:
-> > +      - reg
-> > +
-> > +    additionalProperties: true
-> > +
-> > +required:
-> > +  - reg
-> > +  - interrupts
-> > +
-> > +additionalProperties: true
-> > +
-> > +...
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > index 9304e4731965..76075d3c8987 100644
-> > --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > @@ -36,8 +36,7 @@ select:
-> >      - compatible
-> >  
-> >  allOf:
-> > -  - $ref: "sata-common.yaml#"
-> > -
-> > +  - $ref: "ahci-common.yaml#"
-> >  
-> >  properties:
-> >    compatible:
-> > @@ -69,90 +68,35 @@ properties:
-> >      maxItems: 1
-> >  
-> >    clocks:
-> > -    description:
-> > -      Clock IDs array as required by the controller.
-> >      minItems: 1
-> >      maxItems: 3
-> >  
-> >    clock-names:
-> > -    description:
-> > -      Names of clocks corresponding to IDs in the clock property.
-> >      minItems: 1
-> >      maxItems: 3
-> >  
-> >    interrupts:
-> >      maxItems: 1
-> >  
-> > -  ahci-supply:
-> > -    description:
-> > -      regulator for AHCI controller
-> > -
-> > -  phy-supply:
-> > -    description:
-> > -      regulator for PHY power
-> > -
-> > -  phys:
-> > -    description:
-> > -      List of all PHYs on this controller
-> > -    maxItems: 1
-> > -
-> > -  phy-names:
-> > -    description:
-> > -      Name specifier for the PHYs
-> > -    maxItems: 1
-> > -
-> > -  ports-implemented:
-> > -    $ref: '/schemas/types.yaml#/definitions/uint32'
-> > -    description: |
-> > -      Mask that indicates which ports that the HBA supports
-> > -      are available for software to use. Useful if PORTS_IMPL
-> > -      is not programmed by the BIOS, which is true with
-> > -      some embedded SoCs.
-> > -    maximum: 0x1f
-> > -
-> >    power-domains:
-> >      maxItems: 1
-> >  
-> >    resets:
-> >      maxItems: 1
-> >  
-> > -  target-supply:
-> > -    description:
-> > -      regulator for SATA target power
-> > -
-> > -required:
-> > -  - compatible
-> > -  - reg
-> > -  - interrupts
-> > -
-> >  patternProperties:
-> >    "^sata-port@[0-9a-f]+$":
-> >      type: object
-> > -    additionalProperties: false
-> > -    description:
-> > -      Subnode with configuration of the Ports.
-> > -
-> > -    properties:
-> > -      reg:
-> > -        maxItems: 1
-> > -
-> > -      phys:
-> > -        maxItems: 1
-> > -
-> > -      phy-names:
-> > -        maxItems: 1
-> > -
-> > -      target-supply:
-> > -        description:
-> > -          regulator for SATA target power
-> > -
-> > -    required:
-> > -      - reg
-> >  
-> >      anyOf:
-> >        - required: [ phys ]
-> >        - required: [ target-supply ]
-> >  
-> > +required:
-> > +  - compatible
-> > +  - reg
-> > +  - interrupts
-> > +
-> >  unevaluatedProperties: false
-> >  
-> >  examples:
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   drivers/ata/ahci_da850.c: In function 'ahci_da850_probe':
+>> drivers/ata/ahci_da850.c:181:13: error: wrong type argument to unary exclamation mark
+     181 |         if (!hpriv->clks[0]) {
+         |             ^
+>> drivers/ata/ahci_da850.c:186:34: error: incompatible types when assigning to type 'struct clk_bulk_data' from type 'struct clk *'
+     186 |                 hpriv->clks[0] = clk;
+         |                                  ^~~
+   drivers/ata/ahci_da850.c:194:13: error: wrong type argument to unary exclamation mark
+     194 |         if (!hpriv->clks[1]) {
+         |             ^
+   drivers/ata/ahci_da850.c:201:34: error: incompatible types when assigning to type 'struct clk_bulk_data' from type 'struct clk *'
+     201 |                 hpriv->clks[1] = clk;
+         |                                  ^~~
+>> drivers/ata/ahci_da850.c:204:64: error: incompatible type for argument 1 of 'clk_get_rate'
+     204 |         mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
+         |                                                     ~~~~~~~~~~~^~~
+         |                                                                |
+         |                                                                struct clk_bulk_data
+   In file included from drivers/ata/ahci.h:23,
+                    from drivers/ata/ahci_da850.c:13:
+   include/linux/clk.h:584:40: note: expected 'struct clk *' but argument is of type 'struct clk_bulk_data'
+     584 | unsigned long clk_get_rate(struct clk *clk);
+         |                            ~~~~~~~~~~~~^~~
+--
+   drivers/ata/ahci_dm816.c: In function 'ahci_dm816_phy_init':
+>> drivers/ata/ahci_dm816.c:72:13: error: wrong type argument to unary exclamation mark
+      72 |         if (!hpriv->clks[1]) {
+         |             ^
+>> drivers/ata/ahci_dm816.c:77:47: error: incompatible type for argument 1 of 'clk_get_rate'
+      77 |         refclk_rate = clk_get_rate(hpriv->clks[1]);
+         |                                    ~~~~~~~~~~~^~~
+         |                                               |
+         |                                               struct clk_bulk_data
+   In file included from drivers/ata/ahci.h:23,
+                    from drivers/ata/ahci_dm816.c:16:
+   include/linux/clk.h:584:40: note: expected 'struct clk *' but argument is of type 'struct clk_bulk_data'
+     584 | unsigned long clk_get_rate(struct clk *clk);
+         |                            ~~~~~~~~~~~~^~~
+
+
+vim +186 drivers/ata/ahci_da850.c
+
+018d5ef2048fca Akinobu Mita              2015-01-29  159  
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  160  static int ahci_da850_probe(struct platform_device *pdev)
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  161  {
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  162  	struct device *dev = &pdev->dev;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  163  	struct ahci_host_priv *hpriv;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  164  	void __iomem *pwrdn_reg;
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  165  	struct resource *res;
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  166  	struct clk *clk;
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  167  	u32 mpy;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  168  	int rc;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  169  
+16af2d65842d34 Kunihiko Hayashi          2018-08-22  170  	hpriv = ahci_platform_get_resources(pdev, 0);
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  171  	if (IS_ERR(hpriv))
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  172  		return PTR_ERR(hpriv);
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  173  
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  174  	/*
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  175  	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  176  	 * when trying to obtain the functional clock. This SATA controller
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  177  	 * uses two clocks for which we specify two connection ids. If we don't
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  178  	 * have the functional clock at this point - call clk_get() again with
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  179  	 * con_id = "fck".
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  180  	 */
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30 @181  	if (!hpriv->clks[0]) {
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  182  		clk = clk_get(dev, "fck");
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  183  		if (IS_ERR(clk))
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  184  			return PTR_ERR(clk);
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  185  
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30 @186  		hpriv->clks[0] = clk;
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  187  	}
+82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  188  
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  189  	/*
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  190  	 * The second clock used by ahci-da850 is the external REFCLK. If we
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  191  	 * didn't get it from ahci_platform_get_resources(), let's try to
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  192  	 * specify the con_id in clk_get().
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  193  	 */
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  194  	if (!hpriv->clks[1]) {
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  195  		clk = clk_get(dev, "refclk");
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  196  		if (IS_ERR(clk)) {
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  197  			dev_err(dev, "unable to obtain the reference clock");
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  198  			return -ENODEV;
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  199  		}
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  200  
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  201  		hpriv->clks[1] = clk;
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  202  	}
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  203  
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30 @204  	mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  205  	if (mpy == 0) {
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  206  		dev_err(dev, "invalid REFCLK multiplier value: 0x%x", mpy);
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  207  		return -EINVAL;
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  208  	}
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  209  
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  210  	rc = ahci_platform_enable_resources(hpriv);
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  211  	if (rc)
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  212  		return rc;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  213  
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  214  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+c88c094985ad38 Christophe JAILLET        2017-08-16  215  	if (!res) {
+c88c094985ad38 Christophe JAILLET        2017-08-16  216  		rc = -ENODEV;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  217  		goto disable_resources;
+c88c094985ad38 Christophe JAILLET        2017-08-16  218  	}
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  219  
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  220  	pwrdn_reg = devm_ioremap(dev, res->start, resource_size(res));
+c88c094985ad38 Christophe JAILLET        2017-08-16  221  	if (!pwrdn_reg) {
+c88c094985ad38 Christophe JAILLET        2017-08-16  222  		rc = -ENOMEM;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  223  		goto disable_resources;
+c88c094985ad38 Christophe JAILLET        2017-08-16  224  	}
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  225  
+cdf0ead3747200 Bartosz Golaszewski       2017-01-30  226  	da850_sata_init(dev, pwrdn_reg, hpriv->mmio, mpy);
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  227  
+018d5ef2048fca Akinobu Mita              2015-01-29  228  	rc = ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info,
+018d5ef2048fca Akinobu Mita              2015-01-29  229  				     &ahci_platform_sht);
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  230  	if (rc)
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  231  		goto disable_resources;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  232  
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  233  	return 0;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  234  disable_resources:
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  235  	ahci_platform_disable_resources(hpriv);
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  236  	return rc;
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  237  }
+ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  238  
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
