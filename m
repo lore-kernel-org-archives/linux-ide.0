@@ -2,216 +2,203 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA01C433FE
-	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 04:27:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1936DC4332F
+	for <linux-ide@archiver.kernel.org>; Wed,  4 May 2022 08:49:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344574AbiEDEa2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 May 2022 00:30:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56780 "EHLO
+        id S1346622AbiEDIxB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 May 2022 04:53:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344542AbiEDEaQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 00:30:16 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7990527CD3;
-        Tue,  3 May 2022 21:26:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651638401; x=1683174401;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=KL0VQr9q7v/ilrpm5D5wFlNTKVUad7oBMkfv8Plpj90=;
-  b=Xxy5MJqT735nBEKQ3ckKDwXtOeaDZ1PflpNmn2i5uobHWea0lLFhjR+U
-   leCSp9xiAq4YeZFKvKK5IO30GagbA93aQrVBFEQ8DglTfD/rL0LrDTgBo
-   L68kdCHcGq3e29/GmLsF24BFEuZodKlbc/0gV79/SgkDzCAHBpw3+jwbs
-   jXSO1He6kO0alZOUlXA4Jz5fBdhXk75zhWi6n1rgvZFwVm2x5VErccROM
-   bjKM89OJ5FbbbGMnmhBe+BhRIQ1Q2eY6cvvY5wla/UaAjgA7KF9eCtY5Z
-   PPN/3H0hE2T/AncpIFX54iWji9WCut7HmB+scem9RFiR1JJBR3OD7olgv
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10336"; a="354097572"
-X-IronPort-AV: E=Sophos;i="5.91,196,1647327600"; 
-   d="scan'208";a="354097572"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2022 21:26:41 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,196,1647327600"; 
-   d="scan'208";a="653556113"
-Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 03 May 2022 21:26:38 -0700
-Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nm6az-000B4N-HH;
-        Wed, 04 May 2022 04:26:37 +0000
-Date:   Wed, 4 May 2022 12:26:36 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 07/23] ata: libahci_platform: Convert to using devm
- bulk clocks API
-Message-ID: <202205041215.o6Ubib6t-lkp@intel.com>
-References: <20220503200938.18027-8-Sergey.Semin@baikalelectronics.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220503200938.18027-8-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S1346464AbiEDIw7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 04:52:59 -0400
+X-Greylist: delayed 1800 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 04 May 2022 01:49:21 PDT
+Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2956E24BF3
+        for <linux-ide@vger.kernel.org>; Wed,  4 May 2022 01:49:20 -0700 (PDT)
+Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
+        by 156.147.23.52 with ESMTP; 4 May 2022 17:19:20 +0900
+X-Original-SENDERIP: 156.147.1.125
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
+        by 156.147.1.125 with ESMTP; 4 May 2022 17:19:20 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     torvalds@linux-foundation.org
+Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, linux-kernel@vger.kernel.org,
+        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
+        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
+        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
+        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
+        tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
+        amir73il@gmail.com, bfields@fieldses.org,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com
+Subject: [PATCH RFC v6 07/21] dept: Apply Dept to seqlock
+Date:   Wed,  4 May 2022 17:17:35 +0900
+Message-Id: <1651652269-15342-8-git-send-email-byungchul.park@lge.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1651652269-15342-1-git-send-email-byungchul.park@lge.com>
+References: <1651652269-15342-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Serge,
+Makes Dept able to track dependencies by seqlock with adding wait
+annotation on read side of seqlock.
 
-I love your patch! Yet something to improve:
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+---
+ include/linux/seqlock.h | 60 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 58 insertions(+), 2 deletions(-)
 
-[auto build test ERROR on axboe-block/for-next]
-[also build test ERROR on robh/for-next linus/master v5.18-rc5 next-20220503]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220504-041431
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-config: arm64-randconfig-r034-20220501 (https://download.01.org/0day-ci/archive/20220504/202205041215.o6Ubib6t-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 363b3a645a1e30011cc8da624f13dac5fd915628)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install arm64 cross compiling tool for clang build
-        # apt-get install binutils-aarch64-linux-gnu
-        # https://github.com/intel-lab-lkp/linux/commit/2aa1a2fe25d3757c2c3a6c59ec00c135ba17fe96
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220504-041431
-        git checkout 2aa1a2fe25d3757c2c3a6c59ec00c135ba17fe96
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm64 SHELL=/bin/bash drivers/ata/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
->> drivers/ata/ahci_da850.c:181:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
-           if (!hpriv->clks[0]) {
-               ^~~~~~~~~~~~~~~
->> drivers/ata/ahci_da850.c:186:18: error: assigning to 'struct clk_bulk_data' from incompatible type 'struct clk *'
-                   hpriv->clks[0] = clk;
-                                  ^ ~~~
-   drivers/ata/ahci_da850.c:194:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
-           if (!hpriv->clks[1]) {
-               ^~~~~~~~~~~~~~~
-   drivers/ata/ahci_da850.c:201:18: error: assigning to 'struct clk_bulk_data' from incompatible type 'struct clk *'
-                   hpriv->clks[1] = clk;
-                                  ^ ~~~
->> drivers/ata/ahci_da850.c:204:46: error: passing 'struct clk_bulk_data' to parameter of incompatible type 'struct clk *'
-           mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
-                                                       ^~~~~~~~~~~~~~
-   include/linux/clk.h:584:40: note: passing argument to parameter 'clk' here
-   unsigned long clk_get_rate(struct clk *clk);
-                                          ^
-   5 errors generated.
---
->> drivers/ata/ahci_dm816.c:72:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
-           if (!hpriv->clks[1]) {
-               ^~~~~~~~~~~~~~~
->> drivers/ata/ahci_dm816.c:77:29: error: passing 'struct clk_bulk_data' to parameter of incompatible type 'struct clk *'
-           refclk_rate = clk_get_rate(hpriv->clks[1]);
-                                      ^~~~~~~~~~~~~~
-   include/linux/clk.h:584:40: note: passing argument to parameter 'clk' here
-   unsigned long clk_get_rate(struct clk *clk);
-                                          ^
-   2 errors generated.
-
-
-vim +181 drivers/ata/ahci_da850.c
-
-018d5ef2048fca Akinobu Mita              2015-01-29  159  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  160  static int ahci_da850_probe(struct platform_device *pdev)
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  161  {
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  162  	struct device *dev = &pdev->dev;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  163  	struct ahci_host_priv *hpriv;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  164  	void __iomem *pwrdn_reg;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  165  	struct resource *res;
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  166  	struct clk *clk;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  167  	u32 mpy;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  168  	int rc;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  169  
-16af2d65842d34 Kunihiko Hayashi          2018-08-22  170  	hpriv = ahci_platform_get_resources(pdev, 0);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  171  	if (IS_ERR(hpriv))
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  172  		return PTR_ERR(hpriv);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  173  
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  174  	/*
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  175  	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  176  	 * when trying to obtain the functional clock. This SATA controller
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  177  	 * uses two clocks for which we specify two connection ids. If we don't
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  178  	 * have the functional clock at this point - call clk_get() again with
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  179  	 * con_id = "fck".
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  180  	 */
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30 @181  	if (!hpriv->clks[0]) {
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  182  		clk = clk_get(dev, "fck");
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  183  		if (IS_ERR(clk))
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  184  			return PTR_ERR(clk);
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  185  
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30 @186  		hpriv->clks[0] = clk;
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  187  	}
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  188  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  189  	/*
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  190  	 * The second clock used by ahci-da850 is the external REFCLK. If we
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  191  	 * didn't get it from ahci_platform_get_resources(), let's try to
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  192  	 * specify the con_id in clk_get().
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  193  	 */
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  194  	if (!hpriv->clks[1]) {
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  195  		clk = clk_get(dev, "refclk");
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  196  		if (IS_ERR(clk)) {
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  197  			dev_err(dev, "unable to obtain the reference clock");
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  198  			return -ENODEV;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  199  		}
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  200  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  201  		hpriv->clks[1] = clk;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  202  	}
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  203  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30 @204  	mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  205  	if (mpy == 0) {
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  206  		dev_err(dev, "invalid REFCLK multiplier value: 0x%x", mpy);
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  207  		return -EINVAL;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  208  	}
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  209  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  210  	rc = ahci_platform_enable_resources(hpriv);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  211  	if (rc)
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  212  		return rc;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  213  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  214  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-c88c094985ad38 Christophe JAILLET        2017-08-16  215  	if (!res) {
-c88c094985ad38 Christophe JAILLET        2017-08-16  216  		rc = -ENODEV;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  217  		goto disable_resources;
-c88c094985ad38 Christophe JAILLET        2017-08-16  218  	}
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  219  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  220  	pwrdn_reg = devm_ioremap(dev, res->start, resource_size(res));
-c88c094985ad38 Christophe JAILLET        2017-08-16  221  	if (!pwrdn_reg) {
-c88c094985ad38 Christophe JAILLET        2017-08-16  222  		rc = -ENOMEM;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  223  		goto disable_resources;
-c88c094985ad38 Christophe JAILLET        2017-08-16  224  	}
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  225  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  226  	da850_sata_init(dev, pwrdn_reg, hpriv->mmio, mpy);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  227  
-018d5ef2048fca Akinobu Mita              2015-01-29  228  	rc = ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info,
-018d5ef2048fca Akinobu Mita              2015-01-29  229  				     &ahci_platform_sht);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  230  	if (rc)
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  231  		goto disable_resources;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  232  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  233  	return 0;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  234  disable_resources:
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  235  	ahci_platform_disable_resources(hpriv);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  236  	return rc;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  237  }
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  238  
-
+diff --git a/include/linux/seqlock.h b/include/linux/seqlock.h
+index 37ded6b..47c3379 100644
+--- a/include/linux/seqlock.h
++++ b/include/linux/seqlock.h
+@@ -23,6 +23,23 @@
+ 
+ #include <asm/processor.h>
+ 
++#ifdef CONFIG_DEPT
++#define DEPT_EVT_ALL		((1UL << DEPT_MAX_SUBCLASSES_EVT) - 1)
++#define dept_seq_wait(m, ip)	dept_wait(m, DEPT_EVT_ALL, ip, __func__, 0)
++#define dept_seq_writebegin(m, ip)				\
++do {								\
++	dept_ecxt_enter(m, 1UL, ip, __func__, "write_seqcount_end", 0);\
++} while (0)
++#define dept_seq_writeend(m, ip)				\
++do {								\
++	dept_ecxt_exit(m, 1UL, ip);				\
++} while (0)
++#else
++#define dept_seq_wait(m, ip)		do { } while (0)
++#define dept_seq_writebegin(m, ip)	do { } while (0)
++#define dept_seq_writeend(m, ip)	do { } while (0)
++#endif
++
+ /*
+  * The seqlock seqcount_t interface does not prescribe a precise sequence of
+  * read begin/retry/end. For readers, typically there is a call to
+@@ -82,7 +99,8 @@ static inline void __seqcount_init(seqcount_t *s, const char *name,
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+ 
+ # define SEQCOUNT_DEP_MAP_INIT(lockname)				\
+-		.dep_map = { .name = #lockname }
++		.dep_map = { .name = #lockname, \
++			     .dmap = DEPT_MAP_INITIALIZER(lockname) }
+ 
+ /**
+  * seqcount_init() - runtime initializer for seqcount_t
+@@ -148,7 +166,7 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
+  * This lock-unlock technique must be implemented for all of PREEMPT_RT
+  * sleeping locks.  See Documentation/locking/locktypes.rst
+  */
+-#if defined(CONFIG_LOCKDEP) || defined(CONFIG_PREEMPT_RT)
++#if defined(CONFIG_LOCKDEP) || defined(CONFIG_DEPT) || defined(CONFIG_PREEMPT_RT)
+ #define __SEQ_LOCK(expr)	expr
+ #else
+ #define __SEQ_LOCK(expr)
+@@ -203,6 +221,22 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
+ 	__SEQ_LOCK(locktype	*lock);					\
+ } seqcount_##lockname##_t;						\
+ 									\
++static __always_inline void						\
++__seqprop_##lockname##_wait(const seqcount_##lockname##_t *s)		\
++{									\
++	__SEQ_LOCK(dept_seq_wait(&(lockmember)->dep_map.dmap, _RET_IP_));\
++}									\
++									\
++static __always_inline void						\
++__seqprop_##lockname##_writebegin(const seqcount_##lockname##_t *s)	\
++{									\
++}									\
++									\
++static __always_inline void						\
++__seqprop_##lockname##_writeend(const seqcount_##lockname##_t *s)	\
++{									\
++}									\
++									\
+ static __always_inline seqcount_t *					\
+ __seqprop_##lockname##_ptr(seqcount_##lockname##_t *s)			\
+ {									\
+@@ -271,6 +305,21 @@ static inline void __seqprop_assert(const seqcount_t *s)
+ 	lockdep_assert_preemption_disabled();
+ }
+ 
++static inline void __seqprop_wait(seqcount_t *s)
++{
++	dept_seq_wait(&s->dep_map.dmap, _RET_IP_);
++}
++
++static inline void __seqprop_writebegin(seqcount_t *s)
++{
++	dept_seq_writebegin(&s->dep_map.dmap, _RET_IP_);
++}
++
++static inline void __seqprop_writeend(seqcount_t *s)
++{
++	dept_seq_writeend(&s->dep_map.dmap, _RET_IP_);
++}
++
+ #define __SEQ_RT	IS_ENABLED(CONFIG_PREEMPT_RT)
+ 
+ SEQCOUNT_LOCKNAME(raw_spinlock, raw_spinlock_t,  false,    s->lock,        raw_spin, raw_spin_lock(s->lock))
+@@ -311,6 +360,9 @@ static inline void __seqprop_assert(const seqcount_t *s)
+ #define seqprop_sequence(s)		__seqprop(s, sequence)
+ #define seqprop_preemptible(s)		__seqprop(s, preemptible)
+ #define seqprop_assert(s)		__seqprop(s, assert)
++#define seqprop_dept_wait(s)		__seqprop(s, wait)
++#define seqprop_dept_writebegin(s)	__seqprop(s, writebegin)
++#define seqprop_dept_writeend(s)	__seqprop(s, writeend)
+ 
+ /**
+  * __read_seqcount_begin() - begin a seqcount_t read section w/o barrier
+@@ -360,6 +412,7 @@ static inline void __seqprop_assert(const seqcount_t *s)
+ #define read_seqcount_begin(s)						\
+ ({									\
+ 	seqcount_lockdep_reader_access(seqprop_ptr(s));			\
++	seqprop_dept_wait(s);						\
+ 	raw_read_seqcount_begin(s);					\
+ })
+ 
+@@ -512,6 +565,7 @@ static inline void do_raw_write_seqcount_end(seqcount_t *s)
+ 		preempt_disable();					\
+ 									\
+ 	do_write_seqcount_begin_nested(seqprop_ptr(s), subclass);	\
++	seqprop_dept_writebegin(s);					\
+ } while (0)
+ 
+ static inline void do_write_seqcount_begin_nested(seqcount_t *s, int subclass)
+@@ -538,6 +592,7 @@ static inline void do_write_seqcount_begin_nested(seqcount_t *s, int subclass)
+ 		preempt_disable();					\
+ 									\
+ 	do_write_seqcount_begin(seqprop_ptr(s));			\
++	seqprop_dept_writebegin(s);					\
+ } while (0)
+ 
+ static inline void do_write_seqcount_begin(seqcount_t *s)
+@@ -554,6 +609,7 @@ static inline void do_write_seqcount_begin(seqcount_t *s)
+  */
+ #define write_seqcount_end(s)						\
+ do {									\
++	seqprop_dept_writeend(s);					\
+ 	do_write_seqcount_end(seqprop_ptr(s));				\
+ 									\
+ 	if (seqprop_preemptible(s))					\
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+1.9.1
+
