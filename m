@@ -2,99 +2,156 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDD09C433F5
-	for <linux-ide@archiver.kernel.org>; Thu,  5 May 2022 02:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49589C433FE
+	for <linux-ide@archiver.kernel.org>; Thu,  5 May 2022 06:04:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231878AbiEECZR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 May 2022 22:25:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58734 "EHLO
+        id S231909AbiEEGIO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 5 May 2022 02:08:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238235AbiEECZP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2022 22:25:15 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 126CC4B1EF;
-        Wed,  4 May 2022 19:21:38 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id n18so3125729plg.5;
-        Wed, 04 May 2022 19:21:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=m8tYXGu935tCO4A1yLQDnVEfASFN2GrANQDA+wv6yeI=;
-        b=hs0QdSt9aR5HZJsrBx0cyFQacevUUGNfXXJmjnhK+snDefAYRtPfS/OJseaupvONmy
-         qzF/ATnv02xNB9rPB/FN0JVdDBvbxbuqWxuD4DochLemJ/K/Qw+CGpQi+ZIhwt462/NC
-         6grsP2lT0BklqXBS18MMCba8HF+/tdpx0xWEFlqRuicK1ftj2iZgwFEI0jox5VV1ujse
-         Zv7185NHU7njna7csplr/VBQ3vN1pLp6ciYpCF4hvBs2zg7Q+OpRSQGYe5QFJ9BeTB09
-         5rzpbXdaP1CUx2Xj9xrqu2nQ0CNDYou7JpYLB8VLQRihQOTGOGgrP5mg206nexOcMQBW
-         4Rog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=m8tYXGu935tCO4A1yLQDnVEfASFN2GrANQDA+wv6yeI=;
-        b=iyYOA1Mdn88HKLa3Xzzqym2ZeHOU7HBQGkAUMzoEbCS1b+Dxdwswot0577Uj9KGOQQ
-         X2fEKLT09r3nd5kZfNo55GzXNynoiqtzoQq9VbbSwmbFi0J86RwJm0uMPaW6AvAcfjo4
-         DFzTZZIkR4Z+DkO8gxSGZUmbHaDF7GofqteNkBdEk7RdfBK1j/wICy062CHWSUxnZald
-         R2MTwOHoPUDGjYJRQQ+Mhv8ScCe8aNeIj2g9XXIqk35kL5KL12R/x69vj1lXiVMWhZ87
-         6bryILh+ehqwA4HtneisJxpyjolO4BZY1cvG8STEDyufmE466u16qEI4z6OHPL1Bdhtl
-         jx8Q==
-X-Gm-Message-State: AOAM530JPA3FlKIicYtKVxll8kgBR1TQpIAGe+IHd2Pk5YAnRVqxMzRD
-        6/Z+JjSmEBBpoO/Oatxm36bLGmNTT3k=
-X-Google-Smtp-Source: ABdhPJw1JgQ70uS+Tb2Lt26hrrMVuOCjMo2+j9p7TVrg90ySnEN8YqRvbL5Zwhdu3VIXO+AjpdVvjA==
-X-Received: by 2002:a17:902:b48f:b0:15e:da68:8f12 with SMTP id y15-20020a170902b48f00b0015eda688f12mr271928plr.27.1651717297536;
-        Wed, 04 May 2022 19:21:37 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id cq17-20020a17090af99100b001cd4989fec9sm4017898pjb.21.2022.05.04.19.21.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 May 2022 19:21:36 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: chi.minghao@zte.com.cn
-To:     damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Minghao Chi <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] ata: simplify the return expression of brcm_ahci_remove
-Date:   Thu,  5 May 2022 02:21:33 +0000
-Message-Id: <20220505022133.55852-1-chi.minghao@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230306AbiEEGIN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 5 May 2022 02:08:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E07F8366A5;
+        Wed,  4 May 2022 23:04:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 766EA61C03;
+        Thu,  5 May 2022 06:04:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF6FEC385BC;
+        Thu,  5 May 2022 06:04:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651730673;
+        bh=gGag8LcvVDzOYjY7vVQNICNRVUATqvouUQ3T9qB8Y4k=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=IzeX2fl3N2x2kryaheKunqUXxhYq2EKW3EevzAcRMispu7pOGu+LIVB4gtA4lt47H
+         kuw8arO+PfbPq7WQnALg8Llzkb+hKwtvB/sYTsnK/90IacYZCB6DJZ5ZQJOsJ5C1F3
+         TeSHzM+uYa+G41zdiYBmFF25L9TEm88hz+cFkf+LED+1kXeRmilzEAvsC7hDnbfjGn
+         7+T7Dj+o9VKBm1U6ge16L5XMEd+1ntq34MUjLp9fn2cdJO958LQytdZ8prNLl0PmNR
+         JJUBc01v6sbgWXUsh3IWA1bR3+vxPlhbpLgI0/bOseW+q4bkkad+M4ksyG11vuvJyh
+         VmRMQT8XoxC+g==
+Received: by mail-wm1-f49.google.com with SMTP id q20so2010918wmq.1;
+        Wed, 04 May 2022 23:04:33 -0700 (PDT)
+X-Gm-Message-State: AOAM532KYwJ4kV4x0ust3FQTY5P7lDLmdAqa0ZHF8tckDNZFQ3EHpIll
+        agg4oXhlxqv95Hv8yxNuanYbXaFOameqvZcXfEI=
+X-Google-Smtp-Source: ABdhPJxJJBc6IXeb9FDBUjhMgPRC02W3Kaja9XP7Gl4879zHpOvDa2WCA8GypEt4poAHxn+t5qvz/Rnv+5FUxU+6qJI=
+X-Received: by 2002:a05:600c:4f0f:b0:394:54c1:f5b3 with SMTP id
+ l15-20020a05600c4f0f00b0039454c1f5b3mr3065513wmq.33.1651730671693; Wed, 04
+ May 2022 23:04:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220419163810.2118169-1-arnd@kernel.org> <20220419163810.2118169-19-arnd@kernel.org>
+ <CACRpkdac8dGKSEmc-HpgooJefrDtiKK+_A1Mv7AJM8yQV9UY-w@mail.gmail.com>
+ <CAK8P3a0w3gFzZoBzyRsi1Ta4prESf8Fp0=quAPSKMnaXvbXNTQ@mail.gmail.com> <CACRpkdZNryYkidvdKuT57RM3fz6_X+3oOzF5xaOZd+TyScfUsw@mail.gmail.com>
+In-Reply-To: <CACRpkdZNryYkidvdKuT57RM3fz6_X+3oOzF5xaOZd+TyScfUsw@mail.gmail.com>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Thu, 5 May 2022 08:04:14 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a0y0tVZODpp+GSf0EkMPWbbvMqA-4kNf0NJMc0M2=2WHw@mail.gmail.com>
+Message-ID: <CAK8P3a0y0tVZODpp+GSf0EkMPWbbvMqA-4kNf0NJMc0M2=2WHw@mail.gmail.com>
+Subject: Re: [PATCH 18/48] ARM: pxa: hx4700: use gpio descriptors for audio
+To:     Linus Walleij <linus.walleij@linaro.org>
+Cc:     Robert Jarzmik <robert.jarzmik@free.fr>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Philipp Zabel <philipp.zabel@gmail.com>,
+        Lubomir Rintel <lkundrak@v3.sk>,
+        Paul Parsons <lost.distance@yahoo.com>,
+        Tomas Cech <sleep_walker@suse.com>,
+        Sergey Lapin <slapin@ossfans.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        IDE-ML <linux-ide@vger.kernel.org>,
+        linux-clk <linux-clk@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
+        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-mtd <linux-mtd@lists.infradead.org>,
+        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Minghao Chi <chi.minghao@zte.com.cn>
+On Wed, May 4, 2022 at 11:59 PM Linus Walleij <linus.walleij@linaro.org> wrote:
+> On Mon, May 2, 2022 at 9:08 AM Arnd Bergmann <arnd@kernel.org> wrote:
+> > On Sun, May 1, 2022 at 11:41 PM Linus Walleij <linus.walleij@linaro.org> wrote:
+> > >
+> > > (...)
+> > > > +static struct gpiod_lookup_table hx4700_audio_gpio_table = {
+> > > > +       .dev_id = "hx4700-audio",
+> > > > +       .table = {
+> > > > +               GPIO_LOOKUP("gpio-pxa", GPIO75_HX4700_EARPHONE_nDET,
+> > > > +                           "earphone-ndet", GPIO_ACTIVE_HIGH),
+> > >
+> > > This looks wrong. The n in nDET in the end of the name of the GPIO line
+> > > means active low does it not?
+> > >
+> > > What I usually do when I see this is to properly set it to
+> > > GPIO_ACTIVE_LOW in the descriptor table, then invert the logic
+> > > where it's getting used.
+> > >
+> > > Also rename to earphone-det instead of -ndet
+> >
+> > Thanks for taking a look! I changed it now, but I don't know if
+> > I got the correct number of inversions in the end. How does this look?
+>
+> Looks wrong, you can just invert the argument to any statement of set_value()
+> after tagging respective line as active low. Then gpilob will do a second
+> inversion.
+>
+> > +               GPIO_LOOKUP("gpio-pxa", GPIO75_HX4700_EARPHONE_nDET,
+> > +                           "earphone-det", GPIO_ACTIVE_LOW),
+> > +               GPIO_LOOKUP("gpio-pxa", GPIO107_HX4700_SPK_nSD,
+> > +                           "spk-sd", GPIO_ACTIVE_LOW),
+>
+> So those two have switched polarity.
+>
+> > @@ -81,14 +79,14 @@ static const struct snd_soc_ops hx4700_ops = {
+> >  static int hx4700_spk_power(struct snd_soc_dapm_widget *w,
+> >                             struct snd_kcontrol *k, int event)
+> >  {
+> > -       gpio_set_value(GPIO107_HX4700_SPK_nSD, !!SND_SOC_DAPM_EVENT_ON(event));
+> > +       gpiod_set_value(gpiod_spk_sd, !!SND_SOC_DAPM_EVENT_ON(event));
+>
+> Thus drop one ! in front of the expression, just !SND_SOC_DAPM_EVENT_ON(event)
 
-Simplify the return expression.
+Ok, done. But I still leave the extra 'invert=1' in hs_jack_pin[], right?
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
----
- drivers/ata/ahci_brcm.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+/* Headphones jack detection DAPM pin */
+static struct snd_soc_jack_pin hs_jack_pin[] = {
+        {
+                .pin    = "Headphone Jack",
+                .mask   = SND_JACK_HEADPHONE,
+        },
+        {
+                .pin    = "Speaker",
+                /* disable speaker when hp jack is inserted */
+                .mask   = SND_JACK_HEADPHONE,
+                .invert = 1,
+        },
+};
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index ab8552b1ff2a..f61795c546cf 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -549,15 +549,10 @@ static int brcm_ahci_remove(struct platform_device *pdev)
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	struct brcm_ahci_priv *priv = hpriv->plat_data;
--	int ret;
- 
- 	brcm_sata_phys_disable(priv);
- 
--	ret = ata_platform_remove_one(pdev);
--	if (ret)
--		return ret;
--
--	return 0;
-+	return ata_platform_remove_one(pdev);
- }
- 
- static void brcm_ahci_shutdown(struct platform_device *pdev)
--- 
-2.25.1
+> > +       gpiod_spk_sd = devm_gpiod_get(&pdev->dev, "spk-sd", GPIOD_OUT_LOW);
+>
+> These initial values don't seem to be set in the old code you could
+> just use GPIOD_ASIS as flag to make sure the new code behaves
+> the same.
 
+Ok.
 
+        Arnd
