@@ -2,151 +2,111 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 475A2C4321E
-	for <linux-ide@archiver.kernel.org>; Sat,  7 May 2022 10:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51D68C433FE
+	for <linux-ide@archiver.kernel.org>; Sat,  7 May 2022 12:37:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1446245AbiEGKFy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 7 May 2022 06:05:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56696 "EHLO
+        id S1358181AbiEGMlW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 7 May 2022 08:41:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1446217AbiEGKFo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 May 2022 06:05:44 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2DDB3DA6B;
-        Sat,  7 May 2022 03:01:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651917717; x=1683453717;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=/TH2t2Zl2v5PlFXuYgl2cfI4T7s5wGnQ+3rQ63ZiRDM=;
-  b=BKyb90VKeR2fb351g3S7LYuQ5xQOwq1Wl/4LH7fcnrWhAY9hxMlo+X19
-   pCnl2MJ01Y7dDmHGti17wcQVj1S3OH6IJp3HFkT+5oKxwo0FD7/XuDI4T
-   hUBaAKijgBnVexRCAFqTd17ypx7A33gUnfJ8c3zch9mVhRudYrqceTvYN
-   OOxYkFCI2rL0YsOexMLtUWUWZghkFOAG4ndOa5hG5AhNfUTXSFV4fjsvT
-   uG41Ef1u1kgD+mxq171w6W2E2C+Gh6qykMtze4JoZcuF8VH/041MR82nl
-   OA93H9JQX4vvCSAMWx5HlkvJIdBxA6GiljmysW4wNFaxBWGdqPMO/vW2c
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10339"; a="250701988"
-X-IronPort-AV: E=Sophos;i="5.91,206,1647327600"; 
-   d="scan'208";a="250701988"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 May 2022 03:01:54 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,206,1647327600"; 
-   d="scan'208";a="655073428"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by FMSMGA003.fm.intel.com with ESMTP; 07 May 2022 03:01:48 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 931661D6; Sat,  7 May 2022 13:01:49 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Wolfram Sang <wsa@kernel.org>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Mark Brown <broonie@kernel.org>,
-        chris.packham@alliedtelesis.co.nz,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-can@vger.kernel.org, netdev@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
-Cc:     Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Anatolij Gustschin <agust@denx.de>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Pantelis Antoniou <pantelis.antoniou@gmail.com>
-Subject: [PATCH v2 3/4] powerpc/52xx: Get rid of of_node assignment
-Date:   Sat,  7 May 2022 13:01:46 +0300
-Message-Id: <20220507100147.5802-3-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220507100147.5802-1-andriy.shevchenko@linux.intel.com>
-References: <20220507100147.5802-1-andriy.shevchenko@linux.intel.com>
+        with ESMTP id S1384792AbiEGMlU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 May 2022 08:41:20 -0400
+Received: from mail-yb1-xb31.google.com (mail-yb1-xb31.google.com [IPv6:2607:f8b0:4864:20::b31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AEEB46B27
+        for <linux-ide@vger.kernel.org>; Sat,  7 May 2022 05:37:33 -0700 (PDT)
+Received: by mail-yb1-xb31.google.com with SMTP id g28so17181138ybj.10
+        for <linux-ide@vger.kernel.org>; Sat, 07 May 2022 05:37:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JUhgclDR3XBkbKooh+LIAZ5rgGQDmCxwnx2kPnqoYMA=;
+        b=KCyiITVKgMi69PaUxMUe8kgt1g0I/YT1BNqXQ8g8jDYzoI10RIuW4XJdIAw+WABgPz
+         sIoqAXB0wg2Fv4K4xa+UIk01I93aMUAh5zwWez9Y9woJgUGlFSInLIx46fZ5Gg1s601e
+         a5i4HOw7TQkJg5Maw+WvNt0vTtgrsC6dMYDUfidiIqwE2Susa4bkzpuGE1IWxOsZTINs
+         CB1T7vFcyxbamcJuoqj4cYj6aPJPj79FjZ60m16yN0qOI1to8EcKMqSlW8ohYQOIT3XX
+         Y47JhHbhAM6byKlmpEHLlDWi3VANQBbeKYdvgbjI2HE4GR8wATeJNEQhXZFHSEQQgNal
+         1RtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=JUhgclDR3XBkbKooh+LIAZ5rgGQDmCxwnx2kPnqoYMA=;
+        b=mCao7U2lsvmkAavC+BW4Hm2bnONCl2lYAOoNdakBXn+E7oMZtUMHqD2NjDvrsGg0nP
+         fafc3CIsSiYH3KbznLKc0jKa3HprLwLj2WHDyV6LC6aEr0ivj4srVaXFLBFycxQ0l1XR
+         quGk1tOfks2B7QSivIcaFslOBr1QfhiSS7s530Camemkop4S5BWMIQgcCK/ieHC2FvOP
+         LxV1q25n78pz+RzXolQWEQDx08Cm/3YM95TAX600fARcHkh6NTIk0cXpwlXmEfojXJQ6
+         juWBl/olaUcwqaLJZFFSpMpKRsGWDxJArbqfP0ZyAnGBy32iCzqVtmY+wfc4VwEwRTXa
+         xkrw==
+X-Gm-Message-State: AOAM531wxRqs9jil6O1WrRMvj6qTVb6qajqwLZOWyCGrnlXTbKhnW1VE
+        IhNGGeR5C6FK9wT3Koign2xr3MAVWDuJVlbuTova+w==
+X-Google-Smtp-Source: ABdhPJzwJpXEUtAZEUc6bZUPoenoZ5sebSG72if0MOZ/TMe4dt5l953VkaeLr4GysoaOw6EpMxKFJUOEIy1GTdxXArc=
+X-Received: by 2002:a25:e684:0:b0:645:d429:78e9 with SMTP id
+ d126-20020a25e684000000b00645d42978e9mr6256768ybh.369.1651927052069; Sat, 07
+ May 2022 05:37:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220419163810.2118169-1-arnd@kernel.org> <20220419163810.2118169-41-arnd@kernel.org>
+In-Reply-To: <20220419163810.2118169-41-arnd@kernel.org>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Sat, 7 May 2022 14:37:20 +0200
+Message-ID: <CACRpkdbHGXfAKiN1sNTrLzRd5Qk-jerhcfvDo8FG=Zq94Dv19g@mail.gmail.com>
+Subject: Re: [PATCH 40/48] ARM: pxa: tosa: use gpio lookup for battery
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org,
+        Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Philipp Zabel <philipp.zabel@gmail.com>,
+        Lubomir Rintel <lkundrak@v3.sk>,
+        Paul Parsons <lost.distance@yahoo.com>,
+        Tomas Cech <sleep_walker@suse.com>,
+        Sergey Lapin <slapin@ossfans.org>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Helge Deller <deller@gmx.de>, Mark Brown <broonie@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-input@vger.kernel.org,
+        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        alsa-devel@alsa-project.org, Sebastian Reichel <sre@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Let GPIO library assign of_node from the parent device.
-This allows to move GPIO library and drivers to use fwnode
-APIs instead of being stuck with OF-only interfaces.
+On Tue, Apr 19, 2022 at 6:44 PM Arnd Bergmann <arnd@kernel.org> wrote:
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
-v2: no changes
- arch/powerpc/platforms/52xx/mpc52xx_gpt.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+> From: Arnd Bergmann <arnd@arndb.de>
+>
+> The battery driver uses a lot of GPIO lines, hardcoded from a
+> machine header file.
+>
+> Change it to use a gpiod lookup table instead.
+>
+> Reviewed-by: Sebastian Reichel <sre@kernel.org>
+> Acked-by: Sebastian Reichel <sre@kernel.org>
+> Cc: linux-pm@vger.kernel.org
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-diff --git a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-index 2605b4667b39..ae47fdcc8a96 100644
---- a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-+++ b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-@@ -58,6 +58,7 @@
- #include <linux/of_platform.h>
- #include <linux/of_gpio.h>
- #include <linux/kernel.h>
-+#include <linux/property.h>
- #include <linux/slab.h>
- #include <linux/fs.h>
- #include <linux/watchdog.h>
-@@ -314,17 +315,15 @@ mpc52xx_gpt_gpio_dir_out(struct gpio_chip *gc, unsigned int gpio, int val)
- 	return 0;
- }
- 
--static void
--mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt, struct device_node *node)
-+static void mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt)
- {
- 	int rc;
- 
--	/* Only setup GPIO if the device tree claims the GPT is
--	 * a GPIO controller */
--	if (!of_find_property(node, "gpio-controller", NULL))
-+	/* Only setup GPIO if the device claims the GPT is a GPIO controller */
-+	if (!device_property_present(gpt->dev, "gpio-controller"))
- 		return;
- 
--	gpt->gc.label = kasprintf(GFP_KERNEL, "%pOF", node);
-+	gpt->gc.label = kasprintf(GFP_KERNEL, "%pfw", dev_fwnode(gpt->dev));
- 	if (!gpt->gc.label) {
- 		dev_err(gpt->dev, "out of memory\n");
- 		return;
-@@ -336,7 +335,7 @@ mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt, struct device_node *node)
- 	gpt->gc.get = mpc52xx_gpt_gpio_get;
- 	gpt->gc.set = mpc52xx_gpt_gpio_set;
- 	gpt->gc.base = -1;
--	gpt->gc.of_node = node;
-+	gpt->gc.parent = gpt->dev;
- 
- 	/* Setup external pin in GPIO mode */
- 	clrsetbits_be32(&gpt->regs->mode, MPC52xx_GPT_MODE_MS_MASK,
-@@ -349,8 +348,7 @@ mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt, struct device_node *node)
- 	dev_dbg(gpt->dev, "%s() complete.\n", __func__);
- }
- #else /* defined(CONFIG_GPIOLIB) */
--static void
--mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *p, struct device_node *np) { }
-+static void mpc52xx_gpt_gpio_setup(struct mpc52xx_gpt_priv *gpt) { }
- #endif /* defined(CONFIG_GPIOLIB) */
- 
- /***********************************************************************
-@@ -727,7 +725,7 @@ static int mpc52xx_gpt_probe(struct platform_device *ofdev)
- 
- 	dev_set_drvdata(&ofdev->dev, gpt);
- 
--	mpc52xx_gpt_gpio_setup(gpt, ofdev->dev.of_node);
-+	mpc52xx_gpt_gpio_setup(gpt);
- 	mpc52xx_gpt_irq_setup(gpt, ofdev->dev.of_node);
- 
- 	mutex_lock(&mpc52xx_gpt_list_mutex);
--- 
-2.35.1
+Oh, I've been iterating a patch for the Tosa charging code
+going down in MFD ans ASoC and all:
+https://lore.kernel.org/linux-arm-kernel/20220125003741.492954-1-linus.walleij@linaro.org/
 
+I just rebased this on v5.18-rc1 and resent with collected ACKs.
+
+Please take a look at it, and see if you rather take that patch,
+at some point I realized I had to go pretty deep around the
+legacy code in different subsystems because the MFD device
+us spawning a GPIO chip...
+
+Yours,
+Linus Walleij
