@@ -2,155 +2,184 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18C37C433FE
-	for <linux-ide@archiver.kernel.org>; Sat,  7 May 2022 07:21:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1E0C433EF
+	for <linux-ide@archiver.kernel.org>; Sat,  7 May 2022 07:37:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1446064AbiEGHZF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 7 May 2022 03:25:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60702 "EHLO
+        id S1358512AbiEGHkr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 7 May 2022 03:40:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1446038AbiEGHY6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 May 2022 03:24:58 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F35F33883;
-        Sat,  7 May 2022 00:21:11 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id 202so7862914pgc.9;
-        Sat, 07 May 2022 00:21:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=rNQz935Rwo42XgI1l8Va40p/MEeV4p6HEVCQ52VDnf4=;
-        b=P42+8ex/HBpVSeUhi79CcZsiB1rEwx7SjPsWOzHKtYtuDRjT+7g81hnQb9Bg+3nrwT
-         De8dQlU9BcgwoEV9wdnbeE3D82XEoM9rdMizKhVMhmThyQPs7pG6yQdXOZHUILyVEB8B
-         MZOMaM5Nag+I9ca+mSFwEkbaCfc+mVQpZN8W0UFxaI3P1zlBAo3OLxIQcU7yZiXAhU1h
-         Jiaawf+dpE+KAoqOYTid6KwfvlqOs8L3T25b9+uILvT8+qC03iIX5R5P7pBVqRxRlV1/
-         2L77a/eKzFW5m+4Q8qaNXGrcogU5pQhNHMvwFRhhaVI7cMNifBapsGydQXtopBhbDEvv
-         tGKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=rNQz935Rwo42XgI1l8Va40p/MEeV4p6HEVCQ52VDnf4=;
-        b=dbeW4iM7xzP1pedpoDFeZtPSpmc86HZmgQb1X3b5lrJZdzI+tplsVsUWaqsF8L1s8A
-         2U5tF6esDkokfGvo/YHHeEeec6aJgpFOSQsbfcC/MQkEGcSX5c6FVHf+p0IAokhhPB+q
-         l4FClkS0nKcw4/jXpPICClyeLZ89tcDKSfVADmhw1kbEBSWgGwHU2IfmpJuqLMTtJCrk
-         PNN3GDEiLwWAtr5iU9coSPpxe6mLDsAFWt5TUq8XBXVcrXTGHRmuddlv7L2GujvJklTK
-         nC7flNwS/oLwTTv+whKqvnsq60zWSNjk4GLU7zCTih+92OwvzA6oXuZtj6nRsBqwc11D
-         eWlA==
-X-Gm-Message-State: AOAM533mkWrE91d5Fv8TF+MsfcWOY5uSudTeBV1ZFoloI+2u15sES9gD
-        tRsM1an+HHlHXwUaVI9RE7Q=
-X-Google-Smtp-Source: ABdhPJy8wngBA9nCSkNphuykt/x5APcFu3ZWQNW14hKz2s7Rb0bLuKnbzsVQiG9xcQts5UZOdrCb6w==
-X-Received: by 2002:a65:6093:0:b0:373:9c75:19ec with SMTP id t19-20020a656093000000b003739c7519ecmr5972095pgu.539.1651908071104;
-        Sat, 07 May 2022 00:21:11 -0700 (PDT)
-Received: from hyeyoo ([114.29.24.243])
-        by smtp.gmail.com with ESMTPSA id 1-20020a170902c20100b0015ec44d25dasm2956759pll.235.2022.05.07.00.20.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 May 2022 00:21:10 -0700 (PDT)
-Date:   Sat, 7 May 2022 16:20:50 +0900
-From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
-Subject: Re: [PATCH RFC v6 00/21] DEPT(Dependency Tracker)
-Message-ID: <YnYd0hd+yTvVQxm5@hyeyoo>
-References: <CAHk-=whnPePcffsNQM+YSHMGttLXvpf8LbBQ8P7HEdqFXaV7Lg@mail.gmail.com>
- <1651795895-8641-1-git-send-email-byungchul.park@lge.com>
+        with ESMTP id S1346679AbiEGHkq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 May 2022 03:40:46 -0400
+Received: from ZXSHCAS1.zhaoxin.com (zxshcas1.zhaoxin.com [180.169.121.87])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E67351E75
+        for <linux-ide@vger.kernel.org>; Sat,  7 May 2022 00:36:58 -0700 (PDT)
+Received: from zxbjmbx1.zhaoxin.com (10.29.252.163) by ZXSHCAS1.zhaoxin.com
+ (10.28.252.161) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Sat, 7 May
+ 2022 15:36:55 +0800
+Received: from [10.29.8.9] (10.29.8.9) by zxbjmbx1.zhaoxin.com (10.29.252.163)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Sat, 7 May
+ 2022 15:36:55 +0800
+Subject: Re: [PATCH 1/2] ahci: Add PhyRdy Change control on actual LPM
+ capability
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>,
+        Mario Limonciello <mario.limonciello@amd.com>,
+        Cobe Chen <CobeChen@zhaoxin.com>, Tim Guo <TimGuo@zhaoxin.com>,
+        TonyW Wang <TonyWWang@zhaoxin.com>,
+        Leo Liu <LeoLiu@zhaoxin.com>
+References: <1650534217-14052-1-git-send-email-RunaGuo-oc@zhaoxin.com>
+ <1650534217-14052-2-git-send-email-RunaGuo-oc@zhaoxin.com>
+ <244f0c98-13f4-1ac4-9ebe-facdad4ae8b6@opensource.wdc.com>
+ <af0571fe-a8f4-cb0a-323f-4dc0c4e7517d@zhaoxin.com>
+ <ffc33fd4-a676-167d-ec2c-18e8211f2858@opensource.wdc.com>
+ <349b0922-7efd-99e9-7bc8-b18ed98d94f8@zhaoxin.com>
+ <e0213b8b-daea-7e75-793c-50f39956f932@opensource.wdc.com>
+From:   Runa Guo-oc <RunaGuo-oc@zhaoxin.com>
+Message-ID: <4824f9b5-92c1-a53b-2174-1d096e723e13@zhaoxin.com>
+Date:   Sat, 7 May 2022 15:36:55 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1651795895-8641-1-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <e0213b8b-daea-7e75-793c-50f39956f932@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Originating-IP: [10.29.8.9]
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ zxbjmbx1.zhaoxin.com (10.29.252.163)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, May 06, 2022 at 09:11:35AM +0900, Byungchul Park wrote:
-> Linus wrote:
-> >
-> > On Wed, May 4, 2022 at 1:19 AM Byungchul Park <byungchul.park@lge.com> wrote:
-> > >
-> > > Hi Linus and folks,
-> > >
-> > > I've been developing a tool for detecting deadlock possibilities by
-> > > tracking wait/event rather than lock(?) acquisition order to try to
-> > > cover all synchonization machanisms.
-> > 
-> > So what is the actual status of reports these days?
-> > 
-> > Last time I looked at some reports, it gave a lot of false positives
-> > due to mis-understanding prepare_to_sleep().
-> 
-> Yes, it was. I handled the case in the following way:
-> 
-> 1. Stage the wait at prepare_to_sleep(), which might be used at commit.
->    Which has yet to be an actual wait that Dept considers.
-> 2. If the condition for sleep is true, the wait will be committed at
->    __schedule(). The wait becomes an actual one that Dept considers.
-> 3. If the condition is false and the task gets back to TASK_RUNNING,
->    clean(=reset) the staged wait.
-> 
-> That way, Dept only works with what actually hits to __schedule() for
-> the waits through sleep.
-> 
-> > For this all to make sense, it would need to not have false positives
-> > (or at least a very small number of them together with a way to sanely
-> 
-> Yes. I agree with you. I got rid of them that way I described above.
+On 2022/5/2 21:05, Damien Le Moal wrote:
+> On 2022/04/27 19:18, Runa Guo-oc wrote:
+>> On 2022/4/23 6:37, Damien Le Moal wrote:
+>>> On 4/22/22 18:57, RunaGuo-oc wrote:
+>>>> On 2022/4/21 18:39, Damien Le Moal wrote:
+>>>>> On 4/21/22 18:43, Runa Guo-oc wrote:
+>>>>>> On some platform, when OS enables LPM by default (eg, min_power),
+>>>>>> then, PhyRdy Change cannot be detected if ahci supports no LPM.
+>>>>> Do you mean "...if the ahci adapter does not support LPM." ?
+>>>> Yes.
+>>>>
+>>>>> If that is what you mean, then min_power should not be set.
+>>>> Yes, I agree with you. But, as we know, link_power_management
+>>>> is a user policy which can be modified, if some users are not
+>>>> familiar with ahci spec, then the above case may happen.
+>>> Users should *never* need to be aware of the HW specs and what can or
+>>> cannot be done with a particular adapter/drive. User actions trying to
+>>> enable an unsupported feature should be failed, always.
+>>>
+>>> In your case though, quickly checking the AHCI specs, the scontrol
+>>> register bits you change seem to be for preventing *device* initiated
+>>> power mode transitions, not user/host initiated operations. Your commit
+>>> message should clearly mention that. But I still need to spend more time
+>>> re-reading the specs to confirm. Will do that next week.
+>>>
+>>> Since you added the CAP flags, these flags should be used to detect low
+>>> power policies that can be allowed for user actions.
+>>>
+>>> Mario,
+>>>
+>>> Please rebase and repost your patches ! I rebased the for-5.19 branch on
+>>> rc3 to have the LPM config name revert. We need to fix this LPM mess :)
+>>>
+>>>>>     Mario has patches to fix that.
+>>>>     
+>>>> Hmm. How to patch this case ?
+>>> Mario's patches modify the beginning of the sata_link_scr_lpm() function
+>>> to prevent setting an LPM policy that the adapter/drive does not support.
+>>> This together with the correct bits set/reset in the scr register will
+>>> only allow LPM transitions that are supported.
+>>>
+>>> It may also be good to revisit ata_scsi_lpm_store() to prevent the user
+>>> from setting an unsupported policy. Currently, that uselessly triggers an
+>>> EH sequence.
+>> To avoid some confusion in this patch set, I want to explain it here.
+>> The patch set involves two LPM related issues, one for the ahci adapter
+>> does not support LPM (no partial & slumber & devslp), the other for
+>> ahci adapter supports part of LPM(eg, only partial, no slumber & devslp).
+>>
+>> The former case is what I metioned in this mail thread. Namely, when LPM is
+>> enabled, actions trying to enable this unsupported feature will be failed,
+>> but will disable PORT_IRQ_PHYRDY bit at the beginning of the ahci_set_lpm()
+>> function, which would make PhyRdy Changed cannot be detected. So I add flags
+>> in the ata_eh_set_lpm() function which will not go to the disable operation.
+>>
+>> The latter case is what I metioned in "PATCH[2/2]". Namely, if the ahci
+>> adapter only supports partial (no slumber & devslp), then when LPM is enabled
+>> (eg, min_power), *device* initiated power mode transitions will be enabled
+>> with the scontrol register bits setting to indicate no restrictions on LPM
+>> transitions. After that, if SSD/HDD sends a DIPM slumber request, it cannot
+>> be disallowed by ahci adpter for driver not setting scontrol register bits
+>> properly. So I add flags to control it.
+>>
+>> Therefore, Mario's patches in the sata_link_scr_lpm() function may fix the
+>> issue in "PATCH[2/2]".
+>>
+>> Revisit ata_scsi_lpm_store() to prevent the user from setting an unsupported
+>> policy may be a way to fix the issue in "PATCH[1/2]", but there may be another
+>> case where some operating system manufacturers setting LPM default enable in
+>> driver, like the following code in the ahci_init_one() function, also need to
+>> control.
+>>
+>> 	if (ap->flags & ATA_FLAG_EM)
+>> 		ap->em_message_type = hpriv->em_msg_type;
+>>
+>> +        ap->target_lpm_policy = ATA_LPM_MIN_POWER;
+> This one looks wrong. This is set inside ahci_update_initial_lpm_policy()
+> according to the default kernel config (CONFIG_SATA_MOBILE_LPM_POLICY) and
+> module param + what the drive can do according to ACPI. The problem though is
+> that the adapter capabilities are not checked in that function, so the initial
+> target lpm policy may be wrong.
 >
+> Since your patch 1/2 adds the hpriv flags indicating the capabilities, you need
+> to use these in ahci_update_initial_lpm_policy() to validate whatever initial
+> policy is asked for by the user.
 
-IMHO DEPT should not report what lockdep allows (Not talking about
-wait events). I mean lockdep allows some kind of nested locks but
-DEPT reports them.
+Yes, the above code is not rigorous, existing methods provided by kernel as you
+said should be used in this case.
 
-When I was collecting reports from DEPT on varous configurations,
-Most of them was report of down_write_nested(), which is allowed in
-lockdep.
+In order to use CAP flags to validate user policy, I review the latest kernel
+LPM policies, here is my understanding:
+ATA_LPM_UNKNOWN: default policy, no LPM
+ATA_LPM_MAX_POWER: disable LPM (hipm & dipm)
+ATA_LPM_MED_POWER: enable hipm partial
+ATA_LPM_MED_POWER_WITH_DIPM: enable hipm partial &dipm partial &slumber
+ATA_LPM_MIN_POWER_WITH_PARTIAL: enable hipm partial &dipm partial&slumber&devslp
+ATA_LPM_MIN_POWER: enable hipm slumber &dipm partial &slumber &devslp
+hipm: adpter initiated power mode transitions;
+dipm:*device* initiated power mode transitions;
 
-DEPT should not report at least what we know it's not a real deadlock.
-Otherwise there will be reports that is never fixed, which is quite
-unpleasant and reporters cannot examine all of them if it's real deadlock
-or not.
+ From my comprehension, user policy in [ATA_LPM_MED_POWER, ATA_LPM_MIN_POWER]
+need to be validated on adapter's capabilities (partial(y/n), slumber(y/n),
+devslp(y/n)), so, there exits the following cases:
+1, (n, n, n), validate  it to ATA_LPM_UNKNOWN;
+2, (n, n, y), validate  it to  ATA_LPM_MIN_POWER_WITH_PARTIAL/ATA_LPM_MIN_POWER?
+3, (n, y, n), validate  it to ATA_LPM_MIN_POWER;
+4, (n, y, y), validate  it to ATA_LPM_MIN_POWER;
+5, (y, n, n), validate  it to ATA_LPM_MED_POWER;
+6, (y, n, y), validate  it to ATA_LPM_MIN_POWER_WITH_PARTIAL;
+7, (y, y, n), default user policy;
+8, (y, y, y), default user policy;
+('y' for support, 'n' for not support)
 
-> > get rid of them), and also have a track record of finding things that
-> > lockdep doesn't.
-> 
-> I have some reports that wait_for_completion or waitqueue is involved.
-> It's worth noting those are not tracked by Lockdep. I'm checking if
-> those are true positive or not. I will share those reports once I get
-> more convinced for that.
-> 
-> > Maybe such reports have been sent out with the current situation, and
-> > I haven't seen them.
-> 
-> Dept reports usually have been sent to me privately, not in LKML. As I
-> told you, I'm planning to share them.
-> 
-> 	Byungchul
-> 
-> > 
-> >                  Linus
-> > 
+for case 2, I'm not quiet sure, for which may enable hipm partial/slumber.
 
--- 
-Thanks,
-Hyeonggon
+The way I provided above is quiet complicated and may be incomplete.
+It may not be realistic to take all into account, but I think case 1 should
+be taken seriously for which may cause the above PORT_IRQ_PHYRDY issue.
+
+Perhaps, I could refer to Mario's patches later (I have not found yet on
+kernel/git ^_^).
+
+>> 	 ahci_update_initial_lpm_policy(ap, hpriv);
+>>
+>> According to my current understanding, the currently submitted patches can
+>> solve the above problems, and definitely not the best. I haven't figured out
+>> good way to use CAP flags to patch. Hope you can give me some advice, thanks.
+>
+>
