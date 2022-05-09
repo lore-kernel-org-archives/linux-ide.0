@@ -2,59 +2,107 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89D6FC433F5
-	for <linux-ide@archiver.kernel.org>; Mon,  9 May 2022 17:58:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C021EC433F5
+	for <linux-ide@archiver.kernel.org>; Mon,  9 May 2022 20:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239899AbiEISCN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 9 May 2022 14:02:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55204 "EHLO
+        id S229825AbiEIUvW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 9 May 2022 16:51:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239984AbiEISCK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 May 2022 14:02:10 -0400
-Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF53722905E
-        for <linux-ide@vger.kernel.org>; Mon,  9 May 2022 10:58:03 -0700 (PDT)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru C8B8020C097E
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH 0/3] Make PATA transfer mode masks always being 32-bit
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <20220508204139.4961-1-s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <922c9d70-70b4-98be-3c12-8d867c0b16b6@omp.ru>
-Date:   Mon, 9 May 2022 20:57:59 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229539AbiEIUvR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 May 2022 16:51:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2E922B1DD1;
+        Mon,  9 May 2022 13:47:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 77FE061707;
+        Mon,  9 May 2022 20:47:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A498C385BA;
+        Mon,  9 May 2022 20:47:14 +0000 (UTC)
+Date:   Mon, 9 May 2022 16:47:12 -0400
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     Byungchul Park <byungchul.park@lge.com>
+Cc:     Hyeonggon Yoo <42.hyeyoo@gmail.com>, torvalds@linux-foundation.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, linux-kernel@vger.kernel.org,
+        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com
+Subject: Re: [PATCH RFC v6 00/21] DEPT(Dependency Tracker)
+Message-ID: <20220509164712.746e236b@gandalf.local.home>
+In-Reply-To: <20220509001637.GA6047@X58A-UD3R>
+References: <CAHk-=whnPePcffsNQM+YSHMGttLXvpf8LbBQ8P7HEdqFXaV7Lg@mail.gmail.com>
+        <1651795895-8641-1-git-send-email-byungchul.park@lge.com>
+        <YnYd0hd+yTvVQxm5@hyeyoo>
+        <20220509001637.GA6047@X58A-UD3R>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-In-Reply-To: <20220508204139.4961-1-s.shtylyov@omp.ru>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 5/8/22 11:41 PM, Sergey Shtylyov wrote:
+On Mon, 9 May 2022 09:16:37 +0900
+Byungchul Park <byungchul.park@lge.com> wrote:
 
-> The PATA transfer mode masks (direct and packed) in libata are sometimes
-> declared as *unsigned int* and sometimes as *unsigned long* (which is a
-> 64-bit type on 64-bit architectures), while the packed mask really only
-> uses 20 bits and the PIO/MWDMA/UDMA masks use up to 8 bits. Switching to
-> the uniform 32-bit masks saves siginificant amount of the object code...
+> CASE 2.
+> 
+>    lock L with depth n
+>    lock A
+>    lock_nested L' with depth n + 1
+>    ...
+>    unlock L'
+>    unlock A
+>    unlock L
+> 
+> This case is allowed by Lockdep.
+> This case is *NOT* allowed by DEPT cuz it's a *DEADLOCK*.
+> 
+> ---
+> 
+> The following scenario would explain why CASE 2 is problematic.
+> 
+>    THREAD X			THREAD Y
+> 
+>    lock L with depth n
+> 				lock L' with depth n
+>    lock A
+> 				lock A
+>    lock_nested L' with depth n + 1
 
-   Forgot to mention the patchset was against the 'for-next' branch of
-Damien's 'libata.git' repo.
-   In fact, I did even forgot to use a working branch while preparing the
-patches to posting -- did that atop of the real local copy of the 'for-next'
-branch. :-/
+I'm confused by what exactly you are saying is a deadlock above.
 
-[...]
+Are you saying that lock A and L' are inversed? If so, lockdep had better
+detect that regardless of L. A nested lock associates the the nesting with
+the same type of lock. That is, in lockdep nested tells lockdep not to
+trigger on the L and L' but it will not ignore that A was taken.
 
-MBR, Sergey
+-- Steve
+
+
+
+> 				lock_nested L'' with depth n + 1
+>    ...				...
+>    unlock L'			unlock L''
+>    unlock A			unlock A
+>    unlock L			unlock L'
+
