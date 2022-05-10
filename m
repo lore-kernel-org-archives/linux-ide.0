@@ -2,28 +2,29 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFDDDC433FE
-	for <linux-ide@archiver.kernel.org>; Tue, 10 May 2022 14:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C5EC433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 10 May 2022 23:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243656AbiEJOwS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 May 2022 10:52:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47656 "EHLO
+        id S238047AbiEJX2c (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 May 2022 19:28:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345658AbiEJOv5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 May 2022 10:51:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3AD918F27D;
-        Tue, 10 May 2022 07:13:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1A4CB615DD;
-        Tue, 10 May 2022 14:13:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16E0DC385C6;
-        Tue, 10 May 2022 14:12:55 +0000 (UTC)
-Date:   Tue, 10 May 2022 10:12:54 -0400
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     Byungchul Park <byungchul.park@lge.com>
+        with ESMTP id S238048AbiEJX2T (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 May 2022 19:28:19 -0400
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 383025DA73
+        for <linux-ide@vger.kernel.org>; Tue, 10 May 2022 16:28:13 -0700 (PDT)
+Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
+        by 156.147.23.51 with ESMTP; 11 May 2022 08:28:11 +0900
+X-Original-SENDERIP: 156.147.1.151
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
+        by 156.147.1.151 with ESMTP; 11 May 2022 08:28:11 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+Date:   Wed, 11 May 2022 08:26:33 +0900
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     Steven Rostedt <rostedt@goodmis.org>
 Cc:     Hyeonggon Yoo <42.hyeyoo@gmail.com>, torvalds@linux-foundation.org,
         damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
@@ -47,39 +48,50 @@ Cc:     Hyeonggon Yoo <42.hyeyoo@gmail.com>, torvalds@linux-foundation.org,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
 Subject: Re: [PATCH RFC v6 00/21] DEPT(Dependency Tracker)
-Message-ID: <20220510101254.33554885@gandalf.local.home>
-In-Reply-To: <20220509233838.GC6047@X58A-UD3R>
+Message-ID: <20220510232633.GA18445@X58A-UD3R>
 References: <CAHk-=whnPePcffsNQM+YSHMGttLXvpf8LbBQ8P7HEdqFXaV7Lg@mail.gmail.com>
-        <1651795895-8641-1-git-send-email-byungchul.park@lge.com>
-        <YnYd0hd+yTvVQxm5@hyeyoo>
-        <20220509001637.GA6047@X58A-UD3R>
-        <20220509164712.746e236b@gandalf.local.home>
-        <20220509233838.GC6047@X58A-UD3R>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+ <1651795895-8641-1-git-send-email-byungchul.park@lge.com>
+ <YnYd0hd+yTvVQxm5@hyeyoo>
+ <20220509001637.GA6047@X58A-UD3R>
+ <20220509164712.746e236b@gandalf.local.home>
+ <20220509233838.GC6047@X58A-UD3R>
+ <20220510101254.33554885@gandalf.local.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220510101254.33554885@gandalf.local.home>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, 10 May 2022 08:38:38 +0900
-Byungchul Park <byungchul.park@lge.com> wrote:
-
-> Yes, I was talking about A and L'.
+On Tue, May 10, 2022 at 10:12:54AM -0400, Steven Rostedt wrote:
+> On Tue, 10 May 2022 08:38:38 +0900
+> Byungchul Park <byungchul.park@lge.com> wrote:
 > 
-> > detect that regardless of L. A nested lock associates the the nesting with  
+> > Yes, I was talking about A and L'.
+> > 
+> > > detect that regardless of L. A nested lock associates the the nesting with  
+> > 
+> > When I checked Lockdep code, L' with depth n + 1 and L' with depth n
+> > have different classes in Lockdep.
 > 
-> When I checked Lockdep code, L' with depth n + 1 and L' with depth n
-> have different classes in Lockdep.
+> If that's the case, then that's a bug in lockdep.
 
-If that's the case, then that's a bug in lockdep.
+Yes, agree. I should've said 'Lockdep doesn't detect it currently.'
+rather than 'Lockdep can't detect it.'.
 
+I also think we make it for this case by fixing the bug in Lockdep.
+
+> > 
+> > That's why I said Lockdep cannot detect it. By any chance, has it
+> > changed so as to consider this case? Or am I missing something?
 > 
-> That's why I said Lockdep cannot detect it. By any chance, has it
-> changed so as to consider this case? Or am I missing something?
+> No, it's not that lockdep cannot detect it, it should detect it. If it is
+> not detecting it, then we need to fix that.
 
-No, it's not that lockdep cannot detect it, it should detect it. If it is
-not detecting it, then we need to fix that.
+Yes.
 
--- Steve
+	Byungchul
+> 
+> -- Steve
