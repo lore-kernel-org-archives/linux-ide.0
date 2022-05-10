@@ -2,38 +2,38 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E58EC433F5
-	for <linux-ide@archiver.kernel.org>; Mon,  9 May 2022 23:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D80EEC4332F
+	for <linux-ide@archiver.kernel.org>; Tue, 10 May 2022 00:33:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232695AbiEIXsg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 9 May 2022 19:48:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40540 "EHLO
+        id S233763AbiEJAht (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 9 May 2022 20:37:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233274AbiEIXrc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 May 2022 19:47:32 -0400
-Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9159226607F
-        for <linux-ide@vger.kernel.org>; Mon,  9 May 2022 16:40:15 -0700 (PDT)
-Received: from unknown (HELO lgeamrelo02.lge.com) (156.147.1.126)
-        by 156.147.23.52 with ESMTP; 10 May 2022 08:40:15 +0900
-X-Original-SENDERIP: 156.147.1.126
+        with ESMTP id S233731AbiEJAhs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 May 2022 20:37:48 -0400
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 902542AF60C
+        for <linux-ide@vger.kernel.org>; Mon,  9 May 2022 17:33:51 -0700 (PDT)
+Received: from unknown (HELO lgemrelse6q.lge.com) (156.147.1.121)
+        by 156.147.23.51 with ESMTP; 10 May 2022 09:33:49 +0900
+X-Original-SENDERIP: 156.147.1.121
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
-        by 156.147.1.126 with ESMTP; 10 May 2022 08:40:14 +0900
+        by 156.147.1.121 with ESMTP; 10 May 2022 09:33:49 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
-Date:   Tue, 10 May 2022 08:38:38 +0900
+Date:   Tue, 10 May 2022 09:32:13 +0900
 From:   Byungchul Park <byungchul.park@lge.com>
-To:     Steven Rostedt <rostedt@goodmis.org>
-Cc:     Hyeonggon Yoo <42.hyeyoo@gmail.com>, torvalds@linux-foundation.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
         joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
         chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, willy@infradead.org,
+        david@fromorbit.com, amir73il@gmail.com, bfields@fieldses.org,
         gregkh@linuxfoundation.org, kernel-team@lge.com,
         linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
         minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
@@ -46,93 +46,77 @@ Cc:     Hyeonggon Yoo <42.hyeyoo@gmail.com>, torvalds@linux-foundation.org,
         dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
+        hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com
 Subject: Re: [PATCH RFC v6 00/21] DEPT(Dependency Tracker)
-Message-ID: <20220509233838.GC6047@X58A-UD3R>
-References: <CAHk-=whnPePcffsNQM+YSHMGttLXvpf8LbBQ8P7HEdqFXaV7Lg@mail.gmail.com>
- <1651795895-8641-1-git-send-email-byungchul.park@lge.com>
- <YnYd0hd+yTvVQxm5@hyeyoo>
- <20220509001637.GA6047@X58A-UD3R>
- <20220509164712.746e236b@gandalf.local.home>
+Message-ID: <20220510003213.GD6047@X58A-UD3R>
+References: <1651652269-15342-1-git-send-email-byungchul.park@lge.com>
+ <YnmCE2iwa0MSqocr@mit.edu>
+ <YnmVgVQ7usoXnJ1N@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220509164712.746e236b@gandalf.local.home>
+In-Reply-To: <YnmVgVQ7usoXnJ1N@mit.edu>
 User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, May 09, 2022 at 04:47:12PM -0400, Steven Rostedt wrote:
-> On Mon, 9 May 2022 09:16:37 +0900
-> Byungchul Park <byungchul.park@lge.com> wrote:
+On Mon, May 09, 2022 at 06:28:17PM -0400, Theodore Ts'o wrote:
+> Oh, one other problem with DEPT --- it's SLOW --- the overhead is
+> enormous.  Using kvm-xfstests[1] running "kvm-xfstests smoke", here
+> are some sample times:
+
+Yes, right. DEPT has never been optimized. It rather turns on
+CONFIG_LOCKDEP and even CONFIG_PROVE_LOCKING when CONFIG_DEPT gets on
+because of porting issue. I have no choice but to rely on those to
+develop DEPT out of tree. Of course, that's what I don't like.
+
+Plus, for now, I'm focusing on removing false positives. Once it's
+considered settled down, I will work on performance optimizaition. But
+it should still keep relying on Lockdep CONFIGs and adding additional
+overhead on it until DEPT can be developed in the tree.
+
+> 			LOCKDEP		DEPT
+> Time to first test	49 seconds	602 seconds
+> ext4/001      		2 s		22 s
+> ext4/003		2 s		8 s
+> ext4/005		0 s		7 s
+> ext4/020		1 s		8 s
+> ext4/021		11 s		17 s
+> ext4/023		0 s		83 s
+> generic/001		4 s		76 s
+> generic/002		0 s		11 s
+> generic/003		10 s		19 s
 > 
-> > CASE 2.
-> > 
-> >    lock L with depth n
-> >    lock A
-> >    lock_nested L' with depth n + 1
-> >    ...
-> >    unlock L'
-> >    unlock A
-> >    unlock L
-> > 
-> > This case is allowed by Lockdep.
-> > This case is *NOT* allowed by DEPT cuz it's a *DEADLOCK*.
-> > 
-> > ---
-> > 
-> > The following scenario would explain why CASE 2 is problematic.
-> > 
-> >    THREAD X			THREAD Y
-> > 
-> >    lock L with depth n
-> > 				lock L' with depth n
-> >    lock A
-> > 				lock A
-> >    lock_nested L' with depth n + 1
+> There are some large variations; in some cases, some xfstests take 10x
+> as much time or more to run.  In fact, when I first started the
+> kvm-xfstests run with DEPT, I thought something had hung and that
+> tests would never start.  (In fact, with gce-xfstests the default
+> watchdog "something has gone terribly wrong with the kexec" had fired,
+> and I didn't get any test results using gce-xfstests at all.  If DEPT
+> goes in without any optimizations, I'm going to have to adjust the
+> watchdogs timers for gce-xfstests.)
+
+Thank you for informing it. I will go for the optimization as well.
+
+> The bottom line is that at the moment, between the false positives,
+> and the significant overhead imposed by DEPT, I would suggest that if
+> DEPT ever does go in, that it should be possible to disable DEPT and
+> only use the existing CONFIG_PROVE_LOCKING version of LOCKDEP, just
+> because DEPT is S - L - O - W.
 > 
-> I'm confused by what exactly you are saying is a deadlock above.
+> [1] https://github.com/tytso/xfstests-bld/blob/master/Documentation/kvm-quickstart.md
 > 
-> Are you saying that lock A and L' are inversed? If so, lockdep had better
+> 						- Ted
+> 
+> P.S.  Darrick and I both have disabled using LOCKDEP by default
+> because it slows down ext4 -g auto testing by a factor 2, and xfs -g
+> auto testing by a factor of 3.  So the fact that DEPT is a factor of
+> 2x to 10x or more slower than LOCKDEP when running various xfstests
+> tests should be a real concern.
 
-Hi Steven,
-
-Yes, I was talking about A and L'.
-
-> detect that regardless of L. A nested lock associates the the nesting with
-
-When I checked Lockdep code, L' with depth n + 1 and L' with depth n
-have different classes in Lockdep.
-
-That's why I said Lockdep cannot detect it. By any chance, has it
-changed so as to consider this case? Or am I missing something?
-
-> the same type of lock. That is, in lockdep nested tells lockdep not to
-> trigger on the L and L' but it will not ignore that A was taken.
-
-It will not ignore A but it would work like this:
-
-   THREAD X			THREAD Y
-
-   lock Ln
-				lock Ln
-   lock A
-				lock A
-   lock_nested Lm
-				lock_nested Lm
-
-So, Lockdep considers this case safe, actually not tho.
+DEPT is tracking way more objects than Lockdep so it's inevitable to be
+slower, but let me try to make it have the similar performance to
+Lockdep.
 
 	Byungchul
-
-> 
-> -- Steve
-> 
-> 
-> 
-> > 				lock_nested L'' with depth n + 1
-> >    ...				...
-> >    unlock L'			unlock L''
-> >    unlock A			unlock A
-> >    unlock L			unlock L'
