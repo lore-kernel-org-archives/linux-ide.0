@@ -2,111 +2,98 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B578C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 11 May 2022 01:18:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80629C433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 11 May 2022 06:27:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239492AbiEKBSU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 May 2022 21:18:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51372 "EHLO
+        id S237416AbiEKG1e (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 11 May 2022 02:27:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236772AbiEKBSS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 May 2022 21:18:18 -0400
-Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B4461580E5
-        for <linux-ide@vger.kernel.org>; Tue, 10 May 2022 18:18:16 -0700 (PDT)
-Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
-        by 156.147.23.52 with ESMTP; 11 May 2022 10:18:15 +0900
-X-Original-SENDERIP: 156.147.1.125
-X-Original-MAILFROM: byungchul.park@lge.com
-Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
-        by 156.147.1.125 with ESMTP; 11 May 2022 10:18:14 +0900
-X-Original-SENDERIP: 10.177.244.38
-X-Original-MAILFROM: byungchul.park@lge.com
-Date:   Wed, 11 May 2022 10:16:37 +0900
-From:   Byungchul Park <byungchul.park@lge.com>
-To:     tytso@mit.edu
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, willy@infradead.org,
-        david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com
-Subject: Re: [PATCH RFC v6 00/21] DEPT(Dependency Tracker)
-Message-ID: <20220511011637.GC18445@X58A-UD3R>
-References: <YnnAnzPFZZte/UR8@mit.edu>
- <1652161060-26531-1-git-send-email-byungchul.park@lge.com>
+        with ESMTP id S233219AbiEKG1e (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 May 2022 02:27:34 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6990A22EA74;
+        Tue, 10 May 2022 23:27:32 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id q76so929871pgq.10;
+        Tue, 10 May 2022 23:27:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=6QMLfxwOjrgEo2T024s8tceNALt/NjOUTGCdVzN17Y0=;
+        b=lrbiXuOxFTroo21bJnsXw8lr9QSBUnK/XFsQaWyDte2CMf+ycoWwOfCC4v4QsXIaFA
+         v3EOJP0bb7sWXSLScJL+uWVTk4ckOrs8s8wtuFOSm+xpeGk/VbobBqsTJx3yjXeNCqAl
+         TSVRYB1r7UaShsu4uZ/fjlXb2J8LKDOBQL/IZxFNKHNu1TrC+1/sC0NTm7aQYMwtSIvU
+         8Mi4akg3JxsMVgziu+MRSwxvmjap/XFPlaTeUH0l8yHVShfFbkWyaxIpaYiK4OaJPTyJ
+         WQnehxWCd12lf/l+aB7NBo9bVJ96nczhnI5cEMToNNK/+7snh0Gvi6SaIRUXxWk5YShU
+         CRAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=6QMLfxwOjrgEo2T024s8tceNALt/NjOUTGCdVzN17Y0=;
+        b=V7fMUxA2exlXqCEY7jRPDdstjCy31lDJrqRkawpbgB6B5YDvwxYbJaYAisFXYqS9ov
+         VBP2pG2P0TaWv6tvlOWxZwoBF3bufMJ796fmpQtXZq/CTaTQM2yevimzaE+bbSUAhDao
+         ZdFKffi5Lsf9sO4ut5fMBwelkRCqyS3RuTilqnmL06oHc0nJqr1F2hsfkXTCW+Qxi3gI
+         tyLCWy0rfqia2PLcMjko5zrcTFTfqfL8xpQpUSU5s8H/jJZQsyLzxRlB5P0hB1r9d/j+
+         2pUf1iYQ1eQ5aa9YIc2KxqVqSp2DGjz97rR+NGHnK9Icm8wvn0Vel8jhoXsd7i8aNXES
+         bdbg==
+X-Gm-Message-State: AOAM530YRlLWZ1IR0PUj6/fpAGfhDDp2Oyr50IYp3JZ+uFL8uTPmjtV7
+        0Ca04T1s5Ou81eU8TWHgzV8=
+X-Google-Smtp-Source: ABdhPJzV7M8WNxLMmly7NZZKEXlt2lXzDUTZ89qzMV6tl2sP0GFbTZJ9KfjTX4f3cCcU/Dstwic0Pg==
+X-Received: by 2002:a63:da13:0:b0:3c6:4c0:e2f9 with SMTP id c19-20020a63da13000000b003c604c0e2f9mr19585290pgh.493.1652250451978;
+        Tue, 10 May 2022 23:27:31 -0700 (PDT)
+Received: from localhost.localdomain ([202.120.234.246])
+        by smtp.googlemail.com with ESMTPSA id s64-20020a17090a2f4600b001d7f3bb11d7sm3173716pjd.53.2022.05.10.23.27.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 May 2022 23:27:31 -0700 (PDT)
+From:   Miaoqian Lin <linmq006@gmail.com>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jeff Garzik <jgarzik@redhat.com>,
+        David Daney <david.daney@cavium.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     linmq006@gmail.com
+Subject: [PATCH] ata: pata_octeon_cf: Fix refcount leak in octeon_cf_probe
+Date:   Wed, 11 May 2022 10:27:23 +0400
+Message-Id: <20220511062723.56652-1-linmq006@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1652161060-26531-1-git-send-email-byungchul.park@lge.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, May 10, 2022 at 02:37:40PM +0900, Byungchul Park wrote:
-> Ted wrote:
-> > On Tue, May 10, 2022 at 09:32:13AM +0900, Byungchul Park wrote:
-> > > DEPT is tracking way more objects than Lockdep so it's inevitable to be
-> > > slower, but let me try to make it have the similar performance to
-> > > Lockdep.
-> > 
-> > In order to eliminate some of these false positives, I suspect it's
-> > going to increase the number of object classes that DEPT will need to
-> > track even *more*.  At which point, the cost/benefit of DEPT may get
-> > called into question, especially if all of the false positives can't
-> > be suppressed.
-> 
-> Look. Let's talk in general terms. There's no way to get rid of the
-> false positives all the way. It's a decision issue for *balancing*
-> between considering potential cases and only real ones. Definitely,
-> potential is not real. The more potential things we consider, the higher
-> the chances are, that false positives appear.
-> 
-> But yes. The advantage we'd take by detecting potential ones should be
-> higher than the risk of being bothered by false ones. Do you think a
-> tool is useless if it produces a few false positives? Of course, it'd
-> be a problem if it's too many, but otherwise, I think it'd be a great
-> tool if the advantage > the risk.
-> 
-> Don't get me wrong here. It doesn't mean DEPT is perfect for now. The
-> performance should be improved and false alarms that appear should be
-> removed, of course. I'm talking about the direction.
-> 
-> For now, there's no tool to track wait/event itself in Linux kernel -
-> a subset of the functionality exists tho. DEPT is the 1st try for that
-> purpose and can be a useful tool by the right direction.
-> 
-> I know what you are concerning about. I bet it's false positives that
-> are going to bother you once merged. I'll insist that DEPT shouldn't be
-> used as a mandatory testing tool until considered stable enough. But
-> what about ones who would take the advantage use DEPT. Why don't you
-> think of folks who will take the advantage from the hints about
-> dependency of synchronization esp. when their subsystem requires very
-> complicated synchronization? Should a tool be useful only in a final
-> testing stage? What about the usefulness during development stage?
-> 
-> It's worth noting DEPT works with any wait/event so any lockups e.g.
-> even by HW-SW interface, retry logic or the like can be detected by DEPT
-> once all waits and events are tagged properly. I believe the advantage
-> by that is much higher than the bad side facing false alarms. It's just
-> my opinion. I'm goning to respect the majority opinion.
+of_find_device_by_node() takes reference, we should use put_device()
+to release it when not need anymore.
+Add missing put_device() in error path to avoid refcount
+leak.
 
-s/take advantage/have the benefit/g
+Fixes: 43f01da0f279 ("MIPS/OCTEON/ata: Convert pata_octeon_cf.c to use device tree.")
+Signed-off-by: Miaoqian Lin <linmq006@gmail.com>
+---
+ drivers/ata/pata_octeon_cf.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-	Byungchul
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index 6b5ed3046b44..65688459acf1 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -857,12 +857,14 @@ static int octeon_cf_probe(struct platform_device *pdev)
+ 				res_dma = platform_get_resource(dma_dev, IORESOURCE_MEM, 0);
+ 				if (!res_dma) {
+ 					of_node_put(dma_node);
++					put_device(&dma_dev->dev);
+ 					return -EINVAL;
+ 				}
+ 				cf_port->dma_base = (u64)devm_ioremap(&pdev->dev, res_dma->start,
+ 									 resource_size(res_dma));
+ 				if (!cf_port->dma_base) {
+ 					of_node_put(dma_node);
++					put_device(&dma_dev->dev);
+ 					return -EINVAL;
+ 				}
+ 
+-- 
+2.25.1
+
