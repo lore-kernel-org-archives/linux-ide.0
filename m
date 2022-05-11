@@ -2,48 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5778DC43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A32C4332F
 	for <linux-ide@archiver.kernel.org>; Wed, 11 May 2022 23:19:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349204AbiEKXTF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 11 May 2022 19:19:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46264 "EHLO
+        id S1349220AbiEKXTD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 11 May 2022 19:19:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349112AbiEKXSe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 May 2022 19:18:34 -0400
+        with ESMTP id S1349124AbiEKXSf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 May 2022 19:18:35 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 75F39188E5A;
-        Wed, 11 May 2022 16:18:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DB96418C054;
+        Wed, 11 May 2022 16:18:30 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 5A2D2BBE;
-        Thu, 12 May 2022 02:19:13 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 5A2D2BBE
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 02794BAA;
+        Thu, 12 May 2022 02:19:18 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 02794BAA
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1652311154;
-        bh=kAvAo0Xyh3tr65Bbm2f0YNCTB8PUXE60W2QC7FBw7fk=;
+        d=baikalelectronics.ru; s=mail; t=1652311158;
+        bh=jCdYikKW5d7lD5eqc9AjF8QycAGAXvdMRkyDuad2vIQ=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=AfayDkrKrq4CdV3rUMm4RKLKG0f7ypDLYVrRDyiPS0KlGUVrMXVesEK2sOdtXqlL3
-         Ih/ZPMCAhmzcdWIMHAtQpi+mmUYnaUPW/zi5HBF3tleLJHM9195CXx3Mp5hcd168XN
-         piOhy4WoVDWXImyN3+tcFprKHbkLGYIeC/V1lRFI=
+        b=VBm5FD5UsBUZT4caGMLcArBUdwpDV0ubwbM24W0LA4CAOnWFQUHqsX2RzQfr3+ZmC
+         yzfod5bwdlRdjOjeLgpjtlsQ0hX/UvEEdK2xT0T1CuvUAQEaOHqvBDee3BuzjgnelU
+         6tazy/gu1PtnTv2bvM6GQAMKUJm6aCul7JJ9thfo=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 12 May 2022 02:18:25 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 12 May 2022 02:18:30 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Patrice Chotard <patrice.chotard@foss.st.com>
+        Jens Axboe <axboe@kernel.dk>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH v3 10/23] ata: libahci_platform: Parse ports-implemented property in resources getter
-Date:   Thu, 12 May 2022 02:17:57 +0300
-Message-ID: <20220511231810.4928-11-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH v3 14/23] ata: libahci: Discard redundant force_port_map parameter
+Date:   Thu, 12 May 2022 02:18:01 +0300
+Message-ID: <20220511231810.4928-15-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -54,79 +50,104 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The ports-implemented property is mainly used on the OF-based platforms
-with no ports mapping initialized by a bootloader/BIOS firmware. Seeing
-the same of_property_read_u32()-based pattern has already been implemented
-in the generic AHCI LLDD (glue) driver and in the Mediatek, St AHCI
-drivers let's move the property read procedure to the generic
-ahci_platform_get_resources() method. Thus we'll have the forced ports
-mapping feature supported for each OF-based platform which requires that,
-and stop re-implementing the same pattern in there a bit simplifying the
-code.
+Currently there are four port-map-related fields declared in the
+ahci_host_priv structure and used to setup the HBA ports mapping. First
+the ports-mapping is read from the PI register and immediately stored in
+the saved_port_map field. If forced_port_map is initialized with non-zero
+value then its value will have greater priority over the value read from
+PI, thus it will override the saved_port_map field. That value will be
+then masked by a non-zero mask_port_map field and after some sanity checks
+it will be stored in the ahci_host_priv.port_map field as a final port
+mapping.
+
+As you can see the logic is a bit too complicated for such a simple task.
+We can freely get rid from at least one of the fields with no change to
+the implemented semantic. The force_port_map field can be replaced with
+taking non-zero saved_port_map value into account. So if saved_port_map is
+pre-initialized by the low level drivers (platform drivers) then it will
+have greater priority over the value read from PI register and will be
+used as actual HBA ports mapping later on. Thus the ports map forcing task
+will be just transferred from the force_port_map to saved_port_map field.
+
+This modification will perfectly fit into the feature of having OF-based
+initialization of the HW-init HBA CSR fields we are about to introduce in
+the next commit.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/ata/ahci_mtk.c         | 2 --
- drivers/ata/ahci_platform.c    | 3 ---
- drivers/ata/ahci_st.c          | 3 ---
- drivers/ata/libahci_platform.c | 3 +++
- 4 files changed, 3 insertions(+), 8 deletions(-)
+ drivers/ata/ahci.c             |  2 +-
+ drivers/ata/ahci.h             |  1 -
+ drivers/ata/libahci.c          | 10 ++++++----
+ drivers/ata/libahci_platform.c |  2 +-
+ 4 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
-index 1f6c85fde983..c056378e3e72 100644
---- a/drivers/ata/ahci_mtk.c
-+++ b/drivers/ata/ahci_mtk.c
-@@ -118,8 +118,6 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
- 				   SYS_CFG_SATA_EN);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 397dfd27c90d..9bc8fa77e92f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -656,7 +656,7 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ {
+ 	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
+ 		dev_info(&pdev->dev, "JMB361 has only one port\n");
+-		hpriv->force_port_map = 1;
++		hpriv->saved_port_map = 1;
  	}
  
--	of_property_read_u32(np, "ports-implemented", &hpriv->force_port_map);
--
- 	return 0;
- }
+ 	/*
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index f501531bd1b3..0e66446a5883 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -327,7 +327,6 @@ struct ahci_port_priv {
+ struct ahci_host_priv {
+ 	/* Input fields */
+ 	unsigned int		flags;		/* AHCI_HFLAG_* */
+-	u32			force_port_map;	/* force port map */
+ 	u32			mask_port_map;	/* mask out particular bits */
  
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 28a8de5b48b9..9b56490ecbc3 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -56,9 +56,6 @@ static int ahci_probe(struct platform_device *pdev)
- 	if (rc)
- 		return rc;
+ 	void __iomem *		mmio;		/* bus-independent mem map */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index cf8c7fd59ada..000a7072614f 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -453,7 +453,6 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 	 * reset.  Values without are used for driver operation.
+ 	 */
+ 	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
+-	hpriv->saved_port_map = port_map = readl(mmio + HOST_PORTS_IMPL);
  
--	of_property_read_u32(dev->of_node,
--			     "ports-implemented", &hpriv->force_port_map);
--
- 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
- 		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+ 	/* CAP2 register is only defined for AHCI 1.2 and later */
+ 	vers = readl(mmio + HOST_VERSION);
+@@ -517,10 +516,13 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 		cap &= ~HOST_CAP_SXS;
+ 	}
  
-diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-index 7526653c843b..068621099c00 100644
---- a/drivers/ata/ahci_st.c
-+++ b/drivers/ata/ahci_st.c
-@@ -168,9 +168,6 @@ static int st_ahci_probe(struct platform_device *pdev)
+-	if (hpriv->force_port_map && port_map != hpriv->force_port_map) {
++	/* Override the HBA ports mapping if the platform needs it */
++	port_map = readl(mmio + HOST_PORTS_IMPL);
++	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
+ 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
+-			 port_map, hpriv->force_port_map);
+-		port_map = hpriv->force_port_map;
++			 port_map, hpriv->saved_port_map);
++		port_map = hpriv->saved_port_map;
++	} else {
+ 		hpriv->saved_port_map = port_map;
+ 	}
  
- 	st_ahci_configure_oob(hpriv->mmio);
- 
--	of_property_read_u32(dev->of_node,
--			     "ports-implemented", &hpriv->force_port_map);
--
- 	err = ahci_platform_init_host(pdev, hpriv, &st_ahci_port_info,
- 				      &ahci_platform_sht);
- 	if (err) {
 diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 4e54e19f07b2..f7f9cac10cb1 100644
+index f5ee2f9d014b..56aced7a76cd 100644
 --- a/drivers/ata/libahci_platform.c
 +++ b/drivers/ata/libahci_platform.c
-@@ -512,6 +512,9 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 		goto err_out;
+@@ -553,7 +553,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
  	}
  
-+	of_property_read_u32(dev->of_node,
-+			     "ports-implemented", &hpriv->force_port_map);
-+
+ 	of_property_read_u32(dev->of_node,
+-			     "ports-implemented", &hpriv->force_port_map);
++			     "ports-implemented", &hpriv->saved_port_map);
+ 
  	if (child_nodes) {
  		for_each_child_of_node(dev->of_node, child) {
- 			u32 port;
 -- 
 2.35.1
 
