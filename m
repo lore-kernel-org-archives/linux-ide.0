@@ -2,84 +2,100 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63105C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 11 May 2022 11:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA4BAC433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 11 May 2022 23:18:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231463AbiEKLqo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 11 May 2022 07:46:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53554 "EHLO
+        id S1349102AbiEKXSe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 11 May 2022 19:18:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230470AbiEKLqn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 May 2022 07:46:43 -0400
-Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C4103CFD0;
-        Wed, 11 May 2022 04:46:41 -0700 (PDT)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 8B33420CD7A4
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH] ata: pata_octeon_cf: Fix refcount leak in octeon_cf_probe
-To:     Miaoqian Lin <linmq006@gmail.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Jeff Garzik <jgarzik@redhat.com>,
-        "David Daney" <david.daney@cavium.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20220511062723.56652-1-linmq006@gmail.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <6af08961-0fd9-513f-cb13-0e77529728f2@omp.ru>
-Date:   Wed, 11 May 2022 14:46:38 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S1348900AbiEKXSa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 May 2022 19:18:30 -0400
+Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CC18817334C;
+        Wed, 11 May 2022 16:18:18 -0700 (PDT)
+Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 57648BB4;
+        Thu, 12 May 2022 02:19:05 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 57648BB4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baikalelectronics.ru; s=mail; t=1652311145;
+        bh=ckfaK5irrS7Tron+bv7kr4WMcSYdpEv5KvtAmATvlro=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=MnneyUcN2UNKynVPlCvSxFcNAiGO7bkZy1zl1OdjFk7lBl91lL9ty4sGcfNB2TX+5
+         SK0iEHSa7/PTAWUFg2e+7NyMOdIfBXi68sewfFb8JlwFYG1uA5xbocH0QbL2A87Yhr
+         6SLRspRXgknzwAyDMtOn3Jb5Txi6MBxSqrsgeInM=
+Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 12 May 2022 02:18:17 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Linus Walleij <linus.walleij@linaro.org>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+Subject: [PATCH v3 04/23] dt-bindings: ata: sata: Extend number of SATA ports
+Date:   Thu, 12 May 2022 02:17:51 +0300
+Message-ID: <20220511231810.4928-5-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-In-Reply-To: <20220511062723.56652-1-linmq006@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+The denoted in the description upper limit only concerns the Port
+Multipliers, but not the actual SATA ports. It's an external device
+attached to a SATA port in order to access more than one SATA-drive. So
+when it's attached to a SATA port it just extends the port capability
+while the number of actual SATA ports stays the same. For instance on AHCI
+controllers the number of actual ports is determined by the CAP.NP field
+and the PI (Ports Implemented) register. AFAICS in general the maximum
+number of SATA ports depends on the particular controller implementation.
+Generic AHCI controller can't have more than 32 ports (since CAP.NP is of
+5 bits wide and PI register is 32-bits size), while DWC AHCI SATA
+controller can't be configured with more than 8 ports activated. So let's
+discard the SATA ports reg-property restrictions and just make sure that
+it consists of a single reg-item.
 
-On 5/11/22 9:27 AM, Miaoqian Lin wrote:
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
-> of_find_device_by_node() takes reference, we should use put_device()
-> to release it when not need anymore.
-> Add missing put_device() in error path to avoid refcount
-> leak.
-> 
-> Fixes: 43f01da0f279 ("MIPS/OCTEON/ata: Convert pata_octeon_cf.c to use device tree.")
-> Signed-off-by: Miaoqian Lin <linmq006@gmail.com>
-> ---
->  drivers/ata/pata_octeon_cf.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-> index 6b5ed3046b44..65688459acf1 100644
-> --- a/drivers/ata/pata_octeon_cf.c
-> +++ b/drivers/ata/pata_octeon_cf.c
-> @@ -857,12 +857,14 @@ static int octeon_cf_probe(struct platform_device *pdev)
->  				res_dma = platform_get_resource(dma_dev, IORESOURCE_MEM, 0);
->  				if (!res_dma) {
->  					of_node_put(dma_node);
-> +					put_device(&dma_dev->dev);
->  					return -EINVAL;
->  				}
->  				cf_port->dma_base = (u64)devm_ioremap(&pdev->dev, res_dma->start,
->  									 resource_size(res_dma));
->  				if (!cf_port->dma_base) {
->  					of_node_put(dma_node);
-> +					put_device(&dma_dev->dev);
->  					return -EINVAL;
->  				}
->  
+---
 
-   It seems you forgot to call put_device() at the end of the enclosing *if*, where of_node_put()
-is also called...
+Changelog v2:
+- Add comma and replace "channel" with "SATA port" in the reg property
+  description (@Damien).
+---
+ Documentation/devicetree/bindings/ata/sata-common.yaml | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-MBR, Sergey
+diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
+index 7ac77b1c5850..9c9c621761ca 100644
+--- a/Documentation/devicetree/bindings/ata/sata-common.yaml
++++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
+@@ -41,11 +41,10 @@ patternProperties:
+     properties:
+       reg:
+         minimum: 0
+-        maximum: 14
+         description:
+-          The ID number of the drive port SATA can potentially use a port
+-          multiplier making it possible to connect up to 15 disks to a single
+-          SATA port.
++          The ID number of the SATA port. Aside with being directly used,
++          each port can have a Port Multiplier attached thus allowing to
++          access more than one drive by means of a single SATA port.
+ 
+ additionalProperties: true
+ 
+-- 
+2.35.1
+
