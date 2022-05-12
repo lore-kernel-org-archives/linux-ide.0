@@ -2,73 +2,74 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCCF1C433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 06:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FBDEC433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 06:58:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350574AbiELGyp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 02:54:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41582 "EHLO
+        id S1346617AbiELG6A (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 02:58:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238889AbiELGyo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:54:44 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5941F21F1F9;
-        Wed, 11 May 2022 23:54:43 -0700 (PDT)
+        with ESMTP id S1350613AbiELG4o (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:56:44 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04B751836F;
+        Wed, 11 May 2022 23:56:43 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 18B4B21C97;
-        Thu, 12 May 2022 06:54:42 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id B75F51F91A;
+        Thu, 12 May 2022 06:56:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1652338482; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652338601; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=QOwIOvq9h82O6Kf9zmG0oPYVnBBO3fd3gQ7NdWfuTsY=;
-        b=jdtrMGEIE/XUM1k9S6P6YjCGCtva0SelKbt5tyAt7nc2QOx6VL8+6Lq4T3M2TQWkRZbImC
-        D1a5TIV9Wdn8lNcOutxxUfaUEtCnGnwhSXubvpm3Sp8L0MJzexeuVYHqjvc7UrwgZNmq0d
-        qP78xDyxKC7iBiulumbHEiTpi1xpEBg=
+        bh=ynfVyISLTocoM+sP5RWAS58Ty5c+joUC7e/SGWdE+18=;
+        b=Syw6WsqdVcqFLDaZzsl+SWMrTmcGh2z6NY7TO/vV5kDe7WWbv4h6m5eRAjbZxXkFqyJpUP
+        IhMfTLAvEruURlOP6Efk6CKIcuG4BpwSky4a2/uzHaw5VGw5XRTcMYYS9wajdkP6h685UQ
+        t/6rN5C7GiNlV/EVf1ZMiEoSAhDXGbc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1652338482;
+        s=susede2_ed25519; t=1652338601;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=QOwIOvq9h82O6Kf9zmG0oPYVnBBO3fd3gQ7NdWfuTsY=;
-        b=1NW8T78kjhRQRC/d1+MmA4WyWEwNRj3Vfc5RzdXtAu+ThA7J9gbTNbKXC3mu5NNU3iUaFU
-        bOTdARje4LPapPAg==
+        bh=ynfVyISLTocoM+sP5RWAS58Ty5c+joUC7e/SGWdE+18=;
+        b=6kpqeVcGuGhqU/hg86ZGgh4ayDEm95Yjwg18QAMcWqXORog6QaFW56gKF4HdGhE+iJGnVs
+        2b/auzxAfL5wNMDA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E8B6B13A97;
-        Thu, 12 May 2022 06:54:41 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9412713A97;
+        Thu, 12 May 2022 06:56:41 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id BkoLNjGvfGJtWAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:54:41 +0000
-Message-ID: <447f74bb-e1d7-3f6c-9cf8-1db774582803@suse.de>
-Date:   Thu, 12 May 2022 08:54:41 +0200
+        id hprbI6mvfGJSWQAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:56:41 +0000
+Message-ID: <5d7ae3e5-3f21-a610-7beb-274ede95850d@suse.de>
+Date:   Thu, 12 May 2022 08:56:41 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v3 11/23] ata: libahci_platform: Introduce reset
- assertion/deassertion methods
+Subject: Re: [PATCH v3 12/23] dt-bindings: ata: ahci: Add platform capability
+ properties
 Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
 Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-12-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-13-Sergey.Semin@baikalelectronics.ru>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220511231810.4928-12-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220511231810.4928-13-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -76,54 +77,31 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 5/12/22 01:17, Serge Semin wrote:
-> Currently the ACHI-platform library supports only the assert and deassert
-> reset signals and ignores the platforms with self-deasserting reset lines.
-> That prone to having the platforms with self-deasserting reset method
-> misbehaviour when it comes to resuming from sleep state after the clocks
-> have been fully disabled. For such cases the controller needs to be fully
-> reset all over after the reference clocks are enabled and stable,
-> otherwise the controller state machine might be in an undetermined state.
-> 
-> The best solution would be to auto-detect which reset method is supported
-> by the particular platform and use it implicitly in the framework of the
-> ahci_platform_enable_resources()/ahci_platform_disable_resources()
-> methods. Alas it can't be implemented due to the AHCI-platform library
-> already supporting the shared reset control lines. As [1] says in such
-> case we have to use only one of the next methods:
-> + reset_control_assert()/reset_control_deassert();
-> + reset_control_reset()/reset_control_rearm().
-> If the driver had an exclusive control over the reset lines we could have
-> been able to manipulate the lines with no much limitation and just used
-> the combination of the methods above to cover all the possible
-> reset-control cases. Since the shared reset control has already been
-> advertised and couldn't be changed with no risk to breaking the platforms
-> relying on it, we have no choice but to make the platform drivers to
-> determine which reset methods the platform reset system supports.
-> 
-> In order to implement both types of reset control support we suggest to
-> introduce the new AHCI-platform flag: AHCI_PLATFORM_RST_TRIGGER, which
-> when passed to the ahci_platform_get_resources() method together with the
-> AHCI_PLATFORM_GET_RESETS flag will indicate that the reset lines are
-> self-deasserting thus the reset_control_reset()/reset_control_rearm() will
-> be used to control the reset state. Otherwise the
-> reset_control_deassert()/reset_control_assert() methods will be utilized.
-> 
-> [1] Documentation/driver-api/reset.rst
+> In case if the platform doesn't have BIOS or a comprehensive firmware
+> installed then the HBA capability flags will be left uninitialized. As a
+> good alternative we can define a set AHCI DT-node properties to describe
+> all of HW-init capabilities flags. Luckily there aren't too many of them.
+> SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
+> support determine the corresponding feature availability for whole HBA by
+> means of the "hba-sss" and "hba-smps" properties.  Each port can have the
+> "hba-{hpcp,mpsp,cpd,esp,fbscp}" defined indicatating that the port
+> supports the next functionality: HPCP - HotPlug capable port, MPSP -
+> Mechanical Presence Switch attached to a port, CPD - Cold Plug detection,
+> ESP - External SATA Port (eSATA), FBSCP - FIS-based switching capable
+> port.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > 
 > ---
 > 
-> Changelog v2:
-> - Convert the ahci_platform_assert_rsts() method to returning int status
->    (@Damien).
-> - Fix some grammar mistakes in the ahci_platform_deassert_rsts() doc
->    (@Damien).
+> Alternatively we could define them as a bitfield, but having a set of
+> boolean properties seemed a better idea since in that case we can
+> implement a simple inter-dependency rules for them, which can't be done
+> should we take the bitfields path.
 > ---
->   drivers/ata/ahci.h             |  1 +
->   drivers/ata/libahci_platform.c | 50 ++++++++++++++++++++++++++++++----
->   include/linux/ahci_platform.h  |  5 +++-
->   3 files changed, 50 insertions(+), 6 deletions(-)
+>   .../devicetree/bindings/ata/ahci-common.yaml  | 66 +++++++++++++++++++
+>   .../bindings/ata/ahci-platform.yaml           | 11 ++++
+>   2 files changed, 77 insertions(+)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
