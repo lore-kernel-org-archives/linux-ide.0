@@ -2,111 +2,156 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6C73C433FE
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 12:04:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B0CC433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 12:32:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349453AbiELMEq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 08:04:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58324 "EHLO
+        id S1353794AbiELMcA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 08:32:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346106AbiELMEq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 08:04:46 -0400
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77EFA22A89A;
-        Thu, 12 May 2022 05:04:44 -0700 (PDT)
-Received: by mail-lf1-x12a.google.com with SMTP id b18so8625297lfv.9;
-        Thu, 12 May 2022 05:04:44 -0700 (PDT)
+        with ESMTP id S1353770AbiELMbz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 08:31:55 -0400
+Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 200804AE09;
+        Thu, 12 May 2022 05:31:51 -0700 (PDT)
+Received: by mail-lj1-x22c.google.com with SMTP id m23so6342085ljc.0;
+        Thu, 12 May 2022 05:31:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=5KdZkGPOMKFoYWGn89lEH4wEYbxX5oNPD2nPGAq2itM=;
-        b=YDfCLtXCLPWwDETkhJdG6lt+L0IATMHdACKjlCie0JtR+zxfARZzWLfKVQRQGhez29
-         v+LjTnCzCImXRWYO9TjE4dDVFag001hDJmwU9g9hDrwa3IFpAFTSgoLeAEljUYtz765B
-         xFjjNKRoXuAj32jnlD/iVFCKVXFXpi5ou5dcD2bixzARGhP3J8pJwdrna6JYfhqam/TW
-         tTeaaVTnM+M5rENqICgX093HvrATRiP7nSNCYSGeZczs3pZcxJ05nn/nMOmrIXfLLmub
-         lD/NEX+qYzPgHGGHG/vTvUEPTneOWFVPhFB0mHPlgoUvhMTXydZC7YD+9naDrfmCAjrp
-         cdpw==
+        bh=1nGNpikUs8vk4+aJD/NKpap25jqeBIDRUKybH2Zwqok=;
+        b=E4oAmZY4A0ZUSqx3z+F0WjMqHKJSpUkcD683dWO7uCrk1433e1ylnPkIEdJ3n8tv9d
+         QFyQQsx72iG73vT3HWD1rKAiXNEcjQWAQxeGKXpmmFQ41loK8I74ot5D7OvPPtFyqlGb
+         UR83VoKixoJGUjzGuNgKFTBGLcZxvJjfiDas74G9q8v3CjG/8e6UggEB9RcpvsGWLlyI
+         9VG7hHaswyeZt31MVo1xLcFYYIja6fxXUVMqJCCBVpRgFkbeD8E9iEWV/jMNiCnqMsxJ
+         JLySwvfm0P0333AvGCcLm54fau8RZPwSziskG2cIOxGlQ4BCSh3ptU+vy+xKEfwcch0r
+         tZyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=5KdZkGPOMKFoYWGn89lEH4wEYbxX5oNPD2nPGAq2itM=;
-        b=tXeDJsWo9EENPqsnIoaHxEtz9r4nZuBp3BiOhQdV8cfDJOLrUw2LAMhKzalUuH4j8U
-         ufi+YU9EvOvysNHlUzB5GTWpnjRLETfE90OhbTgy3bqg4CF1xzgmasMEh37SaUo3lxxg
-         u/xswYoUtd/FahD6rLZrzpGxQzKdCKLNj48fUFjXXfWEzz8Z5+iH2ikA5nHxE8AaQkLD
-         cExBKJDSDqyN39h7agp8onOAtbh2mTSe3dgtzWNZkqvFk2tss8ttpUpAvLf7LJWh4RAN
-         ZlcNX8Mp7CnJH+mfgwPjjgH+Isvc667aAAC/wsOd8sC8BkJj5hTUGGlPFXgujuToFcw/
-         LE8A==
-X-Gm-Message-State: AOAM531ngtelU3hMXKzCGYCEZH1vZPdwPOqmE7D2xLx+pZHQYWNn2N9w
-        V9ot96WM1N3d1NVFENAi/dM=
-X-Google-Smtp-Source: ABdhPJxhedCMd7PTu1DAntYZHh0feSOaw5PZ7n6Eg55nP+HDLFfR4rMnWT75CnH+2j+xEO0U92Wx9Q==
-X-Received: by 2002:a05:6512:554:b0:472:1891:a14b with SMTP id h20-20020a056512055400b004721891a14bmr23815604lfl.677.1652357081972;
-        Thu, 12 May 2022 05:04:41 -0700 (PDT)
+        bh=1nGNpikUs8vk4+aJD/NKpap25jqeBIDRUKybH2Zwqok=;
+        b=DMdvVXqKOXt7itawx5J915+bXmS16EKEo/F6QUgHyPHz4TzQBbxuHFYeLz/JRdFMbE
+         GzKP5IeFNEKglN4jkzcKWsTAqAkLRN+Cf2Gbv+WYfSXXdjce5rS8dvMRGv3njAFYVZil
+         ZmhW/QUOCRk3p2b1VTnEK9OMXsJ26oAxK8pIO12AKuxOLsSbRf4TKuoioHloW0Yby1+7
+         GXnGmHV/HYh1Htv5a8HF8MIsQ27gwOCIsydiU2iDawnWnlvPAwLLWBiIlOc7vnbT7r2D
+         bzg2WOIIp08evh0+IK0FfccoT2jQR7ifNzqQYKNjy1U9jDBVoTBcuYt9NkEfpsdHLsnj
+         D6LA==
+X-Gm-Message-State: AOAM530Ex4WcvReUXlU5OVO3foMUdQSed5z9PqeNcpRmMtX0tnmX5CWV
+        1vnKX1Xf13uyKafsa0W1+aA=
+X-Google-Smtp-Source: ABdhPJzWOhBlKh2AZ9FLigPh2HroCkxI1czqj30olnv2HQZTPhPzwsTMmKpIgl47dJKBJ34Hg+QrEA==
+X-Received: by 2002:a2e:82c3:0:b0:250:c47e:c3ab with SMTP id n3-20020a2e82c3000000b00250c47ec3abmr13518987ljh.393.1652358709589;
+        Thu, 12 May 2022 05:31:49 -0700 (PDT)
 Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id m3-20020a056512114300b0047255d21193sm757969lfg.194.2022.05.12.05.04.40
+        by smtp.gmail.com with ESMTPSA id n6-20020a195506000000b0047415cd1ec3sm766340lfe.165.2022.05.12.05.31.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 May 2022 05:04:41 -0700 (PDT)
-Date:   Thu, 12 May 2022 15:04:39 +0300
+        Thu, 12 May 2022 05:31:48 -0700 (PDT)
+Date:   Thu, 12 May 2022 15:31:46 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hannes Reinecke <hare@suse.de>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 03/23] dt-bindings: ata: ahci-platform: Clarify common
- AHCI props constraints
-Message-ID: <20220512120439.uysohhdllax6upim@mobilestation>
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 05/23] ata: libahci_platform: Explicitly set rc on
+ devres_alloc failure
+Message-ID: <20220512123146.zkuftdu7fm26r6mp@mobilestation>
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-4-Sergey.Semin@baikalelectronics.ru>
- <68d51092-1a4c-0d42-e28d-c3b5316d580a@gmail.com>
+ <20220511231810.4928-6-Sergey.Semin@baikalelectronics.ru>
+ <4bd4318b-a753-6453-a815-716fbfffab3f@suse.de>
+ <9a1ad8f4-7f60-a941-940d-eca00b1f533b@opensource.wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <68d51092-1a4c-0d42-e28d-c3b5316d580a@gmail.com>
+In-Reply-To: <9a1ad8f4-7f60-a941-940d-eca00b1f533b@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, May 12, 2022 at 11:11:22AM +0300, Sergei Shtylyov wrote:
-> Hello!
+On Thu, May 12, 2022 at 12:32:42PM +0200, Damien Le Moal wrote:
+> On 2022/05/12 8:27, Hannes Reinecke wrote:
+> > On 5/12/22 01:17, Serge Semin wrote:
+> >> It's better for readability and maintainability to explicitly assign an
+> >> error number to the variable used then as a return value from the method
+> >> on the cleanup-on-error path. So adding new code in the method we won't
+> >> have to think whether the overridden rc-variable is set afterward in case
+> >> of an error. Saving one line of code doesn't worth it especially seeing
+> >> the rest of the ahci_platform_get_resources() function errors handling
+> >> blocks do explicitly write errno to rc.
+> >>
+> >> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> >>
+> >> ---
+> >>
+> >> Changelog v2:
+> >> - Drop rc variable initialization (@Damien)
+> >> ---
+> >>   drivers/ata/libahci_platform.c | 6 ++++--
+> >>   1 file changed, 4 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> >> index 32495ae96567..f7f9bfcfc164 100644
+> >> --- a/drivers/ata/libahci_platform.c
+> >> +++ b/drivers/ata/libahci_platform.c
+> >> @@ -389,7 +389,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+> >>   	struct ahci_host_priv *hpriv;
+> >>   	struct clk *clk;
+> >>   	struct device_node *child;
+> >> -	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
+> >> +	int i, enabled_ports = 0, rc, child_nodes;
+> >>   	u32 mask_port_map = 0;
+> >>   
+> >>   	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+> >> @@ -397,8 +397,10 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+> >>   
+> >>   	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
+> >>   			     GFP_KERNEL);
+> >> -	if (!hpriv)
+> >> +	if (!hpriv) {
+> >> +		rc = -ENOMEM;
+> >>   		goto err_out;
+> >> +	}
+> >>   
+> >>   	devres_add(dev, hpriv);
+> >>   
+
+> > I disagree.
+> > As 'rc' is now only initialized within a conditional we're risking 'rc' 
+> > will be left uninitialized.
+
+That's what I told to @Damien in v1.
+
+> > And in the end, it's a matter of style; this patch doesn't change the 
+> > flow of events and the benefits are hard to see.
+
+As a first time reader of the module I've saw them. It was hard
+to comprehend right from the code context whether rc was properly
+initialized especially seeing there are so many local variables
+defined. Unified rc-initialization approach makes code easier to read
+for sure. In this case the rc variable is re-initialized in each
+error-case. So having it defaulted to a value which is relevant to the
+code block in the twenty lines below isn't the most optimized design.
+
 > 
-> On 5/12/22 2:17 AM, Serge Semin wrote:
-> 
-> > Indeed in accordance with what is imeplemtned in the AHCI paltform driver
-> 
+> Yes. Let's drop this patch. Not improving anything.
 
->    Implemented? :-)
-
-The "paltform" word is misspelled too. Thanks for noting.
-
-> 
-> > and the way the AHCI DT nodes are defined in the DT files we can add the
-> > next AHCI DT properties constraints: AHCI CSR ID is fixed to 'ahci', PHY
-> > name is fixed to 'sata-phy', AHCI controller can't have more than 32 ports
-> > by design.
-> > 
-> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > 
-> > Changelog v2:
-> > - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
-> 
-
->    This normally goes after ---...
-
-Right. I've got it noticed too on taking the @Hannes comments into
-account.
-
-All of the denoted problems will be fixed in v3.
+It's up to you to decide after all. Even though I disagree with your
+opinions the patch will be dropped in v4.
 
 -Sergey
 
 > 
-> [...]
+> > 
+> > Cheers,
+> > 
+> > Hannes
 > 
-> MBR, Sergey
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
