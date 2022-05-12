@@ -2,118 +2,126 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D33C433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 16:29:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED22BC433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 16:41:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343807AbiELQ3K (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 12:29:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52894 "EHLO
+        id S240920AbiELQlz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 12:41:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241673AbiELQ3K (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 12:29:10 -0400
-Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3EC760BB7;
-        Thu, 12 May 2022 09:29:08 -0700 (PDT)
-Received: by mail-lj1-x22d.google.com with SMTP id bx33so7146734ljb.12;
-        Thu, 12 May 2022 09:29:08 -0700 (PDT)
+        with ESMTP id S236495AbiELQly (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 12:41:54 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 249AC5D5F6;
+        Thu, 12 May 2022 09:41:54 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id d22so5421030plr.9;
+        Thu, 12 May 2022 09:41:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=gLe5l9DAolzLphi8/wPvIZln9njciDHas8G30cxiyRE=;
-        b=f+myMvIiz2tjwVtbg/kwFeqyRkKhEUyloCObDSYMuAm4tqelGuM/cpPuvE4abEDHe+
-         qm+HgiUExaRlIQs4cDQUnEvlh0RUFpxHKSURPyRKEAeQf2AP1iZi8x5Xh8Y3roofRHAD
-         2iAu3rnA6ggRtCqTCdqaf6WWpko4Q+Rv7Fs1zgnuSkUAmpz6Nc9O7glhWXixIZvYDQvi
-         dQAuRaRUmMj2HLxwtdL+K/g+gfjKPQ80Ai4pn7i/Akk1wptzy9c3TTk5X25l989641OK
-         o0V5oLpfH9KkNs6aoRfAFtdf0KYaTOTT4YZiK4wAQIH0I9Uhozm4kuEg3jnUedPuiWd8
-         TNPw==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=6TwX+Uem+RX7yFMEQloRfhp790CWUfMnBz6v8ZFXqWw=;
+        b=W0iepvlelCLBuiCrQ0b37NsVuwjZqmnDvDuXQwTxPwqmfcisydLXhlvB+5bIBxb9Mo
+         DDIm9SAd9GCqOj8Y1mqJ3sPE2DDD2VG+CyW+x8zKZGJ1ncvmUcgmSj5NWAatP+ff85TH
+         ZnWqN4wW+Xvd09HvOI7ErGXsWF0qITMEkVBE8CptKkPKH0y41qpN2h8EhYFt/EnyW95X
+         LUnS06SYFHbr1Fd4ZdIEgY2aNXkWlf7fBX3yTTPM4sIzGKDRzP8t5PBqeY5+wGCWKGeI
+         4l9xLi0L1UoF0RefF/g+HEKdfK0lgVXEOyZZ3Lz8Yy/OIJTAikD/cX/wCLx1Gu2ea24/
+         QN8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=gLe5l9DAolzLphi8/wPvIZln9njciDHas8G30cxiyRE=;
-        b=O9BpZomNF3I+8+2yd85mQPlAHpnLXt1+wnGOPJUHcQUfSRGGLFbkIolUSdVuZehCtS
-         NPnN4ysNBw9DyZpd1F5vR/aof4crECHraK8aZDoZ4IeIfhAo/xBWtj4mvXHn15DWIgJK
-         gaAkAVYfKZsJhHn3sSsrFWiUNWTtmwVO8xG98H9TWsgoqQjv649uIANwxZcCAuV+hE/l
-         ZdXAoikDgFnC6u8NbQnTPkLooeqyBSUe84erwHxO7nmIvQIn2n2ncaEndSilOk3C2UEG
-         PvHeiKrkp3PeKA/6/D3PXNjcltkWuoD28JXYbkRTqxyACnp5OfghmLsymEH02JCEk9WP
-         fXMQ==
-X-Gm-Message-State: AOAM531NJTIKtGNXVFW10FxSNyySCbgpDhhb2nkVgNZde1iQN3TW/Avf
-        rnVJj40L3YAkzUiNFZY0SIQapEyJsLIDDA==
-X-Google-Smtp-Source: ABdhPJw9rrsJElQQstE2Px12+IH9oT7SX+diGL9CcP696w8ibA9VJFrOK2y6+hnOk766xAI059XEXw==
-X-Received: by 2002:a2e:9556:0:b0:24f:1c4f:cade with SMTP id t22-20020a2e9556000000b0024f1c4fcademr496981ljh.39.1652372946377;
-        Thu, 12 May 2022 09:29:06 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id n11-20020a05651203eb00b0047255d211adsm2738lfq.220.2022.05.12.09.29.04
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=6TwX+Uem+RX7yFMEQloRfhp790CWUfMnBz6v8ZFXqWw=;
+        b=4Qx/+dLMe/UYMi/4NF5aXGTzt6txId//pn0zTeIZEmB7igS/a8vc1e7ruASYup9ViL
+         vsmmNel4A2ato1HKfpQ9nHOlL1yjEAfpnOVbWzvvUtB/Xl0WAA6SvbiepWoeWFQSdoQV
+         CX6n0ERvWDrz/IhAHDgbIJlxuWDysXisyjP3ok6RdzMcASdLNz89eix9umQIgeT9iScI
+         yV6hkMzP+qxBErEl8vBV4sE5LdXk1BOYQvtpDR4c/pVLHGJwYdmYjq8Js/6lo6dKkilF
+         jfUp1rnbu/tgBvtuyq36DlZQpZaJbdRA2eqtDTpcIbNpzi2NCzE4+Jk+pDK4Ay7duYRv
+         ResQ==
+X-Gm-Message-State: AOAM530g93I3/N321NxGBxcb0167fLbNgCKlQqX1I3cc/Ly3mZysNPCW
+        5fMuj4oJAlo5bTTqViSMhB8=
+X-Google-Smtp-Source: ABdhPJzsb54QRB11Kg0xwOQPwsZz32Td9eLOjqUbH9eOlCaQUD4CO9IvOZZ+4QXL8vYjVErb6WonGA==
+X-Received: by 2002:a17:902:ab96:b0:159:1ff:4ea0 with SMTP id f22-20020a170902ab9600b0015901ff4ea0mr779294plr.60.1652373713356;
+        Thu, 12 May 2022 09:41:53 -0700 (PDT)
+Received: from localhost ([2620:10d:c090:400::4:6c64])
+        by smtp.gmail.com with ESMTPSA id x4-20020a62fb04000000b0050dc76281a9sm46574pfm.131.2022.05.12.09.41.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 May 2022 09:29:05 -0700 (PDT)
-Date:   Thu, 12 May 2022 19:29:03 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 21/23] ata: ahci-dwc: Add platform-specific quirks
- support
-Message-ID: <20220512162903.ehqrbqm5wngznwjl@mobilestation>
-References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-22-Sergey.Semin@baikalelectronics.ru>
- <f89f34e6-eb04-4ed4-0323-292c2e332948@suse.de>
+        Thu, 12 May 2022 09:41:52 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Thu, 12 May 2022 06:41:51 -1000
+From:   Tejun Heo <tj@kernel.org>
+To:     Byungchul Park <byungchul.park@lge.com>
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tytso@mit.edu, willy@infradead.org,
+        david@fromorbit.com, amir73il@gmail.com,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
+        42.hyeyoo@gmail.com, mcgrof@kernel.org, holt@sgi.com
+Subject: Re: [REPORT] syscall reboot + umh + firmware fallback
+Message-ID: <Yn04z6xzqJQqYNOX@slm.duckdns.org>
+References: <YnzQHWASAxsGL9HW@slm.duckdns.org>
+ <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f89f34e6-eb04-4ed4-0323-292c2e332948@suse.de>
+In-Reply-To: <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, May 12, 2022 at 09:12:46AM +0200, Hannes Reinecke wrote:
-> On 5/12/22 01:18, Serge Semin wrote:
-> > Some DWC AHCI SATA IP-core derivatives require to perform small platform
-> > or IP-core specific setups. They are too small to be placed in a dedicated
-> > driver. It's just much easier to have a set of quirks for them right in
-> > the DWC AHCI driver code. Since we are about to add such platform support,
-> > as a pre-requisite we introduce a platform-data based DWC AHCI quirks API.
-> > The platform data can be used to define the flags passed to the
-> > ahci_platform_get_resources() method, additional AHCI host-flags and a set
-> > of callbacks to initialize, re-initialize and clear the platform settings.
-> > 
-> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > 
-> > ---
-> > 
-> > Changelog v2:
-> > - Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_'.
-> >    (@Damien)
-> > ---
-> >   drivers/ata/ahci_dwc.c | 52 ++++++++++++++++++++++++++++++++++++++----
-> >   1 file changed, 48 insertions(+), 4 deletions(-)
-> > 
+Hello,
 
-> This really could be merged with patch 19; as you're adding a new driver you
-> might as well fold this patch in to avoid further modifications.
-
-That merely depends on the development approach. I saw and reviewed
-not one kernel patchsets introducing new drivers and adding features
-one after another. Moreover there is no kernel patches requirement
-which would constitutes not to do so. In this particular case the
-modification isn't complicated at all thus can be reviewed as is.
-
--Sergey
-
+On Thu, May 12, 2022 at 08:18:24PM +0900, Byungchul Park wrote:
+> > 1. wait_for_completion_killable_timeout() doesn't need someone to wake it up
+> >    to make forward progress because it will unstick itself after timeout
+> >    expires.
 > 
-> Cheers,
+> I have a question about this one. Yes, it would never been stuck thanks
+> to timeout. However, IIUC, timeouts are not supposed to expire in normal
+> cases. So I thought a timeout expiration means not a normal case so need
+> to inform it in terms of dependency so as to prevent further expiraton.
+> That's why I have been trying to track even timeout'ed APIs.
 > 
-> Hannes
-> -- 
-> Dr. Hannes Reinecke		           Kernel Storage Architect
-> hare@suse.de			                  +49 911 74053 688
-> SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-> HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+> Do you think DEPT shouldn't track timeout APIs? If I was wrong, I
+> shouldn't track the timeout APIs any more.
+
+Without actually surveying the use cases, I can't say for sure but my
+experience has been that we often get pretty creative with timeouts and it's
+something people actively think about and monitor (and it's usually not
+subtle). Given that, I'm skeptical about how much value it'd add for a
+dependency checker to warn about timeouts. It might be net negative than the
+other way around.
+
+> > 2. complete_all() from __fw_load_abort() isn't the only source of wakeup.
+> >    The fw loader can be, and mainly should be, woken up by firmware loading
+> >    actually completing instead of being aborted.
+> 
+> This is the point I'd like to ask. In normal cases, fw_load_done() might
+> happen, of course, if the loading gets completed. However, I was
+> wondering if the kernel ensures either fw_load_done() or fw_load_abort()
+> to be called by *another* context while kernel_halt().
+
+We'll have to walk through the code to tell that. On a cursory look tho, up
+until that point (just before shutting down usermode helper), I don't see
+anything which would actively block firmware loading.
+
+Thanks.
+
+-- 
+tejun
