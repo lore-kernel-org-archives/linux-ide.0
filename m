@@ -2,75 +2,73 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B5FC433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 06:23:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E34D3C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 06:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349197AbiELGX6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 02:23:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47672 "EHLO
+        id S229934AbiELG2d (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 02:28:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350294AbiELGX5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:23:57 -0400
+        with ESMTP id S1350406AbiELG2W (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:28:22 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DDCD59BB1;
-        Wed, 11 May 2022 23:23:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5901D5F8D6;
+        Wed, 11 May 2022 23:27:55 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 17FA621AE4;
-        Thu, 12 May 2022 06:23:53 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 19BEA21ACB;
+        Thu, 12 May 2022 06:27:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1652336633; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652336874; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=q2Ziuk/8n/V8x8TU5pFnBuxK3RFdRleKuAeFlcwHMJc=;
-        b=vu4hYqFJsyev3Gj8hLLyi8kcnv7HULOzkVHqS06qJ8fLlDDiYRhZc35qSAq/4hp2ZHPqy1
-        FiueDsPPbh9CcmbwZVa5JKduvgtpULsxtlnrqu/8CgMQd8vfDa9ODMplwixcda06v7J8s5
-        N7qSQP6iWBgk8naYH+YtqbN1TcXj9dY=
+        bh=/Yif5rQWHgrq+WHn14NbPf9qK8+CDYsZFAUQ+p+C2iM=;
+        b=NK97LIFCPNWla3WDhxnaKX/cUQmu+IBEFCWDR6Qne3sDHfcLOAfk9oTkX4tKw8mEyaFMNj
+        lsGniYn9j9O75NhIqgzWLMGajpHH+fVU74lbofJr5ocHyBIukDPYG0SdiYWoFYlFsBiPNa
+        IUvemT8bUL5LCK59GLGMQQDFzKk2ZeY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1652336633;
+        s=susede2_ed25519; t=1652336874;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=q2Ziuk/8n/V8x8TU5pFnBuxK3RFdRleKuAeFlcwHMJc=;
-        b=fxThtM4CCSKxbBnru7/B789HB2PG/RVOrKqqr5hjF/B0Z5t3PjM9Ld4jJmKtB6Jvl6Z5+i
-        t+YijYvgsczK3aBw==
+        bh=/Yif5rQWHgrq+WHn14NbPf9qK8+CDYsZFAUQ+p+C2iM=;
+        b=A10xl/mGFm1BaaG+a7kggJcQHhrtAtcEFOmhQawcDjOo58ERVivE6zbqsSFhU56UnEuSI0
+        5G45mdKef8qFg9CA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A2D4713ABE;
-        Thu, 12 May 2022 06:23:52 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EFAC313ABE;
+        Thu, 12 May 2022 06:27:53 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id a4pMJvinfGI5TQAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:23:52 +0000
-Message-ID: <271251bf-f941-4db3-5ffd-f54439a5434d@suse.de>
-Date:   Thu, 12 May 2022 08:23:52 +0200
+        id u/YAOemofGKUTgAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:27:53 +0000
+Message-ID: <4bd4318b-a753-6453-a815-716fbfffab3f@suse.de>
+Date:   Thu, 12 May 2022 08:27:53 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v3 04/23] dt-bindings: ata: sata: Extend number of SATA
- ports
+Subject: Re: [PATCH v3 05/23] ata: libahci_platform: Explicitly set rc on
+ devres_alloc failure
 Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linus Walleij <linus.walleij@linaro.org>
+        Jens Axboe <axboe@kernel.dk>
 Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-5-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-6-Sergey.Semin@baikalelectronics.ru>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220511231810.4928-5-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220511231810.4928-6-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -78,51 +76,54 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 5/12/22 01:17, Serge Semin wrote:
-> The denoted in the description upper limit only concerns the Port
-> Multipliers, but not the actual SATA ports. It's an external device
-> attached to a SATA port in order to access more than one SATA-drive. So
-> when it's attached to a SATA port it just extends the port capability
-> while the number of actual SATA ports stays the same. For instance on AHCI
-> controllers the number of actual ports is determined by the CAP.NP field
-> and the PI (Ports Implemented) register. AFAICS in general the maximum
-> number of SATA ports depends on the particular controller implementation.
-> Generic AHCI controller can't have more than 32 ports (since CAP.NP is of
-> 5 bits wide and PI register is 32-bits size), while DWC AHCI SATA
-> controller can't be configured with more than 8 ports activated. So let's
-> discard the SATA ports reg-property restrictions and just make sure that
-> it consists of a single reg-item.
+> It's better for readability and maintainability to explicitly assign an
+> error number to the variable used then as a return value from the method
+> on the cleanup-on-error path. So adding new code in the method we won't
+> have to think whether the overridden rc-variable is set afterward in case
+> of an error. Saving one line of code doesn't worth it especially seeing
+> the rest of the ahci_platform_get_resources() function errors handling
+> blocks do explicitly write errno to rc.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > 
 > ---
 > 
 > Changelog v2:
-> - Add comma and replace "channel" with "SATA port" in the reg property
->    description (@Damien).
+> - Drop rc variable initialization (@Damien)
 > ---
->   Documentation/devicetree/bindings/ata/sata-common.yaml | 7 +++----
->   1 file changed, 3 insertions(+), 4 deletions(-)
+>   drivers/ata/libahci_platform.c | 6 ++++--
+>   1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
-> index 7ac77b1c5850..9c9c621761ca 100644
-> --- a/Documentation/devicetree/bindings/ata/sata-common.yaml
-> +++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
-> @@ -41,11 +41,10 @@ patternProperties:
->       properties:
->         reg:
->           minimum: 0
-> -        maximum: 14
->           description:
-> -          The ID number of the drive port SATA can potentially use a port
-> -          multiplier making it possible to connect up to 15 disks to a single
-> -          SATA port.
-> +          The ID number of the SATA port. Aside with being directly used,
-> +          each port can have a Port Multiplier attached thus allowing to
-> +          access more than one drive by means of a single SATA port.
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 32495ae96567..f7f9bfcfc164 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -389,7 +389,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+>   	struct ahci_host_priv *hpriv;
+>   	struct clk *clk;
+>   	struct device_node *child;
+> -	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
+> +	int i, enabled_ports = 0, rc, child_nodes;
+>   	u32 mask_port_map = 0;
 >   
->   additionalProperties: true
+>   	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+> @@ -397,8 +397,10 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
 >   
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+>   	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
+>   			     GFP_KERNEL);
+> -	if (!hpriv)
+> +	if (!hpriv) {
+> +		rc = -ENOMEM;
+>   		goto err_out;
+> +	}
+>   
+>   	devres_add(dev, hpriv);
+>   
+I disagree.
+As 'rc' is now only initialized within a conditional we're risking 'rc' 
+will be left uninitialized.
+And in the end, it's a matter of style; this patch doesn't change the 
+flow of events and the benefits are hard to see.
 
 Cheers,
 
