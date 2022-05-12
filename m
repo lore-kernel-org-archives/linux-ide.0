@@ -2,107 +2,105 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FBDEC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F15D7C4332F
 	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 06:58:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346617AbiELG6A (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 02:58:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47572 "EHLO
+        id S1350599AbiELG6B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 02:58:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350613AbiELG4o (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:56:44 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04B751836F;
-        Wed, 11 May 2022 23:56:43 -0700 (PDT)
+        with ESMTP id S238889AbiELG57 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:57:59 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 708EC1836F;
+        Wed, 11 May 2022 23:57:57 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id B75F51F91A;
-        Thu, 12 May 2022 06:56:41 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 2EED421CA1;
+        Thu, 12 May 2022 06:57:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1652338601; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652338676; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ynfVyISLTocoM+sP5RWAS58Ty5c+joUC7e/SGWdE+18=;
-        b=Syw6WsqdVcqFLDaZzsl+SWMrTmcGh2z6NY7TO/vV5kDe7WWbv4h6m5eRAjbZxXkFqyJpUP
-        IhMfTLAvEruURlOP6Efk6CKIcuG4BpwSky4a2/uzHaw5VGw5XRTcMYYS9wajdkP6h685UQ
-        t/6rN5C7GiNlV/EVf1ZMiEoSAhDXGbc=
+        bh=X8cuhc70WJhGVRlyqcGiXhEgWuGjboKttKdlKZeYH/k=;
+        b=08FotzP/dZFOaguP7NtLoygRK6Z0DNF7JuTX6Hs4U6OeU5bxgna/sEAHeOUX+wfid/ikMd
+        tAwOQx+iApOHrA0cSkWx6SdP+JAxXV3W4z7C2/Vc0fPgcFgskZUlRoLM5wwSazZJ9S43/d
+        znh3k6yUQLHrheIbk4etcVbt9hJ6YyI=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1652338601;
+        s=susede2_ed25519; t=1652338676;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ynfVyISLTocoM+sP5RWAS58Ty5c+joUC7e/SGWdE+18=;
-        b=6kpqeVcGuGhqU/hg86ZGgh4ayDEm95Yjwg18QAMcWqXORog6QaFW56gKF4HdGhE+iJGnVs
-        2b/auzxAfL5wNMDA==
+        bh=X8cuhc70WJhGVRlyqcGiXhEgWuGjboKttKdlKZeYH/k=;
+        b=XMybFq3x0miy40f2Szg2tI7gwpnNWNWAtzHsQy/X21tXWL3lpk7ulNUUcFUz+cEJl8fb73
+        ppSC7JGuZ9ed4vCg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9412713A97;
-        Thu, 12 May 2022 06:56:41 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E0B0513A97;
+        Thu, 12 May 2022 06:57:55 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id hprbI6mvfGJSWQAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:56:41 +0000
-Message-ID: <5d7ae3e5-3f21-a610-7beb-274ede95850d@suse.de>
-Date:   Thu, 12 May 2022 08:56:41 +0200
+        id 8tHBNfOvfGLNWQAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:57:55 +0000
+Message-ID: <7fd1c122-12b2-adff-856f-50ffc5fc6bd1@suse.de>
+Date:   Thu, 12 May 2022 08:57:55 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v3 12/23] dt-bindings: ata: ahci: Add platform capability
- properties
+Subject: Re: [PATCH v3 13/23] ata: libahci: Extend port-cmd flags set with
+ port capabilities
 Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+        Jens Axboe <axboe@kernel.dk>
 Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-13-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-14-Sergey.Semin@baikalelectronics.ru>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220511231810.4928-13-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220511231810.4928-14-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 5/12/22 01:17, Serge Semin wrote:
-> In case if the platform doesn't have BIOS or a comprehensive firmware
-> installed then the HBA capability flags will be left uninitialized. As a
-> good alternative we can define a set AHCI DT-node properties to describe
-> all of HW-init capabilities flags. Luckily there aren't too many of them.
-> SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
-> support determine the corresponding feature availability for whole HBA by
-> means of the "hba-sss" and "hba-smps" properties.  Each port can have the
-> "hba-{hpcp,mpsp,cpd,esp,fbscp}" defined indicatating that the port
-> supports the next functionality: HPCP - HotPlug capable port, MPSP -
-> Mechanical Presence Switch attached to a port, CPD - Cold Plug detection,
-> ESP - External SATA Port (eSATA), FBSCP - FIS-based switching capable
-> port.
+On 5/12/22 01:18, Serge Semin wrote:
+> Currently not all of the Port-specific capabilities listed in the
+> PORT_CMD-enumeration. Let's extend that set with the Cold Presence
+> Detection and Mechanical Presence Switch attached to the Port flags [1] so
+> to closeup the set of the platform-specific port-capabilities flags.  Note
+> these flags are supposed to be set by the platform firmware if there is
+> one. Alternatively as we are about to do they can be set by means of the
+> OF properties.
+> 
+> While at it replace PORT_IRQ_DEV_ILCK with PORT_IRQ_DEV_MPS and fix the
+> comment there. In accordance with [2] that IRQ flag is supposed to
+> indicate the state of the signal coming from the Mechanical Presence
+> Switch.
+> 
+> [1] Serial ATA AHCI 1.3.1 Specification, p.27
+> [2] Serial ATA AHCI 1.3.1 Specification, p.7
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> 
 > ---
+>   drivers/ata/ahci.h | 7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> Alternatively we could define them as a bitfield, but having a set of
-> boolean properties seemed a better idea since in that case we can
-> implement a simple inter-dependency rules for them, which can't be done
-> should we take the bitfields path.
-> ---
->   .../devicetree/bindings/ata/ahci-common.yaml  | 66 +++++++++++++++++++
->   .../bindings/ata/ahci-platform.yaml           | 11 ++++
->   2 files changed, 77 insertions(+)
-> 
+You might want to adapt the subject line, as this patch doesn't touch 
+libahci at all.
+Other than that:
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
