@@ -2,128 +2,100 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62B85C433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 07:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED69AC433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 08:11:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350808AbiELHQX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 03:16:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57942 "EHLO
+        id S1351329AbiELILa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 04:11:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350752AbiELHQW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 03:16:22 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69FB122BCB;
-        Thu, 12 May 2022 00:16:21 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 22ED921C96;
-        Thu, 12 May 2022 07:16:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1652339780; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kAOBiDseOchKBUVGbREzQWb5NJM+9H32dPAb3OH0tjw=;
-        b=Sdc0t8UVyGSdnz90CuZRhzPXjeLCP5WOqm9TnPupxUWBBsgAH2waCu0uv7e5E40Fsj1TyM
-        v6DBGEGJLsEYP6oLGkoXdIzgVCd670ViGtMortXbCrCus3ZczWnnGxaydAPkYM5SMlulvn
-        NVSZqk61rgUM9i3zBga0WIQWT7g1VXo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1652339780;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=kAOBiDseOchKBUVGbREzQWb5NJM+9H32dPAb3OH0tjw=;
-        b=BEUi1DQB9/71/j/nxeM7w0jg8frWx9FZP9h4USk9A4uOEjSPCsm5HEITpSeUxlFgbaX52g
-        LotUHWrULLpRHQDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E864213A97;
-        Thu, 12 May 2022 07:16:19 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id HyZ1OEO0fGL/YQAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 12 May 2022 07:16:19 +0000
-Message-ID: <5b2b3f12-ba1f-45b5-cb05-6f5376e4e2c6@suse.de>
-Date:   Thu, 12 May 2022 09:16:19 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v3 23/23] MAINTAINERS: Add maintainers for DWC AHCI SATA
- driver
-Content-Language: en-US
+        with ESMTP id S233612AbiELIL2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 04:11:28 -0400
+Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF17A4C433;
+        Thu, 12 May 2022 01:11:26 -0700 (PDT)
+Received: by mail-lj1-x22e.google.com with SMTP id bx33so5478431ljb.12;
+        Thu, 12 May 2022 01:11:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=IT4+ZL64oTTNdkAnINgvpnUEBANf9bbEzcBz3oDssZE=;
+        b=dIG8FRU8MCYcHd5Y7xBSUD3HNg/0MdYKgGMgIpFhx8qFn7HSfM3dHfjCewzE7Dx5Jf
+         YM6NResLXt/kXRttUOKKI2ADsOnLzfU1ywg4qXoOmooa/jFxItVb4Mx9XxjKV690rfMN
+         qRCGhb7hlIFBM9ASn18SQoneSKCR2Kqix4hHCfgya+04Yq+Z/n1AtAL2cEg5Ja5AUy6C
+         xmOXIluEDL4qquYUvC/LDFT9ROPuBcJy2Gd6vTvDdUU02Mn+KWzdTefzOsX4H7MDLt3/
+         keXWvZgdRl+EyIJt5v8VvqqTHf+xgGc66hluWJpgffUvqMFa9lo7onSglJZ9Ho5f0jy9
+         nvTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=IT4+ZL64oTTNdkAnINgvpnUEBANf9bbEzcBz3oDssZE=;
+        b=RZrBlHStqr9fW3MkDQFHO6XR/DR+ZfK2GgOAAwwn4LAIntpupWb0b4sZUNk66yUZIx
+         xB9FNZI96Um1Qi40u4UX6BQMoYv1isebsd7kt5Z+7I1daPPimAumusqnWHGBqjUA9iLZ
+         MyMMl2sb8VJXjROH8C+ZOxQoBc4nXJQ2twS3+Qn8WmVJuiLHOdqUZtTla1CW2oNEvl+9
+         zMNF85759MyIw+RMDAAvLS7cJjmhUl/7xjiCuo7kS3sP4JUzDnHgh7QvvxS8ZGqdbTKX
+         J3b+7wExEGYgfByyUm5gi8/mBL/G6CeatI3y3kA5/C/+N6p3vb3InY8iJmV4SCNaK+ML
+         zNqg==
+X-Gm-Message-State: AOAM532GqZ6epYXalmhPu4AyujOKvvmTj9LQG+s0tzEQMUe5M0EYgUSl
+        QR7rmG88T3vnklUJCjbnjFvA8lpDoAk=
+X-Google-Smtp-Source: ABdhPJwCT3OLpL3yxeUTBokf861h6vE2qpINykhuZEe7e6iXUQ8sm+sXh4KKjLAv7oIMKjcsahbBNA==
+X-Received: by 2002:a2e:8759:0:b0:250:6afa:78e9 with SMTP id q25-20020a2e8759000000b002506afa78e9mr19691006ljj.225.1652343084776;
+        Thu, 12 May 2022 01:11:24 -0700 (PDT)
+Received: from [192.168.1.103] ([31.173.83.174])
+        by smtp.gmail.com with ESMTPSA id z6-20020a2e9646000000b0024f3d1daeb7sm742266ljh.63.2022.05.12.01.11.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 May 2022 01:11:24 -0700 (PDT)
+Subject: Re: [PATCH v3 03/23] dt-bindings: ata: ahci-platform: Clarify common
+ AHCI props constraints
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
 Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-24-Sergey.Semin@baikalelectronics.ru>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220511231810.4928-24-Sergey.Semin@baikalelectronics.ru>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <20220511231810.4928-4-Sergey.Semin@baikalelectronics.ru>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <68d51092-1a4c-0d42-e28d-c3b5316d580a@gmail.com>
+Date:   Thu, 12 May 2022 11:11:22 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <20220511231810.4928-4-Sergey.Semin@baikalelectronics.ru>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 5/12/22 01:18, Serge Semin wrote:
-> Add myself as a maintainer of the new DWC AHCI SATA driver and
-> its DT-bindings schema.
+Hello!
+
+On 5/12/22 2:17 AM, Serge Semin wrote:
+
+> Indeed in accordance with what is imeplemtned in the AHCI paltform driver
+
+   Implemented? :-)
+
+> and the way the AHCI DT nodes are defined in the DT files we can add the
+> next AHCI DT properties constraints: AHCI CSR ID is fixed to 'ahci', PHY
+> name is fixed to 'sata-phy', AHCI controller can't have more than 32 ports
+> by design.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > 
-> ---
-> 
 > Changelog v2:
-> - Use dlemoal/libata.git git tree for the LIBATA SATA AHCI SYNOPSYS
->    DWC driver (@Damien).
-> ---
->   MAINTAINERS | 9 +++++++++
->   1 file changed, 9 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 40fa1955ca3f..04f470519708 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11135,6 +11135,15 @@ F:	drivers/ata/ahci_platform.c
->   F:	drivers/ata/libahci_platform.c
->   F:	include/linux/ahci_platform.h
->   
-> +LIBATA SATA AHCI SYNOPSYS DWC CONTROLLER DRIVER
-> +M:	Serge Semin <fancer.lancer@gmail.com>
-> +L:	linux-ide@vger.kernel.org
-> +S:	Maintained
-> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git
-> +F:	Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-> +F:	Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
-> +F:	drivers/ata/ahci_dwc.c
-> +
->   LIBATA SATA PROMISE TX2/TX4 CONTROLLER DRIVER
->   M:	Mikael Pettersson <mikpelinux@gmail.com>
->   L:	linux-ide@vger.kernel.org
-Tsk.
+> - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 
-One would have thought that you'd be using the same email address for 
-sending patches, and not specifying a different one for the maintainers 
-file. There is this thing about proof of authenticity and all that ...
+   This normally goes after ---...
 
-I'm not really comfortable with this. Please use the same email address 
-for both the Maintainers file and for sending patches.
+[...]
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+MBR, Sergey
