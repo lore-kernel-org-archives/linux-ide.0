@@ -2,126 +2,138 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED22BC433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 16:41:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22891C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 16:47:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240920AbiELQlz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 12:41:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41684 "EHLO
+        id S1356647AbiELQrl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 12:47:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236495AbiELQly (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 12:41:54 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 249AC5D5F6;
-        Thu, 12 May 2022 09:41:54 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d22so5421030plr.9;
-        Thu, 12 May 2022 09:41:54 -0700 (PDT)
+        with ESMTP id S231565AbiELQrl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 12:47:41 -0400
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE8F424F0FC;
+        Thu, 12 May 2022 09:47:39 -0700 (PDT)
+Received: by mail-lf1-x12e.google.com with SMTP id bu29so10214351lfb.0;
+        Thu, 12 May 2022 09:47:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=6TwX+Uem+RX7yFMEQloRfhp790CWUfMnBz6v8ZFXqWw=;
-        b=W0iepvlelCLBuiCrQ0b37NsVuwjZqmnDvDuXQwTxPwqmfcisydLXhlvB+5bIBxb9Mo
-         DDIm9SAd9GCqOj8Y1mqJ3sPE2DDD2VG+CyW+x8zKZGJ1ncvmUcgmSj5NWAatP+ff85TH
-         ZnWqN4wW+Xvd09HvOI7ErGXsWF0qITMEkVBE8CptKkPKH0y41qpN2h8EhYFt/EnyW95X
-         LUnS06SYFHbr1Fd4ZdIEgY2aNXkWlf7fBX3yTTPM4sIzGKDRzP8t5PBqeY5+wGCWKGeI
-         4l9xLi0L1UoF0RefF/g+HEKdfK0lgVXEOyZZ3Lz8Yy/OIJTAikD/cX/wCLx1Gu2ea24/
-         QN8g==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=ZkeVSJkmptp9qNf3NXGzCw01fTFE3/b+0l0GX9neAqk=;
+        b=n7WaurAF6TaHWnFHl5YNZkxg460sfhrGuGaFN1mwenC6UaLF99GCjJI2LiEPky3A92
+         fHJf6y9l+fzLxEahqM0iZ6iY0zKGRGkppGMH3aSPEPU1Ajom34iQtL8ZSqexBboSu38T
+         7R/MWomkDyoPZIqlosFrChTl2cTk1xhSuXV3xAkv9/mMT9pTkLHmHO1Hx3jNPUqRJrlI
+         70zyxPuc11D0mHHbGeTgVsSAOn1na/cL4uhkfLKDeOwMqkZSkb+u6LyQ8zFrQ/ymhVQ6
+         PuV7w59WCvm/etpCasQZ7kD5h/CqkGztjMwfBhIqNdz+pxLg++HaadeC4+Te9sJiTlJ9
+         rfSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=6TwX+Uem+RX7yFMEQloRfhp790CWUfMnBz6v8ZFXqWw=;
-        b=4Qx/+dLMe/UYMi/4NF5aXGTzt6txId//pn0zTeIZEmB7igS/a8vc1e7ruASYup9ViL
-         vsmmNel4A2ato1HKfpQ9nHOlL1yjEAfpnOVbWzvvUtB/Xl0WAA6SvbiepWoeWFQSdoQV
-         CX6n0ERvWDrz/IhAHDgbIJlxuWDysXisyjP3ok6RdzMcASdLNz89eix9umQIgeT9iScI
-         yV6hkMzP+qxBErEl8vBV4sE5LdXk1BOYQvtpDR4c/pVLHGJwYdmYjq8Js/6lo6dKkilF
-         jfUp1rnbu/tgBvtuyq36DlZQpZaJbdRA2eqtDTpcIbNpzi2NCzE4+Jk+pDK4Ay7duYRv
-         ResQ==
-X-Gm-Message-State: AOAM530g93I3/N321NxGBxcb0167fLbNgCKlQqX1I3cc/Ly3mZysNPCW
-        5fMuj4oJAlo5bTTqViSMhB8=
-X-Google-Smtp-Source: ABdhPJzsb54QRB11Kg0xwOQPwsZz32Td9eLOjqUbH9eOlCaQUD4CO9IvOZZ+4QXL8vYjVErb6WonGA==
-X-Received: by 2002:a17:902:ab96:b0:159:1ff:4ea0 with SMTP id f22-20020a170902ab9600b0015901ff4ea0mr779294plr.60.1652373713356;
-        Thu, 12 May 2022 09:41:53 -0700 (PDT)
-Received: from localhost ([2620:10d:c090:400::4:6c64])
-        by smtp.gmail.com with ESMTPSA id x4-20020a62fb04000000b0050dc76281a9sm46574pfm.131.2022.05.12.09.41.52
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=ZkeVSJkmptp9qNf3NXGzCw01fTFE3/b+0l0GX9neAqk=;
+        b=ooTC3Qwb6CPrKOmY03jX+GzKfWw4Z/ULu3nctZdSir3/PbtVo6xuY/8DeuBBdAW7Zo
+         0DeahmDqTfBF6gOGlqzkxMEPRx1CjO2UQN4kh4yI8lpWorKrUbtEZHOs1qiJx4K3skex
+         8HMTq8eXLmDUg1njGbl712QsD43whA55yA05IsUrjqWzOMkWDKtRvTOpiX91KGy99MhF
+         1DbbdrSj3QHYW9UZW2AjUAjue7HLHAAmoPy8Lw8dmNNVbphCQ/TG1A/UJ3R7D0RbMS0X
+         SYjia+66NZWegjLXJTp1HiVFRNPA9HbOsfQ5adPIK6qF3AcU9Etysj2Z3vIuJXcI/Twe
+         zBhw==
+X-Gm-Message-State: AOAM532ujaTwJYDwV46aUqtdJzmq3gkZk0cUGNmCv+zeXZZtOnCdHe6u
+        kuiYafhka3e7hWYLecFcKXn1Nv6EorrahA==
+X-Google-Smtp-Source: ABdhPJzqk5KmZ9a6wq/NaIpiHmX+MF1xFmmTzEyzFddNC52ar10S84jdxsr9ycFr+FGWAA9i/1GkSg==
+X-Received: by 2002:a05:6512:25e:b0:472:251f:9611 with SMTP id b30-20020a056512025e00b00472251f9611mr487694lfo.164.1652374058071;
+        Thu, 12 May 2022 09:47:38 -0700 (PDT)
+Received: from mobilestation ([95.79.189.214])
+        by smtp.gmail.com with ESMTPSA id g11-20020a2eb5cb000000b0024f3d1daeabsm962450ljn.51.2022.05.12.09.47.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 May 2022 09:41:52 -0700 (PDT)
-Sender: Tejun Heo <htejun@gmail.com>
-Date:   Thu, 12 May 2022 06:41:51 -1000
-From:   Tejun Heo <tj@kernel.org>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tytso@mit.edu, willy@infradead.org,
-        david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
-        42.hyeyoo@gmail.com, mcgrof@kernel.org, holt@sgi.com
-Subject: Re: [REPORT] syscall reboot + umh + firmware fallback
-Message-ID: <Yn04z6xzqJQqYNOX@slm.duckdns.org>
-References: <YnzQHWASAxsGL9HW@slm.duckdns.org>
- <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
+        Thu, 12 May 2022 09:47:37 -0700 (PDT)
+Date:   Thu, 12 May 2022 19:47:34 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 23/23] MAINTAINERS: Add maintainers for DWC AHCI SATA
+ driver
+Message-ID: <20220512164734.hmoeuyf3fscqcpts@mobilestation>
+References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-24-Sergey.Semin@baikalelectronics.ru>
+ <5b2b3f12-ba1f-45b5-cb05-6f5376e4e2c6@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5b2b3f12-ba1f-45b5-cb05-6f5376e4e2c6@suse.de>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello,
-
-On Thu, May 12, 2022 at 08:18:24PM +0900, Byungchul Park wrote:
-> > 1. wait_for_completion_killable_timeout() doesn't need someone to wake it up
-> >    to make forward progress because it will unstick itself after timeout
-> >    expires.
+On Thu, May 12, 2022 at 09:16:19AM +0200, Hannes Reinecke wrote:
+> On 5/12/22 01:18, Serge Semin wrote:
+> > Add myself as a maintainer of the new DWC AHCI SATA driver and
+> > its DT-bindings schema.
+> > 
+> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> > 
+> > ---
+> > 
+> > Changelog v2:
+> > - Use dlemoal/libata.git git tree for the LIBATA SATA AHCI SYNOPSYS
+> >    DWC driver (@Damien).
+> > ---
+> >   MAINTAINERS | 9 +++++++++
+> >   1 file changed, 9 insertions(+)
+> > 
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index 40fa1955ca3f..04f470519708 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -11135,6 +11135,15 @@ F:	drivers/ata/ahci_platform.c
+> >   F:	drivers/ata/libahci_platform.c
+> >   F:	include/linux/ahci_platform.h
+> > +LIBATA SATA AHCI SYNOPSYS DWC CONTROLLER DRIVER
+> > +M:	Serge Semin <fancer.lancer@gmail.com>
+> > +L:	linux-ide@vger.kernel.org
+> > +S:	Maintained
+> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git
+> > +F:	Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
+> > +F:	Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> > +F:	drivers/ata/ahci_dwc.c
+> > +
+> >   LIBATA SATA PROMISE TX2/TX4 CONTROLLER DRIVER
+> >   M:	Mikael Pettersson <mikpelinux@gmail.com>
+> >   L:	linux-ide@vger.kernel.org
+> Tsk.
 > 
-> I have a question about this one. Yes, it would never been stuck thanks
-> to timeout. However, IIUC, timeouts are not supposed to expire in normal
-> cases. So I thought a timeout expiration means not a normal case so need
-> to inform it in terms of dependency so as to prevent further expiraton.
-> That's why I have been trying to track even timeout'ed APIs.
+> One would have thought that you'd be using the same email address for
+> sending patches, and not specifying a different one for the maintainers
+> file. There is this thing about proof of authenticity and all that ...
 > 
-> Do you think DEPT shouldn't track timeout APIs? If I was wrong, I
-> shouldn't track the timeout APIs any more.
+> I'm not really comfortable with this. Please use the same email address for
+> both the Maintainers file and for sending patches.
 
-Without actually surveying the use cases, I can't say for sure but my
-experience has been that we often get pretty creative with timeouts and it's
-something people actively think about and monitor (and it's usually not
-subtle). Given that, I'm skeptical about how much value it'd add for a
-dependency checker to warn about timeouts. It might be net negative than the
-other way around.
+I am more comfortable with reviewing and emailing from my private
+email box rather than from the corporate one. Moreover the corporate
+email address tends to get changed much more frequent than the private
+one while the person role still preserves. Keeping more stable address
+in the MAINTAINERS file gives a benefit of providing better review
+service and causes less consequent modifications. So to speak I'd stick
+with keeping the email address as is here.
 
-> > 2. complete_all() from __fw_load_abort() isn't the only source of wakeup.
-> >    The fw loader can be, and mainly should be, woken up by firmware loading
-> >    actually completing instead of being aborted.
+-Sergey
+
 > 
-> This is the point I'd like to ask. In normal cases, fw_load_done() might
-> happen, of course, if the loading gets completed. However, I was
-> wondering if the kernel ensures either fw_load_done() or fw_load_abort()
-> to be called by *another* context while kernel_halt().
-
-We'll have to walk through the code to tell that. On a cursory look tho, up
-until that point (just before shutting down usermode helper), I don't see
-anything which would actively block firmware loading.
-
-Thanks.
-
--- 
-tejun
+> Cheers,
+> 
+> Hannes
+> -- 
+> Dr. Hannes Reinecke		           Kernel Storage Architect
+> hare@suse.de			                  +49 911 74053 688
+> SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+> HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
