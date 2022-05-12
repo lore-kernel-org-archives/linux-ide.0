@@ -2,73 +2,73 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F449C433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 07:13:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62B85C433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 07:16:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350791AbiELHNx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 03:13:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49682 "EHLO
+        id S1350808AbiELHQX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 03:16:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350775AbiELHNv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 03:13:51 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46CB567D30;
-        Thu, 12 May 2022 00:13:50 -0700 (PDT)
+        with ESMTP id S1350752AbiELHQW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 03:16:22 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69FB122BCB;
+        Thu, 12 May 2022 00:16:21 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 044DC1F8F4;
-        Thu, 12 May 2022 07:13:49 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 22ED921C96;
+        Thu, 12 May 2022 07:16:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1652339629; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652339780; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=dyxbLfNOJw/BbaFY8V1NilJt4bYAp/bOtoENiqM21v0=;
-        b=qF2J1z0ztypZ0jvPu8RTEwNWgm8C2I2ME127w/TMQwEe/qozCsw0YXnpR/18s0tWQda400
-        k0urc5hE186YHcuHGF0dETKGnLf4H40Po0Wf3CL+MCOOldPAgV9Ikuv8r4ll4x5UevI/hd
-        Z+agi8VAW8xMokn2vrSoF0LyBdHMlYI=
+        bh=kAOBiDseOchKBUVGbREzQWb5NJM+9H32dPAb3OH0tjw=;
+        b=Sdc0t8UVyGSdnz90CuZRhzPXjeLCP5WOqm9TnPupxUWBBsgAH2waCu0uv7e5E40Fsj1TyM
+        v6DBGEGJLsEYP6oLGkoXdIzgVCd670ViGtMortXbCrCus3ZczWnnGxaydAPkYM5SMlulvn
+        NVSZqk61rgUM9i3zBga0WIQWT7g1VXo=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1652339629;
+        s=susede2_ed25519; t=1652339780;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=dyxbLfNOJw/BbaFY8V1NilJt4bYAp/bOtoENiqM21v0=;
-        b=ky4YRyVQFlkia8sX75soOxA710QX+rZWpz7S/Cwcjj3zDZSm9Bi0WNHb2gUZ2NxQGVmXMl
-        2Ar0zhoFw3DeQcDw==
+        bh=kAOBiDseOchKBUVGbREzQWb5NJM+9H32dPAb3OH0tjw=;
+        b=BEUi1DQB9/71/j/nxeM7w0jg8frWx9FZP9h4USk9A4uOEjSPCsm5HEITpSeUxlFgbaX52g
+        LotUHWrULLpRHQDA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C4BF613A97;
-        Thu, 12 May 2022 07:13:48 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E864213A97;
+        Thu, 12 May 2022 07:16:19 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 1NdSL6yzfGK+YAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 12 May 2022 07:13:48 +0000
-Message-ID: <9598f7c1-e238-39cc-e1c9-66a63083965c@suse.de>
-Date:   Thu, 12 May 2022 09:13:48 +0200
+        id HyZ1OEO0fGL/YQAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 12 May 2022 07:16:19 +0000
+Message-ID: <5b2b3f12-ba1f-45b5-cb05-6f5376e4e2c6@suse.de>
+Date:   Thu, 12 May 2022 09:16:19 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v3 22/23] ata: ahci-dwc: Add Baikal-T1 AHCI SATA interface
- support
+Subject: Re: [PATCH v3 23/23] MAINTAINERS: Add maintainers for DWC AHCI SATA
+ driver
 Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Serge Semin <fancer.lancer@gmail.com>
-Cc:     Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-23-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-24-Sergey.Semin@baikalelectronics.ru>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220511231810.4928-23-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220511231810.4928-24-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -76,41 +76,52 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 5/12/22 01:18, Serge Semin wrote:
-> It's almost fully compatible DWC AHCI SATA IP-core derivative except the
-> reference clocks source, which need to be very carefully selected. In
-> particular the DWC AHCI SATA PHY can be clocked either from the pads
-> ref_pad_clk_{m,p} or from the internal wires ref_alt_clk_{m,n}. In the
-> later case the clock signal is generated from the Baikal-T1 CCU SATA PLL.
-> The clocks source is selected by means of the ref_use_pad wire connected
-> to the CCU SATA reference clock CSR.
-> 
-> In normal situation it would be much more handy to use the internal
-> reference clock source, but alas we haven't managed to make the AHCI
-> controller working well with it so far. So it's preferable to have the
-> controller clocked from the external clock generator and fallback to the
-> internal clock source only as a last resort. Other than that the
-> controller is full compatible with the DWC AHCI SATA IP-core.
+> Add myself as a maintainer of the new DWC AHCI SATA driver and
+> its DT-bindings schema.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > 
 > ---
 > 
 > Changelog v2:
-> - Rename 'syscon' property to 'baikal,bt1-syscon'.
-> - Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_',
->    from 'bt1_ahci_' to 'ahci_bt1_'. (@Damien)
+> - Use dlemoal/libata.git git tree for the LIBATA SATA AHCI SYNOPSYS
+>    DWC driver (@Damien).
 > ---
->   drivers/ata/Kconfig    |  1 +
->   drivers/ata/ahci_dwc.c | 87 ++++++++++++++++++++++++++++++++++++++++++
->   2 files changed, 88 insertions(+)
+>   MAINTAINERS | 9 +++++++++
+>   1 file changed, 9 insertions(+)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 40fa1955ca3f..04f470519708 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -11135,6 +11135,15 @@ F:	drivers/ata/ahci_platform.c
+>   F:	drivers/ata/libahci_platform.c
+>   F:	include/linux/ahci_platform.h
+>   
+> +LIBATA SATA AHCI SYNOPSYS DWC CONTROLLER DRIVER
+> +M:	Serge Semin <fancer.lancer@gmail.com>
+> +L:	linux-ide@vger.kernel.org
+> +S:	Maintained
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git
+> +F:	Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
+> +F:	Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> +F:	drivers/ata/ahci_dwc.c
+> +
+>   LIBATA SATA PROMISE TX2/TX4 CONTROLLER DRIVER
+>   M:	Mikael Pettersson <mikpelinux@gmail.com>
+>   L:	linux-ide@vger.kernel.org
+Tsk.
+
+One would have thought that you'd be using the same email address for 
+sending patches, and not specifying a different one for the maintainers 
+file. There is this thing about proof of authenticity and all that ...
+
+I'm not really comfortable with this. Please use the same email address 
+for both the Maintainers file and for sending patches.
 
 Cheers,
 
 Hannes
-
-
 -- 
 Dr. Hannes Reinecke		           Kernel Storage Architect
 hare@suse.de			                  +49 911 74053 688
