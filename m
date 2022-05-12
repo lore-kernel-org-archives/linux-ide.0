@@ -2,95 +2,173 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80BBBC433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 13:57:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B638C433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 14:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354762AbiELN5A (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 09:57:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52400 "EHLO
+        id S1355252AbiELO0Q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 10:26:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354768AbiELN4y (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 09:56:54 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77A0A3982D;
-        Thu, 12 May 2022 06:56:52 -0700 (PDT)
-Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 24CDuk1S025723
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 12 May 2022 09:56:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1652363808; bh=fK1JutfKwB9RZi7LGZBoNzqwgl48auY9kCDUP4LKjGo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=UdsqUMuxNr9fe51BYBreYmwrfOY1B++I+ve8viaz0nmXc6KyQP5QUzEjOXAOAk4ra
-         g8Tr5jAwwqGdfLEZT3d8iGx07G6013fFup2jsp6fjMByQkPvPM7yC06ELxnpD8rVsB
-         1sxDQ9aqUvLS5dS7Sa3ta0hvdwNATlFnfdv/y9/oYwrKDrZxkYGSYvQXdmyBnWws2S
-         PHEQ9SuJKLtMvK42rHTFd0TlOuBN4zDHFnoLMwcvI8XW5rrTW4gTOi0+I5Kb4gWPQ8
-         UA8k4Zb1JGSopLJy9riWjPVB0MCf9k1zX5RrjRWwXGG1E7eacsHmf+ZiylDmJ6kJ9O
-         N+RhD+0vEgzeQ==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id B5CC215C3F2A; Thu, 12 May 2022 09:56:46 -0400 (EDT)
-Date:   Thu, 12 May 2022 09:56:46 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     tj@kernel.org, torvalds@linux-foundation.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
-        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
-        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
-        duyuyang@gmail.com, johannes.berg@intel.com, willy@infradead.org,
-        david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
-        42.hyeyoo@gmail.com, mcgrof@kernel.org, holt@sgi.com
-Subject: Re: [REPORT] syscall reboot + umh + firmware fallback
-Message-ID: <Yn0SHhnhB8fyd0jq@mit.edu>
-References: <YnzQHWASAxsGL9HW@slm.duckdns.org>
- <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
+        with ESMTP id S1354953AbiELO0N (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 10:26:13 -0400
+Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 386F7220F0;
+        Thu, 12 May 2022 07:26:12 -0700 (PDT)
+Received: by mail-lj1-x233.google.com with SMTP id 4so6696804ljw.11;
+        Thu, 12 May 2022 07:26:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=TfDCVHRtgrPCtctsl2EaaUulg/1gPdaA0bbzv0CbTF4=;
+        b=fB+mgiTBS84Bwp+xHMfq0NKZ3fBFe/flDnHYXWZ+kv8LPyaY6zhcd62nSQIvceLorv
+         jRlleaRdnVjoNGj6DRLWpVt1YyI7/nJ4qqelKf+yBMlrrNieTEEmGHicnddbmcDCTp1/
+         s6xbzwjF4l3LeU4fY6wYD9PWbZkAEGM8aEEijnldR0bH9GyY2YNAUzDRr3aEB8H077W1
+         /lGrI5uwNicPF7EOle/9VpvR4NtXhTI3YnRcj7aSdZV2vV8CgPLeSCal+y4x9k9T+91K
+         xto2zzz/OzelrGGIaiISEcec1AqxCkm2gZAiIKzh6b3wZlTkHKFaVzZ3lL1ba+KG3TA2
+         nrHQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=TfDCVHRtgrPCtctsl2EaaUulg/1gPdaA0bbzv0CbTF4=;
+        b=fvYWBKWbxpnNB385ncEdnpWF6iBOHvHil2A8sgDyiUKc4YgR3Ss+Tu13eX01sWysP9
+         81naCrDrrhBbmSppZ5aJtonZfdWH+LoYC7WhqWeCHQFUz/evpRxA4jxd5YES12NMkDm+
+         OQhK4uzoTdHNDFqtVfZDD2XGr3w1z1hd7bYL5zyfRUv6SKVRKn4hgYjNmE2p/6/AKIlP
+         rYYkxD0xIuIvmJwQOTms5h1CIdBU6xLbJyxdWN44/AiqnkplSyG9j//pnnhOh99nm7xe
+         ZwmKTMtCRv3KAyA39eaE7KfxkiW2VzKuXoXb+rjkkqRDum7X/RWauT8tCMzABjuilqp0
+         +lsA==
+X-Gm-Message-State: AOAM533S31ZGZL2VlxIfTqQ2g9x5uZqzP2oCfLY4IDbGVyPQr1xs6z2N
+        oWuIaXZB1zdv0ys6edxPGuhuRhgtu5JrpQ==
+X-Google-Smtp-Source: ABdhPJziSKzmfdfSYwT3FoP3fegLwMFcliuj82gmIzZ9/NR3VKY9dVP/M49ulboPnBLqiuA49DBm/A==
+X-Received: by 2002:a05:651c:160b:b0:247:f955:1b18 with SMTP id f11-20020a05651c160b00b00247f9551b18mr152728ljq.427.1652365570388;
+        Thu, 12 May 2022 07:26:10 -0700 (PDT)
+Received: from mobilestation ([95.79.189.214])
+        by smtp.gmail.com with ESMTPSA id y5-20020ac24465000000b0047255d21165sm807567lfl.148.2022.05.12.07.26.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 May 2022 07:26:09 -0700 (PDT)
+Date:   Thu, 12 May 2022 17:26:07 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 08/23] ata: libahci_platform: Add function returning a
+ clock-handle by id
+Message-ID: <20220512142607.u2kls35pevnjsjjh@mobilestation>
+References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-9-Sergey.Semin@baikalelectronics.ru>
+ <0732a28c-579e-52f8-21ad-653fd9a10aa2@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0732a28c-579e-52f8-21ad-653fd9a10aa2@suse.de>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, May 12, 2022 at 08:18:24PM +0900, Byungchul Park wrote:
-> I have a question about this one. Yes, it would never been stuck thanks
-> to timeout. However, IIUC, timeouts are not supposed to expire in normal
-> cases. So I thought a timeout expiration means not a normal case so need
-> to inform it in terms of dependency so as to prevent further expiraton.
-> That's why I have been trying to track even timeout'ed APIs.
+On Thu, May 12, 2022 at 08:32:37AM +0200, Hannes Reinecke wrote:
+> On 5/12/22 01:17, Serge Semin wrote:
+> > Since all the clocks are retrieved by the method
+> > ahci_platform_get_resources() there is no need for the LLD (glue) drivers
+> > to be looking for some particular of them in the kernel clocks table
+> > again. Instead we suggest to add a simple method returning a
+> > device-specific clock with passed connection ID if it is managed to be
+> > found. Otherwise the function will return NULL. Thus the glue-drivers
+> > won't need to either manually touching the hpriv->clks array or calling
+> > clk_get()-friends. The AHCI platform drivers will be able to use the new
+> > function right after the ahci_platform_get_resources() method invocation
+> > and up to the device removal.
+> > 
+> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> > 
+> > ---
+> > 
+> > Changelog v2:
+> > - Fix some grammar mistakes in the method description.
+> > ---
+> >   drivers/ata/libahci_platform.c | 27 +++++++++++++++++++++++++++
+> >   include/linux/ahci_platform.h  |  3 +++
+> >   2 files changed, 30 insertions(+)
+> > 
+> > diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> > index 3cff86c225fd..7ff6626fd569 100644
+> > --- a/drivers/ata/libahci_platform.c
+> > +++ b/drivers/ata/libahci_platform.c
+> > @@ -94,6 +94,33 @@ void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
+> >   }
+> >   EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
+> > +/**
+> > + * ahci_platform_find_clk - Find platform clock
+> > + * @hpriv: host private area to store config values
+> > + * @con_id: clock connection ID
+> > + *
+> > + * This function returns a pointer to the clock descriptor of the clock with
+> > + * the passed ID.
+> > + *
+> > + * RETURNS:
+> > + * Pointer to the clock descriptor on success otherwise NULL
+> > + */
+> > +struct clk *ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id)
+> > +{
+> > +	struct clk *clk = NULL;
+> > +	int i;
+> > +
+> > +	for (i = 0; i < hpriv->n_clks; i++) {
+> > +		if (!strcmp(hpriv->clks[i].id, con_id)) {
+> > +			clk = hpriv->clks[i].clk;
+> > +			break;
+> > +		}
+> > +	}
+> > +
+> > +	return clk;
+> > +}
+> > +EXPORT_SYMBOL_GPL(ahci_platform_find_clk);
+> > +
+> >   /**
+> >    * ahci_platform_enable_clks - Enable platform clocks
+> >    * @hpriv: host private area to store config values
+> > diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+> > index 49e5383d4222..fd964e6a68d6 100644
+> > --- a/include/linux/ahci_platform.h
+> > +++ b/include/linux/ahci_platform.h
+> > @@ -13,6 +13,7 @@
+> >   #include <linux/compiler.h>
+> > +struct clk;
+> >   struct device;
+> >   struct ata_port_info;
+> >   struct ahci_host_priv;
+> > @@ -21,6 +22,8 @@ struct scsi_host_template;
+> >   int ahci_platform_enable_phys(struct ahci_host_priv *hpriv);
+> >   void ahci_platform_disable_phys(struct ahci_host_priv *hpriv);
+> > +struct clk *
+> > +ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id);
+> >   int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
+> >   void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
+> >   int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv);
+> 
 
-As I beleive I've already pointed out to you previously in ext4 and
-ocfs2, the jbd2 timeout every five seconds happens **all** the time
-while the file system is mounted.  Commits more frequently than five
-seconds is the exception case, at least for desktops/laptop workloads.
+> Where is this function being used?
 
-We *don't* get to the timeout only when a userspace process calls
-fsync(2), or if the journal was incorrectly sized by the system
-administrator so that it's too small, and the workload has so many
-file system mutations that we have to prematurely close the
-transaction ahead of the 5 second timeout.
+It will be used in the DWC AHCI SATA driver and can be utilized in the
+rest of the drivers to simplify the available clocks access.
+BTW Damien asked the same question in v1. My response was the same.
 
-> Do you think DEPT shouldn't track timeout APIs? If I was wrong, I
-> shouldn't track the timeout APIs any more.
+-Sergey
 
-DEPT tracking timeouts will cause false positives in at least some
-cases.  At the very least, there needs to be an easy way to suppress
-these false positives on a per wait/mutex/spinlock basis.
-
-      	       	    	     	      	   	 - Ted
+> 
+> Cheers,
+> 
+> Hannes
+> -- 
+> Dr. Hannes Reinecke		           Kernel Storage Architect
+> hare@suse.de			                  +49 911 74053 688
+> SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+> HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
