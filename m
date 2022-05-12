@@ -2,156 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B0CC433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 12:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80BBBC433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 13:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353794AbiELMcA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 08:32:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57876 "EHLO
+        id S1354762AbiELN5A (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 09:57:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353770AbiELMbz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 08:31:55 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 200804AE09;
-        Thu, 12 May 2022 05:31:51 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id m23so6342085ljc.0;
-        Thu, 12 May 2022 05:31:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=1nGNpikUs8vk4+aJD/NKpap25jqeBIDRUKybH2Zwqok=;
-        b=E4oAmZY4A0ZUSqx3z+F0WjMqHKJSpUkcD683dWO7uCrk1433e1ylnPkIEdJ3n8tv9d
-         QFyQQsx72iG73vT3HWD1rKAiXNEcjQWAQxeGKXpmmFQ41loK8I74ot5D7OvPPtFyqlGb
-         UR83VoKixoJGUjzGuNgKFTBGLcZxvJjfiDas74G9q8v3CjG/8e6UggEB9RcpvsGWLlyI
-         9VG7hHaswyeZt31MVo1xLcFYYIja6fxXUVMqJCCBVpRgFkbeD8E9iEWV/jMNiCnqMsxJ
-         JLySwvfm0P0333AvGCcLm54fau8RZPwSziskG2cIOxGlQ4BCSh3ptU+vy+xKEfwcch0r
-         tZyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=1nGNpikUs8vk4+aJD/NKpap25jqeBIDRUKybH2Zwqok=;
-        b=DMdvVXqKOXt7itawx5J915+bXmS16EKEo/F6QUgHyPHz4TzQBbxuHFYeLz/JRdFMbE
-         GzKP5IeFNEKglN4jkzcKWsTAqAkLRN+Cf2Gbv+WYfSXXdjce5rS8dvMRGv3njAFYVZil
-         ZmhW/QUOCRk3p2b1VTnEK9OMXsJ26oAxK8pIO12AKuxOLsSbRf4TKuoioHloW0Yby1+7
-         GXnGmHV/HYh1Htv5a8HF8MIsQ27gwOCIsydiU2iDawnWnlvPAwLLWBiIlOc7vnbT7r2D
-         bzg2WOIIp08evh0+IK0FfccoT2jQR7ifNzqQYKNjy1U9jDBVoTBcuYt9NkEfpsdHLsnj
-         D6LA==
-X-Gm-Message-State: AOAM530Ex4WcvReUXlU5OVO3foMUdQSed5z9PqeNcpRmMtX0tnmX5CWV
-        1vnKX1Xf13uyKafsa0W1+aA=
-X-Google-Smtp-Source: ABdhPJzWOhBlKh2AZ9FLigPh2HroCkxI1czqj30olnv2HQZTPhPzwsTMmKpIgl47dJKBJ34Hg+QrEA==
-X-Received: by 2002:a2e:82c3:0:b0:250:c47e:c3ab with SMTP id n3-20020a2e82c3000000b00250c47ec3abmr13518987ljh.393.1652358709589;
-        Thu, 12 May 2022 05:31:49 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id n6-20020a195506000000b0047415cd1ec3sm766340lfe.165.2022.05.12.05.31.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 May 2022 05:31:48 -0700 (PDT)
-Date:   Thu, 12 May 2022 15:31:46 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hannes Reinecke <hare@suse.de>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 05/23] ata: libahci_platform: Explicitly set rc on
- devres_alloc failure
-Message-ID: <20220512123146.zkuftdu7fm26r6mp@mobilestation>
-References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-6-Sergey.Semin@baikalelectronics.ru>
- <4bd4318b-a753-6453-a815-716fbfffab3f@suse.de>
- <9a1ad8f4-7f60-a941-940d-eca00b1f533b@opensource.wdc.com>
+        with ESMTP id S1354768AbiELN4y (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 09:56:54 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77A0A3982D;
+        Thu, 12 May 2022 06:56:52 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 24CDuk1S025723
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 12 May 2022 09:56:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1652363808; bh=fK1JutfKwB9RZi7LGZBoNzqwgl48auY9kCDUP4LKjGo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=UdsqUMuxNr9fe51BYBreYmwrfOY1B++I+ve8viaz0nmXc6KyQP5QUzEjOXAOAk4ra
+         g8Tr5jAwwqGdfLEZT3d8iGx07G6013fFup2jsp6fjMByQkPvPM7yC06ELxnpD8rVsB
+         1sxDQ9aqUvLS5dS7Sa3ta0hvdwNATlFnfdv/y9/oYwrKDrZxkYGSYvQXdmyBnWws2S
+         PHEQ9SuJKLtMvK42rHTFd0TlOuBN4zDHFnoLMwcvI8XW5rrTW4gTOi0+I5Kb4gWPQ8
+         UA8k4Zb1JGSopLJy9riWjPVB0MCf9k1zX5RrjRWwXGG1E7eacsHmf+ZiylDmJ6kJ9O
+         N+RhD+0vEgzeQ==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id B5CC215C3F2A; Thu, 12 May 2022 09:56:46 -0400 (EDT)
+Date:   Thu, 12 May 2022 09:56:46 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Byungchul Park <byungchul.park@lge.com>
+Cc:     tj@kernel.org, torvalds@linux-foundation.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, linux-kernel@vger.kernel.org,
+        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
+        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
+        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
+        duyuyang@gmail.com, johannes.berg@intel.com, willy@infradead.org,
+        david@fromorbit.com, amir73il@gmail.com,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
+        42.hyeyoo@gmail.com, mcgrof@kernel.org, holt@sgi.com
+Subject: Re: [REPORT] syscall reboot + umh + firmware fallback
+Message-ID: <Yn0SHhnhB8fyd0jq@mit.edu>
+References: <YnzQHWASAxsGL9HW@slm.duckdns.org>
+ <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9a1ad8f4-7f60-a941-940d-eca00b1f533b@opensource.wdc.com>
+In-Reply-To: <1652354304-17492-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, May 12, 2022 at 12:32:42PM +0200, Damien Le Moal wrote:
-> On 2022/05/12 8:27, Hannes Reinecke wrote:
-> > On 5/12/22 01:17, Serge Semin wrote:
-> >> It's better for readability and maintainability to explicitly assign an
-> >> error number to the variable used then as a return value from the method
-> >> on the cleanup-on-error path. So adding new code in the method we won't
-> >> have to think whether the overridden rc-variable is set afterward in case
-> >> of an error. Saving one line of code doesn't worth it especially seeing
-> >> the rest of the ahci_platform_get_resources() function errors handling
-> >> blocks do explicitly write errno to rc.
-> >>
-> >> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> >>
-> >> ---
-> >>
-> >> Changelog v2:
-> >> - Drop rc variable initialization (@Damien)
-> >> ---
-> >>   drivers/ata/libahci_platform.c | 6 ++++--
-> >>   1 file changed, 4 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> >> index 32495ae96567..f7f9bfcfc164 100644
-> >> --- a/drivers/ata/libahci_platform.c
-> >> +++ b/drivers/ata/libahci_platform.c
-> >> @@ -389,7 +389,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
-> >>   	struct ahci_host_priv *hpriv;
-> >>   	struct clk *clk;
-> >>   	struct device_node *child;
-> >> -	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
-> >> +	int i, enabled_ports = 0, rc, child_nodes;
-> >>   	u32 mask_port_map = 0;
-> >>   
-> >>   	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-> >> @@ -397,8 +397,10 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
-> >>   
-> >>   	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
-> >>   			     GFP_KERNEL);
-> >> -	if (!hpriv)
-> >> +	if (!hpriv) {
-> >> +		rc = -ENOMEM;
-> >>   		goto err_out;
-> >> +	}
-> >>   
-> >>   	devres_add(dev, hpriv);
-> >>   
+On Thu, May 12, 2022 at 08:18:24PM +0900, Byungchul Park wrote:
+> I have a question about this one. Yes, it would never been stuck thanks
+> to timeout. However, IIUC, timeouts are not supposed to expire in normal
+> cases. So I thought a timeout expiration means not a normal case so need
+> to inform it in terms of dependency so as to prevent further expiraton.
+> That's why I have been trying to track even timeout'ed APIs.
 
-> > I disagree.
-> > As 'rc' is now only initialized within a conditional we're risking 'rc' 
-> > will be left uninitialized.
+As I beleive I've already pointed out to you previously in ext4 and
+ocfs2, the jbd2 timeout every five seconds happens **all** the time
+while the file system is mounted.  Commits more frequently than five
+seconds is the exception case, at least for desktops/laptop workloads.
 
-That's what I told to @Damien in v1.
+We *don't* get to the timeout only when a userspace process calls
+fsync(2), or if the journal was incorrectly sized by the system
+administrator so that it's too small, and the workload has so many
+file system mutations that we have to prematurely close the
+transaction ahead of the 5 second timeout.
 
-> > And in the end, it's a matter of style; this patch doesn't change the 
-> > flow of events and the benefits are hard to see.
+> Do you think DEPT shouldn't track timeout APIs? If I was wrong, I
+> shouldn't track the timeout APIs any more.
 
-As a first time reader of the module I've saw them. It was hard
-to comprehend right from the code context whether rc was properly
-initialized especially seeing there are so many local variables
-defined. Unified rc-initialization approach makes code easier to read
-for sure. In this case the rc variable is re-initialized in each
-error-case. So having it defaulted to a value which is relevant to the
-code block in the twenty lines below isn't the most optimized design.
+DEPT tracking timeouts will cause false positives in at least some
+cases.  At the very least, there needs to be an easy way to suppress
+these false positives on a per wait/mutex/spinlock basis.
 
-> 
-> Yes. Let's drop this patch. Not improving anything.
-
-It's up to you to decide after all. Even though I disagree with your
-opinions the patch will be dropped in v4.
-
--Sergey
-
-> 
-> > 
-> > Cheers,
-> > 
-> > Hannes
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+      	       	    	     	      	   	 - Ted
