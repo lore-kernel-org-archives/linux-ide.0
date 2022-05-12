@@ -2,74 +2,75 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DDCCC433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 06:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B5FC433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 12 May 2022 06:23:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350226AbiELGVq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 May 2022 02:21:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37830 "EHLO
+        id S1349197AbiELGX6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 May 2022 02:23:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347424AbiELGVp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:21:45 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D0B63DA6F;
-        Wed, 11 May 2022 23:21:44 -0700 (PDT)
+        with ESMTP id S1350294AbiELGX5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2022 02:23:57 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DDCD59BB1;
+        Wed, 11 May 2022 23:23:54 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1D2901F8F4;
-        Thu, 12 May 2022 06:21:43 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 17FA621AE4;
+        Thu, 12 May 2022 06:23:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1652336503; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652336633; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=VZCkAVlqK4be51Iao9TAxRWn1tf1liEtuTyxdtziUME=;
-        b=XVG6WYWpgxTlc1QAjyFQKda84XQH/ddCehEX3+/2JdRWk2RMHw5R/LvoiiNfHc4nab89Xs
-        kQ67oaHGn1tkUhdflhKqGWWrsmS1rMJETQ8XjYXKK0HqlXWC2SD5qzJYH8rMDFIA/EMOZl
-        yDZ3pX4FtTJyby1LI/LQpV52fdwo6Ts=
+        bh=q2Ziuk/8n/V8x8TU5pFnBuxK3RFdRleKuAeFlcwHMJc=;
+        b=vu4hYqFJsyev3Gj8hLLyi8kcnv7HULOzkVHqS06qJ8fLlDDiYRhZc35qSAq/4hp2ZHPqy1
+        FiueDsPPbh9CcmbwZVa5JKduvgtpULsxtlnrqu/8CgMQd8vfDa9ODMplwixcda06v7J8s5
+        N7qSQP6iWBgk8naYH+YtqbN1TcXj9dY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1652336503;
+        s=susede2_ed25519; t=1652336633;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=VZCkAVlqK4be51Iao9TAxRWn1tf1liEtuTyxdtziUME=;
-        b=qNpR4yLBd+2ipVw2OGK6OEjXYydiCTUrYps2c2J37BnzRoX93eYHSoUJXj4Qj1tNrNIlel
-        y7d0feS5aOQV6GAA==
+        bh=q2Ziuk/8n/V8x8TU5pFnBuxK3RFdRleKuAeFlcwHMJc=;
+        b=fxThtM4CCSKxbBnru7/B789HB2PG/RVOrKqqr5hjF/B0Z5t3PjM9Ld4jJmKtB6Jvl6Z5+i
+        t+YijYvgsczK3aBw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E430513ABE;
-        Thu, 12 May 2022 06:21:42 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A2D4713ABE;
+        Thu, 12 May 2022 06:23:52 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id CY8eNHanfGKETAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:21:42 +0000
-Message-ID: <d73f45d3-171f-a704-e479-411a54699d3b@suse.de>
-Date:   Thu, 12 May 2022 08:21:42 +0200
+        id a4pMJvinfGI5TQAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 12 May 2022 06:23:52 +0000
+Message-ID: <271251bf-f941-4db3-5ffd-f54439a5434d@suse.de>
+Date:   Thu, 12 May 2022 08:23:52 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH v3 03/23] dt-bindings: ata: ahci-platform: Clarify common
- AHCI props constraints
+Subject: Re: [PATCH v3 04/23] dt-bindings: ata: sata: Extend number of SATA
+ ports
 Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Linus Walleij <linus.walleij@linaro.org>
 Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-4-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-5-Sergey.Semin@baikalelectronics.ru>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220511231810.4928-4-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220511231810.4928-5-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -77,79 +78,50 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 5/12/22 01:17, Serge Semin wrote:
-> Indeed in accordance with what is imeplemtned in the AHCI paltform driver
-
-Spelling; 'imeplemtned' and 'paltform'
-
-> and the way the AHCI DT nodes are defined in the DT files we can add the
-> next AHCI DT properties constraints: AHCI CSR ID is fixed to 'ahci', PHY
-> name is fixed to 'sata-phy', AHCI controller can't have more than 32 ports
-> by design.
+> The denoted in the description upper limit only concerns the Port
+> Multipliers, but not the actual SATA ports. It's an external device
+> attached to a SATA port in order to access more than one SATA-drive. So
+> when it's attached to a SATA port it just extends the port capability
+> while the number of actual SATA ports stays the same. For instance on AHCI
+> controllers the number of actual ports is determined by the CAP.NP field
+> and the PI (Ports Implemented) register. AFAICS in general the maximum
+> number of SATA ports depends on the particular controller implementation.
+> Generic AHCI controller can't have more than 32 ports (since CAP.NP is of
+> 5 bits wide and PI register is 32-bits size), while DWC AHCI SATA
+> controller can't be configured with more than 8 ports activated. So let's
+> discard the SATA ports reg-property restrictions and just make sure that
+> it consists of a single reg-item.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > 
-> Changelog v2:
-> - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 > ---
->   .../devicetree/bindings/ata/ahci-common.yaml      | 15 ++++++++++-----
->   1 file changed, 10 insertions(+), 5 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> index 620042ca12e7..a7d1a8353de3 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> @@ -31,6 +31,8 @@ properties:
->   
->     reg-names:
->       description: CSR space IDs
-> +    contains:
-> +      const: ahci
->   
->     interrupts:
->       description:
-> @@ -71,14 +73,13 @@ properties:
->       maxItems: 1
->   
->     phy-names:
-> -    maxItems: 1
-> +    const: sata-phy
->   
->     ports-implemented:
->       $ref: '/schemas/types.yaml#/definitions/uint32'
->       description:
->         Mask that indicates which ports the HBA supports. Useful if PI is not
->         programmed by the BIOS, which is true for some embedded SoC's.
-> -    maximum: 0x1f
->   
->   patternProperties:
->     "^sata-port@[0-9a-f]+$":
-> @@ -89,8 +90,12 @@ patternProperties:
->   
+> Changelog v2:
+> - Add comma and replace "channel" with "SATA port" in the reg property
+>    description (@Damien).
+> ---
+>   Documentation/devicetree/bindings/ata/sata-common.yaml | 7 +++----
+>   1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
+> index 7ac77b1c5850..9c9c621761ca 100644
+> --- a/Documentation/devicetree/bindings/ata/sata-common.yaml
+> +++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
+> @@ -41,11 +41,10 @@ patternProperties:
 >       properties:
 >         reg:
-> -        description: AHCI SATA port identifier
-> -        maxItems: 1
-> +        description:
-> +          AHCI SATA port identifier. By design AHCI controller can't have
-> +          more than 32 ports due to the CAP.NP fields and PI register size
-> +          constraints.
-> +        minimum: 0
-> +        maximum: 31
+>           minimum: 0
+> -        maximum: 14
+>           description:
+> -          The ID number of the drive port SATA can potentially use a port
+> -          multiplier making it possible to connect up to 15 disks to a single
+> -          SATA port.
+> +          The ID number of the SATA port. Aside with being directly used,
+> +          each port can have a Port Multiplier attached thus allowing to
+> +          access more than one drive by means of a single SATA port.
 >   
->         phys:
->           description: Individual AHCI SATA port PHY
-> @@ -98,7 +103,7 @@ patternProperties:
+>   additionalProperties: true
 >   
->         phy-names:
->           description: AHCI SATA port PHY ID
-> -        maxItems: 1
-> +        const: sata-phy
->   
->         target-supply:
->           description: Power regulator for SATA port target device
-
-Other than that it looks okay.
-
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
