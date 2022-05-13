@@ -2,66 +2,118 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63205C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 13 May 2022 08:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0705C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 13 May 2022 08:22:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378094AbiEMIKa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 13 May 2022 04:10:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54406 "EHLO
+        id S1378167AbiEMIW6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 13 May 2022 04:22:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357650AbiEMIK3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2022 04:10:29 -0400
-Received: from mail.coredeal.pl (mail.coredeal.pl [51.75.73.133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF3552A4A2A
-        for <linux-ide@vger.kernel.org>; Fri, 13 May 2022 01:10:28 -0700 (PDT)
-Received: by mail.coredeal.pl (Postfix, from userid 1002)
-        id 7A617A4D13; Fri, 13 May 2022 08:06:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=coredeal.pl; s=mail;
-        t=1652429239; bh=9KGuIG62LgzC9aYmjKxzocuYLRCVghXg6v9Q1q2LHec=;
-        h=Date:From:To:Subject:From;
-        b=KpVZXt7Xnk5dumqflUTos/lI5+TNzCyfP/0RgZcgMxR8ZMJk8RjT4D2WYA7ZYqROQ
-         ABYI4PNwIYY2WtWSeKWZ0Qs0kpdd1J5kunIu2M0avs9P84ik5IT7dcLmRuuiaIEOGj
-         8QOnhotFoLwnBd+IminBvSCMa8Y9zwYWR4HR+ocynpGdJsOyj3gVuw6CzaY4cxHCis
-         sDLTooedtRfPFp1RXs2uAWko4sUcU0Noi4SFTtcVC3ZcXFzHxdUeUMNL/xBQfFgerA
-         J+EBzCzp5DUrYfcroz9odSSbnhFu8mnkNYrxRTwkAOqm3zbaGfwuB5By0KvM3kL1Wr
-         QLbpwXtc38FMQ==
-Received: by mail.coredeal.pl for <linux-ide@vger.kernel.org>; Fri, 13 May 2022 08:05:55 GMT
-Message-ID: <20220513064500-0.1.33.o0gw.0.9gbm77dnd3@coredeal.pl>
-Date:   Fri, 13 May 2022 08:05:55 GMT
-From:   "Krzysztof Maj" <krzysztof.maj@coredeal.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Biznesowy angielski
-X-Mailer: mail.coredeal.pl
+        with ESMTP id S1378091AbiEMIWw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2022 04:22:52 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DC5B262672;
+        Fri, 13 May 2022 01:22:49 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id c24so3730149lfv.11;
+        Fri, 13 May 2022 01:22:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=bHr/LN3gH4J18SZqSPlyS5LBwKeIhV3WXsMlgOi6f+4=;
+        b=XMgBiIJSaZ7yHO4F9FFyh4HHsDzgwZIc4ROUHt/XnJTZwDoCGLlUf0jmBOhMlJUneq
+         PdynIO8s2ISkn1/WAhVMYiuz1CIU/JH64vo0cGEkqvx2d8tJM7M3aY+P2guwTeVDqq2e
+         aDs9vLoKwGFgLXH7VFbdoRofSmEdjAg9pXXuBy2rJ0JQDJzRw28lrMb0HWdW69GBG7Ro
+         PbB42o+ip83alHR8cSOYN5OlMKVp3LwEM2klfmNpRUABn+3nLswfeRyvIJLRM3kQnMWe
+         FAm89zG5JnMnPy8tRcReAxncvZ4huoqs7gjMBERp2M9AWUJj5ANU37+rxoItLT6jq0Yz
+         pIdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bHr/LN3gH4J18SZqSPlyS5LBwKeIhV3WXsMlgOi6f+4=;
+        b=uN6KQaUXbtPmKI9zmAaV5tBMxYqf9SJ4jI73Db0qGXU16Q74YuYyA5BWJrIHktcXRH
+         Xuxa9YBFtLcTHDLLY5Qvqb9Zr5RxT8KSqbGaA0NvWPfS/4sF/1mv6RfSok8r+/LiNl/I
+         HnQibfPEHHuRCHOaNwReTzD/r5YxRvN1TFT0+/T/B0d/lrVQ4qLkY7blhopKxA6ZJicg
+         rqtMS5RPDSx5QNOdNHzU0AnStkb/bZ2QEvTwcA9k9aXkb7zM65mnIWpZtibdT3NBOa8V
+         Eb1s7HO4sl2ti0heKO1ju+Ck+76dTGB5+DVKAo8PPEssT/Rt3Sy2r5Z1oQsXqBH5qME7
+         +fyg==
+X-Gm-Message-State: AOAM5332KAGSY/BbTddvNPc7Y+HyXODZV0K+f+w3E2spRBpxgcaVaHuq
+        5bWeLDk5vYYROA+rjbSGxKi4ftWsjoM=
+X-Google-Smtp-Source: ABdhPJx1GDgivsFZ/N+yg7hu65wIxi09RSSRjKzQnH/8QUBVM9jo2ssm4vEaZeluX4loQWBMs2fudg==
+X-Received: by 2002:ac2:5f84:0:b0:471:fd0f:a6e7 with SMTP id r4-20020ac25f84000000b00471fd0fa6e7mr2589134lfe.41.1652430167053;
+        Fri, 13 May 2022 01:22:47 -0700 (PDT)
+Received: from [192.168.1.103] ([31.173.80.171])
+        by smtp.gmail.com with ESMTPSA id n2-20020a195502000000b0047255d21164sm286121lfe.147.2022.05.13.01.22.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 13 May 2022 01:22:46 -0700 (PDT)
+Subject: Re: [PATCH v3 13/23] ata: libahci: Extend port-cmd flags set with
+ port capabilities
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-14-Sergey.Semin@baikalelectronics.ru>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <887a7537-5400-f3e2-235c-033871d413bc@gmail.com>
+Date:   Fri, 13 May 2022 11:22:44 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20220511231810.4928-14-Sergey.Semin@baikalelectronics.ru>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,=20
+On 5/12/22 2:18 AM, Serge Semin wrote:
 
-czy rozwa=C5=BCali Pa=C5=84stwo rozw=C3=B3j kwalifikacji j=C4=99zykowych =
-swoich pracownik=C3=B3w?
+> Currently not all of the Port-specific capabilities listed in the
+> PORT_CMD-enumeration. Let's extend that set with the Cold Presence
+> Detection and Mechanical Presence Switch attached to the Port flags [1] so
+> to closeup the set of the platform-specific port-capabilities flags.  Note
+> these flags are supposed to be set by the platform firmware if there is
+> one. Alternatively as we are about to do they can be set by means of the
+> OF properties.
+> 
+> While at it replace PORT_IRQ_DEV_ILCK with PORT_IRQ_DEV_MPS and fix the
 
-Opracowali=C5=9Bmy kursy j=C4=99zykowe dla r=C3=B3=C5=BCnych bran=C5=BC, =
-w kt=C3=B3rych koncentrujemy si=C4=99 na podniesieniu poziomu s=C5=82owni=
-ctwa i jako=C5=9Bci komunikacji wykorzystuj=C4=85c autorsk=C4=85 metod=C4=
-=99, stworzon=C4=85 specjalnie dla wymagaj=C4=85cego biznesu.=20
+   Your code has PORT_IRQ_DMPS instead...
 
-Niestandardowy kurs on-line, dopasowany do profilu firmy i obszar=C3=B3w =
-=C5=9Bwiadczonych us=C5=82ug, w szybkim czasie przyniesie efekty, kt=C3=B3=
-re zwi=C4=99ksz=C4=85 komfort i jako=C5=9B=C4=87 pracy, rozwijaj=C4=85c m=
-o=C5=BCliwo=C5=9Bci biznesowe.=20
+> comment there. In accordance with [2] that IRQ flag is supposed to
+> indicate the state of the signal coming from the Mechanical Presence
+> Switch.
+> 
+> [1] Serial ATA AHCI 1.3.1 Specification, p.27
+> [2] Serial ATA AHCI 1.3.1 Specification, p.7
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> ---
+>  drivers/ata/ahci.h | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 7d834deefeb9..f501531bd1b3 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -138,7 +138,7 @@ enum {
+>  	PORT_IRQ_BAD_PMP	= (1 << 23), /* incorrect port multiplier */
+>  
+>  	PORT_IRQ_PHYRDY		= (1 << 22), /* PhyRdy changed */
+> -	PORT_IRQ_DEV_ILCK	= (1 << 7), /* device interlock */
+> +	PORT_IRQ_DMPS		= (1 << 7), /* mechanical presence status */
+>  	PORT_IRQ_CONNECT	= (1 << 6), /* port connect change status */
+>  	PORT_IRQ_SG_DONE	= (1 << 5), /* descriptor processed */
+>  	PORT_IRQ_UNK_FIS	= (1 << 4), /* unknown FIS rx'd */
+[...]
 
-Zdalne szkolenie j=C4=99zykowe to m.in. zaj=C4=99cia z native speakerami,=
- kt=C3=B3re w szybkim czasie naucz=C4=85 pracownik=C3=B3w rozmawia=C4=87 =
-za pomoc=C4=85 jasnego i zwi=C4=99z=C5=82ego j=C4=99zyka Business English=
-=2E
-
-Czy m=C3=B3g=C5=82bym przedstawi=C4=87 wi=C4=99cej szczeg=C3=B3=C5=82=C3=B3=
-w i opowiedzie=C4=87 jak dzia=C5=82amy?=20
-
-
-Pozdrawiam
-Krzysztof Maj
+MBR, Sergey
