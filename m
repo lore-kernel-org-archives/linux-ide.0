@@ -2,72 +2,103 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 346AAC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 13 May 2022 21:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE1AC433F5
+	for <linux-ide@archiver.kernel.org>; Sat, 14 May 2022 02:52:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231829AbiEMV1Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 13 May 2022 17:27:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57954 "EHLO
+        id S229966AbiENCwl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 13 May 2022 22:52:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1384667AbiEMV1W (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2022 17:27:22 -0400
-Received: from mail-yb1-xb30.google.com (mail-yb1-xb30.google.com [IPv6:2607:f8b0:4864:20::b30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FBD412AE4
-        for <linux-ide@vger.kernel.org>; Fri, 13 May 2022 14:27:19 -0700 (PDT)
-Received: by mail-yb1-xb30.google.com with SMTP id w187so17424544ybe.2
-        for <linux-ide@vger.kernel.org>; Fri, 13 May 2022 14:27:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=b5AthED04DvJKPgqpu7aFbZJ2so3QAiqmWJHWR8vFaU=;
-        b=SNOrvzyPthgcBhIMLJS++HW5z0GuyJwLjXKA2K73VDB2hRg8mgC5kpEFN2SCEnd1Df
-         4ong9e7mtL3QvvmbZfeYOkfP7zjFdGiXsDr8pNUVP8ruCyC0GAvvABFcM/flbrIfwkmJ
-         +SU9AJVBfzn832ahOfi/isu4j3EiNvZMPjijck2vsQyf7wrqX4L1mHp+CReHtG9LdfsW
-         Fw/44ZL4wpHMDWrxPNcstCK0H8jSytBPUykESvjqyxxNONcdqivkWlJKJP2SOmOtoysg
-         bjgTmKZKsW/9Moq5W7iicISLpsdgVHTKlIlpaPIzzSAUSTMtwu0+giE5bOrsFTZsuOlm
-         4AUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=b5AthED04DvJKPgqpu7aFbZJ2so3QAiqmWJHWR8vFaU=;
-        b=3PlqF9j/r3fViWOtGJRN4uuAkY4KdYoO2zdNI/owZuFNXIKn4eKCe9qMMX7m1dKa/+
-         7oKje1scteKWx7oS/AQiMVRBgMIaSPJnyP9K5xKocGtjAyXeuYSNZKSpvTMhwDMNViMz
-         t2hio47p4XQ0ZA/eiDXBxgV3HoxS72WiB2VMNt4TmnmEYf9QHAiwqjAsghGaNcDOz2tZ
-         npdUocPw9NS0kLV6HqUbNDXFwuwlgQnIJzrx8X1yWmt7zyW+SuHDjU5DTwHtemGfpAN1
-         M3A5lg4w8R3t51hcBgZM9ivtw2JISa/PcOh1KoOoqJLHhplNYmw0hgpPhbGPM37vkirj
-         rCCw==
-X-Gm-Message-State: AOAM532oV6ADdR9639E+syTmqxfKARshhjP+NV/UZVQCaeJbRbmVjiWs
-        UJCmy2Wc1/UwpPKKjeB4queuV9MODlAv+Xb6KrzzD7gcZKy7RQ==
-X-Google-Smtp-Source: ABdhPJw+o49OaFd2ww+QOMWIlJs0P4szqp/cOcXcZhsilvmGlEbkOYSY3aBHnBUbtfc19fSqMxxlocvLPmva7WBZNes=
-X-Received: by 2002:a25:1f85:0:b0:64b:a5fc:e881 with SMTP id
- f127-20020a251f85000000b0064ba5fce881mr3984163ybf.514.1652477238724; Fri, 13
- May 2022 14:27:18 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220513075554.127677-1-wanjiabing@vivo.com>
-In-Reply-To: <20220513075554.127677-1-wanjiabing@vivo.com>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Fri, 13 May 2022 23:27:07 +0200
-Message-ID: <CACRpkdaLArmZc5Zwi-2r3kvBgWHDJ6tbY5o-=qLAG=8B70Hfag@mail.gmail.com>
-Subject: Re: [PATCH] ata: Remove unneeded ERROR check before clk_disable_unprepare
-To:     Wan Jiabing <wanjiabing@vivo.com>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        with ESMTP id S229956AbiENCwf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2022 22:52:35 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 320B234CD35;
+        Fri, 13 May 2022 17:57:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1652489854; x=1684025854;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=vOdFNpVYPOQqVrglPzA6klVqup0LBeGqjPQesKgR29c=;
+  b=LH2i1bbVFUFGVHVTPGDc8aGlM4MrPb/+HAX8lDwYMIYxdTmFzqQ3XpKI
+   3tRD6mv5aQ5kAh8anq7Um56S4FZBM2MB0Exwq5DaCdFoT5Bs5XKWVgmva
+   Y54irM4qSUA/3V4aCt5YpnLLJnFs5V9+5x+uiBgOKADDD1fYEsSkNeYr7
+   /ec6UywQkjOcq4wvs08HvPL3qmkgTZFicEdk5maOYvCZ2q6jiqSOVyz8u
+   EKTw9c/d/8eJQ0gaKz1igEVAKZLtsF2jtTWnG2hIiYWOyNXeKqkoUx9cw
+   nq4GdxYn3hhIYX1RnP/4iPk+bkiWZZCh8mCBYhyCwJfpNrkFY1sgEjXr2
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10346"; a="333479190"
+X-IronPort-AV: E=Sophos;i="5.91,223,1647327600"; 
+   d="scan'208";a="333479190"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 17:31:29 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,223,1647327600"; 
+   d="scan'208";a="595486968"
+Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
+  by orsmga008.jf.intel.com with ESMTP; 13 May 2022 17:31:27 -0700
+Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1npfgr-000MFV-Ql;
+        Sat, 14 May 2022 00:31:25 +0000
+Date:   Sat, 14 May 2022 08:30:26 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Serge Semin <fancer.lancer@gmail.com>
+Cc:     kbuild-all@lists.01.org,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 21/23] ata: ahci-dwc: Add platform-specific quirks
+ support
+Message-ID: <202205140748.Lb7DqbPf-lkp@intel.com>
+References: <20220511231810.4928-22-Sergey.Semin@baikalelectronics.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220511231810.4928-22-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, May 13, 2022 at 9:56 AM Wan Jiabing <wanjiabing@vivo.com> wrote:
+Hi Serge,
 
-> ERROR check is already in clk_disable() and clk_unprepare() by using
-> IS_ERR_OR_NULL. Remove unneeded ERROR check for ftide->pclk here.
->
-> Signed-off-by: Wan Jiabing <wanjiabing@vivo.com>
+I love your patch! Perhaps something to improve:
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+[auto build test WARNING on axboe-block/for-next]
+[also build test WARNING on robh/for-next linus/master v5.18-rc6 next-20220513]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-Yours,
-Linus Walleij
+url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220512-072125
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+config: x86_64-rhel-8.3-kselftests (https://download.01.org/0day-ci/archive/20220514/202205140748.Lb7DqbPf-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.2.0-20) 11.2.0
+reproduce:
+        # apt-get install sparse
+        # sparse version: v0.6.4-dirty
+        # https://github.com/intel-lab-lkp/linux/commit/bc74e5ca4cbfd2bef25a9ecefc401e7d1af3df43
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220512-072125
+        git checkout bc74e5ca4cbfd2bef25a9ecefc401e7d1af3df43
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/ata/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+
+sparse warnings: (new ones prefixed by >>)
+>> drivers/ata/ahci_dwc.c:414:27: sparse: sparse: symbol 'ahci_dwc_plat' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
