@@ -2,103 +2,114 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE1AC433F5
-	for <linux-ide@archiver.kernel.org>; Sat, 14 May 2022 02:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E18FC433F5
+	for <linux-ide@archiver.kernel.org>; Sun, 15 May 2022 20:41:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229966AbiENCwl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 13 May 2022 22:52:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51212 "EHLO
+        id S231199AbiEOUlj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 15 May 2022 16:41:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229956AbiENCwf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2022 22:52:35 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 320B234CD35;
-        Fri, 13 May 2022 17:57:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652489854; x=1684025854;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=vOdFNpVYPOQqVrglPzA6klVqup0LBeGqjPQesKgR29c=;
-  b=LH2i1bbVFUFGVHVTPGDc8aGlM4MrPb/+HAX8lDwYMIYxdTmFzqQ3XpKI
-   3tRD6mv5aQ5kAh8anq7Um56S4FZBM2MB0Exwq5DaCdFoT5Bs5XKWVgmva
-   Y54irM4qSUA/3V4aCt5YpnLLJnFs5V9+5x+uiBgOKADDD1fYEsSkNeYr7
-   /ec6UywQkjOcq4wvs08HvPL3qmkgTZFicEdk5maOYvCZ2q6jiqSOVyz8u
-   EKTw9c/d/8eJQ0gaKz1igEVAKZLtsF2jtTWnG2hIiYWOyNXeKqkoUx9cw
-   nq4GdxYn3hhIYX1RnP/4iPk+bkiWZZCh8mCBYhyCwJfpNrkFY1sgEjXr2
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10346"; a="333479190"
-X-IronPort-AV: E=Sophos;i="5.91,223,1647327600"; 
-   d="scan'208";a="333479190"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2022 17:31:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,223,1647327600"; 
-   d="scan'208";a="595486968"
-Received: from lkp-server01.sh.intel.com (HELO 5056e131ad90) ([10.239.97.150])
-  by orsmga008.jf.intel.com with ESMTP; 13 May 2022 17:31:27 -0700
-Received: from kbuild by 5056e131ad90 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1npfgr-000MFV-Ql;
-        Sat, 14 May 2022 00:31:25 +0000
-Date:   Sat, 14 May 2022 08:30:26 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Serge Semin <fancer.lancer@gmail.com>
-Cc:     kbuild-all@lists.01.org,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 21/23] ata: ahci-dwc: Add platform-specific quirks
- support
-Message-ID: <202205140748.Lb7DqbPf-lkp@intel.com>
-References: <20220511231810.4928-22-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S229739AbiEOUlf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 15 May 2022 16:41:35 -0400
+Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 419B41ADAD
+        for <linux-ide@vger.kernel.org>; Sun, 15 May 2022 13:41:31 -0700 (PDT)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 3078F20A4E6F
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+Subject: [PATCH 4/4] ata: pata_hpt3x2n: pass base DPLL frequency to hpt3x2n_pci_clock()
+Date:   Sun, 15 May 2022 23:41:26 +0300
+Message-ID: <20220515204126.4866-5-s.shtylyov@omp.ru>
+X-Mailer: git-send-email 2.26.3
+In-Reply-To: <20220515204126.4866-1-s.shtylyov@omp.ru>
+References: <20220515204126.4866-1-s.shtylyov@omp.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220511231810.4928-22-Sergey.Semin@baikalelectronics.ru>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Serge,
+Currently, the base DPLL frequency is hardcoded in hpt3x2n_pci_clock().
+Align with the updated 'pata_hpt37x' driver, where this frequency is a
+parameter to hpt37x_pci_clock().
 
-I love your patch! Perhaps something to improve:
+While at it, also do the following to align with the 'pata_hpt37x' driver:
+- fix the 'freq' local variable's type;
+- remove the 'iobase' local variable;
+- extend the comment to the inl() call;
+- move the 'total' local variable's declaration.
 
-[auto build test WARNING on axboe-block/for-next]
-[also build test WARNING on robh/for-next linus/master v5.18-rc6 next-20220513]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+---
+ drivers/ata/pata_hpt3x2n.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220512-072125
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-config: x86_64-rhel-8.3-kselftests (https://download.01.org/0day-ci/archive/20220514/202205140748.Lb7DqbPf-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.2.0-20) 11.2.0
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.4-dirty
-        # https://github.com/intel-lab-lkp/linux/commit/bc74e5ca4cbfd2bef25a9ecefc401e7d1af3df43
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220512-072125
-        git checkout bc74e5ca4cbfd2bef25a9ecefc401e7d1af3df43
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 SHELL=/bin/bash drivers/ata/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-
-sparse warnings: (new ones prefixed by >>)
->> drivers/ata/ahci_dwc.c:414:27: sparse: sparse: symbol 'ahci_dwc_plat' was not declared. Should it be static?
-
-Please review and possibly fold the followup patch.
-
+diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
+index 1f6afd8ee29b..d1595e17dca2 100644
+--- a/drivers/ata/pata_hpt3x2n.c
++++ b/drivers/ata/pata_hpt3x2n.c
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt3x2n"
+-#define DRV_VERSION	"0.3.18"
++#define DRV_VERSION	"0.3.19"
+ 
+ enum {
+ 	PCI66		=	(1 << 1),
+@@ -403,17 +403,20 @@ static int hpt3xn_calibrate_dpll(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-static int hpt3x2n_pci_clock(struct pci_dev *pdev)
++static int hpt3x2n_pci_clock(struct pci_dev *pdev, unsigned int base)
+ {
+-	unsigned long freq;
++	unsigned int freq;
+ 	u32 fcnt;
+-	unsigned long iobase = pci_resource_start(pdev, 4);
+ 
+-	fcnt = inl(iobase + 0x90);	/* Not PCI readable for some chips */
++	/*
++	 * Some devices do not let this value be accessed via PCI space
++	 * according to the old driver.
++	 */
++	fcnt = inl(pci_resource_start(pdev, 4) + 0x90);
+ 	if ((fcnt >> 12) != 0xABCDE) {
++		u32 total = 0;
+ 		int i;
+ 		u16 sr;
+-		u32 total = 0;
+ 
+ 		dev_warn(&pdev->dev, "BIOS clock data not set\n");
+ 
+@@ -427,7 +430,7 @@ static int hpt3x2n_pci_clock(struct pci_dev *pdev)
+ 	}
+ 	fcnt &= 0x1FF;
+ 
+-	freq = (fcnt * 77) / 192;
++	freq = (fcnt * base) / 192;	/* in MHz */
+ 
+ 	/* Clamp to bands */
+ 	if (freq < 40)
+@@ -559,7 +562,7 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	 * 50 for UDMA100. Right now we always use 66
+ 	 */
+ 
+-	pci_mhz = hpt3x2n_pci_clock(dev);
++	pci_mhz = hpt3x2n_pci_clock(dev, 77);
+ 
+ 	f_low = (pci_mhz * 48) / 66;	/* PCI Mhz for 66Mhz DPLL */
+ 	f_high = f_low + 2;		/* Tolerance */
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.26.3
+
