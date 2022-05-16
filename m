@@ -2,144 +2,209 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F70C433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 16 May 2022 11:29:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA37DC4332F
+	for <linux-ide@archiver.kernel.org>; Mon, 16 May 2022 13:48:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229693AbiEPL33 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 16 May 2022 07:29:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54352 "EHLO
+        id S238802AbiEPNsS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 16 May 2022 09:48:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236388AbiEPL32 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 May 2022 07:29:28 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 111F3DE8E
-        for <linux-ide@vger.kernel.org>; Mon, 16 May 2022 04:29:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1652700567; x=1684236567;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=876yzZj6/+tm4YDmqPDxaGjV1EdwMr9TQE1q9RywbHg=;
-  b=QXI31Ch+yQWa37Nv24eZzPOwgd2jTFLdefbq13+nrNY6rTK8MDYsFaaD
-   O2dOWw3JkpY4zKpadag4uABHthtrRCJAK/C0325Uu0IgyFvxJRpM3Nc0b
-   DBQ5HBdbDAMVhGxJEjKKmHZ5RKRVSMJza64rQQwsMhx6CqIZIDN5VHbGB
-   jiB0BvLjhHrc0XSe8P02EUWZu6vpv14blZxzTx9O2C1TX5Bcvw/WJbH1N
-   WZHzfKtitNCXOkOzQ04RfIFkaSgdhgGHcgAq0vtICvJO0kkm5ifJejbC+
-   FmzOKV64HugKNT7pO0n4E1aq1kXm8bz/R2r0ZOLiRRGDNxg8ZBOAc+KNM
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.91,229,1647273600"; 
-   d="scan'208";a="312408658"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 16 May 2022 19:29:27 +0800
-IronPort-SDR: Tf6M/yVyNwiwxOGBhf0Dz6z4KRVw9CSYYAtrRut7BDdZ5nlU/6tuoOI/snJICQN+rX3oxniNTP
- HJN2aSCT8k7FikbWgVXvt+URl3ut/6Idc+sguhi8SufJ1CHQnTUuaGYFsBvvqm8JFMC+EQAcag
- IRPzETw0CGF7jGUCYd/sYCCA3ob4jIppv32otsDHeMLYValox6lhe6FNRQxepkxjY9ONxsJVAD
- XVzoGUh3uzHmxrn0OlUv2hez+cDpl8Pd/gSMePzuTRF/FaJ1HJAqll2czjzoc0gnxglFSTZLTe
- H+X5+gc+3sjL0Xt3ogec5G18
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 May 2022 03:53:20 -0700
-IronPort-SDR: qG8FgwootM/Ojk+lbBA/HNnJyF0uofR3HgCCGQ6ginPHQ+zgknGVN/z3nDGGAwTNoKDgWYt7Wv
- i5CPaNlItN339mm+R8hznb3luuhe1i5uGmQiW/kwWzEJ7PrE57kfhWPff2rSFL+NEOkXl/w5f5
- swUa4qPvK5Igg4tJLqHePlgsoPskiiBjsMQ87Rgri3iEpqOALmUxjxSpOOtej5no/s9gnpzUTD
- kz3B4B3C2ZEcyVQni6iCAkc5yLMZB//0aMEJ44cf2CPkdziq7AJfMRQCf//vALkza+FKNlY795
- h8g=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 May 2022 04:29:28 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4L1xqC31fdz1Rvlx
-        for <linux-ide@vger.kernel.org>; Mon, 16 May 2022 04:29:27 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1652700567; x=1655292568; bh=876yzZj6/+tm4YDmqPDxaGjV1EdwMr9TQE1
-        q9RywbHg=; b=ZLhse1cPwPHAoN+s49KmgqCRpnU2sLsxn+Flws1fB5S0FtlefPK
-        oEE7MmaG+Z+t0JjVwdi2a4lk55RBef2H8ZINLwhOPv8gBz377Ko19vCE2RKIZSUD
-        Q8/6qrz/TxtWTS2Y7WKYTTZHE1QTBI3v4dg8Qu9Rw4uJs5DO3OQEzRHnk8Y16efY
-        yotbN8HgpstsCWRJWXHkgWPUvdg2SNAoxQXtaJ1ierjFBBFmznBQvzFah/XitAs5
-        MuouZC4uq9ohLJyJhg3MOOFTE3+ihqpbB7av5pIiiphfVjeQfEAihJ6jb132tGT7
-        P+5hrOJfMU3n7udh3ASXjDKsd1mWihg6zpA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id zIODr2HJJPLx for <linux-ide@vger.kernel.org>;
-        Mon, 16 May 2022 04:29:27 -0700 (PDT)
-Received: from [10.225.1.43] (unknown [10.225.1.43])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4L1xqB40Bzz1Rvlc;
-        Mon, 16 May 2022 04:29:26 -0700 (PDT)
-Message-ID: <f8e5288f-e0e9-da11-6a82-6bcbe5365eea@opensource.wdc.com>
-Date:   Mon, 16 May 2022 13:29:24 +0200
+        with ESMTP id S237525AbiEPNsR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 May 2022 09:48:17 -0400
+Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A34883914C;
+        Mon, 16 May 2022 06:48:15 -0700 (PDT)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4L20vB6skwz4xZ5;
+        Mon, 16 May 2022 23:48:06 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+        s=201909; t=1652708890;
+        bh=IoEgFN1b2dRBNPBgpQ3TrV8TAD3LrZl3dnKWhxyBcE8=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=eOCT8tTgO0HB3LTSAxu5VPZmIDCja3jmYMxo19810CBMQQW4VUwng4Vi307xbkQp3
+         NtGdL+eJoxbZnFWifwb7kCOChKLsaCuGHJ7kenALzxiy/5D+lDIzS/Pa9H71ujoCuJ
+         1PcimRASMi9dPMp1ajYEAnJJ845+xdMAWXVLExUxp7rHLl+PjV+9dDRmB7YTQb3gCn
+         dg31DcWS+4zmI+yfmKkMWaecSijwxwHugdByRa5Px62h2UGh7tUSMCsI1YSl6uu9u9
+         OL7ZW1+kKqSCaifOCHd32fjcMBnXMDsj8J86SFvZdwAx4giXzsNaNy7F1zFwFwAeyT
+         iQLit7nUMYGng==
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Wolfram Sang <wsa@kernel.org>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Mark Brown <broonie@kernel.org>,
+        chris.packham@alliedtelesis.co.nz,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-can@vger.kernel.org, netdev@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
+Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Anatolij Gustschin <agust@denx.de>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Eric Dumazet <edumazet@google.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Pantelis Antoniou <pantelis.antoniou@gmail.com>
+Subject: Re: [PATCH v2 4/4] powerpc/52xx: Convert to use fwnode API
+In-Reply-To: <20220507100147.5802-4-andriy.shevchenko@linux.intel.com>
+References: <20220507100147.5802-1-andriy.shevchenko@linux.intel.com>
+ <20220507100147.5802-4-andriy.shevchenko@linux.intel.com>
+Date:   Mon, 16 May 2022 23:48:05 +1000
+Message-ID: <877d6l7fmy.fsf@mpe.ellerman.id.au>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.9.0
-Subject: Re: [PATCH] ata: libata-core: fix sloppy typing in ata_id_n_sectors()
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <a15e1894-8be2-70f8-26b4-be62de8055d9@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <a15e1894-8be2-70f8-26b4-be62de8055d9@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/05/13 22:50, Sergey Shtylyov wrote:
-> The code multiplying the # of cylinders/heads/sectors in ata_id_n_sectors()
-> to get a disk capacity implicitly uses the *int* type for that calculation
-> and casting the result to 'u64' before returning ensues a sign extension.
-> Explicitly casting the 'u16' typed multipliers to 'u32' results in avoiding
-> a sign extension instruction and so in a more compact code...
-> 
-> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-> analysis tool.
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> ---
-> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
-> 
->  drivers/ata/libata-core.c |   10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> Index: libata/drivers/ata/libata-core.c
-> ===================================================================
-> --- libata.orig/drivers/ata/libata-core.c
-> +++ libata/drivers/ata/libata-core.c
-> @@ -1107,11 +1107,13 @@ static u64 ata_id_n_sectors(const u16 *i
->  			return ata_id_u32(id, ATA_ID_LBA_CAPACITY);
->  	} else {
->  		if (ata_id_current_chs_valid(id))
-> -			return id[ATA_ID_CUR_CYLS] * id[ATA_ID_CUR_HEADS] *
-> -			       id[ATA_ID_CUR_SECTORS];
-> +			return (u32)id[ATA_ID_CUR_CYLS] *
-> +			       (u32)id[ATA_ID_CUR_HEADS] *
-> +			       (u32)id[ATA_ID_CUR_SECTORS];
->  		else
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+> We may convert the GPT driver to use fwnode API for the sake
+> of consistency of the used APIs inside the driver.
 
-While at it, you can drop this useless "else". The 2 else above this one are
-actually also useless...
+I'm not sure about this one.
 
-> -			return id[ATA_ID_CYLS] * id[ATA_ID_HEADS] *
-> -			       id[ATA_ID_SECTORS];
-> +			return (u32)id[ATA_ID_CYLS] *
-> +			       (u32)id[ATA_ID_HEADS] *
-> +			       (u32)id[ATA_ID_SECTORS];
+It's more consistent to use fwnode in this driver, but it's very
+inconsistent with the rest of the powerpc code. We have basically no
+uses of the fwnode APIs at the moment.
 
-Given that the function returns an u64, I would cast everything to u64. That
-will avoid overflows too, which was possible before, eventhough no problems seem
-to have been reported... Who uses CHS these days :)
+It seems like a pretty straight-forward conversion, but there could
+easily be a bug in there, I don't have any way to test it. Do you?
 
->  	}
+cheers
+
+
+
+> diff --git a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
+> index ae47fdcc8a96..58c3651034bd 100644
+> --- a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
+> +++ b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
+> @@ -53,10 +53,9 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/io.h>
+>  #include <linux/list.h>
+> +#include <linux/mod_devicetable.h>
+> +#include <linux/module.h>
+>  #include <linux/mutex.h>
+> -#include <linux/of.h>
+> -#include <linux/of_platform.h>
+> -#include <linux/of_gpio.h>
+>  #include <linux/kernel.h>
+>  #include <linux/property.h>
+>  #include <linux/slab.h>
+> @@ -64,7 +63,7 @@
+>  #include <linux/watchdog.h>
+>  #include <linux/miscdevice.h>
+>  #include <linux/uaccess.h>
+> -#include <linux/module.h>
+> +
+>  #include <asm/div64.h>
+>  #include <asm/mpc52xx.h>
+>  
+> @@ -235,18 +234,17 @@ static const struct irq_domain_ops mpc52xx_gpt_irq_ops = {
+>  	.xlate = mpc52xx_gpt_irq_xlate,
+>  };
+>  
+> -static void
+> -mpc52xx_gpt_irq_setup(struct mpc52xx_gpt_priv *gpt, struct device_node *node)
+> +static void mpc52xx_gpt_irq_setup(struct mpc52xx_gpt_priv *gpt)
+>  {
+>  	int cascade_virq;
+>  	unsigned long flags;
+>  	u32 mode;
+>  
+> -	cascade_virq = irq_of_parse_and_map(node, 0);
+> -	if (!cascade_virq)
+> +	cascade_virq = platform_get_irq(to_platform_device(gpt->dev), 0);
+> +	if (cascade_virq < 0)
+>  		return;
+>  
+> -	gpt->irqhost = irq_domain_add_linear(node, 1, &mpc52xx_gpt_irq_ops, gpt);
+> +	gpt->irqhost = irq_domain_create_linear(dev_fwnode(gpt->dev), 1, &mpc52xx_gpt_irq_ops, gpt);
+>  	if (!gpt->irqhost) {
+>  		dev_err(gpt->dev, "irq_domain_add_linear() failed\n");
+>  		return;
+> @@ -670,8 +668,7 @@ static int mpc52xx_gpt_wdt_init(void)
+>  	return err;
 >  }
 >  
-
-
--- 
-Damien Le Moal
-Western Digital Research
+> -static int mpc52xx_gpt_wdt_setup(struct mpc52xx_gpt_priv *gpt,
+> -				 const u32 *period)
+> +static int mpc52xx_gpt_wdt_setup(struct mpc52xx_gpt_priv *gpt, const u32 period)
+>  {
+>  	u64 real_timeout;
+>  
+> @@ -679,14 +676,14 @@ static int mpc52xx_gpt_wdt_setup(struct mpc52xx_gpt_priv *gpt,
+>  	mpc52xx_gpt_wdt = gpt;
+>  
+>  	/* configure the wdt if the device tree contained a timeout */
+> -	if (!period || *period == 0)
+> +	if (period == 0)
+>  		return 0;
+>  
+> -	real_timeout = (u64) *period * 1000000000ULL;
+> +	real_timeout = (u64)period * 1000000000ULL;
+>  	if (mpc52xx_gpt_do_start(gpt, real_timeout, 0, 1))
+>  		dev_warn(gpt->dev, "starting as wdt failed\n");
+>  	else
+> -		dev_info(gpt->dev, "watchdog set to %us timeout\n", *period);
+> +		dev_info(gpt->dev, "watchdog set to %us timeout\n", period);
+>  	return 0;
+>  }
+>  
+> @@ -697,8 +694,7 @@ static int mpc52xx_gpt_wdt_init(void)
+>  	return 0;
+>  }
+>  
+> -static inline int mpc52xx_gpt_wdt_setup(struct mpc52xx_gpt_priv *gpt,
+> -					const u32 *period)
+> +static inline int mpc52xx_gpt_wdt_setup(struct mpc52xx_gpt_priv *gpt, const u32 period)
+>  {
+>  	return 0;
+>  }
+> @@ -726,25 +722,26 @@ static int mpc52xx_gpt_probe(struct platform_device *ofdev)
+>  	dev_set_drvdata(&ofdev->dev, gpt);
+>  
+>  	mpc52xx_gpt_gpio_setup(gpt);
+> -	mpc52xx_gpt_irq_setup(gpt, ofdev->dev.of_node);
+> +	mpc52xx_gpt_irq_setup(gpt);
+>  
+>  	mutex_lock(&mpc52xx_gpt_list_mutex);
+>  	list_add(&gpt->list, &mpc52xx_gpt_list);
+>  	mutex_unlock(&mpc52xx_gpt_list_mutex);
+>  
+>  	/* check if this device could be a watchdog */
+> -	if (of_get_property(ofdev->dev.of_node, "fsl,has-wdt", NULL) ||
+> -	    of_get_property(ofdev->dev.of_node, "has-wdt", NULL)) {
+> -		const u32 *on_boot_wdt;
+> +	if (device_property_present(gpt->dev, "fsl,has-wdt") ||
+> +	    device_property_present(gpt->dev, "has-wdt")) {
+> +		u32 on_boot_wdt = 0;
+> +		int ret;
+>  
+>  		gpt->wdt_mode = MPC52xx_GPT_CAN_WDT;
+> -		on_boot_wdt = of_get_property(ofdev->dev.of_node,
+> -					      "fsl,wdt-on-boot", NULL);
+> -		if (on_boot_wdt) {
+> +		ret = device_property_read_u32(gpt->dev, "fsl,wdt-on-boot", &on_boot_wdt);
+> +		if (ret) {
+> +			dev_info(gpt->dev, "can function as watchdog\n");
+> +		} else {
+>  			dev_info(gpt->dev, "used as watchdog\n");
+>  			gpt->wdt_mode |= MPC52xx_GPT_IS_WDT;
+> -		} else
+> -			dev_info(gpt->dev, "can function as watchdog\n");
+> +		}
+>  		mpc52xx_gpt_wdt_setup(gpt, on_boot_wdt);
+>  	}
+>  
+> -- 
+> 2.35.1
