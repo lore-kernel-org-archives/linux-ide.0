@@ -2,121 +2,263 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6CFDC433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 17 May 2022 19:43:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE5E0C433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 17 May 2022 20:04:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240791AbiEQTnI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 May 2022 15:43:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39076 "EHLO
+        id S1349805AbiEQUEP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 May 2022 16:04:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233185AbiEQTnH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2022 15:43:07 -0400
-Received: from mxout01.lancloud.ru (mxout01.lancloud.ru [45.84.86.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FC0427B07
-        for <linux-ide@vger.kernel.org>; Tue, 17 May 2022 12:43:04 -0700 (PDT)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru ED4C220D5BCA
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH] ata: libata-core: fix sloppy typing in ata_id_n_sectors()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <a15e1894-8be2-70f8-26b4-be62de8055d9@omp.ru>
- <f8e5288f-e0e9-da11-6a82-6bcbe5365eea@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <0fbb1f50-503c-f258-2a34-10cf069a633e@omp.ru>
-Date:   Tue, 17 May 2022 22:43:02 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S241347AbiEQUEO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2022 16:04:14 -0400
+Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5524CD72;
+        Tue, 17 May 2022 13:04:13 -0700 (PDT)
+Received: by mail-ot1-f47.google.com with SMTP id a22-20020a9d3e16000000b00606aeb12ab6so12912772otd.7;
+        Tue, 17 May 2022 13:04:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=IIaQA4b3hHv2itAgFRZqCZtPkNhj3dWRuktwztUeYB0=;
+        b=tkzuaoxfNVnHWLOyzE359WoNf7Zr0mWZ5CEebi4Fr/F3ejDpYUUuAbiUvIGJXnRx4B
+         ZAQpLHS/sIl7rSmjcqDz0DXNKivGg5q83S7/KP1Gn8vjeIv5GNYtvFKH0LJ5Vm3u6zm3
+         Qjk0q6oCxZ8WvpLqUke/M31dr7YuOohsj2hvqQmBk/ee6UruK4Hzp9zSTXb+H67vmY0t
+         YU+QYT0ozhvjewtqtgY7ocPe9kUG3oN2Pw66js/La2wImOAULD5eva0eawpi/Bt+UwD0
+         ysS1nsNhG1Xh+95Psa2tDIHlFp9N9Ef/Y85n8AY2ioDAfsrRufPic3+BnDL+IbbEg67J
+         XYWg==
+X-Gm-Message-State: AOAM5339vD9Wpx7pen5xCN9EgpH0wf4l4xUfhHsiKoP3CK5l9zlDjgXF
+        gl6pfEG2+Eu9n25FEaL0IQ==
+X-Google-Smtp-Source: ABdhPJzK+76emXX7coEe6iFrJmT3kQ+hsQh9vVP0K86w/fEgQvyGQUjTO8KvNZGDC6AVcfxP09fXog==
+X-Received: by 2002:a9d:eec:0:b0:606:bc42:9b3e with SMTP id 99-20020a9d0eec000000b00606bc429b3emr8924788otj.105.1652817853015;
+        Tue, 17 May 2022 13:04:13 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id k12-20020a4a2a0c000000b0035eb4e5a6bbsm174260oof.17.2022.05.17.13.04.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 May 2022 13:04:12 -0700 (PDT)
+Received: (nullmailer pid 1535050 invoked by uid 1000);
+        Tue, 17 May 2022 20:04:11 -0000
+Date:   Tue, 17 May 2022 15:04:11 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 18/23] dt-bindings: ata: ahci: Add DWC AHCI SATA
+ controller DT schema
+Message-ID: <20220517200411.GA1462130-robh@kernel.org>
+References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-19-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-In-Reply-To: <f8e5288f-e0e9-da11-6a82-6bcbe5365eea@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220511231810.4928-19-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-On 5/16/22 2:29 PM, Damien Le Moal wrote:
-
->> The code multiplying the # of cylinders/heads/sectors in ata_id_n_sectors()
->> to get a disk capacity implicitly uses the *int* type for that calculation
->> and casting the result to 'u64' before returning ensues a sign extension.
->> Explicitly casting the 'u16' typed multipliers to 'u32' results in avoiding
->> a sign extension instruction and so in a more compact code...
->>
->> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
->> analysis tool.
->>
->> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>
->> ---
->> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
->>
->>  drivers/ata/libata-core.c |   10 ++++++----
->>  1 file changed, 6 insertions(+), 4 deletions(-)
->>
->> Index: libata/drivers/ata/libata-core.c
->> ===================================================================
->> --- libata.orig/drivers/ata/libata-core.c
->> +++ libata/drivers/ata/libata-core.c
->> @@ -1107,11 +1107,13 @@ static u64 ata_id_n_sectors(const u16 *i
->>  			return ata_id_u32(id, ATA_ID_LBA_CAPACITY);
->>  	} else {
->>  		if (ata_id_current_chs_valid(id))
->> -			return id[ATA_ID_CUR_CYLS] * id[ATA_ID_CUR_HEADS] *
->> -			       id[ATA_ID_CUR_SECTORS];
->> +			return (u32)id[ATA_ID_CUR_CYLS] *
->> +			       (u32)id[ATA_ID_CUR_HEADS] *
->> +			       (u32)id[ATA_ID_CUR_SECTORS];
->>  		else
+On Thu, May 12, 2022 at 02:18:05AM +0300, Serge Semin wrote:
+> Synopsys AHCI SATA controller is mainly compatible with the generic AHCI
+> SATA controller except a few peculiarities and the platform environment
+> requirements. In particular it can have one or two reference clocks to
+> feed up its AXI/AHB interface and SATA PHYs domain and at least one reset
+> control for the application clock domain. In addition to that the DMA
+> interface of each port can be tuned up to work with the predefined maximum
+> data chunk size. Note unlike generic AHCI controller DWC AHCI can't have
+> more than 8 ports. All of that is reflected in the new DWC AHCI SATA
+> device DT binding.
 > 
-> While at it, you can drop this useless "else". The 2 else above this one are
-> actually also useless...
-
-   OK. But I think it's all a matter of a separate patch. I don't want to touch
-the LBA branches in this same patch...
-
->> -			return id[ATA_ID_CYLS] * id[ATA_ID_HEADS] *
->> -			       id[ATA_ID_SECTORS];
->> +			return (u32)id[ATA_ID_CYLS] *
->> +			       (u32)id[ATA_ID_HEADS] *
->> +			       (u32)id[ATA_ID_SECTORS];
+> Note the DWC AHCI SATA controller DT-schema has been created in a way so
+> to be reused for the vendor-specific DT-schemas (see for example the
+> "snps,dwc-ahci" compatible string binding). One of which we are about to
+> introduce.
 > 
-> Given that the function returns an u64, I would cast everything to u64. That
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> 
+> ---
+> 
+> Changelog v2:
+> - Replace min/max constraints of the snps,{tx,rx}-ts-max property with
+>   enum [ 1, 2, 4, ..., 1024 ]. (@Rob)
+> ---
+>  .../bindings/ata/ahci-platform.yaml           |   8 --
+>  .../bindings/ata/snps,dwc-ahci.yaml           | 123 ++++++++++++++++++
+>  2 files changed, 123 insertions(+), 8 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> index 6cad7e86f3bb..4b65966ec23b 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> @@ -30,8 +30,6 @@ select:
+>            - marvell,armada-3700-ahci
+>            - marvell,armada-8k-ahci
+>            - marvell,berlin2q-ahci
+> -          - snps,dwc-ahci
+> -          - snps,spear-ahci
+>    required:
+>      - compatible
+>  
+> @@ -48,17 +46,11 @@ properties:
+>                - marvell,berlin2-ahci
+>                - marvell,berlin2q-ahci
+>            - const: generic-ahci
+> -      - items:
+> -          - enum:
+> -              - rockchip,rk3568-dwc-ahci
+> -          - const: snps,dwc-ahci
+>        - enum:
+>            - cavium,octeon-7130-ahci
+>            - hisilicon,hisi-ahci
+>            - ibm,476gtr-ahci
+>            - marvell,armada-3700-ahci
+> -          - snps,dwc-ahci
+> -          - snps,spear-ahci
+>  
+>    reg:
+>      minItems: 1
+> diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> new file mode 100644
+> index 000000000000..a13fd77a451f
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> @@ -0,0 +1,123 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ata/snps,dwc-ahci.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Synopsys DWC AHCI SATA controller
+> +
+> +maintainers:
+> +  - Serge Semin <fancer.lancer@gmail.com>
+> +
+> +description:
+> +  This document defines device tree bindings for the Synopsys DWC
+> +  implementation of the AHCI SATA controller.
+> +
+> +allOf:
+> +  - $ref: ahci-common.yaml#
+> +
+> +properties:
+> +  compatible:
+> +    oneOf:
+> +      - description: Synopsys AHCI SATA-compatible devices
+> +        contains:
+> +          const: snps,dwc-ahci
+> +      - description: SPEAr1340 AHCI SATA device
+> +        const: snps,spear-ahci
+> +      - description: Rockhip RK3568 ahci controller
+> +        const: rockchip,rk3568-dwc-ahci
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    description:
+> +      Basic DWC AHCI SATA clock sources like application AXI/AHB BIU clock
+> +      and embedded PHYs reference clock together with vendor-specific set
+> +      of clocks.
+> +    minItems: 1
+> +    maxItems: 4
+> +
+> +  clock-names:
+> +    contains:
+> +      anyOf:
+> +        - description: Application AXI/AHB BIU clock source
+> +          enum:
+> +            - aclk
+> +            - sata
+> +        - description: SATA Ports reference clock
+> +          enum:
+> +            - ref
+> +            - sata_ref
+> +
+> +  resets:
+> +    description:
+> +      At least basic core and application clock domains reset is normally
+> +      supported by the DWC AHCI SATA controller. Some platform specific
+> +      clocks can be also specified though.
+> +
+> +  reset-names:
+> +    contains:
+> +      description: Core and application clock domains reset control
+> +      const: arst
+> +
+> +patternProperties:
+> +  "^sata-port@[0-9a-e]$":
+> +    type: object
+> +
+> +    properties:
+> +      reg:
+> +        minimum: 0
+> +        maximum: 7
+> +
+> +      snps,tx-ts-max:
+> +        $ref: /schemas/types.yaml#/definitions/uint32
+> +        description: Maximal size of Tx DMA transactions in FIFO words
+> +        enum: [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ]
+> +
+> +      snps,rx-ts-max:
+> +        $ref: /schemas/types.yaml#/definitions/uint32
+> +        description: Maximal size of Rx DMA transactions in FIFO words
+> +        enum: [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ]
+> +
+> +      additionalProperties: true
 
-   I don't think this is a good idea. Looking at the produced x86 32-bit code,
-gcc produces an extra (3rd) multiplication instruction for no value.
+You just defined a DT property called 'additionalProperties'. For this 
+reason, I prefer placing additionalProperties above 'properties'.
 
-> will avoid overflows too, which was possible before,
+As mentioned the way 'sata-port' schemas are done here doesn't work.
 
-   No, it wasn't possible. Any possible CHS capacity always fits into 32 bits --
-max # of sectors per track is 255, max # of heads is only 16.
-   What actually seems to make sense is changing the order of multiplications
-to first multiply # of sectors by # of heads and than multiply that by # of
-cylinders...
-
-> eventhough no problems seem
-> to have been reported...
-
-   Because there's not problem. :-)
-   The current CHS capacity is stored in the words 57-58 (so 32-bit) and we
-could read it from there instead of the multiplications... BUT I do remember
-the disks (IIRC Fujitsu... but I'm not sure now -- that was back in 90s!)
-that had totally wrong value in these words... so the code we have now is
-a good thing! :-)
-
-> Who uses CHS these days :)
-
-   Indeed, the CHS days are long gone... :-)
-
-[...]
-
-MBR, Sergey
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +
+> +    sata@122f0000 {
+> +      compatible = "snps,dwc-ahci";
+> +      reg = <0x122F0000 0x1ff>;
+> +      #address-cells = <1>;
+> +      #size-cells = <0>;
+> +
+> +      interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
+> +
+> +      clocks = <&clock1>, <&clock2>;
+> +      clock-names = "aclk", "ref";
+> +
+> +      phys = <&sata_phy>;
+> +      phy-names = "sata-phy";
+> +
+> +      ports-implemented = <0x1>;
+> +
+> +      sata-port@0 {
+> +        reg = <0>;
+> +
+> +        hba-fbscp;
+> +        snps,tx-ts-max = <512>;
+> +        snps,rx-ts-max = <512>;
+> +      };
+> +    };
+> +...
+> -- 
+> 2.35.1
+> 
+> 
