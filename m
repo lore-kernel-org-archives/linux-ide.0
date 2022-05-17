@@ -2,132 +2,75 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E137CC433FE
-	for <linux-ide@archiver.kernel.org>; Tue, 17 May 2022 16:30:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96974C433FE
+	for <linux-ide@archiver.kernel.org>; Tue, 17 May 2022 18:58:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230121AbiEQQaS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 May 2022 12:30:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50402 "EHLO
+        id S1352390AbiEQS6q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 May 2022 14:58:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232072AbiEQQaQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2022 12:30:16 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7D7227FCB;
-        Tue, 17 May 2022 09:30:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652805015; x=1684341015;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=0NqJ5VwhtJ3tBjditXPJfSf+c2F9/tHzdRAp1qZ01bI=;
-  b=j3AfRc0u6OCgoEwPQjh4bdI+1qJ1h9afmuYsbH6RsFzvEOkr7hoc7J5o
-   LXchL9r5h3bxJIrV6QosV5BwOqn6TZZlg9nM8veaGnrzGUeGsNzA4FWzM
-   HkYg/B+aEdQ8ZkO/MUdJqUV4GiRarnhm/uDSPW/YXPny2ZYSr7NUyi+oB
-   aVify6KIhjZbva7ea+b2o37ilAq9NdOmu9Rr/smq2t/fyinqrzgTo7rzW
-   X1X9W3YRH3bty1uTDFyQzRo58JAFiep9vEiTPJYx60NY1pYBtg/Llc5xs
-   sZFY/lPSTwlwdwk5Hmoux4dlQfFZTDOHuL2dtNASITWI8qKmzhCEwglKN
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10350"; a="271364116"
-X-IronPort-AV: E=Sophos;i="5.91,233,1647327600"; 
-   d="scan'208";a="271364116"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 09:30:15 -0700
-X-IronPort-AV: E=Sophos;i="5.91,233,1647327600"; 
-   d="scan'208";a="626561602"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2022 09:30:09 -0700
-Received: from andy by smile.fi.intel.com with local (Exim 4.95)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1nr05E-0008C4-Vy;
-        Tue, 17 May 2022 19:30:04 +0300
-Date:   Tue, 17 May 2022 19:30:04 +0300
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Michael Ellerman <mpe@ellerman.id.au>
-Cc:     Wolfram Sang <wsa@kernel.org>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Mark Brown <broonie@kernel.org>,
-        chris.packham@alliedtelesis.co.nz,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-can@vger.kernel.org, netdev@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Anatolij Gustschin <agust@denx.de>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Pantelis Antoniou <pantelis.antoniou@gmail.com>
-Subject: Re: [PATCH v2 4/4] powerpc/52xx: Convert to use fwnode API
-Message-ID: <YoPNjPp3LMF2+qKS@smile.fi.intel.com>
-References: <20220507100147.5802-1-andriy.shevchenko@linux.intel.com>
- <20220507100147.5802-4-andriy.shevchenko@linux.intel.com>
- <877d6l7fmy.fsf@mpe.ellerman.id.au>
- <YoJaGGwfoSYhaT13@smile.fi.intel.com>
- <YoJbaTNJFV2A1Etw@smile.fi.intel.com>
- <874k1p6oa7.fsf@mpe.ellerman.id.au>
+        with ESMTP id S236392AbiEQS6q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2022 14:58:46 -0400
+Received: from mail-oi1-f170.google.com (mail-oi1-f170.google.com [209.85.167.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB31F50053;
+        Tue, 17 May 2022 11:58:43 -0700 (PDT)
+Received: by mail-oi1-f170.google.com with SMTP id n24so23399209oie.12;
+        Tue, 17 May 2022 11:58:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=I3ZXSbwtXnbTG8zgREWqc9qR1l4Fnmm+ZYjnu3VE+lA=;
+        b=NDwXTTqbD78D3KSTibz24Jk/Cup9BFXX2Jlv5BfbExMWzCa+ktFigktaczkIy0h9uK
+         iVEMNz5t4DEdEuev9KN8Ad0FjwqM5ULyA/GKLszoGOs+BBDGe6FibdqhURdSbTp0iIIC
+         U/UQ/SPQvUtr0vkkTT9mBAlBEZRG3y9XjqGYKLcgEKNei6XLlszSAKkmymUutwmW0nw8
+         /j3AQhqWlpTlJy6qTyjlUvvEgHBQLm3qY0c+Z7psf2JnritNVHq+j4NP8wg/v+mkVhLV
+         sVcVjS7Y5+6f9FbDItnjgi57GtrQCGghvzsnzoaQIEO6OUF2l7LABVZbCOsVZJz41VZ6
+         dcWQ==
+X-Gm-Message-State: AOAM530hg6D/7JwVkkJZJYW+CYFIqlBZ6JMmksERQeXAPNVtujD4xpnw
+        3uph71mqD53AXB+8u6LJiQ==
+X-Google-Smtp-Source: ABdhPJxrzDvBkqwcRQsKquYBOMXgBblq7AmcvwunVmwPxmIQE/e9kRoM0tLUsgCYudhkP+buO0TuJA==
+X-Received: by 2002:aca:c20b:0:b0:326:d448:43fb with SMTP id s11-20020acac20b000000b00326d44843fbmr16849871oif.12.1652813922797;
+        Tue, 17 May 2022 11:58:42 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id fp17-20020a056870659100b000e686d1387csm112570oab.22.2022.05.17.11.58.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 May 2022 11:58:41 -0700 (PDT)
+Received: (nullmailer pid 1424064 invoked by uid 1000);
+        Tue, 17 May 2022 18:58:41 -0000
+Date:   Tue, 17 May 2022 13:58:41 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 01/23] dt-bindings: ata: ahci-platform: Drop
+ dma-coherent property declaration
+Message-ID: <20220517185841.GA1388602-robh@kernel.org>
+References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
+ <20220511231810.4928-2-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <874k1p6oa7.fsf@mpe.ellerman.id.au>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <20220511231810.4928-2-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, May 17, 2022 at 09:38:56AM +1000, Michael Ellerman wrote:
-> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
-> > On Mon, May 16, 2022 at 05:05:12PM +0300, Andy Shevchenko wrote:
-> >> On Mon, May 16, 2022 at 11:48:05PM +1000, Michael Ellerman wrote:
-> >> > Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
-> >> > > We may convert the GPT driver to use fwnode API for the sake
-> >> > > of consistency of the used APIs inside the driver.
-> >> > 
-> >> > I'm not sure about this one.
-> >> > 
-> >> > It's more consistent to use fwnode in this driver, but it's very
-> >> > inconsistent with the rest of the powerpc code. We have basically no
-> >> > uses of the fwnode APIs at the moment.
-> >> 
-> >> Fair point!
-> >> 
-> >> > It seems like a pretty straight-forward conversion, but there could
-> >> > easily be a bug in there, I don't have any way to test it. Do you?
-> >> 
-> >> Nope, only compile testing. The important part of this series is to
-> >> clean up of_node from GPIO library, so since here it's a user of
-> >> it I want to do that. This patch is just ad-hoc conversion that I
-> >> noticed is possible. But there is no any requirement to do so.
-> >> 
-> >> Lemme drop this from v3.
-> >
-> > I just realize that there is no point to send a v3. You can just apply
-> > first 3 patches. Or is your comment against entire series?
-> 
-> No, my comment is just about this patch.
-> 
-> I don't mind converting to new APIs when it's blocking some other
-> cleanup. But given the age of this code I think it's probably better to
-> just leave the rest of it as-is, unless someone volunteers to test it.
-> 
-> So yeah I'll just take patches 1-3 of this v2 series, no need to resend.
+On Thu, May 12, 2022 at 02:17:48AM +0300, Serge Semin wrote:
+> It's redundant to have the 'dma-coherent' property explicitly specified in
+> the DT schema because it's a generic property described in the core
+> DT-schema by which the property is always evaluated.
 
-Thanks!
+It is not redundant.
 
-One note though, the fwnode_for_each_parent_node() is not yet available in
-upstream, but will be after v5.19-rc1. It means the patch 3 can't be applied
-without that. That's why LKP complained on patch 4 in this series.
+The core schema defines the property (as a boolean), but this schema 
+defines it being used in this binding. Otherwise, it won't be allowed.
 
-That said, the easiest way is to postpone it till v5.19-rc1 is out.
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+Rob
