@@ -2,224 +2,121 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66925C433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 17 May 2022 19:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6CFDC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 17 May 2022 19:43:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237224AbiEQTUh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 May 2022 15:20:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47206 "EHLO
+        id S240791AbiEQTnI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 May 2022 15:43:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241252AbiEQTUc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2022 15:20:32 -0400
-Received: from mail-ot1-f52.google.com (mail-ot1-f52.google.com [209.85.210.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85094427C5;
-        Tue, 17 May 2022 12:20:30 -0700 (PDT)
-Received: by mail-ot1-f52.google.com with SMTP id y14-20020a9d460e000000b00605ee347da1so12849616ote.8;
-        Tue, 17 May 2022 12:20:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=jMly9zZBObNQRlIQNVFaY06sIaIahtck7cQNpLIcDRE=;
-        b=KKoXsBtHuSNOScxelpdcaXSSyde0uepEm+1Ux+7wgTUTXxBsGkBRIwtGfDennVrdC/
-         evN14D9bjfi3tXZclJiES0gg7zLekoeeAvisaPBWkxOEGp+8Ssb2gK7JRqIibGR589PJ
-         2z5lRLQPDfNy7h7sdGWFngY2GGbRE7fnDsfb0POp5cmM0Tx0jsJ70EtxnEXTuSiN0+lZ
-         hC1jERIwYSfXAXB6zKHG2fLQrMU3BQfVwtBad4dnER57esbvs7/V/KdET0ogJ/EIXV4W
-         Krt5BhZT5W2/cma9kcdqjbTG6X0EtzuNcGeU4S9EtBMyiq5WZ3W3fTfXDSU5kYjJnnfU
-         WK4g==
-X-Gm-Message-State: AOAM530fRhiVxTknSA2Y+miEsxAtZ/JBKLdgtMoayhKaXOVSf7t9vbg6
-        X1NOHGzc/juuf7K9lNQwmUOaXimBSA==
-X-Google-Smtp-Source: ABdhPJxxgh/F0v4j8Y3VuOwu8SOZrLN5lBS78tigzQM+mMPyMT6Ic8wZDNl1+FvOjbANN75Eh0ioYg==
-X-Received: by 2002:a9d:4d8c:0:b0:606:2a57:7f5 with SMTP id u12-20020a9d4d8c000000b006062a5707f5mr8721462otk.78.1652815229742;
-        Tue, 17 May 2022 12:20:29 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id p12-20020a9d454c000000b00606b237d850sm98549oti.13.2022.05.17.12.20.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 May 2022 12:20:29 -0700 (PDT)
-Received: (nullmailer pid 1461903 invoked by uid 1000);
-        Tue, 17 May 2022 19:20:28 -0000
-Date:   Tue, 17 May 2022 14:20:28 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 12/23] dt-bindings: ata: ahci: Add platform capability
- properties
-Message-ID: <20220517192028.GA1453662-robh@kernel.org>
-References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-13-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S233185AbiEQTnH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2022 15:43:07 -0400
+Received: from mxout01.lancloud.ru (mxout01.lancloud.ru [45.84.86.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FC0427B07
+        for <linux-ide@vger.kernel.org>; Tue, 17 May 2022 12:43:04 -0700 (PDT)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru ED4C220D5BCA
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH] ata: libata-core: fix sloppy typing in ata_id_n_sectors()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <a15e1894-8be2-70f8-26b4-be62de8055d9@omp.ru>
+ <f8e5288f-e0e9-da11-6a82-6bcbe5365eea@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <0fbb1f50-503c-f258-2a34-10cf069a633e@omp.ru>
+Date:   Tue, 17 May 2022 22:43:02 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220511231810.4928-13-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <f8e5288f-e0e9-da11-6a82-6bcbe5365eea@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, May 12, 2022 at 02:17:59AM +0300, Serge Semin wrote:
-> In case if the platform doesn't have BIOS or a comprehensive firmware
-> installed then the HBA capability flags will be left uninitialized. As a
-> good alternative we can define a set AHCI DT-node properties to describe
-> all of HW-init capabilities flags. Luckily there aren't too many of them.
-> SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
-> support determine the corresponding feature availability for whole HBA by
-> means of the "hba-sss" and "hba-smps" properties.  Each port can have the
-> "hba-{hpcp,mpsp,cpd,esp,fbscp}" defined indicatating that the port
-> supports the next functionality: HPCP - HotPlug capable port, MPSP -
-> Mechanical Presence Switch attached to a port, CPD - Cold Plug detection,
-> ESP - External SATA Port (eSATA), FBSCP - FIS-based switching capable
-> port.
-> 
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> 
-> ---
-> 
-> Alternatively we could define them as a bitfield, but having a set of
-> boolean properties seemed a better idea since in that case we can
-> implement a simple inter-dependency rules for them, which can't be done
-> should we take the bitfields path.
+Hello!
 
-I would just provide a CAP register override and be done with it.
+On 5/16/22 2:29 PM, Damien Le Moal wrote:
 
-The boolean fields only let you set a capability, but not unset one. 
-They would need to be tristate.
+>> The code multiplying the # of cylinders/heads/sectors in ata_id_n_sectors()
+>> to get a disk capacity implicitly uses the *int* type for that calculation
+>> and casting the result to 'u64' before returning ensues a sign extension.
+>> Explicitly casting the 'u16' typed multipliers to 'u32' results in avoiding
+>> a sign extension instruction and so in a more compact code...
+>>
+>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>> analysis tool.
+>>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>>
+>> ---
+>> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
+>>
+>>  drivers/ata/libata-core.c |   10 ++++++----
+>>  1 file changed, 6 insertions(+), 4 deletions(-)
+>>
+>> Index: libata/drivers/ata/libata-core.c
+>> ===================================================================
+>> --- libata.orig/drivers/ata/libata-core.c
+>> +++ libata/drivers/ata/libata-core.c
+>> @@ -1107,11 +1107,13 @@ static u64 ata_id_n_sectors(const u16 *i
+>>  			return ata_id_u32(id, ATA_ID_LBA_CAPACITY);
+>>  	} else {
+>>  		if (ata_id_current_chs_valid(id))
+>> -			return id[ATA_ID_CUR_CYLS] * id[ATA_ID_CUR_HEADS] *
+>> -			       id[ATA_ID_CUR_SECTORS];
+>> +			return (u32)id[ATA_ID_CUR_CYLS] *
+>> +			       (u32)id[ATA_ID_CUR_HEADS] *
+>> +			       (u32)id[ATA_ID_CUR_SECTORS];
+>>  		else
+> 
+> While at it, you can drop this useless "else". The 2 else above this one are
+> actually also useless...
 
-> ---
->  .../devicetree/bindings/ata/ahci-common.yaml  | 66 +++++++++++++++++++
->  .../bindings/ata/ahci-platform.yaml           | 11 ++++
->  2 files changed, 77 insertions(+)
+   OK. But I think it's all a matter of a separate patch. I don't want to touch
+the LBA branches in this same patch...
+
+>> -			return id[ATA_ID_CYLS] * id[ATA_ID_HEADS] *
+>> -			       id[ATA_ID_SECTORS];
+>> +			return (u32)id[ATA_ID_CYLS] *
+>> +			       (u32)id[ATA_ID_HEADS] *
+>> +			       (u32)id[ATA_ID_SECTORS];
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> index a7d1a8353de3..a29edfbb25db 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> @@ -75,6 +75,19 @@ properties:
->    phy-names:
->      const: sata-phy
->  
-> +  hba-sss:
-> +    type: boolean
-> +    description:
-> +      Staggered Spin-up Support. Indicates whether the HBA supports the
-> +      staggered spin-up on its ports, for use in balancing power spikes.
-> +
-> +  hba-smps:
-> +    type: boolean
-> +    description:
-> +      Mechanical Presence Switch Support. Indicates whether the HBA supports
-> +      mechanical presence switches on its ports for use in hot plug
-> +      operations.
-> +
->    ports-implemented:
->      $ref: '/schemas/types.yaml#/definitions/uint32'
->      description:
-> @@ -97,6 +110,40 @@ patternProperties:
->          minimum: 0
->          maximum: 31
->  
-> +      hba-hpcp:
-> +        type: boolean
-> +        description:
-> +          Hot Plug Capable Port. Indicates that this port’s signal and power
-> +          connectors are externally accessible via a joint signal and power
-> +          connector for blindmate device hot plug. It is mutually exclusive
-> +          with the ESP feature.
-> +
-> +      hba-mpsp:
-> +        type: boolean
-> +        description:
-> +          Mechanical Presence Switch Attached to Port. Indicates whether
-> +          the platform an mechanical presence switch attached to this
-> +          port.
-> +
-> +      hba-cpd:
-> +        type: boolean
-> +        description:
-> +          Cold Presence Detection. Indicates whether the platform supports
-> +          cold presence detection on this port.
-> +
-> +      hba-esp:
-> +        type: boolean
-> +        description:
-> +          External SATA Port. Indicates that this port’s signal connector
-> +          is externally accessible on a signal only connector (e.g. eSATA
-> +          connector).
-> +
-> +      hba-fbscp:
-> +        type: boolean
-> +        description:
-> +          FIS-based Switching Capable Port. Indicates whether this port
-> +          supports Port Multiplier FIS-based switching.
-> +
->        phys:
->          description: Individual AHCI SATA port PHY
->          maxItems: 1
-> @@ -111,6 +158,25 @@ patternProperties:
->      required:
->        - reg
->  
-> +    # eSATA can't be enabled together with the HotPlug capability
-> +    oneOf:
-> +      - required:
-> +          - hba-hpcp
-> +      - required:
-> +          - hba-esp
-> +      - not:
-> +          anyOf:
-> +            - required:
-> +                - hba-hpcp
-> +            - required:
-> +                - hba-esp
-> +
-> +    # HotPlug capability must be enabled together with Cold Plug
-> +    # Detection and Mechanical Presence Switching.
-> +    dependencies:
-> +      hba-cpd: ["hba-hpcp"]
-> +      hba-mpsp: ["hba-hpcp"]
-> +
->      additionalProperties: true
->  
->  required:
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> index 76075d3c8987..6cad7e86f3bb 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> @@ -117,14 +117,25 @@ examples:
->          #address-cells = <1>;
->          #size-cells = <0>;
->  
-> +        hba-smps;
-> +
->          sata0: sata-port@0 {
->              reg = <0>;
-> +
-> +            hba-fbscp;
-> +            hba-esp;
-> +
->              phys = <&sata_phy 0>;
->              target-supply = <&reg_sata0>;
->          };
->  
->          sata1: sata-port@1 {
->              reg = <1>;
-> +
-> +            hba-fbscp;
-> +            hba-hpcp;
-> +            hba-mpsp;
-> +
->              phys = <&sata_phy 1>;
->              target-supply = <&reg_sata1>;
->          };
-> -- 
-> 2.35.1
-> 
-> 
+> Given that the function returns an u64, I would cast everything to u64. That
+
+   I don't think this is a good idea. Looking at the produced x86 32-bit code,
+gcc produces an extra (3rd) multiplication instruction for no value.
+
+> will avoid overflows too, which was possible before,
+
+   No, it wasn't possible. Any possible CHS capacity always fits into 32 bits --
+max # of sectors per track is 255, max # of heads is only 16.
+   What actually seems to make sense is changing the order of multiplications
+to first multiply # of sectors by # of heads and than multiply that by # of
+cylinders...
+
+> eventhough no problems seem
+> to have been reported...
+
+   Because there's not problem. :-)
+   The current CHS capacity is stored in the words 57-58 (so 32-bit) and we
+could read it from there instead of the multiplications... BUT I do remember
+the disks (IIRC Fujitsu... but I'm not sure now -- that was back in 90s!)
+that had totally wrong value in these words... so the code we have now is
+a good thing! :-)
+
+> Who uses CHS these days :)
+
+   Indeed, the CHS days are long gone... :-)
+
+[...]
+
+MBR, Sergey
