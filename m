@@ -2,122 +2,72 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D72DCC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 20 May 2022 08:29:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03096C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 20 May 2022 20:53:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347034AbiETI3r (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 20 May 2022 04:29:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39444 "EHLO
+        id S234804AbiETUxm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 20 May 2022 16:53:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346999AbiETI3e (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2022 04:29:34 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4156D5E166;
-        Fri, 20 May 2022 01:29:33 -0700 (PDT)
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4L4KZB2267z687Dc;
-        Fri, 20 May 2022 16:26:26 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 20 May 2022 10:29:31 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 20 May 2022 09:29:27 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/4] dma-iommu: Add iommu_dma_opt_mapping_size()
-Date:   Fri, 20 May 2022 16:23:21 +0800
-Message-ID: <1653035003-70312-3-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1653035003-70312-1-git-send-email-john.garry@huawei.com>
-References: <1653035003-70312-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S231705AbiETUxk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2022 16:53:40 -0400
+Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D319619320C
+        for <linux-ide@vger.kernel.org>; Fri, 20 May 2022 13:53:36 -0700 (PDT)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru B242420BFEC3
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: [PATCH] ata: libata-core: fix NULL pointer deref in
+ ata_host_alloc_pinfo()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+Organization: Open Mobile Platform
+Message-ID: <3727e0b4-3958-283f-c0cf-6b8b898ab018@omp.ru>
+Date:   Fri, 20 May 2022 23:53:33 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add the IOMMU callback for DMA mapping API dma_opt_mapping_size(), which
-allows the drivers to know the optimal mapping limit and thus limit the
-requested IOVA lengths.
+In an unlikely (and probably wrong?) case that the 'ppi' parameter of
+ata_host_alloc_pinfo() points to an array starting with a NULL pointer,
+there's going to be a kernel oops as the 'pi' local variable won't get
+reassigned from the initial value of NULL.  Assign &ata_dummy_port_info
+to 'pi' at the start of the *for* loop instead to fix this kernel oops
+for good...
 
-This value is based on the IOVA rcache range limit, as IOVAs allocated
-above this limit must always be newly allocated, which may be quite slow.
+Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+analysis tool.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
 ---
- drivers/iommu/dma-iommu.c | 6 ++++++
- drivers/iommu/iova.c      | 5 +++++
- include/linux/iova.h      | 2 ++
- 3 files changed, 13 insertions(+)
+This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
 
-diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-index 09f6e1c0f9c0..f619e41b9172 100644
---- a/drivers/iommu/dma-iommu.c
-+++ b/drivers/iommu/dma-iommu.c
-@@ -1442,6 +1442,11 @@ static unsigned long iommu_dma_get_merge_boundary(struct device *dev)
- 	return (1UL << __ffs(domain->pgsize_bitmap)) - 1;
- }
- 
-+static size_t iommu_dma_opt_mapping_size(void)
-+{
-+	return iova_rcache_range();
-+}
-+
- static const struct dma_map_ops iommu_dma_ops = {
- 	.alloc			= iommu_dma_alloc,
- 	.free			= iommu_dma_free,
-@@ -1462,6 +1467,7 @@ static const struct dma_map_ops iommu_dma_ops = {
- 	.map_resource		= iommu_dma_map_resource,
- 	.unmap_resource		= iommu_dma_unmap_resource,
- 	.get_merge_boundary	= iommu_dma_get_merge_boundary,
-+	.opt_mapping_size	= iommu_dma_opt_mapping_size,
- };
- 
- /*
-diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
-index db77aa675145..9f00b58d546e 100644
---- a/drivers/iommu/iova.c
-+++ b/drivers/iommu/iova.c
-@@ -26,6 +26,11 @@ static unsigned long iova_rcache_get(struct iova_domain *iovad,
- static void free_cpu_cached_iovas(unsigned int cpu, struct iova_domain *iovad);
- static void free_iova_rcaches(struct iova_domain *iovad);
- 
-+unsigned long iova_rcache_range(void)
-+{
-+	return PAGE_SIZE << (IOVA_RANGE_CACHE_MAX_SIZE - 1);
-+}
-+
- static int iova_cpuhp_dead(unsigned int cpu, struct hlist_node *node)
- {
- 	struct iova_domain *iovad;
-diff --git a/include/linux/iova.h b/include/linux/iova.h
-index 320a70e40233..c6ba6d95d79c 100644
---- a/include/linux/iova.h
-+++ b/include/linux/iova.h
-@@ -79,6 +79,8 @@ static inline unsigned long iova_pfn(struct iova_domain *iovad, dma_addr_t iova)
- int iova_cache_get(void);
- void iova_cache_put(void);
- 
-+unsigned long iova_rcache_range(void);
-+
- void free_iova(struct iova_domain *iovad, unsigned long pfn);
- void __free_iova(struct iova_domain *iovad, struct iova *iova);
- struct iova *alloc_iova(struct iova_domain *iovad, unsigned long size,
--- 
-2.26.2
+ drivers/ata/libata-core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+Index: libata/drivers/ata/libata-core.c
+===================================================================
+--- libata.orig/drivers/ata/libata-core.c
++++ libata/drivers/ata/libata-core.c
+@@ -5470,7 +5470,7 @@ struct ata_host *ata_host_alloc_pinfo(st
+ 	if (!host)
+ 		return NULL;
+ 
+-	for (i = 0, j = 0, pi = NULL; i < host->n_ports; i++) {
++	for (i = 0, j = 0, pi = &ata_dummy_port_info; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+ 
+ 		if (ppi[j])
