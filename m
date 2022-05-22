@@ -2,52 +2,52 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 678E3C433F5
-	for <linux-ide@archiver.kernel.org>; Sun, 22 May 2022 17:51:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73C42C433EF
+	for <linux-ide@archiver.kernel.org>; Sun, 22 May 2022 20:49:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349583AbiEVRvR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 22 May 2022 13:51:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49086 "EHLO
+        id S1348230AbiEVUti (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 22 May 2022 16:49:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229764AbiEVRvQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 22 May 2022 13:51:16 -0400
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E37911C07;
-        Sun, 22 May 2022 10:51:14 -0700 (PDT)
-Received: by mail-lf1-x12e.google.com with SMTP id br17so9733728lfb.2;
-        Sun, 22 May 2022 10:51:14 -0700 (PDT)
+        with ESMTP id S242511AbiEVUth (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 22 May 2022 16:49:37 -0400
+Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0F352A26B;
+        Sun, 22 May 2022 13:49:35 -0700 (PDT)
+Received: by mail-lf1-x12c.google.com with SMTP id c19so9377631lfv.5;
+        Sun, 22 May 2022 13:49:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=ITTsNLYfRm3KBt/z3QePjNE967lZd3UdYSvgr4oZIgk=;
-        b=jT8OCq42U7t0kYjcsgJ1iVUdq1f6bqIKSC2+UJaLeUoC5EhtdwIMSGBhMmcOReznl6
-         ANktiiIk8gUiQuxANjjE8FyNzuTAnmrCEkS1Ye/awjIPYUF8bEFMhKYmrLg79DryDxPq
-         Nzm7wnYoqNDpGYvcko2HmCfPGzjM8vXVEnZw1aMY0oJv8YWoiPuOgg/KFgnNKVT6Rq+j
-         LthxBv4QHLbCR3UOi+s/SyRdD+ipGzvGqjNqUaqDn2tpG+VmgwgAPCAD7VloG4pdQ9TX
-         +cf3iQz+HWvTz5VY982HfBYaEOJe48ewr46GNc5xMH4ac7vbZRfcTL8A3Y0ubwIQLbSJ
-         mX8g==
+        bh=/O11HhPBoNweXXd7JMltDDwduZUfH8myCWo19DY/IP4=;
+        b=LlDmvR59s5rhzELEtv9RjIx24yW/3o8NMRn/wMwDpt1GOVL6xwSVSLsRuX8Huuof7G
+         e1R1Ie9xpSekwLismWS3RXbOnm9m2BSgsh85tC0tvfoelO7VYSg1m0+XgQLn8+a/a+VK
+         VBK5Go+CgcIo0fB+HQtllsjaX52t8gNp68WRs/eIIS3hvn/Qjs/XUyK6UtA/BxHugRBd
+         MkbbSsHVjBm/Rig7JOHwC6pdm+Ga2jtO7FoskEXuX1ojDIJ/u/7UgToa4cn2sbUryE//
+         +jBqMmRSjF+2IfyVjiXAbsmM2n9gt5bizjemgkyRZ+KgCZhJb0BYZh3MNz3Bg7kiMSrq
+         ELwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=ITTsNLYfRm3KBt/z3QePjNE967lZd3UdYSvgr4oZIgk=;
-        b=KtBGeW3TIWjMb+Z/XZHMXY1S/rKkDunVQ6RgXb1ApX6pxlxBQJP2rNo8FD3U/9WTUA
-         FNi/TUIsdTSJOj54FSWbaTTGLvZmIycrTu5OTB7uG7EqWKNzVCxhtorVyY3UYy981ItR
-         t7Vswjxpy2Ha4a94zcF+xmC6Voy1ybd9UjGF0JTG+v8oGaN+KyFwgYXEcUXkHiXYAgr9
-         finEWBDpnXX1djgyjvBz9MllnxcqP5qpEjYzK5aVxquFgN51hmsbRxlhaARLer0vMLHg
-         BZ8tUuAddrHPRsnGCK8C16bSP8ffROBJgXSxwTrJqOSFLZdyYb/AUME+W1XTpYdce9hA
-         KtzA==
-X-Gm-Message-State: AOAM532KrrwAwy8v10lsCMQNIzYMXNJJ2zhHZMPgNZldDjY7jeRG9MeU
-        siMN7g1Bvo2MZOZNZtrQoEU=
-X-Google-Smtp-Source: ABdhPJxIuUWtDG0S9xd99Aftxb7pXt18anJCBliDo1+pwZF4kFDE5QWGzyzw8gVU2dRO1+9PCcM6NA==
-X-Received: by 2002:a05:6512:3052:b0:477:bf98:60fd with SMTP id b18-20020a056512305200b00477bf9860fdmr14006318lfb.451.1653241872848;
-        Sun, 22 May 2022 10:51:12 -0700 (PDT)
+        bh=/O11HhPBoNweXXd7JMltDDwduZUfH8myCWo19DY/IP4=;
+        b=chO0+Coblv//n2OgOpFCmSsqI/vwkrEx7ZCh1Sq+5MJC5KDMXJ3g5aCQmGNPc/0AKl
+         y4I/RIO+BnmW6i4zJgdvXdjyTZ1k26KwQTDM0pLB7rLBNe7RRvfAlrhlcYH35j8WB8+z
+         9quw3+WGMSiVJguCvUZXgBt2SFEjZMrPNJzE3UYrLqzvHd7GC6Rer2lo3mqzjXGehFT2
+         SXQWj46QJa3iZFmavnVvjo1DNH9m1yVa4Ao9F/GNpjii3z8EtCncUK3sQVfn2P5I4VFe
+         Kvrtw850rf8KPm73ChEOVKoUe4scO87JYfZBJFW5VF4uCD4xgbdHfuTerwD6TQj+dQrA
+         8tJA==
+X-Gm-Message-State: AOAM533MSxkWRlEcvfTTWTiL7seeuWNxLbmmG6ojDTucohITjEA10xMj
+        VX4g1rCkSRUmnp3ElReuzL8=
+X-Google-Smtp-Source: ABdhPJwZTo+UXrEnFscHzAb6JIlWOmhqGeMcmdfjg4rXLWWgfEAEWHYFslLmM4KnWIpqESyO8g/JTw==
+X-Received: by 2002:a19:5e16:0:b0:478:6d8e:ced2 with SMTP id s22-20020a195e16000000b004786d8eced2mr2261372lfb.152.1653252574153;
+        Sun, 22 May 2022 13:49:34 -0700 (PDT)
 Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id a1-20020ac25e61000000b0047255d21149sm1537986lfr.120.2022.05.22.10.51.11
+        by smtp.gmail.com with ESMTPSA id q23-20020a19a417000000b00477c1172063sm1594576lfc.165.2022.05.22.13.49.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 May 2022 10:51:12 -0700 (PDT)
-Date:   Sun, 22 May 2022 20:51:10 +0300
+        Sun, 22 May 2022 13:49:33 -0700 (PDT)
+Date:   Sun, 22 May 2022 23:49:31 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
 To:     Rob Herring <robh@kernel.org>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
@@ -59,226 +59,215 @@ Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 18/23] dt-bindings: ata: ahci: Add DWC AHCI SATA
+Subject: Re: [PATCH v3 20/23] dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA
  controller DT schema
-Message-ID: <20220522175110.bqj7i2zpgcunyx6f@mobilestation>
+Message-ID: <20220522204931.rcgqyyctxivyfmv7@mobilestation>
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-19-Sergey.Semin@baikalelectronics.ru>
- <20220517200411.GA1462130-robh@kernel.org>
+ <20220511231810.4928-21-Sergey.Semin@baikalelectronics.ru>
+ <20220517201332.GB1462130-robh@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220517200411.GA1462130-robh@kernel.org>
+In-Reply-To: <20220517201332.GB1462130-robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, May 17, 2022 at 03:04:11PM -0500, Rob Herring wrote:
-> On Thu, May 12, 2022 at 02:18:05AM +0300, Serge Semin wrote:
-> > Synopsys AHCI SATA controller is mainly compatible with the generic AHCI
-> > SATA controller except a few peculiarities and the platform environment
-> > requirements. In particular it can have one or two reference clocks to
-> > feed up its AXI/AHB interface and SATA PHYs domain and at least one reset
-> > control for the application clock domain. In addition to that the DMA
-> > interface of each port can be tuned up to work with the predefined maximum
-> > data chunk size. Note unlike generic AHCI controller DWC AHCI can't have
-> > more than 8 ports. All of that is reflected in the new DWC AHCI SATA
-> > device DT binding.
-> > 
-> > Note the DWC AHCI SATA controller DT-schema has been created in a way so
-> > to be reused for the vendor-specific DT-schemas (see for example the
-> > "snps,dwc-ahci" compatible string binding). One of which we are about to
-> > introduce.
+On Tue, May 17, 2022 at 03:13:32PM -0500, Rob Herring wrote:
+> On Thu, May 12, 2022 at 02:18:07AM +0300, Serge Semin wrote:
+> > Baikal-T1 AHCI controller is based on the DWC AHCI SATA IP-core v4.10a
+> > with the next specific settings: two SATA ports, cascaded CSR access based
+> > on two clock domains (APB and AXI), selectable source of the reference
+> > clock (though stable work is currently available from the external source
+> > only), two reset lanes for the application and SATA ports domains. Other
+> > than that the device is fully compatible with the generic DWC AHCI SATA
+> > bindings.
 > > 
 > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > > 
 > > ---
 > > 
 > > Changelog v2:
-> > - Replace min/max constraints of the snps,{tx,rx}-ts-max property with
-> >   enum [ 1, 2, 4, ..., 1024 ]. (@Rob)
+> > - Rename 'syscon' property to 'baikal,bt1-syscon'.
+> > - Drop macro usage from the example node.
 > > ---
-> >  .../bindings/ata/ahci-platform.yaml           |   8 --
-> >  .../bindings/ata/snps,dwc-ahci.yaml           | 123 ++++++++++++++++++
-> >  2 files changed, 123 insertions(+), 8 deletions(-)
-> >  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> >  .../bindings/ata/baikal,bt1-ahci.yaml         | 127 ++++++++++++++++++
+> >  1 file changed, 127 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
 > > 
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > index 6cad7e86f3bb..4b65966ec23b 100644
-> > --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > @@ -30,8 +30,6 @@ select:
-> >            - marvell,armada-3700-ahci
-> >            - marvell,armada-8k-ahci
-> >            - marvell,berlin2q-ahci
-> > -          - snps,dwc-ahci
-> > -          - snps,spear-ahci
-> >    required:
-> >      - compatible
-> >  
-> > @@ -48,17 +46,11 @@ properties:
-> >                - marvell,berlin2-ahci
-> >                - marvell,berlin2q-ahci
-> >            - const: generic-ahci
-> > -      - items:
-> > -          - enum:
-> > -              - rockchip,rk3568-dwc-ahci
-> > -          - const: snps,dwc-ahci
-> >        - enum:
-> >            - cavium,octeon-7130-ahci
-> >            - hisilicon,hisi-ahci
-> >            - ibm,476gtr-ahci
-> >            - marvell,armada-3700-ahci
-> > -          - snps,dwc-ahci
-> > -          - snps,spear-ahci
-> >  
-> >    reg:
-> >      minItems: 1
-> > diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> > diff --git a/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
 > > new file mode 100644
-> > index 000000000000..a13fd77a451f
+> > index 000000000000..7c2eae75434f
 > > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
-> > @@ -0,0 +1,123 @@
+> > +++ b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
+> > @@ -0,0 +1,127 @@
 > > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 > > +%YAML 1.2
 > > +---
-> > +$id: http://devicetree.org/schemas/ata/snps,dwc-ahci.yaml#
+> > +$id: http://devicetree.org/schemas/ata/baikal,bt1-ahci.yaml#
 > > +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > > +
-> > +title: Synopsys DWC AHCI SATA controller
+> > +title: Baikal-T1 SoC AHCI SATA controller
 > > +
 > > +maintainers:
 > > +  - Serge Semin <fancer.lancer@gmail.com>
 > > +
-> > +description:
-> > +  This document defines device tree bindings for the Synopsys DWC
-> > +  implementation of the AHCI SATA controller.
+> > +description: |
+> > +  AHCI SATA controller embedded into the Baikal-T1 SoC is based on the
+> > +  DWC AHCI SATA v4.10a IP-core.
 > > +
 > > +allOf:
-> > +  - $ref: ahci-common.yaml#
+> > +  - $ref: snps,dwc-ahci.yaml#
 > > +
 > > +properties:
 > > +  compatible:
-> > +    oneOf:
-> > +      - description: Synopsys AHCI SATA-compatible devices
-> > +        contains:
-> > +          const: snps,dwc-ahci
-> > +      - description: SPEAr1340 AHCI SATA device
-> > +        const: snps,spear-ahci
-> > +      - description: Rockhip RK3568 ahci controller
-> > +        const: rockchip,rk3568-dwc-ahci
-> > +
-> > +  reg:
-> > +    maxItems: 1
-> > +
-> > +  interrupts:
-> > +    maxItems: 1
+> > +    contains:
+> > +      const: baikal,bt1-ahci
 > > +
 > > +  clocks:
-> > +    description:
-> > +      Basic DWC AHCI SATA clock sources like application AXI/AHB BIU clock
-> > +      and embedded PHYs reference clock together with vendor-specific set
-> > +      of clocks.
-> > +    minItems: 1
-> > +    maxItems: 4
+> > +    items:
+> > +      - description: Peripheral APB bus clock source
+> > +      - description: Application AXI BIU clock
+> > +      - description: Internal SATA Ports reference clock
+> > +      - description: External SATA Ports reference clock
 > > +
 > > +  clock-names:
-> > +    contains:
-> > +      anyOf:
-> > +        - description: Application AXI/AHB BIU clock source
-> > +          enum:
-> > +            - aclk
-> > +            - sata
-> > +        - description: SATA Ports reference clock
-> > +          enum:
-> > +            - ref
-> > +            - sata_ref
+> > +    items:
+> > +      - const: pclk
+> > +      - const: aclk
+> > +      - const: ref_int
+> > +      - const: ref_ext
 > > +
 > > +  resets:
-> > +    description:
-> > +      At least basic core and application clock domains reset is normally
-> > +      supported by the DWC AHCI SATA controller. Some platform specific
-> > +      clocks can be also specified though.
+> > +    items:
+> > +      - description: Application AXI BIU domain reset
+> > +      - description: SATA Ports clock domain reset
 > > +
 > > +  reset-names:
-> > +    contains:
-> > +      description: Core and application clock domains reset control
-> > +      const: arst
+> > +    items:
+> > +      - const: arst
+> > +      - const: ref
+> > +
+> > +  baikal,bt1-syscon:
+> > +    $ref: /schemas/types.yaml#/definitions/phandle
+> > +    description:
+> > +      Phandle reference to the CCU system controller. It is required to
+> > +      switch between internal and external SATA reference clock sources.
+> 
+
+> Seems like the CCU system ctrlr should be a clock provider that provides 
+> 'ref' clock and then assigned-clocks can be used to pick internal vs. 
+> external ref.
+
+By assigned-clocks do you mean using the "assigned-clock-parents"
+property? Does it mean creating additional clocks exported from the
+CCU controller, which could have got one of the two parental clocks?
+
+> 
+> > +
+> > +  ports-implemented:
+> > +    maximum: 0x3
 > > +
 > > +patternProperties:
 > > +  "^sata-port@[0-9a-e]$":
 > > +    type: object
+> 
+>        unevaluatedProperties: false
+> 
+
+> and then a $ref to a sata-port schema.
+
+Can I set additional sata-port properties constraints afterwards? Like
+I've done for the reg, snps,tx-ts-max and snps,rx-ts-max properties
+here?
+
+> 
 > > +
 > > +    properties:
 > > +      reg:
 > > +        minimum: 0
-> > +        maximum: 7
+> > +        maximum: 1
 > > +
 > > +      snps,tx-ts-max:
 > > +        $ref: /schemas/types.yaml#/definitions/uint32
-> > +        description: Maximal size of Tx DMA transactions in FIFO words
-> > +        enum: [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ]
+> > +        description:
+> > +          Due to having AXI3 bus interface utilized the maximum Tx DMA
+> > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
+> > +        minimum: 1
+> > +        maximum: 16
 > > +
 > > +      snps,rx-ts-max:
 > > +        $ref: /schemas/types.yaml#/definitions/uint32
-> > +        description: Maximal size of Rx DMA transactions in FIFO words
-> > +        enum: [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ]
-> > +
-> > +      additionalProperties: true
+> > +        description:
+> > +          Due to having AXI3 bus interface utilized the maximum Rx DMA
+> > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
 > 
 
-> You just defined a DT property called 'additionalProperties'. For this 
-> reason, I prefer placing additionalProperties above 'properties'.
+> That's not a per port limitation (even though it's a per port register)? 
+> I think this should be implied by the compatible string.
 
-Right. Thanks
+The snps,{rx,tx}-ts-max property is a per-port property. I'd better
+explicitly set the property limitation here rather than having the
+value implicitly clamped by hardware especially seeing the limitation
+is set by the formulae
+(CC_MSTR_BURST_LEN * M_HDATA_WIDTH/32)) / (M_HDATA_WIDTH/32),
+which consists of the IP-core synthesized parameters.
 
 > 
-> As mentioned the way 'sata-port' schemas are done here doesn't work.
+> Really, firmware should configure this IMO.
 
-Please, turn your attention to the emailing thread where you mentioned it:
-"[PATCH v3 02/23] dt-bindings: ata: ahci-platform: Detach common AHCI bindings"
-https://lore.kernel.org/linux-ide/20220511231810.4928-3-Sergey.Semin@baikalelectronics.ru/
-Before I get to the series re-development I need your confirmation
-whether what I understand regarding your suggestion was right.
+We don't have comprehensive firmware setting these and generic HBA parameters.
+In our case dtb is the main platform firmware.
 
 -Sergey
 
 > 
+> > +        minimum: 1
+> > +        maximum: 16
 > > +
 > > +required:
 > > +  - compatible
 > > +  - reg
 > > +  - interrupts
+> > +  - clocks
+> > +  - clock-names
+> > +  - resets
+> > +  - baikal,bt1-syscon
 > > +
 > > +unevaluatedProperties: false
 > > +
 > > +examples:
 > > +  - |
-> > +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> > +
-> > +    sata@122f0000 {
-> > +      compatible = "snps,dwc-ahci";
-> > +      reg = <0x122F0000 0x1ff>;
+> > +    sata@1f050000 {
+> > +      compatible = "baikal,bt1-ahci", "snps,dwc-ahci";
+> > +      reg = <0x1f050000 0x2000>;
 > > +      #address-cells = <1>;
 > > +      #size-cells = <0>;
 > > +
-> > +      interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
+> > +      interrupts = <0 64 4>;
 > > +
-> > +      clocks = <&clock1>, <&clock2>;
-> > +      clock-names = "aclk", "ref";
+> > +      clocks = <&ccu_sys 1>, <&ccu_axi 2>, <&ccu_sys 0>, <&clk_sata>;
+> > +      clock-names = "pclk", "aclk", "ref_int", "ref_ext";
 > > +
-> > +      phys = <&sata_phy>;
-> > +      phy-names = "sata-phy";
+> > +      resets = <&ccu_axi 2>, <&ccu_sys 0>;
+> > +      reset-names = "arst", "ref";
 > > +
-> > +      ports-implemented = <0x1>;
+> > +      baikal,bt1-syscon = <&syscon>;
+> > +
+> > +      ports-implemented = <0x3>;
 > > +
 > > +      sata-port@0 {
 > > +        reg = <0>;
 > > +
-> > +        hba-fbscp;
-> > +        snps,tx-ts-max = <512>;
-> > +        snps,rx-ts-max = <512>;
+> > +        snps,tx-ts-max = <4>;
+> > +        snps,rx-ts-max = <4>;
+> > +      };
+> > +
+> > +      sata-port@1 {
+> > +        reg = <1>;
+> > +
+> > +        snps,tx-ts-max = <4>;
+> > +        snps,rx-ts-max = <4>;
 > > +      };
 > > +    };
 > > +...
