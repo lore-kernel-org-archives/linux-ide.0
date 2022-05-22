@@ -2,52 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 492FAC433FE
-	for <linux-ide@archiver.kernel.org>; Sun, 22 May 2022 15:09:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08456C433EF
+	for <linux-ide@archiver.kernel.org>; Sun, 22 May 2022 17:43:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241163AbiEVPI6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 22 May 2022 11:08:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53360 "EHLO
+        id S1349948AbiEVRnl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 22 May 2022 13:43:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230290AbiEVPI5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 22 May 2022 11:08:57 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F90D3A5E3;
-        Sun, 22 May 2022 08:08:56 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id t25so21663807lfg.7;
-        Sun, 22 May 2022 08:08:56 -0700 (PDT)
+        with ESMTP id S229764AbiEVRnk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 22 May 2022 13:43:40 -0400
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1781D3968A;
+        Sun, 22 May 2022 10:43:39 -0700 (PDT)
+Received: by mail-lf1-x135.google.com with SMTP id bq30so22058091lfb.3;
+        Sun, 22 May 2022 10:43:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=7g33WtJZnwYfTwI509SCQTLTp308sKh4zxrRwkR1M1s=;
-        b=c9godQeu8vT6tVI38R1L6EOrm/QCt0Dhf+GHnwxRq87S+8EkI8WDYvJwOpXYMmqTfU
-         NVFnu/NyWq6zD2OV9YQliMk56QUSHyaAAGRdCOnTJEhcyvnJKRrhy1n1RmMu30OdR4LE
-         oMus8NGN3R7ajDoZ9C3RaELEvF2upqn/8EEhXd8P05R6qtDCuSbACIca1sgo+7xwkS7L
-         OYImqumpCGnmWr4y7RQgQ6LjgSSSmB6jMPFOc1Vok/xV9KSS6UqU7VZ1WwCU2SCmkRuh
-         R65o4FbSOdvbgkLdlVUWtxYLnqnw08OCVETFf1s7ba+ireDyLj9HebRVvBUe5iH2q+qB
-         +bvw==
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=cXqTZ3cjvi9NXPyDIk9+YjtNXvi3tP5AIRH9jXxAD+A=;
+        b=lcaqLRZy2DJWntEBdPcJ4L0Svs1tqhjpMDr6iQYrqxNM41QqdlbiXh2JShtsDEr9Fl
+         xxXuiJ2dx+V6yz3ViMK0a24NiZfcY98/PFfuwDIUTYfp3HmHjxtAhiIgP8jZeBcKmGA9
+         7Noe3d3Q3aGL3FI4+LRcMieas072dxPqT+lgkADdZYJmVSTQOP7EoB/mLwGA1zzcH/zu
+         ht7ZDhpTr4+c9RDspPqdelfxNGEjPeArMeYZDN1IJMhcGzfo3RGBmgJVzuQTk5wlsBuS
+         EqfpLtQOlDLCK1fZRDk3+Z/PWYZKfchqdziCxCd6qjQowF0oaeCeff9lGbQJsUl44nLK
+         6/tQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=7g33WtJZnwYfTwI509SCQTLTp308sKh4zxrRwkR1M1s=;
-        b=6/K5ADP226pLqU/xcpo26cIiKIQNna2aeqT9F54QuQXfzVozYzctG3ZAhuD1QTEexL
-         C9caK1rHctgjDWR1vPAY3hbvlBPBtzL05VsHpYX+qJ6Irf8+tXXz0AO2S8r8r6jqipKq
-         4Gjp0q3DBrgCeMPqFKGlSgFRbT7eriERjdgQdAXBDDYIHM6I6+msNjQD2e5et0bI/5ra
-         lamvT8IpT2xFGeejUBGAy8HPBdvmUBZM4vR+HEGgGaUkJSulPbpQLGJZydfegP/8x9TG
-         iFHpLjpQCOAKE0Llo2ariQ6foZeEYUYoA4vMy4QIsMvC6NoD3TOXI6H4dHnw+H3XenbJ
-         8/wQ==
-X-Gm-Message-State: AOAM530kAFlM6fVtOh3hvz+X6mCbCSBKb3eSvQTGGRtSgpGCZf4BkkxA
-        VtDeusGH+9LCoknwoeRw021wBLB23C4=
-X-Google-Smtp-Source: ABdhPJxzA2qZom1Ij7EyzIN6/ZFfQuqaXx91/vip/JYRQgoWg6l/FagtzgXOmgXgUFQGvHDMHRth7Q==
-X-Received: by 2002:ac2:4289:0:b0:477:b3eb:f2f with SMTP id m9-20020ac24289000000b00477b3eb0f2fmr14069215lfh.386.1653232134406;
-        Sun, 22 May 2022 08:08:54 -0700 (PDT)
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=cXqTZ3cjvi9NXPyDIk9+YjtNXvi3tP5AIRH9jXxAD+A=;
+        b=n6gkdjiqsTIkoY3xV8Q/t3CTYb6cDHCNPDdmfOEX6/OPAu5AfWB6g5+0XVS0H6FI93
+         1sAND21G0aaEdslhXgdWyj+4sC/lVGe0nlGHBMHLpZf8yQ9uehiqYZRv3SOCTaQY+Wum
+         xuzlx01QjPy2rT6M3qA2A5bdyMDCbqp9IeImx7b4nZ92JB9yvAEt4uznF64cP4ZkeibE
+         54TekBNcHWVADFvgg0wxbrD17gm2rh1F+H0ivUsJrOHtkt+XRQgdcSc57ACyCpNHCU69
+         4r6P3AiRN8uBxRlzyzMs0xwL1Z1p8TI3uWj7BuL4Rnk82B9it/eenL8IoQaOM48vL0Jk
+         cvig==
+X-Gm-Message-State: AOAM531UgnTIM1yvWZpb4aa6gAXw568FpP3MeNDZPdpmFOiva2kHMa/W
+        CGHf7DwDOCqloDb1tl49Bzo=
+X-Google-Smtp-Source: ABdhPJxJkcvQEApjpLtEssxzt1CwmQVJRIGNPq4QxWNRUeXwBRWyO7FxB9+JGrjYEtV35dgXBfv7Ew==
+X-Received: by 2002:a05:6512:6cb:b0:478:6420:67f with SMTP id u11-20020a05651206cb00b004786420067fmr4407736lff.77.1653241417274;
+        Sun, 22 May 2022 10:43:37 -0700 (PDT)
 Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id i22-20020a2e8096000000b00250664c906asm1224927ljg.133.2022.05.22.08.08.53
+        by smtp.gmail.com with ESMTPSA id p2-20020a2e8042000000b00253c4d434a6sm1284273ljg.127.2022.05.22.10.43.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 May 2022 08:08:53 -0700 (PDT)
-Date:   Sun, 22 May 2022 18:08:51 +0300
+        Sun, 22 May 2022 10:43:36 -0700 (PDT)
+Date:   Sun, 22 May 2022 20:43:34 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
 To:     Rob Herring <robh@kernel.org>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
@@ -59,98 +60,183 @@ Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 03/23] dt-bindings: ata: ahci-platform: Clarify common
- AHCI props constraints
-Message-ID: <20220522150851.x4unzszwd3lh52qt@mobilestation>
+Subject: Re: [PATCH v3 12/23] dt-bindings: ata: ahci: Add platform capability
+ properties
+Message-ID: <20220522174334.cnguiyl7u3nhe7mm@mobilestation>
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-4-Sergey.Semin@baikalelectronics.ru>
- <20220517191409.GA1445438-robh@kernel.org>
+ <20220511231810.4928-13-Sergey.Semin@baikalelectronics.ru>
+ <20220517192028.GA1453662-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20220517191409.GA1445438-robh@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220517192028.GA1453662-robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, May 17, 2022 at 02:14:09PM -0500, Rob Herring wrote:
-> On Thu, May 12, 2022 at 02:17:50AM +0300, Serge Semin wrote:
-> > Indeed in accordance with what is imeplemtned in the AHCI paltform driver
-> > and the way the AHCI DT nodes are defined in the DT files we can add the
-> > next AHCI DT properties constraints: AHCI CSR ID is fixed to 'ahci', PHY
-> > name is fixed to 'sata-phy', AHCI controller can't have more than 32 ports
-> > by design.
+On Tue, May 17, 2022 at 02:20:28PM -0500, Rob Herring wrote:
+> On Thu, May 12, 2022 at 02:17:59AM +0300, Serge Semin wrote:
+> > In case if the platform doesn't have BIOS or a comprehensive firmware
+> > installed then the HBA capability flags will be left uninitialized. As a
+> > good alternative we can define a set AHCI DT-node properties to describe
+> > all of HW-init capabilities flags. Luckily there aren't too many of them.
+> > SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
+> > support determine the corresponding feature availability for whole HBA by
+> > means of the "hba-sss" and "hba-smps" properties.  Each port can have the
+> > "hba-{hpcp,mpsp,cpd,esp,fbscp}" defined indicatating that the port
+> > supports the next functionality: HPCP - HotPlug capable port, MPSP -
+> > Mechanical Presence Switch attached to a port, CPD - Cold Plug detection,
+> > ESP - External SATA Port (eSATA), FBSCP - FIS-based switching capable
+> > port.
 > > 
 > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > > 
-> > Changelog v2:
-> > - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 > > ---
-> >  .../devicetree/bindings/ata/ahci-common.yaml      | 15 ++++++++++-----
-> >  1 file changed, 10 insertions(+), 5 deletions(-)
 > > 
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > index 620042ca12e7..a7d1a8353de3 100644
-> > --- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > @@ -31,6 +31,8 @@ properties:
-> >  
-> >    reg-names:
-> >      description: CSR space IDs
-> > +    contains:
-> > +      const: ahci
+> > Alternatively we could define them as a bitfield, but having a set of
+> > boolean properties seemed a better idea since in that case we can
+> > implement a simple inter-dependency rules for them, which can't be done
+> > should we take the bitfields path.
 > 
 
-> Okay, with this it makes sense to keep. The others still should go.
+> I would just provide a CAP register override and be done with it.
+> 
+> The boolean fields only let you set a capability, but not unset one. 
+> They would need to be tristate.
 
-Ok.
+Ok. I'll convert the boolean properties to the generic (hba-cap) and
+per-port (hba-port-cap) properties with CAP-override fields.
 
 -Sergey
 
 > 
-> >  
-> >    interrupts:
-> >      description:
-> > @@ -71,14 +73,13 @@ properties:
-> >      maxItems: 1
-> >  
+> > ---
+> >  .../devicetree/bindings/ata/ahci-common.yaml  | 66 +++++++++++++++++++
+> >  .../bindings/ata/ahci-platform.yaml           | 11 ++++
+> >  2 files changed, 77 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+> > index a7d1a8353de3..a29edfbb25db 100644
+> > --- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
+> > +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+> > @@ -75,6 +75,19 @@ properties:
 > >    phy-names:
-> > -    maxItems: 1
-> > +    const: sata-phy
+> >      const: sata-phy
 > >  
+> > +  hba-sss:
+> > +    type: boolean
+> > +    description:
+> > +      Staggered Spin-up Support. Indicates whether the HBA supports the
+> > +      staggered spin-up on its ports, for use in balancing power spikes.
+> > +
+> > +  hba-smps:
+> > +    type: boolean
+> > +    description:
+> > +      Mechanical Presence Switch Support. Indicates whether the HBA supports
+> > +      mechanical presence switches on its ports for use in hot plug
+> > +      operations.
+> > +
 > >    ports-implemented:
 > >      $ref: '/schemas/types.yaml#/definitions/uint32'
 > >      description:
-> >        Mask that indicates which ports the HBA supports. Useful if PI is not
-> >        programmed by the BIOS, which is true for some embedded SoC's.
-> > -    maximum: 0x1f
+> > @@ -97,6 +110,40 @@ patternProperties:
+> >          minimum: 0
+> >          maximum: 31
 > >  
-> >  patternProperties:
-> >    "^sata-port@[0-9a-f]+$":
-> > @@ -89,8 +90,12 @@ patternProperties:
-> >  
-> >      properties:
-> >        reg:
-> > -        description: AHCI SATA port identifier
-> > -        maxItems: 1
+> > +      hba-hpcp:
+> > +        type: boolean
 > > +        description:
-> > +          AHCI SATA port identifier. By design AHCI controller can't have
-> > +          more than 32 ports due to the CAP.NP fields and PI register size
-> > +          constraints.
-> > +        minimum: 0
-> > +        maximum: 31
-> >  
+> > +          Hot Plug Capable Port. Indicates that this port’s signal and power
+> > +          connectors are externally accessible via a joint signal and power
+> > +          connector for blindmate device hot plug. It is mutually exclusive
+> > +          with the ESP feature.
+> > +
+> > +      hba-mpsp:
+> > +        type: boolean
+> > +        description:
+> > +          Mechanical Presence Switch Attached to Port. Indicates whether
+> > +          the platform an mechanical presence switch attached to this
+> > +          port.
+> > +
+> > +      hba-cpd:
+> > +        type: boolean
+> > +        description:
+> > +          Cold Presence Detection. Indicates whether the platform supports
+> > +          cold presence detection on this port.
+> > +
+> > +      hba-esp:
+> > +        type: boolean
+> > +        description:
+> > +          External SATA Port. Indicates that this port’s signal connector
+> > +          is externally accessible on a signal only connector (e.g. eSATA
+> > +          connector).
+> > +
+> > +      hba-fbscp:
+> > +        type: boolean
+> > +        description:
+> > +          FIS-based Switching Capable Port. Indicates whether this port
+> > +          supports Port Multiplier FIS-based switching.
+> > +
 > >        phys:
 > >          description: Individual AHCI SATA port PHY
-> > @@ -98,7 +103,7 @@ patternProperties:
+> >          maxItems: 1
+> > @@ -111,6 +158,25 @@ patternProperties:
+> >      required:
+> >        - reg
 > >  
-> >        phy-names:
-> >          description: AHCI SATA port PHY ID
-> > -        maxItems: 1
-> > +        const: sata-phy
+> > +    # eSATA can't be enabled together with the HotPlug capability
+> > +    oneOf:
+> > +      - required:
+> > +          - hba-hpcp
+> > +      - required:
+> > +          - hba-esp
+> > +      - not:
+> > +          anyOf:
+> > +            - required:
+> > +                - hba-hpcp
+> > +            - required:
+> > +                - hba-esp
+> > +
+> > +    # HotPlug capability must be enabled together with Cold Plug
+> > +    # Detection and Mechanical Presence Switching.
+> > +    dependencies:
+> > +      hba-cpd: ["hba-hpcp"]
+> > +      hba-mpsp: ["hba-hpcp"]
+> > +
+> >      additionalProperties: true
 > >  
-> >        target-supply:
-> >          description: Power regulator for SATA port target device
+> >  required:
+> > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> > index 76075d3c8987..6cad7e86f3bb 100644
+> > --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> > +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> > @@ -117,14 +117,25 @@ examples:
+> >          #address-cells = <1>;
+> >          #size-cells = <0>;
+> >  
+> > +        hba-smps;
+> > +
+> >          sata0: sata-port@0 {
+> >              reg = <0>;
+> > +
+> > +            hba-fbscp;
+> > +            hba-esp;
+> > +
+> >              phys = <&sata_phy 0>;
+> >              target-supply = <&reg_sata0>;
+> >          };
+> >  
+> >          sata1: sata-port@1 {
+> >              reg = <1>;
+> > +
+> > +            hba-fbscp;
+> > +            hba-hpcp;
+> > +            hba-mpsp;
+> > +
+> >              phys = <&sata_phy 1>;
+> >              target-supply = <&reg_sata1>;
+> >          };
 > > -- 
 > > 2.35.1
 > > 
