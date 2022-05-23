@@ -2,70 +2,67 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36274C433FE
-	for <linux-ide@archiver.kernel.org>; Mon, 23 May 2022 12:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9294EC433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 23 May 2022 21:40:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235217AbiEWMAO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 23 May 2022 08:00:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35246 "EHLO
+        id S231318AbiEWVkw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 23 May 2022 17:40:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235029AbiEWMAN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2022 08:00:13 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1C6F52526;
-        Mon, 23 May 2022 05:00:11 -0700 (PDT)
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4L6G4n5HfQz67xMg;
-        Mon, 23 May 2022 19:56:09 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 23 May 2022 14:00:09 +0200
-Received: from [10.47.87.6] (10.47.87.6) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 23 May
- 2022 13:00:08 +0100
-Message-ID: <b756a30e-9fb1-ad0e-a55d-3fd3354b8517@huawei.com>
-Date:   Mon, 23 May 2022 13:00:07 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH 0/4] DMA mapping changes for SCSI core
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>
-CC:     <joro@8bytes.org>, <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <m.szyprowski@samsung.com>,
-        <robin.murphy@arm.com>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <iommu@lists.linux-foundation.org>, <linux-scsi@vger.kernel.org>,
-        <liyihang6@hisilicon.com>, <chenxiang66@hisilicon.com>,
-        <thunder.leizhen@huawei.com>
-References: <1653035003-70312-1-git-send-email-john.garry@huawei.com>
- <20220522131345.GB25785@lst.de>
- <15f94ea2-fa97-3122-60dd-a87a3dd8a7db@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <15f94ea2-fa97-3122-60dd-a87a3dd8a7db@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.87.6]
-X-ClientProxiedBy: lhreml748-chm.china.huawei.com (10.201.108.198) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        with ESMTP id S231479AbiEWVkt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2022 17:40:49 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7299460D82
+        for <linux-ide@vger.kernel.org>; Mon, 23 May 2022 14:40:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B68EDB81696
+        for <linux-ide@vger.kernel.org>; Mon, 23 May 2022 21:40:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4BFACC385AA;
+        Mon, 23 May 2022 21:40:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653342043;
+        bh=mZWtN0ihVUP6DG0k+Zt1euj3Occ93VoHkWrne0OOoG0=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=IBFWBX9mJaNW+1K7nG/m9mGsBReMdUsVDlTMgAiDQczt4ZRgLR/Wel2v1N9xsOWga
+         m4ipBrZmqGMHw6eyYFkItfPsoNJZAnzf0jz3X3tk+YcYvhzsqnDcmJoHZO9Vekr3Yn
+         pavM46t/6RmJWrtd45Ma/lYl7X9RwjJwYhW8w4b0onnp9uhTIhprjEkgO639KpcWMl
+         h4pQVdxmnHCAJgGBmTRJbuEHOT4qDnShs7B4yP6hGxHc6CoUwb1edqMx6ZGJgeUsS4
+         B7Uotnosi+GzuShKo/fMGYVmFeS9ubgiHdxNA3Kb8JmZ6K2Pzr6ls4pe7S4QEinlVO
+         oVs5Qj4uERr8w==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 39479F03935;
+        Mon, 23 May 2022 21:40:43 +0000 (UTC)
+Subject: Re: [GIT PULL] ata changes for 5.19-rc1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20220523043903.328279-1-damien.lemoal@opensource.wdc.com>
+References: <20220523043903.328279-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20220523043903.328279-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.19-rc1
+X-PR-Tracked-Commit-Id: 71abb4df29815d17f3dff98dce553fc1732d9738
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 8a32f81a89cf3b0b0e1cc626f7f7777f62adf99d
+Message-Id: <165334204323.21378.7171424072633392380.pr-tracker-bot@kernel.org>
+Date:   Mon, 23 May 2022 21:40:43 +0000
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 22/05/2022 23:22, Damien Le Moal wrote:
-> On 2022/05/22 22:13, Christoph Hellwig wrote:
->> The whole series looks fine to me.  I'll happily queue it up in the
->> dma-mapping tree if the SCSI and ATA maintainers are ok with that.
->>
-> 
-> Fine with me. I sent an acked-by for the libata bit.
-> 
+The pull request you sent on Mon, 23 May 2022 13:39:03 +0900:
 
-Thanks, I'm going to have to post a v2 and I figure that with the timing 
-that I'll have to wait for v5.20 now.
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.19-rc1
 
-Cheers,
-John
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/8a32f81a89cf3b0b0e1cc626f7f7777f62adf99d
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
