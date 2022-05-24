@@ -2,230 +2,132 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D11BAC433FE
-	for <linux-ide@archiver.kernel.org>; Tue, 24 May 2022 15:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5267CC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 24 May 2022 17:05:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238908AbiEXPdz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 May 2022 11:33:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59948 "EHLO
+        id S239698AbiEXRFR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 May 2022 13:05:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238900AbiEXPdv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2022 11:33:51 -0400
-Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 640D460BA1;
-        Tue, 24 May 2022 08:33:47 -0700 (PDT)
-Received: by mail-oo1-f45.google.com with SMTP id j25-20020a4ad199000000b0040e50cc687cso2654758oor.9;
-        Tue, 24 May 2022 08:33:47 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=EcvZzFYCsMzS5Yx/Ut8QojBzLo1+Vtyk5hpoiHqUgoQ=;
-        b=DCg7BcnraMsFljMLazUCwZ7LkG/cF2+n1URK52uHM8THTUd82ppfAru9TEg2u3Egol
-         GRKD5iQkB0//E8yBhEPzpY0X2f2I1tBEyDACxECE813pjhsJkxMmDaZ22XgbI8+pBY1t
-         1J5fhPxUVN2p8tGquIzfQyPXN7Gp720I95QSc7wtdJD/zqT/Cpdlfy2cllPLmXiriAUU
-         x4HH+f1OwMW4ZeT7/gjQZnVN+tMzrdGCY7EY6A+B5KlL3ZewuHL2uVbeulLlcgZ2hWJl
-         B0vjUjOUolNttzuSnX0h+NV/UBkkrckc6pkMjGKY3DmAI7y+rvfc3OG4ehhMvM7/via/
-         EwIA==
-X-Gm-Message-State: AOAM53331jDsLrtKRQ4girdPUkCcjLy/bySsRMkQKXmc/1adUHZsI62i
-        Lbcj6oTxBD+vtsbfhjiMUY7nDaUe0g==
-X-Google-Smtp-Source: ABdhPJwrZvyvEMBcR9AJtWmbvbztDIs+x+vbQ1zbDfy9UYupkCeMQe1v8j8Uwml1/UtVUjNMnO15YQ==
-X-Received: by 2002:a4a:d40d:0:b0:33a:33be:9c1e with SMTP id n13-20020a4ad40d000000b0033a33be9c1emr10840977oos.96.1653406426548;
-        Tue, 24 May 2022 08:33:46 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id g6-20020a9d6c46000000b0060ae8586befsm5057109otq.53.2022.05.24.08.33.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 May 2022 08:33:45 -0700 (PDT)
-Received: (nullmailer pid 3838423 invoked by uid 1000);
-        Tue, 24 May 2022 15:33:45 -0000
-Date:   Tue, 24 May 2022 10:33:45 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Serge Semin <fancer.lancer@gmail.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 20/23] dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA
- controller DT schema
-Message-ID: <20220524153345.GC3730540-robh@kernel.org>
-References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-21-Sergey.Semin@baikalelectronics.ru>
- <20220517201332.GB1462130-robh@kernel.org>
- <20220522204931.rcgqyyctxivyfmv7@mobilestation>
+        with ESMTP id S236052AbiEXRFQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2022 13:05:16 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2076.outbound.protection.outlook.com [40.107.223.76])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30DD17938B;
+        Tue, 24 May 2022 10:05:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iEalL9Jw2LCKmOmaRx0GqbRlGob++rH4tUrTOEEH7DIYCdfRVULo64SKG8ysPGCYe2V2SqFUxuqHxnBNPfJGRW/Zi91efe+TxZRmtvG6RNEawgz/7eDYHtvNw5PIShdodwL00mAlLhMqinhAnabFxtg5Ss5kMjw7MBPtj4FCC5OIXv9tFvd1JGR5DPc4HwmQqfXMbhdCYa5ERTaUCNEv7IIzi25M4v36+WNlCOKrkuALDnFa1yYdTISd1Cut5DSkS6VhukxtI0HGB3qUJki/PlqR5E1TkiAHukdIpLBcwVmWJ4ECbBjnx5hsh8Wg0OtYiYLwySiC4qASI5KJezi0Xg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4imZihw8g7gXK33mtvmmsnM7DUpDf8Wf4kv1xV6lm0M=;
+ b=TF2UU5BdsvSxq2LR3IQcLv/mFCnDhfYP6FiHXze1F+pWIoFe1TuIxSl/v8QDG9UdwPJE8Cota65emCw4C5J0bf+llF0BmqahKOTIvOMKYI9UrU5nXItghKElLZaahXFaGvTJib3HVttmfhR6NRTKT0qXOHTSGyCEsuk+LarNEfTaFEuXPUVVkxdZJDVsMVAHS2lcb4DW8MKhteLNK7D4ocQgLlD8TRoH7ULCOkRIGuVp209327+1jkAFVJfeBw2IpGygW2R5UszwszBjf/Hh2MPImRP9kpb7xiUybCEK4dvhLvN1FcOT2tKMyQlT2HoKptat25RfvMLaZKq+RFBi8A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=opensource.wdc.com smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4imZihw8g7gXK33mtvmmsnM7DUpDf8Wf4kv1xV6lm0M=;
+ b=qBPgeQQH96rdEfgl+aXUImDc3+M3nuMS9V5cVFvvgcijGG0vkkg18FpWl9PX5sNiTphCo1zVTlKxmfIRhIsVD7Z7DTk/bAOhMB8a7uSamspkOmzmF9nu8uWPLcBUUy3ABrY196cjB8qDvbYs0wr8mzZHikpomxWDwFcyHvbAjmQ=
+Received: from BN0PR04CA0057.namprd04.prod.outlook.com (2603:10b6:408:e8::32)
+ by DS0PR12MB6463.namprd12.prod.outlook.com (2603:10b6:8:c5::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Tue, 24 May
+ 2022 17:05:13 +0000
+Received: from BN8NAM11FT039.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:e8:cafe::5d) by BN0PR04CA0057.outlook.office365.com
+ (2603:10b6:408:e8::32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13 via Frontend
+ Transport; Tue, 24 May 2022 17:05:13 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BN8NAM11FT039.mail.protection.outlook.com (10.13.177.169) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5273.14 via Frontend Transport; Tue, 24 May 2022 17:05:13 +0000
+Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 24 May
+ 2022 12:05:11 -0500
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        <hdegoede@redhat.com>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH v3 0/3] Drop mobile board support
+Date:   Tue, 24 May 2022 12:05:05 -0500
+Message-ID: <20220524170508.563-1-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220522204931.rcgqyyctxivyfmv7@mobilestation>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: af626812-da15-41b1-807a-08da3da7916e
+X-MS-TrafficTypeDiagnostic: DS0PR12MB6463:EE_
+X-Microsoft-Antispam-PRVS: <DS0PR12MB6463F78A3AFC5144B19963C9E2D79@DS0PR12MB6463.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 1AbCZx/8GKjCtXOAfyUw3K7K7b7wOxYQJUyV8Ak91+FSq6AAo9rriV/f1GF4hOgPjI8rlSXlAiePCfhXYbGXum/Xoel+WtiGEzCpvpMOwvjBMQ4FlJ/n8rtxQY9NEXAeKv1YjOWgVxcAipRaZXkYo6X+G+pOPuiDJ2BJmcg5qJTwwRV4mDMHxcxyjODSAhLOoPRDOH6pH2/PFyCAYMCeYcONozpoDvKaS5z84KfU1tAJe+ND1DyglpgmWl9Zi3XIaojJqQCOckYPEoS46BoYu1D2mBXwemAy7ApFciOKN50T8Dj3wOt3doEY5bVauyBMhj+2VRcaRt+5D45uir6MEpT4lYpbhOq1t007xb5JMgYFr6ox29shpPsZYTEB9Y7pSk6pZB0ER5kA3B5gz8yVjLxbCK62Qj+QOdqoPJcL1ePN3jirYh5oZ07HbIV94XxE+VgIVcYSr25ieeKDbFutOvuOkvza+vWjZpVKU2biMUD0yi+nFV82Og7qZGWi2Fb/jbbDCyeWstov0HswXzDEDZemHqYTEf3wKLO3le3n/2aptVxeLTRNA3b10ZQ38ekD/yOEsTcIbXC4Uy/JXS1Dxr5OwyDr7ZNx/NyXWw1/loGXPpnofjZIkTXNXcfmrCL2gqRUXmxkCr2vrh1bIQbbRDd3lfssrD4XvgiDkndHe+YylGKqoTMzNMHNhWUXWZVs9d9yEhM+gjSZmkapiGC9h6Jh0/7mSuAY0IArUOtq4MaoxcZS7y4idvavx/8C5igB2rHF4KhsUEVG+3qX7G243lYvWsDrzWPDLQElzwJ2GGWRw+6OfnLf/Z8+gVpBkryg26T+byVJqkZp25HXlrR9yg==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(46966006)(40470700004)(508600001)(47076005)(70206006)(8676002)(86362001)(83380400001)(4326008)(70586007)(6666004)(44832011)(336012)(426003)(40460700003)(5660300002)(966005)(186003)(8936002)(2616005)(1076003)(6916009)(2906002)(36756003)(54906003)(26005)(36860700001)(81166007)(356005)(7696005)(82310400005)(316002)(16526019)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 17:05:13.4023
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: af626812-da15-41b1-807a-08da3da7916e
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT039.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6463
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, May 22, 2022 at 11:49:31PM +0300, Serge Semin wrote:
-> On Tue, May 17, 2022 at 03:13:32PM -0500, Rob Herring wrote:
-> > On Thu, May 12, 2022 at 02:18:07AM +0300, Serge Semin wrote:
-> > > Baikal-T1 AHCI controller is based on the DWC AHCI SATA IP-core v4.10a
-> > > with the next specific settings: two SATA ports, cascaded CSR access based
-> > > on two clock domains (APB and AXI), selectable source of the reference
-> > > clock (though stable work is currently available from the external source
-> > > only), two reset lanes for the application and SATA ports domains. Other
-> > > than that the device is fully compatible with the generic DWC AHCI SATA
-> > > bindings.
-> > > 
-> > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > > 
-> > > ---
-> > > 
-> > > Changelog v2:
-> > > - Rename 'syscon' property to 'baikal,bt1-syscon'.
-> > > - Drop macro usage from the example node.
-> > > ---
-> > >  .../bindings/ata/baikal,bt1-ahci.yaml         | 127 ++++++++++++++++++
-> > >  1 file changed, 127 insertions(+)
-> > >  create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-> > > 
-> > > diff --git a/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-> > > new file mode 100644
-> > > index 000000000000..7c2eae75434f
-> > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-> > > @@ -0,0 +1,127 @@
-> > > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > > +%YAML 1.2
-> > > +---
-> > > +$id: http://devicetree.org/schemas/ata/baikal,bt1-ahci.yaml#
-> > > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > > +
-> > > +title: Baikal-T1 SoC AHCI SATA controller
-> > > +
-> > > +maintainers:
-> > > +  - Serge Semin <fancer.lancer@gmail.com>
-> > > +
-> > > +description: |
-> > > +  AHCI SATA controller embedded into the Baikal-T1 SoC is based on the
-> > > +  DWC AHCI SATA v4.10a IP-core.
-> > > +
-> > > +allOf:
-> > > +  - $ref: snps,dwc-ahci.yaml#
-> > > +
-> > > +properties:
-> > > +  compatible:
-> > > +    contains:
-> > > +      const: baikal,bt1-ahci
-> > > +
-> > > +  clocks:
-> > > +    items:
-> > > +      - description: Peripheral APB bus clock source
-> > > +      - description: Application AXI BIU clock
-> > > +      - description: Internal SATA Ports reference clock
-> > > +      - description: External SATA Ports reference clock
-> > > +
-> > > +  clock-names:
-> > > +    items:
-> > > +      - const: pclk
-> > > +      - const: aclk
-> > > +      - const: ref_int
-> > > +      - const: ref_ext
-> > > +
-> > > +  resets:
-> > > +    items:
-> > > +      - description: Application AXI BIU domain reset
-> > > +      - description: SATA Ports clock domain reset
-> > > +
-> > > +  reset-names:
-> > > +    items:
-> > > +      - const: arst
-> > > +      - const: ref
-> > > +
-> > > +  baikal,bt1-syscon:
-> > > +    $ref: /schemas/types.yaml#/definitions/phandle
-> > > +    description:
-> > > +      Phandle reference to the CCU system controller. It is required to
-> > > +      switch between internal and external SATA reference clock sources.
-> > 
-> 
-> > Seems like the CCU system ctrlr should be a clock provider that provides 
-> > 'ref' clock and then assigned-clocks can be used to pick internal vs. 
-> > external ref.
-> 
-> By assigned-clocks do you mean using the "assigned-clock-parents"
-> property? 
+The AHCI driver currently has a large list of boards that are distinguished
+as mobile or not mobile controlling LPM policy.  This approach hasn't
+scaled very well as new boards need to be added and all new boards do
+support LPM.
 
-Yes, I meant any of those properties.
+Furthermore it was shown recently in some bug reports that some of the
+controllers included in this list actually are used in multiple
+products spanning different product types.  This means that the
+assumptions about "mobile" or "low-power" support don't make sense at
+all anyway.
 
-> Does it mean creating additional clocks exported from the
-> CCU controller, which could have got one of the two parental clocks?
+This series drops that distinction and then also adds documentation to
+make the module parameter for configuring it more accessible.
 
-Yes, I believe so.
+v2->v3
+ * Add documentation
+ * Rename parameter
+ * Drop patch for users protecting from themselves, this will be taken over
+   by Runa Guo-Oc's series
 
+Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1971576
+Link: https://lore.kernel.org/linux-ide/1650534217-14052-2-git-send-email-RunaGuo-oc@zhaoxin.com/
 
-> > > +
-> > > +  ports-implemented:
-> > > +    maximum: 0x3
-> > > +
-> > > +patternProperties:
-> > > +  "^sata-port@[0-9a-e]$":
-> > > +    type: object
-> > 
-> >        unevaluatedProperties: false
-> > 
-> 
-> > and then a $ref to a sata-port schema.
-> 
-> Can I set additional sata-port properties constraints afterwards? Like
-> I've done for the reg, snps,tx-ts-max and snps,rx-ts-max properties
-> here?
+Mario Limonciello (3):
+  ata: ahci: Drop low power policy board type
+  ata: ahci: Rename module parameter for lpm policy
+  ahci: Document the loss of hotplug by new LPM policy
 
-Yes. All the constraints are effectively ANDed together.
+ .../admin-guide/kernel-parameters.txt         |  18 +++
+ drivers/ata/Kconfig                           |   5 +-
+ drivers/ata/ahci.c                            | 115 ++++++++----------
+ drivers/ata/ahci.h                            |   7 +-
+ 4 files changed, 73 insertions(+), 72 deletions(-)
 
-> > > +
-> > > +    properties:
-> > > +      reg:
-> > > +        minimum: 0
-> > > +        maximum: 1
-> > > +
-> > > +      snps,tx-ts-max:
-> > > +        $ref: /schemas/types.yaml#/definitions/uint32
-> > > +        description:
-> > > +          Due to having AXI3 bus interface utilized the maximum Tx DMA
-> > > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
-> > > +        minimum: 1
-> > > +        maximum: 16
-> > > +
-> > > +      snps,rx-ts-max:
-> > > +        $ref: /schemas/types.yaml#/definitions/uint32
-> > > +        description:
-> > > +          Due to having AXI3 bus interface utilized the maximum Rx DMA
-> > > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
-> > 
-> 
-> > That's not a per port limitation (even though it's a per port register)? 
-> > I think this should be implied by the compatible string.
-> 
-> The snps,{rx,tx}-ts-max property is a per-port property. I'd better
-> explicitly set the property limitation here rather than having the
-> value implicitly clamped by hardware especially seeing the limitation
-> is set by the formulae
-> (CC_MSTR_BURST_LEN * M_HDATA_WIDTH/32)) / (M_HDATA_WIDTH/32),
-> which consists of the IP-core synthesized parameters.
+-- 
+2.34.1
 
-I did not say use the h/w default.
-
-What I asking is do you have any need for this to be different per port? 
-Seems unlikely given it's just 1 bus interface for all ports IIRC. I 
-can't see why you would want to tune the performance per port to 
-anything but the max burst length. If you have no need, use the 
-compatible string to determine what to set the register value to.
-
-> > Really, firmware should configure this IMO.
-> 
-> We don't have comprehensive firmware setting these and generic HBA parameters.
-> In our case dtb is the main platform firmware.
-
-No u-boot?
-
-Rob
