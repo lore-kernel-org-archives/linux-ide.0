@@ -2,43 +2,43 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5267CC433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 24 May 2022 17:05:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E7A1C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 24 May 2022 17:05:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239698AbiEXRFR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 May 2022 13:05:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54472 "EHLO
+        id S239788AbiEXRFY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 May 2022 13:05:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236052AbiEXRFQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2022 13:05:16 -0400
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2076.outbound.protection.outlook.com [40.107.223.76])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30DD17938B;
-        Tue, 24 May 2022 10:05:15 -0700 (PDT)
+        with ESMTP id S239781AbiEXRFT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2022 13:05:19 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2084.outbound.protection.outlook.com [40.107.220.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95A2F7938B;
+        Tue, 24 May 2022 10:05:18 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iEalL9Jw2LCKmOmaRx0GqbRlGob++rH4tUrTOEEH7DIYCdfRVULo64SKG8ysPGCYe2V2SqFUxuqHxnBNPfJGRW/Zi91efe+TxZRmtvG6RNEawgz/7eDYHtvNw5PIShdodwL00mAlLhMqinhAnabFxtg5Ss5kMjw7MBPtj4FCC5OIXv9tFvd1JGR5DPc4HwmQqfXMbhdCYa5ERTaUCNEv7IIzi25M4v36+WNlCOKrkuALDnFa1yYdTISd1Cut5DSkS6VhukxtI0HGB3qUJki/PlqR5E1TkiAHukdIpLBcwVmWJ4ECbBjnx5hsh8Wg0OtYiYLwySiC4qASI5KJezi0Xg==
+ b=ZjSG4XXK1UayFaMm6mwq5of07MjADQBLaXxafnFrTuHigTYqthwIb9ScWSUJbTJ0QniPDoBZwuQfU/xDONEjpBDX68VXKs51JynIJyWG6Z8zt/afWjkvqie38UzBTXXlamTGORWizESc8kRwE/s0u3z4Ez6hHzIiJ8vT4GcSDGMr31EOyq3CpBULKgTypd20isMYLyrie3Ip2vx8wG3h9zMxkBI+0ChQDl582K3k0XbMNgcdWcvCgGk+CDdS43FVPgAecfvwUz03v5RrWDhnZ2edyP0DrrSXEnxb3dt1+Cl/B7qBk7I0DnXgG0I5CH1zCY5zLAUPH/mvAfIqvapuZQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4imZihw8g7gXK33mtvmmsnM7DUpDf8Wf4kv1xV6lm0M=;
- b=TF2UU5BdsvSxq2LR3IQcLv/mFCnDhfYP6FiHXze1F+pWIoFe1TuIxSl/v8QDG9UdwPJE8Cota65emCw4C5J0bf+llF0BmqahKOTIvOMKYI9UrU5nXItghKElLZaahXFaGvTJib3HVttmfhR6NRTKT0qXOHTSGyCEsuk+LarNEfTaFEuXPUVVkxdZJDVsMVAHS2lcb4DW8MKhteLNK7D4ocQgLlD8TRoH7ULCOkRIGuVp209327+1jkAFVJfeBw2IpGygW2R5UszwszBjf/Hh2MPImRP9kpb7xiUybCEK4dvhLvN1FcOT2tKMyQlT2HoKptat25RfvMLaZKq+RFBi8A==
+ bh=GOcVzkAfqLWZX6lFhzvfmi2oe6rC2/LYtJ8etQwpzag=;
+ b=d2PMngvMpMemkbW5eVCYXfp8jLZWefzU+JMo8+QwRpw/Zf89l1hu8YNaKCwvyl6X03Wo2foLjcKktKmadEngqypK6QIF59+hAx6i9T/0536rWrESzFVq/7EYZMLLeVDroz6kR4clTF1Okwl/Pkkx2zJFfcMiO43Z1FWXRXdrGvNZosDwU4DQDChz+b7dUJYj590boDpFeTmlyy9TL9NafVj9oPWbDNatZwTEbby1VQtM8Mw2mf4CVODHru7s1/vODLltHmF3WiCVWHxvM8fpeDYuYRaICBpXkU3/TvGidai8F9VODxoFyO49O65NmPbdU9VtnNUripQwKGgT6LnmXQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=opensource.wdc.com smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4imZihw8g7gXK33mtvmmsnM7DUpDf8Wf4kv1xV6lm0M=;
- b=qBPgeQQH96rdEfgl+aXUImDc3+M3nuMS9V5cVFvvgcijGG0vkkg18FpWl9PX5sNiTphCo1zVTlKxmfIRhIsVD7Z7DTk/bAOhMB8a7uSamspkOmzmF9nu8uWPLcBUUy3ABrY196cjB8qDvbYs0wr8mzZHikpomxWDwFcyHvbAjmQ=
-Received: from BN0PR04CA0057.namprd04.prod.outlook.com (2603:10b6:408:e8::32)
- by DS0PR12MB6463.namprd12.prod.outlook.com (2603:10b6:8:c5::10) with
+ bh=GOcVzkAfqLWZX6lFhzvfmi2oe6rC2/LYtJ8etQwpzag=;
+ b=vUBNPZoAWioh6CDdwUjxkkR8eNdz7gM9jaYP3M5XNVUspD3T0hi8eOLperFRdKPKT+wgwb2qXzPEJVIEl69pUT8Mf+4bLC5voFqiQBskDX86ZS5kDJamdD7SXvZKQtT1fiV28qHNzerusD79F83EkNTCjHF9JBMazrKuLd2Z3yA=
+Received: from BN0PR04CA0035.namprd04.prod.outlook.com (2603:10b6:408:e8::10)
+ by DM6PR12MB3724.namprd12.prod.outlook.com (2603:10b6:5:1c9::31) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Tue, 24 May
- 2022 17:05:13 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.20; Tue, 24 May
+ 2022 17:05:16 +0000
 Received: from BN8NAM11FT039.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:e8:cafe::5d) by BN0PR04CA0057.outlook.office365.com
- (2603:10b6:408:e8::32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13 via Frontend
- Transport; Tue, 24 May 2022 17:05:13 +0000
+ (2603:10b6:408:e8:cafe::e2) by BN0PR04CA0035.outlook.office365.com
+ (2603:10b6:408:e8::10) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.14 via Frontend
+ Transport; Tue, 24 May 2022 17:05:16 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  BN8NAM11FT039.mail.protection.outlook.com (10.13.177.169) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5273.14 via Frontend Transport; Tue, 24 May 2022 17:05:13 +0000
+ 15.20.5273.14 via Frontend Transport; Tue, 24 May 2022 17:05:16 +0000
 Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 24 May
- 2022 12:05:11 -0500
+ 2022 12:05:13 -0500
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 CC:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
@@ -60,10 +60,12 @@ CC:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
         open list <linux-kernel@vger.kernel.org>,
         <hdegoede@redhat.com>,
         Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v3 0/3] Drop mobile board support
-Date:   Tue, 24 May 2022 12:05:05 -0500
-Message-ID: <20220524170508.563-1-mario.limonciello@amd.com>
+Subject: [PATCH 2/3] ata: ahci: Rename module parameter for lpm policy
+Date:   Tue, 24 May 2022 12:05:07 -0500
+Message-ID: <20220524170508.563-3-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220524170508.563-1-mario.limonciello@amd.com>
+References: <20220524170508.563-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -72,62 +74,91 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: af626812-da15-41b1-807a-08da3da7916e
-X-MS-TrafficTypeDiagnostic: DS0PR12MB6463:EE_
-X-Microsoft-Antispam-PRVS: <DS0PR12MB6463F78A3AFC5144B19963C9E2D79@DS0PR12MB6463.namprd12.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: c4c88bfc-2186-4a64-3c6b-08da3da79338
+X-MS-TrafficTypeDiagnostic: DM6PR12MB3724:EE_
+X-Microsoft-Antispam-PRVS: <DM6PR12MB3724FA42B262B72D3E8822F0E2D79@DM6PR12MB3724.namprd12.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 1AbCZx/8GKjCtXOAfyUw3K7K7b7wOxYQJUyV8Ak91+FSq6AAo9rriV/f1GF4hOgPjI8rlSXlAiePCfhXYbGXum/Xoel+WtiGEzCpvpMOwvjBMQ4FlJ/n8rtxQY9NEXAeKv1YjOWgVxcAipRaZXkYo6X+G+pOPuiDJ2BJmcg5qJTwwRV4mDMHxcxyjODSAhLOoPRDOH6pH2/PFyCAYMCeYcONozpoDvKaS5z84KfU1tAJe+ND1DyglpgmWl9Zi3XIaojJqQCOckYPEoS46BoYu1D2mBXwemAy7ApFciOKN50T8Dj3wOt3doEY5bVauyBMhj+2VRcaRt+5D45uir6MEpT4lYpbhOq1t007xb5JMgYFr6ox29shpPsZYTEB9Y7pSk6pZB0ER5kA3B5gz8yVjLxbCK62Qj+QOdqoPJcL1ePN3jirYh5oZ07HbIV94XxE+VgIVcYSr25ieeKDbFutOvuOkvza+vWjZpVKU2biMUD0yi+nFV82Og7qZGWi2Fb/jbbDCyeWstov0HswXzDEDZemHqYTEf3wKLO3le3n/2aptVxeLTRNA3b10ZQ38ekD/yOEsTcIbXC4Uy/JXS1Dxr5OwyDr7ZNx/NyXWw1/loGXPpnofjZIkTXNXcfmrCL2gqRUXmxkCr2vrh1bIQbbRDd3lfssrD4XvgiDkndHe+YylGKqoTMzNMHNhWUXWZVs9d9yEhM+gjSZmkapiGC9h6Jh0/7mSuAY0IArUOtq4MaoxcZS7y4idvavx/8C5igB2rHF4KhsUEVG+3qX7G243lYvWsDrzWPDLQElzwJ2GGWRw+6OfnLf/Z8+gVpBkryg26T+byVJqkZp25HXlrR9yg==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(46966006)(40470700004)(508600001)(47076005)(70206006)(8676002)(86362001)(83380400001)(4326008)(70586007)(6666004)(44832011)(336012)(426003)(40460700003)(5660300002)(966005)(186003)(8936002)(2616005)(1076003)(6916009)(2906002)(36756003)(54906003)(26005)(36860700001)(81166007)(356005)(7696005)(82310400005)(316002)(16526019)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 4fIimEB3ylZhdrXR1KturUBQllFcGa/2r8kt6cD7JL1j5niS5GeR39OIixHu5pC3WUPtU1YNKMsEPziOAPKofR/TGgQ6rrJPeNvC/qV40nZ5UmgyG1/7iBN3svpENZertnm5n/3o1uP+al0PoylvASIU/77GClxozVH8UEYqoeNyH9ck/pxhpBBN1LM2h0GO1JiwVrJWVn6Yrl1lYCkAOAxbMiSJaRnCAtb6aWv0fLqd1tSfzbmDc+MaOf3IjxqVk7KZhNkWrirQ5SLDPhtut4dE8HS649rWi8ME/zHIboUccHZIwtpWEHjIkmWVq5ITi6qhT0w0r5omxgkr6E65fYAQhys6LVZr/qAl4oXwe3N+wUscWSB0vnSk3WPT0NRSDUeeaI5ORSqezMZt0AhWn7TG9zi8pq4G2cC+BBaUHQODBrXagxuykWCokbPfSQ2VPIYryoIfkJ1X25krMPclfTZsSXUSgIpUTY3js7Rtp9yjCL7a4xGwUsea+Z/DI+dVzmnTkkIExsXwJpRnzrSsfrfypze7D2N/sPTGxJz5Uzdrmgzb94D+27Ka0G413Oweyxim7QXa/5GiKLp7LPErFm/mJ09P93PyJOAkdXvLHMxTfgVVS5/Yob7xwV2if+nPbD/M18Gqo8PRg76lz2wxjAbBuE41Ml1REsy/1AfvKXlPalWYE1GmJVvB0MOUn4Vu0Azd1rzhrYiw/Pkn0tWKmQ==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(46966006)(40470700004)(36860700001)(336012)(47076005)(426003)(316002)(70586007)(16526019)(8676002)(26005)(1076003)(2616005)(186003)(36756003)(70206006)(6916009)(54906003)(44832011)(7696005)(6666004)(81166007)(4326008)(86362001)(8936002)(508600001)(2906002)(356005)(40460700003)(5660300002)(82310400005)(83380400001)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 17:05:13.4023
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 17:05:16.4490
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: af626812-da15-41b1-807a-08da3da7916e
+X-MS-Exchange-CrossTenant-Network-Message-Id: c4c88bfc-2186-4a64-3c6b-08da3da79338
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT039.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6463
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3724
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The AHCI driver currently has a large list of boards that are distinguished
-as mobile or not mobile controlling LPM policy.  This approach hasn't
-scaled very well as new boards need to be added and all new boards do
-support LPM.
+The LPM policy is applied to more chipsets than just mobile designs.
+Update the module parameter to drop the word "mobile" to make this
+clearer to users.
 
-Furthermore it was shown recently in some bug reports that some of the
-controllers included in this list actually are used in multiple
-products spanning different product types.  This means that the
-assumptions about "mobile" or "low-power" support don't make sense at
-all anyway.
+Also, document this renamed parameter in the admin-guide for users
+as it was missing previously.
 
-This series drops that distinction and then also adds documentation to
-make the module parameter for configuring it more accessible.
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ Documentation/admin-guide/kernel-parameters.txt | 11 +++++++++++
+ drivers/ata/ahci.c                              | 10 +++++-----
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-v2->v3
- * Add documentation
- * Rename parameter
- * Drop patch for users protecting from themselves, this will be taken over
-   by Runa Guo-Oc's series
-
-Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1971576
-Link: https://lore.kernel.org/linux-ide/1650534217-14052-2-git-send-email-RunaGuo-oc@zhaoxin.com/
-
-Mario Limonciello (3):
-  ata: ahci: Drop low power policy board type
-  ata: ahci: Rename module parameter for lpm policy
-  ahci: Document the loss of hotplug by new LPM policy
-
- .../admin-guide/kernel-parameters.txt         |  18 +++
- drivers/ata/Kconfig                           |   5 +-
- drivers/ata/ahci.c                            | 115 ++++++++----------
- drivers/ata/ahci.h                            |   7 +-
- 4 files changed, 73 insertions(+), 72 deletions(-)
-
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 9336d98fc670..9e6bd212004d 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -268,6 +268,17 @@
+ 			try_unsupported: try to drive unsupported chipsets
+ 				(may crash computer or cause data corruption)
+ 
++	ahci.lpm_policy= [AHCI]
++			The Default SATA Link Power Management (LPM) policy to use
++			for chipsets / "South Bridges" supporting low-power modes.
++
++			The value set has the following meanings:
++			0 => Keep firmware settings
++			1 => Maximum performance
++			2 => Medium power
++			3 => Medium power with Device Initiated PM enabled
++			4 => Minimum power
++
+ 	ALSA		[HW,ALSA]
+ 			See Documentation/sound/alsa-configuration.rst
+ 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index c39cdf6a44f1..1e2febea2f28 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -640,9 +640,9 @@ static int marvell_enable = 1;
+ module_param(marvell_enable, int, 0644);
+ MODULE_PARM_DESC(marvell_enable, "Marvell SATA via AHCI (1 = enabled)");
+ 
+-static int mobile_lpm_policy = -1;
+-module_param(mobile_lpm_policy, int, 0644);
+-MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
++static int lpm_policy = -1;
++module_param(lpm_policy, int, 0644);
++MODULE_PARM_DESC(lpm_policy, "Default LPM policy");
+ 
+ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ 					 struct ahci_host_priv *hpriv)
+@@ -1591,8 +1591,8 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+ 	int policy = CONFIG_SATA_MOBILE_LPM_POLICY;
+ 
+ 	/* user modified policy via module param */
+-	if (mobile_lpm_policy != -1) {
+-		policy = mobile_lpm_policy;
++	if (lpm_policy != -1) {
++		policy = lpm_policy;
+ 		goto update_policy;
+ 	}
+ 
 -- 
 2.34.1
 
