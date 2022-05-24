@@ -2,43 +2,43 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99CFBC433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 24 May 2022 15:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D11BAC433FE
+	for <linux-ide@archiver.kernel.org>; Tue, 24 May 2022 15:33:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236387AbiEXPTT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 May 2022 11:19:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32970 "EHLO
+        id S238908AbiEXPdz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 May 2022 11:33:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236047AbiEXPTS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2022 11:19:18 -0400
-Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73779193C5;
-        Tue, 24 May 2022 08:19:17 -0700 (PDT)
-Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-f233f06563so11015912fac.7;
-        Tue, 24 May 2022 08:19:17 -0700 (PDT)
+        with ESMTP id S238900AbiEXPdv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2022 11:33:51 -0400
+Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 640D460BA1;
+        Tue, 24 May 2022 08:33:47 -0700 (PDT)
+Received: by mail-oo1-f45.google.com with SMTP id j25-20020a4ad199000000b0040e50cc687cso2654758oor.9;
+        Tue, 24 May 2022 08:33:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=qJ7rZvdt4VLS6Ce2lZxnAMjqSa9bdOshXdO7Tpa1RYE=;
-        b=s33JESsyNbTJdeyf4G/nozwuKCyrVSclk5wIutVFyuYjoj2Kr0Vf41J3oicoHW5dES
-         3zq5nNQK+xY2Ab09yNxjz5dcyrDJ9bCgtBLQS4RGsRZZc+l8onRY8BgmPjyBl/Wlvl4M
-         R3sISX1lKsJCQEtv1xFDpZs0/JjaDFKYK9QhLgm1A0HjZzrMf+HDo56OiY8E0kWHM8uk
-         h86LPSacQYHNydRr7jKdqfmK+6tQ8GXUE9xkskqZl24Pyasye0zsgVdU9t/IJUBds2QP
-         ptlnEY3wnZ84Efe7rWDVuOrAhVAsCtm02JRdJuoAmjirR3WOyEPSuEsGto43r8cQ60os
-         opxw==
-X-Gm-Message-State: AOAM533U19EODn+WxTCK1v6uOFYNTjPDmyyoF62qQxoRnAy47DKKasRj
-        2lg9tfDf/cHdaRaTVfaFwCcHsTkdtA==
-X-Google-Smtp-Source: ABdhPJwT6h8YyMFaEc6eguFxjhU7jET5JCCWTKtF1BfZkK25Jg4TeGRLPkCk6Ku2rwXDXfEuLLqveA==
-X-Received: by 2002:a05:6870:fba9:b0:f2:2adf:476b with SMTP id kv41-20020a056870fba900b000f22adf476bmr2835019oab.279.1653405556520;
-        Tue, 24 May 2022 08:19:16 -0700 (PDT)
+        bh=EcvZzFYCsMzS5Yx/Ut8QojBzLo1+Vtyk5hpoiHqUgoQ=;
+        b=DCg7BcnraMsFljMLazUCwZ7LkG/cF2+n1URK52uHM8THTUd82ppfAru9TEg2u3Egol
+         GRKD5iQkB0//E8yBhEPzpY0X2f2I1tBEyDACxECE813pjhsJkxMmDaZ22XgbI8+pBY1t
+         1J5fhPxUVN2p8tGquIzfQyPXN7Gp720I95QSc7wtdJD/zqT/Cpdlfy2cllPLmXiriAUU
+         x4HH+f1OwMW4ZeT7/gjQZnVN+tMzrdGCY7EY6A+B5KlL3ZewuHL2uVbeulLlcgZ2hWJl
+         B0vjUjOUolNttzuSnX0h+NV/UBkkrckc6pkMjGKY3DmAI7y+rvfc3OG4ehhMvM7/via/
+         EwIA==
+X-Gm-Message-State: AOAM53331jDsLrtKRQ4girdPUkCcjLy/bySsRMkQKXmc/1adUHZsI62i
+        Lbcj6oTxBD+vtsbfhjiMUY7nDaUe0g==
+X-Google-Smtp-Source: ABdhPJwrZvyvEMBcR9AJtWmbvbztDIs+x+vbQ1zbDfy9UYupkCeMQe1v8j8Uwml1/UtVUjNMnO15YQ==
+X-Received: by 2002:a4a:d40d:0:b0:33a:33be:9c1e with SMTP id n13-20020a4ad40d000000b0033a33be9c1emr10840977oos.96.1653406426548;
+        Tue, 24 May 2022 08:33:46 -0700 (PDT)
 Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id l6-20020a056871068600b000e686d1389esm5155618oao.56.2022.05.24.08.19.15
+        by smtp.gmail.com with ESMTPSA id g6-20020a9d6c46000000b0060ae8586befsm5057109otq.53.2022.05.24.08.33.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 May 2022 08:19:15 -0700 (PDT)
-Received: (nullmailer pid 3814603 invoked by uid 1000);
-        Tue, 24 May 2022 15:19:14 -0000
-Date:   Tue, 24 May 2022 10:19:14 -0500
+        Tue, 24 May 2022 08:33:45 -0700 (PDT)
+Received: (nullmailer pid 3838423 invoked by uid 1000);
+        Tue, 24 May 2022 15:33:45 -0000
+Date:   Tue, 24 May 2022 10:33:45 -0500
 From:   Rob Herring <robh@kernel.org>
 To:     Serge Semin <fancer.lancer@gmail.com>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
@@ -50,303 +50,182 @@ Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 02/23] dt-bindings: ata: ahci-platform: Detach common
- AHCI bindings
-Message-ID: <20220524151914.GB3730540-robh@kernel.org>
+Subject: Re: [PATCH v3 20/23] dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA
+ controller DT schema
+Message-ID: <20220524153345.GC3730540-robh@kernel.org>
 References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-3-Sergey.Semin@baikalelectronics.ru>
- <20220517191055.GA1424316-robh@kernel.org>
- <20220522150247.zznapdonuq7dsbup@mobilestation>
+ <20220511231810.4928-21-Sergey.Semin@baikalelectronics.ru>
+ <20220517201332.GB1462130-robh@kernel.org>
+ <20220522204931.rcgqyyctxivyfmv7@mobilestation>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220522150247.zznapdonuq7dsbup@mobilestation>
+In-Reply-To: <20220522204931.rcgqyyctxivyfmv7@mobilestation>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, May 22, 2022 at 06:02:47PM +0300, Serge Semin wrote:
-> On Tue, May 17, 2022 at 02:10:55PM -0500, Rob Herring wrote:
-> > On Thu, May 12, 2022 at 02:17:49AM +0300, Serge Semin wrote:
-> > > In order to create a more sophisticated AHCI controller DT bindings let's
-> > > divide the already available generic AHCI platform YAML schema into the
-> > > platform part and a set of the common AHCI properties. The former part
-> > > will be used to evaluate the AHCI DT nodes mainly compatible with the
-> > > generic AHCI controller while the later schema will be used for more
-> > > thorough AHCI DT nodes description. For instance such YAML schemas design
-> > > will be useful for our DW AHCI SATA controller derivative with four clock
-> > > sources, two reset lines, one system controller reference and specific
-> > > max Rx/Tx DMA xfers size constraints.
-> > > 
-> > > Note the phys and target-supply property requirement is preserved in the
-> > > generic AHCI platform bindings because some platforms can lack of the
-> > > explicitly specified PHYs or target device power regulators.
+On Sun, May 22, 2022 at 11:49:31PM +0300, Serge Semin wrote:
+> On Tue, May 17, 2022 at 03:13:32PM -0500, Rob Herring wrote:
+> > On Thu, May 12, 2022 at 02:18:07AM +0300, Serge Semin wrote:
+> > > Baikal-T1 AHCI controller is based on the DWC AHCI SATA IP-core v4.10a
+> > > with the next specific settings: two SATA ports, cascaded CSR access based
+> > > on two clock domains (APB and AXI), selectable source of the reference
+> > > clock (though stable work is currently available from the external source
+> > > only), two reset lanes for the application and SATA ports domains. Other
+> > > than that the device is fully compatible with the generic DWC AHCI SATA
+> > > bindings.
 > > > 
 > > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > > > 
 > > > ---
 > > > 
-> > > Folks, I don't really see why the phys/target-supply requirement has been
-> > > added to the generic AHCI DT schema in the first place. Probably just to
-> > > imply some meaning for the sub-nodes definition. Anyway in one of the
-> > > further patches I am adding the DW AHCI SATA controller DT bindings which
-> > > won't require having these properties specified in the sub-nodes, but will
-> > > describe additional port-specific properties. That's why I get to keep the
-> > > constraints in the ahci-platform.yaml schema instead of moving them to the
-> > > common schema.
-> > > 
 > > > Changelog v2:
-> > > - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
-> > > 
-> > > Changelog v3:
-> > > - Replace Jens's email address with Damien's one in the list of the
-> > >   schema maintainers. (@Damien)
+> > > - Rename 'syscon' property to 'baikal,bt1-syscon'.
+> > > - Drop macro usage from the example node.
 > > > ---
-> > >  .../devicetree/bindings/ata/ahci-common.yaml  | 117 ++++++++++++++++++
-> > >  .../bindings/ata/ahci-platform.yaml           |  68 +---------
-> > >  2 files changed, 123 insertions(+), 62 deletions(-)
-> > >  create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
+> > >  .../bindings/ata/baikal,bt1-ahci.yaml         | 127 ++++++++++++++++++
+> > >  1 file changed, 127 insertions(+)
+> > >  create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
 > > > 
-> > > diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+> > > diff --git a/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
 > > > new file mode 100644
-> > > index 000000000000..620042ca12e7
+> > > index 000000000000..7c2eae75434f
 > > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > > @@ -0,0 +1,117 @@
+> > > +++ b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
+> > > @@ -0,0 +1,127 @@
 > > > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 > > > +%YAML 1.2
 > > > +---
-> > > +$id: http://devicetree.org/schemas/ata/ahci-common.yaml#
+> > > +$id: http://devicetree.org/schemas/ata/baikal,bt1-ahci.yaml#
 > > > +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > > > +
-> > > +title: Common Properties for Serial ATA AHCI controllers
+> > > +title: Baikal-T1 SoC AHCI SATA controller
 > > > +
 > > > +maintainers:
-> > > +  - Hans de Goede <hdegoede@redhat.com>
-> > > +  - Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> > > +  - Serge Semin <fancer.lancer@gmail.com>
 > > > +
-> > > +description:
-> > > +  This document defines device tree properties for a common AHCI SATA
-> > > +  controller implementation. It's hardware interface is supposed to
-> > > +  conform to the technical standard defined by Intel (see Serial ATA
-> > > +  Advanced Host Controller Interface specification for details). The
-> > > +  document doesn't constitute a DT-node binding by itself but merely
-> > > +  defines a set of common properties for the AHCI-compatible devices.
-> > > +
-> > > +select: false
+> > > +description: |
+> > > +  AHCI SATA controller embedded into the Baikal-T1 SoC is based on the
+> > > +  DWC AHCI SATA v4.10a IP-core.
 > > > +
 > > > +allOf:
-> > > +  - $ref: sata-common.yaml#
+> > > +  - $ref: snps,dwc-ahci.yaml#
 > > > +
 > > > +properties:
-> > > +  reg:
-> > > +    description:
-> > > +      Generic AHCI registers space conforming to the Serial ATA AHCI
-> > > +      specification.
-> > > +
-> > > +  reg-names:
-> > > +    description: CSR space IDs
-> > > +
-> > > +  interrupts:
-> > > +    description:
-> > > +      Generic AHCI state change interrupt. Can be implemented either as a
-> > > +      single line attached to the controller as a set of the dedicated signals
-> > > +      for the global and particular port events.
+> > > +  compatible:
+> > > +    contains:
+> > > +      const: baikal,bt1-ahci
 > > > +
 > > > +  clocks:
-> > > +    description:
-> > > +      List of all the reference clocks connected to the controller.
+> > > +    items:
+> > > +      - description: Peripheral APB bus clock source
+> > > +      - description: Application AXI BIU clock
+> > > +      - description: Internal SATA Ports reference clock
+> > > +      - description: External SATA Ports reference clock
 > > > +
 > > > +  clock-names:
-> > > +    description: Reference clocks IDs
+> > > +    items:
+> > > +      - const: pclk
+> > > +      - const: aclk
+> > > +      - const: ref_int
+> > > +      - const: ref_ext
 > > > +
 > > > +  resets:
-> > > +    description:
-> > > +      List of the reset control lines to reset the controller clock
-> > > +      domains.
+> > > +    items:
+> > > +      - description: Application AXI BIU domain reset
+> > > +      - description: SATA Ports clock domain reset
 > > > +
 > > > +  reset-names:
-> > > +    description: Reset line IDs
+> > > +    items:
+> > > +      - const: arst
+> > > +      - const: ref
 > > > +
-> > > +  power-domains:
+> > > +  baikal,bt1-syscon:
+> > > +    $ref: /schemas/types.yaml#/definitions/phandle
 > > > +    description:
-> > > +      List of the power domain the AHCI controller being a part of.
+> > > +      Phandle reference to the CCU system controller. It is required to
+> > > +      switch between internal and external SATA reference clock sources.
 > > 
 > 
-> > There's not really any point in listing all the above properties here, 
-> > because they all have to be listed in the device specific schemas.
+> > Seems like the CCU system ctrlr should be a clock provider that provides 
+> > 'ref' clock and then assigned-clocks can be used to pick internal vs. 
+> > external ref.
 > 
-> I agree with dropping the reset, clocks and power-related properties,
-> but it would be good to somehow signify that at least one IRQ is
-> required. Is it possible to somehow set such constraint with open
-> upper bound? If currently it isn't what about setting minItems: 1 (one
-> generic IRQ) and maxItems: 32 (in case of the per-port IRQs platform)?
+> By assigned-clocks do you mean using the "assigned-clock-parents"
+> property? 
 
-required:
-  - interrupts
+Yes, I meant any of those properties.
 
-> 
-> Regarding the reg and reg-names properties. Some constraints are added
-> in one of the next patches of this series (you have already noticed
-> that).
-> 
-> > 
-> > > +
-> > > +  ahci-supply:
-> > > +    description: Power regulator for AHCI controller
-> > > +
-> > > +  target-supply:
-> > > +    description: Power regulator for SATA target device
-> > > +
-> > > +  phy-supply:
-> > > +    description: Power regulator for SATA PHY
-> > > +
-> > > +  phys:
-> > > +    description: Reference to the SATA PHY node
-> > > +    maxItems: 1
-> > > +
-> > > +  phy-names:
-> > > +    maxItems: 1
+> Does it mean creating additional clocks exported from the
+> CCU controller, which could have got one of the two parental clocks?
+
+Yes, I believe so.
+
+
 > > > +
 > > > +  ports-implemented:
-> > > +    $ref: '/schemas/types.yaml#/definitions/uint32'
-> > > +    description:
-> > > +      Mask that indicates which ports the HBA supports. Useful if PI is not
-> > > +      programmed by the BIOS, which is true for some embedded SoC's.
-> > > +    maximum: 0x1f
-> > 
-> 
-> > The AHCI spec says there's a max of 32 ports, not 5.
-> > 
-> > https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/serial-ata-ahci-spec-rev1-3-1.pdf
-> 
-> Right. The maximum constraint is dropped in the patch:
-> [PATCH v3 03/23] dt-bindings: ata: ahci-platform: Clarify common AHCI props constraints
-> 
-> > 
+> > > +    maximum: 0x3
 > > > +
 > > > +patternProperties:
-> > > +  "^sata-port@[0-9a-f]+$":
+> > > +  "^sata-port@[0-9a-e]$":
 > > > +    type: object
-> > > +    description:
-> > > +      It is optionally possible to describe the ports as sub-nodes so
-> > > +      to enable each port independently when dealing with multiple PHYs.
+> > 
+> >        unevaluatedProperties: false
+> > 
+> 
+> > and then a $ref to a sata-port schema.
+> 
+> Can I set additional sata-port properties constraints afterwards? Like
+> I've done for the reg, snps,tx-ts-max and snps,rx-ts-max properties
+> here?
+
+Yes. All the constraints are effectively ANDed together.
+
 > > > +
 > > > +    properties:
 > > > +      reg:
-> > > +        description: AHCI SATA port identifier
-> > > +        maxItems: 1
+> > > +        minimum: 0
+> > > +        maximum: 1
 > > > +
-> > > +      phys:
-> > > +        description: Individual AHCI SATA port PHY
-> > > +        maxItems: 1
+> > > +      snps,tx-ts-max:
+> > > +        $ref: /schemas/types.yaml#/definitions/uint32
+> > > +        description:
+> > > +          Due to having AXI3 bus interface utilized the maximum Tx DMA
+> > > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
+> > > +        minimum: 1
+> > > +        maximum: 16
 > > > +
-> > > +      phy-names:
-> > > +        description: AHCI SATA port PHY ID
-> > > +        maxItems: 1
-> > > +
-> > > +      target-supply:
-> > > +        description: Power regulator for SATA port target device
-> > > +
-> > > +    required:
-> > > +      - reg
-> > > +
-> > > +    additionalProperties: true
+> > > +      snps,rx-ts-max:
+> > > +        $ref: /schemas/types.yaml#/definitions/uint32
+> > > +        description:
+> > > +          Due to having AXI3 bus interface utilized the maximum Rx DMA
+> > > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
 > > 
 > 
-> > If device specific bindings can add their own properties (as this 
-> > allows), then all the common sata-port properties needs to be its own 
-> > schema document. That way the device binding can reference it, define 
-> > extra properties and set 'unevaluatedProperties: false'.
-> > 
+> > That's not a per port limitation (even though it's a per port register)? 
+> > I think this should be implied by the compatible string.
 > 
-> Could you please be more specific the way it is supposed to look? We
-> have already got the sata-port@.* object defined in the sata-common.yaml
-> super-schema. Here I just redefine it with more specific properties.
+> The snps,{rx,tx}-ts-max property is a per-port property. I'd better
+> explicitly set the property limitation here rather than having the
+> value implicitly clamped by hardware especially seeing the limitation
+> is set by the formulae
+> (CC_MSTR_BURST_LEN * M_HDATA_WIDTH/32)) / (M_HDATA_WIDTH/32),
+> which consists of the IP-core synthesized parameters.
 
-If you want an example, see spi-peripheral-props.yaml and the change 
-that introduced it.
+I did not say use the h/w default.
 
-If properties are defined in multiple locations, we have to be able to 
-combine all those schemas to a single (logical, not single file) schema 
-to apply it. That's the only way all the disjoint properties can be 
-evaluated.
+What I asking is do you have any need for this to be different per port? 
+Seems unlikely given it's just 1 bus interface for all ports IIRC. I 
+can't see why you would want to tune the performance per port to 
+anything but the max burst length. If you have no need, use the 
+compatible string to determine what to set the register value to.
 
-> Is it ok if I moved the sata-port@.* properties in the "definitions"
-> section of the sata-common.yaml and ahci-common.yaml schema and
-> re-used them right in the common bindings and, if required, in the
-> device-specific schema?
-
-Yes, I guess. There's not really any advantage to doing that. A separate 
-schema file is only a small amount of boilerplate.
-
-> Please confirm that the next schema hierarchy is what you were talking
-> about and it will be ok in this case:
+> > Really, firmware should configure this IMO.
 > 
-> > Documentation/devicetree/bindings/ata/sata-common.yaml:
-> ...
-> + patternProperties:
-> +   "^sata-port@[0-9a-e]$":
-> +     $ref: '#/definitions/sata-port'
-> + 
-> + definitions:
+> We don't have comprehensive firmware setting these and generic HBA parameters.
+> In our case dtb is the main platform firmware.
 
-'$defs' is preferred over 'definitions'.
-
-> +   sata-port:
-> +     type: object
-> +   
-> +     properties:
-> +       reg:
-> +         minimum: 0
-
-That's the default.
-
-> + 
-> +     additionalProperties: true
-
-Drop this.
-
-> 
-> > Documentation/devicetree/bindings/ata/ahci-common.yaml:
-> ...
-> + patternProperties:
-> +   "^sata-port@[0-9a-e]$":
-> +     $ref: '#/definitions/ahci-port'
-> + 
-> + definitions:
-> +   ahci-port:
-> +     $ref: /schemas/ata/sata-common.yaml#/definitions/sata-port
-> +     properties:
-> +       reg:
-> +         minimum: 0
-> +         maximum: 31
-> ...
-> + 
-> +     additionalProperties: true
-
-Drop this.
-
-> 
-> > Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml:
-> ...
-> + patternProperties:
-> +   "^sata-port@[0-9a-e]$":
-> +     $ref: /schemas/ata/ahci-common.yaml#/definitions/ahci-port
-> +     properties:
-> +       reg:
-> +         minimum: 0
-> +         maximum: 7
-> + 
-> +       snps,tx-ts-max:
-> +         $ref: /schemas/types.yaml#/definitions/uint32
-> + 
-> +       snps,rx-ts-max:
-> +         $ref: /schemas/types.yaml#/definitions/uint32
-> +
-> +     unevaluatedProperties: true
-
-This needs to be false. And this should work as the $ref issue is only 
-for the top-level schema.
+No u-boot?
 
 Rob
