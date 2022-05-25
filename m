@@ -2,199 +2,121 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4F8BC433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 25 May 2022 10:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D6F4C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 25 May 2022 11:11:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241360AbiEYKB6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 25 May 2022 06:01:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43446 "EHLO
+        id S229703AbiEYLLi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 May 2022 07:11:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230033AbiEYKBy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2022 06:01:54 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E136B25C46;
-        Wed, 25 May 2022 03:01:51 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id c19so22097698lfv.5;
-        Wed, 25 May 2022 03:01:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=UC6SLSEFgFoqdIS2QlBVrr0bcViqmEfbMxaWyDKUl8M=;
-        b=F7kl8H1+FaV2Vh1LXn1XnSvsIozWpEd9+HHSz54qJuz2NixS+zjMGe4t5gdVLYHX+z
-         3Dr0bRIkAg4SQ8nxeWsa7ZHi/S7+VXvJznj62MD7jv5yYTEUPFWuYnltbYmRWE0LTpsy
-         pZq4ahW2vIEOFC+FcsGlVMJAJS4Ok563OjrNQRYxUxPt7zVdB+RZYKGKkFmQkxd+pAIi
-         zrF0cLhQCGFXkDrATyxqp9gap3GTe0rj/bV8yBPHjDpctNQUSfm/JvuoZ6HhtuCntvLr
-         sYiPSjgNOctc/BQ4P9BV9FOvs29pBYqZp5k1CuYKWcMg7GtDZgg0tVfIZ3fON0iwf9BS
-         dF6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=UC6SLSEFgFoqdIS2QlBVrr0bcViqmEfbMxaWyDKUl8M=;
-        b=xBMnXDPhnKjoFTJxndVEwntB3DlTryEm5XGD6cuTWwDiSUPPRvcb5hQ7JJ/2EsIvDZ
-         jplp1Ys71Ojy1GCsBlRkyUAKYaCiT646bEpU/noqiRguOTuYgA0OT73maCVcDm3RILOU
-         lO0g87xm40huoEqxKxhRirXU/3coH0ASrcEv+ET1eT79RUuOYME4tmp3Fv5FzevxGNM9
-         k3I6fN5nEB8CEYWOZIijq/pgrbQLE9xzfs6ESl603E0Ibnx6LY1Iey1OuGah2IFP8v/W
-         i5WUzWxAw9oAykVl8LmpEubV/7m0FymTo/AqfsxL+S4Utf7gwWR1lYIS+BQDZFqoC+5N
-         sfzA==
-X-Gm-Message-State: AOAM533T3yNes5L3jymZrpxv52gyjMwCT5D8lzaJ6qx8ynGdFUo2RcWO
-        ZhUXmbIJCZGyoJMwyiIBy/Q=
-X-Google-Smtp-Source: ABdhPJyDA6VfNajwGr+/2coU/jEB6iKPlVDHwq7UqcQffVPL8x+i3wPqmtNMsv+3q9fLIfm3Kg5GBA==
-X-Received: by 2002:a05:6512:3d13:b0:472:5d8d:5202 with SMTP id d19-20020a0565123d1300b004725d8d5202mr22395092lfv.331.1653472910249;
-        Wed, 25 May 2022 03:01:50 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id c38-20020a05651223a600b0047855a54704sm2549547lfv.172.2022.05.25.03.01.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 May 2022 03:01:48 -0700 (PDT)
-Date:   Wed, 25 May 2022 13:01:46 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 01/23] dt-bindings: ata: ahci-platform: Drop
- dma-coherent property declaration
-Message-ID: <20220525100146.3xg3vjj4edizl6yb@mobilestation>
-References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-2-Sergey.Semin@baikalelectronics.ru>
- <20220517185841.GA1388602-robh@kernel.org>
- <20220521092248.7i53lxf3gx26fmi5@mobilestation>
- <20220524145758.GA3730540-robh@kernel.org>
+        with ESMTP id S232302AbiEYLLh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2022 07:11:37 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 621B133E0B
+        for <linux-ide@vger.kernel.org>; Wed, 25 May 2022 04:11:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1653477094; x=1685013094;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=1ApspzUBKpnPb41FxJK3phqUVQ+mxeo54ozF/QmwScU=;
+  b=Ag02bwg54s/Qj6Hwf23GVWFKdzm5lIiiMWsIMxiWg9uURf+ubSTDludS
+   9hVjJjtW6RRfv5hU27mYSTTBGpM6+8Ux5irkFRR5wzop0ioLlBC9wj1zk
+   c/xZMVej5FKWDvRfb2wxtrPBLyvTSqrBnM5F61hcv+IpJn3VwbimULetM
+   3X0C6zFOY5ucze01xvmvcFfaQbKjVSsBMBD08h2Qq3q8cpL322LQlwVwJ
+   qa1BLWpPieFGjAJxMIPhP9rN/q3Sh/KkxkTrvRAUiJwd925z+kFRRJhGO
+   5iuG19KutPnQdU8zv3o+G+jodyusBf1Ew7HJvrC1UVA+m4aznS2RD7em9
+   g==;
+X-IronPort-AV: E=Sophos;i="5.91,250,1647273600"; 
+   d="scan'208";a="200173549"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 25 May 2022 19:11:33 +0800
+IronPort-SDR: g6TCurx4LWODxKG8YeA/uRY2EZzJ21nVh0xool4bB4FbE2hsmPWhFxT7wZSfKAAYaQrNHjcopV
+ 2HEowyiF71Exg9YCA74fvcSR6sAaFNBumF9CNghG3mXYjlONy6uq2cYONBAfesGtRtSIHdH7GZ
+ BAiaheJK3r0OWkZC+CKTMRf5twOFum6b/60vWI3H9pRop/ElkyStA11tTnzYezKrJaYXVd5BKN
+ oN1apWPB5ToSfeqq5kzg6oDvI2tUbR8Nm/h0QRR60JfsQlzWoclIPSTSgY2czO+J9UeT1bo6Sh
+ fupOpz6yB1WeJfrTDKMqjNKq
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 May 2022 03:31:04 -0700
+IronPort-SDR: uW3UGQ2yi8xnHwK/lPB6hzZq3U9I+gGkgHgB8mKFbUbzJNF+NU2pivAn7Xnn4vzUl9bNShjbdr
+ yZvaS7rml2JUscDLJjQHmqnoEjyV2bwO9gtAmfU/I64dg7gXdOCLKRoonDWbhrFo+XXYAJMci1
+ 3gwDPzckOMMfWd1d+u586Q7anqzM79uv9BQe+DFIVe+bULa2GsVuNpBhfZXvHflcaK0uGCLRJl
+ vmFF6MglVoL0Vkr2XHGlYDS97jOZ0JDbWotY5Sfr0p6b47HXCZ4a/QnRvQUzsB5uQ9RLi+s05N
+ yCo=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 May 2022 04:11:33 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4L7T0N63tJz1SHwl
+        for <linux-ide@vger.kernel.org>; Wed, 25 May 2022 04:11:32 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1653477092; x=1656069093; bh=1ApspzUBKpnPb41FxJK3phqUVQ+mxeo54oz
+        F/QmwScU=; b=gimYfpIJP7lQ4yMAIpoZzyEWNEhMXnRdQibGB1an1gd6dWPOTXj
+        iNvaHhqmQnGrd2kZ+0ikb9Azx+6NjehJfAqfUAJyfsEaA/AwQNhDLhFBQKWYPDHh
+        aoI8M/p/E2Lv7W6D4oO+NC6mKLHZY6zabvT1g4MnExytLEsMmFbPMGnPLcDMLy4H
+        oksHMJ4m0pq5ja2juHcWzzBeO3qDnOdnAO5ed8nDqCc26vVgubMfjZ/3k7SqedN4
+        SKCrISvnEtihumQaXZ75C5AKw/KG1jQ/bxZQxLAM/wGsJIKWMoyPw12/ixPq7ZvP
+        dSBfSl9QfoAQRTnhMzvijKIcKngks9M61BQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 9n6rC2yzeKMC for <linux-ide@vger.kernel.org>;
+        Wed, 25 May 2022 04:11:32 -0700 (PDT)
+Received: from [10.225.163.54] (unknown [10.225.163.54])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4L7T0M2BqLz1Rvlc;
+        Wed, 25 May 2022 04:11:31 -0700 (PDT)
+Message-ID: <48012e6e-f3c0-4436-5f5c-a2b0db89e33b@opensource.wdc.com>
+Date:   Wed, 25 May 2022 20:11:29 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220524145758.GA3730540-robh@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [PATCH 2/3] ata: ahci: Rename module parameter for lpm policy
+Content-Language: en-US
+To:     Christoph Hellwig <hch@infradead.org>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Cc:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>, hdegoede@redhat.com
+References: <20220524170508.563-1-mario.limonciello@amd.com>
+ <20220524170508.563-3-mario.limonciello@amd.com>
+ <Yo3w/dsaly+gcQNR@infradead.org>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <Yo3w/dsaly+gcQNR@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, May 24, 2022 at 09:57:58AM -0500, Rob Herring wrote:
-> On Sat, May 21, 2022 at 12:22:48PM +0300, Serge Semin wrote:
-> > On Tue, May 17, 2022 at 01:58:41PM -0500, Rob Herring wrote:
-> > > On Thu, May 12, 2022 at 02:17:48AM +0300, Serge Semin wrote:
-> > > > It's redundant to have the 'dma-coherent' property explicitly specified in
-> > > > the DT schema because it's a generic property described in the core
-> > > > DT-schema by which the property is always evaluated.
-> > > 
-> > 
-> > > It is not redundant.
-> > > 
-> > > The core schema defines the property (as a boolean), but this schema 
-> > > defines it being used in this binding. Otherwise, it won't be allowed.
-> > 
-> > I thought that the generic properties like ranges, dma-ranges, etc
-> > including the dma-coherent one due to being defined in the dt-core
-> > schema are always evaluated. As such seeing the unevaluatedProperties
-> > property is set to false here, they can be used in the DT-nodes with
-> > no need to be explicitly specified in the DT node bindings. In
-> > addition to that I tested this assumption by dropping the dma-coherent
-> > property definition from the AHCI-common schema and executed the
-> > DT-bindings check procedure. No error has been spotted:
+On 5/25/22 18:03, Christoph Hellwig wrote:
+> On Tue, May 24, 2022 at 12:05:07PM -0500, Mario Limonciello wrote:
+>> The LPM policy is applied to more chipsets than just mobile designs.
+>> Update the module parameter to drop the word "mobile" to make this
+>> clearer to users.
+>>
+>> Also, document this renamed parameter in the admin-guide for users
+>> as it was missing previously.
 > 
+> Even if the name is confusing I don't think we should rename it as
+> that breaks existing setups.  I think just updating the documentation
+> is good enough, but if you feel strongly we can just add the new name
+> while keeping the old one as an alias.
 
-> Those common properties are always applied, but not at the same time as 
-> a device binding. IOW, it's 2 schemas that are applied to an instance 
-> (node) independently. For things like 'reg', the common schema does type 
-> checks and the device schema does size (number of entries) checks.
-> 
-> There a few things always allowed like 'status', and those are added to 
-> the device schema by the tools.
++1 for the alias.
 
-It makes sense now. Thanks for clarification.
+The other thing that this series need is to add the changes of the LPM
+policy initialization according to the adapter capabilities (your patch
+and the patches from Runa) as well as accounting for the eventual nolpm
+link horkage flag. Otherwise, I fear that this change will generate many
+regressions.
 
-> 
-> > 
-> > > [fancer@mobilestation] kernel $ cat Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml | grep dma-coherent
-> > >        dma-coherent;
-> > > [fancer@mobilestation] kernel $ make -j8 DT_SCHEMA_FILES=Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml dt_binding_check
-> > >   LINT    Documentation/devicetree/bindings
-> > >   DTEX    Documentation/devicetree/bindings/ata/snps,dwc-ahci.example.dts
-> > >   CHKDT   Documentation/devicetree/bindings/processed-schema.json
-> > >   SCHEMA  Documentation/devicetree/bindings/processed-schema.json
-> > >   DTC     Documentation/devicetree/bindings/ata/snps,dwc-ahci.example.dtb
-> > >   CHECK   Documentation/devicetree/bindings/ata/snps,dwc-ahci.example.dtb
-> > > [fancer@mobilestation] kernel $ cat Documentation/devicetree/bindings/ata/snps,dwc-ahci.example.dts | grep dma-coherent
-> > >           dma-coherent;
-> > > [fancer@mobilestation] kernel $ echo $?
-> > > 0
-> > Due to that here are a few backward questions:
-> > 1) Am I doing something wrong in the framework of the DT-bindings
-> > evaluation? Really I even tried to specify unknown property in the
-> > DT-bindings example like "bla-bla-bla;" and no evaluation error was
-> > printed. Anyway If what you are saying was correct I would have got an
-> > error during the DT-bindings evaluation, but as you can see there was
-> > none.
-> 
-
-> I think this is a known issue which has a pending fix. If a referenced 
-> schema has 'additionalProperties: true' in it, then the referring schema 
-> never has any unevaluated properties. The fix is pending because all 
-> the schema examples that start failing have to be fixed and in a base 
-> that people work on (i.e. rc1).
-
-Ok. I see. Just to note in case if a non-related schema error is
-found the unknown property error is printed too. Like this:
-
-/.../ata/snps,dwc-ahci.example.dtb: sata@122f0000: interrupts: [[0, 115, 4], [0, 116, 4]] is too long
-        From schema: /.../ata/snps,dwc-ahci.yaml
-/../ata/snps,dwc-ahci.example.dtb: sata@122f0000: Unevaluated properties are not allowed ('#address-cells', '#size-cells', 'phys', 'phy-names', 'ports-implemented', 'bla-bla-bla' were unexpected)
-
-If I fix the interrupts-property error, the dt-schema check procedure
-will work just fine.
-
-> 
-> > 2) Am I wrong in thinking that the unevaluatedProperties setting
-> > concerns the generic properties defined in the DT-core schema? 
-> 
-> You are wrong as explained above.
-> 
-> > If it
-> > doesn't concern the generic properties then does it work for the
-> > $ref'ed schemas only? 
-> 
-> Yes, except for the issue making it not work.
-> 
-> > Getting back to the patch topic. We need to drop the dma-coherent
-> > property from the schema anyway. AHCI-specification doesn't
-> > regulate the DMA operations coherency. The dma-coherent property is
-> > more specific to the particular controller implementation mainly
-> > dependent on the platform settings. So I'll change the patch log, but
-> > get to keep the patch in the series. What do you think?
-> 
-> Intel wrote the spec, so they probably assume coherent. In DT, PPC is 
-> default coherent and Arm is default non-coherent.
-> 
-
-> You'll need to add it to whatever specific device schemas need it if you 
-> remove it.
-
-Right. This is what I was going to add to the patch log.
-
-> Personally, I think it is fine where it is. dma-coherent is 
-> valid on any DMA capable device and it's not really a property of the 
-> device, but the system.
-
-Right. It is mainly the platform property. In particular the DMA
-coherency is determined by the system interconnect design. In our case
-the l1 and l2 caches are embedded into the CPU cores block while the
-DDR and other SoC peripheral devices/controllers are attached to the
-cores via a dedicated AXI3 interconnect bus, which has nothing to do
-with the caches. That's why none of the system devices are
-cache-coherent.
-
-> If we could generically identify DMA capable 
-> devices, then dma-coherent would be allowed on them automatically.
-
-Got it. I'll drop this patch then.
-
--Sergey
-
-> 
-> Rob
+-- 
+Damien Le Moal
+Western Digital Research
