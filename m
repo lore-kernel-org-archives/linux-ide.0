@@ -2,141 +2,171 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F520C433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 26 May 2022 13:02:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2293DC433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 26 May 2022 22:57:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245433AbiEZNCV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 26 May 2022 09:02:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41862 "EHLO
+        id S1345693AbiEZW5B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 26 May 2022 18:57:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234042AbiEZNCU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2022 09:02:20 -0400
-X-Greylist: delayed 1372 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 26 May 2022 06:02:15 PDT
-Received: from se19-yh-out3.route25.eu (se19-yh-out3.route25.eu [IPv6:2a01:b941:2::91])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A28CCFE15
-        for <linux-ide@vger.kernel.org>; Thu, 26 May 2022 06:02:13 -0700 (PDT)
-Message-ID: <c7e0c932-2e20-18b5-fe9f-36572807f59b@staalenberk.nl>
-Date:   Thu, 26 May 2022 14:38:53 +0200
+        with ESMTP id S234631AbiEZW46 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2022 18:56:58 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F04A4EF7A
+        for <linux-ide@vger.kernel.org>; Thu, 26 May 2022 15:56:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1653605818; x=1685141818;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=aI6/VxU2h7xTzqWQsH03zlgK2zXxTVp7REvISJhfkUM=;
+  b=IynPiefEofyyWs80VmroKaQn2NDlPllfI4n2WlnwnroGvKo0nwQvB7tK
+   x0B0w91JSP5VPeow35wMVhyYhvNf99mYG4cMz7sMnx8EJiQJSZjBLd/Wx
+   GCz1Tt7eYy0XFLkgYx3omH4705WhladN0I5lpRDu82tJ0RFBH0fGWZkJ/
+   AdjdOaV53939YAUN1kfB7RdOBGpM635oalYkBXnhVaA5jFpN/mmqIdfF8
+   DeK8CD7zK7OtZeoAv9VtlF7/F2D31WLtOSVJpDT7NXklJTiyVF8Ia9Q0L
+   0OdDMw26YjfrShHKmwuU7quBIGb990JBbkSMgIeJBgvVmO7kpdOzlABNr
+   A==;
+X-IronPort-AV: E=Sophos;i="5.91,252,1647273600"; 
+   d="scan'208";a="202384979"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 May 2022 06:56:57 +0800
+IronPort-SDR: Yrf7okEMy5/NhZ1/kwl4gw2NLAI7uPsDcSHo3C6aK9LXgBe+0YfuNvNHyhMYoQbDhPKMAA0fWz
+ RRtJgDcrFZdG75nb492caCGW8Q3cqwVT8EkVgkNfo4377iP9RwB0kta6iUWJGkpSkmiIhz16yv
+ +kDdT0W3L3h+FU2Z5MvBX098jiVefbkf1qRRMUGdPKQ9j98MB4uh9fn+7rbBC78RG4/b/f2SzU
+ r5l0S/0p24knp20painij0ZsjYq/u7tDReOwD49umwH0rC5PlIzWw2Y+bvZCOXooxTIi076if5
+ 1kcw0ZyfkjMabNEBfOgaLw0H
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 May 2022 15:20:50 -0700
+IronPort-SDR: zKu4LICnALMeDRSa0sTmPaCLdFGm7iZpa5efkEJ0nEKMFE6xIKXXFgfUH0RNSUcIPk0brfCeys
+ +9MdEml5Mv2yiBSpMO76aAj5zzcb1KZDLWSxEjIGp+Tf1DScVi9/yLxtz+QMveHEji0S9wnT+e
+ KbKVizGHRwB/L5bx8AMU7LHkSif+NsMJiIzleCzpb+2be+CwDvqYgvsadlr7VbjV1NH2s5rOWd
+ iQgZOSh6M8qIA1VL5QwTYm1kpjeM/wL/TCAja4dxeGpLruLjDL+UEG5sHuCfY6gi86fQ0al81t
+ VpQ=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 May 2022 15:56:56 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4L8Nbq2h3hz1SVp3
+        for <linux-ide@vger.kernel.org>; Thu, 26 May 2022 15:56:55 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1653605814; x=1656197815; bh=aI6/VxU2h7xTzqWQsH03zlgK2zXxTVp7REv
+        ISJhfkUM=; b=mUaCxv9v8cJ7R3el0h+ntICd3sYnvGeIZ2UKkpnbJZZj+T9PwLa
+        rj8NU7MbE0AePNYG3+WBi8TsdrcKNLbez65tBD3aMPl5xD1tXBIgSBpTNIgVK6L0
+        eMd/SZeR4ygvVhl2TrLe69TVpvlTd652Liv5tVZtgx5ObXV5pTYbhhZ6rHmu7s5L
+        AZYkf+uQHvYsthX8UxYi4y9XTB/pBgHp3wR0wvNeaUhBMzIOH5pwlYBBQS7JKxOl
+        rBaxmXtGPPfWKsFXIlKHPDM9xmYAQDujX1CtlFSWN1zad60a34i2QpSip2QFOaR6
+        w7zAHPOvKtOoECrRUPXZs4wQa9Vz/y7/vvA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id its5S5ASZFcz for <linux-ide@vger.kernel.org>;
+        Thu, 26 May 2022 15:56:54 -0700 (PDT)
+Received: from [10.89.80.98] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.80.98])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4L8Nbl3WbCz1Rvlc;
+        Thu, 26 May 2022 15:56:51 -0700 (PDT)
+Message-ID: <36dbfa77-d8f0-88d4-7dda-1e18c4c453b8@opensource.wdc.com>
+Date:   Fri, 27 May 2022 07:56:50 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.9.1
+Subject: Re: [PATCH v2 2/4] dma-iommu: Add iommu_dma_opt_mapping_size()
 Content-Language: en-US
-To:     linux-ide@vger.kernel.org
-From:   "J.J. Berkhout" <j.j.berkhout@staalenberk.nl>
-Subject: Multiple errors with DVD drive
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------0fD8SRhvkRLKZL4498Kn0jXB"
-X-PPP-Message-ID: <20220526123917.27412.63123@server108.yourhosting.nl>
-X-PPP-Vhost: staalenberk.nl
-X-Originating-IP: 185.37.71.73
-X-SpamExperts-Domain: filter.yourhosting.nl
-X-SpamExperts-Username: 185.37.71.73
-Authentication-Results: route25.eu; auth=pass smtp.auth=185.37.71.73@filter.yourhosting.nl
-X-SpamExperts-Outgoing-Class: ham
-X-SpamExperts-Outgoing-Evidence: Combined (0.04)
-X-Recommended-Action: accept
-X-Filter-ID: Pt3MvcO5N4iKaDQ5O6lkdGlMVN6RH8bjRMzItlySaT/Ik4R2KGRO6MWn4rxNWqIZPUtbdvnXkggZ
- 3YnVId/Y5jcf0yeVQAvfjHznO7+bT5wbKGKgvDNtko52zmlKj9u4U2Itm39BdCc4FEP6OrUewhPm
- p87GC1OZvsh7yKER8spmk5K29Ldt/0gY6O53I/Cyeb4o0/MLsfRXq2B6Bj1eqLdRg4TfZq2twbxK
- ne3bTxREkSF2RwjLlNyLHQr71RxeYzDzG2yBl+P6SMBMGH3GzmHsVhwt8dbKhbdn7deZ07Pt6JtT
- TglxNZAq/da6Ra+kV1jRduzSeTlLA4KONKsfZbm2yKklKs/xwV8kE9t47ZiZOZh/196Uh/xDSW9g
- kA3LEWgKIJ7Ay0RVJqlA03GHx7ObK052/jLuewOcI5amMxstChAJ8MhPXbXvhZAyklffRAwX31WV
- Y5lWjWxuGSRuxbb9wsrnUxyV5R6XweswXiYy2dhy85T3A96mF1Evp4++cd3QbXHil9nVohJvu6B5
- vcQRHhpp7PEHhQA50A063668oLWVcEFIP6cB4qvhjDlE8SRu8s3H6BxpZmNpeigyegX81Q2b6Us7
- siSVRTTv3earEPGaUfvTQD8mTYnm5Vyb/eB36XvbBuC1U1srT4VxcBqZR3KVQgqF/fPYYAfEfsg1
- 1Ad23U0cZ9WVVTbpTmmUZrGhqUDaqras7LqiHi35vbMHwRfzaSU5FsHqIjos197mzfV669FmRwFs
- RSOwswyQAcVCbFO9oZq2JrkUu2Y0bcen5bW2mj7gpl+Nel82aV6t85jdQ1W7xM52M4KvSDibJS8X
- NHE22jNoXXtgm8Rhij9YHcdrxh7ntAaPP6XHE+ux3UngHmmej3FmzKkqBXsKLO5CFt1KNiXMKT/q
- NzUI6CG7X+t1TW39Ja77LGPpOwAT4kZm3AYrwwubjkeENJKdbGMwes7NyHuYBdQjd1YteIi7YBpB
- LYUph4jPimJS/7Zi/131P3mdLzgr+UhVxYKZoSyaA1TzQpMNBxbB7RLiYFYq922Wf+VLnUUJCa5X
- EkPBdYzH5SHs7OXwC7D2RhUaKfhganupwSWw7cas29IGI3Ms1dwieR5pqJIe+glXHys9mi+FbRwZ
- y3X+fQbaXDYb
-X-Report-Abuse-To: spam@semaster01.route25.eu
+To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
+        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
+        chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
+References: <1653560914-82185-1-git-send-email-john.garry@huawei.com>
+ <1653560914-82185-3-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1653560914-82185-3-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------0fD8SRhvkRLKZL4498Kn0jXB
-Content-Type: multipart/mixed; boundary="------------Rp5hM3uRlea3p60DiPZIRonT";
- protected-headers="v1"
-From: "J.J. Berkhout" <j.j.berkhout@staalenberk.nl>
-To: linux-ide@vger.kernel.org
-Message-ID: <c7e0c932-2e20-18b5-fe9f-36572807f59b@staalenberk.nl>
-Subject: Multiple errors with DVD drive
+On 2022/05/26 19:28, John Garry wrote:
+> Add the IOMMU callback for DMA mapping API dma_opt_mapping_size(), which
+> allows the drivers to know the optimal mapping limit and thus limit the
+> requested IOVA lengths.
+> 
+> This value is based on the IOVA rcache range limit, as IOVAs allocated
+> above this limit must always be newly allocated, which may be quite slow.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/iommu/dma-iommu.c | 6 ++++++
+>  drivers/iommu/iova.c      | 5 +++++
+>  include/linux/iova.h      | 2 ++
+>  3 files changed, 13 insertions(+)
+> 
+> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+> index 09f6e1c0f9c0..f619e41b9172 100644
+> --- a/drivers/iommu/dma-iommu.c
+> +++ b/drivers/iommu/dma-iommu.c
+> @@ -1442,6 +1442,11 @@ static unsigned long iommu_dma_get_merge_boundary(struct device *dev)
+>  	return (1UL << __ffs(domain->pgsize_bitmap)) - 1;
+>  }
+>  
+> +static size_t iommu_dma_opt_mapping_size(void)
+> +{
+> +	return iova_rcache_range();
+> +}
+> +
+>  static const struct dma_map_ops iommu_dma_ops = {
+>  	.alloc			= iommu_dma_alloc,
+>  	.free			= iommu_dma_free,
+> @@ -1462,6 +1467,7 @@ static const struct dma_map_ops iommu_dma_ops = {
+>  	.map_resource		= iommu_dma_map_resource,
+>  	.unmap_resource		= iommu_dma_unmap_resource,
+>  	.get_merge_boundary	= iommu_dma_get_merge_boundary,
+> +	.opt_mapping_size	= iommu_dma_opt_mapping_size,
+>  };
+>  
+>  /*
+> diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
+> index db77aa675145..9f00b58d546e 100644
+> --- a/drivers/iommu/iova.c
+> +++ b/drivers/iommu/iova.c
+> @@ -26,6 +26,11 @@ static unsigned long iova_rcache_get(struct iova_domain *iovad,
+>  static void free_cpu_cached_iovas(unsigned int cpu, struct iova_domain *iovad);
+>  static void free_iova_rcaches(struct iova_domain *iovad);
+>  
+> +unsigned long iova_rcache_range(void)
+> +{
+> +	return PAGE_SIZE << (IOVA_RANGE_CACHE_MAX_SIZE - 1);
+> +}
+> +
+>  static int iova_cpuhp_dead(unsigned int cpu, struct hlist_node *node)
+>  {
+>  	struct iova_domain *iovad;
+> diff --git a/include/linux/iova.h b/include/linux/iova.h
+> index 320a70e40233..c6ba6d95d79c 100644
+> --- a/include/linux/iova.h
+> +++ b/include/linux/iova.h
+> @@ -79,6 +79,8 @@ static inline unsigned long iova_pfn(struct iova_domain *iovad, dma_addr_t iova)
+>  int iova_cache_get(void);
+>  void iova_cache_put(void);
+>  
+> +unsigned long iova_rcache_range(void);
+> +
+>  void free_iova(struct iova_domain *iovad, unsigned long pfn);
+>  void __free_iova(struct iova_domain *iovad, struct iova *iova);
+>  struct iova *alloc_iova(struct iova_domain *iovad, unsigned long size,
 
---------------Rp5hM3uRlea3p60DiPZIRonT
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Firstly, if this is not the right place for this message, I apologize.
-In this case, disregard.
-
-I have a problem which I suspect is a bug in libata, but of course I
-could be wrong.
-
-The problem is:
-After going from Linux Mint 19.3 Cinnamon kernel 5.4.0-97 to Linux Mint
-20.3 Cinnamon kernel 5.4.0-107 I discovered that I could not (reliably)
-access my optical drive anymore.
-It produces errors like:
-	ata1.00: exception Emask 0x10 SAct 0x0 SErr 0x40d0000 action 0xe frozen
-	ata1: SError: { PHYRdyChg CommWake 10B8B DevExch }
-	ata1.00: cmd a0/00:00:00:00:fc/00:00:00:00:00/a0 tag 0 pio 131072 in
-         Read(10) 28 00 00 00 05 61 00 00 40 00res
-50/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x10 (ATA bus error)
-	blk_update_request: I/O error, dev sr0, sector 5508 op 0x0:(READ) flags
-0x80700 phys_seg 19 prio class 0
-	ata1.00: failed to set xfermode (err_mask=3D0x1)
-
-The system was Linux Mint 20.3 Cinnamon with kernel 5.4.0-107-generic,
-mobo ASRock model X570 Taichi.
-After some tests I found out:
-Kernel 5.4.0-99 works OK;
-Kernel 5.4.0-100 has the problem;
-Kernel 5.13.0-30 works OK;
-Kernel 5.13.0-35 has the problem.
-
-The problem is described more fully in
-	https://forums.linuxmint.com/viewtopic.php?f=3D47&t=3D371251
-
-I reported the bug to the Launchpad Ubuntu site under number #1968155:
-	https://bugs.launchpad.net/bugs/1968155
-
-One other person (as far as I know) has the same problem.
-
-I froze my kernel at 5.13.0-30, so for the moment I can use my system.
-I realize that there are probably not many users with an ASRock X570
-mobo, and in that group only a few would be using a BD reader/burner.
-However, it would be nice if I could again keep my kernel current.
-
-With kind regards,
-
-Jaap Berkhout
-
---------------Rp5hM3uRlea3p60DiPZIRonT--
-
---------------0fD8SRhvkRLKZL4498Kn0jXB
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEoR3751BhG/27nT45Zx3W/nHBYkoFAmKPdN0ACgkQZx3W/nHB
-YkqFpw//V5/MnRWxc+K4KR5Ur0Gw+23z+g384xU34TxoEVsxUeUxDZwuxZC/r8r3
-ulzul7DCzagZfa6vtQ8KkacTmac7bcit9w6Rphusk8l2G4YWlgc8svc9ntYH+p1w
-+YtSKCxSDdknaSDY/z2VDMRnIaSDL1QfYmjfntNQ9xZsYVyoSLc+gIeNtlpeMoj0
-Hn93WLpn5udlQNnINxgNPKU2sPw0uTM/W3NWjAwym9WToOGvlt0Th38BtCkBv8v6
-NYoujbUK0LZMkJ2w4K2QCdtr6mhLyxTUBsqdH1rBfOihcAR+cCIO+y1ovgAEAqRF
-8y2YDfdFP6HjgCwwxJtb1M75DRkxzTJUYshWkrxbhbv1x6422/oVqtnaE794v2w9
-W9K5vuvXTv9VgAtIN7AuECvn0Vn0+whgu/+7jegonuewXL8NwYadgbF7A9zwQg+0
-ueV0BGVOmSFWoAQqUWdEOF6zxRIMsBZZ5x2FpS6vgcpUN9X3NXwMHpa6KXZJ8bSy
-yHVQyMvoAimNM+tMS3vFxgZUTAYMw8HQK8TnhH0YHu0eVkRNZIRHTmROA/ze4QZg
-/1Bw1ljAgM73yK3IFOiDIuRcxVxOQVzJeZrXYx09KTjGCNucEsHf4RHDC4V4kw0G
-708YiPN9sfqPYR6c53SBYXd3a34PHgqBbm3DyqyiFXBWQkDNnpE=
-=fr75
------END PGP SIGNATURE-----
-
---------------0fD8SRhvkRLKZL4498Kn0jXB--
+-- 
+Damien Le Moal
+Western Digital Research
