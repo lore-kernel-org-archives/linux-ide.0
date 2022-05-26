@@ -2,61 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D484C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 25 May 2022 13:24:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77BB4C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 26 May 2022 10:35:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232440AbiEYNYR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 25 May 2022 09:24:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36530 "EHLO
+        id S1345663AbiEZKfn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 26 May 2022 06:35:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230038AbiEYNYQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2022 09:24:16 -0400
-X-Greylist: delayed 99796 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 25 May 2022 06:24:15 PDT
-Received: from box.indicandustries.com (hwsrv-970840.hostwindsdns.com [IPv6:2607:5501:3000:21a5::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED7162AE05
-        for <linux-ide@vger.kernel.org>; Wed, 25 May 2022 06:24:15 -0700 (PDT)
-Received: from authenticated-user (box.indicandustries.com [104.168.149.109])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by box.indicandustries.com (Postfix) with ESMTPSA id E52681087C8
-        for <linux-ide@vger.kernel.org>; Tue, 24 May 2022 03:25:29 -0600 (MDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=box.indicandustries.com; s=mail; t=1653384330;
-        bh=V6VCn7WEbqHjVVQ20/+SYu6rwS1WmTHcxX88g+j430s=;
-        h=Reply-To:From:To:Subject:Date:From;
-        b=JB0Btwu5oiRYwzeKsqqlHwp3p30Hoqp/V35eNSuG7M7Ei9xgLPEuFYROqPDJsykcO
-         njoSnGrXbmmCHnShuuSDrurqRyZuNzYdSzyKuRVp0on8c8McMMhK85Y85BxmHru5vu
-         ksa18Q7Lt9ZzWh09SqkVVt4lkKmwrhx4uKRC0KydjlggfoBx7WWENqzT75D4dHuDDJ
-         jdvw7r88oMsgkp/Vdx/nDX5XQ41/1l0ACuNGqbWFoVFmoYJAiErEesN3l5sr5INXUN
-         efvSm6HQf6ZHRMRgLbzZAOJ1yK1ugzgk0CrFSMonEPEIUB0Mc8FSYO5vb87LHMPTLK
-         lN7O2Ttum9SkA==
-Reply-To: amjalia90@gmail.com
-From:   amjad.ali@box.indicandustries.com
-To:     linux-ide@vger.kernel.org
-Subject: Hello Sir, I seek your urgent consideration.
-Date:   24 May 2022 11:25:29 +0200
-Message-ID: <20220524112529.7362B1DE9DD9CD1A@box.indicandustries.com>
+        with ESMTP id S230203AbiEZKfn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2022 06:35:43 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA75FCC174;
+        Thu, 26 May 2022 03:35:41 -0700 (PDT)
+Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4L843k5Ym8z67JwR;
+        Thu, 26 May 2022 18:31:30 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 26 May 2022 12:35:38 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 26 May 2022 11:35:34 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
+        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 0/4] DMA mapping changes for SCSI core
+Date:   Thu, 26 May 2022 18:28:30 +0800
+Message-ID: <1653560914-82185-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello,
+As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA caching
+limit may see a big performance hit.
 
-Greetings? I am Amjad. I work with a leading Bio Firm.  Due to=20
-the setbacks of the pandemic, my company has opened a bid in=20
-search of new suppliers for basic raw materials needed in=20
-production.
+This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
+that drivers may know this limit when performance is a factor in the
+mapping.
 
-I am seeking a representative=C2=A0as I am a staff, I can not be=20
-involved directly. It may not be your area of work but the=20
-profits are great and I will guide you through. I have already=20
-sourced a local supplier for this. I only need a reliable=20
-representative.
+Robin didn't like using dma_max_mapping_size() for this [1].
 
-Please get back to me so I can explain this in full.
+The SCSI core code is modified to use this limit.
 
-Amjad
+I also added a patch for libata-scsi as it does not currently honour the
+shost max_sectors limit.
+
+[0] https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
+[1] https://lore.kernel.org/linux-iommu/f5b78c9c-312e-70ab-ecbb-f14623a4b6e3@arm.com/
+
+Changes since v1:
+- Relocate scsi_add_host_with_dma() dma_dev check (Reported by Dan)
+- Add tags from Damien and Martin (thanks)
+  - note: I only added Martin's tag to the SCSI patch
+
+John Garry (4):
+  dma-mapping: Add dma_opt_mapping_size()
+  dma-iommu: Add iommu_dma_opt_mapping_size()
+  scsi: core: Cap shost max_sectors according to DMA optimum mapping
+    limits
+  libata-scsi: Cap ata_device->max_sectors according to
+    shost->max_sectors
+
+ Documentation/core-api/dma-api.rst |  9 +++++++++
+ drivers/ata/libata-scsi.c          |  1 +
+ drivers/iommu/dma-iommu.c          |  6 ++++++
+ drivers/iommu/iova.c               |  5 +++++
+ drivers/scsi/hosts.c               |  5 +++++
+ drivers/scsi/scsi_lib.c            |  4 ----
+ include/linux/dma-map-ops.h        |  1 +
+ include/linux/dma-mapping.h        |  5 +++++
+ include/linux/iova.h               |  2 ++
+ kernel/dma/mapping.c               | 12 ++++++++++++
+ 10 files changed, 46 insertions(+), 4 deletions(-)
+
+-- 
+2.26.2
+
