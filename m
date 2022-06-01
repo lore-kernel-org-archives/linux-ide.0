@@ -2,313 +2,121 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A1DCC433FE
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Jun 2022 00:51:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21BD6C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Jun 2022 06:40:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230104AbiFAAvr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 May 2022 20:51:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49462 "EHLO
+        id S239283AbiFAGkX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Jun 2022 02:40:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229849AbiFAAvr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 May 2022 20:51:47 -0400
-Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C724DE09F;
-        Tue, 31 May 2022 17:51:45 -0700 (PDT)
-Received: by mail-ot1-f51.google.com with SMTP id l9-20020a056830268900b006054381dd35so198226otu.4;
-        Tue, 31 May 2022 17:51:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ANUzpUtdAXNE0kNU2IE/l1wVtJZLEJWOERU20g49xRc=;
-        b=BY5fZ6xu5neREUr/3XrejVfoLy774ebxVm419UhP6cOaQ6oE0TljwWVXtVLXLMYlvx
-         wMPlb8gqk4SRSp2XP/EZWuD+qEDktgssNMQxz+pKGq8vWBzzs6wfFn2z3swGYQxMwsrm
-         0n9McKy1qBx4F/mWakljBb2SLeirPl8IWtPa4jknY6cPb9YA3KG333Pkip5LD5YE2/TU
-         a9Y7emUGhIqbMKU3hee/gJJDM1HXoVVmfdD4RC04wo/gsg2EGt/iArlvcNzKmtblxbM4
-         knF4oDu/3LDcjzxhkProV6WlGS99WRdqH2aXdEOpPNR86rjzdB2v0rjw7q7udpAYmFSC
-         u7SQ==
-X-Gm-Message-State: AOAM533YSDSd0zKytnJ0ZAMriWLbdND/1KdWtDQ++mBpcv/O1krL3aU7
-        dBuj+48lL0+lrAh02Jsm6Q==
-X-Google-Smtp-Source: ABdhPJyMgwX3ACzMOmLAbMegRjP2DBdN3jZf0pv57O4KUJyvnm2M+yRTb7IBEi7Yg3WP9e01hbDVmw==
-X-Received: by 2002:a9d:6e8d:0:b0:60b:83f9:7e9a with SMTP id a13-20020a9d6e8d000000b0060b83f97e9amr4989157otr.30.1654044704908;
-        Tue, 31 May 2022 17:51:44 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id w82-20020aca6255000000b0032694a9925esm223093oib.10.2022.05.31.17.51.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 31 May 2022 17:51:44 -0700 (PDT)
-Received: (nullmailer pid 2650548 invoked by uid 1000);
-        Wed, 01 Jun 2022 00:51:43 -0000
-Date:   Tue, 31 May 2022 19:51:43 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Serge Semin <fancer.lancer@gmail.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 02/23] dt-bindings: ata: ahci-platform: Detach common
- AHCI bindings
-Message-ID: <20220601005143.GA2398472-robh@kernel.org>
-References: <20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru>
- <20220511231810.4928-3-Sergey.Semin@baikalelectronics.ru>
- <20220517191055.GA1424316-robh@kernel.org>
- <20220522150247.zznapdonuq7dsbup@mobilestation>
- <20220524151914.GB3730540-robh@kernel.org>
- <20220527101057.b5z7ase6y4naoxvk@mobilestation>
+        with ESMTP id S230331AbiFAGkV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jun 2022 02:40:21 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 327C2941B4
+        for <linux-ide@vger.kernel.org>; Tue, 31 May 2022 23:40:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1654065619; x=1685601619;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=9wLBC1Rr0CXfT2DGDqXF9i/snXuwmwlPkyy6lwIjJFg=;
+  b=Tr3vGYhdfzNJq5pk6inxJKr3H8exVrV+gCkfJBdCGnv21mSlOl7n1GaC
+   mSizooYAz8vMYIb20K4EDy5b61Qanu17sCmANHWDdOSqD1ZoKp3e9/olt
+   GjiRExC6nV+CQgmqycBoA4HBXF40Bl6t2icn/u/4th4DO78SJoUUv12v/
+   Jf0Tmc+5Ngmw5ypP7ro9QtGC4pIu4Tc/uUBXho9/1opWgXbgSx6MUkus6
+   hGZSklqPNZASEJcKVIMNZ2vAxT7v3oRV8cxpIXk+X/H/XaBKPGVSJ9XtF
+   ZhCUJDcNF0uZ9AJIYt5IfAWGXFEDsf7f2Kd82HV3KgQmsruhCCkLVKv4t
+   g==;
+X-IronPort-AV: E=Sophos;i="5.91,266,1647273600"; 
+   d="scan'208";a="206823314"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Jun 2022 14:40:19 +0800
+IronPort-SDR: APVcxv10+cozbaQLKf0wttZIH0yaGMgfPWeulFLbV/rLlY9XeJbL2w2+JZLeqf0/L04bIFbVJc
+ arlsHP7/5l8/4cNik2MFeSZw1Q1J5UExVSH0IVmgEpEBtacpGWSUiToipFjuk+QXu+LBBFthl5
+ wLE0zJ5bbDgxBx373vMZttAlBiWEJfDFCU5aAgv3drGRr3AaoBsgfv3SKCalTdi045pXsAdciR
+ l6qIKeN5qQhlFePfvcUOsQw5gxIn/38stHwWDTDpkpZWbVuUtc/aqDWhwcqNYH7zNDnC9B6oCD
+ bF/+zbYbaLLb2tDVtvB63arA
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2022 22:59:33 -0700
+IronPort-SDR: pfxbHA7f3tLMZtQgzYJS33eYz2uYAAnCVynRDHZa9BXxe/T/QO0O5Nxq2gy/PX6/KFLNiYV3o2
+ vdzPYZT6fhOPR+V1KJx2g4veCC0DmDPuMlhwAu42UAY/l7TbVHmzwPnIUigBIRF64iwD1gfXI0
+ nEh4fkYBjEtXhf/VTbqV7enlpzUWzEVGIev1OYhdY+EX/p6MkS8zlBSM4XUGOwpNsfnOLXtd1w
+ XWKCXNJ7Rt86sUS6Y8Mwog8XtDAOFQJ69pCW0VhTIVpQgayuzlO1CpjoIVUadJOZve0A8mC65Y
+ iIA=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 May 2022 23:40:20 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LCffC48Pgz1SVnx
+        for <linux-ide@vger.kernel.org>; Tue, 31 May 2022 23:40:19 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1654065619; x=1656657620; bh=9wLBC1Rr0CXfT2DGDqXF9i/snXuwmwlPkyy
+        6lwIjJFg=; b=La/86JzzPkNF9jaRLlUczKv6sY64XwWRqJRxx5YLDU73EZeOpil
+        5/6Yl6FLk9QZcASgCKwjN/rzHoOS2nl/sWxl6zt0bzzt8UOZ6Z8baEqzzlIPpIe5
+        9B6Oe8WAMHud83tFYOQHA6330Hk6RpKcXv9fYdYhrTFhbDyxo94b4c74brF33HB3
+        5HQ+ccGR54giGHXFHgHhTC1OjGzzrHIJb6eKOHF0bsCcWCiFf14TA5E0GEzlvqX2
+        nE3HS7SYVZs/bD2fGfCPkkNHVvVON7Hyc5LH/74JVv/ecK/E49uyXX5Va/sQ2izL
+        wI5wzJSKeFpHO8HfwH/hwhHZL70ZMp2NfRQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 0Xvt3eV7_ezR for <linux-ide@vger.kernel.org>;
+        Tue, 31 May 2022 23:40:19 -0700 (PDT)
+Received: from [10.225.163.63] (unknown [10.225.163.63])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LCffB1qb0z1Rvlc;
+        Tue, 31 May 2022 23:40:18 -0700 (PDT)
+Message-ID: <f66e1c54-a334-328f-10dc-e4aa760e23c6@opensource.wdc.com>
+Date:   Wed, 1 Jun 2022 15:40:16 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220527101057.b5z7ase6y4naoxvk@mobilestation>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH] libata: drop 'sas_last_tag'
+Content-Language: en-US
+To:     Hannes Reinecke <hare@suse.de>,
+        Damien LeMoal <damien.lemoal@wdc.com>
+Cc:     linux-ide@vger.kernel.org, John Garry <john.garry@huawei.com>
+References: <20220525114942.92934-1-hare@suse.de>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220525114942.92934-1-hare@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, May 27, 2022 at 01:10:57PM +0300, Serge Semin wrote:
-> On Tue, May 24, 2022 at 10:19:14AM -0500, Rob Herring wrote:
-> > On Sun, May 22, 2022 at 06:02:47PM +0300, Serge Semin wrote:
-> > > On Tue, May 17, 2022 at 02:10:55PM -0500, Rob Herring wrote:
-> > > > On Thu, May 12, 2022 at 02:17:49AM +0300, Serge Semin wrote:
-> > > > > In order to create a more sophisticated AHCI controller DT bindings let's
-> > > > > divide the already available generic AHCI platform YAML schema into the
-> > > > > platform part and a set of the common AHCI properties. The former part
-> > > > > will be used to evaluate the AHCI DT nodes mainly compatible with the
-> > > > > generic AHCI controller while the later schema will be used for more
-> > > > > thorough AHCI DT nodes description. For instance such YAML schemas design
-> > > > > will be useful for our DW AHCI SATA controller derivative with four clock
-> > > > > sources, two reset lines, one system controller reference and specific
-> > > > > max Rx/Tx DMA xfers size constraints.
-> > > > > 
-> > > > > Note the phys and target-supply property requirement is preserved in the
-> > > > > generic AHCI platform bindings because some platforms can lack of the
-> > > > > explicitly specified PHYs or target device power regulators.
+On 5/25/22 20:49, Hannes Reinecke wrote:
+> Unused now.
+> 
+> Fixes: 4f1a22ee7b57 ("libata: Improve ATA queued command allocation")
+> 
+> Cc: John Garry <john.garry@huawei.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  include/linux/libata.h | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 732de9014626..0f2a59c9c735 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -822,7 +822,6 @@ struct ata_port {
+>  	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE + 1];
+>  	u64			qc_active;
+>  	int			nr_active_links; /* #links with active qcs */
+> -	unsigned int		sas_last_tag;	/* track next tag hw expects */
+>  
+>  	struct ata_link		link;		/* host default link */
+>  	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
 
-[...]
+Applied to for-5.19-fixes. Thanks !
 
-> > > > > +patternProperties:
-> > > > > +  "^sata-port@[0-9a-f]+$":
-> > > > > +    type: object
-> > > > > +    description:
-> > > > > +      It is optionally possible to describe the ports as sub-nodes so
-> > > > > +      to enable each port independently when dealing with multiple PHYs.
-> > > > > +
-> > > > > +    properties:
-> > > > > +      reg:
-> > > > > +        description: AHCI SATA port identifier
-> > > > > +        maxItems: 1
-> > > > > +
-> > > > > +      phys:
-> > > > > +        description: Individual AHCI SATA port PHY
-> > > > > +        maxItems: 1
-> > > > > +
-> > > > > +      phy-names:
-> > > > > +        description: AHCI SATA port PHY ID
-> > > > > +        maxItems: 1
-> > > > > +
-> > > > > +      target-supply:
-> > > > > +        description: Power regulator for SATA port target device
-> > > > > +
-> > > > > +    required:
-> > > > > +      - reg
-> > > > > +
-> > > > > +    additionalProperties: true
-> > > > 
-> > > 
-> > > > If device specific bindings can add their own properties (as this 
-> > > > allows), then all the common sata-port properties needs to be its own 
-> > > > schema document. That way the device binding can reference it, define 
-> > > > extra properties and set 'unevaluatedProperties: false'.
-> > > > 
-> > > 
-> > > Could you please be more specific the way it is supposed to look? We
-> > > have already got the sata-port@.* object defined in the sata-common.yaml
-> > > super-schema. Here I just redefine it with more specific properties.
-> > 
-> 
-> > If you want an example, see spi-peripheral-props.yaml and the change 
-> > that introduced it.
-> > 
-> > If properties are defined in multiple locations, we have to be able to 
-> > combine all those schemas to a single (logical, not single file) schema 
-> > to apply it. That's the only way all the disjoint properties can be 
-> > evaluated.
-> 
-> Hm, why do you refer to the cdns,qspi-nor-peripheral-props.yaml and
-> samsung,spi-peripheral-props.yaml schema from the common
-> spi-peripheral-props.yaml schema? In that case you permit having the
-> vendor-specific properties used in all controllers. It doesn't seem
-> right. Isn't it would be more natural to create a generic-to-private
-> hierarchy? Like this:
-
-It's not 'used in all controllers' but used in all devices. But yes, it 
-does mean a device node could have any of the properties. 
-
-The schema for the device must have all possible properties in its 
-schema either directly or via $ref's. There's not a way to say if the 
-parent controller is X, then apply these controller child device 
-properties.
-
-> > spi-peripheral-props.yaml:
-> + properties:
-> +    ...
-> 
-> > cdns,qspi-nor-peripheral-props.yaml:
-> + allOf:
-> +   - $ref: spi-peripheral-props.yaml#
-> + properties:
-> +   ...
-> 
-> > samsung,spi-peripheral-props.yaml:
-
-Who would apply/$ref this in your schema?
-
-> + allOf:
-> +   - $ref: spi-peripheral-props.yaml#
-> + properties:
-> +   ...
-> 
-> Especially seeing you left the generic peripheral-props schema opened for
-> the additional properties (additionalProperties: true). Afterwards the Cdns
-> and Samsung SPI DT-schemas would refer to these peripheral props schemas
-> in the sub-nodes. Like this:
-> > cdns,qspi-nor.yaml:
-> + ...
-> + patternProperties:
-> +   "^.*@[0-9a-f]+$":
-> +     type: object
-> +     $ref: spi-peripheral-props.yaml
-> +     ...
-
-This is the pattern that simply doesn't work. "^.*@[0-9a-f]+$" is 
-entirely independent of a device schema and there's not 1 schema that 
-has all possible properties.
-
-We could at least limit nodes to allow one set of controller specific 
-properties (but not necessarily the correct one):
-
-allOf:
-  - $ref: spi-peripheral-props.yaml#
-  - oneOf:
-      - $ref: samsung,spi-peripheral-props.yaml#
-      - $ref: cdns,qspi-nor-peripheral-props.yaml#
-
-And then in each of the above schemas we need:
-
-anyOf:
-  - required: [ vendor,prop1 ]
-  - required: [ vendor,prop2 ]
-  - ... for all the controller specific properties
-
-The last part keeps the vendor specific schema from being true if none 
-of the properties are present.
-
-> > > Is it ok if I moved the sata-port@.* properties in the "definitions"
-> > > section of the sata-common.yaml and ahci-common.yaml schema and
-> > > re-used them right in the common bindings and, if required, in the
-> > > device-specific schema?
-> > 
-> 
-> > Yes, I guess. There's not really any advantage to doing that. A separate 
-> > schema file is only a small amount of boilerplate.
-> 
-> IMO having the common ports definitions in the same schema file as the
-> corresponding DT-bindings is more readable. You don't have to
-> open additional files, switch between tabs in order to get to the
-> referred sub-schema. In addition splitting that much coherent parts
-> isn't good from the maintainability point of view either.
-> 
-> > 
-> > > Please confirm that the next schema hierarchy is what you were talking
-> > > about and it will be ok in this case:
-> > > 
-> > > > Documentation/devicetree/bindings/ata/sata-common.yaml:
-> > > ...
-> > > + patternProperties:
-> > > +   "^sata-port@[0-9a-e]$":
-> > > +     $ref: '#/definitions/sata-port'
-> > > + 
-> > > + definitions:
-> > 
-> 
-> > '$defs' is preferred over 'definitions'.
-> 
-> Ok.
-> 
-> > 
-> > > +   sata-port:
-> > > +     type: object
-> > > +   
-> > > +     properties:
-> > > +       reg:
-> > > +         minimum: 0
-> > 
-> 
-> > That's the default.
-> > 
-> > > + 
-> > > +     additionalProperties: true
-> > 
-> > Drop this.
-> 
-> Ok.
-> 
-> > 
-> > > 
-> > > > Documentation/devicetree/bindings/ata/ahci-common.yaml:
-> > > ...
-> > > + patternProperties:
-> > > +   "^sata-port@[0-9a-e]$":
-> > > +     $ref: '#/definitions/ahci-port'
-> > > + 
-> > > + definitions:
-> > > +   ahci-port:
-> > > +     $ref: /schemas/ata/sata-common.yaml#/definitions/sata-port
-> > > +     properties:
-> > > +       reg:
-> > > +         minimum: 0
-> > > +         maximum: 31
-> > > ...
-> > > + 
-> > > +     additionalProperties: true
-> > 
-> > Drop this.
-> > 
-> > > 
-> > > > Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml:
-> > > ...
-> > > + patternProperties:
-> > > +   "^sata-port@[0-9a-e]$":
-> > > +     $ref: /schemas/ata/ahci-common.yaml#/definitions/ahci-port
-> > > +     properties:
-> > > +       reg:
-> > > +         minimum: 0
-> > > +         maximum: 7
-> > > + 
-> > > +       snps,tx-ts-max:
-> > > +         $ref: /schemas/types.yaml#/definitions/uint32
-> > > + 
-> > > +       snps,rx-ts-max:
-> > > +         $ref: /schemas/types.yaml#/definitions/uint32
-> > > +
-> > > +     unevaluatedProperties: true
-> > 
-> 
-> > This needs to be false. 
-> 
-> Right. Incorrectly copy-pasted it.
-> 
-> > And this should work as the $ref issue is only 
-> > for the top-level schema.
-> 
-> Do you mean that this will work for the schemas referring the
-> snps,dwc-ahci.yaml schema only? I suppose the vendor-specific schemas
-> still can extend it by re-designing the snps,dwc-ahci.yaml DT-binding in
-> the same way as the generic SATA/AHCI schemas.
-
-I mean it doesn't have the bug in dtschema preventing 
-unevaluatedProperties from fully working correctly.
-
-Rob
+-- 
+Damien Le Moal
+Western Digital Research
