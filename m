@@ -2,114 +2,188 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5556C433EF
-	for <linux-ide@archiver.kernel.org>; Fri,  3 Jun 2022 06:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 454B5C43334
+	for <linux-ide@archiver.kernel.org>; Fri,  3 Jun 2022 07:07:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241365AbiFCGSo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 3 Jun 2022 02:18:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35250 "EHLO
+        id S241800AbiFCHHs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 3 Jun 2022 03:07:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbiFCGSn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jun 2022 02:18:43 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDABA1D0F1;
-        Thu,  2 Jun 2022 23:18:42 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7699D1F90D;
-        Fri,  3 Jun 2022 06:18:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1654237121; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EDB7jYe/eREYzqsgeee74yP1wsa2+nOa8MnVZn+zwws=;
-        b=vIy48MsKmGFLrbsKxHDnrH1z3Cv4rwmxKyqeCpDcmluxOQ9opkXzvsMbABN7fx19PY600r
-        +pXaxkywliLrubk2nUyChFVQRkSekb0ZmxzPWkoEPBsdyjcZv62Dxu+RjCmja1Np56ln8A
-        GFSkDDCchb+A+pL2Q4bHMxL7nM+pQrQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1654237121;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EDB7jYe/eREYzqsgeee74yP1wsa2+nOa8MnVZn+zwws=;
-        b=lknC0K5oGVxwpH2P5IjnJCFVqSyGXNx61FIkvfChMETEeThorLAWX5pH0wP+3YH2i90FpO
-        6s6ejSzF4Py22xAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 47A7613AA2;
-        Fri,  3 Jun 2022 06:18:41 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id BFioEMGnmWJ/NQAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 03 Jun 2022 06:18:41 +0000
-Message-ID: <94c1c9ae-67cb-2491-0f00-477d78178616@suse.de>
-Date:   Fri, 3 Jun 2022 08:18:40 +0200
+        with ESMTP id S242124AbiFCHHm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jun 2022 03:07:42 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B15DD19C18
+        for <linux-ide@vger.kernel.org>; Fri,  3 Jun 2022 00:07:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1654240058; x=1685776058;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=uM1jIRHRevJwm7+Qyxup2fdwLhUnSqJOSozlPvxAOsA=;
+  b=b3O6HJ4kUmBfNrIqS/RX6BE+tUsijWothY0BcSqTM3773JsTGH4I3NpG
+   GqWI0fzPbHFxPFFk9KP69b20A2/rJHgci6t7HwGm1MoOtiS2uDE/eBEmS
+   B66eKpya3dnKjPkfVS1BRMPwmFJGeY71JzpzhMOn6PZq62QHkxfbqK6SR
+   s9raOm/rScQ56YMsmu3XWMP698v22blv/9eHbIlaDSAkCVggnNuQm7rfH
+   EjrtvGGoGJ3efnbZpL8nx0LbqFwbrChNgjev70ACqbtzQ+yjkxMi/jXJd
+   qFfjYLVxDoBGElx6va8r/avIKE3qcjea1Zqxjt4A4CkHw4dMHlf/ep03Z
+   w==;
+X-IronPort-AV: E=Sophos;i="5.91,273,1647273600"; 
+   d="scan'208";a="306434770"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Jun 2022 15:07:35 +0800
+IronPort-SDR: nQUpKN5lzmytbFgZceU2wjKd2kqdqqNOWcG2hKKiW05I5xlwttGYZCDJ4YQTBPbkwew8iF03+Q
+ cMnAagjnANWC/Zgr24NPztuAhJutOCIuy75+u5FL7uY7x6t+HtyoHzoIqFwKcuQlXE9QRQK1CM
+ JDNEd1oMFUU5ImbEPFo9E6/zUQ5ZbRnaUGomo2u0MXv1jfygOsByFImwSDENOiWL1c5kXSJjmj
+ vPS2oHkJfyxGJaGrlCuEbKsARZ244f3MOFfhu7GnwdHTV3e0TCaCtObu68GljP6EffHl3Z3ZLL
+ EjsM8fp/iQaTq32C7gVnWifB
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 02 Jun 2022 23:26:40 -0700
+IronPort-SDR: TQpt8LGggPPfAsPINQA1akOihxFVsEfGnZtqc8MElveQJ2g4N30h6JtSAjncYbCOyO/COp0KBQ
+ 2/wRUHI8z1l1tA/S89VOv7bWvEjbMwA47KwtN3ijvim/5uEzDIEjouwcsgTJYNptZ9YBjLFIUP
+ o4t+QAzJY8milDtHBptjaJE0TiFuvoaRDRNcjKszYPl5oPqpeZ375VoOKtQw7dDoJZmGo2aA/Z
+ YHs8s4WVkBdVmM3/gCrLy9PsmjSY8gRzkBouosQSFDZ1aumunuPZzBcXDCYVy0wOH7I9Tr5yph
+ ixk=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 03 Jun 2022 00:07:35 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LDv8l2fNBz1SVp0
+        for <linux-ide@vger.kernel.org>; Fri,  3 Jun 2022 00:07:35 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1654240054; x=1656832055; bh=uM1jIRHRevJwm7+Qyxup2fdwLhUnSqJOSoz
+        lPvxAOsA=; b=iyxsCrf7ecox+D17zQfPEeGFAYaDeoH4KHDEN6AyiKUcufyiw4G
+        snHvnatBCfc9H2xfQVqIh8B9dfcGcBNtoJ6QeLYR9+8ZB2LfK9/Vbm9BmX0bx+iP
+        PZoinjyq74P7Kmf5kaKkE+VMQ6ZTc/ShfRSjj7k2iYz4AhJvbDrqXEqkKTCXQNnQ
+        XkDJNbUcRWhs4Wq5ojeAqxTQyxBDgIvUNPquoCItppOUz9uySLPMxk2Imek7sQ8y
+        WDkz96McELGKvq+gVtIZgPe4JFHl9RFTH80kIqvXWYpnDPkBGGDkasihUgM0tYhJ
+        1V2jsIR7xV+02dmU1tGSxloJ9QW6nIhaiiA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 3MDJEQSkSaay for <linux-ide@vger.kernel.org>;
+        Fri,  3 Jun 2022 00:07:34 -0700 (PDT)
+Received: from [10.225.163.68] (unknown [10.225.163.68])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LDv8h4xFjz1Rvlc;
+        Fri,  3 Jun 2022 00:07:32 -0700 (PDT)
+Message-ID: <948fc607-af5a-8b80-4f87-297462bb58c4@opensource.wdc.com>
+Date:   Fri, 3 Jun 2022 16:07:31 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v2 3/3] scsi: sd: Fix interpretation of VPD B9h length
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v2 1/3] libata: fix reading concurrent positioning ranges
+ log
 Content-Language: en-US
-To:     Tyler Erickson <tyler.erickson@seagate.com>,
-        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
+To:     Hannes Reinecke <hare@suse.de>,
+        Tyler Erickson <tyler.erickson@seagate.com>,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         muhammad.ahmad@seagate.com, stable@vger.kernel.org
 References: <20220602225113.10218-1-tyler.erickson@seagate.com>
- <20220602225113.10218-4-tyler.erickson@seagate.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20220602225113.10218-4-tyler.erickson@seagate.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <20220602225113.10218-2-tyler.erickson@seagate.com>
+ <071542b5-2269-7c8a-a78c-0cd7299bca99@suse.de>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <071542b5-2269-7c8a-a78c-0cd7299bca99@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/3/22 00:51, Tyler Erickson wrote:
-> Fixing the interpretation of the length of the B9h VPD page
-> (concurrent positioning ranges). Adding 4 is necessary as
-> the first 4 bytes of the page is the header with page number
-> and length information. Adding 3 was likely a misinterpretation
-> of the SBC-5 specification which sets all offsets starting at zero.
+On 6/3/22 15:17, Hannes Reinecke wrote:
+> On 6/3/22 00:51, Tyler Erickson wrote:
+>> The concurrent positioning ranges log is not a fixed size and may depend
+>> on how many ranges are supported by the device. This patch uses the size
+>> reported in the GPL directory to determine the number of pages supported
+>> by the device before attempting to read this log page.
+>>
+>> This resolves this error from the dmesg output:
+>>      ata6.00: Read log 0x47 page 0x00 failed, Emask 0x1
+>>
+>> Cc: stable@vger.kernel.org
+>> Fixes: fe22e1c2f705 ("libata: support concurrent positioning ranges log")
+>> Signed-off-by: Tyler Erickson <tyler.erickson@seagate.com>
+>> Reviewed-by: Muhammad Ahmad <muhammad.ahmad@seagate.com>
+>> Tested-by: Michael English <michael.english@seagate.com>
+>> ---
+>>   drivers/ata/libata-core.c | 21 +++++++++++++--------
+>>   1 file changed, 13 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 40e816419f48..3ea10f72cb70 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -2010,16 +2010,16 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+>>   	return err_mask;
+>>   }
+>>   
+>> -static bool ata_log_supported(struct ata_device *dev, u8 log)
+>> +static int ata_log_supported(struct ata_device *dev, u8 log)
+>>   {
+>>   	struct ata_port *ap = dev->link->ap;
+>>   
+>>   	if (dev->horkage & ATA_HORKAGE_NO_LOG_DIR)
+>> -		return false;
+>> +		return 0;
+>>   
+>>   	if (ata_read_log_page(dev, ATA_LOG_DIRECTORY, 0, ap->sector_buf, 1))
+>> -		return false;
+>> -	return get_unaligned_le16(&ap->sector_buf[log * 2]) ? true : false;
+>> +		return 0;
+>> +	return get_unaligned_le16(&ap->sector_buf[log * 2]);
+>>   }
+>>   
+> Maybe we should change to name of the function here; 
+> 'ata_log_supported()' suggests a bool return.
 > 
-> This fixes the error in dmesg:
-> [ 9.014456] sd 1:0:0:0: [sda] Invalid Concurrent Positioning Ranges VPD page
+> ata_check_log_page() ?
 > 
-> Cc: stable@vger.kernel.org
-> Fixes: e815d36548f0 ("scsi: sd: add concurrent positioning ranges support")
-> Signed-off-by: Tyler Erickson <tyler.erickson@seagate.com>
-> Reviewed-by: Muhammad Ahmad <muhammad.ahmad@seagate.com>
-> Tested-by: Michael English <michael.english@seagate.com>
-> ---
->   drivers/scsi/sd.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>>   static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
+>> @@ -2455,15 +2455,20 @@ static void ata_dev_config_cpr(struct ata_device *dev)
+>>   	struct ata_cpr_log *cpr_log = NULL;
+>>   	u8 *desc, *buf = NULL;
+>>   
+>> -	if (ata_id_major_version(dev->id) < 11 ||
+>> -	    !ata_log_supported(dev, ATA_LOG_CONCURRENT_POSITIONING_RANGES))
+>> +	if (ata_id_major_version(dev->id) < 11)
+>> +		goto out;
+>> +
+>> +	buf_len = ata_log_supported(dev, ATA_LOG_CONCURRENT_POSITIONING_RANGES);
+>> +	if (buf_len == 0)
+>>   		goto out;
+>>   
+>>   	/*
+>>   	 * Read the concurrent positioning ranges log (0x47). We can have at
+>> -	 * most 255 32B range descriptors plus a 64B header.
+>> +	 * most 255 32B range descriptors plus a 64B header. This log varies in
+>> +	 * size, so use the size reported in the GPL directory. Reading beyond
+>> +	 * the supported length will result in an error.
+>>   	 */
+>> -	buf_len = (64 + 255 * 32 + 511) & ~511;
+>> +	buf_len <<= 9;
+>>   	buf = kzalloc(buf_len, GFP_KERNEL);
+>>   	if (!buf)
+>>   		goto out;
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 749316462075..f25b0cc5dd21 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3072,7 +3072,7 @@ static void sd_read_cpr(struct scsi_disk *sdkp)
->   		goto out;
->   
->   	/* We must have at least a 64B header and one 32B range descriptor */
-> -	vpd_len = get_unaligned_be16(&buffer[2]) + 3;
-> +	vpd_len = get_unaligned_be16(&buffer[2]) + 4;
->   	if (vpd_len > buf_len || vpd_len < 64 + 32 || (vpd_len & 31)) {
->   		sd_printk(KERN_ERR, sdkp,
->   			  "Invalid Concurrent Positioning Ranges VPD page\n");
+> I don't get it.
+> You just returned the actual length of the log page from the previous 
+> function. Why do you need to calculate the length here?
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Calculate ? This is only converting from 512B sectors to bytes.
+The calculation was mine, a gross error :) This is what this patch is fixing.
 
-Cheers,
+> 
+> Cheers,
+> 
+> Hannes
 
-Hannes
+
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+Damien Le Moal
+Western Digital Research
