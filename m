@@ -2,161 +2,150 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E090DC433EF
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Jun 2022 02:42:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82EAECCA483
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Jun 2022 09:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349161AbiFFCmJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 5 Jun 2022 22:42:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33666 "EHLO
+        id S232859AbiFFJgk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Jun 2022 05:36:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241809AbiFFCmH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 5 Jun 2022 22:42:07 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E5E163CB
-        for <linux-ide@vger.kernel.org>; Sun,  5 Jun 2022 19:42:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1654483326; x=1686019326;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=wVZw+lH039ADPETmDQdHaK1lxpc+CC3Nqs4e9zJ/LHg=;
-  b=DKGkHgQ/eqUU9iWbNy0MLdQnTI5EtdJSyQh+OI4LwZNrF7RRSpSBgeEy
-   vRqt6kWLlni29N+U7ulJv0ppbpeag9EcKjGgwL9LuOQexci0F13ahIkaC
-   VIntdtYP5qhZsKhfMn/wY+4kOXKh4qqdunhvkHvIjprj0IAt7G5LtXIg2
-   bcFW/wtzR4zlxFOYvzR3pqdGuTb61H7UjrxRt1Kgnsarnu+blrCXYEC+3
-   zcQRnNxzjYo0LhMY155FJ6DfiY3Nj4QIaTNUnf+vFPURj7qVIT2PeZUcZ
-   DMOqiW859iHcxYMfJnI2PTABj/qDdBk3Jy64ttHihRY8G7ArNaGhNdvU5
-   g==;
-X-IronPort-AV: E=Sophos;i="5.91,280,1647273600"; 
-   d="scan'208";a="314379911"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 06 Jun 2022 10:42:05 +0800
-IronPort-SDR: f7PgQ0MF1rrOql1vTaKcGughERTDL/4Enmg+i9rRGaJnZO/F2whHtzpcPqGZLPyrTKpbOJCGlI
- Wmrc6FK2MvE4Otwi9c9u0flpkVcly8bxcF1OHIwbEw4mGwCN1wUJ90ierTo0qLkGDTmbySL3qf
- R4xV8lIylWA7TC5+z5SxSEz9jV9uaiyJK8VJzJ779dmq1SOmKkpmSB1Hr8GWb5RlGKFaTCOkMG
- qdZ8fMM1D0xq51jay4W4JsTiVlciiWgp3b2jLAZeGqDkfyNSYPAOxLkwXgoHjZ1YS1+f/KBe5C
- twjMznz7vnOr/m9ZT1eszYc9
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Jun 2022 19:05:26 -0700
-IronPort-SDR: WXlKtqa//PVz2gkYZcL+ni+KFFJagZNnzMyk9Dx0R+gWlrZGFoCcuX5t+N4UcRTZs80mobYhl/
- Z+Tv2SKMlczTzUiMmHRV7kCjTLdzi0W0N9Efqyh3fVMjC4fn47F7PjV0RGKdvRqCM3bkon21xi
- 4vgSyqiCdJM2+p9YxryksfLISdRULn/pGfhmS/iMBq81mCIiYZ4Q6gkO/ukb21LbvySpigpoqp
- MiIK2r8Z6Hyq7Cf+sqcI8qAQcEoy4uKo3qpufCayQzMt0SW9U3DzT9bvrFrkJx5i2X6VLcoAxH
- jJM=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Jun 2022 19:42:06 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LGd712Pwrz1Rvlx
-        for <linux-ide@vger.kernel.org>; Sun,  5 Jun 2022 19:42:05 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1654483324; x=1657075325; bh=wVZw+lH039ADPETmDQdHaK1lxpc+CC3Nqs4
-        e9zJ/LHg=; b=bj6CPVihuDtzL8fv0Ix9iRysVN4b9owCjjM4cTlnzivgVL+wpfy
-        3KUY01YdAAPWDvIJFdiKCgh6ImEb0ZPtOInIXhfYFQ5HfHy3fbzjFfcp4pCG52/l
-        puF9nKxGTjwvEhu1k0Ab2dqnWudU2i7syQEpLO7LmgmgFNU8HjIJjLg2TcYiwWyg
-        j++MN7QSy8knjUfMHVr0Zo0hB4RZJQTur3HObZM2iV6UnkaEH41Y8GdwIdUKOUdt
-        5FarRiJ/rnQVR5KvXsN6U9X9kaMSRbcm7+yiSkLcoO64AUhYv+InYg3D6EHwWhJ0
-        jHmCThwgj2BF+5QR78v0BLCSsZB5mAZJpWg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 3-wakoyooFJr for <linux-ide@vger.kernel.org>;
-        Sun,  5 Jun 2022 19:42:04 -0700 (PDT)
-Received: from [10.225.163.72] (unknown [10.225.163.72])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LGd701mCLz1Rvlc;
-        Sun,  5 Jun 2022 19:42:04 -0700 (PDT)
-Message-ID: <c9695894-3bc6-e825-8239-ea6aa3e4831e@opensource.wdc.com>
-Date:   Mon, 6 Jun 2022 11:42:02 +0900
+        with ESMTP id S232897AbiFFJgi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jun 2022 05:36:38 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02FA41BF177;
+        Mon,  6 Jun 2022 02:36:37 -0700 (PDT)
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LGpHz1CYzz67M0J;
+        Mon,  6 Jun 2022 17:35:27 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Mon, 6 Jun 2022 11:36:34 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 6 Jun 2022 10:36:30 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
+        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v3 1/4] dma-mapping: Add dma_opt_mapping_size()
+Date:   Mon, 6 Jun 2022 17:30:19 +0800
+Message-ID: <1654507822-168026-2-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] ata: libata-transport: fix {dma|pio|xfer}_mode sysfs
- files
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <b0f8a1d3-2550-31b2-702c-3294d0569187@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <b0f8a1d3-2550-31b2-702c-3294d0569187@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/5/22 05:53, Sergey Shtylyov wrote:
-> The {dma|pio|xfer}_mode sysfs files are incorrectly handled by the
-> ata_bitfield_name_match() macro which leads to reading such kind of
-> nonsense from them:
-> 
-> $ cat /sys/class/ata_device/dev3.0/pio_mode
-> XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_MW_DMA_4,
-> XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2, XFER_PIO_1,
-> XFER_PIO_0
-> 
-> Using the correct ata_bitfield_name_search() macro fixes that:
-> 
-> $ cat /sys/class/ata_device/dev3.0/pio_mode
-> XFER_PIO_4
+Streaming DMA mapping involving an IOMMU may be much slower for larger
+total mapping size. This is because every IOMMU DMA mapping requires an
+IOVA to be allocated and freed. IOVA sizes above a certain limit are not
+cached, which can have a big impact on DMA mapping performance.
 
-Looks good, but Documentation/ABI/testing/sysfs-ata says:
+Provide an API for device drivers to know this "optimal" limit, such that
+they may try to produce mapping which don't exceed it.
 
-pio_mode:       (RO) Transfer modes supported by the device when
-                in PIO mode. Mostly used by PATA device.
+Signed-off-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ Documentation/core-api/dma-api.rst |  9 +++++++++
+ include/linux/dma-map-ops.h        |  1 +
+ include/linux/dma-mapping.h        |  5 +++++
+ kernel/dma/mapping.c               | 12 ++++++++++++
+ 4 files changed, 27 insertions(+)
 
-xfer_mode:      (RO) Current transfer mode
-
-dma_mode:       (RO) Transfer modes supported by the device when
-                in DMA mode. Mostly used by PATA device.
-
-which seems incorrect/badly worded for pio_mode and dma_mode. Since these
-2 sysfs attributes do not actually device the pio mask (list of supported
-pio modes) but the pio mode that will be used for that device, we should
-reword, no ?
-
-What about:
-
-pio_mode:       (RO) Transfer mode used by the device when
-                in PIO mode. Mostly used by PATA device.
-
-xfer_mode:      (RO) Current transfer mode
-
-dma_mode:       (RO) Transfer mode used by the device when
-                in DMA mode. Mostly used by PATA device.
-
-
-> 
-> Fixes: d9027470b886 ("[libata] Add ATA transport class")
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Cc: stable@vger.kernel.org
-> 
-> ---
-> This patch is against the 'master' branch of Damien's 'libata.git' repo.
-> 
->  drivers/ata/libata-transport.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: libata/drivers/ata/libata-transport.c
-> ===================================================================
-> --- libata.orig/drivers/ata/libata-transport.c
-> +++ libata/drivers/ata/libata-transport.c
-> @@ -196,7 +196,7 @@ static struct {
->  	{ XFER_PIO_0,			"XFER_PIO_0" },
->  	{ XFER_PIO_SLOW,		"XFER_PIO_SLOW" }
->  };
-> -ata_bitfield_name_match(xfer,ata_xfer_names)
-> +ata_bitfield_name_search(xfer, ata_xfer_names)
->  
->  /*
->   * ATA Port attributes
-
-
+diff --git a/Documentation/core-api/dma-api.rst b/Documentation/core-api/dma-api.rst
+index 6d6d0edd2d27..b3cd9763d28b 100644
+--- a/Documentation/core-api/dma-api.rst
++++ b/Documentation/core-api/dma-api.rst
+@@ -204,6 +204,15 @@ Returns the maximum size of a mapping for the device. The size parameter
+ of the mapping functions like dma_map_single(), dma_map_page() and
+ others should not be larger than the returned value.
+ 
++::
++
++	size_t
++	dma_opt_mapping_size(struct device *dev);
++
++Returns the maximum optimal size of a mapping for the device. Mapping large
++buffers may take longer so device drivers are advised to limit total DMA
++streaming mappings length to the returned value.
++
+ ::
+ 
+ 	bool
+diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
+index 0d5b06b3a4a6..98ceba6fa848 100644
+--- a/include/linux/dma-map-ops.h
++++ b/include/linux/dma-map-ops.h
+@@ -69,6 +69,7 @@ struct dma_map_ops {
+ 	int (*dma_supported)(struct device *dev, u64 mask);
+ 	u64 (*get_required_mask)(struct device *dev);
+ 	size_t (*max_mapping_size)(struct device *dev);
++	size_t (*opt_mapping_size)(void);
+ 	unsigned long (*get_merge_boundary)(struct device *dev);
+ };
+ 
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index dca2b1355bb1..fe3849434b2a 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -144,6 +144,7 @@ int dma_set_mask(struct device *dev, u64 mask);
+ int dma_set_coherent_mask(struct device *dev, u64 mask);
+ u64 dma_get_required_mask(struct device *dev);
+ size_t dma_max_mapping_size(struct device *dev);
++size_t dma_opt_mapping_size(struct device *dev);
+ bool dma_need_sync(struct device *dev, dma_addr_t dma_addr);
+ unsigned long dma_get_merge_boundary(struct device *dev);
+ struct sg_table *dma_alloc_noncontiguous(struct device *dev, size_t size,
+@@ -266,6 +267,10 @@ static inline size_t dma_max_mapping_size(struct device *dev)
+ {
+ 	return 0;
+ }
++static inline size_t dma_opt_mapping_size(struct device *dev)
++{
++	return 0;
++}
+ static inline bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+ {
+ 	return false;
+diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
+index db7244291b74..1bfe11b1edb6 100644
+--- a/kernel/dma/mapping.c
++++ b/kernel/dma/mapping.c
+@@ -773,6 +773,18 @@ size_t dma_max_mapping_size(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(dma_max_mapping_size);
+ 
++size_t dma_opt_mapping_size(struct device *dev)
++{
++	const struct dma_map_ops *ops = get_dma_ops(dev);
++	size_t size = SIZE_MAX;
++
++	if (ops && ops->opt_mapping_size)
++		size = ops->opt_mapping_size();
++
++	return min(dma_max_mapping_size(dev), size);
++}
++EXPORT_SYMBOL_GPL(dma_opt_mapping_size);
++
+ bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+ {
+ 	const struct dma_map_ops *ops = get_dma_ops(dev);
 -- 
-Damien Le Moal
-Western Digital Research
+2.26.2
+
