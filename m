@@ -2,144 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A54BC43334
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Jun 2022 09:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0BF8C43334
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Jun 2022 01:11:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240181AbiFGJu7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Jun 2022 05:50:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37328 "EHLO
+        id S238778AbiFHBLB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 7 Jun 2022 21:11:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240510AbiFGJuW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2022 05:50:22 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87A09EBA84
-        for <linux-ide@vger.kernel.org>; Tue,  7 Jun 2022 02:49:12 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id w20so5789024lfa.11
-        for <linux-ide@vger.kernel.org>; Tue, 07 Jun 2022 02:49:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=osMFyRNZSbpgD+ikzJcSTdM5bItB0V1zO0LHaEiyZKM=;
-        b=dMM+KcZzUAdkYRQjSOWwVxXLgSWQvAN8gqvj/mDFFtXMqaShMsce7TQqfpv3ljmtUK
-         DkhkHItyEuU9qkNMZbfgpnmfVFs3UsFPRPXg1XGZF7m/AZniu/SsMXEFo43JFStMlAjd
-         UnFqA2kUH07fNXpXU0SaclJdwV2ML6RGKdBl2PwQ5tIkdMCl19XnBYowtpC2nm/TsJhq
-         ZucDIuWJXf99fKl4+c47OTA4dnd0TLiDNMwsxoDJM5LKDJka5fOiogiWnSPNReX3/aGX
-         fxeAVGTyKmG5VrRpbYGnXOdZSKn7/XSihPXCZDLnNob16ZG8ogzFFDTfNcxPtj8Rcuo2
-         wTuQ==
+        with ESMTP id S1587310AbiFGXxC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2022 19:53:02 -0400
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C4FB2945E5;
+        Tue,  7 Jun 2022 15:44:00 -0700 (PDT)
+Received: by mail-pj1-f43.google.com with SMTP id k5-20020a17090a404500b001e8875e6242so5942877pjg.5;
+        Tue, 07 Jun 2022 15:44:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=osMFyRNZSbpgD+ikzJcSTdM5bItB0V1zO0LHaEiyZKM=;
-        b=e4+kcRrxjvTh1mj8PJ4DlXX89+Kk29af73j2+MYAncG1qoTPf/IwX3i+/6/W61wRJ+
-         rgs8nw0znGFfZNiYD0Qml4DrmujC/WAI6ScWmZu1ZEJByYHpM+D6q0kyIs8joGXIBp+y
-         FLPgwUbzeoD/lEoAMfF/ejfDAIaXH48t4V04Dm/d47jllcBZ15zt3DNkDeBe/vckNlcf
-         wZEF+vUVp+DCmxbP2Pn1Mt7jcTrorsjmFB2xt8tPbkNbC4DIi3UkUapt0F2PYWD8poS5
-         ujKgkSD0TlaVVYFyPg/bF9GpfENN7r8yRSghsiuy1p2l3/9le6zCWVHXszM5sz/6ByWw
-         9q5g==
-X-Gm-Message-State: AOAM531N46uaO5JL3lSD8LCUz5lBsITAT86SBAqA5tG8Q5W4k+oOCQBF
-        VXbEk0T9VRLGL0UeJYmAZ/ylQngCwCc=
-X-Google-Smtp-Source: ABdhPJyuXx3d9NhA026LzGUawgqALjcX+cbRUxhi0LeX2lK0fhKhBrL0e+cguX5xorcu20L9r2f3Yw==
-X-Received: by 2002:a05:6512:31d4:b0:479:78d:9c96 with SMTP id j20-20020a05651231d400b00479078d9c96mr18851486lfe.121.1654595347252;
-        Tue, 07 Jun 2022 02:49:07 -0700 (PDT)
-Received: from [192.168.1.103] ([178.176.79.94])
-        by smtp.gmail.com with ESMTPSA id f15-20020a2e918f000000b00255804c185csm1741123ljg.22.2022.06.07.02.49.06
+        bh=w8NDUBo3z6UDbWsc/XByX6YF7c4oG4yuYC7oAUnBsYY=;
+        b=wmJNHrZm8vt1N3Fna/3p1FnnVcRuFZZyEy/21hgX49HizjQ9yvZQ53zCvdetoUatVE
+         432zbmPjCUDVtLHXgY6WF2Ivztymj8hl6NqWHXa0mPQ4iQOpCLXwCcnMrFzcSmNGbQaj
+         8ofK7SluYbs2cnAC1+h/0f/MXzhSLGBygpi5nXuTQMwJyBfiHKPPiBpWunGlpXEtGtHq
+         Rj6CYPjj+W1C3sn6g3YobF9ktE01x9ja+yy1MBf2Hf8VGzfoWRBGu6EGXIHFUpNPOUZC
+         IvqdeEoJTm/U1gyCG1ieunVWZO9WkxDZuNEbPl8v7osYuJMLlkesJi5fx4Ju5P8WT+2m
+         +kWQ==
+X-Gm-Message-State: AOAM532+nFS/mMnENlXByKy9Bdh+4jxEPPf5bKLS8/I9CvOyGLk/OQUm
+        aN3qzw6VPJeJUd3HbFFRT3Q=
+X-Google-Smtp-Source: ABdhPJyerYGytLfJP4UmMuvbsKpIxNlss+3u6Myd9djlsW8ZEBq2xQNYIWDPe/Kqg6qSLUHDPa8PZg==
+X-Received: by 2002:a17:902:7088:b0:167:78c0:e05e with SMTP id z8-20020a170902708800b0016778c0e05emr13533905plk.149.1654641824895;
+        Tue, 07 Jun 2022 15:43:44 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:e794:fbe6:94b0:435b? ([2620:15c:211:201:e794:fbe6:94b0:435b])
+        by smtp.gmail.com with ESMTPSA id v11-20020a62a50b000000b0051ba97b788bsm13451064pfm.27.2022.06.07.15.43.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Jun 2022 02:49:06 -0700 (PDT)
-Subject: Re: [PATCH] ata: libata-transport: fix {dma|pio|xfer}_mode sysfs
- files
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <b0f8a1d3-2550-31b2-702c-3294d0569187@omp.ru>
- <c9695894-3bc6-e825-8239-ea6aa3e4831e@opensource.wdc.com>
- <78ae75a3-7f11-b177-c430-ad746f7d106a@omp.ru>
- <a9a01deb-c314-3196-bd3e-947fcd8819b8@opensource.wdc.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <ac79bf20-5db0-90fa-380d-3e16f81bd79f@gmail.com>
-Date:   Tue, 7 Jun 2022 12:49:05 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        Tue, 07 Jun 2022 15:43:44 -0700 (PDT)
+Message-ID: <3e2324dc-2ab1-6a35-46ab-72d970cc466c@acm.org>
+Date:   Tue, 7 Jun 2022 15:43:42 -0700
 MIME-Version: 1.0
-In-Reply-To: <a9a01deb-c314-3196-bd3e-947fcd8819b8@opensource.wdc.com>
-Content-Type: text/plain; charset=utf-8
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v3 0/4] DMA mapping changes for SCSI core
 Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        damien.lemoal@opensource.wdc.com, joro@8bytes.org, will@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
+        chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/7/22 3:37 AM, Damien Le Moal wrote:
-
-[...]
->>>> The {dma|pio|xfer}_mode sysfs files are incorrectly handled by the
->>>> ata_bitfield_name_match() macro which leads to reading such kind of
->>>> nonsense from them:
->>>>
->>>> $ cat /sys/class/ata_device/dev3.0/pio_mode
->>>> XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_MW_DMA_4,
->>>> XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2, XFER_PIO_1,
->>>> XFER_PIO_0
->>>>
->>>> Using the correct ata_bitfield_name_search() macro fixes that:
->>>>
->>>> $ cat /sys/class/ata_device/dev3.0/pio_mode
->>>> XFER_PIO_4
->>>
->>> Looks good, but Documentation/ABI/testing/sysfs-ata says:
->>
->>    Completely forgot that the sysfs files are documented as ABIs... :-(
->>    Hm, shouldn't that file be added to the libata's entry in MAINTAINERS?
-
-   So what's your opinion on that idea?
->>> pio_mode:       (RO) Transfer modes supported by the device when
->>>                 in PIO mode. Mostly used by PATA device.
->>>
->>> xfer_mode:      (RO) Current transfer mode
->>>
->>> dma_mode:       (RO) Transfer modes supported by the device when
->>>                 in DMA mode. Mostly used by PATA device.
->>>
->>> which seems incorrect/badly worded for pio_mode and dma_mode. Since these
->>> 2 sysfs attributes do not actually device the pio mask (list of supported
->>
->>    Device?
+On 6/6/22 02:30, John Garry wrote:
+> As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA caching
+> limit may see a big performance hit.
 > 
-> advertise :)
-
-   Makes sense now. :-)
-
->>> pio modes) but the pio mode that will be used for that device, we should
->>> reword, no ?
->>
->>    Yes, of course. :-)
->>
->>> What about:
->>>
->>> pio_mode:       (RO) Transfer mode used by the device when
->>>                 in PIO mode. Mostly used by PATA device.
->>>
->>> xfer_mode:      (RO) Current transfer mode
->>>
->>> dma_mode:       (RO) Transfer mode used by the device when
->>>                 in DMA mode. Mostly used by PATA device.
->>
->>    Sounds quite tautological... :-)
->>    What about:
->>
->> {dma|pio}_mode: (RO) {DMA|PIO} transfer mode used by the device.
->>                 Mostly used by PATA devices.
->>
->>    I think this should be done in the same patch. Or would you prefer 2 patches?
+> This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
+> that drivers may know this limit when performance is a factor in the
+> mapping.
 > 
-> Let's do 2 patches. Not sure if you can find a fixes tag for the doc update
+> Robin didn't like using dma_max_mapping_size() for this [1].
+> 
+> The SCSI core code is modified to use this limit.
+> 
+> I also added a patch for libata-scsi as it does not currently honour the
+> shost max_sectors limit.
+> 
+> Note: Christoph has previously kindly offered to take this series via the
+>        dma-mapping tree, so I think that we just need an ack from the
+>        IOMMU guys now.
+> 
+> [0] https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
+> [1] https://lore.kernel.org/linux-iommu/f5b78c9c-312e-70ab-ecbb-f14623a4b6e3@arm.com/
 
-   It'll be the same tag.
+Regarding [0], that patch reverts commit 4e89dce72521 ("iommu/iova: 
+Retry from last rb tree node if iova search fails"). Reading the 
+description of that patch, it seems to me that the iova allocator can be 
+improved. Shouldn't the iova allocator be improved such that we don't 
+need this patch series? There are algorithms that handle fragmentation 
+much better than the current iova allocator algorithm, e.g. the 
+https://en.wikipedia.org/wiki/Buddy_memory_allocation algorithm.
 
-> though. But we should not aggregate the 2 attributes as you did. These doc files
-> have a defined format and may not be happy with that merged syntax.
+Thanks,
 
-   Sorry about that -- I did that just for the mail... :-)
-
-MBR, Sergey
+Bart.
