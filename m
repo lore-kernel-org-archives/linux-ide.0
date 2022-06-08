@@ -2,156 +2,109 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1F17C433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Jun 2022 10:21:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BD3FC43334
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Jun 2022 10:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236440AbiFHKVS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Jun 2022 06:21:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34532 "EHLO
+        id S236899AbiFHKYy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Jun 2022 06:24:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236473AbiFHKU3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jun 2022 06:20:29 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C9891498D5
-        for <linux-ide@vger.kernel.org>; Wed,  8 Jun 2022 03:09:54 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.82.248) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 8 Jun 2022
- 13:09:50 +0300
-Subject: Re: [PATCH] ata: libata-transport: fix {dma|pio|xfer}_mode sysfs
- files
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sergei Shtylyov <sergei.shtylyov@gmail.com>,
-        <linux-ide@vger.kernel.org>
-References: <b0f8a1d3-2550-31b2-702c-3294d0569187@omp.ru>
- <c9695894-3bc6-e825-8239-ea6aa3e4831e@opensource.wdc.com>
- <78ae75a3-7f11-b177-c430-ad746f7d106a@omp.ru>
- <a9a01deb-c314-3196-bd3e-947fcd8819b8@opensource.wdc.com>
- <ac79bf20-5db0-90fa-380d-3e16f81bd79f@gmail.com>
- <1c81b5a8-b1b3-7bac-b7e4-9de7127c48b0@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <a3d25d32-9e97-e227-4a0b-1c083b29f7f6@omp.ru>
-Date:   Wed, 8 Jun 2022 13:09:49 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S237373AbiFHKYT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jun 2022 06:24:19 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BB0C142A8D;
+        Wed,  8 Jun 2022 03:14:12 -0700 (PDT)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJ32H3WYkz6H6pv;
+        Wed,  8 Jun 2022 18:12:55 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 8 Jun 2022 12:14:09 +0200
+Received: from [10.47.90.54] (10.47.90.54) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 8 Jun
+ 2022 11:14:08 +0100
+Message-ID: <202f1969-41e4-5f9a-3ff6-0009757434f5@huawei.com>
+Date:   Wed, 8 Jun 2022 11:14:07 +0100
 MIME-Version: 1.0
-In-Reply-To: <1c81b5a8-b1b3-7bac-b7e4-9de7127c48b0@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.82.248]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/08/2022 09:52:06
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 170990 [Jun 08 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 485 485 30d410687e032eeb95d5c3c4fb66dc8aafb87b20
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.82.248
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/08/2022 09:55:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 6/8/2022 8:33:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v3 0/4] DMA mapping changes for SCSI core
+To:     Bart Van Assche <bvanassche@acm.org>,
+        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
+        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <3e2324dc-2ab1-6a35-46ab-72d970cc466c@acm.org>
+In-Reply-To: <3e2324dc-2ab1-6a35-46ab-72d970cc466c@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.47.90.54]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-On 6/8/22 6:14 AM, Damien Le Moal wrote:
-[...]
->>>>>> The {dma|pio|xfer}_mode sysfs files are incorrectly handled by the
->>>>>> ata_bitfield_name_match() macro which leads to reading such kind of
->>>>>> nonsense from them:
->>>>>>
->>>>>> $ cat /sys/class/ata_device/dev3.0/pio_mode
->>>>>> XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_MW_DMA_4,
->>>>>> XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2, XFER_PIO_1,
->>>>>> XFER_PIO_0
->>>>>>
->>>>>> Using the correct ata_bitfield_name_search() macro fixes that:
->>>>>>
->>>>>> $ cat /sys/class/ata_device/dev3.0/pio_mode
->>>>>> XFER_PIO_4
->>>>>
->>>>> Looks good, but Documentation/ABI/testing/sysfs-ata says:
->>>>
->>>>    Completely forgot that the sysfs files are documented as ABIs... :-(
->>>>    Hm, shouldn't that file be added to the libata's entry in MAINTAINERS?
+On 07/06/2022 23:43, Bart Van Assche wrote:
+> On 6/6/22 02:30, John Garry wrote:
+>> As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA 
+>> caching
+>> limit may see a big performance hit.
 >>
->>    So what's your opinion on that idea?
-
-   ???
-
->>>>> pio_mode:       (RO) Transfer modes supported by the device when
->>>>>                 in PIO mode. Mostly used by PATA device.
->>>>>
->>>>> xfer_mode:      (RO) Current transfer mode
->>>>>
->>>>> dma_mode:       (RO) Transfer modes supported by the device when
->>>>>                 in DMA mode. Mostly used by PATA device.
->>>>>
->>>>> which seems incorrect/badly worded for pio_mode and dma_mode. Since these
->>>>> 2 sysfs attributes do not actually device the pio mask (list of supported
->>>>
->>>>    Device?
->>>
->>> advertise :)
+>> This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
+>> that drivers may know this limit when performance is a factor in the
+>> mapping.
 >>
->>    Makes sense now. :-)
+>> Robin didn't like using dma_max_mapping_size() for this [1].
 >>
->>>>> pio modes) but the pio mode that will be used for that device, we should
->>>>> reword, no ?
->>>>
->>>>    Yes, of course. :-)
->>>>
->>>>> What about:
->>>>>
->>>>> pio_mode:       (RO) Transfer mode used by the device when
->>>>>                 in PIO mode. Mostly used by PATA device.
->>>>>
->>>>> xfer_mode:      (RO) Current transfer mode
->>>>>
->>>>> dma_mode:       (RO) Transfer mode used by the device when
->>>>>                 in DMA mode. Mostly used by PATA device.
->>>>
->>>>    Sounds quite tautological... :-)
->>>>    What about:
->>>>
->>>> {dma|pio}_mode: (RO) {DMA|PIO} transfer mode used by the device.
->>>>                 Mostly used by PATA devices.
->>>>
->>>>    I think this should be done in the same patch. Or would you prefer 2 patches?
->>>
->>> Let's do 2 patches. Not sure if you can find a fixes tag for the doc update
+>> The SCSI core code is modified to use this limit.
 >>
->>    It'll be the same tag.
+>> I also added a patch for libata-scsi as it does not currently honour the
+>> shost max_sectors limit.
+>>
+>> Note: Christoph has previously kindly offered to take this series via the
+>>        dma-mapping tree, so I think that we just need an ack from the
+>>        IOMMU guys now.
+>>
+>> [0] 
+>> https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/ 
+>>
+>> [1] 
+>> https://lore.kernel.org/linux-iommu/f5b78c9c-312e-70ab-ecbb-f14623a4b6e3@arm.com/ 
+>>
 > 
-> OK. Then let's do code and doc fixes in one patch, not 2.
+> Regarding [0], that patch reverts commit 4e89dce72521 ("iommu/iova: 
+> Retry from last rb tree node if iova search fails"). Reading the 
+> description of that patch, it seems to me that the iova allocator can be 
+> improved. Shouldn't the iova allocator be improved such that we don't 
+> need this patch series? There are algorithms that handle fragmentation 
+> much better than the current iova allocator algorithm, e.g. the 
+> https://en.wikipedia.org/wiki/Buddy_memory_allocation algorithm.
 
-   Doh! Just when I did 2 patches... :-/
+Regardless of whether the IOVA allocator can be improved - which it 
+probably can be - this series is still useful. That is due to the IOVA 
+rcache - that is a cache of pre-allocated IOVAs which can be quickly 
+used in the DMA mapping. The rache contains IOVAs up to certain fixed 
+size. In this series we limit the DMA mapping length to the rcache size 
+upper limit to always bypass the allocator (when we have a cached IOVA 
+available) - see alloc_iova_fast().
 
->>> though. But we should not aggregate the 2 attributes as you did. These doc files
->>> have a defined format and may not be happy with that merged syntax.
->>
->>    Sorry about that -- I did that just for the mail... :-)
+Even if the IOVA allocator were greatly optimised for speed, there would 
+still be an overhead in the alloc and free for those larger IOVAs which 
+would outweigh the advantage of having larger DMA mappings. But is there 
+even an advantage in very large streaming DMA mappings? Maybe for iotlb 
+efficiency. But some say it's better to have the DMA engine start 
+processing the data ASAP and not wait for larger lists to be built.
 
-MBR, Sergey
+Thanks,
+John
+
