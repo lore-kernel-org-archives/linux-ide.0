@@ -2,96 +2,78 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE7EC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Jun 2022 20:37:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F657CCA47B
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Jun 2022 21:07:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232274AbiFHUhT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Jun 2022 16:37:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34206 "EHLO
+        id S231416AbiFHVHL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Jun 2022 17:07:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231416AbiFHUhT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jun 2022 16:37:19 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DA26986F9
-        for <linux-ide@vger.kernel.org>; Wed,  8 Jun 2022 13:37:17 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.87.89) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 8 Jun 2022
- 23:37:09 +0300
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH] MAINTAINERS: add ATA sysfs file documentation to libata entry
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-Organization: Open Mobile Platform
-Message-ID: <fb6ea0d3-c962-26d2-16e6-a7782d39a0de@omp.ru>
-Date:   Wed, 8 Jun 2022 23:37:09 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229720AbiFHVHL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jun 2022 17:07:11 -0400
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 295A32271A5;
+        Wed,  8 Jun 2022 14:07:09 -0700 (PDT)
+Received: by mail-pg1-f170.google.com with SMTP id f65so9848086pgc.7;
+        Wed, 08 Jun 2022 14:07:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=9ecb3buQLdnsK4f3qTJQfieUPfKbyWt/zyj1SzIvpTM=;
+        b=GT/cb+ne0jcS2KxL5TzPds92fvJZ70ZbabYgMvnNXbAXohuhQC/fGOVk6sMfwGtNUs
+         +C9UE3wJg8m/rnwID+LXlkyFPHL99M6kZZVx4L8T4AmeWK3JsvYgxerUxBTBUQQ1toTB
+         Zsbk4QZBeuuWvZHTs1sNgrxJZUwUtlfTeBVPJzj5cLMwrqi+8vFzinrc3BCd/E6dYzBv
+         +jFYhOVgcioBAOY2kyq5pQmzwPt906i4cSBI2I276gfR5OUxeleBP2PgatRTU5AWC5Tp
+         Vrb/0/W0jw9FPtv3VzJXccMLG39CYwTO1CpCWWFDwf7ND/W8+pTIqP8Nt77ji1V1UWm0
+         6Stw==
+X-Gm-Message-State: AOAM533iN6PH7/ywhyIw1ZauyjPAjFCARqkO2RE8H2gclk9DDIlSurnE
+        PE8bxeId5ZsEf9jGqQdHZeg=
+X-Google-Smtp-Source: ABdhPJwGJ0nRHde8RTl6xYLYR29tSKmbbRXlGMXSsUmS5fgFGnp4YCile/NXrK4PxwLOOdGqsZyMzw==
+X-Received: by 2002:a63:18b:0:b0:3fe:e54b:da15 with SMTP id 133-20020a63018b000000b003fee54bda15mr789973pgb.571.1654722428389;
+        Wed, 08 Jun 2022 14:07:08 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:1cb7:9e5d:5ca4:2a39? ([2620:15c:211:201:1cb7:9e5d:5ca4:2a39])
+        by smtp.gmail.com with ESMTPSA id t20-20020a170902d29400b00161947ecc82sm15020395plc.199.2022.06.08.14.07.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 08 Jun 2022 14:07:07 -0700 (PDT)
+Message-ID: <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
+Date:   Wed, 8 Jun 2022 14:07:05 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
 Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        damien.lemoal@opensource.wdc.com, joro@8bytes.org, will@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
+        chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <1654507822-168026-4-git-send-email-john.garry@huawei.com>
+ <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
+ <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.87.89]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/08/2022 20:19:28
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 171014 [Jun 08 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 485 485 30d410687e032eeb95d5c3c4fb66dc8aafb87b20
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.87.89 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.87.89 in (user) dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;31.173.87.89:7.7.3,7.4.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: {iprep_blacklist}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.87.89
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/08/2022 20:24:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 6/8/2022 5:59:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add the (still missing!) ATA sysfs file documentation to the libata
-subsystem entry in the MAINTAINERS file.
+On 6/8/22 10:50, John Garry wrote:
+> Please note that this limit only applies if we have an IOMMU enabled for 
+> the scsi host dma device. Otherwise we are limited by dma direct or 
+> swiotlb max mapping size, as before.
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+SCSI host bus adapters that support 64-bit DMA may support much larger 
+transfer sizes than 128 KiB.
 
----
-This patch is against the 'master' branch of Damien's 'libata.git' repo.
+Thanks,
 
- MAINTAINERS |    1 +
- 1 file changed, 1 insertion(+)
+Bart.
 
-Index: libata/MAINTAINERS
-===================================================================
---- libata.orig/MAINTAINERS
-+++ libata/MAINTAINERS
-@@ -11257,6 +11257,7 @@ M:	Damien Le Moal <damien.lemoal@opensou
- L:	linux-ide@vger.kernel.org
- S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git
-+F:	Documentation/ABI/testing/sysfs-ata
- F:	Documentation/devicetree/bindings/ata/
- F:	drivers/ata/
- F:	include/linux/ata.h
