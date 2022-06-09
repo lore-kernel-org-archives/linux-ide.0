@@ -2,122 +2,153 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C18FC433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Jun 2022 20:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23FC0C433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Jun 2022 20:34:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244052AbiFIUPU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Jun 2022 16:15:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50794 "EHLO
+        id S245644AbiFIUek (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Jun 2022 16:34:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244861AbiFIUPT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2022 16:15:19 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1446FF45D7
-        for <linux-ide@vger.kernel.org>; Thu,  9 Jun 2022 13:15:14 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.84.193) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Thu, 9 Jun 2022
- 23:15:05 +0300
-Subject: Re: [PATCH] ata: libata-core: fix sloppy typing in ata_id_n_sectors()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <a15e1894-8be2-70f8-26b4-be62de8055d9@omp.ru>
- <2a523107-9838-0940-1402-3b6bdad7e1e1@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <1651775c-cb00-0bdc-e27f-700d0580ec88@omp.ru>
-Date:   Thu, 9 Jun 2022 23:15:05 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S234450AbiFIUej (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2022 16:34:39 -0400
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AF3120F6F;
+        Thu,  9 Jun 2022 13:34:35 -0700 (PDT)
+Received: by mail-pj1-f47.google.com with SMTP id l7-20020a17090aaa8700b001dd1a5b9965so367809pjq.2;
+        Thu, 09 Jun 2022 13:34:35 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=6wtdNtGFdpESF6glfweoRrpOjBH9aO2zp0t1kc4rzd4=;
+        b=XM41EtxdgqDwSnXs9BxHiYNEE9xSlvjsSvGS6YC1mYa51sY4dbnJPUmP33vLBALWEl
+         YF8HjcT9tTOZ9yKl9lTEJpFNTs4cj75iNSJolVpAWTqd+6drodK2hc/XpgrULVfTfhkM
+         SiuICvel3BY1u5JqongrT2ea2PF98hWm3CPFC0rupvbFyql1UUg3V0eBU0HrRf2heRA1
+         YqdKtj2Dcn5soxcLM3uEVpc8jUR4s7NJgWhxNNgtWlTyxdl33Kb6ehuUi3y0kvBgMxSX
+         v41eHk0ggApdXMgDT3p9hUrU6qdErcrfAgplQGeXt+oMXl0qrSWJwwqhYDVDfBKP6scD
+         qVug==
+X-Gm-Message-State: AOAM532q7xox2hHyyYrC3bYVMrIAUP1Ozs9DT8j0jhF8WAg97yN4S0i3
+        WeLm0cbhRtuj33O0zQZh5lA=
+X-Google-Smtp-Source: ABdhPJzP68mcRSDMkhmkAefbn0A7+sB9Xcl1QQgOF53xsaTu2y4djDDrLLteVYsPMpjj5mZsq2HCYQ==
+X-Received: by 2002:a17:903:22d1:b0:166:4bc1:a1da with SMTP id y17-20020a17090322d100b001664bc1a1damr37186025plg.13.1654806874934;
+        Thu, 09 Jun 2022 13:34:34 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:8a44:a3e:c994:3f4b? ([2620:15c:211:201:8a44:a3e:c994:3f4b])
+        by smtp.gmail.com with ESMTPSA id k16-20020aa79d10000000b0050dc7628162sm17863699pfp.60.2022.06.09.13.34.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Jun 2022 13:34:33 -0700 (PDT)
+Message-ID: <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
+Date:   Thu, 9 Jun 2022 13:34:31 -0700
 MIME-Version: 1.0
-In-Reply-To: <2a523107-9838-0940-1402-3b6bdad7e1e1@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
 Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        damien.lemoal@opensource.wdc.com, joro@8bytes.org, will@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, liyihang6@hisilicon.com,
+        chenxiang66@hisilicon.com, thunder.leizhen@huawei.com
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <1654507822-168026-4-git-send-email-john.garry@huawei.com>
+ <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
+ <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+ <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
+ <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
+ <a2585983-75d7-c627-13ba-38a464cf716e@acm.org>
+ <9b1d155e-28cc-08dc-5a5a-8580132575e7@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <9b1d155e-28cc-08dc-5a5a-8580132575e7@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.84.193]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/09/2022 19:56:58
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 171038 [Jun 09 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 489 489 b67d2e276d358fa514f5991440453e6a402e3a26
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.84.193 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.84.193
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/09/2022 20:00:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 6/9/2022 4:23:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/8/22 9:47 AM, Damien Le Moal wrote:
+On 6/9/22 10:54, John Garry wrote:
+> ok, but do you have a system where the UFS host controller is behind an 
+> IOMMU? I had the impression that UFS controllers would be mostly found 
+> in embedded systems and IOMMUs are not as common on there.
 
->> The code multiplying the # of cylinders/heads/sectors in ata_id_n_sectors()
->> to get a disk capacity implicitly uses the *int* type for that calculation
->> and casting the result to 'u64' before returning ensues a sign extension.
->> Explicitly casting the 'u16' typed multipliers to 'u32' results in avoiding
->> a sign extension instruction and so in a more compact code...
->>
->> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
->> analysis tool.
->>
->> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>
->> ---
->> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
->>
->>  drivers/ata/libata-core.c |   10 ++++++----
->>  1 file changed, 6 insertions(+), 4 deletions(-)
->>
->> Index: libata/drivers/ata/libata-core.c
->> ===================================================================
->> --- libata.orig/drivers/ata/libata-core.c
->> +++ libata/drivers/ata/libata-core.c
->> @@ -1107,11 +1107,13 @@ static u64 ata_id_n_sectors(const u16 *i
->>  			return ata_id_u32(id, ATA_ID_LBA_CAPACITY);
->>  	} else {
->>  		if (ata_id_current_chs_valid(id))
->> -			return id[ATA_ID_CUR_CYLS] * id[ATA_ID_CUR_HEADS] *
->> -			       id[ATA_ID_CUR_SECTORS];
->> +			return (u32)id[ATA_ID_CUR_CYLS] *
->> +			       (u32)id[ATA_ID_CUR_HEADS] *
->> +			       (u32)id[ATA_ID_CUR_SECTORS];
->>  		else
->> -			return id[ATA_ID_CYLS] * id[ATA_ID_HEADS] *
->> -			       id[ATA_ID_SECTORS];
->> +			return (u32)id[ATA_ID_CYLS] *
->> +			       (u32)id[ATA_ID_HEADS] *
->> +			       (u32)id[ATA_ID_SECTORS];
->>  	}
->>  }
->>  
-> 
-> Applied to for-5.20. Thanks !
+Modern phones have an IOMMU. Below one can find an example from a Pixel 
+6 phone. The UFS storage controller is not controller by the IOMMU as 
+far as I can see but I wouldn't be surprised if the security team would 
+ask us one day to enable the IOMMU for the UFS controller.
 
-   Actually I was going to redo it (changing the order of multiplications), but well,
-it's OK as is...
+# (cd /sys/class/iommu && ls */devices)
+1a090000.sysmmu/devices:
+19000000.aoc
 
-MBR, Sergey
+1a510000.sysmmu/devices:
+1a440000.lwis_csi
+
+1a540000.sysmmu/devices:
+1aa40000.lwis_pdp
+
+1a880000.sysmmu/devices:
+1a840000.lwis_g3aa
+
+1ad00000.sysmmu/devices:
+1ac40000.lwis_ipp  1ac80000.lwis_gtnr_align
+
+1b080000.sysmmu/devices:
+1b450000.lwis_itp
+
+1b780000.sysmmu/devices:
+
+1b7b0000.sysmmu/devices:
+1b760000.lwis_mcsc
+
+1b7e0000.sysmmu/devices:
+
+1baa0000.sysmmu/devices:
+1a4e0000.lwis_votf  1ba40000.lwis_gdc
+
+1bad0000.sysmmu/devices:
+1ba60000.lwis_gdc
+
+1bb00000.sysmmu/devices:
+1ba80000.lwis_scsc
+
+1bc70000.sysmmu/devices:
+1bc40000.lwis_gtnr_merge
+
+1bca0000.sysmmu/devices:
+
+1bcd0000.sysmmu/devices:
+
+1bd00000.sysmmu/devices:
+
+1bd30000.sysmmu/devices:
+
+1c100000.sysmmu/devices:
+1c300000.drmdecon  1c302000.drmdecon
+
+1c110000.sysmmu/devices:
+
+1c120000.sysmmu/devices:
+
+1c660000.sysmmu/devices:
+1c640000.g2d
+
+1c690000.sysmmu/devices:
+
+1c710000.sysmmu/devices:
+1c700000.smfc
+
+1c870000.sysmmu/devices:
+1c8d0000.MFC-0  mfc
+
+1c8a0000.sysmmu/devices:
+
+1ca40000.sysmmu/devices:
+1cb00000.bigocean
+
+1cc40000.sysmmu/devices:
+1ce00000.abrolhos
+
+Bart.
