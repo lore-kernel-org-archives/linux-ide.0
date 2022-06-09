@@ -2,78 +2,131 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2ED4C433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Jun 2022 08:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C150C433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Jun 2022 10:36:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238417AbiFIIBB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Jun 2022 04:01:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55418 "EHLO
+        id S235693AbiFIKgB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Jun 2022 06:36:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240415AbiFIIBA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2022 04:01:00 -0400
+        with ESMTP id S233351AbiFIKgB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2022 06:36:01 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ED075FDB;
-        Thu,  9 Jun 2022 01:00:54 -0700 (PDT)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJbxw3Jf7z6881w;
-        Thu,  9 Jun 2022 15:56:04 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 542CE31536;
+        Thu,  9 Jun 2022 03:35:59 -0700 (PDT)
+Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LJgNr6RXCz682sD;
+        Thu,  9 Jun 2022 18:31:08 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
+ fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 9 Jun 2022 10:00:52 +0200
-Received: from [10.47.88.201] (10.47.88.201) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 9 Jun
- 2022 09:00:51 +0100
-Message-ID: <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
-Date:   Thu, 9 Jun 2022 09:00:50 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
- optimum mapping limits
-To:     Bart Van Assche <bvanassche@acm.org>,
-        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
-References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
- <1654507822-168026-4-git-send-email-john.garry@huawei.com>
- <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
- <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
- <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
+ 15.1.2375.24; Thu, 9 Jun 2022 12:35:56 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 9 Jun 2022 11:35:53 +0100
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.88.201]
-X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
+To:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <brking@us.ibm.com>, <hare@suse.de>, <hch@lst.de>
+CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH RFC v2 00/18] blk-mq/libata/scsi: SCSI driver tagging improvements
+Date:   Thu, 9 Jun 2022 18:29:01 +0800
+Message-ID: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  lhreml724-chm.china.huawei.com (10.201.108.75)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 08/06/2022 22:07, Bart Van Assche wrote:
-> On 6/8/22 10:50, John Garry wrote:
->> Please note that this limit only applies if we have an IOMMU enabled 
->> for the scsi host dma device. Otherwise we are limited by dma direct 
->> or swiotlb max mapping size, as before.
-> 
-> SCSI host bus adapters that support 64-bit DMA may support much larger 
-> transfer sizes than 128 KiB.
+Currently SCSI low-level drivers are required to manage tags for commands
+which do not come via the block layer - libata internal commands would be
+an example of one of these. We want to make blk-mq manage these tags also.
 
-Indeed, and that is my problem today, as my storage controller is 
-generating DMA mapping lengths which exceeds 128K and they slow 
-everything down.
+There was some work to provide "reserved commands" support in such series
+as https://lore.kernel.org/linux-scsi/20211125151048.103910-1-hare@suse.de/
 
-If you say that SRP enjoys best peformance with larger transfers then 
-can you please test this with an IOMMU enabled (iommu group type DMA or 
-DMA-FQ)?
+This was based on allocating a request for the lifetime of the "internal"
+command.
 
-Thanks,
-John
+This series tries to solve that problem by not just allocating the request
+but also sending it as a request through the block layer. Reasons to do
+this:
+- Normal flow of a request and also commonality for regular scsi command
+  lifetime
+- We don't leave request and scsi_cmnd fields dangling as when we just
+  allocate and free the request for the lifetime of the "internal" command
+- For poll mode support we can only poll in block layer, so could not send
+  internal commands on poll mode queues if we did not do this, which is a
+  problem
+- Can get rid of duplicated code like libsas internal command timeout
+  handling
+
+Based on v5.19-rc1
+
+Please consider as an PoC for now. I have broken builds, bisectablility,
+and functionality for a lot of libsas drivers, like pm8001. Indeed, 
+10/18 onwards need a lot of work...
+
+Testing:
+QEMU with AHCI with disk and cdrom attached and hisi_sas v2 both boot.
+
+v1 was sent here:
+https://lore.kernel.org/linux-scsi/1647945585-197349-1-git-send-email-john.garry@huawei.com/
+
+Hannes Reinecke (1):
+  scsi: core: Implement reserved command handling
+
+John Garry (17):
+  blk-mq: Add a flag for reserved requests
+  scsi: core: Resurrect scsi_{get,free}_host_dev()
+  scsi: core: Add support to send reserved commands
+  scsi: core: Allocate SCSI host sdev when required
+  libata-scsi: Add ata_scsi_queue_internal()
+  libata-scsi: Add ata_internal_queuecommand()
+  libata: Queue ATA internal commands as requests
+  scsi: ipr: Support reserved commands
+  libata/scsi: libsas: Add sas_queuecommand_internal()
+  scsi: libsas: Don't attempt to find scsi host rphy in slave alloc
+  scsi: libsas drivers: Prepare for reserved commands
+  scsi: libsas: Allocate SCSI commands for tasks
+  scsi: libsas: Queue SMP commands as requests
+  scsi: libsas: Queue TMF commands as requests
+  scsi: core: Add scsi_alloc_request_hwq()
+  scsi: libsas: Queue internal abort commands as requests
+  scsi: libsas drivers: Remove private tag management
+
+ block/blk-mq.c                         |   6 +
+ drivers/ata/libata-core.c              | 145 +++++++++++++++----------
+ drivers/ata/libata-sata.c              |   5 +-
+ drivers/ata/libata-scsi.c              |  61 ++++++++++-
+ drivers/ata/libata.h                   |   4 -
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  93 ++++------------
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   6 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   3 +-
+ drivers/scsi/hosts.c                   |  14 +++
+ drivers/scsi/ipr.c                     |  17 ++-
+ drivers/scsi/libsas/sas_ata.c          |  22 ++--
+ drivers/scsi/libsas/sas_expander.c     |  24 ++--
+ drivers/scsi/libsas/sas_init.c         |  74 ++++++++-----
+ drivers/scsi/libsas/sas_internal.h     |   6 +
+ drivers/scsi/libsas/sas_scsi_host.c    | 121 +++++++++++++++------
+ drivers/scsi/scsi_lib.c                |  50 ++++++++-
+ drivers/scsi/scsi_scan.c               |  57 ++++++++++
+ include/linux/blk-mq.h                 |   6 +
+ include/linux/libata.h                 |  13 ++-
+ include/scsi/libsas.h                  |  57 +++++++++-
+ include/scsi/scsi_cmnd.h               |   8 ++
+ include/scsi/scsi_host.h               |  34 +++++-
+ 22 files changed, 597 insertions(+), 229 deletions(-)
+
+-- 
+2.26.2
+
