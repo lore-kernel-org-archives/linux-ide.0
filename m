@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F430C43334
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Jun 2022 23:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 783E5CCA47A
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Jun 2022 00:29:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229481AbiFHXWJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Jun 2022 19:22:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54800 "EHLO
+        id S236402AbiFIA26 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Jun 2022 20:28:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231579AbiFHXWI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jun 2022 19:22:08 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE06228CEA2
-        for <linux-ide@vger.kernel.org>; Wed,  8 Jun 2022 16:21:22 -0700 (PDT)
+        with ESMTP id S233980AbiFIA25 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jun 2022 20:28:57 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06A551B701D
+        for <linux-ide@vger.kernel.org>; Wed,  8 Jun 2022 17:28:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1654730484; x=1686266484;
+  t=1654734536; x=1686270536;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=us9wHuQfe5+8aJa8g25iuZ/pfGcwOfvBHlOyfRcjeGk=;
-  b=KLXVm4+1dvX+ENWazPpmnZYxSRbsjmYCSEZs71wGwXPE3n+L0szOF2nS
-   i9hLb1GozTCQeed0eMiQI633W3CzvWXRaMrqTXDlMyfQE6Al4leMQ+9uJ
-   zw/ni8elU3jNn065kMpZCiwhPKXAevCCCvC4+EQj3F/4dqbjILNlp1bRB
-   whrL9MJupKTZ1Bx5nudjlMkcQ6s6fmTOJgHHegsqNtFQY0V+aGFGHS9lV
-   DZdiUKk1AmJiO80zq5GoDHVklDg3vR6gRnwZmajR0BUcIpSkTHcjTwlS+
-   /+jMGvYTWTUytScz+jhLdNU2J/9kMQcHdzcAjWDTgqXLi1d5YsIZg960/
+  bh=mMgOZuLItNcWZeNn1mAE5c5TjgHithTG+3QaIuikvxc=;
+  b=jvanHw+LIJTOEgR98rLvBrx1NNf44veOLqFskrqy2Rjo6ZJTwQn+jcZ7
+   Z7bPCtIHC38f0dKRv+C9jFwFJxAI9Fb+qN0HBQz/cllMndNssha2H4vhO
+   VugGAU9QhRlsX0hHI+k9O/i4h3GbJ4teelWijLWmUqWLUekEHSAC/pIdc
+   iaCb+MOOohHAqs7ZGow46aanVHLHbnuOaluCLF9/lGN/JX+x8DLIPVNJP
+   7n3CUaorR1HUvmhQKmHOa11n37d5ycFbXbfSeJMvZ92R1fzVJjg4Zf/kY
+   Z136kpzeMBNWA5DBitvHWN09IEysvUrJIQW/6FLiMUcNaxk9zJSym4MI0
    Q==;
 X-IronPort-AV: E=Sophos;i="5.91,287,1647273600"; 
-   d="scan'208";a="202643151"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Jun 2022 07:21:23 +0800
-IronPort-SDR: 78GHB6a6c2Ljd9BQuDitU5UO2bnjiEb+v6hHcRG8xlAhVRLF1wg2VJ0c+GL7+RJ9xZpQ76nAug
- AQy+1fZsJ8kd2oLP2MiKqul50hOMewSchQsR0rEjZg5ZJJjhZynl86Vy2Av3JEWk1Bm2h3iJSY
- EZhs+6LjGufv/To2KepAxtT16ozXmcuNWgKa+tdqJClPxcMKn7IUsL9UYxzk30l7HHkK3xM7Kj
- ayBjjfhR37Lk1x18G2xGqE7ewXwSGaaPj6RWvuAbwrCkKoJ1xzOCbbxwa0AzvYgPu11b3Lgks1
- zVsWNgf6VNiohqe/hjnfaF23
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Jun 2022 15:40:12 -0700
-IronPort-SDR: MrQDbZctUylX/sMWccCsRX44z+0a6RrHqnOk0xBisxVa1e1so1o1o31SdhMS3PsgsiGwM5pgn9
- JFZ9U7oST7lJgSu+mj+axXDgK3XZMSrCmi1AOYKlzJk+s6w473ya55bDGNnZ0zGPZh9SxZ9N+x
- P0mQKwfeqU2zfqUd8B5RF5RSyQtHtUTd8/x7pT+Isz0ktOHOiJvzx70B801xLp19wS2QY0n+T2
- eg3bTxZqd1+XgfkCKXC1UM3uQbNsLuR7C+IjMSxYEYtT5fTc4JhqbZrAS10+1YJAEDJJlDpOHB
- oxc=
+   d="scan'208";a="207499510"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Jun 2022 08:28:55 +0800
+IronPort-SDR: WeFicZxQW1BJH5gMYR+bcZhR349C/caAYz6QHF4FLmRnjgltNj4eBMGK8S0rZOLLaD8c5A5W30
+ J4vxxgAw77DJO6v+cIRJn3JUvI7Hd6KwxYSjCvqtEDXIVfmMOdBzWa7BNGAjaGa4AVgKOmpS7b
+ BAY3jJtox/Th00gLR20yy0Wy+BUUOe3pUHzh3Bq0HN5V4ctpXtOP1QMxTZgrvfey/EoiiZtnuA
+ +RBAfhg9Q3ekMJHk4BoK4vQDUj815hytcuvniYyuwQNtk7UtDJd1CpJ6bZafPd7mdvpl4WYPMZ
+ q/OB9tk+6Ap/6tUdvkrI5MdL
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Jun 2022 16:52:09 -0700
+IronPort-SDR: NLzVK68CwzIUopu8GdS4+5m0YUqAtsSo0q9oGF8WW6cN+aaSoer6xIqaqUzmaLGOnokl+gwhtn
+ T9kXpEQswYZhN7t+IaoVJnuYf3ujm3H4u8Ck8r4ke/cWE5v7Dexqgwa0+ajn8bQLatm2U6qB8B
+ C5objg1TBauDC74OEB5u5RyPm/B1Y+pxcqEEGVXkb3zwvIwF3pZl0DxBxc8TMHZpmUbDebTtxR
+ RZEOenMTlvVI7LlsEllKBBAifNFk9yky0gKDWnAOAgvEpN+lXi9B2UN1xG+wOUa82rILTK3fHM
+ yog=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Jun 2022 16:21:23 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Jun 2022 17:28:56 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LJNX32Bhvz1Rvlx
-        for <linux-ide@vger.kernel.org>; Wed,  8 Jun 2022 16:21:23 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LJQ1z5kskz1Rvlx
+        for <linux-ide@vger.kernel.org>; Wed,  8 Jun 2022 17:28:55 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,121 +56,66 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1654730482; x=1657322483; bh=us9wHuQfe5+8aJa8g25iuZ/pfGcwOfvBHlO
-        yfRcjeGk=; b=drVtaRdfLVmGq2/07T1GQNTtRGLfqeQTDoUzkJdrvuhjF7w4pXJ
-        jJPVvruCitgmNFo8QatuwMIDTRQdElbk6fmLM4kL5WvpLtKgSuO2KASmN0bAilR7
-        NeINSPSR6O8yfUFPjDZ3coBRccOQrKjK5N1EAkvQhem+/P+JCjjYroA+LdRnjzhL
-        ohFY+1SlIlz3nLdDE0OOF6GLFPFV0KZ1KfgAxPahHOwfGNI+2kn+Y39XLC26q88/
-        /sc7wgysRXpd6/X9bbMzUvCUXa0s2QBGmWRaJ1tw8XdpbDj/leIhfARmyKPtqBjS
-        l2ubKATLf0MwQi1URSsBr/5+EghcR4Y6wtw==
+        1654734535; x=1657326536; bh=mMgOZuLItNcWZeNn1mAE5c5TjgHithTG+3Q
+        aIuikvxc=; b=TQasqH4wQPXqOgaVaie+twgh44mAbzdAC0FajOxJJ7AT1uiK4go
+        rauJFlgM2wow5G5T0FiXFl2YlIXg8b/ZqY/fU8QiivASAOx/D4qJPGgBZiQvVyXP
+        T+qeoKl7GzTHhQOO+Kuyvshmdh6Pa3tFhdtgjYcnskCe106WeGTDRxsbxQpleR9I
+        +8ukgG53GuO3FJHCHl33YvBnbYsUnwb0f38eLojZ0sA+dwI7c8HuaccJsQhrwPHJ
+        zM69tLdCadEfXbcE2VsMzVd7PO5CfQkNPuHLARbHUbozWwqMPgpuwUjTqjnwN837
+        BqaJ4T3op41JKRdgRxT1PN60NtBRGntcwQw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id vxr6EuBhNTT8 for <linux-ide@vger.kernel.org>;
-        Wed,  8 Jun 2022 16:21:22 -0700 (PDT)
+        with ESMTP id GQhnTG7RJFaz for <linux-ide@vger.kernel.org>;
+        Wed,  8 Jun 2022 17:28:55 -0700 (PDT)
 Received: from [10.225.163.72] (unknown [10.225.163.72])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LJNX21M8zz1Rvlc;
-        Wed,  8 Jun 2022 16:21:21 -0700 (PDT)
-Message-ID: <5c6bf755-62e9-f0d0-f22e-c7c116992d05@opensource.wdc.com>
-Date:   Thu, 9 Jun 2022 08:21:20 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LJQ1y6DSwz1Rvlc;
+        Wed,  8 Jun 2022 17:28:54 -0700 (PDT)
+Message-ID: <ce246561-4afb-f66d-957f-2848dcde4cdb@opensource.wdc.com>
+Date:   Thu, 9 Jun 2022 09:28:53 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH v2] ata: libata-transport: fix {dma|pio|xfer}_mode sysfs
- files
+Subject: Re: [PATCH] MAINTAINERS: add ATA sysfs file documentation to libata
+ entry
 Content-Language: en-US
 To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <02321da6-5cd6-aad0-727b-7207d8e3fff5@omp.ru>
+References: <fb6ea0d3-c962-26d2-16e6-a7782d39a0de@omp.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <02321da6-5cd6-aad0-727b-7207d8e3fff5@omp.ru>
+In-Reply-To: <fb6ea0d3-c962-26d2-16e6-a7782d39a0de@omp.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/9/22 04:51, Sergey Shtylyov wrote:
-> The {dma|pio}_mode sysfs files are incorrectly documented as having a list
-> of the supported DMA/PIO transfer modes, while the corresponding fields of
-> the *struct* ata_device hold the transfer mode IDs, not masks.
+On 6/9/22 05:37, Sergey Shtylyov wrote:
+> Add the (still missing!) ATA sysfs file documentation to the libata
+> subsystem entry in the MAINTAINERS file.
 > 
-> To match these docs, the {dma|pio}_mode (and even xfer_mode!) sysfs files
-> are handled by the ata_bitfield_name_match() macro which leads to reading
-> such kind of nonsense from them:
-> 
-> $ cat /sys/class/ata_device/dev3.0/pio_mode
-> XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_MW_DMA_4,
-> XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2, XFER_PIO_1,
-> XFER_PIO_0
-> 
-> Using the correct ata_bitfield_name_search() macro fixes that:
-> 
-> $ cat /sys/class/ata_device/dev3.0/pio_mode
-> XFER_PIO_4
-> 
-> While fixing the file misdocumentation, somewhat reword the {dma|pio}_mode
-> file doc and add a note about being mostly useful for the PATA devices to
-> the xfer_mode file doc...
-> 
-> Fixes: d9027470b886 ("[libata] Add ATA transport class")
 > Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Cc: stable@vger.kernel.org
 > 
 > ---
 > This patch is against the 'master' branch of Damien's 'libata.git' repo.
 > 
-> Changes in version 2:
-> - added the Documentation/ABI/testing/sysfs-ata file, updating the patch
->   description accordingly.
+>  MAINTAINERS |    1 +
+>  1 file changed, 1 insertion(+)
 > 
->  Documentation/ABI/testing/sysfs-ata |   11 ++++++-----
->  drivers/ata/libata-transport.c      |    2 +-
->  2 files changed, 7 insertions(+), 6 deletions(-)
-> 
-> Index: libata/Documentation/ABI/testing/sysfs-ata
+> Index: libata/MAINTAINERS
 > ===================================================================
-> --- libata.orig/Documentation/ABI/testing/sysfs-ata
-> +++ libata/Documentation/ABI/testing/sysfs-ata
-> @@ -107,13 +107,14 @@ Description:
->  				described in ATA8 7.16 and 7.17. Only valid if
->  				the device is not a PM.
->  
-> -		pio_mode:	(RO) Transfer modes supported by the device when
-> -				in PIO mode. Mostly used by PATA device.
-> +		pio_mode:	(RO) PIO transfer mode used by the device.
-> +				Mostly used by the PATA devices.
+> --- libata.orig/MAINTAINERS
+> +++ libata/MAINTAINERS
+> @@ -11257,6 +11257,7 @@ M:	Damien Le Moal <damien.lemoal@opensou
+>  L:	linux-ide@vger.kernel.org
+>  S:	Maintained
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git
+> +F:	Documentation/ABI/testing/sysfs-ata
+>  F:	Documentation/devicetree/bindings/ata/
+>  F:	drivers/ata/
+>  F:	include/linux/ata.h
 
-s/by the PATA devices/by PATA devices
-(since here we talk about PATA devices in general)
-Same fix below. I will fix that up when applying.
-
->  
-> -		xfer_mode:	(RO) Current transfer mode
-> +		xfer_mode:	(RO) Current transfer mode. Mostly used by
-> +				the PATA devices.
->  
-> -		dma_mode:	(RO) Transfer modes supported by the device when
-> -				in DMA mode. Mostly used by PATA device.
-> +		dma_mode:	(RO) DMA transfer mode used by the device.
-> +				Mostly used by the PATA devices.
->  
->  		class:		(RO) Device class. Can be "ata" for disk,
->  				"atapi" for packet device, "pmp" for PM, or
-> Index: libata/drivers/ata/libata-transport.c
-> ===================================================================
-> --- libata.orig/drivers/ata/libata-transport.c
-> +++ libata/drivers/ata/libata-transport.c
-> @@ -196,7 +196,7 @@ static struct {
->  	{ XFER_PIO_0,			"XFER_PIO_0" },
->  	{ XFER_PIO_SLOW,		"XFER_PIO_SLOW" }
->  };
-> -ata_bitfield_name_match(xfer,ata_xfer_names)
-> +ata_bitfield_name_search(xfer, ata_xfer_names)
->  
->  /*
->   * ATA Port attributes
-
+Applied to for-5.19-fixes. Thanks !
 
 -- 
 Damien Le Moal
