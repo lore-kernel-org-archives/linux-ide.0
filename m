@@ -2,80 +2,82 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B8D5CCA47B
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 15:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 251ECC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 16:35:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238563AbiFJPiE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 11:38:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41288 "EHLO
+        id S242904AbiFJQfw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jun 2022 12:35:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233903AbiFJPiD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 11:38:03 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0938326562F;
-        Fri, 10 Jun 2022 08:37:58 -0700 (PDT)
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LKQ2n144hz689ML;
-        Fri, 10 Jun 2022 23:33:05 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 10 Jun 2022 17:37:56 +0200
-Received: from [10.47.88.201] (10.47.88.201) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 10 Jun
- 2022 16:37:55 +0100
-Message-ID: <f7872ebc-dfe5-d977-c51f-91b73e6d1fbb@huawei.com>
-Date:   Fri, 10 Jun 2022 16:37:54 +0100
+        with ESMTP id S1349626AbiFJQfX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 12:35:23 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42BAF5A097;
+        Fri, 10 Jun 2022 09:35:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=ITFCmOiKiwpLnIkUYUaZ9ApXZjSQdaUdOkg4dD/FPoE=; b=XZqQoZt7QcwLeMSIihkqhnAt9G
+        GiVWhkFdiE7GA2h30pWh3vgPBwMLASudYSHFvXPNPZu5zVFZwhrlsrBWFvDfWCxxMcomWTsJosjtk
+        9gkUreI59XCiOnj5yiTBI93J1XiJOIIrprKkYbwM/s5csJ7thxbHy0qd0PRwEoJZk8qvx7AB+2zNi
+        TJwD5KbqbhGwwQlfdszLogNbMHxsuvppgtA6GKuziEvStSgVV46cFunt9K1alwlY+4D/1sSlyKkt7
+        9th/UPsNweljWDuF6rKL9hxWvjGDo8QijSUl44yscs6OfxXIuQ35rWsz5dIUQ7/ds9mrqBdrltNRh
+        UJvCGztw==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1nzhb3-00EaOY-VD; Fri, 10 Jun 2022 16:34:54 +0000
+Message-ID: <6c02f8ef-8aea-8f80-590d-343f67a96f8d@infradead.org>
+Date:   Fri, 10 Jun 2022 09:34:46 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
- optimum mapping limits
-To:     Bart Van Assche <bvanassche@acm.org>,
-        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
-References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
- <1654507822-168026-4-git-send-email-john.garry@huawei.com>
- <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
- <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
- <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
- <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
- <a2585983-75d7-c627-13ba-38a464cf716e@acm.org>
- <9b1d155e-28cc-08dc-5a5a-8580132575e7@huawei.com>
- <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: [PATCH v4 19/23] ata: ahci: Add DWC AHCI SATA controller support
+Content-Language: en-US
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Serge Semin <fancer.lancer@gmail.com>
+Cc:     Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
+ <20220610081801.11854-20-Sergey.Semin@baikalelectronics.ru>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20220610081801.11854-20-Sergey.Semin@baikalelectronics.ru>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.88.201]
-X-ClientProxiedBy: lhreml727-chm.china.huawei.com (10.201.108.78) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 09/06/2022 21:34, Bart Van Assche wrote:
-> On 6/9/22 10:54, John Garry wrote:
->> ok, but do you have a system where the UFS host controller is behind 
->> an IOMMU? I had the impression that UFS controllers would be mostly 
->> found in embedded systems and IOMMUs are not as common on there.
-> 
-> Modern phones have an IOMMU. Below one can find an example from a Pixel 
-> 6 phone. The UFS storage controller is not controller by the IOMMU as 
-> far as I can see but I wouldn't be surprised if the security team would 
-> ask us one day to enable the IOMMU for the UFS controller.
+Hi--
 
-OK, then unfortunately it seems that you have no method to test. I might 
-be able to test USB MSC but I am not even sure if I can even get DMA 
-mappings who length exceeds the IOVA rcache limit there.
+On 6/10/22 01:17, Serge Semin wrote:
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index bb45a9c00514..95e0e022b5bb 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -176,6 +176,16 @@ config AHCI_DM816
+>  
+>  	  If unsure, say N.
+>  
+> +config AHCI_DWC
+> +	tristate "Synopsys DWC AHCI SATA support"
+> +	select SATA_HOST
+> +	default SATA_AHCI_PLATFORM
 
-Thanks,
-John
+I don't think this needs to default to SATA_AHCI_PLATFORM.
+It might build a driver that isn't needed.
+And it's incompatible with "If unsure, say N."
+
+> +	help
+> +	  This option enables support for the Synopsys DWC AHCI SATA
+> +	  controller implementation.
+> +
+> +	  If unsure, say N.
+
+-- 
+~Randy
