@@ -2,48 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41FAECCA482
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3959ECCA485
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:18:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347298AbiFJISm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 04:18:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58216 "EHLO
+        id S1347311AbiFJISn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jun 2022 04:18:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347271AbiFJISI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:08 -0400
+        with ESMTP id S1347323AbiFJISU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:20 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5B39A232DBE;
-        Fri, 10 Jun 2022 01:18:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0E183237943;
+        Fri, 10 Jun 2022 01:18:17 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id D140516A1;
-        Fri, 10 Jun 2022 11:18:56 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com D140516A1
+        by mail.baikalelectronics.com (Postfix) with ESMTP id B107E16A9;
+        Fri, 10 Jun 2022 11:19:01 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com B107E16A9
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849136;
-        bh=QrErFtN/zqRDjEklewjleyI99O1mCds171bdKVO4/Q0=;
+        d=baikalelectronics.ru; s=mail; t=1654849141;
+        bh=PZFSfsCT24HFXj3Ecc6Vn3a7tOVoW/wc6B5ZrH2r9og=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=cHfD0CdNkg+F5yO3BIa2HPtkhO/js2I6YK670cCINLO00TzFg3pr+P65P3zkxAfGv
-         duZnylbji9kcUROvOyKqDarDQ4u4wm0AEMEGq0UAHBdKFTifvV2lcCY7K5k/wBQPUc
-         ZCh4pAvLiypkQ+yOP/3Giesxi+ndsH+rusmr38Pg=
+        b=AXhY9zFTvv4QQ7iOL8URRmLIIM/pOy7Hy827CSLgvOR1CjDCP+C6c+7daoF9YoA1q
+         2ui/tyTewWgnu27O0hNG3yj9obKCSnCeWEs7t5ywvlxKPmNEF5xDrtC14qOfcnsGxy
+         Omone8uQoTehfJfcLYqq8WFgFVhcPkAq/8/R2NQ8=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:04 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:09 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-Subject: [PATCH v4 01/23] dt-bindings: ata: ahci-platform: Move dma-coherent to sata-common.yaml
-Date:   Fri, 10 Jun 2022 11:17:39 +0300
-Message-ID: <20220610081801.11854-2-Sergey.Semin@baikalelectronics.ru>
+        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH v4 08/23] ata: libahci_platform: Sanity check the DT child nodes number
+Date:   Fri, 10 Jun 2022 11:17:46 +0300
+Message-ID: <20220610081801.11854-9-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -54,70 +50,68 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Seeing doubtfully any SATA device working without embedded DMA engine
-let's permit the device nodes being equipped with the dma-coherent
-property in case if the platform is capable of cache-coherent DMAs.
+Having greater than AHCI_MAX_PORTS (32) ports detected isn't that critical
+from the further AHCI-platform initialization point of view since
+exceeding the ports upper limit will cause allocating more resources than
+will be used afterwards. But detecting too many child DT-nodes doesn't
+seem right since it's very unlikely to have it on an ordinary platform. In
+accordance with the AHCI specification there can't be more than 32 ports
+implemented at least due to having the CAP.NP field of 5 bits wide and the
+PI register of dword size. Thus if such situation is found the DTB must
+have been corrupted and the data read from it shouldn't be reliable. Let's
+consider that as an erroneous situation and halt further resources
+allocation.
 
-As a side-effect we can drop the explicit dma-coherent property definition
-from the particular device schemas. Currently it concerns the Broadcom
-SATA AHCI controller only.
+Note it's logically more correct to have the nports set only after the
+initialization value is checked for being sane. So while at it let's make
+sure nports is assigned with a correct value.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 ---
 
 Changelog v2:
-- This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
+- Drop the else word from the child_nodes value checking if-else-if
+  statement (@Damien) and convert the after-else part into the ternary
+  operator-based statement.
 
 Changelog v4:
-- Move the dma-coherent property to the sata-common.yaml schema instead
-  of removing it.
-- Remove the Hannes' rb tag.
+- Fix some logical mistakes in the patch log. (@Sergei Shtylyov)
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.yaml  | 2 --
- Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml | 2 --
- Documentation/devicetree/bindings/ata/sata-common.yaml    | 2 ++
- 3 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/ata/libahci_platform.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-index c146ab8e14e5..9304e4731965 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-@@ -87,8 +87,6 @@ properties:
-     description:
-       regulator for AHCI controller
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 814804582d1d..8aed7b29c7ab 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -451,15 +451,22 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		}
+ 	}
  
--  dma-coherent: true
--
-   phy-supply:
-     description:
-       regulator for PHY power
-diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-index 235a93ac86b0..4ee74df8e58a 100644
---- a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-+++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-@@ -41,8 +41,6 @@ properties:
-   interrupts:
-     maxItems: 1
+-	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
++	/*
++	 * Too many sub-nodes most likely means having something wrong with
++	 * the firmware.
++	 */
++	child_nodes = of_get_child_count(dev->of_node);
++	if (child_nodes > AHCI_MAX_PORTS) {
++		rc = -EINVAL;
++		goto err_out;
++	}
  
--  dma-coherent: true
--
- if:
-   properties:
-     compatible:
-diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
-index 7ac77b1c5850..cb88d3e25e73 100644
---- a/Documentation/devicetree/bindings/ata/sata-common.yaml
-+++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
-@@ -31,6 +31,8 @@ properties:
-   "#size-cells":
-     const: 0
+ 	/*
+ 	 * If no sub-node was found, we still need to set nports to
+ 	 * one in order to be able to use the
+ 	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
+ 	 */
+-	if (!child_nodes)
+-		hpriv->nports = 1;
++	hpriv->nports = child_nodes ?: 1;
  
-+  dma-coherent: true
-+
- patternProperties:
-   "^sata-port@[0-9a-e]$":
-     description: |
+ 	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
+ 	if (!hpriv->phys) {
 -- 
 2.35.1
 
