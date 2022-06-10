@@ -2,44 +2,48 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D763CC43334
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:18:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41FAECCA482
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:18:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347279AbiFJISl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 04:18:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34892 "EHLO
+        id S1347298AbiFJISm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jun 2022 04:18:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347162AbiFJISS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:18 -0400
+        with ESMTP id S1347271AbiFJISI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:08 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A4359235B0A;
-        Fri, 10 Jun 2022 01:18:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5B39A232DBE;
+        Fri, 10 Jun 2022 01:18:07 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 3CD2F16A7;
-        Fri, 10 Jun 2022 11:19:00 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 3CD2F16A7
+        by mail.baikalelectronics.com (Postfix) with ESMTP id D140516A1;
+        Fri, 10 Jun 2022 11:18:56 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com D140516A1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849140;
-        bh=cwjTY+UXbYCa95/dq1KpC5+URj+jwo1L4bVykF4JcuI=;
+        d=baikalelectronics.ru; s=mail; t=1654849136;
+        bh=QrErFtN/zqRDjEklewjleyI99O1mCds171bdKVO4/Q0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=C3zlayNvOLSLbTJO3Mz1lUZzlLrubDMMSbB4otsv28Ez4JOHihCXHpi5Z77Emq/Ed
-         oKWWD1FmuX506t3osYyTIlZBhU8R/tXSYRw8ERDBKaejCFBqH/Ow1Bhb84X+Q/2S72
-         QDKmNq+23KBiI+cqbI8tOjBLqMHeIkN7l58aAidA=
+        b=cHfD0CdNkg+F5yO3BIa2HPtkhO/js2I6YK670cCINLO00TzFg3pr+P65P3zkxAfGv
+         duZnylbji9kcUROvOyKqDarDQ4u4wm0AEMEGq0UAHBdKFTifvV2lcCY7K5k/wBQPUc
+         ZCh4pAvLiypkQ+yOP/3Giesxi+ndsH+rusmr38Pg=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:07 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:04 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v4 06/23] ata: libahci_platform: Convert to using platform devm-ioremap methods
-Date:   Fri, 10 Jun 2022 11:17:44 +0300
-Message-ID: <20220610081801.11854-7-Sergey.Semin@baikalelectronics.ru>
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+Subject: [PATCH v4 01/23] dt-bindings: ata: ahci-platform: Move dma-coherent to sata-common.yaml
+Date:   Fri, 10 Jun 2022 11:17:39 +0300
+Message-ID: <20220610081801.11854-2-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,54 +54,70 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Currently the IOMEM AHCI registers space is mapped by means of the
-two functions invocation: platform_get_resource() is used to get the very
-first memory resource and devm_ioremap_resource() is called to remap that
-resource. Device-managed kernel API provides a handy wrapper to perform
-the same in single function call: devm_platform_ioremap_resource().
+Seeing doubtfully any SATA device working without embedded DMA engine
+let's permit the device nodes being equipped with the dma-coherent
+property in case if the platform is capable of cache-coherent DMAs.
 
-While at it seeing many AHCI platform drivers rely on having the AHCI CSR
-space marked with "ahci" name let's first try to find and remap the CSR
-IO-mem with that name and only if it fails fallback to getting the very
-first registers space platform resource.
+As a side-effect we can drop the explicit dma-coherent property definition
+from the particular device schemas. Currently it concerns the Broadcom
+SATA AHCI controller only.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 ---
 
 Changelog v2:
-- Check whether there is "ahci" reg resource before using the
-  devm_platform_ioremap_resource_byname() method in order to prevent a
-  false error message printed in the log (@Damien)
-- Slightly update the patch title due to the change above and to be more
-  specific about what the platform device managed methods are utilized
-  for.
----
- drivers/ata/libahci_platform.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+- This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 32495ae96567..1e9e825d6cc5 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -402,8 +402,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+Changelog v4:
+- Move the dma-coherent property to the sata-common.yaml schema instead
+  of removing it.
+- Remove the Hannes' rb tag.
+---
+ Documentation/devicetree/bindings/ata/ahci-platform.yaml  | 2 --
+ Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml | 2 --
+ Documentation/devicetree/bindings/ata/sata-common.yaml    | 2 ++
+ 3 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+index c146ab8e14e5..9304e4731965 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+@@ -87,8 +87,6 @@ properties:
+     description:
+       regulator for AHCI controller
  
- 	devres_add(dev, hpriv);
+-  dma-coherent: true
+-
+   phy-supply:
+     description:
+       regulator for PHY power
+diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
+index 235a93ac86b0..4ee74df8e58a 100644
+--- a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
++++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
+@@ -41,8 +41,6 @@ properties:
+   interrupts:
+     maxItems: 1
  
--	hpriv->mmio = devm_ioremap_resource(dev,
--			      platform_get_resource(pdev, IORESOURCE_MEM, 0));
-+	/*
-+	 * If the DT provided an "ahci" named resource, use it. Otherwise,
-+	 * fallback to using the default first resource for the device node.
-+	 */
-+	if (platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci"))
-+		hpriv->mmio = devm_platform_ioremap_resource_byname(pdev, "ahci");
-+	else
-+		hpriv->mmio = devm_platform_ioremap_resource(pdev, 0);
- 	if (IS_ERR(hpriv->mmio)) {
- 		rc = PTR_ERR(hpriv->mmio);
- 		goto err_out;
+-  dma-coherent: true
+-
+ if:
+   properties:
+     compatible:
+diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
+index 7ac77b1c5850..cb88d3e25e73 100644
+--- a/Documentation/devicetree/bindings/ata/sata-common.yaml
++++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
+@@ -31,6 +31,8 @@ properties:
+   "#size-cells":
+     const: 0
+ 
++  dma-coherent: true
++
+ patternProperties:
+   "^sata-port@[0-9a-e]$":
+     description: |
 -- 
 2.35.1
 
