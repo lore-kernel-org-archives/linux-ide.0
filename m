@@ -2,44 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D62DCCA47F
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:19:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08815CCA480
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:19:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244704AbiFJITC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 04:19:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35932 "EHLO
+        id S1347501AbiFJITE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jun 2022 04:19:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347294AbiFJISm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:42 -0400
+        with ESMTP id S1347342AbiFJISp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:45 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A011B24B617;
-        Fri, 10 Jun 2022 01:18:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 777EC253812;
+        Fri, 10 Jun 2022 01:18:43 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 2DE9F16A6;
-        Fri, 10 Jun 2022 11:19:10 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 2DE9F16A6
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 86BC016C0;
+        Fri, 10 Jun 2022 11:19:12 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 86BC016C0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849150;
-        bh=Zs+DSEKY2IttBFqufTGwQAL3Q0cOXZPxf2nj/K3Sq/s=;
+        d=baikalelectronics.ru; s=mail; t=1654849152;
+        bh=J2syxJxPBxl/O9ELEC45e3GC4/7pOxuTZBZ19Urz1aA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=PxmFGZU5FzCcwVJf/nb6amCx7GL7b9RTwYrXfd2oXmm4OZRuDcHfbh/a5lxwpDEI9
-         EKDJPVd5reLR8AoI9w7dY+zPso9+4zpbaVV6acaaXLDYW9n4kOdPWcTa17m02+Ncpp
-         mTOwj/XPR0HChB8bYKVzvVB/qRq7CS+PxPRQKJ9g=
+        b=i8xAiVduBqO1BNwKL26BBmtgk8hsiX/veoSUjgmCYK5rK18JD0ZGVopEhmDNVLA/k
+         Avgd+ZS93zVDRNMVfg6cAbSNYwSoyVm/WdxhJ44n1cpGfWQ62Yz2yMLB4yAMEMrbgE
+         VxqZpcISmKtZaAXTNF5yjFauesZT5enYvJnBEJtg=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:17 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:20 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Serge Semin <fancer.lancer@gmail.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v4 18/23] ata: libahci_platform: Add function returning a clock-handle by id
-Date:   Fri, 10 Jun 2022 11:17:56 +0300
-Message-ID: <20220610081801.11854-19-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v4 21/23] ata: ahci-dwc: Add platform-specific quirks support
+Date:   Fri, 10 Jun 2022 11:17:59 +0300
+Message-ID: <20220610081801.11854-22-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,93 +50,152 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Since all the clocks are retrieved by the method
-ahci_platform_get_resources() there is no need for the LLD (glue) drivers
-to be looking for some particular of them in the kernel clocks table
-again. Instead we suggest to add a simple method returning a
-device-specific clock with passed connection ID if it is managed to be
-found. Otherwise the function will return NULL. Thus the glue-drivers
-won't need to either manually touching the hpriv->clks array or calling
-clk_get()-friends. The AHCI platform drivers will be able to use the new
-function right after the ahci_platform_get_resources() method invocation
-and up to the device removal.
-
-Note the method is left unused here, but will be utilized in the framework
-of the DWC AHCI SATA driver being added in the next commit.
+Some DWC AHCI SATA IP-core derivatives require to perform small platform
+or IP-core specific setups. They are too small to be placed in a dedicated
+driver. It's just much easier to have a set of quirks for them right in
+the DWC AHCI driver code. Since we are about to add such platform support,
+as a pre-requisite we introduce a platform-data based DWC AHCI quirks API.
+The platform data can be used to define the flags passed to the
+ahci_platform_get_resources() method, additional AHCI host-flags and a set
+of callbacks to initialize, re-initialize and clear the platform settings.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
 Changelog v2:
-- Fix some grammar mistakes in the method description.
+- Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_'.
+  (@Damien)
 
 Changelog v4:
-- Add a note regarding the new method usage.
+- Convert ahci_dwc_plat to being statically defined. (@kbot)
 ---
- drivers/ata/libahci_platform.c | 27 +++++++++++++++++++++++++++
- include/linux/ahci_platform.h  |  3 +++
- 2 files changed, 30 insertions(+)
+ drivers/ata/ahci_dwc.c | 52 ++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 48 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 8b542a8bc487..418961f954af 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -95,6 +95,33 @@ void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
- }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
+diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
+index 8c2510933a31..ab4180b7ed23 100644
+--- a/drivers/ata/ahci_dwc.c
++++ b/drivers/ata/ahci_dwc.c
+@@ -90,7 +90,16 @@
+ #define AHCI_DWC_PORT_PHYCR		0x74
+ #define AHCI_DWC_PORT_PHYSR		0x78
  
-+/**
-+ * ahci_platform_find_clk - Find platform clock
-+ * @hpriv: host private area to store config values
-+ * @con_id: clock connection ID
-+ *
-+ * This function returns a pointer to the clock descriptor of the clock with
-+ * the passed ID.
-+ *
-+ * RETURNS:
-+ * Pointer to the clock descriptor on success otherwise NULL
-+ */
-+struct clk *ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id)
-+{
-+	struct clk *clk = NULL;
-+	int i;
++struct ahci_dwc_plat_data {
++	unsigned int pflags;
++	unsigned int hflags;
++	int (*init)(struct ahci_host_priv *hpriv);
++	int (*reinit)(struct ahci_host_priv *hpriv);
++	void (*clear)(struct ahci_host_priv *hpriv);
++};
 +
-+	for (i = 0; i < hpriv->n_clks; i++) {
-+		if (!strcmp(hpriv->clks[i].id, con_id)) {
-+			clk = hpriv->clks[i].clk;
-+			break;
-+		}
+ struct ahci_dwc_host_priv {
++	const struct ahci_dwc_plat_data *pdata;
+ 	struct platform_device *pdev;
+ 
+ 	u32 timv;
+@@ -107,11 +116,15 @@ static struct ahci_host_priv *ahci_dwc_get_resources(struct platform_device *pde
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	dpriv->pdev = pdev;
++	dpriv->pdata = device_get_match_data(&pdev->dev);
++	if (!dpriv->pdata)
++		return ERR_PTR(-EINVAL);
+ 
+-	hpriv = ahci_platform_get_resources(pdev, AHCI_PLATFORM_GET_RESETS);
++	hpriv = ahci_platform_get_resources(pdev, dpriv->pdata->pflags);
+ 	if (IS_ERR(hpriv))
+ 		return hpriv;
+ 
++	hpriv->flags |= dpriv->pdata->hflags;
+ 	hpriv->plat_data = (void *)dpriv;
+ 
+ 	return hpriv;
+@@ -242,22 +255,33 @@ static int ahci_dwc_init_dmacr(struct ahci_host_priv *hpriv)
+ 
+ static int ahci_dwc_init_host(struct ahci_host_priv *hpriv)
+ {
++	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
+ 	int rc;
+ 
+ 	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+ 		return rc;
+ 
++	if (dpriv->pdata->init) {
++		rc = dpriv->pdata->init(hpriv);
++		if (rc)
++			goto err_disable_resources;
 +	}
 +
-+	return clk;
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_find_clk);
+ 	ahci_dwc_check_cap(hpriv);
+ 
+ 	ahci_dwc_init_timer(hpriv);
+ 
+ 	rc = ahci_dwc_init_dmacr(hpriv);
+ 	if (rc)
+-		goto err_disable_resources;
++		goto err_clear_platform;
+ 
+ 	return 0;
+ 
++err_clear_platform:
++	if (dpriv->pdata->clear)
++		dpriv->pdata->clear(hpriv);
 +
- /**
-  * ahci_platform_enable_clks - Enable platform clocks
-  * @hpriv: host private area to store config values
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index 6d7dd472d370..3418980b0341 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -13,6 +13,7 @@
+ err_disable_resources:
+ 	ahci_platform_disable_resources(hpriv);
  
- #include <linux/compiler.h>
+@@ -275,6 +299,12 @@ static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
+ 	if (rc)
+ 		return rc;
  
-+struct clk;
- struct device;
- struct ata_port_info;
- struct ahci_host_priv;
-@@ -21,6 +22,8 @@ struct scsi_host_template;
++	if (dpriv->pdata->reinit) {
++		rc = dpriv->pdata->reinit(hpriv);
++		if (rc)
++			goto err_disable_resources;
++	}
++
+ 	writel(dpriv->timv, hpriv->mmio + AHCI_DWC_HOST_TIMER1MS);
  
- int ahci_platform_enable_phys(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_phys(struct ahci_host_priv *hpriv);
-+struct clk *
-+ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id);
- int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
- int ahci_platform_deassert_rsts(struct ahci_host_priv *hpriv);
+ 	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
+@@ -283,10 +313,20 @@ static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
+ 	}
+ 
+ 	return 0;
++
++err_disable_resources:
++	ahci_platform_disable_resources(hpriv);
++
++	return rc;
+ }
+ 
+ static void ahci_dwc_clear_host(struct ahci_host_priv *hpriv)
+ {
++	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
++
++	if (dpriv->pdata->clear)
++		dpriv->pdata->clear(hpriv);
++
+ 	ahci_platform_disable_resources(hpriv);
+ }
+ 
+@@ -371,9 +411,13 @@ static int ahci_dwc_resume(struct device *dev)
+ 
+ static SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend, ahci_dwc_resume);
+ 
++static struct ahci_dwc_plat_data ahci_dwc_plat = {
++	.pflags = AHCI_PLATFORM_GET_RESETS,
++};
++
+ static const struct of_device_id ahci_dwc_of_match[] = {
+-	{ .compatible = "snps,dwc-ahci", },
+-	{ .compatible = "snps,spear-ahci", },
++	{ .compatible = "snps,dwc-ahci", &ahci_dwc_plat },
++	{ .compatible = "snps,spear-ahci", &ahci_dwc_plat },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_dwc_of_match);
 -- 
 2.35.1
 
