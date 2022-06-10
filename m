@@ -2,85 +2,67 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C13C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 17:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A786BC43334
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 18:26:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350222AbiFJRvQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 13:51:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51064 "EHLO
+        id S1346557AbiFJSZ7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jun 2022 14:25:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347189AbiFJRvO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 13:51:14 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED6DB231CCC
-        for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2022 10:51:10 -0700 (PDT)
-Received: from [192.168.1.103] (178.176.73.120) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 10 Jun
- 2022 20:51:02 +0300
-Subject: Re: [PATCH] ata: libata-core: get rid of *else* branches in
- ata_id_n_sectors()
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <9490e8b7-e601-ecaf-dc94-d0f5fb63aa5f@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <611cbaec-33c1-5390-3d64-1614fb3715cf@omp.ru>
-Date:   Fri, 10 Jun 2022 20:51:02 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-MIME-Version: 1.0
-In-Reply-To: <9490e8b7-e601-ecaf-dc94-d0f5fb63aa5f@omp.ru>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.73.120]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/10/2022 17:39:08
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 171067 [Jun 10 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 489 489 b67d2e276d358fa514f5991440453e6a402e3a26
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.73.120 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.73.120:7.4.1,7.1.2,7.7.3
-X-KSE-AntiSpam-Info: {iprep_blacklist}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.73.120
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/10/2022 17:41:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 6/10/2022 2:00:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+        with ESMTP id S1349693AbiFJSZ5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 14:25:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55D0D2AE4
+        for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2022 11:25:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E6AE4621E1
+        for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2022 18:25:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 43BA3C34114;
+        Fri, 10 Jun 2022 18:25:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654885554;
+        bh=5QYl9NK60wUdIAtHRONcFdoPplv//o4x3V2jN4ZmUTw=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=DaUAMXJC11hn5tSy5zk1ZbPEvrQ/tzDz6OvKUabNzTz0xF0jxpUobGpAZb5OPt7mL
+         mal1acoA6tHVy57UOoSucH1fZAnW+JlpwqiAPspWpH95GloKXHs+lONQA6o/+fveJG
+         rI4Eq3ejK3pIkvF0j1l+HRAI3f2edORjPzgudmlwWwUQQiT5gvUDTFkT/9NiL+bktQ
+         rIRSLzr7timyMCCopvAyCWR1OVKPl1trcjY31yvcJnYQfTEdHS2I7IgWF1JHHNwumm
+         Tmbwlv0OrFuW7X5GfMhElV08P0wpoWzweZeb+mHMk6BkyKe1w8YNoJeDaCwWd/IQ7k
+         Wft7mv2kmEUpA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 3064FE737EA;
+        Fri, 10 Jun 2022 18:25:54 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 5.19-rc2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20220610112700.794521-1-damien.lemoal@opensource.wdc.com>
+References: <20220610112700.794521-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20220610112700.794521-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.19-rc2
+X-PR-Tracked-Commit-Id: 481f7017c37a8c722a0b09985db1a35f15749d5d
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: f7a1d00e749f1357b48c1e50abf605819c1e8404
+Message-Id: <165488555419.32117.2891248375234792840.pr-tracker-bot@kernel.org>
+Date:   Fri, 10 Jun 2022 18:25:54 +0000
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/10/22 12:06 AM, Sergey Shtylyov wrote:
+The pull request you sent on Fri, 10 Jun 2022 20:27:00 +0900:
 
-> Using *else* after *return* doesn't make much sense -- getting rid of such
-> *else* branches reduces the indentation levels and thus reduces # of LoC...
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.19-rc2
 
-Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/f7a1d00e749f1357b48c1e50abf605819c1e8404
 
-MBR, Sergey
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
