@@ -2,44 +2,46 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 016DEC43334
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:19:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B36CCA47B
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:19:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347361AbiFJITE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 04:19:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36276 "EHLO
+        id S1347337AbiFJITU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jun 2022 04:19:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347355AbiFJISq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:46 -0400
+        with ESMTP id S1347370AbiFJISY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:24 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B11892574C1;
-        Fri, 10 Jun 2022 01:18:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6DCEE22077A;
+        Fri, 10 Jun 2022 01:18:22 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 5F13416A9;
-        Fri, 10 Jun 2022 11:19:13 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 5F13416A9
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 8610D16A3;
+        Fri, 10 Jun 2022 11:19:04 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 8610D16A3
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849153;
-        bh=oo0zR+j0fayt6r5bhpsH8DMYzEx8H4D+KwaO0iitby8=;
+        d=baikalelectronics.ru; s=mail; t=1654849144;
+        bh=pN5RrGFPq8X383ZX0ty6vOonzWhfGG0ZcAvyXOImQx0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=pXq3bHQ6X1oRNzxI5OlaaubEy82dgF3aESa/lx2rEtMQn0GBxuoo5pRiXXQk9+YtE
-         aIjm/odRoUuT0UIkmpusgowx0RLsXJaJlHwdrdS4cijCY9ime1mbKtL7TJ7jep0Vtn
-         08A4oixqVb9TL4LHiOK/dtPE2pkrdEZ4MT+5kVNM=
+        b=lqzIhAhAWzE6ryIyWIdh84hjh8Acg1w1pQJJOeQ4yHvEAHGbLSLRZ3o2GbeR0sHr5
+         aBhvYHvVgY92ASN6cjTcT/ENqF8QydP9CEniqC0H3xO0tkXcR1Xvm6vQ+PelEQLawD
+         pU56/ZVzzCnj9lJfSw7ht9Q8jHCFT9amfJxlKm/0=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:21 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:12 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Serge Semin <fancer.lancer@gmail.com>
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v4 22/23] ata: ahci-dwc: Add Baikal-T1 AHCI SATA interface support
-Date:   Fri, 10 Jun 2022 11:18:00 +0300
-Message-ID: <20220610081801.11854-23-Sergey.Semin@baikalelectronics.ru>
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+Subject: [PATCH v4 11/23] dt-bindings: ata: ahci: Add platform capability properties
+Date:   Fri, 10 Jun 2022 11:17:49 +0300
+Message-ID: <20220610081801.11854-12-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,146 +52,131 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-It's almost fully compatible DWC AHCI SATA IP-core derivative except the
-reference clocks source, which need to be very carefully selected. In
-particular the DWC AHCI SATA PHY can be clocked either from the pads
-ref_pad_clk_{m,p} or from the internal wires ref_alt_clk_{m,n}. In the
-later case the clock signal is generated from the Baikal-T1 CCU SATA PLL.
-The clocks source is selected by means of the ref_use_pad wire connected
-to the CCU SATA reference clock CSR.
-
-In normal situation it would be much more handy to use the internal
-reference clock source, but alas we haven't managed to make the AHCI
-controller working well with it so far. So it's preferable to have the
-controller clocked from the external clock generator and fallback to the
-internal clock source only as a last resort. Other than that the
-controller is full compatible with the DWC AHCI SATA IP-core.
+In case if the platform doesn't have BIOS or a comprehensive firmware
+installed then the HBA capability flags will be left uninitialized. As a
+good alternative we suggest to define the DT-properties with the AHCI
+platform capabilities describing all the HW-init flags of the
+corresponding capability register. Luckily there aren't too many of them.
+SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
+support determine the corresponding feature availability for the whole HBA
+by means of the "hba-cap" property. Each port can have the "hba-port-cap"
+property initialized indicating that the port supports some of the next
+functionalities: HPCP - HotPlug capable port, MPSP - Mechanical Presence
+Switch attached to a port, CPD - Cold Plug detection, ESP - External SATA
+Port (eSATA), FBSCP - FIS-based switching capable port.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 ---
-
-Changelog v2:
-- Rename 'syscon' property to 'baikal,bt1-syscon'.
-- Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_',
-  from 'bt1_ahci_' to 'ahci_bt1_'. (@Damien)
 
 Changelog v4:
-- Convert ahci_bt1_plat to being statically defined. (@kbot)
-- Drop Baikal-T1 syscon reference relying on the clock controller
-  and the platform setup having the proper clock source selected. (@Rob)
+- Fix some misspelling in the patch log.
+- Convert the boolean properties to the bitfield properties. (@Rob)
+- Remove Hannes' rb tag due to the patch content change.
 ---
- drivers/ata/Kconfig    |  1 +
- drivers/ata/ahci_dwc.c | 55 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 56 insertions(+)
+ .../devicetree/bindings/ata/ahci-common.yaml  | 16 +++++++++++++++
+ .../bindings/ata/ahci-platform.yaml           | 10 ++++++++++
+ include/dt-bindings/ata/ahci.h                | 20 +++++++++++++++++++
+ 3 files changed, 46 insertions(+)
+ create mode 100644 include/dt-bindings/ata/ahci.h
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 95e0e022b5bb..249717cdc74f 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -180,6 +180,7 @@ config AHCI_DWC
- 	tristate "Synopsys DWC AHCI SATA support"
- 	select SATA_HOST
- 	default SATA_AHCI_PLATFORM
-+	select MFD_SYSCON if (MIPS_BAIKAL_T1 || COMPILE_TEST)
- 	help
- 	  This option enables support for the Synopsys DWC AHCI SATA
- 	  controller implementation.
-diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-index ab4180b7ed23..ed31c0f6782a 100644
---- a/drivers/ata/ahci_dwc.c
-+++ b/drivers/ata/ahci_dwc.c
-@@ -13,10 +13,12 @@
- #include <linux/kernel.h>
- #include <linux/libata.h>
- #include <linux/log2.h>
-+#include <linux/mfd/syscon.h>
- #include <linux/module.h>
- #include <linux/of_device.h>
- #include <linux/platform_device.h>
- #include <linux/pm.h>
-+#include <linux/regmap.h>
+diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+index 12a97b56226f..94d72aeaad0f 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+@@ -58,6 +58,14 @@ properties:
+   phy-names:
+     const: sata-phy
  
- #include "ahci.h"
++  hba-cap:
++    $ref: '/schemas/types.yaml#/definitions/uint32'
++    description:
++      Bitfield of the HBA generic platform capabilities like Staggered
++      Spin-up or Mechanical Presence Switch support. It can be used to
++      appropriately initialize the HWinit fields of the HBA CAP register
++      in case if the system firmware hasn't done it.
++
+   ports-implemented:
+     $ref: '/schemas/types.yaml#/definitions/uint32'
+     description:
+@@ -101,6 +109,14 @@ $defs:
+       target-supply:
+         description: Power regulator for SATA port target device
  
-@@ -90,6 +92,20 @@
- #define AHCI_DWC_PORT_PHYCR		0x74
- #define AHCI_DWC_PORT_PHYSR		0x78
++      hba-port-cap:
++        $ref: '/schemas/types.yaml#/definitions/uint32'
++        description:
++          Bitfield of the HBA port-specific platform capabilities like Hot
++          plugging, eSATA, FIS-based Switching, etc (see AHCI specification
++          for details). It can be used to initialize the HWinit fields of
++          the PxCMD register in case if the system firmware hasn't done it.
++
+     required:
+       - reg
  
-+/* Baikal-T1 AHCI SATA specific registers */
-+#define AHCI_BT1_HOST_PHYCR		AHCI_DWC_HOST_GPCR
-+#define AHCI_BT1_HOST_MPLM_MASK		GENMASK(29, 23)
-+#define AHCI_BT1_HOST_LOSDT_MASK	GENMASK(22, 20)
-+#define AHCI_BT1_HOST_CRR		BIT(19)
-+#define AHCI_BT1_HOST_CRW		BIT(18)
-+#define AHCI_BT1_HOST_CRCD		BIT(17)
-+#define AHCI_BT1_HOST_CRCA		BIT(16)
-+#define AHCI_BT1_HOST_CRDI_MASK		GENMASK(15, 0)
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+index 15be98e0385b..e19cf9828e68 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+@@ -111,6 +111,8 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/arm-gic.h>
+     #include <dt-bindings/clock/berlin2q.h>
++    #include <dt-bindings/ata/ahci.h>
 +
-+#define AHCI_BT1_HOST_PHYSR		AHCI_DWC_HOST_GPSR
-+#define AHCI_BT1_HOST_CRA		BIT(16)
-+#define AHCI_BT1_HOST_CRDO_MASK		GENMASK(15, 0)
-+
- struct ahci_dwc_plat_data {
- 	unsigned int pflags;
- 	unsigned int hflags;
-@@ -106,6 +122,39 @@ struct ahci_dwc_host_priv {
- 	u32 dmacr[AHCI_MAX_PORTS];
- };
+     sata@f7e90000 {
+         compatible = "marvell,berlin2q-ahci", "generic-ahci";
+         reg = <0xf7e90000 0x1000>;
+@@ -119,15 +121,23 @@ examples:
+         #address-cells = <1>;
+         #size-cells = <0>;
  
-+static int ahci_bt1_init(struct ahci_host_priv *hpriv)
-+{
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
-+	int ret;
++        hba-cap = <HBA_SMPS>;
 +
-+	/* APB, application and reference clocks are required */
-+	if (!ahci_platform_find_clk(hpriv, "pclk") ||
-+	    !ahci_platform_find_clk(hpriv, "aclk") ||
-+	    !ahci_platform_find_clk(hpriv, "ref")) {
-+		dev_err(&dpriv->pdev->dev, "No system clocks specified\n");
-+		return -EINVAL;
-+	}
+         sata0: sata-port@0 {
+             reg = <0>;
 +
-+	/*
-+	 * Fully reset the SATA AXI and ref clocks domain to ensure the state
-+	 * machine is working from scratch especially if the reference clocks
-+	 * source has been changed.
-+	 */
-+	ret = ahci_platform_assert_rsts(hpriv);
-+	if (ret) {
-+		dev_err(&dpriv->pdev->dev, "Couldn't assert the resets\n");
-+		return ret;
-+	}
+             phys = <&sata_phy 0>;
+             target-supply = <&reg_sata0>;
 +
-+	ret = ahci_platform_deassert_rsts(hpriv);
-+	if (ret) {
-+		dev_err(&dpriv->pdev->dev, "Couldn't de-assert the resets\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static struct ahci_host_priv *ahci_dwc_get_resources(struct platform_device *pdev)
- {
- 	struct ahci_dwc_host_priv *dpriv;
-@@ -415,9 +464,15 @@ static struct ahci_dwc_plat_data ahci_dwc_plat = {
- 	.pflags = AHCI_PLATFORM_GET_RESETS,
- };
++            hba-port-cap = <(HBA_PORT_FBSCP | HBA_PORT_ESP)>;
+         };
  
-+static struct ahci_dwc_plat_data ahci_bt1_plat = {
-+	.pflags = AHCI_PLATFORM_GET_RESETS | AHCI_PLATFORM_RST_TRIGGER,
-+	.init = ahci_bt1_init,
-+};
+         sata1: sata-port@1 {
+             reg = <1>;
 +
- static const struct of_device_id ahci_dwc_of_match[] = {
- 	{ .compatible = "snps,dwc-ahci", &ahci_dwc_plat },
- 	{ .compatible = "snps,spear-ahci", &ahci_dwc_plat },
-+	{ .compatible = "baikal,bt1-ahci", &ahci_bt1_plat },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_dwc_of_match);
+             phys = <&sata_phy 1>;
+             target-supply = <&reg_sata1>;
++
++            hba-port-cap = <(HBA_PORT_HPCP | HBA_PORT_MPSP | HBA_PORT_FBSCP)>;
+         };
+     };
+diff --git a/include/dt-bindings/ata/ahci.h b/include/dt-bindings/ata/ahci.h
+new file mode 100644
+index 000000000000..6841caebcedf
+--- /dev/null
++++ b/include/dt-bindings/ata/ahci.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * This header provides constants for most AHCI bindings.
++ */
++
++#ifndef _DT_BINDINGS_ATA_AHCI_H
++#define _DT_BINDINGS_ATA_AHCI_H
++
++/* Host Bus Adapter generic platform capabilities */
++#define HBA_SSS		(1 << 27)
++#define HBA_SMPS	(1 << 28)
++
++/* Host Bus Adapter port-specific platform capabilities */
++#define HBA_PORT_HPCP	(1 << 18)
++#define HBA_PORT_MPSP	(1 << 19)
++#define HBA_PORT_CPD	(1 << 20)
++#define HBA_PORT_ESP	(1 << 21)
++#define HBA_PORT_FBSCP	(1 << 22)
++
++#endif
 -- 
 2.35.1
 
