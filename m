@@ -2,46 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB5ACCA47B
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AD68C43334
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 08:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347324AbiFJISo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 04:18:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55844 "EHLO
+        id S1347343AbiFJISp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jun 2022 04:18:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244704AbiFJISN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:13 -0400
+        with ESMTP id S1347310AbiFJISQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 04:18:16 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EF75A23428B;
-        Fri, 10 Jun 2022 01:18:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8D2E823512D;
+        Fri, 10 Jun 2022 01:18:15 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 4789716A4;
-        Fri, 10 Jun 2022 11:18:58 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 4789716A4
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 8D54816A6;
+        Fri, 10 Jun 2022 11:18:59 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 8D54816A6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849138;
-        bh=lwyWyOK1nXgLe3QnPATCiNk6Mfk5wQ5Jb1rS0FxolVA=;
+        d=baikalelectronics.ru; s=mail; t=1654849139;
+        bh=ziywhS226uueS7ATE0wHWin9aE5fJAEXVPduh54bP74=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=Il7nEgMdm5C8vlcGQUDUpMRj10ccx7oOKEmRE5zwxOFt9D4pHV8IUDxQ15zNgb0Ar
-         ZqOqlt65VoSQGX221r2L4jvGauxsv0NSEI1rbqMzb0k7aCea+Dj80CLThyopN/aYJg
-         knB0Pk5cKazWxB6Zb6uATblGKPmoDl/hpKdTlkKo=
+        b=SuOxovivlh/stWfNHG5TLO+h5avykiBoP88eN0ALtI86v6D0JSiGWWvNFJ14scpw6
+         3iqgWWUEaf89yFnn5TI9FOsXz7zGI5K3FuNj6pxJ65ToeJptX1x1yF/re30OINl/Cu
+         6iEQU8fq42m2YvhRZHkQWnFtuVrRvIa0E2KHRgmg=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:05 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:18:07 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Florian Fainelli <f.fainelli@gmail.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>
-Subject: [PATCH v4 03/23] dt-bindings: ata: ahci-platform: Clarify common AHCI props constraints
-Date:   Fri, 10 Jun 2022 11:17:41 +0300
-Message-ID: <20220610081801.11854-4-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v4 05/23] dt-bindings: ata: sata-brcm: Apply common AHCI schema
+Date:   Fri, 10 Jun 2022 11:17:43 +0300
+Message-ID: <20220610081801.11854-6-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -52,89 +53,34 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Indeed in accordance with what is implemented in the AHCI platform driver
-and the way the AHCI DT nodes are defined in the DT files we can add the
-next AHCI DT properties constraints: AHCI CSR ID is fixed to 'ahci', PHY
-name is fixed to 'sata-phy', AHCI controller can't have more than 32 ports
-by design, AHCI controller can have up to 32 IRQ lines.
+The Broadcom SATA controller is obviously based on the AHCI standard. The
+device driver uses the kernel AHCI library to work with it. Therefore we
+can be have a more thorough DT-bindings evaluation by referring to the
+AHCI-common schema instead of using the more relaxed SATA-common one.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 ---
-
-Changelog v2:
-- This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 
 Changelog v4:
-- Fix spelling: 'imeplemtned' and 'paltform' in the patch log. (@Hannes)
-- Add the interrupts property constraints. (@Rob)
-- Add forgotten '---' patchlog-changelog separator. (@Sergei)
+- This is a new patch added on v4 lap of the review procedure.
 ---
- .../devicetree/bindings/ata/ahci-common.yaml    | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-index e89bda3b62cc..12a97b56226f 100644
---- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-@@ -31,12 +31,16 @@ properties:
+diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
+index 4ee74df8e58a..fa8ebc8f243f 100644
+--- a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
++++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
+@@ -14,7 +14,7 @@ maintainers:
+   - Florian Fainelli <f.fainelli@gmail.com>
  
-   reg-names:
-     description: CSR space IDs
-+    contains:
-+      const: ahci
+ allOf:
+-  - $ref: sata-common.yaml#
++  - $ref: ahci-common.yaml#
  
-   interrupts:
-     description:
-       Generic AHCI state change interrupt. Can be implemented either as a
-       single line attached to the controller or as a set of the signals
-       indicating the particular port events.
-+    minItems: 1
-+    maxItems: 32
- 
-   ahci-supply:
-     description: Power regulator for AHCI controller
-@@ -52,14 +56,13 @@ properties:
-     maxItems: 1
- 
-   phy-names:
--    maxItems: 1
-+    const: sata-phy
- 
-   ports-implemented:
-     $ref: '/schemas/types.yaml#/definitions/uint32'
-     description:
-       Mask that indicates which ports the HBA supports. Useful if PI is not
-       programmed by the BIOS, which is true for some embedded SoC's.
--    maximum: 0x1f
- 
- patternProperties:
-   "^sata-port@[0-9a-f]+$":
-@@ -80,8 +83,12 @@ $defs:
- 
-     properties:
-       reg:
--        description: AHCI SATA port identifier
--        maxItems: 1
-+        description:
-+          AHCI SATA port identifier. By design AHCI controller can't have
-+          more than 32 ports due to the CAP.NP fields and PI register size
-+          constraints.
-+        minimum: 0
-+        maximum: 31
- 
-       phys:
-         description: Individual AHCI SATA port PHY
-@@ -89,7 +96,7 @@ $defs:
- 
-       phy-names:
-         description: AHCI SATA port PHY ID
--        maxItems: 1
-+        const: sata-phy
- 
-       target-supply:
-         description: Power regulator for SATA port target device
+ properties:
+   compatible:
 -- 
 2.35.1
 
