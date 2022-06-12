@@ -2,109 +2,68 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B544C43334
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jun 2022 23:34:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5787BC433EF
+	for <linux-ide@archiver.kernel.org>; Sun, 12 Jun 2022 07:33:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348949AbiFJXew (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jun 2022 19:34:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53020 "EHLO
+        id S229956AbiFLHdg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 12 Jun 2022 03:33:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348626AbiFJXev (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2022 19:34:51 -0400
-Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49A3B289A0F;
-        Fri, 10 Jun 2022 16:34:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
-        :In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=wwxScsKhI2Gxa0NDbcdKj4SXbyaU0oPRufyab5cqNns=; b=nuJn2mITolgztxc1OtuuW5b9bc
-        r5eVsM0cGFiQ7FM5BTPwGzLl9Pp3DFHI58cH8UxPCGTndt6CshU5UHisXKsaVEngEOaPVpo7h+BxS
-        UJmrxs1R+8E6yrjHWWrTVVXDJKtQQ0m2TEbV1iDc+odJpRwEEhpxjHEXYDqOyUJ6nFcx7CLs0BrB9
-        7AaDgHFro5h92kf5lJWVgeC6HRdUTMygXdIiJkfP7lGpGjM87xpZCPdHBY11BKx14Z5yJ4LdSESpe
-        Qcb5YPUfSBK8Q62VLQcLXtM8OuWbasTBO6ICOEu0qFRq9zKd89Y3IwR0PMSjB+md5tJFGzVyFrtp2
-        eDRuT8OA==;
-Received: from [2601:1c0:6280:3f0::aa0b]
-        by desiato.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1nzo8z-006o8u-Ah; Fri, 10 Jun 2022 23:34:22 +0000
-Message-ID: <73716f9f-892c-41c5-89f0-64a1985438aa@infradead.org>
-Date:   Fri, 10 Jun 2022 16:34:13 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v4 19/23] ata: ahci: Add DWC AHCI SATA controller support
-Content-Language: en-US
-To:     Serge Semin <fancer.lancer@gmail.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
- <20220610081801.11854-20-Sergey.Semin@baikalelectronics.ru>
- <6c02f8ef-8aea-8f80-590d-343f67a96f8d@infradead.org>
- <20220610215850.ju76kxjquwef6kd3@mobilestation>
-From:   Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20220610215850.ju76kxjquwef6kd3@mobilestation>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229559AbiFLHdf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jun 2022 03:33:35 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4005539811;
+        Sun, 12 Jun 2022 00:33:31 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id A63431E80D89;
+        Sun, 12 Jun 2022 15:32:29 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id D6JU9v0rtj7Y; Sun, 12 Jun 2022 15:32:27 +0800 (CST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+        (Authenticated sender: liqiong@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id 56DFD1E80C8B;
+        Sun, 12 Jun 2022 15:32:26 +0800 (CST)
+From:   Li Qiong <liqiong@nfschina.com>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hukun@nfschina.com, qixu@nfschina.com, yuzhe@nfschina.com,
+        renyu@nfschina.com, Li Qiong <liqiong@nfschina.com>
+Subject: [PATCH] ata: handle failure of devm_ioremap()
+Date:   Sun, 12 Jun 2022 15:32:22 +0800
+Message-Id: <20220612073222.18974-1-liqiong@nfschina.com>
+X-Mailer: git-send-email 2.11.0
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Serge,
+As the possible failure of the devm_ioremap(), the return value
+could be NULL. Therefore it should be better to check it and
+print error message, return '-ENOMEM' error code.
 
-On 6/10/22 14:58, Serge Semin wrote:
-> On Fri, Jun 10, 2022 at 09:34:46AM -0700, Randy Dunlap wrote:
->> Hi--
-> 
-> Hi Randy
-> 
->>
->> On 6/10/22 01:17, Serge Semin wrote:
->>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
->>> index bb45a9c00514..95e0e022b5bb 100644
->>> --- a/drivers/ata/Kconfig
->>> +++ b/drivers/ata/Kconfig
->>> @@ -176,6 +176,16 @@ config AHCI_DM816
->>>  
->>>  	  If unsure, say N.
->>>  
->>> +config AHCI_DWC
->>> +	tristate "Synopsys DWC AHCI SATA support"
->>> +	select SATA_HOST
->>> +	default SATA_AHCI_PLATFORM
->>
-> 
->> I don't think this needs to default to SATA_AHCI_PLATFORM.
->> It might build a driver that isn't needed.
->> And it's incompatible with "If unsure, say N."
-> 
-> Basically you are right, but this particular setting is connected with
-> the modification I've done in the drivers/ata/ahci_platform.c driver
-> in the framework of this commit. I've moved the "snps,spear-ahci" and
-> "snps,dwc-ahci" compatible devices support to the new driver. Thus
-> should I omit the SATA_AHCI_PLATFORM dependency their default kernel
-> configs will lack the corresponding controllers support. If it's not a
-> problem and we can rely on the kernel build system ability to ask
-> whether the new config needs to be set/cleared, then I would be very
-> happy to drop the default setting. What do you think?
+Signed-off-by: Li Qiong <liqiong@nfschina.com>
+---
+ drivers/ata/pata_pxa.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-I'd prefer to try it like that.
-If it becomes a problem, we can go back to this v4 patch.
-
->>> +	help
->>> +	  This option enables support for the Synopsys DWC AHCI SATA
->>> +	  controller implementation.
->>> +
->>> +	  If unsure, say N.
->>
->> -- 
->> ~Randy
-
-Thanks.
+diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+index 985f42c4fd70..cd1a8f37f920 100644
+--- a/drivers/ata/pata_pxa.c
++++ b/drivers/ata/pata_pxa.c
+@@ -228,6 +228,11 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 	ap->ioaddr.bmdma_addr	= devm_ioremap(&pdev->dev, dma_res->start,
+ 						resource_size(dma_res));
+ 
++	if (!ap->ioaddr.cmd_addr || !ap->ioaddr.ctl_addr || !ap->ioaddr.bmdma_addr) {
++		dev_err(&pdev->dev, "failed to map ap->ioaddr\n");
++		return -ENOMEM;
++	}
++
+ 	/*
+ 	 * Adjust register offsets
+ 	 */
 -- 
-~Randy
+2.11.0
+
