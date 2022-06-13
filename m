@@ -2,303 +2,137 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C49AEC433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Jun 2022 10:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 943D6C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Jun 2022 14:47:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235024AbiFMKHZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Jun 2022 06:07:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47840 "EHLO
+        id S1385787AbiFMOqO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Jun 2022 10:46:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239737AbiFMKHG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jun 2022 06:07:06 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC3BF1129
-        for <linux-ide@vger.kernel.org>; Mon, 13 Jun 2022 03:07:05 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id v1so10099169ejg.13
-        for <linux-ide@vger.kernel.org>; Mon, 13 Jun 2022 03:07:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=nyX3Q3rQQM2IsC6FFrgRDtgxd8UP6+kxf/OJYst5UXA=;
-        b=nyCWPHxIGKa2NB5OHYiSyem5xuy6+kXjlO9RrgVfZL+LLd23RIjjmQX66HJL8NIYmH
-         qF2KKYqmXcquxwaqa14kZEhuU/AaqSJiy/z5rb1RcyDAu9jjVpXzvPZCA6tOSo7nzd6y
-         UhKXG4bt+S6iTSMIkTYRQ228IQ5XsdvJkJ/xWrmupMtG4+0+seyCR98xMpyNx9/OXGW/
-         Em9fccEdZ+yDexaflRVSWUZ4Y+OYecjtThEhqA1qoBsoKKIh01Gn+hqLqVAV0jJmUrEr
-         LtltEO0pyw5S5J5cyDrPoZRpsB3XFScAYuQbtIMHlW2mXtffInZPtxQwQNKVZFK5YAmI
-         xonQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=nyX3Q3rQQM2IsC6FFrgRDtgxd8UP6+kxf/OJYst5UXA=;
-        b=GmxcOGMelnqB5tT4CrcZ0QGRA+FOYVHZbnQvA9etkozNlNcO7FGhTreM5Tydbaay8q
-         mIcEAlHAogxzcAEZVw6AZXceXLXdwz3ef6Wr65Sd1nb+IFYTp7KdRXuY4NBBHoFVFV+h
-         EqIEC1XkafP88tWwWZrbTtE4QIvvLW4g8vGBE0itJtt8U59xXvX4h/eIeyGtQZDc0YU7
-         tIDBy1vKmny4N9JrpzOOygsrMwVM1/BKTs9dCkZZnG1RoG4QKzVMF2PEsaEgM2TIdaig
-         qh7fX0Md2Xn9moVDV1zT10E+503+Hq0Us4C+UQyWtPMohPz6l8rqMbUKZGND//sfjiOZ
-         QQOw==
-X-Gm-Message-State: AOAM530V17mhn+8vIRmGrsJW/qo5FsjVu+AYNcVGr8Mu+kyUMnZfxPzr
-        R1AGK5lDgo3DrO+Q3AyF2Mgnpw==
-X-Google-Smtp-Source: ABdhPJzWkcnRCWVe/fTvWG3tCIJR5yjLJBH55iEtG+cyP0Xrqj/+5gHFUwbKjtBy0csgJHIUqA2EDA==
-X-Received: by 2002:a17:907:1250:b0:711:d0bc:2370 with SMTP id wc16-20020a170907125000b00711d0bc2370mr34681686ejb.454.1655114824203;
-        Mon, 13 Jun 2022 03:07:04 -0700 (PDT)
-Received: from krzk-bin.monzoon.net (80-254-69-65.dynamic.monzoon.net. [80.254.69.65])
-        by smtp.gmail.com with ESMTPSA id v2-20020a170906858200b006fe921fcb2dsm3639911ejx.49.2022.06.13.03.07.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 03:07:03 -0700 (PDT)
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org
-Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v3 3/3] scsi: ufs: ufshcd: constify pointed data
-Date:   Mon, 13 Jun 2022 12:06:55 +0200
-Message-Id: <20220613100655.105301-4-krzysztof.kozlowski@linaro.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220613100655.105301-1-krzysztof.kozlowski@linaro.org>
-References: <20220613100655.105301-1-krzysztof.kozlowski@linaro.org>
+        with ESMTP id S1385906AbiFMOoB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jun 2022 10:44:01 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9650B41CC
+        for <linux-ide@vger.kernel.org>; Mon, 13 Jun 2022 04:51:02 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.86.159) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 13 Jun
+ 2022 14:50:40 +0300
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH v2] ata: pata_pxa: handle failure of devm_ioremap()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        Li Qiong <liqiong@nfschina.com>
+CC:     <linux-ide@vger.kernel.org>, <yuzhe@nfschina.com>,
+        <renyu@nfschina.com>
+References: <20220612073222.18974-1-liqiong@nfschina.com>
+ <20220612125700.11740-1-liqiong@nfschina.com>
+ <fbbed055-fa60-cdee-589b-5d8c12672e94@gmail.com>
+ <097b7e93-4a85-1b6a-1772-67976f834108@opensource.wdc.com>
+Organization: Open Mobile Platform
+Message-ID: <80cc4026-a6bf-255f-69d9-d1c1d390f83e@omp.ru>
+Date:   Mon, 13 Jun 2022 14:50:40 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <097b7e93-4a85-1b6a-1772-67976f834108@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.86.159]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/13/2022 11:36:46
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 19
+X-KSE-AntiSpam-Info: Lua profiles 171074 [Jun 13 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 489 489 b67d2e276d358fa514f5991440453e6a402e3a26
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.159 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.159 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.159
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 19
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/13/2022 11:39:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/13/2022 9:03:00 AM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Constify arrays and pointers to data which is not modified for code
-safety.
+On 6/13/22 1:47 AM, Damien Le Moal wrote:
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- drivers/ufs/core/ufshcd-priv.h |  6 ++---
- drivers/ufs/core/ufshcd.c      | 42 ++++++++++++++++++----------------
- include/ufs/ufshcd.h           |  6 ++---
- 3 files changed, 28 insertions(+), 26 deletions(-)
+>>> As the possible failure of the devm_ioremap(), the return value
+>>> could be NULL. Therefore it should be better to check it and
+>>> print error message, return '-ENOMEM' error code.
+> 
+> This error is very unlikely. So unless you are seeing actual problems in
+> the field, I do not think it is worth fixing.
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index ffb01fc6de75..8f67db202d7b 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -215,7 +215,7 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
- 		hba->vops->config_scaling_param(hba, p, data);
- }
- 
--extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-+extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- /**
-  * ufshcd_scsi_to_upiu_lun - maps scsi LUN to UPIU LUN
-@@ -234,8 +234,8 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
- 
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr);
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr);
- 
- static inline int ufshcd_update_ee_drv_mask(struct ufs_hba *hba,
- 					    u16 set, u16 clr)
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 01fb4bad86be..59f73d67a673 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -175,7 +175,7 @@ enum {
- #define ufshcd_clear_eh_in_progress(h) \
- 	((h)->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
- 
--struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
-+const struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
- 	[UFS_PM_LVL_0] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
- 	[UFS_PM_LVL_1] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
- 	[UFS_PM_LVL_2] = {UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE},
-@@ -363,7 +363,7 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- }
- 
- static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
--					 struct uic_command *ucmd,
-+					 const struct uic_command *ucmd,
- 					 enum ufs_trace_str_t str_t)
- {
- 	u32 cmd;
-@@ -443,11 +443,11 @@ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
- }
- 
- static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
--			     char *err_name)
-+			     const char *err_name)
- {
- 	int i;
- 	bool found = false;
--	struct ufs_event_hist *e;
-+	const struct ufs_event_hist *e;
- 
- 	if (id >= UFS_EVT_CNT)
- 		return;
-@@ -497,7 +497,7 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
- static
- void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
- {
--	struct ufshcd_lrb *lrbp;
-+	const struct ufshcd_lrb *lrbp;
- 	int prdt_length;
- 	int tag;
- 
-@@ -553,7 +553,7 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
- 
- static void ufshcd_print_host_state(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev_ufs = hba->ufs_device_wlun;
-+	const struct scsi_device *sdev_ufs = hba->ufs_device_wlun;
- 
- 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
- 	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
-@@ -1098,7 +1098,7 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
-  */
- static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev;
-+	const struct scsi_device *sdev;
- 	u32 pending = 0;
- 
- 	lockdep_assert_held(hba->host->host_lock);
-@@ -2069,14 +2069,15 @@ static inline int ufshcd_monitor_opcode2dir(u8 opcode)
- static inline bool ufshcd_should_inform_monitor(struct ufs_hba *hba,
- 						struct ufshcd_lrb *lrbp)
- {
--	struct ufs_hba_monitor *m = &hba->monitor;
-+	const struct ufs_hba_monitor *m = &hba->monitor;
- 
- 	return (m->enabled && lrbp && lrbp->cmd &&
- 		(!m->chunk_size || m->chunk_size == lrbp->cmd->sdb.length) &&
- 		ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_stamp));
- }
- 
--static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_start_monitor(struct ufs_hba *hba,
-+				 const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
-@@ -2087,14 +2088,14 @@ static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- }
- 
--static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_update_monitor(struct ufs_hba *hba, const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
--		struct request *req = scsi_cmd_to_rq(lrbp->cmd);
-+		const struct request *req = scsi_cmd_to_rq(lrbp->cmd);
- 		struct ufs_hba_monitor *m = &hba->monitor;
- 		ktime_t now, inc, lat;
- 
-@@ -4899,7 +4900,7 @@ static int ufshcd_get_lu_wp(struct ufs_hba *hba,
-  *
-  */
- static inline void ufshcd_get_lu_power_on_wp_status(struct ufs_hba *hba,
--						    struct scsi_device *sdev)
-+						    const struct scsi_device *sdev)
- {
- 	if (hba->dev_info.f_power_on_wp_en &&
- 	    !hba->dev_info.is_lu_power_on_wp) {
-@@ -5418,8 +5419,8 @@ int ufshcd_write_ee_control(struct ufs_hba *hba)
- 	return err;
- }
- 
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr)
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr)
- {
- 	u16 new_mask, ee_ctrl_mask;
- 	int err = 0;
-@@ -7346,7 +7347,8 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
-  *
-  * Returns calculated max ICC level for specific regulator
-  */
--static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-+static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan,
-+				    const char *buff)
- {
- 	int i;
- 	int curr_uA;
-@@ -7393,7 +7395,7 @@ static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-  * Returns calculated ICC level
-  */
- static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
--							u8 *desc_buf, int len)
-+						const u8 *desc_buf, int len)
- {
- 	u32 icc_level = 0;
- 
-@@ -7543,7 +7545,7 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- 	return ret;
- }
- 
--static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u8 lun;
-@@ -7614,7 +7616,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	hba->caps &= ~UFSHCD_CAP_WB_EN;
- }
- 
--static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u32 ext_ufs_feature;
-@@ -7848,7 +7850,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	u32 granularity, peer_granularity;
- 	u32 pa_tactivate, peer_pa_tactivate;
- 	u32 pa_tactivate_us, peer_pa_tactivate_us;
--	u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
-+	const u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
- 
- 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_GRANULARITY),
- 				  &granularity);
-@@ -7965,7 +7967,7 @@ struct ufs_ref_clk {
- 	enum ufs_ref_clk_freq val;
- };
- 
--static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
-+static const struct ufs_ref_clk ufs_ref_clk_freqs[] = {
- 	{19200000, REF_CLK_FREQ_19_2_MHZ},
- 	{26000000, REF_CLK_FREQ_26_MHZ},
- 	{38400000, REF_CLK_FREQ_38_4_MHZ},
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a92271421718..4f0531af9141 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1217,14 +1217,14 @@ static inline int ufshcd_vops_phy_initialization(struct ufs_hba *hba)
- 	return 0;
- }
- 
--extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-+extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 		     const char *prefix);
- 
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr);
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr);
- 
- #endif /* End of Header */
--- 
-2.34.1
+   The error paths should absolutely be fixed. It helps avoid an oops later...
 
+>>>
+>>> Signed-off-by: Li Qiong <liqiong@nfschina.com>
+>>> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>>> ---
+>>> v2:
+>>> - add driver's name (pata_pxa) to subject.
+>>> ---
+>>>  drivers/ata/pata_pxa.c | 5 +++++
+>>>  1 file changed, 5 insertions(+)
+>>>
+>>> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+>>> index 985f42c4fd70..cd1a8f37f920 100644
+>>> --- a/drivers/ata/pata_pxa.c
+>>> +++ b/drivers/ata/pata_pxa.c
+>>> @@ -228,6 +228,11 @@ static int pxa_ata_probe(struct platform_device *pdev)
+>>>  	ap->ioaddr.bmdma_addr	= devm_ioremap(&pdev->dev, dma_res->start,
+>>>  						resource_size(dma_res));
+>>
+>>    Looking again into this driver, this statement doesn't make sense: dma_res
+>> points to a DMA resource, calling devm_ioremap() on it is just wrong... and
+> 
+> Yes, having to do an ioremap of an IORESOURCE_DMA resource is rather
+> unusual. dmaengine_slave_config() should be doing anything that is
+> required for that resource.
+> 
+>> 'ap->ioaddr.bmdma_addr' doesn;t seem to be used anyways...
+> 
+> It is used in lbata-sff.c.
+
+   Where exactly? To me, it looked like all ata_bmdma_port_ops were overridden
+by the driver... Even if not so, I don't think such code is correct...
+
+> 
+> A much cleaner fix would be to use
+> devm_platform_get_and_ioremap_resource() or
+> devm_platform_ioremap_resource() which will also remove the call to
+> platform_get_resource(().
+
+   This is an -rc1 material.
+
+> But as mentioned above, unless this is fixing an
+> actual bug in production, I do not think this is worth it.
+
+   I strongly disagree here.
+
+MBR, Sergey
