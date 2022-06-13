@@ -2,25 +2,25 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CC54C43334
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Jun 2022 18:25:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D33C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Jun 2022 18:31:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245387AbiFMSZh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Jun 2022 14:25:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46452 "EHLO
+        id S243018AbiFMSbS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Jun 2022 14:31:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242509AbiFMSZZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jun 2022 14:25:25 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2064.outbound.protection.outlook.com [40.107.94.64])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AEF4A76DE;
-        Mon, 13 Jun 2022 07:31:43 -0700 (PDT)
+        with ESMTP id S245681AbiFMSbE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jun 2022 14:31:04 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2040.outbound.protection.outlook.com [40.107.220.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11901B7DD6;
+        Mon, 13 Jun 2022 07:47:06 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S4fr2C2aG8DXZlUtOPVXFQg3abOvynQUo1V8nxfhx0cBdceGlJ9yGlrKEOusOvMEDFPWlwzkUX0+Y62SZphjmctQF8Lv5XE2Bf/REjurYKUDNvpkuN+USJaqz1/Lmn5rMofh6OiUQuzuyaxkN3KBAFuxv0OAWvapBS9TOZo1GAVeJG9clhbteuNHh7W6V+buXdhFnnAsrOsCruECkbOINDypPWyJ4uF4bOHs+iTzYbESop2PUU+O+voFtp2HP7/HGwNIGEhJufQvTHHtuCJLIEObtH5Whc0HDmj885mef/mBYWa5X8GGPFsFewpiGJzHPkgipBivDHxDS9mfYDFL4g==
+ b=V6bLmqfZohYCXM9X/NLRUjq+60uaGDC2mXCrC0UwkvXw13wkTK9mnug0MWw+EyDjReYOXpu581TzL0all+HSqMt92lRkuFbkfVP17FUNysZQTovkn46VSSKYHp9XoM8Uu1ERJvrqtV3X4dHOi9pcj4m5lVYOTZclgsR+xp3Xxfnuf1HorMSDrJlAOc2T+LWWrOJKP5noNDNn/Wz2EEtagWI3HnIbSS8IiQ/dkZLAagtqDBBQK2z/v2+xCriAiorBxFQKxgWKIJ8cH7kCCO8eeO9yRcTUvW68vp+TSOb/jsNTduCm2Ztur5FbWsehwrGlrkqt4J6IxZi4Uo2GxWOhJg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pFehFNcus93WEme+cHXr1XPKQlnJKnpItDN0snfAh5s=;
- b=Xbvndu+GAV+5ccNyHCCQle7+49guJvpvG7fgx6AAxrbZujxpg0ajq9zPU/XRB+ZjsxL6WmYUyHwti32dxj1K+LmfQKnE4qmoW4bFIS1RZDx6Pw4GQkKFet2qNTYYDxeLIu/duGQiVB1aB7gCTr4suShgE/QhPo8klbmo3C1THnvaZZulJafgE7q3AsSMYNWxhtEExa9uoBmMZeI5w6YKlPnDdOg3IMKIKMIXcFu3HoEiDfG8WgwdNXkYxdHtia4CHNxCMLDHHd0M0cmCSbLABA+d9ACACSPgkOqHhtnwyWnX1exH9PSBcbJpl/1Y14jmGHMwAS765sBAwRuQ+1Gedg==
+ bh=Ji6hZgO5KlHzuqw7B3G8kwBucs0ZtRiCQ7J/ckaoA3A=;
+ b=WtXTUIz6ZZKeiO8h2P2YC3x6xDlgKuelgWWCv4fHt37in25zKnsJtmmckwIxAShrH7mzNHLhvWlamq8e72mucHepXo10t59FgKraaJLxZlXDt1LiDEjki+V4eoDkOOhsVKc/8yd5OxQExMF5byK5y86zrZggQ6l+xHjVEy4h4IndSHqyvYRFsGVp28P9X0L1jaBGpQjApSKW023pQ9RInfjCMttsW0VJaAjkvU2rBpYJu/GCQcGP751xOzCuA9qacuBjRq3DtIQ5odql340wnuKYtmsKHAnfuBcXuJYvT/f4T/KOtY/+Jrhghi3ZBOeNX1pdL7vdMUQH0Au3K72/aA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  149.199.62.198) smtp.rcpttodomain=opensource.wdc.com
  smtp.mailfrom=xilinx.com; dmarc=pass (p=none sp=none pct=100) action=none
@@ -28,34 +28,34 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pFehFNcus93WEme+cHXr1XPKQlnJKnpItDN0snfAh5s=;
- b=it9KQcK+3cjRoBnQDxSnRaJ5AyNAaaIeNHrA7sUQjOEcbXcEF2EwLocNaAdPU24kistG5+pdWHRYuqBRPM4pOIOqs3wToe8dekd8f1SZ7JXCnqF4+hN3zXR3AfajUEF+GBB1lNFxP2Hc6ff29+NiOQWVHEIp6MlZ7kDviapOlH4=
-Received: from DM3PR11CA0016.namprd11.prod.outlook.com (2603:10b6:0:54::26) by
- BL0PR02MB4772.namprd02.prod.outlook.com (2603:10b6:208:52::12) with Microsoft
+ bh=Ji6hZgO5KlHzuqw7B3G8kwBucs0ZtRiCQ7J/ckaoA3A=;
+ b=Pl6N6XgiRGgrg1VLoNclT1Nl0n1DBbMjnfCScA4YiuowQ6hleMChGEXoKV29QCVI1sZTbygxAO3+UOgaFgQzqmkwZ5BK6stDKIPlKVIuKfo/Ukajz7Akbf5ukjJSf4IKGQ6DSkdpOaFAz05DiSrzvCe3vH3sJu2WMdTF1S+S4AA=
+Received: from SN1PR12CA0050.namprd12.prod.outlook.com (2603:10b6:802:20::21)
+ by DM8PR02MB8070.namprd02.prod.outlook.com (2603:10b6:8:17::6) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5332.15; Mon, 13 Jun 2022 14:31:37 +0000
-Received: from DM3NAM02FT040.eop-nam02.prod.protection.outlook.com
- (2603:10b6:0:54:cafe::c4) by DM3PR11CA0016.outlook.office365.com
- (2603:10b6:0:54::26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5332.13 via Frontend
- Transport; Mon, 13 Jun 2022 14:31:37 +0000
+ 15.20.5332.15; Mon, 13 Jun 2022 14:47:03 +0000
+Received: from SN1NAM02FT0057.eop-nam02.prod.protection.outlook.com
+ (2603:10b6:802:20:cafe::41) by SN1PR12CA0050.outlook.office365.com
+ (2603:10b6:802:20::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5332.14 via Frontend
+ Transport; Mon, 13 Jun 2022 14:47:02 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 149.199.62.198)
  smtp.mailfrom=xilinx.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=xilinx.com;
 Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
  149.199.62.198 as permitted sender) receiver=protection.outlook.com;
- client-ip=149.199.62.198; helo=xsj-pvapexch01.xlnx.xilinx.com; pr=C
-Received: from xsj-pvapexch01.xlnx.xilinx.com (149.199.62.198) by
- DM3NAM02FT040.mail.protection.outlook.com (10.13.5.132) with Microsoft SMTP
+ client-ip=149.199.62.198; helo=xsj-pvapexch02.xlnx.xilinx.com; pr=C
+Received: from xsj-pvapexch02.xlnx.xilinx.com (149.199.62.198) by
+ SN1NAM02FT0057.mail.protection.outlook.com (10.97.4.123) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5332.12 via Frontend Transport; Mon, 13 Jun 2022 14:31:36 +0000
+ 15.20.5332.12 via Frontend Transport; Mon, 13 Jun 2022 14:47:02 +0000
 Received: from xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) by
- xsj-pvapexch01.xlnx.xilinx.com (172.19.86.40) with Microsoft SMTP Server
+ xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Mon, 13 Jun 2022 07:31:35 -0700
-Received: from smtp.xilinx.com (172.19.127.96) by
+ 15.1.2176.14; Mon, 13 Jun 2022 07:46:58 -0700
+Received: from smtp.xilinx.com (172.19.127.95) by
  xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server id
- 15.1.2176.14 via Frontend Transport; Mon, 13 Jun 2022 07:31:35 -0700
+ 15.1.2176.14 via Frontend Transport; Mon, 13 Jun 2022 07:46:58 -0700
 Envelope-to: git@xilinx.com,
  damien.lemoal@opensource.wdc.com,
  robh+dt@kernel.org,
@@ -63,10 +63,10 @@ Envelope-to: git@xilinx.com,
  linux-ide@vger.kernel.org,
  devicetree@vger.kernel.org,
  linux-kernel@vger.kernel.org
-Received: from [10.140.6.18] (port=39540 helo=xhdlakshmis40.xilinx.com)
+Received: from [10.140.6.18] (port=39544 helo=xhdlakshmis40.xilinx.com)
         by smtp.xilinx.com with esmtp (Exim 4.90)
         (envelope-from <piyush.mehta@xilinx.com>)
-        id 1o0l6M-00098T-DV; Mon, 13 Jun 2022 07:31:34 -0700
+        id 1o0lLF-0001rj-HX; Mon, 13 Jun 2022 07:46:58 -0700
 From:   Piyush Mehta <piyush.mehta@xilinx.com>
 To:     <damien.lemoal@opensource.wdc.com>, <robh+dt@kernel.org>,
         <krzysztof.kozlowski+dt@linaro.org>, <linux-ide@vger.kernel.org>,
@@ -74,33 +74,33 @@ To:     <damien.lemoal@opensource.wdc.com>, <robh+dt@kernel.org>,
         <michal.simek@xilinx.com>
 CC:     <git@xilinx.com>, <sivadur@xilinx.com>,
         Piyush Mehta <piyush.mehta@xilinx.com>
-Subject: [PATCH V3] dt-bindings: ata: ahci-ceva: convert to yaml
-Date:   Mon, 13 Jun 2022 20:01:20 +0530
-Message-ID: <20220613143120.6936-1-piyush.mehta@xilinx.com>
+Subject: [PATCH V2] dt-bindings: ata: ahci-ceva: convert to yaml
+Date:   Mon, 13 Jun 2022 20:16:51 +0530
+Message-ID: <20220613144651.7300-1-piyush.mehta@xilinx.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f8785ae1-6c2b-4615-eb65-08da4d496c29
-X-MS-TrafficTypeDiagnostic: BL0PR02MB4772:EE_
-X-Microsoft-Antispam-PRVS: <BL0PR02MB477240AC74D95D4C70345E4DD4AB9@BL0PR02MB4772.namprd02.prod.outlook.com>
+X-MS-Office365-Filtering-Correlation-Id: 9481d0ac-d8d1-4027-3bad-08da4d4b93fd
+X-MS-TrafficTypeDiagnostic: DM8PR02MB8070:EE_
+X-Microsoft-Antispam-PRVS: <DM8PR02MB8070927785ABC6656E47F1F0D4AB9@DM8PR02MB8070.namprd02.prod.outlook.com>
 X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: onD914akgMOZjMFtMDr6/eQtXl3qAyhn4TFZcsHcQfC9w/X1LSUvqNuUpRaHd8iyKvUzkq0YxP9EB9EsUklYbsthhUQMRUQXt2gDE8ZnmRzNwVZsWU737+8b6XLcJqMyhTZeLgfka1pAh7MM4RRlf/vkiO1bwf7t9ICJ2Rst8UeWS+/duA61c9YxcK3f4YYII8fG6GDuKyFu+p4ITp+z9YyoFKFtaY9+FlqNSXdYME7B20GGo19epNJp/yLHiSl15gagwKpaT7MVVlhIn0zXQG3hzlNiFWryZ/uJm9nWigsj52BPGo0esGA3uCjpV09Qt6oV24q5cOYHjQN5H32IZncQXQybnKtf/bZ1EekbGwBwoQzFoI7SdEixZnxVqUlRncN5318/Sfxp976a/sQ2p4pr0H51dxo1aMCUaQ9efDvJI7j5h2txGBZp78kFFcTdJuivGD/09rSrYdx9LOhexDrCZMPDtOUH/hLrV/WXRR6WQ6JIeelYF9uQgcF9OZEVpfiP0eqDnIJMjrCjwzDNLYqFOEL3WsAd8Y9M3xw/QnmN/kvuKm5LtgN2N3bIwE8/EdJhEA3rCuYoq/mqGSVDt3QadcTmx5FPY3J+/2oV3PwQdGt2pR0yoGlG+GLTj8n6vAFBK1aXAzU1lmzzqWFdMQiBVE866tI7bDaSsr5+vzaNkzqmpS5jJCFsoKpVw7j/4ARxcKmZw4HLIAV9g9wUDcW2sWaxNOjJ1NRJ2praf2RXL2IoKBawSJovvqtWwVT+UJftDxzHVpYliEzoA30bTfuquGkTjWiwNNF7ma8N5QF7OuVeVupsA9XIeGFphHV2ZRUrsR9v7M0VRErI+1jr9w==
-X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch01.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(13230016)(4636009)(46966006)(36840700001)(40470700004)(2906002)(508600001)(966005)(8676002)(82310400005)(36860700001)(6636002)(40460700003)(316002)(70586007)(7696005)(26005)(70206006)(6666004)(110136005)(4326008)(54906003)(36756003)(2616005)(83380400001)(186003)(1076003)(426003)(47076005)(107886003)(336012)(9786002)(8936002)(356005)(5660300002)(44832011)(7636003)(102446001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: clEpgbL0d2WLl/Tt8O98ZOvJBf/gUvI+l5Ofp3p8ZZAfEU/DJ1Wf4V+KQoIltzFSSfkwdt6O4DkG2fwosDE4J+OhI2pCIkD54j+7K1KyqfElyfdiunp1PRTpvBHp7C/YgOSq0njJ/oxqzmiUleO2tkBNSLRJm496oEnH0huEVNggt5ADPhtQhsnVDIIuS/W3AuVEsTa7iNKG2xqFIsOQZyKUw8kYpysjFp6D+fXuxGjjSyQji0F/ItfakrAb73HtZxidvFvlsTR/bg8g2zNWQ+w603QHj6MJgIZWzwtlEGzaILq5NMiVrjNXKfnVaz+Ah5D11Idj00IWfXJbymfakDw3RiCliwhAzvR0IQ/KekJTp1Y4K1J+c7TNMu/Mw8F9a3/3/XR0SBBraeaJ9RqPfJ6RSiCazhjH5UWsIF+wu5+O2GUBaGnwzXtqzsr+YG5olpaidLcbdxZUAEmxCpY9WnUGdDsrD4pFfrIOJ4dHgyobRMQ0/fch98mdDKOJRbTtpxDQyffOeG2i068bmM/MirFknulU7Bq/m1XKE8lBTDnwUJC3Zu1D5AbD7T7ktIq5nlqyogQ82ijkbdswEzzzFb1us5c+KMQi/Hfy4wX/MDhofKLcVKHVwYknIiqNvKFH/zxXqo/6apKKzcfPNkw3BqATMkGIgzsbOZ4Eh+GlIOaO/jE8gmDWYXybShU9gKLvUvkEzS8HciIZn5pJynCyR/gF9R+tdgBrmWiuCCHmhPnZ72p8Zt4E0PEzTfvGA5MsELJr1LtIDW+rZz3H+g+Az8uPSNidzzlfQN2kZo8guueCIwtRaE5OdPltm1VG2WzbG8Ohim+iYJ4JhUl3PXSgy+aLwbt/NgILlIwCZ28j9zAbr03rahwVJIt9lNg5oz/n
+X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch02.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(13230016)(4636009)(40470700004)(46966006)(36840700001)(9786002)(966005)(44832011)(83380400001)(8676002)(7636003)(6636002)(110136005)(36756003)(70586007)(356005)(70206006)(40460700003)(316002)(5660300002)(54906003)(508600001)(8936002)(186003)(2616005)(4326008)(107886003)(36860700001)(2906002)(7696005)(6666004)(26005)(47076005)(426003)(82310400005)(1076003)(336012)(102446001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: xilinx.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jun 2022 14:31:36.8046
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jun 2022 14:47:02.6297
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f8785ae1-6c2b-4615-eb65-08da4d496c29
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9481d0ac-d8d1-4027-3bad-08da4d4b93fd
 X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch01.xlnx.xilinx.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM3NAM02FT040.eop-nam02.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch02.xlnx.xilinx.com]
+X-MS-Exchange-CrossTenant-AuthSource: SN1NAM02FT0057.eop-nam02.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR02MB4772
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM8PR02MB8070
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -109,9 +109,13 @@ Convert the ahci-ceva doc to yaml.
 
 Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
 ---
+Changes for V2:
+- Corrected the patch --prefix V3 to V2.
+- Added Required properties.
+---
  .../devicetree/bindings/ata/ahci-ceva.txt     |  63 ------
- .../devicetree/bindings/ata/ahci-ceva.yaml    | 191 ++++++++++++++++++
- 2 files changed, 191 insertions(+), 63 deletions(-)
+ .../devicetree/bindings/ata/ahci-ceva.yaml    | 197 ++++++++++++++++++
+ 2 files changed, 197 insertions(+), 63 deletions(-)
  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
  create mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.yaml
 
@@ -186,10 +190,10 @@ index bfb6da0281ec..000000000000
 -	};
 diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.yaml b/Documentation/devicetree/bindings/ata/ahci-ceva.yaml
 new file mode 100644
-index 000000000000..f13b3286a079
+index 000000000000..71f9ff0e2844
 --- /dev/null
 +++ b/Documentation/devicetree/bindings/ata/ahci-ceva.yaml
-@@ -0,0 +1,191 @@
+@@ -0,0 +1,197 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
@@ -198,6 +202,9 @@ index 000000000000..f13b3286a079
 +
 +title: Ceva AHCI SATA Controller
 +
++maintainers:
++  - Piyush Mehta <piyush.mehta@xilinx.com>
++
 +description: |
 +  The Ceva SATA controller mostly conforms to the AHCI interface with some
 +  special extensions to add functionality, is a high-performance dual-port
@@ -205,14 +212,14 @@ index 000000000000..f13b3286a079
 +  advanced features such as native command queuing and frame information
 +  structure (FIS) based switching for systems employing port multipliers.
 +
-+maintainers:
-+  - Piyush Mehta <piyush.mehta@xilinx.com>
-+
 +properties:
 +  compatible:
 +    const: ceva,ahci-1v84
 +
 +  reg:
++    maxItems: 1
++
++  clocks:
 +    maxItems: 1
 +
 +  interrupts:
@@ -338,17 +345,22 @@ index 000000000000..f13b3286a079
 +  resets:
 +    maxItems: 1
 +
-+  clocks:
-+    maxItems: 1
-+
 +  '#stream-id-cells':
 +    const: 4
 +
 +required:
 +  - compatible
 +  - reg
-+  - interrupts
 +  - clocks
++  - interrupts
++  - ceva,p0-cominit-params
++  - ceva,p0-comwake-params
++  - ceva,p0-burst-params
++  - ceva,p0-retry-params
++  - ceva,p1-cominit-params
++  - ceva,p1-comwake-params
++  - ceva,p1-burst-params
++  - ceva,p1-retry-params
 +
 +additionalProperties: false
 +
@@ -358,7 +370,7 @@ index 000000000000..f13b3286a079
 +    #include <dt-bindings/interrupt-controller/irq.h>
 +    #include <dt-bindings/power/xlnx-zynqmp-power.h>
 +    #include <dt-bindings/reset/xlnx-zynqmp-resets.h>
-+    #include <dt-bindings/reset/xlnx-zynqmp-resets.h>
++    #include <dt-bindings/clock/xlnx-zynqmp-clk.h>
 +    #include <dt-bindings/phy/phy.h>
 +
 +    sata: ahci@fd0c0000 {
@@ -379,8 +391,6 @@ index 000000000000..f13b3286a079
 +        phys = <&psgtr 1 PHY_TYPE_SATA 1 1>;
 +        resets = <&zynqmp_reset ZYNQMP_RESET_SATA>;
 +    };
-+
-+...
 -- 
 2.17.1
 
