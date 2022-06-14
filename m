@@ -2,71 +2,83 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABF2C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 22:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B28CFC43334
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 22:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239118AbiFNWCi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jun 2022 18:02:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56832 "EHLO
+        id S234781AbiFNWPt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jun 2022 18:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234714AbiFNWCh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 18:02:37 -0400
-Received: from mail-il1-f182.google.com (mail-il1-f182.google.com [209.85.166.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8FAD5581;
-        Tue, 14 Jun 2022 15:02:34 -0700 (PDT)
-Received: by mail-il1-f182.google.com with SMTP id p1so7569355ilj.9;
-        Tue, 14 Jun 2022 15:02:34 -0700 (PDT)
+        with ESMTP id S232003AbiFNWPt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 18:15:49 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2682E4FC70;
+        Tue, 14 Jun 2022 15:15:46 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id v17-20020a17090a899100b001ead067eaf9so373888pjn.0;
+        Tue, 14 Jun 2022 15:15:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=OE/fzMqpiaW3OFuKMIGVvraecSzECkoBjR9tZsRV+uI=;
+        b=DnPPZrfz0bfFY/bANga/SjMZTFaMo1iEYiOk6JRl7u03GEoCMxLja7V+93EZw0JBx9
+         pZVS/hsedBJVlYu6OBJZnnLBae7ffRL51mj4pXu/32yqnaHUEbya9zGy6pg06qy4wUDO
+         bsmMgodMjAVt4SlgNCfuI/Bf0oxQjp4CsCfeEwIprjNpYLYA/Pl3dRQS1AhchJpABbE/
+         vZfjWaEztcuX8A2sFWpGds9g/1Iaj8lM3bHjeBU6sH0kwHHLlsSZ5/+8cu2KO4sKfQPE
+         kw8mHLIPHOaz2q+c1VCVlQJLxAJ+cz20dW9ORzd3aDLR3RqGs86ca1XPT55uNCVrzn1A
+         eHZg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=0nxRd9AE8Oe6xN5njg7BT1Z7XjTAG7bzfY/YVaHWxW0=;
-        b=RoUuMFnliUzMEiYKVdMgoyitIDiWLkRlrYluMKR9M8VNsLvstw9m0hA4EsMJTbElb7
-         EAAaZx+1asi1aI5E/pIv7UNlMuLZ2dz/81cW+dskI8x5a2j7lyiB5E+GIq8RH3FJ1YTC
-         pjUHsTxiS8Hdf5ddCFZ/3X6GYjPKA72URnU8DEef3lpF81Gg+eYzi5sfLJMXEjP6Yztn
-         ovLYPNvq3Vyl0mdlXOiUbtgu55J3J1SKeTubyl0DLmS1SMcsHDF7z/gUuYdZog21adSj
-         yrIFXcuFAYUo6fyoAbm2pY/5MGw5V7+H2RSSs/rHBIRZtCNaqeERjd2z3cw28/cxefRY
-         nEvQ==
-X-Gm-Message-State: AJIora8oYwcfRB34mcKuv4hICNvfbSzVMXt0cZ8MDvbbZPvB7sfQ9TWs
-        J/YZ4/8NQDhcxzsAidBInG9D1quCjw==
-X-Google-Smtp-Source: AGRyM1s5JXgBzROW2REr1JyDPeUi7FdtaT5Ia8u5KZ46ee7E98SZvgRNcVp8ywM58DLAA4k2gAbIpw==
-X-Received: by 2002:a92:c567:0:b0:2d1:c3df:eff8 with SMTP id b7-20020a92c567000000b002d1c3dfeff8mr4160022ilj.84.1655244153238;
-        Tue, 14 Jun 2022 15:02:33 -0700 (PDT)
-Received: from robh.at.kernel.org ([64.188.179.251])
-        by smtp.gmail.com with ESMTPSA id g17-20020a022711000000b00331fdc68ccesm5320943jaa.140.2022.06.14.15.02.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jun 2022 15:02:32 -0700 (PDT)
-Received: (nullmailer pid 2793685 invoked by uid 1000);
-        Tue, 14 Jun 2022 22:02:30 -0000
-Date:   Tue, 14 Jun 2022 16:02:30 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        devicetree@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
-        Linus Walleij <linus.walleij@linaro.org>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=OE/fzMqpiaW3OFuKMIGVvraecSzECkoBjR9tZsRV+uI=;
+        b=oUlhoal47RaGSM3ns2Sw1+ep8FklwZkeGF1TichkYRNAXFE2WnyRgY8PokQBvwuM6y
+         ze8hHMsuocbI0crksNRpSFOxnJ3M2e1KsT21htpR8/6fB92vV2ZO0ms1UhonJVWFg3S1
+         pLiaQgMc0noZBlyB/b7FpyvbH0MCKoMkpGiPB9Q1p92pWHlw1bLrHgIOlJ2KONTrfG1j
+         ftYy8+Eb8XlXVnA5O6L9XIb3iOorfklhYKcxj/+7MJfO9ZbfgdKLMC+53cuzz+fuVrmP
+         yAnKn9i/xjpavAXIoCOqnI0UkU2gTq/1i/Nk0yLDYoDK9XHxS1dp2aXwu8doTRH+bLmC
+         vVuQ==
+X-Gm-Message-State: AJIora+nXoeCg+eg2xY6imPqjCvCdcy4C+3TWN72aXL1LXIJeJGCX8B5
+        MRhutlKncoXlR8HaLkzEhro=
+X-Google-Smtp-Source: AGRyM1uOwk/emmVkX0QQYsxktMPnz9B66VY8L42swcCnbDvxdt1YA+mxYj3v0VZmMSVf571E4rpaOw==
+X-Received: by 2002:a17:902:ab08:b0:167:7fa1:60df with SMTP id ik8-20020a170902ab0800b001677fa160dfmr6137259plb.71.1655244945535;
+        Tue, 14 Jun 2022 15:15:45 -0700 (PDT)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.googlemail.com with ESMTPSA id 130-20020a630188000000b003fadd680908sm8395481pgb.83.2022.06.14.15.15.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Jun 2022 15:15:45 -0700 (PDT)
+Message-ID: <0f4118eb-d04a-c674-606e-09fd231c6936@gmail.com>
+Date:   Tue, 14 Jun 2022 15:15:42 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
 Subject: Re: [PATCH v4 01/23] dt-bindings: ata: ahci-platform: Move
  dma-coherent to sata-common.yaml
-Message-ID: <20220614220230.GA2793572-robh@kernel.org>
+Content-Language: en-US
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc:     Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
  <20220610081801.11854-2-Sergey.Semin@baikalelectronics.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+From:   Florian Fainelli <f.fainelli@gmail.com>
 In-Reply-To: <20220610081801.11854-2-Sergey.Semin@baikalelectronics.ru>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 10 Jun 2022 11:17:39 +0300, Serge Semin wrote:
+On 6/10/22 01:17, Serge Semin wrote:
 > Seeing doubtfully any SATA device working without embedded DMA engine
 > let's permit the device nodes being equipped with the dma-coherent
 > property in case if the platform is capable of cache-coherent DMAs.
@@ -76,21 +88,7 @@ On Fri, 10 Jun 2022 11:17:39 +0300, Serge Semin wrote:
 > SATA AHCI controller only.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> 
-> ---
-> 
-> Changelog v2:
-> - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
-> 
-> Changelog v4:
-> - Move the dma-coherent property to the sata-common.yaml schema instead
->   of removing it.
-> - Remove the Hannes' rb tag.
-> ---
->  Documentation/devicetree/bindings/ata/ahci-platform.yaml  | 2 --
->  Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml | 2 --
->  Documentation/devicetree/bindings/ata/sata-common.yaml    | 2 ++
->  3 files changed, 2 insertions(+), 4 deletions(-)
-> 
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
+-- 
+Florian
