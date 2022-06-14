@@ -2,76 +2,75 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B28CFC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 22:15:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAC18C43334
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 22:16:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234781AbiFNWPt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jun 2022 18:15:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40404 "EHLO
+        id S232003AbiFNWQB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jun 2022 18:16:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232003AbiFNWPt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 18:15:49 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2682E4FC70;
-        Tue, 14 Jun 2022 15:15:46 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id v17-20020a17090a899100b001ead067eaf9so373888pjn.0;
-        Tue, 14 Jun 2022 15:15:46 -0700 (PDT)
+        with ESMTP id S236212AbiFNWQA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 18:16:00 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8C3B517E2;
+        Tue, 14 Jun 2022 15:15:56 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id g186so9754419pgc.1;
+        Tue, 14 Jun 2022 15:15:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=message-id:date:mime-version:user-agent:subject:content-language:to
          :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=OE/fzMqpiaW3OFuKMIGVvraecSzECkoBjR9tZsRV+uI=;
-        b=DnPPZrfz0bfFY/bANga/SjMZTFaMo1iEYiOk6JRl7u03GEoCMxLja7V+93EZw0JBx9
-         pZVS/hsedBJVlYu6OBJZnnLBae7ffRL51mj4pXu/32yqnaHUEbya9zGy6pg06qy4wUDO
-         bsmMgodMjAVt4SlgNCfuI/Bf0oxQjp4CsCfeEwIprjNpYLYA/Pl3dRQS1AhchJpABbE/
-         vZfjWaEztcuX8A2sFWpGds9g/1Iaj8lM3bHjeBU6sH0kwHHLlsSZ5/+8cu2KO4sKfQPE
-         kw8mHLIPHOaz2q+c1VCVlQJLxAJ+cz20dW9ORzd3aDLR3RqGs86ca1XPT55uNCVrzn1A
-         eHZg==
+        bh=mOOADoNR4DGuoQaFlilbRe0jU293y9VGdZpvVpe1nsA=;
+        b=NmmbxmbbOprX/zSFCrUhOCZ824//g4cTKYTWXdumeNdjKtc3kP9EIaX9tvxY8TYw2U
+         JPxjX2JaRhH/scb7G35UXH0cFJqEbt2KLB2bfc3S5HX8zzIzLwjG3imNzV5n0/nsjuSx
+         6ioHIUNTwdPlwE8fMmps8Xo2y3mbBgvYLtyP7P//uIZJ3wj7ywjfk3Rs2y3bwG9buVs9
+         TDKxCHE/t0DbLbU/56O4nluba5SYAXTh7jzsdsCMmY4PgTqB3fiv6hKxCFpoE+d5Mjp4
+         TpcMUHM2XevLydjJ5O0Rz8CoCu6gSmkeTvZVvT6z4aJAGppdDdjA8bFm1ifWozLpFoBx
+         wj7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=OE/fzMqpiaW3OFuKMIGVvraecSzECkoBjR9tZsRV+uI=;
-        b=oUlhoal47RaGSM3ns2Sw1+ep8FklwZkeGF1TichkYRNAXFE2WnyRgY8PokQBvwuM6y
-         ze8hHMsuocbI0crksNRpSFOxnJ3M2e1KsT21htpR8/6fB92vV2ZO0ms1UhonJVWFg3S1
-         pLiaQgMc0noZBlyB/b7FpyvbH0MCKoMkpGiPB9Q1p92pWHlw1bLrHgIOlJ2KONTrfG1j
-         ftYy8+Eb8XlXVnA5O6L9XIb3iOorfklhYKcxj/+7MJfO9ZbfgdKLMC+53cuzz+fuVrmP
-         yAnKn9i/xjpavAXIoCOqnI0UkU2gTq/1i/Nk0yLDYoDK9XHxS1dp2aXwu8doTRH+bLmC
-         vVuQ==
-X-Gm-Message-State: AJIora+nXoeCg+eg2xY6imPqjCvCdcy4C+3TWN72aXL1LXIJeJGCX8B5
-        MRhutlKncoXlR8HaLkzEhro=
-X-Google-Smtp-Source: AGRyM1uOwk/emmVkX0QQYsxktMPnz9B66VY8L42swcCnbDvxdt1YA+mxYj3v0VZmMSVf571E4rpaOw==
-X-Received: by 2002:a17:902:ab08:b0:167:7fa1:60df with SMTP id ik8-20020a170902ab0800b001677fa160dfmr6137259plb.71.1655244945535;
-        Tue, 14 Jun 2022 15:15:45 -0700 (PDT)
+        bh=mOOADoNR4DGuoQaFlilbRe0jU293y9VGdZpvVpe1nsA=;
+        b=GthXSmflUqOXMOnkRIxmCrq6dEUEHWM3m1z88HjqWL+pA6CZoUUXiA6VlFLspQSnwJ
+         VotPD3w55OUSI9ThxSkuufCO84ekHTQvudCQWQmFaaqIdmmm/wYEgtEeo9p2qPjYF7do
+         BY0SRW9x0FzC5KddUd/hKOc+JrY1PPJ7QZ5+TAdgpUxfYE8KUCwnVGl2ahWHo2kGLGB0
+         heHBsFuSQA9EfMcYj3Fh6Pyq2Tr3zAzQCdggHTuM+iZhtSe3RJxB5SUQDFOtHbPsOm05
+         5AfjWUhqn+AD8/6GJiwCnLE9ceJ3Tz0CRlmXJreNAb9lJqOc8dnScx3f6kf6C7H6FI8c
+         04hw==
+X-Gm-Message-State: AOAM532xQeSkPeNUKZR/1gaEwoq87avFRF+1rQKddhw2gDK5JWas7wS6
+        2SyZgSXXOkzWuFlf76rupQXwqim4Vf4=
+X-Google-Smtp-Source: ABdhPJxBT3OLZvYSExo4h5ZIxGMiHDgXBtxJ1wy/zhk6MQtacPPBseSWOv99BhnkqXyRrU2yma//Yg==
+X-Received: by 2002:a63:f156:0:b0:3ab:ada6:b463 with SMTP id o22-20020a63f156000000b003abada6b463mr6129114pgk.462.1655244956232;
+        Tue, 14 Jun 2022 15:15:56 -0700 (PDT)
 Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id 130-20020a630188000000b003fadd680908sm8395481pgb.83.2022.06.14.15.15.43
+        by smtp.googlemail.com with ESMTPSA id h30-20020aa79f5e000000b00519cfca8e30sm8089435pfr.209.2022.06.14.15.15.54
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Jun 2022 15:15:45 -0700 (PDT)
-Message-ID: <0f4118eb-d04a-c674-606e-09fd231c6936@gmail.com>
-Date:   Tue, 14 Jun 2022 15:15:42 -0700
+        Tue, 14 Jun 2022 15:15:55 -0700 (PDT)
+Message-ID: <8b676d6a-2f6b-1906-a41e-9c1dd5288534@gmail.com>
+Date:   Tue, 14 Jun 2022 15:15:53 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.9.1
-Subject: Re: [PATCH v4 01/23] dt-bindings: ata: ahci-platform: Move
- dma-coherent to sata-common.yaml
+Subject: Re: [PATCH v4 05/23] dt-bindings: ata: sata-brcm: Apply common AHCI
+ schema
 Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linus Walleij <linus.walleij@linaro.org>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
 Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
- <20220610081801.11854-2-Sergey.Semin@baikalelectronics.ru>
+ <20220610081801.11854-6-Sergey.Semin@baikalelectronics.ru>
 From:   Florian Fainelli <f.fainelli@gmail.com>
-In-Reply-To: <20220610081801.11854-2-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220610081801.11854-6-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -79,13 +78,10 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 6/10/22 01:17, Serge Semin wrote:
-> Seeing doubtfully any SATA device working without embedded DMA engine
-> let's permit the device nodes being equipped with the dma-coherent
-> property in case if the platform is capable of cache-coherent DMAs.
-> 
-> As a side-effect we can drop the explicit dma-coherent property definition
-> from the particular device schemas. Currently it concerns the Broadcom
-> SATA AHCI controller only.
+> The Broadcom SATA controller is obviously based on the AHCI standard. The
+> device driver uses the kernel AHCI library to work with it. Therefore we
+> can be have a more thorough DT-bindings evaluation by referring to the
+> AHCI-common schema instead of using the more relaxed SATA-common one.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
