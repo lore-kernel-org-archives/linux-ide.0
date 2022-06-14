@@ -2,105 +2,74 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD4EAC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 17:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE9A6C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 18:00:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236553AbiFNR4D (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jun 2022 13:56:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48800 "EHLO
+        id S240330AbiFNSAn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jun 2022 14:00:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233032AbiFNR4D (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 13:56:03 -0400
-Received: from mail-il1-f180.google.com (mail-il1-f180.google.com [209.85.166.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E4B6286FA;
-        Tue, 14 Jun 2022 10:56:02 -0700 (PDT)
-Received: by mail-il1-f180.google.com with SMTP id s1so7168576ilj.0;
-        Tue, 14 Jun 2022 10:56:02 -0700 (PDT)
+        with ESMTP id S237431AbiFNSAn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 14:00:43 -0400
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E98C52A24F;
+        Tue, 14 Jun 2022 11:00:42 -0700 (PDT)
+Received: by mail-pf1-f169.google.com with SMTP id 187so9224788pfu.9;
+        Tue, 14 Jun 2022 11:00:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject:date
-         :message-id;
-        bh=SwWDE6cwQQmygMiXif7g/HNKoV630590Lu3na+H4tf8=;
-        b=tOOrTUdfr/CyK2K1jLtyIM8+9borwZqL7JBbvd9z4DKFtEct0MXlFsMThuOZhJVZuZ
-         74XyfS9KJpOy5B63BOowtsPYm0SwmdOjmvDxhlCrTnHMYNPL5x5RB0w4r2Hs0D6H1F+3
-         2xbsjjG0Ug7sBJpTNaNN1+PSlhIXdENyRDQ2yd7wgTEHuD1cX6J7MKszX9VeSjQs9Lg9
-         KykXj/MOxSiuRTZg+COuIaGKX84x3FjHEnV44cyv0rMmKaL9sZnmBO7hBCJUyYNQxtHL
-         PAG/rspUqDbe0Rk1QBWo1Hgc82I2yFZ3Ro7XLEZ86oZm4Gf6EwnDNrhGyzbNGXmdximY
-         gNDQ==
-X-Gm-Message-State: AJIora8ogGpNyV8OvXIbLrX9AHd1ymUPXbLT/yRl/L2OG0ljb8GbPpPx
-        pQTOI+VW1bT5+EbizV2SsA==
-X-Google-Smtp-Source: AGRyM1s4AjNweeXDZMr26t3YCh80q9RGi6qfBYIzE3LD4gndL8OM1f++ViNKTeqwVNIKU6HjXmnQ/A==
-X-Received: by 2002:a05:6e02:f44:b0:2d3:b54f:d83e with SMTP id y4-20020a056e020f4400b002d3b54fd83emr3699031ilj.9.1655229361518;
-        Tue, 14 Jun 2022 10:56:01 -0700 (PDT)
-Received: from robh.at.kernel.org ([64.188.179.251])
-        by smtp.gmail.com with ESMTPSA id g18-20020a02c552000000b00332122c106dsm5150944jaj.152.2022.06.14.10.56.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jun 2022 10:56:01 -0700 (PDT)
-Received: (nullmailer pid 1889801 invoked by uid 1000);
-        Tue, 14 Jun 2022 17:55:59 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Piyush Mehta <piyush.mehta@xilinx.com>
-Cc:     devicetree@vger.kernel.org, git@xilinx.com,
-        linux-kernel@vger.kernel.org, michal.simek@xilinx.com,
-        sivadur@xilinx.com, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        robh+dt@kernel.org
-In-Reply-To: <20220613144651.7300-1-piyush.mehta@xilinx.com>
-References: <20220613144651.7300-1-piyush.mehta@xilinx.com>
-Subject: Re: [PATCH V2] dt-bindings: ata: ahci-ceva: convert to yaml
-Date:   Tue, 14 Jun 2022 11:55:59 -0600
-Message-Id: <1655229359.837256.1889800.nullmailer@robh.at.kernel.org>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=9WKPI79Gjph2WfiqwNvS+zcjQJjDViwq87Qamyz2DXk=;
+        b=KjsuvBWDonPyN7jrDJropfLzF+q9XTDK0sSiecl+hB+u3ceBBdwd1+GdAC2wrpJ1ZK
+         yPVNBmXmUIupt1cEALtKMrkbnm7ahdKUpZB4v317OduDBMU/dlCVcsYmU6sKeRh6unBW
+         I4Uo2bdtVehxxrtu62i+fycf0g6YybPHqcVO8Ur4sG7WQiepbAsC9LT3VY1hCrtyfEM9
+         4wRMfB+Qp4Ik/dIANzPTc8RHk9E5qbZxj8NEeW6SqS1W5u9WeoYo+feDPmStTOri2BVg
+         /NDa9vlOoMyZ7+u0uknqI3A/GYiwOklRYLheEwIbk82hJ5xse+J0zjOgtNki2WC9ONvZ
+         ieZA==
+X-Gm-Message-State: AOAM532gpzlvC4oBVhcQzrnWuW9cioHjLGTQlxDlVIKN5SokYPCdOAJo
+        /P2meB5mUNHp/VPnBVqCLeo=
+X-Google-Smtp-Source: ABdhPJyeLEADYZlXGQ6fcr2O2NZgYjSFxVUQw7IEtpwqZAiMRkvSNcDi5EBIoIpVpSmrvmXuGWFljQ==
+X-Received: by 2002:a63:155:0:b0:3fd:1b8e:16ca with SMTP id 82-20020a630155000000b003fd1b8e16camr5514696pgb.407.1655229642302;
+        Tue, 14 Jun 2022 11:00:42 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ab60:e1ea:e2eb:c1b6? ([2620:15c:211:201:ab60:e1ea:e2eb:c1b6])
+        by smtp.gmail.com with ESMTPSA id jf21-20020a170903269500b0015e8d4eb1d1sm7552726plb.27.2022.06.14.11.00.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Jun 2022 11:00:41 -0700 (PDT)
+Message-ID: <1f8e7891-a557-bd8e-221a-6cb14770ea8b@acm.org>
+Date:   Tue, 14 Jun 2022 11:00:39 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH RFC v2 01/18] blk-mq: Add a flag for reserved requests
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, brking@us.ibm.com, hare@suse.de,
+        hch@lst.de
+Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        chenxiang66@hisilicon.com
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-2-git-send-email-john.garry@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1654770559-101375-2-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 13 Jun 2022 20:16:51 +0530, Piyush Mehta wrote:
-> Convert the ahci-ceva doc to yaml.
+On 6/9/22 03:29, John Garry wrote:
+> Add a flag for reserved requests so that drivers may know this for any
+> special handling.
 > 
-> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
-> ---
-> Changes for V2:
-> - Corrected the patch --prefix V3 to V2.
-> - Added Required properties.
-> ---
->  .../devicetree/bindings/ata/ahci-ceva.txt     |  63 ------
->  .../devicetree/bindings/ata/ahci-ceva.yaml    | 197 ++++++++++++++++++
->  2 files changed, 197 insertions(+), 63 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.yaml
-> 
+> The 'reserved' argument in blk_mq_ops.timeout callback could now be
+> replaced by using this flag.
 
-Running 'make dtbs_check' with the schema in this patch gives the
-following warnings. Consider if they are expected or the schema is
-incorrect. These may not be new warnings.
+Why not to combine that change into this patch?
 
-Note that it is not yet a requirement to have 0 warnings for dtbs_check.
-This will change in the future.
+Anyway:
 
-Full log is available here: https://patchwork.ozlabs.org/patch/
-
-
-ahci@fd0c0000: 'iommus' does not match any of the regexes: 'pinctrl-[0-9]+'
-	arch/arm64/boot/dts/xilinx/avnet-ultra96-rev1.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-sm-k26-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-smk-k26-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1232-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1254-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1275-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm016-dc2.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm018-dc4.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm019-dc5.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu100-revC.dtb
-
-ahci@fd0c0000: 'iommus', 'phy-names' do not match any of the regexes: 'pinctrl-[0-9]+'
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm015-dc1.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm017-dc3.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-rev1.0.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-rev1.1.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-revB.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu104-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu104-revC.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu106-revA.dtb
-	arch/arm64/boot/dts/xilinx/zynqmp-zcu111-revA.dtb
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
