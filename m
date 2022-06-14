@@ -2,132 +2,105 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AFBEC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 13:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD4EAC43334
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 17:56:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242909AbiFNNJQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jun 2022 09:09:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55420 "EHLO
+        id S236553AbiFNR4D (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jun 2022 13:56:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234149AbiFNNJQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 09:09:16 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52AC321E11;
-        Tue, 14 Jun 2022 06:09:14 -0700 (PDT)
-Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LMpd70JCTz6F90V;
-        Tue, 14 Jun 2022 21:07:39 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 14 Jun 2022 15:09:12 +0200
-Received: from [10.195.33.253] (10.195.33.253) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 14 Jun 2022 14:09:10 +0100
-Message-ID: <4a3ab043-f609-22cb-895f-e67c8dd8f6ab@huawei.com>
-Date:   Tue, 14 Jun 2022 14:12:18 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v3 2/4] dma-iommu: Add iommu_dma_opt_mapping_size()
-To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
-CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <linux-scsi@vger.kernel.org>, <liyihang6@hisilicon.com>,
-        <chenxiang66@hisilicon.com>, <thunder.leizhen@huawei.com>
-References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
- <1654507822-168026-3-git-send-email-john.garry@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <1654507822-168026-3-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.33.253]
-X-ClientProxiedBy: lhreml746-chm.china.huawei.com (10.201.108.196) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        with ESMTP id S233032AbiFNR4D (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 13:56:03 -0400
+Received: from mail-il1-f180.google.com (mail-il1-f180.google.com [209.85.166.180])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E4B6286FA;
+        Tue, 14 Jun 2022 10:56:02 -0700 (PDT)
+Received: by mail-il1-f180.google.com with SMTP id s1so7168576ilj.0;
+        Tue, 14 Jun 2022 10:56:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject:date
+         :message-id;
+        bh=SwWDE6cwQQmygMiXif7g/HNKoV630590Lu3na+H4tf8=;
+        b=tOOrTUdfr/CyK2K1jLtyIM8+9borwZqL7JBbvd9z4DKFtEct0MXlFsMThuOZhJVZuZ
+         74XyfS9KJpOy5B63BOowtsPYm0SwmdOjmvDxhlCrTnHMYNPL5x5RB0w4r2Hs0D6H1F+3
+         2xbsjjG0Ug7sBJpTNaNN1+PSlhIXdENyRDQ2yd7wgTEHuD1cX6J7MKszX9VeSjQs9Lg9
+         KykXj/MOxSiuRTZg+COuIaGKX84x3FjHEnV44cyv0rMmKaL9sZnmBO7hBCJUyYNQxtHL
+         PAG/rspUqDbe0Rk1QBWo1Hgc82I2yFZ3Ro7XLEZ86oZm4Gf6EwnDNrhGyzbNGXmdximY
+         gNDQ==
+X-Gm-Message-State: AJIora8ogGpNyV8OvXIbLrX9AHd1ymUPXbLT/yRl/L2OG0ljb8GbPpPx
+        pQTOI+VW1bT5+EbizV2SsA==
+X-Google-Smtp-Source: AGRyM1s4AjNweeXDZMr26t3YCh80q9RGi6qfBYIzE3LD4gndL8OM1f++ViNKTeqwVNIKU6HjXmnQ/A==
+X-Received: by 2002:a05:6e02:f44:b0:2d3:b54f:d83e with SMTP id y4-20020a056e020f4400b002d3b54fd83emr3699031ilj.9.1655229361518;
+        Tue, 14 Jun 2022 10:56:01 -0700 (PDT)
+Received: from robh.at.kernel.org ([64.188.179.251])
+        by smtp.gmail.com with ESMTPSA id g18-20020a02c552000000b00332122c106dsm5150944jaj.152.2022.06.14.10.56.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jun 2022 10:56:01 -0700 (PDT)
+Received: (nullmailer pid 1889801 invoked by uid 1000);
+        Tue, 14 Jun 2022 17:55:59 -0000
+From:   Rob Herring <robh@kernel.org>
+To:     Piyush Mehta <piyush.mehta@xilinx.com>
+Cc:     devicetree@vger.kernel.org, git@xilinx.com,
+        linux-kernel@vger.kernel.org, michal.simek@xilinx.com,
+        sivadur@xilinx.com, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        robh+dt@kernel.org
+In-Reply-To: <20220613144651.7300-1-piyush.mehta@xilinx.com>
+References: <20220613144651.7300-1-piyush.mehta@xilinx.com>
+Subject: Re: [PATCH V2] dt-bindings: ata: ahci-ceva: convert to yaml
+Date:   Tue, 14 Jun 2022 11:55:59 -0600
+Message-Id: <1655229359.837256.1889800.nullmailer@robh.at.kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 06/06/2022 10:30, John Garry wrote:
-> Add the IOMMU callback for DMA mapping API dma_opt_mapping_size(), which
-> allows the drivers to know the optimal mapping limit and thus limit the
-> requested IOVA lengths.
+On Mon, 13 Jun 2022 20:16:51 +0530, Piyush Mehta wrote:
+> Convert the ahci-ceva doc to yaml.
 > 
-> This value is based on the IOVA rcache range limit, as IOVAs allocated
-> above this limit must always be newly allocated, which may be quite slow.
-> 
-
-Can I please get some sort of ack from the IOMMU people on this one?
-
-Thanks,
-John
-
-EOM
-
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
 > ---
->   drivers/iommu/dma-iommu.c | 6 ++++++
->   drivers/iommu/iova.c      | 5 +++++
->   include/linux/iova.h      | 2 ++
->   3 files changed, 13 insertions(+)
+> Changes for V2:
+> - Corrected the patch --prefix V3 to V2.
+> - Added Required properties.
+> ---
+>  .../devicetree/bindings/ata/ahci-ceva.txt     |  63 ------
+>  .../devicetree/bindings/ata/ahci-ceva.yaml    | 197 ++++++++++++++++++
+>  2 files changed, 197 insertions(+), 63 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.yaml
 > 
-> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-> index f90251572a5d..9e1586447ee8 100644
-> --- a/drivers/iommu/dma-iommu.c
-> +++ b/drivers/iommu/dma-iommu.c
-> @@ -1459,6 +1459,11 @@ static unsigned long iommu_dma_get_merge_boundary(struct device *dev)
->   	return (1UL << __ffs(domain->pgsize_bitmap)) - 1;
->   }
->   
-> +static size_t iommu_dma_opt_mapping_size(void)
-> +{
-> +	return iova_rcache_range();
-> +}
-> +
->   static const struct dma_map_ops iommu_dma_ops = {
->   	.alloc			= iommu_dma_alloc,
->   	.free			= iommu_dma_free,
-> @@ -1479,6 +1484,7 @@ static const struct dma_map_ops iommu_dma_ops = {
->   	.map_resource		= iommu_dma_map_resource,
->   	.unmap_resource		= iommu_dma_unmap_resource,
->   	.get_merge_boundary	= iommu_dma_get_merge_boundary,
-> +	.opt_mapping_size	= iommu_dma_opt_mapping_size,
->   };
->   
->   /*
-> diff --git a/drivers/iommu/iova.c b/drivers/iommu/iova.c
-> index db77aa675145..9f00b58d546e 100644
-> --- a/drivers/iommu/iova.c
-> +++ b/drivers/iommu/iova.c
-> @@ -26,6 +26,11 @@ static unsigned long iova_rcache_get(struct iova_domain *iovad,
->   static void free_cpu_cached_iovas(unsigned int cpu, struct iova_domain *iovad);
->   static void free_iova_rcaches(struct iova_domain *iovad);
->   
-> +unsigned long iova_rcache_range(void)
-> +{
-> +	return PAGE_SIZE << (IOVA_RANGE_CACHE_MAX_SIZE - 1);
-> +}
-> +
->   static int iova_cpuhp_dead(unsigned int cpu, struct hlist_node *node)
->   {
->   	struct iova_domain *iovad;
-> diff --git a/include/linux/iova.h b/include/linux/iova.h
-> index 320a70e40233..c6ba6d95d79c 100644
-> --- a/include/linux/iova.h
-> +++ b/include/linux/iova.h
-> @@ -79,6 +79,8 @@ static inline unsigned long iova_pfn(struct iova_domain *iovad, dma_addr_t iova)
->   int iova_cache_get(void);
->   void iova_cache_put(void);
->   
-> +unsigned long iova_rcache_range(void);
-> +
->   void free_iova(struct iova_domain *iovad, unsigned long pfn);
->   void __free_iova(struct iova_domain *iovad, struct iova *iova);
->   struct iova *alloc_iova(struct iova_domain *iovad, unsigned long size,
+
+Running 'make dtbs_check' with the schema in this patch gives the
+following warnings. Consider if they are expected or the schema is
+incorrect. These may not be new warnings.
+
+Note that it is not yet a requirement to have 0 warnings for dtbs_check.
+This will change in the future.
+
+Full log is available here: https://patchwork.ozlabs.org/patch/
+
+
+ahci@fd0c0000: 'iommus' does not match any of the regexes: 'pinctrl-[0-9]+'
+	arch/arm64/boot/dts/xilinx/avnet-ultra96-rev1.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-sm-k26-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-smk-k26-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1232-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1254-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1275-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm016-dc2.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm018-dc4.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm019-dc5.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu100-revC.dtb
+
+ahci@fd0c0000: 'iommus', 'phy-names' do not match any of the regexes: 'pinctrl-[0-9]+'
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm015-dc1.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zc1751-xm017-dc3.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-rev1.0.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-rev1.1.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu102-revB.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu104-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu104-revC.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu106-revA.dtb
+	arch/arm64/boot/dts/xilinx/zynqmp-zcu111-revA.dtb
 
