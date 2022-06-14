@@ -2,97 +2,140 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16C4BC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 18:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AACC433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 19:33:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357335AbiFNSpn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jun 2022 14:45:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59284 "EHLO
+        id S235623AbiFNTdO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jun 2022 15:33:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357471AbiFNSpU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 14:45:20 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ED461014
-        for <linux-ide@vger.kernel.org>; Tue, 14 Jun 2022 11:43:49 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.81.88) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 14 Jun
- 2022 21:43:41 +0300
-Subject: Re: [PATCH] ata: libata-core: fix sloppy parameter type in
- ata_exec_internal[_sg]()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <226fc2b1-ecb9-19d9-d7f0-2c6bc0fc8edf@omp.ru>
- <de30104b-f299-ab7e-c687-06ca513aa7a7@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <8b6d5cfe-a353-c894-337d-00e4bdfa67f5@omp.ru>
-Date:   Tue, 14 Jun 2022 21:43:41 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229676AbiFNTdN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 15:33:13 -0400
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64B9819F8D;
+        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
+Received: by mail-pj1-f51.google.com with SMTP id v11-20020a17090a4ecb00b001e2c5b837ccso12745973pjl.3;
+        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=0yuY33WdxMB76iynhvTSZPcdcuymbepOOB6v4k/PQOY=;
+        b=jbB+qjSucecXj/HEgCIw1t9EsXmppQ+DavJNYSpUNrariNuH3b/MN6vnNGUdupzrv7
+         Ts0oisAV493ABkX7o5r7XccRpuoTotG9aYWaLeuZGI5NEEZXg5xfH8Etn/oGwBlELKIw
+         TwFDZQIkZR1UsNS3pH4oJd13pgkrt18JLVnTkjk4bOcTyHifJQa2WUIi1z0Kl8sYWRpJ
+         MgV5Npe92Yhbs0SFQkMYx1XllUWHvxta87xXoEo8DX4zVvAgCFprz/61JCFbRLimYkZm
+         0TJQNlQbQOd+0rkt+/RR5M9wFXZg/BRG7CbluA+SR9ofD3E8XaLaWoUvQr6afvSgr/zb
+         jlJw==
+X-Gm-Message-State: AJIora8eDAXkXliL2whctKXAYlQ8Lf1nlHvLBa3mSBrA2fNN3yX/Z7Wy
+        N/cfMLZaKfOSc3sJ38NCO019JbLPqIk=
+X-Google-Smtp-Source: AGRyM1s5w76ZfqYj/+26pMyhfynVA754uE8tmVNVmVHD3j64emOukGeeDvplcoiOLZ4wwUSbu4tMLA==
+X-Received: by 2002:a17:90a:e50c:b0:1ea:14c1:2236 with SMTP id t12-20020a17090ae50c00b001ea14c12236mr6274836pjy.2.1655235190627;
+        Tue, 14 Jun 2022 12:33:10 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ab60:e1ea:e2eb:c1b6? ([2620:15c:211:201:ab60:e1ea:e2eb:c1b6])
+        by smtp.gmail.com with ESMTPSA id kv18-20020a17090b169200b001ea629a431bsm7969640pjb.8.2022.06.14.12.33.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Jun 2022 12:33:09 -0700 (PDT)
+Message-ID: <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
+Date:   Tue, 14 Jun 2022 12:33:07 -0700
 MIME-Version: 1.0
-In-Reply-To: <de30104b-f299-ab7e-c687-06ca513aa7a7@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH RFC v2 02/18] scsi: core: Resurrect
+ scsi_{get,free}_host_dev()
 Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, brking@us.ibm.com, hare@suse.de,
+        hch@lst.de
+Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        chenxiang66@hisilicon.com
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-3-git-send-email-john.garry@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1654770559-101375-3-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.81.88]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/14/2022 18:32:33
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 171111 [Jun 14 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 489 489 b67d2e276d358fa514f5991440453e6a402e3a26
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_arrow_text}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.88 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;31.173.81.88:7.4.1,7.7.3;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: {iprep_blacklist}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.88
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/14/2022 18:34:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 6/14/2022 2:31:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/14/22 8:24 AM, Damien Le Moal wrote:
-[...]
->> Make the 'timeout' parameter to ata_exec_internal_sg() *unsigned int* as
->> msecs_to_jiffies() that it calls takes just *unsigned int* for the time in
->> milliseconds. Then follow the suit with ata_exec_internal(), its only
->> caller; also fix up ata_dev_set_feature(), the only ata_exec_internal()'s
->> caller  that explicitly passes *unsigned long* variable for timeout...
->>
->> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
->> analysis tool.
-> 
-> Since you are changing this function signature, can you also make it
-> static since it is only used in libata-core.c ? The declaration in
-> drivers/ata/libata.h is useless.
+On 6/9/22 03:29, John Garry wrote:
+> +/**
+> + * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What does this mean? That part of the function description is not
+clear to me.
 
-   Hopefully you don't mean I should do it in the same patch? :-)
+> + * @shost: Host that needs a scsi_device
+                               ^^^^^^^^^^^^^
+This is not detailed enough. Consider changing "a scsi_device" into
+"a scsi device for allocating reserved commands from".
 
-[...]
+> + *
+> + * Lock status: None assumed.
+> + *
+> + * Returns:     The scsi_device or NULL
+> + *
+> + * Notes:
+> + *	Attach a single scsi_device to the Scsi_Host - this should
+> + *	be made to look like a "pseudo-device" that points to the
+> + *	HA itself.
+> + *
+> + *	Note - this device is not accessible from any high-level
+> + *	drivers (including generics), which is probably not
+> + *	optimal.  We can add hooks later to attach.
 
-MBR, Sergey
+The "which is probably not optimal. We can add hooks later to attach."
+part probably should be moved to the patch description.
+
+> + */
+> +struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+> +{
+> +	struct scsi_device *sdev = NULL;
+> +	struct scsi_target *starget;
+> +
+> +	mutex_lock(&shost->scan_mutex);
+> +	if (!scsi_host_scan_allowed(shost))
+> +		goto out;
+> +	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
+                                                           ^^^^^^^^^^^^^^^^^^
+Is it guaranteed that this channel / id combination will not be used for
+any other SCSI device?
+
+What if shost->this_id == -1?
+
+> +	if (!starget)
+> +		goto out;
+> +
+> +	sdev = scsi_alloc_sdev(starget, 0, NULL);
+> +	if (sdev)
+> +		sdev->borken = 0;
+> +	else
+> +		scsi_target_reap(starget);
+> +	put_device(&starget->dev);
+> + out:
+> +	mutex_unlock(&shost->scan_mutex);
+> +	return sdev;
+> +}
+> +EXPORT_SYMBOL(scsi_get_host_dev);
+
+Elsewhere in the SCSI core "get..dev" means increment the reference count of
+a SCSI device. Maybe scsi_alloc_host_dev() is a better name?
+
+> +/*
+> + * These two functions are used to allocate and free a pseudo device
+> + * which will connect to the host adapter itself rather than any
+> + * physical device.  You must deallocate when you are done with the
+> + * thing.  This physical pseudo-device isn't real and won't be available
+> + * from any high-level drivers.
+> + */
+
+Please keep function comments in .c files because that makes it more likely
+that the comment and the implementation will remain in sync.
+
+Thanks,
+
+Bart.
