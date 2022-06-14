@@ -2,104 +2,97 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E07C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 18:27:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16C4BC43334
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 18:45:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353921AbiFNS1T (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jun 2022 14:27:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46576 "EHLO
+        id S1357335AbiFNSpn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jun 2022 14:45:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353350AbiFNS1S (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 14:27:18 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD8B46C9E;
-        Tue, 14 Jun 2022 11:27:16 -0700 (PDT)
-Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LMxdc2MYlz67Zjl;
-        Wed, 15 Jun 2022 02:23:32 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 14 Jun 2022 20:27:13 +0200
-Received: from [10.195.33.253] (10.195.33.253) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 14 Jun 2022 19:27:12 +0100
-Message-ID: <bc567212-af8c-6aba-30ab-fb1b2390e2e4@huawei.com>
-Date:   Tue, 14 Jun 2022 19:30:20 +0100
+        with ESMTP id S1357471AbiFNSpU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 14:45:20 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ED461014
+        for <linux-ide@vger.kernel.org>; Tue, 14 Jun 2022 11:43:49 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.81.88) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 14 Jun
+ 2022 21:43:41 +0300
+Subject: Re: [PATCH] ata: libata-core: fix sloppy parameter type in
+ ata_exec_internal[_sg]()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <226fc2b1-ecb9-19d9-d7f0-2c6bc0fc8edf@omp.ru>
+ <de30104b-f299-ab7e-c687-06ca513aa7a7@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <8b6d5cfe-a353-c894-337d-00e4bdfa67f5@omp.ru>
+Date:   Tue, 14 Jun 2022 21:43:41 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH RFC v2 01/18] blk-mq: Add a flag for reserved requests
-To:     Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
-        <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <brking@us.ibm.com>, <hare@suse.de>,
-        <hch@lst.de>
-CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <chenxiang66@hisilicon.com>
-References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-2-git-send-email-john.garry@huawei.com>
- <1f8e7891-a557-bd8e-221a-6cb14770ea8b@acm.org>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <1f8e7891-a557-bd8e-221a-6cb14770ea8b@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <de30104b-f299-ab7e-c687-06ca513aa7a7@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.33.253]
-X-ClientProxiedBy: lhreml746-chm.china.huawei.com (10.201.108.196) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-Originating-IP: [31.173.81.88]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/14/2022 18:32:33
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 171111 [Jun 14 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 489 489 b67d2e276d358fa514f5991440453e6a402e3a26
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_arrow_text}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.88 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;31.173.81.88:7.4.1,7.7.3;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: {iprep_blacklist}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.88
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/14/2022 18:34:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/14/2022 2:31:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 14/06/2022 19:00, Bart Van Assche wrote:
-> On 6/9/22 03:29, John Garry wrote:
->> Add a flag for reserved requests so that drivers may know this for any
->> special handling.
+On 6/14/22 8:24 AM, Damien Le Moal wrote:
+[...]
+>> Make the 'timeout' parameter to ata_exec_internal_sg() *unsigned int* as
+>> msecs_to_jiffies() that it calls takes just *unsigned int* for the time in
+>> milliseconds. Then follow the suit with ata_exec_internal(), its only
+>> caller; also fix up ata_dev_set_feature(), the only ata_exec_internal()'s
+>> caller  that explicitly passes *unsigned long* variable for timeout...
 >>
->> The 'reserved' argument in blk_mq_ops.timeout callback could now be
->> replaced by using this flag.
+>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>> analysis tool.
 > 
-> Why not to combine that change into this patch?
-> 
+> Since you are changing this function signature, can you also make it
+> static since it is only used in libata-core.c ? The declaration in
+> drivers/ata/libata.h is useless.
 
-If we remove the 'reserved' argument in blk_mq_ops.timeout callback then 
-we can also remove the 'reserved' member of busy_tag_iter_fn. I gave 
-that all a try and the diffstat looks like this:
+   Hopefully you don't mean I should do it in the same patch? :-)
 
-  block/blk-mq-debugfs.c              |  2 +-
-  block/blk-mq-tag.c                  | 13 +++++--------
-  block/blk-mq.c                      | 22 +++++++++++++---------
-  block/bsg-lib.c                     |  2 +-
-  drivers/block/mtip32xx/mtip32xx.c   | 11 +++++------
-  drivers/block/nbd.c                 |  5 ++---
-  drivers/block/null_blk/main.c       |  2 +-
-  drivers/infiniband/ulp/srp/ib_srp.c |  3 +--
-  drivers/mmc/core/queue.c            |  3 +--
-  drivers/nvme/host/apple.c           |  3 +--
-  drivers/nvme/host/core.c            |  2 +-
-  drivers/nvme/host/fc.c              |  6 ++----
-  drivers/nvme/host/nvme.h            |  2 +-
-  drivers/nvme/host/pci.c             |  2 +-
-  drivers/nvme/host/rdma.c            |  3 +--
-  drivers/nvme/host/tcp.c             |  3 +--
-  drivers/s390/block/dasd.c           |  2 +-
-  drivers/scsi/aacraid/comminit.c     |  2 +-
-  drivers/scsi/aacraid/linit.c        |  2 +-
-  drivers/scsi/hosts.c                | 14 ++++++--------
-  drivers/scsi/mpi3mr/mpi3mr_os.c     | 15 ++++-----------
-  drivers/scsi/scsi_lib.c             | 12 ++----------
-  include/linux/blk-mq.h              | 10 ++++++++--
-  include/scsi/scsi_host.h            |  2 +-
-  24 files changed, 62 insertions(+), 81 deletions(-)
+[...]
 
-It would seem sensible to send that all separately and break it down a 
-bit - this series is already almost unmanageable.
-
-> Anyway:
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> .
-
-Thanks
+MBR, Sergey
