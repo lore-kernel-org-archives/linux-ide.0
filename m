@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F09DC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 02:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FEE3CCA47B
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 02:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354231AbiFNCWJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Jun 2022 22:22:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38784 "EHLO
+        id S1354555AbiFNCZG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Jun 2022 22:25:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353661AbiFNCUg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jun 2022 22:20:36 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7547A3FBF7;
-        Mon, 13 Jun 2022 19:10:14 -0700 (PDT)
+        with ESMTP id S1355170AbiFNCYH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jun 2022 22:24:07 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BE3640A04;
+        Mon, 13 Jun 2022 19:10:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 591EEB80AC1;
-        Tue, 14 Jun 2022 02:10:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41880C341C5;
-        Tue, 14 Jun 2022 02:10:01 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8733DB80AC1;
+        Tue, 14 Jun 2022 02:10:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B78BC385A2;
+        Tue, 14 Jun 2022 02:10:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655172602;
-        bh=2NaLsw+VKS3gezcd5noKb0OnET71MfjOfMTBsv/wb2Y=;
+        s=k20201202; t=1655172650;
+        bh=u1D/hLqCjUAb9AG1DeAYgoHN8PQ3oSyKG26DNohWGvI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Jh0B1tp3WBA2kzUjTskfCJIDynKriDxhRVZC1GIpYjoOgMnPHlnQjJMBv9WcGn+8m
-         N9RlNq0TmXwN2r7O26en8czusWuwjE01C6YeJaW4oE6bBvV5hEjfqln8DaKGASJ4Q7
-         VxrBgMDA14eOeZvZ0SS138XHvZqDF7eM4nIr/aME8oNHUDPFCK/vBl5GQGUrNmLaUU
-         yKC0XUItU6pskZM47gKXLqPFljQqlskGAmEiqvJ3vOPwchGJ0mdIiprIrZbr/yJuoU
-         9YpAgF2zSqQp2jNbE/gj6GGuxU0twSvadg8Z7p/DOmeygbHNldEv8JIo0E7hCfCOev
-         0Yy5GAuUsmlKw==
+        b=PJxbwDN9GIAPmA/aL1kSPcM0Ccne6GZigf/SRdwXBXflytKWB0Q2t0s5aM3bFt35f
+         IQ9UogPbOoRwcpgdyIdVeknB7JLF3F+nFakxeKyOcdWQJzrICqLvQeJ5trMCkFZPoD
+         m0aQMtLOG2LK3DBDUzBknJ0rtkKbJ41LmmPr1xPaqvM4H3bzBu4g2Zk+8SPeSeTm2E
+         LvqYzxVR3aiS88krGgO6fYfFgdrGYMv69nkEd1GUMYNSBiThc1Qchtp+mpyESI/g7M
+         zvBKv2v8pL0SCRkpNgJnqFUtwpWIUbVHfqYHd7JDWBQYrcoAeNrxyWzVKEbpsNAi9R
+         fZHUIlhLpaO4w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sasha Levin <sashal@kernel.org>, tj@kernel.org,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/18] ata: libata-core: fix NULL pointer deref in ata_host_alloc_pinfo()
-Date:   Mon, 13 Jun 2022 22:09:29 -0400
-Message-Id: <20220614020941.1100702-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 05/12] ata: libata-core: fix NULL pointer deref in ata_host_alloc_pinfo()
+Date:   Mon, 13 Jun 2022 22:10:33 -0400
+Message-Id: <20220614021040.1101131-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220614020941.1100702-1-sashal@kernel.org>
-References: <20220614020941.1100702-1-sashal@kernel.org>
+In-Reply-To: <20220614021040.1101131-1-sashal@kernel.org>
+References: <20220614021040.1101131-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0c10d9557754..b0dea0702c74 100644
+index 35db918a1de5..42f0a592b5ab 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -6253,7 +6253,7 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+@@ -6051,7 +6051,7 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
  				      const struct ata_port_info * const * ppi,
  				      int n_ports)
  {
@@ -84,7 +84,7 @@ index 0c10d9557754..b0dea0702c74 100644
  	struct ata_host *host;
  	int i, j;
  
-@@ -6261,7 +6261,7 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+@@ -6059,7 +6059,7 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
  	if (!host)
  		return NULL;
  
