@@ -2,140 +2,367 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AACC433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 19:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0922DC43334
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jun 2022 19:48:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235623AbiFNTdO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jun 2022 15:33:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43196 "EHLO
+        id S243571AbiFNTsj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jun 2022 15:48:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229676AbiFNTdN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 15:33:13 -0400
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64B9819F8D;
-        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
-Received: by mail-pj1-f51.google.com with SMTP id v11-20020a17090a4ecb00b001e2c5b837ccso12745973pjl.3;
-        Tue, 14 Jun 2022 12:33:11 -0700 (PDT)
+        with ESMTP id S1345182AbiFNTsf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jun 2022 15:48:35 -0400
+Received: from mail-io1-f42.google.com (mail-io1-f42.google.com [209.85.166.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AE2F31357;
+        Tue, 14 Jun 2022 12:48:34 -0700 (PDT)
+Received: by mail-io1-f42.google.com with SMTP id r5so10538754iod.5;
+        Tue, 14 Jun 2022 12:48:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=0yuY33WdxMB76iynhvTSZPcdcuymbepOOB6v4k/PQOY=;
-        b=jbB+qjSucecXj/HEgCIw1t9EsXmppQ+DavJNYSpUNrariNuH3b/MN6vnNGUdupzrv7
-         Ts0oisAV493ABkX7o5r7XccRpuoTotG9aYWaLeuZGI5NEEZXg5xfH8Etn/oGwBlELKIw
-         TwFDZQIkZR1UsNS3pH4oJd13pgkrt18JLVnTkjk4bOcTyHifJQa2WUIi1z0Kl8sYWRpJ
-         MgV5Npe92Yhbs0SFQkMYx1XllUWHvxta87xXoEo8DX4zVvAgCFprz/61JCFbRLimYkZm
-         0TJQNlQbQOd+0rkt+/RR5M9wFXZg/BRG7CbluA+SR9ofD3E8XaLaWoUvQr6afvSgr/zb
-         jlJw==
-X-Gm-Message-State: AJIora8eDAXkXliL2whctKXAYlQ8Lf1nlHvLBa3mSBrA2fNN3yX/Z7Wy
-        N/cfMLZaKfOSc3sJ38NCO019JbLPqIk=
-X-Google-Smtp-Source: AGRyM1s5w76ZfqYj/+26pMyhfynVA754uE8tmVNVmVHD3j64emOukGeeDvplcoiOLZ4wwUSbu4tMLA==
-X-Received: by 2002:a17:90a:e50c:b0:1ea:14c1:2236 with SMTP id t12-20020a17090ae50c00b001ea14c12236mr6274836pjy.2.1655235190627;
-        Tue, 14 Jun 2022 12:33:10 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:ab60:e1ea:e2eb:c1b6? ([2620:15c:211:201:ab60:e1ea:e2eb:c1b6])
-        by smtp.gmail.com with ESMTPSA id kv18-20020a17090b169200b001ea629a431bsm7969640pjb.8.2022.06.14.12.33.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Jun 2022 12:33:09 -0700 (PDT)
-Message-ID: <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
-Date:   Tue, 14 Jun 2022 12:33:07 -0700
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=O3rYhmFImT1RAS7An54BiIbYDGKfNgw74f5cf68okiQ=;
+        b=VT7ay/n9Dy+nULOmwKWgYXCfH+H7F72oIlv1zSU4QY041uYVDI2SiDLtf5tSaawxsF
+         CBVZHUVFgcooSeIttI4Eu4i1xrhz+FogbLEthY7j4K5EzWtj+gZ8mvAZ6ljsVpZO0IT7
+         7TsHGbtrcX8nUuKGVK96WqqsTFSe2g1v21wTSo2fD1l0QWxTZhfpf1pr5QdLrXEREw0z
+         eRYO2YI1S/1bv2gjEv6CEe/aYsh1juO1ptYn/2C/PO+ukNn/rdMA9ucLlPFWCdjOWnGC
+         dW9//GDZ9joB54gjc8PLS/dTxbXgaLLIUm7YZRJLMGxhNtgnNB99x6aLRVYHYGZ+mx8I
+         JS2g==
+X-Gm-Message-State: AOAM531FChiYM4TrfarqpGS7E/ZOxihbCUrNeBKHeTb1XDU0+iCtKMLP
+        DkOs6Qm0SpDKIr5O5u3pX/wPtzJTWA==
+X-Google-Smtp-Source: ABdhPJzlZj1aSBRp8lCMinP650UeoqluoYL+kV5sfObpvrDd2R3pr2PAjEHPPbm9EOCIGnOodfrI2A==
+X-Received: by 2002:a05:6602:2f0d:b0:669:e058:9a18 with SMTP id q13-20020a0566022f0d00b00669e0589a18mr3308001iow.26.1655236113445;
+        Tue, 14 Jun 2022 12:48:33 -0700 (PDT)
+Received: from robh.at.kernel.org ([64.188.179.251])
+        by smtp.gmail.com with ESMTPSA id t6-20020a025406000000b00331c8618d2esm5226636jaa.143.2022.06.14.12.48.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jun 2022 12:48:33 -0700 (PDT)
+Received: (nullmailer pid 2284849 invoked by uid 1000);
+        Tue, 14 Jun 2022 19:48:31 -0000
+Date:   Tue, 14 Jun 2022 13:48:31 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Piyush Mehta <piyush.mehta@xilinx.com>
+Cc:     damien.lemoal@opensource.wdc.com,
+        krzysztof.kozlowski+dt@linaro.org, linux-ide@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        michal.simek@xilinx.com, git@xilinx.com, sivadur@xilinx.com
+Subject: Re: [PATCH V2] dt-bindings: ata: ahci-ceva: convert to yaml
+Message-ID: <20220614194831.GB2209956-robh@kernel.org>
+References: <20220613144651.7300-1-piyush.mehta@xilinx.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.0
-Subject: Re: [PATCH RFC v2 02/18] scsi: core: Resurrect
- scsi_{get,free}_host_dev()
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, axboe@kernel.dk,
-        damien.lemoal@opensource.wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, brking@us.ibm.com, hare@suse.de,
-        hch@lst.de
-Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        chenxiang66@hisilicon.com
-References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
- <1654770559-101375-3-git-send-email-john.garry@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1654770559-101375-3-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220613144651.7300-1-piyush.mehta@xilinx.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/9/22 03:29, John Garry wrote:
-> +/**
-> + * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-What does this mean? That part of the function description is not
-clear to me.
-
-> + * @shost: Host that needs a scsi_device
-                               ^^^^^^^^^^^^^
-This is not detailed enough. Consider changing "a scsi_device" into
-"a scsi device for allocating reserved commands from".
-
-> + *
-> + * Lock status: None assumed.
-> + *
-> + * Returns:     The scsi_device or NULL
-> + *
-> + * Notes:
-> + *	Attach a single scsi_device to the Scsi_Host - this should
-> + *	be made to look like a "pseudo-device" that points to the
-> + *	HA itself.
-> + *
-> + *	Note - this device is not accessible from any high-level
-> + *	drivers (including generics), which is probably not
-> + *	optimal.  We can add hooks later to attach.
-
-The "which is probably not optimal. We can add hooks later to attach."
-part probably should be moved to the patch description.
-
-> + */
-> +struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
-> +{
-> +	struct scsi_device *sdev = NULL;
-> +	struct scsi_target *starget;
+On Mon, Jun 13, 2022 at 08:16:51PM +0530, Piyush Mehta wrote:
+> Convert the ahci-ceva doc to yaml.
+> 
+> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
+> ---
+> Changes for V2:
+> - Corrected the patch --prefix V3 to V2.
+> - Added Required properties.
+> ---
+>  .../devicetree/bindings/ata/ahci-ceva.txt     |  63 ------
+>  .../devicetree/bindings/ata/ahci-ceva.yaml    | 197 ++++++++++++++++++
+>  2 files changed, 197 insertions(+), 63 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.txt b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+> deleted file mode 100644
+> index bfb6da0281ec..000000000000
+> --- a/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+> +++ /dev/null
+> @@ -1,63 +0,0 @@
+> -Binding for CEVA AHCI SATA Controller
+> -
+> -Required properties:
+> -  - reg: Physical base address and size of the controller's register area.
+> -  - compatible: Compatibility string. Must be 'ceva,ahci-1v84'.
+> -  - clocks: Input clock specifier. Refer to common clock bindings.
+> -  - interrupts: Interrupt specifier. Refer to interrupt binding.
+> -  - ceva,p0-cominit-params: OOB timing value for COMINIT parameter for port 0.
+> -  - ceva,p1-cominit-params: OOB timing value for COMINIT parameter for port 1.
+> -			The fields for the above parameter must be as shown below:
+> -			ceva,pN-cominit-params = /bits/ 8 <CIBGMN CIBGMX CIBGN CINMP>;
+> -			CINMP : COMINIT Negate Minimum Period.
+> -			CIBGN : COMINIT Burst Gap Nominal.
+> -			CIBGMX: COMINIT Burst Gap Maximum.
+> -			CIBGMN: COMINIT Burst Gap Minimum.
+> -  - ceva,p0-comwake-params: OOB timing value for COMWAKE parameter for port 0.
+> -  - ceva,p1-comwake-params: OOB timing value for COMWAKE parameter for port 1.
+> -			The fields for the above parameter must be as shown below:
+> -			ceva,pN-comwake-params = /bits/ 8 <CWBGMN CWBGMX CWBGN CWNMP>;
+> -			CWBGMN: COMWAKE Burst Gap Minimum.
+> -			CWBGMX: COMWAKE Burst Gap Maximum.
+> -			CWBGN: COMWAKE Burst Gap Nominal.
+> -			CWNMP: COMWAKE Negate Minimum Period.
+> -  - ceva,p0-burst-params: Burst timing value for COM parameter for port 0.
+> -  - ceva,p1-burst-params: Burst timing value for COM parameter for port 1.
+> -			The fields for the above parameter must be as shown below:
+> -			ceva,pN-burst-params = /bits/ 8 <BMX BNM SFD PTST>;
+> -			BMX: COM Burst Maximum.
+> -			BNM: COM Burst Nominal.
+> -			SFD: Signal Failure Detection value.
+> -			PTST: Partial to Slumber timer value.
+> -  - ceva,p0-retry-params: Retry interval timing value for port 0.
+> -  - ceva,p1-retry-params: Retry interval timing value for port 1.
+> -			The fields for the above parameter must be as shown below:
+> -			ceva,pN-retry-params = /bits/ 16 <RIT RCT>;
+> -			RIT:  Retry Interval Timer.
+> -			RCT:  Rate Change Timer.
+> -
+> -Optional properties:
+> -  - ceva,broken-gen2: limit to gen1 speed instead of gen2.
+> -  - phys: phandle for the PHY device
+> -  - resets: phandle to the reset controller for the SATA IP
+> -
+> -Examples:
+> -	ahci@fd0c0000 {
+> -		compatible = "ceva,ahci-1v84";
+> -		reg = <0xfd0c0000 0x200>;
+> -		interrupt-parent = <&gic>;
+> -		interrupts = <0 133 4>;
+> -		clocks = <&clkc SATA_CLK_ID>;
+> -		ceva,p0-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
+> -		ceva,p0-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
+> -		ceva,p0-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
+> -		ceva,p0-retry-params = /bits/ 16 <0x0216 0x7F06>;
+> -
+> -		ceva,p1-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
+> -		ceva,p1-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
+> -		ceva,p1-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
+> -		ceva,p1-retry-params = /bits/ 16 <0x0216 0x7F06>;
+> -		ceva,broken-gen2;
+> -		phys = <&psgtr 1 PHY_TYPE_SATA 1 1>;
+> -		resets = <&zynqmp_reset ZYNQMP_RESET_SATA>;
+> -	};
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.yaml b/Documentation/devicetree/bindings/ata/ahci-ceva.yaml
+> new file mode 100644
+> index 000000000000..71f9ff0e2844
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-ceva.yaml
+> @@ -0,0 +1,197 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ata/ahci-ceva.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > +
-> +	mutex_lock(&shost->scan_mutex);
-> +	if (!scsi_host_scan_allowed(shost))
-> +		goto out;
-> +	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
-                                                           ^^^^^^^^^^^^^^^^^^
-Is it guaranteed that this channel / id combination will not be used for
-any other SCSI device?
-
-What if shost->this_id == -1?
-
-> +	if (!starget)
-> +		goto out;
+> +title: Ceva AHCI SATA Controller
 > +
-> +	sdev = scsi_alloc_sdev(starget, 0, NULL);
-> +	if (sdev)
-> +		sdev->borken = 0;
-> +	else
-> +		scsi_target_reap(starget);
-> +	put_device(&starget->dev);
-> + out:
-> +	mutex_unlock(&shost->scan_mutex);
-> +	return sdev;
-> +}
-> +EXPORT_SYMBOL(scsi_get_host_dev);
+> +maintainers:
+> +  - Piyush Mehta <piyush.mehta@xilinx.com>
+> +
+> +description: |
+> +  The Ceva SATA controller mostly conforms to the AHCI interface with some
+> +  special extensions to add functionality, is a high-performance dual-port
+> +  SATA host controller with an AHCI compliant command layer which supports
+> +  advanced features such as native command queuing and frame information
+> +  structure (FIS) based switching for systems employing port multipliers.
+> +
+> +properties:
+> +  compatible:
+> +    const: ceva,ahci-1v84
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    maxItems: 1
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  dma-coherent: true
+> +
+> +  power-domains:
+> +    description: |
+> +      Specifies a phandle to PM domain provider node.
 
-Elsewhere in the SCSI core "get..dev" means increment the reference count of
-a SCSI device. Maybe scsi_alloc_host_dev() is a better name?
+Don't need generic descriptions for common properties.
 
-> +/*
-> + * These two functions are used to allocate and free a pseudo device
-> + * which will connect to the host adapter itself rather than any
-> + * physical device.  You must deallocate when you are done with the
-> + * thing.  This physical pseudo-device isn't real and won't be available
-> + * from any high-level drivers.
-> + */
+> +    maxItems: 1
+> +
+> +  ceva,p0-cominit-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint8-array
+> +    minItems: 4
+> +    maxItems: 4
+> +    description: |
+> +      OOB timing value for COMINIT parameter for port 0.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,p0-cominit-params = /bits/ 8 <CIBGMN CIBGMX CIBGN CINMP>;
+> +      CINMP  - COMINIT Negate Minimum Period.
+> +      CIBGN  - COMINIT Burst Gap Nominal.
+> +      CIBGMX - COMINIT Burst Gap Maximum.
+> +      CIBGMN - COMINIT Burst Gap Minimum.
 
-Please keep function comments in .c files because that makes it more likely
-that the comment and the implementation will remain in sync.
+Better described something like this:
 
-Thanks,
+items:
+  - description: CINMP  - COMINIT Negate Minimum Period.
+  - description: CIBGN  - COMINIT Burst Gap Nominal.
+  - ...
+  - ...
 
-Bart.
+
+> +
+> +  ceva,p0-comwake-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint8-array
+> +    minItems: 4
+> +    maxItems: 4
+> +    description: |
+> +      OOB timing value for COMWAKE parameter for port 0.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,p0-comwake-params = /bits/ 8 <CWBGMN CWBGMX CWBGN CWNMP>;
+> +      CWBGMN - COMWAKE Burst Gap Minimum.
+> +      CWBGMX - COMWAKE Burst Gap Maximum.
+> +      CWBGN  - COMWAKE Burst Gap Nominal.
+> +      CWNMP  - COMWAKE Negate Minimum Period.
+> +
+> +  ceva,p0-burst-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint8-array
+> +    minItems: 4
+> +    maxItems: 4
+> +    description: |
+> +      Burst timing value for COM parameter for port 0.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,p0-burst-params = /bits/ 8 <BMX BNM SFD PTST>;
+> +      BMX  - COM Burst Maximum.
+> +      BNM  - COM Burst Nominal.
+> +      SFD  - Signal Failure Detection value.
+> +      PTST - Partial to Slumber timer value.
+> +
+> +  ceva,p0-retry-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint16-array
+> +    minItems: 2
+> +    maxItems: 2
+> +    description: |
+> +      Retry interval timing value for port 0.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,p0-retry-params = /bits/ 16 <RIT RCT>;
+> +      RIT - Retry Interval Timer.
+> +      RCT - Rate Change Timer.
+> +
+> +  ceva,p1-cominit-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint8-array
+> +    minItems: 4
+> +    maxItems: 4
+> +    description: |
+> +      OOB timing value for COMINIT parameter for port 1.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,p1-cominit-params = /bits/ 8 <CIBGMN CIBGMX CIBGN CINMP>;
+> +      CINMP  - COMINIT Negate Minimum Period.
+> +      CIBGN  - COMINIT Burst Gap Nominal.
+> +      CIBGMX - COMINIT Burst Gap Maximum.
+> +      CIBGMN - COMINIT Burst Gap Minimum.
+> +
+> +  ceva,p1-comwake-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint8-array
+> +    minItems: 4
+> +    maxItems: 4
+> +    description: |
+> +      OOB timing value for COMWAKE parameter for port 1.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,p1-comwake-params = /bits/ 8 <CWBGMN CWBGMX CWBGN CWNMP>;
+> +      CWBGMN - COMWAKE Burst Gap Minimum.
+> +      CWBGMX - COMWAKE Burst Gap Maximum.
+> +      CWBGN  - COMWAKE Burst Gap Nominal.
+> +      CWNMP  - COMWAKE Negate Minimum Period.
+> +
+> +  ceva,p1-burst-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint8-array
+> +    minItems: 4
+> +    maxItems: 4
+> +    description: |
+> +      Burst timing value for COM parameter for port 1.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,p1-burst-params = /bits/ 8 <BMX BNM SFD PTST>;
+> +      BMX  - COM Burst Maximum.
+> +      BNM  - COM Burst Nominal.
+> +      SFD  - Signal Failure Detection value.
+> +      PTST - Partial to Slumber timer value.
+> +
+> +  ceva,p1-retry-params:
+> +    $ref: /schemas/types.yaml#/definitions/uint16-array
+> +    minItems: 2
+> +    maxItems: 2
+> +    description: |
+> +      Retry interval timing value for port 1.
+> +      The fields for the above parameter must be as shown below:-
+> +      ceva,pN-retry-params = /bits/ 16 <RIT RCT>;
+> +      RIT - Retry Interval Timer.
+> +      RCT - Rate Change Timer.
+> +
+> +  ceva,broken-gen2:
+> +    $ref: /schemas/types.yaml#/definitions/flag
+> +    description: |
+> +      limit to gen1 speed instead of gen2.
+> +
+> +  phys:
+> +    description: |
+> +      Phandle for the PHY device.
+
+Drop
+
+> +    maxItems: 1
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +  '#stream-id-cells':
+> +    const: 4
+
+? Deprecated and not in any dts file. Drop
+
+
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - clocks
+> +  - interrupts
+> +  - ceva,p0-cominit-params
+> +  - ceva,p0-comwake-params
+> +  - ceva,p0-burst-params
+> +  - ceva,p0-retry-params
+> +  - ceva,p1-cominit-params
+> +  - ceva,p1-comwake-params
+> +  - ceva,p1-burst-params
+> +  - ceva,p1-retry-params
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/clock/xlnx-zynqmp-clk.h>
+> +    #include <dt-bindings/interrupt-controller/irq.h>
+> +    #include <dt-bindings/power/xlnx-zynqmp-power.h>
+> +    #include <dt-bindings/reset/xlnx-zynqmp-resets.h>
+> +    #include <dt-bindings/clock/xlnx-zynqmp-clk.h>
+> +    #include <dt-bindings/phy/phy.h>
+> +
+> +    sata: ahci@fd0c0000 {
+> +        compatible = "ceva,ahci-1v84";
+> +        reg = <0xfd0c0000 0x200>;
+> +        interrupt-parent = <&gic>;
+> +        interrupts = <0 133 IRQ_TYPE_LEVEL_HIGH>;
+> +        clocks = <&zynqmp_clk SATA_REF>;
+> +        ceva,p0-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
+> +        ceva,p0-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
+> +        ceva,p0-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
+> +        ceva,p0-retry-params = /bits/ 16 <0x0216 0x7F06>;
+> +        ceva,p1-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
+> +        ceva,p1-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
+> +        ceva,p1-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
+> +        ceva,p1-retry-params = /bits/ 16 <0x0216 0x7F06>;
+> +        ceva,broken-gen2;
+> +        phys = <&psgtr 1 PHY_TYPE_SATA 1 1>;
+> +        resets = <&zynqmp_reset ZYNQMP_RESET_SATA>;
+> +    };
+> -- 
+> 2.17.1
+> 
