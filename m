@@ -2,56 +2,99 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D2DC43334
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 08:06:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17EF9C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 13:33:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237955AbiFOIGL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jun 2022 04:06:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43256 "EHLO
+        id S1351398AbiFONdx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jun 2022 09:33:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240340AbiFOIGL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 04:06:11 -0400
-X-Greylist: delayed 455 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 15 Jun 2022 01:06:10 PDT
-Received: from mail.olerise.pl (mail.olerise.pl [46.183.184.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DC27483AE
-        for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2022 01:06:10 -0700 (PDT)
-Received: by mail.olerise.pl (Postfix, from userid 1001)
-        id 6919D2604E; Wed, 15 Jun 2022 09:56:18 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=olerise.pl; s=mail;
-        t=1655279829; bh=FDuFY3XQoq0gMX1b2gxgT7Py2p4Sxl0PJZYZ4NVaPho=;
-        h=Date:From:To:Subject:From;
-        b=kqIbEP71YggIdwrMkJCnoseVIFVzR3J4YVHAoL/NQk4C8TUFTottapw44YK+AspCO
-         vXtGcqr5hsVlMD6JDt+3G7QhA8LZO3WIy+YRMcU0HGgsYPThxsLkXJlVBXIQVCByQS
-         4nKcfk8GvaWDszjxfHYKtCo6avGkz1LixnUjmkATwSFTgUFgXV6uhQmcUmoFSzw6Qz
-         IK9ByoCukzLttsrDrta4P9hujB93ePBFVCoKN2Up83uLixUkhKF02nvmdN+djXB5PF
-         bXWVH6FaIw7xLaDu8PfuKjdnCmKXBAv4HiKkDyYRXBgWT/1RC1ni+b2mL5QARpJg0r
-         H1OFlVKhTXMvQ==
-Received: by mail.olerise.pl for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2022 07:55:22 GMT
-Message-ID: <20220615084500-0.1.f.83ko.0.z6o5gcf4jj@olerise.pl>
-Date:   Wed, 15 Jun 2022 07:55:22 GMT
-From:   =?UTF-8?Q? "Przemys=C5=82aw_Wr=C3=B3blewski" ?= 
-        <przemyslaw.wroblewski@olerise.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.olerise.pl
+        with ESMTP id S1351648AbiFONdu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 09:33:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D61AD36326;
+        Wed, 15 Jun 2022 06:33:49 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 44C0461A88;
+        Wed, 15 Jun 2022 13:33:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A97C5C3411C;
+        Wed, 15 Jun 2022 13:33:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655300028;
+        bh=GS3xnpuX97rLUj8LjHZuszylSXQMHB8JheJV7wdxaEA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=rsTfFz33tQEQiFCWsk+brsU8JETQeKOuqDYdhaqxsKFO5Z6TUOv7tKJTcqHPLck3l
+         SHQZj1cASBnSPeAc455Suy7V8dAafEvj9jC4P5vpgeRhfeRUCHGDUvjXmuamc78MbK
+         tuj2aQhArDpeH7lTVGj5CjaaffmfqxwXj/25Bb9yBq+zirO+rwkGJ9WGLlWylko7T2
+         EUtoF1nFceGrKxMW9wMjkQwm7si+P+xEuQn4+rkST0Atb50vlo4oXHhAhxgXOGKzqU
+         W7jDla0U9yTzmd1g/N5VkKEICs+KxWnYHnuYpmgAMqlrcCvgA9Gi2rrNG9iPCfQS1F
+         7gSLRWBOYBe5Q==
+Received: by mail-ua1-f45.google.com with SMTP id m10so4366191uao.11;
+        Wed, 15 Jun 2022 06:33:48 -0700 (PDT)
+X-Gm-Message-State: AJIora/lJvyVlw04hTl229w20iO5ZkW/scIp2kziuXDH+y9LjYkEXVpP
+        A0VvXnOtgRXUFt7Aq36ma4Ul5J8nRjim+F+IYA==
+X-Google-Smtp-Source: AGRyM1vl3rEMhCWrfabx4G8UW4agh58YWTqSIPnh7S7BgbjlFbw06IsA0c518VcVDpVFsYVBWjK1QQBn9lCsfe9pDjc=
+X-Received: by 2002:ab0:3407:0:b0:379:65f3:a39b with SMTP id
+ z7-20020ab03407000000b0037965f3a39bmr4898428uap.63.1655300027658; Wed, 15 Jun
+ 2022 06:33:47 -0700 (PDT)
 MIME-Version: 1.0
+References: <20220615071410.12499-1-piyush.mehta@xilinx.com>
+In-Reply-To: <20220615071410.12499-1-piyush.mehta@xilinx.com>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Wed, 15 Jun 2022 07:33:36 -0600
+X-Gmail-Original-Message-ID: <CAL_Jsq+3oS=SB-TVH3JA7Jb8KDgQ8ek_KPJSQhL0mgiq4sjmyQ@mail.gmail.com>
+Message-ID: <CAL_Jsq+3oS=SB-TVH3JA7Jb8KDgQ8ek_KPJSQhL0mgiq4sjmyQ@mail.gmail.com>
+Subject: Re: [PATCH V4] dt-bindings: ata: ahci-ceva: convert to yaml
+To:     Piyush Mehta <piyush.mehta@xilinx.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, devicetree@vger.kernel.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Michal Simek <michal.simek@xilinx.com>, git <git@xilinx.com>,
+        Siva Durga Prasad Paladugu <sivadur@xilinx.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Wed, Jun 15, 2022 at 1:14 AM Piyush Mehta <piyush.mehta@xilinx.com> wrote:
+>
+> Convert the ahci-ceva doc to yaml.
+>
+> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
+> ---
+> Changes for V2:
+> - Corrected the patch --prefix V3 to V2.
+> - Added Required properties.
+>
+> Changes for V3:
+> - Skip patch --prefix [PATCH V3] as already sent.
+>
+> Changes for V4:
+> - Addressed Rob review comments:-
+>  - Update params description
+>  - Removed description from common properties.
+>  - Deleted deprecated property.
+> - Warning generated from: 'make dtbs_check'
+>  - Thanks Rob: We are aware of these warnings,
+>    but they are unrelated to this patch.
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
-
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
-
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
+Huh? You are saying the dts files are wrong and should not have
+'iommus' or 'phy-names' properties? That doesn't seem likely for
+'iommus'. If the old binding was wrong, it is fine to add the
+properties in the conversion. Just note that in the commit message.
 
 
-Pozdrawiam,
-Przemys=C5=82aw Wr=C3=B3blewski
+> ---
+>  .../devicetree/bindings/ata/ahci-ceva.txt     |  63 ------
+>  .../devicetree/bindings/ata/ahci-ceva.yaml    | 182 ++++++++++++++++++
+>  2 files changed, 182 insertions(+), 63 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.yaml
+
+Also, rename to ceva,ahci-1v84.yaml for the filename.
+
+Rob
