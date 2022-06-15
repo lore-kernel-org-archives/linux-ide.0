@@ -2,99 +2,158 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17EF9C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 13:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 474B2C43334
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 13:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351398AbiFONdx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jun 2022 09:33:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41770 "EHLO
+        id S1348868AbiFONlw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jun 2022 09:41:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351648AbiFONdu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 09:33:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D61AD36326;
-        Wed, 15 Jun 2022 06:33:49 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 44C0461A88;
-        Wed, 15 Jun 2022 13:33:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A97C5C3411C;
-        Wed, 15 Jun 2022 13:33:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655300028;
-        bh=GS3xnpuX97rLUj8LjHZuszylSXQMHB8JheJV7wdxaEA=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=rsTfFz33tQEQiFCWsk+brsU8JETQeKOuqDYdhaqxsKFO5Z6TUOv7tKJTcqHPLck3l
-         SHQZj1cASBnSPeAc455Suy7V8dAafEvj9jC4P5vpgeRhfeRUCHGDUvjXmuamc78MbK
-         tuj2aQhArDpeH7lTVGj5CjaaffmfqxwXj/25Bb9yBq+zirO+rwkGJ9WGLlWylko7T2
-         EUtoF1nFceGrKxMW9wMjkQwm7si+P+xEuQn4+rkST0Atb50vlo4oXHhAhxgXOGKzqU
-         W7jDla0U9yTzmd1g/N5VkKEICs+KxWnYHnuYpmgAMqlrcCvgA9Gi2rrNG9iPCfQS1F
-         7gSLRWBOYBe5Q==
-Received: by mail-ua1-f45.google.com with SMTP id m10so4366191uao.11;
-        Wed, 15 Jun 2022 06:33:48 -0700 (PDT)
-X-Gm-Message-State: AJIora/lJvyVlw04hTl229w20iO5ZkW/scIp2kziuXDH+y9LjYkEXVpP
-        A0VvXnOtgRXUFt7Aq36ma4Ul5J8nRjim+F+IYA==
-X-Google-Smtp-Source: AGRyM1vl3rEMhCWrfabx4G8UW4agh58YWTqSIPnh7S7BgbjlFbw06IsA0c518VcVDpVFsYVBWjK1QQBn9lCsfe9pDjc=
-X-Received: by 2002:ab0:3407:0:b0:379:65f3:a39b with SMTP id
- z7-20020ab03407000000b0037965f3a39bmr4898428uap.63.1655300027658; Wed, 15 Jun
- 2022 06:33:47 -0700 (PDT)
+        with ESMTP id S232167AbiFONlw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 09:41:52 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 051F037A3A;
+        Wed, 15 Jun 2022 06:41:51 -0700 (PDT)
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LNRFp14TFz688JQ;
+        Wed, 15 Jun 2022 21:38:06 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 15 Jun 2022 15:41:48 +0200
+Received: from [10.202.227.197] (10.202.227.197) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 15 Jun 2022 14:41:47 +0100
+Message-ID: <56cd28b3-da05-7737-c053-3c28459581e4@huawei.com>
+Date:   Wed, 15 Jun 2022 14:44:54 +0100
 MIME-Version: 1.0
-References: <20220615071410.12499-1-piyush.mehta@xilinx.com>
-In-Reply-To: <20220615071410.12499-1-piyush.mehta@xilinx.com>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Wed, 15 Jun 2022 07:33:36 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+3oS=SB-TVH3JA7Jb8KDgQ8ek_KPJSQhL0mgiq4sjmyQ@mail.gmail.com>
-Message-ID: <CAL_Jsq+3oS=SB-TVH3JA7Jb8KDgQ8ek_KPJSQhL0mgiq4sjmyQ@mail.gmail.com>
-Subject: Re: [PATCH V4] dt-bindings: ata: ahci-ceva: convert to yaml
-To:     Piyush Mehta <piyush.mehta@xilinx.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>, devicetree@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Michal Simek <michal.simek@xilinx.com>, git <git@xilinx.com>,
-        Siva Durga Prasad Paladugu <sivadur@xilinx.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH RFC v2 02/18] scsi: core: Resurrect
+ scsi_{get,free}_host_dev()
+To:     Bart Van Assche <bvanassche@acm.org>, <axboe@kernel.dk>,
+        <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <brking@us.ibm.com>, <hare@suse.de>,
+        <hch@lst.de>
+CC:     <linux-block@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <chenxiang66@hisilicon.com>
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-3-git-send-email-john.garry@huawei.com>
+ <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
+In-Reply-To: <b61d3687-70ea-1ab7-63e1-44e381d36012@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.202.227.197]
+X-ClientProxiedBy: lhreml722-chm.china.huawei.com (10.201.108.73) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Jun 15, 2022 at 1:14 AM Piyush Mehta <piyush.mehta@xilinx.com> wrote:
->
-> Convert the ahci-ceva doc to yaml.
->
-> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
-> ---
-> Changes for V2:
-> - Corrected the patch --prefix V3 to V2.
-> - Added Required properties.
->
-> Changes for V3:
-> - Skip patch --prefix [PATCH V3] as already sent.
->
-> Changes for V4:
-> - Addressed Rob review comments:-
->  - Update params description
->  - Removed description from common properties.
->  - Deleted deprecated property.
-> - Warning generated from: 'make dtbs_check'
->  - Thanks Rob: We are aware of these warnings,
->    but they are unrelated to this patch.
+On 14/06/2022 20:33, Bart Van Assche wrote:
 
-Huh? You are saying the dts files are wrong and should not have
-'iommus' or 'phy-names' properties? That doesn't seem likely for
-'iommus'. If the old binding was wrong, it is fine to add the
-properties in the conversion. Just note that in the commit message.
+Hi Bart,
 
+> On 6/9/22 03:29, John Garry wrote:
+>> +/**
+>> + * scsi_get_host_dev - Create a scsi_device that points to the host 
+>> adapter itself
+>                                                 
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> What does this mean? That part of the function description is not
+> clear to me.
+> 
 
-> ---
->  .../devicetree/bindings/ata/ahci-ceva.txt     |  63 ------
->  .../devicetree/bindings/ata/ahci-ceva.yaml    | 182 ++++++++++++++++++
->  2 files changed, 182 insertions(+), 63 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.yaml
+Agreed, this text is just as it was before (it was originally deleted) 
+but I can fix it up to make sense.
 
-Also, rename to ceva,ahci-1v84.yaml for the filename.
+>> + * @shost: Host that needs a scsi_device
+>                                ^^^^^^^^^^^^^
+> This is not detailed enough. Consider changing "a scsi_device" into
+> "a scsi device for allocating reserved commands from".
+> 
+>> + *
+>> + * Lock status: None assumed.
+>> + *
+>> + * Returns:     The scsi_device or NULL
+>> + *
+>> + * Notes:
+>> + *    Attach a single scsi_device to the Scsi_Host - this should
+>> + *    be made to look like a "pseudo-device" that points to the
+>> + *    HA itself.
+>> + *
+>> + *    Note - this device is not accessible from any high-level
+>> + *    drivers (including generics), which is probably not
+>> + *    optimal.  We can add hooks later to attach.
+> 
+> The "which is probably not optimal. We can add hooks later to attach."
+> part probably should be moved to the patch description.
 
-Rob
+ok
+
+> 
+>> + */
+>> +struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+>> +{
+>> +    struct scsi_device *sdev = NULL;
+>> +    struct scsi_target *starget;
+>> +
+>> +    mutex_lock(&shost->scan_mutex);
+>> +    if (!scsi_host_scan_allowed(shost))
+>> +        goto out;
+>> +    starget = scsi_alloc_target(&shost->shost_gendev, 0, 
+>> shost->this_id);
+>                                                            
+> ^^^^^^^^^^^^^^^^^^
+> Is it guaranteed that this channel / id combination will not be used for
+> any other SCSI device?
+
+Does it matter if the parent device is different?
+
+> 
+> What if shost->this_id == -1?
+> 
+>> +    if (!starget)
+>> +        goto out;
+>> +
+>> +    sdev = scsi_alloc_sdev(starget, 0, NULL);
+>> +    if (sdev)
+>> +        sdev->borken = 0;
+>> +    else
+>> +        scsi_target_reap(starget);
+>> +    put_device(&starget->dev);
+>> + out:
+>> +    mutex_unlock(&shost->scan_mutex);
+>> +    return sdev;
+>> +}
+>> +EXPORT_SYMBOL(scsi_get_host_dev);
+> 
+> Elsewhere in the SCSI core "get..dev" means increment the reference 
+> count of
+> a SCSI device. Maybe scsi_alloc_host_dev() is a better name?
+
+I think that the intention is to only use this once for a shost, i.e. 
+get or allocate that scsi_device once and use it for the lifetime of the 
+shost. But I can rename if you think it's better.
+
+> 
+>> +/*
+>> + * These two functions are used to allocate and free a pseudo device
+>> + * which will connect to the host adapter itself rather than any
+>> + * physical device.  You must deallocate when you are done with the
+>> + * thing.  This physical pseudo-device isn't real and won't be available
+>> + * from any high-level drivers.
+>> + */
+> 
+> Please keep function comments in .c files because that makes it more likely
+> that the comment and the implementation will remain in sync.
+> 
+
+fine, I can relocate this.
+
+Thanks,
+John
