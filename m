@@ -2,221 +2,115 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D8EC433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 21:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2973DC43334
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 21:59:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245369AbiFOV4h (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jun 2022 17:56:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47290 "EHLO
+        id S1349872AbiFOV7l (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jun 2022 17:59:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346441AbiFOV4g (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 17:56:36 -0400
-Received: from mail-lj1-x22f.google.com (mail-lj1-x22f.google.com [IPv6:2a00:1450:4864:20::22f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 755A244A3A;
-        Wed, 15 Jun 2022 14:56:32 -0700 (PDT)
-Received: by mail-lj1-x22f.google.com with SMTP id h23so14780985ljl.3;
-        Wed, 15 Jun 2022 14:56:32 -0700 (PDT)
+        with ESMTP id S1347212AbiFOV7k (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 17:59:40 -0400
+Received: from EUR04-HE1-obe.outbound.protection.outlook.com (mail-he1eur04hn0206.outbound.protection.outlook.com [52.100.18.206])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7038853C76
+        for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2022 14:59:38 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=CsRt53ZYax+AEOeti3vtug0ncUfsI4BtDTmATK4j9TWGo7tRGqgcX5Za1IyPnpEnBtzFI+geVdnBNk3qMbBTVB2lOhOWIsJHCQz95RrvtKvNM+7TRSQcrzhORJluIZxFfP1HaXDfc0DeTg0J3LVDdOjTjlAxdHQvNJiJtl3n9DsN89JocsaSx3P3gmb01BTwWt/3fr9RWTdzEpGlvU967iOOPOX3RojaUqH2lUBPmC5Y4FaDoZttgyF+Nhs7G47OI+WBU4ey/Vuix1KlQyguh9obRMkMQIBlPuInZHx52tJ/VoKKlAHtPrheUFJnJ6uJE/XH4YNXvNIIMpFQObo39w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lQsm62DnO3DRMaTO7/AWxijWtNxIrL/VW/Qe6xhipJU=;
+ b=IGQsFS6EetL6gudVSJfMgpjpmfd5+XQYqAKwQ8MAdyuIZrZ1Cv3DTTbsfge2vjrFU5F+pt4EPEgUj+ucHPj/Sm5ppaluIJalpsGyjZdCtqHaHBcXDwB3OvgRP0RC+OvpMaYUCvl3f0EIbuEa8gIjFYVqfpx3Ay3chIkGal4seqaJhI1RZOyrzAA06OMuEulgHI3yvqB1MKaKX+ii+SDrinsAmdKHprS9M1k3lGoY792BeAWrBH0hcuvhDbX7HZuc0RmS7g1bGefiYItiMznXZEReHrnLUDTsA8qQnnc6SRJoOWb/7rR30f1yDKj8l9UqdH8APxAq4/TWdSH3XzBAAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=permerror (sender ip
+ is 91.151.71.70) smtp.rcpttodomain=vger.kernel.org
+ smtp.mailfrom=solairedirect.co.za; dmarc=none action=none
+ header.from=solairedirect.co.za; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=fj3idR9ITxtyBkLb8C2yMHLKLG7IMAyqge6auz8Xoso=;
-        b=geZQgQBfPs0gt1EhAThZmGnVf/B3qlss07EEfs+bWEivxL+jVVax1x5tGlhx01mFYw
-         DbKXjki82pi2wpCiZI+fzhyvX/0mfO7O01D1Qo0d30opmIYIiyRlN3lD4YEz/2wKN4N2
-         g6nCcz1iKJXIMmgAazAi8u7IQZaZi3Fd8hbp8n0C2QnAcdXxPHdVpd4+Tw3P1HCyN8NK
-         4hgwx6/fkgc3JYyTW6RuaxBsZET5mbscooRHtEIfkEuLppcEdcSRcaJ9OeKoW8kkAW3v
-         3xhbgd39xeFzTnlX5YN5eonge/RAqdoy4ToKN+fiJfs06Hi+kAhg84bFRnHnuE2zwfW1
-         4J6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=fj3idR9ITxtyBkLb8C2yMHLKLG7IMAyqge6auz8Xoso=;
-        b=eXSn6lx13dW59tiWuYkqg1GB5Wzq2msQj5GU0fATLfyHIuqOIYpb21BjqAtEbWg6w3
-         zv94r64VxEPoK+DZPcVdEsbrjEMSSxwC1bgkGq5Ilf2KrxXIS+m+rerwm5BCGfTXcnuX
-         dCTg450gLrxNmUM5XQT82NfLtCXz1cJXz5yJgyyrCVEb6IbNM+DM2Jsa3A8RCD1a7BPa
-         wCHXoGcUIfhLcN6QeFF8uaoeZ0kdaPfGZp59yDryzXDLhdN+Rlr1qxARyAdTJ8///3sG
-         0pK+bgQZTZGn5tDO1hu2GMX0cR3IU0zoMIZ1Bb7iUK/gDI/LUyZtnfvYrSbvPCJi7/mZ
-         cQCQ==
-X-Gm-Message-State: AJIora8bpLUVNoOlqB678vRcA7l9wn7QcWEQRsaKVimoVZb68gxJp4v3
-        jOyvuQABxz2oejKfzeUs2fQ=
-X-Google-Smtp-Source: AGRyM1ssSQMkRSYZ0vv7iOqWHBgvY/2JNmKnl/GQF59+6dI9uvS6E33ao5FwJXCzISRaT6udDukahg==
-X-Received: by 2002:a2e:508:0:b0:255:66fb:9fce with SMTP id 8-20020a2e0508000000b0025566fb9fcemr950322ljf.171.1655330190775;
-        Wed, 15 Jun 2022 14:56:30 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id b13-20020a2eb90d000000b0025587b872cesm2516ljb.70.2022.06.15.14.56.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jun 2022 14:56:30 -0700 (PDT)
-Date:   Thu, 16 Jun 2022 00:56:28 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 11/23] dt-bindings: ata: ahci: Add platform capability
- properties
-Message-ID: <20220615215628.m5pgnys7acmkhslg@mobilestation>
-References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
- <20220610081801.11854-12-Sergey.Semin@baikalelectronics.ru>
- <20220614221917.GA2824584-robh@kernel.org>
+ d=solairdirect.onmicrosoft.com; s=selector1-solairdirect-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lQsm62DnO3DRMaTO7/AWxijWtNxIrL/VW/Qe6xhipJU=;
+ b=HsgLrIBf5Y5/jugPwHtZ3YjFXOYz7zxWLBzU7zsXG9VlhkejcSNBlSPznZSZxqd3Py8TKG9TenjZ2h+1d7f4mI0HoWLgtwFkC2aoms2KYL1wG5rVh26vO3xNMegw706L3WVxdfK/TrxVDy0NLMK2PAtGRoRDRFSm6enD8XsQIWo=
+Received: from DB6PR0601CA0011.eurprd06.prod.outlook.com (2603:10a6:4:7b::21)
+ by AM5PR0602MB2771.eurprd06.prod.outlook.com (2603:10a6:203:97::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.13; Wed, 15 Jun
+ 2022 21:59:36 +0000
+Received: from DB5EUR01FT086.eop-EUR01.prod.protection.outlook.com
+ (2603:10a6:4:7b:cafe::9d) by DB6PR0601CA0011.outlook.office365.com
+ (2603:10a6:4:7b::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.14 via Frontend
+ Transport; Wed, 15 Jun 2022 21:59:36 +0000
+X-MS-Exchange-Authentication-Results: spf=permerror (sender IP is
+ 91.151.71.70) smtp.mailfrom=solairedirect.co.za; dkim=none (message not
+ signed) header.d=none;dmarc=none action=none header.from=solairedirect.co.za;
+Received-SPF: PermError (protection.outlook.com: domain of solairedirect.co.za
+ used an invalid SPF mechanism)
+Received: from SDSV152-VM.solairedirect.lan (91.151.71.70) by
+ DB5EUR01FT086.mail.protection.outlook.com (10.152.5.118) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.5353.14 via Frontend Transport; Wed, 15 Jun 2022 21:59:35 +0000
+Received: from [206.72.197.122] ([206.72.197.122] unverified) by SDSV152-VM.solairedirect.lan with Microsoft SMTPSVC(8.5.9600.16384);
+         Thu, 16 Jun 2022 00:00:12 +0200
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220614221917.GA2824584-robh@kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
+Subject: Hi
+To:     linux-ide@vger.kernel.org
+From:   "Emerald Johansson" <marketing@solairedirect.co.za>
+Date:   Wed, 15 Jun 2022 17:59:34 -0400
+Reply-To: emjo680@gmail.com
+Message-ID: <SDSV152-VM5d0g4ucaj00047013@SDSV152-VM.solairedirect.lan>
+X-OriginalArrivalTime: 15 Jun 2022 22:00:12.0354 (UTC) FILETIME=[49630220:01D88103]
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: ba2cf0f4-652a-4476-258b-08da4f1a5622
+X-MS-TrafficTypeDiagnostic: AM5PR0602MB2771:EE_
+X-Microsoft-Antispam-PRVS: <AM5PR0602MB2771B0D09E4C31696F2A48FAEBAD9@AM5PR0602MB2771.eurprd06.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: =?iso-8859-1?Q?rxaNO7BR1VOHvkWuHnyHHXX/pdC8iGmyieEALgT1JrUayU3TXBbg8i0445?=
+ =?iso-8859-1?Q?VfIZGzkrrMUxC8O5uUvTqSYRoUgDKPAus324pJBGPbRlneb16Ts5VCei7S?=
+ =?iso-8859-1?Q?Ej56l0raUjbgkIRo00b4kxfhr/8mTbDFuAHfgziX2uBF8FU5NKOAFvwzU8?=
+ =?iso-8859-1?Q?BiRjNMfz5aYK+XWdC/1klhCkyZgrWz/7y6xKpL0zuX+0FHrS65NfFL07IT?=
+ =?iso-8859-1?Q?Dhga0+i6xh21QMmh+wDlo85KRnUbzwoGp75xA6b2ZoqVFPpL1liFM5dBSr?=
+ =?iso-8859-1?Q?Y7lLcaYhj3QYv2Bd4S/lzNAOnSK1ETfVLrINmJRFiSVstPP3UrKgprOiOz?=
+ =?iso-8859-1?Q?zTmbAETO9GEG6y9+5bzxsaz6zyWNv3TBy//7uOHxSX+8331lNUzA4sDwVv?=
+ =?iso-8859-1?Q?hD1xSb/tBN82ZYkxd228VgiLkVQtPEBMD54KTf1zg1NNEm07TnwGfbRp51?=
+ =?iso-8859-1?Q?smUWc3QpKSGUhtlaUweiTwG9npz61nBvl9YzhJG5wr2fKaxectvcoM8P5G?=
+ =?iso-8859-1?Q?WouiLNzNX80fC7VBHChQOqGqx+Ao0mE7VpdVWFLiu/A1WeQpsuTd0p8sZ3?=
+ =?iso-8859-1?Q?g0JW2+9rdTb6BGsO/ZqPzu0SmftgHnkebkYg01phyRSDbp+WBEt9bs45YV?=
+ =?iso-8859-1?Q?6pqva0uPbNiXGfvp+6wCsbZfxE1rrYhT++rlIDadePqA+3YHeAm+h/Zl+W?=
+ =?iso-8859-1?Q?zugIsr8bu6iqTHULBPwfCBJE0EkL7UxIOW4De40B5VVj7IzvXH+nT0e9Q1?=
+ =?iso-8859-1?Q?IXiS2yVpTkh7n36h+yYPhAagXGmQESMt1e6PzrkSNwcLTrD1kx+ZzRBqi5?=
+ =?iso-8859-1?Q?ztZRl4GCGYVkuE1mlSfuLa2VWCHmr+ympGYDrcblkZct0EZo31rg4fl95h?=
+ =?iso-8859-1?Q?sR+zi8J5YsU1n+VcDmo6sYK+V2kfBSjnXkJvcGhIWc7q0rwqCqyA8hAau0?=
+ =?iso-8859-1?Q?e8xoIzl3voW0WklscKJ/LwhcMJysDbNmRsEQMn8uTQGpXi405S5sJT5xRw?=
+ =?iso-8859-1?Q?RGHB5n4Eiw8PQfunbFXvqeUEsOXWwQFh9kYYz9urFpc0nizrWHCZTEiiu3?=
+ =?iso-8859-1?Q?eryEClSxIJLHd5+DvF4pyLY=3D?=
+X-Forefront-Antispam-Report: CIP:91.151.71.70;CTRY:FR;LANG:en;SCL:5;SRV:;IPV:CAL;SFV:SPM;H:SDSV152-VM.solairedirect.lan;PTR:undef-71-70.c-si.fr;CAT:OSPM;SFS:(13230016)(346002)(39860400002)(396003)(136003)(40470700004)(36840700001)(46966006)(186003)(7116003)(3480700007)(2860700004)(8936002)(82310400005)(4744005)(5660300002)(36860700001)(41300700001)(336012)(956004)(316002)(40480700001)(508600001)(6666004)(40460700003)(81166007)(86362001)(2906002)(356005)(26005)(9686003)(47076005)(70206006)(6916009)(70586007)(8676002)(16900700008);DIR:OUT;SFP:1501;
+X-OriginatorOrg: solairedirect.co.za
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2022 21:59:35.8075
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: ba2cf0f4-652a-4476-258b-08da4f1a5622
+X-MS-Exchange-CrossTenant-Id: 1c138fa9-0b91-4473-baea-5be5feac0f7e
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=1c138fa9-0b91-4473-baea-5be5feac0f7e;Ip=[91.151.71.70];Helo=[SDSV152-VM.solairedirect.lan]
+X-MS-Exchange-CrossTenant-AuthSource: DB5EUR01FT086.eop-EUR01.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR0602MB2771
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jun 14, 2022 at 04:19:17PM -0600, Rob Herring wrote:
-> On Fri, Jun 10, 2022 at 11:17:49AM +0300, Serge Semin wrote:
-> > In case if the platform doesn't have BIOS or a comprehensive firmware
-> > installed then the HBA capability flags will be left uninitialized. As a
-> > good alternative we suggest to define the DT-properties with the AHCI
-> > platform capabilities describing all the HW-init flags of the
-> > corresponding capability register. Luckily there aren't too many of them.
-> > SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
-> > support determine the corresponding feature availability for the whole HBA
-> > by means of the "hba-cap" property. Each port can have the "hba-port-cap"
-> > property initialized indicating that the port supports some of the next
-> > functionalities: HPCP - HotPlug capable port, MPSP - Mechanical Presence
-> > Switch attached to a port, CPD - Cold Plug detection, ESP - External SATA
-> > Port (eSATA), FBSCP - FIS-based switching capable port.
-> > 
-> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > 
-> > ---
-> > 
-> > Changelog v4:
-> > - Fix some misspelling in the patch log.
-> > - Convert the boolean properties to the bitfield properties. (@Rob)
-> > - Remove Hannes' rb tag due to the patch content change.
-> > ---
-> >  .../devicetree/bindings/ata/ahci-common.yaml  | 16 +++++++++++++++
-> >  .../bindings/ata/ahci-platform.yaml           | 10 ++++++++++
-> >  include/dt-bindings/ata/ahci.h                | 20 +++++++++++++++++++
-> >  3 files changed, 46 insertions(+)
-> >  create mode 100644 include/dt-bindings/ata/ahci.h
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > index 12a97b56226f..94d72aeaad0f 100644
-> > --- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-> > @@ -58,6 +58,14 @@ properties:
-> >    phy-names:
-> >      const: sata-phy
-> >  
-> > +  hba-cap:
-> > +    $ref: '/schemas/types.yaml#/definitions/uint32'
-> > +    description:
-> > +      Bitfield of the HBA generic platform capabilities like Staggered
-> > +      Spin-up or Mechanical Presence Switch support. It can be used to
-> > +      appropriately initialize the HWinit fields of the HBA CAP register
-> > +      in case if the system firmware hasn't done it.
-> > +
-> >    ports-implemented:
-> >      $ref: '/schemas/types.yaml#/definitions/uint32'
-> >      description:
-> > @@ -101,6 +109,14 @@ $defs:
-> >        target-supply:
-> >          description: Power regulator for SATA port target device
-> >  
-> > +      hba-port-cap:
-> > +        $ref: '/schemas/types.yaml#/definitions/uint32'
-> > +        description:
-> > +          Bitfield of the HBA port-specific platform capabilities like Hot
-> > +          plugging, eSATA, FIS-based Switching, etc (see AHCI specification
-> > +          for details). It can be used to initialize the HWinit fields of
-> > +          the PxCMD register in case if the system firmware hasn't done it.
-> > +
-> >      required:
-> >        - reg
-> >  
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > index 15be98e0385b..e19cf9828e68 100644
-> > --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> > @@ -111,6 +111,8 @@ examples:
-> >    - |
-> >      #include <dt-bindings/interrupt-controller/arm-gic.h>
-> >      #include <dt-bindings/clock/berlin2q.h>
-> > +    #include <dt-bindings/ata/ahci.h>
-> > +
-> >      sata@f7e90000 {
-> >          compatible = "marvell,berlin2q-ahci", "generic-ahci";
-> >          reg = <0xf7e90000 0x1000>;
-> > @@ -119,15 +121,23 @@ examples:
-> >          #address-cells = <1>;
-> >          #size-cells = <0>;
-> >  
-> > +        hba-cap = <HBA_SMPS>;
-> > +
-> >          sata0: sata-port@0 {
-> >              reg = <0>;
-> > +
-> >              phys = <&sata_phy 0>;
-> >              target-supply = <&reg_sata0>;
-> > +
-> > +            hba-port-cap = <(HBA_PORT_FBSCP | HBA_PORT_ESP)>;
-> >          };
-> >  
-> >          sata1: sata-port@1 {
-> >              reg = <1>;
-> > +
-> >              phys = <&sata_phy 1>;
-> >              target-supply = <&reg_sata1>;
-> > +
-> > +            hba-port-cap = <(HBA_PORT_HPCP | HBA_PORT_MPSP | HBA_PORT_FBSCP)>;
-> >          };
-> >      };
-> > diff --git a/include/dt-bindings/ata/ahci.h b/include/dt-bindings/ata/ahci.h
-> > new file mode 100644
-> > index 000000000000..6841caebcedf
-> > --- /dev/null
-> > +++ b/include/dt-bindings/ata/ahci.h
-> > @@ -0,0 +1,20 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> 
+I hope that you are at your best and doing well. The purpose of this letter=
+ is seeking for a pen pal like friendship and I'd love to and be honored to=
+ be friends with you if you do not mind.. If the Idea sounds OK with you, j=
+ust say yes and we can take it on from there. I look forward to hear hearin=
+g from you.. My name is Emerald From Sweden 36 years , this will mean a lot=
+ to me to hear back from you.
 
-> Dual license.
+Warm Regards.
 
-Ok.
-
-> 
-> With that,
-> 
-> Reviewed-by: Rob Herring <robh@kernel.org>
-
-Thanks.
-
--Sergey
-
-> 
-> > +/*
-> > + * This header provides constants for most AHCI bindings.
-> > + */
-> > +
-> > +#ifndef _DT_BINDINGS_ATA_AHCI_H
-> > +#define _DT_BINDINGS_ATA_AHCI_H
-> > +
-> > +/* Host Bus Adapter generic platform capabilities */
-> > +#define HBA_SSS		(1 << 27)
-> > +#define HBA_SMPS	(1 << 28)
-> > +
-> > +/* Host Bus Adapter port-specific platform capabilities */
-> > +#define HBA_PORT_HPCP	(1 << 18)
-> > +#define HBA_PORT_MPSP	(1 << 19)
-> > +#define HBA_PORT_CPD	(1 << 20)
-> > +#define HBA_PORT_ESP	(1 << 21)
-> > +#define HBA_PORT_FBSCP	(1 << 22)
-> > +
-> > +#endif
-> > -- 
-> > 2.35.1
-> > 
-> > 
+Emerald
