@@ -2,89 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63FDACCA473
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 19:38:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0193C43334
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jun 2022 20:04:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229737AbiFOTij (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jun 2022 15:38:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41226 "EHLO
+        id S239149AbiFOUEZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jun 2022 16:04:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349680AbiFOTi2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 15:38:28 -0400
-Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2566546B1
-        for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2022 12:38:24 -0700 (PDT)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru D4F5F20C2B71
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
+        with ESMTP id S237375AbiFOUEY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2022 16:04:24 -0400
+X-Greylist: delayed 903 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 15 Jun 2022 13:04:20 PDT
+Received: from mx01.omp.ru (unknown [95.181.193.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA208340E9
+        for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2022 13:04:20 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.86.16) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 15 Jun
+ 2022 22:49:08 +0300
+Subject: Re: [PATCH v2 0/2] Fix sloppy 'timeout' parameter type in
+ libata-core.c
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-ide@vger.kernel.org>
-Subject: [PATCH v2 1/2] ata: libata-core: make ata_exec_internal_sg() *static*
-Date:   Wed, 15 Jun 2022 22:38:20 +0300
-Message-ID: <20220615193821.9235-2-s.shtylyov@omp.ru>
-X-Mailer: git-send-email 2.26.3
-In-Reply-To: <20220615193821.9235-1-s.shtylyov@omp.ru>
 References: <20220615193821.9235-1-s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <7da76e0a-3805-6e33-def2-3846a2f3c8a8@omp.ru>
+Date:   Wed, 15 Jun 2022 22:49:09 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1902.lancloud.ru (fd00:f066::72)
+In-Reply-To: <20220615193821.9235-1-s.shtylyov@omp.ru>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.86.16]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/15/2022 19:25:54
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 19
+X-KSE-AntiSpam-Info: Lua profiles 171152 [Jun 15 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 489 489 b67d2e276d358fa514f5991440453e6a402e3a26
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.16 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 31.173.86.16:7.4.1,7.7.2;omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: {iprep_blacklist}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.16
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 19
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/15/2022 19:28:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/15/2022 4:39:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-ata_exec_internal_sg() is only called by ata_exec_internal() further in
-the same file, so we can make it *static* and remove its prototype from
-drivers/ata/libata.h...
+On 6/15/22 10:38 PM, Sergey Shtylyov wrote:
 
-Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
----
-Changes in version 2:
-- new patch.
+> The libata code too often uses the *unsigned long* type for the millisecond
+> timeouts, while the kernel functions like msecs_to_jiffies() or msleep() only
+> take *unsigned int* parameters for those. Start fixing the timeout types from
+> ata_exec_internal[_sg]() that triggered the SVACE static analyzer; there's
+> going to be a large continuation series somewhat later...
+> 
+> Sergey Shtylyov (2):
+>   ata: libata-core: make ata_exec_internal_sg() *static*
+>   ata: libata-core: fix sloppy parameter type in ata_exec_internal[_sg]()
+> 
+>  drivers/ata/libata-core.c | 12 ++++++------
+>  drivers/ata/libata.h      |  6 +-----
+>  2 files changed, 7 insertions(+), 11 deletions(-)
 
- drivers/ata/libata-core.c | 8 ++++----
- drivers/ata/libata.h      | 4 ----
- 2 files changed, 4 insertions(+), 8 deletions(-)
+  Forgot to mention the patches are against the 'for-next' branch of Damien's
+'libata.git' repo... :-/
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 980328a4b896..3cc1312a2622 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1467,10 +1467,10 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
-  *	RETURNS:
-  *	Zero on success, AC_ERR_* mask on failure
-  */
--unsigned ata_exec_internal_sg(struct ata_device *dev,
--			      struct ata_taskfile *tf, const u8 *cdb,
--			      int dma_dir, struct scatterlist *sgl,
--			      unsigned int n_elem, unsigned long timeout)
-+static unsigned ata_exec_internal_sg(struct ata_device *dev,
-+				     struct ata_taskfile *tf, const u8 *cdb,
-+				     int dma_dir, struct scatterlist *sgl,
-+				     unsigned int n_elem, unsigned long timeout)
- {
- 	struct ata_link *link = dev->link;
- 	struct ata_port *ap = link->ap;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 926a7f41303d..1446a482835d 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -53,10 +53,6 @@ extern unsigned ata_exec_internal(struct ata_device *dev,
- 				  struct ata_taskfile *tf, const u8 *cdb,
- 				  int dma_dir, void *buf, unsigned int buflen,
- 				  unsigned long timeout);
--extern unsigned ata_exec_internal_sg(struct ata_device *dev,
--				     struct ata_taskfile *tf, const u8 *cdb,
--				     int dma_dir, struct scatterlist *sg,
--				     unsigned int n_elem, unsigned long timeout);
- extern int ata_wait_ready(struct ata_link *link, unsigned long deadline,
- 			  int (*check_ready)(struct ata_link *link));
- extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
--- 
-2.26.3
+MBR, Sergey
