@@ -2,246 +2,154 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E31CC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Jun 2022 19:50:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F2F2C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Jun 2022 19:54:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244112AbiFQTuC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Jun 2022 15:50:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59998 "EHLO
+        id S234252AbiFQTyJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Jun 2022 15:54:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237436AbiFQTuB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jun 2022 15:50:01 -0400
-Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C475424F14;
-        Fri, 17 Jun 2022 12:49:58 -0700 (PDT)
-Received: by mail-lj1-x22b.google.com with SMTP id e4so5787973ljl.1;
-        Fri, 17 Jun 2022 12:49:58 -0700 (PDT)
+        with ESMTP id S229794AbiFQTyI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jun 2022 15:54:08 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58E022E9DA;
+        Fri, 17 Jun 2022 12:54:07 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id y32so8415160lfa.6;
+        Fri, 17 Jun 2022 12:54:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=8cF0jLiNO24HEVg/eFcBOsZzwy8p5T1qe7dG9jJuCeU=;
-        b=oLc+30L51GLtSNIwz+1aokX4ZwOHGvE+O16kPLkMj5PUbVBSi7EvcKrJb6ItQmfBb/
-         zBn6fZT5O1gCOydciraB78awv0VhxOESGD90P0pth8ZcHX9PGjhbF3NnAOtZWXlxybek
-         NgnSy7+RA9anwFCM8TFP6olGzDfyDA0C3SlFDTYgaXvKyVnEXko4tRZQtvKwrCGjdcpM
-         PxxUN/qp9lZrZQFTRh72WcE7mFjhizyCg7ZRn0wEgl56Kg4EXcyjosqele9RpeTjUfsv
-         hn0+Ff5cxS5ZFhOL7GRgdh5puGAq8LT9EI/unobQXouMn941gxyDjeosdxDhkC04Dfp/
-         oboQ==
+        bh=02rUpC1JaF7EaBeJHvEU6ZBWvHsGGlNTq1EAsa26d+U=;
+        b=qKuKUQO/dcX5z9teCBIMgIMk3uOFQJLA3kHLgJnf3nxxZ7xzS/DXSwQhi0dsCujAcf
+         3BXckUda/elXHotAMIpNINg170iI42nMz4NCxKxIaqXZ5C7V1x3pV2rKW2kIyEXBbQdS
+         l46xTw46DtID6yKeA7MEPDIFrok8wY0EntHqq/Sy/eP2oT5dfG8MsjG2vVz0UbF5jq6o
+         /XmaSdi3IZnBNmzrEivxuZqSOeMTxakgYM4UL8r+FwVQiAzkP8jH7KO3cYeT/dU9DH2o
+         ITCzXEqkEBMx0f1eo5mpo4XCURBWxCA1XCQSxHspUeV7C1G5Rf15NmQe1KvSjmcA7wyV
+         G7CA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=8cF0jLiNO24HEVg/eFcBOsZzwy8p5T1qe7dG9jJuCeU=;
-        b=321cimFble3dKNa7V4yd4djrvJPCwvSXcNMXh7FI8HnSIeNLkQZzXZCB7dl5RTgJiv
-         iIFvftvuVM4tpN0yNvM5HcNosTn9iRVw/ZKlZ/i6qGhuAEhpsh3XdxnoKJip46DO4TSZ
-         03SxvCrYxQrEL+48avvcV7puGqcns1VuVbpnvQmBcVzhmw4MKzbwgz1cgjybDrCdKKsX
-         NdPYx/5GWhCUitYox7/GmjkOzRa12P8LuiDM1yDZB+OE/MrVQPllwF9xxXkjfVbu4Itm
-         l44oLvRagw7rOVmYh3HuY6tYLGy+6/Tuq+CUnDJPYqLP+lYzFhAT5XQqmq3hjnPUS6vY
-         Gi/g==
-X-Gm-Message-State: AJIora+CTw2VRNiFV2q1fi0Jgd6lRbakygb5o6DjxayW5T0HnXSzbemA
-        Uq88eeNseO9fmSsWlfqe8FMOn6xLPXBxoVe5
-X-Google-Smtp-Source: AGRyM1tp6GDDUHFzOGPeMoJTIZSKkijB5O140rIglUlzjD7ZnfA6zsAAcu3uJfe2hEZg0MSCd1pQvg==
-X-Received: by 2002:a2e:881a:0:b0:255:7c2c:46d8 with SMTP id x26-20020a2e881a000000b002557c2c46d8mr5818333ljh.364.1655495397133;
-        Fri, 17 Jun 2022 12:49:57 -0700 (PDT)
+        bh=02rUpC1JaF7EaBeJHvEU6ZBWvHsGGlNTq1EAsa26d+U=;
+        b=JlLjKdOPfaO6M0JcRiwhdnToMgWYmGQGlUylxVj0EOV4EqDh2bnRDXVx19AyCAdaEY
+         7kZuOCugaA4aaxFI0Ij8LxKW/MFbgtOap71IJAYkT+XVQ8ofFV4o1OCGz9AVDiQorBGS
+         26OtwcgfCmgKk4WbJ8V3MXYCOzcqyMQ3jH7lwhrMD7sSG5AhAXjdEQl3MxruZL7ZE0kv
+         8En4YPOhkGaJH2D+Ulfb+PakWajwkKO6vapkFJjs5ZCLFtd/i+w2WtW3SFoOvsQoGQW9
+         mogFKbB+cf9RJeDV6OGxDhKfpH+Kqcxikh26VqxZZM9tFSHGHDzev+LJv5ZTzHHsxVCE
+         AKUQ==
+X-Gm-Message-State: AJIora9cvLleZRWlPql3f0QsSmcS+2T7lKwZ0pwa5l2bsEtkELC3POZf
+        gjMr3wjQAjSTuF9WkeuwwhE=
+X-Google-Smtp-Source: AGRyM1scl8XJBZO2QfldF/lmnmDPuZMn9aZDccuJGjXCRN2CeOWsSuAYogHMxuezZr/3ib1KJwEHmw==
+X-Received: by 2002:ac2:4314:0:b0:47e:53ff:7db with SMTP id l20-20020ac24314000000b0047e53ff07dbmr6548634lfh.118.1655495645696;
+        Fri, 17 Jun 2022 12:54:05 -0700 (PDT)
 Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id u17-20020ac25bd1000000b004791c4858e0sm739976lfn.114.2022.06.17.12.49.55
+        by smtp.gmail.com with ESMTPSA id g18-20020ac24d92000000b0047f523ae57csm381524lfe.17.2022.06.17.12.54.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 12:49:56 -0700 (PDT)
-Date:   Fri, 17 Jun 2022 22:49:54 +0300
+        Fri, 17 Jun 2022 12:54:05 -0700 (PDT)
+Date:   Fri, 17 Jun 2022 22:54:03 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Rob Herring <robh@kernel.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 20/23] dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA
- controller DT schema
-Message-ID: <20220617194954.ayoqkla3ww3hf2qy@mobilestation>
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 07/23] ata: libahci_platform: Convert to using devm
+ bulk clocks API
+Message-ID: <20220617195403.wbqy5ozm6x7tq3dh@mobilestation>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
- <20220610081801.11854-21-Sergey.Semin@baikalelectronics.ru>
- <20220614222922.GB2830345-robh@kernel.org>
+ <20220610081801.11854-8-Sergey.Semin@baikalelectronics.ru>
+ <3bf20887-6e2f-41f4-e4ec-5c2278f6cb18@opensource.wdc.com>
+ <20220615204509.siz54h4vbgvb3zkm@mobilestation>
+ <0dcebae2-5e4e-a0d3-181d-37bb9b40d564@opensource.wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220614222922.GB2830345-robh@kernel.org>
+In-Reply-To: <0dcebae2-5e4e-a0d3-181d-37bb9b40d564@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jun 14, 2022 at 04:29:22PM -0600, Rob Herring wrote:
-> On Fri, Jun 10, 2022 at 11:17:58AM +0300, Serge Semin wrote:
-> > Baikal-T1 AHCI controller is based on the DWC AHCI SATA IP-core v4.10a
-> > with the next specific settings: two SATA ports, cascaded CSR access based
-> > on two clock domains (APB and AXI), selectable source of the reference
-> > clock (though stable work is currently available from the external source
-> > only), two reset lanes for the application and SATA ports domains. Other
-> > than that the device is fully compatible with the generic DWC AHCI SATA
-> > bindings.
+On Thu, Jun 16, 2022 at 09:23:28AM +0900, Damien Le Moal wrote:
+> On 2022/06/16 5:45, Serge Semin wrote:
+> [...]
+> >>> +		hpriv->clks = devm_kzalloc(dev, sizeof(*hpriv->clks), GFP_KERNEL);
+> >>> +		if (!hpriv->clks) {
+> >>> +			rc = -ENOMEM;
+> >>> +			goto err_out;
+> >>> +		}
+> >>> +		hpriv->clks->clk = devm_clk_get_optional(dev, NULL);
 > > 
-> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > Reviewed-by: Hannes Reinecke <hare@suse.de>
+> >>> +		if (IS_ERR(hpriv->clks->clk)) {
+> >>> +			rc = PTR_ERR(hpriv->clks->clk);
+> >>> +			goto err_out;
+> >>> +		} else if (hpriv->clks->clk) {
+> >>
+> >> Nit: the else is not needed here.
 > > 
-> > ---
-> > 
-> > Changelog v2:
-> > - Rename 'syscon' property to 'baikal,bt1-syscon'.
-> > - Drop macro usage from the example node.
-> > 
-> > Changelog v4:
-> > - Use the DWC AHCI port properties definition from the DWC AHCI SATA
-> >   common schema. (@Rob)
-> > - Drop Baikal-T1 syscon reference and implement the clock signal
-> >   source in the framework of the clock controller. (@Rob)
-> > ---
-> >  .../bindings/ata/baikal,bt1-ahci.yaml         | 116 ++++++++++++++++++
-> >  1 file changed, 116 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-> > new file mode 100644
-> > index 000000000000..d5fbd7d561d8
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-> > @@ -0,0 +1,116 @@
-> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/ata/baikal,bt1-ahci.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> > +
-> > +title: Baikal-T1 SoC AHCI SATA controller
-> > +
-> > +maintainers:
-> > +  - Serge Semin <fancer.lancer@gmail.com>
-> > +
-> > +description: |
-> > +  AHCI SATA controller embedded into the Baikal-T1 SoC is based on the
-> > +  DWC AHCI SATA v4.10a IP-core.
-> > +
-> > +allOf:
-> > +  - $ref: snps,dwc-ahci.yaml#
-> > +
-> > +properties:
-> > +  compatible:
-> > +    contains:
-> > +      const: baikal,bt1-ahci
-> > +
-> > +  clocks:
-> > +    items:
-> > +      - description: Peripheral APB bus clock source
-> > +      - description: Application AXI BIU clock
-> > +      - description: SATA Ports reference clock
-> > +
-> > +  clock-names:
-> > +    items:
-> > +      - const: pclk
-> > +      - const: aclk
-> > +      - const: ref
-> > +
-> > +  resets:
-> > +    items:
-> > +      - description: Application AXI BIU domain reset
-> > +      - description: SATA Ports clock domain reset
-> > +
-> > +  reset-names:
-> > +    items:
-> > +      - const: arst
-> > +      - const: ref
-> > +
-> > +  ports-implemented:
-> > +    maximum: 0x3
-> > +
-> > +patternProperties:
-> > +  "^sata-port@[0-9a-e]$":
-> > +    $ref: /schemas/ata/snps,dwc-ahci.yaml#/$defs/dwc-ahci-port
-> > +
-> > +    properties:
-> > +      reg:
-> > +        minimum: 0
-> > +        maximum: 1
-> > +
-> > +      snps,tx-ts-max:
-> > +        $ref: /schemas/types.yaml#/definitions/uint32
-> > +        description:
-> > +          Due to having AXI3 bus interface utilized the maximum Tx DMA
-> > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
-> > +        enum: [ 1, 2, 4, 8, 16 ]
-> > +
-> > +      snps,rx-ts-max:
-> > +        $ref: /schemas/types.yaml#/definitions/uint32
-> > +        description:
-> > +          Due to having AXI3 bus interface utilized the maximum Rx DMA
-> > +          transaction size can't exceed 16 beats (AxLEN[3:0]).
-> > +        enum: [ 1, 2, 4, 8, 16 ]
-> > +
-> > +    unevaluatedProperties: false
-> > +
-> > +required:
-> > +  - compatible
-> > +  - reg
-> > +  - interrupts
-> > +  - clocks
-> > +  - clock-names
-> > +  - resets
-> > +
-> > +unevaluatedProperties: false
-> > +
-> > +examples:
-> > +  - |
-> > +    sata@1f050000 {
-> > +      compatible = "baikal,bt1-ahci", "snps,dwc-ahci";
+> > Well, it depends on what you see behind it. I see many reasons to keep
+> > it and only one tiny reason to drop it. Keeping it will improve the
+> > code readability and maintainability like having a more natural
+> > execution flow representation, thus clearer read-flow (else part as
+> > exception to the if part), less modifications should the goto part is
+> > changed/removed, a more exact program flow representation can be used
+> > by the compiler for some internal optimizations, it's one line shorter
+> > than the case we no 'else' here. On the other hand indeed we can drop
+> > it since if the conditional statement is true, the code afterwards
+> > won't be executed due to the goto operator. But as I see it dropping
+> > the else operator won't improve anything, but vise-versa will worsen
+> > the code instead. So if I get to miss something please justify why you
+> > want it being dropped, otherwise I would rather preserve it.
+> 
+> An else after a goto or return is never necessary and in my opinion makes the
+> code harder to read. I am not interested in debating this in general anyway. For
+> this particular case, the code would be:
+> 
+> 		hpriv->clks->clk = devm_clk_get_optional(dev, NULL);
+> 		if (IS_ERR(hpriv->clks->clk)) {
+> 			/* Error path */
+> 			rc = PTR_ERR(hpriv->clks->clk);
+> 			goto err_out;
+> 		}
+> 
+> 		/* Normal path */
+> 		if (hpriv->clks->clk) {
+> 			...
+> 		}
+> 
+> Which in my opinion is a lot easier to understand compared to having to parse
+> the if/else if and figure out which case in that sequence is normal vs error.
 > 
 
-> Just drop 'snps,dwc-ahci'. The generic IP block fallbacks have proven to 
-> be useless.
+> As noted, this is a nit. If you really insist, keep that else if.
 
-Please see my answer to your comment to the patch
-[PATCH v4 17/23] dt-bindings: ata: ahci: Add DWC AHCI SATA controller DT schema
-in this series here:
-https://lore.kernel.org/linux-ide/20220617193744.av27axznbogademt@mobilestation/
-Let's settle the fallback usage in general otherwise I'll keep
-submitting patches with such functionality and will always be getting
-your notes in that regard.)
+Ok. I'll leave it as is then.
 
+Thanks
 -Sergey
 
-
 > 
-> > +      reg = <0x1f050000 0x2000>;
-> > +      #address-cells = <1>;
-> > +      #size-cells = <0>;
-> > +
-> > +      interrupts = <0 64 4>;
-> > +
-> > +      clocks = <&ccu_sys 1>, <&ccu_axi 2>, <&sata_ref_clk>;
-> > +      clock-names = "pclk", "aclk", "ref";
-> > +
-> > +      resets = <&ccu_axi 2>, <&ccu_sys 0>;
-> > +      reset-names = "arst", "ref";
-> > +
-> > +      ports-implemented = <0x3>;
-> > +
-> > +      sata-port@0 {
-> > +        reg = <0>;
-> > +
-> > +        snps,tx-ts-max = <4>;
-> > +        snps,rx-ts-max = <4>;
-> > +      };
-> > +
-> > +      sata-port@1 {
-> > +        reg = <1>;
-> > +
-> > +        snps,tx-ts-max = <4>;
-> > +        snps,rx-ts-max = <4>;
-> > +      };
-> > +    };
-> > +...
-> > -- 
-> > 2.35.1
 > > 
+> > -Sergey
 > > 
+> >>
+> >>> +			hpriv->clks->id = __clk_get_name(hpriv->clks->clk);
+> >>> +			hpriv->n_clks = 1;
+> >>>  		}
+> >>> -		hpriv->clks[i] = clk;
+> >>>  	}
+> >>>  
+> >>>  	hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
+> >>
+> >>
+> >> -- 
+> >> Damien Le Moal
+> >> Western Digital Research
+> 
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
