@@ -2,55 +2,56 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4BE7C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Jun 2022 20:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5DC2C43334
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Jun 2022 20:40:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382433AbiFQUhN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Jun 2022 16:37:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37846 "EHLO
+        id S1383408AbiFQUkK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Jun 2022 16:40:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1382325AbiFQUfj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jun 2022 16:35:39 -0400
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7756C5E762;
-        Fri, 17 Jun 2022 13:34:23 -0700 (PDT)
-Received: by mail-lf1-x12a.google.com with SMTP id be31so8522091lfb.10;
-        Fri, 17 Jun 2022 13:34:23 -0700 (PDT)
+        with ESMTP id S1350359AbiFQUjz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jun 2022 16:39:55 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D40CD6B029;
+        Fri, 17 Jun 2022 13:36:57 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id be31so8529870lfb.10;
+        Fri, 17 Jun 2022 13:36:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=vDd9GRNgXOH4DRh4h4tsEZAUpzvs2GX7UG6ZUxEQU3I=;
-        b=lw8A+ey8OiVQ6R8WpbnJEVWi2qreXkw2WJNoZmz9mrILvv42LKWsMb7XfHPbGF9t1c
-         aM3PNDZyWMQ+O8On7hKVB/FWNICsdCCPH4Zf4mAHaJqOffK+iNJ0VgzuF1jJXmj3r7Ke
-         jJXjuuzdSQVZNLzKeFUOyGNy3PDHO5R1syZRs9a9w2GdCzeOgPgpAWtlYuFH+6oTa7ef
-         D8xWauC9rIl61rReFFi6yEwtRugJqqVjZLvIFJVWv2fsnetilEVMP5xbMV86q1V9fRPM
-         uFDK3guhTxy4EoRrhTafWPxebRAakvV0pz7ueL707ewiFUPZdhwL/T+90Y+mKMdyaKoU
-         /aaA==
+        bh=oISNlUz9ZficuYsPA/Qge/7xO0eNE7k8Vy/EmxWpRmI=;
+        b=cPydoDo5WZvGMR5+LSnh4cU2jc/hWCi4BCd0UK//fM7ymk/dflR8sjrxE89dsaE2I0
+         TUsmJdTNRYD0rsLiY3DJH1VXacZGP5SqrlYNQXxOCAHCgCyCEr/0nSo1SroaNxcbalMV
+         z+JXmlYqa4ApElo1U8JMmSrXirGuKiNO9tVeXwwfP1iU+Y8aRZUMYZkI+NY4gslnwFuQ
+         XS/WL9qaHffT6+f2eV2yx1T+F0hm90sG8MIZdmXVpFyBiybpeAXK4CSfRAJRhFAYQoKo
+         P1myqMugwjwhykwPB1+Fi1TsHr+sHSx2AAggonGQG6hPcmN+UwIqHSYDow7sE2qt8Eg0
+         7G+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=vDd9GRNgXOH4DRh4h4tsEZAUpzvs2GX7UG6ZUxEQU3I=;
-        b=ODFRSKQlvN4wEYtOWveA8BqECciRqUzynFWmNt/LsNjMXK+TS8vuHL3lSWEpkKIcKA
-         BrQe5Hbnm0J0iWnnLHNlRLRLWw0uFvsxMTvQKcpTr2MBVzvtMNplRFUdg5g2Y+lPfmKZ
-         VQNhQiCiINKaSdr/PesRi8Rean457qGOaBTWZ8fBY6kS++3QTQEQwNMwmSqSND2uo05x
-         KHpGAbcnlZp1CRZ/AKVC99yLvMaA60BfYipZR+uXZcICRFC84pJL4S10XsAfYDYZn7DV
-         izmwFE2PztTR05+sJFnFegxojA/J69R0NNew4c0uG8/QqsXzlJQPQPJwvQI32699BqsK
-         qzRg==
-X-Gm-Message-State: AJIora/G3kuPTgGymbhIdWoPGGdkqCcxoZElqsrRTgkriktE4U9VC6wt
-        TAKHO/r8Vg4F+lMQ7EpVeu89dzB6CCYpzhJz
-X-Google-Smtp-Source: AGRyM1tQRBiE4Z/onR34yRi4gEu5sqX+Q3/+fniA0+YaHZH6w7FIKnCTx20qlAJqho6h+DruXtFlSw==
-X-Received: by 2002:ac2:4e10:0:b0:479:2160:623e with SMTP id e16-20020ac24e10000000b004792160623emr6457849lfr.602.1655498061849;
-        Fri, 17 Jun 2022 13:34:21 -0700 (PDT)
+        bh=oISNlUz9ZficuYsPA/Qge/7xO0eNE7k8Vy/EmxWpRmI=;
+        b=RS/0oDQ1547YbbMTUC1jZmuD7Cp3iwWNX7eVQ6giLt7L3a7pG5edHCRdOo2NShgwAz
+         XS1xlrxeTDo1IZuH5HalwrjoBrkDQs3RhFGC/6vIB6ZNLbWnZaCr3fVJupItSzY8FesH
+         sncVVVWFnUYr7y4IuvlT9xWgce46S8u+jevWzXSt5LXn9FugJsO9Repne7rzdifXbYGp
+         wgcK1W31jqBBeZhDbFvgguz9DN76uKRSP8qV6kqngNHxxgZQZZsG9wQLoIX1U1tGP0TQ
+         +Us3w63In/KvZALz3HZ0LCBytOzh1nq0/cfUG8MKZjv7brXZvoKJfM3gJbh/rJsk8/+o
+         U3MQ==
+X-Gm-Message-State: AJIora919EvZ0ZbojV9/zSo2tS/Jetd8bFTrZcRXNjNlKXsr48T4Ztgb
+        MlLcabjmNwGnW2mUHx5IO4s=
+X-Google-Smtp-Source: AGRyM1u3aMO9KEyXbJIiCCbg9Kcfnq5GIbxgvcamCCxYVJoX9MOACf6DU7PZMSrao1T7QShHYxY1NQ==
+X-Received: by 2002:a19:a417:0:b0:479:15ef:4ded with SMTP id q23-20020a19a417000000b0047915ef4dedmr6476478lfc.225.1655498211994;
+        Fri, 17 Jun 2022 13:36:51 -0700 (PDT)
 Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id h13-20020a19ca4d000000b0047dbff43a7dsm752862lfj.63.2022.06.17.13.34.20
+        by smtp.gmail.com with ESMTPSA id o1-20020a2e7301000000b00253bd515f88sm627825ljc.68.2022.06.17.13.36.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 13:34:21 -0700 (PDT)
-Date:   Fri, 17 Jun 2022 23:34:19 +0300
+        Fri, 17 Jun 2022 13:36:51 -0700 (PDT)
+Date:   Fri, 17 Jun 2022 23:36:49 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -58,41 +59,76 @@ Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 Subject: Re: [PATCH v4 19/23] ata: ahci: Add DWC AHCI SATA controller support
-Message-ID: <20220617203419.ksoald7am3677csh@mobilestation>
+Message-ID: <20220617203649.wa2b3etx6gpm3s5g@mobilestation>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
  <20220610081801.11854-20-Sergey.Semin@baikalelectronics.ru>
- <52c9ca79-769f-4426-db94-7aad05a68258@opensource.wdc.com>
- <20220615214802.ke6owp5cuv5l77hu@mobilestation>
- <5f1edbd8-018a-bcd0-10f2-94767f341b45@opensource.wdc.com>
+ <6c02f8ef-8aea-8f80-590d-343f67a96f8d@infradead.org>
+ <20220610215850.ju76kxjquwef6kd3@mobilestation>
+ <73716f9f-892c-41c5-89f0-64a1985438aa@infradead.org>
+ <20220615213029.3upsmasnnhigqozm@mobilestation>
+ <bfaf0208-8416-c159-93f8-8cc31dbc7ef5@opensource.wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5f1edbd8-018a-bcd0-10f2-94767f341b45@opensource.wdc.com>
+In-Reply-To: <bfaf0208-8416-c159-93f8-8cc31dbc7ef5@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Jun 16, 2022 at 09:33:22AM +0900, Damien Le Moal wrote:
-> On 2022/06/16 6:48, Serge Semin wrote:
-> [...]
-> >> MODULE_LICENSE("GPL v2");
+On Thu, Jun 16, 2022 at 09:31:30AM +0900, Damien Le Moal wrote:
+> On 2022/06/16 6:30, Serge Semin wrote:
+> > On Fri, Jun 10, 2022 at 04:34:13PM -0700, Randy Dunlap wrote:
+> >> Hi Serge,
 > >>
-> >> To match the file header SPDX.
+> >> On 6/10/22 14:58, Serge Semin wrote:
+> >>> On Fri, Jun 10, 2022 at 09:34:46AM -0700, Randy Dunlap wrote:
+> >>>> Hi--
+> >>>
+> >>> Hi Randy
+> >>>
+> >>>>
+> >>>> On 6/10/22 01:17, Serge Semin wrote:
+> >>>>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> >>>>> index bb45a9c00514..95e0e022b5bb 100644
+> >>>>> --- a/drivers/ata/Kconfig
+> >>>>> +++ b/drivers/ata/Kconfig
+> >>>>> @@ -176,6 +176,16 @@ config AHCI_DM816
+> >>>>>  
+> >>>>>  	  If unsure, say N.
+> >>>>>  
+> >>>>> +config AHCI_DWC
+> >>>>> +	tristate "Synopsys DWC AHCI SATA support"
+> >>>>> +	select SATA_HOST
+> >>>>> +	default SATA_AHCI_PLATFORM
+> >>>>
+> >>>
+> >>>> I don't think this needs to default to SATA_AHCI_PLATFORM.
+> >>>> It might build a driver that isn't needed.
+> >>>> And it's incompatible with "If unsure, say N."
+> >>>
+> >>> Basically you are right, but this particular setting is connected with
+> >>> the modification I've done in the drivers/ata/ahci_platform.c driver
+> >>> in the framework of this commit. I've moved the "snps,spear-ahci" and
+> >>> "snps,dwc-ahci" compatible devices support to the new driver. Thus
+> >>> should I omit the SATA_AHCI_PLATFORM dependency their default kernel
+> >>> configs will lack the corresponding controllers support. If it's not a
+> >>> problem and we can rely on the kernel build system ability to ask
+> >>> whether the new config needs to be set/cleared, then I would be very
+> >>> happy to drop the default setting. What do you think?
+> >>
 > > 
-> > No. Please see the commit bf7fbeeae6db ("module: Cure the
-> > MODULE_LICENSE "GPL" vs. "GPL v2" bogosity") and what checkpatch.pl
-> > says should the "GPL v2" string is used in the module license block.
-> > More info regarding this macro and the possible license values are
-> > described here:
-> > Documentation/process/license-rules.rst
+> >> I'd prefer to try it like that.
+> >> If it becomes a problem, we can go back to this v4 patch.
+> > 
+> > Agreed then (seeing Damien is silent about your comment).
 > 
 
-> ah ! OK. I was not 100% sure. Doing a quick grep, there is still a lot of (half
-> ?) of "GPL v2" vs "GPL".
-> 
-> Ignore this then.
+> I have not thought about it :)
+> I do not use SATA PLATFORM at all, so I am not familiar with its dependencies.
+> Will have a look and do my usual build tests anyway.
 
-Ok.
+Ok. I'll be waiting for you reply in this regard the before
+re-submitting the next series version.
 
 -Sergey
 
@@ -101,26 +137,18 @@ Ok.
 > > -Sergey
 > > 
 > >>
-> >>> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> >>> index 9b56490ecbc3..8f5572a9f8f1 100644
-> >>> --- a/drivers/ata/ahci_platform.c
-> >>> +++ b/drivers/ata/ahci_platform.c
-> >>> @@ -80,9 +80,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
-> >>>  static const struct of_device_id ahci_of_match[] = {
-> >>>  	{ .compatible = "generic-ahci", },
-> >>>  	/* Keep the following compatibles for device tree compatibility */
-> >>> -	{ .compatible = "snps,spear-ahci", },
-> >>>  	{ .compatible = "ibm,476gtr-ahci", },
-> >>> -	{ .compatible = "snps,dwc-ahci", },
-> >>>  	{ .compatible = "hisilicon,hisi-ahci", },
-> >>>  	{ .compatible = "cavium,octeon-7130-ahci", },
-> >>>  	{ /* sentinel */ }
+> >>>>> +	help
+> >>>>> +	  This option enables support for the Synopsys DWC AHCI SATA
+> >>>>> +	  controller implementation.
+> >>>>> +
+> >>>>> +	  If unsure, say N.
+> >>>>
+> >>>> -- 
+> >>>> ~Randy
 > >>
-> >>
+> >> Thanks.
 > >> -- 
-> >> Damien Le Moal
-> >> Western Digital Research
-> > 
+> >> ~Randy
 > 
 > 
 > -- 
