@@ -2,110 +2,120 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB6CBC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Jun 2022 07:48:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18251C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Jun 2022 17:28:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234148AbiFQHsl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Jun 2022 03:48:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59294 "EHLO
+        id S234143AbiFQR2L (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Jun 2022 13:28:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346603AbiFQHsk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jun 2022 03:48:40 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FFD5674FA
-        for <linux-ide@vger.kernel.org>; Fri, 17 Jun 2022 00:48:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655452126; x=1686988126;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=nDh5lFWZsMx+VLgd7S4sxAT7uTU8JzbbXQedlHxFQvs=;
-  b=Ck3LAlvWPvE21ENttalrVeDUeocyUAwdsGkARkm81fxlfXHFCv2AuodR
-   ZdDHOg0LP/x6erR23zNCe5TOfPHMyovh03Du1QxpiU2zHSYseOS8adHs+
-   ntiXsiGA6qMLU4a7tj3G+l/oiyGFRhMa9QTcaW2L79NAZDzgMNhZndDfs
-   0XE6I3/6OPn/tSQOfxKlKmNy6ioqiwDNcB6qTpTri5A+o+xTXcyAF5+eB
-   wXnpngcUI2wElQDFJPhavB3WHtel8NddTqd0zAVpwzbTdFz5rpUBkNIWp
-   ZR9ZwpVMO0en3ZZmCPBPRJosCrTVpHKRE4GTnQGVrgtvyuPIQnXQq7QNs
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.92,306,1650902400"; 
-   d="scan'208";a="204169137"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Jun 2022 15:48:45 +0800
-IronPort-SDR: gpRyfEh4sQuibazdlkpgRwEsTO2cdg0hugj0XnWXYcm5xQJkunC2gPCspsglZvnqAfYdzVWyQl
- Z6Eb3QhSHNcLkrrncyh7pYp+YZg1FTXp39J+S2JzZRJFZE5Yv7r4EcsCJnAt0gaxT4vN56YYuN
- KWS3kLhKzExn2GFUzU62Y+rgfdTzrZytV6xHs0DePdOerPkfb+0E1yLVvDdzg4IrXYsah123Bn
- f/QkFOKxeAZjfhJbG0C5WsT4czgm/eA9zHWYTKzdOXd72FQHS4p1mMfGpqLFxqyN0Al0QbiQC8
- EUR2iB1j3KHHiA6YVJUiG5d2
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jun 2022 00:06:51 -0700
-IronPort-SDR: u8Lr7RJM8J9Ru8ebI7HvipBP8jg4EO2n9IXpK7QN3Lb3Fqb/hVg1OZkh4seNSbReO+RhVYOMpw
- k4TIqmqQF449epfpQhR2IyoJ8lfPMDI0QBwTqyrAuLCW60kYAgTtPKoTVgKkEJfrEOzVMPjY/E
- bIAb1Qq1zsJLIhZxiYCe/EMYkccSnpIiEDg3GzX+99FKBE/xxcHFPnKVFkUKRtD/W4GrrK+Z4R
- MPRq3Da41dIPqpTaQXTZkBT4NulCcDuI/+wJkpjwGGzoerk7aYkGT0INWCDaMnx9X5WFeHUrb6
- WiE=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jun 2022 00:48:40 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LPWPg2lWwz1Rvlx
-        for <linux-ide@vger.kernel.org>; Fri, 17 Jun 2022 00:48:39 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1655452119; x=1658044120; bh=nDh5lFWZsMx+VLgd7S4sxAT7uTU8JzbbXQe
-        dlHxFQvs=; b=ZuPD04WvRMBrOiBI9Tl+7Ce1uDfmGmqmgTleueTqSNSDFBk6yyY
-        0aW13SA3PFxxaOFMr5HyKPmFO2Urv6vYtFHRu8l+IG9ce62Q4CArjPld2JlvRPg2
-        OJH/KkuRjnur1Pcduy4wOfuzW1YUZJU5ESzw8kvPHhmaO4DeOxsA0LahZO1psVBI
-        FnFFDfgpD39yCNWm+5ijJEJJ27IlnkA/PY/4E767t2ZAvz4uJqxDqK7MR3KjvPU5
-        ZiVjDFV3lg3J7OR9YzbqA5KM4f+M/FLKqfHkHGnBjq8IaNFOs1kkq9Y0oayfhpEV
-        9gE+l5okMPVVNwhwQ/hABwpJkHoCQASr+tA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id w6NNjsfONaL4 for <linux-ide@vger.kernel.org>;
-        Fri, 17 Jun 2022 00:48:39 -0700 (PDT)
-Received: from [10.225.163.84] (unknown [10.225.163.84])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LPWPf5W05z1Rvlc;
-        Fri, 17 Jun 2022 00:48:38 -0700 (PDT)
-Message-ID: <202b0ac3-eb20-9ecc-79fc-e1f21752d570@opensource.wdc.com>
-Date:   Fri, 17 Jun 2022 16:48:37 +0900
+        with ESMTP id S231697AbiFQR2K (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jun 2022 13:28:10 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F2A01CFE9
+        for <linux-ide@vger.kernel.org>; Fri, 17 Jun 2022 10:28:04 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.76.79) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 17 Jun
+ 2022 20:27:56 +0300
+Subject: Re: [PATCH v2 2/2] ata: libata-core: fix sloppy parameter type in
+ ata_exec_internal[_sg]()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <20220615193821.9235-1-s.shtylyov@omp.ru>
+ <20220615193821.9235-3-s.shtylyov@omp.ru>
+ <849f65c3-007e-8f01-2412-e91b3fd6d254@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <c2aac3d9-d1d9-eb87-2644-462f30902352@omp.ru>
+Date:   Fri, 17 Jun 2022 20:27:56 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH 0/2] Fix sloppy typing in the fast drain logic
+In-Reply-To: <849f65c3-007e-8f01-2412-e91b3fd6d254@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <20220616205149.16157-1-s.shtylyov@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220616205149.16157-1-s.shtylyov@omp.ru>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.76.79]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/17/2022 17:07:58
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 171211 [Jun 17 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 490 490 64947c9fe6ec4170c45683de1592f92a9c3bac07
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.76.79 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.76.79
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/17/2022 17:11:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/17/2022 2:19:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/17/22 05:51, Sergey Shtylyov wrote:
-> Here are 2 patches against the 'for-next' branch of Damien Le Moal's
-> 'libata.git' repo.
-> The libata's fast drain logic unfortunately boasts of some sloppy typing --
-> unify it by using *unsigned int* everyhere...
-> 
-> Sergey Shtylyov (2):
->   ata: libata-eh: fix sloppy result type of ata_eh_nr_in_flight()
->   ata: make ata_port::fastdrain_cnt *unsigned int*
-> 
->  drivers/ata/libata-eh.c | 8 ++++----
->  include/linux/libata.h  | 2 +-
->  2 files changed, 5 insertions(+), 5 deletions(-)
-> 
+Hello!
 
-Applied to for-5.20. Thanks !
+On 6/17/22 10:44 AM, Damien Le Moal wrote:
 
--- 
-Damien Le Moal
-Western Digital Research
+>> Make the 'timeout' parameter to ata_exec_internal_sg() *unsigned int* as
+>> msecs_to_jiffies() that it calls takes just *unsigned int* for the time in
+>> milliseconds. Then follow the suit with ata_exec_internal(), its only
+>> caller; also fix up ata_dev_set_feature(), the only ata_exec_internal()'s
+>> caller  that explicitly passes *unsigned long* variable for timeout...
+> 
+> Checking this, struct ata_eh_cmd_timeout_ent uses an unsigned long timeout
+> and ata_internal_cmd_timeout() returns an unsigned long which is stored
+> into the unsigned int timeout variable.
+
+   I know. All timeouts stored in those tables fit into *unsigned int* (except
+the last ones which get truncated from ULONG_MAX to UINT_MAX anyways).
+   Note that *unsigned long* has always been silently truncated to *unsigned int*
+when calling msecs_to_jiffies() in ata_exec_internal_sg(); nothing changes with
+my patch, it just gets truncated a bit earlier...
+
+> So it may be good to add another
+> prep patch before this one to cleanup the auto_timeout stuff (struct
+> ata_eh_cmd_timeout_ent and ata_internal_cmd_timeout()).
+
+   It shouldn't matter whether we do it before or after this patch, due to
+truncation which happens even now (I have such a patch, but no description
+yet). I was planning to address that as a part of the large patch series,
+most probably next week (and I wrote about that in the cover letter)...
+
+> Hmm ? Thoughts ?
+
+   Was I clear enough? :-)
+
+>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>> analysis tool.
+
+   I wanted to fix SVACE's reports 1st, then the rest of the sloppy timeout
+typing...
+
+>>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+[...]
+
+MBR, Sergey
