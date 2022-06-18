@@ -2,155 +2,152 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5DC2C43334
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Jun 2022 20:40:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E16C433EF
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Jun 2022 06:45:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1383408AbiFQUkK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Jun 2022 16:40:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45634 "EHLO
+        id S231917AbiFRGps (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 18 Jun 2022 02:45:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350359AbiFQUjz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jun 2022 16:39:55 -0400
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D40CD6B029;
-        Fri, 17 Jun 2022 13:36:57 -0700 (PDT)
-Received: by mail-lf1-x133.google.com with SMTP id be31so8529870lfb.10;
-        Fri, 17 Jun 2022 13:36:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=oISNlUz9ZficuYsPA/Qge/7xO0eNE7k8Vy/EmxWpRmI=;
-        b=cPydoDo5WZvGMR5+LSnh4cU2jc/hWCi4BCd0UK//fM7ymk/dflR8sjrxE89dsaE2I0
-         TUsmJdTNRYD0rsLiY3DJH1VXacZGP5SqrlYNQXxOCAHCgCyCEr/0nSo1SroaNxcbalMV
-         z+JXmlYqa4ApElo1U8JMmSrXirGuKiNO9tVeXwwfP1iU+Y8aRZUMYZkI+NY4gslnwFuQ
-         XS/WL9qaHffT6+f2eV2yx1T+F0hm90sG8MIZdmXVpFyBiybpeAXK4CSfRAJRhFAYQoKo
-         P1myqMugwjwhykwPB1+Fi1TsHr+sHSx2AAggonGQG6hPcmN+UwIqHSYDow7sE2qt8Eg0
-         7G+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=oISNlUz9ZficuYsPA/Qge/7xO0eNE7k8Vy/EmxWpRmI=;
-        b=RS/0oDQ1547YbbMTUC1jZmuD7Cp3iwWNX7eVQ6giLt7L3a7pG5edHCRdOo2NShgwAz
-         XS1xlrxeTDo1IZuH5HalwrjoBrkDQs3RhFGC/6vIB6ZNLbWnZaCr3fVJupItSzY8FesH
-         sncVVVWFnUYr7y4IuvlT9xWgce46S8u+jevWzXSt5LXn9FugJsO9Repne7rzdifXbYGp
-         wgcK1W31jqBBeZhDbFvgguz9DN76uKRSP8qV6kqngNHxxgZQZZsG9wQLoIX1U1tGP0TQ
-         +Us3w63In/KvZALz3HZ0LCBytOzh1nq0/cfUG8MKZjv7brXZvoKJfM3gJbh/rJsk8/+o
-         U3MQ==
-X-Gm-Message-State: AJIora919EvZ0ZbojV9/zSo2tS/Jetd8bFTrZcRXNjNlKXsr48T4Ztgb
-        MlLcabjmNwGnW2mUHx5IO4s=
-X-Google-Smtp-Source: AGRyM1u3aMO9KEyXbJIiCCbg9Kcfnq5GIbxgvcamCCxYVJoX9MOACf6DU7PZMSrao1T7QShHYxY1NQ==
-X-Received: by 2002:a19:a417:0:b0:479:15ef:4ded with SMTP id q23-20020a19a417000000b0047915ef4dedmr6476478lfc.225.1655498211994;
-        Fri, 17 Jun 2022 13:36:51 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id o1-20020a2e7301000000b00253bd515f88sm627825ljc.68.2022.06.17.13.36.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 13:36:51 -0700 (PDT)
-Date:   Fri, 17 Jun 2022 23:36:49 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 19/23] ata: ahci: Add DWC AHCI SATA controller support
-Message-ID: <20220617203649.wa2b3etx6gpm3s5g@mobilestation>
-References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
- <20220610081801.11854-20-Sergey.Semin@baikalelectronics.ru>
- <6c02f8ef-8aea-8f80-590d-343f67a96f8d@infradead.org>
- <20220610215850.ju76kxjquwef6kd3@mobilestation>
- <73716f9f-892c-41c5-89f0-64a1985438aa@infradead.org>
- <20220615213029.3upsmasnnhigqozm@mobilestation>
- <bfaf0208-8416-c159-93f8-8cc31dbc7ef5@opensource.wdc.com>
+        with ESMTP id S231425AbiFRGpr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jun 2022 02:45:47 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A9E54D9EA
+        for <linux-ide@vger.kernel.org>; Fri, 17 Jun 2022 23:45:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1655534746; x=1687070746;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=zdbHkkHYDoTGs20H0kaKa5SUGxeUgixaAroFpiwtLVI=;
+  b=b80zhRpAo2ReqaVCjwQ4rlzn8HISIpqJ4Ueh57cPMrWT3hU0w3cJ+iA5
+   J+eHX0S9k+hSCrFO79tUe+pavYOM381SxdYieob/mI6B5uKL0e6ff1Kzp
+   zl1oqDiMPG3WPhd4m3QS3mWJk7yLtu9rbKlHPl8gzOxGdnvnoPyB+pWxo
+   B/3P6Y1J5CYcop5lEIihzYUGjLZmLjX7mLOYplNHG9yQvv0VrCTQ3UkZw
+   V2Dddgdjdd5oR4aDPYrAx1VXlZUSos9htWX9+HrNdqx9U4vOLAyc0G2QZ
+   iMD8FITP83BYHsyFt5oL5TTG15mNgkyWuyEtYFHyrzCOkYWwydQbidqA2
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.92,306,1650902400"; 
+   d="scan'208";a="202203331"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Jun 2022 14:45:45 +0800
+IronPort-SDR: Jzo9dHX27u40/ruL6IW+LwGb79RekVpz0rF+2TmhiWW5CIOHXANSrIREFLxU+PriCVwYfaRQdW
+ R0EPhU6nA6AEfCvBkchHkcTO085GjYaMGrMa6achMzKC3f9h6rCLERMy64Du/r3dirZAZ9SOjX
+ QaUUJ9HUNF0AVbpvpJUFnP8O8rz9q21ycx7Dko2pVg+fgLo1B24LxDOf9HjUOYJmXI5S0YiJaf
+ Du8H8Pta6mZNsdmvJXePOk/ZpVvjNfVDXkOFQ6h1hZKIRv6rpol1lgrYu1NLMlIA+7PCv0WyND
+ nK6Wpv68NRbdBOsGZTqTkKnS
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jun 2022 23:08:19 -0700
+IronPort-SDR: EF03Uwfcbzr4Bbd+FE6QHDq3TowoV3wBdB9NjUPRTzVeCPw0oDXWjb/CVnrDbyHppU5cKqfVNt
+ 4jyBBF34H8V9HqHmUp7QObtGUmgkkkGTtfBVfaLOQMJC4YoFgyVHRjJ2ftS6FvRkiqPkyZsGD2
+ O5Sj8tzwOjBTp14MZ7j7H/HaB9txWo/JUJ3cBpQn/qJpMldUtgKPhwYRhGH1sk6Y6Sr3UXYBSS
+ /wBImvjzpHM5AjBbgCCl28pEjWEU9KoDhPZnwT/UAdZG+EmuJ7L0tjBc+t3w2yPoCiq740e9rq
+ n34=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jun 2022 23:45:46 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LQ5yd294yz1Rwrw
+        for <linux-ide@vger.kernel.org>; Fri, 17 Jun 2022 23:45:45 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1655534744; x=1658126745; bh=zdbHkkHYDoTGs20H0kaKa5SUGxeUgixaAro
+        FpiwtLVI=; b=FW6dkjyOfs9eUNPqhqMCyGBHjKOlx0GHY2M9u9MCf/f0KxgS9CO
+        UcdI7roD/Q46Vg5pc2E8CurrUyY9B+lDZt16uHG+KdPkAG/NZjEetwp3I/i8gwDE
+        RuM9AT2c7ulacCUL9nfN66C6zVqfLdLyBlBW+ayDMiGX4U76xudWyBhbTu4H7XUC
+        fKnb0YSVeoZxb61HPTwieBtCNuW2cf179ekJ3o3hLFGL2j9MkRczeJ8A759cXx5m
+        XQOwegUsrVIlXsjNElzRJhxcdlYLcRP3ltHxAeBcB42m41Zs8hhtmKOyD+i/WM8O
+        xBkEoCZTQQpdUWil+QLe2UH+FAEspaFAZmg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 7AleEwgsVfm2 for <linux-ide@vger.kernel.org>;
+        Fri, 17 Jun 2022 23:45:44 -0700 (PDT)
+Received: from [10.225.163.84] (unknown [10.225.163.84])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LQ5yc3Qg1z1Rvlc;
+        Fri, 17 Jun 2022 23:45:44 -0700 (PDT)
+Message-ID: <a2d8df09-2ecf-baa5-d8ee-4651f5a612f1@opensource.wdc.com>
+Date:   Sat, 18 Jun 2022 15:45:42 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bfaf0208-8416-c159-93f8-8cc31dbc7ef5@opensource.wdc.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v2 2/2] ata: libata-core: fix sloppy parameter type in
+ ata_exec_internal[_sg]()
+Content-Language: en-US
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
+References: <20220615193821.9235-1-s.shtylyov@omp.ru>
+ <20220615193821.9235-3-s.shtylyov@omp.ru>
+ <849f65c3-007e-8f01-2412-e91b3fd6d254@opensource.wdc.com>
+ <c2aac3d9-d1d9-eb87-2644-462f30902352@omp.ru>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <c2aac3d9-d1d9-eb87-2644-462f30902352@omp.ru>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Jun 16, 2022 at 09:31:30AM +0900, Damien Le Moal wrote:
-> On 2022/06/16 6:30, Serge Semin wrote:
-> > On Fri, Jun 10, 2022 at 04:34:13PM -0700, Randy Dunlap wrote:
-> >> Hi Serge,
-> >>
-> >> On 6/10/22 14:58, Serge Semin wrote:
-> >>> On Fri, Jun 10, 2022 at 09:34:46AM -0700, Randy Dunlap wrote:
-> >>>> Hi--
-> >>>
-> >>> Hi Randy
-> >>>
-> >>>>
-> >>>> On 6/10/22 01:17, Serge Semin wrote:
-> >>>>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> >>>>> index bb45a9c00514..95e0e022b5bb 100644
-> >>>>> --- a/drivers/ata/Kconfig
-> >>>>> +++ b/drivers/ata/Kconfig
-> >>>>> @@ -176,6 +176,16 @@ config AHCI_DM816
-> >>>>>  
-> >>>>>  	  If unsure, say N.
-> >>>>>  
-> >>>>> +config AHCI_DWC
-> >>>>> +	tristate "Synopsys DWC AHCI SATA support"
-> >>>>> +	select SATA_HOST
-> >>>>> +	default SATA_AHCI_PLATFORM
-> >>>>
-> >>>
-> >>>> I don't think this needs to default to SATA_AHCI_PLATFORM.
-> >>>> It might build a driver that isn't needed.
-> >>>> And it's incompatible with "If unsure, say N."
-> >>>
-> >>> Basically you are right, but this particular setting is connected with
-> >>> the modification I've done in the drivers/ata/ahci_platform.c driver
-> >>> in the framework of this commit. I've moved the "snps,spear-ahci" and
-> >>> "snps,dwc-ahci" compatible devices support to the new driver. Thus
-> >>> should I omit the SATA_AHCI_PLATFORM dependency their default kernel
-> >>> configs will lack the corresponding controllers support. If it's not a
-> >>> problem and we can rely on the kernel build system ability to ask
-> >>> whether the new config needs to be set/cleared, then I would be very
-> >>> happy to drop the default setting. What do you think?
-> >>
-> > 
-> >> I'd prefer to try it like that.
-> >> If it becomes a problem, we can go back to this v4 patch.
-> > 
-> > Agreed then (seeing Damien is silent about your comment).
+On 6/18/22 02:27, Sergey Shtylyov wrote:
+> Hello!
 > 
+> On 6/17/22 10:44 AM, Damien Le Moal wrote:
+> 
+>>> Make the 'timeout' parameter to ata_exec_internal_sg() *unsigned int* as
+>>> msecs_to_jiffies() that it calls takes just *unsigned int* for the time in
+>>> milliseconds. Then follow the suit with ata_exec_internal(), its only
+>>> caller; also fix up ata_dev_set_feature(), the only ata_exec_internal()'s
+>>> caller  that explicitly passes *unsigned long* variable for timeout...
+>>
+>> Checking this, struct ata_eh_cmd_timeout_ent uses an unsigned long timeout
+>> and ata_internal_cmd_timeout() returns an unsigned long which is stored
+>> into the unsigned int timeout variable.
+> 
+>    I know. All timeouts stored in those tables fit into *unsigned int* (except
+> the last ones which get truncated from ULONG_MAX to UINT_MAX anyways).
+>    Note that *unsigned long* has always been silently truncated to *unsigned int*
+> when calling msecs_to_jiffies() in ata_exec_internal_sg(); nothing changes with
+> my patch, it just gets truncated a bit earlier...
+> 
+>> So it may be good to add another
+>> prep patch before this one to cleanup the auto_timeout stuff (struct
+>> ata_eh_cmd_timeout_ent and ata_internal_cmd_timeout()).
+> 
+>    It shouldn't matter whether we do it before or after this patch, due to
+> truncation which happens even now (I have such a patch, but no description
+> yet). I was planning to address that as a part of the large patch series,
+> most probably next week (and I wrote about that in the cover letter)...
+> 
+>> Hmm ? Thoughts ?
+> 
+>    Was I clear enough? :-)
+> 
+>>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>>> analysis tool.
+> 
+>    I wanted to fix SVACE's reports 1st, then the rest of the sloppy timeout
+> typing...
 
-> I have not thought about it :)
-> I do not use SATA PLATFORM at all, so I am not familiar with its dependencies.
-> Will have a look and do my usual build tests anyway.
+Fine. But in the spirit of fixing everything with these types, please add
+a patch to also convert the timeout tables to unsigned int. It is never a
+good idea to have code silently truncate long to int as that can be a pain
+to debug. So let's go all the way and fix this.
 
-Ok. I'll be waiting for you reply in this regard the before
-re-submitting the next series version.
-
--Sergey
+If you cannot do the additional patch, I will do it.
 
 > 
-> > 
-> > -Sergey
-> > 
-> >>
-> >>>>> +	help
-> >>>>> +	  This option enables support for the Synopsys DWC AHCI SATA
-> >>>>> +	  controller implementation.
-> >>>>> +
-> >>>>> +	  If unsure, say N.
-> >>>>
-> >>>> -- 
-> >>>> ~Randy
-> >>
-> >> Thanks.
-> >> -- 
-> >> ~Randy
+>>>
+>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> [...]
 > 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+> MBR, Sergey
+
+
+-- 
+Damien Le Moal
+Western Digital Research
