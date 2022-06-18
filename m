@@ -2,244 +2,140 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D65DBC433EF
-	for <linux-ide@archiver.kernel.org>; Sat, 18 Jun 2022 08:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C89F3C43334
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Jun 2022 19:50:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230320AbiFRILG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 18 Jun 2022 04:11:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44668 "EHLO
+        id S229680AbiFRTuJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 18 Jun 2022 15:50:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230457AbiFRILC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jun 2022 04:11:02 -0400
-Received: from mail-lj1-x235.google.com (mail-lj1-x235.google.com [IPv6:2a00:1450:4864:20::235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 279D92B193;
-        Sat, 18 Jun 2022 01:11:00 -0700 (PDT)
-Received: by mail-lj1-x235.google.com with SMTP id b7so6909916ljr.6;
-        Sat, 18 Jun 2022 01:11:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Cgt8r4SWxYEShXV42BthEwq1nWQW0QY6gFYNlkR9jIA=;
-        b=WvEQLsiqGkVo54RbG2r1VqNFqkfE+4JCxUE7T5vKrUFZ31O9eMrux2q1XItBJZ729Y
-         ktZK6rY5aIr+YAYZ6ym1mbK2aXkSGMg0+KcAPgZOcD8dcrpAM5fMAJ/7GASAVN67DMqF
-         qvoxB3SX7ttCHllE90Bz2mMBRl+lKutM6HJKOMiSZpaJ4YXBjYWtt8tlFfTXx2sOLACh
-         kcbWCDPUqgxwsCh634pf64OurQKBrBvjPbF6kJVnuhtJu7RRct8zHiAKGzGhq4VN9m4T
-         1LrKpAG+MgBVoMLFDKQfkkzb4jtddZl5Pu/PnThj/lNaroF/TKmN5jMisoB9m+dmy5BR
-         SBaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Cgt8r4SWxYEShXV42BthEwq1nWQW0QY6gFYNlkR9jIA=;
-        b=5cKjLo9jN5Gp89fUtQAq8Mu0bgTfaxHAYiZBTMQmt6UN5AonUMYFqHG9ZBqusdQuK+
-         jIlx6jM0tPPEY0poxBqaqShZ3INpxVJmx524nd3sV2JJp/lG58XDX4zk2V8W+GWqhUq5
-         P1UDUgObWBI94K0UMkttl7Szw0+AlEUNKd0eAc9pb/Ewd4IwH/CPRXaUkwBuV4EnOL7t
-         xHF7O+1nFmMkTz16HLSaYv/SYqCuenjWiETs5cL2g29yQ1V+LCUsmypTyV+pFKmuiY/y
-         A7kzrBInAkR2cuiBQxCkQszxaUaFZu6Ty6G4aijMxiQNHoRPlQ7P1Sm9F9/omRvEcOxD
-         hyDw==
-X-Gm-Message-State: AJIora9OqnTQK9WBE301t+6TdbdY3OpfyQZxQhEUG4Jgrrxj2Ng89VKM
-        8/kEkUzeegKNWtmGnfld+RhP5yK1T0O4g2z4
-X-Google-Smtp-Source: AGRyM1til4vYja08UaNonR/BsUxCOZoV3Rbhj5CwEAeRzcemMJIDW5thjfdsb91pJKouQKfYt4GIgg==
-X-Received: by 2002:a05:651c:b24:b0:25a:45d7:4bb8 with SMTP id b36-20020a05651c0b2400b0025a45d74bb8mr6671159ljr.361.1655539857976;
-        Sat, 18 Jun 2022 01:10:57 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id y23-20020a196417000000b004791b687235sm910895lfb.119.2022.06.18.01.10.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Jun 2022 01:10:57 -0700 (PDT)
-Date:   Sat, 18 Jun 2022 11:10:55 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 12/23] ata: libahci: Extend port-cmd flags set with
- port capabilities
-Message-ID: <20220618081055.grsrjxa5gqiuhy2i@mobilestation>
-References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
- <20220610081801.11854-13-Sergey.Semin@baikalelectronics.ru>
- <d06e9910-527e-cfa2-f2df-737fb4799fe5@opensource.wdc.com>
- <20220615205819.uiqptkqm5qfdvrbj@mobilestation>
- <903e273a-9dc5-f0df-5391-e96e63318323@opensource.wdc.com>
- <20220617203100.jg2o7ponolaenf6r@mobilestation>
- <f560ca8b-d921-d228-64f0-74e320f8af67@opensource.wdc.com>
+        with ESMTP id S229451AbiFRTuI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jun 2022 15:50:08 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 907ADBE3F
+        for <linux-ide@vger.kernel.org>; Sat, 18 Jun 2022 12:50:05 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.77.73) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sat, 18 Jun
+ 2022 22:49:56 +0300
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH v2 2/2] ata: libata-core: fix sloppy parameter type in
+ ata_exec_internal[_sg]()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <20220615193821.9235-1-s.shtylyov@omp.ru>
+ <20220615193821.9235-3-s.shtylyov@omp.ru>
+ <849f65c3-007e-8f01-2412-e91b3fd6d254@opensource.wdc.com>
+ <c2aac3d9-d1d9-eb87-2644-462f30902352@omp.ru>
+ <a2d8df09-2ecf-baa5-d8ee-4651f5a612f1@opensource.wdc.com>
+Organization: Open Mobile Platform
+Message-ID: <70d7734e-5d4c-0d72-742c-a350908d86db@omp.ru>
+Date:   Sat, 18 Jun 2022 22:49:56 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f560ca8b-d921-d228-64f0-74e320f8af67@opensource.wdc.com>
+In-Reply-To: <a2d8df09-2ecf-baa5-d8ee-4651f5a612f1@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.77.73]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/18/2022 19:32:54
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 171212 [Jun 18 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 490 490 64947c9fe6ec4170c45683de1592f92a9c3bac07
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.77.73 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.77.73 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.77.73:7.7.3,7.4.1;omp.ru:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: {iprep_blacklist}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.77.73
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/18/2022 19:35:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/18/2022 2:00:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Jun 18, 2022 at 03:52:28PM +0900, Damien Le Moal wrote:
-> On 6/18/22 05:31, Serge Semin wrote:
-> > On Thu, Jun 16, 2022 at 09:28:18AM +0900, Damien Le Moal wrote:
-> >> On 2022/06/16 5:58, Serge Semin wrote:
-> >>> On Tue, Jun 14, 2022 at 05:32:41PM +0900, Damien Le Moal wrote:
-> >>>> On 6/10/22 17:17, Serge Semin wrote:
-> >>>>> Currently not all of the Port-specific capabilities listed in the
-> >>>>
-> >>>> s/listed/are listed
-> >>>>
-> >>>>> PORT_CMD-enumeration. Let's extend that set with the Cold Presence
-> >>>>> Detection and Mechanical Presence Switch attached to the Port flags [1] so
-> >>>>> to closeup the set of the platform-specific port-capabilities flags.  Note
-> >>>>> these flags are supposed to be set by the platform firmware if there is
-> >>>>> one. Alternatively as we are about to do they can be set by means of the
-> >>>>> OF properties.
-> >>>>>
-> >>>>> While at it replace PORT_IRQ_DEV_ILCK with PORT_IRQ_DMPS and fix the
-> >>>>> comment there. In accordance with [2] that IRQ flag is supposed to
-> >>>>> indicate the state of the signal coming from the Mechanical Presence
-> >>>>> Switch.
-> >>>>>
-> >>>>> [1] Serial ATA AHCI 1.3.1 Specification, p.27
-> >>>>> [2] Serial ATA AHCI 1.3.1 Specification, p.24, p.88
-> >>>>>
-> >>>>> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> >>>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> >>>>>
-> >>>>> ---
-> >>>>>
-> >>>>> Changelog v4:
-> >>>>> - Fix the DMPS macros name in the patch log. (@Sergei Shtylyov)
-> >>>>> ---
-> >>>>>  drivers/ata/ahci.h | 7 ++++++-
-> >>>>>  1 file changed, 6 insertions(+), 1 deletion(-)
-> >>>>>
-> >>>>> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> >>>>> index 7d834deefeb9..f501531bd1b3 100644
-> >>>>> --- a/drivers/ata/ahci.h
-> >>>>> +++ b/drivers/ata/ahci.h
-> >>>>> @@ -138,7 +138,7 @@ enum {
-> >>>>>  	PORT_IRQ_BAD_PMP	= (1 << 23), /* incorrect port multiplier */
-> >>>>>  
-> >>>>>  	PORT_IRQ_PHYRDY		= (1 << 22), /* PhyRdy changed */
-> >>>>> -	PORT_IRQ_DEV_ILCK	= (1 << 7), /* device interlock */
-> >>>>> +	PORT_IRQ_DMPS		= (1 << 7), /* mechanical presence status */
-> >>>>>  	PORT_IRQ_CONNECT	= (1 << 6), /* port connect change status */
-> >>>>>  	PORT_IRQ_SG_DONE	= (1 << 5), /* descriptor processed */
-> >>>>>  	PORT_IRQ_UNK_FIS	= (1 << 4), /* unknown FIS rx'd */
-> >>>>> @@ -166,6 +166,8 @@ enum {
-> >>>>>  	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
-> >>>>>  	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
-> >>>>>  	PORT_CMD_ESP		= (1 << 21), /* External Sata Port */
-> >>>>> +	PORT_CMD_CPD		= (1 << 20), /* Cold Presence Detection */
-> >>>>> +	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch */
-> >>>>>  	PORT_CMD_HPCP		= (1 << 18), /* HotPlug Capable Port */
-> >>>>>  	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
-> >>>>>  	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
-> >>>>> @@ -181,6 +183,9 @@ enum {
-> >>>>>  	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
-> >>>>>  	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
-> >>>>>  
-> >>>>> +	PORT_CMD_CAP		= PORT_CMD_HPCP | PORT_CMD_MPSP |
-> >>>>> +				  PORT_CMD_CPD | PORT_CMD_ESP | PORT_CMD_FBSCP,
-> >>>>
-> >>>
-> >>>> What is this one for ? A comment above it would be nice.
-> >>>
-> >>> Isn't it obviously inferrable from the definition and the item name?
-> >>
-> > 
-> >> I am guessing from the name. Am I guessing OK ? A comment would still be nice.
-> >> Why just these bits ? There are more cap/support indicator bits in that port cmd
-> >> bitfield. So why this particular set of bits ? What do they mean all together ?
-> > 
-> > Normally the variable/constant name should be self-content (as the
-> > kernel coding style doc states and what the common sense suggests). So
-> > the reader could correctly guess its purpose/content/value. In this
-> > case PORT_CMD_CAP - means PORT CMD capabilities mask. All of the
-> > possible flags have been set in that mask. There are no more
-> > capabilities in the PORT CMD register left undeclared. That's why the
-> > name is selected the way it is and why I haven't added any comment in
-> > here (what the kernel coding style says about the over-commenting the
-> > code).
+Hello!
+
+On 6/18/22 9:45 AM, Damien Le Moal wrote:
+[...]
+>>>> Make the 'timeout' parameter to ata_exec_internal_sg() *unsigned int* as
+>>>> msecs_to_jiffies() that it calls takes just *unsigned int* for the time in
+>>>> milliseconds. Then follow the suit with ata_exec_internal(), its only
+>>>> caller; also fix up ata_dev_set_feature(), the only ata_exec_internal()'s
+>>>> caller  that explicitly passes *unsigned long* variable for timeout...
+>>>
+>>> Checking this, struct ata_eh_cmd_timeout_ent uses an unsigned long timeout
+>>> and ata_internal_cmd_timeout() returns an unsigned long which is stored
+>>> into the unsigned int timeout variable.
+>>
+>>    I know. All timeouts stored in those tables fit into *unsigned int* (except
+>> the last ones which get truncated from ULONG_MAX to UINT_MAX anyways).
+>>    Note that *unsigned long* has always been silently truncated to *unsigned int*
+>> when calling msecs_to_jiffies() in ata_exec_internal_sg(); nothing changes with
+>> my patch, it just gets truncated a bit earlier...
+>>
+>>> So it may be good to add another
+>>> prep patch before this one to cleanup the auto_timeout stuff (struct
+>>> ata_eh_cmd_timeout_ent and ata_internal_cmd_timeout()).
+>>
+>>    It shouldn't matter whether we do it before or after this patch, due to
+>> truncation which happens even now (I have such a patch, but no description
+>> yet). I was planning to address that as a part of the large patch series,
+>> most probably next week (and I wrote about that in the cover letter)...
+>>
+>>> Hmm ? Thoughts ?
+>>
+>>    Was I clear enough? :-)
+>>
+>>>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>>>> analysis tool.
+>>
+>>    I wanted to fix SVACE's reports 1st, then the rest of the sloppy timeout
+>> typing...
 > 
+> Fine. But in the spirit of fixing everything with these types, please add
+> a patch to also convert the timeout tables to unsigned int. It is never a
+> good idea to have code silently truncate long to int
 
-> Yes, I understood from the name what it is. What I do NOT understand is
-> why all the feature bits are not there. Why this subset only ? A comment
-> about that would be nice so that the reason for it is not lost.
+   I even wonder why C allows that... and the static analyzers don't seem to
+complain about that too...
 
-Well, because it's indeed "PORT_CMD capabilities mask", and not features,
-not setups, not settings, not status flags, etc. As I said all the port
-Capabilities have been listed in that mask:
-PORT_CMD_FBSCP	BIT(22) - FIS-based Switching Capable Port
-PORT_CMD_ESP	BIT(21) - External SATA Port
-PORT_CMD_CPD	BIT(20) - Cold Presence Detect
-PORT_CMD_MPSP	BIT(19) - Mechanical Presence Switch Attached to Port
-PORT_CMD_HPCP	BIT(18) - Hot Plug Capable Port
-I've or'ed-them-up in a single mask => PORT_CMD_CAP in order to work
-with them independently from the rest of the PORT_CMD CSR fields.
+> as that can be a pain
+> to debug. So let's go all the way and fix this.
 
-Unlike the generic controller CAP/CAP2 registers, which consists of the
-device capabilities only, PORT_CMD contains various R/W settings (PM, LED
-driver, etc), RO status flags (CMD-list running, FIS recv running, etc)
-and amongst other the RO/Wo !port-specific capabilities!. The later ones
-indicate the platform-specific device features. Since the register
-contains flags with the intermixed nature, I need to have a mask to at
-least get the capabilities and preserve them between the device
-resets. That's why the PORT_CMD_CAP has been introduced in the
-framework of this patch. Its name was chosen with a reference to the
-CAP registers, see:
-HOST_CAP, HOST_CAP2, and finally my PORT_CMD_CAP.
+   OK.
 
-> 
-> > 
-> >>
-> >> Sure I can go and read the specs to figure it out. But again, a comment would
-> >> avoid readers of the code to have to decrypt all that.
-> > 
-> > If you still insist on having an additional comment. I can add
-> > something like "/* PORT_CMD capabilities mask */". Are you ok with it?
-> 
+> If you cannot do the additional patch, I will do it.
 
-> That does not help on its own. The macro name says that already. I would
-> like a note about why only these features are selected.
+   I can. I have the patch already, just without the description yet...
 
-Please see the explanation above. I don't see what else to say about
-that mask, because in short what I said above really means "PORT_CMD
-capabilities mask". So should you have some more clever text, which
-would be more suitable here, please tell me and I'll add it to the
-patch.
+>>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>> [...]
 
-Regarding what you said earlier. In order to fully understand the
-AHCI driver a hacker would always need to read the specs. There is
-just no way to do that effectively enough without the controller
-manual at hands. And the PORT_CMD capabilities isn't the most
-complicated part of the device.
-
--Sergey
-
-> 
-> > 
-> > -Sergey
-> > 
-> >>
-> >>>
-> >>> -Sergey
-> >>>
-> >>>>
-> >>>>> +
-> >>>>>  	/* PORT_FBS bits */
-> >>>>>  	PORT_FBS_DWE_OFFSET	= 16, /* FBS device with error offset */
-> >>>>>  	PORT_FBS_ADO_OFFSET	= 12, /* FBS active dev optimization offset */
-> >>>>
-> >>>>
-> >>>> -- 
-> >>>> Damien Le Moal
-> >>>> Western Digital Research
-> >>
-> >>
-> >> -- 
-> >> Damien Le Moal
-> >> Western Digital Research
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+MBR, Sergey
