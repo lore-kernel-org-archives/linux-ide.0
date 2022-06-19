@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F011C43334
-	for <linux-ide@archiver.kernel.org>; Sun, 19 Jun 2022 23:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED87FC433EF
+	for <linux-ide@archiver.kernel.org>; Sun, 19 Jun 2022 23:15:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231812AbiFSXMV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 19 Jun 2022 19:12:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35878 "EHLO
+        id S232915AbiFSXPh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 19 Jun 2022 19:15:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234714AbiFSXMU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 19 Jun 2022 19:12:20 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DE706150
-        for <linux-ide@vger.kernel.org>; Sun, 19 Jun 2022 16:12:19 -0700 (PDT)
+        with ESMTP id S232358AbiFSXPh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 19 Jun 2022 19:15:37 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF436170
+        for <linux-ide@vger.kernel.org>; Sun, 19 Jun 2022 16:15:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655680337; x=1687216337;
+  t=1655680536; x=1687216536;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=BNGXodo6bsaRQsownTQhqIEIhLDFmYlphFv7/iV53Vc=;
-  b=X4o4489DE2xEcleOpK9zo52qFvDxew6NyvQkdCVg9BmPvULBAFK/w54U
-   +zlZ4XAXSdlL8Ai5gpA1Y/Jc2AdIRGHaGLH2mKafozCXI1MAQD6XlVUpY
-   qmnmBTWEkPmiBzTOrvqqBxuh2NBug+edxG1+rxT0I7zCRmmZ031trZ80h
-   UcSbEP4AzSsA/jYq7/my15LjEImV2Fesv46AhHIae8gtmGOWuCGchxfLy
-   wZ1sF3MLQpsuJHdwxI1jZ3Z4T5EJv/OgYpsF1Xr8Sg3bRoxrXn51h9e2U
-   N9GegIm6yyQtZInqeOydkpuLichgOaFcjtfjP+8G2sQuU8714sjqaqabF
-   w==;
+  bh=gwpnJwpjwbNWS6M/sJrs1yPFrFKwNFi8+3yrb0GjKkg=;
+  b=h9zUaQUmvTddo40BA39PSQCc0ULokJHwx75HGsVkEimRWqVHqMQyoUHx
+   GaqMP8MH6Nk1pIuKDKF3GBjId7Cp7MEBC1ltQgDNzG1LbgjoiiOnT2+WH
+   Q/V3cRmoVzAAaFBjeJC2olrlIEauQTKwwGNzWGOGlWok5ErHmws8iF3gZ
+   5gXHPckhkwSZjFh40JYgQzg2N1TTA9QklOXDGotSAwzzV/1wkQyJt2tEv
+   3IouMrLlbC6VIdDgMoPU1AbATYb0Av630VJrc4jD+shg5D0u/M9VqAJsS
+   CLXUxw3InJ+zBOm/MHt3lqvlGBG4ZCSUb/pUHabiG7yDItcjiFhl75DLg
+   A==;
 X-IronPort-AV: E=Sophos;i="5.92,306,1650902400"; 
-   d="scan'208";a="203573538"
+   d="scan'208";a="307887336"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Jun 2022 07:12:17 +0800
-IronPort-SDR: S25WR2f+rURQ/xs51iLP9TEE+GD4t2DOODOCZ7DE3ztN/j0JMh4uX9ZJo2KeG9PtpKabOhLnxf
- YMLahnh2kumQZjNXT8/Z5slxdsAWzGPfPtpLZSuk1e/66tcdTrPyZF0393m2t90zvxuh8qOb+v
- MAGpm2Ljat88uh60YZxQJgn+7hBQ11R7QICyn3DHgJ0cbng7WhSiGaDOuGdFiAqzfwgLxipfkw
- tkLMKlTXNOjaZ9C+cS6M+QUs/07Dv8yOLGnnVtjASRmldl74v6mrkqmmEDA2pWLJ+AX0IaPQJ4
- rzuGamqV6wt7grujpjILd9kf
+  by ob1.hgst.iphmx.com with ESMTP; 20 Jun 2022 07:15:35 +0800
+IronPort-SDR: pma6jd/ssXInGXiz9vDa4t621JAGSdh2B/qc+i/n6BAgoxBWwo5HFwcCd5tkzgFvCEOLhYm0+i
+ mi/YouVGZzKexuW6/6mtAK2UDnPmi4AqYh0uN08Tsu+6j7lS0Iyq8yezuuBpBwHudPU/m6wIxn
+ P2Tg+/TgzI7PEHGP/aYfdYFQmA5+ZkOiWJmuCXAHvm3Wr6iJBdDTDLLI2qwPGvDEIumxuLhTKQ
+ T2xDVcz69NFQl3ft4TtjPzykW/UrGw5895NqXMdK2DZM9Cd4uKdUvoWPiOdlUhAM34FL6NxvGW
+ TbqpnWZBpoKNKI7to0vG6VSE
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jun 2022 15:30:27 -0700
-IronPort-SDR: SAYhZTzSydee+/BcMKs0W5eh+MfkxNssp7FAsa3bLi2QSXZ7LDX13et68xDg2ydBDjK+hK9wqT
- YFTD2V+RsobIgf7m5aFKvLeMLXcPtqgMi7fFTbmo7i1MfuIiFDCrt3b0GIJh/i//s1FKxr7nO4
- vvvCuoRXAO+hb4Hpho1vi13FxWm0tq77rxAl3R7238Vn6rzh385ujz0gaPfe+R9la/Y0LTXzx9
- hlruxomx/SZ+++qeCHRugaJ5ufTBq1wNbj3AdGvHNyjJ4x7EUqGVtedmxHG9Gz3MgUPrJ7ecWC
- FZg=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jun 2022 15:33:44 -0700
+IronPort-SDR: tKQU4ho586Jw9TNBf0EtFB9mWP/iBkR8zDegQPTZxMUC4mWS1Tjle5n/gB35pO3XAYgS2YrR0b
+ JfSA0pj/BpVONDE9geOfhAMVBUXfl9M5wGd3BdllMC77nYohTPrxlVLB8v4JZLRddyP/lDO3Fv
+ GfA3gMTI5nL0Pzwg4Rhr/VJ/Z87Bhmy76Rerx+bqs+aIfqqRM94YOeojC3ZtqwM1uAoHRfPCSh
+ uMrzp2R7O5+xR5stPwCnFMx3Jbb/FnhuRRkFf20VabvMkKdtb19q0wogpapeYNl26ZBzYp7X51
+ NZ8=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jun 2022 16:12:19 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jun 2022 16:15:36 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LR7pV061pz1Rvlx
-        for <linux-ide@vger.kernel.org>; Sun, 19 Jun 2022 16:12:17 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LR7tG59bcz1Rvlx
+        for <linux-ide@vger.kernel.org>; Sun, 19 Jun 2022 16:15:34 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,72 +56,68 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1655680337; x=1658272338; bh=BNGXodo6bsaRQsownTQhqIEIhLDFmYlphFv
-        7/iV53Vc=; b=MUopLY90qBDe6l9/scLnFIfKNXZzx3T3xC0MGYV5j6x4zKcqbb+
-        97KhFHz+wrfi22dkdtNc8csDYTW0nmdklZohC3B3krh6CQIob6mC4JPQpcm115LB
-        3JrA6N+cfrwLsiU8yvMo0IlKGfVjd+aEde4jdDAG2w1TjUWaDJG3ffRhO+mSo3p4
-        0Jef2cKBao3f0RS/LPfy1R4A09ee43uiYxjiys0iMWgleM5bJzgStf3/Nx6aF47l
-        CpWJt5nhRF1ogP7JkLmS1M58dLrGWRTegobaTpeWBzxRzmxep475tcluLB6dDeAy
-        2nDvdkz2d3VsK1XisUKQNmARHw+GB8zslJA==
+        1655680534; x=1658272535; bh=gwpnJwpjwbNWS6M/sJrs1yPFrFKwNFi8+3y
+        rb0GjKkg=; b=Dv7ED4VGhlWg0etQqiUIlfgQFRjkeACGaQko4uqjQwIuaoBBCOX
+        yf9Ta5i1aEJ4hYnCNj0440bWuyVcDJ0jvy43B6v6qkSa5FgkvsUaZHGfqsgunIle
+        6J9Cc5ulOfYb4Pr+jkaQW+WXg1hVjyMKqIK/wUK4aGXRSszzoxLnfPbipFq+SB2l
+        itGfxvPtdOskAmiYU8WZxp0ptCACt/MLS4yCxUWD580GNqCFBR9vcdVAhescnIvL
+        IYyBFVaoZdS8+bY2+IjEX1HavV7CgrQaHVVSP8dUrsIQzDxiSRbTqrTtmeWxY2WE
+        ydh8kUSsfUKIy7IrG0gmrX1Piy3uoR0BEdQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id nnEsxWnnolVs for <linux-ide@vger.kernel.org>;
-        Sun, 19 Jun 2022 16:12:17 -0700 (PDT)
+        with ESMTP id aTX_7RizNiNo for <linux-ide@vger.kernel.org>;
+        Sun, 19 Jun 2022 16:15:34 -0700 (PDT)
 Received: from [10.225.163.87] (unknown [10.225.163.87])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LR7pT24RDz1Rvlc;
-        Sun, 19 Jun 2022 16:12:17 -0700 (PDT)
-Message-ID: <d653908c-1270-9c2f-eceb-2572e9c9d339@opensource.wdc.com>
-Date:   Mon, 20 Jun 2022 08:12:15 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LR7tF59w4z1Rvlc;
+        Sun, 19 Jun 2022 16:15:33 -0700 (PDT)
+Message-ID: <82798f42-1a11-db2a-c5c6-3fec6c0a627f@opensource.wdc.com>
+Date:   Mon, 20 Jun 2022 08:15:32 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH] ata: libata-scsi: fix sloppy result type of ata_ioc32()
+Subject: Re: [PATCH 1/2] ata: libata-eh: fix sloppy result type of
+ ata_eh_nr_in_flight()
 Content-Language: en-US
 To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <4a695619-2de7-671e-7b67-2afddf22423f@omp.ru>
+References: <20220616205149.16157-1-s.shtylyov@omp.ru>
+ <20220616205149.16157-2-s.shtylyov@omp.ru>
+ <2c352e63-e946-a1bc-77c4-4579e6f01854@omp.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <4a695619-2de7-671e-7b67-2afddf22423f@omp.ru>
+In-Reply-To: <2c352e63-e946-a1bc-77c4-4579e6f01854@omp.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/18/22 04:30, Sergey Shtylyov wrote:
-> While ata_ioc32() returns *int*, its result gets assigned to and compared
-> with the *unsigned long* variable 'val' in ata_sas_scsi_ioctl(), its only
-> caller, which implies a problematic implicit cast -- fix that by returning
-> *unsigned long* instead.
+On 6/18/22 03:16, Sergey Shtylyov wrote:
+> On 6/16/22 11:51 PM, Sergey Shtylyov wrote:
 > 
-> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-> analysis tool.
+>> ata_eh_nr_in_flight() counts the # of the active tagged commands and thus
+>> cannot return a negative value but the result type is nevertheless *int*;
+>> switching it to *unsigned int* (along with the local variables receiving
+>> the function's result) helps avoiding the sign extension instructions when
+>> comparing with or assigning to *unsigned long *ata_port::fastdrain_cnt and
 > 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> ---
-> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
-> 
->  drivers/ata/libata-scsi.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: libata/drivers/ata/libata-scsi.c
-> ===================================================================
-> --- libata.orig/drivers/ata/libata-scsi.c
-> +++ libata/drivers/ata/libata-scsi.c
-> @@ -539,7 +539,7 @@ int ata_task_ioctl(struct scsi_device *s
->  	return rc;
->  }
->  
-> -static int ata_ioc32(struct ata_port *ap)
-> +static unsigned long ata_ioc32(struct ata_port *ap)
->  {
->  	if (ap->flags & ATA_FLAG_PIO_DMA)
->  		return 1;
+>    Grr, a typo! Should have been *unsigned long* ata_port::fastdrain_cnt...
+> Damien, coyld you please fix it?
 
-Actually, this should be a bool I think and the ioctl code cleaned to use
-that type since the val argument of the ioctl is also used as a bool.
+OK. Note: please stop using markdown stuff like *xxx*. That is not useful
+and that will avoid this kind of typos.
+
+> 
+>> thus results in a more compact 64-bit code...
+>>
+>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>> analysis tool.
+>>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> [...]
+> 
+> MBR, Sergey
+
 
 -- 
 Damien Le Moal
