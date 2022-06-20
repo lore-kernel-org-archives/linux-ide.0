@@ -2,121 +2,116 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC25DC43334
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Jun 2022 11:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E090C43334
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jun 2022 20:26:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241188AbiFTL4j (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Jun 2022 07:56:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41310 "EHLO
+        id S235833AbiFTU06 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Jun 2022 16:26:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231272AbiFTL4h (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2022 07:56:37 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2865617E03;
-        Mon, 20 Jun 2022 04:56:37 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id DA00A21B73;
-        Mon, 20 Jun 2022 11:56:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1655726195; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=+wkpLj1K+yPjMRJxi8utxl0ln69LqNl6bk/oJMw1gi4=;
-        b=g5wKTYdSVahRen1Xx4ZVdANCmeFmjoi1EBy2+EXhQj5rhUeouBHw0KBx+D3YR3oHBfcIyj
-        28t+BypWrSMddQIJPVhLC3xnTIm/70iAMX4vIpK2Lc6JiiGwBE/wWM8fGcKY6LOUIe1RrX
-        26nadAcchEElh1vnT54ytH/5QTS8iZo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1655726195;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=+wkpLj1K+yPjMRJxi8utxl0ln69LqNl6bk/oJMw1gi4=;
-        b=8OP+PeX7Ag28Hlzm51S2jXkO8equavYlE3ZtDEYXl+ptjPVEPWhEB31PHL8TPGL1WXTi0Z
-        PjfrpXODVaW6/RDw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C7FD7134CA;
-        Mon, 20 Jun 2022 11:56:35 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 0lWkMHNgsGIKEQAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 20 Jun 2022 11:56:35 +0000
-Message-ID: <22bedb25-63ee-3106-f37d-b4ef19ac9e6f@suse.de>
-Date:   Mon, 20 Jun 2022 13:56:34 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Content-Language: en-US
+        with ESMTP id S236325AbiFTU05 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2022 16:26:57 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AE0D15A24
+        for <linux-ide@vger.kernel.org>; Mon, 20 Jun 2022 13:26:56 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.78.78) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 20 Jun
+ 2022 23:26:48 +0300
+Subject: Re: [PATCH] ata: libata-scsi: fix sloppy result type of ata_ioc32()
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     John Garry <john.garry@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, brking@us.ibm.com,
-        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        chenxiang66@hisilicon.com
-References: <1654770559-101375-4-git-send-email-john.garry@huawei.com>
- <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
- <9e89360d-3325-92af-0436-b34df748f3e2@acm.org>
- <e36bba7e-d78d-27b4-a0e2-9d921bc82f5d@opensource.wdc.com>
- <3a27b6ff-e495-8f11-6925-1487c9d14fa9@huawei.com>
- <c702f06e-b7da-92be-3c4f-5dd405600235@opensource.wdc.com>
- <ecfb0694-21b8-55b4-c9b8-5e738f59ce8d@huawei.com>
- <98fa010d-3555-a82b-e960-f47aeeb38151@opensource.wdc.com>
- <7b046321-fdb3-33f0-94a0-78a25cbbe02e@suse.de>
- <9de5ed1b-e874-28ac-0532-cd5420892064@opensource.wdc.com>
- <20220620090543.GA13643@lst.de>
- <41fa0f12-cdcf-f2c4-7366-1abd04312f1f@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
- handling
-In-Reply-To: <41fa0f12-cdcf-f2c4-7366-1abd04312f1f@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+        <linux-ide@vger.kernel.org>
+References: <4a695619-2de7-671e-7b67-2afddf22423f@omp.ru>
+ <d653908c-1270-9c2f-eceb-2572e9c9d339@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <e8dcebdc-7618-533e-0050-dd03ef1f4bb8@omp.ru>
+Date:   Mon, 20 Jun 2022 23:26:47 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <d653908c-1270-9c2f-eceb-2572e9c9d339@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.78.78]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/20/2022 20:09:25
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 171243 [Jun 20 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 490 490 64947c9fe6ec4170c45683de1592f92a9c3bac07
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.78.78 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.78.78
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/20/2022 20:12:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/20/2022 5:27:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/20/22 13:24, Damien Le Moal wrote:
-> On 6/20/22 18:05, Christoph Hellwig wrote:
->> On Mon, Jun 20, 2022 at 06:02:30PM +0900, Damien Le Moal wrote:
->>> So reserving a tag/req to be able to do NCQ at the cost of max qd being 31
->>> works for that. We could keep max qd at 32 by creating one more "fake" tag
->>> and having a request for it, that is, having the fake tag visible to the
->>> block layer as a reserved tag, as John's series is doing, but for the
->>> reserved tags, we actually need to use an effective tag (qc->hw_tag) when
->>> issuing the commands. And for that, we can reuse the tag of one of the
->>> failed commands.
+On 6/20/22 2:12 AM, Damien Le Moal wrote:
+
+>> While ata_ioc32() returns *int*, its result gets assigned to and compared
+>> with the *unsigned long* variable 'val' in ata_sas_scsi_ioctl(), its only
+>> caller, which implies a problematic implicit cast -- fix that by returning
+>> *unsigned long* instead.
 >>
->> Take a look at the magic flush request in blk-flush.c, which is
->> preallocated but borrows a tag from the request that wants a pre- or
->> post-flush.  The logic is rather ugly, but maybe it might actually
->> become cleaner by generalizing it a bit.
-> 
-> Thanks. Will check.
-> I am also looking at scsi_unjam_host() and scsi_eh_get_sense(). These
-> reuse a scsi command to do eh operations. So I could use that too, modulo
-> making it work outside of eh context to keep the command flow intact.
-> 
+>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>> analysis tool.
+>>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>>
+>> ---
+>> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
+>>
+>>  drivers/ata/libata-scsi.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> Index: libata/drivers/ata/libata-scsi.c
+>> ===================================================================
+>> --- libata.orig/drivers/ata/libata-scsi.c
+>> +++ libata/drivers/ata/libata-scsi.c
+>> @@ -539,7 +539,7 @@ int ata_task_ioctl(struct scsi_device *s
+>>  	return rc;
+>>  }
+>>  
+>> -static int ata_ioc32(struct ata_port *ap)
+>> +static unsigned long ata_ioc32(struct ata_port *ap)
+>>  {
+>>  	if (ap->flags & ATA_FLAG_PIO_DMA)
+>>  		return 1;
 
-Tsk. I was hoping to be able to remove it (especially 
-scsi_eh_get_sense()), but looks as if we actually do need it.
-But it might be not a bad idea to have scsi_eh_get_sense() to run 
-independent on the SCSI EH stuff; returning with a sense code is not 
-necessary an error, so there are reasons for not always invoking SCSI EH.
+> Actually, this should be a bool I think and the ioctl code cleaned to use
 
-Cheers,
+   By the ioctl code you mean ata_sas_scsi_ioctl()?
 
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+> that type since the val argument of the ioctl is also used as a bool.
+
+   As for HDIO_SET_32BIT, that's prolly OK but what to do with HDIO_GET_32BIT
+(it calls put_user() on *unsigned long*)?
+
+MBR, Sergey
