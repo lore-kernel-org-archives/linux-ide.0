@@ -2,107 +2,180 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CECBC433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Jun 2022 04:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD688C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jun 2022 06:24:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbiFTEsH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Jun 2022 00:48:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35004 "EHLO
+        id S232762AbiFTGYl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Jun 2022 02:24:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236560AbiFTEsG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2022 00:48:06 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC07B28A
-        for <linux-ide@vger.kernel.org>; Sun, 19 Jun 2022 21:48:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655700485; x=1687236485;
-  h=message-id:date:mime-version:to:from:subject:
-   content-transfer-encoding;
-  bh=Fp1YV/H54fWKae49QTYpj5CNXERWqHTEkZJXLZ2XPUA=;
-  b=mK/VKKzWQ1Y5PkHjUesFR6Ppu14MrWpx0E2mwGSvOn+JydsTbRCzP2EU
-   9XVnqB3Qo8VN1iMYeG04bw664bZ2n/YKXSaV3W3/2GOo7l5ikdvdFVOBD
-   O9Gey3tcv2uziCEc8YIO/wmjF4LLWM/FplTDwoaiQT44f3aQCiGLIVqO+
-   S6ZpyF2OiPUVX4ibp6Y0AKJGKXQe0P5Xl9EfwE9GQ6DULMfPpND/iQlrT
-   vGw2sCmiKeNGVEftd4caRisKgqtneRh6CthURSFwbT6/t7cR817fQPYD3
-   AdtC3zMobUpZ1a5ZQyjo10Mktc8knOcm4a6lDNAIeaujabG6sfX1kH/qC
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.92,306,1650902400"; 
-   d="scan'208";a="307907156"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Jun 2022 12:48:04 +0800
-IronPort-SDR: WnklqgsQ3d1BH4IZ9NojsbWk+V2luouT3XHNmp3evQhaOZOsMJjSU3kcRbG1J25sZvEOJSqGCM
- 1p6Vzk83gsKOYa8NwxVtDOsm5Wrn+ZKNHPscCr0L32N7kD25fioRpP1h5IaEongp0E+b3NMCrn
- R2LfqkMslSzFDModx2TF0SsiJACFMmuTC2i1j77SP/HLPo6b6L+U6MLIaxIRyZFS3svuuZVrtv
- sfawLnrTMSw936B9AoH2AuqyNdG3AuAYecw5/3fRiMdwKwULLg2T+FjoTU4OfmJiqUPMVujQpm
- TSLuBV0w8yE+w7k6mmpZq5Dw
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jun 2022 21:10:36 -0700
-IronPort-SDR: XZf1r1G2mCRfemzAWtzD2KQNS/cgFxAHBJSyFwBXH9VxhO6Y3ic8iRzpQTLuJ7S31X8UmIEeba
- 9+g6aU2IM/JaaMZK0MpBTCG+60JiOFDdVBcrjlY2uFgINkCpVLEmqLCUNAzkhKoEYDVGkaaYPC
- 1I1EsnC+ZloLwMvSwvbvF80Sw3HOxttbvszOP21RJf5K7bhkJLqyzpvn0qkUFCanaB1Ov70Le8
- 3ZJuDw0szoZAdxfqnJur9vE7IxtcHtjRHGQGahZ+VZqYuLk/+K0jIWr3On4vdZldZemq4RYN+y
- diM=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jun 2022 21:48:05 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LRHFw0qM2z1SVnx
-        for <linux-ide@vger.kernel.org>; Sun, 19 Jun 2022 21:48:04 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :organization:subject:from:to:content-language:user-agent
-        :mime-version:date:message-id; s=dkim; t=1655700483; x=
-        1658292484; bh=Fp1YV/H54fWKae49QTYpj5CNXERWqHTEkZJXLZ2XPUA=; b=b
-        Gqd4TEb8JP+lCMu8J3DFzP3uENPdLUsVfqp6+PJFvvRZmAbdDCR8By4r3RZH+0LD
-        xlDjJE/vvMm/3q+P8KRt9qrULDhZhKY3Knql9QKE980Ovx66+2IsAiWEqTO/2Ou2
-        2imQb4fchUMiCtYfjPRTdyJn8dWhAKbZmJfEWwA04LvYyF3Up+Ws+sC7FlkzAXv4
-        pAJWadaWP1xzegB5fjGuM/rOupEhixpIDxfWTqCBaHnyHo0s8pDzrVHbT9W28whw
-        oYQeoqcuFZy91vMCy6CXdfARKM7wmDdQuA4z2sWzZ69mCYcRAZWoIkr6YJeK/qTT
-        d5K7ydPOS7Xkd9q0MCPyw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id TG2hjUJl_Jtn for <linux-ide@vger.kernel.org>;
-        Sun, 19 Jun 2022 21:48:03 -0700 (PDT)
-Received: from [10.225.163.87] (unknown [10.225.163.87])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LRHFt55WDz1Rvlc;
-        Sun, 19 Jun 2022 21:48:02 -0700 (PDT)
-Message-ID: <a5a3527c-d662-5bd1-e1dd-ad4930d10b3a@opensource.wdc.com>
-Date:   Mon, 20 Jun 2022 13:48:01 +0900
+        with ESMTP id S231691AbiFTGYg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2022 02:24:36 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E786263CD;
+        Sun, 19 Jun 2022 23:24:34 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 008CF21B85;
+        Mon, 20 Jun 2022 06:24:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1655706273; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5hr3/37jxG57EYxXXjTqzWDrdvvVL4USOVNoiGW+pHA=;
+        b=Rr1/KkVRBJ+ZUD2nvBMQN1PV/3c7aN4qMju4I8xNfL8sWQ3/7HVsXNaIaaW+sjW8IDhC7Z
+        WYinOQ8eS12NDrHjCiCLbUGUIPF2tUT4q7S3sPjU8GY7vgRSsgDK7kvhoz9XQqA/TKBMIb
+        yrtJErkFNddWSAQg58nh8hlg6XwQo74=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1655706273;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5hr3/37jxG57EYxXXjTqzWDrdvvVL4USOVNoiGW+pHA=;
+        b=Lufj3gO3lhaDPcfTBR0VXuX9XnMPF1bUaPtCCGho4nHy+2s+DysRi5wqRVTGMMkKWCLuEW
+        kEaJDOYx3cwaGBDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1701513638;
+        Mon, 20 Jun 2022 06:24:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id aFmkA5sSsGLEagAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 20 Jun 2022 06:24:27 +0000
+Message-ID: <88d192b5-741b-7104-7f72-0178aa18bafb@suse.de>
+Date:   Mon, 20 Jun 2022 08:24:24 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
+ Thunderbird/91.4.0
+Subject: Re: [PATCH RFC v2 03/18] scsi: core: Implement reserved command
+ handling
 Content-Language: en-US
-To:     Brian King <brking@us.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: Do we still need the scsi IPR driver ?
-Organization: Western Digital Research
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, brking@us.ibm.com,
+        hch@lst.de
+Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        chenxiang66@hisilicon.com
+References: <1654770559-101375-1-git-send-email-john.garry@huawei.com>
+ <1654770559-101375-4-git-send-email-john.garry@huawei.com>
+ <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <b4a0ede5-95a3-4388-e808-7627b5484d01@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 6/13/22 09:01, Damien Le Moal wrote:
+> On 6/9/22 19:29, John Garry wrote:
+>> From: Hannes Reinecke <hare@suse.de>
+>>
+>> Quite some drivers are using management commands internally, which
+>> typically use the same hardware tag pool (ie they are being allocated
+>> from the same hardware resources) as the 'normal' I/O commands.
+>> These commands are set aside before allocating the block-mq tag bitmap,
+>> so they'll never show up as busy in the tag map.
+>> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
+>> this situation.
+>> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
+>> template to instruct the block layer to set aside a tag space for these
+>> management commands by using reserved tags.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+>> ---
+>>   drivers/scsi/hosts.c     |  3 +++
+>>   drivers/scsi/scsi_lib.c  |  6 +++++-
+>>   include/scsi/scsi_host.h | 22 +++++++++++++++++++++-
+>>   3 files changed, 29 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>> index 8352f90d997d..27296addaf63 100644
+>> --- a/drivers/scsi/hosts.c
+>> +++ b/drivers/scsi/hosts.c
+>> @@ -474,6 +474,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>>   	if (sht->virt_boundary_mask)
+>>   		shost->virt_boundary_mask = sht->virt_boundary_mask;
+>>   
+>> +	if (sht->nr_reserved_cmds)
+>> +		shost->nr_reserved_cmds = sht->nr_reserved_cmds;
+>> +
+>>   	device_initialize(&shost->shost_gendev);
+>>   	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+>>   	shost->shost_gendev.bus = &scsi_bus_type;
+>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>> index 6ffc9e4258a8..f6e53c6d913c 100644
+>> --- a/drivers/scsi/scsi_lib.c
+>> +++ b/drivers/scsi/scsi_lib.c
+>> @@ -1974,8 +1974,12 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+>>   	else
+>>   		tag_set->ops = &scsi_mq_ops_no_commit;
+>>   	tag_set->nr_hw_queues = shost->nr_hw_queues ? : 1;
+>> +
+>>   	tag_set->nr_maps = shost->nr_maps ? : 1;
+>> -	tag_set->queue_depth = shost->can_queue;
+>> +	tag_set->queue_depth =
+>> +		shost->can_queue + shost->nr_reserved_cmds;
+>> +	tag_set->reserved_tags = shost->nr_reserved_cmds;
+>> +
+>>   	tag_set->cmd_size = cmd_size;
+>>   	tag_set->numa_node = dev_to_node(shost->dma_dev);
+>>   	tag_set->flags = BLK_MQ_F_SHOULD_MERGE;
+>> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+>> index 59aef1f178f5..149dcbd4125e 100644
+>> --- a/include/scsi/scsi_host.h
+>> +++ b/include/scsi/scsi_host.h
+>> @@ -366,10 +366,19 @@ struct scsi_host_template {
+>>   	/*
+>>   	 * This determines if we will use a non-interrupt driven
+>>   	 * or an interrupt driven scheme.  It is set to the maximum number
+>> -	 * of simultaneous commands a single hw queue in HBA will accept.
+>> +	 * of simultaneous commands a single hw queue in HBA will accept
+>> +	 * excluding internal commands.
+>>   	 */
+>>   	int can_queue;
+>>   
+>> +	/*
+>> +	 * This determines how many commands the HBA will set aside
+>> +	 * for internal commands. This number will be added to
+>> +	 * @can_queue to calcumate the maximum number of simultaneous
+> 
+> s/calcumate/calculate
+> 
+> But this is weird. For SATA, can_queue is 32. Having reserved commands,
+> that number needs to stay the same. We cannot have more than 32 tags.
+> I think keeping can_queue as the max queue depth with at most
+> nr_reserved_cmds tags reserved is better.
+> 
+I had been thinking about this for quite a while, and figured that the 
+'reserved' commands model from blk-mq doesn't fit nicely with the SATA 
+protocol.
 
-Polling people here: Do we still need the scsi IPR driver for IBM Power
-Linux RAID adapters (IBM iSeries: 5702, 5703, 2780, 5709, 570A, 570B
-adapters) ?
+So my idea for SATA is simply _not_ to use reserved tags.
+Any TMF functions (or the equivalent thereof) should always be sent as 
+non-NCQ commands. And when doing so we're back to QD=1 on SATA anyway, 
+so there _must_ be tags available. Consequently the main reason for 
+having reserved tags (namely to guarantee that tags are available for 
+TMF) doesn't apply here.
 
-The reason I am asking is because this driver is the *only* libsas/ata
-driver that does not define a ->error_handler port operation. If this
-driver is removed, or if it is modified to use a ->error_handler operation
-to handle failed commands, then a lot of code simplification can be done
-in libata, which I am trying to do to facilitate the processing of some
-special error completion for commands using a command duration limit.
+Which is why in my initial patchset I've always been referrring to 
+'internal' commands, and drivers could select if the 'internal' commands 
+are mappend on reserved tags or not.
 
-Thoughts ?
+Cheers,
 
+Hannes
 -- 
-Damien Le Moal
-Western Digital Research
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
