@@ -2,165 +2,115 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BFEC433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Jun 2022 20:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5981CCA47E
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Jun 2022 21:05:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245194AbiFUUiH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 21 Jun 2022 16:38:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38978 "EHLO
+        id S1355461AbiFUVFM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 21 Jun 2022 17:05:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231259AbiFUUiF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jun 2022 16:38:05 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8BDD10EB
-        for <linux-ide@vger.kernel.org>; Tue, 21 Jun 2022 13:38:03 -0700 (PDT)
-Received: from [192.168.1.103] (178.176.77.12) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 21 Jun
- 2022 23:37:55 +0300
-Subject: Re: [PATCH] ata: libata-scsi: fix sloppy result type of ata_ioc32()
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <4a695619-2de7-671e-7b67-2afddf22423f@omp.ru>
- <d653908c-1270-9c2f-eceb-2572e9c9d339@opensource.wdc.com>
- <e8dcebdc-7618-533e-0050-dd03ef1f4bb8@omp.ru>
- <9c231ffe-df3c-9c36-4b8b-dc518009c3d2@opensource.wdc.com>
- <b37cfe23-a19b-970d-d5b1-3d67659595ee@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <a57fdc21-1f06-495a-deda-d29c74cd75ab@omp.ru>
-Date:   Tue, 21 Jun 2022 23:37:55 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S1356211AbiFUVD4 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jun 2022 17:03:56 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 022113585B;
+        Tue, 21 Jun 2022 13:53:27 -0700 (PDT)
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 25LK3XOr024830;
+        Tue, 21 Jun 2022 20:52:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : from : to : references : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=l2WbDNq6sdrdY3ONOHicSbBuRhEnS9WPbcWjZaiMTmk=;
+ b=B2FEPkgDLQfsCcuoqtu2OjAYIlmDqgD6i41nLxCRrDc4Y2vsmih7Nd5tqLIsuemjN4p0
+ MT+xUmTk7YJDuHsH7n43W8NYc5Z6ugbiBA/OZmHCd3O2MiLv9zwImkYTFzJQZIKSxe2s
+ bQZbQlUDDsIqjlGHjb4DOCxXctweTY6Fdka3L4pq57XZ/Y78VS98y4uJZ1B6Q8c8Pk9q
+ y/E/UE6rQ0xsHLHrn+FPZkniFHLaErdnDXrOI0u83BXwNsVpjgJo5NIzuwpKdmYEyjFs
+ 3JnW6nxaq44QObgtqkN7nRFYbEzW2iZK+EBcJrz22HDFl2c3SnRQIShtmownjq7iSVlo Fw== 
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3gumpm19a2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 21 Jun 2022 20:52:21 +0000
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 25LKpuUe012653;
+        Tue, 21 Jun 2022 20:52:21 GMT
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+        by ppma04dal.us.ibm.com with ESMTP id 3gs6b9v7ge-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 21 Jun 2022 20:52:21 +0000
+Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
+        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 25LKqKC422020484
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 21 Jun 2022 20:52:20 GMT
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 65C4EB2064;
+        Tue, 21 Jun 2022 20:52:20 +0000 (GMT)
+Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id DCCA1B205F;
+        Tue, 21 Jun 2022 20:52:19 +0000 (GMT)
+Received: from [9.211.124.46] (unknown [9.211.124.46])
+        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
+        Tue, 21 Jun 2022 20:52:19 +0000 (GMT)
+Message-ID: <be79092f-fdd6-9f0f-4ffa-95ffc4b778c5@linux.vnet.ibm.com>
+Date:   Tue, 21 Jun 2022 15:52:19 -0500
 MIME-Version: 1.0
-In-Reply-To: <b37cfe23-a19b-970d-d5b1-3d67659595ee@omp.ru>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.1
+Subject: Re: Do we still need the scsi IPR driver ?
 Content-Language: en-US
+From:   Brian King <brking@linux.vnet.ibm.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Brian King <brking@us.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+References: <a5a3527c-d662-5bd1-e1dd-ad4930d10b3a@opensource.wdc.com>
+ <3dbd9ae4-a101-e55d-79c8-9b3a96ab5b17@linux.vnet.ibm.com>
+In-Reply-To: <3dbd9ae4-a101-e55d-79c8-9b3a96ab5b17@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.77.12]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/21/2022 20:24:58
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 171269 [Jun 21 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 491 491 a718ef6dc942138335b0bcd7ab07f27b5c06005e
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.77.12 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;178.176.77.12:7.7.3,7.7.1;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.77.12
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/21/2022 20:28:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 6/21/2022 4:24:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: oc0I6NpZB01zGH688zD-XOKWPfUQuj3d
+X-Proofpoint-ORIG-GUID: oc0I6NpZB01zGH688zD-XOKWPfUQuj3d
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.64.514
+ definitions=2022-06-21_09,2022-06-21_01,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1015
+ mlxlogscore=999 malwarescore=0 spamscore=0 lowpriorityscore=0
+ suspectscore=0 bulkscore=0 impostorscore=0 phishscore=0 priorityscore=1501
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2204290000 definitions=main-2206210086
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/21/22 10:14 PM, Sergey Shtylyov wrote:
-[...]
->>>>> While ata_ioc32() returns *int*, its result gets assigned to and compared
->>>>> with the *unsigned long* variable 'val' in ata_sas_scsi_ioctl(), its only
->>>>> caller, which implies a problematic implicit cast -- fix that by returning
->>>>> *unsigned long* instead.
->>>>>
->>>>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
->>>>> analysis tool.
->>>>>
->>>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>>>>
->>>>> ---
->>>>> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
->>>>>
->>>>>  drivers/ata/libata-scsi.c |    2 +-
->>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>>
->>>>> Index: libata/drivers/ata/libata-scsi.c
->>>>> ===================================================================
->>>>> --- libata.orig/drivers/ata/libata-scsi.c
->>>>> +++ libata/drivers/ata/libata-scsi.c
->>>>> @@ -539,7 +539,7 @@ int ata_task_ioctl(struct scsi_device *s
->>>>>  	return rc;
->>>>>  }
->>>>>  
->>>>> -static int ata_ioc32(struct ata_port *ap)
->>>>> +static unsigned long ata_ioc32(struct ata_port *ap)
->>>>>  {
->>>>>  	if (ap->flags & ATA_FLAG_PIO_DMA)
->>>>>  		return 1;
->>>
->>>> Actually, this should be a bool I think and the ioctl code cleaned to use
->>>
->>>    By the ioctl code you mean ata_sas_scsi_ioctl()?
+On 6/21/22 3:36 PM, Brian King wrote:
+> On 6/19/22 11:48 PM, Damien Le Moal wrote:
 >>
->> yes.
+>> Polling people here: Do we still need the scsi IPR driver for IBM Power
+>> Linux RAID adapters (IBM iSeries: 5702, 5703, 2780, 5709, 570A, 570B
+>> adapters) ?
 >>
->>>> that type since the val argument of the ioctl is also used as a bool.
->>>
->>>    As for HDIO_SET_32BIT, that's prolly OK but what to do with HDIO_GET_32BIT
->>> (it calls put_user() on *unsigned long*)?
->>
->> Something like this should work fine:
->>
->> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->> index 86dbb1cdfabd..ec7f79cbb135 100644
->> --- a/drivers/ata/libata-scsi.c
->> +++ b/drivers/ata/libata-scsi.c
-> [...]
->> @@ -571,16 +572,16 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct
->> scsi_device *scsidev,
->>                 return put_user(val, (unsigned long __user *)arg);
->>
->>         case HDIO_SET_32BIT:
+>> The reason I am asking is because this driver is the *only* libsas/ata
+>> driver that does not define a ->error_handler port operation. If this
+>> driver is removed, or if it is modified to use a ->error_handler operation
+>> to handle failed commands, then a lot of code simplification can be done
+>> in libata, which I am trying to do to facilitate the processing of some
+>> special error completion for commands using a command duration limit.
 > 
->    Hmm, I told you this *case* is prolly OK -- it was HDIO_GET_32BIT *case* that
-> I was concerned about... So you mean that HDIO_GET_32BIT handling should remain
-> intact?
-> 
->> -               val = (unsigned long) arg;
->> +               pio32 = !!((unsigned long) arg);
+> We still need it around for now. IBM still sells these adapters
+> and they can still be ordered even on our latest Power 10 systems.
 
-   No, this one won't do -- it changes the behavior in case ATA_PFLAG_PIO32CHANGE
-isn't set... :-/
+At one point I did look into modifying ipr to use an ->error_handler.
+I recall I ran into some issues that resulted in this getting put
+on the shelf, but its been a while. I'll go dig that code up and
+see what it looks like.
 
->>                 rc = 0;
->>                 spin_lock_irqsave(ap->lock, flags);
->>                 if (ap->pflags & ATA_PFLAG_PIO32CHANGE) {
->> -                       if (val)
->> +                       if (pio32)
->>                                 ap->pflags |= ATA_PFLAG_PIO32;
->>                         else
->>                                 ap->pflags &= ~ATA_PFLAG_PIO32;
->>                 } else {
->> -                       if (val != ata_ioc32(ap))
->> +                       if (pio32 != ata_ioc32(ap))
->>                                 rc = -EINVAL;
->>                 }
->>                 spin_unlock_irqrestore(ap->lock, flags);
-> 
->    Not really sure this is worth it... *unsigned long* result type for
-> ata_ioc32() seems simpler.
+Thanks,
 
-   Actually, even just modifying ata_ioc32() to return 'bool' produces
-a seemingly correct code. Note that ata_ioc32() is inlined in any case...
+Brian
 
-MBR, Sergey
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
