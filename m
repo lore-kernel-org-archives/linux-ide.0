@@ -2,162 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD64CC433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 08:22:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A604BCCA480
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 08:36:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229572AbiFWIWf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 23 Jun 2022 04:22:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35796 "EHLO
+        id S230006AbiFWIgV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Jun 2022 04:36:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229850AbiFWIWe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 04:22:34 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4082F4833D
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 01:22:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655972551; x=1687508551;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=gNpD1bVqKlbsMksw4J8hMe8jV69hgwr3fUwwPSY2qLA=;
-  b=WvAsNl7uJERhyBIg4rOkFvAI3zpVe1MCWebYJ3LErdOfmt5U4IECf6Yr
-   FHHsWVaC15oHlSGRsKUR2ERGS+HWY/0E6TtQ57xJI0iXCnfuWxM24E4zh
-   mR2LFc6VV85em5wcHCe56BWZxo/sm1S3NSr3ggbmZCscy3HUhxH5mWT6b
-   UJf1li8Eb67Ns2Np/mHZhwjKumXKdQDTEKd9H+Le62UGqjtm9kMUCGKYc
-   LuzH8fhiO2mIh250Z4WMlgvzPaIScCJOjIxntn0sEKqCkJKDhglcolVoY
-   n76TlDIz64CeqisbsphrpzgFMM+ZgRB5h9h3ULFXYKm94io5gUYaHL+rm
-   w==;
-X-IronPort-AV: E=Sophos;i="5.92,215,1650902400"; 
-   d="scan'208";a="208765634"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Jun 2022 16:22:29 +0800
-IronPort-SDR: RMPjZlI+T0LkC4s/FPNs1Bz/F7hoBA4PpoOk4HLIsUEuDo1qrIeuPZ+QsCBxOxe4Zu3JXBKIh1
- 8tIBRqor+UdKv55US7QevZByHmElWXeM4JGCF5hTVL86nh41B2SO8LBWAu5/fMzeN1EPDp8KhQ
- crGhh8GjSGyU0oAjr6yMRvOkiAGQ21ed2lGpOJ0OrNerFioBHnAM+L9kefu8yn7+rkU6RJr8Am
- SQzdTghvLG65BiLKFdYilfHR/RlI6uoU7Wkw59ypo1FMbpFEoEF7Paye+EnDC4jqZBVbNIMYDn
- chOeewN1l4Q931LfAvLQMdVy
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 00:44:58 -0700
-IronPort-SDR: N4Rrd14VRBambCkgBIF9q1PtKJiLI21GDKxZcynHAW4xhYAb/NorGBS1lIcAL5UW4PKvLbYsGO
- mP29eCx+TWOkjd29HU/7UVKXdxKxTg0TSCzKRDlArcga7u0bOJt01QqG8jjAfXkfx1yrxQUXKY
- SB0PwA75GVJGftbElxFA2KfyPS6tFTQa+TAG9EzEUp5Lo0n66Nzc0cQlYF2GgwWOK4NIVfVlze
- Gc2sf45p24xlpEaoA4AvWlld7tm4Y5fb9fZlIjJuwvu0LFjiYi3yzJwoyxPICIfViLfCGlrSJh
- qm0=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 01:22:31 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LTCsx74dRz1Rwnl
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 01:22:29 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1655972549; x=1658564550; bh=gNpD1bVqKlbsMksw4J8hMe8jV69hgwr3fUw
-        wPSY2qLA=; b=PAibzQuoVnPczN2jLQ68p94iASR4uLcJfBZHQqcQDsJaW2YfISQ
-        cQpMlHIFZIte6e/DJ1vIzK9Nx5B24TRuxsYoTbQ3vZ6Ng8m9MhT1cbnRikYbEgNM
-        xaF93brbXSVsXrYRZIiTOhfzIdvRTPMLwer9bZbnDWpL1j1JhzMryjNmTVwvsfoJ
-        XbActMEXZhie+v6RhoYu5GwFaEK5O0pu0N0DcOeJJYvs5ijWZJZNTPOVoatWBLPw
-        vsUURP7qsOwp2hd7x7sX3KGcoNT9zrYfAjiFPGjVuTiZpDgGX3rkJAP+HCFcytxY
-        Vn+LkB07Rdz/ZPQuHRiv75FjwtZQvLSv3sg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id vq5-LqJChgAt for <linux-ide@vger.kernel.org>;
-        Thu, 23 Jun 2022 01:22:29 -0700 (PDT)
-Received: from [10.225.163.90] (unknown [10.225.163.90])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LTCsw5vFCz1RtVk;
-        Thu, 23 Jun 2022 01:22:28 -0700 (PDT)
-Message-ID: <09091cc4-f652-0978-bb6a-b63f24fdcf49@opensource.wdc.com>
-Date:   Thu, 23 Jun 2022 17:22:27 +0900
+        with ESMTP id S229910AbiFWIgT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 04:36:19 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2A6048E57;
+        Thu, 23 Jun 2022 01:36:17 -0700 (PDT)
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LTD9H0dZ7z684wN;
+        Thu, 23 Jun 2022 16:35:47 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Thu, 23 Jun 2022 10:36:14 +0200
+Received: from [10.195.245.183] (10.195.245.183) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2375.24; Thu, 23 Jun 2022 09:36:13 +0100
+Message-ID: <c973c0d1-49a4-e0d5-2d2e-4eefeb91099f@huawei.com>
+Date:   Thu, 23 Jun 2022 09:36:12 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] libata: add horkage for M88V29
-Content-Language: en-US
-To:     =?UTF-8?B?QsO2c3rDtnJtw6lueWkgWm9sdMOhbg==?= <zboszor@gmail.com>,
-        zboszor@pr.hu, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <20220204125750.1771303-1-zboszor@pr.hu>
- <f726e9e1-bdad-ac8a-368b-aae423a00676@opensource.wdc.com>
- <78c29f43-3b67-8e70-0711-14e997f3efb1@gmail.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <78c29f43-3b67-8e70-0711-14e997f3efb1@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH v3 3/4] scsi: core: Cap shost max_sectors according to DMA
+ optimum mapping limits
+To:     Bart Van Assche <bvanassche@acm.org>,
+        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <liyihang6@hisilicon.com>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+References: <1654507822-168026-1-git-send-email-john.garry@huawei.com>
+ <1654507822-168026-4-git-send-email-john.garry@huawei.com>
+ <fe365aa8-00d5-153d-ceb2-f887a71a6927@acm.org>
+ <31417477-953d-283e-808e-cf8701e820a8@huawei.com>
+ <bccbcc9b-4750-a1a7-130f-69eeea5dcb23@acm.org>
+ <5b214e95-dd95-551a-496e-a2139a74e8eb@huawei.com>
+ <a2585983-75d7-c627-13ba-38a464cf716e@acm.org>
+ <9b1d155e-28cc-08dc-5a5a-8580132575e7@huawei.com>
+ <23bf4427-41c3-bf1d-903a-75928bb47627@acm.org>
+ <f7872ebc-dfe5-d977-c51f-91b73e6d1fbb@huawei.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <f7872ebc-dfe5-d977-c51f-91b73e6d1fbb@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.245.183]
+X-ClientProxiedBy: lhreml705-chm.china.huawei.com (10.201.108.54) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/23/22 16:47, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
-> 2022. 02. 08. 9:07 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
->> On 2/4/22 21:57, zboszor@pr.hu wrote:
->>> From: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.com>
->>>
->>> This device is a CF card, or possibly an SSD in CF form factor.
->>> It supports NCQ and high speed DMA.
->>>
->>> While it also advertises TRIM support, I/O errors are reported
->>> when the discard mount option fstrim is used. TRIM also fails
->>> when disabling NCQ and not just as an NCQ command.
->>>
->>> TRIM must be disabled for this device.
->>>
->>> Signed-off-by: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.=
-com>
->>> ---
->>>   drivers/ata/libata-core.c | 1 +
->>>   1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index 67f88027680a..4a7f58fcc411 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -4028,6 +4028,7 @@ static const struct ata_blacklist_entry ata_dev=
-ice_blacklist [] =3D {
->>>  =20
->>>   	/* devices that don't properly handle TRIM commands */
->>>   	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
->>> +	{ "M88V29*",			NULL,	ATA_HORKAGE_NOTRIM, },
->>>  =20
->>>   	/*
->>>   	 * As defined, the DRAT (Deterministic Read After Trim) and RZAT
->> Applied to for-5.17-fixes. Thanks !
->=20
-> Thank you. However, I have second thoughts about this patch.
-> The device advertises this:
->=20
-> # hdparm -iI /dev/sda
-> ...
->  =C2=A0Enabled Supported
->  =C2=A0=C2=A0=C2=A0 *=C2=A0=C2=A0=C2=A0 Data Set Management TRIM suppor=
-ted (limit 1 block)
-> ...
->=20
-> but the I/O failures always reported higher number of blocks,
-> IIRC the attempted number of block was 8 or so.
->=20
-> Can the kernel limit or split TRIM commands according to the
-> advertised limit? If not (or not yet) then the quirk is good for now.
+On 10/06/2022 16:37, John Garry via iommu wrote:
+> 
+>> On 6/9/22 10:54, John Garry wrote:
+>>> ok, but do you have a system where the UFS host controller is behind 
+>>> an IOMMU? I had the impression that UFS controllers would be mostly 
+>>> found in embedded systems and IOMMUs are not as common on there.
+>>
+>> Modern phones have an IOMMU. Below one can find an example from a 
+>> Pixel 6 phone. The UFS storage controller is not controller by the 
+>> IOMMU as far as I can see but I wouldn't be surprised if the security 
+>> team would ask us one day to enable the IOMMU for the UFS controller.
+> 
+> OK, then unfortunately it seems that you have no method to test. I might 
+> be able to test USB MSC but I am not even sure if I can even get DMA 
+> mappings who length exceeds the IOVA rcache limit there.
 
-Yes, the kernel does that. See the sysfs queue attributes
-discard_max_bytes and discard_max_hw_bytes. What are the values for your
-device ? I think that the "limit 1 block" indicated by hdparm is simply t=
-o
-say that the DSM command (to trim the device) accept only at most a 1
-block (512 B) list of sectors to trim. That is not the actual trim limit
-for each sector range in that list.
+I was able to do some testing on USB MSC for an XHCI controller. The 
+result is that limiting the max HW sectors there does not affect 
+performance in normal conditions.
 
->=20
-> Best regards,
-> Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi
->=20
+However if I hack the USB driver and fiddle with request queue settings 
+then it can:
+- lift max_sectors limit in usb_stor_host_template 120KB -> 256KB
+- lift request queue read_ahead_kb 128KB -> 256KB
 
+In this scenario I can get 42.5MB/s read throughput, as opposed to 
+39.5MB/s in normal conditions. Since .can_queue=1 for that host it would 
+not fall foul of some issues I experience in IOVA allocator performance, 
+so limiting max_sectors would not be required for that reason.
 
---=20
-Damien Le Moal
-Western Digital Research
+So this is an artificial test, but it may be worth considering only 
+applying this DMA mapping optimal max_sectors limit to SAS controllers 
+which I know can benefit.
+
+Christoph, any opinion?
+
+thanks,
+John
