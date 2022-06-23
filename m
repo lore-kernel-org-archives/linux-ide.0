@@ -2,151 +2,100 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE706C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Jun 2022 23:45:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BEA8C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 07:16:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233587AbiFVXpT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 22 Jun 2022 19:45:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53480 "EHLO
+        id S229966AbiFWHQF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Jun 2022 03:16:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233155AbiFVXpR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jun 2022 19:45:17 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 313AA42A2F
-        for <linux-ide@vger.kernel.org>; Wed, 22 Jun 2022 16:45:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655941517; x=1687477517;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=YdSf2yB4jXP5hnDFm5JFFyMmIBMmskTgp/VDw2VuMOQ=;
-  b=AoiPCwFOpKbRxkde5rkoVBID41zf24CR0k7TeEuEdFtld/p1ZtgVCc3l
-   WLYWjiuEwa6W6ld5RrdUbZriKFDRBwC7N99DoUiRO90tkIcqd03kz9m1c
-   +Q5QWgivvjBJ7df/8D9tAJB+2UKELE+4G4nq5MFGn2pZFyQ1waEtvfW34
-   peTDHLTbJr7gY5SPfCRWtb1XmFv9/DjLkwRle1AGw1+7IZaJXFjxxF5iJ
-   3MP6q/T00/IGGWYT5vvGkTWEcmgiDYj4w+aCe6uaDP2/Z+X3aPsPNDQEo
-   SMfGa5qgbpiqIYfbIU+8TvDE4pfxwVSu+zQWqoeSnzBUFpOSc5WXC8N+r
-   g==;
-X-IronPort-AV: E=Sophos;i="5.92,215,1650902400"; 
-   d="scan'208";a="315975035"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Jun 2022 07:45:16 +0800
-IronPort-SDR: ppjYMeWnAXDXQybyBrWvUuV/RctcrY8RO3/rCRZZxq6apMyUrLizLn8RjQBGdoJk2imdHMJY+S
- kWKjS4Hxa1mp+QYri50jcOe1280J1+pE+uy8UEWdaza68/ztUyGpQ9MB/SQ4eD+6D40o0UH8/U
- /w9oCG42fQ/CW/e9QnLUX+Oa/6CnVYdclltAbVhORuUvYgRZDP640iqRNgTquNjrBXzu01rlZG
- m/H1E8EmTGL5cE115VJ3cQHe4Bph+1MryJFpVPD0Fk0GkMQDNGg2iSnGJLLisl+Hro6B+OTIlK
- MiVih0XKc6slnZFH87l7x7Qg
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jun 2022 16:07:45 -0700
-IronPort-SDR: 7Nf4Z3/MDStzNoEzec9SDROZk5SB+Rc1phSCF5ajiM13KINR1+gqCpfgLgNjEQi84RGNqOQA/e
- S/Sh+0ZcCPF5W4O0WVm9G70INkqjDjwBqHt6Rf9OizYQNvnwj9mgs24L6Fw6AHTLEW5Afbgt+C
- pCX1Yig3nyPNE5kqsmCfwXvjWCICkCBWQX/9beTw6xbIoOLLfpGr3cLXjpK3yW1njBURRRENOH
- jGyk8/9LzEGfnQWhybpdvhfWP7xva+3cK5k89cLbRM+cRgu2dw8i/dJTmnLCGrwFhVeFRIrkS9
- /uU=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Jun 2022 16:45:17 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LT0P81dwMz1Rw4L
-        for <linux-ide@vger.kernel.org>; Wed, 22 Jun 2022 16:45:16 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1655941515; x=1658533516; bh=YdSf2yB4jXP5hnDFm5JFFyMmIBMmskTgp/V
-        Dw2VuMOQ=; b=tuFBZcx4mLnQ9CAgn9NHqShZD+rKZzIZoYkZ7HP5FnteINxIwh5
-        3Cr39e42T59jf+yMo6FpV5QMrD/ZOxz9ZmY4uSvEBFwmHc/g847YyFyhN6FkRTwD
-        Xc2ge1oMBPhR+pfhQtiaVfPv0bahrBllUPJkSYdp+yeNgDYki+4qXxtOx9N0jqHW
-        GhhqnQtBQ1JNGu6fX8ZAvodsPU37QFhQ+W7AFTH3F66adEFnlPROpbz6yAcDHQi1
-        DX5VI4UnyCUcVfXtFSoD80czUVHSO8nKKsTzoHUsRAx2MoCIOu6ciA3IJO1wmo0I
-        BJ4mHjhcb5SRp1VIAXhXqUNgCFBPVl2nsFw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id MimyvGI1yydl for <linux-ide@vger.kernel.org>;
-        Wed, 22 Jun 2022 16:45:15 -0700 (PDT)
-Received: from [10.225.163.90] (unknown [10.225.163.90])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LT0P65FJ8z1RtVk;
-        Wed, 22 Jun 2022 16:45:14 -0700 (PDT)
-Message-ID: <2e7f96b6-2223-c687-a65b-6b90964bb4e1@opensource.wdc.com>
-Date:   Thu, 23 Jun 2022 08:45:13 +0900
+        with ESMTP id S229665AbiFWHQE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 03:16:04 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D88CB45AC3
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 00:16:03 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id fd6so24407853edb.5
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 00:16:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :references:from:in-reply-to:content-transfer-encoding;
+        bh=Cll48XQjSTk7Px9A3T9Ss8n7MDZa7XaBt+noA+sIkX0=;
+        b=lfUMk/6WWkQfd1u6eIEAt5S6MO04bvoWQpmpBKEIaEYfIL1pY4UIBGPNPqOvjJ1v2a
+         hqH4reyTh97v+KohVSS4u+dsf3AuqB87nyxyRevUaGammMtU6g+Xk4OJaDI46ItneMfX
+         ikHeHDp/TzScw3BOUiq5KLaJKyrBBJNWaxa52jwTclMLPVZhaLBy7fpXHj6Q1kehPIXY
+         +5wN/GMku84YN4yrYABNIGEgcvjmGKdFvXCeHVWKHwEt4qfZkoiqwbMUa6Aw/rhHIuZB
+         EZQ5X+zmNWObZEKBCO7NrXe6EyDlYS0jVqyZEOX6nlkk854dtYc9YRbxK1jrZkEsuml3
+         Ks9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=Cll48XQjSTk7Px9A3T9Ss8n7MDZa7XaBt+noA+sIkX0=;
+        b=PHiuFpM9rNd2qtKgvs08j1pbCmhQvHZrJjmhDH1ffBBiZt7D1GQFr7vFdsdHWKEXVF
+         IDHoC21E29v1bIhK5YTWmQUZqtwglXOinxelEyPIZdbkhkVWYRLAj2CHmTOhE8aMFcwz
+         akQ1run47cYlrfH5TevyXNSV5ZKvlcw7hfSvZUHWWY5BhoNFY0n+IARxxIVh0si0tD7g
+         zXLFVrOduf4aB1mTSPUsrC1snhuurhwiPAF/rX7ttoSDf0mreq8f1acIu68onxe9D8Ri
+         2i9/lznczcdIFRX71ySfUVkImcpHidKMSMQGmD8xhzG6sKrcRb2WhR9jLk1fr3a68pn3
+         S0Aw==
+X-Gm-Message-State: AJIora9JDepmhCcHGNLgXWPGLOrXnUWdQEmptdJhTuy603go6Xo014Z7
+        wD9e3Ob1LwE0huFBDzHWhJi6vA==
+X-Google-Smtp-Source: AGRyM1tK/+zU1nkRE73+oAyAzR1niE0FCivKu9SrXPJ6oaNUJvOowbMlui+VsaW/AcUv17K0T2LlBg==
+X-Received: by 2002:a05:6402:430a:b0:435:8ec9:31ec with SMTP id m10-20020a056402430a00b004358ec931ecmr8812330edc.248.1655968562421;
+        Thu, 23 Jun 2022 00:16:02 -0700 (PDT)
+Received: from [192.168.0.226] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id g5-20020a50d5c5000000b004356c0d7436sm13430643edj.42.2022.06.23.00.16.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jun 2022 00:16:02 -0700 (PDT)
+Message-ID: <c155d5ab-f765-e547-3d1d-62df54c615ac@linaro.org>
+Date:   Thu, 23 Jun 2022 09:16:01 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH] ata: libata-scsi: fix result type of ata_ioc32()
+Subject: Re: [PATCH v3 3/3] scsi: ufs: ufshcd: constify pointed data
 Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <05a7fcf4-3a2b-3012-34c6-ca1f00fa457c@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <05a7fcf4-3a2b-3012-34c6-ca1f00fa457c@omp.ru>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Doug Gilbert <dgilbert@interlog.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
+References: <20220613100655.105301-1-krzysztof.kozlowski@linaro.org>
+ <20220613100655.105301-4-krzysztof.kozlowski@linaro.org>
+ <08544601-3364-0352-415f-2e3576b84976@acm.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <08544601-3364-0352-415f-2e3576b84976@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/23/22 05:57, Sergey Shtylyov wrote:
-> While ata_ioc32() returns 'int', its result gets assigned to and compared
-> with the 'unsigned long' variable 'val' in ata_sas_scsi_ioctl(), its only
-> caller, which implies a problematic implicit cast -- fix that by returning
-> 'bool' instead (actually, the object code doesn't seem to change, probably
-> because the function is always inlined).
+On 22/06/2022 18:13, Bart Van Assche wrote:
+> On 6/13/22 03:06, Krzysztof Kozlowski wrote:
+>> Constify arrays and pointers to data which is not modified for code
+>                                               ^^
+>> safety.
+> 
+> is -> are?
+> 
+>> @@ -7848,7 +7850,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
+>>   	u32 granularity, peer_granularity;
+>>   	u32 pa_tactivate, peer_pa_tactivate;
+>>   	u32 pa_tactivate_us, peer_pa_tactivate_us;
+>> -	u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
+>> +	const u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
+> 
+> Can this array be declared static? Anyway:
+> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Looks good. I would though prefer to change this commit message to simply
-say that ata_ioc32() return value is clearly a bool. The implicit cast to
-unsigned long from int is not really an issue at all (the reverse cast
-would be an issue). And keep mentioning that the object code does not change.
+Could be, it's a kind of optimization, so a bit different problem. I'll
+send v4 with language fix, static and your review.
 
-By the way, does your statis analyzer stop complaining after this change ?
-Because we still have an implicit cast in the user site.
-
-> 
-> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-> analysis tool.
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> ---
-> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
-> 
-> Changes in version 2:
-> - changed the result type of ata_ioc32() to 'bool', updating the 'return'
->   statements as well;
-> - dropped "sloppy" from the patch subject;
-> - added a note about the object code to the patch description;
-> - changed * to ' in the patch description.
-> 
->  drivers/ata/libata-scsi.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> Index: libata/drivers/ata/libata-scsi.c
-> ===================================================================
-> --- libata.orig/drivers/ata/libata-scsi.c
-> +++ libata/drivers/ata/libata-scsi.c
-> @@ -539,13 +539,13 @@ int ata_task_ioctl(struct scsi_device *s
->  	return rc;
->  }
->  
-> -static int ata_ioc32(struct ata_port *ap)
-> +static bool ata_ioc32(struct ata_port *ap)
->  {
->  	if (ap->flags & ATA_FLAG_PIO_DMA)
-> -		return 1;
-> +		return true;
->  	if (ap->pflags & ATA_PFLAG_PIO32)
-> -		return 1;
-> -	return 0;
-> +		return true;
-> +	return false;
->  }
->  
->  /*
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Best regards,
+Krzysztof
