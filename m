@@ -2,302 +2,233 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98330C43334
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 10:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B105C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 10:37:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231193AbiFWKZW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 23 Jun 2022 06:25:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54700 "EHLO
+        id S229595AbiFWKhw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Jun 2022 06:37:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230399AbiFWKYv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 06:24:51 -0400
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48EED49F9A
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 03:24:43 -0700 (PDT)
-Received: by mail-ej1-x62a.google.com with SMTP id lw20so17714383ejb.4
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 03:24:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=abFcN7yt45SAGecDxFSgv8asUDSKLZ0iooh6X0QnrtM=;
-        b=kz3Wdh6KLPaVMA1S/IqIpp6DgZU4rRVcYPQ4sclUQn7bznussF6Dd/sSWuTnG9Fho1
-         40PT4gbksc5gMT7uj4O1GgSIUJ7v9bejewE1D9UfVacauFOBs9D57BYZsL5PxT7s4BTa
-         i4WAjrE/Uf7CVlKnQuOTlrl5whclsslzecddKUXJDevmgidEJ0kRcKzg1UZLq3DCFXO7
-         Sidl6DZFUvuON4JekMxz+Mp/pjFHkPQQTud+Dv6LxueIxw+c94/g8Zr4rGsm/gpG0p9g
-         quvfnjMVUhPHmUctCyD75tn6FOgkoI7iYeXh9ubB1etfFywIDKnBq9ZMjfilk9jh0adr
-         gS2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=abFcN7yt45SAGecDxFSgv8asUDSKLZ0iooh6X0QnrtM=;
-        b=l0Xs6n1Dml3OhWOPSD2WnYAr4Ql9jNDSfmf4GUmH9ZJdAUe1eanloCWyPxL6Htofyf
-         827B3kN9PHT71ECzFOVWVvUP3Z2U1OcNi5AxgCSlFVViopgKlMU7VNHWazdxmLD/KIWU
-         9sM14zX2E9C2odDTyx9UxuMphsDI9s/MXfl0WlrjsCwBoZ6jqLS9nubZGP+lgE7eQ19+
-         yfujyCOtWaCr8YIP51lUvbaY0pXwfAFSvKJCdIvtbb7p8tjhgVe7PwBf4cU88nKrWcrt
-         7MW4EvUpdRyYlhz6A4+rjRNfbaaMd/xuiLdKKN9sWPU94XvRTpePmBQVGA83iwDsmkTY
-         ADKw==
-X-Gm-Message-State: AJIora9DWJMcYXGSBxFc5uCLVISkW4ZbKF7BZ0xFwJP2L0ZQtEP40jAy
-        grg4mW4TGxIlR5E7xe8hO8Q2DQ==
-X-Google-Smtp-Source: AGRyM1vKi7gNH6A091rkjDn8tue2t5aKDS/UlumenTlpfwCwy53xNbqKWKG/nbEN5R62WeybpuqCpg==
-X-Received: by 2002:a17:907:2da9:b0:722:ce54:2cd1 with SMTP id gt41-20020a1709072da900b00722ce542cd1mr7638664ejc.517.1655979881672;
-        Thu, 23 Jun 2022 03:24:41 -0700 (PDT)
-Received: from localhost.localdomain (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id 15-20020a170906300f00b006f3ef214dd9sm10692128ejz.63.2022.06.23.03.24.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jun 2022 03:24:40 -0700 (PDT)
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Doug Gilbert <dgilbert@interlog.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org
-Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v4 3/3] scsi: ufs: ufshcd: constify pointed data
-Date:   Thu, 23 Jun 2022 12:24:32 +0200
-Message-Id: <20220623102432.108059-4-krzysztof.kozlowski@linaro.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220623102432.108059-1-krzysztof.kozlowski@linaro.org>
-References: <20220623102432.108059-1-krzysztof.kozlowski@linaro.org>
+        with ESMTP id S229826AbiFWKhv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 06:37:51 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C2D64B1C7
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 03:37:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1655980669; x=1687516669;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=VfgPtM/PPdX4UbS9Bl5+NNKpDesfaBVvgbvBXUlzqNs=;
+  b=YQ7W6ZsIJsLHi50xNW4+3Qyg+wD+Hg9N/YeDxqoJ7/mKTNTJhGyYRAxq
+   P6o9pzvc5G9DjHzCmrduRkZBcuXi7EWDjLlQN2NZLmeG1Gst08zm60Zd/
+   7iafSa/x/V8hBOVWeM+jPphkNLHbN4bEMtMCDUIJverFJdVsZ4jHpy6z1
+   qhHfbX/P0QckTgWl+WxbajIuFGjfYLbVoUW76+kOIi3HMgGJj31lhX7ec
+   Ue5+xUeotNKS5nh9wVzJqboaK2QtZigaHkkiAbDwUgpCAfih23x05zmhn
+   brM0iyX2rWMvrLoSyUsJYXlGKPBwtRNo+qgh5DT1HZMq2X+dqSCdjxgvG
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.92,215,1650902400"; 
+   d="scan'208";a="316017214"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 23 Jun 2022 18:37:48 +0800
+IronPort-SDR: ZJl89qLipY7VvFdD8QT9fxREaCn7Mv3ozuXv+t91eKKV4kE4BWVJznM4/31gjr2m86ne0WGJgJ
+ IIixjG9obkjY+RAAxsmNMGt/cZ1gRtpkctSTH5BpGu2IUvty7cILPR84zzjqawhaPW1C6ZkvqT
+ gsHTKEG+tNhRffmg5yExvBIVRJFuMyCGVNsh6+K6yG5lA7hpR0ISDtMkiCHD6+9TcxCyM/WqAG
+ 8dkjugOWiQzxOA4ljhFyRGGcdD2nY/3CPoaQ5GaXaFHZOHWdHkepUbqLhsIJUPqVY5lA0XU5em
+ tDX9TW9jbwXHSXVGQgsCUalq
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 03:00:15 -0700
+IronPort-SDR: 1KkKhQ9tvjNX2Hlh/dCnzK0AFz7/B5EZgxK1DQUm5Gy+iFnQWbBWOo5IX0DAEahaCt6qCdvSrF
+ 3n0OdrcoLEsJ5oXy3Fc1PbkQT9kkrP3BNiClkmFGN8IcdIsw0fL4FhI/3CzKnSYLPmu3mdvePw
+ BcLwrTcgOBEvbDIyUD9gHc0/9raLrH35gn869+W12Scvs6GE0z+0BqMbzyvzzlR9+sLUUA9uN/
+ zsi0i4raf9PCGKJakbl3fI6D8IIWyh22uSv8S+oJC/jn11oFZg8RPChby+McAbYsYOBx89wX/g
+ NtI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 03:37:48 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LTGt34f67z1Rw4L
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 03:37:47 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1655980667; x=1658572668; bh=VfgPtM/PPdX4UbS9Bl5+NNKpDesfaBVvgbv
+        BXUlzqNs=; b=CM301ih7nB/nytPGTPn6Pv6faUPSKh2nYT6mD/vnDWuRC5vMp2u
+        FHYwBXOocAqD3c/UzAdUeg+TbBqbJJB80FKBe+/ORddeGP3Bd41u1UP9cfYlBrJz
+        LM3BzqQCGi78jy5lJimsVJup6EcayNWPMxoGUpLywwV0dQSyZ4iy8pFJwpf1Vp56
+        KfbqQcsIwkMuCseLM+4rp4N44Rhx7IoEWnCFfGAflbBRw68jXR1oisWl83enFYuo
+        B+DDZnQvOSCOJK0MSqDAR70u1m58HL7ebbjbFIGRXrEu4b8Ho5Z7iR3WhsN/fO7Y
+        nhUgp7hQKJH341KmVEe0rVqhCqmQVohuK0Q==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id lf0kBec7cVtP for <linux-ide@vger.kernel.org>;
+        Thu, 23 Jun 2022 03:37:47 -0700 (PDT)
+Received: from [10.225.163.90] (unknown [10.225.163.90])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LTGt22yBjz1RtVk;
+        Thu, 23 Jun 2022 03:37:46 -0700 (PDT)
+Message-ID: <66e7ec7a-03b0-4d71-c9e4-87847cd3410f@opensource.wdc.com>
+Date:   Thu, 23 Jun 2022 19:37:45 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] libata: add horkage for M88V29
+Content-Language: en-US
+To:     =?UTF-8?B?QsO2c3rDtnJtw6lueWkgWm9sdMOhbg==?= <zboszor@gmail.com>,
+        zboszor@pr.hu, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
+References: <20220204125750.1771303-1-zboszor@pr.hu>
+ <f726e9e1-bdad-ac8a-368b-aae423a00676@opensource.wdc.com>
+ <78c29f43-3b67-8e70-0711-14e997f3efb1@gmail.com>
+ <09091cc4-f652-0978-bb6a-b63f24fdcf49@opensource.wdc.com>
+ <bbfeb862-9e1f-79c2-89dd-7db9515471e4@gmail.com>
+ <7f086930-ff6c-da99-212b-46c4479247cb@opensource.wdc.com>
+ <c678589c-cb30-35a3-cc7f-ad4065863640@gmail.com>
+ <43061e32-3a00-d8a1-5946-656d38ff195c@gmail.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <43061e32-3a00-d8a1-5946-656d38ff195c@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Constify arrays and pointers to data which are not modified for code
-safety.
+On 6/23/22 19:12, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
+> 2022. 06. 23. 11:32 keltez=C3=A9ssel, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=
+=A1n =C3=ADrta:
+>> 2022. 06. 23. 10:46 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
+>>> On 6/23/22 17:38, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
+>>>> 2022. 06. 23. 10:22 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
+>>>>> On 6/23/22 16:47, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
+>>>>>> 2022. 02. 08. 9:07 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
+>>>>>>> On 2/4/22 21:57, zboszor@pr.hu wrote:
+>>>>>>>> From: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.com>
+>>>>>>>>
+>>>>>>>> This device is a CF card, or possibly an SSD in CF form factor.
+>>>>>>>> It supports NCQ and high speed DMA.
+>>>>>>>>
+>>>>>>>> While it also advertises TRIM support, I/O errors are reported
+>>>>>>>> when the discard mount option fstrim is used. TRIM also fails
+>>>>>>>> when disabling NCQ and not just as an NCQ command.
+>>>>>>>>
+>>>>>>>> TRIM must be disabled for this device.
+>>>>>>>>
+>>>>>>>> Signed-off-by: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@g=
+mail.com>
+>>>>>>>> ---
+>>>>>>>> =C2=A0=C2=A0=C2=A0 drivers/ata/libata-core.c | 1 +
+>>>>>>>> =C2=A0=C2=A0=C2=A0 1 file changed, 1 insertion(+)
+>>>>>>>>
+>>>>>>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core=
+.c
+>>>>>>>> index 67f88027680a..4a7f58fcc411 100644
+>>>>>>>> --- a/drivers/ata/libata-core.c
+>>>>>>>> +++ b/drivers/ata/libata-core.c
+>>>>>>>> @@ -4028,6 +4028,7 @@ static const struct ata_blacklist_entry at=
+a_device_blacklist=20
+>>>>>>>> [] =3D {
+>>>>>>>> =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*=
+ devices that don't properly handle TRIM commands */
+>>>>>>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 { "SuperSSpeed S238*"=
+,=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 NULL, ATA_HORKAGE_NOTRIM, },
+>>>>>>>> +=C2=A0=C2=A0=C2=A0 { "M88V29*",=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 NULL, ATA_HORKAGE_NOTRIM, },
+>>>>>>>> =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
+>>>>>>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * As defined, t=
+he DRAT (Deterministic Read After Trim) and RZAT
+>>>>>>> Applied to for-5.17-fixes. Thanks !
+>>>>>> Thank you. However, I have second thoughts about this patch.
+>>>>>> The device advertises this:
+>>>>>>
+>>>>>> # hdparm -iI /dev/sda
+>>>>>> ...
+>>>>>> =C2=A0=C2=A0 =C2=A0Enabled Supported
+>>>>>> =C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 *=C2=A0=C2=A0=C2=A0 Data Set Manag=
+ement TRIM supported (limit 1 block)
+>>>>>> ...
+>>>>>>
+>>>>>> but the I/O failures always reported higher number of blocks,
+>>>>>> IIRC the attempted number of block was 8 or so.
+>>>>>>
+>>>>>> Can the kernel limit or split TRIM commands according to the
+>>>>>> advertised limit? If not (or not yet) then the quirk is good for n=
+ow.
+>>>>> Yes, the kernel does that. See the sysfs queue attributes
+>>>>> discard_max_bytes and discard_max_hw_bytes. What are the values for=
+ your
+>>>>> device ? I think that the "limit 1 block" indicated by hdparm is si=
+mply to
+>>>>> say that the DSM command (to trim the device) accept only at most a=
+ 1
+>>>>> block (512 B) list of sectors to trim. That is not the actual trim =
+limit
+>>>>> for each sector range in that list.
+>>>> With the quirk in effect (TRIM disabled) I have these:
+>>>>
+>>>> [root@chef queue]# pwd
+>>>> /sys/block/sda/queue
+>>>> [root@chef queue]# cat discard_granularity
+>>>> 0
+>>>> [root@chef queue]# cat discard_max_bytes
+>>>> 0
+>>>> [root@chef queue]# cat discard_max_hw_bytes
+>>>> 0
+>>> Yes, expected. What are the values without the quirk applied ?
+>>
+>> I built 5.18.6 with removing the quirk.
+>>
+>> [root@chef queue]# pwd
+>> /sys/block/sda/queue/
+>> [root@chef queue]# cat discard_granularity
+>> 512
+>> [root@chef queue]# cat discard_max_bytes
+>> 2147450880
+>> [root@chef queue]# cat discard_max_hw_bytes
+>> 2147450880
+>> [root@chef queue]# cat max_discard_segments
+>> 1
+>=20
+> "echo 512 >discard_max_hw_bytes" says permission denied.
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd-priv.h |  6 ++---
- drivers/ufs/core/ufshcd.c      | 42 ++++++++++++++++++----------------
- include/ufs/ufshcd.h           |  6 ++---
- 3 files changed, 28 insertions(+), 26 deletions(-)
+That is normal. This is a hardware characteristic so this is read only.
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index ffb01fc6de75..8f67db202d7b 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -215,7 +215,7 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
- 		hba->vops->config_scaling_param(hba, p, data);
- }
- 
--extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-+extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- /**
-  * ufshcd_scsi_to_upiu_lun - maps scsi LUN to UPIU LUN
-@@ -234,8 +234,8 @@ static inline u8 ufshcd_scsi_to_upiu_lun(unsigned int scsi_lun)
- 
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr);
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr);
- 
- static inline int ufshcd_update_ee_drv_mask(struct ufs_hba *hba,
- 					    u16 set, u16 clr)
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 01fb4bad86be..94d059c7473d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -175,7 +175,7 @@ enum {
- #define ufshcd_clear_eh_in_progress(h) \
- 	((h)->eh_flags &= ~UFSHCD_EH_IN_PROGRESS)
- 
--struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
-+const struct ufs_pm_lvl_states ufs_pm_lvl_states[] = {
- 	[UFS_PM_LVL_0] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_ACTIVE_STATE},
- 	[UFS_PM_LVL_1] = {UFS_ACTIVE_PWR_MODE, UIC_LINK_HIBERN8_STATE},
- 	[UFS_PM_LVL_2] = {UFS_SLEEP_PWR_MODE, UIC_LINK_ACTIVE_STATE},
-@@ -363,7 +363,7 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- }
- 
- static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
--					 struct uic_command *ucmd,
-+					 const struct uic_command *ucmd,
- 					 enum ufs_trace_str_t str_t)
- {
- 	u32 cmd;
-@@ -443,11 +443,11 @@ static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
- }
- 
- static void ufshcd_print_evt(struct ufs_hba *hba, u32 id,
--			     char *err_name)
-+			     const char *err_name)
- {
- 	int i;
- 	bool found = false;
--	struct ufs_event_hist *e;
-+	const struct ufs_event_hist *e;
- 
- 	if (id >= UFS_EVT_CNT)
- 		return;
-@@ -497,7 +497,7 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
- static
- void ufshcd_print_trs(struct ufs_hba *hba, unsigned long bitmap, bool pr_prdt)
- {
--	struct ufshcd_lrb *lrbp;
-+	const struct ufshcd_lrb *lrbp;
- 	int prdt_length;
- 	int tag;
- 
-@@ -553,7 +553,7 @@ static void ufshcd_print_tmrs(struct ufs_hba *hba, unsigned long bitmap)
- 
- static void ufshcd_print_host_state(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev_ufs = hba->ufs_device_wlun;
-+	const struct scsi_device *sdev_ufs = hba->ufs_device_wlun;
- 
- 	dev_err(hba->dev, "UFS Host state=%d\n", hba->ufshcd_state);
- 	dev_err(hba->dev, "outstanding reqs=0x%lx tasks=0x%lx\n",
-@@ -1098,7 +1098,7 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
-  */
- static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
- {
--	struct scsi_device *sdev;
-+	const struct scsi_device *sdev;
- 	u32 pending = 0;
- 
- 	lockdep_assert_held(hba->host->host_lock);
-@@ -2069,14 +2069,15 @@ static inline int ufshcd_monitor_opcode2dir(u8 opcode)
- static inline bool ufshcd_should_inform_monitor(struct ufs_hba *hba,
- 						struct ufshcd_lrb *lrbp)
- {
--	struct ufs_hba_monitor *m = &hba->monitor;
-+	const struct ufs_hba_monitor *m = &hba->monitor;
- 
- 	return (m->enabled && lrbp && lrbp->cmd &&
- 		(!m->chunk_size || m->chunk_size == lrbp->cmd->sdb.length) &&
- 		ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_stamp));
- }
- 
--static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_start_monitor(struct ufs_hba *hba,
-+				 const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
-@@ -2087,14 +2088,14 @@ static void ufshcd_start_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- }
- 
--static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+static void ufshcd_update_monitor(struct ufs_hba *hba, const struct ufshcd_lrb *lrbp)
- {
- 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
--		struct request *req = scsi_cmd_to_rq(lrbp->cmd);
-+		const struct request *req = scsi_cmd_to_rq(lrbp->cmd);
- 		struct ufs_hba_monitor *m = &hba->monitor;
- 		ktime_t now, inc, lat;
- 
-@@ -4899,7 +4900,7 @@ static int ufshcd_get_lu_wp(struct ufs_hba *hba,
-  *
-  */
- static inline void ufshcd_get_lu_power_on_wp_status(struct ufs_hba *hba,
--						    struct scsi_device *sdev)
-+						    const struct scsi_device *sdev)
- {
- 	if (hba->dev_info.f_power_on_wp_en &&
- 	    !hba->dev_info.is_lu_power_on_wp) {
-@@ -5418,8 +5419,8 @@ int ufshcd_write_ee_control(struct ufs_hba *hba)
- 	return err;
- }
- 
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr)
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr)
- {
- 	u16 new_mask, ee_ctrl_mask;
- 	int err = 0;
-@@ -7346,7 +7347,8 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd)
-  *
-  * Returns calculated max ICC level for specific regulator
-  */
--static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-+static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan,
-+				    const char *buff)
- {
- 	int i;
- 	int curr_uA;
-@@ -7393,7 +7395,7 @@ static u32 ufshcd_get_max_icc_level(int sup_curr_uA, u32 start_scan, char *buff)
-  * Returns calculated ICC level
-  */
- static u32 ufshcd_find_max_sup_active_icc_level(struct ufs_hba *hba,
--							u8 *desc_buf, int len)
-+						const u8 *desc_buf, int len)
- {
- 	u32 icc_level = 0;
- 
-@@ -7543,7 +7545,7 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- 	return ret;
- }
- 
--static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_wb_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u8 lun;
-@@ -7614,7 +7616,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	hba->caps &= ~UFSHCD_CAP_WB_EN;
- }
- 
--static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
-+static void ufshcd_temp_notif_probe(struct ufs_hba *hba, const u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u32 ext_ufs_feature;
-@@ -7848,7 +7850,7 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	u32 granularity, peer_granularity;
- 	u32 pa_tactivate, peer_pa_tactivate;
- 	u32 pa_tactivate_us, peer_pa_tactivate_us;
--	u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
-+	static const u8 gran_to_us_table[] = {1, 4, 8, 16, 32, 100};
- 
- 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_GRANULARITY),
- 				  &granularity);
-@@ -7965,7 +7967,7 @@ struct ufs_ref_clk {
- 	enum ufs_ref_clk_freq val;
- };
- 
--static struct ufs_ref_clk ufs_ref_clk_freqs[] = {
-+static const struct ufs_ref_clk ufs_ref_clk_freqs[] = {
- 	{19200000, REF_CLK_FREQ_19_2_MHZ},
- 	{26000000, REF_CLK_FREQ_26_MHZ},
- 	{38400000, REF_CLK_FREQ_38_4_MHZ},
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a92271421718..4f0531af9141 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1217,14 +1217,14 @@ static inline int ufshcd_vops_phy_initialization(struct ufs_hba *hba)
- 	return 0;
- }
- 
--extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
-+extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
- 		     const char *prefix);
- 
- int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
--int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask, u16 *other_mask,
--			     u16 set, u16 clr);
-+int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
-+			     const u16 *other_mask, u16 set, u16 clr);
- 
- #endif /* End of Header */
--- 
-2.34.1
+> "echo 512 >discard_max_bytes" can be set
 
+Yes, this is the soft limit that can be used to limit trim command size.
+
+> But with or without libata.force=3Dnoncqtrim, running
+> "fstrim /boot" (which is ext4) goes into an infinite loop
+> dumping a lot of I/O errors into dmesg.
+>=20
+> Interestingly, after setting discard_max_bytes=3D512,
+> in both cases (with or without libata.force=3Dnoncqrtim)
+> running "fstrim /" (which is f2fs) there is no error in
+> dmesg and fstrim returns after a small delay.
+
+Which would tend to indicate that the drive only likes single sector trim=
+s...
+
+>=20
+> So I guess TRIM does work but ext4 seems to be misbehaving.
+
+I do not think so. The ext4 is going to issue whatever trim request for
+free blocks it has and the block layer will split these request into at
+most discard_max_bytes trim commands. You can check this behavior using
+blktrace.
+
+> FWIW "mount" shows "discard" for the big f2fs partition but
+> it doesn't for ext4 but it's in the default mount option AFAIK.
+> "mount /boot -o remount.discard" doesn't make a difference.
+> the machine dumps a lot of errors into dmesg with "fstrim /boot".
+
+If you have an empty partition, you could experiment using blkdiscard
+command to remove the fs.
+
+--=20
+Damien Le Moal
+Western Digital Research
