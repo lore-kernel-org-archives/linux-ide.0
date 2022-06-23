@@ -2,233 +2,119 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B105C433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 10:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC887C43334
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 19:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229595AbiFWKhw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 23 Jun 2022 06:37:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37002 "EHLO
+        id S229709AbiFWTYq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Jun 2022 15:24:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229826AbiFWKhv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 06:37:51 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C2D64B1C7
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 03:37:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1655980669; x=1687516669;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=VfgPtM/PPdX4UbS9Bl5+NNKpDesfaBVvgbvBXUlzqNs=;
-  b=YQ7W6ZsIJsLHi50xNW4+3Qyg+wD+Hg9N/YeDxqoJ7/mKTNTJhGyYRAxq
-   P6o9pzvc5G9DjHzCmrduRkZBcuXi7EWDjLlQN2NZLmeG1Gst08zm60Zd/
-   7iafSa/x/V8hBOVWeM+jPphkNLHbN4bEMtMCDUIJverFJdVsZ4jHpy6z1
-   qhHfbX/P0QckTgWl+WxbajIuFGjfYLbVoUW76+kOIi3HMgGJj31lhX7ec
-   Ue5+xUeotNKS5nh9wVzJqboaK2QtZigaHkkiAbDwUgpCAfih23x05zmhn
-   brM0iyX2rWMvrLoSyUsJYXlGKPBwtRNo+qgh5DT1HZMq2X+dqSCdjxgvG
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.92,215,1650902400"; 
-   d="scan'208";a="316017214"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Jun 2022 18:37:48 +0800
-IronPort-SDR: ZJl89qLipY7VvFdD8QT9fxREaCn7Mv3ozuXv+t91eKKV4kE4BWVJznM4/31gjr2m86ne0WGJgJ
- IIixjG9obkjY+RAAxsmNMGt/cZ1gRtpkctSTH5BpGu2IUvty7cILPR84zzjqawhaPW1C6ZkvqT
- gsHTKEG+tNhRffmg5yExvBIVRJFuMyCGVNsh6+K6yG5lA7hpR0ISDtMkiCHD6+9TcxCyM/WqAG
- 8dkjugOWiQzxOA4ljhFyRGGcdD2nY/3CPoaQ5GaXaFHZOHWdHkepUbqLhsIJUPqVY5lA0XU5em
- tDX9TW9jbwXHSXVGQgsCUalq
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 03:00:15 -0700
-IronPort-SDR: 1KkKhQ9tvjNX2Hlh/dCnzK0AFz7/B5EZgxK1DQUm5Gy+iFnQWbBWOo5IX0DAEahaCt6qCdvSrF
- 3n0OdrcoLEsJ5oXy3Fc1PbkQT9kkrP3BNiClkmFGN8IcdIsw0fL4FhI/3CzKnSYLPmu3mdvePw
- BcLwrTcgOBEvbDIyUD9gHc0/9raLrH35gn869+W12Scvs6GE0z+0BqMbzyvzzlR9+sLUUA9uN/
- zsi0i4raf9PCGKJakbl3fI6D8IIWyh22uSv8S+oJC/jn11oFZg8RPChby+McAbYsYOBx89wX/g
- NtI=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 03:37:48 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LTGt34f67z1Rw4L
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 03:37:47 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1655980667; x=1658572668; bh=VfgPtM/PPdX4UbS9Bl5+NNKpDesfaBVvgbv
-        BXUlzqNs=; b=CM301ih7nB/nytPGTPn6Pv6faUPSKh2nYT6mD/vnDWuRC5vMp2u
-        FHYwBXOocAqD3c/UzAdUeg+TbBqbJJB80FKBe+/ORddeGP3Bd41u1UP9cfYlBrJz
-        LM3BzqQCGi78jy5lJimsVJup6EcayNWPMxoGUpLywwV0dQSyZ4iy8pFJwpf1Vp56
-        KfbqQcsIwkMuCseLM+4rp4N44Rhx7IoEWnCFfGAflbBRw68jXR1oisWl83enFYuo
-        B+DDZnQvOSCOJK0MSqDAR70u1m58HL7ebbjbFIGRXrEu4b8Ho5Z7iR3WhsN/fO7Y
-        nhUgp7hQKJH341KmVEe0rVqhCqmQVohuK0Q==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id lf0kBec7cVtP for <linux-ide@vger.kernel.org>;
-        Thu, 23 Jun 2022 03:37:47 -0700 (PDT)
-Received: from [10.225.163.90] (unknown [10.225.163.90])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LTGt22yBjz1RtVk;
-        Thu, 23 Jun 2022 03:37:46 -0700 (PDT)
-Message-ID: <66e7ec7a-03b0-4d71-c9e4-87847cd3410f@opensource.wdc.com>
-Date:   Thu, 23 Jun 2022 19:37:45 +0900
+        with ESMTP id S229733AbiFWTY0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 15:24:26 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2A0B792A1
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 11:34:02 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.85.234) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Thu, 23 Jun
+ 2022 21:33:40 +0300
+Subject: Re: [PATCH] ata: libata-scsi: fix result type of ata_ioc32()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <05a7fcf4-3a2b-3012-34c6-ca1f00fa457c@omp.ru>
+ <2e7f96b6-2223-c687-a65b-6b90964bb4e1@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <d1363b9b-db0a-a9c9-199f-ab71dbbc55d7@omp.ru>
+Date:   Thu, 23 Jun 2022 21:33:41 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] libata: add horkage for M88V29
+In-Reply-To: <2e7f96b6-2223-c687-a65b-6b90964bb4e1@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-To:     =?UTF-8?B?QsO2c3rDtnJtw6lueWkgWm9sdMOhbg==?= <zboszor@gmail.com>,
-        zboszor@pr.hu, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <20220204125750.1771303-1-zboszor@pr.hu>
- <f726e9e1-bdad-ac8a-368b-aae423a00676@opensource.wdc.com>
- <78c29f43-3b67-8e70-0711-14e997f3efb1@gmail.com>
- <09091cc4-f652-0978-bb6a-b63f24fdcf49@opensource.wdc.com>
- <bbfeb862-9e1f-79c2-89dd-7db9515471e4@gmail.com>
- <7f086930-ff6c-da99-212b-46c4479247cb@opensource.wdc.com>
- <c678589c-cb30-35a3-cc7f-ad4065863640@gmail.com>
- <43061e32-3a00-d8a1-5946-656d38ff195c@gmail.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <43061e32-3a00-d8a1-5946-656d38ff195c@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.85.234]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/23/2022 18:09:51
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 171342 [Jun 23 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 491 491 a718ef6dc942138335b0bcd7ab07f27b5c06005e
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.85.234 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.85.234 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.85.234
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/23/2022 18:13:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/23/2022 4:30:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/23/22 19:12, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
-> 2022. 06. 23. 11:32 keltez=C3=A9ssel, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=
-=A1n =C3=ADrta:
->> 2022. 06. 23. 10:46 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
->>> On 6/23/22 17:38, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
->>>> 2022. 06. 23. 10:22 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
->>>>> On 6/23/22 16:47, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
->>>>>> 2022. 02. 08. 9:07 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
->>>>>>> On 2/4/22 21:57, zboszor@pr.hu wrote:
->>>>>>>> From: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.com>
->>>>>>>>
->>>>>>>> This device is a CF card, or possibly an SSD in CF form factor.
->>>>>>>> It supports NCQ and high speed DMA.
->>>>>>>>
->>>>>>>> While it also advertises TRIM support, I/O errors are reported
->>>>>>>> when the discard mount option fstrim is used. TRIM also fails
->>>>>>>> when disabling NCQ and not just as an NCQ command.
->>>>>>>>
->>>>>>>> TRIM must be disabled for this device.
->>>>>>>>
->>>>>>>> Signed-off-by: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@g=
-mail.com>
->>>>>>>> ---
->>>>>>>> =C2=A0=C2=A0=C2=A0 drivers/ata/libata-core.c | 1 +
->>>>>>>> =C2=A0=C2=A0=C2=A0 1 file changed, 1 insertion(+)
->>>>>>>>
->>>>>>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core=
-.c
->>>>>>>> index 67f88027680a..4a7f58fcc411 100644
->>>>>>>> --- a/drivers/ata/libata-core.c
->>>>>>>> +++ b/drivers/ata/libata-core.c
->>>>>>>> @@ -4028,6 +4028,7 @@ static const struct ata_blacklist_entry at=
-a_device_blacklist=20
->>>>>>>> [] =3D {
->>>>>>>> =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*=
- devices that don't properly handle TRIM commands */
->>>>>>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 { "SuperSSpeed S238*"=
-,=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 NULL, ATA_HORKAGE_NOTRIM, },
->>>>>>>> +=C2=A0=C2=A0=C2=A0 { "M88V29*",=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 NULL, ATA_HORKAGE_NOTRIM, },
->>>>>>>> =C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
->>>>>>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * As defined, t=
-he DRAT (Deterministic Read After Trim) and RZAT
->>>>>>> Applied to for-5.17-fixes. Thanks !
->>>>>> Thank you. However, I have second thoughts about this patch.
->>>>>> The device advertises this:
->>>>>>
->>>>>> # hdparm -iI /dev/sda
->>>>>> ...
->>>>>> =C2=A0=C2=A0 =C2=A0Enabled Supported
->>>>>> =C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 *=C2=A0=C2=A0=C2=A0 Data Set Manag=
-ement TRIM supported (limit 1 block)
->>>>>> ...
->>>>>>
->>>>>> but the I/O failures always reported higher number of blocks,
->>>>>> IIRC the attempted number of block was 8 or so.
->>>>>>
->>>>>> Can the kernel limit or split TRIM commands according to the
->>>>>> advertised limit? If not (or not yet) then the quirk is good for n=
-ow.
->>>>> Yes, the kernel does that. See the sysfs queue attributes
->>>>> discard_max_bytes and discard_max_hw_bytes. What are the values for=
- your
->>>>> device ? I think that the "limit 1 block" indicated by hdparm is si=
-mply to
->>>>> say that the DSM command (to trim the device) accept only at most a=
- 1
->>>>> block (512 B) list of sectors to trim. That is not the actual trim =
-limit
->>>>> for each sector range in that list.
->>>> With the quirk in effect (TRIM disabled) I have these:
->>>>
->>>> [root@chef queue]# pwd
->>>> /sys/block/sda/queue
->>>> [root@chef queue]# cat discard_granularity
->>>> 0
->>>> [root@chef queue]# cat discard_max_bytes
->>>> 0
->>>> [root@chef queue]# cat discard_max_hw_bytes
->>>> 0
->>> Yes, expected. What are the values without the quirk applied ?
+Hello!
+
+On 6/23/22 2:45 AM, Damien Le Moal wrote:
+[...]
+>> While ata_ioc32() returns 'int', its result gets assigned to and compared
+>> with the 'unsigned long' variable 'val' in ata_sas_scsi_ioctl(), its only
+>> caller, which implies a problematic implicit cast -- fix that by returning
+>> 'bool' instead (actually, the object code doesn't seem to change, probably
+>> because the function is always inlined).
+> 
+> Looks good. I would though prefer to change this commit message to simply
+> say that ata_ioc32() return value is clearly a bool.
+
+   No, just changing *int* to 'bool' wasn't the purpose of this patch --
+I would not have called it a fix if it was so.
+
+> The implicit cast to
+> unsigned long from int is not really an issue at all (the reverse cast
+
+   In general case, it is an issue -- as it involves a sign extension (and
+thus a needless extra instruction on an x86_64 kernel)! However, with the
+possible *int* values just being 0 and 1, it's not much of issue indeed
+(except an extra instruction just being there)...  In reality , that extra
+instruction is not there, probably due to ata_ioc32() being inlined...
+
+> would be an issue). And keep mentioning that the object code does not change.
+> 
+> By the way, does your statis analyzer stop complaining after this change ?
+
+   I don't really know -- all I have is the online report generated for the
+whole 5.10 kernel. I still can't re-run SVACE but maybe that will change soon...
+
+> Because we still have an implicit cast in the user site.
+
+   A cast from 'bool' should be OK... :-)
+
+>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>> analysis tool.
 >>
->> I built 5.18.6 with removing the quirk.
->>
->> [root@chef queue]# pwd
->> /sys/block/sda/queue/
->> [root@chef queue]# cat discard_granularity
->> 512
->> [root@chef queue]# cat discard_max_bytes
->> 2147450880
->> [root@chef queue]# cat discard_max_hw_bytes
->> 2147450880
->> [root@chef queue]# cat max_discard_segments
->> 1
->=20
-> "echo 512 >discard_max_hw_bytes" says permission denied.
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+[...]
 
-That is normal. This is a hardware characteristic so this is read only.
-
-> "echo 512 >discard_max_bytes" can be set
-
-Yes, this is the soft limit that can be used to limit trim command size.
-
-> But with or without libata.force=3Dnoncqtrim, running
-> "fstrim /boot" (which is ext4) goes into an infinite loop
-> dumping a lot of I/O errors into dmesg.
->=20
-> Interestingly, after setting discard_max_bytes=3D512,
-> in both cases (with or without libata.force=3Dnoncqrtim)
-> running "fstrim /" (which is f2fs) there is no error in
-> dmesg and fstrim returns after a small delay.
-
-Which would tend to indicate that the drive only likes single sector trim=
-s...
-
->=20
-> So I guess TRIM does work but ext4 seems to be misbehaving.
-
-I do not think so. The ext4 is going to issue whatever trim request for
-free blocks it has and the block layer will split these request into at
-most discard_max_bytes trim commands. You can check this behavior using
-blktrace.
-
-> FWIW "mount" shows "discard" for the big f2fs partition but
-> it doesn't for ext4 but it's in the default mount option AFAIK.
-> "mount /boot -o remount.discard" doesn't make a difference.
-> the machine dumps a lot of errors into dmesg with "fstrim /boot".
-
-If you have an empty partition, you could experiment using blkdiscard
-command to remove the fs.
-
---=20
-Damien Le Moal
-Western Digital Research
+MBR, Sergey
