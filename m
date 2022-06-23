@@ -2,67 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC2ACCA47F
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 08:14:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD64CC433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 08:22:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229706AbiFWIOA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 23 Jun 2022 04:14:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58778 "EHLO
+        id S229572AbiFWIWf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Jun 2022 04:22:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229725AbiFWIN7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 04:13:59 -0400
-X-Greylist: delayed 902 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 23 Jun 2022 01:13:53 PDT
-Received: from frontdoor.pr.hu (frontdoor.pr.hu [IPv6:2a02:808:3:101:250:56ff:fe8e:1370])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFD2343AF3;
-        Thu, 23 Jun 2022 01:13:53 -0700 (PDT)
-Received: from [2a02:808:3:101::5] (helo=mail.pr.hu)
-        by frontdoor.pr.hu with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <zboszor@pr.hu>)
-        id 1o4Hjj-0008L3-G3; Thu, 23 Jun 2022 09:58:47 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=pr.hu;
-        s=pr20170203; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-        References:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=ijw29va7e9GjYEvDhYSV4GaaJPfxvijzkTXyC52jbc0=; b=f4o8FWaet1jmFLzeHwcEZMG7Nv
-        c04/9OtyQitceucrg++QARmZeAuoMIKMc5bowZFGZrTec13G4RSXW+FR2bCnkL1ZTPK0f6zwEoZpO
-        dx4+UuTBm9y2glifRLrXhqOVOfgqBtlcPQlcpB4/U9l8UuwEdsrABxJcQT1Ow2xZndWO9f9+XXLki
-        82QhCLgokcfwrTWG+udIDFntmy4mv4IPHbWMRLaP6zJrPQ1+kq1issASroU0gY1PjrL2qsxFRBbwr
-        U8dn1QW4BXa0lo80j5JKAMFKP9l+xLT4YeVY/8no+DdZqMeZqxoh/UkMjMIc/fmaIVjzHc/NG12+9
-        pMir7Gbw==;
-Received: from host-87-242-32-154.prtelecom.hu ([87.242.32.154] helo=[192.168.1.143])
-        by mail.pr.hu with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <zboszor@pr.hu>)
-        id 1o4Hjb-0006xF-0d; Thu, 23 Jun 2022 09:58:45 +0200
-Message-ID: <6fedf197-2a85-2ee8-5ae2-12b955ad5fae@pr.hu>
-Date:   Thu, 23 Jun 2022 09:58:36 +0200
+        with ESMTP id S229850AbiFWIWe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 04:22:34 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4082F4833D
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 01:22:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1655972551; x=1687508551;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=gNpD1bVqKlbsMksw4J8hMe8jV69hgwr3fUwwPSY2qLA=;
+  b=WvAsNl7uJERhyBIg4rOkFvAI3zpVe1MCWebYJ3LErdOfmt5U4IECf6Yr
+   FHHsWVaC15oHlSGRsKUR2ERGS+HWY/0E6TtQ57xJI0iXCnfuWxM24E4zh
+   mR2LFc6VV85em5wcHCe56BWZxo/sm1S3NSr3ggbmZCscy3HUhxH5mWT6b
+   UJf1li8Eb67Ns2Np/mHZhwjKumXKdQDTEKd9H+Le62UGqjtm9kMUCGKYc
+   LuzH8fhiO2mIh250Z4WMlgvzPaIScCJOjIxntn0sEKqCkJKDhglcolVoY
+   n76TlDIz64CeqisbsphrpzgFMM+ZgRB5h9h3ULFXYKm94io5gUYaHL+rm
+   w==;
+X-IronPort-AV: E=Sophos;i="5.92,215,1650902400"; 
+   d="scan'208";a="208765634"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 23 Jun 2022 16:22:29 +0800
+IronPort-SDR: RMPjZlI+T0LkC4s/FPNs1Bz/F7hoBA4PpoOk4HLIsUEuDo1qrIeuPZ+QsCBxOxe4Zu3JXBKIh1
+ 8tIBRqor+UdKv55US7QevZByHmElWXeM4JGCF5hTVL86nh41B2SO8LBWAu5/fMzeN1EPDp8KhQ
+ crGhh8GjSGyU0oAjr6yMRvOkiAGQ21ed2lGpOJ0OrNerFioBHnAM+L9kefu8yn7+rkU6RJr8Am
+ SQzdTghvLG65BiLKFdYilfHR/RlI6uoU7Wkw59ypo1FMbpFEoEF7Paye+EnDC4jqZBVbNIMYDn
+ chOeewN1l4Q931LfAvLQMdVy
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 00:44:58 -0700
+IronPort-SDR: N4Rrd14VRBambCkgBIF9q1PtKJiLI21GDKxZcynHAW4xhYAb/NorGBS1lIcAL5UW4PKvLbYsGO
+ mP29eCx+TWOkjd29HU/7UVKXdxKxTg0TSCzKRDlArcga7u0bOJt01QqG8jjAfXkfx1yrxQUXKY
+ SB0PwA75GVJGftbElxFA2KfyPS6tFTQa+TAG9EzEUp5Lo0n66Nzc0cQlYF2GgwWOK4NIVfVlze
+ Gc2sf45p24xlpEaoA4AvWlld7tm4Y5fb9fZlIjJuwvu0LFjiYi3yzJwoyxPICIfViLfCGlrSJh
+ qm0=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Jun 2022 01:22:31 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LTCsx74dRz1Rwnl
+        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 01:22:29 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1655972549; x=1658564550; bh=gNpD1bVqKlbsMksw4J8hMe8jV69hgwr3fUw
+        wPSY2qLA=; b=PAibzQuoVnPczN2jLQ68p94iASR4uLcJfBZHQqcQDsJaW2YfISQ
+        cQpMlHIFZIte6e/DJ1vIzK9Nx5B24TRuxsYoTbQ3vZ6Ng8m9MhT1cbnRikYbEgNM
+        xaF93brbXSVsXrYRZIiTOhfzIdvRTPMLwer9bZbnDWpL1j1JhzMryjNmTVwvsfoJ
+        XbActMEXZhie+v6RhoYu5GwFaEK5O0pu0N0DcOeJJYvs5ijWZJZNTPOVoatWBLPw
+        vsUURP7qsOwp2hd7x7sX3KGcoNT9zrYfAjiFPGjVuTiZpDgGX3rkJAP+HCFcytxY
+        Vn+LkB07Rdz/ZPQuHRiv75FjwtZQvLSv3sg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id vq5-LqJChgAt for <linux-ide@vger.kernel.org>;
+        Thu, 23 Jun 2022 01:22:29 -0700 (PDT)
+Received: from [10.225.163.90] (unknown [10.225.163.90])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LTCsw5vFCz1RtVk;
+        Thu, 23 Jun 2022 01:22:28 -0700 (PDT)
+Message-ID: <09091cc4-f652-0978-bb6a-b63f24fdcf49@opensource.wdc.com>
+Date:   Thu, 23 Jun 2022 17:22:27 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
 Subject: Re: [PATCH] libata: add horkage for M88V29
 Content-Language: en-US
 To:     =?UTF-8?B?QsO2c3rDtnJtw6lueWkgWm9sdMOhbg==?= <zboszor@gmail.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+        zboszor@pr.hu, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
 References: <20220204125750.1771303-1-zboszor@pr.hu>
  <f726e9e1-bdad-ac8a-368b-aae423a00676@opensource.wdc.com>
  <78c29f43-3b67-8e70-0711-14e997f3efb1@gmail.com>
-From:   =?UTF-8?B?QsO2c3rDtnJtw6lueWkgWm9sdMOhbg==?= <zboszor@pr.hu>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
 In-Reply-To: <78c29f43-3b67-8e70-0711-14e997f3efb1@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scan-Signature: 6a8c5092fa5a4f65eed44a44a14f0c19
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-2022. 06. 23. 9:47 keltezéssel, Böszörményi Zoltán írta:
-> 2022. 02. 08. 9:07 keltezéssel, Damien Le Moal írta:
+On 6/23/22 16:47, B=C3=B6sz=C3=B6rm=C3=A9nyi Zolt=C3=A1n wrote:
+> 2022. 02. 08. 9:07 keltez=C3=A9ssel, Damien Le Moal =C3=ADrta:
 >> On 2/4/22 21:57, zboszor@pr.hu wrote:
->>> From: Zoltán Böszörményi <zboszor@gmail.com>
+>>> From: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.com>
 >>>
 >>> This device is a CF card, or possibly an SSD in CF form factor.
 >>> It supports NCQ and high speed DMA.
@@ -73,130 +107,57 @@ X-Mailing-List: linux-ide@vger.kernel.org
 >>>
 >>> TRIM must be disabled for this device.
 >>>
->>> Signed-off-by: Zoltán Böszörményi <zboszor@gmail.com>
+>>> Signed-off-by: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.=
+com>
 >>> ---
->>>   drivers/ata/libata-core.c | 1 +
->>>   1 file changed, 1 insertion(+)
+>>>   drivers/ata/libata-core.c | 1 +
+>>>   1 file changed, 1 insertion(+)
 >>>
 >>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
 >>> index 67f88027680a..4a7f58fcc411 100644
 >>> --- a/drivers/ata/libata-core.c
 >>> +++ b/drivers/ata/libata-core.c
->>> @@ -4028,6 +4028,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->>>       /* devices that don't properly handle TRIM commands */
->>>       { "SuperSSpeed S238*",        NULL,    ATA_HORKAGE_NOTRIM, },
->>> +    { "M88V29*",            NULL,    ATA_HORKAGE_NOTRIM, },
->>>       /*
->>>        * As defined, the DRAT (Deterministic Read After Trim) and RZAT
+>>> @@ -4028,6 +4028,7 @@ static const struct ata_blacklist_entry ata_dev=
+ice_blacklist [] =3D {
+>>>  =20
+>>>   	/* devices that don't properly handle TRIM commands */
+>>>   	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
+>>> +	{ "M88V29*",			NULL,	ATA_HORKAGE_NOTRIM, },
+>>>  =20
+>>>   	/*
+>>>   	 * As defined, the DRAT (Deterministic Read After Trim) and RZAT
 >> Applied to for-5.17-fixes. Thanks !
-> 
+>=20
 > Thank you. However, I have second thoughts about this patch.
 > The device advertises this:
-> 
+>=20
 > # hdparm -iI /dev/sda
 > ...
->   Enabled Supported
->      *    Data Set Management TRIM supported (limit 1 block)
+>  =C2=A0Enabled Supported
+>  =C2=A0=C2=A0=C2=A0 *=C2=A0=C2=A0=C2=A0 Data Set Management TRIM suppor=
+ted (limit 1 block)
 > ...
-
-Here's the complete hdparm output:
-
-/dev/sda:
-
-  Model=M88V29 32GB, FwRev=181019i, SerialNo=20211023AA20A0656011
-  Config={ HardSect NotMFM HdSw>15uSec Fixed DTR>10Mbs }
-  RawCHS=16383/15/63, TrkSize=0, SectSize=0, ECCbytes=4
-  BuffType=unknown, BuffSize=unknown, MaxMultSect=1, MultSect=off
-  CurCHS=16383/15/63, CurSects=15481935, LBA=yes, LBAsects=62533296
-  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
-  PIO modes:  pio0 pio1 pio2 pio3 pio4
-  DMA modes:  mdma0 mdma1 mdma2
-  UDMA modes: udma0 udma1 udma2 udma3 udma4 *udma5
-  AdvancedPM=yes: unknown setting
-  Drive conforms to: Unspecified:  ATA/ATAPI-5,6,7
-
-  * signifies the current active mode
-
-
-CompactFlash ATA device
-	Model Number:       M88V29 32GB
-	Serial Number:      20211023AA20A0656011
-	Firmware Revision:  181019i
-Standards:
-	Supported: 8 7 6 5
-	Likely used: 8
-Configuration:
-	Logical		max	current
-	cylinders	16383	16383
-	heads		15	15
-	sectors/track	63	63
-	--
-	CHS current addressable sectors:    15481935
-	LBA    user addressable sectors:    62533296
-	LBA48  user addressable sectors:    62533296
-	Logical/Physical Sector size:           512 bytes
-	device size with M = 1024*1024:       30533 MBytes
-	device size with M = 1000*1000:       32017 MBytes (32 GB)
-	cache/buffer size  = unknown
-	Nominal Media Rotation Rate: Solid State Device
-Capabilities:
-	LBA, IORDY(can be disabled)
-	Standby timer values: spec'd by Vendor, with device specific minimum
-	R/W multiple sector transfer: Max = 1	Current = 0
-	Advanced power management level: 0
-	DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
-	     Cycle time: min=120ns recommended=120ns
-	PIO: pio0 pio1 pio2 pio3 pio4
-	     Cycle time: no flow control=120ns  IORDY flow control=120ns
-Commands/features:
-	Enabled	Supported:
-	   *	SMART feature set
-	    	Security Mode feature set
-	   *	Power Management feature set
-	   *	Look-ahead
-	   *	WRITE_BUFFER command
-	   *	READ_BUFFER command
-	   *	NOP cmd
-	   *	DOWNLOAD_MICROCODE
-	   *	CFA feature set
-	   *	Advanced Power Management feature set
-	   *	48-bit Address feature set
-	   *	Mandatory FLUSH_CACHE
-	   *	FLUSH_CACHE_EXT
-	   *	SMART error logging
-	   *	SMART self-test
-	   *	General Purpose Logging feature set
-	   *	WRITE_{DMA|MULTIPLE}_FUA_EXT
-	   *	{READ,WRITE}_DMA_EXT_GPL commands
-	   *	DOWNLOAD MICROCODE DMA command
-	   *	Data Set Management TRIM supported (limit 1 block)
-	   *	Deterministic read data after TRIM
-		CFA max advanced io_udma cycle time: 80ns
-		CFA max advanced mem_udma cycle time: 80ns
-	   *	CFA advanced modes: pio5 pio6 mdma3 mdma4 io_udma4 io_udma5 io_udma6 io_udma7 
-io_udma8 *io_udma9 mem_udma4 mem_udma5 mem_udma6 mem_udma7 mem_udma8 *mem_udma9
-		CFA Power Level 1  not supported (max 100mA)
-Security:
-		supported
-	not	enabled
-	not	locked
-		frozen
-	not	expired: security count
-		supported: enhanced erase
-	4min for SECURITY ERASE UNIT. 4min for ENHANCED SECURITY ERASE UNIT.
-HW reset results:
-	CBLID- above Vih
-	Device num = 0
-Checksum: correct
-
-> 
+>=20
 > but the I/O failures always reported higher number of blocks,
 > IIRC the attempted number of block was 8 or so.
-> 
+>=20
 > Can the kernel limit or split TRIM commands according to the
 > advertised limit? If not (or not yet) then the quirk is good for now.
-> 
-> Best regards,
-> Zoltán Böszörményi
-> 
 
+Yes, the kernel does that. See the sysfs queue attributes
+discard_max_bytes and discard_max_hw_bytes. What are the values for your
+device ? I think that the "limit 1 block" indicated by hdparm is simply t=
+o
+say that the DSM command (to trim the device) accept only at most a 1
+block (512 B) list of sectors to trim. That is not the actual trim limit
+for each sector range in that list.
+
+>=20
+> Best regards,
+> Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi
+>=20
+
+
+--=20
+Damien Le Moal
+Western Digital Research
