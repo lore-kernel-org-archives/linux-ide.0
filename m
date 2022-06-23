@@ -2,60 +2,118 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0E4FC433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 07:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 571BBC43334
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Jun 2022 07:48:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230432AbiFWHqh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 23 Jun 2022 03:46:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59602 "EHLO
+        id S230394AbiFWHr7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Jun 2022 03:47:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229889AbiFWHqg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 03:46:36 -0400
-Received: from mail.onlinesuccesses.pl (mail.onlinesuccesses.pl [198.244.150.235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7C2A46B32
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 00:46:35 -0700 (PDT)
-Received: by mail.onlinesuccesses.pl (Postfix, from userid 1002)
-        id 50D8DAEC67; Thu, 23 Jun 2022 07:42:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=onlinesuccesses.pl;
-        s=mail; t=1655970251;
-        bh=nE8HqilgMh4dy7+Z8ksfg7Bc9rmPeQtYFq3/3YR2ODU=;
-        h=Date:From:To:Subject:From;
-        b=tkiz5x8bZQJHzc5ktvNEcMFq1gmT1sdjvZOAilnEvFyjiV5HewTximcjU5RdXLppf
-         goYxmj8tIUHgJXldizvrvqLoG+k9FDdrRJ5L2Ocz0ebLfgwgnrot+ety+bNlnd/l/T
-         aAl86ifwqRq+FzmzbCDevTGdZHJfziwHtz5v+GvFqs5RojgcYD1qwcGQWzHnL2PX5+
-         Yl1IWLDNcsnrfAAuVd0GM1o2ECYQKKXSJxZ0QLEfMXr+3Ls4Iri/Wf9dn92wMvFndB
-         1cGq2eo3pt2vzxmaV35UhTQkbmUaBbXPYZ30r/+ogAgSFsp8nMkmwDcMN2o/frpKKc
-         V4lfba4nn3Duw==
-Received: by mail.onlinesuccesses.pl for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2022 07:41:20 GMT
-Message-ID: <20220623064501-0.1.51.1ms0y.0.reu253cb20@onlinesuccesses.pl>
-Date:   Thu, 23 Jun 2022 07:41:20 GMT
-From:   "Wiktor Zielonko" <wiktor.zielonko@onlinesuccesses.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Ruch z pierwszej pozycji w Google
-X-Mailer: mail.onlinesuccesses.pl
+        with ESMTP id S230288AbiFWHr6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2022 03:47:58 -0400
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 975FFBE7;
+        Thu, 23 Jun 2022 00:47:52 -0700 (PDT)
+Received: by mail-ed1-x536.google.com with SMTP id e40so14735919eda.2;
+        Thu, 23 Jun 2022 00:47:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :references:from:in-reply-to:content-transfer-encoding;
+        bh=vKeUYrOnHA0zZN0XQTl1zor+a3N2Xv1aslSC072Uq1I=;
+        b=TXII47El0341dJhe7FFZgxqniHkSYpisMc6jisLwbHLuV4qMgCpcPQgLC8plLDp6mq
+         WarKgq2HVtGHSELQ+GaC2dVL61FsxYlsaUrE3C7dHJrPw+QDh7XB4nENCPBwYKvDJqJI
+         HQUjQheD3yEFcGDAAO4vca2g9fj1pmm5rHOiM0Ve+fyPit9hJkWg9oBJThLF3dhOODVm
+         qT8QM+h08F5sDI0P71sU1NIhMMUO+oMLr3zjF0TPt8UDzFaE5OFTJh8+FPlRAtxWl87z
+         tN71b+f1toYcsO95YQpRnaoqpzxgrw6dwC/8/hvnM2IBzG0XM9AnzMNN7dr+RVOKpMBI
+         BGOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=vKeUYrOnHA0zZN0XQTl1zor+a3N2Xv1aslSC072Uq1I=;
+        b=0aUvMwqoibPngYjRK+sVy2x/7F0TrdZO8pybsTBI3wNRJjzOy9fuVSR4U5MGfW88xA
+         D6y2doNqWCzPNO+/o1qCLrfzlNdFt1y6V93tqciy7RZzb3nkTSAOWtQufVLCSFD4EKqq
+         24q8YpvxRvt+G/SDnCZvE3QfAUvHPRp/LQSkY70uKOF1seg3X/dPTHos0XjJ/35lCVoQ
+         saDtTKVwUq2juhLGxSPVRIDtftk2M9TXvI8BFtObgzda2cryhzpqpe1mzobaSWlsAW+5
+         nMdZB1C6FyJSujBHFv3wWiVjvr/TeNxfp+yM11iuMnpos6tFgR82M29kjk0KzmYzkjwo
+         wnNg==
+X-Gm-Message-State: AJIora/feX8bQXk+4TPXS133Gu6ImPxduvxmf4jpK24Cay87OAIxOgwi
+        UBL24Ph1td1Gq399gPcBGcvbY2LdeO6Nnw==
+X-Google-Smtp-Source: AGRyM1v2kX0rI7PLKbmVWNz24SS4DsLoF7TT5ENboEO1fViJlxqGaVofGP38x2kD6f8+eLzWg0vO9A==
+X-Received: by 2002:a05:6402:1a4d:b0:435:74ce:7b36 with SMTP id bf13-20020a0564021a4d00b0043574ce7b36mr8777906edb.94.1655970470785;
+        Thu, 23 Jun 2022 00:47:50 -0700 (PDT)
+Received: from [192.168.1.143] (host-87-242-32-154.prtelecom.hu. [87.242.32.154])
+        by smtp.gmail.com with ESMTPSA id g23-20020a170906349700b00709343c0017sm823560ejb.98.2022.06.23.00.47.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 23 Jun 2022 00:47:50 -0700 (PDT)
+Message-ID: <78c29f43-3b67-8e70-0711-14e997f3efb1@gmail.com>
+Date:   Thu, 23 Jun 2022 09:47:48 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] libata: add horkage for M88V29
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>, zboszor@pr.hu,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+References: <20220204125750.1771303-1-zboszor@pr.hu>
+ <f726e9e1-bdad-ac8a-368b-aae423a00676@opensource.wdc.com>
+From:   =?UTF-8?B?QsO2c3rDtnJtw6lueWkgWm9sdMOhbg==?= <zboszor@gmail.com>
+In-Reply-To: <f726e9e1-bdad-ac8a-368b-aae423a00676@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,=20
+2022. 02. 08. 9:07 keltezéssel, Damien Le Moal írta:
+> On 2/4/22 21:57, zboszor@pr.hu wrote:
+>> From: Zoltán Böszörményi <zboszor@gmail.com>
+>>
+>> This device is a CF card, or possibly an SSD in CF form factor.
+>> It supports NCQ and high speed DMA.
+>>
+>> While it also advertises TRIM support, I/O errors are reported
+>> when the discard mount option fstrim is used. TRIM also fails
+>> when disabling NCQ and not just as an NCQ command.
+>>
+>> TRIM must be disabled for this device.
+>>
+>> Signed-off-by: Zoltán Böszörményi <zboszor@gmail.com>
+>> ---
+>>   drivers/ata/libata-core.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 67f88027680a..4a7f58fcc411 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -4028,6 +4028,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>>   
+>>   	/* devices that don't properly handle TRIM commands */
+>>   	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
+>> +	{ "M88V29*",			NULL,	ATA_HORKAGE_NOTRIM, },
+>>   
+>>   	/*
+>>   	 * As defined, the DRAT (Deterministic Read After Trim) and RZAT
+> Applied to for-5.17-fixes. Thanks !
 
-jaki=C5=9B czas temu zg=C5=82osi=C5=82a si=C4=99 do nas firma, kt=C3=B3re=
-j strona internetowa nie pozycjonowa=C5=82a si=C4=99 wysoko w wyszukiwarc=
-e Google.=20
+Thank you. However, I have second thoughts about this patch.
+The device advertises this:
 
-Na podstawie wykonanego przez nas audytu SEO zoptymalizowali=C5=9Bmy tre=C5=
-=9Bci na stronie pod k=C4=85tem wcze=C5=9Bniej opracowanych s=C5=82=C3=B3=
-w kluczowych. Nasz wewn=C4=99trzny system codziennie analizuje prawid=C5=82=
-owe dzia=C5=82anie witryny.  Dzi=C4=99ki indywidualnej strategii, firma z=
-dobywa coraz wi=C4=99cej Klient=C3=B3w. =20
+# hdparm -iI /dev/sda
+...
+  Enabled Supported
+     *    Data Set Management TRIM supported (limit 1 block)
+...
 
-Czy chcieliby Pa=C5=84stwo zwi=C4=99kszy=C4=87 liczb=C4=99 os=C3=B3b odwi=
-edzaj=C4=85cych stron=C4=99 internetow=C4=85 firmy? M=C3=B3g=C5=82bym prz=
-edstawi=C4=87 ofert=C4=99?=20
+but the I/O failures always reported higher number of blocks,
+IIRC the attempted number of block was 8 or so.
 
+Can the kernel limit or split TRIM commands according to the
+advertised limit? If not (or not yet) then the quirk is good for now.
 
-Pozdrawiam serdecznie,
-Wiktor Zielonko
+Best regards,
+Zoltán Böszörményi
+
