@@ -2,32 +2,34 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A43E2C43334
-	for <linux-ide@archiver.kernel.org>; Fri, 24 Jun 2022 20:39:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60855C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 24 Jun 2022 20:43:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229451AbiFXUj5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 24 Jun 2022 16:39:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48392 "EHLO
+        id S231775AbiFXUnm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 24 Jun 2022 16:43:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbiFXUj4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Jun 2022 16:39:56 -0400
+        with ESMTP id S231774AbiFXUnb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Jun 2022 16:43:31 -0400
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 653C363630
-        for <linux-ide@vger.kernel.org>; Fri, 24 Jun 2022 13:39:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0813C3B2AD
+        for <linux-ide@vger.kernel.org>; Fri, 24 Jun 2022 13:43:29 -0700 (PDT)
 Received: from [192.168.1.103] (31.173.87.92) by msexch01.omp.ru (10.188.4.12)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 24 Jun
- 2022 23:39:44 +0300
+ 2022 23:43:22 +0300
+Subject: Re: [PATCH v3] ata: libata-scsi: fix result type of ata_ioc32()
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH v3] ata: libata-scsi: fix result type of ata_ioc32()
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-ide@vger.kernel.org>
+References: <1e088333-7c7e-8e7b-7b85-12edd4355b92@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <1e088333-7c7e-8e7b-7b85-12edd4355b92@omp.ru>
-Date:   Fri, 24 Jun 2022 23:39:44 +0300
+Message-ID: <86ffba31-a110-393c-c564-f314ee22e0e1@omp.ru>
+Date:   Fri, 24 Jun 2022 23:43:22 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
+In-Reply-To: <1e088333-7c7e-8e7b-7b85-12edd4355b92@omp.ru>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -36,7 +38,7 @@ X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
  (10.188.4.12)
 X-KSE-ServerInfo: msexch01.omp.ru, 9
 X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/24/2022 20:16:00
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/24/2022 20:30:06
 X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
 X-KSE-AntiSpam-Method: none
 X-KSE-AntiSpam-Rate: 59
@@ -50,7 +52,7 @@ X-KSE-AntiSpam-Info: {relay has no DNS name}
 X-KSE-AntiSpam-Info: {SMTP from is not routable}
 X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.87.92 in (user)
  b.barracudacentral.org}
-X-KSE-AntiSpam-Info: 31.173.87.92:7.7.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;31.173.87.92:7.7.2;127.0.0.199:7.1.2
 X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.87.92
 X-KSE-AntiSpam-Info: {DNS response errors}
 X-KSE-AntiSpam-Info: Rate: 59
@@ -61,7 +63,7 @@ X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
 X-KSE-Antiphishing-Info: Clean
 X-KSE-Antiphishing-ScanningType: Heuristic
 X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/24/2022 20:19:00
+X-KSE-Antiphishing-Bases: 06/24/2022 20:32:00
 X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: Clean, bases: 6/24/2022 6:30:00 PM
@@ -70,54 +72,24 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-While ata_ioc32() returns 'int', its result gets assigned to and compared
-with the 'unsigned long' variable 'val' in ata_sas_scsi_ioctl(), its only
-caller, which implies a problematic implicit cast (with sign extension).
-Fix this by returning 'bool' instead -- the implicit cast then implies
-zero extension which is OK.  Note that actually the object code doesn't
-change because ata_ioc32() is always inlined -- I can see the expected
-code changes with 'noinline')...
+On 6/24/22 11:39 PM, Sergey Shtylyov wrote:
 
-Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-analysis tool.
+> While ata_ioc32() returns 'int', its result gets assigned to and compared
+> with the 'unsigned long' variable 'val' in ata_sas_scsi_ioctl(), its only
+> caller, which implies a problematic implicit cast (with sign extension).
+> Fix this by returning 'bool' instead -- the implicit cast then implies
+> zero extension which is OK.  Note that actually the object code doesn't
+> change because ata_ioc32() is always inlined -- I can see the expected
+> code changes with 'noinline')...
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+   Leftover paren, could this be fixed while applying?
 
----
-This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
+> 
+> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+> analysis tool.
+> 
+> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Changes in version 3:
-- refined the patch description.
+[...]
 
-Changes in version 2:
-- changed the result type of ata_ioc32() to 'bool', updating the 'return'
-  statements as well;
-- dropped "sloppy" from the patch subject;
-- added a note about the object code to the patch description;
-- changed * to ' in the patch description.
-
- drivers/ata/libata-scsi.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-Index: libata/drivers/ata/libata-scsi.c
-===================================================================
---- libata.orig/drivers/ata/libata-scsi.c
-+++ libata/drivers/ata/libata-scsi.c
-@@ -539,13 +539,13 @@ int ata_task_ioctl(struct scsi_device *s
- 	return rc;
- }
- 
--static int ata_ioc32(struct ata_port *ap)
-+static bool ata_ioc32(struct ata_port *ap)
- {
- 	if (ap->flags & ATA_FLAG_PIO_DMA)
--		return 1;
-+		return true;
- 	if (ap->pflags & ATA_PFLAG_PIO32)
--		return 1;
--	return 0;
-+		return true;
-+	return false;
- }
- 
- /*
+MBR, Sergey
