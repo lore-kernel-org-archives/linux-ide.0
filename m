@@ -2,251 +2,343 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC4F4C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jun 2022 12:08:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E6A3CCA479
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jun 2022 12:10:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344255AbiF1MIa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Jun 2022 08:08:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38100 "EHLO
+        id S1345246AbiF1MK7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 28 Jun 2022 08:10:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238286AbiF1MI2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 08:08:28 -0400
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4636524F11;
-        Tue, 28 Jun 2022 05:08:25 -0700 (PDT)
-Received: by mail-lj1-x229.google.com with SMTP id c15so1692105ljr.0;
-        Tue, 28 Jun 2022 05:08:25 -0700 (PDT)
+        with ESMTP id S1345243AbiF1MK6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 08:10:58 -0400
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A40234671;
+        Tue, 28 Jun 2022 05:10:55 -0700 (PDT)
+Received: by mail-lf1-x136.google.com with SMTP id g4so21877558lfv.9;
+        Tue, 28 Jun 2022 05:10:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=wOMPHZxTAXk49D3k8YxdoXS022ibQ+MZGCBPChiaDtU=;
-        b=ZENmrFoCpujFuHEP87dUs9OH4WML1Oe2tGWPfEo3b0haXjrbvFCot7uCZr4qq57B3G
-         Fw9GjhZ9fB4dwseVV7boti4KaPS3Y8GeLtuWe8ECnVdyOJDjRjuIWqkVXNlaMPQKJmmT
-         4WFtxuNQIj5qvEeWXvIb2mkPk3nuQh+wspP2QQuVpgs49THdp494LnBmrmohQrYumEbF
-         Je0rP0o12u69La13Il6SX0+L2kaCfFkl4oG9FJgEkFqSBVsEH8wPBYn2tgfmu+Q7ueoa
-         ZGPhwlJl7wbYrWQSDGut82qFkT324ULuWILLlYWaIPShhgcVDQHX+CeXf0A2dtz0dod3
-         TT3w==
+        bh=iUThF36MhWxuNcZJwCw3U7E8s2+/JCGpjeHLpyuRyW8=;
+        b=Xd/dySpMVit9WWKQWCdfdQIQXOA/CZOlRW3pa/3Td+dvAI6XZO8/e/vDrgVvDdEAyz
+         i8jLqoQFQBuV/nmWAB6ra9Xsh3RZk7zNXYAHSliuxVvJif9otblt23E3IQT7vsB/mgnR
+         +Y5bJw4vg/roMe9Nsmf8EV/W8pppRVE4ey3nZ7aw9nFrZnOLuWdyPkB+8ZqZUJeoT84H
+         Zo5pVNPjA8GOBBf6/2sI3TV7KsAseYFvVlA4GQE0bHGhF3dM5TXJBRTdgbNfEoClZCkw
+         20OPRmRk3reRoptd17LRg4Fn9pt1akUxcs2o5Jr1ct8Bd4c93RtK3fMwOFRIDmnBP708
+         IhWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=wOMPHZxTAXk49D3k8YxdoXS022ibQ+MZGCBPChiaDtU=;
-        b=KlxoiWCLMGBPIic4m5FN4fjs9B1Nv1iT0UVDd9XnZikKZKOL8Neti8hCXTb+BilOy0
-         /dlABp7XwNSHjSmV7U5GEnhcI2eJoQrtwgeylO/4vZmTpZ5fX718wN/+AoHNCDu0pGrb
-         a6xyByx9zC55TRCJKUAWZJs+jSs4BVvP1A7SzOcc9oRpQLb3c07Rw783S5DrS4upBN3c
-         m8Q8l1ypzMEcmsO1o3EiqalQdd1FncnXL5l4xd3XSSJud/R7WBEZY3C3mxr1+5BFsma+
-         mQz2qBTVeohMQu+sFmb5jXj0KQDlb2mZjBtvnAZpmpHxZ9UUaf4h2rT0U1g7SI0CmDd+
-         zGQg==
-X-Gm-Message-State: AJIora9z26osHqolET88KyGhVBxKSctWwgVic1h+/VcsJyWp4iw36+Ao
-        +rHaddu+YOK1OAhRWdSEBMWBMMSNZ1jrvQ==
-X-Google-Smtp-Source: AGRyM1vWGiUUC8PJAqaqyVLzlhx5Xr5O6ERuzpLNXemJwAmj8Ym3ze3lgJGTd40bOF/3PYR5t0ob8A==
-X-Received: by 2002:a2e:a484:0:b0:25a:8c94:3763 with SMTP id h4-20020a2ea484000000b0025a8c943763mr9188084lji.64.1656418103542;
-        Tue, 28 Jun 2022 05:08:23 -0700 (PDT)
+        bh=iUThF36MhWxuNcZJwCw3U7E8s2+/JCGpjeHLpyuRyW8=;
+        b=gA+Q7EKTPAPhucFTETgBAAJdCJtmdWlhD9Ml64PohoptwzKven2y0Hrx8GWDkGCxpD
+         wu5TQKumjQj0z+mL0p/XvvgE4AFnggfR+aK+PE2roTHaQk1INANYxse3r2sj+5Y19LY+
+         YUltVQzfTRJU1ldQxMJpql0acAANUuNHEL8FiP90DLyLQoUGfmbTwTl27VRQRt/bHSWW
+         71xWX4wnqXB/SXA0JORTC4OkKkIlKkeEN9C3RWdPnccsoi5qvgiYeFa2Y5wj3rR6z9la
+         8VDF0ArzjQQFH5blas4DE3apN7doelw2FTjXLqy58AbVrk2M/jq0HokSIueXlOYvA7t2
+         DypQ==
+X-Gm-Message-State: AJIora9WOV9I/KjBL6NapZJrfUxIxfbXjdqhR6UzDfNKJNBhbffCYXnd
+        pQzI1EzgRLKwHHRsT9Cn6xg=
+X-Google-Smtp-Source: AGRyM1vmsdX5x0hVJqJrjzWJ6sMBsDWCRMjzatlF1fSHMyHidNtTWBGtv3RwPzCuJ+XsR+/Q4Kzm7w==
+X-Received: by 2002:a05:6512:6d5:b0:480:fd16:42c5 with SMTP id u21-20020a05651206d500b00480fd1642c5mr10854410lff.183.1656418253793;
+        Tue, 28 Jun 2022 05:10:53 -0700 (PDT)
 Received: from mobilestation ([95.79.140.178])
-        by smtp.gmail.com with ESMTPSA id i17-20020a2ea231000000b002555d6ca497sm1769938ljm.115.2022.06.28.05.08.22
+        by smtp.gmail.com with ESMTPSA id d10-20020a0565123d0a00b0048110fd06c4sm1226744lfv.53.2022.06.28.05.10.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jun 2022 05:08:22 -0700 (PDT)
-Date:   Tue, 28 Jun 2022 15:08:20 +0300
+        Tue, 28 Jun 2022 05:10:53 -0700 (PDT)
+Date:   Tue, 28 Jun 2022 15:10:51 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Rob Herring <robh@kernel.org>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 12/23] ata: libahci: Extend port-cmd flags set with
- port capabilities
-Message-ID: <20220628120820.3nprogcpe2l3bcm4@mobilestation>
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 17/23] dt-bindings: ata: ahci: Add DWC AHCI SATA
+ controller DT schema
+Message-ID: <20220628121051.lvmoyz4gmexijoeo@mobilestation>
 References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
- <20220610081801.11854-13-Sergey.Semin@baikalelectronics.ru>
- <d06e9910-527e-cfa2-f2df-737fb4799fe5@opensource.wdc.com>
- <20220615205819.uiqptkqm5qfdvrbj@mobilestation>
- <903e273a-9dc5-f0df-5391-e96e63318323@opensource.wdc.com>
- <20220617203100.jg2o7ponolaenf6r@mobilestation>
- <f560ca8b-d921-d228-64f0-74e320f8af67@opensource.wdc.com>
- <20220618081055.grsrjxa5gqiuhy2i@mobilestation>
+ <20220610081801.11854-18-Sergey.Semin@baikalelectronics.ru>
+ <20220614222754.GA2830345-robh@kernel.org>
+ <20220617193744.av27axznbogademt@mobilestation>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220618081055.grsrjxa5gqiuhy2i@mobilestation>
+In-Reply-To: <20220617193744.av27axznbogademt@mobilestation>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Damien,
-Any notes to the comments below?
+Rob,
+I am very much waiting for your response to the notes below.
 
 -Sergey
 
-On Sat, Jun 18, 2022 at 11:10:55AM +0300, Serge Semin wrote:
-> On Sat, Jun 18, 2022 at 03:52:28PM +0900, Damien Le Moal wrote:
-> > On 6/18/22 05:31, Serge Semin wrote:
-> > > On Thu, Jun 16, 2022 at 09:28:18AM +0900, Damien Le Moal wrote:
-> > >> On 2022/06/16 5:58, Serge Semin wrote:
-> > >>> On Tue, Jun 14, 2022 at 05:32:41PM +0900, Damien Le Moal wrote:
-> > >>>> On 6/10/22 17:17, Serge Semin wrote:
-> > >>>>> Currently not all of the Port-specific capabilities listed in the
-> > >>>>
-> > >>>> s/listed/are listed
-> > >>>>
-> > >>>>> PORT_CMD-enumeration. Let's extend that set with the Cold Presence
-> > >>>>> Detection and Mechanical Presence Switch attached to the Port flags [1] so
-> > >>>>> to closeup the set of the platform-specific port-capabilities flags.  Note
-> > >>>>> these flags are supposed to be set by the platform firmware if there is
-> > >>>>> one. Alternatively as we are about to do they can be set by means of the
-> > >>>>> OF properties.
-> > >>>>>
-> > >>>>> While at it replace PORT_IRQ_DEV_ILCK with PORT_IRQ_DMPS and fix the
-> > >>>>> comment there. In accordance with [2] that IRQ flag is supposed to
-> > >>>>> indicate the state of the signal coming from the Mechanical Presence
-> > >>>>> Switch.
-> > >>>>>
-> > >>>>> [1] Serial ATA AHCI 1.3.1 Specification, p.27
-> > >>>>> [2] Serial ATA AHCI 1.3.1 Specification, p.24, p.88
-> > >>>>>
-> > >>>>> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > >>>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> > >>>>>
-> > >>>>> ---
-> > >>>>>
-> > >>>>> Changelog v4:
-> > >>>>> - Fix the DMPS macros name in the patch log. (@Sergei Shtylyov)
-> > >>>>> ---
-> > >>>>>  drivers/ata/ahci.h | 7 ++++++-
-> > >>>>>  1 file changed, 6 insertions(+), 1 deletion(-)
-> > >>>>>
-> > >>>>> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> > >>>>> index 7d834deefeb9..f501531bd1b3 100644
-> > >>>>> --- a/drivers/ata/ahci.h
-> > >>>>> +++ b/drivers/ata/ahci.h
-> > >>>>> @@ -138,7 +138,7 @@ enum {
-> > >>>>>  	PORT_IRQ_BAD_PMP	= (1 << 23), /* incorrect port multiplier */
-> > >>>>>  
-> > >>>>>  	PORT_IRQ_PHYRDY		= (1 << 22), /* PhyRdy changed */
-> > >>>>> -	PORT_IRQ_DEV_ILCK	= (1 << 7), /* device interlock */
-> > >>>>> +	PORT_IRQ_DMPS		= (1 << 7), /* mechanical presence status */
-> > >>>>>  	PORT_IRQ_CONNECT	= (1 << 6), /* port connect change status */
-> > >>>>>  	PORT_IRQ_SG_DONE	= (1 << 5), /* descriptor processed */
-> > >>>>>  	PORT_IRQ_UNK_FIS	= (1 << 4), /* unknown FIS rx'd */
-> > >>>>> @@ -166,6 +166,8 @@ enum {
-> > >>>>>  	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
-> > >>>>>  	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
-> > >>>>>  	PORT_CMD_ESP		= (1 << 21), /* External Sata Port */
-> > >>>>> +	PORT_CMD_CPD		= (1 << 20), /* Cold Presence Detection */
-> > >>>>> +	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch */
-> > >>>>>  	PORT_CMD_HPCP		= (1 << 18), /* HotPlug Capable Port */
-> > >>>>>  	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
-> > >>>>>  	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
-> > >>>>> @@ -181,6 +183,9 @@ enum {
-> > >>>>>  	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
-> > >>>>>  	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
-> > >>>>>  
-> > >>>>> +	PORT_CMD_CAP		= PORT_CMD_HPCP | PORT_CMD_MPSP |
-> > >>>>> +				  PORT_CMD_CPD | PORT_CMD_ESP | PORT_CMD_FBSCP,
-> > >>>>
-> > >>>
-> > >>>> What is this one for ? A comment above it would be nice.
-> > >>>
-> > >>> Isn't it obviously inferrable from the definition and the item name?
-> > >>
+On Fri, Jun 17, 2022 at 10:37:44PM +0300, Serge Semin wrote:
+> On Tue, Jun 14, 2022 at 04:27:54PM -0600, Rob Herring wrote:
+> > On Fri, Jun 10, 2022 at 11:17:55AM +0300, Serge Semin wrote:
+> > > Synopsys AHCI SATA controller is mainly compatible with the generic AHCI
+> > > SATA controller except a few peculiarities and the platform environment
+> > > requirements. In particular it can have one or two reference clocks to
+> > > feed up its AXI/AHB interface and SATA PHYs domain and at least one reset
+> > > control for the application clock domain. In addition to that the DMA
+> > > interface of each port can be tuned up to work with the predefined maximum
+> > > data chunk size. Note unlike generic AHCI controller DWC AHCI can't have
+> > > more than 8 ports. All of that is reflected in the new DWC AHCI SATA
+> > > device DT binding.
 > > > 
-> > >> I am guessing from the name. Am I guessing OK ? A comment would still be nice.
-> > >> Why just these bits ? There are more cap/support indicator bits in that port cmd
-> > >> bitfield. So why this particular set of bits ? What do they mean all together ?
+> > > Note the DWC AHCI SATA controller DT-schema has been created in a way so
+> > > to be reused for the vendor-specific DT-schemas (see for example the
+> > > "snps,dwc-ahci" compatible string binding). One of which we are about to
+> > > introduce.
 > > > 
-> > > Normally the variable/constant name should be self-content (as the
-> > > kernel coding style doc states and what the common sense suggests). So
-> > > the reader could correctly guess its purpose/content/value. In this
-> > > case PORT_CMD_CAP - means PORT CMD capabilities mask. All of the
-> > > possible flags have been set in that mask. There are no more
-> > > capabilities in the PORT CMD register left undeclared. That's why the
-> > > name is selected the way it is and why I haven't added any comment in
-> > > here (what the kernel coding style says about the over-commenting the
-> > > code).
+> > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> > > 
+> > > ---
+> > > 
+> > > Changelog v2:
+> > > - Replace min/max constraints of the snps,{tx,rx}-ts-max property with
+> > >   enum [ 1, 2, 4, ..., 1024 ]. (@Rob)
+> > > 
+> > > Changelog v4:
+> > > - Decrease the "additionalProperties" property identation otherwise it's
+> > >   percieved as the node property instead of the key one. (@Rob)
+> > > - Use the ahci-port properties definition from the AHCI common schema
+> > >   in order to extend it with DWC AHCI SATA port properties. (@Rob)
+> > > - Remove the Hannes' rb tag since the patch content has changed.
+> > > ---
+> > >  .../bindings/ata/ahci-platform.yaml           |   8 --
+> > >  .../bindings/ata/snps,dwc-ahci.yaml           | 129 ++++++++++++++++++
+> > >  2 files changed, 129 insertions(+), 8 deletions(-)
+> > >  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> > > 
+> > > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> > > index e19cf9828e68..7dc2a2e8f598 100644
+> > > --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> > > +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> > > @@ -30,8 +30,6 @@ select:
+> > >            - marvell,armada-3700-ahci
+> > >            - marvell,armada-8k-ahci
+> > >            - marvell,berlin2q-ahci
+> > > -          - snps,dwc-ahci
+> > > -          - snps,spear-ahci
+> > >    required:
+> > >      - compatible
+> > >  
+> > > @@ -48,17 +46,11 @@ properties:
+> > >                - marvell,berlin2-ahci
+> > >                - marvell,berlin2q-ahci
+> > >            - const: generic-ahci
+> > > -      - items:
+> > > -          - enum:
+> > > -              - rockchip,rk3568-dwc-ahci
+> > > -          - const: snps,dwc-ahci
+> > >        - enum:
+> > >            - cavium,octeon-7130-ahci
+> > >            - hisilicon,hisi-ahci
+> > >            - ibm,476gtr-ahci
+> > >            - marvell,armada-3700-ahci
+> > > -          - snps,dwc-ahci
+> > > -          - snps,spear-ahci
+> > >  
+> > >    reg:
+> > >      minItems: 1
+> > > diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> > > new file mode 100644
+> > > index 000000000000..af78f6c9b857
+> > > --- /dev/null
+> > > +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> > > @@ -0,0 +1,129 @@
+> > > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > > +%YAML 1.2
+> > > +---
+> > > +$id: http://devicetree.org/schemas/ata/snps,dwc-ahci.yaml#
+> > > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > > +
+> > > +title: Synopsys DWC AHCI SATA controller
+> > > +
+> > > +maintainers:
+> > > +  - Serge Semin <fancer.lancer@gmail.com>
+> > > +
+> > > +description:
+> > > +  This document defines device tree bindings for the Synopsys DWC
+> > > +  implementation of the AHCI SATA controller.
+> > > +
+> > > +allOf:
+> > > +  - $ref: ahci-common.yaml#
+> > > +
+> > > +properties:
+> > > +  compatible:
+> > > +    oneOf:
+> > > +      - description: Synopsys AHCI SATA-compatible devices
+> > > +        contains:
+> > > +          const: snps,dwc-ahci
+> > > +      - description: SPEAr1340 AHCI SATA device
+> > > +        const: snps,spear-ahci
+> > > +      - description: Rockhip RK3568 ahci controller
+> > > +        const: rockchip,rk3568-dwc-ahci
 > > 
 > 
-> > Yes, I understood from the name what it is. What I do NOT understand is
-> > why all the feature bits are not there. Why this subset only ? A comment
-> > about that would be nice so that the reason for it is not lost.
+> > This is never true because there is a fallback. We should keep what we 
+> > had before.
 > 
-> Well, because it's indeed "PORT_CMD capabilities mask", and not features,
-> not setups, not settings, not status flags, etc. As I said all the port
-> Capabilities have been listed in that mask:
-> PORT_CMD_FBSCP	BIT(22) - FIS-based Switching Capable Port
-> PORT_CMD_ESP	BIT(21) - External SATA Port
-> PORT_CMD_CPD	BIT(20) - Cold Presence Detect
-> PORT_CMD_MPSP	BIT(19) - Mechanical Presence Switch Attached to Port
-> PORT_CMD_HPCP	BIT(18) - Hot Plug Capable Port
-> I've or'ed-them-up in a single mask => PORT_CMD_CAP in order to work
-> with them independently from the rest of the PORT_CMD CSR fields.
+> Could you be more specific what you meant? I don't see
+> "snps,spear-ahci" and "rockchip,rk3568-dwc-ahci" used with the fallback
+> string so modification is correct in that case.
 > 
-> Unlike the generic controller CAP/CAP2 registers, which consists of the
-> device capabilities only, PORT_CMD contains various R/W settings (PM, LED
-> driver, etc), RO status flags (CMD-list running, FIS recv running, etc)
-> and amongst other the RO/Wo !port-specific capabilities!. The later ones
-> indicate the platform-specific device features. Since the register
-> contains flags with the intermixed nature, I need to have a mask to at
-> least get the capabilities and preserve them between the device
-> resets. That's why the PORT_CMD_CAP has been introduced in the
-> framework of this patch. Its name was chosen with a reference to the
-> CAP registers, see:
-> HOST_CAP, HOST_CAP2, and finally my PORT_CMD_CAP.
+> My idea was to have the compatible strings with the required generic
+> fallback "snps,dwc-ahci" for all new devices thus identifying the
+> controller IP-core origin. But later you said "The generic IP block
+> fallbacks have proven to be useless." I do agree that functionally it
+> isn't that often used, but in some cases it can be handy for instance
+> to implement quirks in the generic code or use the fallback as an
+> additional info regarding the IP-core origin/version. So if I were you
+> I wouldn't be that strict about dropping the generic IP-core fallback
+> identifier. It's much easier to have it specified from the very
+> beginning than adding it after it has been declared as not required.
 > 
 > > 
-> > > 
-> > >>
-> > >> Sure I can go and read the specs to figure it out. But again, a comment would
-> > >> avoid readers of the code to have to decrypt all that.
-> > > 
-> > > If you still insist on having an additional comment. I can add
-> > > something like "/* PORT_CMD capabilities mask */". Are you ok with it?
+> > 
+> > > +
+> > > +  reg:
+> > > +    maxItems: 1
+> > > +
+> > > +  interrupts:
+> > > +    maxItems: 1
+> > > +
+> > > +  clocks:
+> > > +    description:
+> > > +      Basic DWC AHCI SATA clock sources like application AXI/AHB BIU clock
+> > > +      and embedded PHYs reference clock together with vendor-specific set
+> > > +      of clocks.
+> > > +    minItems: 1
+> > > +    maxItems: 4
+> > > +
+> > > +  clock-names:
+> > > +    contains:
+> > > +      anyOf:
+> > > +        - description: Application AXI/AHB BIU clock source
+> > > +          enum:
+> > > +            - aclk
+> > > +            - sata
+> > > +        - description: SATA Ports reference clock
+> > > +          enum:
+> > > +            - ref
+> > > +            - sata_ref
+> > > +
+> > > +  resets:
+> > > +    description:
+> > > +      At least basic core and application clock domains reset is normally
+> > > +      supported by the DWC AHCI SATA controller. Some platform specific
+> > > +      clocks can be also specified though.
 > > 
 > 
-> > That does not help on its own. The macro name says that already. I would
-> > like a note about why only these features are selected.
+> > s/clocks/resets/ ?
 > 
-> Please see the explanation above. I don't see what else to say about
-> that mask, because in short what I said above really means "PORT_CMD
-> capabilities mask". So should you have some more clever text, which
-> would be more suitable here, please tell me and I'll add it to the
-> patch.
+> Right, but only in the reference to "platform specific clocks" -> "... resets".
 > 
-> Regarding what you said earlier. In order to fully understand the
-> AHCI driver a hacker would always need to read the specs. There is
-> just no way to do that effectively enough without the controller
-> manual at hands. And the PORT_CMD capabilities isn't the most
-> complicated part of the device.
+> > 
+> > This allows any number of resets which isn't great. I think this schema 
+> > should just be the 'simple' cases where there's only 1 reset and 1 
+> > clock (or how many the DWC block actually has if you have that info). 
+> > More complicated cases get there own schema.
+> 
+> DWC SATA reference manual claims there can be resets implemented to
+> each clock domain.
+> 1) PM-clk <- PM-rst - PM keep-alive clock/reset.
+> 2) aclk/hclk <- aresetn/hresetn - AXI/AHB clock domain/reset.
+> 3) rbc*_clk <- rbc*_rst - PHY Receive Clock domain/reset. (Up to
+> number of ports <= 8.)
+> 4) asic*_clk <- asic*_rst - PHY Transmit Clock domain/reset. (Up to
+> number of ports <= 8.)
+> 5) rxoob*_clk <- rxoob*_rst - RxOOB Detection Clock domain/reset. (Up
+> to number of ports <= 8.)
+> 
+> So to speak the IP-core can be equipped with up to 26 clocks and
+> resets. Should we be more strict we would have needed to define the
+> properties with all the names above and permit up to 26 clocks/resets
+> items. (Do you want it to be done?). In our case for instance there
+> is "aclk" and a single common "ref" clock for all 3, 4 and 5 domain
+> (clock 1 is missing).
 > 
 > -Sergey
 > 
 > > 
+> > > +
+> > > +  reset-names:
+> > > +    contains:
+> > > +      description: Core and application clock domains reset control
+> > > +      const: arst
+> > > +
+> > > +patternProperties:
+> > > +  "^sata-port@[0-9a-e]$":
+> > > +    $ref: '#/$defs/dwc-ahci-port'
+> > > +
+> > > +    unevaluatedProperties: false
+> > > +
+> > > +required:
+> > > +  - compatible
+> > > +  - reg
+> > > +  - interrupts
+> > > +
+> > > +unevaluatedProperties: false
+> > > +
+> > > +$defs:
+> > > +  dwc-ahci-port:
+> > > +    $ref: /schemas/ata/ahci-common.yaml#/$defs/ahci-port
+> > > +
+> > > +    properties:
+> > > +      reg:
+> > > +        minimum: 0
+> > > +        maximum: 7
+> > > +
+> > > +      snps,tx-ts-max:
+> > > +        $ref: /schemas/types.yaml#/definitions/uint32
+> > > +        description: Maximal size of Tx DMA transactions in FIFO words
+> > > +        enum: [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ]
+> > > +
+> > > +      snps,rx-ts-max:
+> > > +        $ref: /schemas/types.yaml#/definitions/uint32
+> > > +        description: Maximal size of Rx DMA transactions in FIFO words
+> > > +        enum: [ 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 ]
+> > > +
+> > > +examples:
+> > > +  - |
+> > > +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > > +    #include <dt-bindings/ata/ahci.h>
+> > > +
+> > > +    sata@122f0000 {
+> > > +      compatible = "snps,dwc-ahci";
+> > > +      reg = <0x122F0000 0x1ff>;
+> > > +      #address-cells = <1>;
+> > > +      #size-cells = <0>;
+> > > +
+> > > +      interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
+> > > +
+> > > +      clocks = <&clock1>, <&clock2>;
+> > > +      clock-names = "aclk", "ref";
+> > > +
+> > > +      phys = <&sata_phy>;
+> > > +      phy-names = "sata-phy";
+> > > +
+> > > +      ports-implemented = <0x1>;
+> > > +
+> > > +      sata-port@0 {
+> > > +        reg = <0>;
+> > > +
+> > > +        hba-port-cap = <HBA_PORT_FBSCP>;
+> > > +
+> > > +        snps,tx-ts-max = <512>;
+> > > +        snps,rx-ts-max = <512>;
+> > > +      };
+> > > +    };
+> > > +...
+> > > -- 
+> > > 2.35.1
 > > > 
-> > > -Sergey
 > > > 
-> > >>
-> > >>>
-> > >>> -Sergey
-> > >>>
-> > >>>>
-> > >>>>> +
-> > >>>>>  	/* PORT_FBS bits */
-> > >>>>>  	PORT_FBS_DWE_OFFSET	= 16, /* FBS device with error offset */
-> > >>>>>  	PORT_FBS_ADO_OFFSET	= 12, /* FBS active dev optimization offset */
-> > >>>>
-> > >>>>
-> > >>>> -- 
-> > >>>> Damien Le Moal
-> > >>>> Western Digital Research
-> > >>
-> > >>
-> > >> -- 
-> > >> Damien Le Moal
-> > >> Western Digital Research
-> > 
-> > 
-> > -- 
-> > Damien Le Moal
-> > Western Digital Research
