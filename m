@@ -2,92 +2,105 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF1DC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jun 2022 13:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC973C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jun 2022 18:39:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346703AbiF1NgQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Jun 2022 09:36:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38990 "EHLO
+        id S232011AbiF1SjT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 28 Jun 2022 14:39:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346592AbiF1NgJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 09:36:09 -0400
-Received: from mail-il1-f179.google.com (mail-il1-f179.google.com [209.85.166.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF44224F09;
-        Tue, 28 Jun 2022 06:36:08 -0700 (PDT)
-Received: by mail-il1-f179.google.com with SMTP id p9so7874111ilj.7;
-        Tue, 28 Jun 2022 06:36:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ljfrFcLSCQwuvYluVxziFP0rt3DXED+J1iuyt0fYGuY=;
-        b=3zLsffXYoQkgYhpoUz7XmQhIj3o/EN35+IBqM9oRD0FyG0pYLbpAY4vqOL1qRXRu4P
-         5o4Jmpxp4PuMPdy9AEnTNmeXXMkvhBD35cyGrEYgPOJbxzWJnDY25AWGkVhd3NktKCE4
-         +vKqieyqLIW4BxPeGzQ1gXhzyCyCw3TeN9GC8AyQoG33vgq6fJ4Rgq8y8Gpp3f6a1Eax
-         kPAbiEbsjuQOyhckXYxvUamJUsXrAk7LoExqo/uXHQ8sdLJOpcRbOe1ghTgN3ZD3vtn+
-         //tvDaezmIcFwB860/wUQ70cwe3jPdv4PLznOEPGjE1NSMiOCc9P+D7PNE0voZZpYcPu
-         KrzA==
-X-Gm-Message-State: AJIora/6Az5xzdn0rhBc0RxZIJqu1ZQf5PxRVunpnUWbwoSAebhDonc1
-        gK6RcA2tVbm/UN3UcrCVzA==
-X-Google-Smtp-Source: AGRyM1tz7l70wGgbXl1juQ9asscmdPKCNmGgwRZqzsjZjzvBQK+ON1vZmV/hujutLLIezpH/spOGDw==
-X-Received: by 2002:a05:6e02:180d:b0:2d9:26a6:d016 with SMTP id a13-20020a056e02180d00b002d926a6d016mr10482078ilv.170.1656423367965;
-        Tue, 28 Jun 2022 06:36:07 -0700 (PDT)
-Received: from robh.at.kernel.org ([64.188.179.253])
-        by smtp.gmail.com with ESMTPSA id bg13-20020a0566383c4d00b00339edc9d877sm1698361jab.120.2022.06.28.06.36.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jun 2022 06:36:07 -0700 (PDT)
-Received: (nullmailer pid 341603 invoked by uid 1000);
-        Tue, 28 Jun 2022 13:36:05 -0000
-Date:   Tue, 28 Jun 2022 07:36:05 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Piyush Mehta <piyush.mehta@xilinx.com>
-Cc:     devicetree@vger.kernel.org, michal.simek@xilinx.com,
-        sivadur@xilinx.com, krzysztof.kozlowski+dt@linaro.org,
-        git@xilinx.com, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, robh+dt@kernel.org,
-        damien.lemoal@opensource.wdc.com
-Subject: Re: [PATCH V5] dt-bindings: ata: ahci-ceva: convert to yaml
-Message-ID: <20220628133605.GA341535-robh@kernel.org>
-References: <20220620073717.3079-1-piyush.mehta@xilinx.com>
+        with ESMTP id S230350AbiF1SjS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 14:39:18 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AEE222B10;
+        Tue, 28 Jun 2022 11:39:15 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.79.109) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 28 Jun
+ 2022 21:39:06 +0300
+Subject: Re: [PATCH] ata: pata_cs5535: Fix W=1 warnings
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1656335540-50293-1-git-send-email-john.garry@huawei.com>
+ <16f727b8-c3b0-c828-0c5b-6728a6e7934f@opensource.wdc.com>
+ <9044b81f-76db-75de-db74-f45d6e5ea71e@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <d26b8345-02e9-e461-c506-b429c44f74df@omp.ru>
+Date:   Tue, 28 Jun 2022 21:39:04 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220620073717.3079-1-piyush.mehta@xilinx.com>
+In-Reply-To: <9044b81f-76db-75de-db74-f45d6e5ea71e@omp.ru>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [178.176.79.109]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/28/2022 18:16:56
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 171420 [Jun 28 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 491 491 a718ef6dc942138335b0bcd7ab07f27b5c06005e
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_arrow_text}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.79.109 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.79.109:7.4.1,7.1.2;127.0.0.199:7.1.2;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: {iprep_blacklist}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.79.109
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/28/2022 18:19:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/28/2022 2:57:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 20 Jun 2022 13:07:17 +0530, Piyush Mehta wrote:
-> Convert the ahci-ceva doc to yaml.
-> 
-> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
-> ---
-> Changes for V2:
-> - Corrected the patch --prefix V3 to V2.
-> - Added Required properties.
-> 
-> Changes for V3:
-> - Skip patch --prefix [PATCH V3] as already sent.
-> 
-> Changes for V4:
-> - Addressed Rob review comments:-
->  - Update params description
->  - Removed description from common properties.
->  - Deleted deprecated property.
-> - Warning generated from: 'make dtbs_check'
->  - Thanks Rob: We are aware of these warnings,
->    but they are unrelated to this patch.
-> 
-> Changes for V5:
-> - Addressed Rob review comments:-
->  - Upadte the file name with ceva,ahci-1v84.yaml
->  - Fix dtbs_check warnings: added iommu and phy-name property.
-> ---
->  .../devicetree/bindings/ata/ahci-ceva.txt     |  63 ------
->  .../bindings/ata/ceva,ahci-1v84.yaml          | 189 ++++++++++++++++++
->  2 files changed, 189 insertions(+), 63 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> 
+On 6/28/22 1:05 PM, Sergey Shtylyov wrote:
+[...]
+>>> x86_64 allmodconfig build with W=1 gives these warnings:
+>>>
+>>> drivers/ata/pata_cs5535.c: In function ‘cs5535_set_piomode’:
+>>> drivers/ata/pata_cs5535.c:93:11: error: variable ‘dummy’ set but not used [-Werror=unused-but-set-variable]
+>>>   u32 reg, dummy;
+>>>            ^~~~~
+>>> drivers/ata/pata_cs5535.c: In function ‘cs5535_set_dmamode’:
+>>> drivers/ata/pata_cs5535.c:132:11: error: variable ‘dummy’ set but not used [-Werror=unused-but-set-variable]
+>>>   u32 reg, dummy;
+>>>            ^~~~~
+>>> cc1: all warnings being treated as errors
+>>>
+>>> Mark variables 'dummy' as "maybe unused" to satisfy when rdmsr() is
+>>> stubbed, which is the same as what we already do in pata_cs5536.c .
 
-Applied, thanks!
+   Wait, what do you mean by "stubbed", the version in <asm/paravirt.h>?
+
+>>>
+>>> Signed-off-by: John Garry <john.garry@huawei.com>
+> 
+> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+[...]
+
+MBR, Sergey
