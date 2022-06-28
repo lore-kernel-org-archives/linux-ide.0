@@ -2,51 +2,52 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B694EC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jun 2022 11:28:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08497C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jun 2022 11:34:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230376AbiF1L2P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Jun 2022 07:28:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51970 "EHLO
+        id S241500AbiF1LeF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 28 Jun 2022 07:34:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345332AbiF1L1m (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 07:27:42 -0400
+        with ESMTP id S231250AbiF1LeE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 07:34:04 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F6512CDFC;
-        Tue, 28 Jun 2022 04:27:40 -0700 (PDT)
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LXMhd247Pz6H6w8;
-        Tue, 28 Jun 2022 19:25:21 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8262F2FFD4;
+        Tue, 28 Jun 2022 04:34:02 -0700 (PDT)
+Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LXMnz3Xjcz686M3;
+        Tue, 28 Jun 2022 19:29:59 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
+ fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 28 Jun 2022 13:27:38 +0200
+ 15.1.2375.24; Tue, 28 Jun 2022 13:34:00 +0200
 Received: from [10.126.174.22] (10.126.174.22) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 28 Jun 2022 12:27:37 +0100
-Message-ID: <a2e717d0-c3e2-ea98-9d8b-cee1fd37c117@huawei.com>
-Date:   Tue, 28 Jun 2022 12:27:38 +0100
+ 15.1.2375.24; Tue, 28 Jun 2022 12:33:59 +0100
+Message-ID: <38ae1cc8-1411-bb54-e082-0f7b91cb9e63@huawei.com>
+Date:   Tue, 28 Jun 2022 12:33:58 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH v4 1/5] dma-mapping: Add dma_opt_mapping_size()
-To:     Robin Murphy <robin.murphy@arm.com>,
-        <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <m.szyprowski@samsung.com>
+Subject: Re: [PATCH v4 5/5] libata-scsi: Cap ata_device->max_sectors according
+ to shost->max_sectors
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>, <hch@lst.de>
 CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
         <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>
+        <linuxarm@huawei.com>, <joro@8bytes.org>, <will@kernel.org>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
 References: <1656343521-62897-1-git-send-email-john.garry@huawei.com>
- <1656343521-62897-2-git-send-email-john.garry@huawei.com>
- <bbca5df5-8681-d6d9-201d-3d48b34e3001@arm.com>
+ <1656343521-62897-6-git-send-email-john.garry@huawei.com>
+ <b69c6112-98b7-3890-9d11-bb321a7c877a@opensource.wdc.com>
+ <6619638c-52e8-cb67-c56c-9c9d38c18161@huawei.com>
+ <ba59a0da-a982-e3eb-1cb7-6e60f80fd319@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <bbca5df5-8681-d6d9-201d-3d48b34e3001@arm.com>
+In-Reply-To: <ba59a0da-a982-e3eb-1cb7-6e60f80fd319@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.126.174.22]
 X-ClientProxiedBy: lhreml726-chm.china.huawei.com (10.201.108.77) To
  lhreml724-chm.china.huawei.com (10.201.108.75)
@@ -55,25 +56,17 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 28/06/2022 12:23, Robin Murphy wrote:
->> +
->> +    size_t
->> +    dma_opt_mapping_size(struct device *dev);
->> +
->> +Returns the maximum optimal size of a mapping for the device. Mapping 
->> large
->> +buffers may take longer so device drivers are advised to limit total DMA
->> +streaming mappings length to the returned value.
+On 28/06/2022 10:14, Damien Le Moal wrote:
+>> BTW, this patch has no real dependency on the rest of the series, so
+>> could be taken separately if you prefer.
+> Sure, you can send it separately. Adding it through the scsi tree is fine too.
 > 
-> Nit: I'm not sure "advised" is necessarily the right thing to say in 
-> general - that's only really true for a caller who cares about 
-> throughput of churning through short-lived mappings more than anything 
-> else, and doesn't take a significant hit overall from splitting up 
-> larger requests. I do think it's good to clarify the exact context of 
-> "optimal" here, but I'd prefer to be objectively clear that it's for 
-> workloads where the up-front mapping overhead dominates.
 
-Ok, sure, I can make that clear.
+Well Christoph originally offered to take this series via the 
+dma-mapping tree.
+
+@Christoph, is that still ok with you? If so, would you rather I send 
+this libata patch separately?
 
 Thanks,
-John
+john
