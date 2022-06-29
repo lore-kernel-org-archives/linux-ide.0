@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD47C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 29 Jun 2022 01:15:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F076C43334
+	for <linux-ide@archiver.kernel.org>; Wed, 29 Jun 2022 01:35:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229494AbiF2BPA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Jun 2022 21:15:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52616 "EHLO
+        id S229681AbiF2BfV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 28 Jun 2022 21:35:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbiF2BO7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 21:14:59 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF23921E1B
-        for <linux-ide@vger.kernel.org>; Tue, 28 Jun 2022 18:14:56 -0700 (PDT)
+        with ESMTP id S229547AbiF2BfV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jun 2022 21:35:21 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97BD625C7C
+        for <linux-ide@vger.kernel.org>; Tue, 28 Jun 2022 18:35:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1656465295; x=1688001295;
+  t=1656466519; x=1688002519;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=AYc1C7eAxiSsjnqUN0DfBfGp3xXz3pkgOLsc25aNAnI=;
-  b=W3PA6N2s6WIN14it2c0CAgXPHslFgt5kcXlTAXkIxOKdKC+xdDA0kO9p
-   Y3rqV95lx3yrM9Zow347iwIu2RSJMlgA5YHRLVBfEzbPV6Sg3wX7tjK8d
-   iiXwJVWcvfRYXSaTljFWOzrs7l04RzQkymW8Q43BrDocEU21ZrPALB6+/
-   bDoihJnm6C18WirNRzZhm6hmvYCJUoRHq9yam0JYOw41/gqEmL+DrQZd/
-   Krg6oNqDHxdmYZP1SAakvcBblWeHFz22TaC6dWmFTRamXLuAlhV9YMgTE
-   i2IZEnNRUmysP+mgcOf3AjxWsn/7QihQYX+6XMrEJzV+bKfArBtAPD+K6
-   w==;
+  bh=s/ZcR4rZ2s2VxX2a+v+kNduBcbXrq+qY3otwjZQxkI8=;
+  b=mv6TttMaeyGtL5pInW/ApBBQosEtRHO4tPAyDOyMKjTw4cvpjsEOBRW9
+   HD9JEfbtzTJcgd0qqYcYDI547Rs+VvObJtQiuMfVfRuMCAgVrERSUe+NG
+   ZS+GL4gHnhoYm64JeQgM0gljARoox+McJIDuTC9NrhxQ1evyjh77ng2PX
+   xejxtef7TXRw2oNInEZY1XRFXjmurEUEGPaMOwW9tZIhleVJJIUVhvAGX
+   LhGcJZZMazR4eGzfkjr9GV+O/BK5ynJTiFU1BBJArJiIlo9qOKfB6n6Rp
+   I2yRz+Wqq4r1fw7slcPKKReanNxUGpotUXhTuaUmOiS3GlOXLzM9EXXl9
+   A==;
 X-IronPort-AV: E=Sophos;i="5.92,230,1650902400"; 
-   d="scan'208";a="209212491"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Jun 2022 09:14:54 +0800
-IronPort-SDR: egmvbxTwcZj4K9pPOYHysgPWGeukbtPLKS2WmxjGrs+T6QDZlwaefLnftSKvTzrW3b8+eS0fnZ
- /+vUcd41WYcmXSemH5WGX2ZnPj4ePGA2JzeGRrJ6aBAkaruBdjx7GXjNz7vAb3MPgdZagJaXRB
- Lv14L2RCwtx+XcDK0QEd/531chXMkSrYOhnyMMrsWPS98PHwr2afaqyAYOd5WVjPcDhCjeD3RC
- GCAwL6ZkKZ0DlF3rM/lBDEWBMUhz0zVYTt/XoKpIGma2Q2ONZBd/EX0j+ijI1kK4RQnAr10y1N
- yfr6Jb1+DTWwnBfGDwFpz0Ax
+   d="scan'208";a="203017038"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Jun 2022 09:35:18 +0800
+IronPort-SDR: 4c780DRr1H246Oi+IqTftm2p7hWDlnFSBdxRI+LVDMvp2zUY21i53ZQfO3xoshZ4/5vRbxRIwW
+ XMgZFQi0XbWgLM3njHJKHGGZeVSRpM+llr6rOIrnOpY+dIixCiZkDJk4tiIP9XwijJHYQM6Y4F
+ 2c+GFTE57ecG12sQoagKvfRz6uiSyIQGisaD0qAWLHTztCcqv1c5NBeJh1cKP3TA1AzllYOBww
+ aJwkJOCj4CUbsawVdLz0xPo9GoxquRfie0Pv0lHCoWqHBYW4z/fi+/scfGTF0ZT9zBYIbea4wg
+ 5Fff4T2T4QDWwK/XkRl0HaE5
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 17:37:16 -0700
-IronPort-SDR: uW9PBNWg9GPZ1g5fGELrQQO+y0bXgwBf+Cns6W28jLzJb8ldJUCUooJrT05GIAz3WSPddNucB/
- B50QJhGPxT7HsBRAOLKHdgT647ptkDeo6HZ6ijmsMJ86phFWJy9C08KgOfyTn1rJfN295rP8vN
- SuDMxXdTCfbTTGrLkHx47DDsnUJyvSzEZ0KLWopMSvkB8Yys1AoXhcqH1G+V85p5DxXypHcXvR
- A4WL25YCp5IVmWTHkYnE+VV/1nej6se617dViZep/TH6TBCztXj2j3NcoVyCBqhRBCYMJi5bwc
- rRA=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 17:52:57 -0700
+IronPort-SDR: H+dngeX1vNkYPGnw77Z7u59FN5aKNbATN0gl/I21Q4qpZeWyVgjSK/LKq76K8lFl1oEMwmE7jl
+ MoJJ89eNrn3goYbRDsi3ZaELMMd3F/+7jxeEjshmJHJWuVfQze+ADNJO67/gDMpgmlkb3vflgi
+ mIX8OoOPlvZWI4BumSLRndLh9CVUaaioiHcDRvNKyBeB5WVrPO1nJQK0AIYQcaTd8z0JUjlN9M
+ oxcL9S3HREGCJJ6qni5DRAh2HIHsNNjiOfpQiVej4Dv7RDqOjYzDq5sEVS2BiObS26mZH6AsKY
+ syw=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 18:14:57 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jun 2022 18:35:19 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LXk5q5fKwz1Rw4L
-        for <linux-ide@vger.kernel.org>; Tue, 28 Jun 2022 18:14:55 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LXkYL1xdvz1Rwnx
+        for <linux-ide@vger.kernel.org>; Tue, 28 Jun 2022 18:35:18 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,92 +56,236 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1656465295; x=1659057296; bh=AYc1C7eAxiSsjnqUN0DfBfGp3xXz3pkgOLs
-        c25aNAnI=; b=L+6U2OIAVD0dFDb0iy7lxvcqo3tUox6FvfgHf7QQNcBCRFrDd0n
-        wohPyiEeCAMGb+PZXUd63cDeaipUrfLckDK+ULIIjKxMqxBA/KJv1MbvfXe5T95W
-        a9OJohnTf2PIhLgKoqn6+UOzZnpgQz6yVrVqn3wA2z+rGVvxE0KgUgTUKzWfmXRq
-        I/yeTq24PFuQfBIfXM2ZRZKJiz/aVwfFvvVNqideW3tR7WcFf1pw73FjYybJQIuz
-        fwhnuyG8M9kf9zrg2wS24fVqUWyhsv80qKzUjpKFvr4oNsi+sAKCl6Jxa9U9/vqB
-        XUfO998RBhxIiM8ufMhIZVNacfogOyScx4g==
+        1656466516; x=1659058517; bh=s/ZcR4rZ2s2VxX2a+v+kNduBcbXrq+qY3ot
+        wjZQxkI8=; b=OmeTcmBgcAZrnVoZTECVFgEfp9RwKPbEgdJUcSqX4PVm0TaRTaz
+        1tErG/4HgZKYjBqGsGZ19zTSkypuS5zKKrqYOSBRtWhkxftZoe6shd6MWeNJFqvK
+        WPV6lZuYkZdo5+R/+wCJ58+C9FTWmcu6GVfPIDl5umJEXCg65xkI3XhcvxiZUZXK
+        NUQ4SKY4wjw2vxGOKgF1jZcEGukCoqWeAcZgOu95Eu9+NnLopNANsn5AFPK/ce0J
+        hJ1EAb15HS/rzSx6SpUbrdd0gZunylqO2pmmlOnPFrAfg2DlDEHm6yRjk18vFc6s
+        1nQKrlae7I4bFc21qpizbg//DRPfFPKQ3bA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id vHzbp1C02Y78 for <linux-ide@vger.kernel.org>;
-        Tue, 28 Jun 2022 18:14:55 -0700 (PDT)
+        with ESMTP id qq_w-vsSpkLX for <linux-ide@vger.kernel.org>;
+        Tue, 28 Jun 2022 18:35:16 -0700 (PDT)
 Received: from [10.225.163.99] (unknown [10.225.163.99])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LXk5p2XxVz1RtVk;
-        Tue, 28 Jun 2022 18:14:54 -0700 (PDT)
-Message-ID: <9fd807fd-f019-4ad2-7f4f-6746e05098bf@opensource.wdc.com>
-Date:   Wed, 29 Jun 2022 10:14:52 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LXkYG5x5vz1RtVk;
+        Tue, 28 Jun 2022 18:35:14 -0700 (PDT)
+Message-ID: <3dade607-71a5-28ad-fb0b-f5b75c1b5392@opensource.wdc.com>
+Date:   Wed, 29 Jun 2022 10:35:13 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.10.0
-Subject: Re: [PATCH] ata: pata_cs5535: Fix W=1 warnings
+Subject: Re: [PATCH v4 12/23] ata: libahci: Extend port-cmd flags set with
+ port capabilities
 Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        John Garry <john.garry@huawei.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1656335540-50293-1-git-send-email-john.garry@huawei.com>
- <16f727b8-c3b0-c828-0c5b-6728a6e7934f@opensource.wdc.com>
- <9044b81f-76db-75de-db74-f45d6e5ea71e@omp.ru>
+To:     Serge Semin <fancer.lancer@gmail.com>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+References: <20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru>
+ <20220610081801.11854-13-Sergey.Semin@baikalelectronics.ru>
+ <d06e9910-527e-cfa2-f2df-737fb4799fe5@opensource.wdc.com>
+ <20220615205819.uiqptkqm5qfdvrbj@mobilestation>
+ <903e273a-9dc5-f0df-5391-e96e63318323@opensource.wdc.com>
+ <20220617203100.jg2o7ponolaenf6r@mobilestation>
+ <f560ca8b-d921-d228-64f0-74e320f8af67@opensource.wdc.com>
+ <20220618081055.grsrjxa5gqiuhy2i@mobilestation>
+ <20220628120820.3nprogcpe2l3bcm4@mobilestation>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <9044b81f-76db-75de-db74-f45d6e5ea71e@omp.ru>
+In-Reply-To: <20220628120820.3nprogcpe2l3bcm4@mobilestation>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/28/22 19:05, Sergey Shtylyov wrote:
-> Hello!
->=20
-> On 6/28/22 11:59 AM, Damien Le Moal wrote:
-> [...]
->>> x86_64 allmodconfig build with W=3D1 gives these warnings:
+On 6/28/22 21:08, Serge Semin wrote:
+> Damien,
+> Any notes to the comments below?
+
+Been very busy and had no time to look at this. Please post your latest
+version of the series and we'll go from there.
+
+> 
+> -Sergey
+> 
+> On Sat, Jun 18, 2022 at 11:10:55AM +0300, Serge Semin wrote:
+>> On Sat, Jun 18, 2022 at 03:52:28PM +0900, Damien Le Moal wrote:
+>>> On 6/18/22 05:31, Serge Semin wrote:
+>>>> On Thu, Jun 16, 2022 at 09:28:18AM +0900, Damien Le Moal wrote:
+>>>>> On 2022/06/16 5:58, Serge Semin wrote:
+>>>>>> On Tue, Jun 14, 2022 at 05:32:41PM +0900, Damien Le Moal wrote:
+>>>>>>> On 6/10/22 17:17, Serge Semin wrote:
+>>>>>>>> Currently not all of the Port-specific capabilities listed in the
+>>>>>>>
+>>>>>>> s/listed/are listed
+>>>>>>>
+>>>>>>>> PORT_CMD-enumeration. Let's extend that set with the Cold Presence
+>>>>>>>> Detection and Mechanical Presence Switch attached to the Port flags [1] so
+>>>>>>>> to closeup the set of the platform-specific port-capabilities flags.  Note
+>>>>>>>> these flags are supposed to be set by the platform firmware if there is
+>>>>>>>> one. Alternatively as we are about to do they can be set by means of the
+>>>>>>>> OF properties.
+>>>>>>>>
+>>>>>>>> While at it replace PORT_IRQ_DEV_ILCK with PORT_IRQ_DMPS and fix the
+>>>>>>>> comment there. In accordance with [2] that IRQ flag is supposed to
+>>>>>>>> indicate the state of the signal coming from the Mechanical Presence
+>>>>>>>> Switch.
+>>>>>>>>
+>>>>>>>> [1] Serial ATA AHCI 1.3.1 Specification, p.27
+>>>>>>>> [2] Serial ATA AHCI 1.3.1 Specification, p.24, p.88
+>>>>>>>>
+>>>>>>>> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+>>>>>>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>>>>>>>>
+>>>>>>>> ---
+>>>>>>>>
+>>>>>>>> Changelog v4:
+>>>>>>>> - Fix the DMPS macros name in the patch log. (@Sergei Shtylyov)
+>>>>>>>> ---
+>>>>>>>>  drivers/ata/ahci.h | 7 ++++++-
+>>>>>>>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>>>>>>>
+>>>>>>>> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+>>>>>>>> index 7d834deefeb9..f501531bd1b3 100644
+>>>>>>>> --- a/drivers/ata/ahci.h
+>>>>>>>> +++ b/drivers/ata/ahci.h
+>>>>>>>> @@ -138,7 +138,7 @@ enum {
+>>>>>>>>  	PORT_IRQ_BAD_PMP	= (1 << 23), /* incorrect port multiplier */
+>>>>>>>>  
+>>>>>>>>  	PORT_IRQ_PHYRDY		= (1 << 22), /* PhyRdy changed */
+>>>>>>>> -	PORT_IRQ_DEV_ILCK	= (1 << 7), /* device interlock */
+>>>>>>>> +	PORT_IRQ_DMPS		= (1 << 7), /* mechanical presence status */
+>>>>>>>>  	PORT_IRQ_CONNECT	= (1 << 6), /* port connect change status */
+>>>>>>>>  	PORT_IRQ_SG_DONE	= (1 << 5), /* descriptor processed */
+>>>>>>>>  	PORT_IRQ_UNK_FIS	= (1 << 4), /* unknown FIS rx'd */
+>>>>>>>> @@ -166,6 +166,8 @@ enum {
+>>>>>>>>  	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+>>>>>>>>  	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
+>>>>>>>>  	PORT_CMD_ESP		= (1 << 21), /* External Sata Port */
+>>>>>>>> +	PORT_CMD_CPD		= (1 << 20), /* Cold Presence Detection */
+>>>>>>>> +	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch */
+>>>>>>>>  	PORT_CMD_HPCP		= (1 << 18), /* HotPlug Capable Port */
+>>>>>>>>  	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+>>>>>>>>  	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+>>>>>>>> @@ -181,6 +183,9 @@ enum {
+>>>>>>>>  	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
+>>>>>>>>  	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
+>>>>>>>>  
+>>>>>>>> +	PORT_CMD_CAP		= PORT_CMD_HPCP | PORT_CMD_MPSP |
+>>>>>>>> +				  PORT_CMD_CPD | PORT_CMD_ESP | PORT_CMD_FBSCP,
+>>>>>>>
+>>>>>>
+>>>>>>> What is this one for ? A comment above it would be nice.
+>>>>>>
+>>>>>> Isn't it obviously inferrable from the definition and the item name?
+>>>>>
+>>>>
+>>>>> I am guessing from the name. Am I guessing OK ? A comment would still be nice.
+>>>>> Why just these bits ? There are more cap/support indicator bits in that port cmd
+>>>>> bitfield. So why this particular set of bits ? What do they mean all together ?
+>>>>
+>>>> Normally the variable/constant name should be self-content (as the
+>>>> kernel coding style doc states and what the common sense suggests). So
+>>>> the reader could correctly guess its purpose/content/value. In this
+>>>> case PORT_CMD_CAP - means PORT CMD capabilities mask. All of the
+>>>> possible flags have been set in that mask. There are no more
+>>>> capabilities in the PORT CMD register left undeclared. That's why the
+>>>> name is selected the way it is and why I haven't added any comment in
+>>>> here (what the kernel coding style says about the over-commenting the
+>>>> code).
 >>>
->>> drivers/ata/pata_cs5535.c: In function =E2=80=98cs5535_set_piomode=E2=
-=80=99:
->>> drivers/ata/pata_cs5535.c:93:11: error: variable =E2=80=98dummy=E2=80=
-=99 set but not used [-Werror=3Dunused-but-set-variable]
->>>   u32 reg, dummy;
->>>            ^~~~~
->>> drivers/ata/pata_cs5535.c: In function =E2=80=98cs5535_set_dmamode=E2=
-=80=99:
->>> drivers/ata/pata_cs5535.c:132:11: error: variable =E2=80=98dummy=E2=80=
-=99 set but not used [-Werror=3Dunused-but-set-variable]
->>>   u32 reg, dummy;
->>>            ^~~~~
->>> cc1: all warnings being treated as errors
+>>
+>>> Yes, I understood from the name what it is. What I do NOT understand is
+>>> why all the feature bits are not there. Why this subset only ? A comment
+>>> about that would be nice so that the reason for it is not lost.
+>>
+>> Well, because it's indeed "PORT_CMD capabilities mask", and not features,
+>> not setups, not settings, not status flags, etc. As I said all the port
+>> Capabilities have been listed in that mask:
+>> PORT_CMD_FBSCP	BIT(22) - FIS-based Switching Capable Port
+>> PORT_CMD_ESP	BIT(21) - External SATA Port
+>> PORT_CMD_CPD	BIT(20) - Cold Presence Detect
+>> PORT_CMD_MPSP	BIT(19) - Mechanical Presence Switch Attached to Port
+>> PORT_CMD_HPCP	BIT(18) - Hot Plug Capable Port
+>> I've or'ed-them-up in a single mask => PORT_CMD_CAP in order to work
+>> with them independently from the rest of the PORT_CMD CSR fields.
+>>
+>> Unlike the generic controller CAP/CAP2 registers, which consists of the
+>> device capabilities only, PORT_CMD contains various R/W settings (PM, LED
+>> driver, etc), RO status flags (CMD-list running, FIS recv running, etc)
+>> and amongst other the RO/Wo !port-specific capabilities!. The later ones
+>> indicate the platform-specific device features. Since the register
+>> contains flags with the intermixed nature, I need to have a mask to at
+>> least get the capabilities and preserve them between the device
+>> resets. That's why the PORT_CMD_CAP has been introduced in the
+>> framework of this patch. Its name was chosen with a reference to the
+>> CAP registers, see:
+>> HOST_CAP, HOST_CAP2, and finally my PORT_CMD_CAP.
+>>
 >>>
->>> Mark variables 'dummy' as "maybe unused" to satisfy when rdmsr() is
->>> stubbed, which is the same as what we already do in pata_cs5536.c .
+>>>>
+>>>>>
+>>>>> Sure I can go and read the specs to figure it out. But again, a comment would
+>>>>> avoid readers of the code to have to decrypt all that.
+>>>>
+>>>> If you still insist on having an additional comment. I can add
+>>>> something like "/* PORT_CMD capabilities mask */". Are you ok with it?
 >>>
->>> Signed-off-by: John Garry <john.garry@huawei.com>
->=20
->=20
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->=20
->> Looks good, but I wonder why I am not getting this warning. I always d=
-o
->> W=3D1 and C=3D1 builds. I tried allmodconfig now and I am not getting =
-the
->> warning...
->=20
->    I can confirm the (fatal) warnings with RedHat gcc 10.3.1... but som=
-ehow they only
-> occur on x86_64 with allmodconfig indeed (which is strange)...
+>>
+>>> That does not help on its own. The macro name says that already. I would
+>>> like a note about why only these features are selected.
+>>
+>> Please see the explanation above. I don't see what else to say about
+>> that mask, because in short what I said above really means "PORT_CMD
+>> capabilities mask". So should you have some more clever text, which
+>> would be more suitable here, please tell me and I'll add it to the
+>> patch.
+>>
+>> Regarding what you said earlier. In order to fully understand the
+>> AHCI driver a hacker would always need to read the specs. There is
+>> just no way to do that effectively enough without the controller
+>> manual at hands. And the PORT_CMD capabilities isn't the most
+>> complicated part of the device.
+>>
+>> -Sergey
+>>
+>>>
+>>>>
+>>>> -Sergey
+>>>>
+>>>>>
+>>>>>>
+>>>>>> -Sergey
+>>>>>>
+>>>>>>>
+>>>>>>>> +
+>>>>>>>>  	/* PORT_FBS bits */
+>>>>>>>>  	PORT_FBS_DWE_OFFSET	= 16, /* FBS device with error offset */
+>>>>>>>>  	PORT_FBS_ADO_OFFSET	= 12, /* FBS active dev optimization offset */
+>>>>>>>
+>>>>>>>
+>>>>>>> -- 
+>>>>>>> Damien Le Moal
+>>>>>>> Western Digital Research
+>>>>>
+>>>>>
+>>>>> -- 
+>>>>> Damien Le Moal
+>>>>> Western Digital Research
+>>>
+>>>
+>>> -- 
+>>> Damien Le Moal
+>>> Western Digital Research
 
-Compiling on x86_64 with allmodconfig with gcc 12 and sparse-0.6.4-2
-(Fedora 36) does not give the warning... Weird.
 
->=20
-> [...]
->=20
-> MBR, Sergey
->=20
-
-
---=20
+-- 
 Damien Le Moal
 Western Digital Research
