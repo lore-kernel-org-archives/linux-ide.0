@@ -2,71 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0779C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 29 Jun 2022 12:16:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF7BC43334
+	for <linux-ide@archiver.kernel.org>; Wed, 29 Jun 2022 13:32:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233438AbiF2MQe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 29 Jun 2022 08:16:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47884 "EHLO
+        id S233850AbiF2Ncb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 29 Jun 2022 09:32:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233263AbiF2MQ1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jun 2022 08:16:27 -0400
-Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D73CE31927;
-        Wed, 29 Jun 2022 05:16:22 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4LY0mv4Wyzz4xD8;
-        Wed, 29 Jun 2022 22:16:15 +1000 (AEST)
-From:   Michael Ellerman <patch-notifications@ellerman.id.au>
-To:     Mark Brown <broonie@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org,
-        linux-serial@vger.kernel.org,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        linux-kernel@vger.kernel.org, Wolfram Sang <wsa@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-i2c@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        netdev@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-spi@vger.kernel.org, linux-can@vger.kernel.org,
-        Jiri Slaby <jirislaby@kernel.org>,
-        chris.packham@alliedtelesis.co.nz,
-        Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc:     Paolo Abeni <pabeni@redhat.com>, Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Eric Dumazet <edumazet@google.com>,
-        Pantelis Antoniou <pantelis.antoniou@gmail.com>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Anatolij Gustschin <agust@denx.de>
-In-Reply-To: <20220507100147.5802-1-andriy.shevchenko@linux.intel.com>
-References: <20220507100147.5802-1-andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH v2 1/4] powerpc/52xx: Remove dead code, i.e. mpc52xx_get_xtal_freq()
-Message-Id: <165650492719.3004956.10259665965182865650.b4-ty@ellerman.id.au>
-Date:   Wed, 29 Jun 2022 22:15:27 +1000
+        with ESMTP id S233838AbiF2Nca (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jun 2022 09:32:30 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9133937034;
+        Wed, 29 Jun 2022 06:32:26 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.80.151) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 29 Jun
+ 2022 16:32:17 +0300
+Subject: Re: [PATCH] ata: pata_cs5535: Fix W=1 warnings
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1656335540-50293-1-git-send-email-john.garry@huawei.com>
+ <69ed5587-52fd-4171-b97f-091df8b377c6@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <9caef01c-b601-c19f-10eb-720e8d7b35dc@omp.ru>
+Date:   Wed, 29 Jun 2022 16:32:17 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
+In-Reply-To: <69ed5587-52fd-4171-b97f-091df8b377c6@opensource.wdc.com>
 Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [31.173.80.151]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 06/29/2022 13:15:36
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 171437 [Jun 29 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 491 491 a718ef6dc942138335b0bcd7ab07f27b5c06005e
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_arrow_text}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.80.151 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.80.151
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/29/2022 13:19:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/29/2022 10:47:00 AM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, 7 May 2022 13:01:44 +0300, Andy Shevchenko wrote:
-> It seems mpc52xx_get_xtal_freq() is not used anywhere. Remove dead code.
+On 6/29/22 4:51 AM, Damien Le Moal wrote:
+
+>> x86_64 allmodconfig build with W=1 gives these warnings:
+>>
+>> drivers/ata/pata_cs5535.c: In function ‘cs5535_set_piomode’:
+>> drivers/ata/pata_cs5535.c:93:11: error: variable ‘dummy’ set but not used [-Werror=unused-but-set-variable]
+>>   u32 reg, dummy;
+>>            ^~~~~
+>> drivers/ata/pata_cs5535.c: In function ‘cs5535_set_dmamode’:
+>> drivers/ata/pata_cs5535.c:132:11: error: variable ‘dummy’ set but not used [-Werror=unused-but-set-variable]
+>>   u32 reg, dummy;
+>>            ^~~~~
+>> cc1: all warnings being treated as errors
+>>
+>> Mark variables 'dummy' as "maybe unused" to satisfy when rdmsr() is
+>> stubbed, which is the same as what we already do in pata_cs5536.c .
+>>
+>> Signed-off-by: John Garry <john.garry@huawei.com>
 > 
-> 
+> Applied to for-5.20. Thanks !
 
-Patches 1-3 applied to powerpc/next.
+   Why not to 5.19? The warnings are fatal as can be seen from the commit log...
 
-[1/4] powerpc/52xx: Remove dead code, i.e. mpc52xx_get_xtal_freq()
-      https://git.kernel.org/powerpc/c/6d056b7254f9954522b7bb9947c8779a013d189f
-[2/4] powerpc/mpc5xxx: Switch mpc5xxx_get_bus_frequency() to use fwnode
-      https://git.kernel.org/powerpc/c/de06fba62af64144aca6f8a8bedbc848d2e5b440
-[3/4] powerpc/52xx: Get rid of of_node assignment
-      https://git.kernel.org/powerpc/c/00bcb550dc60f73d593d2dbb718c4f521c7d7be8
+MBR, Sergey
 
-cheers
