@@ -2,137 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53751C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 29 Jun 2022 23:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF54AC43334
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jun 2022 12:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230482AbiF2XEF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 29 Jun 2022 19:04:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47376 "EHLO
+        id S233844AbiF3MOX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Jun 2022 08:14:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230060AbiF2XEE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jun 2022 19:04:04 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1A5126F1
-        for <linux-ide@vger.kernel.org>; Wed, 29 Jun 2022 16:04:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1656543843; x=1688079843;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=ptrmLR99DmPF+HuZkx+sytXL0IpohrYTge6kXuvw7is=;
-  b=WWLjb5x6pOIiuR+1bu5aPwSQkJFPQt/mCqD3KyO7r7mCkDdplcqEIEr+
-   URbCBoSeDMMUeidHYfVe69yF72/8zMFcxNsFLNAIqszCPvFDNkLUR5cj0
-   FGIirMb+0iPRmn7+CI1SZK+xB0zFTfeuqCKu/Yk2YGY+t8Qf1B2XHntQw
-   Qgqrr1E5Tps9cfBIkcqGxn+LOBZ87Rf8As2s5ZnoRWihitHXi+A2Iap51
-   isBQGd+swqC8zvnVn45NOnDRCYhCQSY0UTZ6zVqW2nmSLJMbRen6fV3IO
-   oeh0gJw7kA0lXx4PM9S+3IKdr5SyQCemjaG3nVa1gkXbDtAAWmpKoyboN
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.92,232,1650902400"; 
-   d="scan'208";a="308757730"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Jun 2022 07:04:00 +0800
-IronPort-SDR: k8vJ8Cg8a6uiZANDe6Kzaknes5adjVvUJeTMZPRvHRc0/RqBp3g8SHbPx9rMmAKr9u9TsZsjke
- S4eCYPYT+AH1NLNzBJBEyhb9d4ofyepnCTXEt5x+MVOaAhS5q9neV324ScSVBxOqs/2i/HaHja
- m6YLG6kH8YegPmYKkTitwE3bu46FMikL+plQhye48Wa83JlEKZ5UQl6liQsE9HyTmvOecnJWxr
- 1Je7uWeZE9WSg7s5bp1O2QP8yz1SYGY+Q3jWCq9oIezthkFF0aC6F4tdHuOh+2jUY5HZIsZOZi
- kkDl9/FCrNCHpBxOf13noWmz
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Jun 2022 15:21:39 -0700
-IronPort-SDR: 1lPhVLY30gaU7W9vMjBiLIThEycR/YHYcrd+rNcml0K+wDXDhLclRdRRCsEmFn3Jun+yQFbak1
- rRlZ/7+yF6Q9vk/DZ/ioGZEE8T/3zrDo/pYiyb4k5X52dP+x1DUkzQg3YbVPRwSt/g8P1Hf84/
- c1SD8QCqPFKDR/7qjO0hgb+FlMZjWA2RxzT5iC/bhRI/aJ/of/lAWffo7CaCVbW6bsnr8rMJWC
- pY6v5Jb7GkUYu+TSylOuFAUp/jmuludfSF+Yh+1nAScC40llopHPO3KKCELP6B8H1iqOh2tA79
- EiI=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Jun 2022 16:04:00 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LYH8J1jgYz1Rw4L
-        for <linux-ide@vger.kernel.org>; Wed, 29 Jun 2022 16:04:00 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1656543839; x=1659135840; bh=ptrmLR99DmPF+HuZkx+sytXL0IpohrYTge6
-        kXuvw7is=; b=O0UEptYFIHQ2xrlcdooiCDQC+bLGyPQ8V0TOJAZfEsIF5Idr1KC
-        hePTwDcjoYED3X0mAKifiixDGVaaY39gL3YGagavf1b7NcJvReo6g0BqBUbIHxs8
-        vE1HEA0I04aw0+ndOqCXtlzv19ab3mtbSAS9CziyAJAmBQ0vZYBrTDsXTg0DI+Z4
-        6OXmSh+Fmyj/ydn2/oaHFzU9XqnBIoLj11uGwnOEhv9Vxn73CM+lvCP+OnfWr1UE
-        QA1zMeZ8pBTXhIFSyYkip+aVq8n/RrVrjxpkMo11E5kB/7umgmwqKEkFYzsgstHs
-        mf1wz0gyRw4ln5GxbS2lhXOGIvHHUgtxLKQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Q5x1VaqC3dOx for <linux-ide@vger.kernel.org>;
-        Wed, 29 Jun 2022 16:03:59 -0700 (PDT)
-Received: from [10.225.163.102] (unknown [10.225.163.102])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LYH8H0Jy2z1RtVk;
-        Wed, 29 Jun 2022 16:03:58 -0700 (PDT)
-Message-ID: <9448ff77-9b0e-95fd-1366-a5103fdb3ea0@opensource.wdc.com>
-Date:   Thu, 30 Jun 2022 08:03:57 +0900
+        with ESMTP id S232632AbiF3MOW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2022 08:14:22 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A6511C934;
+        Thu, 30 Jun 2022 05:14:21 -0700 (PDT)
+Received: from fraeml713-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LYcbV5xxSz6H8WY;
+        Thu, 30 Jun 2022 20:10:14 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml713-chm.china.huawei.com (10.206.15.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 30 Jun 2022 14:14:18 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 30 Jun 2022 13:14:14 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
+        <will@kernel.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>
+CC:     <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH v5 0/5] DMA mapping changes for SCSI core
+Date:   Thu, 30 Jun 2022 20:08:07 +0800
+Message-ID: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] ata: pata_cs5535: Fix W=1 warnings
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        John Garry <john.garry@huawei.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1656335540-50293-1-git-send-email-john.garry@huawei.com>
- <69ed5587-52fd-4171-b97f-091df8b377c6@opensource.wdc.com>
- <9caef01c-b601-c19f-10eb-720e8d7b35dc@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <9caef01c-b601-c19f-10eb-720e8d7b35dc@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/29/22 22:32, Sergey Shtylyov wrote:
-> On 6/29/22 4:51 AM, Damien Le Moal wrote:
->=20
->>> x86_64 allmodconfig build with W=3D1 gives these warnings:
->>>
->>> drivers/ata/pata_cs5535.c: In function =E2=80=98cs5535_set_piomode=E2=
-=80=99:
->>> drivers/ata/pata_cs5535.c:93:11: error: variable =E2=80=98dummy=E2=80=
-=99 set but not used [-Werror=3Dunused-but-set-variable]
->>>   u32 reg, dummy;
->>>            ^~~~~
->>> drivers/ata/pata_cs5535.c: In function =E2=80=98cs5535_set_dmamode=E2=
-=80=99:
->>> drivers/ata/pata_cs5535.c:132:11: error: variable =E2=80=98dummy=E2=80=
-=99 set but not used [-Werror=3Dunused-but-set-variable]
->>>   u32 reg, dummy;
->>>            ^~~~~
->>> cc1: all warnings being treated as errors
->>>
->>> Mark variables 'dummy' as "maybe unused" to satisfy when rdmsr() is
->>> stubbed, which is the same as what we already do in pata_cs5536.c .
->>>
->>> Signed-off-by: John Garry <john.garry@huawei.com>
->>
->> Applied to for-5.20. Thanks !
->=20
->    Why not to 5.19? The warnings are fatal as can be seen from the comm=
-it log...
+As reported in [0], DMA mappings whose size exceeds the IOMMU IOVA caching
+limit may see a big performance hit.
 
-This is only a compile warning and nobody complained, not even the 0-day
-bot/linux-next builds, and for years... Most definitely not an urgent fix=
-.
+This series introduces a new DMA mapping API, dma_opt_mapping_size(), so
+that drivers may know this limit when performance is a factor in the
+mapping.
 
-But yeah, sure, can do 5.19 fixes too.
+The SCSI SAS transport code is modified only to use this limit. For now I
+did not want to touch other hosts as I have a concern that this change
+could cause a performance regression.
 
->=20
-> MBR, Sergey
->=20
+I also added a patch for libata-scsi as it does not currently honour the
+shost max_sectors limit.
 
+[0] https://lore.kernel.org/linux-iommu/20210129092120.1482-1-thunder.leizhen@huawei.com/
 
---=20
-Damien Le Moal
-Western Digital Research
+Changes since v4:
+- tweak libata and other patch titles
+- Add Robin's tag (thanks!)
+- Clarify description of new DMA mapping API
+
+Changes since v3:
+- Apply max DMA optimial limit to SAS hosts only
+  Note: Even though "scsi: core: Cap shost max_sectors only once when
+  adding" is a subset of a previous patch I did not transfer the RB tags
+- Rebase on v5.19-rc4
+
+John Garry (5):
+  dma-mapping: Add dma_opt_mapping_size()
+  dma-iommu: Add iommu_dma_opt_mapping_size()
+  scsi: core: Cap shost max_sectors according to DMA limits only once
+  scsi: scsi_transport_sas: Cap shost max_sectors according to DMA
+    optimal limit
+  ata: libata-scsi: Cap ata_device->max_sectors according to
+    shost->max_sectors
+
+ Documentation/core-api/dma-api.rst | 14 ++++++++++++++
+ drivers/ata/libata-scsi.c          |  1 +
+ drivers/iommu/dma-iommu.c          |  6 ++++++
+ drivers/iommu/iova.c               |  5 +++++
+ drivers/scsi/hosts.c               |  5 +++++
+ drivers/scsi/scsi_lib.c            |  4 ----
+ drivers/scsi/scsi_transport_sas.c  |  6 ++++++
+ include/linux/dma-map-ops.h        |  1 +
+ include/linux/dma-mapping.h        |  5 +++++
+ include/linux/iova.h               |  2 ++
+ kernel/dma/mapping.c               | 12 ++++++++++++
+ 11 files changed, 57 insertions(+), 4 deletions(-)
+
+-- 
+2.35.3
+
