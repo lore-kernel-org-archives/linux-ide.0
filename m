@@ -2,113 +2,117 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61ADEC43334
-	for <linux-ide@archiver.kernel.org>; Fri,  1 Jul 2022 00:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E466CC433EF
+	for <linux-ide@archiver.kernel.org>; Fri,  1 Jul 2022 02:33:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229672AbiGAAtG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jun 2022 20:49:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46590 "EHLO
+        id S233624AbiGACdl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Jun 2022 22:33:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229586AbiGAAtF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2022 20:49:05 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2A5D2A255
-        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2022 17:49:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1656636542; x=1688172542;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=r0l5+r2ZWjM1GCTDoybfZ7hI2CFa1+Bw47L/ZyVPJzw=;
-  b=mOhzIQYw08rdsj+WQMQz50vTw2OMxY/Pz47DTm+wbpsZ8kJVgGAMk4+j
-   LV9NBzBY/6H3UH7diJkWSpu4Qr8Oeefq4ao6ufTvbXFyZtdqNoAGBiiwG
-   f32hcWIKwHDv8JPLFKg8D0Qhhgkz16dHxXHaYG/xttfbzfevswfc6BvoQ
-   WD8ZDWy+58koyn3UDk3ptQy8vH9H+mGkLm3I5aeNYQvs3bxN2EQZFxvZv
-   U1bfz4OmkyfTQNKvvOi6ecCCQ0SmkieIX0W+n/M93cR98hVFnwwcqnYu3
-   /YF1Esc2RoQbW7nUDUUsJlN+WnhRbmopSpAjqwWtmS4BM5s9DobCexdEW
-   g==;
-X-IronPort-AV: E=Sophos;i="5.92,235,1650902400"; 
-   d="scan'208";a="308864558"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Jul 2022 08:49:01 +0800
-IronPort-SDR: XOgu3AzLZcOsZ9kD9Y05UGFQ9myHfbTJf/JbbNWDMMF7OJgjsLz/5GLUu+8gm5esQRLLk8qkOD
- AIvK5PG/CVjPf0f7EjsHJzW8OgW1rWfjfIUwBkyKW9Jcsl3jaNAexfPAdVXfpKx8vGcIBNKYBe
- ya1XgyOljgkBp/S/wKG++wqhNJ8JwX/ssdiSH205ZVprB9KikQpuSEmglRwM+DvDiWFrG7+ni5
- VuKlxAYCf4/vOyFrVBIG/No0SC/sSS5BAE9RXUJC4bXmUGFcJUndFMeGYOBFkiBGQZSgsTpobA
- Y97SMxYE8lEpl/7J2PTQ/vCE
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jun 2022 17:11:14 -0700
-IronPort-SDR: mQHgXCpHlCYqWYH5IfbsdbeyUeU/AyKLBXXYTEo/KXLGsVqPBjugxnyHn1peKgqJ+LGnh2sPYU
- lhHxP9o7Db8JT8WcTpyRpqA89eIUZfshDXqsp8oHmXBqUZ6rWT3RpbVuTDyO7zQeXaB+ff2Va0
- 9FWRK8eS5QFL3Fvs/WaGkTx8ZCv2b0meSqyV6QVXzbMdcQfh4ca6lD6b1/bWSPGocbuP4wTqwR
- QgIXel55DzfscWFSIheBz/1iwMj8XVE2DRYCNhs002qZqZLHu0K5x81ME4IkYZM9xSsbMveBiM
- Xg4=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jun 2022 17:49:02 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LYxR14z5kz1Rwnl
-        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2022 17:49:01 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1656636541;
-         x=1659228542; bh=r0l5+r2ZWjM1GCTDoybfZ7hI2CFa1+Bw47L/ZyVPJzw=; b=
-        UnYXGeDTkRx64w8E17QD6TbUM3o1X7uICQ790ZVO2amafeIRivkEx6XURUbF+FUw
-        cxzmjZogqC4qwPc68HNehZDx4/OvmyEjOP+zgwgY0JIoZK7a615wViV8+kOfo+KK
-        FVbuMmW7bnytzeBDAk6If4Q0Eo4Z0NpyPAzuUPQZqz99I6fVhB7fykdtjRZcXPUf
-        neogV9ttDRmJzZW7qAVjUj0eAe3ISVVHhOruKH9yC4lCYY2z87kmEKaPZdCjMvOa
-        HkDOw3yg2VqvTxgBkfRXLekf+5yoqF+bIKPVU67n+qNgUJCgPENmE51+9xc+Vk/7
-        stHizxFrREzpD1EMdTHrKA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id jc8_joMJUaoH for <linux-ide@vger.kernel.org>;
-        Thu, 30 Jun 2022 17:49:01 -0700 (PDT)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LYxR067d9z1RtVk;
-        Thu, 30 Jun 2022 17:49:00 -0700 (PDT)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 5.19-rc5
-Date:   Fri,  1 Jul 2022 09:48:59 +0900
-Message-Id: <20220701004859.7645-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.36.1
+        with ESMTP id S233583AbiGACdh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2022 22:33:37 -0400
+Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04on2060.outbound.protection.outlook.com [40.107.101.60])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44C98313AD;
+        Thu, 30 Jun 2022 19:33:33 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=XfaT78x058Pc5wgKMvf1RvxkuWtRnJj53Uz01efv5IRhpadI0b14j+6x1kEPh8UCBUCCqYcklIp6zoVw1uDSOdOa03HHSHzewdmfjHJUC6GN27OXi3f4eH4d7b/LgP8Wtn6vS3ELxkMxYCgccKLOiRHjRppMM9mdeE81uFw9DNtDHrBBYY77qrlou3VCMRH7yKIrqCdowftO0RBb1A3c2zb2HtL2fOHD7a3o38VfzVpjHjK9WwlQD6tCXCj65etjC3MqJy9L1MOh47FJ8PmbXCOhG2joZrqneVDN6en+tSeM/9XdsuVdrh4euwtuayUHO37WYJ3RvBnKGA//A6Xhfg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=V2fjv8LuM0gFTP5c2H1wFK7j+ZshOClw+rZZ+a65VYM=;
+ b=E1FrMSY0tVI9dhl/HiDH3tyD3iOK9RZ97r7WZ0ljsRWOBzYpn1nAULxyLFxkCvppa2oQ9W2d0E8P483MpUVYvX5M48I0Ho9NRYceMdu5AOlIvWcL0UULkhy2CwTCY/QesI3B6suMiLtfgrxpbQibte5XJf3WsHKZWQEnv+Upy4D4wSuy42hPajn7x0IfnDieDYSOaJGY4uL9BI7yMteft7HARYEwXiZ3jpoIwA8IrHpuPEpEnSESE7/GaBrWbOKagcBQXq2gX126c7XSUnUnx7kgNB4/1NFSIgF56/mAJFVeZgnckphELE2M+J1NKrLdPR7x/4WtRgmmMSsigAMnOA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=opensource.wdc.com smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=V2fjv8LuM0gFTP5c2H1wFK7j+ZshOClw+rZZ+a65VYM=;
+ b=RO+q6i5/yHsRS/KNcNsKwYz5oSqO1kjBBrv4/Nb4/EP0WQJiEw9gUMeHH3yLzwFleiSBBCNl7LWRe0rOw2phrQ2awLdUWR362a2EYXrLe8gglkaReVpL12/QScvuymKgHgmPzpfC73A5P7WOJ2JKoDLn0Wjcc6r+pmFsH32zQQ4=
+Received: from BN9PR03CA0989.namprd03.prod.outlook.com (2603:10b6:408:109::34)
+ by DS7PR12MB6191.namprd12.prod.outlook.com (2603:10b6:8:98::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5373.18; Fri, 1 Jul
+ 2022 02:33:31 +0000
+Received: from BN8NAM11FT020.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:109:cafe::6e) by BN9PR03CA0989.outlook.office365.com
+ (2603:10b6:408:109::34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.14 via Frontend
+ Transport; Fri, 1 Jul 2022 02:33:31 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BN8NAM11FT020.mail.protection.outlook.com (10.13.176.223) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5395.14 via Frontend Transport; Fri, 1 Jul 2022 02:33:30 +0000
+Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Thu, 30 Jun
+ 2022 21:33:30 -0500
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     <mario.limonciello@amd.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     <linux-pm@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 04/10] ata: ahci: Use `pm_suspend_preferred_s2idle`
+Date:   Thu, 30 Jun 2022 21:33:22 -0500
+Message-ID: <20220701023328.2783-4-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220701023328.2783-1-mario.limonciello@amd.com>
+References: <20220701023328.2783-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 4e637f2f-230f-44fd-f414-08da5b0a1670
+X-MS-TrafficTypeDiagnostic: DS7PR12MB6191:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 3tQZhuQf14BztUUQ+UMX9OUDX9EfiyLWuA0TU+Pre/M1IfnIuk+KmrBrGMoDrEtLRS0YhiRAuccWi7UlPEhAV6a3Ib2qr35xafOLp0Kp8/fIqyTESgXOSbV7qrE6wlcQv8Q44C65jGq18IWCnjq3/EFfDOA+OxThTM7MrFWFJMXd/OQ+N8ZEL9f1J/J73vOvbKv95IeTcXOIUBTzIo33uOxiKD7h3mlTxCz8wmYir32NNpGPyioCPNmCQAle+4wH3bloTvTsGblsJCllRFtYwtLdCnimewDEvLZKtnub0mQFUJpvj+MiNJ6D2xfgtwbDUYqlm9kx71HVTfkJKbxqDZdmly8OBsxXPlUBwnpm/OBfdrA8pWxNnUAF//0+Fb4Ku/4kRz8BLW1xSk16s/sOq4uQoDOGEQrbB4xapfbwSiGkT5XauKTED0PHMc8xsCCa040dljU9Esk9bafRvYsO4n62oVG1uNq7gt82RbVYq8ZKb0POcx+Z4HYNI3Cgx9BYsddmZJdqwGnHtz5jKO0L3Lzgtkt8HrkK5oLYkJ/WPtRJ55eZo2b3DrRhvK/qYPsYa0LKoFvBfPTS6wId2wQ+YZCsP1b8fQ3kemECgHqH8bk/+rHnrMx1AvNAWilSkEPv8zwA8ZNtt5pwhuovPLheZpfKKg31YVGMkypNN+0ls3t8is12raU6b/7+lJLQWSVvBYsW3UKfPv0h0hOlQwJf//v2/TovPxBs2affyHxHzLJDGVhOR7UTp6MDenVidT1wYeyPmPqRxZ0cdlnUPtJmqJYVn5pqHKjTxqSufRuhNgsfuV41Zc4gXTWn5py07eM9fcNQztKxb7HW/vf3d0MT7kr0lhovZm06CpUDvet5gij6VIZwlgcvonf/Np0CHz+e
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230016)(4636009)(136003)(39860400002)(376002)(396003)(346002)(40470700004)(46966006)(36840700001)(40480700001)(8936002)(82740400003)(40460700003)(6666004)(81166007)(83380400001)(356005)(16526019)(86362001)(5660300002)(186003)(47076005)(7696005)(336012)(426003)(316002)(4326008)(26005)(4744005)(82310400005)(2906002)(41300700001)(36756003)(110136005)(70206006)(2616005)(54906003)(8676002)(70586007)(1076003)(44832011)(36860700001)(478600001)(81973001)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Jul 2022 02:33:30.9867
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4e637f2f-230f-44fd-f414-08da5b0a1670
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT020.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6191
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+Drop the direct check from the FADT and use the helper instead.
 
-The following changes since commit 540a92bfe6dab7310b9df2e488ba247d784d01=
-63:
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/ata/ahci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  ata: libata: add qc->flags in ata_qc_complete_template tracepoint (2022=
--06-17 16:30:03 +0900)
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index c1eca72b4575..3f79b732dd00 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1611,7 +1611,7 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+ 
+ #ifdef CONFIG_ACPI
+ 	if (policy > ATA_LPM_MED_POWER &&
+-	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0)) {
++	    pm_suspend_preferred_s2idle()) {
+ 		if (hpriv->cap & HOST_CAP_PART)
+ 			policy = ATA_LPM_MIN_POWER_WITH_PARTIAL;
+ 		else if (hpriv->cap & HOST_CAP_SSC)
+-- 
+2.34.1
 
-are available in the Git repository at:
-
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
-ags/ata-5.19-rc5
-
-for you to fetch changes up to 32788beb103f7f71e0192dce701f387070914651:
-
-  ata: pata_cs5535: Fix W=3D1 warnings (2022-06-30 08:21:43 +0900)
-
-----------------------------------------------------------------
-ATA fixes for 5.19-rc5
-
-* Fix a compilation warning with some versions of gcc/sparse when
-  compiling the pata_cs5535 driver, from John.
-
-----------------------------------------------------------------
-John Garry (1):
-      ata: pata_cs5535: Fix W=3D1 warnings
-
- drivers/ata/pata_cs5535.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
