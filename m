@@ -2,117 +2,123 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E466CC433EF
-	for <linux-ide@archiver.kernel.org>; Fri,  1 Jul 2022 02:33:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24051C433EF
+	for <linux-ide@archiver.kernel.org>; Fri,  1 Jul 2022 05:06:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233624AbiGACdl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jun 2022 22:33:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60194 "EHLO
+        id S233569AbiGAFGY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 1 Jul 2022 01:06:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233583AbiGACdh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2022 22:33:37 -0400
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04on2060.outbound.protection.outlook.com [40.107.101.60])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44C98313AD;
-        Thu, 30 Jun 2022 19:33:33 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XfaT78x058Pc5wgKMvf1RvxkuWtRnJj53Uz01efv5IRhpadI0b14j+6x1kEPh8UCBUCCqYcklIp6zoVw1uDSOdOa03HHSHzewdmfjHJUC6GN27OXi3f4eH4d7b/LgP8Wtn6vS3ELxkMxYCgccKLOiRHjRppMM9mdeE81uFw9DNtDHrBBYY77qrlou3VCMRH7yKIrqCdowftO0RBb1A3c2zb2HtL2fOHD7a3o38VfzVpjHjK9WwlQD6tCXCj65etjC3MqJy9L1MOh47FJ8PmbXCOhG2joZrqneVDN6en+tSeM/9XdsuVdrh4euwtuayUHO37WYJ3RvBnKGA//A6Xhfg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=V2fjv8LuM0gFTP5c2H1wFK7j+ZshOClw+rZZ+a65VYM=;
- b=E1FrMSY0tVI9dhl/HiDH3tyD3iOK9RZ97r7WZ0ljsRWOBzYpn1nAULxyLFxkCvppa2oQ9W2d0E8P483MpUVYvX5M48I0Ho9NRYceMdu5AOlIvWcL0UULkhy2CwTCY/QesI3B6suMiLtfgrxpbQibte5XJf3WsHKZWQEnv+Upy4D4wSuy42hPajn7x0IfnDieDYSOaJGY4uL9BI7yMteft7HARYEwXiZ3jpoIwA8IrHpuPEpEnSESE7/GaBrWbOKagcBQXq2gX126c7XSUnUnx7kgNB4/1NFSIgF56/mAJFVeZgnckphELE2M+J1NKrLdPR7x/4WtRgmmMSsigAMnOA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=opensource.wdc.com smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=V2fjv8LuM0gFTP5c2H1wFK7j+ZshOClw+rZZ+a65VYM=;
- b=RO+q6i5/yHsRS/KNcNsKwYz5oSqO1kjBBrv4/Nb4/EP0WQJiEw9gUMeHH3yLzwFleiSBBCNl7LWRe0rOw2phrQ2awLdUWR362a2EYXrLe8gglkaReVpL12/QScvuymKgHgmPzpfC73A5P7WOJ2JKoDLn0Wjcc6r+pmFsH32zQQ4=
-Received: from BN9PR03CA0989.namprd03.prod.outlook.com (2603:10b6:408:109::34)
- by DS7PR12MB6191.namprd12.prod.outlook.com (2603:10b6:8:98::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5373.18; Fri, 1 Jul
- 2022 02:33:31 +0000
-Received: from BN8NAM11FT020.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:109:cafe::6e) by BN9PR03CA0989.outlook.office365.com
- (2603:10b6:408:109::34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.14 via Frontend
- Transport; Fri, 1 Jul 2022 02:33:31 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BN8NAM11FT020.mail.protection.outlook.com (10.13.176.223) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5395.14 via Frontend Transport; Fri, 1 Jul 2022 02:33:30 +0000
-Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Thu, 30 Jun
- 2022 21:33:30 -0500
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     <mario.limonciello@amd.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     <linux-pm@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 04/10] ata: ahci: Use `pm_suspend_preferred_s2idle`
-Date:   Thu, 30 Jun 2022 21:33:22 -0500
-Message-ID: <20220701023328.2783-4-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220701023328.2783-1-mario.limonciello@amd.com>
-References: <20220701023328.2783-1-mario.limonciello@amd.com>
+        with ESMTP id S229481AbiGAFGX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jul 2022 01:06:23 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03B8D61D4D
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2022 22:06:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1656651981; x=1688187981;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=SvxleXnvLLu2HAHqskkysVjHRspI2rZmxKBEUNqOG3g=;
+  b=K6zObYdKiTg49Um2OXBNTIDXPnNNuSrKy71KiZPKUM65Vb4JU9+vBKVc
+   d797pRehYmN7+BW0+hrs+dnn8ty92qsSYwzK+fGe2BNNj0SSOPj6YP9yq
+   3q2hx9yiNmR2RobPsF47OZ+8eoJV8SD56rOiXpxD4xBSFVFzhLeN4FrWr
+   0ERePZeX7AwRRaYVI9oXA/HVb8Y3TT41L1sEUUM7ggtNC5FpFGKrLtHYJ
+   NEH0ukzOAD43bcD3wueYxvLmWzgKRUAUsyMFCCr/aS0iFjNgiO6uOOIFt
+   kCmtrJkWxBBaq41eyw5ou2EDBp+OF1fmpgBRqsHUvS/vecW7/JzLsuoDJ
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.92,236,1650902400"; 
+   d="scan'208";a="316670746"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Jul 2022 13:06:21 +0800
+IronPort-SDR: 2sx85l4pBWVrgF1BXBqGgbAWu/njrZVIG7iLkNu2Ez9bKh3g3XOMxB+KaZi1PQGg19yX8DxJm3
+ fJnjKoesg9P8ox85jPNjGqWrGouWXuMuZzfJiHbi0mIvfC6d9LJE/NAyvf/VM0qnOaKeDNxUDI
+ i8dHHEpSdtCV4vZAXnCxC4gx3MzP0h/Qdv+tcoi7gZLl7CrtuYjEzjiBzPoNSfJX0bYuEUZ3Lc
+ xYZddl9M3ouQvtwRzmrq/9AnUck5Vnm6pVNVMS9ZmxozrU2enOZRwAwg4HsjhIs8hXDaUO1Oi8
+ A7hXXkguPheaI6ejYfIZRn/p
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jun 2022 21:23:51 -0700
+IronPort-SDR: 5icrcxWiHlgNAsXmd6tNqlS9cnPafhV7BOrCXYjrw4+8STW4Ltuw0TbkQbGmIkLJFC8oaSug1g
+ JPyRIMVaj+ke04PzPSMJndGiJaouwAjW3NXtuJsqjFLZcOtqp3jrZF5fCvjBXcrrzEvkGz/w+d
+ XlRxDODP6rBz4iCJJt4Px/dS7u6vLqN6couveFQNFkmjXZMAAYq/tsJuq2pFW3sCjimvQl/eCe
+ zA/dJk7fQZUztMEGEXSQ+mF30/uByvt3ZznjpbsxoT/MKgmEp6z5+atefqiSpn9bum+oVohlhU
+ 55c=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jun 2022 22:06:22 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LZ37x12rCz1Rw4L
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2022 22:06:21 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1656651980; x=1659243981; bh=SvxleXnvLLu2HAHqskkysVjHRspI2rZmxKB
+        EUNqOG3g=; b=EmrS2gTUseTPly7tzkn5i4i42v8gT5n5mRrMsDJEjbCUmpLGtbV
+        lcbFsEOQyuRuFxezy/eGfLqnI00kAsHK0r58wtfN62aG0zukPe+Xn4Gui8dF0wKg
+        pa8m0WoU6c/0T9XMerV2uSjIJhX0d5RgeMvuhUuKLfaaZr5YCGpaSjmYplnCp+ad
+        95hGHgo/ftS0spQH4SyHoZHeOPsQw6V53x7HQV8ZN7MkV066KhO49l5+jj5H940t
+        QRN1ErqRp1F2QtjB7O58RL7TA1qWTR26o5iZeD8pMshtYn8B965KeOuF4QBQgJn4
+        0kzOodBGTQ4neQHv02wS9hm1O1hjr0Nk66Q==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id flaZZ6E2ahfP for <linux-ide@vger.kernel.org>;
+        Thu, 30 Jun 2022 22:06:20 -0700 (PDT)
+Received: from [10.225.163.102] (unknown [10.225.163.102])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LZ37v6Hz4z1RtVk;
+        Thu, 30 Jun 2022 22:06:19 -0700 (PDT)
+Message-ID: <4e0783ac-b9f5-24ff-f7c6-7b64549b8f9c@opensource.wdc.com>
+Date:   Fri, 1 Jul 2022 14:06:18 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 4e637f2f-230f-44fd-f414-08da5b0a1670
-X-MS-TrafficTypeDiagnostic: DS7PR12MB6191:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 3tQZhuQf14BztUUQ+UMX9OUDX9EfiyLWuA0TU+Pre/M1IfnIuk+KmrBrGMoDrEtLRS0YhiRAuccWi7UlPEhAV6a3Ib2qr35xafOLp0Kp8/fIqyTESgXOSbV7qrE6wlcQv8Q44C65jGq18IWCnjq3/EFfDOA+OxThTM7MrFWFJMXd/OQ+N8ZEL9f1J/J73vOvbKv95IeTcXOIUBTzIo33uOxiKD7h3mlTxCz8wmYir32NNpGPyioCPNmCQAle+4wH3bloTvTsGblsJCllRFtYwtLdCnimewDEvLZKtnub0mQFUJpvj+MiNJ6D2xfgtwbDUYqlm9kx71HVTfkJKbxqDZdmly8OBsxXPlUBwnpm/OBfdrA8pWxNnUAF//0+Fb4Ku/4kRz8BLW1xSk16s/sOq4uQoDOGEQrbB4xapfbwSiGkT5XauKTED0PHMc8xsCCa040dljU9Esk9bafRvYsO4n62oVG1uNq7gt82RbVYq8ZKb0POcx+Z4HYNI3Cgx9BYsddmZJdqwGnHtz5jKO0L3Lzgtkt8HrkK5oLYkJ/WPtRJ55eZo2b3DrRhvK/qYPsYa0LKoFvBfPTS6wId2wQ+YZCsP1b8fQ3kemECgHqH8bk/+rHnrMx1AvNAWilSkEPv8zwA8ZNtt5pwhuovPLheZpfKKg31YVGMkypNN+0ls3t8is12raU6b/7+lJLQWSVvBYsW3UKfPv0h0hOlQwJf//v2/TovPxBs2affyHxHzLJDGVhOR7UTp6MDenVidT1wYeyPmPqRxZ0cdlnUPtJmqJYVn5pqHKjTxqSufRuhNgsfuV41Zc4gXTWn5py07eM9fcNQztKxb7HW/vf3d0MT7kr0lhovZm06CpUDvet5gij6VIZwlgcvonf/Np0CHz+e
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230016)(4636009)(136003)(39860400002)(376002)(396003)(346002)(40470700004)(46966006)(36840700001)(40480700001)(8936002)(82740400003)(40460700003)(6666004)(81166007)(83380400001)(356005)(16526019)(86362001)(5660300002)(186003)(47076005)(7696005)(336012)(426003)(316002)(4326008)(26005)(4744005)(82310400005)(2906002)(41300700001)(36756003)(110136005)(70206006)(2616005)(54906003)(8676002)(70586007)(1076003)(44832011)(36860700001)(478600001)(81973001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Jul 2022 02:33:30.9867
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4e637f2f-230f-44fd-f414-08da5b0a1670
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT020.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6191
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v3 04/10] ata: ahci: Use `pm_suspend_preferred_s2idle`
+Content-Language: en-US
+To:     Mario Limonciello <mario.limonciello@amd.com>
+Cc:     linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20220701023328.2783-1-mario.limonciello@amd.com>
+ <20220701023328.2783-4-mario.limonciello@amd.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220701023328.2783-4-mario.limonciello@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Drop the direct check from the FADT and use the helper instead.
+On 7/1/22 11:33, Mario Limonciello wrote:
+> Drop the direct check from the FADT and use the helper instead.
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
- drivers/ata/ahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Where is this helper defined ? Seeing that this is patch 4/10, I have no
+context for this patch. Please send the whole series next time.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index c1eca72b4575..3f79b732dd00 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1611,7 +1611,7 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
- 
- #ifdef CONFIG_ACPI
- 	if (policy > ATA_LPM_MED_POWER &&
--	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0)) {
-+	    pm_suspend_preferred_s2idle()) {
- 		if (hpriv->cap & HOST_CAP_PART)
- 			policy = ATA_LPM_MIN_POWER_WITH_PARTIAL;
- 		else if (hpriv->cap & HOST_CAP_SSC)
+> 
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> ---
+>  drivers/ata/ahci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index c1eca72b4575..3f79b732dd00 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1611,7 +1611,7 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+>  
+>  #ifdef CONFIG_ACPI
+>  	if (policy > ATA_LPM_MED_POWER &&
+> -	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0)) {
+> +	    pm_suspend_preferred_s2idle()) {
+>  		if (hpriv->cap & HOST_CAP_PART)
+>  			policy = ATA_LPM_MIN_POWER_WITH_PARTIAL;
+>  		else if (hpriv->cap & HOST_CAP_SSC)
+
+
 -- 
-2.34.1
-
+Damien Le Moal
+Western Digital Research
