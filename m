@@ -2,187 +2,138 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32954C43334
-	for <linux-ide@archiver.kernel.org>; Sat,  2 Jul 2022 01:03:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82CB5C43334
+	for <linux-ide@archiver.kernel.org>; Sat,  2 Jul 2022 09:34:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231658AbiGBBDn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 1 Jul 2022 21:03:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35774 "EHLO
+        id S229838AbiGBJev (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 2 Jul 2022 05:34:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231173AbiGBBDi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Jul 2022 21:03:38 -0400
-Received: from out1.migadu.com (out1.migadu.com [91.121.223.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C4682409E;
-        Fri,  1 Jul 2022 18:03:35 -0700 (PDT)
-Date:   Fri, 1 Jul 2022 18:03:10 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1656723813;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UefsvJWBOCsJEHG/jcpgIGR+KBtUCRUqjXcROu7qjh4=;
-        b=oGHlDm4tgr6UzDbC5z/sb7q2WEts5mi8mJ8aiIMXBOzW75BRr4BaIuszRL9hOCzoFfVxku
-        tmO6BM7R9GzDDzZbe/MQeyeOEOAx+3VHqH/w/8ecEZ7fImffcNYGlal4Cw/gQ26E9Sym1J
-        usYWeNXz8OdB9Vt23HLuxwKOwXbZ7ng=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Roman Gushchin <roman.gushchin@linux.dev>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        kernel test robot <lkp@intel.com>
-Cc:     virtualization@lists.linux-foundation.org,
-        usbb2k-api-dev@nongnu.org, tipc-discussion@lists.sourceforge.net,
-        target-devel@vger.kernel.org, sound-open-firmware@alsa-project.org,
-        samba-technical@lists.samba.org, rds-devel@oss.oracle.com,
-        patches@opensource.cirrus.com, osmocom-net-gprs@lists.osmocom.org,
-        openipmi-developer@lists.sourceforge.net, nvdimm@lists.linux.dev,
-        ntb@lists.linux.dev, netfilter-devel@vger.kernel.org,
-        netdev@vger.kernel.org, mjpeg-users@lists.sourceforge.net,
-        megaraidlinux.pdl@broadcom.com, linuxppc-dev@lists.ozlabs.org,
-        linux1394-devel@lists.sourceforge.net, linux-x25@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-unionfs@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-perf-users@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-parisc@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-nfc@lists.01.org, linux-mtd@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
-        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-hwmon@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-fpga@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-efi@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-cifs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-bcache@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org, linaro-mm-sig@lists.linaro.org,
-        legousb-devel@lists.sourceforge.net, kvm@vger.kernel.org,
-        keyrings@vger.kernel.org, isdn4linux@listserv.isdn4linux.de,
-        iommu@lists.linux.dev, iommu@lists.linux-foundation.org,
-        intel-wired-lan@lists.osuosl.org, dri-devel@lists.freedesktop.org,
-        dm-devel@redhat.com, devicetree@vger.kernel.org,
-        dev@openvswitch.org, dccp@vger.kernel.org, damon@lists.linux.dev,
-        coreteam@netfilter.org, cgroups@vger.kernel.org,
-        ceph-devel@vger.kernel.org, apparmor@lists.ubuntu.com,
-        amd-gfx@lists.freedesktop.org, alsa-devel@alsa-project.org,
-        accessrunner-general@lists.sourceforge.net
-Subject: Re: [linux-next:master] BUILD REGRESSION
- 6cc11d2a1759275b856e464265823d94aabd5eaf
-Message-ID: <Yr+ZTnLb9lJk6fJO@castle>
-References: <62be3696.+PAAAVlbtWK6G2hk%lkp@intel.com>
+        with ESMTP id S229446AbiGBJeu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 2 Jul 2022 05:34:50 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C841F15A02;
+        Sat,  2 Jul 2022 02:34:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1656754489; x=1688290489;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=yMmA2W1SvyNpAttWj/B6jRcNsRBOC+CcZJ9+GyTMevI=;
+  b=ElWAyDoA0lKJQnWOjVTP1AQDMGEOaqSQ2AFk9MdwA9HsnXSKcY0bZPLb
+   4b9GCViTT9oWLWmbJfsWtEEKcqmBtzAEBwDfO3TYhFiSI5HSKZFmjk0uZ
+   KCZIbHbMBB6TJ12cwIr3kDDnkpP89PALzxCocEcrJ+Foytc5o6olnzsUP
+   DVURmcg8FsNTDltt2bMUDp28v+op8hEUnO8li6j+POxASB6gAWX1ihKfl
+   F7v7LWY6nr74TSO8IV/ORFGFq9jNynVl3N4f4VQ0rH+JV2ARXzItdeNcb
+   9cPuIqlHUybPrV9D2e4Zdx6gTHUee5bCd2K8zpE3bCZ2Q9Dx0Hu+B2e4H
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10395"; a="308342167"
+X-IronPort-AV: E=Sophos;i="5.92,239,1650956400"; 
+   d="scan'208";a="308342167"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jul 2022 02:34:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,239,1650956400"; 
+   d="scan'208";a="718877221"
+Received: from lkp-server01.sh.intel.com (HELO 68b931ab7ac1) ([10.239.97.150])
+  by orsmga004.jf.intel.com with ESMTP; 02 Jul 2022 02:34:47 -0700
+Received: from kbuild by 68b931ab7ac1 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1o7ZWY-000F6B-Dv;
+        Sat, 02 Jul 2022 09:34:46 +0000
+Date:   Sat, 2 Jul 2022 17:34:07 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Mario Limonciello <mario.limonciello@amd.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 04/10] ata: ahci: Use `pm_suspend_preferred_s2idle`
+Message-ID: <202207021730.qxUxPlRq-lkp@intel.com>
+References: <20220701023328.2783-4-mario.limonciello@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <62be3696.+PAAAVlbtWK6G2hk%lkp@intel.com>
-X-Migadu-Flow: FLOW_OUT
-X-Migadu-Auth-User: linux.dev
+In-Reply-To: <20220701023328.2783-4-mario.limonciello@amd.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-esOn Fri, Jul 01, 2022 at 07:49:42AM +0800, kbuild test robot wrote:
-> tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-> branch HEAD: 6cc11d2a1759275b856e464265823d94aabd5eaf  Add linux-next specific files for 20220630
-> 
-> Error/Warning reports:
-> 
-> https://lore.kernel.org/linux-mm/202206301859.UodBCrva-lkp@intel.com
-> 
-> Error/Warning: (recently discovered and may have been fixed)
-> 
-> arch/powerpc/kernel/interrupt.c:542:55: error: suggest braces around empty body in an 'if' statement [-Werror=empty-body]
-> arch/powerpc/kernel/interrupt.c:542:55: warning: suggest braces around empty body in an 'if' statement [-Wempty-body]
-> drivers/pci/endpoint/functions/pci-epf-vntb.c:975:5: warning: no previous prototype for 'pci_read' [-Wmissing-prototypes]
-> drivers/pci/endpoint/functions/pci-epf-vntb.c:984:5: warning: no previous prototype for 'pci_write' [-Wmissing-prototypes]
-> mm/shrinker_debug.c:143:9: warning: function 'shrinker_debugfs_rename' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-> mm/shrinker_debug.c:217:9: warning: function 'shrinker_debugfs_rename' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-> mm/vmscan.c:637:9: warning: function 'prealloc_shrinker' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-> mm/vmscan.c:642:9: warning: function 'prealloc_shrinker' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-> mm/vmscan.c:697:9: warning: function 'register_shrinker' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-> mm/vmscan.c:702:9: warning: function 'register_shrinker' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
+Hi Mario,
 
-Shrinker-related warnings should be fixed by the following patch.
+Thank you for the patch! Yet something to improve:
 
-Thanks!
+[auto build test ERROR on rafael-pm/linux-next]
+[also build test ERROR on drm-misc/drm-misc-next hid/for-next linus/master v5.19-rc4 next-20220701]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
---
+url:    https://github.com/intel-lab-lkp/linux/commits/Mario-Limonciello/PM-suspend-Introduce-pm_suspend_preferred_s2idle/20220701-103534
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git linux-next
+config: i386-randconfig-a011 (https://download.01.org/0day-ci/archive/20220702/202207021730.qxUxPlRq-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project bcd153485ebf07fe79e2b843ed5f1cb74997df1b)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/ceb90ecfef1f252424a29b31a547cfc80c8f5135
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Mario-Limonciello/PM-suspend-Introduce-pm_suspend_preferred_s2idle/20220701-103534
+        git checkout ceb90ecfef1f252424a29b31a547cfc80c8f5135
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ata/
 
-From c399aff65c7745a209397a531c5b28fd404d83c2 Mon Sep 17 00:00:00 2001
-From: Roman Gushchin <roman.gushchin@linux.dev>
-Date: Fri, 1 Jul 2022 17:38:31 -0700
-Subject: [PATCH] mm:shrinkers: fix build warnings
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
-Add __printf(a, b) attributes to shrinker functions taking shrinker
-name as an argument to avoid compiler warnings like:
+All errors (new ones prefixed by >>):
 
-mm/shrinker_debug.c:143:9: warning: function 'shrinker_debugfs_rename'
-  might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-mm/shrinker_debug.c:217:9: warning: function 'shrinker_debugfs_rename'
-  might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-mm/vmscan.c:637:9: warning: function 'prealloc_shrinker' might be a
-  candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-mm/vmscan.c:642:9: warning: function 'prealloc_shrinker' might be a
-  candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-mm/vmscan.c:697:9: warning: function 'register_shrinker' might be a
-  candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
-mm/vmscan.c:702:9: warning: function 'register_shrinker' might be a
-  candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
+>> drivers/ata/ahci.c:1614:6: error: call to undeclared function 'pm_suspend_preferred_s2idle'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+               pm_suspend_preferred_s2idle()) {
+               ^
+   drivers/ata/ahci.c:1614:6: note: did you mean 'pm_suspend_default_s2idle'?
+   include/linux/suspend.h:343:20: note: 'pm_suspend_default_s2idle' declared here
+   static inline bool pm_suspend_default_s2idle(void) { return false; }
+                      ^
+   1 error generated.
 
-Signed-off-by: Roman Gushchin <roman.gushchin@linux.dev>
----
- include/linux/shrinker.h | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-index 64416f3e0a1f..08e6054e061f 100644
---- a/include/linux/shrinker.h
-+++ b/include/linux/shrinker.h
-@@ -93,9 +93,11 @@ struct shrinker {
-  */
- #define SHRINKER_NONSLAB	(1 << 3)
- 
--extern int prealloc_shrinker(struct shrinker *shrinker, const char *fmt, ...);
-+extern int __printf(2, 3) prealloc_shrinker(struct shrinker *shrinker,
-+					    const char *fmt, ...);
- extern void register_shrinker_prepared(struct shrinker *shrinker);
--extern int register_shrinker(struct shrinker *shrinker, const char *fmt, ...);
-+extern int __printf(2, 3) register_shrinker(struct shrinker *shrinker,
-+					    const char *fmt, ...);
- extern void unregister_shrinker(struct shrinker *shrinker);
- extern void free_prealloced_shrinker(struct shrinker *shrinker);
- extern void synchronize_shrinkers(void);
-@@ -103,8 +105,8 @@ extern void synchronize_shrinkers(void);
- #ifdef CONFIG_SHRINKER_DEBUG
- extern int shrinker_debugfs_add(struct shrinker *shrinker);
- extern void shrinker_debugfs_remove(struct shrinker *shrinker);
--extern int shrinker_debugfs_rename(struct shrinker *shrinker,
--				   const char *fmt, ...);
-+extern int __printf(2, 3) shrinker_debugfs_rename(struct shrinker *shrinker,
-+						  const char *fmt, ...);
- #else /* CONFIG_SHRINKER_DEBUG */
- static inline int shrinker_debugfs_add(struct shrinker *shrinker)
- {
-@@ -113,8 +115,8 @@ static inline int shrinker_debugfs_add(struct shrinker *shrinker)
- static inline void shrinker_debugfs_remove(struct shrinker *shrinker)
- {
- }
--static inline int shrinker_debugfs_rename(struct shrinker *shrinker,
--					  const char *fmt, ...)
-+static inline __printf(2, 3)
-+int shrinker_debugfs_rename(struct shrinker *shrinker, const char *fmt, ...)
- {
- 	return 0;
- }
+vim +/pm_suspend_preferred_s2idle +1614 drivers/ata/ahci.c
+
+  1595	
+  1596	static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+  1597						   struct ahci_host_priv *hpriv)
+  1598	{
+  1599		int policy = CONFIG_SATA_MOBILE_LPM_POLICY;
+  1600	
+  1601	
+  1602		/* Ignore processing for chipsets that don't use policy */
+  1603		if (!(hpriv->flags & AHCI_HFLAG_USE_LPM_POLICY))
+  1604			return;
+  1605	
+  1606		/* user modified policy via module param */
+  1607		if (mobile_lpm_policy != -1) {
+  1608			policy = mobile_lpm_policy;
+  1609			goto update_policy;
+  1610		}
+  1611	
+  1612	#ifdef CONFIG_ACPI
+  1613		if (policy > ATA_LPM_MED_POWER &&
+> 1614		    pm_suspend_preferred_s2idle()) {
+  1615			if (hpriv->cap & HOST_CAP_PART)
+  1616				policy = ATA_LPM_MIN_POWER_WITH_PARTIAL;
+  1617			else if (hpriv->cap & HOST_CAP_SSC)
+  1618				policy = ATA_LPM_MIN_POWER;
+  1619		}
+  1620	#endif
+  1621	
+  1622	update_policy:
+  1623		if (policy >= ATA_LPM_UNKNOWN && policy <= ATA_LPM_MIN_POWER)
+  1624			ap->target_lpm_policy = policy;
+  1625	}
+  1626	
+
 -- 
-2.36.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
