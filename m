@@ -2,83 +2,79 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2A0BC433EF
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Jul 2022 16:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E3BAC433EF
+	for <linux-ide@archiver.kernel.org>; Fri,  8 Jul 2022 21:09:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238973AbiGHQRP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 8 Jul 2022 12:17:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59280 "EHLO
+        id S240407AbiGHVJ2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 8 Jul 2022 17:09:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238559AbiGHQRN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2022 12:17:13 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5026F7B367;
-        Fri,  8 Jul 2022 09:17:11 -0700 (PDT)
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Lfdbm5bSbz686M3;
-        Sat,  9 Jul 2022 00:12:52 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 8 Jul 2022 18:17:08 +0200
-Received: from [10.195.34.23] (10.195.34.23) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 8 Jul
- 2022 17:17:07 +0100
-Message-ID: <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
-Date:   Fri, 8 Jul 2022 17:17:06 +0100
+        with ESMTP id S240053AbiGHVJZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2022 17:09:25 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 865087B348;
+        Fri,  8 Jul 2022 14:09:24 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id o12so99681pfp.5;
+        Fri, 08 Jul 2022 14:09:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=9E/mZeimCA88giN6rs5vLbSeCJTF3k6+VjGGAIWcV/k=;
+        b=H7vyoKXshYAaDuCXHzumSvPd0vSlH3129MGT4JypuLk4D5nZpLuwDSs36U3poOsiD2
+         FU1NArC2BbIOa7agQMBZKUsReCbibYPtmKapbY+OoejaSXc9MXV6VnFijbRa8gOamfLn
+         gt7A4XeD/X1Ktt0QSUc17tlRDoAFXx4TqOH1AKrkN2cRva4LRzRvIaw76QrYClPcrztf
+         pz8whfX8uueDz7mez0k7DRv/YskMPQ4+eGsMx79REZhGKoUn60cvLaeyWYsnIxP0kaye
+         VKtZ0d8ebrpBN6zew6qv0W8TNvu7vpY4E1DO0z+WKVQWscYVUN+y1RCDiji9w0pZvC4v
+         n+0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=9E/mZeimCA88giN6rs5vLbSeCJTF3k6+VjGGAIWcV/k=;
+        b=rl5eUSDhmQYSot4BGMYTsXpLVGwVHQF15Ob+PqUOD1nUESqPKpAgXOWhI5UQr9DCOh
+         EvAwlX1TWMJnmdDO1C0yCvk1qnnLRw8ETeHq0adkuFbxdU9iVkjC/L7eBTkHSvmy8n/B
+         wxZ+vPECU+QvZi/ZutPxXJVdJUDGBuQvkm4VStE0zvi+JbuqXwoXXU4nZbOXEbli8t5x
+         T5nI9jaQUqC6M8g9LXYoH+4eBWp+gMfBfQZZ+AqegkuB8HFJa+fWFzjRvR5x9HPeu8fb
+         49khswZ8iCuJlx0Ct6jjFzT+4bUp65QpsnwFWuBAO3XBGDKFrC8JEOEPzEizgLCFtF/0
+         CT6Q==
+X-Gm-Message-State: AJIora9twr7R+1sRxqw1FwrAQGBsi9O6pouPTWFJVlRdX1mHF7yKKVQm
+        BpIw7eedV5+cOgOh1VAhREI=
+X-Google-Smtp-Source: AGRyM1ugzG/hWta6GrNXvx8TwkDWRE+33xf7z7yDD3ABzTqFoJGGI3w37eb8VXs8f7UPN2v+VqSsyQ==
+X-Received: by 2002:a63:d711:0:b0:415:c581:2aff with SMTP id d17-20020a63d711000000b00415c5812affmr1902658pgg.278.1657314563948;
+        Fri, 08 Jul 2022 14:09:23 -0700 (PDT)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id q4-20020a17090311c400b0016bfaee8244sm7402307plh.14.2022.07.08.14.09.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Jul 2022 14:09:23 -0700 (PDT)
+From:   Florian Fainelli <f.fainelli@gmail.com>
+To:     bcm-kernel-feedback-list@broadcom.com,
+        William Zhang <william.zhang@broadcom.com>,
+        Linux ARM List <linux-arm-kernel@lists.infradead.org>
+Cc:     anand.gore@broadcom.com, dan.beygelman@broadcom.com,
+        kursad.oney@broadcom.com, joel.peshkin@broadcom.com,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH 2/8] ata: ahci_brcm: bcmbca: Replace ARCH_BCM_63XX with ARCH_BCMBCA
+Date:   Fri,  8 Jul 2022 14:09:21 -0700
+Message-Id: <20220708210921.2660714-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220707065800.261269-2-william.zhang@broadcom.com>
+References: <20220707065800.261269-1-william.zhang@broadcom.com> <20220707065800.261269-2-william.zhang@broadcom.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [PATCH v5 0/5] DMA mapping changes for SCSI core
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-CC:     <damien.lemoal@opensource.wdc.com>, <joro@8bytes.org>,
-        <will@kernel.org>, <jejb@linux.ibm.com>,
-        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>,
-        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
-        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>
-References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
- <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
- <20220706134447.GA23753@lst.de> <yq1y1x47jgn.fsf@ca-mkp.ca.oracle.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <yq1y1x47jgn.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.195.34.23]
-X-ClientProxiedBy: lhreml748-chm.china.huawei.com (10.201.108.198) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 07/07/2022 21:35, Martin K. Petersen wrote:
-> Christoph,
+On Wed,  6 Jul 2022 23:57:53 -0700, William Zhang <william.zhang@broadcom.com> wrote:
+> Prepare for the BCM63138 ARCH_BCM_63XX migration to ARCH_BCMBCA. Make
+> AHCI_BRCM depending on ARCH_BCMBCA.
 > 
->> Yes, I've mostly been waiting for an ACK from Martin.
-> Sorry, I'm on vacation this week. The series looks OK to me although I
-> do agree that it would be great if the max was reflected in the queue's
-> hard limit and opt in the soft limit.
+> Signed-off-by: William Zhang <william.zhang@broadcom.com>
+> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
 
-Ah, I think that I misunderstood Damien's question. I thought he was 
-asking why not keep shost max_sectors at dma_max_mapping_size() and then 
-init each sdev request queue max hw sectors at dma_opt_mapping_size().
-
-But he seems that you want to know why not have the request queue max 
-sectors at dma_opt_mapping_size(). The answer is related to meaning of 
-dma_opt_mapping_size(). If we get any mappings which exceed this size 
-then it can have a big dma mapping performance hit. So I set max hw 
-sectors at this ‘opt’ mapping size to ensure that we get no mappings 
-which exceed this size. Indeed, I think max sectors is 128Kb today for 
-my host, which would be same as dma_opt_mapping_size() value with an 
-IOMMU enabled. And I find that only a small % of request size may exceed 
-this 128kb size, but it still has a big performance impact.
-
-> 
-> Acked-by: Martin K. Petersen<martin.petersen@oracle.com>
-
-Thanks,
-John
+Applied to https://github.com/Broadcom/stblinux/commits/drivers/next, thanks!
+--
+Florian
