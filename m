@@ -2,77 +2,141 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18783C43334
-	for <linux-ide@archiver.kernel.org>; Sun, 10 Jul 2022 14:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B8CC43334
+	for <linux-ide@archiver.kernel.org>; Sun, 10 Jul 2022 21:26:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbiGJOWL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 10 Jul 2022 10:22:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41656 "EHLO
+        id S229895AbiGJV0w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 10 Jul 2022 17:26:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbiGJOWL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jul 2022 10:22:11 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDCDD11811;
-        Sun, 10 Jul 2022 07:22:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1657462927;
-        bh=UEHzy2UOGNOI4erbhTVIqhEBR1G0jFo5sbobopAQmCc=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=xi3D1kEvoEXnShgXHBpH9GzWpq1xih4Hjv8jUVNvMVul4NSMUCEOQGkQNE1Suxx/b
-         9fmX111AWjz28ipisp23a9SsRjTFYYJCV3E9+gTb0ydaxhVSQFSXBBiaHdyFwY/BtC
-         h8plGxBbj6+nvOy3aTffQ+TdTT/r5eLGYzVAsIT4=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id DD4741281218;
-        Sun, 10 Jul 2022 10:22:07 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 4jJXjst3V0te; Sun, 10 Jul 2022 10:22:07 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1657462927;
-        bh=UEHzy2UOGNOI4erbhTVIqhEBR1G0jFo5sbobopAQmCc=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=xi3D1kEvoEXnShgXHBpH9GzWpq1xih4Hjv8jUVNvMVul4NSMUCEOQGkQNE1Suxx/b
-         9fmX111AWjz28ipisp23a9SsRjTFYYJCV3E9+gTb0ydaxhVSQFSXBBiaHdyFwY/BtC
-         h8plGxBbj6+nvOy3aTffQ+TdTT/r5eLGYzVAsIT4=
-Received: from [172.19.0.226] (unknown [75.104.86.111])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 1B70B1280361;
-        Sun, 10 Jul 2022 10:22:02 -0400 (EDT)
-Message-ID: <cec12e246d7151f6041bf553629a3047e81d4afe.camel@HansenPartnership.com>
-Subject: Re: [PATCH] drivers/ata: fix repeated words in comments
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Jilin Yuan <yuanjilin@cdjrlc.com>,
-        damien.lemoal@opensource.wdc.com, s.shtylyov@omp.ru
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Sun, 10 Jul 2022 10:21:56 -0400
-In-Reply-To: <20220710052203.12349-1-yuanjilin@cdjrlc.com>
-References: <20220710052203.12349-1-yuanjilin@cdjrlc.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S229799AbiGJV0O (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jul 2022 17:26:14 -0400
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BAE4167F1
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 14:25:30 -0700 (PDT)
+Received: by mail-wr1-x429.google.com with SMTP id a5so4744608wrx.12
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 14:25:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linexp-org.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=qWuLOj6nDfiApNSc64J2uRqACZX+IVavJuD3AMPKGUY=;
+        b=cdYKu83P0gOPdJq4HqnHimBhZEQhFDIWWzxJRonAfn7A8HPPQ1Ra7rZ/q6UwVnfqm3
+         AwqqjY8+BZYNYi1rFjHrBccBWZF9f7o7L4dL/eWanJc7IM+adwgjgN/ZEuojhpOFdvJJ
+         9lAKbhl7+CSfOdVpINdyi2meeBdqKKWhggHBfJm0L21Uenxu6ekzeZ/BKa4cwsnTB7kb
+         iREsWBLbQm6O4BI3/gLMkuCZMG6AwQ5yPN+iQPM84ZLXQOJoMfV3LXKBCQNk9OkSE9oP
+         VSuXHjqgB31tAgwc/VXzGdxhh32uU53Twdu8mDKn9uuPvDrHy/OznX0++lluMvnnquf2
+         kWbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=qWuLOj6nDfiApNSc64J2uRqACZX+IVavJuD3AMPKGUY=;
+        b=QqE1OV3xH4qrXkRzvb8pTAtOr3HIDBm6AMB/ngeEXQruGhoift78BaSdSl7ZvGDiSv
+         ICsz5KdE4+E4Gk7cKbQ+K0FmPQBM4q+Xu6RkXf2nIG8qv2UwGTjDvlYBktPGknbDA6Fc
+         a3KeikvjHLqxFXPXAEZZSV7M3jHm4ozLSY1LrOQ243XNABXCFe4kfFPcEX0j7hdHOTCj
+         GFE03y8XNTsFi4RigG1Atdc9Er9ThyA2674jFJV5yn6J1SPua2pw55eTOr2EVtDXuMol
+         CYuZsK2yEtqhdSR3/JOoPOCH9FLBxd5Mtmn/Lr7pLIKQDOtL6EbSy3IR2o/F1VHMdPk/
+         wFxw==
+X-Gm-Message-State: AJIora/ZoADzGhPx+rz16/QEriaoUgN7ek1EmVXr4TE8/MfVafujLkeW
+        VIybcYq8a6rjH7Km9REJZRU1bg==
+X-Google-Smtp-Source: AGRyM1u7otQoNLhS1lQ+oub24K4MnjT+FBSWkx06RuIyOEGGrp95LgLnjfxEXYrnOsJCTwc0Ssd5Ww==
+X-Received: by 2002:adf:e18e:0:b0:21d:8d22:bb24 with SMTP id az14-20020adfe18e000000b0021d8d22bb24mr14143838wrb.397.1657488315767;
+        Sun, 10 Jul 2022 14:25:15 -0700 (PDT)
+Received: from mai.box.freepro.com ([2a05:6e02:1041:c10:c7c0:6823:f3ce:2447])
+        by smtp.gmail.com with ESMTPSA id m19-20020a05600c3b1300b003a2dd0d21f0sm7142759wms.13.2022.07.10.14.25.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 10 Jul 2022 14:25:15 -0700 (PDT)
+From:   Daniel Lezcano <daniel.lezcano@linexp.org>
+To:     daniel.lezcano@linaro.org, rafael@kernel.org
+Cc:     rui.zhang@intel.com, khilman@baylibre.com, abailon@baylibre.com,
+        amitk@kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/FREESCALE IMX
+        / MXC ARM ARCHITECTURE)
+Subject: [PATCH v1 25/33] ata/drivers/ahci_imx: Switch to new of thermal API
+Date:   Sun, 10 Jul 2022 23:24:15 +0200
+Message-Id: <20220710212423.681301-26-daniel.lezcano@linexp.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220710212423.681301-1-daniel.lezcano@linexp.org>
+References: <20220710212423.681301-1-daniel.lezcano@linexp.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, 2022-07-10 at 13:22 +0800, Jilin Yuan wrote:
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 3307ed45fe4d..f2ac8340e769 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -863,7 +863,7 @@ void ata_eh_fastdrain_timerfn(struct timer_list
-> *t)
->   *
->   *	Set ATA_PFLAG_EH_PENDING and activate fast drain if @fastdrain
->   *	is non-zero and EH wasn't pending before.  Fast drain ensures
-> - *	that EH kicks in in timely manner.
-> + *	that EH kicks in timely manner.
+The thermal OF code has a new API allowing to migrate the OF
+initialization to a simpler approach.
 
-The original is correct and the update doesn't make sense.  Of course
-adding an article would make the original read better ...
+Use this new API.
 
-James
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linexp.org>
+---
+ drivers/ata/ahci_imx.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 79aa9f285312..5ad9a890e71a 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -327,7 +327,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
+ }
+ 
+ /* SATA AHCI temperature monitor */
+-static int sata_ahci_read_temperature(void *dev, int *temp)
++static int __sata_ahci_read_temperature(void *dev, int *temp)
+ {
+ 	u16 mpll_test_reg, rtune_ctl_reg, dac_ctl_reg, read_sum;
+ 	u32 str1, str2, str3, str4;
+@@ -416,6 +416,11 @@ static int sata_ahci_read_temperature(void *dev, int *temp)
+ 	return 0;
+ }
+ 
++static int sata_ahci_read_temperature(struct thermal_zone_device *tz, int *temp)
++{
++	return __sata_ahci_read_temperature(tz->devdata, temp);
++}
++
+ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 				   struct device_attribute *da,
+ 				   char *buf)
+@@ -423,14 +428,14 @@ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 	unsigned int temp = 0;
+ 	int err;
+ 
+-	err = sata_ahci_read_temperature(dev, &temp);
++	err = __sata_ahci_read_temperature(dev, &temp);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	return sprintf(buf, "%u\n", temp);
+ }
+ 
+-static const struct thermal_zone_of_device_ops fsl_sata_ahci_of_thermal_ops = {
++static struct thermal_zone_device_ops fsl_sata_ahci_of_thermal_ops = {
+ 	.get_temp = sata_ahci_read_temperature,
+ };
+ 
+@@ -1131,8 +1136,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 			ret = PTR_ERR(hwmon_dev);
+ 			goto disable_clk;
+ 		}
+-		devm_thermal_zone_of_sensor_register(hwmon_dev, 0, hwmon_dev,
+-					     &fsl_sata_ahci_of_thermal_ops);
++		devm_thermal_of_zone_register(hwmon_dev, 0, hwmon_dev,
++					      &fsl_sata_ahci_of_thermal_ops);
+ 		dev_info(dev, "%s: sensor 'sata_ahci'\n", dev_name(hwmon_dev));
+ 	}
+ 
+-- 
+2.25.1
 
