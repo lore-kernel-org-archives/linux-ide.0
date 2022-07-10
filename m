@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 294DEC43334
-	for <linux-ide@archiver.kernel.org>; Sun, 10 Jul 2022 23:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE0DC43334
+	for <linux-ide@archiver.kernel.org>; Sun, 10 Jul 2022 23:12:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229478AbiGJXIf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 10 Jul 2022 19:08:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35384 "EHLO
+        id S229476AbiGJXME (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 10 Jul 2022 19:12:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229537AbiGJXIe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jul 2022 19:08:34 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5B5A5F63
-        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 16:08:33 -0700 (PDT)
+        with ESMTP id S229450AbiGJXME (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jul 2022 19:12:04 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 866C95FB9
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 16:12:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1657494512; x=1689030512;
+  t=1657494723; x=1689030723;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=mKne22iKALzQ3J0xLcJU8NPKnJVHQYik+HOhe8r31SI=;
-  b=f64l87Dm5MY1q0qb+U4qtmSHBGiWsSSTBsSWpoRHcO+Y6bXfDMdm90Rz
-   I3RblogT2gSGj+U299oWKyIg87VzUE5lAzbstMoDCbUGw946PHm+z/jrq
-   7HSV+yHRZmjUdXaUOXwDj8CMOUgOXbGiV3CNLb3IsxFxltA6qDced0OGV
-   tnZCz/I3iwiMxEBphrviItb9X2eb3hjY9e1seD9G0wM7EZ68ClQJ8hsx6
-   kJoodT99P1UCjhyntj4C6gRW+WvJqLgFKX5unWUbWRo4yzziQfxlKEdK4
-   feqS+z+7xIIs74c3uPe0eUVmJhxnerE3RrzEkycM4pt7tsJ7F/bOMKa+Q
+  bh=y6n2xO56ccReruOffYR7/rcHB13U7RFfKAUPB4hruKU=;
+  b=qiX3Ydx5Iq8xMofWvZL0OFqpCYOv+TeVFY3gqpKFNw9JN8Tml+zKNKOz
+   Axm6JMVljx3fLSLcfuP2Zbo1FEe6jdoxPKxf3WahUUBjZJFwYPfWFlB9L
+   23xoUkbXDYIT4mQkdd4YZD+b0ok3BFZSnST6CXsUSx0qTWP27P0qr5cxt
+   5QufH2aH2JUPPD7f/d1pnIsACul0YSXfYgrITl5NOfl9D5yI4ITT9ttRv
+   t69u4/wHINtQXWJyhW/t34B3mt/lQ8f1Ch6fTrdyDSpbPWrKfQLI2N/bC
+   aTWMsbS1MEpQ9j3VnqB6VxRRmzHUkD0rI3Arf3nhN0OC492WtIVjmy/rB
    g==;
 X-IronPort-AV: E=Sophos;i="5.92,261,1650902400"; 
-   d="scan'208";a="205310165"
+   d="scan'208";a="317444933"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Jul 2022 07:08:30 +0800
-IronPort-SDR: BpnA7fXkRuLKfp3RXlbl0BamdTXS853tYV6lnV7xnGkscdmSlulhJU/yIicZzCBg92PxZfjyI8
- YZB6yiKd3POQvYaF2SnkwGxehGeiVkLaAre3wt7mztvrPvnkJK/AG8o/D+koNim+0ljR7btiKi
- Js6dml5PZuRx58Zz4t/2QnYLHCv4Im0IS/Ot8oGNuKFe9f2Q5Z0GdlzShcIldLbsJ0rCmkdKA9
- ivu40+jVQNrCcAdvyS0C1mmYFIrTIIlxdr1IqYUGGSU166oG4B3PQ/6fyFMJcQ7lN3+/opEA8R
- CoM//j12MFrmyEdj9PW7F1Yn
+  by ob1.hgst.iphmx.com with ESMTP; 11 Jul 2022 07:12:02 +0800
+IronPort-SDR: oI8JSNscgpKSn2+u7E7dSekJcFsiJ3KsDfekWKkC1GFfKZ2R3Y5ylUe5U+2nyRrxx9boMBKRdS
+ v1xs7TripY7sDKHXfOMZ5JsIDmOFlFR3PCtITiOvt8a9pRYatUdmRnsgv3n3hKkiuc+DBp2Oxs
+ q95K5RRo1UYh4ZJpCqYIeR6vKv5RG3cDIE3dP3YX7c0luyGxxNaSLBT5Whbju8ewALokdb38qI
+ sJy4cdDvQ6MQ+9/5HoUqg61g3gU4lJDXAAa/N9IICeCi+5PMtGOUoEpQn4bQ/nlB+sxt8zeocL
+ as5fbFMmLxT9POJekZ+0ayfq
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jul 2022 15:30:09 -0700
-IronPort-SDR: /zYExmVkVitcV8xzFncH4qU+W7Q+l1k+dm1yY+RgdDS/duDpq6K7ZcaaRu3/Z/igMSoO4wSgRx
- tZi6Jetr5PeZMianJMXGApl+M4hDQNQSNrsrZL2TFGj2NaYj25oweFDp4f9tgy9heRbaEWkuXY
- fmBLlzI1Qd6c9azx2lbMDFXBu67V9kNX+5W8P3JrYhJv4NMQr7CWFBcyyQnniWqCuuRWz03JBz
- FccOPAXHFZmO6/iN2N63nNMhZ6JX/pLu0tc3+KRmRJWWyLTXBqAJB5OjExXi/bh8m+2pXuDxjK
- EfE=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jul 2022 15:33:40 -0700
+IronPort-SDR: utAjjSLw1AgtNUFrOkUZDZ3OJlwlGaRWfYqBKI4jsg4+wjc+j0+Tnrnfpe35mxLlR7RpiPUV0O
+ aAQtogLms+YlgoCCq/INQk20HhpsazWyM26ppCTBWnBaQSOxpCHiWTvKdV/gVuRgSMMHGufhP8
+ vRB5eCAtNp28YJmMDHVnBsFttiWU7HpsQPmX3Qe2P61KXZ3QBb5Q8CNID2N4OA/8dFhCvf2zfU
+ 0vRaj9gretbmmzTmqf807n9TuTpsUTMc4uQaxmVJg37dbqq2650umJPQqVR1n18zrsDWaD+txP
+ VHU=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jul 2022 16:08:31 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jul 2022 16:12:03 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lh2kP5VgYz1Rwry
-        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 16:08:29 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lh2pV12xnz1RwqM
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 16:12:02 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,89 +56,67 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1657494509; x=1660086510; bh=mKne22iKALzQ3J0xLcJU8NPKnJVHQYik+HO
-        he8r31SI=; b=LFBrpQ2567/K4oU4UX1SyFMfJ8BAa4bdsk1UJ/NMSHvt37CYjOf
-        1kbvpSo8/bCcW9xh3pjCSJKXmr8wvDZv/F8hxNeg7l97iwC8m6L2E7G+eKJF1Lt5
-        tuHTFC7W6GUwcMXVmAQRGXBOUdnaBe2+GGkRBtMgeAxHuz3t0zjI6GvNFJO2Ip7O
-        JEAGQxLI1dFWwGgeZXKVQ/AhQ47Ukri78yOLdbxnM9K3sBHTAoJ8M7KnTr8t/e4j
-        +5SzXzsyZHnO99NQ/x7k8lv2NhJWaoJ9mbn6ecUdD/LZHdctnaPoKFR77Z78u8U+
-        PSrqKxNyIHtWMXXPfCzy7HEip35NWR6kZYQ==
+        1657494721; x=1660086722; bh=y6n2xO56ccReruOffYR7/rcHB13U7RFfKAU
+        PB4hruKU=; b=dnjrd6Sl9EoZ7U+i192CYUEyM9kIQWPHutxp/22MNeUYorF0nZ+
+        1e8JCWt6jPLOi3RTxrxoTVgPM3VUOARfuEFJXzHqPWZ1vcOnzblU3uW81ls3iEkQ
+        Q65de0WR5dlbBgFvbITYQAXw90rGHK+KoitlKzp+EoZ35bhv5vitDa8Ile5SN/QM
+        h1ynvRstMsdkhuHUZp8Kx6PUgcW1up9yWctm9ulinwgUJUGJe94eGJ8/8ve6ED9Z
+        MhVz+uT+HXH2jzwDVNy4b19ZeEYSByc/Zbvfy7gTT5FsRD9cnYY/2RfHRj53ZffE
+        4YlOejzQHqqRBpAJ4fmKvFW6Jjzfc0YWLGw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id enyBkMBk4lFa for <linux-ide@vger.kernel.org>;
-        Sun, 10 Jul 2022 16:08:29 -0700 (PDT)
+        with ESMTP id 8ZoSzcadxWp0 for <linux-ide@vger.kernel.org>;
+        Sun, 10 Jul 2022 16:12:01 -0700 (PDT)
 Received: from [10.225.163.114] (unknown [10.225.163.114])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Lh2kK2D3Hz1RtVk;
-        Sun, 10 Jul 2022 16:08:25 -0700 (PDT)
-Message-ID: <6367a264-a3d3-8857-9b5a-2afcd25580cb@opensource.wdc.com>
-Date:   Mon, 11 Jul 2022 08:08:23 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Lh2pS5TmLz1RtVk;
+        Sun, 10 Jul 2022 16:12:00 -0700 (PDT)
+Message-ID: <81f7fc52-1adf-a26b-3f43-5fdf975ee57c@opensource.wdc.com>
+Date:   Mon, 11 Jul 2022 08:11:59 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.11.0
-Subject: Re: [PATCH v5 0/5] DMA mapping changes for SCSI core
+Subject: Re: [PATCH] drivers/ata: fix repeated words in comments
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     joro@8bytes.org, will@kernel.org, jejb@linux.ibm.com,
-        m.szyprowski@samsung.com, robin.murphy@arm.com,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
-        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
-References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
- <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
- <20220706134447.GA23753@lst.de> <yq1y1x47jgn.fsf@ca-mkp.ca.oracle.com>
- <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Jilin Yuan <yuanjilin@cdjrlc.com>, s.shtylyov@omp.ru
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220710052203.12349-1-yuanjilin@cdjrlc.com>
+ <cec12e246d7151f6041bf553629a3047e81d4afe.camel@HansenPartnership.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
+In-Reply-To: <cec12e246d7151f6041bf553629a3047e81d4afe.camel@HansenPartnership.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/9/22 01:17, John Garry wrote:
-> On 07/07/2022 21:35, Martin K. Petersen wrote:
->> Christoph,
->>
->>> Yes, I've mostly been waiting for an ACK from Martin.
->> Sorry, I'm on vacation this week. The series looks OK to me although I
->> do agree that it would be great if the max was reflected in the queue'=
-s
->> hard limit and opt in the soft limit.
->=20
-> Ah, I think that I misunderstood Damien's question. I thought he was=20
-> asking why not keep shost max_sectors at dma_max_mapping_size() and the=
-n=20
-> init each sdev request queue max hw sectors at dma_opt_mapping_size().
+On 7/10/22 23:21, James Bottomley wrote:
+> On Sun, 2022-07-10 at 13:22 +0800, Jilin Yuan wrote:
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index 3307ed45fe4d..f2ac8340e769 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -863,7 +863,7 @@ void ata_eh_fastdrain_timerfn(struct timer_list
+>> *t)
+>>   *
+>>   *	Set ATA_PFLAG_EH_PENDING and activate fast drain if @fastdrain
+>>   *	is non-zero and EH wasn't pending before.  Fast drain ensures
+>> - *	that EH kicks in in timely manner.
+>> + *	that EH kicks in timely manner.
+> 
+> The original is correct and the update doesn't make sense.  Of course
+> adding an article would make the original read better ...
 
-I was suggesting the reverse :) Keep the device hard limit
-(max_hw_sectors) to the max dma mapping and set the soft limit
-(max_sectors) to the optimal dma mapping size.
+yep: ...that EH kicks in in a timely manner.
 
->=20
-> But he seems that you want to know why not have the request queue max=20
-> sectors at dma_opt_mapping_size(). The answer is related to meaning of=20
-> dma_opt_mapping_size(). If we get any mappings which exceed this size=20
-> then it can have a big dma mapping performance hit. So I set max hw=20
-> sectors at this =E2=80=98opt=E2=80=99 mapping size to ensure that we ge=
-t no mappings=20
-> which exceed this size. Indeed, I think max sectors is 128Kb today for=20
-> my host, which would be same as dma_opt_mapping_size() value with an=20
-> IOMMU enabled. And I find that only a small % of request size may excee=
-d=20
-> this 128kb size, but it still has a big performance impact.
->=20
->>
->> Acked-by: Martin K. Petersen<martin.petersen@oracle.com>
->=20
-> Thanks,
-> John
+> 
+> James
+> 
+> 
 
 
---=20
+-- 
 Damien Le Moal
 Western Digital Research
