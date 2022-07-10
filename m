@@ -2,141 +2,143 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B8CC43334
-	for <linux-ide@archiver.kernel.org>; Sun, 10 Jul 2022 21:26:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 294DEC43334
+	for <linux-ide@archiver.kernel.org>; Sun, 10 Jul 2022 23:08:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229895AbiGJV0w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 10 Jul 2022 17:26:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46968 "EHLO
+        id S229478AbiGJXIf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 10 Jul 2022 19:08:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229799AbiGJV0O (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jul 2022 17:26:14 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BAE4167F1
-        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 14:25:30 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id a5so4744608wrx.12
-        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 14:25:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linexp-org.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=qWuLOj6nDfiApNSc64J2uRqACZX+IVavJuD3AMPKGUY=;
-        b=cdYKu83P0gOPdJq4HqnHimBhZEQhFDIWWzxJRonAfn7A8HPPQ1Ra7rZ/q6UwVnfqm3
-         AwqqjY8+BZYNYi1rFjHrBccBWZF9f7o7L4dL/eWanJc7IM+adwgjgN/ZEuojhpOFdvJJ
-         9lAKbhl7+CSfOdVpINdyi2meeBdqKKWhggHBfJm0L21Uenxu6ekzeZ/BKa4cwsnTB7kb
-         iREsWBLbQm6O4BI3/gLMkuCZMG6AwQ5yPN+iQPM84ZLXQOJoMfV3LXKBCQNk9OkSE9oP
-         VSuXHjqgB31tAgwc/VXzGdxhh32uU53Twdu8mDKn9uuPvDrHy/OznX0++lluMvnnquf2
-         kWbA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=qWuLOj6nDfiApNSc64J2uRqACZX+IVavJuD3AMPKGUY=;
-        b=QqE1OV3xH4qrXkRzvb8pTAtOr3HIDBm6AMB/ngeEXQruGhoift78BaSdSl7ZvGDiSv
-         ICsz5KdE4+E4Gk7cKbQ+K0FmPQBM4q+Xu6RkXf2nIG8qv2UwGTjDvlYBktPGknbDA6Fc
-         a3KeikvjHLqxFXPXAEZZSV7M3jHm4ozLSY1LrOQ243XNABXCFe4kfFPcEX0j7hdHOTCj
-         GFE03y8XNTsFi4RigG1Atdc9Er9ThyA2674jFJV5yn6J1SPua2pw55eTOr2EVtDXuMol
-         CYuZsK2yEtqhdSR3/JOoPOCH9FLBxd5Mtmn/Lr7pLIKQDOtL6EbSy3IR2o/F1VHMdPk/
-         wFxw==
-X-Gm-Message-State: AJIora/ZoADzGhPx+rz16/QEriaoUgN7ek1EmVXr4TE8/MfVafujLkeW
-        VIybcYq8a6rjH7Km9REJZRU1bg==
-X-Google-Smtp-Source: AGRyM1u7otQoNLhS1lQ+oub24K4MnjT+FBSWkx06RuIyOEGGrp95LgLnjfxEXYrnOsJCTwc0Ssd5Ww==
-X-Received: by 2002:adf:e18e:0:b0:21d:8d22:bb24 with SMTP id az14-20020adfe18e000000b0021d8d22bb24mr14143838wrb.397.1657488315767;
-        Sun, 10 Jul 2022 14:25:15 -0700 (PDT)
-Received: from mai.box.freepro.com ([2a05:6e02:1041:c10:c7c0:6823:f3ce:2447])
-        by smtp.gmail.com with ESMTPSA id m19-20020a05600c3b1300b003a2dd0d21f0sm7142759wms.13.2022.07.10.14.25.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Jul 2022 14:25:15 -0700 (PDT)
-From:   Daniel Lezcano <daniel.lezcano@linexp.org>
-To:     daniel.lezcano@linaro.org, rafael@kernel.org
-Cc:     rui.zhang@intel.com, khilman@baylibre.com, abailon@baylibre.com,
-        amitk@kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/FREESCALE IMX
-        / MXC ARM ARCHITECTURE)
-Subject: [PATCH v1 25/33] ata/drivers/ahci_imx: Switch to new of thermal API
-Date:   Sun, 10 Jul 2022 23:24:15 +0200
-Message-Id: <20220710212423.681301-26-daniel.lezcano@linexp.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220710212423.681301-1-daniel.lezcano@linexp.org>
-References: <20220710212423.681301-1-daniel.lezcano@linexp.org>
+        with ESMTP id S229537AbiGJXIe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Jul 2022 19:08:34 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5B5A5F63
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 16:08:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1657494512; x=1689030512;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=mKne22iKALzQ3J0xLcJU8NPKnJVHQYik+HOhe8r31SI=;
+  b=f64l87Dm5MY1q0qb+U4qtmSHBGiWsSSTBsSWpoRHcO+Y6bXfDMdm90Rz
+   I3RblogT2gSGj+U299oWKyIg87VzUE5lAzbstMoDCbUGw946PHm+z/jrq
+   7HSV+yHRZmjUdXaUOXwDj8CMOUgOXbGiV3CNLb3IsxFxltA6qDced0OGV
+   tnZCz/I3iwiMxEBphrviItb9X2eb3hjY9e1seD9G0wM7EZ68ClQJ8hsx6
+   kJoodT99P1UCjhyntj4C6gRW+WvJqLgFKX5unWUbWRo4yzziQfxlKEdK4
+   feqS+z+7xIIs74c3uPe0eUVmJhxnerE3RrzEkycM4pt7tsJ7F/bOMKa+Q
+   g==;
+X-IronPort-AV: E=Sophos;i="5.92,261,1650902400"; 
+   d="scan'208";a="205310165"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Jul 2022 07:08:30 +0800
+IronPort-SDR: BpnA7fXkRuLKfp3RXlbl0BamdTXS853tYV6lnV7xnGkscdmSlulhJU/yIicZzCBg92PxZfjyI8
+ YZB6yiKd3POQvYaF2SnkwGxehGeiVkLaAre3wt7mztvrPvnkJK/AG8o/D+koNim+0ljR7btiKi
+ Js6dml5PZuRx58Zz4t/2QnYLHCv4Im0IS/Ot8oGNuKFe9f2Q5Z0GdlzShcIldLbsJ0rCmkdKA9
+ ivu40+jVQNrCcAdvyS0C1mmYFIrTIIlxdr1IqYUGGSU166oG4B3PQ/6fyFMJcQ7lN3+/opEA8R
+ CoM//j12MFrmyEdj9PW7F1Yn
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jul 2022 15:30:09 -0700
+IronPort-SDR: /zYExmVkVitcV8xzFncH4qU+W7Q+l1k+dm1yY+RgdDS/duDpq6K7ZcaaRu3/Z/igMSoO4wSgRx
+ tZi6Jetr5PeZMianJMXGApl+M4hDQNQSNrsrZL2TFGj2NaYj25oweFDp4f9tgy9heRbaEWkuXY
+ fmBLlzI1Qd6c9azx2lbMDFXBu67V9kNX+5W8P3JrYhJv4NMQr7CWFBcyyQnniWqCuuRWz03JBz
+ FccOPAXHFZmO6/iN2N63nNMhZ6JX/pLu0tc3+KRmRJWWyLTXBqAJB5OjExXi/bh8m+2pXuDxjK
+ EfE=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jul 2022 16:08:31 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lh2kP5VgYz1Rwry
+        for <linux-ide@vger.kernel.org>; Sun, 10 Jul 2022 16:08:29 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1657494509; x=1660086510; bh=mKne22iKALzQ3J0xLcJU8NPKnJVHQYik+HO
+        he8r31SI=; b=LFBrpQ2567/K4oU4UX1SyFMfJ8BAa4bdsk1UJ/NMSHvt37CYjOf
+        1kbvpSo8/bCcW9xh3pjCSJKXmr8wvDZv/F8hxNeg7l97iwC8m6L2E7G+eKJF1Lt5
+        tuHTFC7W6GUwcMXVmAQRGXBOUdnaBe2+GGkRBtMgeAxHuz3t0zjI6GvNFJO2Ip7O
+        JEAGQxLI1dFWwGgeZXKVQ/AhQ47Ukri78yOLdbxnM9K3sBHTAoJ8M7KnTr8t/e4j
+        +5SzXzsyZHnO99NQ/x7k8lv2NhJWaoJ9mbn6ecUdD/LZHdctnaPoKFR77Z78u8U+
+        PSrqKxNyIHtWMXXPfCzy7HEip35NWR6kZYQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id enyBkMBk4lFa for <linux-ide@vger.kernel.org>;
+        Sun, 10 Jul 2022 16:08:29 -0700 (PDT)
+Received: from [10.225.163.114] (unknown [10.225.163.114])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Lh2kK2D3Hz1RtVk;
+        Sun, 10 Jul 2022 16:08:25 -0700 (PDT)
+Message-ID: <6367a264-a3d3-8857-9b5a-2afcd25580cb@opensource.wdc.com>
+Date:   Mon, 11 Jul 2022 08:08:23 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v5 0/5] DMA mapping changes for SCSI core
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     joro@8bytes.org, will@kernel.org, jejb@linux.ibm.com,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
+        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
+ <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
+ <20220706134447.GA23753@lst.de> <yq1y1x47jgn.fsf@ca-mkp.ca.oracle.com>
+ <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The thermal OF code has a new API allowing to migrate the OF
-initialization to a simpler approach.
+On 7/9/22 01:17, John Garry wrote:
+> On 07/07/2022 21:35, Martin K. Petersen wrote:
+>> Christoph,
+>>
+>>> Yes, I've mostly been waiting for an ACK from Martin.
+>> Sorry, I'm on vacation this week. The series looks OK to me although I
+>> do agree that it would be great if the max was reflected in the queue'=
+s
+>> hard limit and opt in the soft limit.
+>=20
+> Ah, I think that I misunderstood Damien's question. I thought he was=20
+> asking why not keep shost max_sectors at dma_max_mapping_size() and the=
+n=20
+> init each sdev request queue max hw sectors at dma_opt_mapping_size().
 
-Use this new API.
+I was suggesting the reverse :) Keep the device hard limit
+(max_hw_sectors) to the max dma mapping and set the soft limit
+(max_sectors) to the optimal dma mapping size.
 
-Signed-off-by: Daniel Lezcano <daniel.lezcano@linexp.org>
----
- drivers/ata/ahci_imx.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+>=20
+> But he seems that you want to know why not have the request queue max=20
+> sectors at dma_opt_mapping_size(). The answer is related to meaning of=20
+> dma_opt_mapping_size(). If we get any mappings which exceed this size=20
+> then it can have a big dma mapping performance hit. So I set max hw=20
+> sectors at this =E2=80=98opt=E2=80=99 mapping size to ensure that we ge=
+t no mappings=20
+> which exceed this size. Indeed, I think max sectors is 128Kb today for=20
+> my host, which would be same as dma_opt_mapping_size() value with an=20
+> IOMMU enabled. And I find that only a small % of request size may excee=
+d=20
+> this 128kb size, but it still has a big performance impact.
+>=20
+>>
+>> Acked-by: Martin K. Petersen<martin.petersen@oracle.com>
+>=20
+> Thanks,
+> John
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 79aa9f285312..5ad9a890e71a 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -327,7 +327,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
- }
- 
- /* SATA AHCI temperature monitor */
--static int sata_ahci_read_temperature(void *dev, int *temp)
-+static int __sata_ahci_read_temperature(void *dev, int *temp)
- {
- 	u16 mpll_test_reg, rtune_ctl_reg, dac_ctl_reg, read_sum;
- 	u32 str1, str2, str3, str4;
-@@ -416,6 +416,11 @@ static int sata_ahci_read_temperature(void *dev, int *temp)
- 	return 0;
- }
- 
-+static int sata_ahci_read_temperature(struct thermal_zone_device *tz, int *temp)
-+{
-+	return __sata_ahci_read_temperature(tz->devdata, temp);
-+}
-+
- static ssize_t sata_ahci_show_temp(struct device *dev,
- 				   struct device_attribute *da,
- 				   char *buf)
-@@ -423,14 +428,14 @@ static ssize_t sata_ahci_show_temp(struct device *dev,
- 	unsigned int temp = 0;
- 	int err;
- 
--	err = sata_ahci_read_temperature(dev, &temp);
-+	err = __sata_ahci_read_temperature(dev, &temp);
- 	if (err < 0)
- 		return err;
- 
- 	return sprintf(buf, "%u\n", temp);
- }
- 
--static const struct thermal_zone_of_device_ops fsl_sata_ahci_of_thermal_ops = {
-+static struct thermal_zone_device_ops fsl_sata_ahci_of_thermal_ops = {
- 	.get_temp = sata_ahci_read_temperature,
- };
- 
-@@ -1131,8 +1136,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 			ret = PTR_ERR(hwmon_dev);
- 			goto disable_clk;
- 		}
--		devm_thermal_zone_of_sensor_register(hwmon_dev, 0, hwmon_dev,
--					     &fsl_sata_ahci_of_thermal_ops);
-+		devm_thermal_of_zone_register(hwmon_dev, 0, hwmon_dev,
-+					      &fsl_sata_ahci_of_thermal_ops);
- 		dev_info(dev, "%s: sensor 'sata_ahci'\n", dev_name(hwmon_dev));
- 	}
- 
--- 
-2.25.1
 
+--=20
+Damien Le Moal
+Western Digital Research
