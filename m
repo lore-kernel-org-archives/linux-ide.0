@@ -2,152 +2,137 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8303DC433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Jul 2022 11:22:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1628CC43334
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Jul 2022 14:49:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231260AbiGKLWO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Jul 2022 07:22:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36406 "EHLO
+        id S231765AbiGKOty (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Jul 2022 10:49:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231268AbiGKLVp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jul 2022 07:21:45 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7693B5C9DD
-        for <linux-ide@vger.kernel.org>; Mon, 11 Jul 2022 03:46:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1657536389; x=1689072389;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=M38FathVBz+QDBZGXrRIt275IISeBfhxZNFV9WnBgzI=;
-  b=bZPT0SN38xEK4G3gHaMMUv5LfQ3+RdIHtlnS3fvYA9SAGeWfoQVhuNJ0
-   Mg4upW9HsGT7q4VHC3pq+jmdvsaJZ5BX7ylOkJsHY70dxvlnrCwV6x8/j
-   y21vRmTa/pbsSjQrvTzKvjkKKnph+h6FJnA9daf5agfwfMhH66MmTlBK9
-   JRoqhrJyNeuXCl3nDnhphHFAqnNtdiDugzJvxCW4E+qPWe0C+LG9IghlU
-   +Gg0Os+InwdBG9T8n2gh5MW03QKDa/98DMfQPcfIVZbCyzQRBDKylS/9l
-   aX6826LkgVlnEz2F3xItvfHaCmL1jj0lL62+OgZUHQv5BAgXPcYIYW0Jd
-   A==;
-X-IronPort-AV: E=Sophos;i="5.92,262,1650902400"; 
-   d="scan'208";a="206062169"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Jul 2022 18:46:28 +0800
-IronPort-SDR: rLYDizoQPZRHFJZqvkJyNeT/gnUzH+zCurVX0kJof3xKnIQmbm3Sr6Uuxct6PSYfjiLwKa9Pgi
- jWWQud3XWRR074Os4vQ8XsNwPb7F6QkP8TdrURlO0Go7WACSrEA/d9NGGk5ANKIQjkF/e2+5x+
- 82eHdouapk2cmRLSqrZOH+JAFGd9HTNB2uTvxgZ+Dy04xnu+aKU4gYIWEkSx8SLxaH2HYfU6q0
- dXjqOz5KP3PnaCLtVfEUUNqKWLCe3qlH7Sx4seo/qUXhpatKoGhzhMElaqEj91n0Urgs88pxB8
- WVHx1xEkHc9+enEWyXma+Pya
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Jul 2022 03:03:27 -0700
-IronPort-SDR: IrCLYTxs7qa6iuyE4ZgKdafVb4/o12DY4rOxSNTq+h2xSpk9nRk4ew3YmI2lt1AK9QWVXJlA+M
- WdJxtCnmW/9kQ0etjfPnrTGNTkAuVy6kwGU9SiwHdhi5uFUNZs4WQqgWOcsxG+DlTO48EgROkE
- JDvYHr+rMLA2FwL2n8rBel5P0MIEr9q4gm1WFb1j8PHFYc3ZQPz/yRYeNECaVWDQ4zeGyKP3dK
- 8S6wEWVoBgvFprD1UwImLdIqhvcDRcCK5yW8jT/8SN4Y4fJXVRODLQhcb3eX1s2Ry0qNJ3ye6x
- mG0=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Jul 2022 03:40:28 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LhL4q58cQz1Rws6
-        for <linux-ide@vger.kernel.org>; Mon, 11 Jul 2022 03:40:27 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1657536026; x=1660128027; bh=M38FathVBz+QDBZGXrRIt275IISeBfhxZNF
-        V9WnBgzI=; b=Jq8yiythf4/NGMPDez5TDXQRmsRywCxgvudQsGMOmYsnKVsSgRw
-        Z4ASuw7usvOrTQKmaPKdWKF6TuTLFpxxEeOa6LGPkWFwal2t9Ftp2g6X1zVAH/Vf
-        icYZ6ZMn/S+DdP4FS0n6P1h7o5igMr45a8B/bUdts7FCCnSxCl6n8LdMRPZFkYzX
-        IOCwnB6HlRhrkluKixvZotg9Y8P5Z5MwHkQGLEYH2TlYfPYZFdopY6kOukm9SPHi
-        MSfHEEhn41NkWpbh+5tU9s8JMTXgsxx5iFx7xwwiFZ2REAmup3MUsSbWP3LCpZFA
-        oO4VfhLvJVEW9Wb6ZQS8VgdguaAlSHxUZuw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ZVfTHt7onPRa for <linux-ide@vger.kernel.org>;
-        Mon, 11 Jul 2022 03:40:26 -0700 (PDT)
-Received: from [10.225.163.114] (unknown [10.225.163.114])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LhL4m0m61z1RtVk;
-        Mon, 11 Jul 2022 03:40:23 -0700 (PDT)
-Message-ID: <62b801e8-66b6-0af7-b0c9-195823bf9f62@opensource.wdc.com>
-Date:   Mon, 11 Jul 2022 19:40:22 +0900
+        with ESMTP id S231800AbiGKOtt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jul 2022 10:49:49 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A136B32449;
+        Mon, 11 Jul 2022 07:49:48 -0700 (PDT)
+Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LhRWV2BZ9z67XMQ;
+        Mon, 11 Jul 2022 22:45:26 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Mon, 11 Jul 2022 16:49:46 +0200
+Received: from [10.202.227.197] (10.202.227.197) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Mon, 11 Jul 2022 15:49:45 +0100
+Message-ID: <2b36e407-f053-20cc-1d7f-983a4424665c@huawei.com>
+Date:   Mon, 11 Jul 2022 15:49:46 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
 Subject: Re: [PATCH v5 0/5] DMA mapping changes for SCSI core
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>,
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>
-Cc:     joro@8bytes.org, will@kernel.org, jejb@linux.ibm.com,
-        m.szyprowski@samsung.com, robin.murphy@arm.com,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, iommu@lists.linux-foundation.org,
-        iommu@lists.linux.dev, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com
+CC:     <joro@8bytes.org>, <will@kernel.org>, <jejb@linux.ibm.com>,
+        <m.szyprowski@samsung.com>, <robin.murphy@arm.com>,
+        <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+        <iommu@lists.linux.dev>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>
 References: <1656590892-42307-1-git-send-email-john.garry@huawei.com>
  <b5f80062-e8ef-9597-1b0c-393140950dfb@huawei.com>
  <20220706134447.GA23753@lst.de> <yq1y1x47jgn.fsf@ca-mkp.ca.oracle.com>
  <5fd4814a-81b1-0e71-58e0-57a747eb684e@huawei.com>
  <6367a264-a3d3-8857-9b5a-2afcd25580cb@opensource.wdc.com>
  <a415e4a1-72ce-53e1-437a-fc7e56e4b913@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <a415e4a1-72ce-53e1-437a-fc7e56e4b913@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+ <62b801e8-66b6-0af7-b0c9-195823bf9f62@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <62b801e8-66b6-0af7-b0c9-195823bf9f62@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.197]
+X-ClientProxiedBy: lhreml723-chm.china.huawei.com (10.201.108.74) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/11/22 16:36, John Garry wrote:
-> On 11/07/2022 00:08, Damien Le Moal wrote:
->>> Ah, I think that I misunderstood Damien's question. I thought he was
->>> asking why not keep shost max_sectors at dma_max_mapping_size() and t=
-hen
->>> init each sdev request queue max hw sectors at dma_opt_mapping_size()=
-.
->> I was suggesting the reverse:)  Keep the device hard limit
->> (max_hw_sectors) to the max dma mapping and set the soft limit
->> (max_sectors) to the optimal dma mapping size.
->=20
-> Sure, but as I mentioned below, I only see a small % of requests whose=20
-> mapping size exceeds max_sectors but that still causes a big performanc=
-e=20
-> hit. So that is why I want to set the hard limit as the optimal dma=20
-> mapping size.
-
-How can you possibly end-up with requests larger than max_sectors ? BIO
-split is done using this limit, right ? Or is it that request merging is
-allowed up to max_hw_sectors even if the resulting request size exceeds
-max_sectors ?
-
->=20
-> Indeed, the IOMMU IOVA caching limit is already the same as default=20
-> max_sectors for the disks in my system - 128Kb for 4k page size.
->=20
+On 11/07/2022 11:40, Damien Le Moal wrote:
+> On 7/11/22 16:36, John Garry wrote:
+>> On 11/07/2022 00:08, Damien Le Moal wrote:
+>>>> Ah, I think that I misunderstood Damien's question. I thought he was
+>>>> asking why not keep shost max_sectors at dma_max_mapping_size() and then
+>>>> init each sdev request queue max hw sectors at dma_opt_mapping_size().
+>>> I was suggesting the reverse:)  Keep the device hard limit
+>>> (max_hw_sectors) to the max dma mapping and set the soft limit
+>>> (max_sectors) to the optimal dma mapping size.
 >>
->>> But he seems that you want to know why not have the request queue max
->>> sectors at dma_opt_mapping_size(). The answer is related to meaning o=
-f
->>> dma_opt_mapping_size(). If we get any mappings which exceed this size
->>> then it can have a big dma mapping performance hit. So I set max hw
->>> sectors at this =E2=80=98opt=E2=80=99 mapping size to ensure that we =
-get no mappings
->>> which exceed this size. Indeed, I think max sectors is 128Kb today fo=
-r
->>> my host, which would be same as dma_opt_mapping_size() value with an
->>> IOMMU enabled. And I find that only a small % of request size may exc=
-eed
->>> this 128kb size, but it still has a big performance impact.
->>>
->=20
-> Thanks,
-> John
+>> Sure, but as I mentioned below, I only see a small % of requests whose
+>> mapping size exceeds max_sectors but that still causes a big performance
+>> hit. So that is why I want to set the hard limit as the optimal dma
+>> mapping size.
+> 
+> How can you possibly end-up with requests larger than max_sectors ? BIO
+> split is done using this limit, right ? Or is it that request merging is
+> allowed up to max_hw_sectors even if the resulting request size exceeds
+> max_sectors ?
+> 
 
+Ah, I see how I thought that I was seeing requests whose size exceeded 
+max_sectors. Somebody must have changed a single disk in my system and 
+this odd disk has a higher default max_sectors_kb -- 512 vs 128 for the 
+rest.
 
---=20
-Damien Le Moal
-Western Digital Research
+So ignoring my nonesence that I was seeing oversize requests, as for the 
+idea to set default max_sectors at dma_opt_mapping_size(), I see some 
+issues:
+- for SAS disks I have no common point to impose this limit. Maybe in 
+the slave configure callback, but each SAS driver has its own 
+implementation generally
+- Even if we do config in slave_configure callback the max_sectors value 
+is overwritten later in sd_revalidate_disk().
+
+This following change could sort the issue though:
+
+---8<----
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 895b56c8f25e..bb49bea3d161 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3214,6 +3214,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
+         sector_t old_capacity = sdkp->capacity;
+         unsigned char *buffer;
+         unsigned int dev_max, rw_max;
++       struct Scsi_Host *host = sdp->host;
++       struct device *dev = host->dma_dev;
+
+         SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
+                                       "sd_revalidate_disk\n"));
+@@ -3296,8 +3298,13 @@ static int sd_revalidate_disk(struct gendisk *disk)
+                                       (sector_t)BLK_DEF_MAX_SECTORS);
+         }
+
+-       /* Do not exceed controller limit */
+-       rw_max = min(rw_max, queue_max_hw_sectors(q));
++       if (dev->dma_mask) {
++               /* Do not exceed dma optimal limit */
++               rw_max = min_t(unsigned int, rw_max,
++                               dma_opt_mapping_size(dev) >> SECTOR_SHIFT);
++       } else {
++               rw_max = min(rw_max, queue_max_hw_sectors(q));
++       }
+
+         /*
+          * Only update max_sectors if previously unset or if the 
+current value
+
+--->8---
+
+Or I could go with the method in this series, which is not preferred. 
+Let me know what you think.
+
+Thanks,
+John
+
