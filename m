@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2C92C43334
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Jul 2022 05:32:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24FC6C43334
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Jul 2022 05:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234501AbiGMFck (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 13 Jul 2022 01:32:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43210 "EHLO
+        id S233696AbiGMFcm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 13 Jul 2022 01:32:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234110AbiGMFbG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2022 01:31:06 -0400
+        with ESMTP id S234109AbiGMFbH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2022 01:31:07 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D879BA58E4;
-        Tue, 12 Jul 2022 22:29:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3F05EB96B8;
+        Tue, 12 Jul 2022 22:29:48 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 5E0AB16C4;
-        Wed, 13 Jul 2022 08:31:29 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 5E0AB16C4
+        by mail.baikalelectronics.com (Postfix) with ESMTP id E1A5416CA;
+        Wed, 13 Jul 2022 08:31:32 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com E1A5416CA
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1657690289;
-        bh=n0UYMJA4c61I8XbWDiUPzKG7qhzI+vK46N6KQLIsBoA=;
+        d=baikalelectronics.ru; s=mail; t=1657690292;
+        bh=ygMX+bu6gc/yMuo4QKjk1bUpr5VLHBbRrZJps6eSGfc=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=RReg+9OfKv9l5p0LpLEhcjCpXIsBlymbsUb2htr5wXuKYBuCVXh1PemRmLUP+/RXm
-         6RaHvDug11K1v9Of/x9ufx/IviOCU7JJYpxyiOcI+lKczlQq4ufVeJaS5+o820TlbU
-         OhkwuOH+49ITt40SQiUvdYR9oQoI5pH1PUKsR5Kw=
+        b=jSKLdH1HfeUXinxvMbACTsI5hGLrRPYMnA1uP6hbaJlynSV4R5O5hqyhG+zq/pC/D
+         YMKWmJQ++p9d3ajx56lWfNBuqvzFfVGUCn+VpQebI+VnDnKUP7cIpmggXW40Sh4klA
+         EZJxiWLFtH7J1lRhcBlInCMV5+ztdSzTv5SgSEDM=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 13 Jul 2022 08:29:33 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 13 Jul 2022 08:29:37 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH v5 12/23] ata: libahci: Extend port-cmd flags set with port capabilities
-Date:   Wed, 13 Jul 2022 08:29:05 +0300
-Message-ID: <20220713052917.27036-13-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v5 15/23] ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
+Date:   Wed, 13 Jul 2022 08:29:08 +0300
+Message-ID: <20220713052917.27036-16-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220713052917.27036-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220713052917.27036-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,69 +50,65 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Currently not all of the Port-specific capabilities listed in the
-PORT_CMD-enumeration. Let's extend that set with the Cold Presence
-Detection and Mechanical Presence Switch attached to the Port flags [1] so
-to closeup the set of the platform-specific port-capabilities flags.  Note
-these flags are supposed to be set by the platform firmware if there is
-one. Alternatively as we are about to do they can be set by means of the
-OF properties.
-
-While at it replace PORT_IRQ_DEV_ILCK with PORT_IRQ_DMPS and fix the
-comment there. In accordance with [2] that IRQ flag is supposed to
-indicate the state of the signal coming from the Mechanical Presence
-Switch.
-
-[1] Serial ATA AHCI 1.3.1 Specification, p.27
-[2] Serial ATA AHCI 1.3.1 Specification, p.24, p.88
+The port base address may be required even before the ata_host instance is
+initialized and activated, for instance in the ahci_save_initial_config()
+method which we are about to update (consider this modification as a
+preparation for that one). Seeing the __ahci_port_base() function isn't
+used much it's the best candidate to provide the required functionality.
+So let's convert it to accepting the ahci_host_priv structure pointer.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 ---
 
-Changelog v4:
-- Fix the DMPS macros name in the patch log. (@Sergei Shtylyov)
-
 Changelog v5:
-- Add a comment regarding the PORT_CMD_CAP enum entity purpose. (@Damien)
+- Fix some grammar notes in the patchlog. (@Damien)
 ---
- drivers/ata/ahci.h | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/ata/ahci.c | 2 +-
+ drivers/ata/ahci.h | 7 ++++---
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index bacb597a0d32..51c0c1dd91ea 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -690,7 +690,7 @@ static void ahci_pci_init_controller(struct ata_host *host)
+ 			mv = 2;
+ 		else
+ 			mv = 4;
+-		port_mmio = __ahci_port_base(host, mv);
++		port_mmio = __ahci_port_base(hpriv, mv);
+ 
+ 		writel(0, port_mmio + PORT_IRQ_MASK);
+ 
 diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 7d834deefeb9..27cab4e909a5 100644
+index cc4f40e6c924..5d9db5e7476c 100644
 --- a/drivers/ata/ahci.h
 +++ b/drivers/ata/ahci.h
-@@ -138,7 +138,7 @@ enum {
- 	PORT_IRQ_BAD_PMP	= (1 << 23), /* incorrect port multiplier */
+@@ -432,10 +432,9 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht);
+ void ahci_error_handler(struct ata_port *ap);
+ u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked);
  
- 	PORT_IRQ_PHYRDY		= (1 << 22), /* PhyRdy changed */
--	PORT_IRQ_DEV_ILCK	= (1 << 7), /* device interlock */
-+	PORT_IRQ_DMPS		= (1 << 7), /* mechanical presence status */
- 	PORT_IRQ_CONNECT	= (1 << 6), /* port connect change status */
- 	PORT_IRQ_SG_DONE	= (1 << 5), /* descriptor processed */
- 	PORT_IRQ_UNK_FIS	= (1 << 4), /* unknown FIS rx'd */
-@@ -166,6 +166,8 @@ enum {
- 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
- 	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
- 	PORT_CMD_ESP		= (1 << 21), /* External Sata Port */
-+	PORT_CMD_CPD		= (1 << 20), /* Cold Presence Detection */
-+	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch */
- 	PORT_CMD_HPCP		= (1 << 18), /* HotPlug Capable Port */
- 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
- 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
-@@ -181,6 +183,10 @@ enum {
- 	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
- 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
+-static inline void __iomem *__ahci_port_base(struct ata_host *host,
++static inline void __iomem *__ahci_port_base(struct ahci_host_priv *hpriv,
+ 					     unsigned int port_no)
+ {
+-	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *mmio = hpriv->mmio;
  
-+	/* PORT_CMD capabilities mask */
-+	PORT_CMD_CAP		= PORT_CMD_HPCP | PORT_CMD_MPSP |
-+				  PORT_CMD_CPD | PORT_CMD_ESP | PORT_CMD_FBSCP,
+ 	return mmio + 0x100 + (port_no * 0x80);
+@@ -443,7 +442,9 @@ static inline void __iomem *__ahci_port_base(struct ata_host *host,
+ 
+ static inline void __iomem *ahci_port_base(struct ata_port *ap)
+ {
+-	return __ahci_port_base(ap->host, ap->port_no);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
 +
- 	/* PORT_FBS bits */
- 	PORT_FBS_DWE_OFFSET	= 16, /* FBS device with error offset */
- 	PORT_FBS_ADO_OFFSET	= 12, /* FBS active dev optimization offset */
++	return __ahci_port_base(hpriv, ap->port_no);
+ }
+ 
+ static inline int ahci_nr_ports(u32 cap)
 -- 
 2.35.1
 
