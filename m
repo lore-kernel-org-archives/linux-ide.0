@@ -2,159 +2,157 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42C1BC43334
-	for <linux-ide@archiver.kernel.org>; Thu, 14 Jul 2022 20:59:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0204DC43334
+	for <linux-ide@archiver.kernel.org>; Mon, 18 Jul 2022 10:47:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232654AbiGNU7p (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 14 Jul 2022 16:59:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39286 "EHLO
+        id S234051AbiGRKrh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 18 Jul 2022 06:47:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbiGNU7o (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2022 16:59:44 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A56313F86;
-        Thu, 14 Jul 2022 13:59:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657832383; x=1689368383;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ysF2hIDjCGBABdVcJ1bsRwdEQVYuIg82pWmVPZ4wXjs=;
-  b=nZEpszVSWkmSV74iW0jZP2kNa89i2g2tg5ICOptobDcYyvFe6tfCpGqT
-   LuW2eWygRT2DdVV22St1Np/Lm8n71uDRbLJHcrwxIOgZtEVtxSs+hm2B6
-   n+MaV3gWZOA5s2/dCHf3je8WPZ6kZAxloog3MlbyJQXDVNYtnkCQNcsLm
-   rFrQRVF3LObkzIoKNsmZJF7OiNKEVcJ7vBbqXrr5N1OWcO6mCJzHLphJf
-   bhH4cpJNNUXuKAbdi3ouuH4qbMoTXnZLwW+8mSKdiP6R/oJfnxkkhj7nQ
-   OQk+xl+H0pYaCIoyi3ohNkH7bsso4RRWNCScm/eTMCmZOkOm0KFJ3wgpz
+        with ESMTP id S233947AbiGRKrg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2022 06:47:36 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64237101DA
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jul 2022 03:47:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1658141255; x=1689677255;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=ICBy3sF/NsNEHPOB6+kzZdomREf/FmWtWHtPkhQaSng=;
+  b=TgEXv/TqL55pQishj21KlpwhWa4rME6QVnytkX6D1lyrKRReSXxnV01f
+   NolN95SImIYtm0VvDMEoKYNC/SWnAnk8uVHsXikQRtTIzi+xESick/X8y
+   EUOTo01Pga7/M5W/tOV4hKHV5eBgdXPeTOwCdTxUtagHfdN+sSB3O7dF/
+   o5DtSoK0dfolYAR+5NVJ7XF4UJnD/BpzjV8jIH85OO3QQpmde7JysgJnp
+   dYO3kkFvwIufZLxJLBnXh5S+hS94Xr4+4TT8LuEWrnyu0mT9M9JiveUEw
+   BUU1yK47IYa10xoIscwTQOyvJsB8Pmb0ALCNmZ7fFEGLUGIsIjC9UDFuJ
    w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10408"; a="284384480"
-X-IronPort-AV: E=Sophos;i="5.92,272,1650956400"; 
-   d="scan'208";a="284384480"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2022 13:59:43 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,272,1650956400"; 
-   d="scan'208";a="596232227"
-Received: from lkp-server01.sh.intel.com (HELO fd2c14d642b4) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 14 Jul 2022 13:59:39 -0700
-Received: from kbuild by fd2c14d642b4 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1oC5vu-00019R-Ml;
-        Thu, 14 Jul 2022 20:59:38 +0000
-Date:   Fri, 15 Jul 2022 04:58:44 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v5 07/23] ata: libahci_platform: Convert to using devm
- bulk clocks API
-Message-ID: <202207150410.A4kg5upp-lkp@intel.com>
-References: <20220713052917.27036-8-Sergey.Semin@baikalelectronics.ru>
+X-IronPort-AV: E=Sophos;i="5.92,280,1650902400"; 
+   d="scan'208";a="210984678"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Jul 2022 18:47:33 +0800
+IronPort-SDR: BpRdoL5CUVVjgLdT+pqdCrYp7MntflHagkBWJD1H2IaiepFa1s9gHnoXJ9SZDUj5FIp3DnZJ7/
+ x8hMgE8aT0HqnsfPn8Eqn1FprMvfvKrD6G0QA+tIKBYcRC7gE94Vi3jm0OcGTnamUJeweAtfhp
+ TnmDHHJ+q/uUHIfnOI60qRDVAg9f6A55KFi3XZQvxEnMkg8xrthif6ysZpl6ddCp0w7c53moNJ
+ In6PIh+4MIoQ10PPJlRzeYxer6kN6ktcJJaLvAmTJ0LsfcxV9WRe8i7b9UFVtTwEDDIIwIPNcC
+ P4gyx+zBHFIBP8vTQgoZp9dw
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jul 2022 03:09:00 -0700
+IronPort-SDR: 03xLuwv+2rR5mrNSzPjaJ23+CWww+gOFCZKgCRggGBHsLNoImiHXetvuz1YSLyRIj6jirO22pj
+ yU19XJmKsbJK9dHagK0YqFbnUqWIs62xaU1aUSjNbByj1Q20mkRR6Lqxlyj+uE0CYCgoleztEx
+ rFZi83VNJGor+5rjkKfQ7QAQxT37/XDBesNm4oEQOEgcDhbfruvs6aI81Pl1VR314E9j8P6lcT
+ A89d6IyKGSYFgZSNpb6Ve75l4YQVFBw39SysqxunXr1KSw5QJRw1VUeUqU62JgIKW8fJJzUFas
+ SNk=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jul 2022 03:47:34 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Lmdvn4lgTz1Rws4
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jul 2022 03:47:33 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1658141252; x=1660733253; bh=ICBy3sF/NsNEHPOB6+kzZdomREf/FmWtWHt
+        PkhQaSng=; b=ffy3r4QzJl2eMxIGeYvZDxhndyaiLEBA6fObdRuA9MXXWuuAuiB
+        zxy2PZue182NyNIs04OSk2RsuUJHRg1ElHOVGtXKOX0xUbQAqa615RJPLSPZbOk6
+        tgjaNfOx5LbKyKliH7H1EJXWmR6bKjTbD2Lsjb0S+1zqNlcakLIYxDDMDF7pgJpm
+        OyOGmOMuDR4RZuFjFX+RVZsMPb0VhGzJ2aDMcdHEUamVC3CuoZt8+m2Mcyb9bHLT
+        malHx8Lm/DEhM60u7f8h6dsj57P5IU0HEjZ83ME2zYrTjqB6SFgHwzkujjGyAuUe
+        WnQPWsMgLhRBfdAGPCNZOXKZ0yxHnoXANag==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id nG2Vy1uK_Vc2 for <linux-ide@vger.kernel.org>;
+        Mon, 18 Jul 2022 03:47:32 -0700 (PDT)
+Received: from [10.225.163.120] (unknown [10.225.163.120])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Lmdvk2p0qz1RtVk;
+        Mon, 18 Jul 2022 03:47:30 -0700 (PDT)
+Message-ID: <6725df4f-4e27-3320-8b7b-22ba15a07866@opensource.wdc.com>
+Date:   Mon, 18 Jul 2022 19:47:29 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220713052917.27036-8-Sergey.Semin@baikalelectronics.ru>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v6 4/6] scsi: sd: Allow max_sectors be capped at DMA
+ optimal size limit
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>, joro@8bytes.org,
+        will@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com
+Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, iommu@lists.linux.dev,
+        linux-scsi@vger.kernel.org, linuxarm@huawei.com
+References: <1657797329-98541-1-git-send-email-john.garry@huawei.com>
+ <1657797329-98541-5-git-send-email-john.garry@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1657797329-98541-5-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Serge,
+On 7/14/22 20:15, John Garry wrote:
+> Streaming DMA mappings may be considerably slower when mappings go through
+> an IOMMU and the total mapping length is somewhat long. This is because the
+> IOMMU IOVA code allocates and free an IOVA for each mapping, which may
+> affect performance.
+> 
+> New member Scsi_Host.opt_sectors is added, which is the optimal host
+> max_sectors, and use this value to cap the request queue max_sectors when
+> set.
+> 
+> It could be considered to have request queues io_opt value initially
+> set at Scsi_Host.opt_sectors in __scsi_init_queue(), but that is not
+> really the purpose of io_opt.
+> 
+> Finally, even though Scsi_Host.opt_sectors value should never be greater
+> than the request queue max_hw_sectors value, continue to limit to this
+> value for safety.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/scsi/sd.c        | 2 ++
+>  include/scsi/scsi_host.h | 1 +
+>  2 files changed, 3 insertions(+)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index a1a2ac09066f..3eaee1f7aaca 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3296,6 +3296,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  				      (sector_t)BLK_DEF_MAX_SECTORS);
+>  	}
+>  
+> +	rw_max = min_not_zero(rw_max, sdp->host->opt_sectors);
+> +
 
-I love your patch! Yet something to improve:
+Adding a comment explaining what the cap is would be nice.
 
-[auto build test ERROR on robh/for-next]
-[also build test ERROR on axboe-block/for-next linus/master v5.19-rc6 next-20220714]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>  	/* Do not exceed controller limit */
+>  	rw_max = min(rw_max, queue_max_hw_sectors(q));
+>  
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index 667d889b92b5..d32a84b2bb40 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -607,6 +607,7 @@ struct Scsi_Host {
+>  	short unsigned int sg_tablesize;
+>  	short unsigned int sg_prot_tablesize;
+>  	unsigned int max_sectors;
+> +	unsigned int opt_sectors;
+>  	unsigned int max_segment_size;
+>  	unsigned long dma_boundary;
+>  	unsigned long virt_boundary_mask;
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220713-133437
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-config: riscv-randconfig-r004-20220714 (https://download.01.org/0day-ci/archive/20220715/202207150410.A4kg5upp-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 5e61b9c556267086ef9b743a0b57df302eef831b)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install riscv cross compiling tool for clang build
-        # apt-get install binutils-riscv64-linux-gnu
-        # https://github.com/intel-lab-lkp/linux/commit/7225145d9ff95641c04bdc1dd85915be6cd5ce57
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220713-133437
-        git checkout 7225145d9ff95641c04bdc1dd85915be6cd5ce57
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash drivers/ata/
+Otherwise, looks good.
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
->> drivers/ata/ahci_dm816.c:72:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
-           if (!hpriv->clks[1]) {
-               ^~~~~~~~~~~~~~~
->> drivers/ata/ahci_dm816.c:77:29: error: passing 'struct clk_bulk_data' to parameter of incompatible type 'struct clk *'
-           refclk_rate = clk_get_rate(hpriv->clks[1]);
-                                      ^~~~~~~~~~~~~~
-   include/linux/clk.h:584:40: note: passing argument to parameter 'clk' here
-   unsigned long clk_get_rate(struct clk *clk);
-                                          ^
-   2 errors generated.
-
-
-vim +72 drivers/ata/ahci_dm816.c
-
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   60  
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   61  static int ahci_dm816_phy_init(struct ahci_host_priv *hpriv, struct device *dev)
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   62  {
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   63  	unsigned long refclk_rate;
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   64  	int mpy;
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   65  	u32 val;
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   66  
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   67  	/*
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   68  	 * We should have been supplied two clocks: the functional and
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   69  	 * keep-alive clock and the external reference clock. We need the
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   70  	 * rate of the latter to calculate the correct value of MPY bits.
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   71  	 */
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14  @72  	if (!hpriv->clks[1]) {
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   73  		dev_err(dev, "reference clock not supplied\n");
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   74  		return -EINVAL;
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   75  	}
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   76  
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14  @77  	refclk_rate = clk_get_rate(hpriv->clks[1]);
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   78  	if ((refclk_rate % 100) != 0) {
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   79  		dev_err(dev, "reference clock rate must be divisible by 100\n");
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   80  		return -EINVAL;
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   81  	}
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   82  
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   83  	mpy = ahci_dm816_get_mpy_bits(refclk_rate);
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   84  	if (mpy < 0) {
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   85  		dev_err(dev, "can't calculate the MPY bits value\n");
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   86  		return -EINVAL;
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   87  	}
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   88  
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   89  	/* Enable the PHY and configure the first HBA port. */
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   90  	val = AHCI_DM816_PHY_MPY(mpy) | AHCI_DM816_PHY_LOS(1) |
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   91  	      AHCI_DM816_PHY_RXCDR(4) | AHCI_DM816_PHY_RXEQ(1) |
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   92  	      AHCI_DM816_PHY_TXSWING(3) | AHCI_DM816_PHY_ENPLL(1);
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   93  	writel(val, hpriv->mmio + AHCI_DM816_P0PHYCR_REG);
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   94  
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   95  	/* Configure the second HBA port. */
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   96  	val = AHCI_DM816_PHY_LOS(1) | AHCI_DM816_PHY_RXCDR(4) |
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   97  	      AHCI_DM816_PHY_RXEQ(1) | AHCI_DM816_PHY_TXSWING(3);
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   98  	writel(val, hpriv->mmio + AHCI_DM816_P1PHYCR_REG);
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14   99  
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14  100  	return 0;
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14  101  }
-df46e6a4c06c89a Bartosz Golaszewski 2017-03-14  102  
+Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Damien Le Moal
+Western Digital Research
