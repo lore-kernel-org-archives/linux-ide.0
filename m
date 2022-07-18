@@ -2,67 +2,117 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58565CCA479
-	for <linux-ide@archiver.kernel.org>; Mon, 18 Jul 2022 13:06:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C07C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 18 Jul 2022 20:33:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235254AbiGRNGM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 18 Jul 2022 09:06:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57734 "EHLO
+        id S233955AbiGRUdW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 18 Jul 2022 16:33:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235297AbiGRNGL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2022 09:06:11 -0400
-Received: from smtpbg.qq.com (unknown [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2279F27B13;
-        Mon, 18 Jul 2022 06:05:57 -0700 (PDT)
-X-QQ-mid: bizesmtp68t1658149514tg33k5r2
-Received: from localhost.localdomain ( [171.223.96.21])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Mon, 18 Jul 2022 21:05:12 +0800 (CST)
-X-QQ-SSF: 01000000002000E0U000C00A0000020
-X-QQ-FEAT: zK0nlCs2Z6F0XWAXfajss1mrNUJaV93pCFwwXEUP9sXFncfoo/WJ+14nRjR/S
-        MuMytYRoBLnO7dnliRdC2Xd/nBedLfWWD+JrsYRaBfvwwp+mtTp4lo/RyEOY+31Prpy3k/B
-        lcxlVUIUOePuwTN07rt+qVCO4A7KYAShEV1owhlqdfN05a8AwFZashVP+T/+i4z26yb1aTr
-        ZrGMsibdhNkhNHhG17RiN92V5qaGJHAVFhBDw7WcZ2Up/5A8/0iSIGEGelXGHerjn+EgIbz
-        NvX4g4vkC6TIt/V6ZuKKQBmYuGOUPZK2uh8iTBrXKwfNjLxTdtB78Xfn0hnwUeLY/Pw4Ord
-        mH5s/RqYUBy+f0ArkqPIARcK4cwaZHJYDcdrDQPJ1P+nxXdGpSTtecmu7CTwDD98F7fmNJ1
-        UjS0zLL6jG4=
-X-QQ-GoodBg: 0
-From:   Jason Wang <wangborong@cdjrlc.com>
-To:     damien.lemoal@opensource.wdc.com
-Cc:     s.shtylyov@omp.ru, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jason Wang <wangborong@cdjrlc.com>
-Subject: [PATCH] ata: pata_macio: Fix comment typo
-Date:   Fri, 15 Jul 2022 13:03:16 +0800
-Message-Id: <20220715050316.25278-1-wangborong@cdjrlc.com>
-X-Mailer: git-send-email 2.35.1
+        with ESMTP id S233811AbiGRUdV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2022 16:33:21 -0400
+Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C76932E9FE;
+        Mon, 18 Jul 2022 13:33:20 -0700 (PDT)
+Received: by mail-io1-f43.google.com with SMTP id u20so10270245iob.8;
+        Mon, 18 Jul 2022 13:33:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=BAk6eC2TiGiEveH5D+C4HMKgKZtoR9XTG/x7IKc38a4=;
+        b=7EVCvwBTXD5bkNuJbTtmEE0kQ57IKESzeATPy/272tkEXbNXkcDhAO1NMUtgH/jYDd
+         WqCp7Uz4IsSiE4phh3QnZFw5ce459Yskz3c8QBlZsKmzDHx+DEe+ksNQ3QXJ2f3KSdTv
+         sAdXhu1J2OSTqYEQqGeWkeyOcuF7jqCB4VmMdAA91iT6QAt7D00Gff0SFQzGwJ3AWpgb
+         NI4bnlEe7j3h9A9vAMGl6oKWtSLF7vp1r50CPFEOlkZMwwaCjYCj2p798nVRtiXzmpdL
+         mKQaSpuIHUWCnnV28ug+l3MuxeS3zFr8I/M/cMeMOhpAA9SRqCH4os6sgsWJb3+ti+Kg
+         j0Pg==
+X-Gm-Message-State: AJIora86ibA952aAg38tV0ptRwCzKTqeOgMEwFCOL99iYUjnmWMOfqgl
+        EmqO8D/xgf73/FNwflsN1Q==
+X-Google-Smtp-Source: AGRyM1viFALT2Np+Dy3PO9pVNF5FoEBBfizbj7aScI4m4hM7EYqhMMLkcEg+7ijdFlj56l8oYbykIQ==
+X-Received: by 2002:a02:2718:0:b0:33f:7a76:baa4 with SMTP id g24-20020a022718000000b0033f7a76baa4mr15484126jaa.277.1658176400070;
+        Mon, 18 Jul 2022 13:33:20 -0700 (PDT)
+Received: from robh.at.kernel.org ([64.188.179.248])
+        by smtp.gmail.com with ESMTPSA id x68-20020a0294ca000000b0034141e2510bsm5605009jah.71.2022.07.18.13.33.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Jul 2022 13:33:19 -0700 (PDT)
+Received: (nullmailer pid 3501428 invoked by uid 1000);
+        Mon, 18 Jul 2022 20:33:17 -0000
+Date:   Mon, 18 Jul 2022 14:33:17 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     linux-ide@vger.kernel.org,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        devicetree@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
+Subject: Re: [PATCH v5 17/23] dt-bindings: ata: ahci: Add DWC AHCI SATA
+ controller DT schema
+Message-ID: <20220718203317.GA3501391-robh@kernel.org>
+References: <20220713052917.27036-1-Sergey.Semin@baikalelectronics.ru>
+ <20220713052917.27036-18-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220713052917.27036-18-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The double `to' is duplicated in line 669, remove one.
+On Wed, 13 Jul 2022 08:29:10 +0300, Serge Semin wrote:
+> Synopsys AHCI SATA controller is mainly compatible with the generic AHCI
+> SATA controller except a few peculiarities and the platform environment
+> requirements. In particular it can have at least two reference clocks to
+> feed up its AHB/AXI interface and SATA PHYs domain and at least one reset
+> control for the application clock domain. In addition to that the DMA
+> interface of each port can be tuned up to work with the predefined maximum
+> data chunk size. Note unlike generic AHCI controller DWC AHCI can't have
+> more than 8 ports. All of that is reflected in the new DWC AHCI SATA
+> device DT binding.
+> 
+> Note the DWC AHCI SATA controller DT-schema has been created in a way so
+> to be reused for the vendor-specific DT-schemas (see for example the
+> "snps,dwc-ahci" compatible string binding). One of which we are about to
+> introduce.
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> 
+> ---
+> 
+> Changelog v2:
+> - Replace min/max constraints of the snps,{tx,rx}-ts-max property with
+>   enum [ 1, 2, 4, ..., 1024 ]. (@Rob)
+> 
+> Changelog v4:
+> - Decrease the "additionalProperties" property identation otherwise it's
+>   percieved as the node property instead of the key one. (@Rob)
+> - Use the ahci-port properties definition from the AHCI common schema
+>   in order to extend it with DWC AHCI SATA port properties. (@Rob)
+> - Remove the Hannes' rb tag since the patch content has changed.
+> 
+> Changelog v5:
+> - Fix "resets" property description: replace "clocks" with "resets".
+>   (@Rob)
+> - Extend "resets/clocks{-names}" property definitions. (@Rob)
+> - Add "resets" property min/maxItems constraints. (@Rob)
+> - Add names for the basic resets like RxOOB and PM-alive. (@Rob)
+> - Add generic DWC AHCI SATA fallback for "rockchip,rk3568-dwc-ahci"
+>   bindings. (@Rob)
+> - Due to the change above the schema has been split up into two parts:
+>   common DWC AHCI SATA properties and generic DW AHCI SATA controller
+>   DT-schema. (@Rob)
+> ---
+>  .../bindings/ata/ahci-platform.yaml           |   8 --
+>  .../bindings/ata/snps,dwc-ahci-common.yaml    | 102 ++++++++++++++++++
+>  .../bindings/ata/snps,dwc-ahci.yaml           |  75 +++++++++++++
+>  3 files changed, 177 insertions(+), 8 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+>  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> 
 
-Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
----
- drivers/ata/pata_macio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index bfea2be2959a..076212fdb9d9 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -666,7 +666,7 @@ static u8 pata_macio_bmdma_status(struct ata_port *ap)
- 	 * a multi-block transfer.
- 	 *
- 	 * - The dbdma fifo hasn't yet finished flushing to
--	 * to system memory when the disk interrupt occurs.
-+	 * system memory when the disk interrupt occurs.
- 	 *
- 	 */
- 
--- 
-2.35.1
-
+Reviewed-by: Rob Herring <robh@kernel.org>
