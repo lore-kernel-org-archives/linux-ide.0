@@ -2,117 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C07C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 18 Jul 2022 20:33:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6D5ECCA479
+	for <linux-ide@archiver.kernel.org>; Mon, 18 Jul 2022 20:34:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233955AbiGRUdW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 18 Jul 2022 16:33:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39288 "EHLO
+        id S236040AbiGRUep (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 18 Jul 2022 16:34:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233811AbiGRUdV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2022 16:33:21 -0400
-Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C76932E9FE;
-        Mon, 18 Jul 2022 13:33:20 -0700 (PDT)
-Received: by mail-io1-f43.google.com with SMTP id u20so10270245iob.8;
-        Mon, 18 Jul 2022 13:33:20 -0700 (PDT)
+        with ESMTP id S235930AbiGRUen (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2022 16:34:43 -0400
+Received: from mail-io1-f42.google.com (mail-io1-f42.google.com [209.85.166.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DFE411C1C;
+        Mon, 18 Jul 2022 13:34:43 -0700 (PDT)
+Received: by mail-io1-f42.google.com with SMTP id h145so10264503iof.9;
+        Mon, 18 Jul 2022 13:34:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=BAk6eC2TiGiEveH5D+C4HMKgKZtoR9XTG/x7IKc38a4=;
-        b=7EVCvwBTXD5bkNuJbTtmEE0kQ57IKESzeATPy/272tkEXbNXkcDhAO1NMUtgH/jYDd
-         WqCp7Uz4IsSiE4phh3QnZFw5ce459Yskz3c8QBlZsKmzDHx+DEe+ksNQ3QXJ2f3KSdTv
-         sAdXhu1J2OSTqYEQqGeWkeyOcuF7jqCB4VmMdAA91iT6QAt7D00Gff0SFQzGwJ3AWpgb
-         NI4bnlEe7j3h9A9vAMGl6oKWtSLF7vp1r50CPFEOlkZMwwaCjYCj2p798nVRtiXzmpdL
-         mKQaSpuIHUWCnnV28ug+l3MuxeS3zFr8I/M/cMeMOhpAA9SRqCH4os6sgsWJb3+ti+Kg
-         j0Pg==
-X-Gm-Message-State: AJIora86ibA952aAg38tV0ptRwCzKTqeOgMEwFCOL99iYUjnmWMOfqgl
-        EmqO8D/xgf73/FNwflsN1Q==
-X-Google-Smtp-Source: AGRyM1viFALT2Np+Dy3PO9pVNF5FoEBBfizbj7aScI4m4hM7EYqhMMLkcEg+7ijdFlj56l8oYbykIQ==
-X-Received: by 2002:a02:2718:0:b0:33f:7a76:baa4 with SMTP id g24-20020a022718000000b0033f7a76baa4mr15484126jaa.277.1658176400070;
-        Mon, 18 Jul 2022 13:33:20 -0700 (PDT)
+        bh=8fwNczFHD3Vu7v1FlEOjKVfCQSdrj4GhMrwGGzxY8cs=;
+        b=nM/ONu/4PDPwn2RQsUGVFa8oYAiNyeO3gHMZ67pelCPbWxdt8DmH5HOm+qS7hxSpb+
+         ZOWp5eQu0BiZdgFM5brwp4yKIrsjpqgg7CC2on/snt2ZtqZVlYBuU05tUKBu4uS6sqJ2
+         JlFyoSBxEFEnzOyxsURtV9+vJErVwGyWxAyfoZZ77u6gnI9gBMFwokV+aKCaI80xzQwx
+         kDbF8qRP32USqkyKYAAlc3DW8ZrK7lIU44adytvrImRig2QlL87l4yBl5IToX4md+weD
+         WgCyR5cwQSktNA0gLYdXQ8l2TV6cefM+2gFeUK0Llbf2TVSmqzGGoxzbgcfg+FazW0WE
+         rR6w==
+X-Gm-Message-State: AJIora/jllFCcglKgSDFTGHMaBeDkP2zuwY/pZ68vJnBAzrHEE8xYyYc
+        rYoojQZsvcdMIJaCCTby4w==
+X-Google-Smtp-Source: AGRyM1vfV3f9iJDVM+Ly0aKtxIJ9fMd4Qa130TnYOdinhVI9JcFvVhVnA/tmbNIXemlEq95sibFZ9A==
+X-Received: by 2002:a6b:fd0e:0:b0:67b:7fe0:c29c with SMTP id c14-20020a6bfd0e000000b0067b7fe0c29cmr13312725ioi.5.1658176482305;
+        Mon, 18 Jul 2022 13:34:42 -0700 (PDT)
 Received: from robh.at.kernel.org ([64.188.179.248])
-        by smtp.gmail.com with ESMTPSA id x68-20020a0294ca000000b0034141e2510bsm5605009jah.71.2022.07.18.13.33.18
+        by smtp.gmail.com with ESMTPSA id g63-20020a028545000000b0032e49fcc241sm5792945jai.176.2022.07.18.13.34.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Jul 2022 13:33:19 -0700 (PDT)
-Received: (nullmailer pid 3501428 invoked by uid 1000);
-        Mon, 18 Jul 2022 20:33:17 -0000
-Date:   Mon, 18 Jul 2022 14:33:17 -0600
+        Mon, 18 Jul 2022 13:34:40 -0700 (PDT)
+Received: (nullmailer pid 3503906 invoked by uid 1000);
+        Mon, 18 Jul 2022 20:34:39 -0000
+Date:   Mon, 18 Jul 2022 14:34:39 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     linux-ide@vger.kernel.org,
+Cc:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        devicetree@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-kernel@vger.kernel.org,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Serge Semin <fancer.lancer@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
-Subject: Re: [PATCH v5 17/23] dt-bindings: ata: ahci: Add DWC AHCI SATA
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 20/23] dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA
  controller DT schema
-Message-ID: <20220718203317.GA3501391-robh@kernel.org>
+Message-ID: <20220718203439.GA3503849-robh@kernel.org>
 References: <20220713052917.27036-1-Sergey.Semin@baikalelectronics.ru>
- <20220713052917.27036-18-Sergey.Semin@baikalelectronics.ru>
+ <20220713052917.27036-21-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220713052917.27036-18-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220713052917.27036-21-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, 13 Jul 2022 08:29:10 +0300, Serge Semin wrote:
-> Synopsys AHCI SATA controller is mainly compatible with the generic AHCI
-> SATA controller except a few peculiarities and the platform environment
-> requirements. In particular it can have at least two reference clocks to
-> feed up its AHB/AXI interface and SATA PHYs domain and at least one reset
-> control for the application clock domain. In addition to that the DMA
-> interface of each port can be tuned up to work with the predefined maximum
-> data chunk size. Note unlike generic AHCI controller DWC AHCI can't have
-> more than 8 ports. All of that is reflected in the new DWC AHCI SATA
-> device DT binding.
-> 
-> Note the DWC AHCI SATA controller DT-schema has been created in a way so
-> to be reused for the vendor-specific DT-schemas (see for example the
-> "snps,dwc-ahci" compatible string binding). One of which we are about to
-> introduce.
+On Wed, 13 Jul 2022 08:29:13 +0300, Serge Semin wrote:
+> Baikal-T1 AHCI controller is based on the DWC AHCI SATA IP-core v4.10a
+> with the next specific settings: two SATA ports, cascaded CSR access based
+> on two clock domains (APB and AXI), selectable source of the reference
+> clock (though stable work is currently available from the external source
+> only), two reset lanes for the application and SATA ports domains. Other
+> than that the device is fully compatible with the generic DWC AHCI SATA
+> bindings.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 > 
 > ---
 > 
 > Changelog v2:
-> - Replace min/max constraints of the snps,{tx,rx}-ts-max property with
->   enum [ 1, 2, 4, ..., 1024 ]. (@Rob)
+> - Rename 'syscon' property to 'baikal,bt1-syscon'.
+> - Drop macro usage from the example node.
 > 
 > Changelog v4:
-> - Decrease the "additionalProperties" property identation otherwise it's
->   percieved as the node property instead of the key one. (@Rob)
-> - Use the ahci-port properties definition from the AHCI common schema
->   in order to extend it with DWC AHCI SATA port properties. (@Rob)
-> - Remove the Hannes' rb tag since the patch content has changed.
+> - Use the DWC AHCI port properties definition from the DWC AHCI SATA
+>   common schema. (@Rob)
+> - Drop Baikal-T1 syscon reference and implement the clock signal
+>   source in the framework of the clock controller. (@Rob)
 > 
 > Changelog v5:
-> - Fix "resets" property description: replace "clocks" with "resets".
->   (@Rob)
-> - Extend "resets/clocks{-names}" property definitions. (@Rob)
-> - Add "resets" property min/maxItems constraints. (@Rob)
-> - Add names for the basic resets like RxOOB and PM-alive. (@Rob)
-> - Add generic DWC AHCI SATA fallback for "rockchip,rk3568-dwc-ahci"
->   bindings. (@Rob)
-> - Due to the change above the schema has been split up into two parts:
->   common DWC AHCI SATA properties and generic DW AHCI SATA controller
->   DT-schema. (@Rob)
+> - Drop generic compatible fallback "snps,dwc-ahci". (@Rob)
+> - Define SATA-port pattern property to be applicable for two ports
+>   only.
+> - Drop "|" qualifier from the description property.
 > ---
->  .../bindings/ata/ahci-platform.yaml           |   8 --
->  .../bindings/ata/snps,dwc-ahci-common.yaml    | 102 ++++++++++++++++++
->  .../bindings/ata/snps,dwc-ahci.yaml           |  75 +++++++++++++
->  3 files changed, 177 insertions(+), 8 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
->  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+>  .../bindings/ata/baikal,bt1-ahci.yaml         | 115 ++++++++++++++++++
+>  1 file changed, 115 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
 > 
 
 Reviewed-by: Rob Herring <robh@kernel.org>
