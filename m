@@ -2,122 +2,156 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AABEC43334
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Jul 2022 11:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41943C43334
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Jul 2022 21:29:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230384AbiGSLpo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Jul 2022 07:45:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48236 "EHLO
+        id S229843AbiGYV3i (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 25 Jul 2022 17:29:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234296AbiGSLpn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jul 2022 07:45:43 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51B79183B0
-        for <linux-ide@vger.kernel.org>; Tue, 19 Jul 2022 04:45:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1658231142; x=1689767142;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=HoB6mNAGD8qprJcACnGtFLQCTHjRhxeUO8i/3z716MM=;
-  b=pQiXQlijCha9OfAXTfwQSczRQcU32WE6SXkC2lcLzXxnKzIIQCS5OdHR
-   cJnRFTN5A84WJZq4lfV2THZ0IlZyw+9gvrNzbd+YYL/eWAcwrnAaRW6aB
-   4kBhfAqMrjZr6qVKpxuQRXzo2iMnK9iW5vtrWL9rbL46wIvbTQWyvy7e2
-   rEnv4Eo5X98WbBCmaXBUhn88Cf6dVO2u1eiD4qrqtPiCgdhYxbAMhs/69
-   CNy/9uv29o3CwCL4TRWEpxrwvb/VxsC//0JP7YJ8DSnZxNY3BSI65FfoL
-   rX+j1213nA7UlUoJBSebwwl6MNManpi3Jk1E06RTaYU4HFScg0q/BScBA
-   w==;
-X-IronPort-AV: E=Sophos;i="5.92,284,1650902400"; 
-   d="scan'208";a="310657185"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jul 2022 19:45:40 +0800
-IronPort-SDR: 9FX6815yIb6pNZIB9qJ1ol++St100bRg1iw0B8tYw22lmYW5mXIGw9rFbkqXqAM4UlUS3MceJF
- ilHn6es/ab5p8gxXtiuumNlHAWTc9+KQQ05yb8GRa1LCo6NjoaYbjf1wEHXD8yowqDgOotiSE3
- 9RLWCfPm+Gd/T1+WPM13uMGhoM0tmna5alu6Wm8OaFG6sHFtChlq2Ye43VcaM4ULAyPO0qDjWO
- 2U6v5JqUfmQv257PSuQsKpXIqjc2pNZ5niAxcHPSD/gOxf7yfQi+t2UBqyRQSsemMvYM0K2JOy
- 9i/c6Jzxjpl1AYY2FWwtcZ24
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jul 2022 04:07:04 -0700
-IronPort-SDR: 7u4r5fIEBO6R5WEBYuiXzLCYer8Eco24bVm1krOGe4FPcHEp7HQqSFyieD3f+DaFTZVLBKA8Lx
- tVwncU/Y5pPlrPpdEIzX/M2iZdo2IXaYBCCCuh5b4Y3cVetstYIGONRxAqt8BNVFPbpAQjXTcK
- qSay1jwSuNQsDqUN5M9VjMUzbzayP6V360igDualBDS507pPZe7S4zJJ6jASL3+XKb7UgRxeht
- PGAhw0o1oVpjiw1KTho29M0tFX6u2hpa6WBXWAQnttzKUARGTLbKE5owPaLWh9Dv04UKR5+mNI
- o0k=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Jul 2022 04:45:40 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LnH8M4gk5z1Rwnm
-        for <linux-ide@vger.kernel.org>; Tue, 19 Jul 2022 04:45:39 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1658231139; x=1660823140; bh=HoB6mNAGD8qprJcACnGtFLQCTHjRhxeUO8i
-        /3z716MM=; b=bI5x5AJX6ASzFR52bquaFd1g4HlLNDkT32aXjh+B8xLB4T+qrtk
-        gTRUnCyUTs1LiiViBL8gcDXT0iz/hVHOqGoER9t4rDE0JcSXAMCgJ1sWwcDzaWaz
-        Es7kcmfWWXS/wUYBWOJmA9FeXQQhyA0Hv02zUFBf0aV5qsRWGfQQ2hktV43yaqGO
-        b9FEw4jJhChG+2qCPX7hI3f/WNTtGFcxIpsb1fGYW+BmgfVL+DwXSqY3ZAu7okeg
-        Q/dgGSTMAug8IVoxiF3Z9j4YlmzSl9pfFwXIM6I3cqGGjE27MJflJtcptRdOvYRw
-        /xYSWY93gPea66g8if+8zZ1OjI8hXkFPsIw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id fHcskA1WV7Rk for <linux-ide@vger.kernel.org>;
-        Tue, 19 Jul 2022 04:45:39 -0700 (PDT)
-Received: from [10.225.163.120] (unknown [10.225.163.120])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LnH8L4MyNz1RtVk;
-        Tue, 19 Jul 2022 04:45:38 -0700 (PDT)
-Message-ID: <1ac89860-957f-a24d-82ee-d40e5345d04e@opensource.wdc.com>
-Date:   Tue, 19 Jul 2022 20:45:37 +0900
+        with ESMTP id S237355AbiGYV2x (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jul 2022 17:28:53 -0400
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C32D252B5
+        for <linux-ide@vger.kernel.org>; Mon, 25 Jul 2022 14:27:55 -0700 (PDT)
+Received: by mail-wr1-x42c.google.com with SMTP id u5so17717884wrm.4
+        for <linux-ide@vger.kernel.org>; Mon, 25 Jul 2022 14:27:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linexp-org.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=GCM3yQVLWF86sbYiyvudiotSwDPj8nChQ6qnbaMqhHs=;
+        b=vDf+UJQ90Y1OWcD9jAnPyUDj6PkXAIzUZs8Stl2T8Wwp2Ny/rUiqSVophvD3G96yuQ
+         lESLHGbb59gI+rUi0Hcjr6568aF+hmWk0pf4X7Ix7akWPPeBUYA/2MoqKJ8BPp9tHw/c
+         n/u7RiY1/D7LNPLFE07I49c5y1wM6T5stX3lsJAM54XHJ73/SS6PoNp7Do2wrqbjKfcJ
+         Af04ZoPkKxUoECcmKBsZpL4vMk9H3L2qnaiG2l4o5MepqTlXXhnZ2s4eOWJpUp/zYETY
+         ke945GH7Dk3mEnAD/zhFbqCnIJzUWsPLq9gsZJw2I+YA8eHItz2G43rEI/AIxfsdVwnm
+         PZyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=GCM3yQVLWF86sbYiyvudiotSwDPj8nChQ6qnbaMqhHs=;
+        b=ukLYP02WuIf+7/ifbENzDc+P7AyEr/pDkcxVZsinvCT+spjLVOvnrSPr7sqdQ89L8b
+         tgwos2bO0IZ4zT1hzXvQVKYemwnTwxCRPsycpVmYXEt0e5Up98LleuUzdPpJ6G0OCB3J
+         FCwji6+EAzsK9lfST5o58fOrP/ibznJhK4Gva49TewB3VyjT4fFVieUxO2rLCaWXfswE
+         KdtbuwJasMQNdcX/5SA8wR4Qj3IlTnpvUseeTJkoL/5+n3RfotEdpMX09gzGtQc/TaHG
+         Qa47gKndSJekY/r30MEvzgAsQYF5CFRf1e1vaYU1fEgGDjD7NsE4iCyR9lbXDvnJBGt4
+         yczg==
+X-Gm-Message-State: AJIora9ZB4q/HdAMd58QPNaXVFPr3Cc9TrdX5U2keAqw3fn2FQjXVQNP
+        BWkxM+JZfMhT8Axy/8QfdqVbFQ==
+X-Google-Smtp-Source: AGRyM1uxSmqjc+KicVfEox4C6+Jx/zNXBWMGNOe4hpzsYpYRTzP2OOFmX4pTibti8j4IRFLYXUoFzA==
+X-Received: by 2002:a05:6000:2ab:b0:21e:2e68:52f4 with SMTP id l11-20020a05600002ab00b0021e2e6852f4mr8435661wry.236.1658784475211;
+        Mon, 25 Jul 2022 14:27:55 -0700 (PDT)
+Received: from mai.box.freepro.com ([2a05:6e02:1041:c10:1780:8e54:dd38:6668])
+        by smtp.gmail.com with ESMTPSA id r17-20020a5d52d1000000b0021d68a504cbsm12668772wrv.94.2022.07.25.14.27.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Jul 2022 14:27:54 -0700 (PDT)
+From:   Daniel Lezcano <daniel.lezcano@linexp.org>
+To:     daniel.lezcano@linaro.org, rafael@kernel.org
+Cc:     rui.zhang@intel.com, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, khilman@baylibre.com,
+        abailon@baylibre.com, lukasz.luba@arm.com, broonie@kernel.org,
+        damien.lemoal@opensource.wdc.com, heiko@sntech.de,
+        hayashi.kunihiko@socionext.com, mhiramat@kernel.org,
+        talel@amazon.com, thierry.reding@gmail.com, digetx@gmail.com,
+        jonathanh@nvidia.com, anarsoul@gmail.com, tiny.windzz@gmail.com,
+        baolin.wang7@gmail.com, f.fainelli@gmail.com,
+        bjorn.andersson@linaro.org, mcoquelin.stm32@gmail.com,
+        glaroque@baylibre.com, miquel.raynal@bootlin.com,
+        shawnguo@kernel.org, niklas.soderlund@ragnatech.se,
+        matthias.bgg@gmail.com, j-keerthy@ti.com,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/FREESCALE IMX
+        / MXC ARM ARCHITECTURE)
+Subject: [PATCH v2 25/32] ata/drivers/ahci_imx: Switch to new of thermal API
+Date:   Mon, 25 Jul 2022 23:26:30 +0200
+Message-Id: <20220725212637.2818207-26-daniel.lezcano@linexp.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220725212637.2818207-1-daniel.lezcano@linexp.org>
+References: <20220725212637.2818207-1-daniel.lezcano@linexp.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] Date:do not initialise statics to 0
-Content-Language: en-US
-To:     Xin Gao <gaoxin@cdjrlc.com>
-Cc:     s.shtylyov@omp.ru, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220719112908.7333-1-gaoxin@cdjrlc.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220719112908.7333-1-gaoxin@cdjrlc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/19/22 20:29, Xin Gao wrote:
-> do not initialise statics to 0
-> 
-> Signed-off-by: Xin Gao <gaoxin@cdjrlc.com>
-> ---
->  drivers/ata/pata_artop.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-> index 20a8f31a3f57..1aad8df2ea87 100644
-> --- a/drivers/ata/pata_artop.c
-> +++ b/drivers/ata/pata_artop.c
-> @@ -37,7 +37,7 @@
->   *	test stuff.
->   */
->  
-> -static int clock = 0;
-> +static int clock;
->  
->  /**
->   *	artop62x0_pre_reset	-	probe begin
+The thermal OF code has a new API allowing to migrate the OF
+initialization to a simpler approach. The ops are no longer device
+tree specific and are the generic ones provided by the core code.
 
-Very weird patch title.
+Convert the ops to the thermal_zone_device_ops format and use the new
+API to register the thermal zone with these generic ops.
 
-Is this solving any static analyzer or compiler warning ? If not, this is
-not a very useful change.
+sata_ahci_read_temperature() is used by sata_ahci_show_temp() also.
 
+So in order to change the function prototype for the get_temp ops which
+does not take a void* but a thermal_zone_device* structure, this
+function wraps the call.
+
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linexp.org>
+---
+ drivers/ata/ahci_imx.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 79aa9f285312..b734e069034d 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -327,7 +327,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
+ }
+ 
+ /* SATA AHCI temperature monitor */
+-static int sata_ahci_read_temperature(void *dev, int *temp)
++static int __sata_ahci_read_temperature(void *dev, int *temp)
+ {
+ 	u16 mpll_test_reg, rtune_ctl_reg, dac_ctl_reg, read_sum;
+ 	u32 str1, str2, str3, str4;
+@@ -416,6 +416,11 @@ static int sata_ahci_read_temperature(void *dev, int *temp)
+ 	return 0;
+ }
+ 
++static int sata_ahci_read_temperature(struct thermal_zone_device *tz, int *temp)
++{
++	return __sata_ahci_read_temperature(tz->devdata, temp);
++}
++
+ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 				   struct device_attribute *da,
+ 				   char *buf)
+@@ -423,14 +428,14 @@ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 	unsigned int temp = 0;
+ 	int err;
+ 
+-	err = sata_ahci_read_temperature(dev, &temp);
++	err = __sata_ahci_read_temperature(dev, &temp);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	return sprintf(buf, "%u\n", temp);
+ }
+ 
+-static const struct thermal_zone_of_device_ops fsl_sata_ahci_of_thermal_ops = {
++static const struct thermal_zone_device_ops fsl_sata_ahci_of_thermal_ops = {
+ 	.get_temp = sata_ahci_read_temperature,
+ };
+ 
+@@ -1131,8 +1136,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 			ret = PTR_ERR(hwmon_dev);
+ 			goto disable_clk;
+ 		}
+-		devm_thermal_zone_of_sensor_register(hwmon_dev, 0, hwmon_dev,
+-					     &fsl_sata_ahci_of_thermal_ops);
++		devm_thermal_of_zone_register(hwmon_dev, 0, hwmon_dev,
++					      &fsl_sata_ahci_of_thermal_ops);
+ 		dev_info(dev, "%s: sensor 'sata_ahci'\n", dev_name(hwmon_dev));
+ 	}
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.25.1
+
