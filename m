@@ -2,54 +2,157 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0105C00140
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Jul 2022 17:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C36C04A68
+	for <linux-ide@archiver.kernel.org>; Wed, 27 Jul 2022 21:05:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231678AbiGZRzq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Jul 2022 13:55:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45362 "EHLO
+        id S236234AbiG0VFh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 27 Jul 2022 17:05:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239775AbiGZRz1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jul 2022 13:55:27 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF5C3120B;
-        Tue, 26 Jul 2022 10:55:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=2MrgM9crsVUK7d7TyylckBEhCPVqAFUH8gFYQW4jo/w=; b=KLxm3pkecdbPtD6wd8X2Cb6ruz
-        cu0Gm3T/R23+/6s4V7cBaW5HIctp/LvNkVcy0FZJ18AVtpaOLaRjFAbnk+JOvaN+37t8Af5Ebkv2A
-        q3mklP5DPy/SiMoPTcjwRO+YOuP+9Sof1/mtikbITe4Ztk0hjbDYgsL6/6PwidTzaPcvP0SCCM7W7
-        lmjJrDqjRSTHKEj7GNUcxKAoYJd4c2Nees3FQXrkENcuPGVOPWyCXIUXRkPl+gvo/DPtc+47DQvPb
-        azgg2l+G5eVHJmNQk4Kl7gJS3BbvksR7TAyGT9nswsKvoLoIOoaGmLH168INEdSNaIMxE3pqHQbuf
-        RmaQKDBQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oGOm9-001qFs-CY; Tue, 26 Jul 2022 17:55:21 +0000
-Date:   Tue, 26 Jul 2022 10:55:21 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 1/1] ata: libata-scsi: Refactor scsi_6_lba_len() with
- use of get_unaligned_be24()
-Message-ID: <YuAqiUcsR5R3uhJ1@infradead.org>
-References: <20220726154518.73248-1-andriy.shevchenko@linux.intel.com>
+        with ESMTP id S236171AbiG0VEs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jul 2022 17:04:48 -0400
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 322426068F
+        for <linux-ide@vger.kernel.org>; Wed, 27 Jul 2022 14:04:09 -0700 (PDT)
+Received: by mail-wr1-x435.google.com with SMTP id d8so25986394wrp.6
+        for <linux-ide@vger.kernel.org>; Wed, 27 Jul 2022 14:04:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linexp-org.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Y+8gnJ68hJod6uvQUR4L1wvFSKnRgzdO4yxaDxG616M=;
+        b=x+88BBJb57JukKqCcxtbzhuJ1izDyDxxyEMwGBi9sRsQElVLfC/KEGAmf8s4wJXVFx
+         4+64HP3I1uRrT2vODAKBvbrB00FVGlVbMQU5HhvwIw9KW2F7FLLLDwgabrdAXGj+Akf6
+         8Mk3FHtwywA3nqhYXq3y9VaQaDY3VnjBdVjGEh/8kbQA7oRhPentpoLGnsMtDSV4P4Fn
+         T/puU7Lyo+pchOSrsXUAGlooCHHrODdVcPEwSdLdfPlqsZ/5sWG2ANbCdedDuweJP0/o
+         Sds9i9n0Owi80qRvI3/8FvR6sddk/85654or77qvOSty+uWQN0GEKStWAIhv2g8JLmsw
+         k1Jw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Y+8gnJ68hJod6uvQUR4L1wvFSKnRgzdO4yxaDxG616M=;
+        b=kc1YqRXVfFg5fY7BFXBj2WtAQOQWNnB3s42B+G0wJFPx4obRiWp/T2J0wSAhBG8cwo
+         D7NUT5UEsxossSVuyTYXlDtfKSfB0+k/nv5bCDwEoFghiJx4qepRDvTTN54zyDC6/c+w
+         mUD+272Gi12t5BQ71ufhEqC7cgPPs3saIHVIQmzye8KeB4eG2cOJWakBairWRiGVJbDx
+         DJSQSaY+lqJz3+Y/shRVPKhjfgZCRBZHmP6+HpGYuqH30gEkLIVlXzwCOU4hxq/jt/R7
+         LJJW8qLMupRkbfDpxvjy/NcbnIzjltPej7d6JeoM9xMhZPx4Aw6HfheXXP1oApK5I2/E
+         TtEg==
+X-Gm-Message-State: AJIora/CvUkbvRHw30MLa3fkvJb9TIJSA9HSNuMx6WDk94SMZG0yokhE
+        AYDEYQpnx9PYkDVIUbYr6liSpQ==
+X-Google-Smtp-Source: AGRyM1slQQd537zbhaxi6R16/WJLy9sr0CulGmuYdFM7k5O2+9TcSk2qXRezXHRFGXF3/fBRBSrJWg==
+X-Received: by 2002:a5d:6f0d:0:b0:21e:3c6f:f67c with SMTP id ay13-20020a5d6f0d000000b0021e3c6ff67cmr14497675wrb.606.1658955849378;
+        Wed, 27 Jul 2022 14:04:09 -0700 (PDT)
+Received: from mai.box.freepro.com ([2a05:6e02:1041:c10:65a8:ebd8:4098:d9d0])
+        by smtp.gmail.com with ESMTPSA id h6-20020a05600c350600b003a38606385esm37908wmq.3.2022.07.27.14.04.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Jul 2022 14:04:09 -0700 (PDT)
+From:   Daniel Lezcano <daniel.lezcano@linexp.org>
+To:     daniel.lezcano@linaro.org, rafael@kernel.org
+Cc:     rui.zhang@intel.com, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, khilman@baylibre.com,
+        abailon@baylibre.com, lukasz.luba@arm.com, broonie@kernel.org,
+        damien.lemoal@opensource.wdc.com, heiko@sntech.de,
+        hayashi.kunihiko@socionext.com, mhiramat@kernel.org,
+        talel@amazon.com, thierry.reding@gmail.com, digetx@gmail.com,
+        jonathanh@nvidia.com, anarsoul@gmail.com, tiny.windzz@gmail.com,
+        baolin.wang7@gmail.com, f.fainelli@gmail.com,
+        bjorn.andersson@linaro.org, mcoquelin.stm32@gmail.com,
+        glaroque@baylibre.com, miquel.raynal@bootlin.com,
+        shawnguo@kernel.org, niklas.soderlund@ragnatech.se,
+        matthias.bgg@gmail.com, j-keerthy@ti.com,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/FREESCALE IMX
+        / MXC ARM ARCHITECTURE)
+Subject: [PATCH v3 25/32] ata/drivers/ahci_imx: Switch to new of thermal API
+Date:   Wed, 27 Jul 2022 23:02:46 +0200
+Message-Id: <20220727210253.3794069-26-daniel.lezcano@linexp.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220727210253.3794069-1-daniel.lezcano@linexp.org>
+References: <20220727210253.3794069-1-daniel.lezcano@linexp.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220726154518.73248-1-andriy.shevchenko@linux.intel.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jul 26, 2022 at 06:45:18PM +0300, Andy Shevchenko wrote:
->  static void scsi_6_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
->  {
-> +	*plba = get_unaligned_be24(cdb[1]) & 0x1fffff;
-> +	*plen = cdb[4];
+The thermal OF code has a new API allowing to migrate the OF
+initialization to a simpler approach. The ops are no longer device
+tree specific and are the generic ones provided by the core code.
 
-I think just pen coding this in the caller would be a lot cleaner.
+Convert the ops to the thermal_zone_device_ops format and use the new
+API to register the thermal zone with these generic ops.
 
-Same for scsi_10_lba_len and scsi_16_lba_len in their two callers each.
+sata_ahci_read_temperature() is used by sata_ahci_show_temp() also.
+
+So in order to change the function prototype for the get_temp ops which
+does not take a void* but a thermal_zone_device* structure, this
+function wraps the call.
+
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linexp.org>
+Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ drivers/ata/ahci_imx.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 79aa9f285312..b734e069034d 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -327,7 +327,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
+ }
+ 
+ /* SATA AHCI temperature monitor */
+-static int sata_ahci_read_temperature(void *dev, int *temp)
++static int __sata_ahci_read_temperature(void *dev, int *temp)
+ {
+ 	u16 mpll_test_reg, rtune_ctl_reg, dac_ctl_reg, read_sum;
+ 	u32 str1, str2, str3, str4;
+@@ -416,6 +416,11 @@ static int sata_ahci_read_temperature(void *dev, int *temp)
+ 	return 0;
+ }
+ 
++static int sata_ahci_read_temperature(struct thermal_zone_device *tz, int *temp)
++{
++	return __sata_ahci_read_temperature(tz->devdata, temp);
++}
++
+ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 				   struct device_attribute *da,
+ 				   char *buf)
+@@ -423,14 +428,14 @@ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 	unsigned int temp = 0;
+ 	int err;
+ 
+-	err = sata_ahci_read_temperature(dev, &temp);
++	err = __sata_ahci_read_temperature(dev, &temp);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	return sprintf(buf, "%u\n", temp);
+ }
+ 
+-static const struct thermal_zone_of_device_ops fsl_sata_ahci_of_thermal_ops = {
++static const struct thermal_zone_device_ops fsl_sata_ahci_of_thermal_ops = {
+ 	.get_temp = sata_ahci_read_temperature,
+ };
+ 
+@@ -1131,8 +1136,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 			ret = PTR_ERR(hwmon_dev);
+ 			goto disable_clk;
+ 		}
+-		devm_thermal_zone_of_sensor_register(hwmon_dev, 0, hwmon_dev,
+-					     &fsl_sata_ahci_of_thermal_ops);
++		devm_thermal_of_zone_register(hwmon_dev, 0, hwmon_dev,
++					      &fsl_sata_ahci_of_thermal_ops);
+ 		dev_info(dev, "%s: sensor 'sata_ahci'\n", dev_name(hwmon_dev));
+ 	}
+ 
+-- 
+2.25.1
+
