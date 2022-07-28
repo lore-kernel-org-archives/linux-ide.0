@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65896C04A68
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0581AC3F6B0
 	for <linux-ide@archiver.kernel.org>; Thu, 28 Jul 2022 11:19:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236603AbiG1LTo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Jul 2022 07:19:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47224 "EHLO
+        id S236715AbiG1LTp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Jul 2022 07:19:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236209AbiG1LTZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2022 07:19:25 -0400
+        with ESMTP id S236320AbiG1LT1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2022 07:19:27 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4663D67167;
-        Thu, 28 Jul 2022 04:19:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BD56167147;
+        Thu, 28 Jul 2022 04:19:25 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id BD17216D4;
-        Thu, 28 Jul 2022 14:21:42 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com BD17216D4
+        by mail.baikalelectronics.com (Postfix) with ESMTP id E155016D6;
+        Thu, 28 Jul 2022 14:21:44 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com E155016D6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659007302;
-        bh=cwjTY+UXbYCa95/dq1KpC5+URj+jwo1L4bVykF4JcuI=;
+        d=baikalelectronics.ru; s=mail; t=1659007304;
+        bh=1w09WlHzsLJJ1Iix44RngaZfNGmBziRoxLwbJ26Cixk=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=DSnIkPYNU4qrE4k7eAwl2CMky7QwCgRh0MzmI1TGjPldyht4RMjMSpWtOdQxFa+I9
-         FNTgUqMt8DLyw76XL+NFDreMkdZHfOocrDJ4RDdVGiYEgYYeJVaXIMVxQV3/Gh5MGT
-         zDb+4NsnyCZd0VG8iT1hcPzQ+AkEq0yD6IURlTvE=
+        b=kLSAmc+yjNXSwxWpbEN0Nr1dX7jm2RcuY+N2ZzlXcO6EvuPY/HIDzcqWHWVyPiQLQ
+         d64BvrIfZzZvR6v8TAovI4QlKH4McnGeqFfvVzZ4wPFHHUw8Ui74xV10qx/b1ss+Cj
+         kaYbRqrAkSjQOIor0WpfnrXc1t9laQw8GW22DAN4=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 14:19:17 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 14:19:19 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH RESEND v6 06/23] ata: libahci_platform: Convert to using platform devm-ioremap methods
-Date:   Thu, 28 Jul 2022 14:18:47 +0300
-Message-ID: <20220728111905.12427-7-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v6 08/23] ata: libahci_platform: Sanity check the DT child nodes number
+Date:   Thu, 28 Jul 2022 14:18:49 +0300
+Message-ID: <20220728111905.12427-9-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728111905.12427-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728111905.12427-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,16 +50,21 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Currently the IOMEM AHCI registers space is mapped by means of the
-two functions invocation: platform_get_resource() is used to get the very
-first memory resource and devm_ioremap_resource() is called to remap that
-resource. Device-managed kernel API provides a handy wrapper to perform
-the same in single function call: devm_platform_ioremap_resource().
+Having greater than AHCI_MAX_PORTS (32) ports detected isn't that critical
+from the further AHCI-platform initialization point of view since
+exceeding the ports upper limit will cause allocating more resources than
+will be used afterwards. But detecting too many child DT-nodes doesn't
+seem right since it's very unlikely to have it on an ordinary platform. In
+accordance with the AHCI specification there can't be more than 32 ports
+implemented at least due to having the CAP.NP field of 5 bits wide and the
+PI register of dword size. Thus if such situation is found the DTB must
+have been corrupted and the data read from it shouldn't be reliable. Let's
+consider that as an erroneous situation and halt further resources
+allocation.
 
-While at it seeing many AHCI platform drivers rely on having the AHCI CSR
-space marked with "ahci" name let's first try to find and remap the CSR
-IO-mem with that name and only if it fails fallback to getting the very
-first registers space platform resource.
+Note it's logically more correct to have the nports set only after the
+initialization value is checked for being sane. So while at it let's make
+sure nports is assigned with a correct value.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -67,37 +72,48 @@ Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
 
 Changelog v2:
-- Check whether there is "ahci" reg resource before using the
-  devm_platform_ioremap_resource_byname() method in order to prevent a
-  false error message printed in the log (@Damien)
-- Slightly update the patch title due to the change above and to be more
-  specific about what the platform device managed methods are utilized
-  for.
+- Drop the else word from the child_nodes value checking if-else-if
+  statement (@Damien) and convert the after-else part into the ternary
+  operator-based statement.
+
+Changelog v4:
+- Fix some logical mistakes in the patch log. (@Sergei Shtylyov)
+- Replace "?:" operator with if-else statement. (@Damien)
 ---
- drivers/ata/libahci_platform.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/ata/libahci_platform.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 32495ae96567..1e9e825d6cc5 100644
+index 814804582d1d..579039956917 100644
 --- a/drivers/ata/libahci_platform.c
 +++ b/drivers/ata/libahci_platform.c
-@@ -402,8 +402,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+@@ -451,14 +451,24 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		}
+ 	}
  
- 	devres_add(dev, hpriv);
- 
--	hpriv->mmio = devm_ioremap_resource(dev,
--			      platform_get_resource(pdev, IORESOURCE_MEM, 0));
+-	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
 +	/*
-+	 * If the DT provided an "ahci" named resource, use it. Otherwise,
-+	 * fallback to using the default first resource for the device node.
++	 * Too many sub-nodes most likely means having something wrong with
++	 * the firmware.
 +	 */
-+	if (platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci"))
-+		hpriv->mmio = devm_platform_ioremap_resource_byname(pdev, "ahci");
++	child_nodes = of_get_child_count(dev->of_node);
++	if (child_nodes > AHCI_MAX_PORTS) {
++		rc = -EINVAL;
++		goto err_out;
++	}
+ 
+ 	/*
+ 	 * If no sub-node was found, we still need to set nports to
+ 	 * one in order to be able to use the
+ 	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
+ 	 */
+-	if (!child_nodes)
++	if (child_nodes)
++		hpriv->nports = child_nodes;
 +	else
-+		hpriv->mmio = devm_platform_ioremap_resource(pdev, 0);
- 	if (IS_ERR(hpriv->mmio)) {
- 		rc = PTR_ERR(hpriv->mmio);
- 		goto err_out;
+ 		hpriv->nports = 1;
+ 
+ 	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
 -- 
 2.35.1
 
