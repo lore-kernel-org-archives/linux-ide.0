@@ -2,44 +2,46 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90833C3F6B0
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jul 2022 11:20:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0DDEC04A68
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Jul 2022 11:21:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236998AbiG1LUu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Jul 2022 07:20:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47926 "EHLO
+        id S236715AbiG1LVW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Jul 2022 07:21:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235803AbiG1LTs (ORCPT
+        with ESMTP id S236005AbiG1LTs (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2022 07:19:48 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D90A067C88;
-        Thu, 28 Jul 2022 04:19:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B41066759F;
+        Thu, 28 Jul 2022 04:19:28 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 5F5C716D3;
-        Thu, 28 Jul 2022 14:21:53 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 5F5C716D3
+        by mail.baikalelectronics.com (Postfix) with ESMTP id DA78E16CC;
+        Thu, 28 Jul 2022 14:21:48 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com DA78E16CC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659007313;
-        bh=ygMX+bu6gc/yMuo4QKjk1bUpr5VLHBbRrZJps6eSGfc=;
+        d=baikalelectronics.ru; s=mail; t=1659007308;
+        bh=GmRmzWevY9P0garDpWjcm8TYUHRVAknKpAHcK4Qdzts=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=mD6brgMiUNOdvxnpCVROBRRnHXWNhZpxZp+6N+umPslZM0lu3IEe+xsT1wTephkJ3
-         vFtKrf/Dj99EJXRlQC+DqL0qpivZtTA3gbgoPpCE1va3H76g5rsWeH13CFhfxbVsDm
-         JOUl7eQfqiIqFuUQwpD5ZeGgyoWlwdtzK3atFpD8=
+        b=K9pGcQQaG8IWryN/fxPebNyI1YUEOcErAObxCCus43hHo+qmu17S/lW6DSVlA+28s
+         QWVFQphVsCgU88ykvliWtq5RaKQwpmd57smWhaVgXVajEdt3OKy5/mH/ZJ0/c3drao
+         Xjsy5KKeQfy8Bb0MjyP1xBkHQfU1UM6kESRLBpus=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 14:19:28 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 14:19:23 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH RESEND v6 15/23] ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
-Date:   Thu, 28 Jul 2022 14:18:56 +0300
-Message-ID: <20220728111905.12427-16-Sergey.Semin@baikalelectronics.ru>
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, Rob Herring <robh@kernel.org>
+Subject: [PATCH RESEND v6 11/23] dt-bindings: ata: ahci: Add platform capability properties
+Date:   Thu, 28 Jul 2022 14:18:52 +0300
+Message-ID: <20220728111905.12427-12-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728111905.12427-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728111905.12427-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,65 +52,135 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The port base address may be required even before the ata_host instance is
-initialized and activated, for instance in the ahci_save_initial_config()
-method which we are about to update (consider this modification as a
-preparation for that one). Seeing the __ahci_port_base() function isn't
-used much it's the best candidate to provide the required functionality.
-So let's convert it to accepting the ahci_host_priv structure pointer.
+In case if the platform doesn't have BIOS or a comprehensive firmware
+installed then the HBA capability flags will be left uninitialized. As a
+good alternative we suggest to define the DT-properties with the AHCI
+platform capabilities describing all the HW-init flags of the
+corresponding capability register. Luckily there aren't too many of them.
+SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
+support determine the corresponding feature availability for the whole HBA
+by means of the "hba-cap" property. Each port can have the "hba-port-cap"
+property initialized indicating that the port supports some of the next
+functionalities: HPCP - HotPlug capable port, MPSP - Mechanical Presence
+Switch attached to a port, CPD - Cold Plug detection, ESP - External SATA
+Port (eSATA), FBSCP - FIS-based switching capable port.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
+
+Changelog v4:
+- Fix some misspelling in the patch log.
+- Convert the boolean properties to the bitfield properties. (@Rob)
+- Remove Hannes' rb tag due to the patch content change.
 
 Changelog v5:
-- Fix some grammar notes in the patchlog. (@Damien)
+- Dual-licese the include/dt-bindings/ata/ahci.h file. (@Rob)
 ---
- drivers/ata/ahci.c | 2 +-
- drivers/ata/ahci.h | 7 ++++---
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ .../devicetree/bindings/ata/ahci-common.yaml  | 16 +++++++++++++++
+ .../bindings/ata/ahci-platform.yaml           | 10 ++++++++++
+ include/dt-bindings/ata/ahci.h                | 20 +++++++++++++++++++
+ 3 files changed, 46 insertions(+)
+ create mode 100644 include/dt-bindings/ata/ahci.h
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index bacb597a0d32..51c0c1dd91ea 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -690,7 +690,7 @@ static void ahci_pci_init_controller(struct ata_host *host)
- 			mv = 2;
- 		else
- 			mv = 4;
--		port_mmio = __ahci_port_base(host, mv);
-+		port_mmio = __ahci_port_base(hpriv, mv);
+diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+index 12a97b56226f..94d72aeaad0f 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+@@ -58,6 +58,14 @@ properties:
+   phy-names:
+     const: sata-phy
  
- 		writel(0, port_mmio + PORT_IRQ_MASK);
- 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index cc4f40e6c924..5d9db5e7476c 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -432,10 +432,9 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht);
- void ahci_error_handler(struct ata_port *ap);
- u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked);
- 
--static inline void __iomem *__ahci_port_base(struct ata_host *host,
-+static inline void __iomem *__ahci_port_base(struct ahci_host_priv *hpriv,
- 					     unsigned int port_no)
- {
--	struct ahci_host_priv *hpriv = host->private_data;
- 	void __iomem *mmio = hpriv->mmio;
- 
- 	return mmio + 0x100 + (port_no * 0x80);
-@@ -443,7 +442,9 @@ static inline void __iomem *__ahci_port_base(struct ata_host *host,
- 
- static inline void __iomem *ahci_port_base(struct ata_port *ap)
- {
--	return __ahci_port_base(ap->host, ap->port_no);
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
++  hba-cap:
++    $ref: '/schemas/types.yaml#/definitions/uint32'
++    description:
++      Bitfield of the HBA generic platform capabilities like Staggered
++      Spin-up or Mechanical Presence Switch support. It can be used to
++      appropriately initialize the HWinit fields of the HBA CAP register
++      in case if the system firmware hasn't done it.
 +
-+	return __ahci_port_base(hpriv, ap->port_no);
- }
+   ports-implemented:
+     $ref: '/schemas/types.yaml#/definitions/uint32'
+     description:
+@@ -101,6 +109,14 @@ $defs:
+       target-supply:
+         description: Power regulator for SATA port target device
  
- static inline int ahci_nr_ports(u32 cap)
++      hba-port-cap:
++        $ref: '/schemas/types.yaml#/definitions/uint32'
++        description:
++          Bitfield of the HBA port-specific platform capabilities like Hot
++          plugging, eSATA, FIS-based Switching, etc (see AHCI specification
++          for details). It can be used to initialize the HWinit fields of
++          the PxCMD register in case if the system firmware hasn't done it.
++
+     required:
+       - reg
+ 
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+index 15be98e0385b..e19cf9828e68 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+@@ -111,6 +111,8 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/arm-gic.h>
+     #include <dt-bindings/clock/berlin2q.h>
++    #include <dt-bindings/ata/ahci.h>
++
+     sata@f7e90000 {
+         compatible = "marvell,berlin2q-ahci", "generic-ahci";
+         reg = <0xf7e90000 0x1000>;
+@@ -119,15 +121,23 @@ examples:
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
++        hba-cap = <HBA_SMPS>;
++
+         sata0: sata-port@0 {
+             reg = <0>;
++
+             phys = <&sata_phy 0>;
+             target-supply = <&reg_sata0>;
++
++            hba-port-cap = <(HBA_PORT_FBSCP | HBA_PORT_ESP)>;
+         };
+ 
+         sata1: sata-port@1 {
+             reg = <1>;
++
+             phys = <&sata_phy 1>;
+             target-supply = <&reg_sata1>;
++
++            hba-port-cap = <(HBA_PORT_HPCP | HBA_PORT_MPSP | HBA_PORT_FBSCP)>;
+         };
+     };
+diff --git a/include/dt-bindings/ata/ahci.h b/include/dt-bindings/ata/ahci.h
+new file mode 100644
+index 000000000000..77997b35612c
+--- /dev/null
++++ b/include/dt-bindings/ata/ahci.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0-only or BSD-2-Clause */
++/*
++ * This header provides constants for most AHCI bindings.
++ */
++
++#ifndef _DT_BINDINGS_ATA_AHCI_H
++#define _DT_BINDINGS_ATA_AHCI_H
++
++/* Host Bus Adapter generic platform capabilities */
++#define HBA_SSS		(1 << 27)
++#define HBA_SMPS	(1 << 28)
++
++/* Host Bus Adapter port-specific platform capabilities */
++#define HBA_PORT_HPCP	(1 << 18)
++#define HBA_PORT_MPSP	(1 << 19)
++#define HBA_PORT_CPD	(1 << 20)
++#define HBA_PORT_ESP	(1 << 21)
++#define HBA_PORT_FBSCP	(1 << 22)
++
++#endif
 -- 
 2.35.1
 
