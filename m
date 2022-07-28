@@ -2,44 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9C70C19F29
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jul 2022 11:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A234C19F21
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Jul 2022 11:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237127AbiG1LWK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Jul 2022 07:22:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
+        id S236927AbiG1LWN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Jul 2022 07:22:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236861AbiG1LU0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2022 07:20:26 -0400
+        with ESMTP id S236290AbiG1LUd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2022 07:20:33 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F34A067CBB;
-        Thu, 28 Jul 2022 04:19:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 33D9867C9B;
+        Thu, 28 Jul 2022 04:19:41 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 222CE16D3;
-        Thu, 28 Jul 2022 14:22:01 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 222CE16D3
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 3515616CC;
+        Thu, 28 Jul 2022 14:22:03 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 3515616CC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659007321;
-        bh=dq5UGE0UhHJptPCfmOAs7RIk99K8/aQGJR2fT1lu2og=;
+        d=baikalelectronics.ru; s=mail; t=1659007323;
+        bh=oUSpaIhkvZGXowqh4vbRpzxbsFao5e19AluMuTh7ZdI=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=lZV1NJdePYexBnI9Z2mdh5Fj0NhLKF/AIzxjz/HqSzxPLisEN1W36mwJoF4HiFDxL
-         T6fadpbcvAkfK5hQm/O4z5uvvroYsx4qgN3yB5krqEgrwWZYvpUZKgTDfJSvKeQj7K
-         REW4ZHaDLZvdZikvdjD9m5ZkTaD3uCVOj7jIsq7Y=
+        b=ELMQ6K/uTOG7q46raYJm3Z0pWlFSMZJcvcXEj4tBQlaukP3cgF/o/kzaWF9Lkj9cO
+         QMa0t87tEE6ApYgYZU1SGz8wiIdoRwxikh8Iq+13qIObentksexvJ790Rwtd785A8q
+         GYy+g8alSe2nf8UWFjOMwpX3c24nruEmxuFfHVRA=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 14:19:36 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 14:19:38 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Serge Semin <fancer.lancer@gmail.com>
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH RESEND v6 21/23] ata: ahci-dwc: Add platform-specific quirks support
-Date:   Thu, 28 Jul 2022 14:19:02 +0300
-Message-ID: <20220728111905.12427-22-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v6 23/23] MAINTAINERS: Add maintainers for DWC AHCI SATA driver
+Date:   Thu, 28 Jul 2022 14:19:04 +0300
+Message-ID: <20220728111905.12427-24-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728111905.12427-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728111905.12427-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,152 +50,40 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Some DWC AHCI SATA IP-core derivatives require to perform small platform
-or IP-core specific setups. They are too small to be placed in a dedicated
-driver. It's just much easier to have a set of quirks for them right in
-the DWC AHCI driver code. Since we are about to add such platform support,
-as a pre-requisite we introduce a platform-data based DWC AHCI quirks API.
-The platform data can be used to define the flags passed to the
-ahci_platform_get_resources() method, additional AHCI host-flags and a set
-of callbacks to initialize, re-initialize and clear the platform settings.
+Add myself as a maintainer of the new DWC AHCI SATA driver and
+its DT-bindings schema.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
 Changelog v2:
-- Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_'.
-  (@Damien)
-
-Changelog v4:
-- Convert ahci_dwc_plat to being statically defined. (@kbot)
+- Use dlemoal/libata.git git tree for the LIBATA SATA AHCI SYNOPSYS
+  DWC driver (@Damien).
 ---
- drivers/ata/ahci_dwc.c | 52 ++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 48 insertions(+), 4 deletions(-)
+ MAINTAINERS | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-index 96d73a4de510..44a9bb7696ab 100644
---- a/drivers/ata/ahci_dwc.c
-+++ b/drivers/ata/ahci_dwc.c
-@@ -90,7 +90,16 @@
- #define AHCI_DWC_PORT_PHYCR		0x74
- #define AHCI_DWC_PORT_PHYSR		0x78
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3cf9842d9233..61a0218a3d27 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11255,6 +11255,15 @@ F:	drivers/ata/ahci_platform.c
+ F:	drivers/ata/libahci_platform.c
+ F:	include/linux/ahci_platform.h
  
-+struct ahci_dwc_plat_data {
-+	unsigned int pflags;
-+	unsigned int hflags;
-+	int (*init)(struct ahci_host_priv *hpriv);
-+	int (*reinit)(struct ahci_host_priv *hpriv);
-+	void (*clear)(struct ahci_host_priv *hpriv);
-+};
++LIBATA SATA AHCI SYNOPSYS DWC CONTROLLER DRIVER
++M:	Serge Semin <fancer.lancer@gmail.com>
++L:	linux-ide@vger.kernel.org
++S:	Maintained
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git
++F:	Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
++F:	Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
++F:	drivers/ata/ahci_dwc.c
 +
- struct ahci_dwc_host_priv {
-+	const struct ahci_dwc_plat_data *pdata;
- 	struct platform_device *pdev;
- 
- 	u32 timv;
-@@ -107,11 +116,15 @@ static struct ahci_host_priv *ahci_dwc_get_resources(struct platform_device *pde
- 		return ERR_PTR(-ENOMEM);
- 
- 	dpriv->pdev = pdev;
-+	dpriv->pdata = device_get_match_data(&pdev->dev);
-+	if (!dpriv->pdata)
-+		return ERR_PTR(-EINVAL);
- 
--	hpriv = ahci_platform_get_resources(pdev, AHCI_PLATFORM_GET_RESETS);
-+	hpriv = ahci_platform_get_resources(pdev, dpriv->pdata->pflags);
- 	if (IS_ERR(hpriv))
- 		return hpriv;
- 
-+	hpriv->flags |= dpriv->pdata->hflags;
- 	hpriv->plat_data = (void *)dpriv;
- 
- 	return hpriv;
-@@ -242,22 +255,33 @@ static int ahci_dwc_init_dmacr(struct ahci_host_priv *hpriv)
- 
- static int ahci_dwc_init_host(struct ahci_host_priv *hpriv)
- {
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
- 	int rc;
- 
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
- 		return rc;
- 
-+	if (dpriv->pdata->init) {
-+		rc = dpriv->pdata->init(hpriv);
-+		if (rc)
-+			goto err_disable_resources;
-+	}
-+
- 	ahci_dwc_check_cap(hpriv);
- 
- 	ahci_dwc_init_timer(hpriv);
- 
- 	rc = ahci_dwc_init_dmacr(hpriv);
- 	if (rc)
--		goto err_disable_resources;
-+		goto err_clear_platform;
- 
- 	return 0;
- 
-+err_clear_platform:
-+	if (dpriv->pdata->clear)
-+		dpriv->pdata->clear(hpriv);
-+
- err_disable_resources:
- 	ahci_platform_disable_resources(hpriv);
- 
-@@ -275,6 +299,12 @@ static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
- 	if (rc)
- 		return rc;
- 
-+	if (dpriv->pdata->reinit) {
-+		rc = dpriv->pdata->reinit(hpriv);
-+		if (rc)
-+			goto err_disable_resources;
-+	}
-+
- 	writel(dpriv->timv, hpriv->mmio + AHCI_DWC_HOST_TIMER1MS);
- 
- 	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
-@@ -283,10 +313,20 @@ static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
- 	}
- 
- 	return 0;
-+
-+err_disable_resources:
-+	ahci_platform_disable_resources(hpriv);
-+
-+	return rc;
- }
- 
- static void ahci_dwc_clear_host(struct ahci_host_priv *hpriv)
- {
-+	struct ahci_dwc_host_priv *dpriv = hpriv->plat_data;
-+
-+	if (dpriv->pdata->clear)
-+		dpriv->pdata->clear(hpriv);
-+
- 	ahci_platform_disable_resources(hpriv);
- }
- 
-@@ -372,9 +412,13 @@ static int ahci_dwc_resume(struct device *dev)
- static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
- 				ahci_dwc_resume);
- 
-+static struct ahci_dwc_plat_data ahci_dwc_plat = {
-+	.pflags = AHCI_PLATFORM_GET_RESETS,
-+};
-+
- static const struct of_device_id ahci_dwc_of_match[] = {
--	{ .compatible = "snps,dwc-ahci", },
--	{ .compatible = "snps,spear-ahci", },
-+	{ .compatible = "snps,dwc-ahci", &ahci_dwc_plat },
-+	{ .compatible = "snps,spear-ahci", &ahci_dwc_plat },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_dwc_of_match);
+ LIBATA SATA PROMISE TX2/TX4 CONTROLLER DRIVER
+ M:	Mikael Pettersson <mikpelinux@gmail.com>
+ L:	linux-ide@vger.kernel.org
 -- 
 2.35.1
 
