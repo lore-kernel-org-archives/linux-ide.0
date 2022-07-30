@@ -2,46 +2,46 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B8B9C00144
-	for <linux-ide@archiver.kernel.org>; Fri, 29 Jul 2022 19:56:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E34AEC00144
+	for <linux-ide@archiver.kernel.org>; Sat, 30 Jul 2022 01:51:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231817AbiG2T4Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 29 Jul 2022 15:56:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37646 "EHLO
+        id S232073AbiG3Bvr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 29 Jul 2022 21:51:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238989AbiG2T4Y (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jul 2022 15:56:24 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A754B87C20;
-        Fri, 29 Jul 2022 12:56:23 -0700 (PDT)
+        with ESMTP id S231843AbiG3Bvj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jul 2022 21:51:39 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 631AB2AC69;
+        Fri, 29 Jul 2022 18:51:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1659124583; x=1690660583;
+  t=1659145896; x=1690681896;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=icmzx4g7Va0EWQGiMBuf7Cg0LU8Z1mCtK02FJnlNI/8=;
-  b=R+SiDLDqvrnH+Z9rK98gj7U1yYvKcQD6GpTBdHNdhdWHpPSRA/LJ9c/D
-   3n5Udx1mUiOBeK5g8XX3YUl8EHdEbf6k9jPtA+j2UuCtxs7Q7fwIBLOmQ
-   phBySzpZw2ifx9w3v9gG4izHlreZSyfrgyzDkCXXAVs+v9hvOVFAx9IzL
-   risS0an/rtGOybzujc9sVX/RhslRj0kvF8OLekoZBztbqwS/5xAtxx3MJ
-   DL3Zes/uY/bxWEzs+xAIH3lkSE9VfNP/TYrNqS4WUbEdWByt8E9iDU2cw
-   uTGvpha4Mv/+1UzEXCFBEBG7T2yRRnyomVgewPITVqayDa0vejKfCUUyL
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10423"; a="286394159"
-X-IronPort-AV: E=Sophos;i="5.93,201,1654585200"; 
-   d="scan'208";a="286394159"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2022 12:56:23 -0700
+  bh=oXvrqgHJX/aXymOLI6Lbg84MsWqjCWPM0eFPadKnZeA=;
+  b=WwPNwDV8PvM7ogfwNJmy/F7daIfhyfAPVcara4+c4ptVtvHjb+s6yICo
+   n0e47mCKqPrGiPibcIBRR5sOOfNPG5/Vc6lj6HVX6s1CkUpq7c0iVNwn+
+   z8eztzxgJb45fou3JWj77LnW2f2qDdnkqpnGhsUoFxsS4eQCLZE/hSMBR
+   6RigKMj2WmGYPmQCgBju2Z7aNokbmR7xtTkA89zt1ZdF3lnWQpsIvBZe9
+   l14R7qXpjbQmrgu57Ow8aBHvI8TPZBPgfbryt7tKYvkR1Qb2oyR2NHXMl
+   5t7UyN5wL3G1KypSZ8MrR11fxa7gJ7gLCf6Qb4ZTE2J/PmEfQkxadGD0Q
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10423"; a="268649188"
+X-IronPort-AV: E=Sophos;i="5.93,202,1654585200"; 
+   d="scan'208";a="268649188"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2022 18:51:36 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,201,1654585200"; 
-   d="scan'208";a="690834908"
+X-IronPort-AV: E=Sophos;i="5.93,202,1654585200"; 
+   d="scan'208";a="601464706"
 Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 29 Jul 2022 12:56:20 -0700
+  by orsmga002.jf.intel.com with ESMTP; 29 Jul 2022 18:51:32 -0700
 Received: from kbuild by e0eace57cfef with local (Exim 4.96)
         (envelope-from <lkp@intel.com>)
-        id 1oHW5s-000C2s-05;
-        Fri, 29 Jul 2022 19:56:20 +0000
-Date:   Sat, 30 Jul 2022 03:56:03 +0800
+        id 1oHbdb-000CG5-2Y;
+        Sat, 30 Jul 2022 01:51:31 +0000
+Date:   Sat, 30 Jul 2022 09:51:27 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
@@ -55,7 +55,7 @@ Cc:     kbuild-all@lists.01.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 Subject: Re: [PATCH RESEND v6 07/23] ata: libahci_platform: Convert to using
  devm bulk clocks API
-Message-ID: <202207300343.gBqrivXn-lkp@intel.com>
+Message-ID: <202207300915.8DDz66ju-lkp@intel.com>
 References: <20220728111905.12427-8-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -77,184 +77,146 @@ https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220728-192315
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-config: m68k-randconfig-s052-20220729 (https://download.01.org/0day-ci/archive/20220730/202207300343.gBqrivXn-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 12.1.0
-reproduce:
+config: csky-randconfig-r023-20220729 (https://download.01.org/0day-ci/archive/20220730/202207300915.8DDz66ju-lkp@intel.com/config)
+compiler: csky-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # apt-get install sparse
-        # sparse version: v0.6.4-39-gce1a6720-dirty
         # https://github.com/intel-lab-lkp/linux/commit/a84e837dd293db69f2510f3036f2c83ce8b0167c
         git remote add linux-review https://github.com/intel-lab-lkp/linux
         git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220728-192315
         git checkout a84e837dd293db69f2510f3036f2c83ce8b0167c
         # save the config file
         mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=m68k SHELL=/bin/bash
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=csky SHELL=/bin/bash drivers/ata/
 
 If you fix the issue, kindly add following tag where applicable
 Reported-by: kernel test robot <lkp@intel.com>
 
 All errors (new ones prefixed by >>):
 
-   m68k-linux-ld: drivers/ata/libahci_platform.o: in function `ahci_platform_get_resources':
->> drivers/ata/libahci_platform.c:428: undefined reference to `__clk_get_name'
+   drivers/ata/ahci_da850.c: In function 'ahci_da850_probe':
+>> drivers/ata/ahci_da850.c:181:13: error: wrong type argument to unary exclamation mark
+     181 |         if (!hpriv->clks[0]) {
+         |             ^
+>> drivers/ata/ahci_da850.c:186:34: error: incompatible types when assigning to type 'struct clk_bulk_data' from type 'struct clk *'
+     186 |                 hpriv->clks[0] = clk;
+         |                                  ^~~
+   drivers/ata/ahci_da850.c:194:13: error: wrong type argument to unary exclamation mark
+     194 |         if (!hpriv->clks[1]) {
+         |             ^
+   drivers/ata/ahci_da850.c:201:34: error: incompatible types when assigning to type 'struct clk_bulk_data' from type 'struct clk *'
+     201 |                 hpriv->clks[1] = clk;
+         |                                  ^~~
+>> drivers/ata/ahci_da850.c:204:64: error: incompatible type for argument 1 of 'clk_get_rate'
+     204 |         mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
+         |                                                     ~~~~~~~~~~~^~~
+         |                                                                |
+         |                                                                struct clk_bulk_data
+   In file included from drivers/ata/ahci.h:23,
+                    from drivers/ata/ahci_da850.c:13:
+   include/linux/clk.h:584:40: note: expected 'struct clk *' but argument is of type 'struct clk_bulk_data'
+     584 | unsigned long clk_get_rate(struct clk *clk);
+         |                            ~~~~~~~~~~~~^~~
+--
+   drivers/ata/ahci_dm816.c: In function 'ahci_dm816_phy_init':
+>> drivers/ata/ahci_dm816.c:72:13: error: wrong type argument to unary exclamation mark
+      72 |         if (!hpriv->clks[1]) {
+         |             ^
+>> drivers/ata/ahci_dm816.c:77:47: error: incompatible type for argument 1 of 'clk_get_rate'
+      77 |         refclk_rate = clk_get_rate(hpriv->clks[1]);
+         |                                    ~~~~~~~~~~~^~~
+         |                                               |
+         |                                               struct clk_bulk_data
+   In file included from drivers/ata/ahci.h:23,
+                    from drivers/ata/ahci_dm816.c:16:
+   include/linux/clk.h:584:40: note: expected 'struct clk *' but argument is of type 'struct clk_bulk_data'
+     584 | unsigned long clk_get_rate(struct clk *clk);
+         |                            ~~~~~~~~~~~~^~~
 
 
-vim +428 drivers/ata/libahci_platform.c
+vim +186 drivers/ata/ahci_da850.c
 
-   347	
-   348	/**
-   349	 * ahci_platform_get_resources - Get platform resources
-   350	 * @pdev: platform device to get resources for
-   351	 * @flags: bitmap representing the resource to get
-   352	 *
-   353	 * This function allocates an ahci_host_priv struct, and gets the following
-   354	 * resources, storing a reference to them inside the returned struct:
-   355	 *
-   356	 * 1) mmio registers (IORESOURCE_MEM 0, mandatory)
-   357	 * 2) regulator for controlling the targets power (optional)
-   358	 *    regulator for controlling the AHCI controller (optional)
-   359	 * 3) all clocks specified in the devicetree node, or a single
-   360	 *    clock for non-OF platforms (optional)
-   361	 * 4) resets, if flags has AHCI_PLATFORM_GET_RESETS (optional)
-   362	 * 5) phys (optional)
-   363	 *
-   364	 * RETURNS:
-   365	 * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
-   366	 */
-   367	struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
-   368							   unsigned int flags)
-   369	{
-   370		int child_nodes, rc = -ENOMEM, enabled_ports = 0;
-   371		struct device *dev = &pdev->dev;
-   372		struct ahci_host_priv *hpriv;
-   373		struct device_node *child;
-   374		u32 mask_port_map = 0;
-   375	
-   376		if (!devres_open_group(dev, NULL, GFP_KERNEL))
-   377			return ERR_PTR(-ENOMEM);
-   378	
-   379		hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
-   380				     GFP_KERNEL);
-   381		if (!hpriv)
-   382			goto err_out;
-   383	
-   384		devres_add(dev, hpriv);
-   385	
-   386		/*
-   387		 * If the DT provided an "ahci" named resource, use it. Otherwise,
-   388		 * fallback to using the default first resource for the device node.
-   389		 */
-   390		if (platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci"))
-   391			hpriv->mmio = devm_platform_ioremap_resource_byname(pdev, "ahci");
-   392		else
-   393			hpriv->mmio = devm_platform_ioremap_resource(pdev, 0);
-   394		if (IS_ERR(hpriv->mmio)) {
-   395			rc = PTR_ERR(hpriv->mmio);
-   396			goto err_out;
-   397		}
-   398	
-   399		/*
-   400		 * Bulk clocks getting procedure can fail to find any clock due to
-   401		 * running on a non-OF platform or due to the clocks being defined in
-   402		 * bypass of the DT firmware (like da850, spear13xx). In that case we
-   403		 * fallback to getting a single clock source right from the dev clocks
-   404		 * list.
-   405		 */
-   406		rc = devm_clk_bulk_get_all(dev, &hpriv->clks);
-   407		if (rc < 0)
-   408			goto err_out;
-   409	
-   410		if (rc > 0) {
-   411			/* Got clocks in bulk */
-   412			hpriv->n_clks = rc;
-   413		} else {
-   414			/*
-   415			 * No clock bulk found: fallback to manually getting
-   416			 * the optional clock.
-   417			 */
-   418			hpriv->clks = devm_kzalloc(dev, sizeof(*hpriv->clks), GFP_KERNEL);
-   419			if (!hpriv->clks) {
-   420				rc = -ENOMEM;
-   421				goto err_out;
-   422			}
-   423			hpriv->clks->clk = devm_clk_get_optional(dev, NULL);
-   424			if (IS_ERR(hpriv->clks->clk)) {
-   425				rc = PTR_ERR(hpriv->clks->clk);
-   426				goto err_out;
-   427			} else if (hpriv->clks->clk) {
- > 428				hpriv->clks->id = __clk_get_name(hpriv->clks->clk);
-   429				hpriv->n_clks = 1;
-   430			}
-   431		}
-   432	
-   433		hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
-   434		if (IS_ERR(hpriv->ahci_regulator)) {
-   435			rc = PTR_ERR(hpriv->ahci_regulator);
-   436			if (rc != 0)
-   437				goto err_out;
-   438		}
-   439	
-   440		hpriv->phy_regulator = devm_regulator_get(dev, "phy");
-   441		if (IS_ERR(hpriv->phy_regulator)) {
-   442			rc = PTR_ERR(hpriv->phy_regulator);
-   443			goto err_out;
-   444		}
-   445	
-   446		if (flags & AHCI_PLATFORM_GET_RESETS) {
-   447			hpriv->rsts = devm_reset_control_array_get_optional_shared(dev);
-   448			if (IS_ERR(hpriv->rsts)) {
-   449				rc = PTR_ERR(hpriv->rsts);
-   450				goto err_out;
-   451			}
-   452		}
-   453	
-   454		hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
-   455	
-   456		/*
-   457		 * If no sub-node was found, we still need to set nports to
-   458		 * one in order to be able to use the
-   459		 * ahci_platform_[en|dis]able_[phys|regulators] functions.
-   460		 */
-   461		if (!child_nodes)
-   462			hpriv->nports = 1;
-   463	
-   464		hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
-   465		if (!hpriv->phys) {
-   466			rc = -ENOMEM;
-   467			goto err_out;
-   468		}
-   469		/*
-   470		 * We cannot use devm_ here, since ahci_platform_put_resources() uses
-   471		 * target_pwrs after devm_ have freed memory
-   472		 */
-   473		hpriv->target_pwrs = kcalloc(hpriv->nports, sizeof(*hpriv->target_pwrs), GFP_KERNEL);
-   474		if (!hpriv->target_pwrs) {
-   475			rc = -ENOMEM;
-   476			goto err_out;
-   477		}
-   478	
-   479		if (child_nodes) {
-   480			for_each_child_of_node(dev->of_node, child) {
-   481				u32 port;
-   482				struct platform_device *port_dev __maybe_unused;
-   483	
-   484				if (!of_device_is_available(child))
-   485					continue;
-   486	
-   487				if (of_property_read_u32(child, "reg", &port)) {
-   488					rc = -EINVAL;
-   489					of_node_put(child);
-   490					goto err_out;
-   491				}
-   492	
-   493				if (port >= hpriv->nports) {
-   494					dev_warn(dev, "invalid port number %d\n", port);
-   495					continue;
-   496				}
-   497				mask_port_map |= BIT(port);
-   498	
+018d5ef2048fcab Akinobu Mita              2015-01-29  159  
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  160  static int ahci_da850_probe(struct platform_device *pdev)
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  161  {
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  162  	struct device *dev = &pdev->dev;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  163  	struct ahci_host_priv *hpriv;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  164  	void __iomem *pwrdn_reg;
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  165  	struct resource *res;
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  166  	struct clk *clk;
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  167  	u32 mpy;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  168  	int rc;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  169  
+16af2d65842d343 Kunihiko Hayashi          2018-08-22  170  	hpriv = ahci_platform_get_resources(pdev, 0);
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  171  	if (IS_ERR(hpriv))
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  172  		return PTR_ERR(hpriv);
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  173  
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  174  	/*
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  175  	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  176  	 * when trying to obtain the functional clock. This SATA controller
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  177  	 * uses two clocks for which we specify two connection ids. If we don't
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  178  	 * have the functional clock at this point - call clk_get() again with
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  179  	 * con_id = "fck".
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  180  	 */
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30 @181  	if (!hpriv->clks[0]) {
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  182  		clk = clk_get(dev, "fck");
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  183  		if (IS_ERR(clk))
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  184  			return PTR_ERR(clk);
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  185  
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30 @186  		hpriv->clks[0] = clk;
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  187  	}
+82dbe1a68fd65a4 Bartosz Golaszewski       2017-01-30  188  
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  189  	/*
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  190  	 * The second clock used by ahci-da850 is the external REFCLK. If we
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  191  	 * didn't get it from ahci_platform_get_resources(), let's try to
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  192  	 * specify the con_id in clk_get().
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  193  	 */
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  194  	if (!hpriv->clks[1]) {
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  195  		clk = clk_get(dev, "refclk");
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  196  		if (IS_ERR(clk)) {
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  197  			dev_err(dev, "unable to obtain the reference clock");
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  198  			return -ENODEV;
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  199  		}
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  200  
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  201  		hpriv->clks[1] = clk;
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  202  	}
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  203  
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30 @204  	mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  205  	if (mpy == 0) {
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  206  		dev_err(dev, "invalid REFCLK multiplier value: 0x%x", mpy);
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  207  		return -EINVAL;
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  208  	}
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  209  
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  210  	rc = ahci_platform_enable_resources(hpriv);
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  211  	if (rc)
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  212  		return rc;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  213  
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  214  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+c88c094985ad38c Christophe JAILLET        2017-08-16  215  	if (!res) {
+c88c094985ad38c Christophe JAILLET        2017-08-16  216  		rc = -ENODEV;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  217  		goto disable_resources;
+c88c094985ad38c Christophe JAILLET        2017-08-16  218  	}
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  219  
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  220  	pwrdn_reg = devm_ioremap(dev, res->start, resource_size(res));
+c88c094985ad38c Christophe JAILLET        2017-08-16  221  	if (!pwrdn_reg) {
+c88c094985ad38c Christophe JAILLET        2017-08-16  222  		rc = -ENOMEM;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  223  		goto disable_resources;
+c88c094985ad38c Christophe JAILLET        2017-08-16  224  	}
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  225  
+cdf0ead3747200d Bartosz Golaszewski       2017-01-30  226  	da850_sata_init(dev, pwrdn_reg, hpriv->mmio, mpy);
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  227  
+018d5ef2048fcab Akinobu Mita              2015-01-29  228  	rc = ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info,
+018d5ef2048fcab Akinobu Mita              2015-01-29  229  				     &ahci_platform_sht);
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  230  	if (rc)
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  231  		goto disable_resources;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  232  
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  233  	return 0;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  234  disable_resources:
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  235  	ahci_platform_disable_resources(hpriv);
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  236  	return rc;
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  237  }
+ae8723f8a9c8e80 Bartlomiej Zolnierkiewicz 2014-03-25  238  
 
 -- 
 0-DAY CI Kernel Test Service
