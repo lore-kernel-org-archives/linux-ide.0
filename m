@@ -2,63 +2,157 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC033C00144
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Aug 2022 08:14:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E83D2C00144
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Aug 2022 21:25:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229848AbiHAIOl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 1 Aug 2022 04:14:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60972 "EHLO
+        id S234928AbiHAVZu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 1 Aug 2022 17:25:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229642AbiHAIOl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2022 04:14:41 -0400
-X-Greylist: delayed 475 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 01 Aug 2022 01:14:40 PDT
-Received: from mail.fadrush.pl (mail.fadrush.pl [54.37.225.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8B7E2CDF0
-        for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 01:14:40 -0700 (PDT)
-Received: by mail.fadrush.pl (Postfix, from userid 1002)
-        id B088F2267E; Mon,  1 Aug 2022 08:06:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fadrush.pl; s=mail;
-        t=1659341204; bh=bD6j9gIFU6CLTaCGl0Ow9oeIxtirvTfMeNZSfLEZQ+I=;
-        h=Date:From:To:Subject:From;
-        b=glfqYAsBqcSzKcHG9hOl/fkLKqQDAjMo+6LsVL3GEbeBtkdDHZmYtc4cK3FCgYVVZ
-         YcYOVENYg/Q5ujAMMlxEKVrCExyVd5KbiTxyOmW0N6cxZYU8O2dXNIm9PhW3HhIAsM
-         q7LaYBuFu7bJKhF1DGVwAJQsUTVrYiCQTzFmuPRphuQc5TZtYKzzK0TlvENGs2FmLN
-         EE7qb3oRq2Kt444dc52Us74zNYj9Lz9+rVnUuUMPX2hrOgK2lVyDLxzTmZFyQK7GZ1
-         a7DyOQJnlEdo1QN2CjpzgZ70sJuOr/zMboCSGH9H+ADSfe0LBP0/4TAhR6Z9Rh6CPJ
-         KndSH7/Dhkj3g==
-Received: by mail.fadrush.pl for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 08:05:58 GMT
-Message-ID: <20220801064500-0.1.r.58g5.0.je8lxu56na@fadrush.pl>
-Date:   Mon,  1 Aug 2022 08:05:58 GMT
-From:   "Jakub Olejniczak" <jakub.olejniczak@fadrush.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?Zwi=C4=99kszenie_p=C5=82ynno=C5=9Bci_finansowej?=
-X-Mailer: mail.fadrush.pl
+        with ESMTP id S234741AbiHAVZB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2022 17:25:01 -0400
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A59D48C85
+        for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 14:24:06 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id l4so15625040wrm.13
+        for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2022 14:24:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linexp-org.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc;
+        bh=Y+8gnJ68hJod6uvQUR4L1wvFSKnRgzdO4yxaDxG616M=;
+        b=NBHfTUiQ4g3pInNgtGa6G+ZzcWU2vJeUc9ioYtj8Zb2LMyDSXbT6NExwerc573eAAv
+         rX6veJRX3zBYYgajn2kLXYMe5hVUyvvKRnpccYvYlWZmvgmDesMaZhTDERcCtV4pUY4i
+         2ee6jzKv+E6p72MB/g5umhdvq36XAutBV9UY6fGdDnwb/lLoZBjGCi4NUFx8ZMLkf716
+         VM6PlkvqWkExrqrX6iEcDVlDRGJyEYyTu4TQqk64NKXmWkhZ9SHFxFYM72EjhHLQF5tI
+         iov5GDdVBgOeL6+XZf4tNOtflC5twMQXWr3IkjDT5CfFl+JUIVkqN0wS0cVqhrBqoiVy
+         qAiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
+        bh=Y+8gnJ68hJod6uvQUR4L1wvFSKnRgzdO4yxaDxG616M=;
+        b=vpj10ohh0YVFnUKv0hh8sjm9PFJLfoh6eGbhU+sikD8uwIDEHq7rQf9okmvQXWZFOu
+         W3x6Eq9dRNOZgQ4wFaOeGMISHezd3Gvr3jNauynm6SuBx9FPs/0qv5TXkNlMdzWkWd9i
+         nURz3bduPZcJM0E9qndeVa1CiFliw5nnFaIyUrBqBdcjjRWbZ1/Kj+ndD6Ee7oq0yp+7
+         ephaqMw0aRLIVqt/+bZ6tcuENI6iM3DpyLHc/iuiRGUXyIciZ02C4tVvSk/SFD8IYN4B
+         A00YJcK8l5ZLBIknwAra/21hkE1kQ5K1sdTtyKZgCzKGQktYd3CwOEyZqpKLxtD1qrRI
+         VguQ==
+X-Gm-Message-State: ACgBeo3y79ePMA/SfevEjsnI1CvQ8b7wl+rC7ann2ZDqotk4vwU/t9rQ
+        oEcfB7gIbc6OybVakI37IPcUgA==
+X-Google-Smtp-Source: AA6agR6hyB/kUCbACq7Gy0CRy1027lqq3Q1zhRKL5RhO0ID4O5UIdq1Skw4yJfqYJSvtv55eIron3Q==
+X-Received: by 2002:a05:6000:1447:b0:21d:b22b:e5d with SMTP id v7-20020a056000144700b0021db22b0e5dmr10663693wrx.189.1659389043799;
+        Mon, 01 Aug 2022 14:24:03 -0700 (PDT)
+Received: from mai.box.freepro.com ([2a05:6e02:1041:c10:d00:ceb8:9c09:1302])
+        by smtp.gmail.com with ESMTPSA id c7-20020adffb07000000b0021e501519d3sm12995285wrr.67.2022.08.01.14.24.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Aug 2022 14:24:03 -0700 (PDT)
+From:   Daniel Lezcano <daniel.lezcano@linexp.org>
+To:     daniel.lezcano@linaro.org, rafael@kernel.org
+Cc:     rui.zhang@intel.com, linux-pm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, khilman@baylibre.com,
+        abailon@baylibre.com, lukasz.luba@arm.com, broonie@kernel.org,
+        damien.lemoal@opensource.wdc.com, heiko@sntech.de,
+        hayashi.kunihiko@socionext.com, mhiramat@kernel.org,
+        talel@amazon.com, thierry.reding@gmail.com, digetx@gmail.com,
+        jonathanh@nvidia.com, anarsoul@gmail.com, tiny.windzz@gmail.com,
+        baolin.wang7@gmail.com, f.fainelli@gmail.com,
+        bjorn.andersson@linaro.org, mcoquelin.stm32@gmail.com,
+        glaroque@baylibre.com, miquel.raynal@bootlin.com,
+        shawnguo@kernel.org, niklas.soderlund@ragnatech.se,
+        matthias.bgg@gmail.com, j-keerthy@ti.com,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM/FREESCALE IMX
+        / MXC ARM ARCHITECTURE)
+Subject: [PATCH v4 25/32] ata/drivers/ahci_imx: Switch to new of thermal API
+Date:   Mon,  1 Aug 2022 23:22:37 +0200
+Message-Id: <20220801212244.1124867-26-daniel.lezcano@linexp.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220801212244.1124867-1-daniel.lezcano@linexp.org>
+References: <20220801212244.1124867-1-daniel.lezcano@linexp.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+The thermal OF code has a new API allowing to migrate the OF
+initialization to a simpler approach. The ops are no longer device
+tree specific and are the generic ones provided by the core code.
 
-kontaktuj=C4=99 si=C4=99 z Pa=C5=84stwem, poniewa=C5=BC chcia=C5=82bym za=
-proponowa=C4=87 wygodne rozwi=C4=85zanie, kt=C3=B3re umo=C5=BCliwi Pa=C5=84=
-stwa firmie stabilny rozw=C3=B3j.=20
+Convert the ops to the thermal_zone_device_ops format and use the new
+API to register the thermal zone with these generic ops.
 
-Konkurencyjne otoczenie wymaga ci=C4=85g=C5=82ego ulepszania i poszerzeni=
-a oferty, co z kolei wi=C4=85=C5=BCe si=C4=99 z konieczno=C5=9Bci=C4=85 i=
-nwestowania. Brak odpowiedniego kapita=C5=82u powa=C5=BCnie ogranicza tem=
-po rozwoju firmy.
+sata_ahci_read_temperature() is used by sata_ahci_show_temp() also.
 
-Od wielu lat z powodzeniem pomagam firmom w uzyskaniu najlepszej formy fi=
-nansowania z banku oraz UE. Mam sta=C5=82ych Klient=C3=B3w, kt=C3=B3rzy n=
-adal ch=C4=99tnie korzystaj=C4=85 z moich us=C5=82ug, a tak=C5=BCe poleca=
-j=C4=85 je innym.
+So in order to change the function prototype for the get_temp ops which
+does not take a void* but a thermal_zone_device* structure, this
+function wraps the call.
 
-Czy chcieliby Pa=C5=84stwo skorzysta=C4=87 z pomocy wykwalifikowanego i d=
-o=C5=9Bwiadczonego doradcy finansowego?
+Signed-off-by: Daniel Lezcano <daniel.lezcano@linexp.org>
+Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ drivers/ata/ahci_imx.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 79aa9f285312..b734e069034d 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -327,7 +327,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
+ }
+ 
+ /* SATA AHCI temperature monitor */
+-static int sata_ahci_read_temperature(void *dev, int *temp)
++static int __sata_ahci_read_temperature(void *dev, int *temp)
+ {
+ 	u16 mpll_test_reg, rtune_ctl_reg, dac_ctl_reg, read_sum;
+ 	u32 str1, str2, str3, str4;
+@@ -416,6 +416,11 @@ static int sata_ahci_read_temperature(void *dev, int *temp)
+ 	return 0;
+ }
+ 
++static int sata_ahci_read_temperature(struct thermal_zone_device *tz, int *temp)
++{
++	return __sata_ahci_read_temperature(tz->devdata, temp);
++}
++
+ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 				   struct device_attribute *da,
+ 				   char *buf)
+@@ -423,14 +428,14 @@ static ssize_t sata_ahci_show_temp(struct device *dev,
+ 	unsigned int temp = 0;
+ 	int err;
+ 
+-	err = sata_ahci_read_temperature(dev, &temp);
++	err = __sata_ahci_read_temperature(dev, &temp);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	return sprintf(buf, "%u\n", temp);
+ }
+ 
+-static const struct thermal_zone_of_device_ops fsl_sata_ahci_of_thermal_ops = {
++static const struct thermal_zone_device_ops fsl_sata_ahci_of_thermal_ops = {
+ 	.get_temp = sata_ahci_read_temperature,
+ };
+ 
+@@ -1131,8 +1136,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 			ret = PTR_ERR(hwmon_dev);
+ 			goto disable_clk;
+ 		}
+-		devm_thermal_zone_of_sensor_register(hwmon_dev, 0, hwmon_dev,
+-					     &fsl_sata_ahci_of_thermal_ops);
++		devm_thermal_of_zone_register(hwmon_dev, 0, hwmon_dev,
++					      &fsl_sata_ahci_of_thermal_ops);
+ 		dev_info(dev, "%s: sensor 'sata_ahci'\n", dev_name(hwmon_dev));
+ 	}
+ 
+-- 
+2.25.1
 
-Pozdrawiam
-Jakub Olejniczak
