@@ -2,76 +2,63 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EEDBC00140
-	for <linux-ide@archiver.kernel.org>; Sun, 31 Jul 2022 20:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC033C00144
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Aug 2022 08:14:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238021AbiGaUtx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 31 Jul 2022 16:49:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49624 "EHLO
+        id S229848AbiHAIOl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 1 Aug 2022 04:14:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231264AbiGaUtw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jul 2022 16:49:52 -0400
-Received: from vps0.lunn.ch (vps0.lunn.ch [185.16.172.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E4391260A
-        for <linux-ide@vger.kernel.org>; Sun, 31 Jul 2022 13:49:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-        s=20171124; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject:
-        Cc:To:From:From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:
-        Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
-        Content-Disposition:In-Reply-To:References;
-        bh=KvM/I72uOywfxOr+6ZI3QPklzbd+YKdsDcghg4Jto+w=; b=SzvRngKe55xl36J8iOwORrMC9t
-        1U5kfTur6t3o8yYC6k2qVEUEW/iJ/g8RT2ELOm47ucKQq76G8kG9OnDffGgA6ticR3V+CIHztxtUz
-        EFBhu1+VJZriAJRyiTACZAui0Q0sq2joUFOVBypg6f15qmJdJxA+/S7DpIbxNHbjCR58=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-        (envelope-from <andrew@lunn.ch>)
-        id 1oIFsY-00C6eC-Og; Sun, 31 Jul 2022 22:49:38 +0200
-From:   Andrew Lunn <andrew@lunn.ch>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>,
-        linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH] ata: sata_mv: Fixes expected number of resources now IRQs are gone
-Date:   Sun, 31 Jul 2022 22:49:06 +0200
-Message-Id: <20220731204906.2885445-1-andrew@lunn.ch>
-X-Mailer: git-send-email 2.32.0
+        with ESMTP id S229642AbiHAIOl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2022 04:14:41 -0400
+X-Greylist: delayed 475 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 01 Aug 2022 01:14:40 PDT
+Received: from mail.fadrush.pl (mail.fadrush.pl [54.37.225.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8B7E2CDF0
+        for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 01:14:40 -0700 (PDT)
+Received: by mail.fadrush.pl (Postfix, from userid 1002)
+        id B088F2267E; Mon,  1 Aug 2022 08:06:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fadrush.pl; s=mail;
+        t=1659341204; bh=bD6j9gIFU6CLTaCGl0Ow9oeIxtirvTfMeNZSfLEZQ+I=;
+        h=Date:From:To:Subject:From;
+        b=glfqYAsBqcSzKcHG9hOl/fkLKqQDAjMo+6LsVL3GEbeBtkdDHZmYtc4cK3FCgYVVZ
+         YcYOVENYg/Q5ujAMMlxEKVrCExyVd5KbiTxyOmW0N6cxZYU8O2dXNIm9PhW3HhIAsM
+         q7LaYBuFu7bJKhF1DGVwAJQsUTVrYiCQTzFmuPRphuQc5TZtYKzzK0TlvENGs2FmLN
+         EE7qb3oRq2Kt444dc52Us74zNYj9Lz9+rVnUuUMPX2hrOgK2lVyDLxzTmZFyQK7GZ1
+         a7DyOQJnlEdo1QN2CjpzgZ70sJuOr/zMboCSGH9H+ADSfe0LBP0/4TAhR6Z9Rh6CPJ
+         KndSH7/Dhkj3g==
+Received: by mail.fadrush.pl for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 08:05:58 GMT
+Message-ID: <20220801064500-0.1.r.58g5.0.je8lxu56na@fadrush.pl>
+Date:   Mon,  1 Aug 2022 08:05:58 GMT
+From:   "Jakub Olejniczak" <jakub.olejniczak@fadrush.pl>
+To:     <linux-ide@vger.kernel.org>
+Subject: =?UTF-8?Q?Zwi=C4=99kszenie_p=C5=82ynno=C5=9Bci_finansowej?=
+X-Mailer: mail.fadrush.pl
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The commit a1a2b7125e10 ("of/platform: Drop static setup of IRQ
-resource from DT core") stopped IRQ resources being available as
-platform resources. This broke the sanity check for the expected
-number of resources in the Marvell SATA driver which expected two
-resources, the IO memory and the interrupt.
+Dzie=C5=84 dobry,
 
-Change the sanity check to only expect the IO memory.
+kontaktuj=C4=99 si=C4=99 z Pa=C5=84stwem, poniewa=C5=BC chcia=C5=82bym za=
+proponowa=C4=87 wygodne rozwi=C4=85zanie, kt=C3=B3re umo=C5=BCliwi Pa=C5=84=
+stwa firmie stabilny rozw=C3=B3j.=20
 
-Cc: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Fixes: a1a2b7125e10 ("of/platform: Drop static setup of IRQ resource from DT core")
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
----
+Konkurencyjne otoczenie wymaga ci=C4=85g=C5=82ego ulepszania i poszerzeni=
+a oferty, co z kolei wi=C4=85=C5=BCe si=C4=99 z konieczno=C5=9Bci=C4=85 i=
+nwestowania. Brak odpowiedniego kapita=C5=82u powa=C5=BCnie ogranicza tem=
+po rozwoju firmy.
 
-v5.19-rc8 is broken. I guess there will not be a -rc9, so please could you
-queue this up for 5.19.1.
+Od wielu lat z powodzeniem pomagam firmom w uzyskaniu najlepszej formy fi=
+nansowania z banku oraz UE. Mam sta=C5=82ych Klient=C3=B3w, kt=C3=B3rzy n=
+adal ch=C4=99tnie korzystaj=C4=85 z moich us=C5=82ug, a tak=C5=BCe poleca=
+j=C4=85 je innym.
 
-drivers/ata/sata_mv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Czy chcieliby Pa=C5=84stwo skorzysta=C4=87 z pomocy wykwalifikowanego i d=
+o=C5=9Bwiadczonego doradcy finansowego?
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index de5bd02cad44..e3cff01201b8 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -4057,7 +4057,7 @@ static int mv_platform_probe(struct platform_device *pdev)
- 	/*
- 	 * Simple resource validation ..
- 	 */
--	if (unlikely(pdev->num_resources != 2)) {
-+	if (unlikely(pdev->num_resources != 1)) {
- 		dev_err(&pdev->dev, "invalid number of resources\n");
- 		return -EINVAL;
- 	}
--- 
-2.36.1
 
+Pozdrawiam
+Jakub Olejniczak
