@@ -2,157 +2,136 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E83D2C00144
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Aug 2022 21:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48711C00140
+	for <linux-ide@archiver.kernel.org>; Tue,  2 Aug 2022 06:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234928AbiHAVZu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 1 Aug 2022 17:25:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50080 "EHLO
+        id S235211AbiHBGlM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 2 Aug 2022 02:41:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234741AbiHAVZB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2022 17:25:01 -0400
-Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A59D48C85
-        for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 14:24:06 -0700 (PDT)
-Received: by mail-wr1-x42f.google.com with SMTP id l4so15625040wrm.13
-        for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2022 14:24:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linexp-org.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=Y+8gnJ68hJod6uvQUR4L1wvFSKnRgzdO4yxaDxG616M=;
-        b=NBHfTUiQ4g3pInNgtGa6G+ZzcWU2vJeUc9ioYtj8Zb2LMyDSXbT6NExwerc573eAAv
-         rX6veJRX3zBYYgajn2kLXYMe5hVUyvvKRnpccYvYlWZmvgmDesMaZhTDERcCtV4pUY4i
-         2ee6jzKv+E6p72MB/g5umhdvq36XAutBV9UY6fGdDnwb/lLoZBjGCi4NUFx8ZMLkf716
-         VM6PlkvqWkExrqrX6iEcDVlDRGJyEYyTu4TQqk64NKXmWkhZ9SHFxFYM72EjhHLQF5tI
-         iov5GDdVBgOeL6+XZf4tNOtflC5twMQXWr3IkjDT5CfFl+JUIVkqN0wS0cVqhrBqoiVy
-         qAiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=Y+8gnJ68hJod6uvQUR4L1wvFSKnRgzdO4yxaDxG616M=;
-        b=vpj10ohh0YVFnUKv0hh8sjm9PFJLfoh6eGbhU+sikD8uwIDEHq7rQf9okmvQXWZFOu
-         W3x6Eq9dRNOZgQ4wFaOeGMISHezd3Gvr3jNauynm6SuBx9FPs/0qv5TXkNlMdzWkWd9i
-         nURz3bduPZcJM0E9qndeVa1CiFliw5nnFaIyUrBqBdcjjRWbZ1/Kj+ndD6Ee7oq0yp+7
-         ephaqMw0aRLIVqt/+bZ6tcuENI6iM3DpyLHc/iuiRGUXyIciZ02C4tVvSk/SFD8IYN4B
-         A00YJcK8l5ZLBIknwAra/21hkE1kQ5K1sdTtyKZgCzKGQktYd3CwOEyZqpKLxtD1qrRI
-         VguQ==
-X-Gm-Message-State: ACgBeo3y79ePMA/SfevEjsnI1CvQ8b7wl+rC7ann2ZDqotk4vwU/t9rQ
-        oEcfB7gIbc6OybVakI37IPcUgA==
-X-Google-Smtp-Source: AA6agR6hyB/kUCbACq7Gy0CRy1027lqq3Q1zhRKL5RhO0ID4O5UIdq1Skw4yJfqYJSvtv55eIron3Q==
-X-Received: by 2002:a05:6000:1447:b0:21d:b22b:e5d with SMTP id v7-20020a056000144700b0021db22b0e5dmr10663693wrx.189.1659389043799;
-        Mon, 01 Aug 2022 14:24:03 -0700 (PDT)
-Received: from mai.box.freepro.com ([2a05:6e02:1041:c10:d00:ceb8:9c09:1302])
-        by smtp.gmail.com with ESMTPSA id c7-20020adffb07000000b0021e501519d3sm12995285wrr.67.2022.08.01.14.24.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Aug 2022 14:24:03 -0700 (PDT)
-From:   Daniel Lezcano <daniel.lezcano@linexp.org>
-To:     daniel.lezcano@linaro.org, rafael@kernel.org
-Cc:     rui.zhang@intel.com, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, khilman@baylibre.com,
-        abailon@baylibre.com, lukasz.luba@arm.com, broonie@kernel.org,
-        damien.lemoal@opensource.wdc.com, heiko@sntech.de,
-        hayashi.kunihiko@socionext.com, mhiramat@kernel.org,
-        talel@amazon.com, thierry.reding@gmail.com, digetx@gmail.com,
-        jonathanh@nvidia.com, anarsoul@gmail.com, tiny.windzz@gmail.com,
-        baolin.wang7@gmail.com, f.fainelli@gmail.com,
-        bjorn.andersson@linaro.org, mcoquelin.stm32@gmail.com,
-        glaroque@baylibre.com, miquel.raynal@bootlin.com,
-        shawnguo@kernel.org, niklas.soderlund@ragnatech.se,
-        matthias.bgg@gmail.com, j-keerthy@ti.com,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)),
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM/FREESCALE IMX
-        / MXC ARM ARCHITECTURE)
-Subject: [PATCH v4 25/32] ata/drivers/ahci_imx: Switch to new of thermal API
-Date:   Mon,  1 Aug 2022 23:22:37 +0200
-Message-Id: <20220801212244.1124867-26-daniel.lezcano@linexp.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220801212244.1124867-1-daniel.lezcano@linexp.org>
-References: <20220801212244.1124867-1-daniel.lezcano@linexp.org>
+        with ESMTP id S235441AbiHBGlK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 2 Aug 2022 02:41:10 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0A9E15719
+        for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 23:41:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1659422466; x=1690958466;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=4J0HMWpDXBHsDxH+LbeWJCs4EZBbBv4SbOlce1/etLE=;
+  b=CroDdh2yXiGWCf6AQbIyQjKaBPoWGyh/z0SSse/9dhXVJh0Fs4Q8GEBD
+   tyDhz5ggHzbt8iMZ92IGSbtb3psYPwh8kOxB7iEWKOQPSuxLWG+0MDR4B
+   hJIb5VvIT49RzH2Q7jf1XK6lfVsDCqC2TtgLK8C25zpEsrIX16gToZdNq
+   lSuPDrdQt0FzR0alqu2WgCPJtDvQiLFz/xkK+Jzj9TeZs1H+iinY5S79d
+   Ojq19GNbSYUUj0vYqpu64+hpKkWwLvboFBxO4HSSAdcG+pYJnoZtEqsMY
+   7UK7XVzo/k5rjUYoCIexBfjE5/MWzClJBa8JyGBklA6QqHIG7J0oSD1AN
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,210,1654531200"; 
+   d="scan'208";a="311849456"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Aug 2022 14:41:05 +0800
+IronPort-SDR: N/TRKLKmimRxSknx56LCcfnaBWX3SF4AxGmMUUOEYu5PMWFEczlGIQRFGvqKOpR4pyMkoovXRD
+ JMs8xvdBkTI2yZ31vCg5rL7dKmC4bpV2Ug22h/vMR1BkSL34oz6g/dpzICSHyVTAtVGlJ798np
+ KrtIuaEk8FyZAdjS8cDYBP+sNH2ypOCnhDUE71qZyLaESREDuPC6+3+04KNhgCxdO/A7boICc5
+ ACrhgNpyG1/S9uEOWTAaPNqW6l7RBqLTN1IP8CjYZN/piz+Im8Kp5mwvu5vH0JR0EKxBSTvnH1
+ VcFAnfdzsniLklBVcaMuSEhb
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Aug 2022 22:57:03 -0700
+IronPort-SDR: lGTggD9TpTdiKdbtKvoyeMxfKlxXovVfkYrgFiKs/Lu/UufznAhCawPN8Z+eYTrKO2j04XHqMx
+ k+wtRjyYVkWjiURUTS4CTqfOH/ycpHf+HPlmSOAHk26E6A6DKf5+Be6YeTJU4YqnyawFavIaok
+ O7VvCcYODTxfINC2FhiRg8v0vt4nqXgGzsA1qxSF7b4i8SIiTgdW8gxLUvJAdbezBZrHv/AxhX
+ e52x9dU3GeyALY5KXvFacsy3LM3u+rbgi0txMJ5pKvH12WGFrTAT39kKZw2n0xJ6nM4V8pVuXX
+ wOg=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 01 Aug 2022 23:41:06 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4LxlkT3VSXz1Rwnm
+        for <linux-ide@vger.kernel.org>; Mon,  1 Aug 2022 23:41:05 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1659422465; x=1662014466; bh=4J0HMWpDXBHsDxH+LbeWJCs4EZBbBv4SbOl
+        ce1/etLE=; b=DkG0hjyR+9SZeVAeamEhZipdqzREkHhLCLSSjBKLWqK9kr9bF8Q
+        OFwDAm4w4qVYf7le6XdiYE9iGlAIrcLLAxsdYBx7PVj/47G0BM0orsWlfFpzs2Lg
+        sgjjSDpo8pRWkYG+HUWpg87xSBQgcW0WFACx56guEdFvQIYFfNv3bGtFESB1CUSG
+        g56fjUqiE+FEk43wcLY6rk31/1vJYED4x2JLno7EAyQB3rjtVGH0GPySKFxrtoky
+        12yHaVdztIQQURms2KjWyzbeFvpxVZmPEbWTKeYUpy/2l3KOQZmG2XZwZCBTZTaw
+        +JFJ1l7BP60eccfrYsnRt3rthwfHRVsrm4A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id t2Ri8L3_uXoT for <linux-ide@vger.kernel.org>;
+        Mon,  1 Aug 2022 23:41:05 -0700 (PDT)
+Received: from [10.225.163.22] (unknown [10.225.163.22])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4LxlkS19rxz1RtVk;
+        Mon,  1 Aug 2022 23:41:03 -0700 (PDT)
+Message-ID: <92a360ad-4ae8-9d36-51ca-a44b13ea3d9c@opensource.wdc.com>
+Date:   Tue, 2 Aug 2022 15:41:02 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] ata: sata_mv: Fixes expected number of resources now IRQs
+ are gone
+Content-Language: en-US
+To:     Andrew Lunn <andrew@lunn.ch>
+Cc:     Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>,
+        linux-ide@vger.kernel.org,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20220731204906.2885445-1-andrew@lunn.ch>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220731204906.2885445-1-andrew@lunn.ch>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The thermal OF code has a new API allowing to migrate the OF
-initialization to a simpler approach. The ops are no longer device
-tree specific and are the generic ones provided by the core code.
+On 8/1/22 05:49, Andrew Lunn wrote:
+> The commit a1a2b7125e10 ("of/platform: Drop static setup of IRQ
+> resource from DT core") stopped IRQ resources being available as
+> platform resources. This broke the sanity check for the expected
+> number of resources in the Marvell SATA driver which expected two
+> resources, the IO memory and the interrupt.
+> 
+> Change the sanity check to only expect the IO memory.
+> 
+> Cc: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Fixes: a1a2b7125e10 ("of/platform: Drop static setup of IRQ resource from DT core")
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> ---
+> 
+> v5.19-rc8 is broken. I guess there will not be a -rc9, so please could you
+> queue this up for 5.19.1.
 
-Convert the ops to the thermal_zone_device_ops format and use the new
-API to register the thermal zone with these generic ops.
+I will queue this for 5.10-rc1 and this will be picked up automatically
+for stable 5.19.x thanks to the Fixes tag.
 
-sata_ahci_read_temperature() is used by sata_ahci_show_temp() also.
+> 
+> drivers/ata/sata_mv.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index de5bd02cad44..e3cff01201b8 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -4057,7 +4057,7 @@ static int mv_platform_probe(struct platform_device *pdev)
+>  	/*
+>  	 * Simple resource validation ..
+>  	 */
+> -	if (unlikely(pdev->num_resources != 2)) {
+> +	if (unlikely(pdev->num_resources != 1)) {
+>  		dev_err(&pdev->dev, "invalid number of resources\n");
+>  		return -EINVAL;
+>  	}
 
-So in order to change the function prototype for the get_temp ops which
-does not take a void* but a thermal_zone_device* structure, this
-function wraps the call.
 
-Signed-off-by: Daniel Lezcano <daniel.lezcano@linexp.org>
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/ata/ahci_imx.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 79aa9f285312..b734e069034d 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -327,7 +327,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
- }
- 
- /* SATA AHCI temperature monitor */
--static int sata_ahci_read_temperature(void *dev, int *temp)
-+static int __sata_ahci_read_temperature(void *dev, int *temp)
- {
- 	u16 mpll_test_reg, rtune_ctl_reg, dac_ctl_reg, read_sum;
- 	u32 str1, str2, str3, str4;
-@@ -416,6 +416,11 @@ static int sata_ahci_read_temperature(void *dev, int *temp)
- 	return 0;
- }
- 
-+static int sata_ahci_read_temperature(struct thermal_zone_device *tz, int *temp)
-+{
-+	return __sata_ahci_read_temperature(tz->devdata, temp);
-+}
-+
- static ssize_t sata_ahci_show_temp(struct device *dev,
- 				   struct device_attribute *da,
- 				   char *buf)
-@@ -423,14 +428,14 @@ static ssize_t sata_ahci_show_temp(struct device *dev,
- 	unsigned int temp = 0;
- 	int err;
- 
--	err = sata_ahci_read_temperature(dev, &temp);
-+	err = __sata_ahci_read_temperature(dev, &temp);
- 	if (err < 0)
- 		return err;
- 
- 	return sprintf(buf, "%u\n", temp);
- }
- 
--static const struct thermal_zone_of_device_ops fsl_sata_ahci_of_thermal_ops = {
-+static const struct thermal_zone_device_ops fsl_sata_ahci_of_thermal_ops = {
- 	.get_temp = sata_ahci_read_temperature,
- };
- 
-@@ -1131,8 +1136,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 			ret = PTR_ERR(hwmon_dev);
- 			goto disable_clk;
- 		}
--		devm_thermal_zone_of_sensor_register(hwmon_dev, 0, hwmon_dev,
--					     &fsl_sata_ahci_of_thermal_ops);
-+		devm_thermal_of_zone_register(hwmon_dev, 0, hwmon_dev,
-+					      &fsl_sata_ahci_of_thermal_ops);
- 		dev_info(dev, "%s: sensor 'sata_ahci'\n", dev_name(hwmon_dev));
- 	}
- 
 -- 
-2.25.1
-
+Damien Le Moal
+Western Digital Research
