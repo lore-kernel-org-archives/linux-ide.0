@@ -2,134 +2,174 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E655C00140
-	for <linux-ide@archiver.kernel.org>; Mon,  8 Aug 2022 15:00:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD5CDC25B07
+	for <linux-ide@archiver.kernel.org>; Tue,  9 Aug 2022 09:59:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235852AbiHHPAu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 8 Aug 2022 11:00:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51058 "EHLO
+        id S239923AbiHIJ7E (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 9 Aug 2022 05:59:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235766AbiHHPAg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 Aug 2022 11:00:36 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B629EB7E2
-        for <linux-ide@vger.kernel.org>; Mon,  8 Aug 2022 08:00:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1659970834; x=1691506834;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=dWpdYZqudDgvmMuJiEXUtDU/7QHq5F7xyssCOzjahPU=;
-  b=F5LPQq6V44QznJiXn2A7opGiqI+s4BKWcikxxhF+i4hyjpjIs7Li4VZM
-   ZNeFO6tgv7yAn7k88/bYJhdaxu1PvENhuZpfw+I5CxiPszI9LasxVT6YN
-   9czs4v7CeeoP/fzPEIfTvhMYjTlBjnxxhIdRMsDKpE0xP6SgGKXkROhVC
-   62KenvHepRxRd3lv2p9CsfIU1tgbG4VpYwjAL+huxpAVcjwy2dbW9xsdb
-   MtxE8dAcI8+6pR8vdA34epKnt+d7BxBnzv55F7vKAnwkAU8sLyuGoUu3Z
-   UhRMKAw2EBdR2kKXNjDWb+MvQxZHB77xVbODSRoxOsUhXY7tdKQH0V3NT
-   A==;
-X-IronPort-AV: E=Sophos;i="5.93,222,1654531200"; 
-   d="scan'208";a="312427347"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Aug 2022 23:00:33 +0800
-IronPort-SDR: Pn+XWhy4Yx+7+vLUvw+r3iWRmWIkU++Uz10xNHys8ZhaZ7Pdp1lVaBmhjvy0ZhD+i07TVupRmQ
- fc0vpITivTw74IYcHYGK9e37mf803ecdHott9lZI/P44g7WPnUfQsJhbfV32mbcjEDjffIoRt5
- L4XFuWWHUVX1MstjzCtph8LVhHSnnFVhBXRsX7Kk2354jWSZ0uy82T7Hb1gQph5eltLfTg6Cgf
- WnTHoEHZWosk3Wdwb6IwcIyp7LwEeMQpRgEl0fQ/WrX1nYWLSYBnLelZE77V0Y5k/JyRq6VPKG
- o9Qv4IO/ZHwxTzLnTQmPjkpq
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Aug 2022 07:21:31 -0700
-IronPort-SDR: AAyvSSx9nA0SPDgPXp+CF1GSPBaDK/8CpTlYU0div8y5XYC2eLHhrRSnu6s4frTd720YzvMm92
- AZpF+EdFK3sZQppR3FfCvGiFJHDxk1dSxX7Exrb13Jh4AJ2GItUPaZgv7HMDDirwnuCHuSFSI9
- A4yA7h8F6RAITYrGrm6Nx/3fFl73I1jtV+R1RmfpB3N2cZ+3WTL2xKUm1LDZQ8VuUuP64B+59C
- JsBgAnUsUASKdtC1zgMA0DwFOSQp10fbwPeHr5jiOe95RUBwhPlskJGQih+h82m9Y9lgghLbpY
- hmQ=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Aug 2022 08:00:34 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M1fX10kqcz1Rw4L
-        for <linux-ide@vger.kernel.org>; Mon,  8 Aug 2022 08:00:33 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1659970832; x=1662562833; bh=dWpdYZqudDgvmMuJiEXUtDU/7QHq5F7xyss
-        COzjahPU=; b=Ijeg89YHTXel49uuubA/KrUoPyxSrVQzzvYOPhJpl/YB5YPTGHr
-        +uJoTzaZjTFC0JKhCDD74aIqUg6Ocpxxh6xywVUFJMuDHfsytCvwLqnY4IAMov4b
-        qq3QBiMl1kJNYq9BWa3gr2adNq/qCyl3swdERxemHMgrG2aqYffrnMHAJq2DBoWk
-        fPnNNEHknjhlawpf9pX+fP2dvkoMtQFtRXqYmNsY7OClXvCis+zJRwZnmZgpUBOQ
-        SmpuSmADP0bc0vEPXSgpch6axMUDDdZYWXJ+xXJgtObJRv0SHKqRZKHtIIFEQPsT
-        apkFIRiDJTeIJuVoHd361MMv7wUZNnwBkmQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ErtpSqTqA2pX for <linux-ide@vger.kernel.org>;
-        Mon,  8 Aug 2022 08:00:32 -0700 (PDT)
-Received: from [10.225.89.57] (gns5353.ad.shared [10.225.89.57])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M1fWz5ZRJz1RtVk;
-        Mon,  8 Aug 2022 08:00:31 -0700 (PDT)
-Message-ID: <88caafa2-6ede-0d8e-0449-72ca559201b7@opensource.wdc.com>
-Date:   Mon, 8 Aug 2022 08:00:30 -0700
+        with ESMTP id S239078AbiHIJ7E (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2022 05:59:04 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B08AE23BC5;
+        Tue,  9 Aug 2022 02:59:02 -0700 (PDT)
+Received: from fraeml710-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M27hR6XZ5z67xh9;
+        Tue,  9 Aug 2022 17:54:31 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml710-chm.china.huawei.com (10.206.15.59) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 9 Aug 2022 11:59:00 +0200
+Received: from [10.195.245.222] (10.195.245.222) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 9 Aug 2022 10:58:59 +0100
+Message-ID: <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
+Date:   Tue, 9 Aug 2022 10:58:58 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.12.0
-Subject: Re: [PATCH V3] libata: Print timeout value when internal command
- times out
-Content-Language: en-US
-To:     Tomas Henzl <thenzl@redhat.com>, linux-ide@vger.kernel.org
-Cc:     sergei.shtylyov@gmail.com
-References: <20220804143519.12245-1-thenzl@redhat.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220804143519.12245-1-thenzl@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
+ regression
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        kernel test robot <oliver.sang@intel.com>
+CC:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Linux Memory Management List" <linux-mm@kvack.org>,
+        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
+        <ying.huang@intel.com>, <feng.tang@intel.com>,
+        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
+References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
+ <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.195.245.222]
+X-ClientProxiedBy: lhrpeml500004.china.huawei.com (7.191.163.9) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/08/04 7:35, Tomas Henzl wrote:
-> Print the timeout value may help in troubleshooting failures.
+On 08/08/2022 15:52, Damien Le Moal wrote:
+> On 2022/08/05 1:05, kernel test robot wrote:
+>>
+>>
+>> Greeting,
+>>
+>> FYI, we noticed a -15.0% regression of stress-ng.copy-file.ops_per_sec due to commit:
+>>
+>>
+>> commit: 0568e6122574dcc1aded2979cd0245038efe22b6 ("ata: libata-scsi: cap ata_device->max_sectors according to shost->max_sectors")
+>> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
+>>
+>> in testcase: stress-ng
+>> on test machine: 96 threads 2 sockets Ice Lake with 256G memory
+>> with following parameters:
+>>
+>> 	nr_threads: 10%
+>> 	disk: 1HDD
+>> 	testtime: 60s
+>> 	fs: f2fs
+>> 	class: filesystem
+>> 	test: copy-file
+>> 	cpufreq_governor: performance
+>> 	ucode: 0xb000280
+> 
+> Without knowing what the device adapter is, hard to say where the problem is. I
+> suspect that with the patch applied, we may be ending up with a small default
+> max_sectors value, causing overhead due to more commands than necessary.
+> 
+> Will check what I see with my test rig.
 
-s/Print/Printing
+As far as I can see, this patch should not make a difference unless the 
+ATA shost driver is setting the max_sectors value unnecessarily low.
 
 > 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-
-You forgot to fix the patch title prefix. Please change it to "ata: libata-core:".
-
-> ---
-> V3: rewording subject and description, no functional change
-> V2: timeout changed to unsigned int as in for-next
+>>
+>>
+>>
+>>
+>> If you fix the issue, kindly add following tag
+>> Reported-by: kernel test robot <oliver.sang@intel.com>
+>>
+>>
+>> Details are as below:
+>> -------------------------------------------------------------------------------------------------->
+>>
+>>
+>> To reproduce:
+>>
+>>          git clone https://github.com/intel/lkp-tests.git
+>>          cd lkp-tests
+>>          sudo bin/lkp install job.yaml           # job file is attached in this email
+>>          bin/lkp split-job --compatible job.yaml # generate the yaml file for lkp run
+>>          sudo bin/lkp run generated-yaml-file
+>>
+>>          # if come across any failure that blocks the test,
+>>          # please remove ~/.lkp and /lkp dir to run from a clean state.
+>>
+>> =========================================================================================
+>> class/compiler/cpufreq_governor/disk/fs/kconfig/nr_threads/rootfs/tbox_group/test/testcase/testtime/ucode:
+>>    filesystem/gcc-11/performance/1HDD/f2fs/x86_64-rhel-8.3/10%/debian-11.1-x86_64-20220510.cgz/lkp-icl-2sp1/copy-file/stress-ng/60s/0xb000280
+>>
+>> commit:
+>>    4cbfca5f77 ("scsi: scsi_transport_sas: cap shost opt_sectors according to DMA optimal limit")
+>>    0568e61225 ("ata: libata-scsi: cap ata_device->max_sectors according to shost->max_sectors")
+>>
+>> 4cbfca5f7750520f 0568e6122574dcc1aded2979cd0
+>> ---------------- ---------------------------
+>>           %stddev     %change         %stddev
+>>               \          |                \
+>>        1627           -14.9%       1385        stress-ng.copy-file.ops
+>>       27.01           -15.0%      22.96        stress-ng.copy-file.ops_per_sec
+>>     8935079           -11.9%    7870629        stress-ng.time.file_system_outputs
+>>       14.88 ±  5%     -31.8%      10.14 ±  3%  stress-ng.time.percent_of_cpu_this_job_got
+>>       50912           -14.7%      43413        vmstat.io.bo
+>>       93.78            +1.4%      95.10        iostat.cpu.idle
+>>        3.89           -31.6%       2.66        iostat.cpu.iowait
+>>        4.01            -1.3        2.74        mpstat.cpu.all.iowait%
+>>        0.23 ±  9%      -0.1        0.17 ± 11%  mpstat.cpu.all.sys%
+>>        1.66 ± 37%      -1.2        0.51 ± 55%  perf-profile.calltrace.cycles-pp.f2fs_write_end.generic_perform_write.f2fs_buffered_write_iter.f2fs_file_write_iter.do_iter_readv_writev
+>>        1.66 ± 37%      -1.1        0.59 ± 25%  perf-profile.children.cycles-pp.f2fs_write_end
+>>        1.51 ± 40%      -1.1        0.45 ± 26%  perf-profile.children.cycles-pp.f2fs_dirty_data_folio
+>>        1.21 ± 49%      -1.0        0.23 ± 33%  perf-profile.children.cycles-pp.f2fs_update_dirty_folio
+>>        0.88 ± 56%      -0.8        0.04 ±111%  perf-profile.children.cycles-pp.native_queued_spin_lock_slowpath
+>>        0.14 ± 26%      +0.1        0.25 ± 28%  perf-profile.children.cycles-pp.page_cache_ra_unbounded
+>>        0.88 ± 56%      -0.8        0.04 ±112%  perf-profile.self.cycles-pp.native_queued_spin_lock_slowpath
+>>     3164876 ±  9%     -20.2%    2524713 ±  7%  perf-stat.i.cache-misses
+>>   4.087e+08            -4.6%  3.899e+08        perf-stat.i.dTLB-loads
+>>      313050 ± 10%     -18.4%     255410 ±  6%  perf-stat.i.node-loads
+>>      972573 ±  9%     -16.4%     812873 ±  6%  perf-stat.i.node-stores
+>>     3114748 ±  9%     -20.2%    2484807 ±  7%  perf-stat.ps.cache-misses
+>>   4.022e+08            -4.6%  3.837e+08        perf-stat.ps.dTLB-loads
+>>      308178 ± 10%     -18.4%     251418 ±  6%  perf-stat.ps.node-loads
+>>      956996 ±  9%     -16.4%     799948 ±  6%  perf-stat.ps.node-stores
+>>      358486            -8.3%     328694        proc-vmstat.nr_active_file
+>>     1121620           -11.9%     987816        proc-vmstat.nr_dirtied
+>>      179906            -6.7%     167912        proc-vmstat.nr_dirty
+>>     1151201            -1.7%    1131322        proc-vmstat.nr_file_pages
+>>      100181            +9.9%     110078 ±  2%  proc-vmstat.nr_inactive_file
+>>      846362           -14.6%     722471        proc-vmstat.nr_written
+>>      358486            -8.3%     328694        proc-vmstat.nr_zone_active_file
+>>      100181            +9.9%     110078 ±  2%  proc-vmstat.nr_zone_inactive_file
+>>      180668            -6.8%     168456        proc-vmstat.nr_zone_write_pending
+>>      556469            -3.5%     536985        proc-vmstat.pgactivate
+>>     3385454           -14.6%    2889953        proc-vmstat.pgpgout
+>>
+>>
+>>
+>>
+>> Disclaimer:
+>> Results have been estimated based on internal Intel analysis and are provided
+>> for informational purposes only. Any difference in system hardware or software
+>> design or configuration may affect actual performance.
+>>
+>>
 > 
->  drivers/ata/libata-core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 826d41f341e4..0fc4782ef4f8 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1578,8 +1578,8 @@ static unsigned ata_exec_internal_sg(struct ata_device *dev,
->  			else
->  				ata_qc_complete(qc);
->  
-> -			ata_dev_warn(dev, "qc timeout (cmd 0x%x)\n",
-> -				     command);
-> +			ata_dev_warn(dev, "qc timeout after %u msecs (cmd 0x%x)\n",
-> +				timeout, command);
-
-Please keep the argument indentation to align with "(".
-
->  		}
->  
->  		spin_unlock_irqrestore(ap->lock, flags);
 > 
 
-
--- 
-Damien Le Moal
-Western Digital Research
