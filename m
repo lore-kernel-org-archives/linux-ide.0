@@ -2,88 +2,93 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78632C19F2D
-	for <linux-ide@archiver.kernel.org>; Tue,  9 Aug 2022 15:16:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 568B1C25B06
+	for <linux-ide@archiver.kernel.org>; Wed, 10 Aug 2022 08:33:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244782AbiHIPQc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 9 Aug 2022 11:16:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54796 "EHLO
+        id S231203AbiHJIdj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 10 Aug 2022 04:33:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244780AbiHIPQb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2022 11:16:31 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C5C2310549
-        for <linux-ide@vger.kernel.org>; Tue,  9 Aug 2022 08:16:30 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-272-zpkONdTzPdWH-Kj0IJX1Bg-1; Tue, 09 Aug 2022 16:16:27 +0100
-X-MC-Unique: zpkONdTzPdWH-Kj0IJX1Bg-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
- Server (TLS) id 15.0.1497.36; Tue, 9 Aug 2022 16:16:26 +0100
-Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
- AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
- 15.00.1497.036; Tue, 9 Aug 2022 16:16:26 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Damien Le Moal' <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.garry@huawei.com>,
+        with ESMTP id S230035AbiHJIda (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2022 04:33:30 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60C8557250;
+        Wed, 10 Aug 2022 01:33:29 -0700 (PDT)
+Received: from fraeml701-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M2jrM3KsSz67Xgw;
+        Wed, 10 Aug 2022 16:33:23 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml701-chm.china.huawei.com (10.206.15.50) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.24; Wed, 10 Aug 2022 10:33:27 +0200
+Received: from [10.195.247.138] (10.195.247.138) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 10 Aug 2022 09:33:24 +0100
+Message-ID: <82dbf4d6-2d43-20ff-22a7-857f9f11a5ce@huawei.com>
+Date:   Wed, 10 Aug 2022 09:33:23 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
+ regression
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         kernel test robot <oliver.sang@intel.com>
 CC:     Christoph Hellwig <hch@lst.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         LKML <linux-kernel@vger.kernel.org>,
         "Linux Memory Management List" <linux-mm@kvack.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "lkp@lists.01.org" <lkp@lists.01.org>,
-        "lkp@intel.com" <lkp@intel.com>,
-        "ying.huang@intel.com" <ying.huang@intel.com>,
-        "feng.tang@intel.com" <feng.tang@intel.com>,
-        "zhengjun.xing@linux.intel.com" <zhengjun.xing@linux.intel.com>,
-        "fengwei.yin@intel.com" <fengwei.yin@intel.com>
-Subject: RE: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
-Thread-Topic: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
-Thread-Index: AQHYrAAmXDHshJwwj0GxX5X1j6JqC62mrM6g
-Date:   Tue, 9 Aug 2022 15:16:26 +0000
-Message-ID: <c4b45c0e06af473abe17e3471e1bb948@AcuMS.aculab.com>
+        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
+        <ying.huang@intel.com>, <feng.tang@intel.com>,
+        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
 References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
  <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
  <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
- <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
-In-Reply-To: <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
-MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+ <16f03f81-a8c7-bacf-c74c-67231f7f7202@huawei.com>
+ <ef84d2dd-84ea-e1c7-05ef-f0a082d4f7d0@opensource.wdc.com>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <ef84d2dd-84ea-e1c7-05ef-f0a082d4f7d0@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.195.247.138]
+X-ClientProxiedBy: lhrpeml500005.china.huawei.com (7.191.163.240) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Li4uDQo+ID4+IFdpdGhvdXQga25vd2luZyB3aGF0IHRoZSBkZXZpY2UgYWRhcHRlciBpcywgaGFy
-ZCB0byBzYXkgd2hlcmUgdGhlIHByb2JsZW0gaXMuIEkNCj4gPj4gc3VzcGVjdCB0aGF0IHdpdGgg
-dGhlIHBhdGNoIGFwcGxpZWQsIHdlIG1heSBiZSBlbmRpbmcgdXAgd2l0aCBhIHNtYWxsIGRlZmF1
-bHQNCj4gPj4gbWF4X3NlY3RvcnMgdmFsdWUsIGNhdXNpbmcgb3ZlcmhlYWQgZHVlIHRvIG1vcmUg
-Y29tbWFuZHMgdGhhbiBuZWNlc3NhcnkuDQo+ID4+DQo+ID4+IFdpbGwgY2hlY2sgd2hhdCBJIHNl
-ZSB3aXRoIG15IHRlc3QgcmlnLg0KPiA+DQo+ID4gQXMgZmFyIGFzIEkgY2FuIHNlZSwgdGhpcyBw
-YXRjaCBzaG91bGQgbm90IG1ha2UgYSBkaWZmZXJlbmNlIHVubGVzcyB0aGUNCj4gPiBBVEEgc2hv
-c3QgZHJpdmVyIGlzIHNldHRpbmcgdGhlIG1heF9zZWN0b3JzIHZhbHVlIHVubmVjZXNzYXJpbHkg
-bG93Lg0KPiANCj4gVGhhdCBpcyBteSBodW5jaCB0b28sIGhlbmNlIG15IHF1ZXN0aW9uIGFib3V0
-IHdoaWNoIGhvc3QgZHJpdmVyIGlzIGJlaW5nIHVzZWQNCj4gZm9yIHRoaXMgdGVzdC4uLiBUaGF0
-IGlzIG5vdCBhcHBhcmVudCBmcm9tIHRoZSBwcm9ibGVtIHJlcG9ydC4NCg0KTm8gb25lJ3MgZmFs
-bGVuIG92ZXIgdGhlIG9sZCBwcm9ibGVtIGFuZCBtYW5hZ2VkIHRvIGxpbWl0DQp0aGUgbnVtYmVy
-IG9mIHNlY3RvcnMgaW4gYSByZWFkIHRvIHRoZSBudW1iZXIgb2Ygc2VjdG9ycw0KaW4gKElJUkMp
-IGEgJ211bHRpIHNlY3RvcicgcmVhZCB0aGF0IHVzZXMgYSBzaW5nbGUgRE1BIGJ1cnN0Pw0KDQpX
-YXMgYWx3YXlzIGEgZ29vZCB3YXkgb2Yga2lsbGluZyBkaXNrIHBlcmZvcm1hbmNlLg0KDQpJSVJD
-IHRoZSBtYXhpbXVtIG51bWJlciBvZiBzZWN0b3JzIGZvciBhbiBBVEEgZGlzayB0cmFuc2ZlciBp
-cyAyNTUuDQoNCglEYXZpZA0KDQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJyYW1s
-ZXkgUm9hZCwgTW91bnQgRmFybSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lzdHJh
-dGlvbiBObzogMTM5NzM4NiAoV2FsZXMpDQo=
+On 09/08/2022 15:57, Damien Le Moal wrote:
+>>> As far as I can see, this patch should not make a difference unless the
+>>> ATA shost driver is setting the max_sectors value unnecessarily low.
+>> For __ATA_BASE_SHT, we don't set max_sectors. As such, we default
+>> shost->max_sectors = SCSI_DEFAULT_MAX_SECTORS (=1024) in
+>> scsi_host_alloc(). I assume no shost dma mapping limit applied.
+>>
+>> Then - for example - we could select dev->max_sectors =
+>> ATA_MAX_SECTORS_LBA48 (=65535) in ata_dev_configure().
+>>
+>> So with commit 0568e6122574 we would have final max sectors = 1024, as
+>> opposed to 65535 previously. I guess that the problem is something like
+>> this.
+>>
+>> If so, it seems that we would need to apply the shost dma mapping limit
+>> separately in ata_scsi_dev_config() and not use shost->max_sectors.
+> OK. Will have a look at that.
+> 
 
+We may need to introduce something like shost->max_hw_sectors, which is 
+set according to sht max sectors and dma mapping limits. That could be 
+also used in USB scsiglue slave_configure()
+
+Or else set max_sectors value for __ATA_BASE_SHT, but I don't know a 
+sane value there considering ATA_MAX_SECTORS_LBA48 gives max_sectors of 
+65535.
+
+Damien, please let me know if you need help now. I am just waiting for 
+you to test to prove this theory about dev->max_sectors being capped. I 
+don't have an AHCI setup readily-available for testing - just SAS cards 
+or QEMU.
+
+Thanks,
+John
