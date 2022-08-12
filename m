@@ -2,321 +2,156 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91466C00140
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Aug 2022 15:42:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB961C00140
+	for <linux-ide@archiver.kernel.org>; Fri, 12 Aug 2022 15:53:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238193AbiHLPmz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 12 Aug 2022 11:42:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37878 "EHLO
+        id S235618AbiHLPxJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 12 Aug 2022 11:53:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238807AbiHLPml (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2022 11:42:41 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9D52868AB
-        for <linux-ide@vger.kernel.org>; Fri, 12 Aug 2022 08:41:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1660318917; x=1691854917;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=WHpBj2fHK1J03Ty6/XHGyBT8jtP16mzYLHAEXWEsj5w=;
-  b=FcpK/XHxzc4fC6wiwEKdCcfl1H78d8L1M1l4CnSBUDdMwx9sugFm55Xs
-   GNzGAXSBNbQUZxBzjhj/EV6E0FQE7aRa30Bes1GzpkSlm2dPT/Ccjz/cW
-   6ieaS/lL/R/osewCtAI+Lvj7b9neoNGSdHvGZfreX8GzWn2tNaCcEiSPd
-   c2cZVxjKbt/cuT4foLLjnaZQ9QJn8TFqWXt0Mtr8ruGaWA4a8pLH4vbaI
-   Ja1GjL03ZkY0CTpElDi2M2Bo/HIKbOUL30znGHLOy1GQA0IqETwynwMS7
-   l8Y1MB0zgzl27osbRxnGWpBa9DOHV79cIFTLdcbX8JdivoFLWoOmt3P+w
-   w==;
-X-IronPort-AV: E=Sophos;i="5.93,233,1654531200"; 
-   d="scan'208";a="312838535"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Aug 2022 23:41:57 +0800
-IronPort-SDR: CA7b5qkpwsXli242Or5IHVmD/9VAybDw8uU7Y89LOJJcChebD6o/4AkJXey2e43T8lyowpjPs0
- 0fDSSx8P0o6H6ITO21rhFB2oR30xcs3lvfn259qAZwl/MH2wNEzRuyy6wzCrPmuv62r88G4T90
- c109IaP7dM29qGl/SaiXEKOd/73hcCpg19gFJmnDUIzzHX2OHbPQqsi7pBO8f65fXerMYb247f
- 1YYDTCBjg8jsBeiwoGWbUi6EiXNIUF4O766KlIbvpE21wnpJrhIIy7fuEQx3bZtBsY7sqjesC+
- /hnv+ulI6408HUgUmDmCnyTd
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Aug 2022 07:57:30 -0700
-IronPort-SDR: cw0W8yFgBHBZiFN4Tal3E+W79HJldATxU6BPKGCD1hJOANzdzM7M2ylpzFXJMLrGj9Zj++HiJm
- 94rPbW//ZBcbJVHeubO5Vdn0Wip9ijrLNr3+lMX/6VNoUT2swyWmcYIdb7Lx4t3YKC2sVgHvXm
- JrGDwGD20eootcnt/hQTd4jGp1t6Hf4FUZYCBXefrxBkgsCOdtcJYyha650hDeECB9sF5di+uz
- huAyIOExZfO7VVSCjKWTddFm78fvatTfZ/I0ZSFV3X0gfJQkqV7nEVG8Hvm1QGSc4irHWYFUQa
- rCI=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Aug 2022 08:41:57 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M47Fw65Zbz1Rwnx
-        for <linux-ide@vger.kernel.org>; Fri, 12 Aug 2022 08:41:56 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1660318914; x=1662910915; bh=WHpBj2fHK1J03Ty6/XHGyBT8jtP16mzYLHA
-        EXWEsj5w=; b=VFe63nZcz3NZx70SVbvpubAiidIN9P0gA1n2KGOUAc68dgqV1xf
-        h4er45oqDLowu8yxjPZjGXk6a2tFBnFANT/GHNRASNVnaVlDP2ayuMBZaSHpWJx0
-        4AJ3FofnYN2hvrRPOQqgIvOYkIYbQHaoixh2CGopMAhdXiZp3hPQOTgh98hxBr+8
-        UDCgmzWKfiE/k7aeVfecj/2y1qTPtvyQs8wPzI+e897FssMidqLYuc/c95bXamcB
-        tcL9qysSoMiakhZeNfru3Y1GUKY4c52tjRUVYaleFi5mrK/eEBKb853Q83XVKO72
-        9+IypbOPFBapNhbG/Idqwp6MXwYcuXlwz/g==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id JZ4T741mexlm for <linux-ide@vger.kernel.org>;
-        Fri, 12 Aug 2022 08:41:54 -0700 (PDT)
-Received: from [10.225.89.57] (cnd1221sqt.ad.shared [10.225.89.57])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M47Fs6y6Mz1RtVk;
-        Fri, 12 Aug 2022 08:41:53 -0700 (PDT)
-Message-ID: <4642848c-a386-d6a0-6255-8b16800e0548@opensource.wdc.com>
-Date:   Fri, 12 Aug 2022 08:41:53 -0700
+        with ESMTP id S235497AbiHLPxI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2022 11:53:08 -0400
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C9239F0CE;
+        Fri, 12 Aug 2022 08:53:08 -0700 (PDT)
+Received: by mail-pg1-f179.google.com with SMTP id f65so1105126pgc.12;
+        Fri, 12 Aug 2022 08:53:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=Xy01o7r1qRYfvttKfpOME67HQkGgv0ZTEftFBcy3PP0=;
+        b=xvfDT9kTzWCMsaT5/VZEbVYx3wjTXrON6TRSRHpntkGcMAoRxXpJBetpf5rJWeqPyA
+         jxJ0Qo3TmZMlgHvWbfl5pOaOSYdjAGNjLmjiVAbuw4bmt8Ir2xTAS2YE3G187Nd9gxl8
+         7nCbm8yYdprXL7C17El2t/0IGWJbOe4Jcdc+M9vGKLh5k9r+WwLFXSieHujsqXohLMe7
+         N+xkJhGNqe7mBYcoejcyGeAWxtqMhea8YwB4rT0rpFLBn3IhaR4MyoUhlLkX3d8KKe+F
+         iYDKypxls33QK2d8P3RfpO7PQYycOeGn8FwtEzE4lZUh5cUbvOBiOfvaKa6YIHzFL3WH
+         SoLw==
+X-Gm-Message-State: ACgBeo2Ro9PJftEen8aepgpAXujG8JufEmqlUxxk9+hMl736n5JewiNg
+        rcinl03r2Pez14qKeFBvzhg=
+X-Google-Smtp-Source: AA6agR74yU/cTSVmxEGOolFw3a8Q1u+dZCKeFfDPq9sYrAgjI8pdJEf+UWbe6og4QBp0o+MNIe3XLw==
+X-Received: by 2002:a05:6a00:22cd:b0:52f:706a:5268 with SMTP id f13-20020a056a0022cd00b0052f706a5268mr4455511pfj.80.1660319587402;
+        Fri, 12 Aug 2022 08:53:07 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:2414:9f13:41de:d21d? ([2620:15c:211:201:2414:9f13:41de:d21d])
+        by smtp.gmail.com with ESMTPSA id s15-20020a63ff4f000000b0040cb1f55391sm1501705pgk.2.2022.08.12.08.53.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 12 Aug 2022 08:53:06 -0700 (PDT)
+Message-ID: <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
+Date:   Fri, 12 Aug 2022 08:53:02 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.12.0
-Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>,
-        Oliver Sang <oliver.sang@intel.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        linux-ide@vger.kernel.org, lkp@lists.01.org, lkp@intel.com,
-        ying.huang@intel.com, feng.tang@intel.com,
-        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com
-References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
- <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
- <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
- <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
- <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
- <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org
+References: <20220630195703.10155-1-bvanassche@acm.org>
+ <20220630195703.10155-3-bvanassche@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
+ <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
+ <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
+ <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+ <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
+ <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+ <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
+ <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/08/12 4:13, John Garry wrote:
-> On 12/08/2022 06:01, Oliver Sang wrote:
->> hi, Damien Le Moal,
->>
->> On Tue, Aug 09, 2022 at 07:55:53AM -0700, Damien Le Moal wrote:
->>> On 2022/08/09 2:58, John Garry wrote:
->>>> On 08/08/2022 15:52, Damien Le Moal wrote:
->>>>> On 2022/08/05 1:05, kernel test robot wrote:
->>>>>>
->>>>>>
->>>>>> Greeting,
->>>>>>
->>>>>> FYI, we noticed a -15.0% regression of stress-ng.copy-file.ops_per=
-_sec due to commit:
->>>>>>
->>>>>>
->>>>>> commit: 0568e6122574dcc1aded2979cd0245038efe22b6 ("ata: libata-scs=
-i: cap ata_device->max_sectors according to shost->max_sectors")
->>>>>> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git m=
-aster
->>>>>>
->>>>>> in testcase: stress-ng
->>>>>> on test machine: 96 threads 2 sockets Ice Lake with 256G memory
->>>>>> with following parameters:
->>>>>>
->>>>>> 	nr_threads: 10%
->>>>>> 	disk: 1HDD
->>>>>> 	testtime: 60s
->>>>>> 	fs: f2fs
->>>>>> 	class: filesystem
->>>>>> 	test: copy-file
->>>>>> 	cpufreq_governor: performance
->>>>>> 	ucode: 0xb000280
->>>>>
->>>>> Without knowing what the device adapter is, hard to say where the p=
-roblem is. I
->>>>> suspect that with the patch applied, we may be ending up with a sma=
-ll default
->>>>> max_sectors value, causing overhead due to more commands than neces=
-sary.
->>>>>
->>>>> Will check what I see with my test rig.
->>>>
->>>> As far as I can see, this patch should not make a difference unless =
-the
->>>> ATA shost driver is setting the max_sectors value unnecessarily low.
->>>
->>> That is my hunch too, hence my question about which host driver is be=
-ing used
->>> for this test... That is not apparent from the problem report.
->>
->> we noticed the commit is already in mainline now, and in our tests, th=
-ere is
->> still similar regression and also on other platforms.
->> could you guide us how to check "which host driver is being used for t=
-his
->> test"? hope to supply some useful information.
->>
->=20
-> For me, a complete kernel log may help.
+On 8/12/22 03:48, Geert Uytterhoeven wrote:
+> sd_submit_start() is called once during suspend, and once during
+> resume.  It does not hang.
+> 
+> Reading from /dev/sda hangs after resume (not in sd_submit_start(),
+> which is never called for reading).
+> 
+> Two tasks are blocked in blk_mq_get_tag() calling io_schedule():
+> 
+> task:kworker/7:1     state:D stack:    0 pid:  122 ppid:     2 flags:0x00000008
+> Workqueue: events ata_scsi_dev_rescan
+> Call trace:
+>   __switch_to+0xbc/0x124
+>   __schedule+0x540/0x71c
+>   schedule+0x58/0xa0
+>   io_schedule+0x18/0x34
+>   blk_mq_get_tag+0x138/0x244
+>   __blk_mq_alloc_requests+0x130/0x2f0
+>   blk_mq_alloc_request+0x74/0xa8
+>   scsi_alloc_request+0x10/0x30
+>   __scsi_execute+0x5c/0x18c
+>   scsi_vpd_inquiry+0x7c/0xdc
+>   scsi_get_vpd_size+0x34/0xa8
+>   scsi_get_vpd_buf+0x28/0xf4
+>   scsi_attach_vpd+0x44/0x170
+>   scsi_rescan_device+0x30/0x98
+>   ata_scsi_dev_rescan+0xc8/0xfc
+>   process_one_work+0x2e0/0x474
+>   worker_thread+0x1cc/0x270
+>   kthread+0xd8/0xe8
+>   ret_from_fork+0x10/0x20
+> 
+> 
+> task:hd              state:D stack:    0 pid: 1163 ppid:  1076 flags:0x00000000
+> Call trace:
+>   __switch_to+0xbc/0x124
+>   __schedule+0x540/0x71c
+>   schedule+0x58/0xa0
+>   io_schedule+0x18/0x34
+>   blk_mq_get_tag+0x138/0x244
+>   __blk_mq_alloc_requests+0x130/0x2f0
+>   blk_mq_submit_bio+0x44c/0x5b4
+>   __submit_bio+0x24/0x5c
+>   submit_bio_noacct_nocheck+0x8c/0x178
+>   submit_bio_noacct+0x380/0x3b0
+>   submit_bio+0x34/0x3c
+>   mpage_bio_submit+0x28/0x38
+>   mpage_readahead+0xa8/0x178
+>   blkdev_readahead+0x14/0x1c
+>   read_pages+0x4c/0x158
+>   page_cache_ra_unbounded+0xd8/0x174
+>   do_page_cache_ra+0x40/0x4c
+>   page_cache_ra_order+0x14/0x1c
+>   ondemand_readahead+0x124/0x2fc
+>   page_cache_sync_ra+0x50/0x54
+>   filemap_read+0x130/0x6e8
+>   blkdev_read_iter+0xf0/0x164
+>   new_sync_read+0x74/0xc0
+>   vfs_read+0xbc/0xd8
+>   ksys_read+0x6c/0xd4
+>   __arm64_sys_read+0x14/0x1c
+>   invoke_syscall+0x70/0xf4
+>   el0_svc_common.constprop.0+0xbc/0xf0
+>   do_el0_svc+0x18/0x20
+>   el0_svc+0x30/0x84
+>   el0t_64_sync_handler+0x90/0xf8
+>   el0t_64_sync+0x14c/0x150
 
-I had a look yesterday with my test rig. I did not see any difference in =
-the
-default max_sectors_kb values for various drives between 5.18 and 5.19 (c=
-urrent
-linus tree). The test machine has 2 AHCI adapters: Intel and Marvell. Bot=
-h use
-the regular AHCI driver. I have another rig with different ATA adapters b=
-ut it
-is powered down and I am traveling... So cannot test that right now.
+Hi Geert,
 
->=20
->>>
->>>>
->>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> If you fix the issue, kindly add following tag
->>>>>> Reported-by: kernel test robot <oliver.sang@intel.com>
->>>>>>
->>>>>>
->>>>>> Details are as below:
->>>>>> ------------------------------------------------------------------=
--------------------------------->
->>>>>>
->>>>>>
->>>>>> To reproduce:
->>>>>>
->>>>>>           git clone https://github.com/intel/lkp-tests.git
->>>>>>           cd lkp-tests
->>>>>>           sudo bin/lkp install job.yaml           # job file is at=
-tached in this email
->>>>>>           bin/lkp split-job --compatible job.yaml # generate the y=
-aml file for lkp run
->>>>>>           sudo bin/lkp run generated-yaml-file
->>>>>>
->>>>>>           # if come across any failure that blocks the test,
->>>>>>           # please remove ~/.lkp and /lkp dir to run from a clean =
-state.
->>>>>>
->>>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>>>>> class/compiler/cpufreq_governor/disk/fs/kconfig/nr_threads/rootfs/=
-tbox_group/test/testcase/testtime/ucode:
->>>>>>     filesystem/gcc-11/performance/1HDD/f2fs/x86_64-rhel-8.3/10%/de=
-bian-11.1-x86_64-20220510.cgz/lkp-icl-2sp1/copy-file/stress-ng/60s/0xb000=
-280
->>>>>>
->>>>>> commit:
->>>>>>     4cbfca5f77 ("scsi: scsi_transport_sas: cap shost opt_sectors a=
-ccording to DMA optimal limit")
->>>>>>     0568e61225 ("ata: libata-scsi: cap ata_device->max_sectors acc=
-ording to shost->max_sectors")
->>>>>>
->>>>>> 4cbfca5f7750520f 0568e6122574dcc1aded2979cd0
->>>>>> ---------------- ---------------------------
->>>>>>            %stddev     %change         %stddev
->>>>>>                \          |                \
->>>>>>         1627           -14.9%       1385        stress-ng.copy-fil=
-e.ops
->>>>>>        27.01           -15.0%      22.96        stress-ng.copy-fil=
-e.ops_per_sec
->>>>>>      8935079           -11.9%    7870629        stress-ng.time.fil=
-e_system_outputs
->>>>>>        14.88 =C2=B1  5%     -31.8%      10.14 =C2=B1  3%  stress-n=
-g.time.percent_of_cpu_this_job_got
->>>>>>        50912           -14.7%      43413        vmstat.io.bo
->>>>>>        93.78            +1.4%      95.10        iostat.cpu.idle
->>>>>>         3.89           -31.6%       2.66        iostat.cpu.iowait
->>>>>>         4.01            -1.3        2.74        mpstat.cpu.all.iow=
-ait%
->>>>>>         0.23 =C2=B1  9%      -0.1        0.17 =C2=B1 11%  mpstat.c=
-pu.all.sys%
->>>>>>         1.66 =C2=B1 37%      -1.2        0.51 =C2=B1 55%  perf-pro=
-file.calltrace.cycles-pp.f2fs_write_end.generic_perform_write.f2fs_buffer=
-ed_write_iter.f2fs_file_write_iter.do_iter_readv_writev
->>>>>>         1.66 =C2=B1 37%      -1.1        0.59 =C2=B1 25%  perf-pro=
-file.children.cycles-pp.f2fs_write_end
->>>>>>         1.51 =C2=B1 40%      -1.1        0.45 =C2=B1 26%  perf-pro=
-file.children.cycles-pp.f2fs_dirty_data_folio
->>>>>>         1.21 =C2=B1 49%      -1.0        0.23 =C2=B1 33%  perf-pro=
-file.children.cycles-pp.f2fs_update_dirty_folio
->>>>>>         0.88 =C2=B1 56%      -0.8        0.04 =C2=B1111%  perf-pro=
-file.children.cycles-pp.native_queued_spin_lock_slowpath
->>>>>>         0.14 =C2=B1 26%      +0.1        0.25 =C2=B1 28%  perf-pro=
-file.children.cycles-pp.page_cache_ra_unbounded
->>>>>>         0.88 =C2=B1 56%      -0.8        0.04 =C2=B1112%  perf-pro=
-file.self.cycles-pp.native_queued_spin_lock_slowpath
->>>>>>      3164876 =C2=B1  9%     -20.2%    2524713 =C2=B1  7%  perf-sta=
-t.i.cache-misses
->>>>>>    4.087e+08            -4.6%  3.899e+08        perf-stat.i.dTLB-l=
-oads
->>>>>>       313050 =C2=B1 10%     -18.4%     255410 =C2=B1  6%  perf-sta=
-t.i.node-loads
->>>>>>       972573 =C2=B1  9%     -16.4%     812873 =C2=B1  6%  perf-sta=
-t.i.node-stores
->>>>>>      3114748 =C2=B1  9%     -20.2%    2484807 =C2=B1  7%  perf-sta=
-t.ps.cache-misses
->>>>>>    4.022e+08            -4.6%  3.837e+08        perf-stat.ps.dTLB-=
-loads
->>>>>>       308178 =C2=B1 10%     -18.4%     251418 =C2=B1  6%  perf-sta=
-t.ps.node-loads
->>>>>>       956996 =C2=B1  9%     -16.4%     799948 =C2=B1  6%  perf-sta=
-t.ps.node-stores
->>>>>>       358486            -8.3%     328694        proc-vmstat.nr_act=
-ive_file
->>>>>>      1121620           -11.9%     987816        proc-vmstat.nr_dir=
-tied
->>>>>>       179906            -6.7%     167912        proc-vmstat.nr_dir=
-ty
->>>>>>      1151201            -1.7%    1131322        proc-vmstat.nr_fil=
-e_pages
->>>>>>       100181            +9.9%     110078 =C2=B1  2%  proc-vmstat.n=
-r_inactive_file
->>>>>>       846362           -14.6%     722471        proc-vmstat.nr_wri=
-tten
->>>>>>       358486            -8.3%     328694        proc-vmstat.nr_zon=
-e_active_file
->>>>>>       100181            +9.9%     110078 =C2=B1  2%  proc-vmstat.n=
-r_zone_inactive_file
->>>>>>       180668            -6.8%     168456        proc-vmstat.nr_zon=
-e_write_pending
->>>>>>       556469            -3.5%     536985        proc-vmstat.pgacti=
-vate
->>>>>>      3385454           -14.6%    2889953        proc-vmstat.pgpgou=
-t
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> Disclaimer:
->>>>>> Results have been estimated based on internal Intel analysis and a=
-re provided
->>>>>> for informational purposes only. Any difference in system hardware=
- or software
->>>>>> design or configuration may affect actual performance.
->>>>>>
->>>>>>
->>>>>
->>>>>
->>>>
->>>
->>>
->>> --=20
->>> Damien Le Moal
->>> Western Digital Research
->> .
->=20
+All that can be concluded from the above is that blk_mq_get_tag() is 
+waiting for other I/O request(s) to finish. One or more other requests 
+are in progress and either scsi_done() has not been called for these 
+requests or the error handler got stuck. Since the issue reported above 
+is not observed with other ATA interfaces, this may be related to the 
+ATA interface driver used in your test setup.
 
+Bart.
 
---=20
-Damien Le Moal
-Western Digital Research
