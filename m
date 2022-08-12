@@ -2,64 +2,111 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6660BC25B0E
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Aug 2022 14:58:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91466C00140
+	for <linux-ide@archiver.kernel.org>; Fri, 12 Aug 2022 15:42:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236892AbiHLO6V (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 12 Aug 2022 10:58:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49108 "EHLO
+        id S238193AbiHLPmz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 12 Aug 2022 11:42:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232085AbiHLO6U (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2022 10:58:20 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB331A7229;
-        Fri, 12 Aug 2022 07:58:18 -0700 (PDT)
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M46HP5vnJz685Yk;
-        Fri, 12 Aug 2022 22:58:09 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 12 Aug 2022 16:58:16 +0200
-Received: from [10.48.157.254] (10.48.157.254) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 12 Aug 2022 15:58:15 +0100
-Message-ID: <f1c3d717-339d-ba2b-9775-fc0e00f57ae3@huawei.com>
-Date:   Fri, 12 Aug 2022 15:58:14 +0100
+        with ESMTP id S238807AbiHLPml (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2022 11:42:41 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9D52868AB
+        for <linux-ide@vger.kernel.org>; Fri, 12 Aug 2022 08:41:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1660318917; x=1691854917;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=WHpBj2fHK1J03Ty6/XHGyBT8jtP16mzYLHAEXWEsj5w=;
+  b=FcpK/XHxzc4fC6wiwEKdCcfl1H78d8L1M1l4CnSBUDdMwx9sugFm55Xs
+   GNzGAXSBNbQUZxBzjhj/EV6E0FQE7aRa30Bes1GzpkSlm2dPT/Ccjz/cW
+   6ieaS/lL/R/osewCtAI+Lvj7b9neoNGSdHvGZfreX8GzWn2tNaCcEiSPd
+   c2cZVxjKbt/cuT4foLLjnaZQ9QJn8TFqWXt0Mtr8ruGaWA4a8pLH4vbaI
+   Ja1GjL03ZkY0CTpElDi2M2Bo/HIKbOUL30znGHLOy1GQA0IqETwynwMS7
+   l8Y1MB0zgzl27osbRxnGWpBa9DOHV79cIFTLdcbX8JdivoFLWoOmt3P+w
+   w==;
+X-IronPort-AV: E=Sophos;i="5.93,233,1654531200"; 
+   d="scan'208";a="312838535"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Aug 2022 23:41:57 +0800
+IronPort-SDR: CA7b5qkpwsXli242Or5IHVmD/9VAybDw8uU7Y89LOJJcChebD6o/4AkJXey2e43T8lyowpjPs0
+ 0fDSSx8P0o6H6ITO21rhFB2oR30xcs3lvfn259qAZwl/MH2wNEzRuyy6wzCrPmuv62r88G4T90
+ c109IaP7dM29qGl/SaiXEKOd/73hcCpg19gFJmnDUIzzHX2OHbPQqsi7pBO8f65fXerMYb247f
+ 1YYDTCBjg8jsBeiwoGWbUi6EiXNIUF4O766KlIbvpE21wnpJrhIIy7fuEQx3bZtBsY7sqjesC+
+ /hnv+ulI6408HUgUmDmCnyTd
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Aug 2022 07:57:30 -0700
+IronPort-SDR: cw0W8yFgBHBZiFN4Tal3E+W79HJldATxU6BPKGCD1hJOANzdzM7M2ylpzFXJMLrGj9Zj++HiJm
+ 94rPbW//ZBcbJVHeubO5Vdn0Wip9ijrLNr3+lMX/6VNoUT2swyWmcYIdb7Lx4t3YKC2sVgHvXm
+ JrGDwGD20eootcnt/hQTd4jGp1t6Hf4FUZYCBXefrxBkgsCOdtcJYyha650hDeECB9sF5di+uz
+ huAyIOExZfO7VVSCjKWTddFm78fvatTfZ/I0ZSFV3X0gfJQkqV7nEVG8Hvm1QGSc4irHWYFUQa
+ rCI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Aug 2022 08:41:57 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M47Fw65Zbz1Rwnx
+        for <linux-ide@vger.kernel.org>; Fri, 12 Aug 2022 08:41:56 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1660318914; x=1662910915; bh=WHpBj2fHK1J03Ty6/XHGyBT8jtP16mzYLHA
+        EXWEsj5w=; b=VFe63nZcz3NZx70SVbvpubAiidIN9P0gA1n2KGOUAc68dgqV1xf
+        h4er45oqDLowu8yxjPZjGXk6a2tFBnFANT/GHNRASNVnaVlDP2ayuMBZaSHpWJx0
+        4AJ3FofnYN2hvrRPOQqgIvOYkIYbQHaoixh2CGopMAhdXiZp3hPQOTgh98hxBr+8
+        UDCgmzWKfiE/k7aeVfecj/2y1qTPtvyQs8wPzI+e897FssMidqLYuc/c95bXamcB
+        tcL9qysSoMiakhZeNfru3Y1GUKY4c52tjRUVYaleFi5mrK/eEBKb853Q83XVKO72
+        9+IypbOPFBapNhbG/Idqwp6MXwYcuXlwz/g==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id JZ4T741mexlm for <linux-ide@vger.kernel.org>;
+        Fri, 12 Aug 2022 08:41:54 -0700 (PDT)
+Received: from [10.225.89.57] (cnd1221sqt.ad.shared [10.225.89.57])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M47Fs6y6Mz1RtVk;
+        Fri, 12 Aug 2022 08:41:53 -0700 (PDT)
+Message-ID: <4642848c-a386-d6a0-6255-8b16800e0548@opensource.wdc.com>
+Date:   Fri, 12 Aug 2022 08:41:53 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.12.0
 Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
  regression
-From:   John Garry <john.garry@huawei.com>
-To:     Oliver Sang <oliver.sang@intel.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     Christoph Hellwig <hch@lst.de>,
+Content-Language: en-US
+To:     John Garry <john.garry@huawei.com>,
+        Oliver Sang <oliver.sang@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         LKML <linux-kernel@vger.kernel.org>,
-        "Linux Memory Management List" <linux-mm@kvack.org>,
-        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
-        <ying.huang@intel.com>, <feng.tang@intel.com>,
-        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
+        Linux Memory Management List <linux-mm@kvack.org>,
+        linux-ide@vger.kernel.org, lkp@lists.01.org, lkp@intel.com,
+        ying.huang@intel.com, feng.tang@intel.com,
+        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com
 References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
  <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
  <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
  <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
  <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
  <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
 In-Reply-To: <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.48.157.254]
-X-ClientProxiedBy: lhrpeml500003.china.huawei.com (7.191.162.67) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/08/2022 12:13, John Garry wrote:
+On 2022/08/12 4:13, John Garry wrote:
+> On 12/08/2022 06:01, Oliver Sang wrote:
+>> hi, Damien Le Moal,
+>>
 >> On Tue, Aug 09, 2022 at 07:55:53AM -0700, Damien Le Moal wrote:
 >>> On 2022/08/09 2:58, John Garry wrote:
 >>>> On 08/08/2022 15:52, Damien Le Moal wrote:
@@ -68,64 +115,208 @@ On 12/08/2022 12:13, John Garry wrote:
 >>>>>>
 >>>>>> Greeting,
 >>>>>>
->>>>>> FYI, we noticed a -15.0% regression of 
->>>>>> stress-ng.copy-file.ops_per_sec due to commit:
+>>>>>> FYI, we noticed a -15.0% regression of stress-ng.copy-file.ops_per=
+_sec due to commit:
 >>>>>>
 >>>>>>
->>>>>> commit: 0568e6122574dcc1aded2979cd0245038efe22b6 ("ata: 
->>>>>> libata-scsi: cap ata_device->max_sectors according to 
->>>>>> shost->max_sectors")
->>>>>> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git 
->>>>>> master
+>>>>>> commit: 0568e6122574dcc1aded2979cd0245038efe22b6 ("ata: libata-scs=
+i: cap ata_device->max_sectors according to shost->max_sectors")
+>>>>>> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git m=
+aster
 >>>>>>
 >>>>>> in testcase: stress-ng
 >>>>>> on test machine: 96 threads 2 sockets Ice Lake with 256G memory
 >>>>>> with following parameters:
 >>>>>>
->>>>>>     nr_threads: 10%
->>>>>>     disk: 1HDD
->>>>>>     testtime: 60s
->>>>>>     fs: f2fs
->>>>>>     class: filesystem
->>>>>>     test: copy-file
->>>>>>     cpufreq_governor: performance
->>>>>>     ucode: 0xb000280
+>>>>>> 	nr_threads: 10%
+>>>>>> 	disk: 1HDD
+>>>>>> 	testtime: 60s
+>>>>>> 	fs: f2fs
+>>>>>> 	class: filesystem
+>>>>>> 	test: copy-file
+>>>>>> 	cpufreq_governor: performance
+>>>>>> 	ucode: 0xb000280
 >>>>>
->>>>> Without knowing what the device adapter is, hard to say where the 
->>>>> problem is. I
->>>>> suspect that with the patch applied, we may be ending up with a 
->>>>> small default
->>>>> max_sectors value, causing overhead due to more commands than 
->>>>> necessary.
+>>>>> Without knowing what the device adapter is, hard to say where the p=
+roblem is. I
+>>>>> suspect that with the patch applied, we may be ending up with a sma=
+ll default
+>>>>> max_sectors value, causing overhead due to more commands than neces=
+sary.
 >>>>>
 >>>>> Will check what I see with my test rig.
 >>>>
->>>> As far as I can see, this patch should not make a difference unless the
+>>>> As far as I can see, this patch should not make a difference unless =
+the
 >>>> ATA shost driver is setting the max_sectors value unnecessarily low.
 >>>
->>> That is my hunch too, hence my question about which host driver is 
->>> being used
+>>> That is my hunch too, hence my question about which host driver is be=
+ing used
 >>> for this test... That is not apparent from the problem report.
 >>
->> we noticed the commit is already in mainline now, and in our tests, 
->> there is
+>> we noticed the commit is already in mainline now, and in our tests, th=
+ere is
 >> still similar regression and also on other platforms.
->> could you guide us how to check "which host driver is being used for this
+>> could you guide us how to check "which host driver is being used for t=
+his
 >> test"? hope to supply some useful information.
 >>
-> 
+>=20
 > For me, a complete kernel log may help.
 
-and since only 1HDD, the output of the following would be helpful:
+I had a look yesterday with my test rig. I did not see any difference in =
+the
+default max_sectors_kb values for various drives between 5.18 and 5.19 (c=
+urrent
+linus tree). The test machine has 2 AHCI adapters: Intel and Marvell. Bot=
+h use
+the regular AHCI driver. I have another rig with different ATA adapters b=
+ut it
+is powered down and I am traveling... So cannot test that right now.
 
-/sys/block/sda/queue/max_sectors_kb
-/sys/block/sda/queue/max_hw_sectors_kb
-
-And for 5.19, if possible.
-
-Thanks!
-
-> 
+>=20
 >>>
 >>>>
+>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> If you fix the issue, kindly add following tag
+>>>>>> Reported-by: kernel test robot <oliver.sang@intel.com>
+>>>>>>
+>>>>>>
+>>>>>> Details are as below:
+>>>>>> ------------------------------------------------------------------=
+-------------------------------->
+>>>>>>
+>>>>>>
+>>>>>> To reproduce:
+>>>>>>
+>>>>>>           git clone https://github.com/intel/lkp-tests.git
+>>>>>>           cd lkp-tests
+>>>>>>           sudo bin/lkp install job.yaml           # job file is at=
+tached in this email
+>>>>>>           bin/lkp split-job --compatible job.yaml # generate the y=
+aml file for lkp run
+>>>>>>           sudo bin/lkp run generated-yaml-file
+>>>>>>
+>>>>>>           # if come across any failure that blocks the test,
+>>>>>>           # please remove ~/.lkp and /lkp dir to run from a clean =
+state.
+>>>>>>
+>>>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>>>>> class/compiler/cpufreq_governor/disk/fs/kconfig/nr_threads/rootfs/=
+tbox_group/test/testcase/testtime/ucode:
+>>>>>>     filesystem/gcc-11/performance/1HDD/f2fs/x86_64-rhel-8.3/10%/de=
+bian-11.1-x86_64-20220510.cgz/lkp-icl-2sp1/copy-file/stress-ng/60s/0xb000=
+280
+>>>>>>
+>>>>>> commit:
+>>>>>>     4cbfca5f77 ("scsi: scsi_transport_sas: cap shost opt_sectors a=
+ccording to DMA optimal limit")
+>>>>>>     0568e61225 ("ata: libata-scsi: cap ata_device->max_sectors acc=
+ording to shost->max_sectors")
+>>>>>>
+>>>>>> 4cbfca5f7750520f 0568e6122574dcc1aded2979cd0
+>>>>>> ---------------- ---------------------------
+>>>>>>            %stddev     %change         %stddev
+>>>>>>                \          |                \
+>>>>>>         1627           -14.9%       1385        stress-ng.copy-fil=
+e.ops
+>>>>>>        27.01           -15.0%      22.96        stress-ng.copy-fil=
+e.ops_per_sec
+>>>>>>      8935079           -11.9%    7870629        stress-ng.time.fil=
+e_system_outputs
+>>>>>>        14.88 =C2=B1  5%     -31.8%      10.14 =C2=B1  3%  stress-n=
+g.time.percent_of_cpu_this_job_got
+>>>>>>        50912           -14.7%      43413        vmstat.io.bo
+>>>>>>        93.78            +1.4%      95.10        iostat.cpu.idle
+>>>>>>         3.89           -31.6%       2.66        iostat.cpu.iowait
+>>>>>>         4.01            -1.3        2.74        mpstat.cpu.all.iow=
+ait%
+>>>>>>         0.23 =C2=B1  9%      -0.1        0.17 =C2=B1 11%  mpstat.c=
+pu.all.sys%
+>>>>>>         1.66 =C2=B1 37%      -1.2        0.51 =C2=B1 55%  perf-pro=
+file.calltrace.cycles-pp.f2fs_write_end.generic_perform_write.f2fs_buffer=
+ed_write_iter.f2fs_file_write_iter.do_iter_readv_writev
+>>>>>>         1.66 =C2=B1 37%      -1.1        0.59 =C2=B1 25%  perf-pro=
+file.children.cycles-pp.f2fs_write_end
+>>>>>>         1.51 =C2=B1 40%      -1.1        0.45 =C2=B1 26%  perf-pro=
+file.children.cycles-pp.f2fs_dirty_data_folio
+>>>>>>         1.21 =C2=B1 49%      -1.0        0.23 =C2=B1 33%  perf-pro=
+file.children.cycles-pp.f2fs_update_dirty_folio
+>>>>>>         0.88 =C2=B1 56%      -0.8        0.04 =C2=B1111%  perf-pro=
+file.children.cycles-pp.native_queued_spin_lock_slowpath
+>>>>>>         0.14 =C2=B1 26%      +0.1        0.25 =C2=B1 28%  perf-pro=
+file.children.cycles-pp.page_cache_ra_unbounded
+>>>>>>         0.88 =C2=B1 56%      -0.8        0.04 =C2=B1112%  perf-pro=
+file.self.cycles-pp.native_queued_spin_lock_slowpath
+>>>>>>      3164876 =C2=B1  9%     -20.2%    2524713 =C2=B1  7%  perf-sta=
+t.i.cache-misses
+>>>>>>    4.087e+08            -4.6%  3.899e+08        perf-stat.i.dTLB-l=
+oads
+>>>>>>       313050 =C2=B1 10%     -18.4%     255410 =C2=B1  6%  perf-sta=
+t.i.node-loads
+>>>>>>       972573 =C2=B1  9%     -16.4%     812873 =C2=B1  6%  perf-sta=
+t.i.node-stores
+>>>>>>      3114748 =C2=B1  9%     -20.2%    2484807 =C2=B1  7%  perf-sta=
+t.ps.cache-misses
+>>>>>>    4.022e+08            -4.6%  3.837e+08        perf-stat.ps.dTLB-=
+loads
+>>>>>>       308178 =C2=B1 10%     -18.4%     251418 =C2=B1  6%  perf-sta=
+t.ps.node-loads
+>>>>>>       956996 =C2=B1  9%     -16.4%     799948 =C2=B1  6%  perf-sta=
+t.ps.node-stores
+>>>>>>       358486            -8.3%     328694        proc-vmstat.nr_act=
+ive_file
+>>>>>>      1121620           -11.9%     987816        proc-vmstat.nr_dir=
+tied
+>>>>>>       179906            -6.7%     167912        proc-vmstat.nr_dir=
+ty
+>>>>>>      1151201            -1.7%    1131322        proc-vmstat.nr_fil=
+e_pages
+>>>>>>       100181            +9.9%     110078 =C2=B1  2%  proc-vmstat.n=
+r_inactive_file
+>>>>>>       846362           -14.6%     722471        proc-vmstat.nr_wri=
+tten
+>>>>>>       358486            -8.3%     328694        proc-vmstat.nr_zon=
+e_active_file
+>>>>>>       100181            +9.9%     110078 =C2=B1  2%  proc-vmstat.n=
+r_zone_inactive_file
+>>>>>>       180668            -6.8%     168456        proc-vmstat.nr_zon=
+e_write_pending
+>>>>>>       556469            -3.5%     536985        proc-vmstat.pgacti=
+vate
+>>>>>>      3385454           -14.6%    2889953        proc-vmstat.pgpgou=
+t
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> Disclaimer:
+>>>>>> Results have been estimated based on internal Intel analysis and a=
+re provided
+>>>>>> for informational purposes only. Any difference in system hardware=
+ or software
+>>>>>> design or configuration may affect actual performance.
+>>>>>>
+>>>>>>
+>>>>>
+>>>>>
+>>>>
+>>>
+>>>
+>>> --=20
+>>> Damien Le Moal
+>>> Western Digital Research
+>> .
+>=20
 
+
+--=20
+Damien Le Moal
+Western Digital Research
