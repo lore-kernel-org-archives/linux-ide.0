@@ -2,89 +2,140 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10DE2C25B0F
-	for <linux-ide@archiver.kernel.org>; Sat, 13 Aug 2022 07:23:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FB67C2BB43
+	for <linux-ide@archiver.kernel.org>; Sat, 13 Aug 2022 22:00:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234125AbiHMHXo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 13 Aug 2022 03:23:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45912 "EHLO
+        id S240265AbiHMWAs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 13 Aug 2022 18:00:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233812AbiHMHXo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 13 Aug 2022 03:23:44 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3E836FA11;
-        Sat, 13 Aug 2022 00:23:39 -0700 (PDT)
-Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M4X350TN8z67TNp;
-        Sat, 13 Aug 2022 15:18:57 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Sat, 13 Aug 2022 09:23:37 +0200
-Received: from [10.48.145.22] (10.48.145.22) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Sat, 13 Aug
- 2022 08:23:36 +0100
-Message-ID: <2b900d3b-9b52-5bc3-4ba8-24249f3c2e42@huawei.com>
-Date:   Sat, 13 Aug 2022 08:23:36 +0100
+        with ESMTP id S240250AbiHMWAp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 13 Aug 2022 18:00:45 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2890BF70;
+        Sat, 13 Aug 2022 15:00:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1660428043; x=1691964043;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=J2stkkYmPik2bQMds1PPTKQFWYY4K6w3/+pjsawBn4I=;
+  b=czriY2QSJtsHs+0YJIn5ie4MEylQAeO1kW/kS7jZoyutko3tg5lYKLsh
+   U8uwSotSnGfPl2vJQS7mXtH4oMFazwVlS/Xc7jXjm/W0R2M8xn4DxBnHw
+   kIWTBYyV1rhIi/CUgFr62xfLVN+CqYCowKo4VrUWdTiHHWU6njZrRlHxQ
+   kaTEKulZ63EuSu4qn9pNqf4xP0sdTWK/u2NAugMb9FbtEUSj30NAXgimh
+   5qPunzQISbEjtHhAHANiwq1Jl2HcUvhbN24qdPsixdN+lNMnl7ALLrf3m
+   ZKPstDNZJppuxJNs4K8cjvcKaPPyhu1ezSatsWfsJc/83jLR0F08xO9ot
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10437"; a="293049446"
+X-IronPort-AV: E=Sophos;i="5.93,236,1654585200"; 
+   d="scan'208";a="293049446"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2022 15:00:42 -0700
+X-IronPort-AV: E=Sophos;i="5.93,236,1654585200"; 
+   d="scan'208";a="635047705"
+Received: from tsaiyinl-mobl1.amr.corp.intel.com (HELO localhost) ([10.209.125.19])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2022 15:00:40 -0700
+From:   ira.weiny@intel.com
+To:     Andy Whitcroft <apw@canonical.com>, Joe Perches <joe@perches.com>
+Cc:     Ira Weiny <ira.weiny@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Fabio M . De Francesco" <fmdefrancesco@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, linux-snps-arc@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-csky@vger.kernel.org,
+        loongarch@lists.linux.dev, linux-mips@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
+        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
+        linux-um@lists.infradead.org, x86@kernel.org,
+        linux-xtensa@linux-xtensa.org, keyrings@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        dri-devel@lists.freedesktop.org, dm-devel@redhat.com,
+        linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-mtd@lists.infradead.org,
+        netdev@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org,
+        kgdb-bugreport@lists.sourceforge.net, iommu@lists.linux.dev,
+        bpf@vger.kernel.org, kvm@vger.kernel.org
+Subject: [PATCH] checkpatch: Add kmap and kmap_atomic to the deprecated list
+Date:   Sat, 13 Aug 2022 15:00:34 -0700
+Message-Id: <20220813220034.806698-1-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Oliver Sang <oliver.sang@intel.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Linux Memory Management List" <linux-mm@kvack.org>,
-        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
-        <ying.huang@intel.com>, <feng.tang@intel.com>,
-        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
-References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
- <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
- <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
- <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
- <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
- <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
- <4642848c-a386-d6a0-6255-8b16800e0548@opensource.wdc.com>
- <fd2b1dbe-8482-cb89-2568-4909db1239b0@huawei.com>
- <840a5f98-a53c-ce08-2833-f41d8c9a015b@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <840a5f98-a53c-ce08-2833-f41d8c9a015b@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.145.22]
-X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/08/2022 19:27, Damien Le Moal wrote:
->> Interestingly ata dev max_sectors kb also gets capped from 32MB (LBA48)
->> -> 256KB due to swiotlb max mapping size. (It would be capped by shost
->> default max sectors 512KB without that swiotlb limit). I assume capping
->> due to swiotlb limit is not occuring on Oliver's machine.
-> Yes, I was suspecting that we may be seeing a difference for anything that is
-> not AHCI, e.g. with other drivers.
-> 
-> But that seems to be the correct thing to do, no ? 
-Yes, this should be the correct thing to do.
+From: Ira Weiny <ira.weiny@intel.com>
 
- > How was this working before
- > without applying the swiotlb limit ?
- >
-Not sure. I would need to check the libata code for how it handles DMA 
-mapping errors, which I assume would occur for when we exceed the 
-swiotlb limit.
+kmap() and kmap_atomic() are being deprecated in favor of
+kmap_local_page().
 
-Having said this, from limited testing, whenever I check megaraid sas or 
-mpt3sas for performance, the length of request data never/rarely comes 
-close to max sectors. That why I am surprised with the regression which 
-Oliver reports.
+There are two main problems with kmap(): (1) It comes with an overhead
+as mapping space is restricted and protected by a global lock for
+synchronization and (2) it also requires global TLB invalidation when
+the kmap’s pool wraps and it might block when the mapping space is fully
+utilized until a slot becomes available.
 
-Thanks,
-John
+kmap_local_page() is safe from any context and is therefore redundant
+with kmap_atomic() with the exception of any pagefault or preemption
+disable requirements.  However, using kmap_atomic() for these side
+effects makes the code less clear.  So any requirement for pagefault or
+preemption disable should be made explicitly.
+
+With kmap_local_page() the mappings are per thread, CPU local, can take
+page faults, and can be called from any context (including interrupts).
+It is faster than kmap() in kernels with HIGHMEM enabled. Furthermore,
+the tasks can be preempted and, when they are scheduled to run again,
+the kernel virtual addresses are restored.
+
+Suggested-by: Thomas Gleixner <tglx@linutronix.de>
+Suggested-by: Fabio M. De Francesco <fmdefrancesco@gmail.com>
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+
+---
+Suggested by credits.
+	Thomas: Idea to keep from growing more kmap/kmap_atomic calls.
+	Fabio: Stole some of his boiler plate commit message.
+
+Notes on tree-wide conversions:
+
+I've cc'ed mailing lists for subsystems which currently contains either kmap()
+or kmap_atomic() calls.  As some of you already know Fabio and I have been
+working through converting kmap() calls to kmap_local_page().  But there is a
+lot more work to be done.  Help from the community is always welcome,
+especially with kmap_atomic() conversions.  To keep from stepping on each
+others toes I've created a spreadsheet of the current calls[1].  Please let me
+or Fabio know if you plan on tacking one of the conversions so we can mark it
+off the list.
+
+[1] https://docs.google.com/spreadsheets/d/1i_ckZ10p90bH_CkxD2bYNi05S2Qz84E2OFPv8zq__0w/edit#gid=1679714357
+
+---
+ scripts/checkpatch.pl | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index 79e759aac543..9ff219e0a9d5 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -807,6 +807,8 @@ our %deprecated_apis = (
+ 	"rcu_barrier_sched"			=> "rcu_barrier",
+ 	"get_state_synchronize_sched"		=> "get_state_synchronize_rcu",
+ 	"cond_synchronize_sched"		=> "cond_synchronize_rcu",
++	"kmap"					=> "kmap_local_page",
++	"kmap_atomic"				=> "kmap_local_page",
+ );
+ 
+ #Create a search pattern for all these strings to speed up a loop below
+
+base-commit: 4a9350597aff50bbd0f4b80ccf49d2e02d1111f5
+-- 
+2.35.3
 
