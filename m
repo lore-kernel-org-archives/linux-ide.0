@@ -2,210 +2,194 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73D0BC2BB41
-	for <linux-ide@archiver.kernel.org>; Sun, 14 Aug 2022 05:25:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4B2DC3F6B0
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Aug 2022 10:15:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232672AbiHNFZi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 14 Aug 2022 01:25:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33466 "EHLO
+        id S242466AbiHOKOl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 15 Aug 2022 06:14:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbiHNFZf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2022 01:25:35 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2081.outbound.protection.outlook.com [40.107.237.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32AFF13E11;
-        Sat, 13 Aug 2022 22:25:33 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LTzIebJc7wR27rZhZNxqQXUGEntM7H6pgwQ4wqeKq55S3mCVi1G29ga7ShcQ7DZ8abXomqXocWnviZJaTu24Ve+p13Wuhy6kkYiTndg9NkOCqS0UhlqrURFSBssOQvYQjPE2L7qH6JBRhsueES0HnHy5fRHzptWMJcFNxpyi9DF6REOSA+C31hnFRJJUEYumrpAO3Gpegw8tJgZ6tVX6WI2WCzoZsCngNfUjzC12sMlnOx6sUwPqBISa0YiM0aJ3H7czXOBgnjsRA/5/wxTVes6MyBe4iPbH8fpRQUHZsSuEnCFV5ahFFf9JYVPr+2O6oxPqbIv9na+UfUuFgJrzEQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iPsnByg9GkmeiXdCbLUjXq5RxPhjCaYA61SaoODvzqg=;
- b=jqSeCGlyL6w/kEEktueNI/fuwZ91+/fgVidnZ72YcZ97Rwp7xj5EDvSPLkV1/ahr5+H+EBmvdP4Nl0R9mW0Iq3eY7dm4BwerE2VEkJdnZBgETrEg4IlzWRdLwr4RZvvWLT57m2103oIHk76hEfLtHxvhp0gmsGzJluRa8NyFolbO0GCqYvLCY+PqT0U3p1R6xyorKt3Py9e0dgo9Kw1nc+l5oe5fQ8Jrxs8wOvyLfKJ6X+Wp1VkxFBNx01/QKmQoktGo3k32L3HiP27JkRs27taUwwECYsnyF6pV6NImm+fK/yzYioblAiwUQMSdnHJIv48FihKzpl3avhxqtyqrrw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iPsnByg9GkmeiXdCbLUjXq5RxPhjCaYA61SaoODvzqg=;
- b=Pq80a7lYO2AKoEkT8vF6OpsyuOwmTuArVdoaMngPuKJXwUPeJT1iDlPtO5FJbvXARElAz8reD+fmZlnlcSgRGD4eHu8W+hgtL3Zo2SwtPeNfLobo6FWydHHHESf1rA9Mbevm4h/fQR/U59WugWV/BNlNhHvcWnpPbc3zwSSFnQXt4rHnp9UOkN4CSpSBE97VKABnj6B6xynrNnOPN01ZUZ/k+oVgdJA5V9n4wBQ0Zorq6ZJlrurxNepEzuMWw90fF5yWwk+KpoC1h6QLT1exzR1yuBpsTKt/7tWdU4HrIzpmqCiB15xCDkDsrng92AXl6yArEcB4R8p+XW/shNACaQ==
-Received: from DM5PR12MB4663.namprd12.prod.outlook.com (2603:10b6:4:a9::26) by
- DM4PR12MB5199.namprd12.prod.outlook.com (2603:10b6:5:396::14) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5504.14; Sun, 14 Aug 2022 05:25:31 +0000
-Received: from DM5PR12MB4663.namprd12.prod.outlook.com
- ([fe80::b4ab:4d63:1cdd:b051]) by DM5PR12MB4663.namprd12.prod.outlook.com
- ([fe80::b4ab:4d63:1cdd:b051%4]) with mapi id 15.20.5504.025; Sun, 14 Aug 2022
- 05:25:31 +0000
-From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
-To:     "ira.weiny@intel.com" <ira.weiny@intel.com>,
-        Andy Whitcroft <apw@canonical.com>,
-        Joe Perches <joe@perches.com>
-CC:     "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-        "kgdb-bugreport@lists.sourceforge.net" 
-        <kgdb-bugreport@lists.sourceforge.net>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "keyrings@vger.kernel.org" <keyrings@vger.kernel.org>,
-        "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-        "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-        "linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
-        "linux1394-devel@lists.sourceforge.net" 
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "x86@kernel.org" <x86@kernel.org>,
-        "linux-csky@vger.kernel.org" <linux-csky@vger.kernel.org>,
-        "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-        "linux-snps-arc@lists.infradead.org" 
-        <linux-snps-arc@lists.infradead.org>,
-        "Fabio M . De Francesco" <fmdefrancesco@gmail.com>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "linux-xtensa@linux-xtensa.org" <linux-xtensa@linux-xtensa.org>,
-        "linux-um@lists.infradead.org" <linux-um@lists.infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "loongarch@lists.linux.dev" <loongarch@lists.linux.dev>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "bpf@vger.kernel.org" <bpf@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH] checkpatch: Add kmap and kmap_atomic to the deprecated
- list
-Thread-Topic: [PATCH] checkpatch: Add kmap and kmap_atomic to the deprecated
- list
-Thread-Index: AQHYr2AnarTe9oV4GEWjC3HdbpR5Ya2t3ckA
-Date:   Sun, 14 Aug 2022 05:25:30 +0000
-Message-ID: <91f708ed-f456-dc83-281e-fc18a0b4b981@nvidia.com>
-References: <20220813220034.806698-1-ira.weiny@intel.com>
-In-Reply-To: <20220813220034.806698-1-ira.weiny@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 31ec3568-a4e9-4168-77a9-08da7db567cb
-x-ms-traffictypediagnostic: DM4PR12MB5199:EE_
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 6VLE6UsKRBwAODhumIvrq3g/k3pw/3vVudsx7E1SYHm5qNlNlnwoHNGRuBrJQuXwTVVhU/VrAz8wlQXrLxQpPOW3iUHura4jvNR1SaAW/5S6I2Qx6kDAoaJd3avPZjss5UBvvIJ0XTxeHDgZskqRz+Iuwvolz3WQrJZJ7Wu1uU3xEF6au3DuFGl6Med2yyJsJsSGjTXkRj3dq4qOMEf7RN062zm0Q3MylQHxl858NTHI406oDnSxrxFcJLqdMZk1wKAI0QIXLGRs9KFi1XEEq/QcHJDH5AWxH7QSWtuCKWI/LXV6WF7spD0PsHp8NfI6oq/BKnuAAHTCtachXF8YNDALwCj+x1IbZmMvtEZCrnh81tDCGsTHvrSTRTMdvaNIaOE3rpUmBKh4o8a0zZFXbJkjhW4B5mvOtdIodXEajf1D0y2nv3u6XShHIwlVQDdQtu0f9H3V2GEMEv2wYY98m0rxNK80QRyYof11BNGSXMA6YsMA5ib4wDeLSybgNDV5rMxAJ2R8s/0/uY81Bd2ma7Cgsu+dKZFwK2nG/FujAuLxp66HdkHZtEDjrK1uBcTBAjvabxosYanuiMrzK/KmduPw+F8M/vBqqtBRFkoDX5hgcBYD+Dg4QlhCtdZ9t/9S1yQK50V/B5rEPgts1rA6grLB7lTOQfNTJHDVQsAW/pxm3Hys4bqjgOw6xMuU5GvWZWt7K/GnjMxxXuMdDJ3u89cIcErwOX0MxVR3NivkZoqA8+uK03F13AHHxSME3P4gG/hAjnM2bVmq1Taj5+DJtKlNRc15jMly+lv9g7OxKYq2IgXpwuivh6VROmKVUc2lt6y0hmnBcNu8zovkYk7KVhJVd1ZElq8RXIN1mjse85V9z6ROkqRQ0xoRQ9uWbgH2YdM8wUZti0B0W3yYPGekPh+xdOdkVR3rud9Sf1ONTr08EArEgOazyW1wU4zYF0Kw
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR12MB4663.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(396003)(376002)(346002)(136003)(39860400002)(366004)(66946007)(66446008)(6506007)(41300700001)(6512007)(53546011)(186003)(83380400001)(91956017)(76116006)(66556008)(4326008)(66476007)(64756008)(8676002)(2616005)(2906002)(8936002)(5660300002)(7406005)(7416002)(86362001)(478600001)(54906003)(966005)(6486002)(110136005)(71200400001)(316002)(38070700005)(31696002)(38100700002)(31686004)(36756003)(122000001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?U1MyRnlCbC8vYlhTbkV3enZJdFhCYXZzOGtIRm52Y3JybUxCZlRBRnVDclN0?=
- =?utf-8?B?ek9xZUhkMm1rNUc2WmgvVXFMSWNYVFZ4dTh0cVY4M0dzRmxxZ1R1R2o0K1la?=
- =?utf-8?B?NVNqd0pEeGNPWm43V0xYRitZWFdqUklvbWsvQ0RmcnFhZkQ4MXRkWko3SDJP?=
- =?utf-8?B?eHJobTFNU1ZUbFk3MytOSUxEeVM1WlFySnc4TGF1MjVWL2tsRENZNW51SnV2?=
- =?utf-8?B?b01wV0RsN0Z2WTA2eEZvMFhQYXBSbk9GWTErbzMrcWJybmd5R0dsMTFCQ1lB?=
- =?utf-8?B?L0k0Um94M0MrNkpRMzFxZVRVZUZGZ3lUUGlXbVBQb1ZYVXZiZCtqMEJsWXpG?=
- =?utf-8?B?QVllM2NCSkR1eE9XRlQrQ0lKeFZ0Y09rWTcrYVV3RVdwTWZGcDcrbDNpWDFH?=
- =?utf-8?B?S3hDODZ3dDBncHdscWFZOWxMWU1SalNhOTlvMDc1cmFaNndHQ2pNSnpCeVF3?=
- =?utf-8?B?L0RIVGN0d1ZqV0VLemg0Unh3VlhpUDdVVnpQbDN0d3NyK0VOWmF5Vkhjanlv?=
- =?utf-8?B?aG1DRDdITjJ5YzFPUHZiYjIvM0Z4ZjVrTnZtdHcrSTVVbmtXcmNXczRRMFJP?=
- =?utf-8?B?YjZNL00zQS8vUm0rMnpDUjV6eGVrS2cxNWNnaWJJaVNZdWhMRW5ZU1dDa0s5?=
- =?utf-8?B?RGExODVYMjBoemc4QnNBaDg0eFNKODJWN29MUHRFUDZWZUlSYUMvWXR3dVhw?=
- =?utf-8?B?UTd4eFVQUGgvazFRaGhOYkNxc2dFelJJUENPdDZJV1o3OEI4dVVwN1h1RG1X?=
- =?utf-8?B?SkZWd09nNWhrSGtnSHFTNXM5VlZnVHYreUpkaVlLOW84UFdlRGlQWWtxdzJh?=
- =?utf-8?B?aSs1VjYrazRuRWloMktyc1JlNzhUcEFmWlFOVS85bFJBeTM5WFpPS2J5bFJh?=
- =?utf-8?B?UElIaTlCUUJ1eDhXcTFpdnlHeHBsdHdMM1oyOXk3aUw1ZlI2c3A3RVo0WnFk?=
- =?utf-8?B?cmhOMHVyNTZTZUhUYkF5dkRkdS9jU1dXMW1nbktKcHd3QTdJZmxxSm5CUkVi?=
- =?utf-8?B?NUsvTVF2THNFMDBFd2JvL0ZzUDdxY0xBUTZhOU5zWHVFVllid2NnTGFicFlu?=
- =?utf-8?B?YkVQQmVwT29vdG51Q2w3eEFGUjNhbUU3OHZOV25jM1VCNlNqSUw5enZFS0h0?=
- =?utf-8?B?eDdUN005QzgvZWtyZVhGclJqdTNVbGtQUm5xVmRQeER0NHVsY3l3OFRLYUlo?=
- =?utf-8?B?aUltOHNRSmowcGhIRjM5ajNjcTNzNEdjVlM3cWdnRnFvaExiRDZhVnNjcjU3?=
- =?utf-8?B?YmRIMU1PenFjM0FLSWtTaGVidHFrSFZDQlp6NDdHTUJnbGZJd203WjNRN2lx?=
- =?utf-8?B?S3ZNK25JVHplalQ3SFhSdGFSeHpPbzMxbTFXQWF4SEtPc25PRG11OUhVQWRC?=
- =?utf-8?B?NFFHYVBzbVlJQkVOZ1Jvd2JPM2QvOUxtUUpSZUIvQUg2MmxEZnlJM3EwTjdX?=
- =?utf-8?B?RVZjM3dwb3JVdDZnMEU1SmtaaXkzZnk0NmxPTnBBcG5INHJSdVAzV2w0RW5J?=
- =?utf-8?B?azJxOUZleldLdW1jTFQ0WmlhM2RlMWpSb0krcGNFZjVIYWNvV1lYbjdSVGlF?=
- =?utf-8?B?a3hNSzhadERYS2VxK20wRHdXSHkvY1F1Mk0xRUhlWUw3bzJXRGgrSHozSVRn?=
- =?utf-8?B?dzBHbk16azVqVWk4WU5iQTdGVENub1Robmk2Y3ZOaUZwdXJ0U0xBb2ZIVHNJ?=
- =?utf-8?B?Qm9EeFBVNmtkSU90ZjM4cDEvdEl3R3dacEM2RFhpN0c1TUdZYVBnemlqYzBV?=
- =?utf-8?B?MUlmSXpaMVpONFhBNHFNY0JPY3FxQWNqckVDd0gvTFRldVJMbGd0SVpBQ2hn?=
- =?utf-8?B?aDRZZkl5MUhjeFlkbDB6eWFrSGpFNHNtbi9JNzhsZzdJQ1N1Z1hKRG9ZcVZR?=
- =?utf-8?B?WGtzbnVGVnN5K2owUy9nS1g2UGpLSEs2KzJibUlRZkZaellFWlRqMTYwSklw?=
- =?utf-8?B?Q2Z2MmlENTlEbXdSWjB5bmwvUFhxWkcreDd2aUMvZWhKS1Iyc1JKMnJtQnpS?=
- =?utf-8?B?TWdtTzUyZmdJMGhaVlpDdStZc3NuR1RZNmgzbEhxejF2cWVFTGlzY1QyM016?=
- =?utf-8?B?WmFDRVY3ZHdPS1oraHNPU3F0S0JHRUVxZFRRWSszLzBqQ1RqaTJYNXY2SEow?=
- =?utf-8?B?SU5IaXpMSWNROTRGYUJsWGVjMXdYQjBuNWg1eUJRcDg4YlR4ZjNMRzFVL1Nx?=
- =?utf-8?B?dmc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <5261E63C04B5044FBDC2CBFA7DC85685@namprd12.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S242491AbiHOKOV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Aug 2022 06:14:21 -0400
+Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC1DE1EC66;
+        Mon, 15 Aug 2022 03:13:52 -0700 (PDT)
+Received: by mail-qv1-f44.google.com with SMTP id mz1so116867qvb.4;
+        Mon, 15 Aug 2022 03:13:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc;
+        bh=o6xCOA86Hungq+d+MPhC/+jht0io7Fvy+/Zhbi5ZEAs=;
+        b=bFb3HODVMgxuuXVCxbHtv0h1hrzn9Hfvv6Ic6zP76t/z3EcbYDuuG4ZkDWnUV7d285
+         BGH+UQUGD/zQKPuiKUVNtoESdjd25ogXzZ3UTtUV6GWZVwGqyKC5wRTa5+dukPYTooLD
+         kvJysdtAsf+FtAoX/Gl0ja8rFBXUr8DKmWdyNkz+90CC8azrPBNbVHDfRGp3XkDugDno
+         wWJapqweK+H54/HUGqRexY/yn0CbRF+D2zJA9AfotSU9RSSSCHw1nLXBHEmh9WbCuoDW
+         zRtHQPra2LpgNlk620kvN9obiKuVTU4Tdz4eAyUOq3VjODsIE05j69G7uiygJaQtONus
+         ng4Q==
+X-Gm-Message-State: ACgBeo3/4zXdYv4Nix5+qHrqRWzjW/pItJ5WAbidVAIXO/O2nj7dJu4i
+        8limkfhn12b6Hlq5ymeKcOOuqXrDAR9pYf9c
+X-Google-Smtp-Source: AA6agR7QViD+S0O2H9qc6JvlauZv7z9vQuWsyYfm+yuZ9qj1yCm83Qtjib25s8Juebm8sL+tSh7/ew==
+X-Received: by 2002:ad4:4eeb:0:b0:474:8435:1508 with SMTP id dv11-20020ad44eeb000000b0047484351508mr12943269qvb.5.1660558431299;
+        Mon, 15 Aug 2022 03:13:51 -0700 (PDT)
+Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com. [209.85.219.172])
+        by smtp.gmail.com with ESMTPSA id h5-20020a05620a284500b006b9a24dc9d7sm8008240qkp.7.2022.08.15.03.13.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 15 Aug 2022 03:13:49 -0700 (PDT)
+Received: by mail-yb1-f172.google.com with SMTP id 21so11519699ybf.4;
+        Mon, 15 Aug 2022 03:13:49 -0700 (PDT)
+X-Received: by 2002:a25:da0b:0:b0:67a:7fb6:8ae with SMTP id
+ n11-20020a25da0b000000b0067a7fb608aemr11373117ybf.89.1660558429300; Mon, 15
+ Aug 2022 03:13:49 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR12MB4663.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 31ec3568-a4e9-4168-77a9-08da7db567cb
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Aug 2022 05:25:31.0130
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: DTS1C5RKwVtBKScaU/BTbd0QOIaELY0YZxfbtZMm5adcb9U5unTaXCRAksNDGAW1JZlBYO6iAoiBrXG8NSNNaQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5199
+References: <20220630195703.10155-1-bvanassche@acm.org> <20220630195703.10155-3-bvanassche@acm.org>
+ <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org> <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org> <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org> <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+ <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org> <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+ <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org> <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
+ <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
+In-Reply-To: <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 15 Aug 2022 12:13:37 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
+Message-ID: <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, ericspero@icloud.com,
+        jason600.groome@gmail.com,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org,
+        James Bottomley <James.Bottomley@hansenpartnership.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-T24gOC8xMy8yMiAxNTowMCwgaXJhLndlaW55QGludGVsLmNvbSB3cm90ZToNCj4gRnJvbTogSXJh
-IFdlaW55IDxpcmEud2VpbnlAaW50ZWwuY29tPg0KPiANCj4ga21hcCgpIGFuZCBrbWFwX2F0b21p
-YygpIGFyZSBiZWluZyBkZXByZWNhdGVkIGluIGZhdm9yIG9mDQo+IGttYXBfbG9jYWxfcGFnZSgp
-Lg0KPiANCj4gVGhlcmUgYXJlIHR3byBtYWluIHByb2JsZW1zIHdpdGgga21hcCgpOiAoMSkgSXQg
-Y29tZXMgd2l0aCBhbiBvdmVyaGVhZA0KPiBhcyBtYXBwaW5nIHNwYWNlIGlzIHJlc3RyaWN0ZWQg
-YW5kIHByb3RlY3RlZCBieSBhIGdsb2JhbCBsb2NrIGZvcg0KPiBzeW5jaHJvbml6YXRpb24gYW5k
-ICgyKSBpdCBhbHNvIHJlcXVpcmVzIGdsb2JhbCBUTEIgaW52YWxpZGF0aW9uIHdoZW4NCj4gdGhl
-IGttYXDigJlzIHBvb2wgd3JhcHMgYW5kIGl0IG1pZ2h0IGJsb2NrIHdoZW4gdGhlIG1hcHBpbmcg
-c3BhY2UgaXMgZnVsbHkNCj4gdXRpbGl6ZWQgdW50aWwgYSBzbG90IGJlY29tZXMgYXZhaWxhYmxl
-Lg0KPiANCj4ga21hcF9sb2NhbF9wYWdlKCkgaXMgc2FmZSBmcm9tIGFueSBjb250ZXh0IGFuZCBp
-cyB0aGVyZWZvcmUgcmVkdW5kYW50DQo+IHdpdGgga21hcF9hdG9taWMoKSB3aXRoIHRoZSBleGNl
-cHRpb24gb2YgYW55IHBhZ2VmYXVsdCBvciBwcmVlbXB0aW9uDQo+IGRpc2FibGUgcmVxdWlyZW1l
-bnRzLiAgSG93ZXZlciwgdXNpbmcga21hcF9hdG9taWMoKSBmb3IgdGhlc2Ugc2lkZQ0KPiBlZmZl
-Y3RzIG1ha2VzIHRoZSBjb2RlIGxlc3MgY2xlYXIuICBTbyBhbnkgcmVxdWlyZW1lbnQgZm9yIHBh
-Z2VmYXVsdCBvcg0KPiBwcmVlbXB0aW9uIGRpc2FibGUgc2hvdWxkIGJlIG1hZGUgZXhwbGljaXRs
-eS4NCj4gDQo+IFdpdGgga21hcF9sb2NhbF9wYWdlKCkgdGhlIG1hcHBpbmdzIGFyZSBwZXIgdGhy
-ZWFkLCBDUFUgbG9jYWwsIGNhbiB0YWtlDQo+IHBhZ2UgZmF1bHRzLCBhbmQgY2FuIGJlIGNhbGxl
-ZCBmcm9tIGFueSBjb250ZXh0IChpbmNsdWRpbmcgaW50ZXJydXB0cykuDQo+IEl0IGlzIGZhc3Rl
-ciB0aGFuIGttYXAoKSBpbiBrZXJuZWxzIHdpdGggSElHSE1FTSBlbmFibGVkLiBGdXJ0aGVybW9y
-ZSwNCj4gdGhlIHRhc2tzIGNhbiBiZSBwcmVlbXB0ZWQgYW5kLCB3aGVuIHRoZXkgYXJlIHNjaGVk
-dWxlZCB0byBydW4gYWdhaW4sDQo+IHRoZSBrZXJuZWwgdmlydHVhbCBhZGRyZXNzZXMgYXJlIHJl
-c3RvcmVkLg0KPiANCj4gU3VnZ2VzdGVkLWJ5OiBUaG9tYXMgR2xlaXhuZXIgPHRnbHhAbGludXRy
-b25peC5kZT4NCj4gU3VnZ2VzdGVkLWJ5OiBGYWJpbyBNLiBEZSBGcmFuY2VzY28gPGZtZGVmcmFu
-Y2VzY29AZ21haWwuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBJcmEgV2VpbnkgPGlyYS53ZWlueUBp
-bnRlbC5jb20+DQo+IA0KPiAtLS0NCj4gU3VnZ2VzdGVkIGJ5IGNyZWRpdHMuDQo+IAlUaG9tYXM6
-IElkZWEgdG8ga2VlcCBmcm9tIGdyb3dpbmcgbW9yZSBrbWFwL2ttYXBfYXRvbWljIGNhbGxzLg0K
-PiAJRmFiaW86IFN0b2xlIHNvbWUgb2YgaGlzIGJvaWxlciBwbGF0ZSBjb21taXQgbWVzc2FnZS4N
-Cj4gDQo+IE5vdGVzIG9uIHRyZWUtd2lkZSBjb252ZXJzaW9uczoNCj4gDQo+IEkndmUgY2MnZWQg
-bWFpbGluZyBsaXN0cyBmb3Igc3Vic3lzdGVtcyB3aGljaCBjdXJyZW50bHkgY29udGFpbnMgZWl0
-aGVyIGttYXAoKQ0KPiBvciBrbWFwX2F0b21pYygpIGNhbGxzLiAgQXMgc29tZSBvZiB5b3UgYWxy
-ZWFkeSBrbm93IEZhYmlvIGFuZCBJIGhhdmUgYmVlbg0KPiB3b3JraW5nIHRocm91Z2ggY29udmVy
-dGluZyBrbWFwKCkgY2FsbHMgdG8ga21hcF9sb2NhbF9wYWdlKCkuICBCdXQgdGhlcmUgaXMgYQ0K
-PiBsb3QgbW9yZSB3b3JrIHRvIGJlIGRvbmUuICBIZWxwIGZyb20gdGhlIGNvbW11bml0eSBpcyBh
-bHdheXMgd2VsY29tZSwNCj4gZXNwZWNpYWxseSB3aXRoIGttYXBfYXRvbWljKCkgY29udmVyc2lv
-bnMuICBUbyBrZWVwIGZyb20gc3RlcHBpbmcgb24gZWFjaA0KPiBvdGhlcnMgdG9lcyBJJ3ZlIGNy
-ZWF0ZWQgYSBzcHJlYWRzaGVldCBvZiB0aGUgY3VycmVudCBjYWxsc1sxXS4gIFBsZWFzZSBsZXQg
-bWUNCj4gb3IgRmFiaW8ga25vdyBpZiB5b3UgcGxhbiBvbiB0YWNraW5nIG9uZSBvZiB0aGUgY29u
-dmVyc2lvbnMgc28gd2UgY2FuIG1hcmsgaXQNCj4gb2ZmIHRoZSBsaXN0Lg0KPiANCj4gWzFdIGh0
-dHBzOi8vZG9jcy5nb29nbGUuY29tL3NwcmVhZHNoZWV0cy9kLzFpX2NrWjEwcDkwYkhfQ2t4RDJi
-WU5pMDVTMlF6ODRFMk9GUHY4enFfXzB3L2VkaXQjZ2lkPTE2Nzk3MTQzNTcNCj4gDQoNCkxvb2tz
-IGdvb2QuDQoNClJldmlld2VkLWJ5OiBDaGFpdGFueWEgS3Vsa2FybmkgPGtjaEBudmlkaWEuY29t
-Pg0KDQoNCg==
+Hoi Bart,
+
+On Fri, Aug 12, 2022 at 5:53 PM Bart Van Assche <bvanassche@acm.org> wrote:
+> On 8/12/22 03:48, Geert Uytterhoeven wrote:
+> > sd_submit_start() is called once during suspend, and once during
+> > resume.  It does not hang.
+> >
+> > Reading from /dev/sda hangs after resume (not in sd_submit_start(),
+> > which is never called for reading).
+
+FTR, this issue is now present in v6.0-rc1. Reverting commit
+88f1669019bd62b3 ("scsi: sd: Rework asynchronous resume support")
+fixes it.
+
+> > Two tasks are blocked in blk_mq_get_tag() calling io_schedule():
+> >
+> > task:kworker/7:1     state:D stack:    0 pid:  122 ppid:     2 flags:0x00000008
+> > Workqueue: events ata_scsi_dev_rescan
+> > Call trace:
+> >   __switch_to+0xbc/0x124
+> >   __schedule+0x540/0x71c
+> >   schedule+0x58/0xa0
+> >   io_schedule+0x18/0x34
+> >   blk_mq_get_tag+0x138/0x244
+> >   __blk_mq_alloc_requests+0x130/0x2f0
+> >   blk_mq_alloc_request+0x74/0xa8
+> >   scsi_alloc_request+0x10/0x30
+> >   __scsi_execute+0x5c/0x18c
+> >   scsi_vpd_inquiry+0x7c/0xdc
+> >   scsi_get_vpd_size+0x34/0xa8
+> >   scsi_get_vpd_buf+0x28/0xf4
+> >   scsi_attach_vpd+0x44/0x170
+> >   scsi_rescan_device+0x30/0x98
+> >   ata_scsi_dev_rescan+0xc8/0xfc
+> >   process_one_work+0x2e0/0x474
+> >   worker_thread+0x1cc/0x270
+> >   kthread+0xd8/0xe8
+> >   ret_from_fork+0x10/0x20
+> >
+> >
+> > task:hd              state:D stack:    0 pid: 1163 ppid:  1076 flags:0x00000000
+> > Call trace:
+> >   __switch_to+0xbc/0x124
+> >   __schedule+0x540/0x71c
+> >   schedule+0x58/0xa0
+> >   io_schedule+0x18/0x34
+> >   blk_mq_get_tag+0x138/0x244
+> >   __blk_mq_alloc_requests+0x130/0x2f0
+> >   blk_mq_submit_bio+0x44c/0x5b4
+> >   __submit_bio+0x24/0x5c
+> >   submit_bio_noacct_nocheck+0x8c/0x178
+> >   submit_bio_noacct+0x380/0x3b0
+> >   submit_bio+0x34/0x3c
+> >   mpage_bio_submit+0x28/0x38
+> >   mpage_readahead+0xa8/0x178
+> >   blkdev_readahead+0x14/0x1c
+> >   read_pages+0x4c/0x158
+> >   page_cache_ra_unbounded+0xd8/0x174
+> >   do_page_cache_ra+0x40/0x4c
+> >   page_cache_ra_order+0x14/0x1c
+> >   ondemand_readahead+0x124/0x2fc
+> >   page_cache_sync_ra+0x50/0x54
+> >   filemap_read+0x130/0x6e8
+> >   blkdev_read_iter+0xf0/0x164
+> >   new_sync_read+0x74/0xc0
+> >   vfs_read+0xbc/0xd8
+> >   ksys_read+0x6c/0xd4
+> >   __arm64_sys_read+0x14/0x1c
+> >   invoke_syscall+0x70/0xf4
+> >   el0_svc_common.constprop.0+0xbc/0xf0
+> >   do_el0_svc+0x18/0x20
+> >   el0_svc+0x30/0x84
+> >   el0t_64_sync_handler+0x90/0xf8
+> >   el0t_64_sync+0x14c/0x150
+>
+> All that can be concluded from the above is that blk_mq_get_tag() is
+> waiting for other I/O request(s) to finish. One or more other requests
+> are in progress and either scsi_done() has not been called for these
+> requests or the error handler got stuck. Since the issue reported above
+> is not observed with other ATA interfaces, this may be related to the
+> ATA interface driver used in your test setup.
+
+I have added debug prints to all ata_port_operations in
+sata_rcar_port_ops.  After s2idle, running "hd /dev/sda | head -70"
+hangs before any of these functions are called.
+
+Showing all locks held in the system:
+1 lock held by rcu_tasks_kthre/10:
+ #0: ffff800009575c38 (rcu_tasks.tasks_gp_mutex){+.+.}-{3:3}, at:
+rcu_tasks_one_gp+0x34/0x4c8
+4 locks held by kworker/0:10/104:
+ #0: ffff0004c0008738 ((wq_completion)events){+.+.}-{0:0}, at:
+process_one_work+0x1f4/0x6a0
+ #1: ffff80000a90bde0
+((work_completion)(&ap->scsi_rescan_task)){+.+.}-{0:0}, at:
+process_one_work+0x1f4/0x6a0
+ #2: ffff0004c2b6bf60 (&ap->scsi_scan_mutex){+.+.}-{3:3}, at:
+ata_scsi_dev_rescan+0x28/0x118
+ #3: ffff0004c2902368 (&dev->mutex){....}-{3:3}, at:
+scsi_rescan_device+0x28/0x78
+1 lock held by in:imklog/636:
+ #0: ffff0004c5ee86e8 (&f->f_pos_lock){+.+.}-{3:3}, at: __fdget_pos+0x54/0x68
+1 lock held by hd/1013:
+ #0: ffff0004c06388b8 (mapping.invalidate_lock#2){.+.+}-{3:3}, at:
+page_cache_ra_unbounded+0x64/0x1a8
+
+I've just tried with a USB storage device on the same platform,
+and it can be read fine after s2idle.  So it looks like the issue
+is related to SATA.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
