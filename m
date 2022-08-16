@@ -2,130 +2,150 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15AF8C2BB41
-	for <linux-ide@archiver.kernel.org>; Tue, 16 Aug 2022 10:50:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8E46C28B2B
+	for <linux-ide@archiver.kernel.org>; Tue, 16 Aug 2022 12:06:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234053AbiHPKuz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 16 Aug 2022 06:50:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41500 "EHLO
+        id S234120AbiHPMFb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 16 Aug 2022 08:05:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235183AbiHPKu2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2022 06:50:28 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA0C59D8F4;
-        Tue, 16 Aug 2022 03:35:16 -0700 (PDT)
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M6SBg6djFz67bbZ;
-        Tue, 16 Aug 2022 18:32:11 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 16 Aug 2022 12:35:13 +0200
-Received: from [10.48.156.171] (10.48.156.171) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 16 Aug 2022 11:35:12 +0100
-Message-ID: <aabf7ed8-8d4d-dc68-1b8b-c91653701def@huawei.com>
-Date:   Tue, 16 Aug 2022 11:35:11 +0100
+        with ESMTP id S235270AbiHPMFN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2022 08:05:13 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56D2F14088
+        for <linux-ide@vger.kernel.org>; Tue, 16 Aug 2022 04:53:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1660650825; x=1692186825;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=xPbMnfXhMPj7c3C5zI4tahRJr/Wy1fcdc8R6fXqq8O8=;
+  b=QLCbf+ZVprme5W808vLCSzqEb9wmbOTdxsogeqKHcipMqDcwK6F22fsu
+   h15Jov8ECmaCY3SBK6lPz3tdCv3CFr0RpgQpaCdo70mE7BfiHfpgI0K42
+   61FYZiyyE56wACEF56gDtdOXbNsfVLxfuFtqm/1IapHYslAQGzW22kOaq
+   Fn4jlTToKxW713hA81u7QuoXG6Hy1bo6Dir3icun7DwsGcUwn/6MJ0mKK
+   CBvgzB+ycbJsv3SSbs1oAfq1mvQw61nqNreqQdkUHtRTqX0riM9uzGL8H
+   +Lv7XIss3y1hD3XtKYJ5HkjvHO0FUVSwaQDtlLPaY3VplDSqO7Mz1sDyX
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,240,1654531200"; 
+   d="scan'208";a="207306598"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Aug 2022 19:53:42 +0800
+IronPort-SDR: Mly0r1drh/jphGrlhMYguvXh7D1BLcD9ApbsBxT45JceeGfVGZxAmN1WWY1fzX37NIm+CWwcNf
+ 2Xzhss5kA+u/MOzojPX1hSVWUprtaTEeLpAejWPUUkKp4Jx2kCZzhkSR6ENbRN3PI2S5QcVaR8
+ I/2GkwK94OHWhTzW9ZPAAA/ap1oOD54hk14kXdVzOqw2PvSqv+uRmc8vI45tblXRXiQBzK/5sZ
+ aLToL2ZwuSPsTCvxb0euB9O5QPSrqZVQBXZI0GCP0fPi5YxXdnQ5WNjNWbxnPrsXTqasGMK2LF
+ hqfw4UaWKhYkKYz6OQ3Lw3+N
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Aug 2022 04:14:31 -0700
+IronPort-SDR: gyUw3KZ6kUMpajv+FCjDKfhSzcRORUwgE5UIdZ2HuoMtm1iV34j3isb8ulKMv/ZDMVEhp4Dv04
+ X7FviU4eaHEmdvFw2VJkfJzZd+GzLog0dfDEqnrlTBMAKcDPGzohKr8dcWsrAiuSWUZR33UL+F
+ pziGgptnMFqjtIOykkaA/sx+2VKTt9+43x0qLUhaB6cKucspjom+2x56q7r4Fft1zKwZmR/Njn
+ qsOwsdE3fccx3F3FRv0C37ikkNN/xTOF2wyGZ8EZXOqiPR0voY9dljp5Oly+0dOwjPemnDVTJy
+ niI=
+WDCIronportException: Internal
+Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.94])
+  by uls-op-cesaip02.wdc.com with ESMTP; 16 Aug 2022 04:53:42 -0700
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
+Subject: [PATCH v2] ata: libata-core: improve parameter names for ata_dev_set_feature()
+Date:   Tue, 16 Aug 2022 13:53:28 +0200
+Message-Id: <20220816115329.1252278-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
-To:     Oliver Sang <oliver.sang@intel.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Linux Memory Management List" <linux-mm@kvack.org>,
-        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
-        <ying.huang@intel.com>, <feng.tang@intel.com>,
-        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
-References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
- <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
- <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
- <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
- <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
- <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
- <f1c3d717-339d-ba2b-9775-fc0e00f57ae3@huawei.com>
- <Yvs/w93KUkgD9f7/@xsang-OptiPlex-9020>
-In-Reply-To: <Yvs/w93KUkgD9f7/@xsang-OptiPlex-9020>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.156.171]
-X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 16/08/2022 07:57, Oliver Sang wrote:
->>> For me, a complete kernel log may help.
->> and since only 1HDD, the output of the following would be helpful:
->>
->> /sys/block/sda/queue/max_sectors_kb
->> /sys/block/sda/queue/max_hw_sectors_kb
->>
->> And for 5.19, if possible.
-> for commit
-> 0568e61225 ("ata: libata-scsi: cap ata_device->max_sectors according to shost->max_sectors")
-> 
-> root@lkp-icl-2sp1 ~# cat /sys/block/sda/queue/max_sectors_kb
-> 512
-> root@lkp-icl-2sp1 ~# cat /sys/block/sda/queue/max_hw_sectors_kb
-> 512
-> 
-> for both commit
-> 4cbfca5f77 ("scsi: scsi_transport_sas: cap shost opt_sectors according to DMA optimal limit")
-> and v5.19
-> 
-> root@lkp-icl-2sp1 ~# cat /sys/block/sda/queue/max_sectors_kb
-> 1280
-> root@lkp-icl-2sp1 ~# cat /sys/block/sda/queue/max_hw_sectors_kb
-> 32767
-> 
+ata_dev_set_feature() is currently used for enabling/disabling any ATA
+feature, e.g. SETFEATURES_SPINUP and SETFEATURE_SENSE_DATA, i.e. it is
+not only used to enable/disable SATA specific features.
 
-thanks, I appreciate this.
+For most features, the enable/disable bit is specified in the subcommand
+specific field "count".
+It is only for the specific subcommands "Enable SATA feature" (0x10) and
+"Disable SATA feature" (0x90) where the field "count" is used to specify
+a feature instead of enable/disable. The parameter names for this
+function are thus quite misleading.
 
- From the dmesg, I see 2x SATA disks - I was under the impression that 
-the system only has 1x.
+Rename the parameter names to be more generic and in line with ACS-5,
+and remove the references to "SATA FEATURES" in the kernel-doc.
 
-Anyway, both drives show LBA48, which means the large max hw sectors at 
-32767KB:
-[   31.129629][ T1146] ata6.00: 1562824368 sectors, multi 1: LBA48 NCQ 
-(depth 32)
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+---
+Changes since v1:
+-Renamed parameter "count" to "action".
 
-So this is what I suspected: we are capped from the default shost max 
-sectors (1024 sectors).
+ drivers/ata/libata-core.c | 19 +++++++++----------
+ drivers/ata/libata.h      |  2 +-
+ 2 files changed, 10 insertions(+), 11 deletions(-)
 
-This seems like the simplest fix for you:
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 826d41f341e4..55a403244723 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4324,13 +4324,12 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
+ }
+ 
+ /**
+- *	ata_dev_set_feature - Issue SET FEATURES - SATA FEATURES
++ *	ata_dev_set_feature - Issue SET FEATURES
+  *	@dev: Device to which command will be sent
+- *	@enable: Whether to enable or disable the feature
+- *	@feature: The sector count represents the feature to set
++ *	@subcmd: The SET FEATURES subcommand to be sent
++ *	@action: The sector count represents a subcommand specific action
+  *
+- *	Issue SET FEATURES - SATA FEATURES command to device @dev
+- *	on port @ap with sector count
++ *	Issue SET FEATURES command to device @dev on port @ap with sector count
+  *
+  *	LOCKING:
+  *	PCI/etc. bus probe sem.
+@@ -4338,23 +4337,23 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
+  *	RETURNS:
+  *	0 on success, AC_ERR_* mask otherwise.
+  */
+-unsigned int ata_dev_set_feature(struct ata_device *dev, u8 enable, u8 feature)
++unsigned int ata_dev_set_feature(struct ata_device *dev, u8 subcmd, u8 action)
+ {
+ 	struct ata_taskfile tf;
+ 	unsigned int err_mask;
+ 	unsigned int timeout = 0;
+ 
+ 	/* set up set-features taskfile */
+-	ata_dev_dbg(dev, "set features - SATA features\n");
++	ata_dev_dbg(dev, "set features\n");
+ 
+ 	ata_tf_init(dev, &tf);
+ 	tf.command = ATA_CMD_SET_FEATURES;
+-	tf.feature = enable;
++	tf.feature = subcmd;
+ 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf.protocol = ATA_PROT_NODATA;
+-	tf.nsect = feature;
++	tf.nsect = action;
+ 
+-	if (enable == SETFEATURES_SPINUP)
++	if (subcmd == SETFEATURES_SPINUP)
+ 		timeout = ata_probe_timeout ?
+ 			  ata_probe_timeout * 1000 : SETFEATURES_SPINUP_TIMEOUT;
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, timeout);
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 98bc8649c63f..bc84fbb48c0a 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -64,7 +64,7 @@ extern int ata_dev_configure(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
+ extern unsigned int ata_dev_set_feature(struct ata_device *dev,
+-					u8 enable, u8 feature);
++					u8 subcmd, u8 action);
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern void ata_qc_issue(struct ata_queued_cmd *qc);
+ extern void __ata_qc_complete(struct ata_queued_cmd *qc);
+-- 
+2.37.2
 
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1382,7 +1382,8 @@ extern const struct attribute_group 
-*ata_common_sdev_groups[];
-        .proc_name              = drv_name,                     \
-        .slave_destroy          = ata_scsi_slave_destroy,       \
-        .bios_param             = ata_std_bios_param,           \
--       .unlock_native_capacity = ata_scsi_unlock_native_capacity
-+       .unlock_native_capacity = ata_scsi_unlock_native_capacity,\
-+       .max_sectors = ATA_MAX_SECTORS_LBA48
-
-
-A concern is that other drivers which use libata may have similar 
-issues, as they use default in SCSI_DEFAULT_MAX_SECTORS for max_sectors:
-hisi_sas
-pm8001
-aic9xxx
-mvsas
-isci
-
-So they may be needlessly hobbled for some SATA disks. However I have a 
-system with hisi_sas controller and attached LBA48 disk. I tested 
-performance for v5.19 vs 6.0 and it was about the same for fio rw=read @ 
-~120K IOPS. I can test this further.
-
-Thanks,
-John
