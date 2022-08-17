@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97992C25B08
-	for <linux-ide@archiver.kernel.org>; Wed, 17 Aug 2022 15:55:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADA6C25B08
+	for <linux-ide@archiver.kernel.org>; Wed, 17 Aug 2022 16:43:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239066AbiHQPzP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 17 Aug 2022 11:55:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35804 "EHLO
+        id S237506AbiHQQnK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 17 Aug 2022 12:43:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234850AbiHQPzF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2022 11:55:05 -0400
+        with ESMTP id S240360AbiHQQnJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2022 12:43:09 -0400
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF39598A6F
-        for <linux-ide@vger.kernel.org>; Wed, 17 Aug 2022 08:55:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E28D85A9D
+        for <linux-ide@vger.kernel.org>; Wed, 17 Aug 2022 09:43:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1660751703; x=1692287703;
+  t=1660754587; x=1692290587;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=Da4nMJ1F9CkVDkvWNzoxhW66X+iNWqedHoEO8QVLg1M=;
-  b=Jm39MN4MYhcURh9wmgDEXCBEL0D8lqhnOCg9IC2LLRlxO9En03UcSEm0
-   A9GtoCVVCjtK08sMyxrY3yiwR0P+pBWdPL7iXO8CwXuqB2vjzdM/V7ISt
-   fI4AEjU36nR/5fiUTjTB+/+nKNbdewLSQim0eRCnYRO6YeP34Wy32CV6q
-   RkRbH3sbvzzIweMBZM7C2z+oUgqydstCFWp+PqeNNPQMvXPP1lr+e0OWJ
-   pItcvVjZIqtt7xY/ZzFGxn+hb6wMIURTR2hLs2tahtcUSqvdWJPUXx5cq
-   fUJ4f6949PCdV9+i7Flzc3dQfddHeiZUZLWKxIGHF96g27H+tKHCsmjyl
-   g==;
+  bh=Yrba2/5d9DHaB5d9HOAvkuXBHfeeQjpyE+nVk0A2pqY=;
+  b=SDWfmG9vMKTVqD3W2AJvNpI9xudAVewlYhBINI3uI7++lT0H8VsxrSpO
+   W28MiQ3QvBDA0xQIxtsJoAO/E48D+E7GIGpMlV3JP+ErAiyNwWee9mUn8
+   pc9e9HdCSZWJs5EttvmQjNIegxigB1j//5RotsD0XD0IjCU7yivaaDhP3
+   1XNetLyeNlNUvLBdSswidMgCj05Vh7oVyufZhai8tHRRpcvqfm3IurSnD
+   lS67ber+09bXDa/6YNsdD2jv6Hw6kFhB+06z3e5BvTTfbZacTB1Wm1yFD
+   JjZgJ0tNt7864SRMw1X1gte3ZwP0EaDtRV4jYfs/4NBS+TaciZnG0+3pr
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.93,243,1654531200"; 
-   d="scan'208";a="208953480"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Aug 2022 23:55:02 +0800
-IronPort-SDR: q6dNK6EewoSZlqBlWmJjtDzQZufHq5aeDn2ggm+bwRuEHeIlCGYK/eIV+zZnoq0SFxPGsdj0kQ
- z357GtzhCqNzQQkwKhCensuYOuoCZWIiQsMeNwQq1Q3Zr2WsuD/kMMUETfq6BoG5eACPG6QEEA
- HMIyEBjq9T2h41oERPLkqN6WcYYiHNxbdV3StLRtuNy7cCSMW0stEa6fdduEUZUCa14JctFy6E
- U/RvgrwDhLWH9KKauYrXyjU7lLQSD08AQt86Bo1j/a/sqOL9AKrqSlXICAF7YC+5WPGs/LIqxS
- 3NhDvjt+Jtul3BHNHNcA/OBJ
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Aug 2022 08:15:50 -0700
-IronPort-SDR: ubxZIm88k0zXQb4rFNWfQvjjPm0Saukt/pHSa8FGHznR1yi38Ft+ho4n7y9JcXKr7h0LwMC+Tr
- wJcnBy1c/B0HuoHTDexUvVAIWj80AG+b5MlqDU4fqElnfYuGybqJqrt8sxqnufNeUts+Q9d4Gj
- HXLrJcTp5yr+XAR3y++/GEYMvA4nFv7BCJjfnz2gMbu6gVg5qNkpBpfj88XyJOsYQUWp0EyX6n
- 7szqSp8S7wDFpNepEzOvpZc/HqJPKg4hlGp6ZClCt4URZ43AqXFm5U3I6Q0xHyEKGxEaXOTAtU
- xlI=
+   d="scan'208";a="208957692"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Aug 2022 00:43:07 +0800
+IronPort-SDR: AtxtzWupfBUMH/E29cRx5t1cLHHtzUBfCyhUN6o/zGkg8iZPZCaHudH2L3gMO6lhQiY9EMWcFG
+ 4wFoAAwXh5MMdKNoRlYWjcSrn2FSvVHsFzp+EkRbrQs1KB/UbRIJ7+NnvD1wP7BhuiVI7Fg2rS
+ pURVg4vu61JfTBTUZ4d1io64MLwvKgWlGxALsJfVRxdWxiG4iEZpHr3/pfeYDjppaMj2l9XFsr
+ EqyRWu45M0kL9xhC/BOiRpwAGVZpAyZBDxEMdPKWxqfewE3LVmlgdR2UT69CLH6lj5MCbITQoC
+ mKAu72tb2yNT+8SuKd7H5ZTB
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Aug 2022 09:03:54 -0700
+IronPort-SDR: KD5kQP4JxYsd7HPKmdQvee6Dy/A4ykfvoIewXxwWrJWBVk3AiZxeNv0yZMNY7aM0GH5BCzF/Mw
+ yCjra8yiWunu2qYPUUenwlWDmFS5IjwgZddlKX4HzHYsDkeI3x4lO0eAbjgndk3+VLuUubb5k1
+ 8dJEIO/IhggeRSzfNMV/9RY1fX+zeEuy62DNSgaG5lR2JSpc6oAkiHdngO1qPJUwBHu6eVvKoI
+ KHVbZbSEzWErzBZ//8XJTmUfVhCcH4mS3Tf9MMb6mg7l6Sl5SB6EIM28O+wfbcp+Di9rVN/ORY
+ ALU=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Aug 2022 08:55:04 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Aug 2022 09:43:08 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M7CJk5ptlz1Rwnx
-        for <linux-ide@vger.kernel.org>; Wed, 17 Aug 2022 08:55:02 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M7DNC6tF0z1Rwnl
+        for <linux-ide@vger.kernel.org>; Wed, 17 Aug 2022 09:43:07 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,155 +56,73 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1660751701; x=1663343702; bh=Da4nMJ1F9CkVDkvWNzoxhW66X+iNWqedHoE
-        O8QVLg1M=; b=a8E4b6TYglEZqemoz/IvureRzXS2h0BxBVr6myCFT2djYIy2Q8a
-        uOrg4utMi2iF33DWYAUjZqOmQaw1UBg+6PgpvdnUc0iK3eCJPYfDxFwhTf6dfmTY
-        JHnFaA/ID4knX74B60BkhAOSskHkaZkiSU6f38w2oHAMtukmu3yxxD/Xs5Lru4Zp
-        sxx4mUhPpPhdUoL3KQ6NLjyBu2lS0QUZIsOdWFD7Pl5qXlud0P12cRKB95aXshh1
-        QMDX19qWOf/gEkJY/DXJihU7aS22PvfgMk07HAt18C2uG2m0ArHlQOxCAS74EytQ
-        p1z4ZW1/Gu7LXGJqpKytFjoPi5uNgNzKd6g==
+        1660754587; x=1663346588; bh=Yrba2/5d9DHaB5d9HOAvkuXBHfeeQjpyE+n
+        Vk0A2pqY=; b=NYAkJ0KIsTDw1jSZ3Y4C+0JhZAM1g2rz7KbH19qCTyNNoBcECid
+        SKx3uVrY3yqYR6ipvoRZjxJbp9KZ63FhNMiwQf+d7wjWd+UMuwQl0Qkt1mSeJTqN
+        vgWuH97iWLG3istuS5mGJPg4f0E0AL2TRC9RN+7+mC7RYx3TFC6Nl8fHAz8APmXj
+        8ZNZGoQrtu+9IdafR55JLAxnHi/WwGTdZnfU1J1n/RHGOcctJbS9y+Ko7YSkaeTf
+        eSkOdumKm0nSkjzvn1OiR+e2V6RamC+Qejx9bsyQ/FXC329OKpNcL3SAqnW9dTpI
+        QpBElsBu0e8Obc+3dk8hv+4IYtJTFVyaxoQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id YBm4r1dk4JQn for <linux-ide@vger.kernel.org>;
-        Wed, 17 Aug 2022 08:55:01 -0700 (PDT)
+        with ESMTP id A93oVwKr7TQy for <linux-ide@vger.kernel.org>;
+        Wed, 17 Aug 2022 09:43:07 -0700 (PDT)
 Received: from [10.11.46.122] (unknown [10.11.46.122])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M7CJh5Fs8z1RtVk;
-        Wed, 17 Aug 2022 08:55:00 -0700 (PDT)
-Message-ID: <e46c8627-3444-1dd1-8fd9-a10b7f3f3851@opensource.wdc.com>
-Date:   Wed, 17 Aug 2022 08:55:00 -0700
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M7DNC3vLYz1RtVk;
+        Wed, 17 Aug 2022 09:43:07 -0700 (PDT)
+Message-ID: <e6c84c32-6737-86e4-1e3c-8828864fad04@opensource.wdc.com>
+Date:   Wed, 17 Aug 2022 09:43:07 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.12.0
-Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
+Subject: Re: [PATCH V4] ata: libata-core: Print timeout value when internal
+ command times
 Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>,
-        Oliver Sang <oliver.sang@intel.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        linux-ide@vger.kernel.org, lkp@lists.01.org, lkp@intel.com,
-        ying.huang@intel.com, feng.tang@intel.com,
-        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com
-References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
- <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
- <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
- <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
- <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
- <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
- <f1c3d717-339d-ba2b-9775-fc0e00f57ae3@huawei.com>
- <Yvs/w93KUkgD9f7/@xsang-OptiPlex-9020>
- <aabf7ed8-8d4d-dc68-1b8b-c91653701def@huawei.com>
- <43eaa104-5b09-072c-56aa-6289569b0015@opensource.wdc.com>
- <28d6e48b-f52f-9467-8260-262504a1a1ff@huawei.com>
- <05a48c68-33ae-10e2-e565-6c124bad93c5@opensource.wdc.com>
- <c93e529d-b688-9910-50c4-779c2f85fbc3@huawei.com>
+To:     Tomas Henzl <thenzl@redhat.com>, linux-ide@vger.kernel.org
+Cc:     sergei.shtylyov@gmail.com
+References: <20220810175909.14485-1-thenzl@redhat.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <c93e529d-b688-9910-50c4-779c2f85fbc3@huawei.com>
+In-Reply-To: <20220810175909.14485-1-thenzl@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/08/16 13:44, John Garry wrote:
-> On 16/08/2022 21:02, Damien Le Moal wrote:
->>> ou confirm this? Thanks!
->>>
->>> On this basis, it appears that max_hw_sectors_kb is getting capped from
->>> scsi default @ 1024 sectors by commit 0568e61225. If it were getting
->>> capped by swiotlb mapping limit then that would give us 512 sectors -
->>> this value is fixed.
->>>
->>> So for my SHT change proposal I am just trying to revert to previous
->>> behaviour in 5.19 - make max_hw_sectors_kb crazy big again.
->> I reread the entire thing and I think I got things reverted here. The perf
->> regression happens with the 512/512 settings, while the original 1280/32767
->> before your patches was OK.
+On 2022/08/10 10:59, Tomas Henzl wrote:
+> Printing the timeout value may help in troubleshooting failures.
 > 
-> Right, that's as I read it. It would be useful for Oliver to confirm the 
-> results.
+> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> ---
+> V4: a whitespace change
+>     a switch from an an infinitive to an -ing form in the body
+>     a fix to the title prefix
+> V3: rewording subject and description, no functional change
+> V2: timeout changed to unsigned int as in for-next
+> ---
+>  drivers/ata/libata-core.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
->> So is your patch defining the optimal mapping size
->> cause the reduction to 512/512.
-> 
-> The optimal mapping size only affects specifically sas controllers, so I 
-> think that we can ignore that one for now. The reduction to 512/512 
-> comes from the change in ata_scsi_dev_config().
-> 
->> It would mean that for ATA, we need a sane
->> default mapping instead of SCSI default 1024 sectors.
-> 
-> Right
-> 
->> Now I understand your
->> proposed change using ATA_MAX_SECTORS_LBA48.
->>
->> However, that would be correct only for LBA48 capable drives.
->> ata_dev_configure() already sets dev->max_sectors correctly according to the
->> drive type, capabilities and eventual quirks. So the problem comes from the
->> libata-scsi change:
->>
->> dev->max_sectors = min(dev->max_sectors, sdev->host->max_sectors);
->>
->> when sdev->host->max_sectors is 0 (not initialized).
-> 
-> That cannot happen. If sht->max_sectors is 0, then we set 
-> shost->max_sectors at SCSI default 1024 sectors in scsi_host_alloc()
-> 
-> For my proposed change, dev->max_sectors would still be initialized in 
-> ata_dev_configure() according to drive type, etc. And it should be <= 
-> LBA48 max sectors (=65535).
-> 
-> So then in ata_scsi_dev_config():
-> 
-> dev->max_sectors = min(dev->max_sectors, sdev->host->max_sectors)
-> 
-> this only has an impact for ahci controllers if sdev->host->max_sectors 
-> was capped according to host dma dev max mapping size.
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 826d41f341e4..9478194740e0 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1578,8 +1578,8 @@ static unsigned ata_exec_internal_sg(struct ata_device *dev,
+>  			else
+>  				ata_qc_complete(qc);
+>  
+> -			ata_dev_warn(dev, "qc timeout (cmd 0x%x)\n",
+> -				     command);
+> +			ata_dev_warn(dev, "qc timeout after %u msecs (cmd 0x%x)\n",
+> +				     timeout, command);
+>  		}
+>  
+>  		spin_unlock_irqrestore(ap->lock, flags);
 
-Got it. I think your fix is fine then. It brings everything the defaults to what
-they were before the dma max mapping patches.
-
-> 
-> I will admit that this is not ideal. An alt approach is to change 
-> ata_scsi_dev_config() to cap the dev max_sectors only according to shost 
-> dma dev mapping limit (similar to scsi_add_host_with_dma()), but that 
-> would not work for a controller like ipr, which does have a geniune 
-> max_sectors limit (which we should respect).
-> 
-> Thanks,
-> John
-> 
-> 
->> So maybe simply changing
->> this line to:
->>
->> dev->max_sectors = min_not_zero(dev->max_sectors, sdev->host->max_sectors);
->>
->> would do the trick ? Any particular adapter driver that needs a mapping cap on
->> the adpter max mapping size can still set sdev->host->max_sectors as needed, and
->> we keep the same defaults as before when it is not set. Thoughts ? Or am I
->> missing something else ?
->>
->>
->>>> The regression may come not from commands becoming tiny, but from the fact that
->>>> after the patch, max_sectors_kb is too large,
->>> I don't think it is, but need confirmation.
->>>
->>>> causing a lot of overhead with
->>>> qemu swiotlb mapping and slowing down IO processing.
->>>> Above, it can be seen that we ed up with max_sectors_kb being 1280, which is the
->>>> default for most scsi disks (including ATA drives). That is normal. But before
->>>> that, it was 512, which likely better fits qemu swiotlb and does not generate
->>> Again, I don't think this this is the case. Need confirmation.
->>>
->>>> overhead. So the above fix will not change anything I think...
-> 
-
+Applied to for-6.1. Thanks !
 
 -- 
 Damien Le Moal
