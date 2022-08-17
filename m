@@ -2,111 +2,87 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F7FC25B08
-	for <linux-ide@archiver.kernel.org>; Wed, 17 Aug 2022 14:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58C29C25B08
+	for <linux-ide@archiver.kernel.org>; Wed, 17 Aug 2022 15:26:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236244AbiHQOFN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 17 Aug 2022 10:05:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58358 "EHLO
+        id S237476AbiHQP0c (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 17 Aug 2022 11:26:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231552AbiHQOEw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2022 10:04:52 -0400
+        with ESMTP id S235568AbiHQP0c (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2022 11:26:32 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CD7266A65;
-        Wed, 17 Aug 2022 07:04:10 -0700 (PDT)
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M78rV4shxz67Pn6;
-        Wed, 17 Aug 2022 22:03:54 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCA315EDC2;
+        Wed, 17 Aug 2022 08:26:30 -0700 (PDT)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M7BZ61jJJz67Hfl;
+        Wed, 17 Aug 2022 23:21:34 +0800 (CST)
 Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 17 Aug 2022 16:04:08 +0200
-Received: from [10.48.158.152] (10.48.158.152) by
+ 15.1.2375.24; Wed, 17 Aug 2022 17:26:28 +0200
+Received: from localhost.localdomain (10.69.192.58) by
  lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 17 Aug 2022 15:04:07 +0100
-Message-ID: <743867a6-b266-58e4-a8a6-542757916f0a@huawei.com>
-Date:   Wed, 17 Aug 2022 15:04:06 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
-To:     Oliver Sang <oliver.sang@intel.com>
-CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
-        <ying.huang@intel.com>, <feng.tang@intel.com>,
-        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
-References: <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
- <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
- <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
- <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
- <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
- <f1c3d717-339d-ba2b-9775-fc0e00f57ae3@huawei.com>
- <Yvs/w93KUkgD9f7/@xsang-OptiPlex-9020>
- <aabf7ed8-8d4d-dc68-1b8b-c91653701def@huawei.com>
- <43eaa104-5b09-072c-56aa-6289569b0015@opensource.wdc.com>
- <28d6e48b-f52f-9467-8260-262504a1a1ff@huawei.com>
- <YvzyZJUblfqN6Xj3@xsang-OptiPlex-9020>
+ 15.1.2375.24; Wed, 17 Aug 2022 16:26:26 +0100
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <YvzyZJUblfqN6Xj3@xsang-OptiPlex-9020>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.48.158.152]
-X-ClientProxiedBy: lhrpeml100005.china.huawei.com (7.191.160.25) To
+To:     <damien.lemoal@opensource.wdc.com>, <oliver.sang@intel.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <hch@lst.de>, John Garry <john.garry@huawei.com>
+Subject: [RFT PATCH] ata: libata: Set __ATA_BASE_SHT max_sectors
+Date:   Wed, 17 Aug 2022 23:20:08 +0800
+Message-ID: <1660749608-62897-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
  lhrpeml500003.china.huawei.com (7.191.162.67)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 17/08/2022 14:51, Oliver Sang wrote:
+Commit 0568e6122574 ("ata: libata-scsi: cap ata_device->max_sectors
+according to shost->max_sectors") inadvertently capped the max_sectors
+value for some SATA disks to a value which is lower than we would want.
 
-Hi Oliver,
+For a device which supports LBA48, we would previously have request queue
+max_sectors_kb and max_hw_sectors_kb values of 1280 and 32767 respectively.
 
->> v5.19 + 0568e61225 : 512/512
->> v5.19 + 0568e61225 + 4cbfca5f77 : 512/512
->> v5.19: 1280/32767
->>
->> They are want makes sense to me, at least.
->>
->> Oliver, can you confirm this? Thanks!
-> I confirm below two:
-> v5.19 + 0568e61225 : 512/512
-> v5.19: 1280/32767 (as last already reported)
+For AHCI controllers, the value chosen for shost max sectors comes from
+the minimum of the SCSI host default max sectors in
+SCSI_DEFAULT_MAX_SECTORS (1024) and the shost DMA device mapping limit.
 
-ack
+This means that we would now set the max_sectors_kb and max_hw_sectors_kb
+values for a disk which supports LBA48 at 512, ignoring DMA mapping limit.
 
-> 
-> but below failed to build:
-> v5.19 + 0568e61225 + 4cbfca5f77
-> 
-> build_errors:
->    - "drivers/scsi/scsi_transport_sas.c:242:33: error: implicit declaration of function 'dma_opt_mapping_size'; did you mean 'dma_max_mapping_size'? [-Werror=implicit-function-declaration]"
->    - "drivers/scsi/scsi_transport_sas.c:241:24: error: 'struct Scsi_Host' has no member named 'opt_sectors'; did you mean 'max_sectors'?"
-> 
-> not sure if I understand this correctly?
-> for this, I just cherry-pick 0568e61225 upon v5.19,
-> then cherry-pick 4cbfca5f77 again.
-> so my branch looks like:
-> 
-> a11d8b97c3ecb8 v5.19 + 0568e61225 + 4cbfca5f77
-> 1b59440cf71f99 v5.19 + 0568e61225
-> 3d7cb6b04c3f31 (tag: v5.19,
-> 
-> did I do the right thing?
+As report by Oliver at [0], this caused a performance regression.
 
-Sorry but I was not really interested in 4cbfca5f77 and I see where that 
-build error is coming, but don't be concerned with it. However, for 
-avoidance of doubt, if you have results for vanilla v6.0-rc1 then that 
-would be appreciated.
+Fix by picking a large enough max sectors value for ATA host controllers
+such that we don't needlessly reduce max_sectors_kb for LBA48 disks.
 
-I will also send a separate patch for testing if you don't mind.
+[0] https://lore.kernel.org/linux-ide/YvsGbidf3na5FpGb@xsang-OptiPlex-9020/T/#m22d9fc5ad15af66066dd9fecf3d50f1b1ef11da3
 
-thanks,
-John
+Fixes: 0568e6122574 ("ata: libata-scsi: cap ata_device->max_sectors according to shost->max_sectors")
+Reported-by: Oliver Sang <oliver.sang@intel.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0269ff114f5a..698032e5ef2d 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1382,7 +1382,8 @@ extern const struct attribute_group *ata_common_sdev_groups[];
+ 	.proc_name		= drv_name,			\
+ 	.slave_destroy		= ata_scsi_slave_destroy,	\
+ 	.bios_param		= ata_std_bios_param,		\
+-	.unlock_native_capacity	= ata_scsi_unlock_native_capacity
++	.unlock_native_capacity	= ata_scsi_unlock_native_capacity,\
++	.max_sectors		= ATA_MAX_SECTORS_LBA48
+ 
+ #define ATA_SUBBASE_SHT(drv_name)				\
+ 	__ATA_BASE_SHT(drv_name),				\
+-- 
+2.35.3
 
