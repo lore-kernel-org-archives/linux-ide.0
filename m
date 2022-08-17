@@ -2,155 +2,134 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45803C25B0E
-	for <linux-ide@archiver.kernel.org>; Tue, 16 Aug 2022 20:44:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB70EC32772
+	for <linux-ide@archiver.kernel.org>; Wed, 17 Aug 2022 08:53:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236635AbiHPUo4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 16 Aug 2022 16:44:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55216 "EHLO
+        id S233014AbiHQIxn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 17 Aug 2022 04:53:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237207AbiHPUol (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 Aug 2022 16:44:41 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C093696EC;
-        Tue, 16 Aug 2022 13:44:36 -0700 (PDT)
-Received: from fraeml710-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M6jgf5VMJz67N4d;
-        Wed, 17 Aug 2022 04:39:42 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml710-chm.china.huawei.com (10.206.15.59) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 16 Aug 2022 22:44:34 +0200
-Received: from [10.195.244.204] (10.195.244.204) by
- lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 16 Aug 2022 21:44:33 +0100
-Message-ID: <c93e529d-b688-9910-50c4-779c2f85fbc3@huawei.com>
-Date:   Tue, 16 Aug 2022 21:44:33 +0100
+        with ESMTP id S229637AbiHQIxm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Aug 2022 04:53:42 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C236745F;
+        Wed, 17 Aug 2022 01:53:39 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.73.252) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 17 Aug
+ 2022 11:53:30 +0300
+Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Hannes Reinecke <hare@suse.de>,
+        John Garry <john.garry@huawei.com>, <ericspero@icloud.com>,
+        <jason600.groome@gmail.com>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>
+References: <20220630195703.10155-1-bvanassche@acm.org>
+ <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
+ <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
+ <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
+ <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
+ <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
+ <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
+ <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
+ <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
+ <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
+ <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
+ <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
+ <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
+ <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
+ <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
+ <CAMuHMdV_hzvd2YkJfRqXm8SmKuibWiUy-c7XpGCnEr86HMx=_Q@mail.gmail.com>
+ <3c7e338e-332e-fe80-e419-b360535533c5@acm.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <56cf0251-159c-3f83-78d2-859048625633@omp.ru>
+Date:   Wed, 17 Aug 2022 11:53:30 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Oliver Sang <oliver.sang@intel.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Linux Memory Management List" <linux-mm@kvack.org>,
-        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
-        <ying.huang@intel.com>, <feng.tang@intel.com>,
-        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
-References: <YuzPMMnnY739Tnit@xsang-OptiPlex-9020>
- <1f498d4a-f93f-ceb4-b713-753196e5e08d@opensource.wdc.com>
- <3451fa5a-6229-073f-ae18-0c232cd48ed5@huawei.com>
- <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
- <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
- <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
- <f1c3d717-339d-ba2b-9775-fc0e00f57ae3@huawei.com>
- <Yvs/w93KUkgD9f7/@xsang-OptiPlex-9020>
- <aabf7ed8-8d4d-dc68-1b8b-c91653701def@huawei.com>
- <43eaa104-5b09-072c-56aa-6289569b0015@opensource.wdc.com>
- <28d6e48b-f52f-9467-8260-262504a1a1ff@huawei.com>
- <05a48c68-33ae-10e2-e565-6c124bad93c5@opensource.wdc.com>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <05a48c68-33ae-10e2-e565-6c124bad93c5@opensource.wdc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <3c7e338e-332e-fe80-e419-b360535533c5@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.244.204]
-X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+X-Originating-IP: [178.176.73.252]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 08/17/2022 08:36:57
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 172266 [Aug 17 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 495 495 bb4e71e2e9e23696ab912b286436360a94c9b107
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.73.252 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.73.252
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 08/17/2022 08:39:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 8/17/2022 6:00:00 AM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 16/08/2022 21:02, Damien Le Moal wrote:
->> ou confirm this? Thanks!
+Hello!
+
+On 8/16/22 11:21 PM, Bart Van Assche wrote:
+
+>> On Mon, Aug 15, 2022 at 3:49 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>>> Would it be possible to share the output of the command below? That
+>>> should reveal which ATA driver is active on the test setup.
+>>>
+>>> find /sys -name proc_name | xargs grep -aH .
 >>
->> On this basis, it appears that max_hw_sectors_kb is getting capped from
->> scsi default @ 1024 sectors by commit 0568e61225. If it were getting
->> capped by swiotlb mapping limit then that would give us 512 sectors -
->> this value is fixed.
->>
->> So for my SHT change proposal I am just trying to revert to previous
->> behaviour in 5.19 - make max_hw_sectors_kb crazy big again.
-> I reread the entire thing and I think I got things reverted here. The perf
-> regression happens with the 512/512 settings, while the original 1280/32767
-> before your patches was OK.
-
-Right, that's as I read it. It would be useful for Oliver to confirm the 
-results.
-
-> So is your patch defining the optimal mapping size
-> cause the reduction to 512/512.
-
-The optimal mapping size only affects specifically sas controllers, so I 
-think that we can ignore that one for now. The reduction to 512/512 
-comes from the change in ata_scsi_dev_config().
-
-> It would mean that for ATA, we need a sane
-> default mapping instead of SCSI default 1024 sectors.
-
-Right
-
-> Now I understand your
-> proposed change using ATA_MAX_SECTORS_LBA48.
+>> /sys/devices/platform/soc/ee300000.sata/ata1/host0/scsi_host/host0/proc_name:sata_rcar
 > 
-> However, that would be correct only for LBA48 capable drives.
-> ata_dev_configure() already sets dev->max_sectors correctly according to the
-> drive type, capabilities and eventual quirks. So the problem comes from the
-> libata-scsi change:
+> Thanks Geert for the help. Although I already posted a revert, I'm still trying to
+> root-cause this issue. Do you perhaps know whether sata_rcar controllers support NCQ
+
+   They don't. :-)
+
+> and if so, what queue depth these controllers support? I think that information is available in sysfs. Here is an example for a VM:
 > 
-> dev->max_sectors = min(dev->max_sectors, sdev->host->max_sectors);
+> # (cd /sys/class/scsi_device && for a in */device/*/*/ncq_prio_enable; do p=${a%/ncq_prio_enable}; grep -qi ata $p/inquiry || continue; grep -aH . $p/{queue_depth,ncq*}; done)
+> 2:0:0:0/device/driver/2:0:0:0/queue_depth:32
+> 2:0:0:0/device/driver/2:0:0:0/ncq_prio_enable:0
+> 2:0:0:0/device/driver/2:0:0:0/ncq_prio_supported:0
+> 2:0:0:0/device/generic/device/queue_depth:32
+> 2:0:0:0/device/generic/device/ncq_prio_enable:0
+> 2:0:0:0/device/generic/device/ncq_prio_supported:0
+> 6:0:0:1/device/driver/2:0:0:0/queue_depth:32
+> 6:0:0:1/device/driver/2:0:0:0/ncq_prio_enable:0
+> 6:0:0:1/device/driver/2:0:0:0/ncq_prio_supported:0
 > 
-> when sdev->host->max_sectors is 0 (not initialized).
-
-That cannot happen. If sht->max_sectors is 0, then we set 
-shost->max_sectors at SCSI default 1024 sectors in scsi_host_alloc()
-
-For my proposed change, dev->max_sectors would still be initialized in 
-ata_dev_configure() according to drive type, etc. And it should be <= 
-LBA48 max sectors (=65535).
-
-So then in ata_scsi_dev_config():
-
-dev->max_sectors = min(dev->max_sectors, sdev->host->max_sectors)
-
-this only has an impact for ahci controllers if sdev->host->max_sectors 
-was capped according to host dma dev max mapping size.
-
-I will admit that this is not ideal. An alt approach is to change 
-ata_scsi_dev_config() to cap the dev max_sectors only according to shost 
-dma dev mapping limit (similar to scsi_add_host_with_dma()), but that 
-would not work for a controller like ipr, which does have a geniune 
-max_sectors limit (which we should respect).
-
-Thanks,
-John
-
-
-> So maybe simply changing
-> this line to:
+> Thanks,
 > 
-> dev->max_sectors = min_not_zero(dev->max_sectors, sdev->host->max_sectors);
-> 
-> would do the trick ? Any particular adapter driver that needs a mapping cap on
-> the adpter max mapping size can still set sdev->host->max_sectors as needed, and
-> we keep the same defaults as before when it is not set. Thoughts ? Or am I
-> missing something else ?
-> 
-> 
->>> The regression may come not from commands becoming tiny, but from the fact that
->>> after the patch, max_sectors_kb is too large,
->> I don't think it is, but need confirmation.
->>
->>> causing a lot of overhead with
->>> qemu swiotlb mapping and slowing down IO processing.
->>> Above, it can be seen that we ed up with max_sectors_kb being 1280, which is the
->>> default for most scsi disks (including ATA drives). That is normal. But before
->>> that, it was 512, which likely better fits qemu swiotlb and does not generate
->> Again, I don't think this this is the case. Need confirmation.
->>
->>> overhead. So the above fix will not change anything I think...
+> Bart.
 
+MBR, Sergey
