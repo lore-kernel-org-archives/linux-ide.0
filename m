@@ -2,62 +2,85 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54903C28B2B
-	for <linux-ide@archiver.kernel.org>; Thu, 18 Aug 2022 08:12:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CFB4C00140
+	for <linux-ide@archiver.kernel.org>; Thu, 18 Aug 2022 09:28:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237784AbiHRIMJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 18 Aug 2022 04:12:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46570 "EHLO
+        id S232860AbiHRJ2g (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 18 Aug 2022 05:28:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231430AbiHRIMI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Aug 2022 04:12:08 -0400
-Received: from mail.fadrush.pl (mail.fadrush.pl [54.37.225.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5978385AB3
-        for <linux-ide@vger.kernel.org>; Thu, 18 Aug 2022 01:12:08 -0700 (PDT)
-Received: by mail.fadrush.pl (Postfix, from userid 1002)
-        id 2665922A97; Thu, 18 Aug 2022 08:11:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fadrush.pl; s=mail;
-        t=1660810327; bh=bD6j9gIFU6CLTaCGl0Ow9oeIxtirvTfMeNZSfLEZQ+I=;
-        h=Date:From:To:Subject:From;
-        b=aatITH5iu2CoYBAAarx8TmsQ9XQeCwlAnu8yUhk6cieNO/PZY9hNrH/KOj+l5guFk
-         xBHA7ZvgdJ8D4pYt1mu1SswHiI1leZofk2jngqW24aAgEOa844nE/rP8wd85jHQc8t
-         Mub03SGSNQQpY7KwsHt8xWQHcBIMUidllcINUO1QaVaB+UCQN8L1ax3cRHnBh+EMLH
-         vSvMzvUM2P5arIt7KYVQ8EnRYZqaTZOxY296HNz+HsN8IJEBLrVrElAaadMNkto/M+
-         hEU+/SJQ/QGxi/iTAN15N6Vt8FMPR2uAkD1WxwS+Ond0AQ0gZcKzIUGsc/7nr6tRy8
-         r0oYR5KYCQzCQ==
-Received: by mail.fadrush.pl for <linux-ide@vger.kernel.org>; Thu, 18 Aug 2022 08:11:03 GMT
-Message-ID: <20220818064500-0.1.13.58g5.0.vj60j74leo@fadrush.pl>
-Date:   Thu, 18 Aug 2022 08:11:03 GMT
-From:   "Jakub Olejniczak" <jakub.olejniczak@fadrush.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?Zwi=C4=99kszenie_p=C5=82ynno=C5=9Bci_finansowej?=
-X-Mailer: mail.fadrush.pl
+        with ESMTP id S233348AbiHRJ2g (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Aug 2022 05:28:36 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5E972B611;
+        Thu, 18 Aug 2022 02:28:34 -0700 (PDT)
+Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M7fch5Y73z688mK;
+        Thu, 18 Aug 2022 17:25:24 +0800 (CST)
+Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
+ fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 18 Aug 2022 11:28:31 +0200
+Received: from [10.48.157.252] (10.48.157.252) by
+ lhrpeml500003.china.huawei.com (7.191.162.67) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 18 Aug 2022 10:28:30 +0100
+Message-ID: <d1b1d434-059d-4d76-5fc6-092ab9ba6e16@huawei.com>
+Date:   Thu, 18 Aug 2022 10:28:30 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
+ regression
+To:     Oliver Sang <oliver.sang@intel.com>
+CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
+        <ying.huang@intel.com>, <feng.tang@intel.com>,
+        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
+References: <e4106ffa-3842-45c0-9756-5226cfcfa17d@opensource.wdc.com>
+ <YvXeuCAK780OuJPz@xsang-OptiPlex-9020>
+ <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
+ <f1c3d717-339d-ba2b-9775-fc0e00f57ae3@huawei.com>
+ <Yvs/w93KUkgD9f7/@xsang-OptiPlex-9020>
+ <aabf7ed8-8d4d-dc68-1b8b-c91653701def@huawei.com>
+ <43eaa104-5b09-072c-56aa-6289569b0015@opensource.wdc.com>
+ <28d6e48b-f52f-9467-8260-262504a1a1ff@huawei.com>
+ <YvzyZJUblfqN6Xj3@xsang-OptiPlex-9020>
+ <743867a6-b266-58e4-a8a6-542757916f0a@huawei.com>
+ <Yv2euLFLjl8bEaeI@xsang-OptiPlex-9020>
+From:   John Garry <john.garry@huawei.com>
+In-Reply-To: <Yv2euLFLjl8bEaeI@xsang-OptiPlex-9020>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.48.157.252]
+X-ClientProxiedBy: lhrpeml100004.china.huawei.com (7.191.162.219) To
+ lhrpeml500003.china.huawei.com (7.191.162.67)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 18/08/2022 03:06, Oliver Sang wrote:
 
-kontaktuj=C4=99 si=C4=99 z Pa=C5=84stwem, poniewa=C5=BC chcia=C5=82bym za=
-proponowa=C4=87 wygodne rozwi=C4=85zanie, kt=C3=B3re umo=C5=BCliwi Pa=C5=84=
-stwa firmie stabilny rozw=C3=B3j.=20
+Hi Oliver,
 
-Konkurencyjne otoczenie wymaga ci=C4=85g=C5=82ego ulepszania i poszerzeni=
-a oferty, co z kolei wi=C4=85=C5=BCe si=C4=99 z konieczno=C5=9Bci=C4=85 i=
-nwestowania. Brak odpowiedniego kapita=C5=82u powa=C5=BCnie ogranicza tem=
-po rozwoju firmy.
+>>> did I do the right thing?
+>> Sorry but I was not really interested in 4cbfca5f77 and I see where that
+>> build error is coming, but don't be concerned with it. However, for
+>> avoidance of doubt, if you have results for vanilla v6.0-rc1 then that would
+>> be appreciated.
+> for v6.0-rc1, it's still 512/512
+> 
+>> I will also send a separate patch for testing if you don't mind.
+> sure! we are very glad that we could help.
 
-Od wielu lat z powodzeniem pomagam firmom w uzyskaniu najlepszej formy fi=
-nansowania z banku oraz UE. Mam sta=C5=82ych Klient=C3=B3w, kt=C3=B3rzy n=
-adal ch=C4=99tnie korzystaj=C4=85 z moich us=C5=82ug, a tak=C5=BCe poleca=
-j=C4=85 je innym.
+As you probably saw, I sent "[RFT PATCH] ata: libata: Set __ATA_BASE_SHT 
+max_sectors" for testing on top of v6.0-rc1, and I hope that then we can 
+get same performance as v5.19
 
-Czy chcieliby Pa=C5=84stwo skorzysta=C4=87 z pomocy wykwalifikowanego i d=
-o=C5=9Bwiadczonego doradcy finansowego?
-
-
-Pozdrawiam
-Jakub Olejniczak
+Thanks,
+John
