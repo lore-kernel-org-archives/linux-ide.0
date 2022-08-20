@@ -2,86 +2,119 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 218FDC28B2B
-	for <linux-ide@archiver.kernel.org>; Fri, 19 Aug 2022 07:54:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1419CC25B08
+	for <linux-ide@archiver.kernel.org>; Sat, 20 Aug 2022 16:34:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347131AbiHSHyt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 19 Aug 2022 03:54:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49882 "EHLO
+        id S233182AbiHTQev (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 20 Aug 2022 12:34:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345865AbiHSHyr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 Aug 2022 03:54:47 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B5F0DB04A;
-        Fri, 19 Aug 2022 00:54:45 -0700 (PDT)
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4M8DTw5Pw8z68BVL;
-        Fri, 19 Aug 2022 15:51:32 +0800 (CST)
-Received: from lhrpeml500003.china.huawei.com (7.191.162.67) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 19 Aug 2022 09:54:42 +0200
-Received: from [10.195.34.98] (10.195.34.98) by lhrpeml500003.china.huawei.com
- (7.191.162.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Fri, 19 Aug
- 2022 08:54:42 +0100
-Message-ID: <4014a51d-0925-c0dc-70dc-1a465dd278e7@huawei.com>
-Date:   Fri, 19 Aug 2022 08:54:42 +0100
+        with ESMTP id S233115AbiHTQeu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 20 Aug 2022 12:34:50 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AC386566C
+        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2022 09:34:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1661013289; x=1692549289;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Wo+oVGrs/+p6u0Pp4Ld4dnmAYJG5gVXS7fhJLbJ+6jw=;
+  b=Yiv/dm4sAmSiQR+xwLK6hWCR33V0kSn4J8brSaw0CH5mCLOp4/UVF8lW
+   CjRKeJchq8mQniUI730oKyd3iIUMJXRmh/WD93AzcJns2Qzez47alWA7l
+   9vnjvpadlAKPupMcT8ditiqVPzeT2z/XZ81T+xaBYNaH0RkGbobkkTFKI
+   tNJc5MquVEut3OS1P404nJd+ZUJb5LgP7xirAQKiGKcbYo+TNfowbvwqa
+   mdKRaQMG458Gqkg4uAcyVUBFBduoDlEqKIqDxOBD9SaFHA/S14prpjXGk
+   EUj8wg3eOCdEQyhUXw7CWfUy8w4C7MzLfYfwVT6Pq+P4M+P7ME970NfgH
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,251,1654531200"; 
+   d="scan'208";a="209733323"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Aug 2022 00:34:47 +0800
+IronPort-SDR: oSSTFAQFeFzMkIUnkyNIcNcIw9swPGcbLgoJhr94jUvakJaJd+i7r8DpkBe9GVOQfguvjOyT/s
+ PNS6Q4UBaZ4L2Zi6KxWhb2cHnepwa61rL+9bLmnnqYFmhO3CxjveYkkt8RF2RzrT3Xyn8B5FNM
+ kJ7ojyjmagGRox9GqV7strZr1VLePkQ45Q6cDVZpG8rE0TriR6QuOXv8fCNwveNbQ3TCwtPq3C
+ gFISu/mxnZSSgeczfj0qezfkIrggOu/QCUDg+fNryzQYjH6TOp3gEP9jkaTBAnUC9LNt138mHc
+ WnhqHoN0Nk+mzIQuKBp47vhe
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Aug 2022 08:50:10 -0700
+IronPort-SDR: X+nXYmHgLf9wzzTNO83pj4sa/2LRG7TFV7RhNHsAGBl4jpu8G8vVPqkF3urMhQPm2sJPfAHThP
+ BKEeNKcLGZED2f7sFJcTL/NUQviadlBHZD9BwZ8XF5l2+8c0sXo9CCgvrviWimmQ2+/uO+AQy/
+ ALXEPE4tL9nU6NtG6jqp/7vx6sUsSRt9y/muyr/E/HaGBXpgM7h6t6L/deQilHBrnOde1dXqte
+ /3/yvKGeq79kNe4VIG8Bh6o/2ytINbeQm5AVo+XHHwoxRgNRJV/MMlHNmALppWqigE0NNtPsW3
+ 8sI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Aug 2022 09:34:47 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4M943B5qQVz1Rwnl
+        for <linux-ide@vger.kernel.org>; Sat, 20 Aug 2022 09:34:46 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1661013286;
+         x=1663605287; bh=Wo+oVGrs/+p6u0Pp4Ld4dnmAYJG5gVXS7fhJLbJ+6jw=; b=
+        R25G3aUtMyKce6MJapzMqKG1EUgR3yBQ+Scblszkb9VNO9BXD/rta5wAFaGBe1C+
+        h2Oy0eYj149PC9XhWbHJZLafA8kv0vMMldWDg8TswSNqha6Mc2lgay/++S1xVP2b
+        s20F2y7HfMaUkvS73wflUy9YzgaMGR8JKrWcasdO3C7OOnlKem2Pem3wzeuPLjE4
+        LKyWtttKTfv5OSNjWsOaEbnlM6/jCAXN0c2xn+6/bpLdWU7+PLEEcYAY5y5es6Wi
+        /WnGmn2nVXL25rgsjNeTK8x/6G7BoiFwouHjyhtY1DqN6PcpkidmzfG+LjrNCK4s
+        BPJO8eDt5ZpyaTaHm2yl7g==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id JGw1vCOjlwZG for <linux-ide@vger.kernel.org>;
+        Sat, 20 Aug 2022 09:34:46 -0700 (PDT)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4M94396vFqz1RtVk;
+        Sat, 20 Aug 2022 09:34:45 -0700 (PDT)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Subject: [GIT PULL] ata fixes for 6.0-rc2
+Date:   Sun, 21 Aug 2022 01:34:44 +0900
+Message-Id: <20220820163444.128237-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-Subject: Re: [ata] 0568e61225: stress-ng.copy-file.ops_per_sec -15.0%
- regression
-To:     Oliver Sang <oliver.sang@intel.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Linux Memory Management List" <linux-mm@kvack.org>,
-        <linux-ide@vger.kernel.org>, <lkp@lists.01.org>, <lkp@intel.com>,
-        <ying.huang@intel.com>, <feng.tang@intel.com>,
-        <zhengjun.xing@linux.intel.com>, <fengwei.yin@intel.com>
-References: <2e9cf5a6-c043-5ccf-e363-097c6c941891@huawei.com>
- <f1c3d717-339d-ba2b-9775-fc0e00f57ae3@huawei.com>
- <Yvs/w93KUkgD9f7/@xsang-OptiPlex-9020>
- <aabf7ed8-8d4d-dc68-1b8b-c91653701def@huawei.com>
- <43eaa104-5b09-072c-56aa-6289569b0015@opensource.wdc.com>
- <28d6e48b-f52f-9467-8260-262504a1a1ff@huawei.com>
- <YvzyZJUblfqN6Xj3@xsang-OptiPlex-9020>
- <743867a6-b266-58e4-a8a6-542757916f0a@huawei.com>
- <Yv2euLFLjl8bEaeI@xsang-OptiPlex-9020>
- <d1b1d434-059d-4d76-5fc6-092ab9ba6e16@huawei.com>
- <Yv8sg3J8PLD56osY@xsang-OptiPlex-9020>
-From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <Yv8sg3J8PLD56osY@xsang-OptiPlex-9020>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.195.34.98]
-X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
- lhrpeml500003.china.huawei.com (7.191.162.67)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 19/08/2022 07:24, Oliver Sang wrote:
->> As you probably saw, I sent "[RFT PATCH] ata: libata: Set __ATA_BASE_SHT
->> max_sectors" for testing on top of v6.0-rc1, and I hope that then we can get
+Linus,
 
-Based on result below, I wonder if SAS HBAs (which use libata) should 
-not use default SCSI max_sectors also. Any libsas HBA driver does today, 
-IIRC.
+The following changes since commit 568035b01cfb107af8d2e4bd2fb9aea22cf5b8=
+68:
 
->> same performance as v5.19
-> yeah, our test confirmed your expectation:
-> 
-> stress-ng.copy-file.ops_per_sec
-> v5.19                 - 26.85
-> v6.0-rc1              - 23.03
-> v6.0-rc1 + your patch - 26.94
-> 
+  Linux 6.0-rc1 (2022-08-14 15:50:18 -0700)
 
-great, thanks
+are available in the Git repository at:
 
-Thanks,
-John
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
+ags/ata-6.0-rc2
+
+for you to fetch changes up to a357f7b4583ebf81d19c95aef57497ae81c5f63c:
+
+  ata: libata: Set __ATA_BASE_SHT max_sectors (2022-08-21 01:29:50 +0900)
+
+----------------------------------------------------------------
+ATA fixes for 6.0-rc2
+
+* Add a missing command name definition for ata_get_cmd_name(), from me.
+
+* A fix to address a performance regression due to the default max_sector=
+s queue limit for ATA devices connected
+  to AHCI adapters being too small, from John.
+
+----------------------------------------------------------------
+Damien Le Moal (1):
+      ata: libata-eh: Add missing command name
+
+John Garry (1):
+      ata: libata: Set __ATA_BASE_SHT max_sectors
+
+ drivers/ata/libata-eh.c | 1 +
+ include/linux/libata.h  | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
