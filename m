@@ -2,48 +2,46 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1341CC32772
-	for <linux-ide@archiver.kernel.org>; Mon, 22 Aug 2022 18:37:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA36AC3F6B0
+	for <linux-ide@archiver.kernel.org>; Mon, 22 Aug 2022 18:37:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237532AbiHVShi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 22 Aug 2022 14:37:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39468 "EHLO
+        id S237416AbiHVShp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 22 Aug 2022 14:37:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237454AbiHVShh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2022 14:37:37 -0400
+        with ESMTP id S236456AbiHVShi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 Aug 2022 14:37:38 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A423349B4A;
-        Mon, 22 Aug 2022 11:37:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 594012F67A;
+        Mon, 22 Aug 2022 11:37:37 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id ADBE2DA3;
-        Mon, 22 Aug 2022 21:40:45 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com ADBE2DA3
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 6F049DA5;
+        Mon, 22 Aug 2022 21:40:47 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 6F049DA5
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1661193645;
-        bh=lftDM8bVxbb6i7gbnpPybwAsln7Ng23i+K1fZlPSI1c=;
+        d=baikalelectronics.ru; s=mail; t=1661193647;
+        bh=242XWgd0beiIZrzRTnwpgzsZw6dSuiW41UyARfAwlLg=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=kAuA/NTc/4ZD9DmhKEiC85ciwijvQlecv6sZEaeHZIVeIi3aPYpezY8wnxxX6Fdhl
-         W38f1PdxkGHLLuvcSaOephLPxlnQZFcflZ76R7/CvIJGsXk9NylYn7ohZPCXHMWMfz
-         AY6Sbz3r+Fm/FirPd48CH44v5yt4ob2tRMcFs1Nw=
+        b=Nr7dEt4boHHfY99kE2SUmhklEYeuTrAFeGfLQBWNFCXC9QqhhGpEljMnt/Au5PhDt
+         FWFP6stGwnhtdnYVfk8NgqOXmvvmZ7qq9YQ0nL3eHvhpcWb5n7JMcpWqqE+kxqS21u
+         TK4YnrGWrI5gnRUQJBXz7KD5wESvSB+1PoQtz2xw=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:37:31 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:37:32 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>, Rob Herring <robh@kernel.org>
-Subject: [PATCH v7 01/23] dt-bindings: ata: ahci-platform: Move dma-coherent to sata-common.yaml
-Date:   Mon, 22 Aug 2022 21:37:06 +0300
-Message-ID: <20220822183728.24434-2-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v7 03/23] dt-bindings: ata: ahci-platform: Clarify common AHCI props constraints
+Date:   Mon, 22 Aug 2022 21:37:08 +0300
+Message-ID: <20220822183728.24434-4-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220822183728.24434-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220822183728.24434-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -54,16 +52,14 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Seeing doubtfully any SATA device working without embedded DMA engine
-let's permit the device nodes being equipped with the dma-coherent
-property in case if the platform is capable of cache-coherent DMAs.
-
-As a side-effect we can drop the explicit dma-coherent property definition
-from the particular device schemas. Currently it concerns the Broadcom
-SATA AHCI controller only.
+Indeed in accordance with what is implemented in the AHCI platform driver
+and the way the AHCI DT nodes are defined in the DT files we can add the
+next AHCI DT properties constraints: AHCI CSR ID is fixed to 'ahci', PHY
+name is fixed to 'sata-phy', AHCI controller can't have more than 32 ports
+by design, AHCI controller can have up to 32 IRQ lines.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
@@ -72,54 +68,74 @@ Changelog v2:
 - This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
 
 Changelog v4:
-- Move the dma-coherent property to the sata-common.yaml schema instead
-  of removing it.
-- Remove the Hannes' rb tag.
+- Fix spelling: 'imeplemtned' and 'paltform' in the patch log. (@Hannes)
+- Add the interrupts property constraints. (@Rob)
+- Add forgotten '---' patchlog-changelog separator. (@Sergei)
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.yaml  | 2 --
- Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml | 2 --
- Documentation/devicetree/bindings/ata/sata-common.yaml    | 2 ++
- 3 files changed, 2 insertions(+), 4 deletions(-)
+ .../devicetree/bindings/ata/ahci-common.yaml    | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-index c146ab8e14e5..9304e4731965 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-@@ -87,8 +87,6 @@ properties:
-     description:
-       regulator for AHCI controller
+diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+index e89bda3b62cc..12a97b56226f 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
++++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
+@@ -31,12 +31,16 @@ properties:
  
--  dma-coherent: true
--
-   phy-supply:
-     description:
-       regulator for PHY power
-diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-index 235a93ac86b0..4ee74df8e58a 100644
---- a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-+++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-@@ -41,8 +41,6 @@ properties:
+   reg-names:
+     description: CSR space IDs
++    contains:
++      const: ahci
+ 
    interrupts:
+     description:
+       Generic AHCI state change interrupt. Can be implemented either as a
+       single line attached to the controller or as a set of the signals
+       indicating the particular port events.
++    minItems: 1
++    maxItems: 32
+ 
+   ahci-supply:
+     description: Power regulator for AHCI controller
+@@ -52,14 +56,13 @@ properties:
      maxItems: 1
  
--  dma-coherent: true
--
- if:
-   properties:
-     compatible:
-diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
-index 7ac77b1c5850..cb88d3e25e73 100644
---- a/Documentation/devicetree/bindings/ata/sata-common.yaml
-+++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
-@@ -31,6 +31,8 @@ properties:
-   "#size-cells":
-     const: 0
+   phy-names:
+-    maxItems: 1
++    const: sata-phy
  
-+  dma-coherent: true
-+
+   ports-implemented:
+     $ref: '/schemas/types.yaml#/definitions/uint32'
+     description:
+       Mask that indicates which ports the HBA supports. Useful if PI is not
+       programmed by the BIOS, which is true for some embedded SoC's.
+-    maximum: 0x1f
+ 
  patternProperties:
-   "^sata-port@[0-9a-e]$":
-     description: |
+   "^sata-port@[0-9a-f]+$":
+@@ -80,8 +83,12 @@ $defs:
+ 
+     properties:
+       reg:
+-        description: AHCI SATA port identifier
+-        maxItems: 1
++        description:
++          AHCI SATA port identifier. By design AHCI controller can't have
++          more than 32 ports due to the CAP.NP fields and PI register size
++          constraints.
++        minimum: 0
++        maximum: 31
+ 
+       phys:
+         description: Individual AHCI SATA port PHY
+@@ -89,7 +96,7 @@ $defs:
+ 
+       phy-names:
+         description: AHCI SATA port PHY ID
+-        maxItems: 1
++        const: sata-phy
+ 
+       target-supply:
+         description: Power regulator for SATA port target device
 -- 
 2.35.1
 
