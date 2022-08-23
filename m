@@ -2,101 +2,107 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D644C3F6B0
-	for <linux-ide@archiver.kernel.org>; Tue, 23 Aug 2022 16:10:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 823FCC32793
+	for <linux-ide@archiver.kernel.org>; Tue, 23 Aug 2022 23:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240769AbiHWQKx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 23 Aug 2022 12:10:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48070 "EHLO
+        id S231883AbiHWXnP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 23 Aug 2022 19:43:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244310AbiHWQKW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 Aug 2022 12:10:22 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9120289829;
-        Tue, 23 Aug 2022 05:29:21 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id s36-20020a17090a69a700b001faad0a7a34so17054780pjj.4;
-        Tue, 23 Aug 2022 05:29:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=ccy2SxZD9TMnc96K+D8Oj+6sNQ5XNCub+nh+eTP3lQs=;
-        b=XSsajTrcC9/zN+sZalxiWHuF+qvphrlwxRfBM+d81FerKXE3+WnaIl/WejghE+UQ76
-         abTEJZkB8A+5IOv9hkxC5dEv/VnMrSeEZhk8i6aVH6fsjVJTv8LmGUYoAyetCUFNgTcR
-         VG6jYfckfjNlHgZHUfEJh5ndUrCsmqpm3j6bWMU8O7esFDj7rLPWXwojU9xmW1mKsA6U
-         4GvsANHDvXumZxpZUdF4rcpd7O8Sue9j47lzLFHQcI/PWhJQGtTHCFA2jtH+VSWZNXf4
-         EJXihCE8jCpp57SLa636Bpu/nJX0WwnifSVxdSj3A/53Y+feX31mcVOKxY5Kf5/r6A/+
-         xMNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc;
-        bh=ccy2SxZD9TMnc96K+D8Oj+6sNQ5XNCub+nh+eTP3lQs=;
-        b=xbjmSzbkpf8wWTMI6Y23KP6fESKN8CR0W+a0pnP7FVOqnFZjGIbhWQ0PnmbxfAVZ96
-         DQZ58jb8+5nyrm/98uRdkzCPXcESHHNCtEfS1tKNULzo3ipzY8jU6UE4Ba77MdlBK7qt
-         aw+mwuT84RIFxFErPLfw7dxpK41dLLOs02b+kXliasI2fazcZEqGHoZEUDNS8FyjivAK
-         gDsZTnPMPsKsXrtahARxVCbMAzXlVm5njXzsdi3OarW5fKPw1ahaDQCqDlUgpC7asdWw
-         C8yfeNtTYPix2cl37ybnLFEb8oMFsEe7ScAS+SqU9cOMjpfytLLyDBAkTfec1wbbGXld
-         VhFQ==
-X-Gm-Message-State: ACgBeo3otALLObhYOPhjQY3pDmBAQtiE48zcCTWjHAtZ/fLAcU4ALggD
-        xtTpkDihmPJwH7BGt1kqITA=
-X-Google-Smtp-Source: AA6agR5r2GBEkrp6zNq7GKBOI6CwFCVkFypVCRquWLbq+1IC8WtkXdKfIfc3hkxR02EVaDAjRX6uyQ==
-X-Received: by 2002:a17:903:1c5:b0:172:f8a4:b3d1 with SMTP id e5-20020a17090301c500b00172f8a4b3d1mr5351282plh.157.1661257759793;
-        Tue, 23 Aug 2022 05:29:19 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id 79-20020a621552000000b0052ddccd7b64sm10621650pfv.205.2022.08.23.05.29.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Aug 2022 05:29:19 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: cui.jinpeng2@zte.com.cn
-To:     damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jinpeng Cui <cui.jinpeng2@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] ata: libata-core: remove redundant err_mask variable
-Date:   Tue, 23 Aug 2022 12:29:14 +0000
-Message-Id: <20220823122914.211355-1-cui.jinpeng2@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229732AbiHWXnO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 Aug 2022 19:43:14 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B88895E9;
+        Tue, 23 Aug 2022 16:43:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661298194; x=1692834194;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=nVmxykiA0uq+h7e/PcBCUGhl/NChr999fUIhLiACrHQ=;
+  b=Bt9mP7LPKokL7Kb32eeVhBc95ZcPrv/h+ihpnJOy0kjLnhW6SahVnxh+
+   spgIiB0VuMtw120pWVmXoAd7BeDDuvwUuUmGrn09B59vM5OVZdelX/blb
+   2z3qBL45gZZBBjManrSlC3ZZnoICre8v+I8jkCVorU5VYeY2LzIVg0o+9
+   Zd6noUVEK71JitAwXIIMkuAEu4T8b3RVkjxzxaoq2umoeD5Z5cVpzsVhB
+   Rvel40j5N6J20UeXaqwZiPT2xad4bnlx12MJvBycxYkf077UvsmuwXufh
+   BjEbsOMvIpjCJDbyRj3ODR4WhBY/El30hcjbKMeyAUSK6DHIyf/WzVHYn
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10448"; a="274208749"
+X-IronPort-AV: E=Sophos;i="5.93,259,1654585200"; 
+   d="scan'208";a="274208749"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2022 16:43:14 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,259,1654585200"; 
+   d="scan'208";a="698852680"
+Received: from lkp-server02.sh.intel.com (HELO 9bbcefcddf9f) ([10.239.97.151])
+  by FMSMGA003.fm.intel.com with ESMTP; 23 Aug 2022 16:43:11 -0700
+Received: from kbuild by 9bbcefcddf9f with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oQdY6-0000id-1b;
+        Tue, 23 Aug 2022 23:43:10 +0000
+Date:   Wed, 24 Aug 2022 07:42:32 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v7 07/23] ata: libahci_platform: Convert to using devm
+ bulk clocks API
+Message-ID: <202208240749.UcN8Fuu0-lkp@intel.com>
+References: <20220822183728.24434-8-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220822183728.24434-8-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
+Hi Serge,
 
-Return value from ata_exec_internal() directly instead of
-taking this in another redundant variable.
+I love your patch! Yet something to improve:
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
----
- drivers/ata/libata-core.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+[auto build test ERROR on robh/for-next]
+[also build test ERROR on axboe-block/for-next linus/master v6.0-rc2 next-20220823]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 864b26009eae..0ba0e692210f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4340,7 +4340,6 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
- unsigned int ata_dev_set_feature(struct ata_device *dev, u8 subcmd, u8 action)
- {
- 	struct ata_taskfile tf;
--	unsigned int err_mask;
- 	unsigned int timeout = 0;
- 
- 	/* set up set-features taskfile */
-@@ -4356,9 +4355,8 @@ unsigned int ata_dev_set_feature(struct ata_device *dev, u8 subcmd, u8 action)
- 	if (subcmd == SETFEATURES_SPINUP)
- 		timeout = ata_probe_timeout ?
- 			  ata_probe_timeout * 1000 : SETFEATURES_SPINUP_TIMEOUT;
--	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, timeout);
- 
--	return err_mask;
-+	return ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, timeout);
- }
- EXPORT_SYMBOL_GPL(ata_dev_set_feature);
- 
+url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
+config: hexagon-randconfig-r041-20220821 (https://download.01.org/0day-ci/archive/20220824/202208240749.UcN8Fuu0-lkp@intel.com/config)
+compiler: clang version 16.0.0 (https://github.com/llvm/llvm-project b04d01c009d7f66bcca9138d2ce40999eedf104d)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/fbc177b5ec3bf29261813907b13ab93865211e6e
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
+        git checkout fbc177b5ec3bf29261813907b13ab93865211e6e
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+>> ld.lld: error: undefined symbol: __clk_get_name
+   >>> referenced by libahci_platform.c
+   >>>               ata/libahci_platform.o:(ahci_platform_get_resources) in archive drivers/built-in.a
+   >>> referenced by libahci_platform.c
+   >>>               ata/libahci_platform.o:(ahci_platform_get_resources) in archive drivers/built-in.a
+
 -- 
-2.25.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
