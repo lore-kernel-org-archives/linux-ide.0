@@ -2,107 +2,93 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 823FCC32793
-	for <linux-ide@archiver.kernel.org>; Tue, 23 Aug 2022 23:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38434C00140
+	for <linux-ide@archiver.kernel.org>; Wed, 24 Aug 2022 17:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231883AbiHWXnP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 23 Aug 2022 19:43:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43038 "EHLO
+        id S240127AbiHXR32 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 24 Aug 2022 13:29:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbiHWXnO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 Aug 2022 19:43:14 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B88895E9;
-        Tue, 23 Aug 2022 16:43:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661298194; x=1692834194;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=nVmxykiA0uq+h7e/PcBCUGhl/NChr999fUIhLiACrHQ=;
-  b=Bt9mP7LPKokL7Kb32eeVhBc95ZcPrv/h+ihpnJOy0kjLnhW6SahVnxh+
-   spgIiB0VuMtw120pWVmXoAd7BeDDuvwUuUmGrn09B59vM5OVZdelX/blb
-   2z3qBL45gZZBBjManrSlC3ZZnoICre8v+I8jkCVorU5VYeY2LzIVg0o+9
-   Zd6noUVEK71JitAwXIIMkuAEu4T8b3RVkjxzxaoq2umoeD5Z5cVpzsVhB
-   Rvel40j5N6J20UeXaqwZiPT2xad4bnlx12MJvBycxYkf077UvsmuwXufh
-   BjEbsOMvIpjCJDbyRj3ODR4WhBY/El30hcjbKMeyAUSK6DHIyf/WzVHYn
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10448"; a="274208749"
-X-IronPort-AV: E=Sophos;i="5.93,259,1654585200"; 
-   d="scan'208";a="274208749"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2022 16:43:14 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,259,1654585200"; 
-   d="scan'208";a="698852680"
-Received: from lkp-server02.sh.intel.com (HELO 9bbcefcddf9f) ([10.239.97.151])
-  by FMSMGA003.fm.intel.com with ESMTP; 23 Aug 2022 16:43:11 -0700
-Received: from kbuild by 9bbcefcddf9f with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oQdY6-0000id-1b;
-        Tue, 23 Aug 2022 23:43:10 +0000
-Date:   Wed, 24 Aug 2022 07:42:32 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v7 07/23] ata: libahci_platform: Convert to using devm
- bulk clocks API
-Message-ID: <202208240749.UcN8Fuu0-lkp@intel.com>
-References: <20220822183728.24434-8-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S239141AbiHXR31 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2022 13:29:27 -0400
+Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 302697CABD;
+        Wed, 24 Aug 2022 10:29:26 -0700 (PDT)
+Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
+ by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
+ id 2e5623db8190bb58; Wed, 24 Aug 2022 19:29:24 +0200
+Received: from kreacher.localnet (unknown [213.134.169.54])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by v370.home.net.pl (Postfix) with ESMTPSA id C299766D157;
+        Wed, 24 Aug 2022 19:29:23 +0200 (CEST)
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org, Linux ACPI <linux-acpi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH] ATA: ACPI: Do not check ACPI_FADT_LOW_POWER_S0
+Date:   Wed, 24 Aug 2022 19:29:23 +0200
+Message-ID: <4426478.LvFx2qVVIh@kreacher>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220822183728.24434-8-Sergey.Semin@baikalelectronics.ru>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 213.134.169.54
+X-CLIENT-HOSTNAME: 213.134.169.54
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvfedrvdejuddgudduhecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpeffffffkefgheehffelteeiveeffeevhfelteejvddvieejjeelvdeiheeuveeuffenucfkphepvddufedrudefgedrudeiledrheegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepvddufedrudefgedrudeiledrheegpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeehpdhrtghpthhtohepuggrmhhivghnrdhlvghmohgrlhesohhpvghnshhouhhrtggvrdifuggtrdgtohhmpdhrtghpthhtoheplhhinhhugidqihguvgesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdgrtghpihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgv
+ lhdrohhrghdprhgtphhtthhopehmrghrihhordhlihhmohhntghivghllhhosegrmhgurdgtohhm
+X-DCC--Metrics: v370.home.net.pl 1024; Body=5 Fuz1=5 Fuz2=5
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Serge,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I love your patch! Yet something to improve:
+The ACPI_FADT_LOW_POWER_S0 flag merely means that it is better to
+use low-power S0 idle on the given platform than S3 (provided that
+the latter is supported) and it doesn't preclude using either of
+them (which of them will be used depends on the choices made by user
+space).
 
-[auto build test ERROR on robh/for-next]
-[also build test ERROR on axboe-block/for-next linus/master v6.0-rc2 next-20220823]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+For this reason, there is no benefit from checking that flag in
+ahci_update_initial_lpm_policy().
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-config: hexagon-randconfig-r041-20220821 (https://download.01.org/0day-ci/archive/20220824/202208240749.UcN8Fuu0-lkp@intel.com/config)
-compiler: clang version 16.0.0 (https://github.com/llvm/llvm-project b04d01c009d7f66bcca9138d2ce40999eedf104d)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/fbc177b5ec3bf29261813907b13ab93865211e6e
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
-        git checkout fbc177b5ec3bf29261813907b13ab93865211e6e
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash
+First off, it cannot be a bug to do S3 with policy set to either
+ATA_LPM_MIN_POWER_WITH_PARTIAL or ATA_LPM_MIN_POWER, because S3 can be
+used on systems with ACPI_FADT_LOW_POWER_S0 set and it must work if
+really supported, so the ACPI_FADT_LOW_POWER_S0 check is not needed to
+protect the S3-capable systems from failing.
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+Second, suspend-to-idle can be carried out on a system with
+ACPI_FADT_LOW_POWER_S0 unset and it is expected to work, so if setting
+policy to either ATA_LPM_MIN_POWER_WITH_PARTIAL or ATA_LPM_MIN_POWER is
+needed to handle that case correctly, it should be done regardless of
+the ACPI_FADT_LOW_POWER_S0 value.
 
-All errors (new ones prefixed by >>):
+Accordingly, drop the ACPI_FADT_LOW_POWER_S0 check from
+ahci_update_initial_lpm_policy().
 
->> ld.lld: error: undefined symbol: __clk_get_name
-   >>> referenced by libahci_platform.c
-   >>>               ata/libahci_platform.o:(ahci_platform_get_resources) in archive drivers/built-in.a
-   >>> referenced by libahci_platform.c
-   >>>               ata/libahci_platform.o:(ahci_platform_get_resources) in archive drivers/built-in.a
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/ata/ahci.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Index: linux-pm/drivers/ata/ahci.c
+===================================================================
+--- linux-pm.orig/drivers/ata/ahci.c
++++ linux-pm/drivers/ata/ahci.c
+@@ -1610,8 +1610,7 @@ static void ahci_update_initial_lpm_poli
+ 	}
+ 
+ #ifdef CONFIG_ACPI
+-	if (policy > ATA_LPM_MED_POWER &&
+-	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0)) {
++	if (policy > ATA_LPM_MED_POWER) {
+ 		if (hpriv->cap & HOST_CAP_PART)
+ 			policy = ATA_LPM_MIN_POWER_WITH_PARTIAL;
+ 		else if (hpriv->cap & HOST_CAP_SSC)
+
+
+
