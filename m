@@ -2,193 +2,162 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28301ECAA24
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Aug 2022 18:48:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EC3BECAAA2
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Aug 2022 22:27:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243107AbiHYSsS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Aug 2022 14:48:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46966 "EHLO
+        id S244408AbiHYW13 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Aug 2022 18:27:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241497AbiHYSsR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2022 14:48:17 -0400
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2077.outbound.protection.outlook.com [40.107.95.77])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 766CF1EC6A;
-        Thu, 25 Aug 2022 11:48:15 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cYt9VZJt5DzrTEnvJtkie0bkPzkdBpkqCOsX/qpxgVHaU1WqardOWZvElUugklh5xC2DB2Ndlvfh6cwTLsWmHK/8boMNpoGXrNz+EcURyt48l1ND0K5jW6a82XEj7ihq0gHv0osBn3NsXdUADemdG1MLAwtVBBPChRpDVmIxciWe8L38ldgxAa223K02mgy2QdDi4C9Qr6fFZNYfDYDKdGVpGsVQfwtjTP8o1xCF1lBl5hWYt3wgqqYkTD521fAyzePBsCARWORzDoolrYHnvvcO1yO85A7sk4o/VdHelbupa2RW7SzsPdS6xZkxIKNt/3YDCRRBkmMQNR4aOTggAg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YaVsALK9inLtnrnSmMl0J+RR42iHPcC/WtiHDRRNs/Y=;
- b=DIYvLDtx4hy2QI0rFGiTebHYZDgoekj4OX35HsJByQltWCYWhyjqHlGeHp6LMtU7aKTQteztFeP7NngWGNEy2sXoOW5hhCck6sRPUItC36TEWAGo2UstERdDowS5qnq/TFh1LwuoRzBMSCEjLF1b0DFs1yCjeDsPmCvX9IURUbglsSoIPLHd/tJsp8C75YMrQrKDnEjKMuorqDEqlA5P31iOo4MnyDCnrCA1jzJHRKEDmL7N2bNLSkE7iibgvio32ZY4lzZlLpY8K3Q6Il1majSUrDFnZmF6yyTAn0UOz4QYgd9g0rOCwj/xFNW+zAka/DbvrqRw37vFgsbx2kE+qw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YaVsALK9inLtnrnSmMl0J+RR42iHPcC/WtiHDRRNs/Y=;
- b=2q91JgwRNfoPhGvCICAkcX0V4GlT6SHlM7PVzsNDmHgVKFn75KD37hYLmRNIb6E6NlqRDudLDlziCF8YQajObe+/KUyGEFRglmz03aebvJycPvMfvFwL4bqcF1RCg109c++Gjgp+vY2QE5QfNab3nU/0XMe9NfUcKJyRp+IUHVM=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from MN0PR12MB6101.namprd12.prod.outlook.com (2603:10b6:208:3cb::10)
- by DM6PR12MB5699.namprd12.prod.outlook.com (2603:10b6:5:35::33) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5546.19; Thu, 25 Aug
- 2022 18:48:13 +0000
-Received: from MN0PR12MB6101.namprd12.prod.outlook.com
- ([fe80::e00a:1f8c:dcd1:afc3]) by MN0PR12MB6101.namprd12.prod.outlook.com
- ([fe80::e00a:1f8c:dcd1:afc3%5]) with mapi id 15.20.5566.015; Thu, 25 Aug 2022
- 18:48:12 +0000
-Message-ID: <018786de-1609-27e0-85ab-bcc7fdaefed0@amd.com>
-Date:   Thu, 25 Aug 2022 13:48:11 -0500
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH v3] ata: ahci: Do not check ACPI_FADT_LOW_POWER_S0
-Content-Language: en-US
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org, Linux ACPI <linux-acpi@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <12054041.O9o76ZdvQC@kreacher>
-From:   "Limonciello, Mario" <mario.limonciello@amd.com>
-In-Reply-To: <12054041.O9o76ZdvQC@kreacher>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: CH2PR10CA0028.namprd10.prod.outlook.com
- (2603:10b6:610:4c::38) To MN0PR12MB6101.namprd12.prod.outlook.com
- (2603:10b6:208:3cb::10)
+        with ESMTP id S244440AbiHYW10 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2022 18:27:26 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB001C59EF
+        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:27:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1661466444; x=1693002444;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=5hpw5clYxJvoQGyX7Gfm68NkZgW2078Mw0aCa+jMZ3E=;
+  b=W+A3tt/aurG/qyzw/Zucii/qJXirJ/t2HQw99Rw4KxfR6UuHWsffvfOC
+   9fPMyCkOrG42c7CyH6KT9+0sXIQtWql5nS3kJ+SEHdaZAF1B2wwTmIqEP
+   U7/gMQ1eswG27mIH/ZHF80/R6Dd6+o2/ZqghVl7Zp7cq6c7wgmWuSW+lV
+   W1GfFh2w5k+AFPvrD2S7xcN33eZCfiswRY1x6Dpq6EZ0Os+4wMQ08TQCq
+   HG/zkXgEF1NYplxqpqHkpiR8MoGPtylr+1lBJ3OWQ5rRJXEFxN3LGT6FH
+   TcZgQ1S+qSiLSXp2lLxyEhiNVukhElOm3h64MgvmE9CjqfMPRdpSzUxIw
+   w==;
+X-IronPort-AV: E=Sophos;i="5.93,264,1654531200"; 
+   d="scan'208";a="210184915"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Aug 2022 06:27:23 +0800
+IronPort-SDR: 0hVaZOv6xbxlkeEaiklJXXa6mP8T7xIqJkR6c+ZT8LjF470rqte1IvQ57LAEE9Wo1YvjixCHE2
+ yRkYk7qdmAeIsn/oBIlULhMMss0cb209iFrSONRvRF56FlA7YT3cyVRCUTr16gBTr7DRiG5YH+
+ 7b2/XfGEe9mpEfLL8DdOMQ7/uFPw3J5/JkmfnpNuTNZux5LCaybwPzcdND4+Kb9FDj3hKh86bd
+ sjX4/3jEAV0oYUmlqc3pF6u7yPopNOdn1P8LIxISILAXgpquuBGf0sZgSLH/TVpc+5pJrFQv9c
+ 9Z3ZUJHpoYUo6UWyirtUOYP0
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 14:48:00 -0700
+IronPort-SDR: OhJnc9uHuy0sqRaRZUeyBolYWVmMCF1buUMQv90NpCQJCeFSTY7tV5tsy/7ClIR7fn9muL3Yho
+ JkADzTC6trWdThHgBWxRPBimqyEBAKU/6jXhoIz75UutedDc3Y+/LJSgT/JBZ2FY2u4fxhQn8F
+ bGgpCQij8GYLAaUTA7shsOyddwLcBc4pEHNuo1boYqUKq41xBqXFcOWmDHwRfzrwESwD4OYJLg
+ p1hgETX4Hn4035hmZtTuWkLHgOyS+yvK+hyVMPldxPFsdcykF6AMYBLO4gIwn18LI0LyVFKNd1
+ SzI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 15:27:24 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MDHdl5Tjnz1Rw4L
+        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:27:23 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1661466443; x=1664058444; bh=5hpw5clYxJvoQGyX7Gfm68NkZgW2078Mw0a
+        Ca+jMZ3E=; b=of09kOgZYhdp5kExVXxEF8Z202tHrkWp6/6iM0qZQHUZu+6HRv3
+        WhYCBtXjGmdgzccoSFZir3UJfstLkYiSFRpimS9BNQZPNMuaknnNriSkib3n+I1b
+        U8TL6+X7qfOoiiB3HYAW/oKwN1mB4O1d54s+YufkK+FjfWmZwp0NiWAOMVJLplra
+        sDOfNDPCsl2Vn5to7Ksi3beyn5bhScEfuyVNtlTiy9o8qayFtp+1UVqjTYmaYwhv
+        L6rizhy9vxbASP/nYCdYGmKgAGzXnlDDPxR872w2jmT6GXA3XnO8+VLtAnzVFgX/
+        htwfRcv5WdMdgDoZBw9hpkGzHaSdzvBRRuw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 7f63N1yg8dIm for <linux-ide@vger.kernel.org>;
+        Thu, 25 Aug 2022 15:27:23 -0700 (PDT)
+Received: from [10.225.163.46] (unknown [10.225.163.46])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MDHdj4z6Jz1RtVk;
+        Thu, 25 Aug 2022 15:27:21 -0700 (PDT)
+Message-ID: <a4948117-dcb1-a27e-941a-811832e9a7c9@opensource.wdc.com>
+Date:   Fri, 26 Aug 2022 07:27:20 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 04e6334a-b347-4643-0182-08da86ca5d08
-X-MS-TrafficTypeDiagnostic: DM6PR12MB5699:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fZ++cEXElYGJ7iYV2iEC/5wO23x5ERQBQTX8IPtIzXe7+pn+Y8wkx2j4DslentKzb8rLpwVcsZM0qfvbpIok5IPyvnbkJx6brbOcEceVQ2OGo60OC0COWMxX3dSC28gloJi/s52EeTDRVg8vJC8KhXJOl471BceV2DPy01kjXuVYikNqiu61b4w6UHFYJGREfoQnr2pCRaJttpp8SM8xB9xX59wa8Ua/+TA6zlLFFn0T+EeZxwZUXHCh8HID9/WcpNI1cZlwHXNkZ5RyGl1Uapb/X75AQ17ozo/eFqTUN0BZfSoL8l19C8m5QTl6BtbsXQ8/br+4KE3+24hGkrFV1oZPvEYZPliaQnohpw3O3ZBpSa+/nPeQplIXGkLzs9w3Z/+MFLuCZaH7at/mFZdpwEEMESoHSeaKDY/8xSKogBpmUNzgEW+WifaPr6Kn//50HQ1BKeBhPUdf/AwUh1BjUDT+hD8iv9RprC1F20Ak75SCfSuWRHzPnePtKgpgsE6wF3O6FLM/o0kTRUGnuLz1UdEFEmgGYAt46q2y2TUzb21+7z2nt4gS5u1Q/Txy3ZRjMsAAuAjm00CrHjqlFgj7k4eoemN8ITXqRoZQVlIBZI9dPZNELe0Yz/wo8VnoIR3DrLrI/hNRd37uVrYwAaErNMIYo3/oCv1Vg4LJPvCUDLQGpOuKOqOBfU7yyUo4wfOO3uUUyTH8/Oy2i9+DJE4CgAHOByQPa/B29wRhCfd+4KIq5Uz6NI66T4q4vv/zUDEJQqnj3yKgM24vTg2m2mUtCcj8xb8A59C3f8r6wjC8kutfLDjwInYUtRaKIqeyegtMXGs16sMf7BvRBeHUDe2QjA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN0PR12MB6101.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(376002)(136003)(366004)(39860400002)(346002)(396003)(54906003)(110136005)(66946007)(66476007)(316002)(66556008)(8676002)(38100700002)(2906002)(26005)(5660300002)(8936002)(4326008)(86362001)(6512007)(36756003)(41300700001)(2616005)(31696002)(6506007)(31686004)(53546011)(6486002)(186003)(84970400001)(83380400001)(478600001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?K1FjNTA3ZjFlZGYzR2p0bnVEU3JqYUZNUEZ6L09WNG5FN0RaWEg5TFg5ejN1?=
- =?utf-8?B?NkVtTnVqcitmNWY3U2F2R0RGYVhsbmJVYmVPTTJ1UEJDaWZtRTNpaldvSmk5?=
- =?utf-8?B?UU1tS0FYck9Qclh3QmlVTk5pbEFsMzRYR3ljWEtTOUFTRTk0SXdmREdJbnZN?=
- =?utf-8?B?cDhKUmZKWENhMHBzUHdGSlNPMkJlRnRseXVRaDU2NFZTc2Z0YzFjQ1lvQlRX?=
- =?utf-8?B?YmVBemtyVVlVUDNNODlUSzBnZGtXcUdsVVIzNzBLa0M5b2psN3VuaUtNdk45?=
- =?utf-8?B?TlBTcWZUdUJ5bXBhSzI0eDFPUXhENmdDd0w2dmJXWC9JVG40RmhuTERKaHB4?=
- =?utf-8?B?a2ZRRW45azVwRzlWYVNGVWRsMEU5ZU9ZWUNIZGRWNEJVUzdPVkVCa05RQ0VK?=
- =?utf-8?B?Qm5xall1R29ZNC9IYnVTcm5HZzZ6NGNEMmRLMUxwdkpSY0VZdVcxNWNDNEVo?=
- =?utf-8?B?MXF5L2VDVENMclovblhBek5ZaVM4SlQxYVpScHExTmFiMElUY1hiZmlEYXJC?=
- =?utf-8?B?RWxSVXVFTzA3eCtySGJzZWxsQjJaMFVnV1hLbWd6U244czFKdFltMVJVaEVy?=
- =?utf-8?B?UU9rLzV6Qlo4Um8xNGwvRTR0ZXd5NlFYWlUydWxqVUR6ZDYwWXlYM1c0UFFw?=
- =?utf-8?B?dGgwVzJFVUoxV3JiVGJTdUo0L0tUNi80R1pHWFN6MWQ0M1dPeTVJTldXdG5t?=
- =?utf-8?B?M0xPaWlLb05iWDNXVjZFYmhnaXVEaUx2U3p2T3FxRzF1SzRFUUY1T2tqUVBy?=
- =?utf-8?B?S0hwSDlJWm1WWkNZSytpRnNwOVNUM2Y1cFlhZXRwV0RnYnJjWFlSWjM4NDBY?=
- =?utf-8?B?aEs5eE1JUldlYVlLbFlKWEFBTEQ3TW5GbzVQMTg3azA5MnV0bFkzNVBJWkFn?=
- =?utf-8?B?N3VHRkhBc2RRbG9VUktOU09rb3R1NkNUL1RmZFpTR0FDL2Q5clJoZXBkeENH?=
- =?utf-8?B?WXRPNXFVTllTTGFReVN2V1dwYjBzSHM1NktoVmNTL1JNb2RXNFN6RlROMlBw?=
- =?utf-8?B?eXlMK2ZjVVYrcDhnZ2FhZWowckdNdVVqeXlaWDE4WUdnWGE1NmNYOWl2RzlB?=
- =?utf-8?B?TjJ6YWVJUXB1a3VhU0RQWWNaY0UzQ2VLMjVwZW41SkRPa0NhZEpWM282V2Zw?=
- =?utf-8?B?K2dWTHcxVFFYWFNQeWZjcmNjS2N3U0tBejBydUxuOG5mQ0o3RkRNRno0akhR?=
- =?utf-8?B?U0pCbmxNSGRXbU0wMHcrdnVNNzNSOTMrU0RSckhXa045YzVWZE4zUWE3MnJ3?=
- =?utf-8?B?NFNESjBzNmNDMXlPM0QzaHQ1dkQ2NXlDMy9BUTdtamxpTmNrbG52TW94c0dl?=
- =?utf-8?B?RzU4VVZJa2RyVXEwSmY1bng3MjFpRmRPUzAxNndLUHNwQ24zNWkvUDd3a3Fk?=
- =?utf-8?B?c0NuNDRzQjU5YTVxdUtGZ01Jd0htU1N5Y3ZTaVNzWlNhV2RqQXdYMjJzSjdO?=
- =?utf-8?B?QkhBRzNjZm4zdm1XdmFRWm1wQ1ptdE5jb3FUR2FnVEJ4b2pPSlZSS2ZqOGVk?=
- =?utf-8?B?RFhuemEzY0ZlcDQyVHBXRTdBMC9LMUY5L1hWVDBwaWFlN3Vudzd1M0Q5eU9q?=
- =?utf-8?B?NVNXeWNqNmFLT3JmVERyVTBiSlJVSzFGYWFUVnRzejQwYmlQOERjUExOaWpa?=
- =?utf-8?B?ZVJSTHBTeko1YS9FTjd3ZTBuT0owTXEybXlsT0dLYUpnMTNzWS9sRGlaZGVV?=
- =?utf-8?B?d3pXTHN6UUU5bjlWV1RGVCtwSC83cHJOY0grMXp3N0hXcjVadUJOVUhLY241?=
- =?utf-8?B?TEVKNTkwYXhNMnk2dUJjaEkycHdVNUo1SFA4WFdjZElKcG8yQVpTRzN4T0dj?=
- =?utf-8?B?TkdYcXRqTTFUQTRYWkp6SG1XSndka3ZxdEVkKzk1ZFZDUk9ZOCtydndFWWcx?=
- =?utf-8?B?dUxXbnNiWGN4K08vcUc5TjV2QUdoczhnb2l6d2JYUDBQY1BWUVNucUVmc1Ev?=
- =?utf-8?B?Nythc29WcVN3WnFFMUovVExqOVNzRU43VTRZcVp1Sy8xMlVydEhWTVFlOTZH?=
- =?utf-8?B?dnZ3SThkZnJyWHlManJpbVhuTDlRQWxsWGNOcUlsUDdTbFlHVFZMakMzeENu?=
- =?utf-8?B?Y1RZOEFGU3E3YlMxMnJPQnFZb0d2ZzFNVmZPbnIrZlJmRlc2TzVkS1hVTXNu?=
- =?utf-8?Q?KO307NQslMRIBZA0IIPcpy/SY?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 04e6334a-b347-4643-0182-08da86ca5d08
-X-MS-Exchange-CrossTenant-AuthSource: MN0PR12MB6101.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Aug 2022 18:48:12.9449
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rLHNtbOmsz4ljvL0Iq0sz09Z/TtRwARJNJQt/6DN1mgScSTMKpsJKuQHU6RKTOZtvr03ADkTee0At6UeXIiGsg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB5699
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH] drivers/ata: fix repeated words in comments
+Content-Language: en-US
+To:     Jilin Yuan <yuanjilin@cdjrlc.com>, s.shtylyov@omp.r
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220825123644.9082-1-yuanjilin@cdjrlc.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220825123644.9082-1-yuanjilin@cdjrlc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/25/2022 13:47, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The ACPI_FADT_LOW_POWER_S0 flag merely means that it is better to
-> use low-power S0 idle on the given platform than S3 (provided that
-> the latter is supported) and it doesn't preclude using either of
-> them (which of them will be used depends on the choices made by user
-> space).
-> 
-> For this reason, there is no benefit from checking that flag in
-> ahci_update_initial_lpm_policy().
-> 
-> First off, it cannot be a bug to do S3 with policy set to either
-> ATA_LPM_MIN_POWER_WITH_PARTIAL or ATA_LPM_MIN_POWER, because S3 can be
-> used on systems with ACPI_FADT_LOW_POWER_S0 set and it must work if
-> really supported, so the ACPI_FADT_LOW_POWER_S0 check is not needed to
-> protect the S3-capable systems from failing.
-> 
-> Second, suspend-to-idle can be carried out on a system with
-> ACPI_FADT_LOW_POWER_S0 unset and it is expected to work, so if setting
-> policy to either ATA_LPM_MIN_POWER_WITH_PARTIAL or ATA_LPM_MIN_POWER is
-> needed to handle that case correctly, it should be done regardless of
-> the ACPI_FADT_LOW_POWER_S0 value.
-> 
-> Accordingly, replace the ACPI_FADT_LOW_POWER_S0 check in
-> ahci_update_initial_lpm_policy() with pm_suspend_default_s2idle()
-> which is more general and also takes the user's preference into
-> account and drop the CONFIG_ACPI #ifdef around it that is not necessary
-> any more.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 8/25/22 21:36, Jilin Yuan wrote:
+>  Delete the redundant word 'in'.
+>  Delete the redundant word 'to'.
 
-Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
 
+> Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 > ---
+>  drivers/ata/libata-eh.c      | 2 +-
+>  drivers/ata/pata_macio.c     | 2 +-
+>  drivers/ata/sata_dwc_460ex.c | 2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> v2 -> v3:
->     * Use pm_suspend_default_s2idle() instead of the check being dropped.
->     * Update the changelog.
-> 
-> v1 -> v2:
->     * Adjust subject (Damien).
->     * Drop #ifdef CONFIG_ACPI that is not necessary any more (Mario).
->     * Update the changelog.
-> 
-> ---
->   drivers/ata/ahci.c |    5 +----
->   1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> Index: linux-pm/drivers/ata/ahci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/ata/ahci.c
-> +++ linux-pm/drivers/ata/ahci.c
-> @@ -1609,15 +1609,12 @@ static void ahci_update_initial_lpm_poli
->   		goto update_policy;
->   	}
->   
-> -#ifdef CONFIG_ACPI
-> -	if (policy > ATA_LPM_MED_POWER &&
-> -	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0)) {
-> +	if (policy > ATA_LPM_MED_POWER && pm_suspend_default_s2idle()) {
->   		if (hpriv->cap & HOST_CAP_PART)
->   			policy = ATA_LPM_MIN_POWER_WITH_PARTIAL;
->   		else if (hpriv->cap & HOST_CAP_SSC)
->   			policy = ATA_LPM_MIN_POWER;
->   	}
-> -#endif
->   
->   update_policy:
->   	if (policy >= ATA_LPM_UNKNOWN && policy <= ATA_LPM_MIN_POWER)
-> 
-> 
-> 
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 7c128c89b454..ca865a95cf24 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -863,7 +863,7 @@ void ata_eh_fastdrain_timerfn(struct timer_list *t)
+>   *
+>   *	Set ATA_PFLAG_EH_PENDING and activate fast drain if @fastdrain
+>   *	is non-zero and EH wasn't pending before.  Fast drain ensures
+> - *	that EH kicks in in timely manner.
+> + *	that EH kicks in timely manner.
 
+As already commented, this fix is not correct. The sentence should read:
+
+	that EH kicks-in in a timely manner.
+
+The patch title for this fix should be:
+
+ata: libata-eh: fix repeated words in comment
+
+>   *
+>   *	LOCKING:
+>   *	spin_lock_irqsave(host lock)
+> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+> index bfea2be2959a..076212fdb9d9 100644
+> --- a/drivers/ata/pata_macio.c
+> +++ b/drivers/ata/pata_macio.c
+> @@ -666,7 +666,7 @@ static u8 pata_macio_bmdma_status(struct ata_port *ap)
+>  	 * a multi-block transfer.
+>  	 *
+>  	 * - The dbdma fifo hasn't yet finished flushing to
+> -	 * to system memory when the disk interrupt occurs.
+> +	 * system memory when the disk interrupt occurs.
+>  	 *
+
+While at it, please remove the above useless extra "*" line.
+
+>  	 */
+>  
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index e3263e961045..a4c83a6e5631 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -1087,7 +1087,7 @@ static struct scsi_host_template sata_dwc_sht = {
+>  	/*
+>  	 * test-only: Currently this driver doesn't handle NCQ
+>  	 * correctly. We enable NCQ but set the queue depth to a
+> -	 * max of 1. This will get fixed in in a future release.
+> +	 * max of 1. This will get fixed in a future release.
+>  	 */
+>  	.sg_tablesize		= LIBATA_MAX_PRD,
+>  	/* .can_queue		= ATA_MAX_QUEUE, */
+
+Please move this second hunk to a different patch with the title:
+
+ata: sata_dwc_460ex: fix repeated words in comment
+
+-- 
+Damien Le Moal
+Western Digital Research
