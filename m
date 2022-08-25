@@ -2,80 +2,80 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A48BECAAA3
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Aug 2022 22:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4893BECAAA3
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Aug 2022 22:45:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237742AbiHYWjR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Aug 2022 18:39:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52406 "EHLO
+        id S232541AbiHYWp0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Aug 2022 18:45:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234759AbiHYWjQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2022 18:39:16 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9056C650B
-        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:39:15 -0700 (PDT)
+        with ESMTP id S230181AbiHYWpZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2022 18:45:25 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46B30BB69A
+        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:45:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1661467155; x=1693003155;
+  t=1661467523; x=1693003523;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=AsUh0dDFE1lKke/1ed+V0IXQKOoZ7OJAR9Pki2Jmxxo=;
-  b=m+1GrJZXWQK2TnvjQevIf/WDpD2Dw8IziTuCmAk+zIZ9h6+Ffv3Gczjj
-   RPaUODjcvr+FK3Gf1gY6RPHERK4bT3ebtJtotb/n8LZ6Lu5ncyhPCIodh
-   bPv9DUwXqwX9zykA2987o2qNB9LxsuDOfwc4NodrAOngBpg0HAk+nM9T/
-   H54p7H0UP8UWh6dcCUBCD1gSgCt+eysjUVN2vahydmC+YqvPrjI6YPnv5
-   tYxlzv9udTFjhBFKqBe3uw8HhNydEbDzfzxACfq4nXaXtoZOfMzUHVR+2
-   5RI0jezUK4z7KSRAFyPwyX0bNvOGypJZlDOSTH6tGBzsI7vWr1vfj1e90
-   g==;
+  bh=zV15AZjvjsxtaqZtgPmW9FQMInNNNeZIS0p3VFopqLQ=;
+  b=bc8cQqpMTU5jThsSchmpAiHAJqLbYlAdzLC4cIw+HJQC0SAlq4je3S0u
+   SduzYqnnwHxVzPNcTXIIPeabHPG+PvIqZAayLAr+Z813aPzATd4i1IKXx
+   ilo4Cau8+hTHJzb6LyBam4SrVVH9EjezaRPZdwG6P7iAVT347GUSNGp/Q
+   GajZtUrThl0bekAnNx3q+rbg4uadqYcks22+e3ox5PP/hDIavGMH0qYCZ
+   2EN/IAIAZLiS/vYh6Xyf5gqATZqqlqp1Ib/eO4D2ZfMjF7I6HhMDRn3b5
+   yuQicW0bsJtma9yHtOA5qE+lUk+TMsl2NvERYRsUPwlrGYqAb22HChNfG
+   w==;
 X-IronPort-AV: E=Sophos;i="5.93,264,1654531200"; 
-   d="scan'208";a="210185435"
+   d="scan'208";a="313965432"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Aug 2022 06:39:14 +0800
-IronPort-SDR: LTI+4avZ3gh4k3871269pcnJt4SUqvABiYTceDgpINcYsdv5fKs50WFpriTmUJfrK3RCv0rsY/
- rwy4Im6EkFbQ9iH75QcZL7iTdR4zLQrVF5DQTxxlgkV12v1wko6WZ95JszW99mViSJLM5wR9X6
- Y8bDhM5VFv0IK4kGEV4cwaxwVQP4EK8N00KfeaBQ+acr5P2ML/FOV+pNRsILe9Sm+KIN96ErW0
- STiGxTeGYE+iQJeUHmrP49rLpG/cd76/EoWAq6/AhUP9mnP8Y6cI/oAKXnOtGUgVawLPJXMIIy
- POpswYpbUpAOFqsSO8F7od43
+  by ob1.hgst.iphmx.com with ESMTP; 26 Aug 2022 06:45:22 +0800
+IronPort-SDR: 9reUmSw/c9PUj4HWyRSJdCpERZEKvtZrAY6q4MPh/gLwNJANYJq9GggOl0qA3R6RqltR5pbYT5
+ DQFiF0nB9JNnIoJQc9QLplcOzqW2b4Dxh54W9ARPbFnotcVG+G2TPpX7qPFkGWS7jThn/nzHFF
+ xvv9Hz5oalDeMD0EMxP1mOgglY/RF10UgknzVciWIauVTM4LbdBKa9UMEJmQ8WfS5KglIkArP/
+ kZ2Nel5/PxA96rV28lr4ubUXpJT25WDNbMMbuF+IjEikpvPOPU08N1cwUq1nPnDHbjXfdWAzyA
+ o7DxZupVdEi4lG5KB8yuDGbJ
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 14:59:51 -0700
-IronPort-SDR: MAETJ6bRimj0XL57KXkiq1UAPYBg/AGyP32Q+2QMsvO+P6agB2s1WEn5RqTOtdJUmdqg1BAf0u
- vT0FhgR6owUpP39vMu8KIdmJ9s3x6r6rnq0R+m0ACWJCKhe4XQ9nlSpc3vMlMPOEzEAg5AKcqL
- uDLdHpY+Ti1mZyY0C3d96S7KNstMRLX7LBLhnomKg/PTubzQNfCuFfDbZkzaVsjOyRMBBNbfdE
- 7UoEmpWWGn8NuM2H6YbnsE8636BG2OQASObrfV8Iu5dtm56F9saTwRxySAbGg951Jkx+ILAy1E
- P7U=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 15:05:59 -0700
+IronPort-SDR: AMcbt+qd8lStGr9ig/y2sH7Ai96FQ5Je5gWjWpJL4+1SJfmGiMxdJ5QppvCbfC6R8cCrUXsmVh
+ 3U2uQ3nBMcPr/VFgE05dFr+aAmWCnaC9ENw20FS6xKnSAveS1wjmrHs916g49UcbUtv7glzRID
+ 4+pNIroDcnB463qU7P0xS1C+CFirFi6Bd51RxB77Zjh9rKbdzoJlxOrh/qtbRzNXD5GEdIHO3J
+ EsMzqwLGFv7vuJOOa6fjtk+oP9MjiRAudm287WwY0sPPdCM1uj+lOiG0wR4VL3bD4vMfU+9dMG
+ ORw=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 15:39:15 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 15:45:23 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MDHvQ5ZpBz1Rwnl
-        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:39:14 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MDJ2V1qBXz1Rw4L
+        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:45:22 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1661467154;
-         x=1664059155; bh=AsUh0dDFE1lKke/1ed+V0IXQKOoZ7OJAR9Pki2Jmxxo=; b=
-        LCndEoMhXz4BITpjVkfTFYoAMMIZhp0kjQc5uOrb/I/y2RjoknVf69jn2cxC8THL
-        0CYWNyc0gP0eV9AnTzfjJdiXh3Zkglt3r2XzyM96YOdMqFg3ZFJMG7sImL5kL7+j
-        SvXjGles5bKcxaJOyOflfM0Wodj446io0RF+Wew0/ASnNFJbiZQQhow3fMlCpR/f
-        LjHhrmUvyoHeQ8+y2/i94YF6DYYXOjnOev+Dx9dv3zSTRW/KNog7/C/aI2Vro+fS
-        x2akkJe5ObkcQb9BWv3p2emuHtrU/hiwXg4tIIOOymujkokGD4NdEGyTe9geKqXj
-        lnn9VMMxLXvr2FeanBPGhQ==
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1661467521;
+         x=1664059522; bh=zV15AZjvjsxtaqZtgPmW9FQMInNNNeZIS0p3VFopqLQ=; b=
+        FhFDO1BembFnkvjIE2wd13Gssf3kRr5KCDGqwiq+QhSzc5jz6e+e6biZMp1FmQeg
+        24rYNVDf+DqAcY/bKucoP9sQT/hznoGLVny32KO4nPCBLPOd0VdUWWdQ7iidbuzl
+        WlYRy9pYGqNL1acWktkBiVPPALolZ8+vDkt5stY1YT6GkViHoR5XlNCKezUJV9t6
+        mY3RZo8T0WYelRup2JMZuKibWExfAlJ7cNn8N2x9yqr4kjtHP1Vrgy3phkNcvCfw
+        OGVtsFLTSfpuhroSUyWODjE9VCvRkAIeqkyoRP8kXRcodDzPDH5KquBxmykZpoUu
+        YGCctTrfZZ7GqViXgcyHZg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id C0B2nyrB6uT4 for <linux-ide@vger.kernel.org>;
-        Thu, 25 Aug 2022 15:39:14 -0700 (PDT)
+        with ESMTP id fNTMQV4pRfmG for <linux-ide@vger.kernel.org>;
+        Thu, 25 Aug 2022 15:45:21 -0700 (PDT)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MDHvQ0TkWz1RtVk;
-        Thu, 25 Aug 2022 15:39:13 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MDJ2T3cJZz1RtVk;
+        Thu, 25 Aug 2022 15:45:21 -0700 (PDT)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-ide@vger.kernel.org
 Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH] ata: libata-scsi: Improve ata_scsiop_maint_in()
-Date:   Fri, 26 Aug 2022 07:39:12 +0900
-Message-Id: <20220825223912.355011-1-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH] ata: libata-core: Simplify ata_dev_set_xfermode()
+Date:   Fri, 26 Aug 2022 07:45:19 +0900
+Message-Id: <20220825224519.369685-1-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
@@ -83,34 +83,45 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Allow translation of REPORT_SUPPORTED_OPERATION_CODES commands using
-the command format 0x3, that is, checking support for commands that are
-identified using an opcode and a service action.
+The err_mask variable is not useful. Remove it.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/ata/libata-scsi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f3c64e796423..99ebd7bf3a9c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3252,11 +3252,12 @@ static unsigned int ata_scsiop_maint_in(struct at=
-a_scsi_args *args, u8 *rbuf)
- 	u8 supported =3D 0;
- 	unsigned int err =3D 0;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 0b62fa14a74c..d0242c75aac5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4295,7 +4295,6 @@ static void ata_dev_xfermask(struct ata_device *dev=
+)
+ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
+ {
+ 	struct ata_taskfile tf;
+-	unsigned int err_mask;
 =20
--	if (cdb[2] !=3D 1) {
-+	if (cdb[2] !=3D 1 && cdb[2] !=3D 3) {
- 		ata_dev_warn(dev, "invalid command format %d\n", cdb[2]);
- 		err =3D 2;
- 		goto out;
- 	}
-+
- 	switch (cdb[3]) {
- 	case INQUIRY:
- 	case MODE_SENSE:
+ 	/* set up set-features taskfile */
+ 	ata_dev_dbg(dev, "set features - xfer mode\n");
+@@ -4317,10 +4316,11 @@ static unsigned int ata_dev_set_xfermode(struct a=
+ta_device *dev)
+ 	else /* In the ancient relic department - skip all of this */
+ 		return 0;
+=20
+-	/* On some disks, this command causes spin-up, so we need longer timeou=
+t */
+-	err_mask =3D ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 15000=
+);
+-
+-	return err_mask;
++	/*
++	 * On some disks, this command causes spin-up, so we need longer
++	 * timeout.
++	 */
++	return ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 15000);
+ }
+=20
+ /**
 --=20
 2.37.2
 
