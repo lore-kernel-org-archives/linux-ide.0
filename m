@@ -2,39 +2,37 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90F07C28D13
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Aug 2022 12:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72CE3C64990
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Aug 2022 14:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240840AbiHYMiW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Aug 2022 08:38:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52488 "EHLO
+        id S235500AbiHYOwm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Aug 2022 10:52:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235148AbiHYMiU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2022 08:38:20 -0400
-X-Greylist: delayed 76 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 25 Aug 2022 05:38:19 PDT
+        with ESMTP id S234556AbiHYOwm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2022 10:52:42 -0400
 Received: from bg5.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E7ABB2769
-        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 05:38:18 -0700 (PDT)
-X-QQ-mid: bizesmtp62t1661431014thbakx3i
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E8F4B4407
+        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 07:52:40 -0700 (PDT)
+X-QQ-mid: bizesmtp72t1661439143txrca0sn
 Received: from localhost.localdomain ( [182.148.14.124])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 25 Aug 2022 20:36:53 +0800 (CST)
-X-QQ-SSF: 01000000002000C0E000B00A0000000
-X-QQ-FEAT: QityeSR92A277cprjEdE58AmL0aKFx5S4Ev5Sj1v6E8ILwe73gcDUDlfjFYZs
-        USbltP7C6HH+wf6J7wKyXKZtehWDxL6esDOAH3oFQ94aTNcYnzZCLPeKqJ//Oj8dKRoJ0Fo
-        pChZOJt+l3rh8dT3cjLzT5yLd9NAMM5u7AFQRkZNEkUViqXvNLoYk6DOVgZ6V6fDNjV+2oE
-        KFLrbLUoz8yWBrsbpBnSxO5m/CXdWlj1fbKvNpoQeKnTeNLFLWrsqgoEk3/gjahJsvBqCbm
-        n+N8qKNX4d209tVkFnRYg7+UZZ22b0B8v49IOtjshXD1e8RdhOttF9zIcVZSTpWrhsron1Y
-        qDcA28jvpzJBFxX+g5XBsBIXcv5GGqQyQeWPx/ULHxBJc8F4ikTARe8PZMQ0StLd9BzLAMp
+        id ; Thu, 25 Aug 2022 22:52:16 +0800 (CST)
+X-QQ-SSF: 01000000002000B0C000B00A0000000
+X-QQ-FEAT: +ynUkgUhZJnEiWTGt3s4ZveE3rPhrTCFH2l+bssblUgdiU0woy+XW1KjykACW
+        roRiTrDzK4mWkO+pbbzgiW+L/6qo9ye/v+tWti9mt2+BNtcxakohisDx+ooPcoX/mUdT3ui
+        pOUkEOYwGFqF4TfZWcgREzFX/ER389QAy6zJ09PDclSngTzExXJWibXXEvtxxoiwmEsHfXz
+        RjiqRVzqCC161VkZFCNhClk5NFmXcKfs36tpxGsUiLJh/Xvjyx9LqvT8w/Zk0UN7VoFTADd
+        kj687f4KipMICJBl+MJEhy8wEobsqUGfa3yfkjEsDI+jZT9WivEqx9PokVg18EkZYKchxV0
+        PnbJqVuTwzrr7DoIVNSkM2/JsPczJy4vwqk9M+wZUMozENBgVfDqWeILSaAcY9DPPpZKSiW
 X-QQ-GoodBg: 0
-From:   Jilin Yuan <yuanjilin@cdjrlc.com>
-To:     damien.lemoal@opensource.wdc.com, s.shtylyov@omp.r
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jilin Yuan <yuanjilin@cdjrlc.com>
-Subject: [PATCH] drivers/ata: fix repeated words in comments
-Date:   Thu, 25 Aug 2022 20:36:44 +0800
-Message-Id: <20220825123644.9082-1-yuanjilin@cdjrlc.com>
-X-Mailer: git-send-email 2.36.1
+From:   Shaomin Deng <dengshaomin@cdjrlc.com>
+To:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org
+Cc:     s.shtylyov@omp.ru, Shaomin Deng <dengshaomin@cdjrlc.com>
+Subject: [PATCH] ata: pata_macio: Remove unneeded word in comments
+Date:   Thu, 25 Aug 2022 10:52:15 -0400
+Message-Id: <20220825145215.5542-1-dengshaomin@cdjrlc.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QQ-SENDSIZE: 520
@@ -43,29 +41,13 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
- Delete the redundant word 'in'.
- Delete the redundant word 'to'.
+There is unneeded word "to" in line 669, so remove it.
 
-Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
+Signed-off-by: Shaomin Deng <dengshaomin@cdjrlc.com>
 ---
- drivers/ata/libata-eh.c      | 2 +-
- drivers/ata/pata_macio.c     | 2 +-
- drivers/ata/sata_dwc_460ex.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/pata_macio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 7c128c89b454..ca865a95cf24 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -863,7 +863,7 @@ void ata_eh_fastdrain_timerfn(struct timer_list *t)
-  *
-  *	Set ATA_PFLAG_EH_PENDING and activate fast drain if @fastdrain
-  *	is non-zero and EH wasn't pending before.  Fast drain ensures
-- *	that EH kicks in in timely manner.
-+ *	that EH kicks in timely manner.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host lock)
 diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
 index bfea2be2959a..076212fdb9d9 100644
 --- a/drivers/ata/pata_macio.c
@@ -79,19 +61,6 @@ index bfea2be2959a..076212fdb9d9 100644
  	 *
  	 */
  
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index e3263e961045..a4c83a6e5631 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1087,7 +1087,7 @@ static struct scsi_host_template sata_dwc_sht = {
- 	/*
- 	 * test-only: Currently this driver doesn't handle NCQ
- 	 * correctly. We enable NCQ but set the queue depth to a
--	 * max of 1. This will get fixed in in a future release.
-+	 * max of 1. This will get fixed in a future release.
- 	 */
- 	.sg_tablesize		= LIBATA_MAX_PRD,
- 	/* .can_queue		= ATA_MAX_QUEUE, */
 -- 
-2.36.1
+2.35.1
 
