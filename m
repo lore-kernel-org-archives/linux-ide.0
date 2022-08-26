@@ -2,137 +2,139 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84876ECAAA3
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Aug 2022 22:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E2FECAADA
+	for <linux-ide@archiver.kernel.org>; Fri, 26 Aug 2022 09:47:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243309AbiHYWrv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Aug 2022 18:47:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37834 "EHLO
+        id S1344093AbiHZJr0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 26 Aug 2022 05:47:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239218AbiHYWru (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2022 18:47:50 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB063C6B78
-        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:47:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1661467669; x=1693003669;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=jmZ4y9zIob46bh2rM8o4F3fEfJ+GVDi8MB3UI98H7jY=;
-  b=FwSHvPln3h2qym6TlODFV4jl8km0Snc/lO1+Y5DobTK2ZTjS65fPqyAT
-   xieL6TzGT/6qt0ixCCq54pZwJlXVNtaKV4fyr/lzX0hvva7GW1duFCZTz
-   zRvw6zMcuooByk0iQUmGe7Rc0OcVXBa3UvU3OAsoTnP9NIjzK2scCpidj
-   J4qjV4IQ7o2MCq5/W3B3raoxE4XnhEyJHbyg9lMdvwfELZSZeZnTWAmMd
-   oNh1lw0wLDdqONdlGGm3BPg60khmWRge9mhPA7C8EmtHxQ7opL/bFqkqz
-   aMEJGIZ8eSasqRJbCYwMdN0vuhWb7NEE7flzdghFtyAtGYYH0TrWjvRo/
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.93,264,1654531200"; 
-   d="scan'208";a="214834937"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Aug 2022 06:47:48 +0800
-IronPort-SDR: URWi30K8hfNT95rh1xFyXvnqlnupeJcK23IPUP3jdLR9oQ/sUoSwqyG2q9LJZkUvd06h0WBwP6
- LMnt+6ptklBrd8PoMb6G72Q63C3BGQ1sVz2/VbDEnorj1TWrvVm/FPOk7meRv/Yy8h9eLQl/c3
- Ej5ftUkTE2hl1c4rEkMdxh6j8u0K7TJufqU74V4qMV9EwGfg6gg54GMqHiEBASW1PEsBMohU74
- eFT7a7qTsh2xRpc3mhAq87JGUrL25m+vlKzoRm055/caf8JBjj4Qrr5H3NrpTWovxpTIfbNAcS
- EYcahrIB8Nz+7Z0lgCbmP781
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 15:08:25 -0700
-IronPort-SDR: 8rSPoIVPBknQQ1OeO4KjaQR8lqRrn9zPp36+Q3N/MJaBmzybfvmhyh3FMtd/DU/ejEdFYA8WFH
- BXIgcnUwqguGAjbyeVWGlzim51PuhOBR4B++PfMLMwh96Y0VcjRFGmKjqhwxuZ4CBwo38YGb+r
- zNTn/rFnyX+wY0pJVW0uCaNczDfuzT8851Bpaasli2jwEIJj5G7tUAlzq61DoNF1xpM6aDqeiT
- 4HuoMLTxTrs05Re3cYcZ6veFhC9XxXI1QPkM5rpPwiFmE3k0doHmDMzaWlcB91RFgXdv79Q4ir
- 16g=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 25 Aug 2022 15:47:49 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MDJ5J48PYz1Rw4L
-        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2022 15:47:48 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1661467668; x=1664059669; bh=jmZ4y9zIob46bh2rM8o4F3fEfJ+GVDi8MB3
-        UI98H7jY=; b=d9Kzbemw76idps6mCmYdleMG0/8OTWdOd8eBiFkDVrx5DmCI6Nx
-        8wLUj+voNOCu2CgkNmcRsf1K+6ZhQM8idEqerXqvsUD9nuMB6ki2e/Oy4+NDh/uU
-        skkG7XTiIaBbl5fuqEMts2UjCkLsGd2kKZsl62dW/Be65ST9D5zAzVJ6UJDWWQfG
-        WLQjEb3vGxD9oH0kRKEe6Xv7LYBkQzg+zUDq3d8IzVFIYEGENwg9B5nkFOJ02qZ7
-        YpIvtoAiO1CI0uua9Aj/fWR6qZJiIRquMG3AHapQpC/m898F2/vXdYrqF82mpefJ
-        OqnKFCLExzeGLTXllHjZVaEXkhmRHiY/YQw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id tw8grc8I0Cb5 for <linux-ide@vger.kernel.org>;
-        Thu, 25 Aug 2022 15:47:48 -0700 (PDT)
-Received: from [10.225.163.46] (unknown [10.225.163.46])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MDJ5H3Cjvz1RtVk;
-        Thu, 25 Aug 2022 15:47:47 -0700 (PDT)
-Message-ID: <b31200c7-4737-a4fe-45dd-83ad70892177@opensource.wdc.com>
-Date:   Fri, 26 Aug 2022 07:47:46 +0900
+        with ESMTP id S1344075AbiHZJrT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2022 05:47:19 -0400
+Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB82D7593
+        for <linux-ide@vger.kernel.org>; Fri, 26 Aug 2022 02:47:17 -0700 (PDT)
+Received: by mail-lj1-x233.google.com with SMTP id w22so1060061ljg.7
+        for <linux-ide@vger.kernel.org>; Fri, 26 Aug 2022 02:47:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc;
+        bh=7/zLm6wYmIJxefFBwnQ6xTIL94BoETjg8bQDFj+L0EQ=;
+        b=HIdAzMqZp+CHMUJvXZDL4kQfbbHEzP9oyvYz1ueQNzPdJuFdzN/xiOWNVvAI5PypY2
+         phc7mMSMvv0CqdAk3VeOaSOG1rVJQhyoTe39lWgf29/RQtOFhD7d+DPbjBkxwJtUIkhy
+         cta3uW2ybEZW+YD8Fw2dkJR4gv7MOtmY6qC+zYXXmj+Z4l5AhOceFVfeylnXwXhn1Qg4
+         ld1fWsPQV5Kf/3HaxA9FJzTVAxTZPdCP38pgrmH64yfQ9etak3X7fthigbG+2fPn57OV
+         wm7dDnDP5PGUOjHBGcdSnq4ZOYoc68PuhJYJy371olT9dw/BL1IEEx4esBwhZD/7bnUm
+         gpNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=7/zLm6wYmIJxefFBwnQ6xTIL94BoETjg8bQDFj+L0EQ=;
+        b=u1HdKJmkgfOBnPr3g04dU89XVm3XTzTelbYLOkfHhKCKYQJ/7egtTJ7/c58P9pOwno
+         7oWr36yXrI07j2KFwpZenJ12JMRscZ74Uc6Q0jsnzBN9e+1Mn3bBcRFyvHF6rJm3KDGt
+         ZrJoH4NV3dNGPuW/usv4nG/N7g0/FCkwZWb/lMNmf5YUNA2SYLWfz4tf795JwCOL2fLu
+         SCNZCh82lSOiga5BWhqOoAVZn5XSP0zDhCMnGPS6g7uydHKWQJ2VRKTPcgZEFuGN97zI
+         X+5LWBCezgiU2lEM35TLGwISyn8Z0Bd1REZk+2ubcrs4wZcibnv+6MQB3DBJLf6HAkpf
+         GIMg==
+X-Gm-Message-State: ACgBeo1F9dADYN7U1o2/v53f/aL8BKxE+XsYaJVXJ3nYoJwnid5kPh83
+        cmI8Fnwo69saPn4igTlE7uEDrA==
+X-Google-Smtp-Source: AA6agR4NooJqTIyf/F5iZCsGcw1gdJa0BYVeuEHWvl+KrvNFJZWMb3qoex5YNXUISP81L4uvAWNr2Q==
+X-Received: by 2002:a05:651c:179c:b0:261:8fbe:b729 with SMTP id bn28-20020a05651c179c00b002618fbeb729mr2140443ljb.114.1661507235107;
+        Fri, 26 Aug 2022 02:47:15 -0700 (PDT)
+Received: from [192.168.1.211] ([37.153.55.125])
+        by smtp.gmail.com with ESMTPSA id q22-20020a194316000000b004931817c487sm320823lfa.197.2022.08.26.02.47.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 26 Aug 2022 02:47:14 -0700 (PDT)
+Message-ID: <e4c5a39e-6a47-6814-92f7-c751bd95bdf0@linaro.org>
+Date:   Fri, 26 Aug 2022 12:47:13 +0300
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH linux-next] ata: libata-core: remove redundant err_mask
- variable
-Content-Language: en-US
-To:     cgel.zte@gmail.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jinpeng Cui <cui.jinpeng2@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-References: <20220823122914.211355-1-cui.jinpeng2@zte.com.cn>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220823122914.211355-1-cui.jinpeng2@zte.com.cn>
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.1.2
+Subject: Re: [PATCH 5/5] dt-bindings: display: drop minItems equal to maxItems
+Content-Language: en-GB
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Sylwester Nawrocki <s.nawrocki@samsung.com>,
+        Tomasz Figa <tomasz.figa@gmail.com>,
+        Chanwoo Choi <cw00.choi@samsung.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Vladimir Zapolskiy <vz@mleia.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrzej Hajda <andrzej.hajda@intel.com>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Robert Foss <robert.foss@linaro.org>,
+        Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
+        Jonas Karlman <jonas@kwiboo.se>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Rob Clark <robdclark@gmail.com>,
+        Abhinav Kumar <quic_abhinavk@quicinc.com>,
+        Sean Paul <sean@poorly.run>, Inki Dae <inki.dae@samsung.com>,
+        Seung-Woo Kim <sw0312.kim@samsung.com>,
+        Kyungmin Park <kyungmin.park@samsung.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Andre Przywara <andre.przywara@arm.com>,
+        Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Marek Vasut <marex@denx.de>,
+        Krishna Manikandan <quic_mkrishn@quicinc.com>,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, linux-crypto@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        freedreno@lists.freedesktop.org, linux-tegra@vger.kernel.org
+References: <20220825113334.196908-1-krzysztof.kozlowski@linaro.org>
+ <20220825113334.196908-5-krzysztof.kozlowski@linaro.org>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+In-Reply-To: <20220825113334.196908-5-krzysztof.kozlowski@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/23/22 21:29, cgel.zte@gmail.com wrote:
-> From: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
+On 25/08/2022 14:33, Krzysztof Kozlowski wrote:
+> minItems, if missing, are implicitly equal to maxItems, so drop
+> redundant piece to reduce size of code.
 > 
-> Return value from ata_exec_internal() directly instead of
-> taking this in another redundant variable.
-> 
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
-
-Applied to for-6.1. Thanks !
-
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 > ---
->  drivers/ata/libata-core.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 864b26009eae..0ba0e692210f 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4340,7 +4340,6 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
->  unsigned int ata_dev_set_feature(struct ata_device *dev, u8 subcmd, u8 action)
->  {
->  	struct ata_taskfile tf;
-> -	unsigned int err_mask;
->  	unsigned int timeout = 0;
->  
->  	/* set up set-features taskfile */
-> @@ -4356,9 +4355,8 @@ unsigned int ata_dev_set_feature(struct ata_device *dev, u8 subcmd, u8 action)
->  	if (subcmd == SETFEATURES_SPINUP)
->  		timeout = ata_probe_timeout ?
->  			  ata_probe_timeout * 1000 : SETFEATURES_SPINUP_TIMEOUT;
-> -	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, timeout);
->  
-> -	return err_mask;
-> +	return ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, timeout);
->  }
->  EXPORT_SYMBOL_GPL(ata_dev_set_feature);
->  
+>   Documentation/devicetree/bindings/display/bridge/fsl,ldb.yaml   | 1 -
+>   .../devicetree/bindings/display/msm/dsi-controller-main.yaml    | 2 --
+>   Documentation/devicetree/bindings/display/msm/dsi-phy-10nm.yaml | 2 --
 
+For msm changes:
+
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+
+>   .../bindings/display/samsung/samsung,exynos5433-decon.yaml      | 2 --
+>   .../bindings/display/samsung/samsung,exynos5433-mic.yaml        | 1 -
+>   .../bindings/display/samsung/samsung,exynos7-decon.yaml         | 1 -
+>   .../devicetree/bindings/display/samsung/samsung,fimd.yaml       | 1 -
+>   .../devicetree/bindings/display/tegra/nvidia,tegra20-gr3d.yaml  | 1 -
+>   .../devicetree/bindings/display/tegra/nvidia,tegra20-mpe.yaml   | 2 --
+>   9 files changed, 13 deletions(-)
+> 
 
 -- 
-Damien Le Moal
-Western Digital Research
+With best wishes
+Dmitry
+
