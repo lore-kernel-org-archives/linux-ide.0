@@ -2,139 +2,69 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E2FECAADA
-	for <linux-ide@archiver.kernel.org>; Fri, 26 Aug 2022 09:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4A47ECAAD4
+	for <linux-ide@archiver.kernel.org>; Fri, 26 Aug 2022 12:01:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344093AbiHZJr0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 26 Aug 2022 05:47:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46754 "EHLO
+        id S231846AbiHZMBN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 26 Aug 2022 08:01:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344075AbiHZJrT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2022 05:47:19 -0400
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB82D7593
-        for <linux-ide@vger.kernel.org>; Fri, 26 Aug 2022 02:47:17 -0700 (PDT)
-Received: by mail-lj1-x233.google.com with SMTP id w22so1060061ljg.7
-        for <linux-ide@vger.kernel.org>; Fri, 26 Aug 2022 02:47:17 -0700 (PDT)
+        with ESMTP id S230362AbiHZMBK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2022 08:01:10 -0400
+Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 614E61181D
+        for <linux-ide@vger.kernel.org>; Fri, 26 Aug 2022 05:01:09 -0700 (PDT)
+Received: by mail-qt1-x82b.google.com with SMTP id w28so1018891qtc.7
+        for <linux-ide@vger.kernel.org>; Fri, 26 Aug 2022 05:01:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc;
-        bh=7/zLm6wYmIJxefFBwnQ6xTIL94BoETjg8bQDFj+L0EQ=;
-        b=HIdAzMqZp+CHMUJvXZDL4kQfbbHEzP9oyvYz1ueQNzPdJuFdzN/xiOWNVvAI5PypY2
-         phc7mMSMvv0CqdAk3VeOaSOG1rVJQhyoTe39lWgf29/RQtOFhD7d+DPbjBkxwJtUIkhy
-         cta3uW2ybEZW+YD8Fw2dkJR4gv7MOtmY6qC+zYXXmj+Z4l5AhOceFVfeylnXwXhn1Qg4
-         ld1fWsPQV5Kf/3HaxA9FJzTVAxTZPdCP38pgrmH64yfQ9etak3X7fthigbG+2fPn57OV
-         wm7dDnDP5PGUOjHBGcdSnq4ZOYoc68PuhJYJy371olT9dw/BL1IEEx4esBwhZD/7bnUm
-         gpNQ==
+        d=gmail.com; s=20210112;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc;
+        bh=3AsezBOsd3cCDoJFpgO+dIwXFEZlcEo7ddArgYWFprM=;
+        b=cvf2M0YJbv6aYnrXLFiv3nYU4t9T5QiZmeS1mkHapgQ0qhEy0gFrvInrbLvP2eOeCb
+         NgMXqaGBPqBBWVyobYXo3NrKQLvdtOsdQYl+Pfwyf+D2jYy3zwNeaKNoa2mCUBIFwmb+
+         CMKauU4zs3JyDQf0rUiweA0SWYnnpK7mTVaJQ96l3+hQZfaG6vbOM6PAvV+1ahnOGpKa
+         82ONXYxHKpxBCC6Jn5ARxm9XHl1bBUqw6by2hCrMMpDGLVAWdEWc1NJhPEfT1M/EDhs9
+         iBI04+0ewWRxXTCtTh5zfv8kj8DE6iY6eDxuk9kUorKs0TQSVqr0r1S8c5vdPo3c0G4y
+         h+XA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc;
-        bh=7/zLm6wYmIJxefFBwnQ6xTIL94BoETjg8bQDFj+L0EQ=;
-        b=u1HdKJmkgfOBnPr3g04dU89XVm3XTzTelbYLOkfHhKCKYQJ/7egtTJ7/c58P9pOwno
-         7oWr36yXrI07j2KFwpZenJ12JMRscZ74Uc6Q0jsnzBN9e+1Mn3bBcRFyvHF6rJm3KDGt
-         ZrJoH4NV3dNGPuW/usv4nG/N7g0/FCkwZWb/lMNmf5YUNA2SYLWfz4tf795JwCOL2fLu
-         SCNZCh82lSOiga5BWhqOoAVZn5XSP0zDhCMnGPS6g7uydHKWQJ2VRKTPcgZEFuGN97zI
-         X+5LWBCezgiU2lEM35TLGwISyn8Z0Bd1REZk+2ubcrs4wZcibnv+6MQB3DBJLf6HAkpf
-         GIMg==
-X-Gm-Message-State: ACgBeo1F9dADYN7U1o2/v53f/aL8BKxE+XsYaJVXJ3nYoJwnid5kPh83
-        cmI8Fnwo69saPn4igTlE7uEDrA==
-X-Google-Smtp-Source: AA6agR4NooJqTIyf/F5iZCsGcw1gdJa0BYVeuEHWvl+KrvNFJZWMb3qoex5YNXUISP81L4uvAWNr2Q==
-X-Received: by 2002:a05:651c:179c:b0:261:8fbe:b729 with SMTP id bn28-20020a05651c179c00b002618fbeb729mr2140443ljb.114.1661507235107;
-        Fri, 26 Aug 2022 02:47:15 -0700 (PDT)
-Received: from [192.168.1.211] ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id q22-20020a194316000000b004931817c487sm320823lfa.197.2022.08.26.02.47.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 26 Aug 2022 02:47:14 -0700 (PDT)
-Message-ID: <e4c5a39e-6a47-6814-92f7-c751bd95bdf0@linaro.org>
-Date:   Fri, 26 Aug 2022 12:47:13 +0300
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc;
+        bh=3AsezBOsd3cCDoJFpgO+dIwXFEZlcEo7ddArgYWFprM=;
+        b=R/WUT8tYvcNYZRORZ8zwatK5bs0+gxm4ZzVUXC1J+lmKX8CTZ582G3BblYftzNsW0B
+         5e5AGZKUfm1akDHq1VSipiDdbMf6ia4eXGnfaIVIoJ+tCkc/VNYPzsLY5wLYsHtz5Xac
+         A+dk61XpvmROGAJlxmQR54OowVW+1Z3dF1UXOKr3mu9XVbleiZSnZC/BTpRp4Fn64P+h
+         UDhoWU9UiEZJf4z4V7dnS7YyjHky8ZVVhTpvX/hOpQBo/E83n30Uqebn7h6ga2n3ul5B
+         JcTeK887NAaRJPn1skxPIlKYYiUJMtC45NA/ZKpJMcU4vYkO2q/gql1UvLrf1VR8mXpB
+         Vl8Q==
+X-Gm-Message-State: ACgBeo30fRiJEP2mXDZAwQTKJYz1X6zkHXxbbzXZRwbQ6JAyUNcLK0X+
+        iY/z6SEr0xnNfeYNwf1UAldHTqBj9rKQrX7fiHE5xdFln+0=
+X-Google-Smtp-Source: AA6agR4h3+U40n//rgmwaWMQ87rYna3q3lCKDr/8GdbofYWWDZnpogSzOnTyFm3f3rafHoLWXPNulcD/ef54hTc8JDc=
+X-Received: by 2002:a05:622a:20e:b0:343:7345:36cc with SMTP id
+ b14-20020a05622a020e00b00343734536ccmr7527200qtx.669.1661515267994; Fri, 26
+ Aug 2022 05:01:07 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
-Subject: Re: [PATCH 5/5] dt-bindings: display: drop minItems equal to maxItems
-Content-Language: en-GB
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Sylwester Nawrocki <s.nawrocki@samsung.com>,
-        Tomasz Figa <tomasz.figa@gmail.com>,
-        Chanwoo Choi <cw00.choi@samsung.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Vladimir Zapolskiy <vz@mleia.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrzej Hajda <andrzej.hajda@intel.com>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Robert Foss <robert.foss@linaro.org>,
-        Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
-        Jonas Karlman <jonas@kwiboo.se>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Rob Clark <robdclark@gmail.com>,
-        Abhinav Kumar <quic_abhinavk@quicinc.com>,
-        Sean Paul <sean@poorly.run>, Inki Dae <inki.dae@samsung.com>,
-        Seung-Woo Kim <sw0312.kim@samsung.com>,
-        Kyungmin Park <kyungmin.park@samsung.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Andre Przywara <andre.przywara@arm.com>,
-        Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Marek Vasut <marex@denx.de>,
-        Krishna Manikandan <quic_mkrishn@quicinc.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org, linux-crypto@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        freedreno@lists.freedesktop.org, linux-tegra@vger.kernel.org
-References: <20220825113334.196908-1-krzysztof.kozlowski@linaro.org>
- <20220825113334.196908-5-krzysztof.kozlowski@linaro.org>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <20220825113334.196908-5-krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From:   =?UTF-8?Q?Peter_Fr=C3=B6hlich?= <peter.hans.froehlich@gmail.com>
+Date:   Fri, 26 Aug 2022 14:00:57 +0200
+Message-ID: <CAHXXO6Eio2LecHS3i7C7yeWOrGFdMA4HTDB=d7azS_67zw5cyg@mail.gmail.com>
+Subject: libata-scsi: ata_to_sense_error handling status 0x40
+To:     linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 25/08/2022 14:33, Krzysztof Kozlowski wrote:
-> minItems, if missing, are implicitly equal to maxItems, so drop
-> redundant piece to reduce size of code.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> ---
->   Documentation/devicetree/bindings/display/bridge/fsl,ldb.yaml   | 1 -
->   .../devicetree/bindings/display/msm/dsi-controller-main.yaml    | 2 --
->   Documentation/devicetree/bindings/display/msm/dsi-phy-10nm.yaml | 2 --
+Apologies if this is the wrong place.
 
-For msm changes:
+In commit 8ae720449fca4b1d0294c0a0204c0c45556a3e61 "libata: whitespace
+fixes in ata_to_sense_error()" we find, among many actual whitespace
+changes, another change that adds an entry for 0x40 to the stat_table.
 
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+I thought that 0x40 is bit 6 of the ATA status which means (I think)
+"drive ready" and not, as we translate here, "unaligned write
+command". I may be very much confused about this, but if so, please
+tell me how.
 
->   .../bindings/display/samsung/samsung,exynos5433-decon.yaml      | 2 --
->   .../bindings/display/samsung/samsung,exynos5433-mic.yaml        | 1 -
->   .../bindings/display/samsung/samsung,exynos7-decon.yaml         | 1 -
->   .../devicetree/bindings/display/samsung/samsung,fimd.yaml       | 1 -
->   .../devicetree/bindings/display/tegra/nvidia,tegra20-gr3d.yaml  | 1 -
->   .../devicetree/bindings/display/tegra/nvidia,tegra20-mpe.yaml   | 2 --
->   9 files changed, 13 deletions(-)
-> 
-
--- 
-With best wishes
-Dmitry
-
+(I've been tracking another, presumably unrelated, error and have the
+impression that this "unaligned write" message has been leading me in
+the wrong direction.)
