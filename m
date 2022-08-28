@@ -2,83 +2,86 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 074B8ECAAD2
-	for <linux-ide@archiver.kernel.org>; Sun, 28 Aug 2022 11:53:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3379EECAAD5
+	for <linux-ide@archiver.kernel.org>; Sun, 28 Aug 2022 20:45:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229781AbiH1LxE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 28 Aug 2022 07:53:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32932 "EHLO
+        id S229882AbiH1UpB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 28 Aug 2022 16:45:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbiH1LxD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 28 Aug 2022 07:53:03 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88CF411A0F;
-        Sun, 28 Aug 2022 04:53:02 -0700 (PDT)
-Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1oSGqb-0007QJ-4K; Sun, 28 Aug 2022 13:53:01 +0200
-Message-ID: <9729ab5f-422d-19a8-d4e0-94de0877736d@leemhuis.info>
-Date:   Sun, 28 Aug 2022 13:52:59 +0200
+        with ESMTP id S229445AbiH1UpA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 28 Aug 2022 16:45:00 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 255091580F;
+        Sun, 28 Aug 2022 13:44:55 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id f24so3413976plr.1;
+        Sun, 28 Aug 2022 13:44:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=A9D0cuoBStYXDmYgb1aaGFX8/+VPPNtzu94Y2LcT1zA=;
+        b=CsUREvxiapMGbqr180DHU8MRhrOi2ZQ4zNXtFB2Jta8htf/c/ylGUIkhuxr0lCkwF5
+         gQ1rYVX2vaO2crfYL4jkb+e5rRjWuqeD8bFqYOKN7AkNNCKkbxHR0FiBvqw4mOocpMTm
+         apKb+psh9eVrljDC1eWdIhujz5vVD8Rs+oqpeGXQYMzDPvBTHFIOuIZ/lE4dXsVnkzZ+
+         adnpd2NAhaXCrkIHZ7ANCieLkoD5NOKWueZkaZrmQFLkLbsalA7ALMwun1FQBaupQgEt
+         rJImEbb/pwBsyGY85R6SeDpsn4eR3w6JPqCAm/s4NzqdhIQsgKEOvkgaTiNfVru7zB+s
+         9Saw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc;
+        bh=A9D0cuoBStYXDmYgb1aaGFX8/+VPPNtzu94Y2LcT1zA=;
+        b=3VYPUY5kPcRBWFJSsOL/UHBrxovVgF2Z+3oPafwJ+8DkiOGvxGxzszcuIP8Q29eEjc
+         I6kgPjxQOSCd0lpg68jD5Zcc03/IglpR10IP+s9O2Qxlf2kGQuUu2QROMiUZ5ErNJSvL
+         mEQ/mFliFVQ+1Lcg/P9oNmSk0RUTIu7DYO2kxPPL0R22ktKQnRDdCO+RvqMnlmZNilnw
+         JHwwHxWQLNNdagu+1yIjdyWspr0vhetV8gU25Pw4MtqIb8uCxmnRTz78EwGwYWhK5L9F
+         vNqkMv7LScja09W3JIsPqy6sZ49Ryo9KRjJwFG2m+/mjjExPIio9eu6ycNfn8jGtJMoR
+         1tPg==
+X-Gm-Message-State: ACgBeo0ZrJvUpgAwbX8WqRdRWoFZyEER6xDbNT0jqSAx91d9sirsSyy3
+        hkHjzi5lOxRZ+/8SFPlG0YSnkhvOMnZdxg==
+X-Google-Smtp-Source: AA6agR7nho/Rb/wMJkJk14TxEHIWwSWyQ8Bzws/9ExjKo7eDw7Fr5TBsjm1Nvo1Fp5dwpa9iOhDl2g==
+X-Received: by 2002:a17:90b:38c4:b0:1fd:7119:1302 with SMTP id nn4-20020a17090b38c400b001fd71191302mr12251507pjb.243.1661719494912;
+        Sun, 28 Aug 2022 13:44:54 -0700 (PDT)
+Received: from localhost.localdomain (lily-optiplex-3070.dynamic.ucsd.edu. [2607:f720:1300:3033::1:4dd])
+        by smtp.googlemail.com with ESMTPSA id j17-20020a170903029100b00172ba718ed4sm5779667plr.138.2022.08.28.13.44.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 28 Aug 2022 13:44:54 -0700 (PDT)
+From:   Li Zhong <floridsleeves@gmail.com>
+To:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc:     damien.lemoal@opensource.wdc.com,
+        Li Zhong <floridsleeves@gmail.com>
+Subject: [PATCH v1] drivers/ata/libata-core: check return value of sata_scr_read()
+Date:   Sun, 28 Aug 2022 13:44:43 -0700
+Message-Id: <20220828204443.1954661-1-floridsleeves@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.0
-Subject: Re: [PATCH v2 2/2] scsi: sd: Rework asynchronous resume support
- #forregzbot
-Content-Language: en-US
-Cc:     scsi <linux-scsi@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ide@vger.kernel.org
-References: <20220630195703.10155-1-bvanassche@acm.org>
- <alpine.DEB.2.22.394.2207191125130.1006766@ramsan.of.borg>
- <db19ed29-e7f9-e5b0-3a6c-f2812078a07d@acm.org>
- <CAMuHMdVzsgSYtbJQnaigNax_JbxPsQfU+gHcteS-ojWbxUdMfw@mail.gmail.com>
- <CAMuHMdWtxBj8ug7AHTqentF8UD4jpO2sgoWWcQCOvEKLJtdq8A@mail.gmail.com>
- <506ca1a6-1122-5755-fc74-60f7c7bfbd0d@acm.org>
- <CAMuHMdVQ2K2v8jpsFfOMk99DG_sBB4_ioiQRroC7K_Ov1wvp9w@mail.gmail.com>
- <6f70e742-9d8a-f389-0482-0ba9696bf445@acm.org>
- <CAMuHMdVc+ATGV-=R3uV6RyF0-mZiuKv7HpmogRBgqGVyO-MKWg@mail.gmail.com>
- <54e20a27-a10b-b77a-e950-1d3398e2e907@acm.org>
- <CAMuHMdURQpAEGgv4cY7v0rqzs12v2TT=Amt26Y0OoBSW7YAoaw@mail.gmail.com>
- <084e7c5a-f98d-d61e-de81-83525851ecf9@acm.org>
- <CAMuHMdW2vOC8ZsE_XF8TbSNoF9zCrwq7UkGZ5jXen1E1mTZe+g@mail.gmail.com>
- <14ec47f3-f3b8-61c7-2c64-d96d00dd7076@acm.org>
- <CAMuHMdW7nGxV_3Z2JV_TCM+WtTdYv5P+0cE6Tw=6krcseNCdAw@mail.gmail.com>
- <40700595-8c83-1b61-ea93-ea9554bfb2db@acm.org>
- <98592410-dd31-9081-86be-fda67d3b06d2@suse.cz>
-To:     regressions@lists.linux.dev
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <98592410-dd31-9081-86be-fda67d3b06d2@suse.cz>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1661687582;b4a732ba;
-X-HE-SMSGID: 1oSGqb-0007QJ-4K
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-TWIMC: this mail is primarily send for documentation purposes and for
-regzbot, my Linux kernel regression tracking bot. These mails usually
-contain '#forregzbot' in the subject, to make them easy to spot and filter.
+sata_scr_read() could return 0 on failure. Check the return value.
 
-On 17.08.22 21:07, Vlastimil Babka wrote:
-> Hi, I have a T460 hanging on resume from suspend to ram in 6.0-rc1 that
-> I bisected to this commit.
-> 
->> Unfortunately the above does not learn us anything new. The code 
->> modified by commit 88f1669019bd ("scsi: sd: Rework asynchronous resume 
->> support") is only called if sdev->manage_start_stop != 1. Only the SATA 
->> code, the Firewire code and the manage_start_stop sysfs attribute store 
->> method set that member variable:
-> [...]
-> #regzbot introduced: 88f1669019bd62b3
-> #regzbot monitor: https://lore.kernel.org/all/20220816172638.538734-1-bvanassche@acm.org/
+Signed-off-by: Li Zhong <floridsleeves@gmail.com>
+---
+ drivers/ata/libata-core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-#regzbot fixed-by: 785538bfdd682c8e962341d585f9b88262a0475
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 826d41f341e4..ae08c7d35cb0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3021,7 +3021,8 @@ static void sata_print_link_status(struct ata_link *link)
+ 
+ 	if (sata_scr_read(link, SCR_STATUS, &sstatus))
+ 		return;
+-	sata_scr_read(link, SCR_CONTROL, &scontrol);
++	if (sata_scr_read(link, SCR_CONTROL, &scontrol))
++		return;
+ 
+ 	if (ata_phys_link_online(link)) {
+ 		tmp = (sstatus >> 4) & 0xf;
+-- 
+2.25.1
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
