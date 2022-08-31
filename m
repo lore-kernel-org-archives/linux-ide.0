@@ -2,223 +2,210 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60AE8ECAAD4
-	for <linux-ide@archiver.kernel.org>; Wed, 31 Aug 2022 14:28:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62E48ECAAD4
+	for <linux-ide@archiver.kernel.org>; Wed, 31 Aug 2022 22:13:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231248AbiHaO2S (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 31 Aug 2022 10:28:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34742 "EHLO
+        id S232117AbiHaWNt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 31 Aug 2022 18:13:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231527AbiHaO2G (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2022 10:28:06 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD27A5D109
-        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2022 07:28:02 -0700 (PDT)
+        with ESMTP id S232278AbiHaWNr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2022 18:13:47 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EC8AE97F8
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2022 15:13:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1661956083; x=1693492083;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=9KoS2pnLKtDlZFqhkrf+zkXhqcmPRu+Y5TW0pFEp6/g=;
-  b=e86PKfo8WbNrRVUpkO93yVcP42gHOQlZ+FPj6HSY84iIdib5VE9Otrnf
-   piuzOo5tSFv3g9SjnPYIpu9sAmOdvIOn3hkT69LPrlIURWledQ8FAe2Zm
-   v3sjz0CdqbIbmHjQDSaoX8uqj+Z81Qbzi1bagc/zbA2Wd0FSWHtXr9ozD
-   tnVkcyYqrXjQauPIZ5NyqBZMEFtyPOqtCcbK8Knrn9sGk2h3WHYdnRYDS
-   4sonrwRGoPo17vr2iktQJSS261dYRUn8EsJv23iSeD7UftBl1HL7WkOQE
-   tCG6lmsOCWcktqAPUKEAxTaZhKLdFTnwfpXzXGatvLdmNjGo9Irh7p7d6
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.93,278,1654531200"; 
-   d="scan'208";a="314419662"
-Received: from mail-dm6nam12lp2174.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.174])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Aug 2022 22:28:01 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VpSC318OrSW2Qx6pg+ynzTjv23shn9SMq+Z+wl3QFMGxKYVdtGMOtZ3xk24wbNwGNLPLjvQr9ucTe7KQjrJViWU/qe4Jq2y+bVZYyc2cQi3owGEVida+fI8i6IDmd4xy46paKMhBYpSehKvFPMMxuyDvjXADuW2TQfA0dB78DCw2HKNkEPUI0ZwfL/tZTc4tvLlsYPCKlVbFrvwk0qm19qX6tUKD76ujOyjwHmvILBSBY1qhVMbcpcbj7F18ilbxdERvjXj37eDQSbLq4ZKejrqYns2yiaRJiSYTgxu7yCAOgy9qSr2skOARr1avVEay5qs7+pYf9NNUUn0BxGlwUQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=R6EmIkjmYPvkhe179PYfgN92fBTee1tq5Gj2lWvC1Ak=;
- b=nS77ZyF+zDS3BVs+Nd1Sg3K26StJ9LgviIrJeMx5qjEdeblbRRjIkU9Xdh0kqfJ6VAnoSkRn/VPIrFVMWQTsmNNoxCy45Duv4urBYxyPz1BguSmu0RZxo21bQEnfPZ1pw3Y6O19a076XhmRGWIGf0ODBQDaF03Dmqs15osZoWlfe7/4WECpOCyEPSt8726UWdMJDGq6Qd2wRGV19ioSrJqVTgNZvgGVoiKoy3JdJPi4AGWnm2Uunz0o3H4vPi+r0dEd70tn23Q7ftxNhiCZ/AFa2epCSjI4GEhfCSW6hSfFC89zvuBrWkaRRiQO0Atzac+7aeMY4Vi/n8IDtLLq1mw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=R6EmIkjmYPvkhe179PYfgN92fBTee1tq5Gj2lWvC1Ak=;
- b=iR/QF0BAO5eJJvxUKYljXObkru59dLVXboLNia8E8P4aFYUPPFnrXen96l9Qrx0FWD6Hp+C3asAyuZ6BxdtlsE3GbHJ3ZZWANMAPwh8t6ptlQ2RGJGSohnpXJBGxusJKCO2wJ6U3inZs9OyeTRjRg69glhvnRkyB3yuOfQmcJuw=
-Received: from PH0PR04MB7158.namprd04.prod.outlook.com (2603:10b6:510:8::18)
- by BL0PR04MB5156.namprd04.prod.outlook.com (2603:10b6:208:5e::27) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.19; Wed, 31 Aug
- 2022 14:27:59 +0000
-Received: from PH0PR04MB7158.namprd04.prod.outlook.com
- ([fe80::c839:6239:54ad:fc30]) by PH0PR04MB7158.namprd04.prod.outlook.com
- ([fe80::c839:6239:54ad:fc30%5]) with mapi id 15.20.5588.010; Wed, 31 Aug 2022
- 14:27:59 +0000
-From:   Niklas Cassel <Niklas.Cassel@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH] ata: libata-scsi: Improve ata_scsiop_maint_in()
-Thread-Topic: [PATCH] ata: libata-scsi: Improve ata_scsiop_maint_in()
-Thread-Index: AQHYvUXerD4QfI7iZk+F4n0D6LT22w==
-Date:   Wed, 31 Aug 2022 14:27:59 +0000
-Message-ID: <Yw9v7gZwJwp7SjNN@x1-carbon>
-References: <20220825223912.355011-1-damien.lemoal@opensource.wdc.com>
-In-Reply-To: <20220825223912.355011-1-damien.lemoal@opensource.wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: b297d1f0-6718-4a32-f244-08da8b5d010f
-x-ms-traffictypediagnostic: BL0PR04MB5156:EE_
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: h0ivwDEUm9dnDxRbOPnajY+9EKBnv0ztg+2iyGUDJUrULh9pt1xdoVUyZyWDhUkdFX0jeIWcHKo+r5Xww/+6kbjFaWJ0oG2b5PtQjVhIMscvq4HTLuaREuiA5iZu3LDD+DWEhrT9i29xDVGyFy1KOSFVpCoZ5wC//rbQ924XUhqA9O3/czmMAUkagvbwuKsQxu2mUmpAbPb8p0viU25PgWe/LizUdXYvWEmsEcmwfjLORP98eW/ltsck4osZvtWZ7YSdi0Q781RAtYxRcDMGr9QgphrPD124XYLW4FzehdoBKqUyNrUcy/3A+LHzcGzsYZa0pz2hmDuHCR4NMhxZvkhi1a4HDO7j2neIdkL3tficwfztHSFoi4GGoJbIniCu0AExJSiwDHVfSH1Lk4ghKDUUv2bU7NJ6ubMdW8blCu6oC6ZMQXO8XDFzL1iSg6ghqsHoUo0y6GT+5M/YDJ1LqMkNpcxzLlAB7Ay39/BFndYRhHbrJBZ9nZYRkhQAnv8rjO0TZwFLmvowXhPxInl7S8rYptP+2Jn2kMB++WbIqDRnl4WRxnH+ne8JCvdEl3/G9wSeV6cWckDn6V7/CmrOt3uhLFyMchY9IUt4Myh7RfGzCx+VHt1eE5UPM0muKTkdCmMdZ1OjNNr9zFYylub/W69cpCMBFWIPR0VGO4477HXVAvIQygvpEZfb6R+2Tm30JHptVSPWVr5LoZy0X9stJ7ycmO8p1g9QJ/Bg3Z2fl/VOa74x/ciQiA+8ZCuM7w0Ppme/zzsoTuPco0XCGcY6Rg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7158.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(7916004)(366004)(396003)(136003)(39860400002)(376002)(346002)(4326008)(66556008)(66446008)(76116006)(5660300002)(66476007)(91956017)(64756008)(66946007)(316002)(8676002)(2906002)(86362001)(33716001)(6862004)(122000001)(83380400001)(8936002)(38070700005)(478600001)(38100700002)(41300700001)(6486002)(71200400001)(26005)(54906003)(186003)(6512007)(6506007)(82960400001)(9686003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?jZuxrxbVs3Ry+hdF37bFnEID7R/Iu3Z7LQzxI1NOnDvKJF00xOYV/VHInnez?=
- =?us-ascii?Q?B/IlqM589iNmEo8hE3wTfxJob6UeXrAjW1VNVsw1b7hTkJYbj3c4f8a2bLVb?=
- =?us-ascii?Q?cEtBSzeCyUcbRbhY3SetwtQEukgmufuY5CfJnL++cAZsk6Ji+eAc5w3IfEYe?=
- =?us-ascii?Q?Fdq441H2iePB16MsWqKRI3T41u5Xlq5HVEX9eI0PXV++KlumwfS+MielNQ8C?=
- =?us-ascii?Q?F8qLjL/keTU2xqE68b3ItLWRUAJQRryBwKZ8nfDcaXaRgkn3Yt4ijtisge4G?=
- =?us-ascii?Q?m5lPWYaIm/Z7P/ylx9/FFUxDhUMAWfCZVVU2pFESGz9vGNnFpb7gmMg0GKuS?=
- =?us-ascii?Q?Q4QpjzGpwFDjmX/JkD2787nVE9OZInlfraywW3l6WpfCO3mxXgANvCp2BNqO?=
- =?us-ascii?Q?MMQ1Tbn3xMuOZZ+u3SOZUsdRPGZEnee4sDOrhZElpqLcFic21Hr/ZzcwGL9U?=
- =?us-ascii?Q?QF4Y2P1IKmKraJzkI0PqvGHdc7vJFhLF/ErVW2EF3vybHkOpB74Jhz90KoH+?=
- =?us-ascii?Q?j2xOwIlPE9qp7GG04FK7zAU1SRMSsm7QAR1c7Qeu5QEoQfsVEo3TmVeRhfeM?=
- =?us-ascii?Q?l7iZYXU7sB5Y2lDrsIOw7v2k0+A9MwrONf4AysaZ2f48EgAfAQ9LznskCxtU?=
- =?us-ascii?Q?qNYb5GnTZ+QyEBd/hwiXavHExhRoAJaIN05SKlwt+cGLRLvQ9lrxWfv0HP2C?=
- =?us-ascii?Q?O+dmpyiBt+I/WoWwtLzqMhr5Vw8vUpuYY0vg5fh6HZq1cMaGur3SpOTvRyPQ?=
- =?us-ascii?Q?+WFP86ggbh4msvjZd1r+E1JsNfDqb4ZFMWYUCQHZTHxgIB1a/A7N8T/T64kL?=
- =?us-ascii?Q?jBerq1TLM9o0In/gaxFC2nPeOA+bfw0a18MfHvKnmqFYKZYaF9eqYZ3OfMB6?=
- =?us-ascii?Q?BwhKjzN0y79ZYLJvcsfzbUXAp5HaSw2Bo3i/JSiZMPqMOwG5FHe3yH6QFjMx?=
- =?us-ascii?Q?Agli6l9jOd+7FOj7fG3+pljTLjFjbA26iRwFyjBI3AvAK7vVDRpc8Jy4zIeP?=
- =?us-ascii?Q?Jt36PpINd7ewWieFlisL8HyVeTnuR5uOWNQLQ3ksr62XWSpCKceLxo7XXqG/?=
- =?us-ascii?Q?xw+9slrgRSNqDcSfo4Exi8KGlkVKt+xymF1tqgdTogMrBUHdrB1JCumrheXC?=
- =?us-ascii?Q?1V6ZCiFzgl9Hv8Ml7mv6DxwxJO5RLaTMl1PJhTpeBq3sna37OmGUvKfdS5kP?=
- =?us-ascii?Q?7A3C9pOOIwPPDW/Bqvw1/+VYxTIu31ww+yOhZ+m1/XvAxMmlB+kg+VdfZVb/?=
- =?us-ascii?Q?jS77Gqv13gNwoAmYRqmg5EP3OQpDOxVwXLFl1ZvV31yu3hfewiwm6UyWwAaS?=
- =?us-ascii?Q?1eCrGOJP7Hq4PTd4W8mMpO9W8A1Xj9JCNtc1+yPjmQZI3oyD+qQHXQz3OZ9D?=
- =?us-ascii?Q?uv/ELxP+WFotwyISFcFqSVXGuWk76POiWIHChpSEEDBde8ZaOj++Hnx0pYFi?=
- =?us-ascii?Q?1AoI00xL2mhwrX46I3vAVaZzmsqy3N1HGgka1fI6cbtOnjoCf6xraVIToBMx?=
- =?us-ascii?Q?vrquyT8UrWUHmBdHe/IEsJqGSWIT3dWjbddKiq/BWV5ZO/o+b+JD4B3EmNox?=
- =?us-ascii?Q?h3VWzNWI0Xvq6mmgk/HwginK/o3LpfeE0O+06XXkHLS5qcdfVzsNtF5s1p7o?=
- =?us-ascii?Q?nA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <8C8A8ACCDB5E804CB9CAB580986885BB@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+  t=1661984026; x=1693520026;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=t+QQB2ovmypqh0IvRjTomNVLTIrFuSzML607jm/gpTo=;
+  b=Zc4fu74mhLZukDnyobWSMy8xIptZ/04ZvPLomVer5AXwKsKrYytviuzs
+   bquJW/db9pyiCKjFB5AjL/DtMIE38uPqIK4BU6BmCH8q44NYhQEKnQTya
+   T9IwmsBT3XgV2vg5NRVJ0VNxoW15Su+1j8LfJONp1Qfm2LovzOLxEwmAO
+   0CPiHMJFNJBh2prhPB3vchs4g7HRz5WpgJ58ccNpXqwJlyn5cITjC+QWJ
+   lgwuf1wprHyvHW6OFLThF433SAiNCU9Sbn8uJnfH1SsMQtmL4SLS3nlvc
+   R/9jNz6KYF88D+eDo1N3Y5/ZLdYlzvgrx3kAE2RUf/0iaAMfGztb5UR0E
+   g==;
+X-IronPort-AV: E=Sophos;i="5.93,279,1654531200"; 
+   d="scan'208";a="208599324"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2022 06:13:40 +0800
+IronPort-SDR: qY0M0oTIZBUWJVATAQx8qBT1UXoXarhBLqghNQpQTb7wmQOJLHmwl7g4Jva+btBCqSh7Q/cRwz
+ ck3eEqxfdsa5UiilqLnZ90YGOz39jom8Clc70j+tz7GGlR91pmjwfX+mIrmvZl58T0xVKySlP9
+ ps4Gh1QAz0B0BNjdhoDoMMmknkzr1eN2eWd+cxEiDH1HJppo2XfuGaA48ZztPUZMO2RPOJttyD
+ Maf9jBacDhn84fF/XRRpJO83qzrKgaNYNMBCGaBlaJq9TYVaifsKD4vbOcQwzH+XCGmhesO2+W
+ bqzL4MY+dC5p03GxrOwXn1bi
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 14:28:48 -0700
+IronPort-SDR: GPEcYf6SPe8l9gUkXG6toBWziUl2DBygdRq40tXvhYKUtvYouBT8/7uI2Y8DpaN+LCbD7Zooru
+ VHI6pPkr8cu5jKw2FJrrmHDhFqrDj5o9YWrzRHU0VXJTHlNfa1knfYWsWMmAidiVtegQbA217r
+ ZHfemnJoZpXlgYqVwSBOLjmoD5lCJl5q78JilZeKK7E43qD9bKtk+6yhbsTPo6/0dLJ771Rcgj
+ /Pj5TAs8plV9WhAfA5Pr9vzIBtHkqN+zsk+rdd/UO5CHo9kWCsLSNN8omCu/UWbSw9v0OVyPY+
+ J5Q=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 15:13:41 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MHz382L0gz1RwqL
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2022 15:13:40 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1661984019; x=1664576020; bh=t+QQB2ovmypqh0IvRjTomNVLTIrFuSzML60
+        7jm/gpTo=; b=XvdNV+Wlc/XWJeKAtwwuGSiZKh6kmR7HeccoSHRUBgEZDF/WZEC
+        YQr4lIyS4326M6hdnGWRPJNvzEXNgqN77e0Nj2G8jSEWuSv8hOnqhsJcUi57aAuC
+        b99KlpP+JlgfKNUP2bZaokJvrhvUuswJxzP17qRcFh+dHeZsMF/MMNESaoM2nQW/
+        bXDr3SAu5V0nd+Zz9hBHccUIUImoTuzDlTlD+IbJjEpMsoPpHbMeTuplxb6VlMyZ
+        WO7Np2Gm78Fdae11hrwSMncBALm756wPtYPhPZvNFPs5NUnWM81xzy1aE5OX4Ge/
+        XoaAaiffHezpV+ihsrGcbBz07nPL0f07SmQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id S1eP-MsYurD0 for <linux-ide@vger.kernel.org>;
+        Wed, 31 Aug 2022 15:13:39 -0700 (PDT)
+Received: from [10.225.163.52] (unknown [10.225.163.52])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MHz365ybXz1RvLy;
+        Wed, 31 Aug 2022 15:13:38 -0700 (PDT)
+Message-ID: <318b0452-9814-6276-95a5-10478e5a1b7d@opensource.wdc.com>
+Date:   Thu, 1 Sep 2022 07:13:37 +0900
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7158.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b297d1f0-6718-4a32-f244-08da8b5d010f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Aug 2022 14:27:59.2074
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: PuKPBqYhSfhQzWSerXPKpUWpFSiJEaJOVHljOVq66xQZnY+fKaeMfvkum7o3Odz02rJwLU7BTpU3LgvrRt4dRQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR04MB5156
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH v2 3/3] ata: ahci: Skip 200 ms debounce delay for AMD 300
+ Series Chipset SATA Controller
+Content-Language: en-US
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     Mario Limonciello <Mario.Limonciello@amd.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <20220321212431.13717-1-pmenzel@molgen.mpg.de>
+ <20220321212431.13717-3-pmenzel@molgen.mpg.de>
+ <BL1PR12MB5157DDFD5E75360F032346D3E2169@BL1PR12MB5157.namprd12.prod.outlook.com>
+ <cc7b4426-f6a6-e6b1-4aaf-0a713ee3d388@opensource.wdc.com>
+ <5fb6af7b-d84f-cbae-7eb1-543f3a7e53e4@molgen.mpg.de>
+ <d9837420-1cbb-ed5e-7043-985d9eb9d065@opensource.wdc.com>
+ <b3e4435d-335c-1aba-1920-c225b46d09e7@molgen.mpg.de>
+ <f6c78650-f22f-fcaf-a660-b1fc4ea7f641@molgen.mpg.de>
+ <22f69d9a-7d0d-a408-70b3-11295f14b82d@opensource.wdc.com>
+ <67950993-2eb9-c180-7c80-98c9954c9b22@molgen.mpg.de>
+ <85f8c8cb-b4b9-b3ed-e79f-a1a161c9b672@opensource.wdc.com>
+ <65012735-0a92-1071-e8e0-9d101c247a64@molgen.mpg.de>
+ <3135eed0-b7e3-42fa-5b6c-80360f34e428@opensource.wdc.com>
+ <893fe832-d522-112e-53ec-0f030c15af0d@molgen.mpg.de>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <893fe832-d522-112e-53ec-0f030c15af0d@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Aug 26, 2022 at 07:39:12AM +0900, Damien Le Moal wrote:
-> Allow translation of REPORT_SUPPORTED_OPERATION_CODES commands using
-> the command format 0x3, that is, checking support for commands that are
-> identified using an opcode and a service action.
-
-So, while the function ata_scsiop_maint_in() has the kdoc:
-*      ata_scsiop_maint_in - Simulate a subset of MAINTENANCE_IN
-
-It actually only handles a MAINTENANCE_IN service action (command).
-
-The name is thus quite misleading.
-Perhaps you could do a patch 1/2 that renames the function so that
-it is more clear that it only handles a single service action.
-
-(If we ever add translation support for more than one action,
-we could reintroduce a ata_scsiop_maint_in() which calls the
-correct function to translate the correct service action.
-
-
-
-> Allow translation of REPORT_SUPPORTED_OPERATION_CODES commands using
-> the command format 0x3, that is, checking support for commands that are
-> identified using an opcode and a service action.
-
-If you rename the function, the commit message will make more sense,
-but could be further clarified to something like:
-
-"""
-The ata_scsi_report_supported_opcodes_xlat() currently only handles
-currently only handles a command specifying "REPORTING OPTIONS" field
-set to 0x1.
-0x1 means:
-return data in one_command format if:
--The opcode in REQUESTED OPERATION CODE is supported,
-REQUESTED SERVICE ACTION field is ignored.
-If opcode implements service actions, then terminate the command
-with CHECK CONDITION and sense key set to ILLEGAL REQUEST and
-additional sense code set to INVALID FIELD IN CDB.
-
-Add support for translating a "REPORTING OPTIONS" field set to 0x3.
-0x3 means:
-return data in one_command format if:
--The opcode in REQUESTED OPERATION CODE does not have service actions
-and the service action in REQUESTED SERVICE ACTION is set to 0x0; or
--The opcode in REQUESTED OPERATION CODE has service actions and the service=
- action in REQUESTED SERVICE ACTION is supported.
-else:
-the command support data shall indicate that the command is not supported,
-i.e. the support field is set to 0x1 rather than 0x3 or 0x5.
-"""
-
+On 8/30/22 18:05, Paul Menzel wrote:
+> Dear Damien,
 >=20
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->  drivers/ata/libata-scsi.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
 >=20
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index f3c64e796423..99ebd7bf3a9c 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3252,11 +3252,12 @@ static unsigned int ata_scsiop_maint_in(struct at=
-a_scsi_args *args, u8 *rbuf)
->  	u8 supported =3D 0;
+> Sorry for the late reply, and thank you for your great work.
+>=20
+> Am 01.06.22 um 10:58 schrieb Damien Le Moal:
+>> On 6/1/22 01:18, Paul Menzel wrote:
+>>>>>> With that in mind, I am not planning to apply your previous patche=
+s
+>>>>>> for 5.18, as they would conflict and would only end up being churn
+>>>>>> since the delay removal by default will undo your changes.
+>>>>> Obviously, I do not agree, as this would give the a little bit more
+>>>>> testing already, if changing the default is a good idea. Also, if t=
+he
+>>>>> conflict will be hard to resolve, I happily do it (the patches coul=
+d
+>>>>> even be reverted on top =E2=80=93 git commits are cheap and easy to=
+ handle).
+>>>>
+>>>> The conflict is not hard to resolve. The point is that my patches ch=
+anging
+>>>> the default to no debounce delay completely remove the changes of yo=
+ur
+>>>> patch to do the same for one or some adapters. So adding your patche=
+s now
+>>>> and then my patches on top does not make much sense at all.
+>>>>
+>>>> If too many problems show up and I end up reverting/removing the pat=
+ches,
+>>>> then I will be happy to take your patches for the adapter you tested=
+. Note
+>>>> that *all* the machines I have tested so far are OK without a deboun=
+ce
+>>>> delay too. So we could add them too... And endup with a long list of
+>>>> adapters that use the default ahci driver without debounce delay. Th=
+e goal
+>>>> of changing the default to no delay is to avoid that. So far, the ad=
+apters
+>>>> I have identified that need the delay have their own declaration, so=
+ we
+>>>> only need to add a flag there. Simpler change that listing up adapte=
+rs
+>>>> that are OK without the delay.
+>>>>
+>>>>> Anyway, I wrote my piece, but you are the maintainer, so it=E2=80=99=
+s your call
+>>>>> and I stop bothering you.
+>>>
+>>> I just wanted to inquire about the status of your changes? I do not f=
+ind
+>>> them in your `for-5.19` branch. As they should be tested in linux-nex=
+t
+>>> before the merge window opens, if these are not ready yet, could you
+>>> please apply my (tested) patches?
+>>
+>> I could, but 5.19 now has an updated libata.force kernel parameter tha=
+t
+>> allows one to disable the debounce delay for a particular port or for =
+all
+>> ports of an adapter. See libata.force=3Dx.y:nodbdelay for a port y of
+>> adapter x or libata.force=3Dx:nodbdelay for all ports of adapter x.
+>=20
+> This is commit 3af9ca4d341d (ata: libata-core: Improve link flags force=
+d=20
+> settings) [1]. Thank you, this is really useful, but easily overlooked.=
+ ;-)
+>=20
+>> I still plan to revisit the arbitrary link debounce timers but I prefe=
+r to
+>> have the power management cleanup applied first. The reason is that li=
+nk
+>> debounce depends on PHY readiness, which itself depends heavily on pow=
+er
+>> mode transitions. My plan is to get this done during this cycle for
+>> release with 5.20 and then fix on top the arbitrary delays for 5.21.
+>=20
+> Nice. Can you share the current status?
 
-A supported value of 0x0 means "Data about the requested SCSI command
-is not currently available".
+No progress. I need to put together a series with all the patches that
+were sent already. Unless Mario can resend something ?
 
-However, considering the differences between 0x3 and 0x1, if we want to
-follow the spec strictly, we should initialize the variable "supported"
-to 0x1 rather than 0x0, when the supplied REPORTING OPTIONS is 0x3.
+>> Is the libata.force solution OK for you until we have a final more sol=
+id
+>> fix that can benefit most modern adapters (and not just the ones you
+>> identified)? If you do have a use case that needs a "nodbdelay" horkag=
+e
+>> due to some constraint in the field, then I will apply your patches, b=
+ut
+>> they likely will be voided by coming changes. Let me know.
+>=20
+> I think, applying the patch would be an improvement, as people wouldn=E2=
+=80=99t=20
+> need to update their Linux kernel command line, and I do not mind, if i=
+t=20
+> gets reverted/dropped later.
 
-REPORTING OPTIONS 0x3 mentions that "supported" should be 0x5, 0x3 or 0x1.
-So (according to the spec) 0x0 does not appear to be a valid value when
-REPORTING OPTIONS is 0x3.
-
->  	unsigned int err =3D 0;
-> =20
-> -	if (cdb[2] !=3D 1) {
-> +	if (cdb[2] !=3D 1 && cdb[2] !=3D 3) {
-
-Considering that this function never terminated a command with
-sense key and additional sense code set before, none of the commands
-support a service action.
-
-Therefore, we could change this to only allow commands where:
-cdb[2] =3D=3D 1; or
-cdb[2] =3D=3D 3 && REQUESTED SERVICE ACTION (cdb[4] && cdb[5]) =3D=3D 0x0
+Let's see were the lpm stuff goes first.
 
 
-Kind regards,
-Niklas=
+--=20
+Damien Le Moal
+Western Digital Research
