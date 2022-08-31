@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62E48ECAAD4
-	for <linux-ide@archiver.kernel.org>; Wed, 31 Aug 2022 22:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8B54ECAAD1
+	for <linux-ide@archiver.kernel.org>; Wed, 31 Aug 2022 22:55:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232117AbiHaWNt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 31 Aug 2022 18:13:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39598 "EHLO
+        id S232357AbiHaWzD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 31 Aug 2022 18:55:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232278AbiHaWNr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2022 18:13:47 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EC8AE97F8
-        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2022 15:13:46 -0700 (PDT)
+        with ESMTP id S232611AbiHaWzC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2022 18:55:02 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EDFB3121F
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2022 15:55:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1661984026; x=1693520026;
+  t=1661986500; x=1693522500;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=t+QQB2ovmypqh0IvRjTomNVLTIrFuSzML607jm/gpTo=;
-  b=Zc4fu74mhLZukDnyobWSMy8xIptZ/04ZvPLomVer5AXwKsKrYytviuzs
-   bquJW/db9pyiCKjFB5AjL/DtMIE38uPqIK4BU6BmCH8q44NYhQEKnQTya
-   T9IwmsBT3XgV2vg5NRVJ0VNxoW15Su+1j8LfJONp1Qfm2LovzOLxEwmAO
-   0CPiHMJFNJBh2prhPB3vchs4g7HRz5WpgJ58ccNpXqwJlyn5cITjC+QWJ
-   lgwuf1wprHyvHW6OFLThF433SAiNCU9Sbn8uJnfH1SsMQtmL4SLS3nlvc
-   R/9jNz6KYF88D+eDo1N3Y5/ZLdYlzvgrx3kAE2RUf/0iaAMfGztb5UR0E
-   g==;
+  bh=ta7NQ6De3ZrERrBIjw4mnHUS52CH/UPGJISZhiCco+k=;
+  b=BPlieqZyrn8pOoMhL+3FLpKs6ILdBoTfdEwTNxFCOIied5uezOWerNJ3
+   5hsDOLSn62SelDm6bSiy9ZFJTNXr0aFwmTXqzXa+oowUijH1gcYaYRsib
+   t14/r2ART8AhG+ZWaxUC8i8A1sMdRbsLcoK5wioRuGZj0TGfXF1yo9kvT
+   RL5LggymAEcR9DN/M8f9iqY0TOF+Be17XNYP4JW4lqxNSd/0PNK0ac95R
+   E0cH86RBBXhIsgUsH5iSRvGcPym4I437HSkFx03D161p02TdbAM37/VVO
+   xMhqaKjDym/nSdzVAt4LWiNIGJQijvB7CaTba4Wp+JGvOg2L7ccX4ukJq
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.93,279,1654531200"; 
-   d="scan'208";a="208599324"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2022 06:13:40 +0800
-IronPort-SDR: qY0M0oTIZBUWJVATAQx8qBT1UXoXarhBLqghNQpQTb7wmQOJLHmwl7g4Jva+btBCqSh7Q/cRwz
- ck3eEqxfdsa5UiilqLnZ90YGOz39jom8Clc70j+tz7GGlR91pmjwfX+mIrmvZl58T0xVKySlP9
- ps4Gh1QAz0B0BNjdhoDoMMmknkzr1eN2eWd+cxEiDH1HJppo2XfuGaA48ZztPUZMO2RPOJttyD
- Maf9jBacDhn84fF/XRRpJO83qzrKgaNYNMBCGaBlaJq9TYVaifsKD4vbOcQwzH+XCGmhesO2+W
- bqzL4MY+dC5p03GxrOwXn1bi
+   d="scan'208";a="215330630"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2022 06:54:59 +0800
+IronPort-SDR: auvHt49GfgdWlv5gMa7jHh0VLpFVd6VjtmKLvWAtNXPSXI/Dco2LtCBxQNq9l4UH8OhEjvxz9g
+ Wn5rd/R+1tT92ShqscU+fH7Aiykyqy0TcnjfSGiLfSbdr5/LuLLT8w9FArVxgcxQm71o70cD+l
+ ctN2YL5hd1BwVk5lU6o/ulnq5mSldjomPz31SFYfGGgvjzVjHU7YUj5FCbU+jGfmbWwE3685Mq
+ 4Nzsc43391/6uMatqWoev+Z92cE18qYrU/MP/DSKryRGj6Ps317bFu91pXrjRuOuH//ikEJU8F
+ OogFIIR/Du48HGYeTHgEymG6
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 14:28:48 -0700
-IronPort-SDR: GPEcYf6SPe8l9gUkXG6toBWziUl2DBygdRq40tXvhYKUtvYouBT8/7uI2Y8DpaN+LCbD7Zooru
- VHI6pPkr8cu5jKw2FJrrmHDhFqrDj5o9YWrzRHU0VXJTHlNfa1knfYWsWMmAidiVtegQbA217r
- ZHfemnJoZpXlgYqVwSBOLjmoD5lCJl5q78JilZeKK7E43qD9bKtk+6yhbsTPo6/0dLJ771Rcgj
- /Pj5TAs8plV9WhAfA5Pr9vzIBtHkqN+zsk+rdd/UO5CHo9kWCsLSNN8omCu/UWbSw9v0OVyPY+
- J5Q=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 15:15:29 -0700
+IronPort-SDR: zwTTEGNA9rHnlDy8nQXWH3DRO68AJOdtpOtVssY++4OhP3ztCFPhdd3S7/io3UEO1o0Gt1bLqG
+ u4aK3Q6ugiiHfbNL8HJax0my+qM9UpZoypaIJ+GjwmGc2u8C/rBGJUWl+6IjT29y4L/IaagYYE
+ a76gdsFIT4biO6SAexTQzj5WEXC2vTZ+xshDf1brPZIM5TBx7awmQFhi0zLU88YOEaWQc2AjJT
+ kjXhl5Twt+Z0h+mNJD+IiOF56AbKvKMDpjoqn8sZdHTInq/oVYNFNOge2j4AdAJusdowYh7Xok
+ Up4=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 15:13:41 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Aug 2022 15:55:00 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MHz382L0gz1RwqL
-        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2022 15:13:40 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MHzyq3dVvz1RvTp
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2022 15:54:59 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,154 +56,111 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1661984019; x=1664576020; bh=t+QQB2ovmypqh0IvRjTomNVLTIrFuSzML60
-        7jm/gpTo=; b=XvdNV+Wlc/XWJeKAtwwuGSiZKh6kmR7HeccoSHRUBgEZDF/WZEC
-        YQr4lIyS4326M6hdnGWRPJNvzEXNgqN77e0Nj2G8jSEWuSv8hOnqhsJcUi57aAuC
-        b99KlpP+JlgfKNUP2bZaokJvrhvUuswJxzP17qRcFh+dHeZsMF/MMNESaoM2nQW/
-        bXDr3SAu5V0nd+Zz9hBHccUIUImoTuzDlTlD+IbJjEpMsoPpHbMeTuplxb6VlMyZ
-        WO7Np2Gm78Fdae11hrwSMncBALm756wPtYPhPZvNFPs5NUnWM81xzy1aE5OX4Ge/
-        XoaAaiffHezpV+ihsrGcbBz07nPL0f07SmQ==
+        1661986498; x=1664578499; bh=ta7NQ6De3ZrERrBIjw4mnHUS52CH/UPGJIS
+        ZhiCco+k=; b=XUVtQYf95o51uBU6P6vHX5B8BMNVoHrDhqKRRFDqMxKD/hnPVVZ
+        89jZq3tkikHpMbRsH1c+kMyKq+WO/xJVAq+Jkq1fgHCsJldq5WbNo4OXIueeBpcN
+        BbqPMujsBuyKhJb6OT2sdtgltoulWIZJwl+CFVmqaYR6au5u8nw/JGJKC4teFQnl
+        HKpu6ToPVfa0lfRGoLQUpj8D3mC2WpZOe0/UgMF+MltV/qyp1KiHw53l5GyFalCD
+        poZBR5478F/eqrRV6O4m4Jv8YxJ8P5FwAAz0eVSbESBSVRtWJTZofSxEcyVB2HHa
+        U1mbnKNWWOOTVyoCCc0fIN+1pPmECfcvM6Q==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id S1eP-MsYurD0 for <linux-ide@vger.kernel.org>;
-        Wed, 31 Aug 2022 15:13:39 -0700 (PDT)
+        with ESMTP id IrXqUfc9lY26 for <linux-ide@vger.kernel.org>;
+        Wed, 31 Aug 2022 15:54:58 -0700 (PDT)
 Received: from [10.225.163.52] (unknown [10.225.163.52])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MHz365ybXz1RvLy;
-        Wed, 31 Aug 2022 15:13:38 -0700 (PDT)
-Message-ID: <318b0452-9814-6276-95a5-10478e5a1b7d@opensource.wdc.com>
-Date:   Thu, 1 Sep 2022 07:13:37 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MHzyp1MWBz1RvLy;
+        Wed, 31 Aug 2022 15:54:57 -0700 (PDT)
+Message-ID: <68bba1fd-1105-791b-433d-4917e74a0c14@opensource.wdc.com>
+Date:   Thu, 1 Sep 2022 07:54:56 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.12.0
-Subject: Re: [PATCH v2 3/3] ata: ahci: Skip 200 ms debounce delay for AMD 300
- Series Chipset SATA Controller
+Subject: Re: libata-scsi: ata_to_sense_error handling status 0x40
 Content-Language: en-US
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     Mario Limonciello <Mario.Limonciello@amd.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-References: <20220321212431.13717-1-pmenzel@molgen.mpg.de>
- <20220321212431.13717-3-pmenzel@molgen.mpg.de>
- <BL1PR12MB5157DDFD5E75360F032346D3E2169@BL1PR12MB5157.namprd12.prod.outlook.com>
- <cc7b4426-f6a6-e6b1-4aaf-0a713ee3d388@opensource.wdc.com>
- <5fb6af7b-d84f-cbae-7eb1-543f3a7e53e4@molgen.mpg.de>
- <d9837420-1cbb-ed5e-7043-985d9eb9d065@opensource.wdc.com>
- <b3e4435d-335c-1aba-1920-c225b46d09e7@molgen.mpg.de>
- <f6c78650-f22f-fcaf-a660-b1fc4ea7f641@molgen.mpg.de>
- <22f69d9a-7d0d-a408-70b3-11295f14b82d@opensource.wdc.com>
- <67950993-2eb9-c180-7c80-98c9954c9b22@molgen.mpg.de>
- <85f8c8cb-b4b9-b3ed-e79f-a1a161c9b672@opensource.wdc.com>
- <65012735-0a92-1071-e8e0-9d101c247a64@molgen.mpg.de>
- <3135eed0-b7e3-42fa-5b6c-80360f34e428@opensource.wdc.com>
- <893fe832-d522-112e-53ec-0f030c15af0d@molgen.mpg.de>
+To:     =?UTF-8?Q?Peter_Fr=c3=b6hlich?= <peter.hans.froehlich@gmail.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+References: <CAHXXO6Eio2LecHS3i7C7yeWOrGFdMA4HTDB=d7azS_67zw5cyg@mail.gmail.com>
+ <48bb6122-626d-aae1-fb96-2c40455f0303@opensource.wdc.com>
+ <CAHXXO6GdTPMgBt_sjh_4QaZgYdOwNaikMzWNrMiBepiX=_aKTg@mail.gmail.com>
+ <424c35de52b7ade5eaec620b308cc0345fb3731f.camel@wdc.com>
+ <CAHXXO6Gj1Tn6C=_CZ2eB5+V0-51Lt=g6PMnazwym_nnXsFNMpg@mail.gmail.com>
+ <fb5b1dda-fa31-077c-f075-c0cffdc689f7@opensource.wdc.com>
+ <13bae786-c912-500a-ab60-af88f63ca576@suse.de>
+ <ab34bac2-a48e-a247-b79c-c1e55bbad98c@opensource.wdc.com>
+ <CAHXXO6HDRmcvhYRYZq66ZHWqc82x6a4Q8NstAvZdxY8yVrA_zQ@mail.gmail.com>
+ <CAHXXO6HZDNdsUC69COBU9MpEgkCCKJNw3OceBgW23WSAG+_wBw@mail.gmail.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <893fe832-d522-112e-53ec-0f030c15af0d@molgen.mpg.de>
+In-Reply-To: <CAHXXO6HZDNdsUC69COBU9MpEgkCCKJNw3OceBgW23WSAG+_wBw@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/30/22 18:05, Paul Menzel wrote:
-> Dear Damien,
+On 8/31/22 22:30, Peter Fr=C3=B6hlich wrote:
+> Sorry for spamming replies and quoting myself.
 >=20
->=20
-> Sorry for the late reply, and thank you for your great work.
->=20
-> Am 01.06.22 um 10:58 schrieb Damien Le Moal:
->> On 6/1/22 01:18, Paul Menzel wrote:
->>>>>> With that in mind, I am not planning to apply your previous patche=
-s
->>>>>> for 5.18, as they would conflict and would only end up being churn
->>>>>> since the delay removal by default will undo your changes.
->>>>> Obviously, I do not agree, as this would give the a little bit more
->>>>> testing already, if changing the default is a good idea. Also, if t=
-he
->>>>> conflict will be hard to resolve, I happily do it (the patches coul=
-d
->>>>> even be reverted on top =E2=80=93 git commits are cheap and easy to=
- handle).
->>>>
->>>> The conflict is not hard to resolve. The point is that my patches ch=
-anging
->>>> the default to no debounce delay completely remove the changes of yo=
-ur
->>>> patch to do the same for one or some adapters. So adding your patche=
-s now
->>>> and then my patches on top does not make much sense at all.
->>>>
->>>> If too many problems show up and I end up reverting/removing the pat=
-ches,
->>>> then I will be happy to take your patches for the adapter you tested=
-. Note
->>>> that *all* the machines I have tested so far are OK without a deboun=
-ce
->>>> delay too. So we could add them too... And endup with a long list of
->>>> adapters that use the default ahci driver without debounce delay. Th=
-e goal
->>>> of changing the default to no delay is to avoid that. So far, the ad=
-apters
->>>> I have identified that need the delay have their own declaration, so=
- we
->>>> only need to add a flag there. Simpler change that listing up adapte=
-rs
->>>> that are OK without the delay.
->>>>
->>>>> Anyway, I wrote my piece, but you are the maintainer, so it=E2=80=99=
-s your call
->>>>> and I stop bothering you.
+> On Wed, Aug 31, 2022 at 12:21 PM Peter Fr=C3=B6hlich
+> <peter.hans.froehlich@gmail.com> wrote:
+>> On Wed, Aug 31, 2022 at 9:48 AM Damien Le Moal
+>> <damien.lemoal@opensource.wdc.com> wrote:
+>>> On 8/31/22 16:15, Hannes Reinecke wrote:
+>>>> Oh, of course :-)
+>>>> That was when doing SMR support for libata.
+>>>> I dimly remember that some pre-spec drives had been using the DRDY b=
+it
+>>>> to signal an unaligned write. Which never made it into the spec, but=
+ the
+>>>> decoding stayed.
 >>>
->>> I just wanted to inquire about the status of your changes? I do not f=
-ind
->>> them in your `for-5.19` branch. As they should be tested in linux-nex=
-t
->>> before the merge window opens, if these are not ready yet, could you
->>> please apply my (tested) patches?
+>>> Any idea where the other bits come from ? Except for bit 5 (device fa=
+ult),
+>>> I do not see anything else in the specs that mandate these definition=
+s...
 >>
->> I could, but 5.19 now has an updated libata.force kernel parameter tha=
+>> I have since discovered the "SCSI to ATA" specification which has two
+>> tables about mapping ATA errors to SCSI errors. Among those I was able
+>> to find an "unaligned write" case as well, but I cannot properly parse
+>> the rest of the two tables yet. They are in sections 11.6 and 11.7 of
+>> that document.
+>=20
+> So I've re-read everything I can get my hands on and from what I can
+> tell the overall "flow" of ata_to_sense_error() is not what the
+> specifications would imply. For example we look at BSY on entry and
+> then say "ah, it's set, then let's ignore the error field" when the
+> specification (the way I read it) instead says "BSY is transport
+> dependent, so we say nothing about it here; but check the error bit in
+> status, if it is set, interpret the error field, otherwise there's
+> nothing for you in the error field". Of course I am a complete noob
+> when it comes to this ATA/SATA/SCSI/AHCI stuff, so please divide by at
+> least two. Sorry if this adds more confusion on top.
+
+I had a quick look at the specs again. I already spotted an error: when
+the status device fault bit is set, the sense should be HARDWARE ERROR /
+INTERNAL TARGET FAILURE and not ABORTED COMMAND / 0x47 like now. That is
+according to SAT-5. But looking at ACS-5, sections 6 and 7.1.6, there are
+*a lot* of cases that need to be taken care of. It looks like the
+sense_table does that, but need to cross check.
+
+As for the stat_table, except for the first buggy entry as mentioned
+above, I have no clue where these come from. SAT only defines the HARDWAR=
+E
+ERROR / INTERNAL TARGET FAILURE for when the status field device fault bi=
 t
->> allows one to disable the debounce delay for a particular port or for =
-all
->> ports of an adapter. See libata.force=3Dx.y:nodbdelay for a port y of
->> adapter x or libata.force=3Dx:nodbdelay for all ports of adapter x.
->=20
-> This is commit 3af9ca4d341d (ata: libata-core: Improve link flags force=
-d=20
-> settings) [1]. Thank you, this is really useful, but easily overlooked.=
- ;-)
->=20
->> I still plan to revisit the arbitrary link debounce timers but I prefe=
-r to
->> have the power management cleanup applied first. The reason is that li=
-nk
->> debounce depends on PHY readiness, which itself depends heavily on pow=
-er
->> mode transitions. My plan is to get this done during this cycle for
->> release with 5.20 and then fix on top the arbitrary delays for 5.21.
->=20
-> Nice. Can you share the current status?
+is set. Need to dig further, but I am afraid this code may be due to year=
+s
+of supporting drives returning weird errors that got mapped to sensible
+sense codes instead of a pure implementation of the specs...
 
-No progress. I need to put together a series with all the patches that
-were sent already. Unless Mario can resend something ?
+I need to spend some quality time with ACS and SAT documents to sort out
+this one... And lots of coffee too probably :)
 
->> Is the libata.force solution OK for you until we have a final more sol=
-id
->> fix that can benefit most modern adapters (and not just the ones you
->> identified)? If you do have a use case that needs a "nodbdelay" horkag=
-e
->> due to some constraint in the field, then I will apply your patches, b=
-ut
->> they likely will be voided by coming changes. Let me know.
 >=20
-> I think, applying the patch would be an improvement, as people wouldn=E2=
-=80=99t=20
-> need to update their Linux kernel command line, and I do not mind, if i=
-t=20
-> gets reverted/dropped later.
-
-Let's see were the lpm stuff goes first.
+> Cheers,
+> Peter
 
 
 --=20
