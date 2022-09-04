@@ -2,87 +2,150 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB555ECAAD5
-	for <linux-ide@archiver.kernel.org>; Sat,  3 Sep 2022 23:10:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 393A0ECAAD5
+	for <linux-ide@archiver.kernel.org>; Sun,  4 Sep 2022 00:35:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229687AbiICXKw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 3 Sep 2022 19:10:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34548 "EHLO
+        id S229680AbiIDAfY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 3 Sep 2022 20:35:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229677AbiICXKv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 3 Sep 2022 19:10:51 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D14CA4BA5A;
-        Sat,  3 Sep 2022 16:10:49 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id b144so555704pfb.7;
-        Sat, 03 Sep 2022 16:10:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=MTRyQeNwNmtbjly6m0NqygvjI275gpJb7kZzL+rHJ2w=;
-        b=EMCanUpSg48ofcHvYZZ62AUtfn3jLg9Ld74CDzZ6h3O5ErCHFO9JkPi3I4re9fj7J7
-         DsdhthaD2uz1iuZxz14zaFQQIUb5+pMyZrePU7gU1wvTrknnmvEG1VjZ2gidt8p95nna
-         IYyCdMjMgoYinVgnLybtZaMbTLWOpGU1lfqYb2hlZ42/VyixOgOnk17eQhHPT5SkGn+A
-         2Rm9lx20CsgVdenw3Snqbvv+X/Z94FZs90FU0Lncuo+bY5J4vUrTa2Gt6NbX0XPEXO75
-         zktj3I11VeSP1HXRZyf8UDtf3vztuwoswpPNmVRrkk2RvpRkBRDHbxSJzcQH+a1+JhzO
-         b29w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=MTRyQeNwNmtbjly6m0NqygvjI275gpJb7kZzL+rHJ2w=;
-        b=2objGE4+Vdx5K7LzipMSKxKTW9w5rCQGl3lHkuGQHo1a8EUGk098l87HFBD3PzMR2v
-         5MPSPGAR9ZgXX8GlvrxYeZFpJGMcmmeYMMinmKA/70jXpVLMV1HNiROfWJHUwv0A3w1L
-         0n9Qw5eqixm/72la+atux1UnszpbkjCnSCVzjAlKeKj3d/HWC67tjuxU339MU1EKvtPk
-         8k7iqcysCypsp6yPh0Szw9UUq2yBg4n6fTuil+crSJd0xUSfg6BZPRzhehHwPIk56fCf
-         wSfJF8rDcgu3uVbdY0NNMSg4SGCHrdMFSQqqD1swWotntoVvLSK44QHiUKOuDoNF7gXg
-         BT0g==
-X-Gm-Message-State: ACgBeo3BdhTt9bricV7Lwk2REFhFjApEkZylhe9nf+RfRubik1yKvF8z
-        q9ZVIyFeTfyI8xofUX2lZ84LJeFpH+S7sQ==
-X-Google-Smtp-Source: AA6agR45+pXNZR02/7Cfkl6KEYX/PdbuySpk+wI7mEklSiLX0ZR7hqbJmHg/4RP9mo6g3U0/QhYx2w==
-X-Received: by 2002:a05:6a00:ac6:b0:530:3197:48b6 with SMTP id c6-20020a056a000ac600b00530319748b6mr43260583pfl.80.1662246649085;
-        Sat, 03 Sep 2022 16:10:49 -0700 (PDT)
-Received: from localhost.localdomain (lily-optiplex-3070.dynamic.ucsd.edu. [2607:f720:1300:3033::1:4dd])
-        by smtp.googlemail.com with ESMTPSA id 26-20020a630d5a000000b00434272fe870sm934390pgn.88.2022.09.03.16.10.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 03 Sep 2022 16:10:48 -0700 (PDT)
-From:   Li Zhong <floridsleeves@gmail.com>
-To:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc:     damien.lemoal@opensource.wdc.com,
-        Li Zhong <floridsleeves@gmail.com>
-Subject: [PATCH v2] ata: libata-core: Check errors in sata_print_link_status()
-Date:   Sat,  3 Sep 2022 16:10:39 -0700
-Message-Id: <20220903231039.2278817-1-floridsleeves@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229478AbiIDAfX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 3 Sep 2022 20:35:23 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCFCE25E84;
+        Sat,  3 Sep 2022 17:35:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1662251721; x=1693787721;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=DR9Og7TufHVcJZwDjl7qukiXl119wqG8vdjGKb2Jlbs=;
+  b=P8rF2aPzEc1aKM28MgM5uZ0yIuTntCOfOfUAlgAE2eQWUYbL7Opv2MOK
+   xyBW3j0RobPs0cJrHOD+xFSIn3KrE+oJq+VbPs9ctmguhg5EzbGDTrnJs
+   B4Jl4rNXlqfn0JeAqDuk63p7t4A88vAo2/NE3TYoLT/rAH9ds/p5FH88x
+   Q18I56NVusfufRD9kVnO8ZMagUT5NMccp+Y2q3Jrl7N2DZT8LEs0IP89K
+   EMiraM6k14TNwq60iCmXY55sm1TG7XGlKHQab1+PO4vRJFS393UovyESf
+   ItepUTR3lu+KhioBelasvfP9ykYe0cRqDJt010BY1QZraFz5qs7bDqvmR
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10459"; a="296202531"
+X-IronPort-AV: E=Sophos;i="5.93,288,1654585200"; 
+   d="scan'208";a="296202531"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2022 17:35:21 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,288,1654585200"; 
+   d="scan'208";a="564351821"
+Received: from lkp-server02.sh.intel.com (HELO 95dfd251caa2) ([10.239.97.151])
+  by orsmga003.jf.intel.com with ESMTP; 03 Sep 2022 17:35:18 -0700
+Received: from kbuild by 95dfd251caa2 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oUdbZ-0002Mj-1I;
+        Sun, 04 Sep 2022 00:35:17 +0000
+Date:   Sun, 4 Sep 2022 08:34:20 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Serge Semin <fancer.lancer@gmail.com>
+Cc:     kbuild-all@lists.01.org,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v7 19/23] ata: ahci: Add DWC AHCI SATA controller support
+Message-ID: <202209040834.w5y0s1NR-lkp@intel.com>
+References: <20220822183728.24434-20-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220822183728.24434-20-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-sata_scr_read() could return negative error code on failure. Check the
-return value when reading the control register.
+Hi Serge,
 
-Signed-off-by: Li Zhong <floridsleeves@gmail.com>
----
- drivers/ata/libata-core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I love your patch! Yet something to improve:
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 826d41f341e4..ae08c7d35cb0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3021,7 +3021,8 @@ static void sata_print_link_status(struct ata_link *link)
- 
- 	if (sata_scr_read(link, SCR_STATUS, &sstatus))
- 		return;
--	sata_scr_read(link, SCR_CONTROL, &scontrol);
-+	if (sata_scr_read(link, SCR_CONTROL, &scontrol))
-+		return;
- 
- 	if (ata_phys_link_online(link)) {
- 		tmp = (sstatus >> 4) & 0xf;
+[auto build test ERROR on robh/for-next]
+[also build test ERROR on axboe-block/for-next linus/master v6.0-rc3 next-20220901]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
+config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20220904/202209040834.w5y0s1NR-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/e628913a210e29775bc995d1ed3ed58ab13416b8
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
+        git checkout e628913a210e29775bc995d1ed3ed58ab13416b8
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash drivers/ata/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   In file included from include/linux/clk.h:13,
+                    from drivers/ata/ahci_dwc.c:11:
+>> drivers/ata/ahci_dwc.c:372:50: error: 'ahci_dwc_suspend' undeclared here (not in a function); did you mean 'ahci_dwc_probe'?
+     372 | static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
+         |                                                  ^~~~~~~~~~~~~~~~
+   include/linux/kernel.h:57:44: note: in definition of macro 'PTR_IF'
+      57 | #define PTR_IF(cond, ptr)       ((cond) ? (ptr) : NULL)
+         |                                            ^~~
+   include/linux/pm.h:313:20: note: in expansion of macro 'pm_sleep_ptr'
+     313 |         .suspend = pm_sleep_ptr(suspend_fn), \
+         |                    ^~~~~~~~~~~~
+   include/linux/pm.h:373:9: note: in expansion of macro 'SYSTEM_SLEEP_PM_OPS'
+     373 |         SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn) \
+         |         ^~~~~~~~~~~~~~~~~~~
+   include/linux/pm.h:399:9: note: in expansion of macro '_DEFINE_DEV_PM_OPS'
+     399 |         _DEFINE_DEV_PM_OPS(name, suspend_fn, resume_fn, NULL, NULL, NULL)
+         |         ^~~~~~~~~~~~~~~~~~
+   drivers/ata/ahci_dwc.c:372:8: note: in expansion of macro 'DEFINE_SIMPLE_DEV_PM_OPS'
+     372 | static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
+         |        ^~~~~~~~~~~~~~~~~~~~~~~~
+>> drivers/ata/ahci_dwc.c:373:33: error: 'ahci_dwc_resume' undeclared here (not in a function); did you mean 'ahci_port_resume'?
+     373 |                                 ahci_dwc_resume);
+         |                                 ^~~~~~~~~~~~~~~
+   include/linux/kernel.h:57:44: note: in definition of macro 'PTR_IF'
+      57 | #define PTR_IF(cond, ptr)       ((cond) ? (ptr) : NULL)
+         |                                            ^~~
+   include/linux/pm.h:314:19: note: in expansion of macro 'pm_sleep_ptr'
+     314 |         .resume = pm_sleep_ptr(resume_fn), \
+         |                   ^~~~~~~~~~~~
+   include/linux/pm.h:373:9: note: in expansion of macro 'SYSTEM_SLEEP_PM_OPS'
+     373 |         SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn) \
+         |         ^~~~~~~~~~~~~~~~~~~
+   include/linux/pm.h:399:9: note: in expansion of macro '_DEFINE_DEV_PM_OPS'
+     399 |         _DEFINE_DEV_PM_OPS(name, suspend_fn, resume_fn, NULL, NULL, NULL)
+         |         ^~~~~~~~~~~~~~~~~~
+   drivers/ata/ahci_dwc.c:372:8: note: in expansion of macro 'DEFINE_SIMPLE_DEV_PM_OPS'
+     372 | static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
+         |        ^~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/ata/ahci_dwc.c:267:12: warning: 'ahci_dwc_reinit_host' defined but not used [-Wunused-function]
+     267 | static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
+         |            ^~~~~~~~~~~~~~~~~~~~
+
+
+vim +372 drivers/ata/ahci_dwc.c
+
+   371	
+ > 372	static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
+ > 373					ahci_dwc_resume);
+   374	
+
 -- 
-2.25.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
