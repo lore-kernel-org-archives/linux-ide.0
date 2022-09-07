@@ -2,150 +2,145 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 393A0ECAAD5
-	for <linux-ide@archiver.kernel.org>; Sun,  4 Sep 2022 00:35:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF72BC38145
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Sep 2022 11:10:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229680AbiIDAfY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 3 Sep 2022 20:35:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37966 "EHLO
+        id S230411AbiIGLK6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 7 Sep 2022 07:10:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbiIDAfX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 3 Sep 2022 20:35:23 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCFCE25E84;
-        Sat,  3 Sep 2022 17:35:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662251721; x=1693787721;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=DR9Og7TufHVcJZwDjl7qukiXl119wqG8vdjGKb2Jlbs=;
-  b=P8rF2aPzEc1aKM28MgM5uZ0yIuTntCOfOfUAlgAE2eQWUYbL7Opv2MOK
-   xyBW3j0RobPs0cJrHOD+xFSIn3KrE+oJq+VbPs9ctmguhg5EzbGDTrnJs
-   B4Jl4rNXlqfn0JeAqDuk63p7t4A88vAo2/NE3TYoLT/rAH9ds/p5FH88x
-   Q18I56NVusfufRD9kVnO8ZMagUT5NMccp+Y2q3Jrl7N2DZT8LEs0IP89K
-   EMiraM6k14TNwq60iCmXY55sm1TG7XGlKHQab1+PO4vRJFS393UovyESf
-   ItepUTR3lu+KhioBelasvfP9ykYe0cRqDJt010BY1QZraFz5qs7bDqvmR
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10459"; a="296202531"
-X-IronPort-AV: E=Sophos;i="5.93,288,1654585200"; 
-   d="scan'208";a="296202531"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Sep 2022 17:35:21 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,288,1654585200"; 
-   d="scan'208";a="564351821"
-Received: from lkp-server02.sh.intel.com (HELO 95dfd251caa2) ([10.239.97.151])
-  by orsmga003.jf.intel.com with ESMTP; 03 Sep 2022 17:35:18 -0700
-Received: from kbuild by 95dfd251caa2 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oUdbZ-0002Mj-1I;
-        Sun, 04 Sep 2022 00:35:17 +0000
-Date:   Sun, 4 Sep 2022 08:34:20 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Serge Semin <fancer.lancer@gmail.com>
-Cc:     kbuild-all@lists.01.org,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v7 19/23] ata: ahci: Add DWC AHCI SATA controller support
-Message-ID: <202209040834.w5y0s1NR-lkp@intel.com>
-References: <20220822183728.24434-20-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S230094AbiIGLKj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2022 07:10:39 -0400
+X-Greylist: delayed 1068 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 07 Sep 2022 04:10:20 PDT
+Received: from spamfilter.jmicron.com (spamfilter.jmicron.com [220.130.51.235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA73A193CA;
+        Wed,  7 Sep 2022 04:10:19 -0700 (PDT)
+Received: from spamfilter.jmicron.com (localhost [127.0.0.2] (may be forged))
+        by spamfilter.jmicron.com with ESMTP id 287ArVKY086128;
+        Wed, 7 Sep 2022 18:53:31 +0800 (+08)
+        (envelope-from mdlin@jmicron.com)
+Received: from JMEH601.jmicron.com (jmeh601.jmicron.com [10.88.10.17])
+        by spamfilter.jmicron.com with ESMTP id 287ArNaW086108;
+        Wed, 7 Sep 2022 18:53:23 +0800 (+08)
+        (envelope-from mdlin@jmicron.com)
+Received: from JMEH601.jmicron.com (10.88.10.17) by JMEH601.jmicron.com
+ (10.88.10.17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2375.28; Wed, 7
+ Sep 2022 18:52:23 +0800
+Received: from localhost.localdomain (10.88.20.234) by JMEH601.jmicron.com
+ (10.88.10.17) with Microsoft SMTP Server id 15.1.2375.28 via Frontend
+ Transport; Wed, 7 Sep 2022 18:52:23 +0800
+From:   MD Lin <mdlin@jmicron.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <mdlin@jmicron.com>, <kevinliu@jmicron.com>,
+        <charonchen@jmicron.com>, <corahuang@jmicron.com>,
+        <mhchen@jmicron.com>, <georgechao@jmicron.com>,
+        <banks@jmicron.com>, <tzuwei@jmicron.com>
+Subject: [PATCH] libata/ahci: quirk for JMB585/JMB582
+Date:   Wed, 7 Sep 2022 10:51:30 +0000
+Message-ID: <20220907105130.13797-1-mdlin@jmicron.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220822183728.24434-20-Sergey.Semin@baikalelectronics.ru>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-DNSRBL: 
+X-MAIL: spamfilter.jmicron.com 287ArVKY086128
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Serge,
+This patch adds a quirk, which enable error bit handling functions
+and SATA configuration for JMicron JMB585/JMB582.
 
-I love your patch! Yet something to improve:
+Signed-off-by: MD Lin <mdlin@jmicron.com>
+---
+ drivers/ata/ahci.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
 
-[auto build test ERROR on robh/for-next]
-[also build test ERROR on axboe-block/for-next linus/master v6.0-rc3 next-20220901]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20220904/202209040834.w5y0s1NR-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/e628913a210e29775bc995d1ed3ed58ab13416b8
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220823-024133
-        git checkout e628913a210e29775bc995d1ed3ed58ab13416b8
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash drivers/ata/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
-   In file included from include/linux/clk.h:13,
-                    from drivers/ata/ahci_dwc.c:11:
->> drivers/ata/ahci_dwc.c:372:50: error: 'ahci_dwc_suspend' undeclared here (not in a function); did you mean 'ahci_dwc_probe'?
-     372 | static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
-         |                                                  ^~~~~~~~~~~~~~~~
-   include/linux/kernel.h:57:44: note: in definition of macro 'PTR_IF'
-      57 | #define PTR_IF(cond, ptr)       ((cond) ? (ptr) : NULL)
-         |                                            ^~~
-   include/linux/pm.h:313:20: note: in expansion of macro 'pm_sleep_ptr'
-     313 |         .suspend = pm_sleep_ptr(suspend_fn), \
-         |                    ^~~~~~~~~~~~
-   include/linux/pm.h:373:9: note: in expansion of macro 'SYSTEM_SLEEP_PM_OPS'
-     373 |         SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn) \
-         |         ^~~~~~~~~~~~~~~~~~~
-   include/linux/pm.h:399:9: note: in expansion of macro '_DEFINE_DEV_PM_OPS'
-     399 |         _DEFINE_DEV_PM_OPS(name, suspend_fn, resume_fn, NULL, NULL, NULL)
-         |         ^~~~~~~~~~~~~~~~~~
-   drivers/ata/ahci_dwc.c:372:8: note: in expansion of macro 'DEFINE_SIMPLE_DEV_PM_OPS'
-     372 | static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
-         |        ^~~~~~~~~~~~~~~~~~~~~~~~
->> drivers/ata/ahci_dwc.c:373:33: error: 'ahci_dwc_resume' undeclared here (not in a function); did you mean 'ahci_port_resume'?
-     373 |                                 ahci_dwc_resume);
-         |                                 ^~~~~~~~~~~~~~~
-   include/linux/kernel.h:57:44: note: in definition of macro 'PTR_IF'
-      57 | #define PTR_IF(cond, ptr)       ((cond) ? (ptr) : NULL)
-         |                                            ^~~
-   include/linux/pm.h:314:19: note: in expansion of macro 'pm_sleep_ptr'
-     314 |         .resume = pm_sleep_ptr(resume_fn), \
-         |                   ^~~~~~~~~~~~
-   include/linux/pm.h:373:9: note: in expansion of macro 'SYSTEM_SLEEP_PM_OPS'
-     373 |         SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn) \
-         |         ^~~~~~~~~~~~~~~~~~~
-   include/linux/pm.h:399:9: note: in expansion of macro '_DEFINE_DEV_PM_OPS'
-     399 |         _DEFINE_DEV_PM_OPS(name, suspend_fn, resume_fn, NULL, NULL, NULL)
-         |         ^~~~~~~~~~~~~~~~~~
-   drivers/ata/ahci_dwc.c:372:8: note: in expansion of macro 'DEFINE_SIMPLE_DEV_PM_OPS'
-     372 | static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
-         |        ^~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/ata/ahci_dwc.c:267:12: warning: 'ahci_dwc_reinit_host' defined but not used [-Wunused-function]
-     267 | static int ahci_dwc_reinit_host(struct ahci_host_priv *hpriv)
-         |            ^~~~~~~~~~~~~~~~~~~~
-
-
-vim +372 drivers/ata/ahci_dwc.c
-
-   371	
- > 372	static DEFINE_SIMPLE_DEV_PM_OPS(ahci_dwc_pm_ops, ahci_dwc_suspend,
- > 373					ahci_dwc_resume);
-   374	
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 505920d45..b0768fae3 100755
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1657,6 +1657,68 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hp
+ 	}
+ }
+ 
++static void ahci_jmb585_write_sata_phy(void __iomem *mmio, u32 addr, u32 data)
++{
++	writel((addr & 0x01FFFUL) + (1UL << 18UL), mmio + 0xC0);
++	writel(data, mmio + 0xC8);
++}
++
++static void ahci_jmicron_585_quirk(void __iomem *mmio)
++{
++	u32 pi = readl(mmio + HOST_PORTS_IMPL);
++	u32 b8_data;
++
++	/*
++	 * enable error bit handling functions, these might overwrite
++	 * the setting which loads from external SPI flash
++	 */
++	b8_data = (pi > 3) ? 0x13 : 0x92;
++	writel(0x03060004+b8_data, mmio + 0xB8);
++	writel(0x00FF0B01,         mmio + 0x30);
++	writel(0x0000003F,         mmio + 0x34);
++	writel(0x0000001F,         mmio + 0x38);
++	writel(0x03060000+b8_data, mmio + 0xB8);
++	writel(0xF9E4EFBF,         mmio + 0xB0);
++
++	/*
++	 * set SATA configuration, these might overwrite
++	 * the setting which loads from external SPI flash
++	 */
++	ahci_jmb585_write_sata_phy(mmio, 0x06, 0x70005BE3); /* port0 */
++	ahci_jmb585_write_sata_phy(mmio, 0x13, 0x70005BE3); /* port1 */
++	ahci_jmb585_write_sata_phy(mmio, 0x73, 0x000001E5); /* port0 */
++	ahci_jmb585_write_sata_phy(mmio, 0x75, 0x000001E5); /* port1 */
++	ahci_jmb585_write_sata_phy(mmio, 0x74, 0x00000024); /* port0 */
++	ahci_jmb585_write_sata_phy(mmio, 0x80, 0x250B0003); /* port1 */
++	if (pi > 3) {
++		ahci_jmb585_write_sata_phy(mmio, 0x20, 0x70005BE3); /* port2 */
++		ahci_jmb585_write_sata_phy(mmio, 0x2D, 0x70005BE3); /* port3 */
++		ahci_jmb585_write_sata_phy(mmio, 0x3A, 0x70005BE3); /* port4 */
++		ahci_jmb585_write_sata_phy(mmio, 0x79, 0x000001E5); /* port3 */
++		ahci_jmb585_write_sata_phy(mmio, 0x83, 0x250B0003); /* port3 */
++		ahci_jmb585_write_sata_phy(mmio, 0x7A, 0x00000024); /* port3 */
++		ahci_jmb585_write_sata_phy(mmio, 0x84, 0x250B0003); /* port3 */
++	}
++}
++
++static void ahci_jmicron_quirk(struct pci_dev *pdev,
++			struct ahci_host_priv *hpriv)
++{
++	void __iomem *mmio = hpriv->mmio;
++	u8 tmp8;
++
++	if (pdev->vendor != PCI_VENDOR_ID_JMICRON)
++		return;
++
++	switch (pdev->device) {
++	case 0x585: /* check if the chip is JMB585 */
++		tmp8 = readb(mmio + 0x44);
++		if (tmp8)
++			ahci_jmicron_585_quirk(mmio);
++		break;
++	}
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	unsigned int board_id = ent->driver_data;
+@@ -1775,6 +1837,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	ahci_intel_pcs_quirk(pdev, hpriv);
+ 
++	/* set JMicron configuration */
++	ahci_jmicron_quirk(pdev, hpriv);
++
+ 	/* prepare host */
+ 	if (hpriv->cap & HOST_CAP_NCQ) {
+ 		pi.flags |= ATA_FLAG_NCQ;
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.17.1
+
