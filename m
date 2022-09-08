@@ -2,252 +2,164 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4D5AC54EE9
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Sep 2022 22:13:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D06ECAAD3
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Sep 2022 00:15:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229551AbiIGWNN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 7 Sep 2022 18:13:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47542 "EHLO
+        id S230134AbiIHAPv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 7 Sep 2022 20:15:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbiIGWNM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2022 18:13:12 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE4E3AA34C
-        for <linux-ide@vger.kernel.org>; Wed,  7 Sep 2022 15:13:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1662588789; x=1694124789;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=V+0k4SbulDK21C0d7Ev+pAWQlueHvqwL6BErGZBgVdU=;
-  b=WCdjjKDLqY5Z4r4H3VcWiqC0DcUxdPYYLERIyQ+p+2XsoQ2tNc2iDy5g
-   sPX1Ap4mVZfQ0ucDPDB0vclzG/EXgjbK5LjSRRN0dLSvovgfUFXFBROFO
-   STkPO1hwvTraxZA4HSlbC7XqH4wtOI1P6e9+N7Ygim/EmftUKGNbjcOu1
-   xXnfd5JEIBw0VBGLyYxic/RQgyi5a3MT2iIyg65hO8A0fhgcXxkminMwm
-   7ya0WDviA5K5+RQib8BcjiMBlP+DRAVX60pF42RU3dDpjdfbanucs338w
-   lNFCb1d6bXr9XZDPYpzRms0ZRbEjgVree8TB8s8QjbglQShs50f5uJASP
-   g==;
-X-IronPort-AV: E=Sophos;i="5.93,298,1654531200"; 
-   d="scan'208";a="215942163"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Sep 2022 06:13:08 +0800
-IronPort-SDR: PUbk7z4U7hFpAMb+AXdzypz8HdYJmLQ+wU1bdVYItgv5KoSpQKsj6nNbuu92+Yhi+PfF4EB/Iq
- HftEQ5lb7zMcDfekJDaZayqC7jIiLbWwdlGv2IOn8/brR0E8VHAkvmMxHqFH13bbcZ2hf7/R5M
- BLynD+0aZFrlNHz4A7YAjevXineUFdoKy4IpFjdkixSeoDCaLuaqzDnBQhhZPOoOO5KtfzyU9b
- 0zz3jIJI13QBCeHoJBGaFizvGS2mIAmqyhPsCf+trMVRYvl4DzUhpSVqWt09dgANt96sueyKDl
- XlG6C5hxiSJcthVk2rN3+6hS
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Sep 2022 14:33:30 -0700
-IronPort-SDR: NcLG2T+UN+fT1qfYw/ADnRSd79aIjYs1asZsUn8v+db8mUlyG5+MfNi6+s4LYBubAclmfNnl5j
- aKjYHHhMlaNtFpUwzlDq49NM3l1yRYwETIKrRZbUmzRSqF7m+bnOl7L8eVKScEvY9HR0TIz26r
- TGrFs81Ri5z4xeAVri4ZipnbtFRgpds7eN7ctTQmg+ipiqMq2L3TheaqiSVS+cYbunEhTDai48
- BtN0j8JChxy8SM7dAgvYGdPzGob3M2uBA1nGdm7XtdU25sIbkTx/jRu5f1WDbvoWs/If8PICs+
- 5Ts=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Sep 2022 15:13:11 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MNGjK5Sy2z1Rwt8
-        for <linux-ide@vger.kernel.org>; Wed,  7 Sep 2022 15:13:09 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1662588788; x=1665180789; bh=V+0k4SbulDK21C0d7Ev+pAWQlueHvqwL6BE
-        rGZBgVdU=; b=rebSP0s+zADCSOOsrax25tnyTOjohwsTRNeFBUc3SAOcVEi+h1e
-        M4h5z16Y6JJQSfuWVtu3hHBSP8YXXSSY8GmqV10QM9Zu+4OxR+GMJw64wOM10bp5
-        lUoxp9b11JoLqpM+6dMKL5gbuaU0oiD5JQRoBUFEbtMU8YPBPwD8KlFA6YPSSAnf
-        6sPfaxHI0XA5QUdScRqm2xtV+sFtrhloG7CogXUQJ7dCUyLNUU1NZV4Z4mYa30tN
-        03s3qFIe5/YKmKU0u8oGH4O8bFsauOSoPQIik6RHO7huVlp133EQYOI/pCfQSPhn
-        C24cyjWFPCc32qvmVEjWF3lGnt2O1io5LlQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 1AdyuU19MGKb for <linux-ide@vger.kernel.org>;
-        Wed,  7 Sep 2022 15:13:08 -0700 (PDT)
-Received: from [10.225.163.64] (unknown [10.225.163.64])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MNGjG656Sz1RvLy;
-        Wed,  7 Sep 2022 15:13:06 -0700 (PDT)
-Message-ID: <04372579-4c43-efa1-6042-270f6ae919c2@opensource.wdc.com>
-Date:   Thu, 8 Sep 2022 07:13:05 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [PATCH] libata/ahci: quirk for JMB585/JMB582
-Content-Language: en-US
-To:     MD Lin <mdlin@jmicron.com>, axboe@kernel.dk
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kevinliu@jmicron.com, charonchen@jmicron.com,
-        corahuang@jmicron.com, mhchen@jmicron.com, georgechao@jmicron.com,
-        banks@jmicron.com, tzuwei@jmicron.com
+        with ESMTP id S230150AbiIHAPs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2022 20:15:48 -0400
+Received: from spamfilter.jmicron.com (spamfilter.jmicron.com [220.130.51.235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C18EBB937;
+        Wed,  7 Sep 2022 17:15:42 -0700 (PDT)
+Received: from JMEH602.jmicron.com (jmeh602.jmicron.com [10.88.10.18])
+        by spamfilter.jmicron.com with ESMTP id 2880FpRC086034;
+        Thu, 8 Sep 2022 08:15:51 +0800 (+08)
+        (envelope-from mdlin@jmicron.com)
+Received: from JMEH601.jmicron.com (10.88.10.17) by JMEH602.jmicron.com
+ (10.88.10.18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2375.28; Thu, 8
+ Sep 2022 08:15:33 +0800
+Received: from JMEH601.jmicron.com ([fe80::a077:1ab:68b0:7ed0]) by
+ JMEH601.jmicron.com ([fe80::a077:1ab:68b0:7ed0%22]) with mapi id
+ 15.01.2375.028; Thu, 8 Sep 2022 08:15:34 +0800
+From:   Md Lin <mdlin@jmicron.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>
+CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Kevin Liu <kevinliu@jmicron.com>,
+        Charon Chen <charonchen@jmicron.com>,
+        Cora Huang <corahuang@jmicron.com>,
+        Ming Chen <mhchen@jmicron.com>,
+        George Chao <georgechao@jmicron.com>,
+        Banks <banks@jmicron.com>, Tzuwei Hung <tzuwei@jmicron.com>
+Subject: RE: [PATCH] libata/ahci: quirk for JMB585/JMB582
+Thread-Topic: [PATCH] libata/ahci: quirk for JMB585/JMB582
+Thread-Index: AQHYwqfp9p1cp+Rv5EyIP4UKdiaqu63UApWAgACmn4A=
+Date:   Thu, 8 Sep 2022 00:15:33 +0000
+Message-ID: <3b89cbd696394a21adb96432d3d3ba02@jmicron.com>
 References: <20220907105130.13797-1-mdlin@jmicron.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220907105130.13797-1-mdlin@jmicron.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <04372579-4c43-efa1-6042-270f6ae919c2@opensource.wdc.com>
+In-Reply-To: <04372579-4c43-efa1-6042-270f6ae919c2@opensource.wdc.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.88.10.240]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-DNSRBL: 
+X-MAIL: spamfilter.jmicron.com 2880FpRC086034
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/7/22 19:51, MD Lin wrote:
-> This patch adds a quirk, which enable error bit handling functions
-> and SATA configuration for JMicron JMB585/JMB582.
-> 
-> Signed-off-by: MD Lin <mdlin@jmicron.com>
-
-Please use scripts/get_maintainer.pl to check to whom ata patches should
-be addressed. If you do not send patches to me, there is a high chance
-that I will miss them.
-
-The patch title should be:
-
-ata: ahci: Add initialization quirk for Jmicro 585/582 controllers
-
-Or equivalent, that is, a little more descriptive.
-
-The commit message also does not explain WHY this quirk is necessary (the
-problem is not described) and there is also no description of HOW your
-patch address the issue. Please be a little more verbose with the commit
-message to better describe the patch.
-
-> ---
->  drivers/ata/ahci.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 65 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 505920d45..b0768fae3 100755
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1657,6 +1657,68 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hp
->  	}
->  }
->  
-> +static void ahci_jmb585_write_sata_phy(void __iomem *mmio, u32 addr, u32 data)
-
-The patch title said jmb585 and jmb582. So should this be called
-ahci_jmb58x_write_sata_phy() ?
-
-> +{
-> +	writel((addr & 0x01FFFUL) + (1UL << 18UL), mmio + 0xC0);
-> +	writel(data, mmio + 0xC8);
-> +}
-> +
-> +static void ahci_jmicron_585_quirk(void __iomem *mmio)
-
-Same here. Also, please be consistent with the names: spell out jmicron or
-use jmb, either is fine with me, but once you choose one, stick with it.
-So:
-
-ahci_jmb58x_write_sata_phy()
-ahci_jmb58x_quirk()
-
-or
-
-ahci_jmicron_58x_write_sata_phy()
-ahci_jmicron_58x_quirk()
-
-> +{
-> +	u32 pi = readl(mmio + HOST_PORTS_IMPL);
-> +	u32 b8_data;
-> +
-> +	/*
-> +	 * enable error bit handling functions, these might overwrite
-> +	 * the setting which loads from external SPI flash
-> +	 */
-> +	b8_data = (pi > 3) ? 0x13 : 0x92;
-> +	writel(0x03060004+b8_data, mmio + 0xB8);
-
-Spaces missing around the "+" in the first argument.
-
-> +	writel(0x00FF0B01,         mmio + 0x30);
-> +	writel(0x0000003F,         mmio + 0x34);
-> +	writel(0x0000001F,         mmio + 0x38);
-> +	writel(0x03060000+b8_data, mmio + 0xB8);
-
-Same here.
-
-> +	writel(0xF9E4EFBF,         mmio + 0xB0);
-
-And what are all these magic values ? Where do they come from ?
-It would be nice to have these defined as macros with descriptive names in
-drivers/ata/ahci.h.
-
-> +
-> +	/*
-> +	 * set SATA configuration, these might overwrite
-> +	 * the setting which loads from external SPI flash
-> +	 */
-> +	ahci_jmb585_write_sata_phy(mmio, 0x06, 0x70005BE3); /* port0 */
-> +	ahci_jmb585_write_sata_phy(mmio, 0x13, 0x70005BE3); /* port1 */
-> +	ahci_jmb585_write_sata_phy(mmio, 0x73, 0x000001E5); /* port0 */
-> +	ahci_jmb585_write_sata_phy(mmio, 0x75, 0x000001E5); /* port1 */
-> +	ahci_jmb585_write_sata_phy(mmio, 0x74, 0x00000024); /* port0 */
-> +	ahci_jmb585_write_sata_phy(mmio, 0x80, 0x250B0003); /* port1 */
-> +	if (pi > 3) {
-> +		ahci_jmb585_write_sata_phy(mmio, 0x20, 0x70005BE3); /* port2 */
-> +		ahci_jmb585_write_sata_phy(mmio, 0x2D, 0x70005BE3); /* port3 */
-> +		ahci_jmb585_write_sata_phy(mmio, 0x3A, 0x70005BE3); /* port4 */
-> +		ahci_jmb585_write_sata_phy(mmio, 0x79, 0x000001E5); /* port3 */
-> +		ahci_jmb585_write_sata_phy(mmio, 0x83, 0x250B0003); /* port3 */
-> +		ahci_jmb585_write_sata_phy(mmio, 0x7A, 0x00000024); /* port3 */
-> +		ahci_jmb585_write_sata_phy(mmio, 0x84, 0x250B0003); /* port3 */
-> +	}
-
-Same here, lots of "magic" values that cannot be checked. Please use
-macros and add comments describing where these come from (adapter specs ?).
-
-> +}
-> +
-> +static void ahci_jmicron_quirk(struct pci_dev *pdev,
-> +			struct ahci_host_priv *hpriv)
-> +{
-> +	void __iomem *mmio = hpriv->mmio;
-> +	u8 tmp8;
-> +
-> +	if (pdev->vendor != PCI_VENDOR_ID_JMICRON)
-> +		return;
-> +
-> +	switch (pdev->device) {
-> +	case 0x585: /* check if the chip is JMB585 */
-
-The comment can be removed. This is obvious.
-
-Also, there is no case for jmb582 model which the patch title mentions. Is
-it the same number for both models ? If that is the case, then please add
-a comment above the switch() describing that.
-
-> +		tmp8 = readb(mmio + 0x44);
-> +		if (tmp8)
-> +			ahci_jmicron_585_quirk(mmio);
-
-The tmp8 variable is not necessary.
-
-> +		break;
-> +	}
-> +}
-> +
->  static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  {
->  	unsigned int board_id = ent->driver_data;
-> @@ -1775,6 +1837,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	 */
->  	ahci_intel_pcs_quirk(pdev, hpriv);
->  
-> +	/* set JMicron configuration */
-
-This is obvious from the function name. So you can drop this comment.
-
-> +	ahci_jmicron_quirk(pdev, hpriv);
-> +
->  	/* prepare host */
->  	if (hpriv->cap & HOST_CAP_NCQ) {
->  		pi.flags |= ATA_FLAG_NCQ;
-
--- 
-Damien Le Moal
-Western Digital Research
-
+SGkgRGFtaWVuLA0KVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgdGhlIGRldGFpbGVkIHN1Z2dlc3Rp
+b24uIEkgd2lsbCBtb2RpZnkgdGhlIHBhdGNoLCBjb21taXQgbWVzc2FnZSBhbmQgc2VuZCB0byB5
+b3UgYWdhaW4uDQoNCkJlc3QgcmVnYXJkcywNCk1EIExpbiAo5p6X5piO5b63KQ0KDQpKTWljcm9u
+IFRlY2hub2xvZ3kNClRlbCA6IDAzLTU3OTczODnCoCBFeHQuIDg3MjcNCkZheCA6IDAzLTU3OTk1
+NjYNCkUtbWFpbCA6IG1kbGluQGptaWNyb24uY29tDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQpGcm9tOiBEYW1pZW4gTGUgTW9hbCA8ZGFtaWVuLmxlbW9hbEBvcGVuc291cmNlLndkYy5j
+b20+IA0KU2VudDogVGh1cnNkYXksIFNlcHRlbWJlciAwOCwgMjAyMiA2OjEzIEFNDQpUbzogTWQg
+TGluIDxtZGxpbkBqbWljcm9uLmNvbT47IGF4Ym9lQGtlcm5lbC5kaw0KQ2M6IGxpbnV4LWlkZUB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEtldmluIExpdSA8
+a2V2aW5saXVAam1pY3Jvbi5jb20+OyBDaGFyb24gQ2hlbiA8Y2hhcm9uY2hlbkBqbWljcm9uLmNv
+bT47IENvcmEgSHVhbmcgPGNvcmFodWFuZ0BqbWljcm9uLmNvbT47IE1pbmcgQ2hlbiA8bWhjaGVu
+QGptaWNyb24uY29tPjsgR2VvcmdlIENoYW8gPGdlb3JnZWNoYW9Aam1pY3Jvbi5jb20+OyBCYW5r
+cyA8YmFua3NAam1pY3Jvbi5jb20+OyBUenV3ZWkgSHVuZyA8dHp1d2VpQGptaWNyb24uY29tPg0K
+U3ViamVjdDogUmU6IFtQQVRDSF0gbGliYXRhL2FoY2k6IHF1aXJrIGZvciBKTUI1ODUvSk1CNTgy
+DQoNCk9uIDkvNy8yMiAxOTo1MSwgTUQgTGluIHdyb3RlOg0KPiBUaGlzIHBhdGNoIGFkZHMgYSBx
+dWlyaywgd2hpY2ggZW5hYmxlIGVycm9yIGJpdCBoYW5kbGluZyBmdW5jdGlvbnMgYW5kIA0KPiBT
+QVRBIGNvbmZpZ3VyYXRpb24gZm9yIEpNaWNyb24gSk1CNTg1L0pNQjU4Mi4NCj4gDQo+IFNpZ25l
+ZC1vZmYtYnk6IE1EIExpbiA8bWRsaW5Aam1pY3Jvbi5jb20+DQoNClBsZWFzZSB1c2Ugc2NyaXB0
+cy9nZXRfbWFpbnRhaW5lci5wbCB0byBjaGVjayB0byB3aG9tIGF0YSBwYXRjaGVzIHNob3VsZCBi
+ZSBhZGRyZXNzZWQuIElmIHlvdSBkbyBub3Qgc2VuZCBwYXRjaGVzIHRvIG1lLCB0aGVyZSBpcyBh
+IGhpZ2ggY2hhbmNlIHRoYXQgSSB3aWxsIG1pc3MgdGhlbS4NCg0KVGhlIHBhdGNoIHRpdGxlIHNo
+b3VsZCBiZToNCg0KYXRhOiBhaGNpOiBBZGQgaW5pdGlhbGl6YXRpb24gcXVpcmsgZm9yIEptaWNy
+byA1ODUvNTgyIGNvbnRyb2xsZXJzDQoNCk9yIGVxdWl2YWxlbnQsIHRoYXQgaXMsIGEgbGl0dGxl
+IG1vcmUgZGVzY3JpcHRpdmUuDQoNClRoZSBjb21taXQgbWVzc2FnZSBhbHNvIGRvZXMgbm90IGV4
+cGxhaW4gV0hZIHRoaXMgcXVpcmsgaXMgbmVjZXNzYXJ5ICh0aGUgcHJvYmxlbSBpcyBub3QgZGVz
+Y3JpYmVkKSBhbmQgdGhlcmUgaXMgYWxzbyBubyBkZXNjcmlwdGlvbiBvZiBIT1cgeW91ciBwYXRj
+aCBhZGRyZXNzIHRoZSBpc3N1ZS4gUGxlYXNlIGJlIGEgbGl0dGxlIG1vcmUgdmVyYm9zZSB3aXRo
+IHRoZSBjb21taXQgbWVzc2FnZSB0byBiZXR0ZXIgZGVzY3JpYmUgdGhlIHBhdGNoLg0KDQo+IC0t
+LQ0KPiAgZHJpdmVycy9hdGEvYWhjaS5jIHwgNjUgDQo+ICsrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysNCj4gIDEgZmlsZSBjaGFuZ2VkLCA2NSBpbnNlcnRpb25z
+KCspDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvYWhjaS5jIGIvZHJpdmVycy9hdGEv
+YWhjaS5jIGluZGV4IA0KPiA1MDU5MjBkNDUuLmIwNzY4ZmFlMyAxMDA3NTUNCj4gLS0tIGEvZHJp
+dmVycy9hdGEvYWhjaS5jDQo+ICsrKyBiL2RyaXZlcnMvYXRhL2FoY2kuYw0KPiBAQCAtMTY1Nyw2
+ICsxNjU3LDY4IEBAIHN0YXRpYyB2b2lkIGFoY2lfaW50ZWxfcGNzX3F1aXJrKHN0cnVjdCBwY2lf
+ZGV2ICpwZGV2LCBzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwDQo+ICAJfQ0KPiAgfQ0KPiAgDQo+
+ICtzdGF0aWMgdm9pZCBhaGNpX2ptYjU4NV93cml0ZV9zYXRhX3BoeSh2b2lkIF9faW9tZW0gKm1t
+aW8sIHUzMiBhZGRyLCANCj4gK3UzMiBkYXRhKQ0KDQpUaGUgcGF0Y2ggdGl0bGUgc2FpZCBqbWI1
+ODUgYW5kIGptYjU4Mi4gU28gc2hvdWxkIHRoaXMgYmUgY2FsbGVkDQphaGNpX2ptYjU4eF93cml0
+ZV9zYXRhX3BoeSgpID8NCg0KPiArew0KPiArCXdyaXRlbCgoYWRkciAmIDB4MDFGRkZVTCkgKyAo
+MVVMIDw8IDE4VUwpLCBtbWlvICsgMHhDMCk7DQo+ICsJd3JpdGVsKGRhdGEsIG1taW8gKyAweEM4
+KTsNCj4gK30NCj4gKw0KPiArc3RhdGljIHZvaWQgYWhjaV9qbWljcm9uXzU4NV9xdWlyayh2b2lk
+IF9faW9tZW0gKm1taW8pDQoNClNhbWUgaGVyZS4gQWxzbywgcGxlYXNlIGJlIGNvbnNpc3RlbnQg
+d2l0aCB0aGUgbmFtZXM6IHNwZWxsIG91dCBqbWljcm9uIG9yIHVzZSBqbWIsIGVpdGhlciBpcyBm
+aW5lIHdpdGggbWUsIGJ1dCBvbmNlIHlvdSBjaG9vc2Ugb25lLCBzdGljayB3aXRoIGl0Lg0KU286
+DQoNCmFoY2lfam1iNTh4X3dyaXRlX3NhdGFfcGh5KCkNCmFoY2lfam1iNTh4X3F1aXJrKCkNCg0K
+b3INCg0KYWhjaV9qbWljcm9uXzU4eF93cml0ZV9zYXRhX3BoeSgpDQphaGNpX2ptaWNyb25fNTh4
+X3F1aXJrKCkNCg0KPiArew0KPiArCXUzMiBwaSA9IHJlYWRsKG1taW8gKyBIT1NUX1BPUlRTX0lN
+UEwpOw0KPiArCXUzMiBiOF9kYXRhOw0KPiArDQo+ICsJLyoNCj4gKwkgKiBlbmFibGUgZXJyb3Ig
+Yml0IGhhbmRsaW5nIGZ1bmN0aW9ucywgdGhlc2UgbWlnaHQgb3ZlcndyaXRlDQo+ICsJICogdGhl
+IHNldHRpbmcgd2hpY2ggbG9hZHMgZnJvbSBleHRlcm5hbCBTUEkgZmxhc2gNCj4gKwkgKi8NCj4g
+KwliOF9kYXRhID0gKHBpID4gMykgPyAweDEzIDogMHg5MjsNCj4gKwl3cml0ZWwoMHgwMzA2MDAw
+NCtiOF9kYXRhLCBtbWlvICsgMHhCOCk7DQoNClNwYWNlcyBtaXNzaW5nIGFyb3VuZCB0aGUgIisi
+IGluIHRoZSBmaXJzdCBhcmd1bWVudC4NCg0KPiArCXdyaXRlbCgweDAwRkYwQjAxLCAgICAgICAg
+IG1taW8gKyAweDMwKTsNCj4gKwl3cml0ZWwoMHgwMDAwMDAzRiwgICAgICAgICBtbWlvICsgMHgz
+NCk7DQo+ICsJd3JpdGVsKDB4MDAwMDAwMUYsICAgICAgICAgbW1pbyArIDB4MzgpOw0KPiArCXdy
+aXRlbCgweDAzMDYwMDAwK2I4X2RhdGEsIG1taW8gKyAweEI4KTsNCg0KU2FtZSBoZXJlLg0KDQo+
+ICsJd3JpdGVsKDB4RjlFNEVGQkYsICAgICAgICAgbW1pbyArIDB4QjApOw0KDQpBbmQgd2hhdCBh
+cmUgYWxsIHRoZXNlIG1hZ2ljIHZhbHVlcyA/IFdoZXJlIGRvIHRoZXkgY29tZSBmcm9tID8NCkl0
+IHdvdWxkIGJlIG5pY2UgdG8gaGF2ZSB0aGVzZSBkZWZpbmVkIGFzIG1hY3JvcyB3aXRoIGRlc2Ny
+aXB0aXZlIG5hbWVzIGluIGRyaXZlcnMvYXRhL2FoY2kuaC4NCg0KPiArDQo+ICsJLyoNCj4gKwkg
+KiBzZXQgU0FUQSBjb25maWd1cmF0aW9uLCB0aGVzZSBtaWdodCBvdmVyd3JpdGUNCj4gKwkgKiB0
+aGUgc2V0dGluZyB3aGljaCBsb2FkcyBmcm9tIGV4dGVybmFsIFNQSSBmbGFzaA0KPiArCSAqLw0K
+PiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4MDYsIDB4NzAwMDVCRTMpOyAv
+KiBwb3J0MCAqLw0KPiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4MTMsIDB4
+NzAwMDVCRTMpOyAvKiBwb3J0MSAqLw0KPiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1t
+aW8sIDB4NzMsIDB4MDAwMDAxRTUpOyAvKiBwb3J0MCAqLw0KPiArCWFoY2lfam1iNTg1X3dyaXRl
+X3NhdGFfcGh5KG1taW8sIDB4NzUsIDB4MDAwMDAxRTUpOyAvKiBwb3J0MSAqLw0KPiArCWFoY2lf
+am1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4NzQsIDB4MDAwMDAwMjQpOyAvKiBwb3J0MCAq
+Lw0KPiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4ODAsIDB4MjUwQjAwMDMp
+OyAvKiBwb3J0MSAqLw0KPiArCWlmIChwaSA+IDMpIHsNCj4gKwkJYWhjaV9qbWI1ODVfd3JpdGVf
+c2F0YV9waHkobW1pbywgMHgyMCwgMHg3MDAwNUJFMyk7IC8qIHBvcnQyICovDQo+ICsJCWFoY2lf
+am1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4MkQsIDB4NzAwMDVCRTMpOyAvKiBwb3J0MyAq
+Lw0KPiArCQlhaGNpX2ptYjU4NV93cml0ZV9zYXRhX3BoeShtbWlvLCAweDNBLCAweDcwMDA1QkUz
+KTsgLyogcG9ydDQgKi8NCj4gKwkJYWhjaV9qbWI1ODVfd3JpdGVfc2F0YV9waHkobW1pbywgMHg3
+OSwgMHgwMDAwMDFFNSk7IC8qIHBvcnQzICovDQo+ICsJCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFf
+cGh5KG1taW8sIDB4ODMsIDB4MjUwQjAwMDMpOyAvKiBwb3J0MyAqLw0KPiArCQlhaGNpX2ptYjU4
+NV93cml0ZV9zYXRhX3BoeShtbWlvLCAweDdBLCAweDAwMDAwMDI0KTsgLyogcG9ydDMgKi8NCj4g
+KwkJYWhjaV9qbWI1ODVfd3JpdGVfc2F0YV9waHkobW1pbywgMHg4NCwgMHgyNTBCMDAwMyk7IC8q
+IHBvcnQzICovDQo+ICsJfQ0KDQpTYW1lIGhlcmUsIGxvdHMgb2YgIm1hZ2ljIiB2YWx1ZXMgdGhh
+dCBjYW5ub3QgYmUgY2hlY2tlZC4gUGxlYXNlIHVzZSBtYWNyb3MgYW5kIGFkZCBjb21tZW50cyBk
+ZXNjcmliaW5nIHdoZXJlIHRoZXNlIGNvbWUgZnJvbSAoYWRhcHRlciBzcGVjcyA/KS4NCg0KPiAr
+fQ0KPiArDQo+ICtzdGF0aWMgdm9pZCBhaGNpX2ptaWNyb25fcXVpcmsoc3RydWN0IHBjaV9kZXYg
+KnBkZXYsDQo+ICsJCQlzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2KQ0KPiArew0KPiArCXZv
+aWQgX19pb21lbSAqbW1pbyA9IGhwcml2LT5tbWlvOw0KPiArCXU4IHRtcDg7DQo+ICsNCj4gKwlp
+ZiAocGRldi0+dmVuZG9yICE9IFBDSV9WRU5ET1JfSURfSk1JQ1JPTikNCj4gKwkJcmV0dXJuOw0K
+PiArDQo+ICsJc3dpdGNoIChwZGV2LT5kZXZpY2UpIHsNCj4gKwljYXNlIDB4NTg1OiAvKiBjaGVj
+ayBpZiB0aGUgY2hpcCBpcyBKTUI1ODUgKi8NCg0KVGhlIGNvbW1lbnQgY2FuIGJlIHJlbW92ZWQu
+IFRoaXMgaXMgb2J2aW91cy4NCg0KQWxzbywgdGhlcmUgaXMgbm8gY2FzZSBmb3Igam1iNTgyIG1v
+ZGVsIHdoaWNoIHRoZSBwYXRjaCB0aXRsZSBtZW50aW9ucy4gSXMgaXQgdGhlIHNhbWUgbnVtYmVy
+IGZvciBib3RoIG1vZGVscyA/IElmIHRoYXQgaXMgdGhlIGNhc2UsIHRoZW4gcGxlYXNlIGFkZCBh
+IGNvbW1lbnQgYWJvdmUgdGhlIHN3aXRjaCgpIGRlc2NyaWJpbmcgdGhhdC4NCg0KPiArCQl0bXA4
+ID0gcmVhZGIobW1pbyArIDB4NDQpOw0KPiArCQlpZiAodG1wOCkNCj4gKwkJCWFoY2lfam1pY3Jv
+bl81ODVfcXVpcmsobW1pbyk7DQoNClRoZSB0bXA4IHZhcmlhYmxlIGlzIG5vdCBuZWNlc3Nhcnku
+DQoNCj4gKwkJYnJlYWs7DQo+ICsJfQ0KPiArfQ0KPiArDQo+ICBzdGF0aWMgaW50IGFoY2lfaW5p
+dF9vbmUoc3RydWN0IHBjaV9kZXYgKnBkZXYsIGNvbnN0IHN0cnVjdCANCj4gcGNpX2RldmljZV9p
+ZCAqZW50KSAgew0KPiAgCXVuc2lnbmVkIGludCBib2FyZF9pZCA9IGVudC0+ZHJpdmVyX2RhdGE7
+IEBAIC0xNzc1LDYgKzE4MzcsOSBAQCANCj4gc3RhdGljIGludCBhaGNpX2luaXRfb25lKHN0cnVj
+dCBwY2lfZGV2ICpwZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqZW50KQ0KPiAgCSAq
+Lw0KPiAgCWFoY2lfaW50ZWxfcGNzX3F1aXJrKHBkZXYsIGhwcml2KTsNCj4gIA0KPiArCS8qIHNl
+dCBKTWljcm9uIGNvbmZpZ3VyYXRpb24gKi8NCg0KVGhpcyBpcyBvYnZpb3VzIGZyb20gdGhlIGZ1
+bmN0aW9uIG5hbWUuIFNvIHlvdSBjYW4gZHJvcCB0aGlzIGNvbW1lbnQuDQoNCj4gKwlhaGNpX2pt
+aWNyb25fcXVpcmsocGRldiwgaHByaXYpOw0KPiArDQo+ICAJLyogcHJlcGFyZSBob3N0ICovDQo+
+ICAJaWYgKGhwcml2LT5jYXAgJiBIT1NUX0NBUF9OQ1EpIHsNCj4gIAkJcGkuZmxhZ3MgfD0gQVRB
+X0ZMQUdfTkNROw0KDQotLQ0KRGFtaWVuIExlIE1vYWwNCldlc3Rlcm4gRGlnaXRhbCBSZXNlYXJj
+aA0KDQo=
