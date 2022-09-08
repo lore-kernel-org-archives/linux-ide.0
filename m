@@ -2,164 +2,66 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D06ECAAD3
-	for <linux-ide@archiver.kernel.org>; Thu,  8 Sep 2022 00:15:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B623FC54EE9
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Sep 2022 12:49:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230134AbiIHAPv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 7 Sep 2022 20:15:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48882 "EHLO
+        id S231899AbiIHMtA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Sep 2022 08:49:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230150AbiIHAPs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2022 20:15:48 -0400
-Received: from spamfilter.jmicron.com (spamfilter.jmicron.com [220.130.51.235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C18EBB937;
-        Wed,  7 Sep 2022 17:15:42 -0700 (PDT)
-Received: from JMEH602.jmicron.com (jmeh602.jmicron.com [10.88.10.18])
-        by spamfilter.jmicron.com with ESMTP id 2880FpRC086034;
-        Thu, 8 Sep 2022 08:15:51 +0800 (+08)
-        (envelope-from mdlin@jmicron.com)
-Received: from JMEH601.jmicron.com (10.88.10.17) by JMEH602.jmicron.com
- (10.88.10.18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2375.28; Thu, 8
- Sep 2022 08:15:33 +0800
-Received: from JMEH601.jmicron.com ([fe80::a077:1ab:68b0:7ed0]) by
- JMEH601.jmicron.com ([fe80::a077:1ab:68b0:7ed0%22]) with mapi id
- 15.01.2375.028; Thu, 8 Sep 2022 08:15:34 +0800
-From:   Md Lin <mdlin@jmicron.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>
-CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Kevin Liu <kevinliu@jmicron.com>,
-        Charon Chen <charonchen@jmicron.com>,
-        Cora Huang <corahuang@jmicron.com>,
-        Ming Chen <mhchen@jmicron.com>,
-        George Chao <georgechao@jmicron.com>,
-        Banks <banks@jmicron.com>, Tzuwei Hung <tzuwei@jmicron.com>
-Subject: RE: [PATCH] libata/ahci: quirk for JMB585/JMB582
-Thread-Topic: [PATCH] libata/ahci: quirk for JMB585/JMB582
-Thread-Index: AQHYwqfp9p1cp+Rv5EyIP4UKdiaqu63UApWAgACmn4A=
-Date:   Thu, 8 Sep 2022 00:15:33 +0000
-Message-ID: <3b89cbd696394a21adb96432d3d3ba02@jmicron.com>
-References: <20220907105130.13797-1-mdlin@jmicron.com>
- <04372579-4c43-efa1-6042-270f6ae919c2@opensource.wdc.com>
-In-Reply-To: <04372579-4c43-efa1-6042-270f6ae919c2@opensource.wdc.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.88.10.240]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        with ESMTP id S231942AbiIHMs7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Sep 2022 08:48:59 -0400
+Received: from bg4.exmail.qq.com (bg4.exmail.qq.com [43.154.221.58])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CDC6D074E;
+        Thu,  8 Sep 2022 05:48:57 -0700 (PDT)
+X-QQ-mid: bizesmtp67t1662641330thnapd60
+Received: from localhost.localdomain ( [182.148.14.0])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Thu, 08 Sep 2022 20:48:49 +0800 (CST)
+X-QQ-SSF: 0100000000200090C000B00A0000000
+X-QQ-FEAT: HHPuPN/BfjVZ87LLtIqzA1WJs/RhE45BrrvU28FNKKd3VpTotRvMZBtDG26UI
+        Qw86oCfzQM8VysWhi7AyYgw6BtnzsyCFZvEHP+vNVLus/e1m6aM5JmRvD9W2c+vaYs3oKL3
+        BQIhp/JpAmQ74bJytgj9Hr922WxfyQPI6IsJn8KKi8bBpjqpiAYqo9BgxiWOD/xehrZmcrQ
+        uKuOvxQqBnwECkJCdLYL2vDj6y6bxKb+ANj4FcMxGdU6g2/uv7Ec2rP8BqmTpQpc0PtrLfs
+        dWnhbL14+N3cyvRWE4LCHRu7/L/7hWzRyQVEo5SBPq2vGSP3aYqe/VDpJIsJKLFJxVHMZzf
+        SB7g5HzibljYgZlDi+kUapRMs2HEoHpYetLYXjIWlEXjZD6s/XaqnxbolJcvg==
+X-QQ-GoodBg: 0
+From:   wangjianli <wangjianli@cdjrlc.com>
+To:     damien.lemoal@opensource.wdc.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wangjianli <wangjianli@cdjrlc.com>
+Subject: [PATCH] drivers/ata: fix repeated words in comments
+Date:   Thu,  8 Sep 2022 20:48:42 +0800
+Message-Id: <20220908124842.25435-1-wangjianli@cdjrlc.com>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-X-DNSRBL: 
-X-MAIL: spamfilter.jmicron.com 2880FpRC086034
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr7
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-SGkgRGFtaWVuLA0KVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgdGhlIGRldGFpbGVkIHN1Z2dlc3Rp
-b24uIEkgd2lsbCBtb2RpZnkgdGhlIHBhdGNoLCBjb21taXQgbWVzc2FnZSBhbmQgc2VuZCB0byB5
-b3UgYWdhaW4uDQoNCkJlc3QgcmVnYXJkcywNCk1EIExpbiAo5p6X5piO5b63KQ0KDQpKTWljcm9u
-IFRlY2hub2xvZ3kNClRlbCA6IDAzLTU3OTczODnCoCBFeHQuIDg3MjcNCkZheCA6IDAzLTU3OTk1
-NjYNCkUtbWFpbCA6IG1kbGluQGptaWNyb24uY29tDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
-LS0tDQpGcm9tOiBEYW1pZW4gTGUgTW9hbCA8ZGFtaWVuLmxlbW9hbEBvcGVuc291cmNlLndkYy5j
-b20+IA0KU2VudDogVGh1cnNkYXksIFNlcHRlbWJlciAwOCwgMjAyMiA2OjEzIEFNDQpUbzogTWQg
-TGluIDxtZGxpbkBqbWljcm9uLmNvbT47IGF4Ym9lQGtlcm5lbC5kaw0KQ2M6IGxpbnV4LWlkZUB2
-Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IEtldmluIExpdSA8
-a2V2aW5saXVAam1pY3Jvbi5jb20+OyBDaGFyb24gQ2hlbiA8Y2hhcm9uY2hlbkBqbWljcm9uLmNv
-bT47IENvcmEgSHVhbmcgPGNvcmFodWFuZ0BqbWljcm9uLmNvbT47IE1pbmcgQ2hlbiA8bWhjaGVu
-QGptaWNyb24uY29tPjsgR2VvcmdlIENoYW8gPGdlb3JnZWNoYW9Aam1pY3Jvbi5jb20+OyBCYW5r
-cyA8YmFua3NAam1pY3Jvbi5jb20+OyBUenV3ZWkgSHVuZyA8dHp1d2VpQGptaWNyb24uY29tPg0K
-U3ViamVjdDogUmU6IFtQQVRDSF0gbGliYXRhL2FoY2k6IHF1aXJrIGZvciBKTUI1ODUvSk1CNTgy
-DQoNCk9uIDkvNy8yMiAxOTo1MSwgTUQgTGluIHdyb3RlOg0KPiBUaGlzIHBhdGNoIGFkZHMgYSBx
-dWlyaywgd2hpY2ggZW5hYmxlIGVycm9yIGJpdCBoYW5kbGluZyBmdW5jdGlvbnMgYW5kIA0KPiBT
-QVRBIGNvbmZpZ3VyYXRpb24gZm9yIEpNaWNyb24gSk1CNTg1L0pNQjU4Mi4NCj4gDQo+IFNpZ25l
-ZC1vZmYtYnk6IE1EIExpbiA8bWRsaW5Aam1pY3Jvbi5jb20+DQoNClBsZWFzZSB1c2Ugc2NyaXB0
-cy9nZXRfbWFpbnRhaW5lci5wbCB0byBjaGVjayB0byB3aG9tIGF0YSBwYXRjaGVzIHNob3VsZCBi
-ZSBhZGRyZXNzZWQuIElmIHlvdSBkbyBub3Qgc2VuZCBwYXRjaGVzIHRvIG1lLCB0aGVyZSBpcyBh
-IGhpZ2ggY2hhbmNlIHRoYXQgSSB3aWxsIG1pc3MgdGhlbS4NCg0KVGhlIHBhdGNoIHRpdGxlIHNo
-b3VsZCBiZToNCg0KYXRhOiBhaGNpOiBBZGQgaW5pdGlhbGl6YXRpb24gcXVpcmsgZm9yIEptaWNy
-byA1ODUvNTgyIGNvbnRyb2xsZXJzDQoNCk9yIGVxdWl2YWxlbnQsIHRoYXQgaXMsIGEgbGl0dGxl
-IG1vcmUgZGVzY3JpcHRpdmUuDQoNClRoZSBjb21taXQgbWVzc2FnZSBhbHNvIGRvZXMgbm90IGV4
-cGxhaW4gV0hZIHRoaXMgcXVpcmsgaXMgbmVjZXNzYXJ5ICh0aGUgcHJvYmxlbSBpcyBub3QgZGVz
-Y3JpYmVkKSBhbmQgdGhlcmUgaXMgYWxzbyBubyBkZXNjcmlwdGlvbiBvZiBIT1cgeW91ciBwYXRj
-aCBhZGRyZXNzIHRoZSBpc3N1ZS4gUGxlYXNlIGJlIGEgbGl0dGxlIG1vcmUgdmVyYm9zZSB3aXRo
-IHRoZSBjb21taXQgbWVzc2FnZSB0byBiZXR0ZXIgZGVzY3JpYmUgdGhlIHBhdGNoLg0KDQo+IC0t
-LQ0KPiAgZHJpdmVycy9hdGEvYWhjaS5jIHwgNjUgDQo+ICsrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysNCj4gIDEgZmlsZSBjaGFuZ2VkLCA2NSBpbnNlcnRpb25z
-KCspDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvYWhjaS5jIGIvZHJpdmVycy9hdGEv
-YWhjaS5jIGluZGV4IA0KPiA1MDU5MjBkNDUuLmIwNzY4ZmFlMyAxMDA3NTUNCj4gLS0tIGEvZHJp
-dmVycy9hdGEvYWhjaS5jDQo+ICsrKyBiL2RyaXZlcnMvYXRhL2FoY2kuYw0KPiBAQCAtMTY1Nyw2
-ICsxNjU3LDY4IEBAIHN0YXRpYyB2b2lkIGFoY2lfaW50ZWxfcGNzX3F1aXJrKHN0cnVjdCBwY2lf
-ZGV2ICpwZGV2LCBzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwDQo+ICAJfQ0KPiAgfQ0KPiAgDQo+
-ICtzdGF0aWMgdm9pZCBhaGNpX2ptYjU4NV93cml0ZV9zYXRhX3BoeSh2b2lkIF9faW9tZW0gKm1t
-aW8sIHUzMiBhZGRyLCANCj4gK3UzMiBkYXRhKQ0KDQpUaGUgcGF0Y2ggdGl0bGUgc2FpZCBqbWI1
-ODUgYW5kIGptYjU4Mi4gU28gc2hvdWxkIHRoaXMgYmUgY2FsbGVkDQphaGNpX2ptYjU4eF93cml0
-ZV9zYXRhX3BoeSgpID8NCg0KPiArew0KPiArCXdyaXRlbCgoYWRkciAmIDB4MDFGRkZVTCkgKyAo
-MVVMIDw8IDE4VUwpLCBtbWlvICsgMHhDMCk7DQo+ICsJd3JpdGVsKGRhdGEsIG1taW8gKyAweEM4
-KTsNCj4gK30NCj4gKw0KPiArc3RhdGljIHZvaWQgYWhjaV9qbWljcm9uXzU4NV9xdWlyayh2b2lk
-IF9faW9tZW0gKm1taW8pDQoNClNhbWUgaGVyZS4gQWxzbywgcGxlYXNlIGJlIGNvbnNpc3RlbnQg
-d2l0aCB0aGUgbmFtZXM6IHNwZWxsIG91dCBqbWljcm9uIG9yIHVzZSBqbWIsIGVpdGhlciBpcyBm
-aW5lIHdpdGggbWUsIGJ1dCBvbmNlIHlvdSBjaG9vc2Ugb25lLCBzdGljayB3aXRoIGl0Lg0KU286
-DQoNCmFoY2lfam1iNTh4X3dyaXRlX3NhdGFfcGh5KCkNCmFoY2lfam1iNTh4X3F1aXJrKCkNCg0K
-b3INCg0KYWhjaV9qbWljcm9uXzU4eF93cml0ZV9zYXRhX3BoeSgpDQphaGNpX2ptaWNyb25fNTh4
-X3F1aXJrKCkNCg0KPiArew0KPiArCXUzMiBwaSA9IHJlYWRsKG1taW8gKyBIT1NUX1BPUlRTX0lN
-UEwpOw0KPiArCXUzMiBiOF9kYXRhOw0KPiArDQo+ICsJLyoNCj4gKwkgKiBlbmFibGUgZXJyb3Ig
-Yml0IGhhbmRsaW5nIGZ1bmN0aW9ucywgdGhlc2UgbWlnaHQgb3ZlcndyaXRlDQo+ICsJICogdGhl
-IHNldHRpbmcgd2hpY2ggbG9hZHMgZnJvbSBleHRlcm5hbCBTUEkgZmxhc2gNCj4gKwkgKi8NCj4g
-KwliOF9kYXRhID0gKHBpID4gMykgPyAweDEzIDogMHg5MjsNCj4gKwl3cml0ZWwoMHgwMzA2MDAw
-NCtiOF9kYXRhLCBtbWlvICsgMHhCOCk7DQoNClNwYWNlcyBtaXNzaW5nIGFyb3VuZCB0aGUgIisi
-IGluIHRoZSBmaXJzdCBhcmd1bWVudC4NCg0KPiArCXdyaXRlbCgweDAwRkYwQjAxLCAgICAgICAg
-IG1taW8gKyAweDMwKTsNCj4gKwl3cml0ZWwoMHgwMDAwMDAzRiwgICAgICAgICBtbWlvICsgMHgz
-NCk7DQo+ICsJd3JpdGVsKDB4MDAwMDAwMUYsICAgICAgICAgbW1pbyArIDB4MzgpOw0KPiArCXdy
-aXRlbCgweDAzMDYwMDAwK2I4X2RhdGEsIG1taW8gKyAweEI4KTsNCg0KU2FtZSBoZXJlLg0KDQo+
-ICsJd3JpdGVsKDB4RjlFNEVGQkYsICAgICAgICAgbW1pbyArIDB4QjApOw0KDQpBbmQgd2hhdCBh
-cmUgYWxsIHRoZXNlIG1hZ2ljIHZhbHVlcyA/IFdoZXJlIGRvIHRoZXkgY29tZSBmcm9tID8NCkl0
-IHdvdWxkIGJlIG5pY2UgdG8gaGF2ZSB0aGVzZSBkZWZpbmVkIGFzIG1hY3JvcyB3aXRoIGRlc2Ny
-aXB0aXZlIG5hbWVzIGluIGRyaXZlcnMvYXRhL2FoY2kuaC4NCg0KPiArDQo+ICsJLyoNCj4gKwkg
-KiBzZXQgU0FUQSBjb25maWd1cmF0aW9uLCB0aGVzZSBtaWdodCBvdmVyd3JpdGUNCj4gKwkgKiB0
-aGUgc2V0dGluZyB3aGljaCBsb2FkcyBmcm9tIGV4dGVybmFsIFNQSSBmbGFzaA0KPiArCSAqLw0K
-PiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4MDYsIDB4NzAwMDVCRTMpOyAv
-KiBwb3J0MCAqLw0KPiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4MTMsIDB4
-NzAwMDVCRTMpOyAvKiBwb3J0MSAqLw0KPiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1t
-aW8sIDB4NzMsIDB4MDAwMDAxRTUpOyAvKiBwb3J0MCAqLw0KPiArCWFoY2lfam1iNTg1X3dyaXRl
-X3NhdGFfcGh5KG1taW8sIDB4NzUsIDB4MDAwMDAxRTUpOyAvKiBwb3J0MSAqLw0KPiArCWFoY2lf
-am1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4NzQsIDB4MDAwMDAwMjQpOyAvKiBwb3J0MCAq
-Lw0KPiArCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4ODAsIDB4MjUwQjAwMDMp
-OyAvKiBwb3J0MSAqLw0KPiArCWlmIChwaSA+IDMpIHsNCj4gKwkJYWhjaV9qbWI1ODVfd3JpdGVf
-c2F0YV9waHkobW1pbywgMHgyMCwgMHg3MDAwNUJFMyk7IC8qIHBvcnQyICovDQo+ICsJCWFoY2lf
-am1iNTg1X3dyaXRlX3NhdGFfcGh5KG1taW8sIDB4MkQsIDB4NzAwMDVCRTMpOyAvKiBwb3J0MyAq
-Lw0KPiArCQlhaGNpX2ptYjU4NV93cml0ZV9zYXRhX3BoeShtbWlvLCAweDNBLCAweDcwMDA1QkUz
-KTsgLyogcG9ydDQgKi8NCj4gKwkJYWhjaV9qbWI1ODVfd3JpdGVfc2F0YV9waHkobW1pbywgMHg3
-OSwgMHgwMDAwMDFFNSk7IC8qIHBvcnQzICovDQo+ICsJCWFoY2lfam1iNTg1X3dyaXRlX3NhdGFf
-cGh5KG1taW8sIDB4ODMsIDB4MjUwQjAwMDMpOyAvKiBwb3J0MyAqLw0KPiArCQlhaGNpX2ptYjU4
-NV93cml0ZV9zYXRhX3BoeShtbWlvLCAweDdBLCAweDAwMDAwMDI0KTsgLyogcG9ydDMgKi8NCj4g
-KwkJYWhjaV9qbWI1ODVfd3JpdGVfc2F0YV9waHkobW1pbywgMHg4NCwgMHgyNTBCMDAwMyk7IC8q
-IHBvcnQzICovDQo+ICsJfQ0KDQpTYW1lIGhlcmUsIGxvdHMgb2YgIm1hZ2ljIiB2YWx1ZXMgdGhh
-dCBjYW5ub3QgYmUgY2hlY2tlZC4gUGxlYXNlIHVzZSBtYWNyb3MgYW5kIGFkZCBjb21tZW50cyBk
-ZXNjcmliaW5nIHdoZXJlIHRoZXNlIGNvbWUgZnJvbSAoYWRhcHRlciBzcGVjcyA/KS4NCg0KPiAr
-fQ0KPiArDQo+ICtzdGF0aWMgdm9pZCBhaGNpX2ptaWNyb25fcXVpcmsoc3RydWN0IHBjaV9kZXYg
-KnBkZXYsDQo+ICsJCQlzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2KQ0KPiArew0KPiArCXZv
-aWQgX19pb21lbSAqbW1pbyA9IGhwcml2LT5tbWlvOw0KPiArCXU4IHRtcDg7DQo+ICsNCj4gKwlp
-ZiAocGRldi0+dmVuZG9yICE9IFBDSV9WRU5ET1JfSURfSk1JQ1JPTikNCj4gKwkJcmV0dXJuOw0K
-PiArDQo+ICsJc3dpdGNoIChwZGV2LT5kZXZpY2UpIHsNCj4gKwljYXNlIDB4NTg1OiAvKiBjaGVj
-ayBpZiB0aGUgY2hpcCBpcyBKTUI1ODUgKi8NCg0KVGhlIGNvbW1lbnQgY2FuIGJlIHJlbW92ZWQu
-IFRoaXMgaXMgb2J2aW91cy4NCg0KQWxzbywgdGhlcmUgaXMgbm8gY2FzZSBmb3Igam1iNTgyIG1v
-ZGVsIHdoaWNoIHRoZSBwYXRjaCB0aXRsZSBtZW50aW9ucy4gSXMgaXQgdGhlIHNhbWUgbnVtYmVy
-IGZvciBib3RoIG1vZGVscyA/IElmIHRoYXQgaXMgdGhlIGNhc2UsIHRoZW4gcGxlYXNlIGFkZCBh
-IGNvbW1lbnQgYWJvdmUgdGhlIHN3aXRjaCgpIGRlc2NyaWJpbmcgdGhhdC4NCg0KPiArCQl0bXA4
-ID0gcmVhZGIobW1pbyArIDB4NDQpOw0KPiArCQlpZiAodG1wOCkNCj4gKwkJCWFoY2lfam1pY3Jv
-bl81ODVfcXVpcmsobW1pbyk7DQoNClRoZSB0bXA4IHZhcmlhYmxlIGlzIG5vdCBuZWNlc3Nhcnku
-DQoNCj4gKwkJYnJlYWs7DQo+ICsJfQ0KPiArfQ0KPiArDQo+ICBzdGF0aWMgaW50IGFoY2lfaW5p
-dF9vbmUoc3RydWN0IHBjaV9kZXYgKnBkZXYsIGNvbnN0IHN0cnVjdCANCj4gcGNpX2RldmljZV9p
-ZCAqZW50KSAgew0KPiAgCXVuc2lnbmVkIGludCBib2FyZF9pZCA9IGVudC0+ZHJpdmVyX2RhdGE7
-IEBAIC0xNzc1LDYgKzE4MzcsOSBAQCANCj4gc3RhdGljIGludCBhaGNpX2luaXRfb25lKHN0cnVj
-dCBwY2lfZGV2ICpwZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqZW50KQ0KPiAgCSAq
-Lw0KPiAgCWFoY2lfaW50ZWxfcGNzX3F1aXJrKHBkZXYsIGhwcml2KTsNCj4gIA0KPiArCS8qIHNl
-dCBKTWljcm9uIGNvbmZpZ3VyYXRpb24gKi8NCg0KVGhpcyBpcyBvYnZpb3VzIGZyb20gdGhlIGZ1
-bmN0aW9uIG5hbWUuIFNvIHlvdSBjYW4gZHJvcCB0aGlzIGNvbW1lbnQuDQoNCj4gKwlhaGNpX2pt
-aWNyb25fcXVpcmsocGRldiwgaHByaXYpOw0KPiArDQo+ICAJLyogcHJlcGFyZSBob3N0ICovDQo+
-ICAJaWYgKGhwcml2LT5jYXAgJiBIT1NUX0NBUF9OQ1EpIHsNCj4gIAkJcGkuZmxhZ3MgfD0gQVRB
-X0ZMQUdfTkNROw0KDQotLQ0KRGFtaWVuIExlIE1vYWwNCldlc3Rlcm4gRGlnaXRhbCBSZXNlYXJj
-aA0KDQo=
+Delete the redundant word 'in'.
+
+Signed-off-by: wangjianli <wangjianli@cdjrlc.com>
+---
+ drivers/ata/sata_dwc_460ex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index e3263e961045..a4c83a6e5631 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1087,7 +1087,7 @@ static struct scsi_host_template sata_dwc_sht = {
+ 	/*
+ 	 * test-only: Currently this driver doesn't handle NCQ
+ 	 * correctly. We enable NCQ but set the queue depth to a
+-	 * max of 1. This will get fixed in in a future release.
++	 * max of 1. This will get fixed in a future release.
+ 	 */
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+ 	/* .can_queue		= ATA_MAX_QUEUE, */
+-- 
+2.36.1
+
