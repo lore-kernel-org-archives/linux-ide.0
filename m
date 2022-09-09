@@ -2,50 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFD6BECAAD3
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Sep 2022 08:57:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E799ECAAA1
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Sep 2022 09:04:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230421AbiIII5B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Sep 2022 04:57:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57730 "EHLO
+        id S231684AbiIIJEg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Sep 2022 05:04:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229867AbiIII4n (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Sep 2022 04:56:43 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9036113463F;
-        Fri,  9 Sep 2022 01:55:23 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id b5so1593277wrr.5;
-        Fri, 09 Sep 2022 01:55:23 -0700 (PDT)
+        with ESMTP id S231714AbiIIJES (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Sep 2022 05:04:18 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61AF3135D40;
+        Fri,  9 Sep 2022 02:03:53 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id 29so1539644edv.2;
+        Fri, 09 Sep 2022 02:03:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=message-id:date:subject:cc:to:from:from:to:cc:subject:date;
         bh=fPvofaEf+BM4TxtIyhxZC/zjNI9R8E3LUT46F136ga4=;
-        b=LNhiywTDLLHnBcl6OCNDZJVmYpUQQBo5Ipo/XFJKAg6DVnp+YKgrbAyDhqMhVredgr
-         pbVU/XS09EffKtsWs1yStnLABtBlZ5Wlyz2RhLmxam/PBYt/Nuc5A2gokC2fC2AK/zyK
-         GJgQQoPnfC8xEXFcZ4UzPAJfx3QnYZ57ZID05n1RakRRuMU9Jz+WokxBI+RNcnTGE8fG
-         fmk+GehVrfLCf7lLWPA0kgxEaupDmAPyvW/I+shS8facJ9KFNgEnws23ygoNAdnWqFfs
-         a4zGMDHcPYVtZjbQtvwCcywmh4+UT6CaUgF5X5P5yOlJ53YYRkcGs+jPMIZvv64lwJOI
-         k1zg==
+        b=gCi4wThsDw2SiO9HtZ66oTW9uZhXcdn97NW5t0PaoJA3ywVSt/1jNG/dK9WECFY7nV
+         ZVkcs573BdAeVmp88LpIA6tUQOI4Rny21x1CQ/ZHE7IzIE5psixmp1I6xEWoRO4+r6qm
+         ZnYxwYCtxzVOc5q90LlglqbO5gBz+48WtGuuzN3A7GlrPjoE5vDQMV5D4/jeI/qKBpjF
+         hN6TmkwcRGMWAr3Abn1th5TSWCJ6FRMvrhyd+Upeg8KZch5AgcWGc1D+ejqdpDrSWp9e
+         0hMu0RMPbFQ3p/YcLfOrd+yOxifHraoD7p7WjuYQAw5epldUhjlFaE+sdZ8GZuld62jv
+         LpLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date;
         bh=fPvofaEf+BM4TxtIyhxZC/zjNI9R8E3LUT46F136ga4=;
-        b=2uCzGuhtvvdrZUmGYbAB/Phpi1i1XUi2c+ROc+uODdDFIZhUffYeXysMEgO8bPCn9X
-         hNWDFQWjieY3mF/zRyaux5CDAvG9/WQGsCN2nTR+UJwuDMh4m0gEPxku2ur/pV8bOZ7+
-         UsCVDWYW5UI0jKwcBc21/dYYQJkfRS7O6J0W7PCIg+3fzetz29Z1+lAMljEN220JnSAQ
-         8SNY57E1/9LULGnVeB8CFCHpjbQzn4L2JDpMwLSHUE/b/u0j4njyGm+WK3xeIW1OAxbs
-         zfPumk9Y+c5NSTqOijaeKyYeEtDxgRNRDIC0aQoCXT3wTbEmBfNFv1fvShOYR6Ks6z+a
-         673w==
-X-Gm-Message-State: ACgBeo3awYN6PPzSl2jw0s0fezuHw+YcLQSpmT39tN3bch+FXZ4mErng
-        1PGq/zCTEAG3OAnFeYGFy6I=
-X-Google-Smtp-Source: AA6agR5ExbaE+aBChdxYVSD7wVDn3HYcvadDzcUXC1aJvwytLqqWjrNZI76Fxl1SHY9jife9qSYwXA==
-X-Received: by 2002:adf:fb0a:0:b0:225:265d:493 with SMTP id c10-20020adffb0a000000b00225265d0493mr7368942wrr.394.1662713720977;
-        Fri, 09 Sep 2022 01:55:20 -0700 (PDT)
+        b=iFVK6S9skbGy7hPi87wVhmjjU4xcD2tQpqc8O30VVcFYj48AHADsi7nXvNYN8mXIEw
+         dWhpvYaf52gXOKxUOw03k+36DkmzwOrsa2dXrd7bqTGlGJU0Xxq6IEdcy6ixH6oS0mo2
+         feN7/JY5ldGaygqFyjPx+gJmKeHJuP88CSkWBnTQLeF894/tEk65BEwA2Eu+ZXKEEk0K
+         OQ9hF63Y2UvvBH3M7rew1RNe4s+pPIuNz5qbV+0xjX8pLGqymJy2dampVSB2MMlTBxQH
+         Ra1o9031eVdRtbh9822QSyZepKR7ZER/s8gwRUvjEw3OsfVg1s/D8WDpwAuwVicU5aNA
+         8x9Q==
+X-Gm-Message-State: ACgBeo1VPpAlwOaLJjBV7Oeu70ZqvlUhW8MAVUN8zrLiGJqIMQ166yNU
+        f4cZaGYECSdqz0J1w5jkkNc=
+X-Google-Smtp-Source: AA6agR68k43p1C9q+JY9fKXpGyzpa5QMGfmsPE3cdpyJf67DgjNwPcmF5UhGm3vXivDmWFaeVEOIJw==
+X-Received: by 2002:a05:6402:450c:b0:443:6279:774f with SMTP id ez12-20020a056402450c00b004436279774fmr10702921edb.11.1662714231621;
+        Fri, 09 Sep 2022 02:03:51 -0700 (PDT)
 Received: from felia.fritz.box (200116b8261bf1004cd87416af9987ea.dip.versatel-1u1.de. [2001:16b8:261b:f100:4cd8:7416:af99:87ea])
-        by smtp.gmail.com with ESMTPSA id bt9-20020a056000080900b00228e071baadsm1586493wrb.36.2022.09.09.01.55.19
+        by smtp.gmail.com with ESMTPSA id nb3-20020a1709071c8300b007303fe58eb2sm659797ejc.154.2022.09.09.02.03.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Sep 2022 01:55:20 -0700 (PDT)
+        Fri, 09 Sep 2022 02:03:50 -0700 (PDT)
 From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
 To:     Michael Ellerman <mpe@ellerman.id.au>,
         Nicholas Piggin <npiggin@gmail.com>,
@@ -54,9 +54,9 @@ To:     Michael Ellerman <mpe@ellerman.id.au>,
         linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH] ppc: select HAVE_PATA_PLATFORM in PPC instead of creating a PPC dependency
-Date:   Fri,  9 Sep 2022 10:55:05 +0200
-Message-Id: <20220909085505.15536-1-lukas.bulwahn@gmail.com>
+Subject: [PATCH v2] powerpc: select HAVE_PATA_PLATFORM in PPC instead of creating a PPC dependency
+Date:   Fri,  9 Sep 2022 11:03:42 +0200
+Message-Id: <20220909090343.21886-1-lukas.bulwahn@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
