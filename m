@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AF2AECAAD3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C784CC6FA8B
 	for <linux-ide@archiver.kernel.org>; Fri,  9 Sep 2022 19:37:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231441AbiIIThC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Sep 2022 15:37:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37504 "EHLO
+        id S231470AbiIIThD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Sep 2022 15:37:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231200AbiIITgp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Sep 2022 15:36:45 -0400
+        with ESMTP id S231243AbiIITgq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Sep 2022 15:36:46 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0276C2AE33;
-        Fri,  9 Sep 2022 12:36:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7C0DA11213D;
+        Fri,  9 Sep 2022 12:36:35 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 47FDEDBB;
-        Fri,  9 Sep 2022 22:40:19 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 47FDEDBB
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 9AF04DBD;
+        Fri,  9 Sep 2022 22:40:20 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 9AF04DBD
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1662752419;
-        bh=tUP+TC6hVDP8Bs3TtlKqKnuOaCO758BhT30UXUMVVrY=;
+        d=baikalelectronics.ru; s=mail; t=1662752420;
+        bh=d2GPchrpvVOgjuEOQF2EanFTi3kLUr78uJWuPrwrf50=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=RZrxTmuINzrOofMv2jDk7xWPi0VtcaDJJf+Qy0ClhUsTxRdpqiJr+1YTWCo6oqo1S
-         wL1YCJZcaAT8HdQJ8t5HiL0T/HWu9cnB63BM+VNbJ77KGgDj1UEby0y5YwBudYDHys
-         gyoSMhuvmp8z0FGkEojBHh2FlQ6hWQdYoJqnjY48=
+        b=pW1qm12n8TUUoawpbk1GHwTl7ZL6XeNLE+u6nnBBKX2P+ZZdeet8dv5w/59D7y3Gh
+         do78eRjnqamBaheNS0BIm13HV5q4E9BEMmt02mLfLBGpnGGWL2gqiMAIQUCIN1EZ+v
+         /JVaQOCa7r96dtDm4HpDcVK3rfej96wkBhILC2Dw=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 9 Sep 2022 22:36:30 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 9 Sep 2022 22:36:32 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -40,9 +40,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>, Rob Herring <robh@kernel.org>
-Subject: [PATCH v8 02/23] dt-bindings: ata: ahci-platform: Detach common AHCI bindings
-Date:   Fri, 9 Sep 2022 22:36:00 +0300
-Message-ID: <20220909193621.17380-3-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v8 04/23] dt-bindings: ata: sata: Extend number of SATA ports
+Date:   Fri, 9 Sep 2022 22:36:02 +0300
+Message-ID: <20220909193621.17380-5-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -53,303 +53,50 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In order to create a more sophisticated AHCI controller DT bindings let's
-divide the already available generic AHCI platform YAML schema into the
-platform part and a set of the common AHCI properties. The former part
-will be used to evaluate the AHCI DT nodes mainly compatible with the
-generic AHCI controller while the later schema will be used for more
-thorough AHCI DT nodes description. For instance such YAML schemas design
-will be useful for our DW AHCI SATA controller derivative with four clock
-sources, two reset lines, one system controller reference and specific
-max Rx/Tx DMA xfers size constraints.
-
-Note the phys and target-supply property requirement is preserved in the
-generic AHCI platform bindings because some platforms can lack of the
-explicitly specified PHYs or target device power regulators.
-
-Also note the SATA/AHCI ports properties have been moved to the
-$defs-paragraph of the schemas. It's done in order to create the
-extendable properties hierarchy such that particular AHCI-controller
-could add vendor-specific port properties.
+The denoted in the description upper limit only concerns the Port
+Multipliers, but not the actual SATA ports. It's an external device
+attached to a SATA port in order to access more than one SATA-drive. So
+when it's attached to a SATA port it just extends the port capability
+while the number of actual SATA ports stays the same. For instance on AHCI
+controllers the number of actual ports is determined by the CAP.NP field
+and the PI (Ports Implemented) register. AFAICS in general the maximum
+number of SATA ports depends on the particular controller implementation.
+Generic AHCI controller can't have more than 32 ports (since CAP.NP is of
+5 bits wide and PI register is 32-bits size), while DWC AHCI SATA
+controller can't be configured with more than 8 ports activated. So let's
+discard the SATA ports reg-property restrictions and just make sure that
+it consists of a single reg-item.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
 
-Folks, I don't really see why the phys/target-supply requirement has been
-added to the generic AHCI DT schema in the first place. Probably just to
-imply some meaning for the sub-nodes definition. Anyway in one of the
-further patches I am adding the DW AHCI SATA controller DT bindings which
-won't require having these properties specified in the sub-nodes, but will
-describe additional port-specific properties. That's why I get to keep the
-constraints in the ahci-platform.yaml schema instead of moving them to the
-common schema.
-
 Changelog v2:
-- This is a new patch created after rebasing v1 onto the 5.18-rc3 kernel.
-
-Changelog v3:
-- Replace Jens's email address with Damien's one in the list of the
-  schema maintainers. (@Damien)
-
-Changelog v4:
-- Drop clocks, clock-names, resets, reset-names and power-domains
-  properties from the common schema. (@Rob)
-- Create sata/ahci-port properties definition hierarchy so the sub-schemas
-  would inherit and extend the ports properties of the super-schema. (@Rob)
+- Add comma and replace "channel" with "SATA port" in the reg property
+  description (@Damien).
 ---
- .../devicetree/bindings/ata/ahci-common.yaml  | 100 ++++++++++++++++++
- .../bindings/ata/ahci-platform.yaml           |  72 ++-----------
- .../devicetree/bindings/ata/sata-common.yaml  |   8 +-
- 3 files changed, 115 insertions(+), 65 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
+ Documentation/devicetree/bindings/ata/sata-common.yaml | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-new file mode 100644
-index 000000000000..e89bda3b62cc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-@@ -0,0 +1,100 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/ahci-common.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Common Properties for Serial ATA AHCI controllers
-+
-+maintainers:
-+  - Hans de Goede <hdegoede@redhat.com>
-+  - Damien Le Moal <damien.lemoal@opensource.wdc.com>
-+
-+description:
-+  This document defines device tree properties for a common AHCI SATA
-+  controller implementation. It's hardware interface is supposed to
-+  conform to the technical standard defined by Intel (see Serial ATA
-+  Advanced Host Controller Interface specification for details). The
-+  document doesn't constitute a DT-node binding by itself but merely
-+  defines a set of common properties for the AHCI-compatible devices.
-+
-+select: false
-+
-+allOf:
-+  - $ref: sata-common.yaml#
-+
-+properties:
-+  reg:
-+    description:
-+      Generic AHCI registers space conforming to the Serial ATA AHCI
-+      specification.
-+
-+  reg-names:
-+    description: CSR space IDs
-+
-+  interrupts:
-+    description:
-+      Generic AHCI state change interrupt. Can be implemented either as a
-+      single line attached to the controller or as a set of the signals
-+      indicating the particular port events.
-+
-+  ahci-supply:
-+    description: Power regulator for AHCI controller
-+
-+  target-supply:
-+    description: Power regulator for SATA target device
-+
-+  phy-supply:
-+    description: Power regulator for SATA PHY
-+
-+  phys:
-+    description: Reference to the SATA PHY node
-+    maxItems: 1
-+
-+  phy-names:
-+    maxItems: 1
-+
-+  ports-implemented:
-+    $ref: '/schemas/types.yaml#/definitions/uint32'
-+    description:
-+      Mask that indicates which ports the HBA supports. Useful if PI is not
-+      programmed by the BIOS, which is true for some embedded SoC's.
-+    maximum: 0x1f
-+
-+patternProperties:
-+  "^sata-port@[0-9a-f]+$":
-+    $ref: '#/$defs/ahci-port'
-+    description:
-+      It is optionally possible to describe the ports as sub-nodes so
-+      to enable each port independently when dealing with multiple PHYs.
-+
-+required:
-+  - reg
-+  - interrupts
-+
-+additionalProperties: true
-+
-+$defs:
-+  ahci-port:
-+    $ref: /schemas/ata/sata-common.yaml#/$defs/sata-port
-+
-+    properties:
-+      reg:
-+        description: AHCI SATA port identifier
-+        maxItems: 1
-+
-+      phys:
-+        description: Individual AHCI SATA port PHY
-+        maxItems: 1
-+
-+      phy-names:
-+        description: AHCI SATA port PHY ID
-+        maxItems: 1
-+
-+      target-supply:
-+        description: Power regulator for SATA port target device
-+
-+    required:
-+      - reg
-+
-+...
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-index 9304e4731965..15be98e0385b 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-@@ -36,8 +36,7 @@ select:
-     - compatible
- 
- allOf:
--  - $ref: "sata-common.yaml#"
--
-+  - $ref: "ahci-common.yaml#"
- 
- properties:
-   compatible:
-@@ -69,90 +68,37 @@ properties:
-     maxItems: 1
- 
-   clocks:
--    description:
--      Clock IDs array as required by the controller.
-     minItems: 1
-     maxItems: 3
- 
-   clock-names:
--    description:
--      Names of clocks corresponding to IDs in the clock property.
-     minItems: 1
-     maxItems: 3
- 
-   interrupts:
-     maxItems: 1
- 
--  ahci-supply:
--    description:
--      regulator for AHCI controller
--
--  phy-supply:
--    description:
--      regulator for PHY power
--
--  phys:
--    description:
--      List of all PHYs on this controller
--    maxItems: 1
--
--  phy-names:
--    description:
--      Name specifier for the PHYs
--    maxItems: 1
--
--  ports-implemented:
--    $ref: '/schemas/types.yaml#/definitions/uint32'
--    description: |
--      Mask that indicates which ports that the HBA supports
--      are available for software to use. Useful if PORTS_IMPL
--      is not programmed by the BIOS, which is true with
--      some embedded SoCs.
--    maximum: 0x1f
--
-   power-domains:
-     maxItems: 1
- 
-   resets:
-     maxItems: 1
- 
--  target-supply:
--    description:
--      regulator for SATA target power
--
--required:
--  - compatible
--  - reg
--  - interrupts
--
- patternProperties:
-   "^sata-port@[0-9a-f]+$":
--    type: object
--    additionalProperties: false
--    description:
--      Subnode with configuration of the Ports.
--
--    properties:
--      reg:
--        maxItems: 1
--
--      phys:
--        maxItems: 1
--
--      phy-names:
--        maxItems: 1
--
--      target-supply:
--        description:
--          regulator for SATA target power
--
--    required:
--      - reg
-+    $ref: /schemas/ata/ahci-common.yaml#/$defs/ahci-port
- 
-     anyOf:
-       - required: [ phys ]
-       - required: [ target-supply ]
- 
-+    unevaluatedProperties: false
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+
- unevaluatedProperties: false
- 
- examples:
 diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
-index cb88d3e25e73..5a31a902618d 100644
+index 5a31a902618d..58c9342b9925 100644
 --- a/Documentation/devicetree/bindings/ata/sata-common.yaml
 +++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
-@@ -35,9 +35,15 @@ properties:
- 
- patternProperties:
-   "^sata-port@[0-9a-e]$":
-+    $ref: '#/$defs/sata-port'
-     description: |
-       DT nodes for ports connected on the SATA host. The SATA port
-       nodes will be named "sata-port".
-+
-+additionalProperties: true
-+
-+$defs:
-+  sata-port:
-     type: object
- 
+@@ -49,10 +49,9 @@ $defs:
      properties:
-@@ -49,6 +55,4 @@ patternProperties:
-           multiplier making it possible to connect up to 15 disks to a single
-           SATA port.
+       reg:
+         minimum: 0
+-        maximum: 14
+         description:
+-          The ID number of the drive port SATA can potentially use a port
+-          multiplier making it possible to connect up to 15 disks to a single
+-          SATA port.
++          The ID number of the SATA port. Aside with being directly used,
++          each port can have a Port Multiplier attached thus allowing to
++          access more than one drive by means of a single SATA port.
  
--additionalProperties: true
--
  ...
 -- 
 2.37.2
