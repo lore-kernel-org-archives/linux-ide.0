@@ -2,82 +2,65 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C790C6FA83
-	for <linux-ide@archiver.kernel.org>; Thu,  8 Sep 2022 14:04:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF2D3ECAAD3
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Sep 2022 06:37:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232311AbiIHOEq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Sep 2022 10:04:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51154 "EHLO
+        id S230471AbiIIGhp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Sep 2022 02:37:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231814AbiIHOEm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Sep 2022 10:04:42 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 707BB11211E;
-        Thu,  8 Sep 2022 07:03:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1662645838;
-        bh=rjzz30/z7/Pr1KuKonquaOWSGEQlzAerRQsz5EcTcmg=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=dVMpQP8L3+/jytMRIW706xGUT/dwvUcNDdKdL/yAw1ScTemRExaVQ43sHwBTeEaPL
-         +P0L2DHYNgVOmmfXQoE4g6pjIzdstOwX1Im9aubd+GHEr8BvGGE5blkvOVKHFN++52
-         UhF7lL+Hfj4XI4vk5XCshqM8xslZdzxDC4gVje38=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 997D81287AA4;
-        Thu,  8 Sep 2022 10:03:58 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id lU5B18hUN8ha; Thu,  8 Sep 2022 10:03:58 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1662645838;
-        bh=rjzz30/z7/Pr1KuKonquaOWSGEQlzAerRQsz5EcTcmg=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=dVMpQP8L3+/jytMRIW706xGUT/dwvUcNDdKdL/yAw1ScTemRExaVQ43sHwBTeEaPL
-         +P0L2DHYNgVOmmfXQoE4g6pjIzdstOwX1Im9aubd+GHEr8BvGGE5blkvOVKHFN++52
-         UhF7lL+Hfj4XI4vk5XCshqM8xslZdzxDC4gVje38=
-Received: from [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b] (unknown [IPv6:2601:5c4:4300:c551:a71:90ff:fec2:f05b])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id EE73D1287A07;
-        Thu,  8 Sep 2022 10:03:57 -0400 (EDT)
-Message-ID: <154c64feea4b2942698c6b96370f78a509048605.camel@HansenPartnership.com>
-Subject: Re: [PATCH] drivers/ata: fix repeated words in comments
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Conor.Dooley@microchip.com, wangjianli@cdjrlc.com,
-        damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Thu, 08 Sep 2022 10:03:56 -0400
-In-Reply-To: <a9052683-13a2-1e90-db90-ca9410fafd89@microchip.com>
-References: <20220908124937.25962-1-wangjianli@cdjrlc.com>
-         <e2f882f7-6871-a754-fbbd-6a5201f45f4a@microchip.com>
-         <3a73cf7f02915891c77dc5a3203dc187f6d91194.camel@HansenPartnership.com>
-         <a9052683-13a2-1e90-db90-ca9410fafd89@microchip.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        with ESMTP id S230424AbiIIGho (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Sep 2022 02:37:44 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 690F911EA8E;
+        Thu,  8 Sep 2022 23:37:40 -0700 (PDT)
+Received: from kwepemi500012.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4MP5mW2N3Gz14QYX;
+        Fri,  9 Sep 2022 14:33:47 +0800 (CST)
+Received: from cgs.huawei.com (10.244.148.83) by
+ kwepemi500012.china.huawei.com (7.221.188.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 9 Sep 2022 14:37:37 +0800
+From:   Gaosheng Cui <cuigaosheng1@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <htejun@gmail.com>,
+        <cuigaosheng1@huawei.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] ata: libata: remove ata_schedule_scsi_eh declaration
+Date:   Fri, 9 Sep 2022 14:37:37 +0800
+Message-ID: <20220909063737.1147983-1-cuigaosheng1@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.244.148.83]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500012.china.huawei.com (7.221.188.12)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 2022-09-08 at 13:09 +0000, Conor.Dooley@microchip.com wrote:
-[...]
-> If there's a tool running against this stuff but maintainers are not
-> applying the patches as the "fixes" are not fixes it's only going to
-> keep generating the same patches over and over is it not?
+ata_schedule_scsi_eh has been removed since
+commit f8bbfc247efb ("[PATCH] SCSI: make scsi_implement_eh() generic
+API for SCSI transports"), so remove it.
 
-That's up to the maintainers, but it's fairly easy to ignore patches
-from given sources however often they are repeated.  There's a lot of
-wrong patches that keep getting repeated ...
+Signed-off-by: Gaosheng Cui <cuigaosheng1@huawei.com>
+---
+ drivers/ata/libata.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-My own take is that the value would be marginal if all the patches were
-correct, but they could be applied with minimal effort using patch
-automation.  Once you have to verify correctness of each patch, I don't
-think the tracking and verification effort is worth the marginal
-improvement, but that's a maintainer call.
-
-Regards,
-
-James
-
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 2c5c8273af01..cb52afd695cf 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -121,7 +121,6 @@ extern void ata_scsi_set_sense_information(struct ata_device *dev,
+ 					   const struct ata_taskfile *tf);
+ extern void ata_scsi_media_change_notify(struct ata_device *dev);
+ extern void ata_scsi_hotplug(struct work_struct *work);
+-extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
+ extern void ata_scsi_dev_rescan(struct work_struct *work);
+ extern int ata_bus_probe(struct ata_port *ap);
+ extern int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+-- 
+2.25.1
 
