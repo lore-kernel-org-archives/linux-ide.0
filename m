@@ -2,69 +2,86 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1599ECAAD3
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Sep 2022 09:43:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F9CECAAD3
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Sep 2022 11:09:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229961AbiIIJni (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Sep 2022 05:43:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49374 "EHLO
+        id S229697AbiIILJc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Sep 2022 07:09:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231649AbiIIJnf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Sep 2022 05:43:35 -0400
-Received: from mail-yw1-x112e.google.com (mail-yw1-x112e.google.com [IPv6:2607:f8b0:4864:20::112e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE4B5CCE13;
-        Fri,  9 Sep 2022 02:43:34 -0700 (PDT)
-Received: by mail-yw1-x112e.google.com with SMTP id 00721157ae682-3378303138bso12506307b3.9;
-        Fri, 09 Sep 2022 02:43:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=7ZB/vFj1LBEvoFTPtCpwJzQSMMS3bz1eErTDvpmrofs=;
-        b=BWmld3ITX+giHZRWkJWwbcDCiOUpMOxQyqf6WsoI7BqlMauyRaz/ygBKpHYYcBNO+X
-         tUxzbx0oJP2PdXRc4UssH4YzjbKa/tcZH7uuybjb+cmvR5GjcY7cZ/Xsbyy+i1O+eVY/
-         5/eT+SZULnxNPSVsQc5sDf7lQCC7IoTjd1fArydNSxtxWzw2iE/Fln6qxNRm4kefwf37
-         4M6EC6OUSjfjZqTc+UWWlYsyNA3Oed/L+1/CNdtZ3ENyEEc/cmVDMI1zpmkJNfkxuGYp
-         yxVvAV/1WQPtYBsUTCvuAEcN+S8yvFEBQZDSt5Fkb86VT+ZJwOTRpUJOP8tNS5jFDDd2
-         qt1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=7ZB/vFj1LBEvoFTPtCpwJzQSMMS3bz1eErTDvpmrofs=;
-        b=Pw3GAMaBKs8XttQ1mpLxwYUl+0BjVsADW018DmKvnTBzhD2OyZNBnuKvhg95aQIYQ1
-         /wXL3uOkxIdlFeK8GBMRw73AmJVwIGDnq1mjWUGeSa6I9Rp0t6d2Fr2X/xqRVJ7b2xdH
-         DYn1ynT2Keemknx+7eAMo89GDC5ejBQHCckdRYBc623a/wdOe1ojbQ9a2vRcxWbx/siB
-         2cD9CxhGvk8zcSApIKBSOJEBuHTSz88wrJCh//TXtu+gJdLyTFEf+G7kgxX1kKEjPpvJ
-         7tL/Axb6eV/7rskcL/Ttqb5ktsPS2UznXOUwyJxBTrjEsEcD6e6dU6GcXxnChBsqTpH4
-         luEA==
-X-Gm-Message-State: ACgBeo2twCqoTjlb9k2U+EE6ssPWD8aTMO1ZwxFHHClemIkU/Sk16jN4
-        6NA2cybVDX2cjmeHNdyUpEJMHXq3nQUXYn0tvxA=
-X-Google-Smtp-Source: AA6agR5jda4a3EcM5GDvNbwnprqfr/4CFDLarXT4mFEldLG0qPusFNe2TD+NpCjCIUQz5j77+wo6CNsqhSjzPuzhyYc=
-X-Received: by 2002:a81:7702:0:b0:328:297a:fdcb with SMTP id
- s2-20020a817702000000b00328297afdcbmr11117970ywc.335.1662716613820; Fri, 09
- Sep 2022 02:43:33 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220909090343.21886-1-lukas.bulwahn@gmail.com> <20220909090343.21886-2-lukas.bulwahn@gmail.com>
-In-Reply-To: <20220909090343.21886-2-lukas.bulwahn@gmail.com>
-From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Date:   Fri, 9 Sep 2022 11:43:23 +0200
-Message-ID: <CAKXUXMyDON2ys_bxNi07h_BOYkjd1Gidi6qTHXQ-=L5Vsu9kxA@mail.gmail.com>
-Subject: Re: [PATCH] ppc: select HAVE_PATA_PLATFORM in PPC instead of creating
- a PPC dependency
-To:     Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        with ESMTP id S229589AbiIILJb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Sep 2022 07:09:31 -0400
+Received: from wnew3-smtp.messagingengine.com (wnew3-smtp.messagingengine.com [64.147.123.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 743BB62E1;
+        Fri,  9 Sep 2022 04:09:28 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.west.internal (Postfix) with ESMTP id 1486F2B059B1;
+        Fri,  9 Sep 2022 07:09:25 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute3.internal (MEProxy); Fri, 09 Sep 2022 07:09:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to; s=fm1; t=1662721765; x=1662725365; bh=wqSZnyFI/c
+        l/mPByp5iGdJ8icj1uq3tpAsMYxesXc90=; b=JNCUOHygKHzw5ymEwgIx150ccZ
+        kk3QcAxPZ+kBSPmdW6jFGXpxAjxmEeG0M6d57nMRbAoHaCqHoE+FBWHfNpOeLwBs
+        /mPuqtbvd/1IPDbHrQuUxW5yCDGLAoB2om5QEevKLcUZVQYafKN1g6jZbmhwHLOu
+        0HRA6C+WddeqcV+7yTAaDTKC7uE2YRZYNsPxH2KSdrzIovQgodn9vw1xR87nCG+W
+        KPYRz8ti9cnn/qzN8glQRQibQH2l1HmUfIA2qVa5UgrX/L1qAkJdpn9gAKjxC3Ks
+        SIdQUbZKUYYQjMI+lOUwNGQgo3vZPc4FYLNL3mkZQP6Adk+Ua83PVyjTJQyA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm2; t=1662721765; x=1662725365; bh=wqSZnyFI/cl/mPByp5iGdJ8icj1u
+        q3tpAsMYxesXc90=; b=NcnoBpow2qM+ovsG2uQ1UBwQb5Coksk8+GOfbMClmXg0
+        FljMyHsOsV/d4c2jkdzcmMrS2dB9O4m2MafmQaN7+qU8HuJK7d2K++DLiICuLM2y
+        AjcE4yKVEsPIlL52TJa57qkn2k9qeBsuhvHX5alkWuvvcLRv0wOUjJzb8d836EGo
+        F/KD5NIL8QMwpvF5G6UbyM0UHVuQPX7ZmSljDoIFpGPeaKEsv8wxuVziYA/Mq6AL
+        AUzrsvFBNWDvi84l76doHdoBRON5BMvjWLQKymPY0D6dPOHzwqS91ZBhGP94gs+3
+        yWnpDzgYO8/dcTsXF9pcTpg4Ajh7Ere3cJRjMUriXA==
+X-ME-Sender: <xms:5R4bY4GaqDmt3X-LJ-uV8Zcyr7ZBZR-NmmXwK3Kgf75UWFViN9SQ3g>
+    <xme:5R4bYxXLe5wUEH8ByBurgfVYAMPzogSUu2s6bS8sgxCTXaY0NKVYElWrRz4Vw1bco
+    W8mW2HX1LXeLyrxkTQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrfedthedgfeejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:5R4bYyKu5j3kSAt9BrZFBOj8MBqapEHrpfOZjwAiyNhZaKRGdpro4g>
+    <xmx:5R4bY6Ec5uNpaboa5u0lOfhinRTwp9OIPIF7MMPIYGNvn2WkJnk6VA>
+    <xmx:5R4bY-WaYgUrlM9_vLjYf5DX1sz3ev5uymLjtLvtFVpsaTXoPZPTDQ>
+    <xmx:5R4bYwKi5QKMiJ_n2x8PmIi78ZHDXfR-pJPa3AoM33UYbxvq50eFoaVECX8>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 0E194B60086; Fri,  9 Sep 2022 07:09:24 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-927-gf4c98c8499-fm-20220826.002-gf4c98c84
+Mime-Version: 1.0
+Message-Id: <21359abe-c3c9-4aa8-8ebf-75ff64cb1935@www.fastmail.com>
+In-Reply-To: <20220909090343.21886-1-lukas.bulwahn@gmail.com>
+References: <20220909090343.21886-1-lukas.bulwahn@gmail.com>
+Date:   Fri, 09 Sep 2022 13:09:03 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Lukas Bulwahn" <lukas.bulwahn@gmail.com>,
+        "Michael Ellerman" <mpe@ellerman.id.au>,
+        "Nicholas Piggin" <npiggin@gmail.com>,
+        "Christophe Leroy" <christophe.leroy@csgroup.eu>,
+        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
         linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v2] powerpc: select HAVE_PATA_PLATFORM in PPC instead of creating a
+ PPC dependency
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Sep 9, 2022 at 11:04 AM Lukas Bulwahn <lukas.bulwahn@gmail.com> wrote:
->
+On Fri, Sep 9, 2022, at 11:03 AM, Lukas Bulwahn wrote:
 > Commit cc18e0fea790 ("LIBATA: Add HAVE_PATA_PLATFORM to select
 > PATA_PLATFORM driver") introduces config HAVE_PATA_PLATFORM, and expects
 > that all architectures simply select this config when the architecture
@@ -78,13 +95,6 @@ On Fri, Sep 9, 2022 at 11:04 AM Lukas Bulwahn <lukas.bulwahn@gmail.com> wrote:
 > any specific architecture anymore.
 >
 > Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-
-Please ignore this patch and pick:
-
-https://lore.kernel.org/linuxppc-dev/20220909090343.21886-1-lukas.bulwahn@gmail.com/
-
-Lukas
-
 > ---
 >  arch/powerpc/Kconfig | 1 +
 >  drivers/ata/Kconfig  | 2 +-
@@ -95,26 +105,19 @@ Lukas
 > --- a/arch/powerpc/Kconfig
 > +++ b/arch/powerpc/Kconfig
 > @@ -237,6 +237,7 @@ config PPC
->         select HAVE_MOD_ARCH_SPECIFIC
->         select HAVE_NMI                         if PERF_EVENTS || (PPC64 && PPC_BOOK3S)
->         select HAVE_OPTPROBES
-> +       select HAVE_PATA_PLATFORM
->         select HAVE_PERF_EVENTS
->         select HAVE_PERF_EVENTS_NMI             if PPC64
->         select HAVE_PERF_REGS
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 1c9f4fb2595d..ed3547165528 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -1103,7 +1103,7 @@ config PATA_PCMCIA
->
->  config PATA_PLATFORM
->         tristate "Generic platform device PATA support"
-> -       depends on EXPERT || PPC || HAVE_PATA_PLATFORM
-> +       depends on EXPERT || HAVE_PATA_PLATFORM
->         help
->           This option enables support for generic directly connected ATA
->           devices commonly found on embedded systems.
-> --
-> 2.17.1
->
+>  	select HAVE_MOD_ARCH_SPECIFIC
+>  	select HAVE_NMI				if PERF_EVENTS || (PPC64 && PPC_BOOK3S)
+>  	select HAVE_OPTPROBES
+> +	select HAVE_PATA_PLATFORM
+>  	select HAVE_PERF_EVENTS
+>  	select HAVE_PERF_EVENTS_NMI		if PPC64
+>  	select HAVE_PERF_REGS
+
+I don't see a single powerpc machine that creates a
+ name="pata_platform" platform_device. I suspect this was
+only needed bwfore 2007 commit 9cd55be4d223 ("[POWERPC] pasemi:
+Move electra-ide to pata_of_platform"), so the "|| PPC"
+bit should just get removed without adding the HAVE_PATA_PLATFORM
+bit.
+
+       Arnd
