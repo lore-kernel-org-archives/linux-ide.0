@@ -2,141 +2,123 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 353E0ECAAD3
-	for <linux-ide@archiver.kernel.org>; Sun, 11 Sep 2022 14:18:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B91DECAAA1
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Sep 2022 07:53:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229816AbiIKOSt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 11 Sep 2022 10:18:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46812 "EHLO
+        id S230070AbiILHxM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Sep 2022 03:53:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230115AbiIKOSs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 11 Sep 2022 10:18:48 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8207420F7D
-        for <linux-ide@vger.kernel.org>; Sun, 11 Sep 2022 07:18:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1662905927; x=1694441927;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=1ZeosKCdRqJre/8DiboNXUF0h0xy40H1IiMlnXbs1ts=;
-  b=H53/KZpaqqLFIQSYmdfqHo2da5UPUTu3xGRPG6FiT1moPN9U7EbAWjmB
-   JkyoYwqTm8tqv4mDjx9JfNiT+Qi1DGEsngoTXQJMO0SEKN+0pS0NmuCaX
-   dI4b3hF7W9AoTpSOXWaT65cJUea4NzeCmay7+RDWJx9p+gVSgEfy7Vcrr
-   ESgVE02bpWeeuvXl4I0cgRB2uW+09aPbNET1dLUZHRDkka+ibxu1MngSl
-   Fp1GNLSAT1aYplYmyd4A1LxhCbwi/YBIkSj5Jb6hmpuIwi2VUsBBCCLHM
-   60bukK1vzfnYb0woY2X2shMHY+mylHoqE1Ntsmrj0G1MTJwEvMI6nKBe1
-   A==;
-X-IronPort-AV: E=Sophos;i="5.93,307,1654531200"; 
-   d="scan'208";a="323164906"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Sep 2022 22:18:46 +0800
-IronPort-SDR: E2L3HSmcM737AfRecRwaq7Lz5X07hq3WQ7Ma8AbIV5if4/E/3tY3j7S0de13q1VnNblFzTinyo
- jTokjX57h1af0KHPBgIRdiwhUMLbcjTyf2Coxcj8mEvXJ1BCf4AfeCB85bkmjMuB2eIM5o+1qs
- NfeN6zIrDwHRjTmt9GYdcSx/pCDUJGvDtPFOdJHLRXVsA6n8YK7h7rgPygIbhv8BJhNLeL13H7
- FV7w+ZQD44bGCP9juy+ZX0AXr03Hn0acx5IxX6CcL2tW+jJYUp0QjnoYxZlUNHQIXWzOFDomgx
- IbJZGNQz5vyXLjCGitYGNO8F
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Sep 2022 06:33:37 -0700
-IronPort-SDR: tNSu2oxPOLmdEoZKIHDXyJ37ly+Dz0AR6k3ySRlRUjUJqh59IOVr4jWinj6CyiJQRbVw2NEW0s
- RKEiqCGnpEbKVSWKqgqKviw+GXZB5aV2PCPB+n3JiSZ8f6ehJ+8Gs0OdgMaGZPMQQP8sxo5shq
- ns9iTqhTgepl4xHR0pj7rSx8KSbzgidXM7cJ8Mh6//sZzbsn9qtA02uykK/YR9dsSZ24Tj3C97
- xuChumbKpPtTpTLpYaJaOsxxI8O64XZ8tJTKZzM0h/aBnlKUUtxx4PBiNxMRrZYqXqVj5IYU1E
- Pg0=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Sep 2022 07:18:46 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MQX0637pWz1RvTp
-        for <linux-ide@vger.kernel.org>; Sun, 11 Sep 2022 07:18:46 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1662905925; x=1665497926; bh=1ZeosKCdRqJre/8DiboNXUF0h0xy40H1IiM
-        lnXbs1ts=; b=j4h2ZE/9PX6h/2kYKLziwwoSgdmonXasjWQwvwVH6ACmLFoeoQC
-        RIAi/oynNfqjDavUA/A9ZlQSaIU2wt6G7N+Z5LeY0j6WKkCIQEexOpArbHZcK7rz
-        608Gw/tG/qm0KYRDg3nUrrcfMhvhif7729OMuAtTtXRmcRCPBX1eOw6PVAZdXj26
-        gTwhvg7Z0Zmm3wyLcqoAHrL2j9S1ZRcP/v5z3Ha2/05VGkPZA11LtjpPoZPaY63A
-        pD8vGUpLde2i8Xeu3yNpleGpo4howJ9GIfSdaSoruNfpKDdhzsGhkW+hIdnuibbG
-        6dB1jAdwiBHJNCV4FGuKPh40dmLBeCSQyTQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id SGnDfYS0hc-m for <linux-ide@vger.kernel.org>;
-        Sun, 11 Sep 2022 07:18:45 -0700 (PDT)
-Received: from [10.225.1.43] (unknown [10.225.1.43])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MQX024lcsz1RvLy;
-        Sun, 11 Sep 2022 07:18:42 -0700 (PDT)
-Message-ID: <99d7c533-f19e-a52a-e532-2a07cd78e9b9@opensource.wdc.com>
-Date:   Sun, 11 Sep 2022 23:18:40 +0900
+        with ESMTP id S229988AbiILHxJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2022 03:53:09 -0400
+Received: from mail-qt1-x836.google.com (mail-qt1-x836.google.com [IPv6:2607:f8b0:4864:20::836])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D04AB22B1C
+        for <linux-ide@vger.kernel.org>; Mon, 12 Sep 2022 00:53:08 -0700 (PDT)
+Received: by mail-qt1-x836.google.com with SMTP id g23so1031863qtu.2
+        for <linux-ide@vger.kernel.org>; Mon, 12 Sep 2022 00:53:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date;
+        bh=0mC6CVULTnfDztzrPje/feYPHnG1TGzG3CtDzj/r7jE=;
+        b=G6wjwsBH0xpdysHnjkfLFKeeSxvALw3acguCI7N9R4TryZQb2QLq+Y4vrZ/+N3PDKz
+         x38Ehito2zGUn2EqvTGs/Dc5Ss00Py9inLzn4qJnO+AaZ72717+yK56xayHxcOGtf2Xv
+         PWwBRoUgIzxCgnxoNAytRAHtUv2kHvLAnsmgN70B51X1BjTyiDdWuiGF9sW+8psyVqbN
+         hnJkTuhtbNbkVcl23QE6X5yO35JuDOxA+kb4dVIdo8P6s7j9qPnlkz3rU2+svFDFE+jq
+         pbtr5fWDDppGvujRB3ona8B+FnJEFy46dD3dJmc06qiWkguohrWIL9UnKrE8CwVYvrTl
+         K6cA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=0mC6CVULTnfDztzrPje/feYPHnG1TGzG3CtDzj/r7jE=;
+        b=PXnT+xtniYlv0lINCiWp57WeIuocXWZrHuiGodKKglIxYoDlItGoRDA17VKrora4m5
+         cnbtKUqYkfQcEW1PXcRG3NmElMNc5SAK+9vBhyFeFCuuA8NuSZfATp8T4CASwt89xZ60
+         qzBKCpf+GxDroNzNyiUfPBZSlJ51yDVBOUPi8gC/yk1iG5hWBrJLX5cexs0G5iPuBVeK
+         NgCUtlYDsUtFHY6e/aiga9Tai3d6akFyi6iLcqf8UFe+f/lxjn1WvDf3ZTB9Kpa5Io67
+         HmvO0qrNT037pWnzcvu279R6lgB+aVZMkNf5ZVZBrGAn5hbE6BhwfcjSsBRWLp4GBY8Q
+         g6fg==
+X-Gm-Message-State: ACgBeo3yWg26izLtHs4lBSVLMvKX3RyaGVnihg15jQZvoHKQpAi+JVFZ
+        MWHzIg/Dd9IjRdT+jhvu1NNl/HtUi37RyUT+Z6A=
+X-Google-Smtp-Source: AA6agR6qUefbY8In6SYx6LPa+1O17wFencwfnL7NV6cTQBOq8LhZKRw0ajDWSFXIGiclxoEsRidKbuYq0ttQHY4nVxI=
+X-Received: by 2002:a05:622a:58c:b0:343:5b5a:41ec with SMTP id
+ c12-20020a05622a058c00b003435b5a41ecmr22081181qtb.377.1662969188009; Mon, 12
+ Sep 2022 00:53:08 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.2.2
-Subject: Re: [PATCH v2] powerpc: select HAVE_PATA_PLATFORM in PPC instead of
- creating a PPC dependency
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+References: <CAHXXO6Eio2LecHS3i7C7yeWOrGFdMA4HTDB=d7azS_67zw5cyg@mail.gmail.com>
+ <48bb6122-626d-aae1-fb96-2c40455f0303@opensource.wdc.com> <CAHXXO6GdTPMgBt_sjh_4QaZgYdOwNaikMzWNrMiBepiX=_aKTg@mail.gmail.com>
+ <424c35de52b7ade5eaec620b308cc0345fb3731f.camel@wdc.com> <CAHXXO6Gj1Tn6C=_CZ2eB5+V0-51Lt=g6PMnazwym_nnXsFNMpg@mail.gmail.com>
+ <fb5b1dda-fa31-077c-f075-c0cffdc689f7@opensource.wdc.com> <13bae786-c912-500a-ab60-af88f63ca576@suse.de>
+ <ab34bac2-a48e-a247-b79c-c1e55bbad98c@opensource.wdc.com> <CAHXXO6HDRmcvhYRYZq66ZHWqc82x6a4Q8NstAvZdxY8yVrA_zQ@mail.gmail.com>
+ <CAHXXO6HZDNdsUC69COBU9MpEgkCCKJNw3OceBgW23WSAG+_wBw@mail.gmail.com>
+ <68bba1fd-1105-791b-433d-4917e74a0c14@opensource.wdc.com> <ed854cd3-3456-4dfc-e589-40f4946bb0e7@suse.de>
+ <396b2bb5-533f-2a9c-66f2-c92465d54df1@opensource.wdc.com> <CAHXXO6ECthyiomdCCR8YaR6O8tq8XhhHn-sX3nRTnjNYkWCVLw@mail.gmail.com>
+ <50673ba5-6cca-23df-e09e-d7b3f7113896@opensource.wdc.com>
+In-Reply-To: <50673ba5-6cca-23df-e09e-d7b3f7113896@opensource.wdc.com>
+From:   =?UTF-8?Q?Peter_Fr=C3=B6hlich?= <peter.hans.froehlich@gmail.com>
+Date:   Mon, 12 Sep 2022 09:52:56 +0200
+Message-ID: <CAHXXO6EYxC3B6L5ur7DrShmpwdw9YsqrnpRBoY7X9paTzWmD2g@mail.gmail.com>
+Subject: Re: libata-scsi: ata_to_sense_error handling status 0x40
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
         "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc:     "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20220909090343.21886-1-lukas.bulwahn@gmail.com>
- <21359abe-c3c9-4aa8-8ebf-75ff64cb1935@www.fastmail.com>
- <2379456e-4f18-d619-10bf-022327de0463@csgroup.eu>
- <4b33bffc-2b6d-46b4-9f1d-d18e55975a5a@www.fastmail.com>
- <0ad5f339-de31-2849-34a1-928ae65cc696@opensource.wdc.com>
- <c4f3d527-7e70-4077-b40b-129144d79374@www.fastmail.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <c4f3d527-7e70-4077-b40b-129144d79374@www.fastmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/09/11 21:41, Arnd Bergmann wrote:
-> On Sun, Sep 11, 2022, at 1:54 PM, Damien Le Moal wrote:
->> On 2022/09/09 20:31, Arnd Bergmann wrote:
->>>  
->>>  config PATA_PLATFORM
->>> -	tristate "Generic platform device PATA support"
->>> -	depends on EXPERT || PPC || HAVE_PATA_PLATFORM
->>> +	tristate "Generic platform device PATA support" if EXPERT || HAVE_PATA_PLATFORM
->>
->> Shouldn't this be:
->>
->> 	tristate "Generic platform device PATA support" if EXPERT || PPC
->>
->> ?
->>
->> And while at it, it would be nice to add "|| COMPILE_TEST" too.
-> 
-> The idea was that this can be selected by CONFIG_PATA_OF_PLATFORM
-> in any configuration that has CONFIG_OF enabled. Since PPC
-> has CONFIG_OF enabled unconditionally, there is no need to
-> make this option visible separately.
-> 
-> Same for compile-testing: since CONFIG_OF can be enabled on
-> any architecture, PATA_OF_PLATFORM is already covered by
-> allmodconfig builds anywhere. The separate HAVE_PATA_PLATFORM
-> is only needed for machines that want the non-OF pata-platform
-> module (sh, m68k-mac, mips-sibyte arm-s3c-simtec).
+Apologies everybody, I dropped the ball on this a little, see below.
 
-Got it. Thanks for the details.
+On Fri, Sep 2, 2022 at 10:41 AM Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
+> On 9/2/22 15:34, Peter Fr=C3=B6hlich wrote:
+> > I don't think the drive wants to "signal" anything, instead it simply
+> > "disappears" at some point. The "original" error is "Emask 0x4
+> > (timeout)". So here's an example from early on when I had not made
+> > many kernel changes yet:
+>
+> Sounds like the drive FW is crashing...
 
-> 
->        Arnd
+That, or maybe the interaction between the SATA controller and the
+drive not being the most awesome. As I hinted before, we've had this
+with different disks, both WD and Samsung disks, but the controller is
+the same. Which, BTW, is this one:
 
--- 
-Damien Le Moal
-Western Digital Research
+02:00.0 SATA controller: Marvell Technology Group Ltd. Device 9215 (rev 11)
 
+As far as I can tell, no major ATA quirks in the driver for that
+thing, just a general PCI quirk that seems to apply to a bunch of
+these Marvell chips.
+
+> Are you running this drive with device/queue_depth set to 1 ? What is
+> issuing a WRITE DMA instead of the NCQ equivalent ? Is this a passthrough
+> command ?
+
+The NCQ feature is indeed switched off because we've had problems with
+other disks (spinning rust IIRC) crashing due to their NCQ
+implementation being buggy. That's a different problem and has, to my
+knowledge, nothing to do with the stuff here. Except that we're not
+using "MULTI" commands without NCQ if I understand it correctly.
+
+Here, finally, is why I "dropped the ball" on this thread. I played
+with kernel command line parameters ON A LARK and it turns out that if
+I say "libata.force=3Dpio4" then for whatever reason all these issues go
+away, I can no longer reproduce the timeouts or the attendant "wrong
+error message" that made me post here originally. From what I gather
+(and I may be very wrong here) forcing "pio4" makes the driver use yet
+another set of commands, and THOSE commands seem to confuse neither
+the SATA controller nor the disk anymore. Quick benchmarks showed some
+loss in speed and we're still trying to figure out more of the
+details, but again, the timeouts disappeared.
+
+I don't like the fact that I am no closer to understanding what is
+actually wrong here, but maybe this data point helps someone else
+formulate a new theory of what's happening. BTW, despite "pio4" when
+you ask the disks what they are using, they keep saying udma5. Another
+thing I don't quite understand, but again, someone more knowledgeable
+might.
+
+Cheers,
+Peter
