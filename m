@@ -2,54 +2,36 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD64ECAAD8
-	for <linux-ide@archiver.kernel.org>; Tue, 13 Sep 2022 16:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B056C54EE9
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Sep 2022 17:29:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231309AbiIMQhQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 13 Sep 2022 12:37:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47506 "EHLO
+        id S232949AbiIMR3t (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 13 Sep 2022 13:29:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231300AbiIMQhA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Sep 2022 12:37:00 -0400
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04on20623.outbound.protection.outlook.com [IPv6:2a01:111:f400:7e8c::623])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D480FB6D73;
-        Tue, 13 Sep 2022 08:31:42 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S1brjs9E1PCNjxjbYrmPOkSRVClp/GedbgGLFxOnspsYgodH23Gj2bw50T7YYP24dz27rmOGf0KwpkknEPRb/e+Hq6+QLm2OI3BTAMqxKY1MuFs1u9wS7BQ5oZDDWLyILfBBqChkEY1RvCRZ+EMoYv3wP/3EYbSvtcTtRMD0JxrthfloBrf0KPsQAiLObhIKZJnnnJu5IA7HkeuboLqFbIyopWND9307iAP06xTbJgIu4phbNRI+JS0dQzMYD2OKILhN260cXmWvNVa7I6Mk6mYUn50t56yTlBTfLQOMh2L9Ii5pt9WNJS8EQCiYG4AolWP8yozyjfk3abDVZf0LRw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EeqvKpeQ7tAzozC8yhK4Fc4X+LQhGgykDzjjNHiAabQ=;
- b=VWmWa4dVDUCilXbsb30PBcifn7s1S40KvLunammvAj0zX7NGEsXxHXZAteEKDCMnIlsPWhwaZoRm9YgHVQqdpm5bizk0znRQLX/ZFzcCr0zibQCLOkrW/cMSnHskeJyeeomNKoUq+qxkia5UwjSD2HiWHudjWkSPiefVO+ygwCKgOip5mvvUuCwHsjaMyvF+fdjE6HcEf/7Qz+woE4fnBfb9BSUp9gNGSnlqpJzJfZfRM/58lVukLem4IGrymIcpvg6JiteV3mNiuv7f7X2FBVqcAPFhiwOiDdX3+7UAIUoQZC5k+A4SHDfV9SUPXHw6dG9jidMyBqqC7ku9/J/7Nw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EeqvKpeQ7tAzozC8yhK4Fc4X+LQhGgykDzjjNHiAabQ=;
- b=FVboeKw9cx2BKIw4KYzjbXFhDzgTBCvlAjdwS/bA1A7+eMqDLHHLu59IqBXyLdGazRWvNTTbg5BhoBM7YgOks26EqE+26EwTt3q8sifdsQ5/hIZksf+VO0fqqnmoehUvA/4agu/tGT525qWzp/mnlA5YgMXeAWicLixDiqZTJ18=
-Received: from MN0PR12MB6101.namprd12.prod.outlook.com (2603:10b6:208:3cb::10)
- by PH0PR12MB5608.namprd12.prod.outlook.com (2603:10b6:510:143::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5612.22; Tue, 13 Sep
- 2022 15:28:34 +0000
-Received: from MN0PR12MB6101.namprd12.prod.outlook.com
- ([fe80::3565:585c:3431:216c]) by MN0PR12MB6101.namprd12.prod.outlook.com
- ([fe80::3565:585c:3431:216c%7]) with mapi id 15.20.5612.022; Tue, 13 Sep 2022
- 15:28:34 +0000
-From:   "Limonciello, Mario" <Mario.Limonciello@amd.com>
-To:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     Hans de Goede <hdegoede@redhat.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 3/3] ata: ahci: Skip 200 ms debounce delay for AMD 300
+        with ESMTP id S232941AbiIMR3X (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Sep 2022 13:29:23 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA9439F8CD;
+        Tue, 13 Sep 2022 09:18:37 -0700 (PDT)
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 38E4161EA1932;
+        Tue, 13 Sep 2022 17:23:16 +0200 (CEST)
+Message-ID: <178704d0-b5fd-f750-b77e-fece6c6d81dd@molgen.mpg.de>
+Date:   Tue, 13 Sep 2022 17:23:15 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH v2 3/3] ata: ahci: Skip 200 ms debounce delay for AMD 300
  Series Chipset SATA Controller
-Thread-Topic: [PATCH v2 3/3] ata: ahci: Skip 200 ms debounce delay for AMD 300
- Series Chipset SATA Controller
-Thread-Index: AQHYPWp+2eAC0XLlKkGwEMOfwwgcjqzKYAEwgAILTACAAB/rAIAAGMyAgAADa4CADPjgAIAAjBuAgABoqYCAACLfgIBe4WeAgAEXX4CAjXPcgIACbmyAgBP7p4CAAAE4EA==
-Date:   Tue, 13 Sep 2022 15:28:34 +0000
-Message-ID: <MN0PR12MB6101E77F03E5A21AEC8A5D6DE2479@MN0PR12MB6101.namprd12.prod.outlook.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Mario Limonciello <Mario.Limonciello@amd.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 References: <20220321212431.13717-1-pmenzel@molgen.mpg.de>
  <20220321212431.13717-3-pmenzel@molgen.mpg.de>
  <BL1PR12MB5157DDFD5E75360F032346D3E2169@BL1PR12MB5157.namprd12.prod.outlook.com>
@@ -65,171 +47,93 @@ References: <20220321212431.13717-1-pmenzel@molgen.mpg.de>
  <3135eed0-b7e3-42fa-5b6c-80360f34e428@opensource.wdc.com>
  <893fe832-d522-112e-53ec-0f030c15af0d@molgen.mpg.de>
  <318b0452-9814-6276-95a5-10478e5a1b7d@opensource.wdc.com>
- <178704d0-b5fd-f750-b77e-fece6c6d81dd@molgen.mpg.de>
-In-Reply-To: <178704d0-b5fd-f750-b77e-fece6c6d81dd@molgen.mpg.de>
-Accept-Language: en-US
 Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_d4243a53-6221-4f75-8154-e4b33a5707a1_Enabled=true;
- MSIP_Label_d4243a53-6221-4f75-8154-e4b33a5707a1_SetDate=2022-09-13T15:27:48Z;
- MSIP_Label_d4243a53-6221-4f75-8154-e4b33a5707a1_Method=Privileged;
- MSIP_Label_d4243a53-6221-4f75-8154-e4b33a5707a1_Name=Public-AIP 2.0;
- MSIP_Label_d4243a53-6221-4f75-8154-e4b33a5707a1_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;
- MSIP_Label_d4243a53-6221-4f75-8154-e4b33a5707a1_ActionId=1c61af36-c934-4222-91a4-0eb9c6f99703;
- MSIP_Label_d4243a53-6221-4f75-8154-e4b33a5707a1_ContentBits=1
-msip_label_d4243a53-6221-4f75-8154-e4b33a5707a1_enabled: true
-msip_label_d4243a53-6221-4f75-8154-e4b33a5707a1_setdate: 2022-09-13T15:28:32Z
-msip_label_d4243a53-6221-4f75-8154-e4b33a5707a1_method: Privileged
-msip_label_d4243a53-6221-4f75-8154-e4b33a5707a1_name: Public-AIP 2.0
-msip_label_d4243a53-6221-4f75-8154-e4b33a5707a1_siteid: 3dd8961f-e488-4e60-8e11-a82d994e183d
-msip_label_d4243a53-6221-4f75-8154-e4b33a5707a1_actionid: 09c42ab2-ed27-4d9e-ac30-024bf618ff08
-msip_label_d4243a53-6221-4f75-8154-e4b33a5707a1_contentbits: 0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN0PR12MB6101:EE_|PH0PR12MB5608:EE_
-x-ms-office365-filtering-correlation-id: 9aacdec0-a72f-4562-b810-08da959c9f50
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: M6wohccedsc6Rn5xcud/eAUxbFpM0OTSFQQJoDfUvMcNVs49Bk3PvvdelFAlj4GCadgQE4skzIz5JxkBsz2OyfvVdEdX472sjYxrDcaTh2RG4wb4imDJyRxtL+IjijSywOlA9WDSVGUPhlQjkrFcvYr5lrJBkoHrbyT2MGIQWTwYiaQ0K1UTVhu8tFSNZaZ2ianf94Wgx7aQF528m4n8Ayc0Px8zgNo88qy82Tee1RaY8y87zKZWv1HCPG8Go78IRM5grzfAq0v5grLx8XTfnD0BqsZxB8ZMMEQlI+QfSw0MmUBX6EoCmE7UztbVnXOptp5SwfykTEhhyJCZ7PTv1vlXoslx+kFFxZSB30sh3f3Sg62zRL32uSS2YqBSZNrQ/K2G621ZADEhzRu84hMz/GEDttKQxch27UYyfTJI8voRfGvBRtwdX1pjiljTZICjgzIWRyUxQdixxCFWch274+qoEt0J4q/P0cuuDoddpPF31rQXNVEa67h55+5zFwB+1kgP4w62BWh/aBQzMcDEKfLKbDbhTRq8jxt6xdzNgptjlMI/IT8P3Q4FdN0I2QvDWG6WmXBtSMbpXl2/XhJJyk8Gtfbh3EZmSMhMR25VQtDuSTNRw9BLYUHG0kITJl2/XgTC4DcQdFztIAbJQaRtxAq1sYCJP85YHiYjPeNQLPJBYvkBT6rpmsAN92bTmxNiA8cDZ7i7MP8TCEucdo8i1up92OFUn5woDwiN5y4kqhZXKkrauCOdmxdry/azHZxB5k9ddDxgcaC0vMIC3YHXPQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN0PR12MB6101.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(376002)(39860400002)(396003)(346002)(366004)(136003)(451199015)(54906003)(26005)(55016003)(71200400001)(9686003)(8936002)(316002)(110136005)(83380400001)(66446008)(8676002)(52536014)(33656002)(41300700001)(66476007)(64756008)(4326008)(86362001)(53546011)(5660300002)(76116006)(66556008)(66946007)(6506007)(38070700005)(186003)(7696005)(122000001)(2906002)(38100700002)(478600001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?RjIyNkJvTXdxS3g3MHN5UGlDelpvSklhR0tNWXduUGNJS1NOZ0FjVWI1b3p5?=
- =?utf-8?B?R2lBWVlIamVoYzhLOEd1OW92WDl2THY2ZGRNKzh6Z3FVVnhNSXVTUGxlbGti?=
- =?utf-8?B?bmpwM0s0MXlVYXk4ZzFjSUxmM05yWGs2cFFCRDhIa01oZzduRGo1cHRUWnd6?=
- =?utf-8?B?bStQTitRN3pMZDNXKzczcjhKemoyNC9Fd0JIdXIzTndQZnBsRXJLNTZVK0xR?=
- =?utf-8?B?UDdzT0hsY2VCTmRVaEx2bFRxcVJBLzgvV1k4WS9FNGlTa2Y1N0MzeGgvUGNv?=
- =?utf-8?B?U3A0N3hlUGNsZ1kvMG04YlNRaDc3QXZSenN6NTN6OE00Q1ZBbHU2dG5SNEo2?=
- =?utf-8?B?NnlhWlhlM0FWd0UyQzBYcjhVSTg2azZoUlZ5dEp5MlZSMXJPYUxQaktuRGN2?=
- =?utf-8?B?SGxTZVYrQ2hRYzVKOWpxTHYvekVrVXFDTkpWZkMycUlJeVBtTmtpSm1yREVq?=
- =?utf-8?B?QkcxamF5MlY1YlZsZGtCZk1GZ1laaHJBbUMrcEw5b3M3TmN0V1VzSHkvUVVM?=
- =?utf-8?B?NkZrV2hQeU94YXMzb3hTaVpwK1oxMS9odmRyQzV5Wlg2dldlWGpvZFErekgr?=
- =?utf-8?B?MnYxamhYZ0VpSUVhQzZWOHluVGU5cExpWTExRldNV3AzQk5GZWY3eExtWCsy?=
- =?utf-8?B?ektHODdJakMrbGtKZExHK0dQMFl0ZVBLSXFwTDRyZC9MMWFLVUx4R0VheXFP?=
- =?utf-8?B?Zi9rQTlZSzY3dzhUU0tLUVptaEwzZFFiNVBCanQwUFlISTNPV2ZhY2RqeHNh?=
- =?utf-8?B?TnFGbm55RXNKL3kzT1paM3FRRVRaM0U0U3V0ZmhZRzN5V0tKeGpqbVcrMzRs?=
- =?utf-8?B?ME8veXVyNy8xTU5BeXNtWG1MWndVUGZNRFZwUmlkaEpPY1ZsSEFDS2cxT1Rn?=
- =?utf-8?B?ZnJmL3JPTm5qU2RjOXhPT3RzdDM1YnFGOVFPQlVCMzRvbmRveDIvWHpkbC9O?=
- =?utf-8?B?ZU5FbExQYktNUmwxQXRzUlVkMEx6c01MUTcvSHFpR2dJckIyYWQ5cDVZM04x?=
- =?utf-8?B?a3FLVXdGV0ZpN2xBZlE1M1RiZ29oeG5QVEd4V2NtYmxvZWFHcHh1ZFVFQ2Ru?=
- =?utf-8?B?TXFnRm9QTGhrNzJLSUI5VkJFZGJGbGh6VytDUmdPajJXNkVmNnJyajRCVmdY?=
- =?utf-8?B?NGhJNy9hcXgxSFoxalBQb0NKMWZhMVk0U0RTS05aT1hoc0luV0taZjRZRkhR?=
- =?utf-8?B?MUpTc2Q3eFFsOVp0TzdkVXI4QWIvSkh4VkFjUmdaZ09vbExxbGhOZzZMOFM1?=
- =?utf-8?B?QmlqWmFXNXA2TFJGRDVJNlRleEMxUk82MVBIeVR2T2JHNFFrM2FoZjAraFh4?=
- =?utf-8?B?VE4rTVZSaFdvaGRwcmNLOERFcmJlMUF3Y1pZcmRuM0k3TVJtTlk0UThSb0Vi?=
- =?utf-8?B?Y0tvVXBxKzBrWThKNzcrL3lVY3JNNkFFTG9vZVR5U3JDTjYyZnRRRDV6dzB2?=
- =?utf-8?B?bC9xUzNwQldLR1g1QzN2OWlMSlJtRlc0WGw2MXFZTXpwQmxkd3l1bG4zTVZw?=
- =?utf-8?B?dU81QTVydUIrdmwweVJjNGY4NFp6bmhTN3p0eTR6MytOZEJlaUNUYmtraHVW?=
- =?utf-8?B?d1VtSXora3FHSmQraGgwK09McFI4V1JwUll1WW1uNzBzeUlnT3lYeHg4NmVE?=
- =?utf-8?B?dVpKanMvT3JIenFxREVyL2QzeHNpWVRaVWlIaTNyb0lMWkJPbFdMaTByTXZC?=
- =?utf-8?B?VGNLaXhZa0EycEtMSFJVL3ZCaHV2dmJQaVVTSkdQVzdKT0VndjNQNXRkZjho?=
- =?utf-8?B?amsvekpZcE9kTkY0Q2FTblo5dm04ak1XSHQreGgrcEErOWNad21OMnU5cjNN?=
- =?utf-8?B?TnFkaERrVEJ2K3VkZzNYbHZJRElwd0tsZ1hHdDQvN0dEK3BGU0I5MkxmOEVC?=
- =?utf-8?B?ZzlOSTNDYmNFU0ZvU1F1ejI4MUhrNWdGbmV1djFGMENVbWNhL1c5TEVrWUJp?=
- =?utf-8?B?R1c4WFMyUUhWUERLRUpiOUhaR3FwdHhZL3hLYWRZc2hVN2ZxN3BmOGZ2SUZD?=
- =?utf-8?B?WmxKRnExQnRQeVpiOHdacnY5ZW10V2NmQjZveVRCa0R2bTFyNXhiYTRxUzlT?=
- =?utf-8?B?ZHNna1pUNW1ncUdncmhsVjBKOVF3YlBpTmZkeW1OWHlUbG1PU3ZoeVlQM1FP?=
- =?utf-8?Q?Ynbc=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN0PR12MB6101.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9aacdec0-a72f-4562-b810-08da959c9f50
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Sep 2022 15:28:34.6338
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Q4IKvFCYUKuv7mQsLK5OwaDn7dkCwV8jYHxYotTKyykOmAapT2Zj98Lm3r12vJeZO9Le/MyiMGv+ybGvlFfhNA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5608
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <318b0452-9814-6276-95a5-10478e5a1b7d@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-W1B1YmxpY10NCg0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUGF1
-bCBNZW56ZWwgPHBtZW56ZWxAbW9sZ2VuLm1wZy5kZT4NCj4gU2VudDogVHVlc2RheSwgU2VwdGVt
-YmVyIDEzLCAyMDIyIDEwOjIzDQo+IFRvOiBEYW1pZW4gTGUgTW9hbCA8ZGFtaWVuLmxlbW9hbEBv
-cGVuc291cmNlLndkYy5jb20+DQo+IENjOiBMaW1vbmNpZWxsbywgTWFyaW8gPE1hcmlvLkxpbW9u
-Y2llbGxvQGFtZC5jb20+OyBIYW5zIGRlIEdvZWRlDQo+IDxoZGVnb2VkZUByZWRoYXQuY29tPjsg
-bGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgTEtNTCA8bGludXgtDQo+IGtlcm5lbEB2Z2VyLmtl
-cm5lbC5vcmc+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMy8zXSBhdGE6IGFoY2k6IFNraXAg
-MjAwIG1zIGRlYm91bmNlIGRlbGF5IGZvciBBTUQgMzAwDQo+IFNlcmllcyBDaGlwc2V0IFNBVEEg
-Q29udHJvbGxlcg0KPiANCj4gRGVhciBEYW1pZW4sDQo+IA0KPiANCj4gQW0gMDEuMDkuMjIgdW0g
-MDA6MTMgc2NocmllYiBEYW1pZW4gTGUgTW9hbDoNCj4gPiBPbiA4LzMwLzIyIDE4OjA1LCBQYXVs
-IE1lbnplbCB3cm90ZToNCj4gDQo+IFvigKZdDQo+IA0KPiA+PiBBbSAwMS4wNi4yMiB1bSAxMDo1
-OCBzY2hyaWViIERhbWllbiBMZSBNb2FsOg0KPiA+Pj4gT24gNi8xLzIyIDAxOjE4LCBQYXVsIE1l
-bnplbCB3cm90ZToNCj4gPj4+Pj4+PiBXaXRoIHRoYXQgaW4gbWluZCwgSSBhbSBub3QgcGxhbm5p
-bmcgdG8gYXBwbHkgeW91ciBwcmV2aW91cyBwYXRjaGVzDQo+ID4+Pj4+Pj4gZm9yIDUuMTgsIGFz
-IHRoZXkgd291bGQgY29uZmxpY3QgYW5kIHdvdWxkIG9ubHkgZW5kIHVwIGJlaW5nIGNodXJuDQo+
-ID4+Pj4+Pj4gc2luY2UgdGhlIGRlbGF5IHJlbW92YWwgYnkgZGVmYXVsdCB3aWxsIHVuZG8geW91
-ciBjaGFuZ2VzLg0KPiA+Pj4+Pj4gT2J2aW91c2x5LCBJIGRvIG5vdCBhZ3JlZSwgYXMgdGhpcyB3
-b3VsZCBnaXZlIHRoZSBhIGxpdHRsZSBiaXQgbW9yZQ0KPiA+Pj4+Pj4gdGVzdGluZyBhbHJlYWR5
-LCBpZiBjaGFuZ2luZyB0aGUgZGVmYXVsdCBpcyBhIGdvb2QgaWRlYS4gQWxzbywgaWYgdGhlDQo+
-ID4+Pj4+PiBjb25mbGljdCB3aWxsIGJlIGhhcmQgdG8gcmVzb2x2ZSwgSSBoYXBwaWx5IGRvIGl0
-ICh0aGUgcGF0Y2hlcyBjb3VsZA0KPiA+Pj4+Pj4gZXZlbiBiZSByZXZlcnRlZCBvbiB0b3Ag4oCT
-IGdpdCBjb21taXRzIGFyZSBjaGVhcCBhbmQgZWFzeSB0byBoYW5kbGUpLg0KPiA+Pj4+Pg0KPiA+
-Pj4+PiBUaGUgY29uZmxpY3QgaXMgbm90IGhhcmQgdG8gcmVzb2x2ZS4gVGhlIHBvaW50IGlzIHRo
-YXQgbXkgcGF0Y2hlcyBjaGFuZ2luZw0KPiA+Pj4+PiB0aGUgZGVmYXVsdCB0byBubyBkZWJvdW5j
-ZSBkZWxheSBjb21wbGV0ZWx5IHJlbW92ZSB0aGUgY2hhbmdlcyBvZiB5b3VyDQo+ID4+Pj4+IHBh
-dGNoIHRvIGRvIHRoZSBzYW1lIGZvciBvbmUgb3Igc29tZSBhZGFwdGVycy4gU28gYWRkaW5nIHlv
-dXIgcGF0Y2hlcw0KPiBub3cNCj4gPj4+Pj4gYW5kIHRoZW4gbXkgcGF0Y2hlcyBvbiB0b3AgZG9l
-cyBub3QgbWFrZSBtdWNoIHNlbnNlIGF0IGFsbC4NCj4gPj4+Pj4NCj4gPj4+Pj4gSWYgdG9vIG1h
-bnkgcHJvYmxlbXMgc2hvdyB1cCBhbmQgSSBlbmQgdXAgcmV2ZXJ0aW5nL3JlbW92aW5nIHRoZQ0K
-PiBwYXRjaGVzLA0KPiA+Pj4+PiB0aGVuIEkgd2lsbCBiZSBoYXBweSB0byB0YWtlIHlvdXIgcGF0
-Y2hlcyBmb3IgdGhlIGFkYXB0ZXIgeW91IHRlc3RlZC4gTm90ZQ0KPiA+Pj4+PiB0aGF0ICphbGwq
-IHRoZSBtYWNoaW5lcyBJIGhhdmUgdGVzdGVkIHNvIGZhciBhcmUgT0sgd2l0aG91dCBhIGRlYm91
-bmNlDQo+ID4+Pj4+IGRlbGF5IHRvby4gU28gd2UgY291bGQgYWRkIHRoZW0gdG9vLi4uIEFuZCBl
-bmR1cCB3aXRoIGEgbG9uZyBsaXN0IG9mDQo+ID4+Pj4+IGFkYXB0ZXJzIHRoYXQgdXNlIHRoZSBk
-ZWZhdWx0IGFoY2kgZHJpdmVyIHdpdGhvdXQgZGVib3VuY2UgZGVsYXkuIFRoZQ0KPiBnb2FsDQo+
-ID4+Pj4+IG9mIGNoYW5naW5nIHRoZSBkZWZhdWx0IHRvIG5vIGRlbGF5IGlzIHRvIGF2b2lkIHRo
-YXQuIFNvIGZhciwgdGhlIGFkYXB0ZXJzDQo+ID4+Pj4+IEkgaGF2ZSBpZGVudGlmaWVkIHRoYXQg
-bmVlZCB0aGUgZGVsYXkgaGF2ZSB0aGVpciBvd24gZGVjbGFyYXRpb24sIHNvIHdlDQo+ID4+Pj4+
-IG9ubHkgbmVlZCB0byBhZGQgYSBmbGFnIHRoZXJlLiBTaW1wbGVyIGNoYW5nZSB0aGF0IGxpc3Rp
-bmcgdXAgYWRhcHRlcnMNCj4gPj4+Pj4gdGhhdCBhcmUgT0sgd2l0aG91dCB0aGUgZGVsYXkuDQo+
-ID4+Pj4+DQo+ID4+Pj4+PiBBbnl3YXksIEkgd3JvdGUgbXkgcGllY2UsIGJ1dCB5b3UgYXJlIHRo
-ZSBtYWludGFpbmVyLCBzbyBpdOKAmXMgeW91ciBjYWxsDQo+ID4+Pj4+PiBhbmQgSSBzdG9wIGJv
-dGhlcmluZyB5b3UuDQo+ID4+Pj4NCj4gPj4+PiBJIGp1c3Qgd2FudGVkIHRvIGlucXVpcmUgYWJv
-dXQgdGhlIHN0YXR1cyBvZiB5b3VyIGNoYW5nZXM/IEkgZG8gbm90IGZpbmQNCj4gPj4+PiB0aGVt
-IGluIHlvdXIgYGZvci01LjE5YCBicmFuY2guIEFzIHRoZXkgc2hvdWxkIGJlIHRlc3RlZCBpbiBs
-aW51eC1uZXh0DQo+ID4+Pj4gYmVmb3JlIHRoZSBtZXJnZSB3aW5kb3cgb3BlbnMsIGlmIHRoZXNl
-IGFyZSBub3QgcmVhZHkgeWV0LCBjb3VsZCB5b3UNCj4gPj4+PiBwbGVhc2UgYXBwbHkgbXkgKHRl
-c3RlZCkgcGF0Y2hlcz8NCj4gPj4+DQo+ID4+PiBJIGNvdWxkLCBidXQgNS4xOSBub3cgaGFzIGFu
-IHVwZGF0ZWQgbGliYXRhLmZvcmNlIGtlcm5lbCBwYXJhbWV0ZXIgdGhhdA0KPiA+Pj4gYWxsb3dz
-IG9uZSB0byBkaXNhYmxlIHRoZSBkZWJvdW5jZSBkZWxheSBmb3IgYSBwYXJ0aWN1bGFyIHBvcnQg
-b3IgZm9yIGFsbA0KPiA+Pj4gcG9ydHMgb2YgYW4gYWRhcHRlci4gU2VlIGxpYmF0YS5mb3JjZT14
-Lnk6bm9kYmRlbGF5IGZvciBhIHBvcnQgeSBvZg0KPiA+Pj4gYWRhcHRlciB4IG9yIGxpYmF0YS5m
-b3JjZT14Om5vZGJkZWxheSBmb3IgYWxsIHBvcnRzIG9mIGFkYXB0ZXIgeC4NCj4gPj4NCj4gPj4g
-VGhpcyBpcyBjb21taXQgM2FmOWNhNGQzNDFkIChhdGE6IGxpYmF0YS1jb3JlOiBJbXByb3ZlIGxp
-bmsgZmxhZ3MgZm9yY2VkDQo+ID4+IHNldHRpbmdzKSBbMV0uIFRoYW5rIHlvdSwgdGhpcyBpcyBy
-ZWFsbHkgdXNlZnVsLCBidXQgZWFzaWx5IG92ZXJsb29rZWQuIDstKQ0KPiA+Pg0KPiA+Pj4gSSBz
-dGlsbCBwbGFuIHRvIHJldmlzaXQgdGhlIGFyYml0cmFyeSBsaW5rIGRlYm91bmNlIHRpbWVycyBi
-dXQgSSBwcmVmZXIgdG8NCj4gPj4+IGhhdmUgdGhlIHBvd2VyIG1hbmFnZW1lbnQgY2xlYW51cCBh
-cHBsaWVkIGZpcnN0LiBUaGUgcmVhc29uIGlzIHRoYXQgbGluaw0KPiA+Pj4gZGVib3VuY2UgZGVw
-ZW5kcyBvbiBQSFkgcmVhZGluZXNzLCB3aGljaCBpdHNlbGYgZGVwZW5kcyBoZWF2aWx5IG9uIHBv
-d2VyDQo+ID4+PiBtb2RlIHRyYW5zaXRpb25zLiBNeSBwbGFuIGlzIHRvIGdldCB0aGlzIGRvbmUg
-ZHVyaW5nIHRoaXMgY3ljbGUgZm9yDQo+ID4+PiByZWxlYXNlIHdpdGggNS4yMCBhbmQgdGhlbiBm
-aXggb24gdG9wIHRoZSBhcmJpdHJhcnkgZGVsYXlzIGZvciA1LjIxLg0KPiA+Pg0KPiA+PiBOaWNl
-LiBDYW4geW91IHNoYXJlIHRoZSBjdXJyZW50IHN0YXR1cz8NCj4gPg0KPiA+IE5vIHByb2dyZXNz
-LiBJIG5lZWQgdG8gcHV0IHRvZ2V0aGVyIGEgc2VyaWVzIHdpdGggYWxsIHRoZSBwYXRjaGVzIHRo
-YXQNCj4gPiB3ZXJlIHNlbnQgYWxyZWFkeS4gVW5sZXNzIE1hcmlvIGNhbiByZXNlbmQgc29tZXRo
-aW5nID8NCj4gDQo+IE5vIHJlcGx5IGZyb20gTWFyaW8uDQoNCkkgdGhpbmsgd2hhdCBoYXBwZW5l
-ZCBoZXJlIGlzIHRoZXJlIHdhcyByZWxhdGVkIHBhdGNoZXMgZnJvbSBhbm90aGVyIHBhcnR5DQp0
-aGF0IGdvdCB0YW5nbGVkIHVwIHdpdGggdGhpcy4NCg0KPiANCj4gPj4+IElzIHRoZSBsaWJhdGEu
-Zm9yY2Ugc29sdXRpb24gT0sgZm9yIHlvdSB1bnRpbCB3ZSBoYXZlIGEgZmluYWwgbW9yZSBzb2xp
-ZA0KPiA+Pj4gZml4IHRoYXQgY2FuIGJlbmVmaXQgbW9zdCBtb2Rlcm4gYWRhcHRlcnMgKGFuZCBu
-b3QganVzdCB0aGUgb25lcyB5b3UNCj4gPj4+IGlkZW50aWZpZWQpPyBJZiB5b3UgZG8gaGF2ZSBh
-IHVzZSBjYXNlIHRoYXQgbmVlZHMgYSAibm9kYmRlbGF5IiBob3JrYWdlDQo+ID4+PiBkdWUgdG8g
-c29tZSBjb25zdHJhaW50IGluIHRoZSBmaWVsZCwgdGhlbiBJIHdpbGwgYXBwbHkgeW91ciBwYXRj
-aGVzLCBidXQNCj4gPj4+IHRoZXkgbGlrZWx5IHdpbGwgYmUgdm9pZGVkIGJ5IGNvbWluZyBjaGFu
-Z2VzLiBMZXQgbWUga25vdy4NCj4gPj4NCj4gPj4gSSB0aGluaywgYXBwbHlpbmcgdGhlIHBhdGNo
-IHdvdWxkIGJlIGFuIGltcHJvdmVtZW50LCBhcyBwZW9wbGUgd291bGRu4oCZdA0KPiA+PiBuZWVk
-IHRvIHVwZGF0ZSB0aGVpciBMaW51eCBrZXJuZWwgY29tbWFuZCBsaW5lLCBhbmQgSSBkbyBub3Qg
-bWluZCwgaWYgaXQNCj4gPj4gZ2V0cyByZXZlcnRlZC9kcm9wcGVkIGxhdGVyLg0KPiA+DQo+ID4g
-TGV0J3Mgc2VlIHdlcmUgdGhlIGxwbSBzdHVmZiBnb2VzIGZpcnN0Lg0KPiANCj4gSXQgc2hvdWxk
-buKAmXQgYmUgdG9vIG11Y2ggaGFzc2xlIHRvIGFkYXB0IHRoZSBscG0gc2VyaWVzIGFmdGVyIHRo
-ZSBwYXRjaA0KPiBpcyBhcHBsaWVkLg0KPiANCj4gDQo+IEtpbmQgcmVnYXJkcywNCj4gDQo+IFBh
-dWwNCg==
+Dear Damien,
+
+
+Am 01.09.22 um 00:13 schrieb Damien Le Moal:
+> On 8/30/22 18:05, Paul Menzel wrote:
+
+[…]
+
+>> Am 01.06.22 um 10:58 schrieb Damien Le Moal:
+>>> On 6/1/22 01:18, Paul Menzel wrote:
+>>>>>>> With that in mind, I am not planning to apply your previous patches
+>>>>>>> for 5.18, as they would conflict and would only end up being churn
+>>>>>>> since the delay removal by default will undo your changes.
+>>>>>> Obviously, I do not agree, as this would give the a little bit more
+>>>>>> testing already, if changing the default is a good idea. Also, if the
+>>>>>> conflict will be hard to resolve, I happily do it (the patches could
+>>>>>> even be reverted on top – git commits are cheap and easy to handle).
+>>>>>
+>>>>> The conflict is not hard to resolve. The point is that my patches changing
+>>>>> the default to no debounce delay completely remove the changes of your
+>>>>> patch to do the same for one or some adapters. So adding your patches now
+>>>>> and then my patches on top does not make much sense at all.
+>>>>>
+>>>>> If too many problems show up and I end up reverting/removing the patches,
+>>>>> then I will be happy to take your patches for the adapter you tested. Note
+>>>>> that *all* the machines I have tested so far are OK without a debounce
+>>>>> delay too. So we could add them too... And endup with a long list of
+>>>>> adapters that use the default ahci driver without debounce delay. The goal
+>>>>> of changing the default to no delay is to avoid that. So far, the adapters
+>>>>> I have identified that need the delay have their own declaration, so we
+>>>>> only need to add a flag there. Simpler change that listing up adapters
+>>>>> that are OK without the delay.
+>>>>>
+>>>>>> Anyway, I wrote my piece, but you are the maintainer, so it’s your call
+>>>>>> and I stop bothering you.
+>>>>
+>>>> I just wanted to inquire about the status of your changes? I do not find
+>>>> them in your `for-5.19` branch. As they should be tested in linux-next
+>>>> before the merge window opens, if these are not ready yet, could you
+>>>> please apply my (tested) patches?
+>>>
+>>> I could, but 5.19 now has an updated libata.force kernel parameter that
+>>> allows one to disable the debounce delay for a particular port or for all
+>>> ports of an adapter. See libata.force=x.y:nodbdelay for a port y of
+>>> adapter x or libata.force=x:nodbdelay for all ports of adapter x.
+>>
+>> This is commit 3af9ca4d341d (ata: libata-core: Improve link flags forced
+>> settings) [1]. Thank you, this is really useful, but easily overlooked. ;-)
+>>
+>>> I still plan to revisit the arbitrary link debounce timers but I prefer to
+>>> have the power management cleanup applied first. The reason is that link
+>>> debounce depends on PHY readiness, which itself depends heavily on power
+>>> mode transitions. My plan is to get this done during this cycle for
+>>> release with 5.20 and then fix on top the arbitrary delays for 5.21.
+>>
+>> Nice. Can you share the current status?
+> 
+> No progress. I need to put together a series with all the patches that
+> were sent already. Unless Mario can resend something ?
+
+No reply from Mario.
+
+>>> Is the libata.force solution OK for you until we have a final more solid
+>>> fix that can benefit most modern adapters (and not just the ones you
+>>> identified)? If you do have a use case that needs a "nodbdelay" horkage
+>>> due to some constraint in the field, then I will apply your patches, but
+>>> they likely will be voided by coming changes. Let me know.
+>>
+>> I think, applying the patch would be an improvement, as people wouldn’t
+>> need to update their Linux kernel command line, and I do not mind, if it
+>> gets reverted/dropped later.
+> 
+> Let's see were the lpm stuff goes first.
+
+It shouldn’t be too much hassle to adapt the lpm series after the patch 
+is applied.
+
+
+Kind regards,
+
+Paul
