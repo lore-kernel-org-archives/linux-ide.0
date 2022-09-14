@@ -2,112 +2,119 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3452C6FA8B
-	for <linux-ide@archiver.kernel.org>; Wed, 14 Sep 2022 14:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 945F6C6FA82
+	for <linux-ide@archiver.kernel.org>; Wed, 14 Sep 2022 14:33:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229772AbiINO1u (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 14 Sep 2022 10:27:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46546 "EHLO
+        id S230019AbiINOdp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 14 Sep 2022 10:33:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229765AbiINO1r (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2022 10:27:47 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 323A92646;
-        Wed, 14 Sep 2022 07:27:45 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id f20so18048112edf.6;
-        Wed, 14 Sep 2022 07:27:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
-         :cc:subject:date;
-        bh=JP95ma47qrdvlJsJm3fTS/uHsMwIKJEK/YCLI3Ebq8k=;
-        b=IVEuXnuTA8UzHQMeXwKt0RDG2RTegpBNa95gy7LChIIc1a6cuWpxAoDg3zSItZiWj6
-         TrtGrsJaWog/G7Z9f5WTgDFLHgUD8FKUyvZ6uX3Wqum7masupsarPkgxA5OQ1C3Nd6wl
-         4nyTGYLQTk199yhVI9YQwjJh91oVNWWssBjyFqNNSf1/xJfdTegvkLKm0FcDC66boYlE
-         2d/xv9oUvl7Sa3AayW3TAGr6KYBeaY/nTAV9RYCp+dvt+7V0qf0MfYy5NY5cU31DS61d
-         LuB3Q5ZZwEF93ne2HAES0BKJllANLIszmx3CdcF+IQPec5iWHuFKBpFob126Yf2oSYqo
-         IsaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=references:in-reply-to:message-id:date:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=JP95ma47qrdvlJsJm3fTS/uHsMwIKJEK/YCLI3Ebq8k=;
-        b=VDEL+QIRvdCKow9/b0db3u//28KwhUxgp8M0IJ4nuyL/H6+bUGCXK4fkJ5uOiaWzdi
-         XpGTevuwumi38eCfdKHwl05R9V3TYnS+yZrUyhs9k3r/CX458ayAJdv35XlnkZKvJ/5j
-         dTQmlcI2uW7uxIQVFsnXcqmKMwCHx4z/u+ymP4lkbbEBh89lZq9ckrq5r4Rp1imy3I97
-         pV1MdaR5kTM0XFs4QrQk6iVFXXGwSSKvo9+zX6RRn9hpDskPsPbjE7g49XNZVg3FtH2Q
-         BcUOMYFSvTwJRBJN206CrgOPGsS6EP/O7nFhVGF7KEPS+WsoSSmlfC3NvOmmFD+FY8RF
-         TfOA==
-X-Gm-Message-State: ACgBeo1YpAcfbOB3+YE1qpr8U1HJ+voJDU6eCP3R3Usd079NBC0ycKjJ
-        oILGCKd1NrndHmCMxooY/nc=
-X-Google-Smtp-Source: AA6agR7jrqjjbW1nGf4SWamFa9Q3aRZ4Nvb6DDs925fLoaNgiZdO+0utdRYQY1YV2FcBxWVywTEAHA==
-X-Received: by 2002:a05:6402:1655:b0:44e:b208:746d with SMTP id s21-20020a056402165500b0044eb208746dmr31218126edx.229.1663165663670;
-        Wed, 14 Sep 2022 07:27:43 -0700 (PDT)
-Received: from felia.fritz.box (200116b826cf470059b9799edefde240.dip.versatel-1u1.de. [2001:16b8:26cf:4700:59b9:799e:defd:e240])
-        by smtp.gmail.com with ESMTPSA id 18-20020a170906329200b007708635be05sm7661502ejw.4.2022.09.14.07.27.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Sep 2022 07:27:43 -0700 (PDT)
-From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
-To:     Linus Walleij <linus.walleij@linaro.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH 2/2] ata: make PATA_PLATFORM selectable only for suitable architectures
-Date:   Wed, 14 Sep 2022 16:27:13 +0200
-Message-Id: <20220914142713.29351-2-lukas.bulwahn@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220914142713.29351-1-lukas.bulwahn@gmail.com>
+        with ESMTP id S230146AbiINOdh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2022 10:33:37 -0400
+X-Greylist: delayed 178 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 14 Sep 2022 07:33:35 PDT
+Received: from wnew1-smtp.messagingengine.com (wnew1-smtp.messagingengine.com [64.147.123.26])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB5CB2C125;
+        Wed, 14 Sep 2022 07:33:35 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.west.internal (Postfix) with ESMTP id 6A99E2B059AB;
+        Wed, 14 Sep 2022 10:33:34 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute3.internal (MEProxy); Wed, 14 Sep 2022 10:33:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to; s=fm1; t=1663166013; x=1663169613; bh=0UwiLm9wU3
+        WSNfSxDyHppyIXzHYDWSLCX7HdL5pdjGA=; b=U8HqBi9PfsGkfsCdkrz12F+ZAc
+        0cDBzVgonGcmcjSkr4ufqkTjDbFfL+iykG8prjDotuDt9xGH1BidESVImJmytVUU
+        DGdHM+ct1xwQaeQ9jvRHGniTW49a4WSdOKqYuy40WAtuunl6xhqpHNkCeEZ9nwiJ
+        v/apP+JayoIOeb88koFTXLQGH1GHrHSwiprrv2gPNNg1mENDVPW0bnDgTaTl3iEN
+        LkJeowub6uYfqaogrZdkjwatc3N4sKVVHUYZjIqMDrTncNgoFyj1GLsAOW+Gbr+/
+        DdTkNyXr5wyJbixWuW88qeU7SfwBteAJ0/B1VpfMdVq8urlk7FvnxRoXK59g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm2; t=1663166013; x=1663169613; bh=0UwiLm9wU3WSNfSxDyHppyIXzHYD
+        WSLCX7HdL5pdjGA=; b=kY8PbjarEfWRSC0PCGKMCFhPOEFU9xjnQSuLRvepFcxi
+        MDZt5RTJvqtetLam3jL7Bf60+2rUoevFWdGTOKK5CYATmXtIWuO3gj3uDnQ7JTmX
+        mjh7gMEYza6vCcRLv/9XszYzFrduAi92m+IsHcQ3ghzs8JxGvfb/Y/LRqulDIKF0
+        Ow6jfbDoxVBs+xyVbbNKzqJ+cgwPPLjul2S2NukfBXm7kRvm63LOXnwaLJMa1uLD
+        ocR/sSBihW44Oi1QhfpCah0jXdEy630ICrVtN3Ks/lQJtlFOL2Iz9PxehI4tezo2
+        wsNpnsDTjp0G/GONo1NnxGuB5lzuAQEuI+WuBtBNpQ==
+X-ME-Sender: <xms:PeYhY1BXlZq-lyBD17CO7IH9CI99Pye-0rG4x254hPBM0KVMtgeHVw>
+    <xme:PeYhYzgpviN6BoUgB_LQOU1LaiGnDImFMfJEA0IbAiemhm9mE8nKL89M1TIJ0Zoup
+    WAngjyOlK4lApRxiiI>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrfeduiedgkedtucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:PeYhYwk1AJiBkKNb89UF5LFcQNV48_6gWkk7cS1dnStA73FTEy2UEQ>
+    <xmx:PeYhY_wW7N7R6mGUh9ib165mLsFQ6_8JBPv9Ct3-JIFa-BFRqrpbuA>
+    <xmx:PeYhY6T1v_v2n5m6QaDruKwQ42IJgb1J_8ECPQfoyB6cxqOHt7Z_MA>
+    <xmx:PeYhY3RxZC-g3EuWJDHOaERaVasqOCdnWjnXyDSqda5UNjdv_HdoetjRuKo>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 7A394B60086; Wed, 14 Sep 2022 10:33:33 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-934-g6274855a4c-fm-20220913.002-g6274855a
+Mime-Version: 1.0
+Message-Id: <0485fd4d-21f3-4972-8667-91959180e60f@www.fastmail.com>
+In-Reply-To: <20220914142713.29351-2-lukas.bulwahn@gmail.com>
 References: <20220914142713.29351-1-lukas.bulwahn@gmail.com>
+ <20220914142713.29351-2-lukas.bulwahn@gmail.com>
+Date:   Wed, 14 Sep 2022 16:33:13 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Lukas Bulwahn" <lukas.bulwahn@gmail.com>,
+        "Linus Walleij" <linus.walleij@linaro.org>,
+        "Russell King" <linux@armlinux.org.uk>,
+        "Catalin Marinas" <catalin.marinas@arm.com>,
+        "Will Deacon" <will@kernel.org>,
+        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
+        linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] ata: make PATA_PLATFORM selectable only for suitable
+ architectures
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-It is currently possible to select "Generic platform device PATA support"
-in two situations:
+On Wed, Sep 14, 2022, at 4:27 PM, Lukas Bulwahn wrote:
+> It is currently possible to select "Generic platform device PATA support"
+> in two situations:
+>
+>   - architecture allows the generic platform device PATA support and
+>     indicates that with "select HAVE_PATA_PLATFORM".
+>   - if the user claims to be an EXPERT by setting CONFIG_EXPERT to yes
+>
+> However, there is no use case to have Generic platform device PATA support
+> in a kernel build if the architecture definition, i.e., the selection of
+> configs by an architecture, does not support it.
+>
+> If the architecture definition is wrong, i.e., it just misses a 'select
+> HAVE_PATA_PLATFORM', then even an expert that configures the kernel build
+> should not just fix that by overruling the claimed support by an
+> architecture. If the architecture definition is wrong, the expert should
+> just provide a patch to correct the architecture definition instead---in
+> the end, if the user is an expert, sending a quick one-line patch should
+> not be an issue.
+>
+> In other words, I do not see the deeper why an expert can overrule the
+> architecture definition in this case, as the expert may not overrule the
+> config selections defined by the architecture in the large majority
+> ---or probably all other (modulo some mistakes)---of similar cases.
+>
+> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
 
-  - architecture allows the generic platform device PATA support and
-    indicates that with "select HAVE_PATA_PLATFORM".
-  - if the user claims to be an EXPERT by setting CONFIG_EXPERT to yes
+Sounds reasonable. My best guess about the intention of the EXPERT
+dependency is that it would be used for users with third-party
+board files or dts files referencing these. We can't really help
+users with out-of-tree boardfiles, and the external dts case would
+be covered by your patch 1/2.
 
-However, there is no use case to have Generic platform device PATA support
-in a kernel build if the architecture definition, i.e., the selection of
-configs by an architecture, does not support it.
-
-If the architecture definition is wrong, i.e., it just misses a 'select
-HAVE_PATA_PLATFORM', then even an expert that configures the kernel build
-should not just fix that by overruling the claimed support by an
-architecture. If the architecture definition is wrong, the expert should
-just provide a patch to correct the architecture definition instead---in
-the end, if the user is an expert, sending a quick one-line patch should
-not be an issue.
-
-In other words, I do not see the deeper why an expert can overrule the
-architecture definition in this case, as the expert may not overrule the
-config selections defined by the architecture in the large majority
----or probably all other (modulo some mistakes)---of similar cases.
-
-Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
----
- drivers/ata/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index c93d97455744..fc11d9d30d72 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -1102,7 +1102,7 @@ config PATA_PCMCIA
- 	  If unsure, say N.
- 
- config PATA_PLATFORM
--	tristate "Generic platform device PATA support" if EXPERT || HAVE_PATA_PLATFORM
-+	tristate "Generic platform device PATA support" if HAVE_PATA_PLATFORM
- 	help
- 	  This option enables support for generic directly connected ATA
- 	  devices commonly found on embedded systems.
--- 
-2.17.1
-
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
