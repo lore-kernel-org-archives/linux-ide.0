@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0238AC54EE9
-	for <linux-ide@archiver.kernel.org>; Fri, 16 Sep 2022 14:27:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B717ECAAD8
+	for <linux-ide@archiver.kernel.org>; Fri, 16 Sep 2022 14:35:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232124AbiIPO1N (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 16 Sep 2022 10:27:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49470 "EHLO
+        id S230265AbiIPOfR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 16 Sep 2022 10:35:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232145AbiIPO0a (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2022 10:26:30 -0400
+        with ESMTP id S230338AbiIPOfQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2022 10:35:16 -0400
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6940EB3B15
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:26:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0B2A3AB28
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:35:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1663338389; x=1694874389;
+  t=1663338913; x=1694874913;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=712YwNQdrWKANR3vHtT8MY/Ny21R8h1VOwwEWwMdGyA=;
-  b=SSFN0QtrqM603yqSsvk75HWBZjmHkKOU+RB+2x14isJ86QxxOR/fotl3
-   igtyWjW4HYdXOoZYEilKaUtAm1o/wOP5Wa7HZgM78mX6+6V4bX9qEx6k5
-   K0SnsTBYBf2gY8dS4nLFuNWhVQViDWYgriH8RYCanYD1VrNPcWtiMdCaB
-   JgdhSBkv9dyau508QoMqS/CHvq9cI4nXjmOqSdt8s9j+7r/86DWSXpUVC
-   qncwiqAMiRdHBttsYHtfv2uV9NTm1h0XetNlEzqOZHZL/K0vtLd2ChyaF
-   3mNJVAqhadC0Jmj8WeTK6/DGydzKAUtTFdzDoARDHIxXSNFG/m+5KfgVw
-   Q==;
+  bh=zQmowXYSqfWbx6tOz5B0DjjiQiWzPuRxrCsV4TcaO2E=;
+  b=jcWR4R7PTs60D/QqgCCiKbFrmca04Dm1ghQL4pAfikrSliIz+FpfsGpW
+   LrMaLTSGBW1aeF3PGtzMcEjEts4aFJR4ywwoHnw5TeHHzcga1138S92wZ
+   QM3CpVt5+CzZ8+ZJJDnstF5q7SiNUDfoJCKOJlD5RBSIa/drIHKg290yO
+   KgeTAH6fm4wgFTLU8WcIbJgdNKR7yfjezioHCwC2NmDy5qst4wwWrzchw
+   T/ontJC9GbnbUD0+TU7LxzOYNbPUCDJVv715iyTbpalmYZ2X/KuwaiIXA
+   Lz1EafRCR8HXFH9PBnsT3oVMMM4OFF84z7eTKf6zc/bN5BzVozEqWZNYi
+   g==;
 X-IronPort-AV: E=Sophos;i="5.93,320,1654531200"; 
-   d="scan'208";a="216707956"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Sep 2022 22:26:25 +0800
-IronPort-SDR: uHFgEHeS8znGUuI39UgGAstWnyvmdSPYOxqsfw8BVqJFemw7e4ke4O1niLmrxnbWLp54Ujb2yD
- 1tlu7Qv6K1U1PJenNRYHLoRyMakSugiDLFODwmV5CCXFZr3ULq9d14vSmiYki8OkIIQZraxYO1
- gJGSQ2ahSBZB33Ej/MNAN45vqm5cPKfAeI7UGB5JHMnNc9j/u4gQzOQ91FglN5dnO5VYbuml4+
- PHMcWz7w2I/T0GGcxukTBefp2bkDzwBF1jDelHN6J8/2qmXLa57f+quCq+G8OR/6AR2Qs/qO0q
- YPz8z8iUlYgQLvim4VyQRAwO
+   d="scan'208";a="216708397"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Sep 2022 22:35:09 +0800
+IronPort-SDR: BJ2P2kEncZ6HymcyDy1IIgWUM1JsgT6dVjPgim+88s5G6ZQ+qDHYR8T3ucRzzVEoaVKedMgpnp
+ pX2mMXm+jFJBneIH/MhQknzsQfrgucaKshtJpx/Ffa1GZ4E0ft4U4rLaswPe9pQ+xyfSuF4tSs
+ UJAR1sQItYeptx5djAhjgnI+YnnjAwbcXM3IaMZcvkh9rubxd8lXAmb+ApaqquF0JrL3Xc2RwC
+ VZJ0rZyJgJ5DvQcfrBYqGD033IFRI5ie4imMr0NaNBd+WUCYS74/3XjjrXuxbgLjaYXXTfLDMT
+ 1xD4T8Abw63aEbUJimwGyDNM
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 06:46:35 -0700
-IronPort-SDR: tSQZxUtDxt8a6jEeFOEaIrrqmW2fh3WSpcxX+0oIOkcW6VxH+uPizsqYBHO2Ayo5KEyuNyZyGW
- 56VND//ii2Z8waddv8cf2AEcv2M4XaVMu/vqMVQRUMUTEufu8a54Ef2ZtvCRUWP4nZA1vffMR1
- mvWRkHQMDSfhmI9XaTtsVrkx8ISP8QLTCRY4aN9alpVnxQtlMCrw+mFnwxSQdwZrG5jvfU9ohn
- WASt+j8uirtgLAzLqw0YXjiDLuLSgz/0cm+ViMLYM7xSTZXNn56LSiw/iMS9S7u5E8z979q2pR
- i1s=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 06:49:49 -0700
+IronPort-SDR: kcPERNvuXDiyPM6Z07wEBjjwcGIEBCUcFtNknv8nhGaGY/eLXFcMGMi0Nsknktov3Jtop4f9gd
+ LdpIGFv0Wpf0BnZ5APLh13gNPgsCL5XrtBhQLf2ygIuwUay53cOnrSSSmQyn8zhyhct+VNSg26
+ edIavNjNn7U6UBfnaJe/9SGzRF3U5/T7EYHftMiFXRnTTW4mUDTdxKblkliAQNmIihQzOxjPK5
+ hSESA9lkNubTwk4/THo8sU+UgYKU17YhzZVonVL/yOl799K5bJgu0ffRWZxkQ4vVvu2HcjuZ3i
+ G5A=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 07:26:25 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 07:35:08 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MTbwd0Jxvz1RvTr
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:26:25 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MTc6f6RHJz1RvTp
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:35:06 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,135 +56,216 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1663338383; x=1665930384; bh=712YwNQdrWKANR3vHtT8MY/Ny21R8h1VOww
-        EWwMdGyA=; b=SDry22ytjYJvvjMx3nluMVo1RXucQuw09chczhDMllGaXqA40+4
-        K+3fggtBLIPON9W5FEHzjjO9jet1Aa1WU5V7g/4YvKV3wXWWZRumQRxA+001ohVe
-        yWtw+NVJfzoLdk1DwP0hp9VwNmr+1x0jnZMuEaPY1EleTJHBhq5g/ON933TdJ4JO
-        jjH2nyfl5dDTR387QeOBJD0r6ToNDDyCkmvS4ER5W6kJH0hllyITeQTGSnIq/GyR
-        6dkOnG/8rrdnHjZMMkbDRVfsCU7/r9j5cvFSRTINkXe6A5AyUyKg/L9V2Y33xuAu
-        y6Syd74iS/g+0j4j3Eu2u7KfhMRZC/1vLqg==
+        1663338905; x=1665930906; bh=zQmowXYSqfWbx6tOz5B0DjjiQiWzPuRxrCs
+        V4TcaO2E=; b=f3KsCnrRvJhqK9TSc2CVwA16RKiXI35/sBLaAjQcN6OmOVDoeaL
+        VOFRGJJajkAH9p7ztw7JrOLwrrjZiPai7UbmTLa38P+ADr487JWxxJ//D+7hre6O
+        wBv2xaDeh9RHmKme3B75QDOxzSwkpkY8CujbtO94m2X70yiqk46YWzLBpF1YONBi
+        k9D/GsqOFas0DovUyU3G32wPO5hkys8l3ZvEKO2XFfQ2renqDbgZ+i7uOnHr/JV7
+        9/NOAOigNk0Fzf+yinEexB/ERoLx6O6rEPhjINTTo1REHepGNRarYVxr4aefrrSK
+        acx2Ap24pS445+NxbB/8gm/DujFfKXSmeJA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Wd0zCMc1e3rW for <linux-ide@vger.kernel.org>;
-        Fri, 16 Sep 2022 07:26:23 -0700 (PDT)
+        with ESMTP id Eu1enYSmNR7d for <linux-ide@vger.kernel.org>;
+        Fri, 16 Sep 2022 07:35:05 -0700 (PDT)
 Received: from [10.225.1.43] (unknown [10.225.1.43])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MTbwX3hFkz1RvLy;
-        Fri, 16 Sep 2022 07:26:20 -0700 (PDT)
-Message-ID: <6cb1bb99-be0d-f2db-a59e-76e6b8d14aa0@opensource.wdc.com>
-Date:   Fri, 16 Sep 2022 15:26:18 +0100
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MTc6Z0PwKz1RvLy;
+        Fri, 16 Sep 2022 07:35:01 -0700 (PDT)
+Message-ID: <58614969-46e3-cb76-6f5e-139c555dcca1@opensource.wdc.com>
+Date:   Fri, 16 Sep 2022 15:35:00 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.2.2
-Subject: Re: [PATCH 1/2] ata: clean up how architectures enable PATA_PLATFORM
- and PATA_OF_PLATFORM
+Subject: Re: [PATCH] ata: ahci: Add initialization quirk for JMicron
+ JMB585/JMB582 controllers
 Content-Language: en-US
-To:     Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220914142713.29351-1-lukas.bulwahn@gmail.com>
+To:     MD Lin <mdlin@jmicron.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kevinliu@jmicron.com, charonchen@jmicron.com,
+        corahuang@jmicron.com, mhchen@jmicron.com, georgechao@jmicron.com,
+        banks@jmicron.com, tzuwei@jmicron.com
+References: <20220915001149.24241-1-mdlin@jmicron.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220914142713.29351-1-lukas.bulwahn@gmail.com>
+In-Reply-To: <20220915001149.24241-1-mdlin@jmicron.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/09/14 15:27, Lukas Bulwahn wrote:
-> There are two options for platform device PATA support:
+On 2022/09/15 1:11, MD Lin wrote:
+> JMicron JMB585/JMB582 does not enable specific error bit handling functions
+> by default so this patch enable these functions for better compatibility.
+> Besides, these patches also adjust SATA RX/TX_GEN1/TX_GEN2 parameters for
+> better compatibility. These patches had been tested in JMicron Test
+> Laboratory and been implemented to our customers.
 > 
->   PATA_PLATFORM: Generic platform device PATA support
->   PATA_OF_PLATFORM: OpenFirmware platform device PATA support
-> 
-> If an architecture allows the generic platform device PATA support, it
-> shall select HAVE_PATA_PLATFORM. Then, Generic platform device PATA support
-> is available and can be selected.
-> 
-> If an architecture has OpenFirmware support, which it indicates by
-> selecting OF, OpenFirmware platform device PATA support is available
-> and can be selected.
-> If OpenFirmware platform device PATA support is selected, then the
-> functionality (code files) from Generic platform device PATA support needs
-> to be integrated in the kernel build for the OpenFirmware platform device
-> PATA support to work. Select PATA_PLATFORM in PATA_OF_PLATFORM to make sure
-> the needed files are added in the build.
-> 
-> So, architectures with OpenFirmware support, do not need to additionally
-> select HAVE_PATA_PLATFORM. It is only needed by architecture that want the
-> non-OF pata-platform module.
-> 
-> Reflect this way of intended use of config symbols in the ata Kconfig and
-> adjust all architecture definitions.
-> 
-> This follows the suggestion from Arnd Bergmann (see Link).
-> 
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> Link: https://lore.kernel.org/all/4b33bffc-2b6d-46b4-9f1d-d18e55975a5a@www.fastmail.com/
-> 
-> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-
-Applied this patch and 2/2 to for-6.1. Thanks !
-
+> Signed-off-by: MD Lin <mdlin@jmicron.com>
 > ---
->  arch/arm/mach-versatile/Kconfig | 1 -
->  arch/arm64/Kconfig              | 1 -
->  drivers/ata/Kconfig             | 6 +++---
->  3 files changed, 3 insertions(+), 5 deletions(-)
+>  drivers/ata/ahci.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/ahci.h | 23 +++++++++++++++
+>  2 files changed, 94 insertions(+)
+>  mode change 100755 => 100644 drivers/ata/ahci.h
 > 
-> diff --git a/arch/arm/mach-versatile/Kconfig b/arch/arm/mach-versatile/Kconfig
-> index 2ef226194c3a..b1519b4dc03a 100644
-> --- a/arch/arm/mach-versatile/Kconfig
-> +++ b/arch/arm/mach-versatile/Kconfig
-> @@ -256,7 +256,6 @@ menuconfig ARCH_VEXPRESS
->  	select GPIOLIB
->  	select HAVE_ARM_SCU if SMP
->  	select HAVE_ARM_TWD if SMP
-> -	select HAVE_PATA_PLATFORM
->  	select CLK_ICST
->  	select NO_IOPORT_MAP
->  	select PLAT_VERSATILE
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index 51f3f07c3efd..036bd67e662e 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -194,7 +194,6 @@ config ARM64
->  	select HAVE_IRQ_TIME_ACCOUNTING
->  	select HAVE_KVM
->  	select HAVE_NMI
-> -	select HAVE_PATA_PLATFORM
->  	select HAVE_PERF_EVENTS
->  	select HAVE_PERF_REGS
->  	select HAVE_PERF_USER_STACK_DUMP
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 1c9f4fb2595d..c93d97455744 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -1102,8 +1102,7 @@ config PATA_PCMCIA
->  	  If unsure, say N.
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 505920d45..3e9e3b8f8 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1657,6 +1657,75 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hp
+>  	}
+>  }
 >  
->  config PATA_PLATFORM
-> -	tristate "Generic platform device PATA support"
-> -	depends on EXPERT || PPC || HAVE_PATA_PLATFORM
-> +	tristate "Generic platform device PATA support" if EXPERT || HAVE_PATA_PLATFORM
->  	help
->  	  This option enables support for generic directly connected ATA
->  	  devices commonly found on embedded systems.
-> @@ -1112,7 +1111,8 @@ config PATA_PLATFORM
+> +static void ahci_jmb58x_write_sata(void __iomem *mmio, u32 addr, u32 data)
+> +{
+> +	writel((addr & 0x01FFFUL) + (1UL << 18UL), mmio + 0xC0);
+> +	writel(data, mmio + 0xC8);
+> +}
+> +
+> +static void ahci_jmb58x_quirk(void __iomem *mmio)
+> +{
+> +	u32 pi = readl(mmio + HOST_PORTS_IMPL);
+> +	u32 b8_data;
+> +
+> +	/*
+> +	 * JMB582: PI is 0x03
+> +	 * JMB585: PI is 0x1f
+> +	 */
+
+What is this comment for ?
+
+> +
+> +	/*
+> +	 * enable error bit handling functions, these might overwrite
+> +	 * the setting which loads from external SPI flash.
+> +	 * the address and value are defined in adapter specs.
+> +	 */
+> +	b8_data = (pi > 3) ? 0x13 : 0x92;
+
+This looks strange. If pi is fixed depending on the controller type, why not use
+a switch-case here with the values in the comments above defined as macros ?
+Something like:
+
+	switch (pi) {
+	case JMB582:
+		b8_data = 0x92;
+	case JMB585:
+	default:
+		b8_data = 0x13;
+	}
+
+This is a lot more readable.
+
+> +	writel(JMB58X_EH_MODIFY_ON + b8_data,  mmio + 0xB8);
+> +	writel(JMB58X_EH_GENERAL,              mmio + 0x30);
+> +	writel(JMB58X_EH_CFIS_RETRY,           mmio + 0x34);
+> +	writel(JMB58X_EH_DROP_D2H,             mmio + 0x38);
+> +	writel(JMB58X_EH_MODIFY_OFF + b8_data, mmio + 0xB8);
+> +	writel(JMB58X_EH_TX_LOCK,              mmio + 0xB0);
+
+Why not define all these magic values as macros using the register names ?
+Anyone comparing the code to the controller specs will more easily understand.
+
+> +
+> +	/*
+> +	 * set SATA configuration, these might overwrite
+> +	 * the setting which loads from external SPI flash.
+> +	 * the address and value are defined in adapter specs.
+> +	 */
+> +	ahci_jmb58x_write_sata(mmio, 0x06, JMB58X_SATA0_RX);
+> +	ahci_jmb58x_write_sata(mmio, 0x13, JMB58X_SATA1_RX);
+> +	ahci_jmb58x_write_sata(mmio, 0x73, JMB58X_SATA0_TX_GEN2);
+> +	ahci_jmb58x_write_sata(mmio, 0x75, JMB58X_SATA1_TX_GEN2);
+> +	ahci_jmb58x_write_sata(mmio, 0x74, JMB58X_SATA0_TX_GEN1);
+> +	ahci_jmb58x_write_sata(mmio, 0x80, JMB58X_SATA1_TX_GEN1);
+> +	if (pi > 3) {
+> +		ahci_jmb58x_write_sata(mmio, 0x20, JMB58X_SATA2_RX);
+> +		ahci_jmb58x_write_sata(mmio, 0x2D, JMB58X_SATA3_RX);
+> +		ahci_jmb58x_write_sata(mmio, 0x3A, JMB58X_SATA4_RX);
+> +		ahci_jmb58x_write_sata(mmio, 0x79, JMB58X_SATA3_TX_GEN2);
+> +		ahci_jmb58x_write_sata(mmio, 0x83, JMB58X_SATA3_TX_GEN2_EXT);
+> +		ahci_jmb58x_write_sata(mmio, 0x7A, JMB58X_SATA3_TX_GEN1);
+> +		ahci_jmb58x_write_sata(mmio, 0x84, JMB58X_SATA3_TX_GEN1_EXT);
+> +	}
+
+Same comment here.
+
+> +}
+> +
+> +static void ahci_jmicron_quirk(struct pci_dev *pdev,
+> +			struct ahci_host_priv *hpriv)
+> +{
+> +	void __iomem *mmio = hpriv->mmio;
+> +	u8 tmp8;
+> +
+> +	if (pdev->vendor != PCI_VENDOR_ID_JMICRON)
+> +		return;
+> +
+> +	switch (pdev->device) {
+> +	case 0x585:
+> +		tmp8 = readb(mmio + 0x44);
+> +		if (tmp8)  /* check controller version */
+> +			ahci_jmb58x_quirk(mmio);
+
+The tmp8 variable is not needed:
+
+		if (readb(mmio + 0x44))
+			ahci_jmb58x_quirk(mmio);
+
+is fine, with the magic value 0x44 defined as a macro with a descriptive name.
+
+> +		break;
+> +	}
+> +}
+> +
+>  static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  {
+>  	unsigned int board_id = ent->driver_data;
+> @@ -1775,6 +1844,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	 */
+>  	ahci_intel_pcs_quirk(pdev, hpriv);
 >  
->  config PATA_OF_PLATFORM
->  	tristate "OpenFirmware platform device PATA support"
-> -	depends on PATA_PLATFORM && OF
-> +	depends on OF
-> +	select PATA_PLATFORM
->  	help
->  	  This option enables support for generic directly connected ATA
->  	  devices commonly found on embedded systems with OpenFirmware
+> +	ahci_jmicron_quirk(pdev, hpriv);
+> +
+>  	/* prepare host */
+>  	if (hpriv->cap & HOST_CAP_NCQ) {
+>  		pi.flags |= ATA_FLAG_NCQ;
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> old mode 100755
+> new mode 100644
+> index 9290e787a..82ecc6f2c
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -52,6 +52,29 @@
+>  #define EM_MSG_LED_VALUE_OFF          0xfff80000
+>  #define EM_MSG_LED_VALUE_ON           0x00010000
+>  
+> +/* JMicron JMB585/JMB582 Error Bit Handling Register Value */
+> +#define JMB58X_EH_MODIFY_ON           0x03060004
+> +#define JMB58X_EH_MODIFY_OFF          0x03060000
+> +#define JMB58X_EH_GENERAL             0x00FF0B01
+> +#define JMB58X_EH_CFIS_RETRY          0x0000003F
+> +#define JMB58X_EH_DROP_D2H            0x0000001F
+> +#define JMB58X_EH_TX_LOCK             0xF9E4EFBF
+> +
+> +/* JMicron JMB585/JMB582 SATA PHY Register Value */
+> +#define JMB58X_SATA0_RX               0x70005BE3
+> +#define JMB58X_SATA1_RX               0x70005BE3
+> +#define JMB58X_SATA2_RX               0x70005BE3
+> +#define JMB58X_SATA3_RX               0x70005BE3
+> +#define JMB58X_SATA4_RX               0x70005BE3
+> +#define JMB58X_SATA0_TX_GEN1          0x00000024
+> +#define JMB58X_SATA1_TX_GEN1          0x250B0003
+> +#define JMB58X_SATA3_TX_GEN1          0x00000024
+> +#define JMB58X_SATA3_TX_GEN1_EXT      0x250B0003
+> +#define JMB58X_SATA0_TX_GEN2          0x000001E5
+> +#define JMB58X_SATA1_TX_GEN2          0x000001E5
+> +#define JMB58X_SATA3_TX_GEN2          0x000001E5
+> +#define JMB58X_SATA3_TX_GEN2_EXT      0x250B0003
+> +
+>  enum {
+>  	AHCI_MAX_PORTS		= 32,
+>  	AHCI_MAX_CLKS		= 5,
 
 -- 
 Damien Le Moal
