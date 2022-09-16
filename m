@@ -2,187 +2,93 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD29DC6FA82
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Sep 2022 00:12:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF53FC54EE9
+	for <linux-ide@archiver.kernel.org>; Fri, 16 Sep 2022 12:28:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229890AbiIOAMr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 14 Sep 2022 20:12:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39634 "EHLO
+        id S231267AbiIPM2x (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 16 Sep 2022 08:28:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229889AbiIOAMq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2022 20:12:46 -0400
-Received: from spamfilter.jmicron.com (spamfilter.jmicron.com [220.130.51.235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CA294454D;
-        Wed, 14 Sep 2022 17:12:43 -0700 (PDT)
-Received: from JMEH602.jmicron.com (jmeh602.jmicron.com [10.88.10.18])
-        by spamfilter.jmicron.com with ESMTP id 28F0CioR002300;
-        Thu, 15 Sep 2022 08:12:44 +0800 (+08)
-        (envelope-from mdlin@jmicron.com)
-Received: from JMEH601.jmicron.com (10.88.10.17) by JMEH602.jmicron.com
- (10.88.10.18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2375.28; Thu, 15
- Sep 2022 08:12:27 +0800
-Received: from localhost.localdomain (10.88.20.234) by JMEH601.jmicron.com
- (10.88.10.17) with Microsoft SMTP Server id 15.1.2375.28 via Frontend
- Transport; Thu, 15 Sep 2022 08:12:27 +0800
-From:   MD Lin <mdlin@jmicron.com>
-To:     <damien.lemoal@opensource.wdc.com>
-CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <mdlin@jmicron.com>, <kevinliu@jmicron.com>,
-        <charonchen@jmicron.com>, <corahuang@jmicron.com>,
-        <mhchen@jmicron.com>, <georgechao@jmicron.com>,
-        <banks@jmicron.com>, <tzuwei@jmicron.com>
-Subject: [PATCH] ata: ahci: Add initialization quirk for JMicron JMB585/JMB582 controllers
-Date:   Thu, 15 Sep 2022 00:11:49 +0000
-Message-ID: <20220915001149.24241-1-mdlin@jmicron.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S231654AbiIPM2s (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2022 08:28:48 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4F08B1BBE
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 05:28:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1663331323; x=1694867323;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=F+3yEhq0e6iXUsaf3DMA4YehJnt6KnSiSERKk0FRxmU=;
+  b=eb74B+loUIvKfwVhON32Nh0a1c6z+dNQEfg0RKtUvkFHk0jD7sWdaNfd
+   s3WoMXmXWLc6vH6Finmfd709Wn4QglQs2slH5WLKFhd9+0q9B8tu7B+Co
+   rk9oyQ19T/1OzwcHOaWY4NEOu/AveJEjaHNbgVN1LRoursklUjVqWHjVc
+   u0a6bqJbk9lVjF5cm4Y5WG3o4iwIS1A6jgrnMaCKGFHdSByxwwbR5M+Gh
+   N0ZIoHR3rcGGIr6Tu997T+cVh+dGUq2CpSJ0Sk5CmM/CzfIiI31vrWpgh
+   3EKzzfUmexYgMdb81yI1LgnvhL/lkl245fhBdOxPM9YZPvf7vRiWEHrME
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,320,1654531200"; 
+   d="scan'208";a="216701263"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Sep 2022 20:28:42 +0800
+IronPort-SDR: qaS9rbD4WAH1/yXBIGWS3AkRvKtIa20oNSYaQrs5pT4YTgkliQcrhvIj38ie7MT1V0MFWlhf2b
+ zpzD2IUKioufNLowB9Jl190wy4a/8Lug5ChPV9SQYZk9FfA49Wq+V6UCBmxlayCALXnYTfFLpk
+ OgkMPF6TsmbG9HgocEg/CY+CE5ELoDGAmhhhbx9R3/XdpGbcqM5eScCYf757Gi6oBMWDhXbwDp
+ SNXHnEn9g7285/2jBM4+wPv3skV4IqArvxNL4Br+z3sykpILbwGpvf9NbYnWBuNZBWAVI/1LhW
+ C/kRH+7Prj3yDPH4o5eol7YO
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 04:48:53 -0700
+IronPort-SDR: jRmMt0dGYg067IeA34IUF69N0QRUW4MJURjAGiiNT7ewKXHxVF35Uf3E8jMB6PscZums60U3Tf
+ rpsp0bM8j8kQwB5WYZVDCU6b0b8EhaCLPYbi0FBuMp6bjt5O/Pd21JUAKTeN+U+eDyGS1x7fm/
+ SBux5S3m6+y6R7FY0aO74BIYxpHLenW80A7LvjMI3f4xd9B9wj0R190iYh72Y5ekWTDYc0QWfM
+ LBPOJKJ4fGfzr0jg2AsojiAYV1pPbOhxMKbIPvuCI8VGeWq3HT2x7vHa2b7hk5pjoWrPZfKUl3
+ hf0=
+WDCIronportException: Internal
+Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
+  by uls-op-cesaip02.wdc.com with ESMTP; 16 Sep 2022 05:28:40 -0700
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
+        Aaron Lu <aaron.lwe@gmail.com>,
+        Shane Huang <shane.huang@amd.com>,
+        Jeff Garzik <jgarzik@redhat.com>,
+        Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
+Subject: [PATCH 0/6] IDENTIFY DEVICE supported bit fixes
+Date:   Fri, 16 Sep 2022 14:28:31 +0200
+Message-Id: <20220916122838.1190628-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-DNSRBL: 
-X-MAIL: spamfilter.jmicron.com 28F0CioR002300
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-JMicron JMB585/JMB582 does not enable specific error bit handling functions
-by default so this patch enable these functions for better compatibility.
-Besides, these patches also adjust SATA RX/TX_GEN1/TX_GEN2 parameters for
-better compatibility. These patches had been tested in JMicron Test
-Laboratory and been implemented to our customers.
+Hello,
 
-Signed-off-by: MD Lin <mdlin@jmicron.com>
----
- drivers/ata/ahci.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/ahci.h | 23 +++++++++++++++
- 2 files changed, 94 insertions(+)
- mode change 100755 => 100644 drivers/ata/ahci.h
+This series fixes some incorrect handling of the supported bits
+in IDENTIFY DEVICE data.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 505920d45..3e9e3b8f8 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1657,6 +1657,75 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hp
- 	}
- }
- 
-+static void ahci_jmb58x_write_sata(void __iomem *mmio, u32 addr, u32 data)
-+{
-+	writel((addr & 0x01FFFUL) + (1UL << 18UL), mmio + 0xC0);
-+	writel(data, mmio + 0xC8);
-+}
-+
-+static void ahci_jmb58x_quirk(void __iomem *mmio)
-+{
-+	u32 pi = readl(mmio + HOST_PORTS_IMPL);
-+	u32 b8_data;
-+
-+	/*
-+	 * JMB582: PI is 0x03
-+	 * JMB585: PI is 0x1f
-+	 */
-+
-+	/*
-+	 * enable error bit handling functions, these might overwrite
-+	 * the setting which loads from external SPI flash.
-+	 * the address and value are defined in adapter specs.
-+	 */
-+	b8_data = (pi > 3) ? 0x13 : 0x92;
-+	writel(JMB58X_EH_MODIFY_ON + b8_data,  mmio + 0xB8);
-+	writel(JMB58X_EH_GENERAL,              mmio + 0x30);
-+	writel(JMB58X_EH_CFIS_RETRY,           mmio + 0x34);
-+	writel(JMB58X_EH_DROP_D2H,             mmio + 0x38);
-+	writel(JMB58X_EH_MODIFY_OFF + b8_data, mmio + 0xB8);
-+	writel(JMB58X_EH_TX_LOCK,              mmio + 0xB0);
-+
-+	/*
-+	 * set SATA configuration, these might overwrite
-+	 * the setting which loads from external SPI flash.
-+	 * the address and value are defined in adapter specs.
-+	 */
-+	ahci_jmb58x_write_sata(mmio, 0x06, JMB58X_SATA0_RX);
-+	ahci_jmb58x_write_sata(mmio, 0x13, JMB58X_SATA1_RX);
-+	ahci_jmb58x_write_sata(mmio, 0x73, JMB58X_SATA0_TX_GEN2);
-+	ahci_jmb58x_write_sata(mmio, 0x75, JMB58X_SATA1_TX_GEN2);
-+	ahci_jmb58x_write_sata(mmio, 0x74, JMB58X_SATA0_TX_GEN1);
-+	ahci_jmb58x_write_sata(mmio, 0x80, JMB58X_SATA1_TX_GEN1);
-+	if (pi > 3) {
-+		ahci_jmb58x_write_sata(mmio, 0x20, JMB58X_SATA2_RX);
-+		ahci_jmb58x_write_sata(mmio, 0x2D, JMB58X_SATA3_RX);
-+		ahci_jmb58x_write_sata(mmio, 0x3A, JMB58X_SATA4_RX);
-+		ahci_jmb58x_write_sata(mmio, 0x79, JMB58X_SATA3_TX_GEN2);
-+		ahci_jmb58x_write_sata(mmio, 0x83, JMB58X_SATA3_TX_GEN2_EXT);
-+		ahci_jmb58x_write_sata(mmio, 0x7A, JMB58X_SATA3_TX_GEN1);
-+		ahci_jmb58x_write_sata(mmio, 0x84, JMB58X_SATA3_TX_GEN1_EXT);
-+	}
-+}
-+
-+static void ahci_jmicron_quirk(struct pci_dev *pdev,
-+			struct ahci_host_priv *hpriv)
-+{
-+	void __iomem *mmio = hpriv->mmio;
-+	u8 tmp8;
-+
-+	if (pdev->vendor != PCI_VENDOR_ID_JMICRON)
-+		return;
-+
-+	switch (pdev->device) {
-+	case 0x585:
-+		tmp8 = readb(mmio + 0x44);
-+		if (tmp8)  /* check controller version */
-+			ahci_jmb58x_quirk(mmio);
-+		break;
-+	}
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	unsigned int board_id = ent->driver_data;
-@@ -1775,6 +1844,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 */
- 	ahci_intel_pcs_quirk(pdev, hpriv);
- 
-+	ahci_jmicron_quirk(pdev, hpriv);
-+
- 	/* prepare host */
- 	if (hpriv->cap & HOST_CAP_NCQ) {
- 		pi.flags |= ATA_FLAG_NCQ;
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-old mode 100755
-new mode 100644
-index 9290e787a..82ecc6f2c
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -52,6 +52,29 @@
- #define EM_MSG_LED_VALUE_OFF          0xfff80000
- #define EM_MSG_LED_VALUE_ON           0x00010000
- 
-+/* JMicron JMB585/JMB582 Error Bit Handling Register Value */
-+#define JMB58X_EH_MODIFY_ON           0x03060004
-+#define JMB58X_EH_MODIFY_OFF          0x03060000
-+#define JMB58X_EH_GENERAL             0x00FF0B01
-+#define JMB58X_EH_CFIS_RETRY          0x0000003F
-+#define JMB58X_EH_DROP_D2H            0x0000001F
-+#define JMB58X_EH_TX_LOCK             0xF9E4EFBF
-+
-+/* JMicron JMB585/JMB582 SATA PHY Register Value */
-+#define JMB58X_SATA0_RX               0x70005BE3
-+#define JMB58X_SATA1_RX               0x70005BE3
-+#define JMB58X_SATA2_RX               0x70005BE3
-+#define JMB58X_SATA3_RX               0x70005BE3
-+#define JMB58X_SATA4_RX               0x70005BE3
-+#define JMB58X_SATA0_TX_GEN1          0x00000024
-+#define JMB58X_SATA1_TX_GEN1          0x250B0003
-+#define JMB58X_SATA3_TX_GEN1          0x00000024
-+#define JMB58X_SATA3_TX_GEN1_EXT      0x250B0003
-+#define JMB58X_SATA0_TX_GEN2          0x000001E5
-+#define JMB58X_SATA1_TX_GEN2          0x000001E5
-+#define JMB58X_SATA3_TX_GEN2          0x000001E5
-+#define JMB58X_SATA3_TX_GEN2_EXT      0x250B0003
-+
- enum {
- 	AHCI_MAX_PORTS		= 32,
- 	AHCI_MAX_CLKS		= 5,
+As a bonus, there are two small cleanups which removes superfluous
+parameters in libata-eh.c.
+
+
+Kind regards,
+Niklas
+
+Niklas Cassel (6):
+  ata: fix ata_id_sense_reporting_enabled() and
+    ata_id_has_sense_reporting()
+  ata: fix ata_id_has_devslp()
+  ata: fix ata_id_has_ncq_autosense()
+  ata: fix ata_id_has_dipm()
+  ata: libata: drop superfluous ata_eh_request_sense() parameter
+  ata: libata: drop superfluous ata_eh_analyze_tf() parameter
+
+ drivers/ata/libata-eh.c | 14 ++++++--------
+ include/linux/ata.h     | 39 +++++++++++++++++++++------------------
+ 2 files changed, 27 insertions(+), 26 deletions(-)
+
 -- 
-2.17.1
+2.37.3
 
