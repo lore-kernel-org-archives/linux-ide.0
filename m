@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B717ECAAD8
-	for <linux-ide@archiver.kernel.org>; Fri, 16 Sep 2022 14:35:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4401ECAAD8
+	for <linux-ide@archiver.kernel.org>; Fri, 16 Sep 2022 16:47:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230265AbiIPOfR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 16 Sep 2022 10:35:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34208 "EHLO
+        id S229667AbiIPQrm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 16 Sep 2022 12:47:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230338AbiIPOfQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2022 10:35:16 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0B2A3AB28
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:35:14 -0700 (PDT)
+        with ESMTP id S229591AbiIPQrk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2022 12:47:40 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D58BEA6C3A
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 09:47:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1663338913; x=1694874913;
+  t=1663346858; x=1694882858;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=zQmowXYSqfWbx6tOz5B0DjjiQiWzPuRxrCsV4TcaO2E=;
-  b=jcWR4R7PTs60D/QqgCCiKbFrmca04Dm1ghQL4pAfikrSliIz+FpfsGpW
-   LrMaLTSGBW1aeF3PGtzMcEjEts4aFJR4ywwoHnw5TeHHzcga1138S92wZ
-   QM3CpVt5+CzZ8+ZJJDnstF5q7SiNUDfoJCKOJlD5RBSIa/drIHKg290yO
-   KgeTAH6fm4wgFTLU8WcIbJgdNKR7yfjezioHCwC2NmDy5qst4wwWrzchw
-   T/ontJC9GbnbUD0+TU7LxzOYNbPUCDJVv715iyTbpalmYZ2X/KuwaiIXA
-   Lz1EafRCR8HXFH9PBnsT3oVMMM4OFF84z7eTKf6zc/bN5BzVozEqWZNYi
-   g==;
+  bh=SK9BL6m95nnaulqfLmLKU8TUvWWPKBLxyF77iTJ28PQ=;
+  b=CVc+X07Vmtyc553ToyLYyAOzYk8/OF4+ZWYzPsHVKokmvRpH67RfkjFQ
+   7qTw79tsA2jDokoOorCBYmnG/p5b5DkVij7haElo6OCw3ZBDeZEQ9tpkl
+   0DbLczHQXDaQfdgFaLgGtDauC4Ap0h+c6zyRCb1+xePyJ4G5KhwMIJCPC
+   D8KvSI9F3YWCGZZLNFGk7vq5hPqrFaIvdpjLT1BDsbvj7X70lSoGgdKK9
+   iyYtuTwc+Nf+jP9+U18LdmsK7gIfxuHfNmsE62DbfOOWrHJbq+g/keqLc
+   TdiEzFUxOVebU1tt6MUFs97qKkR5gDC2UYQC52c0vqDPgHc6nDBock7AZ
+   w==;
 X-IronPort-AV: E=Sophos;i="5.93,320,1654531200"; 
-   d="scan'208";a="216708397"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Sep 2022 22:35:09 +0800
-IronPort-SDR: BJ2P2kEncZ6HymcyDy1IIgWUM1JsgT6dVjPgim+88s5G6ZQ+qDHYR8T3ucRzzVEoaVKedMgpnp
- pX2mMXm+jFJBneIH/MhQknzsQfrgucaKshtJpx/Ffa1GZ4E0ft4U4rLaswPe9pQ+xyfSuF4tSs
- UJAR1sQItYeptx5djAhjgnI+YnnjAwbcXM3IaMZcvkh9rubxd8lXAmb+ApaqquF0JrL3Xc2RwC
- VZJ0rZyJgJ5DvQcfrBYqGD033IFRI5ie4imMr0NaNBd+WUCYS74/3XjjrXuxbgLjaYXXTfLDMT
- 1xD4T8Abw63aEbUJimwGyDNM
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 06:49:49 -0700
-IronPort-SDR: kcPERNvuXDiyPM6Z07wEBjjwcGIEBCUcFtNknv8nhGaGY/eLXFcMGMi0Nsknktov3Jtop4f9gd
- LdpIGFv0Wpf0BnZ5APLh13gNPgsCL5XrtBhQLf2ygIuwUay53cOnrSSSmQyn8zhyhct+VNSg26
- edIavNjNn7U6UBfnaJe/9SGzRF3U5/T7EYHftMiFXRnTTW4mUDTdxKblkliAQNmIihQzOxjPK5
- hSESA9lkNubTwk4/THo8sU+UgYKU17YhzZVonVL/yOl799K5bJgu0ffRWZxkQ4vVvu2HcjuZ3i
- G5A=
+   d="scan'208";a="315830089"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 17 Sep 2022 00:47:36 +0800
+IronPort-SDR: 43nAcO9lFFX3bU2oVb5vTKM2UQcREUgv01gMS2hggD1zH4IUtajiT1McuzgF8k5UNSLjPi3CTl
+ mr9ozSXxu5kBGK0HxwT92uE1/kMjX9FQPqvAT3j5HrgZzJmmyLYFEoy/qi7N6QvkZjs4c5UpQX
+ SmEwowvZ7xInpd434mmk40kt+FfkI94GorRZgRtD0lqCnymgKc+00RzG4pnKZiT6LPQz/Mjk29
+ T6xihTsdRMUaC2jPaCRoiaAVZ7NTl70/W6ULz1z7sbYo+bRVrJIuFj00soVkoxDQ9FalQJb8lQ
+ m3EIvQx4q+OyUxMttBIdy0T6
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 09:02:18 -0700
+IronPort-SDR: Yed6hnNLT2oQp+W5OCYb9fHIOmoClpEldT8mH5y93Gz4/MizvNPZIANghgfjS8H//TK3Lo+wgp
+ DNVA2iFGL+7leXlZMXwdPYVcFyoL4iI36hoGL+ZYuE4zt9Pa+yYm6kVk7kWNbKo/LkCwr/I+Vy
+ 2fIZdCPtJCnHj3HLsQakMMxNPxDlDEyFf90N18W3xNBOfD+D94vPlvnI96CmxD67Dy1mbe8RKU
+ HLaUYSAaZFbrtuy/zzP4DyZWoPkpIOPqtcKPn5ao9yWVyKn8YYCM4EMEpMom+WFkYw5/qO66Ph
+ /is=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 07:35:08 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 09:47:37 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MTc6f6RHJz1RvTp
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:35:06 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MTg3V6Xjtz1RwvL
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 09:47:34 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,216 +56,330 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1663338905; x=1665930906; bh=zQmowXYSqfWbx6tOz5B0DjjiQiWzPuRxrCs
-        V4TcaO2E=; b=f3KsCnrRvJhqK9TSc2CVwA16RKiXI35/sBLaAjQcN6OmOVDoeaL
-        VOFRGJJajkAH9p7ztw7JrOLwrrjZiPai7UbmTLa38P+ADr487JWxxJ//D+7hre6O
-        wBv2xaDeh9RHmKme3B75QDOxzSwkpkY8CujbtO94m2X70yiqk46YWzLBpF1YONBi
-        k9D/GsqOFas0DovUyU3G32wPO5hkys8l3ZvEKO2XFfQ2renqDbgZ+i7uOnHr/JV7
-        9/NOAOigNk0Fzf+yinEexB/ERoLx6O6rEPhjINTTo1REHepGNRarYVxr4aefrrSK
-        acx2Ap24pS445+NxbB/8gm/DujFfKXSmeJA==
+        1663346851; x=1665938852; bh=SK9BL6m95nnaulqfLmLKU8TUvWWPKBLxyF7
+        7iTJ28PQ=; b=S3lTBDFtnBlAuavyRBpR84hqWgwC1HXSBVY5iH3s+3WD6hrtMoI
+        vTkcYs7Ml2IGirdFqk+858RM5/G6PbHk5y469YNkQl0BIwUtWs3RY9rJtzU4AihZ
+        1Fs+ICXPyUsFQrgKCqa0wAbOPqOOgsL1Ynrnc5z25GP2fxYfF6ds8Io2nLgxApmP
+        j1fSJ7RXGz937K4keCA7ImhWmTHoMUljzClBvXzJUgDZRvI5F09+WHc0fMhCpAO6
+        X3ZOI/9k2+lvRHWjWqx+ETDWENvNMUbVKlOt0CfyhhbJCSjWUJgm2RTPcMEYdaI+
+        UHCNnLlbo/qWNOH1mru//CScAT8LYB39pWQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Eu1enYSmNR7d for <linux-ide@vger.kernel.org>;
-        Fri, 16 Sep 2022 07:35:05 -0700 (PDT)
+        with ESMTP id RS5IgPFr4FgL for <linux-ide@vger.kernel.org>;
+        Fri, 16 Sep 2022 09:47:31 -0700 (PDT)
 Received: from [10.225.1.43] (unknown [10.225.1.43])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MTc6Z0PwKz1RvLy;
-        Fri, 16 Sep 2022 07:35:01 -0700 (PDT)
-Message-ID: <58614969-46e3-cb76-6f5e-139c555dcca1@opensource.wdc.com>
-Date:   Fri, 16 Sep 2022 15:35:00 +0100
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MTg3L4B56z1RvLy;
+        Fri, 16 Sep 2022 09:47:26 -0700 (PDT)
+Message-ID: <9a81d6b5-2444-17ec-6aeb-4d473c239cb4@opensource.wdc.com>
+Date:   Fri, 16 Sep 2022 17:47:24 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.2.2
-Subject: Re: [PATCH] ata: ahci: Add initialization quirk for JMicron
- JMB585/JMB582 controllers
+Subject: Re: [PATCH v8 00/23] ata: ahci: Add DWC/Baikal-T1 AHCI SATA support
 Content-Language: en-US
-To:     MD Lin <mdlin@jmicron.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kevinliu@jmicron.com, charonchen@jmicron.com,
-        corahuang@jmicron.com, mhchen@jmicron.com, georgechao@jmicron.com,
-        banks@jmicron.com, tzuwei@jmicron.com
-References: <20220915001149.24241-1-mdlin@jmicron.com>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>
+Cc:     Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220915001149.24241-1-mdlin@jmicron.com>
+In-Reply-To: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/09/15 1:11, MD Lin wrote:
-> JMicron JMB585/JMB582 does not enable specific error bit handling functions
-> by default so this patch enable these functions for better compatibility.
-> Besides, these patches also adjust SATA RX/TX_GEN1/TX_GEN2 parameters for
-> better compatibility. These patches had been tested in JMicron Test
-> Laboratory and been implemented to our customers.
+On 2022/09/09 20:35, Serge Semin wrote:
+> The main goal of this patchset was to add Baikal-T1 AHCI SATA specifics
+> support into the kernel AHCI subsystem. On the way of doing that we
+> figured out that mainly these specifics are actually DWC AHCI SATA
+> controller features, but still there were some Baikal-T1 SoC platform
+> peculiarities which we had to take into account. So the patchset
+> introduces two AHCI SATA controllers support and one AHCI SATA driver
+> with a series of preparation, optimization and cleanup patches.
 > 
-> Signed-off-by: MD Lin <mdlin@jmicron.com>
-> ---
->  drivers/ata/ahci.c | 71 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/ata/ahci.h | 23 +++++++++++++++
->  2 files changed, 94 insertions(+)
->  mode change 100755 => 100644 drivers/ata/ahci.h
+> The series starts used to start with converting the legacy AHCI SATA
+> controllers text-based DT-bindings to the DT-schema. But turned out that
+> has already been done in kernel v5.17. So instead we suggest to improve
+> the bindings usability by splitting up the AHCI DT bindings into two
+> schemas: one common AHCI SATA controller yaml-file, which can be reused by
+> any AHCI-compatible controller utilizing the kernel AHCI library
+> functions, and DT-bindings for the generic AHCI SATA devices indicated by
+> the "generic-ahci" compatible string and implemented in the
+> ahci_platform.c driver. Note after doing that we had to fix the
+> sata-common.yaml file SATA port IDs constraint.
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 505920d45..3e9e3b8f8 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1657,6 +1657,75 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hp
->  	}
->  }
->  
-> +static void ahci_jmb58x_write_sata(void __iomem *mmio, u32 addr, u32 data)
-> +{
-> +	writel((addr & 0x01FFFUL) + (1UL << 18UL), mmio + 0xC0);
-> +	writel(data, mmio + 0xC8);
-> +}
-> +
-> +static void ahci_jmb58x_quirk(void __iomem *mmio)
-> +{
-> +	u32 pi = readl(mmio + HOST_PORTS_IMPL);
-> +	u32 b8_data;
-> +
-> +	/*
-> +	 * JMB582: PI is 0x03
-> +	 * JMB585: PI is 0x1f
-> +	 */
+> Then a series of generic preparations-cleanups goes. First of all it
+> concerns the device-managed methods usage in the framework of the CSR
+> space remapping and the clocks requesting and enabling. Note since the
+> clocks handlers are requested and kept in the generic AHCI library it
+> seemed a good idea to add an AHCI-platform generic method to find and get
+> a particular clock handler from the pool of the requested ones. It was
+> used later in the series in the DWC/Baikal-T1-specific code. Secondly we
+> suggested to at least sanity check the number of SATA ports DT-sub-nodes
+> before using it further.  Thirdly the ports-implemented DT-property
+> parsing was moved from the AHCI platform-driver to the AHCI-library so to
+> be used by the non-generic AHCI drivers if required (DT-schema is
+> accordingly fixed too). Finally due to having the shared-reset control
+> support we had to add a new AHCI-resource getter flag -
+> AHCI_PLATFORM_RST_TRIGGER, which indicated using a trigger-like reset
+> control. For such platforms the controller reset will be performed by
+> means of the reset_control_reset() and reset_control_rearm() methods.
+> AHCI-library reset functions encapsulating the way the reset procedure is
+> performed have been also added.
+> 
+> After that goes a patches series with the platform-specific
+> AHCI-capabilities initialization. The suggested functionality will be
+> useful for the platforms with no BIOS, comprehensive bootloader/firmware
+> installed. In that case the AHCI-related platform-specifics like drive
+> staggered spin-up, mechanical presence switch attached or FIS-based
+> switching capability usage, etc will be left uninitialized with no generic
+> way to be indicated as available if required. We suggested to use the AHCI
+> device tree node and its ports sub-nodes for that. AHCI-platform library
+> will be responsible fo the corresponding DT-properties parsing and
+> pre-initialization of the internal capability registers cache, which will
+> be then flashed back to the corresponding CSR after HBA reset. Thus a
+> supposed to be firmware-work will be done by means of the AHCI-library and
+> the DT-data. A set of the preparations/cleanups required to be done before
+> introducing the feature.  First the DT-properties indicating the
+> corresponding capability availability were described in the common AHCI
+> DT-binding schema. Second we needed to add the enum items with the AHCI
+> Port CMD fields, which hadn't been added so far. Thirdly we suggested to
+> discard one of the port-map internal storage (force_port_map) in favor of
+> re-using another one (save_port_map) in order to simplify the port-map
+> initialization interface a bit by getting rid from a redundant variable.
+> Finally after discarding the double AHCI-version read procedure and
+> changing the __ahci_port_base() method prototype the platform
+> firmware-specific caps initialization functionality was introduced.
+> 
+> The main part of the series goes afterwards. A dedicated DWC AHCI SATA
+> controller driver was introduced together with the corresponding
+> DT-binding schema pre-patch. Note the driver built mode is activated
+> synchronously with the generic AHCI-platform driver by default so
+> automatically to be integrated into the kernel for the DWC AHCI-based
+> platforms which relied on activating the generic AHCI SATA controller
+> driver. Aside with the generic resources getting and AHCI-host
+> initialization, the driver implements the DWC-specific setups. In
+> particular it checks whether the platform capabilities activated by the
+> firmware (see the functionality described above) are actually supported by
+> the controller. It's done by means of the vendor-specific registers. Then
+> it makes sure that the embedded 1ms timer interval, which is used for the
+> DevSleep and CCC features, is correctly initialized based on the
+> application clock rate.  The last but not least the driver provides a way
+> to tune the DMA-interface performance up by setting the Tx/Rx transactions
+> maximum size up. The required values are specified by means of the
+> "snps,tx-ts-max" and snps,rx-ts-max" DT-properties.
+> 
+> Finally we suggest to extend the DWC AHCI SATA controller driver
+> functionality with a way to add the DWC-AHCI-based platform-specific
+> quirks. Indeed there are many DWC AHCI-based controllers and just a few of
+> them are diverged too much to be handled by a dedicated AHCI-driver. The
+> rest of them most likely can work well either with a generic version of
+> the driver or require a simple normally platform-specific quirk to get up
+> and running. Such platforms can define a platform-data in the DWC AHCI
+> driver with a set of the controller-specific flags and initialization
+> functions. Those functions will be called at the corresponding stages of
+> the device probe/resume/remove procedures so to be performing the platform
+> setups/cleanups.
+> 
+> After the denoted above functionality is added we can finally introduce
+> the Baikal-T1 AHCI SATA controller support into the DWC AHCI SATA driver.
+> The controller is based on the DWC AHCI SATA IP-core v4.10a and can work
+> well with the generic DWC AHCI driver. The only peculiarity of it is
+> connected with the SATA Ports reference clock source. It can be supplied
+> either from the internal SoC PLL or from the chip pads. Currently we have
+> to prefer selecting the signal coming from the pads if the corresponding
+> clock source is specified because the link doesn't get stably established
+> when the internal clock signal is activated. In addition the platform has
+> trigger-based reset signals so the corresponding flag must be passed to
+> the generic AHCI-resource getter.
 
-What is this comment for ?
+Applied to for-6.1. Thanks !
 
-> +
-> +	/*
-> +	 * enable error bit handling functions, these might overwrite
-> +	 * the setting which loads from external SPI flash.
-> +	 * the address and value are defined in adapter specs.
-> +	 */
-> +	b8_data = (pi > 3) ? 0x13 : 0x92;
-
-This looks strange. If pi is fixed depending on the controller type, why not use
-a switch-case here with the values in the comments above defined as macros ?
-Something like:
-
-	switch (pi) {
-	case JMB582:
-		b8_data = 0x92;
-	case JMB585:
-	default:
-		b8_data = 0x13;
-	}
-
-This is a lot more readable.
-
-> +	writel(JMB58X_EH_MODIFY_ON + b8_data,  mmio + 0xB8);
-> +	writel(JMB58X_EH_GENERAL,              mmio + 0x30);
-> +	writel(JMB58X_EH_CFIS_RETRY,           mmio + 0x34);
-> +	writel(JMB58X_EH_DROP_D2H,             mmio + 0x38);
-> +	writel(JMB58X_EH_MODIFY_OFF + b8_data, mmio + 0xB8);
-> +	writel(JMB58X_EH_TX_LOCK,              mmio + 0xB0);
-
-Why not define all these magic values as macros using the register names ?
-Anyone comparing the code to the controller specs will more easily understand.
-
-> +
-> +	/*
-> +	 * set SATA configuration, these might overwrite
-> +	 * the setting which loads from external SPI flash.
-> +	 * the address and value are defined in adapter specs.
-> +	 */
-> +	ahci_jmb58x_write_sata(mmio, 0x06, JMB58X_SATA0_RX);
-> +	ahci_jmb58x_write_sata(mmio, 0x13, JMB58X_SATA1_RX);
-> +	ahci_jmb58x_write_sata(mmio, 0x73, JMB58X_SATA0_TX_GEN2);
-> +	ahci_jmb58x_write_sata(mmio, 0x75, JMB58X_SATA1_TX_GEN2);
-> +	ahci_jmb58x_write_sata(mmio, 0x74, JMB58X_SATA0_TX_GEN1);
-> +	ahci_jmb58x_write_sata(mmio, 0x80, JMB58X_SATA1_TX_GEN1);
-> +	if (pi > 3) {
-> +		ahci_jmb58x_write_sata(mmio, 0x20, JMB58X_SATA2_RX);
-> +		ahci_jmb58x_write_sata(mmio, 0x2D, JMB58X_SATA3_RX);
-> +		ahci_jmb58x_write_sata(mmio, 0x3A, JMB58X_SATA4_RX);
-> +		ahci_jmb58x_write_sata(mmio, 0x79, JMB58X_SATA3_TX_GEN2);
-> +		ahci_jmb58x_write_sata(mmio, 0x83, JMB58X_SATA3_TX_GEN2_EXT);
-> +		ahci_jmb58x_write_sata(mmio, 0x7A, JMB58X_SATA3_TX_GEN1);
-> +		ahci_jmb58x_write_sata(mmio, 0x84, JMB58X_SATA3_TX_GEN1_EXT);
-> +	}
-
-Same comment here.
-
-> +}
-> +
-> +static void ahci_jmicron_quirk(struct pci_dev *pdev,
-> +			struct ahci_host_priv *hpriv)
-> +{
-> +	void __iomem *mmio = hpriv->mmio;
-> +	u8 tmp8;
-> +
-> +	if (pdev->vendor != PCI_VENDOR_ID_JMICRON)
-> +		return;
-> +
-> +	switch (pdev->device) {
-> +	case 0x585:
-> +		tmp8 = readb(mmio + 0x44);
-> +		if (tmp8)  /* check controller version */
-> +			ahci_jmb58x_quirk(mmio);
-
-The tmp8 variable is not needed:
-
-		if (readb(mmio + 0x44))
-			ahci_jmb58x_quirk(mmio);
-
-is fine, with the magic value 0x44 defined as a macro with a descriptive name.
-
-> +		break;
-> +	}
-> +}
-> +
->  static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  {
->  	unsigned int board_id = ent->driver_data;
-> @@ -1775,6 +1844,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	 */
->  	ahci_intel_pcs_quirk(pdev, hpriv);
->  
-> +	ahci_jmicron_quirk(pdev, hpriv);
-> +
->  	/* prepare host */
->  	if (hpriv->cap & HOST_CAP_NCQ) {
->  		pi.flags |= ATA_FLAG_NCQ;
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> old mode 100755
-> new mode 100644
-> index 9290e787a..82ecc6f2c
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -52,6 +52,29 @@
->  #define EM_MSG_LED_VALUE_OFF          0xfff80000
->  #define EM_MSG_LED_VALUE_ON           0x00010000
->  
-> +/* JMicron JMB585/JMB582 Error Bit Handling Register Value */
-> +#define JMB58X_EH_MODIFY_ON           0x03060004
-> +#define JMB58X_EH_MODIFY_OFF          0x03060000
-> +#define JMB58X_EH_GENERAL             0x00FF0B01
-> +#define JMB58X_EH_CFIS_RETRY          0x0000003F
-> +#define JMB58X_EH_DROP_D2H            0x0000001F
-> +#define JMB58X_EH_TX_LOCK             0xF9E4EFBF
-> +
-> +/* JMicron JMB585/JMB582 SATA PHY Register Value */
-> +#define JMB58X_SATA0_RX               0x70005BE3
-> +#define JMB58X_SATA1_RX               0x70005BE3
-> +#define JMB58X_SATA2_RX               0x70005BE3
-> +#define JMB58X_SATA3_RX               0x70005BE3
-> +#define JMB58X_SATA4_RX               0x70005BE3
-> +#define JMB58X_SATA0_TX_GEN1          0x00000024
-> +#define JMB58X_SATA1_TX_GEN1          0x250B0003
-> +#define JMB58X_SATA3_TX_GEN1          0x00000024
-> +#define JMB58X_SATA3_TX_GEN1_EXT      0x250B0003
-> +#define JMB58X_SATA0_TX_GEN2          0x000001E5
-> +#define JMB58X_SATA1_TX_GEN2          0x000001E5
-> +#define JMB58X_SATA3_TX_GEN2          0x000001E5
-> +#define JMB58X_SATA3_TX_GEN2_EXT      0x250B0003
-> +
->  enum {
->  	AHCI_MAX_PORTS		= 32,
->  	AHCI_MAX_CLKS		= 5,
+> 
+> Link: https://lore.kernel.org/linux-ide/20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru/
+> Changelog v2:
+> - Rebase from kernel v5.17 to v5.18-rc3. (@Rob)
+> - Rebase onto the already available AHCI DT schema. As a result two more
+>   patches have been added. (@Rob)
+> - Rename 'syscon' property to 'baikal,bt1-syscon'. (@Rob)
+> - Replace min/max constraints of the snps,{tx,rx}-ts-max property with
+>   enum [ 1, 2, 4, ..., 1024 ]. (@Rob)
+> - Use dlemoal/libata.git git tree for the LIBATA SATA AHCI SYNOPSYS
+>   DWC driver (@Damien).
+> - Change the local objects prefix from 'dwc_ahci_' to 'ahci_dwc_',
+>   from 'bt1_ahci_' to 'ahci_bt1_'. (@Damien)
+> - Use LLDD term in place of 'glue-driver'. (@Damien)
+> - Convert the ahci_platform_assert_rsts() method to returning int status
+>   (@Damien).
+> - Drop the else word from the DT child_nodes value checking if-else-if
+>   statement (@Damien) and convert the after-else part into the ternary
+>   operator-based statement.
+> - Convert to checking the error-case first in the devm_clk_bulk_get_all()
+>   method invocation. (@Damien)
+> - Drop the rc variable initialization in the ahci_platform_get_resources()
+>   method. (@Damien)
+> - Add comma and replace "channel" with "SATA port" in the reg property
+>   description of the sata-common.yaml schema. (@Damien)
+> 
+> Link: https://lore.kernel.org/lkml/20220503200938.18027-1-Sergey.Semin@baikalelectronics.ru/
+> Changelog v3:
+> - Replace Jens's email address with Damien's one in the list of the
+>   common DT schema maintainers. (@Damien)
+> 
+> Link: https://lore.kernel.org/linux-ide/20220511231810.4928-1-Sergey.Semin@baikalelectronics.ru/
+> Changelog v4:
+> - Drop clocks, clock-names, resets, reset-names and power-domains
+>   properties from the AHCI common schema. (@Rob)
+> - Make sure the interrupts DT-property can have from 1 to 32 items
+>   specified. (@Rob)
+> - Decrease the "additionalProperties" property identation in the DW AHCI
+>   SATA DT-schema otherwise it's percieved as the node property instead of
+>   the key one. (@Rob)
+> - Convert the HBA-capabilities boolean properties to the bitfield
+>   DT-properties. (@Rob)
+> - Create SATA/AHCI-port properties definition hierarchy so the sub-schemas
+>   could inherit and extend the ports properties of the super-schema. (@Rob)
+> - Drop Baikal-T1 syscon reference and implement the clock signal
+>   source in the framework of the clock controller. (@Rob)
+> - Refactor the patch
+>   [PATCH v3 01/23] dt-bindings: ata: ahci-platform: Drop dma-coherent property declaration
+>   to
+>   [PATCH v3 01/23] dt-bindings: ata: ahci-platform: Move dma-coherent to sata-common.yaml
+>   (@Rob)
+> - Add a new patch:
+>   [PATCH v4 05/24] dt-bindings: ata: sata-brcm: Apply common AHCI schema
+> - Drop the patch:
+>   [PATCH v3 05/23] ata: libahci_platform: Explicitly set rc on devres_alloc failure
+>   (@Hannes, @Damien)
+> - Convert ahci_dwc_plat and ahci_bt1_plat to being statically defined.
+>   (@kbot)
+> - Rebase onto the kernel v5.18.
+> 
+> Link: https://lore.kernel.org/linux-ide/20220610081801.11854-1-Sergey.Semin@baikalelectronics.ru/T/
+> Changelog v5:
+> - Add a comment regarding the PORT_CMD_CAP enum entity purpose. (@Damien)
+> - Fix the patchlogs grammer notes. (@Damien)
+> - Fix the ahci_platform_find_clk() declaration identations. (@Damien)
+> - Replace "?:" operator with the if-else statement in the NoF child-nodes
+>   calculation procedure. (@Damien)
+> - Simplify the ahci_platform_find_clk() method body by dropping
+>   the local poiter to the clk structure. (@Damien)
+> - Drop the "default SATA_AHCI_PLATFORM" setting from the AHCI_DWC
+>   config. (@Randy)
+> - Replace deprecated SIMPLE_DEV_PM_OPS() with the
+>   DEFINE_SIMPLE_DEV_PM_OPS() macro usage. (@Damien)
+> - Dual-licese the include/dt-bindings/ata/ahci.h file. (@Rob)
+> - Fix the "resets" property description: replace "clocks" with "resets".
+>   (@Rob)
+> - Extend resets/clocks{-names} property definitions. (@Rob)
+> - Add DWC AHCI SATA "resets" property min/maxItems constraints. (@Rob)
+> - Add names for the basic resets like RxOOB and PM-alive in the
+>   generic DWC AHCI SATA DT-schema. (@Rob)
+> - Add generic DWC AHCI SATA fallback for "rockchip,rk3568-dwc-ahci"
+>   bindings. (@Rob)
+> - Due to the change above the DWC AHCI SATA DT-schema has been split up
+>   into two parts: common DWC AHCI SATA properties and generic DW AHCI
+>   SATA controller DT-schema. (@Rob)
+> - Drop generic compatible fallback "snps,dwc-ahci" from Baikal-T1
+>   DT-schema. (@Rob)
+> - Define SATA-port pattern property to be applicable for two ports
+>   only on the Baikal-T1 AHCI SATA node.
+> - Drop "|" qualifier from the Baikal-T1 AHCI SATA bindings description
+>   property.
+> - Rebase onto the kernel 5.19-rcX.
+> 
+> Link: https://lore.kernel.org/linux-ide/20220713052917.27036-1-Sergey.Semin@baikalelectronics.ru/
+> Changelog v6:
+> - Just resend.
+> 
+> Link: https://lore.kernel.org/linux-ide/20220728111905.12427-1-Sergey.Semin@baikalelectronics.ru
+> Changelog v7:
+> - Fix Davinci DA850 and Omap2 DM816 AHCI LLDD to be using the new bulk
+>   clocks interface. (@Damien)
+> - Rebase onto the kernel 6.0-rc2 (dlemoal/libata.git:for-6.1).
+> 
+> Link: https://lore.kernel.org/linux-ide/20220822183728.24434-1-Sergey.Semin@baikalelectronics.ru
+> Changelog v8:
+> - Replace __clk_get_name() call with static string "ahci".
+>   (@Damien, @tbot)
+> - Drop ifdef CONFIG_PM_SLEEP since the DEFINE_SIMPLE_DEV_PM_OPS macro
+>   uses the PTR_IF() pattern which implies no if-defs. (@tbot)
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
+> Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+> Cc: linux-ide@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: devicetree@vger.kernel.org
+> 
+> Serge Semin (23):
+>   dt-bindings: ata: ahci-platform: Move dma-coherent to sata-common.yaml
+>   dt-bindings: ata: ahci-platform: Detach common AHCI bindings
+>   dt-bindings: ata: ahci-platform: Clarify common AHCI props constraints
+>   dt-bindings: ata: sata: Extend number of SATA ports
+>   dt-bindings: ata: sata-brcm: Apply common AHCI schema
+>   ata: libahci_platform: Convert to using platform devm-ioremap methods
+>   ata: libahci_platform: Convert to using devm bulk clocks API
+>   ata: libahci_platform: Sanity check the DT child nodes number
+>   ata: libahci_platform: Parse ports-implemented property in resources
+>     getter
+>   ata: libahci_platform: Introduce reset assertion/deassertion methods
+>   dt-bindings: ata: ahci: Add platform capability properties
+>   ata: libahci: Extend port-cmd flags set with port capabilities
+>   ata: libahci: Discard redundant force_port_map parameter
+>   ata: libahci: Don't read AHCI version twice in the save-config method
+>   ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
+>   ata: ahci: Introduce firmware-specific caps initialization
+>   dt-bindings: ata: ahci: Add DWC AHCI SATA controller DT schema
+>   ata: libahci_platform: Add function returning a clock-handle by id
+>   ata: ahci: Add DWC AHCI SATA controller support
+>   dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA controller DT schema
+>   ata: ahci-dwc: Add platform-specific quirks support
+>   ata: ahci-dwc: Add Baikal-T1 AHCI SATA interface support
+>   MAINTAINERS: Add maintainers for DWC AHCI SATA driver
+> 
+>  .../devicetree/bindings/ata/ahci-common.yaml  | 123 +++++
+>  .../bindings/ata/ahci-platform.yaml           |  92 +---
+>  .../bindings/ata/baikal,bt1-ahci.yaml         | 115 ++++
+>  .../bindings/ata/brcm,sata-brcm.yaml          |   4 +-
+>  .../devicetree/bindings/ata/sata-common.yaml  |  17 +-
+>  .../bindings/ata/snps,dwc-ahci-common.yaml    | 102 ++++
+>  .../bindings/ata/snps,dwc-ahci.yaml           |  75 +++
+>  MAINTAINERS                                   |   9 +
+>  drivers/ata/Kconfig                           |  10 +
+>  drivers/ata/Makefile                          |   1 +
+>  drivers/ata/ahci.c                            |   4 +-
+>  drivers/ata/ahci.h                            |  22 +-
+>  drivers/ata/ahci_da850.c                      |  47 +-
+>  drivers/ata/ahci_dm816.c                      |   4 +-
+>  drivers/ata/ahci_dwc.c                        | 493 ++++++++++++++++++
+>  drivers/ata/ahci_mtk.c                        |   2 -
+>  drivers/ata/ahci_platform.c                   |   5 -
+>  drivers/ata/ahci_st.c                         |   3 -
+>  drivers/ata/libahci.c                         |  63 ++-
+>  drivers/ata/libahci_platform.c                | 218 ++++++--
+>  include/dt-bindings/ata/ahci.h                |  20 +
+>  include/linux/ahci_platform.h                 |   8 +-
+>  22 files changed, 1238 insertions(+), 199 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
+>  create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
+>  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+>  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+>  create mode 100644 drivers/ata/ahci_dwc.c
+>  create mode 100644 include/dt-bindings/ata/ahci.h
+> 
 
 -- 
 Damien Le Moal
