@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C7FBC54EE9
-	for <linux-ide@archiver.kernel.org>; Fri, 16 Sep 2022 14:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A406AECAAD8
+	for <linux-ide@archiver.kernel.org>; Fri, 16 Sep 2022 14:21:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229757AbiIPOVO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 16 Sep 2022 10:21:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37442 "EHLO
+        id S230305AbiIPOVx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 16 Sep 2022 10:21:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbiIPOVM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2022 10:21:12 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6B1471BD6
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:21:09 -0700 (PDT)
+        with ESMTP id S231256AbiIPOVp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2022 10:21:45 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAC27B277C
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:21:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1663338068; x=1694874068;
+  t=1663338096; x=1694874096;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=O+pqlwbxQg1hAAq+luWu/GEhDDgCmFWLTEZMPBOz8xs=;
-  b=eK4vyUDnJ/RWKWugI/ZCOxm8S+TKoa9bByskzlXz/DN1roiH35ZmA2NB
-   Dq2TsGXvtINCttZFNqO/F/DHSrsU7xAQ2bk8rKe3+IgUvz4FW5YpMv/NK
-   qyqMjZ83iMosXbfP+kd+sB3f5KqxpTi6z5ycuMYIKeOB5q40QWodhgYIH
-   JDrUG7xCR1eiFAZcnS9gSdijvGmrkdL3zAV1HwEhvUTeYxUOczw635awx
-   A4BqIbUgRwAlpEOufU9OTwkevN0eod19dT8amAIdpJrs392AXaY0Uk+5q
-   nWIBN0rJviTDNJkEvnVWZPbSlXBcXx2gzahBDq2oBBx+k5aqcJX5LioPD
-   Q==;
+  bh=84pn1zP6OIV/5QpJPF4VioDf7XMSIZsIpSSdc8bqVLo=;
+  b=Af6FHZZ7CW6Y4qr3sXG5SF+iKQdHg/GcohxSz6pqpmGd38x7UUtKmtav
+   yxzbYEWM2LTCuasl2WtoHF3AYxyL+PATALB7cDB8NH/JPtSoXn+lfOYvK
+   33JA5axqv9gAFKcslRkP2StOutwCteAr3iBS2YsD5xrBKQbNqbErtUb/B
+   NFftTUamA7aIs79YOFAvwihB9h3rLyeuB/iC8O2DuJSdyxnnrQ3J7kLGm
+   IInnBTqBeFTqOfGeOlY6ndTGadNWVwDWbc5EA2hFFZdBkTIZv/HkEax4+
+   +39mWy8sUxfdx7sx69SOQPGSdMzrYYQ4KKkZa90n/ogCz4AB/ZfQQFQWv
+   g==;
 X-IronPort-AV: E=Sophos;i="5.93,320,1654531200"; 
-   d="scan'208";a="216707657"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Sep 2022 22:21:07 +0800
-IronPort-SDR: qpJSoDsKL9i0yIZ9N1vgFqreK9sZX5zwOa8XhYcppm6BPaT+B8o/kHMNidA4tQFhNXEeApcte6
- ZAdJ8AmtRj8mXeNDKMHoRqnT4Fi9Hj6DC2AfJOqY77SxlHurFb/fdfBmWr16fd9ri6sNmaNlIs
- iigI+ew5hVqUPGGGhJyc8Jw4A99nn6OADCAKzvQcQdiTWgSPYXJbQP9nYZbWjTkqOZDJOwfIyi
- R3mgC8aFP0Hq7CTHE2HEJhJQ6NV4H4sYjNL7E07Xt/cLjLxUHmS+6UBue1H1KwqgwBeP8ZET/K
- a4llswYJDdcLAZoETIRJ3xJG
+   d="scan'208";a="209930965"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 16 Sep 2022 22:21:35 +0800
+IronPort-SDR: 1JAFbdPqfZlpLJQDb1eq+xR8S3oG/rfiY8ueqr3KsyRWTYtokbzEhQbmU+Rv7LXqSCdbc8FaMB
+ cUZdyGGp1epJcpj+NTyCvYNQuMwumXpyqK3+ifBLR5r/ZRjCDFQiuGnwUMdfdahXyDKtDY9ioe
+ trbfWlHy2EfdDGiOnzL6P8mRI2N/o3C/kaE+M/ShoDC799IvJuLqV2A5oolkkYUo+Xjk+Fvbw5
+ Nx3dLvSV7yUP4wNrZhncOY1zeqzle1GtdvhyUAAbrQw0dkzUFiICQ2PkVYN/xzT5ogZNhzckdB
+ odRZCe1piwdzXOFg6iBktQoy
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 06:41:18 -0700
-IronPort-SDR: Vv0iupSTvkmDrNUkFyQmqcn97Oq+ezXmZfx7y6s6jOf0RfsCA0y+MhCf0O7U6qNeux8Z1kOCQs
- E/2/HRD3Wp1IHfBn1RYT777k9VJQ8BKQ7w3Vfs9G1fiThEPA1Dz1+WKY+xKk6WoRzZCN6pQj1h
- WzeGBMq5NvTv7K4Wd6KfZ4zXGqn80GLVSHH7NEOH3UARfxjacZ6GMOLL0338onjuyhTe7TOgoK
- hKVwt/AmHbG5z09iz5IZgTipZc9FYYzBUYiIqXHpknhDnrA4ONL6QUjSFVEpbrcb19oJ68iTn4
- mcY=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 06:41:44 -0700
+IronPort-SDR: L/xOuWgVLWRg/Hx5JOPmfRjUi+8yl8eu4dv8s57KJbxorS5Vcu4D8nDEA/yMShQVfSeSXHn3qG
+ i1S1V0mJHv6cyc0YppmMKzlvLJOsl44bljLTzMO37TVqXZeyPPkJIT8CCWPFXoZxZ+bh48+xrM
+ LX0YYPz0iOkp2q2m9azsffyr1UmieHW7g0bxSDF6AH/V7eBD8aTiLBhPHhzYl5PsWJ+H4WFWuf
+ WQFIbbK1bqoEwG+jAu+tRfQguN5srx9ZZPvqXGlCYpHgnaee3VzrrCby5Lt0Hb4R2DrJgKEIFD
+ 6tA=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 07:21:09 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Sep 2022 07:21:35 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MTbpX4vKhz1RvTp
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:21:08 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MTbq25Kd8z1RvTp
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2022 07:21:34 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,61 +56,64 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1663338067; x=1665930068; bh=O+pqlwbxQg1hAAq+luWu/GEhDDgCmFWLTEZ
-        MPBOz8xs=; b=obazrQBLnRYGfFJyqigB0N1pI915+a7he34qV7FvbJ7M1prfbj8
-        J4uaQJ8PWdZCBoeAsPdvCfF0fVHBZTUE/aR1JFuBs14Uer6ZY/DQ4vPUoh9/fK7H
-        XzrY7mMpKJvs7MjMmbSt8DlcVeKCGFrefFsbxV2LGTALggDoYvuUfaXFBHZAYTg6
-        WgRbs6pgusS+gosyq2w1O1owGrjZLjumL0inM6BUqJdTHTo8PHrKdQMMIzH/z+ma
-        EfMFAFspdZPtcV59NKs4fTD3/7lwUmUmJ23ta8OExPLITXQ7vunpy3i+Vuc66+ww
-        ArZG0lcfqJxd/Q+Ah7O7BmVak3PgYgqVTZQ==
+        1663338094; x=1665930095; bh=84pn1zP6OIV/5QpJPF4VioDf7XMSIZsIpSS
+        dc8bqVLo=; b=SBl2kAtab+wRZelgXy74wEUdwx+SPFe9Ko2ETaiGfQ9+Bg4hJK9
+        11cxhEpPON0+DY+iQmSLZLgkrPNU6YQN5UIVh33CWfzF5X/xgzjfWfkslhiPgy1T
+        qHI7G+ZggRSWyJxM4eEKUYuTSgIsHmaHauTLW7JAV5HjZT4h+ELeaTojGZoV3Mbw
+        QUWR9KK5n/GkWiSAq8ZtpXnEE0Ez++LzpRVoO3MNcqNvViZOTIYkIkm9rY4luoNI
+        xbF0y6to3XwPlV+mzVOBM+rQD1Wk/ZOk8x+kV8DqV0ujCupbN6bvcs8gXb7pGyxB
+        boXqPtFe9Xq7HgcqNl/AJ2TfGGEaDPjU6AQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id CF_v8t3WRC_e for <linux-ide@vger.kernel.org>;
-        Fri, 16 Sep 2022 07:21:07 -0700 (PDT)
+        with ESMTP id JwliyqHGY33L for <linux-ide@vger.kernel.org>;
+        Fri, 16 Sep 2022 07:21:34 -0700 (PDT)
 Received: from [10.225.1.43] (unknown [10.225.1.43])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MTbpT0LZwz1RvLy;
-        Fri, 16 Sep 2022 07:21:04 -0700 (PDT)
-Message-ID: <198dc594-4d74-ba85-bc4e-190981592ae6@opensource.wdc.com>
-Date:   Fri, 16 Sep 2022 15:21:02 +0100
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MTbq03J7tz1RvLy;
+        Fri, 16 Sep 2022 07:21:32 -0700 (PDT)
+Message-ID: <7b7f36d4-9aa5-fff5-bd82-3658be6496f4@opensource.wdc.com>
+Date:   Fri, 16 Sep 2022 15:21:30 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.2.2
-Subject: Re: [PATCH] ata: libata-sff: Fix double word in comments
+Subject: Re: [PATCH v2] ata: libata-core: Check errors in
+ sata_print_link_status()
 Content-Language: en-US
-To:     Shaomin Deng <dengshaomin@cdjrlc.com>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220830075024.13917-1-dengshaomin@cdjrlc.com>
+To:     Li Zhong <floridsleeves@gmail.com>, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
+References: <20220903231039.2278817-1-floridsleeves@gmail.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220830075024.13917-1-dengshaomin@cdjrlc.com>
+In-Reply-To: <20220903231039.2278817-1-floridsleeves@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/08/30 8:50, Shaomin Deng wrote:
-> Remove the repeated word "Transfer" in comments.
+On 2022/09/04 0:10, Li Zhong wrote:
+> sata_scr_read() could return negative error code on failure. Check the
+> return value when reading the control register.
 > 
-> Signed-off-by: Shaomin Deng <dengshaomin@cdjrlc.com>
+> Signed-off-by: Li Zhong <floridsleeves@gmail.com>
 > ---
->  drivers/ata/libata-sff.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/ata/libata-core.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index b1666adc1c3a..7916e369e15e 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -776,7 +776,7 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
->   *	@qc: Command on going
->   *	@bytes: number of bytes
->   *
-> - *	Transfer Transfer data from/to the ATAPI device.
-> + *	Transfer data from/to the ATAPI device.
->   *
->   *	LOCKING:
->   *	Inherited from caller.
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 826d41f341e4..ae08c7d35cb0 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3021,7 +3021,8 @@ static void sata_print_link_status(struct ata_link *link)
+>  
+>  	if (sata_scr_read(link, SCR_STATUS, &sstatus))
+>  		return;
+> -	sata_scr_read(link, SCR_CONTROL, &scontrol);
+> +	if (sata_scr_read(link, SCR_CONTROL, &scontrol))
+> +		return;
+>  
+>  	if (ata_phys_link_online(link)) {
+>  		tmp = (sstatus >> 4) & 0xf;
 
 Applied to for-6.1. Thanks.
 
