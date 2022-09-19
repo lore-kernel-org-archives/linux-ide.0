@@ -2,87 +2,145 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08643ECAAD3
-	for <linux-ide@archiver.kernel.org>; Mon, 19 Sep 2022 13:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 983D0ECAAA1
+	for <linux-ide@archiver.kernel.org>; Mon, 19 Sep 2022 21:50:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230243AbiISNRQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 19 Sep 2022 09:17:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41112 "EHLO
+        id S229568AbiISVuV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 19 Sep 2022 17:50:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229733AbiISNRP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Sep 2022 09:17:15 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D55C927CCF;
-        Mon, 19 Sep 2022 06:17:13 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id y5so3926244wrh.3;
-        Mon, 19 Sep 2022 06:17:13 -0700 (PDT)
+        with ESMTP id S229709AbiISVuT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Sep 2022 17:50:19 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF65043E64;
+        Mon, 19 Sep 2022 14:50:17 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id y136so914801pfb.3;
+        Mon, 19 Sep 2022 14:50:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date;
-        bh=JQnXUuOJXq/53Yv1BXw4BU5ty1+Q8lF8nWyvKAwQnVk=;
-        b=djAwBlz4IYY0rUhhPbPSWE5HYq9S/iI4r09rzmHuXTKMoHBZMEbHVraoH+31PHYC8W
-         PaI/qr4jI1tuIYiX1rsMt6zZdteqBWUbeY3RFJyCDsmRoojctjj6aWgWtG+eU3zNfJ/j
-         4HtGVnaYijO5BQSDfHs5bRDpBwD0vKSK36ElNPTndJE7sRjJS6t+SHMySFr2/HV+nL2H
-         h8EG24wZj0tfl/hWpfNNnglczOVpb9DH/iPHBqOvQ8fV5rrg43c6K5lNUD4mentn42qM
-         D9Zue07KaQgYuofW/9kXCvBGBqaeyX+/X+lwPzyJnQgoFyb2UvttuEAlWFZ8ekNqIUD3
-         k3dg==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
+        bh=kk7J0kbmWOo0ElCJGaFd9+RljsQo/irob0nXHRUh9g4=;
+        b=S5nLy3TPw7ILmHNMx1jaAOARf0AyNjNd2mXDIfB0S9mQVlHCa1B+dQxa3QQxTRKljE
+         5IcUAjXgPyr1AzCH2r11GZBERiGm71sfcw9M96NJGoY/D1N58ftnabjaqkEchNUZp1ax
+         YkNWr2B3x73QVIgDhkjptcFT7pw/MUspxnNzPysC3de7CAbK4TIKnKkQkjmJT8OOGd6r
+         ILp7s4AegZ/w0ZY7uOel1bPwlBMSKElixjKtA+6WS8TDEz0h0/N/wPu6VSTfopRAtF2R
+         LreLT/NcoyAeAy8ZrMGP3FsOVaMh79HiCK8n4isvbC+afGgXaYSXSSVanVBYk0uI4uHX
+         Pj1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=JQnXUuOJXq/53Yv1BXw4BU5ty1+Q8lF8nWyvKAwQnVk=;
-        b=T31GtAK8gUSq9nHSGxbk1yyoPQMYpF3u8cmZEk1KypGpkCGXi3DkALr/wKG590ILEP
-         LFb8HUGPl2I3F75ONSQaaaBKRpPEHfTFk6t/Q9wYrQy0l16eOGJykkAhJPrX5cj7Z9y8
-         zUym8w5fZRS67dppZ7T/WauYE770coayD/sVeUWKvAxIFz8b8wegxAym40kXK8fLt2CA
-         qfAYnV6DPurp8qw+AhTaWxlC7AfvuNLAIHd38+7rg/Q5VlUPPvXQ04uriPLqEs/SGr2W
-         9PkoLtKRANE9Emuuz+J4ZRzgwg9+9gCV1gyDqCiVZBq7iaJ2keK2B49JBU4ot0Iavbp3
-         ILeA==
-X-Gm-Message-State: ACrzQf0tx+BwMndwZBDe+ce8ucEf3at3Qs11HrL7RU2PoDDH3rpaQitm
-        lmftxbgHART1ZdEMcP4AO2c=
-X-Google-Smtp-Source: AMsMyM6At6wZZKE3giXauF/PxG0cXvEkzICAJxueaR/qWjhvyI9oPNaCyMGvp6xsR2W7eU60d1x3ug==
-X-Received: by 2002:a5d:6c6f:0:b0:22a:7778:6ea2 with SMTP id r15-20020a5d6c6f000000b0022a77786ea2mr11104709wrz.15.1663593431937;
-        Mon, 19 Sep 2022 06:17:11 -0700 (PDT)
-Received: from debian (host-78-150-37-98.as13285.net. [78.150.37.98])
-        by smtp.gmail.com with ESMTPSA id p5-20020a05600c358500b003a6125562e1sm14346610wmq.46.2022.09.19.06.17.10
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=kk7J0kbmWOo0ElCJGaFd9+RljsQo/irob0nXHRUh9g4=;
+        b=Y9vcvljuhNxon6dgGLLrHUlHtUogbhtdcm9EhtmGpj5BRTYiNy6Nf1R5X8geqtonww
+         KsvrpXJ7zAPa8ASnQ7SoEtTn4KNZmvYuDd2kRn+rfSzrldWW2aK1vtClG6PZuwoV4A1k
+         q8Iy9LgKwEJYmWc7qdZyp72qwQD8R/E43MdhXfzdmFUWPwff43P7JbvjWZdiRrYNXdiY
+         x7OTGFs/f0erfnewDoJ7aAtqZ1MDq239SFyyXTYUOkvWl/ca/T3jKjwapYQ1ZAyH2FdL
+         h4PcRhrzb5I8A329VQa7FQze/yjwZWjG9fZH6E6u8Mapac50k+yEz8oUKXX7854qAiQ0
+         N2iw==
+X-Gm-Message-State: ACrzQf3g1z7GULEmaElNtOgKQEwcKIynZGf4Hf7XqwX3Ng9LfaXt766v
+        i5MSf9iaLg52H0N/lx3VSoY=
+X-Google-Smtp-Source: AMsMyM6iftGnRzY+31jrAofx44FXCGKCcoJx9qjkQXDrx/KzZF6TV12z7StjR9+X2ADJmT4QVhfY6A==
+X-Received: by 2002:aa7:8607:0:b0:53b:13b5:2b6a with SMTP id p7-20020aa78607000000b0053b13b52b6amr21041435pfn.52.1663624217009;
+        Mon, 19 Sep 2022 14:50:17 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id e11-20020a17090301cb00b00172a670607asm20560809plh.300.2022.09.19.14.50.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Sep 2022 06:17:11 -0700 (PDT)
-Date:   Mon, 19 Sep 2022 14:17:09 +0100
-From:   "Sudip Mukherjee (Codethink)" <sudipm.mukherjee@gmail.com>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Patrice Chotard <patrice.chotard@foss.st.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
-Subject: build failure of next-20220919 due to 3f74cd046fbe ("ata:
- libahci_platform: Parse ports-implemented property in resources getter")
-Message-ID: <Yyhr1VW3Kn30E/Jv@debian>
+        Mon, 19 Sep 2022 14:50:15 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date:   Mon, 19 Sep 2022 14:50:14 -0700
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Patrice Chotard <patrice.chotard@foss.st.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v8 09/23] ata: libahci_platform: Parse ports-implemented
+ property in resources getter
+Message-ID: <20220919215014.GA336081@roeck-us.net>
+References: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
+ <20220909193621.17380-10-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20220909193621.17380-10-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi All,
+On Fri, Sep 09, 2022 at 10:36:07PM +0300, Serge Semin wrote:
+> The ports-implemented property is mainly used on the OF-based platforms
+> with no ports mapping initialized by a bootloader/BIOS firmware. Seeing
+> the same of_property_read_u32()-based pattern has already been implemented
+> in the generic AHCI LLDD (glue) driver and in the Mediatek, St AHCI
+> drivers let's move the property read procedure to the generic
+> ahci_platform_get_resources() method. Thus we'll have the forced ports
+> mapping feature supported for each OF-based platform which requires that,
+> and stop re-implementing the same pattern in there a bit simplifying the
+> code.
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> ---
+>  drivers/ata/ahci_mtk.c         | 2 --
+>  drivers/ata/ahci_platform.c    | 3 ---
+>  drivers/ata/ahci_st.c          | 3 ---
+>  drivers/ata/libahci_platform.c | 3 +++
+>  4 files changed, 3 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
+> index 1f6c85fde983..c056378e3e72 100644
+> --- a/drivers/ata/ahci_mtk.c
+> +++ b/drivers/ata/ahci_mtk.c
+> @@ -118,8 +118,6 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
+>  				   SYS_CFG_SATA_EN);
+>  	}
+>  
+> -	of_property_read_u32(np, "ports-implemented", &hpriv->force_port_map);
+> -
+>  	return 0;
+>  }
+>  
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index 28a8de5b48b9..9b56490ecbc3 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -56,9 +56,6 @@ static int ahci_probe(struct platform_device *pdev)
+>  	if (rc)
+>  		return rc;
+>  
+> -	of_property_read_u32(dev->of_node,
+> -			     "ports-implemented", &hpriv->force_port_map);
+> -
+>  	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+>  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+>  
+> diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+> index 7526653c843b..068621099c00 100644
+> --- a/drivers/ata/ahci_st.c
+> +++ b/drivers/ata/ahci_st.c
+> @@ -168,9 +168,6 @@ static int st_ahci_probe(struct platform_device *pdev)
+>  
+>  	st_ahci_configure_oob(hpriv->mmio);
+>  
+> -	of_property_read_u32(dev->of_node,
+> -			     "ports-implemented", &hpriv->force_port_map);
+> -
 
-The builds of arm allmodconfig have failed to build next-20220919
-with the error:
+With arm:allmodconfig, this results in:
 
+  CC [M]  drivers/ata/ahci_st.o
 drivers/ata/ahci_st.c: In function 'st_ahci_probe':
 drivers/ata/ahci_st.c:147:24: error: unused variable 'dev' [-Werror=unused-variable]
   147 |         struct device *dev = &pdev->dev;
-      |                        ^~~
 
-
-git bisect pointed to 3f74cd046fbe ("ata: libahci_platform: Parse ports-implemented property in resources getter")
-
-I will be happy to test any patch or provide any extra log if needed.
-
-
--- 
-Regards
-Sudip
-
+Guenter
