@@ -2,59 +2,86 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 983D0ECAAA1
-	for <linux-ide@archiver.kernel.org>; Mon, 19 Sep 2022 21:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8257C6FA8B
+	for <linux-ide@archiver.kernel.org>; Mon, 19 Sep 2022 23:56:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229568AbiISVuV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 19 Sep 2022 17:50:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33564 "EHLO
+        id S229562AbiISX4P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 19 Sep 2022 19:56:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbiISVuT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Sep 2022 17:50:19 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF65043E64;
-        Mon, 19 Sep 2022 14:50:17 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id y136so914801pfb.3;
-        Mon, 19 Sep 2022 14:50:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
-        bh=kk7J0kbmWOo0ElCJGaFd9+RljsQo/irob0nXHRUh9g4=;
-        b=S5nLy3TPw7ILmHNMx1jaAOARf0AyNjNd2mXDIfB0S9mQVlHCa1B+dQxa3QQxTRKljE
-         5IcUAjXgPyr1AzCH2r11GZBERiGm71sfcw9M96NJGoY/D1N58ftnabjaqkEchNUZp1ax
-         YkNWr2B3x73QVIgDhkjptcFT7pw/MUspxnNzPysC3de7CAbK4TIKnKkQkjmJT8OOGd6r
-         ILp7s4AegZ/w0ZY7uOel1bPwlBMSKElixjKtA+6WS8TDEz0h0/N/wPu6VSTfopRAtF2R
-         LreLT/NcoyAeAy8ZrMGP3FsOVaMh79HiCK8n4isvbC+afGgXaYSXSSVanVBYk0uI4uHX
-         Pj1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=kk7J0kbmWOo0ElCJGaFd9+RljsQo/irob0nXHRUh9g4=;
-        b=Y9vcvljuhNxon6dgGLLrHUlHtUogbhtdcm9EhtmGpj5BRTYiNy6Nf1R5X8geqtonww
-         KsvrpXJ7zAPa8ASnQ7SoEtTn4KNZmvYuDd2kRn+rfSzrldWW2aK1vtClG6PZuwoV4A1k
-         q8Iy9LgKwEJYmWc7qdZyp72qwQD8R/E43MdhXfzdmFUWPwff43P7JbvjWZdiRrYNXdiY
-         x7OTGFs/f0erfnewDoJ7aAtqZ1MDq239SFyyXTYUOkvWl/ca/T3jKjwapYQ1ZAyH2FdL
-         h4PcRhrzb5I8A329VQa7FQze/yjwZWjG9fZH6E6u8Mapac50k+yEz8oUKXX7854qAiQ0
-         N2iw==
-X-Gm-Message-State: ACrzQf3g1z7GULEmaElNtOgKQEwcKIynZGf4Hf7XqwX3Ng9LfaXt766v
-        i5MSf9iaLg52H0N/lx3VSoY=
-X-Google-Smtp-Source: AMsMyM6iftGnRzY+31jrAofx44FXCGKCcoJx9qjkQXDrx/KzZF6TV12z7StjR9+X2ADJmT4QVhfY6A==
-X-Received: by 2002:aa7:8607:0:b0:53b:13b5:2b6a with SMTP id p7-20020aa78607000000b0053b13b52b6amr21041435pfn.52.1663624217009;
-        Mon, 19 Sep 2022 14:50:17 -0700 (PDT)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id e11-20020a17090301cb00b00172a670607asm20560809plh.300.2022.09.19.14.50.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Sep 2022 14:50:15 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date:   Mon, 19 Sep 2022 14:50:14 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        with ESMTP id S229971AbiISX4N (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Sep 2022 19:56:13 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23D5550058
+        for <linux-ide@vger.kernel.org>; Mon, 19 Sep 2022 16:56:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1663631771; x=1695167771;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=++5axOCldtTWM+izrbSQWpROwyvWlmGRPLJdA2yng0M=;
+  b=Mnn61pXQouxDcedtf8N/mBz6S5pP6OeSTutsTy8vFuXLddEd2EaRRHjt
+   gQvfMQ6dS4FucO9brRAId0fRt6wJzxRWLDymH424LYGRN5njopsgkhdFt
+   +CtbQxPPrQskwUGWQDSKbUqi8UbJBbZdjpfHq0kb7n4vVBCw3BcdxvaE8
+   5vAudGucKD2OcU3JhDBJki2fNrtSWt1m3QlxGVd79hmhnn5z7Kr9nMTr8
+   2K15p/roUDVNSexSdREiG9IlHjDecYqzehLMmVexDWT2oz3xULSk6Qa5g
+   GTjzySy0WQxymKWsTH0AU0G14eee9e6f5WXkRZIQVXIOezAoKYpcOGjuB
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.93,329,1654531200"; 
+   d="scan'208";a="323859293"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Sep 2022 07:56:10 +0800
+IronPort-SDR: 1ODYXVJscuV3C7yhVSlgV204N2z975rNJW1SFOdOMwYbCwvoCtqAyz8ehxQOCNqxxCVmyfk7ha
+ 9FQOQ3qf0tmv6qgNqcUZHbK2Zq73IYnOD8iaQiB5Z8mqaiVKwc9emPCQg631tKUyNIrmjMaHsu
+ zaZ91dZPOk/+/jbuOLXxSAOl9JotqbD81/RBaTVVjjwIFzUe9sqELTHNRt4/WunK/sxWa/tZET
+ 23DPzogjp+npDflDkvL0VmT5Mo9wGoB99v4+LleZe1YPhHOu5f4fSwfUi3mwIDtBRLqWUorGgv
+ lYz7XDcHIkZdYdR79ofCosmP
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Sep 2022 16:10:47 -0700
+IronPort-SDR: YEPQcBmREKaUzBJ5mVC5srEmKqh8Cna8rDIIErEnkjRe6fZGsPs29GBTWjNE9UhOF4V47m1jg9
+ yLVUGoC7hnV5zviiUZ79mpUZEFhdZRSYJJ4A5aDUPtRzVk2LeWez/VguZsK8XCF7Th0rCmDZ36
+ FsJH5+/FOs/EVtw87jHAC3B2tN0yy7GWag1fSju+K1XL0tIfndIym9FjqeOI+g3UnIKQrb5w0L
+ pbSlHycMdlpNVg30f9freCliVSMmANwzq6KOg5tbBzQSsgbFfCRG8i8NMoZCc4QUatswEw6OGW
+ yQM=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Sep 2022 16:56:10 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MWhQd3pGBz1RwvL
+        for <linux-ide@vger.kernel.org>; Mon, 19 Sep 2022 16:56:09 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:content-language:references:to
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1663631768; x=1666223769; bh=++5axOCldtTWM+izrbSQWpROwyvWlmGRPLJ
+        dA2yng0M=; b=KumYlcFECCyMFuCCbzzjbk2hBlrl09J7H1BVMMpdpWLqTeK1Udg
+        BQJQNamL7noEQ2kcOpXY79ZFm5an7hgZYNIet+ruTqKUe+qcUHcR0timQfFKEfTT
+        7+EU2aANdBVmxzOTCdnC3Inc+WyuGkoiyybBjJBZHjeFfNTvNNOrWnWtJOt+7C16
+        4xnnoGJ2hsBWcHs8UXmd09FBjoVunvoEbalULcIh0Y9nt/2kAx6gYcjSMb9o+c0p
+        sd2cnrprJIdrUMnVB0OwM0O2rS8UAgnvJDEjxWg63PVisyECEIb91ymOK/63rc3D
+        O4eDxIUJvk8GQtdY7j66BU1zyADl90ojNnQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id yScft8BrSWca for <linux-ide@vger.kernel.org>;
+        Mon, 19 Sep 2022 16:56:08 -0700 (PDT)
+Received: from [10.225.163.81] (unknown [10.225.163.81])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MWhQV5lcDz1RvLy;
+        Mon, 19 Sep 2022 16:56:02 -0700 (PDT)
+Message-ID: <7872df9d-db4e-0617-84eb-e47394774322@opensource.wdc.com>
+Date:   Tue, 20 Sep 2022 08:55:59 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.1
+Subject: Re: [PATCH v8 09/23] ata: libahci_platform: Parse ports-implemented
+ property in resources getter
+To:     Guenter Roeck <linux@roeck-us.net>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Hannes Reinecke <hare@suse.de>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         Patrice Chotard <patrice.chotard@foss.st.com>,
         Serge Semin <fancer.lancer@gmail.com>,
@@ -65,82 +92,91 @@ Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v8 09/23] ata: libahci_platform: Parse ports-implemented
- property in resources getter
-Message-ID: <20220919215014.GA336081@roeck-us.net>
 References: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
  <20220909193621.17380-10-Sergey.Semin@baikalelectronics.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220909193621.17380-10-Sergey.Semin@baikalelectronics.ru>
+ <20220919215014.GA336081@roeck-us.net>
+Content-Language: en-US
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220919215014.GA336081@roeck-us.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Sep 09, 2022 at 10:36:07PM +0300, Serge Semin wrote:
-> The ports-implemented property is mainly used on the OF-based platforms
-> with no ports mapping initialized by a bootloader/BIOS firmware. Seeing
-> the same of_property_read_u32()-based pattern has already been implemented
-> in the generic AHCI LLDD (glue) driver and in the Mediatek, St AHCI
-> drivers let's move the property read procedure to the generic
-> ahci_platform_get_resources() method. Thus we'll have the forced ports
-> mapping feature supported for each OF-based platform which requires that,
-> and stop re-implementing the same pattern in there a bit simplifying the
-> code.
+On 9/20/22 06:50, Guenter Roeck wrote:
+> On Fri, Sep 09, 2022 at 10:36:07PM +0300, Serge Semin wrote:
+>> The ports-implemented property is mainly used on the OF-based platforms
+>> with no ports mapping initialized by a bootloader/BIOS firmware. Seeing
+>> the same of_property_read_u32()-based pattern has already been implemented
+>> in the generic AHCI LLDD (glue) driver and in the Mediatek, St AHCI
+>> drivers let's move the property read procedure to the generic
+>> ahci_platform_get_resources() method. Thus we'll have the forced ports
+>> mapping feature supported for each OF-based platform which requires that,
+>> and stop re-implementing the same pattern in there a bit simplifying the
+>> code.
+>>
+>> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+>> ---
+>>  drivers/ata/ahci_mtk.c         | 2 --
+>>  drivers/ata/ahci_platform.c    | 3 ---
+>>  drivers/ata/ahci_st.c          | 3 ---
+>>  drivers/ata/libahci_platform.c | 3 +++
+>>  4 files changed, 3 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
+>> index 1f6c85fde983..c056378e3e72 100644
+>> --- a/drivers/ata/ahci_mtk.c
+>> +++ b/drivers/ata/ahci_mtk.c
+>> @@ -118,8 +118,6 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
+>>  				   SYS_CFG_SATA_EN);
+>>  	}
+>>  
+>> -	of_property_read_u32(np, "ports-implemented", &hpriv->force_port_map);
+>> -
+>>  	return 0;
+>>  }
+>>  
+>> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+>> index 28a8de5b48b9..9b56490ecbc3 100644
+>> --- a/drivers/ata/ahci_platform.c
+>> +++ b/drivers/ata/ahci_platform.c
+>> @@ -56,9 +56,6 @@ static int ahci_probe(struct platform_device *pdev)
+>>  	if (rc)
+>>  		return rc;
+>>  
+>> -	of_property_read_u32(dev->of_node,
+>> -			     "ports-implemented", &hpriv->force_port_map);
+>> -
+>>  	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+>>  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+>>  
+>> diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+>> index 7526653c843b..068621099c00 100644
+>> --- a/drivers/ata/ahci_st.c
+>> +++ b/drivers/ata/ahci_st.c
+>> @@ -168,9 +168,6 @@ static int st_ahci_probe(struct platform_device *pdev)
+>>  
+>>  	st_ahci_configure_oob(hpriv->mmio);
+>>  
+>> -	of_property_read_u32(dev->of_node,
+>> -			     "ports-implemented", &hpriv->force_port_map);
+>> -
 > 
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> ---
->  drivers/ata/ahci_mtk.c         | 2 --
->  drivers/ata/ahci_platform.c    | 3 ---
->  drivers/ata/ahci_st.c          | 3 ---
->  drivers/ata/libahci_platform.c | 3 +++
->  4 files changed, 3 insertions(+), 8 deletions(-)
+> With arm:allmodconfig, this results in:
 > 
-> diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
-> index 1f6c85fde983..c056378e3e72 100644
-> --- a/drivers/ata/ahci_mtk.c
-> +++ b/drivers/ata/ahci_mtk.c
-> @@ -118,8 +118,6 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
->  				   SYS_CFG_SATA_EN);
->  	}
->  
-> -	of_property_read_u32(np, "ports-implemented", &hpriv->force_port_map);
-> -
->  	return 0;
->  }
->  
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index 28a8de5b48b9..9b56490ecbc3 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -56,9 +56,6 @@ static int ahci_probe(struct platform_device *pdev)
->  	if (rc)
->  		return rc;
->  
-> -	of_property_read_u32(dev->of_node,
-> -			     "ports-implemented", &hpriv->force_port_map);
-> -
->  	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
->  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
->  
-> diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-> index 7526653c843b..068621099c00 100644
-> --- a/drivers/ata/ahci_st.c
-> +++ b/drivers/ata/ahci_st.c
-> @@ -168,9 +168,6 @@ static int st_ahci_probe(struct platform_device *pdev)
->  
->  	st_ahci_configure_oob(hpriv->mmio);
->  
-> -	of_property_read_u32(dev->of_node,
-> -			     "ports-implemented", &hpriv->force_port_map);
-> -
+>   CC [M]  drivers/ata/ahci_st.o
+> drivers/ata/ahci_st.c: In function 'st_ahci_probe':
+> drivers/ata/ahci_st.c:147:24: error: unused variable 'dev' [-Werror=unused-variable]
+>   147 |         struct device *dev = &pdev->dev;
+> 
+> Guenter
 
-With arm:allmodconfig, this results in:
+Just pushed a fix for this in ata tree for-next and for-6.1 branches. The
+problem should be resolved with the next linux-next merge.
 
-  CC [M]  drivers/ata/ahci_st.o
-drivers/ata/ahci_st.c: In function 'st_ahci_probe':
-drivers/ata/ahci_st.c:147:24: error: unused variable 'dev' [-Werror=unused-variable]
-  147 |         struct device *dev = &pdev->dev;
+-- 
+Damien Le Moal
+Western Digital Research
 
-Guenter
