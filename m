@@ -2,181 +2,97 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8257C6FA8B
-	for <linux-ide@archiver.kernel.org>; Mon, 19 Sep 2022 23:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B68FECAAD8
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Sep 2022 06:29:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229562AbiISX4P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 19 Sep 2022 19:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55796 "EHLO
+        id S230365AbiITG3j (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 20 Sep 2022 02:29:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229971AbiISX4N (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Sep 2022 19:56:13 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23D5550058
-        for <linux-ide@vger.kernel.org>; Mon, 19 Sep 2022 16:56:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1663631771; x=1695167771;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=++5axOCldtTWM+izrbSQWpROwyvWlmGRPLJdA2yng0M=;
-  b=Mnn61pXQouxDcedtf8N/mBz6S5pP6OeSTutsTy8vFuXLddEd2EaRRHjt
-   gQvfMQ6dS4FucO9brRAId0fRt6wJzxRWLDymH424LYGRN5njopsgkhdFt
-   +CtbQxPPrQskwUGWQDSKbUqi8UbJBbZdjpfHq0kb7n4vVBCw3BcdxvaE8
-   5vAudGucKD2OcU3JhDBJki2fNrtSWt1m3QlxGVd79hmhnn5z7Kr9nMTr8
-   2K15p/roUDVNSexSdREiG9IlHjDecYqzehLMmVexDWT2oz3xULSk6Qa5g
-   GTjzySy0WQxymKWsTH0AU0G14eee9e6f5WXkRZIQVXIOezAoKYpcOGjuB
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.93,329,1654531200"; 
-   d="scan'208";a="323859293"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Sep 2022 07:56:10 +0800
-IronPort-SDR: 1ODYXVJscuV3C7yhVSlgV204N2z975rNJW1SFOdOMwYbCwvoCtqAyz8ehxQOCNqxxCVmyfk7ha
- 9FQOQ3qf0tmv6qgNqcUZHbK2Zq73IYnOD8iaQiB5Z8mqaiVKwc9emPCQg631tKUyNIrmjMaHsu
- zaZ91dZPOk/+/jbuOLXxSAOl9JotqbD81/RBaTVVjjwIFzUe9sqELTHNRt4/WunK/sxWa/tZET
- 23DPzogjp+npDflDkvL0VmT5Mo9wGoB99v4+LleZe1YPhHOu5f4fSwfUi3mwIDtBRLqWUorGgv
- lYz7XDcHIkZdYdR79ofCosmP
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Sep 2022 16:10:47 -0700
-IronPort-SDR: YEPQcBmREKaUzBJ5mVC5srEmKqh8Cna8rDIIErEnkjRe6fZGsPs29GBTWjNE9UhOF4V47m1jg9
- yLVUGoC7hnV5zviiUZ79mpUZEFhdZRSYJJ4A5aDUPtRzVk2LeWez/VguZsK8XCF7Th0rCmDZ36
- FsJH5+/FOs/EVtw87jHAC3B2tN0yy7GWag1fSju+K1XL0tIfndIym9FjqeOI+g3UnIKQrb5w0L
- pbSlHycMdlpNVg30f9freCliVSMmANwzq6KOg5tbBzQSsgbFfCRG8i8NMoZCc4QUatswEw6OGW
- yQM=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Sep 2022 16:56:10 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MWhQd3pGBz1RwvL
-        for <linux-ide@vger.kernel.org>; Mon, 19 Sep 2022 16:56:09 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:content-language:references:to
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1663631768; x=1666223769; bh=++5axOCldtTWM+izrbSQWpROwyvWlmGRPLJ
-        dA2yng0M=; b=KumYlcFECCyMFuCCbzzjbk2hBlrl09J7H1BVMMpdpWLqTeK1Udg
-        BQJQNamL7noEQ2kcOpXY79ZFm5an7hgZYNIet+ruTqKUe+qcUHcR0timQfFKEfTT
-        7+EU2aANdBVmxzOTCdnC3Inc+WyuGkoiyybBjJBZHjeFfNTvNNOrWnWtJOt+7C16
-        4xnnoGJ2hsBWcHs8UXmd09FBjoVunvoEbalULcIh0Y9nt/2kAx6gYcjSMb9o+c0p
-        sd2cnrprJIdrUMnVB0OwM0O2rS8UAgnvJDEjxWg63PVisyECEIb91ymOK/63rc3D
-        O4eDxIUJvk8GQtdY7j66BU1zyADl90ojNnQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id yScft8BrSWca for <linux-ide@vger.kernel.org>;
-        Mon, 19 Sep 2022 16:56:08 -0700 (PDT)
-Received: from [10.225.163.81] (unknown [10.225.163.81])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MWhQV5lcDz1RvLy;
-        Mon, 19 Sep 2022 16:56:02 -0700 (PDT)
-Message-ID: <7872df9d-db4e-0617-84eb-e47394774322@opensource.wdc.com>
-Date:   Tue, 20 Sep 2022 08:55:59 +0900
+        with ESMTP id S230357AbiITG3e (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Sep 2022 02:29:34 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1526BCF0;
+        Mon, 19 Sep 2022 23:29:34 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id l65so1804831pfl.8;
+        Mon, 19 Sep 2022 23:29:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=YBtQZeH3wsdy40ng7vXdH8dANci6zTn7e1xBfD0d/f0=;
+        b=MsgnZ+iOa9wkQMTHj5bFMWzt5obd9fz7I+spLbys6vPAhOSrtaldoyga6JSM11mQEA
+         DvKwMPReJ5XGAggd/L9QlXBFR8GesL9P1L1Zt78mYw14Zs0v8zByr6WHpWziEqeswppk
+         KHgKRrNomzf8UL4XuLzReLdiYAU55e2ihFiXW+GPFo7j8V+CmCmjsqk+CqtBAWy0ieap
+         77mNALcAOeO/6kctOAy6FWxrgxT9ggj3IAyukjqnFyc+hdtlfyA3PZdiwqS8uCNLyvra
+         b7i9NGZotqSWSTShORBtFW78wUU0i7iSCERM0R4PfxoUQxvDqtEd2icWrxkZCOlydk86
+         olTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=YBtQZeH3wsdy40ng7vXdH8dANci6zTn7e1xBfD0d/f0=;
+        b=BSi2hwHDe+efHBtD2LrpU3MWELiiJG+pZsq+8opEP0XfJk3UUK1a8tvmEZfND7t/z2
+         TxW6hygNlH0TFN2AyU+6qZY1LbmqcI7hFoSlXbtVQIni4fw6ydj1q6vz3FoFP346ClBv
+         /Z0e0XwiYQwmG+X45UAr8EJplbZ4+NRnzhvZnJKOPRiMRvCsXp71XkwPB5cLglqHSFzR
+         uvw3srbZ90oc21k7CyUFVEcLb3dYtKVhEMOgyJf9NhA7NxB/DZxwxI9RBvpCXph006B5
+         VWa606I5C9j1hPddbr6CTRqUR1J0mxRm9sRc++C47GCMIC3e8+/kKlAmZD2wA2jhZRBy
+         pq9Q==
+X-Gm-Message-State: ACrzQf0zSXYAmtqYO4qdpNdZnEinp3X/nz+beC3Nx3jqHFPhg2nq9qr9
+        ZQF7ZKXiwYPX5FPXSFQ3IaA=
+X-Google-Smtp-Source: AMsMyM5ufZI+Y9ZWKSTRThW4JnMXGcte3B1lKcUAbYnJAhoyq/80A2R8l/c9nQakca/dWEzTWZ65bw==
+X-Received: by 2002:a65:6055:0:b0:42a:7b2b:dc71 with SMTP id a21-20020a656055000000b0042a7b2bdc71mr18632465pgp.23.1663655373582;
+        Mon, 19 Sep 2022 23:29:33 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id n4-20020a1709026a8400b0016d5b7fb02esm530773plk.60.2022.09.19.23.29.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Sep 2022 23:29:32 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ye.xingchen@zte.com.cn
+To:     damien.lemoal@opensource.wdc.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ye xingchen <ye.xingchen@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH linux-next] ata: libata-eh: Remove the unneeded result variable
+Date:   Tue, 20 Sep 2022 06:29:29 +0000
+Message-Id: <20220920062929.214976-1-ye.xingchen@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.1
-Subject: Re: [PATCH v8 09/23] ata: libahci_platform: Parse ports-implemented
- property in resources getter
-To:     Guenter Roeck <linux@roeck-us.net>,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        Hannes Reinecke <hare@suse.de>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Patrice Chotard <patrice.chotard@foss.st.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-References: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
- <20220909193621.17380-10-Sergey.Semin@baikalelectronics.ru>
- <20220919215014.GA336081@roeck-us.net>
-Content-Language: en-US
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220919215014.GA336081@roeck-us.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/20/22 06:50, Guenter Roeck wrote:
-> On Fri, Sep 09, 2022 at 10:36:07PM +0300, Serge Semin wrote:
->> The ports-implemented property is mainly used on the OF-based platforms
->> with no ports mapping initialized by a bootloader/BIOS firmware. Seeing
->> the same of_property_read_u32()-based pattern has already been implemented
->> in the generic AHCI LLDD (glue) driver and in the Mediatek, St AHCI
->> drivers let's move the property read procedure to the generic
->> ahci_platform_get_resources() method. Thus we'll have the forced ports
->> mapping feature supported for each OF-based platform which requires that,
->> and stop re-implementing the same pattern in there a bit simplifying the
->> code.
->>
->> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
->> ---
->>  drivers/ata/ahci_mtk.c         | 2 --
->>  drivers/ata/ahci_platform.c    | 3 ---
->>  drivers/ata/ahci_st.c          | 3 ---
->>  drivers/ata/libahci_platform.c | 3 +++
->>  4 files changed, 3 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
->> index 1f6c85fde983..c056378e3e72 100644
->> --- a/drivers/ata/ahci_mtk.c
->> +++ b/drivers/ata/ahci_mtk.c
->> @@ -118,8 +118,6 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
->>  				   SYS_CFG_SATA_EN);
->>  	}
->>  
->> -	of_property_read_u32(np, "ports-implemented", &hpriv->force_port_map);
->> -
->>  	return 0;
->>  }
->>  
->> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
->> index 28a8de5b48b9..9b56490ecbc3 100644
->> --- a/drivers/ata/ahci_platform.c
->> +++ b/drivers/ata/ahci_platform.c
->> @@ -56,9 +56,6 @@ static int ahci_probe(struct platform_device *pdev)
->>  	if (rc)
->>  		return rc;
->>  
->> -	of_property_read_u32(dev->of_node,
->> -			     "ports-implemented", &hpriv->force_port_map);
->> -
->>  	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
->>  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
->>  
->> diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
->> index 7526653c843b..068621099c00 100644
->> --- a/drivers/ata/ahci_st.c
->> +++ b/drivers/ata/ahci_st.c
->> @@ -168,9 +168,6 @@ static int st_ahci_probe(struct platform_device *pdev)
->>  
->>  	st_ahci_configure_oob(hpriv->mmio);
->>  
->> -	of_property_read_u32(dev->of_node,
->> -			     "ports-implemented", &hpriv->force_port_map);
->> -
-> 
-> With arm:allmodconfig, this results in:
-> 
->   CC [M]  drivers/ata/ahci_st.o
-> drivers/ata/ahci_st.c: In function 'st_ahci_probe':
-> drivers/ata/ahci_st.c:147:24: error: unused variable 'dev' [-Werror=unused-variable]
->   147 |         struct device *dev = &pdev->dev;
-> 
-> Guenter
+From: ye xingchen <ye.xingchen@zte.com.cn>
 
-Just pushed a fix for this in ata tree for-next and for-6.1 branches. The
-problem should be resolved with the next linux-next merge.
+Return the value ata_port_abort() directly instead of storing it in
+another redundant variable.
 
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: ye xingchen <ye.xingchen@zte.com.cn>
+---
+ drivers/ata/libata-eh.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7c128c89b454..7dbca2a2f9ee 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1086,14 +1086,11 @@ static void __ata_port_freeze(struct ata_port *ap)
+  */
+ int ata_port_freeze(struct ata_port *ap)
+ {
+-	int nr_aborted;
+-
+ 	WARN_ON(!ap->ops->error_handler);
+ 
+ 	__ata_port_freeze(ap);
+-	nr_aborted = ata_port_abort(ap);
+ 
+-	return nr_aborted;
++	return ata_port_abort(ap);
+ }
+ EXPORT_SYMBOL_GPL(ata_port_freeze);
+ 
 -- 
-Damien Le Moal
-Western Digital Research
-
+2.25.1
