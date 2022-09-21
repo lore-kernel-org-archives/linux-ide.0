@@ -2,159 +2,143 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8026AECAAD8
-	for <linux-ide@archiver.kernel.org>; Wed, 21 Sep 2022 14:57:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E6D7C6FA82
+	for <linux-ide@archiver.kernel.org>; Wed, 21 Sep 2022 17:20:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230358AbiIUO5K (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 21 Sep 2022 10:57:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47432 "EHLO
+        id S229866AbiIURT7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 21 Sep 2022 13:19:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230487AbiIUO4X (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2022 10:56:23 -0400
-Received: from se21-yh-out2.route25.eu (se21-yh-out2.route25.eu [IPv6:2a01:b941:2::57])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F22636C123
-        for <linux-ide@vger.kernel.org>; Wed, 21 Sep 2022 07:55:21 -0700 (PDT)
-Message-ID: <d1683a01-005a-3588-a63d-e52781275516@staalenberk.nl>
-Date:   Wed, 21 Sep 2022 16:54:54 +0200
+        with ESMTP id S230087AbiIURT6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2022 13:19:58 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E6A75C35C
+        for <linux-ide@vger.kernel.org>; Wed, 21 Sep 2022 10:19:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1663780794; x=1695316794;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=snPvfZCdDqDFcpBnh+0xdjo3PDdJaJXqCgEHIMewdI8=;
+  b=Q2JUjnhcNoNSbiA2mUwNa7KCSl7W1o5x/4e/92J2g7m1tHfsX48L26tA
+   BJmevSsz+sXI6J07+y44L1gpoxQ4dwQtkLnPnRjO79MMR1pe2zJqf/09P
+   dRdDl9vQ8+ygFIWGCZVaizOGND+ZuNrNsFOeZ9xDgfIerqC4VZUhd9Ld7
+   pdmUIzGnobvbggPvSRtbBAbUe+opYV8Co1dbiw4WoMklQisHyE2JAhL88
+   CQkxplEQy8RmrNDJfyQsYhiEzhnqsluV1m3OxxTSBLJk4Qo4w69URY2kt
+   EGE3fmPO5nzHEDeId62kUjavawIRTHv+b4sfnfUv1PRRxuRrGkFiChg2D
+   A==;
+X-IronPort-AV: E=Sophos;i="5.93,333,1654531200"; 
+   d="scan'208";a="210311071"
+Received: from unknown (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Sep 2022 23:58:19 +0800
+IronPort-SDR: O6ctfnpDI+hCSzYd6bEENdLezoNQKsqz0dCoO5rBW4eQ0Xtu4UrkcJQKapeq3ShSXErdFHImwh
+ OK5JST8dOXQvJY/Ufmi78fiiM2yAnlVyZFfpUyb+LzXbUKb5m6cPZIuJd500k8dlbWji6T0f/i
+ 4eSdsJ8QFBp3XzIiRd84Bszrh64zkSZx/Do2Jm7KwLOYrVYffnOp3QfMvdS4r58LbxkRckyPbC
+ r7Wlp7tdJYbz2zk4vQVK6GvSFiW5nU8XsXKfMKAeyU4GTBFhbI4768n8B4x6H6LvIoFWuFuuWw
+ txvKm/SmDp09fkb7X8tmNsY7
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 21 Sep 2022 08:18:04 -0700
+IronPort-SDR: lUQKyi3Cfmw8b5ACycosvtHYMf2zjTtmqPdrPmm/7HAzyxt+tOU6PXcLFb6gVUlTPaWa6VcoYL
+ gYbPPYKKcBZd421bUCz1+IVIf+3NeBDvdHVOD0g16qS3bVKh7bvlHqyc/MJPwaTsUBdiTuazXu
+ qeCwit+wsNUAKjanXrMF1zBjmwP288uHVGoiHE4iUyMsoR8uxNz52FCJ27IFxrQNEi7rY87yHn
+ Ybi3nnORg6yidV2QYQTeyo0pY0m1WPLGuL6SUZW25WpnERmsuukK/4YD2y2NUz2rKIez70qHbo
+ 4jg=
+WDCIronportException: Internal
+Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.30])
+  by uls-op-cesaip02.wdc.com with ESMTP; 21 Sep 2022 08:57:59 -0700
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
+Subject: [PATCH] ata: libata-eh: avoid needless hard reset when revalidating link
+Date:   Wed, 21 Sep 2022 17:57:52 +0200
+Message-Id: <20220921155753.231770-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: Multiple errors with DVD drive
-Content-Language: en-US
-References: <c7e0c932-2e20-18b5-fe9f-36572807f59b@staalenberk.nl>
- <40946617-7f37-b5a6-f94c-d47d1b4b21f3@opensource.wdc.com>
- <f7efabe8-79ab-8c6b-81d5-2cd0a396f148@staalenberk.nl>
- <a4326505-f52b-7a7b-d626-a77fb546642e@staalenberk.nl>
- <0baf58ab-4e7e-e8bf-d1e8-0897542d1bc6@staalenberk.nl>
- <Yym65wlizZydJ/Tn@x1-carbon>
- <9756ac37-6790-7b83-5840-abe04f8ab838@staalenberk.nl>
- <Yyor5zsqHAoNimF3@x1-carbon>
- <f3111c18-704b-1845-1d39-e220642eec34@staalenberk.nl>
- <Yyr8aV5CEOuChpre@x1-carbon>
- <e9893bab-f2af-bae0-18df-924f9ff4652f@staalenberk.nl>
-To:     linux-ide@vger.kernel.org
-From:   "J.J. Berkhout" <j.j.berkhout@staalenberk.nl>
-In-Reply-To: <e9893bab-f2af-bae0-18df-924f9ff4652f@staalenberk.nl>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------3SpZreKYCMxZrqYdchushBAu"
-X-PPP-Message-ID: <20220921145517.6059.25956@server108.yourhosting.nl>
-X-PPP-Vhost: staalenberk.nl
-X-Originating-IP: 185.37.71.73
-X-SpamExperts-Domain: filter.yourhosting.nl
-X-SpamExperts-Username: 185.37.71.73
-Authentication-Results: route25.eu; auth=pass smtp.auth=185.37.71.73@filter.yourhosting.nl
-X-SpamExperts-Outgoing-Class: ham
-X-SpamExperts-Outgoing-Evidence: Combined (0.05)
-X-Recommended-Action: accept
-X-Filter-ID: Pt3MvcO5N4iKaDQ5O6lkdGlMVN6RH8bjRMzItlySaT8YSbZel1yDd5EU2iBI90sIPUtbdvnXkggZ
- 3YnVId/Y5jcf0yeVQAvfjHznO7+bT5wbKGKgvDNtko52zmlKj9u4U2Itm39BdCc4FEP6OrUewhPm
- p87GC1OZvsh7yKER8srmI2BiYodkYGBMdWyjOHkBeb4o0/MLsfRXq2B6Bj1eqLdRg4TfZq2twbxK
- ne3bTxREkSF2RwjLlNyLHQr71RxeYzDzG2yBl+P6SMBMGH3GzhZ53TcoV3yK32bHTR6GRn3t6JtT
- TglxNZAq/da6Ra+kzsLfXfprfrktIHePOCuQY7m2yKklKs/xwV8kE9t47ZiZOZh/196Uh/xDSW9g
- kA3LEWgKIJ7Ay0RVJqlA03GHx7ObK052/jLuewOcI5amMxstChAJ8MhPXbXvhZAyklffRAwX31WV
- Y5lWjWxuGSRuxbb9wsrnUxyV5R6XweswXiYy2dhy85T3A96mF1Evp4++cd3QbXHil9nVohJvu6B5
- vcQRHhpp7PEHhQA50A063668oLWVcEFIP6cB4qvhjDlE8SRu8s3H6BxpZmNpeigyegX81Q2b6Us7
- siSVRTTv3earEPGaUfvTQD8mTYnm5Vyb/eB36XvbBuC1U1srT4VxcBqZR3KVQgqF/fPYYAfEfsg1
- 1Ad23U0cZ9WVVTbpTmmUCiVDPWVg2jC+Q3dCispdoz8BY8aNT8azziAnFylBxLPmzfV669FmRwFs
- RSOwswyQAcVCbFO9oZq2JrkUu2Y0bcen5bW2mj7gpl+Nel82aV6t85jdQ1W7xM52M4KvSDibJS8X
- NHE22jNoXXtgm8Rhij9YHcdrxh7ntAaPP6XHE+u7xS0WDw/IGcY7vSWOyzoCSHa9Wtinw9ABNti+
- VLYjeyG7X+t1TW39Ja77LGPpOwAT4kZm3AYrwwubjkeENJKdbGMwes7NyHuYBdQjd1YteIi7YBpB
- LYUph4jPimJS/7Zi/131P3mdLzgr+UhVxYKZoSyaA1TzQpMNBxbB7RLiYFYq922Wf+VLnUUJCa5X
- EkPBdYzH5SHs7OXwC7D2RhUaKfhganupwSWw7cas29IGI3Ms1dwieR5pqJIe+glXHys9mi+FbRwZ
- y3X+fQbaXDYb
-X-Report-Abuse-To: spam@semaster01.route25.eu
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------3SpZreKYCMxZrqYdchushBAu
-Content-Type: multipart/mixed; boundary="------------mvb8Yf0M6bZhBSWFm3ZZx3W7";
- protected-headers="v1"
-From: "J.J. Berkhout" <j.j.berkhout@staalenberk.nl>
-To: linux-ide@vger.kernel.org
-Message-ID: <d1683a01-005a-3588-a63d-e52781275516@staalenberk.nl>
-Subject: Re: Multiple errors with DVD drive
-References: <c7e0c932-2e20-18b5-fe9f-36572807f59b@staalenberk.nl>
- <40946617-7f37-b5a6-f94c-d47d1b4b21f3@opensource.wdc.com>
- <f7efabe8-79ab-8c6b-81d5-2cd0a396f148@staalenberk.nl>
- <a4326505-f52b-7a7b-d626-a77fb546642e@staalenberk.nl>
- <0baf58ab-4e7e-e8bf-d1e8-0897542d1bc6@staalenberk.nl>
- <Yym65wlizZydJ/Tn@x1-carbon>
- <9756ac37-6790-7b83-5840-abe04f8ab838@staalenberk.nl>
- <Yyor5zsqHAoNimF3@x1-carbon>
- <f3111c18-704b-1845-1d39-e220642eec34@staalenberk.nl>
- <Yyr8aV5CEOuChpre@x1-carbon>
- <e9893bab-f2af-bae0-18df-924f9ff4652f@staalenberk.nl>
-In-Reply-To: <e9893bab-f2af-bae0-18df-924f9ff4652f@staalenberk.nl>
+Performing a revalidation on a AHCI controller supporting LPM,
+while using a lpm mode of e.g. med_power_with_dip (hipm + dipm) or
+medium_power (hipm), will currently always lead to a hard reset.
 
---------------mvb8Yf0M6bZhBSWFm3ZZx3W7
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+The expected behavior is that a hard reset is only performed when
+revalidate fails, because the properties of the drive has changed.
 
-Hello,
+A revalidate performed after e.g. a NCQ error, or such a simple thing
+as disabling write-caching (hdparm -W 0 /dev/sda), should succeed on
+the first try (and should therefore not cause the link to be reset).
 
+This unwarranted hard reset happens because ata_phys_link_offline()
+returns true for a link that is in deep sleep. Thus the call to
+ata_phys_link_offline() in ata_eh_revalidate_and_attach() will cause
+the revalidation to fail, which causes ata_eh_handle_dev_fail() to be
+called, which will set ehc->i.action |= ATA_EH_RESET, such that the
+link is reset before retrying revalidation.
 
+When the link is reset, the link is reestablished, so when
+ata_eh_revalidate_and_attach() is called the second time, directly
+after the link has been reset, ata_phys_link_offline() will return
+false, and the revalidation will succeed.
 
-On 21-09-2022 14:38, J.J. Berkhout wrote:
-> On 21-09-2022 13:58, Niklas Cassel wrote:
->> Another way do disable lpm is to do:
->>
->> $ ls -al /sys/class/scsi_host/host*
->>
->> Find your device in the list. My device is:
->> /sys/class/scsi_host/host13/
->>
->> Print the current lpm policy for your device:
->> $ cat /sys/class/scsi_host/host13/link_power_management_policy
->> med_power_with_dipm
->>
->> Anything other than "max_performance" means that you have (a varying d=
-egree)
->> of low power modes enabled.
->>
->> $ sudo sh -c "echo max_performance > /sys/class/scsi_host/host13/link_=
-power_management_policy"
->>
->> $ cat /sys/class/scsi_host/host13/link_power_management_policy=20
->> max_performance
->>
->> Try reading from the optical drive after ensuring that the policy is
->> "max_performance".
->>
->=20
-> Yes, this worked and did the trick!  Reading without any errors.  I did=
+Looking at "8.3.1.3 HBA Initiated" in the AHCI 1.3.1 specification,
+it is clear the when host software writes a new command to memory,
+by setting a bit in the PxCI/PxSACT HBA port registers, the HBA will
+automatically bring back the link before sending out the Command FIS.
 
-> not yet try to write, but will do so today.
+However, simply reading a SCR (like ata_phys_link_offline() does),
+will not cause the HBA to automatically bring back the link.
 
-I just wrote two Blu-Ray disks without problems.
-Perfect.
+As long as hipm is enabled, the HBA will put an idle link into deep
+sleep. Avoid this needless hard reset on revalidation by temporarily
+disabling hipm, by setting the LPM mode to ATA_LPM_MAX_POWER.
 
-Jaap Berkhout.
+After revalidation is complete, ata_eh_recover() will restore the link
+policy by setting the LPM mode to ap->target_lpm_policy.
 
---------------mvb8Yf0M6bZhBSWFm3ZZx3W7--
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+---
+ drivers/ata/libata-eh.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
---------------3SpZreKYCMxZrqYdchushBAu
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7c128c89b454..1f83ae8690ee 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -151,6 +151,8 @@ ata_eh_cmd_timeout_table[ATA_EH_CMD_TIMEOUT_TABLE_SIZE] = {
+ #undef CMDS
+ 
+ static void __ata_port_freeze(struct ata_port *ap);
++static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
++			  struct ata_device **r_failed_dev);
+ #ifdef CONFIG_PM
+ static void ata_eh_handle_port_suspend(struct ata_port *ap);
+ static void ata_eh_handle_port_resume(struct ata_port *ap);
+@@ -2940,6 +2942,23 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
+ 			WARN_ON(dev->class == ATA_DEV_PMP);
+ 
++			/*
++			 * The link may be in a deep sleep, wake it up.
++			 *
++			 * If the link is in deep sleep, ata_phys_link_offline()
++			 * will return true, causing the revalidation to fail,
++			 * which leads to a (potentially) needless hard reset.
++			 *
++			 * ata_eh_recover() will later restore the link policy
++			 * to ap->target_lpm_policy after revalidation is done.
++			 */
++			if (link->lpm_policy > ATA_LPM_MAX_POWER) {
++				rc = ata_eh_set_lpm(link, ATA_LPM_MAX_POWER,
++						    r_failed_dev);
++				if (rc)
++					goto err;
++			}
++
+ 			if (ata_phys_link_offline(ata_dev_phys_link(dev))) {
+ 				rc = -EIO;
+ 				goto err;
+-- 
+2.37.3
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEoR3751BhG/27nT45Zx3W/nHBYkoFAmMrJb4ACgkQZx3W/nHB
-YkpH8Q/8D8LBD6A8pLcY0ur5ZDa6N+oQOxsjyE540lI/LSbPGC2nXra8q9gUY03w
-86bK+Gr3dhid3WxDlf7kNNMS0YVdyoVZOUnEGblxC9lXb5uwpKH9zrhLW8ST/qXl
-sX+KDKA9CNxDqp7dYB2l04jtvSjsiUyRnV8+MmQIpEWoMCsLnbw+KvW7b1PL4O7H
-4KbTNj38HYu5Pfz3pFBtsnKQTliKqx6tf+Qj4C0eDjW5y5xM/yr2LoCo/2P5nC1a
-NKN/VqwZUrEKPdgX92IYRVgQi4VUrk6aE0NLVraHtwzj87GdkI+zFT6AxWI+CdK5
-i6WSZJWHQZZt/aSO+VXqCAkxb4Nna9JjWQZBXR/ubfimBfPK+Luk4BhK2Ot63l+h
-3TiM/redHq42Uq1IY788XmaYp5X1NWeSEFFplqZp0HOR8m3bumqn0KZbhcpCz/FM
-QPBEnN73GZEHaf7iOK16pAj0VXqwbIf739n4vyGNtlJ3fijZ/x9zBaXj1jYmthso
-zN3+KG6S90FYqzj1b4/YANPHvkGv9duFisiVWFQfMdV7Z1rOzDTn8wkgr5X03H8p
-Y8CjLoZeiHdTy3jI3OxPXB/+PkY1WUqwarfKQZtB9HuU+hbC5udcJqCwCTk9WlvC
-1Wr+Yp7kTAJ4bLf/hsI/dlmOxCsVMfAaXRWaSwsM4wbz/1vxC6w=
-=6tfH
------END PGP SIGNATURE-----
-
---------------3SpZreKYCMxZrqYdchushBAu--
