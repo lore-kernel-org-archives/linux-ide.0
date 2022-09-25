@@ -2,127 +2,162 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67470C32771
-	for <linux-ide@archiver.kernel.org>; Sat, 24 Sep 2022 09:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8197C6FA82
+	for <linux-ide@archiver.kernel.org>; Sun, 25 Sep 2022 16:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233342AbiIXJtt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 24 Sep 2022 05:49:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51092 "EHLO
+        id S230465AbiIYQTg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 25 Sep 2022 12:19:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233221AbiIXJts (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 24 Sep 2022 05:49:48 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BADCE1EAD2;
-        Sat, 24 Sep 2022 02:49:44 -0700 (PDT)
-Received: from [192.168.1.103] (178.176.77.229) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sat, 24 Sep
- 2022 12:49:33 +0300
-Subject: Re: [PATCH 2/2] ata: libata-sata: Fix device queue depth control
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.garry@huawei.com>
-References: <20220924062907.959856-1-damien.lemoal@opensource.wdc.com>
- <20220924062907.959856-3-damien.lemoal@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <b1595afb-49cd-2e19-1b5f-bfbe9836784e@omp.ru>
-Date:   Sat, 24 Sep 2022 12:49:33 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S232770AbiIYQTd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 25 Sep 2022 12:19:33 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D372233;
+        Sun, 25 Sep 2022 09:19:31 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id k10so7434598lfm.4;
+        Sun, 25 Sep 2022 09:19:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=J9KMqJi/q6W4clyZw0NlrkwRki9TMO0lxNcnvx1Dx7M=;
+        b=DSAJvMB5y7LrdMIgz2mEY5jZTvcYCFvJqeOmULmTDrFFtElW0jkSccyqTuaYDQHVA4
+         jmJsWaKuoTEiQ5B71N4r6DHehQO4cf3se6jlQcU8VuOI71EJu9Zk5SwFRIE/SEyemsiF
+         5tqdTPOd7QGho3eAGH6iuUFhFd2Lah9OWeLjsBm47AZwPck3xy+80e315dbPgaHK0NCh
+         3nb+pK6mLbl5yH5AScwXh2/WbReQXoBDCGwECEGlNvv0E/DmpyAsiMvQ9v25HaFpmQ1A
+         t0CdcPTqXWWodO83QxXbagw/+c5cfgZFo+f/YQTHKaQ9+MIWA2rKWTYTN2SNj6OfUREU
+         5HXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=J9KMqJi/q6W4clyZw0NlrkwRki9TMO0lxNcnvx1Dx7M=;
+        b=uHwPIsautUpwbO1M+g0kJeZJqewYEK539kDy+X5Pc8b6PzuGuH6e/sU+Yt+qdqNrsE
+         uo3Aq7nekPXP5DB/SCS5ONuB1y0asKuqMQ5Zk87DhcV6J7Xuvkema7J7p7QuEOotdkm2
+         iL9fpXFHPGcK53k2GuiHzllrsaOKS8//c0Gw/n9whSJYL+D9nyICrab5aUm2NdvtFFzf
+         wXdqzGiB6tSp2vzTTmFjyXHRRnPEv6I6YShwIjPyFjY8TVa5D88562ywrJ5N0JkrZy6j
+         Ubwft4pQxuHlUwoh464WxtBWKe9wqRZz341zkn47VKHbAwYRqLYKXT5jMfzHkN/nYuxw
+         VqNg==
+X-Gm-Message-State: ACrzQf3R9JnmMrovff8Au6ibbgRvDvb68cqj+w3NScnhV/E+/XZ585He
+        g2LmqX6DD94uxlfVHP3vIik=
+X-Google-Smtp-Source: AMsMyM4VQ4kfS/T8BAv5BTaYjOoI6VwKUlODD/pVTfaN8Ipg3GLRgOBNVr58j3q1TI/QIOB4wslv5Q==
+X-Received: by 2002:a05:6512:3e13:b0:499:1829:5181 with SMTP id i19-20020a0565123e1300b0049918295181mr7363944lfv.71.1664122769424;
+        Sun, 25 Sep 2022 09:19:29 -0700 (PDT)
+Received: from mobilestation ([95.79.140.178])
+        by smtp.gmail.com with ESMTPSA id c3-20020a05651221a300b0048b08e25979sm2248212lft.199.2022.09.25.09.19.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 25 Sep 2022 09:19:28 -0700 (PDT)
+Date:   Sun, 25 Sep 2022 19:19:26 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Guenter Roeck <linux@roeck-us.net>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Patrice Chotard <patrice.chotard@foss.st.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v8 09/23] ata: libahci_platform: Parse ports-implemented
+ property in resources getter
+Message-ID: <20220925161926.hc6txrf7yklqen7s@mobilestation>
+References: <20220909193621.17380-1-Sergey.Semin@baikalelectronics.ru>
+ <20220909193621.17380-10-Sergey.Semin@baikalelectronics.ru>
+ <20220919215014.GA336081@roeck-us.net>
+ <7872df9d-db4e-0617-84eb-e47394774322@opensource.wdc.com>
 MIME-Version: 1.0
-In-Reply-To: <20220924062907.959856-3-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.77.229]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 09/24/2022 09:23:18
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 172871 [Sep 23 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 499 499 6614d57ea7c6ac2e38ef0272e2cc77f73b9aae18
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_phishing_log_reg_50_60}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.77.229 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1;178.176.77.229:7.1.2
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.77.229
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/24/2022 09:27:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 9/24/2022 4:23:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7872df9d-db4e-0617-84eb-e47394774322@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-On 9/24/22 9:29 AM, Damien Le Moal wrote:
-
-> The function __ata_change_queue_depth() uses the helper
-> ata_scsi_find_dev() to get the ata_device structure of a scsi device and
-> set that device maximum queue depth. However, when the ata device is
-> managed by libsas, ata_scsi_find_dev() return NULL, turning
-
-   Returns?
-
-> __ata_change_queue_depth() into a nop, which prevents the user from
-> setting the maximum queue depth of ATA devices used with libsas based
-> HBAs.
+On Tue, Sep 20, 2022 at 08:55:59AM +0900, Damien Le Moal wrote:
+> On 9/20/22 06:50, Guenter Roeck wrote:
+> > On Fri, Sep 09, 2022 at 10:36:07PM +0300, Serge Semin wrote:
+> >> The ports-implemented property is mainly used on the OF-based platforms
+> >> with no ports mapping initialized by a bootloader/BIOS firmware. Seeing
+> >> the same of_property_read_u32()-based pattern has already been implemented
+> >> in the generic AHCI LLDD (glue) driver and in the Mediatek, St AHCI
+> >> drivers let's move the property read procedure to the generic
+> >> ahci_platform_get_resources() method. Thus we'll have the forced ports
+> >> mapping feature supported for each OF-based platform which requires that,
+> >> and stop re-implementing the same pattern in there a bit simplifying the
+> >> code.
+> >>
+> >> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> >> ---
+> >>  drivers/ata/ahci_mtk.c         | 2 --
+> >>  drivers/ata/ahci_platform.c    | 3 ---
+> >>  drivers/ata/ahci_st.c          | 3 ---
+> >>  drivers/ata/libahci_platform.c | 3 +++
+> >>  4 files changed, 3 insertions(+), 8 deletions(-)
+> >>
+> >> diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
+> >> index 1f6c85fde983..c056378e3e72 100644
+> >> --- a/drivers/ata/ahci_mtk.c
+> >> +++ b/drivers/ata/ahci_mtk.c
+> >> @@ -118,8 +118,6 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
+> >>  				   SYS_CFG_SATA_EN);
+> >>  	}
+> >>  
+> >> -	of_property_read_u32(np, "ports-implemented", &hpriv->force_port_map);
+> >> -
+> >>  	return 0;
+> >>  }
+> >>  
+> >> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> >> index 28a8de5b48b9..9b56490ecbc3 100644
+> >> --- a/drivers/ata/ahci_platform.c
+> >> +++ b/drivers/ata/ahci_platform.c
+> >> @@ -56,9 +56,6 @@ static int ahci_probe(struct platform_device *pdev)
+> >>  	if (rc)
+> >>  		return rc;
+> >>  
+> >> -	of_property_read_u32(dev->of_node,
+> >> -			     "ports-implemented", &hpriv->force_port_map);
+> >> -
+> >>  	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+> >>  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+> >>  
+> >> diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+> >> index 7526653c843b..068621099c00 100644
+> >> --- a/drivers/ata/ahci_st.c
+> >> +++ b/drivers/ata/ahci_st.c
+> >> @@ -168,9 +168,6 @@ static int st_ahci_probe(struct platform_device *pdev)
+> >>  
+> >>  	st_ahci_configure_oob(hpriv->mmio);
+> >>  
+> >> -	of_property_read_u32(dev->of_node,
+> >> -			     "ports-implemented", &hpriv->force_port_map);
+> >> -
+> > 
+> > With arm:allmodconfig, this results in:
+> > 
+> >   CC [M]  drivers/ata/ahci_st.o
+> > drivers/ata/ahci_st.c: In function 'st_ahci_probe':
+> > drivers/ata/ahci_st.c:147:24: error: unused variable 'dev' [-Werror=unused-variable]
+> >   147 |         struct device *dev = &pdev->dev;
+> > 
+> > Guenter
 > 
-> Fix this by renaming __ata_change_queue_depth() to
-> ata_change_queue_depth() and adding a pointer to the ata_device
-> structure of the target device as argument. This pointer is provided by
-> ata_scsi_change_queue_depth() using ata_scsi_find_dev() in the case ofi
 
-   Of?
+> Just pushed a fix for this in ata tree for-next and for-6.1 branches. The
+> problem should be resolved with the next linux-next merge.
 
-> a libata managed device and by sas_change_queue_depth() using
-> sas_to_ata_dev() in the case of a libsas managed ata device.
+Once again thanks for sending the fix for my mistake.
+
+Regards,
+-Sergey
+
 > 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-[...]
-
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index ff9602a0e54e..c63bb50323c1 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1101,6 +1101,11 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
->  	if (dev->flags & ATA_DFLAG_AN)
->  		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
->  
-> +	pr_info("#### can queue %d, ata qd %d, scsi qd %d\n",
-
-    Hm... isn't this a debugging pr_info() call you forgot to remove?
-
-> +		sdev->host->can_queue,
-> +		ata_id_queue_depth(dev->id),
-> +		sdev->queue_depth);
-> +
->  	if (dev->flags & ATA_DFLAG_NCQ)
->  		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
->  	depth = min(ATA_MAX_QUEUE, depth);
-[...]
-
-MBR, Sergey
+> -- 
+> Damien Le Moal
+> Western Digital Research
+> 
