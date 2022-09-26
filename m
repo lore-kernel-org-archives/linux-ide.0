@@ -2,201 +2,239 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C0BC07E9D
-	for <linux-ide@archiver.kernel.org>; Mon, 26 Sep 2022 20:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6FBBC6FA82
+	for <linux-ide@archiver.kernel.org>; Mon, 26 Sep 2022 23:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230506AbiIZUxn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 26 Sep 2022 16:53:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36066 "EHLO
+        id S230464AbiIZXFK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 26 Sep 2022 19:05:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229760AbiIZUxV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Sep 2022 16:53:21 -0400
+        with ESMTP id S230381AbiIZXFJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Sep 2022 19:05:09 -0400
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67DFAAC3AE
-        for <linux-ide@vger.kernel.org>; Mon, 26 Sep 2022 13:53:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D78CA927F
+        for <linux-ide@vger.kernel.org>; Mon, 26 Sep 2022 16:05:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1664225600; x=1695761600;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=D2tlF2V9kpdDUzPbuo0OvgGM763PPvJVdQJbL/XT7gA=;
-  b=PzOoX1eN2fwEYSawzfrq46oGhSGnyoZCjki8NI3fX8Doc06YXeLhkfDF
-   mqGZk4R5UquDByrOYGwZ2pzetXSVE9EQ1f95dzYVBeIenya8TBkOhNASG
-   nPk5WOpsMLXLjpOKq0bsXB7IuSIIkaDLMD/e/zrXg86U8eDDbCzk9/ozG
-   Id9Cg/kK9FghOzkuge/hlRvH0yGuQbr/dguKPQrqV9xVGN/FkitSM7r2I
-   LY/DWocIPGRp3+bI20DO+Jl1hVOK6k9hgvS1y1ct2puZyWnkMFzEANy+Q
-   AX1wE627Z3NDJuRaLguze0zFBkpZdi7ljZTScXlyruE1UbJO+YzQBhhzn
-   g==;
+  t=1664233507; x=1695769507;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=eKnkjWI7rvgP1Xc5BeMmuyTOF0H1sFW1ko4/vAeazoE=;
+  b=qGtHOiExrTVRzX11zs6RHtdpo6g4s/gAGV8Z99376Y5vQp78EwesTQNu
+   xOMszOVfuLiISZ4s21Bnt/Qwl4tlC811donM31Qi0ksSSf3L6hLhhqkpu
+   vhdwBUuhZucLp57069NxzS7bNRrNHiSE1GmMOQRxbncsxtcYUQI485DjG
+   0U9LGYWMbk2+RbyN1IlvpUIP0RvXawbNkxFxDThbi1f0Uk+kIvlvYY5HT
+   W5NRJNX11nMExQWdpsd7997P2B4jIGnp/XAqMi7euoOoAG41Q7nmQjeEA
+   lbGXPBkF+59Upywaf5PtSoiBl96KFnNITOgVDJxG75ikNMP8QtYktV++M
+   A==;
 X-IronPort-AV: E=Sophos;i="5.93,347,1654531200"; 
-   d="scan'208";a="316601435"
-Received: from mail-bn8nam04lp2043.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.43])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2022 04:53:09 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dWGPSRw31RU+jW9WhaiLrKN9MudrO36+/SFC2ouA0vXTPH4pYO3xBueZna8uzq6c07a6peo2P/DL8Pe51ySfVohT5WFdK7dkICrtJA79/F23wZzokzNh3P1wHeAyTV8rP9IiOlc7it6czS0uT91j2+/XVo+jHjEie8J7QAZDxOOgHmfa9/EdFr5sbMM8B6FDjj4fdvHccpDOf75bebjV3sl3RjwGh4szmsoojFSB7SlyWWu8JLVWedGgpMmgsNjvJYdnfpLM55KfCeb3TksESpUg70QXeLJN+10HKUCbZPO4McmejynqAk8yrH6YxF/RK1WXARoYx5UYJLFo87HxiQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GdfCAwA9ZeHwR1l+q68dZDsCSRmLlPEWtzMEVyVIRsg=;
- b=gxq11YEAdzN/F9mqzHoRKI7g5UX1t8QHjmxsrjHTjnJfY0v+QY0opT5+kN3KOmeo13VNcunApEzZScVTYyljb5h/MWtl1w7fBicRKexHSV2kyUsw57XzUFtk+hLKNxnQ7Adpx6cZ7Nw6iWc3BHrFgQst7phrwk9AB6sUXlcusiOeiPw+Y0+9kj/rbs5lXd6S6HeUXLNGEKqIPCcrlNgYG/sQmLtDOCgGdZHIYZD/dMVi6/QcoGT2n3ygWk/hCDN4sHrUVLkYsWswEwKD/iKgu0mJYU8QCih7Pc+V/pIKRqD9n/hepC/afGXOKgtT8rYKt/cUth0ytxygcPjqEMwb+Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GdfCAwA9ZeHwR1l+q68dZDsCSRmLlPEWtzMEVyVIRsg=;
- b=YKYUdbztecmDLQ3csuBHUOcDERnOL9A0KHsAhmiR2XBsuDOTHG2boww89I6jJW5BWSqNSlU7V8BeYFhi0RY8/+TYEze3Lw8wpK4yZrmvC4k0vJEhdUAEm7Wig7EB4oPmVEpHb9tmb01SIfEtGfaGxQJQjvXm4Uq4UbQq+nbxm7M=
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
- by BY5PR04MB6469.namprd04.prod.outlook.com (2603:10b6:a03:1e4::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.25; Mon, 26 Sep
- 2022 20:53:06 +0000
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::c8bd:645f:364:f7aa]) by MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::c8bd:645f:364:f7aa%5]) with mapi id 15.20.5654.025; Mon, 26 Sep 2022
- 20:53:06 +0000
-From:   Niklas Cassel <Niklas.Cassel@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>
-CC:     Hannes Reinecke <hare@suse.com>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: [PATCH 2/5] ata: libata: fix NCQ autosense logic
-Thread-Topic: [PATCH 2/5] ata: libata: fix NCQ autosense logic
-Thread-Index: AQHY0en6rNKKvZczkECrEVsvZ9JCxg==
-Date:   Mon, 26 Sep 2022 20:53:06 +0000
-Message-ID: <20220926205257.601750-3-Niklas.Cassel@wdc.com>
-References: <20220926205257.601750-1-Niklas.Cassel@wdc.com>
-In-Reply-To: <20220926205257.601750-1-Niklas.Cassel@wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: git-send-email 2.37.3
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|BY5PR04MB6469:EE_
-x-ms-office365-filtering-correlation-id: f13f461a-53da-435e-4d0f-08daa0011c8d
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: DKeXzIXA4/ILQMohe64gT1984ZqUq4ixQcKjMI9KVMqs3wgxGuydY5iPjXoPYuwHdSXSRrEwCgQkURxaJQ/3ita9aD5ibXgIjMX8KZHNLhxNbOzvAs+XEyNoG6G14eWRv1ORCzYva0zNnEtR6OZUAuSv5ZkmLe+IiJKxgB5CKw5l5J64Nd763oIAQilYCIwmeGPD+QyGHQZ0htv5JjdcCe+Q5/QHxb19j4pBbSGFZkMfRxlPAThE6qF0y4y8ZoRcbyFM3ii2VbPzyIdtJRpN8ehZFaJal12UrGpupDfqvDT+fwjFXIQjFnGZPz2R5W41sVUBcZ7uIuQItGXxBo6fcrcNqngGFdL3g+xUevpYDKdH3AFDZ31SIGul+volmwFm6jnBytSwOmb+o4yB61ng046p2YYAqccHQsK3EUblE4vLpJEceagA/v6QIlDDla2PxREN1cQiUDWRT6uUkC/UOqYqXiHDRlwMLNdvojeqGeZdNCaBVzDsnfENBmJyNi49tIbarQQvcNm5eBtUeJ1V2lklDEX8G3MbPrcKxRI3so1+zDt60+d6RQ1E4fOVg2z9cdIZiTcm2YnJCOOVZg6NKDBFXCB9zNEWthXUXOQ1fEDGJ2cNhuqrkaT2m46Yn/2Daiut0JzMS9F7wAordvS+068bykiBCDAVy1VTKF++hLXg82hJlEv7N191YZYJNTte+FM5tu8NcUvC/Pf74o3QMOk8Bp5suMiEbFdWlbCsI6xKwYqtC+x2myX/Zaw1WqIXkckpfqEIlrE3PlCtCOM7Aw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(136003)(346002)(376002)(396003)(39860400002)(451199015)(26005)(6506007)(5660300002)(8936002)(41300700001)(82960400001)(83380400001)(6512007)(122000001)(186003)(2616005)(1076003)(36756003)(38070700005)(2906002)(38100700002)(110136005)(316002)(6486002)(54906003)(71200400001)(4326008)(8676002)(76116006)(66446008)(66476007)(66556008)(91956017)(64756008)(66946007)(86362001)(478600001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?D2jBtPAEzqxpersxfWDfvizWMIGrA/2/1eC5/Q48I1qmmGJji/Yp1upW5j?=
- =?iso-8859-1?Q?i8hVyCEIKXNbXMEG923MLnrc98MD1jnpSQtYPBeUIip1VGFUb5NJ1KCf2o?=
- =?iso-8859-1?Q?DDNw0qBLrzK2hCsh1QXvVocVVYhX4sbyfAkMwIbH6Q6QpugI8ljqga++6E?=
- =?iso-8859-1?Q?a/SUr3jR84nvyW0PxqC2mqhh7YXKkKwXo3QFC49wW022fFFuSMHRHkjELi?=
- =?iso-8859-1?Q?sd7/javfAKqkfcg0US/TlvOV4UOoWIs/LuOSASDGwKeaZA5l5vOPc9/9co?=
- =?iso-8859-1?Q?dDIiG91S5y08mkJdbGZPhhSI0KF8hAQM94pvGxFfTiym7iUbXtGKhYnUTu?=
- =?iso-8859-1?Q?rb5BSsLkak8tgdc1ngowOabnRJoabe0/Gj3RWF0OeEBiQd6P/WRtwFXIYO?=
- =?iso-8859-1?Q?M4LmYty7I0nZZIK/KxWIuROxx4GRP6ZkeIysZxTU1Xi1XdcUuwXsKVygYi?=
- =?iso-8859-1?Q?Nf/r0A6dnmz/sDq9Gw9c2g6/ThOGGnA699lOYK3u/bqZGCTR2RXTyIkKrX?=
- =?iso-8859-1?Q?5sPQKWVN1LfJ2ZtvVv3LMZWoVsbe3QgSrn0LLpCBGGuOBPIppsjymUoiQE?=
- =?iso-8859-1?Q?IT7gbx+EdAR1pHJc4pp44vKcv2jkaU0VTn7abMITzFHNEztzReRT1A6kcb?=
- =?iso-8859-1?Q?x6d5FI79T0iKczjqTyGvEy+7+LEZOzO89PGD3pWXjgq9MIbr9k8r6iTLAB?=
- =?iso-8859-1?Q?edqGvYRoRkI5V2c8bInLAmo1ot8pNp4WrV/AoXW62KKx5jrGXEmxZ0CLYX?=
- =?iso-8859-1?Q?1SUZ9gi90bRHiw1ioeHjpDGW5sy3ey22cYNkcTfhxPBJ0AbJBXg+ahpuJK?=
- =?iso-8859-1?Q?lN/TujHSS10y2QAu6ikwZ/noAxe0oftoj8MnKnDXkd3Go3sxhwICfyHyJG?=
- =?iso-8859-1?Q?qA3VcgXzrYkLnxnoa9ShydQFpeKOsTc8YIFfN6dra/tiCTDoFrFNwnkS21?=
- =?iso-8859-1?Q?gDgTVbGgPoPfpwzhkUmdOS+S3KmIjknpPErCEUAnmUSODOpMN96wAopqYI?=
- =?iso-8859-1?Q?e7Ufpr79PMzDOlcmzB0182CLtCtQT3IqEFq6OQKmNBD+w1ZWv2QrTlevio?=
- =?iso-8859-1?Q?ZUzSKoV2zzdK6sU/goKkxb5ECrElY59Kz5ZDIgeLeLyoIpj3W84vx/SDEw?=
- =?iso-8859-1?Q?qVTEj/ZKV6rtufBpocsbgwx3XjTJQ1MsU703iZoPT/eYOaRUipDg0ntMKe?=
- =?iso-8859-1?Q?1qHUWiT6SaQf4jzUzU/Fnce0POB+YbgzWj1amZYbiIiqu7+KBqn9Ph0Kb6?=
- =?iso-8859-1?Q?hSIhS1bQ7u4QSSM1bdnMMff/mPn4frjDVJP6dO71YNvVirUZux70CShJvz?=
- =?iso-8859-1?Q?+y4b9p4pPTeb2odHurxlrZlLn/PfxMjpuVqdMFBF9VvedboAm02dj1Aq9O?=
- =?iso-8859-1?Q?I/lSZFL9HrbhuQVPWHEQyLP3A1RTsfEmSHPdN764er3fM79qkonetzXVK2?=
- =?iso-8859-1?Q?6yrHJTYkT58PRXDsB/qeWPsLJkZKWQjANeAPWh+8qdDczMAaM2f2SCFCas?=
- =?iso-8859-1?Q?81m6kxp+8ohc6pdc8XsewGa6XkEvm5i4g/r+M7iwRTtUNl9H87GC3VI7UF?=
- =?iso-8859-1?Q?nNYkh0kdbScKFs/YerZkn4alORX+cCthUlGHkj3TKjLI3QAXy2ogF+Gys5?=
- =?iso-8859-1?Q?89r2lu9iYB1K14UdkTMW4tgnZlzjlx24ZdSwTtRhrocxkmGwmlQztPsA?=
- =?iso-8859-1?Q?=3D=3D?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+   d="scan'208";a="316608033"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2022 07:05:03 +0800
+IronPort-SDR: Tr+qSYNK9zXdbZbgud0eJ0RzcPwFphT0wYULNNUuR2VwdQAn7TAlhmd8TivX2jzae5u/5CfLXW
+ ZzXDznW47LYFMMObziPOVxixq6ly6tmjtUCsUgnPBGJ69WGCbvxtodheY0utQnHOEahBvVNrep
+ jk4t42x8C/E3ksTnGsLjBTKCK94eFlJgLLlgLa+9oPycINTsHi3m3VMIWVwScwwoqpC59LOqI0
+ 5ti1SbOONFeJWeD1R9LpT/WrCWCMJIFFUf4MDaiNnhuwg9ZGh5ND733w/d31O0AeQe3YvHZMdk
+ r55vp60cF49aWPncAWUyqVKX
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 15:25:01 -0700
+IronPort-SDR: 0IJvt5hJ6427cNiV84b6z89c75VS+0i0KlwyJ2r32I1oIQCbgIZEX8G1KiyfXfeX+xqxjRoD0S
+ GQ9QhFhMPwdK48Xp58cW54IpuAjJcVyS0G8s9rPdutPcamr6uELuanmUG8iQPQZEwOgpp45gYq
+ /ZMPgfk/qSj6dDDrfN5FNIvdJwf/vkHPt8EMwytnyp9cPI1nVpbBnZEZWS+7C2mLqq1aWO1Ng+
+ DcUznrNz98cpi4mCdzEP9Sfpd1Ik0Ho6Tx1yZ98YIVsBfrNmmdhnJSG3Ehy/9t8kcuQP0mEu/l
+ wJQ=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 16:05:04 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MbyyR4FMqz1RvTr
+        for <linux-ide@vger.kernel.org>; Mon, 26 Sep 2022 16:05:03 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:content-language:references:to
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1664233502; x=1666825503; bh=eKnkjWI7rvgP1Xc5BeMmuyTOF0H1sFW1ko4
+        /vAeazoE=; b=TFCYH2ErgnwJYr5TLuy4c6IIHvgWtd+CSg1U3PTV/8GzyuH2yC7
+        3GWi0xB3FbiyaHqMo6VEPoVEGgU2cWiicQLG17ghMeZP92+ejsEZyYYU1yDiRzKR
+        Rl061csFTOw2DrzOq912dz0K+FKJYFxIK/0znYbd/yNcZEhDx7E73xUM+WzMUPrR
+        vSk7ooj2DGjvKHq5lXmyxH+x1jBVkYz63j2fmeQaavwTk/bs0i3bTDj8pVr9ZGSX
+        MPQwCrGV3KR3DkBoABzq+NgFJT+JmeFic32rUFuynQTBonD3JbwR9Ae/sQkH46bn
+        eDLkpp8rRZ0R9CLjmtNwWLOv+EPc/wYVXxA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id oCEoMMiyjSPx for <linux-ide@vger.kernel.org>;
+        Mon, 26 Sep 2022 16:05:02 -0700 (PDT)
+Received: from [10.225.163.91] (unknown [10.225.163.91])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MbyyQ15nqz1RvLy;
+        Mon, 26 Sep 2022 16:05:01 -0700 (PDT)
+Message-ID: <92d87d6c-9bd0-0cf9-1ced-bac104ea2d66@opensource.wdc.com>
+Date:   Tue, 27 Sep 2022 08:05:00 +0900
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f13f461a-53da-435e-4d0f-08daa0011c8d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Sep 2022 20:53:06.0624
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: m0gMHMI5lLp6cPCALNqQINgCUONiWRKMuyKEkpKLs4UVyEeaURPM87jIQD+QIwK6zAnxgy7/RbFBz5EwUl9xqA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR04MB6469
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH v2 2/2] ata: libata-sata: Fix device queue depth control
+To:     John Garry <john.garry@huawei.com>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20220925230817.91542-1-damien.lemoal@opensource.wdc.com>
+ <20220925230817.91542-3-damien.lemoal@opensource.wdc.com>
+ <5bab7eb9-7b91-8c06-e8c3-f2076bac78dc@huawei.com>
+Content-Language: en-US
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <5bab7eb9-7b91-8c06-e8c3-f2076bac78dc@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Niklas Cassel <niklas.cassel@wdc.com>
+On 9/26/22 20:31, John Garry wrote:
+> On 26/09/2022 00:08, Damien Le Moal wrote:
+>> The function __ata_change_queue_depth() uses the helper
+>> ata_scsi_find_dev() to get the ata_device structure of a scsi device and
+>> set that device maximum queue depth. However, when the ata device is
+>> managed by libsas,
+> 
+> Yeah, this current code is utterly broken. Just a nit is that it would 
+> be good to mention that the sdev id is assigned by scsi_transport_sas 
+> (and not libata) for when using libsas.
+> 
+> In my series "Allocate SCSI device earlier for ata port probe" I 
+> mentioned this problem of different id assignment scheme. It would be 
+> nice to try to commonize this.
+> 
+>> ata_scsi_find_dev() returns NULL, turning
+>> __ata_change_queue_depth() into a nop, which prevents the user from
+>> setting the maximum queue depth of ATA devices used with libsas based
+>> HBAs.
+>>
+>> Fix this by renaming __ata_change_queue_depth() to
+>> ata_change_queue_depth() and adding a pointer to the ata_device
+>> structure of the target device as argument. This pointer is provided by
+>> ata_scsi_change_queue_depth() using ata_scsi_find_dev() in the case of
+>> a libata managed device and by sas_change_queue_depth() using
+>> sas_to_ata_dev() in the case of a libsas managed ata device.
+> 
+> This seems ok. But could you alternatively use ata_for_each_dev() and 
+> match by ata_device.sdev pointer? That pointer is set quite late in the 
+> probe, though, so maybe it would not work.
 
-Currently, the logic if we should call ata_scsi_set_sense()
-(and set flag ATA_QCFLAG_SENSE_VALID to indicate that we have
-successfully added sense data to the struct ata_queued_cmd)
-looks like this:
+Not sure I understand why we should search for the ata device again using
+ata_for_each_dev() when sas_to_ata_dev() gives us directly what we need
+for the libsas controlled device... Can you clarify ?
 
-if (dev->class =3D=3D ATA_DEV_ZAC &&
-    ((qc->result_tf.status & ATA_SENSE) || qc->result_tf.auxiliary))
+> 
+> As an aside, one other thing I noticed is that ata_device.private_data 
+> is unused. Maybe we should delete it - apparently it was added just for 
+> symmetry of libata structures.
+> 
+> Thanks,
+> John
+> 
+>>
+>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> ---
+>>   drivers/ata/libata-sata.c           | 24 ++++++++++++------------
+>>   drivers/scsi/libsas/sas_scsi_host.c |  3 ++-
+>>   include/linux/libata.h              |  4 ++--
+>>   3 files changed, 16 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+>> index 7a5fe41aa5ae..13b9d0fdd42c 100644
+>> --- a/drivers/ata/libata-sata.c
+>> +++ b/drivers/ata/libata-sata.c
+>> @@ -1018,26 +1018,25 @@ DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
+>>   EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
+>>   
+>>   /**
+>> - *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
+>> - *	@ap: ATA port to which the device change the queue depth
+>> + *	ata_change_queue_depth - Set a device maximum queue depth
+>> + *	@ap: ATA port of the target device
+>> + *	@dev: target ATA device
+>>    *	@sdev: SCSI device to configure queue depth for
+>>    *	@queue_depth: new queue depth
+>>    *
+>> - *	libsas and libata have different approaches for associating a sdev to
+>> - *	its ata_port.
+>> + *	Helper to set a device maximum queue depth, usable with both libsas
+>> + *	and libata.
+>>    *
+>>    */
+>> -int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+>> -			     int queue_depth)
+>> +int ata_change_queue_depth(struct ata_port *ap, struct ata_device *dev,
+>> +			   struct scsi_device *sdev, int queue_depth)
+>>   {
+>> -	struct ata_device *dev;
+>>   	unsigned long flags;
+>>   
+>> -	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
+>> +	if (!dev || !ata_dev_enabled(dev))
+>>   		return sdev->queue_depth;
+>>   
+>> -	dev = ata_scsi_find_dev(ap, sdev);
+>> -	if (!dev || !ata_dev_enabled(dev))
+>> +	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
+>>   		return sdev->queue_depth;
+>>   
+>>   	/* NCQ enabled? */
+>> @@ -1059,7 +1058,7 @@ int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+>>   
+>>   	return scsi_change_queue_depth(sdev, queue_depth);
+>>   }
+>> -EXPORT_SYMBOL_GPL(__ata_change_queue_depth);
+>> +EXPORT_SYMBOL_GPL(ata_change_queue_depth);
+>>   
+>>   /**
+>>    *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
+>> @@ -1080,7 +1079,8 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+>>   {
+>>   	struct ata_port *ap = ata_shost_to_port(sdev->host);
+>>   
+>> -	return __ata_change_queue_depth(ap, sdev, queue_depth);
+>> +	return ata_change_queue_depth(ap, ata_scsi_find_dev(ap, sdev),
+>> +				      sdev, queue_depth);
+>>   }
+>>   EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+>>   
+>> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+>> index 9c82e5dc4fcc..a36fa1c128a8 100644
+>> --- a/drivers/scsi/libsas/sas_scsi_host.c
+>> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+>> @@ -872,7 +872,8 @@ int sas_change_queue_depth(struct scsi_device *sdev, int depth)
+>>   	struct domain_device *dev = sdev_to_domain_dev(sdev);
+>>   
+>>   	if (dev_is_sata(dev))
+>> -		return __ata_change_queue_depth(dev->sata_dev.ap, sdev, depth);
+>> +		return ata_change_queue_depth(dev->sata_dev.ap,
+>> +					      sas_to_ata_dev(dev), sdev, depth);
+>>   
+>>   	if (!sdev->tagged_supported)
+>>   		depth = 1;
+>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>> index 698032e5ef2d..20765d1c5f80 100644
+>> --- a/include/linux/libata.h
+>> +++ b/include/linux/libata.h
+>> @@ -1136,8 +1136,8 @@ extern int ata_scsi_slave_config(struct scsi_device *sdev);
+>>   extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+>>   extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+>>   				       int queue_depth);
+>> -extern int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+>> -				    int queue_depth);
+>> +extern int ata_change_queue_depth(struct ata_port *ap, struct ata_device *dev,
+>> +				  struct scsi_device *sdev, int queue_depth);
+>>   extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+>>   extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+>>   extern void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap);
+> 
 
-The problem with this is that a drive can support the NCQ command
-error log without supporting NCQ autosense.
+-- 
+Damien Le Moal
+Western Digital Research
 
-On such a drive, if the failing command has sense data, the status
-field in the NCQ command error log will have the ATA_SENSE bit set.
-
-It is just that this sense data is not included in the NCQ command
-error log when NCQ autosense is not supported. Instead the sense
-data has to be fetched using the REQUEST SENSE DATA EXT command.
-
-Therefore, we should only add the sense data if the drive supports
-NCQ autosense AND the ATA_SENSE bit is set in the status field.
-
-Fix this, and at the same time, remove the duplicated ATA_DEV_ZAC
-check. The struct ata_taskfile supplied to ata_eh_read_log_10h()
-is memset:ed before calling the function, so simply checking if
-qc->result_tf.auxiliary is set is sufficient to tell us that the
-log actually contained sense data.
-
-Fixes: d238ffd59d3c ("libata: do not attempt to retrieve sense code twice")
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
----
- drivers/ata/libata-sata.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index eef57d101ed1..dfbc660651e7 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1392,7 +1392,8 @@ static int ata_eh_read_log_10h(struct ata_device *dev=
-,
- 	tf->hob_lbah =3D buf[10];
- 	tf->nsect =3D buf[12];
- 	tf->hob_nsect =3D buf[13];
--	if (dev->class =3D=3D ATA_DEV_ZAC && ata_id_has_ncq_autosense(dev->id))
-+	if (dev->class =3D=3D ATA_DEV_ZAC && ata_id_has_ncq_autosense(dev->id) &&
-+	    (tf->status & ATA_SENSE))
- 		tf->auxiliary =3D buf[14] << 16 | buf[15] << 8 | buf[16];
-=20
- 	return 0;
-@@ -1456,8 +1457,12 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 	memcpy(&qc->result_tf, &tf, sizeof(tf));
- 	qc->result_tf.flags =3D ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA4=
-8;
- 	qc->err_mask |=3D AC_ERR_DEV | AC_ERR_NCQ;
--	if (dev->class =3D=3D ATA_DEV_ZAC &&
--	    ((qc->result_tf.status & ATA_SENSE) || qc->result_tf.auxiliary)) {
-+
-+	/*
-+	 * If the device supports NCQ autosense, ata_eh_read_log_10h() will have
-+	 * stored the sense data in qc->result_tf.auxiliary.
-+	 */
-+	if (qc->result_tf.auxiliary) {
- 		char sense_key, asc, ascq;
-=20
- 		sense_key =3D (qc->result_tf.auxiliary >> 16) & 0xff;
---=20
-2.37.3
