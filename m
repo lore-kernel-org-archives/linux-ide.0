@@ -2,237 +2,185 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6FBBC6FA82
-	for <linux-ide@archiver.kernel.org>; Mon, 26 Sep 2022 23:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0374EC07E9D
+	for <linux-ide@archiver.kernel.org>; Mon, 26 Sep 2022 23:12:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230464AbiIZXFK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 26 Sep 2022 19:05:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39856 "EHLO
+        id S230253AbiIZXMn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 26 Sep 2022 19:12:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230381AbiIZXFJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Sep 2022 19:05:09 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D78CA927F
-        for <linux-ide@vger.kernel.org>; Mon, 26 Sep 2022 16:05:06 -0700 (PDT)
+        with ESMTP id S230179AbiIZXMl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Sep 2022 19:12:41 -0400
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4080DAD9B3
+        for <linux-ide@vger.kernel.org>; Mon, 26 Sep 2022 16:12:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1664233507; x=1695769507;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=eKnkjWI7rvgP1Xc5BeMmuyTOF0H1sFW1ko4/vAeazoE=;
-  b=qGtHOiExrTVRzX11zs6RHtdpo6g4s/gAGV8Z99376Y5vQp78EwesTQNu
-   xOMszOVfuLiISZ4s21Bnt/Qwl4tlC811donM31Qi0ksSSf3L6hLhhqkpu
-   vhdwBUuhZucLp57069NxzS7bNRrNHiSE1GmMOQRxbncsxtcYUQI485DjG
-   0U9LGYWMbk2+RbyN1IlvpUIP0RvXawbNkxFxDThbi1f0Uk+kIvlvYY5HT
-   W5NRJNX11nMExQWdpsd7997P2B4jIGnp/XAqMi7euoOoAG41Q7nmQjeEA
-   lbGXPBkF+59Upywaf5PtSoiBl96KFnNITOgVDJxG75ikNMP8QtYktV++M
-   A==;
+  t=1664233960; x=1695769960;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=iK58kBNd3bRngNiZIR2NVeiphbGoK7gL3G+AiVBwpFs=;
+  b=eDhtYeYOn8JFwabdJYxtYXHLNvEKWZze71P7Xev8vcQq7tYyK0Eh3NNF
+   cHv/kq9NArlRaEHdyob7o0VouhLgRjpx9BmtUsyx06dYUoyk+gpGflzHh
+   RmLtpQpk+eP9inqsLiMyQYTfQmPGCDImPIPHrHoyUK+Gsuk6g5Yj0lsTr
+   Ia3i2R+q3E+0G3IWlabqItvNHz1lifTvLSKtSNEPzfp7zEQ/R5cDvIaEM
+   WWkSQqUkJiEna3N4F6VSNk8E9tNR8ZBoBk34G873STximUCjRDXOofie4
+   PGkUvs6z3NXBckgd3erE0C7NgMrfhTwLYesz4Vp6LxJLE6ssIPdYOugt8
+   w==;
 X-IronPort-AV: E=Sophos;i="5.93,347,1654531200"; 
-   d="scan'208";a="316608033"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2022 07:05:03 +0800
-IronPort-SDR: Tr+qSYNK9zXdbZbgud0eJ0RzcPwFphT0wYULNNUuR2VwdQAn7TAlhmd8TivX2jzae5u/5CfLXW
- ZzXDznW47LYFMMObziPOVxixq6ly6tmjtUCsUgnPBGJ69WGCbvxtodheY0utQnHOEahBvVNrep
- jk4t42x8C/E3ksTnGsLjBTKCK94eFlJgLLlgLa+9oPycINTsHi3m3VMIWVwScwwoqpC59LOqI0
- 5ti1SbOONFeJWeD1R9LpT/WrCWCMJIFFUf4MDaiNnhuwg9ZGh5ND733w/d31O0AeQe3YvHZMdk
- r55vp60cF49aWPncAWUyqVKX
+   d="scan'208";a="210692955"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Sep 2022 07:12:39 +0800
+IronPort-SDR: +hM/MOETQcKGqsJ/H6eGtlax/gPe4NfsSR+qw8JLg0tJW+9L1VhH7ZqqfSczUJBMQJG1yq3teN
+ cbnsqUBl5/yXPsdTNkWgMmHcfq85g50JZzNT3YKgBJdxQCqq0LV8Sasm1E/3VH6SCbWf0+upVB
+ iyoa4+XVBO5OVJFwL19GCAdrCHIx7vLIAEengUcDNMHRgQ60Ijy9Cc6apt27CKlS37EjTt4JA4
+ bv0SJl24ij4fVMazo5lcLbRNLUsoYoJHMaAPFsXFJBwe9boWBeDDf2jgjrMAOxzI2JPYuTjr8B
+ x+bnftn/NqjlRJJgNraBnnYB
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 15:25:01 -0700
-IronPort-SDR: 0IJvt5hJ6427cNiV84b6z89c75VS+0i0KlwyJ2r32I1oIQCbgIZEX8G1KiyfXfeX+xqxjRoD0S
- GQ9QhFhMPwdK48Xp58cW54IpuAjJcVyS0G8s9rPdutPcamr6uELuanmUG8iQPQZEwOgpp45gYq
- /ZMPgfk/qSj6dDDrfN5FNIvdJwf/vkHPt8EMwytnyp9cPI1nVpbBnZEZWS+7C2mLqq1aWO1Ng+
- DcUznrNz98cpi4mCdzEP9Sfpd1Ik0Ho6Tx1yZ98YIVsBfrNmmdhnJSG3Ehy/9t8kcuQP0mEu/l
- wJQ=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 15:27:05 -0700
+IronPort-SDR: YeACv3E6+m5pEq8v26L3O6oHjzlZEdcQR4UM+QKrk9BNTOThxiS0+nUBbHyZEMYHBGTdB24T8x
+ 7PGxFemrFlFi+MePZxbDolND8fS37di43J0Y4Hzp0Z96CFyB6Rj59XcyDlUUmDlbIGlq8aiGhx
+ kChqLhHpBS5NVEOodKUopXqHIyqCh5o7iGRxN8tUnw8AqO+decfVgY1uo9TTj70NLGffld6Zqy
+ HSdHJEBPjdAkj9MDPBM9JP+zmb+aKi6CpfcOXiz5s26XAuT6kgTcr/a6Wca9KwvJ84nqh2epFf
+ frc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 16:05:04 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Sep 2022 16:12:40 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MbyyR4FMqz1RvTr
-        for <linux-ide@vger.kernel.org>; Mon, 26 Sep 2022 16:05:03 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Mbz7C0Y2Tz1RwqL
+        for <linux-ide@vger.kernel.org>; Mon, 26 Sep 2022 16:12:39 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:content-language:references:to
+        :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1664233502; x=1666825503; bh=eKnkjWI7rvgP1Xc5BeMmuyTOF0H1sFW1ko4
-        /vAeazoE=; b=TFCYH2ErgnwJYr5TLuy4c6IIHvgWtd+CSg1U3PTV/8GzyuH2yC7
-        3GWi0xB3FbiyaHqMo6VEPoVEGgU2cWiicQLG17ghMeZP92+ejsEZyYYU1yDiRzKR
-        Rl061csFTOw2DrzOq912dz0K+FKJYFxIK/0znYbd/yNcZEhDx7E73xUM+WzMUPrR
-        vSk7ooj2DGjvKHq5lXmyxH+x1jBVkYz63j2fmeQaavwTk/bs0i3bTDj8pVr9ZGSX
-        MPQwCrGV3KR3DkBoABzq+NgFJT+JmeFic32rUFuynQTBonD3JbwR9Ae/sQkH46bn
-        eDLkpp8rRZ0R9CLjmtNwWLOv+EPc/wYVXxA==
+        1664233958; x=1666825959; bh=iK58kBNd3bRngNiZIR2NVeiphbGoK7gL3G+
+        AiVBwpFs=; b=I8WqOxMStk/qWSS+SMA2Ay7SH6FwD30UmCxklKjV9HCWnISWcW+
+        zHhPtk10jjjRsSiCiSNBzuHekz1rEoHoK3tsiT2XeUQzfmSCKmkUyzqkROCpwjLj
+        33BIMEe/D/fNLJYlh7OfD2zbSte5jA0DfN48RuHTlIP+EnoDYTMM2ssuuYYyJFP8
+        TIQm75mC+lG6XgDpS6YaLpU1D4CrMqoa9qjfX5OBhRGuCmF6vOh5yvBwlOjnvgfl
+        wv1/Zy/85ffur1lAAWzUwRbPhmo18q3ycIRg/xMFaBW4rWeiI24TkyNKVEeV5CAZ
+        EBw9gYMOJhfDt0sR6a+KykMWFIUOMb0WyIA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id oCEoMMiyjSPx for <linux-ide@vger.kernel.org>;
-        Mon, 26 Sep 2022 16:05:02 -0700 (PDT)
+        with ESMTP id 4upUMiq1uxEK for <linux-ide@vger.kernel.org>;
+        Mon, 26 Sep 2022 16:12:38 -0700 (PDT)
 Received: from [10.225.163.91] (unknown [10.225.163.91])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MbyyQ15nqz1RvLy;
-        Mon, 26 Sep 2022 16:05:01 -0700 (PDT)
-Message-ID: <92d87d6c-9bd0-0cf9-1ced-bac104ea2d66@opensource.wdc.com>
-Date:   Tue, 27 Sep 2022 08:05:00 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Mbz794xRCz1RvLy;
+        Mon, 26 Sep 2022 16:12:37 -0700 (PDT)
+Message-ID: <ab2c6a7a-132f-380d-f14d-4d165915dd95@opensource.wdc.com>
+Date:   Tue, 27 Sep 2022 08:12:36 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
-Subject: Re: [PATCH v2 2/2] ata: libata-sata: Fix device queue depth control
-To:     John Garry <john.garry@huawei.com>, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20220925230817.91542-1-damien.lemoal@opensource.wdc.com>
- <20220925230817.91542-3-damien.lemoal@opensource.wdc.com>
- <5bab7eb9-7b91-8c06-e8c3-f2076bac78dc@huawei.com>
+Subject: Re: [PATCH] libata: add ATA_HORKAGE_NOLPM for Pioneer BDR-207M and
+ BDR-205
 Content-Language: en-US
+To:     "Limonciello, Mario" <Mario.Limonciello@amd.com>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Jaap Berkhout <j.j.berkhout@staalenberk.nl>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+References: <20220926183718.480950-1-Niklas.Cassel@wdc.com>
+ <MN0PR12MB61013BB7AAD6ED1FBA63C269E2529@MN0PR12MB6101.namprd12.prod.outlook.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <5bab7eb9-7b91-8c06-e8c3-f2076bac78dc@huawei.com>
+In-Reply-To: <MN0PR12MB61013BB7AAD6ED1FBA63C269E2529@MN0PR12MB6101.namprd12.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/26/22 20:31, John Garry wrote:
-> On 26/09/2022 00:08, Damien Le Moal wrote:
->> The function __ata_change_queue_depth() uses the helper
->> ata_scsi_find_dev() to get the ata_device structure of a scsi device and
->> set that device maximum queue depth. However, when the ata device is
->> managed by libsas,
+On 9/27/22 03:56, Limonciello, Mario wrote:
+> [Public]
 > 
-> Yeah, this current code is utterly broken. Just a nit is that it would 
-> be good to mention that the sdev id is assigned by scsi_transport_sas 
-> (and not libata) for when using libsas.
 > 
-> In my series "Allocate SCSI device earlier for ata port probe" I 
-> mentioned this problem of different id assignment scheme. It would be 
-> nice to try to commonize this.
 > 
->> ata_scsi_find_dev() returns NULL, turning
->> __ata_change_queue_depth() into a nop, which prevents the user from
->> setting the maximum queue depth of ATA devices used with libsas based
->> HBAs.
+>> -----Original Message-----
+>> From: Niklas Cassel <Niklas.Cassel@wdc.com>
+>> Sent: Monday, September 26, 2022 13:38
+>> To: Damien Le Moal <damien.lemoal@opensource.wdc.com>; Limonciello,
+>> Mario <Mario.Limonciello@amd.com>
+>> Cc: Niklas Cassel <Niklas.Cassel@wdc.com>; stable@vger.kernel.org; Jaap
+>> Berkhout <j.j.berkhout@staalenberk.nl>; linux-ide@vger.kernel.org
+>> Subject: [PATCH] libata: add ATA_HORKAGE_NOLPM for Pioneer BDR-207M
+>> and BDR-205
 >>
->> Fix this by renaming __ata_change_queue_depth() to
->> ata_change_queue_depth() and adding a pointer to the ata_device
->> structure of the target device as argument. This pointer is provided by
->> ata_scsi_change_queue_depth() using ata_scsi_find_dev() in the case of
->> a libata managed device and by sas_change_queue_depth() using
->> sas_to_ata_dev() in the case of a libsas managed ata device.
-> 
-> This seems ok. But could you alternatively use ata_for_each_dev() and 
-> match by ata_device.sdev pointer? That pointer is set quite late in the 
-> probe, though, so maybe it would not work.
-
-Not sure I understand why we should search for the ata device again using
-ata_for_each_dev() when sas_to_ata_dev() gives us directly what we need
-for the libsas controlled device... Can you clarify ?
-
-> 
-> As an aside, one other thing I noticed is that ata_device.private_data 
-> is unused. Maybe we should delete it - apparently it was added just for 
-> symmetry of libata structures.
-> 
-> Thanks,
-> John
-> 
+>> From: Niklas Cassel <niklas.cassel@wdc.com>
 >>
->> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>> Commit 1527f69204fe ("ata: ahci: Add Green Sardine vendor ID as
+>> board_ahci_mobile") added an explicit entry for AMD Green Sardine
+>> AHCI controller using the board_ahci_mobile configuration (this
+>> configuration has later been renamed to board_ahci_low_power).
+>>
+>> The board_ahci_low_power configuration enables support for low power
+>> modes.
+>>
+>> This explicit entry takes precedence over the generic AHCI controller
+>> entry, which does not enable support for low power modes.
+>>
+>> Therefore, when commit 1527f69204fe ("ata: ahci: Add Green Sardine
+>> vendor ID as board_ahci_mobile") was backported to stable kernels,
+>> it make some Pioneer optical drives, which was working perfectly fine
+>> before the commit was backported, stop working.
+>>
+>> The real problem is that the Pioneer optical drives do not handle low
+>> power modes correctly. If these optical drives would have been tested
+>> on another AHCI controller using the board_ahci_low_power configuration,
+>> this issue would have been detected earlier.
+>>
+>> Unfortunately, the board_ahci_low_power configuration is only used in
+>> less than 15% of the total AHCI controller entries, so many devices
+>> have never been tested with an AHCI controller with low power modes.
+>>
+>> Fixes: 1527f69204fe ("ata: ahci: Add Green Sardine vendor ID as
+>> board_ahci_mobile")
+>> Cc: stable@vger.kernel.org
+>> Reported-by: Jaap Berkhout <j.j.berkhout@staalenberk.nl>
+>> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+> 
+> Thanks!
+> 
+> Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
+> 
+> Since Damien was still intending to modify the default policy so that LPM
+> applies everywhere I feel like more of this is going to show up.  Should we
+> consider to maybe keep all CD/DVD/BD devices excluded from LPM?
+
+I am moving carefully on that one for fear of (old) devices breaking
+randomly... So not needed yet. But yeah, I definitely want to cleanup the
+lpm code.
+
+> 
 >> ---
->>   drivers/ata/libata-sata.c           | 24 ++++++++++++------------
->>   drivers/scsi/libsas/sas_scsi_host.c |  3 ++-
->>   include/linux/libata.h              |  4 ++--
->>   3 files changed, 16 insertions(+), 15 deletions(-)
+>>  drivers/ata/libata-core.c | 4 ++++
+>>  1 file changed, 4 insertions(+)
 >>
->> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
->> index 7a5fe41aa5ae..13b9d0fdd42c 100644
->> --- a/drivers/ata/libata-sata.c
->> +++ b/drivers/ata/libata-sata.c
->> @@ -1018,26 +1018,25 @@ DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
->>   EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
->>   
->>   /**
->> - *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
->> - *	@ap: ATA port to which the device change the queue depth
->> + *	ata_change_queue_depth - Set a device maximum queue depth
->> + *	@ap: ATA port of the target device
->> + *	@dev: target ATA device
->>    *	@sdev: SCSI device to configure queue depth for
->>    *	@queue_depth: new queue depth
->>    *
->> - *	libsas and libata have different approaches for associating a sdev to
->> - *	its ata_port.
->> + *	Helper to set a device maximum queue depth, usable with both libsas
->> + *	and libata.
->>    *
->>    */
->> -int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
->> -			     int queue_depth)
->> +int ata_change_queue_depth(struct ata_port *ap, struct ata_device *dev,
->> +			   struct scsi_device *sdev, int queue_depth)
->>   {
->> -	struct ata_device *dev;
->>   	unsigned long flags;
->>   
->> -	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
->> +	if (!dev || !ata_dev_enabled(dev))
->>   		return sdev->queue_depth;
->>   
->> -	dev = ata_scsi_find_dev(ap, sdev);
->> -	if (!dev || !ata_dev_enabled(dev))
->> +	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
->>   		return sdev->queue_depth;
->>   
->>   	/* NCQ enabled? */
->> @@ -1059,7 +1058,7 @@ int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
->>   
->>   	return scsi_change_queue_depth(sdev, queue_depth);
->>   }
->> -EXPORT_SYMBOL_GPL(__ata_change_queue_depth);
->> +EXPORT_SYMBOL_GPL(ata_change_queue_depth);
->>   
->>   /**
->>    *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
->> @@ -1080,7 +1079,8 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
->>   {
->>   	struct ata_port *ap = ata_shost_to_port(sdev->host);
->>   
->> -	return __ata_change_queue_depth(ap, sdev, queue_depth);
->> +	return ata_change_queue_depth(ap, ata_scsi_find_dev(ap, sdev),
->> +				      sdev, queue_depth);
->>   }
->>   EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
->>   
->> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
->> index 9c82e5dc4fcc..a36fa1c128a8 100644
->> --- a/drivers/scsi/libsas/sas_scsi_host.c
->> +++ b/drivers/scsi/libsas/sas_scsi_host.c
->> @@ -872,7 +872,8 @@ int sas_change_queue_depth(struct scsi_device *sdev, int depth)
->>   	struct domain_device *dev = sdev_to_domain_dev(sdev);
->>   
->>   	if (dev_is_sata(dev))
->> -		return __ata_change_queue_depth(dev->sata_dev.ap, sdev, depth);
->> +		return ata_change_queue_depth(dev->sata_dev.ap,
->> +					      sas_to_ata_dev(dev), sdev, depth);
->>   
->>   	if (!sdev->tagged_supported)
->>   		depth = 1;
->> diff --git a/include/linux/libata.h b/include/linux/libata.h
->> index 698032e5ef2d..20765d1c5f80 100644
->> --- a/include/linux/libata.h
->> +++ b/include/linux/libata.h
->> @@ -1136,8 +1136,8 @@ extern int ata_scsi_slave_config(struct scsi_device *sdev);
->>   extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
->>   extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
->>   				       int queue_depth);
->> -extern int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
->> -				    int queue_depth);
->> +extern int ata_change_queue_depth(struct ata_port *ap, struct ata_device *dev,
->> +				  struct scsi_device *sdev, int queue_depth);
->>   extern struct ata_device *ata_dev_pair(struct ata_device *adev);
->>   extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
->>   extern void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap);
-> 
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 826d41f341e4..c9a9aa607b62 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -3988,6 +3988,10 @@ static const struct ata_blacklist_entry
+>> ata_device_blacklist [] = {
+>>  	{ "PIONEER DVD-RW  DVR-212D",	NULL,
+>> 	ATA_HORKAGE_NOSETXFER },
+>>  	{ "PIONEER DVD-RW  DVR-216D",	NULL,
+>> 	ATA_HORKAGE_NOSETXFER },
+>>
+>> +	/* These specific Pioneer models have LPM issues */
+>> +	{ "PIONEER BD-RW   BDR-207M",	NULL,
+>> 	ATA_HORKAGE_NOLPM },
+>> +	{ "PIONEER BD-RW   BDR-205",	NULL,	ATA_HORKAGE_NOLPM },
+>> +
+>>  	/* Crucial BX100 SSD 500GB has broken LPM support */
+>>  	{ "CT500BX100SSD1",		NULL,	ATA_HORKAGE_NOLPM },
+>>
+>> --
+>> 2.37.3
 
 -- 
 Damien Le Moal
