@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE1C6C54EE9
-	for <linux-ide@archiver.kernel.org>; Tue, 27 Sep 2022 23:45:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEBECC32771
+	for <linux-ide@archiver.kernel.org>; Wed, 28 Sep 2022 07:01:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229577AbiI0XpJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 27 Sep 2022 19:45:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48992 "EHLO
+        id S233333AbiI1HBL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 28 Sep 2022 03:01:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229538AbiI0XpH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Sep 2022 19:45:07 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3D1610044
-        for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2022 16:45:06 -0700 (PDT)
+        with ESMTP id S233413AbiI1HAo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 28 Sep 2022 03:00:44 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11FE965572
+        for <linux-ide@vger.kernel.org>; Wed, 28 Sep 2022 00:00:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1664322306; x=1695858306;
+  t=1664348438; x=1695884438;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=w2L6cdVn+U0fnhVsr1zHVAf4O3jrCn+FDD7RoZyhMzU=;
-  b=opnMo0pXVf7Hh4bymhxaB+YBYBOTuoUTSZmeexnSug1VKzHgvIn63OKH
-   ckwtoyI4/YsBRMyCbveqUtOtmNgneD3h9LCb/+12+EqLkh+hpwBzAai7C
-   SC7H9J0Jq6NiN1tUuflwncy0DYcsBRz7r3bvF6z8iWJDdUYwaO+dI/Igv
-   iADS5riRrPFo4MtwGGrExlm5H7ws2rmHBp+rOhAzGDmvXQkslYRkwbbZQ
-   O9ounnTb+G+KIQqNtKVInEONllNThU5C54BGUC9v4O6Y3BcDbSKGmL20P
-   LymEcCxcyHkMjjWtiwuF4NmYtFxUe1upfDYxoMPDCNQy9mA0GiyKYvFVG
-   A==;
-X-IronPort-AV: E=Sophos;i="5.93,350,1654531200"; 
-   d="scan'208";a="212840702"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Sep 2022 07:45:05 +0800
-IronPort-SDR: eI54BesNAmUIfl0x6lrLRkzBs0p0p2XZ7YrVl/GA8O2sb0fb0B18GSjyO2/qCe/TFQZZqQFRaa
- Wv6rVPRidOAFSu7aQiQ8Q+1cGh70ECCRufyaTKZJnfYwQMz1r4q0VpTzNWonU05uG+cTZ3sXf+
- xo2BofdDrSUVASFokbGDCB8ItjbQcC9IiQ+dewDiVXiYvHo4pSJIw2nzm9PdmtRI83lvaXU1XO
- 3MTo1UzasC0aVvTMob12/Sxp73PH5gxYcqWQ6zuQmL7nE/3xGTf1qNJqqt22mbZMpICiRbRHW4
- ZOrEIyoBjf527X/pIOWpATvS
+  bh=6JoL1tKwkfS7OPgDlZpX2SGlHNeZf2fiupPWHLEtE8c=;
+  b=Evr9qeNSY0wXdv9SsyqAS1xwKSdIpxjmZVOaRaiATJBVtHpgYRKPhT7h
+   UL/2VssErhrVoEvgb+zbPkZEGS3CPMEIwFaFN5sY+sz21N03hvb+9WB9O
+   rnbRwqkC+x/LB9BIlVI2cqJKNodx1DAWCPTiejZgyEQ1xK+WGW8vr7KIe
+   hjHW2eHKIRsal7G6q2ZEMI0Y3sQb0wUotbbJ9zDK/op2golwWS2zlIvj1
+   QkF6eSlzKm9Pi6zvX1xyXOS1Sk+Q395+puDEB5WDpDmYTYeha4hEnTwmY
+   xnp/o0utJQpbeaVvaaLB+IEbABbiqDTvav8LR65hvRcYQjz1J6RIVxhaE
+   w==;
+X-IronPort-AV: E=Sophos;i="5.93,351,1654531200"; 
+   d="scan'208";a="324569363"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 28 Sep 2022 15:00:30 +0800
+IronPort-SDR: uClwtTvG37LZ7ZquFZtojFaCJQvy5zyaAc6ld3RgOkDbeLAxBQrwvvDAnRnKJLIAuTS8tQZiMT
+ GILGo+ykZgqnVz+G9aNq8D4O+A3Fcg9iagxK3Vb0e/8/zds3T8XR9rx2a2mQjvJZ0q8/n2xw2D
+ /diafBW7LxL3umWOq2KAFDEZng6HtI7ze7eV6Mc/Y4TgZFr1d2qI39a1DxEh1z7ptl6EEYEGzx
+ 3kh0RCO4xtO6NSvHuLALWmr/Yr2749UeRlhsRN7YnN/R+KF73rqNPU2Y/aYuoD/L1Hwmdt1kQA
+ 4rvsrOhtdkr5X9yiWnfOYPKC
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Sep 2022 16:05:02 -0700
-IronPort-SDR: R7izjcnVgpnewuuxunzQCVRL+wvV2xn1DOo1piPxMowHIYIQZP4G3NbMq5rcN96VqHcWumi/PE
- 3yXshalRIt1OsZaGW5K5s3hy6/UD3FgIVrSR4gy58QLyaQyMAvDPHSUwMxLFfS4b1Cy/L93LTr
- tFafEOjffMbUzORq1//hUleOS/7OomQQMNeusmteSjFRMQGjVprjKq1pQSnwc3RCgeyMcYQ3vS
- Z+lYBAFMN790gJAqICxaHobJ+7CcJWJgW/ZfvjRbVc6GgbCjwlpzKA9Pb4oI31kgDLyIWsKAx1
- 7xg=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Sep 2022 23:20:27 -0700
+IronPort-SDR: e4Rxx+KWoOlaFiVpmV94lvNWwwYvDTc1mZXNlxIaieZnqHaleZHDjJ18yIfy6dA6m1WsuiUaGK
+ Chs9r0Oy3keHynAPD5UWbiTEdq49kNQHVIrfYQ2lAfJm20bMKuIokPMcVzbdoJcGgh629/XLQi
+ okQ+vVdfoYTR8QbS9W99SCgmO23iN1Pl5cwB+6XB4Fx3mIwSqeruKeha+98s2u52xoCmggwf3m
+ IFk/jcc4jzPDO6MjJCF9hLkxJckvAw2H49BSHpDr+2VTNy0YDd/Jz5T5jzXqXJDUhQ2fuvR2Np
+ 4ic=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Sep 2022 16:39:06 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Sep 2022 00:00:32 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4McbgF4lW5z1RvTp
-        for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2022 16:39:05 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4McnSW6J3zz1Rwrq
+        for <linux-ide@vger.kernel.org>; Wed, 28 Sep 2022 00:00:27 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,23 +56,23 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1664321945; x=1666913946; bh=w2L6cdVn+U0fnhVsr1zHVAf4O3jrCn+FDD7
-        RoZyhMzU=; b=nQz68xjU7D6tOaMcZLpzHVsG1yfpfRWsEfcPZWEIgYSPqUuWKAH
-        avcdnalv9dIcyIkNsuDgvoFEsPf1HwPehWKDhZggv1Jjo+Rn5Bt9RG62gZXHE1Sp
-        WJ4NpJb0Ncj85UQchXDWwPa2TsIN7i3Qg03+eMmCYOqH3Q3x1dLH9SKkJ3y92PXD
-        PxWHgsMgawkrti2YYy9S26KSU7DabYNuLy5IK+Iy344mY3Zvr1W06vZKg7A5/6rw
-        Px5fE9Yk9AMFp+O0EW5UKG+ExH0/jxrAky1jfzoC3wZAOEXmRXWKw5UsHxVnhAdD
-        Bu0P5HYUOehpTpAvjLZkIbyEFqBCmuQf6XQ==
+        1664348427; x=1666940428; bh=6JoL1tKwkfS7OPgDlZpX2SGlHNeZf2fiupP
+        WHLEtE8c=; b=VgCUHFPYHD2oxvTfCEBJtd2SmE3tNyAnc1CJtr/MjiJpdkmAri1
+        vkMSXXU/J2VL8u3nBriB4z0nA+Kw9o7ShHW8uFSlFxrbUP4jt0puuSu1Itv/Gf51
+        xHMhTxjaIkIlZEJLY8fxoacwk8cL1G11yaQYeZRcMYMsA8GBGCJ4vARNhTiZ0PJn
+        vcMyY9Lf5cjfY+0N4Gi5iFMW62CLvCNAB/DqJxpGD+JXgmssc/O0eJSQSVOcblLv
+        YnYDDNa1PhEpSrCJXgIuVpGpW1fZEBK6AlZmWuv3K67kB9es+we5iSoxeLmOJSgG
+        n0eUba8b/PHiN6u+J1YoSy0AvDQsUsxdfxw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id UtquPzVLRe2t for <linux-ide@vger.kernel.org>;
-        Tue, 27 Sep 2022 16:39:05 -0700 (PDT)
+        with ESMTP id XWtYqn4N7gbM for <linux-ide@vger.kernel.org>;
+        Wed, 28 Sep 2022 00:00:27 -0700 (PDT)
 Received: from [10.225.163.91] (unknown [10.225.163.91])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4McbgD3SyQz1RvLy;
-        Tue, 27 Sep 2022 16:39:04 -0700 (PDT)
-Message-ID: <46240962-bfd3-8ff9-03a3-d15db7a67df7@opensource.wdc.com>
-Date:   Wed, 28 Sep 2022 08:39:03 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4McnSV448vz1RvLy;
+        Wed, 28 Sep 2022 00:00:26 -0700 (PDT)
+Message-ID: <6f08d6b9-63ba-10f6-2900-020db60a94be@opensource.wdc.com>
+Date:   Wed, 28 Sep 2022 16:00:25 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.0
@@ -147,14 +147,33 @@ On 9/28/22 01:09, John Garry wrote:
 > 
 > And we error.
 
-Gotcha. This needs to be changed to:
+I dug further into this. For AHCI, I still get an error when trying to set
+33. No capping and defaulting to 32. The reason is I believe that
+sdev_store_queue_depth() has the check:
 
-if (sdev->queue_depth == queue_depth)
-	return queue_depth;
+	if (depth < 1 || depth > sdev->host->can_queue)
+                return -EINVAL;
 
-And the non-sensical error will go away.
+as you mentioned. So all good.
 
-Will send another patch for that.
+So changing that last "if" in ata_change_queue_depth() to
+
+	if (sdev->queue_depth == queue_depth)
+		return sdev->queue_depth;
+
+has no effect. The error remains.
+
+Now, for a libsas SATA drive, if I add the above change, I do indeed get a
+cap to 32 and the QD changes, no error. That is bothering me as that is
+really inconsistent. Instead of suppressing the error, shouldn't we unify
+AHCI and libsas behavior and error if the user is attempting to set a
+value larger than what the *device* supports (the host can_queue was
+checked already). In a nutshell, the difference comes form
+sdev->host->can_queue being equal to the device max qd for AHCI but not
+necessarily for libsas.
+
+I am tempted to leave things as is for now (not changin gthe current weird
+behavior) and cleaning that up during the next round. Thoughts ?
 
 > 
 >>
