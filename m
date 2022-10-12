@@ -2,99 +2,99 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B685C4332F
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Oct 2022 07:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9189C43219
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Oct 2022 13:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229548AbiJLHYq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Oct 2022 03:24:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46018 "EHLO
+        id S229436AbiJLNLQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Oct 2022 09:11:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229771AbiJLHYp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2022 03:24:45 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85CFF2DFB
-        for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2022 00:24:42 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id a67so13907443edf.12
-        for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2022 00:24:42 -0700 (PDT)
+        with ESMTP id S229808AbiJLNLO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2022 09:11:14 -0400
+Received: from mx1.tq-group.com (mx1.tq-group.com [93.104.207.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E76167AC0D
+        for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2022 06:11:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=QqX7TWBfdPQVg4fEx1BQ7sbR3W9tFyeiZ5DR5tT6eT8=;
-        b=fNjmT+XNAgLdf8CgJrhqLKcmsC2myZL4hIlsXKn83gc8c2MSQpsAI+YIZNIX86lnw+
-         BwupRVcHubAN1um2uZSrdXcY3TsGjO11UJVnNK026tzGz2zUrQpXbbNJCRtoILNp5+U2
-         ZjaHwprE9dz47eb1x04Drkq7eXbGOYvPj7WEHI45cJtoekQxNveglYomUNqXgM2jDMQB
-         AAbKlP8UVozYNQN7fcb4VAmGVPH5vk6Xo0c2vlX02p92k2Fd88O4SIClJm2ntRaMy0Sf
-         zD9MVreqhOWGby+BHocppu4YXnCKPQ9G7KbguQ5JLkaLqtb2RTAQ0IHvuDhxsEjsYDE7
-         mfrQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=QqX7TWBfdPQVg4fEx1BQ7sbR3W9tFyeiZ5DR5tT6eT8=;
-        b=yJakZKrL0bRyzgMOsPb/4KrPObVsePMXdz2VOhRUlKMh+iUOV0NVYBPozE6Gw9zvfU
-         Cx7KqLhi8FvU26t6/E3BWPOO6IZ8tqp8iwg4wNR6E/xDCpmZHgiEvnMLqn4DoUdBtj2A
-         2ZHKxsp2ETVGYDLcnyZtK5gdN8Uxau+1JPt75Pxc2iRqupfpEVzTQlgESxj6N9NkjOZV
-         Oo+jPiWovOmm7yBNyQ4y+XsRGnL7zij9xoJtc2B7eu8C06bkjdd6JPM/NtrX8vZzkA9R
-         5GuNggdKjEaYExUYXNqCksYViB0MNp1yfTwLORrzizlKY4FKMTaUwb4j3adg51nFLsKR
-         eD3g==
-X-Gm-Message-State: ACrzQf0LqsaVjnedb6EOSeJsTz+M6sowphCRmud5yynnmm3+E0jfxSK3
-        J79bsDvZqnKAuill/ALJOP0hESt+MCfvlH+V8sjJ6SLwkT6eww==
-X-Google-Smtp-Source: AMsMyM4r5g5tiPQtlMYhEp8r2PlEJr8nKPirdj+Q0JtCL1W4mt3CoToyJxY2WG98D9uXUExqxQEWbNq6YFsC4RzH+zE=
-X-Received: by 2002:aa7:cb87:0:b0:43b:e650:6036 with SMTP id
- r7-20020aa7cb87000000b0043be6506036mr26286805edt.350.1665559480967; Wed, 12
- Oct 2022 00:24:40 -0700 (PDT)
+  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
+  t=1665580271; x=1697116271;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=sqxBUnvzDNUFqNGYaIQPjO4k3Z2Z8faQlIic70/PaPA=;
+  b=WEQUnqe2LO/b2rilkJbxSLxkrlTfRICThf/6xLdjS5YB0ypApEyyK+If
+   sVKb3QRF1xGKyk0sHSfHINdMvrJw+2joWKLVLkevZ5ELw3cnfYsT1x/D3
+   ZJFSrQQRy0JkoZwZoUrMIDtl4hOjsQTsobFQiTyO06pxwZ4IyY/YtoRIJ
+   tMP5wj+JfuSg2C/bXPw3VAUW65kYEINwgTJdkUiIZuScf8GVxPXbQHUY6
+   lWi2N4AE491unXrErQ+/NWmVu0TYtx71dKKsUrZD9rgWRTx/c5DaUdHXb
+   yjMpu6Atw2Lj6rcKNHiDYz5a9kmuToKYC8OalgdFuoHf9gCeUXSPXLcpC
+   w==;
+X-IronPort-AV: E=Sophos;i="5.95,179,1661810400"; 
+   d="scan'208";a="26709681"
+Received: from unknown (HELO tq-pgp-pr1.tq-net.de) ([192.168.6.15])
+  by mx1-pgp.tq-group.com with ESMTP; 12 Oct 2022 15:11:09 +0200
+Received: from mx1.tq-group.com ([192.168.6.7])
+  by tq-pgp-pr1.tq-net.de (PGP Universal service);
+  Wed, 12 Oct 2022 15:11:09 +0200
+X-PGP-Universal: processed;
+        by tq-pgp-pr1.tq-net.de on Wed, 12 Oct 2022 15:11:09 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
+  t=1665580269; x=1697116269;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=sqxBUnvzDNUFqNGYaIQPjO4k3Z2Z8faQlIic70/PaPA=;
+  b=T09tdufLaONRHpNrjkVv0x7t1fVbFjpKuJttx2Bu9NZ7/170qkeQlmmd
+   oVb3mIdXdx8huc2r3RAl+7jDKOnw6lJ/0I1SVTlNHWJn1X94y6/+digSo
+   RTmEMS+Hr1z792UQ+socb+5vzeNnbU4tyFaq+EvAV8pTl6+/ALeq2rr6A
+   q/utwptEn+pWfXWe2dLkzN5rOPtLRlJESkLziuGUXHJz8Lwo/maphmc0v
+   crIZMZE1ixtZT5XhC5+iHN/Jms3fiH0no6VtxSRQeLFpYiB+3RoXAxwyi
+   SmbWmIeQFWY66td4FpMHlIOmAc+PLtMD9aNobbWwHERLbNoj7GU6gcscu
+   A==;
+X-IronPort-AV: E=Sophos;i="5.95,179,1661810400"; 
+   d="scan'208";a="26709680"
+Received: from vtuxmail01.tq-net.de ([10.115.0.20])
+  by mx1.tq-group.com with ESMTP; 12 Oct 2022 15:11:08 +0200
+Received: from steina-w.tq-net.de (unknown [10.123.53.21])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by vtuxmail01.tq-net.de (Postfix) with ESMTPSA id B0648280056;
+        Wed, 12 Oct 2022 15:11:08 +0200 (CEST)
+From:   Alexander Stein <alexander.stein@ew.tq-group.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>
+Cc:     Alexander Stein <alexander.stein@ew.tq-group.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 1/1] ata: ahci-imx: Fix MODULE_ALIAS
+Date:   Wed, 12 Oct 2022 15:11:05 +0200
+Message-Id: <20221012131105.725258-1-alexander.stein@ew.tq-group.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-From:   Naresh Kamboju <naresh.kamboju@linaro.org>
-Date:   Wed, 12 Oct 2022 12:54:29 +0530
-Message-ID: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
-Subject: TI: X15 the connected SSD is not detected on Linux next 20221006 tag
-To:     open list <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        linux-fsdevel@vger.kernel.org, regressions@lists.linux.dev,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>, lkft-triage@lists.linaro.org
-Cc:     Niklas Cassel <niklas.cassel@wdc.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Anders Roxell <anders.roxell@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On TI beagle board x15 the connected SSD is not detected on linux next
-20221006 tag.
+'ahci:' is an invalid prefix, preventing the module from autoloading.
+Fix this by using the 'platform:' prefix and DRV_NAME.
 
-+ export STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-+ STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-+ test -n /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-+ echo y
-+ mkfs.ext4 /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-mke2fs 1.46.5 (30-Dec-2021)
-The file /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 does
-not exist and no size was specified.
-+ lava-test-raise 'mkfs.ext4
-/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 failed; job
-exit'
+Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
+---
+ drivers/ata/ahci_imx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Test log:
- - https://lkft.validation.linaro.org/scheduler/job/5634743#L2580
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index b734e069034d..632caa301458 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -1235,4 +1235,4 @@ module_platform_driver(imx_ahci_driver);
+ MODULE_DESCRIPTION("Freescale i.MX AHCI SATA platform driver");
+ MODULE_AUTHOR("Richard Zhu <Hong-Xing.Zhu@freescale.com>");
+ MODULE_LICENSE("GPL");
+-MODULE_ALIAS("ahci:imx");
++MODULE_ALIAS("platform:" DRV_NAME);
+-- 
+2.25.1
 
-Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-
-metadata:
-  git_ref: master
-  git_repo: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next
-  git_sha: 7da9fed0474b4cd46055dd92d55c42faf32c19ac
-  git_describe: next-20221006
-  kernel_version: 6.0.0
-  kernel-config: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F/config
-  build-url: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next/-/pipelines/659754170
-  artifact-location: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F
-  toolchain: gcc-10
-
---
-Linaro LKFT
-https://lkft.linaro.org
