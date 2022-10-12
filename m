@@ -2,141 +2,99 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97CBDC433FE
-	for <linux-ide@archiver.kernel.org>; Tue, 11 Oct 2022 14:00:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B685C4332F
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Oct 2022 07:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229621AbiJKOAM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 11 Oct 2022 10:00:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48472 "EHLO
+        id S229548AbiJLHYq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Oct 2022 03:24:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229889AbiJKOAL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2022 10:00:11 -0400
-Received: from mail-oi1-f172.google.com (mail-oi1-f172.google.com [209.85.167.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BF0120374;
-        Tue, 11 Oct 2022 07:00:09 -0700 (PDT)
-Received: by mail-oi1-f172.google.com with SMTP id g130so15898362oia.13;
-        Tue, 11 Oct 2022 07:00:09 -0700 (PDT)
+        with ESMTP id S229771AbiJLHYp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2022 03:24:45 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85CFF2DFB
+        for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2022 00:24:42 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id a67so13907443edf.12
+        for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2022 00:24:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=QqX7TWBfdPQVg4fEx1BQ7sbR3W9tFyeiZ5DR5tT6eT8=;
+        b=fNjmT+XNAgLdf8CgJrhqLKcmsC2myZL4hIlsXKn83gc8c2MSQpsAI+YIZNIX86lnw+
+         BwupRVcHubAN1um2uZSrdXcY3TsGjO11UJVnNK026tzGz2zUrQpXbbNJCRtoILNp5+U2
+         ZjaHwprE9dz47eb1x04Drkq7eXbGOYvPj7WEHI45cJtoekQxNveglYomUNqXgM2jDMQB
+         AAbKlP8UVozYNQN7fcb4VAmGVPH5vk6Xo0c2vlX02p92k2Fd88O4SIClJm2ntRaMy0Sf
+         zD9MVreqhOWGby+BHocppu4YXnCKPQ9G7KbguQ5JLkaLqtb2RTAQ0IHvuDhxsEjsYDE7
+         mfrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fpinFLGyfMz5LuoFScjs1SYGNlDOoMK18vHAn2nhxCo=;
-        b=5ZybirFQCUgwVRA4joHZ/hUemxB3JPKlCCjx4mOyFeoDCBeI1m7mSqgeRrkB7N6mRp
-         VY7foDCblqKgvVU5o5jX6Mav4oPImMevSY2IIWl3G8OhzJZs1qo+1IRtLROeIPprIuU4
-         nIyGdtW+Nl8f6QOZ4u0Qr4VpLujv7uz7melkcUZmAFHz4J43hW18hGulNXKdO899LB9E
-         8vHkCZG7d8gm0ftcXW4Kcb1YJ4CL6JnUIgJRLdniyrgWD2WSCPlWYZFXsIbiSEQZq1on
-         PjU2dVcSjOLmFb9+uaqbDtkgWuCw8a00Im8YZJkBIge9v3AJlih7jePdjKXvRvz7qUcF
-         B0Vg==
-X-Gm-Message-State: ACrzQf3aPNSm14kBl4cYqQe3qFI4UTbQXSREMHgSmjPKhQ6ZyEddx67h
-        TEpiMmO6FopdxR+1hXoM5Y9uGdhmpA==
-X-Google-Smtp-Source: AMsMyM5HM5siP22QE9AFMbURQF+/Q7yQHyaDxP66PMEWANnBNS8+u9VKkNiJULC0pZeLlabGvBFvog==
-X-Received: by 2002:aca:f056:0:b0:350:f0ba:9caa with SMTP id o83-20020acaf056000000b00350f0ba9caamr11984375oih.198.1665496808582;
-        Tue, 11 Oct 2022 07:00:08 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id r12-20020a4abf0c000000b0044897475dd0sm5292461oop.43.2022.10.11.07.00.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Oct 2022 07:00:08 -0700 (PDT)
-Received: (nullmailer pid 2787286 invoked by uid 1000);
-        Tue, 11 Oct 2022 14:00:09 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linus Walleij <linus.walleij@linaro.org>
-Cc:     Alexander Shiyan <shc_work@mail.ru>, linux-ide@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: ata: Add 'ata-generic' binding
-Date:   Tue, 11 Oct 2022 08:58:50 -0500
-Message-Id: <20221011135849.2785834-1-robh@kernel.org>
-X-Mailer: git-send-email 2.35.1
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QqX7TWBfdPQVg4fEx1BQ7sbR3W9tFyeiZ5DR5tT6eT8=;
+        b=yJakZKrL0bRyzgMOsPb/4KrPObVsePMXdz2VOhRUlKMh+iUOV0NVYBPozE6Gw9zvfU
+         Cx7KqLhi8FvU26t6/E3BWPOO6IZ8tqp8iwg4wNR6E/xDCpmZHgiEvnMLqn4DoUdBtj2A
+         2ZHKxsp2ETVGYDLcnyZtK5gdN8Uxau+1JPt75Pxc2iRqupfpEVzTQlgESxj6N9NkjOZV
+         Oo+jPiWovOmm7yBNyQ4y+XsRGnL7zij9xoJtc2B7eu8C06bkjdd6JPM/NtrX8vZzkA9R
+         5GuNggdKjEaYExUYXNqCksYViB0MNp1yfTwLORrzizlKY4FKMTaUwb4j3adg51nFLsKR
+         eD3g==
+X-Gm-Message-State: ACrzQf0LqsaVjnedb6EOSeJsTz+M6sowphCRmud5yynnmm3+E0jfxSK3
+        J79bsDvZqnKAuill/ALJOP0hESt+MCfvlH+V8sjJ6SLwkT6eww==
+X-Google-Smtp-Source: AMsMyM4r5g5tiPQtlMYhEp8r2PlEJr8nKPirdj+Q0JtCL1W4mt3CoToyJxY2WG98D9uXUExqxQEWbNq6YFsC4RzH+zE=
+X-Received: by 2002:aa7:cb87:0:b0:43b:e650:6036 with SMTP id
+ r7-20020aa7cb87000000b0043be6506036mr26286805edt.350.1665559480967; Wed, 12
+ Oct 2022 00:24:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   Naresh Kamboju <naresh.kamboju@linaro.org>
+Date:   Wed, 12 Oct 2022 12:54:29 +0530
+Message-ID: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
+Subject: TI: X15 the connected SSD is not detected on Linux next 20221006 tag
+To:     open list <linux-kernel@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-fsdevel@vger.kernel.org, regressions@lists.linux.dev,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, lkft-triage@lists.linaro.org
+Cc:     Niklas Cassel <niklas.cassel@wdc.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Anders Roxell <anders.roxell@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The 'ata-generic' binding has been around since 2008, but never
-documented.
+On TI beagle board x15 the connected SSD is not detected on linux next
+20221006 tag.
 
-Cc: Alexander Shiyan <shc_work@mail.ru>
-Signed-off-by: Rob Herring <robh@kernel.org>
----
-AFAICT, the ata-generic,use16bit property has no effect in Linux. The
-32-bit transfers fallback to 16-bit if ATA_PFLAG_PIO32 flag is not set
-which it doesn't appear to ever be set. Looking at the history, the
-driver always used 16-bit mode.
++ export STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
++ STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
++ test -n /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
++ echo y
++ mkfs.ext4 /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
+mke2fs 1.46.5 (30-Dec-2021)
+The file /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 does
+not exist and no size was specified.
++ lava-test-raise 'mkfs.ext4
+/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 failed; job
+exit'
 
-Linus, Okay with being maintainer here?
+Test log:
+ - https://lkft.validation.linaro.org/scheduler/job/5634743#L2580
 
----
- .../devicetree/bindings/ata/ata-generic.yaml  | 58 +++++++++++++++++++
- 1 file changed, 58 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/ata-generic.yaml
+Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
 
-diff --git a/Documentation/devicetree/bindings/ata/ata-generic.yaml b/Documentation/devicetree/bindings/ata/ata-generic.yaml
-new file mode 100644
-index 000000000000..0697927f3d7e
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ata-generic.yaml
-@@ -0,0 +1,58 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/ata-generic.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Generic Parallel ATA Controller
-+
-+maintainers:
-+  - Linus Walleij <linus.walleij@linaro.org>
-+
-+description:
-+  Generic Parallel ATA controllers supporting PIO modes only.
-+
-+properties:
-+  compatible:
-+    items:
-+      - enum:
-+          - arm,vexpress-cf
-+          - fsl,mpc8349emitx-pata
-+      - const: ata-generic
-+
-+  reg:
-+    items:
-+      - description: Command interface registers
-+      - description: Control interface registers
-+
-+  reg-shift:
-+    enum: [ 1, 2 ]
-+
-+  interrupts:
-+    maxItems: 1
-+
-+  ata-generic,use16bit:
-+    type: boolean
-+    description: Use 16-bit accesses instead of 32-bit for data transfers
-+
-+  pio-mode:
-+    description: Maximum ATA PIO transfer mode
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    maximum: 6
-+    default: 0
-+
-+required:
-+  - compatible
-+  - reg
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    compact-flash@1a000 {
-+        compatible = "arm,vexpress-cf", "ata-generic";
-+        reg = <0x1a000 0x100>,
-+              <0x1a100 0xf00>;
-+        reg-shift = <2>;
-+    };
-+...
--- 
-2.35.1
+metadata:
+  git_ref: master
+  git_repo: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next
+  git_sha: 7da9fed0474b4cd46055dd92d55c42faf32c19ac
+  git_describe: next-20221006
+  kernel_version: 6.0.0
+  kernel-config: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F/config
+  build-url: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next/-/pipelines/659754170
+  artifact-location: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F
+  toolchain: gcc-10
 
+--
+Linaro LKFT
+https://lkft.linaro.org
