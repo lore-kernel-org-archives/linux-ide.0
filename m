@@ -2,150 +2,217 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F908C4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 13 Oct 2022 07:12:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A8D3C433FE
+	for <linux-ide@archiver.kernel.org>; Thu, 13 Oct 2022 12:39:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229613AbiJMHMF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 13 Oct 2022 03:12:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35698 "EHLO
+        id S229560AbiJMMjt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 13 Oct 2022 08:39:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbiJMHLk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2022 03:11:40 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B35C105649
-        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2022 00:11:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1665645098; x=1697181098;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=s9hcQcdAlAzyhKMWI+wdGejeFtAk0WjChyhpIcsu+pQ=;
-  b=DZytZz/8HudNd+mS1mNmn8c6wruFv2pvstItEnAQfWN2UX+qyD89rMeL
-   AfZYy+/MDaGMu8oMubt6cGrNJL+d4TAfMYD1ZKW3CI5U5FFs1nOpZRV1s
-   k6u56c6vrAoRYV7mAWOCL32ShLM2tG1LI2BKENY1AE7oE+gukM80pFQLK
-   4f82bHUkS4wTz7S1ksFkEs8OTC03IyprbbGQacR0QckTO+zuAu58hHsow
-   eOgAEuXgZZsZmc6r43cYn5DceHX+vRtWPTiD/yyZVJA+yQUCEw82/Bf0H
-   WUsUSonp3HwpNmhQzPN/NyqW8ftbh5MMo6jxSuIZNliF5WAzCtELoLgIW
-   g==;
-X-IronPort-AV: E=Sophos;i="5.95,180,1661788800"; 
-   d="scan'208";a="214073744"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Oct 2022 15:11:34 +0800
-IronPort-SDR: ZdFUPdNcXlonJPXc9MJ1D0tBkBYSlCyU3z9HogYmMZoRRaQlbPIfmT3U9w4dHFikmo6QeSAMZV
- JfND7gD/XMYOhUuwipUo8f7YDK93V/otXCihL8Rybdz/wqS3cV4bd1+Qbr0RDP3t3ZLKzJL3pn
- bxrpjRulf66W9MrASfkJ4lVjiY7NO8owaSIXfq+dt3C/5jR9nihNiL+NEWC8/C9RoWlEz2/TQk
- Docg0l2AAmsUCMXL0BfFS5o4xVgoYR+sUbV91lbSWlKJ9jD4n3NHHWZdaOJp8nbNg3FWDnoUqh
- L1uJXeZszLUCi3fcU22kh6jt
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Oct 2022 23:31:12 -0700
-IronPort-SDR: 4ZUEI9cTJ+MnNvuCRvqkvYseO2ZGRP87IfMyK2CT50fVP+vwKAYcUIHkcdn85v/ipT410FEYja
- HdS6jk/iG2RhjYSsEE3WXyt/7J9zl3m7CiFnlat6HvnUOekYjHGT/Bx7ZR5/6eDxUtN1fRswXG
- 3UCMgaMtzkNCAoEiRYjJR0d/G/87ImhM182wFVneA6b5fatgW9QtsxUPqNoxi+c9n/M+OyO49b
- ia5I0FtIHdS4E+qZm7+ap+ACIsVRCX3c0S34cPzMaEcm8iPWCz5x+0JU40LxF+mjhuwoM1dIvi
- +TQ=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Oct 2022 00:11:35 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Mp10P6mGFz1RwtC
-        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2022 00:11:33 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1665645092; x=1668237093; bh=s9hcQcdAlAzyhKMWI+wdGejeFtAk0WjChyh
-        pIcsu+pQ=; b=E2qH8RgJd3gtBWYAORPFpgQaSWrC9PBc2Az25CwFOjOp7LLwl6k
-        jvPcf8DEeRTKatzK97j5Z7Nd+h8tZefe47khQ5qrcJwCV9ICM2gLmslL34WENuqK
-        d5FPrWZLObqk0R5O8Oac8mAl5oGW21cp0tICCtp+wHRRZ2aVCiGse1C7DH+KM86M
-        bD0pIuFXhNNtDKFod35yzP0p5j9GOnEPNLk7RKi+/kPBh0RkMZ5xZTsWGFmyCTJr
-        4jZ6poKF3w5HHS9HaYf4DOTMPRXGh1gXNbLPgItU2S+M3GgVUhH55cuMhTipeyqd
-        E9S/6AfN2/JPDNgqLHEMQy1MYC5RujDpOaw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id lF7FXm-eouwH for <linux-ide@vger.kernel.org>;
-        Thu, 13 Oct 2022 00:11:32 -0700 (PDT)
-Received: from [10.89.85.169] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.85.169])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Mp10L5vWSz1RvLy;
-        Thu, 13 Oct 2022 00:11:30 -0700 (PDT)
-Message-ID: <bf1b053d-ffa6-48ab-d2d2-d59ab21afc19@opensource.wdc.com>
-Date:   Thu, 13 Oct 2022 16:11:29 +0900
+        with ESMTP id S229741AbiJMMjt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2022 08:39:49 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 836911A81B
+        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2022 05:39:46 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id s2so2444665edd.2
+        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2022 05:39:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=GD5Q0fIlYFy9UgmSPGmxuwFTbHUtfpAAgAnjM1dUOhI=;
+        b=OjcVqnLYYMkA8IvE4mzGLx1ggf60Mdr2S81VA3jSR2/YIK+Z4RcpHYKbRazbSKCDna
+         2NjesK0/nrMTJlitm0X4DhPwt8F9DPVoImdHI8zWidu1c2HpteHlY6OCsR69ZFQscD61
+         nCISz4Yn2YXce4ZldUahcvzXXzAO0joUXR35Co+xVyt5ONyrwxVDZP5DvXHQGegOmBlw
+         iRlOCea2WWOEuiPTM4Cas8FTdwKxdjUnfW0ZFsz3mdV80P7Qxe02m+iagp/tvZ2kDtZd
+         HIS6JyK76Ks8WDf/hkjYugkvoCupr5PDSPy3kUGiy5PnYgI18jNxGuKPaAAyvw/Uitmz
+         kpXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GD5Q0fIlYFy9UgmSPGmxuwFTbHUtfpAAgAnjM1dUOhI=;
+        b=B5SX7vmCBXYylvWswTcUfrO4F3quAXgd+KthM5qr6SrZznaSMN8V0bQzhjedntV52G
+         t7dBIySJ95eGLHUvByVfcEXmWOlZmt8oegDnydhIzZAW4vxdxOshZVARGmEOqUVDdwGK
+         JWawY4SqwEdhCQq48NS5Hm1ScuBPOLPsVDxbZnugKrjLfphcflCSjkGyKvcbtfwDIYw4
+         7GC9jgsEzgfS/luSLEr0aUX5YToe15PbhSgV5OBkd1HIecEyUXhVbhDSK0f/ucoqlfQ2
+         M4MrraJ7bFYAEE4gMGXbWH6lskRQMq4tW4whTyVLRc4skqzHkbTcYgee7X6g7SxaMQdB
+         i89w==
+X-Gm-Message-State: ACrzQf3RbOI8VpQsfQOxZe9si9xFfgIxLXGHqJbBFliWGmKLEw/wvJS1
+        nbAk++oha8x6CNvMT/x46aX+wpB0YI8jH0w3p4XQE0mPMDG8Lg==
+X-Google-Smtp-Source: AMsMyM7LqebKv/Vg0TFf9NGRzOp//qKzV5yRcGJR9qiv0wViF6GF9Ih6o2EBzI/MLW2yjpk3ydnmYG0IkSo+IR/eGhU=
+X-Received: by 2002:a05:6402:2989:b0:44e:90d0:b9ff with SMTP id
+ eq9-20020a056402298900b0044e90d0b9ffmr31446858edb.110.1665664784554; Thu, 13
+ Oct 2022 05:39:44 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.3.2
-Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006
- tag
-Content-Language: en-US
-To:     Naresh Kamboju <naresh.kamboju@linaro.org>,
-        open list <linux-kernel@vger.kernel.org>,
+References: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
+ <bf1b053d-ffa6-48ab-d2d2-d59ab21afc19@opensource.wdc.com>
+In-Reply-To: <bf1b053d-ffa6-48ab-d2d2-d59ab21afc19@opensource.wdc.com>
+From:   Naresh Kamboju <naresh.kamboju@linaro.org>
+Date:   Thu, 13 Oct 2022 18:09:32 +0530
+Message-ID: <CA+G9fYvUnn0cS+_DZm8hAfi=FnMB08+6Xnhud6yvi9Bxh=DU+Q@mail.gmail.com>
+Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006 tag
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     open list <linux-kernel@vger.kernel.org>,
         Linux ARM <linux-arm-kernel@lists.infradead.org>,
         linux-block <linux-block@vger.kernel.org>,
         linux-fsdevel@vger.kernel.org, regressions@lists.linux.dev,
         "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
         <linux-ide@vger.kernel.org>, lkft-triage@lists.linaro.org,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Cc:     Niklas Cassel <niklas.cassel@wdc.com>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
         Arnd Bergmann <arnd@arndb.de>,
         Anders Roxell <anders.roxell@linaro.org>
-References: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/10/12 16:24, Naresh Kamboju wrote:
-> On TI beagle board x15 the connected SSD is not detected on linux next
-> 20221006 tag.
-> 
-> + export STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-> + STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-> + test -n /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-> + echo y
-> + mkfs.ext4 /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-> mke2fs 1.46.5 (30-Dec-2021)
-> The file /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 does
-> not exist and no size was specified.
-> + lava-test-raise 'mkfs.ext4
-> /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 failed; job
-> exit'
-> 
-> Test log:
->  - https://lkft.validation.linaro.org/scheduler/job/5634743#L2580
-> 
-> Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-> 
-> metadata:
->   git_ref: master
->   git_repo: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next
->   git_sha: 7da9fed0474b4cd46055dd92d55c42faf32c19ac
->   git_describe: next-20221006
->   kernel_version: 6.0.0
->   kernel-config: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F/config
->   build-url: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next/-/pipelines/659754170
->   artifact-location: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F
->   toolchain: gcc-10
+On Thu, 13 Oct 2022 at 12:41, Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
+>
+> On 2022/10/12 16:24, Naresh Kamboju wrote:
+> > On TI beagle board x15 the connected SSD is not detected on linux next
+> > 20221006 tag.
+> >
+> > + export STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
+> > + STORAGE_DEV=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
+> > + test -n /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
+> > + echo y
+> > + mkfs.ext4 /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
+> > mke2fs 1.46.5 (30-Dec-2021)
+> > The file /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 does
+> > not exist and no size was specified.
+> > + lava-test-raise 'mkfs.ext4
+> > /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 failed; job
+> > exit'
 
-The kernel messages that are shown in the links above do not show any "libata
-version 3.00 loaded." message nor any ata/ahci message that I can see. So I
-think the eSATA adapter is not even being detected and libata/ahci driver not used.
+The reported issue is now noticed on the Linux mainline master branch.
 
-Was this working before ? If yes, can you try with the following patches reverted ?
+1)
+I see following config is missing on latest problematic builds
+  - CONFIG_HAVE_PATA_PLATFORM=y
 
-d3243965f24a ("ata: make PATA_PLATFORM selectable only for suitable architectures")
-3ebe59a54111 ("ata: clean up how architectures enable PATA_PLATFORM and
-PATA_OF_PLATFORM")
+2)
+Following ahci sata kernel message are missing on problematic boots,
+[    1.408660] ahci 4a140000.sata: forcing port_map 0x0 -> 0x1
+[    1.408691] ahci 4a140000.sata: AHCI 0001.0300 32 slots 1 ports 3
+Gbps 0x1 impl platform mode
+[    1.408721] ahci 4a140000.sata: flags: 64bit ncq sntf pm led clo
+only pmp pio slum part ccc apst
+[    1.409820] scsi host0: ahci
+[    1.410064] ata1: SATA max UDMA/133 mmio [mem
+0x4a140000-0x4a1410ff] port 0x100 irq 98
 
-If reverting these patches restores the eSATA port on this board, then you need
-to fix the defconfig for that board.
+3)
+GOOD: 9d84bb40bcb30a7fa16f33baa967aeb9953dda78
+BAD:  e08466a7c00733a501d3c5328d29ec974478d717
 
--- 
-Damien Le Moal
-Western Digital Research
+4)
+Here i am adding links working and not working test jobs and kernel configs,
+problematic test job:
+ - https://lkft.validation.linaro.org/scheduler/job/5641407#L2602
+Good test job:
+ - https://lkft.validation.linaro.org/scheduler/job/5640672#L2198
 
+5)
+metadata:
+  git_ref: master
+  git_repo: https://gitlab.com/Linaro/lkft/mirrors/torvalds/linux-mainline
+  git_sha: e08466a7c00733a501d3c5328d29ec974478d717
+  git_describe: v6.0-7220-ge08466a7c007
+  kernel_version: 6.0.0
+  kernel-config: https://builds.tuxbuild.com/2Fourpiqf1OrlPFFtKwhHV0wAiq/config
+  build-url: https://gitlab.com/Linaro/lkft/mirrors/torvalds/linux-mainline/-/pipelines/661424896
+  artifact-location: https://builds.tuxbuild.com/2Fourpiqf1OrlPFFtKwhHV0wAiq
+  toolchain: gcc-10
+
+
+6)
+For your information,
+--
+I see diff on good to bad commits,
+$ git log --oneline 9d84bb40bcb3..e08466a7c007  -- drivers/ata
+4078aa685097 Merge tag 'ata-6.1-rc1' of
+git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata
+71d7b6e51ad3 ata: libata-eh: avoid needless hard reset when revalidating link
+e3b1fff6c051 ata: libata: drop superfluous ata_eh_analyze_tf() parameter
+b46c760e11c8 ata: libata: drop superfluous ata_eh_request_sense() parameter
+cb6e73aaadff ata: libata-eh: Remove the unneeded result variable
+ecf8322f464d ata: ahci_st: Enable compile test
+2d29dd108c78 ata: ahci_st: Fix compilation warning
+9628711aa649 ata: ahci-dwc: Add Baikal-T1 AHCI SATA interface support
+bc7af9100fa8 ata: ahci-dwc: Add platform-specific quirks support
+33629d35090f ata: ahci: Add DWC AHCI SATA controller support
+6ce73f3a6fc0 ata: libahci_platform: Add function returning a clock-handle by id
+18ee7c49f75b ata: ahci: Introduce firmware-specific caps initialization
+7cbbfbe01a72 ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
+fad64dc06579 ata: libahci: Don't read AHCI version twice in the
+save-config method
+88589772e80c ata: libahci: Discard redundant force_port_map parameter
+eb7cae0b6afd ata: libahci: Extend port-cmd flags set with port capabilities
+f67f12ff57bc ata: libahci_platform: Introduce reset
+assertion/deassertion methods
+3f74cd046fbe ata: libahci_platform: Parse ports-implemented property
+in resources getter
+3c132ea6508b ata: libahci_platform: Sanity check the DT child nodes number
+e28b3abf8020 ata: libahci_platform: Convert to using devm bulk clocks API
+82d437e6dcb1 ata: libahci_platform: Convert to using platform
+devm-ioremap methods
+d3243965f24a ata: make PATA_PLATFORM selectable only for suitable architectures
+3ebe59a54111 ata: clean up how architectures enable PATA_PLATFORM and
+PATA_OF_PLATFORM
+55d5ba550535 ata: libata-core: Check errors in sata_print_link_status()
+03070458d700 ata: libata-sff: Fix double word in comments
+0b2436d3d25f ata: pata_macio: Remove unneeded word in comments
+024811a2da45 ata: libata-core: Simplify ata_dev_set_xfermode()
+066de3b9d93b ata: libata-core: Simplify ata_build_rw_tf()
+e00923c59e68 ata: libata: Rename ATA_DFLAG_NCQ_PRIO_ENABLE
+614065aba704 ata: libata-core: remove redundant err_mask variable
+fee6073051c3 ata: ahci: Do not check ACPI_FADT_LOW_POWER_S0
+99ad3f9f829f ata: libata-core: improve parameter names for ata_dev_set_feature()
+16169fb78182 ata: libata-core: Print timeout value when internal command times
+
+
+
+
+> >
+> > Test log:
+> >  - https://lkft.validation.linaro.org/scheduler/job/5634743#L2580
+> >
+> > Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
+> >
+> > metadata:
+> >   git_ref: master
+> >   git_repo: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next
+> >   git_sha: 7da9fed0474b4cd46055dd92d55c42faf32c19ac
+> >   git_describe: next-20221006
+> >   kernel_version: 6.0.0
+> >   kernel-config: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F/config
+> >   build-url: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next/-/pipelines/659754170
+> >   artifact-location: https://builds.tuxbuild.com/2FkkkZ51ZYhBL1G8D69YX8Pkt5F
+> >   toolchain: gcc-10
+
+7)
+> The kernel messages that are shown in the links above do not show any "libata
+> version 3.00 loaded." message nor any ata/ahci message that I can see. So I
+> think the eSATA adapter is not even being detected and libata/ahci driver not used.
+>
+> Was this working before ? If yes, can you try with the following patches reverted ?
+>
+> d3243965f24a ("ata: make PATA_PLATFORM selectable only for suitable architectures")
+> 3ebe59a54111 ("ata: clean up how architectures enable PATA_PLATFORM and
+> PATA_OF_PLATFORM")
+
+I have reverted above two patches and but the problem has not been solved.
+
+8)
+> If reverting these patches restores the eSATA port on this board, then you need
+> to fix the defconfig for that board.
+
+OTOH,
+Anders, enabled the new config CONFIG_AHCI_DWC=y  and tried but the
+device failed to boot.
+
+- Naresh
