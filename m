@@ -2,35 +2,35 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 336A8C4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 13 Oct 2022 00:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 182CAC4167B
+	for <linux-ide@archiver.kernel.org>; Thu, 13 Oct 2022 00:35:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231494AbiJMAbt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Oct 2022 20:31:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47496 "EHLO
+        id S231644AbiJMAft (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Oct 2022 20:35:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232068AbiJMA3r (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2022 20:29:47 -0400
+        with ESMTP id S231862AbiJMAdO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2022 20:33:14 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27D8C4A129;
-        Wed, 12 Oct 2022 17:27:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22C42C7851;
+        Wed, 12 Oct 2022 17:28:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 374AAB81CD2;
-        Thu, 13 Oct 2022 00:19:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5BABC43470;
-        Thu, 13 Oct 2022 00:19:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AA9D3B81CF4;
+        Thu, 13 Oct 2022 00:26:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FCE5C433B5;
+        Thu, 13 Oct 2022 00:26:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665620382;
-        bh=YBukERdAxHkU57EcJR6ZhFZ2hlJha5Z6ys8hKW3Glgs=;
+        s=k20201202; t=1665620795;
+        bh=8VBt0TV070VIaruyQ4lTpvVLgKOxHaLZWr95D3YRDZk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lHWyzKjUWTHy7Z3cfl9K8KO+XzI58BUR5smLax4juNN4HgI62b/Naw7oynXbAGvCW
-         yTcG+/1OsNjEKx5eAJ9p4FTkiTWjZlaDuzadhr1WDDDQakamZ5ni9ATtLZrDumILoW
-         GeJ5ZNPS7rNUW/P0dichssqv20WL/uJyymJC6B3TlQ6uyup6nkyHcp7VDnbKEDUCRo
-         nQu4hnGh/quKyzRW+uhO9Uitn7J5QZrHErQPuAFsuxamq/EX3OKHltDdIBJegXBpEg
-         dwDxjeMJmxdrl7dmmb1nC+ejiM1XjY2FrBcre6HcwFlbtU2EG6mU6MV6aDUgqanTSA
-         98NcULwu/QN3A==
+        b=jAyxA1V919rde29/i8Np0MhZkSfaRBH9/wxTIkuAoKvBcJGsQBgVHEnUr2/VjkMDq
+         losQIEtNV3/a7f602OgtbtAyucUkJz28/bme5k3lTBCU6HjrcQONAAZPiGZRX072+E
+         554VkHpu/7ICHlstnbuasj9DmCzCgLUE2FO4vwTAQx9I/Wm5XG2RC6g2p+QkyzLzXu
+         QjE8NWqPn+s3/pNSmocJ/inqwa+StGOwD1cE+h+c9VwQ879SUUtMY4qbsMAwvVXYPG
+         6fih+vgNGoeUSVTlb1jgu7IhD44Ex4dmgAYe7XKC269kpFmjq2QKiQHYSZMO+WS2bG
+         1C+GbDpbJ6nVA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
@@ -38,12 +38,12 @@ Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sasha Levin <sashal@kernel.org>, hdegoede@redhat.com,
         axboe@kernel.dk, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 24/63] ata: libahci_platform: Sanity check the DT child nodes number
-Date:   Wed, 12 Oct 2022 20:17:58 -0400
-Message-Id: <20221013001842.1893243-24-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 06/19] ata: libahci_platform: Sanity check the DT child nodes number
+Date:   Wed, 12 Oct 2022 20:26:05 -0400
+Message-Id: <20221013002623.1895576-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221013001842.1893243-1-sashal@kernel.org>
-References: <20221013001842.1893243-1-sashal@kernel.org>
+In-Reply-To: <20221013002623.1895576-1-sashal@kernel.org>
+References: <20221013002623.1895576-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -81,10 +81,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 32495ae96567..986f1923a76d 100644
+index 6a55aac0c60f..63086f90bbf8 100644
 --- a/drivers/ata/libahci_platform.c
 +++ b/drivers/ata/libahci_platform.c
-@@ -451,14 +451,24 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+@@ -421,14 +421,24 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
  		}
  	}
  
