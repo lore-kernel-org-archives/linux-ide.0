@@ -2,103 +2,115 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC10C4332F
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Oct 2022 13:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA098C4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 13 Oct 2022 00:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229686AbiJLNaO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Oct 2022 09:30:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32782 "EHLO
+        id S230021AbiJMASM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Oct 2022 20:18:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230004AbiJLNaL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2022 09:30:11 -0400
-Received: from mx1.tq-group.com (mx1.tq-group.com [93.104.207.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8875230548
-        for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2022 06:30:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
-  t=1665581407; x=1697117407;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=VUQfEgYnTxt46y3lPmAjh4eGn2QA84UvLb9AeykCqhw=;
-  b=Q0hGa8P3Iy3vC5TePLvf0Vq/9NLSGxG3rNMZmWa9pEVqIrhSTXf6bpxG
-   xQ0k9adpVgAwPtQKqjLiLvfEpjvfXn6dX4E7Q1ybnvAbL7YS60Un7NTaT
-   8Ar8n0oqCK715mU2eiRsfN4cgoU8KF2pslRl0BDi6fPpWgVjTt3uhN+CT
-   R5JOyqAVoMnt8ruhnaCnOlqA8AuDgfZbLyRJD0nA76i+HFjmEIsheKNcp
-   GVcOl0HjuJPlbit3uykNVf/82CB7QlDfz4GBHlTE84VrKboONqPdR2U9f
-   YhWqeOrgMIwQbO4EJbsf7EMP+RJBNrVmR8XWyZcCRfLMn5Nr3UX/XD8Gq
-   w==;
-X-IronPort-AV: E=Sophos;i="5.95,179,1661810400"; 
-   d="scan'208";a="26710329"
-Received: from unknown (HELO tq-pgp-pr1.tq-net.de) ([192.168.6.15])
-  by mx1-pgp.tq-group.com with ESMTP; 12 Oct 2022 15:30:05 +0200
-Received: from mx1.tq-group.com ([192.168.6.7])
-  by tq-pgp-pr1.tq-net.de (PGP Universal service);
-  Wed, 12 Oct 2022 15:30:05 +0200
-X-PGP-Universal: processed;
-        by tq-pgp-pr1.tq-net.de on Wed, 12 Oct 2022 15:30:05 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
-  t=1665581405; x=1697117405;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=VUQfEgYnTxt46y3lPmAjh4eGn2QA84UvLb9AeykCqhw=;
-  b=W8VnxwtXggs/qFWo3uC3/PTKHpzCKeLLc5mvNOA/6pfc5NpICt1Spyld
-   l8h4HxsnhELlJ6VcpqewdHQjs9J6ZnuCrC+KQ3ENKv7bOOS8+XCReIe8W
-   Ab3auv6I0c+zULsojtVPS03BEM6eGWoRAyv0gm7AhIyUx56AimvVP5g7Q
-   YFfo1aqFERLef2zwtvOsfKESlFc4nQV48lsQR9oQ0fzfC+e4D7p2fr1V7
-   6RSC5gafddY+Oigscln/jb3UHD48jqBiEJWUUJ/RM5wtoZJ1qY8wPl+0v
-   Je3N5cMSJo3qSHnPjPybKm+yGROR3k5pXOxetxEoIOwzqLzdB0S3rHyC9
-   g==;
-X-IronPort-AV: E=Sophos;i="5.95,179,1661810400"; 
-   d="scan'208";a="26710328"
-Received: from vtuxmail01.tq-net.de ([10.115.0.20])
-  by mx1.tq-group.com with ESMTP; 12 Oct 2022 15:30:05 +0200
-Received: from steina-w.localnet (unknown [10.123.53.21])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        with ESMTP id S229958AbiJMARl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2022 20:17:41 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3977142C96;
+        Wed, 12 Oct 2022 17:16:58 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by vtuxmail01.tq-net.de (Postfix) with ESMTPSA id 773CE280056;
-        Wed, 12 Oct 2022 15:30:05 +0200 (CEST)
-From:   Alexander Stein <alexander.stein@ew.tq-group.com>
-To:     Fabio Estevam <festevam@gmail.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/1] ata: ahci-imx: Fix MODULE_ALIAS
-Date:   Wed, 12 Oct 2022 15:30:05 +0200
-Message-ID: <5877338.lOV4Wx5bFT@steina-w>
-Organization: TQ-Systems GmbH
-In-Reply-To: <CAOMZO5DzFtuVxuAhmtsBx+EoxXgeg6nHDeJiLULsY8wRdpXbEw@mail.gmail.com>
-References: <20221012131105.725258-1-alexander.stein@ew.tq-group.com> <CAOMZO5DzFtuVxuAhmtsBx+EoxXgeg6nHDeJiLULsY8wRdpXbEw@mail.gmail.com>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 84EECB81CC2;
+        Thu, 13 Oct 2022 00:16:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63AB9C43470;
+        Thu, 13 Oct 2022 00:16:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665620212;
+        bh=YBukERdAxHkU57EcJR6ZhFZ2hlJha5Z6ys8hKW3Glgs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Ydyvt0tcfOsGWnBUpolOhmKedLrrR4AfRC1FpP0kPY5rlnB5TwPGhtHkRZg9lEJVD
+         qw2vjdpYMAcDlnKMGMyovNwRvS//l/dpy0jfFXUUn65kqQKLVQiqzaVXmEmE9vF11O
+         /m9Gao0G2VPdEavc9T1ZnlwZqGu+4FddwHq2p83WgrUo37B3gu3VTAMv/gB8yC8qiD
+         BFkd1pfcr4bXRDuky+7ARrKzi0EFSog+wi4l7b21z8PsCPtasQXrll7xSsSTE1T7hz
+         Eoe+ydAxo1gUm1ImYT6xmFFplvGz5/akljM1oatYmcgkNGkUYbPVKUvX+6QbprQnNq
+         8rUa7sklLRObA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sasha Levin <sashal@kernel.org>, hdegoede@redhat.com,
+        axboe@kernel.dk, linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 24/67] ata: libahci_platform: Sanity check the DT child nodes number
+Date:   Wed, 12 Oct 2022 20:15:05 -0400
+Message-Id: <20221013001554.1892206-24-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221013001554.1892206-1-sashal@kernel.org>
+References: <20221013001554.1892206-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Fabio,
+From: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
-Am Mittwoch, 12. Oktober 2022, 15:23:04 CEST schrieb Fabio Estevam:
-> Hi Alexander,
-> 
-> On Wed, Oct 12, 2022 at 10:11 AM Alexander Stein
-> 
-> <alexander.stein@ew.tq-group.com> wrote:
-> > 'ahci:' is an invalid prefix, preventing the module from autoloading.
-> > Fix this by using the 'platform:' prefix and DRV_NAME.
-> 
-> What about adding a Fixes tag?
-> 
-> Reviewed-by: Fabio Estevam <festevam@gmail.com>
+[ Upstream commit 3c132ea6508b34956e5ed88d04936983ec230601 ]
 
-Thanks. A Fixes tag seems reasonable, but I have to admit I don't know at 
-which point auto loading stopped working (if it did at all).
+Having greater than AHCI_MAX_PORTS (32) ports detected isn't that critical
+from the further AHCI-platform initialization point of view since
+exceeding the ports upper limit will cause allocating more resources than
+will be used afterwards. But detecting too many child DT-nodes doesn't
+seem right since it's very unlikely to have it on an ordinary platform. In
+accordance with the AHCI specification there can't be more than 32 ports
+implemented at least due to having the CAP.NP field of 5 bits wide and the
+PI register of dword size. Thus if such situation is found the DTB must
+have been corrupted and the data read from it shouldn't be reliable. Let's
+consider that as an erroneous situation and halt further resources
+allocation.
 
-Best regards,
-Alexander
+Note it's logically more correct to have the nports set only after the
+initialization value is checked for being sane. So while at it let's make
+sure nports is assigned with a correct value.
 
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/libahci_platform.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 32495ae96567..986f1923a76d 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -451,14 +451,24 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		}
+ 	}
+ 
+-	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
++	/*
++	 * Too many sub-nodes most likely means having something wrong with
++	 * the firmware.
++	 */
++	child_nodes = of_get_child_count(dev->of_node);
++	if (child_nodes > AHCI_MAX_PORTS) {
++		rc = -EINVAL;
++		goto err_out;
++	}
+ 
+ 	/*
+ 	 * If no sub-node was found, we still need to set nports to
+ 	 * one in order to be able to use the
+ 	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
+ 	 */
+-	if (!child_nodes)
++	if (child_nodes)
++		hpriv->nports = child_nodes;
++	else
+ 		hpriv->nports = 1;
+ 
+ 	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
+-- 
+2.35.1
 
