@@ -2,183 +2,146 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E96A4C433FE
-	for <linux-ide@archiver.kernel.org>; Fri, 14 Oct 2022 03:33:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66B0DC433FE
+	for <linux-ide@archiver.kernel.org>; Fri, 14 Oct 2022 07:32:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229757AbiJNDdD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 13 Oct 2022 23:33:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53490 "EHLO
+        id S229595AbiJNHcZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 14 Oct 2022 03:32:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229496AbiJNDdC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2022 23:33:02 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59C85E8C5F
-        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2022 20:33:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1665718381; x=1697254381;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=7/i9odLgURMcNLh9baM3cplpp14Eizpe1w6f4JvRqRQ=;
-  b=Odxub+yNeoKQ+Wvcdi+duN/00fg3rApQBslEZ5GRxtBluaelv0Rp0NG+
-   XexNL0TUTDOu4Vq1Otzs4mcfUe7fxsJqtTkuOC+GvlYctvhscjr4pyIj5
-   xmIrFTjAYD4pFwA1JrkcRg3jvupA4qW0xB2vpGRwlHQCnslw1yBjspuui
-   KYkwTvu54RQ1BBx6zsmyUQLY7QWk195Ojs675DUu9c/4ap24DBqwrXDyY
-   X9nBMPWHj2pZdmG0RxN2ZXOD0PJzbWFwBS8sl0pdUMYGuFXsQUC/4mFSL
-   JBjwEkWQorCqYXjOcQOf/uUjYzznRK1iOqLRWGU9+kEl+LNtYMQaJqVLz
-   w==;
-X-IronPort-AV: E=Sophos;i="5.95,182,1661788800"; 
-   d="scan'208";a="325867343"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Oct 2022 11:33:00 +0800
-IronPort-SDR: 94sY20HKdv9ZmoTZ3cioByS0BM44UuveTZRXsGbEl3iyGvMKUN6T0BlNsXQUSBZtMiA2C3wE8p
- LKdfSiJcsAVY14g390NbwpdbPRWZc8h/YDN448J3a8fYDpQx6rYj872EBGw+BfSj0Pp+7nxMnA
- RQhZdstUC8eEjViYWUt4UJ0dIQXApEHARTWUobjTPSIFC+7YUVP88ScVlyRP/ZhTjupnSsUNEt
- dNEC9kfz9utw9lqdMOHGO0TjdGTSWeXlhCTgyPlzFCuENYf5BlRFUuvOVOzzPjPKMLPene2SM/
- XdbAuvS3TbjU4wj8j3Cvl2TD
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Oct 2022 19:52:37 -0700
-IronPort-SDR: +26WGnnG5LhZ+GdvZglH3Js0St7FMcLCxiCykbbSuzLCGEyUjMIjtdKAcP3s12KPuZn4GxIBey
- v0rzLnN6/ayaXO1fn2+OofNx9zexLM3+LzhNgCrLw8kIQ9mNsMOm5DOKzbKnOl3Pnb6eGKeuSP
- LfWF2vnRECJ62iuhVhKQk3GPpxAD+rSywp2V9YUvR0/m9MYql1DmBtgQywLNnusCEDoQlfp48i
- rshoWvwAXSwqnb65LrDZh+3goRE75Ndr4n7jcajJUHTQbXQYyXjqdGdO6cEQt22ouQ8H8BHuGZ
- f54=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Oct 2022 20:33:00 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MpX5l026Fz1RvTp
-        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2022 20:32:59 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1665718378; x=1668310379; bh=7/i9odLgURMcNLh9baM3cplpp14Eizpe1w6
-        f4JvRqRQ=; b=BNMbR8lmt9ePsQ6R7UKXfyQ4/5L6WItbjD1dz6+7NPquJLfRr7M
-        SXWFR+aR9+vEAsAcU/cQGVqeybVpZMji67UWIA8eV5c9HHg8l+tiYFAbr0a+5Ddv
-        a6tVLz11vodfs8ne5Q8tWydrXq9jMclzQxT75wYUL+KjzQK6RDh2O1nYHCgDpNny
-        i7KHuT6LGOzlLWgx9OY0rrPCJd9SFWCzRLg0eufdHW2pxAWGKdaR58kPLxOx85vJ
-        YV12d9LFUNPJMxveK1J2I2M8Fu4S8YLGmJKr3325Je5j7te1nfRqcctd4J9B4gJb
-        HSwgVRIVXTE32PSlxp6ObEEDNAuYKFmhbzw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id fqKyYTM32nZN for <linux-ide@vger.kernel.org>;
-        Thu, 13 Oct 2022 20:32:58 -0700 (PDT)
-Received: from [10.225.163.119] (unknown [10.225.163.119])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MpX5j5jdrz1RvLy;
-        Thu, 13 Oct 2022 20:32:57 -0700 (PDT)
-Message-ID: <76a729e7-5d65-d965-da8e-f3ff3fd781d8@opensource.wdc.com>
-Date:   Fri, 14 Oct 2022 12:32:56 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.1
-Subject: Re: [PATCH] ata: ahci: Match EM_MAX_SLOTS with SATA_PMP_MAX_PORTS
-Content-Language: en-US
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221011024617.720898-1-kai.heng.feng@canonical.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20221011024617.720898-1-kai.heng.feng@canonical.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229650AbiJNHcY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2022 03:32:24 -0400
+Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com [66.111.4.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E1041B76FB;
+        Fri, 14 Oct 2022 00:32:22 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailout.nyi.internal (Postfix) with ESMTP id D60585C00A7;
+        Fri, 14 Oct 2022 03:32:19 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute3.internal (MEProxy); Fri, 14 Oct 2022 03:32:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to; s=fm2; t=1665732739; x=1665819139; bh=iYvmehNBlw
+        06CbCuBOD7St3FUBj4CVVluYujD7ayDLQ=; b=Ep1sOt8A+qbphOkwJNMS+bZLPI
+        fEDpw6wWBA0iKtWim8X/cGXLMdxzH9uDxaQeNqmOtXCrfXPx3DXYoI+hgJ0tmx0y
+        RVTnV7fN4/91vAfA4uaZHokKX++vPp73iEsHqaHk1jUw3Qyuv6Zz2+HeMgTOj2w/
+        tzJSbOqAzefr80yOxvWnlTnjd7L26tMKxr398379T+0MeJyfZyMoYc1fBcG4kWaT
+        2RZp/Onca1bJn4ICIhqQJXkjVuygoH25+5zSA7B64mTCpdsYLR7Xb/utpFBrtHpL
+        qL1hzHzLsflpqR9kgutHmYrAn/bni9PvxfBiCZWCkjgp7ccRMPIpnmAYa7ZA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm3; t=1665732739; x=1665819139; bh=iYvmehNBlw06CbCuBOD7St3FUBj4
+        CVVluYujD7ayDLQ=; b=VGwd6u0xuftNgTZ8id3L5Cmu4x1grNfv49BGbEcLoSFC
+        MpftI5ayl0p/D9AxMHyu57NWqdJlZzRa3ubk+71v1jplmcoRo19QOSM5r+vkh4hh
+        qWYajAHaeT4Df2R/l0lKBRBuffHgdG2SwRjil88hNxLhHAj1lIarEvq+eiZzy4bN
+        AjHu73YPiMOQxIpr5oyW8bttA8Um5DlMIUKRB1zRY/yRJzfPQxsksf29YGpghAoy
+        /AHbCED/8jgEQCOk40nbaL2GGpqyJ8cidTtzZv7wQ1rjs2y5lFUKEq7VjrZhv1Hg
+        kaW+YUeGW8Yw8s4mZx3IuALE3CXPWtdY+uZxmytDzg==
+X-ME-Sender: <xms:ghBJY8rQQUX89VmEP719Vlga8mGPnIly6_zLHeQmJXF1-VcKbe8Ogg>
+    <xme:ghBJYyp-yYxDAFGGI_kbPfy9Da1sDiQF73MnMsQjynnn435wgmGgISPmtGbPWFYGi
+    w8UfK3KuAjaDU8dhH4>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrfeekuddguddvvdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdet
+    rhhnugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrg
+    htthgvrhhnpeffheeugeetiefhgeethfejgfdtuefggeejleehjeeutefhfeeggefhkedt
+    keetffenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grrhhnugesrghrnhgusgdruggv
+X-ME-Proxy: <xmx:ghBJYxPMPKv6ivZxtF1uk9-anNwMvt76e7OgfhXmTRHxOkDeds3wiA>
+    <xmx:ghBJYz5io2gJQ1k5Q6b-nW7Okh-UaZSuOKWizh4QRqKxI7OBHL5QNQ>
+    <xmx:ghBJY75MQOlIccS_xJ_ua4u5VMX6D_PRyl0TjVOQX8z-8RpSXT6sOA>
+    <xmx:gxBJY1vfUsQ7_xS9EOI6dAmJGrvGYHEsWZh12MYIJS476czTtYI13Q>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id CF023B60086; Fri, 14 Oct 2022 03:32:18 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-1047-g9e4af4ada4-fm-20221005.001-g9e4af4ad
+Mime-Version: 1.0
+Message-Id: <7ee4a1bd-0674-42d8-8980-8b029ca09e71@app.fastmail.com>
+In-Reply-To: <ca8d3fff-0365-24d9-fd53-5799ac34f336@opensource.wdc.com>
+References: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
+ <bf1b053d-ffa6-48ab-d2d2-d59ab21afc19@opensource.wdc.com>
+ <CA+G9fYvUnn0cS+_DZm8hAfi=FnMB08+6Xnhud6yvi9Bxh=DU+Q@mail.gmail.com>
+ <CADYN=9L8tt2T-8O+u5NSMSUOkZDvEggnvzxH6aMmd5Rn9yDeuw@mail.gmail.com>
+ <ca8d3fff-0365-24d9-fd53-5799ac34f336@opensource.wdc.com>
+Date:   Fri, 14 Oct 2022 09:31:55 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
+        "Anders Roxell" <anders.roxell@linaro.org>,
+        "Naresh Kamboju" <naresh.kamboju@linaro.org>,
+        Sergey.Semin@baikalelectronics.ru
+Cc:     "open list" <linux-kernel@vger.kernel.org>,
+        "Linux ARM" <linux-arm-kernel@lists.infradead.org>,
+        regressions@lists.linux.dev,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, lkft-triage@lists.linaro.org,
+        "Lukas Bulwahn" <lukas.bulwahn@gmail.com>,
+        "Niklas Cassel" <niklas.cassel@wdc.com>
+Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006 tag
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/11/22 11:46, Kai-Heng Feng wrote:
-> UBSAN complains about array-index-out-of-bounds:
-> [ 1.980703] kernel: UBSAN: array-index-out-of-bounds in /build/linux-9H675w/linux-5.15.0/drivers/ata/libahci.c:968:41
-> [ 1.980709] kernel: index 15 is out of range for type 'ahci_em_priv [8]'
-> [ 1.980713] kernel: CPU: 0 PID: 209 Comm: scsi_eh_8 Not tainted 5.15.0-25-generic #25-Ubuntu
-> [ 1.980716] kernel: Hardware name: System manufacturer System Product Name/P5Q3, BIOS 1102 06/11/2010
-> [ 1.980718] kernel: Call Trace:
-> [ 1.980721] kernel: <TASK>
-> [ 1.980723] kernel: show_stack+0x52/0x58
-> [ 1.980729] kernel: dump_stack_lvl+0x4a/0x5f
-> [ 1.980734] kernel: dump_stack+0x10/0x12
-> [ 1.980736] kernel: ubsan_epilogue+0x9/0x45
-> [ 1.980739] kernel: __ubsan_handle_out_of_bounds.cold+0x44/0x49
-> [ 1.980742] kernel: ahci_qc_issue+0x166/0x170 [libahci]
-> [ 1.980748] kernel: ata_qc_issue+0x135/0x240
-> [ 1.980752] kernel: ata_exec_internal_sg+0x2c4/0x580
-> [ 1.980754] kernel: ? vprintk_default+0x1d/0x20
-> [ 1.980759] kernel: ata_exec_internal+0x67/0xa0
-> [ 1.980762] kernel: sata_pmp_read+0x8d/0xc0
-> [ 1.980765] kernel: sata_pmp_read_gscr+0x3c/0x90
-> [ 1.980768] kernel: sata_pmp_attach+0x8b/0x310
-> [ 1.980771] kernel: ata_eh_revalidate_and_attach+0x28c/0x4b0
-> [ 1.980775] kernel: ata_eh_recover+0x6b6/0xb30
-> [ 1.980778] kernel: ? ahci_do_hardreset+0x180/0x180 [libahci]
-> [ 1.980783] kernel: ? ahci_stop_engine+0xb0/0xb0 [libahci]
-> [ 1.980787] kernel: ? ahci_do_softreset+0x290/0x290 [libahci]
-> [ 1.980792] kernel: ? trace_event_raw_event_ata_eh_link_autopsy_qc+0xe0/0xe0
-> [ 1.980795] kernel: sata_pmp_eh_recover.isra.0+0x214/0x560
-> [ 1.980799] kernel: sata_pmp_error_handler+0x23/0x40
-> [ 1.980802] kernel: ahci_error_handler+0x43/0x80 [libahci]
-> [ 1.980806] kernel: ata_scsi_port_error_handler+0x2b1/0x600
-> [ 1.980810] kernel: ata_scsi_error+0x9c/0xd0
-> [ 1.980813] kernel: scsi_error_handler+0xa1/0x180
-> [ 1.980817] kernel: ? scsi_unjam_host+0x1c0/0x1c0
-> [ 1.980820] kernel: kthread+0x12a/0x150
-> [ 1.980823] kernel: ? set_kthread_struct+0x50/0x50
-> [ 1.980826] kernel: ret_from_fork+0x22/0x30
-> [ 1.980831] kernel: </TASK>
-> 
-> This happens because sata_pmp_init_links() initialize link->pmp up to
-> SATA_PMP_MAX_PORTS while em_priv is declared as 8 elements array.
-> 
-> I can't find the maximum Enclosure Management ports specified in AHCI
-> spec v1.3.1, but "12.2.1 LED message type" states that "Port Multiplier
-> Information" can utilize 4 bits, which implies it can support up to 16
-> ports. Hence, use SATA_PMP_MAX_PORTS as EM_MAX_SLOTS to resolve the
-> issue.
+On Fri, Oct 14, 2022, at 2:22 AM, Damien Le Moal wrote:
+> On 10/14/22 07:07, Anders Roxell wrote:
+> [...]
+>>> 8)
+>>>> If reverting these patches restores the eSATA port on this board, then you need
+>>>> to fix the defconfig for that board.
+>>>
+>>> OTOH,
+>>> Anders, enabled the new config CONFIG_AHCI_DWC=y  and tried but the
+>>> device failed to boot.
+>> 
+>> I thought it would work with enabling CONFIG_AHCI_DWC=y, but it didn't...
+>
+> As mentioned in my previous reply to Naresh, this is a new driver added in
+> 6.1. Your board was working before so this should not be the driver needed
+> for it.
+>
+>> However, reverting patch 33629d35090f ("ata: ahci: Add DWC AHCI SATA
+>> controller support")
+>> from next-20221013 was a success, kernel booted  and the 'mkfs.ext4' cmd was
+>> successful.
+>
+> Which is very strange... There is only one hunk in that commit that could
+> be considered suspicious:
+>
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index 9b56490ecbc3..8f5572a9f8f1 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -80,9 +80,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
+>  static const struct of_device_id ahci_of_match[] = {
+>         { .compatible = "generic-ahci", },
+>         /* Keep the following compatibles for device tree compatibility */
+> -       { .compatible = "snps,spear-ahci", },
+>         { .compatible = "ibm,476gtr-ahci", },
+> -       { .compatible = "snps,dwc-ahci", },
+>         { .compatible = "hisilicon,hisi-ahci", },
+>         { .compatible = "cavium,octeon-7130-ahci", },
+>         { /* sentinel */ }
+>
+> Is your board using one of these compatible string ?
 
-Yes, makes sense: em_priv declaration does say so:
+The x15 uses "snps,dwc-ahci". I would expect it to detect the device
+with the new driver if that is loaded, but it's possible that the
+driver does not work on all versions of the dwc-ahci hardware.
 
-	/* enclosure management info per PM slot */
-	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
+Anders, can you provide the boot log from a boot with the new driver
+built in? There should be some messages from dwc-ahci about finding
+the device, but then not ultimately working.
 
-So if it is per pm slot and we can have at most SATA_PMP_MAX_PORTS, then
-indeed EM_MAX_SLOTS should be equal to that. I wonder why a different
-macro is used, but I have not dig into git log history to find out :)
+Depending on which way it goes wrong, the safest fallback for 6.1 is
+probably to move the "snps,spear-ahci" and "snps,dwc-ahci" compatible
+strings back into the old driver, and leave the new one only for 
+the "baikal,bt1-ahci" implementation of it, until it has been
+successfully verified on TI am5/dra7, spear13xx and exynos.
 
-> BugLink: https://bugs.launchpad.net/bugs/1970074
-
-Ideally, this would need a Fixes tag too I. EM_MAX_SLOTS was set to 8 from
-the start:
-
-18f7ba4c2f4b ("libata/ahci: enclosure management support")
-
-but the code has changed a lot after that.
-
-Adding "Cc: stable@vger.kernel.org" should suffice here since your fix
-should apply to all stable versions (please check !).
-
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
->  drivers/ata/ahci.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index da7ee8bec165a..7add8e79912b1 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -257,7 +257,7 @@ enum {
->  	PCS_7				= 0x94, /* 7+ port PCS (Denverton) */
->  
->  	/* em constants */
-> -	EM_MAX_SLOTS			= 8,
-> +	EM_MAX_SLOTS			= SATA_PMP_MAX_PORTS,
->  	EM_MAX_RETRY			= 5,
->  
->  	/* em_ctl bits */
-
--- 
-Damien Le Moal
-Western Digital Research
-
+     Arnd
