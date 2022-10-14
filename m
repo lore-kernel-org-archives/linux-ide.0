@@ -2,196 +2,145 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E318C43217
-	for <linux-ide@archiver.kernel.org>; Fri, 14 Oct 2022 14:07:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 655C6C4332F
+	for <linux-ide@archiver.kernel.org>; Fri, 14 Oct 2022 16:44:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230202AbiJNOHS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 14 Oct 2022 10:07:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37126 "EHLO
+        id S229973AbiJNQom (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 14 Oct 2022 12:44:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230251AbiJNOHL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2022 10:07:11 -0400
-Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 15F72D57D7;
-        Fri, 14 Oct 2022 07:06:57 -0700 (PDT)
-Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 87681E0EAF;
-        Fri, 14 Oct 2022 17:06:34 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        baikalelectronics.ru; h=cc:cc:content-type:content-type:date
-        :from:from:in-reply-to:message-id:mime-version:references
-        :reply-to:subject:subject:to:to; s=post; bh=8x0DQi0sc4Cp7zYGG0KG
-        ETioxXW4LTwMCzYPtV24TFo=; b=Hdsk+2c3den3XYUl6CgB5pRzIh2FdQniC45R
-        af5E24UGKk3h9ZpZ/gVYs0f6EuIke8RbT1kTOxMUvHZlLwpLmkVdjJ8iZpEIlmG3
-        my+GvLRM9fPenxkpGCy1dEm1seeRArsdIp5rj7qPiItdgri23i9Y5PcLWOrudVTG
-        1M7mKXk=
-Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 77A7EE0E1C;
-        Fri, 14 Oct 2022 17:06:34 +0300 (MSK)
-Received: from mobilestation (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 14 Oct 2022 17:06:34 +0300
-Date:   Fri, 14 Oct 2022 17:06:33 +0300
-From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
-To:     Anders Roxell <anders.roxell@linaro.org>
-CC:     Serge Semin <fancer.lancer@gmail.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Naresh Kamboju <naresh.kamboju@linaro.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        <regressions@lists.linux.dev>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>, <lkft-triage@lists.linaro.org>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006
- tag
-Message-ID: <20221014140633.mlypet7skkxvt453@mobilestation>
-References: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
- <bf1b053d-ffa6-48ab-d2d2-d59ab21afc19@opensource.wdc.com>
- <CA+G9fYvUnn0cS+_DZm8hAfi=FnMB08+6Xnhud6yvi9Bxh=DU+Q@mail.gmail.com>
- <CADYN=9L8tt2T-8O+u5NSMSUOkZDvEggnvzxH6aMmd5Rn9yDeuw@mail.gmail.com>
- <ca8d3fff-0365-24d9-fd53-5799ac34f336@opensource.wdc.com>
- <7ee4a1bd-0674-42d8-8980-8b029ca09e71@app.fastmail.com>
- <75eaeab3-7781-d60a-ae61-ae837f5dcec9@opensource.wdc.com>
- <CADYN=9JiX-=PcKMzAcSm=p7Dh6kYT7Kbv-8kcNF0MQ4=1hFS5g@mail.gmail.com>
+        with ESMTP id S230523AbiJNQok (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2022 12:44:40 -0400
+Received: from vps-vb.mhejs.net (vps-vb.mhejs.net [37.28.154.113])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 165F9A476;
+        Fri, 14 Oct 2022 09:44:34 -0700 (PDT)
+Received: from MUA
+        by vps-vb.mhejs.net with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <mail@maciej.szmigiero.name>)
+        id 1ojNnU-0004xS-0P; Fri, 14 Oct 2022 18:44:32 +0200
+Message-ID: <220d39ad-11cc-338f-806e-293ac43b5021@maciej.szmigiero.name>
+Date:   Fri, 14 Oct 2022 18:44:25 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <CADYN=9JiX-=PcKMzAcSm=p7Dh6kYT7Kbv-8kcNF0MQ4=1hFS5g@mail.gmail.com>
-X-Originating-IP: [192.168.168.10]
-X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Content-Language: en-US, pl-PL
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <ed1c179cff84b49e22cf229cc69751fa4d357d9a.1664221825.git.maciej.szmigiero@oracle.com>
+ <df8701f3905c1a394863e57c7a2d30c5b5dc3503.1664221825.git.maciej.szmigiero@oracle.com>
+ <24a48f71-8a79-6311-1e43-494df0458a32@opensource.wdc.com>
+ <7ecf20b7-794a-39d8-0b03-8f19d9167efd@maciej.szmigiero.name>
+ <28712bad-8215-4246-7370-42d204488aa3@opensource.wdc.com>
+ <7cf5744e-78ec-79c3-98af-2a716167ea1a@opensource.wdc.com>
+ <31f8c4d1-1575-e64d-f42a-ce864e060975@maciej.szmigiero.name>
+ <cb78be0f-633c-29ee-a3c8-cc05d8108cf9@opensource.wdc.com>
+From:   "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
+Subject: Re: [PATCH 2/2] ata: allow enabling FUA support in Kconfig
+In-Reply-To: <cb78be0f-633c-29ee-a3c8-cc05d8108cf9@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Oct 14, 2022 at 11:22:38AM +0200, Anders Roxell wrote:
-> On Fri, 14 Oct 2022 at 09:53, Damien Le Moal
-> <damien.lemoal@opensource.wdc.com> wrote:
-> >
-> > On 10/14/22 16:31, Arnd Bergmann wrote:
-> > > On Fri, Oct 14, 2022, at 2:22 AM, Damien Le Moal wrote:
-> > >> On 10/14/22 07:07, Anders Roxell wrote:
-> > >> [...]
-> > >>>> 8)
-> > >>>>> If reverting these patches restores the eSATA port on this board, then you need
-> > >>>>> to fix the defconfig for that board.
-> > >>>>
-> > >>>> OTOH,
-> > >>>> Anders, enabled the new config CONFIG_AHCI_DWC=y  and tried but the
-> > >>>> device failed to boot.
-> > >>>
-> > >>> I thought it would work with enabling CONFIG_AHCI_DWC=y, but it didn't...
-> > >>
-> > >> As mentioned in my previous reply to Naresh, this is a new driver added in
-> > >> 6.1. Your board was working before so this should not be the driver needed
-> > >> for it.
-> > >>
-> > >>> However, reverting patch 33629d35090f ("ata: ahci: Add DWC AHCI SATA
-> > >>> controller support")
-> > >>> from next-20221013 was a success, kernel booted  and the 'mkfs.ext4' cmd was
-> > >>> successful.
-> > >>
-> > >> Which is very strange... There is only one hunk in that commit that could
-> > >> be considered suspicious:
-> > >>
-> > >> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> > >> index 9b56490ecbc3..8f5572a9f8f1 100644
-> > >> --- a/drivers/ata/ahci_platform.c
-> > >> +++ b/drivers/ata/ahci_platform.c
-> > >> @@ -80,9 +80,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
-> > >>  static const struct of_device_id ahci_of_match[] = {
-> > >>         { .compatible = "generic-ahci", },
-> > >>         /* Keep the following compatibles for device tree compatibility */
-> > >> -       { .compatible = "snps,spear-ahci", },
-> > >>         { .compatible = "ibm,476gtr-ahci", },
-> > >> -       { .compatible = "snps,dwc-ahci", },
-> > >>         { .compatible = "hisilicon,hisi-ahci", },
-> > >>         { .compatible = "cavium,octeon-7130-ahci", },
-> > >>         { /* sentinel */ }
-> > >>
-> > >> Is your board using one of these compatible string ?
-> > >
-> > > The x15 uses "snps,dwc-ahci". I would expect it to detect the device
-> > > with the new driver if that is loaded, but it's possible that the
-> > > driver does not work on all versions of the dwc-ahci hardware.
-> > >
-> > > Anders, can you provide the boot log from a boot with the new driver
-> > > built in? There should be some messages from dwc-ahci about finding
-> > > the device, but then not ultimately working.
-> > >
-> > > Depending on which way it goes wrong, the safest fallback for 6.1 is
-> > > probably to move the "snps,spear-ahci" and "snps,dwc-ahci" compatible
-> > > strings back into the old driver, and leave the new one only for
-> > > the "baikal,bt1-ahci" implementation of it, until it has been
-> > > successfully verified on TI am5/dra7, spear13xx and exynos.
-> >
-> > OK. So a fix patch until further tests/debug is completed would be this:
-> >
-> > diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-> > index 8fb66860db31..7a0cbab00843 100644
-> > --- a/drivers/ata/ahci_dwc.c
-> > +++ b/drivers/ata/ahci_dwc.c
-> > @@ -469,8 +469,6 @@ static struct ahci_dwc_plat_data ahci_bt1_plat = {
-> >  };
-> >
-> >  static const struct of_device_id ahci_dwc_of_match[] = {
-> > -       { .compatible = "snps,dwc-ahci", &ahci_dwc_plat },
-> > -       { .compatible = "snps,spear-ahci", &ahci_dwc_plat },
-> >         { .compatible = "baikal,bt1-ahci", &ahci_bt1_plat },
-> >         {},
-> >  };
-> > diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> > index 8f5572a9f8f1..9b56490ecbc3 100644
-> > --- a/drivers/ata/ahci_platform.c
-> > +++ b/drivers/ata/ahci_platform.c
-> > @@ -80,7 +80,9 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
-> >  static const struct of_device_id ahci_of_match[] = {
-> >         { .compatible = "generic-ahci", },
-> >         /* Keep the following compatibles for device tree compatibility */
-> > +       { .compatible = "snps,spear-ahci", },
-> >         { .compatible = "ibm,476gtr-ahci", },
-> > +       { .compatible = "snps,dwc-ahci", },
-> >         { .compatible = "hisilicon,hisi-ahci", },
-> >         { .compatible = "cavium,octeon-7130-ahci", },
-> >         { /* sentinel */ }
-> >
-> > Anders, Naresh,
-> >
-> > Can you try this ?
+On 8.10.2022 00:41, Damien Le Moal wrote:
+> On 10/7/22 23:14, Maciej S. Szmigiero wrote:
+>> On 7.10.2022 00:53, Damien Le Moal wrote:
+>>> On 10/7/22 07:20, Damien Le Moal wrote:
+>>>> On 10/6/22 22:06, Maciej S. Szmigiero wrote:
+>>>>> On 6.10.2022 01:38, Damien Le Moal wrote:
+>>>>>> On 9/27/22 04:51, Maciej S. Szmigiero wrote:
+>>>>>>> From: "Maciej S. Szmigiero" <maciej.szmigiero@oracle.com>
+>>>>>>>
+>>>>>>> Currently, if one wants to make use of FUA support in libata it is
+>>>>>>> necessary to provide an explicit kernel command line parameter in order to
+>>>>>>> enable it (for drives that report such support).
+>>>>>>>
+>>>>>>> In terms of Git archaeology: FUA support was enabled by default in early
+>>>>>>> libata versions but was disabled soon after.
+>>>>>>> Since then there were a few attempts to enable this support by default:
+>>>>>>> [1] (for NCQ drives only), [2] (for all drives).
+>>>>>>> However, the second change had to be reverted after a report came of
+>>>>>>> an incompatibility with the HDD in 2011 Mac Mini.
+>>>>>>>
+>>>>>>> Enabling FUA avoids having to emulate it by issuing an extra drive cache
+>>>>>>> flush for every request that have this flag set.
+>>>>>>> Since FUA support is required by the ATA/ATAPI spec for any drive that
+>>>>>>> supports LBA48 and so these days should be pretty widespread let's provide
+>>>>>>> an ability to enable it by default in Kconfig.
+>>>>>>
+>>>>>> This can be done by adding "libata.fua=1" to the CONFIG_CMDLINE option. So
+>>>>>> I do not see the need to add yet another config option.
+>>>>>
+>>>>> A specific Kconfig option is more structured than a free-form
+>>>>> CONFIG_CMDLINE (which is also technically a per-arch option, but seems
+>>>>> to be widely supported across arches).
+>>>>>
+>>>>> That's why there is a lot (100+) of similar Kconfig default-changing
+>>>>> options, a quick sample of these (in no particular order):
+>>>>> SOUND_OSS_CORE_PRECLAIM, SND_INTEL_BYT_PREFER_SOF, LSM,
+>>>>> SECURITY_SELINUX_CHECKREQPROT_VALUE, SECURITY_LOADPIN_ENFORCE,
+>>>>> SECURITY_APPARMOR_DEBUG_MESSAGES, IP_VS_TAB_BITS, IP_SET_MAX,
+>>>>> MAC80211_HAS_RC, SLUB_DEBUG_ON, KFENCE_SAMPLE_INTERVAL, PRINTK_TIME,
+>>>>> DEBUG_OBJECTS_ENABLE_DEFAULT, RCU_NOCB_CPU_DEFAULT_ALL, ...
+>>>>>
+>>>>> libata currently has only one similar option: SATA_MOBILE_LPM_POLICY,
+>>>>> so it's not like a person performing kernel configuration is
+>>>>> overloaded with questions here.
+>>>>>
+>>>>> But at the same time, I respect your decision as a maintainer of
+>>>>> this code.
+>>>>
+>>>> I am not dead set on pushing back on this, but as usual, whenever we can
+>>>> avoid adding config options, we should. Given that libata has had fua
+>>>> disabled forever, I am not convinced yet that there is a strong need for
+>>>> that new option. But if distros prefer the config option approach, we can
+>>>> make that happen.
+>>>>
+>>>> If anything, I would be tempted to switch fua support to on by default
+>>>> after some time if we do not get many reports of broken drives. You did
+>>>> mention that old mac minis drives did not like it, but these are not even
+>>>> blacklisted in libata-scsi. They should. Only one model of maxtor drives
+>>>> is. We should add an ATA_HORKAGE_NO_FUA flag and start a proper blacklist
+>>>> of drives not liking fua. Without that in place, switching to on by
+>>>> default as your config option allows could break many (old) systems.
+>>>
+>>> To be extra clear, I think that this fua module parameter is silly. If a
+>>> drive says it supports fua, we should use it and not have a global
+>>> parameter to disable it for all drives. So no config option needed for it.
+>>>
+>>> That is also why I am not keen on taking that config option. It is not
+>>> really improving anything at all and would prefer nuking the fua module
+>>> argument and have a proper blacklisting of buggy drives.
+>>>
+>>> But such a change is painful as we'll be able to update the blacklist with
+>>> users getting corrupted FSes on buggy drives. The time may have come to do
+>>> this change though as the number of buggy drives out there is hopefully
+>>> small enough now.
+>>
+>> So your proposal is basically to switch the existing fua option default
+>> to "on" and deal with the fallout (hopefully minimal) by blacklisting
+>> misbehaving drives as they get reported, right?
 > 
+> Yes. The risk though is that if the fallout are not minimal and we get too
+> many bug reports, we'll likely have to revert. So this needs to be
+> attempted early at the beginning of a cycle to get plenty of testing.
+> 
+>> In this case, my vote would be to still keep the "libata.fua" parameter
+>> available (at least for the time being) so people have some way of
+>> working broken drives around without having to recompile their kernel
+>> (maybe also print a kernel log message if libata.fua=0 is provided asking
+>> people to report these drive models to linux-ide@).
+> 
+> If we add a proper "nofua" horkage flag to blacklist buggy drives, we need
+> to move the fua parameter to be an argument of the force parameter so that
+> disabling fua can be done per drive (port) or for all drives, similarly to
+> other tweak (noncq, nodmalog, etc)
 
-> Tested this patch on todays linux-next tag: next-20221014 without enabling
-> CONFIG_AHCI_DWC and it worked as expected when booting [1].
-> On the other hand I also tried a build/boot with CONFIG_AHCI_DWC enabled
-> and it worked as expected to boot [2].
+So would you like an updated patch set or do you prefer to do the changes
+yourself?
 
-Expected result. The DWC driver will probe the device on our platform
-only while your platform falls back to using the generic driver.
-Anders, in order understand the root cause of the problem could you please
-1. upload the bogus boot log.
-2. try what I suggested here
-Link: https://lore.kernel.org/linux-ide/20221014133623.l6w4o7onoyhv2q34@mobilestation/
-and if the system fails to boot at some point upload the boot log.
-
--Sergey
-
-> However, during building a warning [3] popped up:
-> 
-> make --silent --keep-going --jobs=8
-> O=/home/tuxbuild/.cache/tuxmake/builds/2/build ARCH=arm
-> CROSS_COMPILE=arm-linux-gnueabihf- 'CC=sccache
-> arm-linux-gnueabihf-gcc' 'HOSTCC=sccache gcc'
-> /builds/linux/drivers/ata/ahci_dwc.c:462:34: warning: 'ahci_dwc_plat'
-> defined but not used [-Wunused-variable]
->   462 | static struct ahci_dwc_plat_data ahci_dwc_plat = {
->          |                                  ^~~~~~~~~~~~~
-> 
-> 
-> Cheers,
-> Anders
-> [1] https://lkft.validation.linaro.org/scheduler/job/5678031
-> [2] https://lkft.validation.linaro.org/scheduler/job/5678152
-> [3] https://builds.tuxbuild.com/2G7PDSV5uzjnQqCCBybK4WpoTxz/build.log
-> 
+Thanks,
+Maciej
 
