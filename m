@@ -2,278 +2,91 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF981C433FE
-	for <linux-ide@archiver.kernel.org>; Mon, 17 Oct 2022 15:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B1CC4332F
+	for <linux-ide@archiver.kernel.org>; Mon, 17 Oct 2022 18:46:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229971AbiJQPwz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 17 Oct 2022 11:52:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45018 "EHLO
+        id S229994AbiJQSqr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 17 Oct 2022 14:46:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiJQPwy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2022 11:52:54 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9392966874;
-        Mon, 17 Oct 2022 08:52:51 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id r14so18205795lfm.2;
-        Mon, 17 Oct 2022 08:52:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xwn9lDC6qeLpckKuqyKYPC8KqluzBnCmAuCKvK4EiN8=;
-        b=TxDVu2SvdVGSD0Eqblix56bCl3aJ8/0KnuvUdesjmnKa9wxMv9qDqAeE5FZYTumwAu
-         Yb8eyMv9jz9ZVd9MzbnFPWMnVbfUFCiSCIJzTKoTUCNhYxfsA2bQEiLqYpL9dqsrCMIh
-         BCRFAKLklF7ALLKU6sOJQHpHQYMzlERpNhgQgRTPi4FLsDdC/4bN9WVuctJqAE9zzeSJ
-         fzTv5PgBNBlBj1wU1oOFQ4o0ywyfJGIp4QIP7aAfwDqxM6OrKMj06PuZ2SdEYywpbrIp
-         wwg4UL4FXsgj01RFPtJhsS94UvQBB48J1AlCsl9HVF7V/h2tF9O5+j9afpAS27o1rJxR
-         EXTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xwn9lDC6qeLpckKuqyKYPC8KqluzBnCmAuCKvK4EiN8=;
-        b=xgpoHPp911isgNxiT/Hzar3wnUDELL6U1cA8cFfnFPjqF0KkbWCKxP1+kacMp9NhYN
-         g6LwEldpHMwbRdJ3vOBm9obXUDMDga+mhEDbJu5qOoQQwDFc+M0QlLwpggyRJpzJElZ6
-         GPUdtDtG94qPFouEL/i1+cOYosCq/OTXDdmZ9M/6Hnkm3qyuT9ueSmxwW1YBVi0yiegY
-         ne22iLuV7lvwSMxGlou9OryivbKdEvLvQoRb4x9ecUtKDSSvo8mmenL9iezb3fF7ELhs
-         IXYe2dH50Ve6OwOEpQQrHtymWOhIeuUrPnsFLfJWXcnnqBnYq1849iMch9YDG7NfWpdJ
-         YdJw==
-X-Gm-Message-State: ACrzQf2aONZ5pE1s+u1HpVFAn0XCTiDTWkKWdJwtcRBWQppcIt1920C5
-        3ILm456fP0NWVyMRwby6Vak=
-X-Google-Smtp-Source: AMsMyM4c62yxCuiYr9QR5J6H8Zs0A56qFxHUrUwBdUC8cax9F+RqMVpaVQbP2D4fczz9WMM5GBeSGQ==
-X-Received: by 2002:ac2:514e:0:b0:4a2:34a4:2d9b with SMTP id q14-20020ac2514e000000b004a234a42d9bmr4501195lfd.166.1666021969636;
-        Mon, 17 Oct 2022 08:52:49 -0700 (PDT)
-Received: from mobilestation ([95.79.133.202])
-        by smtp.gmail.com with ESMTPSA id i25-20020a196d19000000b004a1e7216131sm1473532lfc.116.2022.10.17.08.52.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Oct 2022 08:52:49 -0700 (PDT)
-Date:   Mon, 17 Oct 2022 18:52:46 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Anders Roxell <anders.roxell@linaro.org>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Naresh Kamboju <naresh.kamboju@linaro.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        regressions@lists.linux.dev,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>, lkft-triage@lists.linaro.org,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006
- tag
-Message-ID: <20221017155246.zxal2cfehjgaajcu@mobilestation>
-References: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
- <bf1b053d-ffa6-48ab-d2d2-d59ab21afc19@opensource.wdc.com>
- <CA+G9fYvUnn0cS+_DZm8hAfi=FnMB08+6Xnhud6yvi9Bxh=DU+Q@mail.gmail.com>
- <CADYN=9L8tt2T-8O+u5NSMSUOkZDvEggnvzxH6aMmd5Rn9yDeuw@mail.gmail.com>
- <ca8d3fff-0365-24d9-fd53-5799ac34f336@opensource.wdc.com>
- <7ee4a1bd-0674-42d8-8980-8b029ca09e71@app.fastmail.com>
- <75eaeab3-7781-d60a-ae61-ae837f5dcec9@opensource.wdc.com>
- <CADYN=9JiX-=PcKMzAcSm=p7Dh6kYT7Kbv-8kcNF0MQ4=1hFS5g@mail.gmail.com>
- <20221014140633.mlypet7skkxvt453@mobilestation>
- <CADYN=9LrKHRNMON3GA4piDvWeSWTASQ1u2=D30rXFdvo1L18bg@mail.gmail.com>
+        with ESMTP id S230308AbiJQSqn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2022 14:46:43 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACCA4754A4
+        for <linux-ide@vger.kernel.org>; Mon, 17 Oct 2022 11:46:29 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.86.181) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 17 Oct
+ 2022 21:46:19 +0300
+Subject: Re: [PATCH 2/2] ata: pata_ftide010: Remove build dependency on OF
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+CC:     Linus Walleij <linus.walleij@linaro.org>
+References: <20221017062559.2221881-1-damien.lemoal@opensource.wdc.com>
+ <20221017062559.2221881-3-damien.lemoal@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <91cff982-c0ac-d292-be4c-db5e04413df7@omp.ru>
+Date:   Mon, 17 Oct 2022 21:46:18 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADYN=9LrKHRNMON3GA4piDvWeSWTASQ1u2=D30rXFdvo1L18bg@mail.gmail.com>
+In-Reply-To: <20221017062559.2221881-3-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.86.181]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 10/17/2022 18:26:46
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 19
+X-KSE-AntiSpam-Info: Lua profiles 173165 [Oct 17 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 501 501 55f57d011f6e23cf0fa58aafb8628737e84a764f
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.181 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.181 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.181
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 19
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 10/17/2022 18:30:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 10/17/2022 4:12:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Oct 17, 2022 at 09:43:24AM +0200, Anders Roxell wrote:
-> On Fri, 14 Oct 2022 at 16:06, Serge Semin
-> <Sergey.Semin@baikalelectronics.ru> wrote:
-> >
-> > On Fri, Oct 14, 2022 at 11:22:38AM +0200, Anders Roxell wrote:
-> > > On Fri, 14 Oct 2022 at 09:53, Damien Le Moal
-> > > <damien.lemoal@opensource.wdc.com> wrote:
-> > > >
-> > > > On 10/14/22 16:31, Arnd Bergmann wrote:
-> > > > > On Fri, Oct 14, 2022, at 2:22 AM, Damien Le Moal wrote:
-> > > > >> On 10/14/22 07:07, Anders Roxell wrote:
-> > > > >> [...]
-> > > > >>>> 8)
-> > > > >>>>> If reverting these patches restores the eSATA port on this board, then you need
-> > > > >>>>> to fix the defconfig for that board.
-> > > > >>>>
-> > > > >>>> OTOH,
-> > > > >>>> Anders, enabled the new config CONFIG_AHCI_DWC=y  and tried but the
-> > > > >>>> device failed to boot.
-> > > > >>>
-> > > > >>> I thought it would work with enabling CONFIG_AHCI_DWC=y, but it didn't...
-> > > > >>
-> > > > >> As mentioned in my previous reply to Naresh, this is a new driver added in
-> > > > >> 6.1. Your board was working before so this should not be the driver needed
-> > > > >> for it.
-> > > > >>
-> > > > >>> However, reverting patch 33629d35090f ("ata: ahci: Add DWC AHCI SATA
-> > > > >>> controller support")
-> > > > >>> from next-20221013 was a success, kernel booted  and the 'mkfs.ext4' cmd was
-> > > > >>> successful.
-> > > > >>
-> > > > >> Which is very strange... There is only one hunk in that commit that could
-> > > > >> be considered suspicious:
-> > > > >>
-> > > > >> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> > > > >> index 9b56490ecbc3..8f5572a9f8f1 100644
-> > > > >> --- a/drivers/ata/ahci_platform.c
-> > > > >> +++ b/drivers/ata/ahci_platform.c
-> > > > >> @@ -80,9 +80,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
-> > > > >>  static const struct of_device_id ahci_of_match[] = {
-> > > > >>         { .compatible = "generic-ahci", },
-> > > > >>         /* Keep the following compatibles for device tree compatibility */
-> > > > >> -       { .compatible = "snps,spear-ahci", },
-> > > > >>         { .compatible = "ibm,476gtr-ahci", },
-> > > > >> -       { .compatible = "snps,dwc-ahci", },
-> > > > >>         { .compatible = "hisilicon,hisi-ahci", },
-> > > > >>         { .compatible = "cavium,octeon-7130-ahci", },
-> > > > >>         { /* sentinel */ }
-> > > > >>
-> > > > >> Is your board using one of these compatible string ?
-> > > > >
-> > > > > The x15 uses "snps,dwc-ahci". I would expect it to detect the device
-> > > > > with the new driver if that is loaded, but it's possible that the
-> > > > > driver does not work on all versions of the dwc-ahci hardware.
-> > > > >
-> > > > > Anders, can you provide the boot log from a boot with the new driver
-> > > > > built in? There should be some messages from dwc-ahci about finding
-> > > > > the device, but then not ultimately working.
-> > > > >
-> > > > > Depending on which way it goes wrong, the safest fallback for 6.1 is
-> > > > > probably to move the "snps,spear-ahci" and "snps,dwc-ahci" compatible
-> > > > > strings back into the old driver, and leave the new one only for
-> > > > > the "baikal,bt1-ahci" implementation of it, until it has been
-> > > > > successfully verified on TI am5/dra7, spear13xx and exynos.
-> > > >
-> > > > OK. So a fix patch until further tests/debug is completed would be this:
-> > > >
-> > > > diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-> > > > index 8fb66860db31..7a0cbab00843 100644
-> > > > --- a/drivers/ata/ahci_dwc.c
-> > > > +++ b/drivers/ata/ahci_dwc.c
-> > > > @@ -469,8 +469,6 @@ static struct ahci_dwc_plat_data ahci_bt1_plat = {
-> > > >  };
-> > > >
-> > > >  static const struct of_device_id ahci_dwc_of_match[] = {
-> > > > -       { .compatible = "snps,dwc-ahci", &ahci_dwc_plat },
-> > > > -       { .compatible = "snps,spear-ahci", &ahci_dwc_plat },
-> > > >         { .compatible = "baikal,bt1-ahci", &ahci_bt1_plat },
-> > > >         {},
-> > > >  };
-> > > > diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> > > > index 8f5572a9f8f1..9b56490ecbc3 100644
-> > > > --- a/drivers/ata/ahci_platform.c
-> > > > +++ b/drivers/ata/ahci_platform.c
-> > > > @@ -80,7 +80,9 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
-> > > >  static const struct of_device_id ahci_of_match[] = {
-> > > >         { .compatible = "generic-ahci", },
-> > > >         /* Keep the following compatibles for device tree compatibility */
-> > > > +       { .compatible = "snps,spear-ahci", },
-> > > >         { .compatible = "ibm,476gtr-ahci", },
-> > > > +       { .compatible = "snps,dwc-ahci", },
-> > > >         { .compatible = "hisilicon,hisi-ahci", },
-> > > >         { .compatible = "cavium,octeon-7130-ahci", },
-> > > >         { /* sentinel */ }
-> > > >
-> > > > Anders, Naresh,
-> > > >
-> > > > Can you try this ?
-> > >
-> >
-> > > Tested this patch on todays linux-next tag: next-20221014 without enabling
-> > > CONFIG_AHCI_DWC and it worked as expected when booting [1].
-> > > On the other hand I also tried a build/boot with CONFIG_AHCI_DWC enabled
-> > > and it worked as expected to boot [2].
-> >
-> > Expected result. The DWC driver will probe the device on our platform
-> > only while your platform falls back to using the generic driver.
-> > Anders, in order understand the root cause of the problem could you please
-> > 1. upload the bogus boot log.
->
- 
-> This [1] is the bogus boot log.
+On 10/17/22 9:25 AM, Damien Le Moal wrote:
+
+> The pata_ftide010 can be built without CONFIG_OF being enabled, as long
+> as the macro of_match_ptr() is not used when initializing the platform
+> driver .of_match_table field.
 > 
-> > 2. try what I suggested here
-> > Link: https://lore.kernel.org/linux-ide/20221014133623.l6w4o7onoyhv2q34@mobilestation/
-> > and if the system fails to boot at some point upload the boot log.
+> Remove the use of this macro and the build dependency on OF.
 > 
-> Only doing this:
-> 
-> --- a/drivers/ata/ahci_dwc.c
-> +++ b/drivers/ata/ahci_dwc.c
-> @@ -316,12 +316,13 @@ static int ahci_dwc_init_host(struct
-> ahci_host_priv *hpriv)
->   if (rc)
->   goto err_disable_resources;
->   }
-> -
-> +/*
->   ahci_dwc_check_cap(hpriv);
-> 
->   ahci_dwc_init_timer(hpriv);
-> 
->   rc = ahci_dwc_init_dmacr(hpriv);
-> +*/
->   if (rc)
->   goto err_clear_platform;
-> 
-> and enable CONFIG_AHCI_DWC made the mkfs to detect the SATA drive [2].
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Judging by what is in [1] and [2] I have much doubt that [1] was
-executed with the CONFIG_AHCI_DWC config enabled because the boot log has
-nothing about the ahci-dwc driver probe failure or none of the logs
-messages seen in [2] (see every line with the ahci-dwc word in it).
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-1. If you had the device probe procedure failed at some point you
-would have got a line like this:
-< ahci-dwc: probe of 4a140000.sata failed with error -errno
-But there is no such line in [1]. There is literally nothing
-AHCI/SATA/SCSI/DWC AHCI/ahci-dwc/etc in it.
+[...]
 
-2. If you had the DW AHCI device probe at least performed, then the next
-calls-chain would have been executed:
-ahci_dwc_probe()
-+-> ahci_dwc_get_resources()
-    +-> ahci_platform_get_resources()
-        +-> ...
-        +-> devm_regulator_get(...)
-        +-> ...
-which would have caused the next log messages:
-< [] ahci-dwc 4a140000.sata: supply ahci not found, using dummy regulator
-< [] ahci-dwc 4a140000.sata: supply phy not found, using dummy regulator
-< [] ahci-dwc 4a140000.sata: supply target not found, using dummy regulator
-You do have these lines in [2] but missing them in [1]. Should you
-have any errors in ahci_dwc_probe() detected before that you would
-have an error printed as I noted in 1.
-
-3. Should the problem was in the commented out code lines you would
-have at least got the messages above printed to the log [1] because
-the commented out code is executed after the resources request
-procedure (see the ahci_dwc_init_host() method is called after
-ahci_dwc_get_resources()).
-
-4. Finally the commented out code doesn't really do any actions which
-could have caused the device probe to silently halt.
-
-All of that makes me thinking that the DW AHCI SATA wasn't even probed
-in [1] which most likely means that either the driver config was
-omitted there or the device was disabled. So could you please re-start
-the system like in [2] but uncomment the lines above?
-
-* Please make sure the Damien's fix
-https://www.spinics.net/lists/arm-kernel/msg1017920.html
-isn't applied on the kernel [2].
-
-[1] https://lkft.validation.linaro.org/scheduler/job/5634743#L2580
-[2] https://lkft.validation.linaro.org/scheduler/job/5679278#L2617
-
--Sergey
-
-> 
-> Cheers,
-> Anders
-> [1] https://lkft.validation.linaro.org/scheduler/job/5634743#L2580
-> [2] https://lkft.validation.linaro.org/scheduler/job/5679278#L2617
+MBR, Sergey
