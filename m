@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DDBAC433FE
-	for <linux-ide@archiver.kernel.org>; Mon, 17 Oct 2022 03:03:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F24EC4332F
+	for <linux-ide@archiver.kernel.org>; Mon, 17 Oct 2022 03:07:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231740AbiJQDDz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 16 Oct 2022 23:03:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45522 "EHLO
+        id S231799AbiJQDG5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 16 Oct 2022 23:06:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231732AbiJQDDx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 16 Oct 2022 23:03:53 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7BCE4A82B
-        for <linux-ide@vger.kernel.org>; Sun, 16 Oct 2022 20:03:52 -0700 (PDT)
+        with ESMTP id S231814AbiJQDGm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 16 Oct 2022 23:06:42 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D63054B987
+        for <linux-ide@vger.kernel.org>; Sun, 16 Oct 2022 20:06:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1665975832; x=1697511832;
+  t=1665975989; x=1697511989;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=8ov5cmz9gU35KmoNjjYRwvfTEW+3UgseEzrD+fH3pwk=;
-  b=NypHitqn2cXSkqHJ3x0dtsl9GKxtBoaSwSmB5/gMHuD/J/BlSLCQEJZm
-   27B6HnQ1J/Sauo/Lj+tqbWTwGKZdeJHOLL0qO1GseWtcGOQc7P5GvE+7i
-   7bRPQF4Xt/xwuwq8mQ3nITk8Yfaux04NuagbctoPQ2WJ+BcNjc6qdFFI/
-   ZPE/Ndc/erbIzZntQ7q437ISbSry7w6xP43Xgbv09Sq2rnQL1Iok7MG9N
-   uvVLR01vEfKmDVS0YUDhyNne2PqGWC5IsYSYCt9GyhOP1TiH7iiSjjrFq
-   UZx7vqdhHmzlDYW8/cblaqoQDK9UYY9GEIQKIb3HdWlQF2o1eayc6Za8Y
-   g==;
+  bh=xdELnJJexhL8yWqz/OoEfdlgLu6DNFfGugQqaoZToj4=;
+  b=U4PIztU/BHvD2xcPkn2PIbxNI4HGtmqavKhnFNq5ManaV2Gmv9B3+m48
+   a24ecwvpiF6HKpcLKx++XDL4VH4yY+RPGQFSX1lE9t/sVTTGzdKmEuzp1
+   em6MyJNbynSAbV58UIgewVrIoEh8J8WNRzkAh82h7eKOD9hxOPeAaS9Ie
+   gsYaLmcmMlpERv9UBNBRHyC3DvV+DJpgofOUD8QBrNTAwDtSTQrcFkmOr
+   pvqIzOvAtRk5w7WsL2u4Y/Rzk9twKwGqyVZ+s2NEHmCjt8PmuTi4IbdOI
+   HEUrjU4txUYJS+lXapDEC/AThGyq7CwLZzF329iaIR1cN9BDurRdaL/vI
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.95,190,1661788800"; 
-   d="scan'208";a="212301919"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Oct 2022 11:03:52 +0800
-IronPort-SDR: aOy3ir14iuL7/70UEfJexgyoLr2wcm4woYrR7zJqrjLQgxC6UT4Ouy8uofvPAV9d1zJbzltHoM
- PEvi1kSLwDFusg8TlkA073B3TP9j7dpFiOzjb5Hf1NKrt/BzG2V19TTSgYGRwySXxcbEwELGXK
- 11pn5nsXqSB8lxSIVFzBQHqV0O/cf8r16Sovda38XHTH3/HsdUs+l7yLHqiilL1bF70eSd8Qim
- BoumT8T/hhFSm/oWMkOtlaJSVRhnx5U2BWAKBJ852gMe5wG9SxjHXgR0+NpMIych5TLkgDAp6J
- 72DicmnyZ02C8xtEHnKhTlXQ
+   d="scan'208";a="214364779"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 17 Oct 2022 11:06:19 +0800
+IronPort-SDR: yfy18c9YHZ10eIAqu1i0BYb/mOXpoSyo+jFK2k8KEspL70nAvG83GkhMmzRVzDC6u+hllJd2ho
+ jZHdie6RaIimTkQitEA3L3oip12tB+SGcgc2Cfrz0BiM7A/s0xkaBMRwFkOgzTPPuhA3v8w0//
+ LbusdRNnUU21bDPwlfQ1UnLG9eEYuHQYML1IOWsDE7wg6PR5DyPr77+7HPeo3dTf3cgiszJmW/
+ bEn6J/eHAmFlVGdINfe4MCpGBVcyARlucmTU2n+Ccfg+xu/4VgEnAVj2+jPrnpuC9mFtNbujZV
+ MNqTDQCv96bk30/8Cv54ga93
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Oct 2022 19:23:25 -0700
-IronPort-SDR: heU6wl+LbpvI6Qb5y3FRNABDKZNeJGE8ENg0PhQURNliLQAkQ+xukuCVD1MagVPgyn87UAN6qu
- DI+a0D3Mwn7oENbaL5BcaOVfRL+5YIVY3UMR4SFRMa1Q0BNGb8FevywDaAf63HsOpQhCwyHkTP
- +gNmYE8xXXxo+TyYBMfpYMaQerxU2ISiVDxRuzvwLUtK/CrOWYVtHAGiEiUJbTBRJLEaVSQkO5
- 9+4x/DyZCnpiRWl8xws99T/RCv3VvFsSMLriBMm/pPdxC4amPi+wQ3gGkQBn6+rGpcsVOtO5v5
- +As=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Oct 2022 19:25:52 -0700
+IronPort-SDR: wIbxeNT8hyPxl+7Rg4bgUym8EB9P4j6OphfsATBqywa+4ahmyJUrjGGFBSQ8XGPuJBPrGKiRWV
+ losSniZ7OIW7MX+nZjLxQky5ftSBceZNq5DMVpTUGTjaT8ypVB4F7kljGCPGTcwNV7qD3/HuK4
+ SRMVKygQBbJrycreg5tkSNZpVJGE8CAmdVakQE4VCaA7xpAaj2fWDh/XY3LCKkaMvpsXXQzWBO
+ pa2kW/Tl5Henae8sq/Kh3KB1B16PyEDgjcLiXkvjiSFavqRPeLrIrVs6s3djYiznkD+2Db06Jl
+ id0=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Oct 2022 20:03:53 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Oct 2022 20:06:20 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MrMJl6yCrz1RvTr
-        for <linux-ide@vger.kernel.org>; Sun, 16 Oct 2022 20:03:51 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MrMMZ5H08z1Rwrq
+        for <linux-ide@vger.kernel.org>; Sun, 16 Oct 2022 20:06:18 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,111 +56,133 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1665975831; x=1668567832; bh=8ov5cmz9gU35KmoNjjYRwvfTEW+3UgseEzr
-        D+fH3pwk=; b=K/G9/8y6racPVJwwOT/iDo6fKDGtXdez/QXPaXZF4iUk9yuY3E0
-        VMzO0B38Wou4xRjNIO18tGjpbMunen14j92wYGFAhjXeA+OrNczkgAOvLYHPBp66
-        AbgF6Fh6fqk8BqFP8tQ+RaEXhth/cRn8qxvBdebZ5n31tgATFMRwYWkSP8YdYngA
-        +3V5Gz5K8MnCUr62KmwLkUOQ7mi4WpqHdJTuBMFXtOPsQI3n4E52K/hsFYVGuXIV
-        B/ypd6U5ZrbYIIcSI5GQm5JD7quf+eKxV1ilwFpBmcHjcw8/ARc7bxmb6b7puogq
-        EZlQt49YHWnDJO9YnvQwdhpEWIhKCB0bryw==
+        1665975978; x=1668567979; bh=xdELnJJexhL8yWqz/OoEfdlgLu6DNFfGugQ
+        qaoZToj4=; b=P2rY1boatCbL1fMRSR2oTyi7HWkdW4fEzEB9PaMMFmES8VlU1LG
+        FRngwMd2S2CNm4cGxlgSC16fCOi6ySznlkfmqTfp/GAI/bLWsVn0f1jXbCwcwclg
+        wgDAIbK4a0C0W/axrTWg0KxI9zjNV5WdYm8uVjxWzvcj1GOIld9orwu9R/93BbqZ
+        0BfVmC3VBxu5UPe3yboDCV+caAeARNLYPlb8qG1aG3Bg8F13iW76VJwCfzzQBu7u
+        tGxbuQFV8QjsQVhn3nbv7d//HbHTJOf9R1zQF+k2kDA8q7jbVM9k6lRq5NuCzbVo
+        NrvOyTRzNFFzWNruCGPI2aslk6toU2/pusA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id OieSRU-g4Wc8 for <linux-ide@vger.kernel.org>;
-        Sun, 16 Oct 2022 20:03:51 -0700 (PDT)
+        with ESMTP id uAZVb-Eaz1Gw for <linux-ide@vger.kernel.org>;
+        Sun, 16 Oct 2022 20:06:18 -0700 (PDT)
 Received: from [10.225.163.121] (unknown [10.225.163.121])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MrMJk66Wmz1RvLy;
-        Sun, 16 Oct 2022 20:03:50 -0700 (PDT)
-Message-ID: <5d249f84-bf74-153d-294d-cab2f6456ff7@opensource.wdc.com>
-Date:   Mon, 17 Oct 2022 12:03:49 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MrMMX6VCsz1RvLy;
+        Sun, 16 Oct 2022 20:06:16 -0700 (PDT)
+Message-ID: <0f330b8a-b4c3-3dcb-2754-2c95d8c85037@opensource.wdc.com>
+Date:   Mon, 17 Oct 2022 12:06:15 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.3.1
-Subject: Re: [PATCH] ata: ahci: Match EM_MAX_SLOTS with SATA_PMP_MAX_PORTS
+Subject: Re: [PATCH] dt-bindings: ata: Add 'ata-generic' binding
 Content-Language: en-US
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20221011024617.720898-1-kai.heng.feng@canonical.com>
+To:     Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc:     Alexander Shiyan <shc_work@mail.ru>, linux-ide@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221011135849.2785834-1-robh@kernel.org>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20221011024617.720898-1-kai.heng.feng@canonical.com>
+In-Reply-To: <20221011135849.2785834-1-robh@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/11/22 11:46, Kai-Heng Feng wrote:
-> UBSAN complains about array-index-out-of-bounds:
-> [ 1.980703] kernel: UBSAN: array-index-out-of-bounds in /build/linux-9H675w/linux-5.15.0/drivers/ata/libahci.c:968:41
-> [ 1.980709] kernel: index 15 is out of range for type 'ahci_em_priv [8]'
-> [ 1.980713] kernel: CPU: 0 PID: 209 Comm: scsi_eh_8 Not tainted 5.15.0-25-generic #25-Ubuntu
-> [ 1.980716] kernel: Hardware name: System manufacturer System Product Name/P5Q3, BIOS 1102 06/11/2010
-> [ 1.980718] kernel: Call Trace:
-> [ 1.980721] kernel: <TASK>
-> [ 1.980723] kernel: show_stack+0x52/0x58
-> [ 1.980729] kernel: dump_stack_lvl+0x4a/0x5f
-> [ 1.980734] kernel: dump_stack+0x10/0x12
-> [ 1.980736] kernel: ubsan_epilogue+0x9/0x45
-> [ 1.980739] kernel: __ubsan_handle_out_of_bounds.cold+0x44/0x49
-> [ 1.980742] kernel: ahci_qc_issue+0x166/0x170 [libahci]
-> [ 1.980748] kernel: ata_qc_issue+0x135/0x240
-> [ 1.980752] kernel: ata_exec_internal_sg+0x2c4/0x580
-> [ 1.980754] kernel: ? vprintk_default+0x1d/0x20
-> [ 1.980759] kernel: ata_exec_internal+0x67/0xa0
-> [ 1.980762] kernel: sata_pmp_read+0x8d/0xc0
-> [ 1.980765] kernel: sata_pmp_read_gscr+0x3c/0x90
-> [ 1.980768] kernel: sata_pmp_attach+0x8b/0x310
-> [ 1.980771] kernel: ata_eh_revalidate_and_attach+0x28c/0x4b0
-> [ 1.980775] kernel: ata_eh_recover+0x6b6/0xb30
-> [ 1.980778] kernel: ? ahci_do_hardreset+0x180/0x180 [libahci]
-> [ 1.980783] kernel: ? ahci_stop_engine+0xb0/0xb0 [libahci]
-> [ 1.980787] kernel: ? ahci_do_softreset+0x290/0x290 [libahci]
-> [ 1.980792] kernel: ? trace_event_raw_event_ata_eh_link_autopsy_qc+0xe0/0xe0
-> [ 1.980795] kernel: sata_pmp_eh_recover.isra.0+0x214/0x560
-> [ 1.980799] kernel: sata_pmp_error_handler+0x23/0x40
-> [ 1.980802] kernel: ahci_error_handler+0x43/0x80 [libahci]
-> [ 1.980806] kernel: ata_scsi_port_error_handler+0x2b1/0x600
-> [ 1.980810] kernel: ata_scsi_error+0x9c/0xd0
-> [ 1.980813] kernel: scsi_error_handler+0xa1/0x180
-> [ 1.980817] kernel: ? scsi_unjam_host+0x1c0/0x1c0
-> [ 1.980820] kernel: kthread+0x12a/0x150
-> [ 1.980823] kernel: ? set_kthread_struct+0x50/0x50
-> [ 1.980826] kernel: ret_from_fork+0x22/0x30
-> [ 1.980831] kernel: </TASK>
+On 10/11/22 22:58, Rob Herring wrote:
+> The 'ata-generic' binding has been around since 2008, but never
+> documented.
 > 
-> This happens because sata_pmp_init_links() initialize link->pmp up to
-> SATA_PMP_MAX_PORTS while em_priv is declared as 8 elements array.
-> 
-> I can't find the maximum Enclosure Management ports specified in AHCI
-> spec v1.3.1, but "12.2.1 LED message type" states that "Port Multiplier
-> Information" can utilize 4 bits, which implies it can support up to 16
-> ports. Hence, use SATA_PMP_MAX_PORTS as EM_MAX_SLOTS to resolve the
-> issue.
-> 
-> BugLink: https://bugs.launchpad.net/bugs/1970074
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-
-Applied to for-6.1-fixes with "Cc: stable@vger.kernel.org" tag added.
-Thanks !
-
+> Cc: Alexander Shiyan <shc_work@mail.ru>
+> Signed-off-by: Rob Herring <robh@kernel.org>
 > ---
->  drivers/ata/ahci.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> AFAICT, the ata-generic,use16bit property has no effect in Linux. The
+> 32-bit transfers fallback to 16-bit if ATA_PFLAG_PIO32 flag is not set
+> which it doesn't appear to ever be set. Looking at the history, the
+> driver always used 16-bit mode.
 > 
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index da7ee8bec165a..7add8e79912b1 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -257,7 +257,7 @@ enum {
->  	PCS_7				= 0x94, /* 7+ port PCS (Denverton) */
->  
->  	/* em constants */
-> -	EM_MAX_SLOTS			= 8,
-> +	EM_MAX_SLOTS			= SATA_PMP_MAX_PORTS,
->  	EM_MAX_RETRY			= 5,
->  
->  	/* em_ctl bits */
+> Linus, Okay with being maintainer here?
+
+If Linus reply is positive, feel free to add:
+
+Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+
+I can take this one through the libata tree also if you prefer.
+
+> 
+> ---
+>  .../devicetree/bindings/ata/ata-generic.yaml  | 58 +++++++++++++++++++
+>  1 file changed, 58 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ata-generic.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ata-generic.yaml b/Documentation/devicetree/bindings/ata/ata-generic.yaml
+> new file mode 100644
+> index 000000000000..0697927f3d7e
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ata-generic.yaml
+> @@ -0,0 +1,58 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ata/ata-generic.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Generic Parallel ATA Controller
+> +
+> +maintainers:
+> +  - Linus Walleij <linus.walleij@linaro.org>
+> +
+> +description:
+> +  Generic Parallel ATA controllers supporting PIO modes only.
+> +
+> +properties:
+> +  compatible:
+> +    items:
+> +      - enum:
+> +          - arm,vexpress-cf
+> +          - fsl,mpc8349emitx-pata
+> +      - const: ata-generic
+> +
+> +  reg:
+> +    items:
+> +      - description: Command interface registers
+> +      - description: Control interface registers
+> +
+> +  reg-shift:
+> +    enum: [ 1, 2 ]
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  ata-generic,use16bit:
+> +    type: boolean
+> +    description: Use 16-bit accesses instead of 32-bit for data transfers
+> +
+> +  pio-mode:
+> +    description: Maximum ATA PIO transfer mode
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +    maximum: 6
+> +    default: 0
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    compact-flash@1a000 {
+> +        compatible = "arm,vexpress-cf", "ata-generic";
+> +        reg = <0x1a000 0x100>,
+> +              <0x1a100 0xf00>;
+> +        reg-shift = <2>;
+> +    };
+> +...
 
 -- 
 Damien Le Moal
