@@ -2,54 +2,103 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5422DC433FE
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Oct 2022 19:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA8F8C43219
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Oct 2022 21:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbiJSTIM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Oct 2022 15:08:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40204 "EHLO
+        id S229896AbiJSVVH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Oct 2022 17:21:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229491AbiJSTIL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2022 15:08:11 -0400
-X-Greylist: delayed 567 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 19 Oct 2022 12:08:09 PDT
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D0E61B76FC;
-        Wed, 19 Oct 2022 12:08:09 -0700 (PDT)
-Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id DAC3D7A0255;
-        Wed, 19 Oct 2022 20:58:39 +0200 (CEST)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] pata_parport: add driver (PARIDE replacement)
-Date:   Wed, 19 Oct 2022 20:58:36 +0200
-User-Agent: KMail/1.9.10
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220312144415.20010-1-linux@zary.sk> <202203161358.06506.linux@zary.sk> <20221019073431.GA12124@lst.de>
-In-Reply-To: <20221019073431.GA12124@lst.de>
-X-KMail-QuotePrefix: > 
+        with ESMTP id S229915AbiJSVVG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2022 17:21:06 -0400
+X-Greylist: delayed 451 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 19 Oct 2022 14:21:04 PDT
+Received: from smtp.smtpout.orange.fr (smtp-26.smtpout.orange.fr [80.12.242.26])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C716318B49E
+        for <linux-ide@vger.kernel.org>; Wed, 19 Oct 2022 14:21:04 -0700 (PDT)
+Received: from sopl295.home ([109.220.248.156])
+        by smtp.orange.fr with ESMTPA
+        id lGNMo1N0Kg7y2lGNMocFLS; Wed, 19 Oct 2022 23:13:31 +0200
+X-ME-Helo: sopl295.home
+X-ME-Auth: amFyem1pay5yb2JlcnRAb3JhbmdlLmZy
+X-ME-Date: Wed, 19 Oct 2022 23:13:31 +0200
+X-ME-IP: 109.220.248.156
+From:   Robert Jarzmik <jarzmik.robert@orange.fr>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     linux-arm-kernel@lists.infradead.org,
+        Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        stern@rowland.harvard.edu, alexandre.belloni@bootlin.com,
+        brgl@bgdev.pl, damien.lemoal@opensource.wdc.com,
+        dmitry.torokhov@gmail.com, linux@dominikbrodowski.net,
+        balbi@kernel.org, gregkh@linuxfoundation.org, deller@gmx.de,
+        perex@perex.cz, jingoohan1@gmail.com, lee@kernel.org,
+        kernel@wantstofly.org, lgirdwood@gmail.com,
+        linus.walleij@linaro.org, marek.vasut@gmail.com,
+        broonie@kernel.org, mkpetch@internode.on.net,
+        miquel.raynal@bootlin.com, lost.distance@yahoo.com,
+        philipp.zabel@gmail.com, linux@armlinux.org.uk, sre@kernel.org,
+        slapin@ossfans.org, s.shtylyov@omp.ru, sudipm.mukherjee@gmail.com,
+        tiwai@suse.com, ulf.hansson@linaro.org, vigneshr@ti.com,
+        viresh.kumar@linaro.org, wsa+renesas@sang-engineering.com,
+        linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-input@vger.kernel.org,
+        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-rtc@vger.kernel.org,
+        linux-usb@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: Re: [PATCH 00/30] ARM: pxa: remove all unused boards&drivers
+References: <20221019161831.3864786-1-arnd@kernel.org>
+X-URL:  http://belgarath.falguerolles.org/
+Date:   Wed, 19 Oct 2022 23:13:20 +0200
+In-Reply-To: <20221019161831.3864786-1-arnd@kernel.org> (Arnd Bergmann's
+        message of "Wed, 19 Oct 2022 18:17:53 +0200")
+Message-ID: <m2sfjjh5zj.fsf@sopl295.home>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.1 (darwin)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <202210192058.36901.linux@zary.sk>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Sorry for the delay, I was still busy. IIRC, I was stuck with locking in libata.
+Arnd Bergmann <arnd@kernel.org> writes:
 
-On Wednesday 19 October 2022 09:34:31 Christoph Hellwig wrote:
-> It's been a while - did you get a chance to make some progress on
-> this?  Do you need any help to unblock you?
-> 
+> From: Arnd Bergmann <arnd@arndb.de>
+...zip...
 
+> A good number of drivers become impossible to select after this, so
+> each of these also get dropped. I'm including the driver patches in the
+> series here and can either merge them through the soc tree, or they
+> can get picked up by the individual subsystem maintainers. Since both
+> the platform and the drivers get removed, the order should not matter.
+This part is a bit ... bothering.
+I at least identified these :
+>  delete mode 100644 drivers/input/touchscreen/wm9705.c
+>  delete mode 100644 drivers/input/touchscreen/wm9712.c
+>  delete mode 100644 drivers/input/touchscreen/wm9713.c
+>  delete mode 100644 drivers/input/touchscreen/wm97xx-core.c
+>  delete mode 100644 drivers/mfd/wm97xx-core.c
+>  delete mode 100644 sound/ac97/bus.c
+>  delete mode 100644 sound/ac97/codec.c
+>  delete mode 100644 sound/ac97/snd_ac97_compat.c
 
--- 
-Ondrej Zary
+For the existing platforms working with devicetree support (mioa701 for
+example), the wm9713 was properly used, providing both sound support and input
+touchscreen.
+So was the a97 part, providing a framework to make the wm9713 work.
+
+So I'm wondering how the choice to chop these drivers was done, and it is
+necessary to remove them. If so, maybe pxa support in the kernel should be
+removed all together, as people playing with it loose part of the working DT
+platforms they had.
+
+As for the removal of defconfigs and arch-pxa, sure, this was PXA's destiny.
+
+Cheers.
+
+--
+Robert
+
+PS: If this mail is sent twice, sorry in advance, my mailer is a bad mood
+lately.
