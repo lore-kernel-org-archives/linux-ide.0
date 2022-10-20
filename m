@@ -2,100 +2,77 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B9A0C4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 20 Oct 2022 11:02:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1BBBC4167B
+	for <linux-ide@archiver.kernel.org>; Thu, 20 Oct 2022 11:18:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230327AbiJTLCe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 20 Oct 2022 07:02:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39580 "EHLO
+        id S230238AbiJTLSy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 20 Oct 2022 07:18:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231148AbiJTLCe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Oct 2022 07:02:34 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48FA61C881A;
-        Thu, 20 Oct 2022 04:02:32 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.87.29) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Thu, 20 Oct
- 2022 14:02:23 +0300
-Subject: Re: [PATCH 11/14] pata: remove palmchip bk3710 driver
-To:     Arnd Bergmann <arnd@kernel.org>, Sekhar Nori <nsekhar@ti.com>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     <linux-kernel@vger.kernel.org>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>,
-        <linux-ide@vger.kernel.org>
-References: <20221019152947.3857217-1-arnd@kernel.org>
- <20221019152947.3857217-12-arnd@kernel.org>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <52f99ca0-5dcc-9759-e089-47bd301577e4@omp.ru>
-Date:   Thu, 20 Oct 2022 14:02:24 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S230131AbiJTLSw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Oct 2022 07:18:52 -0400
+Received: from mail-ua1-x936.google.com (mail-ua1-x936.google.com [IPv6:2607:f8b0:4864:20::936])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A8BD1ACAAD
+        for <linux-ide@vger.kernel.org>; Thu, 20 Oct 2022 04:18:51 -0700 (PDT)
+Received: by mail-ua1-x936.google.com with SMTP id p89so8697719uap.12
+        for <linux-ide@vger.kernel.org>; Thu, 20 Oct 2022 04:18:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20210112.gappssmtp.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=j4yNfgdYt57OohzxwCH1esBxLVu69+vmUe2ikK/4LWY=;
+        b=49vtJf0c5It2Iknt3l/k7+opjdNuUF0nINt5E5Jy21NUgXQ1441CnbelIb+Zb8Iei7
+         tbadreJlDzHpoy9h6p81ZK959n3IfECQX9ifwUelTq3Vn3krsB1RSrDzt5XhNOzqLBWB
+         RLwqkOxaKd0U5WSQEyvmtJXOf4eZbSwo+r1a1HEmJG+kpflgcYM8RHdJg1D8MfrdE/ar
+         PngTM8W/U0BR1Fdoekw0M+/ghlnZCqvnq1Wn5VEVkLLB7rh6gjALftzuadmFoLHngmpl
+         K2ID3O6/sb7ssamZDFSise9IRPr+GL1uxwuMFn/yS5vpgdhRlxNBuLmOYlchGGlpJW4b
+         DV8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=j4yNfgdYt57OohzxwCH1esBxLVu69+vmUe2ikK/4LWY=;
+        b=txhOPri3aPrJkbUoJmdB9kY/jxbO0Q+J7/pbjCDicDAOvor85HNLGeH539Pubwm1aS
+         jOC04L8wv6Q50M5gXKgjcqr5MYrbgiRmBvxjcOey7DeyGfC3shPGQWtDjbtpJeitmtul
+         tXKQ55Eaxax3TtaLZOqx8bdMbwfLP9wZEUBoYKQx0saQesGJ0o1ybKkqmzfV0GNhiTeM
+         gKQ+VQhXFxdKZl5YH/Bc17CQzeiDnPFTXZHwUncMSDoiESl9C/ce354zNINdUN0zPwkS
+         x7FUcnyLHPRIXnoxQAhCAYDOA69Z8VCmOhbaFla9KMlfDp718/dpBWm/T8O+ida9/SK7
+         EmOQ==
+X-Gm-Message-State: ACrzQf2nI3XCdFk6AKqQxm6RjAQycTO5BlWiZldqkOzqhRlUHT5dU2rS
+        aJ80sp+vW1Q8+6hgCGRX73lIcEE1pYR1GYEoA2vCKw==
+X-Google-Smtp-Source: AMsMyM762bnsENd96YRg5cs5iK+jXaUnjmTAxCH71GWL6OADkqGRfA+/Q9MVteIpYcE1xjQ6HSh4XXVvA4ehsuW7v9c=
+X-Received: by 2002:a67:ab02:0:b0:3a9:9953:6471 with SMTP id
+ u2-20020a67ab02000000b003a999536471mr4291701vse.47.1666264730567; Thu, 20 Oct
+ 2022 04:18:50 -0700 (PDT)
 MIME-Version: 1.0
+References: <20221019152947.3857217-1-arnd@kernel.org> <20221019152947.3857217-12-arnd@kernel.org>
 In-Reply-To: <20221019152947.3857217-12-arnd@kernel.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.87.29]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 10/20/2022 10:25:24
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 173210 [Oct 20 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.87.29 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.87.29
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/20/2022 10:32:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 10/20/2022 7:12:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+From:   Bartosz Golaszewski <brgl@bgdev.pl>
+Date:   Thu, 20 Oct 2022 13:18:39 +0200
+Message-ID: <CAMRc=Mcph92ir5KgSr5C4UHAwCz8MkyykR2hBfgv4NS2rMcLHw@mail.gmail.com>
+Subject: Re: [PATCH 11/14] pata: remove palmchip bk3710 driver
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Sekhar Nori <nsekhar@ti.com>, linux-arm-kernel@lists.infradead.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-kernel@vger.kernel.org, Kevin Hilman <khilman@baylibre.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/19/22 6:29 PM, Arnd Bergmann wrote:
-
+On Wed, Oct 19, 2022 at 5:38 PM Arnd Bergmann <arnd@kernel.org> wrote:
+>
 > From: Arnd Bergmann <arnd@arndb.de>
-> 
+>
 > This device was used only on the davinci dm644x platform that
-
-  Well, DM646x too but...
-
 > is now gone, and no references to the device remain in the
 > kernel.
-
-   ... in fact, I'm not seeing davinci_init_ide() called anywhere... :-/
-
+>
 > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
-[...]
-
-MBR, Sergey
+Acked-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
