@@ -2,105 +2,138 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E8E8C4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 20 Oct 2022 07:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D14C43217
+	for <linux-ide@archiver.kernel.org>; Thu, 20 Oct 2022 07:13:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229494AbiJTHJk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 20 Oct 2022 03:09:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39440 "EHLO
+        id S230212AbiJTHNf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 20 Oct 2022 03:13:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229932AbiJTHJh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Oct 2022 03:09:37 -0400
-Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38FAC5F9D;
-        Thu, 20 Oct 2022 00:09:32 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailout.nyi.internal (Postfix) with ESMTP id 28B5C5C01E8;
-        Thu, 20 Oct 2022 03:09:29 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute3.internal (MEProxy); Thu, 20 Oct 2022 03:09:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to; s=fm2; t=1666249769; x=1666336169; bh=/t4Z9bLnF2
-        xmVdZWXqjDI32xl+lMqj7En+thDsi771s=; b=lIMpDNdoqFyUKUk6mYQoSX3lTN
-        6orgtDH9Pr4DQ7xtHsOZUw7vD2XYRHRvJ30OUqUq4o79BM4YjAnKuu1HHZIyNzQO
-        snPyXZ2ssUXj/1zpNDAZxC2MBlNn6sEaa11Q/3gl9calJguQjtSwWschdjwp4X2n
-        W+gLNNWgMB96FRqmoOQ7PcTkIA3H4cbPhM7Z42XhJJh95zsNCmZNuuKg8Lfi9ogY
-        1rKjhjew9Q9YuoScN7GAUhBVD36Wx1XQ8AxtVTEGLX35FryWnjlPIufC+B9qbMle
-        73r92SisTBxHXZH/5saNsBt3tpIxgUqcHsNdvUvcaI2DpV5217+l77KT56RA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; t=1666249769; x=1666336169; bh=/t4Z9bLnF2xmVdZWXqjDI32xl+lM
-        qj7En+thDsi771s=; b=Sf+Mp+N7c/eRebH++z/2SsQlzLfjGGIkPeK256x26N9w
-        7WrRGU21JMH/P077/FtoAxv6F7UhSrYqR06Lplc8vJeMRtL5ovjdT89GnGGbMp6M
-        sekjWfTSvNNwlDOq0YAfZW+cEIst9XYNrNXHxpIRt7hlGszVxPw2Tu207/BWSp8O
-        0hAZlhb9XZONWwgbXFg0ohBSK6Q/CTai8x2ur5YKmZi/BzLjeoJJYb6L7qBFoDD0
-        Pq2G6jv78bzGf0mfo+wZT5BddTb+71zHqqi7aY8SxDnFhsPWwFeVYHLktwzKNIBT
-        kk5JIHCVUhYiuw+Z0RjHUFjYfEAgWVYvis7bGy8WAg==
-X-ME-Sender: <xms:KPRQY6DlX3wDnMlw2URek3kyE0iOQY_560U4v4BLotpcLRFNDMMy9g>
-    <xme:KPRQY0ihmNTF5k3l-SAAYJTX3FTb66s6FhTJhyphEaX09J-_1JjOsXBHdOP9m4hoC
-    0bEkbRn42_ul170S3w>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrfeelhedgudduiecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
-    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
-    enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdet
-    rhhnugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrg
-    htthgvrhhnpeffheeugeetiefhgeethfejgfdtuefggeejleehjeeutefhfeeggefhkedt
-    keetffenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grrhhnugesrghrnhgusgdruggv
-X-ME-Proxy: <xmx:KPRQY9mzo7tODYnPY9k_l20HvZwEPPPKjW_bMpMXNKjSWK3pqYYxbA>
-    <xmx:KPRQY4z1Nzcysc2-vlkC_7KAg8CY4GGpojwM5WTajyQ8nc8neWL3nA>
-    <xmx:KPRQY_QYw8rDQ4bKGRlHpHzU6V_TlzPZn1Xh-KCFktqumourUsdiVw>
-    <xmx:KfRQY4QNDTPgmGw4Vdm-6Wp6tQk7Q_ayzvep-5pgMy67BCwf1HaJkQ>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 07EAAB60086; Thu, 20 Oct 2022 03:09:27 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.7.0-alpha0-1047-g9e4af4ada4-fm-20221005.001-g9e4af4ad
-Mime-Version: 1.0
-Message-Id: <e8390747-082c-4b1b-a340-ce5bc1993497@app.fastmail.com>
-In-Reply-To: <5780fa6b-4a18-7382-5600-02007f82a1a6@opensource.wdc.com>
-References: <20221019152947.3857217-1-arnd@kernel.org>
- <20221019152947.3857217-12-arnd@kernel.org>
- <5780fa6b-4a18-7382-5600-02007f82a1a6@opensource.wdc.com>
-Date:   Thu, 20 Oct 2022 09:09:07 +0200
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
-        "Arnd Bergmann" <arnd@kernel.org>, "Sekhar Nori" <nsekhar@ti.com>,
-        "Bartosz Golaszewski" <brgl@bgdev.pl>,
-        linux-arm-kernel@lists.infradead.org
-Cc:     linux-kernel@vger.kernel.org,
-        "Kevin Hilman" <khilman@baylibre.com>,
-        "Sergey Shtylyov" <s.shtylyov@omp.ru>,
-        "Hannes Reinecke" <hare@suse.de>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH 11/14] pata: remove palmchip bk3710 driver
-Content-Type: text/plain
+        with ESMTP id S230209AbiJTHNM (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Oct 2022 03:13:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BF34160204;
+        Thu, 20 Oct 2022 00:13:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 266A761A30;
+        Thu, 20 Oct 2022 07:13:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6806C433D6;
+        Thu, 20 Oct 2022 07:12:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666249983;
+        bh=DWD/+a3tWspqd9R6eZBRIia+z4497qxbwbDyZj76oLI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PMsAEFVD9WkedPvZ+l9oQhe6aKnlJ5QLEE/RAQL9Hdcc42aiZpvKQTxC305JfTGC7
+         HIiBFiyvAsNadm37u8Hfx9NL0Nj1ovVYawfZFWjT1jHyBqLcaoEzE81tld4QRTQcRq
+         1sNrMwbOaEFU4cFBzyCu2yq8+QF/+T8uUuezBvAaVCLvMo+hQZNXbbrO5Bt1qnKPOA
+         g4FpFI4xvJ0seaFCmivcPDcVBVicUidY1B3W/JQo0AkYB93UbthGLj9zxp5tjjv3bX
+         WHNv0zjG+ItGUccu+GqbSLjLpERRSZOjraiWPPAD9FrnYnJaB7fbLDBRWdnEJDSzbh
+         r1FvJA9rT3QGg==
+Date:   Thu, 20 Oct 2022 08:12:50 +0100
+From:   Lee Jones <lee@kernel.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     linux-arm-kernel@lists.infradead.org,
+        Daniel Mack <daniel@zonque.org>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Robert Jarzmik <robert.jarzmik@free.fr>,
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        stern@rowland.harvard.edu, alexandre.belloni@bootlin.com,
+        brgl@bgdev.pl, damien.lemoal@opensource.wdc.com,
+        dmitry.torokhov@gmail.com, linux@dominikbrodowski.net,
+        balbi@kernel.org, gregkh@linuxfoundation.org, deller@gmx.de,
+        perex@perex.cz, jingoohan1@gmail.com, kernel@wantstofly.org,
+        lgirdwood@gmail.com, linus.walleij@linaro.org,
+        marek.vasut@gmail.com, broonie@kernel.org,
+        mkpetch@internode.on.net, miquel.raynal@bootlin.com,
+        lost.distance@yahoo.com, philipp.zabel@gmail.com,
+        linux@armlinux.org.uk, sre@kernel.org, slapin@ossfans.org,
+        s.shtylyov@omp.ru, sudipm.mukherjee@gmail.com, tiwai@suse.com,
+        ulf.hansson@linaro.org, vigneshr@ti.com, viresh.kumar@linaro.org,
+        wsa+renesas@sang-engineering.com, linux-pm@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, patches@opensource.cirrus.com,
+        linux-leds@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
+        alsa-devel@alsa-project.org
+Subject: Re: [PATCH 00/30] ARM: pxa: remove all unused boards&drivers
+Message-ID: <Y1D08tpbdE52x7hN@google.com>
+References: <20221019161831.3864786-1-arnd@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221019161831.3864786-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Oct 20, 2022, at 01:17, Damien Le Moal wrote:
-> On 10/20/22 00:29, Arnd Bergmann wrote:
->> From: Arnd Bergmann <arnd@arndb.de>
->> 
->> This device was used only on the davinci dm644x platform that
->> is now gone, and no references to the device remain in the
->> kernel.
->> 
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->
-> Great, one less pata/ide driver !
-> I can queue this in ata tree. I do have some changes in ata Kconfig queued
-> already, but they should not conflict.
+On Wed, 19 Oct 2022, Arnd Bergmann wrote:
 
-I have two more patches coming today: the palmld and samsung_cf drivers.
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Most of the legacy PXA board files were marked as unused in linux-5.19 and
+> can get removed in linux-6.2. There is support for pxa250/pxa270/pxa300
+> using devicetree already, which supports a number of boards, but progress
+> on converting the remaining ones has stalled over the past few years.
+> 
+> The two boards that are left in the tree for now are the three 'sharpsl'
+> variants (spitz/akita/borzoi) and the 'gumstix' family of machines.
+> Both of these are supported by qemu, which can be helpful for completing
+> the DT conversion.
+> 
+> Only PXA25x and PXA27x are left with full boardfile support, so PXA300
+> can get a lot simpler while still working with DT, and PXA310/320/93x
+> can be removed entirely.
+> 
+> A good number of drivers become impossible to select after this, so
+> each of these also get dropped. I'm including the driver patches in the
+> series here and can either merge them through the soc tree, or they
+> can get picked up by the individual subsystem maintainers. Since both
+> the platform and the drivers get removed, the order should not matter.
+> 
+> Note that the patches here are generated with 'git format-patch -D'
+> and don't contain the contents of removed files because of the
+> significant size (the first patch is close to a megabyte).
+> 
+> Arnd Bergmann (30):
+>   ARM: pxa: remove unused board files
+>   ARM: pxa: remove irda leftover
+>   ARM: pxa: remove unused pxa3xx-ulpi
+>   ARM: pxa: drop pxa310/pxa320/pxa93x support
+>   ARM: pxa: prune unused device support
+>   power: remove z2_battery driver
+>   power: remove tosa_battery driver
+>   ata: remove palmld pata driver
+>   backlight: remove pxa tosa support
+>   input: remove pxa930_trkball driver
+>   input: remove pxa930_rotary keyboard driver
+>   input: remove zylonite touchscreen driver
+>   pcmcia: remove unused pxa/sa1100 drivers
+>   ASoC: pxa: remove unused board support
+>   ALSA: remove ac97 bus support
+>   mfd: remove wm97xx driver
+>   input: remove wm97xx support
+>   parport: remove ax88796 driver
+>   power: remove pda_power supply driver
+>   rtc: remove v3020 driver
+>   mfd: remove toshiba tmio drivers
+>   mfd: remove ucb1400 support
+>   mtd: remove tmio_nand driver
+>   mmc: remove tmio_mmc driver
+>   fbdev: remove tmiofb driver
+>   fbdev: remove w100fb driver
+>   leds: remove asic3 driver
+>   usb: remove ohci-tmio driver
+>   w1: remove ds1wm driver
+>   mfd: remove htc-pasic3 driver
 
-You can apply all three as they come in, otherwise I'll
-just keep them in my tree along with the arch/arm/ boardfile
-removal.
+Are you sure these went out?
 
-      Arnd
+They do not appear to be in my inbox, nor lore.
+
+-- 
+Lee Jones [李琼斯]
