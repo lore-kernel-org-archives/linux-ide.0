@@ -2,113 +2,109 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC39C433FE
-	for <linux-ide@archiver.kernel.org>; Sat, 22 Oct 2022 13:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DAAEFA3741
+	for <linux-ide@archiver.kernel.org>; Sat, 22 Oct 2022 15:19:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229823AbiJVNuf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 22 Oct 2022 09:50:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49516 "EHLO
+        id S229587AbiJVPTF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 22 Oct 2022 11:19:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229788AbiJVNu1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 22 Oct 2022 09:50:27 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35961B8C07
-        for <linux-ide@vger.kernel.org>; Sat, 22 Oct 2022 06:50:20 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id EBC8521B61;
-        Sat, 22 Oct 2022 13:50:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666446618; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zYX2rCCdL4K9pBaT1A4aBXT/8LYcc4CxUosb5Twlmz4=;
-        b=lrwMsoP7yGknO+NuLLywtze1UY3vC4kdeFoS2rfZDKRNWzn3yoIUI9Zb+NTm0ExDSqMrrT
-        uYIe2462k4iGkOqEFnZJ4DUKVJXSzmZibJIyv3NRDqBI86vCVbsV+iaZMr6v/CkKQEJaTX
-        tQs9L99JE/t7ozG0bUfc0OS6AUluI5k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666446618;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zYX2rCCdL4K9pBaT1A4aBXT/8LYcc4CxUosb5Twlmz4=;
-        b=EWJd6eZZ5y6Qsd/P6ES5jUPUwIoNnk+Kwq9oDL7We7rKsHfjapAX5gWS/eyjD9tcsfQV/s
-        gi5cRAUquQ35vrCA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id BD2D013494;
-        Sat, 22 Oct 2022 13:50:18 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 1BMTLBr1U2MVagAAMHmgww
-        (envelope-from <hare@suse.de>); Sat, 22 Oct 2022 13:50:18 +0000
-Message-ID: <5b8ae976-413a-98bb-1912-2fe953eaa918@suse.de>
-Date:   Sat, 22 Oct 2022 15:50:18 +0200
+        with ESMTP id S229695AbiJVPTA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 22 Oct 2022 11:19:00 -0400
+Received: from mail-oa1-x2b.google.com (mail-oa1-x2b.google.com [IPv6:2001:4860:4864:20::2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A98E012974B
+        for <linux-ide@vger.kernel.org>; Sat, 22 Oct 2022 08:18:55 -0700 (PDT)
+Received: by mail-oa1-x2b.google.com with SMTP id 586e51a60fabf-13ae8117023so7077252fac.9
+        for <linux-ide@vger.kernel.org>; Sat, 22 Oct 2022 08:18:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gz0LxUsOUlJDcIAW5bPu+WDjpQGro2FyWxGKpu7r8bo=;
+        b=gWrs34NeTJPV2fQ1MVoQY+zpFojHR3D/A6fVxaEOoPyaG1lz86TK/RINtSik3ihs6m
+         epr6PhFlnoD33CCeTfWoNQCRee99kzlwRupaR937A3VU5HU4OTIvs/zluF82SMnywl6D
+         HdEJ7m7PbwxapFaNOFa9ppWW4y91iGtKkwoLpnocgDPBTYKE8ItremNKc8YrHhceRIZp
+         h3VMtehI1AqTwZwEWQcTgFOjDVRQQngjmAnbv2gz4Ef/Bbck+zcB6GCOTs8PKUKrqPeL
+         49sPdfcCEYUyqTEphtRdJczJc984b2NmTshEFvs/XiFALWDOPilFuaMHYm7NR6Fhz+qX
+         X9nQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=gz0LxUsOUlJDcIAW5bPu+WDjpQGro2FyWxGKpu7r8bo=;
+        b=zuA9JbgQe4LvJne44yURBJEAWNvM2n4fYKNgEKlu6cBAOCcsjKjs3oM/3klSHtGOYX
+         01vEQhwS6Zt6tMovTomUjCeUsESu/yUGuRYNVRaRxwYMPVzla9M/H+XfDV2oThdrpPwJ
+         akxXsL1cdxnEw2PdLIz746BvYfmSITUDoHCagfwBK7mvhC4ZN20cAy9hqLiVbW6rC+70
+         n2MJWbfNXl9qqJf/9CamCML5CJ4FzgvTUwocPyd6lzhxzMC8ofqhZVPputYftcmF8ZjP
+         os887svDzmUY4unj/sG2iy7FcbK5Bui+J1Ga5aaSCXH7PZJCglXX9HkdQHvthgm8aZVq
+         qaJQ==
+X-Gm-Message-State: ACrzQf0YATKanzEv9jiFuh8fM629zsb9RvK15IazaruhqGJFAJzmuOsp
+        mo0vTfhitUZmN803EcHqrk6FXQ==
+X-Google-Smtp-Source: AMsMyM4Ums0et6AQMZox+xdB7Wz2plUu78klbaMd0EOzV1OnnwGbhhl8/BymyNDqbBFL+Y+cBT/t0g==
+X-Received: by 2002:a05:6870:f288:b0:131:de71:3eb6 with SMTP id u8-20020a056870f28800b00131de713eb6mr31239483oap.63.1666451935002;
+        Sat, 22 Oct 2022 08:18:55 -0700 (PDT)
+Received: from [10.203.8.70] ([205.153.95.177])
+        by smtp.gmail.com with ESMTPSA id v5-20020a056870310500b00136c20b1c59sm11538284oaa.43.2022.10.22.08.18.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 22 Oct 2022 08:18:54 -0700 (PDT)
+Message-ID: <e7ace68a-98e5-63c8-7dd7-a35d0eba1c6e@linaro.org>
+Date:   Sat, 22 Oct 2022 11:18:49 -0400
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH 0/3] Improve libata support for FUA
+ Thunderbird/102.4.0
+Subject: Re: [PATCH 00/21] ARM: s3c: clean out obsolete platforms
+To:     Arnd Bergmann <arnd@kernel.org>,
+        linux-arm-kernel@lists.infradead.org
+Cc:     linux-kernel@vger.kernel.org, Ben Dooks <ben-linux@fluff.org>,
+        Simtec Linux Team <linux@simtec.co.uk>,
+        Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+        patches@opensource.cirrus.com,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-pm@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-gpio@vger.kernel.org, linux-rtc@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-watchdog@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-pwm@vger.kernel.org
+References: <20221021202254.4142411-1-arnd@kernel.org>
 Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
-Cc:     linux-ide@vger.kernel.org
-References: <20221021053809.237651-1-damien.lemoal@opensource.wdc.com>
- <165565d4-f391-b13c-b450-26f115bb4cf9@maciej.szmigiero.name>
- <d0315388-460b-37c9-298e-97f86b7965b7@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <d0315388-460b-37c9-298e-97f86b7965b7@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20221021202254.4142411-1-arnd@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/22/22 00:45, Damien Le Moal wrote:
-> On 10/22/22 06:02, Maciej S. Szmigiero wrote:
->> On 21.10.2022 07:38, Damien Le Moal wrote:
->>> These patches cleanup and improve libata support for the FUA device
->>> feature. Patch 3 enables FUA support by default for any drive that
->>> reports supporting the feature.
->>>
->>> Damien Le Moal (2):
->>>     ata: libata: cleanup fua handling
->>>     ata: libata: Enable fua support by default
->>>
->>> Maciej S. Szmigiero (1):
->>>     ata: libata: allow toggling fua parameter at runtime
->>>
->>
->> Thanks Damien for the series!
->>
->> I've looked at the code changes and have basically two points:
->> 1) There seems to be no way to revalidate the FUA setting for an existing
->> disk, since it is now only taken into account in ata_dev_config_fua().
->>
->> As far as I can see, this function is only called on probe paths
->> (and during exception handling), so if the "libata.fua" parameter is
->> toggled the new setting would only affect newly (re-)attached disks.
+On 21/10/2022 16:22, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> Yes. Indeed. Forcing an ATA revalidation needs some more trickery as the
-> regular sd_revalidate() does not lead to ata_dev_configure() being called
-> again.
+> The s3c24xx platform was marked as deprecated a while ago,
+> and for the s3c64xx platform, we marked all except one legacy
+> board file as unused.
 > 
-But shouldn't we rather fix that?
-After Johns series of pre-allocating the SCSI devices we should be able 
-to call ata_dev_configure() from sd_revalidate() ...
+> This series removes all of those, leaving only s3c64xx support
+> for DT based boots as well as the cragg6410 board file.
+> 
+> About half of the s3c specific drivers were only used on
+> the now removed machines, so these drivers can be retired
+> as well. I can either merge the driver removal patches through
+> the soc tree along with the board file patches, or subsystem
+> maintainers can pick them up into their own trees, whichever
+> they prefer.
 
-Cheers,
+Just to be sure - do you expect me to ack the series, or rather as usual
+pick them up?
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+
+Best regards,
+Krzysztof
 
