@@ -2,99 +2,165 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F204FA3743
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 16:50:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85611FA3745
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 18:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232243AbiJXQuW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Oct 2022 12:50:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58652 "EHLO
+        id S232641AbiJXSMv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Oct 2022 14:12:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235565AbiJXQtv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 12:49:51 -0400
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C1A4B845;
-        Mon, 24 Oct 2022 08:33:12 -0700 (PDT)
-Received: by mail-wm1-x330.google.com with SMTP id b20-20020a05600c4e1400b003cc28585e2fso3571527wmq.1;
-        Mon, 24 Oct 2022 08:33:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=h2f/Wq6hw/Zz7h01CyJIfhHfe2/k6p4+o75M8dITN0c=;
-        b=PX5nZva0lV0pnt32fzYeW2dTGOsI4CM2ZxntnUoEx0OMwo5Vx+a/05szDGQSsLlw/d
-         NgdIFIoo/5V7jrbaNK71a6S63upr3q/X/dJsUMZD8rT28OutMaizuWtrgzrthsVweccJ
-         9MT8hnSrNJw2IK2idnWDtTqxEfg5Wn5Vkab4z8qC/68fH7YjsiZhxUrzb/J+SIPG4efn
-         3NnClaiVR7R+QsVxlapoXrpLeFuElCVAQnFoY29e/TMPKIrI3SCji4c270e0fdP8wPpR
-         Giv6KD8cQWE4p2iiXOxjCmoxQIMfG6WEfT1tCBWpzGMvXjmvI93eBeUYcxOPj/p4IDJ1
-         zTPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=h2f/Wq6hw/Zz7h01CyJIfhHfe2/k6p4+o75M8dITN0c=;
-        b=n13+gnGF/zr6A2G6ovmJTArrkOejb/UUDwNtB+S37b2e1Ui6Oa5y9zw3wbXqzLJ3Vm
-         dKvXu2pEnKWUQT+qznGqFs/Uj5N8Ah227qhw9Z6mUJA6mw/faBsS6TJ2fTbTLyhB/MB8
-         rIc428MWsdNeQ2UgwDNJX/Csg6l8Bc1GlSdWlPl+lPOH5F0Rwq1xmo2BWz4tFe5mYmMo
-         3hSgJ0nVCAOA00ANt7JoXV9LXPrETtQXouREQA8NLJD4t5WV8veTv6+392+7xGayPpTj
-         F5mBiE7GLPMyd4xVPemjsRJXbxcdCy326JSgrAqJDQYotXq0tvdBsnvDVEaBAozrqw5O
-         5QBg==
-X-Gm-Message-State: ACrzQf1AsWk7SSsrfEOySIQj0SIDRenqyr7awDzGjoah0zuXYMiljrTz
-        gm3sl/pANkZHeaPw5wRP/RwXwufnhuQUpYmE
-X-Google-Smtp-Source: AMsMyM4vYNbitR0d5EYNcQejuq2Bm6qAgLHpXEvE3v/gmJZw3RhGH5/7o4JA86RGgoLst3OHTYndtg==
-X-Received: by 2002:a05:600c:1906:b0:3c6:f83e:d15f with SMTP id j6-20020a05600c190600b003c6f83ed15fmr27287852wmq.205.1666621080888;
-        Mon, 24 Oct 2022 07:18:00 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id d9-20020a5d6dc9000000b002364c77bc96sm10691434wrz.33.2022.10.24.07.18.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Oct 2022 07:18:00 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ata: sata_dwc_460ex: remove variable num_processed
-Date:   Mon, 24 Oct 2022 15:17:59 +0100
-Message-Id: <20221024141759.2161963-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.37.3
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S231854AbiJXSMU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 14:12:20 -0400
+Received: from wnew4-smtp.messagingengine.com (wnew4-smtp.messagingengine.com [64.147.123.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C56126C452;
+        Mon, 24 Oct 2022 09:53:44 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.west.internal (Postfix) with ESMTP id 011D42B066F0;
+        Mon, 24 Oct 2022 09:19:09 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute3.internal (MEProxy); Mon, 24 Oct 2022 09:19:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to; s=fm2; t=1666617549; x=1666624749; bh=dNk4I7ELz1
+        Q72dRob/8j+4seSTYFKAZT/RUPASjRJ5c=; b=q+NqZuUcR73y8BnZPPG5dx1Zsk
+        6km9xLqa6tEkJrornmVIrbgVsoTaG0EQRj//U3P/qs5FFUR0kQj3xsDpIMDiHNAP
+        KHymuWr00P67rJl6tNZNMaSvfwBvDXs8mjOeO+DtIb91LFvy9u7IqPZlLBHzDqVY
+        OqQ+UV/5sGJOiUEzmGUI9NOmwTaSDzu4RgOGbpc9QTg1ReluTq9aBn60FamJs6vN
+        DKIJe0X1BrhoAYInvyHnNd5GZdOejs+w4Suvb5ImKHNqRwAYBvpipR0/HvaVLckd
+        CHTLMlrLH5H5bEpdNq1ZJ2ZVvg8gjN0DzzHIiqNjzW420ViiiKKJHNZdB8zg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm3; t=1666617549; x=1666624749; bh=dNk4I7ELz1Q72dRob/8j+4seSTYF
+        KAZT/RUPASjRJ5c=; b=uYEImk9/JaoBLZkHmS4JMUN51UUW3Adz4NZ33zTXfhfn
+        X2zc+bMCIXUEr4nNHo354GqKRASijikTpJx4FFU+epgcfr8J1IPlgZPNpNiYVB9M
+        w8ihE4tr46Zh/a1sL2xOLJxavoW+rkvJ5mUtViAoLX1JGrLBO17yVcJcaCCL+4DZ
+        U79zEm+ybsbN3XMbJe7XZH2qegoAJbChw5mNkbbe1D33ukaTT9FYQuJEpTpQ+3Cm
+        dcgc9DJADBfxr4sonBlprzuNuFtddjyQxgp5OFhdXtZwXkncp0R9eBa1XvUUpv5H
+        Fai3j/IlJ8ZfnHiUrjBdKzUP8vcWG93GWsi2JgpEew==
+X-ME-Sender: <xms:zZBWY4d6hZdrWDWBmQnXOunjtmGBLNtVOGtYlcpUAkqGnIq3nQ_ULg>
+    <xme:zZBWY6ORVL4inZtEZ347UGYnYKlOyas-DedRgWZhgJSTlHghoiUBMTH5Vdl7j2SlB
+    orGRM2A45E3sznwkiE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrgedtgedgheelucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:zZBWY5jMfpgYOekZ5Xiy1zZWPWGF2N1SaGbKcsqvIIsAoksVTelYew>
+    <xmx:zZBWY98Y0Yr03VdtjC58Vfn64oQoe8znN7FH4bLecym0d8-7ie150w>
+    <xmx:zZBWY0u1N4N4cR6ZhhO6MwuQK8N3p7TbkgEiIMvu0C2hnaFTg0G-QA>
+    <xmx:zZBWY2px7fOBs4XObZs9jNKaCaM5g4TthCLLA4wr0bUEo7pzc_VBCiqJhiU>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 3DDB5B60086; Mon, 24 Oct 2022 09:19:09 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-1047-g9e4af4ada4-fm-20221005.001-g9e4af4ad
+Mime-Version: 1.0
+Message-Id: <e5aa233d-526b-45ab-9acb-ab792b8686bc@app.fastmail.com>
+In-Reply-To: <20221024130035.GA1645003-robh@kernel.org>
+References: <20221021202254.4142411-1-arnd@kernel.org>
+ <20221024130035.GA1645003-robh@kernel.org>
+Date:   Mon, 24 Oct 2022 15:18:41 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Rob Herring" <robh@kernel.org>, "Arnd Bergmann" <arnd@kernel.org>
+Cc:     linux-arm-kernel@lists.infradead.org,
+        "Krzysztof Kozlowski" <krzysztof.kozlowski@linaro.org>,
+        linux-kernel@vger.kernel.org, "Ben Dooks" <ben-linux@fluff.org>,
+        "Simtec Linux Team" <linux@simtec.co.uk>,
+        linux-doc@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        devicetree@vger.kernel.org, patches@opensource.cirrus.com,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-pm@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+        "linux-mmc @ vger . kernel . org" <linux-mmc@vger.kernel.org>,
+        linux-mtd@lists.infradead.org,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        linux-rtc@vger.kernel.org, linux-spi@vger.kernel.org,
+        linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-watchdog@vger.kernel.org, alsa-devel@alsa-project.org,
+        linux-pwm@vger.kernel.org
+Subject: Re: [PATCH 00/21] ARM: s3c: clean out obsolete platforms
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Variable num_processed is just being incremented and it's never used
-anywhere else. The variable and the increment are redundant so
-remove it.
+On Mon, Oct 24, 2022, at 15:00, Rob Herring wrote:
+> On Fri, Oct 21, 2022 at 10:22:28PM +0200, Arnd Bergmann wrote:
+>> From: Arnd Bergmann <arnd@arndb.de>
+>> 
+>> The s3c24xx platform was marked as deprecated a while ago,
+>> and for the s3c64xx platform, we marked all except one legacy
+>> board file as unused.
+>> 
+>> This series removes all of those, leaving only s3c64xx support
+>> for DT based boots as well as the cragg6410 board file.
+>> 
+>> About half of the s3c specific drivers were only used on
+>> the now removed machines, so these drivers can be retired
+>> as well. I can either merge the driver removal patches through
+>> the soc tree along with the board file patches, or subsystem
+>> maintainers can pick them up into their own trees, whichever
+>> they prefer.
+>
+> [...]
+>
+>>  Documentation/arm/index.rst                   |    1 -
+>>  Documentation/arm/samsung-s3c24xx/cpufreq.rst |   77 -
+>>  .../arm/samsung-s3c24xx/eb2410itx.rst         |   59 -
+>>  Documentation/arm/samsung-s3c24xx/gpio.rst    |  172 --
+>>  Documentation/arm/samsung-s3c24xx/h1940.rst   |   41 -
+>>  Documentation/arm/samsung-s3c24xx/index.rst   |   20 -
+>>  Documentation/arm/samsung-s3c24xx/nand.rst    |   30 -
+>>  .../arm/samsung-s3c24xx/overview.rst          |  311 ---
+>>  Documentation/arm/samsung-s3c24xx/s3c2412.rst |  121 -
+>>  Documentation/arm/samsung-s3c24xx/s3c2413.rst |   22 -
+>>  .../arm/samsung-s3c24xx/smdk2440.rst          |   57 -
+>>  Documentation/arm/samsung-s3c24xx/suspend.rst |  137 --
+>>  .../arm/samsung-s3c24xx/usb-host.rst          |   91 -
+>>  Documentation/arm/samsung/overview.rst        |   13 -
+>
+> What about?:
+>
+> Documentation/devicetree/bindings/clock/samsung,s3c2410-clock.txt
+> Documentation/devicetree/bindings/interrupt-controller/samsung,s3c24xx-irq.txt
+> Documentation/devicetree/bindings/mmc/samsung,s3cmci.txt
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
----
- drivers/ata/sata_dwc_460ex.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Good catch!
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index e3263e961045..fd699c5bfc34 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -472,7 +472,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
- 	u8 status, tag;
--	int handled, num_processed, port = 0;
-+	int handled, port = 0;
- 	uint intpr, sactive, sactive2, tag_mask;
- 	struct sata_dwc_device_port *hsdevp;
- 	hsdev->sactive_issued = 0;
-@@ -618,9 +618,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 	dev_dbg(ap->dev, "%s ATA status register=0x%x\n", __func__, status);
- 
- 	tag = 0;
--	num_processed = 0;
- 	while (tag_mask) {
--		num_processed++;
- 		while (!(tag_mask & 0x00000001)) {
- 			tag++;
- 			tag_mask <<= 1;
--- 
-2.37.3
+I've removed these three now and and will add the removal to
+the same patch, also the related
+samsung,s3c2412-clock.txt and samsung,s3c2443-clock.txt
+files.
 
+> Documentation/devicetree/bindings/mtd/samsung-s3c2410.txt
+
+samsung,s3c2412-nand is apparently still used on s3c6400,
+and the driver is selectable on that platform, so I think
+that should remain in there until we remove s3c64xx in 2024,
+even if it is not referenced by the dts files in the kernel.
+
+> Documentation/devicetree/bindings/usb/s3c2410-usb.txt
+
+Similarly, the driver is used on the crag6410 board
+(without DT), and probably just works with the DT based
+boards if one adds a node to s3c64xx.dtsi.
+
+I've also checked if any of the other removed drivers
+matches of_device_id[] strings to see if there are more
+bindings to kill off, but I don't see any that have
+now become obsolete. It did point me to pxa2xx_ac97_dt_ids,
+which Robert already complained about, this apparently
+is still used with dts files outside of mainline.
+
+      Arnd
