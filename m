@@ -2,110 +2,111 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F578C3A59D
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 07:52:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9890BC38A2D
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 10:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229506AbiJXHwl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Oct 2022 03:52:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40514 "EHLO
+        id S229730AbiJXKRE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Oct 2022 06:17:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230000AbiJXHwj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 03:52:39 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93BC658068
-        for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2022 00:52:38 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id EDB15219A1;
-        Mon, 24 Oct 2022 07:52:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666597956; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=I/GnWVa6+wdck212S9oIg3lKL9kyS2uis5kp0xRfxDw=;
-        b=ru3tppEFKDTP6Rws59C5RD/21LIageoRTNlo3wVRMeqDwVQNxNQmIx8hGNLICIxtwtFTqT
-        l7jZBI6LqnzMKubpNIBUrcqViLmJYJYIwNX9EwTArESMxs+JltkvwIImqm8Z9i3jrBZc8x
-        pQjqd2yq1sGV6AWLvYQl2Fk48Ud9P/A=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666597956;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=I/GnWVa6+wdck212S9oIg3lKL9kyS2uis5kp0xRfxDw=;
-        b=6jhAFwq0Yuw+aZeObeKw0zRNxSnpqbl0iA1kf8BD0lWNKnQwQslcbbTTCofmPHJTugxv4p
-        7VeVUgE5sPwd12DA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DAB2F13A79;
-        Mon, 24 Oct 2022 07:52:36 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 5U5LNEREVmOWPAAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 24 Oct 2022 07:52:36 +0000
-Message-ID: <244d9dbe-a077-b927-b097-96535be21c0b@suse.de>
-Date:   Mon, 24 Oct 2022 09:52:36 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH v2 2/3] ata: libata: blacklist FUA support for known buggy
- drives
+        with ESMTP id S229719AbiJXKRE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 06:17:04 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32F4A688AF
+        for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2022 03:17:01 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.86.228) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 24 Oct
+ 2022 13:16:50 +0300
+Subject: Re: [PATCH v2 3/3] ata: libata: Enable fua support by default
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org,
+        <linux-ide@vger.kernel.org>,
         "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>
+CC:     Hannes Reinecke <hare@suse.de>
 References: <20221024072609.346502-1-damien.lemoal@opensource.wdc.com>
- <20221024072609.346502-3-damien.lemoal@opensource.wdc.com>
+ <20221024072609.346502-4-damien.lemoal@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <52f3c988-3432-64d6-e38f-603b881c31ce@omp.ru>
+Date:   Mon, 24 Oct 2022 13:16:50 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <20221024072609.346502-4-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20221024072609.346502-3-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.86.228]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 10/24/2022 09:50:18
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 19
+X-KSE-AntiSpam-Info: Lua profiles 173250 [Oct 24 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.228 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.228
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 19
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 10/24/2022 09:53:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 10/24/2022 7:44:00 AM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/24/22 09:26, Damien Le Moal wrote:
-> Thread [1] reported back in 2012 problems with enabling FUA for 3
-> different drives. Add these drives to ata_device_blacklist[] to mark
-> them with the ATA_HORKAGE_NO_FUA flag. To be conservative and avoid
-> rpoblems on old systems, the model number for the three new entries
-> are defined as to widely match all drives in the same product line.
+Hello!
+
+On 10/24/22 10:26 AM, Damien Le Moal wrote:
+
+> Change the default value of the fua module parameter to 1 to enable fua
+> support by default for all devices supporting it. This parameter
+> description is also updated to indicate it is deprecated and that
+> libata.force=[no]fua should be used to control fua support.
+
+   Mhm, where is that change? You only seem to change the default...
+
 > 
-> [1]: https://lore.kernel.org/lkml/CA+6av4=uxu_q5U_46HtpUt=FSgbh3pZuAEY54J5_xK=MKWq-YQ@mail.gmail.com/
-> 
-> Suggested-by: Maciej S. Szmigiero <mail@maciej.szmigiero.name>
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 > ---
->   drivers/ata/libata-core.c | 3 +++
->   1 file changed, 3 insertions(+)
+>  drivers/ata/libata-core.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 6008f7ed1c42..27aec8e63a8c 100644
+> index 27aec8e63a8c..867e2c423627 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
-> @@ -4128,6 +4128,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->   
->   	/* Buggy FUA */
->   	{ "Maxtor",		"BANC1G10",	ATA_HORKAGE_NO_FUA },
-> +	{ "WDC*WD2500J*",	NULL,		ATA_HORKAGE_NO_FUA },
-> +	{ "OCZ-VERTEX*",	NULL,		ATA_HORKAGE_NO_FUA },
-> +	{ "INTEL*SSDSC2CT*",	NULL,		ATA_HORKAGE_NO_FUA },
->   
->   	/* End Marker */
->   	{ }
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> @@ -127,9 +127,9 @@ int atapi_passthru16 = 1;
+>  module_param(atapi_passthru16, int, 0444);
+>  MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+>  
+> -int libata_fua = 0;
+> +int libata_fua = 1;
+>  module_param_named(fua, libata_fua, int, 0444);
+> -MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
+> +MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on [default])");
+>  
+>  static int ata_ignore_hpa;
+>  module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
-
+MBR, Sergey
