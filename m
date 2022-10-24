@@ -2,118 +2,110 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F4C7FA373F
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 07:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F578C3A59D
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 07:52:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229519AbiJXH0Y (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Oct 2022 03:26:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53280 "EHLO
+        id S229506AbiJXHwl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Oct 2022 03:52:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229562AbiJXH0V (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 03:26:21 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B842B5F7FA
-        for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2022 00:26:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1666596377; x=1698132377;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=zT3L1lXrdj9pPArQzXt07ys8xjPys1a7SwOMZxaf2TI=;
-  b=dAVM5RrRRjLbJvAyVsO5Egy6Of3hZq7m8PRi4K0rYIiPD9r/qumvbAH1
-   JFqGiiPnM5KvVW8RCTuWazF84bX+Phje/hqOPgWX8/U0ctk07W0hYbqd+
-   xSqjn1pGoSvO7Jawu1Yl9NM/ja3PdOctJ9EAuC0w8gC8RkGdS7yCF/KcT
-   N3T3utReo2RlW0r7vXgK6Cq0uga7oWwQmSAwlfQ3tuUdztulVfE3Xz2sj
-   S0cUTkT+yXemottzAlsi/fYEor+5f38kp73o6VTRv8rSt8QzG/kRNbudG
-   HgDnWjNqforra0ivaezuJPpeuxbeI0vAEkC3JKK+ysdNEHuK3V/cipkC6
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.95,207,1661788800"; 
-   d="scan'208";a="318901548"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Oct 2022 15:26:14 +0800
-IronPort-SDR: qnU+FHSqLUx3oKKzq2uATBE2iYWII9slUsed8XsUFWnbmmtCq/q0PwcE3fsc0hUXjEWQ9gUI/+
- k/RvYlHpoJ+mkZLFaTaTwCOqrvj30GaMkJVSREiezTa0Whd/l59fB+/QEKGkKgyv94AYwtnv8o
- fHqR1jtaiIMSqzaHDWLjZIwPX3ZDjbiyJPWKP95uaEFJHBdP2uWGIBTrR1qi2rrpQVSZYOe3WR
- /Zxcf48ULo/3Vg9RtnK5kqGv3oLB7KqVKNyqlw5QR8nlqh/yfTot+zKjEmkL7h0TlJSn4wZ/Qo
- So3Jc+AFEmAMYO30u4XQFMiZ
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 Oct 2022 23:39:58 -0700
-IronPort-SDR: NgD+2T6J3N5ROwGgUPYpEaOYUEtPeSo9VgjPdSIqBohqADV7SyW+mfEHkNdPVl73f63AHROy9y
- 3g+PzZMmJbjcJsfvTWiqc7FpcY6ROcrpFykgPM0bhSROhDWIy5yw5gW0TzTiLX3PqZmZNmNaxt
- bx7ZgG24jtFYvoh3K1UYCctlpucPxjbu7MM0b+ms6mqqPdIZ4iCzWuzAWpUCrUe7c4DmgBZwwT
- cCPHjKRvrugZ3pwTlWvvMXLkg2fbPRFM//JuOFAXb8Fq5kS0qrtEnAZhib+S+W2CKNG1hWsXrw
- pwA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Oct 2022 00:26:15 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MwmpG5bb6z1RvLy
-        for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2022 00:26:14 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1666596374; x=1669188375; bh=zT3L1lXrdj9pPArQzX
-        t07ys8xjPys1a7SwOMZxaf2TI=; b=ucn9vChTOPeWLSed2dM4ONjWl4reE1fLn9
-        GC/KQz+123re81PQQAtw0b3ubDWAbKhwSt5lDrFsbw1lTwwXJQeRWCig2YWlQy7F
-        9JLWhIb4S11Uh6StvWLTZQysXqMJs6q8uo8RKZolyfQ9x++R121LshJ/XodUfl9m
-        wS6i050nB3Z0aHjzcgZQb8y6iUgo2qXF9FqjuigOfjfvIVtWlW3pW1UpyE0QsxL9
-        aXnnmUT5QmLyauk/3p1AuNCMfj9T8t+TBe3tbmTPKEkkUUlLYeDhakRCdgvmXqXV
-        HnVUoju5OTzOg9wwkdIb8cbel+IpwkIFkJCd0HcTY+9yEkkITFdQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 1YwwPftfx-Lm for <linux-ide@vger.kernel.org>;
-        Mon, 24 Oct 2022 00:26:14 -0700 (PDT)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MwmpF5wQjz1RvTp;
-        Mon, 24 Oct 2022 00:26:13 -0700 (PDT)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-ide@vger.kernel.org,
-        "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>
-Cc:     Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v2 3/3] ata: libata: Enable fua support by default
-Date:   Mon, 24 Oct 2022 16:26:09 +0900
-Message-Id: <20221024072609.346502-4-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.37.3
-In-Reply-To: <20221024072609.346502-1-damien.lemoal@opensource.wdc.com>
-References: <20221024072609.346502-1-damien.lemoal@opensource.wdc.com>
+        with ESMTP id S230000AbiJXHwj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 03:52:39 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93BC658068
+        for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2022 00:52:38 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id EDB15219A1;
+        Mon, 24 Oct 2022 07:52:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1666597956; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=I/GnWVa6+wdck212S9oIg3lKL9kyS2uis5kp0xRfxDw=;
+        b=ru3tppEFKDTP6Rws59C5RD/21LIageoRTNlo3wVRMeqDwVQNxNQmIx8hGNLICIxtwtFTqT
+        l7jZBI6LqnzMKubpNIBUrcqViLmJYJYIwNX9EwTArESMxs+JltkvwIImqm8Z9i3jrBZc8x
+        pQjqd2yq1sGV6AWLvYQl2Fk48Ud9P/A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1666597956;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=I/GnWVa6+wdck212S9oIg3lKL9kyS2uis5kp0xRfxDw=;
+        b=6jhAFwq0Yuw+aZeObeKw0zRNxSnpqbl0iA1kf8BD0lWNKnQwQslcbbTTCofmPHJTugxv4p
+        7VeVUgE5sPwd12DA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DAB2F13A79;
+        Mon, 24 Oct 2022 07:52:36 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 5U5LNEREVmOWPAAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 24 Oct 2022 07:52:36 +0000
+Message-ID: <244d9dbe-a077-b927-b097-96535be21c0b@suse.de>
+Date:   Mon, 24 Oct 2022 09:52:36 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH v2 2/3] ata: libata: blacklist FUA support for known buggy
+ drives
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org,
+        "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>
+References: <20221024072609.346502-1-damien.lemoal@opensource.wdc.com>
+ <20221024072609.346502-3-damien.lemoal@opensource.wdc.com>
+Content-Language: en-US
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20221024072609.346502-3-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Change the default value of the fua module parameter to 1 to enable fua
-support by default for all devices supporting it. This parameter
-description is also updated to indicate it is deprecated and that
-libata.force=3D[no]fua should be used to control fua support.
-
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+On 10/24/22 09:26, Damien Le Moal wrote:
+> Thread [1] reported back in 2012 problems with enabling FUA for 3
+> different drives. Add these drives to ata_device_blacklist[] to mark
+> them with the ATA_HORKAGE_NO_FUA flag. To be conservative and avoid
+> rpoblems on old systems, the model number for the three new entries
+> are defined as to widely match all drives in the same product line.
+> 
+> [1]: https://lore.kernel.org/lkml/CA+6av4=uxu_q5U_46HtpUt=FSgbh3pZuAEY54J5_xK=MKWq-YQ@mail.gmail.com/
+> 
+> Suggested-by: Maciej S. Szmigiero <mail@maciej.szmigiero.name>
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
+>   drivers/ata/libata-core.c | 3 +++
+>   1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 6008f7ed1c42..27aec8e63a8c 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4128,6 +4128,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>   
+>   	/* Buggy FUA */
+>   	{ "Maxtor",		"BANC1G10",	ATA_HORKAGE_NO_FUA },
+> +	{ "WDC*WD2500J*",	NULL,		ATA_HORKAGE_NO_FUA },
+> +	{ "OCZ-VERTEX*",	NULL,		ATA_HORKAGE_NO_FUA },
+> +	{ "INTEL*SSDSC2CT*",	NULL,		ATA_HORKAGE_NO_FUA },
+>   
+>   	/* End Marker */
+>   	{ }
 Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/ata/libata-core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 27aec8e63a8c..867e2c423627 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -127,9 +127,9 @@ int atapi_passthru16 =3D 1;
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI dev=
-ices (0=3Doff, 1=3Don [default])");
-=20
--int libata_fua =3D 0;
-+int libata_fua =3D 1;
- module_param_named(fua, libata_fua, int, 0444);
--MODULE_PARM_DESC(fua, "FUA support (0=3Doff [default], 1=3Don)");
-+MODULE_PARM_DESC(fua, "FUA support (0=3Doff, 1=3Don [default])");
-=20
- static int ata_ignore_hpa;
- module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
---=20
-2.37.3
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
 
