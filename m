@@ -2,118 +2,116 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD8E5FA3744
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 13:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41110FA3747
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Oct 2022 14:30:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236029AbiJXNmR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Oct 2022 09:42:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55284 "EHLO
+        id S235417AbiJXOaf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Oct 2022 10:30:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236789AbiJXNlP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 09:41:15 -0400
-Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com [209.85.219.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB864B44BF
-        for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2022 05:38:38 -0700 (PDT)
-Received: by mail-qv1-f48.google.com with SMTP id n18so1047442qvt.11
-        for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2022 05:38:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Oppr3g1kldcRr/h0YX8+D6gvN1LuMqBrF3TdUSXw7uw=;
-        b=Mqnv6SQRHYxqDSvqFOM3ZLYqWYMqHSgRR9NfD4WFyHINegNpyafEjGcaUUfZSq4ZU6
-         2AhhXXa6KgZtAutXORalVNP4KopcVzsydgD6rAJsecH2Lfhw9Y2AcdIppkoLskWmbAon
-         dxnp1p2thqWjVVGAzqT3QbdJNLylwGPtqD2e8ZR/eHfvfmtMDLIlHANZuGUMT6DOcT0c
-         BB5nu/7Xxnzb8khN/Y2fXNvEZXhekWtbb1Nbf9hbK3kCE6wNUNw1lIeAiwBfyIEWC+aI
-         F3T99QX1FdCugoXtj2vLzHPCY5e5unpKACQlqLOFUD0b01NZQQe/fplvHlEvZhW6OSoP
-         0+UQ==
+        with ESMTP id S234904AbiJXO2v (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2022 10:28:51 -0400
+Received: from mail-oa1-f42.google.com (mail-oa1-f42.google.com [209.85.160.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED92D73C2;
+        Mon, 24 Oct 2022 06:02:17 -0700 (PDT)
+Received: by mail-oa1-f42.google.com with SMTP id 586e51a60fabf-13b23e29e36so10999254fac.8;
+        Mon, 24 Oct 2022 06:02:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Oppr3g1kldcRr/h0YX8+D6gvN1LuMqBrF3TdUSXw7uw=;
-        b=r5Mt2Va0JLJuFigHBDi1vxaCBJ2SrCCNWC+bNsLH/puYkUQUx2tD/Hek6F0sfG78+n
-         tySj9nd1+g5V4lrpflRkbFxmUPcl5K9geySNqFQ8jr7gYatFBE+Vkhz/J1LgRwNMeFNE
-         wqurhEzpGRSnHLYg9fpoC1z7a+Bw2N8oBVHIFn25dZg5vsS7SxcclDPPvD0rQIGKTpWL
-         Ytro8db+xvN2dPMUxSMrALk4roe8dWCRadsrON3/qpiGywTxkjxNeLPtfFoVsmZOimlO
-         CBpnbS6ziJmubf7Bv8WvdcdlU+wNaxDo4pdmEZrcOosjHwqxcjJlab7YnPW9d6glzRF5
-         xZ/A==
-X-Gm-Message-State: ACrzQf1CY/J0WBW0VEC3Esx1waY2uZRovn4Mhp9uZdpJS8DD1Rbs0anF
-        FQvrjopghGpwKvMv/v2nIYGIzQ==
-X-Google-Smtp-Source: AMsMyM4iLxX3UBiGciYkAbas+DN289cPrqWsUgLbLsnCVUvii+FKgBK9L/GjErEZT6DwfcUBdiBuDg==
-X-Received: by 2002:a0c:b3da:0:b0:4b4:a3d6:fa27 with SMTP id b26-20020a0cb3da000000b004b4a3d6fa27mr27199126qvf.14.1666614897485;
-        Mon, 24 Oct 2022 05:34:57 -0700 (PDT)
-Received: from [192.168.1.8] ([64.57.193.93])
-        by smtp.gmail.com with ESMTPSA id bm30-20020a05620a199e00b006e42a8e9f9bsm14638163qkb.121.2022.10.24.05.34.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Oct 2022 05:34:56 -0700 (PDT)
-Message-ID: <a5b300e3-97aa-0166-82d0-87049a87b1bf@linaro.org>
-Date:   Mon, 24 Oct 2022 08:34:55 -0400
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH 09/21] pata: remove samsung_cf driver
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-kernel@vger.kernel.org, Ben Dooks <ben-linux@fluff.org>,
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=p+x9joGdXdBFLPPxN1p6d7/jrm+b1E7zu0ZikUl9XbM=;
+        b=kN4xIs/QEGJ+oT9qrn2OjPi/N6FcvGH6BvACP76blbVF103TXYi+7qEU5tINWQ+OJz
+         dApYzrcvxoO2ZIXOFTxb7h3JgOvX67e53Ux9I2wwMvKPIJrbpeDZZobSiNgXQhwqMaF/
+         R3ztR06WTPRqxKei/NzyOWyK9tZuNZ0Cm15uInIPmFb7tUxRSre+3lm52uo1EfezpHK9
+         o9VNCRaweqKifLKL/48NiILy3trNo3072uYGiXhEVisoQwGcZ30ghYt4hAv1vlMBiN/X
+         ltLvQXpHTYGfKkWtuOvorD19U4Zbzkwzp6qZaLG5THbYH133b9fRVRaPubb8xH2WHVbL
+         oPdg==
+X-Gm-Message-State: ACrzQf3i7XkzH7UpZj1xKGIMrADeoCGwSUDmJj0hXhqGuTa4oC2Svjr2
+        vms3XoPp+qtUCiVrBxssV68CXNLJaw==
+X-Google-Smtp-Source: AMsMyM4RB1x55W7tWXLqKMCfn9+yNGKoyP28eeDXqoWuK46CSg7FurAIxSSG6961lNUtLuCZU2W88g==
+X-Received: by 2002:a05:6870:e9a8:b0:133:223f:49a1 with SMTP id r40-20020a056870e9a800b00133223f49a1mr38235091oao.114.1666616434841;
+        Mon, 24 Oct 2022 06:00:34 -0700 (PDT)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id g20-20020a056870c15400b0012796e8033dsm2716705oad.57.2022.10.24.06.00.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Oct 2022 06:00:34 -0700 (PDT)
+Received: (nullmailer pid 1652638 invoked by uid 1000);
+        Mon, 24 Oct 2022 13:00:35 -0000
+Date:   Mon, 24 Oct 2022 08:00:35 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     linux-arm-kernel@lists.infradead.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        linux-kernel@vger.kernel.org, Ben Dooks <ben-linux@fluff.org>,
         Simtec Linux Team <linux@simtec.co.uk>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
+        Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org,
+        patches@opensource.cirrus.com,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-pm@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-gpio@vger.kernel.org, linux-rtc@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-watchdog@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-pwm@vger.kernel.org
+Subject: Re: [PATCH 00/21] ARM: s3c: clean out obsolete platforms
+Message-ID: <20221024130035.GA1645003-robh@kernel.org>
 References: <20221021202254.4142411-1-arnd@kernel.org>
- <20221021203329.4143397-9-arnd@kernel.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20221021203329.4143397-9-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221021202254.4142411-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 21/10/2022 16:27, Arnd Bergmann wrote:
+On Fri, Oct 21, 2022 at 10:22:28PM +0200, Arnd Bergmann wrote:
 > From: Arnd Bergmann <arnd@arndb.de>
 > 
-> This device was only used by the smdk6410 board file that is now
-> gone, so the driver can be removed as well.
+> The s3c24xx platform was marked as deprecated a while ago,
+> and for the s3c64xx platform, we marked all except one legacy
+> board file as unused.
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/ata/Kconfig                          |  10 -
->  drivers/ata/Makefile                         |   1 -
->  drivers/ata/pata_samsung_cf.c                | 662 -------------------
->  include/linux/platform_data/ata-samsung_cf.h |  31 -
->  4 files changed, 704 deletions(-)
->  delete mode 100644 drivers/ata/pata_samsung_cf.c
->  delete mode 100644 include/linux/platform_data/ata-samsung_cf.h
+> This series removes all of those, leaving only s3c64xx support
+> for DT based boots as well as the cragg6410 board file.
 > 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 6b446cfc3455..3b8cb7a29efd 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -1136,16 +1136,6 @@ config PATA_RZ1000
->  
->  	  If unsure, say N.
->  
-> -config PATA_SAMSUNG_CF
-> -	tristate "Samsung SoC PATA support"
-> -	depends on SAMSUNG_DEV_IDE || COMPILE_TEST
-> -	select PATA_TIMINGS
-> -	help
-> -	  This option enables basic support for Samsung's S3C/S5P board
-> -	  PATA controllers via the new ATA layer
-> -
+> About half of the s3c specific drivers were only used on
+> the now removed machines, so these drivers can be retired
+> as well. I can either merge the driver removal patches through
+> the soc tree along with the board file patches, or subsystem
+> maintainers can pick them up into their own trees, whichever
+> they prefer.
 
-This driver is present and somehow usable on newer platform: S5PV210.
-It's not converted to DT, but someone might want to do it. OTOH, if no
-one added DT for all this time, I doubt anyone will.
-Postmarket/Lineage-folks target smartphones, so don't use it.
+[...]
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>  Documentation/arm/index.rst                   |    1 -
+>  Documentation/arm/samsung-s3c24xx/cpufreq.rst |   77 -
+>  .../arm/samsung-s3c24xx/eb2410itx.rst         |   59 -
+>  Documentation/arm/samsung-s3c24xx/gpio.rst    |  172 --
+>  Documentation/arm/samsung-s3c24xx/h1940.rst   |   41 -
+>  Documentation/arm/samsung-s3c24xx/index.rst   |   20 -
+>  Documentation/arm/samsung-s3c24xx/nand.rst    |   30 -
+>  .../arm/samsung-s3c24xx/overview.rst          |  311 ---
+>  Documentation/arm/samsung-s3c24xx/s3c2412.rst |  121 -
+>  Documentation/arm/samsung-s3c24xx/s3c2413.rst |   22 -
+>  .../arm/samsung-s3c24xx/smdk2440.rst          |   57 -
+>  Documentation/arm/samsung-s3c24xx/suspend.rst |  137 --
+>  .../arm/samsung-s3c24xx/usb-host.rst          |   91 -
+>  Documentation/arm/samsung/overview.rst        |   13 -
 
-Best regards,
-Krzysztof
+What about?:
 
+Documentation/devicetree/bindings/clock/samsung,s3c2410-clock.txt
+Documentation/devicetree/bindings/interrupt-controller/samsung,s3c24xx-irq.txt
+Documentation/devicetree/bindings/mmc/samsung,s3cmci.txt
+Documentation/devicetree/bindings/mtd/samsung-s3c2410.txt
+Documentation/devicetree/bindings/usb/s3c2410-usb.txt
+
+Rob
