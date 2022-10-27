@@ -2,135 +2,108 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A11BDC38A2D
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Oct 2022 09:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4144C67871
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Oct 2022 09:43:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233687AbiJ0Jmy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Oct 2022 05:42:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43830 "EHLO
+        id S234290AbiJ0JnZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Oct 2022 05:43:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233280AbiJ0Jmx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2022 05:42:53 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 480DC5F72
-        for <linux-ide@vger.kernel.org>; Thu, 27 Oct 2022 02:42:52 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 914761FD9E;
-        Thu, 27 Oct 2022 09:42:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1666863771; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=e0M73oisHVsa3Ya1/sMKT/z9kqF9GtHB+q0ehUlMgmM=;
-        b=cXR+EZA8WuxRYqwGoJ9hmlUGREfn9k4wznIsGBtoJ7uEu7oOKmWa8cw8umO4+v4BPu8Lko
-        CmqAM+iZk68fPSJWJaimXc0s4uzeqlflBfyOPUmA0IAwoAS6BCbjSpKqWpeF+jC47GcOZ8
-        ok7yjzKaW0WFLiKhoYxkXu6LEz3OytQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1666863771;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=e0M73oisHVsa3Ya1/sMKT/z9kqF9GtHB+q0ehUlMgmM=;
-        b=vZa4D7nRxYCWeuOmQHukGdvQsMcm3Qh1P0z3V9o8sn1QV0jntSinEXElcauA9lS2wrdkZ9
-        2weFHFFffySyS9Aw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 64C0A13357;
-        Thu, 27 Oct 2022 09:42:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id XviVFptSWmN3ZwAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 27 Oct 2022 09:42:51 +0000
-Message-ID: <69b5067c-dd13-a56a-3267-867902953045@suse.de>
-Date:   Thu, 27 Oct 2022 11:42:50 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH v3 4/6] ata: libata: Fix FUA handling in ata_build_rw_tf()
-Content-Language: en-US
+        with ESMTP id S233280AbiJ0JnY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2022 05:43:24 -0400
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E6D3DEEC
+        for <linux-ide@vger.kernel.org>; Thu, 27 Oct 2022 02:43:23 -0700 (PDT)
+Received: by mail-lj1-x230.google.com with SMTP id a15so1527933ljb.7
+        for <linux-ide@vger.kernel.org>; Thu, 27 Oct 2022 02:43:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Z9jc/ixHxMQXTNaF95PsyQEA61wcheV2RJS6Z5LtrjM=;
+        b=HF2fgSI0Z5sg37+lE955k9NPuuo3772ijxhWuYFJ4ttAUO0kNekBnNWytOuV3QIfxK
+         0mc0BsBIvjSFYeeUbIUpRanavKC0PEylZNgWwq8gVj7TLO33OuTjJIzR5r2ydltulx3F
+         sa+hYuPiB3h09ent1FcMVnuA7ymAOxY6Z5GWpN6J/ni4sxpgU24wUl55piIJHou9cdoD
+         RZ6nU7qDJPbeIGdwhsD7fboeJuf3Ts5Es2cci2uNzI/7A+kmbVKu0hfxw+d7NomPq5IP
+         LHrH4OAba2puNHPnNN/TgA/ug50c4m5EodyAt9GF4XkdqmEbC4DpB3TiglCcfl8CXC39
+         DXpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Z9jc/ixHxMQXTNaF95PsyQEA61wcheV2RJS6Z5LtrjM=;
+        b=w/iP3gE3uryXDcq2+IKDiGloKIvF5RlYNFT6emuCd7KH722QbSg5rmbX0qSr27C3NR
+         vZFtR5rC9rUWqlSp1PIGdZtZKduFLxm1A7cMbih4hGkhWWsuoJA7KYjfRtyTbIs4CDyn
+         7O6Wr+NkjPbHWYA406T2pzf7pfauHTqrz5h1C3rYPhJaFZdXo9iF8DecHJf1fOGujO6v
+         6gejhuNIwl1gbvm8lfpgu8A9SbLW3B2FLZTr1npUgggj26jo9lGySEWafe7PSR2hfAQ0
+         pqV7bQDaYvsLyi2sKNR1ImLfmIQYd/zMyfpNmB3cPzJWvwIb0XFAjEUxsdb2txA0uXkz
+         2I2A==
+X-Gm-Message-State: ACrzQf1Vtw0FWNjHZH3Nh+Qe7r0jHm+zhLVQ02J9jsVrTl11aL2nf/nT
+        u/dJmg+n0FhywY8cAUI9WkbXqqYfTm4=
+X-Google-Smtp-Source: AMsMyM7Eu/7dv01gSRimOl46SsXuxOvH38hn5Yk1UnKRaccI4alAyDjLPu9Ege3lHnCuJhJtGFUSkQ==
+X-Received: by 2002:a05:651c:c88:b0:26d:fea6:36b1 with SMTP id bz8-20020a05651c0c8800b0026dfea636b1mr18967721ljb.433.1666863801408;
+        Thu, 27 Oct 2022 02:43:21 -0700 (PDT)
+Received: from [192.168.1.103] ([178.176.73.120])
+        by smtp.gmail.com with ESMTPSA id bu9-20020a056512168900b0048a934168c0sm123156lfb.35.2022.10.27.02.43.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 27 Oct 2022 02:43:21 -0700 (PDT)
+Subject: Re: [PATCH v3 2/6] ata: libata: Rename and cleanup
+ ata_rwcmd_protocol()
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-ide@vger.kernel.org,
         "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>
+Cc:     Hannes Reinecke <hare@suse.de>
 References: <20221027075026.240017-1-damien.lemoal@opensource.wdc.com>
- <20221027075026.240017-5-damien.lemoal@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20221027075026.240017-5-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <20221027075026.240017-3-damien.lemoal@opensource.wdc.com>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <ec971154-47c5-2e93-23e5-40090d29d2ff@gmail.com>
+Date:   Thu, 27 Oct 2022 12:43:19 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <20221027075026.240017-3-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/27/22 09:50, Damien Le Moal wrote:
-> If a user issues a write command with the FUA bit set for a device with
-> NCQ support disabled (that is, the device queue depth was set to 1), the
-> LBA 48 command WRITE DMA FUA EXT must be used. However,
-> ata_build_rw_tf() ignores this and first test if LBA 28 can be used.
-> That is, for small FUA writes at low LBAs, ata_rwcmd_protocol() will
-> cause the write to fail.
-> 
-> Fix this by preventing the use of LBA 28 for any FUA write request.
-> While at it, also early test if the request is a FUA read and fail these
-> requests for the NCQ-disabled case instead of relying on
-> ata_rwcmd_protocol() returning an error.
-> 
+Hello!
+
+On 10/27/22 10:50 AM, Damien Le Moal wrote:
+
+> Rename ata_rwcmd_protocol() to ata_set_rwcmd_protocol() to better
+> reflect the fact that this function sets a task file command and
+> protocol. The arguments order is also reversed and the function return
+> type changed to a bool to indicate if the command and protocol were set
+> corretly (instead of returning a completely arbitrary "-1" value.
+
+   Correctly. :-)
+
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > ---
->   drivers/ata/libata-core.c | 17 +++++++++++++++--
->   1 file changed, 15 insertions(+), 2 deletions(-)
+>  drivers/ata/libata-core.c | 26 ++++++++++++++------------
+>  1 file changed, 14 insertions(+), 12 deletions(-)
 > 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 81b20ffb1554..fea06f41f371 100644
+> index 884ae73b11ea..56ddcbaa0c6f 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
-> @@ -725,9 +725,21 @@ int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
->   		    class == IOPRIO_CLASS_RT)
->   			tf->hob_nsect |= ATA_PRIO_HIGH << ATA_SHIFT_PRIO;
->   	} else if (dev->flags & ATA_DFLAG_LBA) {
-> +		bool lba28_ok;
-> +
-> +		if (tf->flags & ATA_TFLAG_FUA) {
-> +			/* FUA reads are not defined */
-> +			if (!(tf->flags & ATA_TFLAG_WRITE))
-> +				return -EINVAL;
-> +			/* We need LBA48 / WRITE DMA FUA EXT for FUA writes */
-> +			lba28_ok = false;
-> +		} else {
-> +			lba28_ok = lba_28_ok(block, n_block);
-> +		}
-> +
->   		tf->flags |= ATA_TFLAG_LBA;
->   
-> -		if (lba_28_ok(block, n_block)) {
-> +		if (lba28_ok) {
->   			/* use LBA28 */
->   			tf->device |= (block >> 24) & 0xf;
->   		} else if (lba_48_ok(block, n_block)) {
+> @@ -574,17 +574,18 @@ static const u8 ata_rw_cmds[] = {
+>  };
+>  
+>  /**
+> - *	ata_rwcmd_protocol - set taskfile r/w commands and protocol
+> + *	ata_set_rwcmd_protocol - set taskfile r/w command and protocol
+> + *	@dev: target device for the tf
 
-I am still skeptical about this change.
-Having checked the code I don't think that we ever issue a 
-REQ_READ|REQ_FUA; but at the same time there doesn't seem to be a strict 
-rule. I wonder if we shouldn't move that check into the block layer, and 
-error out any attempts to issue such?
+   s/tf/taskfile/?
 
-Otherwise we would error out an otherwise fine I/O (which we _could_ 
-have handled via PREFLUSH etc semantics), which I don't think is a good 
-idea.
+>   *	@tf: command to examine and configure
+> - *	@dev: device tf belongs to
+[...]
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+MBR, Sergey
