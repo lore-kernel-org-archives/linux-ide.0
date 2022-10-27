@@ -2,108 +2,210 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4144C67871
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Oct 2022 09:43:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 448E9C67871
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Oct 2022 09:51:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234290AbiJ0JnZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Oct 2022 05:43:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44026 "EHLO
+        id S234881AbiJ0Jvk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Oct 2022 05:51:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233280AbiJ0JnY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2022 05:43:24 -0400
-Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E6D3DEEC
-        for <linux-ide@vger.kernel.org>; Thu, 27 Oct 2022 02:43:23 -0700 (PDT)
-Received: by mail-lj1-x230.google.com with SMTP id a15so1527933ljb.7
-        for <linux-ide@vger.kernel.org>; Thu, 27 Oct 2022 02:43:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Z9jc/ixHxMQXTNaF95PsyQEA61wcheV2RJS6Z5LtrjM=;
-        b=HF2fgSI0Z5sg37+lE955k9NPuuo3772ijxhWuYFJ4ttAUO0kNekBnNWytOuV3QIfxK
-         0mc0BsBIvjSFYeeUbIUpRanavKC0PEylZNgWwq8gVj7TLO33OuTjJIzR5r2ydltulx3F
-         sa+hYuPiB3h09ent1FcMVnuA7ymAOxY6Z5GWpN6J/ni4sxpgU24wUl55piIJHou9cdoD
-         RZ6nU7qDJPbeIGdwhsD7fboeJuf3Ts5Es2cci2uNzI/7A+kmbVKu0hfxw+d7NomPq5IP
-         LHrH4OAba2puNHPnNN/TgA/ug50c4m5EodyAt9GF4XkdqmEbC4DpB3TiglCcfl8CXC39
-         DXpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Z9jc/ixHxMQXTNaF95PsyQEA61wcheV2RJS6Z5LtrjM=;
-        b=w/iP3gE3uryXDcq2+IKDiGloKIvF5RlYNFT6emuCd7KH722QbSg5rmbX0qSr27C3NR
-         vZFtR5rC9rUWqlSp1PIGdZtZKduFLxm1A7cMbih4hGkhWWsuoJA7KYjfRtyTbIs4CDyn
-         7O6Wr+NkjPbHWYA406T2pzf7pfauHTqrz5h1C3rYPhJaFZdXo9iF8DecHJf1fOGujO6v
-         6gejhuNIwl1gbvm8lfpgu8A9SbLW3B2FLZTr1npUgggj26jo9lGySEWafe7PSR2hfAQ0
-         pqV7bQDaYvsLyi2sKNR1ImLfmIQYd/zMyfpNmB3cPzJWvwIb0XFAjEUxsdb2txA0uXkz
-         2I2A==
-X-Gm-Message-State: ACrzQf1Vtw0FWNjHZH3Nh+Qe7r0jHm+zhLVQ02J9jsVrTl11aL2nf/nT
-        u/dJmg+n0FhywY8cAUI9WkbXqqYfTm4=
-X-Google-Smtp-Source: AMsMyM7Eu/7dv01gSRimOl46SsXuxOvH38hn5Yk1UnKRaccI4alAyDjLPu9Ege3lHnCuJhJtGFUSkQ==
-X-Received: by 2002:a05:651c:c88:b0:26d:fea6:36b1 with SMTP id bz8-20020a05651c0c8800b0026dfea636b1mr18967721ljb.433.1666863801408;
-        Thu, 27 Oct 2022 02:43:21 -0700 (PDT)
-Received: from [192.168.1.103] ([178.176.73.120])
-        by smtp.gmail.com with ESMTPSA id bu9-20020a056512168900b0048a934168c0sm123156lfb.35.2022.10.27.02.43.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 27 Oct 2022 02:43:21 -0700 (PDT)
-Subject: Re: [PATCH v3 2/6] ata: libata: Rename and cleanup
- ata_rwcmd_protocol()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org,
-        "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>
-Cc:     Hannes Reinecke <hare@suse.de>
-References: <20221027075026.240017-1-damien.lemoal@opensource.wdc.com>
- <20221027075026.240017-3-damien.lemoal@opensource.wdc.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <ec971154-47c5-2e93-23e5-40090d29d2ff@gmail.com>
-Date:   Thu, 27 Oct 2022 12:43:19 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S234802AbiJ0Jvj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2022 05:51:39 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60AFCD8EEA;
+        Thu, 27 Oct 2022 02:51:38 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 1C154221D4;
+        Thu, 27 Oct 2022 09:51:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1666864297; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lMhDnMZsampgRMF7aSgCvQ+2ib+vll1P4/w4qqcbYrU=;
+        b=o+Xnrhc+P/dGykBrUg4YiT1fyjCP23M39/0Mkg3D08oe15WqtJQcH8B0owXI+4xf4in7bW
+        yHcMDCGpK/Uv0JCPqRURadQD9H1DEIczWzoGVVG2k3bS8Zcwpk38sfzDmRidQj184mUa3r
+        HxZihd3l9bpRPVqyNCQ8t0i/mLyI/oE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1666864297;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lMhDnMZsampgRMF7aSgCvQ+2ib+vll1P4/w4qqcbYrU=;
+        b=AU6KYi2aeqTWCFIX/KbgPTSH1DgsFHj4gyYq6E0qtoww9FVYCY0oGZ0CW+a5z3blUfuhgq
+        dQbMkALsGeuaBMBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D7BD613357;
+        Thu, 27 Oct 2022 09:51:35 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id o4zMMqdUWmM4bAAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 27 Oct 2022 09:51:35 +0000
+Message-ID: <331fffd7-b5db-9b4a-42ae-940a6b54a37f@suse.de>
+Date:   Thu, 27 Oct 2022 11:51:34 +0200
 MIME-Version: 1.0
-In-Reply-To: <20221027075026.240017-3-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset=utf-8
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH RFC v3 16/22] ata: libata-scsi: Allocate sdev early in
+ port probe
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        jinpu.wang@cloud.ionos.com, bvanassche@acm.org, hch@lst.de,
+        ming.lei@redhat.com, niklas.cassel@wdc.com
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
+ <1666693096-180008-17-git-send-email-john.garry@huawei.com>
+ <6c0a4a75-786a-c946-57f2-c511bd765bcc@opensource.wdc.com>
+ <d4535f4f-d9cf-30de-ce8c-9d8ee9c0decb@suse.de>
+ <5417d401-6fb3-c1d7-58df-e24e0013cfb8@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <5417d401-6fb3-c1d7-58df-e24e0013cfb8@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-On 10/27/22 10:50 AM, Damien Le Moal wrote:
-
-> Rename ata_rwcmd_protocol() to ata_set_rwcmd_protocol() to better
-> reflect the fact that this function sets a task file command and
-> protocol. The arguments order is also reversed and the function return
-> type changed to a bool to indicate if the command and protocol were set
-> corretly (instead of returning a completely arbitrary "-1" value.
-
-   Correctly. :-)
-
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->  drivers/ata/libata-core.c | 26 ++++++++++++++------------
->  1 file changed, 14 insertions(+), 12 deletions(-)
+On 10/27/22 11:16, Damien Le Moal wrote:
+> On 10/27/22 17:11, Hannes Reinecke wrote:
+>> On 10/27/22 03:34, Damien Le Moal wrote:
+>>> On 10/25/22 19:18, John Garry wrote:
+>>>> Currently the per-ata device sdev is allocated as part of the scsi
+>>>> target
+>>>> scan, which is after the ata port probe.
+>>>>
+>>>> However it is useful to have the sdev available in the port probe. As an
+>>>> example of an advantage, if the request queue is available in the probe
+>>>> (which it would be if the sdev is available), then it is possible to use
+>>>> a SCSI cmnd for ATA internal commands. The benefit of this is then we
+>>>> can
+>>>> put the ATA qc structure in the SCSI cmnd private data. It will also be
+>>>> useful if we want to send ATA internal commands as requests.
+>>>>
+>>>> Export scsi_target_reap() so that it can be used to put the extra
+>>>> reference we get when allocating the sdev.
+>>>>
+>>>> Signed-off-by: John Garry <john.garry@huawei.com>
+>>>> ---
+>>>>    drivers/ata/libata-eh.c   |  1 +
+>>>>    drivers/ata/libata-scsi.c | 23 +++++++++--------------
+>>>>    drivers/scsi/scsi_scan.c  |  1 +
+>>>>    3 files changed, 11 insertions(+), 14 deletions(-)
+>>>>
+>>>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>>>> index 08e11bc312c2..1ed5b1b64792 100644
+>>>> --- a/drivers/ata/libata-eh.c
+>>>> +++ b/drivers/ata/libata-eh.c
+>>>> @@ -3446,6 +3446,7 @@ static int ata_eh_schedule_probe(struct
+>>>> ata_device *dev)
+>>>>          ata_eh_detach_dev(dev);
+>>>>        ata_dev_init(dev);
+>>>> +    ata_scsi_setup_sdev(dev);
+>>>>        ehc->did_probe_mask |= (1 << dev->devno);
+>>>>        ehc->i.action |= ATA_EH_RESET;
+>>>>        ehc->saved_xfer_mode[dev->devno] = 0;
+>>>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>>>> index efdba852e363..476e0ef4bd29 100644
+>>>> --- a/drivers/ata/libata-scsi.c
+>>>> +++ b/drivers/ata/libata-scsi.c
+>>>> @@ -1109,7 +1109,12 @@ int ata_scsi_dev_config(struct scsi_device
+>>>> *sdev, struct ata_device *dev)
+>>>>        if (dev->flags & ATA_DFLAG_TRUSTED)
+>>>>            sdev->security_supported = 1;
+>>>>    -    dev->sdev = sdev;
+>>>> +    /*
+>>>> +     * Put extra reference which we get when allocating the starget
+>>>> +     * initially
+>>>> +     */
+>>>> +    scsi_target_reap(scsi_target(sdev));
+>>>> +
+>>>>        return 0;
+>>>>    }
+>>>>    @@ -4289,26 +4294,16 @@ void ata_scsi_scan_host(struct ata_port
+>>>> *ap, int sync)
+>>>>     repeat:
+>>>>        ata_for_each_link(link, ap, EDGE) {
+>>>>            ata_for_each_dev(dev, link, ENABLED) {
+>>>> -            struct scsi_device *sdev;
+>>>> +            struct Scsi_Host *shost = ap->scsi_host;
+>>>>                int channel = 0, id = 0;
+>>>>    -            if (dev->sdev)
+>>>> -                continue;
+>>>> -
+>>>>                if (ata_is_host_link(link))
+>>>>                    id = dev->devno;
+>>>>                else
+>>>>                    channel = link->pmp;
+>>>>    -            sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
+>>>> -                         NULL);
+>>>> -            if (!IS_ERR(sdev)) {
+>>>> -                dev->sdev = sdev;
+>>>> -                ata_scsi_assign_ofnode(dev, ap);
+>>>
+>>> Is there something equivalent to what this function does inside
+>>> scsi_scan_target() ? I had a quick look but did not see anything...
+>>>
+>> Typically, the SCSI layer has two ways of scanning.
+>> One it the old-style serial scanning (originating in the old SCSI
+>> parallel model):
+>> The scanning code will blindly scan _all_ devices up to max_luns, and
+>> attach every device for which the scanning code returns 'OK'.
+>> The other one is to issue REPORT_LUNS and scan all LUNs returned there.
+>>
+>> Mapped to libata we would need to figure out a stable SCSI enumeration,
+>> given that we have PMP and slave devices to content with.
+>> To my knowledge we have ATA ports, each can have either a 'master' and
+>> 'slave' device, _or_ it be a PMP port when it can support up to 16
+>> devices, right?
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 884ae73b11ea..56ddcbaa0c6f 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -574,17 +574,18 @@ static const u8 ata_rw_cmds[] = {
->  };
->  
->  /**
-> - *	ata_rwcmd_protocol - set taskfile r/w commands and protocol
-> + *	ata_set_rwcmd_protocol - set taskfile r/w command and protocol
-> + *	@dev: target device for the tf
+> yes
+> 
+>> Point being, master/slave and PMP are exclusive, right?
+> 
+> Never heard of pmp with ide cable :)
+> 
+See?
 
-   s/tf/taskfile/?
+>> So we can make the master as LUN 0, and the slave as LUN 1.
+> 
+> Yes, but isn't that a little wrong ? That would assume that the ata port
+> is the device and the ata devices the luns of that device. But beside
+> the "link busy" stuff that needs to be dealt with, master and slave are
+> independent devices, unlike LUNs. No ?
+> Well; technically, yes.
 
->   *	@tf: command to examine and configure
-> - *	@dev: device tf belongs to
-[...]
+But we already enumerate the ata ports (which is typically done by the 
+hardware/PCI layer etc), and if we were try to model slave devices as 
+independent ports we would either have to insert a numbering (awkward) 
+or add a number at the en (even more awkward).
 
-MBR, Sergey
+And the one key takeaway from the 'multiple actuators' discussion is 
+that LUNs _are_ independent (cf all the hoops they had to jump through 
+to define a command spanning several LUNs ...)(which, incidentally, we 
+could leverage here, too ...), and the target port really only serves as 
+an enumeration thingie to address the LUNs.
+
+So we _could_ map the master device on LUN 0 and the slave device on LUN 
+1 with no loss of functionality, _but_ enable a consistent SCSI enumeration.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
+
