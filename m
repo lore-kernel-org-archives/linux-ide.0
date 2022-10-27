@@ -2,120 +2,130 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DDBBC67871
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Oct 2022 07:50:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50EE8C67871
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Oct 2022 07:51:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234370AbiJ0Hut (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Oct 2022 03:50:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50142 "EHLO
+        id S234517AbiJ0HvJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Oct 2022 03:51:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234467AbiJ0Huk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2022 03:50:40 -0400
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7839F50F9A
-        for <linux-ide@vger.kernel.org>; Thu, 27 Oct 2022 00:50:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1666857038; x=1698393038;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=ZvxT68TPawr5kMpnZe7jSWLnJqX8MsbOD5/LZPH9N40=;
-  b=ov8fvjklP6rNCnUl0ZPoN7ehO60l43S0qXnVLH3Dzx+7BSHZITCrB1JG
-   wLqumL62NFF9eia0MFwMfEqt1gR2/AE0Ie6vFggFTOeHmh4P3IzF53/ug
-   2Aqx/OACOdqZusg8pbtWm4uRP50+Y86KO4lwnRXhOBxuX5UgmgSbwQyS4
-   BTpzFoLHJ0YI4zn8njHV9KNtf0REqQSCh1hdIeRHqMOgB5MQnTVGB+CDE
-   RmJn8/9vp7Plx3TLzQL4OkX2/7DlcWWIu7k2QqQMkeQnjcao9Qd2/VekJ
-   rgn/EsA+7arRY3Mj5l99LEnLY270RQql/YKyIrP08DefQ4zrAxmyBF1Za
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.95,217,1661788800"; 
-   d="scan'208";a="214853401"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Oct 2022 15:50:35 +0800
-IronPort-SDR: K8JBNUBeV5I1afT5RVcuXqgTvM76BpRm3cF9fYt/uKc2KVFVhOTSP3d4uCArULu7t9vO1nv2eN
- hc5TxTNZeam842FoFpRZc1d0gXwv5JlpCZrj3o6hbWJ6I8VgA6gwnnmVI3rRGIU5aUOm89JntY
- d6y6Ny76o927y+JgcJ18//OT9Wm6fyXZ6TKcHD1bTS/NfcupRyxsv1dkAVI5KmR38HkyRCtpWI
- Dob2uNbh5cQzt6yrAniNO2DkJ61B971IMOACWvShRq+0AB5VbXSWkrps/sDD/Nrn124qmDcZ5B
- 4Ee6t7qHzaKvDc1AnGHb13yM
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2022 00:09:55 -0700
-IronPort-SDR: Q8ZC/jTwjVQFqVprI3KohK/Ak6WwSW+IZ21q11vAQ1RnueibkHaeSuBA2Ov5X13YGPZiLnY2DM
- aAc2fwg9aKhMKYTYIIzTOQnkRDYzUO8iRl4O/ZW37kENGn8TQm4kWJV5J9vpxUwlbBVSsS9Wj+
- 3dZt1V7IlRX8PL825Yk40F+nHXAJ6bTe+p8eVAW93QPr7gbFrr5CHlWkwxLksZ6ybmauavhCKm
- X/08eNXo6/6ykup00AqAZTlKWpF5YA8R6caSKhdFsfmm4OJBq870cA3l+nzIMxenMESyd+R8PQ
- Nt4=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 27 Oct 2022 00:50:35 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4MydBy13z4z1RvTp
-        for <linux-ide@vger.kernel.org>; Thu, 27 Oct 2022 00:50:34 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1666857033; x=1669449034; bh=ZvxT68TPawr5kMpnZe
-        7jSWLnJqX8MsbOD5/LZPH9N40=; b=ZUjnsPudx1aC5KC4KJ9IvGzAal4oQgnZgv
-        E6enAGX/s1AE+YEFnygtbInZeYWAETFxnnqaO+6vOqBOa7Rs8Bf+1ziJjar3QLQI
-        /+CDEZy+pz19+0Li6/NpUbf65TpvT3yudpYKY9GIGBxK+6oNfZRvk0LYeMKX5EoZ
-        abLelfvWmUnrcIXUB/ZhWOdcOETHwdhoUnZ8cgyRf5gPn7D0VXRwxCgbbDKeU/MX
-        WMQ6LbgtC7l2GuQ18jXZWQiKC9rnZlK9m3cSb+3LGbgcsnx3DfctaRgu1lkyGGSQ
-        CUVOBsu5gYCDqM1UtTqhr3hjjB/FqNN28cDYt7FUqr81JiCIuY5w==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id GuRAki6m8hy5 for <linux-ide@vger.kernel.org>;
-        Thu, 27 Oct 2022 00:50:33 -0700 (PDT)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4MydBx20b4z1RvLy;
-        Thu, 27 Oct 2022 00:50:33 -0700 (PDT)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-ide@vger.kernel.org,
-        "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>
-Cc:     Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v3 6/6] ata: libata: Enable fua support by default
-Date:   Thu, 27 Oct 2022 16:50:26 +0900
-Message-Id: <20221027075026.240017-7-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.37.3
-In-Reply-To: <20221027075026.240017-1-damien.lemoal@opensource.wdc.com>
-References: <20221027075026.240017-1-damien.lemoal@opensource.wdc.com>
+        with ESMTP id S234241AbiJ0HvJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2022 03:51:09 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20202A287D;
+        Thu, 27 Oct 2022 00:51:03 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 9178A1FDFB;
+        Thu, 27 Oct 2022 07:51:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1666857062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KW/ilq8EeIAm/XWevD2VqVdEVtwgp+eQrNdLBxj+VgI=;
+        b=OCmdeJxHcSlsxMdZdzBBEXBfyqcZ0GgftjK5FUv6GyZ/az5wshetS/ofhrLLDeTdMiSiIb
+        nNlTj/4aJdd+0bGEGAI21TZth7hgaVOn8+8L7OknRj7ovhmB5wns/FfIvxjpxRBSefd1HW
+        ugBcA3i40gOjaF2C4JdK2jZ6ClRyVI4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1666857062;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KW/ilq8EeIAm/XWevD2VqVdEVtwgp+eQrNdLBxj+VgI=;
+        b=px1TAfPvKNwPje1yeI4HyYEBfMYX9Qb31If2wK3ByrXC9j8Y5c9FlwY/GH/l1zePnVNtmn
+        I4iZ0MXJT3wohfBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 55FB6134CA;
+        Thu, 27 Oct 2022 07:51:01 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id gTgsE2U4WmPdLgAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 27 Oct 2022 07:51:01 +0000
+Message-ID: <5db88114-559b-970a-0437-9acdacb47f8b@suse.de>
+Date:   Thu, 27 Oct 2022 09:51:00 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH RFC v3 03/22] scsi: core: Implement reserved command
+ handling
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.garry@huawei.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        jinpu.wang@cloud.ionos.com, bvanassche@acm.org, hch@lst.de,
+        ming.lei@redhat.com, niklas.cassel@wdc.com
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com
+References: <1666693096-180008-1-git-send-email-john.garry@huawei.com>
+ <1666693096-180008-4-git-send-email-john.garry@huawei.com>
+ <cd5df8e0-03d1-8f22-0367-eb7c76bc70e7@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <cd5df8e0-03d1-8f22-0367-eb7c76bc70e7@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Change the default value of the fua module parameter to 1 to enable fua
-support by default for all devices supporting it.
+On 10/27/22 03:18, Damien Le Moal wrote:
+> On 10/25/22 19:17, John Garry wrote:
+>> From: Hannes Reinecke <hare@suse.de>
+>>
+>> Quite some drivers are using management commands internally, which
+>> typically use the same hardware tag pool (ie they are being allocated
+>> from the same hardware resources) as the 'normal' I/O commands.
+>> These commands are set aside before allocating the block-mq tag bitmap,
+>> so they'll never show up as busy in the tag map.
+>> The block-layer, OTOH, already has 'reserved_tags' to handle precisely
+>> this situation.
+>> So this patch adds a new field 'nr_reserved_cmds' to the SCSI host
+>> template to instruct the block layer to set aside a tag space for these
+>> management commands by using reserved tags.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> #jpg: Set tag_set->queue_depth = shost->can_queue, and not
+>> = shost->can_queue + shost->nr_reserved_cmds;
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+>> ---
+>>   drivers/scsi/hosts.c     |  3 +++
+>>   drivers/scsi/scsi_lib.c  |  2 ++
+>>   include/scsi/scsi_host.h | 15 ++++++++++++++-
+>>   3 files changed, 19 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>> index 12346e2297fd..db89afc37bc9 100644
+>> --- a/drivers/scsi/hosts.c
+>> +++ b/drivers/scsi/hosts.c
+>> @@ -489,6 +489,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>>   	if (sht->virt_boundary_mask)
+>>   		shost->virt_boundary_mask = sht->virt_boundary_mask;
+>>   
+>> +	if (sht->nr_reserved_cmds)
+>> +		shost->nr_reserved_cmds = sht->nr_reserved_cmds;
+>> +
+> 
+> Nit: the if is not really necessary I think. But it does not hurt.
+> 
+Yes, we do.
+Not all HBAs are able to figure out the number of reserved commands 
+upfront; some modify that based on the PCI device used etc.
+So I'd keep it for now.
 
-FUA support can be disabled for individual drives using the
-force=3D[ID]nofua libata module argument.
+Cheers,
 
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Maciej S. Szmigiero <maciej.szmigiero@oracle.com>
----
- drivers/ata/libata-core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ec732c47b6fb..77a7be74e65e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -127,9 +127,9 @@ int atapi_passthru16 =3D 1;
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI dev=
-ices (0=3Doff, 1=3Don [default])");
-=20
--int libata_fua =3D 0;
-+int libata_fua =3D 1;
- module_param_named(fua, libata_fua, int, 0444);
--MODULE_PARM_DESC(fua, "FUA support (0=3Doff [default], 1=3Don)");
-+MODULE_PARM_DESC(fua, "FUA support (0=3Doff, 1=3Don [default])");
-=20
- static int ata_ignore_hpa;
- module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
---=20
-2.37.3
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
