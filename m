@@ -2,153 +2,107 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6044FC38A02
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Oct 2022 16:45:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14425FA3740
+	for <linux-ide@archiver.kernel.org>; Fri, 28 Oct 2022 21:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229686AbiJ1Qpv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 28 Oct 2022 12:45:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32770 "EHLO
+        id S229866AbiJ1VHe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 28 Oct 2022 17:07:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229776AbiJ1Qpt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Oct 2022 12:45:49 -0400
-Received: from vps-vb.mhejs.net (vps-vb.mhejs.net [37.28.154.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0827065003
-        for <linux-ide@vger.kernel.org>; Fri, 28 Oct 2022 09:45:46 -0700 (PDT)
-Received: from MUA
-        by vps-vb.mhejs.net with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <mail@maciej.szmigiero.name>)
-        id 1ooSUE-0005FZ-Db; Fri, 28 Oct 2022 18:45:38 +0200
-Message-ID: <3f14c490-0ac4-4355-4b56-567d5547049c@maciej.szmigiero.name>
-Date:   Fri, 28 Oct 2022 18:45:33 +0200
+        with ESMTP id S229668AbiJ1VHS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Oct 2022 17:07:18 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDC75248C9E
+        for <linux-ide@vger.kernel.org>; Fri, 28 Oct 2022 14:07:15 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.84.89) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sat, 29 Oct
+ 2022 00:07:06 +0300
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: [PATCH] ata: pata_legacy: fix pdc20230_set_piomode()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+CC:     Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, <llvm@lists.linux.dev>
+Organization: Open Mobile Platform
+Message-ID: <99d91d0e-d3fc-5492-ddca-6da6e65e1e89@omp.ru>
+Date:   Sat, 29 Oct 2022 00:07:06 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [PATCH v3 4/6] ata: libata: Fix FUA handling in ata_build_rw_tf()
-Content-Language: en-US, pl-PL
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-References: <20221027075026.240017-1-damien.lemoal@opensource.wdc.com>
- <20221027075026.240017-5-damien.lemoal@opensource.wdc.com>
- <69b5067c-dd13-a56a-3267-867902953045@suse.de>
- <e171ce82-fdd5-0db2-c821-849dd9467fef@opensource.wdc.com>
-Cc:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
-From:   "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
-In-Reply-To: <e171ce82-fdd5-0db2-c821-849dd9467fef@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.84.89]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 10/28/2022 20:37:24
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 173322 [Oct 28 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.20.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.84.89 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;31.173.84.89:7.7.3,7.4.1
+X-KSE-AntiSpam-Info: {iprep_blacklist}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.84.89
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 10/28/2022 20:40:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 10/28/2022 6:31:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 28.10.2022 00:22, Damien Le Moal wrote:
-> On 10/27/22 18:42, Hannes Reinecke wrote:
->> On 10/27/22 09:50, Damien Le Moal wrote:
->>> If a user issues a write command with the FUA bit set for a device with
->>> NCQ support disabled (that is, the device queue depth was set to 1), the
->>> LBA 48 command WRITE DMA FUA EXT must be used. However,
->>> ata_build_rw_tf() ignores this and first test if LBA 28 can be used.
->>> That is, for small FUA writes at low LBAs, ata_rwcmd_protocol() will
->>> cause the write to fail.
->>>
->>> Fix this by preventing the use of LBA 28 for any FUA write request.
->>> While at it, also early test if the request is a FUA read and fail these
->>> requests for the NCQ-disabled case instead of relying on
->>> ata_rwcmd_protocol() returning an error.
->>>
->>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>> ---
->>>    drivers/ata/libata-core.c | 17 +++++++++++++++--
->>>    1 file changed, 15 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index 81b20ffb1554..fea06f41f371 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -725,9 +725,21 @@ int ata_build_rw_tf(struct ata_queued_cmd *qc, u64 block, u32 n_block,
->>>    		    class == IOPRIO_CLASS_RT)
->>>    			tf->hob_nsect |= ATA_PRIO_HIGH << ATA_SHIFT_PRIO;
->>>    	} else if (dev->flags & ATA_DFLAG_LBA) {
->>> +		bool lba28_ok;
->>> +
->>> +		if (tf->flags & ATA_TFLAG_FUA) {
->>> +			/* FUA reads are not defined */
->>> +			if (!(tf->flags & ATA_TFLAG_WRITE))
->>> +				return -EINVAL;
->>> +			/* We need LBA48 / WRITE DMA FUA EXT for FUA writes */
->>> +			lba28_ok = false;
->>> +		} else {
->>> +			lba28_ok = lba_28_ok(block, n_block);
->>> +		}
->>> +
->>>    		tf->flags |= ATA_TFLAG_LBA;
->>>    
->>> -		if (lba_28_ok(block, n_block)) {
->>> +		if (lba28_ok) {
->>>    			/* use LBA28 */
->>>    			tf->device |= (block >> 24) & 0xf;
->>>    		} else if (lba_48_ok(block, n_block)) {
->>
->> I am still skeptical about this change.
->> Having checked the code I don't think that we ever issue a
->> REQ_READ|REQ_FUA; but at the same time there doesn't seem to be a strict
->> rule. I wonder if we shouldn't move that check into the block layer, and
->> error out any attempts to issue such?
-> 
-> That definitely would be good for ATA, but potentially restrictive for
-> scsi ? Not sure about NVMe, I have not checked the specs. That said, the
-> only reasonable reason to do an FUA read that I can think of would be a
-> "scrub" like write-and-verify feature. And I do not think that any FS
-> implement their scrub process using FUA.
-> 
->> Otherwise we would error out an otherwise fine I/O (which we _could_
->> have handled via PREFLUSH etc semantics), which I don't think is a good
->> idea.
-> 
-> Well no. Given that there is no FUA read command for the non-ncq case,
-> doing the same as for a write FUA in reverse order (synchronize cache
-> first, then read) would still not necessarily force the drive to access
-> the media because synchronize cache is *not* and "invalidate cache"
-> operation. So we cannot use the block layer either as we potentially would
-> end up lying about the media access part of "FUA". With that in mind,
-> failing the FUA read is a much safer option I think.
-> 
-> What we could do given that we now have FUA restricted to NCQ is this:
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 77a7be74e65e..61e449877d8d 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -693,7 +693,7 @@ int ata_build_rw_tf(struct ata_queued_cmd *qc, u64
-> block, u32 n_block,
->          tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
->          tf->flags |= tf_flags;
-> 
-> -       if (ata_ncq_enabled(dev)) {
-> +       if (ata_ncq_enabled(dev) || tf->flags & ATA_TFLAG_FUA) {
->                  /* yay, NCQ */
->                  if (!lba_48_ok(block, n_block))
->                          return -ERANGE;
-> 
-> That is, ignore if NCQ is off and always use NCQ read/write for FUA.
-> I am not a huge fan of this as that would lead to mixing NCQ and non-NCQ
-> commands when the drive QD is set to 1. Not exactly nice, which is why I
-> did not initially modify the patch to do that.
-> However, with this change, we would be fully on par with scsi and can do
-> both read and write FUA with the same semantic, as expected from the user
-> if we declare that we support FUA.
-> 
-(..)
-> 
-> Thoughts ?
-> 
+Clang gives a warning when compiling pata_legacy.c with 'make W=1' about
+the 'rt' local variable in pdc20230_set_piomode() being set but unused.
+Quite obviously, there is an outb() call missing to write back the updated
+variable. Moreover, checking the docs by Petr Soucek revealed that bitwise
+AND should have been done with a negated timing mask and the master/slave
+timing masks were swapped while updating...
 
-To be honest, this seems like much cleaner solution to me - as you say,
-it makes libata consistent with SCSI.
+Fixes: 669a5db411d8 ("[libata] Add a bunch of PATA drivers.")
+Reported-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-In this case, obviously the FUA support still needs to be dependent on
-NCQ support.
+---
+ drivers/ata/pata_legacy.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thanks,
-Maciej
-
+Index: libata/drivers/ata/pata_legacy.c
+===================================================================
+--- libata.orig/drivers/ata/pata_legacy.c
++++ libata/drivers/ata/pata_legacy.c
+@@ -315,9 +315,10 @@ static void pdc20230_set_piomode(struct
+ 	outb(inb(0x1F4) & 0x07, 0x1F4);
+ 
+ 	rt = inb(0x1F3);
+-	rt &= 0x07 << (3 * adev->devno);
++	rt &= ~(0x07 << (3 * !adev->devno));
+ 	if (pio)
+-		rt |= (1 + 3 * pio) << (3 * adev->devno);
++		rt |= (1 + 3 * pio) << (3 * !adev->devno);
++	outb(rt, 0x1F3);
+ 
+ 	udelay(100);
+ 	outb(inb(0x1F2) | 0x01, 0x1F2);
