@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A13FA3740
-	for <linux-ide@archiver.kernel.org>; Mon, 31 Oct 2022 05:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C018FA3741
+	for <linux-ide@archiver.kernel.org>; Mon, 31 Oct 2022 05:59:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229469AbiJaFqZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 31 Oct 2022 01:46:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58066 "EHLO
+        id S229494AbiJaF7R (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 31 Oct 2022 01:59:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbiJaFqZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2022 01:46:25 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A00FEA186
-        for <linux-ide@vger.kernel.org>; Sun, 30 Oct 2022 22:46:20 -0700 (PDT)
+        with ESMTP id S229480AbiJaF7Q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2022 01:59:16 -0400
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7981D5FB7
+        for <linux-ide@vger.kernel.org>; Sun, 30 Oct 2022 22:59:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667195180; x=1698731180;
+  t=1667195955; x=1698731955;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=kw5WVDheaT4abpviVXxRq7vxgC1kJcugKS9M3lKgvYI=;
-  b=o3g+PPNpKT9anRhii1rw5p6QH8py0A0d3J10wY2vUAdZQaiwRg+OdYWv
-   sm7IFvKsKJEAaLLjgMV9LRe8Ud+KB+hwczn7vJmhS6ZhZDt+YUNK3kSOO
-   77e8pOjbuJATRKxO22bf3INwcje4wWboWnpnXsPtyuI4i6W0fOeohZHvn
-   wGGNi4NxsdLyckCe/H2n0RgCjfsuOyjthiVQycEBBZhLDu0R/Sg2qx63A
-   UMRpzP8rudiIz+knviueAY3AMDGvymr+Q1n+Opz9lOxe5MMvaq9TEqGJj
-   FDeRedVKRPDQmmOpsqoAqQD1AXGzsgKnE0GWhzedSPFDtLu0/qrWCnuzA
-   w==;
+  bh=vflxvR+XmHinY4eo+kW8luvLFnoJAGpWj7D2G8z6iqY=;
+  b=SFTwc1hwVzhGrBrH/hq5XDE7qt3HCUK3eKgz0vAE1gA96Vqb6CjLWfWC
+   ZiRpyIcpKBOwo/1H/TKyRXzmTixt/Ln75tQbOvs49q5aYH92NFfOJj+QE
+   Dsx2julNuh1ToDqz5sNFq05tbn9SqClWKXlV3Dmagq3nZDtVrrNcKcTf+
+   +yEubGi6iNP46/ArJP4sJ62S3LtDmFFV+BAWckUknY/iZATnBov2nbLKj
+   tgqWuLeXRRXcXNyvvWnbTmdP1rhHFSMYJSmSkht0E7/x0QMhSsfJBZ02h
+   bmufZHz/Xwm6WcgTNUkyJC5BxmSx/pfA3UrGymVwLrgGDYo45tny7TgSu
+   g==;
 X-IronPort-AV: E=Sophos;i="5.95,227,1661788800"; 
-   d="scan'208";a="213400017"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Oct 2022 13:46:19 +0800
-IronPort-SDR: iNTnAs+I8iTLb8E1ZO9qzO18SPQVVnGFw5qBmacMptSebA7H2PBxSsRDDZWJyPRXSHrFUS8J6Y
- XLiZ0Z9QG+hfDQoDYOqU5IvlSJFX+y8+QMQimmRg0aXg8VQy5ykoVZzzY0hXmXAZj5dtd5Ltr7
- W+BObWxQNlJNGO+0vCuCtQSH2rh80nkz0jJDNUUZXjESXcgGM1sXwuwU0ChTugR5szweFUt0lg
- c3sBpMJjUT792mwkrSPpUPfz47EGTCCsK08mtoGFLJ2z2nru+oX4ZUrKWcz4FbToy33OiQTHac
- xnXBdsjc1kJs0l1UDf2oF9Ia
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 21:59:52 -0700
-IronPort-SDR: Gbn2rrn0ywVa+33to5voFs7hnkt3QQY9fjklf4FE2DIMPNONILxSYTmRHcoN4fsto/R32lHstS
- YaEyRpAOOhHwXzL+I7IZ8hLHLHEJePScp/CtNVE5q5FcpjJ4prV2dkFJiwVwJlOL7quBBschwC
- 6h3K2O9wFUOk5sk6Wfj+AfZNooQaOj/WPgbqfBjoH6dNVII11b5akcqPrv5f89JR5GjZ8pqNs0
- fkQ5zoFk135ysshFoqu5o9qziZF873Li0arQpg5vg+JVDR9mkkpmfbHcQsh1c4ROFJrTROKt+G
- xzw=
+   d="scan'208";a="327211888"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Oct 2022 13:59:13 +0800
+IronPort-SDR: 54nTbBZ1KCxOZKYw8/zm/4xiBksV18wFgeQzt8CTshWLpyJnGzWYVGxL/VFGBZGTH2AqfYmefT
+ M9zjL5/71aWlQZ/kPxr1nU1/MvyB0+86xxct+buHNbEa9ryHcmg2OIuuYcII8+eXsF7HRGBYMk
+ iWm1gU/yOIH/TpLtTM0G9QqGnK/KABvq50qr5em13LtIfyxjRRO3REL5lr7QyeKJFvCjMmNmBi
+ Ozy4RblJVnWuozcXdN2Qne6fE3tJPNJ9On1QWY/zl6vPATz6mu+bm/fa5cnJGmRhA9WWYq4Qbd
+ bQjVfkE8QWSslrhJevDECR7f
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 22:18:30 -0700
+IronPort-SDR: HjTO1VJT9BYa4lHo02xoz6lmN+y1QuTfjAGVYWwjuMNx+VpcGdLtXTi/HeogeG68JxVZno3GZ+
+ Ri3mN3jCTM1F5cGQvnlvtYZgOAss/c3BV2KBl/cdRRutyEhmI5+9Isl1VuCkHaZWOE0+VZB8j4
+ MOwv7EQ69uOy4LyEII2bEMIVexNwLo1xLM2NAGvMsFLsjQF/TM660SiOYN9UJO1MGHl9am2ZEU
+ lgdfEWLRLd/1rMN3m56LoVPyCLjaEAbTG/r4M5FziCmweuaL/961+LO3ZK0mSPqX/QsBuU1vWj
+ Hw0=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 22:46:20 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 22:59:14 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N12Fl1tf0z1Rwrq
-        for <linux-ide@vger.kernel.org>; Sun, 30 Oct 2022 22:46:19 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N12Xd2FPwz1RwvT
+        for <linux-ide@vger.kernel.org>; Sun, 30 Oct 2022 22:59:13 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,75 +56,126 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1667195178; x=1669787179; bh=kw5WVDheaT4abpviVXxRq7vxgC1kJcugKS9
-        M3lKgvYI=; b=a8KzAlosFGrCyDiy748MtGtTbG8aBZd0fJGJ3YMel69Gs5iRRfT
-        OZt20tn2a8Cg5lIHa8VGMe3KIq46rVcwtzyPg+K2REGaRvM6lm3AcOVlc/6rczUm
-        I3dXUOj/m/vr6MTxJu3bviHvnajPzVMWAaBRVXRBjapzLzF5Ek8SeAIdJ6bfcdOo
-        lJIGLRXsX79KnThFDI4T0TwPD75ew7HaSiexhazoAxoxTmbw4l6TEN/ral/8yZdt
-        wG9wbPq+yiNW5hm3Zn2zucKOHmZVcQ9Xhxx/G8aDURyaSqg7IcMGI4yHupySpOaE
-        sG+UTlH3JkCHSwb0bK4cB7fdUOiPeJM1hHg==
+        1667195952; x=1669787953; bh=vflxvR+XmHinY4eo+kW8luvLFnoJAGpWj7D
+        2G8z6iqY=; b=ixW6Y4O5mJwOkP/wNk7ftWn6xwxRMW+qeUb/7TDih7EuLpkIHjS
+        WynJ4X8xzdH/ZQEX2I0CGWT71Z/9mD4qhXJ5FW1bm8Vxa5pT1U88iru30w6bwu4P
+        rjOn6JQW2kjIHHon2/VtZgX1U2fU3vwDkmhSwp4dhSVeJod6jSVfpgLAKv/XH2tb
+        E+Mtl5VoBAkZXZ76uxKHnVkit5JjvyBi35jdf2eWxeaLpTs4dq46dqRyJR7UYfyJ
+        nH3QMo9AGQMgv58LXMO8umBhboUm7URL5oKkKiKb1RztrlBrX8zqqrsTvFGLCFOT
+        KnkAkPfVRc4tXrS4kfbkhSPtgfdsk9ID7vQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id wXk1BcHkh-Y3 for <linux-ide@vger.kernel.org>;
-        Sun, 30 Oct 2022 22:46:18 -0700 (PDT)
+        with ESMTP id WX3FtAT_WiAa for <linux-ide@vger.kernel.org>;
+        Sun, 30 Oct 2022 22:59:12 -0700 (PDT)
 Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N12Fk0DRwz1RvLy;
-        Sun, 30 Oct 2022 22:46:17 -0700 (PDT)
-Message-ID: <491dfec9-b6c5-5f20-a3f0-2a339e2d528c@opensource.wdc.com>
-Date:   Mon, 31 Oct 2022 14:46:16 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N12XY1nGYz1RvLy;
+        Sun, 30 Oct 2022 22:59:09 -0700 (PDT)
+Message-ID: <0e4994f7-f131-39b0-c876-f447b71566cd@opensource.wdc.com>
+Date:   Mon, 31 Oct 2022 14:59:07 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.4.0
-Subject: Re: [PATCH RESEND] ata: palmld: fix return value check in
- palmld_pata_probe()
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
 Content-Language: en-US
-To:     Yang Yingliang <yangyingliang@huawei.com>,
-        linux-ide@vger.kernel.org
-Cc:     s.shtylyov@omp.ru, arnd@arndb.de
-References: <20221029074931.3189275-1-yangyingliang@huawei.com>
+To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.de, bvanassche@acm.org,
+        hch@lst.de, ming.lei@redhat.com, niklas.cassel@wdc.com
+Cc:     axboe@kernel.dk, jinpu.wang@cloud.ionos.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com, john.garry2@mail.dcu.ie
+References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ <1666693976-181094-3-git-send-email-john.garry@huawei.com>
+ <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+ <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
+ <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
+ <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
+ <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
+ <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20221029074931.3189275-1-yangyingliang@huawei.com>
+In-Reply-To: <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/29/22 16:49, Yang Yingliang wrote:
-> If devm_platform_ioremap_resource() fails, it never return
-> NULL pointer, replace the check with IS_ERR().
+On 10/28/22 17:33, John Garry wrote:
+> On 28/10/2022 09:07, Damien Le Moal wrote:
+>>> Well, yeah. So if some error happens and EH kicks in, then full queue
+>>> depth of requests may be allocated. I have seen this for NCQ error. So
+>>> this is why I make in very first patch change allow us to allocate
+>>> reserved request from sdev request queue even when budget is fully
+>>> allocated.
+>>>
+>>> Please also note that for AHCI, I make reserved depth =1, while for SAS
+>>> controllers it is greater. This means that in theory we could alloc > 1x
+>>> reserved command for SATA disk, but I don't think it matters.
+>> Yes, 1 is enough. However, is 1 reserved out of 32 total, meaning that
+>> the
+>> user can only use 31 tags ? or is it 32+1 reserved ? which we can do
+>> since
+>> when using the reserved request, we will not use a hw tag (all reserved
+>> requests will be non-ncq).
+>>
+>> The 32 + 1 scheme will work. 
 > 
-> Fixes: 57bf0f5a162d ("ARM: pxa: use pdev resource for palmld mmio")
-> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
-> The previous patch link:
-> https://lore.kernel.org/lkml/15e09c18-792b-931c-11c7-5ef284490eba@huawei.com/T/#t
-> ---
->  drivers/ata/pata_palmld.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> Yes, 32 + 1 is what we want. I now think that there is a mistake in my
+> code in this series for ahci.
 > 
-> diff --git a/drivers/ata/pata_palmld.c b/drivers/ata/pata_palmld.c
-> index 400e65190904..51caa2a427dd 100644
-> --- a/drivers/ata/pata_palmld.c
-> +++ b/drivers/ata/pata_palmld.c
-> @@ -63,8 +63,8 @@ static int palmld_pata_probe(struct platform_device *pdev)
->  
->  	/* remap drive's physical memory address */
->  	mem = devm_platform_ioremap_resource(pdev, 0);
-> -	if (!mem)
-> -		return -ENOMEM;
-> +	if (IS_ERR(mem))
-> +		return PTR_ERR(mem);
->  
->  	/* request and activate power and reset GPIOs */
->  	lda->power = devm_gpiod_get(dev, "power", GPIOD_OUT_HIGH);
+> So I think we need for ahci:
+> 
+> can_queue = 33
 
-Arnd has a series of patches that removes this driver from the kernel in
-6.2. Do you need this fix for a stable release ?
+Hmm.. For ATA, can_queue should be only 32. nr_tags is going to be 33
+though as we include one tag for a reserved command. No ? (may be I
+misunderstand can_queue though).
+
+> nr_reserved_cmds = 1
+> 
+> while I only have can_queue = 32
+
+Which seems right to me.
+
+> 
+> I need to check that again for ahci driver and AHCI SHT...
+> 
+>> But for CDL command completion handling, we
+>> will need a NCQ command to do a read log, to avoid forcing a queue drain.
+>> For that to reliably work, we'll need a 31+1+1 setup...
+>>
+> 
+> So is your idea to permanently reserve 1 more command from 32 commands ?
+
+Yes. Command Duration Limits has this weird case were commands may be
+failed when exceeding their duration limit with a "good status" and
+"sense data available bit" set. This case was defined to avoid the queue
+stall that happens with any NCQ error. The way to handle this without
+relying on EH (as that would also cause a queue drain) is to issue an
+NCQ read log command to fetch the "sense data for successful NCQ
+commands" log, to retrieve the sense data for the completed command and
+check if it really failed or not. So we absolutely need a reserved
+command for this, Without a reserved command, it is a nightmare to
+support (tag reuse would be another solution, but it is horrible).
+
+> Or re-use 1 from 32 (and still also have 1 separate internal command)?
+
+I am not yet 100% sure if we can treat that internal NCQ read log like
+any other read/write request... If we can, then the 1-out-of-32
+reservation would not be needed. Need to revisit all the cases we need
+to take care of (because in the middle of this CDL completion handling,
+regular NCQ errors can happen, resulting in a drive reset that could
+wreck everything as we lose the sense data for the completed requests).
+
+In any case, I think that we can deal with that extra reserved command
+on top of you current series. No need to worry about it for now I think.
+
+> 
+> Thanks,
+> John
 
 -- 
 Damien Le Moal
