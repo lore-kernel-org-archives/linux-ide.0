@@ -2,98 +2,127 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE69C433FE
-	for <linux-ide@archiver.kernel.org>; Sat, 29 Oct 2022 10:26:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC628FA3742
+	for <linux-ide@archiver.kernel.org>; Mon, 31 Oct 2022 01:53:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229634AbiJ2K0M (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 29 Oct 2022 06:26:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60130 "EHLO
+        id S229719AbiJaBxg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 30 Oct 2022 21:53:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229587AbiJ2K0K (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2022 06:26:10 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EAF6664C7
-        for <linux-ide@vger.kernel.org>; Sat, 29 Oct 2022 03:26:01 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.80.252) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sat, 29 Oct
- 2022 13:25:51 +0300
-Subject: Re: [PATCH] ata: pata_legacy: fix pdc20230_set_piomode()
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-CC:     Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>, <llvm@lists.linux.dev>
-References: <99d91d0e-d3fc-5492-ddca-6da6e65e1e89@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <a0e81265-2704-90ac-1282-c6c1977237b9@omp.ru>
-Date:   Sat, 29 Oct 2022 13:25:51 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229668AbiJaBxf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2022 21:53:35 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C65EE95AF
+        for <linux-ide@vger.kernel.org>; Sun, 30 Oct 2022 18:53:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667181214; x=1698717214;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=X5zEpX6SMAZQugAJoTV81VehZ+el5Q+3olqpJdDoQEM=;
+  b=H/qMSDYJaAoz7E88hB7YyR/86MYvnnUQWQCZKxsHVURZdBxbBIpZR10B
+   Cj6PmCLa9DotKFMLpJ0PZeQMRRw0DRgk4Rkijo4uw1COdv4CBy0hOdygI
+   b2bpecEMq0Ihtv0VbPrFaOMlP9qRBt35LAPsFb5r29dyCvSursuh2vGE5
+   i6fVax2WgnYEzW35wtVoHQvm2t4h12nNGfPRmsoF3v/VxfQuPpK9HeL3E
+   2Jp0jtW72o2buqxkwwcI3db/AHcpPgDEUh7bpHyFmCdlhdMCbe+eWWM2G
+   uA6+Cs7SnpYAi3VpKxTAJbtTaTE3EMSka5XgmleHR9Y8rotK6er7uwD1t
+   g==;
+X-IronPort-AV: E=Sophos;i="5.95,227,1661788800"; 
+   d="scan'208";a="220246015"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Oct 2022 09:53:33 +0800
+IronPort-SDR: 1l0KZhd/nYSML/u1KPLZhVKa9lJGbvzJPUavl7fZOvDuqmVNA7Zj+qa33NLIFg7GBglfJ5JXQA
+ TtkCSdZeZ3TutOB4uj5ii5YjoVzwpZsdP4HGgy3GqrY4byhxL4UktGAIWCO4HNUNKfkPJXGBZz
+ RmYBbkAf+Ycrmvw9M1r+M6GT3bFcWdh6tAGrS0gFx3e2I0lFFm0+D0w9Vh1KphI7tt2ELU334s
+ xxZILFC61HaTxKf2rIr87JT5tPj3H5BmiS+NraGS2rRxcAhPvnxm6BSPWLopHB6bcv/kfpeb+y
+ D0VCgGvAVxUS2AelRPz+cfpq
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 18:07:06 -0700
+IronPort-SDR: GmWdmj2FiZL7QmCFVpQ95hSvvC4lRpulEgg0a+O0vZWSlluTq1lh6MFc3Y5a3I0LkrIQUmWFP/
+ YuSVJR6Ijotk5JjMA3mL/BhHNpWRvDNW4SXYVRQ/qNdt5DOpkNHfA769bluFe4aCd9YFTLvdl4
+ Y/5gjf904NJ+tgYrF9oTqPxVyMhOKBfn01S9Y8IvWPMB4j/eFstfi/H4ErkA0D7olTwIKfP+m/
+ BagNJ91uv4S7OZift+ujwL2GFUlZIKcwGiH5787ABelfnn9BQzxtFlH/bDb59gWIUiwiyWnmdT
+ JsE=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Oct 2022 18:53:34 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N0x586rddz1Rwrq
+        for <linux-ide@vger.kernel.org>; Sun, 30 Oct 2022 18:53:32 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1667181212;
+         x=1669773213; bh=X5zEpX6SMAZQugAJoTV81VehZ+el5Q+3olqpJdDoQEM=; b=
+        sTVLSidPt1Z/gAxxlLa4bRTPqZbgdV37A6eSVzTt38taLgNrhdl60ypH9CJxwkrQ
+        7NMzLX2izJTDlliBO6XRqWVgG3/JyrKcnegg/54jaitdRvwF+JFIpgQ1maninTSD
+        MSiX8OHZGWbPBYielm2Fk7YcsuSoOyauteHZ6xVODMec9kRR0DIn5/8fZA8TOe8y
+        bZKDh1Madaame0dr70jiKSEufaaAeRMfO6Az0Gq99SEn6D1IeKEaUTq3OozobpfM
+        9VwA/4IvPOvjGGiR1+tXAonGxQSHRFM7kiJK0vegWbcJryB0iltJ+oINHnKTbTa+
+        yI7qJgjS0oqRSF+favvPCg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id lq64EaVgmT5D for <linux-ide@vger.kernel.org>;
+        Sun, 30 Oct 2022 18:53:32 -0700 (PDT)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N0x573JZfz1RvLy;
+        Sun, 30 Oct 2022 18:53:31 -0700 (PDT)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v4 0/7] 
+Date:   Mon, 31 Oct 2022 10:53:22 +0900
+Message-Id: <20221031015329.141954-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-In-Reply-To: <99d91d0e-d3fc-5492-ddca-6da6e65e1e89@omp.ru>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.80.252]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.20, Database issued on: 10/29/2022 09:47:12
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 173322 [Oct 28 2022]
-X-KSE-AntiSpam-Info: Version: 5.9.20.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: 31.173.80.252:7.7.3,7.4.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: {iprep_blacklist}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.80.252
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/29/2022 09:51:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 10/29/2022 6:42:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+These patches cleanup and improve libata support for the FUA device
+feature. Patch 6 enables FUA support by default for any drive that
+reports supporting the feature as well as NCQ.
 
-On 10/29/22 12:07 AM, Sergey Shtylyov wrote:
+Changes from v3:
+- Added patch 1 to prevent any block device user from issuing a
+  REQ_FUA read.
+- Changed patch 5 to remove the check for REQ_FUA read and also remove=20
+  support for ATA_CMD_WRITE_MULTI_FUA_EXT as this command is obsolete
+  in recent ACS specifications.
 
-> Clang gives a warning when compiling pata_legacy.c with 'make W=1' about
-> the 'rt' local variable in pdc20230_set_piomode() being set but unused.
-> Quite obviously, there is an outb() call missing to write back the updated
-> variable. Moreover, checking the docs by Petr Soucek revealed that bitwise
-> AND should have been done with a negated timing mask and the master/slave
-> timing masks were swapped while updating...
-> 
-> Fixes: 669a5db411d8 ("[libata] Add a bunch of PATA drivers.")
-> Reported-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> ---
+Changes from v2:
+ - Added patch 1 and 2 as preparatory patches
+ - Added patch 4 to fix FUA writes handling for the non-ncq case. Note
+   that it is possible that the drives blacklisted in patch 5 are
+   actually OK since the code back in 2012 had the issue with the wrong
+   use of LBA 28 commands for FUA writes.
 
-   Forgot to mention that the patch was done against the 'master' branch
-of libata.git...
+Changes from v1:
+ - Removed Maciej's patch 2. Instead, blacklist drives which are known
+   to have a buggy FUA support.
 
-[...]
+Damien Le Moal (7):
+  block: Prevent the use of REQ_FUA with read operations
+  ata: libata: Introduce ata_ncq_supported()
+  ata: libata: Rename and cleanup ata_rwcmd_protocol()
+  ata: libata: cleanup fua support detection
+  ata: libata: Fix FUA handling in ata_build_rw_tf()
+  ata: libata: blacklist FUA support for known buggy drives
+  ata: libata: Enable fua support by default
 
-MBR, Sergey
+ .../admin-guide/kernel-parameters.txt         |  3 +
+ block/blk-flush.c                             | 12 +++
+ drivers/ata/libata-core.c                     | 77 ++++++++++++++-----
+ drivers/ata/libata-scsi.c                     | 30 +-------
+ include/linux/libata.h                        | 34 +++++---
+ 5 files changed, 100 insertions(+), 56 deletions(-)
+
+--=20
+2.38.1
+
