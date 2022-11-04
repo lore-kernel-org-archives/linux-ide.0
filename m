@@ -2,123 +2,67 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8932CC433FE
-	for <linux-ide@archiver.kernel.org>; Thu,  3 Nov 2022 21:43:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9288C4332F
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Nov 2022 00:09:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbiKCVnl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 3 Nov 2022 17:43:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54926 "EHLO
+        id S229611AbiKDAJY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 3 Nov 2022 20:09:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbiKCVnk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Nov 2022 17:43:40 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1640EDD
-        for <linux-ide@vger.kernel.org>; Thu,  3 Nov 2022 14:43:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667511819; x=1699047819;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=2lWhfqga4/fFXjjNT44/WJxlkHVLd+9xHu0xZnKbfgk=;
-  b=RAPfLtr/V9zOrkt7zWNWN4qkJu88AOeRt43QPNx0yZpNwTVc0vl31ynF
-   /9ETgYQgvQlsbLjdw6dx+vW3yY1WiiIkMH1dSaCgRjEPFLi5T5BOhVQ/2
-   c10OP0nHe9NDGooI0IwicDqBApuAl35l8ByxDgQXU+Z8hELEdMjDMGY6k
-   WWoBbuaOAD8myk11PwEu/MVyvnbfF3y7FCH4Goz4JsIFSPupZWYSN/cHW
-   D5N3SapHl/wUCQIsy6y5FS2ucMJgN/BxcjWQ5JjWHrxcrt1+S83+t4MdC
-   4Rbo9PUFR1Y/Rev0ay4Pu8DOX7zlWMLW8qxGl8kot3nQ0BVMbQ1eKAWiK
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,135,1665417600"; 
-   d="scan'208";a="319779181"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Nov 2022 05:43:38 +0800
-IronPort-SDR: O0nsLR5yUs7sttJ6yRnIDxeKkGt9Ulk5OWQAdHGpRh8Ayx1CBzecVs60QMt1PpqLHsuNxVt2Jm
- MItQJbhVZai6v/FevBB07A+swkaMuMunDYRUA6vaPQKvuFqo9hduRT9vdCUsY6l9fEmZLQ1mQy
- 6S+ri4zNvi7zE2GyByrmBMy44vVl65twT63iegtcxG/Sl2tR9WKzoNFvGJ3s1OlEj8nRuOX7Xf
- IMhELFTMkX1ag3n9ZCuBiEZg3qwWLISIKokyAthDDs/19jQc8C6HlWyZ4ml27Wf9JVrOQtLBnm
- 2t0=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 03 Nov 2022 14:02:49 -0700
-IronPort-SDR: iRRGuGi9X1ceqPrcqrdU7+mC01Xu9+DOtSZXVsNozB4FvAbHFqx7H2rQBrPCbGfOyhfcphh2BU
- ulRJPMjmA7k8eR18L2Aj572Qt8Sn+QMMDmq8dJfp7patCFMwtJEQIYVntf5qQx0CXJgMkJnCUs
- 279ArvtioO+z0bhk56Qq/EYfsXUaMDKGEJWg+I88Ky+vYbi8H8ll9R+DE3vHueFaI3mGHQAsts
- wjemt7qHdr2v9BN+lNvVy8deH7ZUvcLmwXBK+fc833XcWpy+KSyj11N0mWnDQcLNBmTd+UFdPu
- JPc=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 03 Nov 2022 14:43:38 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N3HLy19PDz1RvTr
-        for <linux-ide@vger.kernel.org>; Thu,  3 Nov 2022 14:43:38 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1667511817;
-         x=1670103818; bh=2lWhfqga4/fFXjjNT44/WJxlkHVLd+9xHu0xZnKbfgk=; b=
-        LWTRkLAwL2lNBls0oOmMAk6Pwi2q9yuBJxBY7JFOwGoP5gYtGHPqtkYBOg92s1Mi
-        vP0nLdMdaIizU4bd42dY3q4bcTajTx15uWxgdmnq1oCsjMNsfZnvi+OHwLk1NX+K
-        qe9LxuVV4V/++Dymnex1RDOCk2JrGjDMbLwnG/VLvA+OPfY/4TaiuAN3QLMKWftu
-        gwJOL6Q0dkhtx47dch5E3Zjp2OS98x30ubCz//deSXQZxXduKPHpV3z/yCiDdTrw
-        rYS12azP2+N1XEWas+uMYrr5j+d7bYMzPiWniLKPMyGEPbeYPa71dZv5QNYwWAPr
-        GsaCm36/GBDOX8vJXEIV7A==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id wiqvmiSNxKhQ for <linux-ide@vger.kernel.org>;
-        Thu,  3 Nov 2022 14:43:37 -0700 (PDT)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N3HLx2DR8z1RvLy;
-        Thu,  3 Nov 2022 14:43:37 -0700 (PDT)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        with ESMTP id S229461AbiKDAJX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Nov 2022 20:09:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CEE11E714
+        for <linux-ide@vger.kernel.org>; Thu,  3 Nov 2022 17:09:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BA2FBB81C38
+        for <linux-ide@vger.kernel.org>; Fri,  4 Nov 2022 00:09:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6771FC433D7;
+        Fri,  4 Nov 2022 00:09:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667520560;
+        bh=/bmXYdZllui1bRLAcPkbnS3D+ZBOPHIOky+yqfRwPR4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=jij9losmPZXm/qpg6YngtdFFr+ZAlP52wCwbZOh+n+1NaDwP/mBXYGVjAivQ9g7zw
+         vmJCmSPY7Y/M+vRseUHW8TboSzO4T9MjNdzqSvkqztsgjCIJAlVFPsHuPjiuQ9jNEG
+         GNoRbk/bN3xQkfb/7gzFOaOYTWOagVbaUkHyA/qOZA8aTpDVn6TjXSuCyL+xkoBfDV
+         ZWn2H2ezVmjXljCLFvcgrf6kgKmukPVahmv6lfFL5RiCJdEIbLllQOS1z3EArE9sv6
+         Qs22QoaGP3qIFe8z1qJo4O7NEsbPAP3CXKUxBpaDW65Nddzx8utU/1W8UL4GDMt8Gg
+         QDGaqv4eF/eMg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 51D0FC41621;
+        Fri,  4 Nov 2022 00:09:20 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.1-rc4
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20221103214335.1126889-1-damien.lemoal@opensource.wdc.com>
+References: <20221103214335.1126889-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20221103214335.1126889-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.1-rc4
+X-PR-Tracked-Commit-Id: 015618c3ec19584c83ff179fa631be8cec906aaf
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: ee6050c8af96bba2f81e8b0793a1fc2f998fcd20
+Message-Id: <166752056031.21078.13302543982702695117.pr-tracker-bot@kernel.org>
+Date:   Fri, 04 Nov 2022 00:09:20 +0000
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
         linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 6.1-rc4
-Date:   Fri,  4 Nov 2022 06:43:35 +0900
-Message-Id: <20221103214335.1126889-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.38.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+The pull request you sent on Fri,  4 Nov 2022 06:43:35 +0900:
 
-The following changes since commit 2ce3a0bf2010b16c78b78cc35a97fa913f1be0=
-ca:
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.1-rc4
 
-  ata: ahci_qoriq: Fix compilation warning (2022-10-18 08:02:14 +0900)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/ee6050c8af96bba2f81e8b0793a1fc2f998fcd20
 
-are available in the Git repository at:
+Thank you!
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
-ags/ata-6.1-rc4
-
-for you to fetch changes up to 015618c3ec19584c83ff179fa631be8cec906aaf:
-
-  ata: palmld: fix return value check in palmld_pata_probe() (2022-10-31 =
-20:28:05 +0900)
-
-----------------------------------------------------------------
-ata fixes for 6.1-rc4
-
-2 driver fixes for rc4:
-
- - Fix the PIO mode configuration of the pdc20230 (pata_legacy) driver.
-   This also removes a compilation warning with clang and W=3D1, from
-   Sergey.
-
- - Fix devm_platform_ioremap_resource() return value check in the palmld
-   driver, from Yang.
-
-----------------------------------------------------------------
-Sergey Shtylyov (1):
-      ata: pata_legacy: fix pdc20230_set_piomode()
-
-Yang Yingliang (1):
-      ata: palmld: fix return value check in palmld_pata_probe()
-
- drivers/ata/pata_legacy.c | 5 +++--
- drivers/ata/pata_palmld.c | 4 ++--
- 2 files changed, 5 insertions(+), 4 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
