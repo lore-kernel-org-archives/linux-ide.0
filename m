@@ -2,192 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CFCEC4332F
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Nov 2022 09:20:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C959CC433FE
+	for <linux-ide@archiver.kernel.org>; Sat,  5 Nov 2022 15:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230008AbiKDJUq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 4 Nov 2022 05:20:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43616 "EHLO
+        id S229839AbiKEPcn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 5 Nov 2022 11:32:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229572AbiKDJUp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Nov 2022 05:20:45 -0400
-Received: from new2-smtp.messagingengine.com (new2-smtp.messagingengine.com [66.111.4.224])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05466248DB;
-        Fri,  4 Nov 2022 02:20:43 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 8B17F580511;
-        Fri,  4 Nov 2022 05:20:41 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute3.internal (MEProxy); Fri, 04 Nov 2022 05:20:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to; s=fm3; t=1667553641; x=1667560841; bh=SJoBz4HEVE
-        RiFUnQzb3ZIub9dT0AONhBbUZgzTI8xuQ=; b=jOAioEcqTCQaB6i99azVot5cAk
-        gre11Ve+vBmc+Fs/vkDIrNjCSzfHPOUS4wzGCXwfIKJy9biOGQnW4iqxv75LAqbt
-        RdYq92O8WI8weSFAZzxtnrW2XuUukmSBN8KcaYYLkhR8/jLD6oh6MJQ9cwWd7yl8
-        mH21fZUTzBP3gaoYiV4qH0o52fq8RuYFTCOdHa7Soal92hUHyLnB5uIHP9R7ZXTY
-        yrk8ucJVboxa6GlUfb8qItPWrs5N4B3xbNfDaXknJzA5ZsbLT0XMXiOZj0LDZKk8
-        6WHRFTqWjdbWEHnXA5Wxg4OS34kfyJ+czE32JS893SSJ8vebcjylW97lvLOw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
-        :mime-version:references:reply-to:sender:subject:subject:to:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; t=1667553641; x=1667560841; bh=SJoBz4HEVERiFUnQzb3ZIub9dT0A
-        ONhBbUZgzTI8xuQ=; b=BmHXv8dWgMDB3A30MW7r0ER+x2KPnCs67D5Tm4znOHms
-        KOvE21G5Qhp1IrhrNpstSMDDbjbRSKKI+wikCsrQUA1D/bc3nhsP6Pfph0Q2sq/L
-        w5xrS9CVegwYB6hNxnfcyAYSDOlMngVd/4QaY9exxV3aeJMS+7bUlXh8ZFR6fpSK
-        gPa2Xr8LydLZo5vJzfOV1L/TUvE6+ISJhz2GoZweOm3SeuEKaa51K7Ium5W5K020
-        eA1TNoxWdJRVK08gDXfqjSbR39bjBE0aJEu+l1hoD12ykpSVSlQ8ZDa9eXuaf1Sv
-        VIUPNFOv24w/xRDpe00prXWHte2pkStlJDT70gy7rw==
-X-ME-Sender: <xms:Z9lkYzSrjU71xNBk6_zqZw7_YH6JI0yUseZ9KPinXiiMwa2ms5wZNA>
-    <xme:Z9lkY0y5CO55EwHV9Y6MI53sDiK8VD6-UVJ3Kx8hhf4HE2ApNz1-y8IkyXw6-f9C2
-    r627sGDwec4-VUhbl4>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvgedrvddugddtudcutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdetrhhn
-    ugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrghtth
-    gvrhhnpeevhfffledtgeehfeffhfdtgedvheejtdfgkeeuvefgudffteettdekkeeufeeh
-    udenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptd
-    enucfrrghrrghmpehmrghilhhfrhhomheprghrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:Z9lkY42FoeE9AWZWaTBjKK0WgCtTsBwtE9dvMmUqE911tjOLuc_EpQ>
-    <xmx:Z9lkYzD3odg97j_NLZJAinYScUOubW4GrxI_Sg6mxaH40a00usXu3A>
-    <xmx:Z9lkY8gjj31U7LlNshlCvQUZGUTi1_xePFBMFsKDj6YaX8-3AvZpfA>
-    <xmx:adlkYxI9rlur3V1K3bRsxhvV5OL9Go-r-JYQNksdhAr5r8wa1PdT3g>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 17FD1B603ED; Fri,  4 Nov 2022 05:20:38 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.7.0-alpha0-1087-g968661d8e1-fm-20221021.001-g968661d8
-Mime-Version: 1.0
-Message-Id: <6b35d496-2313-4fd9-851b-2ba469bc9261@app.fastmail.com>
-In-Reply-To: <803778517.2279639.1667493436959.JavaMail.open-xchange@opme11oxm02aub.pom.fr.intraorange>
-References: <20221019161831.3864786-1-arnd@kernel.org>
- <m2r0z3h5yr.fsf@sopl295.home>
- <7d9eebc8-39b6-4dc1-9ffc-f17ec584bee2@app.fastmail.com>
- <803778517.2279639.1667493436959.JavaMail.open-xchange@opme11oxm02aub.pom.fr.intraorange>
-Date:   Fri, 04 Nov 2022 10:20:20 +0100
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Robert Jarzmik" <jarzmik.robert@orange.fr>,
-        "Arnd Bergmann" <arnd@kernel.org>,
-        "Robert Jarzmik" <robert.jarzmik@free.fr>
-Cc:     jingoohan1@gmail.com, "Linus Walleij" <linus.walleij@linaro.org>,
-        "Sudip Mukherjee" <sudipm.mukherjee@gmail.com>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        marek.vasut@gmail.com,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        "Ulf Hansson" <ulf.hansson@linaro.org>, linux-pm@vger.kernel.org,
-        "Sergey Shtylyov" <s.shtylyov@omp.ru>, alsa-devel@alsa-project.org,
-        philipp.zabel@gmail.com, linux-usb@vger.kernel.org,
-        linux-leds@vger.kernel.org, slapin@ossfans.org,
-        "Bartosz Golaszewski" <brgl@bgdev.pl>,
-        "Miquel Raynal" <miquel.raynal@bootlin.com>,
-        "Mark Brown" <broonie@kernel.org>, linux-mtd@lists.infradead.org,
-        "Lee Jones" <lee@kernel.org>,
-        "Russell King" <linux@armlinux.org.uk>,
-        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
-        linux-input@vger.kernel.org, mkpetch@internode.on.net,
-        lgirdwood@gmail.com, "Vignesh Raghavendra" <vigneshr@ti.com>,
-        "Daniel Mack" <daniel@zonque.org>, kernel@wantstofly.org,
-        "Dmitry Torokhov" <dmitry.torokhov@gmail.com>, sre@kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        patches@opensource.cirrus.com, linux-fbdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, "Felipe Balbi" <balbi@kernel.org>,
-        "Helge Deller" <deller@gmx.de>,
-        "Alan Stern" <stern@rowland.harvard.edu>,
-        "Wolfram Sang" <wsa+renesas@sang-engineering.com>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, perex@perex.cz,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-rtc@vger.kernel.org,
-        "linux-mmc @ vger . kernel . org" <linux-mmc@vger.kernel.org>,
-        lost.distance@yahoo.com,
-        "Haojian Zhuang" <haojian.zhuang@gmail.com>,
-        "Viresh Kumar" <viresh.kumar@linaro.org>, tiwai@suse.com,
-        "Dominik Brodowski" <linux@dominikbrodowski.net>,
-        "Alexandre Belloni" <alexandre.belloni@bootlin.com>
-Subject: Re: [PATCH 00/30] ARM: pxa: remove all unused boards&drivers
-Content-Type: text/plain
+        with ESMTP id S229772AbiKEPcn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Nov 2022 11:32:43 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65271A180
+        for <linux-ide@vger.kernel.org>; Sat,  5 Nov 2022 08:32:42 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id k15so6971613pfg.2
+        for <linux-ide@vger.kernel.org>; Sat, 05 Nov 2022 08:32:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=u6m1xWl0cTcngqkPkHG892As2RQXCoWAPr6dzQ1sZGM=;
+        b=JTyaoj59H4cWDZL3KXPYpdeVR+b9LmS5fPyBQxtXXgLQnh+yZydPbWsiDlJ1Kt22mv
+         HBSimvFze4TC9nv2jtbMXHvE0QxUoGBTyQj70IM958/D47+aq3rBMYq74yIeQ9z3wTFE
+         GW728FRB+T6IIxYWMAxaQ83aIeq2T6PPN/ysAaEJbvM//jODZK06egDXkO7C5mpo1gX+
+         SbMAMqNv9X4BsNNOleo9oV0JAazkXqj4b2jEIF4IJptT6Rg2fFcwI9zDrqmdqvcxAunV
+         5AJaUywTcTjPdszriz++tKDHe21nECoXtKDf859UkZ465COCIesGG7yykTtybsicRJYS
+         FrKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=u6m1xWl0cTcngqkPkHG892As2RQXCoWAPr6dzQ1sZGM=;
+        b=F+dlb8xzJcgoSV35G+m6KHkmRhyBdR0eslergq3luUzpTpul4pL/pm0/VyKRSQ49hO
+         3UZp/FpL0p7CaaWvZsDHiR6VFExYEJA9VlDNhbpBSjmPFUzMHkmnB9rN/5m6WRdQ/uFk
+         O59QGZVsWTuTNcjr81DUEfcIZiNQpZy65plVfWenOHJ4yFn7yapLszuyYjERWAqzFA1C
+         9+VDFOISzf8Zt+p43ixN4NOEvZHRFYNOXyARLyGsx1xRP/rcDlrmzzfIXjxTq9q/isAN
+         W3sfIOQrv9GV6z5AfkpX18/A3RmUfsBwuTaXIwP7VarjNPqbqBnkaQ+prLjD4pHcPKZt
+         96wQ==
+X-Gm-Message-State: ACrzQf2DxKxHcroR+FIt6UHYR8uNxejXkEoXg8GcmM2wijSfe6Czi86t
+        S8v+O79T0IZim35eQCDDFz1ssoxz0jnHCM+/
+X-Google-Smtp-Source: AMsMyM43iwI3AlHrekdzk0svmfJr8ErR3FtBgJcfpu1Sdgg00NRTf0wngRydK/o6jUUnIvc9qwYXLA==
+X-Received: by 2002:aa7:959d:0:b0:56d:27ac:778 with SMTP id z29-20020aa7959d000000b0056d27ac0778mr38035147pfj.29.1667662361826;
+        Sat, 05 Nov 2022 08:32:41 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id q8-20020a170902dac800b0017f9021ddc6sm1798353plx.289.2022.11.05.08.32.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 05 Nov 2022 08:32:41 -0700 (PDT)
+Message-ID: <e2e297a5-b25f-dba2-bac9-dcb2342faeb5@kernel.dk>
+Date:   Sat, 5 Nov 2022 09:32:39 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH v4 1/7] block: Prevent the use of REQ_FUA with read
+ operations
+Content-Language: en-US
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+        "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>,
+        Hannes Reinecke <hare@suse.de>
+References: <20221031022642.352794-1-damien.lemoal@opensource.wdc.com>
+ <20221031022642.352794-2-damien.lemoal@opensource.wdc.com>
+ <Y2E2wFnbeUzAPjo0@infradead.org>
+ <3af6895b-b776-cf0d-fe1e-866ce5e6b0b0@opensource.wdc.com>
+ <Y2IXjzWL5eHA3Co9@infradead.org>
+ <8125e422-7bc8-46a1-792a-f31cee7a91a3@kernel.dk>
+ <Y2NylejsWVvOeZuL@infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <Y2NylejsWVvOeZuL@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Nov 3, 2022, at 17:37, Jarzmik Robert wrote:
-> I'm sorry Arnd, my mailer messed up again, and instead of using my 
-> normal robert.jarzmik@free.fr, it used my ISP mail ...
+On 11/3/22 1:49 AM, Christoph Hellwig wrote:
+> On Wed, Nov 02, 2022 at 09:17:54AM -0600, Jens Axboe wrote:
 >>
->
-> The reason you're not seeing the AC97_BUS_NEW used is because this 
-> becomes visible only in device-tree files, which were posted (for 
-> mioa701 for example) but never properly reviewed nor merged.
->
-> As from memory, at least mioa701, zylonite, em_x270 are DT ported, ie. 
-> there is a DT file which makes them boot. For the mioa701, the DT file 
-> offers the same functionnality, ie. all drivers in mioa701.c legacy 
-> file are working as well in a DT variant (not using mioa701.c 
-> obviously).
+>> This looks fine, but if we're never expecting this to happen, I do think
+>> it should just go into libata instead as that's the only user that
+>> cares about it. Yes, that'll lose the backtrace for who submitted it
+>> potentially, but you can debug it pretty easily at that point if you
+>> run into it.
+> 
+> FUA and PREFLUSH are bits only defined for writes.  libata might be the
+> first thing blowing up, but it really is a block layer constraint.
+> So validity checking what is being sent to the block layer at the
+> highest possible lyer is a good thing to ensure we don't get us in
+> trouble by someone accidentally sending one down or even expecting it
+> to work.  Especially as at least SCSI actually defines semantics for FUA
+> on reads, but they are completely bogus and useless.
 
-Ok, I see. I need a little clarification here, so I can adapt
-my patch series to keep the necessary files in place:
+OK, fair enough. I guess we can stick it in the block layer.
 
-- Zylonite has both PXA300 and PXA320 variants. I removed the PXA320
-  code because nothing selected it any more and it is not hooked
-  up to the MACH_PXA3XX_DT Kconfig symbol. Should I undo this and
-  keep all three PXA3xx variant, removing only PXA930 but selecting
-  CPU_PXA310/320 from MACH_PXA3XX_DT?
+-- 
+Jens Axboe
 
-- The em_x270 board file was already removed as part of 9d3239147d6d
-  ("ARM: pxa: remove Compulab pxa2xx boards"), which already removed
-  the associated drivers. Is it correct to assume that the DT support
-  for it has also become unusable at that point, or would you expect
-  it to still have some use? I now remove the related CM-X300 machine
-  as well, but it sounds like you did not have DT support for that,
-  right?
 
-- I'm not sure how the probing of the ASoC drivers works in the
-  DT case. Do I only need to make SND_PXA2XX_SOC_AC97 user-visible
-  to let everything get probed automatically from DT, or do we
-  need to also keep SND_PXA2XX_SOC_MIOA701 and SND_SOC_ZYLONITE?
-
->> Any idea where I went wrong here? Did I make a mistake in following the Kconfig dependencies, or are some parts of this
-> incorrectly annotated?
->
-> I don't think you did a mistake, I think I did. When I saw the patch of 
-> "deprecation" of mioa701 and all the other pxa files, I took it that 
-> the platform-device was deprecated, and was to be removed. This is the 
-> right thing to do in my opinion. I wouldn't mind if all board file go 
-> actually (expect the QEMU one), as this would leave only the boards 
-> with proper DT support, and would remove some clutter from the kernel.
-
-Right, this is the plan: the only board files I left in place are
-'gumstix' family that is supported by qemu and has the largest amount
-of RAM in there, and the 'spitz' family that is also supported by
-qemu and apparently had at least one user that was interested in
-working on DT (I can't find a record of who that was now). 
-
-> I also thought the drivers won't get touched by the purge, exception 
-> made of "platform similar ones", such as in the sound tree 
-> (sound/soc/pxa) where we have some of them, and maybe mfd tree.
-
-I made two lists of drivers here: the first list is for those that
-become invisible in Kconfig and can no longer even be compile tested.
-My reasoning here was that these are likely already dead and will
-only get worse without compile testing. If anyone ends up doing
-a new DT conversion of a removed board later on, these can obviously
-get resurrected. The current state of the patches is in [1],
-I'll go through them again based on your feedback, but let me know
-if you see anything else that I'm removing that you think should be
-kept.
-
-The second list of drivers is for those that have no DT support and
-are impossible to get used without anyone declaring a (platform, spi,
-i2c, ...) device in source code somewhere. The list is still
-incomplete because this is hard to check automatically. I have
-included a few patches to remove drivers that have been obviously
-unused for a long time, or never had an in-tree user at all, but
-I left the majority of these drivers for a later series.
-
-       Arnd
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git/log/?h=boardfile-remove&id=73c4b7cfbc2b2ef0
