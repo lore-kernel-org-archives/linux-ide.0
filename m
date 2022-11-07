@@ -2,156 +2,192 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C10C433FE
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Nov 2022 14:19:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27738C4332F
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Nov 2022 14:34:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232033AbiKGOTi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Nov 2022 09:19:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60142 "EHLO
+        id S232375AbiKGOey (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Nov 2022 09:34:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232217AbiKGOSb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2022 09:18:31 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8D41DA6B
-        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 06:17:07 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2A7DKr0U024095;
-        Mon, 7 Nov 2022 14:17:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2022-7-12;
- bh=4vHCY20mYqQJFa/0rG/1WHuKTfQpdjJd8dfk0Srm6Co=;
- b=qkb8Z7PBQvSv+kwr8LGo0crVxHli151H6jzzGKy/cqUprDm7TegUsjmyAdN/r+7ThlBG
- hepJJwIHh4oDRyChEH9ji4Jx2gHx77pCh0sra1vq8DtPtAubY/9Ilw2Ctl6ZUlR+cPGC
- hjSKgHphZPrsYpk9eN51KjfVeJyrK+naM0qSExpyK3UpUB3gcPzI+haus+XcObA0TH+u
- SPxpdtFRxpW6w+j5GOLkCcU+yewM0o84qrMXM4tguocd70SAkBvWQXcqTNPNmnxcU3FU
- n1e4D3P1r6CjQPJP6OVss9oKLGRXkjhFmr3O4t2QrJgif4WMk63XZUD4tgCqWe7DoZh1 mA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kngk6c1k9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 07 Nov 2022 14:17:07 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2A7DqHDQ007924;
-        Mon, 7 Nov 2022 14:17:06 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2175.outbound.protection.outlook.com [104.47.59.175])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kpctjas8f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 07 Nov 2022 14:17:06 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YQh+6IFelTLzdx4bbfPQVvRhJY9OOu4ilvdNg01NMuVjCNVBT53di2wwsKJlQGXqYjraaFth1A6phnfv5QsDLlBs6loraJHHIPVFKXlMG1P7R3wOHzLgRNPPS0bgaQEiHuCNwmzHcOXrZHbpwxtfMI+b1hFYtzhyc9X+jcz0qVr8kaqVY/GOBF45VSSHAyoeEZQcwsD/Q+JfLP979JGj9ffXNpAb/m1/VyK7dsNsaKaeCEv/rvME4SSOQMvRbBT/1bEDn/XjYBx/bWhEUAplpASVzhQQisr4hyJi0JfZxhSpyOL1Tx8sNDtKL4c7CY5S1CvQYMr+hJ/jFjD34ETN6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4vHCY20mYqQJFa/0rG/1WHuKTfQpdjJd8dfk0Srm6Co=;
- b=fnG3AHPeKIEkffBn8tdHy+RAIANeGicEUQ6Or2ojqHqlFReVC301UJXKgtxn1eCxIn9P/aLHyklmy56UQBTsWZJxS2GzaA8W1vNdYdKDWi4R7CTTMdMrjsQZMlpdu9kRQ7yN0KrOz6Qv3tFyrto7jfmUWtB4cGLZH0V2NJXXPignW+ZoULcfBsAMXuRQ5rYT0olq8BWD1Q9WDt++D/agIWf6OCbe1hptq75YACKd2tnuV3W388mazNtnDZlpeWt82KWrAOJ9pZJa+Avt492V3CU/77BTwvx4zB3mV9PGSwkOwaxKSEe3KSufNxa2XAefQ6oEv3fhV4MFHMbzOXcx7Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4vHCY20mYqQJFa/0rG/1WHuKTfQpdjJd8dfk0Srm6Co=;
- b=OzE/efwFvifpbJqtpNpk45GFNB8KRiMEmAoKZ0rOutL4JmIlqmsa8cYFGUuAvDADTWwE8yYKhsNWEhYTnL5U+U9tJrnHxBrNLslM07wb5mepfD5IekSVbyLf+ObOuq7oHP4hKq60Gtlx3XuCCJvMgskoICQLQrhTSOIgUPogl/M=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by CH0PR10MB5068.namprd10.prod.outlook.com (2603:10b6:610:c7::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.26; Mon, 7 Nov
- 2022 14:17:04 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::f77e:1a1a:38b3:8ff1]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::f77e:1a1a:38b3:8ff1%9]) with mapi id 15.20.5791.026; Mon, 7 Nov 2022
- 14:17:04 +0000
-To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc:     linux-ide@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Dmitry Fomichev <Dmitry.Fomichev@wdc.com>
-Subject: Re: [PATCH v2] ata: libata-scsi: fix SYNCHRONIZE CACHE (16) command
- failure
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq135auonnr.fsf@ca-mkp.ca.oracle.com>
-References: <20221107040229.1548793-1-shinichiro.kawasaki@wdc.com>
-Date:   Mon, 07 Nov 2022 09:17:02 -0500
-In-Reply-To: <20221107040229.1548793-1-shinichiro.kawasaki@wdc.com>
-        (Shin'ichiro Kawasaki's message of "Mon, 7 Nov 2022 13:02:29 +0900")
-Content-Type: text/plain
-X-ClientProxiedBy: SA0PR11CA0040.namprd11.prod.outlook.com
- (2603:10b6:806:d0::15) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        with ESMTP id S232417AbiKGOef (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2022 09:34:35 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B075B214;
+        Mon,  7 Nov 2022 06:34:33 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 6B1EE225AD;
+        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1667831672; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
+        b=N6Bkqf/c7//mK5rtoPzoC8e+qy9BdJHOSb8jcGnaB5CG5HwReYZjRblTPTmnRQxvFnaQIv
+        qDV8M41T0T6bHuMPHrfUA3nSKLPjyhKR6cEjb7mKNpSdSWrMhOfCWqP5GN9x0MhE1QmL85
+        peuBYiQOCGwswOb6zO2vwvbnISvnkxA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1667831672;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
+        b=J4uiNATruM+2EzKbD+Jy+1ehg3atdTKIKxl8M5nA1CM6NlOwGjnpqIzTa8zLjwW/q50d5w
+        P0F5WEaqk5+VfiCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 462D413AC7;
+        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id kC/TEHgXaWNCBAAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 07 Nov 2022 14:34:32 +0000
+Message-ID: <84544a8b-5884-840c-0b69-fe6c4ae18e72@suse.de>
+Date:   Mon, 7 Nov 2022 15:34:31 +0100
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|CH0PR10MB5068:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0c67891e-aa76-4c02-c3f2-08dac0cabee8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: pNmer/Yj+kOFmjo9UnwU1bjx2AypvKPXbP225sgEvn26rUcUpiWzogFFvgZbMwUopGlqlej52OGsTioeP07bqmoykF0Bk5GoPjLG4dR2o6r4fXmRRB9czzpfWl7Tv17PfcE2dAAQwmm20P4kWL72gWsGXOUWA2vpPHLsY4cpWi3EOG5de/40wHKJDLT8QADuNMpwMxB4U+VeIPRkZzOkSBStrn9Oc7/Ms6K+bU8z9/m90etijV42h7lKUTIAkM7L/zG3Q2klZjAQ89RHwolTQPJy1/QywDGK3oXIeLEZAFqaYBln+oJxBz/b8oJbeVyB4ckBS+n4Yjsgjpc7U2aNw7tnxVGxE2TUNXmq38GAcUIlvbFZP5q1vUqROxFQOzIA4JQMAxo9I2hfWdNk/w/KmR1UJCH3a+73JOa89an5cQxK4LMRtuQdGobgA0Mc7eMyCvz1sIuX069NkXK6A+L0FlDgZ0cliDDJFFrmT6duXIhxBlQ+PuQRJlLIIUCPPu6kpr4O9Ma69/ZSSHeQbgXo+dAgx8/Av8bKBLciGU29WHX8OjEUEPnwsUtdlXGAfz1A+P+EjcKynA7ftqjianBN2g7+tECeLdvYkKFhkuXz9WaIrcRXs1beAass0S6A5iBd2nLfjc3zFtAhJ5wkPb5904tmZABi/0l4/oiCyGxz+bYC5RNHwQ5e8XBQl+Kdp6r1aQneTfknoQDnRAl4Dw84iw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(136003)(396003)(366004)(346002)(39860400002)(451199015)(6512007)(26005)(186003)(36916002)(6506007)(83380400001)(4744005)(2906002)(6916009)(478600001)(54906003)(6486002)(5660300002)(41300700001)(38100700002)(8936002)(4326008)(316002)(66946007)(66556008)(66476007)(8676002)(86362001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VkKvKld+5sO+lp8XnGi9zBfkmkdhK3rj4BEB5iv4qN5QM0PK09vzNUov4VKh?=
- =?us-ascii?Q?E9BhQluetUSJMjSbQ6V+lGTqknSR+7F7T6OFhf+N4ro3Cs5xQfhJTTX68VZP?=
- =?us-ascii?Q?nNftI8mOHM9rNwkrzBL4wAXG4OMGIMdkL5W+KhTDjfWrObvC3T34Es/u1V4w?=
- =?us-ascii?Q?Y179Ohd0jCk9cfF8BaJxGXIaC5HtXdmPpUD4wDassJB40DmWh2hsXK+zbeY5?=
- =?us-ascii?Q?bg9vj78qCMX5h7mhg/LyHc24UY9GnwPy7nH1cyh3rrz4GlW75l/ToVWFO+ro?=
- =?us-ascii?Q?Glo1kRhYQXOe8yDOURCJVmTwmwTRsMdiIgu8JX/Qx6Oq0iTRF3oNs38Xx5DL?=
- =?us-ascii?Q?lYWgAPaVB9ftb1dtUVom+fcGEmDm+6pKY/LHPWVOYyvY5BTrP1+JDolk/mjn?=
- =?us-ascii?Q?RipXsLws2ws8h7KnhF6nWf6BSLSLK4FxL3WEB8YQ69d7i9qiYbIS+ck/aZO0?=
- =?us-ascii?Q?Cq+GvSyPf20RXr7UwnS/yvrHwG2ZcB0LFRvmOld/CjyRzi3c3N+W8i5VZ71Q?=
- =?us-ascii?Q?RJZR2Vcjm9fLwn82A0nKEN3gyTBG+dBRki3FnXMvp86ZBij5c2A+ztGf9igA?=
- =?us-ascii?Q?LbKCM1is4d1X1Qk94YCxg9R5HA8M1p9eXp916hNjjnyTdn+71HyZgOm8pgQM?=
- =?us-ascii?Q?i1N6EWpyj68lV8UH7+f+1iRCX0Msof+vDDkm554uRZP2GCQ5T0sKXVpCLqch?=
- =?us-ascii?Q?XMj5MPnLzdC4stColWMEgRDFBToy0esUuMgsJUvOUInpGrifDx13pJHB+M23?=
- =?us-ascii?Q?fpsBLf6p5IEGcgheMp98mG/3F5x1mV0lklxNPOc/Kk9mymcmqI0bzOdRlBQn?=
- =?us-ascii?Q?oVDFN1R+w6xk3Gu2z9RQsgpKXHzCsp1fXgSLw66ABS3bTJKAq/gaYcO5F6ms?=
- =?us-ascii?Q?FPFqMqdpZ+xfdNq2RDdBp6jFBrLw58NbrnVGhMv3FF07KAX+jCCrVgDlenS/?=
- =?us-ascii?Q?2Kf5hXGb8/vO7V+eo2tZ893sGtlygPrkhLVNq/9Qoxc6RZbbOz62KO8V4ARN?=
- =?us-ascii?Q?NtRjphfE/Oi/LHlg7zgXqXJytHQgKO2g9/hOXlgHQUJ2hyzRz1z5VxgzzVqy?=
- =?us-ascii?Q?xjbTMb+ZPahbEWgdPu3FLYuRVsK0JunlHdb9ehjK1YDJe68dVH4+z6C2cWn9?=
- =?us-ascii?Q?5nb7IO6bA5Msz31NskOtBqEESgNRAsa5PJT4Jkp/BnujQ5gZPxudr7JlczE8?=
- =?us-ascii?Q?+2oPvajqdYFFXn98L2ZCAQRIBsFOuMzeorsM0VgQOUjfNjDXsHYwjg5Joibk?=
- =?us-ascii?Q?2WUGEiOwKE9yqzSLsbnoCllSgPOqOhxrpf88/TttdIwv+pzeCR/jv+DqNPKA?=
- =?us-ascii?Q?wih4D6QsGHpSGzir73uMjIjQSEU49IKxv7sGTiIXJKUDTO8bVN6x24tArv64?=
- =?us-ascii?Q?m+FUude8F3Qolgaax/jlxpPfX4e1120twFuUaQwSWwJ6kMOv4vdq5AXBLycC?=
- =?us-ascii?Q?MadxOaK6H0S2ufXVTl3+aZO1SOWsDfNln4JFrEk/gXu/dE1kBnqZYb23H2jR?=
- =?us-ascii?Q?IOo2QE/cFpZ+x9wOR+xyf7GkHbtQ12ytZkX1M7DPpT39Pv7EkFxyX6K2KhMy?=
- =?us-ascii?Q?47KpKEa8OWDq3jhvc/fYKc9gMMg2clAxvwcb681WM6sHLoghZWselCJWQueL?=
- =?us-ascii?Q?XQ=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0c67891e-aa76-4c02-c3f2-08dac0cabee8
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Nov 2022 14:17:04.6931
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 08/hojD6iNWNh9YJCn4cnlfUhC1djm5bCptYnJTGzhTx31MbXy2imusvVI6xbDiM7qYbRv5a1mUiuC8nkd4KUIkzyLNlWmZv1VdD+eAafo8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5068
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-07_06,2022-11-07_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 bulkscore=0
- adultscore=0 mlxscore=0 suspectscore=0 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211070115
-X-Proofpoint-ORIG-GUID: 7WucrAPDE4YBrtuqkrgkyMYaDa7q-6ml
-X-Proofpoint-GUID: 7WucrAPDE4YBrtuqkrgkyMYaDa7q-6ml
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        John Garry <john.g.garry@oracle.com>,
+        John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
+        ming.lei@redhat.com, niklas.cassel@wdc.com
+Cc:     axboe@kernel.dk, jinpu.wang@cloud.ionos.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linuxarm@huawei.com, john.garry2@mail.dcu.ie
+References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
+ <1666693976-181094-3-git-send-email-john.garry@huawei.com>
+ <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
+ <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
+ <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
+ <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
+ <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
+ <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
+ <0e4994f7-f131-39b0-c876-f447b71566cd@opensource.wdc.com>
+ <05cf6d61-987b-025d-b694-a58981226b97@oracle.com>
+ <ff0c2ab7-8e82-40d9-1adf-78ee12846e1f@opensource.wdc.com>
+ <39f9afc5-9aab-6f7c-b67a-e74e694543d4@suse.de>
+ <0de1c3fd-4be7-1690-0780-720505c3692b@opensource.wdc.com>
+ <75aea0e8-4fa4-593c-0024-3c39ac3882f3@suse.de>
+ <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
+ ata_internal_queuecommand()
+In-Reply-To: <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 11/7/22 14:29, Damien Le Moal wrote:
+> On 11/7/22 19:12, Hannes Reinecke wrote:
+>> On 11/2/22 12:25, Damien Le Moal wrote:
+>>> On 11/2/22 20:12, Hannes Reinecke wrote:
+>>>> On 11/2/22 11:07, Damien Le Moal wrote:
+>>>>> On 11/2/22 18:52, John Garry wrote:
+>>>>>> Hi Damien,
+>>>>>>
+>>>> [ .. ] >> So we only need to find a way of 're-using' that tag, then we won't have
+>>>> to set aside a reserved tag and everything would be dandy...
+>>>
+>>> I tried that. It is very ugly... Problem is that integration with EH in
+>>> case a real NCQ error happens when all that read-log-complete dance is
+>>> happening is hard. And don't get me started with the need to save/restore
+>>> the scsi command context of the command we are reusing the tag from.
+>>>
+>>> And given that the code is changing to use regular submission path for
+>>> internal commands, right now, we need a reserved tag. Or a way to "borrow"
+>>> the tag from a request that we need to check. Which means we need some
+>>> additional api to not always try to allocate a tag.
+>>>
+>>>>
+>>>> Maybe we can stop processing when we receive an error (should be doing
+>>>> that anyway as otherwise the log might be overwritten), then we should
+>>>> be having a pretty good chance of getting that tag.
+>>>
+>>> Hmmm.... that would be no better than using EH which does stop processing
+>>> until the internal house keeping is done.
+>>>
+>>>> Or, precisely, getting _any_ tag as at least one tag is free at that point.
+>>>> Hmm?
+>>>
+>>> See above. Not free, but usable as far as the device is concerned since we
+>>> have at least on command we need to check completed at the device level
+>>> (but not yet completed from scsi/block layer point of view).
+>>>
+>> So, having had an entire weekend pondering this issue why don't we
+>> allocate an _additional_ set of requests?
+>> After all, we had been very generous with allocating queues and requests
+>> (what with us doing a full provisioning of the requests for all queues
+>> already for the non-shared tag case).
+>>
+>> Idea would be to keep the single tag bitmap, but add eg a new rq state
+>> MQ_RQ_ERROR. Once that flag is set we'll fetch the error request instead
+>> of the normal one:
+>>
+>> @@ -761,6 +763,8 @@ static inline struct request
+>> *blk_mq_tag_to_rq(struct blk_mq_tags *tags,
+>>    {
+>>           if (tag < tags->nr_tags) {
+>>                   prefetch(tags->rqs[tag]);
+>> +               if (unlikely(blk_mq_request_error(tags->rqs[tag])))
+>> +                       return tags->error_rqs[tag];
+>>                   return tags->rqs[tag];
+>>           }
+>>
+>> and, of course, we would need to provision the error request first.
+>>
+>> Rationale here is that this will be primarily for devices with a low
+>> number of tags, so doubling the number of request isn't much of an
+>> overhead (as we'll be doing it essentially anyway in the error case as
+>> we'll have to save the original request _somewhere_), and that it would
+>> remove quite some cruft from the subsystem; look at SCSI EH trying to
+>> store the original request contents and then after EH restoring them again.
+> 
+> Interesting idea. I like it. It is essentially a set of reserved requests
+> without reserved tags: the tag to use for these requests would be provided
+> "manually" by the user. Right ?
+> 
+Yes. Upon failure one would be calling something like 
+'blk_mq_get_error_rq(rq)', which would set the error flag in the 
+original request, fetch the matching request from ->static_rqs, and 
+return that one.
 
-Shin'ichiro,
+Just figured, we could simply enlarge 'static_rqs' to have double the 
+size; then we can easily get the appropriate request from 'static_rqs' 
+by just adding the queue size.
+Making things even easier ...
 
-> SAT SCSI/ATA Translation specification requires SCSI SYNCHRONIZE CACHE
-> (10) and (16) commands both shall be translated to ATA flush command.
-> Also, ZBC Zoned Block Commands specification mandates SYNCHRONIZE
-> CACHE (16) command support. However, libata translates only
-> SYNCHRONIZE CACHE (10). This results in SYNCHRONIZE CACHE (16) command
-> failures on SATA drives and then libata translation does not conform
-> to ZBC. To avoid the failure, add support for SYNCHRONIZE CACHE (16).
+> That should allow simplifying any processing that needs to reuse a tag,
+> and currently its request. That is, CDL, but also usb-scsi, scsi EH and
+> the few scsi LLDs using scsi_eh_prep_cmnd()+scsi_eh_restore_cmnd().
+> Ideally, these 2 functions could go away too.
+> 
+Which was precisely the idea. We have quite some drivers/infrastructure 
+which already require a similar functionality, and basically all of them 
+cover devices with a really low tag space (32/31 in the libata NCQ case, 
+16 in the SCSI TCQ case, or even _1_ in the SCSI parallel case :-)
+So a request duplication wouldn't matter _that_ much here.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Drivers with a higher queue depth typically can do 'real' TMFs, where 
+you need to allocate a new tag anyway, and so the whole operation 
+doesn't apply here.
 
+Cheers,
+
+Hannes
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+
