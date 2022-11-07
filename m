@@ -2,192 +2,149 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27738C4332F
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Nov 2022 14:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED011C4332F
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Nov 2022 16:10:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232375AbiKGOey (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Nov 2022 09:34:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48572 "EHLO
+        id S232273AbiKGQKz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Nov 2022 11:10:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232417AbiKGOef (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2022 09:34:35 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B075B214;
-        Mon,  7 Nov 2022 06:34:33 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6B1EE225AD;
-        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1667831672; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
-        b=N6Bkqf/c7//mK5rtoPzoC8e+qy9BdJHOSb8jcGnaB5CG5HwReYZjRblTPTmnRQxvFnaQIv
-        qDV8M41T0T6bHuMPHrfUA3nSKLPjyhKR6cEjb7mKNpSdSWrMhOfCWqP5GN9x0MhE1QmL85
-        peuBYiQOCGwswOb6zO2vwvbnISvnkxA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1667831672;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=L4Sg1qZkwEiVSC2iC9dKlGrQBQD0s8J33K2XOu5KL/0=;
-        b=J4uiNATruM+2EzKbD+Jy+1ehg3atdTKIKxl8M5nA1CM6NlOwGjnpqIzTa8zLjwW/q50d5w
-        P0F5WEaqk5+VfiCA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 462D413AC7;
-        Mon,  7 Nov 2022 14:34:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id kC/TEHgXaWNCBAAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 07 Nov 2022 14:34:32 +0000
-Message-ID: <84544a8b-5884-840c-0b69-fe6c4ae18e72@suse.de>
-Date:   Mon, 7 Nov 2022 15:34:31 +0100
+        with ESMTP id S232632AbiKGQKo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2022 11:10:44 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DEC020363
+        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 08:10:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667837443; x=1699373443;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=caKJkWRc/AXDgJppCja4vlDiaNvWRJ/36ThmslFZ9l8=;
+  b=jYFAgpnUnEQsTf7POH/Wjczz57ybqaqqbAwqGTV1AFsrCnlBnFiYZxFc
+   Rw5SIMFawmhCkD3RWY9Yzp4JJPrUKQov56xvcvjr0jPAEqNxe4mNDdJ9B
+   MfGLhJVxgkB82j2XSKMJsp9h3UroxoYDOZr3melsB1yK6cdZ+kUV+Upnd
+   itjYw6QtUw0h1vcpiPJb3VjtOArgz9tQ/gHkaGBkeQUHzEu4Ae4KN5alZ
+   f1L4TfylkLmym1AxGo0uWULVWI/Pss3ciTU2FawI05hja6iHizQgX72G7
+   aUNbbcPpkvwvI8eqO6CU+nqbDaosWoMjuGH5rTwz2K/XtxEgYm2zKOodZ
+   w==;
+X-IronPort-AV: E=Sophos;i="5.96,145,1665417600"; 
+   d="scan'208";a="216017265"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 00:10:42 +0800
+IronPort-SDR: IGeko97yL+6mgiP3/vhnpDO1E1VPKa1FinY76NuBHN7POFJpRkHTsXbIWv8SXaegWW/TicVjQt
+ PBYQ9l0+8WiGt3+K1jd+RlSijuA7/9u3W6VjYFPt3jhg9XdZ4PqC053evPAloNHevDv+OSyiQH
+ X7MRiP26xVEILNaNS4Fbk1/LsmVuFK0hZOce/G0JH/cTyKFbkFEMFq5AwgQrV8opY9UxKZx4kl
+ R2Ete1IWyRwN5OV/DkL+42esGlPwrNsMs/aF6WPcJhm4Tp3lLrLp1xcpefIXkVbYR4/NpEd4f2
+ ouM=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 07:29:49 -0800
+IronPort-SDR: IfLwRmZkkyFsIqBz3qwgc++WcfIUZ5cl0Xa0Ej+q3OBqIfckeUYVey3CBwnENBxNwpLwKlyWnl
+ u1AjxI+wU4xjfYE2PRPlUzrlflcXKCTmmTCCFYJmLE+XImt0KvJ+kZINbe+N2CcgoSwC0+YF5t
+ DE6tcWGRtd1rFnIT33fm3hsR4+wmXuWIjqpSzSx1ghWBeVAq7nAAw4ZIHrrjuKhPci+H3SRIuN
+ vvMzhEgDf8B4mShZ4N9okMXj0t8tvrofLPWq0eSxSVDBv3RsUJnvCJzwfkLjZfCplnE4YAT6pw
+ m/E=
+WDCIronportException: Internal
+Received: from unknown (HELO x1-carbon.wdc.com) ([10.225.164.9])
+  by uls-op-cesaip02.wdc.com with ESMTP; 07 Nov 2022 08:10:42 -0800
+From:   Niklas Cassel <niklas.cassel@wdc.com>
+To:     damien.lemoal@opensource.wdc.com, tj@kernel.org, hare@suse.de
+Cc:     linux-ide@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH v2] ata: libata-core: do not issue non-internal commands once EH is pending
+Date:   Mon,  7 Nov 2022 17:10:36 +0100
+Message-Id: <20221107161036.670237-1-niklas.cassel@wdc.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        John Garry <john.g.garry@oracle.com>,
-        John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, bvanassche@acm.org, hch@lst.de,
-        ming.lei@redhat.com, niklas.cassel@wdc.com
-Cc:     axboe@kernel.dk, jinpu.wang@cloud.ionos.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxarm@huawei.com, john.garry2@mail.dcu.ie
-References: <1666693976-181094-1-git-send-email-john.garry@huawei.com>
- <1666693976-181094-3-git-send-email-john.garry@huawei.com>
- <08fdb698-0df3-7bc8-e6af-7d13cc96acfa@opensource.wdc.com>
- <83d9dc82-ea37-4a3c-7e67-1c097f777767@huawei.com>
- <9a2f30cc-d0e9-b454-d7cd-1b0bd3cf0bb9@opensource.wdc.com>
- <0e60fab5-8a76-9b7e-08cf-fb791e01ae08@huawei.com>
- <71b56949-e4d7-fd94-c44a-867080b7a4fa@opensource.wdc.com>
- <b03b37a2-35dc-5218-7279-ae68678a47ff@huawei.com>
- <0e4994f7-f131-39b0-c876-f447b71566cd@opensource.wdc.com>
- <05cf6d61-987b-025d-b694-a58981226b97@oracle.com>
- <ff0c2ab7-8e82-40d9-1adf-78ee12846e1f@opensource.wdc.com>
- <39f9afc5-9aab-6f7c-b67a-e74e694543d4@suse.de>
- <0de1c3fd-4be7-1690-0780-720505c3692b@opensource.wdc.com>
- <75aea0e8-4fa4-593c-0024-3c39ac3882f3@suse.de>
- <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RFC v3 2/7] ata: libata-scsi: Add
- ata_internal_queuecommand()
-In-Reply-To: <cfb89169-77e5-b208-62e7-4cf1c660ac7a@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 11/7/22 14:29, Damien Le Moal wrote:
-> On 11/7/22 19:12, Hannes Reinecke wrote:
->> On 11/2/22 12:25, Damien Le Moal wrote:
->>> On 11/2/22 20:12, Hannes Reinecke wrote:
->>>> On 11/2/22 11:07, Damien Le Moal wrote:
->>>>> On 11/2/22 18:52, John Garry wrote:
->>>>>> Hi Damien,
->>>>>>
->>>> [ .. ] >> So we only need to find a way of 're-using' that tag, then we won't have
->>>> to set aside a reserved tag and everything would be dandy...
->>>
->>> I tried that. It is very ugly... Problem is that integration with EH in
->>> case a real NCQ error happens when all that read-log-complete dance is
->>> happening is hard. And don't get me started with the need to save/restore
->>> the scsi command context of the command we are reusing the tag from.
->>>
->>> And given that the code is changing to use regular submission path for
->>> internal commands, right now, we need a reserved tag. Or a way to "borrow"
->>> the tag from a request that we need to check. Which means we need some
->>> additional api to not always try to allocate a tag.
->>>
->>>>
->>>> Maybe we can stop processing when we receive an error (should be doing
->>>> that anyway as otherwise the log might be overwritten), then we should
->>>> be having a pretty good chance of getting that tag.
->>>
->>> Hmmm.... that would be no better than using EH which does stop processing
->>> until the internal house keeping is done.
->>>
->>>> Or, precisely, getting _any_ tag as at least one tag is free at that point.
->>>> Hmm?
->>>
->>> See above. Not free, but usable as far as the device is concerned since we
->>> have at least on command we need to check completed at the device level
->>> (but not yet completed from scsi/block layer point of view).
->>>
->> So, having had an entire weekend pondering this issue why don't we
->> allocate an _additional_ set of requests?
->> After all, we had been very generous with allocating queues and requests
->> (what with us doing a full provisioning of the requests for all queues
->> already for the non-shared tag case).
->>
->> Idea would be to keep the single tag bitmap, but add eg a new rq state
->> MQ_RQ_ERROR. Once that flag is set we'll fetch the error request instead
->> of the normal one:
->>
->> @@ -761,6 +763,8 @@ static inline struct request
->> *blk_mq_tag_to_rq(struct blk_mq_tags *tags,
->>    {
->>           if (tag < tags->nr_tags) {
->>                   prefetch(tags->rqs[tag]);
->> +               if (unlikely(blk_mq_request_error(tags->rqs[tag])))
->> +                       return tags->error_rqs[tag];
->>                   return tags->rqs[tag];
->>           }
->>
->> and, of course, we would need to provision the error request first.
->>
->> Rationale here is that this will be primarily for devices with a low
->> number of tags, so doubling the number of request isn't much of an
->> overhead (as we'll be doing it essentially anyway in the error case as
->> we'll have to save the original request _somewhere_), and that it would
->> remove quite some cruft from the subsystem; look at SCSI EH trying to
->> store the original request contents and then after EH restoring them again.
-> 
-> Interesting idea. I like it. It is essentially a set of reserved requests
-> without reserved tags: the tag to use for these requests would be provided
-> "manually" by the user. Right ?
-> 
-Yes. Upon failure one would be calling something like 
-'blk_mq_get_error_rq(rq)', which would set the error flag in the 
-original request, fetch the matching request from ->static_rqs, and 
-return that one.
+scsi_queue_rq() will check if scsi_host_in_recovery() (state is
+SHOST_RECOVERY), and if so, it will _not_ issue a command via:
+scsi_dispatch_cmd() -> host->hostt->queuecommand() (ata_scsi_queuecmd())
+-> __ata_scsi_queuecmd() -> ata_scsi_translate() -> ata_qc_issue()
 
-Just figured, we could simply enlarge 'static_rqs' to have double the 
-size; then we can easily get the appropriate request from 'static_rqs' 
-by just adding the queue size.
-Making things even easier ...
+Before commit e494f6a72839 ("[SCSI] improved eh timeout handler"),
+when receiving a TFES error IRQ, this was the call chain:
+ahci_error_intr() -> ata_port_abort() -> ata_do_link_abort() ->
+ata_qc_complete() -> ata_qc_schedule_eh() -> blk_abort_request() ->
+blk_rq_timed_out() -> q->rq_timed_out_fn() (scsi_times_out()) ->
+scsi_eh_scmd_add() -> scsi_host_set_state(shost, SHOST_RECOVERY)
 
-> That should allow simplifying any processing that needs to reuse a tag,
-> and currently its request. That is, CDL, but also usb-scsi, scsi EH and
-> the few scsi LLDs using scsi_eh_prep_cmnd()+scsi_eh_restore_cmnd().
-> Ideally, these 2 functions could go away too.
-> 
-Which was precisely the idea. We have quite some drivers/infrastructure 
-which already require a similar functionality, and basically all of them 
-cover devices with a really low tag space (32/31 in the libata NCQ case, 
-16 in the SCSI TCQ case, or even _1_ in the SCSI parallel case :-)
-So a request duplication wouldn't matter _that_ much here.
+Which meant that as soon as the error IRQ was serviced, no additional
+commands sent from the block layer (scsi_queue_rq()) would be sent down
+to the device. (ATA internal commands originating for ATA EH could of
+course still be sent.)
 
-Drivers with a higher queue depth typically can do 'real' TMFs, where 
-you need to allocate a new tag anyway, and so the whole operation 
-doesn't apply here.
+However, after commit e494f6a72839 ("[SCSI] improved eh timeout handler"),
+scsi_times_out() would instead result in a call to scsi_abort_command() ->
+queue_delayed_work(). work function: scmd_eh_abort_handler() would call
+scsi_eh_scmd_add(), which calls scsi_host_set_state(shost, SHOST_RECOVERY).
 
-Cheers,
+(It was possible to get the old behavior if host->hostt->no_async_abort
+was set, but libata never used it, and this option was completely removed
+in commit a06586325f37 ("scsi: make asynchronous aborts mandatory"))
 
-Hannes
+Additionally, later in commit 358f70da49d7 ("blk-mq: make
+blk_abort_request() trigger timeout path"), blk_abort_request() was changed
+to also call the abort callback asynchronously.
+
+So now, after the TFES error irq has been serviced, we need to wait for
+two different workqueues to run their work, before the SHOST_RECOVERY
+state gets set.
+
+While the ATA specification states that a device should return command
+aborted for all commands queued after the device has entered error state,
+since ATA only keeps the sense data for the latest command (in non-NCQ
+case), we really don't want to send block layer commands to the device
+after it has entered error state. (Only ATA EH commands should be sent,
+to read the sense data etc.)
+
+While we could just call scsi_host_set_state(shost, SHOST_RECOVERY) from
+ata_qc_schedule_eh() directly, that might be a layering violation.
+So instead of doing that, add an additional check against the libata's own
+EH flag(s) before calling the qc_defer callback.
+
+Fixes: e494f6a72839 ("[SCSI] improved eh timeout handler")
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+---
+Changes since v1:
+-Implemented review comments from Damien.
+
+ drivers/ata/libata-scsi.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 4cb914103382..383a208f5f99 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1736,6 +1736,26 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 	if (xlat_func(qc))
+ 		goto early_finish;
+ 
++	/*
++	 * scsi_queue_rq() will defer commands when in state SHOST_RECOVERY.
++	 *
++	 * When getting an error interrupt, ata_port_abort() will be called,
++	 * which ends up calling ata_qc_schedule_eh() on all QCs.
++	 *
++	 * ata_qc_schedule_eh() will call ata_eh_set_pending() and then call
++	 * blk_abort_request() on the given QC. blk_abort_request() will
++	 * asynchronously end up calling scsi_eh_scmd_add(), which will set
++	 * the state to SHOST_RECOVERY and wake up SCSI EH.
++	 *
++	 * In order to avoid requests from being issued to the device from the
++	 * time ata_eh_set_pending() is called, to the time scsi_eh_scmd_add()
++	 * sets the state to SHOST_RECOVERY, we defer requests here as well.
++	 */
++	if (ap->pflags & (ATA_PFLAG_EH_PENDING | ATA_PFLAG_EH_IN_PROGRESS)) {
++		rc = ATA_DEFER_LINK;
++		goto defer;
++	}
++
+ 	if (ap->ops->qc_defer) {
+ 		if ((rc = ap->ops->qc_defer(qc)))
+ 			goto defer;
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+2.38.1
 
