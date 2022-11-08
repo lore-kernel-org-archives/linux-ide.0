@@ -2,122 +2,147 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7469DC433FE
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Nov 2022 05:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28FB9C4332F
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Nov 2022 06:11:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233390AbiKHF4T (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Nov 2022 00:56:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55528 "EHLO
+        id S233479AbiKHGLm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Nov 2022 01:11:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233405AbiKHF4G (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Nov 2022 00:56:06 -0500
+        with ESMTP id S233444AbiKHGLd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Nov 2022 01:11:33 -0500
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEE74317C6
-        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 21:55:57 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 859C240462
+        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 22:11:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667886957; x=1699422957;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=MzodolIBXzjJzo8qX7vax6iZ+4wEc086CZFFgStxWSw=;
-  b=fmlGCiXcgDnqA3qmwKXcbMZZVb0LijFkD+tPNH67KFlquYB3eXuRO/7g
-   cFr0Ln17qC8UNSXhPEkyfISjRSt1gAM5PsOWKNGswMTbG2N65fE640HZU
-   pQzBzS4rg9nj/0ttdNOJGo9PXBYanBfu/r16b+a+zoFJBxV0XX6XwkFUt
-   KW5C4Yl9js5bQltlk+O0dMrMm5ZLvRpOMrzJozCbxWzXyKU6FQSO1yZP/
-   Wh+6XMSQMH68hcurgToVgSvOGomWcaCi0UTK7ghDwzepqIMoO/m+rSiYp
-   yFAZ6/jIe1TgWpvcF+AdOiZv3q89Yxnf3HFlek217/ulhZdNa47ONBjfC
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,145,1665417600"; 
-   d="scan'208";a="327831374"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 13:55:57 +0800
-IronPort-SDR: zXJZNZJ5UY2Vo+9gnvEueal/7C+sBtigGs0WZa/CP0zp+pDV/5C0PNWeTy9BjK2H8tuc6bnztp
- 8T4ilHNY6FUJxv5p78nCFobbool7nQKDYfMqf4tkgPiOFuJH/J/mJNs7L/pgXUIpltRcVE4AU7
- fZQWwyd2i2iU2hbr7Gl5JSTFtZ2fLQeqPBgmQI59F8lzubxkrPFvVO8el/HSILUThGgzX2Ebzw
- YGyCVsrCYTI/12Hw0qLQoiurwT0bLPhRRckSYrbzqjT/803DoCrhIpSKb4OcgEeXWcOrUKKJER
- gTE=
+  t=1667887892; x=1699423892;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=jseMqPJWNiWBF4rM0E/F4EXcH+Q+uKiSrNvDQDUghks=;
+  b=duq2bg1+BPhlJikr4oTsHG/2DXnLD+4MS0FzI12IBnliRfukFYRo5b/j
+   3A9WjzwmAzYUOJpxVeq69EmyAM6H5BPCvpVdPcJI2wp3RvWuNhKlEm/Rq
+   cVs9LCNlsl0YMaMrxDjXWQdejaKu2ji6mgwj6+ZVN7nXCcT2BNgGbo1Po
+   xcu2gUDVDUDpngYviTYYycjeRPt3JbHkUMdpRP8gcmN6SKZJbVXAATj/J
+   PtwgEBd5btEXOPvDCf5oHmXc01pQA6ZHyNGoGsRuXTNDF1w7f3aTwxvP6
+   snBryttocb7l6OYJbRDSW/ihXgXe7qeZecnVd3NRJAMYHVFjVlcbRNsn6
+   A==;
+X-IronPort-AV: E=Sophos;i="5.96,147,1665417600"; 
+   d="scan'208";a="327832628"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 14:11:31 +0800
+IronPort-SDR: hw7PpFwFAVwMN/rRvpd/aMxDpb/FBLlc11YtqTMdz7AuLbnkObqNPuSI5aFZT9SdfEdlN4VTa/
+ G9P97ANpouJsWVddRrZIlzl5EzKavB5t7uP6CuVh2+xTCiAy6e2WR/oHMe084cAv30ADStX2Z3
+ miLHrv6zoLNMCUFjSbH5ID4v/sUFMgD0WFLUsTwVy7cfXZDvha8X7Hmd6zodQs0eiuEp6QpF3x
+ i1aKA7fPZnIgM031ndrL/YOkPepv97I1R+fQ1X5nyoeEtX9KaECUW12OiB3mdmY5LpLxzFJEmn
+ Qnw=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 21:15:03 -0800
-IronPort-SDR: hY1o8/9QHlbmYLX2kc00l10Fg8WchUqqqmxH4kbKKKX7YggxnVVTylXaLcCMlVPjLD3mW/jpLZ
- h9U/78dF6/c/qMSYxdxPSuZ4jpkPGqhvKH/Po2FfXC37qoeYaDmL9ZXf9SoIeKIrAMcrBshQ+E
- Cp+3IZUeEZpS9tgnNUBsoQ406rCRnb4WhAaBN+4wCaRLhuF8Z5Q5DOuKh68ci0/Z2EOhHnXjA/
- 2UW2eP35eC4kaz9gvuwTMngq7FlZwEYMqlWJ853Xw+Q418EGN7lYSzTBnNZecft3Ubvo7Eyz+N
- Vbg=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 21:30:38 -0800
+IronPort-SDR: HkdBlPLs2VEaa5qKl62i8XYJtK3v7ONlO9CQZrYgpHCqHQsnyHwwi8NJZr8i/YEo1KbtUhwjDq
+ puAOcIx/Q0y9hzgzcVOEer59wpLO/d1iICGqrWASF2N45OWY8WhkW3twRn3k1e6l3MVKz7KSJK
+ 5Oq7I4DN+5SeMk9kmUQacvYudbOpm9LVXmAwAZB6jMt7X6x7Pc2t7yl/H2fO6sgqASV2FujK90
+ xC7NSF6kg5YWfVkHHuEjOno8nf0kvSJhYx4qHZ1htrjGOeib0S8PNa8xs2BwfAT1tGRnBPfciR
+ /rs=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 21:55:57 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 22:11:32 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N5y586fscz1RvLy
-        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 21:55:56 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N5yR73DDyz1RvTp
+        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 22:11:31 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1667886956; x=1670478957; bh=MzodolIBXzjJzo8qX7
-        vax6iZ+4wEc086CZFFgStxWSw=; b=a5DHYDEOiXZLKy7A2nc8/vr7X5DowBMNue
-        cojTCNemnbJh9rsDLtZOQTgrd6COznK9mNypsBskBb33d2RhyNZ+adf9Grj9YP24
-        O6HHrqnlFVho2uvbo1+pTmsCcsySSH4NBealyxvwd6m2JlSV8aANq5WDiyBz+Sjq
-        rdPeQ9hYkbS/Rncvf+ZrVIMmBbmRgn+GRRaeMyHc6XIGM3r2Tad5LeTK4najJXj7
-        cMkHFqVUEQvmjaJzz/ODPvt/yXcShGbTenDCgo88RvRN3JkJiOkMwIu8ZnHKQnXz
-        RAq5HJLTLx/miuGLG2H8LNtupNIakNsu3XUsJON6p2NQf1z0sC+w==
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1667887891; x=1670479892; bh=jseMqPJWNiWBF4rM0E/F4EXcH+Q+uKiSrNv
+        DQDUghks=; b=mgp7rHPjVhZhDr7EvJo+x9HCUvf6LMRPIkb/XIgLqUXoh0q8BmX
+        +g4HsExtgBjdALgQAerOgjRX93KkZbdwKuyH5PLd0to+k4CtZFhV9ncWEQAMF65k
+        H93UwjPRV0bcznmpN/7wE6iv4Ah2W9QCHol0ywd+8iIYqMW2KAnMVZmTJia6syzj
+        qYNouclzf/NNE1DlTQtUibwJp8344wnhUFyf+xCox0jkAFyNMcMQOpzFL2I++f2x
+        /+HyqCcoG8+0PkxTdCIXW1w0VB6pi1KnS6BWb714exsJAorf7mhFVF6oPK7sjBBu
+        kWzYUJd9DzNBlkqkSKFRnDE0SaNG18nQlaA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id KvclwuW_NUVq for <linux-ide@vger.kernel.org>;
-        Mon,  7 Nov 2022 21:55:56 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N5y574bhCz1RvTp;
-        Mon,  7 Nov 2022 21:55:55 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>,
-        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v6 7/7] ata: libata: Enable fua support by default
-Date:   Tue,  8 Nov 2022 14:55:44 +0900
-Message-Id: <20221108055544.1481583-8-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221108055544.1481583-1-damien.lemoal@opensource.wdc.com>
-References: <20221108055544.1481583-1-damien.lemoal@opensource.wdc.com>
+        with ESMTP id Wk9Cd7eoaHfV for <linux-ide@vger.kernel.org>;
+        Mon,  7 Nov 2022 22:11:31 -0800 (PST)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N5yR64SCBz1RvLy;
+        Mon,  7 Nov 2022 22:11:30 -0800 (PST)
+Message-ID: <9c48b2ec-7cca-e95a-4dbe-0de94676a4dc@opensource.wdc.com>
+Date:   Tue, 8 Nov 2022 15:11:29 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.0
+Subject: Re: [PATCH v2] ata: libata-scsi: fix SYNCHRONIZE CACHE (16) command
+ failure
+Content-Language: en-US
+To:     Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        linux-ide@vger.kernel.org
+Cc:     Dmitry Fomichev <Dmitry.Fomichev@wdc.com>
+References: <20221107040229.1548793-1-shinichiro.kawasaki@wdc.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20221107040229.1548793-1-shinichiro.kawasaki@wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Change the default value of the fua module parameter to 1 to enable fua
-support by default for all devices supporting it.
+On 11/7/22 13:02, Shin'ichiro Kawasaki wrote:
+> SAT SCSI/ATA Translation specification requires SCSI SYNCHRONIZE CACHE
+> (10) and (16) commands both shall be translated to ATA flush command.
+> Also, ZBC Zoned Block Commands specification mandates SYNCHRONIZE CACHE
+> (16) command support. However, libata translates only SYNCHRONIZE CACHE
+> (10). This results in SYNCHRONIZE CACHE (16) command failures on SATA
+> drives and then libata translation does not conform to ZBC. To avoid the
+> failure, add support for SYNCHRONIZE CACHE (16).
+> 
+> Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> Cc: stable@vger.kernel.org
 
-FUA support can be disabled for individual drives using the
-force=3D[ID]nofua libata module argument.
+Applied to for-6.1-fixes. Thanks !
 
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Maciej S. Szmigiero <maciej.szmigiero@oracle.com>
-Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
----
- drivers/ata/libata-core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> ---
+> Changes from v1:
+> * Improved commit message per comments on the list
+> 
+>  drivers/ata/libata-scsi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index e2ebb0b065e2..61cd4e90e4e7 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3264,6 +3264,7 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+>  	case REPORT_LUNS:
+>  	case REQUEST_SENSE:
+>  	case SYNCHRONIZE_CACHE:
+> +	case SYNCHRONIZE_CACHE_16:
+>  	case REZERO_UNIT:
+>  	case SEEK_6:
+>  	case SEEK_10:
+> @@ -3922,6 +3923,7 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+>  		return ata_scsi_write_same_xlat;
+>  
+>  	case SYNCHRONIZE_CACHE:
+> +	case SYNCHRONIZE_CACHE_16:
+>  		if (ata_try_flush_cache(dev))
+>  			return ata_scsi_flush_xlat;
+>  		break;
+> @@ -4145,6 +4147,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+>  	 * turning this into a no-op.
+>  	 */
+>  	case SYNCHRONIZE_CACHE:
+> +	case SYNCHRONIZE_CACHE_16:
+>  		fallthrough;
+>  
+>  	/* no-op's, complete with success */
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 97ade977b830..2967671131d2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -127,9 +127,9 @@ int atapi_passthru16 =3D 1;
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI dev=
-ices (0=3Doff, 1=3Don [default])");
-=20
--int libata_fua =3D 0;
-+int libata_fua =3D 1;
- module_param_named(fua, libata_fua, int, 0444);
--MODULE_PARM_DESC(fua, "FUA support (0=3Doff [default], 1=3Don)");
-+MODULE_PARM_DESC(fua, "FUA support (0=3Doff, 1=3Don [default])");
-=20
- static int ata_ignore_hpa;
- module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
---=20
-2.38.1
+-- 
+Damien Le Moal
+Western Digital Research
 
