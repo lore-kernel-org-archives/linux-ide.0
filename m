@@ -2,297 +2,151 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A530BC433FE
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Nov 2022 07:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF9E0C4321E
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Nov 2022 07:37:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229931AbiKHHNn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Nov 2022 02:13:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56664 "EHLO
+        id S233426AbiKHHh0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Nov 2022 02:37:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230154AbiKHHNm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Nov 2022 02:13:42 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E4C42EF52
-        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 23:13:41 -0800 (PST)
+        with ESMTP id S233563AbiKHHhE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Nov 2022 02:37:04 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CA872F672;
+        Mon,  7 Nov 2022 23:37:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667891621; x=1699427621;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=eo5Ossivt2NINgP0U1LKva2jpqv1jOLKaA9iTwBQEDE=;
-  b=RSyEkRADULWVJ04p8mpQjlqQKvs8SXdjGgauy8wiwkk0GA9qEDrUobi0
-   vNf4ORa6Y+WKSw/mdcUX3CCJ6g2bbeGx/L0cU43xU2uf0L/evZyFNYuh7
-   u6bgwxT4yQzC4nDL1SiSk4Bwz46OOA26Ltlfk2ClUAM1jxtzLiD80o1Lu
-   hipDoGkQiik+OfZGm9YWHtqkS24RmQVSGJHhm5H1Hs4VYfJZ1jzXy5+uK
-   2xi8JDuY4eBnzHcPS0Abz4UTiAwajqyErLTRtSHYl81K9UJWeF139CL8S
-   Uq+hEXTUgrvk4gBGY7u39Zh130U3YS9ONi+h91gw9C7IBpcBy2/nzZo9M
-   A==;
+  t=1667893023; x=1699429023;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
+  b=Sm7KN92W8CMpl3CsoAV/Zekha1WCmHpC5Y00xhXTJDYaVSAZkQ+ToFVN
+   FkAH2wc45nSlACUeVaaGj7InwL/vMmF3pNWwGf0If7veqntfeQN4Zf3NA
+   XK5ZR8Ws8i4cJs5O+bLvP0gwcLfj3AQ1qIlMpfH9DILMX9OJ8eZR8wm9M
+   LOAb7DJQHogR1zObgIOMfSfBISOnvlHI2hRKKYZjfSY/XDtNTNLnd7zwP
+   OUL7nwAhmHlyzHibfo5LkFlGTyb9+7scQaGT9WOghu3EaUhHptEuAkMgI
+   kXxibLJQlwCVTqO9ecpIY/8/RpninD4tOWeYqc56JVoD6d0gGPy8NJYBV
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.96,147,1665417600"; 
-   d="scan'208";a="220894878"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 15:13:41 +0800
-IronPort-SDR: ibV8lGc6NbKCcxgPWSjHQXxYgl0ssN2Wi7u5EdYa8hxD3oMp1HH6giOltUMNz240aPJt0gZGDE
- //oTAcX4zfts1o/EfQ92E9ngUiN4vPgXfEaRUVaW28wqPHR/BT14fNxxgem1enHLq2TYqSwrD3
- IynAHrPqIGgy1QnYXUOR6B2JrjKoxTS3z7vPtHmoT4ZQCU/8llDDw8kNU8BYytIN/HTf4mq1zm
- pswrdeChLoy2CCZTgzq5YGnLeP09cVBRDrIVvRYj+iayUqlApuXyo6uh3vjeTmNoQ2rwBZU+VF
- SOM=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 22:27:02 -0800
-IronPort-SDR: Ss9WR3/DNv9WLb/algdbRcA4WIh0IZAzHiGMx6DvJ8H+LdF1lXLBH1zOhmaLyUR/7hUudynfzs
- r2m4u6Ko9bAxhnizS3808AMq0LjOtVONep0eVN//J/oR2iTQczlJfTjenNhjp93YiOdJYGG7oW
- EMxa4oN/R50nxQLjwoZ7LzBcoH77v2oJnu4IkwTTo36vEE8ulNzavc4+mLzLQTlKBdYqGJvkB/
- ZGvW0eeWf4FCheSbIerf0kG5/3G5JnXAMcYz5kte91gum5vagwMRF606tOMy6fSYFsA0SETVVw
- KJY=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 23:13:41 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N5zpq326mz1Rwrq
-        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 23:13:39 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1667891618; x=1670483619; bh=eo5Ossivt2NINgP0U1LKva2jpqv1jOLKaA9
-        iTwBQEDE=; b=esP8QHjJM1BCaV9+/bf7hGciQMGhBqFNK454sPEz5MylrZnWeLd
-        Fc0OGZIFg7Rc2KwTZJov656xuefZ5SMFdAVPDnYa7sYKp2UnBe90dP99SVfW/V8R
-        GCnLqvEbWZEsaVUfEqwD4RJxdGUTDGPwFjtzicow8RjcMtFLcnFCXKe7LzURFynM
-        4n+eMBR1akJeWR0ujAVWMdkT3ahfOBedWTd5L7O1vS3g3p+wiHYWUeP8FNxFYPZg
-        FMbDuhJH3N5/ASPXNxAS5UFfzCs9n9S5Eg2/CDJaJgsYRLHltfZoSWcTKVsRIFX3
-        MANpy4Fpav1xpkNLsEFXoJq/Qs1Vm5CVuTQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id jTDfo00NX68s for <linux-ide@vger.kernel.org>;
-        Mon,  7 Nov 2022 23:13:38 -0800 (PST)
-Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N5zpn3wSgz1RvLy;
-        Mon,  7 Nov 2022 23:13:37 -0800 (PST)
-Message-ID: <2c36f5ca-d7c7-ccd9-a6d3-72c677345c34@opensource.wdc.com>
-Date:   Tue, 8 Nov 2022 16:13:36 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.0
-Subject: Re: [PATCH v2] ata: libata-core: do not issue non-internal commands
- once EH is pending
+   d="scan'208";a="215738439"
+Received: from mail-dm6nam12lp2177.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.177])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 15:37:02 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=RHydFaVvWzVOxNZqTRXRAro6yeLlChuuVcwNX78TYuBK/wczMpR80Tk2Hh522W1vJkZTgros8xFdPVfkoIXRfFWhA083R4fnyTMVyTxZYrssA0EMs2Q/8Py65Zh/CdQR/Zcvzjbpfj201H5sVXg2sqTKtYKgdMNtjwFrbFCPowpqIihI+egcqAGfEdX1Pypoz95eQiTV/CcWPBrSOfsHoFu6mq3vwGy3aLfmr/y1LmvqV0I6GPfnSGirc9VqoGmFBKYoEAGqe+5LYe1MDIuA9ulZ0/Fqd8O4HzC6wf5X0oPCiTk654hzqHu66Qwignhw4Rr/ST5WkJreSV6CzyjLEA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
+ b=nb40/AibUtY5EqyibNAK6/9IR3SeVKIltMF8OZ/74FKWJHcaLLAOIJUlbzhu23HHbsmG/+Bh4ouw1XoK6l6Cn6Y6xhxtuoAURhc2+d3PO0V1qDgZMEA2SPRETOEfWQUPKpa3Z3k1Z5/YylqB0/XqaiuwflOspECWbSBRDEpbFfvB61hM41VQ1kV3ommVfzxrjUnSkNzGpjiCTqmxFlq3jD3IqyWPK/UNqCPrr7VU1gZxONoU3Lzhe0W15pOZhircPrtf4CxhkH0G1v1CP+dAOIGM4OiOpkW/BKgGGPsfYIGh+zWUvZfT5mJv4TmHPsZechZ2iz5jjAYBpyTtT/Cxgg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
+ b=QJ0srgcbr0KMRkvIqZtRHQCnTOBOCgGBXWYwLxnX5PSl7dACktLEuZwRr7VtRVOQp/M2/iI96NuLoEmuXgXS7jxgZXmPCNvLhBTcYNJrZXsDyFRA/yUg54L+j5eS9SYk+13HF0eoKIrt2jR3p5v3AvKgbhh7SISrDOz8F2uwRAk=
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
+ by CY4PR04MB1113.namprd04.prod.outlook.com (2603:10b6:903:b9::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.26; Tue, 8 Nov
+ 2022 07:37:00 +0000
+Received: from PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::88ea:acd8:d928:b496]) by PH0PR04MB7416.namprd04.prod.outlook.com
+ ([fe80::88ea:acd8:d928:b496%5]) with mapi id 15.20.5791.027; Tue, 8 Nov 2022
+ 07:37:00 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>
+CC:     "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>,
+        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v6 1/7] block: add a sanity check for non-write flush/fua
+ bios
+Thread-Topic: [PATCH v6 1/7] block: add a sanity check for non-write flush/fua
+ bios
+Thread-Index: AQHY8zbHti/dmKoWqkCXh0QSmvEs9640o1eA
+Date:   Tue, 8 Nov 2022 07:37:00 +0000
+Message-ID: <b5aae5f4-9473-9943-bc86-4378270688d8@wdc.com>
+References: <20221108055544.1481583-1-damien.lemoal@opensource.wdc.com>
+ <20221108055544.1481583-2-damien.lemoal@opensource.wdc.com>
+In-Reply-To: <20221108055544.1481583-2-damien.lemoal@opensource.wdc.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        John Garry <john.g.garry@oracle.com>
-Cc:     "tj@kernel.org" <tj@kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-References: <20221107161036.670237-1-niklas.cassel@wdc.com>
- <5a4fa5db-c706-5cf2-1145-bf091445d20e@oracle.com>
- <Y2mbX8MvYrF0FHaI@x1-carbon> <00204846-726c-7fbc-fc4b-43ac432500f8@suse.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <00204846-726c-7fbc-fc4b-43ac432500f8@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.4.2
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH0PR04MB7416:EE_|CY4PR04MB1113:EE_
+x-ms-office365-filtering-correlation-id: 654df979-40fa-4e49-19e9-08dac15c05d7
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: J8s5FvzEAjgS1tsWPy8iZmJPTm/jvgypDAKQJxHuFX7m1hAxZ5xjHRZEew7BjH8EuhaBnyzWVU3GS9MGrSDYugACfJ3mcQxZOUUPg8xljHXx6DuGWKVNjq282Jd+lj9zLv/FbHhiNDgo5UEmaefLwIO7PDJYWC8uoIXV/dLtgHLdQypBy85ocav3eFaMO1Avqo93LPVtDjA/IP/tpE1C7yMHTB+pHZ9ntuB55sFQZ7bPxFK6+2ARpBgrr15k48Adp3xOM2DIoarfmkUm+vMhZGm+e4V22IOE5dLZ5aWBTienLg+gy+qsoGbLRHqdJuUdLie/GypBPe6R6ygZS/F8C3IsW9XNUnUONqwwbAivvTZzh7iY/mZ6i2FV7NSI9TJXZBJXSTnOoC58CABIwUfiu0xrpaecNoukDG/P522tT4eJlpq/QDbZAn6zyuIbBj0NXaw19b7NihwEEuIcOLqlaor6SY8G5WdU5zeb06ZngqbJmpl8c/Yrcp7Z0urqqd6i4O40OrM64IjkI6OY06YU9Bra9vFesCXwNrS6K16VsnxEmS1GuDk+suno6dBFQkCMr2REqHeaZyFRHjAwbKVjAodgZTqdHQClJrLjVpfT4wM/y67Ge5CEgh4ZuQDtvAz7Do8qlj2uUdiNHAFBcWr7eQdoMui+MI1gmpIhQk5p5XtWsYEKc1Ph12n0dVCW2Jmo4W9qxFO1G7IcKMxxEpYrbV1JBbgt2au7D1DuD2Prugy8w96XchUHww4wFjvHDcdVw/57Xg2vWhnzW1EG4/+rJk4l//z2JLiSTThdT3t768LZH6CBeNcnI0fA9eRG86K0I3NqgX2o4Huwk9dlDMWHxQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(39860400002)(396003)(346002)(136003)(376002)(451199015)(2616005)(558084003)(122000001)(38100700002)(38070700005)(66476007)(186003)(2906002)(82960400001)(19618925003)(8936002)(5660300002)(86362001)(478600001)(6486002)(6506007)(6512007)(91956017)(4270600006)(66446008)(64756008)(66556008)(31696002)(8676002)(316002)(71200400001)(41300700001)(76116006)(4326008)(66946007)(54906003)(110136005)(31686004)(36756003)(43740500002)(45980500001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?QjlZb0c2Z2d3VEN2cWxhZG5jSkRxczg1TlJVTW5TV0tXYUFrU1lrSDUvZW9s?=
+ =?utf-8?B?WWZIRXo0dmxvbDdRazJsaGtFbFNtVkJzR0w5NWNBZ3VDL1o4TDVzYW4zUnNT?=
+ =?utf-8?B?WVkremdDSnhhRmRoT3ZzWkpNVGk1cTRRbEhWRGlVb3FOWXZkdXNKYVhWMDRr?=
+ =?utf-8?B?OWNEOEVQdlU1cVhRZCttaFlOYjJVZXZEYXJFZVVZcTJ3bXNEQVRaVnlWaDA4?=
+ =?utf-8?B?KzgwZkp5bzZhb1hnSk5iMUFOWTh4SHA2UGNaQzVMUUZiQWo3WUlNYU1maVdM?=
+ =?utf-8?B?c2pVcUpJdFJlTW9NK1NvODJyancvOVAxbjZ2YkpmNmtXQ1NPcUZRRFc1Y2x5?=
+ =?utf-8?B?MWRiQ2lnbG9uWXhOVWZrdG9ueVlQNEVuS3g4b2FScVNtRE5mdzB3RzNoQnpP?=
+ =?utf-8?B?eU94UWxSNnlueDY4TjZFRGVZMWk2SGNlSUdzd21SaU5ERk1MT2RzdzhJc3Vj?=
+ =?utf-8?B?bHpIakdQazdwZjNnUnBxZ0lscFFKaG9HcnBDbWplUTFwVEdjenRhREhGUVc5?=
+ =?utf-8?B?SnI1RSs1TlYzdXBjRHI4TWFwTE16R1dtNFlORWJlbDBZQzhsNUN0cDZKRXV5?=
+ =?utf-8?B?SDdPWUdqUWJzNFB0dis1aWhLRS96UmhNWDVhNmNGY1o3MldKS0JOT3AwK1NQ?=
+ =?utf-8?B?Qkt2OVNqcjVnNW9WbzR6cDYxbDlGVEtmT2JzRk96T0ZWSDRmM3MzaEhSR0xV?=
+ =?utf-8?B?clNua0FtZ2k1N3RWUHRMUUZDaXc3MVU0OFVVN3VQVjc5VzNFOXhTWStpdzVu?=
+ =?utf-8?B?a3U4dll0eGRVWW9TOWV6NlhIYW5IUFd1Si9wYk1ibGhvNmpBWDlhQ0tNYnNU?=
+ =?utf-8?B?eTBUK3F4UTJBc0xJWGgrd2xTUEhYSlVUb005WitKWjZWaGZVYmpkTENYcDND?=
+ =?utf-8?B?RUVBeHVUNzdrbDZMZGZhcGFyQWIzeEt1Rlc0VGpVQ29wdjJkMk8wQ0lhVWta?=
+ =?utf-8?B?WVROVE4rMVEzL1gwd2V5SkR3Q3FRcXFSNTZLalMrTFQ2eXdLalViQkpOL3Y4?=
+ =?utf-8?B?Z2NBMG8zQ2l4NnA1NFQrZWIvd1FybVk2S1l4eC80MW9aT2lZVWNueWd2NFdK?=
+ =?utf-8?B?S0RaTFdjU3pJeW9kQ3FTYVpRdGtsNk10RjhMdk9zSEVrSXhxNzAvUkdjaFJj?=
+ =?utf-8?B?NHNTWk8vN1h0Sm9UdDRsWHV3NDFvZ1VFbW1HaEpDTTZpUUliYnNEeE8yVHF2?=
+ =?utf-8?B?UXpMZkdVOWFkeHo4c0FGaDBOd09IQTdDQ0ZIemF3KzNheDZsekE1dEN1OXUx?=
+ =?utf-8?B?RTNOam9oR0Q4WkpOaXY2OEEyZWtkQXdxUnBvam9rZCsxNFZpenE1aWx5Y3ZG?=
+ =?utf-8?B?UmZ5RVI2ZTdTM0JMNytvNXB5b0liaGZkN0lVK2hINzJLd1FLUGxWRXlvMWZz?=
+ =?utf-8?B?a0VHK21FYkhSalVVbmxyZGxHTXpQZ2ltUXRRS1Z3SUg2eWxTcElJeXZSdm5u?=
+ =?utf-8?B?MzB3R1BqcnY4QjhFSnNjT0JBb0ZwTXB5c1FVTlF3M1BhdTZUZ01LTHNQZ2JB?=
+ =?utf-8?B?eGZIdyt2WE5hQkxFRFJ0OXNBd3VSSUVremZCS0VjTldVRHEyd043c1pIOVMz?=
+ =?utf-8?B?dmFISGFBZVVia3RFU1dhakVkaGVrUXNQd2VwRUUwQWxHMEdiaFFoczNnY1Vz?=
+ =?utf-8?B?dDZJcCtaeEFrbDFuYjYxSUgvSGpoMWVWVHg2QmxRanhiNEVtUGtIcE9IOUxu?=
+ =?utf-8?B?a3gza1orQkxQT3BnQ1JQTzRqeTVBSUZBTlhzTGRTUTFUV2M2MytMMXllb3Z3?=
+ =?utf-8?B?WFlTZE5SQmUyb2sybGErRENOcTd0OUhIVXVxdWxKUFhIRWRGc3ZtM0s5THdW?=
+ =?utf-8?B?MG42b0lkUENmR0lzNnQ0NnpPYkZ1Z0ZhV3RZUzdrVXMzWUdPMzgwSEJVNkxQ?=
+ =?utf-8?B?VmlsZXpkdFNZZW9waWNxQzk3dGVNa3JZYXJHNkhLL25FSzdCOC9BSEhEVnJC?=
+ =?utf-8?B?enNlOHV3clUvaThhMUsxTmtucWdLUlFhNGZMWWh2YXVaUG11a25xUStsUHFn?=
+ =?utf-8?B?T0pNN3J6eTl6Q1ZpdTNWQ3g1U2hrYlBVMDRNOW1IM1M2UHBBNzVHWnV1TzFm?=
+ =?utf-8?B?bTRYVllQcERCKzZCZUFkRjQzcXptWlBaSkRlK2psRG85TjFtTkM4a29ZTUQw?=
+ =?utf-8?B?RFNaNnFZSUVEc3habUFGRnJyNjlSVGRpdWFFSy92K08zT1RiZWVGd0xudUtR?=
+ =?utf-8?B?S0ttQUhKZWlJeXpRbnprNThZQjU4SmxBZ3NBbDdMRFJuUXBSdU9ZbmZETmxL?=
+ =?utf-8?B?VlhuTkNnNG1jTkorZXo4MHFGWWZBPT0=?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <F6263139F94AC840A8CB90D4714AAB8E@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 654df979-40fa-4e49-19e9-08dac15c05d7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Nov 2022 07:37:00.4856
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: s2pNhgOrVKS5lTiNunSjRGNpY4SUZqBN/LR1oR14ppTmnC7At1lPod6SOUIsLIjKl430EuyMsRqpkDy1wUeFO4uCx6dFAFAXQEY9S2IqA78=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR04MB1113
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 11/8/22 16:10, Hannes Reinecke wrote:
-> On 11/8/22 00:57, Niklas Cassel wrote:
->> On Mon, Nov 07, 2022 at 05:01:53PM +0000, John Garry wrote:
->>> On 07/11/2022 16:10, Niklas Cassel wrote:
->>>> scsi_queue_rq() will check if scsi_host_in_recovery() (state is
->>>> SHOST_RECOVERY), and if so, it will _not_ issue a command via:
->>>> scsi_dispatch_cmd() -> host->hostt->queuecommand()
->>>> (ata_scsi_queuecmd())
->>>> -> __ata_scsi_queuecmd() -> ata_scsi_translate() -> ata_qc_issue()
->>>>
->>>> Before commit e494f6a72839 ("[SCSI] improved eh timeout handler"),
->>>> when receiving a TFES error IRQ, this was the call chain:
->>>> ahci_error_intr() -> ata_port_abort() -> ata_do_link_abort() ->
->>>> ata_qc_complete() -> ata_qc_schedule_eh() -> blk_abort_request() ->
->>>> blk_rq_timed_out() -> q->rq_timed_out_fn() (scsi_times_out()) ->
->>>> scsi_eh_scmd_add() -> scsi_host_set_state(shost, SHOST_RECOVERY)
->>>>
->>>> Which meant that as soon as the error IRQ was serviced, no additiona=
-l
->>>> commands sent from the block layer (scsi_queue_rq()) would be sent d=
-own
->>>> to the device. (ATA internal commands originating for ATA EH could o=
-f
->>>> course still be sent.)
->>>>
->>>> However, after commit e494f6a72839 ("[SCSI] improved eh timeout
->>>> handler"),
->>>> scsi_times_out() would instead result in a call to
->>>> scsi_abort_command() ->
->>>> queue_delayed_work(). work function: scmd_eh_abort_handler() would c=
-all
->>>> scsi_eh_scmd_add(), which calls scsi_host_set_state(shost,
->>>> SHOST_RECOVERY).
->>>>
->>>> (It was possible to get the old behavior if host->hostt->no_async_ab=
-ort
->>>> was set, but libata never used it, and this option was completely
->>>> removed
->>>> in commit a06586325f37 ("scsi: make asynchronous aborts mandatory"))
->>>>
->>>> Additionally, later in commit 358f70da49d7 ("blk-mq: make
->>>> blk_abort_request() trigger timeout path"), blk_abort_request() was
->>>> changed
->>>> to also call the abort callback asynchronously.
->>>>
->>>> So now, after the TFES error irq has been serviced, we need to wait =
-for
->>>> two different workqueues to run their work, before the SHOST_RECOVER=
-Y
->>>> state gets set.
->>>>
->>>> While the ATA specification states that a device should return comma=
-nd
->>>> aborted for all commands queued after the device has entered error
->>>> state,
->>>> since ATA only keeps the sense data for the latest command (in non-N=
-CQ
->>>> case), we really don't want to send block layer commands to the devi=
-ce
->>>> after it has entered error state. (Only ATA EH commands should be se=
-nt,
->>>> to read the sense data etc.)
->>>>
->>>> While we could just call scsi_host_set_state(shost, SHOST_RECOVERY)
->>>> from
->>>> ata_qc_schedule_eh() directly, that might be a layering violation.
->>>> So instead of doing that, add an additional check against the
->>>> libata's own
->>>> EH flag(s) before calling the qc_defer callback.
->>>>
->>>> Fixes: e494f6a72839 ("[SCSI] improved eh timeout handler")
->>>> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
->>>> ---
->>>> Changes since v1:
->>>> -Implemented review comments from Damien.
->>>>
->>>> =C2=A0=C2=A0 drivers/ata/libata-scsi.c | 20 ++++++++++++++++++++
->>>> =C2=A0=C2=A0 1 file changed, 20 insertions(+)
->>>>
->>>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->>>> index 4cb914103382..383a208f5f99 100644
->>>> --- a/drivers/ata/libata-scsi.c
->>>> +++ b/drivers/ata/libata-scsi.c
->>>> @@ -1736,6 +1736,26 @@ static int ata_scsi_translate(struct
->>>> ata_device *dev, struct scsi_cmnd *cmd,
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (xlat_func(qc))
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto ea=
-rly_finish;
->>>> +=C2=A0=C2=A0=C2=A0 /*
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * scsi_queue_rq() will defer commands when=
- in state
->>>> SHOST_RECOVERY.
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 *
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * When getting an error interrupt, ata_por=
-t_abort() will be
->>>> called,
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * which ends up calling ata_qc_schedule_eh=
-() on all QCs.
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 *
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * ata_qc_schedule_eh() will call ata_eh_se=
-t_pending() and then
->>>> call
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * blk_abort_request() on the given QC. blk=
-_abort_request() will
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * asynchronously end up calling scsi_eh_sc=
-md_add(), which will
->>>> set
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * the state to SHOST_RECOVERY and wake up =
-SCSI EH.
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 *
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * In order to avoid requests from being is=
-sued to the device
->>>> from the
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * time ata_eh_set_pending() is called, to =
-the time
->>>> scsi_eh_scmd_add()
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 * sets the state to SHOST_RECOVERY, we def=
-er requests here as
->>>> well.
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0 */
->>>> +=C2=A0=C2=A0=C2=A0 if (ap->pflags & (ATA_PFLAG_EH_PENDING |
->>>> ATA_PFLAG_EH_IN_PROGRESS)) {
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rc =3D ATA_DEFER_LINK;
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto defer;
->>>
->>> Could we move this check earlier? I mean, we didn't need to have the =
-qc
->>> alloc'ed and xlat'ed for this check to be done, right?
->>
->> Sure, we could put it in e.g. ata_scsi_queuecmd() or
->> __ata_scsi_queuecmd().
->>
->>
->> Or, perhaps it is just time to accept that ATA EH is so interconnected
->> with
->> SCSI EH, so the simplest thing is just to do:
->>
->> --- a/drivers/ata/libata-eh.c
->> +++ b/drivers/ata/libata-eh.c
->> @@ -913,6 +913,7 @@ void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
->> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 qc->flags |=3D=
- ATA_QCFLAG_FAILED;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_eh_set_pending(ap=
-, 1);
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 scsi_host_set_state(ap->scsi_hos=
-t, SHOST_RECOVERY);
->> =C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* The followi=
-ng will fail if timeout has already expired.
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * ata_scsi_erro=
-r() takes care of such scmds on EH entry.
->>
->>
->> Which appears to work just as well as the patch in $subject.
->>
->> In commit ee7863bc68fa ("[PATCH] SCSI: implement
->> shost->host_eh_scheduled")
->> Tejun mentioned that "... libata is planning to depart from SCSI, so,
->> for the
->> time being, libata will be using SCSI EH to handle such exceptions."
->>
->> Now, 16 years later, ATA is still using SCSI EH (see
->> ata_port_schedule_eh() and
->> ata_std_sched_eh()) to schedule EH in the case when there are no QCs
->> to abort:
->> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tre=
-e/drivers/ata/libata-eh.c?h=3Dv6.1-rc4#n1004
->>
->> Damien, thoughts?
->=20
-> Yeah, that was the original idea. By the time libata was designed we
-> still had quite a lot of drivers in drivers/ide, and it wasn't quite
-> clear if managing everything via SATL was the way to go.
-> So one idea was to allow libata to become stand-alone, and SATL working
-> as a modular interface on top of libata.
-> However, this never materialized, as everyone was quite happy having to
-> deal with SCSI devices only, even if that meant to go via an additional
-> layer of interpolation.
->=20
-> With the introduction of libsas this idea became even more dubious, as
-> libsas really called for a _tighter_ integration with SCSI.
-> Plus ATA in general seems to be heading into the sunset, so I sincerely
-> doubt anyone really wants to head that way.
->=20
-> In fact, with the recent patches we should finally drop the pretension
-> that libata will ever be standalone, and concentrate on making it more
-> aligned with SCSI.
-
-So you are saying you prefer the fix proposed by Niklas above, calling
-scsi_host_set_state() from libata ? I feel OK-ish about it... But if it
-is called in the right place, why not.
-
->=20
-> Cheers,
->=20
-> Hannes
-
---=20
-Damien Le Moal
-Western Digital Research
-
+TG9va3MgZ29vZCwNClJldmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGpvaGFubmVzLnRo
+dW1zaGlybkB3ZGMuY29tPg0K
