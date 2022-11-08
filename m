@@ -2,238 +2,418 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC7BBC433FE
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Nov 2022 03:50:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C341C4167B
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Nov 2022 05:00:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232991AbiKHDuw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Nov 2022 22:50:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33532 "EHLO
+        id S229843AbiKHFAK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Nov 2022 00:00:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232920AbiKHDuv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2022 22:50:51 -0500
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 239262DABA
-        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 19:50:50 -0800 (PST)
+        with ESMTP id S233300AbiKHE7q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Nov 2022 23:59:46 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 337353207A
+        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 20:58:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1667879449; x=1699415449;
+  t=1667883532; x=1699419532;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=zWCZlBV0Du560Hsw2iMyyo75APBF5iv+MkGPs81UfQQ=;
-  b=cvCsNHQ+MnQdF9q3N82dz5mStt/eEaTgKKr1nSSYpFD/yAGu0gYJZRry
-   LMyFRDciyPvfnPs5E2wIfYliINIGBor7w3pW5hdGZmfQ/NLJlUTG74ZSb
-   zTc/lmvB19ur+nMMAKZemNGEk83ykU1ImINpNrLtpVou5rqNA5dYnLi5c
-   D5c+xgftPQPnjdy1setbMYghpCFBoUIhg9FlXSLMrK3tFSgS9my7vTr5k
-   I1gLH6aCWIJW3RwY04cu1yCB4VXgOvYaL30GN+6d67Yhi82/zUcwqOCoR
-   osuzSx0DYnU2pVG7+dVO/mBQDHTSI4OarN5dd7TCQ0xglsklTdRcFFcuQ
-   w==;
+  bh=46ovSLoSoayx3G43K4UsLTVhaD9jYAuDPcb9XUrUYbU=;
+  b=p0Y5J1haLEszztFfGHgUGzTQCWEPkO4NW5TzN579jJmm3fJrv/hmSP9k
+   6SKOExW0xEHqF3EeEhBxt1sf8XLwyXWE62ibN48lLaJVijJJXLoT6lto8
+   yQ4LQV4Ux5Zo7pb/xVGwObW6q+Uos8cjWhj05i5FPjB5OyIQtqUXM1rfB
+   6msfXXiiSk02co7NN/dI+2MqT3NInYBPIOAP9OiO9xcWWRMbO1TJ64TnQ
+   wkdCHg61eEQG2ngBtV6pEL5S6DnCt2SvNWqLB/AdkY4bQTWTNodzc9MlI
+   vyB2UH2opFu9lHBKIVzpPMHR2ei+/uRZyQD3xhITgo04Kv4Lvux8w3r2m
+   A==;
 X-IronPort-AV: E=Sophos;i="5.96,145,1665417600"; 
-   d="scan'208";a="327823949"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 11:50:49 +0800
-IronPort-SDR: MrgXa9B/emWgpwEXAuRVcVzLvyQLmU5voDJUhM2tliheImFdVgW5C3YpLV0Uyda2T2+RoOzaqO
- Xik3C46C+PJX1CYzTPkH5iVwLe0NsOkMeJnRloS/gkQJ0D9Z4WHHIm31vQSSITRSVhH35Aj9rB
- bhdZYj02slILHeGbadtQqQrqDQz3uGx8WEC9RysmRA8mIoIz5BiLjobKD1MaUKQBL4HFu30abp
- qIpdXvffSKJ8rtcKmFD5qvbMPtj4ywVZLdJ6V1NPiJjmU7H2QtOKLskbKUvQDh4n0GjF9dUt4x
- mXc=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 19:04:10 -0800
-IronPort-SDR: NzTAJIXn7xH/g9qGRhVlVH22mn3dN5+vFKpDqH7JSPVV3xyNaBadlwjBHf0MgaUZO/0RPtHhgy
- b+yFBS8o6SZV75RsLns/hFf9Z2BmTj/b1ZmMeDw7RQHppRtWERzukXkFsrZW4qA8iUiMnX5FbV
- gDzJc0ItLld1AiNY4I5elVCTkTWccNuMQavtoDAGIcoGUaxCBptKM+XdFbPlHedo5KzLrxQMuI
- b/hERfP0XKbWay4cAxS7HswIx64Q/bnoEIW1OyKwbGBjfThKM15m7T40gfh5hsnCTHDvYbrpML
- WrU=
+   d="scan'208";a="320064102"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 08 Nov 2022 12:58:49 +0800
+IronPort-SDR: vQ5gXbbUREUotJleOQTGGchiqLqAtCYVZfiLBnBOz+AIHWNJ+o81lA+Y3Rn0tLh5fZkOc/nzs8
+ HcgazIQe5ocrT6ClpMssGlP4jZ+WgGem50P1wgGVOwypnpB0oXWkq0POo17iMGh3dbsXrhGxOz
+ KNS86qoPdKASefyZI7tDfTTFO2I19FdqRiF6OQkbYve185O5spEcExGcBuuk3hUaAPmgkmyXfu
+ E3rAcMDTlrSydHT3BY6LFhfUz/E9tPV8599+EHzDRBT0U+fR2XdUyJi8ykMbUU5lYJ8hAs0ULb
+ xmc=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 20:17:56 -0800
+IronPort-SDR: B82SJdPuCbKZL4PWbXyLAEIET1MwlSdJZBpWQGaFqLCJvTvGTSkNdVOB4FmgSkmIMl/YBuK8Mr
+ azFvX8WFUZxL/Ef3HiP5YHKaoD7rh16pGiMwQZc/m4amuV0HMWYDDF1cv6z+yYys/4m+BVn5/t
+ n8IIsBYRXSlHlSY6Z0qNZNzcqiLontpPzJGhp//hAeb0VZI4EC751sl4URNRlp8nXVE+x8j0pm
+ OgUZ5EFpUqiXr8hYBHN7fFnM12CgzjfOIVhHN96Nsrgb1tjqT31rTQB06qaiVtbMCOoLoSdR3O
+ V+8=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 19:50:49 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Nov 2022 20:58:50 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N5vJm4kWSz1RvTp
-        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 19:50:48 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N5wqF3nRnz1RvTr
+        for <linux-ide@vger.kernel.org>; Mon,  7 Nov 2022 20:58:49 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:content-language:references:to
+        :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1667879447; x=1670471448; bh=zWCZlBV0Du560Hsw2iMyyo75APBF5iv+MkG
-        Ps81UfQQ=; b=QCilGdrE2aqDwoWOvbH52jTJfkeMCBflDkaj0Js77GIbKVdlBcw
-        tR5EWa9P2qVUoQYhuPLk6tBtnY13AY1/6UFMKIfdVNamHY7Aryi3FY26Mu30sn8j
-        vuDIHLkJHIqLI70cC/VoIXrY3H1mherXZTE1gj3YnCAGPnwNXO8gVCvV+tAGCYZr
-        kCnh0ivYjfQ0WkwGYTX6XWXW9UonMiSNE6UDebYNeoa62jXggA4T3A6f6FagFwkt
-        nYYtie9usTK87JbsVd6HQSq7fDhpRgGiMdeMy/UJOP9Zh0Xg4Pc43oDoPxNe/unC
-        2htXozfsunTwF4QYCRZ61lUAszCClE/XufQ==
+        1667883528; x=1670475529; bh=46ovSLoSoayx3G43K4UsLTVhaD9jYAuDPcb
+        9XUrUYbU=; b=ZrzaftJmL3sO7U7+iCl+0YhaUTM2YAXTODriLgV8GWzVPC1vDw1
+        X+QW6U2pe7C/h/F52a26VC5sz9V2Ud4TPDHecVbSTccPfdrMU3lS5MxDaAOWEpYw
+        ksPq9zlnzTFxq9CXIkgH2Zc4WYeIeMitztORwUeXLm4b8q2z51kV/DTLRndVclyV
+        YcJ3D1gN313geU68zNV6qpB1ZwhsRuQUqurWecuwKnxJFfvp2k6QlYAoXce5e8rI
+        AlxiU8xV0BAdc1Vrl4JSQMJBZkf8qfFEIMss7dM1GiojUbU89VriJcmBhPY84vqY
+        9MeuaY3Az0QUbpLEILtKRQnEV1FKGpKQQAw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id wppdwPShKPbL for <linux-ide@vger.kernel.org>;
-        Mon,  7 Nov 2022 19:50:47 -0800 (PST)
+        with ESMTP id qWJ9NnB34uee for <linux-ide@vger.kernel.org>;
+        Mon,  7 Nov 2022 20:58:48 -0800 (PST)
 Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N5vJk311nz1RvLy;
-        Mon,  7 Nov 2022 19:50:46 -0800 (PST)
-Message-ID: <976bdcb7-cb97-9332-2bcc-5d98bc41871b@opensource.wdc.com>
-Date:   Tue, 8 Nov 2022 12:50:44 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N5wqC3QZbz1RvLy;
+        Mon,  7 Nov 2022 20:58:47 -0800 (PST)
+Message-ID: <2df619de-2931-390c-08c6-f4d9c0f75bc5@opensource.wdc.com>
+Date:   Tue, 8 Nov 2022 13:58:46 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.4.0
-Subject: Re: [PATCH v2] ata: libata-core: do not issue non-internal commands
- once EH is pending
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        John Garry <john.g.garry@oracle.com>
-Cc:     "tj@kernel.org" <tj@kernel.org>, "hare@suse.de" <hare@suse.de>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>
-References: <20221107161036.670237-1-niklas.cassel@wdc.com>
- <5a4fa5db-c706-5cf2-1145-bf091445d20e@oracle.com>
- <Y2mbX8MvYrF0FHaI@x1-carbon>
+Subject: Re: [PATCH 1/2] ata: ahci (gcc13): use BIT() for bit definitions in
+ enum
 Content-Language: en-US
+To:     "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, Martin Liska <mliska@suse.cz>,
+        linux-ide@vger.kernel.org
+References: <20221031114310.10337-1-jirislaby@kernel.org>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <Y2mbX8MvYrF0FHaI@x1-carbon>
+In-Reply-To: <20221031114310.10337-1-jirislaby@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 10/31/22 20:43, Jiri Slaby (SUSE) wrote:
+> gcc13 now uses the type of the enum for all its members [1]. Given the
+> ata enum defines its members using both unsigned and signed ints, the
+> type of the enum is promoted to long.
+> 
+> Make sure most the members are unsigned ints using the BIT() macro. The
+> rest will be converted separately in the next patch.
+> 
+> The error in question is for example this:
+> drivers/block/mtip32xx/mtip32xx.c:722:25: error: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'long in'
 
-+ linux-scsi, Martin and James
+This is not an ATA driver. Any example of a compile warning/error for
+libata and ata drivers ?
 
-On 11/8/22 08:57, Niklas Cassel wrote:
-> On Mon, Nov 07, 2022 at 05:01:53PM +0000, John Garry wrote:
->> On 07/11/2022 16:10, Niklas Cassel wrote:
->>> scsi_queue_rq() will check if scsi_host_in_recovery() (state is
->>> SHOST_RECOVERY), and if so, it will _not_ issue a command via:
->>> scsi_dispatch_cmd() -> host->hostt->queuecommand() (ata_scsi_queuecmd())
->>> -> __ata_scsi_queuecmd() -> ata_scsi_translate() -> ata_qc_issue()
->>>
->>> Before commit e494f6a72839 ("[SCSI] improved eh timeout handler"),
->>> when receiving a TFES error IRQ, this was the call chain:
->>> ahci_error_intr() -> ata_port_abort() -> ata_do_link_abort() ->
->>> ata_qc_complete() -> ata_qc_schedule_eh() -> blk_abort_request() ->
->>> blk_rq_timed_out() -> q->rq_timed_out_fn() (scsi_times_out()) ->
->>> scsi_eh_scmd_add() -> scsi_host_set_state(shost, SHOST_RECOVERY)
->>>
->>> Which meant that as soon as the error IRQ was serviced, no additional
->>> commands sent from the block layer (scsi_queue_rq()) would be sent down
->>> to the device. (ATA internal commands originating for ATA EH could of
->>> course still be sent.)
->>>
->>> However, after commit e494f6a72839 ("[SCSI] improved eh timeout handler"),
->>> scsi_times_out() would instead result in a call to scsi_abort_command() ->
->>> queue_delayed_work(). work function: scmd_eh_abort_handler() would call
->>> scsi_eh_scmd_add(), which calls scsi_host_set_state(shost, SHOST_RECOVERY).
->>>
->>> (It was possible to get the old behavior if host->hostt->no_async_abort
->>> was set, but libata never used it, and this option was completely removed
->>> in commit a06586325f37 ("scsi: make asynchronous aborts mandatory"))
->>>
->>> Additionally, later in commit 358f70da49d7 ("blk-mq: make
->>> blk_abort_request() trigger timeout path"), blk_abort_request() was changed
->>> to also call the abort callback asynchronously.
->>>
->>> So now, after the TFES error irq has been serviced, we need to wait for
->>> two different workqueues to run their work, before the SHOST_RECOVERY
->>> state gets set.
->>>
->>> While the ATA specification states that a device should return command
->>> aborted for all commands queued after the device has entered error state,
->>> since ATA only keeps the sense data for the latest command (in non-NCQ
->>> case), we really don't want to send block layer commands to the device
->>> after it has entered error state. (Only ATA EH commands should be sent,
->>> to read the sense data etc.)
->>>
->>> While we could just call scsi_host_set_state(shost, SHOST_RECOVERY) from
->>> ata_qc_schedule_eh() directly, that might be a layering violation.
->>> So instead of doing that, add an additional check against the libata's own
->>> EH flag(s) before calling the qc_defer callback.
->>>
->>> Fixes: e494f6a72839 ("[SCSI] improved eh timeout handler")
->>> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
->>> ---
->>> Changes since v1:
->>> -Implemented review comments from Damien.
->>>
->>>   drivers/ata/libata-scsi.c | 20 ++++++++++++++++++++
->>>   1 file changed, 20 insertions(+)
->>>
->>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->>> index 4cb914103382..383a208f5f99 100644
->>> --- a/drivers/ata/libata-scsi.c
->>> +++ b/drivers/ata/libata-scsi.c
->>> @@ -1736,6 +1736,26 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
->>>   	if (xlat_func(qc))
->>>   		goto early_finish;
->>> +	/*
->>> +	 * scsi_queue_rq() will defer commands when in state SHOST_RECOVERY.
->>> +	 *
->>> +	 * When getting an error interrupt, ata_port_abort() will be called,
->>> +	 * which ends up calling ata_qc_schedule_eh() on all QCs.
->>> +	 *
->>> +	 * ata_qc_schedule_eh() will call ata_eh_set_pending() and then call
->>> +	 * blk_abort_request() on the given QC. blk_abort_request() will
->>> +	 * asynchronously end up calling scsi_eh_scmd_add(), which will set
->>> +	 * the state to SHOST_RECOVERY and wake up SCSI EH.
->>> +	 *
->>> +	 * In order to avoid requests from being issued to the device from the
->>> +	 * time ata_eh_set_pending() is called, to the time scsi_eh_scmd_add()
->>> +	 * sets the state to SHOST_RECOVERY, we defer requests here as well.
->>> +	 */
->>> +	if (ap->pflags & (ATA_PFLAG_EH_PENDING | ATA_PFLAG_EH_IN_PROGRESS)) {
->>> +		rc = ATA_DEFER_LINK;
->>> +		goto defer;
->>
->> Could we move this check earlier? I mean, we didn't need to have the qc
->> alloc'ed and xlat'ed for this check to be done, right?
 > 
-> Sure, we could put it in e.g. ata_scsi_queuecmd() or __ata_scsi_queuecmd().
+> [1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
 > 
+> Cc: Martin Liska <mliska@suse.cz>
+> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Cc: linux-ide@vger.kernel.org
+> Signed-off-by: Jiri Slaby (SUSE) <jirislaby@kernel.org>
+> ---
+>  drivers/ata/ahci.h | 220 ++++++++++++++++++++++-----------------------
+>  1 file changed, 110 insertions(+), 110 deletions(-)
 > 
-> Or, perhaps it is just time to accept that ATA EH is so interconnected with
-> SCSI EH, so the simplest thing is just to do:
-> 
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -913,6 +913,7 @@ void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 7add8e79912b..94b5c81f08dd 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -53,12 +53,12 @@ enum {
+>  	AHCI_PORT_PRIV_FBS_DMA_SZ	= AHCI_CMD_SLOT_SZ +
+>  					  AHCI_CMD_TBL_AR_SZ +
+>  					  (AHCI_RX_FIS_SZ * 16),
+> -	AHCI_IRQ_ON_SG		= (1 << 31),
+> -	AHCI_CMD_ATAPI		= (1 << 5),
+> -	AHCI_CMD_WRITE		= (1 << 6),
+> -	AHCI_CMD_PREFETCH	= (1 << 7),
+> -	AHCI_CMD_RESET		= (1 << 8),
+> -	AHCI_CMD_CLR_BUSY	= (1 << 10),
+> +	AHCI_IRQ_ON_SG		= BIT(31),
+> +	AHCI_CMD_ATAPI		= BIT(5),
+> +	AHCI_CMD_WRITE		= BIT(6),
+> +	AHCI_CMD_PREFETCH	= BIT(7),
+> +	AHCI_CMD_RESET		= BIT(8),
+> +	AHCI_CMD_CLR_BUSY	= BIT(10),
 >  
->         qc->flags |= ATA_QCFLAG_FAILED;
->         ata_eh_set_pending(ap, 1);
-> +       scsi_host_set_state(ap->scsi_host, SHOST_RECOVERY);
-
-Why put this in this function ? Nothing in ata_qc_schedule_eh() calls
-scsi_schedule_eh() or scsi_eh_scmd_add(), which set that state.
-It looks like ata_port->ops->sched_eh(), that is, ata_std_sched_eh(),
-would be a better place for this.
-
+>  	RX_FIS_PIO_SETUP	= 0x20,	/* offset of PIO Setup FIS data */
+>  	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
+> @@ -76,37 +76,37 @@ enum {
+>  	HOST_CAP2		= 0x24, /* host capabilities, extended */
 >  
->         /* The following will fail if timeout has already expired.
->          * ata_scsi_error() takes care of such scmds on EH entry.
-> 
-> 
-> Which appears to work just as well as the patch in $subject.
-> 
-> In commit ee7863bc68fa ("[PATCH] SCSI: implement shost->host_eh_scheduled")
-> Tejun mentioned that "... libata is planning to depart from SCSI, so, for the
-> time being, libata will be using SCSI EH to handle such exceptions."
-> 
-> Now, 16 years later, ATA is still using SCSI EH (see ata_port_schedule_eh() and
-> ata_std_sched_eh()) to schedule EH in the case when there are no QCs to abort:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/ata/libata-eh.c?h=v6.1-rc4#n1004
-> 
-> Damien, thoughts?
-
-I like this simpler fix better, but it does introduce a risk of (again)
-having problems with ata EH if scsi EH trigger/timing is changed.
-Unlikely now, but as this fix proves, not unheard of.
-
-The v2 change is fine too, modulo John's suggestion, which I agree with.
-At least it is consistent with the ata internal eh state accounting, so
-self contained within libata and somewhat less dependent on scsi state
-machine.
-
-Martin ? James ? Thoughts ?
+>  	/* HOST_CTL bits */
+> -	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
+> -	HOST_IRQ_EN		= (1 << 1),  /* global IRQ enable */
+> -	HOST_MRSM		= (1 << 2),  /* MSI Revert to Single Message */
+> -	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
+> +	HOST_RESET		= BIT(0),  /* reset controller; self-clear */
+> +	HOST_IRQ_EN		= BIT(1),  /* global IRQ enable */
+> +	HOST_MRSM		= BIT(2),  /* MSI Revert to Single Message */
+> +	HOST_AHCI_EN		= BIT(31), /* AHCI enabled */
+>  
+>  	/* HOST_CAP bits */
+> -	HOST_CAP_SXS		= (1 << 5),  /* Supports External SATA */
+> -	HOST_CAP_EMS		= (1 << 6),  /* Enclosure Management support */
+> -	HOST_CAP_CCC		= (1 << 7),  /* Command Completion Coalescing */
+> -	HOST_CAP_PART		= (1 << 13), /* Partial state capable */
+> -	HOST_CAP_SSC		= (1 << 14), /* Slumber state capable */
+> -	HOST_CAP_PIO_MULTI	= (1 << 15), /* PIO multiple DRQ support */
+> -	HOST_CAP_FBS		= (1 << 16), /* FIS-based switching support */
+> -	HOST_CAP_PMP		= (1 << 17), /* Port Multiplier support */
+> -	HOST_CAP_ONLY		= (1 << 18), /* Supports AHCI mode only */
+> -	HOST_CAP_CLO		= (1 << 24), /* Command List Override support */
+> -	HOST_CAP_LED		= (1 << 25), /* Supports activity LED */
+> -	HOST_CAP_ALPM		= (1 << 26), /* Aggressive Link PM support */
+> -	HOST_CAP_SSS		= (1 << 27), /* Staggered Spin-up */
+> -	HOST_CAP_MPS		= (1 << 28), /* Mechanical presence switch */
+> -	HOST_CAP_SNTF		= (1 << 29), /* SNotification register */
+> -	HOST_CAP_NCQ		= (1 << 30), /* Native Command Queueing */
+> -	HOST_CAP_64		= (1 << 31), /* PCI DAC (64-bit DMA) support */
+> +	HOST_CAP_SXS		= BIT(5),  /* Supports External SATA */
+> +	HOST_CAP_EMS		= BIT(6),  /* Enclosure Management support */
+> +	HOST_CAP_CCC		= BIT(7),  /* Command Completion Coalescing */
+> +	HOST_CAP_PART		= BIT(13), /* Partial state capable */
+> +	HOST_CAP_SSC		= BIT(14), /* Slumber state capable */
+> +	HOST_CAP_PIO_MULTI	= BIT(15), /* PIO multiple DRQ support */
+> +	HOST_CAP_FBS		= BIT(16), /* FIS-based switching support */
+> +	HOST_CAP_PMP		= BIT(17), /* Port Multiplier support */
+> +	HOST_CAP_ONLY		= BIT(18), /* Supports AHCI mode only */
+> +	HOST_CAP_CLO		= BIT(24), /* Command List Override support */
+> +	HOST_CAP_LED		= BIT(25), /* Supports activity LED */
+> +	HOST_CAP_ALPM		= BIT(26), /* Aggressive Link PM support */
+> +	HOST_CAP_SSS		= BIT(27), /* Staggered Spin-up */
+> +	HOST_CAP_MPS		= BIT(28), /* Mechanical presence switch */
+> +	HOST_CAP_SNTF		= BIT(29), /* SNotification register */
+> +	HOST_CAP_NCQ		= BIT(30), /* Native Command Queueing */
+> +	HOST_CAP_64		= BIT(31), /* PCI DAC (64-bit DMA) support */
+>  
+>  	/* HOST_CAP2 bits */
+> -	HOST_CAP2_BOH		= (1 << 0),  /* BIOS/OS handoff supported */
+> -	HOST_CAP2_NVMHCI	= (1 << 1),  /* NVMHCI supported */
+> -	HOST_CAP2_APST		= (1 << 2),  /* Automatic partial to slumber */
+> -	HOST_CAP2_SDS		= (1 << 3),  /* Support device sleep */
+> -	HOST_CAP2_SADM		= (1 << 4),  /* Support aggressive DevSlp */
+> -	HOST_CAP2_DESO		= (1 << 5),  /* DevSlp from slumber only */
+> +	HOST_CAP2_BOH		= BIT(0),  /* BIOS/OS handoff supported */
+> +	HOST_CAP2_NVMHCI	= BIT(1),  /* NVMHCI supported */
+> +	HOST_CAP2_APST		= BIT(2),  /* Automatic partial to slumber */
+> +	HOST_CAP2_SDS		= BIT(3),  /* Support device sleep */
+> +	HOST_CAP2_SADM		= BIT(4),  /* Support aggressive DevSlp */
+> +	HOST_CAP2_DESO		= BIT(5),  /* DevSlp from slumber only */
+>  
+>  	/* registers for each SATA port */
+>  	PORT_LST_ADDR		= 0x00, /* command list DMA addr */
+> @@ -128,24 +128,24 @@ enum {
+>  	PORT_DEVSLP		= 0x44, /* device sleep */
+>  
+>  	/* PORT_IRQ_{STAT,MASK} bits */
+> -	PORT_IRQ_COLD_PRES	= (1 << 31), /* cold presence detect */
+> -	PORT_IRQ_TF_ERR		= (1 << 30), /* task file error */
+> -	PORT_IRQ_HBUS_ERR	= (1 << 29), /* host bus fatal error */
+> -	PORT_IRQ_HBUS_DATA_ERR	= (1 << 28), /* host bus data error */
+> -	PORT_IRQ_IF_ERR		= (1 << 27), /* interface fatal error */
+> -	PORT_IRQ_IF_NONFATAL	= (1 << 26), /* interface non-fatal error */
+> -	PORT_IRQ_OVERFLOW	= (1 << 24), /* xfer exhausted available S/G */
+> -	PORT_IRQ_BAD_PMP	= (1 << 23), /* incorrect port multiplier */
+> -
+> -	PORT_IRQ_PHYRDY		= (1 << 22), /* PhyRdy changed */
+> -	PORT_IRQ_DMPS		= (1 << 7), /* mechanical presence status */
+> -	PORT_IRQ_CONNECT	= (1 << 6), /* port connect change status */
+> -	PORT_IRQ_SG_DONE	= (1 << 5), /* descriptor processed */
+> -	PORT_IRQ_UNK_FIS	= (1 << 4), /* unknown FIS rx'd */
+> -	PORT_IRQ_SDB_FIS	= (1 << 3), /* Set Device Bits FIS rx'd */
+> -	PORT_IRQ_DMAS_FIS	= (1 << 2), /* DMA Setup FIS rx'd */
+> -	PORT_IRQ_PIOS_FIS	= (1 << 1), /* PIO Setup FIS rx'd */
+> -	PORT_IRQ_D2H_REG_FIS	= (1 << 0), /* D2H Register FIS rx'd */
+> +	PORT_IRQ_COLD_PRES	= BIT(31), /* cold presence detect */
+> +	PORT_IRQ_TF_ERR		= BIT(30), /* task file error */
+> +	PORT_IRQ_HBUS_ERR	= BIT(29), /* host bus fatal error */
+> +	PORT_IRQ_HBUS_DATA_ERR	= BIT(28), /* host bus data error */
+> +	PORT_IRQ_IF_ERR		= BIT(27), /* interface fatal error */
+> +	PORT_IRQ_IF_NONFATAL	= BIT(26), /* interface non-fatal error */
+> +	PORT_IRQ_OVERFLOW	= BIT(24), /* xfer exhausted available S/G */
+> +	PORT_IRQ_BAD_PMP	= BIT(23), /* incorrect port multiplier */
+> +
+> +	PORT_IRQ_PHYRDY		= BIT(22), /* PhyRdy changed */
+> +	PORT_IRQ_DMPS		= BIT(7), /* mechanical presence status */
+> +	PORT_IRQ_CONNECT	= BIT(6), /* port connect change status */
+> +	PORT_IRQ_SG_DONE	= BIT(5), /* descriptor processed */
+> +	PORT_IRQ_UNK_FIS	= BIT(4), /* unknown FIS rx'd */
+> +	PORT_IRQ_SDB_FIS	= BIT(3), /* Set Device Bits FIS rx'd */
+> +	PORT_IRQ_DMAS_FIS	= BIT(2), /* DMA Setup FIS rx'd */
+> +	PORT_IRQ_PIOS_FIS	= BIT(1), /* PIO Setup FIS rx'd */
+> +	PORT_IRQ_D2H_REG_FIS	= BIT(0), /* D2H Register FIS rx'd */
+>  
+>  	PORT_IRQ_FREEZE		= PORT_IRQ_HBUS_ERR |
+>  				  PORT_IRQ_IF_ERR |
+> @@ -161,22 +161,22 @@ enum {
+>  				  PORT_IRQ_PIOS_FIS | PORT_IRQ_D2H_REG_FIS,
+>  
+>  	/* PORT_CMD bits */
+> -	PORT_CMD_ASP		= (1 << 27), /* Aggressive Slumber/Partial */
+> -	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
+> -	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+> -	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
+> -	PORT_CMD_ESP		= (1 << 21), /* External Sata Port */
+> -	PORT_CMD_CPD		= (1 << 20), /* Cold Presence Detection */
+> -	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch */
+> -	PORT_CMD_HPCP		= (1 << 18), /* HotPlug Capable Port */
+> -	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+> -	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+> -	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+> -	PORT_CMD_FIS_RX		= (1 << 4), /* Enable FIS receive DMA engine */
+> -	PORT_CMD_CLO		= (1 << 3), /* Command list override */
+> -	PORT_CMD_POWER_ON	= (1 << 2), /* Power up device */
+> -	PORT_CMD_SPIN_UP	= (1 << 1), /* Spin up device */
+> -	PORT_CMD_START		= (1 << 0), /* Enable port DMA engine */
+> +	PORT_CMD_ASP		= BIT(27), /* Aggressive Slumber/Partial */
+> +	PORT_CMD_ALPE		= BIT(26), /* Aggressive Link PM enable */
+> +	PORT_CMD_ATAPI		= BIT(24), /* Device is ATAPI */
+> +	PORT_CMD_FBSCP		= BIT(22), /* FBS Capable Port */
+> +	PORT_CMD_ESP		= BIT(21), /* External Sata Port */
+> +	PORT_CMD_CPD		= BIT(20), /* Cold Presence Detection */
+> +	PORT_CMD_MPSP		= BIT(19), /* Mechanical Presence Switch */
+> +	PORT_CMD_HPCP		= BIT(18), /* HotPlug Capable Port */
+> +	PORT_CMD_PMP		= BIT(17), /* PMP attached */
+> +	PORT_CMD_LIST_ON	= BIT(15), /* cmd list DMA engine running */
+> +	PORT_CMD_FIS_ON		= BIT(14), /* FIS DMA engine running */
+> +	PORT_CMD_FIS_RX		= BIT(4), /* Enable FIS receive DMA engine */
+> +	PORT_CMD_CLO		= BIT(3), /* Command list override */
+> +	PORT_CMD_POWER_ON	= BIT(2), /* Power up device */
+> +	PORT_CMD_SPIN_UP	= BIT(1), /* Spin up device */
+> +	PORT_CMD_START		= BIT(0), /* Enable port DMA engine */
+>  
+>  	PORT_CMD_ICC_MASK	= (0xf << 28), /* i/f ICC state mask */
+>  	PORT_CMD_ICC_ACTIVE	= (0x1 << 28), /* Put i/f in active state */
+> @@ -192,9 +192,9 @@ enum {
+>  	PORT_FBS_ADO_OFFSET	= 12, /* FBS active dev optimization offset */
+>  	PORT_FBS_DEV_OFFSET	= 8,  /* FBS device to issue offset */
+>  	PORT_FBS_DEV_MASK	= (0xf << PORT_FBS_DEV_OFFSET),  /* FBS.DEV */
+> -	PORT_FBS_SDE		= (1 << 2), /* FBS single device error */
+> -	PORT_FBS_DEC		= (1 << 1), /* FBS device error clear */
+> -	PORT_FBS_EN		= (1 << 0), /* Enable FBS */
+> +	PORT_FBS_SDE		= BIT(2), /* FBS single device error */
+> +	PORT_FBS_DEC		= BIT(1), /* FBS device error clear */
+> +	PORT_FBS_EN		= BIT(0), /* Enable FBS */
+>  
+>  	/* PORT_DEVSLP bits */
+>  	PORT_DEVSLP_DM_OFFSET	= 25,             /* DITO multiplier offset */
+> @@ -202,50 +202,50 @@ enum {
+>  	PORT_DEVSLP_DITO_OFFSET	= 15,             /* DITO offset */
+>  	PORT_DEVSLP_MDAT_OFFSET	= 10,             /* Minimum assertion time */
+>  	PORT_DEVSLP_DETO_OFFSET	= 2,              /* DevSlp exit timeout */
+> -	PORT_DEVSLP_DSP		= (1 << 1),       /* DevSlp present */
+> -	PORT_DEVSLP_ADSE	= (1 << 0),       /* Aggressive DevSlp enable */
+> +	PORT_DEVSLP_DSP		= BIT(1),       /* DevSlp present */
+> +	PORT_DEVSLP_ADSE	= BIT(0),       /* Aggressive DevSlp enable */
+>  
+>  	/* hpriv->flags bits */
+>  
+>  #define AHCI_HFLAGS(flags)		.private_data	= (void *)(flags)
+>  
+> -	AHCI_HFLAG_NO_NCQ		= (1 << 0),
+> -	AHCI_HFLAG_IGN_IRQ_IF_ERR	= (1 << 1), /* ignore IRQ_IF_ERR */
+> -	AHCI_HFLAG_IGN_SERR_INTERNAL	= (1 << 2), /* ignore SERR_INTERNAL */
+> -	AHCI_HFLAG_32BIT_ONLY		= (1 << 3), /* force 32bit */
+> -	AHCI_HFLAG_MV_PATA		= (1 << 4), /* PATA port */
+> -	AHCI_HFLAG_NO_MSI		= (1 << 5), /* no PCI MSI */
+> -	AHCI_HFLAG_NO_PMP		= (1 << 6), /* no PMP */
+> -	AHCI_HFLAG_SECT255		= (1 << 8), /* max 255 sectors */
+> -	AHCI_HFLAG_YES_NCQ		= (1 << 9), /* force NCQ cap on */
+> -	AHCI_HFLAG_NO_SUSPEND		= (1 << 10), /* don't suspend */
+> -	AHCI_HFLAG_SRST_TOUT_IS_OFFLINE	= (1 << 11), /* treat SRST timeout as
+> +	AHCI_HFLAG_NO_NCQ		= BIT(0),
+> +	AHCI_HFLAG_IGN_IRQ_IF_ERR	= BIT(1), /* ignore IRQ_IF_ERR */
+> +	AHCI_HFLAG_IGN_SERR_INTERNAL	= BIT(2), /* ignore SERR_INTERNAL */
+> +	AHCI_HFLAG_32BIT_ONLY		= BIT(3), /* force 32bit */
+> +	AHCI_HFLAG_MV_PATA		= BIT(4), /* PATA port */
+> +	AHCI_HFLAG_NO_MSI		= BIT(5), /* no PCI MSI */
+> +	AHCI_HFLAG_NO_PMP		= BIT(6), /* no PMP */
+> +	AHCI_HFLAG_SECT255		= BIT(8), /* max 255 sectors */
+> +	AHCI_HFLAG_YES_NCQ		= BIT(9), /* force NCQ cap on */
+> +	AHCI_HFLAG_NO_SUSPEND		= BIT(10), /* don't suspend */
+> +	AHCI_HFLAG_SRST_TOUT_IS_OFFLINE	= BIT(11), /* treat SRST timeout as
+>  							link offline */
+> -	AHCI_HFLAG_NO_SNTF		= (1 << 12), /* no sntf */
+> -	AHCI_HFLAG_NO_FPDMA_AA		= (1 << 13), /* no FPDMA AA */
+> -	AHCI_HFLAG_YES_FBS		= (1 << 14), /* force FBS cap on */
+> -	AHCI_HFLAG_DELAY_ENGINE		= (1 << 15), /* do not start engine on
+> +	AHCI_HFLAG_NO_SNTF		= BIT(12), /* no sntf */
+> +	AHCI_HFLAG_NO_FPDMA_AA		= BIT(13), /* no FPDMA AA */
+> +	AHCI_HFLAG_YES_FBS		= BIT(14), /* force FBS cap on */
+> +	AHCI_HFLAG_DELAY_ENGINE		= BIT(15), /* do not start engine on
+>  						        port start (wait until
+>  						        error-handling stage) */
+> -	AHCI_HFLAG_NO_DEVSLP		= (1 << 17), /* no device sleep */
+> -	AHCI_HFLAG_NO_FBS		= (1 << 18), /* no FBS */
+> +	AHCI_HFLAG_NO_DEVSLP		= BIT(17), /* no device sleep */
+> +	AHCI_HFLAG_NO_FBS		= BIT(18), /* no FBS */
+>  
+>  #ifdef CONFIG_PCI_MSI
+> -	AHCI_HFLAG_MULTI_MSI		= (1 << 20), /* per-port MSI(-X) */
+> +	AHCI_HFLAG_MULTI_MSI		= BIT(20), /* per-port MSI(-X) */
+>  #else
+>  	/* compile out MSI infrastructure */
+>  	AHCI_HFLAG_MULTI_MSI		= 0,
+>  #endif
+> -	AHCI_HFLAG_WAKE_BEFORE_STOP	= (1 << 22), /* wake before DMA stop */
+> -	AHCI_HFLAG_YES_ALPM		= (1 << 23), /* force ALPM cap on */
+> -	AHCI_HFLAG_NO_WRITE_TO_RO	= (1 << 24), /* don't write to read
+> +	AHCI_HFLAG_WAKE_BEFORE_STOP	= BIT(22), /* wake before DMA stop */
+> +	AHCI_HFLAG_YES_ALPM		= BIT(23), /* force ALPM cap on */
+> +	AHCI_HFLAG_NO_WRITE_TO_RO	= BIT(24), /* don't write to read
+>  							only registers */
+> -	AHCI_HFLAG_USE_LPM_POLICY	= (1 << 25), /* chipset that should use
+> +	AHCI_HFLAG_USE_LPM_POLICY	= BIT(25), /* chipset that should use
+>  							SATA_MOBILE_LPM_POLICY
+>  							as default lpm_policy */
+> -	AHCI_HFLAG_SUSPEND_PHYS		= (1 << 26), /* handle PHYs during
+> +	AHCI_HFLAG_SUSPEND_PHYS		= BIT(26), /* handle PHYs during
+>  							suspend/resume */
+> -	AHCI_HFLAG_NO_SXS		= (1 << 28), /* SXS not supported */
+> +	AHCI_HFLAG_NO_SXS		= BIT(28), /* SXS not supported */
+>  
+>  	/* ap->flags bits */
+>  
+> @@ -261,22 +261,22 @@ enum {
+>  	EM_MAX_RETRY			= 5,
+>  
+>  	/* em_ctl bits */
+> -	EM_CTL_RST		= (1 << 9), /* Reset */
+> -	EM_CTL_TM		= (1 << 8), /* Transmit Message */
+> -	EM_CTL_MR		= (1 << 0), /* Message Received */
+> -	EM_CTL_ALHD		= (1 << 26), /* Activity LED */
+> -	EM_CTL_XMT		= (1 << 25), /* Transmit Only */
+> -	EM_CTL_SMB		= (1 << 24), /* Single Message Buffer */
+> -	EM_CTL_SGPIO		= (1 << 19), /* SGPIO messages supported */
+> -	EM_CTL_SES		= (1 << 18), /* SES-2 messages supported */
+> -	EM_CTL_SAFTE		= (1 << 17), /* SAF-TE messages supported */
+> -	EM_CTL_LED		= (1 << 16), /* LED messages supported */
+> +	EM_CTL_RST		= BIT(9), /* Reset */
+> +	EM_CTL_TM		= BIT(8), /* Transmit Message */
+> +	EM_CTL_MR		= BIT(0), /* Message Received */
+> +	EM_CTL_ALHD		= BIT(26), /* Activity LED */
+> +	EM_CTL_XMT		= BIT(25), /* Transmit Only */
+> +	EM_CTL_SMB		= BIT(24), /* Single Message Buffer */
+> +	EM_CTL_SGPIO		= BIT(19), /* SGPIO messages supported */
+> +	EM_CTL_SES		= BIT(18), /* SES-2 messages supported */
+> +	EM_CTL_SAFTE		= BIT(17), /* SAF-TE messages supported */
+> +	EM_CTL_LED		= BIT(16), /* LED messages supported */
+>  
+>  	/* em message type */
+> -	EM_MSG_TYPE_LED		= (1 << 0), /* LED */
+> -	EM_MSG_TYPE_SAFTE	= (1 << 1), /* SAF-TE */
+> -	EM_MSG_TYPE_SES2	= (1 << 2), /* SES-2 */
+> -	EM_MSG_TYPE_SGPIO	= (1 << 3), /* SGPIO */
+> +	EM_MSG_TYPE_LED		= BIT(0), /* LED */
+> +	EM_MSG_TYPE_SAFTE	= BIT(1), /* SAF-TE */
+> +	EM_MSG_TYPE_SES2	= BIT(2), /* SES-2 */
+> +	EM_MSG_TYPE_SGPIO	= BIT(3), /* SGPIO */
+>  };
+>  
+>  struct ahci_cmd_hdr {
 
 -- 
 Damien Le Moal
