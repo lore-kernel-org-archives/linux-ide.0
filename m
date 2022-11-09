@@ -2,32 +2,32 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D59BC433FE
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Nov 2022 21:34:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C00CFC4332F
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Nov 2022 21:40:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231890AbiKIVe1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Nov 2022 16:34:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44632 "EHLO
+        id S229975AbiKIVkg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Nov 2022 16:40:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231451AbiKIVeX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Nov 2022 16:34:23 -0500
+        with ESMTP id S231366AbiKIVke (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Nov 2022 16:40:34 -0500
 Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A648133
-        for <linux-ide@vger.kernel.org>; Wed,  9 Nov 2022 13:34:19 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02D9C2F65A
+        for <linux-ide@vger.kernel.org>; Wed,  9 Nov 2022 13:40:30 -0800 (PST)
 dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
         c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
-        bh=rbyymVDq3X++k0sD7yA4gqidZ5ccch1Im3+5qUb+4Vk=;
-        b=wis8zgHe+OCTn6/Z4VJUQmGcMQP6MLLcVc1EI1rk1d9lyoZ7fAnLKldVVZwsqgz2huu+m5H5M+OsYVu6SlRqZUxXajyGejHtCa60XOF9OZYvwMHpBMN5kjm8Wv/gsXEgLNp1FPRfdjXDGnNVj6oNx3YG7HNvgr3sHIBEVsIgXQPZAOCWgMd2kYpzFxmsa0LGMoa7IqCeWIPKL418S4YaQAXS5iSreRoc7pXbRdGOqJjn9Tm2OdYBN0qBmw
-        MtPzHORqsxKCRLtjHr3DfcU0/ahMz310WENOcbMmcN2f5N8YcGS8aOOeV/m7+QGHO2MriZmINLK6yTZ0P5djQQjN3jBg==
+        bh=dkvfIaBJ+yTCvmxulYpse2Wa6B74IOd6m8Sl2ig57wc=;
+        b=ExwfznzdRdBq4HPPxZt8KFpqUlntfPPYXhP7gCXvzJzeYMcG7oX/8msNHoW9ScBeL4917MahoRqHr00IW7rNqNSoAzeX4NC2JaF9sR+dJul3lG3xtox2UE2IzRgpYS56lCB7papCzcQZi3t44AbsqAkg7DXVM29R9HVt3Jek/EztR6PewQo3Oh/nbmWKp+bk0v/A2xlGuo2xJd5a5KgxQJUSfzvuWw/2mOM69u5AeiCOfmVbntR3hT9To+
+        Msh83Uo8ZNo92i4BEgU15agIglNGJ2m0D+FYGEIaSK+CdPkIkU/H7q8CtnC4d94IotMnuT2tMEx1heIAk69wzFGfiC4A==
 Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204]) by mx1.wiredblade.com
- with ESMTPA ; Wed, 9 Nov 2022 19:52:54 +0000
+ with ESMTPA ; Wed, 9 Nov 2022 19:55:50 +0000
 MIME-Version: 1.0
-Date:   Wed, 09 Nov 2022 19:52:21 +0000
+Date:   Wed, 09 Nov 2022 19:55:11 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 X-Mailer: RainLoop/1.16.0
 From:   marius@psihoexpert.ro
-Message-ID: <36c79924907752ddd40802d83c797f11@psihoexpert.ro>
+Message-ID: <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
 Subject: Re: Bug report for ahci-mvebu driver
 To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
 Cc:     linux-ide@vger.kernel.org
@@ -70,7 +70,7 @@ See https://ulli-kroll.de/Downloads/NAS326/A38x-Functional-Spec-PU0A.pdf =
 From my kernel log:
 ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only pmp fbs pio slum=
  part sxs
-From https://ata.wiki.kernel.org/index.php/SATA_hardware_features
+From kernel sources ahci.h:
 pmp means "port multiplier"
 fbs means "FIS based switching"
 
