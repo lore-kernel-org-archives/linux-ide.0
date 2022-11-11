@@ -2,190 +2,123 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4DAC4332F
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Nov 2022 08:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D545CC4332F
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Nov 2022 08:31:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232825AbiKKIXi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Nov 2022 03:23:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49890 "EHLO
+        id S232341AbiKKIbP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Nov 2022 03:31:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232580AbiKKIXg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 03:23:36 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE29D634F
-        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2022 00:23:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1668155014; x=1699691014;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=gLM1pw1lxESUSO1QrGsLjt7aw1yn9IkJ0ehJ8/TBJcA=;
-  b=bH54WAscjLxhqec2BtbAwpdHc/ICZwCBNAiex0/dZ8Ww8zFT75DAHsmd
-   vC4DiLPfRrHyMUkxp/wu5jh1A5U0fswF+3jAw/KjjTSruO8CLfhsxsiQ0
-   Qq/0ZxVUw/p8mbKKhIJHpxG7HnVGsia19LVB6AwXRwQB6KdL6i4mTUI6L
-   rRK0k6o8d8RQCuaOo9t179cSGgJEJhTbi6akuzMTPFKEwxi73GYY/kkpV
-   R4+Ah+f1SrPTGrMcp9QJF/9XNi4bauw7aWO7fSlQp+m1GAkVVy+pyjlNu
-   2pJOlJQ16KgDdHewAC6U8KsNhC+t1R5jBmMalwwQoN5R9XowSWkkYX/xJ
-   g==;
-X-IronPort-AV: E=Sophos;i="5.96,156,1665417600"; 
-   d="scan'208";a="216366801"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Nov 2022 16:23:33 +0800
-IronPort-SDR: ZVmwJctQ+mBHV+nHHmKR35jAjlzI0/4bQivKL2Ot9cmJjY4+lEdC+fGMq2IDuPT8g/7l9IgPGO
- m+7SmBNKKDiyL27KVQbkQ/WWnD3QJlVaNpyLMVkehrcf6joTZv9Q3y8pKjnYVZ+3rglpnr/p6g
- aqCg6doPcRvsh9CUpMO1e2vTRAIQnWYoQBp/ama4Y4LB/Fmnx6qfCPrtu32KniIL5OxbCGRskP
- kLlBM0M0fYOtdi4n4GvpDr3WRWg3VMbzjMmSESVijUqKnQnZuzcbMsvurrZnLhcaaPfcBvyMxI
- U+0=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Nov 2022 23:42:35 -0800
-IronPort-SDR: ozBkFLjv9qJlEoWSyL+EbOhyhyDcokRMQqmV2azEIL0YkZNKzoT9xRvg/cwNrt+pdp+IGjI0j8
- W/jwFQjdywQzeljsAJujcFtOui+Zhoj6B8XG6NkeA3wa6GaVNHAGvjbQZ7gQikQD/mDBUPfPDF
- POmNHjaMvnJQ7vujvyL96l9Fmy6QB/phns0JrPTHy6J0xDFB3H3fdlNnAKMF0tSTIRwAhmzkl9
- PKdolvi0g8NAY4fETWqIQMEX6hUDj0BOrAR2BIaBBTg4d4erEZxlvvp1y0vaHenOlSy5vPSEa2
- 66A=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Nov 2022 00:23:33 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N7sD46ph7z1RvTp
-        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2022 00:23:32 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1668155012; x=1670747013; bh=gLM1pw1lxESUSO1QrGsLjt7aw1yn9IkJ0eh
-        J8/TBJcA=; b=iBg+2vLJBL9+ysdtKVETjwp0kv2m77usaERzjWRQYK7LgbYR9RC
-        geQbzZunpYLrNpOTqdEJgARj5RRWFrINbDptdAEFGxccZQTyU5k7vBk3Msht6oQi
-        CuJ2xIqDKkVloaBdHvygb2t1q5dPod+Of25zd5h9lmgsG+kwpSeNTaDH61OcqIu8
-        +DATm9Mz3FRrQ2kVj5Ia3D0jj4Q5oNHMquG66wq9KqZMouR8X2XqCVK2rg1SH8NX
-        mDVFq1/1QuPsAC625otkj/2Zq1jXQS5jgCw3QB150uWywvVGC/mBZrN5E/RGDQ7v
-        m/V/ndi/JHwjaxLefmOGuTBS8uQOFMSJxeQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id pcNSrLcqoX9j for <linux-ide@vger.kernel.org>;
-        Fri, 11 Nov 2022 00:23:32 -0800 (PST)
-Received: from [10.225.163.43] (unknown [10.225.163.43])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N7sD4158zz1RvLy;
-        Fri, 11 Nov 2022 00:23:31 -0800 (PST)
-Message-ID: <77a207bb-3fa7-58fd-e5d1-84b5f3f63967@opensource.wdc.com>
-Date:   Fri, 11 Nov 2022 17:23:30 +0900
+        with ESMTP id S232921AbiKKIbI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 03:31:08 -0500
+Received: from pegase2.c-s.fr (pegase2.c-s.fr [93.17.235.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 071FD7B23C;
+        Fri, 11 Nov 2022 00:31:07 -0800 (PST)
+Received: from localhost (mailhub3.si.c-s.fr [172.26.127.67])
+        by localhost (Postfix) with ESMTP id 4N7sNm2swzz9snb;
+        Fri, 11 Nov 2022 09:31:04 +0100 (CET)
+X-Virus-Scanned: amavisd-new at c-s.fr
+Received: from pegase2.c-s.fr ([172.26.127.65])
+        by localhost (pegase2.c-s.fr [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 1h5Tw1p4eEV5; Fri, 11 Nov 2022 09:31:04 +0100 (CET)
+Received: from messagerie.si.c-s.fr (messagerie.si.c-s.fr [192.168.25.192])
+        by pegase2.c-s.fr (Postfix) with ESMTP id 4N7sNm28NQz9snY;
+        Fri, 11 Nov 2022 09:31:04 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by messagerie.si.c-s.fr (Postfix) with ESMTP id 3AB558B786;
+        Fri, 11 Nov 2022 09:31:04 +0100 (CET)
+X-Virus-Scanned: amavisd-new at c-s.fr
+Received: from messagerie.si.c-s.fr ([127.0.0.1])
+        by localhost (messagerie.si.c-s.fr [127.0.0.1]) (amavisd-new, port 10023)
+        with ESMTP id vGQmwCgOE861; Fri, 11 Nov 2022 09:31:04 +0100 (CET)
+Received: from PO20335.IDSI0.si.c-s.fr (unknown [192.168.235.201])
+        by messagerie.si.c-s.fr (Postfix) with ESMTP id F3CE68B763;
+        Fri, 11 Nov 2022 09:31:03 +0100 (CET)
+Received: from PO20335.IDSI0.si.c-s.fr (localhost [127.0.0.1])
+        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.16.1) with ESMTPS id 2AB8UrLG1224942
+        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+        Fri, 11 Nov 2022 09:30:54 +0100
+Received: (from chleroy@localhost)
+        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.17.1/Submit) id 2AB8Uqne1224938;
+        Fri, 11 Nov 2022 09:30:52 +0100
+X-Authentication-Warning: PO20335.IDSI0.si.c-s.fr: chleroy set sender to christophe.leroy@csgroup.eu using -f
+From:   Christophe Leroy <christophe.leroy@csgroup.eu>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Christophe Leroy <christophe.leroy@csgroup.eu>,
+        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v2] ata: sata_dwc_460ex: Check !irq instead of irq == NO_IRQ
+Date:   Fri, 11 Nov 2022 09:30:46 +0100
+Message-Id: <146506d93c96b842422d31a90b5d23c98b70a111.1668155425.git.christophe.leroy@csgroup.eu>
+X-Mailer: git-send-email 2.37.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Subject: Re: [PATCH] ata: libata-sff: kill unused ata_sff_busy_sleep()
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <aaf9372f-a166-8ad1-53a1-a6d38aed031f@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <aaf9372f-a166-8ad1-53a1-a6d38aed031f@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1668155445; l=2065; s=20211009; h=from:subject:message-id; bh=kJeJYqdLxMtxzzZVD2m5nEZc0ye6WZ1r6uQHyJMp1mQ=; b=fEGzqVbxatKtg4XAQ9Njlsv6bP1voD8N6m/dNiYA6BVgu8ai1aCF1l2d8a+h+op1lgCRRNfEPosz HHbgcHb+Boq3NEK9zlU2SmcussNgyUErJC0hITZ3StfDvxJRkMyk
+X-Developer-Key: i=christophe.leroy@csgroup.eu; a=ed25519; pk=HIzTzUj91asvincQGOFx6+ZF5AoUuP9GdOtQChs7Mm0=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 11/10/22 06:47, Sergey Shtylyov wrote:
-> Nobody seems to call ata_sff_busy_sleep(), so we can get rid of it...
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+NO_IRQ is a relic from the old days. It is not used anymore in core
+functions. By the way, function irq_of_parse_and_map() returns value 0
+on error.
 
-Applied to for-6.2. Thanks !
+In some drivers, NO_IRQ is erroneously used to check the return of
+irq_of_parse_and_map().
 
-> 
-> ---
-> This patch is against the 'for-next' branch of Damien's 'libata.git' repo.
-> 
->  drivers/ata/libata-sff.c |   56 -----------------------------------------------
->  include/linux/libata.h   |    2 -
->  2 files changed, 58 deletions(-)
-> 
-> Index: libata/drivers/ata/libata-sff.c
-> ===================================================================
-> --- libata.orig/drivers/ata/libata-sff.c
-> +++ libata/drivers/ata/libata-sff.c
-> @@ -184,62 +184,6 @@ void ata_sff_dma_pause(struct ata_port *
->  }
->  EXPORT_SYMBOL_GPL(ata_sff_dma_pause);
->  
-> -/**
-> - *	ata_sff_busy_sleep - sleep until BSY clears, or timeout
-> - *	@ap: port containing status register to be polled
-> - *	@tmout_pat: impatience timeout in msecs
-> - *	@tmout: overall timeout in msecs
-> - *
-> - *	Sleep until ATA Status register bit BSY clears,
-> - *	or a timeout occurs.
-> - *
-> - *	LOCKING:
-> - *	Kernel thread context (may sleep).
-> - *
-> - *	RETURNS:
-> - *	0 on success, -errno otherwise.
-> - */
-> -int ata_sff_busy_sleep(struct ata_port *ap,
-> -		       unsigned long tmout_pat, unsigned long tmout)
-> -{
-> -	unsigned long timer_start, timeout;
-> -	u8 status;
-> -
-> -	status = ata_sff_busy_wait(ap, ATA_BUSY, 300);
-> -	timer_start = jiffies;
-> -	timeout = ata_deadline(timer_start, tmout_pat);
-> -	while (status != 0xff && (status & ATA_BUSY) &&
-> -	       time_before(jiffies, timeout)) {
-> -		ata_msleep(ap, 50);
-> -		status = ata_sff_busy_wait(ap, ATA_BUSY, 3);
-> -	}
-> -
-> -	if (status != 0xff && (status & ATA_BUSY))
-> -		ata_port_warn(ap,
-> -			      "port is slow to respond, please be patient (Status 0x%x)\n",
-> -			      status);
-> -
-> -	timeout = ata_deadline(timer_start, tmout);
-> -	while (status != 0xff && (status & ATA_BUSY) &&
-> -	       time_before(jiffies, timeout)) {
-> -		ata_msleep(ap, 50);
-> -		status = ap->ops->sff_check_status(ap);
-> -	}
-> -
-> -	if (status == 0xff)
-> -		return -ENODEV;
-> -
-> -	if (status & ATA_BUSY) {
-> -		ata_port_err(ap,
-> -			     "port failed to respond (%lu secs, Status 0x%x)\n",
-> -			     DIV_ROUND_UP(tmout, 1000), status);
-> -		return -EBUSY;
-> -	}
-> -
-> -	return 0;
-> -}
-> -EXPORT_SYMBOL_GPL(ata_sff_busy_sleep);
-> -
->  static int ata_sff_check_ready(struct ata_link *link)
->  {
->  	u8 status = link->ap->ops->sff_check_status(link->ap);
-> Index: libata/include/linux/libata.h
-> ===================================================================
-> --- libata.orig/include/linux/libata.h
-> +++ libata/include/linux/libata.h
-> @@ -1918,8 +1918,6 @@ extern void ata_sff_dev_select(struct at
->  extern u8 ata_sff_check_status(struct ata_port *ap);
->  extern void ata_sff_pause(struct ata_port *ap);
->  extern void ata_sff_dma_pause(struct ata_port *ap);
-> -extern int ata_sff_busy_sleep(struct ata_port *ap,
-> -			      unsigned long timeout_pat, unsigned long timeout);
->  extern int ata_sff_wait_ready(struct ata_link *link, unsigned long deadline);
->  extern void ata_sff_tf_load(struct ata_port *ap, const struct ata_taskfile *tf);
->  extern void ata_sff_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+It is not a real bug today because the only architectures using the
+drivers being fixed by this patch define NO_IRQ as 0, but there are
+architectures which define NO_IRQ as -1. If one day those
+architectures start using the non fixed drivers, there will be a
+problem.
 
+Long time ago Linus advocated for not using NO_IRQ, see
+https://lkml.org/lkml/2005/11/21/221 . He re-iterated the same view
+recently in https://lkml.org/lkml/2022/10/12/622
+
+So test !irq instead of tesing irq == NO_IRQ.
+
+And remove the fallback definition of NO_IRQ at the top of the file.
+
+Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
+---
+v2: Also removed the #ifndef NO_IRQ #define NO_IRQ 0 at the top
+---
+ drivers/ata/sata_dwc_460ex.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index e3263e961045..7b7e1516dbdd 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -42,10 +42,6 @@
+ #define sata_dwc_writel(a, v)	writel_relaxed(v, a)
+ #define sata_dwc_readl(a)	readl_relaxed(a)
+ 
+-#ifndef NO_IRQ
+-#define NO_IRQ		0
+-#endif
+-
+ #define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length */
+ 
+ enum {
+@@ -242,7 +238,7 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
+ 
+ 	/* Get SATA DMA interrupt number */
+ 	hsdev->dma->irq = irq_of_parse_and_map(np, 1);
+-	if (hsdev->dma->irq == NO_IRQ) {
++	if (!hsdev->dma->irq) {
+ 		dev_err(dev, "no SATA DMA irq\n");
+ 		return -ENODEV;
+ 	}
+@@ -1180,7 +1176,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 
+ 	/* Get SATA interrupt number */
+ 	irq = irq_of_parse_and_map(np, 0);
+-	if (irq == NO_IRQ) {
++	if (!irq) {
+ 		dev_err(dev, "no SATA DMA irq\n");
+ 		return -ENODEV;
+ 	}
 -- 
-Damien Le Moal
-Western Digital Research
+2.37.1
 
