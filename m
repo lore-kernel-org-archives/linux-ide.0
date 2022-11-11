@@ -2,134 +2,92 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C986DC4332F
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Nov 2022 11:09:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 642F1C4332F
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Nov 2022 12:30:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233280AbiKKLJk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Nov 2022 06:09:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33854 "EHLO
+        id S231615AbiKKMam (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Nov 2022 07:30:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233672AbiKKLJ3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 06:09:29 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A27667101
-        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2022 03:09:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1668164968; x=1699700968;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=4RiHsU1jwHUkIP4zazEvf7ayxXr/ETX8lP9UDsthGus=;
-  b=Jo11Qnu+B3jzVorI21MuexGhKeOGtCT/+VaPSVhs4buLO+BwVDJbY7kh
-   hG77R7ulUPFxEM9ZKYD7GbTEn91sbMQxvCGf58PLLVoOa1an0jVtEDrog
-   lDEuARmAatmbpvSq1ADhE728kXj0/+xFBEm7e/JzHbvBAxLz4tUTEat/p
-   my76NRchZDCOkk3+O+1sHtIA7N5/8HwGQzzNWc4wD2VU3R5mnBkKh7TXG
-   34gvfdGwQrHfb/12Zw3GomHtrCW7GHhOuxWGJLdTvqmHJVeEIC5W27xMJ
-   evKRLs9mSsySzYHBa8phyLwkR4O/0G0K9LOnv7Ct8svD4b6GpMF1d13Sc
-   A==;
-X-IronPort-AV: E=Sophos;i="5.96,156,1665417600"; 
-   d="scan'208";a="320384065"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Nov 2022 19:09:28 +0800
-IronPort-SDR: TGlYV6e7wZ4NiqVIkY8OTbc3wCFHUlWfKeuxkzsT/2nz/kqniQPCX1i9BXXa9wIAt1hUQESQKd
- C8m6NnjRHqhiPA0V+u93czCJuCBF9NP76fxRbPD4JAOZVDwJS/zWpzb622+AyWF5Lhkv1LWBeb
- 9wu5Z4J1pRO5aPvZAA97yFlmpSRK7HarDKmghNvoZni6BJJ+aCbhNrjDGYLZHlmTMbB618FYAK
- zxwsr4bUsd2tOyEE2jm5cr4B3fkKegDXbnAyKPNgpywEkC7mK7jYiMuTr7A2aicdl1yeolGGlX
- pTY=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Nov 2022 02:22:45 -0800
-IronPort-SDR: CoFGYHGgWEBh69CCPLxkwA0EhiWvcHMNOg5yi+erXDRCErN6W/IS0UZR6LeHh1j+3DzVJJu8E6
- pVH0UDMXZD5jsbMykHN8KfIou1VtMMotihYZFNddSgmLhiDVMHzcptR/vXhVcPZ71qRm1YB/hI
- TMoKhbBhRX0Aas0yEDe8KCR4itT8FwVr/lYOf2OhfIoRhhw4hRPXLiTEZRpMkVEHm0mAw3+x0s
- D3u8BURNQklUTQl0EZzZTe7/iFNszGIBz2cQM2sIy4hSCfurcyjbwMLIZ63ZH11sQT+J0vb4iW
- zOQ=
-WDCIronportException: Internal
-Received: from unknown (HELO x1-carbon.lan) ([10.225.164.31])
-  by uls-op-cesaip02.wdc.com with ESMTP; 11 Nov 2022 03:09:27 -0800
-From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
-Subject: [PATCH 2/2] ata: libata: skip error analysis for commands that are not errors
-Date:   Fri, 11 Nov 2022 12:09:20 +0100
-Message-Id: <20221111110921.1273193-3-niklas.cassel@wdc.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221111110921.1273193-1-niklas.cassel@wdc.com>
-References: <20221111110921.1273193-1-niklas.cassel@wdc.com>
+        with ESMTP id S233067AbiKKMak (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 07:30:40 -0500
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F021F6B397;
+        Fri, 11 Nov 2022 04:30:37 -0800 (PST)
+Received: from [192.168.1.103] (178.176.79.36) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 11 Nov
+ 2022 15:30:28 +0300
+Subject: Re: [PATCH] ata: ep93xx: use devm_platform_get_and_ioremap_resource()
+To:     <ye.xingchen@zte.com.cn>
+CC:     <damien.lemoal@opensource.wdc.com>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <chi.minghao@zte.com.cn>
+References: <202211111647123266703@zte.com.cn>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <d54062da-7379-84b9-c787-d0c2f56ea172@omp.ru>
+Date:   Fri, 11 Nov 2022 15:30:28 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <202211111647123266703@zte.com.cn>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.79.36]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 11/11/2022 12:05:57
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 173506 [Nov 11 2022]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.79.36 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.79.36
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 11/11/2022 12:08:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 11/11/2022 10:19:00 AM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-A NCQ error means that the device has aborted a single NCQ command and
-halted further processing of queued commands.
-To get the single NCQ command that caused the NCQ error, host software has
-to read the NCQ error log, which also takes the device out of error state.
+Hello!
 
-ata_eh_link_autopsy() starts off by calling ata_eh_analyze_ncq_error() to
-read the NCQ error log, to find the offending command that caused the NCQ
-error. ata_eh_analyze_ncq_error() marks the offending command by setting
-qc->err_mask to AC_ERR_NCQ.
+On 11/11/22 11:47 AM, ye.xingchen@zte.com.cn wrote:
 
-ata_eh_link_autopsy() then continues with further analysis for all
-commands owned by libata EH.
+> From: Minghao Chi <chi.minghao@zte.com.cn>
+> 
+> Convert platform_get_resource(), devm_ioremap_resource() to a single
+> call to devm_platform_get_and_ioremap_resource(), as this is exactly
+> what this function does.
+> 
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 
-However, once we have found the offending command, we know that all other
-commands cannot be an error. (Theoretically a command could have timed out
-just before the NCQ error happened (so EH was scheduled but did not yet
-run), such command will have AC_ERR_TIMEOUT set in qc->err_mask.)
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Therefore, after finding the offending command, we know that we can simply
-skip the per command analysis for all commands that have not been marked
-as error at this point, since we know that they have to be retried anyway.
+[...]
 
-Do this by changing ata_eh_analyze_ncq_error() to mark all non-failed
-commands as ATA_QCFLAG_RETRY, and change the loop in ata_eh_link_autopsy()
-to skip commands marked as ATA_QCFLAG_RETRY.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
----
-Flag ATA_QCFLAG_FAILED is kept since it means that the command is owned
-by libata EH. A failed command will always have qc->err_mask set.
-Perhaps flag ATA_QCFLAG_FAILED should be renamed to something like
-ATA_QCFLAG_OWNED_BY_EH to further clarify this meaning, and that the flag
-does not necessarily mean that it is an error.
-
- drivers/ata/libata-eh.c   | 1 +
- drivers/ata/libata-sata.c | 8 ++++++++
- 2 files changed, 9 insertions(+)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index bde15f855f70..34303ce67c14 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1955,6 +1955,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 
- 	ata_qc_for_each_raw(ap, qc, tag) {
- 		if (!(qc->flags & ATA_QCFLAG_FAILED) ||
-+		    qc->flags & ATA_QCFLAG_RETRY ||
- 		    ata_dev_phys_link(qc->dev) != link)
- 			continue;
- 
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 6b2dcf3eb2fb..18ef14e749a0 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1493,6 +1493,14 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 		 */
- 		qc->result_tf.status &= ~ATA_ERR;
- 		qc->result_tf.error = 0;
-+
-+		/*
-+		 * If we get a NCQ error, that means that a single command was
-+		 * aborted. All other failed commands for our link should be
-+		 * retried and has no business of going though further scrutiny
-+		 * by ata_eh_link_autopsy().
-+		 */
-+		qc->flags |= ATA_QCFLAG_RETRY;
- 	}
- 
- 	ehc->i.err_mask &= ~AC_ERR_DEV;
--- 
-2.38.1
-
+MBR, Sergey
