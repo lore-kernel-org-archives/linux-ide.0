@@ -2,123 +2,92 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D545CC4332F
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Nov 2022 08:31:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13202C4332F
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Nov 2022 08:47:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232341AbiKKIbP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Nov 2022 03:31:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53872 "EHLO
+        id S233028AbiKKIra (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Nov 2022 03:47:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232921AbiKKIbI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 03:31:08 -0500
-Received: from pegase2.c-s.fr (pegase2.c-s.fr [93.17.235.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 071FD7B23C;
-        Fri, 11 Nov 2022 00:31:07 -0800 (PST)
-Received: from localhost (mailhub3.si.c-s.fr [172.26.127.67])
-        by localhost (Postfix) with ESMTP id 4N7sNm2swzz9snb;
-        Fri, 11 Nov 2022 09:31:04 +0100 (CET)
-X-Virus-Scanned: amavisd-new at c-s.fr
-Received: from pegase2.c-s.fr ([172.26.127.65])
-        by localhost (pegase2.c-s.fr [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 1h5Tw1p4eEV5; Fri, 11 Nov 2022 09:31:04 +0100 (CET)
-Received: from messagerie.si.c-s.fr (messagerie.si.c-s.fr [192.168.25.192])
-        by pegase2.c-s.fr (Postfix) with ESMTP id 4N7sNm28NQz9snY;
-        Fri, 11 Nov 2022 09:31:04 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-        by messagerie.si.c-s.fr (Postfix) with ESMTP id 3AB558B786;
-        Fri, 11 Nov 2022 09:31:04 +0100 (CET)
-X-Virus-Scanned: amavisd-new at c-s.fr
-Received: from messagerie.si.c-s.fr ([127.0.0.1])
-        by localhost (messagerie.si.c-s.fr [127.0.0.1]) (amavisd-new, port 10023)
-        with ESMTP id vGQmwCgOE861; Fri, 11 Nov 2022 09:31:04 +0100 (CET)
-Received: from PO20335.IDSI0.si.c-s.fr (unknown [192.168.235.201])
-        by messagerie.si.c-s.fr (Postfix) with ESMTP id F3CE68B763;
-        Fri, 11 Nov 2022 09:31:03 +0100 (CET)
-Received: from PO20335.IDSI0.si.c-s.fr (localhost [127.0.0.1])
-        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.16.1) with ESMTPS id 2AB8UrLG1224942
-        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-        Fri, 11 Nov 2022 09:30:54 +0100
-Received: (from chleroy@localhost)
-        by PO20335.IDSI0.si.c-s.fr (8.17.1/8.17.1/Submit) id 2AB8Uqne1224938;
-        Fri, 11 Nov 2022 09:30:52 +0100
-X-Authentication-Warning: PO20335.IDSI0.si.c-s.fr: chleroy set sender to christophe.leroy@csgroup.eu using -f
-From:   Christophe Leroy <christophe.leroy@csgroup.eu>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Christophe Leroy <christophe.leroy@csgroup.eu>,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH v2] ata: sata_dwc_460ex: Check !irq instead of irq == NO_IRQ
-Date:   Fri, 11 Nov 2022 09:30:46 +0100
-Message-Id: <146506d93c96b842422d31a90b5d23c98b70a111.1668155425.git.christophe.leroy@csgroup.eu>
-X-Mailer: git-send-email 2.37.1
-MIME-Version: 1.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1668155445; l=2065; s=20211009; h=from:subject:message-id; bh=kJeJYqdLxMtxzzZVD2m5nEZc0ye6WZ1r6uQHyJMp1mQ=; b=fEGzqVbxatKtg4XAQ9Njlsv6bP1voD8N6m/dNiYA6BVgu8ai1aCF1l2d8a+h+op1lgCRRNfEPosz HHbgcHb+Boq3NEK9zlU2SmcussNgyUErJC0hITZ3StfDvxJRkMyk
-X-Developer-Key: i=christophe.leroy@csgroup.eu; a=ed25519; pk=HIzTzUj91asvincQGOFx6+ZF5AoUuP9GdOtQChs7Mm0=
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S232675AbiKKIr3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 03:47:29 -0500
+Received: from mxct.zte.com.cn (mxct.zte.com.cn [58.251.27.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA1C3748FC;
+        Fri, 11 Nov 2022 00:47:28 -0800 (PST)
+Received: from mxde.zte.com.cn (unknown [10.35.20.121])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mxct.zte.com.cn (FangMail) with ESMTPS id 4N7slg176gz1DyC;
+        Fri, 11 Nov 2022 16:47:27 +0800 (CST)
+Received: from mxus.zte.com.cn (unknown [10.207.168.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mxde.zte.com.cn (FangMail) with ESMTPS id 4N7slb5b4kz9vSpC;
+        Fri, 11 Nov 2022 16:47:23 +0800 (CST)
+Received: from mxhk.zte.com.cn (unknown [192.168.250.137])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mxus.zte.com.cn (FangMail) with ESMTPS id 4N7slX0YnFzdmYkm;
+        Fri, 11 Nov 2022 16:47:20 +0800 (CST)
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4N7slS5M4jz8R03x;
+        Fri, 11 Nov 2022 16:47:16 +0800 (CST)
+Received: from xaxapp01.zte.com.cn ([10.88.40.50])
+        by mse-fl2.zte.com.cn with SMTP id 2AB8lAeA020835;
+        Fri, 11 Nov 2022 16:47:10 +0800 (+08)
+        (envelope-from ye.xingchen@zte.com.cn)
+Received: from mapi (xaxapp02[null])
+        by mapi (Zmail) with MAPI id mid31;
+        Fri, 11 Nov 2022 16:47:12 +0800 (CST)
+Date:   Fri, 11 Nov 2022 16:47:12 +0800 (CST)
+X-Zmail-TransId: 2afa636e0c10582f6ced
+X-Mailer: Zmail v1.0
+Message-ID: <202211111647123266703@zte.com.cn>
+Mime-Version: 1.0
+From:   <ye.xingchen@zte.com.cn>
+To:     <s.shtylyov@omp.ru>
+Cc:     <damien.lemoal@opensource.wdc.com>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <chi.minghao@zte.com.cn>
+Subject: =?UTF-8?B?W1BBVENIXSBhdGE6IGVwOTN4eDogdXNlIGRldm1fcGxhdGZvcm1fZ2V0X2FuZF9pb3JlbWFwX3Jlc291cmNlKCk=?=
+Content-Type: text/plain;
+        charset="UTF-8"
+X-MAIL: mse-fl2.zte.com.cn 2AB8lAeA020835
+X-Fangmail-Gw-Spam-Type: 0
+X-FangMail-Miltered: at cgslv5.04-192.168.251.14.novalocal with ID 636E0C1E.000 by FangMail milter!
+X-FangMail-Envelope: 1668156447/4N7slg176gz1DyC/636E0C1E.000/10.35.20.121/[10.35.20.121]/mxde.zte.com.cn/<ye.xingchen@zte.com.cn>
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 636E0C1E.000/4N7slg176gz1DyC
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-NO_IRQ is a relic from the old days. It is not used anymore in core
-functions. By the way, function irq_of_parse_and_map() returns value 0
-on error.
+From: Minghao Chi <chi.minghao@zte.com.cn>
 
-In some drivers, NO_IRQ is erroneously used to check the return of
-irq_of_parse_and_map().
+Convert platform_get_resource(), devm_ioremap_resource() to a single
+call to devm_platform_get_and_ioremap_resource(), as this is exactly
+what this function does.
 
-It is not a real bug today because the only architectures using the
-drivers being fixed by this patch define NO_IRQ as 0, but there are
-architectures which define NO_IRQ as -1. If one day those
-architectures start using the non fixed drivers, there will be a
-problem.
-
-Long time ago Linus advocated for not using NO_IRQ, see
-https://lkml.org/lkml/2005/11/21/221 . He re-iterated the same view
-recently in https://lkml.org/lkml/2022/10/12/622
-
-So test !irq instead of tesing irq == NO_IRQ.
-
-And remove the fallback definition of NO_IRQ at the top of the file.
-
-Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 ---
-v2: Also removed the #ifndef NO_IRQ #define NO_IRQ 0 at the top
----
- drivers/ata/sata_dwc_460ex.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/ata/pata_ep93xx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index e3263e961045..7b7e1516dbdd 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -42,10 +42,6 @@
- #define sata_dwc_writel(a, v)	writel_relaxed(v, a)
- #define sata_dwc_readl(a)	readl_relaxed(a)
- 
--#ifndef NO_IRQ
--#define NO_IRQ		0
--#endif
--
- #define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length */
- 
- enum {
-@@ -242,7 +238,7 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
- 
- 	/* Get SATA DMA interrupt number */
- 	hsdev->dma->irq = irq_of_parse_and_map(np, 1);
--	if (hsdev->dma->irq == NO_IRQ) {
-+	if (!hsdev->dma->irq) {
- 		dev_err(dev, "no SATA DMA irq\n");
- 		return -ENODEV;
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index 6c75a22db12b..47845d920075 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -931,8 +931,7 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 		goto err_rel_gpio;
  	}
-@@ -1180,7 +1176,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 
- 	/* Get SATA interrupt number */
- 	irq = irq_of_parse_and_map(np, 0);
--	if (irq == NO_IRQ) {
-+	if (!irq) {
- 		dev_err(dev, "no SATA DMA irq\n");
- 		return -ENODEV;
- 	}
+
+-	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	ide_base = devm_ioremap_resource(&pdev->dev, mem_res);
++	ide_base = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
+ 	if (IS_ERR(ide_base)) {
+ 		err = PTR_ERR(ide_base);
+ 		goto err_rel_gpio;
 -- 
-2.37.1
-
+2.25.1
