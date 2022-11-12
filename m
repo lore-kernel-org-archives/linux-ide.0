@@ -2,138 +2,162 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B0EC433FE
-	for <linux-ide@archiver.kernel.org>; Sat, 12 Nov 2022 01:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17D9CC433FE
+	for <linux-ide@archiver.kernel.org>; Sat, 12 Nov 2022 02:11:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233225AbiKLB6J (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Nov 2022 20:58:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37762 "EHLO
+        id S233363AbiKLCLS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Nov 2022 21:11:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229991AbiKLB6I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 20:58:08 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35B532BD0
-        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2022 17:58:05 -0800 (PST)
+        with ESMTP id S232921AbiKLCLR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Nov 2022 21:11:17 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47DB91D0F9
+        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2022 18:11:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1668218285; x=1699754285;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=MMLlJtLyv+IoSA0F2Spli7qnd64rUsa2ZvdgrMgGTkM=;
-  b=HkN7j2UcUZYU3Mwt3nH6YxgK+QGxOuIlHuTQgO8QVBScsE9eSkWeg4ED
-   riwo4jUr6KdssEP42Z5tgWBwgZQ3hy8YgKdgnhoC9pge2ADt1/S9N09e/
-   vazArUlHhCtsnatsdniqPPV29GOvtePm8gTfWrFbkuKpnRFG3iIf6qDEa
-   q7kygHA3/YTq5+37d1zCTnw+RnTYEzgQei8w1XbYvygs5yFpuzjQ0Yev4
-   b/VXb2Pf8Jg5eZRR+JIL7vZ2qDomhqyswStlBP4JrHcDqxSz+DeXf8ASo
-   XPxkx8EPnSY3sBv+XniiizGlDo3bKkYmLpPZjpuVlitU62bQQuW95nmYX
+  t=1668219076; x=1699755076;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=tVnzCIB/D4Hs8hr4UQqxx65RGUiscS9RdxgdHub7Ww8=;
+  b=UpJ8Chr/kwqFqV9F+7ekOMNqC9Da9en8kPMmCdwypvcrmMCjXciCH0ZG
+   66iviJvuS+CRY0hhXZdAbUFsnUu9qyBXzmOLudi0Gzf+nA3tICYktzsxH
+   VEF1DQ8ks2TYldQ7Mx7F4D7fAjBByV997H3G3GIBvNZlA3ytawxrkSZW+
+   ZF7yZu1vCQPrJuYjbQAxR+lYqjCSmUFqw6xzocrMR9Rn5Z0/XiVUIDM+n
+   S8ZGr49ufxOG/A9NnUT9SYxhoHXJHKIsyL9kS6EVBMx+XCfIYPtf2Y6jc
+   RZjopzKtWKkXwOPP/JRvwZavaOWLwcAwgn5N2Xjaqp2c0M6QSq14zwGMr
    g==;
 X-IronPort-AV: E=Sophos;i="5.96,158,1665417600"; 
-   d="scan'208";a="214366509"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Nov 2022 09:58:04 +0800
-IronPort-SDR: humzECwJD0ryR/tSty1tZp+/IVF5AN7crFUOF5ZzhiAzJyIRlpYaTebW1UJFcY+SeaGR5ZN+y+
- uzcC1dfTAnNFj9hKOJFsBm/uSSbbCbAymHuTIJ+irH6eSGyCpNVvIAMbk18hgQgfVlUiuAaxiz
- Z/GXVF283rU9EB4Qd/W92WEhKsQB5bM/P/DXqxeGt/QdcbWpEMPjJSQQpqx3/UIMU2Swf7bi0R
- dgYqXBUwBHVuyrxh4AomX8ZublORht6WV0y1kDDrK0bekobFTBalRQY3TyZrvgaoGdujxk7qNX
- QtE=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Nov 2022 17:11:21 -0800
-IronPort-SDR: DayunUljkYw8JOLMgPJH/J1VblMtK5320NNZsV3XVs/vQYe+DvMRRTg3+BmI3QIin+XAeNLPAO
- 9f/1/Ljl1TnfjDYvm0L1TA3js3FNaS/iLeZBQT24oo/5QsxFD6tWR4eKEk98pQQUTUmZqf9eAK
- 0Es5uGdW8AVqdbctIOM5izUXTX5n53KeP3yt44JJqPdq57PTTY9QYBBdabI6Xj2BxWJULChp24
- jxDgsmDbdCFuwaV7Rqc7im7PMvnv3HuAfoSTIJ+52o21tPfUCdBfE2KTPOEBmhwQMrL7DBfQQR
- 4ZE=
+   d="scan'208";a="328193772"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Nov 2022 10:11:15 +0800
+IronPort-SDR: NHUyoissaXHFHidgENgVwWGcrYexHjdpUm31y1lNgMtxHSHRJZC0Tao8mYyruyj/UmtWEkG0cK
+ inkr3NfZxPeJvDPYGV3hLBikpif4Jd+QOxwpgHsdvTyoi9TaEpWzXJxYLb88csPV8Pt42Ph488
+ NzYVUNH2DiZkk9zAfF+sqvH4FQR6T2LpY1OY38exg5+AUQGKS5k0vGZwL2kMTPU2cgEUDiB/GH
+ FudHKM5egftS6DXNe8V0OgdcBGuEbZnWDBJJw2YdWZX8EMaXKBNtCt4I7Waz29aPNfooPNTBVr
+ NJs=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Nov 2022 17:30:17 -0800
+IronPort-SDR: F/WENt3NYOMo1X1r7lw+7RenNGgSYd3SNeGuHZxFY6cR6I/CF+xH9pDkopz9DuxoG95Y03n9IF
+ lOuxaOZFmLQKLeu9LXg4cE5VrKFizIWS6Q4UsC8NHXEfjYZMPByrdaSBOauhpjF1ZwDj3tGWk5
+ 1BawB+zTKwXmszi8aIuKQQws2yGeosaXHAU9iwC2x7WMhTfL/sPDC1eCfCJ4EJv0G5URuoFHau
+ SyWDWygWiwYcPyBC0m7/3GCO3M8CZ92sQ7+fMv4DwvGggPB0fP7GiY+2nC9otxRAMtRDgRqX4T
+ 7uU=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Nov 2022 17:58:05 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Nov 2022 18:11:16 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N8Jcr4MmYz1RvTp
-        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2022 17:58:04 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N8Jw33Cqfz1RvTp
+        for <linux-ide@vger.kernel.org>; Fri, 11 Nov 2022 18:11:15 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1668218284;
-         x=1670810285; bh=MMLlJtLyv+IoSA0F2Spli7qnd64rUsa2ZvdgrMgGTkM=; b=
-        oNVQVe46AHJKMUYtnJGAlFC9WSgW2Oux0tXsl5qrbUp7PFbULg3Hdf/CZdQXvsDv
-        Ubwx13Eh6t+qtaCCZSIsq0D1+VJR1S8uBgP9qYzWmKJqGiNV+4KIDHhWFSW5Ybsb
-        2H/J72WoTjor3IQ3lNUyTRQ6wri/zbl8mTa+QrQYNDKpxL2hb6wasg/RI67Uy12p
-        41zh+2DL3qaEDQt/g+E4z9YSZXrxfVZ3BcxRLC+MxGeNGG6TGkgWQtZQCVJ2zrVS
-        xn6Zg0l8t/nCRJnJ6Mij7AJoQTfvZxM44KIylH70EMVncIRsDXM95iH9kQWuxpQY
-        82J0KgrGqyje3bz9SVWASQ==
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1668219074; x=1670811075; bh=tVnzCIB/D4Hs8hr4UQqxx65RGUiscS9Rdxg
+        dHub7Ww8=; b=lrwVaEUeAZSAaKpdTNpkJ3GE/AIl4RokhhuiCRbPybEbVCg7uLB
+        misKBM+ilt66cPBhlqgfv/tNfBKRMOyVBumzP6ysKAdhy49wumXz54ndevqziFc6
+        ayVbjfi7VXVjI/f/lWMNdLISXoL2Zvt9YTByqxjG1BeaGL1jfXqgeD+D5ooxg234
+        e796zoEswOQIf+rqWGPsKpEN4h8hZ6gMu+Xpqu85KQoaechNDi9G2lC8x9QK79gX
+        5QITXevD/z9ZqajV1GnyphPY29gP2tva5xVo4caPH/AGk4KN8q29aLgaGSzM9q4f
+        c85YxWjLVwusf37cznL9rgzP34Jj8pS6VBA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 2a3rovZYanLK for <linux-ide@vger.kernel.org>;
-        Fri, 11 Nov 2022 17:58:04 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N8Jcq67yMz1RvLy;
-        Fri, 11 Nov 2022 17:58:03 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 6.1-rc5
-Date:   Sat, 12 Nov 2022 10:58:02 +0900
-Message-Id: <20221112015802.2192898-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id dchNksm3lRst for <linux-ide@vger.kernel.org>;
+        Fri, 11 Nov 2022 18:11:14 -0800 (PST)
+Received: from [10.225.163.43] (unknown [10.225.163.43])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N8Jw22W0mz1RvLy;
+        Fri, 11 Nov 2022 18:11:14 -0800 (PST)
+Message-ID: <f46021a8-03f1-60ea-a783-5626272de2a6@opensource.wdc.com>
+Date:   Sat, 12 Nov 2022 11:11:13 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Subject: Re: [PATCH v2] ata: sata_dwc_460ex: Check !irq instead of irq ==
+ NO_IRQ
+Content-Language: en-US
+To:     Christophe Leroy <christophe.leroy@csgroup.eu>
+Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+References: <146506d93c96b842422d31a90b5d23c98b70a111.1668155425.git.christophe.leroy@csgroup.eu>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <146506d93c96b842422d31a90b5d23c98b70a111.1668155425.git.christophe.leroy@csgroup.eu>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+On 11/11/22 17:30, Christophe Leroy wrote:
+> NO_IRQ is a relic from the old days. It is not used anymore in core
+> functions. By the way, function irq_of_parse_and_map() returns value 0
+> on error.
+> 
+> In some drivers, NO_IRQ is erroneously used to check the return of
+> irq_of_parse_and_map().
+> 
+> It is not a real bug today because the only architectures using the
+> drivers being fixed by this patch define NO_IRQ as 0, but there are
+> architectures which define NO_IRQ as -1. If one day those
+> architectures start using the non fixed drivers, there will be a
+> problem.
+> 
+> Long time ago Linus advocated for not using NO_IRQ, see
+> https://lkml.org/lkml/2005/11/21/221 . He re-iterated the same view
+> recently in https://lkml.org/lkml/2022/10/12/622
+> 
+> So test !irq instead of tesing irq == NO_IRQ.
+> 
+> And remove the fallback definition of NO_IRQ at the top of the file.
+> 
+> Signed-off-by: Christophe Leroy <christophe.leroy@csgroup.eu>
 
-The following changes since commit 015618c3ec19584c83ff179fa631be8cec906a=
-af:
+Applied to for-6.2. Thanks !
 
-  ata: palmld: fix return value check in palmld_pata_probe() (2022-10-31 =
-20:28:05 +0900)
+> ---
+> v2: Also removed the #ifndef NO_IRQ #define NO_IRQ 0 at the top
+> ---
+>  drivers/ata/sata_dwc_460ex.c | 8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index e3263e961045..7b7e1516dbdd 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -42,10 +42,6 @@
+>  #define sata_dwc_writel(a, v)	writel_relaxed(v, a)
+>  #define sata_dwc_readl(a)	readl_relaxed(a)
+>  
+> -#ifndef NO_IRQ
+> -#define NO_IRQ		0
+> -#endif
+> -
+>  #define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length */
+>  
+>  enum {
+> @@ -242,7 +238,7 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
+>  
+>  	/* Get SATA DMA interrupt number */
+>  	hsdev->dma->irq = irq_of_parse_and_map(np, 1);
+> -	if (hsdev->dma->irq == NO_IRQ) {
+> +	if (!hsdev->dma->irq) {
+>  		dev_err(dev, "no SATA DMA irq\n");
+>  		return -ENODEV;
+>  	}
+> @@ -1180,7 +1176,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+>  
+>  	/* Get SATA interrupt number */
+>  	irq = irq_of_parse_and_map(np, 0);
+> -	if (irq == NO_IRQ) {
+> +	if (!irq) {
+>  		dev_err(dev, "no SATA DMA irq\n");
+>  		return -ENODEV;
+>  	}
 
-are available in the Git repository at:
+-- 
+Damien Le Moal
+Western Digital Research
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
-ags/ata-6.1-rc5
-
-for you to fetch changes up to e20e81a24a4d58744a29715aac2f795cd1651955:
-
-  ata: libata-core: do not issue non-internal commands once EH is pending=
- (2022-11-12 07:51:06 +0900)
-
-----------------------------------------------------------------
-ata fixes for 6.1-rc5
-
-Several libata generic code fixes for rc5:
-
- - Add missing translation of the SYNCHRONIZE CACHE 16 scsi command as
-   this command is mandatory for host-managed ZBC drives. The lack of
-   support for it in libata-scsi was causing issues with some
-   passthrough applications using ZBC drives (from Shin'ichiro).
-
- - Fix the error path of libata-transport host, port, link and device
-   attributes initialization (from Yingliang).
-
- - Prevent issuing new commands to a drive that is in the NCQ error
-   state and undergoing recovery (From Niklas). This bug went unnoticed
-   for a long time as commands issued to a drive in error state are
-   aborted immediately and retried by the scsi layer, hiding the useless
-   abort-and-retry sequence.
-
-----------------------------------------------------------------
-Niklas Cassel (1):
-      ata: libata-core: do not issue non-internal commands once EH is pen=
-ding
-
-Shin'ichiro Kawasaki (1):
-      ata: libata-scsi: fix SYNCHRONIZE CACHE (16) command failure
-
-Yang Yingliang (4):
-      ata: libata-transport: fix double ata_host_put() in ata_tport_add()
-      ata: libata-transport: fix error handling in ata_tport_add()
-      ata: libata-transport: fix error handling in ata_tlink_add()
-      ata: libata-transport: fix error handling in ata_tdev_add()
-
- drivers/ata/libata-scsi.c      | 13 +++++++++++++
- drivers/ata/libata-transport.c | 19 +++++++++++++++----
- 2 files changed, 28 insertions(+), 4 deletions(-)
