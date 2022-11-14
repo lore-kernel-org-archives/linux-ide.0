@@ -2,948 +2,266 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 092DAC4332F
-	for <linux-ide@archiver.kernel.org>; Mon, 14 Nov 2022 08:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D70C433FE
+	for <linux-ide@archiver.kernel.org>; Mon, 14 Nov 2022 17:19:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236155AbiKNIDn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 14 Nov 2022 03:03:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56070 "EHLO
+        id S236681AbiKNRTS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 14 Nov 2022 12:19:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236162AbiKNIDm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Nov 2022 03:03:42 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39152639F
-        for <linux-ide@vger.kernel.org>; Mon, 14 Nov 2022 00:03:40 -0800 (PST)
+        with ESMTP id S238111AbiKNRTH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Nov 2022 12:19:07 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5C0FE60
+        for <linux-ide@vger.kernel.org>; Mon, 14 Nov 2022 09:19:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1668413020; x=1699949020;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=DbjC3H2Ku7yQenUDNoHIk16VbS/maGkqEh/pBXxGFcI=;
-  b=o3wi9lP6xrjevRfUHyY7WjIQzArT0ymdk1X6X+O9KO4FImbosD3efptm
-   hEpbG1A4NX6oTqaSnrPGHD/FpWiDw5KRMXnImurCJ2k2tG9jtYriO8eHv
-   pI4NHnigyZu9n/e/jO49YkVIJBGhUg8oxq+9pXBLn8aoEKIyp9rkElDkf
-   5pag0DW8GWqlv2g/FBGfQH2demZHpggVG/qU++Le4BJeb0l7qCqKUJCOl
-   SxPW7cGmBKqAYl4RGllLBaWPdsA7YfeMxP1xZa5bypgJJVYX/C7Iwfu/t
-   rRSXUsF/Ves/6JNguI/QBZDQ9NCl+de3rbS+VV4LFxW3S3JkYU62qfiqC
-   A==;
-X-IronPort-AV: E=Sophos;i="5.96,161,1665417600"; 
-   d="scan'208";a="216204316"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Nov 2022 16:03:35 +0800
-IronPort-SDR: XSFEBtPFNvxknGOD9kcSOcASpAfryw1Al/jQ1V3N5q+INj95wm/YxGV7jQCdOuxVEmFNEZmTHm
- I1VvF6efSQ/u6y+eb4FxsVnne+pPB/wdHNEJytMHKE5+365jje1I60lxHPQST7CtxsFYLlmCrs
- wadfwSoom2m/2fjCyj/yp8GdNnwQXtQfSstOO8nY8Vq0tstbT2pM98w/JH9U/862tR+VWp+y51
- +Y1g+etm880XRxFk7fZtkxwrRIqLc63mElIgrtIxVqIuxAk2RetTIssRVNHyH095dILD1cbiqT
- SQY=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Nov 2022 23:22:33 -0800
-IronPort-SDR: AHeQ/o5ZeybqpNuk8p657ugpwfrST68nYJ9gdZbWJQUT9zNAcQcESCQQ3aSIUyhIQH0iQtX7Ls
- LtbfL/OhdRbu2BxVY8IX6KrDYEg+j5dWu3SMwK8nV5zQ8VAPkh3FKAdmRWCXPYaEHO57rYxvD9
- FxkcaLOVtwVqYRCoIACw70O7TKoWvwBRZV8QtmYyW4m0DnrrpD8+CcvU5PujURbtaXZfBhG7Cb
- 2zYyi501a4FR4V0iB3unQvlJdj2YqxnTFIgmeSAK5w4coLHVHGmpMimAXxiKRtBnBiCC5FBQMy
- Ct0=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Nov 2022 00:03:35 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4N9hdf40kMz1RwtC
-        for <linux-ide@vger.kernel.org>; Mon, 14 Nov 2022 00:03:34 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1668413011; x=1671005012; bh=DbjC3H2Ku7yQenUDNoHIk16VbS/maGkqEh/
-        pBXxGFcI=; b=LHXGp+axE2AoT0lFqqFp+/8OuzyFLF3IhIuQLFvCSK3RFKgQjzZ
-        uTuAjGohCtnfJGlMFMakpbKV2fYkFiRg38RgJ8nLvZj9D3QWyO5co/n/Vl9e1vZI
-        p6+kb4Z1Mjz3Ox++pH8j3TNwDh5TgwxyiQykjMtEF6KeXhPPwUE6NiFMnS7qA+DT
-        8s+SHqHFrFJOd/bGxfeH5Xbn1nVQ0UxGCVhbRQQe/H40M7S4wP8MBetoNq0wNE3p
-        lYY7j5Gt6q8269gqQ73/EVfmK7CUjNeOnoWQzC6jopdoE+BQfEEPaxqbbXDwG6PE
-        79inucPi1EfKFhvXJUQzu6kF6kBi5qHEROQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id K1iM42zezW5k for <linux-ide@vger.kernel.org>;
-        Mon, 14 Nov 2022 00:03:31 -0800 (PST)
-Received: from [10.225.163.46] (unknown [10.225.163.46])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4N9hdY5JXSz1RvLy;
-        Mon, 14 Nov 2022 00:03:29 -0800 (PST)
-Message-ID: <f8ce8ecd-cadd-d9ca-d2fa-1251804344f0@opensource.wdc.com>
-Date:   Mon, 14 Nov 2022 17:03:28 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Subject: Re: [PATCH] pata_parport: add driver (PARIDE replacement)
+  t=1668446346; x=1699982346;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=FkvJsUtvBfQ8N+UB0jqNbWLRPDazPP+bdCcfjIcez94=;
+  b=OdYaSS4Qhii4CBNCoTNkOUz686Metas4PIuP0imHj6Dmj8VtatCB4RbX
+   l2z8+JPtAlzLeD3Ge9PE/n1KCYkNOGZiD+NvluW3fIF9xJIX8CGi0GEIN
+   Sm8APqwV8Udemia+V/FQyCmL61Opf+9JI37k1QIro6AeUmvhN/o8yxQok
+   /lOZmFXwIu+f3ISuyVXiWevz3Yy8/KpR+tuXVdt8WWPYLDwPCaj4x3lha
+   F8xWP0MaVoUJthi9pnxpnG00kOXENLZjyTWKNfmNRY1uQ6OOEghZfiKTj
+   bqXbpUdcrJk8RTPtL+XTHfkVbAB1YrWvbeZTbKgYy0w3yoqi8S69iMSoJ
+   g==;
+X-IronPort-AV: E=Sophos;i="5.96,164,1665417600"; 
+   d="scan'208";a="328339844"
+Received: from mail-bn8nam11lp2169.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.169])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Nov 2022 01:19:05 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OWPBKdmAp71Fk9nZGadsRllO5/qNvCcPHfQkZpXmKvUg6elwamKZnmV4h1Dmkv1kQERPNaX03HR2sC/xOWKGEKI75SKUAxDNE5P9sORzk8pNYz7IkZgggkJBb5AW45HWAyhx+94rHnH0HOJ+ttdSUyefRtMRdLsKhdHFBVnhIs/JV+QhaxDMnYzh9jMoXi5rbedJzJG9YSedlsSxtMFAPgJKZAxhe2i2S+fhqrAc5SE8equBpZ1TM7EXgUyHn0oBT7d168899QkVzNIjjmYeBsf1mMA4dkBO+MUbgKVw/KVNRMzlP1+vII6gRztir/yIeU0DTytFbtnV04D6VY3yjA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8wP9/Z4bxxna9XnytZ3wBFSBl1eBOIjiRryELs+9wDo=;
+ b=QQujvfa37SUGs6sxV8JD5HNc9EnldF0CCnNFYqC4LcYXa/HZnlZn1aHzp8ZjjSrvskvj4aSxkeQITZ7aCELWC8oiivIrL+1MFtri885VtGr0QXhuzet/fYQcRXjd0DOnTwRzk5mFraVUDkknySG6FYyhdL5S5/HCsPEAVpjy5EwiMXbRyHrf65B+JOZLyJ8+bKkJhVgI5ilC9PKt66lsmNhvp4ZSMH8D0JfuZVfQGx229G7HgAx7zt+kgLhyAXYXvHp1dSqo6WGXf4RJkOshLZJJB36caxkuSf3a4tkbBph6syy9s32y/F6qiJZUjbWm9F62hl5V1mNBG6vDF6Fc1g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8wP9/Z4bxxna9XnytZ3wBFSBl1eBOIjiRryELs+9wDo=;
+ b=Y7uv0g42keYcuChsa51mEM4fApG0rpQYA+npyhByWyx9q2m6EpsmFcYkS9t7isPMxrxLP2lM5U6S3jxYW3AbXHo4DCreI2YtQ6KNj+XPt2OwrieZyb8npi4PhAuQXEheylyUQAcN7fAMnFbJTii7AftzGwxWRKJhuoHx/7HcqDQ=
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
+ by DM6PR04MB7017.namprd04.prod.outlook.com (2603:10b6:5:24e::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5813.17; Mon, 14 Nov
+ 2022 17:19:02 +0000
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::cb5e:7ea3:2482:80f8]) by MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::cb5e:7ea3:2482:80f8%7]) with mapi id 15.20.5813.016; Mon, 14 Nov 2022
+ 17:19:02 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ata: libata: only mark a single command as error
+ during a NCQ error
+Thread-Topic: [PATCH 1/2] ata: libata: only mark a single command as error
+ during a NCQ error
+Thread-Index: AQHY9b4S6lcdnroLWk2AZdz4y7jecK49sVAAgAD9kgA=
+Date:   Mon, 14 Nov 2022 17:19:01 +0000
+Message-ID: <Y3J4hLWA3SR+bDvW@x1-carbon>
+References: <20221111110921.1273193-1-niklas.cassel@wdc.com>
+ <20221111110921.1273193-2-niklas.cassel@wdc.com>
+ <d9f8025b-2058-5ca3-0353-5c8bf67ff3c0@opensource.wdc.com>
+In-Reply-To: <d9f8025b-2058-5ca3-0353-5c8bf67ff3c0@opensource.wdc.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     Ondrej Zary <linux@zary.sk>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220312144415.20010-1-linux@zary.sk>
- <202211121217.03948.linux@zary.sk>
- <51bb45e2-6de5-3608-0ccf-7ee78071fa05@opensource.wdc.com>
- <202211140853.11115.linux@zary.sk>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <202211140853.11115.linux@zary.sk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|DM6PR04MB7017:EE_
+x-ms-office365-filtering-correlation-id: 29f0bc52-ea3b-4906-660b-08dac664531f
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: PjzMJufxboPVuu7XU0M4Pdp/fYiWRRbkLXjRXFa7uqSPnAobL3UZBnuIqCAwjpJodQrd8mUIBTmLK2W+PMrFRrOytJjjl+Wf550sz04dHDG+dT2eu+ToDTZbNMjD/khI6rr2BGs8c5qeAem0Z/vbpgdsw+wcfmnL0WVZT7sOtNNW3QLmIVyYSP4mPuPqehw3F6TosJZ3srwPHYhOrnD4Z2G5pE2Ye3bawv7jN33+1oPnGtYsFpONTSErgXVvSLh0BgGspvdtLowWffASyxt3wSPDU/4wOQsdaJpifdLJyPY0YaE4mTDZdkCdbqeUTuOxY4Sfjv509Lmo1Y6j0+TGby5ZPl3A59rzbxnT7KM58smGTO/JLzSpucElyy/kdLJpUFN+1dHdvtFGzeN0xoJFwgaJg0m3XuK1rbO3M+v+bCBa+9kSJPfw+MU8AC759RbadXMRt8Nz9tiwGqRaqUqM7zarhW99qg3+XDf+haFyIk267DtIo0FcrQij1YxAwbV9Tbl+bm/6lklVC+YxnwBQKCSfk9CTdbK/mzts77Gcf7cwM3ddPiWGTB9MC9jOALv4rtWMzGNEmBbPSK0o13F0+dm+srq53Er4LZtRUFdOhoyuRlHsZVHsyuTF3hEq6iBhIUpfILJLzM/3N1Hzp1/nQY4HpX20JLkiW/n4fUi2nhcnf/rxtq32j+p9WM/np7APWBEtikfNHaMiDQ3DEzA08Zy1RlCOu37lfmqqsvXG48yr4Ay7lZCArUbyclv9IhGTsaGe+ANPkuusK89y1gNqeuWCZPeQrbkteQ2/usYz3BQ=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(7916004)(136003)(376002)(346002)(396003)(366004)(39860400002)(451199015)(2906002)(8676002)(33716001)(66556008)(66946007)(91956017)(86362001)(76116006)(66446008)(316002)(83380400001)(38070700005)(478600001)(6486002)(6862004)(5660300002)(41300700001)(64756008)(8936002)(71200400001)(38100700002)(6512007)(53546011)(186003)(9686003)(6506007)(26005)(82960400001)(4326008)(122000001)(66476007)(67856001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?nhPd95XCOH6jyCLy+l3Nd+ATScVhjqzKWGMAqjv3Mf5MI/tVoRvc/vFC4cnj?=
+ =?us-ascii?Q?owYHDSJZRDp21/RKX//bPeoQX3UXqx3X4arALRWAg7VIK+uMKztWwVJMYnPE?=
+ =?us-ascii?Q?hqz/yifsvlE7cN8lgwvUNgLitBtfT9eknz1le2of5Y/xnopzlp0lA3ehAP73?=
+ =?us-ascii?Q?A+zjhUBGQE5yHsmZik62eDYKY+l9Gpk+NsQ/Y3hKQ5rs64gSkLCacdPwl04S?=
+ =?us-ascii?Q?iKqQPdGZZXF6W+aEke7uhpUyIQyh7nx94n21dkbN5LLTOIbarhi4toCkXAeF?=
+ =?us-ascii?Q?fvLQpqKfL5eIx56tLODygzekzugXvHAJG9e+QufOCIyJGGMiEIYgLVQtXaer?=
+ =?us-ascii?Q?ZuAvqaUNTFVFi/ohipE3NwCdYdPX4vc0/lGsdGcfu6ODiDQLmIk2CsmW8kyV?=
+ =?us-ascii?Q?iuhSBgJdYYRdoK3f3CTcPpQMxKJMykKYDHnwR5V3UP0f/1I7ALfQXeRhOXdQ?=
+ =?us-ascii?Q?3f4xtZVy5CSzKeJzamnrMw+mQQAOLJL3nGXt3lkX8pqcwIMz6bXCqrIRa3cv?=
+ =?us-ascii?Q?wuXjF33AX7Wk8eIfUFt10pl6vIHkdYjVCzYzJhuZJczapI4VM8yv29ZoIzgT?=
+ =?us-ascii?Q?TcVnZBoMlgQgIQ8tjyw2RHVAp8MauwT3SG61NNGwmrxr/u/dLdD7FVBDv/qB?=
+ =?us-ascii?Q?G2ClJJEw1f9rw9gPizJYo4Tpx3EUB/vI9dV6TrKOMUwIMsGVfITLfq1ZZXiW?=
+ =?us-ascii?Q?He47SxRSZSbK2Lt1hK8InnzJcaC688GM/COJw1jW1EFo5eJxOrpDAoakokb7?=
+ =?us-ascii?Q?zC5seD3qwl1jRMuUk+oZUnGwMT8p2mqNQTO+jRocUxXG/Jqm+VeCEiu9jKcj?=
+ =?us-ascii?Q?9sJhnIbPm4n4fup0T5iGrSNprCxCHs6kObWF4fmxdLxIzJIc+grtedKJU9jp?=
+ =?us-ascii?Q?yUuX4GEcmutsnGwu1fvYu25d/OC6wFpNyL6bpBufi1W9jqtNDldYeVRYLeWI?=
+ =?us-ascii?Q?OFielB/bnPDo5SgKS5S4Jy/KMZxGh9n4qJZsJufG7y11WjDsMOYcQ7YPWhqh?=
+ =?us-ascii?Q?sI6ajhkaBkzN/WmKUmjhNtZ802vXMvOnhYZGg8Q04qM8/JphoEden5d/sxCf?=
+ =?us-ascii?Q?k3/g8cCrFrYt6rK7N8aAJ1GC+Y+7dbrj8/eTHB10lzjXPA4N32owSY+j9Kad?=
+ =?us-ascii?Q?FNzz58O0ukSkGY8g4uA3bmuciTkbtPOrWkGKX8llKNaQZutxOVhXD1SC366F?=
+ =?us-ascii?Q?KVgvY4TOX5vKN+VvMzcn/1G7kRRRpJOHQ7Ofh6r5mm30AguhcUZ9MvNDh4HL?=
+ =?us-ascii?Q?mYvfobUIeaW+y8IDAp3MGmKzmAFKvVzoKI/s+rkuyJyug57wkv55fEltBYnX?=
+ =?us-ascii?Q?4VsEnQIU+nUy0cteWNIwX0ZQolHiOFxUE4O5l5+rkAsPVq5H2VjaAvedHnzx?=
+ =?us-ascii?Q?ELSZXNgfyvkiDmiXDiZRGoI2c6b+T9vQb+TNAUR+V7nDHBSq5H6LlAvWMlZO?=
+ =?us-ascii?Q?ce6TBTxMCvlB79WhpinhVPXK73qHxoS3Vh6uw7rnu40VBkvXUnm16n+e+TNC?=
+ =?us-ascii?Q?RTbxe3XyumGPaZS1nTmIhv5LZZsn+Kl4w1nhJzfhO8e7B0twXlCF0LL87js7?=
+ =?us-ascii?Q?AGlDrjctcYqvwcK6nkLJjjzfLcvrhmh4sCA7QdYQSY5Q0T7W2xZHOtIokiA2?=
+ =?us-ascii?Q?Iw=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <F08188D203F9CA47B5FC54D00EDBEFF5@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: LTe17UhLqF5KKlMsFKsPw96Wj0MR5z266/xDSc6aXApA6QZzlZEzOJ+YFRwR3XUx4UTbCKkNtt3fZFgmlhimiSC2l/FhnBtr+k2pLoGQ6/Eb1low5MeLRl4wTMWYuvsigtTfNkLZniTfjgWUop6Fgjw6CsZlntd1vtDPCWAGyKsKk5/2XC0yPwGfvSj8vAUEh91RPcG+dRlDGc1Pem3OuSReHbTqMNbhOmtVWLbR0rtlFD0fLwzgTxXpeQONNqFWBJc72vxokK+oC9Dp/z2P7wyNF2+it63J4dxcRnDABQcwML/IMSXMzr4rJGacu0iwR78629m1IJ90End8fpDFIUyFqXBp4znHHOap1PV0iYBWtPu+GWTzrUszyzCEF8vNBjBQtcmLhuorSFDJ9rAyBnhdeYo/eZsEKweeuvC56suiStpX5cTvyntch8bQ5UFbMWsjim5jWaU2em+VVHxIyNwCZ2IehyDXNTV4vF5nVrxV/BD+mIhnpSC079YJYmj0fwj/aFD/keZF6OGWDn4KiU7SMdla7BY0bqrkftiFBeg5LUDjsjPFaxpwl0vrMs8ciAt3pv/+pdEc3vRWzoGUG8rGFvWsAcWZtC9rUnOh0GJqa+mhGUNmOcp2bakOqHyCTHELtduToHoMoWKnVx9N6m73rfQWyMUxbEjyH1zR1m9PfMf3m4IeyHytBk+9LXXCAOp99Wag3obQec6pll316ikzNItbcUQlQ3Iw5QNYeR8TuuTLaCOBiAcjknGjjSTR4NffkySP9pv13R2SiSgZj5oMIHYWtm6V8UINjvtxpbw=
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 29f0bc52-ea3b-4906-660b-08dac664531f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Nov 2022 17:19:01.9629
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3fJTvpPYhfOtmrbiPDbEWgWobs0EJg9EdVRgtbuswROnOyA8K+X+FdQdBLm1kwBHzy+uhnwyVCdnLb9/6b959g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB7017
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 11/14/22 16:53, Ondrej Zary wrote:
-> On Monday 14 November 2022, Damien Le Moal wrote:
->> On 11/12/22 20:17, Ondrej Zary wrote:
->>> On Wednesday 19 October 2022 09:34:31 Christoph Hellwig wrote:
->>>> It's been a while - did you get a chance to make some progress on
->>>> this?  Do you need any help to unblock you?
->>>>
->>>
->>> Sorry again, I'm back now. Trying to fix locking problems.
->>> Added this to each function for analysis how the functions are called wrt.
->>> locking:
->>>
->>> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
->>
->> Do you have your code somewhere that we can look at ?
-> 
-> This is the current version with debug printks. I've also added dump_stack()
-> to find out the code path but haven't analyzed the output yet.
+On Mon, Nov 14, 2022 at 11:11:26AM +0900, Damien Le Moal wrote:
+> On 11/11/22 20:09, Niklas Cassel wrote:
+> > A NCQ error means that the device has aborted a single NCQ command and
+> > halted further processing of queued commands.
+>
+> Nit: To be strict with wording, this should say something like "an NCQ
+> command failure results in the device aborting the execution of all activ=
+e
+> commands."
+>
+> > To get the single NCQ command that caused the NCQ error, host software =
+has
+> > to read the NCQ error log, which also takes the device out of error sta=
+te.
+> >
+> > When the device encounters a NCQ error, we receive an error interrupt f=
+rom
+> > the HBA, and call ata_do_link_abort() to mark all outstanding commands =
+on
+> > the link as ATA_QCFLAG_FAILED (which means that these commands are owne=
+d
+> > by libata EH), and then call ata_qc_complete() on them.
+> >
+> > ata_qc_complete() will call fill_result_tf() for all commands marked as
+> > ATA_QCFLAG_FAILED.
+> >
+> > The taskfile is simply the latest status/error as seen from the device'=
+s
+> > perspective. The taskfile will have ATA_ERR set in the status field and
+> > ATA_ABORTED set in the error field.
+> >
+> > When we fill the current taskfile values for all outstanding commands,
+> > that means that qc->result_tf will have ATA_ERR set for all commands
+> > owned by libata EH.
+> >
+> > When ata_eh_link_autopsy() later analyzes all commands owned by libata =
+EH,
+> > it will call ata_eh_analyze_tf(), which will check if qc->result_tf has
+> > ATA_ERR set, if it does, it will set qc->err_mask (which marks the comm=
+and
+> > as an error).
+> >
+> > When ata_eh_finish() later calls __ata_qc_complete() on all commands ow=
+ned
+> > by libata EH, it will call qc->complete_fn() (ata_scsi_qc_complete()),
+> > ata_scsi_qc_complete() will call ata_gen_ata_sense() to generate sense
+> > data if qc->err_mask is set.
+> >
+> > This means that we will generate sense data for commands that really
+> > should not have any sense data set. Having sense data set might cause S=
+CSI
+> > to finish these commands instead of retrying them.
+> >
+> > While this incorrect behavior has existed for a long time, this first
+> > became a problem once we started reading the correct taskfile register =
+in
+> > commit 4ba09d202657 ("ata: libahci: read correct status and error field
+> > for NCQ commands").
+> >
+> > Before this commit, NCQ commands would read the taskfile values receive=
+d
+> > from the last non-NCQ command completion, which most likely did not hav=
+e
+> > ATA_ERR set, since the last non-NCQ command was most likely not an erro=
+r.
+> >
+> > Fix this by clearing ATA_ERR and any error bits for all commands except
+> > the actual command that caused the NCQ error, since the error bits in t=
+he
+> > taskfile are not applicable to them.
+> >
+> > Fixes: 4ba09d202657 ("ata: libahci: read correct status and error field=
+ for NCQ commands")
+> > Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+> > ---
+> >  drivers/ata/libata-sata.c | 19 +++++++++++++++++++
+> >  1 file changed, 19 insertions(+)
+> >
+> > diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> > index 283ce1ab29cf..6b2dcf3eb2fb 100644
+> > --- a/drivers/ata/libata-sata.c
+> > +++ b/drivers/ata/libata-sata.c
+> > @@ -1476,6 +1476,25 @@ void ata_eh_analyze_ncq_error(struct ata_link *l=
+ink)
+> >		}
+> >	}
+> >
+> > +	ata_qc_for_each_raw(ap, qc, tag) {
+> > +		if (!(qc->flags & ATA_QCFLAG_FAILED) ||
+> > +		    ata_dev_phys_link(qc->dev) !=3D link)
+> > +			continue;
+> > +
+> > +		/* Skip the single QC which caused the NCQ error. */
+> > +		if (qc->err_mask)
+> > +			continue;
+>
+> Before the continue, should we check that this qc tag is the one we got
+> from ata_eh_read_log_10h() ? We should at least warn if there is a mismat=
+ch.
 
-Can you send a proper patch ? Or a link to a git tree ? That is easier to
-handle than pasted code in an email...
+I really see no point of displaying a warning in case of mismatch here.
 
-> 
-> // SPDX-License-Identifier: GPL-2.0-only
-> /*
->  * Copyright 2022 Ondrej Zary
->  * based on paride.c by Grant R. Guenther <grant@torque.net>
->  */
-> #include <linux/kernel.h>
-> #include <linux/module.h>
-> #include <linux/parport.h>
-> #include <linux/pata_parport.h>
-> 
-> #define DRV_NAME "pata_parport"
-> 
-> static DEFINE_IDR(parport_list);
-> static DEFINE_IDR(protocols);
-> static DEFINE_IDA(pata_parport_bus_dev_ids);
-> static DEFINE_MUTEX(pi_mutex);
-> 
-> static bool probe = true;
-> module_param(probe, bool, 0644);
-> MODULE_PARM_DESC(probe, "Enable automatic device probing (0=off, 1=on [default])");
-> 
-> static bool verbose;
-> module_param(verbose, bool, 0644);
-> MODULE_PARM_DESC(verbose, "Enable verbose messages (0=off [default], 1=on)");
-> 
-> #define DISCONNECT_TIMEOUT	(HZ / 10)
-> 
-> static void pi_connect(struct ata_port *ap)
-> {
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	if (spin_is_locked(ap->lock))
-> 		dump_stack();
-> 
-> 	del_timer_sync(&pi->timer);
-> 	if (!pi->claimed) {
-> 		pi->claimed = true;
-> 		parport_claim_or_block(pi->pardev);
-> 		pi->proto->connect(pi);
-> 	}
-> }
-> 
-> static void pi_disconnect(struct pi_adapter *pi)
-> {
-> 	if (pi->claimed) {
-> 		pi->proto->disconnect(pi);
-> 		parport_release(pi->pardev);
-> 		pi->claimed = false;
-> 	}
-> }
-> 
-> static void pi_disconnect_timer(struct timer_list *t)
-> {
-> 	struct pi_adapter *pi = from_timer(pi, t, timer);
-> 
-> 	pi_disconnect(pi);
-> }
-> 
-> /* functions taken from libata-sff.c and converted from direct port I/O */
-> static void pata_parport_dev_select(struct ata_port *ap, unsigned int device)
-> {
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	u8 tmp;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 
-> 	if (device == 0)
-> 		tmp = ATA_DEVICE_OBS;
-> 	else
-> 		tmp = ATA_DEVICE_OBS | ATA_DEV1;
-> 
-> 	pi_connect(ap);
-> 	pi->proto->write_regr(pi, 0, ATA_REG_DEVICE, tmp);
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> 	ata_sff_pause(ap);
-> }
-> 
-> static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
-> {
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	u8 nsect, lbal;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pata_parport_dev_select(ap, device);
-> 
-> 	pi_connect(ap);
-> 	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0x55);
-> 	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0xaa);
-> 
-> 	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0xaa);
-> 	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0x55);
-> 
-> 	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 055);
-> 	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0xaa);
-> 
-> 	nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
-> 	lbal = pi->proto->read_regr(pi, 0, ATA_REG_LBAL);
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> 
-> 	if ((nsect == 0x55) && (lbal == 0xaa))
-> 		return true;	/* we found a device */
-> 
-> 	return false;		/* nothing found */
-> }
-> 
-> static int pata_parport_bus_softreset(struct ata_port *ap, unsigned int devmask,
-> 				      unsigned long deadline)
-> {
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi_connect(ap);
-> 	/* software reset.  causes dev0 to be selected */
-> 	pi->proto->write_regr(pi, 1, 6, ap->ctl);
-> 	udelay(20);
-> 	pi->proto->write_regr(pi, 1, 6, ap->ctl | ATA_SRST);
-> 	udelay(20);
-> 	pi->proto->write_regr(pi, 1, 6, ap->ctl);
-> 	ap->last_ctl = ap->ctl;
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> 
-> 	/* wait the port to become ready */
-> 	return ata_sff_wait_after_reset(&ap->link, devmask, deadline);
-> }
-> 
-> static int pata_parport_softreset(struct ata_link *link, unsigned int *classes,
-> 				  unsigned long deadline)
-> {
-> 	struct ata_port *ap = link->ap;
-> 	unsigned int devmask = 0;
-> 	int rc;
-> 	u8 err;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	/* determine if device 0/1 are present */
-> 	if (pata_parport_devchk(ap, 0))
-> 		devmask |= (1 << 0);
-> 	if (pata_parport_devchk(ap, 1))
-> 		devmask |= (1 << 1);
-> 
-> 	/* select device 0 again */
-> 	pata_parport_dev_select(ap, 0);
-> 
-> 	/* issue bus reset */
-> 	rc = pata_parport_bus_softreset(ap, devmask, deadline);
-> 	if (rc && rc != -ENODEV) {
-> 		ata_link_err(link, "SRST failed (errno=%d)\n", rc);
-> 		return rc;
-> 	}
-> 
-> 	/* determine by signature whether we have ATA or ATAPI devices */
-> 	classes[0] = ata_sff_dev_classify(&link->device[0],
-> 					  devmask & (1 << 0), &err);
-> 	if (err != 0x81)
-> 		classes[1] = ata_sff_dev_classify(&link->device[1],
-> 						  devmask & (1 << 1), &err);
-> 
-> 	return 0;
-> }
-> 
-> static u8 pata_parport_check_status(struct ata_port *ap)
-> {
-> 	u8 status;
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi_connect(ap);
-> 	status = pi->proto->read_regr(pi, 0, ATA_REG_STATUS);
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> 
-> 	return status;
-> }
-> 
-> static u8 pata_parport_check_altstatus(struct ata_port *ap)
-> {
-> 	u8 altstatus;
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi_connect(ap);
-> 	altstatus = pi->proto->read_regr(pi, 1, 6);
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> 
-> 	return altstatus;
-> }
-> 
-> static void pata_parport_tf_load(struct ata_port *ap,
-> 				 const struct ata_taskfile *tf)
-> {
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi_connect(ap);
-> 	if (tf->ctl != ap->last_ctl) {
-> 		pi->proto->write_regr(pi, 1, 6, tf->ctl);
-> 		ap->last_ctl = tf->ctl;
-> 		ata_wait_idle(ap);
-> 	}
-> 
-> 	if (tf->flags & ATA_TFLAG_ISADDR) {
-> 		if (tf->flags & ATA_TFLAG_LBA48) {
-> 			pi->proto->write_regr(pi, 0, ATA_REG_FEATURE,
-> 					      tf->hob_feature);
-> 			pi->proto->write_regr(pi, 0, ATA_REG_NSECT,
-> 					      tf->hob_nsect);
-> 			pi->proto->write_regr(pi, 0, ATA_REG_LBAL,
-> 					      tf->hob_lbal);
-> 			pi->proto->write_regr(pi, 0, ATA_REG_LBAM,
-> 					      tf->hob_lbam);
-> 			pi->proto->write_regr(pi, 0, ATA_REG_LBAH,
-> 					      tf->hob_lbah);
-> 		}
-> 		pi->proto->write_regr(pi, 0, ATA_REG_FEATURE, tf->feature);
-> 		pi->proto->write_regr(pi, 0, ATA_REG_NSECT, tf->nsect);
-> 		pi->proto->write_regr(pi, 0, ATA_REG_LBAL, tf->lbal);
-> 		pi->proto->write_regr(pi, 0, ATA_REG_LBAM, tf->lbam);
-> 		pi->proto->write_regr(pi, 0, ATA_REG_LBAH, tf->lbah);
-> 	}
-> 
-> 	if (tf->flags & ATA_TFLAG_DEVICE)
-> 		pi->proto->write_regr(pi, 0, ATA_REG_DEVICE, tf->device);
-> 
-> 	ata_wait_idle(ap);
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> }
-> 
-> static void pata_parport_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-> {
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi_connect(ap);
-> 	tf->status = pi->proto->read_regr(pi, 0, ATA_REG_STATUS);
-> 	tf->error = pi->proto->read_regr(pi, 0, ATA_REG_ERR);
-> 	tf->nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
-> 	tf->lbal = pi->proto->read_regr(pi, 0, ATA_REG_LBAL);
-> 	tf->lbam = pi->proto->read_regr(pi, 0, ATA_REG_LBAM);
-> 	tf->lbah = pi->proto->read_regr(pi, 0, ATA_REG_LBAH);
-> 	tf->device = pi->proto->read_regr(pi, 0, ATA_REG_DEVICE);
-> 
-> 	if (tf->flags & ATA_TFLAG_LBA48) {
-> 		pi->proto->write_regr(pi, 1, 6, tf->ctl | ATA_HOB);
-> 		tf->hob_feature = pi->proto->read_regr(pi, 0, ATA_REG_ERR);
-> 		tf->hob_nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
-> 		tf->hob_lbal = pi->proto->read_regr(pi, 0, ATA_REG_LBAL);
-> 		tf->hob_lbam = pi->proto->read_regr(pi, 0, ATA_REG_LBAM);
-> 		tf->hob_lbah = pi->proto->read_regr(pi, 0, ATA_REG_LBAH);
-> 		pi->proto->write_regr(pi, 1, 6, tf->ctl);
-> 		ap->last_ctl = tf->ctl;
-> 	}
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> }
-> 
-> static void pata_parport_exec_command(struct ata_port *ap,
-> 				      const struct ata_taskfile *tf)
-> {
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi_connect(ap);
-> 	pi->proto->write_regr(pi, 0, ATA_REG_CMD, tf->command);
-> 	ata_sff_pause(ap);
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> }
-> 
-> static unsigned int pata_parport_data_xfer(struct ata_queued_cmd *qc,
-> 				unsigned char *buf, unsigned int buflen, int rw)
-> {
-> 	struct ata_port *ap = qc->dev->link->ap;
-> 	struct pi_adapter *pi = ap->host->private_data;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi_connect(ap);
-> 	if (rw == READ)
-> 		pi->proto->read_block(pi, buf, buflen);
-> 	else
-> 		pi->proto->write_block(pi, buf, buflen);
-> 	mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> 
-> 	return buflen;
-> }
-> 
-> static void pata_parport_drain_fifo(struct ata_queued_cmd *qc)
-> {
-> 	int count;
-> 	struct ata_port *ap;
-> 	struct pi_adapter *pi;
-> 	char junk[2];
-> 
-> 	/* We only need to flush incoming data when a command was running */
-> 	if (qc == NULL || qc->dma_dir == DMA_TO_DEVICE)
-> 		return;
-> 
-> 	ap = qc->ap;
-> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
-> 	pi = ap->host->private_data;
-> 	/* Drain up to 64K of data before we give up this recovery method */
-> 	for (count = 0; (pata_parport_check_status(ap) & ATA_DRQ)
-> 						&& count < 65536; count += 2) {
-> 		pi_connect(ap);
-> 		pi->proto->read_block(pi, junk, 2);
-> 		mod_timer(&pi->timer, jiffies + DISCONNECT_TIMEOUT);
-> 	}
-> 
-> 	if (count)
-> 		ata_port_dbg(ap, "drained %d bytes to clear DRQ\n", count);
-> }
-> 
-> static struct ata_port_operations pata_parport_port_ops = {
-> 	.inherits		= &ata_sff_port_ops,
-> 
-> 	.softreset		= pata_parport_softreset,
-> 	.hardreset		= NULL,
-> 
-> 	.sff_dev_select		= pata_parport_dev_select,
-> 	.sff_check_status	= pata_parport_check_status,
-> 	.sff_check_altstatus	= pata_parport_check_altstatus,
-> 	.sff_tf_load		= pata_parport_tf_load,
-> 	.sff_tf_read		= pata_parport_tf_read,
-> 	.sff_exec_command	= pata_parport_exec_command,
-> 	.sff_data_xfer		= pata_parport_data_xfer,
-> 	.sff_drain_fifo		= pata_parport_drain_fifo,
-> };
-> 
-> static const struct ata_port_info pata_parport_port_info = {
-> 	.flags		= ATA_FLAG_SLAVE_POSS | ATA_FLAG_PIO_POLLING,
-> 	.pio_mask	= ATA_PIO0,
-> 	/* No DMA */
-> 	.port_ops	= &pata_parport_port_ops,
-> };
-> 
-> static void pi_release(struct pi_adapter *pi)
-> {
-> 	parport_unregister_device(pi->pardev);
-> 	if (pi->proto->release_proto)
-> 		pi->proto->release_proto(pi);
-> 	module_put(pi->proto->owner);
-> }
-> 
-> static int default_test_proto(struct pi_adapter *pi, char *scratch)
-> {
-> 	int j, k;
-> 	int e[2] = { 0, 0 };
-> 
-> 	pi->proto->connect(pi);
-> 
-> 	for (j = 0; j < 2; j++) {
-> 		pi->proto->write_regr(pi, 0, 6, 0xa0 + j * 0x10);
-> 		for (k = 0; k < 256; k++) {
-> 			pi->proto->write_regr(pi, 0, 2, k ^ 0xaa);
-> 			pi->proto->write_regr(pi, 0, 3, k ^ 0x55);
-> 			if (pi->proto->read_regr(pi, 0, 2) != (k ^ 0xaa))
-> 				e[j]++;
-> 		}
-> 	}
-> 	pi->proto->disconnect(pi);
-> 
-> 	if (verbose)
-> 		dev_info(&pi->dev, "%s: port 0x%x, mode %d, test=(%d,%d)\n",
-> 		       pi->proto->name, pi->port,
-> 		       pi->mode, e[0], e[1]);
-> 
-> 	return e[0] && e[1];	/* not here if both > 0 */
-> }
-> 
-> static int pi_test_proto(struct pi_adapter *pi, char *scratch)
-> {
-> 	int res;
-> 
-> 	parport_claim_or_block(pi->pardev);
-> 	if (pi->proto->test_proto)
-> 		res = pi->proto->test_proto(pi, scratch, verbose);
-> 	else
-> 		res = default_test_proto(pi, scratch);
-> 	parport_release(pi->pardev);
-> 
-> 	return res;
-> }
-> 
-> static bool pi_probe_mode(struct pi_adapter *pi, int max, char *scratch)
-> {
-> 	int best, range;
-> 
-> 	if (pi->mode != -1) {
-> 		if (pi->mode >= max)
-> 			return false;
-> 		range = 3;
-> 		if (pi->mode >= pi->proto->epp_first)
-> 			range = 8;
-> 		if (range == 8 && pi->port % 8)
-> 			return false;
-> 		return !pi_test_proto(pi, scratch);
-> 	}
-> 	best = -1;
-> 	for (pi->mode = 0; pi->mode < max; pi->mode++) {
-> 		range = 3;
-> 		if (pi->mode >= pi->proto->epp_first)
-> 			range = 8;
-> 		if (range == 8 && pi->port % 8)
-> 			break;
-> 		if (!pi_test_proto(pi, scratch))
-> 			best = pi->mode;
-> 	}
-> 	pi->mode = best;
-> 	return best > -1;
-> }
-> 
-> static bool pi_probe_unit(struct pi_adapter *pi, int unit, char *scratch)
-> {
-> 	int max, s, e;
-> 
-> 	s = unit;
-> 	e = s + 1;
-> 
-> 	if (s == -1) {
-> 		s = 0;
-> 		e = pi->proto->max_units;
-> 	}
-> 
-> 	if (pi->proto->test_port) {
-> 		parport_claim_or_block(pi->pardev);
-> 		max = pi->proto->test_port(pi);
-> 		parport_release(pi->pardev);
-> 	} else {
-> 		max = pi->proto->max_mode;
-> 	}
-> 
-> 	if (pi->proto->probe_unit) {
-> 		parport_claim_or_block(pi->pardev);
-> 		for (pi->unit = s; pi->unit < e; pi->unit++) {
-> 			if (pi->proto->probe_unit(pi)) {
-> 				parport_release(pi->pardev);
-> 				return pi_probe_mode(pi, max, scratch);
-> 			}
-> 		}
-> 		parport_release(pi->pardev);
-> 		return false;
-> 	}
-> 
-> 	return pi_probe_mode(pi, max, scratch);
-> }
-> 
-> static void pata_parport_dev_release(struct device *dev)
-> {
-> 	struct pi_adapter *pi = container_of(dev, struct pi_adapter, dev);
-> 
-> 	kfree(pi);
-> }
-> 
-> static void pata_parport_bus_release(struct device *dev)
-> {
-> 	/* nothing to do here but required to avoid warning on device removal */
-> }
-> 
-> static struct bus_type pata_parport_bus_type = {
-> 	.name = DRV_NAME,
-> };
-> 
-> static struct device pata_parport_bus = {
-> 	.init_name = DRV_NAME,
-> 	.release = pata_parport_bus_release,
-> };
-> 
-> /* temporary for old paride protocol modules */
-> static struct scsi_host_template pata_parport_sht = {
-> 	PATA_PARPORT_SHT("pata_parport")
-> };
-> 
-> struct pi_device_match {
-> 	struct parport *parport;
-> 	struct pi_protocol *proto;
-> };
-> 
-> static int pi_find_dev(struct device *dev, void *data)
-> {
-> 	struct pi_adapter *pi = container_of(dev, struct pi_adapter, dev);
-> 	struct pi_device_match *match = data;
-> 
-> 	return pi->pardev->port == match->parport && pi->proto == match->proto;
-> }
-> 
-> static struct pi_adapter *pi_init_one(struct parport *parport,
-> 			struct pi_protocol *pr, int mode, int unit, int delay)
-> {
-> 	struct pardev_cb par_cb = { };
-> 	char scratch[512];
-> 	const struct ata_port_info *ppi[] = { &pata_parport_port_info };
-> 	struct ata_host *host;
-> 	struct pi_adapter *pi;
-> 	struct pi_device_match match = { .parport = parport, .proto = pr };
-> 
-> 	/*
-> 	 * Abort if there's a device already registered on the same parport
-> 	 * using the same protocol.
-> 	 */
-> 	if (bus_for_each_dev(&pata_parport_bus_type, NULL, &match, pi_find_dev))
-> 		return NULL;
-> 
-> 	pi = kzalloc(sizeof(struct pi_adapter), GFP_KERNEL);
-> 	if (!pi)
-> 		return NULL;
-> 
-> 	/* set up pi->dev before pi_probe_unit() so it can use dev_printk() */
-> 	pi->dev.parent = &pata_parport_bus;
-> 	pi->dev.bus = &pata_parport_bus_type;
-> 	pi->dev.driver = &pr->driver;
-> 	pi->dev.release = pata_parport_dev_release;
-> 	pi->dev.id = ida_alloc(&pata_parport_bus_dev_ids, GFP_KERNEL);
-> 	if (pi->dev.id < 0)
-> 		return NULL; /* pata_parport_dev_release will do kfree(pi) */
-> 	dev_set_name(&pi->dev, "pata_parport.%u", pi->dev.id);
-> 	if (device_register(&pi->dev)) {
-> 		put_device(&pi->dev);
-> 		goto out_ida_free;
-> 	}
-> 
-> 	pi->proto = pr;
-> 
-> 	if (!try_module_get(pi->proto->owner))
-> 		goto out_unreg_dev;
-> 	if (pi->proto->init_proto && pi->proto->init_proto(pi) < 0)
-> 		goto out_module_put;
-> 
-> 	pi->delay = (delay == -1) ? pi->proto->default_delay : delay;
-> 	pi->mode = mode;
-> 	pi->port = parport->base;
-> 
-> 	par_cb.private = pi;
-> 	pi->pardev = parport_register_dev_model(parport, DRV_NAME, &par_cb,
-> 						pi->dev.id);
-> 	if (!pi->pardev)
-> 		goto out_module_put;
-> 
-> 	if (!pi_probe_unit(pi, unit, scratch)) {
-> 		dev_info(&pi->dev, "Adapter not found\n");
-> 		goto out_unreg_parport;
-> 	}
-> 
-> 	pi->proto->log_adapter(pi, scratch, verbose);
-> 
-> 	host = ata_host_alloc_pinfo(&pi->pardev->dev, ppi, 1);
-> 	if (!host)
-> 		goto out_unreg_parport;
-> 	dev_set_drvdata(&pi->dev, host);
-> 	host->private_data = pi;
-> 
-> 	ata_port_desc(host->ports[0], "port %s", pi->pardev->port->name);
-> 	ata_port_desc(host->ports[0], "protocol %s", pi->proto->name);
-> 
-> 	timer_setup(&pi->timer, pi_disconnect_timer, 0);
-> 
-> 	if (ata_host_activate(host, 0, NULL, 0, &pata_parport_sht))
-> 		goto out_unreg_parport;
-> 
-> 	return pi;
-> 
-> out_unreg_parport:
-> 	parport_unregister_device(pi->pardev);
-> 	if (pi->proto->release_proto)
-> 		pi->proto->release_proto(pi);
-> out_module_put:
-> 	module_put(pi->proto->owner);
-> out_unreg_dev:
-> 	device_unregister(&pi->dev);
-> out_ida_free:
-> 	ida_free(&pata_parport_bus_dev_ids, pi->dev.id);
-> 	return NULL;
-> }
-> 
-> int pata_parport_register_driver(struct pi_protocol *pr)
-> {
-> 	int error;
-> 	struct parport *parport;
-> 	int port_num;
-> 
-> 	pr->driver.bus = &pata_parport_bus_type;
-> 	pr->driver.name = pr->name;
-> 	error = driver_register(&pr->driver);
-> 	if (error)
-> 		return error;
-> 
-> 	mutex_lock(&pi_mutex);
-> 	error = idr_alloc(&protocols, pr, 0, 0, GFP_KERNEL);
-> 	if (error < 0) {
-> 		driver_unregister(&pr->driver);
-> 		mutex_unlock(&pi_mutex);
-> 		return error;
-> 	}
-> 
-> 	pr_info("pata_parport: protocol %s registered\n", pr->name);
-> 
-> 	if (probe) {
-> 		/* probe all parports using this protocol */
-> 		idr_for_each_entry(&parport_list, parport, port_num)
-> 			pi_init_one(parport, pr, -1, 0, -1);
-> 	}
-> 	mutex_unlock(&pi_mutex);
-> 
-> 	return 0;
-> }
-> EXPORT_SYMBOL(pata_parport_register_driver);
-> 
-> void pata_parport_unregister_driver(struct pi_protocol *pr)
-> {
-> 	struct pi_protocol *pr_iter;
-> 	int id = -1;
-> 
-> 	mutex_lock(&pi_mutex);
-> 	idr_for_each_entry(&protocols, pr_iter, id) {
-> 		if (pr_iter == pr)
-> 			break;
-> 	}
-> 	idr_remove(&protocols, id);
-> 	mutex_unlock(&pi_mutex);
-> 	driver_unregister(&pr->driver);
-> }
-> EXPORT_SYMBOL(pata_parport_unregister_driver);
-> 
-> static ssize_t new_device_store(struct bus_type *bus, const char *buf,
-> 				size_t count)
-> {
-> 	char port[12] = "auto";
-> 	char protocol[8] = "auto";
-> 	int mode = -1, unit = -1, delay = -1;
-> 	struct pi_protocol *pr, *pr_wanted;
-> 	struct device_driver *drv;
-> 	struct parport *parport;
-> 	int port_num, port_wanted, pr_num;
-> 	bool ok = false;
-> 
-> 	if (sscanf(buf, "%11s %7s %d %d %d",
-> 			port, protocol, &mode, &unit, &delay) < 1)
-> 		return -EINVAL;
-> 
-> 	if (sscanf(port, "parport%u", &port_wanted) < 1) {
-> 		if (!strcmp(port, "auto")) {
-> 			port_wanted = -1;
-> 		} else {
-> 			pr_err("invalid port name %s\n", port);
-> 			return -EINVAL;
-> 		}
-> 	}
-> 
-> 	drv = driver_find(protocol, &pata_parport_bus_type);
-> 	if (!drv) {
-> 		if (!strcmp(protocol, "auto")) {
-> 			pr_wanted = NULL;
-> 		} else {
-> 			pr_err("protocol %s not found\n", protocol);
-> 			return -EINVAL;
-> 		}
-> 	} else {
-> 		pr_wanted = container_of(drv, struct pi_protocol, driver);
-> 	}
-> 
-> 	mutex_lock(&pi_mutex);
-> 	/* walk all parports */
-> 	idr_for_each_entry(&parport_list, parport, port_num) {
-> 		if (port_num == port_wanted || port_wanted == -1) {
-> 			parport = parport_find_number(port_num);
-> 			if (!parport) {
-> 				pr_err("no such port %s\n", port);
-> 				mutex_unlock(&pi_mutex);
-> 				return -ENODEV;
-> 			}
-> 			/* walk all protocols */
-> 			idr_for_each_entry(&protocols, pr, pr_num) {
-> 				if (pr == pr_wanted || !pr_wanted)
-> 					if (pi_init_one(parport, pr, mode, unit,
-> 							delay))
-> 						ok = true;
-> 			}
-> 			parport_put_port(parport);
-> 		}
-> 	}
-> 	mutex_unlock(&pi_mutex);
-> 	if (!ok)
-> 		return -ENODEV;
-> 
-> 	return count;
-> }
-> static BUS_ATTR_WO(new_device);
-> 
-> static void pi_remove_one(struct device *dev)
-> {
-> 	struct ata_host *host = dev_get_drvdata(dev);
-> 	struct pi_adapter *pi = host->private_data;
-> 
-> 	ata_host_detach(host);
-> 	del_timer_sync(&pi->timer);
-> 	pi_disconnect(pi);
-> 	pi_release(pi);
-> 	device_unregister(dev);
-> 	ida_free(&pata_parport_bus_dev_ids, dev->id);
-> 	/* pata_parport_dev_release will do kfree(pi) */
-> }
-> 
-> static ssize_t delete_device_store(struct bus_type *bus, const char *buf,
-> 				   size_t count)
-> {
-> 	struct device *dev;
-> 	char device_name[32];
-> 
-> 	if (sscanf(buf, "%31s", device_name) < 1)
-> 		return -EINVAL;
-> 
-> 	mutex_lock(&pi_mutex);
-> 	dev = bus_find_device_by_name(bus, NULL, device_name);
-> 	if (!dev) {
-> 		mutex_unlock(&pi_mutex);
-> 		return -ENODEV;
-> 	}
-> 
-> 	pi_remove_one(dev);
-> 	mutex_unlock(&pi_mutex);
-> 
-> 	return count;
-> }
-> static BUS_ATTR_WO(delete_device);
-> 
-> static void pata_parport_attach(struct parport *port)
-> {
-> 	struct pi_protocol *pr;
-> 	int pr_num, id;
-> 
-> 	mutex_lock(&pi_mutex);
-> 	id = idr_alloc(&parport_list, port, port->number, port->number,
-> 		       GFP_KERNEL);
-> 	if (id < 0) {
-> 		mutex_unlock(&pi_mutex);
-> 		return;
-> 	}
-> 
-> 	if (probe) {
-> 		/* probe this port using all protocols */
-> 		idr_for_each_entry(&protocols, pr, pr_num)
-> 			pi_init_one(port, pr, -1, 0, -1);
-> 	}
-> 	mutex_unlock(&pi_mutex);
-> }
-> 
-> static int pi_remove_port(struct device *dev, void *p)
-> {
-> 	struct ata_host *host = dev_get_drvdata(dev);
-> 	struct pi_adapter *pi = host->private_data;
-> 
-> 	if (pi->pardev->port == p)
-> 		pi_remove_one(dev);
-> 
-> 	return 0;
-> }
-> 
-> static void pata_parport_detach(struct parport *port)
-> {
-> 	mutex_lock(&pi_mutex);
-> 	bus_for_each_dev(&pata_parport_bus_type, NULL, port, pi_remove_port);
-> 	idr_remove(&parport_list, port->number);
-> 	mutex_unlock(&pi_mutex);
-> }
-> 
-> static struct parport_driver pata_parport_driver = {
-> 	.name = DRV_NAME,
-> 	.match_port = pata_parport_attach,
-> 	.detach = pata_parport_detach,
-> 	.devmodel = true,
-> };
-> 
-> static __init int pata_parport_init(void)
-> {
-> 	int error;
-> 
-> 	error = bus_register(&pata_parport_bus_type);
-> 	if (error) {
-> 		pr_err("failed to register pata_parport bus, error: %d\n", error);
-> 		return error;
-> 	}
-> 
-> 	error = device_register(&pata_parport_bus);
-> 	if (error) {
-> 		pr_err("failed to register pata_parport bus, error: %d\n", error);
-> 		goto out_unregister_bus;
-> 	}
-> 
-> 	error = bus_create_file(&pata_parport_bus_type, &bus_attr_new_device);
-> 	if (error) {
-> 		pr_err("unable to create sysfs file, error: %d\n", error);
-> 		goto out_unregister_dev;
-> 	}
-> 
-> 	error = bus_create_file(&pata_parport_bus_type, &bus_attr_delete_device);
-> 	if (error) {
-> 		pr_err("unable to create sysfs file, error: %d\n", error);
-> 		goto out_remove_new;
-> 	}
-> 
-> 	error = parport_register_driver(&pata_parport_driver);
-> 	if (error) {
-> 		pr_err("unable to register parport driver, error: %d\n", error);
-> 		goto out_remove_del;
-> 	}
-> 
-> 	return 0;
-> 
-> out_remove_del:
-> 	bus_remove_file(&pata_parport_bus_type, &bus_attr_delete_device);
-> out_remove_new:
-> 	bus_remove_file(&pata_parport_bus_type, &bus_attr_new_device);
-> out_unregister_dev:
-> 	device_unregister(&pata_parport_bus);
-> out_unregister_bus:
-> 	bus_unregister(&pata_parport_bus_type);
-> 	return error;
-> }
-> 
-> static __exit void pata_parport_exit(void)
-> {
-> 	parport_unregister_driver(&pata_parport_driver);
-> 	bus_remove_file(&pata_parport_bus_type, &bus_attr_new_device);
-> 	bus_remove_file(&pata_parport_bus_type, &bus_attr_delete_device);
-> 	device_unregister(&pata_parport_bus);
-> 	bus_unregister(&pata_parport_bus_type);
-> }
-> 
-> MODULE_AUTHOR("Ondrej Zary");
-> MODULE_DESCRIPTION("driver for parallel port ATA adapters");
-> MODULE_LICENSE("GPL");
-> MODULE_ALIAS("paride");
-> 
-> module_init(pata_parport_init);
-> module_exit(pata_parport_exit);
-> 
-> 
-> 
+At this point, there will be exactly one command that has AC_ERR_NCQ set.
+If ata_eh_read_log_10h() reported an invalid tag, we would have returned
+in the check performed directly after ata_eh_read_log_10h() was called:
 
--- 
-Damien Le Moal
-Western Digital Research
+	if (!(link->sactive & (1 << tag))) {
+		ata_link_err(link, "log page 10h reported inactive tag %d\n",
+			     tag);
+		return;
+	}
 
+Which means that we would never have reached this new code.
+
+However, there could theoretically be another command that has e.g.
+AC_ERR_TIMEOUT set, if there was a command that timed out just before
+the NCQ error, so EH did not yet have a change to run before handling
+both errors at the same time.
+
+Therefore I wrote:
++           if (qc->err_mask)
++                   continue;
+
+Instead of:
++           if (qc->err_mask & AC_ERR_NCQ)
++                   continue;
+
+
+Kind regards,
+Niklas=
