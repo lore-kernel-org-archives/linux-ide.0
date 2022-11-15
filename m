@@ -2,142 +2,109 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB92C433FE
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Nov 2022 08:10:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59880C4321E
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Nov 2022 14:57:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232174AbiKOIK7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Nov 2022 03:10:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38424 "EHLO
+        id S229939AbiKOO5J (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Nov 2022 09:57:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229631AbiKOIK6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2022 03:10:58 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 501126306
-        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2022 00:10:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1668499857; x=1700035857;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=M2ftrW8zl5Jydq/L5riUlSr41wjfkSo28ylObHMgyGg=;
-  b=js3K3HGAF5UQ/crPM465yaKnfE0YPnDTJqAznXdyNK3xMLqqGUkJxUda
-   Sq26XxqeVK9kXVmx0Lim7xbIg2lKAJrxmx2EjQzK6qy2/Rb6Nq1nI4clV
-   OTImbNtkre2ixwkbFlAnUGMwLjQ8rUlP9jN2thX+mRZ7R2TY0zr+dOV/E
-   Oifbw5BmNCUwoZQOCkwtdLrBsFT0XjtsBc9PDJhdjuRLfXPplYXNF3z0N
-   TzBLT8vhUEXryTvUrkUNgtIuyrvXVAqlYF4ThOGA69FhCWxD9Z7Bf4BCW
-   TYdkgR8S/AqVgWAiTOvLMviVoh/F1+LFv2F6G5kFRjJe5DLypbS882pXh
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.96,165,1665417600"; 
-   d="scan'208";a="320640015"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Nov 2022 16:10:56 +0800
-IronPort-SDR: vpvwByciyo3l7uDyXc65r+FWmZlAD2TE/SuJ3fZTkeEbF8PsCaPOSDzlWbfuy1HIRBQKdHOmmS
- CTKL+ABlmhlOUKSGNsYASbSgCmKBthMXoasIvCGxZdAjJ45u6fSyOcOcVdUr9Qhw1jLcsOZx8S
- Ah1EuDlkwtwWkM+ZYbW5OkaBzzQQKnalTXkQ6ebMs2jiJXeiAsDy2lyy+ioc7uHuDY7dMQuIB8
- Lmt0LGrbANoKh8aPXPRHRYh3pWHRepIXzX7UH9pXCqz4S0Z7kiAOBDDC5OYF4PiwPsg+Jw3OXy
- HPc=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Nov 2022 23:24:09 -0800
-IronPort-SDR: gws9cIRHE4NtF7Mwn1UutDFf3xC1BbK83ppcN5fBbuPMd5GFOIpBHPX/dZqKwSo+sJDaKqvJi8
- 08BmW9yVHU43eYKnSo5JEF8ynhRMW00z89YCtbz7OmhEI2Ue+89CvQtPBXEYjLOyfElfOtGzQ7
- CHj97Gyaz7MGFyUPTEaEsx5Kw6DWNmA/T3IhP0BbcwWkQpXM12os8DOVjQuo3jYU7+GpjiHfst
- mUA92DRK8NER9jCVNGczgLm31qGrsXMBHs9yW3XdD1hMe/OdaJ3yqL8upAgwNQ27xYpF/GYRZ1
- yYM=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Nov 2022 00:10:56 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NBJlh33mWz1RvTp
-        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2022 00:10:56 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1668499856; x=1671091857; bh=M2ftrW8zl5Jydq/L5riUlSr41wjfkSo28yl
-        ObHMgyGg=; b=PcMUqixXLpwr1eAFNA9YGuFKPmrmzK93dMsUmo++IoWoqtfrmDh
-        +JTKietYEOiOzMsiyTnzIIeDe6Xq3a2FaK2rO9fvRP1h/Bzp012I4+B/Coodw873
-        W1x7amOaVN6ZQScZbMtUq1La8DvACfq+Aq0ll8Q7gdWcqDSJaPq2PZCiaYGqCMGo
-        bFmY81xW42+qaCkWPMpzjowje02d77cypcgpPvSJUJlVzkI4sHU0iOGNcx7Uhbu7
-        h31G9QfG98FfUc5wHo8OElz9Is3s6N4L1yrZeNugZZlCMASOr2E25n7RCTzU0qvq
-        69nqC/LhmwkyMmsASXv8cGYYEMKdXNETYAQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Mb59cZToEugM for <linux-ide@vger.kernel.org>;
-        Tue, 15 Nov 2022 00:10:56 -0800 (PST)
-Received: from [10.225.163.46] (unknown [10.225.163.46])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NBJlg5J75z1RvLy;
-        Tue, 15 Nov 2022 00:10:55 -0800 (PST)
-Message-ID: <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
-Date:   Tue, 15 Nov 2022 17:10:54 +0900
+        with ESMTP id S229814AbiKOO5B (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2022 09:57:01 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2BDD5F00E;
+        Tue, 15 Nov 2022 06:56:58 -0800 (PST)
+Received: from [192.168.1.3] (gsystem.sk [85.248.217.30])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 6F3107A0426;
+        Tue, 15 Nov 2022 15:56:56 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH] pata_parport: add driver (PARIDE replacement)
+Date:   Tue, 15 Nov 2022 15:56:52 +0100
+User-Agent: KMail/1.9.10
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220312144415.20010-1-linux@zary.sk> <202211142025.46723.linux@zary.sk> <dc4e757a-737d-0bfa-c85d-9521feaa8d5f@opensource.wdc.com>
+In-Reply-To: <dc4e757a-737d-0bfa-c85d-9521feaa8d5f@opensource.wdc.com>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Subject: Re: Bug report for ahci-mvebu driver
-Content-Language: en-US
-To:     marius@psihoexpert.ro
-Cc:     linux-ide@vger.kernel.org
-References: <125bd8a6-7a1c-cd08-b5ee-da5a24f79f21@opensource.wdc.com>
- <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
- <a1b3b74b-1548-44d9-7d72-8eb428fa1788@opensource.wdc.com>
- <0ba8ebf7-6e6c-e63d-32c4-44d97898be1d@opensource.wdc.com>
- <126ce7f2-3de2-9e75-7920-09d78c224d76@opensource.wdc.com>
- <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
- <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
- <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
- <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
- <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
- <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <202211151556.52895.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 11/15/22 16:28, marius@psihoexpert.ro wrote:
-> November 15, 2022 5:02 AM, "Damien Le Moal"
-> <damien.lemoal@opensource.wdc.com> wrote:
+On Tuesday 15 November 2022, Damien Le Moal wrote:
+> On 11/15/22 04:25, Ondrej Zary wrote:
+> > On Monday 14 November 2022 09:03:28 Damien Le Moal wrote:
+> >> On 11/14/22 16:53, Ondrej Zary wrote:
+> >>> On Monday 14 November 2022, Damien Le Moal wrote:
+> >>>> On 11/12/22 20:17, Ondrej Zary wrote:
+> >>>>> On Wednesday 19 October 2022 09:34:31 Christoph Hellwig wrote:
+> >>>>>> It's been a while - did you get a chance to make some progress on
+> >>>>>> this?  Do you need any help to unblock you?
+> >>>>>>
+> >>>>>
+> >>>>> Sorry again, I'm back now. Trying to fix locking problems.
+> >>>>> Added this to each function for analysis how the functions are called wrt.
+> >>>>> locking:
+> >>>>>
+> >>>>> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
+> >>>>
+> >>>> Do you have your code somewhere that we can look at ?
+> >>>
+> >>> This is the current version with debug printks. I've also added dump_stack()
+> >>> to find out the code path but haven't analyzed the output yet.
+> >>
+> >> Can you send a proper patch ? Or a link to a git tree ? That is easier to
+> >> handle than pasted code in an email...
+> > 
+> > Patch against what? I don't have a git server.
 > 
->> So something is going on at the hardware level here. The register
->> value is not stable... You could try playing with the sleep interval
->> (unsigned long interval = params[0];) and duration (unsigned long
->> duration = params[1];) to see if anything changes. Especially try
->> reducing and increasing interval. -- Damien Le Moal Western Digital
->> Research
+> patch against current 6.1-rc, or against an older kernel should be OK too.
+> But please "git send-email" a patch, or push your dev tree to github ?
 > 
-> What are the defaults? Are these defaults the same for all sata/ahci
-> controllers? How much can I increase them? Will anything break?
-
-Nothing will break. No commands are exchanged during that link-up. It is
-only phy initialization. The defaults are defined by
-sata_deb_timing_normal or sata_deb_timing_hotplug at the beginning of
-libata-sata.c. The names speak for themselves: normal timing is for device
-scan on boot, hotplug for... hotplug :)
-
-> What could be the cause of this? sata cable? Power source? BTW, while
-> doing the testing, I saw the same error with the laptop HDD. I
-> disconnected the cable and then reconnected it, and the second time it
-> was detected OK. Unfortunately, I wasn't capturing serial messages and
-> I couldn't make it happen again.
-
-Could be the cable. Try to use a good quality short cable if you can.
-Power source can be a cause too, but less likely. I have seen lots of
-issues with bad cables, but they generally manifest themselves under load
-with transfers with bad ECC. When it happens, the errors are obvious.
-
-Could be the plugs too. Check for dust and/or lose connection with the cable.
-
+> > I've done some call trace analysis. These code paths are calling
+> > pata_parport functions with ap->lock locked during init.
+> > 
+> > Comm: kworker, Workqueue: ata_sff ata_sff_pio_task
+> > ata_sff_hsm_move -> ata_pio_sectors-> ata_sff_altstatus -> pata_parport_tf_read -> pata_parport_check_altstatus
+> > ata_sff_hsm_move -> ata_sff_altstatus -> pata_parport_tf_read -> pata_parport_check_altstatus
+> > ata_sff_pio_task -> ata_sff_busy_wait -> pata_parport_check_status
+> > ata_sff_hsm_move -> ata_wait_idle -> ata_sff_busy_wait -> pata_parport_check_status
+> > ata_sff_hsm_move -> ata_hsm_qc_complete -> ata_sff_irq_on -> ata_wait_idle -> ata_sff_busy_wait -> pata_parport_check_status
+> > ata_sff_pio_task -> ata_sff_hsm_move -> ata_pio_sectors -> ata_pio_sector -> ata_pio_xfer -> pata_parport_data_xfer
+> > ata_sff_pio_task -> ata_sff_hsm_move -> pata_parport_data_xfer
+> > ata_sff_pio_task -> ata_sff_hsm_move -> pata_parport_tf_read
+> > ata_sff_hsm_move -> ata_hsm_qc_complete -> ata_qc_complete -> fill_result_tf -> ata_sff_qc_fill_rtf -> pata_parport_tf_read
+> > ata_sff_hsm_move -> ata_pio_sectors -> ata_sff_altstatus -> pata_parport_check_altstatus
+> > ata_sff_hsm_move -> ata_sff_altstatus -> pata_parport_check_altstatus
+> > 
+> > Comm: modprobe
+> > ata_host_start -> ata_eh_freeze_port -> ata_sff_freeze -> pata_parport_check_status
+> > 
+> > Comm: scsi_eh_4
+> > ata_eh_recover -> ata_eh_reset -> ata_eh_thaw_port -> ata_sff_thaw -> ata_sff_irq_on -> ata_wait_idle -> ata_sff_busy_wait -> pata_parport_check_status
+> > ata_eh_reset -> ata_eh_freeze_port -> ata_sff_freeze -> pata_parport_check_status
+> > ata_scsi_error -> ata_scsi_port_error_handler -> ata_port_freeze -> ata_sff_freeze -> pata_parport_check_status
+> > ata_sff_error_handler -> pata_parport_drain_fifo -> pata_parport_check_status
 > 
-> Marius Dinu
+> What exactly are the issues you are having with ap->lock ? It looks like
+> you have done a lot of analysis of the code, but without any context about
+> the problem, I do not understand what I am looking at.
 > 
+
+The problem is that pi_connect() can sleep because it calls
+parport_claim_or_block(). And any access (even reading ATA status register)
+requires pi_connect.
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+Ondrej Zary
