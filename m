@@ -2,97 +2,91 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4414C43219
-	for <linux-ide@archiver.kernel.org>; Mon, 14 Nov 2022 21:09:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC47EC43219
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Nov 2022 03:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237661AbiKNVJF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 14 Nov 2022 16:09:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46018 "EHLO
+        id S237875AbiKODDN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 14 Nov 2022 22:03:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237580AbiKNVIu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Nov 2022 16:08:50 -0500
-Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::222])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DACCBE18;
-        Mon, 14 Nov 2022 13:08:43 -0800 (PST)
-Received: (Authenticated sender: alexandre.belloni@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id CCBD540002;
-        Mon, 14 Nov 2022 21:08:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1668460122;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WUcN8Hyfr1CcrMqYvHeNHTB6GPer8+O1tgop6jO/i4o=;
-        b=LoY2BISB89oKKYW3bgqoV/6ifu5d0aCRaj643or12/Zq89QFtRZr3S3ZrVgAij0TEk8XXQ
-        AhUZdvHzKr7WlOZYmyp79CsK6/2kgZ7LuKbnTNhEy/2F00YleILJTTbt4XWLv6EcWHkddO
-        07N+3CbUW3UjsWpTpWswfjJa5YcWwUPAbHvRjcx+CRzClWi6Oemsy2iDr6ntRAimB6b9qB
-        xqyjY+iJaKWSW//kWkKE5ce0oW0tNfg2vyhksnqzqDD/LLdbUHis+e1Roj4fwu7T+UZ4Iq
-        g/nCFdH3jroKXyOxlPcbfVVZki+yfk+NVUNqr6/xsMpotUg6GrfrQW179o9zdQ==
-Date:   Mon, 14 Nov 2022 22:08:38 +0100
-From:   Alexandre Belloni <alexandre.belloni@bootlin.com>
-To:     Bartosz Golaszewski <brgl@bgdev.pl>, Sekhar Nori <nsekhar@ti.com>,
-        Arnd Bergmann <arnd@kernel.org>,
-        linux-arm-kernel@lists.infradead.org
-Cc:     linux-staging@lists.linux.dev,
-        Russell King <linux@armlinux.org.uk>,
-        linux-clk@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
-        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
-        "Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
-        Lee Jones <lee@kernel.org>, linux-media@vger.kernel.org,
-        linux-input@vger.kernel.org,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Kevin Hilman <khilman@baylibre.com>,
-        David Lechner <david@lechnology.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Mark Brown <broonie@kernel.org>, linux-rtc@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Yang Yingliang <yangyingliang@huawei.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        alsa-devel@alsa-project.org, Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Peter Ujfalusi <peter.ujfalusi@gmail.com>,
-        linux-ide@vger.kernel.org, Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Bin Liu <b-liu@ti.com>, Takashi Iwai <tiwai@suse.com>,
-        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Michael Turquette <mturquette@baylibre.com>
-Subject: Re: [PATCH 00/14] ARM: remove unused davinci board & drivers
-Message-ID: <166846004404.2111985.9223963351202037616.b4-ty@bootlin.com>
-References: <20221019152947.3857217-1-arnd@kernel.org>
+        with ESMTP id S237572AbiKODCm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Nov 2022 22:02:42 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33DA51D678;
+        Mon, 14 Nov 2022 19:00:17 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B89D061512;
+        Tue, 15 Nov 2022 03:00:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 162F4C433D7;
+        Tue, 15 Nov 2022 03:00:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668481216;
+        bh=7GwYrxfGLtv3EWezChxqb+EW1qTYQWOsMI1x0yOy/oM=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=C/bEiGywRVb82J2X3iohUPsoR5VFGT138fbFv/XrIkmjGs2ZRayyC7JCaEZlnMDLC
+         3K1T4KRAtqdTekG0wTAN0zp3bcdRkrV8ZjK/kjng4ybddpNbjHoPEP2WxwojQToVph
+         z+1XmL84ug3FedJjcKeQbug0BKPQAYWWUobPpx1QAaRDLYhqEAU4EXfIv/Yc1EKN2v
+         1A1Kttu2USPTmA+F+Yp11L4ve0gbojWUX3E4K0INQ9t3agglnd0LrNSGiELzqxo0KM
+         htIZ1DFY6o1h0R3UI8Zd4eE4x3fWvjqkQHLsUYIjAlB9d2pR4AFWb38IVzM9UmQrt5
+         EGkwh/TLqp5Rw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id EA42FC395FE;
+        Tue, 15 Nov 2022 03:00:15 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221019152947.3857217-1-arnd@kernel.org>
+Content-Transfer-Encoding: 8bit
+Subject: Re: [patch 00/10] genirq/msi: Treewide cleanup of pointless linux/msi.h
+ includes
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <166848121595.31359.929419753615501478.git-patchwork-notify@kernel.org>
+Date:   Tue, 15 Nov 2022 03:00:15 +0000
+References: <20221113201935.776707081@linutronix.de>
+In-Reply-To: <20221113201935.776707081@linutronix.de>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     linux-kernel@vger.kernel.org, maz@kernel.org, lee@kernel.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, stuyoder@gmail.com,
+        laurentiu.tudor@nxp.com, fenghua.yu@intel.com,
+        dave.jiang@intel.com, vkoul@kernel.org, dmaengine@vger.kernel.org,
+        ioana.ciornei@nxp.com, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, netdev@vger.kernel.org,
+        simon.horman@corigine.com, oss-drivers@corigine.com,
+        Roy.Pledge@nxp.com, diana.craciun@oss.nxp.com,
+        alex.williamson@redhat.com, cohuck@redhat.com, kvm@vger.kernel.org,
+        joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
+        iommu@lists.linux.dev
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, 19 Oct 2022 17:29:26 +0200, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
+Hello:
+
+This series was applied to netdev/net-next.git (master)
+by Jakub Kicinski <kuba@kernel.org>:
+
+On Sun, 13 Nov 2022 21:33:54 +0100 (CET) you wrote:
+> While working on per device MSI domains I noticed that quite some files
+> include linux/msi.h just because.
 > 
-> As part of removing all board files that were previously marked as unused,
-> I looked through the davinci platform and recursively removed everything
-> that has now become unused.
+> The top level comment in the header file clearly says:
 > 
-> In particular, this is for all dm3xx support, in addition to the dm64xx
-> support removed previously. The remaining support is now for da8xx using
-> devicetree only, which means a lot of the da8xx specific device support
-> can also go away.
+>   Regular device drivers have no business with any of these functions....
 > 
 > [...]
 
-Applied, thanks!
+Here is the summary with links:
+  - [06/10] net: dpaa2: Remove linux/msi.h includes
+    https://git.kernel.org/netdev/net-next/c/515e5fb6a95e
+  - [07/10] net: nfp: Remove linux/msi.h includes
+    https://git.kernel.org/netdev/net-next/c/5fd66a0b3bb4
 
-[08/14] rtc: remove davinci rtc driver
-        commit: 6274ef3c7eb5e9792a708c23757e16b444e4267f
-
-Best regards,
-
+You are awesome, thank you!
 -- 
-Alexandre Belloni, co-owner and COO, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
