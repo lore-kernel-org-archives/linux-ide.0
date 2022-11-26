@@ -2,111 +2,82 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E7BFC4167D
-	for <linux-ide@archiver.kernel.org>; Sat, 26 Nov 2022 03:28:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C03FC4321E
+	for <linux-ide@archiver.kernel.org>; Sat, 26 Nov 2022 14:27:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230255AbiKZD2p (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Nov 2022 22:28:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37538 "EHLO
+        id S229624AbiKZO1D (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 26 Nov 2022 09:27:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230304AbiKZD22 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Nov 2022 22:28:28 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2E0E1BE98;
-        Fri, 25 Nov 2022 19:28:24 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AQ2hbup007916;
-        Sat, 26 Nov 2022 03:27:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2022-7-12;
- bh=AcagkFnJ+fxUlscIN6IjL6P7egIgluL1OZhulAL1UnQ=;
- b=mvu81B1jAjb+iQ6MM92frRDUHEr4JjxmPPoaI8lGgelfK0tY26AeAGpXKYQqxl7PfakE
- zKYR5gspEHq4K8A5lXxuzIhtLNaXvmIKO62/MRCp0/7BL781RtS2v7uCoevnZJ3y5Jpe
- o4k15RYgVjtQOzJ7HMVMABblAwr0dtY49pEsscSVs8hehmj/twewXRy1+1LN1vLlT3G/
- v2xYrPsJW6V6XrJm2hokCQMoNB7mRQcHFN2tzIe9dpmq/LftKP6ZeS9lIhBRARfqXgp+
- Eaf1bj/wXzdFOlU5SlpQfuENIvXv9u+TNm6GxzDP01RMy7w2HAFdX8VSqM3T7Hplrxc0 Qw== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m39k2g1ng-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 26 Nov 2022 03:27:47 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AQ1XTWB007302;
-        Sat, 26 Nov 2022 03:27:47 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3m3988b812-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 26 Nov 2022 03:27:47 +0000
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2AQ3Rhsb028327;
-        Sat, 26 Nov 2022 03:27:46 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3m3988b7y9-8;
-        Sat, 26 Nov 2022 03:27:46 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Fenghua Yu <fenghua.yu@intel.com>, oss-drivers@corigine.com,
-        James Smart <james.smart@broadcom.com>,
-        Cornelia Huck <cohuck@redhat.com>, dmaengine@vger.kernel.org,
-        Paolo Abeni <pabeni@redhat.com>, Will Deacon <will@kernel.org>,
-        Lee Jones <lee@kernel.org>, Vinod Koul <vkoul@kernel.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Roy Pledge <Roy.Pledge@nxp.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Ioana Ciornei <ioana.ciornei@nxp.com>, iommu@lists.linux.dev,
-        Joerg Roedel <joro@8bytes.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        netdev@vger.kernel.org, kvm@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Marc Zyngier <maz@kernel.org>,
-        Diana Craciun <diana.craciun@oss.nxp.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Stuart Yoder <stuyoder@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        linux-scsi@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>
-Subject: Re: [patch 00/10] genirq/msi: Treewide cleanup of pointless linux/msi.h includes
-Date:   Sat, 26 Nov 2022 03:27:39 +0000
-Message-Id: <166943312556.1684293.1625990735787388062.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221113201935.776707081@linutronix.de>
-References: <20221113201935.776707081@linutronix.de>
+        with ESMTP id S229600AbiKZO06 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 26 Nov 2022 09:26:58 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35CE918E1F
+        for <linux-ide@vger.kernel.org>; Sat, 26 Nov 2022 06:26:58 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C3127604AD
+        for <linux-ide@vger.kernel.org>; Sat, 26 Nov 2022 14:26:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DFE7C433C1;
+        Sat, 26 Nov 2022 14:26:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669472817;
+        bh=zT2TGf0/VwVQ5gq9C2oz/vy1cdaH9LNK+6BZxFvxXTY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZgZgY7KJH/WqwQVKa21Ul4UXTpp5lsOFNODsGCOKOmzVxdufEuPWXG9Bxy3yKRxzm
+         4dPJFx0EpP6rO18VnJPO9VXV3caiVMq2d7yLpxHSaKxmYx3yVAwgpyQDAcHEbki0Xy
+         jks7AefBvrkQr5LlQD3FtIpkDnIOSNFc2+8WTcMRhYG+rca9qyWF41XH9PxoiNoXNy
+         VT798OZNaiwUEFH1gPl4pcaRJCi0OeIEg3NiafPxcCstK1LJ9E/WBnHa+SToOpoQxi
+         aRljOTsVsAbGUpphT2ni+0g3lfCG98A1dKKhUrZd2b78MvWhi0/GGDgoxQLAysF4dd
+         Nza8icVA23xvg==
+Received: by pali.im (Postfix)
+        id 214BF7B2; Sat, 26 Nov 2022 15:26:54 +0100 (CET)
+Date:   Sat, 26 Nov 2022 15:26:53 +0100
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Dinu Marius <marius@psihoexpert.ro>
+Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org
+Subject: Re: Bug report for ahci-mvebu driver
+Message-ID: <20221126142653.j2y42a77hnd7e6ha@pali>
+References: <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-26_02,2022-11-25_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 phishscore=0
- mlxlogscore=825 mlxscore=0 adultscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211260024
-X-Proofpoint-GUID: oUxjHgTGr4WNozsr_LV_OOFyzCy5QslK
-X-Proofpoint-ORIG-GUID: oUxjHgTGr4WNozsr_LV_OOFyzCy5QslK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, 13 Nov 2022 21:33:54 +0100 (CET), Thomas Gleixner wrote:
-
-> While working on per device MSI domains I noticed that quite some files
-> include linux/msi.h just because.
+On Tuesday 01 November 2022 21:21:37 Dinu Marius wrote:
+> Hello.
 > 
-> The top level comment in the header file clearly says:
+> I'm contacting you because your email is listed in www.kernel.org/doc/linux/MAINTAINERS
+> I encountered a problem with the ahci-mvebu driver. I think it's a bug.
 > 
->   Regular device drivers have no business with any of these functions....
+> Hardware:
+> Areca ARC-5040 RAID enclosure (DAS), eSATA port, 8 SATA drive bays with 1x 500GB HDD stand-alone and 7x 2TB HDDs in RAID5.
+> Linksys WRT-1900ACS v2 router, Marvell Armada 385 (88F6820), one eSATAp using ahci-mvebu driver with port-multiplier support.
+> The router runs OpenWrt with kernel version 5.15.
 > 
-> [...]
+> Problem encountered:
+> Areca DAS is not detected properly. When I connect it, I get these repeating errors in kernel log:
 
-Applied to 6.2/scsi-queue, thanks!
-
-[03/10] scsi: lpfc: Remove linux/msi.h include
-        https://git.kernel.org/mkp/scsi/c/cdd9344e00b4
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Hello! Sorry for jumping into this discussion but I think it could be
+useful for you to know that Armada 38x and 39x SoCs have HW errata
+related to their SATA PHYs and SATA port replicators. Due to the wrong
+Busy status returned, the GEN 1.0 Port Multiplier cannot establish a
+link with the SATA 3.0 interface. As a workaround connect GEN 1.0 Port
+Multiplier to a SATA 2.0 interface. Native A38x/A39x SATA IP is
+controlled by ahci-mvebu linux kernel. I do not have any other details
+if broken is SerDes / PHY block in that SoC or SATA block. But error
+"cannot establish a link" may be related to that documented A38x/A39x
+SATA HW errata. Note that older Marvell SoCs (Armada 375, 370) have also
+some different SATA HW erratas related to link establishment, so in my
+opinion there could be some common undocumented root cause with SATA in
+all those 32-bit Marvell SoCs, as lot of HW blocks are shared, and not
+only related to port replicators. I have never played/debugged SATA
+issues on A38x but I observed similar issues with PCIe on A38x. And due
+to nature of Common PHY HW blocks implementing same SerDes interface for
+both PCIe and SATA PHYs on those SoCs, I would not be surprised if PHY
+issues could be present on both PCIe and SATA functions.
