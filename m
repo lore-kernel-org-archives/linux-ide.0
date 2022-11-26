@@ -2,62 +2,111 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5DFC4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 24 Nov 2022 08:39:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E7BFC4167D
+	for <linux-ide@archiver.kernel.org>; Sat, 26 Nov 2022 03:28:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229806AbiKXIjb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 24 Nov 2022 03:39:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38706 "EHLO
+        id S230255AbiKZD2p (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 25 Nov 2022 22:28:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbiKXIja (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Nov 2022 03:39:30 -0500
-X-Greylist: delayed 540 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 24 Nov 2022 00:39:28 PST
-Received: from mail.gluegivebiz.com (mail.gluegivebiz.com [94.177.230.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB739A444
-        for <linux-ide@vger.kernel.org>; Thu, 24 Nov 2022 00:39:28 -0800 (PST)
-Received: by mail.gluegivebiz.com (Postfix, from userid 1001)
-        id DD4D882734; Thu, 24 Nov 2022 08:30:22 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gluegivebiz.com;
-        s=mail; t=1669278626;
-        bh=suFMqso2eT9nGxcKUkouP21Cya6vlSHiaK8ebgNdeQQ=;
-        h=Date:From:To:Subject:From;
-        b=i++lMZqVYippVZ2FVso3+bQCoAfpTVY61Yd+31BVcMoOzcyAkLTQzQ5jzFwRRtgEi
-         U5w3bzHAhflLUfRJZEg2JbxfrTK+9snHPaTTPPL5A8dNBNo/xnTGfjF/qgAvCiLTF0
-         NQoNn9Rko2nU4u0VEvAFgwosV0Ts5hYz2sIN5q0ld8RrghPuj3RrUd61IPednHn3d7
-         eCyxMwxEPepkmTfJCpsFgQOxKfZn77s0/UuYTAKSnC9EDzfWhMIELrDw7ttDMcCRFs
-         jKb7wpoH8hrUgErnAA7LyDuZc17R7tWraNyg3kRwEFiASB9F9Oua+zvzPgaSxO8+gc
-         fzJMXyZUO1ijg==
-Received: by mail.gluegivebiz.com for <linux-ide@vger.kernel.org>; Thu, 24 Nov 2022 08:30:15 GMT
-Message-ID: <20221124074500-0.1.f.n7l.0.hedd5bs82d@gluegivebiz.com>
-Date:   Thu, 24 Nov 2022 08:30:15 GMT
-From:   "Gaston Perrot" <gaston.perrot@gluegivebiz.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: Silikonmischungen
-X-Mailer: mail.gluegivebiz.com
+        with ESMTP id S230304AbiKZD22 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Nov 2022 22:28:28 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2E0E1BE98;
+        Fri, 25 Nov 2022 19:28:24 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AQ2hbup007916;
+        Sat, 26 Nov 2022 03:27:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2022-7-12;
+ bh=AcagkFnJ+fxUlscIN6IjL6P7egIgluL1OZhulAL1UnQ=;
+ b=mvu81B1jAjb+iQ6MM92frRDUHEr4JjxmPPoaI8lGgelfK0tY26AeAGpXKYQqxl7PfakE
+ zKYR5gspEHq4K8A5lXxuzIhtLNaXvmIKO62/MRCp0/7BL781RtS2v7uCoevnZJ3y5Jpe
+ o4k15RYgVjtQOzJ7HMVMABblAwr0dtY49pEsscSVs8hehmj/twewXRy1+1LN1vLlT3G/
+ v2xYrPsJW6V6XrJm2hokCQMoNB7mRQcHFN2tzIe9dpmq/LftKP6ZeS9lIhBRARfqXgp+
+ Eaf1bj/wXzdFOlU5SlpQfuENIvXv9u+TNm6GxzDP01RMy7w2HAFdX8VSqM3T7Hplrxc0 Qw== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3m39k2g1ng-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 26 Nov 2022 03:27:47 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AQ1XTWB007302;
+        Sat, 26 Nov 2022 03:27:47 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3m3988b812-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 26 Nov 2022 03:27:47 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2AQ3Rhsb028327;
+        Sat, 26 Nov 2022 03:27:46 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3m3988b7y9-8;
+        Sat, 26 Nov 2022 03:27:46 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Fenghua Yu <fenghua.yu@intel.com>, oss-drivers@corigine.com,
+        James Smart <james.smart@broadcom.com>,
+        Cornelia Huck <cohuck@redhat.com>, dmaengine@vger.kernel.org,
+        Paolo Abeni <pabeni@redhat.com>, Will Deacon <will@kernel.org>,
+        Lee Jones <lee@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Roy Pledge <Roy.Pledge@nxp.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Ioana Ciornei <ioana.ciornei@nxp.com>, iommu@lists.linux.dev,
+        Joerg Roedel <joro@8bytes.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        netdev@vger.kernel.org, kvm@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Diana Craciun <diana.craciun@oss.nxp.com>,
+        Simon Horman <simon.horman@corigine.com>,
+        Stuart Yoder <stuyoder@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        linux-scsi@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
+        Laurentiu Tudor <laurentiu.tudor@nxp.com>
+Subject: Re: [patch 00/10] genirq/msi: Treewide cleanup of pointless linux/msi.h includes
+Date:   Sat, 26 Nov 2022 03:27:39 +0000
+Message-Id: <166943312556.1684293.1625990735787388062.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20221113201935.776707081@linutronix.de>
+References: <20221113201935.776707081@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-26_02,2022-11-25_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 phishscore=0
+ mlxlogscore=825 mlxscore=0 adultscore=0 bulkscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211260024
+X-Proofpoint-GUID: oUxjHgTGr4WNozsr_LV_OOFyzCy5QslK
+X-Proofpoint-ORIG-GUID: oUxjHgTGr4WNozsr_LV_OOFyzCy5QslK
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Good morning,
+On Sun, 13 Nov 2022 21:33:54 +0100 (CET), Thomas Gleixner wrote:
 
-do you need intermediates for processing, plastics (e.g. rubber) or silic=
-one mixtures?
+> While working on per device MSI domains I noticed that quite some files
+> include linux/msi.h just because.
+> 
+> The top level comment in the header file clearly says:
+> 
+>   Regular device drivers have no business with any of these functions....
+> 
+> [...]
 
-We provide a wide range of silicone rubbers with various properties, sili=
-cone mixtures from renowned manufacturers such as Wacker, Elastosil LR an=
-d dyes, stabilizers, primers and anti-adhesive additives.
+Applied to 6.2/scsi-queue, thanks!
 
-We also produce technical silicone compounds with increased resistance to=
- oils, resistant to high temperatures and water vapor, conductive and man=
-y more.
+[03/10] scsi: lpfc: Remove linux/msi.h include
+        https://git.kernel.org/mkp/scsi/c/cdd9344e00b4
 
-We provide fast order fulfillment, timely deliveries and cost optimizatio=
-n.
-
-Can I introduce what we can offer you?
-
-
-Gaston Perrot
+-- 
+Martin K. Petersen	Oracle Linux Engineering
