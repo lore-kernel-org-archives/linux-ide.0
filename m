@@ -2,99 +2,122 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BE3CC43217
-	for <linux-ide@archiver.kernel.org>; Thu,  1 Dec 2022 20:48:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16965C47088
+	for <linux-ide@archiver.kernel.org>; Thu,  1 Dec 2022 21:28:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230080AbiLAUsx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 1 Dec 2022 15:48:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45528 "EHLO
+        id S230523AbiLAV2C (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 1 Dec 2022 16:28:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230169AbiLAUsw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Dec 2022 15:48:52 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8477D442D3;
-        Thu,  1 Dec 2022 12:48:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-        bh=gM+SGNzlvBm852uPOzFZ2L0ERl2zW0zv3SAqQ3sX+ic=; b=mRQHbNpb3cTL7vq7Q7H4tdjVs7
-        fo4b/jGRi1z+nFBuRp7k3WypXqw0Eb5SRjuGUAfwGl4cTL0+Ei7Ie0CVNAd1uic6FE4fBCKCAGSuw
-        FnS2ydTQjtY1aIy4Sxc61sboBcUX5LnlSUcInqsVUmScTCkSzhdiW+hXY+s59wj+lZjik5L8opekB
-        6VvKF4D7rDA8JwCEJo8u02TlNXQZ+0L5DfV2G47zs6tHukpFdS5d94z12hWZ3hW0xwY7mIMPenLAa
-        lbokRcIaYa8ox9LeXxWDznZrtMu17exeHvTPAEangWSulKRCzRRIO4Szd7ALX9em/fluZlwSwiwCB
-        6xUsFAzw==;
-Received: from [2601:1c2:d80:3110::a2e7]
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1p0qU5-00B1qe-HD; Thu, 01 Dec 2022 20:48:41 +0000
-Message-ID: <7e5f86c0-04b3-aa68-565a-7b86f1e1553d@infradead.org>
-Date:   Thu, 1 Dec 2022 12:48:40 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH] ata: ahci: fix enum constants for gcc-13
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Luis Machado <luis.machado@arm.com>, linux-ide@vger.kernel.org,
-        stable@vger.kernel.org
+        with ESMTP id S230413AbiLAV2B (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Dec 2022 16:28:01 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86D7976141;
+        Thu,  1 Dec 2022 13:28:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3450CB82025;
+        Thu,  1 Dec 2022 21:27:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A85AEC433D6;
+        Thu,  1 Dec 2022 21:27:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669930078;
+        bh=+DN+P/rKB/9tSIZAc6i0bxDS167JyMagYuQTQ8imLrI=;
+        h=In-Reply-To:References:Date:From:To:Cc:Subject:From;
+        b=uQMJuusUn8CNI4pztWvsbyTXchDju2WKgZTz3saR/BgX9smZeCwvibPrzs9Tdto6H
+         VA9B1hA7g7ZOhjYryGYTX7Z2fNYZCFaLNU5zyko1KC8a/DqKJyohuKBs4elBA7l+CK
+         1msdZtU5vSC8+oDl5fYLVFDw3+MmkcaWIyfn7oMfr7b/CWLZNb4x2FdMn8tJJ6Qb8q
+         OFWEsb4OpyFYQmjxyY7bi7RwZSQS1lZqFMFDjlfh23gGwxCP14wpbjORohXqKNMpdJ
+         mpKWX/+eyf8VB0Yv5i8qVoz0YIm4tzoNwis/YhJQieorteKMRctFM6mX1T8jiMv2Wl
+         FqJZjXvPVfNEg==
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+        by mailauth.nyi.internal (Postfix) with ESMTP id 8A80727C0054;
+        Thu,  1 Dec 2022 16:27:55 -0500 (EST)
+Received: from imap51 ([10.202.2.101])
+  by compute6.internal (MEProxy); Thu, 01 Dec 2022 16:27:55 -0500
+X-ME-Sender: <xms:WhyJY56bY9F_MYFxv7DaioKPBJHJxAo0Fv98h9FAnoD_QfY89srmBA>
+    <xme:WhyJY25S12Ycs-orXZS5gVWcTnneBahCIouBH5bKrpPz_0xCSU7M-VYtRlImKMbjM
+    6dJs_nLem9NhUmhlzU>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrtdehgdduhedtucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusehkvghrnhgvlhdrohhrgheqnecuggftrf
+    grthhtvghrnhepvdeviefgtedugeevieelvdfgveeuvdfgteegfeeiieejjeffgeeghedu
+    gedtveehnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomh
+    eprghrnhguodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdduvdekhedujedt
+    vdegqddvkeejtddtvdeigedqrghrnhgupeepkhgvrhhnvghlrdhorhhgsegrrhhnuggsrd
+    guvg
+X-ME-Proxy: <xmx:WhyJYwdFhZYwNTJEhjA3iEa-0lKweK4UrtEn7GUmniukcOgyJrrWpA>
+    <xmx:WhyJYyIaGsyihW68Uz2LeO1u-ncg-PKppdRDl1e0bZlBmqR6C3NA2w>
+    <xmx:WhyJY9JwMyoeO3Z661IObk96bEKAtdmHD6O9TT3p157Vql2qf5o4iw>
+    <xmx:WxyJY6FVIpHTCYek0JcdB1j1xlCUc9smfmHtm_cu792257_b04rcIA>
+Feedback-ID: i36794607:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id E3357B60086; Thu,  1 Dec 2022 16:27:54 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-1115-g8b801eadce-fm-20221102.001-g8b801ead
+Mime-Version: 1.0
+Message-Id: <c88afa91-72a9-4905-a710-90655f97831d@app.fastmail.com>
+In-Reply-To: <7e5f86c0-04b3-aa68-565a-7b86f1e1553d@infradead.org>
 References: <20221201204310.142039-1-arnd@kernel.org>
-From:   Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20221201204310.142039-1-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <7e5f86c0-04b3-aa68-565a-7b86f1e1553d@infradead.org>
+Date:   Thu, 01 Dec 2022 22:27:34 +0100
+From:   "Arnd Bergmann" <arnd@kernel.org>
+To:     "Randy Dunlap" <rdunlap@infradead.org>,
+        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
+Cc:     linux-kernel@vger.kernel.org, "Arnd Bergmann" <arnd@arndb.de>,
+        "Luis Machado" <luis.machado@arm.com>, linux-ide@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] ata: ahci: fix enum constants for gcc-13
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On Thu, Dec 1, 2022, at 21:48, Randy Dunlap wrote:
+> On 12/1/22 12:43, Arnd Bergmann wrote:
+>> From: Arnd Bergmann <arnd@arndb.de>
+>> 
+>> gcc-13 slightly changes the type of constant expressions that are deifined
+>
+>                                                                     defined
+
+fixed
+
+>> ---
+>>  drivers/ata/ahci.h | 234 ++++++++++++++++++++++-----------------------
+>>  1 file changed, 117 insertions(+), 117 deletions(-)
+>
+> What #include <linux/bits.h> ?
+> or is it just done indirectly?
+
+Good point. It survived a build test, and it's one of the headers that
+is almost always included from somewhere, but you are correct that
+there should be an explicit include here as well.
+
+I also found that PORT_CMD_ICC_MASK is still a negative number
+that needs to be changed:
+
+@@ -178,10 +178,10 @@ enum {
+        PORT_CMD_SPIN_UP        = BIT(1),  /* Spin up device */
+        PORT_CMD_START          = BIT(0),  /* Enable port DMA engine */
+ 
+-       PORT_CMD_ICC_MASK       = (0xf << 28), /* i/f ICC state mask */
+-       PORT_CMD_ICC_ACTIVE     = (0x1 << 28), /* Put i/f in active state */
+-       PORT_CMD_ICC_PARTIAL    = (0x2 << 28), /* Put i/f in partial state */
+-       PORT_CMD_ICC_SLUMBER    = (0x6 << 28), /* Put i/f in slumber state */
++       PORT_CMD_ICC_MASK       = (0xfu << 28), /* i/f ICC state mask */
++       PORT_CMD_ICC_ACTIVE     = (0x1u << 28), /* Put i/f in active state */
++       PORT_CMD_ICC_PARTIAL    = (0x2u << 28), /* Put i/f in partial state */
++       PORT_CMD_ICC_SLUMBER    = (0x6u << 28), /* Put i/f in slumber state */
+ 
+        /* PORT_CMD capabilities mask */
+        PORT_CMD_CAP            = PORT_CMD_HPCP | PORT_CMD_MPSP |
 
 
-On 12/1/22 12:43, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> gcc-13 slightly changes the type of constant expressions that are deifined
+I've addressed all three issues now, will send a v2 after Luis is
+able to validate that this fixes the problem.
 
-                                                                    defined
-
-> in an enum, which triggers a compile time sanity check in libata:
-> 
-> linux/drivers/ata/libahci.c: In function 'ahci_led_store':
-> linux/include/linux/compiler_types.h:357:45: error: call to '__compiletime_assert_302' declared with attribute error: BUILD_BUG_ON failed: sizeof(_s) > sizeof(long)
-> 357 | _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-> 
-> The new behavior is that sizeof() returns the same value for the
-> constant as it does for the enum type, which is generally more sensible
-> and consistent.
-> 
-> The problem in libata is that it contains a single enum definition for
-> lots of unrelated constants, some of which are large positive (unsigned)
-> integers like 0xffffffff, while others like (1<<31) are interpreted as
-> negative integers, and this forces the enum type to become 64 bit wide
-> even though most constants would still fit into a signed 32-bit 'int'.
-> 
-> Fix this by changing the entire enum definition to use BIT(x) in place
-> of (1<<x), which results in all values being seen as 'unsigned' and
-> fitting into an unsigned 32-bit type.
-> 
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=107917
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=107405
-> Reported-by: Luis Machado <luis.machado@arm.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-> Luis, I don't have gcc-13 installed on the machine I used for
-> creating this patch, can you give this a spin and see if it
-> addresses the build failure?
-> ---
->  drivers/ata/ahci.h | 234 ++++++++++++++++++++++-----------------------
->  1 file changed, 117 insertions(+), 117 deletions(-)
-
-What #include <linux/bits.h> ?
-or is it just done indirectly?
-
-thanks.
--- 
-~Randy
+    Arnd
