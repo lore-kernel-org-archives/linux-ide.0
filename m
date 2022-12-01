@@ -2,178 +2,96 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C72CFC43217
-	for <linux-ide@archiver.kernel.org>; Thu,  1 Dec 2022 11:48:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2730C4321E
+	for <linux-ide@archiver.kernel.org>; Thu,  1 Dec 2022 13:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229463AbiLALs4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 1 Dec 2022 06:48:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37576 "EHLO
+        id S230471AbiLAND7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 1 Dec 2022 08:03:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229935AbiLALsr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Dec 2022 06:48:47 -0500
-Received: from mail-io1-xd31.google.com (mail-io1-xd31.google.com [IPv6:2607:f8b0:4864:20::d31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B2489AE07
-        for <linux-ide@vger.kernel.org>; Thu,  1 Dec 2022 03:48:44 -0800 (PST)
-Received: by mail-io1-xd31.google.com with SMTP id b2so841202iof.12
-        for <linux-ide@vger.kernel.org>; Thu, 01 Dec 2022 03:48:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Im8aG2HhGlxgZH4iTquAT2HFHDXCKd8y8vkv6lHhFXg=;
-        b=JYyHDRbO2aW4UmEejNSdCo2szLux+7Zcot5vDKhMJdFx0dBPGVgx6DYXoXYkf194He
-         4B4181TOme1f5FLctjIw9UzccRsiGczbfdoJHuF/hUvJ1scdx6fyaCwrxW9cu1JMHAnx
-         dEuHB9zesWjrBR9mynIWox4PQQfdRXTOGYz/SZp3TXmpfO1tG7lS3P1q8yesWxfLlQ0/
-         bkjoEbCL/7YyK7Gq3cE/JguBp/n4c5zQxEXUOzplpdIGmkCu/tMun9Bkv/vVQk9BjcnF
-         iUE7XqXcfpNRHkUL4uz7XpSTLqFte23BxXh+s5eV5WNv3FbbRnjf/3snn0PiPfSansIf
-         EDig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Im8aG2HhGlxgZH4iTquAT2HFHDXCKd8y8vkv6lHhFXg=;
-        b=elyUIo6ZPQ3gmxchzJ70LphAHeLurCyWgEqqp+2uKYLRcjE3UwkxAnEt2T9eQq8ZoF
-         K/s2KEr57FfabbFp3G3JHQkcQIOaqbsnsoAXioxGt5hjkADfzmn+at0FELd2mkw9QUYi
-         UoePbnDIduunq0pxkYhyJrby/tRkQBDCx12OROwJA9NTuSqDAlrqWhfdv+YwKBIPeBw+
-         YRKBgir99K5LJ4o63Nvo0yAckwVL6aYTr7BaNWjI4rXdr4HrqZ1jITiCtRcY4Lk1zp8C
-         kTMMdblq2LKYfqwFtMYocA3T8BVllGfFO+YkUsF6MGOL6N1/AoOVPre20vOEYGfxnO3n
-         FInw==
-X-Gm-Message-State: ANoB5pkLf35PsaTohGxzbVIYREMpytLM3ZUOJ096b9++sO8iM01k4PEd
-        xWZBPFMh+bvJCSsxyOpIC5eSgo17ANX2ipgVxS4Y1gvZUd6tgVNn
-X-Google-Smtp-Source: AA0mqf41hMKwtkf4xbRGiRzWBrltGwtbsUvrrqiCOCed4fhJhU6zzDCcb/toEsxMj7xcuXoUo4C5eWh/jY9KyVI1Iik=
-X-Received: by 2002:a6b:6109:0:b0:6df:c08d:2760 with SMTP id
- v9-20020a6b6109000000b006dfc08d2760mr3407964iob.209.1669895323749; Thu, 01
- Dec 2022 03:48:43 -0800 (PST)
+        with ESMTP id S231521AbiLANCu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Dec 2022 08:02:50 -0500
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF31432B85;
+        Thu,  1 Dec 2022 05:02:42 -0800 (PST)
+Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1p0jD6-00068i-Ku; Thu, 01 Dec 2022 14:02:40 +0100
+Message-ID: <201c873d-83a9-a006-f5b9-368135e8dadd@leemhuis.info>
+Date:   Thu, 1 Dec 2022 14:02:39 +0100
 MIME-Version: 1.0
-References: <CA+G9fYvUnn0cS+_DZm8hAfi=FnMB08+6Xnhud6yvi9Bxh=DU+Q@mail.gmail.com>
- <CADYN=9L8tt2T-8O+u5NSMSUOkZDvEggnvzxH6aMmd5Rn9yDeuw@mail.gmail.com>
- <ca8d3fff-0365-24d9-fd53-5799ac34f336@opensource.wdc.com> <7ee4a1bd-0674-42d8-8980-8b029ca09e71@app.fastmail.com>
- <75eaeab3-7781-d60a-ae61-ae837f5dcec9@opensource.wdc.com> <CADYN=9JiX-=PcKMzAcSm=p7Dh6kYT7Kbv-8kcNF0MQ4=1hFS5g@mail.gmail.com>
- <20221014140633.mlypet7skkxvt453@mobilestation> <CADYN=9LrKHRNMON3GA4piDvWeSWTASQ1u2=D30rXFdvo1L18bg@mail.gmail.com>
- <20221017155246.zxal2cfehjgaajcu@mobilestation> <CA+G9fYtYetV5sZVD14WkZxCE_tgTC4VVKm8BcBw5_NwXD6U=Sw@mail.gmail.com>
- <Y4cqcTRcni5H7UAU@x1-carbon>
-In-Reply-To: <Y4cqcTRcni5H7UAU@x1-carbon>
-From:   Anders Roxell <anders.roxell@linaro.org>
-Date:   Thu, 1 Dec 2022 12:48:32 +0100
-Message-ID: <CADYN=9KKGBXn-YkiiFxsUzsanTALbDV1c+tB0oUQPouE1idnuQ@mail.gmail.com>
-Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006 tag
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     Naresh Kamboju <naresh.kamboju@linaro.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Praneeth Bajjuri <praneeth@ti.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        open list <linux-kernel@vger.kernel.org>,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006
+ tag #forregzbot
+Content-Language: en-US, de-DE
+To:     regressions@lists.linux.dev
+Cc:     open list <linux-kernel@vger.kernel.org>,
         Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
         "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        "lkft-triage@lists.linaro.org" <lkft-triage@lists.linaro.org>,
-        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-        Carlos Hernandez <ceh@ti.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+        <linux-ide@vger.kernel.org>
+References: <CA+G9fYvRXkjeO+yDEQxwJ8+GjSmwhZ7XHHAaVWAsxAaSngj5gg@mail.gmail.com>
+ <bf1b053d-ffa6-48ab-d2d2-d59ab21afc19@opensource.wdc.com>
+ <CA+G9fYvUnn0cS+_DZm8hAfi=FnMB08+6Xnhud6yvi9Bxh=DU+Q@mail.gmail.com>
+ <CADYN=9L8tt2T-8O+u5NSMSUOkZDvEggnvzxH6aMmd5Rn9yDeuw@mail.gmail.com>
+ <ca8d3fff-0365-24d9-fd53-5799ac34f336@opensource.wdc.com>
+ <7ee4a1bd-0674-42d8-8980-8b029ca09e71@app.fastmail.com>
+ <75eaeab3-7781-d60a-ae61-ae837f5dcec9@opensource.wdc.com>
+ <CADYN=9JiX-=PcKMzAcSm=p7Dh6kYT7Kbv-8kcNF0MQ4=1hFS5g@mail.gmail.com>
+ <20221014140633.mlypet7skkxvt453@mobilestation>
+ <CADYN=9LrKHRNMON3GA4piDvWeSWTASQ1u2=D30rXFdvo1L18bg@mail.gmail.com>
+ <20221017155246.zxal2cfehjgaajcu@mobilestation>
+ <CA+G9fYtYetV5sZVD14WkZxCE_tgTC4VVKm8BcBw5_NwXD6U=Sw@mail.gmail.com>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+In-Reply-To: <CA+G9fYtYetV5sZVD14WkZxCE_tgTC4VVKm8BcBw5_NwXD6U=Sw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1669899765;da1ec07b;
+X-HE-SMSGID: 1p0jD6-00068i-Ku
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, 30 Nov 2022 at 11:03, Niklas Cassel <Niklas.Cassel@wdc.com> wrote:
->
-> On Wed, Nov 30, 2022 at 03:10:37PM +0530, Naresh Kamboju wrote:
-> > On Mon, 17 Oct 2022 at 21:22, Serge Semin <fancer.lancer@gmail.com> wrote:
-> >
-> > FYI,
-> >
-> > We have been noticing this problem [a] & [b] on Linux mainline master 6.1.0-rc7
-> >
-> >     Test error: mkfs.ext4
-> > /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 failed; job
-> > exit
-> >
-> > Please suggest a way forward on this reported issue on arm32 TI BeagleBoard X15
-> > device. Build and Kernel configs details provided in the metadata section.
-> >
-> > metadata:
-> >   git_ref: master
-> >   git_repo: https://gitlab.com/Linaro/lkft/mirrors/torvalds/linux-mainline
-> >   git_sha: b7b275e60bcd5f89771e865a8239325f86d9927d
-> >   git_describe: v6.1-rc7
-> >   kernel_version: 6.1.0-rc7
-> >   kernel-config: https://builds.tuxbuild.com/2I9I42JhhQqS9GOpFppfRiuqtRW/config
-> >   build-url: https://gitlab.com/Linaro/lkft/mirrors/torvalds/linux-mainline/-/pipelines/706371149
-> >   artifact-location: https://builds.tuxbuild.com/2I9I42JhhQqS9GOpFppfRiuqtRW
-> >   toolchain: gcc-10
-> >
-> > [a] https://lkft.validation.linaro.org/scheduler/job/5892099
-> > [b] https://lore.kernel.org/all/20221017155246.zxal2cfehjgaajcu@mobilestation/
-> >
-> > - Naresh
->
-> Hello Naresh,
->
->
-> Looking at the error from the log:
->
-> + mkfs.ext4 /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84
-> mke2fs 1.46.5 (30-Dec-2021)
-> The file /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 does not exist and no size was specified.
->
-> It seems like the device that you are trying to format does not exist.
->
->
->
-> On October 17th Serge suggested that you guys should try to enable:
-> CONFIG_AHCI_DWC
-> and see if that does solve your problem.
->
-> There was never any reply to his suggestion.
+[Note: this mail contains only information for Linux kernel regression
+tracking. Mails like these contain '#forregzbot' in the subject to make
+then easy to spot and filter out. The author also tried to remove most
+or all individuals from the list of recipients to spare them the hassle.]
 
-I re-tested this on todays linux tree v6.1-rc7-103-gef4d3ea40565.
+On 30.11.22 10:40, Naresh Kamboju wrote:
 
-With CONFIG_AHCI_DWC=y the kernel fell on its back and no output was produced
-So changing  the ahci_dwc_init to be a late_initcall [1] made me see
-what was going on [2].
+> 
+> We have been noticing this problem [a] & [b] on Linux mainline master 6.1.0-rc7
+> 
+>     Test error: mkfs.ext4
+> /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190702A00D84 failed; job
+> exit
+> 
+> Please suggest a way forward on this reported issue on arm32 TI BeagleBoard X15
+> device. Build and Kernel configs details provided in the metadata section.
 
-The kernel booted fine with CONFIG_AHCI_DWC=y + this patch [3]
+Thanks for the report. To be sure below issue doesn't fall through the
+cracks unnoticed, I'm adding it to regzbot, my Linux kernel regression
+tracking bot:
 
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -109,7 +109,8 @@ struct clk *ahci_platform_find_clk(struct
-ahci_host_priv *hpriv, const char *con
-  int i;
+#regzbot ^introduced v6.0..v6.1-rc7
+#regzbot title ata/arm32: TI BeagleBoard X15 doesn't boot
+#regzbot ignore-activity
 
-  for (i = 0; i < hpriv->n_clks; i++) {
-- if (!strcmp(hpriv->clks[i].id, con_id))
-+ if (hpriv->clks && hpriv->clks[i].id &&
-+    !strcmp(hpriv->clks[i].id, con_id))
-  return hpriv->clks[i].clk;
-  }
+This isn't a regression? This issue or a fix for it are already
+discussed somewhere else? It was fixed already? You want to clarify when
+the regression started to happen? Or point out I got the title or
+something else totally wrong? Then just reply -- ideally with also
+telling regzbot about it, as explained here:
+https://linux-regtracking.leemhuis.info/tracked-regression/
 
-Bootlog [4].
-Thank you Arnd for helping out with the investigation and for
-proposing the patch for me to test.
+Reminder for developers: When fixing the issue, add 'Link:' tags
+pointing to the report (the mail this one replies to), as explained for
+in the Linux kernel's documentation; above webpage explains why this is
+important for tracked regressions.
 
->
->
->
-> Looking at the config in:
-> >   kernel-config: https://builds.tuxbuild.com/2I9I42JhhQqS9GOpFppfRiuqtRW/config
->
-> # CONFIG_AHCI_DWC is not set
->
-> This Kconfig is indeed not enabled.
->
-> Could you guys please try the suggestion from Serge?
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
 
-The patch was also tested [5] without enabling CONFIG_AHCI_DWC, this
-also worked fine.
-
-Cheers,
-Anders
-[1] http://ix.io/4hmt
-[2] https://lkft.validation.linaro.org/scheduler/job/5902935
-[3] http://ix.io/4hmv
-[4] https://lkft.validation.linaro.org/scheduler/job/5903220
-[5] http://ix.io/4hmw
+P.S.: As the Linux kernel's regression tracker I deal with a lot of
+reports and sometimes miss something important when writing mails like
+this. If that's the case here, don't hesitate to tell me in a public
+reply, it's in everyone's interest to set the public record straight.
