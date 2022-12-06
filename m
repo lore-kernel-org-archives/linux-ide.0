@@ -2,146 +2,149 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3795CC352A1
-	for <linux-ide@archiver.kernel.org>; Tue,  6 Dec 2022 20:59:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20743C3A5A7
+	for <linux-ide@archiver.kernel.org>; Tue,  6 Dec 2022 21:04:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbiLFU7n (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 6 Dec 2022 15:59:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47774 "EHLO
+        id S229527AbiLFVEl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 6 Dec 2022 16:04:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbiLFU7m (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2022 15:59:42 -0500
-Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5FFB2F028;
-        Tue,  6 Dec 2022 12:59:40 -0800 (PST)
-Received: by mail-lf1-x129.google.com with SMTP id d6so25583221lfs.10;
-        Tue, 06 Dec 2022 12:59:40 -0800 (PST)
+        with ESMTP id S229827AbiLFVEj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2022 16:04:39 -0500
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCB7A30577;
+        Tue,  6 Dec 2022 13:04:38 -0800 (PST)
+Received: by mail-lf1-x135.google.com with SMTP id y25so3416759lfa.9;
+        Tue, 06 Dec 2022 13:04:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=UpMc+/BC3gmHVc2NYwVAUDbM6fSZdcDC5PUMhunP1hU=;
-        b=UxathvI7GH0Ei6fmKQkz3kX1KEysFTgkL2egw5WFbAV0U0rkNvK0emEJD3iLFOFioM
-         r9QHlvLU8Ml6EhbW0DJF09b7GUPeKrfaFM3YH75vDphBAFItnhEjJe3isGwaDAxFwAJ/
-         ZV3A2kZ99LdSj6UQx+Xi0Dn1+5SL3vGYO2/Nw5GAYvmZ0tXYBKfxkZIl2Fm61HT5IF4k
-         thiHUoyZHiNPX3HGLn0fMcl1tpM5C6xz1m+hw4pXOOJZMoOwC8/A1JiHqv4DSpwdmViK
-         /Rmj7h9/py+GL+OHKteZktQFvp+QAwdJgXBMvcMGS57BetAOmUvzQ6ptwfU5UpI55Em8
-         WW9A==
+        bh=bGfC41RTI6jgj8ywYESKxaRQC3IxCMppOBqs9HFb7hI=;
+        b=bNQEtaR1NsMh9mBbNKD/Y01RTcj/56safmMbTV/XW62mfIJ4Q2KApj/steVorzOSvc
+         ld9uCsyPAxJYAPy79UOF9M3rXiJQjqcLyWxuefpT7WA6VMckwzOhQnmPEhsgRjmzOxnc
+         Iyw8R76JCvgW+E23NufgvCV4kagx6FLlbbdh6AnXqHigklPlbkuj50CzZhDJrkWGKFc5
+         d4XrH3K95NJs5ju+3Neok+onvTqB2Qo9384vttmTufY3TTwvUQtr5gCzclfArNjX71QM
+         r5EtdiKwXIS544o6qQWwwSKL/NX13b5zssd1zLHSuEO5eDBpSIix9DJhZd4B7T3yzZ//
+         G7bQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=UpMc+/BC3gmHVc2NYwVAUDbM6fSZdcDC5PUMhunP1hU=;
-        b=a3G/5C5dvecSBKB8FPJ/O5nngjgR6qV2CQtvCh+p9V7PkSUaRu3+vk2o6iaigY2AGp
-         DkuNUEMSK6/EL0nrJu2ZjndFSLOjRM5g3kNG4Qhzfz75VHoXen6zHJbaiO0l6wNmTKyh
-         dSxSBNoFVhUAGHAMuGp4Qv2gNJdbcyp6hUwfsw5uet8UvSOyp1C7eee1G0ucY3jhvEMw
-         AdLp36dztIeKX4aJ90qt1urs8S0rwgRYZrWsl+mbh87sHVdUKm61Nya+/U1bJ7gYivx9
-         nKLeY1ZXEEILa/A9YVAHt5cszP3AqfiM/sHfUL87C32mRt6qEXMMaB1taLfdJICiHMYb
-         cXKQ==
-X-Gm-Message-State: ANoB5pmtrioVDuZJME1eGuDxLoNKR1sVXA41xl6KP9K75YWYIUrmH/LH
-        icfXH5RBsQFtqvkIT134eAs=
-X-Google-Smtp-Source: AA0mqf5272ez/Ay/mUTXPEX4pG6QcJI5pNzKnuFaJP7uMwV3WKGB8ACg6a6Oajd3PrsPQp5gjZRJNg==
-X-Received: by 2002:ac2:44c6:0:b0:4b5:7640:1a with SMTP id d6-20020ac244c6000000b004b57640001amr3255238lfm.140.1670360379057;
-        Tue, 06 Dec 2022 12:59:39 -0800 (PST)
+        bh=bGfC41RTI6jgj8ywYESKxaRQC3IxCMppOBqs9HFb7hI=;
+        b=AD3Ac7qgHSl7YJb7g8bgYRl5nRX5fUWECUlipt+XJcPi3IKSN73xI/2UbOGGFrKy2d
+         3ZqX3hFdb4bcLxmDOh5QrQtwg03ke2XW/VM7VtelW8sQPgn8HNFZqaBN3w4QoDrqt7hU
+         sJqlnV1/qpk21fqN85CpUC7OE2Fc2p+QfX3YCVMRDCor2B01yH8lMMmg/XCOF8QRBann
+         tl4y07QtLwjPd4BWlzXah0QfJWJh+PynRtVzMVqXsXKbPVRLla7MgNZrHp1ADWrxDiwP
+         C8g8DeM8j7esnSAVLv+lSqYqLDBkfIir7fys9IS6VUINSXvvIelKxG0NjXxbcYwDnHLw
+         DkaA==
+X-Gm-Message-State: ANoB5pmYJGhtTTyMdSBD7tOGmLf1vcNxucB5yFlu8QjYb58alt/lWInE
+        exNcBxIXSe5bOcgrkvoghqs=
+X-Google-Smtp-Source: AA0mqf6lk8n1mSovdZxsNEks0iX3SYkOI7bB3GP+FfVi9H/dJoGvipfviaVx3C8lx6rPgOyVK/Nh3Q==
+X-Received: by 2002:a05:6512:104e:b0:4b5:604a:5b24 with SMTP id c14-20020a056512104e00b004b5604a5b24mr5337245lfb.550.1670360676996;
+        Tue, 06 Dec 2022 13:04:36 -0800 (PST)
 Received: from mobilestation ([95.79.133.202])
-        by smtp.gmail.com with ESMTPSA id y2-20020a0565123f0200b004a46a9cebe2sm2604588lfa.289.2022.12.06.12.59.37
+        by smtp.gmail.com with ESMTPSA id p1-20020ac24ec1000000b004991437990esm2618593lfr.11.2022.12.06.13.04.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Dec 2022 12:59:38 -0800 (PST)
-Date:   Tue, 6 Dec 2022 23:59:36 +0300
+        Tue, 06 Dec 2022 13:04:36 -0800 (PST)
+Date:   Wed, 7 Dec 2022 00:04:34 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Anders Roxell <anders.roxell@linaro.org>
-Cc:     Serge Semin <fancer.lancer@gmail.com>, hdegoede@redhat.com,
-        axboe@kernel.dk, damien.lemoal@opensource.wdc.com,
-        Sergey.Semin@baikalelectronics.ru, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ata: libahci_platform: ahci_platform_find_clk: oops,
- NULL pointer
-Message-ID: <20221206205936.m7qkfk777s46vh54@mobilestation>
-References: <20221206083416.705111-1-anders.roxell@linaro.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Naresh Kamboju <naresh.kamboju@linaro.org>,
+        Praneeth Bajjuri <praneeth@ti.com>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        open list <linux-kernel@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        "lkft-triage@lists.linaro.org" <lkft-triage@lists.linaro.org>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        Carlos Hernandez <ceh@ti.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>
+Subject: Re: TI: X15 the connected SSD is not detected on Linux next 20221006
+ tag
+Message-ID: <20221206210434.wdttz5aj7ipzsvcy@mobilestation>
+References: <CADYN=9LrKHRNMON3GA4piDvWeSWTASQ1u2=D30rXFdvo1L18bg@mail.gmail.com>
+ <20221017155246.zxal2cfehjgaajcu@mobilestation>
+ <CA+G9fYtYetV5sZVD14WkZxCE_tgTC4VVKm8BcBw5_NwXD6U=Sw@mail.gmail.com>
+ <Y4cqcTRcni5H7UAU@x1-carbon>
+ <CADYN=9KKGBXn-YkiiFxsUzsanTALbDV1c+tB0oUQPouE1idnuQ@mail.gmail.com>
+ <20221205011105.4do4trbytq4bfw5b@mobilestation>
+ <98670e23-6553-4788-8662-9403c480af82@app.fastmail.com>
+ <f440a8ff-7657-c1be-e733-4ad69b6b7b0b@opensource.wdc.com>
+ <20221206084637.olaflvqmxwoo467a@mobilestation>
+ <fa2bc2b9-d74a-51a3-cb5f-80d04e145b27@opensource.wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221206083416.705111-1-anders.roxell@linaro.org>
+In-Reply-To: <fa2bc2b9-d74a-51a3-cb5f-80d04e145b27@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Dec 06, 2022 at 09:34:16AM +0100, Anders Roxell wrote:
-> When booting a arm 32-bit kernel with config CONFIG_AHCI_DWC enabled on
-> a am57xx-evm board. This happens when the clock references are unnamed
-> in DT, the strcmp() produces a NULL pointer dereference, see the
-> following oops, NULL pointer dereference:
+On Tue, Dec 06, 2022 at 06:12:48PM +0900, Damien Le Moal wrote:
+> On 12/6/22 17:46, Serge Semin wrote:
+> > On Mon, Dec 05, 2022 at 10:24:22PM +0900, Damien Le Moal wrote:
+> >> On 12/5/22 19:08, Arnd Bergmann wrote:
+> >>> On Mon, Dec 5, 2022, at 02:11, Serge Semin wrote:
+> >>>> On Thu, Dec 01, 2022 at 12:48:32PM +0100, Anders Roxell wrote:
+> >>>
+> >>>>>
+> >>>>>   for (i = 0; i < hpriv->n_clks; i++) {
+> >>>>> - if (!strcmp(hpriv->clks[i].id, con_id))
+> >>>>> + if (hpriv->clks && hpriv->clks[i].id &&
+> >>>>> +    !strcmp(hpriv->clks[i].id, con_id))
+> >>>>>   return hpriv->clks[i].clk;
+> >>>>>   }
+> >>>>
+> >>>> Indeed I should have taken into account that devm_clk_bulk_get_all()
+> >>>> can get unnamed clocks too. But checking the hpriv->clks pointer for
+> >>>> being not null is redundant, since the ahci_platform_get_resources()
+> >>>> procedure makes sure that the array is always allocated. At the very
+> >>>> least you shouldn't check the pointer in the loop, but can make sure
+> >>>> that the clks array is available before it.
+> >>>
+> > 
+> >>> Do you think this is otherwise the correct fix then? Any chance we
+> >>> can still get a version of it into 6.1?
+> > 
+> > I'll think of a better solution. But at this stage it seems like the
+> > best choice seeing the bindings permit having unnamed clocks
+> > specified.
+> > 
+> >>
+> >> If someone sends me a proper patch to apply, I can send a last PR for 6.1
+> >> to Linus before week end.
+> > 
+> > I'll submit the patch today. Thanks.
 > 
-> [    4.673950] Unable to handle kernel NULL pointer dereference at virtual address 00000000
-> [    4.682098] [00000000] *pgd=00000000
-> [    4.685699] Internal error: Oops: 5 [#1] SMP ARM
-> [    4.690338] Modules linked in:
-> [    4.693420] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 6.1.0-rc7 #1
-> [    4.699615] Hardware name: Generic DRA74X (Flattened Device Tree)
-> [    4.705749] PC is at strcmp+0x0/0x34
-> [    4.709350] LR is at ahci_platform_find_clk+0x3c/0x5c
-> [    4.714416] pc : [<c130c494>]    lr : [<c0c230e0>]    psr: 20000013
-> [    4.720703] sp : f000dda8  ip : 00000001  fp : c29b1840
-> [    4.725952] r10: 00000020  r9 : c1b23380  r8 : c1b23368
-> [    4.731201] r7 : c1ab4cc4  r6 : 00000001  r5 : c3c66040  r4 : 00000000
-> [    4.737762] r3 : 00000080  r2 : 00000080  r1 : c1ab4cc4  r0 : 00000000
-> [...]
-> [    4.998870]  strcmp from ahci_platform_find_clk+0x3c/0x5c
-> [    5.004302]  ahci_platform_find_clk from ahci_dwc_probe+0x1f0/0x54c
-> [    5.010589]  ahci_dwc_probe from platform_probe+0x64/0xc0
-> [    5.016021]  platform_probe from really_probe+0xe8/0x41c
-> [    5.021362]  really_probe from __driver_probe_device+0xa4/0x204
-> [    5.027313]  __driver_probe_device from driver_probe_device+0x38/0xc8
-> [    5.033782]  driver_probe_device from __driver_attach+0xb4/0x1ec
-> [    5.039825]  __driver_attach from bus_for_each_dev+0x78/0xb8
-> [    5.045532]  bus_for_each_dev from bus_add_driver+0x17c/0x220
-> [    5.051300]  bus_add_driver from driver_register+0x90/0x124
-> [    5.056915]  driver_register from do_one_initcall+0x48/0x1e8
-> [    5.062591]  do_one_initcall from kernel_init_freeable+0x1cc/0x234
-> [    5.068817]  kernel_init_freeable from kernel_init+0x20/0x13c
-> [    5.074584]  kernel_init from ret_from_fork+0x14/0x2c
-> [    5.079681] Exception stack(0xf000dfb0 to 0xf000dff8)
-> [    5.084747] dfa0:                                     00000000 00000000 00000000 00000000
-> [    5.092956] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> [    5.101165] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
-> [    5.107818] Code: e5e32001 e3520000 1afffffb e12fff1e (e4d03001)
-> [    5.114013] ---[ end trace 0000000000000000 ]---
-> 
-> Add an extra check in the if-statement if hpriv-clks[i].id.
-> 
-> Fixes: 6ce73f3a6fc0 ("ata: libahci_platform: Add function returning a clock-handle by id")
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
-> ---
->  drivers/ata/libahci_platform.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index ddf17e2d266c..b9e336bacf17 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -109,7 +109,7 @@ struct clk *ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con
->  	int i;
->  
->  	for (i = 0; i < hpriv->n_clks; i++) {
-> -		if (!strcmp(hpriv->clks[i].id, con_id))
-> +		if (hpriv->clks[i].id && !strcmp(hpriv->clks[i].id, con_id))
 
-I also thought to add the con_id check or if it's null then return a
-first clock descriptor with null id. But since there is no users of
-such semantic at this stage it's ok to accept the fix as is. It will
-at least prevent the kernel from oopsing on the unnamed clocks.
-So thanks for the patch
+> Anders just posted one. Can you review it please ?
 
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Done. Thanks.
 
 -Serge(y)
 
->  			return hpriv->clks[i].clk;
->  	}
->  
-> -- 
-> 2.35.1
 > 
+> > 
+> > -Serge(y)
+> > 
+> >>
+> >>
+> >>>
+> >>>      Arnd
+> >>
+> >> -- 
+> >> Damien Le Moal
+> >> Western Digital Research
+> >>
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
 > 
