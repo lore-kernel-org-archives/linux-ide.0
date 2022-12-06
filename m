@@ -2,132 +2,131 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9788C3A5A7
-	for <linux-ide@archiver.kernel.org>; Tue,  6 Dec 2022 06:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B10C1C352A1
+	for <linux-ide@archiver.kernel.org>; Tue,  6 Dec 2022 08:34:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230381AbiLFGqq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 6 Dec 2022 01:46:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37794 "EHLO
+        id S234170AbiLFIef (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 6 Dec 2022 03:34:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232616AbiLFGqo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2022 01:46:44 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F8F220DE
-        for <linux-ide@vger.kernel.org>; Mon,  5 Dec 2022 22:46:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670309204; x=1701845204;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=AzsErKObOeSdHVU0v+2ELRRiNknYBWmasc2TFqZExXk=;
-  b=q+/bV/fenyk7kv7ru6QXYJNTVbRT5BD6wvtYdYBFn2al2naFhNu5VF8I
-   zY8B56SdrrfXHngKqZZUkI9v6EeKaDUksBj+mH7U7sj+VwP1LqBOKvvkG
-   6zeMCvJjcsXexePROxbeCeTm0cHmT3ee4E4gJYHncfQpdmrRRTK538XPV
-   4130Q5YbP7hp97extN9eAtxITBZuM6Zt5fpIoF1wicl4R6I9jVma1F7jv
-   CUnasuU4yQUrkRYgNDgCoVaPp58zlFtXMDpq9CgyZa42IOTw9M/YoUfPu
-   4kH8Firft2reoiKFumbBmXxJ4IeB2qB2vWeQlZIiSbH1ut5nj7PBv1QnK
-   A==;
-X-IronPort-AV: E=Sophos;i="5.96,220,1665417600"; 
-   d="scan'208";a="217980025"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 06 Dec 2022 14:46:43 +0800
-IronPort-SDR: zj3IMeL7H1IUqHxzqqhjxDDjYfHXqcqPkJgmG2PVLz6fCvlByhIQx6lB8zpnIddffofXX4btCY
- MpC/jZbxTG9ZiLfJydvSXBQvWUcdNbMCEagzx+VQFbGwtQIWuZX+zzd1JsSRWa5zIC3+p+Ilr3
- V9iwAYzHpr6KVMNfd5R+3sjQ2GaX+i+WO1NNMyyMM5VLf7Vrs01DraNHkbM3MAVLVNoJu+6Stp
- Rc5JhrtTz8RurprFJAuUiZpat4sPyjdUEBvKW28CWqmCJuQbyxFj8mXnrfwusM0kb1oDwJJCct
- mps=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Dec 2022 21:59:31 -0800
-IronPort-SDR: sjQ3aM1KwrD6rI6+xBOAOTA7X8XPTp/8HVTXxRvorrNG3mJEw8PLD2hrrIOQDS1Uk9Dvlt4Vl3
- WDGUH5IBmYpwJRc6m1NWxmG0fWsPXg7QmWPErxH0G/eM3bFu3ECMHEhd0gDbjLjgDrUNxIA7BA
- ZFzYlgHk8BUwmBFiSIKP5fQGUaKONA56x63HwRcx0M/ff/uprLXEKWOkM8Td3QLMovlqcj6JBx
- jlSsw7Hk9wkWEw2vnExYJ6cNMXIFSzVTYLM47lQlEh8gdLU0TEl4em0yqHUvV7jyAm5AEX1GiS
- HgU=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Dec 2022 22:46:44 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NR9tq3Z7Lz1RvTp
-        for <linux-ide@vger.kernel.org>; Mon,  5 Dec 2022 22:46:43 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1670309202; x=1672901203; bh=AzsErKObOeSdHVU0v+2ELRRiNknYBWmasc2
-        TFqZExXk=; b=VYuF/8CiJ3Lrhvp7uvRKf8KKoqbLhlWoPhOBrCWDKZKwgyoRLid
-        t6D9UMa3vdbAy9gOQ2q9nwje1ObwQML9LihKbmIV7mZCTN/h5aAmLUY4B5xmSxaA
-        Za1WowfrhTtU1ta28/vZIf+AJz/v3VeoRkIsXEXWyRpFaRQvT/EQapLJx01txmjj
-        oyldzBaogIJN9r23Wv+03NUYigTA7LzvzFlsomaRt2CRXTin9vxYGbCiDYe+T4Cv
-        Ul00b1M/THk3A8cIpNpBIFsYdw34UGLZdm4JUk6Nzg7P4YD6mVxuQ3FgUOnRStNQ
-        m3O4mvY81fYNGaRMEpOvWtwheXgZphAyRrw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 2ss2id8Zunai for <linux-ide@vger.kernel.org>;
-        Mon,  5 Dec 2022 22:46:42 -0800 (PST)
-Received: from [10.225.163.74] (unknown [10.225.163.74])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NR9tn5nrNz1RvLy;
-        Mon,  5 Dec 2022 22:46:41 -0800 (PST)
-Message-ID: <95785bc5-ac4b-9c44-74ea-6b3afb11cf14@opensource.wdc.com>
-Date:   Tue, 6 Dec 2022 15:46:40 +0900
+        with ESMTP id S234073AbiLFIeX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2022 03:34:23 -0500
+Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B27D38BF
+        for <linux-ide@vger.kernel.org>; Tue,  6 Dec 2022 00:34:21 -0800 (PST)
+Received: by mail-lj1-x234.google.com with SMTP id n1so16400742ljg.3
+        for <linux-ide@vger.kernel.org>; Tue, 06 Dec 2022 00:34:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=dB5uxVvRgkCzh5zZI2hSHtW59YI+R9FGNxGFZk/czLU=;
+        b=ETUfGkLMmSB3lUZx24YJ7ZDNKO9dSec+Gd7bcEY9KnBBnJ1woJsRWeQLgxh/84onVi
+         mvgaEXfTP2R2Q0FBAoSIlG1Zp4pGruCo0hRioadH8GXMR7PRX422Gd3xgMFxD1FEi6vB
+         wzdow0IHCLio/y0554G+lMwrtGADFujdHpgqHoWinr2ut4rBCOQRtR8BQlG5u1pafvj+
+         K+3NxFKUDX8SZZLmF3d4g6eNzffWf7AbLeZilYtVlVanJeP6z3FnxAcRwm2cHyyb4Qdw
+         GnUztDIr85lbqQMfIMiTW4DjvcXjTmeGf4TwvateJtSIIGCIk0IXMQCZE+wQTqXQPHoa
+         qvEg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=dB5uxVvRgkCzh5zZI2hSHtW59YI+R9FGNxGFZk/czLU=;
+        b=ycN18B8PKtDxfsnREZ0/Ibaf19zAaoEu+3hoN3zvSxV2DVMUMTMAwCik6xDH9DapAE
+         ZQL//yEIMOVe11x8rtEyTfrltbMd1iC3QMrjWYz76uoH3gS4vz3ISLcxneVX4ey78xT5
+         MZbVuDtGDUGJiUZE7+UK3U5XNtt0/tsWqFgHWHWzyiPAjC+mlv3fDbPdwWo3b/GWx3Pq
+         qr9rwL8uNdVxHLvW5qMxFgPK86fzpABvCNByAFLRIExJNF6a/8+Mrnd3/+HZdQypRZON
+         EI8TFwUv3XSC15yaWqwfUzVKCF+k7CgHfU71mf0cgSkv1DzloajpiK58Dm1ZEtIP7oyx
+         EqdA==
+X-Gm-Message-State: ANoB5pkDZru+QqjL0D0Cun/MfCCVv4gMDuO4s+MQTUhehamAnjNR5Dj1
+        o/aqoC8YMMPEOUjltEvv3oYSNg==
+X-Google-Smtp-Source: AA0mqf5Da/gaQ+2OpANyCGySTMEe3xJ9baBAC/awJat/NeHnvPcOfhUsnsRlv/V2JOFoVJHagRvpnQ==
+X-Received: by 2002:a2e:7212:0:b0:279:88ce:43a9 with SMTP id n18-20020a2e7212000000b0027988ce43a9mr17393202ljc.354.1670315659683;
+        Tue, 06 Dec 2022 00:34:19 -0800 (PST)
+Received: from localhost (c-e429e555.07-21-73746f28.bbcust.telenor.se. [85.229.41.228])
+        by smtp.gmail.com with ESMTPSA id bf37-20020a2eaa25000000b00279c92b4a04sm1572963ljb.9.2022.12.06.00.34.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Dec 2022 00:34:19 -0800 (PST)
+From:   Anders Roxell <anders.roxell@linaro.org>
+To:     hdegoede@redhat.com, axboe@kernel.dk,
+        damien.lemoal@opensource.wdc.com
+Cc:     Sergey.Semin@baikalelectronics.ru, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Anders Roxell <anders.roxell@linaro.org>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ata: libahci_platform: ahci_platform_find_clk: oops, NULL pointer
+Date:   Tue,  6 Dec 2022 09:34:16 +0100
+Message-Id: <20221206083416.705111-1-anders.roxell@linaro.org>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH] [v2] ata: ahci: fix enum constants for gcc-13
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Luis Machado <luis.machado@arm.com>, linux-ide@vger.kernel.org,
-        stable@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
-References: <20221203105425.180641-1-arnd@kernel.org>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20221203105425.180641-1-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/3/22 19:54, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> gcc-13 slightly changes the type of constant expressions that are defined
-> in an enum, which triggers a compile time sanity check in libata:
-> 
-> linux/drivers/ata/libahci.c: In function 'ahci_led_store':
-> linux/include/linux/compiler_types.h:357:45: error: call to '__compiletime_assert_302' declared with attribute error: BUILD_BUG_ON failed: sizeof(_s) > sizeof(long)
-> 357 | _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-> 
-> The new behavior is that sizeof() returns the same value for the
-> constant as it does for the enum type, which is generally more sensible
-> and consistent.
-> 
-> The problem in libata is that it contains a single enum definition for
-> lots of unrelated constants, some of which are large positive (unsigned)
-> integers like 0xffffffff, while others like (1<<31) are interpreted as
-> negative integers, and this forces the enum type to become 64 bit wide
-> even though most constants would still fit into a signed 32-bit 'int'.
-> 
-> Fix this by changing the entire enum definition to use BIT(x) in place
-> of (1<<x), which results in all values being seen as 'unsigned' and
-> fitting into an unsigned 32-bit type.
-> 
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=107917
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=107405
-> Reported-by: Luis Machado <luis.machado@arm.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Cc: stable@vger.kernel.org
-> Cc: Randy Dunlap <rdunlap@infradead.org>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+When booting a arm 32-bit kernel with config CONFIG_AHCI_DWC enabled on
+a am57xx-evm board. This happens when the clock references are unnamed
+in DT, the strcmp() produces a NULL pointer dereference, see the
+following oops, NULL pointer dereference:
 
-Applied to for-6.2. Thanks !
+[    4.673950] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+[    4.682098] [00000000] *pgd=00000000
+[    4.685699] Internal error: Oops: 5 [#1] SMP ARM
+[    4.690338] Modules linked in:
+[    4.693420] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 6.1.0-rc7 #1
+[    4.699615] Hardware name: Generic DRA74X (Flattened Device Tree)
+[    4.705749] PC is at strcmp+0x0/0x34
+[    4.709350] LR is at ahci_platform_find_clk+0x3c/0x5c
+[    4.714416] pc : [<c130c494>]    lr : [<c0c230e0>]    psr: 20000013
+[    4.720703] sp : f000dda8  ip : 00000001  fp : c29b1840
+[    4.725952] r10: 00000020  r9 : c1b23380  r8 : c1b23368
+[    4.731201] r7 : c1ab4cc4  r6 : 00000001  r5 : c3c66040  r4 : 00000000
+[    4.737762] r3 : 00000080  r2 : 00000080  r1 : c1ab4cc4  r0 : 00000000
+[...]
+[    4.998870]  strcmp from ahci_platform_find_clk+0x3c/0x5c
+[    5.004302]  ahci_platform_find_clk from ahci_dwc_probe+0x1f0/0x54c
+[    5.010589]  ahci_dwc_probe from platform_probe+0x64/0xc0
+[    5.016021]  platform_probe from really_probe+0xe8/0x41c
+[    5.021362]  really_probe from __driver_probe_device+0xa4/0x204
+[    5.027313]  __driver_probe_device from driver_probe_device+0x38/0xc8
+[    5.033782]  driver_probe_device from __driver_attach+0xb4/0x1ec
+[    5.039825]  __driver_attach from bus_for_each_dev+0x78/0xb8
+[    5.045532]  bus_for_each_dev from bus_add_driver+0x17c/0x220
+[    5.051300]  bus_add_driver from driver_register+0x90/0x124
+[    5.056915]  driver_register from do_one_initcall+0x48/0x1e8
+[    5.062591]  do_one_initcall from kernel_init_freeable+0x1cc/0x234
+[    5.068817]  kernel_init_freeable from kernel_init+0x20/0x13c
+[    5.074584]  kernel_init from ret_from_fork+0x14/0x2c
+[    5.079681] Exception stack(0xf000dfb0 to 0xf000dff8)
+[    5.084747] dfa0:                                     00000000 00000000 00000000 00000000
+[    5.092956] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[    5.101165] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
+[    5.107818] Code: e5e32001 e3520000 1afffffb e12fff1e (e4d03001)
+[    5.114013] ---[ end trace 0000000000000000 ]---
 
+Add an extra check in the if-statement if hpriv-clks[i].id.
+
+Fixes: 6ce73f3a6fc0 ("ata: libahci_platform: Add function returning a clock-handle by id")
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
+---
+ drivers/ata/libahci_platform.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index ddf17e2d266c..b9e336bacf17 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -109,7 +109,7 @@ struct clk *ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con
+ 	int i;
+ 
+ 	for (i = 0; i < hpriv->n_clks; i++) {
+-		if (!strcmp(hpriv->clks[i].id, con_id))
++		if (hpriv->clks[i].id && !strcmp(hpriv->clks[i].id, con_id))
+ 			return hpriv->clks[i].clk;
+ 	}
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.35.1
 
