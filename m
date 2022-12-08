@@ -2,298 +2,242 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05CBDC6370D
-	for <linux-ide@archiver.kernel.org>; Thu,  8 Dec 2022 11:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E546CC6370A
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Dec 2022 11:03:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229793AbiLHLDX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:03:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35620 "EHLO
+        id S229738AbiLHLDV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Dec 2022 06:03:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229940AbiLHLCF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 06:02:05 -0500
+        with ESMTP id S230041AbiLHLBx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 06:01:53 -0500
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F04435F73;
-        Thu,  8 Dec 2022 03:00:57 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90948BF7E;
+        Thu,  8 Dec 2022 03:00:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497257; x=1702033257;
+  t=1670497255; x=1702033255;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=qEbSqx02Hms4e+VhyDUd/rgwE6Jtv1eQbot0wFgdMSg=;
-  b=Fz57JeVDEbkLfm09Bh0O28B6lARe6TDFNUeKIYnSDqEwsqFIFrDC+OxL
-   hKCyVBpASqDgZKZC/vVEPz4qvN20kqb5UGkUSbjrrdkStL5Sh/WRLPai2
-   /RzgxIqV12CE+71gkyoow4djCxtYPeYXo8p/kLTGsFLUouND19Am9u67W
-   9sqaVNARfC7ryx1Zy0H52Kygq5V/7htGqRPBcCoGH5uUwEWTSswIkErBM
-   RiIyuLwT3fXYoI+SSta5Ld+lWE35kJa/z/S6I/Xz2fm72K7entkJfJU1p
-   w2s+9mhyQNJ2r4T1BPPQomkRKWUgfRIJmoK6OYy0SrpwYrl25StT0O6ey
-   A==;
+  bh=BTJ8LoJp6X+8/V4roeSzAaSaPwzHMewoL7aqMsmDJjg=;
+  b=Gk6egJ1SpNj0Nr+TdEmjVn5Ye3uszoklQ+jbCuG+OehB0qkM1/ErNBZA
+   xGyTHqngppulN0+MqLuauWEJjkEjHm/42X5Wno5tofGx82Ny0QZvzbhIn
+   /bkn2/OAlJo+HYmHauXeGD+gDbNEvU8cOBDUyHaOpYxKstpSqk0fBxo4g
+   2xFnqTtld2ZUkeR8AjnCCGw9JwlzY9EOssYeeM1rQOy+v9UnqVu/3zcln
+   hmFFdILdULjQo64+iKcWRU/7TdPp+UB2a7wjSKKtMimkObTlFNgd9n7tw
+   iDj3lawh02fZa6mFkhxooh/m0CmqHMvpQG9OZTwWJiqLczgFASZ/C8sD2
+   g==;
 X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333375"
+   d="scan'208";a="223333371"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:00:57 +0800
-IronPort-SDR: njZymEfvw3f9dz+YvmRhXbYzEEb6EV5y+X3tNKdYPYy2fA0d+4EtUtszc7MnDsYaP7lNu1Xbw6
- OCTBGc1ZvG9xja4cEmFcfk6Da2wz35hBNimjr73fymtb2+vZk8qxqnpHDRrt7QJ+CI8zk2pp0c
- Il3opvEUTd6vOBC3jRH5fXmDyZDGjguBgvmpbwFeHFw9ym4v+LmMA8nQtAF4gZnfO9IIvgGitc
- G+Lo9Bn3Foe+Ks5odFvXkgNAhSP78SYbh6yHlCerDmja90HfaaFKhoEUewVtZuc59CVDzhVwN0
- Cus=
+  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:00:55 +0800
+IronPort-SDR: n5diKaqmPulEoJUFvOt2Csn7SupTuXLS/bp2J6NwISeLj1m5tIaEZYo0Lnm2X/+PBNHJonz5hB
+ zjDnTjQBX9gx/W+hGCKx2gqBw0Uws1Ex8G3JTaFhOBDcc5t7SXvyhU6d5dpKfuEvp+BycADJmx
+ MG8ZJO9Gy7AOZAeZaxrOioSoLdjwdt8mPTefJd8chi5EXGuCCeEodrAnc9kGZIzcTy5AIfPsey
+ kZG4vD12EJ5D0T6SR81mfgqefjcAHxl/Nvy+17vjEOUtAOa4cInZaPojBVvWkwpybEia++0hHg
+ D9g=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:13:42 -0800
-IronPort-SDR: pmnLZj8r0EJGUg9r3uyUBAul7aXJxI7Ge3x9qxANnkVZbyrANcbbFkSrThUVfQPaq+BgdVN1+F
- KgMpW1wcIJQBiJzPZWwcEfVQRWNfKkjAN8aRtDgSG2LWZjLSqjIiYHZxf5HFZ6/IQpGSfUItfa
- cfqS+u+G91sFqfWAQuoqhv9DFZcthKrDCSSDBVEg021/HzplLMliCx4pUvPBOoB9lRgSKVaeWm
- /sRZn5Ldq1JJ/7hVvd6dCCewRKhxxFvlTlAbczmfl/RVmg4O1e4YtaHcYBv9UAAWfZKIz9hCxm
- EzQ=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:13:40 -0800
+IronPort-SDR: ajpZ+AjupHZxuJ61VkOK6TDEwkH7KZE9zOecDoMHL6D7KMrrWqXvTrG8dr7HpGj/yV5clOJERu
+ duvMkKhrBtkq9u1OdTP5Gc4Kq/aYHxs0ahOvTpEuruQfdIOW14x6ZqLVoTmfghkuYMkb6zSXAl
+ 3O7LkUO5emMWQQToxUY8Q2jPVtDD2dAtV+GD34N28DglaWXq2tbG6ANYoDXxkvEI8R0dv24buA
+ PcXhQdtCsxvL1zAFq3mXYs2JWjrFzkYKbQ6X+tTkz2eZFLVgQg4hXpgCvIWnANxIxKwAVZ1IBs
+ ZfE=
 WDCIronportException: Internal
 Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:00:57 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:00:54 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
         Niklas Cassel <niklas.cassel@wdc.com>,
         linux-ide@vger.kernel.org
-Subject: [PATCH 06/25] ata: libata: allow ata_scsi_set_sense() to not set CHECK_CONDITION
-Date:   Thu,  8 Dec 2022 11:59:22 +0100
-Message-Id: <20221208105947.2399894-7-niklas.cassel@wdc.com>
+Subject: [PATCH 05/25] ata: libata: respect successfully completed commands during errors
+Date:   Thu,  8 Dec 2022 11:59:21 +0100
+Message-Id: <20221208105947.2399894-6-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Current ata_scsi_set_sense() calls scsi_build_sense(), which,
-in addition to setting the sense data, unconditionally sets the
-scsicmd->result to SAM_STAT_CHECK_CONDITION.
+In AHCI specification 1.3.1:
+"5.5.3 Processing Completed Commands"
 
-For Command Duration Limits policy 0xD:
-The device shall complete the command without error (SAM_STAT_GOOD)
-with the additional sense code set to DATA CURRENTLY UNAVAILABLE.
+"For each port that has an interrupt pending:
 
-It is perfectly fine to have sense data for a command that returned
-completion without error.
+1. Software determines the cause of the interrupt by reading the PxIS
+   register. It is possible for multiple bits to be set.
+2. Software clears appropriate bits in the PxIS register corresponding
+   to the cause of the interrupt.
+3. Software clears the interrupt bit in IS.IPS corresponding to the port.
+4. If executing non-queued commands, software reads the PxCI register,
+   and compares the current value to the list of commands previously
+   issued by software that are still outstanding. If executing native
+   queued commands, software reads the PxSACT register and compares the
+   current value to the list of commands previously issued by software.
+   Software completes with success any outstanding command whose
+   corresponding bit has been cleared in the respective register. PxCI
+   and PxSACT are volatile registers; software should only use their
+   values to determine commands that have completed, not to determine
+   which commands have previously been issued.
+5. If there were errors, noted in the PxIS register, software performs
+   error recovery actions (see section 6.2.2)."
 
-In order to support for CDL policy 0xD, we have to remove this
-assumption that having sense data means that the command failed
-(SAM_STAT_CHECK_CONDITION).
+The documentation for the PxSACT shadow register in AHCI:
+"The device clears bits in this field by sending a Set Device Bits FIS
+to the host. The HBA clears bits in this field that are set to ‘1’ in
+the SActive field of the Set Device Bits FIS. The HBA only clears bits
+that correspond to native queued commands that have completed
+successfully."
 
-Add a new parameter to ata_scsi_set_sense() to allow us to set
-sense data without unconditionally setting SAM_STAT_CHECK_CONDITION.
-This new parameter will be used in a follow-up patch.
+Additionally, in SATA specification 3.5a:
+"11.15 FPDMA QUEUED command protocol"
 
+"DFPDMAQ11: ERROR
+Halt command processing and transmit Set Device Bits FIS to host
+with the ERR bit in Status field set to one, Interrupt bit set to one,
+ATA error code set to one in the ERROR field, bits in ACT field cleared
+to zero for any outstanding queued commands, and bits set to one
+for any successfully completed queued commands that completion
+notification not yet delivered."
+
+I.e. even when the HBA triggers an error interrupt, the HBA will still
+clear successfully completed commands in PxSACT. Commands that did not
+complete successfully will still have its bit set in PxSACT.
+(Which means the command that caused the NCQ error and queued commands
+that had not yet finished at the time when the NCQ error occurred.)
+
+Additionally, for a HBA that does not have the libata flag
+AHCI_HFLAG_MULTI_MSI set, all ap->locks will point to host->lock, which
+means that IRQs will be disabled for one port while another port's IRQ
+handler is running. The HBA will still receive FISes from the device,
+even if IRQs on the HBA itself are disabled. What can thus e.g. receive
+a FIS that completes several commands successfully, followed by a FIS
+that does (or does not) complete additional commands with the error bit
+set, to indicate that at least one command was aborted.
+
+Therefore, modify ahci_handle_port_interrupt() using the new helper
+ahci_qc_complete() to complete the commands that have already been
+signaled as successfully through a regular completion SDB FIS, as not
+doing so would simply cause successfully completed commands to be
+retried for no good reason.
+
+Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- drivers/ata/libata-eh.c   |  3 ++-
- drivers/ata/libata-sata.c |  4 ++--
- drivers/ata/libata-scsi.c | 38 ++++++++++++++++++++------------------
- drivers/ata/libata.h      |  4 ++--
- 4 files changed, 26 insertions(+), 23 deletions(-)
+ drivers/ata/libahci.c | 73 +++++++++++++++++++++++++------------------
+ 1 file changed, 42 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 8cb250930c48..c278366370ab 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1429,7 +1429,8 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc)
- 	/* Ignore err_mask; ATA_ERR might be set */
- 	if (tf.status & ATA_SENSE) {
- 		if (ata_scsi_sense_is_valid(tf.lbah, tf.lbam, tf.lbal)) {
--			ata_scsi_set_sense(dev, cmd, tf.lbah, tf.lbam, tf.lbal);
-+			ata_scsi_set_sense(dev, cmd, true, tf.lbah, tf.lbam,
-+					   tf.lbal);
- 			qc->flags |= ATA_QCFLAG_SENSE_VALID;
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 019d74d6eb7d..db5ecc386657 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1849,18 +1849,47 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+ 		ata_port_abort(ap);
+ }
+ 
+-static void ahci_handle_port_interrupt(struct ata_port *ap,
+-				       void __iomem *port_mmio, u32 status)
++static void ahci_qc_complete(struct ata_port *ap, void __iomem *port_mmio)
+ {
+ 	struct ata_eh_info *ehi = &ap->link.eh_info;
+ 	struct ahci_port_priv *pp = ap->private_data;
+-	struct ahci_host_priv *hpriv = ap->host->private_data;
+-	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
+ 	u32 qc_active = 0;
+ 	int rc;
+ 
++	/*
++	 * pp->active_link is not reliable once FBS is enabled, both
++	 * PORT_SCR_ACT and PORT_CMD_ISSUE should be checked because
++	 * NCQ and non-NCQ commands may be in flight at the same time.
++	 */
++	if (pp->fbs_enabled) {
++		if (ap->qc_active) {
++			qc_active = readl(port_mmio + PORT_SCR_ACT);
++			qc_active |= readl(port_mmio + PORT_CMD_ISSUE);
++		}
++	} else {
++		/* pp->active_link is valid iff any command is in flight */
++		if (ap->qc_active && pp->active_link->sactive)
++			qc_active = readl(port_mmio + PORT_SCR_ACT);
++		else
++			qc_active = readl(port_mmio + PORT_CMD_ISSUE);
++	}
++
++	rc = ata_qc_complete_multiple(ap, qc_active);
++	if (unlikely(rc < 0 && !(ap->pflags & ATA_PFLAG_RESETTING))) {
++		ehi->err_mask |= AC_ERR_HSM;
++		ehi->action |= ATA_EH_RESET;
++		ata_port_freeze(ap);
++	}
++}
++
++static void ahci_handle_port_interrupt(struct ata_port *ap,
++				       void __iomem *port_mmio, u32 status)
++{
++	struct ahci_port_priv *pp = ap->private_data;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
+ 	/* ignore BAD_PMP while resetting */
+-	if (unlikely(resetting))
++	if (unlikely(ap->pflags & ATA_PFLAG_RESETTING))
+ 		status &= ~PORT_IRQ_BAD_PMP;
+ 
+ 	if (sata_lpm_ignore_phy_events(&ap->link)) {
+@@ -1869,6 +1898,12 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+ 	}
+ 
+ 	if (unlikely(status & PORT_IRQ_ERROR)) {
++		/*
++		 * Before getting the error notification, we may have
++		 * received SDB FISes notifying successful completions.
++		 * Handle these first and then handle the error.
++		 */
++		ahci_qc_complete(ap, port_mmio);
+ 		ahci_error_intr(ap, status);
+ 		return;
+ 	}
+@@ -1905,32 +1940,8 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
  		}
- 	} else {
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index f3e7396e3191..414d7f8a95bf 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1471,8 +1471,8 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 		asc = (qc->result_tf.auxiliary >> 8) & 0xff;
- 		ascq = qc->result_tf.auxiliary & 0xff;
- 		if (ata_scsi_sense_is_valid(sense_key, asc, ascq)) {
--			ata_scsi_set_sense(dev, qc->scsicmd, sense_key, asc,
--					   ascq);
-+			ata_scsi_set_sense(dev, qc->scsicmd, true, sense_key,
-+					   asc, ascq);
- 			ata_scsi_set_sense_information(dev, qc->scsicmd,
- 						       &qc->result_tf);
- 			qc->flags |= ATA_QCFLAG_SENSE_VALID;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index cbb3a7a50816..0e6684ca0315 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -205,14 +205,16 @@ bool ata_scsi_sense_is_valid(u8 sk, u8 asc, u8 ascq)
- }
- 
- void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
--			u8 sk, u8 asc, u8 ascq)
-+			bool check_condition, u8 sk, u8 asc, u8 ascq)
- {
- 	bool d_sense = (dev->flags & ATA_DFLAG_D_SENSE);
- 
- 	if (!cmd)
- 		return;
- 
--	scsi_build_sense(cmd, d_sense, sk, asc, ascq);
-+	scsi_build_sense_buffer(d_sense, cmd->sense_buffer, sk, asc, ascq);
-+	if (check_condition)
-+		set_status_byte(cmd, SAM_STAT_CHECK_CONDITION);
- }
- 
- void ata_scsi_set_sense_information(struct ata_device *dev,
-@@ -235,7 +237,7 @@ void ata_scsi_set_sense_information(struct ata_device *dev,
- static void ata_scsi_set_invalid_field(struct ata_device *dev,
- 				       struct scsi_cmnd *cmd, u16 field, u8 bit)
- {
--	ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x24, 0x0);
-+	ata_scsi_set_sense(dev, cmd, true, ILLEGAL_REQUEST, 0x24, 0x0);
- 	/* "Invalid field in CDB" */
- 	scsi_set_sense_field_pointer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
- 				     field, bit, 1);
-@@ -245,7 +247,7 @@ static void ata_scsi_set_invalid_parameter(struct ata_device *dev,
- 					   struct scsi_cmnd *cmd, u16 field)
- {
- 	/* "Invalid field in parameter list" */
--	ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x26, 0x0);
-+	ata_scsi_set_sense(dev, cmd, true, ILLEGAL_REQUEST, 0x26, 0x0);
- 	scsi_set_sense_field_pointer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
- 				     field, 0xff, 0);
- }
-@@ -914,7 +916,7 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
- 	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
- 		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
- 				   &sense_key, &asc, &ascq, verbose);
--		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
-+		ata_scsi_set_sense(qc->dev, cmd, true, sense_key, asc, ascq);
- 	} else {
- 		/*
- 		 * ATA PASS-THROUGH INFORMATION AVAILABLE
-@@ -1005,7 +1007,7 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
- 	if (ata_dev_disabled(dev)) {
- 		/* Device disabled after error recovery */
- 		/* LOGICAL UNIT NOT READY, HARD RESET REQUIRED */
--		ata_scsi_set_sense(dev, cmd, NOT_READY, 0x04, 0x21);
-+		ata_scsi_set_sense(dev, cmd, true, NOT_READY, 0x04, 0x21);
- 		return;
- 	}
- 	/* Use ata_to_sense_error() to map status register bits
-@@ -1015,12 +1017,12 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
- 	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
- 		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
- 				   &sense_key, &asc, &ascq, verbose);
--		ata_scsi_set_sense(dev, cmd, sense_key, asc, ascq);
-+		ata_scsi_set_sense(dev, cmd, true, sense_key, asc, ascq);
- 	} else {
- 		/* Could not decode error */
- 		ata_dev_warn(dev, "could not decode error status 0x%x err_mask 0x%x\n",
- 			     tf->status, qc->err_mask);
--		ata_scsi_set_sense(dev, cmd, ABORTED_COMMAND, 0, 0);
-+		ata_scsi_set_sense(dev, cmd, true, ABORTED_COMMAND, 0, 0);
- 		return;
  	}
  
-@@ -1496,7 +1498,7 @@ static unsigned int ata_scsi_verify_xlat(struct ata_queued_cmd *qc)
- 	return 1;
- 
- out_of_range:
--	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x21, 0x0);
-+	ata_scsi_set_sense(qc->dev, scmd, true, ILLEGAL_REQUEST, 0x21, 0x0);
- 	/* "Logical Block Address out of range" */
- 	return 1;
- 
-@@ -1631,7 +1633,7 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- 	return 1;
- 
- out_of_range:
--	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x21, 0x0);
-+	ata_scsi_set_sense(qc->dev, scmd, true, ILLEGAL_REQUEST, 0x21, 0x0);
- 	/* "Logical Block Address out of range" */
- 	return 1;
- 
-@@ -2380,7 +2382,7 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 	return 1;
- 
- saving_not_supp:
--	ata_scsi_set_sense(dev, args->cmd, ILLEGAL_REQUEST, 0x39, 0x0);
-+	ata_scsi_set_sense(dev, args->cmd, true, ILLEGAL_REQUEST, 0x39, 0x0);
- 	 /* "Saving parameters not supported" */
- 	return 1;
- }
-@@ -3241,11 +3243,11 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	return 1;
- invalid_param_len:
- 	/* "Parameter list length error" */
--	ata_scsi_set_sense(dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
-+	ata_scsi_set_sense(dev, scmd, true, ILLEGAL_REQUEST, 0x1a, 0x0);
- 	return 1;
- invalid_opcode:
- 	/* "Invalid command operation code" */
--	ata_scsi_set_sense(dev, scmd, ILLEGAL_REQUEST, 0x20, 0x0);
-+	ata_scsi_set_sense(dev, scmd, true, ILLEGAL_REQUEST, 0x20, 0x0);
- 	return 1;
+-	/* pp->active_link is not reliable once FBS is enabled, both
+-	 * PORT_SCR_ACT and PORT_CMD_ISSUE should be checked because
+-	 * NCQ and non-NCQ commands may be in flight at the same time.
+-	 */
+-	if (pp->fbs_enabled) {
+-		if (ap->qc_active) {
+-			qc_active = readl(port_mmio + PORT_SCR_ACT);
+-			qc_active |= readl(port_mmio + PORT_CMD_ISSUE);
+-		}
+-	} else {
+-		/* pp->active_link is valid iff any command is in flight */
+-		if (ap->qc_active && pp->active_link->sactive)
+-			qc_active = readl(port_mmio + PORT_SCR_ACT);
+-		else
+-			qc_active = readl(port_mmio + PORT_CMD_ISSUE);
+-	}
+-
+-
+-	rc = ata_qc_complete_multiple(ap, qc_active);
+-
+-	/* while resetting, invalid completions are expected */
+-	if (unlikely(rc < 0 && !resetting)) {
+-		ehi->err_mask |= AC_ERR_HSM;
+-		ehi->action |= ATA_EH_RESET;
+-		ata_port_freeze(ap);
+-	}
++	/* Handle completed commands */
++	ahci_qc_complete(ap, port_mmio);
  }
  
-@@ -3471,7 +3473,7 @@ static unsigned int ata_scsi_zbc_in_xlat(struct ata_queued_cmd *qc)
- 
- invalid_param_len:
- 	/* "Parameter list length error" */
--	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
-+	ata_scsi_set_sense(qc->dev, scmd, true, ILLEGAL_REQUEST, 0x1a, 0x0);
- 	return 1;
- }
- 
-@@ -3549,7 +3551,7 @@ static unsigned int ata_scsi_zbc_out_xlat(struct ata_queued_cmd *qc)
- 	return 1;
- invalid_param_len:
- 	/* "Parameter list length error" */
--	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
-+	ata_scsi_set_sense(qc->dev, scmd, true, ILLEGAL_REQUEST, 0x1a, 0x0);
- 	return 1;
- }
- 
-@@ -3810,7 +3812,7 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
- 
-  invalid_param_len:
- 	/* "Parameter list length error" */
--	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
-+	ata_scsi_set_sense(qc->dev, scmd, true, ILLEGAL_REQUEST, 0x1a, 0x0);
- 	return 1;
- 
-  skip:
-@@ -4166,7 +4168,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
- 		break;
- 
- 	case REQUEST_SENSE:
--		ata_scsi_set_sense(dev, cmd, 0, 0, 0);
-+		ata_scsi_set_sense(dev, cmd, true, 0, 0, 0);
- 		break;
- 
- 	/* if we reach this, then writeback caching is disabled,
-@@ -4198,7 +4200,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
- 
- 	/* all other commands */
- 	default:
--		ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x20, 0x0);
-+		ata_scsi_set_sense(dev, cmd, true, ILLEGAL_REQUEST, 0x20, 0x0);
- 		/* "Invalid command operation code" */
- 		break;
- 	}
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 2cd6124a01e8..5481d29bb273 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -115,8 +115,8 @@ extern int ata_scsi_add_hosts(struct ata_host *host,
- extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
- extern int ata_scsi_offline_dev(struct ata_device *dev);
- extern bool ata_scsi_sense_is_valid(u8 sk, u8 asc, u8 ascq);
--extern void ata_scsi_set_sense(struct ata_device *dev,
--			       struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq);
-+extern void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
-+			       bool check_condition, u8 sk, u8 asc, u8 ascq);
- extern void ata_scsi_set_sense_information(struct ata_device *dev,
- 					   struct scsi_cmnd *cmd,
- 					   const struct ata_taskfile *tf);
+ static void ahci_port_intr(struct ata_port *ap)
 -- 
 2.38.1
 
