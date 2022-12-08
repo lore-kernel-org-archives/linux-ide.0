@@ -2,562 +2,184 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51CF3C3A5A7
-	for <linux-ide@archiver.kernel.org>; Thu,  8 Dec 2022 11:05:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF998C4332F
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Dec 2022 15:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229840AbiLHLEv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:04:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40000 "EHLO
+        id S229685AbiLHP0G (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Dec 2022 10:26:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229929AbiLHLDa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 06:03:30 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEDBF89326;
-        Thu,  8 Dec 2022 03:01:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497301; x=1702033301;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=FrYoQibYnNJyG9v24OMUbrROx7H4s/1w3/ha5UWQEyI=;
-  b=bQp4Q5bYCIHecLZoavWI3dE0M5sTIjqievJK7DOiuWptewLwv7jJxWw7
-   ebn1Z+pK3ILrY6lTGBAz02iwOisZxssEyWFPbZY1sJ3W355Sif/rTXxK7
-   P/NKiT7NJ9XNxoqcsX3BsJWXNjh1QN4G9subfPYVfjiBZ3HOKz+tV5qqt
-   UABc38VzY++gLkTUAwbsRIKRQd8QDZT3V0Xy956aE4FTPtW1hjvliz3Lg
-   +v7McPkAZnHdiZ1GXTHj5uAVs3X5Z+8gATDY5K9JtMa6e6GgbVsDfYrDT
-   yUFGiC5mk1dA5h2TTb5+gDes0++ehtOKggz0v2YhH3dFmmt3UAYRF6mGN
-   w==;
-X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333437"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:41 +0800
-IronPort-SDR: 9NB2tcLdHLGPgIpGOiAYLCmu/J1Coa0pHW3yhpZQpFvI9CX4ODosnFWVeyudWNOo15mxfQT680
- JC9x8tJYLUwWVWqxuwHzPOWhnZonjlapew6u+16L33gOCawgDdt1Fd38LAtthUocpWtfsGMFR8
- kheZ4DgmiPouXLfYeOZ+jV1Foq5g87p4FwajNJcOybvh+Q64fSO/4uyUIerLUYU64oDxebdDw8
- DQjLnnYX6cV/b5M15A3UeVxnjMZ0wSOKNEUD1q4/MrehOh/anoEJ+i0G/BaZvQEMUR5+qJH7L7
- RIo=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:14:26 -0800
-IronPort-SDR: IybSnvqeacTmkLVsHZLtNuEwmHdoXhlR2S5qcFn6Ru/1TqHN6CXFiP5BL2Fzzd4tuhuX6audce
- 4c405FAdLjqwFits9H2xkN8vlrtU8EHKZ6cDm9b3xDY0DgAKyZN+uQMuM6Y3c1COMloOZy0wyT
- ci6lCoAEJp4LmqShTJaEvJLAdCHb0UM9oi0/ajXB6mNOrgucnJwhi7mB8fmy12UIoHsxxAHn+c
- 7GKLBtQKUP/s0bM2bHOPMxjGWKBK8khm0pQ6OROl3+CipDdLXaO1OhPv0BUc/VFXUnf54JzEa3
- 510=
-WDCIronportException: Internal
-Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:41 -0800
-From:   Niklas Cassel <niklas.cassel@wdc.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH 24/25] ata: libata: handle completion of CDL commands using policy 0xD
-Date:   Thu,  8 Dec 2022 11:59:40 +0100
-Message-Id: <20221208105947.2399894-25-niklas.cassel@wdc.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
-References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
+        with ESMTP id S229783AbiLHP0G (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 10:26:06 -0500
+Received: from mail-4318.protonmail.ch (mail-4318.protonmail.ch [185.70.43.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BECDDE032
+        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 07:26:03 -0800 (PST)
+Date:   Thu, 08 Dec 2022 15:25:52 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail3; t=1670513161; x=1670772361;
+        bh=l/7QWX++cE3V6kZ3qLPfWLibj8mHK+7QSmIU6w55rA8=;
+        h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+         Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+        b=iPZw7SZk0A+QWfEi39BRbMNzQ6HZFJ+n8ISzaB/HhcnOHqAsRycmDH6Y6OnUWYL5x
+         lXySoFYmLTJh55gzLwB0BnEuTYJK59el/lhiBYMo72VNwQsPNpRSEfamnGboWcJlLZ
+         pvxUrveQJlcmMqLl7rALp0KO1Bm/bf7HEzKsoAV86VVzlykhRy4r6Ew8Ypk8DvV27Q
+         an3f72Ln2IBcGxGodLm+ZH/eLlpPAxxCYKGhzr6X39JTxDBR6dhXxCiqtwWpjU83Jn
+         x9spwBWtDJ7A70f+aD60Zlr43PToutlwK81lzg2BCF8Dz5+OuugL2mkYihaMnnJNZx
+         b5MOpUSEnuMnQ==
+To:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+From:   Adam Tukaj <grozzly@protonmail.com>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v3] libata/ahci: Fix PCS quirk application for suspend
+Message-ID: <OM8HSmyIGyT2XF-f70AR7JA5kLpuIYEu5mYEIpyUT-4CC-u7ezc6po32ZIGOSN_7PlsF0RhOvUs8HpVJiAHGrh2ytgiBEltBpz0MuKiy-vg=@protonmail.com>
+Feedback-ID: 34388925:user:proton
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-A CDL timeout for policy 0xF is defined as a NCQ error, just with a CDL
-specific sk/asc/ascq in the sense data. Therefore, the existing code in
-libata does not need to be modified to handle a policy 0xF CDL timeout.
+Since kernel 5.3.4 my laptop (ICH8M controller) does not see Kingston
+SV300S37A60G SSD disk connected into a SATA connector on wake from suspend.
+The problem was introduced in c312ef176399 "libata/ahci: Drop PCS quirk for
+Denverton and beyond": the quirk is not applied on wake from suspend as it
+originally was.
 
-For Command Duration Limits policy 0xD:
-The device shall complete the command without error with the additional
-sense code set to DATA CURRENTLY UNAVAILABLE.
+It is worth to mention the commit contained another bug: the quirk is not
+applied at all to controllers which require it. The fix 09d6ac8dc51a
+"libata/ahci: Fix PCS quirk application" landed in 5.3.8. So testing my
+patch anywhere between c312ef176399 and 09d6ac8dc51a is pointless.
 
-Since a CDL timeout for policy 0xD is not an error, we cannot use the
-NCQ Command Error log (10h).
+Not all disks trigger the problem. For example nothing bad happens with
+Western Digital WD5000LPCX HDD.
 
-Instead, we need to read the Sense Data for Successful NCQ Commands
-log (0Fh).
+Test hardware:
+- Acer 5920G with ICH8M SATA controller
+- sda: some SATA HDD connnected into the DVD drive IDE port with a SATA-IDE
+caddy. It is a boot disk
+- sdb: Kingston SV300S37A60G SSD connected into the only SATA port
 
-In the success case, just like in the error case, we cannot simply read
-a log page from the interrupt handler itself, since reading a log page
-involves sending a READ LOG DMA EXT or READ LOG EXT command.
+Sample "dmesg --notime | grep -E '^(sd |ata)'" output on wake:
 
-Therefore, we add a new EH action ATA_EH_GET_SUCCESS_SENSE.
-When a command completes without error, and when the ATA_SENSE bit
-is set, this new action is set as pending, and EH is scheduled.
+sd 0:0:0:0: [sda] Starting disk
+sd 2:0:0:0: [sdb] Starting disk
+ata4: SATA link down (SStatus 4 SControl 300)
+ata3: SATA link down (SStatus 4 SControl 300)
+ata1.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
+ata1.00: ACPI cmd ef/03:42:00:00:00:a0 (SET FEATURES) filtered out
+ata1: FORCE: cable set to 80c
+ata5: SATA link down (SStatus 0 SControl 300)
+ata3: SATA link down (SStatus 4 SControl 300)
+ata3: SATA link down (SStatus 4 SControl 300)
+ata3.00: disabled
+sd 2:0:0:0: rejecting I/O to offline device
+ata3.00: detaching (SCSI 2:0:0:0)
+sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=3DDID_NO_CONNECT
+=09driverbyte=3DDRIVER_OK
+sd 2:0:0:0: [sdb] Synchronizing SCSI cache
+sd 2:0:0:0: [sdb] Synchronize Cache(10) failed: Result:
+=09hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK
+sd 2:0:0:0: [sdb] Stopping disk
+sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=3DDID_BAD_TARGET
+=09driverbyte=3DDRIVER_OK
 
-This way, similar to the NCQ error case, the log page will be read
-from EH context.
+c312ef176399 dropped ahci_pci_reset_controller() which internally calls
+ahci_reset_controller() and applies the PCS quirk if needed after that. It
+was called each time a reset was required instead of just
+ahci_reset_controller(). This patch puts the function back in place.
 
-An alternative would have been to add a new kthread or workqueue to
-handle this. However, extending EH can be done with minimal changes
-and avoids the need to synchronize a new kthread/workqueue with EH.
-
-Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Fixes: c312ef176399 ("libata/ahci: Drop PCS quirk for Denverton and beyond"=
+)
+Signed-off-by: Adam Vodopjan <grozzly@protonmail.com>
 ---
- drivers/ata/libata-core.c |  82 ++++++++++++++++++++++++++++-
- drivers/ata/libata-eh.c   | 108 +++++++++++++++++++++++++++++++++++++-
- drivers/ata/libata-sata.c |  89 +++++++++++++++++++++++++++++++
- include/linux/ata.h       |   3 ++
- include/linux/libata.h    |  11 +++-
- 5 files changed, 289 insertions(+), 4 deletions(-)
+ drivers/ata/ahci.c | 32 +++++++++++++++++++++++---------
+ 1 file changed, 23 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c79ee38dc594..78f586a21528 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -683,8 +683,12 @@ static inline void ata_set_tf_cdl(struct ata_queued_cmd *qc, int ioprio)
- 	else
- 		tf->feature |= cdl;
- 
--	/* Mark this command as having a CDL */
--	qc->flags |= ATA_QCFLAG_HAS_CDL;
-+	/*
-+	 * Mark this command as having a CDL and request the result
-+	 * task file so that we can inspect the sense data available
-+	 * bit on completion.
-+	 */
-+	qc->flags |= ATA_QCFLAG_HAS_CDL | ATA_QCFLAG_RESULT_TF;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 639de2d75d63..53ab2306da00 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -84,6 +84,7 @@ enum board_ids {
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id =
+*ent);
+ static void ahci_remove_one(struct pci_dev *dev);
+ static void ahci_shutdown_one(struct pci_dev *dev);
++static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_pr=
+iv *hpriv);
+ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *clas=
+s,
+ =09=09=09=09 unsigned long deadline);
+ static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
+@@ -677,6 +678,25 @@ static void ahci_pci_save_initial_config(struct pci_de=
+v *pdev,
+ =09ahci_save_initial_config(&pdev->dev, hpriv);
  }
- 
- /**
-@@ -2427,6 +2431,24 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 		ata_dev_warn(dev,
- 			"Command duration guideline is not supported\n");
- 
-+	/*
-+	 * We must have support for the sense data for successful NCQ commands
-+	 * log indicated by the successful NCQ command sense data supported bit.
-+	 */
-+	val = get_unaligned_le64(&ap->sector_buf[8]);
-+	if (!(val & BIT_ULL(63)) || !(val & BIT_ULL(47))) {
-+		ata_dev_warn(dev,
-+			"CDL supported but Successful NCQ Command Sense Data is not supported\n");
-+		goto not_supported;
-+	}
-+
-+	/* Without NCQ autosense, the successful NCQ commands log is useless. */
-+	if (!ata_id_has_ncq_autosense(dev->id)) {
-+		ata_dev_warn(dev,
-+			"CDL supported but NCQ autosense is not supported\n");
-+		goto not_supported;
-+	}
-+
- 	/*
- 	 * If CDL is marked as enabled, make sure the feature is enabled too.
- 	 * Conversely, if CDL is disabled, make sure the feature is turned off.
-@@ -2461,6 +2483,35 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 		}
- 	}
- 
-+	/*
-+	 * While CDL itself has to be enabled using sysfs, CDL requires that
-+	 * sense data for successful NCQ commands is enabled to work properly.
-+	 * Just like ata_dev_config_sense_reporting(), enable it unconditionally
-+	 * if supported.
-+	 */
-+	if (!(val & BIT_ULL(63)) || !(val & BIT_ULL(18))) {
-+		err_mask = ata_dev_set_feature(dev,
-+					SETFEATURE_SENSE_DATA_SUCC_NCQ, 0x1);
-+		if (err_mask) {
-+			ata_dev_warn(dev,
-+				     "failed to enable Sense Data for successful NCQ commands, Emask 0x%x\n",
-+				     err_mask);
-+			goto not_supported;
-+		}
-+	}
-+
-+	/*
-+	 * Allocate a buffer to handle reading the sense data for successful
-+	 * NCQ Commands log page for commands using a CDL with one of the limit
-+	 * policy set to 0xD (successful completion with sense data available
-+	 * bit set).
-+	 */
-+	if (!ap->ncq_sense_buf) {
-+		ap->ncq_sense_buf = kmalloc(ATA_LOG_SENSE_NCQ_SIZE, GFP_KERNEL);
-+		if (!ap->ncq_sense_buf)
-+			goto not_supported;
-+	}
-+
- 	/*
- 	 * Command duration limits is supported: cache the CDL log page 18h
- 	 * (command duration descriptors).
-@@ -2478,6 +2529,8 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 
- not_supported:
- 	dev->flags &= ~(ATA_DFLAG_CDL | ATA_DFLAG_CDL_ENABLED);
-+	kfree(ap->ncq_sense_buf);
-+	ap->ncq_sense_buf = NULL;
- }
- 
- static int ata_dev_config_lba(struct ata_device *dev)
-@@ -4848,6 +4901,30 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
- 			fill_result_tf(qc);
- 
- 		trace_ata_qc_complete_done(qc);
-+
-+		/*
-+		 * For CDL commands that completed without an error, check if
-+		 * we have sense data (ATA_SENSE is set). If we do, then the
-+		 * command may have been aborted by the device due to a limit
-+		 * timeout using the policy 0xD. For these commands, invoke EH
-+		 * to get the command sense data.
-+		 */
-+		if (qc->result_tf.status & ATA_SENSE &&
-+		    ((ata_is_ncq(qc->tf.protocol) &&
-+		      dev->flags & ATA_DFLAG_CDL_ENABLED) ||
-+		     (!(ata_is_ncq(qc->tf.protocol) &&
-+			ata_id_sense_reporting_enabled(dev->id))))) {
-+			/*
-+			 * Tell SCSI EH to not overwrite scmd->result even if
-+			 * this command is finished with result SAM_STAT_GOOD.
-+			 */
-+			qc->scsicmd->flags |= SCMD_EH_SUCCESS_CMD;
-+			qc->flags |= ATA_QCFLAG_EH_SUCCESS_CMD;
-+			ehi->dev_action[dev->devno] |= ATA_EH_GET_SUCCESS_SENSE;
-+			ata_qc_schedule_eh(qc);
-+			return;
-+		}
-+
- 		/* Some commands need post-processing after successful
- 		 * completion.
- 		 */
-@@ -5480,6 +5557,7 @@ static void ata_host_release(struct kref *kref)
- 
- 		kfree(ap->pmp_link);
- 		kfree(ap->slave_link);
-+		kfree(ap->ncq_sense_buf);
- 		kfree(ap);
- 		host->ports[i] = NULL;
- 	}
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index e05d62791e08..d34bda7a7baa 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1910,6 +1910,102 @@ static inline bool ata_eh_quiet(struct ata_queued_cmd *qc)
- 	return qc->flags & ATA_QCFLAG_QUIET;
- }
- 
-+static int ata_eh_read_sense_success_non_ncq(struct ata_link *link)
+=20
++static int ahci_pci_reset_controller(struct ata_host *host)
 +{
-+	struct ata_port *ap = link->ap;
-+	struct ata_queued_cmd *qc;
++=09struct pci_dev *pdev =3D to_pci_dev(host->dev);
++=09struct ahci_host_priv *hpriv =3D host->private_data;
++=09int rc;
 +
-+	qc = __ata_qc_from_tag(ap, link->active_tag);
-+	if (!qc)
-+		return -EIO;
++=09rc =3D ahci_reset_controller(host);
++=09if (rc)
++=09=09return rc;
 +
-+	if (!(qc->flags & ATA_QCFLAG_EH) ||
-+	    !(qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) ||
-+	    qc->err_mask)
-+		return -EIO;
++=09/*
++=09 * If platform firmware failed to enable ports, try to enable
++=09 * them here.
++=09 */
++=09ahci_intel_pcs_quirk(pdev, hpriv);
 +
-+	ata_eh_request_sense(qc, false);
-+
-+	if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
-+		return -EIO;
-+
-+	/*
-+	 * If we have sense data, call scsi_check_sense() in order to set the
-+	 * correct SCSI ML byte (if any). No point in checking the return value,
-+	 * since the command has already completed successfully.
-+	 */
-+	scsi_check_sense(qc->scsicmd);
-+
-+	return 0;
++=09return 0;
 +}
 +
-+static void ata_eh_get_success_sense(struct ata_link *link)
-+{
-+	struct ata_eh_context *ehc = &link->eh_context;
-+	struct ata_device *dev = link->device;
-+	struct ata_port *ap = link->ap;
-+	struct ata_queued_cmd *qc;
-+	int tag, ret = 0;
-+
-+	if (!(ehc->i.dev_action[dev->devno] & ATA_EH_GET_SUCCESS_SENSE))
-+		return;
-+
-+	/* if frozen, we can't do much */
-+	if (ata_port_is_frozen(ap)) {
-+		ata_dev_warn(dev,
-+			"successful sense data available but port frozen\n");
-+		goto out;
-+	}
-+
-+	/*
-+	 * If the link has sactive set, then we have outstanding NCQ commands
-+	 * and have to read the Successful NCQ Commands log to get the sense
-+	 * data. Otherwise, we are dealing with a non-NCQ command and use
-+	 * request sense ext command to retrieve the sense data.
-+	 */
-+	if (link->sactive)
-+		ret = ata_eh_read_sense_success_ncq_log(link);
-+	else
-+		ret = ata_eh_read_sense_success_non_ncq(link);
-+	if (ret)
-+		goto out;
-+
-+	ata_eh_done(link, dev, ATA_EH_GET_SUCCESS_SENSE);
-+	return;
-+
-+out:
-+	/*
-+	 * If we failed to get sense data for a successful command that ought to
-+	 * have sense data, we cannot simply return BLK_STS_OK to user space.
-+	 * This is because we can't know if the sense data that we couldn't get
-+	 * was actually "DATA CURRENTLY UNAVAILABLE". Reporting such a command
-+	 * as success to user space would result in a silent data corruption.
-+	 * Thus, add a bogus ABORTED_COMMAND sense data to such commands, such
-+	 * that SCSI will report these commands as BLK_STS_IOERR to user space.
-+	 */
-+	ata_qc_for_each_raw(ap, qc, tag) {
-+		if (!(qc->flags & ATA_QCFLAG_EH) ||
-+		    !(qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) ||
-+		    qc->err_mask ||
-+		    ata_dev_phys_link(qc->dev) != link)
-+			continue;
-+
-+		/* We managed to get sense for this success command, skip. */
-+		if (qc->flags & ATA_QCFLAG_SENSE_VALID)
-+			continue;
-+
-+		/* This success command did not have any sense data, skip. */
-+		if (!(qc->result_tf.status & ATA_SENSE))
-+			continue;
-+
-+		/* This success command had sense data, but we failed to get. */
-+		ata_scsi_set_sense(dev, qc->scsicmd, true, ABORTED_COMMAND,
-+				   0, 0);
-+		qc->flags |= ATA_QCFLAG_SENSE_VALID;
-+	}
-+	ata_eh_done(link, dev, ATA_EH_GET_SUCCESS_SENSE);
-+}
-+
- /**
-  *	ata_eh_link_autopsy - analyze error and determine recovery action
-  *	@link: host link to perform autopsy on
-@@ -1950,6 +2046,14 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 	/* analyze NCQ failure */
- 	ata_eh_analyze_ncq_error(link);
- 
-+	/*
-+	 * Check if this was a successful command that simply needs sense data.
-+	 * Since the sense data is not part of the completion, we need to fetch
-+	 * it using an additional command. Since this can't be done from irq
-+	 * context, the sense data for successful commands are fetched by EH.
-+	 */
-+	ata_eh_get_success_sense(link);
-+
- 	/* any real error trumps AC_ERR_OTHER */
- 	if (ehc->i.err_mask & ~AC_ERR_OTHER)
- 		ehc->i.err_mask &= ~AC_ERR_OTHER;
-@@ -1959,6 +2063,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 	ata_qc_for_each_raw(ap, qc, tag) {
- 		if (!(qc->flags & ATA_QCFLAG_EH) ||
- 		    qc->flags & ATA_QCFLAG_RETRY ||
-+		    qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD ||
- 		    ata_dev_phys_link(qc->dev) != link)
- 			continue;
- 
-@@ -3818,7 +3923,8 @@ void ata_eh_finish(struct ata_port *ap)
- 			else
- 				ata_eh_qc_complete(qc);
- 		} else {
--			if (qc->flags & ATA_QCFLAG_SENSE_VALID) {
-+			if (qc->flags & ATA_QCFLAG_SENSE_VALID ||
-+			    qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) {
- 				ata_eh_qc_complete(qc);
- 			} else {
- 				/* feed zero TF to sense generation */
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index b12f8e9e1f86..1c85e9eee619 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -11,7 +11,9 @@
- #include <linux/module.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_eh.h>
- #include <linux/libata.h>
-+#include <asm/unaligned.h>
- 
- #include "libata.h"
- #include "libata-transport.h"
-@@ -1408,6 +1410,92 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
- 	return 0;
- }
- 
-+/**
-+ *	ata_eh_read_sense_success_ncq_log - Read the sense data for successful
-+ *					    NCQ commands log
-+ *	@link: ATA link to get sense data for
-+ *
-+ *	Read the sense data for successful NCQ commands log page to obtain
-+ *	sense data for all NCQ commands that completed successfully with
-+ *	the sense data available bit set.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_eh_read_sense_success_ncq_log(struct ata_link *link)
-+{
-+	struct ata_device *dev = link->device;
-+	struct ata_port *ap = dev->link->ap;
-+	u8 *buf = ap->ncq_sense_buf;
-+	struct ata_queued_cmd *qc;
-+	unsigned int err_mask, tag;
-+	u8 *sense, sk = 0, asc = 0, ascq = 0;
-+	u64 sense_valid, val;
-+	int ret = 0;
-+
-+	err_mask = ata_read_log_page(dev, ATA_LOG_SENSE_NCQ, 0, buf, 2);
-+	if (err_mask) {
-+		ata_dev_err(dev,
-+			"Failed to read Sense Data for Successful NCQ Commands log\n");
-+		return -EIO;
-+	}
-+
-+	/* Check the log header */
-+	val = get_unaligned_le64(&buf[0]);
-+	if ((val & 0xffff) != 1 || ((val >> 16) & 0xff) != 0x0f) {
-+		ata_dev_err(dev,
-+			"Invalid Sense Data for Successful NCQ Commands log\n");
-+		return -EIO;
-+	}
-+
-+	sense_valid = (u64)buf[8] | ((u64)buf[9] << 8) |
-+		((u64)buf[10] << 16) | ((u64)buf[11] << 24);
-+
-+	ata_qc_for_each_raw(ap, qc, tag) {
-+		if (!(qc->flags & ATA_QCFLAG_EH) ||
-+		    !(qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) ||
-+		    qc->err_mask ||
-+		    ata_dev_phys_link(qc->dev) != link)
-+			continue;
-+
-+		/*
-+		 * If the command does not have any sense data, clear ATA_SENSE.
-+		 * Keep ATA_QCFLAG_EH_SUCCESS_CMD so that command is finished.
-+		 */
-+		if (!(sense_valid & (1ULL << tag))) {
-+			qc->result_tf.status &= ~ATA_SENSE;
-+			continue;
-+		}
-+
-+		sense = &buf[32 + 24 * tag];
-+		sk = sense[0];
-+		asc = sense[1];
-+		ascq = sense[2];
-+
-+		if (!ata_scsi_sense_is_valid(sk, asc, ascq)) {
-+			ret = -EIO;
-+			continue;
-+		}
-+
-+		ata_scsi_set_sense(dev, qc->scsicmd, false, sk, asc, ascq);
-+		qc->flags |= ATA_QCFLAG_SENSE_VALID;
-+
-+		/*
-+		 * If we have sense data, call scsi_check_sense() in order to
-+		 * set the correct SCSI ML byte (if any). No point in checking
-+		 * the return value, since the command has already completed
-+		 * successfully.
-+		 */
-+		scsi_check_sense(qc->scsicmd);
-+	}
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(ata_eh_read_sense_success_ncq_log);
-+
- /**
-  *	ata_eh_analyze_ncq_error - analyze NCQ error
-  *	@link: ATA link to analyze NCQ error for
-@@ -1488,6 +1576,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 
- 	ata_qc_for_each_raw(ap, qc, tag) {
- 		if (!(qc->flags & ATA_QCFLAG_EH) ||
-+		    qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD ||
- 		    ata_dev_phys_link(qc->dev) != link)
- 			continue;
- 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index a59b17d6ad11..2e2e22362096 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -326,6 +326,8 @@ enum {
- 	ATA_LOG_CDL		= 0x18,
- 	ATA_LOG_CDL_SIZE	= ATA_SECT_SIZE,
- 	ATA_LOG_IDENTIFY_DEVICE	= 0x30,
-+	ATA_LOG_SENSE_NCQ	= 0x0F,
-+	ATA_LOG_SENSE_NCQ_SIZE	= ATA_SECT_SIZE * 2,
- 	ATA_LOG_CONCURRENT_POSITIONING_RANGES = 0x47,
- 
- 	/* Identify device log pages: */
-@@ -432,6 +434,7 @@ enum {
- 	SATA_DEVSLP		= 0x09,	/* Device Sleep */
- 
- 	SETFEATURE_SENSE_DATA	= 0xC3, /* Sense Data Reporting feature */
-+	SETFEATURE_SENSE_DATA_SUCC_NCQ = 0xC4, /* Sense Data for successful NCQ commands */
- 
- 	/* feature values for SET_MAX */
- 	ATA_SET_MAX_ADDR	= 0x00,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index ecdabe5647d1..b00bd6daacd0 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -212,6 +212,7 @@ enum {
- 	ATA_QCFLAG_EH		= (1 << 16), /* cmd aborted and owned by EH */
- 	ATA_QCFLAG_SENSE_VALID	= (1 << 17), /* sense data valid */
- 	ATA_QCFLAG_EH_SCHEDULED = (1 << 18), /* EH scheduled (obsolete) */
-+	ATA_QCFLAG_EH_SUCCESS_CMD = (1 << 19), /* EH should fetch sense for this successful cmd */
- 
- 	/* host set flags */
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
-@@ -310,8 +311,10 @@ enum {
- 	ATA_EH_RESET		= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 	ATA_EH_ENABLE_LINK	= (1 << 3),
- 	ATA_EH_PARK		= (1 << 5), /* unload heads and stop I/O */
-+	ATA_EH_GET_SUCCESS_SENSE = (1 << 6), /* Get sense data for successful cmd */
- 
--	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK,
-+	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK |
-+				  ATA_EH_GET_SUCCESS_SENSE,
- 	ATA_EH_ALL_ACTIONS	= ATA_EH_REVALIDATE | ATA_EH_RESET |
- 				  ATA_EH_ENABLE_LINK,
- 
-@@ -864,6 +867,7 @@ struct ata_port {
- 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
- #endif
- 	/* owned by EH */
-+	u8			*ncq_sense_buf;
- 	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
- };
- 
-@@ -1182,6 +1186,7 @@ extern int sata_link_hardreset(struct ata_link *link,
- 			bool *online, int (*check_ready)(struct ata_link *));
- extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 			    unsigned long deadline);
-+extern int ata_eh_read_sense_success_ncq_log(struct ata_link *link);
- extern void ata_eh_analyze_ncq_error(struct ata_link *link);
- #else
- static inline const unsigned long *
-@@ -1219,6 +1224,10 @@ static inline int sata_link_resume(struct ata_link *link,
+ static void ahci_pci_init_controller(struct ata_host *host)
  {
- 	return -EOPNOTSUPP;
- }
-+static inline int ata_eh_read_sense_success_ncq_log(struct ata_link *link)
-+{
-+	return -EOPNOTSUPP;
-+}
- static inline void ata_eh_analyze_ncq_error(struct ata_link *link) { }
- #endif
- extern int sata_link_debounce(struct ata_link *link,
--- 
-2.38.1
+ =09struct ahci_host_priv *hpriv =3D host->private_data;
+@@ -871,7 +891,7 @@ static int ahci_pci_device_runtime_resume(struct device=
+ *dev)
+ =09struct ata_host *host =3D pci_get_drvdata(pdev);
+ =09int rc;
+=20
+-=09rc =3D ahci_reset_controller(host);
++=09rc =3D ahci_pci_reset_controller(host);
+ =09if (rc)
+ =09=09return rc;
+ =09ahci_pci_init_controller(host);
+@@ -907,7 +927,7 @@ static int ahci_pci_device_resume(struct device *dev)
+ =09=09ahci_mcp89_apple_enable(pdev);
+=20
+ =09if (pdev->dev.power.power_state.event =3D=3D PM_EVENT_SUSPEND) {
+-=09=09rc =3D ahci_reset_controller(host);
++=09=09rc =3D ahci_pci_reset_controller(host);
+ =09=09if (rc)
+ =09=09=09return rc;
+=20
+@@ -1785,12 +1805,6 @@ static int ahci_init_one(struct pci_dev *pdev, const=
+ struct pci_device_id *ent)
+ =09/* save initial config */
+ =09ahci_pci_save_initial_config(pdev, hpriv);
+=20
+-=09/*
+-=09 * If platform firmware failed to enable ports, try to enable
+-=09 * them here.
+-=09 */
+-=09ahci_intel_pcs_quirk(pdev, hpriv);
+-
+ =09/* prepare host */
+ =09if (hpriv->cap & HOST_CAP_NCQ) {
+ =09=09pi.flags |=3D ATA_FLAG_NCQ;
+@@ -1900,7 +1914,7 @@ static int ahci_init_one(struct pci_dev *pdev, const =
+struct pci_device_id *ent)
+ =09if (rc)
+ =09=09return rc;
+=20
+-=09rc =3D ahci_reset_controller(host);
++=09rc =3D ahci_pci_reset_controller(host);
+ =09if (rc)
+ =09=09return rc;
+=20
+--=20
+2.34.1
 
