@@ -2,58 +2,57 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A7BAC63715
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C822C63716
 	for <linux-ide@archiver.kernel.org>; Thu,  8 Dec 2022 11:03:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229843AbiLHLDX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Dec 2022 06:03:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35626 "EHLO
+        id S229883AbiLHLDZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Dec 2022 06:03:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbiLHLCH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 06:02:07 -0500
+        with ESMTP id S229840AbiLHLCN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 06:02:13 -0500
 Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 269ED813BE;
-        Thu,  8 Dec 2022 03:01:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A67ADF01;
+        Thu,  8 Dec 2022 03:01:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670497260; x=1702033260;
+  t=1670497264; x=1702033264;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=7OOLcX2+vM155WgZyxnafA0YBJsvwJzjjqumba4e+eQ=;
-  b=WCKLu4rpPWjAgM22gohlf2I1/RiyGRA//4FNtc2rHoPVSXYNJ7gjR/Cq
-   hiPBU0xpSnNmlVlXGGkl6HHt+2gS8Zp9LsPPBTiBk/FU0CDjsZEP9M0Sn
-   ds66Dza7BRZ1ovzp//0NHVsMgr8fHz8VzcLw0gEvG9ryzxcCrJPm4xuvo
-   vW01mgkUOF+lgbzunLe++RbjfgL/qLfb6eOzJpiJp2zjoQM12YsVokVZJ
-   ipar2OwlIQ7v2KYpBLgWaEJWc8XgcAK0fO9QtR+9xPLVuS0BmgJbGgrQ7
-   10zCAygtKseeOnTg7x1TgtQnyguJazTBGMo/LY4WjV+XlEiJCLFKAlW2b
+  bh=y/WCKpHJCy1/94Jl00aMjpl6YjzcQPt+Nc3cOlCy9Q0=;
+  b=XDJ4iCPUApD6i5d/09C+gHc+y34amma9/T3T+aLTsN2kAiU9dcWifDTU
+   8tZilZplwvb06QY825sbaqLL1YYyggQ6mUCrsgApNkf1KglXuWdExAZXB
+   iBQqrDOZUU6fdBG7lc+WjdnfOPClmPFq0Bszly2A2NWHNgNqSIJSFnwgF
+   NxpqevQmN8pT9x6VXOR6mnG91fpR/hIdwVcpC1OIy5UASjmNsrYtzDZvx
+   bF+dsmaowAhwqBDYbmcDUukC3LAWy7pw2ykeyWsTSfxZXuyqVfvF2q+oE
+   gJ8JjpqXJpO+ThqnrBeCoeO6aRVKu18MfyT3sMkEnC8cRFu6hdI8fw+42
    Q==;
 X-IronPort-AV: E=Sophos;i="5.96,227,1665417600"; 
-   d="scan'208";a="223333379"
+   d="scan'208";a="223333388"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:00:59 +0800
-IronPort-SDR: gunyvR74Zdxnge1ER/wX0QtcLGHBNpzrWBrZp843BBn/f86H0Ug9NWqK1fkhVmY10J5dZSnd8h
- HVou8nLMjAmZT6xe9tZKJU4gGm61Ig2ghbmj20KzjfUmZky8Ld5kPXJhPrlVKHr4H9onjKQ/GX
- bTLY68VFZBHsTiGxdJz3kmPE2uKxEENU6RUPvG9hfsrgfn2sjZqrXYqz0r90NhXWnZurmGwtlR
- WECsmUMArNuLgHp4KPJjLPOEQRAF7CI+d65ya7szLOuZ35NVM/78YyepsvJoTLRDXySHxgnfUC
- f8g=
+  by ob1.hgst.iphmx.com with ESMTP; 08 Dec 2022 19:01:03 +0800
+IronPort-SDR: KtQLNNHyjyeU8Nikk81VTxAwj6iL4DnVw+x4bn/5aK1XUpAL08GfUmzvBA5NMHL17FmNoQ8RTC
+ yCfu2NJA7pCEYYeUOqd8PezjoxFrXodrk6Y9ctJlyTYbFKxBtmEK7SFgOlZMXbI7Su/GvpzkWY
+ sKTCdcJh81YUrPXmTnbuhCMglZHlbAdr88yXSQI1BSkP7Ce/3MTk/iFnQu+/RmjhRKpUSOc3Lt
+ t+jP8/jUUXAbDjprOxaQ3mpE/HamJvDIek6R+rwbfL/nux7kwpOLgat4PjX/UVK/dJo7XM6Yh7
+ 9yo=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:13:45 -0800
-IronPort-SDR: 85QCEAkcwvB4LVbsz1/iBs+GUc6b2Z+vpDwOKzBUOVLgRf/Kg3TQXOIJB5+YhtUWG3+gc5aCOt
- 9ldbNYUkSHM6u6rPzYcoTxj2th8k1avw3cV5HsA9ZADL4CI7V1vTYyURuZs0Wgn2iUIkGmSo29
- oFVdCyfRsT6XP1lvHi5vZu4nxPoGepYiBOWHEEN/MaGjlCDe9M4t54O/BRr1H984bfET9I/E43
- LLN+ZHbZiZWe7XAEbIOfEMC4dvZNiuVEO9Elg5T8PzdtqB5z+oWcsp37T9sO/OOi34V9HtuQno
- 2Jc=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 02:13:49 -0800
+IronPort-SDR: n7DP5eOX9kGRysOgLgAi1oIsdQVJo4HAwc775L4L8cHU09TXsmFAN6ibxdiq5t7HwEyHRWJGaa
+ RoO/bWfz238EdtakNsRvEANGFLQw/QAyrVIodDPQli/y4icTsP4rHCMFqI26kiFf/UHe/zj8rq
+ YINyOsArb8ZXKKR8GdXpyw8+qjNFVXzC1t2d+mv+0fh7wTpeqHzlpbxHgyYdPSUVP5ibihVkhj
+ NfUkJXh1r2UeihO09Dk0hxawX/30/4PIJj+EUDCT+aB5T1v2y0X/MFUkybJ95RbEH85melfQEs
+ Fro=
 WDCIronportException: Internal
 Received: from dellx5.wdc.com (HELO x1-carbon.cphwdc) ([10.200.210.81])
-  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:00:59 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP; 08 Dec 2022 03:01:03 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>,
         linux-ide@vger.kernel.org
-Subject: [PATCH 07/25] ata: libata: allow ata_eh_request_sense() to not set CHECK_CONDITION
-Date:   Thu,  8 Dec 2022 11:59:23 +0100
-Message-Id: <20221208105947.2399894-8-niklas.cassel@wdc.com>
+Subject: [PATCH 09/25] ata: libata-scsi: improve ata_scsiop_maint_in()
+Date:   Thu,  8 Dec 2022 11:59:25 +0100
+Message-Id: <20221208105947.2399894-10-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221208105947.2399894-1-niklas.cassel@wdc.com>
 References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
@@ -63,73 +62,35 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Current ata_eh_request_sense() calls ata_scsi_set_sense() with
-check_condition always set to true, which, in addition to setting the
-sense data, unconditionally sets the scsicmd->result to
-SAM_STAT_CHECK_CONDITION.
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-For Command Duration Limits policy 0xD:
-The device shall complete the command without error (SAM_STAT_GOOD)
-with the additional sense code set to DATA CURRENTLY UNAVAILABLE.
+Allow translation of REPORT_SUPPORTED_OPERATION_CODES commands using
+the command format 0x3, that is, checking support for commands that are
+identified using an opcode and a service action.
 
-It is perfectly fine to have sense data for a command that returned
-completion without error.
-
-In order to support for CDL policy 0xD, we have to remove this
-assumption that having sense data means that the command failed
-(SAM_STAT_CHECK_CONDITION).
-
-Add a new parameter to ata_eh_request_sense() to allow us to request
-sense data without unconditionally setting SAM_STAT_CHECK_CONDITION.
-This new parameter will be used in a follow-up patch.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/ata/libata-eh.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/ata/libata-scsi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index c278366370ab..e05d62791e08 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1392,6 +1392,7 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
- /**
-  *	ata_eh_request_sense - perform REQUEST_SENSE_DATA_EXT
-  *	@qc: qc to perform REQUEST_SENSE_SENSE_DATA_EXT to
-+ *	@check_condition: if SAM_STAT_CHECK_CONDITION should get set
-  *
-  *	Perform REQUEST_SENSE_DATA_EXT after the device reported CHECK
-  *	SENSE.  This function is an EH helper.
-@@ -1399,7 +1400,8 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
-  *	LOCKING:
-  *	Kernel thread context (may sleep).
-  */
--static void ata_eh_request_sense(struct ata_queued_cmd *qc)
-+static void ata_eh_request_sense(struct ata_queued_cmd *qc,
-+				 bool check_condition)
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	struct ata_device *dev = qc->dev;
-@@ -1429,8 +1431,8 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc)
- 	/* Ignore err_mask; ATA_ERR might be set */
- 	if (tf.status & ATA_SENSE) {
- 		if (ata_scsi_sense_is_valid(tf.lbah, tf.lbam, tf.lbal)) {
--			ata_scsi_set_sense(dev, cmd, true, tf.lbah, tf.lbam,
--					   tf.lbal);
-+			ata_scsi_set_sense(dev, cmd, check_condition, tf.lbah,
-+					   tf.lbam, tf.lbal);
- 			qc->flags |= ATA_QCFLAG_SENSE_VALID;
- 		}
- 	} else {
-@@ -1587,7 +1589,7 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc)
- 		 *  (i.e. NCQ autosense is not supported by the device).
- 		 */
- 		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID) && (stat & ATA_SENSE))
--			ata_eh_request_sense(qc);
-+			ata_eh_request_sense(qc, true);
- 		if (err & ATA_ICRC)
- 			qc->err_mask |= AC_ERR_ATA_BUS;
- 		if (err & (ATA_UNC | ATA_AMNF))
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index ca3b92a1a6a5..78729fd9fbfd 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3268,11 +3268,12 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+ 	u8 supported = 0;
+ 	unsigned int err = 0;
+ 
+-	if (cdb[2] != 1) {
++	if (cdb[2] != 1 && cdb[2] != 3) {
+ 		ata_dev_warn(dev, "invalid command format %d\n", cdb[2]);
+ 		err = 2;
+ 		goto out;
+ 	}
++
+ 	switch (cdb[3]) {
+ 	case INQUIRY:
+ 	case MODE_SENSE:
 -- 
 2.38.1
 
