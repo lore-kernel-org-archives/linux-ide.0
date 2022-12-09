@@ -2,165 +2,302 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87471C4332F
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 09:55:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 017C8C4332F
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 18:31:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbiLIJze (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Dec 2022 04:55:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60158 "EHLO
+        id S229512AbiLISbC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Dec 2022 13:31:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229845AbiLIJzd (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2022 04:55:33 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 730585F6DE;
-        Fri,  9 Dec 2022 01:55:32 -0800 (PST)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B97nY7J003554;
-        Fri, 9 Dec 2022 09:55:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=KxEf8ju+WhJT1zCbkhTkLzN2FVCXDpEbVb6GqywZ0Fc=;
- b=Xxq1QlipgenmTlQNAnIyrxnk3/V/rjOj98TZf8Io6ubUMoVSe/W9hwkup/9T/pgG/b+B
- NRUG9F7/mSB23RMGGxPcd8TaPz4nwfZi+4k6ASKke14TBSnscwGrkwBlLVCXajdEwQnL
- fGNTPw0TmrOly816zom+l6uWivK7jxDr5cL07sau/2CqDVWJqPq9fSbDi41/TEDAg0te
- jRLomY0LVH4N1cwvVsCTTQkyFkrwyFWc2D2oHxAfLpmi0UOgV1zTuTrUkVCKVe/A9pb/
- Ph0mAch8kekXqUOg+UGJ0uFTwL8jqbU1fzqDM4alZRWghP/Gi00YdvUNjbXO7zjUFDYQ 0w== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mauf8mq5f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Dec 2022 09:55:21 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2B98YLoR019708;
-        Fri, 9 Dec 2022 09:55:20 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2172.outbound.protection.outlook.com [104.47.56.172])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3maa8k46g2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Dec 2022 09:55:20 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SWNV6uRP7o8YaPbaxqG7FszF3jBb5YLUm+6JSouuSgLT1989MYDDpIdF0kkGTjda5J41Ih8BXfJWztrD8CWgJzdfMSYEz/VD1tldbS4ZskmiWXWtHrNnKBqdZAPwqgMzOpaGo1hljKmrkoNkKS/brPGQhhzvzNvVyzhMBW7Y/h6iALINeRmSu6YRv6QfU5SXqvYe/OKXaWgjwek+6WmKVhQvn/gXGY+4hmIJcf9Iw65JEZTxenEJtvoTF1Qh28QJv6bXc9RNLKqe7+jxbb453wBG5PR2RIDbwfVLllebA7ZdjKK59f8hZg8x4dDfimqh4AAl12S7CbjsE8cwzLc6Bg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KxEf8ju+WhJT1zCbkhTkLzN2FVCXDpEbVb6GqywZ0Fc=;
- b=ABsK7ZCa20cL2aU2nDzBf2OmGuqvmYBCB8eVOsP5ISX3AjbpWqByR7Lug6pn5UsjlmbdB4Fu0e/esw9JunUOVx3fK01ShKk7SDq2BEbsaDFnYfh2cc6YadgSwmaDVWWSMoa7ZOdOzTm1hOIor6NnDfIw/fqb3ygZHqIeEZVbVtcbv/TK0DEwMgyhMZIIoDrtYx/zV54p/nJOpZ/gvZqq1k6Wk5YjlQHo8YovRE/AT859bJthYW9MT15FnUWVzYqv8/TOwVAbgFpfclg/gbbc/L+yiNUjeXTJaTH7vXl7km+o8UWP65Qsv1hzx2HHQBh6dMUwwISVBaTZSIMPBybSFg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KxEf8ju+WhJT1zCbkhTkLzN2FVCXDpEbVb6GqywZ0Fc=;
- b=bUv5cnNmHIt7VmuGn15RQMRDR4FpJKZ8V/tiWA3OCcBnetuG0QvNhZZs8rQeeNYze2lnK1mTxQD/Op2DN0tPtSwn2euU5f10eAPWRAW3wXlcQ33idnGJRgcfWSwH6swJPi+wL1pFSo7cX680oJOW1RgwTMoha9dUBK+jyL5M9Tk=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DS0PR10MB7294.namprd10.prod.outlook.com (2603:10b6:8:f6::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5880.14; Fri, 9 Dec
- 2022 09:55:18 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::5984:a376:6e91:ac0d]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::5984:a376:6e91:ac0d%9]) with mapi id 15.20.5880.018; Fri, 9 Dec 2022
- 09:55:18 +0000
-Message-ID: <863dfb55-ed51-4655-17dc-54f8a53ddb7f@oracle.com>
-Date:   Fri, 9 Dec 2022 09:55:13 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH v2 02/15] scsi: libata: Convert to scsi_execute_args
-Content-Language: en-US
-To:     Mike Christie <michael.christie@oracle.com>, bvanassche@acm.org,
-        mwilck@suse.com, hch@lst.de, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com,
-        linux-ide@vger.kernel.org
-References: <20221209061325.705999-1-michael.christie@oracle.com>
- <20221209061325.705999-3-michael.christie@oracle.com>
-From:   John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20221209061325.705999-3-michael.christie@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P123CA0480.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:1a8::17) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S229976AbiLISbB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2022 13:31:01 -0500
+Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52B5C37F82
+        for <linux-ide@vger.kernel.org>; Fri,  9 Dec 2022 10:30:59 -0800 (PST)
+dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
+        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
+        bh=gxBfnI8iKRP/VOgfr/9zUJ6HbICQnv1fEVkbVw7nEQw=;
+        b=ZIMSdYKi91lawK6G0TpD/tly8dyoFixoVVuHvSpVSAE0iJMOKjwuXvzcS60m2zmCAkOgFygoOYAq+ka/g1ciWoX3DX7Dkg3EPOIUtlqbnNayknTJlkaQs39Ur7MWTs0AMpXC+jXAnfPwWTPo9LVb+pfxlA7HDVD4D0fHeXaAYOJVAD4kzDYMQijUV7z80vSUQ2IwDrp0EeJKU5sjx0qDRd1D0Wxa1lnSyRJjyuF71kMJC62W0Wx+gIz6WU
+        9sOMatBW2ygVL2tl3MFOUON7OWfqcJ4jQsjqA0BBdFAwauWPRFJmesYmwKnEZaIPrFAG9EQH/tZEaWqt/qOaI74UpP2w==
+Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
+        by mx1.wiredblade.com with ESMTPA
+        ; Fri, 9 Dec 2022 18:30:55 +0000
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB7294:EE_
-X-MS-Office365-Filtering-Correlation-Id: 09b830a5-1845-487e-b25f-08dad9cb7a65
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: rcnEJ8PC411Xyolk1vDBnbqkX7zzATNaPpo6BC+3FoARLLXhjkATCE63nS5XSDQlzFSh2nUxDFAeKHbB7yMhFyUnmCXTB4ml3JDNlj4XS/F+Io4aKtuN8oBBz6/6jsPXJGqkUJqLYbBh4fFLeOvniW7ajyApIP8jsitM7/hKsdNpwLEPArtglSQ8ZOFatjQU9ft6mWPAiirjH+9+OWCa1k+Kbw00VAnK3nuGBoUTCDzilAEQ9M5dxmslvhnZ48DVKtjxrSfCJQdbUzl0gY0f3uwVFXKyQ+yENDOFV6lx7XqJ0N2VOiseAQpBGFe378sOnQNGtb8zlBmXE40OxBmFsn7gUEzWJpdI9jQYMois77Dny9IIUPf1IAUdOAiF3MW3pdW71/mkR9NkqfMxuyRL+DYErwuijD8U29kNscM+hhUGLd7W0DI0h86J1Q2AJ5uO/r3rIF80U/QE0vhvkTp8f2m3jO/tFDZzTl02CD6GhlCMfBbI6AkAFZH6Zf5lUhRTzby90ZzWIXBXh9P8kmH/ocO9/+ytW1Eh16uN0IZqMHZ2O7Qd5sGOGZPpolmDlYE8Dau98981sut8QZ5+Whl3qKBnP4JOMyw/ZxukIEIxQC32A6QtBiTV2GiNAnFPsfLvxJLqRQyk4Zdno7PAORQ3mz+7nQwJZXmGc6lckPKN4J62hjTYof6s46kowenIhpgywcTcgl+KH8AcDkgkxKOeQbvmSX9HCsU4k+4JTKy2nSE=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(346002)(376002)(39860400002)(396003)(136003)(451199015)(31696002)(36756003)(86362001)(36916002)(478600001)(6486002)(53546011)(2616005)(316002)(41300700001)(8936002)(6506007)(26005)(5660300002)(8676002)(186003)(6666004)(4744005)(6512007)(66556008)(66946007)(66476007)(2906002)(38100700002)(83380400001)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UlVqSzNVeVJYeU1oV1Mva09RQjYvc1hrWTZZNnd6ZnFod2lrK0pJYjVNNHMz?=
- =?utf-8?B?LzZHcWVRcU1nL081L3p6V2d4VmtnTkd6M0o2N0U0eit2VjVZZDVpMWd5UDNV?=
- =?utf-8?B?MDJuSHVyK2toUnpiTjZsdkxuRWk5Wm1la2RvbUNhaWp2d1JJN2c0ckNsejZq?=
- =?utf-8?B?Y1RVU0FjWHZOTTUvbytRdDB0WFhCNmpRalRzczh0UXJMZTZJRHZYQnc2eWFU?=
- =?utf-8?B?SWJlLy9Bam5pNzlZcW9aN0daM3BCQjBla1g0MmFuL2FjbExtMTRGa1pKa3ly?=
- =?utf-8?B?YTl0eDcwRlFER1Ixc0UzZDhXdE5mVmxLL0haTVRSaFhtRlFpVDdiVVRPVGFo?=
- =?utf-8?B?RHAzMHY2LzdUQ2lrWDVPWlRBVjlNaWJBTHVLVVI3bkZRUUN1N2hZRjNrMlk5?=
- =?utf-8?B?TTEvdFE3emovTGlWaDEyOXAvNUZRNVpLM2w2aDVOK09HekF1OG5RZFEvMzNZ?=
- =?utf-8?B?VHdOS0drSlR2OW1iZHdHRkc4M3BDMEdQOTNvMi9mdkY2RlBlblg1Y3d3TUp6?=
- =?utf-8?B?emRQVC9EMGQvNVpRS1d2SUF5ZDJ0UWpaQmhnZ3RkWlVrRXlSVFFmZUJ1OXdJ?=
- =?utf-8?B?TlFuZ1NmbWdiTnc5ajFPNEhuZ3dzR2NRR0tOdUdXb0pwTmVSOXV5YTEzTXdN?=
- =?utf-8?B?UDVvaFNDQkdxcDFQVko5NDk2cnhDUDdDYi9Pek9YWkxqQ3QyV3F5SUxnWllk?=
- =?utf-8?B?bG82N0pmZHdOSUdUdGNBRHFDY2Q0ODdXUkxFRjVTYmpGYVpGWjZOL1R0ZFpp?=
- =?utf-8?B?ZnJrUndqaUNZdUxmNi9qL1BJVTI3encxZHkxMG1EWjZ5VjZWcW40NHl6VENm?=
- =?utf-8?B?ems4L0c4MHZ1bFBsNnZPejlMZlZ5cXJXYUt3Tlh5azVUWWlQVHEyMnBCR1lz?=
- =?utf-8?B?UXd3czJSQkdhUUNkK2w1SlpDWTJudzhnanQ0TVNiQzB2cmhBaXpneWZxL081?=
- =?utf-8?B?Q3VNd1ZsTThaY0huY0VoQytqd09kMlFTSXkrL25GSk9sZytrelIvaTJRMFMz?=
- =?utf-8?B?VFI1andqODM3OUgzZEloRTVlNVAyVDNIMmo2UUxiZWtlaFRWK0g0eXhsKy9p?=
- =?utf-8?B?ZGUrdXFlQ1BvaUlNWUcrT2RJS0EzRkZNaURpMGg3NktZUHFSUUgxN2JHRk1o?=
- =?utf-8?B?N2QvbUVPQXF5R1NlTUg4dnZPdDZXbkc0aXR6Z1IwdzFUaE4xd2xUZlFsYzhy?=
- =?utf-8?B?dHdlanZsM3JmUkJyWUR3REFEak04N05IdGcramR1Q0lCaXJQSkZVQXhqNzAv?=
- =?utf-8?B?VVlqUzcrc2tHKzNjaFVaRlNCNnlUb3pBMEtUc2xPREhZSHpuS0RkRjdLMk5L?=
- =?utf-8?B?MnIrelg1dXJsUENrVjBaTkJXK1dCN21HNzg0YjlZR2hTZmFZbVhNNHMyK2dl?=
- =?utf-8?B?M0N5ZytmdHprRWtYcW9qcDZFdDZweENDN1NXM0NEbjhpU0RDaWZvdkdSQXhC?=
- =?utf-8?B?UFRKUHIyQzVSb24xdWw5cEZKVDh3SWZUcDVSRlJWMW5LVm9SSnJMaTlVcnJx?=
- =?utf-8?B?c2JMWG5kRFpGNEZSRW53cWNpejFNdEMxSG92bnFxdXF4SDRITjArS09wWW5I?=
- =?utf-8?B?NnRtMytXRlNOODNYQ2FrbXZLQmhqQWxlTHhIVFU2T1g4YlZGSkZkSjNPWVZQ?=
- =?utf-8?B?Sm4wWWVMRUhFQ3ROZFB4R09QZy9Fd1JiTlU3bUtRTUVmRkhOTDU2TG1rMDc1?=
- =?utf-8?B?RXU0M2xsKzlaeHFpa09jUUJNc2VsdGc1ODVvU1h2VitHL3lvcnhOYklzN3VQ?=
- =?utf-8?B?YnFoaGgvNjVGbEhEalVNMkpUY3lrNlNLMldWN2podkdiTUNQcFYxb2hHV09Q?=
- =?utf-8?B?a0VvWHMydnh4WXRTUXJnTDhwR3lEbFZKN0xFNis3WDdXazR6RGFQRnkyU1pL?=
- =?utf-8?B?cGJxckYraFR6U3hSdWUycjYvNGwwNVVsd2JBVy90bkU3TGJwSnMzY096eUN1?=
- =?utf-8?B?SkhRc2FodEpJdHpNSVJ6Q0Qya2Z5cFMydm5VRnpXY2R3QnFKWjdZU0Y5R3oy?=
- =?utf-8?B?M3p6UE1jRkptWHl4cG1INFd0ZkcwdjZwb0Y3RlhJZGNzam8vZDVSU21ld3RN?=
- =?utf-8?B?M2dpOEVkcllpUXZXbDk3TytudHpuRkZrNkJVMmVJVDMwcUNjb0JvYXI2d1pG?=
- =?utf-8?B?QU9KTFhtYTFZM1NMODlyMENhakVxMmZMTzVKYkk4OFVvRnFEUmpQR3VTWng3?=
- =?utf-8?B?Nmc9PQ==?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 09b830a5-1845-487e-b25f-08dad9cb7a65
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Dec 2022 09:55:18.4075
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: wNJAk+BisAMqWhmACSj6n21m6hWFQ+80WGShtuHIVJvm5MZlFJOfY+hLQN5aAmcT2Or6/k+FBaLLtw0ZTkZY2g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7294
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-09_04,2022-12-08_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2212090066
-X-Proofpoint-ORIG-GUID: FAOHVXBVR6BH-J3k7jVN8PReGyvTGL4R
-X-Proofpoint-GUID: FAOHVXBVR6BH-J3k7jVN8PReGyvTGL4R
+Date:   Fri, 09 Dec 2022 18:30:56 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: RainLoop/1.16.0
+From:   marius@psihoexpert.ro
+Message-ID: <b6d818c162b14cc508f5cdb14c6e88a9@psihoexpert.ro>
+Subject: Re: Bug report for ahci-mvebu driver
+To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org
+In-Reply-To: <7521d86e-a83e-7972-a4cc-55dd7155fa43@opensource.wdc.com>
+References: <7521d86e-a83e-7972-a4cc-55dd7155fa43@opensource.wdc.com>
+ <1b1f8ab0-9a2d-93e3-66f0-18597e80b790@opensource.wdc.com>
+ <125bd8a6-7a1c-cd08-b5ee-da5a24f79f21@opensource.wdc.com>
+ <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
+ <a1b3b74b-1548-44d9-7d72-8eb428fa1788@opensource.wdc.com>
+ <0ba8ebf7-6e6c-e63d-32c4-44d97898be1d@opensource.wdc.com>
+ <126ce7f2-3de2-9e75-7920-09d78c224d76@opensource.wdc.com>
+ <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
+ <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
+ <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
+ <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
+ <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
+ <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
+ <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
+ <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
+ <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
+ <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
+ <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
+ <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
+X-Originating-IP: 84.232.129.15
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 09/12/2022 06:13, Mike Christie wrote:
-> scsi_execute_req is going to be removed. Convert libata to
-> scsi_execute_args.
-> 
-> Signed-off-by: Mike Christie<michael.christie@oracle.com>
-> ---
->   drivers/ata/libata-scsi.c | 23 ++++++++++++++---------
->   1 file changed, 14 insertions(+), 9 deletions(-)
+December 9, 2022 11:28 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc=
+.com> wrote:
 
-FWIW,
+>> [ 19.006105][ T113] Reconfig spd
+>=20
+>=20Which function did you add this message to ?
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+sata_link_hardreset(), inside if(sata_set_spd_needed(link)){} condition,
+but I replaced it with detailed debug inside sata_set_spd_needed() and __=
+_sata_set_spd_needed()
+
+I ran the tests again with the new debug messages.
+These are kernel boot logs with eSATA cable already connected.
+I selected only the interesting lines to make it easy to read.
+
+---- force 1.5Gbps ----
+
+[ 4.362670][ T1] ahci-mvebu f10a8000.sata: AHCI 0001.0000 32 slots 2 port=
+s 6 Gbps 0x3 impl platform
+mode
+[ 4.372489][ T1] ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only=
+ pmp fbs pio slum part sxs
+[ 4.501238][ T1] ata1: SCR_CONTROL =3D 0x0
+[ 4.505468][ T1] ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
+ port 0x100 irq 42
+[ 4.514123][ T1] ata2: SCR_CONTROL =3D 0x0
+[ 4.518345][ T1] ata2: FORCE: PHY spd limit set to 1.5Gbps
+[ 4.524121][ T1] ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
+ port 0x180 irq 42
+[ 4.533000][ T1] driver: 'ahci-mvebu': driver_bound: bound to device 'f10=
+a8000.sata'
+[ 4.533531][ T107] hardreset, Online=3D>Offline
+[ 4.541075][ T107] sata_set_spd_needed, scontrol=3D0x0
+[ 4.545587][ T107] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[ 4.559662][ T107] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
+[ 4.559667][ T107] __sata_set_spd_needed, target=3D0x0
+[ 4.559671][ T107] __sata_set_spd_needed, spd=3D0x0
+[ 4.559675][ T107] __sata_set_spd_needed, final *scontrol=3D0x0
+[ 4.560898][ T107] resume, do loop
+[ 4.571158][ T112] hardreset, Online=3D>Offline
+[ 4.582480][ T112] sata_set_spd_needed, scontrol=3D0x0
+[ 4.593173][ T112] __sata_set_spd_needed, initial limit=3D0x1
+[ 4.601251][ T112] __sata_set_spd_needed, corrected limit=3D0x1
+[ 4.611322][ T112] __sata_set_spd_needed, target=3D0x1
+[ 4.627598][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 4.627602][ T112] __sata_set_spd_needed, final *scontrol=3D0x10
+[ 4.627608][ T112] __sata_set_spd_needed, initial limit=3D0x1  <--- why d=
+oes it run twice?
+[ 4.627611][ T112] __sata_set_spd_needed, corrected limit=3D0x1
+[ 4.627615][ T112] __sata_set_spd_needed, target=3D0x1
+[ 4.627619][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 4.627622][ T112] __sata_set_spd_needed, final *scontrol=3D0x314
+[ 4.628702][ T112] resume, do loop
+[ 4.794479][ T107] resume, after do loop
+[ 4.800859][ T107] debounce, SCR=3D0x0 <---- T107 is probably ata1, not c=
+onnected
+[ 4.805936][ T107] debounce, SCR=3D0x0
+[ 4.814690][ T107] debounce, SCR=3D0x0
+[ 4.822841][ T107] debounce, SCR=3D0x0
+[ 4.836237][ T107] debounce, SCR=3D0x0
+[ 4.845368][ T107] debounce, SCR=3D0x0
+[ 4.855008][ T107] debounce, SCR=3D0x0
+[ 4.864502][ T112] resume, after do loop
+[ 4.869198][ T107] debounce, SCR=3D0x0
+[ 4.877867][ T112] debounce, SCR=3D0x113 <---- T112 is probably ata2, lin=
+k detected
+[ 4.886183][ T107] debounce, SCR=3D0x0
+[ 4.894861][ T107] resume, return at end of function
+[ 4.903009][ T107] hardreset, ata_phys_link_offline check failed
+[ 4.913867][ T107] ata1: SATA link down (SStatus 0 SControl 300)
+[ 4.924894][ T112] debounce, SCR=3D0x113
+...
+[ 5.867867][ T112] ata2.00: SCR_CONTROL =3D 0x300
+[ 5.872520][ T112] ata2.00: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.883284][ T112] ata2.01: SCR_CONTROL =3D 0x300
+[ 5.887960][ T112] ata2.01: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.888111][ T112] ata2.02: SCR_CONTROL =3D 0x300
+[ 5.901206][ T112] ata2.02: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.919553][ T112] ata2.03: SCR_CONTROL =3D 0x300
+[ 5.930054][ T112] ata2.03: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.956888][ T112] ata2.04: SCR_CONTROL =3D 0x300
+[ 5.968103][ T112] ata2.04: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.984053][ T112] ata2.05: SCR_CONTROL =3D 0x300
+[ 5.988735][ T112] ata2.05: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.988858][ T112] ata2.06: SCR_CONTROL =3D 0x300
+[ 5.988865][ T112] ata2.06: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.988947][ T112] ata2.07: SCR_CONTROL =3D 0x300
+[ 5.988953][ T112] ata2.07: FORCE: PHY spd limit set to 1.5Gbps
+[ 5.997728][ T112] ata2.00: hard resetting link
+[ 6.008378][ T112] hardreset, Online=3D>Offline
+[ 6.025110][ T112] sata_set_spd_needed, scontrol=3D0x300
+[ 6.039361][ T112] __sata_set_spd_needed, initial limit=3D0x1
+[ 6.049281][ T112] __sata_set_spd_needed, corrected limit=3D0x1
+[ 6.064930][ T112] __sata_set_spd_needed, target=3D0x1
+[ 6.064935][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 6.064939][ T112] __sata_set_spd_needed, final *scontrol=3D0x310
+[ 6.097506][ T112] __sata_set_spd_needed, initial limit=3D0x1
+[ 6.108372][ T112] __sata_set_spd_needed, corrected limit=3D0x1
+[ 6.118892][ T112] __sata_set_spd_needed, target=3D0x1
+[ 6.118897][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 6.129664][ T112] __sata_set_spd_needed, final *scontrol=3D0x310
+[ 6.153117][ T112] resume, do loop
+[ 6.387397][ T112] resume, after do loop
+[ 6.394052][ T112] debounce, SCR=3D0x123
+[ 6.414455][ T112] debounce, SCR=3D0x123
+[ 6.427772][ T112] debounce, SCR=3D0x123
+[ 6.436940][ T112] debounce, SCR=3D0x123
+[ 6.446566][ T112] debounce, SCR=3D0x123
+[ 6.456201][ T112] debounce, SCR=3D0x123
+[ 6.461379][ T112] debounce, SCR=3D0x123
+[ 6.470664][ T112] debounce, SCR=3D0x123
+[ 6.494546][ T112] debounce, SCR=3D0x123
+[ 6.497712][ T112] resume, return at end of function
+[ 6.512188][ T112] hardreset, Offline=3D>Online
+[ 6.527056][ T112] hardreset, after check_ready
+[ 6.538540][ T112] ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 3=
+00)
+
+---- force 3.0Gbps ----
+
+[ 4.364181][ T1] ahci-mvebu f10a8000.sata: AHCI 0001.0000 32 slots 2 port=
+s 6 Gbps 0x3 impl platform
+mode
+[ 4.374001][ T1] ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only=
+ pmp fbs pio slum part sxs
+[ 4.501990][ T1] ata1: SCR_CONTROL =3D 0x0
+[ 4.506221][ T1] ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
+ port 0x100 irq 42
+[ 4.514896][ T1] ata2: SCR_CONTROL =3D 0x0
+[ 4.519102][ T1] ata2: FORCE: PHY spd limit set to 3.0Gbps
+[ 4.524894][ T1] ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
+ port 0x180 irq 42
+[ 4.533679][ T1] driver: 'ahci-mvebu': driver_bound: bound to device 'f10=
+a8000.sata'
+[ 4.541836][ T1] bus: 'platform': really_probe: bound device f10a8000.sat=
+a to driver ahci-mvebu
+[ 4.544628][ T107] hardreset, Online=3D>Offline
+[ 4.550844][ T107] sata_set_spd_needed, scontrol=3D0x0
+[ 4.555435][ T107] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[ 4.565341][ T107] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
+[ 4.576197][ T107] __sata_set_spd_needed, target=3D0x0
+[ 4.576202][ T107] __sata_set_spd_needed, spd=3D0x0
+[ 4.576206][ T107] __sata_set_spd_needed, final *scontrol=3D0x0
+[ 4.590311][ T107] resume, do loop
+[ 4.598257][ T112] hardreset, Online=3D>Offline
+[ 4.615265][ T112] sata_set_spd_needed, scontrol=3D0x0
+[ 4.629198][ T112] __sata_set_spd_needed, initial limit=3D0x3
+[ 4.640664][ T112] __sata_set_spd_needed, corrected limit=3D0x3
+[ 4.640668][ T112] __sata_set_spd_needed, target=3D0x2
+[ 4.640672][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 4.652837][ T112] __sata_set_spd_needed, final *scontrol=3D0x20
+[ 4.663171][ T112] __sata_set_spd_needed, initial limit=3D0x3
+[ 4.674127][ T112] __sata_set_spd_needed, corrected limit=3D0x3
+[ 4.687268][ T112] __sata_set_spd_needed, target=3D0x2
+[ 4.687273][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 4.687277][ T112] __sata_set_spd_needed, final *scontrol=3D0x324
+[ 4.688355][ T112] resume, do loop
+[ 4.824481][ T107] resume, after do loop
+[ 4.833744][ T107] debounce, SCR=3D0x0
+...
+[ 4.916944][ T107] debounce, SCR=3D0x0
+[ 4.924448][ T112] resume, after do loop
+[ 4.930813][ T107] debounce, SCR=3D0x0
+[ 4.940447][ T107] resume, return at end of function
+[ 4.948608][ T107] hardreset, ata_phys_link_offline check failed
+[ 4.958306][ T107] ata1: SATA link down (SStatus 0 SControl 300)
+[ 4.958766][ T112] debounce, SCR=3D0x100
+[ 4.974540][ T112] debounce, SCR=3D0x100
+[ 4.984450][ T112] debounce, SCR=3D0x100
+[ 4.998528][ T112] debounce, SCR=3D0x100
+[ 5.006870][ T112] debounce, SCR=3D0x101
+[ 5.016032][ T112] debounce, SCR=3D0x100
+
+---- nolpm ----
+
+[ 4.364384][ T1] ahci-mvebu f10a8000.sata: AHCI 0001.0000 32 slots 2 port=
+s 6 Gbps 0x3 impl platform
+mode
+[ 4.374205][ T1] ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only=
+ pmp fbs pio slum part sxs
+[ 4.502855][ T1] ata1: SCR_CONTROL =3D 0x0
+[ 4.507087][ T1] ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
+ port 0x100 irq 42
+[ 4.515761][ T1] ata2: SCR_CONTROL =3D 0x0
+[ 4.519968][ T1] ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
+ port 0x180 irq 42
+[ 4.528704][ T1] driver: 'ahci-mvebu': driver_bound: bound to device 'f10=
+a8000.sata'
+[ 4.536860][ T1] bus: 'platform': really_probe: bound device f10a8000.sat=
+a to driver ahci-mvebu
+[ 4.544628][ T107] hardreset, Online=3D>Offline
+[ 4.545867][ T107] sata_set_spd_needed, scontrol=3D0x0
+[ 4.550348][ T107] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[ 4.560435][ T107] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
+[ 4.571308][ T107] __sata_set_spd_needed, target=3D0x0
+[ 4.583386][ T107] __sata_set_spd_needed, spd=3D0x0
+[ 4.599648][ T107] __sata_set_spd_needed, final *scontrol=3D0x0
+[ 4.615974][ T107] resume, do loop
+[ 4.627876][ T112] hardreset, Online=3D>Offline
+[ 4.638396][ T112] sata_set_spd_needed, scontrol=3D0x0
+[ 4.647521][ T112] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[ 4.660915][ T112] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
+[ 4.673702][ T112] __sata_set_spd_needed, target=3D0x0
+[ 4.686663][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 4.686668][ T112] __sata_set_spd_needed, final *scontrol=3D0x0
+[ 4.688105][ T112] resume, do loop
+[ 4.854467][ T107] resume, after do loop
+[ 4.863650][ T107] debounce, SCR=3D0x0
+[ 4.873874][ T107] debounce, SCR=3D0x0
+[ 4.882559][ T107] debounce, SCR=3D0x0
+[ 4.891306][ T107] debounce, SCR=3D0x0
+[ 4.901119][ T107] debounce, SCR=3D0x0
+[ 4.910367][ T107] debounce, SCR=3D0x0
+[ 4.915322][ T112] resume, after do loop
+[ 4.920379][ T107] debounce, SCR=3D0x0
+[ 4.927643][ T112] debounce, SCR=3D0x100
+[ 4.936031][ T107] debounce, SCR=3D0x0
+[ 4.944728][ T112] debounce, SCR=3D0x100
+[ 4.953532][ T107] debounce, SCR=3D0x0
+[ 4.962475][ T107] resume, return at end of function
+[ 4.970650][ T107] hardreset, ata_phys_link_offline check failed
+[ 4.980376][ T107] ata1: SATA link down (SStatus 0 SControl 300)
+[ 4.991536][ T112] debounce, SCR=3D0x100
+[ 5.007097][ T112] debounce, SCR=3D0x100
+[ 5.016660][ T112] debounce, SCR=3D0x100
+[ 5.025693][ T112] debounce, SCR=3D0x100
+[ 5.030094][ T112] resume, return at end of function
+[ 5.033962][ T112] hardreset, ata_phys_link_offline check failed
+[ 5.043999][ T112] ata2: SATA link down (SStatus 101 SControl 300)
+[ 5.054652][ T112] hardreset, Online=3D>Offline
+[ 5.067061][ T112] sata_set_spd_needed, scontrol=3D0x300
+[ 5.067066][ T112] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[ 5.076006][ T112] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
+[ 5.076010][ T112] __sata_set_spd_needed, target=3D0x0
+[ 5.076014][ T112] __sata_set_spd_needed, spd=3D0x0
+[ 5.076018][ T112] __sata_set_spd_needed, final *scontrol=3D0x300
+[ 5.077276][ T112] resume, do loop
+[ 5.314471][ T112] resume, after do loop
+[ 5.364488][ T112] debounce, SCR=3D0x100
+... and doesn't work.
+
+
+Marius Dinu
+
