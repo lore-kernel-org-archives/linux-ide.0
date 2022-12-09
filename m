@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A9EC4332F
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 02:15:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA9FC4332F
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 02:58:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229517AbiLICPE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Dec 2022 21:15:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43294 "EHLO
+        id S229710AbiLIC60 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Dec 2022 21:58:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbiLICPD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 21:15:03 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30D585C755
-        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:15:01 -0800 (PST)
+        with ESMTP id S229838AbiLIC6Z (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 21:58:25 -0500
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7CAB22536
+        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:58:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670552101; x=1702088101;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=i4L/kET/ToCez7Tl55woa4bnQI01PtqrU2m/f3PoqKo=;
-  b=eBEUFq2kVgFj2N0Ndk/tFCuFVluE8IJ2UGajWdajb4ZYwMTbJ3ncynqE
-   LON1THZcU40Mz6jzmjpaxhTSua86vg/LBw+QH2kscmgpbAQjqfQGOfNyx
-   ZHQ2M6yswBvC9MPdNjMqn28x1vRrnJ9o/0xaFhT0uGEbae/QqscW0HzTt
-   k39+GFAxP0hdxp0OxGAaP8WiWIyQqz+bokU1nu5XDBX6l8Lc+YOEGZYw7
-   jX3j+M/x8VMhb5rXYpeIWTAqtUNfFSF7lP/j8ParRIx77XMLVHJm9+dXp
-   qhbMGExof8ScMyvbs4EDEnYsm28Yj4okWJ0jTJNdiUSoontg9YthNclVs
-   g==;
+  t=1670554703; x=1702090703;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=XYvY7qIrEH4KVazJqmAoNQwpNIVYhq1ENNLejGYHHnQ=;
+  b=NdYv18bo8vvnlBUTKYNh8MOW+9kXLYrWzJXh+tMPg1m4ijFAq0nYt+bS
+   JsY4giXu7zkY2i+//h3KJGBSsKNsrcwPE4OjV95V4VIhjvtiJZ7hz6rmQ
+   dYrZ8s1Yvla3NByDoJ8NF6SDbKOR3zQAET8AW60jqZTbn8HlXaPJT3RIr
+   FH0RttiOgp2dx4sppVjOJ1McmlKTPmdmtshv4RHLveMjuIvrB4BZV9baF
+   o3OUO1mIh85WD3vp+iS0VuTOaXXanz/Ez4jawmvbJfdt0B+NpLbAp0RZF
+   pFCs0vOt/gqsh/WhvfqtWIgQGFGOAv0DLaV0MkBGmY/JQ1e3R18QNDvxo
+   A==;
 X-IronPort-AV: E=Sophos;i="5.96,228,1665417600"; 
-   d="scan'208";a="322603455"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Dec 2022 10:15:00 +0800
-IronPort-SDR: CrJ9BTivwfvLuuWC1khbrl6yvF8IzYZyTkRHxvJAGsAadOv6xM/tx3E/jQ4AWy4E6DTY8VvIb6
- vyLquGgG+KdqsbYfV68ocwkTFIbt1d7zxs2CZd59n7hjoHb7sV2GhHwAPYNZ3PwTqXMvro+UJJ
- VHKDOzP2Tin1W6aCx8aQP+ngOa8aVYdEW5O5meU/Lpm/GQQ+op+7PMhWczOHIPcDgjAMA94Eac
- c5uW7lLLg5/yx/x0twRikivSvw7yy2A2YTKzrSI3DWYgmG1R4tTCR2yo5dEw6D4EghRpWdjTJT
- qWM=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 17:27:45 -0800
-IronPort-SDR: rgCmdsXLI+b87EmRDPMEqD78wDm2wcSTvISkgYP+vPE2/9O7ibsCW3TGrk7KwKnPmtI6Z/qRWn
- 0qy0Twz0x/RYU3A/BFMDJRjYa86RaoIFYJzQdnrFbsnHW5yhMUyFzZniiVs59EKkzbCFztvKkz
- 5lg4LwA0XxtfL8Q/tyDGDgeFBzRsv/LpCbjVCwk8BmBWGaCeyhbz1QNWlHZgXPmb+UC9UZaW76
- 0GVxh7a+XoBOw7YlkMDN9wuUW9ByyDpexYO4JF0fBhWk+GcSPGwTm8adOGKa0AqRsIi3dgO9s1
- kjc=
+   d="scan'208";a="223397274"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Dec 2022 10:58:23 +0800
+IronPort-SDR: pJkVlWsCySgiJTZKKx/xG1dNtFN1qPHXGtEaGjJPB4jk9G+yWaoZuLJCpmpY5jhLE7Stjo7Wa8
+ dJD5aKEqYCqsFs6GFZocfxVbqN3gUD+XIm8/bIKxk2fKZexC8Z1G/NkvUTXDZ/P1oD0SuFEQJP
+ UQswz1lmlFqgeplJx71s4ZypTeD+J/O38U2bfwHWluLx5raXIRi+kwr+tq2jydR7eAKhnvs/Xf
+ NYbNADmAPX9J75a+RZTYJqTJY1JDF9Sx0U7U7aInIQjVkjzlzPsNA9S+LEKaHF1UUJOIpety7Y
+ IHE=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 18:16:52 -0800
+IronPort-SDR: HQnUgxwAj9vxYaeccgGl82lCYA/Yo+gqjaocHtmpq7m1LgdD4B4PI83IsNYyeoPQiS63y8hwG3
+ /lU12F6Oyu8V07Ojhfg5msKQJPWtbQl9q68qPUHTXCIJaP7BAZH6qVlZqFnmhVBKN1EergAlIx
+ Zsec5OA1/cp6eEcTDYxZtENLHjIskLeLCJT86A1X6wUnYr+4b4dzBk5FXp68Nbf18r9DA4aEtx
+ tnSx/V6RsquJR6wtNBzQLIEDST1VneHfEQyrii4aDpWZcIz+ktzM4aUVi9Y5uhkTXHZugDYksP
+ Nb4=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 18:09:00 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 18:58:24 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NSvb03l6cz1RvTp
-        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:09:00 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NSwgz05ggz1RvTp
+        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:58:23 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,182 +56,101 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1670551740; x=1673143741; bh=i4L/kET/ToCez7Tl55woa4bnQI01PtqrU2m
-        /f3PoqKo=; b=ojq554Phw1oxQ+dDlT5r/XQO/BvsHlT8pSu0V9dOpRO061+8SEn
-        zUtw/DL7jWT7tWEUHbpKYr9s1QjL2tx/j40pdm6JCVGW/Tj69dkTpMQKCOe99wPX
-        VNCm4vljm2JQMJdGSTk408j1ggFAErz018K8fBpJUbvnk9rQnkkOPJx00JV/fnsu
-        Z1BUouptsSlpX8tySh7Xh14DpJkCdhNZZPJmoVYb98DEPFo5c7p+mxmiw+aJGena
-        JKxeqZRLOncpWjFgTcYaxfxy0JFSxzGm4MKt6pDOnlETBNN2aAdr+QVYWK0MCAT1
-        gMEYs9/APP+IB8h0O7RG/a5iCFLkumZBY5g==
+        1670554702; x=1673146703; bh=XYvY7qIrEH4KVazJqmAoNQwpNIVYhq1ENNL
+        ejGYHHnQ=; b=RvAaZ7CiFcD5EX1NFL5ilK36AKPIo1uprprxUhQFlMlpDmiwQcQ
+        mQ4kC/m47V0bMhZyjujnpvmvKDH1OsgnzprATceAtit3mmhSCtzSDz/MtrsIvwiA
+        8GUgCh+90TR1twGa0oc+G0aeroakGRmQqk/xM+zpNOUZMSFNfo7Ke4J3RgUeIJmh
+        TWdqp3Ha0bhnYGIOW57R88X4tCNhmoX4Ia9NO9BejN4gY2t51B9Np0AnCetQ9P07
+        Z767vM05q3BoP7fo3zawfWf9zAFAUznS73IJZamx3k2ZoqPelINZkuDpO38fC+BI
+        wJqUdcSDu54m1iTntrFXEc38GAWzPM0zfJA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id i8BbFZ6B12rs for <linux-ide@vger.kernel.org>;
-        Thu,  8 Dec 2022 18:09:00 -0800 (PST)
+        with ESMTP id kTNn3dy7PZcb for <linux-ide@vger.kernel.org>;
+        Thu,  8 Dec 2022 18:58:22 -0800 (PST)
 Received: from [10.225.163.85] (unknown [10.225.163.85])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NSvZz4Zxfz1RvLy;
-        Thu,  8 Dec 2022 18:08:59 -0800 (PST)
-Message-ID: <805d0cb5-a110-3fce-9c47-f94896f5f8a9@opensource.wdc.com>
-Date:   Fri, 9 Dec 2022 11:08:58 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NSwgx6Hlfz1RvLy;
+        Thu,  8 Dec 2022 18:58:21 -0800 (PST)
+Message-ID: <1b1f8ab0-9a2d-93e3-66f0-18597e80b790@opensource.wdc.com>
+Date:   Fri, 9 Dec 2022 11:58:20 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.0
-Subject: Re: [PATCH v3] libata/ahci: Fix PCS quirk application for suspend
+Subject: Re: Bug report for ahci-mvebu driver
 Content-Language: en-US
-To:     Adam Tukaj <grozzly@protonmail.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-References: <OM8HSmyIGyT2XF-f70AR7JA5kLpuIYEu5mYEIpyUT-4CC-u7ezc6po32ZIGOSN_7PlsF0RhOvUs8HpVJiAHGrh2ytgiBEltBpz0MuKiy-vg=@protonmail.com>
+To:     marius@psihoexpert.ro
+Cc:     linux-ide@vger.kernel.org
+References: <f030af47-8522-cdef-8394-84f020c6ddca@opensource.wdc.com>
+ <5b5d7816-5e43-88e8-1337-769cce825f78@opensource.wdc.com>
+ <125bd8a6-7a1c-cd08-b5ee-da5a24f79f21@opensource.wdc.com>
+ <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
+ <a1b3b74b-1548-44d9-7d72-8eb428fa1788@opensource.wdc.com>
+ <0ba8ebf7-6e6c-e63d-32c4-44d97898be1d@opensource.wdc.com>
+ <126ce7f2-3de2-9e75-7920-09d78c224d76@opensource.wdc.com>
+ <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
+ <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
+ <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
+ <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
+ <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
+ <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
+ <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
+ <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
+ <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
+ <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
+ <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <OM8HSmyIGyT2XF-f70AR7JA5kLpuIYEu5mYEIpyUT-4CC-u7ezc6po32ZIGOSN_7PlsF0RhOvUs8HpVJiAHGrh2ytgiBEltBpz0MuKiy-vg=@protonmail.com>
+In-Reply-To: <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/9/22 00:25, Adam Tukaj wrote:
-> Since kernel 5.3.4 my laptop (ICH8M controller) does not see Kingston
-> SV300S37A60G SSD disk connected into a SATA connector on wake from suspend.
-> The problem was introduced in c312ef176399 "libata/ahci: Drop PCS quirk for
-> Denverton and beyond": the quirk is not applied on wake from suspend as it
-> originally was.
+On 12/9/22 03:06, marius@psihoexpert.ro wrote:
+> December 8, 2022 12:51 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.com> wrote:
 > 
-> It is worth to mention the commit contained another bug: the quirk is not
-> applied at all to controllers which require it. The fix 09d6ac8dc51a
-> "libata/ahci: Fix PCS quirk application" landed in 5.3.8. So testing my
-> patch anywhere between c312ef176399 and 09d6ac8dc51a is pointless.
+>> By the way, did you also try a cold boot ? Switching off your router,
+>> connect the pmp box, turn on the router ? Does it change anything ?
+>> ATA hot-plugging tends to have more problems, so worth trying. The
+>> ahci_mvebu driver errata is for hot-plug, so this newer SoC may have
+>> different issues with that too.
 > 
-> Not all disks trigger the problem. For example nothing bad happens with
-> Western Digital WD5000LPCX HDD.
+> Yes. No change. Same errors.
 > 
-> Test hardware:
-> - Acer 5920G with ICH8M SATA controller
-> - sda: some SATA HDD connnected into the DVD drive IDE port with a SATA-IDE
-> caddy. It is a boot disk
-> - sdb: Kingston SV300S37A60G SSD connected into the only SATA port
+>> Can you try with no patches and no revert adding the following options to
+>> your kernel command line ?
+>>
+>> libata.force=2:3Gbps
 > 
-> Sample "dmesg --notime | grep -E '^(sd |ata)'" output on wake:
+> No change. Same errors.
 > 
-> sd 0:0:0:0: [sda] Starting disk
-> sd 2:0:0:0: [sdb] Starting disk
-> ata4: SATA link down (SStatus 4 SControl 300)
-> ata3: SATA link down (SStatus 4 SControl 300)
-> ata1.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
-> ata1.00: ACPI cmd ef/03:42:00:00:00:a0 (SET FEATURES) filtered out
-> ata1: FORCE: cable set to 80c
-> ata5: SATA link down (SStatus 0 SControl 300)
-> ata3: SATA link down (SStatus 4 SControl 300)
-> ata3: SATA link down (SStatus 4 SControl 300)
-> ata3.00: disabled
-> sd 2:0:0:0: rejecting I/O to offline device
-> ata3.00: detaching (SCSI 2:0:0:0)
-> sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_NO_CONNECT
-> 	driverbyte=DRIVER_OK
-> sd 2:0:0:0: [sdb] Synchronizing SCSI cache
-> sd 2:0:0:0: [sdb] Synchronize Cache(10) failed: Result:
-> 	hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> sd 2:0:0:0: [sdb] Stopping disk
-> sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET
-> 	driverbyte=DRIVER_OK
+>> libata.force=2:1.5Gbps
 > 
-> c312ef176399 dropped ahci_pci_reset_controller() which internally calls
-> ahci_reset_controller() and applies the PCS quirk if needed after that. It
-> was called each time a reset was required instead of just
-> ahci_reset_controller(). This patch puts the function back in place.
-> 
-> Fixes: c312ef176399 ("libata/ahci: Drop PCS quirk for Denverton and beyond")
-> Signed-off-by: Adam Vodopjan <grozzly@protonmail.com>
+> This one works, without any error at the beginning, unlike the way reverted commit worked.
 
-Patch author name and signed-off-by name do not match. Please fix that.
-(use scripts/checkpatch.pl to check your patch)
+Checking the specs for the SoC again, it does say:
 
-Also please change the patch title to:
+Gen3 Serial ATA PHY (6 Gbps) with speed negotiation to Gen1, Gen2
 
-ata: ahci: Fix PCS quirk application for suspend
+So with your gen2 (3gbps) pmp box, clearly, the speed negotiation is not
+working but limiting it to 1.5gbps seems ok. Could you add the following
+print to see what the HW is saying it supports ?
 
-> ---
->  drivers/ata/ahci.c | 32 +++++++++++++++++++++++---------
->  1 file changed, 23 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 639de2d75d63..53ab2306da00 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -84,6 +84,7 @@ enum board_ids {
->  static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
->  static void ahci_remove_one(struct pci_dev *dev);
->  static void ahci_shutdown_one(struct pci_dev *dev);
-> +static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hpriv);
->  static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
->  				 unsigned long deadline);
->  static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
-> @@ -677,6 +678,25 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
->  	ahci_save_initial_config(&pdev->dev, hpriv);
->  }
->  
-> +static int ahci_pci_reset_controller(struct ata_host *host)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(host->dev);
-> +	struct ahci_host_priv *hpriv = host->private_data;
-> +	int rc;
-> +
-> +	rc = ahci_reset_controller(host);
-> +	if (rc)
-> +		return rc;
-> +
-> +	/*
-> +	 * If platform firmware failed to enable ports, try to enable
-> +	 * them here.
-> +	 */
-> +	ahci_intel_pcs_quirk(pdev, hpriv);
-> +
-> +	return 0;
-> +}
-> +
->  static void ahci_pci_init_controller(struct ata_host *host)
->  {
->  	struct ahci_host_priv *hpriv = host->private_data;
-> @@ -871,7 +891,7 @@ static int ahci_pci_device_runtime_resume(struct device *dev)
->  	struct ata_host *host = pci_get_drvdata(pdev);
->  	int rc;
->  
-> -	rc = ahci_reset_controller(host);
-> +	rc = ahci_pci_reset_controller(host);
->  	if (rc)
->  		return rc;
->  	ahci_pci_init_controller(host);
-> @@ -907,7 +927,7 @@ static int ahci_pci_device_resume(struct device *dev)
->  		ahci_mcp89_apple_enable(pdev);
->  
->  	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
-> -		rc = ahci_reset_controller(host);
-> +		rc = ahci_pci_reset_controller(host);
->  		if (rc)
->  			return rc;
->  
-> @@ -1785,12 +1805,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	/* save initial config */
->  	ahci_pci_save_initial_config(pdev, hpriv);
->  
-> -	/*
-> -	 * If platform firmware failed to enable ports, try to enable
-> -	 * them here.
-> -	 */
-> -	ahci_intel_pcs_quirk(pdev, hpriv);
-> -
->  	/* prepare host */
->  	if (hpriv->cap & HOST_CAP_NCQ) {
->  		pi.flags |= ATA_FLAG_NCQ;
-> @@ -1900,7 +1914,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	if (rc)
->  		return rc;
->  
-> -	rc = ahci_reset_controller(host);
-> +	rc = ahci_pci_reset_controller(host);
->  	if (rc)
->  		return rc;
->  
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 884ae73b11ea..b3925239b8b0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5271,6 +5271,9 @@ int sata_link_init_spd(struct ata_link *link)
+        if (rc)
+                return rc;
+
++       ata_link_info(link, "SCR_CONTROL = 0x%x\n",
++                     link->saved_scontrol);
++
+        spd = (link->saved_scontrol >> 4) & 0xf;
+        if (spd)
+                link->hw_sata_spd_limit &= (1 << spd) - 1;
 
 -- 
 Damien Le Moal
