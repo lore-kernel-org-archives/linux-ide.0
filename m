@@ -2,85 +2,39 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA9FC4332F
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 02:58:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EAC3C4332F
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 07:32:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229710AbiLIC60 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Dec 2022 21:58:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41822 "EHLO
+        id S229550AbiLIHcU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Dec 2022 02:32:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbiLIC6Z (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 21:58:25 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7CAB22536
-        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:58:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670554703; x=1702090703;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=XYvY7qIrEH4KVazJqmAoNQwpNIVYhq1ENNLejGYHHnQ=;
-  b=NdYv18bo8vvnlBUTKYNh8MOW+9kXLYrWzJXh+tMPg1m4ijFAq0nYt+bS
-   JsY4giXu7zkY2i+//h3KJGBSsKNsrcwPE4OjV95V4VIhjvtiJZ7hz6rmQ
-   dYrZ8s1Yvla3NByDoJ8NF6SDbKOR3zQAET8AW60jqZTbn8HlXaPJT3RIr
-   FH0RttiOgp2dx4sppVjOJ1McmlKTPmdmtshv4RHLveMjuIvrB4BZV9baF
-   o3OUO1mIh85WD3vp+iS0VuTOaXXanz/Ez4jawmvbJfdt0B+NpLbAp0RZF
-   pFCs0vOt/gqsh/WhvfqtWIgQGFGOAv0DLaV0MkBGmY/JQ1e3R18QNDvxo
-   A==;
-X-IronPort-AV: E=Sophos;i="5.96,228,1665417600"; 
-   d="scan'208";a="223397274"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Dec 2022 10:58:23 +0800
-IronPort-SDR: pJkVlWsCySgiJTZKKx/xG1dNtFN1qPHXGtEaGjJPB4jk9G+yWaoZuLJCpmpY5jhLE7Stjo7Wa8
- dJD5aKEqYCqsFs6GFZocfxVbqN3gUD+XIm8/bIKxk2fKZexC8Z1G/NkvUTXDZ/P1oD0SuFEQJP
- UQswz1lmlFqgeplJx71s4ZypTeD+J/O38U2bfwHWluLx5raXIRi+kwr+tq2jydR7eAKhnvs/Xf
- NYbNADmAPX9J75a+RZTYJqTJY1JDF9Sx0U7U7aInIQjVkjzlzPsNA9S+LEKaHF1UUJOIpety7Y
- IHE=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 18:16:52 -0800
-IronPort-SDR: HQnUgxwAj9vxYaeccgGl82lCYA/Yo+gqjaocHtmpq7m1LgdD4B4PI83IsNYyeoPQiS63y8hwG3
- /lU12F6Oyu8V07Ojhfg5msKQJPWtbQl9q68qPUHTXCIJaP7BAZH6qVlZqFnmhVBKN1EergAlIx
- Zsec5OA1/cp6eEcTDYxZtENLHjIskLeLCJT86A1X6wUnYr+4b4dzBk5FXp68Nbf18r9DA4aEtx
- tnSx/V6RsquJR6wtNBzQLIEDST1VneHfEQyrii4aDpWZcIz+ktzM4aUVi9Y5uhkTXHZugDYksP
- Nb4=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 18:58:24 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NSwgz05ggz1RvTp
-        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:58:23 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1670554702; x=1673146703; bh=XYvY7qIrEH4KVazJqmAoNQwpNIVYhq1ENNL
-        ejGYHHnQ=; b=RvAaZ7CiFcD5EX1NFL5ilK36AKPIo1uprprxUhQFlMlpDmiwQcQ
-        mQ4kC/m47V0bMhZyjujnpvmvKDH1OsgnzprATceAtit3mmhSCtzSDz/MtrsIvwiA
-        8GUgCh+90TR1twGa0oc+G0aeroakGRmQqk/xM+zpNOUZMSFNfo7Ke4J3RgUeIJmh
-        TWdqp3Ha0bhnYGIOW57R88X4tCNhmoX4Ia9NO9BejN4gY2t51B9Np0AnCetQ9P07
-        Z767vM05q3BoP7fo3zawfWf9zAFAUznS73IJZamx3k2ZoqPelINZkuDpO38fC+BI
-        wJqUdcSDu54m1iTntrFXEc38GAWzPM0zfJA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id kTNn3dy7PZcb for <linux-ide@vger.kernel.org>;
-        Thu,  8 Dec 2022 18:58:22 -0800 (PST)
-Received: from [10.225.163.85] (unknown [10.225.163.85])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NSwgx6Hlfz1RvLy;
-        Thu,  8 Dec 2022 18:58:21 -0800 (PST)
-Message-ID: <1b1f8ab0-9a2d-93e3-66f0-18597e80b790@opensource.wdc.com>
-Date:   Fri, 9 Dec 2022 11:58:20 +0900
+        with ESMTP id S229756AbiLIHbr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2022 02:31:47 -0500
+Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAF12109F
+        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 23:31:36 -0800 (PST)
+dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
+        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
+        bh=A/ThwtIHF7VcMrZ1bK//UdrihjBgYq03/cUsdYetRTQ=;
+        b=DuC+Xo33viRaPapbApqNVOtXS2IyyVw4Ysmcj0zz/ivtbfgl3pzgYdrXEG0kJULIlq9SfoOqfSRJRrtJi3Oh2hpJ8HdDdNcsZUaqJJJ1nkKGKEPZtMM2ErvhZsg/B2Rk4kSON9s2TYNziQOceV9Fhx+wVvb/fJ/31zXjd/Ewe2C3fwmt0Zl9EnbDdjS6voU40lQ8T0S4sKjXY1s1zVoUKSJGrCbn37R/MVEecf3yNIDIr6B61m9EJG8TuI
+        dRZb/NROdaK7vepQx+bT+0BQ4c6vEHJJYjdQNj6tXo17Ib6f3DXqYsNOl4IikpRlpFHcp+/UmhtFscLXyup0Kd6/+Kfg==
+Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
+        by mx1.wiredblade.com with ESMTPA
+        ; Fri, 9 Dec 2022 07:31:33 +0000
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
+Date:   Fri, 09 Dec 2022 07:31:34 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: RainLoop/1.16.0
+From:   marius@psihoexpert.ro
+Message-ID: <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
 Subject: Re: Bug report for ahci-mvebu driver
-Content-Language: en-US
-To:     marius@psihoexpert.ro
+To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
 Cc:     linux-ide@vger.kernel.org
-References: <f030af47-8522-cdef-8394-84f020c6ddca@opensource.wdc.com>
+In-Reply-To: <1b1f8ab0-9a2d-93e3-66f0-18597e80b790@opensource.wdc.com>
+References: <1b1f8ab0-9a2d-93e3-66f0-18597e80b790@opensource.wdc.com>
+ <f030af47-8522-cdef-8394-84f020c6ddca@opensource.wdc.com>
  <5b5d7816-5e43-88e8-1337-769cce825f78@opensource.wdc.com>
  <125bd8a6-7a1c-cd08-b5ee-da5a24f79f21@opensource.wdc.com>
  <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
@@ -98,61 +52,218 @@ References: <f030af47-8522-cdef-8394-84f020c6ddca@opensource.wdc.com>
  <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
  <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
  <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Originating-IP: 84.232.129.15
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/9/22 03:06, marius@psihoexpert.ro wrote:
-> December 8, 2022 12:51 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.com> wrote:
-> 
->> By the way, did you also try a cold boot ? Switching off your router,
->> connect the pmp box, turn on the router ? Does it change anything ?
->> ATA hot-plugging tends to have more problems, so worth trying. The
->> ahci_mvebu driver errata is for hot-plug, so this newer SoC may have
->> different issues with that too.
-> 
-> Yes. No change. Same errors.
-> 
->> Can you try with no patches and no revert adding the following options to
->> your kernel command line ?
->>
->> libata.force=2:3Gbps
-> 
-> No change. Same errors.
-> 
->> libata.force=2:1.5Gbps
-> 
-> This one works, without any error at the beginning, unlike the way reverted commit worked.
+December 9, 2022 4:58 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.=
+com> wrote:
 
-Checking the specs for the SoC again, it does say:
+> On 12/9/22 03:06, marius@psihoexpert.ro wrote:
+>=20
+>=20Checking the specs for the SoC again, it does say:
+>=20
+>=20Gen3 Serial ATA PHY (6 Gbps) with speed negotiation to Gen1, Gen2
+>=20
+>=20So with your gen2 (3gbps) pmp box, clearly, the speed negotiation is =
+not
+> working but limiting it to 1.5gbps seems ok. Could you add the followin=
+g
+> print to see what the HW is saying it supports ?
+>=20
+>=20diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 884ae73b11ea..b3925239b8b0 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5271,6 +5271,9 @@ int sata_link_init_spd(struct ata_link *link)
+> if (rc)
+> return rc;
+>=20
+>=20+ ata_link_info(link, "SCR_CONTROL =3D 0x%x\n",
+> + link->saved_scontrol);
+> +
+> spd =3D (link->saved_scontrol >> 4) & 0xf;
+> if (spd)
+> link->hw_sata_spd_limit &=3D (1 << spd) - 1;
+>=20
+>=20--
+> Damien Le Moal
+> Western Digital Research
 
-Gen3 Serial ATA PHY (6 Gbps) with speed negotiation to Gen1, Gen2
 
-So with your gen2 (3gbps) pmp box, clearly, the speed negotiation is not
-working but limiting it to 1.5gbps seems ok. Could you add the following
-print to see what the HW is saying it supports ?
+Without libata.force=3D2:1.5Gbps, the extra debug message appears only du=
+ring boot.
+Cable connected or not - doesn't matter - the messages are the same.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 884ae73b11ea..b3925239b8b0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5271,6 +5271,9 @@ int sata_link_init_spd(struct ata_link *link)
-        if (rc)
-                return rc;
+[    4.480888][    T1] scsi host1: ahci-mvebu
+[    4.485149][    T1] device: 'host1': device_add
+[    4.489728][    T1] bus: 'scsi': add device host1
+[    4.494544][    T1] device: 'host1': device_add
+[    4.499589][    T1] ata1: SCR_CONTROL =3D 0x0
+[    4.503822][    T1] ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10=
+a9fff] port 0x100 irq 42
+[    4.512480][    T1] ata2: SCR_CONTROL =3D 0x0
+[    4.516704][    T1] ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10=
+a9fff] port 0x180 irq 42
+[    4.525443][    T1] driver: 'ahci-mvebu': driver_bound: bound to devic=
+e 'f10a8000.sata'
+[    4.533599][    T1] bus: 'platform': really_probe: bound device f10a80=
+00.sata to driver ahci-mvebu
 
-+       ata_link_info(link, "SCR_CONTROL = 0x%x\n",
-+                     link->saved_scontrol);
-+
-        spd = (link->saved_scontrol >> 4) & 0xf;
-        if (spd)
-                link->hw_sata_spd_limit &= (1 << spd) - 1;
 
--- 
-Damien Le Moal
-Western Digital Research
+With libata.force=3D2:1.5Gbps, the same message appears during boot, but =
+then, when the device is detected:
+
+[   17.624417][  T113] hardreset, Online=3D>Offline
+[   17.625498][  T113] resume, do loop
+[   17.853273][  T113] resume, after do loop
+[   17.913272][  T113] debounce, SCR=3D0x113
+[   17.973271][  T113] debounce, SCR=3D0x113
+[   18.033271][  T113] debounce, SCR=3D0x113
+[   18.093271][  T113] debounce, SCR=3D0x113
+[   18.153271][  T113] debounce, SCR=3D0x113
+[   18.213270][  T113] debounce, SCR=3D0x113
+[   18.273270][  T113] debounce, SCR=3D0x113
+[   18.333270][  T113] debounce, SCR=3D0x113
+[   18.393271][  T113] debounce, SCR=3D0x113
+[   18.397130][  T113] resume, return at end of function
+[   18.400987][  T113] hardreset, Offline=3D>Online
+[   18.410547][  T113] hardreset, sata_pmp_supported, before check_ready
+[   18.583275][  T113] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl =
+310)
+[   18.597005][  T113] ata2.15: Port Multiplier 1.2, 0x197b:0x0325 r193, =
+8 ports, feat 0xf/0x1f
+[   18.605655][  T113] device: 'link2.0': device_add
+[   18.610473][  T113] device: 'link2.0': device_add
+[   18.615504][  T113] device: 'dev2.0.0': device_add
+[   18.620352][  T113] device: 'dev2.0.0': device_add
+[   18.625852][  T113] device: 'link2.1': device_add
+[   18.630625][  T113] device: 'link2.1': device_add
+[   18.635522][  T113] device: 'dev2.1.0': device_add
+[   18.640371][  T113] device: 'dev2.1.0': device_add
+[   18.646031][  T113] device: 'link2.2': device_add
+[   18.650796][  T113] device: 'link2.2': device_add
+[   18.656012][  T113] device: 'dev2.2.0': device_add
+[   18.660865][  T113] device: 'dev2.2.0': device_add
+[   18.666438][  T113] device: 'link2.3': device_add
+[   18.671204][  T113] device: 'link2.3': device_add
+[   18.676113][  T113] device: 'dev2.3.0': device_add
+[   18.680962][  T113] device: 'dev2.3.0': device_add
+[   18.686775][  T113] device: 'link2.4': device_add
+[   18.691544][  T113] device: 'link2.4': device_add
+[   18.696469][  T113] device: 'dev2.4.0': device_add
+[   18.701319][  T113] device: 'dev2.4.0': device_add
+[   18.706341][  T113] device: 'link2.5': device_add
+[   18.711109][  T113] device: 'link2.5': device_add
+[   18.716036][  T113] device: 'dev2.5.0': device_add
+[   18.720888][  T113] device: 'dev2.5.0': device_add
+[   18.726475][  T113] device: 'link2.6': device_add
+[   18.731243][  T113] device: 'link2.6': device_add
+[   18.736445][  T113] device: 'dev2.6.0': device_add
+[   18.741300][  T113] device: 'dev2.6.0': device_add
+[   18.746642][  T113] device: 'link2.7': device_add
+[   18.751412][  T113] device: 'link2.7': device_add
+[   18.756871][  T113] device: 'dev2.7.0': device_add
+[   18.761730][  T113] device: 'dev2.7.0': device_add
+[   18.766760][  T113] device: 'link2.8': device_add
+[   18.771528][  T113] device: 'link2.8': device_add
+[   18.776986][  T113] device: 'dev2.8.0': device_add
+[   18.781847][  T113] device: 'dev2.8.0': device_add
+[   18.787176][  T113] device: 'link2.9': device_add
+[   18.791951][  T113] device: 'link2.9': device_add
+[   18.796844][  T113] device: 'dev2.9.0': device_add
+[   18.801967][  T113] device: 'dev2.9.0': device_add
+[   18.807019][  T113] device: 'link2.10': device_add
+[   18.811877][  T113] device: 'link2.10': device_add
+[   18.817156][  T113] device: 'dev2.10.0': device_add
+[   18.822104][  T113] device: 'dev2.10.0': device_add
+[   18.827544][  T113] device: 'link2.11': device_add
+[   18.832406][  T113] device: 'link2.11': device_add
+[   18.837713][  T113] device: 'dev2.11.0': device_add
+[   18.842661][  T113] device: 'dev2.11.0': device_add
+[   18.848594][  T113] device: 'link2.12': device_add
+[   18.853474][  T113] device: 'link2.12': device_add
+[   18.858472][  T113] device: 'dev2.12.0': device_add
+[   18.863433][  T113] device: 'dev2.12.0': device_add
+[   18.869167][  T113] device: 'link2.13': device_add
+[   18.874050][  T113] device: 'link2.13': device_add
+[   18.879039][  T113] device: 'dev2.13.0': device_add
+[   18.884013][  T113] device: 'dev2.13.0': device_add
+[   18.889113][  T113] device: 'link2.14': device_add
+[   18.893992][  T113] device: 'link2.14': device_add
+[   18.898985][  T113] device: 'dev2.14.0': device_add
+[   18.903948][  T113] device: 'dev2.14.0': device_add
+[   18.909642][  T113] ahci-mvebu f10a8000.sata: FBS is enabled
+[   18.915398][  T113] ata2.00: SCR_CONTROL =3D 0x300
+[   18.920044][  T113] ata2.00: FORCE: PHY spd limit set to 1.5Gbps
+[   18.926149][  T113] ata2.01: SCR_CONTROL =3D 0x300
+[   18.930795][  T113] ata2.01: FORCE: PHY spd limit set to 1.5Gbps
+[   18.936889][  T113] ata2.02: SCR_CONTROL =3D 0x300
+[   18.941533][  T113] ata2.02: FORCE: PHY spd limit set to 1.5Gbps
+[   18.947634][  T113] ata2.03: SCR_CONTROL =3D 0x300
+[   18.952277][  T113] ata2.03: FORCE: PHY spd limit set to 1.5Gbps
+[   18.958371][  T113] ata2.04: SCR_CONTROL =3D 0x300
+[   18.963015][  T113] ata2.04: FORCE: PHY spd limit set to 1.5Gbps
+[   18.969111][  T113] ata2.05: SCR_CONTROL =3D 0x300
+[   18.973775][  T113] ata2.05: FORCE: PHY spd limit set to 1.5Gbps
+[   18.979846][  T113] ata2.06: SCR_CONTROL =3D 0x300
+[   18.984515][  T113] ata2.06: FORCE: PHY spd limit set to 1.5Gbps
+[   18.990586][  T113] ata2.07: SCR_CONTROL =3D 0x300
+[   18.995251][  T113] ata2.07: FORCE: PHY spd limit set to 1.5Gbps
+[   19.001401][  T113] ata2.00: hard resetting link
+[   19.006066][  T113] hardreset, Online=3D>Offline
+[   19.006105][  T113] Reconfig spd
+[   19.011857][  T113] resume, do loop
+[   19.243309][  T113] resume, after do loop
+[   19.251950][  T113] debounce, SCR=3D0x123
+[   19.261104][  T113] debounce, SCR=3D0x123
+[   19.270082][  T113] debounce, SCR=3D0x123
+[   19.279059][  T113] debounce, SCR=3D0x123
+[   19.288018][  T113] debounce, SCR=3D0x123
+[   19.296978][  T113] debounce, SCR=3D0x123
+[   19.305937][  T113] debounce, SCR=3D0x123
+[   19.314896][  T113] debounce, SCR=3D0x123
+[   19.323855][  T113] debounce, SCR=3D0x123
+[   19.332813][  T113] debounce, SCR=3D0x123
+[   19.341790][  T113] debounce, SCR=3D0x123
+[   19.350768][  T113] debounce, SCR=3D0x123
+[   19.354706][  T113] resume, return at end of function
+[   19.358595][  T113] hardreset, Offline=3D>Online
+[   19.368155][  T113] hardreset, after check_ready
+[   19.368372][  T113] ata2.00: SATA link up 3.0 Gbps (SStatus 123 SContr=
+ol 300)
+[   19.380239][  T113] ata2.01: hard resetting link
+[   19.384903][  T113] hardreset, Online=3D>Offline
+[   19.384940][  T113] Reconfig spd
+[   19.390688][  T113] resume, do loop
+[   19.623306][  T113] resume, after do loop
+[   19.631947][  T113] debounce, SCR=3D0x123
+[   19.641098][  T113] debounce, SCR=3D0x123
+[   19.650075][  T113] debounce, SCR=3D0x123
+[   19.659053][  T113] debounce, SCR=3D0x123
+[   19.668011][  T113] debounce, SCR=3D0x123
+[   19.676970][  T113] debounce, SCR=3D0x123
+[   19.685929][  T113] debounce, SCR=3D0x123
+[   19.694889][  T113] debounce, SCR=3D0x123
+[   19.703847][  T113] debounce, SCR=3D0x123
+[   19.712805][  T113] debounce, SCR=3D0x123
+[   19.721782][  T113] debounce, SCR=3D0x123
+[   19.730760][  T113] debounce, SCR=3D0x123
+[   19.734699][  T113] resume, return at end of function
+[   19.738587][  T113] hardreset, Offline=3D>Online
+[   19.748146][  T113] hardreset, after check_ready
+[   19.748363][  T113] ata2.01: SATA link up 3.0 Gbps (SStatus 123 SContr=
+ol 300)
+...
+
+
+I had the impression that speed always starts low and is negociated up (1=
+.5 -> 3 -> 6), not starting high and decreased. How would negociation wor=
+k if the speed is too high and one of the devices can't communicate?
+
+I tried the pmp box on other computers. ATI/AMD AHCI, Jmicron PATA/SATA c=
+ombo card, Intel ICH7. None of these have any errors in the log.
+
+Marius Dinu
 
