@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F4EC4332F
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 01:56:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A5E3C4332F
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 02:01:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbiLIB4U (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Dec 2022 20:56:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53686 "EHLO
+        id S229993AbiLICBq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Dec 2022 21:01:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230049AbiLIBzs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 20:55:48 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 571C07D05B
-        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 17:54:29 -0800 (PST)
+        with ESMTP id S229538AbiLICBn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2022 21:01:43 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B5FB23151
+        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:01:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1670550869; x=1702086869;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=hnnJefGOEbanYyLY2oNygmUXo2NPSdyA4tdhMgHSjus=;
-  b=cLAqaB3nXqulQs/TvaQuYvZcx1TVPdc+qxz/DIatFfoWFEYxV14Z1LtP
-   pumQlJAUe+oNd+R7Wa5QfKUMGbqtvvpMPtorxh/5Rl5Ghtih6YkIelwy0
-   y94Xl1g6xBJ1rFRmUza1ar84EkOoWIFai328I7/hxxC58i1xqO8ARsbT5
-   giTewggKuTtsqC0D8MbyE8Ah0d7DgRt1EuUnpucY1TdqIyFa3+WSRoJQa
-   5CVnF+eM4IkDVFhaSRqKEPW8cIvv3/b7xhhG8w2BAzeLNAOOKnyigoEiR
-   JzbhePHiQXdAcSJRNJ1CI3qSgbXyfDXDY0dPQW4jHJq9CuaW3WwPMMa9v
+  t=1670551302; x=1702087302;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=/WLJDtdsfpshOBYc9Ij4gcgC701OUKbxKUbK7Sculwk=;
+  b=U2tVYzZ0gKJiJ9DMepjYsKwtiD29cYSiQ4YOPWJNOk/itGO3i3J585NP
+   GNASgB1sd6l6pQFre1QvV+ldWDs5HvXsZxdWYEML//XGdY6RdjScN+FdN
+   FuxZpUdpGJXh39wcNwksJX9L+sDdB7Wj1fUd6o6Qz2z5f9Hizc7tS7vD6
+   ssyNSKVh9YYRcUec1+6JJFVpAdo4QdK14l/M6Xh8Ij9Xkd1y1IiFkNrge
+   pXe4vtI8UeZ9vh2mJGjDzOtmdF979uVsgWUdUM2Xynp+Slwb/oW2GYSxO
+   i1YJcyuQL1A13OesUq5WVVp/b8nzP82XYrB3e8m6cPaoTjcRD1UKpku2I
    A==;
 X-IronPort-AV: E=Sophos;i="5.96,228,1665417600"; 
-   d="scan'208";a="223393338"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Dec 2022 09:54:23 +0800
-IronPort-SDR: eSXAlDjLvAZpFhYGrLTKcnJ2q960+pyPx8fArnQbcMHhb2R7d40BKxVec24cFo9S0xHV8EIs31
- CIVCyXo/zjlWcRZhnFeNmXrd0Z5xFt4G3r2xqtjIabLhS1POPWrNR7r+hh8q9xxMwvTUdTlHwx
- wlIAqBJ1JCQRFLjDxiDpjF3EpjOQcDPiP+y7resiRniZBTlfx06Kj/nj8qjekcZuwS9OtNE35g
- sWSlLGrGd56+/QMcb3Ak3x2NQMxEhjOCsbolYOxhLMiaLySdGlbKBv7V6ppxLxdXeWCGqEo9Ql
- sbE=
+   d="scan'208";a="218504910"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Dec 2022 10:01:41 +0800
+IronPort-SDR: X3wTMUnDs9cpXHZcAIKepu4CssstHi8cyOvw6VHNZZY4qjjHdqEqE4w1Q8bIIiUPDAQlzdX4HD
+ AWq5rR86OFIY7cNymbSpA2IcZ6GOvoAZkFNocxpLDwoI5CRW2nLuPUU9of4j2bxM0zMZsPNFDY
+ 22G8KqJWfM8pIqyzEO3sIjy5Y6Sms9eucAMnnob5l4ief77Y1ThRUmokAY2S3iuD36ehp9GXu+
+ S1f2mQbKFOfhGvJEpVjtKGZl0UYG86uCaMq5xTBITaSBa0BV5lSEAmAeE/cWUCHAOW/ULQmXqR
+ 3+A=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 17:12:52 -0800
-IronPort-SDR: iIdcKNq7FnZUSC7w1F5QstDkrskQaqN1WUr6SGcJqu3dYPhCmiofhK6M3gGO5WQPQHMeD42ivF
- owfL/AqZTlT5Z9/Jhm2g6Gl5OLjvZRfzXgTv1c9w/S3H03IVXIkBXPNV+yauxohY3g7Qe5knGW
- 3uHOxqYT6tuIs6uvutaRsUIi2TBsvpzQtPtchmXvlELt6QoogwDWWJVY+QD5bS1EhocZTOOvX/
- xzBZ6Se69SIHVXjAV+PffmEyZZyf6b0apYNKvzdn57gQy9h9lXucbPIFwTlJEYDe1+jJEBYb/F
- 9ss=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 17:20:10 -0800
+IronPort-SDR: llom9CzgeNszvpNjbMN+TmBfNyFLJO4+so828TAZUe3qvqlY/R7a90o2POoadWhbpC8hhdBfYl
+ s3uTRGtaIhFaVOao5ArYuu3ErCO8ftq955MfauvBkcazjdJ7v5Xw8xDsflepzCJijijxFfcBWJ
+ CS41slydkpcOBi2LkgZeg3sStRtqYi8jaWP/MEwMurkCOuBYfDGg9Vmkze3SDh4c3gYqtw9XUs
+ /rC0Olm2wC9LuzED5WE19t42EFd0rrfUibXwgDjj9pywHIHeTDwni0+5Pc2kVqqaSjgIRevune
+ YL4=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 17:54:24 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Dec 2022 18:01:42 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NSvG72srZz1RvTp
-        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 17:54:23 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NSvQY1Qt5z1RvTr
+        for <linux-ide@vger.kernel.org>; Thu,  8 Dec 2022 18:01:41 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,70 +56,97 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1670550863; x=1673142864; bh=hnnJefGOEbanYyLY2oNygmUXo2NPSdyA4td
-        hMgHSjus=; b=HYQXdeK+A57ttB1vkP82uCjzHKAAyP2Q0gqjmexl7Bawzvfs60h
-        EG6eb4bzdCJcKP7RdVRXigWMWecQVSQjV1kixp9dSeHa3nfInVeYdMWDBzqdDmlK
-        4ybqmZu6Kt2t4JAGOoAne0mfROBfdzOJBm5nTiM3UbcTMlJhnFam9On05UIwUNIX
-        26s08FM5sk/6BoaeVz34nCr1KU4C3m+vsQdN+i5lEmWq78Ww/wMi6qVhG3SbsAts
-        G08K1ud2Due+CaW+qSUCo1FbM4VozSXpEddsPZwZAdOENUCYtS62NC55uupJcMn4
-        L3mDV1uGkh+2AFUZ5qIljQmMhnQ1MVtOdHw==
+        1670551300; x=1673143301; bh=/WLJDtdsfpshOBYc9Ij4gcgC701OUKbxKUb
+        K7Sculwk=; b=FbnuJq0Mv5I3k003RsON7j6zUbJ7H6VQB5B2E8ujE33yROkCsha
+        XUKkPX9oGOAkuBUje9aMs58y0ep3fV8TNRkHQ9YzptjMez7tesWHvLfuY4Pzx6Eo
+        MAMQErJ5uunDK1BMFiSp8YDrivBCHDDGWG04p22XDB0ZQKoaAJ0edRgz45WPhn9x
+        /arcNWF68lYDRa1bWVlpfmTIvV/CTh6D9tFeBDLET794afdxVrHrJCwEjzlIEwql
+        Kk6L5Bol+DigkANyDwyON2WRI0VWdIlh9mKjHiLv97IQR6IZ/IK7PsTbZO4foors
+        4uol3MtBBGjbd4QYQy6GLAUSfOm1bm0zKTQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 7pQddn8WM-C6 for <linux-ide@vger.kernel.org>;
-        Thu,  8 Dec 2022 17:54:23 -0800 (PST)
+        with ESMTP id lr9yjLuRSxYp for <linux-ide@vger.kernel.org>;
+        Thu,  8 Dec 2022 18:01:40 -0800 (PST)
 Received: from [10.225.163.85] (unknown [10.225.163.85])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NSvG64Bqrz1RvLy;
-        Thu,  8 Dec 2022 17:54:22 -0800 (PST)
-Message-ID: <2964a457-4b27-82e2-57a8-646370f0a4d4@opensource.wdc.com>
-Date:   Fri, 9 Dec 2022 10:54:21 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NSvQX3C3tz1RvLy;
+        Thu,  8 Dec 2022 18:01:40 -0800 (PST)
+Message-ID: <2911ead1-c458-30f7-47a8-5cce343ddff6@opensource.wdc.com>
+Date:   Fri, 9 Dec 2022 11:01:39 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.5.0
-Subject: Re: Bug report for ahci-mvebu driver
+Subject: Re: [PATCH v3] libata/ahci: Fix PCS quirk application for suspend
 Content-Language: en-US
-To:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>
-Cc:     marius@psihoexpert.ro, linux-ide@vger.kernel.org
-References: <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
- <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
- <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
- <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
- <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
- <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
- <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
- <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
- <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
- <c403c1dd-6478-09a3-f8b4-98026eb16c99@opensource.wdc.com>
- <20221208212616.ghplickz23h3iv3y@pali>
+To:     Adam Tukaj <grozzly@protonmail.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+References: <OM8HSmyIGyT2XF-f70AR7JA5kLpuIYEu5mYEIpyUT-4CC-u7ezc6po32ZIGOSN_7PlsF0RhOvUs8HpVJiAHGrh2ytgiBEltBpz0MuKiy-vg=@protonmail.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20221208212616.ghplickz23h3iv3y@pali>
+In-Reply-To: <OM8HSmyIGyT2XF-f70AR7JA5kLpuIYEu5mYEIpyUT-4CC-u7ezc6po32ZIGOSN_7PlsF0RhOvUs8HpVJiAHGrh2ytgiBEltBpz0MuKiy-vg=@protonmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/9/22 06:26, Pali Roh=C3=A1r wrote:
-> On Tuesday 06 December 2022 15:08:33 Damien Le Moal wrote:
->> This essentially disables the use of ahci_mvebu_stop_engine() function=
- for
->> your adapter, that is, it assumes that your newer adapter is not subje=
-ct
->> to errata Ref#226.
->=20
-> Just to make it clear, errata Ref#226 is for Armada 3720. Armada 385 is
-> 32-bit and is _older_ product than 64-bit Armada 3720. Marvell naming
-> convention is... well unintuitive.
+On 12/9/22 00:25, Adam Tukaj wrote:
+> Since kernel 5.3.4 my laptop (ICH8M controller) does not see Kingston
+> SV300S37A60G SSD disk connected into a SATA connector on wake from suspend.
+> The problem was introduced in c312ef176399 "libata/ahci: Drop PCS quirk for
+> Denverton and beyond": the quirk is not applied on wake from suspend as it
+> originally was.
+> 
+> It is worth to mention the commit contained another bug: the quirk is not
+> applied at all to controllers which require it. The fix 09d6ac8dc51a
+> "libata/ahci: Fix PCS quirk application" landed in 5.3.8. So testing my
+> patch anywhere between c312ef176399 and 09d6ac8dc51a is pointless.
+> 
+> Not all disks trigger the problem. For example nothing bad happens with
+> Western Digital WD5000LPCX HDD.
+> 
+> Test hardware:
+> - Acer 5920G with ICH8M SATA controller
+> - sda: some SATA HDD connnected into the DVD drive IDE port with a SATA-IDE
+> caddy. It is a boot disk
+> - sdb: Kingston SV300S37A60G SSD connected into the only SATA port
+> 
+> Sample "dmesg --notime | grep -E '^(sd |ata)'" output on wake:
+> 
+> sd 0:0:0:0: [sda] Starting disk
+> sd 2:0:0:0: [sdb] Starting disk
+> ata4: SATA link down (SStatus 4 SControl 300)
+> ata3: SATA link down (SStatus 4 SControl 300)
+> ata1.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
+> ata1.00: ACPI cmd ef/03:42:00:00:00:a0 (SET FEATURES) filtered out
+> ata1: FORCE: cable set to 80c
+> ata5: SATA link down (SStatus 0 SControl 300)
+> ata3: SATA link down (SStatus 4 SControl 300)
+> ata3: SATA link down (SStatus 4 SControl 300)
+> ata3.00: disabled
+> sd 2:0:0:0: rejecting I/O to offline device
+> ata3.00: detaching (SCSI 2:0:0:0)
+> sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_NO_CONNECT
+> 	driverbyte=DRIVER_OK
+> sd 2:0:0:0: [sdb] Synchronizing SCSI cache
+> sd 2:0:0:0: [sdb] Synchronize Cache(10) failed: Result:
+> 	hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 2:0:0:0: [sdb] Stopping disk
+> sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET
+> 	driverbyte=DRIVER_OK
+> 
+> c312ef176399 dropped ahci_pci_reset_controller() which internally calls
+> ahci_reset_controller() and applies the PCS quirk if needed after that. It
+> was called each time a reset was required instead of just
+> ahci_reset_controller(). This patch puts the function back in place.
+> 
+> Fixes: c312ef176399 ("libata/ahci: Drop PCS quirk for Denverton and beyond")
+> Signed-off-by: Adam Vodopjan <grozzly@protonmail.com>
 
-ah ! I thought the reverse :) Indeed not intuitive...
+Looks good now. I will queue this up for 6.2 and add cc: stable.
+Thanks.
 
-> In my opinion Marvell tried to fix A385 errata Ref#FE-8889968 in its ne=
-w
-> A3720 product but broke something different which introduced a new HW
-> errata Ref#226.
-
---=20
+-- 
 Damien Le Moal
 Western Digital Research
 
