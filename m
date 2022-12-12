@@ -2,302 +2,219 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 017C8C4332F
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Dec 2022 18:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6859C4167B
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Dec 2022 05:08:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229512AbiLISbC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Dec 2022 13:31:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55368 "EHLO
+        id S229639AbiLLFIt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Dec 2022 00:08:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229976AbiLISbB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2022 13:31:01 -0500
-Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52B5C37F82
-        for <linux-ide@vger.kernel.org>; Fri,  9 Dec 2022 10:30:59 -0800 (PST)
-dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
-        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
-        bh=gxBfnI8iKRP/VOgfr/9zUJ6HbICQnv1fEVkbVw7nEQw=;
-        b=ZIMSdYKi91lawK6G0TpD/tly8dyoFixoVVuHvSpVSAE0iJMOKjwuXvzcS60m2zmCAkOgFygoOYAq+ka/g1ciWoX3DX7Dkg3EPOIUtlqbnNayknTJlkaQs39Ur7MWTs0AMpXC+jXAnfPwWTPo9LVb+pfxlA7HDVD4D0fHeXaAYOJVAD4kzDYMQijUV7z80vSUQ2IwDrp0EeJKU5sjx0qDRd1D0Wxa1lnSyRJjyuF71kMJC62W0Wx+gIz6WU
-        9sOMatBW2ygVL2tl3MFOUON7OWfqcJ4jQsjqA0BBdFAwauWPRFJmesYmwKnEZaIPrFAG9EQH/tZEaWqt/qOaI74UpP2w==
-Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
-        by mx1.wiredblade.com with ESMTPA
-        ; Fri, 9 Dec 2022 18:30:55 +0000
+        with ESMTP id S229379AbiLLFIs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2022 00:08:48 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09E2495BD
+        for <linux-ide@vger.kernel.org>; Sun, 11 Dec 2022 21:08:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1670821725; x=1702357725;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=yEH3o1hzWUGdBvpFj3bVzW8li4cshnUBhG7ggJisbuQ=;
+  b=iN6fLsvKIxVUuzhYhpZ+qdBWKSsOaAT9VHRF5gj6LJfYGtq62wuCmRCs
+   jx9UiRo3tQQQGKRdIzi5lE/h/m5TbF+xPAC4u8Ue1G2rrbAnBlDz8vOH6
+   kydgEaz1sPCk/dZCT5TtP79KwDtFKqJHuiD8IkHdbVFhyx5SxPMNojE88
+   UBDwGDyONjBhvbcruRdF/fZ3AAOzLQYjrOwmgotEI51BgUZgsK5SMYe+T
+   BatiWl/cdHyBuQmNYvcEDnXL8XHxRvxYN19CWVNrO+AbSWHWt/I+/U8RH
+   k1mBZDL/2k6IEUzIdemiBDNQZGQUhCD3dUkjXOuRmNWgAebNtBn+4NjoL
+   A==;
+X-IronPort-AV: E=Sophos;i="5.96,237,1665417600"; 
+   d="scan'208";a="216618418"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Dec 2022 13:08:44 +0800
+IronPort-SDR: 5KYnvB7+ThEkJXonz6ZjJ+bR1T/jx5Brt8C8+mWp6Qia5FS2qu+X/RRU5j8EJLK3dQ30yoeLdx
+ 1PhHPexvXdoWENGe85XSw65ma2sIad5I0HsoCInBBhlJNCQ1nfNmJctJS2i1PsOCHRjPJHCj32
+ oFfuiKsUIxAg4ZqkyfF2YBqa5wUZiqBeZ9MsdSxe3RM4NjzkmtTbmf1d1+B26LgowWUBP9PcjT
+ 6iqi9VUbeRFQm+7q5RMmNrYi3kT20aGO4mSUXbZlMQlNJKBb4BnFLpjfEU5Ovd346EpsNjywY6
+ wZA=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Dec 2022 20:21:25 -0800
+IronPort-SDR: V5P5knK4Q4m3ycFn8kdAyIU/BGLGJ4lkEgCgRSkjQ2gyrDWMzoKhUMgIQEL7Ru1tM6gRLuHvNV
+ i0LKqe2W6SHucZ5RNHsLTRudHE0dc2YQewM5XgYlUOo9m/EEm6FO53PFjhCMyRCrDS2qGVku4S
+ udcKCOxokVxffTaa4VwBq8OEDEWeXe0d8Ak3FGXZcmK1dhMuKsSEQ2LJkzr2BjKkm0+FKWfqg8
+ RZrLp2fipK47N/Ga3uC++fZr81HYJwS+jbgeNpY4OW3uDefY8xnmryWEFHeRg64WzL6qvx1zWm
+ CyY=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Dec 2022 21:08:44 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NVqR00tnrz1RvTp
+        for <linux-ide@vger.kernel.org>; Sun, 11 Dec 2022 21:08:44 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1670821723;
+         x=1673413724; bh=yEH3o1hzWUGdBvpFj3bVzW8li4cshnUBhG7ggJisbuQ=; b=
+        rKd0P1gkBvPzfmplEPm735WxUazUp1hYSneOaL5BDoQLFa35LJF5ezfKT3XpEzhm
+        o7K+34rwr25FiXi568oSkpAud9ylkaQOybDNEzxHP+anEu2wCObJs9kwh4cgLZdF
+        heXokCmZzLzku81mnHW2vavhVf8GbP74emh03zNOX5kvmzUMriDlmvwzvh1SMJUj
+        DpqP2Z8dWk+wZ7Hx5WNrWNcaS1cSn1YyidkeJvtL+kEia8CcIWymNOVObrI+UXhR
+        aElbb/xi3S/RXIcl3V2H2bp7nvB2g+IUoj24YfUGCG+5Mqax4isjFmhiZWdiDMIt
+        693SjZFSkQBhu5+Hz6bGcA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id GZj_pKEdWoZN for <linux-ide@vger.kernel.org>;
+        Sun, 11 Dec 2022 21:08:43 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NVqQz1YJkz1RvLy;
+        Sun, 11 Dec 2022 21:08:42 -0800 (PST)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Subject: [GIT PULL] ata changes for 6.2
+Date:   Mon, 12 Dec 2022 14:08:41 +0900
+Message-Id: <20221212050841.1877401-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Date:   Fri, 09 Dec 2022 18:30:56 +0000
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-X-Mailer: RainLoop/1.16.0
-From:   marius@psihoexpert.ro
-Message-ID: <b6d818c162b14cc508f5cdb14c6e88a9@psihoexpert.ro>
-Subject: Re: Bug report for ahci-mvebu driver
-To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org
-In-Reply-To: <7521d86e-a83e-7972-a4cc-55dd7155fa43@opensource.wdc.com>
-References: <7521d86e-a83e-7972-a4cc-55dd7155fa43@opensource.wdc.com>
- <1b1f8ab0-9a2d-93e3-66f0-18597e80b790@opensource.wdc.com>
- <125bd8a6-7a1c-cd08-b5ee-da5a24f79f21@opensource.wdc.com>
- <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
- <a1b3b74b-1548-44d9-7d72-8eb428fa1788@opensource.wdc.com>
- <0ba8ebf7-6e6c-e63d-32c4-44d97898be1d@opensource.wdc.com>
- <126ce7f2-3de2-9e75-7920-09d78c224d76@opensource.wdc.com>
- <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
- <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
- <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
- <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
- <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
- <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
- <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
- <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
- <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
- <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
- <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
- <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
-X-Originating-IP: 84.232.129.15
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-December 9, 2022 11:28 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc=
-.com> wrote:
+Linus,
 
->> [ 19.006105][ T113] Reconfig spd
->=20
->=20Which function did you add this message to ?
+The following changes since commit 9abf2313adc1ca1b6180c508c25f22f9395cc7=
+80:
 
-sata_link_hardreset(), inside if(sata_set_spd_needed(link)){} condition,
-but I replaced it with detailed debug inside sata_set_spd_needed() and __=
-_sata_set_spd_needed()
+  Linux 6.1-rc1 (2022-10-16 15:36:24 -0700)
 
-I ran the tests again with the new debug messages.
-These are kernel boot logs with eSATA cable already connected.
-I selected only the interesting lines to make it easy to read.
+are available in the Git repository at:
 
----- force 1.5Gbps ----
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
+ags/ata-6.2-rc1
 
-[ 4.362670][ T1] ahci-mvebu f10a8000.sata: AHCI 0001.0000 32 slots 2 port=
-s 6 Gbps 0x3 impl platform
-mode
-[ 4.372489][ T1] ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only=
- pmp fbs pio slum part sxs
-[ 4.501238][ T1] ata1: SCR_CONTROL =3D 0x0
-[ 4.505468][ T1] ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
- port 0x100 irq 42
-[ 4.514123][ T1] ata2: SCR_CONTROL =3D 0x0
-[ 4.518345][ T1] ata2: FORCE: PHY spd limit set to 1.5Gbps
-[ 4.524121][ T1] ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
- port 0x180 irq 42
-[ 4.533000][ T1] driver: 'ahci-mvebu': driver_bound: bound to device 'f10=
-a8000.sata'
-[ 4.533531][ T107] hardreset, Online=3D>Offline
-[ 4.541075][ T107] sata_set_spd_needed, scontrol=3D0x0
-[ 4.545587][ T107] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
-[ 4.559662][ T107] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
-[ 4.559667][ T107] __sata_set_spd_needed, target=3D0x0
-[ 4.559671][ T107] __sata_set_spd_needed, spd=3D0x0
-[ 4.559675][ T107] __sata_set_spd_needed, final *scontrol=3D0x0
-[ 4.560898][ T107] resume, do loop
-[ 4.571158][ T112] hardreset, Online=3D>Offline
-[ 4.582480][ T112] sata_set_spd_needed, scontrol=3D0x0
-[ 4.593173][ T112] __sata_set_spd_needed, initial limit=3D0x1
-[ 4.601251][ T112] __sata_set_spd_needed, corrected limit=3D0x1
-[ 4.611322][ T112] __sata_set_spd_needed, target=3D0x1
-[ 4.627598][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 4.627602][ T112] __sata_set_spd_needed, final *scontrol=3D0x10
-[ 4.627608][ T112] __sata_set_spd_needed, initial limit=3D0x1  <--- why d=
-oes it run twice?
-[ 4.627611][ T112] __sata_set_spd_needed, corrected limit=3D0x1
-[ 4.627615][ T112] __sata_set_spd_needed, target=3D0x1
-[ 4.627619][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 4.627622][ T112] __sata_set_spd_needed, final *scontrol=3D0x314
-[ 4.628702][ T112] resume, do loop
-[ 4.794479][ T107] resume, after do loop
-[ 4.800859][ T107] debounce, SCR=3D0x0 <---- T107 is probably ata1, not c=
-onnected
-[ 4.805936][ T107] debounce, SCR=3D0x0
-[ 4.814690][ T107] debounce, SCR=3D0x0
-[ 4.822841][ T107] debounce, SCR=3D0x0
-[ 4.836237][ T107] debounce, SCR=3D0x0
-[ 4.845368][ T107] debounce, SCR=3D0x0
-[ 4.855008][ T107] debounce, SCR=3D0x0
-[ 4.864502][ T112] resume, after do loop
-[ 4.869198][ T107] debounce, SCR=3D0x0
-[ 4.877867][ T112] debounce, SCR=3D0x113 <---- T112 is probably ata2, lin=
-k detected
-[ 4.886183][ T107] debounce, SCR=3D0x0
-[ 4.894861][ T107] resume, return at end of function
-[ 4.903009][ T107] hardreset, ata_phys_link_offline check failed
-[ 4.913867][ T107] ata1: SATA link down (SStatus 0 SControl 300)
-[ 4.924894][ T112] debounce, SCR=3D0x113
-...
-[ 5.867867][ T112] ata2.00: SCR_CONTROL =3D 0x300
-[ 5.872520][ T112] ata2.00: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.883284][ T112] ata2.01: SCR_CONTROL =3D 0x300
-[ 5.887960][ T112] ata2.01: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.888111][ T112] ata2.02: SCR_CONTROL =3D 0x300
-[ 5.901206][ T112] ata2.02: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.919553][ T112] ata2.03: SCR_CONTROL =3D 0x300
-[ 5.930054][ T112] ata2.03: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.956888][ T112] ata2.04: SCR_CONTROL =3D 0x300
-[ 5.968103][ T112] ata2.04: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.984053][ T112] ata2.05: SCR_CONTROL =3D 0x300
-[ 5.988735][ T112] ata2.05: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.988858][ T112] ata2.06: SCR_CONTROL =3D 0x300
-[ 5.988865][ T112] ata2.06: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.988947][ T112] ata2.07: SCR_CONTROL =3D 0x300
-[ 5.988953][ T112] ata2.07: FORCE: PHY spd limit set to 1.5Gbps
-[ 5.997728][ T112] ata2.00: hard resetting link
-[ 6.008378][ T112] hardreset, Online=3D>Offline
-[ 6.025110][ T112] sata_set_spd_needed, scontrol=3D0x300
-[ 6.039361][ T112] __sata_set_spd_needed, initial limit=3D0x1
-[ 6.049281][ T112] __sata_set_spd_needed, corrected limit=3D0x1
-[ 6.064930][ T112] __sata_set_spd_needed, target=3D0x1
-[ 6.064935][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 6.064939][ T112] __sata_set_spd_needed, final *scontrol=3D0x310
-[ 6.097506][ T112] __sata_set_spd_needed, initial limit=3D0x1
-[ 6.108372][ T112] __sata_set_spd_needed, corrected limit=3D0x1
-[ 6.118892][ T112] __sata_set_spd_needed, target=3D0x1
-[ 6.118897][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 6.129664][ T112] __sata_set_spd_needed, final *scontrol=3D0x310
-[ 6.153117][ T112] resume, do loop
-[ 6.387397][ T112] resume, after do loop
-[ 6.394052][ T112] debounce, SCR=3D0x123
-[ 6.414455][ T112] debounce, SCR=3D0x123
-[ 6.427772][ T112] debounce, SCR=3D0x123
-[ 6.436940][ T112] debounce, SCR=3D0x123
-[ 6.446566][ T112] debounce, SCR=3D0x123
-[ 6.456201][ T112] debounce, SCR=3D0x123
-[ 6.461379][ T112] debounce, SCR=3D0x123
-[ 6.470664][ T112] debounce, SCR=3D0x123
-[ 6.494546][ T112] debounce, SCR=3D0x123
-[ 6.497712][ T112] resume, return at end of function
-[ 6.512188][ T112] hardreset, Offline=3D>Online
-[ 6.527056][ T112] hardreset, after check_ready
-[ 6.538540][ T112] ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 3=
-00)
+for you to fetch changes up to f07788079f515ca4a681c5f595bdad19cfbd7b1d:
 
----- force 3.0Gbps ----
+  ata: ahci: fix enum constants for gcc-13 (2022-12-06 14:33:30 +0900)
 
-[ 4.364181][ T1] ahci-mvebu f10a8000.sata: AHCI 0001.0000 32 slots 2 port=
-s 6 Gbps 0x3 impl platform
-mode
-[ 4.374001][ T1] ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only=
- pmp fbs pio slum part sxs
-[ 4.501990][ T1] ata1: SCR_CONTROL =3D 0x0
-[ 4.506221][ T1] ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
- port 0x100 irq 42
-[ 4.514896][ T1] ata2: SCR_CONTROL =3D 0x0
-[ 4.519102][ T1] ata2: FORCE: PHY spd limit set to 3.0Gbps
-[ 4.524894][ T1] ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
- port 0x180 irq 42
-[ 4.533679][ T1] driver: 'ahci-mvebu': driver_bound: bound to device 'f10=
-a8000.sata'
-[ 4.541836][ T1] bus: 'platform': really_probe: bound device f10a8000.sat=
-a to driver ahci-mvebu
-[ 4.544628][ T107] hardreset, Online=3D>Offline
-[ 4.550844][ T107] sata_set_spd_needed, scontrol=3D0x0
-[ 4.555435][ T107] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
-[ 4.565341][ T107] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
-[ 4.576197][ T107] __sata_set_spd_needed, target=3D0x0
-[ 4.576202][ T107] __sata_set_spd_needed, spd=3D0x0
-[ 4.576206][ T107] __sata_set_spd_needed, final *scontrol=3D0x0
-[ 4.590311][ T107] resume, do loop
-[ 4.598257][ T112] hardreset, Online=3D>Offline
-[ 4.615265][ T112] sata_set_spd_needed, scontrol=3D0x0
-[ 4.629198][ T112] __sata_set_spd_needed, initial limit=3D0x3
-[ 4.640664][ T112] __sata_set_spd_needed, corrected limit=3D0x3
-[ 4.640668][ T112] __sata_set_spd_needed, target=3D0x2
-[ 4.640672][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 4.652837][ T112] __sata_set_spd_needed, final *scontrol=3D0x20
-[ 4.663171][ T112] __sata_set_spd_needed, initial limit=3D0x3
-[ 4.674127][ T112] __sata_set_spd_needed, corrected limit=3D0x3
-[ 4.687268][ T112] __sata_set_spd_needed, target=3D0x2
-[ 4.687273][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 4.687277][ T112] __sata_set_spd_needed, final *scontrol=3D0x324
-[ 4.688355][ T112] resume, do loop
-[ 4.824481][ T107] resume, after do loop
-[ 4.833744][ T107] debounce, SCR=3D0x0
-...
-[ 4.916944][ T107] debounce, SCR=3D0x0
-[ 4.924448][ T112] resume, after do loop
-[ 4.930813][ T107] debounce, SCR=3D0x0
-[ 4.940447][ T107] resume, return at end of function
-[ 4.948608][ T107] hardreset, ata_phys_link_offline check failed
-[ 4.958306][ T107] ata1: SATA link down (SStatus 0 SControl 300)
-[ 4.958766][ T112] debounce, SCR=3D0x100
-[ 4.974540][ T112] debounce, SCR=3D0x100
-[ 4.984450][ T112] debounce, SCR=3D0x100
-[ 4.998528][ T112] debounce, SCR=3D0x100
-[ 5.006870][ T112] debounce, SCR=3D0x101
-[ 5.016032][ T112] debounce, SCR=3D0x100
+----------------------------------------------------------------
+ata changes for 6.2
 
----- nolpm ----
+ata changes fro 6.2 include the ususal set of driver fixes and
+improvements as well as several patches improving libata core in
+preparation of the introduction of the support for the command duration
+limits feature. In more details:
 
-[ 4.364384][ T1] ahci-mvebu f10a8000.sata: AHCI 0001.0000 32 slots 2 port=
-s 6 Gbps 0x3 impl platform
-mode
-[ 4.374205][ T1] ahci-mvebu f10a8000.sata: flags: 64bit ncq sntf led only=
- pmp fbs pio slum part sxs
-[ 4.502855][ T1] ata1: SCR_CONTROL =3D 0x0
-[ 4.507087][ T1] ata1: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
- port 0x100 irq 42
-[ 4.515761][ T1] ata2: SCR_CONTROL =3D 0x0
-[ 4.519968][ T1] ata2: SATA max UDMA/133 mmio [mem 0xf10a8000-0xf10a9fff]=
- port 0x180 irq 42
-[ 4.528704][ T1] driver: 'ahci-mvebu': driver_bound: bound to device 'f10=
-a8000.sata'
-[ 4.536860][ T1] bus: 'platform': really_probe: bound device f10a8000.sat=
-a to driver ahci-mvebu
-[ 4.544628][ T107] hardreset, Online=3D>Offline
-[ 4.545867][ T107] sata_set_spd_needed, scontrol=3D0x0
-[ 4.550348][ T107] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
-[ 4.560435][ T107] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
-[ 4.571308][ T107] __sata_set_spd_needed, target=3D0x0
-[ 4.583386][ T107] __sata_set_spd_needed, spd=3D0x0
-[ 4.599648][ T107] __sata_set_spd_needed, final *scontrol=3D0x0
-[ 4.615974][ T107] resume, do loop
-[ 4.627876][ T112] hardreset, Online=3D>Offline
-[ 4.638396][ T112] sata_set_spd_needed, scontrol=3D0x0
-[ 4.647521][ T112] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
-[ 4.660915][ T112] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
-[ 4.673702][ T112] __sata_set_spd_needed, target=3D0x0
-[ 4.686663][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 4.686668][ T112] __sata_set_spd_needed, final *scontrol=3D0x0
-[ 4.688105][ T112] resume, do loop
-[ 4.854467][ T107] resume, after do loop
-[ 4.863650][ T107] debounce, SCR=3D0x0
-[ 4.873874][ T107] debounce, SCR=3D0x0
-[ 4.882559][ T107] debounce, SCR=3D0x0
-[ 4.891306][ T107] debounce, SCR=3D0x0
-[ 4.901119][ T107] debounce, SCR=3D0x0
-[ 4.910367][ T107] debounce, SCR=3D0x0
-[ 4.915322][ T112] resume, after do loop
-[ 4.920379][ T107] debounce, SCR=3D0x0
-[ 4.927643][ T112] debounce, SCR=3D0x100
-[ 4.936031][ T107] debounce, SCR=3D0x0
-[ 4.944728][ T112] debounce, SCR=3D0x100
-[ 4.953532][ T107] debounce, SCR=3D0x0
-[ 4.962475][ T107] resume, return at end of function
-[ 4.970650][ T107] hardreset, ata_phys_link_offline check failed
-[ 4.980376][ T107] ata1: SATA link down (SStatus 0 SControl 300)
-[ 4.991536][ T112] debounce, SCR=3D0x100
-[ 5.007097][ T112] debounce, SCR=3D0x100
-[ 5.016660][ T112] debounce, SCR=3D0x100
-[ 5.025693][ T112] debounce, SCR=3D0x100
-[ 5.030094][ T112] resume, return at end of function
-[ 5.033962][ T112] hardreset, ata_phys_link_offline check failed
-[ 5.043999][ T112] ata2: SATA link down (SStatus 101 SControl 300)
-[ 5.054652][ T112] hardreset, Online=3D>Offline
-[ 5.067061][ T112] sata_set_spd_needed, scontrol=3D0x300
-[ 5.067066][ T112] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
-[ 5.076006][ T112] __sata_set_spd_needed, corrected limit=3D0xFFFFFFFF
-[ 5.076010][ T112] __sata_set_spd_needed, target=3D0x0
-[ 5.076014][ T112] __sata_set_spd_needed, spd=3D0x0
-[ 5.076018][ T112] __sata_set_spd_needed, final *scontrol=3D0x300
-[ 5.077276][ T112] resume, do loop
-[ 5.314471][ T112] resume, after do loop
-[ 5.364488][ T112] debounce, SCR=3D0x100
-... and doesn't work.
+  - Define the missing COMPLETED sense key in scsi header (from me).
 
+  - Several patches to improve libata handling of the status of
+    completed commands and the retry and sense data reported to the scsi
+    layer for failed commands. In particular, this widen the support for
+    NCQ autosense to all drives that support this feature instead of
+    restricting this feature use to ZAC drives only (from Niklas).
 
-Marius Dinu
+  - Cleanup of the pata_mpc52xx and sata_dwc_460ex drivers to remove the
+    use of the deprecated NO_IRQ macro (from Christophe).
 
+  - Fix build dedependency on OF vs use of the of_match_ptr() macro to
+    avoid build errors with the sata_gemini and pata_ftide010 drivers
+    (from me).
+
+  - Some libata cleanups using the new helper function
+    ata_port_is_frozen() (from Niklas).
+
+  - Improve internal command handling by not retrying commands that
+    failed with a timeout (from Niklas).
+
+  - Remove code for several unused libata helper functions (from
+    Niklas).
+
+  - Remove the palmchip pata_bk3710 driver. A couple of other driver
+    removal should come in through the arm tree pull request (from
+    Arnd).
+
+  - Remove unused variable and function in the sata_dwc_460ex driver and
+    libata-sff code (from Colin and Sergey).
+
+  - Minor cleanup of the pata_ep93xx driver platform code (from
+    Minghao).
+
+  - Remove the unnecessary linux/msi.h include from the ahci driver
+    (from Thomas).
+
+  - Changes to libata enum constants definitions to avoid warnings with
+    gcc-13 (from Arnd).
+
+----------------------------------------------------------------
+Arnd Bergmann (2):
+      ata: remove palmchip pata_bk3710 driver
+      ata: ahci: fix enum constants for gcc-13
+
+Christophe Leroy (2):
+      ata: pata_mpc52xx: Replace NO_IRQ with 0
+      ata: sata_dwc_460ex: Check !irq instead of irq =3D=3D NO_IRQ
+
+Colin Ian King (1):
+      ata: sata_dwc_460ex: remove variable num_processed
+
+Damien Le Moal (3):
+      scsi: Define the COMPLETED sense key
+      ata: sata_gemini: Remove dependency on OF for compile tests
+      ata: pata_ftide010: Remove build dependency on OF
+
+Minghao Chi (1):
+      ata: pata_ep93xx: use devm_platform_get_and_ioremap_resource()
+
+Niklas Cassel (13):
+      ata: libata: fix NCQ autosense logic
+      ata: libata: clarify when ata_eh_request_sense() will be called
+      ata: libata: only set sense valid flag if sense data is valid
+      ata: libata: fetch sense data for ATA devices supporting sense repo=
+rting
+      ata: libahci: read correct status and error field for NCQ commands
+      ata: add ata_port_is_frozen() helper
+      ata: make use of ata_port_is_frozen() helper
+      scsi: libsas: make use of ata_port_is_frozen() helper
+      ata: libata-core: do not retry reading the log on timeout
+      ata: remove unused helper ata_id_lba48_enabled()
+      ata: remove unused helper ata_id_flush_enabled()
+      ata: remove unused helper ata_id_flush_ext_enabled()
+      ata: libata: fix commands incorrectly not getting retried during NC=
+Q error
+
+Sergey Shtylyov (1):
+      ata: libata-sff: kill unused ata_sff_busy_sleep()
+
+Thomas Gleixner (1):
+      ata: ahci: Remove linux/msi.h include
+
+ drivers/ata/Kconfig           |  13 +-
+ drivers/ata/Makefile          |   1 -
+ drivers/ata/ahci.c            |   1 -
+ drivers/ata/ahci.h            | 245 +++++++++++++--------------
+ drivers/ata/libahci.c         |  20 ++-
+ drivers/ata/libata-acpi.c     |   4 +-
+ drivers/ata/libata-core.c     |   7 +-
+ drivers/ata/libata-eh.c       |  40 +++--
+ drivers/ata/libata-sata.c     |  50 +++++-
+ drivers/ata/libata-scsi.c     |  18 +-
+ drivers/ata/libata-sff.c      |  56 -------
+ drivers/ata/libata.h          |   1 +
+ drivers/ata/pata_bk3710.c     | 380 ------------------------------------=
+------
+ drivers/ata/pata_ep93xx.c     |   3 +-
+ drivers/ata/pata_ftide010.c   |   2 +-
+ drivers/ata/pata_mpc52xx.c    |   2 +-
+ drivers/ata/sata_dwc_460ex.c  |  12 +-
+ drivers/ata/sata_gemini.c     |   2 +-
+ drivers/ata/sata_nv.c         |   2 +-
+ drivers/ata/sata_promise.c    |   2 +-
+ drivers/ata/sata_sx4.c        |   2 +-
+ drivers/scsi/libsas/sas_ata.c |   2 +-
+ include/linux/ata.h           |  31 ----
+ include/linux/libata.h        |   7 +-
+ include/scsi/scsi_proto.h     |   4 +-
+ 25 files changed, 249 insertions(+), 658 deletions(-)
+ delete mode 100644 drivers/ata/pata_bk3710.c
