@@ -2,85 +2,120 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E53FCC4332F
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Dec 2022 21:41:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9907C4332F
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Dec 2022 22:55:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232449AbiLLVlV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Dec 2022 16:41:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37634 "EHLO
+        id S233523AbiLLWzm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Dec 2022 17:55:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229872AbiLLVlV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2022 16:41:21 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 934A0FAED
-        for <linux-ide@vger.kernel.org>; Mon, 12 Dec 2022 13:41:20 -0800 (PST)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1p4qY2-0008BP-UE; Mon, 12 Dec 2022 22:41:18 +0100
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1p4qY1-0046bv-7G; Mon, 12 Dec 2022 22:41:18 +0100
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1p4qY1-004bIk-Bt; Mon, 12 Dec 2022 22:41:17 +0100
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
+        with ESMTP id S233737AbiLLWzh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2022 17:55:37 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 46D5D1208B;
+        Mon, 12 Dec 2022 14:55:36 -0800 (PST)
+Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id EF74A7A028B;
+        Mon, 12 Dec 2022 23:55:33 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org, kernel@pengutronix.de
-Subject: [PATCH] ata: octeon: Drop empty platform remove function
-Date:   Mon, 12 Dec 2022 22:41:12 +0100
-Message-Id: <20221212214112.3775327-1-u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.38.1
+Subject: Re: [PATCH] pata_parport: add driver (PARIDE replacement)
+Date:   Mon, 12 Dec 2022 23:55:30 +0100
+User-Agent: KMail/1.9.10
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220312144415.20010-1-linux@zary.sk> <202211151556.52895.linux@zary.sk> <bfc49618-dbc3-8ffb-f536-3b4486e1980e@opensource.wdc.com>
+In-Reply-To: <bfc49618-dbc3-8ffb-f536-3b4486e1980e@opensource.wdc.com>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1119; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=Z1RqCbjDjRIoZdYTj0677xw8Feb0CeNXjw2zg0nHjrs=; b=owEBbQGS/pANAwAKAcH8FHityuwJAcsmYgBjl5/0Kime4HS5mV13/ugeXl6I6KDBzglgqbDQCDlb 3STFdGuJATMEAAEKAB0WIQR+cioWkBis/z50pAvB/BR4rcrsCQUCY5ef9AAKCRDB/BR4rcrsCZBcB/ 90pYqpDhc0Baqjq1nAKhgEtTvA16ZJVqF6h45txj8dI/TyGBx33KO7RHCEc/wheWzbxk+vNIndtQfV 2KnByA50QMidsCPJ0Bpqq/X0i0ODvj6PjR1vZJPiCcUqLpSuPmHUyiV9epv1jKWGGmWtnoSmFRtJl+ rSsjFcAL9l04jEdG4+FSrlgfitFgVtJT4xrboPdBl11DaSjJscqKaMFKz/ic6oOr8gnUV5k4rPCKvA 4LdwbEZYq9ek7ehaf2d6JUIpwLPjTkl5uhlmV4hFtAkl5R3r8edwksHMqSYpv4BeEuGmlSF9XOswqS yx3sx2N0L8CA5QLy7kzWMMGQNWm0by
-X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <202212122355.30988.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-A remove callback just returning 0 is equivalent to no remove callback
-at all. So drop the useless function.
+On Wednesday 16 November 2022 02:30:46 Damien Le Moal wrote:
+> On 2022/11/15 23:56, Ondrej Zary wrote:
+> > On Tuesday 15 November 2022, Damien Le Moal wrote:
+> >> On 11/15/22 04:25, Ondrej Zary wrote:
+> >>> On Monday 14 November 2022 09:03:28 Damien Le Moal wrote:
+> >>>> On 11/14/22 16:53, Ondrej Zary wrote:
+> >>>>> On Monday 14 November 2022, Damien Le Moal wrote:
+> >>>>>> On 11/12/22 20:17, Ondrej Zary wrote:
+> >>>>>>> On Wednesday 19 October 2022 09:34:31 Christoph Hellwig wrote:
+> >>>>>>>> It's been a while - did you get a chance to make some progress on
+> >>>>>>>> this?  Do you need any help to unblock you?
+> >>>>>>>>
+> >>>>>>>
+> >>>>>>> Sorry again, I'm back now. Trying to fix locking problems.
+> >>>>>>> Added this to each function for analysis how the functions are called wrt.
+> >>>>>>> locking:
+> >>>>>>>
+> >>>>>>> 	printk("%s, locked=%d\n", __FUNCTION__, spin_is_locked(ap->lock));
+> >>>>>>
+> >>>>>> Do you have your code somewhere that we can look at ?
+> >>>>>
+> >>>>> This is the current version with debug printks. I've also added dump_stack()
+> >>>>> to find out the code path but haven't analyzed the output yet.
+> >>>>
+> >>>> Can you send a proper patch ? Or a link to a git tree ? That is easier to
+> >>>> handle than pasted code in an email...
+> >>>
+> >>> Patch against what? I don't have a git server.
+> >>
+> >> patch against current 6.1-rc, or against an older kernel should be OK too.
+> >> But please "git send-email" a patch, or push your dev tree to github ?
+> >>
+> >>> I've done some call trace analysis. These code paths are calling
+> >>> pata_parport functions with ap->lock locked during init.
+> >>>
+> >>> Comm: kworker, Workqueue: ata_sff ata_sff_pio_task
+> >>> ata_sff_hsm_move -> ata_pio_sectors-> ata_sff_altstatus -> pata_parport_tf_read -> pata_parport_check_altstatus
+> >>> ata_sff_hsm_move -> ata_sff_altstatus -> pata_parport_tf_read -> pata_parport_check_altstatus
+> >>> ata_sff_pio_task -> ata_sff_busy_wait -> pata_parport_check_status
+> >>> ata_sff_hsm_move -> ata_wait_idle -> ata_sff_busy_wait -> pata_parport_check_status
+> >>> ata_sff_hsm_move -> ata_hsm_qc_complete -> ata_sff_irq_on -> ata_wait_idle -> ata_sff_busy_wait -> pata_parport_check_status
+> >>> ata_sff_pio_task -> ata_sff_hsm_move -> ata_pio_sectors -> ata_pio_sector -> ata_pio_xfer -> pata_parport_data_xfer
+> >>> ata_sff_pio_task -> ata_sff_hsm_move -> pata_parport_data_xfer
+> >>> ata_sff_pio_task -> ata_sff_hsm_move -> pata_parport_tf_read
+> >>> ata_sff_hsm_move -> ata_hsm_qc_complete -> ata_qc_complete -> fill_result_tf -> ata_sff_qc_fill_rtf -> pata_parport_tf_read
+> >>> ata_sff_hsm_move -> ata_pio_sectors -> ata_sff_altstatus -> pata_parport_check_altstatus
+> >>> ata_sff_hsm_move -> ata_sff_altstatus -> pata_parport_check_altstatus
+> >>>
+> >>> Comm: modprobe
+> >>> ata_host_start -> ata_eh_freeze_port -> ata_sff_freeze -> pata_parport_check_status
+> >>>
+> >>> Comm: scsi_eh_4
+> >>> ata_eh_recover -> ata_eh_reset -> ata_eh_thaw_port -> ata_sff_thaw -> ata_sff_irq_on -> ata_wait_idle -> ata_sff_busy_wait -> pata_parport_check_status
+> >>> ata_eh_reset -> ata_eh_freeze_port -> ata_sff_freeze -> pata_parport_check_status
+> >>> ata_scsi_error -> ata_scsi_port_error_handler -> ata_port_freeze -> ata_sff_freeze -> pata_parport_check_status
+> >>> ata_sff_error_handler -> pata_parport_drain_fifo -> pata_parport_check_status
+> >>
+> >> What exactly are the issues you are having with ap->lock ? It looks like
+> >> you have done a lot of analysis of the code, but without any context about
+> >> the problem, I do not understand what I am looking at.
+> >>
+> > 
+> > The problem is that pi_connect() can sleep because it calls
+> > parport_claim_or_block(). And any access (even reading ATA status register)
+> > requires pi_connect.
+> 
+> OK. Let me have a look.
+> 
 
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
----
- drivers/ata/ahci_octeon.c | 6 ------
- 1 file changed, 6 deletions(-)
+The locking problems seem not to be easily solvable. Maybe a hack that grabs
+the parport before registering ata interface (and keeps it until the
+interface is disabled) will help? That will prevent multiple chained devices
+on one parport from working but can get pata_parport moving.
 
-diff --git a/drivers/ata/ahci_octeon.c b/drivers/ata/ahci_octeon.c
-index b9460b91288f..5021ab3ede49 100644
---- a/drivers/ata/ahci_octeon.c
-+++ b/drivers/ata/ahci_octeon.c
-@@ -73,11 +73,6 @@ static int ahci_octeon_probe(struct platform_device *pdev)
- 	return 0;
- }
- 
--static int ahci_octeon_remove(struct platform_device *pdev)
--{
--	return 0;
--}
--
- static const struct of_device_id octeon_ahci_match[] = {
- 	{ .compatible = "cavium,octeon-7130-sata-uctl", },
- 	{ /* sentinel */ }
-@@ -86,7 +81,6 @@ MODULE_DEVICE_TABLE(of, octeon_ahci_match);
- 
- static struct platform_driver ahci_octeon_driver = {
- 	.probe          = ahci_octeon_probe,
--	.remove         = ahci_octeon_remove,
- 	.driver         = {
- 		.name   = "octeon-ahci",
- 		.of_match_table = octeon_ahci_match,
 
-base-commit: 830b3c68c1fb1e9176028d02ef86f3cf76aa2476
 -- 
-2.38.1
-
+Ondrej Zary
