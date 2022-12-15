@@ -2,87 +2,104 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55DB2C3DA6E
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Dec 2022 11:30:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1812FC4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Dec 2022 11:34:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229948AbiLOLas (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 15 Dec 2022 06:30:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44790 "EHLO
+        id S230196AbiLOLeR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 15 Dec 2022 06:34:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229544AbiLOLaq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 06:30:46 -0500
-Received: from mail-lj1-x235.google.com (mail-lj1-x235.google.com [IPv6:2a00:1450:4864:20::235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B76D2709;
-        Thu, 15 Dec 2022 03:30:42 -0800 (PST)
-Received: by mail-lj1-x235.google.com with SMTP id h10so9591739ljk.11;
-        Thu, 15 Dec 2022 03:30:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=EXn6HifCWq1JlSGrtQpUbdd1OwF62/y9hWZc/OllYLc=;
-        b=dj29mqLu1uJstcU8Uy3IHbOamfmYEcdN2djPk4k8Yt/F9Rzxjp89Zj9LARcjy3hpKG
-         tS3qRPZZMT3BGTzM3J8BBUWTtIu6580bI0j8VLYiz7LTOw6FTQZKuepwbfQJG7ljFi6N
-         6Ig0GRl90v9aQbaBlx7deplBDGGK7BoPl5H4pob1FozREoN/F+/cbDXqM4JD9Y5Z3WQz
-         Kf4I08KZJzJG/at3QwwuSLHi3krilsAfb9h8IWfr+VJKCbBNOKiRQcUuK2OUAntk366J
-         cbp2tqG7xaJzrfFidEs7O4a58KlmlhtNcI/VXoJz2YEljA4naAcRdzIF7qJWQNlqwox7
-         GuvQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=EXn6HifCWq1JlSGrtQpUbdd1OwF62/y9hWZc/OllYLc=;
-        b=B496ror3mPVaeXn3l+yNbXSQ/wH0ZNb4oKNd5KmECFUbr9lERPzBDPGVdUXoS8pcy/
-         /VgIx2RUqk/2TiAXO1agosqdVJKybTE9EY+AJyzCxfLpvZjVH61VRERqsZiZT/EKkOLs
-         YQ1cIyz603jm1rYGKsVHng6mfqpdJPub4uvjiDpB10BujyxDLzmyhINewIL2ZGgY5wc1
-         cqCzQsA9RxIBBnd8NmmCUPynwWSdUxSCQRvt5Y3cmJQgwnwTdEX4G+n3vofewx8kXzG/
-         eSabHyPw07VAKrczeRe3PDm5WpFhBbqbWyrutQz+zrb8IBVniBYiw5yrzXGrj4TwgUnw
-         /BUg==
-X-Gm-Message-State: ANoB5pkWpNBacLX0wKMz+GwYDavjp6g4FGfPua/ox8OnVFns5xa0700z
-        OfNWUPVAW5LMmoraP+bJQ3w0hUxNTnI=
-X-Google-Smtp-Source: AA0mqf46ZmpcIX8pzYzb5pdj2oZ9LK33Y8vdo+OgQQ4WU/Pob4sB/x/6/GAkT37d1YKUyS1/ac0RGA==
-X-Received: by 2002:a2e:9f49:0:b0:27a:1d04:6709 with SMTP id v9-20020a2e9f49000000b0027a1d046709mr7102029ljk.42.1671103840323;
-        Thu, 15 Dec 2022 03:30:40 -0800 (PST)
-Received: from [192.168.1.103] ([178.176.75.188])
-        by smtp.gmail.com with ESMTPSA id i66-20020a2e2245000000b0027a099ad7efsm805217lji.35.2022.12.15.03.30.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Dec 2022 03:30:39 -0800 (PST)
+        with ESMTP id S230194AbiLOLds (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 06:33:48 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B27971901F
+        for <linux-ide@vger.kernel.org>; Thu, 15 Dec 2022 03:33:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1671104005; x=1702640005;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=YHvfPcgbEg5SdVofoWBXfcRaaAc3DVVLJlvf2+rQYXI=;
+  b=YvD5aFtYey5u+pljrJ+1A0kSu3XpOB421Xr3TL06cTzJCWnjLkNRp0ht
+   rdLB324OrSrS2QKOb9AxZokb0MMVpngB/GyzBk8D46Zm9FTi5e3baPAY+
+   Rn21F7+UspgnaDEVpl4sIJ9GFMFQm6ZaDpvaysVKslrVZmZfPL90bVD4n
+   A5QPZt5JW2kQseyBD4c2hWT66dsknXuI5rck8bkMc4aKYlJzX5/m44fcH
+   QlmT0Doze3/0bkjs7dGBTGuNk94fiWZgiyfzh8xNXZF4a3ZHTgr/IF0ew
+   TXRuBQr3EKvNTtDQanIkpyQUpKKaTtjw0xaGIccmeTiCUtAEYRzV64PGS
+   g==;
+X-IronPort-AV: E=Sophos;i="5.96,247,1665417600"; 
+   d="scan'208";a="323083601"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Dec 2022 19:33:23 +0800
+IronPort-SDR: Eb0JDdwoI9VyUvAd4s0Oub8RC0XI6IfnK+nj8ZtsY4M2c75pzQiqupuuaCVBqwSqyHWtOkvY2I
+ xjF7+Yo6mPn0/IhS9/0pntYfzTdh0LL14mGf61DA376nhrbQNKsct1MTBJ184oHTGTz8cE+vci
+ yiqF9udMqHDX37ZDr9243BmiWff8/GJ4v+NzqZ79z0CbsE7Rxkl8IwI30nk3Znn4aG8ehxMa/L
+ /PrrnrWrv5da2XfrSvnzvifhRHQkd/pxlyv7VtmDiJpZ65yGgTRfW7v6tJucGjsJ4/xXv4aRid
+ JaA=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Dec 2022 02:45:57 -0800
+IronPort-SDR: WY7mTXgVTAJ1HEWKa9rs23z8Ok/rnoz1vZq2nB6CPdWOgpnTZ2ZXgIk8/34HS2xuZviiZBTSTL
+ TAFzjglzoe8BV7hc1PU3jNfN5P3JAP6QNPGV1UnW9CBcCx5CnAGLRDoTdJgyadXzM0CyiGm9cl
+ pjojfu3nFTGWU/wLmndNZjSBkWY03kKqEbn2rqtE3G/Uwb+gdwqDDrQRiIZrlQvOOPKWefjaOy
+ XcJG0N/oA/zaz8yQZuwXd74fjT4Sef/QauMjbd1j6LbN7+5ALPYdL2Hgc3CchLj8UQWCen/oxP
+ ZMY=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 15 Dec 2022 03:33:21 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4NXqqP0nSQz1Rwt8
+        for <linux-ide@vger.kernel.org>; Thu, 15 Dec 2022 03:33:21 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1671104000; x=1673696001; bh=YHvfPcgbEg5SdVofoWBXfcRaaAc3DVVLJlv
+        f2+rQYXI=; b=cuQFHKYoNGGowcPl4O/fsTnJpEgFSUqC7UFz9QqY5K1ryUlfXCO
+        Rr+8ftrx2X7D2SBHxxAle6cPITH4iU4CN20L66rXfJDeV8766edPXpE075RHX1Lf
+        VtD9HYbUcIsWaBQu/RgguFSyGRUt2e5Hq12ecK7DuLBhQMh/juYsADl1FtB5nGpx
+        9kyXQI5F7NeUkrUzIEMfM3TRVntFbL8/g7w7nn/bdG1T+eDeW3BWyThq2i5Sd3ka
+        Na9F7/fXNt5o7q8VTC0x9bwkkoztWRgYtZj/sbkAkUy0wYbvzjZXe9gtwByS6OHc
+        WXcCCy8aMV5gQ8FKjGEaKt91onTR4k4uvqw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 5blp_ed997hA for <linux-ide@vger.kernel.org>;
+        Thu, 15 Dec 2022 03:33:20 -0800 (PST)
+Received: from [10.225.163.96] (unknown [10.225.163.96])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4NXqqM3gqVz1RvLy;
+        Thu, 15 Dec 2022 03:33:19 -0800 (PST)
+Message-ID: <3767474a-a87c-19d5-8dd2-4f5907d1fab5@opensource.wdc.com>
+Date:   Thu, 15 Dec 2022 20:33:18 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
 Subject: Re: [PATCH v2] ata:libata-eh:Cleanup ata_scsi_cmd_error_handler
-To:     Wenchao Hao <haowenchao@huawei.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Language: en-US
+To:     Wenchao Hao <haowenchao@huawei.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 Cc:     liuzhiqiang26@huawei.com, linfeilong@huawei.com
 References: <20221215105747.1927412-1-haowenchao@huawei.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <f552f2ab-895a-14dd-d391-a7b1c9930c88@gmail.com>
-Date:   Thu, 15 Dec 2022 14:30:38 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-MIME-Version: 1.0
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
 In-Reply-To: <20221215105747.1927412-1-haowenchao@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-  The subject should really look like "ata: libata-eh: Cleanup
-ata_scsi_cmd_error_handler()"...
-
-On 12/15/22 1:57 PM, Wenchao Hao wrote:
-
+On 12/15/22 19:57, Wenchao Hao wrote:
 > If ap->ops->error_handler is NULL, just return.
 > 
 > V2:
 > - Check ap->ops->error_handler without taking the spin lock
 
-   This normally belongs under ---...
+Changelog needs to go after the "---" below your SoB.
 
+> 
 > Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
 > ---
 >  drivers/ata/libata-eh.c | 96 ++++++++++++++++++++---------------------
@@ -92,7 +109,22 @@ On 12/15/22 1:57 PM, Wenchao Hao wrote:
 > index 34303ce67c14..c445c272e77f 100644
 > --- a/drivers/ata/libata-eh.c
 > +++ b/drivers/ata/libata-eh.c
-[...]
+> @@ -565,10 +565,15 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+>  {
+>  	int i;
+>  	unsigned long flags;
+> +	struct scsi_cmnd *scmd, *tmp;
+> +	int nr_timedout = 0;
+>  
+>  	/* make sure sff pio task is not running */
+>  	ata_sff_flush_pio_task(ap);
+>  
+> +	if (!ap->ops->error_handler)
+> +		return;
+> +
+>  	/* synchronize with host lock and sort out timeouts */
+>  
+>  	/* For new EH, all qcs are finished in one of three ways -
 > @@ -584,62 +589,57 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
 >  	 * timed out iff its associated qc is active and not failed.
 >  	 */
@@ -114,7 +146,8 @@ On 12/15/22 1:57 PM, Wenchao Hao wrote:
 > -			ap->ops->lost_interrupt(ap);
 > +	/* This must occur under the ap->lock as we don't want
 
-   The multi-line comments should start with /* on its own line...
+While at it, please fix the comment style. Multi-line comments should
+start with a "/*" empty line.
 
 > +	 * a polled recovery to race the real interrupt handler
 > +	 *
@@ -168,9 +201,6 @@ On 12/15/22 1:57 PM, Wenchao Hao wrote:
 >  			}
 > +		} else {
 > +			/* Normal completion occurred after
-
-   Here as well...
-
 > +			 * SCSI timeout but before this point.
 > +			 * Successfully complete it.
 > +			 */
@@ -190,8 +220,26 @@ On 12/15/22 1:57 PM, Wenchao Hao wrote:
 > -
 > +	/* If we have timed out qcs.  They belong to EH from
 
-   And here...
+Same here. Fix the comment style please.
 
-[...]
+> +	 * this point but the state of the controller is
+> +	 * unknown.  Freeze the port to make sure the IRQ
+> +	 * handler doesn't diddle with those qcs.  This must
+> +	 * be done atomically w.r.t. setting QCFLAG_FAILED.
+> +	 */
+> +	if (nr_timedout)
+> +		__ata_port_freeze(ap);
+>  
+> -		/* initialize eh_tries */
+> -		ap->eh_tries = ATA_EH_MAX_TRIES;
+> -	}
+> +	/* initialize eh_tries */
+> +	ap->eh_tries = ATA_EH_MAX_TRIES;
+>  	spin_unlock_irqrestore(ap->lock, flags);
+>  
+>  }
 
-MBR, Sergey
+-- 
+Damien Le Moal
+Western Digital Research
+
