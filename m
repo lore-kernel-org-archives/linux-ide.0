@@ -2,56 +2,176 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECD5FC4332F
-	for <linux-ide@archiver.kernel.org>; Wed, 14 Dec 2022 09:07:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57CF7C4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Dec 2022 05:04:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237867AbiLNJHu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 14 Dec 2022 04:07:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60872 "EHLO
+        id S229493AbiLOFEo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 15 Dec 2022 00:04:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237880AbiLNJHo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2022 04:07:44 -0500
-Received: from mail.lokoho.com (mail.lokoho.com [217.61.105.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EE34BC28
-        for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2022 01:07:43 -0800 (PST)
-Received: by mail.lokoho.com (Postfix, from userid 1001)
-        id AB1198691A; Wed, 14 Dec 2022 09:06:42 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lokoho.com; s=mail;
-        t=1671008861; bh=Z0N5VlX9/JlryGOL5I747Le9USomZJCRNNGRT3LbbKc=;
-        h=Date:From:To:Subject:From;
-        b=MqSXxrpnCErsY6KOHMFpuV7TK4/4LN7QHjcCShJ1FEAFsJ1drsOTLJQ/ccf3GAWXm
-         MccJkXyOuD9DeJQWDOJ2vuXh/VKHrrCdYlfe5I8QwW4682SqOxP5NibJF244AHJxEc
-         nKqklcGLlLTvmaOkJgRQ6me5ouY892lQaVatY5M4Z9R6p2zSPHjuDkW0SvsXETNfTZ
-         YyGoIEHTJ54WtjJv/pQBozw337/yI/yfS5GKHoJ2qytyMJnav6KzYMQTwdRk95Y7nf
-         3eL/LeLA0/DuQwUyFWobvCggys8xe67y+pDDd2/cFzXSgknlqBSoLvw5nEOhffg34x
-         8zvGBtPw4KmIw==
-Received: by mail.lokoho.com for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2022 09:05:06 GMT
-Message-ID: <20221214074502-0.1.2t.9rxi.0.h7qc44j8wd@lokoho.com>
-Date:   Wed, 14 Dec 2022 09:05:06 GMT
-From:   "Adam Charachuta" <adam.charachuta@lokoho.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania?=
-X-Mailer: mail.lokoho.com
+        with ESMTP id S229453AbiLOFEn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 00:04:43 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21187537CC;
+        Wed, 14 Dec 2022 21:04:40 -0800 (PST)
+Received: from dggpemm500017.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NXg9g57VSzRppt;
+        Thu, 15 Dec 2022 13:03:35 +0800 (CST)
+Received: from build.huawei.com (10.175.101.6) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Thu, 15 Dec 2022 13:04:37 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>,
+        Wenchao Hao <haowenchao@huawei.com>
+Subject: [PATCH] ata:libata-eh:Cleanup ata_scsi_cmd_error_handler
+Date:   Thu, 15 Dec 2022 13:04:16 +0800
+Message-ID: <20221215050416.1891113-1-haowenchao@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+If ap->ops->error_handler is NULL, just go out and release the
+spinlock. This patch is just a cleanup, which would not change
+the origin error handle logic.
 
-zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
-=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
-o dalszych rozm=C3=B3w.=20
+Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+---
+ drivers/ata/libata-eh.c | 96 ++++++++++++++++++++---------------------
+ 1 file changed, 48 insertions(+), 48 deletions(-)
 
-Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
-=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
-=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
-strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 34303ce67c14..66ca3ac7cd58 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -565,6 +565,8 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ {
+ 	int i;
+ 	unsigned long flags;
++	struct scsi_cmnd *scmd, *tmp;
++	int nr_timedout = 0;
+ 
+ 	/* make sure sff pio task is not running */
+ 	ata_sff_flush_pio_task(ap);
+@@ -584,62 +586,60 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 	 * timed out iff its associated qc is active and not failed.
+ 	 */
+ 	spin_lock_irqsave(ap->lock, flags);
+-	if (ap->ops->error_handler) {
+-		struct scsi_cmnd *scmd, *tmp;
+-		int nr_timedout = 0;
+-
+-		/* This must occur under the ap->lock as we don't want
+-		   a polled recovery to race the real interrupt handler
+-
+-		   The lost_interrupt handler checks for any completed but
+-		   non-notified command and completes much like an IRQ handler.
+-
+-		   We then fall into the error recovery code which will treat
+-		   this as if normal completion won the race */
++	if (!ap->ops->error_handler)
++		goto out;
+ 
+-		if (ap->ops->lost_interrupt)
+-			ap->ops->lost_interrupt(ap);
++	/* This must occur under the ap->lock as we don't want
++	 * a polled recovery to race the real interrupt handler
++	 *
++	 * The lost_interrupt handler checks for any completed but
++	 * non-notified command and completes much like an IRQ handler.
++	 *
++	 * We then fall into the error recovery code which will treat
++	 * this as if normal completion won the race
++	 */
++	if (ap->ops->lost_interrupt)
++		ap->ops->lost_interrupt(ap);
+ 
+-		list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
+-			struct ata_queued_cmd *qc;
++	list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
++		struct ata_queued_cmd *qc;
+ 
+-			ata_qc_for_each_raw(ap, qc, i) {
+-				if (qc->flags & ATA_QCFLAG_ACTIVE &&
+-				    qc->scsicmd == scmd)
+-					break;
+-			}
++		ata_qc_for_each_raw(ap, qc, i) {
++			if (qc->flags & ATA_QCFLAG_ACTIVE &&
++			    qc->scsicmd == scmd)
++				break;
++		}
+ 
+-			if (i < ATA_MAX_QUEUE) {
+-				/* the scmd has an associated qc */
+-				if (!(qc->flags & ATA_QCFLAG_FAILED)) {
+-					/* which hasn't failed yet, timeout */
+-					qc->err_mask |= AC_ERR_TIMEOUT;
+-					qc->flags |= ATA_QCFLAG_FAILED;
+-					nr_timedout++;
+-				}
+-			} else {
+-				/* Normal completion occurred after
+-				 * SCSI timeout but before this point.
+-				 * Successfully complete it.
+-				 */
+-				scmd->retries = scmd->allowed;
+-				scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
++		if (i < ATA_MAX_QUEUE) {
++			/* the scmd has an associated qc */
++			if (!(qc->flags & ATA_QCFLAG_FAILED)) {
++				/* which hasn't failed yet, timeout */
++				qc->err_mask |= AC_ERR_TIMEOUT;
++				qc->flags |= ATA_QCFLAG_FAILED;
++				nr_timedout++;
+ 			}
++		} else {
++			/* Normal completion occurred after
++			 * SCSI timeout but before this point.
++			 * Successfully complete it.
++			 */
++			scmd->retries = scmd->allowed;
++			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
+ 		}
++	}
+ 
+-		/* If we have timed out qcs.  They belong to EH from
+-		 * this point but the state of the controller is
+-		 * unknown.  Freeze the port to make sure the IRQ
+-		 * handler doesn't diddle with those qcs.  This must
+-		 * be done atomically w.r.t. setting QCFLAG_FAILED.
+-		 */
+-		if (nr_timedout)
+-			__ata_port_freeze(ap);
+-
++	/* If we have timed out qcs.  They belong to EH from
++	 * this point but the state of the controller is
++	 * unknown.  Freeze the port to make sure the IRQ
++	 * handler doesn't diddle with those qcs.  This must
++	 * be done atomically w.r.t. setting QCFLAG_FAILED.
++	 */
++	if (nr_timedout)
++		__ata_port_freeze(ap);
+ 
+-		/* initialize eh_tries */
+-		ap->eh_tries = ATA_EH_MAX_TRIES;
+-	}
++	/* initialize eh_tries */
++	ap->eh_tries = ATA_EH_MAX_TRIES;
++out:
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ }
+-- 
+2.32.0
 
-Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
-
-
-Pozdrawiam
-Adam Charachuta
