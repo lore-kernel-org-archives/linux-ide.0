@@ -2,176 +2,57 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80F9FC4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Dec 2022 10:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D97EC4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Dec 2022 10:57:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229810AbiLOKK3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 15 Dec 2022 05:10:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33084 "EHLO
+        id S230013AbiLOK5h (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 15 Dec 2022 05:57:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229797AbiLOKK2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 05:10:28 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A31995F50;
-        Thu, 15 Dec 2022 02:10:25 -0800 (PST)
-Received: from dggpemm500017.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NXnyW4GV6zmWb9;
-        Thu, 15 Dec 2022 18:09:23 +0800 (CST)
-Received: from build.huawei.com (10.175.101.6) by
+        with ESMTP id S229966AbiLOK5e (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 05:57:34 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C104926C5;
+        Thu, 15 Dec 2022 02:57:32 -0800 (PST)
+Received: from dggpemm500017.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NXq0z2HcMzJqZS;
+        Thu, 15 Dec 2022 18:56:35 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
  dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Thu, 15 Dec 2022 18:10:23 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
+ 15.1.2375.34; Thu, 15 Dec 2022 18:57:30 +0800
+Message-ID: <02631c6e-d8b8-c6fe-7339-9471f8c13227@huawei.com>
+Date:   Thu, 15 Dec 2022 18:57:29 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH] ata:libata-eh:Cleanup ata_scsi_cmd_error_handler
+Content-Language: en-US
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>,
-        Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH] ata:libata-eh:Cleanup ata_scsi_cmd_error_handler
-Date:   Thu, 15 Dec 2022 18:09:59 +0800
-Message-ID: <20221215100959.1926459-1-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+CC:     <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>
+References: <20221215100959.1926459-1-haowenchao@huawei.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <20221215100959.1926459-1-haowenchao@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml100011.china.huawei.com (7.185.36.193) To
  dggpemm500017.china.huawei.com (7.185.36.178)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-If ap->ops->error_handler is NULL, just go out and release the
-spinlock. This patch is just a cleanup, which would not change
-the origin error handle logic.
 
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
----
- drivers/ata/libata-eh.c | 96 ++++++++++++++++++++---------------------
- 1 file changed, 48 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 34303ce67c14..66ca3ac7cd58 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -565,6 +565,8 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- {
- 	int i;
- 	unsigned long flags;
-+	struct scsi_cmnd *scmd, *tmp;
-+	int nr_timedout = 0;
- 
- 	/* make sure sff pio task is not running */
- 	ata_sff_flush_pio_task(ap);
-@@ -584,62 +586,60 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 	 * timed out iff its associated qc is active and not failed.
- 	 */
- 	spin_lock_irqsave(ap->lock, flags);
--	if (ap->ops->error_handler) {
--		struct scsi_cmnd *scmd, *tmp;
--		int nr_timedout = 0;
--
--		/* This must occur under the ap->lock as we don't want
--		   a polled recovery to race the real interrupt handler
--
--		   The lost_interrupt handler checks for any completed but
--		   non-notified command and completes much like an IRQ handler.
--
--		   We then fall into the error recovery code which will treat
--		   this as if normal completion won the race */
-+	if (!ap->ops->error_handler)
-+		goto out;
- 
--		if (ap->ops->lost_interrupt)
--			ap->ops->lost_interrupt(ap);
-+	/* This must occur under the ap->lock as we don't want
-+	 * a polled recovery to race the real interrupt handler
-+	 *
-+	 * The lost_interrupt handler checks for any completed but
-+	 * non-notified command and completes much like an IRQ handler.
-+	 *
-+	 * We then fall into the error recovery code which will treat
-+	 * this as if normal completion won the race
-+	 */
-+	if (ap->ops->lost_interrupt)
-+		ap->ops->lost_interrupt(ap);
- 
--		list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
--			struct ata_queued_cmd *qc;
-+	list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
-+		struct ata_queued_cmd *qc;
- 
--			ata_qc_for_each_raw(ap, qc, i) {
--				if (qc->flags & ATA_QCFLAG_ACTIVE &&
--				    qc->scsicmd == scmd)
--					break;
--			}
-+		ata_qc_for_each_raw(ap, qc, i) {
-+			if (qc->flags & ATA_QCFLAG_ACTIVE &&
-+			    qc->scsicmd == scmd)
-+				break;
-+		}
- 
--			if (i < ATA_MAX_QUEUE) {
--				/* the scmd has an associated qc */
--				if (!(qc->flags & ATA_QCFLAG_FAILED)) {
--					/* which hasn't failed yet, timeout */
--					qc->err_mask |= AC_ERR_TIMEOUT;
--					qc->flags |= ATA_QCFLAG_FAILED;
--					nr_timedout++;
--				}
--			} else {
--				/* Normal completion occurred after
--				 * SCSI timeout but before this point.
--				 * Successfully complete it.
--				 */
--				scmd->retries = scmd->allowed;
--				scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-+		if (i < ATA_MAX_QUEUE) {
-+			/* the scmd has an associated qc */
-+			if (!(qc->flags & ATA_QCFLAG_FAILED)) {
-+				/* which hasn't failed yet, timeout */
-+				qc->err_mask |= AC_ERR_TIMEOUT;
-+				qc->flags |= ATA_QCFLAG_FAILED;
-+				nr_timedout++;
- 			}
-+		} else {
-+			/* Normal completion occurred after
-+			 * SCSI timeout but before this point.
-+			 * Successfully complete it.
-+			 */
-+			scmd->retries = scmd->allowed;
-+			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
- 		}
-+	}
- 
--		/* If we have timed out qcs.  They belong to EH from
--		 * this point but the state of the controller is
--		 * unknown.  Freeze the port to make sure the IRQ
--		 * handler doesn't diddle with those qcs.  This must
--		 * be done atomically w.r.t. setting QCFLAG_FAILED.
--		 */
--		if (nr_timedout)
--			__ata_port_freeze(ap);
--
-+	/* If we have timed out qcs.  They belong to EH from
-+	 * this point but the state of the controller is
-+	 * unknown.  Freeze the port to make sure the IRQ
-+	 * handler doesn't diddle with those qcs.  This must
-+	 * be done atomically w.r.t. setting QCFLAG_FAILED.
-+	 */
-+	if (nr_timedout)
-+		__ata_port_freeze(ap);
- 
--		/* initialize eh_tries */
--		ap->eh_tries = ATA_EH_MAX_TRIES;
--	}
-+	/* initialize eh_tries */
-+	ap->eh_tries = ATA_EH_MAX_TRIES;
-+out:
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- }
--- 
-2.32.0
-
+On 2022/12/15 18:09, Wenchao Hao wrote:
+> If ap->ops->error_handler is NULL, just go out and release the
+> spinlock. This patch is just a cleanup, which would not change
+> the origin error handle logic.
+> 
+> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+> ---
+>  drivers/ata/libata-eh.c | 96 ++++++++++++++++++++---------------------
+>  1 file changed, 48 insertions(+), 48 deletions(-)
+> 
+Sorry, I send the wrong patch file, please ignore it
