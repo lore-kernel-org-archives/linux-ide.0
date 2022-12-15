@@ -2,66 +2,183 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46635C4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Dec 2022 15:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD81EC4167B
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Dec 2022 15:22:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230248AbiLOPVj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 15 Dec 2022 10:21:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48926 "EHLO
+        id S230156AbiLOPWr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 15 Dec 2022 10:22:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229955AbiLOPVK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 10:21:10 -0500
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68A4122524;
-        Thu, 15 Dec 2022 07:19:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=veWqpQXIk6sP3oOKoPG/TZGs2w9yCqcBMZk/w842K00=; b=QbNQuPdyKRFdDd4vHkfoRgJo9/
-        2FiN/5ro9QZsnj+FWx2oWEjf16PdPmyp1LW6MWVgAgLAw6gBUblFg4GhIKRxt1Weox1/gxj2p1gki
-        wKqqQPElTKHIZ1aq4ZCnk+si4ytzhH4gwNNFBgK+0Q+4aMuU+kYKs4yKemH9M8O1Ya4itX9+2STsp
-        S1zH6aUWo1+8Xzz2acQaLnEsbmEqsee/iALnBwhqMNrPl5CFKPgFhEs8hMXcm1QAIQP5RHDJE7Pp5
-        udVGt+AKOy+X8UUJaT8qVx93oUI9npbGrwRmeLIH8rv+uH0zAValHAGU+vqV3aO8xFcIKTHsvWYk1
-        5BoWsuCg==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1p5q1X-00C3Q0-1K;
-        Thu, 15 Dec 2022 15:19:51 +0000
-Date:   Thu, 15 Dec 2022 15:19:51 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Wei Chen <harperchen1110@gmail.com>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com,
-        syzbot <syzkaller@googlegroups.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Jeff Layton <jlayton@kernel.org>
-Subject: Re: possible deadlock in __ata_sff_interrupt
-Message-ID: <Y5s7F/4WKe8BtftB@ZenIV>
-References: <CAO4mrfcX8J73DWunmdYjf_SK5TyLfp9W9rmESTj57PCkG2qkBw@mail.gmail.com>
- <5eff70b8-04fc-ee87-973a-2099a65f6e29@opensource.wdc.com>
+        with ESMTP id S230162AbiLOPWV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 10:22:21 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ADE85FEA;
+        Thu, 15 Dec 2022 07:20:44 -0800 (PST)
+Received: from dggpemm500017.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NXwrg15MmzJqb0;
+        Thu, 15 Dec 2022 23:19:47 +0800 (CST)
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Thu, 15 Dec 2022 23:20:42 +0800
+Message-ID: <8cba5193-6628-43ba-b9e8-46f78da3e53b@huawei.com>
+Date:   Thu, 15 Dec 2022 23:20:41 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5eff70b8-04fc-ee87-973a-2099a65f6e29@opensource.wdc.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v2] ata:libata-eh:Cleanup ata_scsi_cmd_error_handler
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <liuzhiqiang26@huawei.com>, <linfeilong@huawei.com>
+References: <20221215105747.1927412-1-haowenchao@huawei.com>
+ <f552f2ab-895a-14dd-d391-a7b1c9930c88@gmail.com>
+ <d991d4fd-3b5f-f0ef-5c96-2352a08e1262@opensource.wdc.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+In-Reply-To: <d991d4fd-3b5f-f0ef-5c96-2352a08e1262@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggpeml100013.china.huawei.com (7.185.36.238) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Dec 15, 2022 at 06:48:20PM +0900, Damien Le Moal wrote:
 
-> The problem is here: sg_rq_end_io() calling kill_fasync(). But at a quick
-> glance, this is not the only driver calling kill_fasync() with a spinlock
-> held with irq disabled... So there may be a fundamental problem with
-> kill_fasync() function if drivers are allowed to do that, or the reverse,
-> all drivers calling that function with a lock held with irq disabled need
-> to be fixed.
+On 2022/12/15 19:34, Damien Le Moal wrote:
+> On 12/15/22 20:30, Sergei Shtylyov wrote:
+>> Hello!
+>>
+>>   The subject should really look like "ata: libata-eh: Cleanup
+>> ata_scsi_cmd_error_handler()"...
+>>
+>> On 12/15/22 1:57 PM, Wenchao Hao wrote:
+>>
+>>> If ap->ops->error_handler is NULL, just return.
+>>>
+>>> V2:
+>>> - Check ap->ops->error_handler without taking the spin lock
+>>
+>>    This normally belongs under ---...
 > 
-> Al, Chuck, Jeff,
+> I should read all emails before replying. I commented exactly the same :)
 > 
-> Any thought ?
+>>
+>>> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+>>> ---
+>>>  drivers/ata/libata-eh.c | 96 ++++++++++++++++++++---------------------
+>>>  1 file changed, 48 insertions(+), 48 deletions(-)
+>>>
+>>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>>> index 34303ce67c14..c445c272e77f 100644
+>>> --- a/drivers/ata/libata-eh.c
+>>> +++ b/drivers/ata/libata-eh.c
+>> [...]
+>>> @@ -584,62 +589,57 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+>>>  	 * timed out iff its associated qc is active and not failed.
+>>>  	 */
+>>>  	spin_lock_irqsave(ap->lock, flags);
+>>> -	if (ap->ops->error_handler) {
+>>> -		struct scsi_cmnd *scmd, *tmp;
+>>> -		int nr_timedout = 0;
+>>> -
+>>> -		/* This must occur under the ap->lock as we don't want
+>>> -		   a polled recovery to race the real interrupt handler
+>>> -
+>>> -		   The lost_interrupt handler checks for any completed but
+>>> -		   non-notified command and completes much like an IRQ handler.
+>>>  
+>>> -		   We then fall into the error recovery code which will treat
+>>> -		   this as if normal completion won the race */
+>>> -
+>>> -		if (ap->ops->lost_interrupt)
+>>> -			ap->ops->lost_interrupt(ap);
+>>> +	/* This must occur under the ap->lock as we don't want
+>>
+>>    The multi-line comments should start with /* on its own line...
+>>
+>>> +	 * a polled recovery to race the real interrupt handler
+>>> +	 *
+>>> +	 * The lost_interrupt handler checks for any completed but
+>>> +	 * non-notified command and completes much like an IRQ handler.
+>>> +	 *
+>>> +	 * We then fall into the error recovery code which will treat
+>>> +	 * this as if normal completion won the race
+>>> +	 */
+>>> +	if (ap->ops->lost_interrupt)
+>>> +		ap->ops->lost_interrupt(ap);
+>>>  
+>>> -		list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
+>>> -			struct ata_queued_cmd *qc;
+>>> +	list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
+>>> +		struct ata_queued_cmd *qc;
+>>>  
+>>> -			ata_qc_for_each_raw(ap, qc, i) {
+>>> -				if (qc->flags & ATA_QCFLAG_ACTIVE &&
+>>> -				    qc->scsicmd == scmd)
+>>> -					break;
+>>> -			}
+>>> +		ata_qc_for_each_raw(ap, qc, i) {
+>>> +			if (qc->flags & ATA_QCFLAG_ACTIVE &&
+>>> +			    qc->scsicmd == scmd)
+>>> +				break;
+>>> +		}
+>>>  
+>>> -			if (i < ATA_MAX_QUEUE) {
+>>> -				/* the scmd has an associated qc */
+>>> -				if (!(qc->flags & ATA_QCFLAG_FAILED)) {
+>>> -					/* which hasn't failed yet, timeout */
+>>> -					qc->err_mask |= AC_ERR_TIMEOUT;
+>>> -					qc->flags |= ATA_QCFLAG_FAILED;
+>>> -					nr_timedout++;
+>>> -				}
+>>> -			} else {
+>>> -				/* Normal completion occurred after
+>>> -				 * SCSI timeout but before this point.
+>>> -				 * Successfully complete it.
+>>> -				 */
+>>> -				scmd->retries = scmd->allowed;
+>>> -				scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
+>>> +		if (i < ATA_MAX_QUEUE) {
+>>> +			/* the scmd has an associated qc */
+>>> +			if (!(qc->flags & ATA_QCFLAG_FAILED)) {
+>>> +				/* which hasn't failed yet, timeout */
+>>> +				qc->err_mask |= AC_ERR_TIMEOUT;
+>>> +				qc->flags |= ATA_QCFLAG_FAILED;
+>>> +				nr_timedout++;
+>>>  			}
+>>> +		} else {
+>>> +			/* Normal completion occurred after
+>>
+>>    Here as well...
+>>
+>>> +			 * SCSI timeout but before this point.
+>>> +			 * Successfully complete it.
+>>> +			 */
+>>> +			scmd->retries = scmd->allowed;
+>>> +			scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
+>>>  		}
+>>> +	}
+>>>  
+>>> -		/* If we have timed out qcs.  They belong to EH from
+>>> -		 * this point but the state of the controller is
+>>> -		 * unknown.  Freeze the port to make sure the IRQ
+>>> -		 * handler doesn't diddle with those qcs.  This must
+>>> -		 * be done atomically w.r.t. setting QCFLAG_FAILED.
+>>> -		 */
+>>> -		if (nr_timedout)
+>>> -			__ata_port_freeze(ap);
+>>> -
+>>> +	/* If we have timed out qcs.  They belong to EH from
+>>
+>>    And here...
+>>
+>> [...]
+>>
+>> MBR, Sergey
+> 
 
-What is the problem with read_lock_irqsave() called with irqs disabled?
-read_lock_irq() would have been a bug in such conditions, of course, but
-that's not what we use...
+Thanks a lot for review, I would update them.
