@@ -2,102 +2,121 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 108D7C4332F
-	for <linux-ide@archiver.kernel.org>; Fri, 16 Dec 2022 03:41:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B04FC001B2
+	for <linux-ide@archiver.kernel.org>; Fri, 16 Dec 2022 11:26:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229910AbiLPDlR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 15 Dec 2022 22:41:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56820 "EHLO
+        id S230039AbiLPL0m (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 16 Dec 2022 06:26:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbiLPDlR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2022 22:41:17 -0500
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39C454045A;
-        Thu, 15 Dec 2022 19:41:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=uFjXacM4V95MITfaVTbj36apFcWXHC9KNgQ5sG+WTEI=; b=G0kCpgSZN1EUotUaOgsFdEeJKi
-        nvprcIE7kGY++o1ePwPpDikIET9h5IfUZv5fKlyM9T+MTa1WtL7BcWlQIPJ1qncj5D+3zA5RSHenM
-        uuyFF3ICu5NIzeaP0IqVitYV1v16gVRNvoLEa0jQfnaD1i0TEBXhJgRZw8l1Ci4W394x7vfLSaZh+
-        6/Krg8qkikKZ4XSbLyCPUHUEHNUNIbxFpj60CINFzQvZ9z22cE+LhEfajKhJruE+eTK0LWmHdw57d
-        AKjOOLtlDJvasjaHWIMZUF9PavT5KPIWZU8a2Isujw/v7ohpSBnpKB9dreiKRAvkb6tt6IQnpuBrH
-        j2FDVTNw==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1p61at-00CAKK-2V;
-        Fri, 16 Dec 2022 03:41:07 +0000
-Date:   Fri, 16 Dec 2022 03:41:07 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Wei Chen <harperchen1110@gmail.com>, linux-ide@vger.kernel.org,
+        with ESMTP id S230024AbiLPL0k (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Dec 2022 06:26:40 -0500
+Received: from mail-qt1-x82d.google.com (mail-qt1-x82d.google.com [IPv6:2607:f8b0:4864:20::82d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A3B31A39A
+        for <linux-ide@vger.kernel.org>; Fri, 16 Dec 2022 03:26:40 -0800 (PST)
+Received: by mail-qt1-x82d.google.com with SMTP id s9so2401990qtx.6
+        for <linux-ide@vger.kernel.org>; Fri, 16 Dec 2022 03:26:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=a7C4DlTIJe/XAzDTApvBRiD8XTjnKR9AH5A3VoUGLOg=;
+        b=NwQY0lOyux8zQdS9zMAo0gTIVBQw4Tpq5Bt9XfwxOWeeZoExJwK4JnJSNs6XbHTM+i
+         Lv5bhR0Bu8KLvRSNai/hEYLSdT1W9Ro3qa4We7yN3/PP2J3AnHLZ4Lfu7LFF67Lx8MY2
+         w+h/UW7V9V8UrlOYYhT/brFKFpP4g/HD7/LKY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=a7C4DlTIJe/XAzDTApvBRiD8XTjnKR9AH5A3VoUGLOg=;
+        b=ankpUDSB2T26ycHR6n8IpfF26UsxFZN0FDegPlBIAB4RypfTPmrpqFLBx42SZ/sMWt
+         p6xRNO//132viMq7RyXeuDBZGzkXAomuO67PPaL6pQRDVBOonOyZiaxa1p/KloElZACz
+         wyUFHle0nk4KvKLfcntxEbBpLleha81lw9YEWQpLXR0xOV3/72/s+NB/viWyVjCezsTW
+         FCGMCfnKHV752G4kyyXr+KC6A+3IfhvEl3axMUT8o2yy0Lfdmsa6oxN5b/EKNcFNXXYS
+         hl7g+2dxmKx3jo+RVXsU+GC1EOh11RqXXXv9hUBvoa9LO9kNSzKQgaysrY1euOcH2r1d
+         edlw==
+X-Gm-Message-State: AFqh2kp7GnTwp52hRQzdjVrWzCPdYIcmX6jhuxZrHQfmuyk6eWqf7LHy
+        Z3r0V4PshVbQKqW1no8IxFbj6m5/g8EkNq/O
+X-Google-Smtp-Source: AMrXdXsBoRCHWKGXB0kcRtaStjS8BDjubZQW8hcxheoijygtcuyG5hfb2vVq+2jU0jYkGOq43mIjzQ==
+X-Received: by 2002:ac8:6f16:0:b0:3a6:9cfa:d6c with SMTP id bs22-20020ac86f16000000b003a69cfa0d6cmr3724157qtb.39.1671189998681;
+        Fri, 16 Dec 2022 03:26:38 -0800 (PST)
+Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com. [209.85.160.176])
+        by smtp.gmail.com with ESMTPSA id f19-20020a05620a15b300b006ce9e880c6fsm1234502qkk.111.2022.12.16.03.26.37
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 16 Dec 2022 03:26:37 -0800 (PST)
+Received: by mail-qt1-f176.google.com with SMTP id x11so2366053qtv.13
+        for <linux-ide@vger.kernel.org>; Fri, 16 Dec 2022 03:26:37 -0800 (PST)
+X-Received: by 2002:ac8:4992:0:b0:3a7:648d:23d4 with SMTP id
+ f18-20020ac84992000000b003a7648d23d4mr19675311qtq.180.1671189997363; Fri, 16
+ Dec 2022 03:26:37 -0800 (PST)
+MIME-Version: 1.0
+References: <CAO4mrfcX8J73DWunmdYjf_SK5TyLfp9W9rmESTj57PCkG2qkBw@mail.gmail.com>
+ <5eff70b8-04fc-ee87-973a-2099a65f6e29@opensource.wdc.com> <Y5s7F/4WKe8BtftB@ZenIV>
+ <80dc24c5-2c4c-b8da-5017-31aae65a4dfa@opensource.wdc.com> <Y5vo00v2F4zVKeug@ZenIV>
+In-Reply-To: <Y5vo00v2F4zVKeug@ZenIV>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 16 Dec 2022 03:26:21 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wgOFV=QmwWQW0QxDNkeDt4t5dOty7AvGyWRyj-O=8db9A@mail.gmail.com>
+Message-ID: <CAHk-=wgOFV=QmwWQW0QxDNkeDt4t5dOty7AvGyWRyj-O=8db9A@mail.gmail.com>
+Subject: Re: possible deadlock in __ata_sff_interrupt
+To:     Al Viro <viro@zeniv.linux.org.uk>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Wei Chen <harperchen1110@gmail.com>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com,
         syzbot <syzkaller@googlegroups.com>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         Chuck Lever <chuck.lever@oracle.com>,
         Jeff Layton <jlayton@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: possible deadlock in __ata_sff_interrupt
-Message-ID: <Y5vo00v2F4zVKeug@ZenIV>
-References: <CAO4mrfcX8J73DWunmdYjf_SK5TyLfp9W9rmESTj57PCkG2qkBw@mail.gmail.com>
- <5eff70b8-04fc-ee87-973a-2099a65f6e29@opensource.wdc.com>
- <Y5s7F/4WKe8BtftB@ZenIV>
- <80dc24c5-2c4c-b8da-5017-31aae65a4dfa@opensource.wdc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <80dc24c5-2c4c-b8da-5017-31aae65a4dfa@opensource.wdc.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+        Peter Zijlstra <peterz@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Dec 16, 2022 at 10:44:06AM +0900, Damien Le Moal wrote:
+On Thu, Dec 15, 2022 at 7:41 PM Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> CPU1: ptrace(2)
+>         ptrace_check_attach()
+>                 read_lock(&tasklist_lock);
+>
+> CPU2: setpgid(2)
+>         write_lock_irq(&tasklist_lock);
+>         spins
+>
+> CPU1: takes an interrupt that would call kill_fasync().  grep and the
+> first instance of kill_fasync() is in hpet_interrupt() - it's not
+> something exotic.  IRQs disabled on CPU2 won't stop it.
+>         kill_fasync(..., SIGIO, ...)
+>                 kill_fasync_rcu()
+>                         read_lock_irqsave(&fa->fa_lock, flags);
+>                         send_sigio()
+>                                 read_lock_irqsave(&fown->lock, flags);
+>                                 read_lock(&tasklist_lock);
+>
+> ... and CPU1 spins as well.
 
-> The original & complete lockdep splat is in the report email here:
-> 
-> https://marc.info/?l=linux-ide&m=167094379710177&w=2
-> 
-> It looks like a spinlock is taken for the fasync stuff without irq
-> disabled and that same spinlock is needed in kill_fasync() which is
-> itself called (potentially) with IRQ disabled. Hence the splat. In any
-> case, that is how I understand the issue. But as mentioned above, given
-> that I can see many drivers calling kill_fasync() with irq disabled, I
-> wonder if this is a genuine potential problem or a false negative.
+Nope. See kernel/locking/qrwlock.c:
 
-OK, I'm about to fall asleep, so I might very well be missing something
-obvious, but...
+        /*
+         * Readers come here when they cannot get the lock without waiting
+         */
+        if (unlikely(in_interrupt())) {
+                /*
+                 * Readers in interrupt context will get the lock immediately
+                 * if the writer is just waiting (not holding the lock yet),
+                 * so spin with ACQUIRE semantics until the lock is available
+                 * without waiting in the queue.
+                 */
+                atomic_cond_read_acquire(&lock->cnts, !(VAL & _QW_LOCKED));
+                return;
+        }
 
-CPU1: ptrace(2)
-	ptrace_check_attach()
-		read_lock(&tasklist_lock);
+and that's the new "civilized" reader unfairness.
 
-CPU2: setpgid(2)
-        write_lock_irq(&tasklist_lock);
-	spins
+The traditional rwlock was unconditionally unfair to writers, to the
+point that there were starvation issues because new readers would
+always get the lock.
 
-CPU1: takes an interrupt that would call kill_fasync().  grep and the
-first instance of kill_fasync() is in hpet_interrupt() - it's not
-something exotic.  IRQs disabled on CPU2 won't stop it.
-	kill_fasync(..., SIGIO, ...)
-		kill_fasync_rcu()
-			read_lock_irqsave(&fa->fa_lock, flags);
-			send_sigio()
-			        read_lock_irqsave(&fown->lock, flags);
-		                read_lock(&tasklist_lock);
-
-... and CPU1 spins as well.
-
-It's not a matter of kill_fasync() called with IRQs disabled; the
-problem is kill_fasync() called from interrupt taken while holding
-tasklist_lock at least shared.  Somebody trying to grab it on another
-CPU exclusive before we get to send_sigio() from kill_fasync() will
-end up spinning and will make us spin as well.
-
-I really hope that's just me not seeing something obvious - we had
-kill_fasync() called in IRQ handlers since way back and we had
-tasklist_lock taken shared without disabling IRQs for just as long.
-
-<goes to sleep, hoping to find "Al, you are a moron, it's obviously OK
-for such and such reasons" in the mailbox tomorrow morning>
+         Linus
