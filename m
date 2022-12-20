@@ -2,117 +2,190 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 397E1C4332F
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Dec 2022 02:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 816F2C4332F
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Dec 2022 08:44:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230087AbiLTCjH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 19 Dec 2022 21:39:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35602 "EHLO
+        id S233159AbiLTIoU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 20 Dec 2022 03:44:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232762AbiLTCjG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Dec 2022 21:39:06 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CA8F1263F;
-        Mon, 19 Dec 2022 18:39:04 -0800 (PST)
-Received: from canpemm500004.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NbgjR5gyTzJqYR;
-        Tue, 20 Dec 2022 10:38:03 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Tue, 20 Dec 2022 10:39:02 +0800
+        with ESMTP id S232686AbiLTIoT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Dec 2022 03:44:19 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B10E112766;
+        Tue, 20 Dec 2022 00:44:17 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BK7o6bl020978;
+        Tue, 20 Dec 2022 08:43:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=AsTyioKZ/DXfZULPevqzm23slVb35LjtRIpFwVNnlPw=;
+ b=dIgVOmRJLaHBRetFP0Rxf3e5BZcY1Vgy4pwenS7hJBvo0apPWp7xafmYCtxAQV5BtRSb
+ dkcJfxdisyJw53Yagnz6u+MPvnTxGdZYhb5tt7iVNIop5b4u8RkrLW1PXz4O02/DOA7X
+ LophcyjhKufXkJ9SCi0rvNK12Io02qzNxcMd/e6AL9q4FU2SbjL2j5So+RqNF1aZJsD4
+ DxpIlCJDL+olvo3RdlL3WKqnbpqUqtJYmpUds9c4Y/kETL0sD8Lb8lzvSxtpuzNYkP8A
+ p9gxx5bo3Lc5ICkZUlaCwNsKc7vSfs4DppqE1cOXJTtmYDc1Fh5BWPZJtQI2xX0ekhc+ sQ== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mh6tmw53k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Dec 2022 08:43:40 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2BK81vUf009681;
+        Tue, 20 Dec 2022 08:43:36 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2171.outbound.protection.outlook.com [104.47.55.171])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3mh47b35wc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Dec 2022 08:43:36 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KY6UxfMrUWoLZbxc5yF3ONN+qAFYIu1r3hzhhJ2uvBE/8ySrQp605USLkrvibO9aS9eRyR1bcW+hL0q7G3P43IPHJtslTTOVuaqmWhugv9Lze1wI0IW14SYDH/AnFrTHc4KDJ1qIzDqFVrJUjeK7YGvRRWlx2tBIYdPaIy40yJcQ2El/QnraKGhyX5dPDfzmrL7dS9l6O+lkQ5aH52Wg/uwyFTqRZrqA6NIO/Hm0YHIVMcs+oGVyHNp9kPGg6JTOBMz0/dn3W1Tkl7BGtPrdO+sMkORgj0fo+sTOD6e4ic7/3p3YwNC2xOdEgD55WqujoMjO3qH1D/Mn0EicA4YsSA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AsTyioKZ/DXfZULPevqzm23slVb35LjtRIpFwVNnlPw=;
+ b=ayIk5lxaeNJY6JasnbiEOA9gzbqWYBr553cztdDi1jUYa5BlguUYNLELon6H/K4PXRa/yuZNQ+okKxo99GrLGn/QwKAyn9BcnXC1F+XnVDQ2Ehswhg3DglkaRDIjlfZIvjh5KAQ82SRElSTrmXGmFyAjYu8fTWW8AGFvhr3XB5yY8B5UudwD5CHd+/ysbUC6ORDPfN4c7k76L4UU5gg3hxqktq+lro1VN/v0YBuSLzyckHM132WBOc4hy/z8BiiU8/qz1utsCiHXmIi5mKqruZdGSDbIH6k117FlORTDHc7Is0O45y8l7yH/ClSprw/IWgtOoywWb7l7YQhLs7K+6Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AsTyioKZ/DXfZULPevqzm23slVb35LjtRIpFwVNnlPw=;
+ b=aVM7hQuJ1G39jaErFBzVxuaORLsnshWjjoGe0QRO85zgMMDvSea24i82D1uLIiht2sZI48G1rvTVuwSHo6AIU8UrwXAMnhkHrw4bSm9qUtLtQ+8U2FaYXy16hfRamaFt3+4nmsmF9aExeZLi/M+RJi6GIpgEjymi8zo1Uu+Vyqc=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by MN6PR10MB7542.namprd10.prod.outlook.com (2603:10b6:208:46d::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5924.16; Tue, 20 Dec
+ 2022 08:43:35 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::1040:f0e3:c129:cff]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::1040:f0e3:c129:cff%6]) with mapi id 15.20.5924.016; Tue, 20 Dec 2022
+ 08:43:35 +0000
+Message-ID: <12cf34d6-8267-ac81-02c4-190bb9afc50b@oracle.com>
+Date:   Tue, 20 Dec 2022 08:43:31 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
 Subject: Re: [PATCH V2] scsi: libsas: Directly kick-off EH when ATA device
  fell off
-To:     John Garry <john.g.garry@oracle.com>,
-        Xingui Yang <yangxingui@huawei.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <hare@suse.com>, <hch@lst.de>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-        <kangfenglong@huawei.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Xingui Yang <yangxingui@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-ide@vger.kernel.org,
+        hare@suse.com, hch@lst.de
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxarm@huawei.com, prime.zeng@hisilicon.com,
+        kangfenglong@huawei.com
 References: <20221216100327.7386-1-yangxingui@huawei.com>
  <565fcf28-ec53-8d74-00a3-94be8e5b60e4@oracle.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <a50ed139-c82f-6d07-ae76-a690cada2c90@huawei.com>
-Date:   Tue, 20 Dec 2022 10:39:01 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
-MIME-Version: 1.0
-In-Reply-To: <565fcf28-ec53-8d74-00a3-94be8e5b60e4@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+ <60ace19e-d029-f14d-9aac-d5cef83b5b64@huawei.com>
+ <257dcd6c-2ffd-f518-9b13-c309348088d9@oracle.com>
+ <4489f80f-9f39-8f3f-5d10-6b113131e65c@opensource.wdc.com>
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- canpemm500004.china.huawei.com (7.192.104.92)
-X-CFilter-Loop: Reflected
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <4489f80f-9f39-8f3f-5d10-6b113131e65c@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0506.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:272::19) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|MN6PR10MB7542:EE_
+X-MS-Office365-Filtering-Correlation-Id: 52baf503-e775-47fc-e82d-08dae26647ef
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 2V0hkAbnvgwSIRQUTkTLrWVFybvJ4N0jChFl9sStnrAO43ehQR25FaVgt/CddC5oGgmUv37Qv+diGeC3D+eBTAppJdZLr+AkO/MluHrCXE3fZEI5paVy5nK/nUEdqNWctT1mLnt/yinMBgIEFnoGrxE+l3ALpQAOSg1APfJRuQco7EQJxV0xR/zLO37+06+0YbC/GJxQgl68CipM0mm7AhKAQqG7uScBsX3ZqZK90X1jbD7jivHr7J67YGtzCMiTUs+142EbcYv96RmrEjLzqTN1b+wW3hESDrqjDYAld0A7o98BY4dwL0k0yfVfKr8xPVLQGfDZe71MPjhhAs+XhNjcqe+/KjqUim6BdUg3kiyKI1VGHgTLiuj8jUPp0KCMzj3RJP9B8B7LWbrfPJmdQwLMofrgF+f0xkpymld6sJubhTHv5qrPmsIbqG7SeMYQCCALyGH3DraECKblkUpUfbuvfw2TKX0W3Lm/withyYXm1w7hUHyVU3CVo94qyRfdfJo34HYtJpZGNz/mVzXJTJaoCFZ+jQIVSuUumgoee9xxAwfGOBkd2onc+m6Fh5tzEICWk9p9S15ZhVa5bpiQDxGbc8taFQikrNLo7Y6b/OXO+LbbvPc+8X5GTujjchFMmbkTgKU7ML3Fnwa7TZnp5WdYXD2kHIBpVpOP4OCBuTd3DKYtvKqc4iUJuNBaw3zqr5OP8z1IDlCjN8IyUJhoTH/C+rpzyzGjUMB3MWdVB/g=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(39860400002)(396003)(376002)(346002)(366004)(136003)(451199015)(8936002)(38100700002)(36916002)(5660300002)(7416002)(6486002)(86362001)(186003)(8676002)(4326008)(66946007)(6512007)(26005)(36756003)(66556008)(66476007)(83380400001)(41300700001)(2616005)(2906002)(6666004)(53546011)(31686004)(316002)(478600001)(31696002)(6506007)(110136005)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?aG1lSjcxRDNRcUZXazlFMGJSZW1uOTBNTWVkUTRpbmROSDRuSWc4Q1hieG1V?=
+ =?utf-8?B?UkZrcHhpZi9iNVA0aGs0L0Y2RE5LKzFKaVo1dzZ4dmFsc2VrczRlL2dqanRj?=
+ =?utf-8?B?SjA2TFpDa3J4THNva29MNnk3Y3NkdFBBT3A4RGZ1cDd6QXlHT1c2TmNPVElH?=
+ =?utf-8?B?TnNsUXJoaVhSdFkvcWtSalZOWW5kSFdqODJoaFBCYkxta0dybUlPYjlXMDBv?=
+ =?utf-8?B?MXhJR3NoUHFVcW5PaFMxWE5xOE5sdFZoZS9WTHNDaXZPVFpLQU51clZMTG1i?=
+ =?utf-8?B?UTJIL29XTk4wQngrLyttQmVLbkxmd3lFMVBIQTl1NVUxRHV2dDdtdzJKVUkv?=
+ =?utf-8?B?cDhFcjVTYmovQmgxNW1neUtFdGZqQzkwWUptL3gwcVA3Uzl2Ti9Tc3VzL2or?=
+ =?utf-8?B?UkJnSytCNVVZWUsybEVGWnFiTm9OUU4zcW4wbTN4MElFMzNCbFBOdUQ4cnRy?=
+ =?utf-8?B?b1B2bDNQL3prN3NwR2FXajRTNlQ4NFlzUkNRb0dBU21xR1BmMEFhWS9qQ015?=
+ =?utf-8?B?Y1ZoNy9Oekx2WEFCKzYzUjhyUWlBd2g0REMwNTFlZUlRVGNONDRUTjhROFVP?=
+ =?utf-8?B?NVM0WWt4TzBSc1BrenRNeXRuNnVMUEZlSE9kREJBandsd015YUd6bEJmdGl4?=
+ =?utf-8?B?ak9kclc4T1dkdnAvWVFGYUpBMHFKUC9RcFlNdlVib29oMytHSUpNaFBVSFUz?=
+ =?utf-8?B?YjU0NjJRY1RheTRRS3VtZ3BETU5JRGxybnFHdkduZVdHNlBXQlcybDZzT1g2?=
+ =?utf-8?B?VjU2MTdzWEJ4VGd1d255N1d2NWJmMWFTV21ibzQzWGxONUhNRTN2dTg5Wm5V?=
+ =?utf-8?B?VDFmc083VVNjRFVGc2t0cktBTnR2ZGVmeXduQVJ2Ui9uaDFmc3BORjlzTHQ5?=
+ =?utf-8?B?WDY1dU1TU3J0bWZuSHlBNTRLOFVzK0xKcllpc0RwNGh1TU1xUzR2ZHZ6dmNi?=
+ =?utf-8?B?a2wra0kvMTBka3FpdktzUHh0Nlg3VHB6dzdzbDVLc3JVblh2UTRUVnE3cW9h?=
+ =?utf-8?B?ZkYxM3paM1IwM0xVYTZzUjBRM1F4NjVKSDVlV3pTbE9EWTBqZGdPOWRJWStN?=
+ =?utf-8?B?QmN1S2F4RnloOVlHRkJtalUvVE9aTC9DN3dYSW9nMGc4SWYzRHY1Z0xnMWhK?=
+ =?utf-8?B?MXNHempQMFZpL3JkSkVjN0FBVWZKSTZwYjMrZ2tpNWF0UDVwMVRhTG9keUsx?=
+ =?utf-8?B?alpTWUovNnBXekwyUmVwblhjaUpkMVJpWE11bUVZRXZ1WjVENG80ZUp6WUFz?=
+ =?utf-8?B?K0h4TnU4Q3NWaDRlbDVSQkVlalhIaVVlQ0RLMmNSZEZmdmVMMUFxNXlaVW9q?=
+ =?utf-8?B?TEhNaVBjNHFyNmE1MUdGUTRZMWhWQjRwWE85MkJMRHRta1BwUmVYTGRHU2dC?=
+ =?utf-8?B?c3pmQU1sK2xoYzA4aExTOVlqVVpqMHJaSm1pUFZRUVhRQnIwY3dub0dhcmJQ?=
+ =?utf-8?B?c3EwZWNqQnBjRWdwV0JzUDJKV2c0T0dIdzlCU0I2MHp4SEFiQ0xPMHFoVmJa?=
+ =?utf-8?B?OGlzQ3Bic3BGYm5DV1lhbWhIRDRjRFM2VHhOMXVPTEFIT2QyWjNwb3E4L0x5?=
+ =?utf-8?B?TGZ3WjhnZFN4RUFXQXFNZWpHL1p6aFBvM3pHWWpyb2hrbVZDdkVURzN0Unp1?=
+ =?utf-8?B?Nk9RL3VBN3JZSGE4dStQUTJJZHBoMG81cXhBYVFCdGZxN1NlL0psNUdZUFNj?=
+ =?utf-8?B?NWVnUjFkRW1qMFhQVGJHOUVKSGZQWXNFYXY4Z3NXZDJwMHBjb095Qk1jNzdP?=
+ =?utf-8?B?aGZaYW42ajhxRldKNmpoN3UraXBiM3dqVEtma1Era2NzR0hhSEd0KzdtNG1D?=
+ =?utf-8?B?cURBNTlJSUZDTENiYmliMThLSi9KYnlONENwYnhtaVhRd2JmUUVlTmZvWVJF?=
+ =?utf-8?B?Sndncmg3QklZU0I5UlJ5bDYrNWVhaHRxUnQ2STZNZUJtb2hmTmVlaFNZeURt?=
+ =?utf-8?B?dTlDaWxLNGk2SUZWQUp0U0JNN2UrREFGeWg0MWdLblRwNzl6VmoxWlQ5d3gy?=
+ =?utf-8?B?dzlGVVdNMDFnYVllSEpROWVhdWdqYzZaUDkwYXhFUDNiOWdGUHVScGZOUzFz?=
+ =?utf-8?B?NGJIRTVkRU9NbG1qQkk5dTk5UGZTakhITVY2c3Nkc2FzcWs1ekt6TE5wUzNv?=
+ =?utf-8?B?L2tZQkd6UGhFS0pncXFaNVZxYjFqaXBrSGI5WHFTcmtjOWs1WE1Fam9yRnJy?=
+ =?utf-8?B?OGc9PQ==?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 52baf503-e775-47fc-e82d-08dae26647ef
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Dec 2022 08:43:34.9823
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: O0BZFHqTSlVyxpBLPkWSEwXkkOftJo30Vit0Psi20du3mn+Rginw4Om8NllVn/qr606GS+MNJVlq6mMLI303Qw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN6PR10MB7542
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-12-20_02,2022-12-15_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 malwarescore=0 suspectscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2212200071
+X-Proofpoint-ORIG-GUID: aCAz3QWqSyXZqGoc_zZCJ4pCdMAfiHrQ
+X-Proofpoint-GUID: aCAz3QWqSyXZqGoc_zZCJ4pCdMAfiHrQ
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/12/19 17:23, John Garry wrote:
-> On 16/12/2022 10:03, Xingui Yang wrote:
->> If the ATA device fell off, call sas_ata_device_link_abort() directly and
->> mark all outstanding QCs as failed and kick-off EH Immediately. This 
->> avoids
->> having to wait for block layer timeouts.
+On 19/12/2022 23:00, Damien Le Moal wrote:
+>> But it is expected that ata_qc_issue() should be called with that the
+>> host lock grabbed (and keep it).
 >>
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> ---
->> Changes to v1:
->> - Use dev_is_sata() to check ATA device type
->>   drivers/scsi/libsas/sas_discover.c | 3 +++
->>   1 file changed, 3 insertions(+)
+>> I think that the reason libsas drops the lock is because some LLDD
+>> queuecommand CBs calls task_done() in some error paths. If we kept the
+>> lock held, then we could have a deadlock, for example:
 >>
->> diff --git a/drivers/scsi/libsas/sas_discover.c 
->> b/drivers/scsi/libsas/sas_discover.c
->> index d5bc1314c341..a12b65eb4a2a 100644
->> --- a/drivers/scsi/libsas/sas_discover.c
->> +++ b/drivers/scsi/libsas/sas_discover.c
->> @@ -362,6 +362,9 @@ static void sas_destruct_ports(struct asd_sas_port 
->> *port)
->>   void sas_unregister_dev(struct asd_sas_port *port, struct 
->> domain_device *dev)
->>   {
->> +    if (test_bit(SAS_DEV_GONE, &dev->state) && dev_is_sata(dev))
->> +        sas_ata_device_link_abort(dev, false);
+>> sas_ata_qc_issue (has lock) -> lldd_execute_task() =
+>> pm8001_queue_command() -> task_done() = sas_ata_task_done() -> grab host
+>> lock => deadlock.
+> That should be easily solvable using a workqueue for doing task_done(), no ?
 > 
-> Firstly, I think that there is a bug in sas_ata_device_link_abort() -> 
-> ata_link_abort() code in that the host lock in not grabbed, as the 
-> comment in ata_port_abort() mentions. Having said that, libsas had 
-> already some dodgy host locking usage - specifically dropping the lock 
-> for the queuing path (that's something else to be fixed up ... I think 
-> that is due to queue command CB calling task_done() in some cases), but 
-> I still think that sas_ata_device_link_abort() should be fixed (to grab 
-> the host lock).
-> 
-> Secondly, this just seems like a half solution to the age-old problem - 
-> that is, EH eventually kicking in only after 30 seconds when a disk is 
-> removed with active IO. I say half solution as SAS disks still have this 
-> issue for libsas. Can we instead push to try to solve both of them now?
-> 
-> There was a broad previous discussion on this:
-> https://urldefense.com/v3/__https://lore.kernel.org/linux-scsi/Ykqg0kr0F*2Fyzk2XW@infradead.org/__;JQ!!ACWV5N9M2RV99hQ!MwAZFXXIwuP0lv-kuUIJ0ekUiGBWlTBhU3oQjyOf_yuP1rHDJb8UKMzJjndXNQ-W1PQGJXzgc0bQUsHh4NGh21EOc50$ 
-> 
-> 
->  From that discussion, Hannes was doing some related prep work series, 
-> but I don't think it got completed.
 
-That discussion is not exactly the same with our issue. That discussion 
-focused on whether one device's error handling can not suspend the other 
-other devices's IO dispatching on the same host. That is something like 
-parallelize the error handling for different device.
+I don't see why we cannot just return an error code directly from the 
+lldd_execute_task CB always - we end up calling scsi_done() directly 
+then. But I am suspicious why it is not already done this way.
 
-However what we are trying to resolve here is to shorten the timeout 
-handling of a unplugged device. The scsi middle layer doesn't know the 
-device is gone and still waiting for the IO until timeout kicks in and 
-start the error handling. This made the applications stuck for a 
-significant long time.But libsas knows that because it receives the phy 
-down event, it knows that device will not come back and there is no need 
-to wait for the timeout.
-
-It's true that this is a half solution. I'd like to have a complete 
-solution too. So we will try to solve both of them.
+Looking at the code history, this fiddling with the ap->lock actually 
+looks related to commit 312d3e56119a4bc5c36a96818f87f650c069ddc2 
+("[SCSI] libsas: remove ata_port.lock management duties from lldds"). I 
+will check that further.
 
 Thanks,
-Jason
+John
+
+
+
+
