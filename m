@@ -1,171 +1,151 @@
-Return-Path: <linux-ide-owner@kernel.org>
+Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E4D9C4332F
-	for <linux-ide@archiver.kernel.org>; Wed, 21 Dec 2022 11:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4527C4332F
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Dec 2022 02:09:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229436AbiLULtH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 21 Dec 2022 06:49:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50224 "EHLO
+        id S229777AbiL0CJx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 26 Dec 2022 21:09:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234575AbiLULtG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Dec 2022 06:49:06 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5A9E1DDD4;
-        Wed, 21 Dec 2022 03:49:05 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BL83wcl008407;
-        Wed, 21 Dec 2022 11:48:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=G7GzAzFPvW7E/1nb1ev7goR44mQF8XDE/1dfACEKxOc=;
- b=a4athEuS3diKeqzvEetBMTv4KdynYiNquuhgRIFkjgk+P8qzAFrzmy8FG/p2lZHsgqFt
- b3rZKVDHGUfHPh6ATCKsJtGism1HBnxhCCs+BGc+tOPQOUa5mi8DLFSWZbMKWTdPrtEv
- 3t3LvWuP3WzhXcHVLjNhtApOCrauTHvYSGkL9lTXOsoBoiyW96dJVLSp6lWin4sxqVlO
- ZDTqZKOo3yiLGthfM9J18x+SqGQxOP0KcrtAxekMzAzaQdKLKt6KbCK+gcqXPSPJfXCd
- ruyrBv96C9NZVY4ptGZQw8uS2hHzuqNV6WlSrzP2EAj/5G6NcNSJfRmIYwTzKe6R1avU uQ== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mh6tprtc8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 21 Dec 2022 11:48:59 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2BLAb2bj008037;
-        Wed, 21 Dec 2022 11:48:58 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3mh47dhcmy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 21 Dec 2022 11:48:57 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nObrBL1QoXHpSqvLnnpOR5Bwr1HOU6fc4QEbZkSygY+n0MtZTdrgwwrz3vtlFSuQKABsNXt+PtawiyckhEv+qp+6FFYgM7jFMHiNEgjRPnDkLEVcNm6e2r/P5Vy8rXKAcbB5EiZ0vMjg9VE9CKXleNP3+/lVCApdqUPXxaCXnluKLgKu47lO4sXBvPEyzy7nk0BC43dvpeSgTyI8PWcTDjnrJlbxUdAGjLNGEXO6cC12W/DndYUzDM0ab4DcEbmCgsCohYqhvu3whL4KHmxcCNRp6DCXM7dxc/ZIJql2kQrYs/jXmL7KsuATrIYx3ykQk9SHKEiD4Dd151HyJSHNmg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G7GzAzFPvW7E/1nb1ev7goR44mQF8XDE/1dfACEKxOc=;
- b=QbKx9QatKZf39wqLyT8QskE9N76JkNa3UtSwJ4HbC26xARl1TKizWitB8FpPdkDU6F/9UOJNw+Ipmke2Pjcc7ut/n0s+ExUX14HTtr93471/FLn8Rp5NwSRtZ72JvYq3tx0XnpXJA/BCx5OHSyG1bPv2/fOAFrznRyPs6q6np61DkpH4FHLvQRtBv3EZwW8/uA1zIRH8nqMze6FhnG1+WIQp3krntBUSA5o7gc8notZ7o5uQaoEJuY0TmnhuzXf3Hj+TaNwuHKq7wzdXfOeKp12ziHKPr00Q2/FcBtP8OuMDGHewz8aP+nISgo0uLJCBKfxFJynPqRUwbANVyazWHA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G7GzAzFPvW7E/1nb1ev7goR44mQF8XDE/1dfACEKxOc=;
- b=sv1PW6Hhsnjo3yxtzF3pcKyV6Q12QYvFxaAEJA9gnuoQkOaCQs69MDr2geqr5j8R5nEyv8LLfmAk1yX6aFH/XHYuMwoepcB6KRuz42bJR5HDcLWW/zrICSQYIL+8UJpsfUlXRCIPeg9UrrJzWh9gHH6lzhwRr5JWdT+TI7b2kgk=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DS0PR10MB7270.namprd10.prod.outlook.com (2603:10b6:8:f4::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5924.16; Wed, 21 Dec
- 2022 11:48:56 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::1040:f0e3:c129:cff]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::1040:f0e3:c129:cff%6]) with mapi id 15.20.5924.016; Wed, 21 Dec 2022
- 11:48:56 +0000
-Message-ID: <9c9a6054-052d-2b21-4c10-2d24d70d55a1@oracle.com>
-Date:   Wed, 21 Dec 2022 11:48:45 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH 03/25] ata: libata: simplify qc_fill_rtf port operation
- interface
-Content-Language: en-US
-To:     Niklas Cassel <niklas.cassel@wdc.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Brian King <brking@us.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <20221208105947.2399894-1-niklas.cassel@wdc.com>
- <20221208105947.2399894-4-niklas.cassel@wdc.com>
-From:   John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20221208105947.2399894-4-niklas.cassel@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SI1PR02CA0007.apcprd02.prod.outlook.com
- (2603:1096:4:1f7::6) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S229578AbiL0CJw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Dec 2022 21:09:52 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EDD11153
+        for <linux-ide@vger.kernel.org>; Mon, 26 Dec 2022 18:09:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1672106989; x=1703642989;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=Xf5uXD7bAhgQwobapLM0oFw5g/zG4CC3bJPveIzVTKk=;
+  b=HKMQmKbBy6kezXQ5Dr+cbHVGxBu9LNFgZbcx17D2ohN+wx0UyZc/7mxg
+   jkcZ2sP13ohy7blR8JdJMrw/QO2RKE5Jc3HL1GuhfbTE9xgtMzKVr7CKA
+   1XrNU5VdUZWQHQCXtrRO5VJfflHcM9yXc/GcF46N/s4KB+p1/SEA1nbSQ
+   SFML+XL+80tKeIyISvfdeswbpXwGnvNIfqzbhhD9YLiTXttw9yqoSTiYf
+   aEYmXGpTYWC40R22iPKCdiBYkM4ad/I/rEmcOcMOa+WoOMMLlzySUBzT8
+   6pVSL/K+y37vUEHVcpQEtiANY3JrhDlfPaoST19RF17Nz5ZQ52crA0WME
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.96,277,1665417600"; 
+   d="scan'208";a="323829623"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Dec 2022 10:09:47 +0800
+IronPort-SDR: cIzjbIwipZaJ19bFHMR8KPKSb79i2BOsu5rvfMh6qHHHZbK/u/o34k+rWZbdEcZG9NZJtyxAMe
+ r2G0aVLUbFRqgnS0xmeywdtETQiFDrXP7qDba/ZZf9sVPh47sB1mSerfTKvjBVUoClRztn0X7i
+ 0u9cg2a+4BrzwZVh/sw6uBNBf567eVXAUg84v18KaNdX65wBKsscYT9TRlHQcXj+HI+/GYo5kb
+ NR+7iIPv+OuCqggeofYsYK8DbpM5SoqMWX7AnebT4svM/1C+aj2SW9POAYj+lSmv0hJTrpvhAs
+ 2/U=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Dec 2022 17:22:10 -0800
+IronPort-SDR: jzqabDxpOpoE2kypTP7eq55OQ9Dm4Rmby3byoLRyMkzquRbBMip4BAmWTwbLPWRIvlAnQ5uicw
+ in4ggltQYI3CnnAr5NpoMg7BTP1+ae+uYwVm1N3roFXMmSfyRpM3NDUd8XejonT3+kc9Fj7QOM
+ JBXVEYocsr3vMY5BSC08/Y1RL4m1T+4Qkj37//Avk9IF6CkuTSP1L6RcauOWO7H5jeSkMdFWIo
+ 4FH27sK52AxRZUHInslZrVutOXApo7+5jILCtZ73aZKiWutWzjh7TTFbz76bqK4NLMLjtfttbS
+ asY=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Dec 2022 18:09:49 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Ngylb5wLYz1RvTr
+        for <linux-ide@vger.kernel.org>; Mon, 26 Dec 2022 18:09:47 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1672106987; x=1674698988; bh=Xf5uXD7bAhgQwobapLM0oFw5g/zG4CC3bJP
+        veIzVTKk=; b=DlNuD/QIjzapCDG6zDHULt3Fioygqib524rSN36e/JC5ubsn4R3
+        WftER/BgZZ1GS06K+T0C42gxMq6XS2zaXgqkhheEuqIS7sxx7Mg/bKPw2dY1DJCJ
+        kazAbWYzauj0ewHepAhf7P11eYLfIeTNr9VXCx6GvI2DzKdRdPSKBNo2HKFbPt1U
+        tp9j7pr4HqQyuOXSce07Zmt5uH2+jdg9NuxPdViLMVKQQ9k3N44iqIe1XKplZtnV
+        JOCE52S5VAGxcHEmQ6fAwDTsAw+wDpqHIkeoqh2cJGBG0woZjCaV4twodLDIf+YL
+        xvoRfadvSSy6z3vikxoeuMzWVbbqHwTXQVA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id vstSRMAqtkVc for <linux-ide@vger.kernel.org>;
+        Mon, 26 Dec 2022 18:09:47 -0800 (PST)
+Received: from [10.225.163.117] (unknown [10.225.163.117])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Ngylb0C68z1RvLy;
+        Mon, 26 Dec 2022 18:09:46 -0800 (PST)
+Message-ID: <6f16a860-6d03-0e09-08b8-2f6a23331882@opensource.wdc.com>
+Date:   Tue, 27 Dec 2022 11:09:45 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB7270:EE_
-X-MS-Office365-Filtering-Correlation-Id: afeae33c-ea5e-4dda-2c89-08dae3495713
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: TdkvaKcNVbS612dFEY9qPv/GKd96fmsmW7C+QmQeuVzOzEAXg3IlqQ0zmxXl0H+1LBWNXxan1qBg38SQDWOZZHgRlkINSKgZhXOp1ulU4v99qrRNnfjeK7Ept99eHC+OQRRG7ewHn7eLq9CFp4h32OjOB9KDwWv2pssW3tzhtOzeO9TRNkopOY5KYNBZZwpv6d/MnhhBLCyqJkUVFjBFJ84m6AR4sC17Ap6kWzngTFmXzLvfB2EJA161osAxK1P/VzBkI+0HcFGUf9X4O3UwfMpmqcHakHHwjnh2zk6kgsZ04eYRoghks/5LGBdfDcU2SjMxoihu/ejS/zgPe3FSr1d6fUSKBUQXUMi49uV8F807Kx0e3pn3yTK0QcAGtehhgjo4282bVaasG8rmcKiQCu3UftAaysOxNIYDZp1A8RerzuH1dAuMJ5SIvtO3Yz56QKTeY4LULtHeFK1mBSaxhkrAqxnt7ngyF3lpn2LxXYDf1jUoU0SKREebAh+P7ydOAgJQv5j77wQ5Xwb69jVzKuYYXtf34H7oyaLrcpdJqx0xYfPILBCmfmAmsIxLKsQEeL7NWdd0kkj9ppMgmcksd90XFveZMG6x0Fd8oLG2wIDI23HpVdAKv4r+XpUglA5rLnjhRi6kJKh1jyZT+xDVmmsiwY7pd2vo8SIjm92xqnAWJjM/JSMYlHh7i+ZkvHfey+TNfbYY8zSnQIQbpTaUgdheArg2VmzC3n6IjLjGwXM=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(346002)(376002)(366004)(136003)(39860400002)(451199015)(38100700002)(2906002)(31696002)(31686004)(36756003)(41300700001)(186003)(86362001)(26005)(53546011)(66476007)(5660300002)(66946007)(4326008)(110136005)(6512007)(8676002)(83380400001)(6486002)(316002)(66556008)(2616005)(478600001)(8936002)(6666004)(4744005)(6636002)(36916002)(6506007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?aTZaS3IvYTBSV2N0R0NLZUQySUI1QjBrMlRpQW9haHl5UVhlbTR3V0UvTGZB?=
- =?utf-8?B?Rkh2dkprQjFkVGdWYkgzSm1Qd21EQjRRYlo4cEVrVFp6TmtIMFowME9XdkRZ?=
- =?utf-8?B?Mk5HVHBSV0lSa0NvWU81cldTMzJJcWFZRDl4Vm8vS0NtUDRSblZzK0lpbEJp?=
- =?utf-8?B?RUQ3ZDYzb3BFNTZMcFpkZWdyWVhvUTdldk03aS91dVJ2WjJLQXNibm80TXV4?=
- =?utf-8?B?K2FZaUk3V0tlRU5vbGdNQzVGTnN4UkxrMVRiTjFDeEh0VXRUVXlNWS9XSEF3?=
- =?utf-8?B?ZGFkQlJUUHltYTcwTDgvRklMUDdhTWd5N0l6WDVyS25MQXVUOUZwNXRGMVFx?=
- =?utf-8?B?SFZzMmtZR3BkeWtWUVo4cWR2REJpZUNiNGhaYm5GRmo1ajdrd3l0bjRUbldk?=
- =?utf-8?B?ZjRhRWZmVWNFNjdSMnNiczIwV29rbEIrZ3RFVEJRWHpOUU4wS3lNc2xHMUNI?=
- =?utf-8?B?S1dxclE1ZFpqRjIzYXMweUVjTnJjejVhK1VCZXJnNjlZYi9FU2dtK2VoNmdG?=
- =?utf-8?B?Qm1sVXI5dCs1a0RJOEJKb0QvbmpKOTU2eHgrbEJHTmc5dlZUMU5zakNVYTNs?=
- =?utf-8?B?bnhFZWpxZGU3SUJ0c0I0bVV2bGsxZmtKcElYM0xWSkFWN0VmaVMwSzh1aUR5?=
- =?utf-8?B?ekhhR29DR0RIVWlvQ0E0NWZ2MnYwekM2a2ZhMHNxQ29ZTVd4eXpCUzVCRTdw?=
- =?utf-8?B?NmNJZ29vNkllaW5DaEp3UEZ1aURFL0FIMDJFbkhtbHg0azc3V1lkekExSytE?=
- =?utf-8?B?V2ZiRE96RUE1STNEZWFMai9QMStSYW9leFJpa1czeHNRZEtXVTdIRUFZRGdC?=
- =?utf-8?B?ektRN1Z0ZGJTM0VGMzdvTm53Q0x3bG1GWEIxcDduNlZpb0ZyTzVuTDlYTzl6?=
- =?utf-8?B?SlplUzhWSDdPSjJMUkhkUFFZQ3M1UkVVVnVVRUJnYTdlWE1FV1RaT1g3OTU5?=
- =?utf-8?B?Tld2cFJ1VG54YVdIYlpWdzBnRndLb2wxTGZnbllTWTBnNENiV0tBdWpSbGJD?=
- =?utf-8?B?TkkxcHorSXY3WWVJVWFMVzIwUFkzUlpUSVdWcTFSeVduOHZRUzlDcFMxOEYv?=
- =?utf-8?B?UGRWMHd6ZUgyaWdOWGRvYm5Qd1VlNktLam1TQU1uT3psT25NR2dPN3QvVjU3?=
- =?utf-8?B?Ly9pc1JJN2MzR1JxRkFuZ0EydEIxZVFOOFBHNTIvTmZ2WEI2RDJOaVZGSkh6?=
- =?utf-8?B?M2R4VzFZUm5LNk5xS0V3b2M1bmtYbE1nVXF1bGpJS2FlUGg2ZVdNM2wyWDdX?=
- =?utf-8?B?Q2dqTDViK0ZOMlgzRUlzUHVoZnR6bmZRRnE4K2tMWTNuZHlDSC8xY3lNbUQ5?=
- =?utf-8?B?M2tCSGZvTGZzNGFmT3E0eFZaVkpaaXJGWXI4R0xNTlJVMTloWklkUU5VRnlO?=
- =?utf-8?B?NDNFSURiRXVzMVJnWUc4aEoxLzMrY0lvTHJnVm8yRW52bmxOcTRLdG5aL1Yy?=
- =?utf-8?B?STkrbWpIdjNkTXo0RjBRMW5iR3F4cXNyN2dINU1tdFI3dnpNd1hrR1hJSUo2?=
- =?utf-8?B?ak5Mc1F4bHRkMXd3MkRPTFhXalhPM3ZGNk15VjYwaVJOMUNZa3QxdkFQRE5h?=
- =?utf-8?B?R1hNeFV3SStveTI4dVArdXA4OVZRYXhSS3FyVVNZbUFKeGYrRVdvQVJjbzFi?=
- =?utf-8?B?NXZ0bVlhYUQzZDhtUS9TRkNYRk9BZ0VBanVoUGtpL0p6K25nSXZHcHJrUlVT?=
- =?utf-8?B?dVhTclNueXFEaXBrQmNISEh3TkloNy9PaHRKclIxSkV3anBvbFFKc0MrMmxL?=
- =?utf-8?B?aktHWVVrc1FVMjVIM09IcG43YUpFeGJST1EzeWdsbTRabUtWdUxwdktObGxV?=
- =?utf-8?B?cWFpQnFlQzROaFlnWXZjblU2dWYrMVMyTHVGbmNJSU9vZVRzWlVqamhQL1ZY?=
- =?utf-8?B?ZmM3YWVKbHNDaXBLYThuMXBoTFB0bDdEZmUrLzRxdFo3citsU2VLb3NVandD?=
- =?utf-8?B?TVNKZkRFNnZmSTVtZnU0QlJCOVlkWjhZMjY4OXJuWUlvZGdPQ2NOMFdzQjBo?=
- =?utf-8?B?S0wyNUo2ME44QjVtUnllVzlGaTdPd3ZUNDFjNmN1YTAxVFJyQ01VUkcwSWpy?=
- =?utf-8?B?NVo0Mm1kUHlQdjJ0NXhRZnYyQXNuME84YVY3TW15QkZvQkNLUmxON2dtMlFh?=
- =?utf-8?Q?jAPJ1oX9uF+JlxfSAfE9qc6QN?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: afeae33c-ea5e-4dda-2c89-08dae3495713
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Dec 2022 11:48:56.2619
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dyt5XDIErzToRaBQKobCUqxjKm48pqryt5vh/Pxu/rMcyGe4OYvka8K+yAsgz0a/ZDfhUfMoGB6tsmBVRsXrPQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7270
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-21_05,2022-12-21_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 suspectscore=0 spamscore=0 bulkscore=0 mlxscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2212210097
-X-Proofpoint-ORIG-GUID: cLmeTl44vnakUqaMyNq0SjApORZ6kENy
-X-Proofpoint-GUID: cLmeTl44vnakUqaMyNq0SjApORZ6kENy
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v4] ata: ahci: Fix PCS quirk application for suspend
+Content-Language: en-US
+To:     Adam Vodopjan <grozzly@protonmail.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+References: <vl5wEUZGVJ2BjH9t6T0GGSs9qLIE5A7NQkpDYGJB6iFamXyhw1zjnrx-TeO-XJB2doendW_7lDvNblGJLb_YeehRZN0iyUHXyvdQ6Em1aXI=@protonmail.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <vl5wEUZGVJ2BjH9t6T0GGSs9qLIE5A7NQkpDYGJB6iFamXyhw1zjnrx-TeO-XJB2doendW_7lDvNblGJLb_YeehRZN0iyUHXyvdQ6Em1aXI=@protonmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 08/12/2022 10:59, Niklas Cassel wrote:
-> From: Damien Le Moal<damien.lemoal@opensource.wdc.com>
+On 12/9/22 18:26, Adam Vodopjan wrote:
+> Since kernel 5.3.4 my laptop (ICH8M controller) does not see Kingston
+> SV300S37A60G SSD disk connected into a SATA connector on wake from suspend.
+> The problem was introduced in c312ef176399 "libata/ahci: Drop PCS quirk for
+> Denverton and beyond": the quirk is not applied on wake from suspend as it
+> originally was.
 > 
-> The boolean return value of the qc_fill_rtf operation is used nowhere.
-> Simplify this operation interface by making it a void function. All
-> drivers defining this operation are also updated.
+> It is worth to mention the commit contained another bug: the quirk is not
+> applied at all to controllers which require it. The fix 09d6ac8dc51a
+> "libata/ahci: Fix PCS quirk application" landed in 5.3.8. So testing my
+> patch anywhere between c312ef176399 and 09d6ac8dc51a is pointless.
 > 
-> Signed-off-by: Damien Le Moal<damien.lemoal@opensource.wdc.com>
+> Not all disks trigger the problem. For example nothing bad happens with
+> Western Digital WD5000LPCX HDD.
+> 
+> Test hardware:
+> - Acer 5920G with ICH8M SATA controller
+> - sda: some SATA HDD connnected into the DVD drive IDE port with a SATA-IDE
+> caddy. It is a boot disk
+> - sdb: Kingston SV300S37A60G SSD connected into the only SATA port
+> 
+> Sample "dmesg --notime | grep -E '^(sd |ata)'" output on wake:
+> 
+> sd 0:0:0:0: [sda] Starting disk
+> sd 2:0:0:0: [sdb] Starting disk
+> ata4: SATA link down (SStatus 4 SControl 300)
+> ata3: SATA link down (SStatus 4 SControl 300)
+> ata1.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
+> ata1.00: ACPI cmd ef/03:42:00:00:00:a0 (SET FEATURES) filtered out
+> ata1: FORCE: cable set to 80c
+> ata5: SATA link down (SStatus 0 SControl 300)
+> ata3: SATA link down (SStatus 4 SControl 300)
+> ata3: SATA link down (SStatus 4 SControl 300)
+> ata3.00: disabled
+> sd 2:0:0:0: rejecting I/O to offline device
+> ata3.00: detaching (SCSI 2:0:0:0)
+> sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_NO_CONNECT
+> 	driverbyte=DRIVER_OK
+> sd 2:0:0:0: [sdb] Synchronizing SCSI cache
+> sd 2:0:0:0: [sdb] Synchronize Cache(10) failed: Result:
+> 	hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 2:0:0:0: [sdb] Stopping disk
+> sd 2:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET
+> 	driverbyte=DRIVER_OK
+> 
+> c312ef176399 dropped ahci_pci_reset_controller() which internally calls
+> ahci_reset_controller() and applies the PCS quirk if needed after that. It
+> was called each time a reset was required instead of just
+> ahci_reset_controller(). This patch puts the function back in place.
+> 
+> Fixes: c312ef176399 ("libata/ahci: Drop PCS quirk for Denverton and beyond")
+> Signed-off-by: Adam Vodopjan <grozzly@protonmail.com>
 
-No 2nd sign off.
+Applied to for-6.2-fixes with some tweaks to the commit message. Thanks !
 
-Anyway,
+-- 
+Damien Le Moal
+Western Digital Research
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
