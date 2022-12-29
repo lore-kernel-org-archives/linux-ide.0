@@ -2,240 +2,133 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49BEFC4167B
-	for <linux-ide@archiver.kernel.org>; Thu, 29 Dec 2022 17:00:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A565C4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 29 Dec 2022 17:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233604AbiL2RAc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 29 Dec 2022 12:00:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42686 "EHLO
+        id S233678AbiL2RAl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 29 Dec 2022 12:00:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233613AbiL2RAX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Dec 2022 12:00:23 -0500
+        with ESMTP id S233597AbiL2RAY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Dec 2022 12:00:24 -0500
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F99A10B78
-        for <linux-ide@vger.kernel.org>; Thu, 29 Dec 2022 09:00:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46647F5A7
+        for <linux-ide@vger.kernel.org>; Thu, 29 Dec 2022 09:00:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1672333222; x=1703869222;
+  t=1672333224; x=1703869224;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=iAp2Ea+KW/L1J0nxWnzcy6lcGq+hi0WMJZGC4TQQidE=;
-  b=bl7S3Wl77jG3FmqZdsidms8C39HRYnSIbpc2RrIc8hROw+E5g2Vxf71M
-   CoIgKbl6diAIYFUQShrEOWt2r2mlQBE5VWpu/A7Kaw5n1hzyeOk+CJ0BZ
-   C8eKaCmVnD/Svte0zy/M1qUx5FfOWNELSpQfJTTPM7DD2Ax/Nn8aK2/3U
-   oKuwn2eIvNxI6NqSqTaern5IblD7FoZzhz09pF/KBYEKVu1BGjatByY/V
-   DDzrBDTlMmsvllL4TeLuefWpHd7l04zZySpY1NQNSAUr978tTb9XRcyrL
-   olEXgpbFNU9JOMfNup60MSgV3zhMx6TvXHStKX9HVfQa8xCk0JQq6M4/U
+  bh=hsaTsMQEc4Quqtfoa6xufM51DCwHC3KueqxYtP9uaN8=;
+  b=hudrl03S2aND3DH1p/HjBm75sNxakOVkRT5D01BOOhvD6s0qxEXO3Y60
+   5BkFZQk8524S/FUaTZX+okzXyzSjyY6PiqURK/aZWovIBf1jF84Ev5Xb+
+   UTyS8bkVtYKa/0dKvP+E4bB/tauhKnlN9+GKn1OL7SIqPsoTejdZnM0Zc
+   +JeDdYh6RxcD/Mdb94IZudTc9pVdA9mPnLlVeWkbxWU/C0jUA9DYOkv6l
+   /Hou9n3ZrjUXVwRRBm1C6fq40shmYYUuNKhFv1/zHsATLANE4b462nSGd
+   nizT8KfnnQyvRUT3ueSfIdoTU7g5RGcbpbbslhaLFSxgpcS68TNXSGLXX
    A==;
 X-IronPort-AV: E=Sophos;i="5.96,284,1665417600"; 
-   d="scan'208";a="323990987"
+   d="scan'208";a="323990992"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Dec 2022 01:00:22 +0800
-IronPort-SDR: Ex8CABQE0shStLl5dNnVlKrcm2EWmY7iEBgHjDKMC/jwlHUXjvGq+ilrP3q9fmXpZBcAg4/AQh
- ATYiMArc9lKEbHy/Myl5NaL6w1ZZogOSPl0ELluCV5xuL5Il7xeJ1516ya83kd72DEi96aSR7Q
- +ArK2dxi9b8Zc9inM5Lppj5L86tOwdfgsfNDnLXm5lDuV1jE/GcVRNEGF94qfwUswrSEwuPmE0
- ke7LKc0scC+bORd+hOHQvNDLGoTp2AjDA94/c5teJi3GThiRur/KP11jRAp9QzYrUhJB6XSpQ5
- bA4=
+  by ob1.hgst.iphmx.com with ESMTP; 30 Dec 2022 01:00:24 +0800
+IronPort-SDR: YDdtCWup8kmkzKBhSxJauCDwR0EcvvEo9KPsi2+7felrRCTuH8LURo3mggyIRqc5Vbm6cMAtqZ
+ s404/5Z8SGexg2M2RCccPuQ/Z0euPW/wpFKY6/EpaEA7oP86HIty6wZIk/5DX3N5o3ZtLhYSyZ
+ ql7cEwln8JRcLn7YxdBTOqUIue8VLUrcTJP1nJnQZImhognh4EQ6q+Z8hK0qIi+HPesTTs2o+v
+ iBtNw0fkQZPIUfTqKkuO3Av04+Eo79Xejj5pero5JgvjH+7C5KutBAQ8amU6s6bARJnO8tNptM
+ EMg=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Dec 2022 08:18:26 -0800
-IronPort-SDR: yjMl6AbyTogYm0vpotyiBiwRbncX3lWs1IQuWwhk5qJkmzcMlGaWxjiBHK8o7gNw1v1Ucd57fN
- 0XB5tx1ooHfraxNnPvhJAxR/UE6Xxa4LIy1TN3rqC2EO+byxjD9P1QJuLDNxvYCh2Ov4Wyt3A8
- TrX/YqeI4ZiXHP8w3iyIXLW9eM8fSjDXGdWEM1hFgNVG8pXR1YKT8RwhlMLLjYdNnPVNjCodOq
- 6gK3hJIDpXlgwts2hOwWDzDHR1nsO2xHKhQINeuP/1GtXpVo4cVJHrktybFBBV5Ia7ex7CU1LE
- jME=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Dec 2022 08:18:28 -0800
+IronPort-SDR: 8Xd/ntRq7eqS1mSQ3nppTFU2ZIUyrPs+7w0h8wArqjFS0IIjw2Yw0OH6da4ZUgSchHwkJ7FOeH
+ /C/ZaNZP0wXlp/LGgKelD7zfUBzUwUBz3z/Tlxlxa0r7fCWO0U3dux321BeL5t/pRCJNQQYSCB
+ +UXME3wkE4zMdk/CmOFIRbcsz3Z8nhtem0LW4FuLLc3HDnHkOUdxhUoXFAwgP6DylRns4LlA0N
+ 47kULq7zUKDlAMJZWyKOoTMIdrkL54uTtxfrS7ZRuHB3YExRTfGE/15xWUJxDv7YlodkDx9VUg
+ Ryk=
 WDCIronportException: Internal
 Received: from unknown (HELO x1-carbon.lan) ([10.225.164.9])
-  by uls-op-cesaip02.wdc.com with ESMTP; 29 Dec 2022 09:00:22 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 29 Dec 2022 09:00:24 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
-Subject: [PATCH v2 4/7] ata: libata: respect successfully completed commands during errors
-Date:   Thu, 29 Dec 2022 18:00:00 +0100
-Message-Id: <20221229170005.49118-5-niklas.cassel@wdc.com>
+Subject: [PATCH v2 5/7] ata: libata: move NCQ related ATA_DFLAGs
+Date:   Thu, 29 Dec 2022 18:00:01 +0100
+Message-Id: <20221229170005.49118-6-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221229170005.49118-1-niklas.cassel@wdc.com>
 References: <20221229170005.49118-1-niklas.cassel@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In AHCI specification 1.3.1:
-"5.5.3 Processing Completed Commands"
+ata_dev_configure() starts off by clearing all flags in ATA_DFLAG_CFG_MASK:
+dev->flags &= ~ATA_DFLAG_CFG_MASK;
 
-"For each port that has an interrupt pending:
+ata_dev_configure() then calls ata_dev_config_lba() which calls
+ata_dev_config_ncq().
 
-1. Software determines the cause of the interrupt by reading the PxIS
-   register. It is possible for multiple bits to be set.
-2. Software clears appropriate bits in the PxIS register corresponding
-   to the cause of the interrupt.
-3. Software clears the interrupt bit in IS.IPS corresponding to the port.
-4. If executing non-queued commands, software reads the PxCI register,
-   and compares the current value to the list of commands previously
-   issued by software that are still outstanding. If executing native
-   queued commands, software reads the PxSACT register and compares the
-   current value to the list of commands previously issued by software.
-   Software completes with success any outstanding command whose
-   corresponding bit has been cleared in the respective register. PxCI
-   and PxSACT are volatile registers; software should only use their
-   values to determine commands that have completed, not to determine
-   which commands have previously been issued.
-5. If there were errors, noted in the PxIS register, software performs
-   error recovery actions (see section 6.2.2)."
+ata_dev_config_ncq() will set the correct ATA_DFLAGs depending on what is
+actually supported.
 
-The documentation for the PxSACT shadow register in AHCI:
-"The device clears bits in this field by sending a Set Device Bits FIS
-to the host. The HBA clears bits in this field that are set to ‘1’ in
-the SActive field of the Set Device Bits FIS. The HBA only clears bits
-that correspond to native queued commands that have completed
-successfully."
+Since these flags are set by ata_dev_configure(), they should be in
+ATA_DFLAG_CFG_MASK and not in ATA_DFLAG_INIT_MASK.
 
-Additionally, in SATA specification 3.5a:
-"11.15 FPDMA QUEUED command protocol"
+ATA_DFLAG_NCQ_PRIO_ENABLED is set via sysfs, is should therefore not be in
+ATA_DFLAG_CFG_MASK. It also cannot be in ATA_DFLAG_INIT_MASK, because
+ata_eh_schedule_probe() calls ata_dev_init(), which will clear all flags in
+ATA_DFLAG_INIT_MASK.
 
-"DFPDMAQ11: ERROR
-Halt command processing and transmit Set Device Bits FIS to host
-with the ERR bit in Status field set to one, Interrupt bit set to one,
-ATA error code set to one in the ERROR field, bits in ACT field cleared
-to zero for any outstanding queued commands, and bits set to one
-for any successfully completed queued commands that completion
-notification not yet delivered."
+This means that ATA_DFLAG_NCQ_PRIO_ENABLED (the value the user sets via
+sysfs) would get silently cleared if ata_eh_schedule_probe() is called.
+While that should only happen in certain circumstances, it still doesn't
+seem right that it can get silently cleared.
 
-I.e. even when the HBA triggers an error interrupt, the HBA will still
-clear successfully completed commands in PxSACT. Commands that did not
-complete successfully will still have its bit set in PxSACT.
-(Which means the command that caused the NCQ error and queued commands
-that had not yet finished at the time when the NCQ error occurred.)
+(ata_dev_config_ncq_prio() will still clear the ATA_DFLAG_NCQ_PRIO_ENABLED
+flag if ATA_DFLAG_NCQ_PRIO is suddenly no longer supported after a
+revalidation.)
 
-Additionally, for a HBA that does not have the libata flag
-AHCI_HFLAG_MULTI_MSI set, all ap->locks will point to host->lock, which
-means that IRQs will be disabled for one port while another port's IRQ
-handler is running. The HBA will still receive FISes from the device,
-even if IRQs on the HBA itself are disabled. What can thus e.g. receive
-a FIS that completes several commands successfully, followed by a FIS
-that does (or does not) complete additional commands with the error bit
-set, to indicate that at least one command was aborted.
+Because of this, move ATA_DFLAG_NCQ_PRIO_ENABLED to be outside of both
+ATA_DFLAG_CFG_MASK and ATA_DFLAG_INIT_MASK.
 
-Therefore, modify ahci_handle_port_interrupt() using the new helper
-ahci_qc_complete() to complete the commands that have already been
-signaled as successfully through a regular completion SDB FIS, as not
-doing so would simply cause successfully completed commands to be
-retried for no good reason.
-
-Co-developed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- drivers/ata/libahci.c | 73 +++++++++++++++++++++++++------------------
- 1 file changed, 42 insertions(+), 31 deletions(-)
+ include/linux/libata.h | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index e5d67eb46f3c..8f216de76648 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1849,18 +1849,47 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 		ata_port_abort(ap);
- }
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index f54e02dadc6f..3b7f5d9e2f87 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -91,22 +91,21 @@ enum {
+ 	ATA_DFLAG_AN		= (1 << 7), /* AN configured */
+ 	ATA_DFLAG_TRUSTED	= (1 << 8), /* device supports trusted send/recv */
+ 	ATA_DFLAG_DMADIR	= (1 << 10), /* device requires DMADIR */
+-	ATA_DFLAG_CFG_MASK	= (1 << 12) - 1,
++	ATA_DFLAG_NCQ_SEND_RECV = (1 << 11), /* device supports NCQ SEND and RECV */
++	ATA_DFLAG_NCQ_PRIO	= (1 << 12), /* device supports NCQ priority */
++	ATA_DFLAG_CFG_MASK	= (1 << 13) - 1,
  
--static void ahci_handle_port_interrupt(struct ata_port *ap,
--				       void __iomem *port_mmio, u32 status)
-+static void ahci_qc_complete(struct ata_port *ap, void __iomem *port_mmio)
- {
- 	struct ata_eh_info *ehi = &ap->link.eh_info;
- 	struct ahci_port_priv *pp = ap->private_data;
--	struct ahci_host_priv *hpriv = ap->host->private_data;
--	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
- 	u32 qc_active = 0;
- 	int rc;
+-	ATA_DFLAG_PIO		= (1 << 12), /* device limited to PIO mode */
+-	ATA_DFLAG_NCQ_OFF	= (1 << 13), /* device limited to non-NCQ mode */
++	ATA_DFLAG_PIO		= (1 << 13), /* device limited to PIO mode */
++	ATA_DFLAG_NCQ_OFF	= (1 << 14), /* device limited to non-NCQ mode */
+ 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
+ 	ATA_DFLAG_DUBIOUS_XFER	= (1 << 16), /* data transfer not verified */
+ 	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
+ 	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
+-	ATA_DFLAG_NCQ_SEND_RECV = (1 << 19), /* device supports NCQ SEND and RECV */
+-	ATA_DFLAG_NCQ_PRIO	= (1 << 20), /* device supports NCQ priority */
+-	ATA_DFLAG_NCQ_PRIO_ENABLED = (1 << 21), /* Priority cmds sent to dev */
+-	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
++	ATA_DFLAG_INIT_MASK	= (1 << 19) - 1,
  
-+	/*
-+	 * pp->active_link is not reliable once FBS is enabled, both
-+	 * PORT_SCR_ACT and PORT_CMD_ISSUE should be checked because
-+	 * NCQ and non-NCQ commands may be in flight at the same time.
-+	 */
-+	if (pp->fbs_enabled) {
-+		if (ap->qc_active) {
-+			qc_active = readl(port_mmio + PORT_SCR_ACT);
-+			qc_active |= readl(port_mmio + PORT_CMD_ISSUE);
-+		}
-+	} else {
-+		/* pp->active_link is valid iff any command is in flight */
-+		if (ap->qc_active && pp->active_link->sactive)
-+			qc_active = readl(port_mmio + PORT_SCR_ACT);
-+		else
-+			qc_active = readl(port_mmio + PORT_CMD_ISSUE);
-+	}
-+
-+	rc = ata_qc_complete_multiple(ap, qc_active);
-+	if (unlikely(rc < 0 && !(ap->pflags & ATA_PFLAG_RESETTING))) {
-+		ehi->err_mask |= AC_ERR_HSM;
-+		ehi->action |= ATA_EH_RESET;
-+		ata_port_freeze(ap);
-+	}
-+}
-+
-+static void ahci_handle_port_interrupt(struct ata_port *ap,
-+				       void __iomem *port_mmio, u32 status)
-+{
-+	struct ahci_port_priv *pp = ap->private_data;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+
- 	/* ignore BAD_PMP while resetting */
--	if (unlikely(resetting))
-+	if (unlikely(ap->pflags & ATA_PFLAG_RESETTING))
- 		status &= ~PORT_IRQ_BAD_PMP;
- 
- 	if (sata_lpm_ignore_phy_events(&ap->link)) {
-@@ -1869,6 +1898,12 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
- 	}
- 
- 	if (unlikely(status & PORT_IRQ_ERROR)) {
-+		/*
-+		 * Before getting the error notification, we may have
-+		 * received SDB FISes notifying successful completions.
-+		 * Handle these first and then handle the error.
-+		 */
-+		ahci_qc_complete(ap, port_mmio);
- 		ahci_error_intr(ap, status);
- 		return;
- 	}
-@@ -1905,32 +1940,8 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
- 		}
- 	}
- 
--	/* pp->active_link is not reliable once FBS is enabled, both
--	 * PORT_SCR_ACT and PORT_CMD_ISSUE should be checked because
--	 * NCQ and non-NCQ commands may be in flight at the same time.
--	 */
--	if (pp->fbs_enabled) {
--		if (ap->qc_active) {
--			qc_active = readl(port_mmio + PORT_SCR_ACT);
--			qc_active |= readl(port_mmio + PORT_CMD_ISSUE);
--		}
--	} else {
--		/* pp->active_link is valid iff any command is in flight */
--		if (ap->qc_active && pp->active_link->sactive)
--			qc_active = readl(port_mmio + PORT_SCR_ACT);
--		else
--			qc_active = readl(port_mmio + PORT_CMD_ISSUE);
--	}
++	ATA_DFLAG_NCQ_PRIO_ENABLED = (1 << 19), /* Priority cmds sent to dev */
+ 	ATA_DFLAG_DETACH	= (1 << 24),
+ 	ATA_DFLAG_DETACHED	= (1 << 25),
 -
--
--	rc = ata_qc_complete_multiple(ap, qc_active);
--
--	/* while resetting, invalid completions are expected */
--	if (unlikely(rc < 0 && !resetting)) {
--		ehi->err_mask |= AC_ERR_HSM;
--		ehi->action |= ATA_EH_RESET;
--		ata_port_freeze(ap);
--	}
-+	/* Handle completed commands */
-+	ahci_qc_complete(ap, port_mmio);
- }
- 
- static void ahci_port_intr(struct ata_port *ap)
+ 	ATA_DFLAG_DA		= (1 << 26), /* device supports Device Attention */
+ 	ATA_DFLAG_DEVSLP	= (1 << 27), /* device supports Device Sleep */
+ 	ATA_DFLAG_ACPI_DISABLED = (1 << 28), /* ACPI for the device is disabled */
 -- 
 2.38.1
 
