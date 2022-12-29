@@ -2,56 +2,56 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA8AC4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 29 Dec 2022 17:00:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 290EDC4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 29 Dec 2022 17:01:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233665AbiL2RAz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 29 Dec 2022 12:00:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42722 "EHLO
+        id S233613AbiL2RBG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 29 Dec 2022 12:01:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233621AbiL2RA1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Dec 2022 12:00:27 -0500
+        with ESMTP id S233660AbiL2RAc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Dec 2022 12:00:32 -0500
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 095DF1276F
-        for <linux-ide@vger.kernel.org>; Thu, 29 Dec 2022 09:00:26 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA97312D20
+        for <linux-ide@vger.kernel.org>; Thu, 29 Dec 2022 09:00:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1672333226; x=1703869226;
+  t=1672333227; x=1703869227;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Ou/zB7g3j8YdYvKA39NcxRMlMw4tzov3bP1icuP5yDI=;
-  b=cWPaLb6HCsGiyT+QPSFPLHodBXDdpvxoEICQit7SVcJtPL5AyWd7dCG0
-   nlMgntGoofdPtsEkdCOCdnne5fuv6bFRtXhNBpn+cfL72Azmrbyw7H2qF
-   hgEeZPpStEUobZN4Jxni9/tthOhJgUokh/55RXpkNnbt0LHHwYOKAKQky
-   olVgfJ9N+uHj8/4RGFHaSGI8/zdA05jR/40ntJ0IzkQ1ypL+7iThENsY8
-   3PfIv1VY4LwmPjB1d0/w82Rx8SJQxFEMwVyxOMZuPBLq0aIbXIw+Vo1EZ
-   nkMWbHg8sn3TKKSL4z4gAMG3ObjDkD0cMBKm6ABbBjvS5GVKJw+iNKrrT
+  bh=MsxKiByk5SZDT9+IrLorvSzVhsvu0x7m7WvNgvgs0SI=;
+  b=VmM9CNcRKO8IOIqomWh6CNk7LhqFt20ohCX5ojzYwbY8Rpgw0p/nxaLR
+   iSS3G/QMXfnAZxDC5OmVabj7clHSb2ebBRjAAI2G/2xmy2BFXxkzc9r7W
+   F9wDOS8ADK3t7QgXFTst5dxf0kp5ZuLv8ia857jXJ5qtYoiWJdJA/g/mA
+   yz5fIpRbtD/Srs9MFQnjkIfNe9bkYZNM8C19H/cHOBSH2r4LtvIwdANqD
+   ouH1DIHn/DJVVailXbMe9N6PGVaXCsDcuoEoBSQV8HAmgdxQRpaHbE6KO
+   bPfpBk7zEpsjwLnhjhIHstkdr9tzvIIxLwpe0IZR3YFzN1hPmO0Us/Qo0
    A==;
 X-IronPort-AV: E=Sophos;i="5.96,284,1665417600"; 
-   d="scan'208";a="323991000"
+   d="scan'208";a="323991008"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Dec 2022 01:00:25 +0800
-IronPort-SDR: PGCMZpL4Ju1SsXNLOamDnxwYGlG8qoktXr9yflKcJpM+nJSyi+TenqJRQIEp+ysRbMlI05/H2D
- su/A22oHKUmoWw2apXITFGoGTTxFusQ0rqICuUzk07FV/7fW2iK/4d++eGz0cxHKF/kT/XECqV
- bcCgegWcg4uObNXyBPhEvySAcsIcFIo0wW+l82e19/cd2uy+6p0bgb+IC1ZZmcFrnoxYwqVtdf
- 2nWmCHKwcy8jgmqkz44b0ys1gQNqNBzB+eha01JOf293BMc4LOp6kyqoQ+g+9vmecN+efrVrOF
- D3A=
+  by ob1.hgst.iphmx.com with ESMTP; 30 Dec 2022 01:00:27 +0800
+IronPort-SDR: t0MO9gcntJHGjNEoz9PhjnqaT6OlQ1tQt/m2JFnHUwDNdMWs23TtRALaloK4T4T7azN5YvotEy
+ zVszvTFeRr/mgNvG1ERRyOQo8y5XRcCsjPri17xz61Pbi5YUcqsE+dyYzlYE3OrTZfy2NTxVWH
+ lKlJAhy/hjxumWNhU9wCaQMF34pkXIpyWrn+VfAPjFT8PmngBNBAuhnaDuOGXfOdrWD7VU0xI0
+ B+4QrCmDDnpUJZM1JJvQDOotzdJJkQqWlowRcOn8jI+N+BxVVYwiUbKgj4TRYF7cEtLylDqA13
+ pWo=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Dec 2022 08:18:30 -0800
-IronPort-SDR: +dzoH6MkizE0UD6xumW1BZzOdMo3cJBHVyuWZzLMWWs1V14Z7ITlhEX9OY8ktuU+H0kEIArOTX
- sgPfwBvx55nstY6MqpNfCzPSIT0uqN8+yDbjmZ9JgIgz8U3VkIzMrQVpYrg5knOXBHLfaKpuPt
- 61eKPESsJf13bnxZjJoNlI/clHSzVX/kQTOUizVcRiV1k9LvSo11yu1JqaEdYrLjS9KyFnVRib
- 6YnsxAR2YtcVgv/egUCgTXZk/tfkmJlAIbSg/BY543hi9yvVUHU3Nnx9Ko7e35F0oMMKgQlaU7
- QZg=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Dec 2022 08:18:31 -0800
+IronPort-SDR: Apx8iwhU9gEMJdVBJinKe0OcEf3P8RZSTg3ScoDVYFbi7jr2v9+DIchqznMKnd5Sr6fQoMrWMj
+ dTLv1HIhbIh06dKOLIn7LceHz3iHG22VQFTCiBbBj/8ZrduEyat8UpfPrvw1wlTo74W5ZniSE0
+ mpfQD9CPu8Tmk5/lRS/2Tp5ze6gzWyNTV8xjw0pIpBoimvudPXdbmcT9YLOx/PFbq/NnnuyDYk
+ NsE59Ewaq54pgxvGB7h3uKiKsOIcEjDbgjTAAkjpVJBCzkVGGisDs2r7cUy4iT+ofSnwWRvJzv
+ N1U=
 WDCIronportException: Internal
 Received: from unknown (HELO x1-carbon.lan) ([10.225.164.9])
-  by uls-op-cesaip02.wdc.com with ESMTP; 29 Dec 2022 09:00:25 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP; 29 Dec 2022 09:00:27 -0800
 From:   Niklas Cassel <niklas.cassel@wdc.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
-Subject: [PATCH v2 6/7] ata: libata-scsi: do not overwrite SCSI ML and status bytes
-Date:   Thu, 29 Dec 2022 18:00:02 +0100
-Message-Id: <20221229170005.49118-7-niklas.cassel@wdc.com>
+Subject: [PATCH v2 7/7] ata: libata-scsi: improve ata_scsiop_maint_in()
+Date:   Thu, 29 Dec 2022 18:00:03 +0100
+Message-Id: <20221229170005.49118-8-niklas.cassel@wdc.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221229170005.49118-1-niklas.cassel@wdc.com>
 References: <20221229170005.49118-1-niklas.cassel@wdc.com>
@@ -61,99 +61,36 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-For SCSI ML byte:
-In the case where a command is completed via libata EH:
-irq -> ata_qc_complete() -> ata_qc_schedule_eh()
-irq done
-... -> ata_do_eh() -> ata_eh_link_autopsy() -> ata_eh_finish() ->
-ata_eh_qc_complete() -> __ata_eh_qc_complete() -> __ata_qc_complete() ->
-qc->complete_fn() (ata_scsi_qc_complete()) -> ata_qc_done() ->
-qc->scsidone() (empty stub)
-... -> scsi_eh_finish_cmd() -> scsi_eh_flush_done_q() ->
-scsi_finish_command()
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-ata_eh_link_autopsy() will call ata_eh_analyze_tf(), which calls
-scsi_check_sense(), which sets the SCSI ML byte.
+Allow translation of REPORT_SUPPORTED_OPERATION_CODES commands using
+the command format 0x3, that is, checking support for commands that are
+identified using an opcode and a service action.
 
-Since ata_scsi_qc_complete() is called after scsi_check_sense() when
-a command is completed via libata EH, we cannot simply overwrite the
-SCSI ML byte that was set earlier in the call chain.
-
-For SCSI status byte:
-When a SCSI command is prepared using scsi_prepare_cmd(), it sets
-cmd->result to 0. (SAM_STAT_GOOD is defined as 0x0).
-Likewise, when a command is requeued from SCSI EH, scsi_queue_insert()
-is called, which sets cmd->result to 0.
-
-A SCSI command thus always has a GOOD status by default when being
-sent to libata.
-
-If libata fetches sense data from the device, it will call
-ata_scsi_set_sense(), which will set the status byte to
-SAM_STAT_CHECK_CONDITION, if the caller deems that the status should be
-a check condition.
-
-ata_scsi_qc_complete() should therefore never overwrite the existing
-status byte, because if it is != GOOD, it was set by libata itself,
-for a reason.
-
-For the host byte:
-When libata abort commands, because of a NCQ error, it will schedule
-SCSI EH for all QCs using blk_abort_request(), which will all end up in
-scsi_timeout(), which will call scsi_abort_command(). scsi_timeout()
-sets DID_TIME_OUT regardless if a command was aborted or timed out.
-If we don't clear the DID_TIME_OUT byte for the QC that caused the
-NCQ error, that QC will be reported as a timed out command, instead
-of being reported as a NCQ error.
-
-For a command that actually timed out, DID_TIME_OUT would be fine to
-keep, but libata has its own way of detecting that a command timed out
-(see ata_scsi_cmd_error_handler()), and sets AC_ERR_TIMEOUT if that is
-the case. libata will retry timed out commands.
-
-We could clear DID_TIME_OUT only for the QC that caused the NCQ error,
-but since libata has its own way of detecting timeouts, simply clear it
-always.
-
-Note that the existing ata_scsi_qc_complete() code does:
-cmd->result = SAM_STAT_CHECK_CONDITION or cmd->result = SAM_STAT_GOOD.
-This WILL clear the host byte. So us clearing the host byte
-unconditionally is in line with the existing libata behavior.
-
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 ---
- drivers/ata/libata-scsi.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/libata-scsi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index cbb3a7a50816..e1c43f9f6bb2 100644
+index e1c43f9f6bb2..46109bde8a04 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -1654,7 +1654,8 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 	struct ata_port *ap = qc->ap;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	u8 *cdb = cmd->cmnd;
--	int need_sense = (qc->err_mask != 0);
-+	int need_sense = (qc->err_mask != 0) &&
-+		!(qc->flags & ATA_QCFLAG_SENSE_VALID);
+@@ -3266,11 +3266,12 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
+ 	u8 supported = 0;
+ 	unsigned int err = 0;
  
- 	/* For ATA pass thru (SAT) commands, generate a sense block if
- 	 * user mandated it or if there's an error.  Note that if we
-@@ -1668,12 +1669,11 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
- 	    ((cdb[2] & 0x20) || need_sense))
- 		ata_gen_passthru_sense(qc);
--	else if (qc->flags & ATA_QCFLAG_SENSE_VALID)
--		cmd->result = SAM_STAT_CHECK_CONDITION;
- 	else if (need_sense)
- 		ata_gen_ata_sense(qc);
- 	else
--		cmd->result = SAM_STAT_GOOD;
-+		/* Keep the SCSI ML and status byte, clear host byte. */
-+		cmd->result &= 0x0000ffff;
- 
- 	if (need_sense && !ap->ops->error_handler)
- 		ata_dump_status(ap, &qc->result_tf);
+-	if (cdb[2] != 1) {
++	if (cdb[2] != 1 && cdb[2] != 3) {
+ 		ata_dev_warn(dev, "invalid command format %d\n", cdb[2]);
+ 		err = 2;
+ 		goto out;
+ 	}
++
+ 	switch (cdb[3]) {
+ 	case INQUIRY:
+ 	case MODE_SENSE:
 -- 
 2.38.1
 
