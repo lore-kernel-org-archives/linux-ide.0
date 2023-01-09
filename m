@@ -2,25 +2,24 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CB27C71132
-	for <linux-ide@archiver.kernel.org>; Mon,  9 Jan 2023 04:04:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6394BC7113D
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Jan 2023 04:05:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236423AbjAIEEd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 8 Jan 2023 23:04:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54872 "EHLO
+        id S236496AbjAIEEf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 8 Jan 2023 23:04:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236475AbjAIEEG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jan 2023 23:04:06 -0500
-X-Greylist: delayed 1799 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 08 Jan 2023 20:03:53 PST
-Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 23DEBCE31
-        for <linux-ide@vger.kernel.org>; Sun,  8 Jan 2023 20:03:52 -0800 (PST)
+        with ESMTP id S236485AbjAIEEH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jan 2023 23:04:07 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CAAF11183F
+        for <linux-ide@vger.kernel.org>; Sun,  8 Jan 2023 20:03:53 -0800 (PST)
 Received: from unknown (HELO lgemrelse6q.lge.com) (156.147.1.121)
-        by 156.147.23.52 with ESMTP; 9 Jan 2023 12:33:51 +0900
+        by 156.147.23.51 with ESMTP; 9 Jan 2023 12:33:52 +0900
 X-Original-SENDERIP: 156.147.1.121
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.121 with ESMTP; 9 Jan 2023 12:33:51 +0900
+        by 156.147.1.121 with ESMTP; 9 Jan 2023 12:33:52 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,241 +45,342 @@ Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
         melissa.srw@gmail.com, hamohammed.sa@gmail.com,
         42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
         gwan-gyeong.mun@intel.com
-Subject: [PATCH RFC v7 00/23] DEPT(Dependency Tracker)
-Date:   Mon,  9 Jan 2023 12:33:28 +0900
-Message-Id: <1673235231-30302-1-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH RFC v7 07/23] dept: Apply sdt_might_sleep_strong() to wait_for_completion()/complete()
+Date:   Mon,  9 Jan 2023 12:33:35 +0900
+Message-Id: <1673235231-30302-8-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1673235231-30302-1-git-send-email-byungchul.park@lge.com>
+References: <1673235231-30302-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Just for those who want to try the latest version of DEPT.
+Makes Dept able to track dependencies by
+wait_for_completion()/complete().
 
+In order to obtain the meaningful caller points, replace all the
+wait_for_completion*() declarations with macros in the header.
+
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
+ include/linux/completion.h | 89 +++++++++++++++++++++++++++++++++++++++++-----
+ kernel/sched/completion.c  | 60 +++++++++++++++----------------
+ 2 files changed, 110 insertions(+), 39 deletions(-)
 
-Hi Linus and folks,
-
-I've been developing a tool for detecting deadlock possibilities by
-tracking wait/event rather than lock(?) acquisition order to try to
-cover all synchonization machanisms. It's done on v6.2-rc2.
-
-https://github.com/lgebyungchulpark/linux-dept/commits/dept2.0_on_v6.2-rc2
-
-Benifit:
-
-	0. Works with all lock primitives.
-	1. Works with wait_for_completion()/complete().
-	2. Works with 'wait' on PG_locked.
-	3. Works with 'wait' on PG_writeback.
-	4. Works with swait/wakeup.
-	5. Works with waitqueue.
-	6. Multiple reports are allowed.
-	7. Deduplication control on multiple reports.
-	8. Withstand false positives thanks to 6.
-	9. Easy to tag any wait/event.
-
-Future work:
-
-	0. To make it more stable.
-	1. To separates Dept from Lockdep.
-	2. To improves performance in terms of time and space.
-	3. To use Dept as a dependency engine for Lockdep.
-	4. To add any missing tags of wait/event in the kernel.
-	5. To deduplicate stack trace.
-
-How to interpret reports:
-
-	1. E(event) in each context cannot be triggered because of the
-	   W(wait) that cannot be woken.
-	2. The stack trace helping find the problematic code is located
-	   in each conext's detail.
-
-Thanks,
-Byungchul
-
----
-
-Changes from v6:
-
-	1. Tie to task scheduler code to track sleep and try_to_wake_up()
-	   assuming sleeps cause waits, try_to_wake_up()s would be the
-	   events that those are waiting for, of course with proper DEPT
-	   annotations, sdt_might_sleep_weak(), sdt_might_sleep_strong()
-	   and so on. For these cases, class is classified at sleep
-	   entrance rather than the synchronization initialization code.
-	   Which would extremely reduce false alarms.
-	2. Remove the DEPT associated instance in each page struct for
-	   tracking dependencies by PG_locked and PG_writeback thanks to
-	   the 1. work above.
-	3. Introduce CONFIG_DEPT_AGGRESIVE_TIMEOUT_WAIT to suppress
-	   reports that waits with timeout set are involved, for those
-	   who don't like verbose reporting.
-	4. Add a mechanism to refill the internal memory pools on
-	   running out so that DEPT could keep working as long as free
-	   memory is available in the system.
-	5. Re-enable tracking hashed-waitqueue wait. That's going to no
-	   longer generate false positives because class is classified
-	   at sleep entrance rather than the waitqueue initailization.
-	6. Refactor to make it easier to port onto each new version of
-	   the kernel.
-	7. Apply DEPT to dma fence.
-	8. Do trivial optimizaitions.
-
-Changes from v5:
-
-	1. Use just pr_warn_once() rather than WARN_ONCE() on the lack
-	   of internal resources because WARN_*() printing stacktrace is
-	   too much for informing the lack. (feedback from Ted, Hyeonggon)
-	2. Fix trivial bugs like missing initializing a struct before
-	   using it.
-	3. Assign a different class per task when handling onstack
-	   variables for waitqueue or the like. Which makes Dept
-	   distinguish between onstack variables of different tasks so
-	   as to prevent false positives. (reported by Hyeonggon)
-	4. Make Dept aware of even raw_local_irq_*() to prevent false
-	   positives. (reported by Hyeonggon)
-	5. Don't consider dependencies between the events that might be
-	   triggered within __schedule() and the waits that requires
-	    __schedule(), real ones. (reported by Hyeonggon)
-	6. Unstage the staged wait that has prepare_to_wait_event()'ed
-	   *and* yet to get to __schedule(), if we encounter __schedule()
-	   in-between for another sleep, which is possible if e.g. a
-	   mutex_lock() exists in 'condition' of ___wait_event().
-	7. Turn on CONFIG_PROVE_LOCKING when CONFIG_DEPT is on, to rely
-	   on the hardirq and softirq entrance tracing to make Dept more
-	   portable for now.
-
-Changes from v4:
-
-	1. Fix some bugs that produce false alarms.
-	2. Distinguish each syscall context from another *for arm64*.
-	3. Make it not warn it but just print it in case Dept ring
-	   buffer gets exhausted. (feedback from Hyeonggon)
-	4. Explicitely describe "EXPERIMENTAL" and "Dept might produce
-	   false positive reports" in Kconfig. (feedback from Ted)
-
-Changes from v3:
-
-	1. Dept shouldn't create dependencies between different depths
-	   of a class that were indicated by *_lock_nested(). Dept
-	   normally doesn't but it does once another lock class comes
-	   in. So fixed it. (feedback from Hyeonggon)
-	2. Dept considered a wait as a real wait once getting to
-	   __schedule() even if it has been set to TASK_RUNNING by wake
-	   up sources in advance. Fixed it so that Dept doesn't consider
-	   the case as a real wait. (feedback from Jan Kara)
-	3. Stop tracking dependencies with a map once the event
-	   associated with the map has been handled. Dept will start to
-	   work with the map again, on the next sleep.
-
-Changes from v2:
-
-	1. Disable Dept on bit_wait_table[] in sched/wait_bit.c
-	   reporting a lot of false positives, which is my fault.
-	   Wait/event for bit_wait_table[] should've been tagged in a
-	   higher layer for better work, which is a future work.
-	   (feedback from Jan Kara)
-	2. Disable Dept on crypto_larval's completion to prevent a false
-	   positive.
-
-Changes from v1:
-
-	1. Fix coding style and typo. (feedback from Steven)
-	2. Distinguish each work context from another in workqueue.
-	3. Skip checking lock acquisition with nest_lock, which is about
-	   correct lock usage that should be checked by Lockdep.
-
-Changes from RFC(v0):
-
-	1. Prevent adding a wait tag at prepare_to_wait() but __schedule().
-	   (feedback from Linus and Matthew)
-	2. Use try version at lockdep_acquire_cpus_lock() annotation.
-	3. Distinguish each syscall context from another.
-
-Byungchul Park (23):
-  llist: Move llist_{head,node} definition to types.h
-  dept: Implement Dept(Dependency Tracker)
-  dept: Add single event dependency tracker APIs
-  dept: Add lock dependency tracker APIs
-  dept: Tie to Lockdep and IRQ tracing
-  dept: Add proc knobs to show stats and dependency graph
-  dept: Apply sdt_might_sleep_strong() to
-    wait_for_completion()/complete()
-  dept: Apply sdt_might_sleep_strong() to PG_{locked,writeback} wait
-  dept: Apply sdt_might_sleep_weak() to swait
-  dept: Apply sdt_might_sleep_weak() to waitqueue wait
-  dept: Apply sdt_might_sleep_weak() to hashed-waitqueue wait
-  dept: Distinguish each syscall context from another
-  dept: Distinguish each work from another
-  dept: Add a mechanism to refill the internal memory pools on running
-    out
-  locking/lockdep, cpu/hotplus: Use a weaker annotation in AP thread
-  dept: Apply sdt_might_sleep_strong() to dma fence wait
-  dept: Track timeout waits separately with a new Kconfig
-  dept: Apply timeout consideration to wait_for_completion()/complete()
-  dept: Apply timeout consideration to swait
-  dept: Apply timeout consideration to waitqueue wait
-  dept: Apply timeout consideration to hashed-waitqueue wait
-  dept: Apply timeout consideration to dma fence wait
-  dept: Record the latest one out of consecutive waits of the same class
-
- arch/arm64/kernel/syscall.c         |    2 +
- arch/x86/entry/common.c             |    4 +
- drivers/dma-buf/dma-fence.c         |   11 +
- include/linux/completion.h          |  102 +-
- include/linux/dept.h                |  600 +++++++
- include/linux/dept_ldt.h            |   77 +
- include/linux/dept_sdt.h            |  101 ++
- include/linux/hardirq.h             |    3 +
- include/linux/irqflags.h            |   22 +-
- include/linux/llist.h               |    8 -
- include/linux/local_lock_internal.h |    1 +
- include/linux/lockdep.h             |  108 +-
- include/linux/lockdep_types.h       |    3 +
- include/linux/mutex.h               |    1 +
- include/linux/percpu-rwsem.h        |    2 +-
- include/linux/rtmutex.h             |    1 +
- include/linux/rwlock_types.h        |    1 +
- include/linux/rwsem.h               |    1 +
- include/linux/sched.h               |    3 +
- include/linux/seqlock.h             |    2 +-
- include/linux/spinlock_types_raw.h  |    3 +
- include/linux/srcu.h                |    2 +-
- include/linux/swait.h               |    6 +
- include/linux/types.h               |    8 +
- include/linux/wait.h                |    6 +
- include/linux/wait_bit.h            |    6 +
- init/init_task.c                    |    2 +
- init/main.c                         |    2 +
- kernel/Makefile                     |    1 +
- kernel/cpu.c                        |    2 +-
- kernel/dependency/Makefile          |    4 +
- kernel/dependency/dept.c            | 3120 +++++++++++++++++++++++++++++++++++
- kernel/dependency/dept_hash.h       |   10 +
- kernel/dependency/dept_internal.h   |   26 +
- kernel/dependency/dept_object.h     |   13 +
- kernel/dependency/dept_proc.c       |   93 ++
- kernel/exit.c                       |    1 +
- kernel/fork.c                       |    2 +
- kernel/locking/lockdep.c            |   23 +
- kernel/module/main.c                |    2 +
- kernel/sched/completion.c           |   60 +-
- kernel/sched/core.c                 |    9 +
- kernel/workqueue.c                  |    3 +
- lib/Kconfig.debug                   |   37 +
- lib/locking-selftest.c              |    2 +
- mm/filemap.c                        |   11 +
- 46 files changed, 4432 insertions(+), 75 deletions(-)
- create mode 100644 include/linux/dept.h
- create mode 100644 include/linux/dept_ldt.h
- create mode 100644 include/linux/dept_sdt.h
- create mode 100644 kernel/dependency/Makefile
- create mode 100644 kernel/dependency/dept.c
- create mode 100644 kernel/dependency/dept_hash.h
- create mode 100644 kernel/dependency/dept_internal.h
- create mode 100644 kernel/dependency/dept_object.h
- create mode 100644 kernel/dependency/dept_proc.c
-
+diff --git a/include/linux/completion.h b/include/linux/completion.h
+index 62b32b1..0408f6d 100644
+--- a/include/linux/completion.h
++++ b/include/linux/completion.h
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <linux/swait.h>
++#include <linux/dept_sdt.h>
+ 
+ /*
+  * struct completion - structure used to maintain state for a "completion"
+@@ -99,19 +100,89 @@ static inline void reinit_completion(struct completion *x)
+ 	x->done = 0;
+ }
+ 
+-extern void wait_for_completion(struct completion *);
+-extern void wait_for_completion_io(struct completion *);
+-extern int wait_for_completion_interruptible(struct completion *x);
+-extern int wait_for_completion_killable(struct completion *x);
+-extern int wait_for_completion_state(struct completion *x, unsigned int state);
+-extern unsigned long wait_for_completion_timeout(struct completion *x,
++extern void raw_wait_for_completion(struct completion *);
++extern void raw_wait_for_completion_io(struct completion *);
++extern int raw_wait_for_completion_interruptible(struct completion *x);
++extern int raw_wait_for_completion_killable(struct completion *x);
++extern int raw_wait_for_completion_state(struct completion *x, unsigned int state);
++extern unsigned long raw_wait_for_completion_timeout(struct completion *x,
+ 						   unsigned long timeout);
+-extern unsigned long wait_for_completion_io_timeout(struct completion *x,
++extern unsigned long raw_wait_for_completion_io_timeout(struct completion *x,
+ 						    unsigned long timeout);
+-extern long wait_for_completion_interruptible_timeout(
++extern long raw_wait_for_completion_interruptible_timeout(
+ 	struct completion *x, unsigned long timeout);
+-extern long wait_for_completion_killable_timeout(
++extern long raw_wait_for_completion_killable_timeout(
+ 	struct completion *x, unsigned long timeout);
++
++#define wait_for_completion(x)					\
++({								\
++	sdt_might_sleep_strong(NULL);				\
++	raw_wait_for_completion(x);				\
++	sdt_might_sleep_finish();				\
++})
++#define wait_for_completion_io(x)				\
++({								\
++	sdt_might_sleep_strong(NULL);				\
++	raw_wait_for_completion_io(x);				\
++	sdt_might_sleep_finish();				\
++})
++#define wait_for_completion_interruptible(x)			\
++({								\
++	int __ret;						\
++	sdt_might_sleep_strong(NULL);				\
++	__ret = raw_wait_for_completion_interruptible(x);	\
++	sdt_might_sleep_finish();				\
++	__ret;							\
++})
++#define wait_for_completion_killable(x)				\
++({								\
++	int __ret;						\
++	sdt_might_sleep_strong(NULL);				\
++	__ret = raw_wait_for_completion_killable(x);		\
++	sdt_might_sleep_finish();				\
++	__ret;							\
++})
++#define wait_for_completion_state(x, s)				\
++({								\
++	int __ret;						\
++	sdt_might_sleep_strong(NULL);				\
++	__ret = raw_wait_for_completion_state(x, s);		\
++	sdt_might_sleep_finish();				\
++	__ret;							\
++})
++#define wait_for_completion_timeout(x, t)			\
++({								\
++	unsigned long __ret;					\
++	sdt_might_sleep_strong(NULL);				\
++	__ret = raw_wait_for_completion_timeout(x, t);		\
++	sdt_might_sleep_finish();				\
++	__ret;							\
++})
++#define wait_for_completion_io_timeout(x, t)			\
++({								\
++	unsigned long __ret;					\
++	sdt_might_sleep_strong(NULL);				\
++	__ret = raw_wait_for_completion_io_timeout(x, t);	\
++	sdt_might_sleep_finish();				\
++	__ret;							\
++})
++#define wait_for_completion_interruptible_timeout(x, t)		\
++({								\
++	long __ret;						\
++	sdt_might_sleep_strong(NULL);				\
++	__ret = raw_wait_for_completion_interruptible_timeout(x, t);\
++	sdt_might_sleep_finish();				\
++	__ret;							\
++})
++#define wait_for_completion_killable_timeout(x, t)		\
++({								\
++	long __ret;						\
++	sdt_might_sleep_strong(NULL);				\
++	__ret = raw_wait_for_completion_killable_timeout(x, t);	\
++	sdt_might_sleep_finish();				\
++	__ret;							\
++})
++
+ extern bool try_wait_for_completion(struct completion *x);
+ extern bool completion_done(struct completion *x);
+ 
+diff --git a/kernel/sched/completion.c b/kernel/sched/completion.c
+index d57a5c1..8fcf5ee 100644
+--- a/kernel/sched/completion.c
++++ b/kernel/sched/completion.c
+@@ -4,7 +4,7 @@
+  * Generic wait-for-completion handler;
+  *
+  * It differs from semaphores in that their default case is the opposite,
+- * wait_for_completion default blocks whereas semaphore default non-block. The
++ * raw_wait_for_completion default blocks whereas semaphore default non-block. The
+  * interface also makes it easy to 'complete' multiple waiting threads,
+  * something which isn't entirely natural for semaphores.
+  *
+@@ -20,7 +20,7 @@
+  * This will wake up a single thread waiting on this completion. Threads will be
+  * awakened in the same order in which they were queued.
+  *
+- * See also complete_all(), wait_for_completion() and related routines.
++ * See also complete_all(), raw_wait_for_completion() and related routines.
+  *
+  * If this function wakes up a task, it executes a full memory barrier before
+  * accessing the task state.
+@@ -124,23 +124,23 @@ void complete_all(struct completion *x)
+ }
+ 
+ /**
+- * wait_for_completion: - waits for completion of a task
++ * raw_wait_for_completion: - waits for completion of a task
+  * @x:  holds the state of this particular completion
+  *
+  * This waits to be signaled for completion of a specific task. It is NOT
+  * interruptible and there is no timeout.
+  *
+- * See also similar routines (i.e. wait_for_completion_timeout()) with timeout
++ * See also similar routines (i.e. raw_wait_for_completion_timeout()) with timeout
+  * and interrupt capability. Also see complete().
+  */
+-void __sched wait_for_completion(struct completion *x)
++void __sched raw_wait_for_completion(struct completion *x)
+ {
+ 	wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_UNINTERRUPTIBLE);
+ }
+-EXPORT_SYMBOL(wait_for_completion);
++EXPORT_SYMBOL(raw_wait_for_completion);
+ 
+ /**
+- * wait_for_completion_timeout: - waits for completion of a task (w/timeout)
++ * raw_wait_for_completion_timeout: - waits for completion of a task (w/timeout)
+  * @x:  holds the state of this particular completion
+  * @timeout:  timeout value in jiffies
+  *
+@@ -152,28 +152,28 @@ void __sched wait_for_completion(struct completion *x)
+  * till timeout) if completed.
+  */
+ unsigned long __sched
+-wait_for_completion_timeout(struct completion *x, unsigned long timeout)
++raw_wait_for_completion_timeout(struct completion *x, unsigned long timeout)
+ {
+ 	return wait_for_common(x, timeout, TASK_UNINTERRUPTIBLE);
+ }
+-EXPORT_SYMBOL(wait_for_completion_timeout);
++EXPORT_SYMBOL(raw_wait_for_completion_timeout);
+ 
+ /**
+- * wait_for_completion_io: - waits for completion of a task
++ * raw_wait_for_completion_io: - waits for completion of a task
+  * @x:  holds the state of this particular completion
+  *
+  * This waits to be signaled for completion of a specific task. It is NOT
+  * interruptible and there is no timeout. The caller is accounted as waiting
+  * for IO (which traditionally means blkio only).
+  */
+-void __sched wait_for_completion_io(struct completion *x)
++void __sched raw_wait_for_completion_io(struct completion *x)
+ {
+ 	wait_for_common_io(x, MAX_SCHEDULE_TIMEOUT, TASK_UNINTERRUPTIBLE);
+ }
+-EXPORT_SYMBOL(wait_for_completion_io);
++EXPORT_SYMBOL(raw_wait_for_completion_io);
+ 
+ /**
+- * wait_for_completion_io_timeout: - waits for completion of a task (w/timeout)
++ * raw_wait_for_completion_io_timeout: - waits for completion of a task (w/timeout)
+  * @x:  holds the state of this particular completion
+  * @timeout:  timeout value in jiffies
+  *
+@@ -186,14 +186,14 @@ void __sched wait_for_completion_io(struct completion *x)
+  * till timeout) if completed.
+  */
+ unsigned long __sched
+-wait_for_completion_io_timeout(struct completion *x, unsigned long timeout)
++raw_wait_for_completion_io_timeout(struct completion *x, unsigned long timeout)
+ {
+ 	return wait_for_common_io(x, timeout, TASK_UNINTERRUPTIBLE);
+ }
+-EXPORT_SYMBOL(wait_for_completion_io_timeout);
++EXPORT_SYMBOL(raw_wait_for_completion_io_timeout);
+ 
+ /**
+- * wait_for_completion_interruptible: - waits for completion of a task (w/intr)
++ * raw_wait_for_completion_interruptible: - waits for completion of a task (w/intr)
+  * @x:  holds the state of this particular completion
+  *
+  * This waits for completion of a specific task to be signaled. It is
+@@ -201,7 +201,7 @@ void __sched wait_for_completion_io(struct completion *x)
+  *
+  * Return: -ERESTARTSYS if interrupted, 0 if completed.
+  */
+-int __sched wait_for_completion_interruptible(struct completion *x)
++int __sched raw_wait_for_completion_interruptible(struct completion *x)
+ {
+ 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_INTERRUPTIBLE);
+ 
+@@ -209,10 +209,10 @@ int __sched wait_for_completion_interruptible(struct completion *x)
+ 		return t;
+ 	return 0;
+ }
+-EXPORT_SYMBOL(wait_for_completion_interruptible);
++EXPORT_SYMBOL(raw_wait_for_completion_interruptible);
+ 
+ /**
+- * wait_for_completion_interruptible_timeout: - waits for completion (w/(to,intr))
++ * raw_wait_for_completion_interruptible_timeout: - waits for completion (w/(to,intr))
+  * @x:  holds the state of this particular completion
+  * @timeout:  timeout value in jiffies
+  *
+@@ -223,15 +223,15 @@ int __sched wait_for_completion_interruptible(struct completion *x)
+  * or number of jiffies left till timeout) if completed.
+  */
+ long __sched
+-wait_for_completion_interruptible_timeout(struct completion *x,
++raw_wait_for_completion_interruptible_timeout(struct completion *x,
+ 					  unsigned long timeout)
+ {
+ 	return wait_for_common(x, timeout, TASK_INTERRUPTIBLE);
+ }
+-EXPORT_SYMBOL(wait_for_completion_interruptible_timeout);
++EXPORT_SYMBOL(raw_wait_for_completion_interruptible_timeout);
+ 
+ /**
+- * wait_for_completion_killable: - waits for completion of a task (killable)
++ * raw_wait_for_completion_killable: - waits for completion of a task (killable)
+  * @x:  holds the state of this particular completion
+  *
+  * This waits to be signaled for completion of a specific task. It can be
+@@ -239,7 +239,7 @@ int __sched wait_for_completion_interruptible(struct completion *x)
+  *
+  * Return: -ERESTARTSYS if interrupted, 0 if completed.
+  */
+-int __sched wait_for_completion_killable(struct completion *x)
++int __sched raw_wait_for_completion_killable(struct completion *x)
+ {
+ 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_KILLABLE);
+ 
+@@ -247,9 +247,9 @@ int __sched wait_for_completion_killable(struct completion *x)
+ 		return t;
+ 	return 0;
+ }
+-EXPORT_SYMBOL(wait_for_completion_killable);
++EXPORT_SYMBOL(raw_wait_for_completion_killable);
+ 
+-int __sched wait_for_completion_state(struct completion *x, unsigned int state)
++int __sched raw_wait_for_completion_state(struct completion *x, unsigned int state)
+ {
+ 	long t = wait_for_common(x, MAX_SCHEDULE_TIMEOUT, state);
+ 
+@@ -257,10 +257,10 @@ int __sched wait_for_completion_state(struct completion *x, unsigned int state)
+ 		return t;
+ 	return 0;
+ }
+-EXPORT_SYMBOL(wait_for_completion_state);
++EXPORT_SYMBOL(raw_wait_for_completion_state);
+ 
+ /**
+- * wait_for_completion_killable_timeout: - waits for completion of a task (w/(to,killable))
++ * raw_wait_for_completion_killable_timeout: - waits for completion of a task (w/(to,killable))
+  * @x:  holds the state of this particular completion
+  * @timeout:  timeout value in jiffies
+  *
+@@ -272,12 +272,12 @@ int __sched wait_for_completion_state(struct completion *x, unsigned int state)
+  * or number of jiffies left till timeout) if completed.
+  */
+ long __sched
+-wait_for_completion_killable_timeout(struct completion *x,
++raw_wait_for_completion_killable_timeout(struct completion *x,
+ 				     unsigned long timeout)
+ {
+ 	return wait_for_common(x, timeout, TASK_KILLABLE);
+ }
+-EXPORT_SYMBOL(wait_for_completion_killable_timeout);
++EXPORT_SYMBOL(raw_wait_for_completion_killable_timeout);
+ 
+ /**
+  *	try_wait_for_completion - try to decrement a completion without blocking
+@@ -319,7 +319,7 @@ bool try_wait_for_completion(struct completion *x)
+  *	completion_done - Test to see if a completion has any waiters
+  *	@x:	completion structure
+  *
+- *	Return: 0 if there are waiters (wait_for_completion() in progress)
++ *	Return: 0 if there are waiters (raw_wait_for_completion() in progress)
+  *		 1 if there are no waiters.
+  *
+  *	Note, this will always return true if complete_all() was called on @X.
 -- 
 1.9.1
 
