@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E7B3C71131
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D83C8C5479D
 	for <linux-ide@archiver.kernel.org>; Mon,  9 Jan 2023 04:04:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236355AbjAIEEc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 8 Jan 2023 23:04:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54738 "EHLO
+        id S236475AbjAIEEe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 8 Jan 2023 23:04:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236423AbjAIEEB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jan 2023 23:04:01 -0500
+        with ESMTP id S236496AbjAIEEJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jan 2023 23:04:09 -0500
 Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3FB661180C
-        for <linux-ide@vger.kernel.org>; Sun,  8 Jan 2023 20:03:52 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 29EB8CE38
+        for <linux-ide@vger.kernel.org>; Sun,  8 Jan 2023 20:03:58 -0800 (PST)
 Received: from unknown (HELO lgemrelse6q.lge.com) (156.147.1.121)
-        by 156.147.23.52 with ESMTP; 9 Jan 2023 12:33:51 +0900
+        by 156.147.23.52 with ESMTP; 9 Jan 2023 12:33:54 +0900
 X-Original-SENDERIP: 156.147.1.121
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.121 with ESMTP; 9 Jan 2023 12:33:51 +0900
+        by 156.147.1.121 with ESMTP; 9 Jan 2023 12:33:54 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -45,9 +45,9 @@ Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
         melissa.srw@gmail.com, hamohammed.sa@gmail.com,
         42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
         gwan-gyeong.mun@intel.com
-Subject: [PATCH RFC v7 01/23] llist: Move llist_{head,node} definition to types.h
-Date:   Mon,  9 Jan 2023 12:33:29 +0900
-Message-Id: <1673235231-30302-2-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH RFC v7 20/23] dept: Apply timeout consideration to waitqueue wait
+Date:   Mon,  9 Jan 2023 12:33:48 +0900
+Message-Id: <1673235231-30302-21-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1673235231-30302-1-git-send-email-byungchul.park@lge.com>
 References: <1673235231-30302-1-git-send-email-byungchul.park@lge.com>
@@ -55,54 +55,31 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-llist_head and llist_node can be used by very primitives. For example,
-Dept for tracking dependency uses llist things in its header. To avoid
-header dependency, move those to types.h.
+Now that CONFIG_DEPT_AGGRESSIVE_TIMEOUT_WAIT was introduced, apply the
+consideration to waitqueue wait, assuming an input 'ret' in
+___wait_event() macro is used as a timeout value.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/llist.h | 8 --------
- include/linux/types.h | 8 ++++++++
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ include/linux/wait.h | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/llist.h b/include/linux/llist.h
-index 85bda2d..99cc3c3 100644
---- a/include/linux/llist.h
-+++ b/include/linux/llist.h
-@@ -53,14 +53,6 @@
- #include <linux/stddef.h>
- #include <linux/types.h>
- 
--struct llist_head {
--	struct llist_node *first;
--};
--
--struct llist_node {
--	struct llist_node *next;
--};
--
- #define LLIST_HEAD_INIT(name)	{ NULL }
- #define LLIST_HEAD(name)	struct llist_head name = LLIST_HEAD_INIT(name)
- 
-diff --git a/include/linux/types.h b/include/linux/types.h
-index ea8cf60a..b12a444 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -187,6 +187,14 @@ struct hlist_node {
- 	struct hlist_node *next, **pprev;
- };
- 
-+struct llist_head {
-+	struct llist_node *first;
-+};
-+
-+struct llist_node {
-+	struct llist_node *next;
-+};
-+
- struct ustat {
- 	__kernel_daddr_t	f_tfree;
- #ifdef CONFIG_ARCH_32BIT_USTAT_F_TINODE
+diff --git a/include/linux/wait.h b/include/linux/wait.h
+index ede466c..87888ee 100644
+--- a/include/linux/wait.h
++++ b/include/linux/wait.h
+@@ -304,7 +304,10 @@ static inline void wake_up_pollfree(struct wait_queue_head *wq_head)
+ 	struct wait_queue_entry __wq_entry;					\
+ 	long __ret = ret;	/* explicit shadow */				\
+ 										\
+-	sdt_might_sleep_weak(NULL);						\
++	if (!__ret || __ret == MAX_SCHEDULE_TIMEOUT)				\
++		sdt_might_sleep_weak(NULL);					\
++	else									\
++		sdt_might_sleep_weak_timeout(NULL);				\
+ 	init_wait_entry(&__wq_entry, exclusive ? WQ_FLAG_EXCLUSIVE : 0);	\
+ 	for (;;) {								\
+ 		long __int = prepare_to_wait_event(&wq_head, &__wq_entry, state);\
 -- 
 1.9.1
 
