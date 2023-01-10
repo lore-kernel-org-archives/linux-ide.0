@@ -2,126 +2,161 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC00C54EBC
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Jan 2023 13:23:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE71DC54EBE
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Jan 2023 13:27:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231996AbjAJNXT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Jan 2023 08:23:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49048 "EHLO
+        id S230432AbjAJN1d (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Jan 2023 08:27:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232828AbjAJNXR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2023 08:23:17 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38169CFC
-        for <linux-ide@vger.kernel.org>; Tue, 10 Jan 2023 05:23:17 -0800 (PST)
+        with ESMTP id S232833AbjAJN1P (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2023 08:27:15 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6632A476
+        for <linux-ide@vger.kernel.org>; Tue, 10 Jan 2023 05:27:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1673356996; x=1704892996;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=QTBZrQdLHDsAsAqEoVMFsJCKFUD0i+1isXzUx2uayrY=;
-  b=bljlMihdy7lgrlrMUZ+4a4B83sgEj4R37sMPwmdvrxQxqVAaekJC94UI
-   Zt1PyDJesVtXtbE54AXWhcQUh/rDyYaI/Qq3WhQmxciDk7L6H3NPoIl1N
-   lCCY6akcYCxbJhQNM1hZeN+8wfYGq7AnrlnOa1bdQ5qcBAuEBhIxTiTg3
-   3wPeEWzWmzGfmjvo+0ghmWmtsecoXB5o9xXkxY8fCYvzseAv1c1M+Mvs6
-   rfNNKYdcJggSEXkGoIzFij3HZusKqHDjqPONSFYR5O5Odx3QjmxWVDBtg
-   xkKmlMUXun0p0sdd/X1N3mrDPS3ZXzGCwLax9JPwdFXFsSFHHH24fL4td
-   Q==;
+  t=1673357234; x=1704893234;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=kJDx5m6NLMgHD4UV2WEuI7W1qzKw58WnWCzUakOHpnk=;
+  b=g+UJfdxWHyeKbNbcthr5Z0zUsLKHxfFHPnz9vv5Qe+M6z4NsAyCys6Ln
+   R+CdUp9LLtdI1ivXV3plBVhKbTq66ksEI8XpAG/vJj8gTtVhD0rlS2cW2
+   TZ6/hlCCjOP/e3Df+wmlDjwGUMHFWw8Gyo5YDRIBSVfFJEdXrzTX1XTwe
+   TUGjytLaiVaYRQd/X5/D2pcPq3K5Nfiw6zdDVWdmTov1K3w6lDWrzaXMe
+   kLrmoqVGCOvALvAq5Mbe5lAFAqiGw/iPE/M8124b/cCbVniJQZvqfT2ic
+   z0ufSsGMYKAJRKzP8v0AO786iwreI5NUI8j0zM1fHobgjNn4RYrkGN+sa
+   A==;
 X-IronPort-AV: E=Sophos;i="5.96,315,1665417600"; 
-   d="scan'208";a="220556151"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Jan 2023 21:23:14 +0800
-IronPort-SDR: fTaOcn5SWV/OoPp8IXsG0jSexaDpk2Jr5Tb08oy66iSx9eeUDXUn+k1f4adDp/aQUtleE+nYpg
- Qs5KNGU3cAAlnmUdBeQlcGEBMgd7ySC+nmohl0gdDgGP9QBPIvvegdZ6lML5pn7oa+FjwILcHC
- fwOGYUvZyk2wVwvkw3KwXmnH+WznLkovIAJL+rTQxNKbkYwwm6VLEsDtmj+EKotaf1JoIKMonF
- 1lqNUlrTaXP2aNpIl6q2sibg3pIs+HzSgD4cdMtUTd3fUQ+U9ud19Gk5720K8lP/tFu0JgrZRn
- Ta8=
+   d="scan'208";a="220321116"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Jan 2023 21:27:14 +0800
+IronPort-SDR: sNNoOo5nNSm7IxxoifgUTYNgM70MPZT/i8i3zmM+CWOeVSDGNSUARqg0bX1lwY1vnobwncqyBu
+ YyZ6XQD9/QSL9ZM0+T3gNVFC2gzXRLzgV7+yiLJJiFafLwxyWspWaoHIWrAdhPdnnCQbpIOOPJ
+ Vjmj3oQFN92jlSYicy27nxwEJO5qO9KTG/9rHpROWBgcdK598bBrmh7wcqF2u7D6rt466DzNrj
+ ldFdpE2/z0GcpDD0uAO9izuurFJxDUKNgOwO90DX3rQVem2abDbBw+nw7YBYCEYJTsg+wNR5Ld
+ yZM=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jan 2023 04:41:04 -0800
-IronPort-SDR: bRruLk6o5wisgJ/1SS/GHfvI1fH3tPIcK1TKcQeqwUql9tXAY9wmLpWx7uGS34VjZ4XtQnH8fA
- X9hfKsaqM0RJkOapl2EHBYdYdtFsO4zEefssD/EhCnHSTgphkd3QKABYHhgrFwEcB9ateNRzrP
- N8hyHIOexncfpK+Dy3JZrJMWF/aqd43JFVxffRO0QgQ9Ajmtu+2RHVkRHa7+9vR4gCIIoGPuo2
- m+xwtYLjJz6PK5tEjIlG/x+SmKQcOiitYlZ+4nRuo61m4M7LRpQBHYXV6V6N642Ir1XkNzzeyg
- 8ok=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jan 2023 04:39:19 -0800
+IronPort-SDR: LXQ4kF79vKWeAQ1yVQpNGy0+PifDMTwFwD4DebB0HFUpVi42tIRS8jZNPz5HSrMuxefSShfqRq
+ LRvZaVlQVqkkWiiWljZFL2Rj+msmhwX2G8Bh2zf8mWISHGeiv26n0AyFHFkFXL2Dt6zqkgIXsQ
+ ArXBxrx/BSMr6dlZzHt4zaIruH9a958jvz6iAlQZWOZu9jCVct7ufwC0/rWTJNqOebKNVVY0+A
+ 4gMezDOkbLXquPuczqDSWbe08GP1mGO9ZBUR+njvuO9+tnKyYpSfUiMu8HEpDrrJ7BmSj9nuqt
+ ifc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jan 2023 05:23:15 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Jan 2023 05:27:14 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Nrs2B4y58z1Rwt8
-        for <linux-ide@vger.kernel.org>; Tue, 10 Jan 2023 05:23:14 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Nrs6n5Lkxz1RwtC
+        for <linux-ide@vger.kernel.org>; Tue, 10 Jan 2023 05:27:13 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1673356994; x=1675948995; bh=QTBZrQdLHDsAsAqEoVMFsJCKFUD0i+1isXz
-        Ux2uayrY=; b=Yz+xO2Mqtrx0XY1yk8sQYcfRq9jOTUKiSg/HN7jFNe0q23pjrTr
-        P+fenOPLHjxDfQS4/28cCio9+KYAdwm5j85ax/nDOFgUw2qadQjxYHsNjxbEhkmj
-        +B+LkFiFxdgXrfjb+f7ZWczynqPqXE6HdzoLgo8k1Qd6Q+PeJ5STj4A9HeQMk2JJ
-        Bt9WpKa4UgkkEU7xIHTiLSeKEZQjl6pzRBT2VOQ+2TVDzpYH5QXngI6kAvajODIA
-        kuvCX94fQ6wGfqVedf7FhYrsG8FWDPPXaCulir9cdzUWtrd4rqe8Xrte+koJQjlu
-        HnvSR0uruYWX9mVPOcCHpJSTyOm5sIQ1uQg==
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1673357233;
+         x=1675949234; bh=kJDx5m6NLMgHD4UV2WEuI7W1qzKw58WnWCzUakOHpnk=; b=
+        AdDDP+RF43BprwMavEQ2mTih25ApxT1PC7armszWqy+lnZGj6m7Z07Nz/cBTWy4U
+        elHxFDO9pYx4Sp3yEzWyj6N71pZfW8sNmy098WAcYRmYsiDxAxpbnu4GQMlMrCdy
+        ax1saYPWowCmE/SMhsC22eO4hjO4C9mM/eIxVfj5wFJRVY0w7t6EjB8LgsTrqnOn
+        BTHl5+ILnDdjhoUdLKrqgTrVLLPFvsveV6W0HCkXql6Rc44gnACw3TGWBQoBlz8z
+        1LCr1U2Lmf4ngZcM6jc2T+07YVugCH5KZa2jT5l4dKSaOFd+7V78ALWZJtL/XSnI
+        Abiu+U2ar0X82LYysgND+w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id giatnSSIEsam for <linux-ide@vger.kernel.org>;
-        Tue, 10 Jan 2023 05:23:14 -0800 (PST)
-Received: from [10.225.163.12] (unknown [10.225.163.12])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Nrs286pFSz1RvLy;
-        Tue, 10 Jan 2023 05:23:12 -0800 (PST)
-Message-ID: <6172d4fc-9747-7003-84bb-899dbff33865@opensource.wdc.com>
-Date:   Tue, 10 Jan 2023 22:23:11 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v7 0/7] Improve libata support for FUA
-Content-Language: en-US
-To:     Tejun Heo <tj@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>,
-        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
-        Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230103051924.233796-1-damien.lemoal@opensource.wdc.com>
- <Y7WuEqMgySOCCTqy@slm.duckdns.org>
- <79260c74-92dd-2cdf-ad71-e70d9fa0f8a9@opensource.wdc.com>
- <Y7cT3SSssHzBYqU4@slm.duckdns.org>
- <b5c57ca5-49b0-b9c6-4a65-a8867a74e950@opensource.wdc.com>
- <Y7hiemMjV5y/ToIF@slm.duckdns.org>
+        with ESMTP id Vh6skOiiGmpL for <linux-ide@vger.kernel.org>;
+        Tue, 10 Jan 2023 05:27:13 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Nrs6m260Zz1RvLy;
+        Tue, 10 Jan 2023 05:27:12 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <Y7hiemMjV5y/ToIF@slm.duckdns.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     "Maciej S . Szmigiero" <mail@maciej.szmigiero.name>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v9 0/6] Improve libata support for FUA
+Date:   Tue, 10 Jan 2023 22:27:04 +0900
+Message-Id: <20230110132710.252015-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.39.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/7/23 03:03, Tejun Heo wrote:
->> We can take a big hammer here and start with enabling only ACS-5 and
->> above for now. That will represent the set of devices that are in
->> development right now, and only a few already released (I have some in
->> my test boxes and they are not even a few months old...).
-> 
-> All that said, yeah, if we restrict it to only the newest devices, they're
-> more likely to be well behaved and a lot more visible when they misbehave.
-> That sounds reasonable to me.
+These patches cleanup and improve libata support for ATA devices
+supporting the FUA feature.
 
-I re-posted the series without patch 7 enabling FUA by default. This
-maintains the current state of libata while still cleaning up nicely all
-the code around FUA.
+The first patch modifies the block layer to prevent the use of REQ_FUA
+with read requests. This is necessary as the block layer code expect
+REQ_FUA to be used with write requests (the flush machinery cannot
+enforce access to the media for FUA read commands) and FUA is not
+supported with ATA devices when NCQ is not enabled (device queue depth
+set to 1).
 
-I will send 1 or 2 patches later after thinking a little more about how to
-safely enable FUA by default only for recent drives or drives of interest.
-E.g. SMR drives as the lack of FUA support for them forces the use of the
-block layer flush machinery, which itself causes write reordering... That
-needs to be addressed too, and will look at that.
+Patch 2 and 3 are libata cleanup preparatory patches. Patch 4 cleans up
+the detection for FUA support. Patch 5 fixes building a taskfile for FUA
+write requests. Patch 6 prevents the use of FUA with known bad drives.
 
-Thanks for the feedback.
+Changes from v8:
+ - Added Niklas Review tag to patch 1 (forgot to do that when I sent
+   v8).
 
--- 
-Damien Le Moal
-Western Digital Research
+Changes from v7:
+ - Given that there are concerns about introducing regressions with
+   older devices by enabling FUA by default, patch 7 is dropped for now.
+   A more restrictive approach enabling FUA by default only for very
+   recent drives will be sent later.
+
+Changes from v6:
+ - Modified patch 1 to include checks for REQ_OP_ZONE_APPEND
+ - Addressed comments from Niklas (patch 2 -> return false, patch 3 ->
+   commit message typo, patch 7 -> more verbose commit message)
+
+Changes from v5:
+ - Removed WARN for FUA reads in patch 5.
+ - Added reviewed-by tags.
+
+Changes from v4:
+ - Changed patch 1 to the one suggested by Christoph.
+ - Added Hannes review tag.
+
+Changes from v3:
+ - Added patch 1 to prevent any block device user from issuing a
+   REQ_FUA read.
+ - Changed patch 5 to remove the check for REQ_FUA read and also remove=20
+   support for ATA_CMD_WRITE_MULTI_FUA_EXT as this command is obsolete
+   in recent ACS specifications.
+
+Changes from v2:
+ - Added patch 1 and 2 as preparatory patches
+ - Added patch 4 to fix FUA writes handling for the non-ncq case. Note
+   that it is possible that the drives blacklisted in patch 5 are
+   actually OK since the code back in 2012 had the issue with the wrong
+   use of LBA 28 commands for FUA writes.
+
+Changes from v1:
+ - Removed Maciej's patch 2. Instead, blacklist drives which are known
+   to have a buggy FUA support.
+
+Christoph Hellwig (1):
+  block: add a sanity check for non-write flush/fua bios
+
+Damien Le Moal (5):
+  ata: libata: Introduce ata_ncq_supported()
+  ata: libata: Rename and cleanup ata_rwcmd_protocol()
+  ata: libata: cleanup fua support detection
+  ata: libata: Fix FUA handling in ata_build_rw_tf()
+  ata: libata: blacklist FUA support for known buggy drives
+
+ .../admin-guide/kernel-parameters.txt         |  3 +
+ block/blk-core.c                              | 14 ++--
+ drivers/ata/libata-core.c                     | 69 ++++++++++++++-----
+ drivers/ata/libata-scsi.c                     | 30 +-------
+ include/linux/libata.h                        | 36 +++++++---
+ 5 files changed, 92 insertions(+), 60 deletions(-)
+
+--=20
+2.39.0
 
