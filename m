@@ -2,111 +2,62 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B2C8C67871
-	for <linux-ide@archiver.kernel.org>; Wed, 11 Jan 2023 17:39:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BAEC61DB3
+	for <linux-ide@archiver.kernel.org>; Thu, 12 Jan 2023 08:52:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231132AbjAKRjH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 11 Jan 2023 12:39:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36824 "EHLO
+        id S230136AbjALIwV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 Jan 2023 03:52:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239286AbjAKRiW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jan 2023 12:38:22 -0500
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F07BE32273;
-        Wed, 11 Jan 2023 09:37:30 -0800 (PST)
-Received: from [192.168.1.103] (178.176.77.35) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 11 Jan
- 2023 20:37:20 +0300
-Subject: Re: [PATCH 08/27] ata: remove palmld pata driver
-To:     Arnd Bergmann <arnd@kernel.org>,
-        Robert Jarzmik <robert.jarzmik@free.fr>
-CC:     Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <20230105134622.254560-1-arnd@kernel.org>
- <20230105134622.254560-9-arnd@kernel.org>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <b1f1d5a3-2c9d-bfb5-5e37-38ac7917f9f6@omp.ru>
-Date:   Wed, 11 Jan 2023 20:37:20 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S235689AbjALIvn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2023 03:51:43 -0500
+Received: from mail.glencoeaur.com (mail.glencoeaur.com [217.61.97.113])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67B3F1EEFC
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2023 00:50:00 -0800 (PST)
+Received: by mail.glencoeaur.com (Postfix, from userid 1001)
+        id 71ECD81DAA; Thu, 12 Jan 2023 08:31:02 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=glencoeaur.com;
+        s=mail; t=1673512267;
+        bh=2S0GQFScndXkBEK4sqdoOhOYLqsB2sEH8Q5XQfVvKpo=;
+        h=Date:From:To:Subject:From;
+        b=KbicD2pqvOiTokYR5Mgu4ogUxGKs1iCBrFu347gXg6dyYmkao/fn/mCBc6Q7XUju+
+         PhQ3UvIG9eTHeN6fEEUEN4zkOjj4OeYoD89itJUEd1uhF+MfqB207Uhh5UDNvn+vtB
+         MdAKjJ2lsGgYJfHrrireV81x9veHtxfnz2UGp642Pr4tfcK6ni53hEEWiLxg1Kblgw
+         CaoyDoB0/h7/FhSEzPDGGEHqG9vPKM03TVHu0YQjaf8o2OTUWwCZGaKX13s+IbzNC1
+         zPzNlkXyILpASvWIQfvdn1Hwr9FqomOt7vERA4l86V0tXmgSaNZAFFaftmY3O2O8QQ
+         YhWHI+8WdvIAA==
+Received: by mail.glencoeaur.com for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2023 08:31:00 GMT
+Message-ID: <20230112074500-0.1.z.3eze.0.w8971916nd@glencoeaur.com>
+Date:   Thu, 12 Jan 2023 08:31:00 GMT
+From:   "Zbynek Spacek" <zbynek.spacek@glencoeaur.com>
+To:     <linux-ide@vger.kernel.org>
+Subject: Silikonmischungen
+X-Mailer: mail.glencoeaur.com
 MIME-Version: 1.0
-In-Reply-To: <20230105134622.254560-9-arnd@kernel.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.77.35]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 01/11/2023 17:22:07
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 174651 [Jan 11 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.77.35 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;178.176.77.35:7.7.3,7.4.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: {iprep_blacklist}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.77.35
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 01/11/2023 17:25:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 1/11/2023 2:58:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+Good morning,
 
-On 1/5/23 4:46 PM, Arnd Bergmann wrote:
+do you need intermediates for processing, plastics (e.g. rubber) or silic=
+one mixtures?
 
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> The PXA palmld machine was removed, so the pata driver is no
-> longer used and can be removed. There is a chance that some of
-> this code might be useful for turning some of the other PXA
-> PCMCIA host drivers into PATA drivers, but it's clear that
-> it would not work unmodified, and it seems unlikely that
-> someone would do this work.
-> 
-> Cc: Alessandro Zummo <a.zummo@towertech.it>
-> Cc: Marek Vasut <marek.vasut@gmail.com>
-> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-ide@vger.kernel.org
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+We provide a wide range of silicone rubbers with various properties, sili=
+cone mixtures from renowned manufacturers such as Wacker, Elastosil LR an=
+d dyes, stabilizers, primers and anti-adhesive additives.
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+We also produce technical silicone compounds with increased resistance to=
+ oils, resistant to high temperatures and water vapor, conductive and man=
+y more.
 
-   Better late than never? :-)
+We provide fast order fulfillment, timely deliveries and cost optimizatio=
+n.
 
-[...]
+Can I introduce what we can offer you?
 
-MBR, Sergey
+
+Best regards
+Zbynek Spacek
