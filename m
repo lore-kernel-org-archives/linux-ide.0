@@ -2,113 +2,108 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38742C63797
-	for <linux-ide@archiver.kernel.org>; Thu, 12 Jan 2023 20:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2971C54EBD
+	for <linux-ide@archiver.kernel.org>; Fri, 13 Jan 2023 04:37:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233365AbjALUH1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 Jan 2023 15:07:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47248 "EHLO
+        id S231416AbjAMEhZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 Jan 2023 23:37:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241389AbjALUDw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2023 15:03:52 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4252713E2A;
-        Thu, 12 Jan 2023 12:01:31 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E0FBDB81E62;
-        Thu, 12 Jan 2023 20:01:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28061C433D2;
-        Thu, 12 Jan 2023 20:01:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673553688;
-        bh=DjplknG/Og42vIVzT/q7FbntQdQMbrnKJqFFsTyhjNM=;
-        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=EUafdQGi6kPVntwFcsX8dQ++eMfDpAt4hRufXGYp4rn3498p9O5an8Dtzb32f8VZO
-         /0dwxqLx9EiZWyrofGYjXdGydKTREAjzdQvusJ0Ow7D4V0fv83WO6VIMOVK93JIW2S
-         WKNFKVIBv7VwC+kTD5h1WgF5etFBp2YPn8S3ZXmT1Seav9nsmaQ1vhNBslaNNmcYRn
-         zsCLB4TmasZgZxWFa1UpanGfaUnDdJStrP+pk1HardQUH3NiBxgoCCXTezH0ic2ZBw
-         6otuSPV9m9aONvZu3dzL7IfHqeZgMZCL4VALktP1HibdXNi78cOSWjN0jogQQsvptF
-         31XhLFJQie5QQ==
-From:   Mark Brown <broonie@kernel.org>
-To:     Robert Jarzmik <robert.jarzmik@free.fr>,
-        Arnd Bergmann <arnd@kernel.org>
-Cc:     Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>, stern@rowland.harvard.edu,
-        alexandre.belloni@bootlin.com, brgl@bgdev.pl,
-        damien.lemoal@opensource.wdc.com, dmitry.torokhov@gmail.com,
-        linux@dominikbrodowski.net, balbi@kernel.org,
-        gregkh@linuxfoundation.org, deller@gmx.de, perex@perex.cz,
-        jingoohan1@gmail.com, lee@kernel.org, kernel@wantstofly.org,
-        lgirdwood@gmail.com, linus.walleij@linaro.org,
-        marek.vasut@gmail.com, mkpetch@internode.on.net,
-        miquel.raynal@bootlin.com, lost.distance@yahoo.com,
-        philipp.zabel@gmail.com, linux@armlinux.org.uk, sre@kernel.org,
-        slapin@ossfans.org, s.shtylyov@omp.ru, sudipm.mukherjee@gmail.com,
-        tiwai@suse.com, ulf.hansson@linaro.org, vigneshr@ti.com,
-        viresh.kumar@linaro.org, wsa+renesas@sang-engineering.com,
-        linux-pm@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-gpio@vger.kernel.org, linux-input@vger.kernel.org,
-        patches@opensource.cirrus.com, linux-leds@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-rtc@vger.kernel.org,
-        linux-usb@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org
-In-Reply-To: <20230105134622.254560-1-arnd@kernel.org>
-References: <20230105134622.254560-1-arnd@kernel.org>
-Subject: Re: (subset) [PATCH v2 00/27] ARM: pxa: remove all unused boards&drivers
-Message-Id: <167355367885.2500964.3629822486060649314.b4-ty@kernel.org>
-Date:   Thu, 12 Jan 2023 20:01:18 +0000
+        with ESMTP id S231154AbjAMEhT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2023 23:37:19 -0500
+Received: from mail-qv1-xf2a.google.com (mail-qv1-xf2a.google.com [IPv6:2607:f8b0:4864:20::f2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28B852F3
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2023 20:37:18 -0800 (PST)
+Received: by mail-qv1-xf2a.google.com with SMTP id q10so14108714qvt.10
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2023 20:37:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=pefoley.com; s=google;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lPm2cDob64PHi+nW3IeZECmXVT/SwFopaoWwfdNRye0=;
+        b=BLpRYQgjOeaSOzpLq9w9Aze82Npz+TR8bofK5jRsT9mhfJ2LbAp3rKHZT8MpUwcWJx
+         clCtjEksgGfakcqxrG3QZC4vDzfZnzxPYBPo5rw5lWh4sTIdVopQ671T9TgwR+h0Z4EC
+         U/zNKX4YnNopUciFbKh1SGt5uYz7Ub1sVPGs8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=lPm2cDob64PHi+nW3IeZECmXVT/SwFopaoWwfdNRye0=;
+        b=ItdgwC4HrCX77YCsSWg5/Wf35W+qcdDMXdRSrw4cUy6DSoa0b+w1LE5h+MqHER7zfR
+         tLrFeF4p4alwV27FEsAbLBkKR7Xsik4a7AsvwHL4Th8ezwvwwxeVTWqv1YrJDb3vie2V
+         04r+JqPGwqXNBE+o4NGf41T9HUz/2xcrJ2B+atBlDd56y2wv7Ei/WrR0EAeKFnDHpYUA
+         2Z/dWbO7RVZCZWL0I8WDzNpE4fcGJjCrgrqQto4CuW822f0zImJUwRgdXiDlmCsivUc9
+         Ne0z/89RbRE4mtk2iv/wsAd79qfxA0qMbPhQBcsoq3HE7n8JYUpcTP+yyfmEkg9+ILkA
+         NnoA==
+X-Gm-Message-State: AFqh2kqGpN5eakWUwiqbZaN/hp76mLxZhxdvkMx1upUG4+kge4FvmDGh
+        zx5zMcp3XffbG5VUHG2F7RFJNmWAuagh63zTKQc=
+X-Google-Smtp-Source: AMrXdXvZC03LqMiePLnWj6MotTeke3pWqpdvKcBQhpkVjCmlrhc4na1nxCifEG61lNj8bV4498iejg==
+X-Received: by 2002:a0c:cdcd:0:b0:532:f87:753c with SMTP id a13-20020a0ccdcd000000b005320f87753cmr43721182qvn.4.1673584636690;
+        Thu, 12 Jan 2023 20:37:16 -0800 (PST)
+Received: from [192.168.1.3] ([2600:4040:29fb:d300:887b:7eff:fe74:68b2])
+        by smtp.gmail.com with ESMTPSA id q5-20020a05620a0d8500b006eee3a09ff3sm12087761qkl.69.2023.01.12.20.37.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Jan 2023 20:37:16 -0800 (PST)
+From:   Peter Foley <pefoley2@pefoley.com>
+Date:   Thu, 12 Jan 2023 23:37:06 -0500
+Subject: [PATCH] ata: Don't build PATA_CS5535 on UML
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.12-dev-8b3d1
+Message-Id: <20230112-umide-v1-1-78742026a3f1@pefoley.com>
+X-B4-Tracking: v=1; b=H4sIAPLfwGMC/x2NQQqAMAwEvyI5WzAVRPyKeKg12hyskqgIxb9bP
+ c7swCZQEiaFrkggdLHyFjNgWYAPLi5keMoMtrJ1hWjNufJEBluP2GAWtYXcjk7JjOKiD1+9Oj1I
+ vmEXmvn+D/rheV6HLd/UcAAAAA==
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Peter Foley <pefoley2@pefoley.com>
+X-Mailer: b4 0.11.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1673584636; l=1936;
+ i=pefoley2@pefoley.com; s=20230111; h=from:subject:message-id;
+ bh=2wIRUjf5hTGwjbx7HQnUhS+/nYxNZeMVIcHB4lIPfKc=;
+ b=fdUZlUPj5Ky5rwzT8s0TyDCN3U6SNivmS/z/aZYkVxKo4o8KhkaJyqXYOoxRVArndWAHSa2oa8+z
+ SVZCKixsCpAwYBm/oCP/ORTmYT8esrrttvb+4EX4iz90pSmUQ75k
+X-Developer-Key: i=pefoley2@pefoley.com; a=ed25519;
+ pk=DCQqIdN6rHnvfQH58WQiQzJFfGUo1HyWSvdYG8vnO5o=
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 05 Jan 2023 14:45:55 +0100, Arnd Bergmann wrote:
-> Most of the legacy PXA board files were marked as unused in linux-5.19 and
-> can get removed in linux-6.3. There is support for pxa250/pxa270/pxa300
-> using devicetree already, which supports a number of boards, but progress
-> on converting the remaining ones has stalled over the past few years.
-> 
-> The two boards that are left in the tree for now are the three 'sharpsl'
-> variants (spitz/akita/borzoi) and the 'gumstix' family of machines.
-> Both of these are supported by qemu, which can be helpful for completing
-> the DT conversion.
-> 
-> [...]
+This driver uses MSR functions that aren't implemented under UML.
+Avoid building it to prevent tripping up allyesconfig.
 
-Applied to
+e.g.
+/usr/lib/gcc/x86_64-pc-linux-gnu/12/../../../../x86_64-pc-linux-gnu/bin/ld: pata_cs5535.c:(.text+0x3a3): undefined reference to `__tracepoint_read_msr'
+/usr/lib/gcc/x86_64-pc-linux-gnu/12/../../../../x86_64-pc-linux-gnu/bin/ld: pata_cs5535.c:(.text+0x3d2): undefined reference to `__tracepoint_write_msr'
+/usr/lib/gcc/x86_64-pc-linux-gnu/12/../../../../x86_64-pc-linux-gnu/bin/ld: pata_cs5535.c:(.text+0x457): undefined reference to `__tracepoint_write_msr'
+/usr/lib/gcc/x86_64-pc-linux-gnu/12/../../../../x86_64-pc-linux-gnu/bin/ld: pata_cs5535.c:(.text+0x481): undefined reference to `do_trace_write_msr'
+/usr/lib/gcc/x86_64-pc-linux-gnu/12/../../../../x86_64-pc-linux-gnu/bin/ld: pata_cs5535.c:(.text+0x4d5): undefined reference to `do_trace_write_msr'
+/usr/lib/gcc/x86_64-pc-linux-gnu/12/../../../../x86_64-pc-linux-gnu/bin/ld: pata_cs5535.c:(.text+0x4f5): undefined reference to `do_trace_read_msr'
+/usr/lib/gcc/x86_64-pc-linux-gnu/12/../../../../x86_64-pc-linux-gnu/bin/ld: pata_cs5535.c:(.text+0x51c): undefined reference to `do_trace_write_msr'
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git for-next
+Signed-off-by: Peter Foley <pefoley2@pefoley.com>
+---
+ drivers/ata/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks!
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index eceaec33af65..9695c4404e26 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -640,6 +640,7 @@ config PATA_CS5530
+ config PATA_CS5535
+ 	tristate "CS5535 PATA support (Experimental)"
+ 	depends on PCI && (X86_32 || (X86_64 && COMPILE_TEST))
++	depends on !UML
+ 	help
+ 	  This option enables support for the NatSemi/AMD CS5535
+ 	  companion chip used with the Geode processor family.
 
-[14/27] ASoC: PXA: make SND_PXA2XX_SOC_AC97 user-selectable
-        commit: 5eab9265759e2fb042aa452931c3d06ab7ab8dae
-[15/27] ASoC: pxa: remove unused board support
-        (no commit info)
+---
+base-commit: 1b929c02afd37871d5afb9d498426f83432e71c2
+change-id: 20230112-umide-18c116111232
 
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.
-
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
-
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
-
-Thanks,
-Mark
+Best regards,
+-- 
+Peter Foley <pefoley2@pefoley.com>
