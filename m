@@ -2,232 +2,198 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D30BC63797
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Jan 2023 11:44:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DEA7C54E76
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Jan 2023 19:05:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236648AbjAQLog (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Jan 2023 06:44:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58240 "EHLO
+        id S233110AbjAQTFA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Jan 2023 14:05:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236580AbjAQLof (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2023 06:44:35 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FBD29012;
-        Tue, 17 Jan 2023 03:44:34 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id BD4E23453B;
-        Tue, 17 Jan 2023 11:44:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1673955872; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5ole6isE4RExd/uxxeZuPvFlLXIRWIIDWEltEeqOodo=;
-        b=oXCvkkZH8Qh6p/q9dIUf+LvjViezQNXRxe3SQ97YDxKHQJXYUL74TYrqbGkKfZNFm21ihH
-        FQa18NyRudcGHd4tvB7LS+GaSFPfUUwESBQGY0ExF5eRxy3B8T9fkdDz6rbtNthV1We++Z
-        R3btKdeyFOnTkK23A6JdjintVSJpNPw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1673955872;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5ole6isE4RExd/uxxeZuPvFlLXIRWIIDWEltEeqOodo=;
-        b=Flz8OS1zLtVdgcyg24JF30m5Ftf75Ep+rCQyrEdIFB8hMYvjwzN8bKPswfntZ1/Sz+mcbk
-        rAIoXimX7GBnlcCA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AC04A13357;
-        Tue, 17 Jan 2023 11:44:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id ksW2KSCKxmMnSAAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 17 Jan 2023 11:44:32 +0000
-Message-ID: <c48cb125-dcde-d1a1-3b99-f85b3348b4bc@suse.de>
-Date:   Tue, 17 Jan 2023 12:44:32 +0100
+        with ESMTP id S235039AbjAQS7r (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2023 13:59:47 -0500
+Received: from mail-vk1-xa2a.google.com (mail-vk1-xa2a.google.com [IPv6:2607:f8b0:4864:20::a2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2DF510A97;
+        Tue, 17 Jan 2023 10:18:56 -0800 (PST)
+Received: by mail-vk1-xa2a.google.com with SMTP id l185so12014232vke.2;
+        Tue, 17 Jan 2023 10:18:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:feedback-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=b2US1+cWQFyCqkm5gKb2Imr+dyizxQQ6oWxz42m5c2U=;
+        b=QOQZ9L6N6v89yP61QhODEIyBSxsPTBrfKXtHZgwBntOCl5ljk7i4UY0j9I1YrcUxWc
+         ub2W9V1gWuQMcIwfl0IJJbHn1UFH1WToeORRalBsyw1US3hfGRcdzofEgLfuW92aVI+5
+         PwhM+jtdgnlG4zrB2uHd/qblDBP59zJAwi1i4Amb8XssPk7p0eUTutXWGl/G6u2TjIo6
+         baTo1PEGYQNLRS/k3y5NFaea9lAc9EJOtVg22tc04ALD7s2fItXi5fUFMvdqQRPYj4gL
+         jrseFJqAAtFnNlDPqUevWkUie1GRsm1SONzlKxD3LY+STVP5fKzHr11q1El/ogronKmz
+         +G/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:feedback-id:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=b2US1+cWQFyCqkm5gKb2Imr+dyizxQQ6oWxz42m5c2U=;
+        b=1UaebWMPoRAsHcKv6557qzdWD18gNLd5j3Hdbhk3zQsrJs7ywYVV7cX20kRKHDc385
+         e6kJug3UmG6ARNY3IgiyOGhCuq04hPPO9ei8iHXMMs2s4BD63CXYI/tngBStdkk4jC3k
+         hVoavQvTjJvN2vtPVmhob7tGUzWb2fvNuFnV9lTSTIzcBJfWtxGgfDOCkvfyNCepxqD2
+         elM2Xok4nXYXFK7XwRJ2dcx1KshyUyNAbxMAjBWEVHAwd6tx8ksMdbneVX8kGYW70PpG
+         x1uxDIcMHeyeKbIP9sFrR39Ivq99awkEiu9HTeOESeGi/pi86kWsXXCvJofjtPcqTMt6
+         xUHQ==
+X-Gm-Message-State: AFqh2kr0lbYMG6pP8/Di49d+HGXPBWLCgNnfwwe8sSB8hNeaV/o4cAhO
+        1iw+Mha1sIDvehGequYhpNqQOLHzjn5QeA==
+X-Google-Smtp-Source: AMrXdXuecM6TMvZUe2LrmDRIr7NaeTlmuaQwsyy+ICsvZ8NkCU/D0oFzBl18C0uumNZrYLaNk1TvJA==
+X-Received: by 2002:a1f:26c8:0:b0:3d8:d594:58e3 with SMTP id m191-20020a1f26c8000000b003d8d59458e3mr13683689vkm.14.1673979535694;
+        Tue, 17 Jan 2023 10:18:55 -0800 (PST)
+Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
+        by smtp.gmail.com with ESMTPSA id bp43-20020a05622a1bab00b003a5c6ad428asm1218943qtb.92.2023.01.17.10.18.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Jan 2023 10:18:54 -0800 (PST)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+        by mailauth.nyi.internal (Postfix) with ESMTP id 175C227C0054;
+        Tue, 17 Jan 2023 13:18:53 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute2.internal (MEProxy); Tue, 17 Jan 2023 13:18:54 -0500
+X-ME-Sender: <xms:i-bGY-9E-mdJVWX4CCVeei-14Vfb5RM2bcefYAEY9jwujyAQLuat9A>
+    <xme:i-bGY-svyDVjSENnZ4SYmye9MHEwAc_xdmBCugrRgiIhupK8t0XJHANZqE2XS0HWX
+    FpMruCHrdoK16v3nw>
+X-ME-Received: <xmr:i-bGY0DhTa8VmWDhetI1q1U1WNpJSFZDda6XC60Ija7SMvOXij7igrtiPxQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedruddtiedgudduudcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpeffhffvvefukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhq
+    uhhnucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrf
+    grthhtvghrnhephfetvdfgtdeukedvkeeiteeiteejieehvdetheduudejvdektdekfeeg
+    vddvhedtnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiii
+    gvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegsohhquhhnodhmvghsmhhtphgruhht
+    hhhpvghrshhonhgrlhhithihqdeiledvgeehtdeigedqudejjeekheehhedvqdgsohhquh
+    hnrdhfvghngheppehgmhgrihhlrdgtohhmsehfihigmhgvrdhnrghmvg
+X-ME-Proxy: <xmx:i-bGY2fUawivGHAWm6LLeaxzKnn5qemkPlKYx612rxwWBBv2e4x76w>
+    <xmx:i-bGYzO-9dNabAYWURztzdQoTUyDu19pqteWeMRsf0ysGOocee_9Lw>
+    <xmx:i-bGYwlqbhoDstgPUi4Gv8RjGKqizzlTMulosaLuOcD6kHFgVW66eA>
+    <xmx:jebGY20d10aTWJlV5fAGRmnugZO0WqcRtaEBaGcyqdUXbdjlcOmh6i2i0g8>
+Feedback-ID: iad51458e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 17 Jan 2023 13:18:51 -0500 (EST)
+Date:   Tue, 17 Jan 2023 10:18:33 -0800
+From:   Boqun Feng <boqun.feng@gmail.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Byungchul Park <byungchul.park@lge.com>,
+        linux-kernel@vger.kernel.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
+        tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
+        amir73il@gmail.com, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
+        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
+        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+        linux-block@vger.kernel.org, paolo.valente@linaro.org,
+        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, jack@suse.cz, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
+        42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
+        gwan-gyeong.mun@intel.com, Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH RFC v7 00/23] DEPT(Dependency Tracker)
+Message-ID: <Y8bmeffIQ3iXU3Ux@boqun-archlinux>
+References: <1673235231-30302-1-git-send-email-byungchul.park@lge.com>
+ <CAHk-=whpkWbdeZE1zask8YPzVYevJU2xOXqOposBujxZsa2-tQ@mail.gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v2 03/18] scsi: core: allow libata to complete successful
- commands via EH
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230112140412.667308-1-niklas.cassel@wdc.com>
- <20230112140412.667308-4-niklas.cassel@wdc.com>
- <ab23c5dd-3a61-452c-52c9-43b6b18f2c8e@suse.de> <Y8VGeFSKuIr0nwC3@x1-carbon>
-Content-Language: en-US
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <Y8VGeFSKuIr0nwC3@x1-carbon>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=whpkWbdeZE1zask8YPzVYevJU2xOXqOposBujxZsa2-tQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/16/23 13:43, Niklas Cassel wrote:
-> On Fri, Jan 13, 2023 at 08:57:37AM +0100, Hannes Reinecke wrote:
->> On 1/12/23 15:03, Niklas Cassel wrote:
->>> In SCSI, we get the sense data as part of the completion, for ATA
->>> however, we need to fetch the sense data as an extra step. For an
->>> aborted ATA command the sense data is fetched via libata's
->>> ->eh_strategy_handler().
->>>
->>> For Command Duration Limits policy 0xD:
->>> The device shall complete the command without error with the additional
->>> sense code set to DATA CURRENTLY UNAVAILABLE.
->>>
->>> In order to handle this policy in libata, we intend to send a successful
->>> command via SCSI EH, and let libata's ->eh_strategy_handler() fetch the
->>> sense data for the good command. This is similar to how we handle an
->>> aborted ATA command, just that we need to read the Successful NCQ
->>> Commands log instead of the NCQ Command Error log.
->>>
->>> When we get a SATA completion with successful commands, ATA_SENSE will
->>> be set, indicating that some commands in the completion have sense data.
->>>
->>> The sense_valid bitmask in the Sense Data for Successful NCQ Commands
->>> log will inform exactly which commands that had sense data, which might
->>> be a subset of all the commands that was completed in the same
->>> completion. (Yet all will have ATA_SENSE set, since the status is per
->>> completion.)
->>>
->>> The successful commands that have e.g. a "DATA CURRENTLY UNAVAILABLE"
->>> sense data will have a SCSI ML byte set, so scsi_eh_flush_done_q() will
->>> not set the scmd->result to DID_TIME_OUT for these commands. However,
->>> the successful commands that did not have sense data, must not get their
->>> result marked as DID_TIME_OUT by SCSI EH.
->>>
->>> Add a new flag SCMD_EH_SUCCESS_CMD, which tells SCSI EH to not mark a
->>> command as DID_TIME_OUT, even if it has scmd->result == SAM_STAT_GOOD.
->>>
->>> This will be used by libata in a follow-up patch.
->>>
->>> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
->>> ---
->>>    drivers/scsi/scsi_error.c | 3 ++-
->>>    include/scsi/scsi_cmnd.h  | 5 +++++
->>>    2 files changed, 7 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->>> index 2aa2c2aee6e7..51aa5c1e31b5 100644
->>> --- a/drivers/scsi/scsi_error.c
->>> +++ b/drivers/scsi/scsi_error.c
->>> @@ -2165,7 +2165,8 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
->>>    			 * scsi_eh_get_sense), scmd->result is already
->>>    			 * set, do not set DID_TIME_OUT.
->>>    			 */
->>> -			if (!scmd->result)
->>> +			if (!scmd->result &&
->>> +			    !(scmd->flags & SCMD_EH_SUCCESS_CMD))
->>>    				scmd->result |= (DID_TIME_OUT << 16);
->>>    			SCSI_LOG_ERROR_RECOVERY(3,
->>>    				scmd_printk(KERN_INFO, scmd,
->> Wouldn't it be better to use '!scmd->result && !scsi_sense_valid(scmd)'
->> instead of a new flag?
->> After all, if we have a valid sense code we _have_ been able to communicate
->> with the device. And as we did so it's questionable whether it should count
->> as a command time out ...
+[Cc Waiman]
+
+On Mon, Jan 16, 2023 at 10:00:52AM -0800, Linus Torvalds wrote:
+> [ Back from travel, so trying to make sense of this series.. ]
 > 
-> Hello Hannes,
+> On Sun, Jan 8, 2023 at 7:33 PM Byungchul Park <byungchul.park@lge.com> wrote:
+> >
+> > I've been developing a tool for detecting deadlock possibilities by
+> > tracking wait/event rather than lock(?) acquisition order to try to
+> > cover all synchonization machanisms. It's done on v6.2-rc2.
 > 
-> Thanks a lot for helping out reviewing this series!
+> Ugh. I hate how this adds random patterns like
 > 
-> Unfortunately, your suggestion won't work.
+>         if (timeout == MAX_SCHEDULE_TIMEOUT)
+>                 sdt_might_sleep_strong(NULL);
+>         else
+>                 sdt_might_sleep_strong_timeout(NULL);
+>    ...
+>         sdt_might_sleep_finish();
 > 
+> to various places, it seems so very odd and unmaintainable.
 > 
-> Let me explain:
-> 
-> When you get a FIS, the ACT register will have a bit set for each
-> command that finished, however, all the commands will share a single
-> STATUS value (since there is just a shared STATUS field in the FIS).
-> 
-> So let's say that tags 0-3 got finished (i.e. bits 0-3 are set in the
-> ACT field) and the STATUS field has the "Sense Data Available" bit set.
-> 
-> This just tells us that at least one of tags 0-3 has sense data.
-> 
-> 
-> In order to know which of these tags that actually has sense data,
-> we need to read the "Sense Data for Successful NCQ Commands log",
-> which contains a sense_valid bitmask (which contains one bit for
-> each of the 32 tags).
-> 
-> So reading the "Sense Data for Successful NCQ Commands log" might
-> tell us that just tag 0-1 have sense data.
-> 
-> So, libata calls ata_qc_schedule_eh() on tags 0-3, wait until SCSI calls
-> libata .eh_strategy_handler(). libata .eh_strategy_handler() will read the
-> "Sense Data for Successful NCQ Commands log", which will see that there is
-> sense data for tags 0-1, and will add sense data for those commands, and
-> call scsi_check_sense() for tags 0-1.
-> 
-> ata_eh_finish() will finally be called, to determine what to do with the
-> commands that belonged to EH.
-> 
-> The code looks like this:
-> if (qc->flags & ATA_QCFLAG_SENSE_VALID ||
->      qc->flags & ATA_QCFLAG_EH_SUCCESS_CMD) {
-> 	ata_eh_qc_complete(qc);
-> }
-> 
-> So it will call complete for all 4 tags, regardless is they had sense data
-> or not.
-> 
-> 
-> scsi_eh_flush_done_q() will soon be called, and since ata_eh_qc_complete()
-> sets scmd->retries == scmd->allowed, none of the four commands will be retired.
-> 
-> if (!scmd->result &&
->      !(scmd->flags & SCMD_EH_SUCCESS_CMD))
-> 	scmd->result |= (DID_TIME_OUT << 16);
-> 
-> The 2 commands with sense data will not get DID_TIMEOUT,
-> because scmd->result has the SCSI ML byte set
-> (which is set by scsi_check_sense()).
-> 
-> The 2 commands without sense data will have scmd->result == 0,
-> so they will get DID_TIME_OUT set if we don't have the extra
-> !(scmd->flags & SCMD_EH_SUCCESS_CMD)) condition.
-> 
-> 
-> SCSI could add an additional check for:
-> 
-> if (!scmd->result && !scsi_sense_valid(scmd) &&
->      !(scmd->flags & SCMD_EH_SUCCESS_CMD))
-> 	scmd->result |= (DID_TIME_OUT << 16);
-> 
-> so that a command with does have sense data, but scsi_check_sense()
-> did not set any SCSI ML byte, does not get DID_TIME_OUT set.
-> 
-> However, for CDL policy 0xD, which this patch cares about,
-> we would still need the "&& !(scmd->flags & SCMD_EH_SUCCESS_CMD))",
-> so at least from a CDL perspective, I don't see how any benefit of
-> also adding a check for "&& !scsi_sense_valid(scmd)".
+> I also recall this giving a fair amount of false positives, are they all fixed?
 > 
 
-Right, I see.
-Thanks for the explanation.
+From the following part in the cover letter, I guess the answer is no?
 
-You can add:
+	...
+        6. Multiple reports are allowed.
+        7. Deduplication control on multiple reports.
+        8. Withstand false positives thanks to 6.
+	...
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+seems to me that the logic is since DEPT allows multiple reports so that
+false positives are fitlerable by users?
 
-Cheers,
+> Anyway, I'd really like the lockdep people to comment and be involved.
 
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+I never get Cced, so I'm unware of this for a long time...
 
+A few comments after a quick look:
+
+*	Looks like the DEPT dependency graph doesn't handle the
+	fair/unfair readers as lockdep current does. Which bring the
+	next question.
+
+*	Can DEPT pass all the selftests of lockdep in
+	lib/locking-selftests.c?
+
+*	Instead of introducing a brand new detector/dependency tracker,
+	could we first improve the lockdep's dependency tracker? I think
+	Byungchul also agrees that DEPT and lockdep should share the
+	same dependency tracker and the benefit of improving the
+	existing one is that we can always use the self test to catch
+	any regression. Thoughts?
+
+Actually the above sugguest is just to revert revert cross-release
+without exposing any annotation, which I think is more practical to
+review and test.
+
+I'd sugguest we 1) first improve the lockdep dependency tracker with
+wait/event in mind and then 2) introduce wait related annotation so that
+users can use, and then 3) look for practical ways to resolve false
+positives/multi reports with the help of users, if all goes well,
+4) make it all operation annotated.
+
+Thoughts?
+
+Regards,
+Boqun
+
+> We did have a fairly recent case of "lockdep doesn't track page lock
+> dependencies because it fundamentally cannot" issue, so DEPT might fix
+> those kinds of missing dependency analysis. See
+> 
+>     https://lore.kernel.org/lkml/00000000000060d41f05f139aa44@google.com/
+> 
+> for some context to that one, but at teh same time I would *really*
+> want the lockdep people more involved and acking this work.
+> 
+> Maybe I missed the email where you reported on things DEPT has found
+> (and on the lack of false positives)?
+> 
+>                Linus
+> 
