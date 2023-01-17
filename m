@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4BB1C3DA78
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Jan 2023 08:00:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C50C678D4
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Jan 2023 08:07:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235843AbjAQIAL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Jan 2023 03:00:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50742 "EHLO
+        id S235920AbjAQIHd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Jan 2023 03:07:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235842AbjAQIAJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2023 03:00:09 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEF1625E18
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2023 00:00:08 -0800 (PST)
+        with ESMTP id S235892AbjAQIHc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2023 03:07:32 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B54C9EF9
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2023 00:07:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1673942408; x=1705478408;
+  t=1673942851; x=1705478851;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=g9jZ4NXxoTsdj4fcvmZe+9a9/ft8JBcGnJUfqd1G/YM=;
-  b=QO5NfqRp6PBNV7PTIej3TR+ydbTl452vNIZhQT1ecRe7VCe8qr/Ygt2O
-   smetn2rpuYPR1wgUMS7S4gDk8B7DCzrGBK5xKuqzs9b6pvq0YHhI4Cpt1
-   irylngZly0Hg9oW00bgTjkkQBCONUV+b5B2jf4vhTs754OKsDWdrDe3wd
-   3kbm+hY1rzSkMcbq/3MawpSMe/TxnNpxnBeT1YbB42jNVsoIGDaTE7yNW
-   eP7ozW4vZyr9g7jh24MMdHYNNXijAhgd3mQQdEtthbuwJZAOhiFA7jBkr
-   EvNwV2SeyV/mbb4qADG1Pyk4WYS8Uci3M3wbWgHcnacxBQjTby4QjbpB/
+  bh=h+hpWb1N2z+sU/R5W+ZfOI5VrXzlmlexOMQc9+gqGoI=;
+  b=aCe92Oojlmazj85baieTc7hNbJy1rAWwk2rMntiqFMDQEvnM+S7a4C6h
+   GvGb39te+JGcVn/kjIrHr1Zb9d+68GZzOb7qTN587NgjGZ8E7eA7AMiJ8
+   M5RAa9+ORwDX7TZU5+OeOlTwBHqW6Ptt7USC9KtuWOp/R+0yumURl5BJh
+   dSdE+fcw8M4pYQq9i06ODtRv4pqLnzjH2+cyg+tInp7kBiIfykwG/gt/s
+   1i6pZUxPF8JF12BGulZop5RQjqvnMZkfxBpxr/QEvb5RPpFdNXnKcBE3j
+   lDMan/bPZBYPjl3GXxNmLWRKEvPUKJjyess8osklhmeIrhVRq0oEl3dVB
    g==;
 X-IronPort-AV: E=Sophos;i="5.97,222,1669046400"; 
-   d="scan'208";a="220819959"
+   d="scan'208";a="219318755"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Jan 2023 16:00:07 +0800
-IronPort-SDR: b06MWK9QFtvw4rTpQa83lxMgyAXkIifFum3Tlr022+6lIbxsAt9/uUs+EJjP1CbLTr/npIEvwt
- BB1kQpS22SJ2FwMfJmpT4I+6EphNqicUrYmM4/ghq4AdcuDLA5RAQ0Rf2nVlE0CJy21CH/iyYY
- e2idmvLEv/QBtcvKVgp337iuxXWX+rInSlOA66Xu8fmtLQ+iD08nnfxylz9a5TCPwKRTNFtbwB
- ZV3ae5VDJseR+WlFT4jTvQMpA3AhQi1uscIP6g+abBMHVQiLpzJKj7f2UpvIiGXgnaTQUngXv1
- B74=
+  by ob1.hgst.iphmx.com with ESMTP; 17 Jan 2023 16:07:29 +0800
+IronPort-SDR: 4KDjFzehzNbbf8fCTDioO+Nss5ts5bfHcZ4EwUBLtt5g5Kq1feth9PHXF6KAbpT+OjEiFzKGKx
+ Oh3JWBFetFY4/NV7HksjP1Lm3w0qhwRCfsAfFry8ngqYSoBusuQqt1RFoqeU1pR1kgXzlTHkXC
+ WamKKgsSfjDbGfzDqYinNlSgfg6wJtjyzxgfhwL0QO0bEv1Z3JGvtg5iqOYDfGteCG9J/H8IJ5
+ hHtkOF0KEcOgCP8gq9cXtA0jYLBmH8+UzqQQ35j61pGQJsc0OT9x3aXj5BemBAJ8YN+HU+REK9
+ FZ4=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Jan 2023 23:17:49 -0800
-IronPort-SDR: qxr9+y6xtDt4tvWFwcso4BBFCLr2Mz4qHU9ruo/1nAT7S/f1xw7qbsXD50nTsW6Vzu9oUpmvzF
- pwjoa3K3A4J6iPhCApFIPf81RZu1hLGfbiCQIBPZJ1ZWYk8CPIesvhjiRhXLDqNYDrHGf51Hho
- enLJHL8irmgpe55PeFy57puXj0CzrJRK28p5UNt2mzv42unqM/mckdvc/pHGwVXQQJtsbnvj9M
- yZNEp9tSfpqB2ablz19rmEFo3z436RrMBE2I7n+vLmy7fUccB5GOLpUEtW/MXJjAyoNz1MXhXY
- tQQ=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Jan 2023 23:24:43 -0800
+IronPort-SDR: SYSXtmZi+k56XZ7QupdNvfhwAFee1V/7ORQB4vN6vRnfSAg9Fhgr0IWaNZa1nbHML6vO4uajzd
+ iKX0PmoLLqg5BMhtELOI7hyAHaJkKsrGALzUmDUxyTnoZZf8eqWFBfXqmkaYYeYZcWX/+JFwyp
+ Wo9NB2ehvdnjvF/2kOH6kIhBT1heFoe2ie3Gq6TWSTRSc1vZWrkmVnx7676YOrMeW4n7PkIUyk
+ OTgXOCpTKphPIJPAzFCy+WfAPaDz+VhIYepeGDsITohsCYubLT3AEz2KnkGAFntw5S7MXG7uyO
+ aI0=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jan 2023 00:00:08 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jan 2023 00:06:56 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Nx1X70r3yz1Rwrq
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2023 00:00:07 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Nx1gz2QZBz1RwtC
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2023 00:06:55 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,58 +56,74 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1673942406; x=1676534407; bh=g9jZ4NXxoTsdj4fcvmZe+9a9/ft8JBcGnJU
-        fqd1G/YM=; b=gh+HNdU5lPDHjtYtR8YwkLMsGJcCWv0G5fvflwB4/e79NO4dc95
-        CATSrXcZ3Hq0ngy8y5zaWrZl1c/tM0v+J/VEtzb5EqDCRTqg+7dM9f8LWFNswk34
-        batIoLERiycRRwPhxp3tvG0vhfu/Mf7Qbhst/wFKoTRscOcO9vtBCeKLqQj3ee1D
-        pyA1yP4KDRjvVZ39vpyO6/dphfv8oZAF05HlR95Bx6mQDflzukwuc5JgYILNasq4
-        m7HPVA+71cQRWFjOU4zK/hNTbfA3gxAeUK8EZ6uzVEEObnSuWcuH/IgypkD7RiJF
-        TDs3dvl4udySqNBAt8aQdh7F8Os5b310S2w==
+        1673942814; x=1676534815; bh=h+hpWb1N2z+sU/R5W+ZfOI5VrXzlmlexOMQ
+        c9+gqGoI=; b=iHt7q5R6/sEMGvZ/mKYvjSUXdc8Z2SGxfcYpbOLKOwiR4XeNv9Y
+        s/1MJEBcguILOW5Pr0FX4Ip2j/8KPCrzLLqsaZVyApGBIUTo1gPEnLr2zLanV1Z6
+        K/FK/xqBF6hqu/1WIWobJ5gyFZ8pdaVpmKAq/o2qbzDL8ajfBt2vGMUMl6DKzY37
+        f9rsI4zDi2hBL9uJVFximnJ08YMeCcWHnppHghhV285D0lTlGJ5zJmIY+6DXaXva
+        +9SNheIQ2i/Q9r2n7GnV1C7ODQ45P7IuMCyWuAxnrTvnCjaL0xNl7fXScqSOuxMi
+        7bz+QUbVMBbidxXD2JhHnooxMOU+8+FgVMQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Ny6zp8cBOEOe for <linux-ide@vger.kernel.org>;
-        Tue, 17 Jan 2023 00:00:06 -0800 (PST)
+        with ESMTP id 9BJYQC4yMjg8 for <linux-ide@vger.kernel.org>;
+        Tue, 17 Jan 2023 00:06:54 -0800 (PST)
 Received: from [10.225.163.30] (unknown [10.225.163.30])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Nx1X5302dz1RvLy;
-        Tue, 17 Jan 2023 00:00:05 -0800 (PST)
-Message-ID: <16676885-5e71-4a5d-1b75-db2ddeb8e16f@opensource.wdc.com>
-Date:   Tue, 17 Jan 2023 17:00:03 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Nx1gx2ppjz1RvLy;
+        Tue, 17 Jan 2023 00:06:53 -0800 (PST)
+Message-ID: <2bd49412-de68-91d3-e710-0b24fed625d2@opensource.wdc.com>
+Date:   Tue, 17 Jan 2023 17:06:52 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
-Subject: Re: [PATCH v2 14/18] scsi: sd: detect support for command duration
- limits
+Subject: Re: [PATCH v2 07/18] block: introduce duration-limits priority class
 Content-Language: en-US
 To:     Christoph Hellwig <hch@infradead.org>,
         Niklas Cassel <niklas.cassel@wdc.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
+Cc:     Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org
 References: <20230112140412.667308-1-niklas.cassel@wdc.com>
- <20230112140412.667308-15-niklas.cassel@wdc.com>
- <Y8ZQQRO/O/3JjHtV@infradead.org>
+ <20230112140412.667308-8-niklas.cassel@wdc.com>
+ <Y8ZNftvsEIuPqMFP@infradead.org>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <Y8ZQQRO/O/3JjHtV@infradead.org>
+In-Reply-To: <Y8ZNftvsEIuPqMFP@infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/17/23 16:37, Christoph Hellwig wrote:
-> Is sysfs really the right interface here?  I would have expected an
-> ioctl (and for kernel use method) on the block device to more
-> useful.  Especially all the dynamic sysfs manipulation from a driver
-> is a little scary to me.
+On 1/17/23 16:25, Christoph Hellwig wrote:
+> On Thu, Jan 12, 2023 at 03:03:56PM +0100, Niklas Cassel wrote:
+>> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+>>
+>> Introduce the IOPRIO_CLASS_DL priority class to indicate that IOs should
+>> be executed using duration-limits targets. The duration target to apply
+>> to a command is indicated using the priority level. Up to 8 levels are
+>> supported, with level 0 indiating "no limit".
+>>
+>> This priority class has effect only if the target device supports the
+>> command duration limits feature and this feature is enabled by the user.
+>> In BFQ and mq-deadline, all requests with this new priority class are
+>> handled using the highest priority class RT and priority level 0.
+> 
+> Hmm, does it make sense to force a high priority?  Can't applications
+> use CDL to also fore a lower priority?
 
-I found it convenient to have everything in sysfs as everything is visible
-from the shell without needing any extra tooling. And I did that because I
-thought ioctls should not be added... We could add one though, but then I
-do not see much value since cdl-tools (cdladm utility) and sg3utils/sdparm
-can give that information already.
+They can, by using a large limit for "low priority" IOs. But then, these
+would still have a limit while any IO issued simultaneously without a CDL
+index specified would have no limit at all. So strictly speaking, the no
+limit IOs should be considered as even lower priority that CDL IOs with
+large limits.
+
+The other aspect here is that on ATA drives, CDL and NCQ priority cannot
+be used together. A mix of CDL and high priority commands cannot be sent
+to a device. Combining this with the above thinking, it made sense to me
+to have the CDL priority class handled the same as the RT class (as that
+is the one that maps to ATA NCQ high prio commands).
 
 -- 
 Damien Le Moal
