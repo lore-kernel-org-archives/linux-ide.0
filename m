@@ -2,158 +2,117 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E569C38159
-	for <linux-ide@archiver.kernel.org>; Thu, 19 Jan 2023 00:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD19C678DC
+	for <linux-ide@archiver.kernel.org>; Thu, 19 Jan 2023 00:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229734AbjASA3V (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 18 Jan 2023 19:29:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45992 "EHLO
+        id S229797AbjASA6p (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 18 Jan 2023 19:58:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229544AbjASA3T (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jan 2023 19:29:19 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C40D5FD72
-        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2023 16:29:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674088158; x=1705624158;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=sWJiQobN+0+lYp6N/mgIWU2A4vK/ghJzsbDaE3IN9ck=;
-  b=No1V7LYc7OeF4fj7qWg1kvd9xvwqlNh0UyR9gfAyEDlJ+eBs2xOnFrFY
-   GphjrNtzR4aaX9HiBYcqvu1QmXbvbvaDvvBgcs7eJqk5JQfAjTlTEr18q
-   LPRG114a9BM89wRK53vgGBgeRm5nTHqwRDh3dkYypiVt6HLINNSM3Kme/
-   UgFOt/lapxWh7tlE596MWu/WSq+Gz5im6qYheXosZbUsbREBqwfH/VmlK
-   /8i3nhZwHwiiphasMicH3mFygbANpn/vZXrpyueEO2Hl1QnuUVMIPz1Ly
-   bFFISQsWzlFWwHtVP1KB9O0S/MsPmJz8lIDtqvo+1+9yJbu1jGfR6Uhqz
-   A==;
-X-IronPort-AV: E=Sophos;i="5.97,226,1669046400"; 
-   d="scan'208";a="325475854"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2023 08:29:17 +0800
-IronPort-SDR: JvGya9bviVpUrSgo9yXVqCBvXNQnYlLUAds7OpjSvMOxo2ooe0KnDtYoLx7MJ//CWX00aPwxn7
- J8tnA9RvsbWuLPrwoGoDmukK8R8lAyg19ovYQFntsJqObZwlwUgdknQYsUAOEkeNN9Q/K03jkt
- IqUrK7mz16Mr4gYf9SKvjsxK6iPeV8dgk87AxB9zGq6JCWLEWUNpcR3rIQ3ZQQPYIw/i2M1+We
- Ifde0ScAOMrDTnrLtwxMdmAxHCsYMTB7al2QmTi8XyqRE4uk6+F420OrjAJG4d8xo1buk3Uyid
- 9XU=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jan 2023 15:46:56 -0800
-IronPort-SDR: w51vGyZJwTJ76jmQsPK1F+4cGJy16YRnpkzWOv/gZgEJLpcTa0gQC7cE7dec/QQFAoOqtzLFGq
- OpQ5F6NC8P3XFIVFPs0IkuXWoUDHm/wLNMGzi+zMpcynmVI/JwY9wGNypJWEnBZmG4fPbCOpXa
- MVSj9sZBZaUZBB5bTZjR6Przsyb0dgW/AhxqZP/RFhKAV6c72CLOs7hn7kEVCh6u5zZAP3gQ+W
- mzV9CWeh0YOb3fbiROIlnpG/h9/VY9d2JcX4Ccx4BMz5hIopvUs8zwgy184cZBhWyWN3CsXSiA
- CBI=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jan 2023 16:29:17 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Ny3R05Lmmz1RvTp
-        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2023 16:29:16 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1674088156; x=1676680157; bh=sWJiQobN+0+lYp6N/mgIWU2A4vK/ghJzsbD
-        aE3IN9ck=; b=go99c9otVZxBxvEabGMfegMifmMOKrQm5hjQSPHPV7ZO8H1JAJs
-        XM9fMMqHszsQ5vKTPUaZxfjVgflYlUxOTqiZwnqbBQIqMHT6zUN2tU5Unp9K7haU
-        MNWtvvg4ElABCxSsjfFI1ZR0KeC1GKm8Kom9iaMils2vf4rQrNZnH3fzQZBwToh3
-        I2zNrheHkFeywGiJ7hKxK1O3y0Z4pWH8I8oza+BdEZLa9zeVwKqavYDCJcFuJpD/
-        /SIl/4kmy5yv4uWopItAvKk0Jc6tIVLNDgn45oQ4BGTVwi2Yhj78hP4wlrBWk3Xn
-        Q/RHGbuBkyLTVJSI/M5Ae/4J7DgFoDERmoA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id tFi6CMbNtoHb for <linux-ide@vger.kernel.org>;
-        Wed, 18 Jan 2023 16:29:16 -0800 (PST)
-Received: from [10.89.84.31] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.84.31])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Ny3R00BXjz1RvLy;
-        Wed, 18 Jan 2023 16:29:15 -0800 (PST)
-Message-ID: <5171a47a-e508-1433-6975-8da5b27318b8@opensource.wdc.com>
-Date:   Thu, 19 Jan 2023 09:29:14 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.6.1
-Subject: Re: Bug report for ahci-mvebu driver
-Content-Language: en-US
-To:     marius@psihoexpert.ro
-Cc:     linux-ide@vger.kernel.org
-References: <41774337-a8d9-a2de-72ea-27b6016ff720@opensource.wdc.com>
- <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
- <a1b3b74b-1548-44d9-7d72-8eb428fa1788@opensource.wdc.com>
- <0ba8ebf7-6e6c-e63d-32c4-44d97898be1d@opensource.wdc.com>
- <126ce7f2-3de2-9e75-7920-09d78c224d76@opensource.wdc.com>
- <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
- <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
- <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
- <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
- <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
- <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
- <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
- <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
- <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
- <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
- <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
- <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
- <d42ddd29171c69e9a6628bfc2b100aca@psihoexpert.ro>
- <44527e2f8583a8ce51b1241bf9e56595@psihoexpert.ro>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <44527e2f8583a8ce51b1241bf9e56595@psihoexpert.ro>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229827AbjASA6n (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jan 2023 19:58:43 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E53D0683DF
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2023 16:58:41 -0800 (PST)
+Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
+        by 156.147.23.53 with ESMTP; 19 Jan 2023 09:58:39 +0900
+X-Original-SENDERIP: 156.147.1.151
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
+        by 156.147.1.151 with ESMTP; 19 Jan 2023 09:58:39 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     torvalds@linux-foundation.org
+Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, linux-kernel@vger.kernel.org,
+        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
+        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
+        daniel.vetter@ffwll.ch, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jlayton@kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
+        42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
+        gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com
+Subject: Re: [PATCH RFC v7 00/23] DEPT(Dependency Tracker)
+Date:   Thu, 19 Jan 2023 09:58:27 +0900
+Message-Id: <1674089907-31690-1-git-send-email-byungchul.park@lge.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <CAHk-=whpkWbdeZE1zask8YPzVYevJU2xOXqOposBujxZsa2-tQ@mail.gmail.com>
+References: <CAHk-=whpkWbdeZE1zask8YPzVYevJU2xOXqOposBujxZsa2-tQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2023/01/19 4:43, marius@psihoexpert.ro wrote:
-> [ 73.075849][ T112] hardreset, Online=>Offline
-> [ 73.075856][ T112] sata_set_spd_needed, scontrol=0x300
-> [ 73.080328][ T112] __sata_set_spd_needed, initial limit=0xFFFFFFFF
-> [ 73.085601][ T112] __sata_set_spd_needed, corrected limit=0xFFFFFFFF
-> [ 73.091900][ T112] __sata_set_spd_needed, target=0x0
-> [ 73.098386][ T112] __sata_set_spd_needed, spd=0x0
-> [ 73.103475][ T112] __sata_set_spd_needed, final *scontrol=0x300
+Torvalds wrote:
+> On Sun, Jan 8, 2023 at 7:33 PM Byungchul Park <byungchul.park@lge.com> wrote:
+>>
+>> I've been developing a tool for detecting deadlock possibilities by
+>> tracking wait/event rather than lock(?) acquisition order to try to
+>> cover all synchonization machanisms. It's done on v6.2-rc2.
+> 
+> Ugh. I hate how this adds random patterns like
 
-Can you share the patch/diff printing these ? Just to be sure I look at the
-right place :)
+I undertand what you mean.. But all the synchronization primitives
+should let DEPT know the beginning and the end of each. However, I will
+remove the 'if' statement that looks ugly from the next spin, and place
+the pattern to a better place if possible.
 
-...
+> 	if (timeout == MAX_SCHEDULE_TIMEOUT)
+> 		sdt_might_sleep_strong(NULL);
+> 	else
+> 		sdt_might_sleep_strong_timeout(NULL);
+> 	...
+> 	sdt_might_sleep_finish();
+> 
+> to various places, it seems so very odd and unmaintainable.
+> 
+> I also recall this giving a fair amount of false positives, are they all fixed?
 
-> [ 76.203475][ T112] debounce, SCR=0x100
-> [ 76.263475][ T112] debounce, SCR=0x100
-> [ 76.323475][ T112] debounce, SCR=0x100
-> [ 76.327332][ T112] resume, return at end of function
-> [ 76.331189][ T112] hardreset, ata_phys_link_offline check failed
-> [ 76.336287][ T112] ata2: SATA link down (SStatus 100 SControl 300)
-> [ 76.348747][ T112] sata_down_spd_limit: limit 0x1, cur spd 0x0, saved limit 0xffffffff, hw limit
-> 0xffffffff
+Yes. Of course I removed all the false positives we found.
 
-OK. And here is the problem: cur spd is 0x0, so unknown, and that leads to an
-einval exit of sata_down_spd_limit() instead of trying something sensible like
-starting with 6Gbps. That leads sata_set_spd to also have cur spd = 0 and
-setting of a bad scontrol which prevents detecting the drive. See the difference
-with forcing 1.5gbps:
+> Anyway, I'd really like the lockdep people to comment and be involved.
+> We did have a fairly recent case of "lockdep doesn't track page lock
+> dependencies because it fundamentally cannot" issue, so DEPT might fix
+> those kinds of missing dependency analysis. See
 
-> [ 19.819298][ T112] hardreset, Online=>Offline
-> [ 19.819306][ T112] sata_set_spd_needed, scontrol=0x310
-> [ 19.823798][ T112] __sata_set_spd_needed, initial limit=0x1
-> [ 19.829052][ T112] __sata_set_spd_needed, corrected limit=0x1
-> [ 19.834752][ T112] __sata_set_spd_needed, target=0x1
-> [ 19.840614][ T112] __sata_set_spd_needed, spd=0x1
-> [ 19.845703][ T112] __sata_set_spd_needed, final *scontrol=0x310
-> [ 19.851592][ T112] resume, do loop
-> [ 20.083568][ T112] resume, after do loop
-> [ 20.143567][ T112] debounce, SCR=0x113
+Sure. That's exactly what DEPT works for e.g. PG_locked.
 
-We have a good SCR thanks to spd being set to 1 = 1.5 gbps.
+> 	https://lore.kernel.org/lkml/00000000000060d41f05f139aa44@google.com/
 
-So patching sata_down_spd_limit() is the right solution I think. Let me cook
-something for you to test.
+I will reproduce it and share the result.
 
--- 
-Damien Le Moal
-Western Digital Research
+> for some context to that one, but at teh same time I would *really*
+> want the lockdep people more involved and acking this work.
+> 
+> Maybe I missed the email where you reported on things DEPT has found
+> (and on the lack of false positives)?
 
+Maybe you didn't miss. It's still too hard to make a decision between:
+
+	Aggressive detection with false alarms that need to be fixed by
+	manual classification as Lockdep did, focusing on potential
+	possibility more.
+
+	versus
+
+	Conservative detection with few false alarms, which requires us
+	to test much longer to get result we expect, focusing on actual
+	happening.
+
+> 
+> 	Linus
+
+	Byungchul
