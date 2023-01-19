@@ -2,123 +2,178 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AC07C004D4
-	for <linux-ide@archiver.kernel.org>; Thu, 19 Jan 2023 18:46:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 590F3C004D4
+	for <linux-ide@archiver.kernel.org>; Thu, 19 Jan 2023 19:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229773AbjASSqV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 19 Jan 2023 13:46:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32986 "EHLO
+        id S229796AbjAST0E (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 19 Jan 2023 14:26:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230034AbjASSqR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2023 13:46:17 -0500
-Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.37])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A1B38EFCF
-        for <linux-ide@vger.kernel.org>; Thu, 19 Jan 2023 10:46:13 -0800 (PST)
-dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
-        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
-        bh=3jWMwbQELGSJL5Oh+RACcldqeqk6F20JAmJFc0PTVs4=;
-        b=T6fDG7SqMn+QQFZy9u9bLZyOrIcAwn/b6CWZTHop3QMSRWaCf3l0Tbm+iUhfYVLfPtapxA7ovdab9M9fDi76iWZxYb1EOyeWoEdH3HfFAQ91imPoQGiPuEjIR4A92RP5dFt63+Ie2t1V4OrtKxlfxDjKylxzUMS70vFqIu0Z+Ia2ODdADhGkTWHOeSFGPyHxoNXBahlrSFYJWz7vSBMxopk9OXxadHZa+1ZlFakD96RtMQrmQ9PxTuzy8D
-        hM//Z3cb9EuVbndkZdgIBSuoFxCruklxNdDuUqkJ0bSi5SbJjROxeYkjC4d7Kxcf6vaGMQDyPPs5V66zWif5tVkox5aQ==
-Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
-        by mx1.wiredblade.com with ESMTPA
-        ; Thu, 19 Jan 2023 18:46:09 +0000
+        with ESMTP id S229876AbjASTZ5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2023 14:25:57 -0500
+Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46BDC530ED;
+        Thu, 19 Jan 2023 11:25:45 -0800 (PST)
+Received: by mail-qt1-x835.google.com with SMTP id s4so2378091qtx.6;
+        Thu, 19 Jan 2023 11:25:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:feedback-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xamYJZSiEPy9Mjo2njH+JPn5/UHZCpsx0WYfjjoyGiY=;
+        b=MrwOCC5ehcze1hpMjcT+s1KhKEgcE4YPuq3yqI1Cm5uRCIw1PUevaLEC6XkTcNhbT9
+         Zw0OvgbmLEFdn1tUM2fjgufvEQCRxf9F5A/ADdKpwTfdOwWf/0FqKiy1RuuQeUDtT2r1
+         WOQNX4WCd5xldt11cYOVTcAYa8grKYNOtlZuJLBY7Hqr8xr25RNCaSO7DWHMR1iJ2wZ4
+         jILLDKWwZP8GiSLOga1KZkHZ1Quhj6gfAe4Q0cx1AezAz9Aw7s1aRjjoXenbgYqQO8nm
+         QgeiFuARK8oNcrVywEUZQ78eB39jl9apcTRWslHRMXoRBD4K3HuCxamntvSxOTPxK4uE
+         BODA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:feedback-id:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=xamYJZSiEPy9Mjo2njH+JPn5/UHZCpsx0WYfjjoyGiY=;
+        b=tq+trOZ8NniRqlPpQ7ZVgULWMFj+94r3w+jkwm10HiVyr9mcUrJ1zM7eWM1RuvhA+J
+         AyiD9Sa8Ldoz3wvlkRJkMH9300p0A/e0MFDMlnGHARDj/0+DlKPcagJ5bXYiWHSt+kzX
+         PzMqIrIfRaPSrIXqtFGORt3MQ0WHbSNtmF4LMbsuAJYlmZD9OwNT4f8fKb18oTh4XFjI
+         p87Dhz2pBuiTEuikcF4jj+o4nmt75pbcPai2AjYAgD/AVjjWH2aci8Nig3JnN4brCfTV
+         Q89Kvvr62SK2CBdPhcxuKwgF2m7EKkdczO1pXLHPt2HOiJiOQeJZ5LlARTOz29kyPn8A
+         SKJg==
+X-Gm-Message-State: AFqh2ko8vWAYA3M0ykHLj3EZ8kOcTjd2Gh/vh+wqy610HCTwbnbroTIh
+        9iKSTNRumdPDf0csLzDAu+SmksT/kbk=
+X-Google-Smtp-Source: AMrXdXv6/5PtZaK3QzptagCsxzBPPETPDBX9eIEhj7kPWY4WuBsc33JbZzxeaNRbDyw281mOZy4DMg==
+X-Received: by 2002:ac8:4446:0:b0:3b6:377b:e05c with SMTP id m6-20020ac84446000000b003b6377be05cmr12291034qtn.47.1674156344292;
+        Thu, 19 Jan 2023 11:25:44 -0800 (PST)
+Received: from auth2-smtp.messagingengine.com (auth2-smtp.messagingengine.com. [66.111.4.228])
+        by smtp.gmail.com with ESMTPSA id ej4-20020a05622a4f8400b003b693fe4427sm727836qtb.90.2023.01.19.11.25.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Jan 2023 11:25:43 -0800 (PST)
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+        by mailauth.nyi.internal (Postfix) with ESMTP id 20B2C27C0054;
+        Thu, 19 Jan 2023 14:25:42 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute6.internal (MEProxy); Thu, 19 Jan 2023 14:25:43 -0500
+X-ME-Sender: <xms:NZnJYwTxwYLfh8N7togMMPPYVeKdqLNSU6cBkqgYw1MVfb1Q7g283w>
+    <xme:NZnJY9xSw9qvXrrAIJEbpvx12Y2TyP_RnRTmtBw-y1f1OYtEkrBMU_4YXAozbQqOh
+    zbQZ0y4tj_ONrG2QQ>
+X-ME-Received: <xmr:NZnJY91HzMP2Iy60XcV_ZcT4yKf2IQY3ocx0fpLzHGwRF2CeF0X43zzN0DQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedruddutddguddviecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpeffhffvvefukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhq
+    uhhnucfhvghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrf
+    grthhtvghrnhephedugfduffffteeutddvheeuveelvdfhleelieevtdeguefhgeeuveei
+    udffiedvnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomh
+    epsghoqhhunhdomhgvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqieelvdeghedt
+    ieegqddujeejkeehheehvddqsghoqhhunhdrfhgvnhhgpeepghhmrghilhdrtghomhesfh
+    higihmvgdrnhgrmhgv
+X-ME-Proxy: <xmx:NZnJY0CTKhGEBWy1veKc6w2hVzbwm1Rf2uZ1Xsyyk9_pC7SbEHDNOw>
+    <xmx:NZnJY5j2rwpIuu1Rn9fBKWIyoQvQrI42uB43xg7d0VHM2TJ04SwWGA>
+    <xmx:NZnJYworf0mYeiLAkASjr3os2e8ECpvW0MlaGgzHEya6_0aWJpdS2A>
+    <xmx:NpnJY464YDfl0tqd71pt0eI__JWNhiE-bQVw-oxLk6HFFui_uQOFPuiI1T8>
+Feedback-ID: iad51458e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 19 Jan 2023 14:25:40 -0500 (EST)
+Date:   Thu, 19 Jan 2023 11:25:16 -0800
+From:   Boqun Feng <boqun.feng@gmail.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Byungchul Park <byungchul.park@lge.com>,
+        linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, peterz@infradead.org, will@kernel.org,
+        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
+        sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        david@fromorbit.com, amir73il@gmail.com,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jlayton@kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
+        42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
+        gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
+        longman@redhat.com
+Subject: Re: [PATCH RFC v7 00/23] DEPT(Dependency Tracker)
+Message-ID: <Y8mZHKJV4FH17vGn@boqun-archlinux>
+References: <Y8bmeffIQ3iXU3Ux@boqun-archlinux>
+ <1674109388-6663-1-git-send-email-byungchul.park@lge.com>
+ <Y8lGxkBrls6qQOdM@casper.infradead.org>
 MIME-Version: 1.0
-Date:   Thu, 19 Jan 2023 18:46:10 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: RainLoop/1.16.0
-From:   marius@psihoexpert.ro
-Message-ID: <45337bf4a17c9c879f9439c1138bc443@psihoexpert.ro>
-Subject: Re: Bug report for ahci-mvebu driver
-To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org
-In-Reply-To: <5171a47a-e508-1433-6975-8da5b27318b8@opensource.wdc.com>
-References: <5171a47a-e508-1433-6975-8da5b27318b8@opensource.wdc.com>
- <41774337-a8d9-a2de-72ea-27b6016ff720@opensource.wdc.com>
- <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
- <a1b3b74b-1548-44d9-7d72-8eb428fa1788@opensource.wdc.com>
- <0ba8ebf7-6e6c-e63d-32c4-44d97898be1d@opensource.wdc.com>
- <126ce7f2-3de2-9e75-7920-09d78c224d76@opensource.wdc.com>
- <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
- <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
- <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
- <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
- <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
- <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
- <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
- <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
- <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
- <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
- <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
- <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
- <d42ddd29171c69e9a6628bfc2b100aca@psihoexpert.ro>
- <44527e2f8583a8ce51b1241bf9e56595@psihoexpert.ro>
-X-Originating-IP: 86.123.22.43
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y8lGxkBrls6qQOdM@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-January 19, 2023 2:29 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.=
-com> wrote:
+On Thu, Jan 19, 2023 at 01:33:58PM +0000, Matthew Wilcox wrote:
+> On Thu, Jan 19, 2023 at 03:23:08PM +0900, Byungchul Park wrote:
+> > Boqun wrote:
+> > > *	Looks like the DEPT dependency graph doesn't handle the
+> > > 	fair/unfair readers as lockdep current does. Which bring the
+> > > 	next question.
+> > 
+> > No. DEPT works better for unfair read. It works based on wait/event. So
+> > read_lock() is considered a potential wait waiting on write_unlock()
+> > while write_lock() is considered a potential wait waiting on either
+> > write_unlock() or read_unlock(). DEPT is working perfect for it.
+> > 
+> > For fair read (maybe you meant queued read lock), I think the case
+> > should be handled in the same way as normal lock. I might get it wrong.
+> > Please let me know if I miss something.
+> 
+> From the lockdep/DEPT point of view, the question is whether:
+> 
+> 	read_lock(A)
+> 	read_lock(A)
+> 
+> can deadlock if a writer comes in between the two acquisitions and
+> sleeps waiting on A to be released.  A fair lock will block new
+> readers when a writer is waiting, while an unfair lock will allow
+> new readers even while a writer is waiting.
+> 
 
-> On 2023/01/19 4:43, marius@psihoexpert.ro wrote:
->=20
->>=20[ 73.075849][ T112] hardreset, Online=3D>Offline
->> [ 73.075856][ T112] sata_set_spd_needed, scontrol=3D0x300
->> [ 73.080328][ T112] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
->> [ 73.085601][ T112] __sata_set_spd_needed, corrected limit=3D0xFFFFFFF=
-F
->> [ 73.091900][ T112] __sata_set_spd_needed, target=3D0x0
->> [ 73.098386][ T112] __sata_set_spd_needed, spd=3D0x0
->> [ 73.103475][ T112] __sata_set_spd_needed, final *scontrol=3D0x300
->=20
->=20Can you share the patch/diff printing these ? Just to be sure I look =
-at the
-> right place :)
+To be more accurate, a fair reader will wait if there is a writer
+waiting for other reader (fair or not) to unlock, and an unfair reader
+won't.
 
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -427,6 +430,7 @@ static int __sata_set_spd_needed(struct ata_link *lin=
-k, u32 *scontrol)
-        u32 limit, target, spd;
+In kernel there are read/write locks that can have both fair and unfair
+readers (e.g. queued rwlock). Regarding deadlocks,
 
-        limit =3D link->sata_spd_limit;
-+       printk(KERN_DEBUG "__sata_set_spd_needed, initial limit=3D0x%X",l=
-imit);
+	T0		T1		T2
+	--		--		--
+	fair_read_lock(A);
+			write_lock(B);
+					write_lock(A);
+	write_lock(B);
+			unfair_read_lock(A);
 
-        /* Don't configure downstream link faster than upstream link.
-         * It doesn't speed up anything and some PMPs choke on such
-@@ -435,14 +439,18 @@ static int __sata_set_spd_needed(struct ata_link *l=
-ink, u32 *scontrol)
-        if (!ata_is_host_link(link) && host_link->sata_spd)
-                limit &=3D (1 << host_link->sata_spd) - 1;
+the above is not a deadlock, since T1's unfair reader can "steal" the
+lock. However the following is a deadlock:
 
-+       printk(KERN_DEBUG "__sata_set_spd_needed, corrected limit=3D0x%X"=
-,limit);
-        if (limit =3D=3D UINT_MAX)
-                target =3D 0;
-        else
-                target =3D fls(limit);
+	T0		T1		T2
+	--		--		--
+	unfair_read_lock(A);
+			write_lock(B);
+					write_lock(A);
+	write_lock(B);
+			fair_read_lock(A);
 
-+       printk(KERN_DEBUG "__sata_set_spd_needed, target=3D0x%X",target);
-        spd =3D (*scontrol >> 4) & 0xf;
-        *scontrol =3D (*scontrol & ~0xf0) | ((target & 0xf) << 4);
+, since T'1 fair reader will wait.
 
-+       printk(KERN_DEBUG "__sata_set_spd_needed, spd=3D0x%X",spd);
-+       printk(KERN_DEBUG "__sata_set_spd_needed, final *scontrol=3D0x%X"=
-,*scontrol);
-        return spd !=3D target;
- }
+FWIW, lockdep is able to catch this (figuring out which is deadlock and
+which is not) since two years ago, plus other trivial deadlock detection
+for read/write locks. Needless to say, if lib/lock-selftests.c was given
+a try, one could find it out on one's own.
 
-@@ -467,6 +475,7 @@ static int sata_set_spd_needed(struct ata_link *link)
-
-        if (sata_scr_read(link, SCR_CONTROL, &scontrol))
-                return 1;
-+       printk(KERN_DEBUG "sata_set_spd_needed, scontrol=3D0x%X",scontrol=
-);
-
-        return __sata_set_spd_needed(link, &scontrol);
- }
-
-Marius Dinu
-
+Regards,
+Boqun
