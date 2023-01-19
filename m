@@ -2,34 +2,34 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD19C678DC
-	for <linux-ide@archiver.kernel.org>; Thu, 19 Jan 2023 00:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F116EC38142
+	for <linux-ide@archiver.kernel.org>; Thu, 19 Jan 2023 06:23:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229797AbjASA6p (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 18 Jan 2023 19:58:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60596 "EHLO
+        id S229699AbjASGXa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 19 Jan 2023 01:23:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229827AbjASA6n (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jan 2023 19:58:43 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E53D0683DF
-        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2023 16:58:41 -0800 (PST)
-Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
-        by 156.147.23.53 with ESMTP; 19 Jan 2023 09:58:39 +0900
-X-Original-SENDERIP: 156.147.1.151
+        with ESMTP id S229626AbjASGX0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2023 01:23:26 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5B1D6654E9
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2023 22:23:23 -0800 (PST)
+Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
+        by 156.147.23.52 with ESMTP; 19 Jan 2023 15:23:21 +0900
+X-Original-SENDERIP: 156.147.1.125
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.151 with ESMTP; 19 Jan 2023 09:58:39 +0900
+        by 156.147.1.125 with ESMTP; 19 Jan 2023 15:23:21 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
-To:     torvalds@linux-foundation.org
-Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+To:     boqun.feng@gmail.com
+Cc:     linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
-        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
-        daniel.vetter@ffwll.ch, duyuyang@gmail.com,
+        mingo@redhat.com, peterz@infradead.org, will@kernel.org,
+        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
+        sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
         johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
         willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
         gregkh@linuxfoundation.org, kernel-team@lge.com,
@@ -45,74 +45,157 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
         melissa.srw@gmail.com, hamohammed.sa@gmail.com,
         42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
-        gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com
+        gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
+        longman@redhat.com
 Subject: Re: [PATCH RFC v7 00/23] DEPT(Dependency Tracker)
-Date:   Thu, 19 Jan 2023 09:58:27 +0900
-Message-Id: <1674089907-31690-1-git-send-email-byungchul.park@lge.com>
+Date:   Thu, 19 Jan 2023 15:23:08 +0900
+Message-Id: <1674109388-6663-1-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
-In-Reply-To: <CAHk-=whpkWbdeZE1zask8YPzVYevJU2xOXqOposBujxZsa2-tQ@mail.gmail.com>
-References: <CAHk-=whpkWbdeZE1zask8YPzVYevJU2xOXqOposBujxZsa2-tQ@mail.gmail.com>
+In-Reply-To: <Y8bmeffIQ3iXU3Ux@boqun-archlinux>
+References: <Y8bmeffIQ3iXU3Ux@boqun-archlinux>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Torvalds wrote:
-> On Sun, Jan 8, 2023 at 7:33 PM Byungchul Park <byungchul.park@lge.com> wrote:
->>
->> I've been developing a tool for detecting deadlock possibilities by
->> tracking wait/event rather than lock(?) acquisition order to try to
->> cover all synchonization machanisms. It's done on v6.2-rc2.
+Boqun wrote:
+> On Mon, Jan 16, 2023 at 10:00:52AM -0800, Linus Torvalds wrote:
+> > [ Back from travel, so trying to make sense of this series..  ]
+> > 
+> > On Sun, Jan 8, 2023 at 7:33 PM Byungchul Park <byungchul.park@lge.com> wrote:
+> > >
+> > > I've been developing a tool for detecting deadlock possibilities by
+> > > tracking wait/event rather than lock(?) acquisition order to try to
+> > > cover all synchonization machanisms. It's done on v6.2-rc2.
+> > 
+> > Ugh. I hate how this adds random patterns like
+> > 
+> >         if (timeout == MAX_SCHEDULE_TIMEOUT)
+> >                 sdt_might_sleep_strong(NULL);
+> >         else
+> >                 sdt_might_sleep_strong_timeout(NULL);
+> >    ...
+> >         sdt_might_sleep_finish();
+> > 
+> > to various places, it seems so very odd and unmaintainable.
+> > 
+> > I also recall this giving a fair amount of false positives, are they all fixed?
+> > 
 > 
-> Ugh. I hate how this adds random patterns like
+> From the following part in the cover letter, I guess the answer is no?
 
-I undertand what you mean.. But all the synchronization primitives
-should let DEPT know the beginning and the end of each. However, I will
-remove the 'if' statement that looks ugly from the next spin, and place
-the pattern to a better place if possible.
+I fixed what we found anyway.
 
-> 	if (timeout == MAX_SCHEDULE_TIMEOUT)
-> 		sdt_might_sleep_strong(NULL);
-> 	else
-> 		sdt_might_sleep_strong_timeout(NULL);
 > 	...
-> 	sdt_might_sleep_finish();
+> 	6. Multiple reports are allowed.
+> 	7. Deduplication control on multiple reports.
+> 	8. Withstand false positives thanks to 6.
+> 	...
 > 
-> to various places, it seems so very odd and unmaintainable.
+> seems to me that the logic is since DEPT allows multiple reports so that
+> false positives are fitlerable by users?
+
+At lease, it's needed until DEPT is considered stable because stronger
+detection inevitably has more chance of false alarms unless we do manual
+fix on each, which is the same as Lockdep.
+
+> > Anyway, I'd really like the lockdep people to comment and be involved.
 > 
-> I also recall this giving a fair amount of false positives, are they all fixed?
+> I never get Cced, so I'm unware of this for a long time...
 
-Yes. Of course I removed all the false positives we found.
+Sorry I missed it. I will cc you from now on.
 
-> Anyway, I'd really like the lockdep people to comment and be involved.
-> We did have a fairly recent case of "lockdep doesn't track page lock
-> dependencies because it fundamentally cannot" issue, so DEPT might fix
-> those kinds of missing dependency analysis. See
-
-Sure. That's exactly what DEPT works for e.g. PG_locked.
-
-> 	https://lore.kernel.org/lkml/00000000000060d41f05f139aa44@google.com/
-
-I will reproduce it and share the result.
-
-> for some context to that one, but at teh same time I would *really*
-> want the lockdep people more involved and acking this work.
+> A few comments after a quick look:
 > 
-> Maybe I missed the email where you reported on things DEPT has found
-> (and on the lack of false positives)?
+> *	Looks like the DEPT dependency graph doesn't handle the
+> 	fair/unfair readers as lockdep current does. Which bring the
+> 	next question.
 
-Maybe you didn't miss. It's still too hard to make a decision between:
+No. DEPT works better for unfair read. It works based on wait/event. So
+read_lock() is considered a potential wait waiting on write_unlock()
+while write_lock() is considered a potential wait waiting on either
+write_unlock() or read_unlock(). DEPT is working perfect for it.
 
-	Aggressive detection with false alarms that need to be fixed by
-	manual classification as Lockdep did, focusing on potential
-	possibility more.
+For fair read (maybe you meant queued read lock), I think the case
+should be handled in the same way as normal lock. I might get it wrong.
+Please let me know if I miss something.
 
-	versus
-
-	Conservative detection with few false alarms, which requires us
-	to test much longer to get result we expect, focusing on actual
-	happening.
-
+> *	Can DEPT pass all the selftests of lockdep in
+> 	lib/locking-selftests.c?
 > 
-> 	Linus
+> *	Instead of introducing a brand new detector/dependency tracker,
+> 	could we first improve the lockdep's dependency tracker? I think
+
+At the beginning of this work, of course I was thinking to improve
+Lockdep but I decided to implement a new tool because:
+
+	1. What we need to check for deadlock detection is no longer
+	   lock dependency but more fundamental dependency by wait/event.
+	   A better design would have a separate dependency engine for
+	   that, not within Lockdep. Remind lock/unlock are also
+	   wait/event after all.
+
+	2. I was thinking to revert the revert of cross-release. But it
+	   will start to report false alarms as Lockdep was at the
+	   beginning, and require us to keep fixing things until being
+	   able to see what we are interested in, maybe for ever. How
+	   can we control that situation? I wouldn't use this extention.
+
+	3. Okay. Let's think about modifying the current Lockdep to make
+	   it work similar to DEPT. It'd require us to pay more effort
+	   than developing a new simple tool from the scratch with the
+	   basic requirement.
+
+	4. Big change at once right away? No way. The new tool need to
+	   be matured and there are ones who want to make use of DEPT at
+	   the same time. The best approach would be I think to go along
+	   together for a while.
+
+Please don't look at each detail but the big picture, the architecture.
+Plus, please consider I introduce a tool only focucing on fundamental
+dependency itself that Lockdep can make use of. I wish great developers
+like you would join improve the common engine togather.
+
+> 	Byungchul also agrees that DEPT and lockdep should share the
+> 	same dependency tracker and the benefit of improving the
+
+I agree that both should share a single tracker.
+
+> 	existing one is that we can always use the self test to catch
+> 	any regression. Thoughts?
+
+I imagine the follownig look for the final form:
+
+     Lock correctness checker(LOCKDEP)
+     +-----------------------------------------+
+     | Lock usage correctness check            |
+     |                                         |
+     |                                         |
+     |       (Request dependency check)        |
+     |                           T             |
+     +---------------------------|-------------+
+                                 |
+     Dependency tracker(DEPT)    V
+     +-----------------------------------------+
+     | Dependency check                        |
+     | (by tracking wait and event context)    |
+     +-----------------------------------------+
+
+> Actually the above sugguest is just to revert revert cross-release
+> without exposing any annotation, which I think is more practical to
+> review and test.
+
+Reverting the revert of cross-release is not bad. But I'd suggest a
+nicer design for the reasons I explained above.
 
 	Byungchul
+
+> I'd sugguest we 1) first improve the lockdep dependency tracker with
+> wait/event in mind and then 2) introduce wait related annotation so that
+> users can use, and then 3) look for practical ways to resolve false
+> positives/multi reports with the help of users, if all goes well,
+> 4) make it all operation annotated.
+> 
+> Thoughts?
+> 
+> Regards,
+> Boqun
