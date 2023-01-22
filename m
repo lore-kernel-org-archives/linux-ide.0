@@ -2,45 +2,86 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12B2FC25B4E
-	for <linux-ide@archiver.kernel.org>; Sun, 22 Jan 2023 07:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65542C25B4E
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Jan 2023 18:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229643AbjAVH5Q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 22 Jan 2023 02:57:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47734 "EHLO
+        id S230114AbjAVSOY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 22 Jan 2023 13:14:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbjAVH5P (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2023 02:57:15 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEECE1CADD;
-        Sat, 21 Jan 2023 23:57:14 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1370C68AA6; Sun, 22 Jan 2023 08:57:10 +0100 (CET)
-Date:   Sun, 22 Jan 2023 08:57:10 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Ondrej Zary <linux@zary.sk>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>,
+        with ESMTP id S230034AbjAVSOX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 22 Jan 2023 13:14:23 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1D6C110250;
+        Sun, 22 Jan 2023 10:14:22 -0800 (PST)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 310517A033B;
+        Sun, 22 Jan 2023 19:14:21 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
         Sergey Shtylyov <s.shtylyov@omp.ru>,
         Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
         linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] pata_parport: add driver (PARIDE replacement)
-Message-ID: <20230122075710.GA4046@lst.de>
-References: <20230121225314.32459-1-linux@zary.sk>
+Subject: [PATCH] paride: Mark PARIDE as deprecated, point to PATA_PARPORT
+Date:   Sun, 22 Jan 2023 19:14:15 +0100
+Message-Id: <20230122181415.21031-1-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20230122075710.GA4046@lst.de>
+References: <20230122075710.GA4046@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230121225314.32459-1-linux@zary.sk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-I suspect a comment in the Kconfig for the old PARIDE code to point
-to this and maybe even a runtime warning when using the old paride
-code would be great.
+Add Kconfig and runtime deprecation warnings to PARIDE, pointing users
+to PATA_PARPORT.
 
-But except for that the code looks awesome, so let's get it merged ASAP:
+Signed-off-by: Ondrej Zary <linux@zary.sk>
+---
+ drivers/block/Kconfig         | 4 +++-
+ drivers/block/paride/paride.c | 2 ++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
+index a2184b428493..3a2065c6a4d7 100644
+--- a/drivers/block/Kconfig
++++ b/drivers/block/Kconfig
+@@ -104,7 +104,7 @@ config GDROM
+ 	  You can also build this as a module which will be called gdrom.
+ 
+ config PARIDE
+-	tristate "Parallel port IDE device support"
++	tristate "Parallel port IDE device support (DEPRECATED)"
+ 	depends on PARPORT_PC
+ 	help
+ 	  There are many external CD-ROM and disk devices that connect through
+@@ -130,6 +130,8 @@ config PARIDE
+ 	  "MicroSolutions backpack protocol", "DataStor Commuter protocol"
+ 	  etc.).
+ 
++	  This driver is deprecated, replaced by libata-based PATA_PARPORT.
++
+ source "drivers/block/paride/Kconfig"
+ 
+ source "drivers/block/mtip32xx/Kconfig"
+diff --git a/drivers/block/paride/paride.c b/drivers/block/paride/paride.c
+index 0e287993b778..010daf605728 100644
+--- a/drivers/block/paride/paride.c
++++ b/drivers/block/paride/paride.c
+@@ -452,6 +452,8 @@ void *pi_register_driver(char *name)
+ 	struct parport_driver *parp_drv;
+ 	int ret;
+ 
++	printk(KERN_WARNING "PARIDE is deprecated. Use PATA_PARPORT instead.\n");
++
+ 	parp_drv = kzalloc(sizeof(*parp_drv), GFP_KERNEL);
+ 	if (!parp_drv)
+ 		return NULL;
+-- 
+Ondrej Zary
+
