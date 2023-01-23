@@ -2,95 +2,62 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 134C1C38142
-	for <linux-ide@archiver.kernel.org>; Mon, 23 Jan 2023 07:38:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46571C54EAA
+	for <linux-ide@archiver.kernel.org>; Mon, 23 Jan 2023 08:52:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbjAWHik (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 23 Jan 2023 02:38:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34226 "EHLO
+        id S231593AbjAWIw3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 23 Jan 2023 03:52:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231594AbjAWHi2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2023 02:38:28 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FEA37AA4;
-        Sun, 22 Jan 2023 23:38:26 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id C3CB83369B;
-        Mon, 23 Jan 2023 07:38:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1674459504; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tJTRdzMZSDnp/JSiCAt8M0GL/TKb+LyjENNLymEDP/w=;
-        b=Na7D44v841g/Ky2mHNzrWP1QDynHWozepDotcv0n8nplDWoBCwccNjg78siACkfAZbswXY
-        qxnuxk/pRCImkjZTs4PTpALPZDggY67IwrUEPd0a+/L74kClCA3XCwH1e0Ctnr7WXeIRau
-        HfPtgarZjkhJH9CwMYMZlsTQXma9rJE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1674459504;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tJTRdzMZSDnp/JSiCAt8M0GL/TKb+LyjENNLymEDP/w=;
-        b=WAYy9aLooM/mkSZCYoGcVKGgdtKytfnKUKJ8B7EQQmBkI/p/NbfIOnYxR7zx+IdGcsIO6G
-        KysYabn/2e/phNBQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 88C21134F5;
-        Mon, 23 Jan 2023 07:38:24 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id X6hjIHA5zmNUOgAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 23 Jan 2023 07:38:24 +0000
-Message-ID: <1537758c-a795-0285-2974-c759d5eb76c3@suse.de>
-Date:   Mon, 23 Jan 2023 08:38:24 +0100
+        with ESMTP id S231625AbjAWIw2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2023 03:52:28 -0500
+X-Greylist: delayed 459 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 Jan 2023 00:51:58 PST
+Received: from mail.tryweryn.pl (mail.tryweryn.pl [5.196.29.197])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A061E2AE
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2023 00:51:58 -0800 (PST)
+Received: by mail.tryweryn.pl (Postfix, from userid 1002)
+        id 0C876A2AA5; Mon, 23 Jan 2023 08:43:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tryweryn.pl; s=mail;
+        t=1674463455; bh=Bo+/jg3TCpOeS79PpZREuOWEeqJV//jojylD9dSrSik=;
+        h=Date:From:To:Subject:From;
+        b=e4ysEtt0EJewy+t3fpKJyhK6UT7O2AhKiXNrvs7OyPqU4bd5dnpFt0/JMcN/oviZT
+         gaCerIzF4+/yxp/cWXDAkLadfxf6WFBPXQLtzazT/us+9dwsY7U37Oeok1npoqc5mw
+         QwJiTeRSgb4xTncdAJ1RZ4ppJe0l3kWbiTMgmXlAQxfXXADT6a1Hx+jli1Hoz0ixGL
+         ET4K1URPoay0Ev4hsQesjXwvSgBbyVpODt9IFx16iHLoQnfmUup0bj/n6EXRpwLCOZ
+         aArj4OfKRqne95hTb0k4P+ti6bwzJEllJIoqo2VauDHlAITXPuZJ6KovHv5gc7QCIv
+         hivQm61CkKA7Q==
+Received: by mail.tryweryn.pl for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2023 08:42:54 GMT
+Message-ID: <20230123081829-0.1.7p.2rx5l.0.mwa1pddoa2@tryweryn.pl>
+Date:   Mon, 23 Jan 2023 08:42:54 GMT
+From:   "Karol Michun" <karol.michun@tryweryn.pl>
+To:     <linux-ide@vger.kernel.org>
+Subject: Prezentacja
+X-Mailer: mail.tryweryn.pl
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH] paride: Mark PARIDE as deprecated, point to PATA_PARPORT
-Content-Language: en-US
-To:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230122075710.GA4046@lst.de>
- <20230122181415.21031-1-linux@zary.sk>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230122181415.21031-1-linux@zary.sk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/22/23 19:14, Ondrej Zary wrote:
-> Add Kconfig and runtime deprecation warnings to PARIDE, pointing users
-> to PATA_PARPORT.
-> 
-> Signed-off-by: Ondrej Zary <linux@zary.sk>
-> ---
->   drivers/block/Kconfig         | 4 +++-
->   drivers/block/paride/paride.c | 2 ++
->   2 files changed, 5 insertions(+), 1 deletion(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Dzie=C5=84 dobry!
 
-Cheers,
+Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
+=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
+zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
+=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
+dostaw.
 
+Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
+nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
+ co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
+
+Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
+=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
+zania w Pa=C5=84stwa firmie.
+
+
+Pozdrawiam
+Karol Michun
