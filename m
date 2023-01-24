@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23732C61D97
-	for <linux-ide@archiver.kernel.org>; Tue, 24 Jan 2023 21:36:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1363C54EED
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Jan 2023 21:39:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232680AbjAXVgW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 Jan 2023 16:36:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55994 "EHLO
+        id S233577AbjAXVjw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 Jan 2023 16:39:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233860AbjAXVgU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2023 16:36:20 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D04BC48A05
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 13:36:19 -0800 (PST)
+        with ESMTP id S235053AbjAXVjq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2023 16:39:46 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E7B0CA17
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 13:39:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674596179; x=1706132179;
+  t=1674596380; x=1706132380;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=MaeulGlWcam/cauFGlIbI6QYkQXS6fmIFOQvrLj/zE0=;
-  b=npF3NL5SfNjYRNwCwddVuriX68ug4cEmz0MClcIS5mvJTb3Z1czAvEuF
-   RzvRtGJ5pEAqkj7FxSAAeQSZ+qFZSWm1w2xX2sDCQeG3lIrtfoazPABgA
-   StwQ6fzedOmnUT61sLqSuuAHpbTKB7YAhA4mUYOPeUbxiXhbfDgwvrh+U
-   uMY8asHhjoz0Kzv90JKIBnu6x5nQushVQCeNGE8BTS/DC3XP+zSRHOHxm
-   hLpRkRUY+DrDMWhzOiwUV5IDRGXK+k3ecXtWS3TlJaDyp+WEl/bKdQ3t9
-   JCBUwMQDKGtJKSbnrrD3q19bvA2XbNODZrzhLIqFRAzZnYUl9UjdBZUeI
-   g==;
+  bh=Qd6GlOwYoybiib2oWiWQIX1FOUfCwCEdPWZivN6s5lw=;
+  b=PnqxYpf9RHDZjQS8vIcK3KPMNhyvZQHaLLEQOygbpNFucU4DQWRr44A3
+   urRK8c/JqrieKcSlOxUQvW4swYmq4Di0kMmD/5TPoCMPcPeP/4uQOOUfj
+   LaWfF++ng+c5gPiNnmdWM5/rhN4pReWJCuPZpvFEkof0vSG3FOsmAvq8R
+   fNGSDISBUQ7vfsb95fW6NxigStfz5U2qhNQJU4m57XqP7ksZU6RbED//4
+   xd11MZpVmWATb87S6xlIb8W+I+vV42xyBj6LzVhdROCQzPQFb/luwPddG
+   9aiITUhtKp8yaxLlHsH3f3Mmk9LPEJNbCs6btgFkJqrWYTXIDdtQ/Vojz
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.97,243,1669046400"; 
-   d="scan'208";a="325971142"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2023 05:36:18 +0800
-IronPort-SDR: YiqbffVhn5UUWPhqu/kHb03ujRpI0/LGcV3lvmPRXc0y+AEo4QpuFraPkTd0uBs+n1a/B+F+vS
- vMneXJiDhZm2VrYinkP9+Cnlzg1+K0av4ZOBqjLF323E+nEeBro9bzjnj68saSkSDr7+bV2jfq
- jmESN0QBlqSJfdBVxqkvqfaoTssYgl9dTBst/lBu4k9ApbU7poUrvWGrZoYQmn5Wz2nwAydWCz
- hcRUYUyGuuKJK5/q9a/XbDxSTQ6SK0mzDFoG9bN2Pr4lNzZ33SWbtNVLcfFPDWU2mt+OAYquiN
- hfY=
+   d="scan'208";a="221481302"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2023 05:39:35 +0800
+IronPort-SDR: v4I4nApw9Q3191/toPXIu4Hph8hYSZ698cvsRIbPFND/UCLLOTV+/YpRWa21iklhL74Rz6BPwk
+ NkN9j12dVksboVFI5sFAqaOB1TPoNr8wIs82zSB3oJDjEo8ckkDkiP/4r73jAZINJgLdhTmhpH
+ /lmyT35C7jRUA9hW8pHm5FVk+UME2VppvoTj00y3vqHbjaZA8VXkGt38wOaCw94XOUs4Hr/TZz
+ k3V/SXzm0mVj+j4F4Qls6yjCn/o417iWHKOehJy0r7kcotwQxYrGXBvsSi/nQBTsrO6PBk1Td9
+ XDg=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 12:48:06 -0800
-IronPort-SDR: Vi9gXUP552X+TpaPs6H35A1qkK31bDJIZyIG04kUfD7qIDCfX28k86lcxd6AEob5w9z1ewpm5I
- rN2sHlmgCjYpIARrQkG4G/FRchVM7UY5hqQgbs7pmid+PALhGRkgP3FKLsGW56ERMaXM7DB5fj
- ldtutjt/z+VNEyd5lobGoHYsOBqBW82Sd8zjKXsHHlMxtRdoaeAg3rAcSo9aYkcS9Apu/VBDlO
- 4J4o6jZjKQeiWqVnRBV0VZElfuT4RSZ1tLE+IvVK+K7zaOxULWc7BVUVtF57RDjATA4UpF9rp1
- /Bs=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 12:57:07 -0800
+IronPort-SDR: ATemZND5UgbmeBSSoNPnikPhq6IWlGq6vfut+gslk0erBdKg1rRcvsy0g/N83vdeLxfZYUuWt/
+ cmnjU653VqF4y3XO+xc0sOsKoRnLk821xp1ZL3RCi59zRKdfHYhhbXjkDFGJ/87R+RiDg38jXV
+ j2N6vIFJRu7xW9Z+Sf6X0z9b+pV1HJZcMA9ZQHoSjyxpu/VT/G7FxnqxrrG0+x7Ps8EU/iOI+7
+ NhzO0sIZ75bf/s4CG64FFZpsjVSFXo95XnSKyxbqz3GmGqwr71QeE116djrHLN9p6z4KXHlZ1B
+ wkc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 13:36:18 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 13:39:35 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P1gJf1dZpz1RwtC
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 13:36:18 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P1gNR0DMSz1RvTp
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 13:39:35 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,30 +56,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1674596177; x=1677188178; bh=MaeulGlWcam/cauFGlIbI6QYkQXS6fmIFOQ
-        vrLj/zE0=; b=fTeMqXQcxQcQK0CIxga3PorH3O7ZyjYWi/8Yfxhw7qngxvQlnBg
-        J0CR8JEsMcV7DArmgahGzPa5aNcNBjk8IWVRjNP7lG60Wk1PmNkVA1sgw8Y4k+qa
-        4JcHpKrt9I1yCblUZfFgShtOAeDfIaTQhrDfzQ4rP/GabBZmeDm6ZzDgf/j8iyRw
-        tvX8vJ1h1Vtd+1/XyGsxD8scqvS1H6YEg08fA3GHxeLaRfr7ySCC55k5ZGkiXSMw
-        RUHqHO2VOWF9DH8OoxQcvaYOQDVEH5TSIQ5OAYBC+pTnmdzsz8cyqj0wzUntgjJt
-        w1a4XR9kYLJ7U7d+wTvnsBtEDtnzkW7qs8A==
+        1674596374; x=1677188375; bh=Qd6GlOwYoybiib2oWiWQIX1FOUfCwCEdPWZ
+        ivN6s5lw=; b=E1yAk+97ZRJTqcpSwJiNQYoRCvTkJZ4HWeX2uA/mv2k0YibOtMd
+        1Kc/S5m4H+rL1CkjeO05UxH88uUEKagj6AFGCSjGHf+meS6nuR0VJINKol2s4GNh
+        vBza/2XOEEMNkelPLGW7/egYOLDreDJKkL5CVGLD1JAN5xhRnSNVzRVX8UvLe3m6
+        uuJvo+wfLeYKYNy+HcBbETWJIpY00wUPkMWRK/C5mh5W+evxJsq51z2yLP0FvjfQ
+        Qs9dRGI2uIqoqbcAiUxf3ToJDJpTArfQ84cOAAvhpXJMerNhWnFdx83kS6jjeQyi
+        /mjZ1K3Peh5OL5H/DAdob+BTs9H6T7ZQSQg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 2mcE0D63uTzO for <linux-ide@vger.kernel.org>;
-        Tue, 24 Jan 2023 13:36:17 -0800 (PST)
+        with ESMTP id bPrayVFRzYaK for <linux-ide@vger.kernel.org>;
+        Tue, 24 Jan 2023 13:39:34 -0800 (PST)
 Received: from [10.225.163.56] (unknown [10.225.163.56])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P1gJc1Rgvz1RvLy;
-        Tue, 24 Jan 2023 13:36:15 -0800 (PST)
-Message-ID: <b585cc43-8584-a980-6b52-224d8692b66a@opensource.wdc.com>
-Date:   Wed, 25 Jan 2023 06:36:14 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P1gNN3q95z1RvLy;
+        Tue, 24 Jan 2023 13:39:32 -0800 (PST)
+Message-ID: <542987b0-c4c0-6ed7-b950-84faee0a2e55@opensource.wdc.com>
+Date:   Wed, 25 Jan 2023 06:39:31 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
 Subject: Re: [PATCH v3 02/18] block: introduce BLK_STS_DURATION_LIMIT
 Content-Language: en-US
-To:     Keith Busch <kbusch@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Keith Busch <kbusch@kernel.org>
 Cc:     Niklas Cassel <niklas.cassel@wdc.com>,
         Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
@@ -88,34 +88,60 @@ References: <20230124190308.127318-1-niklas.cassel@wdc.com>
  <20230124190308.127318-3-niklas.cassel@wdc.com>
  <517c119a-38cf-2600-0443-9bda93e03f32@acm.org>
  <Y9A4s5tlsdx0S8s4@kbusch-mbp.dhcp.thefacebook.com>
+ <a127b2d1-b7b0-66e4-5af1-bd292a46e752@acm.org>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <Y9A4s5tlsdx0S8s4@kbusch-mbp.dhcp.thefacebook.com>
+In-Reply-To: <a127b2d1-b7b0-66e4-5af1-bd292a46e752@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/25/23 04:59, Keith Busch wrote:
-> On Tue, Jan 24, 2023 at 11:29:10AM -0800, Bart Van Assche wrote:
->> On 1/24/23 11:02, Niklas Cassel wrote:
->>> Introduce the new block IO status BLK_STS_DURATION_LIMIT for LLDDs to
->>> report command that failed due to a command duration limit being
->>> exceeded. This new status is mapped to the ETIME error code to allow
->>> users to differentiate "soft" duration limit failures from other more
->>> serious hardware related errors.
+On 1/25/23 05:32, Bart Van Assche wrote:
+> On 1/24/23 11:59, Keith Busch wrote:
+>> On Tue, Jan 24, 2023 at 11:29:10AM -0800, Bart Van Assche wrote:
+>>> On 1/24/23 11:02, Niklas Cassel wrote:
+>>>> Introduce the new block IO status BLK_STS_DURATION_LIMIT for LLDDs to
+>>>> report command that failed due to a command duration limit being
+>>>> exceeded. This new status is mapped to the ETIME error code to allow
+>>>> users to differentiate "soft" duration limit failures from other more
+>>>> serious hardware related errors.
+>>>
+>>> What makes exceeding the duration limit different from an I/O timeout
+>>> (BLK_STS_TIMEOUT)? Why is it important to tell the difference between an I/O
+>>> timeout and exceeding the command duration limit?
 >>
->> What makes exceeding the duration limit different from an I/O timeout
->> (BLK_STS_TIMEOUT)? Why is it important to tell the difference between an I/O
->> timeout and exceeding the command duration limit?
+>> BLK_STS_TIMEOUT should be used if the target device doesn't provide any
+>> response to the command. The DURATION_LIMIT status is used when the device
+>> completes a command with that status.
 > 
-> BLK_STS_TIMEOUT should be used if the target device doesn't provide any
-> response to the command. The DURATION_LIMIT status is used when the device
-> completes a command with that status.
+> Hi Keith,
+> 
+>  From SPC-6: "The MAX ACTIVE TIME field specifies an upper limit on the 
+> time that elapses from the time at which the device server initiates 
+> actions to access, transfer, or act upon the specified data until the 
+> time the device server returns status for the command."
+> 
+> My interpretation of the above text is that the SCSI command duration 
+> limit specifies a hard limit, the same type of limit reported by the 
+> status code BLK_STS_TIMEOUT. It is not clear to me from the patch 
+> description why a new status code is needed for reporting that the 
+> command duration limit has been exceeded.
 
-Yes, exactly :)
+As explained, this allows differentiating the "drive gave a response"
+(BLK_STS_DURATION_LIMIT) from the "drive is not responding" case with
+BLK_STS_TIMEOUT. We took care of mapping BLK_STS_DURATION_LIMIT to ETIME
+(timer expired) for user space too, to not overload ETIMEDOUT used with
+BLK_STS_TIMEOUT.
 
+We can certainly improve the commit message to describe all of this in
+more details.
+
+> 
+> Thanks,
+> 
+> Bart.
 
 -- 
 Damien Le Moal
