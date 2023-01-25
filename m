@@ -2,171 +2,298 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF2F7C54E94
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Jan 2023 13:23:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26A7FC54EED
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Jan 2023 18:37:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234182AbjAYNXZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 25 Jan 2023 08:23:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54752 "EHLO
+        id S230347AbjAYSh6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 Jan 2023 13:37:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230257AbjAYNXZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jan 2023 08:23:25 -0500
-Received: from mx.bauer-kirch.de (mx.bauer-kirch.de [87.230.111.147])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D8B9CA3D
-        for <linux-ide@vger.kernel.org>; Wed, 25 Jan 2023 05:23:23 -0800 (PST)
-Received: by mail.bauer-kirch.de with ESMTPSA id 1pKfkG-0000pB-Q6
-        authenticated id <420001312>
-        (TLS1.2:ECDHE_RSA_SECP256R1__AES_128_GCM:128); Wed, 25 Jan 2023 14:23:20 +0100
-Message-ID: <db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de>
-Date:   Wed, 25 Jan 2023 14:23:19 +0100
+        with ESMTP id S230257AbjAYSh5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jan 2023 13:37:57 -0500
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A25AD113E8;
+        Wed, 25 Jan 2023 10:37:55 -0800 (PST)
+Received: by mail-pj1-f49.google.com with SMTP id x2-20020a17090a46c200b002295ca9855aso2983497pjg.2;
+        Wed, 25 Jan 2023 10:37:55 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9kuEv51EG0zNMhrIvpDUzfQvpav0zuBUyyhhMrhPuDU=;
+        b=YHbtP6IQ4xnXMVZvdnC+iBxvWJDgTLxqjIPfg2L/ezur/RikdA8uqjtkXhlvMKr3oy
+         fwwhamILbA7/qty19OxzTTCLbBIJpPOFnvxcz3sXD6PEabqcXP6JhZc/j2T6oPRKNvVl
+         wSqepjN0pCszKI8WZxN/KFF3i2bWklxO/zBHN7gyoLGdsrO9Gr9pYsOeEj1gUFktMMY1
+         zFQDWbm5QYc0/yFTDeQuqUOMqy55NWvP53AuxupVSEu4aG4gv57xO3Ywm87Dzo/yhUFi
+         bgDRm7B2s50reVZStoEGJ7PKMyzaQQCTyPqiK/1fvQxmTtMp1iPZ2Z7r2ok0WiWWPC+T
+         59nA==
+X-Gm-Message-State: AO0yUKWFTENIzV2L78/isS1gCaFcj8i+4IIIVH4WdGCXefXgg62I/5cC
+        lz6P8LEcPP5A4kCmJrmNaaE=
+X-Google-Smtp-Source: AK7set/eyzU5R1T8RxHzrGu8mMDZMxDBM+2Wemi9pKnGYeykwIi4w4++/Z8BzcQHI35taNc4h0qMxw==
+X-Received: by 2002:a17:90b:3e8e:b0:22c:1613:1656 with SMTP id rj14-20020a17090b3e8e00b0022c16131656mr976291pjb.26.1674671874852;
+        Wed, 25 Jan 2023 10:37:54 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:7512:ed47:db25:4294? ([2620:15c:211:201:7512:ed47:db25:4294])
+        by smtp.gmail.com with ESMTPSA id j3-20020a17090a3e0300b002263faf8431sm1986677pjc.17.2023.01.25.10.37.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Jan 2023 10:37:54 -0800 (PST)
+Message-ID: <e8324901-7c18-153f-b47f-112a394832bd@acm.org>
+Date:   Wed, 25 Jan 2023 10:37:52 -0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-From:   Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-Subject: Marvel 88SE6121 fails with SATA-2/3 HDDs
-To:     linux-ide@vger.kernel.org
-Cc:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
-        damien.lemoal@opensource.wdc.com
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org
+References: <20230124190308.127318-1-niklas.cassel@wdc.com>
+ <20230124190308.127318-2-niklas.cassel@wdc.com>
+ <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
+ <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+ <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
+ <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
+ <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+ <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 1/24/23 17:19, Damien Le Moal wrote:
+> On 1/25/23 09:05, Bart Van Assche wrote:
+>> Thanks again for the detailed reply. Your replies are very informative
+>> and help me understand the context better.
+>>
+>> However, I'm still less than enthusiast about the introduction of the
+>> I/O priority class IOPRIO_CLASS_DL. To me command duration limits (CDL)
+>> is a mechanism that is supported by one storage standard (SCSI) and of
+> 
+> And ATA (ACS) too. Not just SCSI. This is actually an improvement over IO
+> priority (command priority) that is supported only by ATA NCQ and does not
+> exist with SCSI/SBC.
+> 
+>> which it is not sure that it will be integrated in other storage
+>> standards (NVMe, ...). Isn't the purpose of the block layer to provide
+>> an interface that is independent of the specifics of a single storage
+>> standard? This is why I'm in favor of letting the ATA core translate one
+>> of the existing I/O priority classes into a CDL instead of introducing a
+>> new I/O priority class (IOPRIO_CLASS_DL) in the block layer.
+> 
+> We discussed CDL with Hannes in the context of NVMe over fabrics. Their
+> may be interesting extensions to consider for NVMe in that context (the
+> value for local PCI attached NVMe drive is more limited at best).
+> 
+> I would argue that IO priority is the same: that is not supported by all
+> device classes either, and for those that support it, the semantic is not
+> identical (ATA vs NVMe). Yet, we have the RT class that maps to high
+> priority for ATA, and nothing else as far as I know.
+> 
+> CDL at least covers SCSI *and* ATA, and as mentioned above, could be used
+> by NVMe-of host drivers to do fancy link selection for a multipath setup
+> based on the link speed for instance.
+> 
+> We could overload the RT class with a mapping to CDL feature on scsi and
+> ata, but I think this is more confusing/messy than a separate class as we
+> implemented.
 
-Bug report for Seagate Blackarmor NAS440 with Marvel 88SE6121 controller (AHCI kernel module): Very old SATA-1 HDDs (mostly laptop HDDs in my tests) work flawlessly, SATA-2/3 consistently fail. Limiting SATA speed (libata.force=1.5G ...) does not help.
+Hi Damien,
 
-Interestingly, SATA-2/3 HDDs do work with U-Boot and 'ancient' 3.x kernels. There was a suspicion that it was the PCI subsystem (the change in kernel 3.16 from kirkwood/pci.c to mvebu-pci). Pali Rohár did a great job to investigate this problem very persistently, but in the end we did not find a solution.
+The more I think about this, the more I'm convinced that it would be wrong
+to introduce IOPRIO_CLASS_DL. Datacenters will have a mix of drives that
+support CDL and drives that do not support CDL. It seems wrong to me to
+make user space software responsible for figuring out whether or not the
+drive supports CDL before it can be decided which I/O priority class should
+be used. This is something the kernel should do instead of user space
+software.
 
-Without knowing anything about this area, there was the assumption that the problem must be at one of the lower levels close to the hardware.
+If we would ask Android storage vendors to implement CDL then IOPRIO_CLASS_DL
+would cause trouble too. Android has support since considerable time to give
+the foreground application a higher I/O priority than background applications.
+The cgroup settings for foreground and background applications come from the
+task_profiles.json file (see also
+https://android.googlesource.com/platform/system/core/+/master/libprocessgroup/profiles/task_profiles.json).
+As one can see all the settings in that file are independent of the features
+of the storage device. Introducing IOPRIO_CLASS_DL in the kernel and using it
+in task_profiles.json would imply that the storage device type has to be
+determined before it can be decided whether or not IOPRIO_CLASS_DL can be used.
+This seems wrong to me.
 
-During some older tests with kernel 5.x I tried to re-integrate a modification from the Seagate vendor 2.6 kernel annotated there with "set 6121 Transmitter Pre-Emphasis to 4", but this did not change anything  (but it may be that I didn't do it right).
+I downloaded the patch series in its entirety and applied it on a local kernel
+branch. I verified which changes would be needed to replace IOPRIO_CLASS_DL
+with IOPRIO_CLASS_RT. Can you help me with verifying the patch below?
 
-You can find all the details and a lot of logs in Bug https://bugzilla.kernel.org/show_bug.cgi?id=216094
+Regarding the BFQ changes in the patch below, is an I/O scheduler useful at all
+if CDL is used since a comment in the BFQ driver says that the disk should do
+the scheduling instead of BFQ if CDL is used?
 
-Please find [1] U-Boot and [2] Kernel (vanilla 6.2.0-rc5) logs attached, with:
-88SE6121-port0 is a SATA-2 ST3500418AS (works with u-boot, fails with linux kernel >3.16)
-88SE6121-port1 is a SATA-1 ST3250310NS (always works)
-88SE6121-port2 is (unused / not wired) PATA
-(during my tests I tried other SATA-1/2/3 drives to rule out a problem with a specific drive or vendor)
+Thanks,
 
-I've been trying to resurrect my NAS440 for over 10 years with all the components (https://github.com/hn/seagate-blackarmor-nas), so I have the hardware available and am happy to persevere to try things or otherwise help.
-
-Hajo
-
-
-[1] U-Boot Log
-
-nas440> version
-U-Boot 2022.04 (Apr 11 2022 - 15:58:53 +0200)
-NAS 440
-nas440> pci enum
-pcie0.0: Link up
-nas440> scsi reset
-
-Reset SCSI
-scanning bus for devices...
-Target spinup took 0 ms.
-Target spinup took 0 ms.
-SATA link 2 timeout.
-AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x7 impl SATA mode
-flags: 64bit ncq stag led pmp slum part
-  Device 0: (0:0) Vendor: ATA Prod.: ST3500418AS Rev: CC38
-            Type: Hard Disk
-            Capacity: 476940.0 MB = 465.7 GB (976773168 x 512)
-  Device 1: (1:0) Vendor: ATA Prod.: ST3250310NS Rev: SN04
-            Type: Hard Disk
-            Capacity: 238475.1 MB = 232.8 GB (488397168 x 512)
-nas440> scsi part 0
-
-Partition Map for SCSI device 0  --   Partition Type: DOS
-
-Part    Start Sector    Num Sectors     UUID            Type
-  1     2048            209715200       cba79dc0-01     83
-  2     209717248       767055920       cba79dc0-02     eb
-nas440> ext2ls scsi 0:1
-<DIR>       4096 .
-<DIR>       4096 ..
-<DIR>      16384 lost+found
-       568888832 foo
+Bart.
 
 
-[2] U-Boot Log
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 7add9346c585..815b884d6c5a 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -5545,14 +5545,6 @@ bfq_set_next_ioprio_data(struct bfq_queue *bfqq, struct bfq_io_cq *bic)
+  		bfqq->new_ioprio_class = IOPRIO_CLASS_IDLE;
+  		bfqq->new_ioprio = 7;
+  		break;
+-	case IOPRIO_CLASS_DL:
+-		/*
+-		 * For the duration-limits class, we want the disk to do the
+-		 * scheduling. So map all levels to the highest RT level.
+-		 */
+-		bfqq->new_ioprio = 0;
+-		bfqq->new_ioprio_class = IOPRIO_CLASS_RT;
+-		break;
+  	}
 
-root@nas440:~# uname -a
-Linux nas440 6.2.0-rc5 #1 Tue Jan 24 23:41:07 CET 2023 armv5tel GNU/Linux
-root@nas440:~# modprobe pci-mvebu
+  	if (bfqq->new_ioprio >= IOPRIO_NR_LEVELS) {
+@@ -5681,8 +5673,6 @@ static struct bfq_queue **bfq_async_queue_prio(struct bfq_data *bfqd,
+  		return &bfqg->async_bfqq[1][ioprio][act_idx];
+  	case IOPRIO_CLASS_IDLE:
+  		return &bfqg->async_idle_bfqq[act_idx];
+-	case IOPRIO_CLASS_DL:
+-		return &bfqg->async_bfqq[0][0][act_idx];
+  	default:
+  		return NULL;
+  	}
+diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
+index dfb5c3f447f4..8bb6b8eba4ce 100644
+--- a/block/blk-ioprio.c
++++ b/block/blk-ioprio.c
+@@ -27,7 +27,6 @@
+   * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+   *		IOPRIO_CLASS_BE.
+   * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
+- * @POLICY_ALL_TO_DL: change the I/O priority class into IOPRIO_CLASS_DL.
+   *
+   * See also <linux/ioprio.h>.
+   */
+@@ -36,7 +35,6 @@ enum prio_policy {
+  	POLICY_NONE_TO_RT	= 1,
+  	POLICY_RESTRICT_TO_BE	= 2,
+  	POLICY_ALL_TO_IDLE	= 3,
+-	POLICY_ALL_TO_DL	= 4,
+  };
 
-[  208.588347] mvebu-pcie mbus@f1000000:pcie@82000000: host bridge /mbus@f1000000/pcie@82000000 ranges:
-[  208.597651] mvebu-pcie mbus@f1000000:pcie@82000000:      MEM 0x00f1040000..0x00f1041fff -> 0x0000040000
-[  208.611351] mvebu-pcie mbus@f1000000:pcie@82000000:      MEM 0xffffffffffffffff..0x00fffffffe -> 0x0100000000
-[  208.621380] mvebu-pcie mbus@f1000000:pcie@82000000:       IO 0xffffffffffffffff..0x00fffffffe -> 0x0100000000
-[  208.641381] mvebu-pcie mbus@f1000000:pcie@82000000: pcie0.0: legacy INTx interrupts cannot be masked individually, /mbus@f1000000/pcie@82000000/pcie@1,0 does not contain intx interrupt
-[  208.667286] mvebu-pcie mbus@f1000000:pcie@82000000: PCI host bridge to bus 0000:00
-[  208.684189] pci_bus 0000:00: root bus resource [bus 00-ff]
-[  208.689802] pci_bus 0000:00: root bus resource [mem 0xf1040000-0xf1041fff] (bus address [0x00040000-0x00041fff])
-[  208.705363] pci_bus 0000:00: root bus resource [mem 0xe0000000-0xefffffff]
-[  208.712352] pci_bus 0000:00: root bus resource [io  0x1000-0xeffff]
-[  208.723392] pci 0000:00:01.0: [11ab:6281] type 01 class 0x060400
-[  208.739782] PCI: bus0: Fast back to back transfers disabled
-[  208.745470] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-[  208.766397] pci 0000:01:00.0: [11ab:6121] type 00 class 0x01018f
-[  208.772921] pci 0000:01:00.0: reg 0x10: [io  0xc0000000-0xc0000007]
-[  208.779272] pci 0000:01:00.0: reg 0x14: [io  0xc0000008-0xc000000b]
-[  208.785607] pci 0000:01:00.0: reg 0x18: [io  0xc0000010-0xc0000017]
-[  208.791937] pci 0000:01:00.0: reg 0x1c: [io  0xc0000018-0xc000001b]
-[  208.798267] pci 0000:01:00.0: reg 0x20: [io  0xc0000020-0xc000002f]
-[  208.804598] pci 0000:01:00.0: reg 0x24: [mem 0x90000000-0x900003ff]
-[  208.818936] pci 0000:01:00.0: supports D1
-[  208.823276] pci 0000:01:00.0: PME# supported from D0 D1 D3hot
-[  208.840601] PCI: bus1: Fast back to back transfers disabled
-[  208.846297] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-[  208.879294] pci 0000:00:01.0: BAR 8: assigned [mem 0xe0000000-0xe00fffff]
-[  208.886183] pci 0000:00:01.0: BAR 7: assigned [io  0x10000-0x10fff]
-[  208.901547] pci 0000:01:00.0: BAR 5: assigned [mem 0xe0000000-0xe00003ff]
-[  208.908459] pci 0000:01:00.0: BAR 4: assigned [io  0x10000-0x1000f]
-[  208.914896] pci 0000:01:00.0: BAR 0: assigned [io  0x10010-0x10017]
-[  208.921238] pci 0000:01:00.0: BAR 2: assigned [io  0x10018-0x1001f]
-[  208.927576] pci 0000:01:00.0: BAR 1: assigned [io  0x10020-0x10023]
-[  208.933905] pci 0000:01:00.0: BAR 3: assigned [io  0x10024-0x10027]
-[  208.940240] pci 0000:00:01.0: PCI bridge to [bus 01]
-[  208.945257] pci 0000:00:01.0:   bridge window [io  0x10000-0x10fff]
-[  208.951596] pci 0000:00:01.0:   bridge window [mem 0xe0000000-0xe00fffff]
-[  208.992175] pcieport 0000:00:01.0: enabling device (0140 -> 0143)
-[  209.007014] ahci 0000:01:00.0: Disabling your PATA port. Use the boot option 'ahci.marvell_enable=0' to avoid this.
-[  209.017595] ahci 0000:01:00.0: controller can't do NCQ, turning off CAP_NCQ
-[  209.024616] ahci 0000:01:00.0: controller can't do PMP, turning off CAP_PMP
-[  209.031635] ahci 0000:01:00.0: masking port_map 0x7 -> 0x3
-[  209.067304] ahci 0000:01:00.0: SSS flag set, parallel bus scan disabled
-[  209.074078] ahci 0000:01:00.0: AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x3 impl IDE mode
-[  209.082187] ahci 0000:01:00.0: flags: 64bit stag led slum part
-[  209.107629] scsi host3: ahci
-[  209.117716] scsi host4: ahci
-[  209.131433] scsi host5: ahci
-[  209.134706] ata3: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000100 irq 39
-[  209.142214] ata4: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000180 irq 39
-[  209.149676] ata5: DUMMY
-[  209.469562] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  214.631228] ata3.00: qc timeout after 5000 msecs (cmd 0xec)
-[  214.636919] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[  214.957579] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  225.127261] ata3.00: qc timeout after 10000 msecs (cmd 0xec)
-[  225.133030] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[  225.139184] ata3: limiting SATA link speed to 1.5 Gbps
-[  225.457616] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  257.127404] ata3.00: qc timeout after 30000 msecs (cmd 0xec)
-[  257.133181] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[  257.453758] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  257.773761] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[  257.781254] ata4.00: ATA-6: ST3250310NS, SN04, max UDMA/133
-[  257.786916] ata4.00: 488397168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-[  257.796826] ata4.00: configured for UDMA/133
-[  257.801537] scsi 4:0:0:0: Direct-Access     ATA      ST3250310NS      SN04 PQ: 0 ANSI: 5
-[  257.820228] sd 4:0:0:0: [sdd] 488397168 512-byte logical blocks: (250 GB/233 GiB)
-[  257.828149] sd 4:0:0:0: Attached scsi generic sg3 type 0
-[  257.843562] sd 4:0:0:0: [sdd] Write Protect is off
-[  257.859628] sd 4:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  257.879625] sd 4:0:0:0: [sdd] Preferred minimum I/O size 512 bytes
-[  257.918058]  sdd: sdd1 sdd2
-[  257.920294] sd 4:0:0:0: [sdd] Attached SCSI disk
+  static const char *policy_name[] = {
+@@ -44,7 +42,6 @@ static const char *policy_name[] = {
+  	[POLICY_NONE_TO_RT]	= "none-to-rt",
+  	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
+  	[POLICY_ALL_TO_IDLE]	= "idle",
+-	[POLICY_ALL_TO_DL]	= "duration-limits",
+  };
+
+  static struct blkcg_policy ioprio_policy;
+diff --git a/block/ioprio.c b/block/ioprio.c
+index 1b3a9da82597..32a456b45804 100644
+--- a/block/ioprio.c
++++ b/block/ioprio.c
+@@ -37,7 +37,6 @@ int ioprio_check_cap(int ioprio)
+
+  	switch (class) {
+  		case IOPRIO_CLASS_RT:
+-		case IOPRIO_CLASS_DL:
+  			/*
+  			 * Originally this only checked for CAP_SYS_ADMIN,
+  			 * which was implicitly allowed for pid 0 by security
+@@ -48,7 +47,7 @@ int ioprio_check_cap(int ioprio)
+  			if (!capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_NICE))
+  				return -EPERM;
+  			fallthrough;
+-			/* RT and DL have prio field too */
++			/* rt has prio field too */
+  		case IOPRIO_CLASS_BE:
+  			if (data >= IOPRIO_NR_LEVELS || data < 0)
+  				return -EINVAL;
+diff --git a/block/mq-deadline.c b/block/mq-deadline.c
+index 526d0ea4dbf9..f10c2a0d18d4 100644
+--- a/block/mq-deadline.c
++++ b/block/mq-deadline.c
+@@ -113,7 +113,6 @@ static const enum dd_prio ioprio_class_to_prio[] = {
+  	[IOPRIO_CLASS_RT]	= DD_RT_PRIO,
+  	[IOPRIO_CLASS_BE]	= DD_BE_PRIO,
+  	[IOPRIO_CLASS_IDLE]	= DD_IDLE_PRIO,
+-	[IOPRIO_CLASS_DL]	= DD_RT_PRIO,
+  };
+
+  static inline struct rb_root *
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index b4761c3c4b91..3065b632e6ae 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -673,7 +673,7 @@ static inline void ata_set_tf_cdl(struct ata_queued_cmd *qc, int ioprio)
+  	struct ata_taskfile *tf = &qc->tf;
+  	int cdl;
+
+-	if (IOPRIO_PRIO_CLASS(ioprio) != IOPRIO_CLASS_DL)
++	if (IOPRIO_PRIO_CLASS(ioprio) != IOPRIO_CLASS_RT)
+  		return;
+
+  	cdl = IOPRIO_PRIO_DATA(ioprio) & 0x07;
+diff --git a/drivers/scsi/sd_cdl.c b/drivers/scsi/sd_cdl.c
+index 59d02dbb5ea1..c5286f5ddae4 100644
+--- a/drivers/scsi/sd_cdl.c
++++ b/drivers/scsi/sd_cdl.c
+@@ -880,10 +880,10 @@ int sd_cdl_dld(struct scsi_disk *sdkp, struct scsi_cmnd *scmd)
+  	unsigned int dld;
+
+  	/*
+-	 * Use "no limit" if the request ioprio class is not IOPRIO_CLASS_DL
++	 * Use "no limit" if the request ioprio class is not IOPRIO_CLASS_RT
+  	 * or if the user specified an invalid CDL descriptor index.
+  	 */
+-	if (IOPRIO_PRIO_CLASS(ioprio) != IOPRIO_CLASS_DL)
++	if (IOPRIO_PRIO_CLASS(ioprio) != IOPRIO_CLASS_RT)
+  		return 0;
+
+  	dld = IOPRIO_PRIO_DATA(ioprio);
+diff --git a/include/linux/ioprio.h b/include/linux/ioprio.h
+index 2f3fc2fbd668..7578d4f6a969 100644
+--- a/include/linux/ioprio.h
++++ b/include/linux/ioprio.h
+@@ -20,7 +20,7 @@ static inline bool ioprio_valid(unsigned short ioprio)
+  {
+  	unsigned short class = IOPRIO_PRIO_CLASS(ioprio);
+
+-	return class > IOPRIO_CLASS_NONE && class <= IOPRIO_CLASS_DL;
++	return class > IOPRIO_CLASS_NONE && class <= IOPRIO_CLASS_IDLE;
+  }
+
+  /*
+diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
+index 15908b9e9d8c..f70f2596a6bf 100644
+--- a/include/uapi/linux/ioprio.h
++++ b/include/uapi/linux/ioprio.h
+@@ -29,7 +29,6 @@ enum {
+  	IOPRIO_CLASS_RT,
+  	IOPRIO_CLASS_BE,
+  	IOPRIO_CLASS_IDLE,
+-	IOPRIO_CLASS_DL,
+  };
+
+  /*
+@@ -38,12 +37,6 @@ enum {
+  #define IOPRIO_NR_LEVELS	8
+  #define IOPRIO_BE_NR		IOPRIO_NR_LEVELS
+
+-/*
+- * The Duration limits class allows 8 levels: level 0 for "no limit" and levels
+- * 1 to 7, each corresponding to a read or write limit descriptor.
+- */
+-#define IOPRIO_DL_NR_LEVELS	8
+-
+  enum {
+  	IOPRIO_WHO_PROCESS = 1,
+  	IOPRIO_WHO_PGRP,
 
