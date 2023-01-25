@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C94CC54EED
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Jan 2023 01:19:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEAA2C38142
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Jan 2023 01:26:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229578AbjAYBTz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 Jan 2023 20:19:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36074 "EHLO
+        id S230048AbjAYB0m (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 Jan 2023 20:26:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229758AbjAYBTy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2023 20:19:54 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FC4ECA36
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 17:19:53 -0800 (PST)
+        with ESMTP id S229798AbjAYB0l (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2023 20:26:41 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C37BA47EF2
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 17:26:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674609593; x=1706145593;
+  t=1674609998; x=1706145998;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=VfqTjjyMMR9U9lGOBZ0np8BZF5+SYnZqch6Vw3uctbk=;
-  b=Q88L51BsI6atqGOeMwajFo14zZFZc6DxTgxrK6ExdUEnafOo30egXCug
-   Mh3b1jq06cTXZUgXMJq36e0Tfz9tPmVlGfqzhd+3E41wbisHdcOfk8PgA
-   PicDReAvndA3CNBGPzzlrulw2kvjxAnjUqgtvzHdWB7gvf5omaF0eLRZH
-   8MyNkuxY32TEaMlFKE8fLK0B1eRULn4Eyts/OSynw2VBZgHC7dL+K5E5/
-   eKMc4oKIDUwVBWZPH9Y9wIkbkUmAj45isbUZncNRPplCQ4O5u5iulhCJW
-   ym0cqLNfC8NiyzchXy1LHRQiC90fobEoUf1O9EVRMyl2n4i5tpFDdan+j
-   Q==;
+  bh=tQjjtcPg0nZWYhmB/6jG70nfJyikpWEpcP+qVUie93k=;
+  b=QQWe1tzT/kG95/pNYwuFmVOeF4ixpqGCW4bX6RGOn9cNf2h86Ca7z58f
+   UKUSEnyYcxVqeWaiinoY02FGGenLY2fvDb9kSLAMWnu45CVa6zcDJ+VbD
+   LgxXDg9kcYqcrKXh/KftAUnPUG3HVc1r1WRFA7obqvM06rAm+lu0tKeBz
+   RjoIgYvXmVqJhJhQUY+aatwQkGXpS8M+4v577A+qz+ihSjR4A2zVAk3Q0
+   xueA/I9q3WY+KJuu5YrUIK90MAkVJwZ3+p7bkRGl1CjWVyf5DKfvBHapJ
+   7XUNCWpZhcW6Ir7/FglxClgkjGmLSyAZ7boLpWT89CefafKU9Hl3s+8hb
+   A==;
 X-IronPort-AV: E=Sophos;i="5.97,244,1669046400"; 
-   d="scan'208";a="325983397"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2023 09:19:50 +0800
-IronPort-SDR: 9k4TPuC43lJ7SXMuAXIxi1hxYRwpM02mk6MWBSBgv6Nc5hTCLzwL9NfXshHPOXuI9TgNBU6IEm
- 8AZjNSHktAHB2WgbNOZYTh25C451UADOBniM4UiAzR4b+BdVJCFCnlkTRJ28j3glF8jU8D2yqW
- hiIWzMD+1t1NNcAJhbtxVXNOmKITz1NfJ7ctveSpdXzqHtiJW7pcxl4PMhhmbQClG1x/YVaXME
- NpCd1dq7EeMc2p0K2Es5xdsTUSIEfPMUIh3wnrbtMdgvMsADn5gj9wr40gAP6HzjLkaQGRV35N
- dU4=
+   d="scan'208";a="220012429"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Jan 2023 09:26:37 +0800
+IronPort-SDR: DQoS45lqMvUS7Otv2m33GKgxSgsQ8KJ3CUrYW/PQJni6vY6BwuPMoclVaJpUJeMvVGdI2G8inN
+ 5HIKDy6ZmLSJJt2ibViS5ve468mCmdZEmE83OIKo/18ZpDkO7uMwXuZOEtGYCHTfHEGt+jNyjK
+ fNjvguidME31NJpEasnsqyYH3f70rDnuvXmyphuN7LNyK5zO2Ll5D/QLa73upBdA6OM5qKSr9s
+ q3cJ/CKkNzRTMIeHwLZBtW0CFf2+8Pjo37vQacPB83ZaITM5kLm9m8wPKhBK8pdb1FIOaa9RYf
+ uwc=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 16:31:38 -0800
-IronPort-SDR: DFyE37zfgJU5olOKMwI/QpMP2Pna6av3jXpHBQEpIdBUshO1ISfoWx+rWdaIWDdfDgVbuto1GT
- AknHouXbNufNntoLKc87mc7f7HshN4hzsqevqoesZer3Daq3Ri0ufSMRPs2/GjUfwvT122aHva
- tTi3iZnHflAnNT5J4XJ2k+yADVXBVjzdZpJgyaiOoLXKWRm4K8xIk6luV7deBFU4JJkFY6zO22
- 1O8jK1FgGsYBPE6hpASSn9r6NZPgs5drqHumhVmz4QftENm9b7jtzXKDz3sneIVci51mj+KiAn
- DiU=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 16:44:10 -0800
+IronPort-SDR: fMn8VWZHD7MddTENt8Spd2YiSOGdX9KgCS3pEvZMd4wmNOfuUXtrP1+lHWzPVnxVfPxGwhsGd8
+ Ie9jA/O9BnICJEW1PzojXn9zCoDpwHRxshQJiCHIXaft5JJtvHv/mtuczEVwHE09eDUczv5Ith
+ PX8OuHKmwSSJ03IRSgPaeNuCl5DCzhem6bNOXY17DS7be6ctQ+wfWtiWOS5tCTSoDB0h6e6aI7
+ e7Jr/xwqu5jHBNZWvWaY2y0/2xh3WHOOO2t82kPAWAI+xMQFfCd73fhnGeoj5U4uh+LN7M3iSY
+ ei4=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 17:19:51 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 24 Jan 2023 17:26:38 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P1mGZ1Knjz1RvTp
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 17:19:50 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P1mQP6HBdz1RvTr
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jan 2023 17:26:37 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,126 +56,213 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1674609588; x=1677201589; bh=VfqTjjyMMR9U9lGOBZ0np8BZF5+SYnZqch6
-        Vw3uctbk=; b=GZOCjYOoA83AgvwEmfwNHooHA2X22ipXOoXltO+/hPkc4tXu3Mr
-        XcECjsvPiqlUHz8LNPfhXIS7BIAYMaa9AQj1jNGs5AQ6+TJx+Wt2Us2s0aXVZuml
-        Nokt66ImwO7YVzmnfCHIhceZlEuUcVhEPEDUm3hMZAeIlBcLX72DHR8jWDo+2/R2
-        lgG5BFJBGck6dRXo9x3Ml2seHw6MpKxBlyAEDEI+SbWSP7gkMklKILfmISgayrLj
-        tOtssZQpPz6dE30z+a7aapIKAIU5Yo9nal63dUtOfuzWFjj7PSCE8MoA/vbVe/Ct
-        vD8SIBwqtKfRyya5nTbZQQHPljsnLddMQ7A==
+        1674609996; x=1677201997; bh=tQjjtcPg0nZWYhmB/6jG70nfJyikpWEpcP+
+        qVUie93k=; b=iDnb3hY7YgL36vhFvii/+zV2KyQDth7Oud18ePAhIBdPhMoPNWa
+        GIPQwBTeOMQqpxGKdhATE8ESPb5PIffAxMaeaV8nN2mbjHf10q9KDyptzLahiEO/
+        +3jGGAfYWBjbq5GUDerJLlVMfiiRyhpD09sZZ7VJd4nSpM8Mu2FAg4sVKvBwly7s
+        Y0grjlsNvCcyOJIayqKxhNPh376VJOa4llAOcERUIc9NMMJjqobo8YeYZqWOlGiG
+        HZWisNj3j90KbiwjDIRy/66ALdYgfInVAnKhlG7qcxSMgFQTQg2TEWN401weur0X
+        KWxRUCmsft4+kWrygsxMlBaT4SbYkzRWeIA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id LutOFtMXIgk7 for <linux-ide@vger.kernel.org>;
-        Tue, 24 Jan 2023 17:19:48 -0800 (PST)
+        with ESMTP id yR9zDzIKk_XM for <linux-ide@vger.kernel.org>;
+        Tue, 24 Jan 2023 17:26:36 -0800 (PST)
 Received: from [10.225.163.56] (unknown [10.225.163.56])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P1mGW0kVVz1RvLy;
-        Tue, 24 Jan 2023 17:19:46 -0800 (PST)
-Message-ID: <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
-Date:   Wed, 25 Jan 2023 10:19:45 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P1mQN4836z1RvLy;
+        Tue, 24 Jan 2023 17:26:36 -0800 (PST)
+Message-ID: <b9a7e400-4eb1-a48b-8e3e-9910317601fc@opensource.wdc.com>
+Date:   Wed, 25 Jan 2023 10:26:35 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
-Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Subject: Re: Bug report for sata_via driver
 Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org
-References: <20230124190308.127318-1-niklas.cassel@wdc.com>
- <20230124190308.127318-2-niklas.cassel@wdc.com>
- <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
- <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
- <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
- <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
- <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+To:     marius@psihoexpert.ro
+Cc:     linux-ide@vger.kernel.org
+References: <7521d86e-a83e-7972-a4cc-55dd7155fa43@opensource.wdc.com>
+ <dc9f74bd-91d7-cda1-8182-11d400e6bc3f@opensource.wdc.com>
+ <a1b3b74b-1548-44d9-7d72-8eb428fa1788@opensource.wdc.com>
+ <0ba8ebf7-6e6c-e63d-32c4-44d97898be1d@opensource.wdc.com>
+ <126ce7f2-3de2-9e75-7920-09d78c224d76@opensource.wdc.com>
+ <ABCCF36A7F484055A8E63A8B739DC7B8@graph>
+ <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
+ <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
+ <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
+ <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
+ <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
+ <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
+ <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
+ <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
+ <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
+ <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
+ <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
+ <1b8e19c35328d8dffb80fe20c6797525@psihoexpert.ro>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+In-Reply-To: <1b8e19c35328d8dffb80fe20c6797525@psihoexpert.ro>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/25/23 09:05, Bart Van Assche wrote:
-> On 1/24/23 14:59, Damien Le Moal wrote:
->> There is only one priority class that ATA understands: RT (the level is
->> irrelevant and ignored). All RT class IOs are mapped to high priority NCQ
->> commands. All other classes map to normal priority (no priority bit set)
->> commands.
->>
->> And sure, we could map the level of RT class IOs to a CDL index, as we do
->> for the CDL class, but what would be the point ? The user should use the
->> CDL class in that case.
->>
->> Furthermore, there is one additional thing that we do not yet support but
->> will later: CDL descriptor 0 can be used to set a target time limit for
->> high priority NCQ commands. Without this new feature introduced with CDL,
->> the drive is free to schedule high priority NCQ commands as it wants, and
->> that is hard coded in FW. So you can endup with very aggressive scheduling
->> leading to significant overall IOPS drop and long tail latency for low
->> priority commands. See page 11 and 20 of this presentation for an example:
->>
->> https://www.snia.org/sites/default/files/SDC/2021/pdfs/SNIA-SDC21-LeMoal-Be-On-Time-command-duration-limits-Feature-Support-in%20Linux.pdf
->>
->> For a drive that supports both CDL and NCQ priority, with CDL feature
->> turned off, CDL descriptor 0 defines the time limit hint for high priority
->> NCQ commands. Again, CDL and NCQ high priority are mutually exclusive.
->>
->> So for clarity, I really would prefer separating CDL and RT classes as we
->> did. We could integrate CDL support reusing the RT class + level for CDL
->> index, but I think this may be very confusing for users, especially
->> considering that the CLDs on a drive can be defined in any order the user
->> wants, resulting in indexes/levels that does do not have any particular
->> order, making it impossible for the host to correctly schedule commands.
+On 1/25/23 02:06, marius@psihoexpert.ro wrote:
+> Hi. It's me again.
 > 
-> Hi Damien,
+> May I bother you with another bug? (^_^;)
 > 
-> Thanks again for the detailed reply. Your replies are very informative 
-> and help me understand the context better.
+> The machine is a Lenovo X61 Tablet, a tablet PC with Intel GM965 / ICH8-M.
+> It has a cardbus slot (32bit PCI), Ricoh RL5C476 II (VEN_1180 DEV_0476).
+> The card is a VIA VT6421 (VEN_1106 DEV_3249) SATA/PATA controller.
+> The card has 2 SATA ports and no PATA.
 > 
-> However, I'm still less than enthusiast about the introduction of the 
-> I/O priority class IOPRIO_CLASS_DL. To me command duration limits (CDL) 
-> is a mechanism that is supported by one storage standard (SCSI) and of 
+> ---- CARD INSERTED ----
+[...]
+> [ 68.460166] resume, return at end of function
+> [ 68.460171] hardreset, ata_phys_link_offline check failed
+> [ 68.470148] [2358] libata:ata_wait_idle:2049: ata6: abnormal Status 0x7F
+> [ 68.472385] ata6: SATA link down (SStatus 0 SControl 310)
+> [ 68.482547] hardreset, Online=>Offline
+> [ 68.483633] resume, do loop
+> [ 68.698036] resume, after do loop
+> [ 68.703129] debounce, SCR=0x0
+> [ 68.708218] debounce, SCR=0x0
+> ...
+> [ 68.804763] debounce, SCR=0x0
+> [ 68.809851] debounce, SCR=0x0
+> [ 68.809858] resume, return at end of function
+> [ 68.809863] hardreset, ata_phys_link_offline check failed
+> [ 68.819838] [2360] libata:ata_wait_idle:2049: ata7: abnormal Status 0x7F
+> [ 68.822067] ata7: SATA link down (SStatus 0 SControl 310)
+> [ 69.008039] [2363] libata:ata_wait_idle:2049: ata8: abnormal Status 0x8
 
-And ATA (ACS) too. Not just SCSI. This is actually an improvement over IO
-priority (command priority) that is supported only by ATA NCQ and does not
-exist with SCSI/SBC.
+Beuh... libata does not understand these status. Bit 3 is set in the
+status, but that one is transport dependent, so defined in CF card...
+Would need to look that up, but it seems to be that the device reports
+that an PIO is still on-going. It seems like we are in the realm of "this
+is a weird drive". You could try increasing the 10ms timeout in
+ata_wait_idle(): change the call:
 
-> which it is not sure that it will be integrated in other storage 
-> standards (NVMe, ...). Isn't the purpose of the block layer to provide 
-> an interface that is independent of the specifics of a single storage 
-> standard? This is why I'm in favor of letting the ATA core translate one 
-> of the existing I/O priority classes into a CDL instead of introducing a 
-> new I/O priority class (IOPRIO_CLASS_DL) in the block layer.
+ata_sff_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
 
-We discussed CDL with Hannes in the context of NVMe over fabrics. Their
-may be interesting extensions to consider for NVMe in that context (the
-value for local PCI attached NVMe drive is more limited at best).
+to something like:
 
-I would argue that IO priority is the same: that is not supported by all
-device classes either, and for those that support it, the semantic is not
-identical (ATA vs NVMe). Yet, we have the RT class that maps to high
-priority for ATA, and nothing else as far as I know.
+ata_sff_busy_wait(ap, ATA_BUSY | ATA_DRQ, 5000);
 
-CDL at least covers SCSI *and* ATA, and as mentioned above, could be used
-by NVMe-of host drivers to do fancy link selection for a multipath setup
-based on the link speed for instance.
+to see if that changes anything.
 
-We could overload the RT class with a mapping to CDL feature on scsi and
-ata, but I think this is more confusing/messy than a separate class as we
-implemented.
+> ---- EXTERNAL HDD CONNECTED ----
+> [ 118.683511] irq 16: nobody cared (try booting with the "irqpoll" option)
+> [ 118.684531] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 6.1.0-rc8-M95D+ #1
+> [ 118.684538] Hardware name: LENOVO 776702U/776702U, BIOS 7SET39WW (1.25 ) 03/22/2011
+> [ 118.684542] Call Trace:
+> [ 118.684547] <IRQ>
+> [ 118.684550] dump_stack_lvl+0x34/0x44
+> [ 118.684561] __report_bad_irq+0x30/0xa2
+> [ 118.684569] note_interrupt.cold+0xb/0x61
+> [ 118.684575] handle_irq_event+0x65/0x70
+> [ 118.684581] handle_fasteoi_irq+0x8b/0x1c0
+> [ 118.684588] __common_interrupt+0x5a/0xf0
+> [ 118.684596] common_interrupt+0x9f/0xc0
+> [ 118.684601] </IRQ>
+> [ 118.684604] <TASK>
+> [ 118.684606] asm_common_interrupt+0x22/0x40
+> [ 118.684614] RIP: 0010:cpuidle_enter_state+0xbb/0x280
 
-> 
-> Others may have a different opinion.
-> 
-> Thanks,
-> 
-> Bart.
+Looks like a problem with interrupts here. Can you "gdb vmlinux" and "list
+*(cpuidle_enter_state+0xbb)" to see exactly what is failing here ?
+
+[...]
+
+> ---- EJECT CARD ----
+> [ 136.498083] pcmcia_socket pcmcia_socket0: pccard: card ejected from slot 0
+> [ 136.498159] hardreset, Online=>Offline
+> [ 136.500751] Reconfig spd
+> [ 136.500807] hardreset, Online=>Offline
+> [ 136.500815] Reconfig spd
+> [ 136.501858] resume, do loop
+> [ 136.501968] resume, do loop
+> [ 136.718048] resume, do loop
+> [ 136.718089] resume, do loop
+> [ 136.938104] resume, do loop
+> [ 136.938115] resume, do loop
+> [ 137.158076] resume, do loop
+> [ 137.158108] resume, do loop
+> [ 137.378105] resume, do loop
+> [ 137.378115] resume, do loop
+> [ 137.598082] resume, after do loop
+> [ 137.598086] ata6: failed to resume link (SControl FFFFFFFF)
+> [ 137.599831] hardreset, ata_phys_link_offline check failed
+> [ 137.599872] ata6: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+> [ 137.599897] resume, after do loop
+> [ 137.599900] ata7: failed to resume link (SControl FFFFFFFF)
+> [ 137.599965] ------------[ cut here ]------------
+> [ 137.601620] hardreset, ata_phys_link_offline check failed
+> [ 137.601618] WARNING: CPU: 1 PID: 79 at drivers/ata/libata-core.c:5910 ata_host_detach+0x1c7/0x1d0
+
+Looks like the ATA_PFLAG_UNLOADED is not set, causing this warning. But
+given that there seem to be issues with interrupts, the eject may not be
+detected.
+
+> [ 137.601661] ata7: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+> [ 137.603368] CPU: 1 PID: 79 Comm: pccardd Not tainted 6.1.0-rc8-M95D+ #1
+> [ 137.603375] Hardware name: LENOVO 776702U/776702U, BIOS 7SET39WW (1.25 ) 03/22/2011
+> [ 137.603378] RIP: 0010:ata_host_detach+0x1c7/0x1d0
+
+Please gdb that too.
+
+> ---- CONNECT CARD WITH HDD ALREADY ATTACHED ----
+> [ 168.768069] pcmcia_socket pcmcia_socket0: pccard: CardBus card inserted into slot 0
+> [ 168.771207] pci 0000:06:00.0: [1106:3249] type 00 class 0x010400
+> [ 168.771256] pci 0000:06:00.0: reg 0x10: [io 0x0af0-0x0aff]
+> [ 168.771280] pci 0000:06:00.0: reg 0x14: [io 0x0a70-0x0a7f]
+> [ 168.771302] pci 0000:06:00.0: reg 0x18: [io 0x01f0-0x01ff]
+> [ 168.771322] pci 0000:06:00.0: reg 0x1c: [io 0x0170-0x017f]
+> [ 168.771343] pci 0000:06:00.0: reg 0x20: [io 0xcc00-0xcc1f]
+> [ 168.771363] pci 0000:06:00.0: reg 0x24: [io 0x8c00-0x8cff]
+> [ 168.771695] pci 0000:06:00.0: BAR 5: assigned [io 0x4000-0x40ff]
+> [ 168.771713] pci 0000:06:00.0: BAR 4: assigned [io 0x4400-0x441f]
+> [ 168.771727] pci 0000:06:00.0: BAR 0: assigned [io 0x4420-0x442f]
+> [ 168.771742] pci 0000:06:00.0: BAR 1: assigned [io 0x4430-0x443f]
+> [ 168.771756] pci 0000:06:00.0: BAR 2: assigned [io 0x4440-0x444f]
+> [ 168.771769] pci 0000:06:00.0: BAR 3: assigned [io 0x4450-0x445f]
+> [ 168.771908] sata_via 0000:06:00.0: enabling device (0000 -> 0001)
+> [ 168.772137] sata_via 0000:06:00.0: routed to hard irq line 0
+> [ 168.772162] [79] sata_via:svia_configure:635: sata_via 0000:06:00.0: enabling SATA hotplug (0x0)
+> [ 168.773265] scsi host6: sata_via
+> [ 168.775256] scsi host7: sata_via
+> [ 168.788766] scsi host8: sata_via
+> [ 168.788866] ata9: SATA max UDMA/133 port i16@0x4420 bmdma 0x4400 irq 16
+> [ 168.788872] ata10: SATA max UDMA/133 port i16@0x4430 bmdma 0x4408 irq 16
+> [ 168.788875] ata11: PATA max UDMA/133 port i16@0x4440 bmdma 0x4410 irq 16
+> [ 168.788961] hardreset, Online=>Offline
+> [ 168.790037] resume, do loop
+> [ 169.008036] resume, after do loop
+> [ 169.013116] debounce, SCR=0x1
+> [ 169.018189] debounce, SCR=0x1
+> ...
+> [ 170.054131] debounce, SCR=0x1
+> [ 170.059209] debounce, SCR=0x1
+> [ 170.062091] irq 16: nobody cared (try booting with the "irqpoll" option)
+> [ 170.062095] CPU: 0 PID: 2356 Comm: tee Tainted: G W 6.1.0-rc8-M95D+ #1
+> [ 170.062100] Hardware name: LENOVO 776702U/776702U, BIOS 7SET39WW (1.25 ) 03/22/2011
+> [ 170.062102] Call Trace:
+> [ 170.062107] <IRQ>
+> [ 170.062109] dump_stack_lvl+0x34/0x44
+> [ 170.062117] __report_bad_irq+0x30/0xa2
+> [ 170.062123] note_interrupt.cold+0xb/0x61
+> [ 170.062128] handle_irq_event+0x65/0x70
+> [ 170.062133] handle_fasteoi_irq+0x8b/0x1c0
+> [ 170.062138] __common_interrupt+0x5a/0xf0
+> [ 170.062144] common_interrupt+0x9f/0xc0
+> [ 170.062148] </IRQ>
+> [ 170.062150] <TASK>
+> [ 170.062151] asm_common_interrupt+0x22/0x40
+> [ 170.062157] RIP: 0010:cfb_imageblit+0x3e8/0x800
+
+gdb disassemble (list command) ?
+
 
 -- 
 Damien Le Moal
