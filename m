@@ -2,57 +2,57 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94827C61DA4
-	for <linux-ide@archiver.kernel.org>; Fri, 27 Jan 2023 13:24:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8EE8C38142
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Jan 2023 13:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234670AbjA0NYH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 27 Jan 2023 08:24:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41868 "EHLO
+        id S234444AbjA0NZH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 27 Jan 2023 08:25:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234149AbjA0NYF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2023 08:24:05 -0500
-Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 384317DBE1
-        for <linux-ide@vger.kernel.org>; Fri, 27 Jan 2023 05:24:04 -0800 (PST)
-Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-4c24993965eso66194807b3.12
-        for <linux-ide@vger.kernel.org>; Fri, 27 Jan 2023 05:24:04 -0800 (PST)
+        with ESMTP id S233302AbjA0NZG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2023 08:25:06 -0500
+Received: from mail-yb1-xb2e.google.com (mail-yb1-xb2e.google.com [IPv6:2607:f8b0:4864:20::b2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2559C7F309
+        for <linux-ide@vger.kernel.org>; Fri, 27 Jan 2023 05:25:04 -0800 (PST)
+Received: by mail-yb1-xb2e.google.com with SMTP id h5so5927607ybj.8
+        for <linux-ide@vger.kernel.org>; Fri, 27 Jan 2023 05:25:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=LZZ3MuEVu6XkQPyGITmSKOdfGu07b5+34vXdaMUVpmM=;
-        b=UAHrFOhuENO8p4X6jjmFs9KrdLnh1L5ioIcN1vRBhDE992xV4cddAO0IjROU44dIG/
-         nalP7afFVUtdPnm8JH4xghgm1GM/q5GOZS2kC5Yd9GXI9Z7PktEengh3fovMoq+zsVVE
-         t0IPxp6dqeh897/z5G46UH91FQqy4WJQU8D3SIuIya0S9WZHfZk2C5Y30r2S827bu9eD
-         CJLrDr1gIIxiC13d3vWqjY/9ZHwEpUdCVVNQAD/k++s1nG+mBWETZdTm2h8dtkZQWFeu
-         swJGEwBP9C1DSuiQ188wLhYmsd5xFXheW++Lnq9ZpWPRKwvE/hZ2po1OCXDHo+L7t9nf
-         jzGw==
+        bh=YfmZdMJN/D3xI4YTB54xIsWSAze0zkG8RrFJPkBL4AQ=;
+        b=d2yyXte/yKIliOx/+8dSFRH8+M3Ex72UVdCuqh3m2tyi3rrRYlzuFLuFuOaXo8UJua
+         gElqKdzCZZxnNL7BluA63zU1vXbJTTdCGK01yYehPr6WfmZLwmosoPiS95G7b5lmagCS
+         L/upqPf5qIY2pjLEDKrUW9EdvBvPWpcC2GegAPRzTI8cGzevNc5TRFXyVw8hHFy7XJzN
+         TH3bv0sOG57U6+65n9Xq6fsYWtTWYlZhS/Bzf440xEraF0lC2iKIkZMz3ndkI1DvtaHw
+         EQNdQGri5E5aTQGN016ehd0p8PTqoPCqtOXzj5K3ayVZ69ryCa5toREYxDUTePUi+iWo
+         LVcA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=LZZ3MuEVu6XkQPyGITmSKOdfGu07b5+34vXdaMUVpmM=;
-        b=FYEMq0uMMIiBeCy/fH1rRbVufdtkKUTxkmnbo4qFixJUTyGJlZeF716VHRAr4Ux+ly
-         GTsQdQmP5xi+fBGxgsNL140Os1LLUTqeOwDGSWYwc8y5C4Gw4tp0s9gh+FMDXtfvnNvM
-         1pOLndDzZiAlJ4l+1iiUrgaR1YRFfNOo6vQrJYBKcc9YAx1nUZkaTEmXowuGz8Yrvb3/
-         jld2RRq2ChC4eZgNq0XemhTcoPnk+2ah9UEZVqi8Om8rAiYcz16HCZbymFc2T5qe6PcU
-         VcmtSBf5yriSq9lP+wUYhtcdvoD82HGx/srKuxY48ACwMN0LuLnqb4ZjlyyM0+HarsRC
-         uJqA==
-X-Gm-Message-State: AFqh2kro2gMpvN6onOWFFcf5+ACHRwYGUPiVx1Al9ITFn2cSQ7/pvNah
-        /JANXgkJnChSSQlqdW9kmM2SlpcX1coUtL55d5AMuA==
-X-Google-Smtp-Source: AMrXdXsM2Y+feqWmDnpZZfAnDgXVYRK43870GInPFgNTT7qpRIbR4qPNx7T9fr58byEQonupKGetuGN9HSWpF17Olo4=
-X-Received: by 2002:a05:690c:39b:b0:4f3:8d0e:edce with SMTP id
- bh27-20020a05690c039b00b004f38d0eedcemr3538984ywb.185.1674825843435; Fri, 27
- Jan 2023 05:24:03 -0800 (PST)
+        bh=YfmZdMJN/D3xI4YTB54xIsWSAze0zkG8RrFJPkBL4AQ=;
+        b=yfslmV841DnZtnyw3en1QenXhQNK2J5DHTI6ptOQVI0qyudYwlNJuUWgWkGZc0VJpr
+         fJavebm3dJZMUZc5JWVDv0dAuPo/iG2G7LlVpQu4XTBtRu9gMChsfH0x/DQ59VcHqeQC
+         k0V/SO8t8els7ljVyXa2aAwsbvOZROu9xWbWjn/zPqOZSCnCi/xUrdYhak6D0VTHNrz/
+         jlSSjC8S7kJyRERev1DyG5eR61O1JBwnJm2OoWLfcYMUbVfIqAwIrgrSY3k3CUqXC8VL
+         GXG8aFLspJmWLTCysFTDT5TSsc0hfONHjeytlJIZxRDbv+CnJzUMCetAgJfepNyMTz5U
+         9TzA==
+X-Gm-Message-State: AO0yUKWjK8loI56sQnnmgY5i3FAXrEiljfhPYCgLlCBZn3HlO2ip//Nb
+        sFreevC3I5cf8338YxQqet06C4TNvM8nVTq94LSIMA==
+X-Google-Smtp-Source: AK7set/AyCr5YILgHa1njAbv5GENd6K1HRNPT5FGDcIp6NDqNoyOABScAptxZu4MVa9CTfeWH7nQwPnr2nr1FbGyMhU=
+X-Received: by 2002:a25:d1d1:0:b0:80b:4d84:b25 with SMTP id
+ i200-20020a25d1d1000000b0080b4d840b25mr1325238ybg.584.1674825903381; Fri, 27
+ Jan 2023 05:25:03 -0800 (PST)
 MIME-Version: 1.0
-References: <20230127093217.60818-1-krzysztof.kozlowski@linaro.org> <20230127093217.60818-2-krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230127093217.60818-2-krzysztof.kozlowski@linaro.org>
+References: <20230127093217.60818-1-krzysztof.kozlowski@linaro.org> <20230127093217.60818-3-krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20230127093217.60818-3-krzysztof.kozlowski@linaro.org>
 From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Fri, 27 Jan 2023 14:23:51 +0100
-Message-ID: <CACRpkdabA03VEFFVDVDiEVnLDZXGmW-kyCpD8iRVOcBzNBTfkw@mail.gmail.com>
-Subject: Re: [PATCH v2 1/3] dt-bindings: intel,ixp4xx-expansion-bus: split out
- peripheral properties
+Date:   Fri, 27 Jan 2023 14:24:52 +0100
+Message-ID: <CACRpkdZUD1rw5j=Kik9KMt0w=JzS_T06FOGnyUA9GWmWZyQjcA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] dt-bindings: reference MC peripheral properties in
+ relevant devices
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -80,22 +80,20 @@ X-Mailing-List: linux-ide@vger.kernel.org
 On Fri, Jan 27, 2023 at 10:32 AM Krzysztof Kozlowski
 <krzysztof.kozlowski@linaro.org> wrote:
 
-> The properties of devices in IXP4xx expansion bus need to be also
-> applied to actual devices' bindings.  Prepare for this by splitting them
-> to separate intel,ixp4xx-expansion-peripheral-props binding, just like
-> other memory-controller peripheral properties.
+> Several devices can be attached to memory controllers (or memory-mapped
+> buses), thus they can come with additional controller-specific
+> properties, e.g. devices wired under Intel IXP4XX bus: cfi-flash,
+> intel,ixp4xx-compact-flash, NS8250 serial and MAX6369 watchdog.
+>
+> Referencing Memory Controller or IXP4XX bus peripheral properties fixes
+> few dtbs_check warnings like:
+>
+>   intel-ixp42x-gateworks-gw2348.dtb: ide@1,0: Unevaluated properties are not allowed
+>     ('intel,ixp4xx-eb-ahb-split-transfers', 'intel,ixp4xx-eb-byte-access', ... ' were unexpected)
 >
 > Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-Whoa, this is a complex one!
-But I assume you and Marek know what you're doing so:
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
-
-Maybe I can assign the following external bus interface to the Qcom
-people, as it is yet another one of those:
-Documentation/devicetree/bindings/bus/qcom,ebi2.txt
-
-I've been uncertain about how I should convert that one over properly.
 
 Yours,
 Linus Walleij
