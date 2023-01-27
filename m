@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B2BC61DA7
-	for <linux-ide@archiver.kernel.org>; Fri, 27 Jan 2023 01:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14CFBC636BD
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Jan 2023 01:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232512AbjA0Btv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 26 Jan 2023 20:49:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32882 "EHLO
+        id S233205AbjA0Btz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 26 Jan 2023 20:49:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233076AbjA0Btq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2023 20:49:46 -0500
+        with ESMTP id S233118AbjA0Btr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jan 2023 20:49:47 -0500
 Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9F03F74A77
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B947726AD
         for <linux-ide@vger.kernel.org>; Thu, 26 Jan 2023 17:49:41 -0800 (PST)
 Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
-        by 156.147.23.52 with ESMTP; 27 Jan 2023 10:19:40 +0900
+        by 156.147.23.52 with ESMTP; 27 Jan 2023 10:19:41 +0900
 X-Original-SENDERIP: 156.147.1.151
 X-Original-MAILFROM: max.byungchul.park@gmail.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.151 with ESMTP; 27 Jan 2023 10:19:40 +0900
+        by 156.147.1.151 with ESMTP; 27 Jan 2023 10:19:41 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: max.byungchul.park@gmail.com
 From:   Byungchul Park <max.byungchul.park@gmail.com>
@@ -46,9 +46,9 @@ Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
         42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
         gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
         boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com
-Subject: [PATCH v8 01/25] llist: Move llist_{head,node} definition to types.h
-Date:   Fri, 27 Jan 2023 10:18:54 +0900
-Message-Id: <1674782358-25542-2-git-send-email-max.byungchul.park@gmail.com>
+Subject: [PATCH v8 09/25] dept: Apply sdt_might_sleep_{start,end}() to swait
+Date:   Fri, 27 Jan 2023 10:19:02 +0900
+Message-Id: <1674782358-25542-10-git-send-email-max.byungchul.park@gmail.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1674782358-25542-1-git-send-email-max.byungchul.park@gmail.com>
 References: <1674782358-25542-1-git-send-email-max.byungchul.park@gmail.com>
@@ -56,54 +56,41 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-llist_head and llist_node can be used by very primitives. For example,
-Dept for tracking dependency uses llist things in its header. To avoid
-header dependency, move those to types.h.
+Makes Dept able to track dependencies by swaits.
 
 Signed-off-by: Byungchul Park <max.byungchul.park@gmail.com>
 ---
- include/linux/llist.h | 8 --------
- include/linux/types.h | 8 ++++++++
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ include/linux/swait.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/linux/llist.h b/include/linux/llist.h
-index 85bda2d..99cc3c3 100644
---- a/include/linux/llist.h
-+++ b/include/linux/llist.h
-@@ -53,14 +53,6 @@
+diff --git a/include/linux/swait.h b/include/linux/swait.h
+index 6a8c22b..0284821 100644
+--- a/include/linux/swait.h
++++ b/include/linux/swait.h
+@@ -6,6 +6,7 @@
  #include <linux/stddef.h>
- #include <linux/types.h>
+ #include <linux/spinlock.h>
+ #include <linux/wait.h>
++#include <linux/dept_sdt.h>
+ #include <asm/current.h>
  
--struct llist_head {
--	struct llist_node *first;
--};
--
--struct llist_node {
--	struct llist_node *next;
--};
--
- #define LLIST_HEAD_INIT(name)	{ NULL }
- #define LLIST_HEAD(name)	struct llist_head name = LLIST_HEAD_INIT(name)
+ /*
+@@ -161,6 +162,7 @@ static inline bool swq_has_sleeper(struct swait_queue_head *wq)
+ 	struct swait_queue __wait;					\
+ 	long __ret = ret;						\
+ 									\
++	sdt_might_sleep_start(NULL);					\
+ 	INIT_LIST_HEAD(&__wait.task_list);				\
+ 	for (;;) {							\
+ 		long __int = prepare_to_swait_event(&wq, &__wait, state);\
+@@ -176,6 +178,7 @@ static inline bool swq_has_sleeper(struct swait_queue_head *wq)
+ 		cmd;							\
+ 	}								\
+ 	finish_swait(&wq, &__wait);					\
++	sdt_might_sleep_end();						\
+ __out:	__ret;								\
+ })
  
-diff --git a/include/linux/types.h b/include/linux/types.h
-index ea8cf60a..b12a444 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -187,6 +187,14 @@ struct hlist_node {
- 	struct hlist_node *next, **pprev;
- };
- 
-+struct llist_head {
-+	struct llist_node *first;
-+};
-+
-+struct llist_node {
-+	struct llist_node *next;
-+};
-+
- struct ustat {
- 	__kernel_daddr_t	f_tfree;
- #ifdef CONFIG_ARCH_32BIT_USTAT_F_TINODE
 -- 
 1.9.1
 
