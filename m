@@ -2,102 +2,253 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E94C61DA4
-	for <linux-ide@archiver.kernel.org>; Fri, 27 Jan 2023 13:29:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36CDBC54EAA
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Jan 2023 15:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233397AbjA0N32 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 27 Jan 2023 08:29:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45154 "EHLO
+        id S229819AbjA0PaK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 27 Jan 2023 10:30:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229830AbjA0N32 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2023 08:29:28 -0500
-Received: from mail-yb1-xb2f.google.com (mail-yb1-xb2f.google.com [IPv6:2607:f8b0:4864:20::b2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E933877517
-        for <linux-ide@vger.kernel.org>; Fri, 27 Jan 2023 05:29:26 -0800 (PST)
-Received: by mail-yb1-xb2f.google.com with SMTP id 129so6015019ybb.0
-        for <linux-ide@vger.kernel.org>; Fri, 27 Jan 2023 05:29:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=d90t2HT4axfU/qrUeGEIoyPWhawGVIFewaicVqJDUqg=;
-        b=bkF37mijcUJHRTb1p6rDKR/QOD6cFK2fbdggg39R9YmoMeA6tsJ6yvEJ14vk9DFsmT
-         cnWWi3EdLY4EgOwM0aFp0esXbWtzUduqqXAgTchHNp1iiaa8mDjQrvwF/FYs7Ezq1EiR
-         UD9b2YeYJPMGKbP99a4CO2DUdafwP48N2eGkFFcn4zdO8fQu3CVfLNPxagbHGVNi9Aid
-         LKTgkD2YpIKAt4xYqDBLxTKiuI2Bnpd+xENAUnjYKhH1WdkmL3iv9NjHp+q8EXfYVfUM
-         wFr6J8H/b6wmAOQ8UXn2NwQkBoN2rvU1BFiqJmNOisRwwkoqxs3IS/K9cTWqDBvwedN8
-         E8AQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=d90t2HT4axfU/qrUeGEIoyPWhawGVIFewaicVqJDUqg=;
-        b=pes4kGpsp+u/7bMfEYtGPDxeZFQbi2U4/cgmyTddCMG844hO6cxwvuVa7icPvbDi4Y
-         6vwYVbay0FpuGwvKjQmdnPVZI0h/iQr/1KTo1ayaJScc4cBWVd+f3F+ejat/dr/l7WZV
-         CBHXiTpN5uwrB8Zwc6b4IRmwCI+hljLgrN/WC+tISm1/QgMNzjshOVM4e3Poba26LSKp
-         E/pnS3CQuvqpEw3boidq6bLPuMULWBX0sunOWnUbQyCIbolRvIRvpvPhhEMZ7ti+4LOA
-         oq3BHKxrqfshzdFbAmEsS6eqBkXO2CfzQQsXy6fLGhdEidQCBU9Gj7p0+0oqZJ5i2CYr
-         DUoA==
-X-Gm-Message-State: AO0yUKV4te1iTo0JFq6XW7QNMMzVD3FC0CswGgA1NYNDk+vQ004wFnQS
-        UWgimlf1YzeFXktdTC7RJF8WjxPyXUUjwMo/R/ekeQ==
-X-Google-Smtp-Source: AK7set/ciBNiEBP0CiIy5i+btLQY0D92zzz0gwoYZYEZs0myOJXaIQEqBAz/mNtne8bob6i5oJYojtdtlEmDw9U92cM=
-X-Received: by 2002:a25:f81b:0:b0:80b:821f:b621 with SMTP id
- u27-20020a25f81b000000b0080b821fb621mr1098028ybd.24.1674826166163; Fri, 27
- Jan 2023 05:29:26 -0800 (PST)
+        with ESMTP id S232439AbjA0PaI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jan 2023 10:30:08 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9281E21959;
+        Fri, 27 Jan 2023 07:30:07 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 4A6EF2205E;
+        Fri, 27 Jan 2023 15:30:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1674833406; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TILPmO6xmFGAFOSuUaexsBJ9guSfp9LwuhV49bX8pZE=;
+        b=Yi2CzkYoLTOwjFRxg6JZJWcc8dq7BkrCS7h32qJ0y5p2B7ayj0XB1nlvbvez93U+Xx7rR6
+        LXiCyc1Rr1OZ6ag5mmMQjdbB5TPOiXc+fVkQ6gsSuH2HC2APdFa0HlpVJsH1waJPr7V5ft
+        c00PXYeiyFWPzmrbGRNQx0MmjlFH15Y=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1674833406;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TILPmO6xmFGAFOSuUaexsBJ9guSfp9LwuhV49bX8pZE=;
+        b=lJTNuW6W+fLDMFPBf49YqjtzX6JlRSNhPv545OOihVGZ1F4hr1kS9d/cH2CjmURJB4MpU0
+        CpSTJ0qC6CeQmHCg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 372A81336F;
+        Fri, 27 Jan 2023 15:30:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id WpuTC/7t02P6ZgAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 27 Jan 2023 15:30:06 +0000
+Message-ID: <e257cab1-7eed-d1d5-4129-f2bedb50953e@suse.de>
+Date:   Fri, 27 Jan 2023 16:30:05 +0100
 MIME-Version: 1.0
-References: <20230127093217.60818-1-krzysztof.kozlowski@linaro.org> <20230127093217.60818-4-krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230127093217.60818-4-krzysztof.kozlowski@linaro.org>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Fri, 27 Jan 2023 14:29:14 +0100
-Message-ID: <CACRpkdbOZLhQ1DTNJowNXF=O-Nvpqcb_A+PwkPWFiUSQUbkR9A@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] dt-bindings: serial: restrict possible child node names
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linus Walleij <linusw@kernel.org>,
-        Imre Kaloz <kaloz@openwrt.org>,
-        Krzysztof Halasa <khalasa@piap.pl>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Marek Vasut <marex@denx.de>, Lubomir Rintel <lkundrak@v3.sk>,
-        - <devicetree@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mtd@lists.infradead.org, linux-serial@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v3 08/18] scsi: sd: set read/write commands CDL index
+Content-Language: en-US
+To:     Niklas Cassel <niklas.cassel@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org
+References: <20230124190308.127318-1-niklas.cassel@wdc.com>
+ <20230124190308.127318-9-niklas.cassel@wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230124190308.127318-9-niklas.cassel@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jan 27, 2023 at 10:32 AM Krzysztof Kozlowski
-<krzysztof.kozlowski@linaro.org> wrote:
+On 1/24/23 20:02, Niklas Cassel wrote:
+> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> 
+> Introduce the command duration limits helper function
+> sd_cdl_cmd_limit() to retrieve and set the DLD bits of the
+> READ/WRITE 16 and READ/WRITE 32 commands to indicate to the device
+> the command duration limit descriptor to apply to the command.
+> 
+> When command duration limits are enabled, sd_cdl_cmd_limit() obtains the
+> index of the descriptor to apply to the command for requests that have
+> the IOPRIO_CLASS_DL priority class with a priority data sepcifying a
+> valid descriptor index (1 to 7).
+> 
+> The read-write sysfs attribute "enable" is introduced to control
+> setting the command duration limits indexes. If this attribute is set
+> to 0 (default), command duration limits specified by the user are
+> ignored. The user must set this attribute to 1 for command duration
+> limits to be set. Enabling and disabling the command duration limits
+> feature for ATA devices must be done using the ATA feature sub-page of
+> the control mode page. The sd_cdl_enable() function is introduced to
+> check if this mode page is supported by the device and if it is, use
+> it to enable/disable CDL.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
+> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+> ---
+>   drivers/scsi/sd.c     |  16 +++--
+>   drivers/scsi/sd.h     |  10 ++++
+>   drivers/scsi/sd_cdl.c | 134 +++++++++++++++++++++++++++++++++++++++++-
+>   3 files changed, 152 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 7879a5470773..d2eb01337943 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1045,13 +1045,14 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+>   
+>   static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+>   				       sector_t lba, unsigned int nr_blocks,
+> -				       unsigned char flags)
+> +				       unsigned char flags, unsigned int dld)
+>   {
+>   	cmd->cmd_len = SD_EXT_CDB_SIZE;
+>   	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
+>   	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
+>   	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
+>   	cmd->cmnd[10] = flags;
+> +	cmd->cmnd[11] = dld & 0x07;
+>   	put_unaligned_be64(lba, &cmd->cmnd[12]);
+>   	put_unaligned_be32(lba, &cmd->cmnd[20]); /* Expected Indirect LBA */
+>   	put_unaligned_be32(nr_blocks, &cmd->cmnd[28]);
+> @@ -1061,12 +1062,12 @@ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+>   
+>   static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
+>   				       sector_t lba, unsigned int nr_blocks,
+> -				       unsigned char flags)
+> +				       unsigned char flags, unsigned int dld)
+>   {
+>   	cmd->cmd_len  = 16;
+>   	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
+> -	cmd->cmnd[1]  = flags;
+> -	cmd->cmnd[14] = 0;
+> +	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
+> +	cmd->cmnd[14] = (dld & 0x03) << 6;
+>   	cmd->cmnd[15] = 0;
+>   	put_unaligned_be64(lba, &cmd->cmnd[2]);
+>   	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
+> @@ -1129,6 +1130,7 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>   	unsigned int mask = logical_to_sectors(sdp, 1) - 1;
+>   	bool write = rq_data_dir(rq) == WRITE;
+>   	unsigned char protect, fua;
+> +	unsigned int dld = 0;
+>   	blk_status_t ret;
+>   	unsigned int dif;
+>   	bool dix;
+> @@ -1178,6 +1180,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>   	fua = rq->cmd_flags & REQ_FUA ? 0x8 : 0;
+>   	dix = scsi_prot_sg_count(cmd);
+>   	dif = scsi_host_dif_capable(cmd->device->host, sdkp->protection_type);
+> +	if (sd_cdl_enabled(sdkp))
+> +		dld = sd_cdl_dld(sdkp, cmd);
+>   
+>   	if (dif || dix)
+>   		protect = sd_setup_protect_cmnd(cmd, dix, dif);
+> @@ -1186,10 +1190,10 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>   
+>   	if (protect && sdkp->protection_type == T10_PI_TYPE2_PROTECTION) {
+>   		ret = sd_setup_rw32_cmnd(cmd, write, lba, nr_blocks,
+> -					 protect | fua);
+> +					 protect | fua, dld);
+>   	} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff)) {
+>   		ret = sd_setup_rw16_cmnd(cmd, write, lba, nr_blocks,
+> -					 protect | fua);
+> +					 protect | fua, dld);
+>   	} else if ((nr_blocks > 0xff) || (lba > 0x1fffff) ||
+>   		   sdp->use_10_for_rw || protect) {
+>   		ret = sd_setup_rw10_cmnd(cmd, write, lba, nr_blocks,
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index e60d33bd222a..5b6b6dc4b92d 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -130,8 +130,11 @@ struct sd_cdl_page {
+>   	struct sd_cdl_desc      descs[SD_CDL_MAX_DESC];
+>   };
+>   
+> +struct scsi_disk;
+> +
+>   struct sd_cdl {
+>   	struct kobject		kobj;
+> +	struct scsi_disk	*sdkp;
+>   	bool			sysfs_registered;
+>   	u8			perf_vs_duration_guideline;
+>   	struct sd_cdl_page	pages[SD_CDL_RW];
+> @@ -188,6 +191,7 @@ struct scsi_disk {
+>   	u8		zeroing_mode;
+>   	u8		nr_actuators;		/* Number of actuators */
+>   	struct sd_cdl	*cdl;
+> +	unsigned	cdl_enabled : 1;
+>   	unsigned	ATO : 1;	/* state of disk ATO bit */
+>   	unsigned	cache_override : 1; /* temp override of WCE,RCD */
+>   	unsigned	WCE : 1;	/* state of disk WCE bit */
+> @@ -355,5 +359,11 @@ void sd_print_result(const struct scsi_disk *sdkp, const char *msg, int result);
+>   /* Command duration limits support (in sd_cdl.c) */
+>   void sd_read_cdl(struct scsi_disk *sdkp, unsigned char *buf);
+>   void sd_cdl_release(struct scsi_disk *sdkp);
+> +int sd_cdl_dld(struct scsi_disk *sdkp, struct scsi_cmnd *scmd);
+> +
+> +static inline bool sd_cdl_enabled(struct scsi_disk *sdkp)
+> +{
+> +	return sdkp->cdl && sdkp->cdl_enabled;
+> +}
+>   
+>   #endif /* _SCSI_DISK_H */
+> diff --git a/drivers/scsi/sd_cdl.c b/drivers/scsi/sd_cdl.c
+> index 513cd989f19a..59d02dbb5ea1 100644
+> --- a/drivers/scsi/sd_cdl.c
+> +++ b/drivers/scsi/sd_cdl.c
+> @@ -93,6 +93,63 @@ static const char *sd_cdl_policy_name(u8 policy)
+>   	}
+>   }
+>   
+> +/*
+> + * Enable/disable CDL.
+> + */
+> +static int sd_cdl_enable(struct scsi_disk *sdkp, bool enable)
+> +{
+> +	struct scsi_device *sdp = sdkp->device;
+> +	struct scsi_mode_data data;
+> +	struct scsi_sense_hdr sshdr;
+> +	struct scsi_vpd *vpd;
+> +	bool is_ata = false;
+> +	char buf[64];
+> +	int ret;
+> +
+> +	rcu_read_lock();
+> +	vpd = rcu_dereference(sdp->vpd_pg89);
+> +	if (vpd)
+> +		is_ata = true;
+> +	rcu_read_unlock();
+> +
+> +	/*
+> +	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
+> +	 */
+> +	if (is_ata) {
+> +		char *buf_data;
+> +		int len;
+> +
+> +		ret = scsi_mode_sense(sdp, 0x08, 0x0a, 0xf2, buf, sizeof(buf),
+> +				      SD_TIMEOUT, sdkp->max_retries, &data,
+> +				      NULL);
+> +		if (ret)
+> +			return -EINVAL;
+> +
+That is a tad odd.
+Is CDL always enabled for 'normal' SCSI?
 
-> The re-usable serial.yaml schema matches every property with ".*"
-> pattern, thus any other schema referencing it will not report unknown
-> (unevaluated) properties.  This hides several wrong properties.  It is
-> a limitation of dtschema, thus provide a simple workaround: expect
-> children to be only of few names matching upstream usage (Bluetooth,
-> GNSS, GPS and MCU).
->
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cheers,
 
-Fair enough,
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
-
-However I think V.35 WAN devices (high speed serial network links)
-should actually be using this? They are just some fancy serial port
-after all. Cf
-Documentation/devicetree/bindings/net/intel,ixp4xx-hss.yaml
-
-No big deal I guess since they are mostly an anarchronism and not
-on the table right now.
-
-Yours,
-Linus Walleij
+Hannes
