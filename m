@@ -2,219 +2,222 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D9CC61DA4
-	for <linux-ide@archiver.kernel.org>; Sat, 28 Jan 2023 07:25:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DCB4C27C76
+	for <linux-ide@archiver.kernel.org>; Sat, 28 Jan 2023 17:08:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233272AbjA1HZd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 28 Jan 2023 02:25:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58288 "EHLO
+        id S234039AbjA1RI4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 28 Jan 2023 12:08:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233489AbjA1HZc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2023 02:25:32 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEDA784B52;
-        Fri, 27 Jan 2023 23:25:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674890730; x=1706426730;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=eDXPzbDiWfsbEwXkYaH34SmQGKn8//5UxGIVNNo7RcU=;
-  b=IH//ZbjhgJq3d9Dw6ZBGyuGxPitojL7VS1cdD16Flh5TdTJg10WOyQi1
-   cK/w262CleWo8JWxA4Y+GVPjh3oEz67skjsB7zcp09AaeQyxX4xhgyr8o
-   bNpbH8H18W1ptwz11efZpV1jIxYgdCd6TAx8pJdr7zocLVe6GLQTg7/QY
-   j1UiuE0TaiHfu3xV6XX0YBAMqagX8eaGoSJckGUpGCkXUOgQ42OuuAZFl
-   xvvvqVyVNiPYKTUZGjXCuh461BAJd5K6/H62mjktHs8KxOmwvzNHJues4
-   lpcIw/H/kN6EQl09t0JOEI5RJCrhxyh9rqdYzWBYTXMbvL4+KtDBstJib
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10603"; a="315225924"
-X-IronPort-AV: E=Sophos;i="5.97,253,1669104000"; 
-   d="scan'208";a="315225924"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2023 23:25:30 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10603"; a="663539356"
-X-IronPort-AV: E=Sophos;i="5.97,253,1669104000"; 
-   d="scan'208";a="663539356"
-Received: from lkp-server01.sh.intel.com (HELO ffa7f14d1d0f) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 27 Jan 2023 23:25:22 -0800
-Received: from kbuild by ffa7f14d1d0f with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pLfaS-0000U6-36;
-        Sat, 28 Jan 2023 07:25:20 +0000
-Date:   Sat, 28 Jan 2023 15:24:41 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Byungchul Park <max.byungchul.park@gmail.com>,
-        linux-kernel@vger.kernel.org
-Cc:     oe-kbuild-all@lists.linux.dev, torvalds@linux-foundation.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, peterz@infradead.org, will@kernel.org,
-        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
-        sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org
-Subject: Re: [PATCH v8 05/25] dept: Tie to Lockdep and IRQ tracing
-Message-ID: <202301281551.sSDuxg0O-lkp@intel.com>
-References: <1674782358-25542-6-git-send-email-max.byungchul.park@gmail.com>
+        with ESMTP id S234014AbjA1RIz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2023 12:08:55 -0500
+Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E497224CAD
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jan 2023 09:08:52 -0800 (PST)
+dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
+        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
+        bh=61muY3k6saQDFZ+uhGgHSTVF5U8c9KzlRxGVmGPD1FE=;
+        b=Rju6+xGW/SqQu1IY8/5ptopgSZDaU1badsazzB4mYK8j01sqxkBDt0j5CPRVkBz1aUaJFkGEAJW+Ys0XHajwrdIPUUZVv6kkDyRUTINSd01WMvLtYJx1MOO2Ai/3eoifFV0Mdi+LvKV62fooYR9/JWE+Xzp3IEvdPMskujFpyoLS2jSKTNSeOsCsFmBBhHlElxTMn5gpwEl9IpbZyVZw4zU4910JMrD9D0LiE8/v1XlPtlLY3aPXPWa6LB
+        dN8kzjzkFmUy0iLRanakSVl2+tX9KLXhgXJivMTNjJYxBrQd4CN7wDc8PROp02SmbGdfNpPtWt7LfruVqTs0d5TpVwKg==
+Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
+        by mx1.wiredblade.com with ESMTPA
+        ; Sat, 28 Jan 2023 17:08:51 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1674782358-25542-6-git-send-email-max.byungchul.park@gmail.com>
+Date:   Sat, 28 Jan 2023 17:08:52 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: RainLoop/1.16.0
+From:   marius@psihoexpert.ro
+Message-ID: <55834657003f5a4579b326ee61fe1e80@psihoexpert.ro>
+Subject: Re: Bug report for ahci-mvebu driver
+To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org
+In-Reply-To: <fbbbad64-482e-93eb-14e7-01b54a92d2b3@opensource.wdc.com>
+References: <fbbbad64-482e-93eb-14e7-01b54a92d2b3@opensource.wdc.com>
+ <f4d558fd-343a-8cb5-605d-574af42ad3db@opensource.wdc.com>
+ <3c94c10243fa1cd2b0128db846298a11@psihoexpert.ro>
+ <13f7138c46c4c486a29322baa4cc414b@psihoexpert.ro>
+ <40f4ae2000164863253c67d405e4f875@psihoexpert.ro>
+ <29aff79be06b7dacb97c13cbff07fabb@psihoexpert.ro>
+ <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
+ <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
+ <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
+ <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
+ <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
+ <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
+ <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
+ <d42ddd29171c69e9a6628bfc2b100aca@psihoexpert.ro>
+ <44527e2f8583a8ce51b1241bf9e56595@psihoexpert.ro>
+ <45337bf4a17c9c879f9439c1138bc443@psihoexpert.ro>
+ <7fe0b96f30bf787d339ba656d5d2df01@psihoexpert.ro>
+ <db3fa398d4a1dcadb9df02d1001a61c6@psihoexpert.ro>
+ <c7e1b214fca6c2a08dbce60006442dd8@psihoexpert.ro>
+ <009822d6-24b8-739d-e7ee-13adc1c7d548@opensource.wdc.com>
+X-Originating-IP: 188.24.134.78
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Byungchul,
+January 27, 2023 8:28 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.=
+com> wrote:
 
-Thank you for the patch! Yet something to improve:
-
-[auto build test ERROR on tip/locking/core]
-[also build test ERROR on tip/sched/core drm-misc/drm-misc-next linus/master v6.2-rc5 next-20230127]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Byungchul-Park/llist-Move-llist_-head-node-definition-to-types-h/20230128-102456
-patch link:    https://lore.kernel.org/r/1674782358-25542-6-git-send-email-max.byungchul.park%40gmail.com
-patch subject: [PATCH v8 05/25] dept: Tie to Lockdep and IRQ tracing
-config: parisc-allyesconfig (https://download.01.org/0day-ci/archive/20230128/202301281551.sSDuxg0O-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/aed5169e3b6767146ee602447fcf75b4c734d2db
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Byungchul-Park/llist-Move-llist_-head-node-definition-to-types-h/20230128-102456
-        git checkout aed5169e3b6767146ee602447fcf75b4c734d2db
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=parisc olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=parisc prepare
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-
-All error/warnings (new ones prefixed by >>):
-
-   In file included from include/linux/bitops.h:68,
-                    from include/linux/kernel.h:22,
-                    from include/linux/irqflags.h:16,
-                    from include/asm-generic/cmpxchg-local.h:6,
-                    from arch/parisc/include/asm/cmpxchg.h:89,
-                    from arch/parisc/include/asm/atomic.h:10,
-                    from include/linux/atomic.h:7,
-                    from include/linux/rcupdate.h:25,
-                    from include/linux/rculist.h:11,
-                    from include/linux/pid.h:5,
-                    from include/linux/sched.h:14,
-                    from arch/parisc/kernel/asm-offsets.c:18:
-   arch/parisc/include/asm/bitops.h: In function 'set_bit':
->> arch/parisc/include/asm/bitops.h:27:9: error: implicit declaration of function '_atomic_spin_lock_irqsave'; did you mean '__atomic_is_lock_free'? [-Werror=implicit-function-declaration]
-      27 |         _atomic_spin_lock_irqsave(addr, flags);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~
-         |         __atomic_is_lock_free
->> arch/parisc/include/asm/bitops.h:29:9: error: implicit declaration of function '_atomic_spin_unlock_irqrestore' [-Werror=implicit-function-declaration]
-      29 |         _atomic_spin_unlock_irqrestore(addr, flags);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   In file included from arch/parisc/include/asm/bitops.h:204:
-   include/asm-generic/bitops/lock.h: In function 'arch_test_and_set_bit_lock':
->> include/asm-generic/bitops/lock.h:28:15: error: implicit declaration of function 'arch_atomic_long_fetch_or_acquire' [-Werror=implicit-function-declaration]
-      28 |         old = arch_atomic_long_fetch_or_acquire(mask, (atomic_long_t *)p);
-         |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> include/asm-generic/bitops/lock.h:28:56: error: 'atomic_long_t' undeclared (first use in this function); did you mean 'atomic_t'?
-      28 |         old = arch_atomic_long_fetch_or_acquire(mask, (atomic_long_t *)p);
-         |                                                        ^~~~~~~~~~~~~
-         |                                                        atomic_t
-   include/asm-generic/bitops/lock.h:28:56: note: each undeclared identifier is reported only once for each function it appears in
->> include/asm-generic/bitops/lock.h:28:71: error: expected expression before ')' token
-      28 |         old = arch_atomic_long_fetch_or_acquire(mask, (atomic_long_t *)p);
-         |                                                                       ^
-   include/asm-generic/bitops/lock.h: In function 'arch_clear_bit_unlock':
->> include/asm-generic/bitops/lock.h:44:9: error: implicit declaration of function 'arch_atomic_long_fetch_andnot_release' [-Werror=implicit-function-declaration]
-      44 |         arch_atomic_long_fetch_andnot_release(BIT_MASK(nr), (atomic_long_t *)p);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/asm-generic/bitops/lock.h:44:62: error: 'atomic_long_t' undeclared (first use in this function); did you mean 'atomic_t'?
-      44 |         arch_atomic_long_fetch_andnot_release(BIT_MASK(nr), (atomic_long_t *)p);
-         |                                                              ^~~~~~~~~~~~~
-         |                                                              atomic_t
-   include/asm-generic/bitops/lock.h:44:77: error: expected expression before ')' token
-      44 |         arch_atomic_long_fetch_andnot_release(BIT_MASK(nr), (atomic_long_t *)p);
-         |                                                                             ^
-   include/asm-generic/bitops/lock.h: In function 'arch___clear_bit_unlock':
->> include/asm-generic/bitops/lock.h:66:9: error: implicit declaration of function 'arch_atomic_long_set_release' [-Werror=implicit-function-declaration]
-      66 |         arch_atomic_long_set_release((atomic_long_t *)p, old);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/asm-generic/bitops/lock.h:66:39: error: 'atomic_long_t' undeclared (first use in this function); did you mean 'atomic_t'?
-      66 |         arch_atomic_long_set_release((atomic_long_t *)p, old);
-         |                                       ^~~~~~~~~~~~~
-         |                                       atomic_t
-   include/asm-generic/bitops/lock.h:66:54: error: expected expression before ')' token
-      66 |         arch_atomic_long_set_release((atomic_long_t *)p, old);
-         |                                                      ^
-   include/asm-generic/bitops/lock.h: In function 'arch_clear_bit_unlock_is_negative_byte':
-   include/asm-generic/bitops/lock.h:86:60: error: 'atomic_long_t' undeclared (first use in this function); did you mean 'atomic_t'?
-      86 |         old = arch_atomic_long_fetch_andnot_release(mask, (atomic_long_t *)p);
-         |                                                            ^~~~~~~~~~~~~
-         |                                                            atomic_t
-   include/asm-generic/bitops/lock.h:86:75: error: expected expression before ')' token
-      86 |         old = arch_atomic_long_fetch_andnot_release(mask, (atomic_long_t *)p);
-         |                                                                           ^
-   In file included from include/linux/atomic.h:81:
-   include/linux/atomic/atomic-long.h: At top level:
->> include/linux/atomic/atomic-long.h:539:1: warning: conflicting types for 'arch_atomic_long_set_release'; have 'void(atomic_long_t *, long int)' {aka 'void(atomic_t *, long int)'}
-     539 | arch_atomic_long_set_release(atomic_long_t *v, long i)
-         | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> include/linux/atomic/atomic-long.h:539:1: error: static declaration of 'arch_atomic_long_set_release' follows non-static declaration
-   include/asm-generic/bitops/lock.h:66:9: note: previous implicit declaration of 'arch_atomic_long_set_release' with type 'void(atomic_long_t *, long int)' {aka 'void(atomic_t *, long int)'}
-      66 |         arch_atomic_long_set_release((atomic_long_t *)p, old);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> include/linux/atomic/atomic-long.h:809:1: error: conflicting types for 'arch_atomic_long_fetch_andnot_release'; have 'long int(long int,  atomic_long_t *)' {aka 'long int(long int,  atomic_t *)'}
-     809 | arch_atomic_long_fetch_andnot_release(long i, atomic_long_t *v)
-         | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/asm-generic/bitops/lock.h:44:9: note: previous implicit declaration of 'arch_atomic_long_fetch_andnot_release' with type 'int()'
-      44 |         arch_atomic_long_fetch_andnot_release(BIT_MASK(nr), (atomic_long_t *)p);
-         |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> include/linux/atomic/atomic-long.h:833:1: error: conflicting types for 'arch_atomic_long_fetch_or_acquire'; have 'long int(long int,  atomic_long_t *)' {aka 'long int(long int,  atomic_t *)'}
-     833 | arch_atomic_long_fetch_or_acquire(long i, atomic_long_t *v)
-         | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/asm-generic/bitops/lock.h:28:15: note: previous implicit declaration of 'arch_atomic_long_fetch_or_acquire' with type 'int()'
-      28 |         old = arch_atomic_long_fetch_or_acquire(mask, (atomic_long_t *)p);
-         |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   cc1: some warnings being treated as errors
-   make[2]: *** [scripts/Makefile.build:114: arch/parisc/kernel/asm-offsets.s] Error 1
-   make[2]: Target 'prepare' not remade because of errors.
-   make[1]: *** [Makefile:1298: prepare0] Error 2
-   make[1]: Target 'prepare' not remade because of errors.
-   make: *** [Makefile:242: __sub-make] Error 2
-   make: Target 'prepare' not remade because of errors.
+> On 1/27/23 14:13, Damien Le Moal wrote:
+>=20
+>>=20Marius,
+>>=20
+>>=20Thanks again for testing.
+>> Could you try a new variation of the fix shown below ? This newer fix
+>> should avoid uselessly going down to 1.5 Gbps as shown above.
+>> Thanks !
+>>=20
+>>=20diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 884ae73b11ea..04938db566e5 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -3085,10 +3085,31 @@ int sata_down_spd_limit(struct ata_link *link,=
+ u32
+>> spd_limit)
+>> * If not, use cached value in link->sata_spd.
+>> */
+>> rc =3D sata_scr_read(link, SCR_STATUS, &sstatus);
+>> - if (rc =3D=3D 0 && ata_sstatus_online(sstatus))
+>> + if (rc =3D=3D 0 && ata_sstatus_online(sstatus)) {
+>> spd =3D (sstatus >> 4) & 0xf;
+>> - else
+>> + } else {
+>> + /*
+>> + * If we reach here, the device is still offline or not
+>> + * reporting a current speed yet. If we do not have a recorded
+>> + * speed either, it means that probing the drive is failing,
+>> + * most likely because problem with link speed autonegotiation
+>> + * (e.g. reported case with mvebu adapter with a port multiplier
+>> + * device). In this case, assume that probing was done at Gen3
+>> + * speed and set the recorded speed to lower Gen2. With this,
+>> + * the next probe retry will be done after sata_set_spd()
+>> + * explicitly lowers the link speed. If the device then
+>> + * responds, the actual maximum speed will be set once
+>> + * libata-eh finishes the device revalidation.
+>> + */
+>> + if (!link->sata_spd) {
+>> + link->sata_spd =3D 2;
+>> + ata_link_warn(link,
+>> + "No reported link speed. Assuming %s\n",
+>> + sata_spd_string(link->sata_spd));
+>> + return;
+>=20
+>=20Oops. My bad. This should be "return 0;" of course.
+>=20
+>>=20+ }
+>> spd =3D link->sata_spd;
+>> + }
+>>=20
+>>=20mask =3D link->sata_spd_limit;
+>> if (mask <=3D 1)
+>=20
+>=20--
+> Damien Le Moal
+> Western Digital Research
 
 
-vim +27 arch/parisc/include/asm/bitops.h
+It doesn't work.
 
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16  14  
-a366064c3ff46c include/asm-parisc/bitops.h      Grant Grundler 2005-10-21  15  /* See http://marc.theaimsgroup.com/?t=108826637900003 for discussion
-a366064c3ff46c include/asm-parisc/bitops.h      Grant Grundler 2005-10-21  16   * on use of volatile and __*_bit() (set/clear/change):
-a366064c3ff46c include/asm-parisc/bitops.h      Grant Grundler 2005-10-21  17   *	*_bit() want use of volatile.
-a366064c3ff46c include/asm-parisc/bitops.h      Grant Grundler 2005-10-21  18   *	__*_bit() are "relaxed" and don't use spinlock or volatile.
-a366064c3ff46c include/asm-parisc/bitops.h      Grant Grundler 2005-10-21  19   */
-a366064c3ff46c include/asm-parisc/bitops.h      Grant Grundler 2005-10-21  20  
-a366064c3ff46c include/asm-parisc/bitops.h      Grant Grundler 2005-10-21  21  static __inline__ void set_bit(int nr, volatile unsigned long * addr)
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16  22  {
-208151bfb70fb7 arch/parisc/include/asm/bitops.h Helge Deller   2020-06-14  23  	unsigned long mask = BIT_MASK(nr);
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16  24  	unsigned long flags;
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16  25  
-208151bfb70fb7 arch/parisc/include/asm/bitops.h Helge Deller   2020-06-14  26  	addr += BIT_WORD(nr);
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16 @27  	_atomic_spin_lock_irqsave(addr, flags);
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16  28  	*addr |= mask;
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16 @29  	_atomic_spin_unlock_irqrestore(addr, flags);
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16  30  }
-^1da177e4c3f41 include/asm-parisc/bitops.h      Linus Torvalds 2005-04-16  31  
+[   15.145150][  T113] hardreset, Online=3D>Offline
+[   15.145159][  T113] sata_set_spd_needed, scontrol=3D0x300
+[   15.149632][  T113] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[   15.154910][  T113] __sata_set_spd_needed, corrected limit=3D0xFFFFFFF=
+F
+[   15.161211][  T113] __sata_set_spd_needed, target=3D0x0
+[   15.167700][  T113] __sata_set_spd_needed, spd=3D0x0
+[   15.172781][  T113] __sata_set_spd_needed, final *scontrol=3D0x300
+[   15.178685][  T113] resume, do loop
+[   15.413909][  T113] resume, after do loop
+[   15.473909][  T113] debounce, SCR=3D0x100
+..
+[   16.553930][  T113] debounce, SCR=3D0x100
+[   16.557791][  T113] resume, return at end of function
+[   16.561650][  T113] hardreset, ata_phys_link_offline check failed
+[   16.566754][  T113] ata2: SATA link down (SStatus 101 SControl 300)
+[   16.579222][  T113] sata_down_spd_limit: limit 0x1, cur spd 0x0, saved=
+ limit 0xffffffff, hw limit 0xffffffff
+[   16.589115][  T113] ata2: No reported link speed. Assuming 3.0 Gbps
+[   16.595436][  T113] hardreset, Online=3D>Offline
+[   16.595442][  T113] sata_set_spd_needed, scontrol=3D0x300
+[   16.599911][  T113] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[   16.605178][  T113] __sata_set_spd_needed, corrected limit=3D0xFFFFFFF=
+F
+[   16.611479][  T113] __sata_set_spd_needed, target=3D0x0
+[   16.617975][  T113] __sata_set_spd_needed, spd=3D0x0
+[   16.623055][  T113] __sata_set_spd_needed, final *scontrol=3D0x300
+[   16.628957][  T113] resume, do loop
+[   16.863910][  T113] resume, after do loop
+[   16.923909][  T113] debounce, SCR=3D0x100
+...
+[   18.123908][  T113] debounce, SCR=3D0x100
+[   18.127770][  T113] resume, return at end of function
+[   18.131628][  T113] hardreset, ata_phys_link_offline check failed
+[   18.136731][  T113] ata2: SATA link down (SStatus 100 SControl 300)
+[   18.149196][  T113] sata_down_spd_limit: limit 0x1, cur spd 0x0, saved=
+ limit 0xffffffff, hw limit 0xffffffff
+[   18.159089][  T113] ata2: No reported link speed. Assuming 3.0 Gbps
+[   18.165409][  T113] hardreset, Online=3D>Offline
+[   18.165415][  T113] sata_set_spd_needed, scontrol=3D0x300
+[   18.169884][  T113] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[   18.175151][  T113] __sata_set_spd_needed, corrected limit=3D0xFFFFFFF=
+F
+[   18.181451][  T113] __sata_set_spd_needed, target=3D0x0
+[   18.187946][  T113] __sata_set_spd_needed, spd=3D0x0
+[   18.193025][  T113] __sata_set_spd_needed, final *scontrol=3D0x300
+[   18.198927][  T113] resume, do loop
+[   18.433909][  T113] resume, after do loop
+[   18.493909][  T113] debounce, SCR=3D0x100
+...
+[   20.413909][  T113] debounce, SCR=3D0x100
+[   20.417768][  T113] resume, return at end of function
+[   20.421627][  T113] hardreset, ata_phys_link_offline check failed
+[   20.426730][  T113] ata2: SATA link down (SStatus 100 SControl 300)
+[   20.439196][  T113] sata_down_spd_limit: limit 0x1, cur spd 0x0, saved=
+ limit 0xffffffff, hw limit 0xffffffff
+[   20.449089][  T113] ata2: No reported link speed. Assuming 3.0 Gbps
+[   20.455409][  T113] hardreset, Online=3D>Offline
+[   20.455415][  T113] sata_set_spd_needed, scontrol=3D0x300
+[   20.459884][  T113] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[   20.465151][  T113] __sata_set_spd_needed, corrected limit=3D0xFFFFFFF=
+F
+[   20.471452][  T113] __sata_set_spd_needed, target=3D0x0
+[   20.477947][  T113] __sata_set_spd_needed, spd=3D0x0
+[   20.483027][  T113] __sata_set_spd_needed, final *scontrol=3D0x300
+[   20.488929][  T113] resume, do loop
+[   20.723909][  T113] resume, after do loop
+[   20.783909][  T113] debounce, SCR=3D0x0
+[   20.843909][  T113] debounce, SCR=3D0x0
+[   20.903909][  T113] debounce, SCR=3D0x0
+[   20.963909][  T113] debounce, SCR=3D0x0
+[   21.023909][  T113] debounce, SCR=3D0x100
+[   21.083909][  T113] debounce, SCR=3D0x100
+[   21.143909][  T113] debounce, SCR=3D0x100
+[   21.203929][  T113] debounce, SCR=3D0x100
+[   21.263909][  T113] debounce, SCR=3D0x100
+[   21.267768][  T113] resume, return at end of function
+[   21.271626][  T113] hardreset, ata_phys_link_offline check failed
+[   21.276728][  T113] ata2: SATA link down (SStatus 101 SControl 300)
+[   21.289194][  T113] sata_down_spd_limit: limit 0x1, cur spd 0x0, saved=
+ limit 0xffffffff, hw limit 0xffffffff
+[   21.299086][  T113] ata2: No reported link speed. Assuming 3.0 Gbps
+[   21.305407][  T113] hardreset, Online=3D>Offline
+[   21.305413][  T113] sata_set_spd_needed, scontrol=3D0x300
+[   21.309882][  T113] __sata_set_spd_needed, initial limit=3D0xFFFFFFFF
+[   21.315149][  T113] __sata_set_spd_needed, corrected limit=3D0xFFFFFFF=
+F
+[   21.321448][  T113] __sata_set_spd_needed, target=3D0x0
+[   21.327943][  T113] __sata_set_spd_needed, spd=3D0x0
+[   21.333024][  T113] __sata_set_spd_needed, final *scontrol=3D0x300
+[   21.338925][  T113] resume, do loop
+[   21.573909][  T113] resume, after do loop
+[   21.633909][  T113] debounce, SCR=3D0x101
+...
+[   22.893908][  T113] debounce, SCR=3D0x100
+[   22.897769][  T113] resume, return at end of function
+[   22.901628][  T113] hardreset, ata_phys_link_offline check failed
+[   22.906731][  T113] ata2: SATA link down (SStatus 100 SControl 300)
+[   22.919179][  T113] ata2: EH pending after 5 tries, giving up
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
