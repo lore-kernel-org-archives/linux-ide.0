@@ -2,118 +2,145 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B90BAC27C76
-	for <linux-ide@archiver.kernel.org>; Sat, 28 Jan 2023 20:31:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA70C636CB
+	for <linux-ide@archiver.kernel.org>; Sun, 29 Jan 2023 02:05:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234906AbjA1Ubv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 28 Jan 2023 15:31:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58880 "EHLO
+        id S229787AbjA2CFj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 28 Jan 2023 21:05:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234994AbjA1Ubk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2023 15:31:40 -0500
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 505B529E09;
-        Sat, 28 Jan 2023 12:31:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674937865; x=1706473865;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=KMvQ4PikohERJD+6DblQkrJ3J4O0NmthJ12AQuApcLQ=;
-  b=AIF8Usk84yRXoYJ57zIcPQ5uFsLmuR2JKf0UOYFLjLXVBrND1Kti0eTo
-   gj8vseWNutTGUrgXijVtmTttjm/LoK7H2Z0+Wp2xR8+Q87BRr+rBaano6
-   r3utKS4Z+7Ykxk+zTGDrJeLDwjOzN8rQXeE5SKOUdBVnlG6SH3U2wYh3m
-   /4FvTRRqGal5bOBLasq5Jmn2MALyNPRUK4GEL/o2uab9EVdU4rDCPW0uQ
-   zxOSHIBTYM83nZXlQ/0twk/eoBNBjGrh/oKH+QHJUcg/wm/OHNALNirCh
-   cKnc8ZFUUmMpNoKe1pYFAYLyNQmajtpp9RdZ4QTOvOuW9u8KphzNDqF+l
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10604"; a="325025784"
-X-IronPort-AV: E=Sophos;i="5.97,254,1669104000"; 
-   d="scan'208";a="325025784"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2023 12:31:01 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10604"; a="837533337"
-X-IronPort-AV: E=Sophos;i="5.97,254,1669104000"; 
-   d="scan'208";a="837533337"
-Received: from lkp-server01.sh.intel.com (HELO ffa7f14d1d0f) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 28 Jan 2023 12:30:51 -0800
-Received: from kbuild by ffa7f14d1d0f with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pLrqc-00015I-2y;
-        Sat, 28 Jan 2023 20:30:50 +0000
-Date:   Sun, 29 Jan 2023 04:30:30 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Byungchul Park <max.byungchul.park@gmail.com>,
-        linux-kernel@vger.kernel.org
-Cc:     oe-kbuild-all@lists.linux.dev, torvalds@linux-foundation.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, peterz@infradead.org, will@kernel.org,
-        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
-        sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org
-Subject: Re: [PATCH v8 25/25] dept: Track the potential waits of
- PG_{locked,writeback}
-Message-ID: <202301290402.j3poWc84-lkp@intel.com>
-References: <1674782358-25542-26-git-send-email-max.byungchul.park@gmail.com>
+        with ESMTP id S230522AbjA2CFi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jan 2023 21:05:38 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ED7C206AD
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jan 2023 18:05:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1674957937; x=1706493937;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=lMWivxvLhEfQDKorNEnMNpMAFprd1R9pddYdWXMbzJo=;
+  b=TOEnp6Dup2h2qVybZ/KEuKwEl20cDPQ4ic4LqDftwXOnf9VI6IFee81w
+   3c+s6Oy+mNkmNn1MVX6fVR2m3GeciPlzCYsPzL9Uc0oUbDdz2zo/I/Ae6
+   AQ8ckY7PJZ2omgke2lviNdfQSsCpiA/UT/iNxCRFMZgSRFdLtMFLFjcJ/
+   00P2hkWeog0G3+XUh8RQt4fwcUMOQgN5kdJDQMTY1+AhFhZ4pI514l/u5
+   mmaKIQg18ft7Ft415+jtLiUhkMQ/KgddEk68jCg7jU1Zjt34uORzG/Nxy
+   7JA+nXnoBfJZlRLZ9fYFA3c+Q2iFRV8nyAXlP7OvKeE2/jqCqa4tCz5V7
+   g==;
+X-IronPort-AV: E=Sophos;i="5.97,254,1669046400"; 
+   d="scan'208";a="326286264"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Jan 2023 10:05:35 +0800
+IronPort-SDR: D7318zxUdkDsEtKwz7Szf0P1D6FAIIytVn0Qflya8YSOhKK8u0RZGZc4E7Z4TnWqRqsNtS10mf
+ p7HlHp63VakMKW72audlesum18tQwcUhFKDja7+k0l6HeS0xQbSaFUvDJp0dGlDN58l2dJHbx1
+ EUIHnDus1LcL2/vOuqpaAYjyFk9bk7rwMg2g8nEmVyVE+KooLxt69OkQmQkz+n2TSTdK27kuto
+ QJIIuMzjo3eyMgypWFI4x2xJSVQycFNZ4jcg6EIKE3GK+gLbV2/b5SPmPxkfVe4d4rCtpPW/pd
+ kXg=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jan 2023 17:23:03 -0800
+IronPort-SDR: h6TnTMimZKvMtAltS3uKFSXSd7Bv0kdVoCs9FjLfqEQxfobvso+N2lS14CqfB5sYQo4Foxn5zL
+ XOPrGa6IPa56SK3L46/rVsFLebkeYJIUQlg7e4TOYiw8vJtXDpjgZSo2HoCSe5ybwfk8XkGzer
+ bzXiEcJZsATPF2zeGIrm20cxzwiPOg3zBsmDZQoPgIxeI60k8AwpjKial63BNCjfO/TfryO8k9
+ i7a0YYa8WCth675/RULWEsQGFGi+tSeC2J+UwbA8kzWC5bjUsKjusS+g0xlWp11pVY9NjbRaXD
+ tBQ=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Jan 2023 18:05:36 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P4F5W2TVcz1RwtC
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jan 2023 18:05:35 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1674957934; x=1677549935; bh=lMWivxvLhEfQDKorNEnMNpMAFprd1R9pddY
+        dWXMbzJo=; b=ec2bLH+IUZYrP+pzBBc80pTKaFoRH8Q2df9F5NJBguMTqwFuPFh
+        ThGxVPOqe8XBeW/MxwjeVfMmWw85ulzOL2mcfCDFPs+pKvEpv3nke9fnMA0Q+hke
+        KHZfFNEfJoMvWLuJo0CJt5/6CbFDUqrInjKV1cUg3fU0Ir83XfD/RhoBmxQeDqJk
+        uJxXCvxkJ94XhOgxmxyGR6Jgc2IDU9dwpLubAO+elu6F6zh9KYOhHAu+baOLf0mW
+        8Uq/meSrcxfa0v9XqPpu91I7E94ad8FxkVaZlpbHakuBeYulW1cfvXdx3tAC1KlE
+        IVqBf8YxKQvjBG40YffhJLn3PIHFQRRIALg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id KX4qXn1_l7sT for <linux-ide@vger.kernel.org>;
+        Sat, 28 Jan 2023 18:05:34 -0800 (PST)
+Received: from [10.225.163.66] (unknown [10.225.163.66])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P4F5T1WtTz1RvLy;
+        Sat, 28 Jan 2023 18:05:32 -0800 (PST)
+Message-ID: <976c4854-2c98-15f8-12bf-ee08ab86af96@opensource.wdc.com>
+Date:   Sun, 29 Jan 2023 11:05:31 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1674782358-25542-26-git-send-email-max.byungchul.park@gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v3 07/18] scsi: sd: detect support for command duration
+ limits
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
+References: <20230124190308.127318-1-niklas.cassel@wdc.com>
+ <20230124190308.127318-8-niklas.cassel@wdc.com>
+ <f0793325-3022-e7b8-672d-00f2f9ee0cd9@suse.de>
+ <99e6b267-6e2e-2233-19c2-1acf7c9135b2@opensource.wdc.com>
+ <f9fe4e54-563a-c8fa-23ae-88780c4edc54@acm.org>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <f9fe4e54-563a-c8fa-23ae-88780c4edc54@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Byungchul,
+On 1/28/23 11:52, Bart Van Assche wrote:
+> On 1/27/23 16:51, Damien Le Moal wrote:
+>> On 1/27/23 22:00, Hannes Reinecke wrote:
+>>> Hmm. Calling this during revalidate() makes sense, but how can we ensure
+>>> that we call revalidate() when the user issues a MODE_SELECT command?
+>>
+>> Given that CDLs can be changed with a passthrough command, I do not think we can
+>> do anything about that, unfortunately. But I think the same is true of many
+>> things like that. E.g. "let's turn onf/off the write cache without the kernel
+>> noticing"... But given that on a normal system only privileged applications can
+>> do passthrough, if that happens, then the system has been hacked or the user is
+>> shooting himself in the foot.
+>>
+>> cdl-tools project (cdladm utility) uses passtrhough but triggers a revalidate
+>> after changing CDLs to make sure sysfs stays in sync.
+>>
+>> As Christoph suggested, we could change all this to an ioctl(GET_CDL) for
+>> applications... But sysfs is so much simpler in my opinion, not to mention that
+>> it allows access to the information for any application written in a language
+>> that does not have ioctl() or an equivalent.
+>>
+>> cdl-tools has a test suite all written in bash scripts thanks to the sysfs
+>> interface :)
+> 
+> My understanding is that combining the sd driver with SCSI pass-through 
+> is not supported and also that there are no plans to support this 
+> combination.
 
-Thank you for the patch! Yet something to improve:
+Yes. Correct. Passthrough commands do not use sd. That is why cdl-tools triggers
+a revalidate once it is done with changing the CDL descriptors using passthrough
+commands.
 
-[auto build test ERROR on tip/locking/core]
-[also build test ERROR on tip/sched/core drm-misc/drm-misc-next linus/master v6.2-rc5 next-20230127]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Byungchul-Park/llist-Move-llist_-head-node-definition-to-types-h/20230128-102456
-patch link:    https://lore.kernel.org/r/1674782358-25542-26-git-send-email-max.byungchul.park%40gmail.com
-patch subject: [PATCH v8 25/25] dept: Track the potential waits of PG_{locked,writeback}
-config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20230129/202301290402.j3poWc84-lkp@intel.com/config)
-compiler: s390-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/ba934a05473c5212edeff20f2298a249bfe87351
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Byungchul-Park/llist-Move-llist_-head-node-definition-to-types-h/20230128-102456
-        git checkout ba934a05473c5212edeff20f2298a249bfe87351
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=s390 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=s390 SHELL=/bin/bash
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>, old ones prefixed by <<):
-
->> ERROR: modpost: "PG_locked_map" [mm/zsmalloc.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [mm/z3fold.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/reiserfs/reiserfs.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/ext4/ext4.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/ext2/ext2.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/jbd2/jbd2.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/minix/minix.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/ecryptfs/ecryptfs.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/nfs/nfs.ko] undefined!
->> ERROR: modpost: "PG_locked_map" [fs/sysv/sysv.ko] undefined!
-WARNING: modpost: suppressed 44 unresolved symbol warnings because there were too many)
+> 
+> Martin, please correct me if I got this wrong.
+> 
+> Thanks,
+> 
+> Bart.
+> 
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Damien Le Moal
+Western Digital Research
+
