@@ -2,273 +2,99 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B835BC636D4
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 19:12:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0C3C636D6
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 19:13:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238186AbjA3TMm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 14:12:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43910 "EHLO
+        id S237911AbjA3TN2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 14:13:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238301AbjA3TMb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 14:12:31 -0500
-Received: from mail-ot1-f41.google.com (mail-ot1-f41.google.com [209.85.210.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CCF638B51;
-        Mon, 30 Jan 2023 11:12:17 -0800 (PST)
-Received: by mail-ot1-f41.google.com with SMTP id s41-20020a05683043a900b0068bd63d34d0so698993otv.6;
-        Mon, 30 Jan 2023 11:12:17 -0800 (PST)
+        with ESMTP id S238325AbjA3TN1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 14:13:27 -0500
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A25B044A9;
+        Mon, 30 Jan 2023 11:13:26 -0800 (PST)
+Received: by mail-pj1-f44.google.com with SMTP id j5so12008419pjn.5;
+        Mon, 30 Jan 2023 11:13:26 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qZ2Q+GiXTf/jZDy+yWnBz+4LrVIM/HYVwYyT24sePUU=;
-        b=qLxb19GSqWvSduWeEhLkwYViSMsUUNEGDq0LU5iPl7b1g9G3GEvYllouNlAi9/8zJU
-         Rvr/Tkty72c5TMNcvuSOcOeB7rN5J/Rc/VLBbFVjNTPhHrHOOBDljaoecmWiUqIo+3ha
-         geJnns5iuUIjFREhPvu55PQFuOA+q12+cfFu8SlI7kIbw04UUd+Ecnl7BeMXWly1/UKa
-         wL9GPBR1PBm8vFK1NQO5nR2AfnJanvDtWuM0l9kgNNwSWg+BbFjdT4uL6JnLf/K2d70z
-         ClxLQUAtOacwYERFq0xKwJhVoHEMD2UQ9p6I4lai+pQFTZhzoyfQFrb1shxeFcvIjbSG
-         V+0w==
-X-Gm-Message-State: AO0yUKU63JSEzzSdv/cwYvQkbRrMAr+IDJZC2MrcMqfsIatovCoVvLYs
-        pn5plIvTwBuyKwd5un4nfQ==
-X-Google-Smtp-Source: AK7set/q/dB5JJ/S45vienphYuLJxho1PabdZkZ68lbop1g9F9Q7uUGEg6YNlXC0i+odnzx6VJM4AQ==
-X-Received: by 2002:a05:6830:440b:b0:68b:dd36:ab17 with SMTP id q11-20020a056830440b00b0068bdd36ab17mr1043458otv.3.1675105936532;
-        Mon, 30 Jan 2023 11:12:16 -0800 (PST)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id 44-20020a9d02af000000b00684152e9ff2sm5724188otl.0.2023.01.30.11.12.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Jan 2023 11:12:16 -0800 (PST)
-Received: (nullmailer pid 3186164 invoked by uid 1000);
-        Mon, 30 Jan 2023 19:12:15 -0000
-Date:   Mon, 30 Jan 2023 13:12:15 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linus Walleij <linusw@kernel.org>,
-        Imre Kaloz <kaloz@openwrt.org>,
-        Krzysztof Halasa <khalasa@piap.pl>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Marek Vasut <marex@denx.de>, Lubomir Rintel <lkundrak@v3.sk>,
-        - <devicetree@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mtd@lists.infradead.org, linux-serial@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] dt-bindings: intel,ixp4xx-expansion-bus: split
- out peripheral properties
-Message-ID: <20230130191215.GA3125737-robh@kernel.org>
-References: <20230127093217.60818-1-krzysztof.kozlowski@linaro.org>
- <20230127093217.60818-2-krzysztof.kozlowski@linaro.org>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ye2d44HpWhl3SswDOdkTRrNgF3Mq2fxwH8BmkcnO8nw=;
+        b=XqnReN1WcfwuPnJSBGfWmZvN2zHIZglyd+K1/EgR3RaMLdZNeOreKtOkZOUc9AaHk3
+         Ytqp0azQmXkGcni2AW77gXy603BVsZF9yw0pV7Qm6sS5INmXg6H99odqez9ps0a/2Bo8
+         rrZnS0FE1yKWEEKqGV1GZ5p0OAdMN8orASEGo7c2p4hSsGjSEuRncHAFmmYSRiQjDEso
+         usEeuDf/Ng2I3PniSFkgXhYVwc+MRHN+vKmOwAgCL1gor4il2y4o4XSKo5EjeGCtHTc/
+         Jxs+VdznBep+H5XafKP/cGpIYlLWIokjXJcD1OjKFtUYUjAN22/hTSVcifvj7BTtmFaA
+         sdMQ==
+X-Gm-Message-State: AFqh2kpnCLJh5ZF9CTwZF50fGbpYkI0DF3vXOQGcxMDDMxyUcZMkfJtH
+        FeaJMTjNgIOIyJy8tIO6HzAgqlhgrxA=
+X-Google-Smtp-Source: AMrXdXvDPY0evIWZsB+g2b5E/H59SVv6fGjhNwzRtSh07DLkQ/fJCbG1etSA15svNsARCK2F5VKZBQ==
+X-Received: by 2002:a17:90b:1b45:b0:22b:b6d5:e347 with SMTP id nv5-20020a17090b1b4500b0022bb6d5e347mr39008967pjb.29.1675106005582;
+        Mon, 30 Jan 2023 11:13:25 -0800 (PST)
+Received: from ?IPV6:2620:15c:211:201:5016:3bcd:59fe:334b? ([2620:15c:211:201:5016:3bcd:59fe:334b])
+        by smtp.gmail.com with ESMTPSA id mv12-20020a17090b198c00b0021952b5e9bcsm9676883pjb.53.2023.01.30.11.13.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 Jan 2023 11:13:24 -0800 (PST)
+Message-ID: <9547f182-4ec2-021c-5860-5cc2e3dc515a@acm.org>
+Date:   Mon, 30 Jan 2023 11:13:22 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230127093217.60818-2-krzysztof.kozlowski@linaro.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Content-Language: en-US
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20230124190308.127318-2-niklas.cassel@wdc.com>
+ <bd0ce7ad-cf9e-a647-9b1e-cb36e7bbe30f@acm.org>
+ <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+ <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
+ <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
+ <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+ <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
+ <e8324901-7c18-153f-b47f-112a394832bd@acm.org> <Y9Gd0eI1t8V61yzO@x1-carbon>
+ <86de1e78-0ff2-be70-f592-673bce76e5ac@opensource.wdc.com>
+ <Y9KF5z/v0Qp5E4sI@x1-carbon> <7f0a2464-673a-f64a-4ebb-e599c3123a24@acm.org>
+ <29b50dbd-76e9-cdce-4227-a22223850c9a@opensource.wdc.com>
+ <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
+ <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
+ <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
+ <b77d5e44-bc1e-7524-7e09-a609ba471dbc@acm.org>
+ <4e803108-9526-6a75-f209-789a06ef52f9@opensource.wdc.com>
+ <yq1r0veh2fa.fsf@ca-mkp.ca.oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <yq1r0veh2fa.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jan 27, 2023 at 10:32:15AM +0100, Krzysztof Kozlowski wrote:
-> The properties of devices in IXP4xx expansion bus need to be also
-> applied to actual devices' bindings.  Prepare for this by splitting them
-> to separate intel,ixp4xx-expansion-peripheral-props binding, just like
-> other memory-controller peripheral properties.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> ---
->  ...intel,ixp4xx-expansion-bus-controller.yaml | 64 +--------------
->  ...tel,ixp4xx-expansion-peripheral-props.yaml | 80 +++++++++++++++++++
+On 1/28/23 12:25, Martin K. Petersen wrote:
+>   - Wrt. ioprio as conduit, I personally really dislike the idea of
+>     conflating priority (relative performance wrt. other I/O) with CDL
+>     (which is a QoS concept). I would really prefer those things to be
+>     separate. However, I do think that the ioprio *interface* is a good
+>     fit. A tool like ionice seems like a reasonable approach to letting
+>     generic applications set their CDL.
 
-Kind of odd to have these in 2 directories. Can we move 
-intel,ixp4xx-expansion-bus-controller.yaml to 
-bindings/memory-controllers/?
+Hi Martin,
 
-Or maybe all the external/parallel bus interfaces need their own 
-directory?
+My understanding is that ionice uses the ioprio_set() system call and 
+hence only affects foreground I/O but not page cache writeback. This is 
+why I introduced the ioprio rq-qos policy (block/blk-ioprio.c). How 
+about not adding CDL support in ioprio_set() and only supporting 
+configuration of CDL via the v2 cgroup mechanism?
 
->  .../mc-peripheral-props.yaml                  |  1 +
->  3 files changed, 82 insertions(+), 63 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml b/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml
-> index 5fb4e7bfa4da..a771796ec499 100644
-> --- a/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml
-> +++ b/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml
-> @@ -56,69 +56,7 @@ patternProperties:
->      description: Devices attached to chip selects are represented as
->        subnodes.
->      type: object
-> -
-> -    properties:
-> -      intel,ixp4xx-eb-t1:
-> -        description: Address timing, extend address phase with n cycles.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        maximum: 3
-> -
-> -      intel,ixp4xx-eb-t2:
-> -        description: Setup chip select timing, extend setup phase with n cycles.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        maximum: 3
-> -
-> -      intel,ixp4xx-eb-t3:
-> -        description: Strobe timing, extend strobe phase with n cycles.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        maximum: 15
-> -
-> -      intel,ixp4xx-eb-t4:
-> -        description: Hold timing, extend hold phase with n cycles.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        maximum: 3
-> -
-> -      intel,ixp4xx-eb-t5:
-> -        description: Recovery timing, extend recovery phase with n cycles.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        maximum: 15
-> -
-> -      intel,ixp4xx-eb-cycle-type:
-> -        description: The type of cycles to use on the expansion bus for this
-> -          chip select. 0 = Intel cycles, 1 = Motorola cycles, 2 = HPI cycles.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        enum: [0, 1, 2]
-> -
-> -      intel,ixp4xx-eb-byte-access-on-halfword:
-> -        description: Allow byte read access on half word devices.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        enum: [0, 1]
-> -
-> -      intel,ixp4xx-eb-hpi-hrdy-pol-high:
-> -        description: Set HPI HRDY polarity to active high when using HPI.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        enum: [0, 1]
-> -
-> -      intel,ixp4xx-eb-mux-address-and-data:
-> -        description: Multiplex address and data on the data bus.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        enum: [0, 1]
-> -
-> -      intel,ixp4xx-eb-ahb-split-transfers:
-> -        description: Enable AHB split transfers.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        enum: [0, 1]
-> -
-> -      intel,ixp4xx-eb-write-enable:
-> -        description: Enable write cycles.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        enum: [0, 1]
-> -
-> -      intel,ixp4xx-eb-byte-access:
-> -        description: Expansion bus uses only 8 bits. The default is to use
-> -          16 bits.
-> -        $ref: /schemas/types.yaml#/definitions/uint32
-> -        enum: [0, 1]
-> +    $ref: /schemas/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml#
->  
->  required:
->    - compatible
-> diff --git a/Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml b/Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml
-> new file mode 100644
-> index 000000000000..8f782c80e88b
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml
-> @@ -0,0 +1,80 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Peripheral properties for Intel IXP4xx Expansion Bus
-> +
-> +description: |
+Thanks,
 
-Don't need '|'.
+Bart.
 
-> +  The IXP4xx expansion bus controller handles access to devices on the
-> +  memory-mapped expansion bus on the Intel IXP4xx family of system on chips,
-> +  including IXP42x, IXP43x, IXP45x and IXP46x.
-> +
-> +maintainers:
-> +  - Linus Walleij <linus.walleij@linaro.org>
-> +
-> +properties:
-> +  intel,ixp4xx-eb-t1:
-> +    description: Address timing, extend address phase with n cycles.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    maximum: 3
-> +
-> +  intel,ixp4xx-eb-t2:
-> +    description: Setup chip select timing, extend setup phase with n cycles.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    maximum: 3
-> +
-> +  intel,ixp4xx-eb-t3:
-> +    description: Strobe timing, extend strobe phase with n cycles.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    maximum: 15
-> +
-> +  intel,ixp4xx-eb-t4:
-> +    description: Hold timing, extend hold phase with n cycles.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    maximum: 3
-> +
-> +  intel,ixp4xx-eb-t5:
-> +    description: Recovery timing, extend recovery phase with n cycles.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    maximum: 15
-> +
-> +  intel,ixp4xx-eb-cycle-type:
-> +    description: The type of cycles to use on the expansion bus for this
-> +      chip select. 0 = Intel cycles, 1 = Motorola cycles, 2 = HPI cycles.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [0, 1, 2]
-> +
-> +  intel,ixp4xx-eb-byte-access-on-halfword:
-> +    description: Allow byte read access on half word devices.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [0, 1]
-> +
-> +  intel,ixp4xx-eb-hpi-hrdy-pol-high:
-> +    description: Set HPI HRDY polarity to active high when using HPI.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [0, 1]
-> +
-> +  intel,ixp4xx-eb-mux-address-and-data:
-> +    description: Multiplex address and data on the data bus.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [0, 1]
-> +
-> +  intel,ixp4xx-eb-ahb-split-transfers:
-> +    description: Enable AHB split transfers.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [0, 1]
-> +
-> +  intel,ixp4xx-eb-write-enable:
-> +    description: Enable write cycles.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [0, 1]
-> +
-> +  intel,ixp4xx-eb-byte-access:
-> +    description: Expansion bus uses only 8 bits. The default is to use
-> +      16 bits.
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    enum: [0, 1]
-> +
-> +additionalProperties: true
-> diff --git a/Documentation/devicetree/bindings/memory-controllers/mc-peripheral-props.yaml b/Documentation/devicetree/bindings/memory-controllers/mc-peripheral-props.yaml
-> index 53ae995462db..5acfcad12bb7 100644
-> --- a/Documentation/devicetree/bindings/memory-controllers/mc-peripheral-props.yaml
-> +++ b/Documentation/devicetree/bindings/memory-controllers/mc-peripheral-props.yaml
-> @@ -34,5 +34,6 @@ required:
->  # The controller specific properties go here.
->  allOf:
->    - $ref: st,stm32-fmc2-ebi-props.yaml#
-> +  - $ref: intel,ixp4xx-expansion-peripheral-props.yaml#
->  
->  additionalProperties: true
-> -- 
-> 2.34.1
-> 
