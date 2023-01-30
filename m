@@ -2,88 +2,131 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DABF0C54EED
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 09:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1CDC54EAA
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 11:08:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233090AbjA3J1y (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 04:27:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56434 "EHLO
+        id S236524AbjA3LIK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 06:08:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236275AbjA3J1X (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 04:27:23 -0500
-Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::222])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4434030286;
-        Mon, 30 Jan 2023 01:25:16 -0800 (PST)
-Received: (Authenticated sender: miquel.raynal@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id E901C40003;
-        Mon, 30 Jan 2023 09:24:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1675070654;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0TuPdf8fRkY/wdrnRAp1povjvstbHbqdy2BCWI+oz9I=;
-        b=hAojLtKxBrWI+/kZN9TP7+vqZsAJSx7PmUJJ5d0LXcczpjw+tcYhs9G0spZypKKRWHNx8c
-        TfSbENIBek943d/t62CHIDuyM2yIoJt5odiuMgEmpmlA8pnwLgAFfGnWb0zSu+QRHJxXgc
-        eGA9jX2JkKsuJOgfXIcp7J4kf0+WxSl3oBFem5mvaz9pvNKuZ7nl6nJt+cNJAnmDzRnRvg
-        fYCf9DjERqzi2VnPq8b/oOFNro3tUIzFyoLaNgzFmlejCZ/uGCLCnBgNfeL7KHTTxy4+0Z
-        DF5KFFPPbLkH8KOYVDCTDq03rQ/lZfRY9w7LZf/BHMqQynpd5t9RHwvAPmAhhw==
-Date:   Mon, 30 Jan 2023 10:24:06 +0100
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linus Walleij <linusw@kernel.org>,
-        Imre Kaloz <kaloz@openwrt.org>,
-        Krzysztof Halasa <khalasa@piap.pl>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Marek Vasut <marex@denx.de>, Lubomir Rintel <lkundrak@v3.sk>,
-        - <devicetree@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mtd@lists.infradead.org, linux-serial@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] dt-bindings: reference MC peripheral properties
- in relevant devices
-Message-ID: <20230130102406.20d2293e@xps-13>
-In-Reply-To: <20230127093217.60818-3-krzysztof.kozlowski@linaro.org>
-References: <20230127093217.60818-1-krzysztof.kozlowski@linaro.org>
-        <20230127093217.60818-3-krzysztof.kozlowski@linaro.org>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.33; x86_64-pc-linux-gnu)
+        with ESMTP id S235600AbjA3LHh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 06:07:37 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 169776EAC
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 03:07:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1675076845; x=1706612845;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=f4d72vUy9Vr3QkqNqMj2UE79B6Vs68Ud+SpOERjeolI=;
+  b=fyzHsQi7OG6oXPUf/LKxu08h4LzIKv7FrlEn1Gg39RkiHqmd7s+nJ5xd
+   lT3Tr7YbSA9pQPm1uMNlg43jaGo7UHUxdNO9/fTKCqGs4pdIU2umQ2tiV
+   rMu9IdiFQtJv+Pt28+O7NIHUAmLYmsSnyJLjRGGYCAcZcGj6PYbmwNjAL
+   T0LSmAL4VF1oKzZQ8wAuG2ME1OfzJSdE+gVAF/Ht9fekGGJY/C473yPda
+   dvDI4CamsNml7TcDCfTk7G2m9fJlYbUyFhM6XHs9Rtu0c11M7U/9uTlJg
+   4Q2lK8Y2S2YxiQ9Lf47U1MxqIPD3Ra7+ayc1hfSYfN2iV61pSaAhgM/1v
+   A==;
+X-IronPort-AV: E=Sophos;i="5.97,257,1669046400"; 
+   d="scan'208";a="326364728"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 30 Jan 2023 19:07:24 +0800
+IronPort-SDR: AAYlcGT6Cmde5ZfIujuKjiY+1sRuj4gKS3HCQBlPZEhkC89/l3/W5pUj6Ng2bxkCZTyxm7oJiQ
+ sMjoWudlhxHgSeYe4g4vaiR+wjnCYfr3CR+0DIr6SGzanHVXxUzdfGWg3b+ttzmAoE6onNlwbR
+ cZQ4UUV4sbSVA+5icitYRJRw+b+r98CoGQwoECYcAFHv5OPSNSIgDt6f1kIY5CjHcXX8XCDqPd
+ AxQUQ6q4dxzqvqZEBK63JeBPX1LLN8HKtaAWObgtqC9wTeXnhtySNHvOzNpYttvJ0Da/pAW03S
+ 0s8=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 02:24:50 -0800
+IronPort-SDR: xOkG+CaU+1wvPjCS2YRIXPumlG9jJxASPK5b1BnU3vbkhJNiA/OhaOqwrfKmHCfzf/ZNQ0Je/h
+ Ypi7Z5lHb+EUeOCQlP+nu6Jt2Va5cig+4asdGYD8SwRD6ERRW8Am3n7P3phKWFRpKoYlm2UY+u
+ 7xw7PdOwe4HlRRI5MisREH7sRdxZ8+SXnWvvqVdgfHv0jy6uAAhbwedUfo9vR7aPPVgKjoRBg8
+ InvPTsN05TgVL6PZ3ZGGXAAGDxWhddhxtoUnU0D14otTYLA+y48wAL4CibHVoIfprPh+Hax5PC
+ HrM=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 03:07:24 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P554D0xHCz1RvTr
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 03:07:24 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1675076843;
+         x=1677668844; bh=f4d72vUy9Vr3QkqNqMj2UE79B6Vs68Ud+SpOERjeolI=; b=
+        iH9gsrcVuo5+dL6JMo+Qxf2sfTVmGXBzQ0R/jJGpojml6NeiniceDnXNCwoMl22D
+        rKNNvm8/PQ1O689Owrwxv7pXjaMPpMLRZz4TiqTojkBtQ83hYxdFPuVsKr2EfOme
+        cEUBX/JjyRMu+RrNjcD5qd/jn1ltozMVw3DxXuZn83zUTZRaoTE4enWa+PcsGXw9
+        2/Av7JwjnhfjMdHmGGwNhV/AXig/zRLRRrRlEj9D2UZBqfUb8xZC+G3VzDffC3oS
+        LQ2+D1hF4rkaTg7AfrJbnEEp04vosQYX9A21crSVr/Sxz2qWZSSQVR+O6h4vJTno
+        V0f5jhYqZeFPu6i81eh+BQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id SSPmQ7XEXrlQ for <linux-ide@vger.kernel.org>;
+        Mon, 30 Jan 2023 03:07:23 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P554C2MpPz1RvLy;
+        Mon, 30 Jan 2023 03:07:23 -0800 (PST)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     linux-ide@vger.kernel.org
+Cc:     Marius Dinu <marius@psihoexpert.ro>
+Subject: [PATCH] ata: libata: Fix sata_down_spd_limit() when no link speed is reported
+Date:   Mon, 30 Jan 2023 20:07:21 +0900
+Message-Id: <20230130110721.111776-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.39.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Krzysztof,
+Commit 2dc0b46b5ea3 ("libata: sata_down_spd_limit should return if
+driver has not recorded sstatus speed") changed the behavior of
+sata_down_spd_limit() to return doing nothing if a drive does not report
+a current link speed, to avoid reducing the link speed to the lowest 1.5
+Gbps speed.
 
-krzysztof.kozlowski@linaro.org wrote on Fri, 27 Jan 2023 10:32:16 +0100:
+However, the change assumed that a speed was recorded before probing
+(e.g. before a suspend/resume) and set in link->sata_spd. This causes
+problems with adapters/drives combination failing to establish a link
+speed during probe autonegotiation. One exampe reported of this problem
+is an mvebu adapter with a 3Gbps port-multiplier box: autonegotiation
+fails, leaving no recorded link speed and no rep@orted current link
+speed. Probe retries also fail as no action is taken by sata_set_spd()
+after each retry.
 
-> Several devices can be attached to memory controllers (or memory-mapped
-> buses), thus they can come with additional controller-specific
-> properties, e.g. devices wired under Intel IXP4XX bus: cfi-flash,
-> intel,ixp4xx-compact-flash, NS8250 serial and MAX6369 watchdog.
->=20
-> Referencing Memory Controller or IXP4XX bus peripheral properties fixes
-> few dtbs_check warnings like:
->=20
->   intel-ixp42x-gateworks-gw2348.dtb: ide@1,0: Unevaluated properties are =
-not allowed
->     ('intel,ixp4xx-eb-ahb-split-transfers', 'intel,ixp4xx-eb-byte-access'=
-, ... ' were unexpected)
->=20
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Fix this by returning early in sata_down_spd_limit() only if we do have
+a recorded link speed, that is, if link->sata_spd is not 0. With this
+fix, a failed probe not leading to a recorded link speed is retried at
+the lower 1.5 Gbps speed, with the link speed potentially increased
+later on the second revalidate of the device if the device reports
+that it supports higher link speeds.
 
-Reviewed-by: Miquel Raynal <miquel.raynal@bootlin.com>
+Reported-by: Marius Dinu <marius@psihoexpert.ro>
+Fixes: 2dc0b46b5ea3 ("libata: sata_down_spd_limit should return if driver=
+ has not recorded sstatus speed")
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-Miqu=C3=A8l
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 884ae73b11ea..2ea572628b1c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3109,7 +3109,7 @@ int sata_down_spd_limit(struct ata_link *link, u32 =
+spd_limit)
+ 	 */
+ 	if (spd > 1)
+ 		mask &=3D (1 << (spd - 1)) - 1;
+-	else
++	else if (link->sata_spd)
+ 		return -EINVAL;
+=20
+ 	/* were we already at the bottom? */
+--=20
+2.39.1
+
