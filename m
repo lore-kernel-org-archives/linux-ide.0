@@ -2,141 +2,158 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2984DC61DA4
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 23:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DC00C61DA4
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 23:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230135AbjA3XSn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 18:18:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46328 "EHLO
+        id S230135AbjA3XWJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 18:22:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230058AbjA3XSm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 18:18:42 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F3A328843
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:18:38 -0800 (PST)
+        with ESMTP id S230295AbjA3XWI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 18:22:08 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4FEF2A160
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:22:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1675120718; x=1706656718;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Vbd5tFkeprAIcq+FYPAfIxJtlFp/qJLwVv9T4su6GKg=;
-  b=mMUaUGR6ceBppBjZ8e5NiyOcTSW9E6oyeOy/3G0pGG+iuleRjI205r3F
-   P58PL2Rjs7d+WvPF2Imq+KmcFpZKw+qQ5tRL35XLLX+UgVRBcJkLu2LUz
-   gHVjcXWkp8lWzbzBqZ8B2OJjI1R42ezAuSF9mahYJPH9b+oye3ve+TX6D
-   U8Own+6iarKGL7u7kzZRghzN4aKCs/cmO0XEXDna9ZyIKIHQdUnfm7FRK
-   TcIjOv1GBqZU4TX/iOYG0QybjtttupHHVNGTfCh/TVgw550DjzzukbnM/
-   hyccX3w5bPjJxqEN+605A3X4m7ijqn+U72PffRCb1fruhqcfs6WdejhkH
-   w==;
+  t=1675120926; x=1706656926;
+  h=message-id:date:mime-version:subject:from:to:cc:
+   references:in-reply-to:content-transfer-encoding;
+  bh=W+VBRZg/vKdC+trIRTk1i9ClPSYg/J1+3ss2KiZJzrU=;
+  b=gHPdsdMzAuYEBBH64Wx+z/03xesYc9eQPftniW3Fnf+8+1K7bjk6bnx+
+   RcMZ+IjEPk0EvZ4s/ytPCVcDRda2TVK36MUjLPEbDLpMNTtnbnAFRRJdY
+   a1SUr5cA97z+S/CyZPZ7Uf3Btzmxs7RJ2ZDpHlx6qzSY7rQdPvyJWNT/G
+   RvyDVabRuK5CZLa+BKuNh6wjMrkQMwHxwdRwUBP7JZznxvH+O9tcyeHIE
+   7hVocbNZVxA6kddH8VEGiaRPYq1z6BN7PbM+QmNwIwXcy6kKdQ0hBZ/8L
+   RalRAHZh4+1OcySBxQ7AUy6cMwzNxWYGMNJVnTs4Z/QRcueEv6BmJgL+6
+   A==;
 X-IronPort-AV: E=Sophos;i="5.97,259,1669046400"; 
-   d="scan'208";a="227090616"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 07:18:36 +0800
-IronPort-SDR: ZZ68BcNMb7IlxQ6DJXq51dFOEOTyK3hWPlMPpg+n72H5eYm/Z+zAYwWzowST5+jT7ACLEmXxzB
- f3PBaQI0G+GbAmtFhbNE7JettEz3MXBYG5O3s3fhYcn1IqCnVusCjTNZWWFCqdEBLSkgeckCBK
- 4fdQCqRhIIrlZ/X0L4Ke5HiPulwBVF8z/gAMIy4dRHIEdq7pLlsWEs5Zn68Pe1VNZQUTK5gFUo
- 8TN6J2x6oJy5rVm89uLbcjFvQtq5pPLcX59M/m/VmMSxq9gS7LumtqALzpSdRJguL/hQULLSlG
- A1E=
+   d="scan'208";a="222174017"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 07:22:03 +0800
+IronPort-SDR: l7QQV2lIg3LjFYDloOxhWJg162VfFauk2PcTFMDOBVEBwpJGlHTNwzPHLYv+R6uuSipHxwV081
+ yO8oU6WCXVWLPzEpuCygkFH/2ikemMtHtGV8APE9ncnos0U7iUbqezjA66rYHUZnDea57dIcb4
+ nj8zzm9PmJbdu0rM40THiQJi7HPLAohF1IlddQ9fGH8v2tETG4hg5ORlfZNeQJegy8/mWL51BN
+ hHdSJm4xAoccK5ZUYt4lXlsDEVsmn21+0VO6bYHXDRaKVVlnYRAL79sU77uNU1jI6vIA042gkZ
+ 19s=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 14:30:17 -0800
-IronPort-SDR: LIzP5ZnJviEFoUGqi0XvsQYbfKrt9dJaks8q0hDruSp2s3XKyzAjI7WgvyWUr8Kz6E6KB/7Led
- OXhaW61kXaG0dY7BgV0eveAwb1uE7IfvJiC1oqqTihtKcVzOI49eOASMdKIkN80SOAztvp1Klq
- DIfyL58WlTXNy7KHdw78B4sP/IK5mHCKXaE4d7p1/p4SGarE+e8pnDTSGsghZdAN2YMAi8ylFN
- 4C9MKEbwDQuKs2SdKZukLNIhwiZLHtB8ANBGTYQyNA+4zXv/EDsdRARX8Jjsauv3TcI0q6/NFu
- 6Kc=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 14:39:28 -0800
+IronPort-SDR: v3T2jVUFonv9g3lEoxreJHlQBw0LbQrDBPA7mI+WZMhJ90ehASWycL4n2D+3fGtHC3Fdq2xsEC
+ 4yaxUsUTyCisS82QjeMRK+fCud5Zi/IYiNKqJz/fDzc3Mb/Fh9V7Gd4S+ADjUnZRSMDbyBfVhi
+ wPmpi3QG3ppaD3m/t+2ccbpPDMUpUGnesSKify37I2SgBiUN3jVEIrbpWu0sE78DHkFepGqbHI
+ MtTVR7N2muGyxTOPs9TxAzABwHyGR9CZrrL7Bj+xfhpouJNlZXpISpNwP9Wid956R8yi1zAzpi
+ O4Y=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 15:18:37 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 15:22:02 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5PHv3gtDz1Rwrq
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:18:35 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5PMv4f2bz1RvTp
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:22:03 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
+        :in-reply-to:organization:references:to:from:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1675120714; x=1677712715; bh=Vbd5tFkeprAIcq+FYPAfIxJtlFp/qJLwVv9
-        T4su6GKg=; b=Zop0i3VQ3u0/Kkq/wuoVylW+23K85upEkoq/q6NTalzD6owpopr
-        QE/5VBD7F1seNe97EvN9SqvP5DlWDe0pksqGH0l9DUYRJBtewJycL9JczGbE866a
-        W7K4aQMYIEySRX5r+nkVehAHhwdOCXNSqe01eOpAWv2Ib9S41sSRH/7lk8PIqiQy
-        dv6v0ud7xbsnRcDKhfJKtf3Oydm5Gn5xK7/aYtjeMA+DCv5KCB4fWqiM5uYI3Fmb
-        HqGTEfDiP7ycpXIRYkD/eCNa+mYNFvVfAGF05ppp4OjfOvNmAOXnamKkQEYQyBx3
-        FCLnLLjIZi/HLJvRSePWy3ve2aWNNs+3P9Q==
+        1675120923; x=1677712924; bh=W+VBRZg/vKdC+trIRTk1i9ClPSYg/J1+3ss
+        2KiZJzrU=; b=lJG2yiMgFk6FEF4flGx3ph1Img7miC2zpd9chf72JnggO2tKl9h
+        KruncfiV0Dsz5S+6FHAzw5ZnpQOPmsZ3eXU6d6h4zLzqfxiOWc3O0PZXCNanNR1f
+        1/kDxCjXieZZqf0049lju7zahlGhlGzf3+48SqF7X3UhjktDb9bCdCfuECZ5KL/N
+        8SraoIkAixZNz4Hc5cLgQUYM6uICnqWBUH6WV3th9zawmQlBjGzm63UG6op+2oQ7
+        O7eOEUv8iuQtUpU2ku8inM5qnlXX0A6S2iylZ1tUNQDQPTCLjJ+eQJ/ZrGrf0fYp
+        gBk7ODPArqMALsTU5k1Z+b4P1e7bgmEGmVA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id FlYjmWAd9Jkw for <linux-ide@vger.kernel.org>;
-        Mon, 30 Jan 2023 15:18:34 -0800 (PST)
+        with ESMTP id dJEvpE79gSxE for <linux-ide@vger.kernel.org>;
+        Mon, 30 Jan 2023 15:22:03 -0800 (PST)
 Received: from [10.225.163.70] (unknown [10.225.163.70])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5PHs3SlDz1RvLy;
-        Mon, 30 Jan 2023 15:18:33 -0800 (PST)
-Message-ID: <1ad62b40-28ed-f452-ecda-6470068b4034@opensource.wdc.com>
-Date:   Tue, 31 Jan 2023 08:18:31 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5PMt6bypz1RvLy;
+        Mon, 30 Jan 2023 15:22:02 -0800 (PST)
+Message-ID: <1831eb01-5c84-54f1-7950-9b8e9bf0a046@opensource.wdc.com>
+Date:   Tue, 31 Jan 2023 08:22:01 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
-Subject: Re: [PATCH v3] pata_parport: add driver (PARIDE replacement)
+Subject: Re: Bug report for ahci-mvebu driver
 Content-Language: en-US
-To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc:     Ondrej Zary <linux@zary.sk>, Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <425b5646-23e2-e271-5ca6-0f3783d39a3b@opensource.wdc.com>
- <20230123190954.5085-1-linux@zary.sk>
- <d4f7ebd5-d90d-fb96-0fad-bd129ac162dc@opensource.wdc.com>
- <e843fde8-7295-dd30-6d98-a62f63d7753c@kernel.dk>
- <20230130064815.GA31925@lst.de>
- <569cb9ba-52d6-da73-dba0-cc62c91f6db2@opensource.wdc.com>
- <7a2f5b2f-3ed9-eabb-6c9b-dcb2bfe82a08@kernel.dk>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     marius@psihoexpert.ro
+Cc:     linux-ide@vger.kernel.org
+References: <3c508c6e-5377-bb2d-64df-407f73a8170a@opensource.wdc.com>
+ <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
+ <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
+ <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
+ <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
+ <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
+ <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
+ <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
+ <d42ddd29171c69e9a6628bfc2b100aca@psihoexpert.ro>
+ <44527e2f8583a8ce51b1241bf9e56595@psihoexpert.ro>
+ <45337bf4a17c9c879f9439c1138bc443@psihoexpert.ro>
+ <7fe0b96f30bf787d339ba656d5d2df01@psihoexpert.ro>
+ <db3fa398d4a1dcadb9df02d1001a61c6@psihoexpert.ro>
+ <c7e1b214fca6c2a08dbce60006442dd8@psihoexpert.ro>
+ <009822d6-24b8-739d-e7ee-13adc1c7d548@opensource.wdc.com>
+ <55834657003f5a4579b326ee61fe1e80@psihoexpert.ro>
+ <8cd8066ac1059ae0fef280a3cf6ab03c@psihoexpert.ro>
+ <9490768bca8f5a213d89214ca9324fa0@psihoexpert.ro>
+ <071bf5d4-4007-6779-60fd-82ec58dd44fe@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <7a2f5b2f-3ed9-eabb-6c9b-dcb2bfe82a08@kernel.dk>
+In-Reply-To: <071bf5d4-4007-6779-60fd-82ec58dd44fe@opensource.wdc.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/31/23 00:25, Jens Axboe wrote:
-> On 1/30/23 12:10=E2=80=AFAM, Damien Le Moal wrote:
->> On 1/30/23 15:48, Christoph Hellwig wrote:
->>> On Sun, Jan 29, 2023 at 08:44:06PM -0700, Jens Axboe wrote:
->>>> I would prefer if we just delete it after merging this one, in the s=
-ame
->>>> release. I don't think there's any point in delaying, as we're not
->>>> removing any functionality.
->>>>
->>>> You could just queue that up too when adding this patch.
+On 1/30/23 16:37, Damien Le Moal wrote:
+> On 1/30/23 16:23, marius@psihoexpert.ro wrote:
+>> January 30, 2023 4:39 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.com> wrote:
 >>>
->>> I'd prefer to just deprecate.  But most importantly I want this patch
->>> in ASAP in some form.
+>>> Apologies for asking you to test again, but could you try this simpler
+>>> version of the initial tweak:
+>>>
+>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>>> index 884ae73b11ea..2ea572628b1c 100644
+>>> --- a/drivers/ata/libata-core.c
+>>> +++ b/drivers/ata/libata-core.c
+>>> @@ -3109,7 +3109,7 @@ int sata_down_spd_limit(struct ata_link *link, u32
+>>> spd_limit)
+>>> */
+>>> if (spd > 1)
+>>> mask &= (1 << (spd - 1)) - 1;
+>>> - else
+>>> + else if (link->sata_spd)
+>>> return -EINVAL;
+>>>
+>>> /* were we already at the bottom? */
+>>>
+>>> This is a partial revert of the commit that created the issue in the
+>>> first place. But better check this is OK.
+>>>
+>>> --
+>>> Damien Le Moal
+>>> Western Digital Research
 >>
->> I will queue it. But I think it needs a follow up to result in somethi=
-ng
->> consistent with KConfig. So either deprecate or delete PARPORT. I can =
-queue the
->> deprecate patch and delete in 6.4, even though I share Jen's opinion t=
-o simply
->> delete directly. I am still fine either way.
+>> No problem. I'll test everything until you find the best possible fix for the kernel.
 >>
->> Jens,
->>
->> If you are OK with that, can I get your ack for the deprecate patch ? =
-Unless you
->> prefer taking it through the block tree. Either way is fine with me.
->=20
-> Yeah I'd be happy to ack that, did you post it? You can add my ack to t=
-he
-> new driver, fine with that now.
+>> It works:
+> 
+> Perfect. I prefer this version of the fix as it actually does *exactly* what the
+> comment above the if/else hunk says, that is not force 1.5gbps speed if we
+> already have a recorded speed. But in your case, we do not have a recorded speed
+> (link->sata_spd == 0), so retrying with 1.5gbps is the right thing to do.
+> 
+> I will write a nice commit message and post.
 
-Will do. But I did not want to queue the new driver without killing (or
-deprecating) the old code too. Ondrej has now sent 2 patches to remove th=
-e old
-code. Please ack that !
+I sent the official patch and CC-ed you. Can I add your
+"Tested-by: Marius Dinu <marius@psihoexpert.ro>" tag to the patch and queue it ?
 
---=20
+
+
+-- 
 Damien Le Moal
 Western Digital Research
 
