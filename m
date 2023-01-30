@@ -2,114 +2,141 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9BDFC636D3
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 22:43:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2984DC61DA4
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 23:18:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229675AbjA3WnG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 17:43:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46952 "EHLO
+        id S230135AbjA3XSn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 18:18:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbjA3WnF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 17:43:05 -0500
-Received: from mail-yw1-x1129.google.com (mail-yw1-x1129.google.com [IPv6:2607:f8b0:4864:20::1129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E3BA18B08
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 14:43:03 -0800 (PST)
-Received: by mail-yw1-x1129.google.com with SMTP id 00721157ae682-51ba4b1b9feso6725307b3.11
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 14:43:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=+TZHpce+LkRMQa6vx6q9obcgDlv0XoFb3aljOsKv7qU=;
-        b=nCBrIiE+L+vdLXic+BhlJTEfwEv/ysg8qF3ePyjPsY/A6pPFUyJ9yxWfviS5IS9XZ+
-         aTkrqx4WuQWd2ry/CmUYytg0ONmjJ++XzlyAcGDLyhrZ4/IX03EskCTili/5UQq5yKge
-         +e1rwxjmS0vI2LeI41+8f4VGz+I/dUip0S2eGn72UYX+dBh2W8CPEuyvYqHBwUzQTY52
-         5vUM6PPZirJQEM/wFGgVbRt8dqUJz0ZaVONsNu44LnLGVX5dLOGLew5RenS7kd33ruoM
-         AeG1hFJb4M2UAk+s92c6xRoPBpxkWpcN0CqUVNQ0xsATgHZATATevhE+7nH+bY+9BJXI
-         PhRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+TZHpce+LkRMQa6vx6q9obcgDlv0XoFb3aljOsKv7qU=;
-        b=LiWW2v/NPttMVd2jDXaiv6kPTt1H8hiQ2AKCJJe7hgu+MxuDoVFT65TruQbscHEAIj
-         awwPOcMQjFOTwSybD2O8v1jQiOs+TP7irnzI7Qaiy3EW66AS+E6wG1KemGiLswv2gg0Y
-         zwwYEn0VMEw9Z9d+qBqFP2T92ANMA9YYfG8JymbCpZjW//EBlludJEG5+IFSIxpQEO4S
-         u+4ylLbQHVIx04iXR+0eyWPzJ/y+m0Lm5KKFwVyOpMFErH/0cd0/hB/0PFgalKRi/vrU
-         achgwuqgtui/yyrD1/V4bPT6fnuya6+oA5SSGPZPCwHU1k69mphJL+46kEs5TOz/SlfJ
-         xM9w==
-X-Gm-Message-State: AFqh2krbhm1XG5RZG5XPvEvtqfII0Bp0z0lNE/zhnFLGb/M4O30Bo7al
-        uWeKqZm8oX+MGd6WVjJT44vBTmoH5O8OY8SXFbFRRw==
-X-Google-Smtp-Source: AMrXdXtQIx/gOYQWR7Z9y8qC4zSuzlnGWFfiiT/LekYqnnNUbvQG32KG8P3YQVm2xu2If9pxmW9DcUUds+3TfNO/91s=
-X-Received: by 2002:a05:690c:39b:b0:4f3:8d0e:edce with SMTP id
- bh27-20020a05690c039b00b004f38d0eedcemr4580998ywb.185.1675118582401; Mon, 30
- Jan 2023 14:43:02 -0800 (PST)
+        with ESMTP id S230058AbjA3XSm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 18:18:42 -0500
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F3A328843
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:18:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1675120718; x=1706656718;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Vbd5tFkeprAIcq+FYPAfIxJtlFp/qJLwVv9T4su6GKg=;
+  b=mMUaUGR6ceBppBjZ8e5NiyOcTSW9E6oyeOy/3G0pGG+iuleRjI205r3F
+   P58PL2Rjs7d+WvPF2Imq+KmcFpZKw+qQ5tRL35XLLX+UgVRBcJkLu2LUz
+   gHVjcXWkp8lWzbzBqZ8B2OJjI1R42ezAuSF9mahYJPH9b+oye3ve+TX6D
+   U8Own+6iarKGL7u7kzZRghzN4aKCs/cmO0XEXDna9ZyIKIHQdUnfm7FRK
+   TcIjOv1GBqZU4TX/iOYG0QybjtttupHHVNGTfCh/TVgw550DjzzukbnM/
+   hyccX3w5bPjJxqEN+605A3X4m7ijqn+U72PffRCb1fruhqcfs6WdejhkH
+   w==;
+X-IronPort-AV: E=Sophos;i="5.97,259,1669046400"; 
+   d="scan'208";a="227090616"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 07:18:36 +0800
+IronPort-SDR: ZZ68BcNMb7IlxQ6DJXq51dFOEOTyK3hWPlMPpg+n72H5eYm/Z+zAYwWzowST5+jT7ACLEmXxzB
+ f3PBaQI0G+GbAmtFhbNE7JettEz3MXBYG5O3s3fhYcn1IqCnVusCjTNZWWFCqdEBLSkgeckCBK
+ 4fdQCqRhIIrlZ/X0L4Ke5HiPulwBVF8z/gAMIy4dRHIEdq7pLlsWEs5Zn68Pe1VNZQUTK5gFUo
+ 8TN6J2x6oJy5rVm89uLbcjFvQtq5pPLcX59M/m/VmMSxq9gS7LumtqALzpSdRJguL/hQULLSlG
+ A1E=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 14:30:17 -0800
+IronPort-SDR: LIzP5ZnJviEFoUGqi0XvsQYbfKrt9dJaks8q0hDruSp2s3XKyzAjI7WgvyWUr8Kz6E6KB/7Led
+ OXhaW61kXaG0dY7BgV0eveAwb1uE7IfvJiC1oqqTihtKcVzOI49eOASMdKIkN80SOAztvp1Klq
+ DIfyL58WlTXNy7KHdw78B4sP/IK5mHCKXaE4d7p1/p4SGarE+e8pnDTSGsghZdAN2YMAi8ylFN
+ 4C9MKEbwDQuKs2SdKZukLNIhwiZLHtB8ANBGTYQyNA+4zXv/EDsdRARX8Jjsauv3TcI0q6/NFu
+ 6Kc=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 15:18:37 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5PHv3gtDz1Rwrq
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:18:35 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1675120714; x=1677712715; bh=Vbd5tFkeprAIcq+FYPAfIxJtlFp/qJLwVv9
+        T4su6GKg=; b=Zop0i3VQ3u0/Kkq/wuoVylW+23K85upEkoq/q6NTalzD6owpopr
+        QE/5VBD7F1seNe97EvN9SqvP5DlWDe0pksqGH0l9DUYRJBtewJycL9JczGbE866a
+        W7K4aQMYIEySRX5r+nkVehAHhwdOCXNSqe01eOpAWv2Ib9S41sSRH/7lk8PIqiQy
+        dv6v0ud7xbsnRcDKhfJKtf3Oydm5Gn5xK7/aYtjeMA+DCv5KCB4fWqiM5uYI3Fmb
+        HqGTEfDiP7ycpXIRYkD/eCNa+mYNFvVfAGF05ppp4OjfOvNmAOXnamKkQEYQyBx3
+        FCLnLLjIZi/HLJvRSePWy3ve2aWNNs+3P9Q==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id FlYjmWAd9Jkw for <linux-ide@vger.kernel.org>;
+        Mon, 30 Jan 2023 15:18:34 -0800 (PST)
+Received: from [10.225.163.70] (unknown [10.225.163.70])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5PHs3SlDz1RvLy;
+        Mon, 30 Jan 2023 15:18:33 -0800 (PST)
+Message-ID: <1ad62b40-28ed-f452-ecda-6470068b4034@opensource.wdc.com>
+Date:   Tue, 31 Jan 2023 08:18:31 +0900
 MIME-Version: 1.0
-References: <20230127093217.60818-1-krzysztof.kozlowski@linaro.org>
- <20230127093217.60818-4-krzysztof.kozlowski@linaro.org> <CACRpkdbOZLhQ1DTNJowNXF=O-Nvpqcb_A+PwkPWFiUSQUbkR9A@mail.gmail.com>
- <755d4a78-0b23-a381-c422-d12b0063f06f@linaro.org>
-In-Reply-To: <755d4a78-0b23-a381-c422-d12b0063f06f@linaro.org>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Mon, 30 Jan 2023 23:42:51 +0100
-Message-ID: <CACRpkdZWqea+RT75g5CkCzT9zMOj419GMJeydgpZGSLvC9Xoog@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] dt-bindings: serial: restrict possible child node names
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Linus Walleij <linusw@kernel.org>,
-        Imre Kaloz <kaloz@openwrt.org>,
-        Krzysztof Halasa <khalasa@piap.pl>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Marek Vasut <marex@denx.de>, Lubomir Rintel <lkundrak@v3.sk>,
-        - <devicetree@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mtd@lists.infradead.org, linux-serial@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v3] pata_parport: add driver (PARIDE replacement)
+Content-Language: en-US
+To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc:     Ondrej Zary <linux@zary.sk>, Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <425b5646-23e2-e271-5ca6-0f3783d39a3b@opensource.wdc.com>
+ <20230123190954.5085-1-linux@zary.sk>
+ <d4f7ebd5-d90d-fb96-0fad-bd129ac162dc@opensource.wdc.com>
+ <e843fde8-7295-dd30-6d98-a62f63d7753c@kernel.dk>
+ <20230130064815.GA31925@lst.de>
+ <569cb9ba-52d6-da73-dba0-cc62c91f6db2@opensource.wdc.com>
+ <7a2f5b2f-3ed9-eabb-6c9b-dcb2bfe82a08@kernel.dk>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <7a2f5b2f-3ed9-eabb-6c9b-dcb2bfe82a08@kernel.dk>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, Jan 29, 2023 at 4:48 PM Krzysztof Kozlowski
-<krzysztof.kozlowski@linaro.org> wrote:
-> On 27/01/2023 14:29, Linus Walleij wrote:
-> > On Fri, Jan 27, 2023 at 10:32 AM Krzysztof Kozlowski
-> > <krzysztof.kozlowski@linaro.org> wrote:
-> >
-> >> The re-usable serial.yaml schema matches every property with ".*"
-> >> pattern, thus any other schema referencing it will not report unknown
-> >> (unevaluated) properties.  This hides several wrong properties.  It is
-> >> a limitation of dtschema, thus provide a simple workaround: expect
-> >> children to be only of few names matching upstream usage (Bluetooth,
-> >> GNSS, GPS and MCU).
-> >>
-> >> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> >
-> > Fair enough,
-> > Acked-by: Linus Walleij <linus.walleij@linaro.org>
-> >
-> > However I think V.35 WAN devices (high speed serial network links)
-> > should actually be using this? They are just some fancy serial port
-> > after all. Cf
-> > Documentation/devicetree/bindings/net/intel,ixp4xx-hss.yaml
-> >
-> > No big deal I guess since they are mostly an anarchronism and not
-> > on the table right now.
->
-> intel,ixp4xx-hss is not part of the expansion bus node.
+On 1/31/23 00:25, Jens Axboe wrote:
+> On 1/30/23 12:10=E2=80=AFAM, Damien Le Moal wrote:
+>> On 1/30/23 15:48, Christoph Hellwig wrote:
+>>> On Sun, Jan 29, 2023 at 08:44:06PM -0700, Jens Axboe wrote:
+>>>> I would prefer if we just delete it after merging this one, in the s=
+ame
+>>>> release. I don't think there's any point in delaying, as we're not
+>>>> removing any functionality.
+>>>>
+>>>> You could just queue that up too when adding this patch.
+>>>
+>>> I'd prefer to just deprecate.  But most importantly I want this patch
+>>> in ASAP in some form.
+>>
+>> I will queue it. But I think it needs a follow up to result in somethi=
+ng
+>> consistent with KConfig. So either deprecate or delete PARPORT. I can =
+queue the
+>> deprecate patch and delete in 6.4, even though I share Jen's opinion t=
+o simply
+>> delete directly. I am still fine either way.
+>>
+>> Jens,
+>>
+>> If you are OK with that, can I get your ack for the deprecate patch ? =
+Unless you
+>> prefer taking it through the block tree. Either way is fine with me.
+>=20
+> Yeah I'd be happy to ack that, did you post it? You can add my ack to t=
+he
+> new driver, fine with that now.
 
-True, my point is that WAN V.35 devices in general should be,
-so that the pattern properties should include wan.
+Will do. But I did not want to queue the new driver without killing (or
+deprecating) the old code too. Ondrej has now sent 2 patches to remove th=
+e old
+code. Please ack that !
 
-But we can add it later if a user appears.
+--=20
+Damien Le Moal
+Western Digital Research
 
-Yours,
-Linus Walleij
