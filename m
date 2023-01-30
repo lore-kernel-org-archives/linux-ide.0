@@ -2,209 +2,96 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52853C54EAA
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 14:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD16C54EED
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 15:24:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237900AbjA3Oz1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 09:55:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39150 "EHLO
+        id S238149AbjA3PYW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 10:24:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235737AbjA3OzZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 09:55:25 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 032D32A17B
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 06:55:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1675090518; x=1706626518;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=BQHcGmdM4nysgwNS5/yf0zA2YFS7llZYqjrDKqY2Ljc=;
-  b=pSVxHavr6GIRT2/mf6PLNj1M5AhcHPJ1SojeEcrTYsmbvJMhnGnaS8mn
-   oB574s5UMhGjqsW9Y5EtjqjaIohO5ibwO4IRdG1rKgwYPiBqCM2+Mh04a
-   WEtVt29Tb2Bzjg2Nc/0qdQ4PsN8Jq7Wv5JEGzrDRPy8wtvWT7LgsDqrv0
-   ULWxPr5g1XrGkchb8CzYHZE+U1Mrzf0/y867tJ9Qf27G0nzw8xkY8lAmG
-   ak2ubVbu1jf0SAYTdwbO4gzZXu0ky+WRxkpi3YKnduGBmwKimy5Fapo9r
-   TqmrEZlbpMZrtjrERNJBmi3OhPyFYn6g8IEuVZ19Ix1q6gQojvmsYjToC
-   A==;
-X-IronPort-AV: E=Sophos;i="5.97,258,1669046400"; 
-   d="scan'208";a="326379302"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 30 Jan 2023 22:55:10 +0800
-IronPort-SDR: XEnpVhLnaugiMI61hyMX6jHci/kYQhcN5lUyfi/b3W6PyWs/cFDzBKGCHe03W19yODoX0NFFOD
- 20NjO5OHALyH4qNNVXIOnJ8uCHNkPfwsUNRqQNYmdlutmtpb8Lgx5dCCPq6JKbOh5DWqWOvdG7
- ZgnhkYloAY3j6/rgDfgaRwNYJMSp8O7Z/e16gbLz6Qc0X5qkCRRj/tmFD89FHUzarzhxdDV79Q
- lU+rYT/OejuIuzwJ236XJF4INnxKqkvq96NLOjTofs1vPSam7/mRa0oJ5QoJ3toiguzwPAzIM4
- rYo=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 06:06:51 -0800
-IronPort-SDR: HWTgjKnyLyC+QKGoU7b0AFOu7B9OXULPgn9InaMiw9ZTFlsAuWdhxGGtZU0z6gbtunWbconYLt
- MlnRpON9kpmvKVlUvGOzJTCPJmUqiKN7Orj2AgnlMmvtUAGeoX3TYkS7trzjM1eEOmPHtkXRp5
- P6oCsXmYTNdy8PumhNPTOhpCYBxUGgb4I98+3SAguIvw9q06yfhBzcyFwOK90RIwt6+lYieAsN
- 956uoy9NgKO7PhH2eJo5UlR7dPVGIf0P4N8Mn4caltEDh76B+upjOlsep4Jnyd5MP46e5+qP0S
- waA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 06:55:10 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5B722qr6z1RwvL
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 06:55:10 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1675090509; x=1677682510; bh=BQHcGmdM4nysgwNS5/yf0zA2YFS7llZYqjr
-        DKqY2Ljc=; b=tFXvLMSfWiO+zVha7KqPjeqtYZl1OJ7gJwuwEkuuprY8NL/iFeh
-        GzvlEaUKK57LU4qfzIKslTJbLAfJGJyajj6WOq19Fw+jVIisqHbA2G4HNdYwXIvr
-        +9qDvP1sDnOBvPHGk8pAqBvd8+AQNaDSjWrPf+G7pkND+BcnXRwdxx6rGbOrRr82
-        GpzU0nQDffMy2s/K4VWgvrasD5gU0uvjFghBchBbm74IDert9btDxPiL8tR0gXMs
-        j+zXMdh4XTcOPjF3kBIKvn/f7Avrx6TVFAcfxCJPdowpofupZfxuXPLfdlltnQQg
-        /FeViPuNTqk74mEEilzENCTZLZN9MZ4nykA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id kf43eJ7XRUSg for <linux-ide@vger.kernel.org>;
-        Mon, 30 Jan 2023 06:55:09 -0800 (PST)
-Received: from [10.225.163.66] (unknown [10.225.163.66])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5B6z3xLmz1RvLy;
-        Mon, 30 Jan 2023 06:55:07 -0800 (PST)
-Message-ID: <0a2b9ba7-cc3f-400b-6a8a-c38ba269af75@opensource.wdc.com>
-Date:   Mon, 30 Jan 2023 23:55:06 +0900
+        with ESMTP id S238145AbjA3PYV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 10:24:21 -0500
+Received: from mail-il1-x12a.google.com (mail-il1-x12a.google.com [IPv6:2607:f8b0:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C1C22DE71
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 07:24:15 -0800 (PST)
+Received: by mail-il1-x12a.google.com with SMTP id l7so3359396ilf.0
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 07:24:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=SdRsnq8SrpYziohnBt7964p9wbA85jXc5wEU3EWSaMA=;
+        b=xAA0YSZ7rVFbbsecaWjmQE+dUSgIdAVQdX4IkJsP7jFdRkp55tlz9muaxeaVkm6HoN
+         0Zufn+RndEx/p14C6tz7uWwr4I2mAjEKs/JPTmKKSsyIRyRnhyZDiZhawctr5sk5AK8I
+         r5vOrdGGTUffdFYG1EH0f/hHYu0VSJviqEedS0mLhLQy55wgRFufHKlR+gSmmqCGHa8T
+         tOidIMfoA3i9GnHSq1Y3dZW+voZJ40ijIm81wRWw0tH0s8AcqIcdkZdVS5aBIvNNlGBY
+         yO/VQMhmNxyX71IdrRLg9JPGYRvKPJjnCjE0udMnyqvevmAGQPwHA+IV3K5dmf5y1glb
+         VJCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=SdRsnq8SrpYziohnBt7964p9wbA85jXc5wEU3EWSaMA=;
+        b=6eVJ7BKNWKEAI4BLx+aN8ji3cntQYYuUDimrRTYeNAopmMxW0fkOXYafSsdDhCUL64
+         8OPLlFeK0t2ICtwsEW1XscBZSxSaCJzNviqfZ5jmcX1y9Ml8lC6xgw09bQtxtUJm/hFb
+         4+kEq9jgf0NO9MrI2Mu9KE5atIqxsEjk5tQTn8iDsXOsOK3ZJKE0qqeSxwJxjybxA0Mr
+         MORNw2u7ikO/wRf18dGokgAANHwouRTZvxLO+mImJ7F111PkV86gyF1Mbsts714pIeJu
+         0Uxw5b89z62/FsJYU1b2LUaATB2LMdw1NIzQ4VN3qkko0EtJG4gsGNb+n7vj+gzGMuGB
+         tZTg==
+X-Gm-Message-State: AO0yUKVAwHwt/E8F/ZvSB/JtR7Po0O27E7McVDkqaVuG9qClNdUgQURg
+        ZLaX5lEoX6orrvYnMAzwOBL6Uw==
+X-Google-Smtp-Source: AK7set/GJmwY86PqWy8yhNLsuUM4E0VP4HyJCqdWV47Lf++7Qi4bE2ApOk/vWfH15N3FLWp8Vm2itQ==
+X-Received: by 2002:a05:6e02:1a46:b0:310:ecea:b488 with SMTP id u6-20020a056e021a4600b00310eceab488mr960112ilv.3.1675092254136;
+        Mon, 30 Jan 2023 07:24:14 -0800 (PST)
+Received: from [192.168.1.94] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id q18-20020a056638239200b0038a56594026sm788407jat.66.2023.01.30.07.24.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 Jan 2023 07:24:13 -0800 (PST)
+Message-ID: <740be398-6963-08cc-6a5e-01e1315bdda6@kernel.dk>
+Date:   Mon, 30 Jan 2023 08:24:12 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
-Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Subject: Re: [PATCH v3] pata_parport: add driver (PARIDE replacement)
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230124190308.127318-2-niklas.cassel@wdc.com>
- <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
- <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
- <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
- <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
- <e8324901-7c18-153f-b47f-112a394832bd@acm.org> <Y9Gd0eI1t8V61yzO@x1-carbon>
- <86de1e78-0ff2-be70-f592-673bce76e5ac@opensource.wdc.com>
- <Y9KF5z/v0Qp5E4sI@x1-carbon> <7f0a2464-673a-f64a-4ebb-e599c3123a24@acm.org>
- <29b50dbd-76e9-cdce-4227-a22223850c9a@opensource.wdc.com>
- <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
- <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
- <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
- <b77d5e44-bc1e-7524-7e09-a609ba471dbc@acm.org>
- <4e803108-9526-6a75-f209-789a06ef52f9@opensource.wdc.com>
- <yq1r0veh2fa.fsf@ca-mkp.ca.oracle.com>
- <f8320ff3-0f52-aa0c-635e-c1e7c28ffe25@opensource.wdc.com>
- <f58200e2-1652-c726-ceaf-be78feaab1bc@suse.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <f58200e2-1652-c726-ceaf-be78feaab1bc@suse.de>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Ondrej Zary <linux@zary.sk>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <425b5646-23e2-e271-5ca6-0f3783d39a3b@opensource.wdc.com>
+ <20230123190954.5085-1-linux@zary.sk>
+ <d4f7ebd5-d90d-fb96-0fad-bd129ac162dc@opensource.wdc.com>
+ <e843fde8-7295-dd30-6d98-a62f63d7753c@kernel.dk>
+ <20230130064815.GA31925@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20230130064815.GA31925@lst.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/30/23 22:44, Hannes Reinecke wrote:
-> On 1/29/23 04:52, Damien Le Moal wrote:
->> On 1/29/23 05:25, Martin K. Petersen wrote:
-> [ .. ]
->>>
->>>     As such, I don't like the "just customize your settings with
->>>     cdltools" approach. I'd much rather see us try to define a few QoS
->>>     classes that make sense that would apply to every app and use those
->>>     to define the application interface. And then have the kernel program
->>>     those CDL classes into SCSI/ATA devices by default.
+On 1/29/23 11:48 PM, Christoph Hellwig wrote:
+> On Sun, Jan 29, 2023 at 08:44:06PM -0700, Jens Axboe wrote:
+>> I would prefer if we just delete it after merging this one, in the same
+>> release. I don't think there's any point in delaying, as we're not
+>> removing any functionality.
 >>
->> Makes sense. Though I think it will be hard to define a set of QoS hints that
->> are useful for a wide range of applications, and even harder to convert the
->> defined hint classes to CDL descriptors. I fear that we may end up with the same
->> issues as IO hints/streams.
->>
->>>     Having the kernel provide an abstract interface for bio QoS and
->>>     configuring a new disk with a sane handful of classes does not
->>>     prevent $CLOUD_VENDOR from overriding what Linux configured. But at
->>>     least we'd have a generic approach to block QoS in Linux. Similar to
->>>     the existing I/O priority infrastructure which is also not tied to
->>>     any particular hardware feature.
->>
->> OK. See below about this.
->>
->>>     A generic implementation also allows us to do fancy things in the
->>>     hypervisor where we would like to be able to do QoS across multiple
->>>     devices as well. Without having ATA or SCSI with CDL involved. Or
->>>     whatever things might look like in NVMe.
->>
->> Fair point, especially given that virtio actually already forwards a guest
->> ioprio to the host through the virtio block command. Thinking of that particular
->> point together with what you said, I came up with the change show below as a
->> replacement for this patch 1/18.
->>
->> This changes the 13-bits ioprio data into a 3-bits QOS hint + 3-bits of IO prio
->> level. This is consistent with the IO prio interface since IO priority levels
->> have to be between 0 and 7 (otherwise, errors are returned). So in fact, the
->> upper 10-bits of the ioprio data are ignored and we can safely use 3 of these
->> bits for an IO hint.
->>
->> This hint applies to all priority classes and levels, that is, for the CDL case,
->> we can enrich any priority with a hint that specifies the CDL index to use for
->> an IO.
->>
->> This falls short of actually defining generic IO hints, but this has the
->> advantage to not break anything for current applications using IO priorities,
->> not require any change to existing IO schedulers, while still allowing to pass
->> CDL indexes for IOs down to the scsi & ATA layers (which for now would be the
->> only layers in the kernel acting on the ioprio qos hints).
->>
->> I think that this approach still allows us to enable CDL support, and on top of
->> it, go further and define generic QOS hints that IO scheduler can use and that
->> also potentially map to CDL for scsi & ata (similarly to the RT class IOs
->> mapping to the NCQ priority feature if the user enabled that feature).
->>
->> As mentioned above, I think that defining generic IO hint classes will be
->> difficult. But the change below is I think a good a starting point that should
->> not prevent working on that.
->>
->> Thoughts ?
->>
-> I like the idea.
-> QoS is one of the recurring topic always coming up sooner or later when 
-> talking of storage networks, so having _some_ concept of QoS in the 
-> linux kernel (for storage) would be beneficial.
+>> You could just queue that up too when adding this patch.
 > 
-> Maybe time for a topic at LSF?
+> I'd prefer to just deprecate.  But most importantly I want this patch
+> in ASAP in some form.
 
-Yes. I was hoping for a quicker resolution so that we can get the CDL
-"mechanical" bits in, but without a nice API for it, we cannot :)
-Trying to compile something with Niklas. So far, we are thinking of having
-QOS flags + QOS data, the flags determining how (and if) the QOS data is used
-and what it means.
-
-Ex of things We could have:
-* IOPRIO_QOS_FAILFAST: do not retry the IO if it fails the first time
-* IOPRIO_QOS_DURATION_LIMIT: then the QOS data indicates the limit to use
-(number). That can be implemented in schedulers and also map to CDL on drives
-that support that feature.
-
-That is the difficult part: what else ? For now, considering only our target of
-adding scsi & ata CDL support, the above is enough. But is that enough in
-general for most users/apps ?
-
-> 
-> Cheers,
-> 
-> Hannes
-> 
+There's feature parity and probably the single user of this already
+knows it... I think we're grossly overthinking this one, just kill
+the old code.
 
 -- 
-Damien Le Moal
-Western Digital Research
+Jens Axboe
+
 
