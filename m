@@ -2,43 +2,43 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF8BCC636D3
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 19:24:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62AFEC636CD
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 20:40:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236703AbjA3TYT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 14:24:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52718 "EHLO
+        id S229559AbjA3Ukx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 15:40:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231538AbjA3TYS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 14:24:18 -0500
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48D922D70;
-        Mon, 30 Jan 2023 11:24:17 -0800 (PST)
-Received: by mail-pg1-f170.google.com with SMTP id q9so8387906pgq.5;
-        Mon, 30 Jan 2023 11:24:17 -0800 (PST)
+        with ESMTP id S229494AbjA3Uku (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 15:40:50 -0500
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89CD03C2AB;
+        Mon, 30 Jan 2023 12:40:49 -0800 (PST)
+Received: by mail-pj1-f43.google.com with SMTP id l4-20020a17090a850400b0023013402671so124265pjn.5;
+        Mon, 30 Jan 2023 12:40:49 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FDOhw4bXgLDlSATV8J35aaw17CH+C7XqPUR7CtrAw5c=;
-        b=doBMMvm5eUcdvBgQccRYOBE+HZwOjDLl7nN0MLHW8Xo7AT4ifj5BOsBgu6j7dJNg4g
-         WCH9HGoY2QN1CznddhAXfqYuV3/fZayKZJP37Dy4jUc0JQkcoM98l2v5EftkoOiLRFHu
-         hKXEuQlgetmbxqgdcIhMn/bMYUIkZyanlCpPASjpohCo0Aec4BPOAv/Ing1H+hhFHP4n
-         DeYf7HP1bV8NfXHNSUwm5pyEtWZ51LElxX/Y4v3GP/QCiASH6QMXTukzgS6GLzIz9GDf
-         4MLG9WspiF3PFdu6LJf/1MaLq56GKwkAsZXmzaA+tGJh0bZimemTp+g/Ucie1VMhBwzk
-         26KA==
-X-Gm-Message-State: AO0yUKVQyS/MJjeNV7crfXlIYRrRcCUUkkpap9MMdv8Z612wjAInyDX6
-        cYaLzzJ5Hk3eYokwBWY4NUY=
-X-Google-Smtp-Source: AK7set/sI/F/T+a4P1OQ0KmYjZI2xoKiJOUjx2Eoy5rgpR4uysq+4FM8gH9blP7EOhJpSw2ypYL5TQ==
-X-Received: by 2002:a62:6c6:0:b0:593:d24b:104e with SMTP id 189-20020a6206c6000000b00593d24b104emr2631515pfg.12.1675106656682;
-        Mon, 30 Jan 2023 11:24:16 -0800 (PST)
+        bh=hmflhFxLbqnfi+QwTGHt4CcSktELIMyYKlRnjrLGhiA=;
+        b=vK81Q6gOW1UOsNP7maMFMDs1+YovxoY+dkp/mW+9rWtHCmuWSlZF8ZWAqNg9PqGx6L
+         syCO+6rqbUSXNYt7pkH+Qfbx7WQFgmkG5c5zBh38c83tlt+rBdyw9PrJw0XuiJtI8LdD
+         cbyBc0T4ONKqgmDXYyT/e9YQbpU46VHg6npS9Ilu7keId8bTKQjHocVtMV6f+9DadpvO
+         V6K8yXJexq98/m7Ifke+r7c0WIYt6NU/Y2/NZ80KMs6/XpYNw8Dc1QJiJSQ9ugXl6IqT
+         zQPpwp4gGCg01cjYPgs54V7JvJVwiSr1y7tMZdO3cbKAudV061a+k836wBhjh+RLA8DP
+         rohg==
+X-Gm-Message-State: AFqh2kq9Fx7PLxZ8smmulzdCIqBQ67gRE1RmlteRrfgY7GXXKUvZhyHs
+        79S53nEG8GcMwXjRlGpXM+g=
+X-Google-Smtp-Source: AMrXdXussbqe0XSnx5wccquvOxqftLaB5cS3nFNKSFtjptAtOtAxutDXuLpLcfKPx9wsZ3kuy3T8zg==
+X-Received: by 2002:a17:902:988f:b0:194:9b5d:2887 with SMTP id s15-20020a170902988f00b001949b5d2887mr45230780plp.64.1675111248923;
+        Mon, 30 Jan 2023 12:40:48 -0800 (PST)
 Received: from ?IPV6:2620:15c:211:201:5016:3bcd:59fe:334b? ([2620:15c:211:201:5016:3bcd:59fe:334b])
-        by smtp.gmail.com with ESMTPSA id z12-20020aa7990c000000b0059252afc069sm7361593pff.64.2023.01.30.11.24.14
+        by smtp.gmail.com with ESMTPSA id x7-20020a1709029a4700b001949b915188sm8225494plv.12.2023.01.30.12.40.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Jan 2023 11:24:15 -0800 (PST)
-Message-ID: <de654983-fb3d-6041-3090-072ea0f44f88@acm.org>
-Date:   Mon, 30 Jan 2023 11:24:13 -0800
+        Mon, 30 Jan 2023 12:40:48 -0800 (PST)
+Message-ID: <2055c51c-d448-e69b-cd41-17fb10fc1923@acm.org>
+Date:   Mon, 30 Jan 2023 12:40:46 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
@@ -79,8 +79,6 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 1/28/23 19:52, Damien Le Moal wrote:
-> diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
-> index f70f2596a6bf..1d90349a19c9 100644
 > +/*
 > + * The 13-bits of ioprio data for each class provide up to 8 QOS hints and
 > + * up to 8 priority levels.
@@ -92,21 +90,28 @@ On 1/28/23 19:52, Damien Le Moal wrote:
 > +#define IOPRIO_PRIO_LEVEL(ioprio)	((ioprio) & IOPRIO_PRIO_LEVEL_MASK)
 > +#define IOPRIO_QOS_HINT(ioprio)	\
 > +	(((ioprio) >> IOPRIO_QOS_HINT_SHIFT) & IOPRIO_QOS_HINT_MASK)
-> +
 
-Hi Damien,
+Does the QoS level really have to be encoded in bio.bi_ioprio? How about 
+introducing a new field in the existing hole in struct bio? From the 
+pahole output:
 
-How about the following approach?
-* Do not add QoS support to the ioprio_set() system cal since that
-   system call only affects foreground I/O.
-* Configure QoS via the v2 cgroup mechanism such that QoS policies are
-   applied to both foreground and background I/O.
+struct bio {
+         struct bio *               bi_next;            /*     0     4 */
+         struct block_device *      bi_bdev;            /*     4     4 */
+         blk_opf_t                  bi_opf;             /*     8     4 */
+         short unsigned int         bi_flags;           /*    12     2 */
+         short unsigned int         bi_ioprio;          /*    14     2 */
+         blk_status_t               bi_status;          /*    16     1 */
 
-This approach allows to use another binary representation for I/O 
-priorities and QoS in the bio.bi_ioprio field than what is supported by 
-the ioprio_set() system call. This approach also allows to use names 
-(strings) for QoS settings instead of numbers in the interface between 
-user space and the kernel if that would be considered desirable.
+         /* XXX 3 bytes hole, try to pack */
+
+         atomic_t                   __bi_remaining;     /*    20     4 */
+         struct bvec_iter           bi_iter;            /*    24    20 */
+         blk_qc_t                   bi_cookie;          /*    44     4 */
+         bio_end_io_t *             bi_end_io;          /*    48     4 */
+         void *                     bi_private;         /*    52     4 */
+         struct bio_crypt_ctx *     bi_crypt_context;   /*    56     4 */
+[ ... ]
 
 Thanks,
 
