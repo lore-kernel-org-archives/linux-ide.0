@@ -2,121 +2,162 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC2B1C54EAA
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 13:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE51C54EAA
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 13:44:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229965AbjA3Nkh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 08:40:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53034 "EHLO
+        id S235985AbjA3Noa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 08:44:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235349AbjA3Nkh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 08:40:37 -0500
-Received: from mx.bauer-kirch.de (mx.bauer-kirch.de [87.230.111.147])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D3E42F794
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 05:40:34 -0800 (PST)
-Received: by mail.bauer-kirch.de with ESMTPSA id 1pMUOe-0003Yn-48
-        authenticated id <420001312>
-        (TLS1.2:ECDHE_RSA_SECP256R1__AES_128_GCM:128); Mon, 30 Jan 2023 14:40:32 +0100
-Message-ID: <b4a515f6-e11c-756b-ff90-114836f919f9@noerenberg.de>
-Date:   Mon, 30 Jan 2023 14:40:29 +0100
+        with ESMTP id S233899AbjA3Noa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 08:44:30 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3063F15552;
+        Mon, 30 Jan 2023 05:44:29 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id E288621AE7;
+        Mon, 30 Jan 2023 13:44:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1675086267; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=sqdDde2VpNl4ymLDR49F5nUaI943cA15fmxKV7GL+FY=;
+        b=edJZGTP1PNJGcNsq6gM5fip7RQwBVj9zU8C56WkbYNt5IFwTcPiPfBml4HubTVNk316kry
+        HIzr8nxQ5lZF2CZGF9SdKKJQOPecwkE2MibAiaIsVODvXgX/3c2PJngalyL0KO5YHiwi2Y
+        XY7dJpd6G3JYkFmFHJqF7pWunfOpJ2s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1675086267;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=sqdDde2VpNl4ymLDR49F5nUaI943cA15fmxKV7GL+FY=;
+        b=QYMr2+44g7gU9zknp2OsTUMIFB1k0HD4zS5gM5M0b2eL8R7CVHOBpJb3UnI1ikh2c/heMq
+        udNWPPBZCqWY4fCg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id CAB9713A06;
+        Mon, 30 Jan 2023 13:44:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id EYYzMbvJ12MAZgAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 30 Jan 2023 13:44:27 +0000
+Message-ID: <f58200e2-1652-c726-ceaf-be78feaab1bc@suse.de>
+Date:   Mon, 30 Jan 2023 14:44:27 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.1
-Subject: Re: Marvel 88SE6121 fails with SATA-2/3 HDDs
-To:     linux-ide@vger.kernel.org
-Cc:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        risc4all@yahoo.com
-References: <db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de>
- <930a0685-c741-110e-40c2-660754301e5a@opensource.wdc.com>
- <a248857e-991c-16d7-496c-9dc692186ead@noerenberg.de>
-From:   Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-In-Reply-To: <a248857e-991c-16d7-496c-9dc692186ead@noerenberg.de>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Paolo Valente <paolo.valente@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20230124190308.127318-2-niklas.cassel@wdc.com>
+ <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
+ <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
+ <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
+ <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
+ <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
+ <e8324901-7c18-153f-b47f-112a394832bd@acm.org> <Y9Gd0eI1t8V61yzO@x1-carbon>
+ <86de1e78-0ff2-be70-f592-673bce76e5ac@opensource.wdc.com>
+ <Y9KF5z/v0Qp5E4sI@x1-carbon> <7f0a2464-673a-f64a-4ebb-e599c3123a24@acm.org>
+ <29b50dbd-76e9-cdce-4227-a22223850c9a@opensource.wdc.com>
+ <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
+ <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
+ <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
+ <b77d5e44-bc1e-7524-7e09-a609ba471dbc@acm.org>
+ <4e803108-9526-6a75-f209-789a06ef52f9@opensource.wdc.com>
+ <yq1r0veh2fa.fsf@ca-mkp.ca.oracle.com>
+ <f8320ff3-0f52-aa0c-635e-c1e7c28ffe25@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <f8320ff3-0f52-aa0c-635e-c1e7c28ffe25@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-Am 26.01.2023 um 16:41 schrieb Hajo Noerenberg:
-
->>> [  209.134706] ata3: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000100 irq 39
->>> [  209.142214] ata4: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000180 irq 39
->>> [  209.149676] ata5: DUMMY
->>> [  209.469562] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>> [  214.631228] ata3.00: qc timeout after 5000 msecs (cmd 0xec)
->>> [  214.636919] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>> [  214.957579] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>> [  225.127261] ata3.00: qc timeout after 10000 msecs (cmd 0xec)
->>> [  225.133030] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>> [  225.139184] ata3: limiting SATA link speed to 1.5 Gbps
->>> [  225.457616] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
->>> [  257.127404] ata3.00: qc timeout after 30000 msecs (cmd 0xec)
->>> [  257.133181] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>> [  257.453758] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
->>> [  257.773761] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>> [  257.781254] ata4.00: ATA-6: ST3250310NS, SN04, max UDMA/133
->>> [  257.786916] ata4.00: 488397168 sectors, multi 0: LBA48 NCQ (depth 0/32)
->>> [  257.796826] ata4.00: configured for UDMA/133
->>> [  257.801537] scsi 4:0:0:0: Direct-Access     ATA      ST3250310NS      SN04 PQ: 0 ANSI: 5
+On 1/29/23 04:52, Damien Le Moal wrote:
+> On 1/29/23 05:25, Martin K. Petersen wrote:
+[ .. ]
 >>
->> Is this a SATA-1 drive (max 1.5gbps) ? port 3 does not work, but port 4 does...
->> Can you try swapping the drives connected to see if you end up with ata3 working
->> but not ata4 ?
->>
+>>     As such, I don't like the "just customize your settings with
+>>     cdltools" approach. I'd much rather see us try to define a few QoS
+>>     classes that make sense that would apply to every app and use those
+>>     to define the application interface. And then have the kernel program
+>>     those CDL classes into SCSI/ATA devices by default.
 > 
-> Swapping the drives slots does not change anything. ST3250310NS works, ST3500418AS not.
+> Makes sense. Though I think it will be hard to define a set of QoS hints that
+> are useful for a wide range of applications, and even harder to convert the
+> defined hint classes to CDL descriptors. I fear that we may end up with the same
+> issues as IO hints/streams.
 > 
-> For my ST3250310NS, "hdparm -I" shows "Gen1 signaling speed (1.5Gb/s)" only. That's why I call it a SATA-1 drive. Oddly enough, a web search shows that it is sold as Sata-2 (https://www.seagate.com/docs/pdf/datasheet/disc/ds_barracuda_es.pdf).
+>>     Having the kernel provide an abstract interface for bio QoS and
+>>     configuring a new disk with a sane handful of classes does not
+>>     prevent $CLOUD_VENDOR from overriding what Linux configured. But at
+>>     least we'd have a generic approach to block QoS in Linux. Similar to
+>>     the existing I/O priority infrastructure which is also not tied to
+>>     any particular hardware feature.
 > 
-
-Update on this: For whatever reason, the ST3250310NS had a "downgrade to 1.5GB/s" jumper set on the back of the drive. I had stupidly  forgotten that HDD drives have jumpers (the last time I set a jumper on a hard drive was on old PATA drives decades ago). Thankfully someone added a hint to the bugzilla bug report (216094, comment #48).
-
-If I remove the 1.5GB/s jumper, the ST3250310NS fails as well within Linux kernel. With U-Boot it works without jumper:
-
-Reset SCSI
-scanning bus for devices...
-SATA link 0 timeout.
-Target spinup took 0 ms.
-SATA link 2 timeout.
-AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x7 impl SATA mode
-flags: 64bit ncq stag led pmp slum part
-  Device 0: (1:0) Vendor: ATA Prod.: ST3250310NS Rev: SN04
-            Type: Hard Disk
-            Capacity: 238475.1 MB = 232.8 GB (488397168 x 512)
-
-> I double checked with a FUJITSU MHZ2160BH laptop drive (hdparm shows Gen1=1.5Gb/s only), this works without problems. Other Gen2/Gen3 drives e.g. a WD3202ABYS or WD30EFRX do not work ("failed to IDENTIFY").
+> OK. See below about this.
 > 
+>>     A generic implementation also allows us to do fancy things in the
+>>     hypervisor where we would like to be able to do QoS across multiple
+>>     devices as well. Without having ATA or SCSI with CDL involved. Or
+>>     whatever things might look like in NVMe.
+> 
+> Fair point, especially given that virtio actually already forwards a guest
+> ioprio to the host through the virtio block command. Thinking of that particular
+> point together with what you said, I came up with the change show below as a
+> replacement for this patch 1/18.
+> 
+> This changes the 13-bits ioprio data into a 3-bits QOS hint + 3-bits of IO prio
+> level. This is consistent with the IO prio interface since IO priority levels
+> have to be between 0 and 7 (otherwise, errors are returned). So in fact, the
+> upper 10-bits of the ioprio data are ignored and we can safely use 3 of these
+> bits for an IO hint.
+> 
+> This hint applies to all priority classes and levels, that is, for the CDL case,
+> we can enrich any priority with a hint that specifies the CDL index to use for
+> an IO.
+> 
+> This falls short of actually defining generic IO hints, but this has the
+> advantage to not break anything for current applications using IO priorities,
+> not require any change to existing IO schedulers, while still allowing to pass
+> CDL indexes for IOs down to the scsi & ATA layers (which for now would be the
+> only layers in the kernel acting on the ioprio qos hints).
+> 
+> I think that this approach still allows us to enable CDL support, and on top of
+> it, go further and define generic QOS hints that IO scheduler can use and that
+> also potentially map to CDL for scsi & ata (similarly to the RT class IOs
+> mapping to the NCQ priority feature if the user enabled that feature).
+> 
+> As mentioned above, I think that defining generic IO hint classes will be
+> difficult. But the change below is I think a good a starting point that should
+> not prevent working on that.
+> 
+> Thoughts ?
+> 
+I like the idea.
+QoS is one of the recurring topic always coming up sooner or later when 
+talking of storage networks, so having _some_ concept of QoS in the 
+linux kernel (for storage) would be beneficial.
 
-I tried to jumper the WD30EFRX to 1.5GB/s but this does not change anything (still fails). But I'm unsure that the "downgrade jumper" even works at all for this relativly new drive. But with U-Boot it works:
+Maybe time for a topic at LSF?
 
-Reset SCSI
-scanning bus for devices...
-Target spinup took 0 ms.
-Target spinup took 0 ms.
-SATA link 2 timeout.
-AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x7 impl SATA mode
-flags: 64bit ncq stag led pmp slum part
-  Device 0: (0:0) Vendor: ATA Prod.: WDC WD30EFRX-68E Rev: 80.0
-            Type: Hard Disk
+Cheers,
 
-I tested with another drive, a WD5000AADS: with 1.5Gb/s-jumper it works within Linux, without not. With U-Boot it works regardless of jumper setting.
+Hannes
 
-I double-checked with libata.force=1.5GGbps, but this does not help:
-
-[   49.191878] ata3: FORCE: PHY spd limit set to 1.5Gbps
-[   49.197028] ata3: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000100 irq 39
-[   49.204511] ata4: FORCE: PHY spd limit set to 1.5Gbps
-[   49.209606] ata4: SATA max UDMA/133 abar m1024@0xe0000000 port 0xe0000180 irq 39
-[   49.217062] ata5: DUMMY
-[   49.532303] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[   54.753947] ata3.00: qc timeout after 5000 msecs (cmd 0xec)
-[   54.759637] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[   55.080266] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[   65.249946] ata3.00: qc timeout after 10000 msecs (cmd 0xec)
-
-
-Summary: With U-Boot and kernels <3.16 the drives work, even without jumper. I wonder if there is a way to get the drives working with up to date kernels. This would have the benefit of a.) no need to set jumpers and b.) getting bigger/newer drives like the WD30EFRX to work which probably do not have a downgrade-jumper.
-
-Hajo
