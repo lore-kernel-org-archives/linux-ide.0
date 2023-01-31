@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E412FC636D3
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 03:03:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E95C636D4
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 03:10:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229680AbjAaDDf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 22:03:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36652 "EHLO
+        id S229445AbjAaDKp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 22:10:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229634AbjAaDDe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 22:03:34 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 928A8298D1
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 19:03:33 -0800 (PST)
+        with ESMTP id S229489AbjAaDKo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 22:10:44 -0500
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7FA44699
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 19:10:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1675134213; x=1706670213;
+  t=1675134643; x=1706670643;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=P7BHgUkZw+jVhhTt3f/OAAE8mvrWUSi6Vx/Cs2piN78=;
-  b=Jt/c32qUzdkZDMrwba1eNONsvMcoBIhSf5nVtGyNK7dAatRhIpSLv2Hd
-   CZiXQUSF7gNcj7epi4fKkS3D3rqwLxEykIpx0Z82UgNO8xwChZvrZitNa
-   3jz3EgUDe23iMjGg7Of6bIBtma4UKt/auRInH9Wj1HJGGXDYEIqzwLr4w
-   ZtEaV18HquWTodCkNzN27DBXDw8a5WisUnUgFtbBkBDSIMDAhNJtekc6A
-   OOoGmMKcTfuHbZ+RsrzIHZVQB3fW6M73mpyjoxgXw7ifLtsBYunl9B9Lj
-   IgMVuywjtLpDfTLUL72+CWWqg47o9ZI8kpbrenKx3/ozHLudWyLHhhPBp
-   A==;
+  bh=74mUSSZbgXTIvUjr10/8l80yClPOJgEszMjAqE2My3I=;
+  b=ItUx3ilE2ZaOI1sbxP0Zy807vZXmL2Z3QQEMC2Nlp3QurfCt+nUqXB9v
+   GUMwuBnTMCNtjzvNpuK9GrT0GSjyqCsb+EMOvt83eBqKn+u4jy3CLSfBF
+   T+dFrva4vgaGdYkRcLxJP+8DUIrv6P6eGjpf7r8ifLuHLRrIgf/86qXvU
+   JU3xJQExB4b9xx5FsRZmgZgEX0lF6+OYXzUElZdALAgIVXv8PHAC91uCo
+   8TNpxms+XSbd5Z3burt2TbHidJDcckPz8Sn00ojEQQRLHu2ur1UOjgYVx
+   9YU4JSvvzaBKFDoBq/bd63rjacziR3GBmoEtVUi9fDNA8QOPoyfFp0ZS4
+   g==;
 X-IronPort-AV: E=Sophos;i="5.97,259,1669046400"; 
-   d="scan'208";a="222189363"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 11:03:31 +0800
-IronPort-SDR: YpFHBbqQ37+Dgv89GzxI4asHkMN7lTnPQbylO3c8eUJgN/MKyvoSLIo//9cRGXoMlBlQTkUuLf
- XY5YqIY+JxAu1tiuHv3gYhnqRss4WHncZkG0CcGJc4T4oqrQibNgbHTixeUDHzBn8scERroT7P
- 18NlkYdInkbGEVqHNpETPPcRxk3H7xr6uQ0tJSQZcXk0L/EnVZeMdTKHJqNq4BTRI/5a8FYA1k
- kjS2U44P8jkDZKeVqCs04LSyDShNJHAP0Cd90t7Y/ESJtbfT3zQcVAIOXk/uTqXacR1YDgeOOI
- G3w=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 18:15:12 -0800
-IronPort-SDR: Y9iFHo7nq8hjQQ6ZaTlrS6vcEYpJovP+lGiNnwbccgwpysFf7gGfefBpyIgr/MFfmsAVn1bDk3
- SpCz16fmaZi7I+45lUQ72G0VVVzQGcBm9zmnnwAZ0UqGMGfKpf59ERDOMoKNjo8NlPGCRxnC9E
- okrYzUwhLf+c1nyvCtSix5ledhQtCKi2AgjAcb/Gxx4gjYYe+P/elDvhICHF/7TqCNbOVmA60V
- 7ntZcfBWGXDcNui6Q55DJawdm+kv8WK6oLTGaGFRk0cNKIJz7fTXmTzlS0uv8c0GyDAmFPKOBX
- wRc=
+   d="scan'208";a="227106788"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 11:10:42 +0800
+IronPort-SDR: sNf/foAK19Lofxu/4gQzQd3c0vwsa2K2EZm2XIzqJJJyNi8WqU0/4H5YcydZed5J2fCl3c9UKP
+ kpPMuE076LaoguBr4HiPurSjcAQAtLz9R57bJf/9Twf1/kSQX/wSBQ5R8YyXp2tP5fW8arbG2f
+ 7ndeB0tplZQ5wihhyigMQl+yiWNEf8iOSV+UVNqlGQ8NN5H7xqfcAusChKhvMTEJ8WJNeAMRLO
+ RMCKTwDXhSGUE2SsuYrw7LtAVBzv8YLqQ4bk+rksDVVEmR1gRxnWzklbubz6YpRSu+gHcxwfde
+ CX8=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 18:28:08 -0800
+IronPort-SDR: 2imc2+4Qk24nuknoI1Ulj0UKM7uaZkEuhJawieXqlzvGjHLI4Dn5UYBy5dIwi7kBpb8QVGSQB9
+ 4e1YWgWVSdw+I6RulLKieEX3tTIuH2etHovNw0IoH0L3Fa4TAXkCivS2i/8Phgp1glqFDhJQq0
+ LcdZq7mQkcS+HiiE7A0hGCIrBmGswag1u2+4B3PiGOTM8djFgiZB5wSjz1O74ebO952K06H4ve
+ rz1S3SwQFpFyIi8Kd2r4z2XYE+QvO2ZUVsgjiYxxDnum9ClYmIwRu5dGFQ+Qy6PkLV1csBdycG
+ 1y8=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 19:03:32 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 19:10:43 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5VHR0PSsz1RwtC
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 19:03:30 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5VRk1RKpz1Rwt8
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 19:10:42 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,31 +56,31 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1675134210; x=1677726211; bh=P7BHgUkZw+jVhhTt3f/OAAE8mvrWUSi6Vx/
-        Cs2piN78=; b=myE75nv+ltDR2wShpOZeAS6m8OCCckCsUxSUwzaQyLhwmxnNwMV
-        YQl/+OSB5N0RDJvamtmZMmu6q4pBH821KCLpBX1/lkMJ/5Y+ZPGTTE5C6gMmn0Vl
-        FZaCIBNoFKGf9MQpNb8uD3/EeC7z9G91nzHOf1FG3G++WDAxmteAqswI0ZJRCotv
-        j1u+4XnR7yZHvVIcJ+eTBdj+Y+akM8vwE0AWl4+ToAPb8copNgM8ngyz6f2QDvz1
-        FYPZpTK6zzKWrR8LntVmm9uBezce81MA5v4EQcpPxOqqoE8/CivHF/qA3ISbgPGS
-        OEhj2bIPHzRcr+AuRxPel63lePSe0c31UoQ==
+        1675134641; x=1677726642; bh=74mUSSZbgXTIvUjr10/8l80yClPOJgEszMj
+        AqE2My3I=; b=chMl9+h6Sy4ZyHyaRKxQD2vlyTIsy2eo0OxUuSArbAlGoEhnNCa
+        C75idSQWanVipKaEO1x0NaZxka/lhz9claSn5YjaUnB+jR+CqpubI077M7dAQR5H
+        LBPml6dT36qsUFozQ5m8k6e53sym250KGJD5dbkOeqg1losx6Kc2ZuwynidgNQKk
+        v0pX4phAml/Bsgwc+TDKRntTU8WPQfHR3RXRZ9n0z4Er02nfNxWH9ZmIObJLtfRM
+        bIAYB5E0wokVT8JhVm8Pmmud3MzKakyJklgjnWVgrECbFF1YU9JGwEaezUl23yn2
+        bonAS8NAKZVHcLrSyk7UT3p+GTfCZHP2KcA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id E_FSBgrvR0Ya for <linux-ide@vger.kernel.org>;
-        Mon, 30 Jan 2023 19:03:30 -0800 (PST)
+        with ESMTP id jIS2qhSMZ5Oe for <linux-ide@vger.kernel.org>;
+        Mon, 30 Jan 2023 19:10:41 -0800 (PST)
 Received: from [10.225.163.70] (unknown [10.225.163.70])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5VHN5Hgpz1RvLy;
-        Mon, 30 Jan 2023 19:03:28 -0800 (PST)
-Message-ID: <4d0e360a-32ce-7204-1d86-7ec636bb3feb@opensource.wdc.com>
-Date:   Tue, 31 Jan 2023 12:03:27 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5VRg5lpYz1RvLy;
+        Mon, 30 Jan 2023 19:10:39 -0800 (PST)
+Message-ID: <4a8a46cb-fec8-4ca8-a346-62fd0f0efb73@opensource.wdc.com>
+Date:   Tue, 31 Jan 2023 12:10:38 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
 Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
 Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>
-Cc:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
         Paolo Valente <paolo.valente@linaro.org>,
         Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Hannes Reinecke <hare@suse.de>,
@@ -88,7 +88,6 @@ Cc:     Niklas Cassel <Niklas.Cassel@wdc.com>,
         "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 References: <20230124190308.127318-2-niklas.cassel@wdc.com>
- <731aeacc-74c0-396b-efa0-f9ae950566d8@opensource.wdc.com>
  <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
  <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
  <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
@@ -103,42 +102,59 @@ References: <20230124190308.127318-2-niklas.cassel@wdc.com>
  <b77d5e44-bc1e-7524-7e09-a609ba471dbc@acm.org>
  <4e803108-9526-6a75-f209-789a06ef52f9@opensource.wdc.com>
  <yq1r0veh2fa.fsf@ca-mkp.ca.oracle.com>
- <9547f182-4ec2-021c-5860-5cc2e3dc515a@acm.org>
- <yq15ycne7rg.fsf@ca-mkp.ca.oracle.com>
+ <f8320ff3-0f52-aa0c-635e-c1e7c28ffe25@opensource.wdc.com>
+ <yq1bkmfe88c.fsf@ca-mkp.ca.oracle.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <yq15ycne7rg.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1bkmfe88c.fsf@ca-mkp.ca.oracle.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/31/23 11:58, Martin K. Petersen wrote:
+On 1/31/23 11:49, Martin K. Petersen wrote:
 > 
-> Hi Bart!
+> Damien,
 > 
->> My understanding is that ionice uses the ioprio_set() system call and
->> hence only affects foreground I/O but not page cache writeback. This
->> is why I introduced the ioprio rq-qos policy (block/blk-ioprio.c). How
->> about not adding CDL support in ioprio_set() and only supporting
->> configuration of CDL via the v2 cgroup mechanism?
+>> Makes sense. Though I think it will be hard to define a set of QoS
+>> hints that are useful for a wide range of applications, and even
+>> harder to convert the defined hint classes to CDL descriptors. I fear
+>> that we may end up with the same issues as IO hints/streams.
 > 
-> I suspect applications that care about CDL would probably not go through
-> the page cache. But I don't have a problem supporting cgroups at all.
+> Hints mainly failed because non-Linux OSes had very different
+> expectations about how this was going to work. So that left device
+> vendors in a situation where they had to essentially support 3 different
+> approaches all implemented using the same protocol.
 > 
-> Longer term, for the applications that I'm aware of that care about
-> this, we'd probably want to be able to specify things on a per-I/O basis
-> via io_uring, though.
+> The challenge of being a general purpose OS is to come up with concepts
+> that are applicable in a variety of situations. Twiddling protocol
+> fields is the easy part.
+> 
+> I have a couple of experienced CDL users that I'd like to talk to and
+> try to get a better idea of what a suitable set of defaults might look
+> like.
+> 
+>> This hint applies to all priority classes and levels, that is, for the
+>> CDL case, we can enrich any priority with a hint that specifies the
+>> CDL index to use for an IO.
+> 
+> Yeah, I like that approach better.
 
-Absolutely agree here. Similarly to the legacy ioprio, we need to be able to
-specify per-io (iouring or libaio) and per context (ioprio_set() or cgroups). I
-see the per-io and cgroups APIs as complementary.
+Of note is that even though the IOPRIO_XXX macros in include/uapi/linux/ioprio.h
+assume a 16bits value for the priority class + data, of which only 6 bits are
+usable (3 for the class, 3 for the level), all syscall and kernel internal
+interface has ioprio defined as an int. So we have in fact 32 bits to play with.
+We could keep the lower 16 bits for ioprio as it was, and have the upper 16bits
+used for QOS hints. More room that the 10 bits between the prio class and level.
 
-Many of the use cases we are seeing for CDL are transitions from ATA NCQ prio,
-which relies on the RT class for per IO aio_iorpio field with libaio/iouring. I
-would like to have continuity with this to facilitate application development.
-Having only cgroups as the API would disallow per-io async io application engines.
+The only place that will need changing is struct bio since bi_ioprio is defined
+as an unsigned short. To solve this, as Bart suggested, we could add another
+unsigned short in the bio struct hole for the qos hints (bi_iohint or bi_ioqoshint).
+
+But if we can define a sensible set of hints that covers at least CDL with the
+10 free bits we have in the current ioprio, that would be even better I think
+(less changes needed in the block layer).
 
 -- 
 Damien Le Moal
