@@ -2,67 +2,86 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBEB8C636CD
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 09:00:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5FEAC636CD
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 10:24:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230033AbjAaJAb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 Jan 2023 04:00:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48716 "EHLO
+        id S231237AbjAaKYe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 31 Jan 2023 05:24:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232371AbjAaI75 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 03:59:57 -0500
-Received: from out199-15.us.a.mail.aliyun.com (out199-15.us.a.mail.aliyun.com [47.90.199.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8A774B498;
-        Tue, 31 Jan 2023 00:56:05 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R801e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0VaW3FKV_1675155272;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VaW3FKV_1675155272)
-          by smtp.aliyun-inc.com;
-          Tue, 31 Jan 2023 16:54:42 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     s.shtylyov@omp.ru
-Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] libata: clean up some inconsistent indenting
-Date:   Tue, 31 Jan 2023 16:54:31 +0800
-Message-Id: <20230131085431.30549-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S231417AbjAaKYd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 05:24:33 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7783A38668;
+        Tue, 31 Jan 2023 02:24:26 -0800 (PST)
+Received: from [192.168.1.3] (gsystem.sk [85.248.217.30])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 89F937A04D9;
+        Tue, 31 Jan 2023 11:24:25 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH 2/2] drivers/block: Move PARIDE protocol modules to drivers/ata/pata_parport
+Date:   Tue, 31 Jan 2023 11:24:23 +0100
+User-Agent: KMail/1.9.10
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <d4f7ebd5-d90d-fb96-0fad-bd129ac162dc@opensource.wdc.com> <20230130211050.16753-2-linux@zary.sk> <e6041145-7336-2534-8449-7b9b6a842466@opensource.wdc.com>
+In-Reply-To: <e6041145-7336-2534-8449-7b9b6a842466@opensource.wdc.com>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <202301311124.23302.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-No functional modification involved.
+On Tuesday 31 January 2023, Damien Le Moal wrote:
+> On 1/31/23 06:10, Ondrej Zary wrote:
+> > diff --git a/drivers/Makefile b/drivers/Makefile
+> > index f1365608bc8c..de8aa561c95c 100644
+> > --- a/drivers/Makefile
+> > +++ b/drivers/Makefile
+> > @@ -98,7 +98,7 @@ obj-$(CONFIG_DIO)		+= dio/
+> >  obj-$(CONFIG_SBUS)		+= sbus/
+> >  obj-$(CONFIG_ZORRO)		+= zorro/
+> >  obj-$(CONFIG_ATA_OVER_ETH)	+= block/aoe/
+> > -obj-y		 		+= block/paride/
+> > +obj-$(CONFIG_PATA_PARPORT)	+= ata/pata_parport/
+> 
+> It would be better to have this in drivers/ata/Makefile, not here, so that doing
+> something like:
+> 
+> make -j64 M=drivers/ata W=1
+> or
+> make -j64 M=drivers/ata C=1
+> 
+> actually also checks the parport protocol modules too.
+> 
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index 23588738cff0..2f85812e16ef 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -114,6 +114,7 @@ obj-$(CONFIG_PATA_SAMSUNG_CF)       += pata_samsung_cf.o
+> 
+>  obj-$(CONFIG_PATA_PXA)         += pata_pxa.o
+> 
+> +obj-$(CONFIG_PATA_PARPORT)     += pata_parport/
+>  obj-$(CONFIG_PATA_PARPORT)     += pata_parport.o
+> 
+> And then we could also have drivers/ata/pata_parport.c moved under
+> drivers/ata/pata_parport/ to tidy things up.
+> 
+> If you agree, I can fix that up, that is easy to do.
 
-drivers/ata/pata_serverworks.c:443 serverworks_init_one() warn: inconsistent indenting.
+OK, thank you.
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3905
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/ata/pata_serverworks.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index c0bc4af0d196..c6bd9e95d4e8 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -434,10 +434,9 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
- 		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE) ||
- 		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)) {
- 
--		 /* If the returned btr is the newer revision then
--		    select the right info block */
--		 if (rc == 3)
--		 	ppi[0] = &info[3];
-+		/* If the returned btr is the newer revision then select the right info block */
-+		if (rc == 3)
-+			ppi[0] = &info[3];
- 
- 		/* Is this the 3rd channel CSB6 IDE ? */
- 		if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)
 -- 
-2.20.1.7.g153144c
-
+Ondrej Zary
