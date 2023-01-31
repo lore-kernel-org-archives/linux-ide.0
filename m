@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46454C63797
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 02:05:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A220C61DA4
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 02:36:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229874AbjAaCFm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 21:05:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40074 "EHLO
+        id S229524AbjAaCgj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 21:36:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231305AbjAaCFl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 21:05:41 -0500
+        with ESMTP id S229797AbjAaCgi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 21:36:38 -0500
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B5001C582
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 18:05:41 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38F7837F10
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 18:35:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1675130741; x=1706666741;
+  t=1675132555; x=1706668555;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=AcsiuLuDwWfVsTzWwmYa8LChhoDmQwERu0vhn8YNug0=;
-  b=ckfJkv/OI0DvVfpRmt5iLvNZEwpPXxVj69ceCdUXZ5dCOJlk/Gaf5wMg
-   JilAid6beAVWi76jHGoj9NFL+wNE4WOG/DT2rZAdg+U9Yxd2C1TUPsb5o
-   Mtd17C7YV/I/UewxtoQNwbisw0GofI+V74Gdf/F9E599ZROe7b3Xez/o8
-   KH3ByduaAUgNzG3SrEd4/TZyK4qEu8INrPkuk8FzZoYGA6/e01e1z/gjZ
-   9C9MPuR7M0T9ApsYVHQxQxEu9MvKKdqGPJBT9DB2eAVXRrAKWIdVrM6qE
-   RWJFzIWxPZuDONeiatgRLGc/0e62fb9otPmYoFCcf16V85xWbVO0NYnR0
-   w==;
+  bh=SNeQfKOzxazL03Bi6f8L2PK2N7W6QrSqPRc7tQbUgyA=;
+  b=DC0IOOl6XjL5Hna8qdjg/9xMD1u8E5nhuFEtk7O6Wc0RnczzuHyDUq6G
+   IiQU7mNmA2kCu3xPuMrKtfsDCsMVk1CSzXcwyPDcglUJFMdr2O63Vjtz9
+   oKfitiy4+ttSwRz9kd53ef2NjWhH/g8Gfaq+CAw+jrXyz9PGannVnAI5x
+   6kvw2KM9cXBJr4FtbpMLN3/nPpEcM6Lq0gcD8dwV+nTTecva3MgGIQxTi
+   DHtPuWUdpnF0wn4rTJPO9ii3CNMgSRoIEoGxWmd2kj30GmqOaU54lfXK0
+   F3WZv5d1EuK6B6fJuiPScGThg91hnNukKcJ1ZEmpOC5JBq6vuCpYFbGNn
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.97,259,1669046400"; 
-   d="scan'208";a="334094201"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 10:05:39 +0800
-IronPort-SDR: FQyNdhocHlQB2QGE94V4lJTvJIRBll5SeS8XCUNPwbXeEyCOBcgMYryfL1KMaiUtLgc1LnSz4e
- 5DUiGB58b3IvwLOXDaFaD2VJ2WOw2V7WxGok4JzCY63UMnsqVJYcLx/aGVf3RAenjeIDNDR/Ip
- 38gSREubSHCOU2BKY/4J5S97aHQ2LAP0RvNZE75rO+zZIUNIXkr1+IF3Hnl6Yy9uHLiQ6+JrP+
- hytDTlXqNCL5iKac20aBIqbABgOMgu+Iw0ha11LYc4c40bPyjNP230LR+1FVccsLWn2ZTzE5G+
- scI=
+   d="scan'208";a="334096400"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 10:35:01 +0800
+IronPort-SDR: uXnMb53PZsIOk97a2ZTOyBfPI4dQ+C/TKb4fHz9Wu7nV0CAJNZMRmaaWvF3cQy2v72L9NgoVqt
+ G+273xTFonhfDb0L+OUsoxShVoTBgoyRJGRQKKxZ3Bz797pqpIPD+9i8olER6mGmOSQWq1+Ynl
+ SMDVGyq4lH8Ern1nYULFXD0BJH3AOcQtduiaCj/9cpKBw8bpqRpRosvjJb3vTeGI7SYsRUJXhq
+ l5zlmNcYKd47YzEho9p5DMwMYpOm6sVax1QiIXJAmizRkhFcwmKm+aNDJhvBU9k/RG34TWGHS8
+ djs=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 17:17:20 -0800
-IronPort-SDR: J30pJEnR/BtkytNtRsV/y8wNM8q68Ieu8crtIek05qMHAuK/r0Ay+830UPWxNbc3eVLlhOtRqe
- 6W0MzgssslQ52nkROB/C93X7/oX86F7ms3EzctEXuZyhuM40gfkSXpDG0d5N5rVYwMhRlHw7Jh
- 2aMjwP5tMcnMifuHEmS6iaTQWWHly3QVOCTmWl/CaWnrd5SB5z+UQM0HrRFBapwId/gw6RV6i0
- K5KE0mJG/gls4q9boHsVpKv6ESNUzVP1DuzJkWL3lvEr3k3pnGfgvZdK5V9bX8K0btikwcvhFr
- 658=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 17:52:26 -0800
+IronPort-SDR: b/URwYT/q2fIs9SXh10BY+ia/1exQALeisVIKhV1movX1DWA1oQfddeFlQPYHxzcK2MLNsihvJ
+ rS+idPhiGfUW3JyJ7DlzmSG5Jn9qDIZ3sCVGpHL3l38b/HoLkmfgsFZfhGlv/TjxRSILmPCbZZ
+ /7DkgSuQLPcZI8h3ZJV2gSI12qjGgyY+xnUyzC0mDv4PbHui70E21Cz/PnQGs+W23ExZtAF11A
+ EgQ+vP/5y0SvlW1aAqF3oILYn7ZSNoq4Hp38+tWVwua6UdY81T8pGEgkgQ7aGB1cx8t/hkWMvF
+ MZs=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 18:05:39 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 18:35:02 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5T0g2qWLz1RvTr
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 18:05:39 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5TfY5Cj4z1Rwrq
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 18:35:01 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,82 +56,55 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1675130738; x=1677722739; bh=AcsiuLuDwWfVsTzWwmYa8LChhoDmQwERu0v
-        hn8YNug0=; b=If7in8ACFpGd9feMG2WQjqjiESkIbI/SSsPJRd0A/fqdyxaPLLO
-        EIxXz42KfGgFXxlNtGWxobMWwIx3Ni5oYuYwu7RN2HtB4O4ljNyxJNwXkB5+tV7k
-        NEzMfXo2NsMs+OpIbM7l5jcczl1eRMXYCTqqgCwbN/7lbtUeKYf/3taHuZzV4Xqp
-        /yPBdjIVEqp5Ho/eckNcS9LedHOrNigrM1Oh93W9pQyaFlwNP/N83Ss6tzsEgaeY
-        +egN+bJGJSuAinpgS1jThyxyYxRs3/6c8tU9+qOytZie+44COimoUgdD3sdTccN8
-        QvaKLMoxgwPZZE/5mPNdaNMsfPoC0t9U4fg==
+        1675132501; x=1677724502; bh=SNeQfKOzxazL03Bi6f8L2PK2N7W6QrSqPRc
+        7tQbUgyA=; b=dMJJfFHihTNKloKThOcz6pDKfVyF8SaJICmxOk6T8dtV3bYFUOx
+        /VtCMpJcodap7obbBT0V4uPiWi0LXyMquMWcpOuET1PCtRVuj+gkmFapwB0hONXf
+        wIgyGHjByTP5+kVq1OHEJJ3fSQXgIvpn6BS3u8jN5oAeXL2/XRvNxvwmPujPhC1o
+        G0Nak5faxYubTBConQ6ofPyGlVIHOVpqLp8b90/YJOBuiHRlVvZSmycBkGLE3ODo
+        L+EzJu0c4MUmDNnhI2Ce/0BJ9U2Hs0O1Vrs+tEjRlputbCO4zo1ScyNI6X6pa5E/
+        HpwiDywfnqQsqDUCmgs/zRmHjBeDuT8bd5w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id S3Ma1xgY6jlN for <linux-ide@vger.kernel.org>;
-        Mon, 30 Jan 2023 18:05:38 -0800 (PST)
+        with ESMTP id bMgYzUlMrwRI for <linux-ide@vger.kernel.org>;
+        Mon, 30 Jan 2023 18:35:01 -0800 (PST)
 Received: from [10.225.163.70] (unknown [10.225.163.70])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5T0d0H6Dz1RvLy;
-        Mon, 30 Jan 2023 18:05:36 -0800 (PST)
-Message-ID: <e6041145-7336-2534-8449-7b9b6a842466@opensource.wdc.com>
-Date:   Tue, 31 Jan 2023 11:05:35 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5TfX4Sp8z1RvLy;
+        Mon, 30 Jan 2023 18:35:00 -0800 (PST)
+Message-ID: <341397a1-9da5-466d-a738-cad79e8d2390@opensource.wdc.com>
+Date:   Tue, 31 Jan 2023 11:34:59 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.6.0
-Subject: Re: [PATCH 2/2] drivers/block: Move PARIDE protocol modules to
- drivers/ata/pata_parport
+Subject: Re: Marvel 88SE6121 fails with SATA-2/3 HDDs
 Content-Language: en-US
-To:     Ondrej Zary <linux@zary.sk>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <d4f7ebd5-d90d-fb96-0fad-bd129ac162dc@opensource.wdc.com>
- <20230130211050.16753-1-linux@zary.sk> <20230130211050.16753-2-linux@zary.sk>
+To:     Hajo Noerenberg <hajo-linux-ide@noerenberg.de>,
+        linux-ide@vger.kernel.org
+Cc:     =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>, risc4all@yahoo.com
+References: <db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de>
+ <930a0685-c741-110e-40c2-660754301e5a@opensource.wdc.com>
+ <a248857e-991c-16d7-496c-9dc692186ead@noerenberg.de>
+ <b4a515f6-e11c-756b-ff90-114836f919f9@noerenberg.de>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20230130211050.16753-2-linux@zary.sk>
+In-Reply-To: <b4a515f6-e11c-756b-ff90-114836f919f9@noerenberg.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/31/23 06:10, Ondrej Zary wrote:
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index f1365608bc8c..de8aa561c95c 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -98,7 +98,7 @@ obj-$(CONFIG_DIO)		+= dio/
->  obj-$(CONFIG_SBUS)		+= sbus/
->  obj-$(CONFIG_ZORRO)		+= zorro/
->  obj-$(CONFIG_ATA_OVER_ETH)	+= block/aoe/
-> -obj-y		 		+= block/paride/
-> +obj-$(CONFIG_PATA_PARPORT)	+= ata/pata_parport/
+On 1/30/23 22:40, Hajo Noerenberg wrote
+> Summary: With U-Boot and kernels <3.16 the drives work, even without jumper.
+> I wonder if there is a way to get the drives working with up to date kernels.
+> This would have the benefit of a.) no need to set jumpers and b.) getting
+> bigger/newer drives like the WD30EFRX to work which probably do not have a
+> downgrade-jumper.
 
-It would be better to have this in drivers/ata/Makefile, not here, so that doing
-something like:
+Can you try with libata.force=nolpm ? A lot of old WD drives have broken LPM.
 
-make -j64 M=drivers/ata W=1
-or
-make -j64 M=drivers/ata C=1
+Also, did you try with the pata_marvell driver instead of AHCI driver ?
 
-actually also checks the parport protocol modules too.
-
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 23588738cff0..2f85812e16ef 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -114,6 +114,7 @@ obj-$(CONFIG_PATA_SAMSUNG_CF)       += pata_samsung_cf.o
-
- obj-$(CONFIG_PATA_PXA)         += pata_pxa.o
-
-+obj-$(CONFIG_PATA_PARPORT)     += pata_parport/
- obj-$(CONFIG_PATA_PARPORT)     += pata_parport.o
-
-And then we could also have drivers/ata/pata_parport.c moved under
-drivers/ata/pata_parport/ to tidy things up.
-
-If you agree, I can fix that up, that is easy to do.
 
 -- 
 Damien Le Moal
