@@ -2,161 +2,80 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E95C636D4
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 03:10:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24274C636CC
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 07:21:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229445AbjAaDKp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 22:10:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39564 "EHLO
+        id S230094AbjAaHVK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 31 Jan 2023 02:21:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbjAaDKo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 22:10:44 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7FA44699
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 19:10:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1675134643; x=1706670643;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=74mUSSZbgXTIvUjr10/8l80yClPOJgEszMjAqE2My3I=;
-  b=ItUx3ilE2ZaOI1sbxP0Zy807vZXmL2Z3QQEMC2Nlp3QurfCt+nUqXB9v
-   GUMwuBnTMCNtjzvNpuK9GrT0GSjyqCsb+EMOvt83eBqKn+u4jy3CLSfBF
-   T+dFrva4vgaGdYkRcLxJP+8DUIrv6P6eGjpf7r8ifLuHLRrIgf/86qXvU
-   JU3xJQExB4b9xx5FsRZmgZgEX0lF6+OYXzUElZdALAgIVXv8PHAC91uCo
-   8TNpxms+XSbd5Z3burt2TbHidJDcckPz8Sn00ojEQQRLHu2ur1UOjgYVx
-   9YU4JSvvzaBKFDoBq/bd63rjacziR3GBmoEtVUi9fDNA8QOPoyfFp0ZS4
-   g==;
-X-IronPort-AV: E=Sophos;i="5.97,259,1669046400"; 
-   d="scan'208";a="227106788"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 11:10:42 +0800
-IronPort-SDR: sNf/foAK19Lofxu/4gQzQd3c0vwsa2K2EZm2XIzqJJJyNi8WqU0/4H5YcydZed5J2fCl3c9UKP
- kpPMuE076LaoguBr4HiPurSjcAQAtLz9R57bJf/9Twf1/kSQX/wSBQ5R8YyXp2tP5fW8arbG2f
- 7ndeB0tplZQ5wihhyigMQl+yiWNEf8iOSV+UVNqlGQ8NN5H7xqfcAusChKhvMTEJ8WJNeAMRLO
- RMCKTwDXhSGUE2SsuYrw7LtAVBzv8YLqQ4bk+rksDVVEmR1gRxnWzklbubz6YpRSu+gHcxwfde
- CX8=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 18:28:08 -0800
-IronPort-SDR: 2imc2+4Qk24nuknoI1Ulj0UKM7uaZkEuhJawieXqlzvGjHLI4Dn5UYBy5dIwi7kBpb8QVGSQB9
- 4e1YWgWVSdw+I6RulLKieEX3tTIuH2etHovNw0IoH0L3Fa4TAXkCivS2i/8Phgp1glqFDhJQq0
- LcdZq7mQkcS+HiiE7A0hGCIrBmGswag1u2+4B3PiGOTM8djFgiZB5wSjz1O74ebO952K06H4ve
- rz1S3SwQFpFyIi8Kd2r4z2XYE+QvO2ZUVsgjiYxxDnum9ClYmIwRu5dGFQ+Qy6PkLV1csBdycG
- 1y8=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 19:10:43 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5VRk1RKpz1Rwt8
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 19:10:42 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1675134641; x=1677726642; bh=74mUSSZbgXTIvUjr10/8l80yClPOJgEszMj
-        AqE2My3I=; b=chMl9+h6Sy4ZyHyaRKxQD2vlyTIsy2eo0OxUuSArbAlGoEhnNCa
-        C75idSQWanVipKaEO1x0NaZxka/lhz9claSn5YjaUnB+jR+CqpubI077M7dAQR5H
-        LBPml6dT36qsUFozQ5m8k6e53sym250KGJD5dbkOeqg1losx6Kc2ZuwynidgNQKk
-        v0pX4phAml/Bsgwc+TDKRntTU8WPQfHR3RXRZ9n0z4Er02nfNxWH9ZmIObJLtfRM
-        bIAYB5E0wokVT8JhVm8Pmmud3MzKakyJklgjnWVgrECbFF1YU9JGwEaezUl23yn2
-        bonAS8NAKZVHcLrSyk7UT3p+GTfCZHP2KcA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id jIS2qhSMZ5Oe for <linux-ide@vger.kernel.org>;
-        Mon, 30 Jan 2023 19:10:41 -0800 (PST)
-Received: from [10.225.163.70] (unknown [10.225.163.70])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5VRg5lpYz1RvLy;
-        Mon, 30 Jan 2023 19:10:39 -0800 (PST)
-Message-ID: <4a8a46cb-fec8-4ca8-a346-62fd0f0efb73@opensource.wdc.com>
-Date:   Tue, 31 Jan 2023 12:10:38 +0900
+        with ESMTP id S229579AbjAaHVJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 02:21:09 -0500
+Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B4AF2BF04
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 23:21:00 -0800 (PST)
+dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
+        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
+        bh=1XqxIWjdf5GC4f+By2KUG4i+s+Og9prkocgvmumvsGI=;
+        b=b9aaKD4dO+GL+rgsKK4ZrjAb5i0wBbaLOlapiEw31loKIV65gHvTVqtVScOccG3vM+VB0YmGS2cn1Gp+fBQui/uEmHDxmRvybYSgB75S57liYjVf75y8fQk8uztUylebXLxSmNOUUPkSJ12R8lCrf1U5sM6yUcCLlUEBJrax2Y4Gvtk1Q2ub83W7RuztN4jF9s+7slMUrRKKITUK6GSSnxiocrQml9DkdXZqi47aVpF5hC2EZMA9JShj4w
+        3xdx1gP/5k8J3drOXg84ODjW/tQ2aF50OTwWVoAI4uQPzXC92g9JMMzR6e6pqg0VVSbCoRNA/zYqgGZpEJIA1OPhPhlA==
+Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
+        by mx1.wiredblade.com with ESMTPA
+        ; Tue, 31 Jan 2023 07:20:58 +0000
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v3 01/18] block: introduce duration-limits priority class
-Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Paolo Valente <paolo.valente@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230124190308.127318-2-niklas.cassel@wdc.com>
- <873e0213-94b5-0d81-a8aa-4671241e198c@acm.org>
- <4c345d8b-7efa-85c9-fe1c-1124ea5d9de6@opensource.wdc.com>
- <5066441f-e265-ed64-fa39-f77a931ab998@acm.org>
- <275993f1-f9e8-e7a8-e901-2f7d3a6bb501@opensource.wdc.com>
- <e8324901-7c18-153f-b47f-112a394832bd@acm.org> <Y9Gd0eI1t8V61yzO@x1-carbon>
- <86de1e78-0ff2-be70-f592-673bce76e5ac@opensource.wdc.com>
- <Y9KF5z/v0Qp5E4sI@x1-carbon> <7f0a2464-673a-f64a-4ebb-e599c3123a24@acm.org>
- <29b50dbd-76e9-cdce-4227-a22223850c9a@opensource.wdc.com>
- <c8ef76be-c285-c797-5bdb-3a960821048b@opensource.wdc.com>
- <ddc88fa1-5aaa-4123-e43b-18dc37f477e9@acm.org>
- <049a7e88-89d1-804f-a0b5-9e5d93d505f7@opensource.wdc.com>
- <b77d5e44-bc1e-7524-7e09-a609ba471dbc@acm.org>
- <4e803108-9526-6a75-f209-789a06ef52f9@opensource.wdc.com>
- <yq1r0veh2fa.fsf@ca-mkp.ca.oracle.com>
- <f8320ff3-0f52-aa0c-635e-c1e7c28ffe25@opensource.wdc.com>
- <yq1bkmfe88c.fsf@ca-mkp.ca.oracle.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <yq1bkmfe88c.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Date:   Tue, 31 Jan 2023 07:20:59 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: RainLoop/1.16.0
+From:   marius@psihoexpert.ro
+Message-ID: <d8abdd49a63106081b4f899f8bc53dbe@psihoexpert.ro>
+Subject: Re: Bug report for ahci-mvebu driver
+To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org
+In-Reply-To: <1831eb01-5c84-54f1-7950-9b8e9bf0a046@opensource.wdc.com>
+References: <1831eb01-5c84-54f1-7950-9b8e9bf0a046@opensource.wdc.com>
+ <3c508c6e-5377-bb2d-64df-407f73a8170a@opensource.wdc.com>
+ <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
+ <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
+ <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
+ <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
+ <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
+ <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
+ <da1d366a494469a46eb066b167613e21@psihoexpert.ro>
+ <d42ddd29171c69e9a6628bfc2b100aca@psihoexpert.ro>
+ <44527e2f8583a8ce51b1241bf9e56595@psihoexpert.ro>
+ <45337bf4a17c9c879f9439c1138bc443@psihoexpert.ro>
+ <7fe0b96f30bf787d339ba656d5d2df01@psihoexpert.ro>
+ <db3fa398d4a1dcadb9df02d1001a61c6@psihoexpert.ro>
+ <c7e1b214fca6c2a08dbce60006442dd8@psihoexpert.ro>
+ <009822d6-24b8-739d-e7ee-13adc1c7d548@opensource.wdc.com>
+ <55834657003f5a4579b326ee61fe1e80@psihoexpert.ro>
+ <8cd8066ac1059ae0fef280a3cf6ab03c@psihoexpert.ro>
+ <9490768bca8f5a213d89214ca9324fa0@psihoexpert.ro>
+ <071bf5d4-4007-6779-60fd-82ec58dd44fe@opensource.wdc.com>
+X-Originating-IP: 188.24.142.89
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/31/23 11:49, Martin K. Petersen wrote:
-> 
-> Damien,
-> 
->> Makes sense. Though I think it will be hard to define a set of QoS
->> hints that are useful for a wide range of applications, and even
->> harder to convert the defined hint classes to CDL descriptors. I fear
->> that we may end up with the same issues as IO hints/streams.
-> 
-> Hints mainly failed because non-Linux OSes had very different
-> expectations about how this was going to work. So that left device
-> vendors in a situation where they had to essentially support 3 different
-> approaches all implemented using the same protocol.
-> 
-> The challenge of being a general purpose OS is to come up with concepts
-> that are applicable in a variety of situations. Twiddling protocol
-> fields is the easy part.
-> 
-> I have a couple of experienced CDL users that I'd like to talk to and
-> try to get a better idea of what a suitable set of defaults might look
-> like.
-> 
->> This hint applies to all priority classes and levels, that is, for the
->> CDL case, we can enrich any priority with a hint that specifies the
->> CDL index to use for an IO.
-> 
-> Yeah, I like that approach better.
+January 31, 2023 1:22 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.=
+com> wrote:
+>=20
+>=20I sent the official patch and CC-ed you. Can I add your
+> "Tested-by: Marius Dinu <marius@psihoexpert.ro>" tag to the patch and q=
+ueue it ?
+>=20
+>=20--
+> Damien Le Moal
+> Western Digital Research
 
-Of note is that even though the IOPRIO_XXX macros in include/uapi/linux/ioprio.h
-assume a 16bits value for the priority class + data, of which only 6 bits are
-usable (3 for the class, 3 for the level), all syscall and kernel internal
-interface has ioprio defined as an int. So we have in fact 32 bits to play with.
-We could keep the lower 16 bits for ioprio as it was, and have the upper 16bits
-used for QOS hints. More room that the 10 bits between the prio class and level.
+Yes, I was planning to reply myself, but I'm not done testing yet. At thi=
+s point I can only say it's working on mvebu / Armada 385. I plan to back=
+port to v5.15 and test with the other router that I have (mvebu / Armada =
+XP), a laptop and two x86_64 desktops, one of which has various PATA and =
+SATA controllers in all sorts of weird configurations. I hope to do it al=
+l this weekend.
+Thank you for the patch!
 
-The only place that will need changing is struct bio since bi_ioprio is defined
-as an unsigned short. To solve this, as Bart suggested, we could add another
-unsigned short in the bio struct hole for the qos hints (bi_iohint or bi_ioqoshint).
-
-But if we can define a sensible set of hints that covers at least CDL with the
-10 free bits we have in the current ioprio, that would be even better I think
-(less changes needed in the block layer).
-
--- 
-Damien Le Moal
-Western Digital Research
+Marius Dinu
 
