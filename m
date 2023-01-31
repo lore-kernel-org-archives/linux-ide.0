@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 214A3C636CC
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 08:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84835C636CC
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 08:42:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231849AbjAaImE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 Jan 2023 03:42:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54440 "EHLO
+        id S231690AbjAaImX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 31 Jan 2023 03:42:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231693AbjAaIkf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 03:40:35 -0500
+        with ESMTP id S231719AbjAaIkw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 03:40:52 -0500
 Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CEB884673C
-        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2023 00:39:59 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C67A346714
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2023 00:39:58 -0800 (PST)
 Received: from unknown (HELO lgeamrelo04.lge.com) (156.147.1.127)
-        by 156.147.23.51 with ESMTP; 31 Jan 2023 17:39:59 +0900
+        by 156.147.23.51 with ESMTP; 31 Jan 2023 17:39:58 +0900
 X-Original-SENDERIP: 156.147.1.127
 X-Original-MAILFROM: max.byungchul.park@gmail.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.127 with ESMTP; 31 Jan 2023 17:39:59 +0900
+        by 156.147.1.127 with ESMTP; 31 Jan 2023 17:39:58 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: max.byungchul.park@gmail.com
 From:   Byungchul Park <max.byungchul.park@gmail.com>
@@ -46,9 +46,9 @@ Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
         42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
         gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
         boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com
-Subject: [PATCH v9 13/25] dept: Distinguish each work from another
-Date:   Tue, 31 Jan 2023 17:39:42 +0900
-Message-Id: <1675154394-25598-14-git-send-email-max.byungchul.park@gmail.com>
+Subject: [PATCH v9 10/25] dept: Apply sdt_might_sleep_{start,end}() to waitqueue wait
+Date:   Tue, 31 Jan 2023 17:39:39 +0900
+Message-Id: <1675154394-25598-11-git-send-email-max.byungchul.park@gmail.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1675154394-25598-1-git-send-email-max.byungchul.park@gmail.com>
 References: <1675154394-25598-1-git-send-email-max.byungchul.park@gmail.com>
@@ -56,81 +56,41 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Workqueue already provides concurrency control. By that, any wait in a
-work doesn't prevents events in other works with the control enabled.
-Thus, each work would better be considered a different context.
-
-So let Dept assign a different context id to each work.
+Makes Dept able to track dependencies by waitqueue waits.
 
 Signed-off-by: Byungchul Park <max.byungchul.park@gmail.com>
 ---
- include/linux/dept.h     |  2 ++
- kernel/dependency/dept.c | 10 ++++++++++
- kernel/workqueue.c       |  3 +++
- 3 files changed, 15 insertions(+)
+ include/linux/wait.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/linux/dept.h b/include/linux/dept.h
-index f62c7b6..d9ca9dd 100644
---- a/include/linux/dept.h
-+++ b/include/linux/dept.h
-@@ -515,6 +515,7 @@ struct dept_task {
- extern void dept_sched_enter(void);
- extern void dept_sched_exit(void);
- extern void dept_kernel_enter(void);
-+extern void dept_work_enter(void);
+diff --git a/include/linux/wait.h b/include/linux/wait.h
+index a0307b5..ff349e6 100644
+--- a/include/linux/wait.h
++++ b/include/linux/wait.h
+@@ -7,6 +7,7 @@
+ #include <linux/list.h>
+ #include <linux/stddef.h>
+ #include <linux/spinlock.h>
++#include <linux/dept_sdt.h>
  
- static inline void dept_ecxt_enter_nokeep(struct dept_map *m)
- {
-@@ -567,6 +568,7 @@ static inline void dept_ecxt_enter_nokeep(struct dept_map *m)
- #define dept_sched_enter()				do { } while (0)
- #define dept_sched_exit()				do { } while (0)
- #define dept_kernel_enter()				do { } while (0)
-+#define dept_work_enter()				do { } while (0)
- #define dept_ecxt_enter_nokeep(m)			do { } while (0)
- #define dept_key_init(k)				do { (void)(k); } while (0)
- #define dept_key_destroy(k)				do { (void)(k); } while (0)
-diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-index dd90746..1f1aca4 100644
---- a/kernel/dependency/dept.c
-+++ b/kernel/dependency/dept.c
-@@ -1977,6 +1977,16 @@ void dept_hardirqs_off_ip(unsigned long ip)
- }
- EXPORT_SYMBOL_GPL(dept_hardirqs_off_ip);
+ #include <asm/current.h>
+ #include <uapi/linux/wait.h>
+@@ -303,6 +304,7 @@ static inline void wake_up_pollfree(struct wait_queue_head *wq_head)
+ 	struct wait_queue_entry __wq_entry;					\
+ 	long __ret = ret;	/* explicit shadow */				\
+ 										\
++	sdt_might_sleep_start(NULL);						\
+ 	init_wait_entry(&__wq_entry, exclusive ? WQ_FLAG_EXCLUSIVE : 0);	\
+ 	for (;;) {								\
+ 		long __int = prepare_to_wait_event(&wq_head, &__wq_entry, state);\
+@@ -318,6 +320,7 @@ static inline void wake_up_pollfree(struct wait_queue_head *wq_head)
+ 		cmd;								\
+ 	}									\
+ 	finish_wait(&wq_head, &__wq_entry);					\
++	sdt_might_sleep_end();							\
+ __out:	__ret;									\
+ })
  
-+/*
-+ * Assign a different context id to each work.
-+ */
-+void dept_work_enter(void)
-+{
-+	struct dept_task *dt = dept_task();
-+
-+	dt->cxt_id[DEPT_CXT_PROCESS] += 1UL << DEPT_CXTS_NR;
-+}
-+
- void dept_kernel_enter(void)
- {
- 	struct dept_task *dt = dept_task();
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 07895de..69c4f46 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -51,6 +51,7 @@
- #include <linux/sched/isolation.h>
- #include <linux/nmi.h>
- #include <linux/kvm_para.h>
-+#include <linux/dept.h>
- 
- #include "workqueue_internal.h"
- 
-@@ -2199,6 +2200,8 @@ static void process_one_work(struct worker *worker, struct work_struct *work)
- 
- 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
- #endif
-+	dept_work_enter();
-+
- 	/* ensure we're on the correct CPU */
- 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
- 		     raw_smp_processor_id() != pool->cpu);
 -- 
 1.9.1
 
