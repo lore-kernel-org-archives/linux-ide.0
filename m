@@ -2,146 +2,112 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A9D7C38142
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 11:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B972C38142
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 12:33:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231358AbjAaLhG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 Jan 2023 06:37:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36784 "EHLO
+        id S230094AbjAaMdt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 31 Jan 2023 07:33:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230306AbjAaLg7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 06:36:59 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0956CDF8
-        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2023 03:36:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1675165018; x=1706701018;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=gA2pIWlMZlIKc4EJKQFR0wQk92xrlZIShxykKJ4in54=;
-  b=VYlzN+JWJ1D+gWU7huVHNW/b2Ofr6XaAq5BGn/Rhgzmm0YFycvdtVy7x
-   edsMF1nrQjDbDGhThZ/QenfDjjMQ03iFeYZ+iLv9gTX8I24gfm2857JHt
-   TaHoVfOBamNweIXbNT5g68p+AcmwROU2jLAkJNzzYNu4cI7lDpXsuQPkv
-   Nz8I6wnV9uvbpj7dBqGdXaktyK+x7/n9IA7dJAxc7DLeIBGMcGLYKUKrs
-   Tplby7o9pegBZwuCiem2ReNvETvJdnEzaVmUqO7kmQtC4y2mnHvqstVZ5
-   6k8JAi3xuLTqbNBL0NqSlMi3G6smfOgC/MTvfAmXEWukBrNKjW+6s6kes
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.97,261,1669046400"; 
-   d="scan'208";a="326459827"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 19:36:57 +0800
-IronPort-SDR: yKWpFgqgqvHfW3RehIxuLqI6V38WOmg9kdRmZjdAFFZ9a203JbJwsIchtHfKt2NBkma6G9/a3/
- T0CoYeEDITY4TXcF4lTIfvZLRb4+qULEtpPoO9OH1USWS0B+qldHUR87+L6yHTZ5bmwNC16jgy
- cBeTLPKvExHexspHu6porQzFA1lfov6oyokFj3jbAWcXRy+Ubm3PIC72lDlChVlGRbaFoORWh3
- JeDIPwDe+H9LPowEJ8/T8J8SlT87yQZMUuShYwIqiBag3jADQ56efSfRO1W5K1Hbi7HUMOWh8+
- 5pU=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Jan 2023 02:48:37 -0800
-IronPort-SDR: XOBBxfpu1Cejp32olrDTwqY2x2ClUy4gYyUIzMI/LK06EmwMuJ8fjS4HvTiNQP6CHz0K9NMiTi
- j4UCA8EAAV8Mo/2lCqbk5sewttM7NPyPzOuK8ajSFxUS2X3HY9kF88gb+aKA8AE/fOhIdr2yN7
- DYrE1ONpToMrWDMF5AF1mlfQCRJjVoBIKh3h7NGQ7TbOwzYSAQGmiAQ/sCdi4BV/iU1nPrFy34
- 0laDB+HGPt+Zf3ohjJPlL4nCBkDEDqWc8BgBkXsikX9p2l4GLLbLCPAuzP8AoKKvZ4LpF46yhI
- 5CE=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 31 Jan 2023 03:36:57 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5jgs0P6Qz1RvTr
-        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2023 03:36:57 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1675165016; x=1677757017; bh=gA2pIWlMZlIKc4EJKQFR0wQk92xrlZIShxy
-        kKJ4in54=; b=hIWdUmu6yk9coI0UhFdgGB5/VD8gQosnLTC00nLyuZ8C7+yemTs
-        /HNf+k2lJxLgAQmjsXrvJ5NeyTDbcgPJrQg0B1NyyGzgyxKwZ18Cp6V1+9/Q2KHC
-        qc8OZTn6m2T6wIYynC52aWw3gNq3IzSRKHQfpyDCOAdSyo4oHSC+mUG+LI9s3+Z6
-        5n3rhKZT2AsK8uwWDTfFDhYodIvfOOS6/khgwMgmaSK76jwY5XbYtf1krcZEYjUB
-        ZhNobySuQnW+r6N9RMZRzIDtVsy8dNquz6NTACu5JEkwEn25dKk3FnvAeaIaQ8xo
-        mqD4PeLqtUv6j32jk1EkOThbFqvANbIb6JQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id DBG6MChnzjEU for <linux-ide@vger.kernel.org>;
-        Tue, 31 Jan 2023 03:36:56 -0800 (PST)
-Received: from [10.225.163.70] (unknown [10.225.163.70])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5jgq0bmTz1RvLy;
-        Tue, 31 Jan 2023 03:36:54 -0800 (PST)
-Message-ID: <1569ffb1-b23c-3f8c-6467-102f51426850@opensource.wdc.com>
-Date:   Tue, 31 Jan 2023 20:36:53 +0900
+        with ESMTP id S229706AbjAaMdt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 07:33:49 -0500
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD7DF29438;
+        Tue, 31 Jan 2023 04:33:46 -0800 (PST)
+Received: from [192.168.1.103] (31.173.86.113) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 31 Jan
+ 2023 15:33:41 +0300
+Subject: Re: [PATCH] libata: clean up some inconsistent indenting
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Abaci Robot <abaci@linux.alibaba.com>
+References: <20230131085431.30549-1-jiapeng.chong@linux.alibaba.com>
+ <d8d117bf-4ab1-3473-85e2-00f1b1a85cba@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <d5a59ca8-1b17-9cf2-80d0-3e267e558fd5@omp.ru>
+Date:   Tue, 31 Jan 2023 15:33:41 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH 2/2] drivers/block: Move PARIDE protocol modules to
- drivers/ata/pata_parport
+In-Reply-To: <d8d117bf-4ab1-3473-85e2-00f1b1a85cba@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-To:     Ondrej Zary <linux@zary.sk>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <d4f7ebd5-d90d-fb96-0fad-bd129ac162dc@opensource.wdc.com>
- <20230130211050.16753-2-linux@zary.sk>
- <e6041145-7336-2534-8449-7b9b6a842466@opensource.wdc.com>
- <202301311124.23302.linux@zary.sk>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <202301311124.23302.linux@zary.sk>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.86.113]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 01/31/2023 12:18:15
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 175146 [Jan 31 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;bugzilla.openanolis.cn:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.113
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 01/31/2023 12:20:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 1/31/2023 10:39:00 AM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/31/23 19:24, Ondrej Zary wrote:
-> On Tuesday 31 January 2023, Damien Le Moal wrote:
->> On 1/31/23 06:10, Ondrej Zary wrote:
->>> diff --git a/drivers/Makefile b/drivers/Makefile
->>> index f1365608bc8c..de8aa561c95c 100644
->>> --- a/drivers/Makefile
->>> +++ b/drivers/Makefile
->>> @@ -98,7 +98,7 @@ obj-$(CONFIG_DIO)		+= dio/
->>>  obj-$(CONFIG_SBUS)		+= sbus/
->>>  obj-$(CONFIG_ZORRO)		+= zorro/
->>>  obj-$(CONFIG_ATA_OVER_ETH)	+= block/aoe/
->>> -obj-y		 		+= block/paride/
->>> +obj-$(CONFIG_PATA_PARPORT)	+= ata/pata_parport/
+On 1/31/23 2:26 PM, Damien Le Moal wrote:
+[...]
+>> No functional modification involved.
 >>
->> It would be better to have this in drivers/ata/Makefile, not here, so that doing
->> something like:
+>> drivers/ata/pata_serverworks.c:443 serverworks_init_one() warn: inconsistent indenting.
 >>
->> make -j64 M=drivers/ata W=1
->> or
->> make -j64 M=drivers/ata C=1
+>> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+>> Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3905
+>> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+>> ---
+>>  drivers/ata/pata_serverworks.c | 7 +++----
+>>  1 file changed, 3 insertions(+), 4 deletions(-)
 >>
->> actually also checks the parport protocol modules too.
->>
->> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
->> index 23588738cff0..2f85812e16ef 100644
->> --- a/drivers/ata/Makefile
->> +++ b/drivers/ata/Makefile
->> @@ -114,6 +114,7 @@ obj-$(CONFIG_PATA_SAMSUNG_CF)       += pata_samsung_cf.o
->>
->>  obj-$(CONFIG_PATA_PXA)         += pata_pxa.o
->>
->> +obj-$(CONFIG_PATA_PARPORT)     += pata_parport/
->>  obj-$(CONFIG_PATA_PARPORT)     += pata_parport.o
->>
->> And then we could also have drivers/ata/pata_parport.c moved under
->> drivers/ata/pata_parport/ to tidy things up.
->>
->> If you agree, I can fix that up, that is easy to do.
+>> diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
+>> index c0bc4af0d196..c6bd9e95d4e8 100644
+>> --- a/drivers/ata/pata_serverworks.c
+>> +++ b/drivers/ata/pata_serverworks.c
+>> @@ -434,10 +434,9 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
+>>  		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE) ||
+>>  		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)) {
+>>  
+>> -		 /* If the returned btr is the newer revision then
+>> -		    select the right info block */
+>> -		 if (rc == 3)
+>> -		 	ppi[0] = &info[3];
+>> +		/* If the returned btr is the newer revision then select the right info block */
 > 
-> OK, thank you.
+> Very long line. Please make that a proper multi-line comment.
 
-All queued now. Thanks !
+   Perhaps the material of a separate patch?
 
--- 
-Damien Le Moal
-Western Digital Research
+> And the patch title should be:
+> 
+> ata: pata_serverworks: clean up indentation
 
+   Yes!
+
+[...]
+
+MBR, Sergey
