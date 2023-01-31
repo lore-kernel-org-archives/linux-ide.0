@@ -2,112 +2,96 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B972C38142
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 12:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC0FDC636CC
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 17:00:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbjAaMdt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 Jan 2023 07:33:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46924 "EHLO
+        id S229651AbjAaRAP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 31 Jan 2023 12:00:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229706AbjAaMdt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 07:33:49 -0500
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD7DF29438;
-        Tue, 31 Jan 2023 04:33:46 -0800 (PST)
-Received: from [192.168.1.103] (31.173.86.113) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 31 Jan
- 2023 15:33:41 +0300
-Subject: Re: [PATCH] libata: clean up some inconsistent indenting
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Abaci Robot <abaci@linux.alibaba.com>
-References: <20230131085431.30549-1-jiapeng.chong@linux.alibaba.com>
- <d8d117bf-4ab1-3473-85e2-00f1b1a85cba@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <d5a59ca8-1b17-9cf2-80d0-3e267e558fd5@omp.ru>
-Date:   Tue, 31 Jan 2023 15:33:41 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S231678AbjAaRAN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 12:00:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 107024DBD1
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2023 09:00:01 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9909861566
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2023 17:00:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 09435C4339B
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2023 17:00:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675184400;
+        bh=WrF11YwuENcOp1F8I+ZiMEbJKkdqW8ln2NIea7Q6FF0=;
+        h=From:To:Subject:Date:From;
+        b=ciHnE2QOYzplB3VOzVOf+JEw0is41AYIaK086Q5yrX67b9AZIsMpb2wtqIKguresL
+         zmIbAxgvkY79H3WUbPsrllAABUzSPBuOOPVvRGy/FgcET1EXkKlGo4YKXz55OeI1bC
+         GHfFS9Bn/IgsTVmPCVKBKRnegRJjsbzMY7ggws1wy2Z9swSVWZ3jnZebtWB4zLg+nf
+         StjF19u7voIg980whSMvVNtJPTGC7bixT6XsePkGPoFjez3VEn0DTTg/nKgTROmfhi
+         jNH/af4ICQbZ0SF/9d35hXkYbo25PT9ieflynF+xhe4SX1W6HILri+yzts4284zQM7
+         ZPlITA+z0kacQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id E22A8C43143; Tue, 31 Jan 2023 16:59:59 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-ide@vger.kernel.org
+Subject: [Bug 216982] New: sound hit
+Date:   Tue, 31 Jan 2023 16:59:59 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo io_ide@kernel-bugs.osdl.org
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: IDE
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: kirill-s-0801@yandex.ru
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: io_ide@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-216982-11633@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-In-Reply-To: <d8d117bf-4ab1-3473-85e2-00f1b1a85cba@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.86.113]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 01/31/2023 12:18:15
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 175146 [Jan 31 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;bugzilla.openanolis.cn:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.113
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 01/31/2023 12:20:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 1/31/2023 10:39:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/31/23 2:26 PM, Damien Le Moal wrote:
-[...]
->> No functional modification involved.
->>
->> drivers/ata/pata_serverworks.c:443 serverworks_init_one() warn: inconsistent indenting.
->>
->> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
->> Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3905
->> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
->> ---
->>  drivers/ata/pata_serverworks.c | 7 +++----
->>  1 file changed, 3 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
->> index c0bc4af0d196..c6bd9e95d4e8 100644
->> --- a/drivers/ata/pata_serverworks.c
->> +++ b/drivers/ata/pata_serverworks.c
->> @@ -434,10 +434,9 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
->>  		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE) ||
->>  		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)) {
->>  
->> -		 /* If the returned btr is the newer revision then
->> -		    select the right info block */
->> -		 if (rc == 3)
->> -		 	ppi[0] = &info[3];
->> +		/* If the returned btr is the newer revision then select the right info block */
-> 
-> Very long line. Please make that a proper multi-line comment.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216982
 
-   Perhaps the material of a separate patch?
+            Bug ID: 216982
+           Summary: sound hit
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 6.1.8
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+          Assignee: io_ide@kernel-bugs.osdl.org
+          Reporter: kirill-s-0801@yandex.ru
+        Regression: No
 
-> And the patch title should be:
-> 
-> ata: pata_serverworks: clean up indentation
+The sound disappeared on the ASUS Vivobook. When I plugged in the headphone=
+s,
+the sound disappeared, after removing the headphones, the sound did not wor=
+k.
+Switched cores, there is no sound. When there should be the intended sound,
+there is a crackling in the headphones. And everything works on the Windows.
+(fedora 37)
 
-   Yes!
+--=20
+You may reply to this email to add a comment.
 
-[...]
-
-MBR, Sergey
+You are receiving this mail because:
+You are watching the assignee of the bug.=
