@@ -2,40 +2,85 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24274C636CC
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 07:21:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 904D4C636CC
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 07:28:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbjAaHVK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 Jan 2023 02:21:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37192 "EHLO
+        id S230328AbjAaH2O (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 31 Jan 2023 02:28:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229579AbjAaHVJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 02:21:09 -0500
-Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B4AF2BF04
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 23:21:00 -0800 (PST)
-dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
-        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
-        bh=1XqxIWjdf5GC4f+By2KUG4i+s+Og9prkocgvmumvsGI=;
-        b=b9aaKD4dO+GL+rgsKK4ZrjAb5i0wBbaLOlapiEw31loKIV65gHvTVqtVScOccG3vM+VB0YmGS2cn1Gp+fBQui/uEmHDxmRvybYSgB75S57liYjVf75y8fQk8uztUylebXLxSmNOUUPkSJ12R8lCrf1U5sM6yUcCLlUEBJrax2Y4Gvtk1Q2ub83W7RuztN4jF9s+7slMUrRKKITUK6GSSnxiocrQml9DkdXZqi47aVpF5hC2EZMA9JShj4w
-        3xdx1gP/5k8J3drOXg84ODjW/tQ2aF50OTwWVoAI4uQPzXC92g9JMMzR6e6pqg0VVSbCoRNA/zYqgGZpEJIA1OPhPhlA==
-Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
-        by mx1.wiredblade.com with ESMTPA
-        ; Tue, 31 Jan 2023 07:20:58 +0000
+        with ESMTP id S230135AbjAaH2N (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2023 02:28:13 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3AC11EA4
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 23:28:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1675150092; x=1706686092;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=3ESuML21Vo+lVaZRwWJlv63h9XhTG4VjGVnTXl+S7A4=;
+  b=l94yXHIbNGtf1g57kuEWwIOclFyLpu8yEva9S4auPAzyVSPh43cmlGK4
+   XePjNCXSG3p0K2yaA14G8ReCSj9o+3Y56t6D+WFSCRLDpPto6mlpxpcbc
+   GR+3cTND4k4WZo2ojL1hzdmzY+g3srHpur3gJ20Xbm3Y+S2JsRu+9nPbM
+   pGuHuUSER16xPu+Do36GqXrRVzy5WK+3TK7b0K32KADKYHGrPwxIkOz4r
+   qbRcs8Z/07b8mFKgNnwABjYww+FcYA2Adkaty0Pqi0ZNfm2yCf47wLfE8
+   c5Gk9URRQ3t0u8SmBZ0uW6FcJpYl8KfoZpz8vutIxZngGBhZ0qbu05x14
+   g==;
+X-IronPort-AV: E=Sophos;i="5.97,259,1669046400"; 
+   d="scan'208";a="220483207"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 15:28:11 +0800
+IronPort-SDR: 6CwDN1kFtDftR0ko3PewoaF5KwYc5li0doPkBqSU1iYUq9nOLO1FvCHylLgWYXVvN6gLAozvZk
+ Zi3fTUzMycNNPYrrpl9HmCYH4/QhgfIYf2DUrZJpYK+52GbLcUskNs/MEMwBWMlieoPiHF/H/u
+ sP2b2EbcYVXw4d3NiW63MQecCRVmqRtymtIju46AYbKapBErQN5L4Yx6ThmIr0s2FSKGj2gZS/
+ 6ZJP+kFRFr/LAHmLmcOjGFu8GvPuDl/ShZlCv74sHo+OJrA7KD/YvXXlUqVMvIiXmS00NjwV44
+ k10=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 22:45:36 -0800
+IronPort-SDR: Yw5LmFfGvMNBVqksEm9sQVZUFqusI7nAHl4at8tl5hcUovwd9az9e7uifuvtQp5B2fOcmEJ7Qz
+ NCY/tSZLt9PVb6fqhsWfOuVaZagc2q6QfQk8kHUl11UIFsh+TeMG1XTNHrKfMJVquVvhTXA8Nm
+ WDkdai+/eNY3Z7sy/WZk9j0mk3+6cws70f569d7i625X0Qk0enxaYnd1C7xtYoZJP76ai3UtGJ
+ 53xEVaWfcep4ZZz684ih6p090DZUcAjv6bksDGpM6irezGgGHrlbx/mVMsIKbpYdDUWfX5JdZl
+ DlE=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 23:28:10 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5c8q2hQ4z1RvTr
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 23:28:11 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1675150091; x=1677742092; bh=3ESuML21Vo+lVaZRwWJlv63h9XhTG4VjGVn
+        TXl+S7A4=; b=EU3tgUbBrcg8OuCI2J2LjO9CpdUWaZhweCi8qXFMXqYQ6G60JYI
+        58PxThl43LXb92idV3AhlJIcuml6/eoAelMw7D+mlXPWoBtOrnakDUzaTOnsGqHn
+        sGv6cUy4CgiOLmS5VxXaySMBZa50JPpvptPWvp+eNnDn6lknv1u1xOL27/g01BpW
+        oQdCNjiJA/p3UiEpJdmQzAK+ASa0Oeo+Jp1kONxIyMKLJqA6RwfsGq1wXQW7AaFJ
+        /asT3E7e5DX+z2UuMHScZ/8m0hRBfZqtm77/CPcJn/Er2H5OStjdaHxK1cZLK47Z
+        oj+NpD2TmN7MTT5qryTyA7hfool2cS19sSA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id Mb7DVQrXgrZD for <linux-ide@vger.kernel.org>;
+        Mon, 30 Jan 2023 23:28:11 -0800 (PST)
+Received: from [10.225.163.70] (unknown [10.225.163.70])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5c8p4VWLz1RvLy;
+        Mon, 30 Jan 2023 23:28:10 -0800 (PST)
+Message-ID: <1e069565-a391-0f33-0714-ba9cc3792a42@opensource.wdc.com>
+Date:   Tue, 31 Jan 2023 16:28:09 +0900
 MIME-Version: 1.0
-Date:   Tue, 31 Jan 2023 07:20:59 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: RainLoop/1.16.0
-From:   marius@psihoexpert.ro
-Message-ID: <d8abdd49a63106081b4f899f8bc53dbe@psihoexpert.ro>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
 Subject: Re: Bug report for ahci-mvebu driver
-To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
+Content-Language: en-US
+To:     marius@psihoexpert.ro
 Cc:     linux-ide@vger.kernel.org
-In-Reply-To: <1831eb01-5c84-54f1-7950-9b8e9bf0a046@opensource.wdc.com>
 References: <1831eb01-5c84-54f1-7950-9b8e9bf0a046@opensource.wdc.com>
- <3c508c6e-5377-bb2d-64df-407f73a8170a@opensource.wdc.com>
- <97af1ef9ed605800e6ad43b7b3518800@psihoexpert.ro>
  <aa61bc53-34e2-4f19-962f-888e9daabbb4@opensource.wdc.com>
  <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
  <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
@@ -53,29 +98,43 @@ References: <1831eb01-5c84-54f1-7950-9b8e9bf0a046@opensource.wdc.com>
  <8cd8066ac1059ae0fef280a3cf6ab03c@psihoexpert.ro>
  <9490768bca8f5a213d89214ca9324fa0@psihoexpert.ro>
  <071bf5d4-4007-6779-60fd-82ec58dd44fe@opensource.wdc.com>
-X-Originating-IP: 188.24.142.89
+ <d8abdd49a63106081b4f899f8bc53dbe@psihoexpert.ro>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <d8abdd49a63106081b4f899f8bc53dbe@psihoexpert.ro>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-January 31, 2023 1:22 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.=
-com> wrote:
->=20
->=20I sent the official patch and CC-ed you. Can I add your
-> "Tested-by: Marius Dinu <marius@psihoexpert.ro>" tag to the patch and q=
-ueue it ?
->=20
->=20--
-> Damien Le Moal
-> Western Digital Research
+On 1/31/23 16:20, marius@psihoexpert.ro wrote:
+> January 31, 2023 1:22 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
+> wrote:
+>> 
+>> I sent the official patch and CC-ed you. Can I add your "Tested-by: Marius
+>> Dinu <marius@psihoexpert.ro>" tag to the patch and queue it ?
+>> 
+>> -- Damien Le Moal Western Digital Research
+> 
+> Yes, I was planning to reply myself, but I'm not done testing yet. At this
+> point I can only say it's working on mvebu / Armada 385. I plan to backport
+> to v5.15 and test with the other router that I have (mvebu / Armada XP), a
+> laptop and two x86_64 desktops, one of which has various PATA and SATA
+> controllers in all sorts of weird configurations. I hope to do it all this
+> weekend. Thank you for the patch!
+I did testing on Intel & AMD machines with different adpaters/drives/pmp that I
+have (AHCI, ASMedia and Marvell adapters). Everything was OK on my end.
 
-Yes, I was planning to reply myself, but I'm not done testing yet. At thi=
-s point I can only say it's working on mvebu / Armada 385. I plan to back=
-port to v5.15 and test with the other router that I have (mvebu / Armada =
-XP), a laptop and two x86_64 desktops, one of which has various PATA and =
-SATA controllers in all sorts of weird configurations. I hope to do it al=
-l this weekend.
-Thank you for the patch!
+The tag is for this kernel only. If backporting to 5.15 does not solve the
+issue, we will need to take that separately and redo debugging on that version.
+I would like to send the patch to Linus by the end of the week...
 
-Marius Dinu
+> 
+> Marius Dinu
+> 
+
+-- 
+Damien Le Moal
+Western Digital Research
 
