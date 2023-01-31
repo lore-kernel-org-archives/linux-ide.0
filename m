@@ -2,87 +2,138 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D19C636D6
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Jan 2023 23:24:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46454C63797
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Jan 2023 02:05:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229623AbjA3XY3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Jan 2023 18:24:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49428 "EHLO
+        id S229874AbjAaCFm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Jan 2023 21:05:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230271AbjA3XY1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 18:24:27 -0500
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 744F512F38
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:24:26 -0800 (PST)
-Received: by mail-pj1-x102e.google.com with SMTP id 88so12572844pjo.3
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 15:24:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=dwROn1mPsy/kk9N99ydvqBeMM2O2HAtXlONjIBsBtw8=;
-        b=xxGxFvWVTHchteWkrGLVN87rZtWQkFiCxzY68BpeJVBgX7tReOeydvbM95V0Aq4CCl
-         vHzAuADH9mpHuHkcDV4y077Mku51ieEhX4uv3tNKLg/fV9wlVnghUZC+Qqcj6qtUIjsd
-         52uIMtucOiDZGo2ciwqYGgRNZXxUwDdB/GH/0GwMSwijRy26JsMBQP74zJnIayIyl9lJ
-         Te26KbAIxlqkbU86bhr3lqJrGiC7szZ64p9T2BTXJwRMqMhg0+VkpYfJn1Lt/CgaeQ0f
-         dya2uNnHiWPBP3Qvak5U7gKtqN7IrqRBasItA/nM7ffaS1txsYKSc+xc8lG1z++B6XOF
-         WSwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dwROn1mPsy/kk9N99ydvqBeMM2O2HAtXlONjIBsBtw8=;
-        b=EoNNPp9oaENjqyArVI8KMdOY75cs31fXWP/Ybx29kQcS27UOK6DLfal8MfPJwCLJWA
-         3VKpcrbCQByauIez+rJaPlKIdEI7f9HD1r5eaFBZnK0+NAzEab4nlwTXdobmzfYswYUl
-         h5qOwypXLr6JXvFPVP5SmZEHKtjrKhmaIgty2ilRc3dV03uOim5cqRYWwNHqi1Jglxy/
-         5o5gjXJX2TlcD6YlrVkIigEw1g22Mdc152v17BOhQkQy5qL5PV5XBbLC5fqr39gOVj1Y
-         +SC8+4rKsU2rC0aVXd4GHXiREX9ydVJ2PubYWmamZuiFF6SX+85lZxgbo6cIrLf+YzF2
-         PjgQ==
-X-Gm-Message-State: AFqh2kp/RTUCmBmptnRvZizW7ssZsiFZjK4yj6JD0ZnLlbiC/HD6HgQo
-        jd3HONtm7TCvEwzMo6ARdatJ8Q==
-X-Google-Smtp-Source: AMrXdXtwvzAVUVQcTEDmRvSkP9UYKDjI1dCGwoHCj3Jhl1jNF1LvHS4uV9XDtAqnjyagFkGrzW5Hqg==
-X-Received: by 2002:a17:902:ab16:b0:195:ea0e:3221 with SMTP id ik22-20020a170902ab1600b00195ea0e3221mr9818704plb.3.1675121065913;
-        Mon, 30 Jan 2023 15:24:25 -0800 (PST)
-Received: from [192.168.1.136] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id g12-20020a63374c000000b00476d1385265sm7190333pgn.25.2023.01.30.15.24.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Jan 2023 15:24:25 -0800 (PST)
-Message-ID: <f3a157d7-839f-ffa9-f2a0-d50ad8d45792@kernel.dk>
-Date:   Mon, 30 Jan 2023 16:24:23 -0700
+        with ESMTP id S231305AbjAaCFl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2023 21:05:41 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B5001C582
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 18:05:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1675130741; x=1706666741;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=AcsiuLuDwWfVsTzWwmYa8LChhoDmQwERu0vhn8YNug0=;
+  b=ckfJkv/OI0DvVfpRmt5iLvNZEwpPXxVj69ceCdUXZ5dCOJlk/Gaf5wMg
+   JilAid6beAVWi76jHGoj9NFL+wNE4WOG/DT2rZAdg+U9Yxd2C1TUPsb5o
+   Mtd17C7YV/I/UewxtoQNwbisw0GofI+V74Gdf/F9E599ZROe7b3Xez/o8
+   KH3ByduaAUgNzG3SrEd4/TZyK4qEu8INrPkuk8FzZoYGA6/e01e1z/gjZ
+   9C9MPuR7M0T9ApsYVHQxQxEu9MvKKdqGPJBT9DB2eAVXRrAKWIdVrM6qE
+   RWJFzIWxPZuDONeiatgRLGc/0e62fb9otPmYoFCcf16V85xWbVO0NYnR0
+   w==;
+X-IronPort-AV: E=Sophos;i="5.97,259,1669046400"; 
+   d="scan'208";a="334094201"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Jan 2023 10:05:39 +0800
+IronPort-SDR: FQyNdhocHlQB2QGE94V4lJTvJIRBll5SeS8XCUNPwbXeEyCOBcgMYryfL1KMaiUtLgc1LnSz4e
+ 5DUiGB58b3IvwLOXDaFaD2VJ2WOw2V7WxGok4JzCY63UMnsqVJYcLx/aGVf3RAenjeIDNDR/Ip
+ 38gSREubSHCOU2BKY/4J5S97aHQ2LAP0RvNZE75rO+zZIUNIXkr1+IF3Hnl6Yy9uHLiQ6+JrP+
+ hytDTlXqNCL5iKac20aBIqbABgOMgu+Iw0ha11LYc4c40bPyjNP230LR+1FVccsLWn2ZTzE5G+
+ scI=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 17:17:20 -0800
+IronPort-SDR: J30pJEnR/BtkytNtRsV/y8wNM8q68Ieu8crtIek05qMHAuK/r0Ay+830UPWxNbc3eVLlhOtRqe
+ 6W0MzgssslQ52nkROB/C93X7/oX86F7ms3EzctEXuZyhuM40gfkSXpDG0d5N5rVYwMhRlHw7Jh
+ 2aMjwP5tMcnMifuHEmS6iaTQWWHly3QVOCTmWl/CaWnrd5SB5z+UQM0HrRFBapwId/gw6RV6i0
+ K5KE0mJG/gls4q9boHsVpKv6ESNUzVP1DuzJkWL3lvEr3k3pnGfgvZdK5V9bX8K0btikwcvhFr
+ 658=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 Jan 2023 18:05:39 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4P5T0g2qWLz1RvTr
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2023 18:05:39 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1675130738; x=1677722739; bh=AcsiuLuDwWfVsTzWwmYa8LChhoDmQwERu0v
+        hn8YNug0=; b=If7in8ACFpGd9feMG2WQjqjiESkIbI/SSsPJRd0A/fqdyxaPLLO
+        EIxXz42KfGgFXxlNtGWxobMWwIx3Ni5oYuYwu7RN2HtB4O4ljNyxJNwXkB5+tV7k
+        NEzMfXo2NsMs+OpIbM7l5jcczl1eRMXYCTqqgCwbN/7lbtUeKYf/3taHuZzV4Xqp
+        /yPBdjIVEqp5Ho/eckNcS9LedHOrNigrM1Oh93W9pQyaFlwNP/N83Ss6tzsEgaeY
+        +egN+bJGJSuAinpgS1jThyxyYxRs3/6c8tU9+qOytZie+44COimoUgdD3sdTccN8
+        QvaKLMoxgwPZZE/5mPNdaNMsfPoC0t9U4fg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id S3Ma1xgY6jlN for <linux-ide@vger.kernel.org>;
+        Mon, 30 Jan 2023 18:05:38 -0800 (PST)
+Received: from [10.225.163.70] (unknown [10.225.163.70])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4P5T0d0H6Dz1RvLy;
+        Mon, 30 Jan 2023 18:05:36 -0800 (PST)
+Message-ID: <e6041145-7336-2534-8449-7b9b6a842466@opensource.wdc.com>
+Date:   Tue, 31 Jan 2023 11:05:35 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH 1/2] drivers/block: Remove PARIDE core and high-level
- protocols
-To:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH 2/2] drivers/block: Move PARIDE protocol modules to
+ drivers/ata/pata_parport
+Content-Language: en-US
+To:     Ondrej Zary <linux@zary.sk>
 Cc:     Christoph Hellwig <hch@lst.de>,
         Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <d4f7ebd5-d90d-fb96-0fad-bd129ac162dc@opensource.wdc.com>
- <20230130211050.16753-1-linux@zary.sk>
-Content-Language: en-US
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20230130211050.16753-1-linux@zary.sk>
+ <20230130211050.16753-1-linux@zary.sk> <20230130211050.16753-2-linux@zary.sk>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20230130211050.16753-2-linux@zary.sk>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/30/23 2:10 PM, Ondrej Zary wrote:
-> Remove PARIDE core and high level protocols, taking care not to break
-> low-level drivers (used by pata_parport). Also update documentation.
-> 
-> Signed-off-by: Ondrej Zary <linux@zary.sk>
+On 1/31/23 06:10, Ondrej Zary wrote:
+> diff --git a/drivers/Makefile b/drivers/Makefile
+> index f1365608bc8c..de8aa561c95c 100644
+> --- a/drivers/Makefile
+> +++ b/drivers/Makefile
+> @@ -98,7 +98,7 @@ obj-$(CONFIG_DIO)		+= dio/
+>  obj-$(CONFIG_SBUS)		+= sbus/
+>  obj-$(CONFIG_ZORRO)		+= zorro/
+>  obj-$(CONFIG_ATA_OVER_ETH)	+= block/aoe/
+> -obj-y		 		+= block/paride/
+> +obj-$(CONFIG_PATA_PARPORT)	+= ata/pata_parport/
 
-Acked-by: Jens Axboe <axboe@kernel.dk>
+It would be better to have this in drivers/ata/Makefile, not here, so that doing
+something like:
+
+make -j64 M=drivers/ata W=1
+or
+make -j64 M=drivers/ata C=1
+
+actually also checks the parport protocol modules too.
+
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 23588738cff0..2f85812e16ef 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -114,6 +114,7 @@ obj-$(CONFIG_PATA_SAMSUNG_CF)       += pata_samsung_cf.o
+
+ obj-$(CONFIG_PATA_PXA)         += pata_pxa.o
+
++obj-$(CONFIG_PATA_PARPORT)     += pata_parport/
+ obj-$(CONFIG_PATA_PARPORT)     += pata_parport.o
+
+And then we could also have drivers/ata/pata_parport.c moved under
+drivers/ata/pata_parport/ to tidy things up.
+
+If you agree, I can fix that up, that is easy to do.
 
 -- 
-Jens Axboe
-
+Damien Le Moal
+Western Digital Research
 
