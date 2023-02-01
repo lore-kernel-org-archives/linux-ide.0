@@ -2,59 +2,58 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA03DC636CD
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Feb 2023 14:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD1FFC636CD
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Feb 2023 14:10:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230417AbjBAOK2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Feb 2023 09:10:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33582 "EHLO
+        id S232007AbjBAOKi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Feb 2023 09:10:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbjBAOK1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2023 09:10:27 -0500
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A712E5D905;
-        Wed,  1 Feb 2023 06:10:25 -0800 (PST)
-Received: by mail-wr1-x42b.google.com with SMTP id q10so17441124wrm.4;
-        Wed, 01 Feb 2023 06:10:25 -0800 (PST)
+        with ESMTP id S229451AbjBAOKh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2023 09:10:37 -0500
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B0365C0CA;
+        Wed,  1 Feb 2023 06:10:36 -0800 (PST)
+Received: by mail-wr1-x42c.google.com with SMTP id o18so7961123wrj.3;
+        Wed, 01 Feb 2023 06:10:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=z6PShDVUBgCEmFh6QpzXZ6mZIDgHxW/uxw0nQ4RD00c=;
-        b=ZR1yJdD9JHdFz5GoMnaoX73GtfmUkomGLRKYINJFlfV+axUnadPDnSwaugTj61FTnP
-         vedDNZtywZxb1Ceyd+zuy5bp2Ifgyn/JPeJLEmPZ3Fz3iVvJmU6WNURZhhhirCjjBJtK
-         hL8MVcF+3fbix56+yCMEUhheJ2i2P3HVWBl8UmVmw74YxP5fy8rFPDLmG1djtnfX2Xw7
-         0BoVS5lioZem5FjaG42Ggmh4vPlG9kE6GCDxep9BmYvJtrbRCddQgmmzFk/QqDfn1oVh
-         A4E6CQgHKmY5HqOnVSOG7mAuMLjtWg21eclZSBhlM3zwkNYkxct6PHzVe+8+nlQ3dgYV
-         kkvA==
+        bh=SKmXuZrVXgZibZ9oamnZiA8Aaq512YKwBXJW47w2Phg=;
+        b=m+su4BE2o3dZMeaSbh6yAdWXZVP4Rg55bJVjCYh1b8wA7qeuOJW+HAKAOd0DYYkaT0
+         5znyzjmsFoySkQHoXr0U/jgXJAMq9RT9B297qPDm7vWMLkL8Q8YO+tJFtPTZPMbdRSjO
+         qAYewESJbYaQUk+2DEQgLrt1T+yxmTj+MHgRYwjavPLWF9Xiyv9MctUG+rhBXtBJSTd5
+         obShSFtgwwjxxbQG3qBEXEjMWleM4bmxZHjc955AqCeuIZzWEMyjagitUjyoHTBM4IPn
+         zd3O2MV4ajxJAEYH9sRNE7lURPiRN2X/2WgsC90qJbNXXyi224o07afrRh2iRXMcjakz
+         Zfnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=z6PShDVUBgCEmFh6QpzXZ6mZIDgHxW/uxw0nQ4RD00c=;
-        b=14pNM8r4ZbwTIY440E6DcNILynlVN/fMcd3tUBZAx7uz7+kGPrXGmwgW5+P3jb6UWK
-         JdIgW/Q8VyUycJGrr9YBC/NJz4vdTDFGtOixUrsotr1o5nWOqpPUpbRsRfLpiBe/1tUW
-         ImZ5a2v++EpBMg/IVJ/qyYroXvNVhhT37p68/IvG5FtdxI6lm0qShYu46LgdZN/1+kBB
-         XWf3WtzLxoFlAuBvK+7ZfXX6mh9Qjl0zyJJIlKqGJ0sNa0+AHEJoUS3iDx6FstY99Kvz
-         3QmIRYvHAERW3RHq5Tar8ak6FgbkvE8pzhb3NS7x/uU36k6FLmukjIqXqLDGzDFtefoe
-         ILiQ==
-X-Gm-Message-State: AO0yUKWNYGfPCsQUgyiSPR4CZH8krkdLNQ2I0oWLb1Ae2DhQvrup1ebI
-        NUJGpsPsvFRd9Rcr1pbt8PI=
-X-Google-Smtp-Source: AK7set/a7ReyJsVtJgCquu6EtEkHujVhZJjLx7ZMQ2eDlW6WRKy9xJczK87Dp3y8Ik38QPIZJK82zA==
-X-Received: by 2002:adf:fcd2:0:b0:2bf:bdbd:25c1 with SMTP id f18-20020adffcd2000000b002bfbdbd25c1mr5783100wrs.26.1675260624161;
-        Wed, 01 Feb 2023 06:10:24 -0800 (PST)
+        bh=SKmXuZrVXgZibZ9oamnZiA8Aaq512YKwBXJW47w2Phg=;
+        b=ugeXwEdjDTAEB9B4x0Pc2YHDluoMC60HPpSi5EzH22D1Slcv2lJ9LCrfhgXi1CypUx
+         HArLktJ9w1ca2/ULgZNN+9OHLd+khphMr8DqJkYzq3HeDLOrUvjqafoznqqGbanltUCr
+         anU5yErcq8eBr19SMW/XGRvob3cRa8r3vxJq1gPB85SMwRWd08GO/vyyL4fMA7ZaiJpG
+         IXQCodrHuz3zfPHXa+ZEaZXEcyWNpIaefkXGCKhBGjwp0l9OEzmcC6zu3mYU9+L5TjrG
+         RjQ1WrlUeqRIaIRSRFofB8tAEfDzGZ5N+L9bGuMNxkjLywtIrnQDAS8WbSyGD6VgPlXO
+         Xkfg==
+X-Gm-Message-State: AO0yUKWppMP001fNzQ2WVVA8C6aPyll0GCD6h2t0R33WfDmyfYwVmc1S
+        nQrmgbFMVNihPfylo6m1AElJkiRccAw=
+X-Google-Smtp-Source: AK7set9I4d3t0TdRNbXG54iNwImlgQoDhUrJExlBESeYk+Emv0Pl3p8/ymOXCiq36684Tsf73+qvpA==
+X-Received: by 2002:adf:fa06:0:b0:2bf:d2b8:8c09 with SMTP id m6-20020adffa06000000b002bfd2b88c09mr2543860wrr.61.1675260634695;
+        Wed, 01 Feb 2023 06:10:34 -0800 (PST)
 Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id j5-20020adff005000000b002bddd75a83fsm17187777wro.8.2023.02.01.06.10.23
+        by smtp.gmail.com with ESMTPSA id j11-20020a5d464b000000b002bfd687a96dsm14391877wrs.16.2023.02.01.06.10.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Feb 2023 06:10:23 -0800 (PST)
-Date:   Wed, 1 Feb 2023 17:10:20 +0300
+        Wed, 01 Feb 2023 06:10:34 -0800 (PST)
+Date:   Wed, 1 Feb 2023 17:10:30 +0300
 From:   Dan Carpenter <error27@gmail.com>
 To:     Sergey Shtylyov <s.shtylyov@omp.ru>
 Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] ata: pata_hpt3x2n: prevent potential forever loop in
- hpt3xn_calibrate_dpll()
-Message-ID: <Y9pyzLUShZJeLDq7@kili>
+Subject: [PATCH] ata: pata_hpt37x: fix potential forever loop
+Message-ID: <Y9py1vjPW5HgRwOR@kili>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -63,21 +62,21 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This code accidentally reuses "tries" as the iterator for both the inside
-and outside loops.  It means that the potentially the "tries" could be
-reset to 0x1000 and never reach 0x5000.
+This code accidentally reuses the "tries" iterator for both the inside
+and outside loops.  It could result in a forever loop if the "tries"
+variable gets reset to 0x1000 and never reaches 0x5000.
 
 Fixes: 669a5db411d8 ("[libata] Add a bunch of PATA drivers.")
 Signed-off-by: Dan Carpenter <error27@gmail.com>
 ---
- drivers/ata/pata_hpt3x2n.c | 4 ++--
+ drivers/ata/pata_hpt37x.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
-index 617c95522f43..447dc287a2d4 100644
---- a/drivers/ata/pata_hpt3x2n.c
-+++ b/drivers/ata/pata_hpt3x2n.c
-@@ -380,14 +380,14 @@ static int hpt3xn_calibrate_dpll(struct pci_dev *dev)
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index ce3c5eaa7e76..35be9a095b18 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -621,14 +621,14 @@ static int hpt37x_calibrate_dpll(struct pci_dev *dev)
  {
  	u8 reg5b;
  	u32 reg5c;
