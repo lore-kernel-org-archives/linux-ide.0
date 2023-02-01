@@ -2,35 +2,36 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 869ACC636CD
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Feb 2023 15:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F34A0C636CD
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Feb 2023 15:06:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232477AbjBAPFx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Feb 2023 10:05:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43114 "EHLO
+        id S232450AbjBAPG3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Feb 2023 10:06:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232483AbjBAPFj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2023 10:05:39 -0500
+        with ESMTP id S232483AbjBAPGP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2023 10:06:15 -0500
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F9F767789;
-        Wed,  1 Feb 2023 07:03:06 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8B6874A4C;
+        Wed,  1 Feb 2023 07:04:03 -0800 (PST)
 Received: from [192.168.1.103] (31.173.80.8) by msexch01.omp.ru (10.188.4.12)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 1 Feb 2023
- 17:59:56 +0300
-Subject: Re: [PATCH] ata: pata_hpt37x: fix potential forever loop
+ 18:02:34 +0300
+Subject: Re: [PATCH] ata: pata_hpt3x2n: prevent potential forever loop in
+ hpt3xn_calibrate_dpll()
 To:     Dan Carpenter <error27@gmail.com>
 CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-ide@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-References: <Y9py1vjPW5HgRwOR@kili>
+References: <Y9pyzLUShZJeLDq7@kili>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <98e8e8cb-53a3-c247-078e-85724079ecad@omp.ru>
-Date:   Wed, 1 Feb 2023 17:59:56 +0300
+Message-ID: <0e89f2ca-bdba-0648-1bad-721533e42f76@omp.ru>
+Date:   Wed, 1 Feb 2023 18:02:34 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <Y9py1vjPW5HgRwOR@kili>
+In-Reply-To: <Y9pyzLUShZJeLDq7@kili>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -54,7 +55,7 @@ X-KSE-AntiSpam-Info: {SMTP from is not routable}
 X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.80.8 in (user)
  b.barracudacentral.org}
 X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.80.8 in (user) dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
 X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.80.8
 X-KSE-AntiSpam-Info: {DNS response errors}
 X-KSE-AntiSpam-Info: Rate: 59
@@ -74,46 +75,20 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
 On 2/1/23 5:10 PM, Dan Carpenter wrote:
 
-> This code accidentally reuses the "tries" iterator for both the inside
-> and outside loops.  It could result in a forever loop if the "tries"
-> variable gets reset to 0x1000 and never reaches 0x5000.
+> This code accidentally reuses "tries" as the iterator for both the inside
+> and outside loops.  It means that the potentially the "tries" could be
+> reset to 0x1000 and never reach 0x5000.
 > 
 > Fixes: 669a5db411d8 ("[libata] Add a bunch of PATA drivers.")
 > Signed-off-by: Dan Carpenter <error27@gmail.com>
-> ---
->  drivers/ata/pata_hpt37x.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-> index ce3c5eaa7e76..35be9a095b18 100644
-> --- a/drivers/ata/pata_hpt37x.c
-> +++ b/drivers/ata/pata_hpt37x.c
-> @@ -621,14 +621,14 @@ static int hpt37x_calibrate_dpll(struct pci_dev *dev)
->  {
->  	u8 reg5b;
->  	u32 reg5c;
-> -	int tries;
-> +	int tries, tries2;
->  
->  	for (tries = 0; tries < 0x5000; tries++) {
->  		udelay(50);
->  		pci_read_config_byte(dev, 0x5b, &reg5b);
->  		if (reg5b & 0x80) {
->  			/* See if it stays set */
-> -			for (tries = 0; tries < 0x1000; tries++) {
-> +			for (tries2 = 0; tries2 < 0x1000; tries2++) {
->  				pci_read_config_byte(dev, 0x5b, &reg5b);
->  				/* Failed ? */
->  				if ((reg5b & 0x80) == 0)
+[...]
 
-   Looks like Alan tried to "fix" the DPLL calibration code imported from drivers/ide/hpt366.c
-and failed at that... :-) The iriginal code has 2 sequential loops (thus 'tries' could be used
-for both). In principle, I agree with a simplistic patch:
+   Again, I'm OK with this simplistic fix:
 
 Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+[...]
 
 MBR, Sergey
