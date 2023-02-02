@@ -2,58 +2,111 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03EECC636D3
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Feb 2023 10:56:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60FF3C61DA4
+	for <linux-ide@archiver.kernel.org>; Thu,  2 Feb 2023 12:48:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231520AbjBBKz7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 2 Feb 2023 05:55:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55712 "EHLO
+        id S231434AbjBBMsG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 2 Feb 2023 07:48:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231594AbjBBKz7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2023 05:55:59 -0500
-X-Greylist: delayed 90600 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 02 Feb 2023 02:55:56 PST
-Received: from mail.corrib.pl (mail.corrib.pl [185.58.226.145])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32E6719C
-        for <linux-ide@vger.kernel.org>; Thu,  2 Feb 2023 02:55:56 -0800 (PST)
-Received: by mail.corrib.pl (Postfix, from userid 1001)
-        id C822EA36A7; Wed,  1 Feb 2023 09:06:46 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=corrib.pl; s=mail;
-        t=1675242433; bh=X6IEpSISwJiYlJ3uA866lskXve3r+4o2hf4z7VM6m5o=;
-        h=Date:From:To:Subject:From;
-        b=DA+6xyzYOo/mjSoZcTJTG/lLaf60rvVq7CtlUMwwQWeFMRLnZcts5NRKbVbnGFlIs
-         08LJai/WodIA5GuSIm62qXFXtFI+Xh00eQ16LOX3ZLTjbhpDr+aqleB7Rfh0+OmydE
-         9x+mymt8Y7TR9/k4PO20SpFmL/NeLaqTeNiipv4SXleeXQ82gU94DgtdMhunVCdonH
-         tercKqaVJO40bVmwcNehIG8Z9BxFHb8nbd8l9qAeymk4LeqtYgEamvbVNFhxxaKuAO
-         mzOF9vvfp3KliTdFABU6VRFEi0mlOlRGKJA6jgsh4c19BzJ+KvnLq+ctlIgKb4kSVi
-         kZWBfJiz5gbmg==
-Received: by mail.corrib.pl for <linux-ide@vger.kernel.org>; Wed,  1 Feb 2023 09:06:19 GMT
-Message-ID: <20230201074500-0.1.58.fi5f.0.9a2gg9xnij@corrib.pl>
-Date:   Wed,  1 Feb 2023 09:06:19 GMT
-From:   =?UTF-8?Q? "Szczepan_Kie=C5=82basa" ?= 
-        <szczepan.kielbasa@corrib.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Faktoring
-X-Mailer: mail.corrib.pl
+        with ESMTP id S232218AbjBBMsF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Feb 2023 07:48:05 -0500
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEAC4DBF6
+        for <linux-ide@vger.kernel.org>; Thu,  2 Feb 2023 04:47:32 -0800 (PST)
+Received: by mail-wm1-x330.google.com with SMTP id l21-20020a05600c1d1500b003dfe462b7e4so2978wms.0
+        for <linux-ide@vger.kernel.org>; Thu, 02 Feb 2023 04:47:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=sQQuXwDROhtxSyWrMW+0tugrT/yyrbK7SPjvct5JEl0=;
+        b=B9xSJluKKF6u3UsIO3Duu89gVn7ooFQYykZ9C2V/ph8cFGfZoxUhldpRtQXxYH8ThX
+         FdPkSyQ8WRreIAKhR1WbFPDo8iiI9XtBQaqgfqH3IsEVmrZLwdIowYXF0C0kNBzWMRC2
+         FHjoyeQPGur1CAvQ/Silj2NJ6SKnqCZVqHpQNQjja2vOCw1LrR6RGoaPcAHvqKsHmCPc
+         bYJacuo9FjefZO9IjOaXBQBcOQT4/XCzxqbOaT0hl/YUT93lCkQH3chj74mMubL5POfJ
+         921CTDVwfH+uAzEVd2BX8LJv1O/PLDGj8YTRAZ9CzMdoudmC75FEI1yrgcDPRb1Zd3x1
+         Ql+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=sQQuXwDROhtxSyWrMW+0tugrT/yyrbK7SPjvct5JEl0=;
+        b=XrkPQ2wBPHKTshMT4d8Gq24T8LKo/vxWSqmsuzx0mOGIdR+x1xPNc8TBU8d5QXFrgs
+         2sD7CyQL2MAKuc1bjlmAf4KccrnwV26atK/0ad5fNdTnxfDfOZCF7GEQp0uvRYeh6PXE
+         89ZJkzYrrT2xkM6wvnkVujkCClcLlb6Gv6eEQQLJeFtIjxhj/zFaosma0vOjCoAwDw9l
+         /swi1PVWIk5ZgPB/vkKGRdU+FyWhJ7vYnyM3tK69YmPYDBZrpeYqRkbyjgrc1cyx5DHv
+         ileGzleXHU9WBqCtHYJy14BJG6a/EHrcPrWOhxgTIApRfTKH+PgDTa44+N72ljL8aPfI
+         HxzQ==
+X-Gm-Message-State: AO0yUKW1BSwdKhm+/4WywSADnjS5vx3imbXXK1dDMjDa0Qj6RlN8kDf3
+        7jbWA7h80cf9AIP10/mLigc=
+X-Google-Smtp-Source: AK7set9B2L3suoYv1+BsSrog44gBrq504mU/e1kJYxf1Ieda/beXharLeSz3sO/5TM2dZ6Z1Xkm+0g==
+X-Received: by 2002:a05:600c:4f07:b0:3db:15b1:fb28 with SMTP id l7-20020a05600c4f0700b003db15b1fb28mr5674757wmq.19.1675341997569;
+        Thu, 02 Feb 2023 04:46:37 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id e22-20020a05600c449600b003db06224953sm4596056wmo.41.2023.02.02.04.46.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Feb 2023 04:46:37 -0800 (PST)
+Date:   Thu, 2 Feb 2023 15:46:33 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     linux@zary.sk
+Cc:     linux-ide@vger.kernel.org
+Subject: [bug report] ata: pata_parport: add driver (PARIDE replacement)
+Message-ID: <Y9uwqRothHhaOeDO@kili>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hello Ondrej Zary,
 
-rozwa=C5=BCali Pa=C5=84stwo wyb=C3=B3r finansowania, kt=C3=B3re spe=C5=82=
-ni potrzeby firmy, zapewniaj=C4=85c natychmiastowy dost=C4=99p do got=C3=B3=
-wki, bez zb=C4=99dnych przestoj=C3=B3w?=20
+The patch 246a1c4c6b7f: "ata: pata_parport: add driver (PARIDE
+replacement)" from Jan 23, 2023, leads to the following Smatch static
+checker warning:
 
-Przygotowali=C5=9Bmy rozwi=C4=85zania faktoringowe dopasowane do Pa=C5=84=
-stwa bran=C5=BCy i wielko=C5=9Bci firmy, dzi=C4=99ki kt=C3=B3rym, nie mus=
-z=C4=85 Pa=C5=84stwo martwi=C4=87 si=C4=99 o niewyp=C5=82acalno=C5=9B=C4=87=
- kontrahent=C3=B3w, poniewa=C5=BC transakcje s=C4=85 zabezpieczone i posi=
-adaj=C4=85 gwarancj=C4=99 sp=C5=82aty.=20
-Chc=C4=85 Pa=C5=84stwo przeanalizowa=C4=87 dost=C4=99pne opcje?
+	drivers/ata/pata_parport/pata_parport.c:445 pi_init_one()
+	warn: unsigned 'pi->dev.id' is never less than zero.
 
+drivers/ata/pata_parport/pata_parport.c
+    418 static struct pi_adapter *pi_init_one(struct parport *parport,
+    419                         struct pi_protocol *pr, int mode, int unit, int delay)
+    420 {
+    421         struct pardev_cb par_cb = { };
+    422         char scratch[512];
+    423         const struct ata_port_info *ppi[] = { &pata_parport_port_info };
+    424         struct ata_host *host;
+    425         struct pi_adapter *pi;
+    426         struct pi_device_match match = { .parport = parport, .proto = pr };
+    427 
+    428         /*
+    429          * Abort if there's a device already registered on the same parport
+    430          * using the same protocol.
+    431          */
+    432         if (bus_for_each_dev(&pata_parport_bus_type, NULL, &match, pi_find_dev))
+    433                 return NULL;
+    434 
+    435         pi = kzalloc(sizeof(struct pi_adapter), GFP_KERNEL);
+    436         if (!pi)
+    437                 return NULL;
+    438 
+    439         /* set up pi->dev before pi_probe_unit() so it can use dev_printk() */
+    440         pi->dev.parent = &pata_parport_bus;
+    441         pi->dev.bus = &pata_parport_bus_type;
+    442         pi->dev.driver = &pr->driver;
+    443         pi->dev.release = pata_parport_dev_release;
+    444         pi->dev.id = ida_alloc(&pata_parport_bus_dev_ids, GFP_KERNEL);
+--> 445         if (pi->dev.id < 0)
+                    ^^^^^^^^^^^^^^
+pi->dev.id is a u32.
 
-Pozdrawiam
-Szczepan Kie=C5=82basa
+    446                 return NULL; /* pata_parport_dev_release will do kfree(pi) */
+    447         dev_set_name(&pi->dev, "pata_parport.%u", pi->dev.id);
+    448         if (device_register(&pi->dev)) {
+    449                 put_device(&pi->dev);
+    450                 goto out_ida_free;
+    451         }
+
+regards,
+dan carpenter
