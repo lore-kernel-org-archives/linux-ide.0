@@ -2,94 +2,221 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0372AC636CD
-	for <linux-ide@archiver.kernel.org>; Sun,  5 Feb 2023 19:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC4E0C63797
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Feb 2023 08:42:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229448AbjBETNw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 5 Feb 2023 14:13:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58378 "EHLO
+        id S229654AbjBFIl6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Feb 2023 03:41:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229379AbjBETNv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 5 Feb 2023 14:13:51 -0500
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12CD8FF35;
-        Sun,  5 Feb 2023 11:13:50 -0800 (PST)
-Received: from [192.168.1.103] (178.176.73.145) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sun, 5 Feb 2023
- 22:13:39 +0300
-Subject: Re: [PATCH] pata_parport: Fix ida_alloc return value error check
-To:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     Dan Carpenter <error27@gmail.com>, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        <linux-block@vger.kernel.org>, <linux-parport@lists.infradead.org>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <Y9uwqRothHhaOeDO@kili> <20230204205527.16716-1-linux@zary.sk>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <ae089777-e219-c3e1-4fd8-3ce3e8f0fb8a@omp.ru>
-Date:   Sun, 5 Feb 2023 22:13:38 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S230042AbjBFIlq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Feb 2023 03:41:46 -0500
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E85041E2A4
+        for <linux-ide@vger.kernel.org>; Mon,  6 Feb 2023 00:41:35 -0800 (PST)
+Received: by mail-wr1-x436.google.com with SMTP id a2so9318881wrd.6
+        for <linux-ide@vger.kernel.org>; Mon, 06 Feb 2023 00:41:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=3VF3j3MRDdF8n8OyA+nQrmUxdMViUka5P0dDhKvF9Cs=;
+        b=RZmvbBqJPu59NEcQKGTy+NuU00/pyxdiCciV3lY+ZJFkGWY6lOKgPO/3EBgdLcFsAs
+         BJ2U0KiOrNWMTyU8NvdlStDETJowb2CVP0ZVeaVML1WknTuU+/NHEfxN/xRQZRINva9E
+         EyBOnkYYlfkc1ZtjwD8QUmkV7YkZ5T6TMK3BnhVZe76K1R49T8YbUmvtx+lJ2vOMzkOr
+         GiWbiuZGZhvnUsI0g0g4LjTXzQhH2HajjN/5ZZG7GqZy3QHa2SU0Kj5SKTBvuRYTsuIE
+         zAXDGHc0E8cBDb5YtxEg4MIfQSZgVAHVdPol3O+QQz14huxaKG1/YvIBNVcOQmuzVemm
+         yT2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3VF3j3MRDdF8n8OyA+nQrmUxdMViUka5P0dDhKvF9Cs=;
+        b=we9eOiI54Cnqbk89HW8dS9nKGWxRVqAG6hrhtM3BwmjbPlkzYhyqQZpxpH7TAemcPW
+         Sz3vLgIBu4ZPajNTLVOG0eceF8f9qZ0G4RcG0o9GgxVy2xgyDWehkg0beyWViWgoQi+w
+         0IH8e2H9+ZwlL3KhX6hzlpXGx60JF754I+wA4ZEC57fZ+Dr9vuoyPc7uqxjYcfWHP1qn
+         uwv1Zt1dHl2GuLIBk8m4D40h+TgrgfHbktkmvp7ib/0JTDd5zH6QUGbh0mXBtkLWxEB/
+         EfMPNbDOWCql5AlshQIN067OpRasZKjIu18guqbIYzXpXxi4lKIisrZr/DNY/sxRPj/l
+         R8nA==
+X-Gm-Message-State: AO0yUKX7x0MdoPYc241XHdrEuwrjXgDW1wh/IHk6SU5n4jp63+FgbS7R
+        VpwjLpvDk/AuxzoBAQZa56PSyw==
+X-Google-Smtp-Source: AK7set+LmJWRqmstWTgtfJr2oiq1AohLOY1rh7Fjr5hdugHUF6tO0yD4dWs5rOvm8gyGxzUBtmE5nw==
+X-Received: by 2002:a5d:66cc:0:b0:2c3:dafd:c729 with SMTP id k12-20020a5d66cc000000b002c3dafdc729mr8449746wrw.47.1675672894408;
+        Mon, 06 Feb 2023 00:41:34 -0800 (PST)
+Received: from [192.168.1.109] ([178.197.216.144])
+        by smtp.gmail.com with ESMTPSA id w5-20020a5d6085000000b0029100e8dedasm8198595wrt.28.2023.02.06.00.41.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Feb 2023 00:41:34 -0800 (PST)
+Message-ID: <177cbf68-4e13-dabe-f14c-17a36c201e26@linaro.org>
+Date:   Mon, 6 Feb 2023 09:41:31 +0100
 MIME-Version: 1.0
-In-Reply-To: <20230204205527.16716-1-linux@zary.sk>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v2 1/3] dt-bindings: intel,ixp4xx-expansion-bus: split out
+ peripheral properties
 Content-Language: en-US
+To:     Rob Herring <robh@kernel.org>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Linus Walleij <linusw@kernel.org>,
+        Imre Kaloz <kaloz@openwrt.org>,
+        Krzysztof Halasa <khalasa@piap.pl>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Marek Vasut <marex@denx.de>, Lubomir Rintel <lkundrak@v3.sk>,
+        - <devicetree@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mtd@lists.infradead.org, linux-serial@vger.kernel.org,
+        linux-watchdog@vger.kernel.org
+References: <20230127093217.60818-1-krzysztof.kozlowski@linaro.org>
+ <20230127093217.60818-2-krzysztof.kozlowski@linaro.org>
+ <20230130191215.GA3125737-robh@kernel.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20230130191215.GA3125737-robh@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.73.145]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 02/05/2023 18:53:15
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 175261 [Feb 05 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.73.145 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.73.145 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.73.145:7.4.1,7.7.3;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: {iprep_blacklist}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.73.145
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 02/05/2023 18:55:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 2/5/2023 3:54:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-On 2/4/23 11:55 PM, Ondrej Zary wrote:
-
-> pi->dev.id is unsigned so error checking of ida_alloc return value does
-> not work. Fix it.
+On 30/01/2023 20:12, Rob Herring wrote:
+> On Fri, Jan 27, 2023 at 10:32:15AM +0100, Krzysztof Kozlowski wrote:
+>> The properties of devices in IXP4xx expansion bus need to be also
+>> applied to actual devices' bindings.  Prepare for this by splitting them
+>> to separate intel,ixp4xx-expansion-peripheral-props binding, just like
+>> other memory-controller peripheral properties.
+>>
+>> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>> ---
+>>  ...intel,ixp4xx-expansion-bus-controller.yaml | 64 +--------------
+>>  ...tel,ixp4xx-expansion-peripheral-props.yaml | 80 +++++++++++++++++++
 > 
-> Signed-off-by: Ondrej Zary <linux@zary.sk>
+> Kind of odd to have these in 2 directories. Can we move 
+> intel,ixp4xx-expansion-bus-controller.yaml to 
+> bindings/memory-controllers/?
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Indeed mostly we kept them so far in memory-controllers. Some of these
+buses are used for attaching some type of memory, but I don't know if
+ixp4xx can work like this.
 
-[...]
+> 
+> Or maybe all the external/parallel bus interfaces need their own 
+> directory?
 
-MBR, Sergey
+Except the IXP4xx, I wouldn't know which one goes where... Example is
+exynos-srom which can work with memory (SRAM, ROM, flash) or devices.
+
+I'll move it to memory-controllers.
+
+
+> 
+>>  .../mc-peripheral-props.yaml                  |  1 +
+>>  3 files changed, 82 insertions(+), 63 deletions(-)
+>>  create mode 100644 Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml
+>>
+>> diff --git a/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml b/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml
+>> index 5fb4e7bfa4da..a771796ec499 100644
+>> --- a/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml
+>> +++ b/Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml
+>> @@ -56,69 +56,7 @@ patternProperties:
+>>      description: Devices attached to chip selects are represented as
+>>        subnodes.
+>>      type: object
+>> -
+>> -    properties:
+>> -      intel,ixp4xx-eb-t1:
+>> -        description: Address timing, extend address phase with n cycles.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        maximum: 3
+>> -
+>> -      intel,ixp4xx-eb-t2:
+>> -        description: Setup chip select timing, extend setup phase with n cycles.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        maximum: 3
+>> -
+>> -      intel,ixp4xx-eb-t3:
+>> -        description: Strobe timing, extend strobe phase with n cycles.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        maximum: 15
+>> -
+>> -      intel,ixp4xx-eb-t4:
+>> -        description: Hold timing, extend hold phase with n cycles.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        maximum: 3
+>> -
+>> -      intel,ixp4xx-eb-t5:
+>> -        description: Recovery timing, extend recovery phase with n cycles.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        maximum: 15
+>> -
+>> -      intel,ixp4xx-eb-cycle-type:
+>> -        description: The type of cycles to use on the expansion bus for this
+>> -          chip select. 0 = Intel cycles, 1 = Motorola cycles, 2 = HPI cycles.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        enum: [0, 1, 2]
+>> -
+>> -      intel,ixp4xx-eb-byte-access-on-halfword:
+>> -        description: Allow byte read access on half word devices.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        enum: [0, 1]
+>> -
+>> -      intel,ixp4xx-eb-hpi-hrdy-pol-high:
+>> -        description: Set HPI HRDY polarity to active high when using HPI.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        enum: [0, 1]
+>> -
+>> -      intel,ixp4xx-eb-mux-address-and-data:
+>> -        description: Multiplex address and data on the data bus.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        enum: [0, 1]
+>> -
+>> -      intel,ixp4xx-eb-ahb-split-transfers:
+>> -        description: Enable AHB split transfers.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        enum: [0, 1]
+>> -
+>> -      intel,ixp4xx-eb-write-enable:
+>> -        description: Enable write cycles.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        enum: [0, 1]
+>> -
+>> -      intel,ixp4xx-eb-byte-access:
+>> -        description: Expansion bus uses only 8 bits. The default is to use
+>> -          16 bits.
+>> -        $ref: /schemas/types.yaml#/definitions/uint32
+>> -        enum: [0, 1]
+>> +    $ref: /schemas/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml#
+>>  
+>>  required:
+>>    - compatible
+>> diff --git a/Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml b/Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml
+>> new file mode 100644
+>> index 000000000000..8f782c80e88b
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml
+>> @@ -0,0 +1,80 @@
+>> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+>> +%YAML 1.2
+>> +---
+>> +$id: http://devicetree.org/schemas/memory-controllers/intel,ixp4xx-expansion-peripheral-props.yaml#
+>> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>> +
+>> +title: Peripheral properties for Intel IXP4xx Expansion Bus
+>> +
+>> +description: |
+> 
+> Don't need '|'.
+
+Right.
+
+
+Best regards,
+Krzysztof
+
