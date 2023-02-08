@@ -2,40 +2,85 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D03EC636CC
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Feb 2023 12:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5210CC636D3
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Feb 2023 23:00:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230246AbjBHMR7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Feb 2023 07:17:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56130 "EHLO
+        id S230464AbjBHXAq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Feb 2023 18:00:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231158AbjBHMR6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Feb 2023 07:17:58 -0500
-Received: from mx1.wiredblade.com (mx1.wiredblade.com [162.216.242.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36D128A5C
-        for <linux-ide@vger.kernel.org>; Wed,  8 Feb 2023 04:17:57 -0800 (PST)
-dkim-signature: v=1; a=rsa-sha256; d=psihoexpert.ro; s=dynu;
-        c=relaxed/relaxed; q=dns/txt; h=From:Subject:Date:Message-ID:To:CC:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
-        bh=Pbm4T0ADHxtDHcPexGMufwQz61HT9iJ7PERXFYiIkmA=;
-        b=ZNo4wH+pI3OEXf7Du6lcy4pUppJerUA17BBuz3SVxLT1bk7P7DjzDJJo29Or+Li/3XRKfkFBKnzS1mwEoa0ZVPGa0VNrRWg+pLxSTJ+TimRu74mKcGSKRYc690esrE53wSP3+DkK9g1w2UTR75fbNSp1ke3BveofQ1EZTqCZOFy6GyKD026f+M7aHZE7JfduU9ZbZxhuzXPdp8N2+QrW8ALtYI7RHis99Ey5qCqeM3UzgKqA8yucbaen98
-        kzGaSi/X8yfOLfr2uaH2UBsHVUjgWa09OIuYSM4yqvP/dzIBc61yWXB09TyjdXoQ15rjOEqaX6H+IP2fsTTWAhD4qUGQ==
-Received: from webmail.dynu.com (webmail.dynu.com [162.216.242.204])
-        by mx1.wiredblade.com with ESMTPA
-        ; Wed, 8 Feb 2023 12:17:55 +0000
+        with ESMTP id S230194AbjBHXAo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Feb 2023 18:00:44 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76EB615CB5
+        for <linux-ide@vger.kernel.org>; Wed,  8 Feb 2023 15:00:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1675897239; x=1707433239;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=cENqs3JHGSS5a+nmrrgBN2wiPWrByhi6oM4315XeNxc=;
+  b=ZxFqcVLQemD5HHOBEZ7L9s4o7oAvBTMmcq8dkcnS4ns/g9gadWs1gQ9f
+   FdgBqja8Jhgjxu5ILzgkcznZuZzGH7FlNLXlfkNLVHGogBL9UiQyqK4v1
+   qB2uTAKmgaRJpwl17hTPHymI4o73b8Ztgqw3Upgxzt5V5cDHQb/4CDe7T
+   /hThF0f97QyUWzVc4VOtpDkw1futZOyjK1Aaypwgx3Ee8jP3sjgg20u/C
+   iLTa0q5SByJ8biub5HxJxZnHm1RNevsFt5U5XZbn1aezkYVGwQPXZy40U
+   pW2tEt0RFs2c5s28xM2n1wBBIGVYV1ATGf913HhwArtbmqJ2sSEz6Ampk
+   A==;
+X-IronPort-AV: E=Sophos;i="5.97,281,1669046400"; 
+   d="scan'208";a="327151156"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Feb 2023 07:00:38 +0800
+IronPort-SDR: iQGZq1hjlg19oxIPxNh2osIy0dcHGU3/spFATmhQoIsyGFsvXE3RXy4a/omf2JQVvw6gEXDJPJ
+ Mu+MfJEru8VF4F2L6SeP4mECQ5f8wPOQS/WfG0LgzY68QqB7yFEalf10gVNiESS2WWVdnEqxPe
+ vpUHEJfAZxUyxzRQg6VVoVz25YUTWRDIoOwUWcKH8f7gfpY7bwqUAOEo7gbGF8ncBoxj2OftBm
+ ygrK1wA7dTbEsVSGgIJd7dPjSz6iYjOe72+rKsybpxHrQauceWjfXP18eU1UoQfBePjc1YfJiJ
+ tXQ=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Feb 2023 14:17:53 -0800
+IronPort-SDR: b7qswGOcAWaD6qn5DfoNUGMhlejlj2h+S4c42EV7O6Xjz70wKT+ZbgCIRjuHuwvDRFN4PNPs9J
+ UEfRKekzr/2vAbKMJrPOXfZs32PDhcuWrDSPNUHiNI72WSo/OG8+YLrDNbuyChSxQ1KoU6qzEJ
+ snydEAi8a43UzsoZcwEapkwq8OHt8+C82m4WJbD9VpIMRVIIddaalRomLChVNsDYTT9yB6GZ0V
+ FO0MPxpLbGQnU0Otur20V9LjSnoIdgFBGTqRtTBiwZKIktpzslwKgu1FamrXe5Ml1PWTtU0B4r
+ o8w=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Feb 2023 15:00:39 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PBwT23PV5z1RvTr
+        for <linux-ide@vger.kernel.org>; Wed,  8 Feb 2023 15:00:38 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1675897238; x=1678489239; bh=cENqs3JHGSS5a+nmrrgBN2wiPWrByhi6oM4
+        315XeNxc=; b=H8sy2JGrfyEs7Ph9MNvbsMT7UzYJ4i9mT0Z36A9VfRf9MSPuiUa
+        +tKflrJrbDIClnbcGvifqevLWNYVi/78tn3/fK3N7pPmL46YQzZK+SC2GO6suU2n
+        maLhOCBAV8s0CCPpzEyMy4KPOptCLX3CdnI7ndOdvFfzqd/XzTV5Wdjl3N7Y9Z0g
+        oHZpWJN3SwKbwYinj0TLafisD42lb9Au/NPJBwK9r9QG48F2LOSRRzyk2nkah+rd
+        g8ToyejHuKezTwweXPM6pu+IXFZdzad4Hw447TlvrZX0J5XId+BSmr38H+X/OwNU
+        ry2e/5URyYtgiD3n1KXgckprhCafo3XK1XQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 5gyQflRt46RF for <linux-ide@vger.kernel.org>;
+        Wed,  8 Feb 2023 15:00:38 -0800 (PST)
+Received: from [10.225.54.64] (unknown [10.225.54.64])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PBwT14VZ4z1RvLy;
+        Wed,  8 Feb 2023 15:00:37 -0800 (PST)
+Message-ID: <f9781af4-667b-197b-807d-970df77286b6@opensource.wdc.com>
+Date:   Thu, 9 Feb 2023 08:00:36 +0900
 MIME-Version: 1.0
-Date:   Wed, 08 Feb 2023 12:17:56 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: RainLoop/1.16.0
-From:   marius@psihoexpert.ro
-Message-ID: <235d8863945fb1da23c1e7b74831db38@psihoexpert.ro>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.6.1
 Subject: Re: Bug report for ahci-mvebu driver
-To:     "Damien Le Moal" <damien.lemoal@opensource.wdc.com>
+Content-Language: en-US
+To:     marius@psihoexpert.ro
 Cc:     linux-ide@vger.kernel.org
-In-Reply-To: <023692b9-d980-82fd-26b9-01a734bd649f@opensource.wdc.com>
 References: <023692b9-d980-82fd-26b9-01a734bd649f@opensource.wdc.com>
- <1e069565-a391-0f33-0714-ba9cc3792a42@opensource.wdc.com>
- <C9DCFF5E79814EAB9E9BE94B81A1CD7F@graph>
  <889ee9c9e77106b17ceac456e327d480@psihoexpert.ro>
  <1b74a7e40419b6f99870c21ca3be7834@psihoexpert.ro>
  <77b389a080646567b9f9d44caa42d547@psihoexpert.ro>
@@ -53,45 +98,54 @@ References: <023692b9-d980-82fd-26b9-01a734bd649f@opensource.wdc.com>
  <071bf5d4-4007-6779-60fd-82ec58dd44fe@opensource.wdc.com>
  <d8abdd49a63106081b4f899f8bc53dbe@psihoexpert.ro>
  <6936c460663c956b5c77215eeef140d7@psihoexpert.ro>
-X-Originating-IP: 188.24.148.115
+ <235d8863945fb1da23c1e7b74831db38@psihoexpert.ro>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <235d8863945fb1da23c1e7b74831db38@psihoexpert.ro>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-February 8, 2023 1:40 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.=
-com> wrote:
+On 2023/02/08 21:17, marius@psihoexpert.ro wrote:
+> February 8, 2023 1:40 AM, "Damien Le Moal" <damien.lemoal@opensource.wdc.com> wrote:
+> 
+>> On 2023/02/08 3:40, marius@psihoexpert.ro wrote:
+>>
+>>> [ 173.591831] ata2.15: Port Multiplier 1.2, 0x197b:0x0325 r193, 8 ports, feat 0xf/0x1f
+>>> [ 173.600838] ahci-mvebu f10a8000.sata: FBS is enabled
+>>> [ 173.605977] ata2.00: hard resetting link
+>>> [ 173.937078] ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> [ 173.943563] ata2.01: hard resetting link
+>>> [ 174.277073] ata2.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> [ 174.283555] ata2.02: hard resetting link
+>>> [ 174.617075] ata2.02: SATA link down (SStatus 0 SControl 300)
+>>> [ 174.622787] ata2.03: hard resetting link
+>>> [ 174.957074] ata2.03: SATA link down (SStatus 0 SControl 300)
+>>> [ 174.962785] ata2.04: hard resetting link
+>>> [ 175.297075] ata2.04: SATA link down (SStatus 0 SControl 300)
+>>> [ 175.302784] ata2.05: hard resetting link
+>>> [ 175.637072] ata2.05: SATA link down (SStatus 0 SControl 300)
+>>> [ 175.642781] ata2.06: hard resetting link
+>>> [ 175.977071] ata2.06: SATA link down (SStatus 0 SControl 300)
+>>> [ 175.982781] ata2.07: hard resetting link
+>>> [ 176.317063] ata2.07: SATA link down (SStatus 0 SControl 300)
+>>
+>> That is weird too. No point in repeatedly resetting if the link is up. So the
+>> patch really screwed up something for 5.15.
+> 
+> Nothing weird here. There is one reset for each logical port. Only two ports are used.
 
-> On 2023/02/08 3:40, marius@psihoexpert.ro wrote:
->
->> [ 173.591831] ata2.15: Port Multiplier 1.2, 0x197b:0x0325 r193, 8 port=
-s, feat 0xf/0x1f
->> [ 173.600838] ahci-mvebu f10a8000.sata: FBS is enabled
->> [ 173.605977] ata2.00: hard resetting link
->> [ 173.937078] ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300=
-)
->> [ 173.943563] ata2.01: hard resetting link
->> [ 174.277073] ata2.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300=
-)
->> [ 174.283555] ata2.02: hard resetting link
->> [ 174.617075] ata2.02: SATA link down (SStatus 0 SControl 300)
->> [ 174.622787] ata2.03: hard resetting link
->> [ 174.957074] ata2.03: SATA link down (SStatus 0 SControl 300)
->> [ 174.962785] ata2.04: hard resetting link
->> [ 175.297075] ata2.04: SATA link down (SStatus 0 SControl 300)
->> [ 175.302784] ata2.05: hard resetting link
->> [ 175.637072] ata2.05: SATA link down (SStatus 0 SControl 300)
->> [ 175.642781] ata2.06: hard resetting link
->> [ 175.977071] ata2.06: SATA link down (SStatus 0 SControl 300)
->> [ 175.982781] ata2.07: hard resetting link
->> [ 176.317063] ata2.07: SATA link down (SStatus 0 SControl 300)
->=20
->=20That is weird too. No point in repeatedly resetting if the link is up=
-. So the
-> patch really screwed up something for 5.15.
+Ah! missed the port number changing :) You are right.
 
-Nothing weird here. There is one reset for each logical port. Only two po=
-rts are used.
+> 
+> I'm going to insert the debug messages in this kernel version too and test again.
 
-I'm going to insert the debug messages in this kernel version too and tes=
-t again.
+Thanks. Did you test the other LTS 6.1 kernel too ? The patch was backported
+there too.
+
+-- 
+Damien Le Moal
+Western Digital Research
 
