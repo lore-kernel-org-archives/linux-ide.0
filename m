@@ -2,22 +2,22 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7F7C61DA4
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Feb 2023 09:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 791C2C05027
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Feb 2023 09:54:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230370AbjBIJyn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Feb 2023 04:54:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57732 "EHLO
+        id S229478AbjBIJyz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Feb 2023 04:54:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229818AbjBIJyc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2023 04:54:32 -0500
+        with ESMTP id S230350AbjBIJyk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2023 04:54:40 -0500
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DA2D17CD1;
-        Thu,  9 Feb 2023 01:54:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 274E566EE5;
+        Thu,  9 Feb 2023 01:54:32 -0800 (PST)
 Received: from [192.168.1.103] (178.176.75.58) by msexch01.omp.ru
  (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Thu, 9 Feb 2023
- 12:54:03 +0300
+ 12:54:21 +0300
 Subject: Re: [PATCH] ata: pata_pxa: Add missing check for devm_ioremap
 To:     Jiasheng Jiang <jiasheng@iscas.ac.cn>,
         <damien.lemoal@opensource.wdc.com>
@@ -25,8 +25,8 @@ CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 References: <20230209092814.10847-1-jiasheng@iscas.ac.cn>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <1b08e3fb-d1fc-80f2-82f8-873812c0fc8c@omp.ru>
-Date:   Thu, 9 Feb 2023 12:54:03 +0300
+Message-ID: <bd0d8eb2-4ee6-1e48-a1bb-ff37fe73df37@omp.ru>
+Date:   Thu, 9 Feb 2023 12:54:21 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
@@ -96,8 +96,8 @@ On 2/9/23 12:28 PM, Jiasheng Jiang wrote:
 > +	if (!ap->ioaddr.cmd_addr || !ap->ioaddr.ctl_addr || !ap->ioaddr.bmdma_addr)
 > +		return -ENOMEM;
 
-   Such patch has been postyed already but the driver is more broken than just
-ths check missing, see:
+   Such patch has been posted already but the driver is more broken than just
+this check missing, see:
 
 https://lore.kernel.org/all/20220612073222.18974-1-liqiong@nfschina.com/
 
