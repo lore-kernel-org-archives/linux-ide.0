@@ -2,103 +2,98 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 791C2C05027
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Feb 2023 09:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C02C5C61DA4
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Feb 2023 11:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229478AbjBIJyz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Feb 2023 04:54:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57260 "EHLO
+        id S231240AbjBILbx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Feb 2023 06:31:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230350AbjBIJyk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2023 04:54:40 -0500
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 274E566EE5;
-        Thu,  9 Feb 2023 01:54:32 -0800 (PST)
-Received: from [192.168.1.103] (178.176.75.58) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Thu, 9 Feb 2023
- 12:54:21 +0300
-Subject: Re: [PATCH] ata: pata_pxa: Add missing check for devm_ioremap
-To:     Jiasheng Jiang <jiasheng@iscas.ac.cn>,
-        <damien.lemoal@opensource.wdc.com>
-CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20230209092814.10847-1-jiasheng@iscas.ac.cn>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <bd0d8eb2-4ee6-1e48-a1bb-ff37fe73df37@omp.ru>
-Date:   Thu, 9 Feb 2023 12:54:21 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S231596AbjBILba (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2023 06:31:30 -0500
+Received: from mx.socionext.com (mx.socionext.com [202.248.49.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3E14D60310;
+        Thu,  9 Feb 2023 03:22:34 -0800 (PST)
+Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 09 Feb 2023 20:19:37 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 212DA2012096;
+        Thu,  9 Feb 2023 20:19:37 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Thu, 9 Feb 2023 20:20:04 +0900
+Received: from [10.212.157.203] (unknown [10.212.157.203])
+        by kinkan2.css.socionext.com (Postfix) with ESMTP id 5FE213D57;
+        Thu,  9 Feb 2023 20:19:36 +0900 (JST)
+Message-ID: <ba1a26c9-c5bd-ba50-b7b2-eea002f71d6f@socionext.com>
+Date:   Thu, 9 Feb 2023 20:19:36 +0900
 MIME-Version: 1.0
-In-Reply-To: <20230209092814.10847-1-jiasheng@iscas.ac.cn>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH] dt-bindings: ata: Add UniPhier controller binding
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230209014052.17654-1-hayashi.kunihiko@socionext.com>
+ <cbf10de1-ba6a-8e5a-6222-25f2322995c9@linaro.org>
 Content-Language: en-US
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+In-Reply-To: <cbf10de1-ba6a-8e5a-6222-25f2322995c9@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.75.58]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 02/09/2023 08:39:21
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 175386 [Feb 09 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.75.58 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;lore.kernel.org:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.75.58
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 02/09/2023 08:42:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 2/9/2023 6:08:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/9/23 12:28 PM, Jiasheng Jiang wrote:
+Hi Krzysztof,
 
-> Add the check for the return value of the devm_ioremap in order to avoid
-> NULL pointer dereference.
+Thank you for reviewing.
+
+On 2023/02/09 17:51, Krzysztof Kozlowski wrote:
+> On 09/02/2023 02:40, Kunihiko Hayashi wrote:
+>> Add UniPhier SATA controller compatible string to the platform binding.
+>> This controller needs two reset controls.
+>>
+>> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+>> ---
+>>   Documentation/devicetree/bindings/ata/ahci-platform.yaml | 6 +++++-
+>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>> b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>> index 7dc2a2e8f598..3f6b21032d02 100644
+>> --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>> @@ -45,6 +45,9 @@ properties:
+>>                 - marvell,armada-8k-ahci
+>>                 - marvell,berlin2-ahci
+>>                 - marvell,berlin2q-ahci
+>> +              - socionext,uniphier-pro4-ahci
+>> +              - socionext,uniphier-pxs2-ahci
+>> +              - socionext,uniphier-pxs3-ahci
+>>             - const: generic-ahci
+>>         - enum:
+>>             - cavium,octeon-7130-ahci
+>> @@ -74,7 +77,8 @@ properties:
+>>       maxItems: 1
+>>
+>>     resets:
+>> -    maxItems: 1
+>> +    minItems: 1
+>> +    maxItems: 2
 > 
-> Fixes: 2dc6c6f15da9 ("[ARM] pata_pxa: DMA-capable PATA driver")
-> Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
-> ---
->  drivers/ata/pata_pxa.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-> index 985f42c4fd70..a20bb0824573 100644
-> --- a/drivers/ata/pata_pxa.c
-> +++ b/drivers/ata/pata_pxa.c
-> @@ -227,6 +227,8 @@ static int pxa_ata_probe(struct platform_device *pdev)
->  						resource_size(ctl_res));
->  	ap->ioaddr.bmdma_addr	= devm_ioremap(&pdev->dev, dma_res->start,
->  						resource_size(dma_res));
-> +	if (!ap->ioaddr.cmd_addr || !ap->ioaddr.ctl_addr || !ap->ioaddr.bmdma_addr)
-> +		return -ENOMEM;
+> You now allow two resets for each other platform, which is not justified
+> in commit msg. Constrain it per device/compatible.
 
-   Such patch has been posted already but the driver is more broken than just
-this check missing, see:
+Ah I see.
+I'll add if-then clause to constrain compatible instead of changing that
+directly.
 
-https://lore.kernel.org/all/20220612073222.18974-1-liqiong@nfschina.com/
+Thank you,
 
-MBR, Sergey
+---
+Best Regards
+Kunihiko Hayashi
