@@ -2,70 +2,91 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B34B2C636D3
-	for <linux-ide@archiver.kernel.org>; Sun, 12 Feb 2023 15:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3A71C05027
+	for <linux-ide@archiver.kernel.org>; Sun, 12 Feb 2023 17:15:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229602AbjBLPDZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 12 Feb 2023 10:03:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56018 "EHLO
+        id S229845AbjBLRPH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 12 Feb 2023 12:15:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjBLPDZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 12 Feb 2023 10:03:25 -0500
-X-Greylist: delayed 595 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 12 Feb 2023 07:03:22 PST
-Received: from smtp.outgoing.loopia.se (smtp.outgoing.loopia.se [93.188.3.37])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5D1412582
-        for <linux-ide@vger.kernel.org>; Sun, 12 Feb 2023 07:03:22 -0800 (PST)
-Received: from s807.loopia.se (localhost [127.0.0.1])
-        by s807.loopia.se (Postfix) with ESMTP id C81332F87B79
-        for <linux-ide@vger.kernel.org>; Sun, 12 Feb 2023 15:53:23 +0100 (CET)
-Received: from s981.loopia.se (unknown [172.22.191.5])
-        by s807.loopia.se (Postfix) with ESMTP id B9B6B2E2788B
-        for <linux-ide@vger.kernel.org>; Sun, 12 Feb 2023 15:53:23 +0100 (CET)
-Received: from s476.loopia.se (unknown [172.22.191.5])
-        by s981.loopia.se (Postfix) with ESMTP id B8B4522B192F
-        for <linux-ide@vger.kernel.org>; Sun, 12 Feb 2023 15:53:23 +0100 (CET)
-X-Virus-Scanned: amavisd-new at amavis.loopia.se
-Received: from s980.loopia.se ([172.22.191.5])
-        by s476.loopia.se (s476.loopia.se [172.22.190.16]) (amavisd-new, port 10024)
-        with LMTP id G03KoL89O6jc for <linux-ide@vger.kernel.org>;
-        Sun, 12 Feb 2023 15:53:23 +0100 (CET)
-X-Loopia-Auth: user
-X-Loopia-User: magnus@elfvendahl.com
-X-Loopia-Originating-IP: 87.249.183.111
-Received: from [192.168.1.175] (87-249-183-111.ljusnet.se [87.249.183.111])
-        (Authenticated sender: magnus@elfvendahl.com)
-        by s980.loopia.se (Postfix) with ESMTPSA id 55D8E2201821
-        for <linux-ide@vger.kernel.org>; Sun, 12 Feb 2023 15:53:23 +0100 (CET)
-Message-ID: <e19a0e0a-b925-3509-0ea3-bfb2c65d4912@elfvendahl.com>
-Date:   Sun, 12 Feb 2023 15:53:22 +0100
+        with ESMTP id S229472AbjBLRPF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 12 Feb 2023 12:15:05 -0500
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A2365259;
+        Sun, 12 Feb 2023 09:15:04 -0800 (PST)
+Received: from [192.168.1.103] (178.176.72.94) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sun, 12 Feb
+ 2023 20:14:55 +0300
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH 07/12] pata_parport: remove scratch parameter from
+ log_adapter()
+To:     Ondrej Zary <linux@zary.sk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, <linux-block@vger.kernel.org>,
+        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20230211144232.15138-1-linux@zary.sk>
+ <20230211144232.15138-8-linux@zary.sk>
+Organization: Open Mobile Platform
+Message-ID: <8222aa5b-f58a-41f2-6588-6b3f9aa4de63@omp.ru>
+Date:   Sun, 12 Feb 2023 20:14:55 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Content-Language: en-CA
-To:     linux-ide@vger.kernel.org
-From:   Magnus Elfvendahl <magnus@elfvendahl.com>
-Subject: The SATA_ini162x.
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20230211144232.15138-8-linux@zary.sk>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.72.94]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 02/12/2023 16:48:07
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 175455 [Feb 12 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 502 502 69dee8ef46717dd3cb3eeb129cb7cc8dab9e30f6
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.94 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.72.94:7.1.2;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.72.94
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 02/12/2023 16:50:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 2/12/2023 1:40:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi
+On 2/11/23 5:42 PM, Ondrej Zary wrote:
 
-Is there a workaround to activate the driver again?
+> scratch parameter of log_adapter() is only used by bpck driver.
+> Remove it.
+> 
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
 
-We have a small production server that stopped working due to Ubuntu 
-disabling access to the drives connected to the controller.
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Fortunately for us, we are not using the RAID function of the unit, only 
-using it as a disc-controller. That is, the pass-through function.
+[...]
 
-I have been ill for a long time and not been able to start doing 
-research as the what the issue is, and I just found this information.
-
-
-Best regards.
-
-Magnus
-
+MBR, Sergey
