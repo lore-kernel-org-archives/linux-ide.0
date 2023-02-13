@@ -2,119 +2,153 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EA7C636CC
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 10:25:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C28CC636D4
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 20:09:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231178AbjBMKZD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Feb 2023 05:25:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33360 "EHLO
+        id S229505AbjBMUJA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Feb 2023 15:09:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231218AbjBMKYr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 05:24:47 -0500
-Received: from wout3-smtp.messagingengine.com (wout3-smtp.messagingengine.com [64.147.123.19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C90B1BEA;
-        Mon, 13 Feb 2023 02:24:46 -0800 (PST)
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-        by mailout.west.internal (Postfix) with ESMTP id AB0423200907;
-        Mon, 13 Feb 2023 05:24:43 -0500 (EST)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute2.internal (MEProxy); Mon, 13 Feb 2023 05:24:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        invisiblethingslab.com; h=cc:cc:content-transfer-encoding:date
-        :date:from:from:in-reply-to:message-id:mime-version:reply-to
-        :sender:subject:subject:to:to; s=fm3; t=1676283883; x=
-        1676370283; bh=mmdn/5U15CkHYElQVUNYUP3/OAbo6/VgMQ5noy+p1YY=; b=n
-        gF8Ss4Yx7j/g+jT3RU3b0wX+fLun5/myeAP1lXpi3U3XH64yHySguHKWx2rNz8vd
-        8r2mZ4SLxYrzza9uBeS3rG4rfC5v4O51a6RPmdqCDeDZbcxYlWWPjgwD2VQ42xVA
-        bA6FEErMHFCDtiwUF4fcBkXdriyA4e4NsxddOBUOfodmMOgx5Pw0O6In42qblxhn
-        X5sQw7ZCkaj8Q79LpuN92YlqsKW41Q9S+xyBkgquChwrstQzGyKUu15ENZtQCfEz
-        hLQ1ZsEhbPapoQqcLbew7ilFwnvY4/7JiHwm9+czRPH/Y7lB7qLq48gqCuIHzgXa
-        baraCFFeoomqVxjYvgrxA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-transfer-encoding:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:message-id
-        :mime-version:reply-to:sender:subject:subject:to:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
-        1676283883; x=1676370283; bh=mmdn/5U15CkHYElQVUNYUP3/OAbo6/VgMQ5
-        noy+p1YY=; b=pI1HMqsoqWTQ3kzcpHXER9OC8xbvKkg0I0zd63tEYNTRNq2sg2l
-        wxEh1twhPrhkDwNj7wglVzUD0THcFhPKNAjtzc1NQrXRhBIbJ81qN8zC7nuZsUs0
-        l+97XXj8OL+dHMsWqabd7bcc/qTpc+OOywsg351yU13Y8w3g6t3FQmPAKJFxzvXU
-        5RGlLCel4gg7HViu1uJFF+7z4tEtgn5AUXIZZ5o4gbRQHxQoQcIcsChOkzw5+Qf1
-        vnFZ4MJKOmcD1DT7G/UcojF71ZvxnNa3w2vn6vppv828mvMTnZt3BqSJfF8wZ8AW
-        ym8VFPwpepzzeuH+8GMAWHb4QJdrDq66p5w==
-X-ME-Sender: <xms:6g_qY4LiHKZ9JlB-LMNld5ZJM9FT0zASlPZIteOnzHBcGFxU6pFJIg>
-    <xme:6g_qY4JZm4HGForcooEfYIfjoVd4L32kBZr8NBgOzMKse1suPw_wNabFwcPl0ENhB
-    i7E150gjTU5qTw>
-X-ME-Received: <xmr:6g_qY4tAyPh9_y-Y18Hi2Awgrch-UUEGSp4ebSWSWHRMRs2XDrrqRzYaHDXBfEC6SuRKpjjmANXRwpBBU2B7HtU>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrudeiuddgudefucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhephffvvefufffkofgggfestdekredtredttdenucfhrhhomhepufhimhhonhcu
-    ifgrihhsvghruceoshhimhhonhesihhnvhhishhisghlvghthhhinhhgshhlrggsrdgtoh
-    hmqeenucggtffrrghtthgvrhhnpeeiueethfehudfhtdejgeelvdefheduvdejgeekjeet
-    fefhgeehiedtgfekleefveenucffohhmrghinhepihhnthgvlhdrtghomhenucevlhhush
-    htvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehsihhmohhnsehinhhv
-    ihhsihgslhgvthhhihhnghhslhgrsgdrtghomh
-X-ME-Proxy: <xmx:6g_qY1bJRyYXXIqg4Vf36rBtCI5Rdr5HJ9QTuXC3mreK9LhYYByUIg>
-    <xmx:6g_qY_bB_zY1eithdShE-qRn3yKBVuc7gfLsykhovB_pSzeRBW4CDw>
-    <xmx:6g_qYxA219YTOe8knuLxosGvw4bAKxkLWiBGp5lmhdugmxS1XXtPZA>
-    <xmx:6w_qY-nXyH-P3gjJ-5-vRoI2nR2VeTKl1fA8U4JiO7wiXCVneFar1g>
-Feedback-ID: idc5945a3:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 13 Feb 2023 05:24:38 -0500 (EST)
-From:   Simon Gaiser <simon@invisiblethingslab.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Simon Gaiser <simon@invisiblethingslab.com>,
-        stable@vger.kernel.org
-Subject: [PATCH] ata: ahci: Add Tiger Lake UP{3,4} AHCI controller
-Date:   Mon, 13 Feb 2023 11:24:49 +0100
-Message-Id: <20230213102450.1604-1-simon@invisiblethingslab.com>
-X-Mailer: git-send-email 2.39.1
+        with ESMTP id S229615AbjBMUJA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 15:09:00 -0500
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B60A1CF65;
+        Mon, 13 Feb 2023 12:08:58 -0800 (PST)
+Received: from [192.168.1.103] (178.176.72.240) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 13 Feb
+ 2023 23:08:48 +0300
+Subject: Re: [PATCH 05/12] pata_parport: remove typedef struct PIA
+To:     Ondrej Zary <linux@zary.sk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, <linux-block@vger.kernel.org>,
+        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20230211144232.15138-1-linux@zary.sk>
+ <20230211144232.15138-6-linux@zary.sk>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <cab6cec4-1a3a-ed15-ddd1-8b51def4f53e@omp.ru>
+Date:   Mon, 13 Feb 2023 23:08:48 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230211144232.15138-6-linux@zary.sk>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.72.240]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 02/13/2023 19:50:32
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 175483 [Feb 13 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 504 504 dc137e1f9c062eb6c0671e7d509ab442ae395562
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.240 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.240 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.72.240
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 02/13/2023 19:52:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 2/13/2023 6:59:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Mark the Tiger Lake UP{3,4} AHCI controller as "low_power". This enables
-S0ix to work out of the box. Otherwise this isn't working unless the
-user manually sets /sys/class/scsi_host/*/link_power_management_policy.
+On 2/11/23 5:42 PM, Ondrej Zary wrote:
 
-Intel lists a total of 4 SATA controller IDs in [1] for those mobile
-PCHs. This commit just adds the "AHCI" variant since I only tested
-those.
+> Remove typedef struct PIA and use struct pi_adapter directly.
 
-[1]: https://cdrdv2.intel.com/v1/dl/getContent/631119
+   Prolly worth mentioning that you drop the spaces in the parameter lists
+while at it...
 
-Signed-off-by: Simon Gaiser <simon@invisiblethingslab.com>
-CC: stable@vger.kernel.org
----
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
 
-As noted above this doesn't include the other PCI IDs listed by Intel
-for those PCHs (RAID modes). Also the same is probably needed for newer
-generations. But for both I don't have hardware to test handy right now,
-so only included what I have actually tested.
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Added stable to CC, since on systems using S0ix this prevents S0ix
-residency and therefore leads to such high power consumption that
-suspend is effectively broken.
+   Had some comments tho...
 
- drivers/ata/ahci.c | 1 +
- 1 file changed, 1 insertion(+)
+[...]
+> diff --git a/drivers/ata/pata_parport/fit2.c b/drivers/ata/pata_parport/fit2.c
+> index 28de8e4e41c3..020c93dea362 100644
+> --- a/drivers/ata/pata_parport/fit2.c
+> +++ b/drivers/ata/pata_parport/fit2.c
+> @@ -37,13 +37,13 @@ devices.
+>  
+>  */
+>  
+> -static void  fit2_write_regr( PIA *pi, int cont, int regr, int val)
+> +static void  fit2_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 14a1c0d14916..3bb9bb483fe3 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -421,6 +421,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci_low_power }, /* Ice Lake LP AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x02d3), board_ahci_low_power }, /* Comet Lake PCH-U AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_low_power }, /* Comet Lake PCH RAID */
-+	{ PCI_VDEVICE(INTEL, 0xa0d3), board_ahci_low_power }, /* Tiger Lake UP{3,4} AHCI */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--- 
-2.39.1
+   Could also kill an extra space after *void*...
 
+[...]
+> diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
+> index 0366f3123508..03f314ad5ee7 100644
+> --- a/drivers/ata/pata_parport/fit3.c
+> +++ b/drivers/ata/pata_parport/fit3.c
+> @@ -39,7 +39,7 @@
+>  
+>  */
+>  
+> -static void  fit3_write_regr( PIA *pi, int cont, int regr, int val)
+> +static void  fit3_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
+
+   Here as well...
+
+[...]
+> diff --git a/drivers/ata/pata_parport/kbic.c b/drivers/ata/pata_parport/kbic.c
+> index 9a99b9e35d41..e065f8367716 100644
+> --- a/drivers/ata/pata_parport/kbic.c
+> +++ b/drivers/ata/pata_parport/kbic.c
+[...]
+> @@ -72,7 +72,7 @@ static int kbic_read_regr( PIA *pi, int cont, int regr )
+>  	return -1;
+>  }       
+>  
+> -static void  kbic_write_regr( PIA *pi, int cont, int regr, int val)
+> +static void  kbic_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
+
+   And here...
+
+[...]
+> diff --git a/drivers/ata/pata_parport/ktti.c b/drivers/ata/pata_parport/ktti.c
+> index d87eb3c139bc..bddd13b4801f 100644
+> --- a/drivers/ata/pata_parport/ktti.c
+> +++ b/drivers/ata/pata_parport/ktti.c
+> @@ -29,7 +29,7 @@
+>  
+>  static int  cont_map[2] = { 0x10, 0x08 };
+>  
+> -static void  ktti_write_regr( PIA *pi, int cont, int regr, int val)
+> +static void  ktti_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
+
+   And here...
+
+[...] 
+
+MBR, Sergey
