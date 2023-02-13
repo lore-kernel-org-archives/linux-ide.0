@@ -2,135 +2,119 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEB32C636CC
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 09:10:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EA7C636CC
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 10:25:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229822AbjBMJKa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Feb 2023 04:10:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38372 "EHLO
+        id S231178AbjBMKZD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Feb 2023 05:25:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229472AbjBMJK3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 04:10:29 -0500
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C10F312070
-        for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2023 01:10:27 -0800 (PST)
-Received: by mail-wr1-x436.google.com with SMTP id o15so8050717wrc.9
-        for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2023 01:10:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=SFbbit3gfVSlgEGux20SeiHF54l/GxrKyyVrimdp8r8=;
-        b=nBndPv6WkmSBKfAb2M7U9jz/A31aNjmjBMJtFrtQZcQPzPPxvHn/SBniepw7wVATDd
-         w1SYEKYE4RjeolvbpnvYEWuEYQA00XwBwHTkWh1y+Y7iA9H4dKfTn8F0bN0lO6Rk8rdp
-         iR4DvWMvJzX+1b2/E8M5AICc4t8Gjh8PCdsIiOreAIoSNQtGVCCvcfWrLvnYKApZiTe1
-         ErgMEZ4Bng07Xh6F97nA8awqDqa6n1qZWoDNPBcqbZsHnYNoC9u2UrJBKicIaIjD8iY1
-         /7igOGeDzKs0Kv+W/9mLfS2iwCacgEWZBvgDczbSD1+Gacf5ZhtNp5LSDJL88Z+kFPlo
-         OqYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SFbbit3gfVSlgEGux20SeiHF54l/GxrKyyVrimdp8r8=;
-        b=fQozgpAHt1nlVgi6qJG52cPzlESgLbshJJubBSt/hHRUHePTCYG5uhC0912bBJouoG
-         MzZqSkScMyXadi0VmFIJGMY2ctcE/MVmPstyB0wVVfWy/AdpZ+dVh/B67SfliPLiGyTk
-         4DuNLNOpl1Iuj3W9Xzv0TeV10XDz+QdQPu4DAu7akmW2uiU7vxPRMk2rulHEkuzDj6je
-         +E6asplS0Z9DfzBmoj5CXh2SADz/fkqwPBA+uqSMefAMvXSdsfNc2cGVT5YnaSgN4eMV
-         xHcyLnpcB7TYWfm5xNCjE4c7PoQze3kudGszIIxR3hpFXwkIfYlsOlxJdiTHxfMSDkX7
-         iIUQ==
-X-Gm-Message-State: AO0yUKV/KfTdqELDUlfI+B/WiwB4/BHM/gSnF7sDHnGRl2lTKRDvUQt8
-        Ah4yCEvBfVtawFQNT2bchLlGxDeY+InIWWOI
-X-Google-Smtp-Source: AK7set/XS7U8EouqlbaDbYShhig4AocctLD3MXJSNH/OT5ab67nu06wZbc7r15szbOVfLyun8GrDAg==
-X-Received: by 2002:a05:6000:15ce:b0:2c5:5e34:6171 with SMTP id y14-20020a05600015ce00b002c55e346171mr885696wry.25.1676279426398;
-        Mon, 13 Feb 2023 01:10:26 -0800 (PST)
-Received: from [192.168.1.109] ([178.197.216.144])
-        by smtp.gmail.com with ESMTPSA id e1-20020a5d5941000000b002c54241b4fesm8917783wri.80.2023.02.13.01.10.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Feb 2023 01:10:26 -0800 (PST)
-Message-ID: <2d76ec86-6580-28b0-0f80-a5c497f8cef7@linaro.org>
-Date:   Mon, 13 Feb 2023 10:10:24 +0100
+        with ESMTP id S231218AbjBMKYr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 05:24:47 -0500
+Received: from wout3-smtp.messagingengine.com (wout3-smtp.messagingengine.com [64.147.123.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C90B1BEA;
+        Mon, 13 Feb 2023 02:24:46 -0800 (PST)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+        by mailout.west.internal (Postfix) with ESMTP id AB0423200907;
+        Mon, 13 Feb 2023 05:24:43 -0500 (EST)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute2.internal (MEProxy); Mon, 13 Feb 2023 05:24:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        invisiblethingslab.com; h=cc:cc:content-transfer-encoding:date
+        :date:from:from:in-reply-to:message-id:mime-version:reply-to
+        :sender:subject:subject:to:to; s=fm3; t=1676283883; x=
+        1676370283; bh=mmdn/5U15CkHYElQVUNYUP3/OAbo6/VgMQ5noy+p1YY=; b=n
+        gF8Ss4Yx7j/g+jT3RU3b0wX+fLun5/myeAP1lXpi3U3XH64yHySguHKWx2rNz8vd
+        8r2mZ4SLxYrzza9uBeS3rG4rfC5v4O51a6RPmdqCDeDZbcxYlWWPjgwD2VQ42xVA
+        bA6FEErMHFCDtiwUF4fcBkXdriyA4e4NsxddOBUOfodmMOgx5Pw0O6In42qblxhn
+        X5sQw7ZCkaj8Q79LpuN92YlqsKW41Q9S+xyBkgquChwrstQzGyKUu15ENZtQCfEz
+        hLQ1ZsEhbPapoQqcLbew7ilFwnvY4/7JiHwm9+czRPH/Y7lB7qLq48gqCuIHzgXa
+        baraCFFeoomqVxjYvgrxA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-transfer-encoding:date:date
+        :feedback-id:feedback-id:from:from:in-reply-to:message-id
+        :mime-version:reply-to:sender:subject:subject:to:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=
+        1676283883; x=1676370283; bh=mmdn/5U15CkHYElQVUNYUP3/OAbo6/VgMQ5
+        noy+p1YY=; b=pI1HMqsoqWTQ3kzcpHXER9OC8xbvKkg0I0zd63tEYNTRNq2sg2l
+        wxEh1twhPrhkDwNj7wglVzUD0THcFhPKNAjtzc1NQrXRhBIbJ81qN8zC7nuZsUs0
+        l+97XXj8OL+dHMsWqabd7bcc/qTpc+OOywsg351yU13Y8w3g6t3FQmPAKJFxzvXU
+        5RGlLCel4gg7HViu1uJFF+7z4tEtgn5AUXIZZ5o4gbRQHxQoQcIcsChOkzw5+Qf1
+        vnFZ4MJKOmcD1DT7G/UcojF71ZvxnNa3w2vn6vppv828mvMTnZt3BqSJfF8wZ8AW
+        ym8VFPwpepzzeuH+8GMAWHb4QJdrDq66p5w==
+X-ME-Sender: <xms:6g_qY4LiHKZ9JlB-LMNld5ZJM9FT0zASlPZIteOnzHBcGFxU6pFJIg>
+    <xme:6g_qY4JZm4HGForcooEfYIfjoVd4L32kBZr8NBgOzMKse1suPw_wNabFwcPl0ENhB
+    i7E150gjTU5qTw>
+X-ME-Received: <xmr:6g_qY4tAyPh9_y-Y18Hi2Awgrch-UUEGSp4ebSWSWHRMRs2XDrrqRzYaHDXBfEC6SuRKpjjmANXRwpBBU2B7HtU>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrudeiuddgudefucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhephffvvefufffkofgggfestdekredtredttdenucfhrhhomhepufhimhhonhcu
+    ifgrihhsvghruceoshhimhhonhesihhnvhhishhisghlvghthhhinhhgshhlrggsrdgtoh
+    hmqeenucggtffrrghtthgvrhhnpeeiueethfehudfhtdejgeelvdefheduvdejgeekjeet
+    fefhgeehiedtgfekleefveenucffohhmrghinhepihhnthgvlhdrtghomhenucevlhhush
+    htvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehsihhmohhnsehinhhv
+    ihhsihgslhgvthhhihhnghhslhgrsgdrtghomh
+X-ME-Proxy: <xmx:6g_qY1bJRyYXXIqg4Vf36rBtCI5Rdr5HJ9QTuXC3mreK9LhYYByUIg>
+    <xmx:6g_qY_bB_zY1eithdShE-qRn3yKBVuc7gfLsykhovB_pSzeRBW4CDw>
+    <xmx:6g_qYxA219YTOe8knuLxosGvw4bAKxkLWiBGp5lmhdugmxS1XXtPZA>
+    <xmx:6w_qY-nXyH-P3gjJ-5-vRoI2nR2VeTKl1fA8U4JiO7wiXCVneFar1g>
+Feedback-ID: idc5945a3:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 13 Feb 2023 05:24:38 -0500 (EST)
+From:   Simon Gaiser <simon@invisiblethingslab.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Simon Gaiser <simon@invisiblethingslab.com>,
+        stable@vger.kernel.org
+Subject: [PATCH] ata: ahci: Add Tiger Lake UP{3,4} AHCI controller
+Date:   Mon, 13 Feb 2023 11:24:49 +0100
+Message-Id: <20230213102450.1604-1-simon@invisiblethingslab.com>
+X-Mailer: git-send-email 2.39.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v2] dt-bindings: ata: Add UniPhier controller binding
-Content-Language: en-US
-To:     Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230213045432.32614-1-hayashi.kunihiko@socionext.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230213045432.32614-1-hayashi.kunihiko@socionext.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 13/02/2023 05:54, Kunihiko Hayashi wrote:
-> Add UniPhier SATA controller compatible string to the platform binding.
-> This controller needs maximum three reset controls.
-> 
-> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> ---
->  .../devicetree/bindings/ata/ahci-platform.yaml  | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
-> 
-> Changes since v1:
-> - Restrict resets property changes with compatible strings
-> - Fix maxItems from two to three
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> index 7dc2a2e8f598..25dd5ffaa517 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> @@ -45,6 +45,9 @@ properties:
->                - marvell,armada-8k-ahci
->                - marvell,berlin2-ahci
->                - marvell,berlin2q-ahci
-> +              - socionext,uniphier-pro4-ahci
-> +              - socionext,uniphier-pxs2-ahci
-> +              - socionext,uniphier-pxs3-ahci
->            - const: generic-ahci
->        - enum:
+Mark the Tiger Lake UP{3,4} AHCI controller as "low_power". This enables
+S0ix to work out of the box. Otherwise this isn't working unless the
+user manually sets /sys/class/scsi_host/*/link_power_management_policy.
 
-Top level is saying reset=1, so did you test your bindings?
+Intel lists a total of 4 SATA controller IDs in [1] for those mobile
+PCHs. This commit just adds the "AHCI" variant since I only tested
+those.
 
->            - cavium,octeon-7130-ahci
-> @@ -76,6 +79,20 @@ properties:
->    resets:
->      maxItems: 1
->  
-> +if:
-Keep it in allOf like in example-schema. Will save you one re-indent
-pretty soon...
+[1]: https://cdrdv2.intel.com/v1/dl/getContent/631119
 
+Signed-off-by: Simon Gaiser <simon@invisiblethingslab.com>
+CC: stable@vger.kernel.org
+---
 
-> +  properties:
-> +    compatible:
-> +      contains:
-> +        enum:
-> +          - socionext,uniphier-pro4-ahci
-> +          - socionext,uniphier-pxs2-ahci
-> +          - socionext,uniphier-pxs3-ahci
-> +then:
-> +  properties:
-> +    resets:
-> +      minItems: 1
-> +      maxItems: 3
+As noted above this doesn't include the other PCI IDs listed by Intel
+for those PCHs (RAID modes). Also the same is probably needed for newer
+generations. But for both I don't have hardware to test handy right now,
+so only included what I have actually tested.
 
-And entire allOf goes to the place like in example-schema.
-> +
->  patternProperties:
->    "^sata-port@[0-9a-f]+$":
->      $ref: /schemas/ata/ahci-common.yaml#/$defs/ahci-port
+Added stable to CC, since on systems using S0ix this prevents S0ix
+residency and therefore leads to such high power consumption that
+suspend is effectively broken.
 
-Best regards,
-Krzysztof
+ drivers/ata/ahci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 14a1c0d14916..3bb9bb483fe3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -421,6 +421,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci_low_power }, /* Ice Lake LP AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x02d3), board_ahci_low_power }, /* Comet Lake PCH-U AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_low_power }, /* Comet Lake PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0xa0d3), board_ahci_low_power }, /* Tiger Lake UP{3,4} AHCI */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-- 
+2.39.1
 
