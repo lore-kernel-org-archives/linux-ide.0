@@ -2,85 +2,89 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0933CC636D4
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 20:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40DD0C636CC
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 20:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229975AbjBMURu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Feb 2023 15:17:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53108 "EHLO
+        id S230249AbjBMUm3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Feb 2023 15:42:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231159AbjBMURt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 15:17:49 -0500
-Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C38521A3E;
-        Mon, 13 Feb 2023 12:17:47 -0800 (PST)
-Date:   Mon, 13 Feb 2023 12:17:45 -0800
-From:   Patrick McLean <chutzpah@gentoo.org>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-core: Disable READ LOG DMA EXT for Samsung
- MZ7LH
-Message-ID: <20230213121745.2847a9ff@moya.linuxfreak.ca>
-In-Reply-To: <dce110de-649d-cde8-9401-346675c95263@opensource.wdc.com>
-References: <20230210215151.812839-1-chutzpah@gentoo.org>
-        <dce110de-649d-cde8-9401-346675c95263@opensource.wdc.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.35; x86_64-pc-linux-gnu)
+        with ESMTP id S230144AbjBMUm0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 15:42:26 -0500
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 752C818B02;
+        Mon, 13 Feb 2023 12:42:25 -0800 (PST)
+Received: from [192.168.1.103] (178.176.72.240) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 13 Feb
+ 2023 23:42:16 +0300
+Subject: Re: [PATCH 11/12] pata_parport: remove obsolete changelogs
+To:     Ondrej Zary <linux@zary.sk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, <linux-block@vger.kernel.org>,
+        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20230211144232.15138-1-linux@zary.sk>
+ <20230211144232.15138-12-linux@zary.sk>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <8e5484a1-5ed1-3f52-218f-59d75ded7f52@omp.ru>
+Date:   Mon, 13 Feb 2023 23:42:17 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20230211144232.15138-12-linux@zary.sk>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.72.240]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 02/13/2023 20:28:43
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 175483 [Feb 13 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 504 504 dc137e1f9c062eb6c0671e7d509ab442ae395562
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.240 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.72.240
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 02/13/2023 20:31:00
+X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 2/13/2023 6:59:00 PM
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, 11 Feb 2023 12:11:48 +0900
-Damien Le Moal <damien.lemoal@opensource.wdc.com> wrote:
+On 2/11/23 5:42 PM, Ondrej Zary wrote:
 
-> On 2/11/23 06:51, Patrick McLean wrote:
-> > Samsung MZ7LH drives are spewing messages like this in to dmesg with AMD
-> > SATA controllers:
-> > 
-> > ata1.00: exception Emask 0x0 SAct 0x7e0000 SErr 0x0 action 0x6 frozen
-> > ata1.00: failed command: SEND FPDMA QUEUED
-> > ata1.00: cmd 64/01:88:00:00:00/00:00:00:00:00/a0 tag 17 ncq dma 512 out
-> >          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask
-> >          0x4 (timeout)
-> > 
-> > Since this was seen previously with SSD 840 EVO drives in
-> > https://bugzilla.kernel.org/show_bug.cgi?id=203475 let's add the same
-> > fix for these drives as the EVOs have, since they likely have very
-> > similar firmwares.
-> > 
-> > Signed-off-by: Patrick McLean <chutzpah@gentoo.org>
-> > ---
-> >  drivers/ata/libata-core.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index 2ea572628b1c..c4c89d24f84c 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> > @@ -4045,6 +4045,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
-> >  	{ "Samsung SSD 870*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-> >  						ATA_HORKAGE_ZERO_AFTER_TRIM |
-> >  						ATA_HORKAGE_NO_NCQ_ON_ATI },
-> > +	{ "SAMSUNG*MZ7LH*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-> > +						ATA_HORKAGE_ZERO_AFTER_TRIM |
-> > +						ATA_HORKAGE_NO_NCQ_ON_ATI, },
-> >  	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-> >  						ATA_HORKAGE_ZERO_AFTER_TRIM },
-> >    
+> Remove obsolete changelogs from protocol drivers.
 > 
-> Looks OK, but ATA_HORKAGE_NO_NCQ_ON_ATI is for PCI vendor ID 1002h. AMD
-> also has vendor ID 1022h. Did you check you adapter vendor ID & tested
-> this patch ?
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
 
-We tested this patch, and it resolves the problem for us (we have been
-using it for several months).
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-> -- 
-> Damien Le Moal
-> Western Digital Research
-> 
+[...]
 
-
--- 
+MBR, Sergey
