@@ -2,28 +2,28 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CEC7C636CC
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 20:17:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0933CC636D4
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Feb 2023 20:17:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230437AbjBMURJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Feb 2023 15:17:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52218 "EHLO
+        id S229975AbjBMURu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Feb 2023 15:17:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbjBMURI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 15:17:08 -0500
+        with ESMTP id S231159AbjBMURt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 15:17:49 -0500
 Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD86C3596;
-        Mon, 13 Feb 2023 12:17:07 -0800 (PST)
-Date:   Mon, 13 Feb 2023 12:16:59 -0800
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C38521A3E;
+        Mon, 13 Feb 2023 12:17:47 -0800 (PST)
+Date:   Mon, 13 Feb 2023 12:17:45 -0800
 From:   Patrick McLean <chutzpah@gentoo.org>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 Subject: Re: [PATCH] ata: libata-core: Disable READ LOG DMA EXT for Samsung
  MZ7LH
-Message-ID: <20230213121635.001a2a65@moya.linuxfreak.ca>
-In-Reply-To: <d2a0c3bd-d7ef-85ff-6268-712c098e9d32@opensource.wdc.com>
+Message-ID: <20230213121745.2847a9ff@moya.linuxfreak.ca>
+In-Reply-To: <dce110de-649d-cde8-9401-346675c95263@opensource.wdc.com>
 References: <20230210215151.812839-1-chutzpah@gentoo.org>
-        <d2a0c3bd-d7ef-85ff-6268-712c098e9d32@opensource.wdc.com>
+        <dce110de-649d-cde8-9401-346675c95263@opensource.wdc.com>
 X-Mailer: Claws Mail 4.1.1 (GTK 3.24.35; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -32,7 +32,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, 11 Feb 2023 12:12:23 +0900
+On Sat, 11 Feb 2023 12:11:48 +0900
 Damien Le Moal <damien.lemoal@opensource.wdc.com> wrote:
 
 > On 2/11/23 06:51, Patrick McLean wrote:
@@ -63,18 +63,20 @@ Damien Le Moal <damien.lemoal@opensource.wdc.com> wrote:
 > >  	{ "Samsung SSD 870*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
 > >  						ATA_HORKAGE_ZERO_AFTER_TRIM |
 > >  						ATA_HORKAGE_NO_NCQ_ON_ATI },
-> > +	{ "SAMSUNG*MZ7LH*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |  
-> 
-> Are you sure about the upper case here for this drive model name ?
-> 
-Yes, the drive model name is upper case. We have tested this patch and
-it does resolve the problem on our hardware.
+> > +	{ "SAMSUNG*MZ7LH*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
 > > +						ATA_HORKAGE_ZERO_AFTER_TRIM |
 > > +						ATA_HORKAGE_NO_NCQ_ON_ATI, },
 > >  	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
 > >  						ATA_HORKAGE_ZERO_AFTER_TRIM },
 > >    
 > 
+> Looks OK, but ATA_HORKAGE_NO_NCQ_ON_ATI is for PCI vendor ID 1002h. AMD
+> also has vendor ID 1022h. Did you check you adapter vendor ID & tested
+> this patch ?
+
+We tested this patch, and it resolves the problem for us (we have been
+using it for several months).
+
 > -- 
 > Damien Le Moal
 > Western Digital Research
