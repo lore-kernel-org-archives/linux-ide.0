@@ -2,72 +2,70 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA59C61DA4
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Feb 2023 10:33:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70749C61DA4
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Feb 2023 20:55:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232487AbjBNKdb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Feb 2023 05:33:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38188 "EHLO
+        id S231714AbjBNUzM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Feb 2023 15:55:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232492AbjBNKda (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2023 05:33:30 -0500
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 943BA227BB;
-        Tue, 14 Feb 2023 02:33:27 -0800 (PST)
-Received: by mail-lf1-x12e.google.com with SMTP id cf42so22858138lfb.1;
-        Tue, 14 Feb 2023 02:33:27 -0800 (PST)
+        with ESMTP id S231843AbjBNUzL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2023 15:55:11 -0500
+Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF5942ED65;
+        Tue, 14 Feb 2023 12:55:09 -0800 (PST)
+Received: by mail-lj1-x233.google.com with SMTP id a9so19811596ljr.13;
+        Tue, 14 Feb 2023 12:55:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :user-agent:date:message-id:references:cc:to:subject:from:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=G5KLJdcy6ykZCzGPMCBN9gC4v93vYkbHdnRlOMJCNb0=;
-        b=dH3dtf5m0tK08ocqe/9CRa4KrTrVgWojqkD9en0KyhlXu5JZGwaEfKWCAYanDRY8+x
-         2s8wt6QMM+DkxCvkkP19UewiZTclVZixnqkxy3QIeocpGSLCeJeoAPgUqKuHBiTLLz2M
-         HorC1FOZvohEgaMqWss2brtVw2UnQA+pctslLCtoOsX9IYuJV90LBvpQz/Nalusxpiyc
-         7BAnU+Vmb1Ungg1R8wBsgYx1DxSBTEimvnBnScKOpGOmSL9s8IG4L0p8MLCEkXbvV8dT
-         23MFjl+7DP4HZ/Pxg/XDahKulbvUIhpL5nuR/RqhAq9dw3t1299uez0btcOIEj/6002H
-         ZVHw==
+        bh=D0pq+m0/U7p0zUEPB+aA1burF2pr6Ir+gD6+zbkqrV0=;
+        b=MtWGP1nEjHF60A5txZB64h5a/LmqKrfw/Y93+e5WU2FPyj9Dmvba5OF/rzlL7gK2ha
+         xVTMJJRaUhwWyuuFB53HyGNJlBYn0muYx9YGgHojo+dtnU3gyO15p8d/73BE+7vu5vkq
+         McFlwAqqSE+Rtp+2J4EGGDCw9npIvMCEJlaVB3iSPwDeGqgu9aTBahKt2+CE6wkNz9LF
+         7ogpFKfEk3/QwhAPCjGWafEnTMron826T+0D9pIRlx22eXGkjqHnP9TSaqBi6UIPyatW
+         3FmKhQvYGiy2RjK7YMtJ6Yt1kh9Owni6IiOk4eFGyzUEwj3yVdNKcEf5sCVsfAUxiASF
+         vpSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
+         :user-agent:date:message-id:references:cc:to:subject:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=G5KLJdcy6ykZCzGPMCBN9gC4v93vYkbHdnRlOMJCNb0=;
-        b=3c9irBhqAUHgB5Q1mix//6PdHVIlhUzuPkB1vl6q5fnnJi5dyoNbx4CN2T1iG+fFqv
-         Y+usiHgTzeVCEJka7p/oFEBEJQW3G+dlEAM+fMTrothpzX7cjZcCHU5hqUm09xUlaW6+
-         /feKHgNIK1Sa3N6Srqp7p9fFPYz29SYPNXM4yiAnK23uh7fy4UCgtmg29BJKuJhzPWy5
-         xGaNUpmdqVeOKeBKt7BNXzrtyP6RcYbXaj+7fNZ1jsxF/ojMCH8VJuylJC6EaQpNm0so
-         meDVmdziQ+/u8LksSOih4ENtO7obYS/mU+fWPfiWE/TllWWCCsLpjvjYotRYR/D3mwye
-         ZY6Q==
-X-Gm-Message-State: AO0yUKXj6F9I3DSfotm1xMXVbzXl+FWtWqPMVjhgWr728jUXz/49SgSp
-        /yHq80A/LukSKTMKFoxrx5N8Uhz4iCE=
-X-Google-Smtp-Source: AK7set/XQFphRDI6LFsYjCz0934ovquKG4Eg3dZbC9z80GrCt3jPXZk7udPc0Qf9S0tnO32rABJ46w==
-X-Received: by 2002:a05:6512:402:b0:4a4:68b8:f4f0 with SMTP id u2-20020a056512040200b004a468b8f4f0mr442536lfk.54.1676370805584;
-        Tue, 14 Feb 2023 02:33:25 -0800 (PST)
-Received: from [192.168.1.103] ([31.173.81.56])
-        by smtp.gmail.com with ESMTPSA id q18-20020ac25292000000b004d783b0d310sm1058874lfm.307.2023.02.14.02.33.24
+        bh=D0pq+m0/U7p0zUEPB+aA1burF2pr6Ir+gD6+zbkqrV0=;
+        b=UVCDKoJSl4O4FCF6KPgE9psf6UySWOE2f1g9ILi/9ei8522VczbiyZgi7DC7+Q9r40
+         r3UL3f1Ps353+BFyxql5zq8ZSYPov+JarnGrOEZn8NhX61JOvOQYKFkNJ7sZuPG470L9
+         IUN4SBk+OZa63zCaaVtSfdaL1e/XuXyPuzuN5UhNjdRFqdDWW8Qk+qq2WBLuhTCB/1qT
+         XocEvRtPip949QDBFUkWExGjDZnJ5aEAt2RCjmdw7qd74cq/ghk+P1le3dymP0rDtAze
+         dLXKIoj6gC1QIDK0xvWXH0omFtok2aKGsFVpuHhsJJNdOXqcz1vGG8uiA/lRwBNEVk6z
+         AEkw==
+X-Gm-Message-State: AO0yUKUYRgMKIwMK66QmVRu8528p/MroZJ1zqtl8TSr5/5J19v45VcE5
+        1hvW684N68YE0LvGMFmTKqCByG29WSY=
+X-Google-Smtp-Source: AK7set8tW5JHF2lSbEiDoQt6ac7vS0uGvRLdYO+97v1LHbbm7fPh3T6bRGS90GYsdMNi6EPjYwZGnA==
+X-Received: by 2002:a2e:9141:0:b0:293:4b8c:3b82 with SMTP id q1-20020a2e9141000000b002934b8c3b82mr1443045ljg.9.1676408107510;
+        Tue, 14 Feb 2023 12:55:07 -0800 (PST)
+Received: from [192.168.1.103] ([178.176.75.124])
+        by smtp.gmail.com with ESMTPSA id g7-20020a2e9e47000000b002932b817990sm2479168ljk.31.2023.02.14.12.55.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Feb 2023 02:33:25 -0800 (PST)
-Subject: Re: [PATCH] ata: pata_octeon_cf: drop kernel-doc notation
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        linux-kernel@vger.kernel.org
-Cc:     kernel test robot <lkp@intel.com>,
-        David Daney <ddaney@caviumnetworks.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        linux-ide@vger.kernel.org
-References: <20230213212549.29914-1-rdunlap@infradead.org>
- <51fb5b13-3e9c-785f-b96f-6f398389d434@gmail.com>
- <c67e4b38-7bec-0901-b13d-6390c1d51cd8@gmail.com>
- <dafa3a1f-3661-72d3-6423-22e8399b333f@opensource.wdc.com>
+        Tue, 14 Feb 2023 12:55:07 -0800 (PST)
 From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <7c2f9a86-fa86-c1e2-25f8-1dd7c2350f69@gmail.com>
-Date:   Tue, 14 Feb 2023 13:33:23 +0300
+Subject: Re: [PATCH 08/12] pata_parport: use dev_* and print_hex_* instead of
+ printk
+To:     Ondrej Zary <linux@zary.sk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230211144232.15138-1-linux@zary.sk>
+ <20230211144232.15138-9-linux@zary.sk>
+Message-ID: <a51aa862-e713-5b7a-d86a-bebca092a54c@gmail.com>
+Date:   Tue, 14 Feb 2023 23:55:05 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <dafa3a1f-3661-72d3-6423-22e8399b333f@opensource.wdc.com>
+In-Reply-To: <20230211144232.15138-9-linux@zary.sk>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -75,33 +73,81 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/14/23 12:27 PM, Damien Le Moal wrote:
-[...]
->>>    Hm, why didn't you CC me?
->>>
->>> On 2/14/23 12:25 AM, Randy Dunlap wrote:
->>>
->>>> Fix a slew of kernel-doc warnings in pata_octeon_cf.c by changing
->>>> all "/**" comments to "/*" since they are not in kernel-doc format.
->>>>
->>>> Fixes: 3c929c6f5aa7 ("libata: New driver for OCTEON SOC Compact Flash interface (v7).")
->>>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
->>>> Reported-by: kernel test robot <lkp@intel.com>
->>>> Link: https://lore.kernel.org/all/202302101722.5O56RClE-lkp@intel.com/
->>>> Cc: David Daney <ddaney@caviumnetworks.com>
->>>> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>>> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
->>>> Cc: linux-ide@vger.kernel.org
->>>
->>> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>
->>    Oops, replied from a wrong account... :-/
->>    Damien, please let me know if you need this fixed...
-> 
-> Nope. That is fine. A review is a review :)
-> I can fix it with your usual email if you prefer though.
+Hello again! :-)
 
-   Well, the OMP's address is correct and listed in MAINTAINERS. It's the address
-I replied from that was wrong. Some pepole (like GregKH) want From: and SoB to match...
+   Resending the mail from Gmail account, as OMP account doesn't work ATM... :-/
+
+On 2/11/23 5:42 PM, Ondrej Zary wrote:
+
+> Use dev_info/dev_err/dev_dbg/print_hex_* instead of printk.
+> Remove version print from log_adapter and meaningless VERSION defines.
+
+   Sounds like this needs to be in a separate patch...
+
+> Remove now useless verbose parameter of bpck6 module.
+
+   This one too...
+
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
+[...]
+
+> diff --git a/drivers/ata/pata_parport/bpck.c b/drivers/ata/pata_parport/bpck.c
+> index 89160a94b30e..d5bc419b2ab3 100644
+> --- a/drivers/ata/pata_parport/bpck.c
+> +++ b/drivers/ata/pata_parport/bpck.c
+[...]
+> @@ -421,24 +416,12 @@ static void bpck_log_adapter(struct pi_adapter *pi)
+>  {	char	*mode_string[5] = { "4-bit","8-bit","EPP-8",
+>  				    "EPP-16","EPP-32" };
+>  	char scratch[128];
+> -#ifdef DUMP_EEPROM
+> -	int i;
+> -#endif
+>  
+>  	bpck_read_eeprom(pi,scratch);
+> -
+> -#ifdef DUMP_EEPROM
+> -	   for(i=0;i<128;i++)
+> -		if ((scratch[i] < ' ') || (scratch[i] > '~'))
+> -		    scratch[i] = '.';
+> -	   printk("bpck EEPROM: %64.64s\n", scratch);
+> -	   printk("             %64.64s\n", &scratch[64]);
+> -#endif
+> -
+> -	printk("bpck %s, backpack %8.8s unit %d",
+> -		BPCK_VERSION, &scratch[110], pi->unit);
+> -	printk(" at 0x%x, mode %d (%s), delay %d\n",pi->port,
+> -		pi->mode,mode_string[pi->mode],pi->delay);
+> +	print_hex_dump_bytes("bpck EEPROM: ", DUMP_PREFIX_NONE, scratch, 128);
+
+   Conversion to print_hex_dump_bytes() deserved its own patch, IMHO...
+
+> +	dev_info(&pi->dev, "backpack %8.8s unit %d at 0x%x, mode %d (%s), delay %d\n",
+> +		 &scratch[110], pi->unit, pi->port, pi->mode,
+> +		 mode_string[pi->mode], pi->delay);
+>  }
+>  
+>  static struct pi_protocol bpck = {
+[...]
+> diff --git a/drivers/ata/pata_parport/frpw.c b/drivers/ata/pata_parport/frpw.c
+> index 9b8db1122154..92b359460e34 100644
+> --- a/drivers/ata/pata_parport/frpw.c
+> +++ b/drivers/ata/pata_parport/frpw.c
+[...]
+> @@ -272,11 +266,9 @@ static void frpw_log_adapter(struct pi_adapter *pi)
+>  {       char    *mode_string[6] = {"4-bit","8-bit","EPP",
+>  				   "EPP-8","EPP-16","EPP-32"};
+>  
+> -	printk("frpw %s, Freecom (%s) adapter at 0x%x, ",
+> -		FRPW_VERSION,((pi->private%2) == 0)?"Xilinx":"ASIC",pi->port);
+> -        printk("mode %d (%s), delay %d\n",pi->mode,
+> -		mode_string[pi->mode],pi->delay);
+> -
+> +	dev_info(&pi->dev, "Freecom (%s) adapter at 0x%x, mode %d (%s), delay %d\n",
+> +		 ((pi->private % 2) == 0) ? "Xilinx":"ASIC",
+
+   Need to add the spaces around ':' as you added spaces around '?'...
+
+[...]
 
 MBR, Sergey
