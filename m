@@ -2,152 +2,74 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70749C61DA4
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Feb 2023 20:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03FBAC61DA4
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Feb 2023 23:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231714AbjBNUzM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Feb 2023 15:55:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52202 "EHLO
+        id S232230AbjBNXAZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Feb 2023 18:00:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231843AbjBNUzL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2023 15:55:11 -0500
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF5942ED65;
-        Tue, 14 Feb 2023 12:55:09 -0800 (PST)
-Received: by mail-lj1-x233.google.com with SMTP id a9so19811596ljr.13;
-        Tue, 14 Feb 2023 12:55:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:references:cc:to:subject:from:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=D0pq+m0/U7p0zUEPB+aA1burF2pr6Ir+gD6+zbkqrV0=;
-        b=MtWGP1nEjHF60A5txZB64h5a/LmqKrfw/Y93+e5WU2FPyj9Dmvba5OF/rzlL7gK2ha
-         xVTMJJRaUhwWyuuFB53HyGNJlBYn0muYx9YGgHojo+dtnU3gyO15p8d/73BE+7vu5vkq
-         McFlwAqqSE+Rtp+2J4EGGDCw9npIvMCEJlaVB3iSPwDeGqgu9aTBahKt2+CE6wkNz9LF
-         7ogpFKfEk3/QwhAPCjGWafEnTMron826T+0D9pIRlx22eXGkjqHnP9TSaqBi6UIPyatW
-         3FmKhQvYGiy2RjK7YMtJ6Yt1kh9Owni6IiOk4eFGyzUEwj3yVdNKcEf5sCVsfAUxiASF
-         vpSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:references:cc:to:subject:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=D0pq+m0/U7p0zUEPB+aA1burF2pr6Ir+gD6+zbkqrV0=;
-        b=UVCDKoJSl4O4FCF6KPgE9psf6UySWOE2f1g9ILi/9ei8522VczbiyZgi7DC7+Q9r40
-         r3UL3f1Ps353+BFyxql5zq8ZSYPov+JarnGrOEZn8NhX61JOvOQYKFkNJ7sZuPG470L9
-         IUN4SBk+OZa63zCaaVtSfdaL1e/XuXyPuzuN5UhNjdRFqdDWW8Qk+qq2WBLuhTCB/1qT
-         XocEvRtPip949QDBFUkWExGjDZnJ5aEAt2RCjmdw7qd74cq/ghk+P1le3dymP0rDtAze
-         dLXKIoj6gC1QIDK0xvWXH0omFtok2aKGsFVpuHhsJJNdOXqcz1vGG8uiA/lRwBNEVk6z
-         AEkw==
-X-Gm-Message-State: AO0yUKUYRgMKIwMK66QmVRu8528p/MroZJ1zqtl8TSr5/5J19v45VcE5
-        1hvW684N68YE0LvGMFmTKqCByG29WSY=
-X-Google-Smtp-Source: AK7set8tW5JHF2lSbEiDoQt6ac7vS0uGvRLdYO+97v1LHbbm7fPh3T6bRGS90GYsdMNi6EPjYwZGnA==
-X-Received: by 2002:a2e:9141:0:b0:293:4b8c:3b82 with SMTP id q1-20020a2e9141000000b002934b8c3b82mr1443045ljg.9.1676408107510;
-        Tue, 14 Feb 2023 12:55:07 -0800 (PST)
-Received: from [192.168.1.103] ([178.176.75.124])
-        by smtp.gmail.com with ESMTPSA id g7-20020a2e9e47000000b002932b817990sm2479168ljk.31.2023.02.14.12.55.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Feb 2023 12:55:07 -0800 (PST)
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Subject: Re: [PATCH 08/12] pata_parport: use dev_* and print_hex_* instead of
- printk
-To:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230211144232.15138-1-linux@zary.sk>
- <20230211144232.15138-9-linux@zary.sk>
-Message-ID: <a51aa862-e713-5b7a-d86a-bebca092a54c@gmail.com>
-Date:   Tue, 14 Feb 2023 23:55:05 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S231220AbjBNXAY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2023 18:00:24 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C22F029173;
+        Tue, 14 Feb 2023 15:00:21 -0800 (PST)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 13F397A0533;
+        Wed, 15 Feb 2023 00:00:19 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 02/18] pata_parport: probe all units automatically
+Date:   Tue, 14 Feb 2023 23:59:54 +0100
+Message-Id: <20230214230010.20318-3-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20230214230010.20318-1-linux@zary.sk>
+References: <20230214230010.20318-1-linux@zary.sk>
 MIME-Version: 1.0
-In-Reply-To: <20230211144232.15138-9-linux@zary.sk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello again! :-)
+Only unit 0 is probed after registering a protocol driver or attaching
+a new parport. This causes bpck and bpck6 devices to be not detected
+automatically.
+Probe all units just like in manual device creation (using sysfs).
 
-   Resending the mail from Gmail account, as OMP account doesn't work ATM... :-/
+Signed-off-by: Ondrej Zary <linux@zary.sk>
+---
+ drivers/ata/pata_parport/pata_parport.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-On 2/11/23 5:42 PM, Ondrej Zary wrote:
+diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+index 294a266a0dda..49e99c9465fd 100644
+--- a/drivers/ata/pata_parport/pata_parport.c
++++ b/drivers/ata/pata_parport/pata_parport.c
+@@ -530,7 +530,7 @@ int pata_parport_register_driver(struct pi_protocol *pr)
+ 	if (probe) {
+ 		/* probe all parports using this protocol */
+ 		idr_for_each_entry(&parport_list, parport, port_num)
+-			pi_init_one(parport, pr, -1, 0, -1);
++			pi_init_one(parport, pr, -1, -1, -1);
+ 	}
+ 	mutex_unlock(&pi_mutex);
+ 
+@@ -665,7 +665,7 @@ static void pata_parport_attach(struct parport *port)
+ 	if (probe) {
+ 		/* probe this port using all protocols */
+ 		idr_for_each_entry(&protocols, pr, pr_num)
+-			pi_init_one(port, pr, -1, 0, -1);
++			pi_init_one(port, pr, -1, -1, -1);
+ 	}
+ 	mutex_unlock(&pi_mutex);
+ }
+-- 
+Ondrej Zary
 
-> Use dev_info/dev_err/dev_dbg/print_hex_* instead of printk.
-> Remove version print from log_adapter and meaningless VERSION defines.
-
-   Sounds like this needs to be in a separate patch...
-
-> Remove now useless verbose parameter of bpck6 module.
-
-   This one too...
-
-> Signed-off-by: Ondrej Zary <linux@zary.sk>
-[...]
-
-> diff --git a/drivers/ata/pata_parport/bpck.c b/drivers/ata/pata_parport/bpck.c
-> index 89160a94b30e..d5bc419b2ab3 100644
-> --- a/drivers/ata/pata_parport/bpck.c
-> +++ b/drivers/ata/pata_parport/bpck.c
-[...]
-> @@ -421,24 +416,12 @@ static void bpck_log_adapter(struct pi_adapter *pi)
->  {	char	*mode_string[5] = { "4-bit","8-bit","EPP-8",
->  				    "EPP-16","EPP-32" };
->  	char scratch[128];
-> -#ifdef DUMP_EEPROM
-> -	int i;
-> -#endif
->  
->  	bpck_read_eeprom(pi,scratch);
-> -
-> -#ifdef DUMP_EEPROM
-> -	   for(i=0;i<128;i++)
-> -		if ((scratch[i] < ' ') || (scratch[i] > '~'))
-> -		    scratch[i] = '.';
-> -	   printk("bpck EEPROM: %64.64s\n", scratch);
-> -	   printk("             %64.64s\n", &scratch[64]);
-> -#endif
-> -
-> -	printk("bpck %s, backpack %8.8s unit %d",
-> -		BPCK_VERSION, &scratch[110], pi->unit);
-> -	printk(" at 0x%x, mode %d (%s), delay %d\n",pi->port,
-> -		pi->mode,mode_string[pi->mode],pi->delay);
-> +	print_hex_dump_bytes("bpck EEPROM: ", DUMP_PREFIX_NONE, scratch, 128);
-
-   Conversion to print_hex_dump_bytes() deserved its own patch, IMHO...
-
-> +	dev_info(&pi->dev, "backpack %8.8s unit %d at 0x%x, mode %d (%s), delay %d\n",
-> +		 &scratch[110], pi->unit, pi->port, pi->mode,
-> +		 mode_string[pi->mode], pi->delay);
->  }
->  
->  static struct pi_protocol bpck = {
-[...]
-> diff --git a/drivers/ata/pata_parport/frpw.c b/drivers/ata/pata_parport/frpw.c
-> index 9b8db1122154..92b359460e34 100644
-> --- a/drivers/ata/pata_parport/frpw.c
-> +++ b/drivers/ata/pata_parport/frpw.c
-[...]
-> @@ -272,11 +266,9 @@ static void frpw_log_adapter(struct pi_adapter *pi)
->  {       char    *mode_string[6] = {"4-bit","8-bit","EPP",
->  				   "EPP-8","EPP-16","EPP-32"};
->  
-> -	printk("frpw %s, Freecom (%s) adapter at 0x%x, ",
-> -		FRPW_VERSION,((pi->private%2) == 0)?"Xilinx":"ASIC",pi->port);
-> -        printk("mode %d (%s), delay %d\n",pi->mode,
-> -		mode_string[pi->mode],pi->delay);
-> -
-> +	dev_info(&pi->dev, "Freecom (%s) adapter at 0x%x, mode %d (%s), delay %d\n",
-> +		 ((pi->private % 2) == 0) ? "Xilinx":"ASIC",
-
-   Need to add the spaces around ':' as you added spaces around '?'...
-
-[...]
-
-MBR, Sergey
