@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14444C636CC
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Feb 2023 03:28:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA2B1C636D4
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Feb 2023 03:29:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229748AbjBND2B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Feb 2023 22:28:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59422 "EHLO
+        id S231426AbjBND3R (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Feb 2023 22:29:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230384AbjBND2A (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 22:28:00 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A88AF17CC3
-        for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2023 19:27:59 -0800 (PST)
+        with ESMTP id S229436AbjBND3Q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2023 22:29:16 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEF0A17CDF
+        for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2023 19:29:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1676345279; x=1707881279;
+  t=1676345355; x=1707881355;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=x7YyVY/jHHAB7fpCW4JZQOTnIZ+pcM1OEZf7EKFnVMk=;
-  b=HK6zYvXYSdnUCeOOai6Vazk+aGtSX6W8L/MyFxtrr3hvAgTeJ3dQQUtJ
-   C5olmEnO385jJQ1NXzzQVfDzy7HWPzzXVcASamf2TFX5574mzL3+Nps66
-   wJ3s2oaDYFlZiSKHUUj0AkCBTt0RDEbZPsNbMVLXqtqdZdXiuG57RyljO
-   WEB/mkXqFbQkFmWLSyOd5JZelUUaG4d7t7H2NKh6QLdxWMrHhoQN0T6tp
-   q8CpihcDewtxbUOukvj9jgc513BILGuIswBcYQYXc7SWxB+9bGm4jGfxa
-   3GHIXN4mk/SO+puqVopicqsBc1VKHxfqTqHbBk3MgZYn6h15yGOuLvfgB
-   Q==;
+  bh=BuoAC+qEMmR3CjmH12htgWfOLvyg89Oblgx670snAuY=;
+  b=rbillNz/ljmA5Z+GSm70S3fe621fqYAQ9o5f+UEyehn/YTxwadkxGEAC
+   VynGwOQbaMxXrwS9+CuXpw7ZhMJm0aZ+RwKju7OeMEHVnuj1VXH0Ek1le
+   TphyVkjqCNI7UkMFNlfCMMYqrjdHN6xnZaPx9IN7EyW9BYoWfQp+lFFDF
+   S1wajqYrMH99i5dZHMpeBJG+q9x9TDQ0F+orYp5pbtJeMqfsTe20fxUy6
+   FWxSCNB5dzflgLTWwlKz9TzQsOAlHnAQrMFLia8RSYUNT6eEO8649yqAn
+   nsY0la0SybZpzw/uIvlRVYbegjbMAtZkvSh82PkyHW8wQjauzaqs/rvSd
+   g==;
 X-IronPort-AV: E=Sophos;i="5.97,294,1669046400"; 
-   d="scan'208";a="327531635"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Feb 2023 11:27:58 +0800
-IronPort-SDR: 18wT82WUpkclnIGx2N2kY1UQHL3gn2jmchUQZYIHsxFNcN57X9KIzKFEpl6Fd1bezaKpVS/Ab5
- MpNZaiF8BvPXyVVgvI91yC9SWhgoWufBuYb2oG+FwGh1E4EtmZiZXdGNtEd27RVu/jwDAO5wzI
- A2/uFY+wtQOaef9lTFZGXLXWRDeQVgJvIjBzCJ4hD364s+zQLiODLIsGHVPnvFwMDfPVl9pYgI
- d/84gF9fuAhJM/HDF6qgwFl+jDZNuklOI70Qq0GAzB/Rp2wfmqYfeYIqwqHihZW3aCyAk7HeV6
- o90=
+   d="scan'208";a="335201562"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Feb 2023 11:29:14 +0800
+IronPort-SDR: 9tkQJpZVbjsM0NfGNS+e8t1NIh2kdjPsycBAyc/cvaEAHxjOb4aIC2La+vDYoBOWDcPIAWObEC
+ wbPv7J9zZ8S1NbjNLFqyFK92n2NFvxdjz4H08mX7N+QNTapeWolY70jYNapudzu+VLMKDhjj4e
+ dcaCR5Y7zg+Vw7HfeXHauLg3JGMb894DlvHJ0laGBLY0tHTipv4t5iUiuaDRjj2iON4owiYygI
+ GYWpxN9ioIuD/t4na6TTp2Ep8aHZfVvdHRKMfZ/ctPpGMEAyDwU051kUw5PO1ut21k7ZQhiZBq
+ AlU=
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Feb 2023 18:39:23 -0800
-IronPort-SDR: pWoeH5T9MjJiOgOWUa6ovsu28aYZEdr0Z1J6SfGxg3+G5wTfeBO5ItrAkBki6/cYWzRGwzdt1Z
- CX0lB0PmtADTqslxarTzPxRVUHbp/UhWdSRe0DS/gh3cgl02Ko4XYNszabsqhBnGsMdSZVRNSK
- PjftfRvSB0fGNKXjtXDFM0LW/obwgvs4ZgS4P4EQq48dnT+C/CU9S3/wxc/dt0Drso/vNmRUs5
- 8OETCfZrtQqMorlzhqVP71kGfbmX6U+8iHJu4LHvPb0hPQf7SDT5lplYdC5ZfRy5tKJK6AQM0N
- PfM=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Feb 2023 18:46:22 -0800
+IronPort-SDR: wGL3GepQKtwdHWq7igkCCols8NFWhbMND+XMoPpA5+Y1f9zakqxA0PmCsjP/C/zhxtj8fHRVpY
+ HqPve1FquMGTbeq4LnWMERkzlOZL39FcT76r+rj9hBfNHA7YY2CgS5GuQYDceyOyG8JWstq01P
+ QkYTuFOL5pOO7L+TuTASBr8spzfAp0PaeEqers/uISVwM0fYGyJouGgAUrcWfIXWzoJNJZswaC
+ NH5GTxF8VyZMNelvFBlmbAOMLm7vtMSNa+zZu+lE3a2xe0OTcRIrYnrGS1q8Ryzkz1bAloPUvG
+ LCU=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Feb 2023 19:27:59 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Feb 2023 19:29:14 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PG69B4X5Vz1RvTp
-        for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2023 19:27:58 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PG6Bf0mQ0z1Rwrq
+        for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2023 19:29:14 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,57 +56,55 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1676345278; x=1678937279; bh=x7YyVY/jHHAB7fpCW4JZQOTnIZ+pcM1OEZf
-        7EKFnVMk=; b=B4m9jBTFsbAsqtZyw8mA5MpFhxjTSCHBlwdei7RWfEb1jSemRdq
-        C5cOkixbuwjJ3uXpJOWE6YxijWDbBkcWb9ukf14ycyfWYJzrTSGc/4UMuvANWquo
-        9S0YFZfkDdSCRboYBdCrFk88TeGrGFHHLKmN+onyWnGEDFxGMyqNlv2i0UmqbZ26
-        fhVkuykoV5nPiMNP0l9hMsTcKuGVS2+81F7nmpT4zCJdpVFgHHBsRGDQG60nBxT3
-        Mhbwk6nXe3j/B9haFvsGdKmjPfq0xw1ePqF7aKXvDAhAHsSR0/X/ynuWfB4UqJHl
-        Clu7WyZiLhO2oueW+3xQbQgJUTS0YwennEw==
+        1676345353; x=1678937354; bh=BuoAC+qEMmR3CjmH12htgWfOLvyg89Oblgx
+        670snAuY=; b=uWWsdQ4wpDa7GFWu9TnZ82/w3oxW3oLX9CQRi+yF3TSHq/07XzW
+        M0G0Rv0Y9PqbN/D899p7wN5G2vAJe6JBKLsWGzDiKtTBDwE3s0i7mFBR1i7wZYGJ
+        Lwy3ZL1PoCfhkosehSwOiatYMogcebYIMt5qxqOmsdnrrxDuUa8m1AQ0+rnLExW4
+        sY6/6Eze8NP5iXFV0yici9iUQJoKIbFcojItI0Bee7fQoi3Zp69mmkfIDK0vNAC1
+        wHK7vnJPNoI69bgaLv4AJtMKr7X5f8qYxU8MT+G+XmG35x2L4PYA2jCPynm6pPBj
+        5zoJVZnZqfE6q7Xk7WtASz/+pqqqbVNmf+Q==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id BxxDC7Fk_4qW for <linux-ide@vger.kernel.org>;
-        Mon, 13 Feb 2023 19:27:58 -0800 (PST)
+        with ESMTP id hne4tvul44YR for <linux-ide@vger.kernel.org>;
+        Mon, 13 Feb 2023 19:29:13 -0800 (PST)
 Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PG6994vVMz1RvLy;
-        Mon, 13 Feb 2023 19:27:57 -0800 (PST)
-Message-ID: <51d8201a-5677-e024-8ca4-f0c73795884c@opensource.wdc.com>
-Date:   Tue, 14 Feb 2023 12:27:56 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PG6Bc4XSkz1RvLy;
+        Mon, 13 Feb 2023 19:29:12 -0800 (PST)
+Message-ID: <86c6d901-2dc6-7b3c-c72d-effb7f08b12b@opensource.wdc.com>
+Date:   Tue, 14 Feb 2023 12:29:11 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.1
-Subject: Re: [PATCH] ata: libata-core: Disable READ LOG DMA EXT for Samsung
- MZ7LH
+Subject: Re: [PATCH] ata: pata_octeon_cf: drop kernel-doc notation
 Content-Language: en-US
-To:     Patrick McLean <chutzpah@gentoo.org>, linux-kernel@vger.kernel.org
-Cc:     linux-ide@vger.kernel.org
-References: <20230210215151.812839-1-chutzpah@gentoo.org>
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc:     kernel test robot <lkp@intel.com>,
+        David Daney <ddaney@caviumnetworks.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        linux-ide@vger.kernel.org
+References: <20230213212549.29914-1-rdunlap@infradead.org>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20230210215151.812839-1-chutzpah@gentoo.org>
+In-Reply-To: <20230213212549.29914-1-rdunlap@infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/11/23 06:51, Patrick McLean wrote:
-> Samsung MZ7LH drives are spewing messages like this in to dmesg with AMD
-> SATA controllers:
+On 2/14/23 06:25, Randy Dunlap wrote:
+> Fix a slew of kernel-doc warnings in pata_octeon_cf.c by changing
+> all "/**" comments to "/*" since they are not in kernel-doc format.
 > 
-> ata1.00: exception Emask 0x0 SAct 0x7e0000 SErr 0x0 action 0x6 frozen
-> ata1.00: failed command: SEND FPDMA QUEUED
-> ata1.00: cmd 64/01:88:00:00:00/00:00:00:00:00/a0 tag 17 ncq dma 512 out
->          res 40/00:01:01:4f:c2/00:00:00:00:00/00 Emask
->          0x4 (timeout)
-> 
-> Since this was seen previously with SSD 840 EVO drives in
-> https://bugzilla.kernel.org/show_bug.cgi?id=203475 let's add the same
-> fix for these drives as the EVOs have, since they likely have very
-> similar firmwares.
-> 
-> Signed-off-by: Patrick McLean <chutzpah@gentoo.org>
+> Fixes: 3c929c6f5aa7 ("libata: New driver for OCTEON SOC Compact Flash interface (v7).")
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Link: https://lore.kernel.org/all/202302101722.5O56RClE-lkp@intel.com/
+> Cc: David Daney <ddaney@caviumnetworks.com>
+> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+> Cc: linux-ide@vger.kernel.org
 
 Applied to for-6.2-fixes. Thanks !
 
