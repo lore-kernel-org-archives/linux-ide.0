@@ -2,250 +2,112 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E938C64EC4
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Feb 2023 19:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBBC0C636D7
+	for <linux-ide@archiver.kernel.org>; Thu, 16 Feb 2023 17:24:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229971AbjBOTrB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Feb 2023 14:47:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42408 "EHLO
+        id S229478AbjBPRYA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 16 Feb 2023 12:24:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229728AbjBOTqe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2023 14:46:34 -0500
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 51AC841B56;
-        Wed, 15 Feb 2023 11:46:16 -0800 (PST)
-Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 0A4927A0728;
-        Wed, 15 Feb 2023 20:46:06 +0100 (CET)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 16/18] pata_parport: remove scratch parameter from test_proto()
-Date:   Wed, 15 Feb 2023 20:45:52 +0100
-Message-Id: <20230215194554.25632-17-linux@zary.sk>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20230215194554.25632-1-linux@zary.sk>
-References: <20230215194554.25632-1-linux@zary.sk>
+        with ESMTP id S229737AbjBPRX7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Feb 2023 12:23:59 -0500
+Received: from mx.socionext.com (mx.socionext.com [202.248.49.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 200CB4D601;
+        Thu, 16 Feb 2023 09:23:52 -0800 (PST)
+Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 17 Feb 2023 02:23:51 +0900
+Received: from mail.mfilter.local (mail-arc02.css.socionext.com [10.213.46.40])
+        by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id CF5402020789;
+        Fri, 17 Feb 2023 02:23:51 +0900 (JST)
+Received: from kinkan2.css.socionext.com ([172.31.9.51]) by m-FILTER with ESMTP; Fri, 17 Feb 2023 02:23:51 +0900
+Received: from [10.212.158.143] (unknown [10.212.158.143])
+        by kinkan2.css.socionext.com (Postfix) with ESMTP id 4F226A855B;
+        Fri, 17 Feb 2023 02:23:51 +0900 (JST)
+Message-ID: <c6b86d56-a8a4-825d-ac34-7a9f00e43b42@socionext.com>
+Date:   Fri, 17 Feb 2023 02:23:50 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v2] dt-bindings: ata: Add UniPhier controller binding
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230213045432.32614-1-hayashi.kunihiko@socionext.com>
+ <2d76ec86-6580-28b0-0f80-a5c497f8cef7@linaro.org>
+ <ed864d57-0de3-a169-ebde-628eb84b8a21@socionext.com>
+ <0c6dc673-7e11-eec5-ec2d-e00fb2060bf3@linaro.org>
+Content-Language: en-US
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+In-Reply-To: <0c6dc673-7e11-eec5-ec2d-e00fb2060bf3@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Don't pass around a pointer to scratch buffer. Use local buffers in
-protocols that need it.
+On 2023/02/14 18:42, Krzysztof Kozlowski wrote:
+> On 14/02/2023 10:33, Kunihiko Hayashi wrote:
+>> Hi Krzysztof,
+>>
+>> On 2023/02/13 18:10, Krzysztof Kozlowski wrote:
+>>> On 13/02/2023 05:54, Kunihiko Hayashi wrote:
+>>>> Add UniPhier SATA controller compatible string to the platform binding.
+>>>> This controller needs maximum three reset controls.
+>>>>
+>>>> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+>>>> ---
+>>>>    .../devicetree/bindings/ata/ahci-platform.yaml  | 17 +++++++++++++++++
+>>>>    1 file changed, 17 insertions(+)
+>>>>
+>>>> Changes since v1:
+>>>> - Restrict resets property changes with compatible strings
+>>>> - Fix maxItems from two to three
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>>>> b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>>>> index 7dc2a2e8f598..25dd5ffaa517 100644
+>>>> --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>>>> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+>>>> @@ -45,6 +45,9 @@ properties:
+>>>>                  - marvell,armada-8k-ahci
+>>>>                  - marvell,berlin2-ahci
+>>>>                  - marvell,berlin2q-ahci
+>>>> +              - socionext,uniphier-pro4-ahci
+>>>> +              - socionext,uniphier-pxs2-ahci
+>>>> +              - socionext,uniphier-pxs3-ahci
+>>>>              - const: generic-ahci
+>>>>          - enum:
+>>>
+>>> Top level is saying reset=1, so did you test your bindings?
+>>
+>> Umm, I didn't see any errors on dt_binding_check, anyway I'll add
+>> initial minItems:1 and maxItems:3 on top level first.
+> 
+> You need to test also all DTS using these bindings. Yours and others.
+> If you tested the DTS (with proper binding, not one which is basically
+> noop):
+> 
+> uniphier-pro4-ace.dtb: sata@65600000: resets: [[27, 12], [27, 28], [37,
+> 3]] is too long
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-Signed-off-by: Ondrej Zary <linux@zary.sk>
+I've tried updating tools and doing dtbs_check, but I couldn't find this
+error. It seems that this error can't be detected unless there is the
+specified compatible in "select:".
+
+> BTW, the patch has other errors - just look at the beginning of the
+> file. I cannot see it here in the diff, but when you open the file you
+> should notice it.
+
+Sorry, but I cannot see anything wrong.
+I'll check the header or something...
+
+Thank you,
+
 ---
- drivers/ata/pata_parport/bpck.c         |  2 +-
- drivers/ata/pata_parport/epat.c         |  3 ++-
- drivers/ata/pata_parport/epia.c         |  3 ++-
- drivers/ata/pata_parport/friq.c         |  3 ++-
- drivers/ata/pata_parport/frpw.c         |  3 ++-
- drivers/ata/pata_parport/pata_parport.c | 23 +++++++++++------------
- include/linux/pata_parport.h            |  2 +-
- 7 files changed, 21 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/ata/pata_parport/bpck.c b/drivers/ata/pata_parport/bpck.c
-index 2072e291fd16..ecb98bf0e6de 100644
---- a/drivers/ata/pata_parport/bpck.c
-+++ b/drivers/ata/pata_parport/bpck.c
-@@ -274,7 +274,7 @@ static void bpck_force_spp(struct pi_adapter *pi)
- 
- #define TEST_LEN  16
- 
--static int bpck_test_proto(struct pi_adapter *pi, char *scratch)
-+static int bpck_test_proto(struct pi_adapter *pi)
- 
- {	int i, e, l, h, om;
- 	char buf[TEST_LEN];
-diff --git a/drivers/ata/pata_parport/epat.c b/drivers/ata/pata_parport/epat.c
-index da3398941f81..26d1b6d438bc 100644
---- a/drivers/ata/pata_parport/epat.c
-+++ b/drivers/ata/pata_parport/epat.c
-@@ -246,10 +246,11 @@ static void epat_disconnect(struct pi_adapter *pi)
- 	w2(pi->saved_r2);
- }
- 
--static int epat_test_proto(struct pi_adapter *pi, char *scratch)
-+static int epat_test_proto(struct pi_adapter *pi)
- 
- {       int     k, j, f, cc;
- 	int	e[2] = {0,0};
-+	char scratch[512];
- 
-         epat_connect(pi);
- 	cc = RR(0xd);
-diff --git a/drivers/ata/pata_parport/epia.c b/drivers/ata/pata_parport/epia.c
-index a83685ed9dde..101a0d9f1aa6 100644
---- a/drivers/ata/pata_parport/epia.c
-+++ b/drivers/ata/pata_parport/epia.c
-@@ -232,10 +232,11 @@ static void epia_write_block(struct pi_adapter *pi, char *buf, int count)
- 
- }
- 
--static int epia_test_proto(struct pi_adapter *pi, char *scratch)
-+static int epia_test_proto(struct pi_adapter *pi)
- 
- {       int     j, k, f;
- 	int	e[2] = {0,0};
-+	char scratch[512];
- 
-         epia_connect(pi);
-         for (j=0;j<2;j++) {
-diff --git a/drivers/ata/pata_parport/friq.c b/drivers/ata/pata_parport/friq.c
-index 7ace1f7eea34..9c4a6487b2a9 100644
---- a/drivers/ata/pata_parport/friq.c
-+++ b/drivers/ata/pata_parport/friq.c
-@@ -178,10 +178,11 @@ static void friq_disconnect(struct pi_adapter *pi)
-         w2(pi->saved_r2);
- } 
- 
--static int friq_test_proto(struct pi_adapter *pi, char *scratch)
-+static int friq_test_proto(struct pi_adapter *pi)
- 
- {       int     j, k, r;
- 	int	e[2] = {0,0};
-+	char scratch[512];
- 
- 	pi->saved_r0 = r0();	
- 	w0(0xff); udelay(20); CMD(0x3d); /* turn the power on */
-diff --git a/drivers/ata/pata_parport/frpw.c b/drivers/ata/pata_parport/frpw.c
-index d04a11889066..024b5c0737e0 100644
---- a/drivers/ata/pata_parport/frpw.c
-+++ b/drivers/ata/pata_parport/frpw.c
-@@ -219,10 +219,11 @@ static int frpw_test_pnp(struct pi_adapter *pi)
-    a hack :-(
- */
- 
--static int frpw_test_proto(struct pi_adapter *pi, char *scratch)
-+static int frpw_test_proto(struct pi_adapter *pi)
- 
- {       int     j, k, r;
- 	int	e[2] = {0,0};
-+	char scratch[512];
- 
- 	if ((pi->private>>1) != pi->port)
- 	   pi->private = frpw_test_pnp(pi) + 2*pi->port;
-diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
-index 27aa2419af02..77a3e5a3f062 100644
---- a/drivers/ata/pata_parport/pata_parport.c
-+++ b/drivers/ata/pata_parport/pata_parport.c
-@@ -276,7 +276,7 @@ static void pi_release(struct pi_adapter *pi)
- 	module_put(pi->proto->owner);
- }
- 
--static int default_test_proto(struct pi_adapter *pi, char *scratch)
-+static int default_test_proto(struct pi_adapter *pi)
- {
- 	int j, k;
- 	int e[2] = { 0, 0 };
-@@ -300,21 +300,21 @@ static int default_test_proto(struct pi_adapter *pi, char *scratch)
- 	return e[0] && e[1];	/* not here if both > 0 */
- }
- 
--static int pi_test_proto(struct pi_adapter *pi, char *scratch)
-+static int pi_test_proto(struct pi_adapter *pi)
- {
- 	int res;
- 
- 	parport_claim_or_block(pi->pardev);
- 	if (pi->proto->test_proto)
--		res = pi->proto->test_proto(pi, scratch);
-+		res = pi->proto->test_proto(pi);
- 	else
--		res = default_test_proto(pi, scratch);
-+		res = default_test_proto(pi);
- 	parport_release(pi->pardev);
- 
- 	return res;
- }
- 
--static bool pi_probe_mode(struct pi_adapter *pi, int max, char *scratch)
-+static bool pi_probe_mode(struct pi_adapter *pi, int max)
- {
- 	int best, range;
- 
-@@ -326,7 +326,7 @@ static bool pi_probe_mode(struct pi_adapter *pi, int max, char *scratch)
- 			range = 8;
- 		if (range == 8 && pi->port % 8)
- 			return false;
--		return !pi_test_proto(pi, scratch);
-+		return !pi_test_proto(pi);
- 	}
- 	best = -1;
- 	for (pi->mode = 0; pi->mode < max; pi->mode++) {
-@@ -335,14 +335,14 @@ static bool pi_probe_mode(struct pi_adapter *pi, int max, char *scratch)
- 			range = 8;
- 		if (range == 8 && pi->port % 8)
- 			break;
--		if (!pi_test_proto(pi, scratch))
-+		if (!pi_test_proto(pi))
- 			best = pi->mode;
- 	}
- 	pi->mode = best;
- 	return best > -1;
- }
- 
--static bool pi_probe_unit(struct pi_adapter *pi, int unit, char *scratch)
-+static bool pi_probe_unit(struct pi_adapter *pi, int unit)
- {
- 	int max, s, e;
- 
-@@ -367,14 +367,14 @@ static bool pi_probe_unit(struct pi_adapter *pi, int unit, char *scratch)
- 		for (pi->unit = s; pi->unit < e; pi->unit++) {
- 			if (pi->proto->probe_unit(pi)) {
- 				parport_release(pi->pardev);
--				return pi_probe_mode(pi, max, scratch);
-+				return pi_probe_mode(pi, max);
- 			}
- 		}
- 		parport_release(pi->pardev);
- 		return false;
- 	}
- 
--	return pi_probe_mode(pi, max, scratch);
-+	return pi_probe_mode(pi, max);
- }
- 
- static void pata_parport_dev_release(struct device *dev)
-@@ -419,7 +419,6 @@ static struct pi_adapter *pi_init_one(struct parport *parport,
- 			struct pi_protocol *pr, int mode, int unit, int delay)
- {
- 	struct pardev_cb par_cb = { };
--	char scratch[512];
- 	const struct ata_port_info *ppi[] = { &pata_parport_port_info };
- 	struct ata_host *host;
- 	struct pi_adapter *pi;
-@@ -469,7 +468,7 @@ static struct pi_adapter *pi_init_one(struct parport *parport,
- 	if (!pi->pardev)
- 		goto out_module_put;
- 
--	if (!pi_probe_unit(pi, unit, scratch)) {
-+	if (!pi_probe_unit(pi, unit)) {
- 		dev_info(&pi->dev, "Adapter not found\n");
- 		goto out_unreg_parport;
- 	}
-diff --git a/include/linux/pata_parport.h b/include/linux/pata_parport.h
-index e45bb1896003..bbfa4e63ee85 100644
---- a/include/linux/pata_parport.h
-+++ b/include/linux/pata_parport.h
-@@ -67,7 +67,7 @@ struct pi_protocol {
- 
- 	int (*test_port)(struct pi_adapter *pi);
- 	int (*probe_unit)(struct pi_adapter *pi);
--	int (*test_proto)(struct pi_adapter *pi, char *scratch);
-+	int (*test_proto)(struct pi_adapter *pi);
- 	void (*log_adapter)(struct pi_adapter *pi);
- 
- 	int (*init_proto)(struct pi_adapter *pi);
--- 
-Ondrej Zary
-
+Best Regards
+Kunihiko Hayashi
