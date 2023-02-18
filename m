@@ -2,92 +2,75 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49031C61DA4
-	for <linux-ide@archiver.kernel.org>; Sat, 18 Feb 2023 17:40:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A7C7C61DA4
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Feb 2023 22:02:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229521AbjBRRkZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 18 Feb 2023 12:40:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51698 "EHLO
+        id S229667AbjBRWCI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 18 Feb 2023 17:02:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229540AbjBRRkY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Feb 2023 12:40:24 -0500
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FA2F13D79;
-        Sat, 18 Feb 2023 09:40:23 -0800 (PST)
-Received: from [192.168.1.103] (31.173.84.74) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sat, 18 Feb
- 2023 20:40:15 +0300
-Subject: Re: [PATCH 15/18] pata_parport: remove verbose parameter from
- test_proto()
-To:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, <linux-block@vger.kernel.org>,
-        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20230215194554.25632-1-linux@zary.sk>
- <20230215194554.25632-16-linux@zary.sk>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <118b9ecc-099e-2ec8-2875-f6c48db1e890@omp.ru>
-Date:   Sat, 18 Feb 2023 20:40:15 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229523AbjBRWCH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Feb 2023 17:02:07 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6E08B1285E;
+        Sat, 18 Feb 2023 14:02:04 -0800 (PST)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 693037A0507;
+        Sat, 18 Feb 2023 23:02:02 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 02/18] pata_parport: probe all units automatically
+Date:   Sat, 18 Feb 2023 23:01:22 +0100
+Message-Id: <20230218220138.5692-3-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20230218220138.5692-1-linux@zary.sk>
+References: <20230218220138.5692-1-linux@zary.sk>
 MIME-Version: 1.0
-In-Reply-To: <20230215194554.25632-16-linux@zary.sk>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.84.74]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 02/18/2023 17:22:38
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 175606 [Feb 17 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 504 504 dc137e1f9c062eb6c0671e7d509ab442ae395562
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.84.74 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.84.74 in (user) dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.84.74
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 02/18/2023 17:26:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 2/18/2023 2:00:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/15/23 10:45 PM, Ondrej Zary wrote:
-
-> verbose parameter of test_proto() is now unused, remove it.
-> 
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Signed-off-by: Ondrej Zary <linux@zary.sk>
+Only unit 0 is probed after registering a protocol driver or attaching
+a new parport. This causes bpck and bpck6 devices to be not detected
+automatically.
+Probe all units just like in manual device creation (using sysfs).
 
 Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Ondrej Zary <linux@zary.sk>
+---
+ drivers/ata/pata_parport/pata_parport.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-[...]
+diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+index 294a266a0dda..49e99c9465fd 100644
+--- a/drivers/ata/pata_parport/pata_parport.c
++++ b/drivers/ata/pata_parport/pata_parport.c
+@@ -530,7 +530,7 @@ int pata_parport_register_driver(struct pi_protocol *pr)
+ 	if (probe) {
+ 		/* probe all parports using this protocol */
+ 		idr_for_each_entry(&parport_list, parport, port_num)
+-			pi_init_one(parport, pr, -1, 0, -1);
++			pi_init_one(parport, pr, -1, -1, -1);
+ 	}
+ 	mutex_unlock(&pi_mutex);
+ 
+@@ -665,7 +665,7 @@ static void pata_parport_attach(struct parport *port)
+ 	if (probe) {
+ 		/* probe this port using all protocols */
+ 		idr_for_each_entry(&protocols, pr, pr_num)
+-			pi_init_one(port, pr, -1, 0, -1);
++			pi_init_one(port, pr, -1, -1, -1);
+ 	}
+ 	mutex_unlock(&pi_mutex);
+ }
+-- 
+Ondrej Zary
 
-MBR, Sergey
