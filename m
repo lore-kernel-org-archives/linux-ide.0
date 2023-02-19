@@ -2,62 +2,56 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FA7C64ED8
-	for <linux-ide@archiver.kernel.org>; Sun, 19 Feb 2023 17:07:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 744E2C05027
+	for <linux-ide@archiver.kernel.org>; Sun, 19 Feb 2023 18:23:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230209AbjBSRHr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 19 Feb 2023 12:07:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43892 "EHLO
+        id S231235AbjBSSXe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 19 Feb 2023 13:23:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230526AbjBSRHq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 19 Feb 2023 12:07:46 -0500
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D631E3A5
-        for <linux-ide@vger.kernel.org>; Sun, 19 Feb 2023 09:07:43 -0800 (PST)
-Received: by mail-wm1-x32c.google.com with SMTP id j10-20020a05600c1c0a00b003e00c739ce4so644780wms.5
-        for <linux-ide@vger.kernel.org>; Sun, 19 Feb 2023 09:07:43 -0800 (PST)
+        with ESMTP id S231223AbjBSSXb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 19 Feb 2023 13:23:31 -0500
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8DCEEC6A
+        for <linux-ide@vger.kernel.org>; Sun, 19 Feb 2023 10:23:24 -0800 (PST)
+Received: by mail-lf1-x135.google.com with SMTP id g15so1376009lfv.13
+        for <linux-ide@vger.kernel.org>; Sun, 19 Feb 2023 10:23:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=6KxNFzRgs/0vUNP2uZncHosd2KHSBPqfvZ7J555gKlI=;
-        b=TqDmxeCqgjX/SCT0zS+PF6AfR/9dCo1FpS5mnG9j01BFC1+VD4Q7ubhlQfXhrmE083
-         0WYN1f0bIbo21XRTWifbJwcYTr2X1HSPBzZM87/35szohbgwJWtwst3ZB/Uyku+BZ1GT
-         fdjOk5jg86fdGhZQivHhMX1dUtyEtd0zEYACMvag1QVVQXdQ7R5c7aIxveMhWwkz75hR
-         8chbsS6v67DndN4W12l84nsUdBhyOjwMW1hwOqBmE6eyqzuIM8WMLxP7V5DN4UAzCAZX
-         vqLCw8gjWfj/gz3br1kNLOjZCJGA+sAEn8LyDTAn692JW1B2MJS3YSi60TU4KXtLsjqR
-         Lx/g==
+        d=ragnatech-se.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ofJSqx7zRI6EorpfBbQAKk970rJXU8Lshyo67tpjsLQ=;
+        b=xeLeOsLmY3pe81rt3ga3i6n8lIyX45qvBgDtiyY75SxtAK1EKPLEQqXyq1T1gn61Wl
+         SJ+jJyXEslG9XZjq5SVgthjWH+AkiKzov8phzcdx8q8u1wRZD2dSS62mDgcNoDTrJRRD
+         BGXSBGZw4wh0B5bjOFtjGs/lNfSujOK7nRSeBI4eM8qRDyPK0u0ttERgJvfd64NhAQOL
+         +GauQSBtxQusXIDfvDLOsegFBY0WgTEt2z+DzKpl1W3Bv4DRhTSQjKczNAPttxdfVqBM
+         dTEYKt9a7qM1Hh42++i5n3Yf5pFVYUGxLDKZ4ol99hiPHSnPg3ZKrbHR9P3kkfouE6yn
+         kpWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6KxNFzRgs/0vUNP2uZncHosd2KHSBPqfvZ7J555gKlI=;
-        b=jwlyjyxwvRuOSpcN8TkBVjotY6nv4ZL25vXEMEQ+3t2laUyAcibJVqdufoMh3VS/x4
-         xzreXXA3D3X87lqikxcz5TWnxuPkh0967CLODFnIcGYvJ4IJGycEZM6QJ64FKhOlqSka
-         +Hbc0LGccTyvSiZsoRPnm2ddGgImOtbRrPYJ7ivBC+qrmQ5jIi+aqOfAhi59En3W5sNY
-         yJ2KX5Ii+jcfVu5IoN1jP6bAmNKQNaVgNdmL3ukbjlBJPIkfhEvLxPz712uCaVPSouol
-         OLdr2roE0tFFUXghOZipUUQZrbF5XEzSPhGuy1K1Tgam6CgCi+NOlz3VMrGU8hq5simS
-         4euw==
-X-Gm-Message-State: AO0yUKWiOQtBu5s0UcaXMRfNlVqAGs15QR/Rf0Sz0npJbU+w2MSP8pWO
-        tqwmF27PmUXtxi3kSs68/uZUsQ==
-X-Google-Smtp-Source: AK7set83h6bWbda4YvPCa+ZBjfPRZ/9UdfQCE1sEN23gN10rONUKibwH121WMa44Jr/M6QZ46vWaSg==
-X-Received: by 2002:a05:600c:198e:b0:3e2:1f00:bff7 with SMTP id t14-20020a05600c198e00b003e21f00bff7mr7646707wmq.12.1676826461464;
-        Sun, 19 Feb 2023 09:07:41 -0800 (PST)
-Received: from ?IPV6:2a05:6e02:1041:c10:6f43:b92:7670:463? ([2a05:6e02:1041:c10:6f43:b92:7670:463])
-        by smtp.googlemail.com with ESMTPSA id n27-20020a05600c3b9b00b003e206cc7237sm15155832wms.24.2023.02.19.09.07.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Feb 2023 09:07:40 -0800 (PST)
-Message-ID: <4d8f1e68-8d2c-b70f-69c7-a1137ac4b05f@linaro.org>
-Date:   Sun, 19 Feb 2023 18:07:36 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v1 01/17] thermal/core: Add a thermal zone 'devdata'
- accessor
-Content-Language: en-US
-To:     =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>
+        bh=ofJSqx7zRI6EorpfBbQAKk970rJXU8Lshyo67tpjsLQ=;
+        b=aj57JCyUY/EUDnc9tUp4xvLBEPhHE4JxNN4aAqj7VGHS2nSIy1H4CHqRycnt1AwmjA
+         52Rm8n4c9qf58zD3MhMKVSMwrrL+ggCYs09GkTD5MAIMaWW+kirfaYVZTJgkaRtAyFTg
+         TUYJm7QQ7auoC7adSHwtWGcOMAG32fGpZbOdAFRUsKUJ0VnoQNH1HFw2JP+GxJFW8j5q
+         NwI2+UxN6MW0Vxo8d52o/o5WBu4rNy4oN3y5ctdiTBExpWpcWjPifexkuRrbmr9HHQak
+         K+KMakbMYpPyE3blqqgakjWztk6x/8qbatwzXMW4QXCzdiReQ+Evw07YvprVnS6XfKy0
+         /C4g==
+X-Gm-Message-State: AO0yUKVain/eH1qzXNt2ARPEr53UPAlHfUXyneNyhqK5B/Dm1GaxY0O9
+        LlBt267AmU8C8DwfpwGdVsYX5A==
+X-Google-Smtp-Source: AK7set+YZZSclvxF42ryv90+XULHABPVIVIEdoKcZJbE3Ao4Z3FCGIUuBB+mT3TOxDnV55f/X2PI5w==
+X-Received: by 2002:ac2:4c21:0:b0:4dc:4c1d:eec1 with SMTP id u1-20020ac24c21000000b004dc4c1deec1mr483829lfq.46.1676831003077;
+        Sun, 19 Feb 2023 10:23:23 -0800 (PST)
+Received: from localhost (h-46-59-89-207.A463.priv.bahnhof.se. [46.59.89.207])
+        by smtp.gmail.com with ESMTPSA id b26-20020ac2563a000000b004db51852e6csm56694lff.246.2023.02.19.10.23.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 19 Feb 2023 10:23:22 -0800 (PST)
+Date:   Sun, 19 Feb 2023 19:23:21 +0100
+From:   Niklas =?utf-8?Q?S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>
+To:     Daniel Lezcano <daniel.lezcano@linaro.org>
 Cc:     rafael@kernel.org, linux-pm@vger.kernel.org,
         linux-kernel@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>,
         Len Brown <lenb@kernel.org>,
@@ -160,99 +154,111 @@ Cc:     rafael@kernel.org, linux-pm@vger.kernel.org,
         <linux-omap@vger.kernel.org>,
         "moderated list:ARM/Mediatek SoC support" 
         <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v1 01/17] thermal/core: Add a thermal zone 'devdata'
+ accessor
+Message-ID: <Y/JpGT206/0r/jF5@oden.dyn.berto.se>
 References: <20230219143657.241542-1-daniel.lezcano@linaro.org>
  <20230219143657.241542-2-daniel.lezcano@linaro.org>
  <Y/I7KA2Uqqk7ib6L@oden.dyn.berto.se>
-From:   Daniel Lezcano <daniel.lezcano@linaro.org>
-In-Reply-To: <Y/I7KA2Uqqk7ib6L@oden.dyn.berto.se>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <4d8f1e68-8d2c-b70f-69c7-a1137ac4b05f@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <4d8f1e68-8d2c-b70f-69c7-a1137ac4b05f@linaro.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 19/02/2023 16:07, Niklas Söderlund wrote:
-> Hi Daniel,
+On 2023-02-19 18:07:36 +0100, Daniel Lezcano wrote:
+> On 19/02/2023 16:07, Niklas Söderlund wrote:
+> > Hi Daniel,
+> > 
+> > Thanks for your work.
+> > 
+> > On 2023-02-19 15:36:41 +0100, Daniel Lezcano wrote:
+> > > The thermal zone device structure is exposed to the different drivers
+> > > and obviously they access the internals while that should be
+> > > restricted to the core thermal code.
+> > > 
+> > > In order to self-encapsulate the thermal core code, we need to prevent
+> > > the drivers accessing directly the thermal zone structure and provide
+> > > accessor functions to deal with.
+> > > 
+> > > Provide an accessor to the 'devdata' structure and make use of it in
+> > > the different drivers.
+> > > 
+> > > No functional changes intended.
+> > > 
+> > > Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+> > > ---
+> > 
+> > ...
+> > 
+> > >   drivers/thermal/rcar_gen3_thermal.c              |  4 ++--
+> > >   drivers/thermal/rcar_thermal.c                   |  3 +--
+> > 
+> > For R-Car,
+> > 
+> > Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
+> > 
+> > ...
+> > 
+> > 
+> > > diff --git a/include/linux/thermal.h b/include/linux/thermal.h
+> > > index 2bb4bf33f4f3..724b95662da9 100644
+> > > --- a/include/linux/thermal.h
+> > > +++ b/include/linux/thermal.h
+> > > @@ -365,6 +365,8 @@ thermal_zone_device_register_with_trips(const char *, struct thermal_trip *, int
+> > >   					void *, struct thermal_zone_device_ops *,
+> > >   					struct thermal_zone_params *, int, int);
+> > > +void *thermal_zone_device_get_data(struct thermal_zone_device *tzd);
+> > > +
+> > 
+> > bikeshedding:
+> > 
+> > Would it make sens to name this thermal_zone_device_get_priv_data(),
+> > thermal_zone_device_get_priv() or something like that? To make it more
+> > explicitly when reading the driver code this fetches the drivers private
+> > data, and not some data belonging to the zone itself.
 > 
-> Thanks for your work.
+> In the headers files, there are more occurrences with _name_priv():
 > 
-> On 2023-02-19 15:36:41 +0100, Daniel Lezcano wrote:
->> The thermal zone device structure is exposed to the different drivers
->> and obviously they access the internals while that should be
->> restricted to the core thermal code.
->>
->> In order to self-encapsulate the thermal core code, we need to prevent
->> the drivers accessing directly the thermal zone structure and provide
->> accessor functions to deal with.
->>
->> Provide an accessor to the 'devdata' structure and make use of it in
->> the different drivers.
->>
->> No functional changes intended.
->>
->> Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
->> ---
+> # _name_priv()
+> git grep priv include/linux/ | grep "priv(" | grep -v get | wc -l
+> 52
 > 
-> ...
+> # _name_private()
+> git grep priv include/linux/ | grep "private(" | grep -v get | wc -l
+> 33
 > 
->>   drivers/thermal/rcar_gen3_thermal.c              |  4 ++--
->>   drivers/thermal/rcar_thermal.c                   |  3 +--
+> # _name_get_private()
+> git grep priv include/linux/ | grep "private(" | grep get | wc -l
+> 12
 > 
-> For R-Car,
-> 
-> Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
-> 
-> ...
+> # _name_get_priv()
+> git grep priv include/linux/ | grep "priv(" | grep get | wc -l
+> 4
 > 
 > 
->> diff --git a/include/linux/thermal.h b/include/linux/thermal.h
->> index 2bb4bf33f4f3..724b95662da9 100644
->> --- a/include/linux/thermal.h
->> +++ b/include/linux/thermal.h
->> @@ -365,6 +365,8 @@ thermal_zone_device_register_with_trips(const char *, struct thermal_trip *, int
->>   					void *, struct thermal_zone_device_ops *,
->>   					struct thermal_zone_params *, int, int);
->>   
->> +void *thermal_zone_device_get_data(struct thermal_zone_device *tzd);
->> +
+> What about thermal_zone_device_priv() ?
+
+Looks good to me.
+
 > 
-> bikeshedding:
 > 
-> Would it make sens to name this thermal_zone_device_get_priv_data(),
-> thermal_zone_device_get_priv() or something like that? To make it more
-> explicitly when reading the driver code this fetches the drivers private
-> data, and not some data belonging to the zone itself.
-
-In the headers files, there are more occurrences with _name_priv():
-
-# _name_priv()
-git grep priv include/linux/ | grep "priv(" | grep -v get | wc -l
-52
-
-# _name_private()
-git grep priv include/linux/ | grep "private(" | grep -v get | wc -l
-33
-
-# _name_get_private()
-git grep priv include/linux/ | grep "private(" | grep get | wc -l
-12
-
-# _name_get_priv()
-git grep priv include/linux/ | grep "priv(" | grep get | wc -l
-4
-
-
-What about thermal_zone_device_priv() ?
-
-
-
-
-
+> 
+> 
+> 
+> 
+> -- 
+> <http://www.linaro.org/> Linaro.org │ Open source software for ARM SoCs
+> 
+> Follow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
+> <http://twitter.com/#!/linaroorg> Twitter |
+> <http://www.linaro.org/linaro-blog/> Blog
+> 
 
 -- 
-<http://www.linaro.org/> Linaro.org │ Open source software for ARM SoCs
-
-Follow Linaro:  <http://www.facebook.com/pages/Linaro> Facebook |
-<http://twitter.com/#!/linaroorg> Twitter |
-<http://www.linaro.org/linaro-blog/> Blog
-
+Kind Regards,
+Niklas Söderlund
