@@ -2,62 +2,178 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33976C05027
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Feb 2023 09:05:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF318C636CC
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Feb 2023 09:09:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231220AbjBTJFI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Feb 2023 04:05:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49632 "EHLO
+        id S230050AbjBTJJ1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Feb 2023 04:09:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230168AbjBTJFH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Feb 2023 04:05:07 -0500
-X-Greylist: delayed 576 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 20 Feb 2023 01:04:49 PST
-Received: from mail.surechiers.com (mail.surechiers.com [80.211.239.236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7DEB19A
-        for <linux-ide@vger.kernel.org>; Mon, 20 Feb 2023 01:04:49 -0800 (PST)
-Received: by mail.surechiers.com (Postfix, from userid 1002)
-        id 3C92582923; Mon, 20 Feb 2023 09:55:08 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=surechiers.com;
-        s=mail; t=1676883310;
-        bh=xg3VVY9SU+I+f+ynMyY8e0Lum0EY/KrTvpy5BYTg7yw=;
-        h=Date:From:To:Subject:From;
-        b=D72KEp4X0/BX6xrCm+534HW8vafxkx5ik5l8uurBTmfwYhRRtnR4qHwvlhHv8QO7S
-         qvEydHcoFKqCvjmgL9wBsyYwcTxkK20AGLB+iUN9yB+z5B2iUQ7qvPDrIqSFg7JnUt
-         sHTLDLYZyR3xmof2su9ynwuNVmQJWI0qkCieP7ViozIzms1wVTIFZ4VHDjlgtp0kbU
-         Ehqww424phrax4FtqsGQMoT+Y5zALS+xw/V1T0w4PbZvmAHgntd9Co5LZLYRC5okKP
-         Q42MwZzNpch4B0e8j1Z+yAAtUlB1Dyjwj49qyrJlFZ8ZBI3UlRz84BiYdYY8K63pp8
-         CNyTBVKxBlzUg==
-Received: by mail.surechiers.com for <linux-ide@vger.kernel.org>; Mon, 20 Feb 2023 08:55:06 GMT
-Message-ID: <20230220084500-0.1.8.6x0.0.ure6e0incc@surechiers.com>
-Date:   Mon, 20 Feb 2023 08:55:06 GMT
-From:   =?UTF-8?Q? "J=C3=A1chym_Zdr=C3=A1hal" ?= 
-        <jachym.zdrahal@surechiers.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: Renovace podlahy
-X-Mailer: mail.surechiers.com
+        with ESMTP id S230040AbjBTJJ0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Feb 2023 04:09:26 -0500
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D04FEB66;
+        Mon, 20 Feb 2023 01:09:25 -0800 (PST)
+Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+        (No client certificate requested)
+        (Authenticated sender: kholk11)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 3E8BA660213E;
+        Mon, 20 Feb 2023 09:09:19 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1676884163;
+        bh=CcTg7ASDuP93bA3Rq45SQJeq89x8G+dp6U70KNUsMPE=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=hJka8ss87wnQqdZEpCLiQcXMdci2VjXO/ExBxWNd2u3NQv77pVKCv+DGHYQubq0/o
+         jOR1Q9V8fiDUdLUie9ZgAWAm2ZS3SUyTJtxh8d6pVVh99Gr3ejUZL6i9kC3bBz/ibR
+         4leGEmi7b30mDq5fBsiprHv3BwcOXyvhPyjnHM9WLt2ciyCmXLOgawlXk3rZAPCCqO
+         ayFqXWG5eOvRXt8snq6HqCK7P4pk8nwQ8Ekb0YXVJwQKcbaks6FZeHSLPNr2hy20ng
+         rBEuqKxU6Xm2BcKhPUt1DFa6cukGDfP/GXtAZgoeuEt0eguqDnFCt0KOiWbA1373Vz
+         JoFgV86+K/1GA==
+Message-ID: <516d9af5-41cc-94a9-4b35-677672101d9c@collabora.com>
+Date:   Mon, 20 Feb 2023 10:09:16 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.2
+Subject: Re: [PATCH v1 01/17] thermal/core: Add a thermal zone 'devdata'
+ accessor
+Content-Language: en-US
+To:     Daniel Lezcano <daniel.lezcano@linaro.org>, rafael@kernel.org
+Cc:     linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Zhang Rui <rui.zhang@intel.com>, Len Brown <lenb@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Samuel Holland <samuel@sholland.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Raju Rangoju <rajur@chelsio.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Ido Schimmel <idosch@nvidia.com>,
+        Petr Machata <petrm@nvidia.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Amit Kucheria <amitk@kernel.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Broadcom internal kernel review list 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Markus Mayer <mmayer@broadcom.com>,
+        Support Opensource <support.opensource@diasemi.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Thara Gopinath <thara.gopinath@gmail.com>,
+        =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang@linux.alibaba.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        Vasily Khoruzhick <anarsoul@gmail.com>,
+        Yangtao Li <tiny.windzz@gmail.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Talel Shenhar <talel@amazon.com>,
+        Eduardo Valentin <edubezval@gmail.com>,
+        Keerthy <j-keerthy@ti.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stefan Wahren <stefan.wahren@i2se.com>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        ye xingchen <ye.xingchen@zte.com.cn>,
+        Zheng Yongjun <zhengyongjun3@huawei.com>,
+        Tim Zimmermann <tim@linux4.de>,
+        Yang Li <yang.lee@linux.alibaba.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Ricardo Neri <ricardo.neri-calderon@linux.intel.com>,
+        Jiang Jian <jiangjian@cdjrlc.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Balsam CHIHI <bchihi@baylibre.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Mikko Perttunen <mperttunen@nvidia.com>,
+        "open list:ACPI THERMAL DRIVER" <linux-acpi@vger.kernel.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:HARDWARE MONITORING" <linux-hwmon@vger.kernel.org>,
+        "open list:IIO SUBSYSTEM AND DRIVERS" <linux-iio@vger.kernel.org>,
+        "open list:ARM/Allwinner sunXi SoC support" 
+        <linux-sunxi@lists.linux.dev>,
+        "open list:INPUT (KEYBOARD, MOUSE, JOYSTICK, TOUCHSCREEN)..." 
+        <linux-input@vger.kernel.org>,
+        "open list:CXGB4 ETHERNET DRIVER (CXGB4)" <netdev@vger.kernel.org>,
+        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)" 
+        <linux-wireless@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        "open list:RENESAS R-CAR THERMAL DRIVERS" 
+        <linux-renesas-soc@vger.kernel.org>,
+        "open list:ARM/Rockchip SoC support" 
+        <linux-rockchip@lists.infradead.org>,
+        "open list:SAMSUNG THERMAL DRIVER" 
+        <linux-samsung-soc@vger.kernel.org>,
+        "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
+        "open list:TI BANDGAP AND THERMAL DRIVER" 
+        <linux-omap@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+References: <20230219143657.241542-1-daniel.lezcano@linaro.org>
+ <20230219143657.241542-2-daniel.lezcano@linaro.org>
+From:   AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
+In-Reply-To: <20230219143657.241542-2-daniel.lezcano@linaro.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dobr=C3=A9 r=C3=A1no,
+Il 19/02/23 15:36, Daniel Lezcano ha scritto:
+> The thermal zone device structure is exposed to the different drivers
+> and obviously they access the internals while that should be
+> restricted to the core thermal code.
+> 
+> In order to self-encapsulate the thermal core code, we need to prevent
+> the drivers accessing directly the thermal zone structure and provide
+> accessor functions to deal with.
+> 
+> Provide an accessor to the 'devdata' structure and make use of it in
+> the different drivers.
+> 
+> No functional changes intended.
+> 
+> Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
+> ---
 
-m=C4=9Bli byste z=C3=A1jem o beze=C5=A1v=C3=A9, chemicky, n=C3=A1razu a o=
-t=C4=9Bru odoln=C3=A9 podlahy?
 
-Zaji=C5=A1=C5=A5uj=C3=AD spolehlivost bez ohledu na to, zda je pou=C5=BE=C3=
-=ADv=C3=A1te v n=C3=A1ro=C4=8Dn=C3=BDch v=C3=BDrobn=C3=ADch prostorech, s=
-kladech, komunika=C4=8Dn=C3=ADch tras=C3=A1ch nebo komer=C4=8Dn=C3=ADch p=
-rostor=C3=A1ch.
+>   drivers/thermal/mediatek/auxadc_thermal.c        |  2 +-
+>   drivers/thermal/mediatek/lvts_thermal.c          |  4 ++--
 
-Navrhli jsme snadno =C4=8Distiteln=C3=A9, hygienick=C3=A9 a protiskluzov=C3=
-=A9 podlahy pro pr=C5=AFmyslov=C3=A9 i komer=C4=8Dn=C3=AD pou=C5=BEit=C3=AD=
-=2E
+For MediaTek auxadc and lvts:
 
-Mohu nab=C3=ADdnout bezplatn=C3=BD audit va=C5=A1ich podlah spolu s kompl=
-exn=C3=AD anal=C3=BDzou podkladu. Mohu o tomhle zavolat?
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 
 
-J=C3=A1chym Zdr=C3=A1hal
