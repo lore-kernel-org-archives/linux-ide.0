@@ -2,119 +2,57 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C66E0C64EC7
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Feb 2023 02:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86333C61DA4
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Feb 2023 08:31:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229815AbjBVCkQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 21 Feb 2023 21:40:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32806 "EHLO
+        id S229672AbjBVIbN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 22 Feb 2023 03:31:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbjBVCkQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Feb 2023 21:40:16 -0500
-Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 047012CC48;
-        Tue, 21 Feb 2023 18:40:13 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R951e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0VcEfCHA_1677033609;
-Received: from 30.97.49.34(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VcEfCHA_1677033609)
-          by smtp.aliyun-inc.com;
-          Wed, 22 Feb 2023 10:40:10 +0800
-Message-ID: <a328da48-a5aa-c31b-074c-d52132997afd@linux.alibaba.com>
-Date:   Wed, 22 Feb 2023 10:40:09 +0800
+        with ESMTP id S231330AbjBVIbN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2023 03:31:13 -0500
+Received: from mail.corrib.pl (mail.corrib.pl [185.58.226.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5B2D35249
+        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2023 00:31:12 -0800 (PST)
+Received: by mail.corrib.pl (Postfix, from userid 1001)
+        id D2084A400F; Wed, 22 Feb 2023 08:30:58 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=corrib.pl; s=mail;
+        t=1677054676; bh=X6IEpSISwJiYlJ3uA866lskXve3r+4o2hf4z7VM6m5o=;
+        h=Date:From:To:Subject:From;
+        b=ZzcVCCakspX32wPli/GXlD1lOsP11ETuY6ktqakL3Kdlphhge+N/4ehkHYMT6U4Sk
+         vK/g1ZL4Iee2wVoup/utQ8gtbdDXEEuH6OuRhBi9lP0KV/Js8LMFJupCycd+Lr2XyW
+         sZF5Iia/oQNM1yA/cReiQF302K5BdWwPqtxHDa45dIWaCU5DM8G+DkJs4PwCiR6JyL
+         Onm3d5DdgDtJMTqlPhZne8uabccupIkJGoRpPdrmoxG1f8vYHVKILPq16PCfP3cEYh
+         Jee80Hr0rFIN3ixK8DRBe2poRaJtO6qyVY7D/ZwsttZGDK0tv/aV6H8v+aUo/IwRuU
+         vn/w8P9QcoYpA==
+Received: by mail.corrib.pl for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2023 08:30:41 GMT
+Message-ID: <20230222074502-0.1.5n.fi5f.0.r96ak18uae@corrib.pl>
+Date:   Wed, 22 Feb 2023 08:30:41 GMT
+From:   =?UTF-8?Q? "Szczepan_Kie=C5=82basa" ?= 
+        <szczepan.kielbasa@corrib.pl>
+To:     <linux-ide@vger.kernel.org>
+Subject: Faktoring
+X-Mailer: mail.corrib.pl
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.6.1
-Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
-To:     Yang Shi <shy828301@gmail.com>,
-        Mel Gorman <mgorman@techsingularity.net>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-References: <Y9KtCc+4n5uANB2f@casper.infradead.org>
- <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
- <CAHbLzkqsyv6rw-RRvNcB0PoEE75qS9ZtmywhJYZbVA05d5tj5A@mail.gmail.com>
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <CAHbLzkqsyv6rw-RRvNcB0PoEE75qS9ZtmywhJYZbVA05d5tj5A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Dzie=C5=84 dobry,
+
+rozwa=C5=BCali Pa=C5=84stwo wyb=C3=B3r finansowania, kt=C3=B3re spe=C5=82=
+ni potrzeby firmy, zapewniaj=C4=85c natychmiastowy dost=C4=99p do got=C3=B3=
+wki, bez zb=C4=99dnych przestoj=C3=B3w?=20
+
+Przygotowali=C5=9Bmy rozwi=C4=85zania faktoringowe dopasowane do Pa=C5=84=
+stwa bran=C5=BCy i wielko=C5=9Bci firmy, dzi=C4=99ki kt=C3=B3rym, nie mus=
+z=C4=85 Pa=C5=84stwo martwi=C4=87 si=C4=99 o niewyp=C5=82acalno=C5=9B=C4=87=
+ kontrahent=C3=B3w, poniewa=C5=BC transakcje s=C4=85 zabezpieczone i posi=
+adaj=C4=85 gwarancj=C4=99 sp=C5=82aty.=20
+Chc=C4=85 Pa=C5=84stwo przeanalizowa=C4=87 dost=C4=99pne opcje?
 
 
-On 2023/2/22 03:09, Yang Shi wrote:
-> On Tue, Feb 21, 2023 at 10:08 AM Gao Xiang <hsiangkao@linux.alibaba.com> wrote:
->>
->>
->>
->> On 2023/1/27 00:40, Matthew Wilcox wrote:
->>> I'd like to do another session on how the struct page dismemberment
->>> is going and what remains to be done.  Given how widely struct page is
->>> used, I think there will be interest from more than just MM, so I'd
->>> suggest a plenary session.
->>>
->>> If I were hosting this session today, topics would include:
->>>
->>> Splitting out users:
->>>
->>>    - slab (done!)
->>>    - netmem (in progress)
->>>    - hugetlb (in akpm)
->>>    - tail pages (in akpm)
->>>    - page tables
->>>    - ZONE_DEVICE
->>>
->>> Users that really should have their own types:
->>>
->>>    - zsmalloc
->>>    - bootmem
->>>    - percpu
->>>    - buddy
->>>    - vmalloc
->>>
->>> Converting filesystems to folios:
->>>
->>>    - XFS (done)
->>>    - AFS (done)
->>>    - NFS (in progress)
->>>    - ext4 (in progress)
->>>    - f2fs (in progress)
->>>    - ... others?
->>>
->>> Unresolved challenges:
->>>
->>>    - mapcount
->>>    - AnonExclusive
->>>    - Splitting anon & file folios apart
->>>    - Removing PG_error & PG_private
->>
->> I'm interested in this topic too, also I'd like to get some idea of the
->> future of the page dismemberment timeline so that I can have time to keep
->> the pace with it since some embedded use cases like Android are
->> memory-sensitive all the time.
->>
->> Minor, it seems some apis still use ->lru field to chain bulk pages,
->> perhaps it needs some changes as well:
->> https://lore.kernel.org/r/20221222124412.rpnl2vojnx7izoow@techsingularity.net
->> https://lore.kernel.org/r/20230214190221.1156876-2-shy828301@gmail.com
-> 
-> The dm-crypt patches don't use list anymore. The bulk allocator still
-> supports the list version, but so far there is no user, so it may be
-> gone soon.
-
-Thanks, it's just a detailed minor stuff relating to page->lru.  Currently
-I'm no rush to evaluate/use it.
-
-> 
->>
->> Thanks,
->> Gao Xiang
->>
->>>
->>> This will probably all change before May.
->>>
->>> I'd like to nominate Vishal Moola & Sidhartha Kumar as invitees based on
->>> their work to convert various functions from pages to folios.
->>
+Pozdrawiam
+Szczepan Kie=C5=82basa
