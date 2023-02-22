@@ -2,202 +2,92 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC667C636D6
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Feb 2023 19:21:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7135EC636D6
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Feb 2023 21:29:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232360AbjBVTVD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 22 Feb 2023 14:21:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51934 "EHLO
+        id S232382AbjBVV3K (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 22 Feb 2023 16:29:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231571AbjBVTVC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2023 14:21:02 -0500
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 692243C7B7;
-        Wed, 22 Feb 2023 11:21:01 -0800 (PST)
-Received: by mail-pl1-x632.google.com with SMTP id bh1so10022109plb.11;
-        Wed, 22 Feb 2023 11:21:01 -0800 (PST)
+        with ESMTP id S231962AbjBVV3J (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Feb 2023 16:29:09 -0500
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28D50457DB
+        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2023 13:29:07 -0800 (PST)
+Received: by mail-lf1-x132.google.com with SMTP id m7so11756073lfj.8
+        for <linux-ide@vger.kernel.org>; Wed, 22 Feb 2023 13:29:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=PLcAztFgWUursA52wmlD2jf40Bmb4ZiQCGT0PizPSB4=;
-        b=fZyXLUPiE4kw6WQeRU6MY4prH3y67vM2b3mdvJAichVGcePn7mOzwSwqqZqsDnIi+B
-         oCI2VPjF6j3wnr3KmIi7Hjfxnq5GV6m5PRZ7UYE5Zl2Y7YOXFH4E3UO0GJpZGsL3orby
-         2GDy7jk+pDEO7a1C/nZ9uKBVSsnZZlZrch5T0UZyD5YiSCDssGWpr9P/VWgv2x43dTcs
-         YSM/86PLOypniQeF1qiHZGAmqbXwKc6E3NtmX3aD5oS69HMEFrwmeWsE1j4I5Bkf6LO2
-         +ps2XnIPJpvyaM97dv4bJ+y/bbuSRbspaNYNYLKoOGeflbKGftMte5xtnVY1ffNSgTKw
-         jSng==
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=HmuGktcWTpwP951tTereejjKvwPxWBwn/R5vRD0MchE=;
+        b=pKZZu3HSNH37gOQAgbvdZbq1ApVyjblXaxc8ad0/uRNRuBlrpOFy7rp9fzrD1Lqq+X
+         D2H2JmArQJVotRusTh3HjlTSqUQ64G+QtEMs5n2yiB+HRlg3YoeKiCdtNRwhKimtCYV4
+         Ut4ZclaqIZCU2WsQ1exlGNdm4QHiznP1ra/XCOVGgZrYETa19q6Zg9vNVNnSYarBVgCQ
+         k/Xu2OUgxJ59KcKFyQwC/3e5+v8XYJ8ZZbty0SetqXGEdM3fI9SjA81LE+6/HJn0LDj7
+         EWDVWVU09gtGGXqsbR7Nm6IXKmpJIM1Q8PNyoeTYD7a5BlGzK8B2kpy9CTIqMATCy4Gb
+         xUNg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PLcAztFgWUursA52wmlD2jf40Bmb4ZiQCGT0PizPSB4=;
-        b=55v1wKN5DxvZrf22g4AmET7tCZZnYxuTEl+EQKBLsxwO4pxMBvIqyXunMrrV5igF/6
-         pK+qve/rxmUrocutQleNt5i5gkU2LRbZ36LyCQgh4Ve8x7wxbHy1XryuDQbd85Q/YreO
-         zj2OarXM8dQlGuYLLw6NA8TV9qBBz/BT/uj1B9Ca726NrvWXqqtYRFEM2UEKqRyTie5v
-         Klm5vUAhf3Ske3KgzhOmhB1K+bpg3fALF5LzcELZXoA5+BcsfIUaghTSqXoWoubcpG2X
-         VUiU9RHVfIE/qHdtoqnoXxpEOIKcSNdR0nfCwwsgnxeqANU9Efa8EDyZK/zkjovd8/tw
-         KTUg==
-X-Gm-Message-State: AO0yUKVr9hWUwJZ5Swv59GYs29Lhzx37Mh4iDz3ZW9tYwbxx8MJtspKD
-        6JxIeqlJJGaBReUFDBEBNsk=
-X-Google-Smtp-Source: AK7set8wAaTOtklU375O2ukRLvaDd0j7hswGqcDt2qm3lUDw62M6nbZXaAjlVk3zGZQQR2Svvz5L3A==
-X-Received: by 2002:a17:902:fa8c:b0:19b:dcfe:5f4 with SMTP id lc12-20020a170902fa8c00b0019bdcfe05f4mr6520296plb.20.1677093660760;
-        Wed, 22 Feb 2023 11:21:00 -0800 (PST)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id a7-20020a170902b58700b0019abd4ddbf2sm3579577pls.179.2023.02.22.11.20.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Feb 2023 11:20:59 -0800 (PST)
-Message-ID: <187c2741-7545-6480-2d00-fd93a6f8e07e@gmail.com>
-Date:   Wed, 22 Feb 2023 11:20:34 -0800
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=HmuGktcWTpwP951tTereejjKvwPxWBwn/R5vRD0MchE=;
+        b=GAb5Q4/3PUgYbuojVyi1y8Kwc/tz7zym7azDT/LzsMrLHk2MYazRQ2yVM87sIxFzx5
+         BNiALYjqBdnSvIWm8BNrewci+hXqqmuQIgM2VsuEpAFc2gnecNdQRnusvxyk7rL+Ix/+
+         uHBqHV4tRcm42qp5tQcnKey6H2iIY/LrnHgCn1/QDM+sfG1AGJWvxrNdQpFR90s1nH/O
+         hQnN01IsC+n6eQp3PUPQDeOmABmkd2ZcBnjLBkQl+YH1Yji/2bJz1jGkltLc2UOtjTOF
+         /Inx3Qf3mfvAlFsOLq0xRBn5zz4KeqYvFrSSGS+t50IDN2+YXJsfRNwsRMIVyLu9vOPv
+         8qYw==
+X-Gm-Message-State: AO0yUKUYJk5mBMVOUpUihJIKhqSBSMDGYJG+M1FALdHtl09cB2JSppCY
+        DHBZiBTiSKIUVYvB1wIykpqPcsecW2kpvK9lTnTnNPu3jHM=
+X-Google-Smtp-Source: AK7set/EpKkL/7GQZlaR1X3o6/qNDJXKBjOKb64kqdVk8UouKT2hjeTnjfo1tMblBL485U29hRedPhs1DQaEbmgY6gE=
+X-Received: by 2002:ac2:4426:0:b0:4d8:5f47:e4d3 with SMTP id
+ w6-20020ac24426000000b004d85f47e4d3mr3075908lfl.8.1677101346141; Wed, 22 Feb
+ 2023 13:29:06 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v2 01/16] thermal/core: Add a thermal zone 'devdata'
- accessor
-Content-Language: en-US
-To:     Daniel Lezcano <daniel.lezcano@linaro.org>, rafael@kernel.org
-Cc:     linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Guenter Roeck <linux@roeck-us.net>,
-        =?UTF-8?Q?Niklas_S=c3=b6derlund?= 
-        <niklas.soderlund+renesas@ragnatech.se>,
-        Mark Brown <broonie@kernel.org>,
-        Ido Schimmel <idosch@nvidia.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Balsam CHIHI <bchihi@baylibre.com>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Adam Ward <DLG-Adam.Ward.opensource@dm.renesas.com>,
-        Baolin Wang <baolin.wang@linux.alibaba.com>,
-        Sebastian Reichel <sebastian.reichel@collabora.com>,
-        Zhang Rui <rui.zhang@intel.com>, Len Brown <lenb@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Jean Delvare <jdelvare@suse.com>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Samuel Holland <samuel@sholland.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Raju Rangoju <rajur@chelsio.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Petr Machata <petrm@nvidia.com>, Kalle Valo <kvalo@kernel.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Amit Kucheria <amitk@kernel.org>,
-        Broadcom internal kernel review list 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Markus Mayer <mmayer@broadcom.com>,
-        Support Opensource <support.opensource@diasemi.com>,
-        Thara Gopinath <thara.gopinath@gmail.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Orson Zhai <orsonzhai@gmail.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        Vasily Khoruzhick <anarsoul@gmail.com>,
-        Yangtao Li <tiny.windzz@gmail.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Talel Shenhar <talel@amazon.com>,
-        Eduardo Valentin <edubezval@gmail.com>,
-        Keerthy <j-keerthy@ti.com>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Stefan Wahren <stefan.wahren@i2se.com>,
-        ye xingchen <ye.xingchen@zte.com.cn>,
-        Zheng Yongjun <zhengyongjun3@huawei.com>,
-        Tim Zimmermann <tim@linux4.de>,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Jiang Jian <jiangjian@cdjrlc.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Mikko Perttunen <mperttunen@nvidia.com>,
-        "open list:ACPI THERMAL DRIVER" <linux-acpi@vger.kernel.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:HARDWARE MONITORING" <linux-hwmon@vger.kernel.org>,
-        "open list:IIO SUBSYSTEM AND DRIVERS" <linux-iio@vger.kernel.org>,
-        "open list:ARM/Allwinner sunXi SoC support" 
-        <linux-sunxi@lists.linux.dev>,
-        "open list:INPUT (KEYBOARD, MOUSE, JOYSTICK, TOUCHSCREEN)..." 
-        <linux-input@vger.kernel.org>,
-        "open list:CXGB4 ETHERNET DRIVER (CXGB4)" <netdev@vger.kernel.org>,
-        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)" 
-        <linux-wireless@vger.kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        "open list:QUALCOMM TSENS THERMAL DRIVER" 
-        <linux-arm-msm@vger.kernel.org>,
-        "open list:RENESAS R-CAR THERMAL DRIVERS" 
-        <linux-renesas-soc@vger.kernel.org>,
-        "open list:ARM/Rockchip SoC support" 
-        <linux-rockchip@lists.infradead.org>,
-        "open list:SAMSUNG THERMAL DRIVER" 
-        <linux-samsung-soc@vger.kernel.org>,
-        "open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>,
-        "open list:TI BANDGAP AND THERMAL DRIVER" 
-        <linux-omap@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-References: <20230221180710.2781027-1-daniel.lezcano@linaro.org>
- <20230221180710.2781027-2-daniel.lezcano@linaro.org>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-In-Reply-To: <20230221180710.2781027-2-daniel.lezcano@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Ioannis Barkas <jnyb.de@gmail.com>
+Date:   Wed, 22 Feb 2023 23:28:54 +0200
+Message-ID: <CADUzMVb+JbwxiKxrxjAep8Gbom_ynM7Os67_gTEHC-dJFAVL0g@mail.gmail.com>
+Subject: Re: The SATA_ini162x.
+To:     linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/21/23 10:06, Daniel Lezcano wrote:
-> The thermal zone device structure is exposed to the different drivers
-> and obviously they access the internals while that should be
-> restricted to the core thermal code.
-> 
-> In order to self-encapsulate the thermal core code, we need to prevent
-> the drivers accessing directly the thermal zone structure and provide
-> accessor functions to deal with.
-> 
-> Provide an accessor to the 'devdata' structure and make use of it in
-> the different drivers.
-> 
-> No functional changes intended.
-> 
-> Signed-off-by: Daniel Lezcano <daniel.lezcano@linaro.org>
-> Acked-by: Guenter Roeck <linux@roeck-us.net> #hwmon
-> Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se> #R-Car
-> Acked-by: Mark Brown <broonie@kernel.org>
-> Reviewed-by: Ido Schimmel <idosch@nvidia.com> #mlxsw
-> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com> #MediaTek auxadc and lvts
-> Reviewed-by: Balsam CHIHI <bchihi@baylibre.com> #Mediatek lvts
-> Acked-by: Gregory Greenman <gregory.greenman@intel.com> #iwlwifi
-> Reviewed-by: Adam Ward <DLG-Adam.Ward.opensource@dm.renesas.com> #da9062
-> Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>  #spread
-> Acked-by: Sebastian Reichel <sebastian.reichel@collabora.com> #power_supply
+Hello Magnus,
 
-Acked-by: Florian Fainelli <f.fainelli@gmail.com> #Broadcom
--- 
-Florian
+I will give you more details about it since I reported the issue with
+this controller many years ago.
 
+Yes you can activate the driver but you will need to enable this
+driver and build your own kernel. That is needed since the driver is
+disabled by default. There is at least one underlying issue that has
+got unnoticed and has not been solved yet thus the driver is
+considered experimental. My PCI card has an eSATA connector routed to
+port 0 and a SATA connector routed to port 1. Back then, I had tested
+the SATA port and believed that the driver could only handle port 0.
+
+Damien if you are willing to investigate this and help me fix it, I am
+at your disposal. I still have the card with this controller, the
+datasheet of the IC manufacturer, an AMD based PC with a PCI slot and
+lots of disks for testing. What is more, I had done some tests back in
+December and the issue remains. Here is what 6.1 prints:
+[    1.947670] sata_inic162x 0000:05:06.0: version 0.4
+[    1.947716] sata_inic162x 0000:05:06.0: inic162x support is broken
+with common data corruption issues and will be disabled by default,
+contact linux-ide@vger.kernel.org if in production use
+
+Here is the problem:
+[    3.285163] ata8.00: native sectors (1) is smaller than sectors (976773168)
+
+I tested the eSATA port and it behaves exactly the same as the SATA
+port. I have also performed some modifications but those were in the
+wrong direction as I completely broke the driver thus it could not
+detect attached devices. That brought a libata bug to the surface and
+I need to send a patch about it. Back to sata_inic, I have not figured
+out how it works with both channels.
+
+Hope to get better Magnus really soon!
+
+Best regards.
