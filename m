@@ -2,46 +2,38 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04275C636D7
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Feb 2023 01:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D256C61DA3
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Feb 2023 02:38:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229880AbjBVBDT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 21 Feb 2023 20:03:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57456 "EHLO
+        id S230214AbjBVCiU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 21 Feb 2023 21:38:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjBVBDS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Feb 2023 20:03:18 -0500
-Received: from mx.socionext.com (mx.socionext.com [202.248.49.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A1F331B56B;
-        Tue, 21 Feb 2023 17:03:16 -0800 (PST)
-Received: from unknown (HELO iyokan2-ex.css.socionext.com) ([172.31.9.54])
-  by mx.socionext.com with ESMTP; 22 Feb 2023 10:03:15 +0900
-Received: from mail.mfilter.local (mail-arc01.css.socionext.com [10.213.46.36])
-        by iyokan2-ex.css.socionext.com (Postfix) with ESMTP id 6C7A02058B4F;
-        Wed, 22 Feb 2023 10:03:15 +0900 (JST)
-Received: from kinkan2.css.socionext.com ([172.31.9.51]) by m-FILTER with ESMTP; Wed, 22 Feb 2023 10:03:15 +0900
-Received: from [10.212.157.25] (unknown [10.212.157.25])
-        by kinkan2.css.socionext.com (Postfix) with ESMTP id DA5217BEA;
-        Wed, 22 Feb 2023 10:03:14 +0900 (JST)
-Message-ID: <7e19d3f4-a3bc-dc9d-35a0-9bfc05f22b2c@socionext.com>
-Date:   Wed, 22 Feb 2023 10:03:14 +0900
+        with ESMTP id S229539AbjBVCiU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Feb 2023 21:38:20 -0500
+Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21D522594B;
+        Tue, 21 Feb 2023 18:38:17 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045170;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0VcEEUep_1677033493;
+Received: from 30.97.49.34(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VcEEUep_1677033493)
+          by smtp.aliyun-inc.com;
+          Wed, 22 Feb 2023 10:38:14 +0800
+Message-ID: <874be627-cb9e-bca6-4845-18dcd65f0f3f@linux.alibaba.com>
+Date:   Wed, 22 Feb 2023 10:38:12 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH v3] dt-bindings: ata: Add UniPhier controller binding
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230220054711.4584-1-hayashi.kunihiko@socionext.com>
- <8a4042fd-02a3-261e-4126-7a3090850fda@linaro.org>
-Content-Language: en-US
-From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-In-Reply-To: <8a4042fd-02a3-261e-4126-7a3090850fda@linaro.org>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.6.1
+Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+References: <Y9KtCc+4n5uANB2f@casper.infradead.org>
+ <8448beac-a119-330d-a2af-fc3531bdb930@linux.alibaba.com>
+ <Y/UiY/08MuA/tBku@casper.infradead.org>
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <Y/UiY/08MuA/tBku@casper.infradead.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -49,117 +41,93 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 
-On 2023/02/20 20:48, Krzysztof Kozlowski wrote:
-> On 20/02/2023 06:47, Kunihiko Hayashi wrote:
->> Add UniPhier SATA controller compatible string to the platform binding.
->> This controller needs two or three reset controls.
+
+On 2023/2/22 03:58, Matthew Wilcox wrote:
+> On Wed, Feb 22, 2023 at 02:08:28AM +0800, Gao Xiang wrote:
+>> On 2023/1/27 00:40, Matthew Wilcox wrote:
+>>> I'd like to do another session on how the struct page dismemberment
+>>> is going and what remains to be done.  Given how widely struct page is
+>>> used, I think there will be interest from more than just MM, so I'd
+>>> suggest a plenary session.
 >>
->> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
->> ---
->>   .../bindings/ata/ahci-platform.yaml           | 32 ++++++++++++++++---
->>   1 file changed, 27 insertions(+), 5 deletions(-)
->>
->> Changes since v2:
->> - Add compatible strings to select property
->> - Add minItems and change maxItems for resets
->> - Move condition schema under allOf property
->> - Change resets to "required" for uniphier-*-ahci
->>
->> Changes since v1:
->> - Restrict resets property changes with compatible strings
->> - Fix maxItems from two to three
->>
->> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
->> b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
->> index 7dc2a2e8f598..4b2ee68097b8 100644
->> --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
->> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
->> @@ -30,12 +30,12 @@ select:
->>             - marvell,armada-3700-ahci
->>             - marvell,armada-8k-ahci
->>             - marvell,berlin2q-ahci
->> +          - socionext,uniphier-pro4-ahci
->> +          - socionext,uniphier-pxs2-ahci
->> +          - socionext,uniphier-pxs3-ahci
->>     required:
->>       - compatible
->>
->> -allOf:
->> -  - $ref: "ahci-common.yaml#"
->> -
->>   properties:
->>     compatible:
->>       oneOf:
->> @@ -45,6 +45,9 @@ properties:
->>                 - marvell,armada-8k-ahci
->>                 - marvell,berlin2-ahci
->>                 - marvell,berlin2q-ahci
->> +              - socionext,uniphier-pro4-ahci
->> +              - socionext,uniphier-pxs2-ahci
->> +              - socionext,uniphier-pxs3-ahci
->>             - const: generic-ahci
->>         - enum:
->>             - cavium,octeon-7130-ahci
->> @@ -67,14 +70,33 @@ properties:
->>       minItems: 1
->>       maxItems: 3
->>
->> +  resets:
->> +    minItems: 1
->> +    maxItems: 3
->> +
->>     interrupts:
->>       maxItems: 1
->>
->>     power-domains:
->>       maxItems: 1
->>
->> -  resets:
->> -    maxItems: 1
+>> I'm interested in this topic too, also I'd like to get some idea of the
+>> future of the page dismemberment timeline so that I can have time to keep
+>> the pace with it since some embedded use cases like Android are
+>> memory-sensitive all the time.
 > 
-> Why moving it?
+> As you all know, I'm absolutely amazing at project management & planning
+> and can tell you to the day when a feature will be ready ;-)
 
-Sorry for my mistake. I should fix it.
-
->> +allOf:
-> 
-> This goes to the same place as in example-schema.
-
-I can see "allOf" next to "required" in example-schema,
-
->> +  - $ref: ahci-common.yaml#
->> +  - if:
->> +      properties:
->> +        compatible:
->> +          contains:
->> +            enum:
->> +              - socionext,uniphier-pro4-ahci
->> +              - socionext,uniphier-pxs2-ahci
->> +              - socionext,uniphier-pxs3-ahci
->> +    then:
->> +      properties:
->> +        resets:
->> +          minItems: 2
->> +          maxItems: 3
-> 
-> You need to describe the items, what's expected here.
-
-I'll add the descriptions for each reset for the compatible.
-However, I'm afraid this "if" part will grow for UniPhier resets
-in common ahci-platform.
+yeah, but this core stuff actually impacts various subsystems, it would
+be better to get some in advance otherwise I'm not sure if I could have
+extra slots to handle these.
 
 > 
->> +      required:
->> +        - resets
+> My goal for 2023 is to get to a point where we (a) have struct page
+> reduced to:
 > 
-> The entire point was to add:
+> struct page {
+> 	unsigned long flags;
+> 	struct list_head lru;
+> 	struct address_space *mapping;
+> 	pgoff_t index;
+> 	unsigned long private;
+> 	atomic_t _mapcount;
+> 	atomic_t _refcount;
+> 	unsigned long memcg_data;
+> #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
+> 	int _last_cpupid;
+> #endif
+> };
 > 
-> else - maxItems: 1
+> and (b) can build an allnoconfig kernel with:
+> 
+> struct page {
+> 	unsigned long flags;
+> 	unsigned long padding[5];
+> 	atomic_t _mapcount;
+> 	atomic_t _refcount;
+> 	unsigned long padding2;
+> #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
+> 	int _last_cpupid;
+> #endif
+> };
 
-I'll add it.
+Okay, with the plan above, how to make it work with memdesc in the long
+term?
 
-Thank you,
+Also in the future at least I'd like to know if it's possible / how to
+get folio itself from page and how to know if some folio is actually
+truncated or connected to some (or more) inodes.
 
----
-Best Regards
-Kunihiko Hayashi
+Anyway, all of the above are interesting to me, and that could avoid
+some extra useless folio adoption in the opposite direction.  Also I
+could have more rough thoughts how to get page cache sharing work.
+
+I could imagine many of them may be still in the preliminary form
+for now, but some detailed plans would be much helpful.
+
+> 
+>> Minor, it seems some apis still use ->lru field to chain bulk pages,
+>> perhaps it needs some changes as well:
+>> https://lore.kernel.org/r/20221222124412.rpnl2vojnx7izoow@techsingularity.net
+>> https://lore.kernel.org/r/20230214190221.1156876-2-shy828301@gmail.com
+> 
+> Yang Shi covered the actual (non-)use of the list version of the bulk
+> allocator already, but perhaps more importantly, each page allocated
+> by the bulk allocator is actually a separately tracked allocation.
+> So the obvious translation of the bulk allocator from pages to folios
+> is that it allocates N order-0 folios.
+> 
+> That may not be the best approach for all the users of the bulk allocator,
+> so we may end up doing something different.  At any rate, use of page->lru
+> isn't the problem here (yes, it's something that would need to change,
+> but it's not a big conceptual problem).
+
+Yes, I just would like to confirm how to use such apis in the long term.
+Currently it's no rush for me but I tend to avoid using them in a vague
+direction.
+
+Thanks,
+Gao Xiang
+
