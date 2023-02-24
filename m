@@ -2,28 +2,28 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D643C64ED8
-	for <linux-ide@archiver.kernel.org>; Fri, 24 Feb 2023 20:40:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38580C64ED8
+	for <linux-ide@archiver.kernel.org>; Fri, 24 Feb 2023 20:40:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229712AbjBXUko (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 24 Feb 2023 15:40:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33318 "EHLO
+        id S229727AbjBXUkt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 24 Feb 2023 15:40:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbjBXUkm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Feb 2023 15:40:42 -0500
+        with ESMTP id S229482AbjBXUks (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Feb 2023 15:40:48 -0500
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DB7D688CA
-        for <linux-ide@vger.kernel.org>; Fri, 24 Feb 2023 12:40:41 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 393484D634
+        for <linux-ide@vger.kernel.org>; Fri, 24 Feb 2023 12:40:47 -0800 (PST)
 Received: from localhost.localdomain (178.176.72.18) by msexch01.omp.ru
  (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 24 Feb
- 2023 23:40:35 +0300
+ 2023 23:40:39 +0300
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <linux-ide@vger.kernel.org>
-Subject: [PATCH 1/2] ata: drop unused ata_id_to_hd_driveid()
-Date:   Fri, 24 Feb 2023 23:40:23 +0300
-Message-ID: <20230224204024.9982-2-s.shtylyov@omp.ru>
+Subject: [PATCH 2/2] ata: drop unused ata_id_is_lba_capacity_ok()
+Date:   Fri, 24 Feb 2023 23:40:24 +0300
+Message-ID: <20230224204024.9982-3-s.shtylyov@omp.ru>
 X-Mailer: git-send-email 2.26.3
 In-Reply-To: <20230224204024.9982-1-s.shtylyov@omp.ru>
 References: <20230224204024.9982-1-s.shtylyov@omp.ru>
@@ -51,15 +51,14 @@ X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.18 in (user)
  b.barracudacentral.org}
 X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.18 in (user)
  dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;178.176.72.18:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: {rdns complete}
-X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;178.176.72.18:7.4.1,7.1.2,7.7.3;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: {iprep_blacklist}
 X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.72.18
 X-KSE-AntiSpam-Info: {DNS response errors}
 X-KSE-AntiSpam-Info: Rate: 59
 X-KSE-AntiSpam-Info: Status: not_detected
 X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
  smtp.mailfrom=omp.ru;dkim=none
 X-KSE-Antiphishing-Info: Clean
 X-KSE-Antiphishing-ScanningType: Heuristic
@@ -73,49 +72,71 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This function was renamed from ide_id_to_hd_driveid() and moved from
+This function was renamed from lba_capacity_is_ok()() and moved from
 drivers/ide/ to <linux/ata.h> but it never got used by libata, thus it
 became useless after drivers/ide/ removal...
 
 Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 ---
- include/linux/ata.h | 21 ---------------------
- 1 file changed, 21 deletions(-)
+ include/linux/ata.h | 50 ---------------------------------------------
+ 1 file changed, 50 deletions(-)
 
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 0c18499f60b6..3240116647d5 100644
+index 3240116647d5..c224dbddb9b2 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -16,7 +16,6 @@
- #include <linux/bits.h>
- #include <linux/string.h>
- #include <linux/types.h>
--#include <asm/byteorder.h>
- 
- /* defines only for the constants which don't work well as enums */
- #define ATA_DMA_BOUNDARY	0xffffUL
-@@ -1067,26 +1066,6 @@ static inline bool ata_id_is_lba_capacity_ok(u16 *id)
- 	return false;	/* LBA capacity value may be bad */
+@@ -1016,56 +1016,6 @@ static inline bool atapi_id_dmadir(const u16 *dev_id)
+ 	return ata_id_major_version(dev_id) >= 7 && (dev_id[62] & 0x8000);
  }
  
--static inline void ata_id_to_hd_driveid(u16 *id)
+-/*
+- * ata_id_is_lba_capacity_ok() performs a sanity check on
+- * the claimed LBA capacity value for the device.
+- *
+- * Returns 1 if LBA capacity looks sensible, 0 otherwise.
+- *
+- * It is called only once for each device.
+- */
+-static inline bool ata_id_is_lba_capacity_ok(u16 *id)
 -{
--#ifdef __BIG_ENDIAN
--	/* accessed in struct hd_driveid as 8-bit values */
--	id[ATA_ID_MAX_MULTSECT]	 = __cpu_to_le16(id[ATA_ID_MAX_MULTSECT]);
--	id[ATA_ID_CAPABILITY]	 = __cpu_to_le16(id[ATA_ID_CAPABILITY]);
--	id[ATA_ID_OLD_PIO_MODES] = __cpu_to_le16(id[ATA_ID_OLD_PIO_MODES]);
--	id[ATA_ID_OLD_DMA_MODES] = __cpu_to_le16(id[ATA_ID_OLD_DMA_MODES]);
--	id[ATA_ID_MULTSECT]	 = __cpu_to_le16(id[ATA_ID_MULTSECT]);
+-	unsigned long lba_sects, chs_sects, head, tail;
 -
--	/* as 32-bit values */
--	*(u32 *)&id[ATA_ID_LBA_CAPACITY] = ata_id_u32(id, ATA_ID_LBA_CAPACITY);
--	*(u32 *)&id[ATA_ID_SPG]		 = ata_id_u32(id, ATA_ID_SPG);
+-	/* No non-LBA info .. so valid! */
+-	if (id[ATA_ID_CYLS] == 0)
+-		return true;
 -
--	/* as 64-bit value */
--	*(u64 *)&id[ATA_ID_LBA_CAPACITY_2] =
--		ata_id_u64(id, ATA_ID_LBA_CAPACITY_2);
--#endif
+-	lba_sects = ata_id_u32(id, ATA_ID_LBA_CAPACITY);
+-
+-	/*
+-	 * The ATA spec tells large drives to return
+-	 * C/H/S = 16383/16/63 independent of their size.
+-	 * Some drives can be jumpered to use 15 heads instead of 16.
+-	 * Some drives can be jumpered to use 4092 cyls instead of 16383.
+-	 */
+-	if ((id[ATA_ID_CYLS] == 16383 ||
+-	     (id[ATA_ID_CYLS] == 4092 && id[ATA_ID_CUR_CYLS] == 16383)) &&
+-	    id[ATA_ID_SECTORS] == 63 &&
+-	    (id[ATA_ID_HEADS] == 15 || id[ATA_ID_HEADS] == 16) &&
+-	    (lba_sects >= 16383 * 63 * id[ATA_ID_HEADS]))
+-		return true;
+-
+-	chs_sects = id[ATA_ID_CYLS] * id[ATA_ID_HEADS] * id[ATA_ID_SECTORS];
+-
+-	/* perform a rough sanity check on lba_sects: within 10% is OK */
+-	if (lba_sects - chs_sects < chs_sects/10)
+-		return true;
+-
+-	/* some drives have the word order reversed */
+-	head = (lba_sects >> 16) & 0xffff;
+-	tail = lba_sects & 0xffff;
+-	lba_sects = head | (tail << 16);
+-
+-	if (lba_sects - chs_sects < chs_sects/10) {
+-		*(__le32 *)&id[ATA_ID_LBA_CAPACITY] = __cpu_to_le32(lba_sects);
+-		return true;	/* LBA capacity is (now) good */
+-	}
+-
+-	return false;	/* LBA capacity value may be bad */
 -}
 -
  static inline bool ata_ok(u8 status)
