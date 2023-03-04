@@ -2,65 +2,79 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A928C678D5
-	for <linux-ide@archiver.kernel.org>; Sat,  4 Mar 2023 05:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 665CFC678DB
+	for <linux-ide@archiver.kernel.org>; Sat,  4 Mar 2023 13:58:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229519AbjCDFED (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 4 Mar 2023 00:04:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48570 "EHLO
+        id S229455AbjCDN6e (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 4 Mar 2023 08:58:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjCDFEC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 4 Mar 2023 00:04:02 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ECCB20051;
-        Fri,  3 Mar 2023 21:04:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=3KUOIEuDKyOHxMbucNAykOCAoCC6boXcHa1Piw6R6Zo=; b=q0t5NYZ0s0uZSFwaYIKPlHAgBG
-        Fh/YpnJ1T7/9vUHeow3hD7Dik99DlmvRByFkcfQZwxvA6KtYG5XM5G0U6uZ/r4FBBtIByb9OqDdZG
-        vQssjkyGhGkTluG3K95ZFHJKSynL14+TSOi1HkppE1tkOTxmsdhcmAvO4sGTy0QJthwNdwQFrXy0t
-        Vn7bD5YMBPbFmyeWmpANMe5iCD8vq/cl2FY5611Tudn/B2YxWnlPK/CUqW5OsPJH3Ffc5YQwZem1E
-        dRMzau6dzmCdGuBED3iNxx1GGRhJd5yy4hQDtKNFt7umUM+SNCpdQCDvbqWeAne9KSxum6aBNAzoN
-        sxvPLyWA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pYK3l-003er5-Gy; Sat, 04 Mar 2023 05:03:53 +0000
-Date:   Sat, 4 Mar 2023 05:03:53 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-Subject: [LSF/MM/BPF] Running BOF
-Message-ID: <ZALROVnC+GDXsBne@casper.infradead.org>
+        with ESMTP id S229437AbjCDN6d (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 4 Mar 2023 08:58:33 -0500
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 965FD13D70;
+        Sat,  4 Mar 2023 05:58:31 -0800 (PST)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1pYSP7-0001uK-Bl; Sat, 04 Mar 2023 14:58:29 +0100
+Message-ID: <229e264a-9af6-7662-c04c-9c1492a18c51@leemhuis.info>
+Date:   Sat, 4 Mar 2023 14:58:28 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [regression] Bug 217114 - Tiger Lake SATA Controller not
+ operating correctly [bisected]
+Content-Language: en-US, de-DE
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>
+Cc:     "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        emmi@emmixis.net, schwagsucks@gmail.com,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        Simon Gaiser <simon@invisiblethingslab.com>,
+        Linux regressions mailing list <regressions@lists.linux.dev>
+References: <ad02467d-d623-5933-67e0-09925c185568@leemhuis.info>
+ <af6a355b-3ac2-a610-379a-167e87145368@opensource.wdc.com>
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <af6a355b-3ac2-a610-379a-167e87145368@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1677938311;b61ab3a7;
+X-HE-SMSGID: 1pYSP7-0001uK-Bl
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Sunday May 7th is the Vancouver Marathon, and both Josef and I are
-registered.  As such, neither of us may be feeling much like joining
-or leading a run.  If anyone else is interested in participating,
-https://bmovanmarathon.ca/ offers 8km and 21.1km races as well.  If you
-just want a spot of morning exercise, I can suggest routes, but will
-probably not join you.
+On 03.03.23 10:48, Damien Le Moal wrote:
+> On 3/3/23 16:10, Linux regression tracking (Thorsten Leemhuis) wrote:
+>>
+>> I noticed a regression report in bugzilla.kernel.org that apparently
+>> affects 6.2 and later as well as 6.1.13 and later, as it was already
+>> backported there.
+>>
+>> As many (most?) kernel developer don't keep an eye on bugzilla, I
+>> decided to forward the report by mail. Quoting from
+>> https://bugzilla.kernel.org/show_bug.cgi?id=217114 :
+>>
+>>>  emmi@emmixis.net 2023-03-02 11:25:00 UTC
+>>>
+>>> As per kernel problem found in https://bbs.archlinux.org/viewtopic.php?id=283906 ,
+>>>
+>>> Commit 104ff59af73aba524e57ae0fef70121643ff270e
+>>
+>> [FWIW: That's "ata: ahci: Add Tiger Lake UP{3,4} AHCI controller" from
+>> Simon Gaiser]
+> 
+> I sent a revert with cc: stable.
 
-For those concerned about how the marathon will affect getting around
-Vancouver, you can see the various course maps:
+Many thx for this and your quick actions.
 
-https://bmovanmarathon.ca/marathon#course (8:30am-3pm)
-https://bmovanmarathon.ca/halfmarathon#course (7am-11am)
-https://bmovanmarathon.ca/8km#course (9:30am - 11am)
+@Greg, @Sasha: that revert landed as 6210038aeaf4 ("ata: ahci: Revert
+"ata: ahci: Add Tiger Lake UP{3,4} AHCI controller""); you might want to
+ensure you have it in the first batch of 6.1 backports in case you need
+to split the backports from the merge window over multiple 6.1.y releases.
 
-Don't expect to walk around Stanley Park until the marathon is over.
-The Skytrain from the airport will be largely unaffected (possibly
-infested with sweaty runners).  Bus routes may have diversions in place,
-but the roads will open once runners are no longer using that particular
-stretch, so eg Cambie & 49th will reopen to traffic quite early while
-Pacific & Georgia will remain closed for much of the day.
-
-If you want to come out & cheer for Josef and/or myself, let us know
-and we can suggest good spots.
+Ciao, Thorsten
