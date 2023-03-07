@@ -2,57 +2,101 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7497C678D5
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Mar 2023 11:08:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D98C6FD1A
+	for <linux-ide@archiver.kernel.org>; Tue,  7 Mar 2023 15:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230209AbjCGLIL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Mar 2023 06:08:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55996 "EHLO
+        id S230110AbjCGPwp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 7 Mar 2023 10:52:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230414AbjCGLHc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2023 06:07:32 -0500
-Received: from mail.ettrick.pl (mail.ettrick.pl [141.94.21.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E00724AFEF
-        for <linux-ide@vger.kernel.org>; Tue,  7 Mar 2023 03:04:05 -0800 (PST)
-Received: by mail.ettrick.pl (Postfix, from userid 1002)
-        id 9BB41A47F7; Mon,  6 Mar 2023 09:06:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ettrick.pl; s=mail;
-        t=1678093568; bh=KHux3km3Civcx5ChslOYQZwQRBjoJa4kWJfGcMIuN6w=;
-        h=Date:From:To:Subject:From;
-        b=Z9IoAJR9PHjN2qGgFwq90lefd9DGq1QtHYYyiD6R4yr8QUbeJgPKWPXH2Bg8KERuv
-         xfqmAtPuNAReXnBAT5+3qXuBrijuR6wjuSNtnSO0WrVEm3O6rwnQVOhPAX6gpP7kHf
-         zC8C6kdVb9g+mIpu04Y8+rr9I8Yck1oxELkDez6deDTtWP0tJFK/ZkBT8I6UlzV1nP
-         UdBSCJ2IYpQB5xYOFajl71qWf6TGKdSOvHy95kj9SELKbt263+nHaCgQaZEaGqLRxg
-         U7JMbHO52wVel0xuPdFjufeuOl6klHbBiOh3XzyI3xF8up5tgilR71q3Hh18DDKRcV
-         322cXka2sapiA==
-Received: by mail.ettrick.pl for <linux-ide@vger.kernel.org>; Mon,  6 Mar 2023 09:05:52 GMT
-Message-ID: <20230306074500-0.1.97.37025.0.mvmklr6h8i@ettrick.pl>
-Date:   Mon,  6 Mar 2023 09:05:52 GMT
-From:   "Norbert Karecki" <norbert.karecki@ettrick.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Fotowoltaika - nowe warunki
-X-Mailer: mail.ettrick.pl
+        with ESMTP id S229852AbjCGPwm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2023 10:52:42 -0500
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A34F88C810
+        for <linux-ide@vger.kernel.org>; Tue,  7 Mar 2023 07:52:30 -0800 (PST)
+Received: by mail-ed1-x52d.google.com with SMTP id ay14so50409092edb.11
+        for <linux-ide@vger.kernel.org>; Tue, 07 Mar 2023 07:52:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1678204349;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xrd6qK7hMyHVwtg6Pun3WvLwqeCKfsvJclD5mLFXwgY=;
+        b=DT+doUYLM/jXsxmjyKKOg8UL7zJewGuXgq2bX0DaONfvjSYO6V59A1RbU6nJpJKW06
+         I2r9Sr0iACpzAZ/KUtBeXz4nAczbUrWkHKXZjP5i8iik7quNyIqBaRBWqixvUeiXPD75
+         TeiRxNXcYkD8joeqd3zCjxEP355Fs0p6XnKnwK7U5UphHvBY2D8a9DebVS/iFaiTkSLG
+         PWphGCEOPu6Ii1eC1ysu04WzKrU9R/O8VZEnwDWnlw/LEsJi6SKkPUFOKnac9q3mu2v8
+         F0byB5NjFIE2eiK/VhTAAzLXgvUzLZyXLnEhGmnZD2P81CPmd//O9L9XMS2UW2iwH6yf
+         ybgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678204349;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xrd6qK7hMyHVwtg6Pun3WvLwqeCKfsvJclD5mLFXwgY=;
+        b=rc6BUuDTpounnzUv8aK1IjRmKXLIIB/ihtQBAoULCQ/HDzvgvjE1pFjGQ3fc0G9e+/
+         uvfV5jDnX13UCONXRlrHc1gow34oku/3WUNjpOhnJ7tdJJJYtKBS4iZm0yM48qEpRx4M
+         EKjgjY4K++5KRNnQ/J9j3XCKT3lUAX6y1dyebfjEKV1vwLIEytRcX1/y5D3B4x3XYBtL
+         1f3O4tU2j6OsSzJW9KTo1Y5F6NMHcBZEFEWU4zDIsb2nYjow+WXKjqETvsUudK3dB1w2
+         OfgSn38iqhibSYsURzhIeLLxEpKVWhFagsNhUhbm9y05by42iGrCbawf8cBE9vMXWWWH
+         jgnw==
+X-Gm-Message-State: AO0yUKXt87/25yRUs/1Yzg7CwPC8BKNx8pJjLfuoXFv1lUzpMXd4Cvrp
+        jJr0q4C4JT1khoThljrp3cWG9A==
+X-Google-Smtp-Source: AK7set8m7oRQ+cAgTtvL5dosF9lC6h3uel75c14Jj9kdll6P9IGXf5r7bqsGtYrW2I6xrGn1yure9Q==
+X-Received: by 2002:a17:907:1ca3:b0:8ea:2055:4f1b with SMTP id nb35-20020a1709071ca300b008ea20554f1bmr18866802ejc.24.1678204349112;
+        Tue, 07 Mar 2023 07:52:29 -0800 (PST)
+Received: from ?IPV6:2a02:810d:15c0:828:a60f:e604:c252:1f3d? ([2a02:810d:15c0:828:a60f:e604:c252:1f3d])
+        by smtp.gmail.com with ESMTPSA id ib21-20020a1709072c7500b008cdb0628991sm6321506ejc.57.2023.03.07.07.52.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 07 Mar 2023 07:52:28 -0800 (PST)
+Message-ID: <bf6d6b20-8479-80f7-1899-d58e03e6c6c8@linaro.org>
+Date:   Tue, 7 Mar 2023 16:52:27 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v4] dt-bindings: ata: Add UniPhier controller binding
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230222155906.19403-1-hayashi.kunihiko@socionext.com>
+ <9d36818f-3ce3-0fb6-1a3e-85e3879af08c@opensource.wdc.com>
+ <a6425bde-5b6d-2fb2-2396-a35677b19e8f@linaro.org>
+ <e5ed284a-77ac-df6d-1473-e4d96955f65b@opensource.wdc.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <e5ed284a-77ac-df6d-1473-e4d96955f65b@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 07/03/2023 11:42, Damien Le Moal wrote:
+> On 3/7/23 17:13, Krzysztof Kozlowski wrote:
+>> On 06/03/2023 02:22, Damien Le Moal wrote:
+>>> On 2/23/23 00:59, Kunihiko Hayashi wrote:
+>>>> Add UniPhier SATA controller compatible string to the platform binding.
+>>>> This controller needs three reset controls for Pro4 SoC, or two reset
+>>>> controls for PXs2 and PXs3 SoCs.
+>>>>
+>>>> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+>>>
+>>> Rob,
+>>>
+>>> Are you OK with this patch ? I can take it for 6.4.
+>>>
+>>
+>> You got Review (which includes also "Ack"), what are you missing here?
+> 
+> By the way, I am not seeing/have not received any Ack. Hence why I checked with Rob.
 
-chcia=C5=82bym poinformowa=C4=87, i=C5=BC mog=C4=85 Pa=C5=84stwo uzyska=C4=
-=87 dofinansowanie na systemy fotowoltaiczne w ramach nowej edycji progra=
-mu M=C3=B3j Pr=C4=85d.
+You were on Cc... Did I end up in spam?
 
-Program zapewnia 6000 z=C5=82 dofinansowania na instalacj=C4=99 paneli i =
-16 000 z=C5=82 na magazyn energii, ni=C5=BCsze cen pr=C4=85du i mo=C5=BCl=
-iwo=C5=9B=C4=87 odliczenia koszt=C3=B3w zwi=C4=85zanych z instalacj=C4=85=
- fotowoltaiki w ramach rozliczenia PIT (tzw. ulga termomodernizacyjna).
+Best regards,
+Krzysztof
 
-Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
-temacie?
-
-
-Pozdrawiam,
-Norbert Karecki
