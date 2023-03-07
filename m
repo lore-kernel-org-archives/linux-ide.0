@@ -2,23 +2,23 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25B32C74A44
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 992D8C74A5B
 	for <linux-ide@archiver.kernel.org>; Tue,  7 Mar 2023 22:47:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230206AbjCGWrP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Mar 2023 17:47:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33256 "EHLO
+        id S231389AbjCGWrS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 7 Mar 2023 17:47:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230323AbjCGWrH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2023 17:47:07 -0500
+        with ESMTP id S229953AbjCGWrI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2023 17:47:08 -0500
 Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4BC0A40D2;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 68CEF93C8;
         Tue,  7 Mar 2023 14:47:01 -0800 (PST)
 Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id E14E37A06F8;
-        Tue,  7 Mar 2023 23:46:48 +0100 (CET)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 2240E7A0708;
+        Tue,  7 Mar 2023 23:46:49 +0100 (CET)
 From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>
@@ -27,9 +27,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
         linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 10/32] pata_parport-bpck6: remove parallel port bit defines
-Date:   Tue,  7 Mar 2023 23:46:05 +0100
-Message-Id: <20230307224627.28011-11-linux@zary.sk>
+Subject: [PATCH 12/32] pata_parport-bpck6: use parport access functions instead of port I/O
+Date:   Tue,  7 Mar 2023 23:46:07 +0100
+Message-Id: <20230307224627.28011-13-linux@zary.sk>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20230307224627.28011-1-linux@zary.sk>
 References: <20230307224627.28011-1-linux@zary.sk>
@@ -39,239 +39,518 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Remove port_stb, port_afd, cmd_stb, port_init, data_stb and port_sel
-defines and use standard PARPORT_CONTROL_* instead.
+Use parport access functions instead of inb/outb/inw/outw/inl/outl.
 
 Signed-off-by: Ondrej Zary <linux@zary.sk>
 ---
- drivers/ata/pata_parport/ppc6lnx.c | 59 ++++++++++++++----------------
- 1 file changed, 27 insertions(+), 32 deletions(-)
+ drivers/ata/pata_parport/bpck6.c   |   1 -
+ drivers/ata/pata_parport/ppc6lnx.c | 212 +++++++++--------------------
+ 2 files changed, 68 insertions(+), 145 deletions(-)
 
+diff --git a/drivers/ata/pata_parport/bpck6.c b/drivers/ata/pata_parport/bpck6.c
+index dc0f71cc305e..39ac6e1a0aee 100644
+--- a/drivers/ata/pata_parport/bpck6.c
++++ b/drivers/ata/pata_parport/bpck6.c
+@@ -15,7 +15,6 @@
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+-#include <asm/io.h>
+ #include <linux/parport.h>
+ #include "pata_parport.h"
+ #include "ppc6lnx.c"
 diff --git a/drivers/ata/pata_parport/ppc6lnx.c b/drivers/ata/pata_parport/ppc6lnx.c
-index ee8cee6bae7c..09480a7fcaee 100644
+index 09480a7fcaee..89c40d6ab036 100644
 --- a/drivers/ata/pata_parport/ppc6lnx.c
 +++ b/drivers/ata/pata_parport/ppc6lnx.c
-@@ -16,12 +16,6 @@
- //***************************************************************************
+@@ -17,7 +17,6 @@
  
  
--#define port_stb					1
--#define port_afd					2
--#define cmd_stb						port_afd
--#define port_init					4
--#define data_stb					port_init
--#define port_sel					8
  #define port_int					16
- #define port_dir					0x20
+-#define port_dir					0x20
  
-@@ -123,7 +117,7 @@ static int ppc6_select(struct pi_adapter *pi)
+ #define ECR_EPP	0x80
+ #define ECR_BI	0x20
+@@ -106,65 +105,60 @@ static int ppc6_select(struct pi_adapter *pi)
+ {
+ 	u8 i, j, k;
+ 
+-	i = inb(pi->port + 1);
++	pi->saved_r0 = parport_read_data(pi->pardev->port);
+ 
+-	if (i & 1)
+-		outb(i, pi->port + 1);
+-
+-	pi->saved_r0 = inb(pi->port);
+-
+-	pi->saved_r2 = inb(pi->port + 2) & 0x5F; // readback ctrl
++	pi->saved_r2 = parport_read_control(pi->pardev->port) & 0x5F; // readback ctrl
  
  	CUR_CTRL = pi->saved_r2;
  
--	CUR_CTRL |= port_sel;
-+	CUR_CTRL |= PARPORT_CONTROL_SELECT;
+ 	CUR_CTRL |= PARPORT_CONTROL_SELECT;
  
- 	outb(CUR_CTRL, pi->port + 2);
+-	outb(CUR_CTRL, pi->port + 2);
++	parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -135,11 +129,11 @@ static int ppc6_select(struct pi_adapter *pi)
- 	outb(pi->unit, pi->port);
- 	outb(~pi->unit, pi->port);
+ 	if (pi->saved_r0 == 'b')
+-		outb('x', pi->port);
++		parport_write_data(pi->pardev->port, 'x');
  
--	CUR_CTRL &= ~port_sel;
-+	CUR_CTRL &= ~PARPORT_CONTROL_SELECT;
+-	outb('b', pi->port);
+-	outb('p', pi->port);
+-	outb(pi->unit, pi->port);
+-	outb(~pi->unit, pi->port);
++	parport_write_data(pi->pardev->port, 'b');
++	parport_write_data(pi->pardev->port, 'p');
++	parport_write_data(pi->pardev->port, pi->unit);
++	parport_write_data(pi->pardev->port, ~pi->unit);
  
- 	outb(CUR_CTRL, pi->port + 2);
+ 	CUR_CTRL &= ~PARPORT_CONTROL_SELECT;
  
--	CUR_CTRL = (CUR_CTRL & port_int) | port_init;
-+	CUR_CTRL = (CUR_CTRL & port_int) | PARPORT_CONTROL_INIT;
+-	outb(CUR_CTRL, pi->port + 2);
++	parport_write_control(pi->pardev->port, CUR_CTRL);
  
- 	outb(CUR_CTRL, pi->port + 2);
+ 	CUR_CTRL = (CUR_CTRL & port_int) | PARPORT_CONTROL_INIT;
  
-@@ -150,13 +144,13 @@ static int ppc6_select(struct pi_adapter *pi)
+-	outb(CUR_CTRL, pi->port + 2);
++	parport_write_control(pi->pardev->port, CUR_CTRL);
  
- 	outb(i, pi->port);
+ 	i = mode_map[pi->mode] & 0x0C;
  
--	CUR_CTRL |= port_sel;
-+	CUR_CTRL |= PARPORT_CONTROL_SELECT;
+ 	if (i == 0)
+ 		i = (mode_map[pi->mode] & 2) | 1;
  
- 	outb(CUR_CTRL, pi->port + 2);
+-	outb(i, pi->port);
++	parport_write_data(pi->pardev->port, i);
+ 
+ 	CUR_CTRL |= PARPORT_CONTROL_SELECT;
+ 
+-	outb(CUR_CTRL, pi->port + 2);
++	parport_write_control(pi->pardev->port, CUR_CTRL);
  
  	// DELAY
  
--	CUR_CTRL |= port_afd;
-+	CUR_CTRL |= PARPORT_CONTROL_AUTOFD;
+ 	CUR_CTRL |= PARPORT_CONTROL_AUTOFD;
  
- 	outb(CUR_CTRL, pi->port + 2);
+-	outb(CUR_CTRL, pi->port + 2);
++	parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -166,7 +160,7 @@ static int ppc6_select(struct pi_adapter *pi)
+ 	j = ((i & 0x08) << 4) | ((i & 0x07) << 3);
+ 
+-	k = inb(pi->port + 1) & 0xB8;
++	k = parport_read_status(pi->pardev->port) & 0xB8;
  
  	if (j == k)
  	{
--		CUR_CTRL &= ~port_afd;
-+		CUR_CTRL &= ~PARPORT_CONTROL_AUTOFD;
+ 		CUR_CTRL &= ~PARPORT_CONTROL_AUTOFD;
  
- 		outb(CUR_CTRL, pi->port + 2);
+-		outb(CUR_CTRL, pi->port + 2);
++		parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -175,9 +169,9 @@ static int ppc6_select(struct pi_adapter *pi)
+-		k = (inb(pi->port + 1) & 0xB8) ^ 0xB8;
++		k = (parport_read_status(pi->pardev->port) & 0xB8) ^ 0xB8;
+ 
  		if (j == k)
  		{
- 			if (i & 4)	// EPP
--				CUR_CTRL &= ~(port_sel | port_init);
-+				CUR_CTRL &= ~(PARPORT_CONTROL_SELECT | PARPORT_CONTROL_INIT);
+@@ -173,15 +167,15 @@ static int ppc6_select(struct pi_adapter *pi)
  			else				// PPC/ECP
--				CUR_CTRL &= ~port_sel;
-+				CUR_CTRL &= ~PARPORT_CONTROL_SELECT;
+ 				CUR_CTRL &= ~PARPORT_CONTROL_SELECT;
  
- 			outb(CUR_CTRL, pi->port + 2);
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -197,15 +191,15 @@ static int ppc6_select(struct pi_adapter *pi)
- static void ppc6_deselect(struct pi_adapter *pi)
- {
- 	if (mode_map[pi->mode] & 4)	// EPP
--		CUR_CTRL |= port_init;
-+		CUR_CTRL |= PARPORT_CONTROL_INIT;
- 	else								// PPC/ECP
--		CUR_CTRL |= port_sel;
-+		CUR_CTRL |= PARPORT_CONTROL_SELECT;
+ 			return(1);
+ 		}
+ 	}
  
- 	outb(CUR_CTRL, pi->port + 2);
+-	outb(pi->saved_r2, pi->port + 2);
++	parport_write_control(pi->pardev->port, pi->saved_r2);
  
- 	outb(pi->saved_r0, pi->port);
+-	outb(pi->saved_r0, pi->port);
++	parport_write_data(pi->pardev->port, pi->saved_r0);
  
--	outb((pi->saved_r2 | port_sel), pi->port + 2);
-+	outb((pi->saved_r2 | PARPORT_CONTROL_SELECT), pi->port + 2);
- 
- 	outb(pi->saved_r2, pi->port + 2);
+ 	return(0); // FAIL
  }
-@@ -223,7 +217,7 @@ static void ppc6_send_cmd(struct pi_adapter *pi, u8 cmd)
+@@ -195,13 +189,13 @@ static void ppc6_deselect(struct pi_adapter *pi)
+ 	else								// PPC/ECP
+ 		CUR_CTRL |= PARPORT_CONTROL_SELECT;
+ 
+-	outb(CUR_CTRL, pi->port + 2);
++	parport_write_control(pi->pardev->port, CUR_CTRL);
+ 
+-	outb(pi->saved_r0, pi->port);
++	parport_write_data(pi->pardev->port, pi->saved_r0);
+ 
+-	outb((pi->saved_r2 | PARPORT_CONTROL_SELECT), pi->port + 2);
++	parport_write_control(pi->pardev->port, (pi->saved_r2 | PARPORT_CONTROL_SELECT));
+ 
+-	outb(pi->saved_r2, pi->port + 2);
++	parport_write_control(pi->pardev->port, pi->saved_r2);
+ }
+ 
+ //***************************************************************************
+@@ -215,11 +209,11 @@ static void ppc6_send_cmd(struct pi_adapter *pi, u8 cmd)
+ 		case PPCMODE_BI_SW :
+ 		case PPCMODE_BI_FW :
  		{
- 			outb(cmd, pi->port);
+-			outb(cmd, pi->port);
++			parport_write_data(pi->pardev->port, cmd);
  
--			CUR_CTRL ^= cmd_stb;
-+			CUR_CTRL ^= PARPORT_CONTROL_AUTOFD;
+ 			CUR_CTRL ^= PARPORT_CONTROL_AUTOFD;
  
- 			outb(CUR_CTRL, pi->port + 2);
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -254,7 +248,7 @@ static void ppc6_wr_data_byte(struct pi_adapter *pi, u8 data)
+ 			break;
+ 		}
+@@ -228,7 +222,7 @@ static void ppc6_send_cmd(struct pi_adapter *pi, u8 cmd)
+ 		case PPCMODE_EPP_WORD :
+ 		case PPCMODE_EPP_DWORD :
  		{
- 			outb(data, pi->port);
+-			outb(cmd, pi->port + 3);
++			pi->pardev->port->ops->epp_write_addr(pi->pardev->port, &cmd, 1, 0);
  
--			CUR_CTRL ^= data_stb;
-+			CUR_CTRL ^= PARPORT_CONTROL_INIT;
- 
- 			outb(CUR_CTRL, pi->port + 2);
- 
-@@ -283,7 +277,7 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi)
- 		case PPCMODE_UNI_SW :
- 		case PPCMODE_UNI_FW :
+ 			break;
+ 		}
+@@ -246,11 +240,11 @@ static void ppc6_wr_data_byte(struct pi_adapter *pi, u8 data)
+ 		case PPCMODE_BI_SW :
+ 		case PPCMODE_BI_FW :
  		{
--			CUR_CTRL = (CUR_CTRL & ~port_stb) ^ data_stb;
-+			CUR_CTRL = (CUR_CTRL & ~PARPORT_CONTROL_STROBE) ^ PARPORT_CONTROL_INIT;
+-			outb(data, pi->port);
++			parport_write_data(pi->pardev->port, data);
  
- 			outb(CUR_CTRL, pi->port + 2);
+ 			CUR_CTRL ^= PARPORT_CONTROL_INIT;
  
-@@ -293,7 +287,7 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi)
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
+ 
+ 			break;
+ 		}
+@@ -259,7 +253,7 @@ static void ppc6_wr_data_byte(struct pi_adapter *pi, u8 data)
+ 		case PPCMODE_EPP_WORD :
+ 		case PPCMODE_EPP_DWORD :
+ 		{
+-			outb(data, pi->port + 4);
++			pi->pardev->port->ops->epp_write_data(pi->pardev->port, &data, 1, 0);
+ 
+ 			break;
+ 		}
+@@ -279,21 +273,21 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi)
+ 		{
+ 			CUR_CTRL = (CUR_CTRL & ~PARPORT_CONTROL_STROBE) ^ PARPORT_CONTROL_INIT;
+ 
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
+ 
+ 			// DELAY
+ 
+-			data = inb(pi->port + 1);
++			data = parport_read_status(pi->pardev->port);
  
  			data = ((data & 0x80) >> 1) | ((data & 0x38) >> 3);
  
--			CUR_CTRL |= port_stb;
-+			CUR_CTRL |= PARPORT_CONTROL_STROBE;
+ 			CUR_CTRL |= PARPORT_CONTROL_STROBE;
  
- 			outb(CUR_CTRL, pi->port + 2);
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -311,13 +305,13 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi)
+ 			// DELAY
  
- 			outb(CUR_CTRL, pi->port + 2);
+-			data |= inb(pi->port + 1) & 0xB8;
++			data |= parport_read_status(pi->pardev->port) & 0xB8;
  
--			CUR_CTRL = (CUR_CTRL | port_stb) ^ data_stb;
-+			CUR_CTRL = (CUR_CTRL | PARPORT_CONTROL_STROBE) ^ PARPORT_CONTROL_INIT;
+ 			break;
+ 		}
+@@ -301,23 +295,19 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi)
+ 		case PPCMODE_BI_SW :
+ 		case PPCMODE_BI_FW :
+ 		{
+-			CUR_CTRL |= port_dir;
+-
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_data_reverse(pi->pardev->port);
  
- 			outb(CUR_CTRL, pi->port + 2);
+ 			CUR_CTRL = (CUR_CTRL | PARPORT_CONTROL_STROBE) ^ PARPORT_CONTROL_INIT;
  
- 			data = inb(pi->port);
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
  
--			CUR_CTRL &= ~port_stb;
-+			CUR_CTRL &= ~PARPORT_CONTROL_STROBE;
+-			data = inb(pi->port);
++			data = parport_read_data(pi->pardev->port);
  
- 			outb(CUR_CTRL, pi->port + 2);
+ 			CUR_CTRL &= ~PARPORT_CONTROL_STROBE;
  
-@@ -376,7 +370,8 @@ static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
- 			{
- 				u8 d;
+-			outb(CUR_CTRL, pi->port + 2);
+-
+-			CUR_CTRL &= ~port_dir;
++			parport_write_control(pi->pardev->port, CUR_CTRL);
  
--				CUR_CTRL = (CUR_CTRL & ~port_stb) ^ data_stb;
-+				CUR_CTRL = (CUR_CTRL & ~PARPORT_CONTROL_STROBE)
-+							^ PARPORT_CONTROL_INIT;
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_data_forward(pi->pardev->port);
  
- 				outb(CUR_CTRL, pi->port + 2);
+ 			break;
+ 		}
+@@ -326,11 +316,7 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi)
+ 		case PPCMODE_EPP_WORD :
+ 		case PPCMODE_EPP_DWORD :
+ 		{
+-			outb((CUR_CTRL | port_dir), pi->port + 2);
+-
+-			data = inb(pi->port + 4);
+-
+-			outb(CUR_CTRL, pi->port + 2);
++			pi->pardev->port->ops->epp_read_data(pi->pardev->port, &data, 1, 0);
  
-@@ -386,7 +381,7 @@ static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 			break;
+ 		}
+@@ -373,21 +359,21 @@ static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 				CUR_CTRL = (CUR_CTRL & ~PARPORT_CONTROL_STROBE)
+ 							^ PARPORT_CONTROL_INIT;
+ 
+-				outb(CUR_CTRL, pi->port + 2);
++				parport_write_control(pi->pardev->port, CUR_CTRL);
+ 
+ 				// DELAY
+ 
+-				d = inb(pi->port + 1);
++				d = parport_read_status(pi->pardev->port);
  
  				d = ((d & 0x80) >> 1) | ((d & 0x38) >> 3);
  
--				CUR_CTRL |= port_stb;
-+				CUR_CTRL |= PARPORT_CONTROL_STROBE;
+ 				CUR_CTRL |= PARPORT_CONTROL_STROBE;
  
- 				outb(CUR_CTRL, pi->port + 2);
+-				outb(CUR_CTRL, pi->port + 2);
++				parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -408,11 +403,11 @@ static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 				// DELAY
  
- 			outb(CUR_CTRL, pi->port + 2);
+-				d |= inb(pi->port + 1) & 0xB8;
++				d |= parport_read_status(pi->pardev->port) & 0xB8;
  
--			CUR_CTRL |= port_stb;
-+			CUR_CTRL |= PARPORT_CONTROL_STROBE;
+ 				*data++ = d;
+ 				count--;
+@@ -399,9 +385,7 @@ static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 		case PPCMODE_BI_SW :
+ 		case PPCMODE_BI_FW :
+ 		{
+-			CUR_CTRL |= port_dir;
+-
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_data_reverse(pi->pardev->port);
  
- 			while(count)
+ 			CUR_CTRL |= PARPORT_CONTROL_STROBE;
+ 
+@@ -409,84 +393,47 @@ static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
  			{
--				CUR_CTRL ^= data_stb;
-+				CUR_CTRL ^= PARPORT_CONTROL_INIT;
+ 				CUR_CTRL ^= PARPORT_CONTROL_INIT;
  
- 				outb(CUR_CTRL, pi->port + 2);
+-				outb(CUR_CTRL, pi->port + 2);
++				parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -420,7 +415,7 @@ static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
+-				*data++ = inb(pi->port);
++				*data++ = parport_read_data(pi->pardev->port);
  				count--;
  			}
  
--			CUR_CTRL &= ~port_stb;
-+			CUR_CTRL &= ~PARPORT_CONTROL_STROBE;
+ 			CUR_CTRL &= ~PARPORT_CONTROL_STROBE;
  
- 			outb(CUR_CTRL, pi->port + 2);
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -525,7 +520,7 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
+-			CUR_CTRL &= ~port_dir;
+-
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_data_forward(pi->pardev->port);
+ 
+ 			break;
+ 		}
+ 
+ 		case PPCMODE_EPP_BYTE :
+ 		{
+-			outb((CUR_CTRL | port_dir), pi->port + 2);
+-
+ 			// DELAY
+ 
+-			while(count)
+-			{
+-				*data++ = inb(pi->port + 4);
+-				count--;
+-			}
+-
+-			outb(CUR_CTRL, pi->port + 2);
++			pi->pardev->port->ops->epp_read_data(pi->pardev->port,
++					data, count, PARPORT_EPP_FAST_8);
+ 
+ 			break;
+ 		}
+ 
+ 		case PPCMODE_EPP_WORD :
+ 		{
+-			outb((CUR_CTRL | port_dir), pi->port + 2);
+-
+ 			// DELAY
+ 
+-			while(count > 1)
+-			{
+-				*((u16 *)data) = inw(pi->port + 4);
+-				data  += 2;
+-				count -= 2;
+-			}
+-
+-			while(count)
+-			{
+-				*data++ = inb(pi->port + 4);
+-				count--;
+-			}
+-
+-			outb(CUR_CTRL, pi->port + 2);
++			pi->pardev->port->ops->epp_read_data(pi->pardev->port,
++					data, count, PARPORT_EPP_FAST_16);
+ 
+ 			break;
+ 		}
+ 
+ 		case PPCMODE_EPP_DWORD :
+ 		{
+-			outb((CUR_CTRL | port_dir), pi->port + 2);
+-
+ 			// DELAY
+ 
+-			while(count > 3)
+-			{
+-				*((u32 *)data) = inl(pi->port + 4);
+-				data  += 4;
+-				count -= 4;
+-			}
+-
+-			while(count)
+-			{
+-				*data++ = inb(pi->port + 4);
+-				count--;
+-			}
+-
+-			outb(CUR_CTRL, pi->port + 2);
++			pi->pardev->port->ops->epp_read_data(pi->pardev->port,
++					data, count, PARPORT_EPP_FAST_32);
+ 
+ 			break;
+ 		}
+@@ -503,7 +450,7 @@ static void ppc6_wait_for_fifo(struct pi_adapter *pi)
+ 	if (PPC_FLAGS & fifo_wait)
+ 	{
+ 		for(i=0; i<20; i++)
+-			inb(pi->port + 1);
++			parport_read_status(pi->pardev->port);
+ 	}
+ }
+ 
+@@ -518,11 +465,11 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 		{
+ 			while(count--)
  			{
- 				outb(*data++, pi->port);
+-				outb(*data++, pi->port);
++				parport_write_data(pi->pardev->port, *data++);
  
--				CUR_CTRL ^= data_stb;
-+				CUR_CTRL ^= PARPORT_CONTROL_INIT;
+ 				CUR_CTRL ^= PARPORT_CONTROL_INIT;
  
- 				outb(CUR_CTRL, pi->port + 2);
+-				outb(CUR_CTRL, pi->port + 2);
++				parport_write_control(pi->pardev->port, CUR_CTRL);
  			}
-@@ -540,7 +535,7 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
  
- 			ppc6_send_cmd(pi, CMD_PREFIX_SET | PREFIX_FASTWR);
+ 			break;
+@@ -537,11 +484,11 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
  
--			CUR_CTRL |= port_stb;
-+			CUR_CTRL |= PARPORT_CONTROL_STROBE;
+ 			CUR_CTRL |= PARPORT_CONTROL_STROBE;
  
- 			outb(CUR_CTRL, pi->port + 2);
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
  
-@@ -555,7 +550,7 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 			last = *data;
  
- 				if (this == last)
+-			outb(last, pi->port);
++			parport_write_data(pi->pardev->port, last);
+ 
+ 			while(count)
+ 			{
+@@ -552,11 +499,11 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
  				{
--					CUR_CTRL ^= data_stb;
-+					CUR_CTRL ^= PARPORT_CONTROL_INIT;
+ 					CUR_CTRL ^= PARPORT_CONTROL_INIT;
  
- 					outb(CUR_CTRL, pi->port + 2);
+-					outb(CUR_CTRL, pi->port + 2);
++					parport_write_control(pi->pardev->port, CUR_CTRL);
  				}
-@@ -567,7 +562,7 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 				else
+ 				{
+-					outb(this, pi->port);
++					parport_write_data(pi->pardev->port, this);
+ 
+ 					last = this;
  				}
- 			}
+@@ -564,7 +511,7 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
  
--			CUR_CTRL &= ~port_stb;
-+			CUR_CTRL &= ~PARPORT_CONTROL_STROBE;
+ 			CUR_CTRL &= ~PARPORT_CONTROL_STROBE;
  
- 			outb(CUR_CTRL, pi->port + 2);
+-			outb(CUR_CTRL, pi->port + 2);
++			parport_write_control(pi->pardev->port, CUR_CTRL);
+ 
+ 			ppc6_send_cmd(pi, CMD_PREFIX_RESET | PREFIX_FASTWR);
+ 
+@@ -573,11 +520,8 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 
+ 		case PPCMODE_EPP_BYTE :
+ 		{
+-			while(count)
+-			{
+-				outb(*data++, pi->port + 4);
+-				count--;
+-			}
++			pi->pardev->port->ops->epp_write_data(pi->pardev->port,
++					data, count, PARPORT_EPP_FAST_8);
+ 
+ 			ppc6_wait_for_fifo(pi);
+ 
+@@ -586,18 +530,8 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 
+ 		case PPCMODE_EPP_WORD :
+ 		{
+-			while(count > 1)
+-			{
+-				outw(*((u16 *)data), pi->port + 4);
+-				data  += 2;
+-				count -= 2;
+-			}
+-
+-			while(count)
+-			{
+-				outb(*data++, pi->port + 4);
+-				count--;
+-			}
++			pi->pardev->port->ops->epp_write_data(pi->pardev->port,
++					data, count, PARPORT_EPP_FAST_16);
+ 
+ 			ppc6_wait_for_fifo(pi);
+ 
+@@ -606,18 +540,8 @@ static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count)
+ 
+ 		case PPCMODE_EPP_DWORD :
+ 		{
+-			while(count > 3)
+-			{
+-				outl(*((u32 *)data), pi->port + 4);
+-				data  += 4;
+-				count -= 4;
+-			}
+-
+-			while(count)
+-			{
+-				outb(*data++, pi->port + 4);
+-				count--;
+-			}
++			pi->pardev->port->ops->epp_write_data(pi->pardev->port,
++					data, count, PARPORT_EPP_FAST_32);
+ 
+ 			ppc6_wait_for_fifo(pi);
  
 -- 
 Ondrej Zary
