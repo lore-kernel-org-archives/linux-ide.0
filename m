@@ -2,23 +2,23 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA0F9C74A44
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Mar 2023 22:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 194C7C74A5B
+	for <linux-ide@archiver.kernel.org>; Tue,  7 Mar 2023 22:48:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231819AbjCGWsH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Mar 2023 17:48:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33438 "EHLO
+        id S231829AbjCGWsI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 7 Mar 2023 17:48:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231555AbjCGWrV (ORCPT
+        with ESMTP id S231600AbjCGWrV (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2023 17:47:21 -0500
 Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8426B9CBE4;
-        Tue,  7 Mar 2023 14:47:07 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8B33D2ED57;
+        Tue,  7 Mar 2023 14:47:08 -0800 (PST)
 Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id F351D7A0742;
-        Tue,  7 Mar 2023 23:46:49 +0100 (CET)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 734E07A0756;
+        Tue,  7 Mar 2023 23:46:50 +0100 (CET)
 From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>
@@ -27,9 +27,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
         linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 20/32] pata_parport-bpck6: merge ppc6_rd_data_blk into bpck6_read_block
-Date:   Tue,  7 Mar 2023 23:46:15 +0100
-Message-Id: <20230307224627.28011-21-linux@zary.sk>
+Subject: [PATCH 25/32] pata_parport-bpck6: merge ppc6_select into bpck6_open
+Date:   Tue,  7 Mar 2023 23:46:20 +0100
+Message-Id: <20230307224627.28011-26-linux@zary.sk>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20230307224627.28011-1-linux@zary.sk>
 References: <20230307224627.28011-1-linux@zary.sk>
@@ -39,184 +39,180 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-ppc6_rd_data_blk is only called by bpck6_read_block. Merge
-ppc6_rd_data_blk into bpck6_read_block.
+ppc6_select is only called by bpck6_open. Merge ppc6_select into
+bpck6_open.
 
 Signed-off-by: Ondrej Zary <linux@zary.sk>
 ---
- drivers/ata/pata_parport/bpck6.c   | 49 +++++++++++++++-
- drivers/ata/pata_parport/ppc6lnx.c | 91 ------------------------------
- 2 files changed, 48 insertions(+), 92 deletions(-)
+ drivers/ata/pata_parport/bpck6.c   | 68 ++++++++++++++++++++++++------
+ drivers/ata/pata_parport/ppc6lnx.c | 66 -----------------------------
+ 2 files changed, 55 insertions(+), 79 deletions(-)
 
 diff --git a/drivers/ata/pata_parport/bpck6.c b/drivers/ata/pata_parport/bpck6.c
-index 1c04fcaba74a..d379603424ff 100644
+index 02f16dedfd29..9b05e1c827cd 100644
 --- a/drivers/ata/pata_parport/bpck6.c
 +++ b/drivers/ata/pata_parport/bpck6.c
-@@ -57,7 +57,54 @@ static void bpck6_read_block(struct pi_adapter *pi, char *buf, int len)
+@@ -176,21 +176,63 @@ static void bpck6_read_block(struct pi_adapter *pi, char *buf, int len)
  
- 	ppc6_send_cmd(pi, CMD_PREFIX_SET | PREFIX_IO16 | PREFIX_BLK);
- 	ppc6_send_cmd(pi, ATA_REG_DATA | ACCESS_PORT | ACCESS_READ);
--	ppc6_rd_data_blk(pi, buf, len);
+ static int bpck6_open(struct pi_adapter *pi)
+ {
+-	int ret = ppc6_select(pi);
+-
+-	if (ret == 0)
+-		return ret;
+-
+-	pi->private = 0;
+-
+-	ppc6_send_cmd(pi, ACCESS_REG | ACCESS_WRITE | REG_RAMSIZE);
+-	ppc6_wr_data_byte(pi, RAMSIZE_128K);
++	u8 i, j, k;
 +
-+	switch (mode_map[pi->mode]) {
-+	case PPCMODE_UNI_SW:
-+	case PPCMODE_UNI_FW:
-+		while (len) {
-+			u8 d;
++	pi->saved_r0 = parport_read_data(pi->pardev->port);
++	pi->saved_r2 = parport_read_control(pi->pardev->port) & 0x5F;
 +
-+			parport_frob_control(pi->pardev->port,
-+					PARPORT_CONTROL_STROBE,
-+					PARPORT_CONTROL_INIT); /* DATA STROBE */
-+			d = parport_read_status(pi->pardev->port);
-+			d = ((d & 0x80) >> 1) | ((d & 0x38) >> 3);
-+			parport_frob_control(pi->pardev->port,
-+					PARPORT_CONTROL_STROBE,
-+					PARPORT_CONTROL_STROBE);
-+			d |= parport_read_status(pi->pardev->port) & 0xB8;
-+			*buf++ = d;
-+			len--;
++	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_SELECT,
++						PARPORT_CONTROL_SELECT);
++	if (pi->saved_r0 == 'b')
++		parport_write_data(pi->pardev->port, 'x');
++	parport_write_data(pi->pardev->port, 'b');
++	parport_write_data(pi->pardev->port, 'p');
++	parport_write_data(pi->pardev->port, pi->unit);
++	parport_write_data(pi->pardev->port, ~pi->unit);
++
++	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_SELECT, 0);
++	parport_write_control(pi->pardev->port, PARPORT_CONTROL_INIT);
++
++	i = mode_map[pi->mode] & 0x0C;
++	if (i == 0)
++		i = (mode_map[pi->mode] & 2) | 1;
++	parport_write_data(pi->pardev->port, i);
++
++	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_SELECT,
++						PARPORT_CONTROL_SELECT);
++	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_AUTOFD,
++						PARPORT_CONTROL_AUTOFD);
++
++	j = ((i & 0x08) << 4) | ((i & 0x07) << 3);
++	k = parport_read_status(pi->pardev->port) & 0xB8;
++	if (j == k) {
++		parport_frob_control(pi->pardev->port, PARPORT_CONTROL_AUTOFD, 0);
++		k = (parport_read_status(pi->pardev->port) & 0xB8) ^ 0xB8;
++		if (j == k) {
++			if (i & 4)	// EPP
++				parport_frob_control(pi->pardev->port,
++					PARPORT_CONTROL_SELECT | PARPORT_CONTROL_INIT, 0);
++			else				// PPC/ECP
++				parport_frob_control(pi->pardev->port,
++					PARPORT_CONTROL_SELECT, 0);
++
++			pi->private = 0;
++
++			ppc6_send_cmd(pi, ACCESS_REG | ACCESS_WRITE | REG_RAMSIZE);
++			ppc6_wr_data_byte(pi, RAMSIZE_128K);
++
++			ppc6_send_cmd(pi, ACCESS_REG | ACCESS_READ | REG_VERSION);
++			if ((ppc6_rd_data_byte(pi) & 0x3F) == 0x0C)
++				pi->private |= fifo_wait;
++
++			return 1;
 +		}
-+		break;
-+	case PPCMODE_BI_SW:
-+	case PPCMODE_BI_FW:
-+		parport_data_reverse(pi->pardev->port);
-+		while (len) {
-+			parport_frob_control(pi->pardev->port,
-+				PARPORT_CONTROL_STROBE,
-+				PARPORT_CONTROL_STROBE | PARPORT_CONTROL_INIT);
-+			*buf++ = parport_read_data(pi->pardev->port);
-+			len--;
-+		}
-+		parport_frob_control(pi->pardev->port, PARPORT_CONTROL_STROBE,
-+					0);
-+		parport_data_forward(pi->pardev->port);
-+		break;
-+	case PPCMODE_EPP_BYTE:
-+		pi->pardev->port->ops->epp_read_data(pi->pardev->port, buf, len,
-+						PARPORT_EPP_FAST_8);
-+		break;
-+	case PPCMODE_EPP_WORD:
-+		pi->pardev->port->ops->epp_read_data(pi->pardev->port, buf, len,
-+						PARPORT_EPP_FAST_16);
-+		break;
-+	case PPCMODE_EPP_DWORD:
-+		pi->pardev->port->ops->epp_read_data(pi->pardev->port, buf, len,
-+						PARPORT_EPP_FAST_32);
-+		break;
 +	}
-+
- 	ppc6_send_cmd(pi, CMD_PREFIX_RESET | PREFIX_IO16 | PREFIX_BLK);
+ 
+-	ppc6_send_cmd(pi, ACCESS_REG | ACCESS_READ | REG_VERSION);
+-	if ((ppc6_rd_data_byte(pi) & 0x3F) == 0x0C)
+-		pi->private |= fifo_wait;
++	parport_write_control(pi->pardev->port, pi->saved_r2);
++	parport_write_data(pi->pardev->port, pi->saved_r0);
+ 
+-	return ret;
++	return 0; // FAIL
  }
  
+ static void bpck6_wr_extout(struct pi_adapter *pi, u8 regdata)
 diff --git a/drivers/ata/pata_parport/ppc6lnx.c b/drivers/ata/pata_parport/ppc6lnx.c
-index d275de3f1ead..679261e19ac5 100644
+index a902ede5ecc5..16d0497dfeaa 100644
 --- a/drivers/ata/pata_parport/ppc6lnx.c
 +++ b/drivers/ata/pata_parport/ppc6lnx.c
-@@ -72,7 +72,6 @@ static void ppc6_deselect(struct pi_adapter *pi);
- static void ppc6_send_cmd(struct pi_adapter *pi, u8 cmd);
- static void ppc6_wr_data_byte(struct pi_adapter *pi, u8 data);
- static u8 ppc6_rd_data_byte(struct pi_adapter *pi);
--static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count);
- static void ppc6_wait_for_fifo(struct pi_adapter *pi);
- static void ppc6_wr_data_blk(struct pi_adapter *pi, u8 *data, long count);
- static void ppc6_wr_extout(struct pi_adapter *pi, u8 regdata);
-@@ -284,96 +283,6 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi)
+@@ -67,7 +67,6 @@
  
  //***************************************************************************
  
--static void ppc6_rd_data_blk(struct pi_adapter *pi, u8 *data, long count)
+-static int ppc6_select(struct pi_adapter *pi);
+ static void ppc6_deselect(struct pi_adapter *pi);
+ static void ppc6_send_cmd(struct pi_adapter *pi, u8 cmd);
+ static void ppc6_wr_data_byte(struct pi_adapter *pi, u8 data);
+@@ -78,71 +77,6 @@ static u8 ppc6_rd_data_byte(struct pi_adapter *pi);
+ int mode_map[] = { PPCMODE_UNI_FW, PPCMODE_BI_FW, PPCMODE_EPP_BYTE,
+ 		   PPCMODE_EPP_WORD, PPCMODE_EPP_DWORD };
+ 
+-static int ppc6_select(struct pi_adapter *pi)
 -{
--	switch (mode_map[pi->mode])
+-	u8 i, j, k;
+-
+-	pi->saved_r0 = parport_read_data(pi->pardev->port);
+-
+-	pi->saved_r2 = parport_read_control(pi->pardev->port) & 0x5F; // readback ctrl
+-
+-	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_SELECT, PARPORT_CONTROL_SELECT);
+-
+-	if (pi->saved_r0 == 'b')
+-		parport_write_data(pi->pardev->port, 'x');
+-
+-	parport_write_data(pi->pardev->port, 'b');
+-	parport_write_data(pi->pardev->port, 'p');
+-	parport_write_data(pi->pardev->port, pi->unit);
+-	parport_write_data(pi->pardev->port, ~pi->unit);
+-
+-	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_SELECT, 0);
+-
+-	parport_write_control(pi->pardev->port, PARPORT_CONTROL_INIT);
+-
+-	i = mode_map[pi->mode] & 0x0C;
+-
+-	if (i == 0)
+-		i = (mode_map[pi->mode] & 2) | 1;
+-
+-	parport_write_data(pi->pardev->port, i);
+-
+-	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_SELECT, PARPORT_CONTROL_SELECT);
+-
+-	// DELAY
+-
+-	parport_frob_control(pi->pardev->port, PARPORT_CONTROL_AUTOFD, PARPORT_CONTROL_AUTOFD);
+-
+-	j = ((i & 0x08) << 4) | ((i & 0x07) << 3);
+-
+-	k = parport_read_status(pi->pardev->port) & 0xB8;
+-
+-	if (j == k)
 -	{
--		case PPCMODE_UNI_SW :
--		case PPCMODE_UNI_FW :
--		{
--			while(count)
--			{
--				u8 d;
+-		parport_frob_control(pi->pardev->port, PARPORT_CONTROL_AUTOFD, 0);
 -
+-		k = (parport_read_status(pi->pardev->port) & 0xB8) ^ 0xB8;
+-
+-		if (j == k)
+-		{
+-			if (i & 4)	// EPP
 -				parport_frob_control(pi->pardev->port,
--					PARPORT_CONTROL_STROBE, PARPORT_CONTROL_INIT);
--
--				// DELAY
--
--				d = parport_read_status(pi->pardev->port);
--
--				d = ((d & 0x80) >> 1) | ((d & 0x38) >> 3);
--
+-					PARPORT_CONTROL_SELECT | PARPORT_CONTROL_INIT, 0);
+-			else				// PPC/ECP
 -				parport_frob_control(pi->pardev->port,
--					PARPORT_CONTROL_STROBE, PARPORT_CONTROL_STROBE);
+-					PARPORT_CONTROL_SELECT, 0);
 -
--				// DELAY
--
--				d |= parport_read_status(pi->pardev->port) & 0xB8;
--
--				*data++ = d;
--				count--;
--			}
--
--			break;
--		}
--
--		case PPCMODE_BI_SW :
--		case PPCMODE_BI_FW :
--		{
--			parport_data_reverse(pi->pardev->port);
--
--			while(count)
--			{
--				parport_frob_control(pi->pardev->port, PARPORT_CONTROL_STROBE,
--					PARPORT_CONTROL_STROBE | PARPORT_CONTROL_INIT);
--
--				*data++ = parport_read_data(pi->pardev->port);
--				count--;
--			}
--
--			parport_frob_control(pi->pardev->port, PARPORT_CONTROL_STROBE, 0);
--
--			parport_data_forward(pi->pardev->port);
--
--			break;
--		}
--
--		case PPCMODE_EPP_BYTE :
--		{
--			// DELAY
--
--			pi->pardev->port->ops->epp_read_data(pi->pardev->port,
--					data, count, PARPORT_EPP_FAST_8);
--
--			break;
--		}
--
--		case PPCMODE_EPP_WORD :
--		{
--			// DELAY
--
--			pi->pardev->port->ops->epp_read_data(pi->pardev->port,
--					data, count, PARPORT_EPP_FAST_16);
--
--			break;
--		}
--
--		case PPCMODE_EPP_DWORD :
--		{
--			// DELAY
--
--			pi->pardev->port->ops->epp_read_data(pi->pardev->port,
--					data, count, PARPORT_EPP_FAST_32);
--
--			break;
+-			return(1);
 -		}
 -	}
 -
+-	parport_write_control(pi->pardev->port, pi->saved_r2);
+-
+-	parport_write_data(pi->pardev->port, pi->saved_r0);
+-
+-	return(0); // FAIL
 -}
 -
--//***************************************************************************
--
- static void ppc6_wait_for_fifo(struct pi_adapter *pi)
- {
- 	int i;
+ //***************************************************************************
+ 
+ static void ppc6_deselect(struct pi_adapter *pi)
 -- 
 Ondrej Zary
 
