@@ -2,81 +2,82 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7540CC678DB
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Mar 2023 09:48:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC0B3C6FD1F
+	for <linux-ide@archiver.kernel.org>; Tue,  7 Mar 2023 10:43:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230506AbjCGJsL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Mar 2023 04:48:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43006 "EHLO
+        id S230194AbjCGKnD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 7 Mar 2023 05:43:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230464AbjCGJrt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2023 04:47:49 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1512354C87
-        for <linux-ide@vger.kernel.org>; Tue,  7 Mar 2023 01:47:32 -0800 (PST)
+        with ESMTP id S229744AbjCGKnA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2023 05:43:00 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBBE059D7
+        for <linux-ide@vger.kernel.org>; Tue,  7 Mar 2023 02:42:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1678182451; x=1709718451;
+  t=1678185778; x=1709721778;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=XAMMJ4e2XknIezt+JVgJt5gbEedpXSXNtv9cd7WBDBw=;
-  b=reUszstGTMC5+0FbXrnVcWT3FvmR0rXeiTs3pWlMcC3bluyRorWQhAmT
-   hwEUIHr85BqmABOMebd5glNZMKHagB5V/GH9qzDIl9DvNx1D/39fktT0Z
-   3Vl5Sqc+VLTPkF0/dQh9TeTz7bc8U8wqvSY1Qin7pyVyuUWs094AaYq2c
-   vWr3QoZVzTr3bQRHpIgknRFr5aiwtkqQAps97uS/Qfy0jZ43UlrTnp7nP
-   RM9epbIxlPPKumYLYn9BcX999aQSXh+ij4kt9ls7IWlkPqG4QFU3lUiAA
-   QaPz0W1VePi/JP9JR2vwU6whV5fUXkPssNawuK0IlZeOec49roEsk5+U3
-   g==;
+  bh=+LVO3F5En6AqL41D+hH/tg3GKjgWE12xa9SmTfU53w4=;
+  b=IbbRUjXreFmumgTsTvcYdW4ICjY+asglw0Yi0RkHx7aoSUNIw08W3Dtr
+   qXZsXNheJB+eJp1vUI97MPEB/QYrwquEYCnEYmdfHK+ddcDUMq61c3i5J
+   x/UAYwTuD5ZkvDVY5qqdWqw72d5jYSmGSEawhDP0ZUaTD1kDFJNYgMcc8
+   mCRILMqdmClu2AqF7LJrskbFYa1r9z+ohb6NTow6xh3duimGcsCfbJ0Ox
+   Ce+ZC+fihL2/FLa7E95AgRUcahOE5jUwmt9l+9T4gThhDpvb59A3Dv+Gr
+   XwBMgCASbVnDzde47Q6QkHg85ddFlS9iI9Nida0RszNcQdUx7JSJBl/ax
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.98,240,1673884800"; 
-   d="scan'208";a="223281644"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Mar 2023 17:47:14 +0800
-IronPort-SDR: JGolZqRK9nAd2/41M8znoSjqm7NVsJhFjKXAUyzARnCv+uejKZ7lO6639x74id+V01y2A7FQbb
- 73NCswF/y1S7TNtQdThohZmyBaasgWCpOlkw+2fisxhEdi+5ga3epRM97Q+J5dt+AWVAtoOV5h
- jkGKwszPzSMwwy3vv2pJktgh1E9BG8gjJ5XwvE+zXD+azB6xwmP7S0/2JxyplkHUEBAoJozF35
- lOAO6b6ePw5WYnYrBh7zZN8JRX5NItujD6ZH6Vn3k1/wTxP0HbWE/1C+zPlK0NEkUI1JoSix4G
- Xuc=
+   d="scan'208";a="224997658"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Mar 2023 18:42:56 +0800
+IronPort-SDR: 5Yi37gH1+VGbJpbkRU3OtbwGSXOqjAe3jWmD5OAOXGpqihF1XLkNtAc2S26zhszQb9aeQobCqQ
+ dxiP9SeEM4yHB3vH3dJPsBukcDCcZP45glAF7+qqygTPe/CTcSM7OsJFwfa4Aa6u4weJlU1Ta/
+ OcXuQZYQQg5uZsJL2yW1f0SYMBX9I2N4MKcV5nzc/pE1uDMB3K4fl6pV8lydZtjOqhg8w4vlaK
+ yFZ3I55l3rliSlDOXLepDoeZjeKqt3wzWs1SG3btHWX4o0tOIto/8ZAGdzcAqC7KpzEinkzl8N
+ 4v4=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Mar 2023 01:03:53 -0800
-IronPort-SDR: Oa9+mwSbfKgGpWfV//9kaVs/pBsq4MTH4girnjCgPR4Ct6rBO55ENdmfG6mjFd+vMKrZBmhnL7
- +QqjKZ8q93pHuPiJUr7GcCvTb5UWAfn0ooHp32Uxgr9a8WW1iS98g3mz0eAiLXJLAhZnnWoBZj
- TVasHiCURmD2//bUOMf0W7gw37wFcEWirvL8G7l8F5FUdiWDW9VvpiN9hhZUIlca1vaHYcgH+z
- Fc5t0/NrgHLj+sqfDCDsivvCG7wXWp6HviU6sLTRDH/9VZISLhvPsKh779s/LA33GqT34YE6CC
- iq0=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Mar 2023 01:53:54 -0800
+IronPort-SDR: TWgjjWQ/P8KyVUZo3NWxRBPlxtQa9CiLn3AIVi9GdwUXhj4HBqRDI+SVmshw4zXi7H22dvRtpO
+ WXs4KXKu/kGySv4uJuvM7Z/TNXRV3UqGW7dqt79zAT/IK36/DNupJoY4yOvlHO7Kr/9jhA5l9K
+ 5UMrSnhtwjFsXr0M6y21xx5nH5k2+v3UBRM/eMO5N3jT6uhgNZ8fFSWqgi8lrRCgGTJaWC79fC
+ r1fhT4VUBIqAxTbkCdmquWQ0Z0jmw6yUvikfbLApKiAQkk5ycVDLU3tZchd89eGTfHJ2nW8XwL
+ j1o=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Mar 2023 01:47:14 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 07 Mar 2023 02:42:56 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PW9b55YrFz1Rwtm
-        for <linux-ide@vger.kernel.org>; Tue,  7 Mar 2023 01:47:13 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PWBqM5HnBz1RwtC
+        for <linux-ide@vger.kernel.org>; Tue,  7 Mar 2023 02:42:55 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:content-language:references:to
+        :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1678182432; x=1680774433; bh=XAMMJ4e2XknIezt+JVgJt5gbEedpXSXNtv9
-        cd7WBDBw=; b=Xe9/lQm/zSq85O2a6WTvXvqJTNvEAfCFQdNv1RDWR4Ny7PKt50l
-        qKhUWmF00BpvOvW7QP5RM7espGYErO/tyuuFclV0quf1nuirs4Ioy0B8E/OTm+cD
-        QhzW5YqWenPEfzo8GNNDltyTrXjrNTeTcNLzT59inQ0N7IF7Mwmnq5VSYphB6+4W
-        67zE2imAYtxXP/Jg3NXo62wwFUFSw0jYtZmdyB1zogSPyQ7Dgp/9F26bXBW9o6OA
-        JtZHbOzSu1fQnmXuywzqgmYd+HxZHdzQyUJKSDzQLMwvnuNAcg2H8aOO7ILqqvPs
-        cV4tOvjWKObdWPF7tU06W9jKHuDpQOWXBPQ==
+        1678185775; x=1680777776; bh=+LVO3F5En6AqL41D+hH/tg3GKjgWE12xa9S
+        mTfU53w4=; b=QnGK3Wk9GsSyj5KfqDrTjG++jMnDI2lAxJHYL0K4FLtLPUJmdwa
+        TK+jMfwx7EJFzWvYcyNbTKHm5iIwQpu7bcgtjNQlONKObRr0mIGowkNfnpW4g+hN
+        soQ2fWLjczlYucbDnE/cvkrguMu/H6itKptiiETR2QrMw50JABCJliVmhL+hJAkr
+        PlATr9FExwRk3oAPNjd9koO25F9dVy0W783Ut69QwfXbzWjGLAUkyGueat7WE2a9
+        exnoxwwmIKj7ixqBfM2WWKwlqwbISXFAG7aw7b4eG9DUXdkNWJfyWoJ9v2QtznXf
+        rmvD8b5vydQb5nVqSsbh818Y1xkPELII46Q==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id t-y4oitnQRvc for <linux-ide@vger.kernel.org>;
-        Tue,  7 Mar 2023 01:47:12 -0800 (PST)
+        with ESMTP id VMBtiZNlo1RB for <linux-ide@vger.kernel.org>;
+        Tue,  7 Mar 2023 02:42:55 -0800 (PST)
 Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PW9b31JKZz1RvLy;
-        Tue,  7 Mar 2023 01:47:10 -0800 (PST)
-Message-ID: <9e0c0ae6-0059-36dc-7cab-6b7e588c560c@opensource.wdc.com>
-Date:   Tue, 7 Mar 2023 18:47:09 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PWBqK3WwWz1RvLy;
+        Tue,  7 Mar 2023 02:42:53 -0800 (PST)
+Message-ID: <e5ed284a-77ac-df6d-1473-e4d96955f65b@opensource.wdc.com>
+Date:   Tue, 7 Mar 2023 19:42:51 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.8.0
 Subject: Re: [PATCH v4] dt-bindings: ata: Add UniPhier controller binding
+Content-Language: en-US
 To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -88,7 +89,6 @@ Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
 References: <20230222155906.19403-1-hayashi.kunihiko@socionext.com>
  <9d36818f-3ce3-0fb6-1a3e-85e3879af08c@opensource.wdc.com>
  <a6425bde-5b6d-2fb2-2396-a35677b19e8f@linaro.org>
-Content-Language: en-US
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
 In-Reply-To: <a6425bde-5b6d-2fb2-2396-a35677b19e8f@linaro.org>
@@ -114,8 +114,12 @@ On 3/7/23 17:13, Krzysztof Kozlowski wrote:
 > 
 > You got Review (which includes also "Ack"), what are you missing here?
 
-Just checking with Rob as he is the DT maintainer. Out of courtesy.
-I will queue that patch then.
+By the way, I am not seeing/have not received any Ack. Hence why I checked with Rob.
+
+> 
+> Best regards,
+> Krzysztof
+> 
 
 -- 
 Damien Le Moal
