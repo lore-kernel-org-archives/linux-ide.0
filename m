@@ -2,114 +2,90 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96782C64EC4
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Mar 2023 08:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8404AC64EC4
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Mar 2023 10:28:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbjCHItg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Mar 2023 03:49:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60898 "EHLO
+        id S230517AbjCHK2r (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Mar 2023 05:28:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230211AbjCHItZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Mar 2023 03:49:25 -0500
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BFC798E98
-        for <linux-ide@vger.kernel.org>; Wed,  8 Mar 2023 00:49:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1678265354; x=1709801354;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=x1g6KQIf6mq6mxi3VGvVhexXGqywvU+LYyvu/s+U7WE=;
-  b=aeTMr8tpqTZnhx5iePOWTuRLp3hj34dFXeLM3679lRElDtTpjSprtqOa
-   JVKvNrWFJW7if43sOyquVJMx9+C9N4ExpH3HoI4Rv7JBjmjKDQioQyvjf
-   8zGACfP21bVWMRAoKJZluDayCw0A8aG4cVbfsLVmwrARexyn6qK5/P+Wi
-   hSBvh3Llqu0K0mXSeu998HBoS3Z2V57kiZeRHb4Or/z/h9PcD6clUuKGy
-   bC4asdFPxUokyiNxxvcAw2jflJxuAIkxTq3IdjeFEy1IKW1hROpqGynmY
-   Nhkg+1bcV7VP5kvU3iUX9vlDWVbjQOIL5ACojgbpaNWAb1TThxse33fOi
-   A==;
-X-IronPort-AV: E=Sophos;i="5.98,243,1673884800"; 
-   d="scan'208";a="329448361"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Mar 2023 16:49:13 +0800
-IronPort-SDR: cbsvrnjVYPVQAq18iWa/zTlX4LcGZr/blmzFrkezWV+2huqVzWXPUtCr5bQQwzf3ZI9kiG8cAp
- pwpgjYJyjP40oPboToDiSGggO3EuY3j5RjjiPTT/s6Wvo6b/AVOYel7jF9mobiX6vhxe2XxK8k
- /e0sGiDDDhFr1JMIxZzHIQpnJ/x8bYhc01xajPd7aPW61zBcSXQDq+GryxPQHI+Cc+/TVRkjeI
- BWU4WKiBYgdqnJ6jQYPE99WARvPgT0eN0ZiFDBNx20S5trILmrQ13q7dc291ZG488cTr0zPqux
- y9s=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Mar 2023 00:00:10 -0800
-IronPort-SDR: gTY3souY+n7LogTGLgT6s9Tgf4zGT2eO9MYCl/eGVSQVaP1nRWMPA9IeP8xuLa5/kw+qjUBn+9
- Nfzg6d0u2h4MV2WHw7eQnb2CxY4kN2tIQgBM0N1OqnKeaQXbqAuPJ5b0DaQLKGhQn2mhlG/bR/
- O9nxa6+UnmImg+lcHiAjStmxakc19XCKBoF7OV1DlCjSLBH5k7l7UWEu3zr20MivRZg0RXWYip
- 0F3IaNNT2e7yUYrIu/A0FMTdmsXK/bB1wZDYjFKA0SeOQlNAnlZxBgzzoBWFQYycGe+/UnpOAP
- +BY=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Mar 2023 00:49:13 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PWmFh6g0Nz1RvTp
-        for <linux-ide@vger.kernel.org>; Wed,  8 Mar 2023 00:49:12 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1678265352; x=1680857353; bh=x1g6KQIf6mq6mxi3VGvVhexXGqywvU+LYyv
-        u/s+U7WE=; b=j/EpUggPR15Od6yyAzFKA2fM+z1HeVVKuYOgmG5NA8MxfoJor0q
-        0qoxI0GLxS+fZDWiy6+HfCZEpzDiRFErKrd67bbuXRrgqxW7HG0T5VeItOC5W4cq
-        xCnuU8zrazUBC4GNmhDcsV1PSin0Q/37hPcMDG9jaSIHbRPAQvHFDNvCg7dhjBJ2
-        jo3Ir0pT4nihN4B7rmliCis9F+OI2pmG33ZMSf6ruscvxb9wIhATAijD9Jgtlanm
-        ygdR3J7DHgx1x7TYryqupDe+L7hNRMkxAC8NvJLX9jfzPw0i5ZMSYho2MsCBi1H+
-        37ArJXpsjH0xClOqXbZDAdVw3lMXPsJwIDg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id b31TSBzU4D0S for <linux-ide@vger.kernel.org>;
-        Wed,  8 Mar 2023 00:49:12 -0800 (PST)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PWmFh24GCz1RvLy;
-        Wed,  8 Mar 2023 00:49:12 -0800 (PST)
-Message-ID: <34737e2c-2f2d-edf2-5afd-1228a3e8c647@opensource.wdc.com>
-Date:   Wed, 8 Mar 2023 17:49:11 +0900
+        with ESMTP id S230487AbjCHK2W (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Mar 2023 05:28:22 -0500
+Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C9EF5A6CB;
+        Wed,  8 Mar 2023 02:28:20 -0800 (PST)
+Received: by mail-lj1-x231.google.com with SMTP id f16so16040328ljq.10;
+        Wed, 08 Mar 2023 02:28:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678271298;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+PM2e55u2rWAuFlB5GNjH23zKw43jDtkXtVhBxiEPjU=;
+        b=g+Hr/wgHRNzChCV24AI87kc2NpZiOoXZNV8xwq4nZS5w56+FWkliUVb2RqVfDS4BZO
+         8x5l0Ne9KSE1YeSpAMXf/491XGTZahDnyW+OF5LSNzI5P98JJbrwTWwfYPkRUkJnNeYG
+         +Af4TOowwCL7ySTkuPfVFuQI9vE59oQX0amxznbGlObVhB3aflB05fCLlhpTh9pOPUYo
+         0S0n17rkTC5qj5uHyqfKtLzKQ/i6yu4fUE+qtMDqUU7wrL3re2zabAbBUYtG4f9jP4lA
+         +Id0Qo3BBgOChEz65poiurixsfaAMv26bybmGJgCbzh5Wl976+6C+RnfEkesg1CKRqI3
+         BgXA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678271298;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+PM2e55u2rWAuFlB5GNjH23zKw43jDtkXtVhBxiEPjU=;
+        b=aDAtSaJA5VsJ6Hh8JRz4tDeuudSivcwUJNLQbOnrPyxhO/oadvfRiOtMJmzi/etjgy
+         XQo43S6kz6kPTtIWh6gnnOcvlldf95VUX6F4kFJfAcI7EJDNjT8o+KFj9a9PbePqTxLu
+         AIk+kVLBE+JdCHwc4addFBjLMQboavehqHn/da6a0h6XwK+aQytSx69QiajZAMYPmumU
+         scAylwRwxHjQK/lm1kLrmZGiOdxh72L3PA3yp9s8hjLZPIUYMT4ra10BSlIu2jFz1Bfw
+         S/ub0AjQoDLQrOyiqjLfXP9axQCCqSIYHvdXe/0XuYi11PiBaAdtUyvdQ5T++5LD8SsM
+         iPBQ==
+X-Gm-Message-State: AO0yUKUzcYHDzHKYJwfdzzUACyjB7V+w0tIEVMOIz/fwEsKMLh8maVwd
+        e0ie5sKqUf+pLjYTlFALKvuZ305mMNE=
+X-Google-Smtp-Source: AK7set8zAN1JLxIDiwx7Z116PrzNfWnAFx+agVATcvYLkaabN8CSjIG2PJjJvw3vurZMUwS7F9nxvA==
+X-Received: by 2002:a2e:7004:0:b0:295:b0f0:cc6d with SMTP id l4-20020a2e7004000000b00295b0f0cc6dmr4752590ljc.4.1678271298052;
+        Wed, 08 Mar 2023 02:28:18 -0800 (PST)
+Received: from [192.168.1.103] ([31.173.83.210])
+        by smtp.gmail.com with ESMTPSA id u14-20020a2e91ce000000b0029597ebacd0sm2450020ljg.64.2023.03.08.02.28.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 08 Mar 2023 02:28:17 -0800 (PST)
+Subject: Re: [PATCH 01/32] pata_parport-bpck6: remove useless defines
+To:     Ondrej Zary <linux@zary.sk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230307224627.28011-1-linux@zary.sk>
+ <20230307224627.28011-2-linux@zary.sk>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <da4e2244-30ae-a518-997f-726ea3222154@gmail.com>
+Date:   Wed, 8 Mar 2023 13:28:16 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 0/2] Drop unused helpers from <linux/ata.h>
+In-Reply-To: <20230307224627.28011-2-linux@zary.sk>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <20230224204024.9982-1-s.shtylyov@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20230224204024.9982-1-s.shtylyov@omp.ru>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/25/23 05:40, Sergey Shtylyov wrote:
-> Here are 2 patches against the 'for-next' branch of Damien Le Moal's
-> 'libata.git' repo.
-> 
-> All the functions moved from drivers/ide/ (with a rename) to <linux/ata.h>
-> by Bart Z. (back then drivers/ide/ maintainer) never saw any use except by
-> drivers/ide/ -- thus, when it was removed from the kernel, these functions
-> became unused; 3 of them have been dropped by Niklas Cassel, and now I am
-> dropping 2 remaining functions...
-> 
-> Sergey Shtylyov (2):
->   ata: drop unused ata_id_to_hd_driveid()
->   ata: drop unused ata_id_is_lba_capacity_ok()
-> 
->  include/linux/ata.h | 71 ---------------------------------------------
->  1 file changed, 71 deletions(-)
-> 
+Hello!
 
-Applied to for-6.4. Thanks !
+  (Sending via my Gmail account, as the OMP SMTP server rejects mails...) 
 
--- 
-Damien Le Moal
-Western Digital Research
+On 3/8/23 1:45 AM, Ondrej Zary wrote:
 
+> Almost all the ATAPI_ defines are unused. Remove them and use
+> ATA_REG_DATA instead of ATAPI_DATA.
+> 
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+[...]
+
+MBR, Sergey
