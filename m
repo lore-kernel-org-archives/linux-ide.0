@@ -2,128 +2,125 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AC1DC6FD19
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Mar 2023 10:19:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E949BC64EC4
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Mar 2023 14:48:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230061AbjCJKTq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Mar 2023 05:19:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41944 "EHLO
+        id S232894AbjCJOsS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Mar 2023 09:48:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229876AbjCJKTp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2023 05:19:45 -0500
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4452B69CC1;
-        Fri, 10 Mar 2023 02:19:38 -0800 (PST)
-Received: from [192.168.1.103] (178.176.75.58) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 10 Mar
- 2023 13:19:29 +0300
-Subject: Re: [PATCH 04/32] pata_parport-bpck6: pass around struct pi_adapter *
-To:     Ondrej Zary <linux@zary.sk>
-CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, <linux-block@vger.kernel.org>,
-        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20230307224627.28011-1-linux@zary.sk>
- <20230307224627.28011-5-linux@zary.sk>
- <6040658f-990f-8cca-eabb-09e97e09c547@omp.ru>
- <202303092158.50217.linux@zary.sk>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <d9e601b1-8689-a438-de2d-481839ec6e97@omp.ru>
-Date:   Fri, 10 Mar 2023 13:19:29 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S232996AbjCJOra (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2023 09:47:30 -0500
+Received: from mail-oa1-f48.google.com (mail-oa1-f48.google.com [209.85.160.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71B4712117B;
+        Fri, 10 Mar 2023 06:47:13 -0800 (PST)
+Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-176b48a9a05so6135328fac.0;
+        Fri, 10 Mar 2023 06:47:13 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678459631;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=OloxL41416j0dtlZQrOwSKVoKWWxTAqOsy1vcR6cR6w=;
+        b=zoF4kDNEDYdtD8udASlTO6I6boLG0OOTU9ptoMm4On6U17+Pt0UEHI1vmECPBqJ/Fq
+         /2ZJZm4ZMLs/OBx64SjcW31GaW92sojCaBq7w/vILUuuHqWxPxgJewAK7SY0tl8CdVbf
+         TrGdP6fwKpJHqAaVeSlSQmSOSx5HQdjZiOAfGc9+q4ouzUbfLFolociaXCwWKSaHkiRG
+         eOIIcemkQ7oAiKDCuZeSLXfAUWFmYGpMREjq5wqT+peCtIqn8lFxGALej+X2JnIcJ5YF
+         f6ykthSpC0Om7AgDei1U8+6pku3Fqs8mXpl01uwfjoi4znECDnC4APvZJvNpnVgdh4Ft
+         L24g==
+X-Gm-Message-State: AO0yUKXo4jhMXUKZygTmBAA6JL/5FXpxaBNUNRTAEjMbz3lej+xz+FX1
+        irIVymhA+Je4qjNB9ywZ5Q5znpMSiw==
+X-Google-Smtp-Source: AK7set8cE4u5Ar/WSEdd16NF/1QGLSArsjjzwCLB+imXcXgcq/h7vUoNgg1qv4X2jNW3kiukcdtxwQ==
+X-Received: by 2002:a05:6870:560a:b0:16e:7440:db73 with SMTP id m10-20020a056870560a00b0016e7440db73mr17913111oao.26.1678459630847;
+        Fri, 10 Mar 2023 06:47:10 -0800 (PST)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id s26-20020a05683004da00b00694303567b0sm129607otd.29.2023.03.10.06.47.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Mar 2023 06:47:10 -0800 (PST)
+Received: (nullmailer pid 1541461 invoked by uid 1000);
+        Fri, 10 Mar 2023 14:47:00 -0000
+From:   Rob Herring <robh@kernel.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH] ata: Use of_property_present() for testing DT property presence
+Date:   Fri, 10 Mar 2023 08:47:00 -0600
+Message-Id: <20230310144700.1541414-1-robh@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-In-Reply-To: <202303092158.50217.linux@zary.sk>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.75.58]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 03/10/2023 09:59:29
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 176004 [Mar 10 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 507 507 08d345461d9bcca7095738422a5279ab257bb65a
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.75.58 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.75.58
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 03/10/2023 10:02:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 3/10/2023 7:05:00 AM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/9/23 11:58 PM, Ondrej Zary wrote:
-[...]
+It is preferred to use typed property access functions (i.e.
+of_property_read_<type> functions) rather than low-level
+of_get_property/of_find_property functions for reading properties. As
+part of this, convert of_get_property/of_find_property calls to the
+recently added of_property_present() helper when we just want to test
+for presence of a property and nothing more.
 
->>> Remove Interface typedef, pass around struct pi_adapter * down to all
->>> functions instead. Remove PPCSTRUCT define.
->>>
->>> Signed-off-by: Ondrej Zary <linux@zary.sk>
->>
->> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>
->>    I had some nit tho -- see below...
->>
->> [...]
->>
->>> diff --git a/drivers/ata/pata_parport/bpck6.c b/drivers/ata/pata_parport/bpck6.c
->>> index fa1f7d4fe3cb..bc128a2c444e 100644
->>> --- a/drivers/ata/pata_parport/bpck6.c
->>> +++ b/drivers/ata/pata_parport/bpck6.c
->> [...]
->>>  static void bpck6_connect(struct pi_adapter *pi)
->>>  {
->>> +	struct ppc_storage *ppc = (void *)(pi->private);
->>
->>    Parens around pi->private are unnecessary here and elsewhere...
->>
->> [...]
->>> diff --git a/drivers/ata/pata_parport/ppc6lnx.c b/drivers/ata/pata_parport/ppc6lnx.c
->>> index 5e5521d3b1dd..f12bb019fc61 100644
->>> --- a/drivers/ata/pata_parport/ppc6lnx.c
->>> +++ b/drivers/ata/pata_parport/ppc6lnx.c
->> [...]
->>> @@ -101,26 +101,27 @@ typedef struct ppc_storage {
->> [...]
->>>  //***************************************************************************
->>>  
->>> -static int ppc6_select(Interface *ppc)
->>> +static int ppc6_select(struct pi_adapter *pi)
->>>  {
->>> +	struct ppc_storage *ppc = (void *)(pi->private);
->>
->>    Parens around pi->private are unnecessary here and elsewhere...
-> 
-> Yes, missed that. But it's "fixed" in patch 9 by removing this code :)
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ drivers/ata/ahci_mtk.c         | 2 +-
+ drivers/ata/libahci_platform.c | 2 +-
+ drivers/ata/sata_dwc_460ex.c   | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-   Yeah, saw that later... Nevermind then. :-)
+diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
+index c056378e3e72..5714efe3f8e7 100644
+--- a/drivers/ata/ahci_mtk.c
++++ b/drivers/ata/ahci_mtk.c
+@@ -106,7 +106,7 @@ static int mtk_ahci_parse_property(struct ahci_host_priv *hpriv,
+ 	struct device_node *np = dev->of_node;
+ 
+ 	/* enable SATA function if needed */
+-	if (of_find_property(np, "mediatek,phy-mode", NULL)) {
++	if (of_property_present(np, "mediatek,phy-mode")) {
+ 		plat->mode = syscon_regmap_lookup_by_phandle(
+ 					np, "mediatek,phy-mode");
+ 		if (IS_ERR(plat->mode)) {
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index b9e336bacf17..f00da19670b0 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -363,7 +363,7 @@ static int ahci_platform_get_phy(struct ahci_host_priv *hpriv, u32 port,
+ 	switch (rc) {
+ 	case -ENOSYS:
+ 		/* No PHY support. Check if PHY is required. */
+-		if (of_find_property(node, "phys", NULL)) {
++		if (of_property_present(node, "phys")) {
+ 			dev_err(dev,
+ 				"couldn't get PHY in node %pOFn: ENOSYS\n",
+ 				node);
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 21d77633a98f..3a30e6eff8a8 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -810,7 +810,7 @@ static int sata_dwc_dma_get_channel(struct sata_dwc_device_port *hsdevp)
+ 	struct device *dev = hsdev->dev;
+ 
+ #ifdef CONFIG_SATA_DWC_OLD_DMA
+-	if (!of_find_property(dev->of_node, "dmas", NULL))
++	if (!of_property_present(dev->of_node, "dmas"))
+ 		return sata_dwc_dma_get_channel_old(hsdevp);
+ #endif
+ 
+@@ -1180,7 +1180,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	}
+ 
+ #ifdef CONFIG_SATA_DWC_OLD_DMA
+-	if (!of_find_property(np, "dmas", NULL)) {
++	if (!of_property_present(np, "dmas")) {
+ 		err = sata_dwc_dma_init_old(ofdev, hsdev);
+ 		if (err)
+ 			return err;
+-- 
+2.39.2
 
-MBR, Sergey
