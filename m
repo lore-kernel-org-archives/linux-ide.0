@@ -2,92 +2,88 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A043C61DA4
-	for <linux-ide@archiver.kernel.org>; Sat, 11 Mar 2023 20:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C65C61DA4
+	for <linux-ide@archiver.kernel.org>; Sat, 11 Mar 2023 20:19:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229519AbjCKUPT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 11 Mar 2023 15:15:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59588 "EHLO
+        id S229665AbjCKUTY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 11 Mar 2023 15:19:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229437AbjCKUPT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2023 15:15:19 -0500
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8528E6150B;
-        Sat, 11 Mar 2023 12:15:17 -0800 (PST)
-Received: from [192.168.1.103] (31.173.84.174) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sat, 11 Mar
- 2023 23:15:09 +0300
-Subject: Re: [PATCH 31/32] pata_parport-bpck6: delete ppc6lnx.c
+        with ESMTP id S229437AbjCKUTX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2023 15:19:23 -0500
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4489B2A155;
+        Sat, 11 Mar 2023 12:19:22 -0800 (PST)
+Received: by mail-lf1-x12a.google.com with SMTP id bi9so10960632lfb.2;
+        Sat, 11 Mar 2023 12:19:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678565960;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=uAh7UYyS4J9vkKx/jH0XKuV34LhyWxZES+T2osD7hNQ=;
+        b=cqQjIzO+iO6NavgeaUHtf1zFGuowXq66QBnY5qggNrwOeRalYx446q4i/mYo151Ozv
+         HQNe2y08cbq6nCL3zJlocDjeX6VIwbNV0T5uJXu4dA2Mce5hFpYXyJ4OAiGzoikMSSAn
+         gSlhwmyu3u83rwSGw/25Cp4r2O5x2quLQpeiOS/ZfETvbSFvPDN4Q3tWumcEVVko989B
+         EnlP3K4jtsz3RRy1q4OIE/DOZTYu7vK2SCbzPDyA1eDdzcMlNoAg3lrWlWl2Nkj6pccW
+         AKIn5qvLJuna6m5UMXpogklRgaXF7okd9/0CwzpoOXiNCKVlfm9yKSEiXTwSzac5d2++
+         6c0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678565960;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uAh7UYyS4J9vkKx/jH0XKuV34LhyWxZES+T2osD7hNQ=;
+        b=CotzbFH9rCzudo0CCfkMpKchAGEdKkdfsfZ5O2ZWBz3tt1FZqY2tmEJXy4kMOk6/O5
+         NF6A/5GnLn2JuG9dpjys296dYCBgTMM7bS8EieWhRbifWMckgg/honj31ukP3wd09uQ2
+         fhXK5RPP6baIGLsJlwUxxj/rupvEzR+wzRSbvHe56Dp2CL4S6zuOl55Q59OMfQMaSe+V
+         X+Us50P7OHnTHFUzCoUiy6JRchWBCz04OKMus/6x5MwqIYPoXEW+xnEOxVaZr32OgCZ2
+         aRzQ9tOS+LtCz9CD8JSTiukVxN6Z40Tq156FtTfqfmIpDFcnDEBwyCqpmOpuRTKHy8zh
+         AZJw==
+X-Gm-Message-State: AO0yUKXDmt6oV7a9iurJ4DcHuzjX0JurXljdDmEerZtXgvizkghq1QIL
+        VdPsTh8w5HMnFLgh3HCdVGpnF+xbzI0=
+X-Google-Smtp-Source: AK7set+uklYTNxXUbNN62o0JdFcDGyPcIBcaE+KVD4k754JpPhgz+jMKS1iOYb1PfJSx5xTb8xNUNQ==
+X-Received: by 2002:a05:6512:694:b0:4d8:86c1:477f with SMTP id t20-20020a056512069400b004d886c1477fmr1759408lfe.20.1678565960121;
+        Sat, 11 Mar 2023 12:19:20 -0800 (PST)
+Received: from [192.168.1.103] ([31.173.84.174])
+        by smtp.gmail.com with ESMTPSA id c6-20020ac25306000000b004a2c447598fsm410175lfh.159.2023.03.11.12.19.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 11 Mar 2023 12:19:19 -0800 (PST)
+Subject: Re: [PATCH] pata_parport: fix possible memory leak
 To:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, <linux-block@vger.kernel.org>,
-        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20230307224627.28011-1-linux@zary.sk>
- <20230307224627.28011-32-linux@zary.sk>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <e6cba0d1-b7fc-050b-1a0f-324a54a8825b@omp.ru>
-Date:   Sat, 11 Mar 2023 23:15:09 +0300
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Dan Carpenter <error27@gmail.com>, Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <3ab89ddc-cb60-47c4-86ad-cdad94a8a3d7@kili.mountain>
+ <20230311185149.22957-1-linux@zary.sk>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <e02f5626-81be-d949-d2b4-7f70820b409c@gmail.com>
+Date:   Sat, 11 Mar 2023 23:19:18 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <20230307224627.28011-32-linux@zary.sk>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20230311185149.22957-1-linux@zary.sk>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.84.174]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 03/11/2023 19:53:14
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 176022 [Mar 10 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 507 507 08d345461d9bcca7095738422a5279ab257bb65a
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.84.174 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.84.174 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.84.174
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 03/11/2023 19:56:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 3/11/2023 6:14:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/8/23 1:46 AM, Ondrej Zary wrote:
+On 3/11/23 9:51 PM, Ondrej Zary wrote:
 
-> Remove now empty ppc6lnx.c.
+> When ida_alloc() fails, "pi" is not freed although the misleading
+> comment says otherwise.
+> Move the ida_alloc() call up so we really don't have to free it.
 > 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Reported-by: Dan Carpenter <error27@gmail.com>
+> Link: https://lore.kernel.org/r/202303111822.IHNchbkp-lkp@intel.com/
 > Signed-off-by: Ondrej Zary <linux@zary.sk>
 
-[...]
-
 Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+[...]
 
 MBR, Sergey
