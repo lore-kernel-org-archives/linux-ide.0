@@ -2,80 +2,69 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECDF6C61DA4
-	for <linux-ide@archiver.kernel.org>; Sat, 11 Mar 2023 18:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2156C6FD1C
+	for <linux-ide@archiver.kernel.org>; Sat, 11 Mar 2023 19:25:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229643AbjCKSwR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 11 Mar 2023 13:52:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51892 "EHLO
+        id S229621AbjCKTZs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 11 Mar 2023 14:25:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229641AbjCKSwQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2023 13:52:16 -0500
+        with ESMTP id S229473AbjCKTZs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 11 Mar 2023 14:25:48 -0500
 Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2F00B91B6F;
-        Sat, 11 Mar 2023 10:52:12 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A3D335C9FA;
+        Sat, 11 Mar 2023 11:25:46 -0800 (PST)
 Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 557E57A03CE;
-        Sat, 11 Mar 2023 19:52:10 +0100 (CET)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id DB4D37A01B9;
+        Sat, 11 Mar 2023 20:25:45 +0100 (CET)
 From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Dan Carpenter <error27@gmail.com>, Christoph Hellwig <hch@lst.de>,
+Cc:     Christoph Hellwig <hch@lst.de>,
         Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] pata_parport: fix possible memory leak
-Date:   Sat, 11 Mar 2023 19:51:49 +0100
-Message-Id: <20230311185149.22957-1-linux@zary.sk>
+Subject: [PATCH] pata_parport: fix parport release without claim
+Date:   Sat, 11 Mar 2023 20:25:38 +0100
+Message-Id: <20230311192538.29067-1-linux@zary.sk>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <3ab89ddc-cb60-47c4-86ad-cdad94a8a3d7@kili.mountain>
-References: <3ab89ddc-cb60-47c4-86ad-cdad94a8a3d7@kili.mountain>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-When ida_alloc() fails, "pi" is not freed although the misleading
-comment says otherwise.
-Move the ida_alloc() call up so we really don't have to free it.
+When adapter is not found, pi->disconnect() is called without previous
+pi->connect(). This results in error like this:
+parport0: pata_parport tried to release parport when not owner
 
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <error27@gmail.com>
-Link: https://lore.kernel.org/r/202303111822.IHNchbkp-lkp@intel.com/
+Add missing out_disconnect label and use it correctly.
+
 Signed-off-by: Ondrej Zary <linux@zary.sk>
 ---
- drivers/ata/pata_parport/pata_parport.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/ata/pata_parport/pata_parport.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
-index 6165ee9aa7da..fb1f10afa722 100644
+index fb1f10afa722..b31cd2a845db 100644
 --- a/drivers/ata/pata_parport/pata_parport.c
 +++ b/drivers/ata/pata_parport/pata_parport.c
-@@ -503,18 +503,19 @@ static struct pi_adapter *pi_init_one(struct parport *parport,
- 	if (bus_for_each_dev(&pata_parport_bus_type, NULL, &match, pi_find_dev))
- 		return NULL;
+@@ -558,12 +558,13 @@ static struct pi_adapter *pi_init_one(struct parport *parport,
  
-+	id = ida_alloc(&pata_parport_bus_dev_ids, GFP_KERNEL);
-+	if (id < 0)
-+		return NULL;
-+
- 	pi = kzalloc(sizeof(struct pi_adapter), GFP_KERNEL);
- 	if (!pi)
--		return NULL;
-+		goto out_ida_free;
+ 	pi_connect(pi);
+ 	if (ata_host_activate(host, 0, NULL, 0, &pata_parport_sht))
+-		goto out_unreg_parport;
++		goto out_disconnect;
  
- 	/* set up pi->dev before pi_probe_unit() so it can use dev_printk() */
- 	pi->dev.parent = &pata_parport_bus;
- 	pi->dev.bus = &pata_parport_bus_type;
- 	pi->dev.driver = &pr->driver;
- 	pi->dev.release = pata_parport_dev_release;
--	id = ida_alloc(&pata_parport_bus_dev_ids, GFP_KERNEL);
--	if (id < 0)
--		return NULL; /* pata_parport_dev_release will do kfree(pi) */
- 	pi->dev.id = id;
- 	dev_set_name(&pi->dev, "pata_parport.%u", pi->dev.id);
- 	if (device_register(&pi->dev)) {
+ 	return pi;
+ 
+-out_unreg_parport:
++out_disconnect:
+ 	pi_disconnect(pi);
++out_unreg_parport:
+ 	parport_unregister_device(pi->pardev);
+ 	if (pi->proto->release_proto)
+ 		pi->proto->release_proto(pi);
 -- 
 Ondrej Zary
 
