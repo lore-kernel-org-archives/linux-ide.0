@@ -2,128 +2,111 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF5E3C6FD1D
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Mar 2023 12:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B35C6FD1D
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Mar 2023 13:02:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231828AbjCNMNm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Mar 2023 08:13:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55024 "EHLO
+        id S232071AbjCNNCB convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Mar 2023 09:02:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231783AbjCNMN3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Mar 2023 08:13:29 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2559A27C
-        for <linux-ide@vger.kernel.org>; Tue, 14 Mar 2023 05:12:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1678795969; x=1710331969;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=AWlliTNQy/jtW/E1Q9kESrXcsNXoqskGW2n4Kz4CcNM=;
-  b=psT4jPZGXx/kS/otHcqipW/m/ipAayRvSJ8zADaTuo7KrOUFTn2GFPn/
-   CrwUEamMtJWwDWEHM63g13+ARkCLSXk6O2h6jx9Uls4/jeN9tXW9Hy2LN
-   de3nhWryf5evp1eR0StjcQdbMp0TNk51zgC68GRaNFKnEfAjZRXk6OKHQ
-   R4wzeNSoRWyLR7fM+PeEnzdgD0tqDwyYxjMOKxJaFAHB2PMMA15iYzVJx
-   fnDR6Fm8S6q129Aw/T8k6Jx+Vjm9BZVL/G7fRNTZMItre0UoqCiyo2kvF
-   xPZaf+iQLAn1Ar06tNkl9Ep8ACBIi39XedPQYCJoQxk3MhIG4yzq1YWYt
-   A==;
-X-IronPort-AV: E=Sophos;i="5.98,259,1673884800"; 
-   d="scan'208";a="223879557"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 14 Mar 2023 20:12:31 +0800
-IronPort-SDR: z7RjHVV2homgxidIjykOReMA1Iclk45ZJurMOxilkll+JpV9Q+fFgq7cCJZZUA+jl4zmERzcgy
- UqQwJRY1+HjrtBZEjLpEQUBqn1j/1gI59wdyQ8VrSGz3AxqFvG7TOavSKid6tVFLyBgoZ4ATDK
- n0R33O1OZFhf0cRv0y5FTvgmNa4vvF/o0rQzwk0Z7GSLuoNwuepQob6Q5Y0uA71eTjDt2HDkP7
- NYxs7OCjwsTqAoOXrvdFZyBtZAbJQ7hO/Ytac/ZG/DFSYVRL+UEcY5vSGaNc50MmJBdmA4Je0t
- eq8=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Mar 2023 04:23:18 -0700
-IronPort-SDR: T4tlbIfezIcOpfCymFwSvoGtQbk/i58zzb+3V73eR7jXMeTbqiP+PF2Wbztdnf3lGAmjx8DKah
- TkFf8PD4fj/8/XBgtvfmbss8RaiabrQIbrTtcwWNkINTs/fEChBgMWqytxj97JQ/L7CJ8t4Waz
- DPoYW8c53Wk0Ol2zqUP39/9e4ShOYUYgVyoZw2yw9biPCA+vW3e3KytzMPpeAyA7d5nc2BDqZB
- pedyTLxHN8/+vJFF72HV/BcL/utrQAQPG5XAzF4MlJ1lOSIiVHPnlz4qteaQC+yn5d9GaThIuL
- CWk=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 14 Mar 2023 05:12:32 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PbXTV74Xvz1RtVw
-        for <linux-ide@vger.kernel.org>; Tue, 14 Mar 2023 05:12:30 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:content-language:references:to
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1678795950; x=1681387951; bh=AWlliTNQy/jtW/E1Q9kESrXcsNXoqskGW2n
-        4Kz4CcNM=; b=dcRlGhE9YGHu+giJbC0D0Ij4I8F+fruLSEa86H2oLB7+c0LDRAm
-        nqcXES3yCK4XAMhVL2Ymg02x5uzM9e4V/kh3sXxOt69qD78k+hNqhbSHTkryVbgE
-        V3JtNyGhW5i+GqmJbBF14VuvUNrUf2kn9BEhIysopzTh5KKUXYqRGz8RqKNS1ZON
-        LgVkrzRXIgDQ/EDYV6IM1oSaVDvB/oFGHHCzYwCrJeCCtktlCEBOdEONjE+md9Rp
-        Jjmn0vnPgYV7rC7lIFFPfKwAVlK9zHlRE172nRVLnBUM7gQ0ZpFRuBlaHooBG8aq
-        Q1CyqzbDzIF3u9V3g9E3CLb08lg9G9L62KA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id dzrf_hzItePL for <linux-ide@vger.kernel.org>;
-        Tue, 14 Mar 2023 05:12:30 -0700 (PDT)
-Received: from [10.225.163.84] (unknown [10.225.163.84])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PbXTT2PB0z1RtVm;
-        Tue, 14 Mar 2023 05:12:29 -0700 (PDT)
-Message-ID: <76456032-cc76-aede-f760-65cb999a2163@opensource.wdc.com>
-Date:   Tue, 14 Mar 2023 21:12:27 +0900
+        with ESMTP id S232108AbjCNNBp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Mar 2023 09:01:45 -0400
+Received: from mail-qv1-xf29.google.com (mail-qv1-xf29.google.com [IPv6:2607:f8b0:4864:20::f29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01F58AB899;
+        Tue, 14 Mar 2023 05:57:22 -0700 (PDT)
+Received: by mail-qv1-xf29.google.com with SMTP id m6so1649345qvq.0;
+        Tue, 14 Mar 2023 05:57:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678798263;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=PQ85EN/5uYFja9HAgTN7gmUCNqF9DS+mPJS2DQU6bkg=;
+        b=3RjCdfCLtplSGObvITNXIWUDsN7rwJhe6e3YqgPz1AMZAZFCWdhJwuWiiasMSraTtd
+         TcgPvVU9w1zaI+nYtlwPb1QiunDVCr0eApm4V/RpJATMr1g0Yg9KOj8GbsonsSkGptUO
+         APDaUFb3Rm8153RnfbBf8KN3/xAf7XYHTQ5v18rfnDxjJtvTmGu/ZEICvwbfSuOULkdD
+         5wUS8L+SH5WcsZBkYZcos0mtbp0D/ZR5Mn07rvwP4gtvbzx4e3YOtWWEjU5rzPKW8vh3
+         9lbeNk87lAxI1BDLoNSmFLP0pYnpD5Gh8yoi7n5218Dmpz26n80Xo9ByJYiXv5OiGZZ0
+         NSHw==
+X-Gm-Message-State: AO0yUKVdc5dNusT8z3n6qWMymSspTWTMbtK32MmaYQ3dHzxWhOED3ETR
+        3bTDgpHqTfVezdyPFpU9nzhgK/lwh8BFsg==
+X-Google-Smtp-Source: AK7set85FitrPer+ZpX0qiWEdR+DJqYIycx0ftgM3AR8mRQ82v0E4Pr8g5ofXY4U6cZ9lLAKL0n5tg==
+X-Received: by 2002:a05:6214:1c87:b0:537:7d76:ea7c with SMTP id ib7-20020a0562141c8700b005377d76ea7cmr18538152qvb.25.1678798262768;
+        Tue, 14 Mar 2023 05:51:02 -0700 (PDT)
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com. [209.85.128.181])
+        by smtp.gmail.com with ESMTPSA id s15-20020ac85ccf000000b003b0b903720esm1765318qta.13.2023.03.14.05.51.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 Mar 2023 05:51:02 -0700 (PDT)
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-541a05e4124so115149717b3.1;
+        Tue, 14 Mar 2023 05:51:02 -0700 (PDT)
+X-Received: by 2002:a81:af48:0:b0:541:9b14:949e with SMTP id
+ x8-20020a81af48000000b005419b14949emr5132457ywj.4.1678798261703; Tue, 14 Mar
+ 2023 05:51:01 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
+References: <3b6733f683c13ac02093206e76a3e30c7d045366.1678279668.git.geert+renesas@glider.be>
+ <76456032-cc76-aede-f760-65cb999a2163@opensource.wdc.com>
+In-Reply-To: <76456032-cc76-aede-f760-65cb999a2163@opensource.wdc.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Tue, 14 Mar 2023 13:50:49 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdUiSZqyTvxCbWzvWmkjC47MepuWmTNd=x_xYGDZH3SZMw@mail.gmail.com>
+Message-ID: <CAMuHMdUiSZqyTvxCbWzvWmkjC47MepuWmTNd=x_xYGDZH3SZMw@mail.gmail.com>
 Subject: Re: [PATCH v2 resend 3] ahci: qoriq: Add platform dependencies
-To:     Geert Uytterhoeven <geert+renesas@glider.be>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
         Li Yang <leoyang.li@nxp.com>
-References: <3b6733f683c13ac02093206e76a3e30c7d045366.1678279668.git.geert+renesas@glider.be>
-Content-Language: en-US
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <3b6733f683c13ac02093206e76a3e30c7d045366.1678279668.git.geert+renesas@glider.be>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/8/23 21:49, Geert Uytterhoeven wrote:
-> The Freescale QorIQ AHCI SATA controller is only present on Freescale
-> Layerscape SoCs.  Add platform dependencies to the AHCI_QORIQ config
-> symbol, to avoid asking the user about it when configuring a kernel
-> without Layerscape support.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
-> Acked-by: Li Yang <leoyang.li@nxp.com>
-> ---
-> v2:
->   - Add Acked-by.
-> ---
->  drivers/ata/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index b56fba76b43f48f7..42b51c9812a0ebab 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -276,6 +276,7 @@ config AHCI_XGENE
->  config AHCI_QORIQ
->  	tristate "Freescale QorIQ AHCI SATA support"
->  	depends on OF
-> +	depends on SOC_LS1021A || ARCH_LAYERSCAPE || COMPILE_TEST
->  	select SATA_HOST
->  	help
->  	  This option enables support for the Freescale QorIQ AHCI SoC's
+Hi Damien,
 
-Do you want this in fixes or queuing this for 6.4 is fine ?
+On Tue, Mar 14, 2023 at 1:12 PM Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
+> On 3/8/23 21:49, Geert Uytterhoeven wrote:
+> > The Freescale QorIQ AHCI SATA controller is only present on Freescale
+> > Layerscape SoCs.  Add platform dependencies to the AHCI_QORIQ config
+> > symbol, to avoid asking the user about it when configuring a kernel
+> > without Layerscape support.
+> >
+> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Acked-by: Arnd Bergmann <arnd@arndb.de>
+> > Acked-by: Li Yang <leoyang.li@nxp.com>
+> > ---
+> > v2:
+> >   - Add Acked-by.
+> > ---
+> >  drivers/ata/Kconfig | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> > index b56fba76b43f48f7..42b51c9812a0ebab 100644
+> > --- a/drivers/ata/Kconfig
+> > +++ b/drivers/ata/Kconfig
+> > @@ -276,6 +276,7 @@ config AHCI_XGENE
+> >  config AHCI_QORIQ
+> >       tristate "Freescale QorIQ AHCI SATA support"
+> >       depends on OF
+> > +     depends on SOC_LS1021A || ARCH_LAYERSCAPE || COMPILE_TEST
+> >       select SATA_HOST
+> >       help
+> >         This option enables support for the Freescale QorIQ AHCI SoC's
+>
+> Do you want this in fixes or queuing this for 6.4 is fine ?
+
+I guess 6.4 is fine. We've been seeing this message while configuring
+our kernels for years, so a few extra weeks won't hurt ;-)
+
+Gr{oetje,eeting}s,
+
+                        Geert
 
 -- 
-Damien Le Moal
-Western Digital Research
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
