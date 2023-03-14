@@ -2,111 +2,144 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B35C6FD1D
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Mar 2023 13:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 687D5C6FD1D
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Mar 2023 22:59:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232071AbjCNNCB convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Mar 2023 09:02:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46956 "EHLO
+        id S229780AbjCNW7R (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Mar 2023 18:59:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232108AbjCNNBp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Mar 2023 09:01:45 -0400
-Received: from mail-qv1-xf29.google.com (mail-qv1-xf29.google.com [IPv6:2607:f8b0:4864:20::f29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01F58AB899;
-        Tue, 14 Mar 2023 05:57:22 -0700 (PDT)
-Received: by mail-qv1-xf29.google.com with SMTP id m6so1649345qvq.0;
-        Tue, 14 Mar 2023 05:57:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678798263;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PQ85EN/5uYFja9HAgTN7gmUCNqF9DS+mPJS2DQU6bkg=;
-        b=3RjCdfCLtplSGObvITNXIWUDsN7rwJhe6e3YqgPz1AMZAZFCWdhJwuWiiasMSraTtd
-         TcgPvVU9w1zaI+nYtlwPb1QiunDVCr0eApm4V/RpJATMr1g0Yg9KOj8GbsonsSkGptUO
-         APDaUFb3Rm8153RnfbBf8KN3/xAf7XYHTQ5v18rfnDxjJtvTmGu/ZEICvwbfSuOULkdD
-         5wUS8L+SH5WcsZBkYZcos0mtbp0D/ZR5Mn07rvwP4gtvbzx4e3YOtWWEjU5rzPKW8vh3
-         9lbeNk87lAxI1BDLoNSmFLP0pYnpD5Gh8yoi7n5218Dmpz26n80Xo9ByJYiXv5OiGZZ0
-         NSHw==
-X-Gm-Message-State: AO0yUKVdc5dNusT8z3n6qWMymSspTWTMbtK32MmaYQ3dHzxWhOED3ETR
-        3bTDgpHqTfVezdyPFpU9nzhgK/lwh8BFsg==
-X-Google-Smtp-Source: AK7set85FitrPer+ZpX0qiWEdR+DJqYIycx0ftgM3AR8mRQ82v0E4Pr8g5ofXY4U6cZ9lLAKL0n5tg==
-X-Received: by 2002:a05:6214:1c87:b0:537:7d76:ea7c with SMTP id ib7-20020a0562141c8700b005377d76ea7cmr18538152qvb.25.1678798262768;
-        Tue, 14 Mar 2023 05:51:02 -0700 (PDT)
-Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com. [209.85.128.181])
-        by smtp.gmail.com with ESMTPSA id s15-20020ac85ccf000000b003b0b903720esm1765318qta.13.2023.03.14.05.51.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Mar 2023 05:51:02 -0700 (PDT)
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-541a05e4124so115149717b3.1;
-        Tue, 14 Mar 2023 05:51:02 -0700 (PDT)
-X-Received: by 2002:a81:af48:0:b0:541:9b14:949e with SMTP id
- x8-20020a81af48000000b005419b14949emr5132457ywj.4.1678798261703; Tue, 14 Mar
- 2023 05:51:01 -0700 (PDT)
-MIME-Version: 1.0
-References: <3b6733f683c13ac02093206e76a3e30c7d045366.1678279668.git.geert+renesas@glider.be>
- <76456032-cc76-aede-f760-65cb999a2163@opensource.wdc.com>
-In-Reply-To: <76456032-cc76-aede-f760-65cb999a2163@opensource.wdc.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 14 Mar 2023 13:50:49 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUiSZqyTvxCbWzvWmkjC47MepuWmTNd=x_xYGDZH3SZMw@mail.gmail.com>
-Message-ID: <CAMuHMdUiSZqyTvxCbWzvWmkjC47MepuWmTNd=x_xYGDZH3SZMw@mail.gmail.com>
-Subject: Re: [PATCH v2 resend 3] ahci: qoriq: Add platform dependencies
+        with ESMTP id S229545AbjCNW7Q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Mar 2023 18:59:16 -0400
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7EC0551CB4;
+        Tue, 14 Mar 2023 15:58:52 -0700 (PDT)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id E6A2A7A0081;
+        Tue, 14 Mar 2023 23:58:11 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Li Yang <leoyang.li@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3] pata_parport: fix memory leaks
+Date:   Tue, 14 Mar 2023 23:58:05 +0100
+Message-Id: <20230314225805.9124-1-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <cf8c7b34-3c5d-2b9e-b410-d83f4af7274a@opensource.wdc.com>
+References: <cf8c7b34-3c5d-2b9e-b410-d83f4af7274a@opensource.wdc.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Damien,
+When ida_alloc() fails, "pi" is not freed although the misleading
+comment says otherwise.
+Move the ida_alloc() call up so we really don't have to free "pi" in
+case of ida_alloc() failure.
 
-On Tue, Mar 14, 2023 at 1:12 PM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
-> On 3/8/23 21:49, Geert Uytterhoeven wrote:
-> > The Freescale QorIQ AHCI SATA controller is only present on Freescale
-> > Layerscape SoCs.  Add platform dependencies to the AHCI_QORIQ config
-> > symbol, to avoid asking the user about it when configuring a kernel
-> > without Layerscape support.
-> >
-> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > Acked-by: Arnd Bergmann <arnd@arndb.de>
-> > Acked-by: Li Yang <leoyang.li@nxp.com>
-> > ---
-> > v2:
-> >   - Add Acked-by.
-> > ---
-> >  drivers/ata/Kconfig | 1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> > index b56fba76b43f48f7..42b51c9812a0ebab 100644
-> > --- a/drivers/ata/Kconfig
-> > +++ b/drivers/ata/Kconfig
-> > @@ -276,6 +276,7 @@ config AHCI_XGENE
-> >  config AHCI_QORIQ
-> >       tristate "Freescale QorIQ AHCI SATA support"
-> >       depends on OF
-> > +     depends on SOC_LS1021A || ARCH_LAYERSCAPE || COMPILE_TEST
-> >       select SATA_HOST
-> >       help
-> >         This option enables support for the Freescale QorIQ AHCI SoC's
->
-> Do you want this in fixes or queuing this for 6.4 is fine ?
+Also move ida_free() call from pi_remove_one() to
+pata_parport_dev_release(). It was dereferencing already freed dev
+pointer.
 
-I guess 6.4 is fine. We've been seeing this message while configuring
-our kernels for years, so a few extra weeks won't hurt ;-)
+Testing revealed leak even in non-failure case which was tracked down
+to missing put_device() call after bus_find_device_by_name(). As a
+result, pata_parport_dev_release() was never called.
 
-Gr{oetje,eeting}s,
+Reported-by: kernel test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Link: https://lore.kernel.org/r/202303111822.IHNchbkp-lkp@intel.com/
+Signed-off-by: Ondrej Zary <linux@zary.sk>
+---
+ drivers/ata/pata_parport/pata_parport.c | 25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
 
-                        Geert
-
+diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+index 6165ee9aa7da..dc77b4c6fcef 100644
+--- a/drivers/ata/pata_parport/pata_parport.c
++++ b/drivers/ata/pata_parport/pata_parport.c
+@@ -452,6 +452,7 @@ static void pata_parport_dev_release(struct device *dev)
+ {
+ 	struct pi_adapter *pi = container_of(dev, struct pi_adapter, dev);
+ 
++	ida_free(&pata_parport_bus_dev_ids, dev->id);
+ 	kfree(pi);
+ }
+ 
+@@ -503,23 +504,27 @@ static struct pi_adapter *pi_init_one(struct parport *parport,
+ 	if (bus_for_each_dev(&pata_parport_bus_type, NULL, &match, pi_find_dev))
+ 		return NULL;
+ 
++	id = ida_alloc(&pata_parport_bus_dev_ids, GFP_KERNEL);
++	if (id < 0)
++		return NULL;
++
+ 	pi = kzalloc(sizeof(struct pi_adapter), GFP_KERNEL);
+-	if (!pi)
++	if (!pi) {
++		ida_free(&pata_parport_bus_dev_ids, id);
+ 		return NULL;
++	}
+ 
+ 	/* set up pi->dev before pi_probe_unit() so it can use dev_printk() */
+ 	pi->dev.parent = &pata_parport_bus;
+ 	pi->dev.bus = &pata_parport_bus_type;
+ 	pi->dev.driver = &pr->driver;
+ 	pi->dev.release = pata_parport_dev_release;
+-	id = ida_alloc(&pata_parport_bus_dev_ids, GFP_KERNEL);
+-	if (id < 0)
+-		return NULL; /* pata_parport_dev_release will do kfree(pi) */
+ 	pi->dev.id = id;
+ 	dev_set_name(&pi->dev, "pata_parport.%u", pi->dev.id);
+ 	if (device_register(&pi->dev)) {
+ 		put_device(&pi->dev);
+-		goto out_ida_free;
++		/* pata_parport_dev_release will do ida_free(dev->id) and kfree(pi) */
++		return NULL;
+ 	}
+ 
+ 	pi->proto = pr;
+@@ -534,8 +539,7 @@ static struct pi_adapter *pi_init_one(struct parport *parport,
+ 	pi->port = parport->base;
+ 
+ 	par_cb.private = pi;
+-	pi->pardev = parport_register_dev_model(parport, DRV_NAME, &par_cb,
+-						pi->dev.id);
++	pi->pardev = parport_register_dev_model(parport, DRV_NAME, &par_cb, id);
+ 	if (!pi->pardev)
+ 		goto out_module_put;
+ 
+@@ -570,8 +574,7 @@ static struct pi_adapter *pi_init_one(struct parport *parport,
+ 	module_put(pi->proto->owner);
+ out_unreg_dev:
+ 	device_unregister(&pi->dev);
+-out_ida_free:
+-	ida_free(&pata_parport_bus_dev_ids, pi->dev.id);
++	/* pata_parport_dev_release will do ida_free(dev->id) and kfree(pi) */
+ 	return NULL;
+ }
+ 
+@@ -696,8 +699,7 @@ static void pi_remove_one(struct device *dev)
+ 	pi_disconnect(pi);
+ 	pi_release(pi);
+ 	device_unregister(dev);
+-	ida_free(&pata_parport_bus_dev_ids, dev->id);
+-	/* pata_parport_dev_release will do kfree(pi) */
++	/* pata_parport_dev_release will do ida_free(dev->id) and kfree(pi) */
+ }
+ 
+ static ssize_t delete_device_store(struct bus_type *bus, const char *buf,
+@@ -713,6 +715,7 @@ static ssize_t delete_device_store(struct bus_type *bus, const char *buf,
+ 	}
+ 
+ 	pi_remove_one(dev);
++	put_device(dev);
+ 	mutex_unlock(&pi_mutex);
+ 
+ 	return count;
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Ondrej Zary
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
