@@ -2,78 +2,116 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F489C74A5B
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Mar 2023 16:56:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D89BFC74A5B
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Mar 2023 22:54:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229808AbjCQQ4f (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Mar 2023 12:56:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60698 "EHLO
+        id S229478AbjCQWyD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Mar 2023 18:54:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbjCQQ4e (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2023 12:56:34 -0400
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7636269069;
-        Fri, 17 Mar 2023 09:56:33 -0700 (PDT)
-Received: by mail-pj1-f45.google.com with SMTP id 6-20020a17090a190600b00237c5b6ecd7so9785997pjg.4;
-        Fri, 17 Mar 2023 09:56:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679072193;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/EDMCWi2+pIYPO7/XjcMvWvrVqhfRSJwEgLRyN06IhM=;
-        b=eNZ8URL7CJMXzDPLLKm28Rz2w5vZQej7Uh290IeqenDX9GBj0dIPI9eCAZypzGzlk4
-         LeNxp6BcvZ+6X0wQe0QM38sEPo/qxgn70vyysK62Z8rvjTfe1cjksizNUNqd6KsnTaxS
-         qk/7mso6xVsikzOQkzUTMVVLJXwDloRx2vfubBLoebfLEzRT8qPTF4XKyg9CMlVs61K3
-         OOXNS6ikh5oK3Wd/p09fVETX3Zn1ZRC69X7Wp+iqvKzkWt/AU2TI+KUg8JmuU+O3Dxow
-         +Lk5i7wxeevL9QugbM4n6wB7aJ07zdlji5vldiXnOBriXz/dUl02BLACymkuXXAfnpw6
-         62fA==
-X-Gm-Message-State: AO0yUKXW2olrazvML7pW6BijlBBUQIXsVG5LbITTTT8Bzf5Of5r98sTX
-        +n1IwKJclHBs7JAC+7YWihk=
-X-Google-Smtp-Source: AK7set9+vucF+M5QAaPH0ImOhBRU8mJ5PzWB43bOiUM7l98DemgZa5Ck1nVTRJiWD4OsyqVp6HnShg==
-X-Received: by 2002:a05:6a20:b915:b0:d7:380b:660 with SMTP id fe21-20020a056a20b91500b000d7380b0660mr4467704pzb.3.1679072192555;
-        Fri, 17 Mar 2023 09:56:32 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:ad26:bef0:6406:d659? ([2620:15c:211:201:ad26:bef0:6406:d659])
-        by smtp.gmail.com with ESMTPSA id e25-20020a62aa19000000b005a817ff3903sm1819707pff.3.2023.03.17.09.56.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 17 Mar 2023 09:56:31 -0700 (PDT)
-Message-ID: <86bbac36-f727-7330-bfcc-a4cd5a544d6c@acm.org>
-Date:   Fri, 17 Mar 2023 09:56:29 -0700
+        with ESMTP id S229517AbjCQWyC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2023 18:54:02 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED44D4F75
+        for <linux-ide@vger.kernel.org>; Fri, 17 Mar 2023 15:53:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1679093618; x=1710629618;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=yeJc0m0LYkyzD0GiYHcjF/zDokKxQY6QwHV1Y80N8b0=;
+  b=IMGPeo5ygj2ykbAr5/5O3JeyMV6vjQkBUmQw193I52G6qx75OwRbEZXw
+   HMovp4/H97KblX2yna9KBH1971WYRTglm76/HQLOtm0a7fEPplddmuBxg
+   /EBHyGSjG4rnLrvQHukyFzo6EnVSskVD5TbLKR4pTWWqPbqPXR2BO+TS1
+   w4Sragx6LPjZ28k27juMOPOEgZUIk6Muyx3oPJ7mxSHYguW//ACnrhtsn
+   nB/3PCyLovGB383Fu3Cv39r45ip9Nx4nB0bzzVkjxbMpFCMfzQtcx0zbQ
+   7YIjBDGDWS7YRGplplewVRDjitI6Hz3v3dgMuRhVkK01cxAGk8lEea3OJ
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.98,270,1673884800"; 
+   d="scan'208";a="230857713"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Mar 2023 06:53:37 +0800
+IronPort-SDR: CDJ2V4Jq6B175FCd5XkN9XDhtqgrAKTVkhnDOYJkj1qX7z077sAsB+AzVeHRXH7agLA/YxIdtV
+ m/VYZVwVlcPB13MWurFSQmNDUNfiuepeE96hBkxE2nM+/m9yHVBHeYeyMRsPMqNBcmt6pZ2GA2
+ /0/grLDseTZJECG/Cqbu6HUSlx8Bj5BaxIgVhIU5qiKaeniTIoIpqM5NGrTbm8AYZKoOch1zdM
+ dXCvbYiikNL7cb5F3SP33wljMQV3QUjDcpxxdhHxMiMHwFqH5jCZ4G7ljV6hRZfXEfMtvwwkMm
+ kyU=
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Mar 2023 15:10:01 -0700
+IronPort-SDR: v8GsYucxVm2bPMMiG+si2KQnwm23FvTUq51pbOWbEyUm8lUvEqQKUrPEsOW3PpnLkDv8w4laW+
+ 5Bsu7F5ZE+M4k+jxYNUwX0gz523KOJtTUzPhKC/J4DbywaLvj9WHmNmf1mL6HNG8a7OkX6qI8l
+ jwDezP7uhbpyp7A3PSp6uNQtv0aukTMVmfV8/XYZzIZ2Bab/ls2D/iJ1bBOH87ExdgXOFD6t0Q
+ iB5R1RpXfyrE3PIh+IBJWix2Pr1535CPQsHRip6pbRa2cbY+fxunRtffaXk+dz7C3k1SLnpGIp
+ gp8=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Mar 2023 15:53:38 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PdfYs3YX0z1RtVn
+        for <linux-ide@vger.kernel.org>; Fri, 17 Mar 2023 15:53:37 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1679093616;
+         x=1681685617; bh=yeJc0m0LYkyzD0GiYHcjF/zDokKxQY6QwHV1Y80N8b0=; b=
+        krIX6/tfiG4hLQSFZy1+YgVMW8KC1mimJ/ZHNq0XsDzukvpQ4DGspCt6tH/ifcXw
+        3f4srim260HGF7+m9U8pOZ6AWJ9boULch9z6BFSZqENN0iPs/c+W8MAXWvm6J4lF
+        ZqCyuE7B0cI2KhlBbiZSdwHDuPC4XvWaDNpGo7G2zSFIzdd2ZVbg5f5UUaw2Z0Bv
+        6cFP7/BrWRGiWbpWUtUT66Zjhi6TuYcnhGfwHOxNqYs68wkjyp6we76opZ1It/zK
+        +aKMS+R3tYObyjlMQR6UH3mCcsR/VoPg8VORKo9wlaf6tIFD0yt0+Y1vIA5MTfJP
+        4Zedm0hw9lz3l8qAtozCLw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id UnkW6jMm6YMj for <linux-ide@vger.kernel.org>;
+        Fri, 17 Mar 2023 15:53:36 -0700 (PDT)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PdfYr2fVTz1RtVm;
+        Fri, 17 Mar 2023 15:53:36 -0700 (PDT)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Subject: [GIT PULL] ata fixes for 6.3-rc3
+Date:   Sat, 18 Mar 2023 07:53:34 +0900
+Message-Id: <20230317225334.30582-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v4 02/19] block: introduce ioprio hints
-Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230309215516.3800571-1-niklas.cassel@wdc.com>
- <20230309215516.3800571-3-niklas.cassel@wdc.com>
- <c91be70e-14a9-7ad6-ba7c-975a640a34d3@opensource.wdc.com>
- <70b757f9-cc0c-ebd9-a597-f6ea14acbedb@acm.org> <ZBQxoRQ4/7au/1ou@x1-carbon>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZBQxoRQ4/7au/1ou@x1-carbon>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/17/23 02:23, Niklas Cassel wrote:
-> When you have the time, we would be very grateful if you could provide
-> a more thorough review, i.e. provide a R-b tag or give some feedback.
-> 
-> Your help is appreciated!
+Linus,
 
-Although I'm overloaded, I will try to find some time to review this 
-patch series.
+The following changes since commit eeac8ede17557680855031c6f305ece2378af3=
+26:
 
-Thanks,
+  Linux 6.3-rc2 (2023-03-12 16:36:44 -0700)
 
-Bart.
+are available in the Git repository at:
 
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
+ags/ata-6.3-rc3
+
+for you to fetch changes up to 5bc9e2d43f86105a95f86fa096fb4e517bb0ce73:
+
+  ata: pata_parport: fix memory leaks (2023-03-16 16:54:38 +0900)
+
+----------------------------------------------------------------
+ata fixes for 6.3-rc3
+
+ * Two fixes from Ondrej for the pata_parport driver to address an issue
+   with error handling during drive connection and to fix memory leaks
+   in case of errors during initialization and when disconnecting a
+   device.
+
+----------------------------------------------------------------
+Ondrej Zary (2):
+      ata: pata_parport: fix parport release without claim
+      ata: pata_parport: fix memory leaks
+
+ drivers/ata/pata_parport/pata_parport.c | 30 +++++++++++++++++----------=
+---
+ 1 file changed, 17 insertions(+), 13 deletions(-)
