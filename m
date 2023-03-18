@@ -2,116 +2,76 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D89BFC74A5B
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Mar 2023 22:54:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA122C61DA4
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Mar 2023 18:55:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229478AbjCQWyD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Mar 2023 18:54:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46922 "EHLO
+        id S229734AbjCRSzu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 18 Mar 2023 14:55:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229517AbjCQWyC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2023 18:54:02 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED44D4F75
-        for <linux-ide@vger.kernel.org>; Fri, 17 Mar 2023 15:53:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1679093618; x=1710629618;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=yeJc0m0LYkyzD0GiYHcjF/zDokKxQY6QwHV1Y80N8b0=;
-  b=IMGPeo5ygj2ykbAr5/5O3JeyMV6vjQkBUmQw193I52G6qx75OwRbEZXw
-   HMovp4/H97KblX2yna9KBH1971WYRTglm76/HQLOtm0a7fEPplddmuBxg
-   /EBHyGSjG4rnLrvQHukyFzo6EnVSskVD5TbLKR4pTWWqPbqPXR2BO+TS1
-   w4Sragx6LPjZ28k27juMOPOEgZUIk6Muyx3oPJ7mxSHYguW//ACnrhtsn
-   nB/3PCyLovGB383Fu3Cv39r45ip9Nx4nB0bzzVkjxbMpFCMfzQtcx0zbQ
-   7YIjBDGDWS7YRGplplewVRDjitI6Hz3v3dgMuRhVkK01cxAGk8lEea3OJ
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.98,270,1673884800"; 
-   d="scan'208";a="230857713"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Mar 2023 06:53:37 +0800
-IronPort-SDR: CDJ2V4Jq6B175FCd5XkN9XDhtqgrAKTVkhnDOYJkj1qX7z077sAsB+AzVeHRXH7agLA/YxIdtV
- m/VYZVwVlcPB13MWurFSQmNDUNfiuepeE96hBkxE2nM+/m9yHVBHeYeyMRsPMqNBcmt6pZ2GA2
- /0/grLDseTZJECG/Cqbu6HUSlx8Bj5BaxIgVhIU5qiKaeniTIoIpqM5NGrTbm8AYZKoOch1zdM
- dXCvbYiikNL7cb5F3SP33wljMQV3QUjDcpxxdhHxMiMHwFqH5jCZ4G7ljV6hRZfXEfMtvwwkMm
- kyU=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Mar 2023 15:10:01 -0700
-IronPort-SDR: v8GsYucxVm2bPMMiG+si2KQnwm23FvTUq51pbOWbEyUm8lUvEqQKUrPEsOW3PpnLkDv8w4laW+
- 5Bsu7F5ZE+M4k+jxYNUwX0gz523KOJtTUzPhKC/J4DbywaLvj9WHmNmf1mL6HNG8a7OkX6qI8l
- jwDezP7uhbpyp7A3PSp6uNQtv0aukTMVmfV8/XYZzIZ2Bab/ls2D/iJ1bBOH87ExdgXOFD6t0Q
- iB5R1RpXfyrE3PIh+IBJWix2Pr1535CPQsHRip6pbRa2cbY+fxunRtffaXk+dz7C3k1SLnpGIp
- gp8=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Mar 2023 15:53:38 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PdfYs3YX0z1RtVn
-        for <linux-ide@vger.kernel.org>; Fri, 17 Mar 2023 15:53:37 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1679093616;
-         x=1681685617; bh=yeJc0m0LYkyzD0GiYHcjF/zDokKxQY6QwHV1Y80N8b0=; b=
-        krIX6/tfiG4hLQSFZy1+YgVMW8KC1mimJ/ZHNq0XsDzukvpQ4DGspCt6tH/ifcXw
-        3f4srim260HGF7+m9U8pOZ6AWJ9boULch9z6BFSZqENN0iPs/c+W8MAXWvm6J4lF
-        ZqCyuE7B0cI2KhlBbiZSdwHDuPC4XvWaDNpGo7G2zSFIzdd2ZVbg5f5UUaw2Z0Bv
-        6cFP7/BrWRGiWbpWUtUT66Zjhi6TuYcnhGfwHOxNqYs68wkjyp6we76opZ1It/zK
-        +aKMS+R3tYObyjlMQR6UH3mCcsR/VoPg8VORKo9wlaf6tIFD0yt0+Y1vIA5MTfJP
-        4Zedm0hw9lz3l8qAtozCLw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id UnkW6jMm6YMj for <linux-ide@vger.kernel.org>;
-        Fri, 17 Mar 2023 15:53:36 -0700 (PDT)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PdfYr2fVTz1RtVm;
-        Fri, 17 Mar 2023 15:53:36 -0700 (PDT)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 6.3-rc3
-Date:   Sat, 18 Mar 2023 07:53:34 +0900
-Message-Id: <20230317225334.30582-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.39.2
+        with ESMTP id S229473AbjCRSzt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Mar 2023 14:55:49 -0400
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 257261CF45;
+        Sat, 18 Mar 2023 11:55:47 -0700 (PDT)
+Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 60C1F7A02C3;
+        Sat, 18 Mar 2023 19:55:45 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH 00/32] pata_parport-bpck6: rework bpck6 protocol driver
+Date:   Sat, 18 Mar 2023 19:55:41 +0100
+User-Agent: KMail/1.9.10
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230307224627.28011-1-linux@zary.sk> <b50705b2-0176-cdef-b02b-88449b3d29f6@omp.ru>
+In-Reply-To: <b50705b2-0176-cdef-b02b-88449b3d29f6@omp.ru>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <202303181955.41922.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+On Saturday 11 March 2023 21:00:01 Sergey Shtylyov wrote:
+> Hello!
+> 
+> On 3/8/23 1:45 AM, Ondrej Zary wrote:
+> 
+> > This patch series simplifies bpck6 code, removing ppc6lnx.c file to match
+> > the simplicity of other protocol drivers. It also converts the direct
+> > port I/O access to paraport access functions. This conversion revealed that
+> > there's no 8-bit and 16-bit EPP support in parport_pc so patch 11 implements
+> > that.
+> > 
+> > Tested with Backpack CD-RW 222011 and CD-RW 19350.
+> > 
+> > Signed-off-by: Ondrej Zary <linux@zary.sk>
+> > ---
+> >  drivers/ata/pata_parport/bpck6.c   | 452 +++++++++++++++++++++++++++--------
+> >  drivers/ata/pata_parport/ppc6lnx.c | 726 ---------------------------------------------------------
+> >  drivers/parport/parport_pc.c       |  20 +-
+> >  include/uapi/linux/parport.h       |   3 +
+> >  4 files changed, 370 insertions(+), 831 deletions(-)
+> 
+>    OK, it's finally clear I can't keep up with reviewing 32 patches posted
+> at once...  Luckily, all those patches seem to be dealing with parallel port
+> control), not the PATA control! Of course, when I volunteered to review the
+> PATA driver patches, I didn't expect such patch volumes -- I mostly expected
+> some odd fixes, not a massive driver rework... :-/
 
-The following changes since commit eeac8ede17557680855031c6f305ece2378af3=
-26:
+So you're going to review the (P)ATA parts (if any) only.
+Maybe Sudip (as parport maintainer) could review the parallel port parts?
 
-  Linux 6.3-rc2 (2023-03-12 16:36:44 -0700)
-
-are available in the Git repository at:
-
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
-ags/ata-6.3-rc3
-
-for you to fetch changes up to 5bc9e2d43f86105a95f86fa096fb4e517bb0ce73:
-
-  ata: pata_parport: fix memory leaks (2023-03-16 16:54:38 +0900)
-
-----------------------------------------------------------------
-ata fixes for 6.3-rc3
-
- * Two fixes from Ondrej for the pata_parport driver to address an issue
-   with error handling during drive connection and to fix memory leaks
-   in case of errors during initialization and when disconnecting a
-   device.
-
-----------------------------------------------------------------
-Ondrej Zary (2):
-      ata: pata_parport: fix parport release without claim
-      ata: pata_parport: fix memory leaks
-
- drivers/ata/pata_parport/pata_parport.c | 30 +++++++++++++++++----------=
----
- 1 file changed, 17 insertions(+), 13 deletions(-)
+-- 
+Ondrej Zary
