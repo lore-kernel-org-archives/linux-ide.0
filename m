@@ -2,76 +2,67 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA122C61DA4
-	for <linux-ide@archiver.kernel.org>; Sat, 18 Mar 2023 18:55:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E3B7C74A5B
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Mar 2023 19:01:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229734AbjCRSzu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 18 Mar 2023 14:55:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37234 "EHLO
+        id S229887AbjCRTBj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 18 Mar 2023 15:01:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjCRSzt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Mar 2023 14:55:49 -0400
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 257261CF45;
-        Sat, 18 Mar 2023 11:55:47 -0700 (PDT)
-Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
+        with ESMTP id S229867AbjCRTBi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Mar 2023 15:01:38 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFEF32BF22
+        for <linux-ide@vger.kernel.org>; Sat, 18 Mar 2023 12:01:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 60C1F7A02C3;
-        Sat, 18 Mar 2023 19:55:45 +0100 (CET)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH 00/32] pata_parport-bpck6: rework bpck6 protocol driver
-Date:   Sat, 18 Mar 2023 19:55:41 +0100
-User-Agent: KMail/1.9.10
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230307224627.28011-1-linux@zary.sk> <b50705b2-0176-cdef-b02b-88449b3d29f6@omp.ru>
-In-Reply-To: <b50705b2-0176-cdef-b02b-88449b3d29f6@omp.ru>
-X-KMail-QuotePrefix: > 
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <202303181955.41922.linux@zary.sk>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 88994B806A1
+        for <linux-ide@vger.kernel.org>; Sat, 18 Mar 2023 19:01:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4CA63C4339C;
+        Sat, 18 Mar 2023 19:01:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679166095;
+        bh=4rkCRkZ5DxhZgNuG0osQFk/gsh2YZbc2XTJndT7hG2Q=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=jSddt1KdNqRjiFgi/KLxKMa0fHzNCKUJwcdqdxjx3y9Y59M1xPUYl4ODr4ozMbRBL
+         FPrWm5GNp6vcElSjF9ztFOYH15TNitBZHe5UdWSRmoxHuhh7GmKuVfjBCoVBUq8wAT
+         9fvc+xOb1UPe2JME1WmluzKHSuw0PP1spKNiYbKavxRAFpsYAM8y73Vr1BxRd/Ls7m
+         65RCC2oSM7BB6/8mYHediyzT0p+IRA6o12iC3axIrqzrAF4viCwuQuItCoDjCM/9Wr
+         hXj2uCnlxLZbRE/b3cHTqLKbTKGRLpJgiG5T6MYsnJLrOeoMVgzNx5XEpk31TdUFOB
+         Nt9gGjrlUUp9w==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 3BEC5C41671;
+        Sat, 18 Mar 2023 19:01:35 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.3-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20230317225334.30582-1-damien.lemoal@opensource.wdc.com>
+References: <20230317225334.30582-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20230317225334.30582-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.3-rc3
+X-PR-Tracked-Commit-Id: 5bc9e2d43f86105a95f86fa096fb4e517bb0ce73
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: f900bffe2dac7eca800406b152da5acd05e92129
+Message-Id: <167916609524.11643.17148485545078154674.pr-tracker-bot@kernel.org>
+Date:   Sat, 18 Mar 2023 19:01:35 +0000
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Saturday 11 March 2023 21:00:01 Sergey Shtylyov wrote:
-> Hello!
-> 
-> On 3/8/23 1:45 AM, Ondrej Zary wrote:
-> 
-> > This patch series simplifies bpck6 code, removing ppc6lnx.c file to match
-> > the simplicity of other protocol drivers. It also converts the direct
-> > port I/O access to paraport access functions. This conversion revealed that
-> > there's no 8-bit and 16-bit EPP support in parport_pc so patch 11 implements
-> > that.
-> > 
-> > Tested with Backpack CD-RW 222011 and CD-RW 19350.
-> > 
-> > Signed-off-by: Ondrej Zary <linux@zary.sk>
-> > ---
-> >  drivers/ata/pata_parport/bpck6.c   | 452 +++++++++++++++++++++++++++--------
-> >  drivers/ata/pata_parport/ppc6lnx.c | 726 ---------------------------------------------------------
-> >  drivers/parport/parport_pc.c       |  20 +-
-> >  include/uapi/linux/parport.h       |   3 +
-> >  4 files changed, 370 insertions(+), 831 deletions(-)
-> 
->    OK, it's finally clear I can't keep up with reviewing 32 patches posted
-> at once...  Luckily, all those patches seem to be dealing with parallel port
-> control), not the PATA control! Of course, when I volunteered to review the
-> PATA driver patches, I didn't expect such patch volumes -- I mostly expected
-> some odd fixes, not a massive driver rework... :-/
+The pull request you sent on Sat, 18 Mar 2023 07:53:34 +0900:
 
-So you're going to review the (P)ATA parts (if any) only.
-Maybe Sudip (as parport maintainer) could review the parallel port parts?
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.3-rc3
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/f900bffe2dac7eca800406b152da5acd05e92129
+
+Thank you!
 
 -- 
-Ondrej Zary
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
