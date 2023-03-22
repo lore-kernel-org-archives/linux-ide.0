@@ -2,346 +2,81 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75ECFC6FD1F
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Mar 2023 05:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00A66C6FD1F
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Mar 2023 12:11:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229595AbjCVFzb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 22 Mar 2023 01:55:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44102 "EHLO
+        id S230127AbjCVMLE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 22 Mar 2023 08:11:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjCVFza (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2023 01:55:30 -0400
-Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 507F43347B;
-        Tue, 21 Mar 2023 22:55:28 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R811e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046060;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VePWA1N_1679464521;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VePWA1N_1679464521)
-          by smtp.aliyun-inc.com;
-          Wed, 22 Mar 2023 13:55:25 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] pata_parport: Clean up some inconsistent indenting
-Date:   Wed, 22 Mar 2023 13:55:19 +0800
-Message-Id: <20230322055519.67900-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S229864AbjCVMLD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2023 08:11:03 -0400
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 094AB5F6D6;
+        Wed, 22 Mar 2023 05:11:01 -0700 (PDT)
+Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id D3E7D7A00F2;
+        Wed, 22 Mar 2023 13:10:59 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH 00/32] pata_parport-bpck6: rework bpck6 protocol driver
+Date:   Wed, 22 Mar 2023 13:10:42 +0100
+User-Agent: KMail/1.9.10
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230307224627.28011-1-linux@zary.sk> <202303181955.41922.linux@zary.sk> <d16b4b27-f1d3-bf05-e062-516e7c708fa2@omp.ru>
+In-Reply-To: <d16b4b27-f1d3-bf05-e062-516e7c708fa2@omp.ru>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <202303221310.44235.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-No functional modification involved.
+On Sunday 19 March 2023 21:02:43 Sergey Shtylyov wrote:
+> On 3/18/23 9:55 PM, Ondrej Zary wrote:
+> 
+> >>> This patch series simplifies bpck6 code, removing ppc6lnx.c file to match
+> >>> the simplicity of other protocol drivers. It also converts the direct
+> >>> port I/O access to paraport access functions. This conversion revealed that
+> >>> there's no 8-bit and 16-bit EPP support in parport_pc so patch 11 implements
+> >>> that.
+> >>>
+> >>> Tested with Backpack CD-RW 222011 and CD-RW 19350.
+> >>>
+> >>> Signed-off-by: Ondrej Zary <linux@zary.sk>
+> >>> ---
+> >>>  drivers/ata/pata_parport/bpck6.c   | 452 +++++++++++++++++++++++++++--------
+> >>>  drivers/ata/pata_parport/ppc6lnx.c | 726 ---------------------------------------------------------
+> >>>  drivers/parport/parport_pc.c       |  20 +-
+> >>>  include/uapi/linux/parport.h       |   3 +
+> >>>  4 files changed, 370 insertions(+), 831 deletions(-)
+> >>
+> >>    OK, it's finally clear I can't keep up with reviewing 32 patches posted
+> >> at once...  Luckily, all those patches seem to be dealing with parallel port
+> >> control), not the PATA control! Of course, when I volunteered to review the
+> >> PATA driver patches, I didn't expect such patch volumes -- I mostly expected
+> >> some odd fixes, not a massive driver rework... :-/
+> > 
+> > So you're going to review the (P)ATA parts (if any) only.
+> 
+>    I saw no PATA parts in this patcheset...
+> 
+> > Maybe Sudip (as parport maintainer) could review the parallel port parts?
+> 
+>    I have no objections! :-)
 
-drivers/ata/pata_parport/comm.c:159 comm_write_block() warn: inconsistent indenting.
+Looks like Sudip does not care. What needs to be done so this can be merged?
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=4587
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/ata/pata_parport/comm.c | 227 ++++++++++++++++----------------
- 1 file changed, 116 insertions(+), 111 deletions(-)
-
-diff --git a/drivers/ata/pata_parport/comm.c b/drivers/ata/pata_parport/comm.c
-index 4c2f9ad60ad8..b474bda59323 100644
---- a/drivers/ata/pata_parport/comm.c
-+++ b/drivers/ata/pata_parport/comm.c
-@@ -1,12 +1,13 @@
--/* 
--        comm.c    (c) 1997-8  Grant R. Guenther <grant@torque.net>
--                              Under the terms of the GNU General Public License.
--
--	comm.c is a low-level protocol driver for some older models
--	of the DataStor "Commuter" parallel to IDE adapter.  Some of
--	the parallel port devices marketed by Arista currently
--	use this adapter.
--*/
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * comm.c    (c) 1997-8  Grant R. Guenther <grant@torque.net>
-+ *			 Under the terms of the GNU General Public License.
-+ *
-+ * comm.c is a low-level protocol driver for some older models
-+ * of the DataStor "Commuter" parallel to IDE adapter.  Some of
-+ * the parallel port devices marketed by Arista currently
-+ * use this adapter.
-+ */
- 
- #include <linux/module.h>
- #include <linux/init.h>
-@@ -18,120 +19,126 @@
- #include "pata_parport.h"
- 
- /* mode codes:  0  nybble reads, 8-bit writes
--                1  8-bit reads and writes
--                2  8-bit EPP mode
--*/
-+ *		1  8-bit reads and writes
-+ *		2  8-bit EPP mode
-+ */
- 
--#define j44(a,b)	(((a>>3)&0x0f)|((b<<1)&0xf0))
-+#define j44(a, b)	(((a>>3)&0x0f)|((b<<1)&0xf0))
- 
--#define P1	w2(5);w2(0xd);w2(0xd);w2(5);w2(4);
--#define P2	w2(5);w2(7);w2(7);w2(5);w2(4);
-+#define P1	w2(5); w2(0xd); w2(0xd); w2(5); w2(4);
-+#define P2	w2(5); w2(7); w2(7); w2(5); w2(4);
- 
--/* cont = 0 - access the IDE register file 
--   cont = 1 - access the IDE command set 
--*/
-+/*
-+ * cont = 0 - access the IDE register file
-+ * cont = 1 - access the IDE command set
-+ */
- 
- static int  cont_map[2] = { 0x08, 0x10 };
- 
- static int comm_read_regr(struct pi_adapter *pi, int cont, int regr)
-+{
-+	int l, h, r;
- 
--{       int     l, h, r;
--
--        r = regr + cont_map[cont];
-+	r = regr + cont_map[cont];
- 
--        switch (pi->mode)  {
-+	switch (pi->mode) {
- 
--        case 0: w0(r); P1; w0(0);
--        	w2(6); l = r1(); w0(0x80); h = r1(); w2(4);
--                return j44(l,h);
-+	case 0: w0(r); P1; w0(0);
-+		w2(6); l = r1(); w0(0x80); h = r1(); w2(4);
-+		return j44(l, h);
- 
--        case 1: w0(r+0x20); P1; 
--        	w0(0); w2(0x26); h = r0(); w2(4);
--                return h;
-+	case 1: w0(r+0x20); P1;
-+		w0(0); w2(0x26); h = r0(); w2(4);
-+		return h;
- 
- 	case 2:
- 	case 3:
--        case 4: w3(r+0x20); (void)r1();
--        	w2(0x24); h = r4(); w2(4);
--                return h;
-+	case 4: w3(r+0x20); (void)r1();
-+		w2(0x24); h = r4(); w2(4);
-+		return h;
- 
--        }
--        return -1;
--}       
-+	}
- 
--static void comm_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
-+	return -1;
-+}
- 
--{       int  r;
-+static void comm_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
-+{
-+	int r;
- 
--        r = regr + cont_map[cont];
-+	r = regr + cont_map[cont];
- 
--        switch (pi->mode)  {
-+	switch (pi->mode) {
- 
--        case 0:
--        case 1: w0(r); P1; w0(val); P2;
-+	case 0:
-+	case 1: w0(r); P1; w0(val); P2;
- 		break;
- 
- 	case 2:
- 	case 3:
--        case 4: w3(r); (void)r1(); w4(val);
--                break;
--        }
-+	case 4: w3(r); (void)r1(); w4(val);
-+		break;
-+	}
- }
- 
- static void comm_connect(struct pi_adapter *pi)
--
--{       pi->saved_r0 = r0();
--        pi->saved_r2 = r2();
--        w2(4); w0(0xff); w2(6);
--        w2(4); w0(0xaa); w2(6);
--        w2(4); w0(0x00); w2(6);
--        w2(4); w0(0x87); w2(6);
--        w2(4); w0(0xe0); w2(0xc); w2(0xc); w2(4);
-+{
-+	pi->saved_r0 = r0();
-+	pi->saved_r2 = r2();
-+	w2(4); w0(0xff); w2(6);
-+	w2(4); w0(0xaa); w2(6);
-+	w2(4); w0(0x00); w2(6);
-+	w2(4); w0(0x87); w2(6);
-+	w2(4); w0(0xe0); w2(0xc); w2(0xc); w2(4);
- }
- 
- static void comm_disconnect(struct pi_adapter *pi)
--
--{       w2(0); w2(0); w2(0); w2(4); 
-+{
-+	w2(0); w2(0); w2(0); w2(4);
- 	w0(pi->saved_r0);
--        w2(pi->saved_r2);
--} 
-+	w2(pi->saved_r2);
-+}
- 
- static void comm_read_block(struct pi_adapter *pi, char *buf, int count)
- 
--{       int     i, l, h;
--
--        switch (pi->mode) {
--        
--        case 0: w0(0x48); P1;
--                for(i=0;i<count;i++) {
--                        w0(0); w2(6); l = r1();
--                        w0(0x80); h = r1(); w2(4);
--                        buf[i] = j44(l,h);
--                }
--                break;
--
--        case 1: w0(0x68); P1; w0(0);
--                for(i=0;i<count;i++) {
--                        w2(0x26); buf[i] = r0(); w2(0x24);
--                }
-+{       int i, l, h;
-+
-+	switch (pi->mode) {
-+	case 0: w0(0x48); P1;
-+		for (i = 0; i < count; i++) {
-+			w0(0); w2(6); l = r1();
-+			w0(0x80); h = r1(); w2(4);
-+			buf[i] = j44(l, h);
-+		}
-+
-+		break;
-+	case 1: w0(0x68); P1; w0(0);
-+		for (i = 0; i < count; i++) {
-+			w2(0x26);
-+			buf[i] = r0();
-+			w2(0x24);
-+		}
-+
- 		w2(4);
- 		break;
--		
- 	case 2: w3(0x68); (void)r1(); w2(0x24);
--		for (i=0;i<count;i++) buf[i] = r4();
-+		for (i = 0; i < count; i++)
-+			buf[i] = r4();
-+
- 		w2(4);
- 		break;
-+	case 3: w3(0x68); (void)r1(); w2(0x24);
-+		for (i = 0; i < count/2; i++)
-+			((u16 *)buf)[i] = r4w();
- 
--        case 3: w3(0x68); (void)r1(); w2(0x24);
--                for (i=0;i<count/2;i++) ((u16 *)buf)[i] = r4w();
--                w2(4);
--                break;
-+		w2(4);
-+		break;
-+	case 4: w3(0x68); (void)r1(); w2(0x24);
-+		for (i = 0; i < count/4; i++)
-+			((u32 *)buf)[i] = r4l();
- 
--        case 4: w3(0x68); (void)r1(); w2(0x24);
--                for (i=0;i<count/4;i++) ((u32 *)buf)[i] = r4l();
--                w2(4);
--                break;
--		
-+		w2(4);
-+		break;
- 	}
- }
- 
-@@ -139,43 +146,41 @@ static void comm_read_block(struct pi_adapter *pi, char *buf, int count)
- 
- static void comm_write_block(struct pi_adapter *pi, char *buf, int count)
- 
--{       int	k;
-+{
-+	int k;
- 
--        switch (pi->mode) {
-+	switch (pi->mode) {
-+	case 0:
-+	case 1: w0(0x68); P1;
-+		for (k = 0; k < count; k++) {
-+			w2(5);
-+			w0(buf[k^1]);
-+			w2(7);
-+		}
- 
--        case 0:
--        case 1: w0(0x68); P1;
--        	for (k=0;k<count;k++) {
--                        w2(5); w0(buf[k^1]); w2(7);
--                }
--                w2(5); w2(4);
--                break;
--
--        case 2: w3(0x48); (void)r1();
--                for (k=0;k<count;k++) w4(buf[k^1]);
--                break;
--
--        case 3: w3(0x48); (void)r1();
--		for (k = 0; k < count / 2; k++)
-+		w2(5); w2(4);
-+		break;
-+	case 2: w3(0x48); (void)r1();
-+		for (k = 0; k < count; k++)
-+			w4(buf[k^1]);
-+		break;
-+	case 3: w3(0x48); (void)r1();
-+		for (k = 0; k < count/2; k++)
- 			w4w(swab16(((u16 *)buf)[k]));
--                break;
--
--        case 4: w3(0x48); (void)r1();
--		for (k = 0; k < count / 4; k++)
--			w4l(swab16(((u16 *)buf)[2 * k]) |
--			    swab16(((u16 *)buf)[2 * k + 1]) << 16);
--                break;
--
--
--        }
-+		break;
-+	case 4: w3(0x48); (void)r1();
-+		for (k = 0; k < count/4; k++)
-+			w4l(swab16(((u16 *)buf)[2 * k]) | swab16(((u16 *)buf)[2 * k + 1]) << 16);
-+		break;
-+	}
- }
- 
- static void comm_log_adapter(struct pi_adapter *pi)
--
--{       char    *mode_string[5] = {"4-bit","8-bit","EPP-8","EPP-16","EPP-32"};
-+{
-+	char *mode_string[5] = {"4-bit", "8-bit", "EPP-8", "EPP-16", "EPP-32"};
- 
- 	dev_info(&pi->dev, "DataStor Commuter at 0x%x, mode %d (%s), delay %d\n",
--		pi->port, pi->mode, mode_string[pi->mode], pi->delay);
-+		 pi->port, pi->mode, mode_string[pi->mode], pi->delay);
- }
- 
- static struct pi_protocol comm = {
 -- 
-2.20.1.7.g153144c
-
+Ondrej Zary
