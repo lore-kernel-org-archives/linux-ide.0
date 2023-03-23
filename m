@@ -2,80 +2,80 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D253EC6FD1F
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Mar 2023 03:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4E47C6FD1F
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Mar 2023 03:38:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230154AbjCWDit (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 22 Mar 2023 23:38:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51800 "EHLO
+        id S230174AbjCWDi5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 22 Mar 2023 23:38:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229522AbjCWDip (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2023 23:38:45 -0400
+        with ESMTP id S230145AbjCWDiq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Mar 2023 23:38:46 -0400
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B542B10EF
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F20FFE388
         for <linux-ide@vger.kernel.org>; Wed, 22 Mar 2023 20:38:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1679542723; x=1711078723;
+  t=1679542724; x=1711078724;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=KXBN5JGmxAlBHEMq2epnFEr6uvT+wtm6pf6xMORBgHs=;
-  b=ewMZo5aDy558PlwyhmVYa3X1X/WzeXRD1vTHU9PihInZrAGLhIpGIP3q
-   P+2QOCi4JSghUsqDzyzHnewKXCO07GTDHHf6susb7HLSoikGYMZYBBxKB
-   FKG6c3bNrhWjkw17Tg46XYTCNh/A0naKr9yVi5Ms+zM9gzdcNXF/shGus
-   whofhN3JgLo2U0wixz4TEVkEs1WkfHMRB6XyRGwBwCTGSmMpGVlJKA8i4
-   aaLWLg4GmBlxl+kc6iW9ZPVelwyDhfkEIftQLSdSO5GFxLl/m9FXxjPQf
-   Yn8tItxcMYQS9eCfqsGjw4kGyCPstwjYL/GaKooiWHcYfn28hAinFn9vG
-   w==;
+  bh=Mh6shQ7fpkoeC7Fx65fFuhoITwX3yL2ZjHH7GecROx8=;
+  b=e1ulQrTeCvjuANzJLuZ9sqSuHleAPfTqVG9l/+BZRD/POW3/FUF7sfP2
+   c035DgpDBzxBjbOUQzqhaopSj5fr9gkliShf+bDSFhRcv6IhjdC5wtOXK
+   JBLzmT00tpv/VGBA0NC8zRySXAkEyeeSzqgkaP/UCFwfvNOqEZgejsivP
+   kPSOqAoMiQ1ZGNjmi+tlBX7SAQlTchdq93tXUWEUHz1q9aD6hrHkRERJ3
+   3XU9Xwq7dDfvtWq5B7YXA/0gqL9dzEvIh8EcPrbYT/+EYlsh6EFRM0Cmj
+   8l3bSzaWWPEwoxS89+WL5UWx0zW49sIFAnGFXS0Pg6dwigBUhcQXR2SRL
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.98,283,1673884800"; 
-   d="scan'208";a="330711519"
+   d="scan'208";a="330711522"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Mar 2023 11:38:39 +0800
-IronPort-SDR: WHWhiVrwYrgdbmF9KtlXlDm2BiJxhbh/EHIGvhKraRlLt3XHKsZITn9qNLyp654wx7UzeiVMbo
- mTSqNbMnrsbQvO8SPnXr5p9DPM8trtULxfD/G0nbh7AaF+Obbz6xKqstUc8GOXZL+d0M/CHLZU
- iGko69wySEo9POuRwPWnu1PLOoPOIpIYPIjjH+rWXs5Lsnk851vB8jseEKv1UAlqXk8UuWh7o7
- BstNq6aLWbEo/gliRredFx2zJY1VQ/63g43VnqNeVc4r1oEoxSxB8VhWnhdwUIej6jtikborHt
- G34=
+  by ob1.hgst.iphmx.com with ESMTP; 23 Mar 2023 11:38:40 +0800
+IronPort-SDR: 4Dbnj0qyZN6KJ4hWEwEYEStb5wmDCMpGqkTwR4Wr1K18TeAL7eRq/TK5FvJx97NelkGaootQon
+ Ia6eldiykZRmw6Lwqo6PzNPkq+oHHE18aCi9I7oXGclcURys4/rpmj1KU6ENXRctOl0XdDmxQu
+ oosLbs2Ipg6k+3O2o0vXAUQtOQj4E+/t0MKXFz/Wbqzo+s+zpTX79sARl5Fero+dd8k6X+5upg
+ 3DKXAZuGQnIyI2z0iUVRyaQKgcSOWYcKXuqvOXqM+ZVq2G2u1npd1TmBTzj8vc8MOI4H+8gShb
+ lSQ=
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
   by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Mar 2023 19:49:16 -0700
-IronPort-SDR: zUO87GwSNesL7sotDJy+4kml4a+DzyGO7ylcS3pY7oWvPpM/3xSXRkCQDqWsQ3FJsLLq47Koc7
- UhRnOm7O6aAT4PeTcP2yLt1g8x4tScYVZ2PNFJTPwPnYhcgxWiXC1rpOo1bQ98rtt6tViGbLBm
- ENVoiviLmsUs0NZ+CBI6GWdT7OkunPqszfKDojbe6L4mjXYLkT+0/qF1u0JODuXBX1RZlEiun0
- 212CQ2Sh9IsKgtWmOv3n71o/yI0cuiQkKhfe8mDexn49t/TtYd6WZXuO6uWj2OPbNHOv+3MU7S
- FnI=
+IronPort-SDR: AqHzQ+AhxCg7zIgYKsgDMkmM8D6ACe1VgJQzcpJilmZfUs9DqVoRkn0+1dsHu6FuYR/LkhNSO9
+ I5Wru1210yRZ0F44aFDmMUjFa7/Ne+9zY8qsfCz7dGuCFjpatiGI/IjVMcDw0Al+rQ+T0wmbJJ
+ k/qL7MqsPwGIBjk+CC/K8t5UME/9V3/YY0BUsDIMQCPAvePiLyYiL3nTBFBGkIJyszfnIxXKWT
+ jNccFYvsjazcKl73GnrBySuMZ89mR0iN7RgAivfUYBcl2IJnXdk+XFUdywNLa9k9BVy5kB/1dk
+ Uyc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Mar 2023 20:38:40 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Mar 2023 20:38:41 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PhrfR5NWBz1RtVq
-        for <linux-ide@vger.kernel.org>; Wed, 22 Mar 2023 20:38:39 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PhrfS4FZqz1RtVp
+        for <linux-ide@vger.kernel.org>; Wed, 22 Mar 2023 20:38:40 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1679542719; x=1682134720; bh=KXBN5JGmxAlBHEMq2e
-        pnFEr6uvT+wtm6pf6xMORBgHs=; b=X9wSWXQki4Y1gK5K03hqEjLPWCWvKxhG9k
-        f4Cnwd0asQtBB+yWZOc9yOfYBrTwFVczGSUeWodPQutNj1gZX9CPn935nhLevzaG
-        ZoC+QJwwktyC/F2qtcVQ9ui35ujdB6/lfcRHPUXvpGxN8fOlmhgbszJBl9U7yFhB
-        12b1lwLaH6FJBCKiQ+3rquE1xxthGlWPGLC06nrx+BzhUsZlmIn9xxgv+wz1tvcj
-        9uiyviQi1ml3jDTqWDkhC31y6SXrpZIR6/AZb05cgVYsT4WZEbbiYkk8VCQ634NB
-        HNWedXu+CqKyAiBg50O+QsbtGofwwNET7cvM1mRGgILaGPEl59Lw==
+        :from; s=dkim; t=1679542720; x=1682134721; bh=Mh6shQ7fpkoeC7Fx65
+        fFuhoITwX3yL2ZjHH7GecROx8=; b=Zjszx4RtXsNm6eDyhXG36l5A9K/MwvqUId
+        9zR9nURVQiY5yPib5ZvJ74MKynCYsaxNhQ9FdvEb7tXpo8AU3WWMfsbWge6a8CR5
+        ldMJ4cnSbU31F2SLGTeAoI4/kt4raJ01qCDSSTaprZSnrKFXhyqW0DfAC7TB3SzS
+        9A0gdZ0MSmwqx+Y7RkoLOaArSDqerR9dKP1QLZD3zR7b4je3ZUv4awU0yaJs/cS8
+        zCQeXNWR1qHWep1HbdRzAgpoaKDLc6Tvs41LUcWqwRrGnxtX5wtLZJeTQpcwd1ri
+        VYawzB3+GnFYy26smBs4xenpiOvHl9xuQTZBDeonAkjF5oaMFexg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Auw4HJuv9l-l for <linux-ide@vger.kernel.org>;
-        Wed, 22 Mar 2023 20:38:39 -0700 (PDT)
+        with ESMTP id G-AWqbHrE3zX for <linux-ide@vger.kernel.org>;
+        Wed, 22 Mar 2023 20:38:40 -0700 (PDT)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PhrfQ5WF0z1RtVn;
-        Wed, 22 Mar 2023 20:38:38 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PhrfR4kyvz1RtVm;
+        Wed, 22 Mar 2023 20:38:39 -0700 (PDT)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-ide@vger.kernel.org, Ondrej Zary <linux@zary.sk>
 Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH 1/2] ata: pata_parport-bpck6: Remove dependency on 64BIT
-Date:   Thu, 23 Mar 2023 12:38:35 +0900
-Message-Id: <20230323033836.352672-2-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH 2/2] ata: pata_parport-bpck6: Declare mode_map as static
+Date:   Thu, 23 Mar 2023 12:38:36 +0900
+Message-Id: <20230323033836.352672-3-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230323033836.352672-1-damien.lemoal@opensource.wdc.com>
 References: <20230323033836.352672-1-damien.lemoal@opensource.wdc.com>
@@ -85,28 +85,36 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There is no reason to have compilation of the bpck6 protocol module
-being dependent on 64BIT. Remove this dependency.
+Compilation C=3D1 of the bpck6 protocol module generates the following
+message:
+
+drivers/ata/pata_parport/bpck6.c:62:5: warning: symbol 'mode_map' was
+not declared. Should it be static?
+
+Fix this by declaring mode_map as static.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/ata/pata_parport/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/pata_parport/bpck6.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_parport/Kconfig b/drivers/ata/pata_parport/=
-Kconfig
-index 0893a13e7979..2c953f5d1396 100644
---- a/drivers/ata/pata_parport/Kconfig
-+++ b/drivers/ata/pata_parport/Kconfig
-@@ -25,7 +25,7 @@ config PATA_PARPORT_BPCK
+diff --git a/drivers/ata/pata_parport/bpck6.c b/drivers/ata/pata_parport/=
+bpck6.c
+index 295dbe5cdaa4..76febd07a9bb 100644
+--- a/drivers/ata/pata_parport/bpck6.c
++++ b/drivers/ata/pata_parport/bpck6.c
+@@ -59,8 +59,8 @@
+ #define PPCMODE_EPP_WORD	5
+ #define PPCMODE_EPP_DWORD	6
 =20
- config PATA_PARPORT_BPCK6
- 	tristate "MicroSolutions backpack (Series 6) protocol"
--	depends on (PATA_PARPORT) && !64BIT
-+	depends on PATA_PARPORT
- 	help
- 	  This option enables support for the Micro Solutions BACKPACK
- 	  parallel port Series 6 IDE protocol.  (Most BACKPACK drives made
+-int mode_map[] =3D { PPCMODE_UNI_FW, PPCMODE_BI_FW, PPCMODE_EPP_BYTE,
+-		   PPCMODE_EPP_WORD, PPCMODE_EPP_DWORD };
++static int mode_map[] =3D { PPCMODE_UNI_FW, PPCMODE_BI_FW, PPCMODE_EPP_B=
+YTE,
++			  PPCMODE_EPP_WORD, PPCMODE_EPP_DWORD };
+=20
+ static void bpck6_send_cmd(struct pi_adapter *pi, u8 cmd)
+ {
 --=20
 2.39.2
 
