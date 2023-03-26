@@ -2,109 +2,68 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE84BC74A5B
-	for <linux-ide@archiver.kernel.org>; Sun, 26 Mar 2023 09:09:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94F19C74A5B
+	for <linux-ide@archiver.kernel.org>; Sun, 26 Mar 2023 20:14:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229621AbjCZJJ0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 26 Mar 2023 05:09:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36044 "EHLO
+        id S229475AbjCZUOK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 26 Mar 2023 16:14:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjCZJJ0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 26 Mar 2023 05:09:26 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8A949032;
-        Sun, 26 Mar 2023 02:09:24 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id t10so24117544edd.12;
-        Sun, 26 Mar 2023 02:09:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679821763;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=CWz+kM84jjmBibW+1U4/kJJyzwolvMd6Soxllt73RkQ=;
-        b=TezzMXLQPDFEMNmCPeVOOce+gMuzyTStYHZN3wFEC+H1b1dSc+orudckLqx/Rrlyr3
-         DB33/sl9ZKdeUPlwgWB3IQBuZg3r8H4nis4C5LpnwT5fFqo9LmJGukEpW4p0dNafy8R2
-         W5VpGKgRgkuw5qeWA4Mf8sBzDwAHxZCWfmlVgQWc3J76yeP/wyhehtCMilfia9Ril5Uy
-         qIpxSa6lLcFW8N5WqPtu/T5aHs/nwuACRLf159bmcZQAWSXQczuAzk3JkW53wtpsSndR
-         fM0oupziVdJ/4F8VEoXemYQuFmMxMau/GBIXnNXrz+uwGnWVWlG3E37JT5f6qn29f+Ui
-         x9Ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679821763;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=CWz+kM84jjmBibW+1U4/kJJyzwolvMd6Soxllt73RkQ=;
-        b=BrgZzZfvZiN7J0YCMxazOeJr3d1bBufjNazguk2sGiLBb//B1/apPNKztI3M1kP1tN
-         KZJD1tEBId3zorVdKPLkoj4pUoowIrLw1ZMLvfmY0jgO8tq6LF39XLY3DdMhI0Sbe4Zt
-         UH5pvR7xCJ1rMkRc3xmmGIrWJsLzAKKDpYgQJabLglpTtobHTdpIGkoxHS2KcFoDYc2i
-         K8qpKfKrZEbhhpgOZdw0e+Az3+GEMCq2DbeHWP3ga3USkGoa/p3c7d80dXH3zDI4C/Kk
-         x7bdGUA1FZf9DUVaGapQ0yn/mtIqa5Q+E5A4cGlncHVVcLn4zhq8dcduSBLSYqcdCtiB
-         bUug==
-X-Gm-Message-State: AAQBX9fT9ZKFHBfs7LReF7YE5o1GjTnZcAWuWsInE9bPciul1JTMFO09
-        1sPyMilvLOgLICu3jeKw4+4mfncsJWCvk+9hbVA=
-X-Google-Smtp-Source: AKy350ZutC1LFLhZ+pc81GNrJON1TxYnwf9GxzFCzarL3co8kVdNkLqvXn/fWnnmVzf5lZ8GhqqbcQz3W9Fa12CHllQ=
-X-Received: by 2002:a50:f692:0:b0:4fc:fc86:5f76 with SMTP id
- d18-20020a50f692000000b004fcfc865f76mr4126134edn.6.1679821763185; Sun, 26 Mar
- 2023 02:09:23 -0700 (PDT)
+        with ESMTP id S229880AbjCZUOI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 26 Mar 2023 16:14:08 -0400
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5A4E259C9
+        for <linux-ide@vger.kernel.org>; Sun, 26 Mar 2023 13:14:06 -0700 (PDT)
+Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id AECCB7A042F;
+        Sun, 26 Mar 2023 22:14:04 +0200 (CEST)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH 1/2] ata: pata_parport-bpck6: Remove dependency on 64BIT
+Date:   Sun, 26 Mar 2023 22:14:00 +0200
+User-Agent: KMail/1.9.10
+Cc:     linux-ide@vger.kernel.org, Sergey Shtylyov <s.shtylyov@omp.ru>
+References: <20230323033836.352672-1-damien.lemoal@opensource.wdc.com> <20230323033836.352672-2-damien.lemoal@opensource.wdc.com>
+In-Reply-To: <20230323033836.352672-2-damien.lemoal@opensource.wdc.com>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-References: <20230307224627.28011-1-linux@zary.sk> <202303181955.41922.linux@zary.sk>
- <d16b4b27-f1d3-bf05-e062-516e7c708fa2@omp.ru> <202303221310.44235.linux@zary.sk>
-In-Reply-To: <202303221310.44235.linux@zary.sk>
-From:   Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Date:   Sun, 26 Mar 2023 10:08:47 +0100
-Message-ID: <CADVatmORsN4ZdOZ+u0AfUy320UV77PuNn7UiV0Kx1nRX03YJTQ@mail.gmail.com>
-Subject: Re: [PATCH 00/32] pata_parport-bpck6: rework bpck6 protocol driver
-To:     Ondrej Zary <linux@zary.sk>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Message-Id: <202303262214.00248.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, 22 Mar 2023 at 12:11, Ondrej Zary <linux@zary.sk> wrote:
->
-> On Sunday 19 March 2023 21:02:43 Sergey Shtylyov wrote:
-> > On 3/18/23 9:55 PM, Ondrej Zary wrote:
-> >
-> > >>> This patch series simplifies bpck6 code, removing ppc6lnx.c file to match
-> > >>> the simplicity of other protocol drivers. It also converts the direct
-> > >>> port I/O access to paraport access functions. This conversion revealed that
-> > >>> there's no 8-bit and 16-bit EPP support in parport_pc so patch 11 implements
-> > >>> that.
-> > >>>
-> > >>> Tested with Backpack CD-RW 222011 and CD-RW 19350.
-> > >>>
-> > >>> Signed-off-by: Ondrej Zary <linux@zary.sk>
-> > >>> ---
-> > >>>  drivers/ata/pata_parport/bpck6.c   | 452 +++++++++++++++++++++++++++--------
-> > >>>  drivers/ata/pata_parport/ppc6lnx.c | 726 ---------------------------------------------------------
-> > >>>  drivers/parport/parport_pc.c       |  20 +-
-> > >>>  include/uapi/linux/parport.h       |   3 +
-> > >>>  4 files changed, 370 insertions(+), 831 deletions(-)
-> > >>
-> > >>    OK, it's finally clear I can't keep up with reviewing 32 patches posted
-> > >> at once...  Luckily, all those patches seem to be dealing with parallel port
-> > >> control), not the PATA control! Of course, when I volunteered to review the
-> > >> PATA driver patches, I didn't expect such patch volumes -- I mostly expected
-> > >> some odd fixes, not a massive driver rework... :-/
-> > >
-> > > So you're going to review the (P)ATA parts (if any) only.
-> >
-> >    I saw no PATA parts in this patcheset...
-> >
-> > > Maybe Sudip (as parport maintainer) could review the parallel port parts?
-> >
-> >    I have no objections! :-)
->
-> Looks like Sudip does not care. What needs to be done so this can be merged?
+On Thursday 23 March 2023 04:38:35 Damien Le Moal wrote:
+> There is no reason to have compilation of the bpck6 protocol module
+> being dependent on 64BIT. Remove this dependency.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-oops.. sorry. I missed it.
+Reviewed-by: Ondrej Zary <linux@zary.sk>
+
+> ---
+>  drivers/ata/pata_parport/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/pata_parport/Kconfig b/drivers/ata/pata_parport/Kconfig
+> index 0893a13e7979..2c953f5d1396 100644
+> --- a/drivers/ata/pata_parport/Kconfig
+> +++ b/drivers/ata/pata_parport/Kconfig
+> @@ -25,7 +25,7 @@ config PATA_PARPORT_BPCK
+>  
+>  config PATA_PARPORT_BPCK6
+>  	tristate "MicroSolutions backpack (Series 6) protocol"
+> -	depends on (PATA_PARPORT) && !64BIT
+> +	depends on PATA_PARPORT
+>  	help
+>  	  This option enables support for the Micro Solutions BACKPACK
+>  	  parallel port Series 6 IDE protocol.  (Most BACKPACK drives made
 
 
 -- 
-Regards
-Sudip
+Ondrej Zary
