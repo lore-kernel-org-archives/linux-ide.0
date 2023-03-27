@@ -2,99 +2,82 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12219C6FD1D
-	for <linux-ide@archiver.kernel.org>; Mon, 27 Mar 2023 18:05:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04A81C76195
+	for <linux-ide@archiver.kernel.org>; Mon, 27 Mar 2023 19:04:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232474AbjC0SFb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 27 Mar 2023 14:05:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44020 "EHLO
+        id S232356AbjC0TEb convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 27 Mar 2023 15:04:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229733AbjC0SFa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2023 14:05:30 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0866730E7;
-        Mon, 27 Mar 2023 11:05:28 -0700 (PDT)
-Received: from [192.168.1.103] (31.173.81.236) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 27 Mar
- 2023 21:05:25 +0300
-Subject: Re: [PATCH] dt-bindings: ata: Drop unneeded quotes
-To:     Rob Herring <robh@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-CC:     <linux-ide@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>
-References: <20230327170053.4100949-1-robh@kernel.org>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <24c8055b-8a1c-4556-e830-3b51b8d23f49@omp.ru>
-Date:   Mon, 27 Mar 2023 21:05:25 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S229677AbjC0TEa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2023 15:04:30 -0400
+Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com [209.85.219.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A71A52719;
+        Mon, 27 Mar 2023 12:04:28 -0700 (PDT)
+Received: by mail-yb1-f181.google.com with SMTP id i7so12056436ybt.0;
+        Mon, 27 Mar 2023 12:04:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679943867;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+UFBf/PJ4B8eptCmmhaug8CchpjKto2XVsuXPxLn/2U=;
+        b=yl2ANp/j8rffygGEC8guR7gZlqWyY8mHgHZWgi7wMaQzVGz7gR8Fv2nKaQYg8y4TuS
+         8kV8C6XjZOUjtMro3EQ6chVAoJ7IHekmPdMf5dWK8EC+IYSXlGqc3MsapAlEmPMWCKYG
+         pz/NSAfctWhSwspzqHzbQHsBQjTg2rBM/LMmtviAL+ZYqDy5Wn1oA/m0Fi/dV+m9Juns
+         j/qCH8z+ZaoHPfBSXBiChXcR3Xto41Bpl9GM9ydkp7sSKY9JdIv2VWv8mCr35wJRI52L
+         GIcX8ya8y9sfJNqu3rkMszQ1TwXIbzB77XPxj6xAmm8N4bSmy18cvQ32jGrh9mCI88gA
+         8UbA==
+X-Gm-Message-State: AAQBX9f9fZA2VOCFUTLlao/I1nKOzckb1CimFqLYfeS883wHQFqjWSt0
+        ypGnoIAXKkmI9rR7XazRtRReBIPL1saNXw==
+X-Google-Smtp-Source: AKy350ZlgSO0AIZgBRroytZb9+3+UdOnRdZ7bbVz6SQazMY4N6YHRrmm2tkgFAYP7d2pS4LXaBrluw==
+X-Received: by 2002:a25:6948:0:b0:b63:e1f7:b121 with SMTP id e69-20020a256948000000b00b63e1f7b121mr11365104ybc.5.1679943867510;
+        Mon, 27 Mar 2023 12:04:27 -0700 (PDT)
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com. [209.85.219.171])
+        by smtp.gmail.com with ESMTPSA id 198-20020a250bcf000000b00b7767ca746asm2414493ybl.7.2023.03.27.12.04.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Mar 2023 12:04:26 -0700 (PDT)
+Received: by mail-yb1-f171.google.com with SMTP id n125so11991834ybg.7;
+        Mon, 27 Mar 2023 12:04:26 -0700 (PDT)
+X-Received: by 2002:a05:6902:154e:b0:b77:d2db:5f8f with SMTP id
+ r14-20020a056902154e00b00b77d2db5f8fmr7646774ybu.12.1679943866424; Mon, 27
+ Mar 2023 12:04:26 -0700 (PDT)
 MIME-Version: 1.0
+References: <20230327170053.4100949-1-robh@kernel.org>
 In-Reply-To: <20230327170053.4100949-1-robh@kernel.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [31.173.81.236]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 03/27/2023 17:45:10
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 176318 [Mar 27 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 507 507 08d345461d9bcca7095738422a5279ab257bb65a
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;devicetree.org:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.236
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 03/27/2023 17:47:00
-X-KSE-AttachmentFiltering-Interceptor-Info: protection disabled
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 3/27/2023 4:08:00 PM
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 27 Mar 2023 21:04:15 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUV9KAtp87rWOhB6eSPWL3jTBf0frwpQDaWPD=H=w3skg@mail.gmail.com>
+Message-ID: <CAMuHMdUV9KAtp87rWOhB6eSPWL3jTBf0frwpQDaWPD=H=w3skg@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: ata: Drop unneeded quotes
+To:     Rob Herring <robh@kernel.org>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/27/23 8:00 PM, Rob Herring wrote:
-
+On Mon, Mar 27, 2023 at 7:01 PM Rob Herring <robh@kernel.org> wrote:
 > Cleanup bindings dropping unneeded quotes. Once all these are fixed,
 > checking for this can be enabled in yamllint.
-> 
+>
 > Signed-off-by: Rob Herring <robh@kernel.org>
-[...]
 
-> diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-> index c4e4a9eab658..fe0909554790 100644
-> --- a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-> +++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-> @@ -1,8 +1,8 @@
->  # SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
->  %YAML 1.2
->  ---
-> -$id: "http://devicetree.org/schemas/ata/renesas,rcar-sata.yaml#"
-> -$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-> +$id: http://devicetree.org/schemas/ata/renesas,rcar-sata.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
->  
->  title: Renesas R-Car Serial-ATA Interface
->  
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Gr{oetje,eeting}s,
 
-MBR, Sergey
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
