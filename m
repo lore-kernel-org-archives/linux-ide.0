@@ -2,56 +2,68 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1316BC76195
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Mar 2023 07:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDBA0C6FD18
+	for <linux-ide@archiver.kernel.org>; Wed, 29 Mar 2023 08:29:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232385AbjC1Hrk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Mar 2023 03:47:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33170 "EHLO
+        id S230393AbjC2I3V (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 29 Mar 2023 04:29:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232336AbjC1Hrg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Mar 2023 03:47:36 -0400
-Received: from mail.lokoho.com (mail.lokoho.com [217.61.105.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A5E04217
-        for <linux-ide@vger.kernel.org>; Tue, 28 Mar 2023 00:47:35 -0700 (PDT)
-Received: by mail.lokoho.com (Postfix, from userid 1001)
-        id 7365A84585; Tue, 28 Mar 2023 08:46:04 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lokoho.com; s=mail;
-        t=1679989569; bh=Z0N5VlX9/JlryGOL5I747Le9USomZJCRNNGRT3LbbKc=;
-        h=Date:From:To:Subject:From;
-        b=pf61YLzAidx+8bHHic78P9Rs7POL2aEMsn1SbgmiiHhvOjMaa2KweGkFUvdEwMsWy
-         4SO1iaCcnxweGx5iibcDBC2bcwjYMr9X0FniYzrXSXrcLE3Uqnucv4iI8bbXmBbRAu
-         gKe4NN9m1xDYMaB5c3fOU4f66qjo7Pe7TzOssqlOl5zYiy/MrKVe+b3xFxbMNSTuOQ
-         gLupZW3C3E8TGd2ZOLGAV/0rFY8+b4FdEuOtKucJxGjN7FpOLx2DdNl8Jbbq8MTFto
-         dJhkzImmImeIS0pb9j9EsURrQN+LR0rU0wCwvFj9JF7BXSLm7jpgTdEe4gQS4mEMbQ
-         0WiizNtACdC8A==
-Received: by mail.lokoho.com for <linux-ide@vger.kernel.org>; Tue, 28 Mar 2023 07:45:59 GMT
-Message-ID: <20230328074501-0.1.4x.1n0em.0.dcni7g6qs3@lokoho.com>
-Date:   Tue, 28 Mar 2023 07:45:59 GMT
-From:   "Adam Charachuta" <adam.charachuta@lokoho.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania?=
-X-Mailer: mail.lokoho.com
+        with ESMTP id S230383AbjC2I3V (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 29 Mar 2023 04:29:21 -0400
+X-Greylist: delayed 1081 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 29 Mar 2023 01:29:19 PDT
+Received: from cstnet.cn (smtp85.cstnet.cn [159.226.251.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 02CAE170F;
+        Wed, 29 Mar 2023 01:29:18 -0700 (PDT)
+Received: from sunying$nj.iscas.ac.cn ( [204.44.112.13] ) by
+ ajax-webmail-APP-13 (Coremail) ; Wed, 29 Mar 2023 15:52:30 +0800
+ (GMT+08:00)
+X-Originating-IP: [204.44.112.13]
+Date:   Wed, 29 Mar 2023 15:52:30 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From:   =?UTF-8?B?5a2Z5rui?= <sunying@nj.iscas.ac.cn>
+To:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        greybus-dev@lists.linaro.org
+Subject: Multiple undefined configuration options are dependent in Kconfig
+ under the v6.3-rc4 drivers directory
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.15 build 20221213(4b1d97a5)
+ Copyright (c) 2002-2023 www.mailtech.cn cnic.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Message-ID: <bc6c86d.11bb9.1872c5aa2cb.Coremail.sunying@nj.iscas.ac.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: twCowACXn18_7iNkH9QOAA--.38250W
+X-CM-SenderInfo: 5vxq5xdqj60y4olvutnvoduhdfq/1tbiCQQFAWQj49YqzwAAse
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+        CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+        daVFxhVjvjDU=
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
-
-zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
-=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
-o dalszych rozm=C3=B3w.=20
-
-Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
-=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
-=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
-strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
-
-Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
-
-
-Pozdrawiam
-Adam Charachuta
+SXQgaGFzIGJlZW4gZGlzY292ZXJlZCB0aGF0IHRoZSBmb2xsb3dpbmcgY29uZmlndXJhdGlvbiBv
+cHRpb25zIGFyZSB1bmRlZmluZWQgaW4gdGhlIGN1cnJlbnQgbGF0ZXN0IHZlcnNpb24sIHY2LjMt
+cmM0LCB5ZXQgdGhleSBhcmUgYmVpbmcgcmVsaWVkIHVwb24gYnkgb3RoZXIgY29uZmlndXJhdGlv
+biBvcHRpb25zIGluIG11bHRpcGxlIEtjb25maWcgZmlsZXM6CgpNSVBTX0JBSUtBTF9UMSBpcyB1
+bmRlZmluZWQsIHVzZWQgYXMgYSAnZGVwZW5kcyBvbicgY29uZGl0aW9uIGluIG11bHRpcGxlIGZp
+bGVzIHN1Y2ggYXMgZHJpdmVycy9hdGEvS2NvbmZpZywgZHJpdmVycy9od21vbi9LY29uZmlnLCBk
+cml2ZXJzL2J1cy9LY29uZmlnLCBhbmQgZHJpdmVycy9tZW1vcnkvS2NvbmZpZy4KTUZEX01BWDU5
+N1ggaXMgdW5kZWZpbmVkLCB1c2VkIGFzIGEgJ2RlcGVuZHMgb24nIGNvbmRpdGlvbiBpbiBLY29u
+ZmlnIGZpbGUgZHJpdmVycy9yZWd1bGF0b3IvS2NvbmZpZy4KTUZEX1NNNTcwMyBpcyB1bmRlZmlu
+ZWQsIHVzZWQgYXMgYSAnZGVwZW5kcyBvbicgY29uZGl0aW9uIGluIEtjb25maWcgZmlsZSBkcml2
+ZXJzL3JlZ3VsYXRvci9LY29uZmlnLgpBUkNIX1RIVU5ERVJCQVkgaXMgdW5kZWZpbmVkLCB1c2Vk
+IGFzIGEgJ2RlcGVuZHMgb24nIGNvbmRpdGlvbiBpbiBLY29uZmlnIGZpbGVzIGRyaXZlcnMvcGlu
+Y3RybC9LY29uZmlnIGFuZCBkcml2ZXJzL3BoeS9pbnRlbC9LY29uZmlnLgpBUkNIX0JDTTQ5MDgg
+aXMgdW5kZWZpbmVkLCB1c2VkIGFzIGEgJ2RlcGVuZHMgb24nIGNvbmRpdGlvbiBpbiBLY29uZmln
+IGZpbGUgZHJpdmVycy9sZWRzL2JsaW5rL0tjb25maWcuCk1GRF9UTjQ4TV9DUExEIGlzIHVuZGVm
+aW5lZCwgdXNlZCBhcyBhICdkZXBlbmRzIG9uJyBjb25kaXRpb24gaW4gS2NvbmZpZyBmaWxlcyBk
+cml2ZXJzL2dwaW8vS2NvbmZpZyBhbmQgZHJpdmVycy9yZXNldC9LY29uZmlnLiAKVVNCX0hTSUNf
+VVNCMzYxMyBpcyB1bmRlZmluZWQsIHVzZWQgYXMgYSAnZGVwZW5kcyBvbicgY29uZGl0aW9uIGlu
+IGRyaXZlcnMvc3RhZ2luZy9ncmV5YnVzL0tjb25maWcgYW5kIGRyaXZlcnMvc3RhZ2luZy9ncmV5
+YnVzL2FyY2hlLXBsYXRmb3JtLmMuCgpJZiB0aGVzZSA3IGNvbmZpZ3VyYXRpb24gb3B0aW9ucyBh
+cmUgZGVwcmVjYXRlZCwgaXQgaXMgcmVjb21tZW5kZWQgdG8gcmVtb3ZlIHRoZSBkZXBlbmRlbmNp
+ZXMgb24gdGhlbSBpbiB0aGUgS2NvbmZpZyBmaWxlcy4gCklmIHRoZXkgYXJlIHN0aWxsIHVzZWZ1
+bCwgaXQgaXMgcmVjb21tZW5kZWQgdG8gZGVmaW5lIHRoZW0uCgoKQmVzdCByZWdhcmRzLApZaW5n
+IFN1bgpQZW5ncGVuZyBIb3UKWWFuamllIFJlbg==
