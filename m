@@ -2,140 +2,93 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A8DC761A6
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Apr 2023 20:00:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1612EC761A6
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Apr 2023 20:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232313AbjDDUAH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Apr 2023 16:00:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51028 "EHLO
+        id S230331AbjDDUNs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Apr 2023 16:13:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229507AbjDDUAG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2023 16:00:06 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D66F81BCE
-        for <linux-ide@vger.kernel.org>; Tue,  4 Apr 2023 13:00:05 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id 185so9213933pgc.10
-        for <linux-ide@vger.kernel.org>; Tue, 04 Apr 2023 13:00:05 -0700 (PDT)
+        with ESMTP id S229457AbjDDUNr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2023 16:13:47 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAA982134
+        for <linux-ide@vger.kernel.org>; Tue,  4 Apr 2023 13:13:46 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id ce4so9222720pfb.1
+        for <linux-ide@vger.kernel.org>; Tue, 04 Apr 2023 13:13:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680638405;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=DYV4PPxMzDepSOWEesiMdaYY+snXj4HjdIADIpWwmm0=;
-        b=W33ExpVwZ8GdoAxj5xnh9cMHG9WCfz68fArGpIbwJJ1CqwHf1hO/8PNFCKlpxO/84G
-         DTp3JubtCfJ6x5/O0VvN1ubmtMNENiLpKxhaAQ38wRUjyi2DiGn7d/a+LYzDHn7TiIHM
-         U8G4jbAPdoE5/ebmw6irlB5ijcMM5VVOWfzwg6c+5VR8uw3fBPl7scA7pDak6hbUrexn
-         fwBvUDE2Rgs7lP7NS5EYZKeKEwIX9iWTPxRk4aTpjQ7q19GZKkq8ykRSwz47jpGqIhIK
-         1fqwxQT4fMqNClkC4mhG+g+4UVLW4GAt5isDS4QuyyufjrXTIE5rc+8r0nJBceGfd/5e
-         SDfA==
+        d=gmail.com; s=20210112; t=1680639226;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=9H1i+TqDmlaQLPUVoZDjq8uF1IwwyWvPsFhWyvDuuEA=;
+        b=LkLe0Aapi7uqb+P1IW0VI3BHU14iLbSwdarXo1DX1AAJKc0HGZyB4p0b/kLcZRiHj2
+         LErQrcw5PscMTL27EIa2osuW0gsvQGZS0hZGWBrTf10SYUYh/7eJ14mZRlYRDpKwK8kD
+         uLl1qG3dHTLHba94YvwSy7O4mb3wS5O+zt3XPZg+uAlY81QVfxAnjenJxn0T+Ofj0wKR
+         y4Qv7sevIW6bvKiniu/O0Nr/+jPuBgXmcpVO8P2cBtJ66fhfRD9urYlyaq3/hWmkmIgA
+         g1t4IvvnP0t01L8Da9vYYZKrhyYN5ZyMGNhuXpVhIJOQw7yfEqs6dG3w6D+kspZGcHC9
+         vyqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680638405;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=DYV4PPxMzDepSOWEesiMdaYY+snXj4HjdIADIpWwmm0=;
-        b=R6m0NgEJiQxfU1+1/ztNgAuOSxDevGdvpL/bzClx8C+zCRfhd3w0UFONqhbKR6AzM1
-         OEHKXowIeWK5KRWbG18AQlotVgjc+3+oP0C25HBxWBBkKqtkqQ1/u4TodZ6XLzlzXjJ+
-         +QmVzt77YyZqbtbkxInFAiTHmDvaNcABMbU5NOmjN4hMqXxzjzs1wksRvA9deYoK0anh
-         RJva75kUj6uiz10tcVBDxMYf/BQSxEsZYW6cgqqGM/oaGKS5r505KaWIbL5LjyNfUnIo
-         g67hO5ydRYyKdgDd453WzkOV2IMzevnxuy24ahbvgcYsX/8QH67BIc1z6aK2GhigkBII
-         YBCg==
-X-Gm-Message-State: AAQBX9eaVAoKkDAM7XJepHbPqR7Skz+JvO81VMUzd13onoHg/kL1UxMB
-        LEVb+x2f7qaaUkivx/1Aiw+kDVICTq2soL7zj9iQVtpOSBs=
-X-Google-Smtp-Source: AKy350bIS1+086YMKZ9wH40yEaFQS2Kd+slOjt/9hYZaE8hjITrj+MZ2UwksOZjZlvFBU1ES0c1KqVyuuTGPleCQkKw=
-X-Received: by 2002:a05:6a00:1256:b0:62b:113b:72d7 with SMTP id
- u22-20020a056a00125600b0062b113b72d7mr1975533pfi.3.1680638404979; Tue, 04 Apr
- 2023 13:00:04 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1680639226;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9H1i+TqDmlaQLPUVoZDjq8uF1IwwyWvPsFhWyvDuuEA=;
+        b=qJ3jeTWbCHFvA6jK4YfYyv3h+mThwwWkbDudmHVOqRR6tWSJpR/HUhrc5/jfx/MNgm
+         DntzDqdaHZM+KSmZ3+9+VOoLBK8vU2Or66ggnYhKj/BFNOaKxY976xxpafKG3/V3RfLF
+         56Puia1xK1DMA52hj0s+t5oxdjdqh7p+LUfoGuIjJT08UHrpInkTHtfedEW9HtdPwxyJ
+         rhs+6oYFuogpki85Bbm+LXCuCOqkfz63IBjI0Az2bORfxYOYeW8Pk1SqfEm/tBvjKTSy
+         JyLwHggm5Ta8w8UBD8EHtT44TY/qkJbJ4dRELkdbG9uC6rU/10FM4qKYviCS/u7FqWxM
+         FVDg==
+X-Gm-Message-State: AAQBX9cqyW4hBqmHelVte8Wl8yisH54P9XnAKX8JsEN+Bg9DdHVabaJb
+        NQEC+O6+/fQib8PygY044a2DuVwNCcUf+VTC2xso/9cOBls=
+X-Google-Smtp-Source: AKy350a670AeuTovRyljMF2rnhCD2jHpRPPj9UaTEn301ASEKSoaKyEQwCju+HSC+UO8xBslxlHk+e1cjIz+KhfBE68=
+X-Received: by 2002:a05:6a00:2d87:b0:626:23a1:7b8a with SMTP id
+ fb7-20020a056a002d8700b0062623a17b8amr2020023pfb.3.1680639226293; Tue, 04 Apr
+ 2023 13:13:46 -0700 (PDT)
 MIME-Version: 1.0
-References: <CADUzMVb+JbwxiKxrxjAep8Gbom_ynM7Os67_gTEHC-dJFAVL0g@mail.gmail.com>
- <5c99651c-01d8-e396-f817-802ad6f1017e@opensource.wdc.com>
-In-Reply-To: <5c99651c-01d8-e396-f817-802ad6f1017e@opensource.wdc.com>
 From:   Ioannis Barkas <jnyb.de@gmail.com>
-Date:   Tue, 4 Apr 2023 22:59:53 +0300
-Message-ID: <CADUzMVYknyN5P4QrzKfb7bP2yVLCgJpvDu+XVZLbemyFLRCUmQ@mail.gmail.com>
-Subject: Re: The SATA_ini162x.
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org
+Date:   Tue, 4 Apr 2023 23:13:34 +0300
+Message-ID: <CADUzMVb=vhCrScxZ+i9Mpq5T7jbmjZCxmUMnWcbQT3QWW0xGBg@mail.gmail.com>
+Subject: Re: [ata] : SATA device speed down after multiple power reset.
+To:     linux-ide@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Damien,
+Hello,
 
-Sorry for the late reply, I have been busy porting an ancient android
-kernel to GCC 10 and have consumed lots of time on that.
+Since you have reported this problem, I suggest to provide some more
+details in case you wish to find its root cause.
 
-Most drives support HPA but it was not enabled on my device. Kernel
-could boot without HPA but I would not recommend it. I have seen x86
-firmware using it to backup its image in HPA area so we could get into
-big trouble.
+You have not provided any useful information at all! You have just
+sent the error but everything else is kept in dark...
 
-I am sure that this is not an HDD issue but can verify that HPA is
-workable on another host. Will test an AMD one and test a boot with
-the proposed argument. I planned to test it with an LBA28 disk but
-haven't done so as I need a spare one. Will definitelly do it during
-the weekend.
+Having that in mind, please elaborate to see what goes wrong. Damien
+will help you if it caused by any coding error. First of all, provide
+a full dmesg so that we can see the interesting details. In detail, we
+need to see the CPU, the SATA host capabilities and the IC used.
+Moreover, we must see the SSD device you are using as well as the
+kernel version. Are you using a custom kernel or one of the official
+releases? Please provide a link to its source in the case of a custom
+kernel.
 
-Thank you!
+To track this error, I suggest to increase the kernel buffer and
+enable CONFIG_ATA_VERBOSE_ERROR. Repeat testing and provide the latest
+dmesg.
 
-On Thu, 23 Feb 2023 at 01:43, Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> On 2/23/23 06:28, Ioannis Barkas wrote:
-> > Hello Magnus,
-> >
-> > I will give you more details about it since I reported the issue with
-> > this controller many years ago.
-> >
-> > Yes you can activate the driver but you will need to enable this
-> > driver and build your own kernel. That is needed since the driver is
-> > disabled by default. There is at least one underlying issue that has
-> > got unnoticed and has not been solved yet thus the driver is
-> > considered experimental. My PCI card has an eSATA connector routed to
-> > port 0 and a SATA connector routed to port 1. Back then, I had tested
-> > the SATA port and believed that the driver could only handle port 0.
-> >
-> > Damien if you are willing to investigate this and help me fix it, I am
-> > at your disposal. I still have the card with this controller, the
-> > datasheet of the IC manufacturer, an AMD based PC with a PCI slot and
-> > lots of disks for testing. What is more, I had done some tests back in
-> > December and the issue remains. Here is what 6.1 prints:
-> > [    1.947670] sata_inic162x 0000:05:06.0: version 0.4
-> > [    1.947716] sata_inic162x 0000:05:06.0: inic162x support is broken
-> > with common data corruption issues and will be disabled by default,
-> > contact linux-ide@vger.kernel.org if in production use
-> >
-> > Here is the problem:
-> > [    3.285163] ata8.00: native sectors (1) is smaller than sectors (976773168)
->
-> Are you using drives with HPA ? (host protected area, see:
-> https://en.wikipedia.org/wiki/Host_protected_area).
->
-> That normally is drive dependent, not adapter dependent. And with TCG now, HPA
-> is not really a thing anymore and not used on any recent drive (that I know of
-> at least).
->
-> Could you try with recent drives (HDDs or SSDs) that do not have HPA ? And maybe
-> also try to see if the libata argument "ata_ignore_hpa=1" helps.
->
-> You could also try adding a horkage for that HPA drive (see
-> ATA_HORKAGE_BROKEN_HPA examples in libata-core.c, ata_device_blacklist array).
-> Note to self: there is unfortunately no libata.force= argument for hpa. Will
-> need to add that.
->
-> >
-> > I tested the eSATA port and it behaves exactly the same as the SATA
-> > port. I have also performed some modifications but those were in the
-> > wrong direction as I completely broke the driver thus it could not
-> > detect attached devices. That brought a libata bug to the surface and
-> > I need to send a patch about it. Back to sata_inic, I have not figured
-> > out how it works with both channels.
-> >
-> > Hope to get better Magnus really soon!
-> >
-> > Best regards.
->
-> --
-> Damien Le Moal
-> Western Digital Research
->
+Concerning the storage device, does your SSD have power loss
+protection? Have you tested this configuration with an HDD? If the
+controller is PCI based, please provide lspci -nnnvvvxxx for all PCI
+devices run with elevated rights. Also please post hdparm and check
+your SSD device health. Have you detected any filesystem related
+corruption? Why do you want to power it down?
+
+In regards to the Power Management Unit(PMU), is the system running
+while the SSD is powered off or does it enter a lower power state as
+well? For example S3 or S4 speaking ACPI wise.
+
+There have been a lot of broken storage devices as well as SATA hosts
+but no one will be able to help you on this unless you provide
+additional information.
+
+Kind regards.
