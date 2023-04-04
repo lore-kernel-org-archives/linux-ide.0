@@ -2,93 +2,125 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1612EC761A6
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Apr 2023 20:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF37C6FD1D
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Apr 2023 23:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230331AbjDDUNs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Apr 2023 16:13:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59286 "EHLO
+        id S236366AbjDDXav (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Apr 2023 19:30:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbjDDUNr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2023 16:13:47 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAA982134
-        for <linux-ide@vger.kernel.org>; Tue,  4 Apr 2023 13:13:46 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id ce4so9222720pfb.1
-        for <linux-ide@vger.kernel.org>; Tue, 04 Apr 2023 13:13:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680639226;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=9H1i+TqDmlaQLPUVoZDjq8uF1IwwyWvPsFhWyvDuuEA=;
-        b=LkLe0Aapi7uqb+P1IW0VI3BHU14iLbSwdarXo1DX1AAJKc0HGZyB4p0b/kLcZRiHj2
-         LErQrcw5PscMTL27EIa2osuW0gsvQGZS0hZGWBrTf10SYUYh/7eJ14mZRlYRDpKwK8kD
-         uLl1qG3dHTLHba94YvwSy7O4mb3wS5O+zt3XPZg+uAlY81QVfxAnjenJxn0T+Ofj0wKR
-         y4Qv7sevIW6bvKiniu/O0Nr/+jPuBgXmcpVO8P2cBtJ66fhfRD9urYlyaq3/hWmkmIgA
-         g1t4IvvnP0t01L8Da9vYYZKrhyYN5ZyMGNhuXpVhIJOQw7yfEqs6dG3w6D+kspZGcHC9
-         vyqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680639226;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=9H1i+TqDmlaQLPUVoZDjq8uF1IwwyWvPsFhWyvDuuEA=;
-        b=qJ3jeTWbCHFvA6jK4YfYyv3h+mThwwWkbDudmHVOqRR6tWSJpR/HUhrc5/jfx/MNgm
-         DntzDqdaHZM+KSmZ3+9+VOoLBK8vU2Or66ggnYhKj/BFNOaKxY976xxpafKG3/V3RfLF
-         56Puia1xK1DMA52hj0s+t5oxdjdqh7p+LUfoGuIjJT08UHrpInkTHtfedEW9HtdPwxyJ
-         rhs+6oYFuogpki85Bbm+LXCuCOqkfz63IBjI0Az2bORfxYOYeW8Pk1SqfEm/tBvjKTSy
-         JyLwHggm5Ta8w8UBD8EHtT44TY/qkJbJ4dRELkdbG9uC6rU/10FM4qKYviCS/u7FqWxM
-         FVDg==
-X-Gm-Message-State: AAQBX9cqyW4hBqmHelVte8Wl8yisH54P9XnAKX8JsEN+Bg9DdHVabaJb
-        NQEC+O6+/fQib8PygY044a2DuVwNCcUf+VTC2xso/9cOBls=
-X-Google-Smtp-Source: AKy350a670AeuTovRyljMF2rnhCD2jHpRPPj9UaTEn301ASEKSoaKyEQwCju+HSC+UO8xBslxlHk+e1cjIz+KhfBE68=
-X-Received: by 2002:a05:6a00:2d87:b0:626:23a1:7b8a with SMTP id
- fb7-20020a056a002d8700b0062623a17b8amr2020023pfb.3.1680639226293; Tue, 04 Apr
- 2023 13:13:46 -0700 (PDT)
+        with ESMTP id S229973AbjDDXau (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2023 19:30:50 -0400
+X-Greylist: delayed 169 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 04 Apr 2023 16:30:50 PDT
+Received: from wnew2-smtp.messagingengine.com (wnew2-smtp.messagingengine.com [64.147.123.27])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06B60171A;
+        Tue,  4 Apr 2023 16:30:49 -0700 (PDT)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+        by mailnew.west.internal (Postfix) with ESMTP id 31FC02B06716;
+        Tue,  4 Apr 2023 19:18:41 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute2.internal (MEProxy); Tue, 04 Apr 2023 19:18:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
+        cc:cc:content-transfer-encoding:content-type:content-type:date
+        :date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+        :references:reply-to:sender:subject:subject:to:to; s=fm2; t=
+        1680650320; x=1680653920; bh=Dh/jNwxjYyR3YpziKbhDIW+cpNCUKNq7RU5
+        ux1R/gic=; b=q5V2S59rH5jkx5zlsSCfiUImJuQixSIsU7cedybja9ADMiLFtFV
+        ToS5U+4F2TygnB3tXBEmHcazEmsV6viFXUK/QmSWQG8U4AAXJwdaGgfVL9654u2m
+        WBA2iSxif7a3ztZXcy4diSv2ufdH9QXmuv0zY5LnsveYJx+LB8LwGfdJU4QerS8U
+        ozSWsfJr9Wu6eSUXq7IKP7VcKRvQcq9xlW3+NvHfzQKiu1SkUEZg24ma1eBG5sHR
+        zAWW8v/XZmaHkMpPYbVr2Tg9naW0TEDIY5PgRANbhchdJ+2L8NbRDvxzRIuLjzeG
+        JDBErgfQA5rCzWKrvBeY5Pt+XgmKlRe4sdw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-transfer-encoding
+        :content-type:content-type:date:date:feedback-id:feedback-id
+        :from:from:in-reply-to:in-reply-to:message-id:mime-version
+        :references:reply-to:sender:subject:subject:to:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=i3db14652.fm2;
+         t=1680650320; x=1680653920; bh=Dh/jNwxjYyR3YpziKbhDIW+cpNCUKNq7
+        RU5ux1R/gic=; b=DnpaVgehezZt6XRUm7fxSj+Yi74DH9MGh2041S2cXS/6dx2Y
+        qi5YyySk5SkiqnMEJKF3QxOUYZVlTGTSUIJzoqex04jyKw0WVxwWtzIqDAxqdHj4
+        WOWSRL/HQC3bnqYybZnhNXmMgswdlELbtaYwqo+W6EQL63NF1s2vwqeZYle8SewV
+        ce/joO5ME77vcSLbgW/vR7t6E/17RzTBZFVhXdjK5GIHdZJSvfRFnuQu6pcvU/OK
+        4+GVxqe6p4GazPlpaG8hQSuijghTeQunkrA6YsdBBeDepJje2IqbpDiRxqY++kSn
+        o1IXRvG2FtotAmmZNi3USo/4d0pBBHFU3seLHA==
+X-ME-Sender: <xms:T7AsZOhGqhftAi9KnSZ_t0aeV05JPij0hZwJRYlSlrtTekJ_e8Flpg>
+    <xme:T7AsZPC8CuXQ_8IHeEsVlq5niGmL2T5CUg47OaIcyCpenfdfFtPcbcVXOjVsQeatL
+    wh_pI7F1gx1RV8Dpv0>
+X-ME-Received: <xmr:T7AsZGFq8m-iWriWNrLUQbe6wnpo51z_S12pPSC-S-6DbMFkW9bcIfjtNvvTdn9SdTeuxhNQiGZ77V7Xc1uU9kp5LvU7JvCL>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrvdejtddgudejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtfeejnecuhfhrohhmpeffrghm
+    ihgvnhcunfgvucfoohgrlhcuoegulhgvmhhorghlsehfrghsthhmrghilhdrtghomheqne
+    cuggftrfgrthhtvghrnhepteefiefhieetgfevhfegfeehffetteduieetudfgleetvdff
+    udelveejfefhfeejnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
+    hfrhhomhepughlvghmohgrlhesfhgrshhtmhgrihhlrdgtohhm
+X-ME-Proxy: <xmx:T7AsZHTdGep7XbMvF9ciWoRW17Z_vfRc44HeTVo9iB1W6MQXf_qUqA>
+    <xmx:T7AsZLxGLeV35LWE9NoOB0nI0-YxRatB87c2yQAz4UIaOS02pe-_vQ>
+    <xmx:T7AsZF6iCgD2ziqnSVNG9nqM5gKWRNxgOKCb4PQyvm_jbJIvkZGUgg>
+    <xmx:ULAsZJ4IJiknPsjBzOd-7aJN2WYRsciV0liGW9fsVhyENRfK-T_OdiG8TgE>
+Feedback-ID: i3db14652:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 4 Apr 2023 19:18:36 -0400 (EDT)
+Message-ID: <83f26d2a-6577-50d9-9a76-0f95dfb05bca@fastmail.com>
+Date:   Wed, 5 Apr 2023 08:18:34 +0900
 MIME-Version: 1.0
-From:   Ioannis Barkas <jnyb.de@gmail.com>
-Date:   Tue, 4 Apr 2023 23:13:34 +0300
-Message-ID: <CADUzMVb=vhCrScxZ+i9Mpq5T7jbmjZCxmUMnWcbQT3QWW0xGBg@mail.gmail.com>
-Subject: Re: [ata] : SATA device speed down after multiple power reset.
-To:     linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCH v5 09/19] scsi: allow enabling and disabling command
+ duration limits
+To:     Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <nks@flawful.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+References: <20230404182428.715140-1-nks@flawful.org>
+ <20230404182428.715140-10-nks@flawful.org> <ZCx6dzyEfWYNaF6r@google.com>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@fastmail.com>
+In-Reply-To: <ZCx6dzyEfWYNaF6r@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello,
+On 4/5/23 04:28, Igor Pylypiv wrote:
+>> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+>> index 4994148e685b..9a54b2c0fee7 100644
+>> --- a/drivers/scsi/scsi_sysfs.c
+>> +++ b/drivers/scsi/scsi_sysfs.c
+>> @@ -1222,6 +1222,36 @@ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
+>>  		   sdev_show_queue_ramp_up_period,
+>>  		   sdev_store_queue_ramp_up_period);
+>>  
+>> +static ssize_t sdev_show_cdl_enable(struct device *dev,
+>> +				    struct device_attribute *attr, char *buf)
+>> +{
+>> +	struct scsi_device *sdev = to_scsi_device(dev);
+>> +
+>> +	return sysfs_emit(buf, "%d\n", (int)sdev->cdl_enable);
+>> +}
+>> +
+>> +static ssize_t sdev_store_cdl_enable(struct device *dev,
+>> +				     struct device_attribute *attr,
+>> +				     const char *buf, size_t count)
+>> +{
+>> +	int ret;
+>> +	bool v;
+>> +
+>> +	if (!capable(CAP_SYS_ADMIN))
+>> +		return -EACCES;
+> CAP_SYS_ADMIN seems be too restrictive. NCQ PRIO (ncq_prio_enable) does not 
+> require CAP_SYS_ADMIN. Since NCQ PRIO and CDL are mutually exclusive a user
+> should be able to toggle both features.
 
-Since you have reported this problem, I suggest to provide some more
-details in case you wish to find its root cause.
+Indeed, we can have CDL be the same as NCQ prio. We can remove this
+SYS_CAP_ADMIN check.
 
-You have not provided any useful information at all! You have just
-sent the error but everything else is kept in dark...
 
-Having that in mind, please elaborate to see what goes wrong. Damien
-will help you if it caused by any coding error. First of all, provide
-a full dmesg so that we can see the interesting details. In detail, we
-need to see the CPU, the SATA host capabilities and the IC used.
-Moreover, we must see the SSD device you are using as well as the
-kernel version. Are you using a custom kernel or one of the official
-releases? Please provide a link to its source in the case of a custom
-kernel.
-
-To track this error, I suggest to increase the kernel buffer and
-enable CONFIG_ATA_VERBOSE_ERROR. Repeat testing and provide the latest
-dmesg.
-
-Concerning the storage device, does your SSD have power loss
-protection? Have you tested this configuration with an HDD? If the
-controller is PCI based, please provide lspci -nnnvvvxxx for all PCI
-devices run with elevated rights. Also please post hdparm and check
-your SSD device health. Have you detected any filesystem related
-corruption? Why do you want to power it down?
-
-In regards to the Power Management Unit(PMU), is the system running
-while the SSD is powered off or does it enter a lower power state as
-well? For example S3 or S4 speaking ACPI wise.
-
-There have been a lot of broken storage devices as well as SATA hosts
-but no one will be able to help you on this unless you provide
-additional information.
-
-Kind regards.
