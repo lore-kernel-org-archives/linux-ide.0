@@ -2,271 +2,140 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C3C2C761A6
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Apr 2023 19:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A8DC761A6
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Apr 2023 20:00:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235694AbjDDT3G (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Apr 2023 15:29:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57286 "EHLO
+        id S232313AbjDDUAH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Apr 2023 16:00:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235721AbjDDT3F (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2023 15:29:05 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A2452713
-        for <linux-ide@vger.kernel.org>; Tue,  4 Apr 2023 12:29:01 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id iw3so32316438plb.6
-        for <linux-ide@vger.kernel.org>; Tue, 04 Apr 2023 12:29:01 -0700 (PDT)
+        with ESMTP id S229507AbjDDUAG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Apr 2023 16:00:06 -0400
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D66F81BCE
+        for <linux-ide@vger.kernel.org>; Tue,  4 Apr 2023 13:00:05 -0700 (PDT)
+Received: by mail-pg1-x52b.google.com with SMTP id 185so9213933pgc.10
+        for <linux-ide@vger.kernel.org>; Tue, 04 Apr 2023 13:00:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680636541;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=elpRMODiaw//U5pfL2czX7ve3QK/cpuxObmTPi8rtBE=;
-        b=X8runZPsrfmCt/Esjj2ZbUqJRzQ5kpFs3/0vCTDM4sAF7eTwNCQO+G7YrESkQAAkWe
-         1JD18ei2ndrUS1AX5MwKpsFLzOboONwYd/X0ZEswKv3MT7aYW2Rdqlld4egECrx0qv+0
-         DfgpZg5wH7N/4UuhpvJ9QCT2YmwIKrLRgD0fLWfvja0KkLX250LqpRAapdIy93X7fE0c
-         990U+XO1Lz2gS3PdNQXEyKIUx4w7EiqIZ4tpDGmPlYFb2Hl71E2219oQhkrS0wVwg1w4
-         YYqU629qe0kl7kh9nqzTjlVT57Dx6uNd+TCjN6WcWHr0tjBYYsrO36uddx0OkjyUCCIr
-         N4KA==
+        d=gmail.com; s=20210112; t=1680638405;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=DYV4PPxMzDepSOWEesiMdaYY+snXj4HjdIADIpWwmm0=;
+        b=W33ExpVwZ8GdoAxj5xnh9cMHG9WCfz68fArGpIbwJJ1CqwHf1hO/8PNFCKlpxO/84G
+         DTp3JubtCfJ6x5/O0VvN1ubmtMNENiLpKxhaAQ38wRUjyi2DiGn7d/a+LYzDHn7TiIHM
+         U8G4jbAPdoE5/ebmw6irlB5ijcMM5VVOWfzwg6c+5VR8uw3fBPl7scA7pDak6hbUrexn
+         fwBvUDE2Rgs7lP7NS5EYZKeKEwIX9iWTPxRk4aTpjQ7q19GZKkq8ykRSwz47jpGqIhIK
+         1fqwxQT4fMqNClkC4mhG+g+4UVLW4GAt5isDS4QuyyufjrXTIE5rc+8r0nJBceGfd/5e
+         SDfA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680636541;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=elpRMODiaw//U5pfL2czX7ve3QK/cpuxObmTPi8rtBE=;
-        b=k5/Z8Alt2l9shpBSAyN60O5Lm9cFNoNU7p4BrFgynJgGR62vkP0DbetaXSqPVgjdcU
-         ZFAws2MIKdUfXTJ9+ogMQMsVPzIX/pAhwmPkPorhz8Ex5nl76r+XmjEl29oTP6YT3uJb
-         NcH7oLTEHALVXD3CTSsLwvvV0RAiUPDkoIdog5QKS25meUyx8vQlWYCXstdeoxkmDZXS
-         2fTunjgws+hc+jbn67YnoCGlO3khI7n3R+qaDGPSVsCjpYU3SZ2TCF1lgNLeJS5DUj4l
-         v7ZgkB0V9KKyHvZAvXBiudonif0GSDifVM1EsMye+F9eP7iU4kvhd0ts+aXI0TUKP9ZS
-         ZOlA==
-X-Gm-Message-State: AAQBX9fiXeq3XVyEVu3+gafOL4H6IMKKmRQE6Z1w+G28J6l42Z+SGJ1K
-        rdNNfd200NoD8HSjWxs2c2ziSA==
-X-Google-Smtp-Source: AKy350bk08eI+rHYkJfIA4GXwHzROnMEnEzKVfVKfThUMmynQeM/qAq9cwH/sCzAHs6kxN51+vX+uQ==
-X-Received: by 2002:a05:6a20:b288:b0:d8:d18d:60ae with SMTP id ei8-20020a056a20b28800b000d8d18d60aemr2850551pzb.7.1680636540626;
-        Tue, 04 Apr 2023 12:29:00 -0700 (PDT)
-Received: from google.com ([2620:15c:2c5:13:94bc:ca55:a3c9:ef36])
-        by smtp.gmail.com with ESMTPSA id c13-20020aa78e0d000000b0062603aec060sm9113803pfr.184.2023.04.04.12.28.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Apr 2023 12:28:59 -0700 (PDT)
-Date:   Tue, 4 Apr 2023 12:28:55 -0700
-From:   Igor Pylypiv <ipylypiv@google.com>
-To:     Niklas Cassel <nks@flawful.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: [PATCH v5 09/19] scsi: allow enabling and disabling command
- duration limits
-Message-ID: <ZCx6dzyEfWYNaF6r@google.com>
-References: <20230404182428.715140-1-nks@flawful.org>
- <20230404182428.715140-10-nks@flawful.org>
+        d=1e100.net; s=20210112; t=1680638405;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DYV4PPxMzDepSOWEesiMdaYY+snXj4HjdIADIpWwmm0=;
+        b=R6m0NgEJiQxfU1+1/ztNgAuOSxDevGdvpL/bzClx8C+zCRfhd3w0UFONqhbKR6AzM1
+         OEHKXowIeWK5KRWbG18AQlotVgjc+3+oP0C25HBxWBBkKqtkqQ1/u4TodZ6XLzlzXjJ+
+         +QmVzt77YyZqbtbkxInFAiTHmDvaNcABMbU5NOmjN4hMqXxzjzs1wksRvA9deYoK0anh
+         RJva75kUj6uiz10tcVBDxMYf/BQSxEsZYW6cgqqGM/oaGKS5r505KaWIbL5LjyNfUnIo
+         g67hO5ydRYyKdgDd453WzkOV2IMzevnxuy24ahbvgcYsX/8QH67BIc1z6aK2GhigkBII
+         YBCg==
+X-Gm-Message-State: AAQBX9eaVAoKkDAM7XJepHbPqR7Skz+JvO81VMUzd13onoHg/kL1UxMB
+        LEVb+x2f7qaaUkivx/1Aiw+kDVICTq2soL7zj9iQVtpOSBs=
+X-Google-Smtp-Source: AKy350bIS1+086YMKZ9wH40yEaFQS2Kd+slOjt/9hYZaE8hjITrj+MZ2UwksOZjZlvFBU1ES0c1KqVyuuTGPleCQkKw=
+X-Received: by 2002:a05:6a00:1256:b0:62b:113b:72d7 with SMTP id
+ u22-20020a056a00125600b0062b113b72d7mr1975533pfi.3.1680638404979; Tue, 04 Apr
+ 2023 13:00:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230404182428.715140-10-nks@flawful.org>
+References: <CADUzMVb+JbwxiKxrxjAep8Gbom_ynM7Os67_gTEHC-dJFAVL0g@mail.gmail.com>
+ <5c99651c-01d8-e396-f817-802ad6f1017e@opensource.wdc.com>
+In-Reply-To: <5c99651c-01d8-e396-f817-802ad6f1017e@opensource.wdc.com>
+From:   Ioannis Barkas <jnyb.de@gmail.com>
+Date:   Tue, 4 Apr 2023 22:59:53 +0300
+Message-ID: <CADUzMVYknyN5P4QrzKfb7bP2yVLCgJpvDu+XVZLbemyFLRCUmQ@mail.gmail.com>
+Subject: Re: The SATA_ini162x.
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 04, 2023 at 08:24:14PM +0200, Niklas Cassel wrote:
-> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> 
-> Add the sysfs scsi device attribute cdl_enable to allow a user to turn
-> enable or disable a device command duration limits feature. CDL is
-> disabled by default. This feature must be explicitly enabled by a user by
-> setting the cdl_enable attribute to 1.
-> 
-> The new function scsi_cdl_enable() does not do anything beside setting
-> the cdl_enable field of struct scsi_device in the case of a (real) scsi
-> device (e.g. a SAS HDD). For ATA devices, the command duration limits
-> feature needs to be enabled/disabled using the ATA feature sub-page of
-> the control mode page. To do so, the scsi_cdl_enable() function checks
-> if this mode page is supported using scsi_mode_sense(). If it is,
-> scsi_mode_select() is used to enable and disable CDL.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> ---
->  Documentation/ABI/testing/sysfs-block-device | 13 ++++
->  drivers/scsi/scsi.c                          | 62 ++++++++++++++++++++
->  drivers/scsi/scsi_sysfs.c                    | 31 ++++++++++
->  include/scsi/scsi_device.h                   |  2 +
->  4 files changed, 108 insertions(+)
-> 
-> diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
-> index ee3610a25845..626d48ac504b 100644
-> --- a/Documentation/ABI/testing/sysfs-block-device
-> +++ b/Documentation/ABI/testing/sysfs-block-device
-> @@ -104,3 +104,16 @@ Contact:	linux-scsi@vger.kernel.org
->  Description:
->  		(RO) Indicates if the device supports the command duration
->  		limits feature found in some ATA and SCSI devices.
-> +
-> +
-> +What:		/sys/block/*/device/cdl_enable
-> +Date:		Mar, 2023
-> +KernelVersion:	v6.4
-> +Contact:	linux-scsi@vger.kernel.org
-> +Description:
-> +		(RW) For a device supporting the command duration limits
-> +		feature, write to the file to turn on or off the feature.
-> +		By default this feature is turned off.
-> +		Writing "1" to this file enables the use of command duration
-> +		limits for read and write commands in the kernel and turns on
-> +		the feature on the device. Writing "0" disables the feature.
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index c03814ce23ca..c4bf99a842f3 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -651,6 +651,68 @@ void scsi_cdl_check(struct scsi_device *sdev)
->  	kfree(buf);
->  }
->  
-> +/**
-> + * scsi_cdl_enable - Enable or disable a SCSI device supports for Command
-> + *                   Duration Limits
-> + * @sdev: The target device
-> + * @enable: the target state
-> + */
-> +int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
-> +{
-> +	struct scsi_mode_data data;
-> +	struct scsi_sense_hdr sshdr;
-> +	struct scsi_vpd *vpd;
-> +	bool is_ata = false;
-> +	char buf[64];
-> +	int ret;
-> +
-> +	if (!sdev->cdl_supported)
-> +		return -EOPNOTSUPP;
-> +
-> +	rcu_read_lock();
-> +	vpd = rcu_dereference(sdev->vpd_pg89);
-> +	if (vpd)
-> +		is_ata = true;
-> +	rcu_read_unlock();
-> +
-> +	/*
-> +	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
-> +	 */
-> +	if (is_ata) {
-> +		char *buf_data;
-> +		int len;
-> +
-> +		ret = scsi_mode_sense(sdev, 0x08, 0x0a, 0xf2, buf, sizeof(buf),
-> +				      5 * HZ, 3, &data, NULL);
-> +		if (ret)
-> +			return -EINVAL;
-> +
-> +		/* Enable CDL using the ATA feature page */
-> +		len = min_t(size_t, sizeof(buf),
-> +			    data.length - data.header_length -
-> +			    data.block_descriptor_length);
-> +		buf_data = buf + data.header_length +
-> +			data.block_descriptor_length;
-> +		if (enable)
-> +			buf_data[4] = 0x02;
-> +		else
-> +			buf_data[4] = 0;
-> +
-> +		ret = scsi_mode_select(sdev, 1, 0, buf_data, len, 5 * HZ, 3,
-> +				       &data, &sshdr);
-> +		if (ret) {
-> +			if (scsi_sense_valid(&sshdr))
-> +				scsi_print_sense_hdr(sdev,
-> +					dev_name(&sdev->sdev_gendev), &sshdr);
-> +			return ret;
-> +		}
-> +	}
-> +
-> +	sdev->cdl_enable = enable;
-> +
-> +	return 0;
-> +}
-> +
->  /**
->   * scsi_device_get  -  get an additional reference to a scsi_device
->   * @sdev:	device to get a reference to
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 4994148e685b..9a54b2c0fee7 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1222,6 +1222,36 @@ static DEVICE_ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
->  		   sdev_show_queue_ramp_up_period,
->  		   sdev_store_queue_ramp_up_period);
->  
-> +static ssize_t sdev_show_cdl_enable(struct device *dev,
-> +				    struct device_attribute *attr, char *buf)
-> +{
-> +	struct scsi_device *sdev = to_scsi_device(dev);
-> +
-> +	return sysfs_emit(buf, "%d\n", (int)sdev->cdl_enable);
-> +}
-> +
-> +static ssize_t sdev_store_cdl_enable(struct device *dev,
-> +				     struct device_attribute *attr,
-> +				     const char *buf, size_t count)
-> +{
-> +	int ret;
-> +	bool v;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EACCES;
-CAP_SYS_ADMIN seems be too restrictive. NCQ PRIO (ncq_prio_enable) does not 
-require CAP_SYS_ADMIN. Since NCQ PRIO and CDL are mutually exclusive a user
-should be able to toggle both features.
+Hello Damien,
 
-Thanks,
-Igor
-> +
-> +	if (kstrtobool(buf, &v))
-> +		return -EINVAL;
-> +
-> +	ret = scsi_cdl_enable(to_scsi_device(dev), v);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return count;
-> +}
-> +static DEVICE_ATTR(cdl_enable, S_IRUGO | S_IWUSR,
-> +		   sdev_show_cdl_enable, sdev_store_cdl_enable);
-> +
->  static umode_t scsi_sdev_attr_is_visible(struct kobject *kobj,
->  					 struct attribute *attr, int i)
->  {
-> @@ -1302,6 +1332,7 @@ static struct attribute *scsi_sdev_attrs[] = {
->  #endif
->  	&dev_attr_queue_ramp_up_period.attr,
->  	&dev_attr_cdl_supported.attr,
-> +	&dev_attr_cdl_enable.attr,
->  	REF_EVT(media_change),
->  	REF_EVT(inquiry_change_reported),
->  	REF_EVT(capacity_change_reported),
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 6b8df9e253a0..b2cdb078b7bd 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -219,6 +219,7 @@ struct scsi_device {
->  	unsigned no_vpd_size:1;		/* No VPD size reported in header */
->  
->  	unsigned cdl_supported:1;	/* Command duration limits supported */
-> +	unsigned cdl_enable:1;		/* Enable/disable Command duration limits */
->  
->  	unsigned int queue_stopped;	/* request queue is quiesced */
->  	bool offline_already;		/* Device offline message logged */
-> @@ -367,6 +368,7 @@ extern void scsi_remove_device(struct scsi_device *);
->  extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
->  void scsi_attach_vpd(struct scsi_device *sdev);
->  void scsi_cdl_check(struct scsi_device *sdev);
-> +int scsi_cdl_enable(struct scsi_device *sdev, bool enable);
->  
->  extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
->  extern int __must_check scsi_device_get(struct scsi_device *);
-> -- 
-> 2.39.2
-> 
+Sorry for the late reply, I have been busy porting an ancient android
+kernel to GCC 10 and have consumed lots of time on that.
+
+Most drives support HPA but it was not enabled on my device. Kernel
+could boot without HPA but I would not recommend it. I have seen x86
+firmware using it to backup its image in HPA area so we could get into
+big trouble.
+
+I am sure that this is not an HDD issue but can verify that HPA is
+workable on another host. Will test an AMD one and test a boot with
+the proposed argument. I planned to test it with an LBA28 disk but
+haven't done so as I need a spare one. Will definitelly do it during
+the weekend.
+
+Thank you!
+
+On Thu, 23 Feb 2023 at 01:43, Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
+>
+> On 2/23/23 06:28, Ioannis Barkas wrote:
+> > Hello Magnus,
+> >
+> > I will give you more details about it since I reported the issue with
+> > this controller many years ago.
+> >
+> > Yes you can activate the driver but you will need to enable this
+> > driver and build your own kernel. That is needed since the driver is
+> > disabled by default. There is at least one underlying issue that has
+> > got unnoticed and has not been solved yet thus the driver is
+> > considered experimental. My PCI card has an eSATA connector routed to
+> > port 0 and a SATA connector routed to port 1. Back then, I had tested
+> > the SATA port and believed that the driver could only handle port 0.
+> >
+> > Damien if you are willing to investigate this and help me fix it, I am
+> > at your disposal. I still have the card with this controller, the
+> > datasheet of the IC manufacturer, an AMD based PC with a PCI slot and
+> > lots of disks for testing. What is more, I had done some tests back in
+> > December and the issue remains. Here is what 6.1 prints:
+> > [    1.947670] sata_inic162x 0000:05:06.0: version 0.4
+> > [    1.947716] sata_inic162x 0000:05:06.0: inic162x support is broken
+> > with common data corruption issues and will be disabled by default,
+> > contact linux-ide@vger.kernel.org if in production use
+> >
+> > Here is the problem:
+> > [    3.285163] ata8.00: native sectors (1) is smaller than sectors (976773168)
+>
+> Are you using drives with HPA ? (host protected area, see:
+> https://en.wikipedia.org/wiki/Host_protected_area).
+>
+> That normally is drive dependent, not adapter dependent. And with TCG now, HPA
+> is not really a thing anymore and not used on any recent drive (that I know of
+> at least).
+>
+> Could you try with recent drives (HDDs or SSDs) that do not have HPA ? And maybe
+> also try to see if the libata argument "ata_ignore_hpa=1" helps.
+>
+> You could also try adding a horkage for that HPA drive (see
+> ATA_HORKAGE_BROKEN_HPA examples in libata-core.c, ata_device_blacklist array).
+> Note to self: there is unfortunately no libata.force= argument for hpa. Will
+> need to add that.
+>
+> >
+> > I tested the eSATA port and it behaves exactly the same as the SATA
+> > port. I have also performed some modifications but those were in the
+> > wrong direction as I completely broke the driver thus it could not
+> > detect attached devices. That brought a libata bug to the surface and
+> > I need to send a patch about it. Back to sata_inic, I have not figured
+> > out how it works with both channels.
+> >
+> > Hope to get better Magnus really soon!
+> >
+> > Best regards.
+>
+> --
+> Damien Le Moal
+> Western Digital Research
+>
