@@ -2,125 +2,185 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B141C7619A
-	for <linux-ide@archiver.kernel.org>; Wed,  5 Apr 2023 22:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB88CC76196
+	for <linux-ide@archiver.kernel.org>; Thu,  6 Apr 2023 11:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229461AbjDEW3k (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 5 Apr 2023 18:29:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57832 "EHLO
+        id S238442AbjDFLkm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 6 Apr 2023 07:40:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbjDEW3j (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Apr 2023 18:29:39 -0400
-Received: from new4-smtp.messagingengine.com (new4-smtp.messagingengine.com [66.111.4.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4334310C8;
-        Wed,  5 Apr 2023 15:29:38 -0700 (PDT)
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-        by mailnew.nyi.internal (Postfix) with ESMTP id D8E47582237;
-        Wed,  5 Apr 2023 18:29:34 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute2.internal (MEProxy); Wed, 05 Apr 2023 18:29:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fastmail.com; h=
-        cc:cc:content-transfer-encoding:content-type:content-type:date
-        :date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-        :references:reply-to:sender:subject:subject:to:to; s=fm2; t=
-        1680733774; x=1680737374; bh=0hvdTrqnIesfwKwVq3biOhVWklyP7PuBB8v
-        wBclqcXE=; b=IPp+MnqRTTn2N3vo6dlles7qSJybzgJBtGedU7ArVmfm98PRps1
-        ysXZ3RJjjMsXtT+cIAhg5aSMTY+WXe+fIt616o4yicnIRSI/9Ld4wdlt5QUnfOlj
-        LsRrcbIeun2wHjykL/2UDc2MYH6v1u1pxWFH7cSdT8okDz9CmTKTeV5e6mf4yRd3
-        /x7nDB3n3DU0CQfnrQIkY5imJeUTj4lkuq6SrySmX70DyZGy6VBv5ocqBAfRMgEl
-        /rl4RRPX88V2Q6ZvvPIczhADDw5RaBe6yJFb3dhFEbRmwcwkJITlOgXbp3wwhexn
-        FndoTzGqo3NjiVRPgPxwY4wdKHL1yRtL5ig==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-transfer-encoding
-        :content-type:content-type:date:date:feedback-id:feedback-id
-        :from:from:in-reply-to:in-reply-to:message-id:mime-version
-        :references:reply-to:sender:subject:subject:to:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=i3db14652.fm2;
-         t=1680733774; x=1680737374; bh=0hvdTrqnIesfwKwVq3biOhVWklyP7PuB
-        B8vwBclqcXE=; b=JcCcM8Seu/Bh6214t3XI5cK0zyL7dg39sz8nnX1B1UPlCXoL
-        gdzUZNAJmpbmsdUvHmOTs99SqfIn4gjPjIPVkWu8ouLGnwGjiho1tXob7mpAE4rv
-        4F6sa53NCV4KDpWeXG0Ws0JBcRtFX0DaxiRNkxOL+wjeJg0mFe2k/22pZCD0o1XU
-        WpC0JOtcItxF8K7TX6x6pq9MNeK6Vg1w3yR/JCUbKhKIgCLoO8Ipm41eS+so6g1Z
-        p03R2uurm2OVJ6mfWa7WaZno9gsndIqfZid73nQmUlbtXhKXTieEJRLTCKoTzp2q
-        46spHIN0zCdtNag5s4LwFoKJ9fQHAX0UHN+QZg==
-X-ME-Sender: <xms:TfYtZHLAdghiXg-PzztIWq6FvuRpVXQ44Khif8DBv__firBZcOw-Zw>
-    <xme:TfYtZLJ4hNjC0q5fjPHb2Ocbr3F_qwbs1L0b5d4U7alWybB1pJb6yJkeD7uGYssX-
-    9NrKNPuVfNuOZ5jPjU>
-X-ME-Received: <xmr:TfYtZPunT8yMHXDDLF6TAQLFmVq2wVlcwhb_hX5tSuSpStl5D5h7_lRZ0bT3PBmva1hiFJfu-Os7wCpPe3sdqelLOaRkcrYQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrvdejvddgudduucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepkfffgggfuffvvehfhfgjtgfgsehtjeertddtfeejnecuhfhrohhmpeffrghm
-    ihgvnhcunfgvucfoohgrlhcuoegulhgvmhhorghlsehfrghsthhmrghilhdrtghomheqne
-    cuggftrfgrthhtvghrnhepteefiefhieetgfevhfegfeehffetteduieetudfgleetvdff
-    udelveejfefhfeejnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
-    hfrhhomhepughlvghmohgrlhesfhgrshhtmhgrihhlrdgtohhm
-X-ME-Proxy: <xmx:TfYtZAZ0HVncHW_8sn3-0_lMi9HLVzug-mragr37Q2RPjbB3xijvAw>
-    <xmx:TfYtZOaOk80OEjjPzUCCR3NG2LfrCWftqEDoCQSHzWEHwhhBXRxDeQ>
-    <xmx:TfYtZEAYJct45crcqaVI-X01Xp6JqTh_AQXeVMpOKbAXX2cjhlFPyw>
-    <xmx:TvYtZLSmM-oHr3AxtvQe2FtoYRhW_2BBEL4vq8Im_0ucS4dwEHTF6w>
-Feedback-ID: i3db14652:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 5 Apr 2023 18:29:30 -0400 (EDT)
-Message-ID: <e61cd958-2cea-a03e-2581-a8cea1940028@fastmail.com>
-Date:   Thu, 6 Apr 2023 07:29:28 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v5 18/19] ata: libata: set read/write commands CDL index
-To:     Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <nks@flawful.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+        with ESMTP id S238996AbjDFLkQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 6 Apr 2023 07:40:16 -0400
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FD0CB47A;
+        Thu,  6 Apr 2023 04:36:32 -0700 (PDT)
+Received: by mail-lf1-x12b.google.com with SMTP id g29so532751lfj.4;
+        Thu, 06 Apr 2023 04:36:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680780934;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hLe2BDpqjmup0y1LPiABk+LzHgKkTNIBWp76zDCcB+4=;
+        b=GIcASHLvXk58zNoEndxSyPxeJSduISNiRK7lWnyq86ivFMxH/4PAdrQOyVXnK3unfq
+         8tpWmJODQuW1eBuHeAF8JSlQXYfYI3LgIESyKi+U/lWEmv4RYoinzZKR5sdLoZoLzTCj
+         GNxuiTQr6Ly+nldPAK6lVvA4ZVHx39c7+3I63uwU8A7mwyTfLlXTj2bv/lRjo7yDfadh
+         P2Ki9a1ztaZyuPQIIPExrlHI5qLIbU5H5bdknMsMBmdEgxRYr6iFyNRK3ffKeYJbXR98
+         sU3eJLUo4SqYB8A88j1iC87kKWEGbtZ+Ej3ceYTa/NqpWBXzqi5C3oHgodLUSCY65kZ6
+         YR0w==
+X-Gm-Message-State: AAQBX9eIj5BOwlWUwXzhvVANVB94xqYmqYBsUg39LO9iKGOMIRbspEMH
+        5/3PJUgQKa451/SMmDVJewFDx/W2UbbVWw==
+X-Google-Smtp-Source: AKy350ZsR7wQELdu0Yp2Ev9AYrRg0/aCfTlocFrwPkX/J8DrIIB5UP0w8paVzkWrOdzVODIGeX3vqQ==
+X-Received: by 2002:ac2:48a1:0:b0:4eb:452d:5bbf with SMTP id u1-20020ac248a1000000b004eb452d5bbfmr2597917lfg.54.1680780934104;
+        Thu, 06 Apr 2023 04:35:34 -0700 (PDT)
+Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
+        by smtp.gmail.com with ESMTPSA id g13-20020ac2538d000000b004eb41d26d49sm229529lfh.28.2023.04.06.04.35.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Apr 2023 04:35:33 -0700 (PDT)
+Received: by flawful.org (Postfix, from userid 112)
+        id C2B7312A1; Thu,  6 Apr 2023 13:35:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1680780933; bh=preqedR2QZNTaOgvRKfmyWCCDHRysOKE6G/n/oQl2tk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=QXZONJlZ0GfO6y8sPyaChIJtM6fJDKJskV+SLPl/UexUPKvDrpbjOZ/jqyelNv28s
+         aAGIS5HV3hKHKkAmcQv/CKNvP2/24akemK/zi6nFBrKEvAFqv+MAnctGOgs7mbOWPL
+         jzcm8vGGgCXy3//izsq53tmSyW8qDOTRJSepm55E=
+Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by flawful.org (Postfix) with ESMTPSA id 1EA9E69A;
+        Thu,  6 Apr 2023 13:33:07 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1680780787; bh=preqedR2QZNTaOgvRKfmyWCCDHRysOKE6G/n/oQl2tk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=YEsZ+/Af/WlbT+HSw0N1YcUN7htnpOH4BXhKpCf8EcuZ/lLc0NbhnVOt+ckzdFEzs
+         6fY/gmaJfXrSiWMI9IfmIqrkmU9aUUtjiUncXShAn11iuqnC0vR0CeqHvfsLXW1jQI
+         o/HTg47o4TdishwfA7oGwd0g98YzBEEiM1A/F5qE=
+From:   Niklas Cassel <nks@flawful.org>
+To:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org
+Cc:     Bart Van Assche <bvanassche@acm.org>,
         Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Damien Le Moal <dlemoal@fastmail.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230404182428.715140-1-nks@flawful.org>
- <20230404182428.715140-19-nks@flawful.org> <ZC29XNMS9CnQZn74@google.com>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@fastmail.com>
-In-Reply-To: <ZC29XNMS9CnQZn74@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v6 02/19] block: introduce ioprio hints
+Date:   Thu,  6 Apr 2023 13:32:31 +0200
+Message-Id: <20230406113252.41211-3-nks@flawful.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230406113252.41211-1-nks@flawful.org>
+References: <20230406113252.41211-1-nks@flawful.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/6/23 03:26, Igor Pylypiv wrote:
-> On Tue, Apr 04, 2023 at 08:24:23PM +0200, Niklas Cassel wrote:
->> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>
->> For devices supporting the command duration limits feature, translate
->> the dld field of read and write operation to set the command duration
->> limit index field of the command task file when the duration limit
->> feature is enabled.
->>
->> The function ata_set_tf_cdl() is introduced to do this. For unqueued
->> (non NCQ) read and write operations, this function sets the command
->> duration limit index set as the lower 2 bits of the feature field.
->> For queued NCQ read/write commands, the index is set as the lower
->> 2 bits of the auxiliary field.
-> 
-> CDL index is lower 3 bits, not 2 bits.
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 
-Yes, typo. We will correct that.
+IO priorities currently only use 6-bits of the 16-bits ioprio value: the
+3-upper bits are used to define up to 8 priority classes (4 of which are
+valid) and the 3 lower bits of the value are used to define a priority
+level for the real-time and best-effort class.
 
-> 
->>
->> The flag ATA_QCFLAG_HAS_CDL is introduced to indicate that a command
->> taskfile has a non zero cdl field.
->>
->> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
->> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
->> ---
->>  drivers/ata/libata-core.c | 32 +++++++++++++++++++++++++++++---
->>  drivers/ata/libata-scsi.c | 16 +++++++++++++++-
->>  drivers/ata/libata.h      |  2 +-
->>  include/linux/libata.h    |  1 +
->>  4 files changed, 46 insertions(+), 5 deletions(-)
-> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+The remaining 10-bits between the IO priority class and level are
+unused, and in fact, cannot be used by the user as doing so would
+either result in the value being completely ignored, or in an error
+returned by ioprio_check_cap().
 
-Thanks.
+Use these 10-bits of an ioprio value to allow a user to specify IO
+hints. An IO hint is defined as a 10-bits value, allowing up to 1023
+different hints to be specified, with the value 0 being reserved as the
+"no hint" case. An IO hint can apply to any IO that specifies a valid
+priority class other than NONE, regardless of the IO priority level
+specified.
+
+To do so, the macros IOPRIO_PRIO_HINT() and IOPRIO_PRIO_VALUE_HINT() are
+introduced in include/uapi/linux/ioprio.h to respectively allow a user
+to get and set a hint in an ioprio value.
+
+To support the ATA and SCSI command duration limits feature, 7 hints
+are defined: IOPRIO_HINT_DEV_DURATION_LIMIT_1 to
+IOPRIO_HINT_DEV_DURATION_LIMIT_7, allowing a user to specify which
+command duration limit descriptor should be applied to the commands
+serving an IO. Specifying these hints has for now no effect whatsoever
+if the target block devices do not support the command duration limits
+feature. However, in the future, block IO schedulers can be modified to
+optimize IO issuing order based on these hints, even for devices that
+do not support the command duration limits feature.
+
+Given that the 7 duration limits hints defined have no effect on any
+block layer component, the actual definition of the duration limits
+implied by these hints remains at the device level.
+
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+ include/uapi/linux/ioprio.h | 49 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+
+diff --git a/include/uapi/linux/ioprio.h b/include/uapi/linux/ioprio.h
+index 4444b4e4fdad..607c7617b9d2 100644
+--- a/include/uapi/linux/ioprio.h
++++ b/include/uapi/linux/ioprio.h
+@@ -58,4 +58,53 @@ enum {
+ #define IOPRIO_NORM	4
+ #define IOPRIO_BE_NORM	IOPRIO_NORM
+ 
++/*
++ * The 10-bits between the priority class and the priority level are used to
++ * optionally define IO hints for any combination of IO priority class and
++ * level. Depending on the kernel configuration, IO scheduler being used and
++ * the target IO device being used, hints can influence how IOs are processed
++ * without affecting the IO scheduling ordering defined by the IO priority
++ * class and level.
++ */
++#define IOPRIO_HINT_SHIFT		IOPRIO_LEVEL_NR_BITS
++#define IOPRIO_HINT_NR_BITS		10
++#define IOPRIO_NR_HINTS			(1 << IOPRIO_HINT_NR_BITS)
++#define IOPRIO_HINT_MASK		(IOPRIO_NR_HINTS - 1)
++#define IOPRIO_PRIO_HINT(ioprio)	\
++	(((ioprio) >> IOPRIO_HINT_SHIFT) & IOPRIO_HINT_MASK)
++
++/*
++ * Alternate macro for IOPRIO_PRIO_VALUE() to define an IO priority with
++ * a class, level and hint.
++ */
++#define IOPRIO_PRIO_VALUE_HINT(class, level, hint)		 \
++	((((class) & IOPRIO_CLASS_MASK) << IOPRIO_CLASS_SHIFT) | \
++	 (((hint) & IOPRIO_HINT_MASK) << IOPRIO_HINT_SHIFT) |	 \
++	 ((level) & IOPRIO_LEVEL_MASK))
++
++/*
++ * IO hints.
++ */
++enum {
++	/* No hint */
++	IOPRIO_HINT_NONE = 0,
++
++	/*
++	 * Device command duration limits: indicate to the device a desired
++	 * duration limit for the commands that will be used to process an IO.
++	 * These will currently only be effective for SCSI and ATA devices that
++	 * support the command duration limits feature. If this feature is
++	 * enabled, then the commands issued to the device to process an IO with
++	 * one of these hints set will have the duration limit index (dld field)
++	 * set to the value of the hint.
++	 */
++	IOPRIO_HINT_DEV_DURATION_LIMIT_1 = 1,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_2 = 2,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_3 = 3,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_4 = 4,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_5 = 5,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_6 = 6,
++	IOPRIO_HINT_DEV_DURATION_LIMIT_7 = 7,
++};
++
+ #endif /* _UAPI_LINUX_IOPRIO_H */
+-- 
+2.39.2
 
