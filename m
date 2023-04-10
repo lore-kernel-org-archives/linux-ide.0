@@ -2,85 +2,107 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDCB3C77B6E
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Apr 2023 01:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32CE6C77B61
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Apr 2023 04:26:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229661AbjDJBNu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 9 Apr 2023 21:13:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40514 "EHLO
+        id S229498AbjDJE0w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Apr 2023 00:26:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229665AbjDJBNt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 9 Apr 2023 21:13:49 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B1643A9A;
-        Sun,  9 Apr 2023 18:13:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=VdW0QiWZs5tGfWPYA1DUgJb23J28q3ZPvcBOi0zT0BE=; b=daWXvKb1EIcxg0HC4CwHgCtg37
-        uOSPNeR3CtfZXI4UL1UQEKRw53ztrrwSN16KQDm0/4UjmKQBs/K4fdMJS1HKBP8Y2lFCOxRQuzvy+
-        X/QkANaB6jdpL1QM2u5V4JiTpYp1CIgii1o//f8tyFp/CHbaSd7E8IL75M0NWjF/wt+vxJviwGu+z
-        iZqE/xoSuYH0mj4H0lD4fmN4yAnheEX/ke1abhcxu8W4roCX4+2RCCDCUDnQYUWYfWqdULe/K6RvQ
-        JbetAX6DydD8As2XFOgUHaCRA9XZNIA9GMa0CZsceZI5KaSgue60KcV8q/9bGl1IQCz+DO4rLq033
-        1oudGLig==;
-Received: from [2601:1c2:980:9ec0::2764] (helo=bombadil.infradead.org)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1plg61-00EPd9-31;
-        Mon, 10 Apr 2023 01:13:26 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-um@lists.infradead.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH v3] UML: pata_cs5536: fix build for X86_32 UML with TRACEPOINTS
-Date:   Sun,  9 Apr 2023 18:13:25 -0700
-Message-Id: <20230410011325.26850-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.40.0
+        with ESMTP id S229475AbjDJE0v (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Apr 2023 00:26:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58105358D;
+        Sun,  9 Apr 2023 21:26:50 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9F9E560C58;
+        Mon, 10 Apr 2023 04:26:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59D65C433EF;
+        Mon, 10 Apr 2023 04:26:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681100809;
+        bh=PFTs0oq8nDaAGNB4674K1KYq60X4dMAg8eiKLD2TXMM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LDXsH0qPu1THx7nSLzxr+IntmT0GIKv6nawYUT4PgAsllybbDfUR1nkD0lBBqGv/D
+         phZdm7Bk5n0W7Gy2U+st+BNo2QHVSo467cJjjtgzB7esTcQpEC9cxoX5DDIrzWgU6G
+         EExD/HuxejDedf7XpsXwYQtNE4slPDugjueJB7rbqQ+rfSY+IXBZ7B44zj8AjaQfzq
+         8DNb0gfyTPCX8wW8ke+bw/0FGIMw/FP5XV/j46eqC1tywKeRHxH8qa1drZEJ4tXqu+
+         ipaxiAhAej7Ao1jVLU75KCl77pplV2nWLqApbO1EjskS71CQyey7bsbb8Pl0/AZp9l
+         eqyCiVFX6hVkQ==
+From:   dlemoal@kernel.org
+To:     linux-ide@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-riscv@lists.infradead.org
+Subject: [PATCH] ata: Change email addresses in MAINTAINERS
+Date:   Mon, 10 Apr 2023 13:26:46 +0900
+Message-Id: <20230410042646.124962-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Current build of pata_cs5536 for i386 UML fails with:
+From: Damien Le Moal <dlemoal@kernel.org>
 
-ERROR: modpost: "__tracepoint_write_msr" [drivers/ata/pata_cs5536.ko] undefined!
-ERROR: modpost: "do_trace_write_msr" [drivers/ata/pata_cs5536.ko] undefined!
-ERROR: modpost: "__tracepoint_read_msr" [drivers/ata/pata_cs5536.ko] undefined!
-ERROR: modpost: "do_trace_read_msr" [drivers/ata/pata_cs5536.ko] undefined!
+Change my email addresses referenced in the MAINTAINERS file for the ata
+subsystem to dlemoal@kernel.org. While at it, also change other
+references (zonefs and k210 drivers) to the same address.
 
-Add the arch/x86/lib/msr.o binary to resolve these undefined symbols.
-
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Richard Weinberger <richard@nod.at>
-Cc: Anton Ivanov <anton.ivanov@cambridgegreys.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-um@lists.infradead.org
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
-v2: change from not building on UML to fixing the build on UML
-v3: add Rev-by: Damien Le Moal
+ MAINTAINERS | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- arch/x86/um/Makefile |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ec57c42ed544..8e156c754e20 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -4461,14 +4461,14 @@ F:	Documentation/devicetree/bindings/net/ieee802154/ca8210.txt
+ F:	drivers/net/ieee802154/ca8210.c
+ 
+ CANAAN/KENDRYTE K210 SOC FPIOA DRIVER
+-M:	Damien Le Moal <damien.lemoal@wdc.com>
++M:	Damien Le Moal <dlemoal@kernel.org>
+ L:	linux-riscv@lists.infradead.org
+ L:	linux-gpio@vger.kernel.org (pinctrl driver)
+ F:	Documentation/devicetree/bindings/pinctrl/canaan,k210-fpioa.yaml
+ F:	drivers/pinctrl/pinctrl-k210.c
+ 
+ CANAAN/KENDRYTE K210 SOC RESET CONTROLLER DRIVER
+-M:	Damien Le Moal <damien.lemoal@wdc.com>
++M:	Damien Le Moal <dlemoal@kernel.org>
+ L:	linux-kernel@vger.kernel.org
+ L:	linux-riscv@lists.infradead.org
+ S:	Maintained
+@@ -4476,7 +4476,7 @@ F:	Documentation/devicetree/bindings/reset/canaan,k210-rst.yaml
+ F:	drivers/reset/reset-k210.c
+ 
+ CANAAN/KENDRYTE K210 SOC SYSTEM CONTROLLER DRIVER
+-M:	Damien Le Moal <damien.lemoal@wdc.com>
++M:	Damien Le Moal <dlemoal@kernel.org>
+ L:	linux-riscv@lists.infradead.org
+ S:	Maintained
+ F:      Documentation/devicetree/bindings/mfd/canaan,k210-sysctl.yaml
+@@ -11757,7 +11757,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
+ F:	drivers/ata/sata_promise.*
+ 
+ LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)
+-M:	Damien Le Moal <damien.lemoal@opensource.wdc.com>
++M:	Damien Le Moal <dlemoal@kernel.org>
+ L:	linux-ide@vger.kernel.org
+ S:	Maintained
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git
+@@ -23122,7 +23122,7 @@ S:	Maintained
+ F:	arch/x86/kernel/cpu/zhaoxin.c
+ 
+ ZONEFS FILESYSTEM
+-M:	Damien Le Moal <damien.lemoal@opensource.wdc.com>
++M:	Damien Le Moal <dlemoal@kernel.org>
+ M:	Naohiro Aota <naohiro.aota@wdc.com>
+ R:	Johannes Thumshirn <jth@kernel.org>
+ L:	linux-fsdevel@vger.kernel.org
+-- 
+2.39.2
 
-diff -- a/arch/x86/um/Makefile b/arch/x86/um/Makefile
---- a/arch/x86/um/Makefile
-+++ b/arch/x86/um/Makefile
-@@ -21,7 +21,7 @@ obj-y += checksum_32.o syscalls_32.o
- obj-$(CONFIG_ELF_CORE) += elfcore.o
- 
- subarch-y = ../lib/string_32.o ../lib/atomic64_32.o ../lib/atomic64_cx8_32.o
--subarch-y += ../lib/cmpxchg8b_emu.o ../lib/atomic64_386_32.o
-+subarch-y += ../lib/cmpxchg8b_emu.o ../lib/atomic64_386_32.o ../lib/msr.o
- subarch-y += ../kernel/sys_ia32.o
- 
- else
