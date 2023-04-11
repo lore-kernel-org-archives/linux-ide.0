@@ -2,114 +2,75 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12050C76196
-	for <linux-ide@archiver.kernel.org>; Tue, 11 Apr 2023 06:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3184AC7619A
+	for <linux-ide@archiver.kernel.org>; Tue, 11 Apr 2023 07:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbjDKGqg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 11 Apr 2023 02:46:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57276 "EHLO
+        id S229789AbjDKHJl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 11 Apr 2023 03:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbjDKGqf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2023 02:46:35 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB99FE5F;
-        Mon, 10 Apr 2023 23:46:34 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229697AbjDKHJk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2023 03:09:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 972A0212F;
+        Tue, 11 Apr 2023 00:09:38 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 5B70F21A49;
-        Tue, 11 Apr 2023 06:46:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1681195593; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LnZLJFAzvf0Pk6IYk3KGyS4mlZTYvqDJlzNUrXNBYHU=;
-        b=dxoW0t1uqK2YJxwofc1glGDRucLqwWuSEIWQF+71FbqH8TurGdzFZjUspLjw4hzKVkZG67
-        +ac1X+V69GQ75tuMMOpwRknh10Ug/cci79TKzFRuM76DzVZbSbYb9FAFbSEyTMgx4Hhv7r
-        GCsZBJw8x9Qnb1OVTI5XGPMU6GevZbI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1681195593;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LnZLJFAzvf0Pk6IYk3KGyS4mlZTYvqDJlzNUrXNBYHU=;
-        b=ioLDuBdCGicuy/BaDBz6AhUaGQJJamJx+T4wxcv7CmV6IiRKjjUt89O/Gp9/r5GK7DynJY
-        DOk+BpV4JOvC/rBg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EF89D13519;
-        Tue, 11 Apr 2023 06:46:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 66JAOUgCNWSBUQAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 11 Apr 2023 06:46:32 +0000
-Message-ID: <74553eaa-c06c-69a4-aa1c-2664f7e85561@suse.de>
-Date:   Tue, 11 Apr 2023 08:46:32 +0200
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F8836222F;
+        Tue, 11 Apr 2023 07:09:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E634C433EF;
+        Tue, 11 Apr 2023 07:09:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681196977;
+        bh=NYgZ6zuxde82GQHKz3xIojLYA6xo8YNrc2uMkoQx8dI=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=sVl2AXWYQML9nx+tHYScRwBtKN/jhh7c8V4P/HduNgKjraPWMs5WMJFGhzJ3V4f5m
+         kh+O9imUidQnze9zuZmzNpoQyjkX9CE+M7ZAe066GsE5yugum8gR2g87Ap7ZA2Uwcm
+         Znq1D0bqNVoVbcZTO7Pq0V2WcdwaqzxNTRc6E9ZZ/ebokZ0NzrmOzqVjdyoGH184ah
+         IBjoyBqIeZukl0egdN4uYIRFziC+SP+hiLYpGxH/UzyDIIudgTD3lfzeBmAc/0n0/c
+         dYVTKr6+oSqsRS0q/CgkDcajPkJtD+yDrBkSSWDKI+T50SLIOJAJFGCfC3air4wPfS
+         Oi6kA5ugKa5Yg==
+Message-ID: <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org>
+Date:   Tue, 11 Apr 2023 16:09:34 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [PATCH v6 18/19] ata: libata: set read/write commands CDL index
+Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
+ duration limits
 Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
+To:     Christoph Hellwig <hch@lst.de>, Niklas Cassel <nks@flawful.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <dlemoal@fastmail.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
-        Igor Pylypiv <ipylypiv@google.com>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
 References: <20230406113252.41211-1-nks@flawful.org>
- <20230406113252.41211-19-nks@flawful.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230406113252.41211-19-nks@flawful.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+ <20230406113252.41211-10-nks@flawful.org> <20230411061648.GD18719@lst.de>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230411061648.GD18719@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/6/23 13:32, Niklas Cassel wrote:
-> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+On 4/11/23 15:16, Christoph Hellwig wrote:
+> On Thu, Apr 06, 2023 at 01:32:38PM +0200, Niklas Cassel wrote:
+>> +	/*
+>> +	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
+>> +	 */
+>> +	if (is_ata) {
 > 
-> For devices supporting the command duration limits feature, translate
-> the dld field of read and write operation to set the command duration
-> limit index field of the command task file when the duration limit
-> feature is enabled.
-> 
-> The function ata_set_tf_cdl() is introduced to do this. For unqueued
-> (non NCQ) read and write operations, this function sets the command
-> duration limit index set as the lower 3 bits of the feature field.
-> For queued NCQ read/write commands, the index is set as the lower
-> 3 bits of the auxiliary field.
-> 
-> The flag ATA_QCFLAG_HAS_CDL is introduced to indicate that a command
-> taskfile has a non zero cdl field.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
-> ---
->   drivers/ata/libata-core.c | 32 +++++++++++++++++++++++++++++---
->   drivers/ata/libata-scsi.c | 16 +++++++++++++++-
->   drivers/ata/libata.h      |  2 +-
->   include/linux/libata.h    |  1 +
->   4 files changed, 46 insertions(+), 5 deletions(-)
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> I don't think these hacks have any business in the SCSI layer.  We should
+> probbaly just do this unconditionally for CDL enabled ATA devices at
+> probe time.
 
-Cheers,
+Yes, this is not pretty, but this has the advantage of not requiring a lot of
+special code for ata, especially the sysfs attribute does not have to be defined
+in both scsi and ata.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
-
+But yes, I guess we could just unconditionally enable CDL for ATA on device scan
+to be on par with scsi, which has CDL always enabled.
