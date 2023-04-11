@@ -2,144 +2,137 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DFC2C77B6F
-	for <linux-ide@archiver.kernel.org>; Tue, 11 Apr 2023 12:22:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 645B9C76196
+	for <linux-ide@archiver.kernel.org>; Tue, 11 Apr 2023 17:03:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229652AbjDKMWI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 11 Apr 2023 08:22:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40844 "EHLO
+        id S229852AbjDKRDB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 11 Apr 2023 13:03:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229630AbjDKMWH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2023 08:22:07 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C429940C6;
-        Tue, 11 Apr 2023 05:22:05 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id o1so10171282lfc.2;
-        Tue, 11 Apr 2023 05:22:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681215724;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:dkim-signature:dkim-signature
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=P0CfEwwxRtpT41g8a6YsRRGMNfYTxceqIiIsFCToW5o=;
-        b=Qlm39oo1uwN2R1XrnH6TujBBGRSvw8Usk4/CKvF2HqgylgMCZsYoebFcm2L/94I6dj
-         q6VLaY81ZZteQKy+IrrSxgrsB1hAFXyYgL2p4Pi/HBFR1KBl5A2t9U1qt6f8ieTcur3w
-         N1A2IJ0SPAvsYsh0dfw2710Ql/q3572B+IVjaHURrdYaDlKebeohHZt21aILQT8N0tJC
-         0lzljxfWSli/nkxrmuOKPObWX+66bAKRdNW0jqaq2dZhlzyoMFCAOSN9ZSXmEuNj+Ssk
-         UkFiTaALvteVcijXgr9h7aJyog0KON0edIDtz5SO0Hd1q6vY6ChkR6Bo2i+IavoMT7Ni
-         tlJg==
-X-Gm-Message-State: AAQBX9eA0A1i6H4kKV23JwGO4QwYsWMGqPkV/Dn+4sASpyMtvKeP/eQ2
-        2GhM3vPwu5psE2jKoW/HkcLmnJbJdyhPmzH/
-X-Google-Smtp-Source: AKy350YcsRFNTafYFBVxlq7IsxWLdwjZmewy5xDiKmI45ffHR99wywc33ew9+03mdnSDkYfhIFcdJQ==
-X-Received: by 2002:ac2:5307:0:b0:4eb:3b4c:50a3 with SMTP id c7-20020ac25307000000b004eb3b4c50a3mr2615918lfh.29.1681215724128;
-        Tue, 11 Apr 2023 05:22:04 -0700 (PDT)
-Received: from flawful.org (c-fcf6e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.246.252])
-        by smtp.gmail.com with ESMTPSA id r6-20020a056512102600b004e843d6244csm2540278lfr.99.2023.04.11.05.22.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 05:22:03 -0700 (PDT)
-Received: by flawful.org (Postfix, from userid 112)
-        id 24541458; Tue, 11 Apr 2023 14:22:02 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1681215723; bh=/LguqkW2Bx5Nx7Nq830RqXMFmLCkG4fHgOSjgc/o8hk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=phJQywzKolyrZmvjPFQHlKnTkNKjK6N9V5T/BxzvhN0fNxLi7gRiR9NVr8kcLnKak
-         dG2vI+aXuo67idi9p9b+F1E+IS/9nuOyvMgFoUxZJz/SUoHGa87Dx29nxcJGnU/7bm
-         ECMENityREAkt4ABxj3hZkgMrh5Sb+aGQPCqaPfs=
-Received: from x1-carbon (unknown [87.116.37.42])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id F40CE458;
-        Tue, 11 Apr 2023 14:21:35 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1681215696; bh=/LguqkW2Bx5Nx7Nq830RqXMFmLCkG4fHgOSjgc/o8hk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mW7y5YiX6yqgycGI4V5C3rc93lrUvbbVuOGxTetRdzZ0rNEVnjr1lNXuLCPu1qL21
-         Yv8KIw29kxjbr6Ii8q4NSjSdXK/pU82tEZl3g0kjsp/WPG8R6rVLkKn6l57k37n5uA
-         Ui1jKrfwJg4z3s9+rDT2fGyBqgVQ60mfFAyvBwms=
-Date:   Tue, 11 Apr 2023 14:20:41 +0200
-From:   Niklas Cassel <nks@flawful.org>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH v6 09/19] scsi: allow enabling and disabling command
- duration limits
-Message-ID: <ZDVQmX2bYoRBYR1Y@x1-carbon>
-References: <20230406113252.41211-1-nks@flawful.org>
- <20230406113252.41211-10-nks@flawful.org>
- <20230411061648.GD18719@lst.de>
- <e9cf65ce-e1f0-4d99-31e7-75b8e88e2a89@kernel.org>
- <20230411072317.GA22683@lst.de>
- <15ad7cf9-e385-9cea-964a-4a2eac35385c@kernel.org>
- <ZDVLsIi/OhkxNcGb@x1-carbon>
+        with ESMTP id S229862AbjDKRCu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2023 13:02:50 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96B0F6585;
+        Tue, 11 Apr 2023 10:02:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681232551; x=1712768551;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=djm8bQ+Qt9WvMFf87Ox1tbM+gNLQTqi3MwetRSRW8Fk=;
+  b=YHfw7YXxQdDQ89xL5s/FyprFev0+qHZtrB9duA2qey0sIxukqaT58ZYT
+   FTTp6cA9Ml3Ery7+fRQMX7ZfRobm0C1YooNDhSj/yunJHcjl3S8eBudL7
+   vGbeNDtvVfAXTBVYr3DC0AvipsqEcoaQ+AhXBHJK9iyiGwmGH9VTwXVEZ
+   PX55Va04CJNu1tsUga3jizUcbpEcw/fMPRGASESOeC3ErSlxF+K9y5K3Z
+   f3JH0Ly+3ZJ3Be6PPLcdERqODllNGEeLqPkbti2IuEZduMquxhjlNTiHF
+   KsxKry3bzt7ix654eYLk7rFLASQd4z3n7DlRoHI4V8tuImKx2AXhzm8Fk
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10677"; a="323305928"
+X-IronPort-AV: E=Sophos;i="5.98,336,1673942400"; 
+   d="scan'208";a="323305928"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Apr 2023 10:01:23 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10677"; a="638898583"
+X-IronPort-AV: E=Sophos;i="5.98,336,1673942400"; 
+   d="scan'208";a="638898583"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 11 Apr 2023 10:01:20 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pmHMt-000WVv-0s;
+        Tue, 11 Apr 2023 17:01:19 +0000
+Date:   Wed, 12 Apr 2023 01:01:16 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc:     oe-kbuild-all@lists.linux.dev,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, linux-um@lists.infradead.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v3] UML: pata_cs5536: fix build for X86_32 UML with
+ TRACEPOINTS
+Message-ID: <202304120048.v4uqUq9Q-lkp@intel.com>
+References: <20230410011325.26850-1-rdunlap@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZDVLsIi/OhkxNcGb@x1-carbon>
+In-Reply-To: <20230410011325.26850-1-rdunlap@infradead.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 01:59:44PM +0200, Niklas Cassel wrote:
-> On Tue, Apr 11, 2023 at 04:38:48PM +0900, Damien Le Moal wrote:
-> > On 4/11/23 16:23, Christoph Hellwig wrote:
-> > > On Tue, Apr 11, 2023 at 04:09:34PM +0900, Damien Le Moal wrote:
-> > >> But yes, I guess we could just unconditionally enable CDL for ATA on device scan
-> > >> to be on par with scsi, which has CDL always enabled.
-> > > 
-> > > I'd prefer that.  With a module option to not enable it just to be
-> > > safe.
-> > 
-> > Then it may be better to move the cdl_enable attribute store definition for ATA
-> > devices to libata. That would be less messy that way. Let me see if that can be
-> > done cleanly.
-> 
-> I don't think that the SCSI mode select can just be replaced with simple
-> SET FEATURES in libata.
-> 
-> If we move the SET FEATURES call to a function in libata, and then use a
-> function pointer in the scsi_host_template, and let only libata set this
-> function pointer (similar to e.g. how the queue_depth sysfs attribute works),
-> then the code will no longer work for SATA devices connected to a SAS HBA.
-> 
-> 
-> 
-> The current code simply checks if VPD page89 (the ATA Information VPD
-> page - which is defined in the SCSI to ATA Translation (SAT) standard)
-> exists. This page (and thus the sdev->vpd_pg89 pointer) will only exist
-> if either:
-> 1) An ATA device is connected to a SATA controller. This page will then
-> be implemented by libata.
-> 2) An ATA device is connected to a SAS HBA. The SAS HB will then provide
-> this page. (The page will not exist for SCSI devices connected to the
-> same SAS HBA.)
-> 
-> For case 1) with the current code, scsi.c will call scsi_mode_select()
-> which will be translated by libata before being sent down to the device.
-> 
-> For case 2) with the current code, scsi.c will send down a SCSI mode
-> select to the SAS HBA, and the SAS HBA will be responsible for translating
-> the command before sending it to the device.
-> 
-> So I actually think that the current way to check if vpd page89 exists
-> is probably the "cleanest" solution that I can think of.
-> 
-> If you have a better suggestion that will work for both case 1) and
-> case 2), I will be happy to change the code accordingly.
+Hi Randy,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on uml/next]
+[also build test WARNING on uml/fixes wireless-next/main wireless/main linus/master v6.3-rc6 next-20230411]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Randy-Dunlap/UML-pata_cs5536-fix-build-for-X86_32-UML-with-TRACEPOINTS/20230410-091733
+base:   git://git.kernel.org/pub/scm/linux/kernel/git/uml/linux next
+patch link:    https://lore.kernel.org/r/20230410011325.26850-1-rdunlap%40infradead.org
+patch subject: [PATCH v3] UML: pata_cs5536: fix build for X86_32 UML with TRACEPOINTS
+config: um-i386_defconfig (https://download.01.org/0day-ci/archive/20230412/202304120048.v4uqUq9Q-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-8) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/2782ce24954318f1698ec910691250f4d287d817
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Randy-Dunlap/UML-pata_cs5536-fix-build-for-X86_32-UML-with-TRACEPOINTS/20230410-091733
+        git checkout 2782ce24954318f1698ec910691250f4d287d817
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=um SUBARCH=i386 olddefconfig
+        make W=1 O=build_dir ARCH=um SUBARCH=i386 SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202304120048.v4uqUq9Q-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> arch/x86/um/../lib/msr.c:30: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+    * Read an MSR with error handling
+   arch/x86/um/../lib/msr.c:52: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+    * Write an MSR with error handling
+   arch/x86/um/../lib/msr.c:91: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+    * Set @bit in a MSR @msr.
+   arch/x86/um/../lib/msr.c:104: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
+    * Clear @bit in a MSR @msr.
 
 
-In addition to:
-https://github.com/torvalds/linux/blame/v6.3-rc6/drivers/scsi/sd.c#L3066-L3074
+vim +30 arch/x86/um/../lib/msr.c
 
-checking for the existence of VPD page89 is also currently done by e.g.:
-https://github.com/torvalds/linux/blob/v6.3-rc6/drivers/scsi/mpt3sas/mpt3sas_scsih.c#L12607
-and
-https://github.com/torvalds/linux/blob/v6.3-rc6/drivers/hwmon/drivetemp.c#L340
+22085a66c2fab6 Borislav Petkov 2014-03-09  28  
+22085a66c2fab6 Borislav Petkov 2014-03-09  29  /**
+22085a66c2fab6 Borislav Petkov 2014-03-09 @30   * Read an MSR with error handling
+22085a66c2fab6 Borislav Petkov 2014-03-09  31   *
+22085a66c2fab6 Borislav Petkov 2014-03-09  32   * @msr: MSR to read
+22085a66c2fab6 Borislav Petkov 2014-03-09  33   * @m: value to read into
+22085a66c2fab6 Borislav Petkov 2014-03-09  34   *
+22085a66c2fab6 Borislav Petkov 2014-03-09  35   * It returns read data only on success, otherwise it doesn't change the output
+22085a66c2fab6 Borislav Petkov 2014-03-09  36   * argument @m.
+22085a66c2fab6 Borislav Petkov 2014-03-09  37   *
+22085a66c2fab6 Borislav Petkov 2014-03-09  38   */
+3e7bbe15ed84e3 Zhao Xuehui     2021-04-08  39  static int msr_read(u32 msr, struct msr *m)
+22085a66c2fab6 Borislav Petkov 2014-03-09  40  {
+22085a66c2fab6 Borislav Petkov 2014-03-09  41  	int err;
+22085a66c2fab6 Borislav Petkov 2014-03-09  42  	u64 val;
+22085a66c2fab6 Borislav Petkov 2014-03-09  43  
+22085a66c2fab6 Borislav Petkov 2014-03-09  44  	err = rdmsrl_safe(msr, &val);
+22085a66c2fab6 Borislav Petkov 2014-03-09  45  	if (!err)
+22085a66c2fab6 Borislav Petkov 2014-03-09  46  		m->q = val;
+22085a66c2fab6 Borislav Petkov 2014-03-09  47  
+22085a66c2fab6 Borislav Petkov 2014-03-09  48  	return err;
+22085a66c2fab6 Borislav Petkov 2014-03-09  49  }
+22085a66c2fab6 Borislav Petkov 2014-03-09  50  
 
-
-Kind regards,
-Niklas
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
