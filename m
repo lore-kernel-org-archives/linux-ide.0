@@ -2,170 +2,87 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54C63C77B77
-	for <linux-ide@archiver.kernel.org>; Thu, 13 Apr 2023 18:24:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D33FC77B6E
+	for <linux-ide@archiver.kernel.org>; Thu, 13 Apr 2023 18:29:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230063AbjDMSYB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 13 Apr 2023 14:24:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49346 "EHLO
+        id S229739AbjDMS3B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 13 Apr 2023 14:29:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229839AbjDMSX4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Apr 2023 14:23:56 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED7EF526F;
-        Thu, 13 Apr 2023 11:23:54 -0700 (PDT)
-Received: from jupiter.universe (dyndsl-091-248-212-251.ewe-ip-backbone.de [91.248.212.251])
+        with ESMTP id S229493AbjDMS3A (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Apr 2023 14:29:00 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D59D32D53;
+        Thu, 13 Apr 2023 11:28:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1681410534;
+        bh=jGwzJw7lP3rN+v/QJE3PZ7uZA3cqTAeu5GAX2Ol/eZo=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=pPwCr6Zwizp1/IBcIS46B4wxR53W8xzNoCq9q78eSRfTQaFP3DnEAVdNoOR7AUYAm
+         YA0591+re/X63z4hNO8YGCxb3KYegETQV6NepwrfwXT06e2cmix3W0jsMN02/olC5d
+         VD2oIVxEVNv1jqExdSBPtR/0FKKXEJuagOM1bzZ0=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D1BB312868DC;
+        Thu, 13 Apr 2023 14:28:54 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id AgN11Pc04sy7; Thu, 13 Apr 2023 14:28:54 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1681410534;
+        bh=jGwzJw7lP3rN+v/QJE3PZ7uZA3cqTAeu5GAX2Ol/eZo=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=pPwCr6Zwizp1/IBcIS46B4wxR53W8xzNoCq9q78eSRfTQaFP3DnEAVdNoOR7AUYAm
+         YA0591+re/X63z4hNO8YGCxb3KYegETQV6NepwrfwXT06e2cmix3W0jsMN02/olC5d
+         VD2oIVxEVNv1jqExdSBPtR/0FKKXEJuagOM1bzZ0=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
-        (No client certificate requested)
-        (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 80B5B6603258;
-        Thu, 13 Apr 2023 19:23:53 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1681410233;
-        bh=U9HSGHcaBoWrjSZxqEllJenGE2UR8Js0ktkaIRChRy0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XgkE4oQtBFKdiYImvtpJ8CSwauNcg6VIpuQW7ccw5sgIbMXxtH3WUd9FpQdWR60eX
-         /XxutSMY5vwZ4HeGfWJrlgspK3sSnjYBnrWZmdCirbmyho6aLreuR6j776K7h3CuFX
-         MnkOtYMugm12bhXVyU5DpuVmbjnH1Qr6xqSrOXlSUn0lgVkvk+LjcsgJDPP3apqDZ/
-         3k50bSdGImu2IFvz4AowC4QYqJck34VEVGEX090k79n9+g3JJ1sNMfxAoOvZzNnTUW
-         9EeST+r151EUvkoPa++NQUYNp6H2WdPafE0N3DwoOvR3yFXgrtmorch7TAxyY1+VZy
-         G12k623CB9rwA==
-Received: by jupiter.universe (Postfix, from userid 1000)
-        id 934E44807F2; Thu, 13 Apr 2023 20:23:48 +0200 (CEST)
-From:   Sebastian Reichel <sebastian.reichel@collabora.com>
-To:     Heiko Stuebner <heiko@sntech.de>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sebastian Reichel <sebastian.reichel@collabora.com>,
-        kernel@collabora.com
-Subject: [PATCHv1 5/5] arm64: dts: rockchip: rk3588: add SATA support
-Date:   Thu, 13 Apr 2023 20:23:45 +0200
-Message-Id: <20230413182345.92557-6-sebastian.reichel@collabora.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230413182345.92557-1-sebastian.reichel@collabora.com>
-References: <20230413182345.92557-1-sebastian.reichel@collabora.com>
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id AFF31128666D;
+        Thu, 13 Apr 2023 14:28:53 -0400 (EDT)
+Message-ID: <726533b0e5f511678e4f40a768974fa818e9677f.camel@HansenPartnership.com>
+Subject: Re: [LSF/MM/BPF] Running BOF
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Matthew Wilcox <willy@infradead.org>,
+        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Date:   Thu, 13 Apr 2023 14:28:52 -0400
+In-Reply-To: <ZALROVnC+GDXsBne@casper.infradead.org>
+References: <ZALROVnC+GDXsBne@casper.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add all three SATA IP blocks to the RK3588 DT.
+On Sat, 2023-03-04 at 05:03 +0000, Matthew Wilcox wrote:
+> Sunday May 7th is the Vancouver Marathon, and both Josef and I are
+> registered.  As such, neither of us may be feeling much like joining
+> or leading a run.  If anyone else is interested in participating,
+> https://bmovanmarathon.ca/ offers 8km and 21.1km races as well.  If
+> you just want a spot of morning exercise, I can suggest routes, but
+> will probably not join you.
 
-Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
----
- arch/arm64/boot/dts/rockchip/rk3588.dtsi  | 23 +++++++++++
- arch/arm64/boot/dts/rockchip/rk3588s.dtsi | 48 +++++++++++++++++++++++
- 2 files changed, 71 insertions(+)
+For those of you who fancy something more scenic and less damaging to
+the knees, Mike and I were planning a hike around the chain lakes trail
+by Mt Baker:
 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3588.dtsi b/arch/arm64/boot/dts/rockchip/rk3588.dtsi
-index fe1866a3697a..65d818964bff 100644
---- a/arch/arm64/boot/dts/rockchip/rk3588.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3588.dtsi
-@@ -61,6 +61,29 @@ gmac0_mtl_tx_setup: tx-queues-config {
- 		};
- 	};
- 
-+	sata1: sata@fe220000 {
-+		compatible = "rockchip,rk3588-dwc-ahci", "snps,dwc-ahci";
-+		reg = <0 0xfe220000 0 0x1000>;
-+		clocks = <&cru ACLK_SATA1>, <&cru CLK_PMALIVE1>,
-+			 <&cru CLK_RXOOB1>, <&cru CLK_PIPEPHY1_REF>,
-+			 <&cru CLK_PIPEPHY1_PIPE_ASIC_G>;
-+		clock-names = "sata", "pmalive", "rxoob", "ref", "asic";
-+		interrupts = <GIC_SPI 274 IRQ_TYPE_LEVEL_HIGH 0>;
-+		ports-implemented = <0x1>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		status = "disabled";
-+
-+		sata-port@0 {
-+			reg = <0>;
-+			hba-port-cap = <HBA_PORT_FBSCP>;
-+			phys = <&combphy1_ps PHY_TYPE_SATA>;
-+			phy-names = "sata-phy";
-+			snps,rx-ts-max = <32>;
-+			snps,tx-ts-max = <32>;
-+		};
-+	};
-+
- 	combphy1_ps: phy@fee10000 {
- 		compatible = "rockchip,rk3588-naneng-combphy";
- 		reg = <0x0 0xfee10000 0x0 0x100>;
-diff --git a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
-index 7227c918f825..2124c654f665 100644
---- a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
-@@ -9,6 +9,8 @@
- #include <dt-bindings/power/rk3588-power.h>
- #include <dt-bindings/reset/rockchip,rk3588-cru.h>
- #include <dt-bindings/thermal/thermal.h>
-+#include <dt-bindings/phy/phy.h>
-+#include <dt-bindings/ata/ahci.h>
- 
- / {
- 	compatible = "rockchip,rk3588";
-@@ -1666,6 +1668,52 @@ gmac1_mtl_tx_setup: tx-queues-config {
- 		};
- 	};
- 
-+	sata0: sata@fe210000 {
-+		compatible = "rockchip,rk3588-dwc-ahci", "snps,dwc-ahci";
-+		reg = <0 0xfe210000 0 0x1000>;
-+		clocks = <&cru ACLK_SATA0>, <&cru CLK_PMALIVE0>,
-+			 <&cru CLK_RXOOB0>, <&cru CLK_PIPEPHY0_REF>,
-+			 <&cru CLK_PIPEPHY0_PIPE_ASIC_G>;
-+		clock-names = "sata", "pmalive", "rxoob", "ref", "asic";
-+		interrupts = <GIC_SPI 273 IRQ_TYPE_LEVEL_HIGH 0>;
-+		ports-implemented = <0x1>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		status = "disabled";
-+
-+		sata-port@0 {
-+			reg = <0>;
-+			hba-port-cap = <HBA_PORT_FBSCP>;
-+			phys = <&combphy0_ps PHY_TYPE_SATA>;
-+			phy-names = "sata-phy";
-+			snps,rx-ts-max = <32>;
-+			snps,tx-ts-max = <32>;
-+		};
-+	};
-+
-+	sata2: sata@fe230000 {
-+		compatible = "rockchip,rk3588-dwc-ahci", "snps,dwc-ahci";
-+		reg = <0 0xfe230000 0 0x1000>;
-+		clocks = <&cru ACLK_SATA2>, <&cru CLK_PMALIVE2>,
-+			 <&cru CLK_RXOOB2>, <&cru CLK_PIPEPHY2_REF>,
-+			 <&cru CLK_PIPEPHY2_PIPE_ASIC_G>;
-+		clock-names = "sata", "pmalive", "rxoob", "ref", "asic";
-+		interrupts = <GIC_SPI 275 IRQ_TYPE_LEVEL_HIGH 0>;
-+		ports-implemented = <0x1>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		status = "disabled";
-+
-+		sata-port@0 {
-+			reg = <0>;
-+			hba-port-cap = <HBA_PORT_FBSCP>;
-+			phys = <&combphy2_psu PHY_TYPE_SATA>;
-+			phy-names = "sata-phy";
-+			snps,rx-ts-max = <32>;
-+			snps,tx-ts-max = <32>;
-+		};
-+	};
-+
- 	sdhci: mmc@fe2e0000 {
- 		compatible = "rockchip,rk3588-dwcmshc";
- 		reg = <0x0 0xfe2e0000 0x0 0x10000>;
--- 
-2.39.2
+https://www.fs.usda.gov/recarea/mbs/recarea/?recid=80181
+
+As long as there's been no recent snowfall, both the trail and the
+Bagley Lakes trailhead should be accessible.  The Rangers have been
+known to keep Chain Lakes closed until June, so we might have to go
+along one of the other trails instead.
+
+Mike and I are planning to drive up early on Sunday from Seattle, but
+it is possible to drive from Vancouver as well if you have a car
+(There's a US$5/car charge at the car park).
+
+Regards,
+
+James
 
