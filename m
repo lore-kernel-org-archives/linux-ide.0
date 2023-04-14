@@ -2,87 +2,122 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D33FC77B6E
-	for <linux-ide@archiver.kernel.org>; Thu, 13 Apr 2023 18:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE9BFC77B6E
+	for <linux-ide@archiver.kernel.org>; Fri, 14 Apr 2023 01:51:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229739AbjDMS3B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 13 Apr 2023 14:29:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54294 "EHLO
+        id S229799AbjDNBvk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 13 Apr 2023 21:51:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229493AbjDMS3A (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Apr 2023 14:29:00 -0400
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D59D32D53;
-        Thu, 13 Apr 2023 11:28:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1681410534;
-        bh=jGwzJw7lP3rN+v/QJE3PZ7uZA3cqTAeu5GAX2Ol/eZo=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=pPwCr6Zwizp1/IBcIS46B4wxR53W8xzNoCq9q78eSRfTQaFP3DnEAVdNoOR7AUYAm
-         YA0591+re/X63z4hNO8YGCxb3KYegETQV6NepwrfwXT06e2cmix3W0jsMN02/olC5d
-         VD2oIVxEVNv1jqExdSBPtR/0FKKXEJuagOM1bzZ0=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D1BB312868DC;
-        Thu, 13 Apr 2023 14:28:54 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id AgN11Pc04sy7; Thu, 13 Apr 2023 14:28:54 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1681410534;
-        bh=jGwzJw7lP3rN+v/QJE3PZ7uZA3cqTAeu5GAX2Ol/eZo=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=pPwCr6Zwizp1/IBcIS46B4wxR53W8xzNoCq9q78eSRfTQaFP3DnEAVdNoOR7AUYAm
-         YA0591+re/X63z4hNO8YGCxb3KYegETQV6NepwrfwXT06e2cmix3W0jsMN02/olC5d
-         VD2oIVxEVNv1jqExdSBPtR/0FKKXEJuagOM1bzZ0=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id AFF31128666D;
-        Thu, 13 Apr 2023 14:28:53 -0400 (EDT)
-Message-ID: <726533b0e5f511678e4f40a768974fa818e9677f.camel@HansenPartnership.com>
-Subject: Re: [LSF/MM/BPF] Running BOF
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Matthew Wilcox <willy@infradead.org>,
-        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-Date:   Thu, 13 Apr 2023 14:28:52 -0400
-In-Reply-To: <ZALROVnC+GDXsBne@casper.infradead.org>
-References: <ZALROVnC+GDXsBne@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+        with ESMTP id S229516AbjDNBvk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Apr 2023 21:51:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4737B30DE;
+        Thu, 13 Apr 2023 18:51:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C340260B3B;
+        Fri, 14 Apr 2023 01:51:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F389AC433EF;
+        Fri, 14 Apr 2023 01:51:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681437097;
+        bh=gLDWYLDDhntT7dquLuIpW7PMEAgkvCXTIyzwrqznejE=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=ZQ7IAWg77gcZjC3M9ConoEp2KwEyANJbR8QqqdS6b+WKyWDHcc9FE491QH/O8dkwk
+         KnxXU8L6P2EO/t/xL7SkRsqgmqQDhgEDVdCtlV5IZ/iQlxguTCbmg0uKm/sAXU5ywj
+         JG7Pzl3ksFU5tyOsYIDYBwKsAL2rGaXunE3CMjwWag6QejhF6cFQ6CuVa2+nOokk8g
+         BxA9uWlK8Ef8w4f9mNZvoo4wDRJxfCSyueUcbWduddxINCG0e+QZoiBzbE5dp5Wx+c
+         75xn5lKXrwt5vMgZIZaA3Ph0z2RLoycooKVXfWxDBSbnEw3TLypxYqSAQYS+DGLjxH
+         qQHK9EetDh03w==
+Message-ID: <59c363bc-9e98-e7a2-1da4-92e41daef34f@kernel.org>
+Date:   Fri, 14 Apr 2023 10:51:34 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+Subject: Re: [PATCHv1 2/5] dt-bindings: ata: ahci: add RK3588 AHCI controller
+To:     Sebastian Reichel <sebastian.reichel@collabora.com>,
+        Heiko Stuebner <heiko@sntech.de>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel@collabora.com
+References: <20230413182345.92557-1-sebastian.reichel@collabora.com>
+ <20230413182345.92557-3-sebastian.reichel@collabora.com>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230413182345.92557-3-sebastian.reichel@collabora.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, 2023-03-04 at 05:03 +0000, Matthew Wilcox wrote:
-> Sunday May 7th is the Vancouver Marathon, and both Josef and I are
-> registered.  As such, neither of us may be feeling much like joining
-> or leading a run.  If anyone else is interested in participating,
-> https://bmovanmarathon.ca/ offers 8km and 21.1km races as well.  If
-> you just want a spot of morning exercise, I can suggest routes, but
-> will probably not join you.
+On 4/14/23 03:23, Sebastian Reichel wrote:
+> Just like RK3568, the RK3588 has a DWC based AHCI controller.
+> 
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> ---
+> FWIW IDK what exactly the ASIC clock is. The TRM does not provide any
+> details unfortunately. It is required for functional SATA, though.
+> ---
+>  .../devicetree/bindings/ata/snps,dwc-ahci-common.yaml       | 6 ++++--
+>  Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml    | 6 ++++--
+>  2 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+> index c1457910520b..0df8f49431eb 100644
+> --- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+> +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+> @@ -31,11 +31,11 @@ properties:
+>        PM-alive clock, RxOOB detection clock, embedded PHYs reference (Rx/Tx)
+>        clock, etc.
+>      minItems: 1
+> -    maxItems: 4
+> +    maxItems: 5
+>  
+>    clock-names:
+>      minItems: 1
+> -    maxItems: 4
+> +    maxItems: 5
+>      items:
+>        oneOf:
+>          - description: Application APB/AHB/AXI BIU clock
+> @@ -50,6 +50,8 @@ properties:
+>            const: rxoob
+>          - description: SATA Ports reference clock
+>            const: ref
+> +        - description: Rockchip ASIC clock
 
-For those of you who fancy something more scenic and less damaging to
-the knees, Mike and I were planning a hike around the chain lakes trail
-by Mt Baker:
+Shouldn't this mention that this clock is for the 3588 only ? Or is it also
+necessary for the 3568 ? That is not super clear.
 
-https://www.fs.usda.gov/recarea/mbs/recarea/?recid=80181
-
-As long as there's been no recent snowfall, both the trail and the
-Bagley Lakes trailhead should be accessible.  The Rangers have been
-known to keep Chain Lakes closed until June, so we might have to go
-along one of the other trails instead.
-
-Mike and I are planning to drive up early on Sunday from Seattle, but
-it is possible to drive from Vancouver as well if you have a car
-(There's a US$5/car charge at the car park).
-
-Regards,
-
-James
+> +          const: asic
+>  
+>    resets:
+>      description:
+> diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> index 5afa4b57ce20..c6a0d6c8b62c 100644
+> --- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> @@ -23,9 +23,11 @@ properties:
+>          const: snps,dwc-ahci
+>        - description: SPEAr1340 AHCI SATA device
+>          const: snps,spear-ahci
+> -      - description: Rockhip RK3568 AHCI controller
+> +      - description: Rockhip AHCI controller
+>          items:
+> -          - const: rockchip,rk3568-dwc-ahci
+> +          - enum:
+> +              - rockchip,rk3568-dwc-ahci
+> +              - rockchip,rk3588-dwc-ahci
+>            - const: snps,dwc-ahci
+>  
+>  patternProperties:
 
