@@ -2,122 +2,61 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE9BFC77B6E
-	for <linux-ide@archiver.kernel.org>; Fri, 14 Apr 2023 01:51:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42072C77B6E
+	for <linux-ide@archiver.kernel.org>; Fri, 14 Apr 2023 08:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229799AbjDNBvk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 13 Apr 2023 21:51:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33300 "EHLO
+        id S229736AbjDNIaB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 14 Apr 2023 04:30:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjDNBvk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Apr 2023 21:51:40 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4737B30DE;
-        Thu, 13 Apr 2023 18:51:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C340260B3B;
-        Fri, 14 Apr 2023 01:51:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F389AC433EF;
-        Fri, 14 Apr 2023 01:51:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681437097;
-        bh=gLDWYLDDhntT7dquLuIpW7PMEAgkvCXTIyzwrqznejE=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=ZQ7IAWg77gcZjC3M9ConoEp2KwEyANJbR8QqqdS6b+WKyWDHcc9FE491QH/O8dkwk
-         KnxXU8L6P2EO/t/xL7SkRsqgmqQDhgEDVdCtlV5IZ/iQlxguTCbmg0uKm/sAXU5ywj
-         JG7Pzl3ksFU5tyOsYIDYBwKsAL2rGaXunE3CMjwWag6QejhF6cFQ6CuVa2+nOokk8g
-         BxA9uWlK8Ef8w4f9mNZvoo4wDRJxfCSyueUcbWduddxINCG0e+QZoiBzbE5dp5Wx+c
-         75xn5lKXrwt5vMgZIZaA3Ph0z2RLoycooKVXfWxDBSbnEw3TLypxYqSAQYS+DGLjxH
-         qQHK9EetDh03w==
-Message-ID: <59c363bc-9e98-e7a2-1da4-92e41daef34f@kernel.org>
-Date:   Fri, 14 Apr 2023 10:51:34 +0900
+        with ESMTP id S230385AbjDNI3k (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 14 Apr 2023 04:29:40 -0400
+Received: from mail.feshiecree.pl (mail.feshiecree.pl [89.40.114.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FC4576AA
+        for <linux-ide@vger.kernel.org>; Fri, 14 Apr 2023 01:29:00 -0700 (PDT)
+Received: by mail.feshiecree.pl (Postfix, from userid 1001)
+        id 928DE89D74; Fri, 14 Apr 2023 09:24:21 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=feshiecree.pl;
+        s=mail; t=1681460671;
+        bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
+        h=Date:From:To:Subject:From;
+        b=t+/GS70vh08+IbTR8RQvopDdMwWr69E54jeoGsINUSC4ff7uMSEZkK5yCC2ckN9vf
+         RWJU1XS+tQFcYnsfud630WC+trb4+fGFd4vjmlR4Kv1wr2cB7N5qNFE3XWAiCFu3hf
+         yb9AMuK6uwLgzbTfzRFcVIZR/k9MLDZomkf355FFSfn9wUesulR+tNbVSb7HuXrGtU
+         vTXlm5nWpvU/Mzobbbn2UOhBusmZdrDZtqqNuNY0D3ZaFNYm2dYx6yU1AHCwMG3lGK
+         TtkUs79pK7kuhP95M74SAdB8LASj5qxZGndiSDM9kn40ao3jhaWULrAduKrwCkPwxd
+         Dr7OOqDeGW5yA==
+Received: by mail.feshiecree.pl for <linux-ide@vger.kernel.org>; Fri, 14 Apr 2023 08:23:46 GMT
+Message-ID: <20230414085824-0.1.21.ah4w.0.d0cn5z21bc@feshiecree.pl>
+Date:   Fri, 14 Apr 2023 08:23:46 GMT
+From:   "Krystian Wieczorek" <krystian.wieczorek@feshiecree.pl>
+To:     <linux-ide@vger.kernel.org>
+Subject: W sprawie samochodu
+X-Mailer: mail.feshiecree.pl
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCHv1 2/5] dt-bindings: ata: ahci: add RK3588 AHCI controller
-To:     Sebastian Reichel <sebastian.reichel@collabora.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel@collabora.com
-References: <20230413182345.92557-1-sebastian.reichel@collabora.com>
- <20230413182345.92557-3-sebastian.reichel@collabora.com>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230413182345.92557-3-sebastian.reichel@collabora.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/14/23 03:23, Sebastian Reichel wrote:
-> Just like RK3568, the RK3588 has a DWC based AHCI controller.
-> 
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> ---
-> FWIW IDK what exactly the ASIC clock is. The TRM does not provide any
-> details unfortunately. It is required for functional SATA, though.
-> ---
->  .../devicetree/bindings/ata/snps,dwc-ahci-common.yaml       | 6 ++++--
->  Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml    | 6 ++++--
->  2 files changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
-> index c1457910520b..0df8f49431eb 100644
-> --- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
-> +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
-> @@ -31,11 +31,11 @@ properties:
->        PM-alive clock, RxOOB detection clock, embedded PHYs reference (Rx/Tx)
->        clock, etc.
->      minItems: 1
-> -    maxItems: 4
-> +    maxItems: 5
->  
->    clock-names:
->      minItems: 1
-> -    maxItems: 4
-> +    maxItems: 5
->      items:
->        oneOf:
->          - description: Application APB/AHB/AXI BIU clock
-> @@ -50,6 +50,8 @@ properties:
->            const: rxoob
->          - description: SATA Ports reference clock
->            const: ref
-> +        - description: Rockchip ASIC clock
+Dzie=C5=84 dobry,
 
-Shouldn't this mention that this clock is for the 3588 only ? Or is it also
-necessary for the 3568 ? That is not super clear.
+chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
+, je=C5=9Bli chodzi o system monitoringu GPS.
 
-> +          const: asic
->  
->    resets:
->      description:
-> diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
-> index 5afa4b57ce20..c6a0d6c8b62c 100644
-> --- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
-> +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
-> @@ -23,9 +23,11 @@ properties:
->          const: snps,dwc-ahci
->        - description: SPEAr1340 AHCI SATA device
->          const: snps,spear-ahci
-> -      - description: Rockhip RK3568 AHCI controller
-> +      - description: Rockhip AHCI controller
->          items:
-> -          - const: rockchip,rk3568-dwc-ahci
-> +          - enum:
-> +              - rockchip,rk3568-dwc-ahci
-> +              - rockchip,rk3588-dwc-ahci
->            - const: snps,dwc-ahci
->  
->  patternProperties:
+Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
+e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
+a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
 
+Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
+dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
+szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
+mne znaczenie.
+
+Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
+b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
+
+
+Pozdrawiam
+Krystian Wieczorek
