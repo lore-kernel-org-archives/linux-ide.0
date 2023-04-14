@@ -2,61 +2,75 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42072C77B6E
-	for <linux-ide@archiver.kernel.org>; Fri, 14 Apr 2023 08:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C32CEC77B72
+	for <linux-ide@archiver.kernel.org>; Fri, 14 Apr 2023 13:55:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229736AbjDNIaB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 14 Apr 2023 04:30:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37282 "EHLO
+        id S229493AbjDNNzR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 14 Apr 2023 09:55:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230385AbjDNI3k (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 14 Apr 2023 04:29:40 -0400
-Received: from mail.feshiecree.pl (mail.feshiecree.pl [89.40.114.103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FC4576AA
-        for <linux-ide@vger.kernel.org>; Fri, 14 Apr 2023 01:29:00 -0700 (PDT)
-Received: by mail.feshiecree.pl (Postfix, from userid 1001)
-        id 928DE89D74; Fri, 14 Apr 2023 09:24:21 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=feshiecree.pl;
-        s=mail; t=1681460671;
-        bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
-        h=Date:From:To:Subject:From;
-        b=t+/GS70vh08+IbTR8RQvopDdMwWr69E54jeoGsINUSC4ff7uMSEZkK5yCC2ckN9vf
-         RWJU1XS+tQFcYnsfud630WC+trb4+fGFd4vjmlR4Kv1wr2cB7N5qNFE3XWAiCFu3hf
-         yb9AMuK6uwLgzbTfzRFcVIZR/k9MLDZomkf355FFSfn9wUesulR+tNbVSb7HuXrGtU
-         vTXlm5nWpvU/Mzobbbn2UOhBusmZdrDZtqqNuNY0D3ZaFNYm2dYx6yU1AHCwMG3lGK
-         TtkUs79pK7kuhP95M74SAdB8LASj5qxZGndiSDM9kn40ao3jhaWULrAduKrwCkPwxd
-         Dr7OOqDeGW5yA==
-Received: by mail.feshiecree.pl for <linux-ide@vger.kernel.org>; Fri, 14 Apr 2023 08:23:46 GMT
-Message-ID: <20230414085824-0.1.21.ah4w.0.d0cn5z21bc@feshiecree.pl>
-Date:   Fri, 14 Apr 2023 08:23:46 GMT
-From:   "Krystian Wieczorek" <krystian.wieczorek@feshiecree.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: W sprawie samochodu
-X-Mailer: mail.feshiecree.pl
-MIME-Version: 1.0
+        with ESMTP id S229853AbjDNNzQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 14 Apr 2023 09:55:16 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6ACEE73;
+        Fri, 14 Apr 2023 06:55:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=4riDwi82epKmnE7d/5W5DyjvMFTPTQCx9+hBpCrTkWM=;
+        t=1681480515; x=1682690115; b=AfBGpkim7slFF45O+uqyYxZ8XcgaOtp88SgWvS3oxZ4m7v3
+        fksl5XzeqGTk+EB95nk/MIAYFkY1Ufrc+gJeFDhZBoTBEba5KVHMy02GQLoIV9z2UhWIwTTzSYPsQ
+        fZPPwwIwb0IY8VNabL3K2Y0DmF474H10zIiW0UosGs+MbZu1F8juZMuWYFdJel+DMq50Ia2KSUvCj
+        hhQNUoW4I0G22DW9GC5fY7LvAPmUJKuL0wB5ONYPJbAme/h1nbvJL5TqhRVDV7rJW9jaETZji0xbP
+        2DkWGyE6evPMYC2YznK/d0RU4ln2siSVq/8MGpiQDPkzk+MXL3JalAGtTFD+ILhQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1pnJtM-00Fc5q-29;
+        Fri, 14 Apr 2023 15:55:08 +0200
+Message-ID: <099028386d683dcc585693d85b6b2739952fcdeb.camel@sipsolutions.net>
+Subject: Re: [PATCH v3] UML: pata_cs5536: fix build for X86_32 UML with
+ TRACEPOINTS
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc:     Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, linux-um@lists.infradead.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Fri, 14 Apr 2023 15:55:07 +0200
+In-Reply-To: <20230410011325.26850-1-rdunlap@infradead.org>
+References: <20230410011325.26850-1-rdunlap@infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Sun, 2023-04-09 at 18:13 -0700, Randy Dunlap wrote:
+> Current build of pata_cs5536 for i386 UML fails with:
+>=20
+> ERROR: modpost: "__tracepoint_write_msr" [drivers/ata/pata_cs5536.ko] und=
+efined!
+> ERROR: modpost: "do_trace_write_msr" [drivers/ata/pata_cs5536.ko] undefin=
+ed!
+> ERROR: modpost: "__tracepoint_read_msr" [drivers/ata/pata_cs5536.ko] unde=
+fined!
+> ERROR: modpost: "do_trace_read_msr" [drivers/ata/pata_cs5536.ko] undefine=
+d!
+>=20
+> Add the arch/x86/lib/msr.o binary to resolve these undefined symbols.
+>=20
 
-chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
-, je=C5=9Bli chodzi o system monitoringu GPS.
+Hm. Does this make sense? I can't see it'd work on UML to configure an
+IDE device through MSRs? Surely that can't work? IOW, that entire driver
+can't really work anyway can it?
 
-Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
-e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
-a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
+OTOH, maybe theoretically it could work in PCI, just not with MSRs, and
+then this patch makes some sense?
 
-Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
-dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
-szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
-mne znaczenie.
-
-Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
-b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
-
-
-Pozdrawiam
-Krystian Wieczorek
+johannes
