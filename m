@@ -2,87 +2,105 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AD21C77B72
-	for <linux-ide@archiver.kernel.org>; Sun, 16 Apr 2023 06:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F13BC77B61
+	for <linux-ide@archiver.kernel.org>; Sun, 16 Apr 2023 09:43:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229908AbjDPGU0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 16 Apr 2023 02:20:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44784 "EHLO
+        id S230253AbjDPJny convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 16 Apr 2023 05:43:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229702AbjDPGUZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 16 Apr 2023 02:20:25 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6650D2125;
-        Sat, 15 Apr 2023 23:20:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=a5HtuX5NCAwNZ2u+MVEk4FRtqRQnPUKDyUxgXoFpbhU=; b=Ml7115g/ona+dWfYlzju3J5h8J
-        MVELE7TWv3Fq60RTVKkPsUzNurpxEGCNNnNtcYs9rLz9UpV3622U+7FKfvGlbsqyWzNorAaRXwSsG
-        zfRZfFWDbUZg5g4eXLLiJvhar/wx4QrJyRmdYFFCQekmYZv1Z6WF5H7MVtVu+6v+vNYFWdHpLoq1W
-        YTUf75AWPuIWE1RdzJ8t43NMUwyTgbqpnecR+aeX5FmQT+l/odFEHMJmNPivrdpq+7rt9LXjDuP5Q
-        cjQ9WpVBqqDBJO+MCTMw2oZTSipYqfDqD5gZUyiii4TEENVYhzxx+pPLsccUUL6Omk2vFXnMezd71
-        Li/MlRzA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1pnvkI-00DDfz-2z;
-        Sun, 16 Apr 2023 06:20:18 +0000
-Date:   Sat, 15 Apr 2023 23:20:18 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
-        Richard Weinberger <richard@nod.at>,
+        with ESMTP id S230221AbjDPJnx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 16 Apr 2023 05:43:53 -0400
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C95482709;
+        Sun, 16 Apr 2023 02:43:51 -0700 (PDT)
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-54f6a796bd0so276730477b3.12;
+        Sun, 16 Apr 2023 02:43:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681638231; x=1684230231;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=eGZ8vTVUDzMj6tlghPjPrAsFRulY7ZaPrM9DcatIBAM=;
+        b=g4liQ7U2AS0j0zlN9uek2QeiaJnNujlSfyDCbAaWE6Oy2UImehFg8sMgq3+am1rtxV
+         8ibSaQ6wZxRWM+oph97Dlt7bO1Mxj49TnHKHDOebAMTGeDB5N1XFFfjuSHpf2TXbifE5
+         FXCy/Cz7KET4VUjQ68WU8T7fJDqUGCTgw2EYd8wcK9BU7wjXp0mJ/Sb6rkwYUm+xdwuh
+         H9w2RujNvIV+MHgmHwDsLme1Y1OCwsMa+uBo7eOX9BAKBwNA8in6K1XPNMW5V85OPi8b
+         YhKLbC5pIFJOwD4zLKYKBJzyoWJ7B7xxm9c9UosChM5fK467c5dkN0H3Mj1ZcU4yKcSM
+         3XWA==
+X-Gm-Message-State: AAQBX9cpKltK6WzipALtK3mAaoNrqhQNCSoej95XSEvj6o/IIQmwQZlf
+        B/EQvXxRT5f0p1YfJ5IuxWZSB7nkie6FwA==
+X-Google-Smtp-Source: AKy350aohQNyiNHBnwR/yyAnqjMGsCSEh5XnEj0ec37xOCvPwMmeI4CaoEzz8PGsqL/xiE1A8DgY3g==
+X-Received: by 2002:a81:60d5:0:b0:54f:e4d8:f4a6 with SMTP id u204-20020a8160d5000000b0054fe4d8f4a6mr6959730ywb.42.1681638230771;
+        Sun, 16 Apr 2023 02:43:50 -0700 (PDT)
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com. [209.85.128.180])
+        by smtp.gmail.com with ESMTPSA id e199-20020a811ed0000000b005463c7417c6sm2402300ywe.8.2023.04.16.02.43.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 16 Apr 2023 02:43:50 -0700 (PDT)
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-54fe82d8bf5so77585127b3.3;
+        Sun, 16 Apr 2023 02:43:49 -0700 (PDT)
+X-Received: by 2002:a81:b65b:0:b0:54f:dc41:8edf with SMTP id
+ h27-20020a81b65b000000b0054fdc418edfmr6862753ywk.2.1681638229566; Sun, 16 Apr
+ 2023 02:43:49 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230410011325.26850-1-rdunlap@infradead.org> <099028386d683dcc585693d85b6b2739952fcdeb.camel@sipsolutions.net>
+ <ZDuTotxqsrysNaYu@infradead.org>
+In-Reply-To: <ZDuTotxqsrysNaYu@infradead.org>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Sun, 16 Apr 2023 11:43:38 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdXRezGfUE4OOc3OjSmP6sS7oQXEd5QnC-G+d+Hv9uVz9Q@mail.gmail.com>
+Message-ID: <CAMuHMdXRezGfUE4OOc3OjSmP6sS7oQXEd5QnC-G+d+Hv9uVz9Q@mail.gmail.com>
+Subject: Re: [PATCH v3] UML: pata_cs5536: fix build for X86_32 UML with TRACEPOINTS
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        linux-kernel@vger.kernel.org, Richard Weinberger <richard@nod.at>,
         Anton Ivanov <anton.ivanov@cambridgegreys.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-um@lists.infradead.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v3] UML: pata_cs5536: fix build for X86_32 UML with
- TRACEPOINTS
-Message-ID: <ZDuTotxqsrysNaYu@infradead.org>
-References: <20230410011325.26850-1-rdunlap@infradead.org>
- <099028386d683dcc585693d85b6b2739952fcdeb.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <099028386d683dcc585693d85b6b2739952fcdeb.camel@sipsolutions.net>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        linux-ide@vger.kernel.org, linux-um@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Apr 14, 2023 at 03:55:07PM +0200, Johannes Berg wrote:
-> On Sun, 2023-04-09 at 18:13 -0700, Randy Dunlap wrote:
-> > Current build of pata_cs5536 for i386 UML fails with:
-> > 
-> > ERROR: modpost: "__tracepoint_write_msr" [drivers/ata/pata_cs5536.ko] undefined!
-> > ERROR: modpost: "do_trace_write_msr" [drivers/ata/pata_cs5536.ko] undefined!
-> > ERROR: modpost: "__tracepoint_read_msr" [drivers/ata/pata_cs5536.ko] undefined!
-> > ERROR: modpost: "do_trace_read_msr" [drivers/ata/pata_cs5536.ko] undefined!
-> > 
-> > Add the arch/x86/lib/msr.o binary to resolve these undefined symbols.
-> > 
-> 
-> Hm. Does this make sense? I can't see it'd work on UML to configure an
-> IDE device through MSRs? Surely that can't work? IOW, that entire driver
-> can't really work anyway can it?
-> 
-> OTOH, maybe theoretically it could work in PCI, just not with MSRs, and
-> then this patch makes some sense?
+Hi Christoph,
 
-I think it is is integrated into actual Geode SOCs.  That being
-said something like the patch below seems as simple as it gets and
-at least gives build coverage on uml
+On Sun, Apr 16, 2023 at 8:20 AM Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Apr 14, 2023 at 03:55:07PM +0200, Johannes Berg wrote:
+> > On Sun, 2023-04-09 at 18:13 -0700, Randy Dunlap wrote:
+> > > Current build of pata_cs5536 for i386 UML fails with:
+> > >
+> > > ERROR: modpost: "__tracepoint_write_msr" [drivers/ata/pata_cs5536.ko] undefined!
+> > > ERROR: modpost: "do_trace_write_msr" [drivers/ata/pata_cs5536.ko] undefined!
+> > > ERROR: modpost: "__tracepoint_read_msr" [drivers/ata/pata_cs5536.ko] undefined!
+> > > ERROR: modpost: "do_trace_read_msr" [drivers/ata/pata_cs5536.ko] undefined!
+> > >
+> > > Add the arch/x86/lib/msr.o binary to resolve these undefined symbols.
+> > >
+> >
+> > Hm. Does this make sense? I can't see it'd work on UML to configure an
+> > IDE device through MSRs? Surely that can't work? IOW, that entire driver
+> > can't really work anyway can it?
+> >
+> > OTOH, maybe theoretically it could work in PCI, just not with MSRs, and
+> > then this patch makes some sense?
+>
+> I think it is is integrated into actual Geode SOCs.  That being
+> said something like the patch below seems as simple as it gets and
+> at least gives build coverage on uml
 
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index ab47aeb5587f55..4f5d9afd51c9d8 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -27,7 +27,7 @@
- #include <scsi/scsi_host.h>
- #include <linux/dmi.h>
- 
--#ifdef CONFIG_X86_32
-+#if defined(CONFIG_X86_32) && !defined(CONFIG_UML)
- #include <asm/msr.h>
- static int use_msr;
- module_param_named(msr, use_msr, int, 0644);
+CS5536 is the Geode Companion Device, i.e. the South Bridge, which
+can be used with other devices, AFAIK.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
