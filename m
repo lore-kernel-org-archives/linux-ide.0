@@ -2,72 +2,136 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB76C77B75
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Apr 2023 21:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B47B6C6FD18
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Apr 2023 21:45:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232882AbjDRVRS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Apr 2023 17:17:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35212 "EHLO
+        id S232946AbjDRVpT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Apr 2023 17:45:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231522AbjDRVRR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2023 17:17:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7B283C1E;
-        Tue, 18 Apr 2023 14:17:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S233083AbjDRVpQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2023 17:45:16 -0400
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1904B49FD;
+        Tue, 18 Apr 2023 14:44:58 -0700 (PDT)
+Received: from mercury (unknown [185.209.196.239])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3CFE163913;
-        Tue, 18 Apr 2023 21:17:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CA49C4339B;
-        Tue, 18 Apr 2023 21:17:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681852635;
-        bh=NkZbO3v1vt7AI6j7cVF6xRNunCdnbFbTZvCRF8jsgq8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=urpnr/YkVnjIu9iySbQ9lTqnTEQrBcWC8upUe1l5mPT3KJWyc6D800EnYZaVZM8CD
-         11YyGIfys29trDDlYBhN+waQP2aRngfkM+sPnAujYbmljKp9khoLZYUnvvE3bfvTkR
-         3ZZeWXpDWm7tdVR0kxl0Y9gEx1nNQ4NTQd+I0NXnwzU3Kw2Qz+9vtQVKQnXpQIaQZK
-         NNMvP2SPr4UVvxUTCk67K/ucm7h3C77cf0ErtvXWNf1z0TDu5a3ihsSbSVclOMV0Tp
-         tAH+lQ0PSxoiiId7vNS50HbtAH2tCyhPBosKNdqpEMyr2b4P/I1BYzb9C5b/027pM3
-         JOHn5CY2pIezw==
-Date:   Tue, 18 Apr 2023 16:17:14 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Patrick McLean <chutzpah@gentoo.org>
-Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Dave Airlie <airlied@redhat.com>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH 1/2] gpu: Move ASPEED vendor ID definition to pci_ids.h
-Message-ID: <20230418211714.GA161849@bhelgaas>
+        (Authenticated sender: sre)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 6BE9D6603217;
+        Tue, 18 Apr 2023 22:44:57 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1681854297;
+        bh=sdgXZWB61ikcdoR6k+DOEhzGhE10wgrKBIzUUFMlXMA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=aIQAGMUCzN7JKN6FIKofs07efe157XyVCT0+2FpttWZsPrC789sJpi5y/Ghr3/Raw
+         8Yl7znactE6Epm4o0O7eXb2emquphikOgt1FR/d2evggCQmNXvfCtWzRtRnm7/tiEB
+         pUrS1yPfIrZVDzJGEzdH2fwqX2i1Q40Z7ek/+vSCzK8dueHfpw97/4yP1BnSOm2OPD
+         5a4IsV8GypyuTPi3R/f4EgAsAxBh8/p9+uN5EVhOgM+NZiqwzBCxFdvGJvd1F/ZT8Z
+         uFAPRLNgDIq54KLvBKFF2FFnYnhAG/Ql1TDRUdNlLGInyvDvLhFPznWQEwWBPP+lIE
+         rP/rYgDesrySQ==
+Received: by mercury (Postfix, from userid 1000)
+        id D9F201066F5D; Tue, 18 Apr 2023 23:44:54 +0200 (CEST)
+Date:   Tue, 18 Apr 2023 23:44:54 +0200
+From:   Sebastian Reichel <sebastian.reichel@collabora.com>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Heiko Stuebner <heiko@sntech.de>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel@collabora.com
+Subject: Re: [PATCHv1 3/5] dt-bindings: phy: rockchip: rk3588 has two reset
+ lines
+Message-ID: <20230418214454.m24t2s3lnsukwppn@mercury.elektranox.org>
+References: <20230413182345.92557-1-sebastian.reichel@collabora.com>
+ <20230413182345.92557-4-sebastian.reichel@collabora.com>
+ <20230418204136.GA2299798-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="s6ptsftpn4p7qth6"
 Content-Disposition: inline
-In-Reply-To: <20230418211403.GA160979@bhelgaas>
+In-Reply-To: <20230418204136.GA2299798-robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 18, 2023 at 04:14:03PM -0500, Bjorn Helgaas wrote:
-> Most subject lines for pci_ids.h look like this:
-> 
->   PCI: Add ASPEED vendor ID
-> 
-> On Mon, Apr 17, 2023 at 06:17:19PM -0700, Patrick McLean wrote:
-> > Currently the ASPEED PCI vendor ID is defined in drivers/gpu/drm/ast/ast_drv.c,
-> > move that to include/linux/pci_ids.h with all the rest of the PCI vendor ID
-> > definitions. Rename the definition to follow the format that the other
-> > definitions follow.
-> > 
-> > Signed-off-by: Patrick McLean <chutzpah@gentoo.org>
-> 
-> Given the subject line and file placement (below) updates,
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Oh, at the same time, would you mind rewrapping at least this commit
-log so it fits in 75 columns to "git log" doesn't overflow an 80
-column terminal?
+--s6ptsftpn4p7qth6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Bjorn
+Hello Rob,
+
+On Tue, Apr 18, 2023 at 03:41:36PM -0500, Rob Herring wrote:
+> On Thu, Apr 13, 2023 at 08:23:43PM +0200, Sebastian Reichel wrote:
+> > The RK3588 has two reset lines for the combphy. One for the
+> > APB interface and one for the actual PHY.
+> >=20
+> > Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> > ---
+> >  .../bindings/phy/phy-rockchip-naneng-combphy.yaml          | 7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> >=20
+> > diff --git a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-=
+combphy.yaml b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-co=
+mbphy.yaml
+> > index 9ae514fa7533..bac1aae07555 100644
+> > --- a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy=
+=2Eyaml
+> > +++ b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy=
+=2Eyaml
+> > @@ -31,8 +31,13 @@ properties:
+> >        - const: pipe
+> > =20
+> >    resets:
+> > +    minItems: 1
+> > +    maxItems: 2
+> > +
+> > +  reset-names:
+> >      items:
+> > -      - description: exclusive PHY reset line
+> > +      - const: phy
+> > +      - const: apb
+>=20
+> This will fail on any existing users with single entry. You need to add=
+=20
+> 'minItems: 1' here.
+>=20
+> It also fails if they didn't use 'phy' as the name, but names should be=
+=20
+> defined.
+
+My understanding is, there there currently are users with one entry
+and no reset-names. I suppose its sensible not to provide a
+reset-name, iff there is only one line. As far as I can tell that
+should still work after my changes.
+
+-- Sebastian
+
+--s6ptsftpn4p7qth6
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAmQ/D00ACgkQ2O7X88g7
++pq29w//Q5Slb98DCTi7eVp+a3iZCQ7kw1XvBK/cvgJLcPFl2ZT79eUY7JQon9pq
+DJs/ln/d65z4AmEX4MNqJU7k3lnv6cX2P2CtjR9oS32WPgxxkmT/kyY/d9yz/Ext
+kD5/QnZ30czThOPar6MWXMHhpXPnzFLBNjHexWU3mU0Qztdf3l8F5dwEhaG3hhnP
+yyuoolfYUHZRoOqCKF83Y/jCUOlpdLt1OB781DuxzVXqFO3r1dvbHTa2gH6vyr38
+clLOSRJ941nMNGxsT5h1QuEd91btcjcuAyPXLAiWfC8ofx9gx2GEApSBIMwlesKm
+/B2OYA2H2u/nKF/+uOld39p2Kf7fvSxZr+WDlc2rUqhMnBhTAMa+loOVfi0ENNOp
+DK+ya0xnJWalRn6v2qYz4vj8yu7nj20njNVgfotw2X2cPfufHOF4HWB19qNmpZmA
+H78RJJrmvZHBdrqwkyufscTaUsJKUjlNk1X1MflBFrl3LzuaIzO2AJ3sbC4q6pXV
+FeOp2ozw9ovlgj0RMUKEb/K62jGwM4RaufZAlzps3FRX35mJ1QhHH4Ro+bd+eja+
+kBAI6Ra69Tz+vn/FAN5zc39IKBZUtJ0tM9uZgwLbHZD/IAx0SicHYtKNYhLD2Cm0
+yc4EQhaCRQKo8k4BgCvxfShpyxJyHBrDQVA5IfWHz31ZP7vg2lM=
+=vQoE
+-----END PGP SIGNATURE-----
+
+--s6ptsftpn4p7qth6--
