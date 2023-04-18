@@ -2,98 +2,108 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2814C77B76
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Apr 2023 20:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5865DC6FD18
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Apr 2023 21:14:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232680AbjDRUly (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Apr 2023 16:41:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44936 "EHLO
+        id S232573AbjDRVOH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Apr 2023 17:14:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231510AbjDRUlk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2023 16:41:40 -0400
-Received: from mail-oo1-f41.google.com (mail-oo1-f41.google.com [209.85.161.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6418C654;
-        Tue, 18 Apr 2023 13:41:38 -0700 (PDT)
-Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-546e2fddc04so580095eaf.2;
-        Tue, 18 Apr 2023 13:41:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681850498; x=1684442498;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6Wn5jPh2OUBYBXHc1I8aQspr9Ndl9LxQc5kkluAkHCg=;
-        b=UOdVX0rk9A6AH2fJ6H5VobmqDV1F172Yi8iheaALelo8zabfibijnIGkjS3VPl9S5N
-         WkJDAHkIM4tPm81w6BxxmO14gTV4YQ0p6pFtuKtJ8JXENa5TrYvbnhISY87+nXvqb9wo
-         XNB2zkr3tdz1hlpI3xMsjY1gsFp+a9QNK0+sGn3Pc8/ZEi0lA7aM7UrykiHekveQFfww
-         3E4oW3jlPutvWTm34RDjwMdX0XKHJRLfOXtre9aVj3EzTVBk08L8aXxPxH+cSz7QQC/6
-         8iwNv7/Vhr5sm65RtQBMLd4lEaJmvOFmN3HylHplrutJSshFjVohyiwVjyUAKTGNDLRM
-         w+Mw==
-X-Gm-Message-State: AAQBX9fyT69UaEOrgk8V8C7k0jMjWy/a4g5b+gweLwPtJWoXQumALkgN
-        rSB/XeTc9Sm2LVI/8cKj/Q==
-X-Google-Smtp-Source: AKy350a+NmjwKRcIM2O3weLQf7m8QnY1Y6F7Tc8lUnHf4ija54gAsp2mitsmSa1rHReBb0iR+FE2sg==
-X-Received: by 2002:a05:6870:970c:b0:187:78db:feba with SMTP id n12-20020a056870970c00b0018778dbfebamr2244694oaq.59.1681850497867;
-        Tue, 18 Apr 2023 13:41:37 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id s3-20020a05687090c300b001805a3e722csm5983987oab.19.2023.04.18.13.41.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Apr 2023 13:41:37 -0700 (PDT)
-Received: (nullmailer pid 2301746 invoked by uid 1000);
-        Tue, 18 Apr 2023 20:41:36 -0000
-Date:   Tue, 18 Apr 2023 15:41:36 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Sebastian Reichel <sebastian.reichel@collabora.com>
-Cc:     Heiko Stuebner <heiko@sntech.de>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel@collabora.com
-Subject: Re: [PATCHv1 3/5] dt-bindings: phy: rockchip: rk3588 has two reset
- lines
-Message-ID: <20230418204136.GA2299798-robh@kernel.org>
-References: <20230413182345.92557-1-sebastian.reichel@collabora.com>
- <20230413182345.92557-4-sebastian.reichel@collabora.com>
+        with ESMTP id S232474AbjDRVOG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2023 17:14:06 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF6AD55AC;
+        Tue, 18 Apr 2023 14:14:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8D29E61527;
+        Tue, 18 Apr 2023 21:14:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC45BC433D2;
+        Tue, 18 Apr 2023 21:14:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681852445;
+        bh=JBNOFe/Q4uIY9BiQEuafN7tvTwnDWbyxZ0gk7Y620+E=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=fby3qz/OFcuKHyHBQn+0w4kcO7mwke+dsb6RnUgR+c5iZjjqMTZ9jwYowkD+2ujmz
+         lLj3WQEavcRi/aq2Y/X4NVRxFuXlu3Av4iCp8dUmsgjUH1H2BA4aJF9wJAt+fEdSzC
+         S8K4FCciilRXX1Cso+nwhIYTmKCKn9ClVMRr9EJY13ffQathK3Z6tJXX2uVipeJrft
+         S8j3J9YVGWuWbORQsjYZ0v60ALdW3NHuiRC6duNt3RjaaX739yCY4jYFjsnEqH14kf
+         Ve3Jln9z/RDVvJ+Y70qj/3WVn9mVNF5ybqIVe+pisZxfU76ZriBjaI9DboxKJqqWvi
+         BurvZCIAMgJ/A==
+Date:   Tue, 18 Apr 2023 16:14:03 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Patrick McLean <chutzpah@gentoo.org>
+Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Dave Airlie <airlied@redhat.com>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH 1/2] gpu: Move ASPEED vendor ID definition to pci_ids.h
+Message-ID: <20230418211403.GA160979@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230413182345.92557-4-sebastian.reichel@collabora.com>
+In-Reply-To: <20230418011720.3900090-2-chutzpah@gentoo.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Apr 13, 2023 at 08:23:43PM +0200, Sebastian Reichel wrote:
-> The RK3588 has two reset lines for the combphy. One for the
-> APB interface and one for the actual PHY.
+Most subject lines for pci_ids.h look like this:
+
+  PCI: Add ASPEED vendor ID
+
+On Mon, Apr 17, 2023 at 06:17:19PM -0700, Patrick McLean wrote:
+> Currently the ASPEED PCI vendor ID is defined in drivers/gpu/drm/ast/ast_drv.c,
+> move that to include/linux/pci_ids.h with all the rest of the PCI vendor ID
+> definitions. Rename the definition to follow the format that the other
+> definitions follow.
 > 
-> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> Signed-off-by: Patrick McLean <chutzpah@gentoo.org>
+
+Given the subject line and file placement (below) updates,
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
 > ---
->  .../bindings/phy/phy-rockchip-naneng-combphy.yaml          | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+>  drivers/gpu/drm/ast/ast_drv.c | 4 +---
+>  include/linux/pci_ids.h       | 2 ++
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
-> index 9ae514fa7533..bac1aae07555 100644
-> --- a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
-> +++ b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
-> @@ -31,8 +31,13 @@ properties:
->        - const: pipe
+> diff --git a/drivers/gpu/drm/ast/ast_drv.c b/drivers/gpu/drm/ast/ast_drv.c
+> index d78852c7cf5b..232e797793b6 100644
+> --- a/drivers/gpu/drm/ast/ast_drv.c
+> +++ b/drivers/gpu/drm/ast/ast_drv.c
+> @@ -70,12 +70,10 @@ static const struct drm_driver ast_driver = {
+>   * PCI driver
+>   */
 >  
->    resets:
-> +    minItems: 1
-> +    maxItems: 2
-> +
-> +  reset-names:
->      items:
-> -      - description: exclusive PHY reset line
-> +      - const: phy
-> +      - const: apb
+> -#define PCI_VENDOR_ASPEED 0x1a03
+> -
+>  #define AST_VGA_DEVICE(id, info) {		\
+>  	.class = PCI_BASE_CLASS_DISPLAY << 16,	\
+>  	.class_mask = 0xff0000,			\
+> -	.vendor = PCI_VENDOR_ASPEED,			\
+> +	.vendor = PCI_VENDOR_ID_ASPEED,			\
+>  	.device = id,				\
+>  	.subvendor = PCI_ANY_ID,		\
+>  	.subdevice = PCI_ANY_ID,		\
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 45c3d62e616d..6634741aea80 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -815,6 +815,8 @@
+>  #define PCI_VENDOR_ID_ASUSTEK		0x1043
+>  #define PCI_DEVICE_ID_ASUSTEK_0675	0x0675
+>  
+> +#define PCI_VENDOR_ID_ASPEED		0x1a03
 
-This will fail on any existing users with single entry. You need to add 
-'minItems: 1' here.
+This looks like a random placement.  Please keep sorted by numeric
+vendor ID.  I'll make the comment at the top a little more specific.
 
-It also fails if they didn't use 'phy' as the name, but names should be 
-defined.
-
-Rob
+>  #define PCI_VENDOR_ID_DPT		0x1044
+>  #define PCI_DEVICE_ID_DPT		0xa400
+>  
+> -- 
+> 2.40.0
+> 
