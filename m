@@ -2,62 +2,156 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C83EC6FD18
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Apr 2023 07:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0041C77B72
+	for <linux-ide@archiver.kernel.org>; Thu, 20 Apr 2023 19:10:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229599AbjDSH4D (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Apr 2023 03:56:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43734 "EHLO
+        id S231845AbjDTTKl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 20 Apr 2023 15:10:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231577AbjDSH4C (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Apr 2023 03:56:02 -0400
-X-Greylist: delayed 323 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 19 Apr 2023 00:56:01 PDT
-Received: from mail.mahavavy.com (mail.mahavavy.com [92.222.170.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1B4D97
-        for <linux-ide@vger.kernel.org>; Wed, 19 Apr 2023 00:56:01 -0700 (PDT)
-Received: by mail.mahavavy.com (Postfix, from userid 1002)
-        id 4D44F234BE; Wed, 19 Apr 2023 07:50:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mahavavy.com; s=mail;
-        t=1681890635; bh=IfqQW79nVX/qUpmHcJiWDpV9BQnOf/s+Zcq9ON74QJY=;
-        h=Date:From:To:Subject:From;
-        b=jBNjvkeUzeuis5cj5BbveU2qgKrlhWf8bVEmT/bxjwx1YHzmKzAA0Gb71RjckxIkL
-         CGbVwGT/Z2Zebwg3OdnDLgea7UgR67hMPLKe00uLLIX4DoGzuRsFiiH6SKTud9ERbV
-         OtDzUIfyToJ84cykmHCuEb7SWvubSZr2AXzvCQiIYodEVj9QhqhqlaafUVV0xcoEz3
-         jY8WWK5ollFGTKO8nWwvEyxd2Mt7pqHR1QGg1XIM1OGyWW+p22+bT5XFLNfxVccIWg
-         sX4s9MBaGuQoz4xiCsDKCPgWNIX8E1ShFNnaY+E2kHM4Qx7dS7C3HVQZsPXSbd2iKY
-         Wgv6D8oVntZ9g==
-Received: by mail.mahavavy.com for <linux-ide@vger.kernel.org>; Wed, 19 Apr 2023 07:50:25 GMT
-Message-ID: <20230419064500-0.1.22.36ra.0.qc26c90aoq@mahavavy.com>
-Date:   Wed, 19 Apr 2023 07:50:25 GMT
-From:   =?UTF-8?Q? "Kristi=C3=A1n_Plet=C3=A1nek" ?= 
-        <kristian.pletanek@mahavavy.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?Tlakov=C4=9B_lit=C3=BD?=
-X-Mailer: mail.mahavavy.com
+        with ESMTP id S231823AbjDTTKk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Apr 2023 15:10:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79AA610D1;
+        Thu, 20 Apr 2023 12:10:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 14A9464B6D;
+        Thu, 20 Apr 2023 19:10:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 420C7C433D2;
+        Thu, 20 Apr 2023 19:10:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682017838;
+        bh=XrXqfqmFPAxvfcLnA7hSYVE5T/DiaBScxzwQjC8CZk4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=LDA5jXTMDJtx+rIFPKnSiZlDcDjiPcZkkoYv6a7KaXWNVDExEskBTpBs+iuoiG1zV
+         EaLTGqTna5BKDtH/AhicV08Z60dmekfu41aStdgnq8vLIfZXpXLa/dg1XOB7TviBV9
+         En+gIxIR0IEveSaCahs3ZKDC//tkHJzO3Q7mJBsRYbgsdRYpzvEo81sC+MRJsGQThn
+         P8mFYrJ7distbVy02YT339dE/+3T1F9wHMGVjwgRFF1PkL9WeGmsdqTsYPbxVSptTB
+         VG8754GGBoYnE0DpeLBUFeJHoBOJ/nggPEiMu6CDz3cdlIS4JwDMpezehL0BJD6Mzv
+         hvPfJ+vO73uAg==
+Date:   Thu, 20 Apr 2023 14:10:36 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Thomas Zimmermann <tzimmermann@suse.de>
+Cc:     "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:DRM DRIVER FOR AST SERVER GRAPHICS CHIPS" 
+        <dri-devel@lists.freedesktop.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Dave Airlie <airlied@redhat.com>,
+        Patrick McLean <chutzpah@gentoo.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ASPEED vendor ID
+Message-ID: <20230420191036.GA315493@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d65e2938-2910-2330-b9c2-082ab947015d@suse.de>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dobr=C3=A9 r=C3=A1no,
+[+cc Damien, linux-ide]
 
-zaji=C5=A1=C5=A5ujeme technologii tlakov=C3=A9ho lit=C3=AD hlin=C3=ADku.
+On Thu, Apr 20, 2023 at 09:08:48AM +0200, Thomas Zimmermann wrote:
+> Am 19.04.23 um 20:37 schrieb Bjorn Helgaas:
+> > On Wed, Apr 19, 2023 at 09:00:15AM +0200, Thomas Zimmermann wrote:
+> > > Am 19.04.23 um 00:57 schrieb Patrick McLean:
+> > > > Currently the ASPEED PCI vendor ID is defined in
+> > > > drivers/gpu/drm/ast/ast_drv.c, move that to include/linux/pci_ids.h
+> > > > with all the rest of the PCI vendor ID definitions. Rename the definition
+> > > > to follow the format that the other definitions follow.
+> > > 
+> > > Thanks a lot. Can you please also move and rename the PCI device ids? [1]
+> > 
+> > Generally we move things to pci_ids.h only when they are shared
+> > between multiple drivers.  This is mostly to make backports easier.
+> > 
+> > PCI_VENDOR_ID_ASPEED is (or will be) used in both ast_drv.c and
+> > libata-core.c, so it qualifies.
+> > 
+> > It doesn't look like PCI_CHIP_AST2000 and PCI_CHIP_AST2100 would
+> > qualify since they're only used in ast_drv.c and ast_main.c, which are
+> > part of the same driver.
+> 
+> Ok, I see. Can I take the patch into DRM trees?
 
-M=C3=A1me v=C3=BDrobn=C3=AD z=C3=A1vody v Polsku, =C5=A0v=C3=A9dsku a =C4=
-=8C=C3=ADn=C4=9B se schopnost=C3=AD flexibiln=C4=9B p=C5=99esouvat v=C3=BD=
-robu mezi lokalitami.
+The first time around I got two patches [2].  This time I only got
+this patch, but IIUC there are still two patches in play here:
 
-Na=C5=A1e lic=C3=AD bu=C5=88ky jsou v=C4=9Bt=C5=A1inou automatick=C3=A9 n=
-ebo poloautomatick=C3=A9, co=C5=BE umo=C5=BE=C5=88uje v=C3=BDrobu velk=C3=
-=BDch v=C3=BDrobn=C3=ADch s=C3=A9ri=C3=AD s vysokou flexibilitou detail=C5=
-=AF.
-=20
-Poskytujeme podporu v ka=C5=BEd=C3=A9 f=C3=A1zi v=C3=BDvoje projektu, vyv=
-=C3=ADj=C3=ADme strukturu detailu.
+  - This one, which moves PCI_VENDOR_ID_ASPEED to pci_ids.h, and
+  - The libata-core one that adds a use in ata_dev_config_ncq()
 
-Cht=C4=9Bli byste mluvit o spolupr=C3=A1ci v t=C3=A9to oblasti?
+Those should go together via the same tree.  I supplied my ack to
+indicate that I'm not going to merge anything myself, and I expect
+whoever merges the libata patch to also merge this one.
 
-Pozdravy
-Kristi=C3=A1n Plet=C3=A1nek
+If for some reason the libata-core patch doesn't happen, then this
+patch shouldn't happen either, because there would no longer be any
+sharing between drivers that would justify a pci_ids.h addition.
+
+Bjorn
+
+[2] https://lore.kernel.org/r/20230418011720.3900090-1-chutzpah@gentoo.org
+
+> > > [1] https://elixir.bootlin.com/linux/v6.2/source/drivers/gpu/drm/ast/ast_drv.h#L52
+
+> > > > Signed-off-by: Patrick McLean <chutzpah@gentoo.org>
+> > > > ---
+> > > >    drivers/gpu/drm/ast/ast_drv.c | 4 +---
+> > > >    include/linux/pci_ids.h       | 2 ++
+> > > >    2 files changed, 3 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/gpu/drm/ast/ast_drv.c b/drivers/gpu/drm/ast/ast_drv.c
+> > > > index d78852c7cf5b..232e797793b6 100644
+> > > > --- a/drivers/gpu/drm/ast/ast_drv.c
+> > > > +++ b/drivers/gpu/drm/ast/ast_drv.c
+> > > > @@ -70,12 +70,10 @@ static const struct drm_driver ast_driver = {
+> > > >     * PCI driver
+> > > >     */
+> > > > -#define PCI_VENDOR_ASPEED 0x1a03
+> > > > -
+> > > >    #define AST_VGA_DEVICE(id, info) {		\
+> > > >    	.class = PCI_BASE_CLASS_DISPLAY << 16,	\
+> > > >    	.class_mask = 0xff0000,			\
+> > > > -	.vendor = PCI_VENDOR_ASPEED,			\
+> > > > +	.vendor = PCI_VENDOR_ID_ASPEED,			\
+> > > >    	.device = id,				\
+> > > >    	.subvendor = PCI_ANY_ID,		\
+> > > >    	.subdevice = PCI_ANY_ID,		\
+> > > > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> > > > index 45c3d62e616d..40e04e88ca5a 100644
+> > > > --- a/include/linux/pci_ids.h
+> > > > +++ b/include/linux/pci_ids.h
+> > > > @@ -2553,6 +2553,8 @@
+> > > >    #define PCI_DEVICE_ID_NETRONOME_NFP3800_VF	0x3803
+> > > >    #define PCI_DEVICE_ID_NETRONOME_NFP6000_VF	0x6003
+> > > > +#define PCI_VENDOR_ID_ASPEED		0x1a03
+> > > > +
+> > > >    #define PCI_VENDOR_ID_QMI		0x1a32
+> > > >    #define PCI_VENDOR_ID_AZWAVE		0x1a3b
+> > > 
+> > > -- 
+> > > Thomas Zimmermann
+> > > Graphics Driver Developer
+> > > SUSE Software Solutions Germany GmbH
+> > > Maxfeldstr. 5, 90409 Nürnberg, Germany
+> > > (HRB 36809, AG Nürnberg)
+> > > Geschäftsführer: Ivo Totev
+> > 
+> > 
+> > 
+> 
+> -- 
+> Thomas Zimmermann
+> Graphics Driver Developer
+> SUSE Software Solutions Germany GmbH
+> Frankenstrasse 146, 90461 Nuernberg, Germany
+> GF: Ivo Totev, Andrew Myers, Andrew McDonald, Boudien Moerman
+> HRB 36809 (AG Nuernberg)
+
+
+
