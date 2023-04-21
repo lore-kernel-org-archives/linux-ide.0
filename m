@@ -2,90 +2,41 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D251C77B76
-	for <linux-ide@archiver.kernel.org>; Fri, 21 Apr 2023 22:07:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1288C6FD18
+	for <linux-ide@archiver.kernel.org>; Sat, 22 Apr 2023 09:22:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230110AbjDUWHs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 21 Apr 2023 18:07:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50808 "EHLO
+        id S229473AbjDVJWe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 22 Apr 2023 05:22:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229656AbjDUWHr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 21 Apr 2023 18:07:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF0F4172A;
-        Fri, 21 Apr 2023 15:07:44 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 48F216183D;
-        Fri, 21 Apr 2023 22:07:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF7B6C433D2;
-        Fri, 21 Apr 2023 22:07:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682114863;
-        bh=pDVibJhWt9LWG5jQ982Dyc+TkQMXFvLmet6bPhbcktY=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=gxZ0nicrjFY6j9AYM+POfkfJscGG0Y6W8XNTVuGvspBoH4cgv68pEXcvDlNCw8otO
-         Hk/QhQ8L2jeiflF0k7ZW8yIWQBj4dP+s2sFbbV+jHg5qmRnGuj6j+BC3NBo23WjX5E
-         JSECn+/0hSHjpUSAInyNoaXSOxJTUPs/RqHZNTIw5k5wvWgeU7u9l28Mkby1B6ZZGo
-         hTcRqxYlRQsOyQYcNW15GdYKVQPoeDicdqGlugn1VW/b+TgJ75FIslyO7OZ7URsywb
-         IxoUKpNxdWFxk0Z4d+lenNwXa90YBIuA92gE5OtxVaDNGP2Vh0aniz1jptqJVpd0er
-         w9nd5/qYhRbIQ==
-Message-ID: <c9348be9-7b9e-ebf8-b787-e6b3e0724b4a@kernel.org>
-Date:   Sat, 22 Apr 2023 07:07:41 +0900
+        with ESMTP id S229451AbjDVJWe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 22 Apr 2023 05:22:34 -0400
+Received: from ODEDI148698.home (odedi148698.mywhc.ca [144.217.254.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B34AC171C
+        for <linux-ide@vger.kernel.org>; Sat, 22 Apr 2023 02:22:32 -0700 (PDT)
+DKIM-Signature: v=1; c=relaxed/relaxed; h=content-type:mime-version:content-transfer-encoding:content-description:subject:to:from:date:reply-to:message-id;
+ d=a2ict.com; s=default; a=rsa-sha256;
+ bh=Go04nnK99XT787CvNeIYgfoIxnHZ6GnsPiwfumIjF7k=;
+ b=lLJrtWvIKMINfX7QEhFSQf7x5hiqYqCys8kgpl8rjJQ25Lv+CQZGDVnxkkPhz+wGy
+ 7urw7YgOXSOtYG9J+VIKA0/Xu+nR4WgSELNgr8Dzj0odtonX9jY1bf9XUZIF8OW6JHu
+ twxxrSvKv0jdGwJYYOaSp5SZxbW7IASPPR3OjzE=;
+Received: from [51.89.94.142] ([51.89.94.142]) by home with
+ MailEnable ESMTPA; Fri, 21 Apr 2023 13:01:15 +0000
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] drivers/ata: Improve performance and readability
-To:     Yahu Gao <yahu.gao@outlook.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yahu Gao <gaoyh12@lenovo.com>, Jiwei Sun <sunjw10@lenovo.com>
-References: <OS3P286MB06322266ED2913AF0F6172219E609@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <OS3P286MB06322266ED2913AF0F6172219E609@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
+Subject: ich bin Edwin Castro
+To:     linux-ide@vger.kernel.org
+From:   "Mr. Edwin Castro" <admin@a2ict.com>
+Date:   Fri, 21 Apr 2023 06:01:15 -0700
+Reply-To: charityhome_edwin@yahoo.com
+Message-ID: <91FA42579EC3485499554FB21F6FC50C.MAI@home>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/21/23 21:54, Yahu Gao wrote:
-> From: Yahu Gao <gaoyh12@lenovo.com>
-> 
+My name is Edwin Castro, I won the Powerball jackpot and I'm donating the s=
+um of $2.8 million to five lucky people around the world...
 
-The patch title should start with:
-
-ata: libata-core: ...
-
-And let's be honest here: this is not the hot path and you are optimizing a
-single "if" condition for a series of commands that will take 10s of ms to
-execute. So this is *not* about performance. So update the patch title please.
-
-> Replace conditions of avoid issuing [P]IDENTIFY to PMP.
-> 
-> Reviewed-by: Jiwei Sun <sunjw10@lenovo.com>
-> Signed-off-by: Yahu Gao <gaoyh12@lenovo.com>
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 14c17c3bda4e..53f65d751189 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3802,11 +3802,7 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
->  		return -ENODEV;
->  
->  	/* fail early if !ATA && !ATAPI to avoid issuing [P]IDENTIFY to PMP */
-> -	if (ata_class_enabled(new_class) &&
-> -	    new_class != ATA_DEV_ATA &&
-> -	    new_class != ATA_DEV_ATAPI &&
-> -	    new_class != ATA_DEV_ZAC &&
-> -	    new_class != ATA_DEV_SEMB) {
-> +	if (new_class == ATA_DEV_PMP) {
-
-Using a switch-case here may actually make things even more readable.
-
->  		ata_dev_info(dev, "class mismatch %u != %u\n",
->  			     dev->class, new_class);
->  		rc = -ENODEV;
-
+Contact me at my email:charityhome_edwin@yahoo.com for more details.
