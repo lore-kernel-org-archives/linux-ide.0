@@ -2,119 +2,143 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70308C7618E
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Apr 2023 13:17:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 057D9C6FD18
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Apr 2023 06:18:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231878AbjDXNRS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Apr 2023 09:17:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40120 "EHLO
+        id S233081AbjDYGSi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 25 Apr 2023 02:18:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231947AbjDXNRO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Apr 2023 09:17:14 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B48E13C35;
-        Mon, 24 Apr 2023 06:16:44 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S232430AbjDYGSh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Apr 2023 02:18:37 -0400
+Received: from smtp-relay-canonical-1.canonical.com (smtp-relay-canonical-1.canonical.com [185.125.188.121])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C64A59001;
+        Mon, 24 Apr 2023 23:18:35 -0700 (PDT)
+Received: from localhost.localdomain (unknown [10.101.196.174])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 30CF1621E2;
-        Mon, 24 Apr 2023 13:16:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3559AC433D2;
-        Mon, 24 Apr 2023 13:16:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682342199;
-        bh=2rlK0Tu+4HejUDU3oS4OqP3yYSq0vZKT4numa2QvaxA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=ObL1F7vaNumRrEBxsCfFxqEacUERCfRXpAwD0bOztpy2ZRaZUvAcFkGNrjO9i8wFB
-         UCpc79o8xeswM6DgwsiuP8/HpdJLcSzhxZK0u1hndebKUQkd+eU9JkojfZzG6vCFU9
-         TTrohRze/oiA/spG3tqj/n6dGrel1VLGIfRK41ewozVEu9f+5s2sLrRS8TUppxqQ9l
-         P9YmrgwtM8mXSxmyRi92HSU2Y0QFNKjkIyfzviLwjc2u6kK6z4qdUolTUmpI0x/T5r
-         Z0SH2Vl410VGMwLzhVK+xASsXPwUlsF6E1gFeHUhkiu5tqhwtu1GzLRGA7Kenuuo+Q
-         HMPAAaY7j8m+A==
-Message-ID: <b6fde790-e43e-693c-19bd-101da9f93632@kernel.org>
-Date:   Mon, 24 Apr 2023 22:16:36 +0900
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id 082993FC2B;
+        Tue, 25 Apr 2023 06:18:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1682403512;
+        bh=xpybMNqsIkCk472a+6jLgU3wLUPfUx2T87BEmh4vcf0=;
+        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
+        b=Cvi96RZncRDEiCpOutJL541wj6f0hVJrhiEcsz47MUL8NZMYRuwZuxsfbe6xbhil0
+         KvCNVZ9akCc0poyuyzb5IMLy+8vY/A5JLDaN5GLLdoYk9PApGmrszoxnHS3DjDgaYr
+         nU2+mIBYRehdD0VLyunYzhEHPmjBhERcw3BL374aBYzrFOB5SLKcYb1cEBRa841oe1
+         frVx94SHbbno8i2QYvlOEEpRKYNuR/MVCjxOgCOd/0erl65SoLpXqwfTeEgFQ6n6VD
+         fi9RJNDGzXPMcfXEXTj0XU6L1Z/Q7SWo1RhpZ+XJYluRRDAHk9hFU1ZaYhMx7itQO0
+         0OSzqF2CiZolQ==
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     bblock@linux.ibm.com, acelan.kao@canonical.com,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] ata: libata: Defer rescan on suspended device
+Date:   Tue, 25 Apr 2023 14:17:45 +0800
+Message-Id: <20230425061746.503145-1-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 24/43] dt-bindings: ata: Add DT bindings ep93xx pata
-Content-Language: en-US
-To:     Nikita Shubin <nikita.shubin@maquefel.me>
-Cc:     Arnd Bergmann <arnd@kernel.org>, Linus Walleij <linusw@kernel.org>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
- <20230424123522.18302-25-nikita.shubin@maquefel.me>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230424123522.18302-25-nikita.shubin@maquefel.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/24/23 21:34, Nikita Shubin wrote:
-> Add YAML bindings ep93xx SoC.
-> 
-> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
-> ---
->  .../bindings/ata/cirrus,ep93xx-pata.yaml      | 40 +++++++++++++++++++
->  1 file changed, 40 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/cirrus,ep93xx-pata.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/cirrus,ep93xx-pata.yaml b/Documentation/devicetree/bindings/ata/cirrus,ep93xx-pata.yaml
-> new file mode 100644
-> index 000000000000..24ed64cfa6d1
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/cirrus,ep93xx-pata.yaml
-> @@ -0,0 +1,40 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/cirrus,ep93xx-pata.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: EP9312 PATA controller driver
-> +
-> +maintainers:
-> +  - Damien Le Moal <damien.lemoal@opensource.wdc.com>
+During system resume, if an EH is schduled after ATA host is resumed
+(i.e. ATA_PFLAG_PM_PENDING cleared), but before the disk device is
+fully resumed, the device_lock hold by scsi_rescan_device() is never
+released so the dpm_resume() of the disk is blocked forerver.
 
-Wrong email address. Please use dlemoal@kernel.org as mentioned in the
-MAINTAINERS file.
+That's because scsi_attach_vpd() is expecting the disk device is in
+operational state, as it doesn't work on suspended device.
 
-(other schema files need to be changed as well. Will send a patch for that)
+To avoid such deadlock, defer rescan if the disk is still suspended so
+the resume process of the disk device can proceed. At the end of the
+resume process, use the complete() callback to schedule the rescan task.
 
-> +
-> +properties:
-> +  compatible:
-> +    const: cirrus,ep9312-pata
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +
-> +additionalProperties: false
-> +
-> +examples:
-> +  - |
-> +    ide: ide@800a0000 {
-> +        compatible = "cirrus,ep9312-pata";
-> +        reg = <0x800a0000 0x38>;
-> +        interrupt-parent = <&vic1>;
-> +        interrupts = <8>;
-> +        pinctrl-names = "default";
-> +        pinctrl-0 = <&ide_default_pins>;
-> +    };
-> +
-> +...
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+v2:
+ - Schedule rescan task at the end of system resume phase.
+ - Wording.
+
+ drivers/ata/libata-core.c | 11 +++++++++++
+ drivers/ata/libata-eh.c   | 11 +++++++++--
+ include/linux/libata.h    |  1 +
+ 3 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 14c17c3bda4e..564d72bf1ec6 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5093,6 +5093,16 @@ static int ata_port_pm_poweroff(struct device *dev)
+ 	return 0;
+ }
+ 
++static void ata_port_pm_complete(struct device *dev)
++{
++	struct ata_port *ap = to_ata_port(dev);
++
++	if (ap->pflags & ATA_PFLAG_DEFER_RESCAN)
++		schedule_work(&(ap->scsi_rescan_task));
++
++	ap->pflags &= ~ATA_PFLAG_DEFER_RESCAN;
++}
++
+ static const unsigned int ata_port_resume_ehi = ATA_EHI_NO_AUTOPSY
+ 						| ATA_EHI_QUIET;
+ 
+@@ -5158,6 +5168,7 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.thaw = ata_port_pm_resume,
+ 	.poweroff = ata_port_pm_poweroff,
+ 	.restore = ata_port_pm_resume,
++	.complete = ata_port_pm_complete,
+ 
+ 	.runtime_suspend = ata_port_runtime_suspend,
+ 	.runtime_resume = ata_port_runtime_resume,
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index a6c901811802..0881b590fb7e 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -15,6 +15,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/export.h>
+ #include <linux/pci.h>
++#include <linux/suspend.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_eh.h>
+@@ -2983,8 +2984,14 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 			 */
+ 			ehc->i.flags |= ATA_EHI_SETMODE;
+ 
+-			/* schedule the scsi_rescan_device() here */
+-			schedule_work(&(ap->scsi_rescan_task));
++			/* Schedule the scsi_rescan_device() here.
++			 * Defer the rescan if it's in process of
++			 * suspending or resuming.
++			 */
++			if (pm_suspend_target_state != PM_SUSPEND_ON)
++				ap->pflags |= ATA_PFLAG_DEFER_RESCAN;
++			else
++				schedule_work(&(ap->scsi_rescan_task));
+ 		} else if (dev->class == ATA_DEV_UNKNOWN &&
+ 			   ehc->tries[dev->devno] &&
+ 			   ata_class_enabled(ehc->classes[dev->devno])) {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index a759dfbdcc91..aaa549444abc 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -189,6 +189,7 @@ enum {
+ 	ATA_PFLAG_UNLOADING	= (1 << 9), /* driver is being unloaded */
+ 	ATA_PFLAG_UNLOADED	= (1 << 10), /* driver is unloaded */
+ 
++	ATA_PFLAG_DEFER_RESCAN	= (1 << 16), /* peform deferred rescan on system resume */
+ 	ATA_PFLAG_SUSPENDED	= (1 << 17), /* port is suspended (power) */
+ 	ATA_PFLAG_PM_PENDING	= (1 << 18), /* PM operation pending */
+ 	ATA_PFLAG_INIT_GTM_VALID = (1 << 19), /* initial gtm data valid */
+-- 
+2.34.1
 
