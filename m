@@ -2,184 +2,174 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA5AC77B71
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Apr 2023 13:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8EFC6FD18
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Apr 2023 14:23:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233944AbjDYN1v (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 25 Apr 2023 09:27:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54192 "EHLO
+        id S234131AbjDYOXd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 25 Apr 2023 10:23:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230195AbjDYN1t (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Apr 2023 09:27:49 -0400
-Received: from wout4-smtp.messagingengine.com (wout4-smtp.messagingengine.com [64.147.123.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00329C173;
-        Tue, 25 Apr 2023 06:27:47 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.west.internal (Postfix) with ESMTP id ECAAA32008FA;
-        Tue, 25 Apr 2023 09:27:42 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute6.internal (MEProxy); Tue, 25 Apr 2023 09:27:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm2; t=1682429262; x=1682515662; bh=sh
-        lQTGWa7vUbJrf98fLKqQIz8VMZW6pYwyh6rr26DkQ=; b=LLq6zsCSRbDjBVqeoa
-        QdSyGzdFeRzi+y8dRC7yvod5SVHeKyFTIeuyfiTgHRDX9Awr81yDjU9y4QtxKrfo
-        cU1BJzuMeChVwfos+ZupiLK5693eur3Az9zQP0C6tP5leOBtsxoSVBo5BxcsGO7K
-        YnDEO3vBsGpNOdsMCfFNRkVF1sblVBXFoUUDMH3el3HzkP7EtTn6FoyExVTN+aTO
-        gqS5bRJpJLk/Y1ln6yHL7bGq9WDFROd44pG/rbGw6QlYGqAnZ/JWZp/0ZoV7Bn0L
-        vq7IJdZ4IHu4w03AFjEKqpLuEgPWaeUW+I/AyBGdPEay4Ph5wh032/s2qj/I9Wro
-        /8xQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; t=1682429262; x=1682515662; bh=shlQTGWa7vUbJ
-        rf98fLKqQIz8VMZW6pYwyh6rr26DkQ=; b=Av/a0k3pjb1ufd4JifUVwkqmaE0xY
-        9CkoNy8ApgC/U0IKdRsJdeBSuhyHHZrHbLb2V34XnstlRhf8x06eo7Woi2Pmpwix
-        1FUDyWuVR25j7bcLCv0SZIqeCbOOzHJd6HjbetiNBz6VUkZQgqJbWjJlxJ8A/BpO
-        A212C1UV+wtke3Pc75MEe/ogcXY+s5a0ytb+7OOOZZFU2L6ynRwsUVp4XQ/s7+RJ
-        Fwj/Kr4OJOlir/HJ5H/UNNH9HZpNxgAqrg5KWHIyAHdoqAHF43/uajOj57iT4Jzl
-        X+HHwFW4rZzPdkC8YzfFnXBiw01B+vpVScnizIK5eGDgzxuBRbcgXd1yw==
-X-ME-Sender: <xms:S9VHZJl5ArBpbY5tqUCy32a43H-Jc6lVaBY-LZKcl_pJhl7n-s0_dQ>
-    <xme:S9VHZE1YTzlO84yHG36gWwGILapdSpSLopmyoWHKeOt_YpUc5zk_N5KDZkZzbByYb
-    B4T9orgHH0-6nfJ018>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeduvddgieegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:S9VHZPoeetQZs_3oaiKa85eO_ubUpz9vMKuiDxO2Xe7ZONIHAb3MkQ>
-    <xmx:S9VHZJk4L8-_hWSmPZAyBlv3pTZdFCFlZLIRfX2VBqLar6yCxaJTpA>
-    <xmx:S9VHZH1TRLt9JCYwgLou_9qePysK818dBIHcDHDLr1LJlHSsbq0KeA>
-    <xmx:TtVHZJsalndLD945CG4tBnqVxTIfpWnAMZDxIRKJWPLVcF1t9S-MXg>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 91FC6B60086; Tue, 25 Apr 2023 09:27:39 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-374-g72c94f7a42-fm-20230417.001-g72c94f7a
-Mime-Version: 1.0
-Message-Id: <c3db2294-4fef-46be-a62a-11fc38884918@app.fastmail.com>
-In-Reply-To: <0210316b-9e21-347c-ed15-ce8200aeeb94@linaro.org>
-References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
- <8101c53e-e682-4dc3-95cc-a332b1822b8b@app.fastmail.com>
- <20230424152933.48b2ede1@kernel.org>
- <0210316b-9e21-347c-ed15-ce8200aeeb94@linaro.org>
-Date:   Tue, 25 Apr 2023 14:27:26 +0100
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Krzysztof Kozlowski" <krzysztof.kozlowski@linaro.org>,
-        "Jakub Kicinski" <kuba@kernel.org>
-Cc:     "Nikita Shubin" <nikita.shubin@maquefel.me>,
-        "Arnd Bergmann" <arnd@kernel.org>,
-        "Linus Walleij" <linusw@kernel.org>,
-        "Alexander Sverdlin" <alexander.sverdlin@gmail.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        =?UTF-8?Q?Jonathan_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
-        "Russell King" <rmk+kernel@armlinux.org.uk>,
-        =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
-        "Alessandro Zummo" <a.zummo@towertech.it>,
-        "Alexander Gordeev" <agordeev@linux.ibm.com>,
-        "Alexandre Belloni" <alexandre.belloni@bootlin.com>,
-        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
-        "Bartosz Golaszewski" <brgl@bgdev.pl>,
-        "Brian Norris" <briannorris@chromium.org>,
-        "Chuanhong Guo" <gch981213@gmail.com>,
-        "Conor.Dooley" <conor.dooley@microchip.com>,
-        "Damien Le Moal" <dlemoal@kernel.org>,
-        "Daniel Lezcano" <daniel.lezcano@linaro.org>,
-        "Dmitry Torokhov" <dmitry.torokhov@gmail.com>,
-        "Emil Renner Berthing" <kernel@esmil.dk>,
-        "Eric Dumazet" <edumazet@google.com>,
-        "Florian Fainelli" <f.fainelli@gmail.com>,
-        "Guenter Roeck" <linux@roeck-us.net>,
-        "Hartley Sweeten" <hsweeten@visionengravers.com>,
-        =?UTF-8?Q?Heiko_St=C3=BCbner?= <heiko@sntech.de>,
-        "Hitomi Hasegawa" <hasegawa-hitomi@fujitsu.com>,
-        "Jaroslav Kysela" <perex@perex.cz>,
-        "Jean Delvare" <jdelvare@suse.de>, "Joel Stanley" <joel@jms.id.au>,
-        "Jonathan Cameron" <Jonathan.Cameron@huawei.com>,
-        "Krzysztof Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
-        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
-        "Liam Girdwood" <lgirdwood@gmail.com>,
-        "Liang Yang" <liang.yang@amlogic.com>,
-        "Linus Walleij" <linus.walleij@linaro.org>,
-        "Lukasz Majewski" <lukma@denx.de>, "Lv Ruyi" <lv.ruyi@zte.com.cn>,
-        "Mark Brown" <broonie@kernel.org>,
-        "Masahiro Yamada" <masahiroy@kernel.org>,
-        "Michael Turquette" <mturquette@baylibre.com>,
-        "Miquel Raynal" <miquel.raynal@bootlin.com>,
-        "Nathan Chancellor" <nathan@kernel.org>,
-        "Nick Desaulniers" <ndesaulniers@google.com>,
-        "Nicolas Saenz Julienne" <nsaenz@kernel.org>,
-        "Olof Johansson" <olof@lixom.net>,
-        "Paolo Abeni" <pabeni@redhat.com>,
-        "Qin Jian" <qinjian@cqplus1.com>,
-        "Richard Weinberger" <richard@nod.at>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        "Robert Jarzmik" <robert.jarzmik@free.fr>,
-        "Russell King" <linux@armlinux.org.uk>,
-        "Sebastian Reichel" <sre@kernel.org>,
-        "Sergey Shtylyov" <s.shtylyov@omp.ru>,
-        "Stephen Boyd" <sboyd@kernel.org>,
-        "Sumanth Korikkar" <sumanthk@linux.ibm.com>,
-        "Sven Peter" <sven@svenpeter.dev>, "Takashi Iwai" <tiwai@suse.com>,
-        "Thierry Reding" <thierry.reding@gmail.com>,
-        "Thomas Gleixner" <tglx@linutronix.de>,
-        "Ulf Hansson" <ulf.hansson@linaro.org>,
-        "Vasily Gorbik" <gor@linux.ibm.com>,
-        "Vignesh Raghavendra" <vigneshr@ti.com>,
-        "Vinod Koul" <vkoul@kernel.org>,
-        "Walker Chen" <walker.chen@starfivetech.com>,
-        "Wim Van Sebroeck" <wim@linux-watchdog.org>,
-        "Yinbo Zhu" <zhuyinbo@loongson.cn>, alsa-devel@alsa-project.org,
-        devicetree@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        linux-ide@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-pwm@vger.kernel.org,
-        linux-rtc@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-        soc@kernel.org
-Subject: Re: [PATCH 00/43] ep93xx device tree conversion
-Content-Type: text/plain
+        with ESMTP id S233842AbjDYOXc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Apr 2023 10:23:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76F8413FA4
+        for <linux-ide@vger.kernel.org>; Tue, 25 Apr 2023 07:23:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0F9DF62567
+        for <linux-ide@vger.kernel.org>; Tue, 25 Apr 2023 14:23:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E057AC433D2;
+        Tue, 25 Apr 2023 14:23:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682432593;
+        bh=FizRTzvozA8qYe/HVZBromF6UjXC538QRscGm+Y0LjU=;
+        h=From:To:Subject:Date:From;
+        b=jbv1I8vDGcs+rvZIXmq1nPiVYoy0r/5U4F+FWU/Aj09X1erUBpbFUeR8fImO1MziZ
+         pkZLjtl2MMqrKaO3olqP0YzBsM3D3b8ItUxpJiUXK59mI0h8boqQnaI7rEKjVGofEO
+         M9CV8FNFfEVLtx3LWJszUg1argL2sPHTkFybm4uJOG/wbHkENTkwd+5Ea+kaPATu3U
+         Daw01joU/zO8xyeaqekiXCNoHvN5rTu6OvsILbHZpJ5d8TGg8ryIdFkObUvcKLQ8Bc
+         3dlTGSSWYQRSdN9GFMstSQoLGbPxHklUll7/8m8IXTsJPHsQF9QJbFYKJg3ujoFe5+
+         uJVicbXilb2Xw==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Subject: [GIT PULL] ata changes for 6.4-rc1
+Date:   Tue, 25 Apr 2023 23:23:11 +0900
+Message-Id: <20230425142311.186448-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.40.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 25, 2023, at 10:20, Krzysztof Kozlowski wrote:
-> On 25/04/2023 00:29, Jakub Kicinski wrote:
->> On Mon, 24 Apr 2023 13:31:25 +0200 Arnd Bergmann wrote:
->>> Thanks a lot for your continued work. I can't merge any of this at
->>> the moment since the upstream merge window just opened, but I'm
->>> happy to take this all through the soc tree for 6.5, provided we
->>> get the sufficient Acks from the subsystem maintainers. Merging
->>> it through each individual tree would take a lot longer, so I
->>> hope we can avoid that.
->> 
->> Is there a dependency between the patches?
->
-> I didn't get entire patchset and cover letter does not mention
-> dependencies, but usually there shouldn't be such. Maybe for the next
-> versions this should be split per subsystem?
+Linus,
 
-Clearly the last patch that removes the board files depends on
-all the previous patches, but I assume that the other ones
-are all independent.
+The following changes since commit e8d018dd0257f744ca50a729e3d042cf2ec9da65:
 
-We don't do complete conversions from boardfiles to DT that often
-any more, but in the past we tended to do this through a cross-
-subsystem branch in the soc tree, which helps do it more quickly
-and is less work for Nikita. In this case, I would make it a
-separate top-level branch in the soc tree.
+  Linux 6.3-rc3 (2023-03-19 13:27:55 -0700)
 
-If anyone strongly feels that the patches should go through
-the subsystem trees here, we'll take the longer path and
-do the changes separately, with the boardfile removal
-coming a release later.
+are available in the Git repository at:
 
-     Arnd
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.4-rc1
+
+for you to fetch changes up to 140b26035b2d379d94e6e3936ab2e0adf94efe46:
+
+  ata: pata_parport-bpck6: Declare mode_map as static (2023-03-28 09:28:06 +0900)
+
+----------------------------------------------------------------
+ata change for 6.4-rc1
+
+ * Many cleanups of the pata_parport driver and of its protocol modules,
+   from Ondrej.
+
+ * Remove unused code (ata_id_xxx() functions), from Sergey.
+
+ * Add Add UniPhier SATA controller DT bindings, from Kunihiko.
+
+ * Fix dependencies for the Freescale QorIQ AHCI SATA controller driver,
+   from Geert.
+
+ * DT property handling improvements, from Rob.
+
+----------------------------------------------------------------
+Damien Le Moal (2):
+      ata: pata_parport-bpck6: Remove dependency on 64BIT
+      ata: pata_parport-bpck6: Declare mode_map as static
+
+Geert Uytterhoeven (1):
+      ahci: qoriq: Add platform dependencies
+
+Kunihiko Hayashi (1):
+      dt-bindings: ata: Add UniPhier controller binding
+
+Ondrej Zary (50):
+      ata: pata_parport: fix EPAT C7/C8 Kconfig
+      ata: pata_parport: probe all units automatically
+      ata: pata_parport: Remove pi_swab16 and pi_swab32
+      ata: pata_parport: remove useless printks at module_init of bpck6
+      ata: pata_parport: Introduce module_pata_parport_driver macro
+      ata: pata_parport: remove devtype from struct pi_adapter
+      ata: pata_parport: remove device from struct pi_adapter
+      ata: pata_parport: remove typedef struct PIA
+      ata: pata_parport: remove verbose parameter from log_adapter()
+      ata: pata_parport: remove scratch parameter from log_adapter()
+      ata: pata_parport: use dev_* instead of printk
+      ata: pata_parport: use print_hex_*
+      ata: pata_parport: simplify log_adapter prints, remove VERSION defines
+      ata: pata_parport: remove bpck6 verbose parameter
+      ata: pata_parport: remove verbose parameter from test_proto()
+      ata: pata_parport: remove scratch parameter from test_proto()
+      ata: pata_parport: remove obsolete changelogs
+      ata: pata_parport: move pata_parport.h to drivers/ata/pata_parport
+      ata: pata_parport-bpck6: remove useless defines
+      ata: pata_parport-bpck6: remove useless range check from read/write_regr
+      ata: pata_parport-bpck6: don't cast pi->pardev to struct pardevice *
+      ata: pata_parport-bpck6: pass around struct pi_adapter *
+      ata: pata_parport-bpck6: remove lpt_addr from struct ppc_storage
+      ata: pata_parport-bpck6: remove ppc_id from struct ppc_storage
+      ata: pata_parport-bpck6: remove org_* from struct ppc_storage
+      ata: pata_parport-bpck6: remove mode from struct ppc_storage
+      ata: pata_parport-bpck6: remove struct ppc_storage
+      ata: pata_parport-bpck6: remove parallel port bit defines
+      ata: parport_pc: add 16-bit and 8-bit fast EPP transfer flags
+      ata: pata_parport-bpck6: use parport access functions instead of port I/O
+      ata: pata_parport-bpck6: use parport_frob_control and remove CUR_CTRL
+      ata: pata_parport-bpck6: remove PPC_FLAGS
+      ata: pata_parport-bpck6: remove ppc6_close
+      ata: pata_parport-bpck6: merge ppc6_rd_port into bpck6_read_regr
+      ata: pata_parport-bpck6: merge ppc6_wr_port into bpck6_write_regr
+      ata: pata_parport-bpck6: merge ppc6_rd_port16_blk into bpck6_read_block
+      ata: pata_parport-bpck6: merge ppc6_wr_port16_blk into bpck6_write_block
+      ata: pata_parport-bpck6: merge ppc6_rd_data_blk into bpck6_read_block
+      ata: pata_parport-bpck6: merge ppc6_wr_data_blk into bpck6_write_block
+      ata: pata_parport-bpck6: move ppc6_wait_for_fifo to bpck6.c and rename
+      ata: pata_parport-bpck6: move ppc6_wr_extout to bpck6.c and rename
+      ata: pata_parport-bpck6: move ppc6_open to bpck6.c and rename
+      ata: pata_parport-bpck6: merge ppc6_select into bpck6_open
+      ata: pata_parport-bpck6: move ppc6_deselect to bpck6.c and rename
+      ata: pata_parport-bpck6: move ppc6_send_cmd to bpck6.c and rename
+      ata: pata_parport-bpck6: move ppc6_rd_data_byte to bpck6.c and rename
+      ata: pata_parport-bpck6: move ppc6_wr_data_byte to bpck6.c and rename
+      ata: pata_parport-bpck6: move defines and mode_map to bpck6.c
+      ata: pata_parport-bpck6: delete ppc6lnx.c
+      ata: pata_parport-bpck6: reduce indents in bpck6_open
+
+Rob Herring (1):
+      ata: Use of_property_present() for testing DT property presence
+
+Sergey Shtylyov (2):
+      ata: drop unused ata_id_to_hd_driveid()
+      ata: drop unused ata_id_is_lba_capacity_ok()
+
+ .../devicetree/bindings/ata/ahci-platform.yaml     |  49 +-
+ drivers/ata/Kconfig                                |   1 +
+ drivers/ata/ahci_mtk.c                             |   2 +-
+ drivers/ata/libahci_platform.c                     |   2 +-
+ drivers/ata/pata_parport/Kconfig                   |   2 +-
+ drivers/ata/pata_parport/aten.c                    |  45 +-
+ drivers/ata/pata_parport/bpck.c                    |  86 +--
+ drivers/ata/pata_parport/bpck6.c                   | 541 ++++++++++-----
+ drivers/ata/pata_parport/comm.c                    |  52 +-
+ drivers/ata/pata_parport/dstr.c                    |  45 +-
+ drivers/ata/pata_parport/epat.c                    |  48 +-
+ drivers/ata/pata_parport/epia.c                    |  55 +-
+ drivers/ata/pata_parport/fit2.c                    |  37 +-
+ drivers/ata/pata_parport/fit3.c                    |  39 +-
+ drivers/ata/pata_parport/friq.c                    |  56 +-
+ drivers/ata/pata_parport/frpw.c                    |  71 +-
+ drivers/ata/pata_parport/kbic.c                    |  66 +-
+ drivers/ata/pata_parport/ktti.c                    |  38 +-
+ drivers/ata/pata_parport/on20.c                    |  45 +-
+ drivers/ata/pata_parport/on26.c                    |  52 +-
+ drivers/ata/pata_parport/pata_parport.c            |  31 +-
+ .../ata/pata_parport}/pata_parport.h               |  41 +-
+ drivers/ata/pata_parport/ppc6lnx.c                 | 726 ---------------------
+ drivers/ata/sata_dwc_460ex.c                       |   4 +-
+ drivers/parport/parport_pc.c                       |  20 +-
+ include/linux/ata.h                                |  71 --
+ include/uapi/linux/parport.h                       |   3 +
+ 27 files changed, 683 insertions(+), 1545 deletions(-)
+ rename {include/linux => drivers/ata/pata_parport}/pata_parport.h (75%)
+ delete mode 100644 drivers/ata/pata_parport/ppc6lnx.c
