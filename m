@@ -2,67 +2,156 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52533C77B7E
-	for <linux-ide@archiver.kernel.org>; Wed, 26 Apr 2023 20:13:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C949C7EE2C
+	for <linux-ide@archiver.kernel.org>; Wed, 26 Apr 2023 20:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239833AbjDZUNa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 26 Apr 2023 16:13:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49646 "EHLO
+        id S239900AbjDZU5N (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 26 Apr 2023 16:57:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239891AbjDZUN3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 26 Apr 2023 16:13:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F11471A4
-        for <linux-ide@vger.kernel.org>; Wed, 26 Apr 2023 13:13:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8AF8163032
-        for <linux-ide@vger.kernel.org>; Wed, 26 Apr 2023 20:13:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id EF741C433EF;
-        Wed, 26 Apr 2023 20:13:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682540004;
-        bh=WO/5+LGGviRdeBCSjr1Fdbi4Meqrk9SaSvIQtA3QZM4=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=DiZ+R1WCUpP/zDt9/sqsy/W1pyX1Nbq/SY4PaPz1wQlFKCQ4+OVg/cOwQhM4bsOtV
-         tWFORR89hbr8fLEltjSVmiJk/fYJmWzKIiVA11PaqpI7UZrOvXj+Udum01FkkxHkeE
-         RVBVDjneFlJbj98u8oYsE5OPL8HhqF4j1ASqsztHqFQfGCnD4pzvu8H0rzZUGujkfN
-         jbtjmnB+SO35sYniVo6+UPScen0r1b1h+PuYMAIkaR8sz6JxUEVgeDLS52mCpW8xF4
-         EtVgQfIgYte8lzmqZ4BzNw0zjYybZQavubxOW1idV5vqw+Sonm08Za6ed+/Awztc/G
-         tO2cwrNBU5k0A==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id D6B06C43158;
-        Wed, 26 Apr 2023 20:13:23 +0000 (UTC)
-Subject: Re: [GIT PULL] ata changes for 6.4-rc1
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20230425142311.186448-1-dlemoal@kernel.org>
-References: <20230425142311.186448-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20230425142311.186448-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.4-rc1
-X-PR-Tracked-Commit-Id: 140b26035b2d379d94e6e3936ab2e0adf94efe46
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 36006b1d5c04692924f011aa949e8788f1c604de
-Message-Id: <168254000386.27655.682279311808732456.pr-tracker-bot@kernel.org>
-Date:   Wed, 26 Apr 2023 20:13:23 +0000
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
+        with ESMTP id S239894AbjDZU5J (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 26 Apr 2023 16:57:09 -0400
+Received: from mail-yw1-x112c.google.com (mail-yw1-x112c.google.com [IPv6:2607:f8b0:4864:20::112c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 843612702
+        for <linux-ide@vger.kernel.org>; Wed, 26 Apr 2023 13:57:06 -0700 (PDT)
+Received: by mail-yw1-x112c.google.com with SMTP id 00721157ae682-555e853d3c5so59562327b3.2
+        for <linux-ide@vger.kernel.org>; Wed, 26 Apr 2023 13:57:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1682542625; x=1685134625;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PeyZTvE2qao9z3HUKls5t/zNMEefQNyhwIh3dGLQJIU=;
+        b=MLeMyFt/BrAb2CUUJZ7KmQTqlKOdl+nyYZc7PmyjnwYQvm0Yf7UbAGXqUUW6bmw5G8
+         d9v/M6N+1fVWgVUttzO6DbM8nQI6KJCXhAN7IozpaR9m8Bl7slG7VpsqTKwoquSQxGsD
+         jxjSQ3saNVE9cXwcQLcGF1jRtKLT/eEwI8kJvMSzxcIq2cDfiKWjYhMONbeUEU8V5mkj
+         6Wdd/04hTAUwScC/UEbqqr6+MnHBHQTixxYJ9LZKKkCtwlqFMN3MWW87ziN5fguiVzeh
+         4csevZGxcMK5tYzjndfSfWqBNcCl6Mif+sgasTPGERCLKwqXoxv35oil0C7Hw7NrwoqG
+         vwLA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682542625; x=1685134625;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=PeyZTvE2qao9z3HUKls5t/zNMEefQNyhwIh3dGLQJIU=;
+        b=kABbGHMsPnT/2fYfqhWQQjCDsuucnZbhBRUJ8Tw5XFkmQTfSPT++vXli7Mwi6T+4a4
+         vgQhfS4oJxLTziLIBnotfv89Iy5aFf9tcoqHikSM/N6dKyLn1hhcpVkTW8LDE+WJPeEo
+         GfAHPniy3ptLCCoeOSlYMPqBlI9iCP158RUDzW+Y8O52FfPKlCmUYh4Q4X8FvFapTRYc
+         xVgHnL49qJ30yJz4cZRjje9ek9Cg1peDklfFzx4QOkrQXyRXluszu9tGBbeJZvtr6gz9
+         aLF/21uIkJBgY4Uo3nyv03f1ZU4l+zxrdSNawiYuQsoVJZu9FORiedfhDmZck1tubjkL
+         9zDw==
+X-Gm-Message-State: AAQBX9fOLblPeAVfbCBJZBysCpUDo1R+nVfweCDAA0IauS0tJRzIpA6e
+        yMBLJvYzGkeR5VBC+t3EGXiHXApBDzAR0FCUoDc0RQ==
+X-Google-Smtp-Source: AKy350ajEJHyhyynqyOl0isjddMpiNdULElT/xAxUEM8cmGuE9kOk2QPH86dypmLR0gOJToVISGwrFvJLTDtak1EsDI=
+X-Received: by 2002:a0d:ea0d:0:b0:552:a2e2:684e with SMTP id
+ t13-20020a0dea0d000000b00552a2e2684emr13680157ywe.52.1682542625695; Wed, 26
+ Apr 2023 13:57:05 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
+In-Reply-To: <20230424123522.18302-1-nikita.shubin@maquefel.me>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Wed, 26 Apr 2023 22:56:53 +0200
+Message-ID: <CACRpkdarANFQ7-p=-Pi_iuk6L=PfSLDsD3_w4dEVqarwXkEGMQ@mail.gmail.com>
+Subject: Re: [PATCH 00/43] ep93xx device tree conversion
+To:     Nikita Shubin <nikita.shubin@maquefel.me>
+Cc:     Arnd Bergmann <arnd@kernel.org>, Linus Walleij <linusw@kernel.org>,
+        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        =?UTF-8?Q?Jonathan_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
+        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+        =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Brian Norris <briannorris@chromium.org>,
+        Chuanhong Guo <gch981213@gmail.com>,
+        Conor Dooley <conor.dooley@microchip.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Emil Renner Berthing <kernel@esmil.dk>,
+        Eric Dumazet <edumazet@google.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Hartley Sweeten <hsweeten@visionengravers.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Hitomi Hasegawa <hasegawa-hitomi@fujitsu.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jean Delvare <jdelvare@suse.de>, Joel Stanley <joel@jms.id.au>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Le Moal <damien.lemoal@opensource.wdc.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Liang Yang <liang.yang@amlogic.com>,
+        Lukasz Majewski <lukma@denx.de>, Lv Ruyi <lv.ruyi@zte.com.cn>,
+        Mark Brown <broonie@kernel.org>,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Olof Johansson <olof@lixom.net>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Qin Jian <qinjian@cqplus1.com>,
+        Richard Weinberger <richard@nod.at>,
+        Rob Herring <robh+dt@kernel.org>,
+        Robert Jarzmik <robert.jarzmik@free.fr>,
+        Russell King <linux@armlinux.org.uk>,
+        Sebastian Reichel <sre@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Sumanth Korikkar <sumanthk@linux.ibm.com>,
+        Sven Peter <sven@svenpeter.dev>, Takashi Iwai <tiwai@suse.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Walker Chen <walker.chen@starfivetech.com>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Yinbo Zhu <zhuyinbo@loongson.cn>, alsa-devel@alsa-project.org,
+        devicetree@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-pm@vger.kernel.org,
+        linux-pwm@vger.kernel.org, linux-rtc@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        netdev@vger.kernel.org, soc@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Tue, 25 Apr 2023 23:23:11 +0900:
+On Mon, Apr 24, 2023 at 11:35=E2=80=AFAM Nikita Shubin
+<nikita.shubin@maquefel.me> wrote:
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.4-rc1
+> This series aims to convert ep93xx from platform to full device tree supp=
+ort.
+>
+> Tested on ts7250 64 RAM/128 MiB Nand flash, edb9302.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/36006b1d5c04692924f011aa949e8788f1c604de
+Neat, I'd say let's merge this for 6.5 once the final rough edges are
+off. The DT bindings should be easy to fix.
 
-Thank you!
+This is a big patch set and the improvement to the ARM kernel it
+brings is great, so I am a bit worried about over-review stalling the
+merged. If there start to be nitpicky comments I would prefer that
+we merge it and let minor comments and "nice-to-haves" be
+addressed in-tree during the development cycle.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+I encourage you to use b4 to manage the patch series if you
+have time to learn it, it could help you:
+https://people.kernel.org/monsieuricon/sending-a-kernel-patch-with-b4-part-=
+1
+
+Yours,
+Linus Walleij
