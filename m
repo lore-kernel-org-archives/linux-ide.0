@@ -2,149 +2,100 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA8DDC77B61
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Apr 2023 05:07:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDB9C77B73
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Apr 2023 10:57:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240499AbjD0FHA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Apr 2023 01:07:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43138 "EHLO
+        id S243534AbjD0K51 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Apr 2023 06:57:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbjD0FG7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2023 01:06:59 -0400
-Received: from smtp-relay-canonical-0.canonical.com (smtp-relay-canonical-0.canonical.com [185.125.188.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 228414208;
-        Wed, 26 Apr 2023 22:06:58 -0700 (PDT)
-Received: from localhost.localdomain (unknown [10.101.196.174])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id 0EB4A42558;
-        Thu, 27 Apr 2023 05:06:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1682572016;
-        bh=I5LSa7XOMxPLIwa3sfuPkV7a2K2/LBac6oRm6IkSpRk=;
-        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-         MIME-Version;
-        b=UcNxV3G2WQt0eMYuFL+kcViuLMVyYKaVEQOew9doGZE9oi/vVgHCZH1tJeIddYICz
-         vTpj9AjWz3RkfLY3w1hpX8w6cQAQiVuYVuWyWLVDe98G2dpui5XeV1dt/FfdaNffHR
-         hDRN2uVdppsqdpvOC69556RSTsoyYehoWkNqaQLqk6P83zH/9QQiTl88F+qZQhCfP9
-         TsKkb1aXAe5yu3LC1M4ZBrtpYd0mBHs6Tz0xy5kKJxQLmk6zDAykPS/lUOsw8b0y+a
-         3qGZ7eCbxmuD9g1OKyrbLTuhwqxQv/lB6IbkRkSOtn8Lhs3Wa6iej6DUFONxi075IA
-         sK/qPYVoJgenA==
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     bblock@linux.ibm.com, acelan.kao@canonical.com,
+        with ESMTP id S243283AbjD0K5Z (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2023 06:57:25 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FDB23580;
+        Thu, 27 Apr 2023 03:57:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1682593044; x=1714129044;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=SLj/Xnkp0ovw6yMU6P6HV5gsFG1WBUMr4Ctk1pEZW8E=;
+  b=TXHHKkdW6mMIBGRaHLy0sqTrtCFy1boYNNdnxqMa5FZVcLLxoymchOFV
+   S/MVgwyS/bxbTj2i2LPIlzP1axSTaeVS42nkaj8IBHlRltjpH0uFvAIqs
+   KxWYRqjy/34zGk6nmtLCdwLopVJow0wUmaA5LTOWvQ5gcaENYoZGGCcqc
+   Y3EcAu2NYR5OnmCcBYQwzDW95w1mQW5X2l5/R/TvJxqnK61uTMKmq4sKe
+   Fu8kw9aB2rzDFjRNsSA/YXZJywyk2acUTq2j5OTmG1aXZbbbGWEt+s9wn
+   Q6KmfAESKerzTUDpuOHVipyW7F+T/2YYkk3gDcNh8ItcxKpzmeNVrRUlV
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="350252387"
+X-IronPort-AV: E=Sophos;i="5.99,230,1677571200"; 
+   d="scan'208";a="350252387"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2023 03:57:22 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="644649684"
+X-IronPort-AV: E=Sophos;i="5.99,230,1677571200"; 
+   d="scan'208";a="644649684"
+Received: from lkp-server01.sh.intel.com (HELO 1e0e07564161) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 27 Apr 2023 03:57:20 -0700
+Received: from kbuild by 1e0e07564161 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1przJP-0000BV-1W;
+        Thu, 27 Apr 2023 10:57:19 +0000
+Date:   Thu, 27 Apr 2023 18:56:40 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     oe-kbuild-all@lists.linux.dev, bblock@linux.ibm.com,
+        acelan.kao@canonical.com,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Damien Le Moal <dlemoal@kernel.org>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 2/2] ata: libata: Defer rescan on suspended device
-Date:   Thu, 27 Apr 2023 13:06:03 +0800
-Message-Id: <20230427050603.612145-2-kai.heng.feng@canonical.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230427050603.612145-1-kai.heng.feng@canonical.com>
-References: <20230427050603.612145-1-kai.heng.feng@canonical.com>
+Subject: Re: [PATCH v3 2/2] ata: libata: Defer rescan on suspended device
+Message-ID: <202304271800.2IH4Swv7-lkp@intel.com>
+References: <20230427050603.612145-2-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230427050603.612145-2-kai.heng.feng@canonical.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-During system resume, if an EH is schduled after ATA host is resumed
-(i.e. ATA_PFLAG_PM_PENDING cleared), but before the disk device is
-fully resumed, the device_lock hold by scsi_rescan_device() is never
-released so the dpm_resume() of the disk is blocked forerver.
+Hi Kai-Heng,
 
-That's because scsi_attach_vpd() is expecting the disk device is in
-operational state, as it doesn't work on suspended device.
+kernel test robot noticed the following build errors:
 
-To avoid such deadlock, defer rescan if the disk is still suspended so
-the resume process of the disk device can proceed. At the end of the
-resume process, use the complete() callback to schedule the rescan task.
+[auto build test ERROR on rafael-pm/linux-next]
+[also build test ERROR on linus/master v6.3 next-20230426]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
----
-v3:
- - New patch to resolve undefined pm_suspend_target_state.
+url:    https://github.com/intel-lab-lkp/linux/commits/Kai-Heng-Feng/ata-libata-Defer-rescan-on-suspended-device/20230427-130726
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git linux-next
+patch link:    https://lore.kernel.org/r/20230427050603.612145-2-kai.heng.feng%40canonical.com
+patch subject: [PATCH v3 2/2] ata: libata: Defer rescan on suspended device
+config: i386-randconfig-a005 (https://download.01.org/0day-ci/archive/20230427/202304271800.2IH4Swv7-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-12) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/0e5dc37a85d9e0c92e2ae38903928499b2b17d04
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Kai-Heng-Feng/ata-libata-Defer-rescan-on-suspended-device/20230427-130726
+        git checkout 0e5dc37a85d9e0c92e2ae38903928499b2b17d04
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=i386 olddefconfig
+        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
 
-v2:
- - Schedule rescan task at the end of system resume phase.
- - Wording.
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202304271800.2IH4Swv7-lkp@intel.com/
 
- drivers/ata/libata-core.c | 11 +++++++++++
- drivers/ata/libata-eh.c   | 11 +++++++++--
- include/linux/libata.h    |  1 +
- 3 files changed, 21 insertions(+), 2 deletions(-)
+All errors (new ones prefixed by >>, old ones prefixed by <<):
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 14c17c3bda4e..564d72bf1ec6 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5093,6 +5093,16 @@ static int ata_port_pm_poweroff(struct device *dev)
- 	return 0;
- }
- 
-+static void ata_port_pm_complete(struct device *dev)
-+{
-+	struct ata_port *ap = to_ata_port(dev);
-+
-+	if (ap->pflags & ATA_PFLAG_DEFER_RESCAN)
-+		schedule_work(&(ap->scsi_rescan_task));
-+
-+	ap->pflags &= ~ATA_PFLAG_DEFER_RESCAN;
-+}
-+
- static const unsigned int ata_port_resume_ehi = ATA_EHI_NO_AUTOPSY
- 						| ATA_EHI_QUIET;
- 
-@@ -5158,6 +5168,7 @@ static const struct dev_pm_ops ata_port_pm_ops = {
- 	.thaw = ata_port_pm_resume,
- 	.poweroff = ata_port_pm_poweroff,
- 	.restore = ata_port_pm_resume,
-+	.complete = ata_port_pm_complete,
- 
- 	.runtime_suspend = ata_port_runtime_suspend,
- 	.runtime_resume = ata_port_runtime_resume,
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index a6c901811802..0881b590fb7e 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -15,6 +15,7 @@
- #include <linux/blkdev.h>
- #include <linux/export.h>
- #include <linux/pci.h>
-+#include <linux/suspend.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_eh.h>
-@@ -2983,8 +2984,14 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 			 */
- 			ehc->i.flags |= ATA_EHI_SETMODE;
- 
--			/* schedule the scsi_rescan_device() here */
--			schedule_work(&(ap->scsi_rescan_task));
-+			/* Schedule the scsi_rescan_device() here.
-+			 * Defer the rescan if it's in process of
-+			 * suspending or resuming.
-+			 */
-+			if (pm_suspend_target_state != PM_SUSPEND_ON)
-+				ap->pflags |= ATA_PFLAG_DEFER_RESCAN;
-+			else
-+				schedule_work(&(ap->scsi_rescan_task));
- 		} else if (dev->class == ATA_DEV_UNKNOWN &&
- 			   ehc->tries[dev->devno] &&
- 			   ata_class_enabled(ehc->classes[dev->devno])) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a759dfbdcc91..aaa549444abc 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -189,6 +189,7 @@ enum {
- 	ATA_PFLAG_UNLOADING	= (1 << 9), /* driver is being unloaded */
- 	ATA_PFLAG_UNLOADED	= (1 << 10), /* driver is unloaded */
- 
-+	ATA_PFLAG_DEFER_RESCAN	= (1 << 16), /* peform deferred rescan on system resume */
- 	ATA_PFLAG_SUSPENDED	= (1 << 17), /* port is suspended (power) */
- 	ATA_PFLAG_PM_PENDING	= (1 << 18), /* PM operation pending */
- 	ATA_PFLAG_INIT_GTM_VALID = (1 << 19), /* initial gtm data valid */
+>> ERROR: modpost: "pm_suspend_target_state" [drivers/ata/libata.ko] undefined!
+
 -- 
-2.34.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
