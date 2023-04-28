@@ -2,104 +2,132 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A65EC77B73
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Apr 2023 11:39:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C72C77B61
+	for <linux-ide@archiver.kernel.org>; Fri, 28 Apr 2023 01:54:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243751AbjD0Ljb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Apr 2023 07:39:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44054 "EHLO
+        id S230076AbjD1ByK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Apr 2023 21:54:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243215AbjD0Lj2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2023 07:39:28 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C12E59DA;
-        Thu, 27 Apr 2023 04:39:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1682595563; x=1714131563;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=W+qEVLnZXkjvqK8g0vmrUvNQJzHb6PylQWSwWeHVLG0=;
-  b=oIotq9qD10/8ETYRPTfqj2epKbuldBGamcVM+bGZCKbSBcjy0l2XHBou
-   ahPMGk8UdeaK2AJN2Hsi0waGiUqwDZWP/KLQ+tk4s3rz3EXfyZmG6cs9K
-   cEJyfrOtV88tzC9nsebdC3CkLlt0F7gSvQINn8zAc4bKZYCX/hQBRReD8
-   BgKyi+lxM6HPvIwwvDkoMeedoQNQASJXy9MnvyypNh1XUNvOf1RNHpEih
-   qIf3vFD18BKJiK/8ZCOCFblWTexfx3syRvwyDbbpSH/xRweS/qzoXEE7X
-   yJRigm2K/OF5AIzDWYPYdIyU0WvJq3jmwJA9Uelyk0X73RMSJnubTsyNl
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="327733059"
-X-IronPort-AV: E=Sophos;i="5.99,230,1677571200"; 
-   d="scan'208";a="327733059"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2023 04:39:23 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10692"; a="724853365"
-X-IronPort-AV: E=Sophos;i="5.99,230,1677571200"; 
-   d="scan'208";a="724853365"
-Received: from lkp-server01.sh.intel.com (HELO 1e0e07564161) ([10.239.97.150])
-  by orsmga008.jf.intel.com with ESMTP; 27 Apr 2023 04:39:20 -0700
-Received: from kbuild by 1e0e07564161 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1przy4-0000CX-0e;
-        Thu, 27 Apr 2023 11:39:20 +0000
-Date:   Thu, 27 Apr 2023 19:38:27 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     oe-kbuild-all@lists.linux.dev, bblock@linux.ibm.com,
-        acelan.kao@canonical.com,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] ata: libata: Defer rescan on suspended device
-Message-ID: <202304271942.yVqlIimT-lkp@intel.com>
-References: <20230427050603.612145-2-kai.heng.feng@canonical.com>
+        with ESMTP id S229713AbjD1ByI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Apr 2023 21:54:08 -0400
+Received: from JPN01-TYC-obe.outbound.protection.outlook.com (mail-tycjpn01olkn2055.outbound.protection.outlook.com [40.92.99.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E7BB3A82;
+        Thu, 27 Apr 2023 18:54:07 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kE+9ZNK9blFEVD3ZKRqk1uxcX4GmXVcPZPjNsDF7PIaf1a1d+9Yd/54JiqU0fUvyyWDfIXFiqovqfel1jz8Rli9iue2JYKxGbAx5TU5k4xvQwCi/2fVHxxydWEYyxU7166JuHm7Cb19QlaxhdvZOetUROYEUH4MhCk+L/aWpdbSlwaWKESHtOpqYp6VCy165tqzD9M59iTQmclal+W/v4eXtYKf16TWcatJqFuiG3cqVOsi/gyrBJxkNSS4WbZcWToR+SqmBjDCSUcLcEH7b+YGYltC7a+Zjh5f9KU5gYAW2Y1Wf0k8Px8CdL0ykw46a0LmahFzOyLRNuQQIN7BCEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=s/DhCtu2AFYl2BEFvjDodkAlcnabRIvAr6fPMABjVyk=;
+ b=S0wITDO8qhEsojDWnJ3hvE665fQ9986tmO9El3zLU4VVbXAs4qgHursWywzPPCcWj1IABgcTwZgOffp84uNMq9B5U+Tj3rRCOT2PJI3SkHinKLfDg+UiT2pokrXErxbyem0vLIB7hGfYmS5oKTQZBmQXItJv91VtvusVo99gYzR72OgHaaGDQDfO64MW9rjwCE0fGQGUlB51hWbhwsGUhun4iZUtuw5NQjzWe+MyGaYR3pWJtOsA95xLt7BwZWVVfHSCsVp9Q7uSlWkgH1bDKqEv7Yes+N/Bo1q6NQ4YmU+zC05ezAtN0NBh7buhAiPk/8ZRGQjlvSocD2h/lhd0Ow==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=s/DhCtu2AFYl2BEFvjDodkAlcnabRIvAr6fPMABjVyk=;
+ b=ZcE4PKBkq34LpgVY6VwEWOQvyrvpXWAohFgTSNhc7b3heRyqy+6FcJotNx3M6h5Yr5GDJxsflzE5GHltyCJuzaw7tTaxMmekh8JSqNbd9DiWqnyhpl8wY36KkbieHU7hB8fOuUh/CJbqPy154k1TNu6uMQEfDm97/2iIfw3V6SgMPWJYvOXYoV5KjfBSOz1u/3uovivzjrj9rx8NXCJGf1DLjz0MSxNs7hPUubS3zJ3PiBypzkKbuDj+BoALKKCFpHD0+/kgDIUZ0CGGx5vpzXedAaz2CnyDfF20e9IbmbrDtBCdJopZX69j1jozlGDACsLGrwxGtiDN583+s+8VFw==
+Received: from OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:ca::9) by
+ TYCP286MB1730.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:187::5) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6340.23; Fri, 28 Apr 2023 01:54:04 +0000
+Received: from OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::ea75:e5e5:1236:341d]) by OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::ea75:e5e5:1236:341d%4]) with mapi id 15.20.6340.023; Fri, 28 Apr 2023
+ 01:54:03 +0000
+Message-ID: <OS0P286MB06283D2E74F02D7C541E46D79E6B9@OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM>
+Date:   Fri, 28 Apr 2023 09:53:58 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2] ata: libata-core: Simplies if condition
+To:     dlemoal@kernel.org
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yahu Gao <gaoyh12@lenovo.com>, Jiwei Sun <sunjw10@lenovo.com>
+References: <20230422121415.6276-1-yahu.gao@outlook.com>
+ <OS3P286MB0632739A614E451725FF697D9E619@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
+From:   Yahu Gao <yahu.gao@outlook.com>
+In-Reply-To: <OS3P286MB0632739A614E451725FF697D9E619@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TMN:  [e/IRxFVxlL5/S3MRPT58EjVmvI4FyFO5]
+X-ClientProxiedBy: SG2P153CA0027.APCP153.PROD.OUTLOOK.COM (2603:1096:4:c7::14)
+ To OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:ca::9)
+X-Microsoft-Original-Message-ID: <f314efd8-a5ca-cc3c-9d3f-ff75798ce4ec@outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230427050603.612145-2-kai.heng.feng@canonical.com>
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: OS0P286MB0628:EE_|TYCP286MB1730:EE_
+X-MS-Office365-Filtering-Correlation-Id: 43e23ed0-a34b-416e-5d03-08db478b718c
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: l1bu7KU3Jb+AhjraQQf7lU3Bezhzs8+RV+TZBNZ440Mu6keKMKAm9ZLbg3qXDjlYUlQcdWFg0XwYB1turwpdOCDb6shUdhvJv8cN8oMYw6kzFXtSMCDtGnuiNWgEtTHBeU7Txxk6StEZVXxz3J6Rvr+wje6rgklIBTNcRZNrQE4lior7t3X3r6dJuYJ2U6HEuxHUdG7Et78QIqcCHx4ErWD0dLDeHK9wssaJt3N73TIBdURSEx5pQpmZkT95BpDG5vd6buLmoUCWpBjZVcfy6PMb1HymhnkkXw2l9RTnN285uEK+CPraBW4zAD5XS8vgHzg3kJLoQauNSg/+ovvEHOQleO0UgbLuzj53DJZF+cBV7ZK8dIYuvDARg1p4dqg5Xe/KY+qEVhyT1R7eyl0egqGDBcm4GdubJBDvXzmugw+XCo5kph+YxZDNOsgdiFMS+KRZrDnRn9vcerBF0okrTRYo5Dwow2fuOAgkwpjMHyB1w60P+4qMUB67TOYlZp6QmODLdpZX2N4jKBJ7+RgBlDuY5uJ6eiqkngsGJ/yfWWbtPVr2R2wxexESM/CEaM8Y/lPLzWhVabiI0FslXboav6lsDMja/qVHLLwngZTeT725EoWeBedXPA+5l536cF7h
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MDdWV3dMYUNIaU50UVVlVVhGN2x5MlF6dmZNWEptcDNsQmlQeEJvWm42bFhu?=
+ =?utf-8?B?bkxNSzhjd0RVaFB0Vy9vK1d4Tnk1aVo5TCtFSUcwbG50ZDJKQXBjUTNuU2pr?=
+ =?utf-8?B?QlZMeWFKdEppSUt1a1lSbElOendjaWZySkRjVjNWbTlpN0tFOHJrUU45dUhi?=
+ =?utf-8?B?d2k0bnU5RkpnVmZRTlo2RVBXTG5RZ3d6K2pFc2c3SExETHRqYkp5T2lpS0p1?=
+ =?utf-8?B?QTVlNVhmb09ad2owM1JkZVU4U0duQkYvaVNsL2g2YXRUcXV0bXMwaEtGTFZx?=
+ =?utf-8?B?QmRjaWpaUDdxVWFaYTFkN0xUazh0SEFBTHJlMFZ2UnZzVnphV1RCcGtsOWNr?=
+ =?utf-8?B?ajZEVFhyaUpna2RaZDA5dUEzSUIzTWYyRzFUK21aWllBNFJ3SkdoczZJNWlw?=
+ =?utf-8?B?VXI0S3lEeU1RWWRkdjVzYXdaKzBFU2xXK2IyTU9lMEFhcERRWm9iOXg2VVhk?=
+ =?utf-8?B?TTZweWpQajVrYXhQU21sU2Iyb0pZYkF2SVJqdFF0MWJwQUdva1dnVjdNYXZo?=
+ =?utf-8?B?Rk1WbDA1RTQ4SDhPWUt0Y0ZLVnE2QVN1TStCVVhUTU9jZyt2TDF2ODNTbG5L?=
+ =?utf-8?B?T0FSQjRhT3JodHBKSlVxUklKNFRPRHA4RmtIUUN4cUlaTkQ5N2dlZ1drSDFS?=
+ =?utf-8?B?V1BERlFlaWJZL3h3SzhTY1VuMy9QdFdBRGozK0VpUUhWRVVuOHFTaG5yWjF5?=
+ =?utf-8?B?MDhaRzFMTVN4Y1Z1U0RrYXozY1Z5K0V1LzBNMEphY0RZSnRVZytWVUthQXF1?=
+ =?utf-8?B?azFZaTZsNDlocml2OVZpcms5Z0s4TFJXcC82Zy8ybml4VlVRVHFIajA4bC9E?=
+ =?utf-8?B?OGNqTkU3T2JJZFFYN0dTQkJSK2hWTFFVZVU3eTBsc1dxSDdhYkJUZTc4M096?=
+ =?utf-8?B?VFdyeHR3bXdINFZxWk1idEQ1Z3oybXl6VStLOWRYblg2aC9Rc0x3MGxHNysx?=
+ =?utf-8?B?a2dpYXJNK3RWVnpTTUo3RDFJbkNMVG5maXZ3Z2hpNG5XWjVmYnM2SXYwRUJj?=
+ =?utf-8?B?VjNkK3dmQzBCRExhQk9BdzNoZFlpOTg3a2EzNHZqVzZpc0d6QlhCY0Z3Z0ox?=
+ =?utf-8?B?QWd2NGMyeTVOanRZL3M5d1lwTFVzcE0wT1ZhaS94aEw3LzdUY3ZXdUdIVTIz?=
+ =?utf-8?B?Q3Q3MUtON3MzSnMrOFdVQkFiNzRuRFZJVW5DYXVFcUp2V2tWbDVvSDczU2FZ?=
+ =?utf-8?B?TTRaUWZmTSt0S3gzYjh4YTJNV0ZMUm9WVytURHZ2Uzl5RHAzT25mVjkwOG1s?=
+ =?utf-8?B?OEFzMGlkL3J5Q0FlcmRtcGNJTlFYUWwrc20rNUFvNkhzbTBIREYzT2RqdjZw?=
+ =?utf-8?B?OERWN2djbFlnV2wvcVhOaEFjZWp1cWdxQXNiTjRYbFhOVncxTXRJYi84V25s?=
+ =?utf-8?B?aCtkUXhoMWJTLzhaREgxLzhKNnhWSURjOEZiQzFUY0tCaTVoSGcwTElTOUNY?=
+ =?utf-8?B?UFkvMk0zRlpScDFPQ044VGdmdU5PZnVzY3k5R28xNy95ZjZIUTNMRjZxTHZH?=
+ =?utf-8?B?K2ZKRE5xbjJ4WWVIQUZzZVl4bHNIS0tXb3BmYjF2enExb2paZi9pbGY2U1Jk?=
+ =?utf-8?B?SFN4T2pORjM0ZjA1TERZNXFSQWtwUkQ1Y0w3OGJKMndYZ2JFYjlkSndqWUFs?=
+ =?utf-8?B?c2pQS1JKYWg0L1d2cGY4aWtmb2pnT0E9PQ==?=
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 43e23ed0-a34b-416e-5d03-08db478b718c
+X-MS-Exchange-CrossTenant-AuthSource: OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2023 01:54:03.9153
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB1730
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Kai-Heng,
+ping ...
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on rafael-pm/linux-next]
-[also build test ERROR on linus/master pavel-leds/for-next v6.3 next-20230426]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Kai-Heng-Feng/ata-libata-Defer-rescan-on-suspended-device/20230427-130726
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git linux-next
-patch link:    https://lore.kernel.org/r/20230427050603.612145-2-kai.heng.feng%40canonical.com
-patch subject: [PATCH v3 2/2] ata: libata: Defer rescan on suspended device
-config: mips-randconfig-r014-20230427 (https://download.01.org/0day-ci/archive/20230427/202304271942.yVqlIimT-lkp@intel.com/config)
-compiler: mipsel-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/0e5dc37a85d9e0c92e2ae38903928499b2b17d04
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Kai-Heng-Feng/ata-libata-Defer-rescan-on-suspended-device/20230427-130726
-        git checkout 0e5dc37a85d9e0c92e2ae38903928499b2b17d04
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=mips olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=mips SHELL=/bin/bash
-
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202304271942.yVqlIimT-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   mipsel-linux-ld: drivers/ata/libata-eh.o: in function `ata_eh_revalidate_and_attach':
->> libata-eh.c:(.text.ata_eh_revalidate_and_attach+0x74): undefined reference to `pm_suspend_target_state'
->> mipsel-linux-ld: libata-eh.c:(.text.ata_eh_revalidate_and_attach+0x1f8): undefined reference to `pm_suspend_target_state'
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+在 2023/4/22 20:14, Yahu Gao 写道:
+> From: Yahu Gao <gaoyh12@lenovo.com>
+>
+> Replace conditions of avoid issuing [P]IDENTIFY to PMP.
+>
+> Reviewed-by: Jiwei Sun <sunjw10@lenovo.com>
+> Signed-off-by: Yahu Gao <gaoyh12@lenovo.com>
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 14c17c3bda4e..53f65d751189 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3802,11 +3802,7 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+>   		return -ENODEV;
+>   
+>   	/* fail early if !ATA && !ATAPI to avoid issuing [P]IDENTIFY to PMP */
+> -	if (ata_class_enabled(new_class) &&
+> -	    new_class != ATA_DEV_ATA &&
+> -	    new_class != ATA_DEV_ATAPI &&
+> -	    new_class != ATA_DEV_ZAC &&
+> -	    new_class != ATA_DEV_SEMB) {
+> +	if (new_class == ATA_DEV_PMP) {
+>   		ata_dev_info(dev, "class mismatch %u != %u\n",
+>   			     dev->class, new_class);
+>   		rc = -ENODEV;
