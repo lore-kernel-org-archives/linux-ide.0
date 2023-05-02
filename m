@@ -2,153 +2,127 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF9F1C77B61
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Apr 2023 13:51:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DEF1C7EE21
+	for <linux-ide@archiver.kernel.org>; Tue,  2 May 2023 13:49:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229943AbjD1Nvp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 28 Apr 2023 09:51:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52722 "EHLO
+        id S233936AbjEBNtF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 2 May 2023 09:49:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbjD1Nvo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Apr 2023 09:51:44 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E32BB171E;
-        Fri, 28 Apr 2023 06:51:42 -0700 (PDT)
-Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33SDntSR002788;
-        Fri, 28 Apr 2023 13:51:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=mhZXU18sF1S9DfTvxmyRD73QBaSwj9QYrtg60YhvJKk=;
- b=kZTnzCEIe4V5A8c3iFXssPyP8i3dLxORhLjk9JyHdX+HC4VD31vraYfZ7bqtbKyvEz3s
- V5cm0SYcOkMwsIwPIxfsdEEqCz1DpGQneMrxmXGc5kMwmk0Tm28EV2NWwyDVTYdOEtZ8
- Q+6eQdvWiqj/4flH4orVee8n3w1oB1Dzl5/xgHEkbqYAcbum/CuHluCHkwhmOaQD3QcD
- mWBMxnySL2uHVeGOMspoFDPUHXnUTH5jOM0G+criqVC63KmFXES1+T/ZHw+/vHVBgOn9
- GZrYXjvb2G1cp3eeSD40abTB037gU/tCaXmX7szCT2Bq9nz4JfWs/i/qZQx9yuGCGC0o uQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3q8fcf00sm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 28 Apr 2023 13:51:23 +0000
-Received: from m0353726.ppops.net (m0353726.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 33SDpAMD007131;
-        Fri, 28 Apr 2023 13:51:23 GMT
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3q8fcf00qt-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 28 Apr 2023 13:51:23 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 33RNvgTA027097;
-        Fri, 28 Apr 2023 13:32:10 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3q47773jwt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 28 Apr 2023 13:32:10 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 33SDW8wS46727580
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 28 Apr 2023 13:32:08 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2846720043;
-        Fri, 28 Apr 2023 13:32:08 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 690D120040;
-        Fri, 28 Apr 2023 13:32:07 +0000 (GMT)
-Received: from [9.171.55.26] (unknown [9.171.55.26])
-        by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Fri, 28 Apr 2023 13:32:07 +0000 (GMT)
-Message-ID: <b2a60102b2e04c535bc16e9220ea00cb314090ab.camel@linux.ibm.com>
-Subject: Re: [PATCH v3 02/38] ata: add HAS_IOPORT dependencies
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        linux-kernel@vger.kernel.org,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-ide@vger.kernel.org
-Date:   Fri, 28 Apr 2023 15:32:07 +0200
-In-Reply-To: <2f07c421-7f9c-4e53-8bd5-46be07bb5c89@app.fastmail.com>
-References: <20230314121216.413434-1-schnelle@linux.ibm.com>
-         <20230314121216.413434-3-schnelle@linux.ibm.com>
-         <CAMuHMdVry2YViJ5oFgo9i+uStWbhy7mXKWdWvCX=qgAu1-_Y1w@mail.gmail.com>
-         <c7315ca2-3ebf-7f3b-da64-9a74a995b0ae@opensource.wdc.com>
-         <CAMuHMdVajEYsw8HrKw0GwV+09gbtkhjVMuKZ6RSBvq6got=jAg@mail.gmail.com>
-         <9a1c49b0-2271-53c7-7f48-039f83d39e82@opensource.wdc.com>
-         <2f07c421-7f9c-4e53-8bd5-46be07bb5c89@app.fastmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
+        with ESMTP id S234196AbjEBNtD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 2 May 2023 09:49:03 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2059.outbound.protection.outlook.com [40.107.223.59])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FF91A6;
+        Tue,  2 May 2023 06:49:02 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=PgSM6oUK3snH6uNRfjn1KaGOrf7UDdeQqikSU9n4s1Jm5UQkyKcPFRGrCR9qnJs+DKTV2PKiSIYjoWk0mdPFfZxKybahoYdTnjiSldpCdVDa3Zky4GNUyQTAAlRijHW8k26wga4Y9pDfPVvWIBUbX52Ze35DpxD103DWkA3IMj8WbB4cmOd+FbSVNmxcr8is86Hc1Vfmex61A28g/CyM47esADMYwH6Ohso72bGS6l6NZxhNwTteMKvddNxdMhGO0a7U9Z/YqZUAkfsZWQid4ZIjg2nLlfqZsZXTgRa+c2QdLS/wBcsAJGHanQK99yqUq/zZo3sWhlOyULhSd1mx9Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LRCfuFmnlObKnM7edyNCUmwI2OV4CSCIsQt19GZ6qNM=;
+ b=bCdTbj0Ckwxqt73db8bl/bPY3ecKylHyUh15C7Ac9QmAZ6niQ5HQP4SwpjA3hjL5Qv+pdMuOwLByp2LUpdtEwryZC3RuywSGBSKQu+s1ZKlgqNgnEgb0VDrNejkdO2u5Z7c6JPeEyqQruLfjySG/Y8Iq9ZCXs9n9878keyx4fXqXt+3LhD7+hylKwW7G2uEWlHNoYmXXnDl9N2bDamj9+MxXAtjCy0Njwwgq/LkK3Qi6O32ivuif+5jLd2WmCExdbHh9NPeE0wMY0X3tAJT+OiFN6N3W8BSq1/TNnih84xtrONjGjS21SYEAKzZDgLGGlkvRglvhhQSSkFfL2boT1Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LRCfuFmnlObKnM7edyNCUmwI2OV4CSCIsQt19GZ6qNM=;
+ b=2AMiGN3tB0yMCAHX/BZcJuwMAHYppSyY6r26bsWxJvGeLLvnKOtnjmrBQhSOV9TLsTMzDi5KXywNBwObTo6fVIyTFId7sLkO2x9avIsgNsvxnSPdhTNITpvQsl2blpKc1lnw6EvlHruzt9Ta8yx7j26EQz77+8rUGPBvU2pN41w=
+Received: from DM6PR17CA0022.namprd17.prod.outlook.com (2603:10b6:5:1b3::35)
+ by DS0PR12MB6581.namprd12.prod.outlook.com (2603:10b6:8:d3::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6340.30; Tue, 2 May
+ 2023 13:48:59 +0000
+Received: from DM6NAM11FT029.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:1b3:cafe::3e) by DM6PR17CA0022.outlook.office365.com
+ (2603:10b6:5:1b3::35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6363.20 via Frontend
+ Transport; Tue, 2 May 2023 13:48:59 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT029.mail.protection.outlook.com (10.13.173.23) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6363.21 via Frontend Transport; Tue, 2 May 2023 13:48:59 +0000
+Received: from localhost (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Tue, 2 May
+ 2023 08:48:58 -0500
+From:   Michal Simek <michal.simek@amd.com>
+To:     <linux-kernel@vger.kernel.org>, <monstr@monstr.eu>,
+        <michal.simek@xilinx.com>, <git@xilinx.com>
+CC:     Damien Le Moal <dlemoal@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Piyush Mehta <piyush.mehta@xilinx.com>,
+        Rob Herring <robh+dt@kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>
+Subject: [PATCH] dt-bindings: ata: ahci-ceva: Cover all 4 iommus entries
+Date:   Tue, 2 May 2023 15:48:51 +0200
+Message-ID: <76a2bbd9fb944dbefdb8d429d0a85937d56a3d6f.1683035327.git.michal.simek@amd.com>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: CPPz08EXnUN60d1f48NpNdCNae6y51Ix
-X-Proofpoint-GUID: athbEtrdqUdMvqdXsY_qjFhYnnqQxAd-
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-28_04,2023-04-27_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 clxscore=1011
- priorityscore=1501 bulkscore=0 mlxlogscore=999 malwarescore=0
- impostorscore=0 phishscore=0 spamscore=0 adultscore=0 lowpriorityscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304280110
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT029:EE_|DS0PR12MB6581:EE_
+X-MS-Office365-Filtering-Correlation-Id: f5ee3211-1139-42d2-2f45-08db4b13fb71
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: M//2Ageb0sinUL1d0KmPuKX/lqMSKPP0SZj6LHflAkq0H55KiKPgpBR8US3SFjJLccUF3v0n+X6KRI739c1R9gPM+QImQGG6YbR6ie5eJ65cnZTbmI2Szmjsg6TP5udl53Mx1/p9VnHmOS94x85KOyQhQ3qg1QCjPQSURreX9IJT5i1CEFL4qvoOklOp+7O5XJBpbRNCjrAqJ0jlWlEKrzoqnxZ/JE0+MqpQ6RuyzbllRQSAwGxKjgplmbfLxirXtAjwwB1r5Z6ny2oAJGOcK8/hvKk9uW13VTDrk95uqzref10y3BQzjHRjY7KQ+YqSk+Wwc2/llFKGJCjNLOQqUY7Y2qiZ/VPn/r4JTT9K8OafgjwhvMF+e2UBrZV6+34QsoaiDx7iurfwW2ztlEmAjs+crhRa1zdUkXQH7/eW7dnEe5S7M7ST1URreOaIOjLJk/jLPCeDSunqK8YVxl5dLmitbIG+40tBJL/I9RTAnuCA6FLKkBvqSM3Y9kQ1bYh5ZpPxvE6s4uVULCDQgUMlfitXq43BimVh+k5RD1Wc3dDF921KpRAVjiUN7lPqPXNPoF3zuRNn2jGuRtYJzMuYJgb/EFXzFL0EM0mI8UZCRhOVvWFsgay8/Zf65zvFHNENyGf9Kcn5AAQXvnSrLAx2gCLgQN86U6geIVru+smvQgl5AI/gDpW5Mi5FDrH1p993rW4QOJXTxFGw60xqSQqheIhx7K7e3aOTQ2RqU9cZKH31xMqv9Iu+U4X/YtkpFiFt
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(396003)(376002)(346002)(136003)(451199021)(46966006)(36840700001)(40470700004)(86362001)(6666004)(54906003)(478600001)(83380400001)(47076005)(336012)(426003)(36860700001)(26005)(40480700001)(16526019)(186003)(36756003)(81166007)(2616005)(82740400003)(82310400005)(40460700003)(4326008)(70586007)(44832011)(70206006)(316002)(4744005)(356005)(8936002)(8676002)(41300700001)(5660300002)(2906002)(110136005)(36900700001)(2101003);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 May 2023 13:48:59.7236
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: f5ee3211-1139-42d2-2f45-08db4b13fb71
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT029.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6581
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 2023-03-16 at 16:21 +0100, Arnd Bergmann wrote:
-> On Thu, Mar 16, 2023, at 00:57, Damien Le Moal wrote:
-> > On 2023/03/15 20:36, Geert Uytterhoeven wrote:
->=20
-> > Ah. OK. I see now. So indeed, applying the dependency on the entire ATA=
-_SFF
-> > group of drivers is very coarse.
->=20
->=20
-> > Can you change this to apply the dependency per driver ?
->=20
-> I think that will fail to build because of this function
-> on architectures that drop their non-functional
-> inb/outb helpers:
->=20
-> int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
-> {
->         unsigned long bmdma =3D pci_resource_start(pdev, 4);
->         u8 simplex;
-> =20
->         if (bmdma =3D=3D 0)
->                 return -ENOENT;
-> =20
->         simplex =3D inb(bmdma + 0x02);=20
->         outb(simplex & 0x60, bmdma + 0x02);
->         simplex =3D inb(bmdma + 0x02);
->         if (simplex & 0x80)
->                 return -EOPNOTSUPP;
->         return 0;
-> }
->=20
-> This is only called from five pata drivers (ali, amd,
-> cmd64x, netcell, serverworks), so an easy workaround
-> would be to make sure those depend on HAS_IOPORT
-> and enclose the function definition in an #ifdef.
->=20
->         Arnd
+Current only one entry is enabled but IP itself is using 4 different IDs
+which are already listed in zynqmp.dtsi.
 
-There were a few additional inb()/outb() uses so a few more drivers had
-to have the dependency added but for v4 it will no longer be on the
-ATA_SFF option and I used your suggestion above for this function.
-There was another call to it in ata_generic_init_one() that is only
-done for PCI_VENDOR_ID_AL so I added an #ifdef CONFIG_PATA_ALI around
-that.
+sata: ahci@fd0c0000 {
+	compatible = "ceva,ahci-1v84";
+	...
+	iommus = <&smmu 0x4c0>, <&smmu 0x4c1>,
+		 <&smmu 0x4c2>, <&smmu 0x4c3>;
+};
 
-Thanks,
-Niklas
+Signed-off-by: Michal Simek <michal.simek@amd.com>
+---
+
+ Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
+index 9b31f864e071..71364c6081ff 100644
+--- a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
++++ b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
+@@ -32,7 +32,7 @@ properties:
+     maxItems: 1
+ 
+   iommus:
+-    maxItems: 1
++    maxItems: 4
+ 
+   power-domains:
+     maxItems: 1
+-- 
+2.36.1
+
