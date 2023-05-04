@@ -2,69 +2,51 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0281EC77B78
-	for <linux-ide@archiver.kernel.org>; Tue,  2 May 2023 20:15:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D70C77B75
+	for <linux-ide@archiver.kernel.org>; Thu,  4 May 2023 02:34:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229564AbjEBUPj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 2 May 2023 16:15:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48440 "EHLO
+        id S229712AbjEDCeH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 3 May 2023 22:34:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229648AbjEBUPi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 2 May 2023 16:15:38 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 258332D68
-        for <linux-ide@vger.kernel.org>; Tue,  2 May 2023 13:15:11 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id 4fb4d7f45d1cf-50bc070c557so6499027a12.0
-        for <linux-ide@vger.kernel.org>; Tue, 02 May 2023 13:15:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1683058510; x=1685650510;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/KLvyC81W8m9NJpaowQEHEMWM8a470rAz1HMvMhlnSI=;
-        b=uBWuYMNnph/lp62Lb4iuFrIV3TjQSvMkekAb5DkQg7UYerz2I4eiXC6ZuQFJZaGnz0
-         4pDCAw6YJe8VSOcOXxQ7Vrk9EsveN5xEX9m1yokB2kxb8SsbRkzv48zrWW8gZFElNI2V
-         iMKszlwEq//6EkBRDpQRNnJOS8/dMPzr3OxqC/1ztVF9t3X4G+qGzQKongKdr07KJK+J
-         SYcHPvL23yh6QlerdsjauAA5o5+qavfMOcSk+9Kccfn0NNZPJxJZlxMgVPgDOAJxV5TW
-         sVTFwNdWdHG5k4rwOUYdIFzTxEIvt+Tc5I0stO8GJBJ+CTKSH2QOirkawMDuzYswhR2d
-         HGqQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683058510; x=1685650510;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/KLvyC81W8m9NJpaowQEHEMWM8a470rAz1HMvMhlnSI=;
-        b=TvjzT1VfZAWDWVjwuVmWtIHwI1gEggZZan0gfYvAatqB+P0wkDLdefJhPbrJjuMkvb
-         voHQHeumCvFInJNI3GuZfZAIYzSYZHQZprvGUAnw48sRmCtxUz1+co9dQxwD/a5zn94/
-         Sh7w6JafDb64ggyTaS0zSM3SLYnFmAzaKRYbYGQuchRTM9bGCUSkEI4J2hO5xOiv2zjN
-         Wrs4tBsmyrgvFUPHMhHwdRsFWYcr8YQvxgTa37StJJpWPJk9n+MjWarxYLd0chH/sTmA
-         QqJOKGiPakpMYSqTcgZ9q9wtiA7II3FlgguJRZbdytjTSaN1wvW/emQNx2oVoLvhqQvX
-         aoxA==
-X-Gm-Message-State: AC+VfDzu6Fy3ujg3tIA1FL5AucectaErXf17X1MhxFB8e46HZygqUe3B
-        q6r/Kl7zvkogA9Rx6bvr/np0+w==
-X-Google-Smtp-Source: ACHHUZ75XYjMT2liIEfOfGXw9D16p0bgc/kYeublTs7bzpZ2DIZSyNFYoC/zTIAyuVbAzneeJbWWOQ==
-X-Received: by 2002:a17:907:98e:b0:93d:ae74:fa9e with SMTP id bf14-20020a170907098e00b0093dae74fa9emr1257619ejc.7.1683058509818;
-        Tue, 02 May 2023 13:15:09 -0700 (PDT)
-Received: from ?IPV6:2a02:810d:15c0:828:37be:eda5:e303:19e0? ([2a02:810d:15c0:828:37be:eda5:e303:19e0])
-        by smtp.gmail.com with ESMTPSA id gj19-20020a170906e11300b0095ec8dfc439sm9643360ejb.166.2023.05.02.13.15.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 May 2023 13:15:09 -0700 (PDT)
-Message-ID: <7579c353-13a6-adb6-fbd8-8deaeeaaef34@linaro.org>
-Date:   Tue, 2 May 2023 22:15:08 +0200
+        with ESMTP id S229441AbjEDCeG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 May 2023 22:34:06 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C75C7E42;
+        Wed,  3 May 2023 19:34:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 57F2062C85;
+        Thu,  4 May 2023 02:34:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 376E8C433D2;
+        Thu,  4 May 2023 02:34:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683167644;
+        bh=Bq0qnaWKFfa058rltCY8ZwbyskEb1BVnd2ovTPtppKY=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=hrjrxztsHVK+9R5BHIPCd11fGLWMeTwkVKGXp3x4o6EATGVytZUcNQiK00Ri+BiNr
+         ucyEcJKKiqo8iVUKceVaoUv8dm+qyOVGjsRvoMOsOewCyK5Q3fGVtuzeERhAaxtPR7
+         yK0GSxePrv6TfmB5l7m6mkZB/GcgeCz71RuumhmU4itTpmZsfL7Lc36RUtQ8grnk02
+         SJELQtQAMrGyqCQddtR9GVO2LGak78JGeT+nHBZVIHVjxUiAYW7t4Dh19p4GvABmJ6
+         bnWFjPH+JLvL88a4lSICUcpjuHl+OOCxio3OEZyLgwNY8WpPU49gZsdxOgpo2ixNOL
+         jL5rb1lgaWp0w==
+Message-ID: <37c651c7-1f7d-fb2c-12d8-646ba3e63247@kernel.org>
+Date:   Thu, 4 May 2023 11:34:01 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.1
+ Thunderbird/102.10.0
 Subject: Re: [PATCH] dt-bindings: ata: ahci-ceva: Cover all 4 iommus entries
 Content-Language: en-US
 To:     Michal Simek <michal.simek@amd.com>, linux-kernel@vger.kernel.org,
         monstr@monstr.eu, michal.simek@xilinx.com, git@xilinx.com
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Piyush Mehta <piyush.mehta@xilinx.com>,
         Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
         linux-ide@vger.kernel.org
 References: <76a2bbd9fb944dbefdb8d429d0a85937d56a3d6f.1683035327.git.michal.simek@amd.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
 In-Reply-To: <76a2bbd9fb944dbefdb8d429d0a85937d56a3d6f.1683035327.git.michal.simek@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
@@ -72,7 +54,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 02/05/2023 15:48, Michal Simek wrote:
+On 5/2/23 22:48, Michal Simek wrote:
 > Current only one entry is enabled but IP itself is using 4 different IDs
 > which are already listed in zynqmp.dtsi.
 > 
@@ -85,10 +67,22 @@ On 02/05/2023 15:48, Michal Simek wrote:
 > 
 > Signed-off-by: Michal Simek <michal.simek@amd.com>
 > ---
+> 
+>  Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
+> index 9b31f864e071..71364c6081ff 100644
+> --- a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
+> +++ b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
+> @@ -32,7 +32,7 @@ properties:
+>      maxItems: 1
+>  
+>    iommus:
+> -    maxItems: 1
+> +    maxItems: 4
+>  
+>    power-domains:
+>      maxItems: 1
 
-
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
-Best regards,
-Krzysztof
-
+Is this a bug fix ? If yes, what about adding Fixes & Cc: stable tags ?
