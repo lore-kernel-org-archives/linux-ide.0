@@ -2,162 +2,178 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D2A9C77B75
-	for <linux-ide@archiver.kernel.org>; Fri,  5 May 2023 11:18:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3DBBC77B75
+	for <linux-ide@archiver.kernel.org>; Sun,  7 May 2023 15:23:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231347AbjEELS5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 5 May 2023 07:18:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59160 "EHLO
+        id S231552AbjEGPXE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 7 May 2023 11:23:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231394AbjEELSv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 5 May 2023 07:18:51 -0400
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2051.outbound.protection.outlook.com [40.107.243.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE5D81A602;
-        Fri,  5 May 2023 04:18:17 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ng7beSTpgrZwGrDs+nBxpdDfAztJOpXz0YV5ZNlp0PfiCNFkxJXMWXBPxjTvcM0n9AaqF6MS4XJNeYU2LGNZm1GDbERi1EWKDAqm1xhnNfE1wJ4IEyP3XFgN3GpjQOeZGvUaSY+ruQoIQydPhhOb9qu4j9FO7XyEJSLswbaJI73/vy0NEnhxraRlJV0YDWDJaWggLIcDlpaKuO8yJNKEHNhTum/LLe5jSZMZlp6PG128M2KhEUNFjtZWOryQBEjAe7/FWM7tQp1fXz2OC4GT6UByE5NTLCJMd9bxljesKD01P5tVk6oBlQwbOsVGyNQM66g1FSLPGxa0mpwa6zx5bA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=M7Rx6bvc98tKNsoO4OBUVVux0eCFbJEoWQ64PLzIVL0=;
- b=fubfYr/YDMt6r8HhweHOhlEo+gvtJ1eZPFtWAQWaEcoF66lJNL0VXoH2cwQt+Mh1lSmjTrq4W93xjyUr74WAuqIzoBpWXJ8rvEzWXAoeh4T0K39Gg9b2eQqUfEfGdL9Q4PtmAAfTgsm7dVcf3HBpx7JouXsizSXl4pDHaDwfnh73znBea6Gqp3ay5axF7GsC7HXwAW/sR8Un4pX3OjryEKzINFyGPOTnOfHhJmpQ80kJqrs1Uslr+3QNMRCPEpRG9ggCIkx28ZNCAm85iidevm0Z+/xfEE8tbo1sXowxgkMFWuICjeUJbLD8VGTu2bssI7ZtTWaDhktLDB4caFnYuA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M7Rx6bvc98tKNsoO4OBUVVux0eCFbJEoWQ64PLzIVL0=;
- b=hrC84HyNuf9AAaI3yaXtq5baCjfFgkuoKw0WOBunRPz8rrRMLgHF4KGKacDymWYo5GsnawV4iQvAIEIjWa52ACFcw+WjUsIoFuAP5X/ApPKE2Zi1bzLmS2O9Vclu+saI85BrUg2mqA5IIAKzyiYd4x3euzAQ6W8tNdz8u6Go5KI=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from BYAPR12MB4758.namprd12.prod.outlook.com (2603:10b6:a03:a5::28)
- by SJ0PR12MB5471.namprd12.prod.outlook.com (2603:10b6:a03:300::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6363.27; Fri, 5 May
- 2023 11:18:06 +0000
-Received: from BYAPR12MB4758.namprd12.prod.outlook.com
- ([fe80::20b9:d472:1981:cf94]) by BYAPR12MB4758.namprd12.prod.outlook.com
- ([fe80::20b9:d472:1981:cf94%4]) with mapi id 15.20.6363.026; Fri, 5 May 2023
- 11:18:05 +0000
-Message-ID: <a2064add-895b-1b35-639d-39e9ffcabe08@amd.com>
-Date:   Fri, 5 May 2023 13:17:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.1
-Subject: Re: [PATCH] dt-bindings: ata: ahci-ceva: Cover all 4 iommus entries
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-kernel@vger.kernel.org,
-        monstr@monstr.eu, michal.simek@xilinx.com, git@xilinx.com
-Cc:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Piyush Mehta <piyush.mehta@xilinx.com>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <76a2bbd9fb944dbefdb8d429d0a85937d56a3d6f.1683035327.git.michal.simek@amd.com>
- <37c651c7-1f7d-fb2c-12d8-646ba3e63247@kernel.org>
-From:   Michal Simek <michal.simek@amd.com>
-In-Reply-To: <37c651c7-1f7d-fb2c-12d8-646ba3e63247@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: VI1PR06CA0156.eurprd06.prod.outlook.com
- (2603:10a6:803:a0::49) To BYAPR12MB4758.namprd12.prod.outlook.com
- (2603:10b6:a03:a5::28)
+        with ESMTP id S231634AbjEGPXE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 7 May 2023 11:23:04 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 400D35FF2;
+        Sun,  7 May 2023 08:23:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F0DC60C7B;
+        Sun,  7 May 2023 15:23:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF266C433D2;
+        Sun,  7 May 2023 15:22:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683472981;
+        bh=GwggOkw376MwKe9ADd4xSds5t1UcPk1BpfCQL0KqQg4=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=H1RZKvkY2mCBZJWqmqJu0Tem22yS/bzxke82206/cbXqSisorUgQcV4aLmdvtaa0j
+         hnVWeYwWkUCJteOr7UKP2w7hEs6dPBQqql17LGVYnQXeSXo5cRJ+NFOlYa7WUpQcZu
+         Q7ilImTmiBV68XCsEdoncrhNTuwCnoJe7Og1pPC9AoaZ2qoSkGtGLo7VE+Ik/sR8qP
+         KHvPYVeJHE0B2e/lBTxI1RjIpfgKMqdirJV0U7rTvbs5w+eIbN+nzSq/YWk/h1SAWC
+         Zb1dKMKO3CFTU4G32BHy7mYAcfrveVKWtQhatNj1IEkXFyfcjP5PQ91HjFojnE1x3S
+         Un6m0CKIAsEww==
+Message-ID: <8eea2352-1d4f-aa3a-7c86-9306adb0aaae@kernel.org>
+Date:   Mon, 8 May 2023 00:22:58 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BYAPR12MB4758:EE_|SJ0PR12MB5471:EE_
-X-MS-Office365-Filtering-Correlation-Id: fd883109-95a0-44dc-d952-08db4d5a6579
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 8PsJMvN1Ve1uxw02m94KDM3nDKj1L1++IFJif09xMq1PY+gRxnFRjWwAmIWcM9pv0GIrZxRKOCE4zvT2Hf58FHDuy2ItNzfs0hhXVJvnsH5aFJT8NOi1gbHqGsH6791QqhPbdW0NV99lSENkzvadHxNLtk4xhNKw3aTCRSUVoRfaJ2UWn74dxa3/V4Pz34EO99zUbVjyoN7/CBdIUvfzohrgE8zSAwwnPrwpfYF774SNLk2AtTboqVAm45CAwTJILrbrpv57AWZ5uGb7IdE4KT2I6Ua7l96WM7kK6lZRBCi/PW/IVTbR675NDK4O094atURZRNq0pJ37HavEmwUoppr6gAaTNS7CNX1ElE1IZhxK1tHS/o2Da/9eOquawXYxdjhsqdPOIeQUa6yxa9QAtfU3e7oCYlnFTYy51cN8RokcEnrCWdzrPxGm6WXFTiBgqfBrsP22Mx392Dkvo1XUYEFVdeuJC0JJTDUlRMOpJv4tRZq8TqOQ0vBANau1/KQ2PLvLlciS2bcufly1nNbOPhkZXTOLT/I8jDzEinLfv0wlmKNZILN8yYvj5E/aKrwQCzeTy/bp5CemdALIfmPl5YO2MEgVL8P7iM5sp+4y1EFXwDOZ6zCaIyO5hrL45/MUyZOhXJPv+zkgiDi8mdn1Eg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR12MB4758.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(396003)(136003)(39860400002)(376002)(366004)(346002)(451199021)(36756003)(31696002)(86362001)(316002)(54906003)(4326008)(66946007)(66556008)(66476007)(6486002)(6666004)(478600001)(41300700001)(8936002)(5660300002)(8676002)(2906002)(7416002)(44832011)(186003)(38100700002)(53546011)(6506007)(26005)(6512007)(83380400001)(2616005)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?YkFnUm9WWThzbTRCNDZ3TXdiVjQreDJGWFBPUEJsQ0czQTFvYW9ZbTE1V08r?=
- =?utf-8?B?dm15ODRYNDhLajlsenIyNlhhclIrbFdkaVlCTlhPNjJVV3d4WXVpZ3RUdE1m?=
- =?utf-8?B?MU43Q01aYlVZRWE0YTQxazY1SXFFeGFDd3RucjdQR1Z2N1lNcUY0T1Rud1Zw?=
- =?utf-8?B?aGM5M2RnbHlDaEg4cmp6MDRodWNneG51Y1NWQXg3bkM0NjF3eTdNMDJlN2dz?=
- =?utf-8?B?dUpqdnhpaVRWdDhEN1JsWFNJOThpbjhlQjd0bmkrenRxMWN5bitacXFvaGlH?=
- =?utf-8?B?NGRjV2hUSzV4ZGFVcmJrUVJQUHhja3NnVjZ1NDFRcHhzQTR6OWx4a0VTdTBQ?=
- =?utf-8?B?bFo0OFJWb3JHWHdPNnpYbmNnZXFXWDBmemRNL3VTLy9JeTZCNFF5V3hmWnBu?=
- =?utf-8?B?bk1QYmU5ZWZGR1dZOVdwcHhTM251KytPS0NCTWdCRW5zWDFSOHpCUUZSNG9Z?=
- =?utf-8?B?U1MyK2Jva1hxYWVOUWZwNmxJSDNwaSszM0w1Mk1TdnZKSGlBMTlieFRZSWVL?=
- =?utf-8?B?Z0FyMXR4TDROUzloZDEvUktNeXBxMjVaZjllLzU5OThlbTRJNlFWMy9XRVJi?=
- =?utf-8?B?TU1rUEN5azZ2VGJRUFZFVVJhRS9HWjcwanFHRGpFbkQ2anQ4TVpZOG1LQzEr?=
- =?utf-8?B?YkpsblZLYmF5dEJJd3FkWGIrNjNlbTJ6ZGxYcE1VVDVQL29TcjFRNWh5dnRG?=
- =?utf-8?B?aGQxRjllc09iRXA3ckNhZzhPaGVrQmtoMGtnR2ZCSWM4djQrN2hteDJBZUNY?=
- =?utf-8?B?QTMzOHpURTFrd293cGhQTFJnUWJBTS9JUlJjQ0lHbTArNUJEdVpyM3orUXNY?=
- =?utf-8?B?NGx6WjFmZjliZTJ2WEdqWktkTEVyZEpRUVFsN3BsUUUwZlg1WXNLTkFDRCt1?=
- =?utf-8?B?MDFVTTd3ZjhkUHB6OEpadGpDK1hoM0hmT3JOQmdFTkFLMkIybW1aYi9oaFJs?=
- =?utf-8?B?VEZ5RFNCY1JEbytFVDU3WDVDMFRDV2V2Qld4b1BROWRSblNia2JCY242Ni83?=
- =?utf-8?B?dWxOZk9yUG1WNXpmem1KK2xVS2J6VTdyWXUyVTAybzd3ZFR0VmRiZ2lsMXV2?=
- =?utf-8?B?N0s0N1UwUmdFN1RGdlphZUVMMEZvTHNUVmxhVGhpSmpOYk5obU9ZQnJwNjR6?=
- =?utf-8?B?ck56d0VkSUE0Tk13Y0U0cmx3ek5lcUtXb3ZIb1R1Q3daeWpXc3plMWxtc0NE?=
- =?utf-8?B?MkM1M242SGNzK3pLZ3FIeWxGTEdWWWhIMWZ6a3hQUlh6bEFETjFPTVpiRDVv?=
- =?utf-8?B?NW5wdFIrMnZsdnFmRE4vUy9CU0xMOXFHR0NZUExnd09WcWgrUFJpdVB4QXlt?=
- =?utf-8?B?NkNneEFFcHBlVFllMy9GYmRuWHBnaHQ1Tk9PQXdWZGdtekI0MlkyYy9uMkVx?=
- =?utf-8?B?NEt3VDRlLzdTTHBGaWtyam1HcDd1QnVueHhhSll4WC96Y0NwdGNkYitJN3ox?=
- =?utf-8?B?SW94cVVsc2J5WWxJdGJkYWwxcFNqNGdCSFVnS21mQllEOTFNa1hBMS9EZEVy?=
- =?utf-8?B?QlVpWXJyY1hvYWRlZW8wM3JDSUdJdTBiYjZwd2pEN2xtZUV3bHRMT1dYT1Ez?=
- =?utf-8?B?ZXFxaHFXYWFYa0F2NWtlVkJpS2lnK0ZoWVBWYUF4TGZ2ZE9oN2o1UU5lcFN5?=
- =?utf-8?B?RytDM3ZqTDRmUnJPVWpLWldkZGhkYVFxaWs1cEdjMTF4VEJ3MHhuR29oLzFG?=
- =?utf-8?B?MnlkMUlBcWNQUUU0NG9WazhGbTVlRStlM0poZk14VkUvVnpNMXJlSGNzR3NF?=
- =?utf-8?B?TzZrY3paZEZpN3VsRGY5QVFCbFJCTW90Y0FqQ1MrTzBuY2svMXlYR0p6eHha?=
- =?utf-8?B?YUh6bnZkMStsTkdtMkJ5VVQ2RGZqaXh3c3l5TmFOMmNtNndnRXBaTllYR01R?=
- =?utf-8?B?WGkyZG1sQW42NDZObUhKZld4c0h2Z3ZBRmhQMXcvSVlJWnlJb0JDSVpCQ2sw?=
- =?utf-8?B?OE51RWJZeWR3TGhneEYrblluektpWkZWSVlHVGxnenhMNXhSQURkZDBRSk50?=
- =?utf-8?B?V25DZXVnNmNtckxScURnQlJFR0RNL1ZMWEFiOHBSU2FGQjAyUDRKdjd4ZHR6?=
- =?utf-8?B?MUxqcHk5M2Y3aHlhM0RZYW9CN0tiVmVsUmRwaGtLNEJaQ0lUNVpkODlYV2do?=
- =?utf-8?Q?ywG6TKKNsP77CeGxNfw9kmAzM?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fd883109-95a0-44dc-d952-08db4d5a6579
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR12MB4758.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2023 11:18:05.3136
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Q5tXKga4iM2+BmTLleJHo+39H2RzF/45drVW9RQW/Kq+zCUnvNcdqvyJk0O+3BKr
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB5471
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.10.0
+Subject: Re: [PATCH v4 2/2] ata: libata: Defer rescan on suspended device
+Content-Language: en-US
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     bblock@linux.ibm.com, acelan.kao@canonical.com,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230502150435.423770-1-kai.heng.feng@canonical.com>
+ <20230502150435.423770-2-kai.heng.feng@canonical.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230502150435.423770-2-kai.heng.feng@canonical.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-
-On 5/4/23 04:34, Damien Le Moal wrote:
-> On 5/2/23 22:48, Michal Simek wrote:
->> Current only one entry is enabled but IP itself is using 4 different IDs
->> which are already listed in zynqmp.dtsi.
->>
->> sata: ahci@fd0c0000 {
->> 	compatible = "ceva,ahci-1v84";
->> 	...
->> 	iommus = <&smmu 0x4c0>, <&smmu 0x4c1>,
->> 		 <&smmu 0x4c2>, <&smmu 0x4c3>;
->> };
->>
->> Signed-off-by: Michal Simek <michal.simek@amd.com>
->> ---
->>
->>   Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
->> index 9b31f864e071..71364c6081ff 100644
->> --- a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
->> +++ b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
->> @@ -32,7 +32,7 @@ properties:
->>       maxItems: 1
->>   
->>     iommus:
->> -    maxItems: 1
->> +    maxItems: 4
->>   
->>     power-domains:
->>       maxItems: 1
+On 2023/05/03 0:04, Kai-Heng Feng wrote:
+> During system resume, if an EH is schduled after ATA host is resumed
+> (i.e. ATA_PFLAG_PM_PENDING cleared), but before the disk device is
+> fully resumed, the device_lock hold by scsi_rescan_device() is never
+> released so the dpm_resume() of the disk is blocked forerver.
 > 
-> Is this a bug fix ? If yes, what about adding Fixes & Cc: stable tags ?
+> That's because scsi_attach_vpd() is expecting the disk device is in
+> operational state, as it doesn't work on suspended device.
+> 
+> To avoid such deadlock, defer rescan if the disk is still suspended so
+> the resume process of the disk device can proceed. At the end of the
+> resume process, use the complete() callback to schedule the rescan task.
+> 
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> ---
+> v4: 
+>  - No change.
+> 
+> v3:
+>  - New patch to resolve undefined pm_suspend_target_state.
+> 
+> v2:
+>  - Schedule rescan task at the end of system resume phase.
+>  - Wording.
+> 
+>  drivers/ata/libata-core.c | 11 +++++++++++
+>  drivers/ata/libata-eh.c   | 11 +++++++++--
+>  include/linux/libata.h    |  1 +
+>  3 files changed, 21 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 8bf612bdd61a..bdd244bdb8a2 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5093,6 +5093,16 @@ static int ata_port_pm_poweroff(struct device *dev)
+>  	return 0;
+>  }
+>  
+> +static void ata_port_pm_complete(struct device *dev)
+> +{
+> +	struct ata_port *ap = to_ata_port(dev);
+> +
+> +	if (ap->pflags & ATA_PFLAG_DEFER_RESCAN)
+> +		schedule_work(&(ap->scsi_rescan_task));
+> +
+> +	ap->pflags &= ~ATA_PFLAG_DEFER_RESCAN;
 
-I can do that no issue.
+Is this called with the port lock held ? Otherwise, there is a race with
+ata_eh_revalidate_and_attach() and we may end up never actually revalidating the
+drive. At the very least, I think that ATA_PFLAG_DEFER_RESCAN needs to be
+cleared before calling schedule_work().
 
-Thanks,
-Michal
+> +}
+> +
+>  static const unsigned int ata_port_resume_ehi = ATA_EHI_NO_AUTOPSY
+>  						| ATA_EHI_QUIET;
+>  
+> @@ -5158,6 +5168,7 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+>  	.thaw = ata_port_pm_resume,
+>  	.poweroff = ata_port_pm_poweroff,
+>  	.restore = ata_port_pm_resume,
+> +	.complete = ata_port_pm_complete,
+>  
+>  	.runtime_suspend = ata_port_runtime_suspend,
+>  	.runtime_resume = ata_port_runtime_resume,
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index a6c901811802..0881b590fb7e 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/blkdev.h>
+>  #include <linux/export.h>
+>  #include <linux/pci.h>
+> +#include <linux/suspend.h>
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_eh.h>
+> @@ -2983,8 +2984,14 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+>  			 */
+>  			ehc->i.flags |= ATA_EHI_SETMODE;
+>  
+> -			/* schedule the scsi_rescan_device() here */
+> -			schedule_work(&(ap->scsi_rescan_task));
+> +			/* Schedule the scsi_rescan_device() here.
+
+Code style: please start multi-line comment with a line starting with "/*"
+without text after it.
+
+> +			 * Defer the rescan if it's in process of
+> +			 * suspending or resuming.
+> +			 */
+> +			if (pm_suspend_target_state != PM_SUSPEND_ON)
+
+Why ? Shouldn't this be "pm_suspend_target_state == PM_SUSPEND_ON" ? Because if
+the device is already resumed, why would we need to defer the rescan ?
+
+> +				ap->pflags |= ATA_PFLAG_DEFER_RESCAN;
+> +			else
+> +				schedule_work(&(ap->scsi_rescan_task));
+>  		} else if (dev->class == ATA_DEV_UNKNOWN &&
+>  			   ehc->tries[dev->devno] &&
+>  			   ata_class_enabled(ehc->classes[dev->devno])) {
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 311cd93377c7..1696c9ebd168 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -189,6 +189,7 @@ enum {
+>  	ATA_PFLAG_UNLOADING	= (1 << 9), /* driver is being unloaded */
+>  	ATA_PFLAG_UNLOADED	= (1 << 10), /* driver is unloaded */
+>  
+> +	ATA_PFLAG_DEFER_RESCAN	= (1 << 16), /* peform deferred rescan on system resume */
+
+Do we really need a new flag ? Can't we use ATA_PFLAG_PM_PENDING correctly ?
+From the rather sparse commit message description, it sounds like this flag is
+being cleared too early. Not sure though. Need to dig further into this.
+
+>  	ATA_PFLAG_SUSPENDED	= (1 << 17), /* port is suspended (power) */
+>  	ATA_PFLAG_PM_PENDING	= (1 << 18), /* PM operation pending */
+>  	ATA_PFLAG_INIT_GTM_VALID = (1 << 19), /* initial gtm data valid */
+
+-- 
+Damien Le Moal
+Western Digital Research
+
