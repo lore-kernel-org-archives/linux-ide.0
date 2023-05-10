@@ -2,61 +2,79 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E36C7EE24
-	for <linux-ide@archiver.kernel.org>; Wed, 10 May 2023 09:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E9D0C7EE22
+	for <linux-ide@archiver.kernel.org>; Wed, 10 May 2023 22:52:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236463AbjEJJcH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 10 May 2023 05:32:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45000 "EHLO
+        id S236499AbjEJWwf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 10 May 2023 18:52:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236614AbjEJJcG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 May 2023 05:32:06 -0400
-X-Greylist: delayed 90599 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 10 May 2023 02:32:03 PDT
-Received: from mail.rawlinsfis.com (mail.rawlinsfis.com [89.40.118.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6083D3A88
-        for <linux-ide@vger.kernel.org>; Wed, 10 May 2023 02:32:03 -0700 (PDT)
-Received: by mail.rawlinsfis.com (Postfix, from userid 1001)
-        id 8AF84822CB; Tue,  9 May 2023 08:45:50 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rawlinsfis.com;
-        s=mail; t=1683618358;
-        bh=lDo1OjfzzJ3sOfR9tSDg5RMmT4aDyBP45hIVJCLtIrE=;
-        h=Date:From:To:Subject:From;
-        b=cijJ7mz8rHuMAR+6nvmjRK7aITkZICMvxP2elBqPuky5jeRxT2gfhFe84RzDVD1k9
-         XB8iuXvk8fxplxyXRLedEeTOklMl7ShZ9fFCUQXHPtBfB60ldRgZ2gDANo/Zg0NQvC
-         bFCFUy7WqGCT7J6tuvGgNUjVB2Syjd3jNYVghSqMYF3N/9KLF26qjZI+qZj+9yFs2C
-         bJJ0wyRLQ9gegH7z7bF35EOJ+A2up0PwYfcPKB92ypK5DNUT4hJL7BT2ntllkD3zjL
-         4U3NePBApr8EmKvkvdFy9nIMyRLPv63SnR8M24bZ5e5ta/fT824LKiibMq/3DRHXmI
-         ILC3TUqVSOlwg==
-Received: by mail.rawlinsfis.com for <linux-ide@vger.kernel.org>; Tue,  9 May 2023 07:45:46 GMT
-Message-ID: <20230509074500-0.1.3e.5pgu.0.qr77o3g8e7@rawlinsfis.com>
-Date:   Tue,  9 May 2023 07:45:46 GMT
-From:   "Damian Hordych" <damian.hordych@rawlinsfis.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?Pompy_ciep=C5=82a_-_nowe_warunki_?=
-X-Mailer: mail.rawlinsfis.com
+        with ESMTP id S230023AbjEJWwe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 May 2023 18:52:34 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34C8A61A4
+        for <linux-ide@vger.kernel.org>; Wed, 10 May 2023 15:52:23 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id D697C2198E;
+        Wed, 10 May 2023 22:52:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1683759141; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=7I6gEUsPDPLHJG5F6lFv3u01NDEKoye1kqcNxdWAgG4=;
+        b=zvMdbZXErsOMeaVon5GpDSEVRI+FHK0IXwXHVxS7caqNJwl0Z4fWU8CZBNvC1K6hSb99M7
+        UAfxR70VMpb1bVp5SKDNXst2BcyMoJ4Hz+EsQ7w5TUyFQ+yx4dOjYfLXljQdHOlY8tN3ie
+        kceHVYPhTY0Nk5Z3wMtONL5L+jkti1w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1683759141;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=7I6gEUsPDPLHJG5F6lFv3u01NDEKoye1kqcNxdWAgG4=;
+        b=lCHwhdCS3+VLZ9QZqghgIwSBeR0LRVNvZRPCaumLqV3zb2fKNYfPnUFDMoMJZbJhVKrl0L
+        fJlGzCoJqsOXkXCQ==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id C9D952C143;
+        Wed, 10 May 2023 22:52:21 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id BA51051C34DF; Thu, 11 May 2023 00:52:21 +0200 (CEST)
+From:   Hannes Reinecke <hare@suse.de>
+To:     Damien LeMoal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/6] libata: remove references to 'old' error handler
+Date:   Thu, 11 May 2023 00:52:05 +0200
+Message-Id: <20230510225211.111113-1-hare@suse.de>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hi all,
 
-w ramach nowej edycji programu Czyste Powietrze dla klient=C3=B3w indywid=
-ualnych mog=C4=85 otrzyma=C4=87 Pa=C5=84stwo do 135 tys. z=C5=82 wsparcia=
- na zakup pompy ciep=C5=82a.
+now that the ipr driver has been modified to not hook into libata
+all drivers now use the 'new' error handler, so we can remove any
+references to it. And do a general cleanup to remove callbacks
+which are no longer needed.
 
-Pr=C3=B3cz wy=C5=BCszego dofinansowania program zak=C5=82ada m.in. podwy=C5=
-=BCszenie prog=C3=B3w dochodowych oraz mo=C5=BCliwo=C5=9B=C4=87 z=C5=82o=C5=
-=BCenia kolejnego wniosku o dofinansowanie dla tych, kt=C3=B3rzy ju=C5=BC=
- wcze=C5=9Bniej skorzystali z Programu.
+Hannes Reinecke (6):
+  ata: remove reference to non-existing error_handler()
+  ata,scsi: remove ata_sas_port_{start,stop} callbacks
+  ata,scsi: remove ata_sas_port_destroy()
+  ata: remove ata_sas_sync_probe()
+  ata: inline ata_port_probe()
+  ata,scsi: cleanup ata_port_probe()
 
-Jako firma specjalizuj=C4=85ca si=C4=99 w dostawie, monta=C5=BCu i serwis=
-ie pomp ciep=C5=82a pomo=C5=BCemy Pa=C5=84stwu w uzyskaniu dofinansowania=
- wraz z kompleksow=C4=85 realizacj=C4=85 ca=C5=82ego projektu.
+ drivers/ata/libata-core.c          | 166 +++++++++++------------------
+ drivers/ata/libata-eh.c            | 148 +++++++++++--------------
+ drivers/ata/libata-sata.c          |  77 -------------
+ drivers/ata/libata-scsi.c          |  21 +---
+ drivers/ata/libata-sff.c           |  32 +++---
+ drivers/ata/libata.h               |   2 -
+ drivers/scsi/libsas/sas_ata.c      |   6 +-
+ drivers/scsi/libsas/sas_discover.c |   2 +-
+ include/linux/libata.h             |   6 +-
+ 9 files changed, 143 insertions(+), 317 deletions(-)
 
-S=C4=85 Pa=C5=84stwo zainteresowani?
+-- 
+2.35.3
 
-Pozdrawiam
-Damian Hordych
