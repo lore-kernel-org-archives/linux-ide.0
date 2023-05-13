@@ -2,128 +2,46 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7967AC7EE24
-	for <linux-ide@archiver.kernel.org>; Sat, 13 May 2023 06:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D64C77B7C
+	for <linux-ide@archiver.kernel.org>; Sat, 13 May 2023 08:28:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233395AbjEMGiE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 13 May 2023 02:38:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37624 "EHLO
+        id S231637AbjEMI2w convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 13 May 2023 04:28:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229527AbjEMGiD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2023 02:38:03 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2C252D48;
-        Fri, 12 May 2023 23:38:01 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-965cc5170bdso1630071866b.2;
-        Fri, 12 May 2023 23:38:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683959880; x=1686551880;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pJAHS0Zaj0yVKhfNHhf5jx/XvjbWQe6dR3+gBFASJBU=;
-        b=YFD59SfNwI80NXatbYx+VnyB6F8bgTWYF5cM6l+/+0MBybE4ati0s2sJJIOR2Dql7+
-         p1amTvshUKIr2n/XCcTaSELHndPCCWo+owGMRBQcF/Dqmp+vlOOYoDOxZRpsvEpdJTTt
-         uUWxOlqz2ZYWlYXn3eE74ooL2nOXT5Ihsd3l/9W6ncaGvgy3lVfZ82Ck9LaTltNt5dzg
-         lJRmt1J1fdlgtxYrkXdL/DEI7/7ui+2QBZi4T4g0e30hckViwFx3A7ksKyFnKHVWrPK9
-         jVMcj+eSseJrZuT5YwPN3F/Fco1dfu1OckFwiEsVHkkT4aZx7GvkIUR0MCgOw0J9PThd
-         O3QA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683959880; x=1686551880;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pJAHS0Zaj0yVKhfNHhf5jx/XvjbWQe6dR3+gBFASJBU=;
-        b=IBhZdPh07+EvYI3Zdr1zz0x9ur6rWbMt2GcafERLsqhcCxrjsEI6nBeQ3eUwRIBr40
-         xupvIZ+RQogVbpIVcXcQyrLGfLf6ehqE3a9/9+UQx+MQKE+nUAoxlcrysUARCWVUPdfb
-         8As4/w9Y3pF/Q+SniaccT8qaEsRkF1hGjGtfMqzGcBSjvTInbNByHKHMlz+akTzZxN+g
-         N/WtLmWnO8f373vi/0Ghl+vpanrsOi72QGOOQfOOmXO3ZMZdNvozYV7W82NOL9FIlnmd
-         t5/xqlw1KsDrbcPtuumfy0O7HRUH7+Vo6ekv8uONx1jxmUVQ+3aiGZANSMlgV8DcuUgi
-         TtBQ==
-X-Gm-Message-State: AC+VfDz4N2aywPAJ9Hm8qW7N5qV1ZhODS5M4SIwGZkh25NwXzsZI5rwe
-        0ktc4Zrixdx8As4QzzMwv4w=
-X-Google-Smtp-Source: ACHHUZ6ItNQrDwZ3aO2IHbDnGlrK+eX28iXA7zT5j5NaZuSZ7J3VBuL20juqQ/09jGy+jwM+MI5cag==
-X-Received: by 2002:a17:906:5d0f:b0:96a:ec5c:687b with SMTP id g15-20020a1709065d0f00b0096aec5c687bmr248946ejt.64.1683959880013;
-        Fri, 12 May 2023 23:38:00 -0700 (PDT)
-Received: from jernej-laptop.localnet (89-212-118-115.static.t-2.net. [89.212.118.115])
-        by smtp.gmail.com with ESMTPSA id b16-20020a170906195000b0094e96e46cc0sm6371733eje.69.2023.05.12.23.37.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 May 2023 23:37:59 -0700 (PDT)
-From:   Jernej =?utf-8?B?xaBrcmFiZWM=?= <jernej.skrabec@gmail.com>
-To:     Damien Le Moal <dlemoal@kernel.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Patrice Chotard <patrice.chotard@foss.st.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Samuel Holland <samuel@sholland.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Uwe =?ISO-8859-1?Q?Kleine=2DK=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Cc:     Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        "open list:LIBATA SUBSYSTEM" <linux-ide@vger.kernel.org>,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-sunxi@lists.linux.dev,
-        linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] ata: libata: Make ata_platform_remove_one return void
-Date:   Sat, 13 May 2023 08:37:58 +0200
-Message-ID: <4827684.31r3eYUQgx@jernej-laptop>
-In-Reply-To: <20230512204646.137746-1-u.kleine-koenig@pengutronix.de>
-References: <20230512204646.137746-1-u.kleine-koenig@pengutronix.de>
+        with ESMTP id S231358AbjEMI2w (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2023 04:28:52 -0400
+X-Greylist: delayed 953 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 13 May 2023 01:28:43 PDT
+Received: from zimbra108.megavelocity.net (mail.cornell-overseas.co.in [192.206.4.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C46153C3D
+        for <linux-ide@vger.kernel.org>; Sat, 13 May 2023 01:28:43 -0700 (PDT)
+Received: from 194.61.41.23 (unknown [194.61.41.52])
+        by zimbra108.megavelocity.net (Postfix) with ESMTPSA id 607DF6CC16F
+        for <linux-ide@vger.kernel.org>; Sat, 13 May 2023 13:42:45 +0530 (IST)
+From:   "Beatrice Benson" <BeatriceBensonrye@cornell-overseas.co.in>
+Subject: Re: [no subject]
+To:     linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Reply-To: "churchhill@hcfchurhmill.online" <churchhill@hcfchurhmill.online>
+Date:   Sat, 13 May 2023 16:12:47 +0800
+X-Mailer: Zimbra 7.2.0_GA_2669 (ZimbraWebClient - FF3.0 (Win)/7.2.0_GA_2669)
+Message-Id: <20230513081247.607DF6CC16F@zimbra108.megavelocity.net>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dne petek, 12. maj 2023 ob 22:46:46 CEST je Uwe Kleine-K=F6nig napisal(a):
-> The function returned zero unconditionally, so the function returning an
-> int is something between useless and irritating. With the goal to make
-> platform drivers' remove function return void, it's helpful to convert
-> the function accordingly. This converts several drivers to the new
-> .remove_new callback that was introduced to smoothen the platform driver
-> conversion.
->=20
-> Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
-> ---
->  drivers/ata/ahci_brcm.c        | 6 +++---
->  drivers/ata/ahci_ceva.c        | 2 +-
->  drivers/ata/ahci_da850.c       | 2 +-
->  drivers/ata/ahci_dm816.c       | 2 +-
->  drivers/ata/ahci_dwc.c         | 2 +-
->  drivers/ata/ahci_imx.c         | 2 +-
->  drivers/ata/ahci_mtk.c         | 2 +-
->  drivers/ata/ahci_mvebu.c       | 2 +-
->  drivers/ata/ahci_platform.c    | 2 +-
->  drivers/ata/ahci_qoriq.c       | 2 +-
->  drivers/ata/ahci_seattle.c     | 2 +-
->  drivers/ata/ahci_st.c          | 2 +-
->  drivers/ata/ahci_sunxi.c       | 2 +-
+Welcome to Financial Source Program.
 
-=46or sunxi:
-Acked-by: Jernej Skrabec <jernej.skrabec@gmail.com>
+Types of loan: business, personal, refinancing, farm, mortgage, self employed, debt consolidation, secured and unsecured, etc.
 
-Best regards,
-Jernej
+-No pre-payment penalty.
+-Rate starting at: 2.08%. 
+-Flexible repayment period.
 
->  drivers/ata/ahci_tegra.c       | 2 +-
->  drivers/ata/ahci_xgene.c       | 2 +-
->  drivers/ata/libata-core.c      | 4 +---
->  drivers/ata/pata_ixp4xx_cf.c   | 2 +-
->  drivers/ata/pata_of_platform.c | 2 +-
->  drivers/ata/pata_platform.c    | 2 +-
->  drivers/ata/sata_highbank.c    | 2 +-
->  include/linux/libata.h         | 2 +-
+For further info and how to apply, please reply. 
 
-
+> To unsubscribe please reply with "unsubscribe" as subject. 
 
