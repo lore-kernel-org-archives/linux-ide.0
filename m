@@ -2,32 +2,54 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 577E2C77B75
-	for <linux-ide@archiver.kernel.org>; Fri, 12 May 2023 20:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7967AC7EE24
+	for <linux-ide@archiver.kernel.org>; Sat, 13 May 2023 06:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230020AbjELUru (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 12 May 2023 16:47:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52904 "EHLO
+        id S233395AbjEMGiE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 13 May 2023 02:38:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229721AbjELUrs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 May 2023 16:47:48 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86EBA1FE0
-        for <linux-ide@vger.kernel.org>; Fri, 12 May 2023 13:47:45 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1pxZfb-0000Nf-4N; Fri, 12 May 2023 22:47:19 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1pxZfW-00330j-00; Fri, 12 May 2023 22:47:14 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1pxZfU-003q4F-Rd; Fri, 12 May 2023 22:47:12 +0200
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
+        with ESMTP id S229527AbjEMGiD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2023 02:38:03 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2C252D48;
+        Fri, 12 May 2023 23:38:01 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-965cc5170bdso1630071866b.2;
+        Fri, 12 May 2023 23:38:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683959880; x=1686551880;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pJAHS0Zaj0yVKhfNHhf5jx/XvjbWQe6dR3+gBFASJBU=;
+        b=YFD59SfNwI80NXatbYx+VnyB6F8bgTWYF5cM6l+/+0MBybE4ati0s2sJJIOR2Dql7+
+         p1amTvshUKIr2n/XCcTaSELHndPCCWo+owGMRBQcF/Dqmp+vlOOYoDOxZRpsvEpdJTTt
+         uUWxOlqz2ZYWlYXn3eE74ooL2nOXT5Ihsd3l/9W6ncaGvgy3lVfZ82Ck9LaTltNt5dzg
+         lJRmt1J1fdlgtxYrkXdL/DEI7/7ui+2QBZi4T4g0e30hckViwFx3A7ksKyFnKHVWrPK9
+         jVMcj+eSseJrZuT5YwPN3F/Fco1dfu1OckFwiEsVHkkT4aZx7GvkIUR0MCgOw0J9PThd
+         O3QA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683959880; x=1686551880;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=pJAHS0Zaj0yVKhfNHhf5jx/XvjbWQe6dR3+gBFASJBU=;
+        b=IBhZdPh07+EvYI3Zdr1zz0x9ur6rWbMt2GcafERLsqhcCxrjsEI6nBeQ3eUwRIBr40
+         xupvIZ+RQogVbpIVcXcQyrLGfLf6ehqE3a9/9+UQx+MQKE+nUAoxlcrysUARCWVUPdfb
+         8As4/w9Y3pF/Q+SniaccT8qaEsRkF1hGjGtfMqzGcBSjvTInbNByHKHMlz+akTzZxN+g
+         N/WtLmWnO8f373vi/0Ghl+vpanrsOi72QGOOQfOOmXO3ZMZdNvozYV7W82NOL9FIlnmd
+         t5/xqlw1KsDrbcPtuumfy0O7HRUH7+Vo6ekv8uONx1jxmUVQ+3aiGZANSMlgV8DcuUgi
+         TtBQ==
+X-Gm-Message-State: AC+VfDz4N2aywPAJ9Hm8qW7N5qV1ZhODS5M4SIwGZkh25NwXzsZI5rwe
+        0ktc4Zrixdx8As4QzzMwv4w=
+X-Google-Smtp-Source: ACHHUZ6ItNQrDwZ3aO2IHbDnGlrK+eX28iXA7zT5j5NaZuSZ7J3VBuL20juqQ/09jGy+jwM+MI5cag==
+X-Received: by 2002:a17:906:5d0f:b0:96a:ec5c:687b with SMTP id g15-20020a1709065d0f00b0096aec5c687bmr248946ejt.64.1683959880013;
+        Fri, 12 May 2023 23:38:00 -0700 (PDT)
+Received: from jernej-laptop.localnet (89-212-118-115.static.t-2.net. [89.212.118.115])
+        by smtp.gmail.com with ESMTPSA id b16-20020a170906195000b0094e96e46cc0sm6371733eje.69.2023.05.12.23.37.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 May 2023 23:37:59 -0700 (PDT)
+From:   Jernej =?utf-8?B?xaBrcmFiZWM=?= <jernej.skrabec@gmail.com>
 To:     Damien Le Moal <dlemoal@kernel.org>,
         Serge Semin <fancer.lancer@gmail.com>,
         Shawn Guo <shawnguo@kernel.org>,
@@ -37,10 +59,11 @@ To:     Damien Le Moal <dlemoal@kernel.org>,
         Jens Axboe <axboe@kernel.dk>,
         Patrice Chotard <patrice.chotard@foss.st.com>,
         Chen-Yu Tsai <wens@csie.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
         Samuel Holland <samuel@sholland.org>,
         Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Uwe =?ISO-8859-1?Q?Kleine=2DK=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
 Cc:     Pengutronix Kernel Team <kernel@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>,
         NXP Linux Team <linux-imx@nxp.com>,
@@ -51,352 +74,56 @@ Cc:     Pengutronix Kernel Team <kernel@pengutronix.de>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org, linux-sunxi@lists.linux.dev,
         linux-tegra@vger.kernel.org
-Subject: [PATCH] ata: libata: Make ata_platform_remove_one return void
-Date:   Fri, 12 May 2023 22:46:46 +0200
-Message-Id: <20230512204646.137746-1-u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.39.2
+Subject: Re: [PATCH] ata: libata: Make ata_platform_remove_one return void
+Date:   Sat, 13 May 2023 08:37:58 +0200
+Message-ID: <4827684.31r3eYUQgx@jernej-laptop>
+In-Reply-To: <20230512204646.137746-1-u.kleine-koenig@pengutronix.de>
+References: <20230512204646.137746-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=12298; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=ZAebgA4XtcKRV7cmTHKf6nNGpbfyJQRXa03X0M2rwCE=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBkXqWzrmzPTTAIn+aY/KQVjXtQ5HFJnplq4hCUv j9lQ1fpNGKJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZF6lswAKCRCPgPtYfRL+ Tm2RB/9PjizDLCk27++FYSpdlAP3Xtv2JMB9cshy3ucah0hxgskBEQy4Oy82VhU23ZEkY8MGgkB eijP/KBn/Sej8oHMBAmVKk+w8K699J1mJRAvktpwKTq63Du/2rdCtaZcj+5PVL/oh3n+I2o+CJQ PaM3okqGdL2S8mFwrIrQMs4/8pX8m+VlZvGSKtDqfPbvLcjgfluHCkQVfr1NmsZwVld9lQohFyd HXlgO06XdLSMKcVV5zZDM3TYSVjI+Jxb9ydURUs8rL4B40yR8sf+7/aNCkwuKRPXHjo3VdP37G9 dNvFikSvbOSZB8iLU2wmMLHEhFa7aX78FiUQC97wggMuhjLv
-X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The function returned zero unconditionally, so the function returning an
-int is something between useless and irritating. With the goal to make
-platform drivers' remove function return void, it's helpful to convert
-the function accordingly. This converts several drivers to the new
-.remove_new callback that was introduced to smoothen the platform driver
-conversion.
+Dne petek, 12. maj 2023 ob 22:46:46 CEST je Uwe Kleine-K=F6nig napisal(a):
+> The function returned zero unconditionally, so the function returning an
+> int is something between useless and irritating. With the goal to make
+> platform drivers' remove function return void, it's helpful to convert
+> the function accordingly. This converts several drivers to the new
+> .remove_new callback that was introduced to smoothen the platform driver
+> conversion.
+>=20
+> Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
+> ---
+>  drivers/ata/ahci_brcm.c        | 6 +++---
+>  drivers/ata/ahci_ceva.c        | 2 +-
+>  drivers/ata/ahci_da850.c       | 2 +-
+>  drivers/ata/ahci_dm816.c       | 2 +-
+>  drivers/ata/ahci_dwc.c         | 2 +-
+>  drivers/ata/ahci_imx.c         | 2 +-
+>  drivers/ata/ahci_mtk.c         | 2 +-
+>  drivers/ata/ahci_mvebu.c       | 2 +-
+>  drivers/ata/ahci_platform.c    | 2 +-
+>  drivers/ata/ahci_qoriq.c       | 2 +-
+>  drivers/ata/ahci_seattle.c     | 2 +-
+>  drivers/ata/ahci_st.c          | 2 +-
+>  drivers/ata/ahci_sunxi.c       | 2 +-
 
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
----
- drivers/ata/ahci_brcm.c        | 6 +++---
- drivers/ata/ahci_ceva.c        | 2 +-
- drivers/ata/ahci_da850.c       | 2 +-
- drivers/ata/ahci_dm816.c       | 2 +-
- drivers/ata/ahci_dwc.c         | 2 +-
- drivers/ata/ahci_imx.c         | 2 +-
- drivers/ata/ahci_mtk.c         | 2 +-
- drivers/ata/ahci_mvebu.c       | 2 +-
- drivers/ata/ahci_platform.c    | 2 +-
- drivers/ata/ahci_qoriq.c       | 2 +-
- drivers/ata/ahci_seattle.c     | 2 +-
- drivers/ata/ahci_st.c          | 2 +-
- drivers/ata/ahci_sunxi.c       | 2 +-
- drivers/ata/ahci_tegra.c       | 2 +-
- drivers/ata/ahci_xgene.c       | 2 +-
- drivers/ata/libata-core.c      | 4 +---
- drivers/ata/pata_ixp4xx_cf.c   | 2 +-
- drivers/ata/pata_of_platform.c | 2 +-
- drivers/ata/pata_platform.c    | 2 +-
- drivers/ata/sata_highbank.c    | 2 +-
- include/linux/libata.h         | 2 +-
- 21 files changed, 23 insertions(+), 25 deletions(-)
+=46or sunxi:
+Acked-by: Jernej Skrabec <jernej.skrabec@gmail.com>
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 4e3dc2b6d67f..70c3a33eee6f 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -544,7 +544,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
--static int brcm_ahci_remove(struct platform_device *pdev)
-+static void brcm_ahci_remove(struct platform_device *pdev)
- {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
-@@ -552,7 +552,7 @@ static int brcm_ahci_remove(struct platform_device *pdev)
- 
- 	brcm_sata_phys_disable(priv);
- 
--	return ata_platform_remove_one(pdev);
-+	ata_platform_remove_one(pdev);
- }
- 
- static void brcm_ahci_shutdown(struct platform_device *pdev)
-@@ -573,7 +573,7 @@ static SIMPLE_DEV_PM_OPS(ahci_brcm_pm_ops, brcm_ahci_suspend, brcm_ahci_resume);
- 
- static struct platform_driver brcm_ahci_driver = {
- 	.probe = brcm_ahci_probe,
--	.remove = brcm_ahci_remove,
-+	.remove_new = brcm_ahci_remove,
- 	.shutdown = brcm_ahci_shutdown,
- 	.driver = {
- 		.name = DRV_NAME,
-diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index bc027468decb..c2b6be083af4 100644
---- a/drivers/ata/ahci_ceva.c
-+++ b/drivers/ata/ahci_ceva.c
-@@ -369,7 +369,7 @@ MODULE_DEVICE_TABLE(of, ceva_ahci_of_match);
- 
- static struct platform_driver ceva_ahci_driver = {
- 	.probe = ceva_ahci_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ceva_ahci_of_match,
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index ca0924dc5bd2..55a6627d5450 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -238,7 +238,7 @@ MODULE_DEVICE_TABLE(of, ahci_da850_of_match);
- 
- static struct platform_driver ahci_da850_driver = {
- 	.probe = ahci_da850_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ahci_da850_of_match,
-diff --git a/drivers/ata/ahci_dm816.c b/drivers/ata/ahci_dm816.c
-index b08547b877a1..4cb70064fb99 100644
---- a/drivers/ata/ahci_dm816.c
-+++ b/drivers/ata/ahci_dm816.c
-@@ -182,7 +182,7 @@ MODULE_DEVICE_TABLE(of, ahci_dm816_of_match);
- 
- static struct platform_driver ahci_dm816_driver = {
- 	.probe = ahci_dm816_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = AHCI_DM816_DRV_NAME,
- 		.of_match_table = ahci_dm816_of_match,
-diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-index 4bfbb09cdc02..9604a2f6ed48 100644
---- a/drivers/ata/ahci_dwc.c
-+++ b/drivers/ata/ahci_dwc.c
-@@ -478,7 +478,7 @@ MODULE_DEVICE_TABLE(of, ahci_dwc_of_match);
- 
- static struct platform_driver ahci_dwc_driver = {
- 	.probe = ahci_dwc_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.shutdown = ahci_platform_shutdown,
- 	.driver = {
- 		.name = DRV_NAME,
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 3a8c248e7c0e..9fa005965f3b 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -1223,7 +1223,7 @@ static SIMPLE_DEV_PM_OPS(ahci_imx_pm_ops, imx_ahci_suspend, imx_ahci_resume);
- 
- static struct platform_driver imx_ahci_driver = {
- 	.probe = imx_ahci_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = imx_ahci_of_match,
-diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
-index 0bf83a297091..5083fb6c4927 100644
---- a/drivers/ata/ahci_mtk.c
-+++ b/drivers/ata/ahci_mtk.c
-@@ -173,7 +173,7 @@ MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
- static struct platform_driver mtk_ahci_driver = {
- 	.probe = mtk_ahci_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ahci_of_match,
-diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
-index 596cf017f427..764501518582 100644
---- a/drivers/ata/ahci_mvebu.c
-+++ b/drivers/ata/ahci_mvebu.c
-@@ -245,7 +245,7 @@ MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
- 
- static struct platform_driver ahci_mvebu_driver = {
- 	.probe = ahci_mvebu_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.suspend = ahci_mvebu_suspend,
- 	.resume = ahci_mvebu_resume,
- 	.driver = {
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 299ee686ac49..ab30c7138d73 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -96,7 +96,7 @@ MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
- 
- static struct platform_driver ahci_driver = {
- 	.probe = ahci_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.shutdown = ahci_platform_shutdown,
- 	.driver = {
- 		.name = DRV_NAME,
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index 0ba764d283c8..3d01b118c9a1 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -359,7 +359,7 @@ static SIMPLE_DEV_PM_OPS(ahci_qoriq_pm_ops, ahci_platform_suspend,
- 
- static struct platform_driver ahci_qoriq_driver = {
- 	.probe = ahci_qoriq_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ahci_qoriq_of_match,
-diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
-index 9eda7bbd2151..2c32d58c6ae7 100644
---- a/drivers/ata/ahci_seattle.c
-+++ b/drivers/ata/ahci_seattle.c
-@@ -187,7 +187,7 @@ MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
- 
- static struct platform_driver ahci_seattle_driver = {
- 	.probe = ahci_seattle_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.acpi_match_table = ahci_acpi_match,
-diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-index f2c1edb36986..d4a626f87963 100644
---- a/drivers/ata/ahci_st.c
-+++ b/drivers/ata/ahci_st.c
-@@ -239,7 +239,7 @@ static struct platform_driver st_ahci_driver = {
- 		.of_match_table = st_ahci_match,
- 	},
- 	.probe = st_ahci_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- };
- module_platform_driver(st_ahci_driver);
- 
-diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
-index 076c12b4ba08..04531fa95e40 100644
---- a/drivers/ata/ahci_sunxi.c
-+++ b/drivers/ata/ahci_sunxi.c
-@@ -292,7 +292,7 @@ MODULE_DEVICE_TABLE(of, ahci_sunxi_of_match);
- 
- static struct platform_driver ahci_sunxi_driver = {
- 	.probe = ahci_sunxi_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ahci_sunxi_of_match,
-diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-index 8e5e2b359f2d..21c20793e517 100644
---- a/drivers/ata/ahci_tegra.c
-+++ b/drivers/ata/ahci_tegra.c
-@@ -609,7 +609,7 @@ static int tegra_ahci_probe(struct platform_device *pdev)
- 
- static struct platform_driver tegra_ahci_driver = {
- 	.probe = tegra_ahci_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = tegra_ahci_of_match,
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 83f5ff54ef5b..eb773f2e28fc 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -868,7 +868,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 
- static struct platform_driver xgene_ahci_driver = {
- 	.probe = xgene_ahci_probe,
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = xgene_ahci_of_match,
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8bf612bdd61a..e9fc69fbe06b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6141,13 +6141,11 @@ EXPORT_SYMBOL_GPL(ata_pci_device_resume);
-  *	LOCKING:
-  *	Inherited from platform layer (may sleep).
-  */
--int ata_platform_remove_one(struct platform_device *pdev)
-+void ata_platform_remove_one(struct platform_device *pdev)
- {
- 	struct ata_host *host = platform_get_drvdata(pdev);
- 
- 	ata_host_detach(host);
--
--	return 0;
- }
- EXPORT_SYMBOL_GPL(ata_platform_remove_one);
- 
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 99a2ce723495..b1daa4d3fcd9 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -303,7 +303,7 @@ static struct platform_driver ixp4xx_pata_platform_driver = {
- 		.of_match_table = ixp4xx_pata_of_match,
- 	},
- 	.probe		= ixp4xx_pata_probe,
--	.remove		= ata_platform_remove_one,
-+	.remove_new	= ata_platform_remove_one,
- };
- 
- module_platform_driver(ixp4xx_pata_platform_driver);
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index 178b28eff170..4956f0f5b93f 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -89,7 +89,7 @@ static struct platform_driver pata_of_platform_driver = {
- 		.of_match_table = pata_of_platform_match,
- 	},
- 	.probe		= pata_of_platform_probe,
--	.remove		= ata_platform_remove_one,
-+	.remove_new	= ata_platform_remove_one,
- };
- 
- module_platform_driver(pata_of_platform_driver);
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 87479bc893b2..232c3dad7ee8 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -223,7 +223,7 @@ static int pata_platform_probe(struct platform_device *pdev)
- 
- static struct platform_driver pata_platform_driver = {
- 	.probe		= pata_platform_probe,
--	.remove		= ata_platform_remove_one,
-+	.remove_new	= ata_platform_remove_one,
- 	.driver = {
- 		.name		= DRV_NAME,
- 	},
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index 8237ece4a46f..d6b324d03e59 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -614,7 +614,7 @@ static SIMPLE_DEV_PM_OPS(ahci_highbank_pm_ops,
- 		  ahci_highbank_suspend, ahci_highbank_resume);
- 
- static struct platform_driver ahci_highbank_driver = {
--	.remove = ata_platform_remove_one,
-+	.remove_new = ata_platform_remove_one,
-         .driver = {
-                 .name = "highbank-ahci",
-                 .of_match_table = ahci_of_match,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 311cd93377c7..01f9fbb69f89 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1276,7 +1276,7 @@ extern int ata_pci_device_resume(struct pci_dev *pdev);
- 
- struct platform_device;
- 
--extern int ata_platform_remove_one(struct platform_device *pdev);
-+extern void ata_platform_remove_one(struct platform_device *pdev);
- 
- /*
-  * ACPI - drivers/ata/libata-acpi.c
--- 
-2.39.2
+Best regards,
+Jernej
+
+>  drivers/ata/ahci_tegra.c       | 2 +-
+>  drivers/ata/ahci_xgene.c       | 2 +-
+>  drivers/ata/libata-core.c      | 4 +---
+>  drivers/ata/pata_ixp4xx_cf.c   | 2 +-
+>  drivers/ata/pata_of_platform.c | 2 +-
+>  drivers/ata/pata_platform.c    | 2 +-
+>  drivers/ata/sata_highbank.c    | 2 +-
+>  include/linux/libata.h         | 2 +-
+
+
 
