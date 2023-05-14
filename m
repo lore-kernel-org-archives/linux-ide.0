@@ -2,103 +2,58 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E7BC77B7F
-	for <linux-ide@archiver.kernel.org>; Sun, 14 May 2023 22:53:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C67C77B7D
+	for <linux-ide@archiver.kernel.org>; Sun, 14 May 2023 22:55:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230169AbjENWxY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 14 May 2023 18:53:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40280 "EHLO
+        id S229710AbjENWzD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 14 May 2023 18:55:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229710AbjENWxY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 14 May 2023 18:53:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DFF61BB;
-        Sun, 14 May 2023 15:53:23 -0700 (PDT)
+        with ESMTP id S229539AbjENWzC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 14 May 2023 18:55:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32ADF1B8;
+        Sun, 14 May 2023 15:55:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D39C261267;
-        Sun, 14 May 2023 22:53:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 930BBC433D2;
-        Sun, 14 May 2023 22:53:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BBA2C61280;
+        Sun, 14 May 2023 22:55:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB027C433D2;
+        Sun, 14 May 2023 22:54:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684104802;
-        bh=hhVyC/OAoNTAaTDUMLdOJPMwd8d8UWMVRdN3Lw1WEsw=;
+        s=k20201202; t=1684104900;
+        bh=gC1Ol887rJVXf1gaHxcAempzA9OBc5QCvIG9jl0aZr8=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=pbm/Xmn7WNwWfLiZpv3qGVDQG9SFqLDVYorUZ/kWU0MzbOQjwwOdvuDSG7TUGcHZ1
-         In9wg3WZ1wlrOJBQ18Ngg2hzQ+tGzlQ/oZZO9TaONmKP0WJK73RKTQDgykr7keO6OB
-         6xtignbQz6DMk1OxB8+1UWzYXW1g2gIXJvU/5sLkJVqxXdIloKjxEChUzscpInTOge
-         IUkleJVRLCrQ1LVGd5/JFFmbuA5KaTpFvmmjqxAOqy6WYAmcDs1bJS4oBspHTp6g2t
-         N1K8p/4xTfqBT9d9iEEvdyF8QuoOWM/K0tZTCqC/IrMgFCaWesm3D4kvDtV3MRwzvA
-         fQvmbYx04Ys/w==
-Message-ID: <b26499be-e8e1-5812-a134-dbeb58118124@kernel.org>
-Date:   Mon, 15 May 2023 07:53:20 +0900
+        b=LW/xgv+q9k9VZjoCnKlX17DQw2mxSnfhmMLcIm2f00K8agzJie6BRJ3zx6APCdPJ0
+         QX5eAF7trc0JdW7Jk/Ar6PdZLSYFEZFmDp0UEHW5VdrKh8PU6x3NehmDRg/+lfWDaO
+         sTT0IkNRMGUMerB6SAEsRIszs7WE9XAN7/0DAzA5qnPwt8pK7X6xo+MBBFRmXVbueA
+         Gqu4ZmksIdMH+rsfI0PPAOxVNhBM9AW/ZtRXW08of5hFlsjfmhZuGeHpHmUuIyCsbR
+         YLh67kkor3ZoEfFlzzh490zrxB2IB2P1jMYgoKQK0Tl717bvla/pNHcSsK7w0zeR0p
+         D8bo3NHaaz/pA==
+Message-ID: <afd5257e-4550-ef9a-19e6-14941a721d55@kernel.org>
+Date:   Mon, 15 May 2023 07:54:59 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
 Subject: Re: [PATCH v2] ata: libata-core: Simplies if condition
 Content-Language: en-US
 To:     Yahu Gao <yahu.gao@outlook.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yahu Gao <gaoyh12@lenovo.com>, Jiwei Sun <sunjw10@lenovo.com>
-References: <20230422121415.6276-1-yahu.gao@outlook.com>
- <OS3P286MB0632739A614E451725FF697D9E619@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
- <OS0P286MB06283D2E74F02D7C541E46D79E6B9@OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <OS3P286MB0632FC8C1783241084E41BB79E619@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <OS0P286MB06283D2E74F02D7C541E46D79E6B9@OS0P286MB0628.JPNP286.PROD.OUTLOOK.COM>
+In-Reply-To: <OS3P286MB0632FC8C1783241084E41BB79E619@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/28/23 10:53, Yahu Gao wrote:
-> ping ...
-> 
-> 在 2023/4/22 20:14, Yahu Gao 写道:
->> From: Yahu Gao <gaoyh12@lenovo.com>
->>
->> Replace conditions of avoid issuing [P]IDENTIFY to PMP.
+On 4/22/23 21:14, Yahu Gao wrote:
+> Changes V1->V2:
+>   Update the patch title.
 
-Please be a little more descriptive. Something like:
-
-Simplify the condition used in ata_dev_revalidate() to not issue identify
-commands to port multiplier devices.
-
-would be better.
-
->>
->> Reviewed-by: Jiwei Sun <sunjw10@lenovo.com>
-
-Where does this review come from ? I have never seen an email for it. I cannot
-accept this tag without seeing the email for it.
-
->> Signed-off-by: Yahu Gao <gaoyh12@lenovo.com>
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 14c17c3bda4e..53f65d751189 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -3802,11 +3802,7 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
->>   		return -ENODEV;
->>   
->>   	/* fail early if !ATA && !ATAPI to avoid issuing [P]IDENTIFY to PMP */
->> -	if (ata_class_enabled(new_class) &&
-
-Please keep the above "ata_class_enabled(new_class) &&" condition:
-
-	if (ata_class_enabled(new_class) && new_class == ATA_DEV_PMP) {
-
-While keeping this condition is logically not necessary, having it makes the
-code easier to understand.
-
->> -	    new_class != ATA_DEV_ATA &&
->> -	    new_class != ATA_DEV_ATAPI &&
->> -	    new_class != ATA_DEV_ZAC &&
->> -	    new_class != ATA_DEV_SEMB) {
->> +	if (new_class == ATA_DEV_PMP) {
->>   		ata_dev_info(dev, "class mismatch %u != %u\n",
->>   			     dev->class, new_class);
->>   		rc = -ENODEV;
-
+This is not the correct way of specifying a patch changelog. This should be
+added in the email, between the "---" and the "diff --git a/drivers/ata/..."
+lines after the commit message.
