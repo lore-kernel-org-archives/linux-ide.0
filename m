@@ -2,57 +2,26 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CB7C77B7D
-	for <linux-ide@archiver.kernel.org>; Sat, 13 May 2023 21:00:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B4C1C7EE22
+	for <linux-ide@archiver.kernel.org>; Sun, 14 May 2023 20:07:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233033AbjEMVAc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 13 May 2023 17:00:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45078 "EHLO
+        id S233797AbjENUHE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 14 May 2023 16:07:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjEMVA2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 13 May 2023 17:00:28 -0400
-Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC0AB2D62;
-        Sat, 13 May 2023 14:00:26 -0700 (PDT)
-Received: by mail-lf1-x136.google.com with SMTP id 2adb3069b0e04-4f13ef4ad91so13161194e87.3;
-        Sat, 13 May 2023 14:00:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684011625; x=1686603625;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=zV8NgaKI21AYQDcwSfLTQKxLM+XHKCDcxx81oVOTUWw=;
-        b=Jytbx05Cm4hRTOEvxNhKpkt2EycSPOAApYX5iEcq1PaJuvy6ICXIOO9Db6B51iIxY4
-         VY5Yqc35txmob86hBt2gP1ryznD2AQ4DiAkSqscaosGywE9/Ph9/tRXfFMd/Qs1SHfOR
-         YETIirJvPgjmShxeiMhmTNAAKbSrBOgWuVoC63XvbrHsV76QKFzjXG8E7wkTmdrBAb0J
-         mSBE5PrfXG1/f+Ode8WFbFkNDeZeREiXMrkaYfChmihjannARS01AbzBkJHAAH9Ny4W4
-         VYAe4lgrla69MbHTPurn3FzG80xSLa7GdVzjHEd364HSVJCITe9a0CNEuIQPtOJD3vUt
-         LimQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684011625; x=1686603625;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zV8NgaKI21AYQDcwSfLTQKxLM+XHKCDcxx81oVOTUWw=;
-        b=a24D8R6ZtleWxqbyYu060snWsH0mdwHmIiN355WdnwMKAAJEdKnhFt/S03nUbdoJuT
-         TBZwBwcZxH5aakQsKelGIqh5wf1qbQ7DksXXU+RmB+6a5AdUrAf+09sUi2M8FfEZ724J
-         lXUGfuWiDJy6xbrs2f1oglesT9N8DG2iY1TPYg6T9har3GJq3bN435Z0NhfwAF3L4NI6
-         ZmkhuTxpxoEtdy85w3/9942qVKqHFi7elOcoTJZ7TaqcsvM6iyAv1W33jQnYYi6WNWES
-         nPIrGMY7yqyp8CRI+U4jeeP3EmHqLwsOvdUGxC3NT9/DLWkNx43iLpNQllDu9ewF+2yg
-         B3Eg==
-X-Gm-Message-State: AC+VfDyZksvA9MpWELaECvqJy/zEn51Y4mDc3H7QVuT8gujSrYFVlWYL
-        K+gZLcT7RXEMbPjGFcl+q5c=
-X-Google-Smtp-Source: ACHHUZ490C1IMSfYMBIJPIBdjHu0hQd16yeY8REgzrulETc0r/zO1YtaBnR0pzf3SHx8vnFcg/YI2Q==
-X-Received: by 2002:ac2:5d2d:0:b0:4e9:bf83:11a4 with SMTP id i13-20020ac25d2d000000b004e9bf8311a4mr4392216lfb.7.1684011624891;
-        Sat, 13 May 2023 14:00:24 -0700 (PDT)
-Received: from mobilestation ([95.79.140.35])
-        by smtp.gmail.com with ESMTPSA id o1-20020a05651238a100b004d8546456c6sm1927815lft.195.2023.05.13.14.00.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 13 May 2023 14:00:24 -0700 (PDT)
-Date:   Sun, 14 May 2023 00:00:21 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
+        with ESMTP id S229585AbjENUHD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 14 May 2023 16:07:03 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 584DC1BD;
+        Sun, 14 May 2023 13:06:59 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.76.26) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sun, 14 May
+ 2023 23:06:48 +0300
+Subject: Re: [PATCH] ata: libata: Make ata_platform_remove_one return void
+To:     =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Shawn Guo <shawnguo@kernel.org>,
         Sascha Hauer <s.hauer@pengutronix.de>,
         Matthias Brugger <matthias.bgg@gmail.com>,
@@ -63,30 +32,73 @@ Cc:     Damien Le Moal <dlemoal@kernel.org>,
         Jernej Skrabec <jernej.skrabec@gmail.com>,
         Samuel Holland <samuel@sholland.org>,
         Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Jonathan Hunter <jonathanh@nvidia.com>
+CC:     Pengutronix Kernel Team <kernel@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>,
         NXP Linux Team <linux-imx@nxp.com>,
         AngeloGioacchino Del Regno 
         <angelogioacchino.delregno@collabora.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
         "open list:LIBATA SUBSYSTEM" <linux-ide@vger.kernel.org>,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-sunxi@lists.linux.dev,
-        linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] ata: libata: Make ata_platform_remove_one return void
-Message-ID: <20230513210021.gver7ibozrmmbm4j@mobilestation>
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-sunxi@lists.linux.dev>, <linux-tegra@vger.kernel.org>
 References: <20230512204646.137746-1-u.kleine-koenig@pengutronix.de>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <7a29c928-1e76-2b6b-5b8f-d79003f3359c@omp.ru>
+Date:   Sun, 14 May 2023 23:06:47 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
 In-Reply-To: <20230512204646.137746-1-u.kleine-koenig@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [178.176.76.26]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 05/14/2023 19:47:15
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 177305 [May 12 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 510 510 bc345371020d3ce827abc4c710f5f0ecf15eaf2e
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.76.26 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.76.26:7.7.3;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.76.26
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 05/14/2023 19:56:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 5/14/2023 5:19:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, May 12, 2023 at 10:46:46PM +0200, Uwe Kleine-König wrote:
+Hello!
+
+On 5/12/23 11:46 PM, Uwe Kleine-KÃ¶nig wrote:
+
 > The function returned zero unconditionally, so the function returning an
 > int is something between useless and irritating. With the goal to make
 > platform drivers' remove function return void, it's helpful to convert
@@ -94,36 +106,10 @@ On Fri, May 12, 2023 at 10:46:46PM +0200, Uwe Kleine-König wrote:
 > .remove_new callback that was introduced to smoothen the platform driver
 > conversion.
 > 
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
-> ---
+> Signed-off-by: Uwe Kleine-KÃ¶nig <u.kleine-koenig@pengutronix.de>
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
 [...]
 
->  drivers/ata/ahci_dwc.c         | 2 +-
-
-[...]
-
-> diff --git a/drivers/ata/ahci_dwc.c b/drivers/ata/ahci_dwc.c
-> index 4bfbb09cdc02..9604a2f6ed48 100644
-> --- a/drivers/ata/ahci_dwc.c
-> +++ b/drivers/ata/ahci_dwc.c
-> @@ -478,7 +478,7 @@ MODULE_DEVICE_TABLE(of, ahci_dwc_of_match);
->  
->  static struct platform_driver ahci_dwc_driver = {
->  	.probe = ahci_dwc_probe,
-> -	.remove = ata_platform_remove_one,
-> +	.remove_new = ata_platform_remove_one,
->  	.shutdown = ahci_platform_shutdown,
->  	.driver = {
->  		.name = DRV_NAME,
-
-For DWC AHCI SATA
-Acked-by: Serge Semin <fancer.lancer@gmail.com>
-
--Serge(y)
-
-[...]
-
-> -- 
-> 2.39.2
-> 
+MBR, Sergey
