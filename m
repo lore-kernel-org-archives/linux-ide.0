@@ -2,131 +2,95 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12F7EC7EE22
-	for <linux-ide@archiver.kernel.org>; Mon, 15 May 2023 02:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A23AC77B75
+	for <linux-ide@archiver.kernel.org>; Mon, 15 May 2023 06:03:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229708AbjEOChf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 14 May 2023 22:37:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44864 "EHLO
+        id S238477AbjEOGDw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 15 May 2023 02:03:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238207AbjEOChb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 14 May 2023 22:37:31 -0400
-Received: from JPN01-OS0-obe.outbound.protection.outlook.com (mail-os0jpn01olkn2040.outbound.protection.outlook.com [40.92.98.40])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9086B8;
-        Sun, 14 May 2023 19:37:25 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JW51PlF6C30GNUvps70X50UuiinTcMdNTkWNaxkxuTaA4HWS1Km00hMk3iBastiFIQH6Y/0Nwo6JE5Zoq79jOgT2SaIvvEAgIvOocUSArTsRnlF9++t66zmWCephuV1uAF5DH9IcFJvDaVy6CkQurihpyINAdxFkDn7t4ispVtvknyrdfjABJsEwacvALXnqbX0+zyKUSb3Qszs91xiEj1RItmZcdPxhVPUi7nKWzGAjStPQgYA+kAMvpAgYJRde96DcYDe37yz0vhziR/7D8LsffUGmcpkiLmrg9RTMRGIJPcXJKK56VrRkK44HgwlvpHF4Rhd66uup7LjWGB56bg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XY59rOFlkGPlORf+kVDsYxk89suEwM7CTq/ZKpjLUTI=;
- b=aKiSxvM+zJeEbSYXYQbr2EGy/7UrCV/r4h0IXjatidLWyThQlXYjDRn6QVuV165BU/e8DsbAktwO3K6yyZEYPFVgNMQf/UYtxFuZ9Z9pxqBmu7EsctznIpKTb4K0h6XjwOhe4GpkrXtpSAtpGTVFaF+H4drwkb+1ZOJq5p7q/FZkNA1tp8IcX0hfNuQtw3Z5ffOqBDnJNCHN2D44uYoFbv2CI4o/DFBpSCfdXxPe+nNi75XexpP0a+O5W9nswsmy2LwHOGlxc/7NJVqnY9T27eG6Yn9sfftjNnZCQB4RpBtw5833WuaPdA9gkK2rCIR63Lyr38Z32KhUwK2Pou3giA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XY59rOFlkGPlORf+kVDsYxk89suEwM7CTq/ZKpjLUTI=;
- b=Ml6pmwX++YRv34qDQSX9zbYMqD0mkWuSj21WUjob7NNVLCFycAPLw2wY9AOxtzEDdELkERhpjxv8pKTL2JYmXsJUGFvVnXaKnkdQ05nrT7NMw+e9ODNyUOARJWKTNRPh7rU8Ni3zIoXpWsfWurzwzHFx14Zy2GPBwQz2W/XD3DI7Si7UYWXDVn/jkAyvcUnItZmUsmnACf9amfLfS+8uUbRcm93D/X2yU4aX1esgXMovFdxZa+vTvv3CZmO6FW53ThnTuykVX9XtVadt347xi+po0YIesYM9CpIc8KpknsnIv/Smg05WX+fECgV50jC9jTXhHTHXy+sDg+1PHOBWyg==
-Received: from OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM (2603:1096:604:d9::7) by
- TYTP286MB3504.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:3a2::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6387.30; Mon, 15 May 2023 02:37:22 +0000
-Received: from OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM
- ([fe80::dc0c:66b7:19f4:48ad]) by OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM
- ([fe80::dc0c:66b7:19f4:48ad%4]) with mapi id 15.20.6387.030; Mon, 15 May 2023
- 02:37:22 +0000
-From:   Yahu Gao <yahu.gao@outlook.com>
-To:     dlemoal@kernel.org
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yahu Gao <gaoyh12@lenovo.com>
-Subject: [PATCH v3] ata: libata-core: Simplies if condition
-Date:   Mon, 15 May 2023 10:36:58 +0800
-Message-ID: <OS3P286MB0632EC8F4BE2127EF092F59B9E789@OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM>
-X-Mailer: git-send-email 2.39.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-TMN:  [9PpA/4siy5S5idJJdg1OegB6vLhRltQ7]
-X-ClientProxiedBy: SG2PR01CA0167.apcprd01.prod.exchangelabs.com
- (2603:1096:4:28::23) To OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:604:d9::7)
-X-Microsoft-Original-Message-ID: <20230515023658.37239-1-yahu.gao@outlook.com>
+        with ESMTP id S239126AbjEOGDW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2023 02:03:22 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A25B26A47
+        for <linux-ide@vger.kernel.org>; Sun, 14 May 2023 22:56:18 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 85BD821D4D;
+        Mon, 15 May 2023 05:55:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1684130159; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=HaW3D4fP2le9mx6aseet94R06MGJz9y4fNI5upmKmrI=;
+        b=z+Mj0XH6wnv526GvXWY7b3K6tl0u03ggDGBTcmt0eUFj2w4olEXVKFYMkkBdDga2lhpNYD
+        Kpgxih7EKmLRkPN6yIp55DO7C+FZE45j/XkdisWnQbsukRxK+kQ1DWI+6bLPGrSBY4HcfD
+        gGm9XEpcNv4uefevFmKAYMGb3rYCWK0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1684130159;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=HaW3D4fP2le9mx6aseet94R06MGJz9y4fNI5upmKmrI=;
+        b=LpkUjvT/1Y9oOdKvvmFvoHUJwuScidGuUbTp//dzT/VgPSu81+acdiHT11q/Zp0f/NSTVD
+        Hkii42IYNqqOFVAw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 685F2138E5;
+        Mon, 15 May 2023 05:55:59 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id jqxlGG/JYWQiZAAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 15 May 2023 05:55:59 +0000
+Message-ID: <f0b8f503-d910-d121-71a2-09d3c25d3070@suse.de>
+Date:   Mon, 15 May 2023 07:55:58 +0200
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: OS3P286MB0632:EE_|TYTP286MB3504:EE_
-X-MS-Office365-Filtering-Correlation-Id: 82f29d1f-1a28-4509-6bbf-08db54ed4f5f
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: LU0Qt1J2ehYXT9gVczmWySeYf7GiuTBE21MurZiXKIjZtbg3D2ZS3fzEJGb+Tfc24ts/0Q/oMSrjwCWsjKAnIjhAKPzzpRMcSnVovWKw4IF61WY9yFkx1tQYUcKDZeYQ7zHMhSYI5KFsIqWzG7U+SN/Nz0tWy08lggSi2p762rwfHl+mCur1NtLhxc4V+CWnDkXZ0sSqCaE+i2S+Sw1/hT5O6kO8IOkL2wsyp3C+XYBJjVqe3T91nBWX5nfNgYC9O0Bbtc6ae1KfGgCl1+fSdCOv2sLFelLDppMpxxT/lf8kPj1NS1BI3QEjg9y1RJzIOiPlqZlTNaauq17CYfOeSIhhmzVxO1JL54u5oSzBxT8kyo5g+hDNln0npiEqslNu+Q7iF/YKGrdDdoNimfjVdPi+ZefTIzoeWGe4l6Y2LDilGuojeiIlhF889laRuD4zvNWH8+qZ6hYRosMyzKl3ss0G0RXRxSy3X91jFr+gOlXq/G8Lt7O6z/kEzV0BDQeiUKkQCRkuoVMBB0SbvI+7x4pDDATsi+kHWh/Fd+KTangjA6pxMyxPuk/Ykvpi5O5n
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?GuMLHOYwMREY5sxTR8gKJATxy1iEXxxfAiCpDItqaP8+mu02Sl1siEGbpnwc?=
- =?us-ascii?Q?ZNtRIpnATuCl0bzXz7RuxAmi9VGreAYRkFG037nxmpj6Q6d4YOlUlE3ho8qN?=
- =?us-ascii?Q?0/WcOI+egoC1L3xdhU05Z77DVb8jgT7wTIhBC7S8xXyELQuUnOpQjakjzecr?=
- =?us-ascii?Q?nyZk68kaKVbFtdxlIfs2jUwsZ+iFEGYbxs23ga9h92Rp3EgDVFEZhwR+fU5R?=
- =?us-ascii?Q?Q0XHC7hn6VVg7zKxYsTszeXzceemAXWeNR5xggD4plYNXHsRQ6csIL4DQkRe?=
- =?us-ascii?Q?8SKOMcEovuhc29XY7e58ZNCA1n+ln1OC6/x1TeuLV2w5d0STATs9nT4ma2ta?=
- =?us-ascii?Q?N1adi8sA50c9G90Yn5uXpcbHGEexF4J7u7MQvzSQGEx1QlL0Gy6MDHOIx8Q/?=
- =?us-ascii?Q?GOBvHjhxPSv9DihTsR/6poIs0E583T+9F0cOZ7Hnvq+5G5cTZM3FsaTRTHl5?=
- =?us-ascii?Q?oCY3wM6+JKSt28DAvEwctgmU9uTNFNZxBkMpnxxl3GSlFFuDRuvunwRFvX0P?=
- =?us-ascii?Q?k4QlWTJ9JjUSW5jiEI2dFD2olCDOhJ8CyZSY4ApqsEAhbrvqH+aEwVvg8QBt?=
- =?us-ascii?Q?7jcww3lHq7uQhLlFZ1GCNN8xWUpDHbpDpe5dXVOi623yAYxduWRLehJP++P6?=
- =?us-ascii?Q?rQExYVbtH3EM5pGXwikP69kwGohLXmqhi5w3aQL9Kc0PaZxqFfJOOKnHP+an?=
- =?us-ascii?Q?InmcOyn48uS8a7yH+0fL8uI0iUSTWX6GCM6q8laE9eDhhey2wOdT5GhGWwVe?=
- =?us-ascii?Q?ZxQr2pyF88KAD3+rq02eMSaklWH1RhB9yCHoyfkJkboKQW1fu9pJ7ylGmHUF?=
- =?us-ascii?Q?tW3U/BI71JdoS647fy/EtTKMJKyTxlqExidXwwjeK21Cnz0LbRpHitLo4yDy?=
- =?us-ascii?Q?5rDlJZ4fofGgbaaj+Z/ZsfS60JlMCik67m7aBuztFNQRntUKR+v/ml2gReW1?=
- =?us-ascii?Q?0RTH9HtPGsEPqk4w3iZ2H+PQyZQs/ULRIWDe9y171wIY+fN+cBKxqmXLHGM9?=
- =?us-ascii?Q?H8V8xvh8SqeIQ6/uSTnWeU9lggnr3LKwk46VoidwQc4APZjZgv0A+Us4Icz3?=
- =?us-ascii?Q?yQTluqOyALeZ1xmUjgtugB4CB4kJSqgSoLt5k9Xa0BucMU8A64n8xjTvD1Co?=
- =?us-ascii?Q?zkSr49eS0VgsBTeAIFVN9rmFpJUppSQFrZTJta47SqnkKYIlH8JYAsoRneID?=
- =?us-ascii?Q?iovQE4lm/KvR602qSlP0fWf/7Tge5Yn9zUTw3Q=3D=3D?=
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 82f29d1f-1a28-4509-6bbf-08db54ed4f5f
-X-MS-Exchange-CrossTenant-AuthSource: OS3P286MB0632.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2023 02:37:22.3527
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYTP286MB3504
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
+Subject: Re: [PATCH 1/2] ata: pata_parport: Fix bpck module code indentation
+ and style
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+        Ondrej Zary <linux@zary.sk>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
+References: <20230514220118.114385-1-dlemoal@kernel.org>
+ <20230514220118.114385-2-dlemoal@kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230514220118.114385-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Yahu Gao <gaoyh12@lenovo.com>
+On 5/15/23 00:01, Damien Le Moal wrote:
+> Fix indentation and coding style in the bpck pata parport protocol
+> module to suppress smatch warnings such as:
+> 
+> drivers/ata/pata_parport/bpck.c:66 bpck_read_regr() warn: inconsistent indenting
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Link: https://lore.kernel.org/oe-kbuild-all/202305021913.nCMzH5Zj-lkp@intel.com/
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/pata_parport/bpck.c | 446 ++++++++++++++++++--------------
+>   1 file changed, 256 insertions(+), 190 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Simplify the condition used in ata_dev_revalidate() to not
-issue identify commands to port multiplier devices.
+Cheers,
 
-Signed-off-by: Yahu Gao <gaoyh12@lenovo.com>
----
- drivers/ata/libata-core.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-Changes since V1:
- 1. Update the subject
- 2. Add more descriptive
- 3. Remove review-by without email
- 4. keep "ata_class_enabled(new_class) &&" condition
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 14c17c3bda4e..2c9472b00f17 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3802,11 +3802,7 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 		return -ENODEV;
- 
- 	/* fail early if !ATA && !ATAPI to avoid issuing [P]IDENTIFY to PMP */
--	if (ata_class_enabled(new_class) &&
--	    new_class != ATA_DEV_ATA &&
--	    new_class != ATA_DEV_ATAPI &&
--	    new_class != ATA_DEV_ZAC &&
--	    new_class != ATA_DEV_SEMB) {
-+	if (ata_class_enabled(new_class) && new_class == ATA_DEV_PMP) {
- 		ata_dev_info(dev, "class mismatch %u != %u\n",
- 			     dev->class, new_class);
- 		rc = -ENODEV;
+Hannes
 -- 
-2.39.1
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
