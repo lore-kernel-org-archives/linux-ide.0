@@ -2,41 +2,41 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC7BC7EE2D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC7CC7EE2A
 	for <linux-ide@archiver.kernel.org>; Tue, 16 May 2023 13:07:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233459AbjEPNHG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 16 May 2023 09:07:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50760 "EHLO
+        id S233004AbjEPNHF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 16 May 2023 09:07:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233456AbjEPNGl (ORCPT
+        with ESMTP id S233459AbjEPNGl (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2023 09:06:41 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AA028687
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 06:06:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8252F83FD
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 06:06:18 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A192B639FF
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 13:06:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AFA9C433D2;
-        Tue, 16 May 2023 13:06:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E7CA3639F4
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 13:06:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E60F9C4339B;
+        Tue, 16 May 2023 13:06:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684242378;
-        bh=RoDkVV6jF2Pfy8RdbwUCO9YQIfFu44zxFZIAxWNm0iQ=;
+        s=k20201202; t=1684242377;
+        bh=wRv/0DMw0qtQY2afxzxBj1cYPhzy7UKWYzqgdSD7TWw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TjpeNjIVaNGJXmfr4pMdpk811U1+J6/72ear4fDwuRcItdDeZZcwyXohF0uPIBE9G
-         RrMofBoWZYvolfjivbZ7o5OuWTvjubZr7RGvbaVZMuTAnuLgD8O8Hf3vRrZH8DZDua
-         bRoxd8nmQDOicA60vSaCvdE/5quzyYDRSnhH30XRifcHRjwLdIo7Ug9w17z8sfe/6i
-         KMHwkDLRumYX9+zK5wkTHiBmHe/33kz38IG51G3N5ZahXAx07n90qRAm48Q5eMlpsV
-         zv5HPBtZiA6vHrtTlSlskTXkE6oMqcTMcccE4yaj5UdB7G2P7Yy85q0yLJzuhoI1bK
-         VcWC3Yx038q/g==
+        b=MB0iRfkIdwMncgezYX5iojSXbVmIrYEks+RQWAuj4MB4scrX0N+L5g6fnI5dxrgRD
+         WkIsCSAd2SlbQQa6FCaJL4wwXelxefQ0MNeJqGazEn8v5xJBwU9rg9dLYBjoTu92fK
+         10f/9xoR7l0vf8dNvjWVFcOCtP6GVZoT5fm0rOmRaPlYze17SGPesxj4+p5p1NyKFT
+         2EAVeFMDRwSaTdfmjUCmzQiFU52s3lSpHrbOyIBuYgBKIB7u6zYBvCzN3xxrLbU7kp
+         kLiJ0GIRrtNofqhrdQ/LeB5mf5+b9lmVpmf+wR8pWnMdaaOXCDcKoZJPYGBKyO7t3U
+         X4ZeJ/gtEy/pA==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org, Ondrej Zary <linux@zary.sk>
 Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH 07/13] ata: pata_parport: Fix fit2 module code indentation and style
-Date:   Tue, 16 May 2023 22:06:05 +0900
-Message-Id: <20230516130611.109932-8-dlemoal@kernel.org>
+Subject: [PATCH 06/13] ata: pata_parport: Fix epia module code indentation and style
+Date:   Tue, 16 May 2023 22:06:04 +0900
+Message-Id: <20230516130611.109932-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230516130611.109932-1-dlemoal@kernel.org>
 References: <20230516130611.109932-1-dlemoal@kernel.org>
@@ -46,7 +46,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fix the header, indentation and coding style in the fit2 pata parport
+Fix the header, indentation and coding style in the epia pata parport
 protocol module to suppress warnings from smatch and other static code
 analyzers.
 
@@ -54,195 +54,514 @@ No functional changes.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/pata_parport/fit2.c | 131 ++++++++++++++++----------------
- 1 file changed, 64 insertions(+), 67 deletions(-)
+ drivers/ata/pata_parport/epia.c | 442 +++++++++++++++++---------------
+ 1 file changed, 230 insertions(+), 212 deletions(-)
 
-diff --git a/drivers/ata/pata_parport/fit2.c b/drivers/ata/pata_parport/fit2.c
-index fd3b2ce426a5..6524f3033b1e 100644
---- a/drivers/ata/pata_parport/fit2.c
-+++ b/drivers/ata/pata_parport/fit2.c
-@@ -1,17 +1,16 @@
+diff --git a/drivers/ata/pata_parport/epia.c b/drivers/ata/pata_parport/epia.c
+index f6db2f79fe99..920e9f40d401 100644
+--- a/drivers/ata/pata_parport/epia.c
++++ b/drivers/ata/pata_parport/epia.c
+@@ -1,14 +1,13 @@
 -/* 
--        fit2.c        (c) 1998  Grant R. Guenther <grant@torque.net>
--                          Under the terms of the GNU General Public License.
+-        epia.c    (c) 1997-8  Grant R. Guenther <grant@torque.net>
+-                              Under the terms of the GNU General Public License.
 -
--	fit2.c is a low-level protocol driver for the older version
--        of the Fidelity International Technology parallel port adapter.  
--	This adapter is used in their TransDisk 2000 and older TransDisk
--	3000 portable hard-drives.  As far as I can tell, this device
--	supports 4-bit mode _only_.  
--
--	Newer models of the FIT products use an enhanced protocol.
--	The "fit3" protocol module should support current drives.
+-        epia.c is a low-level protocol driver for Shuttle Technologies 
+-	EPIA parallel to IDE adapter chip.  This device is now obsolete
+-	and has been replaced with the EPAT chip, which is supported
+-	by epat.c, however, some devices based on EPIA are still
+-	available.
 -
 -*/
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
-+ * (c) 1998  Grant R. Guenther <grant@torque.net>
++ * (c) 1997-1998  Grant R. Guenther <grant@torque.net>
 + *
-+ * fit2.c is a low-level protocol driver for the older version
-+ * of the Fidelity International Technology parallel port adapter.
-+ * This adapter is used in their TransDisk 2000 and older TransDisk
-+ * 3000 portable hard-drives.  As far as I can tell, this device
-+ * supports 4-bit mode _only_.
-+ *
-+ * Newer models of the FIT products use an enhanced protocol.
-+ * The "fit3" protocol module should support current drives.
++ * epia.c is a low-level protocol driver for Shuttle Technologies
++ * EPIA parallel to IDE adapter chip.  This device is now obsolete
++ * and has been replaced with the EPAT chip, which is supported
++ * by epat.c, however, some devices based on EPIA are still
++ * available.
 + */
  
  #include <linux/module.h>
  #include <linux/init.h>
-@@ -22,99 +21,97 @@
+@@ -19,255 +18,274 @@
  #include <asm/io.h>
  #include "pata_parport.h"
  
--#define j44(a,b)                (((a>>4)&0x0f)|(b&0xf0))
--
--/* cont = 0 - access the IDE register file 
--   cont = 1 - access the IDE command set 
-+#define j44(a, b)	(((a >> 4) & 0x0f) | (b & 0xf0))
- 
--NB:  The FIT adapter does not appear to use the control registers.
--So, we map ALT_STATUS to STATUS and NO-OP writes to the device
--control register - this means that IDE reset will not work on these
--devices.
--
+-/* mode codes:  0  nybble reads on port 1, 8-bit writes
+-                1  5/3 reads on ports 1 & 2, 8-bit writes
+-                2  8-bit reads and writes
+-                3  8-bit EPP mode
+-		4  16-bit EPP
+-		5  32-bit EPP
 -*/
+-
+-#define j44(a,b)                (((a>>4)&0x0f)+(b&0xf0))
+-#define j53(a,b)                (((a>>3)&0x1f)+((b<<4)&0xe0))
+-
+-/* cont =  0   IDE register file
+-   cont =  1   IDE control registers
+-*/
+-
 +/*
-+ * cont = 0 - access the IDE register file
-+ * cont = 1 - access the IDE command set
-+ *
-+ * NB: The FIT adapter does not appear to use the control registers.
-+ * So, we map ALT_STATUS to STATUS and NO-OP writes to the device
-+ * control register - this means that IDE reset will not work on these
-+ * devices.
++ * mode codes:  0  nybble reads on port 1, 8-bit writes
++ *		1  5/3 reads on ports 1 & 2, 8-bit writes
++ *		2  8-bit reads and writes
++ *		3  8-bit EPP mode
++ *		4  16-bit EPP
++ *		5  32-bit EPP
 + */
++
++#define j44(a, b)	(((a >> 4) & 0x0f) + (b & 0xf0))
++#define j53(a, b)	(((a >> 3) & 0x1f) + ((b << 4) & 0xe0))
++
++/*
++ * cont =  0   IDE register file
++ * cont =  1   IDE control registers
++ */
+ static int cont_map[2] = { 0, 0x80 };
  
- static void fit2_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
+ static int epia_read_regr(struct pi_adapter *pi, int cont, int regr)
 -
--{	if (cont == 1) return;
+-{       int     a, b, r;
 +{
-+	if (cont == 1)
-+		return;
- 	w2(0xc); w0(regr); w2(4); w0(val); w2(5); w0(0); w2(4);
- }
++	int a, b, r;
  
- static int fit2_read_regr(struct pi_adapter *pi, int cont, int regr)
+ 	regr += cont_map[cont];
+ 
+-        switch (pi->mode)  {
 -
--{	int  a, b, r;
-+{
-+	int  a, b, r;
- 
- 	if (cont) {
--	  if (regr != 6) return 0xff;
--	  r = 7;
--	} else r = regr + 0x10;
-+		if (regr != 6)
-+			return 0xff;
-+		r = 7;
-+	} else {
-+		r = regr + 0x10;
+-        case 0: r = regr^0x39;
+-                w0(r); w2(1); w2(3); w0(r);
+-                a = r1(); w2(1); b = r1(); w2(4);
+-                return j44(a,b);
+-
+-        case 1: r = regr^0x31;
+-                w0(r); w2(1); w0(r&0x37); 
+-                w2(3); w2(5); w0(r|0xf0);
+-                a = r1(); b = r2(); w2(4);
+-                return j53(a,b);
+-
+-        case 2: r = regr^0x29;
+-                w0(r); w2(1); w2(0X21); w2(0x23); 
+-                a = r0(); w2(4);
+-                return a;
+-
++	switch (pi->mode)  {
++	case 0:
++		r = regr ^ 0x39;
++		w0(r); w2(1); w2(3); w0(r);
++		a = r1(); w2(1); b = r1(); w2(4);
++		return j44(a, b);
++	case 1:
++		r = regr ^ 0x31;
++		w0(r); w2(1); w0(r & 0x37);
++		w2(3); w2(5); w0(r | 0xf0);
++		a = r1(); b = r2(); w2(4);
++		return j53(a, b);
++	case 2:
++		r = regr^0x29;
++		w0(r); w2(1); w2(0X21); w2(0x23);
++		a = r0(); w2(4);
++		return a;
+ 	case 3:
+ 	case 4:
+-        case 5: w3(regr); w2(0x24); a = r4(); w2(4);
+-                return a;
++	case 5:
++		w3(regr); w2(0x24); a = r4(); w2(4);
++		return a;
 +	}
  
--	w2(0xc); w0(r); w2(4); w2(5); 
--	         w0(0); a = r1();
--	         w0(1); b = r1();
-+	w2(0xc); w0(r); w2(4); w2(5);
-+	w0(0); a = r1();
-+	w0(1); b = r1();
- 	w2(4);
+-        }
+-        return -1;
+-}       
++	return -1;
++}
  
--	return j44(a,b);
+ static void epia_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
 -
-+	return j44(a, b);
- }
- 
- static void fit2_read_block(struct pi_adapter *pi, char *buf, int count)
--
--{	int  k, a, b, c, d;
+-{       int  r;
 +{
-+	int  k, a, b, c, d;
++	int  r;
  
- 	w2(0xc); w0(0x10);
+ 	regr += cont_map[cont];
  
--	for (k=0;k<count/4;k++) {
+-        switch (pi->mode)  {
 -
-+	for (k = 0; k < count / 4; k++) {
- 		w2(4); w2(5);
- 		w0(0); a = r1(); w0(1); b = r1();
--		w0(3); c = r1(); w0(2); d = r1(); 
--		buf[4*k+0] = j44(a,b);
--		buf[4*k+1] = j44(d,c);
+-        case 0:
+-        case 1:
+-        case 2: r = regr^0x19;
+-                w0(r); w2(1); w0(val); w2(3); w2(4);
+-                break;
 -
--                w2(4); w2(5);
--                       a = r1(); w0(3); b = r1();
--                w0(1); c = r1(); w0(0); d = r1(); 
--                buf[4*k+2] = j44(d,c);
--                buf[4*k+3] = j44(a,b);
-+		w0(3); c = r1(); w0(2); d = r1();
-+		buf[4 * k + 0] = j44(a, b);
-+		buf[4 * k + 1] = j44(d, c);
- 
-+		w2(4); w2(5);
-+		a = r1(); w0(3); b = r1();
-+		w0(1); c = r1(); w0(0); d = r1();
-+		buf[4 * k + 2] = j44(d, c);
-+		buf[4 * k + 3] = j44(a, b);
- 	}
- 
- 	w2(4);
--
++	switch (pi->mode)  {
++	case 0:
++	case 1:
++	case 2:
++		r = regr ^ 0x19;
++		w0(r); w2(1); w0(val); w2(3); w2(4);
++		break;
+ 	case 3:
+ 	case 4:
+-        case 5: r = regr^0x40;
+-                w3(r); w4(val); w2(4);
+-                break;
+-        }
++	case 5:
++		r = regr ^ 0x40;
++		w3(r); w4(val); w2(4);
++		break;
++	}
  }
  
- static void fit2_write_block(struct pi_adapter *pi, char *buf, int count)
-+{
-+	int k;
- 
--{	int k;
+-#define WR(r,v)         epia_write_regr(pi,0,r,v)
+-#define RR(r)           (epia_read_regr(pi,0,r))
 -
--
--	w2(0xc); w0(0); 
--	for (k=0;k<count/2;k++) {
--		w2(4); w0(buf[2*k]); 
--		w2(5); w0(buf[2*k+1]);
-+	w2(0xc); w0(0);
-+	for (k = 0; k < count / 2; k++) {
-+		w2(4); w0(buf[2 * k]);
-+		w2(5); w0(buf[2 * k + 1]);
- 	}
- 	w2(4);
- }
+-/* The use of register 0x84 is entirely unclear - it seems to control
+-   some EPP counters ...  currently we know about 3 different block
+-   sizes:  the standard 512 byte reads and writes, 12 byte writes and 
+-   2048 byte reads (the last two being used in the CDrom drivers.
+-*/
++#define WR(r, v)	epia_write_regr(pi, 0, r, v)
++#define RR(r)		epia_read_regr(pi, 0, r)
  
- static void fit2_connect(struct pi_adapter *pi)
++/*
++ * The use of register 0x84 is entirely unclear - it seems to control
++ * some EPP counters ...  currently we know about 3 different block
++ * sizes:  the standard 512 byte reads and writes, 12 byte writes and
++ * 2048 byte reads (the last two being used in the CDrom drivers.
++ */
+ static void epia_connect(struct pi_adapter *pi)
 -
 -{       pi->saved_r0 = r0();
 -        pi->saved_r2 = r2();
--	w2(0xcc); 
+-
+-        w2(4); w0(0xa0); w0(0x50); w0(0xc0); w0(0x30); w0(0xa0); w0(0);
+-        w2(1); w2(4);
+-        if (pi->mode >= 3) { 
+-                w0(0xa); w2(1); w2(4); w0(0x82); w2(4); w2(0xc); w2(4);
+-                w2(0x24); w2(0x26); w2(4);
+-        }
+-        WR(0x86,8);  
 +{
 +	pi->saved_r0 = r0();
 +	pi->saved_r2 = r2();
-+	w2(0xcc);
++
++	w2(4); w0(0xa0); w0(0x50); w0(0xc0); w0(0x30); w0(0xa0); w0(0);
++	w2(1); w2(4);
++	if (pi->mode >= 3) {
++		w0(0xa); w2(1); w2(4); w0(0x82); w2(4); w2(0xc); w2(4);
++		w2(0x24); w2(0x26); w2(4);
++	}
++	WR(0x86, 8);
  }
  
- static void fit2_disconnect(struct pi_adapter *pi)
+ static void epia_disconnect(struct pi_adapter *pi)
 -
--{       w0(pi->saved_r0);
+-{       /* WR(0x84,0x10); */
+-        w0(pi->saved_r0);
+-        w2(1); w2(4);
+-        w0(pi->saved_r0);
 -        w2(pi->saved_r2);
 -} 
 +{
++	/* WR(0x84,0x10); */
++	w0(pi->saved_r0);
++	w2(1); w2(4);
 +	w0(pi->saved_r0);
 +	w2(pi->saved_r2);
 +}
  
- static void fit2_log_adapter(struct pi_adapter *pi)
--
- {
- 	dev_info(&pi->dev, "FIT 2000 adapter at 0x%x, delay %d\n",
--		pi->port, pi->delay);
-+		 pi->port, pi->delay);
+ static void epia_read_block(struct pi_adapter *pi, char *buf, int count)
  
+-{       int     k, ph, a, b;
+-
+-        switch (pi->mode) {
+-
+-        case 0: w0(0x81); w2(1); w2(3); w0(0xc1);
+-                ph = 1;
+-                for (k=0;k<count;k++) {
+-                        w2(2+ph); a = r1();
+-                        w2(4+ph); b = r1();
+-                        buf[k] = j44(a,b);
+-                        ph = 1 - ph;
+-                } 
+-                w0(0); w2(4);
+-                break;
+-
+-        case 1: w0(0x91); w2(1); w0(0x10); w2(3); 
+-                w0(0x51); w2(5); w0(0xd1); 
+-                ph = 1;
+-                for (k=0;k<count;k++) {
+-                        w2(4+ph);
+-                        a = r1(); b = r2();
+-                        buf[k] = j53(a,b);
+-                        ph = 1 - ph;
+-                }
+-                w0(0); w2(4);
+-                break;
+-
+-        case 2: w0(0x89); w2(1); w2(0x23); w2(0x21); 
+-                ph = 1;
+-                for (k=0;k<count;k++) {
+-                        w2(0x24+ph);
+-                        buf[k] = r0();
+-                        ph = 1 - ph;
+-                }
+-                w2(6); w2(4);
+-                break;
+-
+-        case 3: if (count > 512) WR(0x84,3);
++{
++	int k, ph, a, b;
++
++	switch (pi->mode) {
++	case 0:
++		w0(0x81); w2(1); w2(3); w0(0xc1);
++		ph = 1;
++		for (k = 0; k < count; k++) {
++			w2(2+ph); a = r1();
++			w2(4+ph); b = r1();
++			buf[k] = j44(a, b);
++			ph = 1 - ph;
++		}
++		w0(0); w2(4);
++		break;
++	case 1:
++		w0(0x91); w2(1); w0(0x10); w2(3);
++		w0(0x51); w2(5); w0(0xd1);
++		ph = 1;
++		for (k = 0; k < count; k++) {
++			w2(4 + ph);
++			a = r1(); b = r2();
++			buf[k] = j53(a, b);
++			ph = 1 - ph;
++		}
++		w0(0); w2(4);
++		break;
++	case 2:
++		w0(0x89); w2(1); w2(0x23); w2(0x21);
++		ph = 1;
++		for (k = 0; k < count; k++) {
++			w2(0x24 + ph);
++			buf[k] = r0();
++			ph = 1 - ph;
++		}
++		w2(6); w2(4);
++		break;
++	case 3:
++		if (count > 512)
++			WR(0x84, 3);
+ 		w3(0); w2(0x24);
+-                for (k=0;k<count;k++) buf[k] = r4();
+-                w2(4); WR(0x84,0);
+-                break;
+-
+-        case 4: if (count > 512) WR(0x84,3);
++		for (k = 0; k < count; k++)
++			buf[k] = r4();
++		w2(4); WR(0x84, 0);
++		break;
++	case 4:
++		if (count > 512)
++			WR(0x84, 3);
+ 		w3(0); w2(0x24);
+-		for (k=0;k<count/2;k++) ((u16 *)buf)[k] = r4w();
+-                w2(4); WR(0x84,0);
+-                break;
+-
+-        case 5: if (count > 512) WR(0x84,3);
++		for (k = 0; k < count / 2; k++)
++			((u16 *)buf)[k] = r4w();
++		w2(4); WR(0x84, 0);
++		break;
++	case 5:
++		if (count > 512)
++			WR(0x84, 3);
+ 		w3(0); w2(0x24);
+-                for (k=0;k<count/4;k++) ((u32 *)buf)[k] = r4l();
+-                w2(4); WR(0x84,0);
+-                break;
+-
+-        }
++		for (k = 0; k < count / 4; k++)
++			((u32 *)buf)[k] = r4l();
++		w2(4); WR(0x84, 0);
++		break;
++	}
  }
  
+ static void epia_write_block(struct pi_adapter *pi, char *buf, int count)
+-
+-{       int     ph, k, last, d;
+-
+-        switch (pi->mode) {
+-
+-        case 0:
+-        case 1:
+-        case 2: w0(0xa1); w2(1); w2(3); w2(1); w2(5);
+-                ph = 0;  last = 0x8000;
+-                for (k=0;k<count;k++) {
+-                        d = buf[k];
+-                        if (d != last) { last = d; w0(d); }
+-                        w2(4+ph);
+-                        ph = 1 - ph;
+-                }
+-                w2(7); w2(4);
+-                break;
+-
+-        case 3: if (count < 512) WR(0x84,1);
++{
++	int ph, k, last, d;
++
++	switch (pi->mode) {
++	case 0:
++	case 1:
++	case 2:
++		w0(0xa1); w2(1); w2(3); w2(1); w2(5);
++		ph = 0;  last = 0x8000;
++		for (k = 0; k < count; k++) {
++			d = buf[k];
++			if (d != last) {
++				last = d;
++				w0(d);
++			}
++			w2(4 + ph);
++			ph = 1 - ph;
++		}
++		w2(7); w2(4);
++		break;
++	case 3:
++		if (count < 512)
++			WR(0x84, 1);
+ 		w3(0x40);
+-                for (k=0;k<count;k++) w4(buf[k]);
+-		if (count < 512) WR(0x84,0);
+-                break;
+-
+-        case 4: if (count < 512) WR(0x84,1);
++		for (k = 0; k < count; k++)
++			w4(buf[k]);
++		if (count < 512)
++			WR(0x84, 0);
++		break;
++	case 4:
++		if (count < 512)
++			WR(0x84, 1);
+ 		w3(0x40);
+-                for (k=0;k<count/2;k++) w4w(((u16 *)buf)[k]);
+-		if (count < 512) WR(0x84,0);
+-                break;
+-
+-        case 5: if (count < 512) WR(0x84,1);
++		for (k = 0; k < count / 2; k++)
++			w4w(((u16 *)buf)[k]);
++		if (count < 512)
++			WR(0x84, 0);
++		break;
++	case 5:
++		if (count < 512)
++			WR(0x84, 1);
+ 		w3(0x40);
+-                for (k=0;k<count/4;k++) w4l(((u32 *)buf)[k]);
+-		if (count < 512) WR(0x84,0);
+-                break;
+-
+-        }
+-
++		for (k = 0; k < count / 4; k++)
++			w4l(((u32 *)buf)[k]);
++		if (count < 512)
++			WR(0x84, 0);
++		break;
++	}
+ }
+ 
+ static int epia_test_proto(struct pi_adapter *pi)
+-
+-{       int     j, k, f;
+-	int	e[2] = {0,0};
++{
++	int j, k, f;
++	int e[2] = { 0, 0 };
+ 	char scratch[512];
+ 
+-        epia_connect(pi);
+-        for (j=0;j<2;j++) {
+-            WR(6,0xa0+j*0x10);
+-            for (k=0;k<256;k++) {
+-                WR(2,k^0xaa);
+-                WR(3,k^0x55);
+-                if (RR(2) != (k^0xaa)) e[j]++;
+-                }
+-	    WR(2,1); WR(3,1);
+-            }
+-        epia_disconnect(pi);
+-
+-        f = 0;
+-        epia_connect(pi);
+-        WR(0x84,8);
+-        epia_read_block(pi,scratch,512);
+-        for (k=0;k<256;k++) {
+-            if ((scratch[2*k] & 0xff) != ((k+1) & 0xff)) f++;
+-            if ((scratch[2*k+1] & 0xff) != ((-2-k) & 0xff)) f++;
+-        }
+-        WR(0x84,0);
+-        epia_disconnect(pi);
++	epia_connect(pi);
++	for (j = 0; j < 2; j++) {
++		WR(6, 0xa0 + j * 0x10);
++		for (k = 0; k < 256; k++) {
++			WR(2, k ^ 0xaa);
++			WR(3, k ^ 0x55);
++			if (RR(2) != (k ^ 0xaa))
++				e[j]++;
++		}
++		WR(2, 1); WR(3, 1);
++	}
++	epia_disconnect(pi);
++
++	f = 0;
++	epia_connect(pi);
++	WR(0x84, 8);
++	epia_read_block(pi, scratch, 512);
++	for (k = 0; k < 256; k++) {
++		if ((scratch[2 * k] & 0xff) != ((k + 1) & 0xff))
++			f++;
++		if ((scratch[2 * k + 1] & 0xff) != ((-2 - k) & 0xff))
++			f++;
++	}
++	WR(0x84, 0);
++	epia_disconnect(pi);
+ 
+ 	dev_dbg(&pi->dev, "epia: port 0x%x, mode %d, test=(%d,%d,%d)\n",
+-	       pi->port, pi->mode, e[0], e[1], f);
+-        
+-        return (e[0] && e[1]) || f;
++		pi->port, pi->mode, e[0], e[1], f);
+ 
++	return (e[0] && e[1]) || f;
+ }
+ 
+ 
+ static void epia_log_adapter(struct pi_adapter *pi)
++{
++	char *mode[6] = { "4-bit", "5/3", "8-bit", "EPP-8", "EPP-16", "EPP-32"};
+ 
+-{       char    *mode_string[6] = {"4-bit","5/3","8-bit",
+-				   "EPP-8","EPP-16","EPP-32"};
+-
+-	dev_info(&pi->dev, "Shuttle EPIA at 0x%x, mode %d (%s), delay %d\n",
+-		pi->port, pi->mode, mode_string[pi->mode], pi->delay);
++	dev_info(&pi->dev,
++		 "Shuttle EPIA at 0x%x, mode %d (%s), delay %d\n",
++		 pi->port, pi->mode, mode[pi->mode], pi->delay);
+ }
+ 
+ static struct pi_protocol epia = {
 -- 
 2.40.1
 
