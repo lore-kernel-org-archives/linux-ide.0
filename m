@@ -2,60 +2,41 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D15FC77B7F
-	for <linux-ide@archiver.kernel.org>; Tue, 16 May 2023 15:33:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C488C7EE2E
+	for <linux-ide@archiver.kernel.org>; Tue, 16 May 2023 23:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233941AbjEPPdU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 16 May 2023 11:33:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54106 "EHLO
+        id S230521AbjEPXRE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 16 May 2023 19:17:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233325AbjEPPcu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2023 11:32:50 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6F486A7C
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 08:32:42 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id 4fb4d7f45d1cf-50bc5197d33so26014663a12.1
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 08:32:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1684251161; x=1686843161;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=+WfDmrqy+QvMst4XEpE/xoK4sak7nQ3C4hjNO9HTTG0=;
-        b=xDEJo0SLmGVlDXhX/NOriVq2mlAqG47xuhR/5aeirsLGvc7tkTl9nINt7oJZhqwU6o
-         koJhGF/IIzflE+YEoTP50NrniSiBi0YiQRxPW6iLxHejXOiDzRaDMgTVxhbW3e3EL5Dh
-         nuUQkhfOcADYBv3spwgyGfSZLOlDBU5J9PVGl3aATwbkjucWdrAxzPZuYLZBn9iDJm3S
-         A4/nurYAYt32tYoLTewVmH9oXggLmJ74/ynZ9y3ksrgZnbZQn4MOm6osU8cZ8D/XK7VR
-         hAvXQejna4ki7fOPorsJxh03h+xg2xP5CaH1XM+RGR4AjYLWCKw6LgH0+fhVeMYnrItR
-         LOvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684251161; x=1686843161;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+WfDmrqy+QvMst4XEpE/xoK4sak7nQ3C4hjNO9HTTG0=;
-        b=V+s3XgZcBT8Q/DBfWf9lk+rhPvWjEI/2lhPrPo1bUOj3L4EPqxnVwqQWr3gWkLFwEo
-         1anQZbs5M5vpSyTDGyDIhZYcpeerd6TZSyN2gNmfqX3dM5dDSIfzQxmspFwAWRylci8j
-         3mAzdKZtOpsGnKUnixuE6lpQGtJ8TWGImWhK/kJeDVZtZuXm3WoS3CvnXFe/wrI3rIwP
-         oHaHwCU1KabDOTesGeU0WPgcetBoqDYWACybGQeDYI5P7BvL/YM4BwWXHDnM13f3IR17
-         Ahd5DjoC+yRdcsPPIts9kRWC4yFV1Casb4Jor8ydR+UvfVoXOCHWJvvpcGq2rzmhuX8z
-         Z7Mg==
-X-Gm-Message-State: AC+VfDy/3PCoMHeMa8frIkPK/OHWItPZsJPLL5UnyWOWKiHdDh7Zwn/5
-        yyDCAhDRZQk+8LFbHigzSHl9CQ==
-X-Google-Smtp-Source: ACHHUZ7x0LFHxkX8C01IljtyBknQMJkvvH2qc+W3wIiGMrH81XlGSgasoeiOPj4uhkFFeOaCs2aTJg==
-X-Received: by 2002:a50:ed99:0:b0:50b:c41b:25d with SMTP id h25-20020a50ed99000000b0050bc41b025dmr27405434edr.7.1684251161319;
-        Tue, 16 May 2023 08:32:41 -0700 (PDT)
-Received: from ?IPV6:2a02:810d:15c0:828:77d1:16a1:abe1:84fc? ([2a02:810d:15c0:828:77d1:16a1:abe1:84fc])
-        by smtp.gmail.com with ESMTPSA id w15-20020a50fa8f000000b0050d89daaa70sm8389780edr.2.2023.05.16.08.32.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 16 May 2023 08:32:40 -0700 (PDT)
-Message-ID: <5b818f32-33c4-3f89-ce02-eb803d34ea48@linaro.org>
-Date:   Tue, 16 May 2023 17:32:38 +0200
+        with ESMTP id S229518AbjEPXRC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2023 19:17:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CC9D448C;
+        Tue, 16 May 2023 16:17:01 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9780463848;
+        Tue, 16 May 2023 23:17:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFDC5C433EF;
+        Tue, 16 May 2023 23:16:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684279020;
+        bh=zCFk9ckmMwoH0fK8TjR+DgTP01W/heIVljzahFq+A38=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=NICfEbOp4ULW5GEyU9ohb43NabVga42QJFmD77gToi4aEEmSR4l23+0E6WVSr+LG9
+         t5+BAjOEL6PQZ0svP9qh+u4sTZapXD2zezdB6CH2J6m2hVn7D7iO3XqzZY/EWCDhwJ
+         DEbBC96l0uq2HKlTsqmZPc/xkBFpLCnzN5uv5diojginclAUxcz68Op66s+MLJD+mc
+         lly1L8n6Xgcayt36KyXXYITiWlon+A1YCip9Drmo8s70vIqb2MrTzlJbH91J06QHS1
+         ClKINgaDfe9Wp3LKGUtPjq6lkZ1EA+qETfcYX5XYF6zsbpu57WZXYJC3pjoiIssXkj
+         9S0PnO9uDsqWg==
+Message-ID: <174a6ed0-1a2a-40d1-9a14-8bbbdd6e582c@kernel.org>
+Date:   Wed, 17 May 2023 08:16:52 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
+ Thunderbird/102.10.0
 Subject: Re: [PATCH] dt-bindings: xilinx: Switch xilinx.com emails to amd.com
-Content-Language: en-US
 To:     Michal Simek <michal.simek@amd.com>, piyush.mehta@amd.com,
         nava.kishore.manne@amd.com, sai.krishna.potthuri@amd.com,
         shubhrajyoti.datta@amd.com, vishal.sagar@amd.com,
@@ -68,7 +49,6 @@ Cc:     Alessandro Zummo <a.zummo@towertech.it>,
         Bartosz Golaszewski <brgl@bgdev.pl>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Conor Dooley <conor+dt@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
         Daniel Lezcano <daniel.lezcano@linaro.org>,
         "David S. Miller" <davem@davemloft.net>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -104,7 +84,9 @@ Cc:     Alessandro Zummo <a.zummo@towertech.it>,
         linux-serial@vger.kernel.org, linux-spi@vger.kernel.org,
         linux-watchdog@vger.kernel.org
 References: <f5b2bd1e78407e4128fc8f0b5874ba723e710a88.1684245058.git.michal.simek@amd.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
 In-Reply-To: <f5b2bd1e78407e4128fc8f0b5874ba723e710a88.1684245058.git.michal.simek@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
@@ -112,15 +94,9 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 16/05/2023 15:51, Michal Simek wrote:
+On 5/16/23 22:51, Michal Simek wrote:
 > @xilinx.com is still working but better to switch to new amd.com after
 > AMD/Xilinx acquisition.
 > 
 > Signed-off-by: Michal Simek <michal.simek@amd.com>
-
-
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
-Best regards,
-Krzysztof
-
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
