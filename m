@@ -2,41 +2,41 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 090FAC7EE2D
-	for <linux-ide@archiver.kernel.org>; Tue, 16 May 2023 13:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CBECC77B7A
+	for <linux-ide@archiver.kernel.org>; Tue, 16 May 2023 13:07:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233144AbjEPNH3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 16 May 2023 09:07:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53256 "EHLO
+        id S233505AbjEPNHj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 16 May 2023 09:07:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233501AbjEPNG4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2023 09:06:56 -0400
+        with ESMTP id S232441AbjEPNG5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2023 09:06:57 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C0857688
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 06:06:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4902230F8
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 06:06:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C2C09639D9
-        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 13:06:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4095C433D2;
-        Tue, 16 May 2023 13:06:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 04C9E639F7
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2023 13:06:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06A3AC433D2;
+        Tue, 16 May 2023 13:06:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684242382;
-        bh=fZCXzRxPA0ckYvTh2NUoDsFDWUHp12jg3NwXenGrjQc=;
+        s=k20201202; t=1684242379;
+        bh=/J8/a6o5xT5YevG7n+8tQm+Wn0F2CSc6Y3S14B+OST0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HNIVE53uUI1QDtZvwp9+LeXmg7GdxWhPGojZ4HUPVXXrvXs5EteBxXG8l0NC2gXWX
-         3tskLqB7/zyLQ62J0JhY9SugkBbNwcUxSzLNnjzFfaQ3UecqZgTv5866fKULJjmGOy
-         0JF1KB7a2KctHnRYxJRIeV0F4PilhfuTMUNtzvuGbLOi/mp6R7StEvA3NQoy3n18o3
-         BQ54l/8Lf+PMnWTs2siztiNlKmDuV7Ys4Zm5SZOOvkQca3g2ADAg+OV0DF8oiVhiOI
-         jncQVH9LDu7utIFYCDxyGubTB7JGrae6uE+AR8L7+G670ZeCT8Ite0U3/rVU0GPxTp
-         JAV2XiIBwwFtA==
+        b=GSomx/ZDV1mnMlI6EAvLtAzbciGHHe8wIsl6WofG440Hy4L8ikw1ZOk3dwfGxnIup
+         /ztaFd3Nhx8iAXDpdGgk7PHLG/0YO4GpiXtbbX99/nHhOn0wlcjWXMPjZ6hesHoObP
+         V3HMbPOZreolMjteKdmjadC6vz0krLffMYU5d5abQ1TjJ8EFCyaqCO9Q7NuF98S0FC
+         W5YO+AkegkPkXEBA8X8QasKvRVbupPPmyhu1mzlBeSIG2fFeHu/nrR38uV7TuOvYhn
+         KqOKRBfnIWgA6I3lypFDR1+JsRitu0UAF60UPI/NRoeFjDk0g4wICYLJFpWv9hMj2e
+         eFFRc8hZAqeXw==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org, Ondrej Zary <linux@zary.sk>
 Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH 13/13] ata: pata_parport: Fix on26 module code indentation and style
-Date:   Tue, 16 May 2023 22:06:11 +0900
-Message-Id: <20230516130611.109932-14-dlemoal@kernel.org>
+Subject: [PATCH 09/13] ata: pata_parport: Fix friq module code indentation and style
+Date:   Tue, 16 May 2023 22:06:07 +0900
+Message-Id: <20230516130611.109932-10-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230516130611.109932-1-dlemoal@kernel.org>
 References: <20230516130611.109932-1-dlemoal@kernel.org>
@@ -46,7 +46,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fix the header, indentation and coding style in the on26 pata parport
+Fix the header, indentation and coding style in the friq pata parport
 protocol module to suppress warnings from smatch and other static code
 analyzers.
 
@@ -54,503 +54,386 @@ No functional changes.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/pata_parport/on26.c | 414 +++++++++++++++++---------------
- 1 file changed, 217 insertions(+), 197 deletions(-)
+ drivers/ata/pata_parport/friq.c | 292 ++++++++++++++++----------------
+ 1 file changed, 150 insertions(+), 142 deletions(-)
 
-diff --git a/drivers/ata/pata_parport/on26.c b/drivers/ata/pata_parport/on26.c
-index dc47a54b121f..5da317b394c1 100644
---- a/drivers/ata/pata_parport/on26.c
-+++ b/drivers/ata/pata_parport/on26.c
-@@ -1,11 +1,10 @@
+diff --git a/drivers/ata/pata_parport/friq.c b/drivers/ata/pata_parport/friq.c
+index 1647264cd9a8..dc428f54fe0c 100644
+--- a/drivers/ata/pata_parport/friq.c
++++ b/drivers/ata/pata_parport/friq.c
+@@ -1,24 +1,23 @@
 -/* 
--        on26.c    (c) 1997-8  Grant R. Guenther <grant@torque.net>
--                              Under the terms of the GNU General Public License.
+-	friq.c	(c) 1998    Grant R. Guenther <grant@torque.net>
+-		            Under the terms of the GNU General Public License
 -
--        on26.c is a low-level protocol driver for the 
--        OnSpec 90c26 parallel to IDE adapter chip.
+-	friq.c is a low-level protocol driver for the Freecom "IQ"
+-	parallel port IDE adapter.   Early versions of this adapter
+-	use the 'frpw' protocol.
+-	
+-	Freecom uses this adapter in a battery powered external 
+-	CD-ROM drive.  It is also used in LS-120 drives by
+-	Maxell and Panasonic, and other devices.
+-
+-	The battery powered drive requires software support to
+-	control the power to the drive.  This module enables the
+-	drive power when the high level driver (pcd) is loaded
+-	and disables it when the module is unloaded.  Note, if
+-	the friq module is built in to the kernel, the power
+-	will never be switched off, so other means should be
+-	used to conserve battery power.
 -
 -*/
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
-+ * (c) 1997-1998  Grant R. Guenther <grant@torque.net>
++ * (c) 1998    Grant R. Guenther <grant@torque.net>
 + *
-+ * on26.c is a low-level protocol driver for the
-+ * OnSpec 90c26 parallel to IDE adapter chip.
++ * friq.c is a low-level protocol driver for the Freecom "IQ"
++ * parallel port IDE adapter.   Early versions of this adapter
++ * use the 'frpw' protocol.
++ *
++ * Freecom uses this adapter in a battery powered external
++ * CD-ROM drive.  It is also used in LS-120 drives by
++ * Maxell and Panasonic, and other devices.
++ *
++ * The battery powered drive requires software support to
++ * control the power to the drive.  This module enables the
++ * drive power when the high level driver (pcd) is loaded
++ * and disables it when the module is unloaded.  Note, if
++ * the friq module is built in to the kernel, the power
++ * will never be switched off, so other means should be
++ * used to conserve battery power.
 + */
  
  #include <linux/module.h>
  #include <linux/init.h>
-@@ -16,260 +15,281 @@
+@@ -29,197 +28,206 @@
  #include <asm/io.h>
  #include "pata_parport.h"
  
--/* mode codes:  0  nybble reads, 8-bit writes
--                1  8-bit reads and writes
--                2  8-bit EPP mode
--		3  EPP-16
--		4  EPP-32
--*/
-+/*
-+ * mode codes:  0  nybble reads, 8-bit writes
-+ *		1  8-bit reads and writes
-+ *		2  8-bit EPP mode
-+ *		3  EPP-16
-+ *		4  EPP-32
-+ */
- 
--#define j44(a,b)  (((a>>4)&0x0f)|(b&0xf0))
-+#define j44(a, b)	(((a >> 4) & 0x0f) | (b & 0xf0))
- 
--#define P1	w2(5);w2(0xd);w2(5);w2(0xd);w2(5);w2(4);
--#define P2	w2(5);w2(7);w2(5);w2(4);
-+#define P1						      \
-+	do {						      \
-+		w2(5); w2(0xd); w2(5); w2(0xd); w2(5); w2(4); \
+-#define CMD(x)		w2(4);w0(0xff);w0(0xff);w0(0x73);w0(0x73);\
+-			w0(0xc9);w0(0xc9);w0(0x26);w0(0x26);w0(x);w0(x);
++#define CMD(x)							\
++	do {							\
++		w2(4); w0(0xff); w0(0xff); w0(0x73); w0(0x73);	\
++		w0(0xc9); w0(0xc9); w0(0x26);			\
++		w0(0x26); w0(x); w0(x);				\
 +	} while (0)
+ 
+-#define j44(l,h)	(((l>>4)&0x0f)|(h&0xf0))
++#define j44(l, h)	(((l >> 4) & 0x0f) | (h & 0xf0))
  
 -/* cont = 0 - access the IDE register file 
 -   cont = 1 - access the IDE command set 
 -*/
 -
--static int on26_read_regr(struct pi_adapter *pi, int cont, int regr)
-+#define P2					\
-+	do {					\
-+		w2(5); w2(7); w2(5); w2(4);	\
-+	} while (0)
- 
--{       int     a, b, r;
+-static int  cont_map[2] = { 0x08, 0x10 };
 +/*
 + * cont = 0 - access the IDE register file
 + * cont = 1 - access the IDE command set
 + */
++static int cont_map[2] = { 0x08, 0x10 };
  
--	r = (regr<<2) + 1 + cont;
-+static int on26_read_regr(struct pi_adapter *pi, int cont, int regr)
+ static int friq_read_regr(struct pi_adapter *pi, int cont, int regr)
+-
+-{	int	h,l,r;
 +{
-+	int a, b, r;
++	int h, l, r;
  
--        switch (pi->mode)  {
-+	r = (regr << 2) + 1 + cont;
+ 	r = regr + cont_map[cont];
  
--        case 0: w0(1); P1; w0(r); P2; w0(0); P1; 
+ 	CMD(r);
+ 	w2(6); l = r1();
+ 	w2(4); h = r1();
+-	w2(4); 
+-
+-	return j44(l,h);
++	w2(4);
+ 
++	return j44(l, h);
+ }
+ 
+ static void friq_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
+-
+-{	int r;
+-
+-        r = regr + cont_map[cont];
++{
++	int r = regr + cont_map[cont];
+ 
+ 	CMD(r);
+ 	w0(val);
+-	w2(5);w2(7);w2(5);w2(4);
++	w2(5); w2(7); w2(5); w2(4);
+ }
+ 
+ static void friq_read_block_int(struct pi_adapter *pi, char *buf, int count, int regr)
++{
++	int h, l, k, ph;
+ 
+-{       int     h, l, k, ph;
+-
+-        switch(pi->mode) {
+-
+-        case 0: CMD(regr); 
+-                for (k=0;k<count;k++) {
+-                        w2(6); l = r1();
+-                        w2(4); h = r1();
+-                        buf[k] = j44(l,h);
+-                }
+-                w2(4);
+-                break;
+-
+-        case 1: ph = 2;
+-                CMD(regr+0xc0); 
+-                w0(0xff);
+-                for (k=0;k<count;k++) {
+-                        w2(0xa4 + ph); 
+-                        buf[k] = r0();
+-                        ph = 2 - ph;
+-                } 
+-                w2(0xac); w2(0xa4); w2(4);
+-                break;
+-
+-	case 2: CMD(regr+0x80);
+-		for (k=0;k<count-2;k++) buf[k] = r4();
 +	switch (pi->mode) {
 +	case 0:
-+		w0(1); P1; w0(r); P2; w0(0); P1;
- 		w2(6); a = r1(); w2(4);
- 		w2(6); b = r1(); w2(4);
- 		w2(6); w2(4); w2(6); w2(4);
--                return j44(a,b);
--
--        case 1: w0(1); P1; w0(r); P2; w0(0); P1;
-+		return j44(a, b);
++		CMD(regr);
++		for (k = 0; k < count; k++) {
++			w2(6); l = r1();
++			w2(4); h = r1();
++			buf[k] = j44(l, h);
++		}
++		w2(4);
++		break;
 +	case 1:
-+		w0(1); P1; w0(r); P2; w0(0); P1;
- 		w2(0x26); a = r0(); w2(4); w2(0x26); w2(4);
--                return a;
--
-+		return a;
- 	case 2:
- 	case 3:
--        case 4: w3(1); w3(1); w2(5); w4(r); w2(4);
-+	case 4:
-+		w3(1); w3(1); w2(5); w4(r); w2(4);
- 		w3(0); w3(0); w2(0x24); a = r4(); w2(4);
- 		w2(0x24); (void)r4(); w2(4);
--                return a;
-+		return a;
-+	}
- 
--        }
--        return -1;
--}       
-+	return -1;
-+}
- 
- static void on26_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
-+{
-+	int r = (regr << 2) + 1 + cont;
- 
--{       int  r;
--
--        r = (regr<<2) + 1 + cont;
--
--        switch (pi->mode)  {
--
--        case 0:
--        case 1: w0(1); P1; w0(r); P2; w0(0); P1;
-+	switch (pi->mode) {
-+	case 0:
-+	case 1:
-+		w0(1); P1; w0(r); P2; w0(0); P1;
- 		w0(val); P2; w0(val); P2;
++		ph = 2;
++		CMD(regr + 0xc0);
++		w0(0xff);
++		for (k = 0; k < count; k++) {
++			w2(0xa4 + ph);
++			buf[k] = r0();
++			ph = 2 - ph;
++		}
++		w2(0xac); w2(0xa4); w2(4);
++		break;
++	case 2:
++		CMD(regr + 0x80);
++		for (k = 0; k < count - 2; k++)
++			buf[k] = r4();
+ 		w2(0xac); w2(0xa4);
+-		buf[count-2] = r4();
+-		buf[count-1] = r4();
++		buf[count - 2] = r4();
++		buf[count - 1] = r4();
+ 		w2(4);
  		break;
 -
- 	case 2:
- 	case 3:
--        case 4: w3(1); w3(1); w2(5); w4(r); w2(4);
--		w3(0); w3(0); 
-+	case 4:
-+		w3(1); w3(1); w2(5); w4(r); w2(4);
-+		w3(0); w3(0);
- 		w2(5); w4(val); w2(4);
- 		w2(5); w4(val); w2(4);
+-	case 3: CMD(regr+0x80);
+-                for (k=0;k<(count/2)-1;k++) ((u16 *)buf)[k] = r4w();
+-                w2(0xac); w2(0xa4);
+-                buf[count-2] = r4();
+-                buf[count-1] = r4();
+-                w2(4);
 -                break;
+-
+-	case 4: CMD(regr+0x80);
+-                for (k=0;k<(count/4)-1;k++) ((u32 *)buf)[k] = r4l();
+-                buf[count-4] = r4();
+-                buf[count-3] = r4();
+-                w2(0xac); w2(0xa4);
+-                buf[count-2] = r4();
+-                buf[count-1] = r4();
+-                w2(4);
+-                break;
+-
 -        }
++	case 3:
++		CMD(regr + 0x80);
++		for (k = 0; k < count / 2 - 1; k++)
++			((u16 *)buf)[k] = r4w();
++		w2(0xac); w2(0xa4);
++		buf[count - 2] = r4();
++		buf[count - 1] = r4();
++		w2(4);
++		break;
++	case 4:
++		CMD(regr + 0x80);
++		for (k = 0; k < count / 4 - 1; k++)
++			((u32 *)buf)[k] = r4l();
++		buf[count - 4] = r4();
++		buf[count - 3] = r4();
++		w2(0xac); w2(0xa4);
++		buf[count - 2] = r4();
++		buf[count - 1] = r4();
++		w2(4);
 +		break;
 +	}
  }
  
--#define  CCP(x)  w0(0xfe);w0(0xaa);w0(0x55);w0(0);w0(0xff);\
--		 w0(0x87);w0(0x78);w0(x);w2(4);w2(5);w2(4);w0(0xff);
-+#define CCP(x)						\
-+	do {						\
-+		w0(0xfe); w0(0xaa); w0(0x55); w0(0);	\
-+		w0(0xff); w0(0x87); w0(0x78); w0(x);	\
-+		w2(4); w2(5); w2(4); w0(0xff);		\
-+	} while (0)
- 
- static void on26_connect(struct pi_adapter *pi)
+ static void friq_read_block(struct pi_adapter *pi, char *buf, int count)
 -
--{       int	x;
+-{	friq_read_block_int(pi,buf,count,0x08);
 +{
-+	int x;
- 
- 	pi->saved_r0 = r0();
--        pi->saved_r2 = r2();
-+	pi->saved_r2 = r2();
- 
--        CCP(0x20);
--	x = 8; if (pi->mode) x = 9;
-+	CCP(0x20);
-+	if (pi->mode)
-+		x = 9;
-+	else
-+		x = 8;
- 
- 	w0(2); P1; w0(8); P2;
- 	w0(2); P1; w0(x); P2;
++	friq_read_block_int(pi, buf, count, 0x08);
  }
  
- static void on26_disconnect(struct pi_adapter *pi)
+ static void friq_write_block(struct pi_adapter *pi, char *buf, int count)
+- 
+-{	int	k;
 -
--{       if (pi->mode >= 2) { w3(4); w3(4); w3(4); w3(4); }
--	              else { w0(4); P1; w0(4); P1; }
+-	switch(pi->mode) {
 +{
-+	if (pi->mode >= 2) {
-+		w3(4); w3(4); w3(4); w3(4);
-+	} else {
-+		w0(4); P1; w0(4); P1;
-+	}
- 	CCP(0x30);
--        w0(pi->saved_r0);
++	int k;
+ 
++	switch (pi->mode) {
+ 	case 0:
+-	case 1: CMD(8); w2(5);
+-        	for (k=0;k<count;k++) {
++	case 1:
++		CMD(8); w2(5);
++		for (k = 0; k < count; k++) {
+ 			w0(buf[k]);
+-			w2(7);w2(5);
++			w2(7); w2(5);
+ 		}
+ 		w2(4);
+ 		break;
+-
+-	case 2: CMD(0xc8); w2(5);
+-		for (k=0;k<count;k++) w4(buf[k]);
++	case 2:
++		CMD(0xc8); w2(5);
++		for (k = 0; k < count; k++)
++			w4(buf[k]);
++		w2(4);
++		break;
++	case 3:
++		CMD(0xc8); w2(5);
++		for (k = 0; k < count / 2; k++)
++			w4w(((u16 *)buf)[k]);
++		w2(4);
++		break;
++	case 4:
++		CMD(0xc8); w2(5);
++		for (k = 0; k < count / 4; k++)
++			w4l(((u32 *)buf)[k]);
+ 		w2(4);
+ 		break;
+-
+-        case 3: CMD(0xc8); w2(5);
+-                for (k=0;k<count/2;k++) w4w(((u16 *)buf)[k]);
+-                w2(4);
+-                break;
+-
+-        case 4: CMD(0xc8); w2(5);
+-                for (k=0;k<count/4;k++) w4l(((u32 *)buf)[k]);
+-                w2(4);
+-                break;
+-	}
++}
+ }
+ 
+ static void friq_connect(struct pi_adapter *pi)
+-
+-{       pi->saved_r0 = r0();
+-        pi->saved_r2 = r2();
++{
++	pi->saved_r0 = r0();
++	pi->saved_r2 = r2();
+ 	w2(4);
+ }
+ 
+ static void friq_disconnect(struct pi_adapter *pi)
+-
+-{       CMD(0x20);
++{
++	CMD(0x20);
+ 	w0(pi->saved_r0);
 -        w2(pi->saved_r2);
 -} 
-+	w0(pi->saved_r0);
 +	w2(pi->saved_r2);
 +}
  
- #define	RESET_WAIT  200
- 
--static int on26_test_port(struct pi_adapter *pi)  /* hard reset */
-+/* hard reset */
-+static int on26_test_port(struct pi_adapter *pi)
+ static int friq_test_proto(struct pi_adapter *pi)
+-
+-{       int     j, k, r;
+-	int	e[2] = {0,0};
 +{
-+	int i, m, d, x = 0, y = 0;
++	int j, k, r;
++	int e[2] = { 0, 0 };
+ 	char scratch[512];
  
--{       int     i, m, d, x=0, y=0;
--
--        pi->saved_r0 = r0();
--        pi->saved_r2 = r2();
--
--        d = pi->delay;
--        m = pi->mode;
--        pi->delay = 5;
--        pi->mode = 0;
--
--        w2(0xc);
--
--        CCP(0x30); CCP(0); 
--
--        w0(0xfe);w0(0xaa);w0(0x55);w0(0);w0(0xff);
--        i = ((r1() & 0xf0) << 4); w0(0x87);
--        i |= (r1() & 0xf0); w0(0x78);
--        w0(0x20);w2(4);w2(5);
--        i |= ((r1() & 0xf0) >> 4);
--        w2(4);w0(0xff);
--
--        if (i == 0xb5f) {
--
--            w0(2); P1; w0(0);   P2;
--            w0(3); P1; w0(0);   P2;
--            w0(2); P1; w0(8);   P2; udelay(100);
--            w0(2); P1; w0(0xa); P2; udelay(100);
--            w0(2); P1; w0(8);   P2; udelay(1000);
--            
--            on26_write_regr(pi,0,6,0xa0);
--
--            for (i=0;i<RESET_WAIT;i++) {
--                on26_write_regr(pi,0,6,0xa0);
--                x = on26_read_regr(pi,0,7);
--                on26_write_regr(pi,0,6,0xb0);
--                y = on26_read_regr(pi,0,7);
--                if (!((x&0x80)||(y&0x80))) break;
--                mdelay(100);
--            }
--
--	    if (i == RESET_WAIT) 
--		dev_err(&pi->dev, "on26: Device reset failed (%x,%x)\n", x, y);
--
--            w0(4); P1; w0(4); P1;
--        }
+-	pi->saved_r0 = r0();	
 +	pi->saved_r0 = r0();
-+	pi->saved_r2 = r2();
-+
-+	d = pi->delay;
-+	m = pi->mode;
-+	pi->delay = 5;
-+	pi->mode = 0;
-+
-+	w2(0xc);
-+
-+	CCP(0x30); CCP(0);
-+
-+	w0(0xfe); w0(0xaa); w0(0x55); w0(0); w0(0xff);
-+	i = ((r1() & 0xf0) << 4); w0(0x87);
-+	i |= (r1() & 0xf0); w0(0x78);
-+	w0(0x20); w2(4); w2(5);
-+	i |= ((r1() & 0xf0) >> 4);
-+	w2(4); w0(0xff);
-+
-+	if (i == 0xb5f) {
-+		w0(2); P1; w0(0);   P2;
-+		w0(3); P1; w0(0);   P2;
-+		w0(2); P1; w0(8);   P2; udelay(100);
-+		w0(2); P1; w0(0xa); P2; udelay(100);
-+		w0(2); P1; w0(8);   P2; udelay(1000);
-+
-+		on26_write_regr(pi, 0, 6, 0xa0);
-+
-+		for (i = 0; i < RESET_WAIT; i++) {
-+			on26_write_regr(pi, 0, 6, 0xa0);
-+			x = on26_read_regr(pi, 0, 7);
-+			on26_write_regr(pi, 0, 6, 0xb0);
-+			y = on26_read_regr(pi, 0, 7);
-+			if (!((x & 0x80) || (y & 0x80)))
-+				break;
-+			mdelay(100);
+ 	w0(0xff); udelay(20); CMD(0x3d); /* turn the power on */
+ 	udelay(500);
+ 	w0(pi->saved_r0);
+ 
+ 	friq_connect(pi);
+-	for (j=0;j<2;j++) {
+-                friq_write_regr(pi,0,6,0xa0+j*0x10);
+-                for (k=0;k<256;k++) {
+-                        friq_write_regr(pi,0,2,k^0xaa);
+-                        friq_write_regr(pi,0,3,k^0x55);
+-                        if (friq_read_regr(pi,0,2) != (k^0xaa)) e[j]++;
+-                        }
+-                }
++	for (j = 0; j < 2; j++) {
++		friq_write_regr(pi, 0, 6, 0xa0 + j * 0x10);
++		for (k = 0; k < 256; k++) {
++			friq_write_regr(pi, 0, 2, k ^ 0xaa);
++			friq_write_regr(pi, 0, 3, k ^ 0x55);
++			if (friq_read_regr(pi, 0, 2) != (k ^ 0xaa))
++				e[j]++;
 +		}
-+
-+		if (i == RESET_WAIT)
-+			dev_err(&pi->dev,
-+				"on26: Device reset failed (%x,%x)\n", x, y);
-+
-+		w0(4); P1; w0(4); P1;
 +	}
+ 	friq_disconnect(pi);
  
--        CCP(0x30);
-+	CCP(0x30);
+ 	friq_connect(pi);
+-        friq_read_block_int(pi,scratch,512,0x10);
+-        r = 0;
+-        for (k=0;k<128;k++) if (scratch[k] != k) r++;
++	friq_read_block_int(pi, scratch, 512, 0x10);
++	r = 0;
++	for (k = 0; k < 128; k++) {
++		if (scratch[k] != k)
++			r++;
++	}
+ 	friq_disconnect(pi);
  
--        pi->delay = d;
--        pi->mode = m;
--        w0(pi->saved_r0);
--        w2(pi->saved_r2);
-+	pi->delay = d;
-+	pi->mode = m;
-+	w0(pi->saved_r0);
-+	w2(pi->saved_r2);
+-	dev_dbg(&pi->dev, "friq: port 0x%x, mode %d, test=(%d,%d,%d)\n",
+-	       pi->port, pi->mode, e[0], e[1], r);
++	dev_dbg(&pi->dev,
++		"friq: port 0x%x, mode %d, test=(%d,%d,%d)\n",
++		pi->port, pi->mode, e[0], e[1], r);
  
--        return 5;
-+	return 5;
+-        return (r || (e[0] && e[1]));
++	return r || (e[0] && e[1]);
  }
  
 -
- static void on26_read_block(struct pi_adapter *pi, char *buf, int count)
+ static void friq_log_adapter(struct pi_adapter *pi)
 +{
-+	int k, a, b;
++	char *mode_string[6] = { "4-bit", "8-bit", "EPP-8", "EPP-16", "EPP-32"};
  
--{       int     k, a, b;
+-{       char    *mode_string[6] = {"4-bit","8-bit",
+-				   "EPP-8","EPP-16","EPP-32"};
 -
--        switch (pi->mode) {
--
--        case 0: w0(1); P1; w0(1); P2; w0(2); P1; w0(0x18); P2; w0(0); P1;
-+	switch (pi->mode) {
-+	case 0:
-+		w0(1); P1; w0(1); P2; w0(2); P1; w0(0x18); P2; w0(0); P1;
- 		udelay(10);
--		for (k=0;k<count;k++) {
--                        w2(6); a = r1();
--                        w2(4); b = r1();
--                        buf[k] = j44(a,b);
--                }
--		w0(2); P1; w0(8); P2; 
--                break;
--
--        case 1: w0(1); P1; w0(1); P2; w0(2); P1; w0(0x19); P2; w0(0); P1;
-+		for (k = 0; k < count; k++) {
-+			w2(6); a = r1();
-+			w2(4); b = r1();
-+			buf[k] = j44(a, b);
-+		}
-+		w0(2); P1; w0(8); P2;
-+		break;
-+	case 1:
-+		w0(1); P1; w0(1); P2; w0(2); P1; w0(0x19); P2; w0(0); P1;
-+		udelay(10);
-+		for (k = 0; k < count / 2; k++) {
-+			w2(0x26); buf[2 * k] = r0();
-+			w2(0x24); buf[2 * k + 1] = r0();
-+		}
-+		w0(2); P1; w0(9); P2;
-+		break;
-+	case 2:
-+		w3(1); w3(1); w2(5); w4(1); w2(4);
-+		w3(0); w3(0); w2(0x24);
-+		udelay(10);
-+		for (k = 0; k < count; k++)
-+			buf[k] = r4();
-+		w2(4);
-+		break;
-+	case 3:
-+		w3(1); w3(1); w2(5); w4(1); w2(4);
-+		w3(0); w3(0); w2(0x24);
- 		udelay(10);
--                for (k=0;k<count/2;k++) {
--                        w2(0x26); buf[2*k] = r0();  
--			w2(0x24); buf[2*k+1] = r0();
--                }
--                w0(2); P1; w0(9); P2;
--                break;
--
--        case 2: w3(1); w3(1); w2(5); w4(1); w2(4);
-+		for (k = 0; k < count / 2; k++)
-+			((u16 *)buf)[k] = r4w();
-+		w2(4);
-+		break;
-+	case 4:
-+		w3(1); w3(1); w2(5); w4(1); w2(4);
- 		w3(0); w3(0); w2(0x24);
- 		udelay(10);
--                for (k=0;k<count;k++) buf[k] = r4();
--                w2(4);
--                break;
--
--        case 3: w3(1); w3(1); w2(5); w4(1); w2(4);
--                w3(0); w3(0); w2(0x24);
--                udelay(10);
--                for (k=0;k<count/2;k++) ((u16 *)buf)[k] = r4w();
--                w2(4);
--                break;
--
--        case 4: w3(1); w3(1); w2(5); w4(1); w2(4);
--                w3(0); w3(0); w2(0x24);
--                udelay(10);
--                for (k=0;k<count/4;k++) ((u32 *)buf)[k] = r4l();
--                w2(4);
--                break;
--
--        }
-+		for (k = 0; k < count / 4; k++)
-+			((u32 *)buf)[k] = r4l();
-+		w2(4);
-+		break;
-+	}
- }
- 
- static void on26_write_block(struct pi_adapter *pi, char *buf, int count)
--
--{       int	k;
--
--        switch (pi->mode) {
--
--        case 0: 
--        case 1: w0(1); P1; w0(1); P2; 
--		w0(2); P1; w0(0x18+pi->mode); P2; w0(0); P1;
-+{
-+	int k;
-+
-+	switch (pi->mode) {
-+	case 0:
-+	case 1:
-+		w0(1); P1; w0(1); P2;
-+		w0(2); P1; w0(0x18 + pi->mode); P2; w0(0); P1;
- 		udelay(10);
--		for (k=0;k<count/2;k++) {
--                        w2(5); w0(buf[2*k]); 
--			w2(7); w0(buf[2*k+1]);
--                }
--                w2(5); w2(4);
--		w0(2); P1; w0(8+pi->mode); P2;
--                break;
--
--        case 2: w3(1); w3(1); w2(5); w4(1); w2(4);
-+		for (k = 0; k < count / 2; k++) {
-+			w2(5); w0(buf[2 * k]);
-+			w2(7); w0(buf[2 * k + 1]);
-+		}
-+		w2(5); w2(4);
-+		w0(2); P1; w0(8 + pi->mode); P2;
-+		break;
-+	case 2:
-+		w3(1); w3(1); w2(5); w4(1); w2(4);
- 		w3(0); w3(0); w2(0xc5);
- 		udelay(10);
--                for (k=0;k<count;k++) w4(buf[k]);
-+		for (k = 0; k < count; k++)
-+			w4(buf[k]);
- 		w2(0xc4);
--                break;
--
--        case 3: w3(1); w3(1); w2(5); w4(1); w2(4);
--                w3(0); w3(0); w2(0xc5);
--                udelay(10);
--                for (k=0;k<count/2;k++) w4w(((u16 *)buf)[k]);
--                w2(0xc4);
--                break;
--
--        case 4: w3(1); w3(1); w2(5); w4(1); w2(4);
--                w3(0); w3(0); w2(0xc5);
--                udelay(10);
--                for (k=0;k<count/4;k++) w4l(((u32 *)buf)[k]);
--                w2(0xc4);
--                break;
--
--        }
--
-+		break;
-+	case 3:
-+		w3(1); w3(1); w2(5); w4(1); w2(4);
-+		w3(0); w3(0); w2(0xc5);
-+		udelay(10);
-+		for (k = 0; k < count / 2; k++)
-+			w4w(((u16 *)buf)[k]);
-+		w2(0xc4);
-+		break;
-+	case 4:
-+		w3(1); w3(1); w2(5); w4(1); w2(4);
-+		w3(0); w3(0); w2(0xc5);
-+		udelay(10);
-+		for (k = 0; k < count / 4; k++)
-+			w4l(((u32 *)buf)[k]);
-+		w2(0xc4);
-+		break;
-+	}
- }
- 
- static void on26_log_adapter(struct pi_adapter *pi)
-+{
-+	char *mode_string[5] = { "4-bit", "8-bit", "EPP-8", "EPP-16", "EPP-32" };
- 
--{       char    *mode_string[5] = {"4-bit","8-bit","EPP-8",
--				   "EPP-16","EPP-32"};
--
--	dev_info(&pi->dev, "OnSpec 90c26 at 0x%x, mode %d (%s), delay %d\n",
+-	dev_info(&pi->dev, "Freecom IQ ASIC-2 adapter at 0x%x, mode %d (%s), delay %d\n",
 -		pi->port, pi->mode, mode_string[pi->mode], pi->delay);
 +	dev_info(&pi->dev,
-+		 "OnSpec 90c26 at 0x%x, mode %d (%s), delay %d\n",
++		 "Freecom IQ ASIC-2 adapter at 0x%x, mode %d (%s), delay %d\n",
 +		 pi->port, pi->mode, mode_string[pi->mode], pi->delay);
+ 
+ 	pi->private = 1;
+ 	friq_connect(pi);
+ 	CMD(0x9e);  		/* disable sleep timer */
+ 	friq_disconnect(pi);
+-
  }
  
- static struct pi_protocol on26 = {
+ static void friq_release_proto(struct pi_adapter *pi)
 -- 
 2.40.1
 
