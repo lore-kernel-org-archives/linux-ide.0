@@ -2,142 +2,299 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A08C7EE24
-	for <linux-ide@archiver.kernel.org>; Tue, 16 May 2023 07:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9729CC77B75
+	for <linux-ide@archiver.kernel.org>; Tue, 16 May 2023 11:02:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231378AbjEPHiJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 16 May 2023 03:38:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38422 "EHLO
+        id S232619AbjEPLC3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 16 May 2023 07:02:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230388AbjEPHiI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2023 03:38:08 -0400
-Received: from forward501b.mail.yandex.net (forward501b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d501])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9329C423C;
-        Tue, 16 May 2023 00:38:05 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net [IPv6:2a02:6b8:c14:2991:0:640:bb47:0])
-        by forward501b.mail.yandex.net (Yandex) with ESMTP id 6695D5F29E;
-        Tue, 16 May 2023 10:38:03 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id rbVsqF6Wo4Y0-UkaxrYJI;
-        Tue, 16 May 2023 10:38:01 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail; t=1684222681;
-        bh=R3NyR73k7IhF7nI84HX4UghfXKGpid2SwwTSfXwtO70=;
-        h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
-        b=QotG58g6dFkLdzg/jCTCPqPNHWfIFJSnx9H8OHC12M2roLLuxVWKx6W2h25dkjVSe
-         HRwtXoqfClom0cLuEY16ejoh6MbeEy+uPI8UAhwOs+j0NQ/gw1AVexLnYUBpraFKDp
-         l0egQl1rEQANggrBncTSCi4j3ZinsQfxms2ylvX4=
-Authentication-Results: mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
-Message-ID: <4f81a96b826344f45d0994539e3b3fe94fe7eb50.camel@maquefel.me>
-Subject: Re: [PATCH 00/43] ep93xx device tree conversion
-From:   Nikita Shubin <nikita.shubin@maquefel.me>
-To:     Florian Fainelli <f.fainelli@gmail.com>
-Cc:     Arnd Bergmann <arnd@kernel.org>, Linus Walleij <linusw@kernel.org>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jonathan =?ISO-8859-1?Q?Neusch=E4fer?= <j.neuschaefer@gmx.net>,
-        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
-        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
+        with ESMTP id S232572AbjEPLBv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2023 07:01:51 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 072E35BA3;
+        Tue, 16 May 2023 04:01:14 -0700 (PDT)
+Received: from pps.filterd (m0353728.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GAuVlu006556;
+        Tue, 16 May 2023 11:00:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=PlsPRCPB3qDYnzyYB5z+JqtZWB2fcxu7jIHwSiaFtss=;
+ b=o50ApwcpeY9lKHf1TGlXXNt7YPLvtSBKOmSY3a7obL2xs7w57MgK5dnq00vPQDRbQCHd
+ +pCIU2qQAQZ4j04Jqca8b+1M+5fAuVTRVMGMhUT6Sw8mhaLYfSrxoR85wDeQy2IN9FYj
+ QgeBPHOwlERz++D3wsRCrr/RvLGvCpM2NN7p3EteRm16mybEEUfyVXtwjE46HjxCd/QV
+ f1JsrPH4W+yscY57zurTpmU5y27lmcyWxYPFcONkQJ3lH8DLTIq2QD1ZTk1iQqPbOd7+
+ OxWCn2xIHjr1yDniOqQ/SyiDfqoaw8TrGbX7B0XZcwIkJYTQrD90GxEDCVOnd8HavK7O sg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8h604d7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:00:46 +0000
+Received: from m0353728.ppops.net (m0353728.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GAwA7W012480;
+        Tue, 16 May 2023 11:00:46 GMT
+Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8h604ax-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:00:46 +0000
+Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
+        by ppma04fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G7MswP011883;
+        Tue, 16 May 2023 11:00:43 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma04fra.de.ibm.com (PPS) with ESMTPS id 3qj264san8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:00:43 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB0em233751510
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 May 2023 11:00:40 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9C7FB20040;
+        Tue, 16 May 2023 11:00:40 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3EE2D20043;
+        Tue, 16 May 2023 11:00:40 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Tue, 16 May 2023 11:00:40 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Arnd Bergmann <arnd@arndb.de>, Damien Le Moal <dlemoal@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Brian Norris <briannorris@chromium.org>,
-        Chuanhong Guo <gch981213@gmail.com>,
-        Conor Dooley <conor.dooley@microchip.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Emil Renner Berthing <kernel@esmil.dk>,
-        Eric Dumazet <edumazet@google.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Hartley Sweeten <hsweeten@visionengravers.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Hitomi Hasegawa <hasegawa-hitomi@fujitsu.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jean Delvare <jdelvare@suse.de>, Joel Stanley <joel@jms.id.au>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Le Moal <damien.lemoal@opensource.wdc.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Liang Yang <liang.yang@amlogic.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Lukasz Majewski <lukma@denx.de>, Lv Ruyi <lv.ruyi@zte.com.cn>,
-        Mark Brown <broonie@kernel.org>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Nicolas Saenz Julienne <nsaenz@kernel.org>,
-        Olof Johansson <olof@lixom.net>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Qin Jian <qinjian@cqplus1.com>,
-        Richard Weinberger <richard@nod.at>,
-        Rob Herring <robh+dt@kernel.org>,
-        Robert Jarzmik <robert.jarzmik@free.fr>,
-        Russell King <linux@armlinux.org.uk>,
-        Sebastian Reichel <sre@kernel.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Sumanth Korikkar <sumanthk@linux.ibm.com>,
-        Sven Peter <sven@svenpeter.dev>, Takashi Iwai <tiwai@suse.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Walker Chen <walker.chen@starfivetech.com>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Yinbo Zhu <zhuyinbo@loongson.cn>, alsa-devel@alsa-project.org,
-        devicetree@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
-        linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-pm@vger.kernel.org,
-        linux-pwm@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        netdev@vger.kernel.org, soc@kernel.org
-Date:   Tue, 16 May 2023 13:37:54 +0300
-In-Reply-To: <1ff2333a-8f78-c066-0158-9c8a1a17684f@gmail.com>
-References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
-         <1ff2333a-8f78-c066-0158-9c8a1a17684f@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH v4 02/41] ata: add HAS_IOPORT dependencies
+Date:   Tue, 16 May 2023 12:59:58 +0200
+Message-Id: <20230516110038.2413224-3-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230516110038.2413224-1-schnelle@linux.ibm.com>
+References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 4O-h99vREYljBoiv-VObOU7deLGswAi2
+X-Proofpoint-ORIG-GUID: BpI0mYhh52WXlYM7Ip1htuyKnFHtbhO9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-16_04,2023-05-16_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ priorityscore=1501 impostorscore=0 mlxscore=0 clxscore=1011 malwarescore=0
+ phishscore=0 suspectscore=0 spamscore=0 lowpriorityscore=0 adultscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305160089
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Florian!
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
-On Mon, 2023-05-15 at 20:47 -0700, Florian Fainelli wrote:
->=20
->=20
-> On 4/24/2023 5:34 AM, Nikita Shubin wrote:
-> > This series aims to convert ep93xx from platform to full device
-> > tree support.
-> >=20
-> > Tested on ts7250 64 RAM/128 MiB Nand flash, edb9302.
-> >=20
-> > Thank you Linus and Arnd for your support, review and comments,
-> > sorry if i missed something -
-> > these series are quite big for me.
-> >=20
-> > Big thanks to Alexander Sverdlin for his testing, support, review,
-> > fixes and patches.
->=20
-> If anyone is interested I still have a TS-7300 board [1] that is
-> fully=20
-> functional and could be sent out to a new home.
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
+      per-subsystem patches may be applied independently
 
-Thank you kindly, i'll keep this in mind !
+ drivers/ata/Kconfig       | 28 ++++++++++++++--------------
+ drivers/ata/ata_generic.c |  2 ++
+ drivers/ata/libata-sff.c  |  2 ++
+ include/linux/libata.h    |  2 ++
+ 4 files changed, 20 insertions(+), 14 deletions(-)
 
->=20
-> https://www.embeddedts.com/products/TS-7300
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 42b51c9812a0..c521cdc51f8c 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -557,7 +557,7 @@ comment "PATA SFF controllers with BMDMA"
+ 
+ config PATA_ALI
+ 	tristate "ALi PATA support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select PATA_TIMINGS
+ 	help
+ 	  This option enables support for the ALi ATA interfaces
+@@ -567,7 +567,7 @@ config PATA_ALI
+ 
+ config PATA_AMD
+ 	tristate "AMD/NVidia PATA support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select PATA_TIMINGS
+ 	help
+ 	  This option enables support for the AMD and NVidia PATA
+@@ -585,7 +585,7 @@ config PATA_ARASAN_CF
+ 
+ config PATA_ARTOP
+ 	tristate "ARTOP 6210/6260 PATA support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables support for ARTOP PATA controllers.
+ 
+@@ -612,7 +612,7 @@ config PATA_ATP867X
+ 
+ config PATA_CMD64X
+ 	tristate "CMD64x PATA support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select PATA_TIMINGS
+ 	help
+ 	  This option enables support for the CMD64x series chips
+@@ -659,7 +659,7 @@ config PATA_CS5536
+ 
+ config PATA_CYPRESS
+ 	tristate "Cypress CY82C693 PATA support (Very Experimental)"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select PATA_TIMINGS
+ 	help
+ 	  This option enables support for the Cypress/Contaq CY82C693
+@@ -707,7 +707,7 @@ config PATA_HPT366
+ 
+ config PATA_HPT37X
+ 	tristate "HPT 370/370A/371/372/374/302 PATA support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables support for the majority of the later HPT
+ 	  PATA controllers via the new ATA layer.
+@@ -716,7 +716,7 @@ config PATA_HPT37X
+ 
+ config PATA_HPT3X2N
+ 	tristate "HPT 371N/372N/302N PATA support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables support for the N variant HPT PATA
+ 	  controllers via the new ATA layer.
+@@ -819,7 +819,7 @@ config PATA_MPC52xx
+ 
+ config PATA_NETCELL
+ 	tristate "NETCELL Revolution RAID support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables support for the Netcell Revolution RAID
+ 	  PATA controller.
+@@ -855,7 +855,7 @@ config PATA_OLDPIIX
+ 
+ config PATA_OPTIDMA
+ 	tristate "OPTI FireStar PATA support (Very Experimental)"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables DMA/PIO support for the later OPTi
+ 	  controllers found on some old motherboards and in some
+@@ -865,7 +865,7 @@ config PATA_OPTIDMA
+ 
+ config PATA_PDC2027X
+ 	tristate "Promise PATA 2027x support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables support for Promise PATA pdc20268 to pdc20277 host adapters.
+ 
+@@ -873,7 +873,7 @@ config PATA_PDC2027X
+ 
+ config PATA_PDC_OLD
+ 	tristate "Older Promise PATA controller support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables support for the Promise 20246, 20262, 20263,
+ 	  20265 and 20267 adapters.
+@@ -901,7 +901,7 @@ config PATA_RDC
+ 
+ config PATA_SC1200
+ 	tristate "SC1200 PATA support"
+-	depends on PCI && (X86_32 || COMPILE_TEST)
++	depends on PCI && (X86_32 || COMPILE_TEST) && HAS_IOPORT
+ 	help
+ 	  This option enables support for the NatSemi/AMD SC1200 SoC
+ 	  companion chip used with the Geode processor family.
+@@ -919,7 +919,7 @@ config PATA_SCH
+ 
+ config PATA_SERVERWORKS
+ 	tristate "SERVERWORKS OSB4/CSB5/CSB6/HT1000 PATA support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  This option enables support for the Serverworks OSB4/CSB5/CSB6 and
+ 	  HT1000 PATA controllers, via the new ATA layer.
+@@ -1183,7 +1183,7 @@ config ATA_GENERIC
+ 
+ config PATA_LEGACY
+ 	tristate "Legacy ISA PATA support (Experimental)"
+-	depends on (ISA || PCI)
++	depends on (ISA || PCI) && HAS_IOPORT
+ 	select PATA_TIMINGS
+ 	help
+ 	  This option enables support for ISA/VLB/PCI bus legacy PATA
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index 2f57ec00ab82..2d391d117f74 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -197,8 +197,10 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
+ 	if (!(command & PCI_COMMAND_IO))
+ 		return -ENODEV;
+ 
++#ifdef CONFIG_PATA_ALI
+ 	if (dev->vendor == PCI_VENDOR_ID_AL)
+ 		ata_pci_bmdma_clear_simplex(dev);
++#endif /* CONFIG_PATA_ALI */
+ 
+ 	if (dev->vendor == PCI_VENDOR_ID_ATI) {
+ 		int rc = pcim_enable_device(dev);
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 9d28badfe41d..80137edb7ebf 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -3031,6 +3031,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_port_start32);
+ 
+ #ifdef CONFIG_PCI
+ 
++#ifdef CONFIG_HAS_IOPORT
+ /**
+  *	ata_pci_bmdma_clear_simplex -	attempt to kick device out of simplex
+  *	@pdev: PCI device
+@@ -3056,6 +3057,7 @@ int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(ata_pci_bmdma_clear_simplex);
++#endif /* CONFIG_HAS_IOPORT */
+ 
+ static void ata_bmdma_nodma(struct ata_host *host, const char *reason)
+ {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 311cd93377c7..90002d4a785b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -2012,7 +2012,9 @@ extern int ata_bmdma_port_start(struct ata_port *ap);
+ extern int ata_bmdma_port_start32(struct ata_port *ap);
+ 
+ #ifdef CONFIG_PCI
++#ifdef CONFIG_HAS_IOPORT
+ extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
++#endif /* CONFIG_HAS_IOPORT */
+ extern void ata_pci_bmdma_init(struct ata_host *host);
+ extern int ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
+ 				      const struct ata_port_info * const * ppi,
+-- 
+2.39.2
 
