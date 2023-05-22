@@ -2,266 +2,117 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7985AC7EE2D
-	for <linux-ide@archiver.kernel.org>; Mon, 22 May 2023 10:51:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6F3C7EE2A
+	for <linux-ide@archiver.kernel.org>; Mon, 22 May 2023 11:28:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232778AbjEVKvT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 22 May 2023 06:51:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40708 "EHLO
+        id S231873AbjEVL23 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 22 May 2023 07:28:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232763AbjEVKvR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2023 06:51:17 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B06DE6;
-        Mon, 22 May 2023 03:51:14 -0700 (PDT)
-Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34M8lXpu031205;
-        Mon, 22 May 2023 10:50:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=6YpN3k6Nyxob70TVYCYJ6D+qKJCsGVUpucKpj8fHJtY=;
- b=Sw4IoaQX5TQ2ia5rjJ/dApgUaj8Wq1EqYui94TWXT/kyZkJ2IgG9mxVIMnAzo5ISl+Z8
- FP0RIxIkAqd1ORkNuHkuOY6/Gct4bgRV2/fu3mjf5zdbfwpJjeXj+CmwHho7ijgdC2da
- tvt/6H+gFXyUEq3qKxG6Lk00z2xL0BPWU68ur4UaHG328itTdjVoD6xB//Rz+lcFsDLa
- wPQoGzZJ+gvkkKOjsr3PJ+eaMk/p9ibaPXqjCY9obZEiEP1/0JfXXyVQv01r8SbVWrWK
- NzJL/vJ/8vn5voMBslSyTkyRQHXjMax3CUXxprNDGyD2Fr6si9YmNsLoZJEClr26QS7S VA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qq7qjgn2v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:50:57 +0000
-Received: from m0353726.ppops.net (m0353726.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAJeZ6014457;
-        Mon, 22 May 2023 10:50:56 GMT
-Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qq7qjgn1x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:50:56 +0000
-Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
-        by ppma06ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M2nk1W024768;
-        Mon, 22 May 2023 10:50:54 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-        by ppma06ams.nl.ibm.com (PPS) with ESMTPS id 3qppc3gw7x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:50:54 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MAopV732833994
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 10:50:51 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9D75E20043;
-        Mon, 22 May 2023 10:50:51 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 42C6D2004B;
-        Mon, 22 May 2023 10:50:51 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon, 22 May 2023 10:50:51 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>, Damien Le Moal <dlemoal@kernel.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH v5 02/44] ata: add HAS_IOPORT dependencies
-Date:   Mon, 22 May 2023 12:50:07 +0200
-Message-Id: <20230522105049.1467313-3-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230522105049.1467313-1-schnelle@linux.ibm.com>
-References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
+        with ESMTP id S231220AbjEVL2O (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2023 07:28:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 227C697
+        for <linux-ide@vger.kernel.org>; Mon, 22 May 2023 04:27:54 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AEAF261ACC
+        for <linux-ide@vger.kernel.org>; Mon, 22 May 2023 11:27:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 981EFC433EF;
+        Mon, 22 May 2023 11:27:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684754873;
+        bh=YlSrjjgS0ttZ0Lq06mQCanJLMeOwH4uMc1M54iSycCc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=tDvGnpy4DgHLRtGR1dAYeyAHhIMncYJRbZCpH+Fc+LAGa1D0hed7R50SJziqo3vcS
+         m78HuWyKbJ36PHcESjuayhrH3UO3lEztwt42Sq3PC9VzYsPRkGJ29O9Mw5A4QZCYYq
+         PfPuSxj/KysWjRTdh1sisAvQm15Yi8irWpxfrgyKTjG9sgaoO5R54xd8z4BpEhU7ZB
+         k3vkrTcWVY31PNpT9tY7JS8UMTzVaNv6+Mgnv5XEXCecjUAnV7KjcPy7aDH1XHWoQC
+         YjiyAUi1bvdb1JuwllihPXYxaxruEjJncHNAk35b9dO24tsxgg5sdn1o3lJMg6XlWa
+         U+ntHLs2PmuqQ==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
+Cc:     John Garry <john.g.garry@oracle.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Xingui Yang <yangxingui@huawei.com>
+Subject: [PATCH] ata: libata-scsi: Use correct device no in ata_find_dev()
+Date:   Mon, 22 May 2023 20:27:51 +0900
+Message-Id: <20230522112751.266505-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: gr1UQ8xUCX7rQxeM6luW7QmU98LjnwCG
-X-Proofpoint-GUID: p2hwgiYmarMOYUH41Iha2Lh9Dgd7OR5W
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-22_06,2023-05-22_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
- priorityscore=1501 clxscore=1015 mlxlogscore=999 impostorscore=0
- mlxscore=0 bulkscore=0 spamscore=0 phishscore=0 lowpriorityscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2305220089
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+For non-pmp attached devices managed directly by libata, the device
+number is always 0 or 1 and lower to the maximum number of devices
+returned by ata_link_max_devices(). However, for libsas managed devices,
+devices are numbered up to the number of device scanned on an HBA port,
+while each device has a regular ata/link setup supporting at most 1
+device per link. This results in ata_find_dev() always returning NULL
+except for the first device with device number 0.
 
-Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Fix this by rewriting ata_find_dev() to ignore the device number for
+non-pmp attached devices with a link with at most 1 device. For these,
+device number 0 is always used to return the correct ata_device struct
+of the port link. This change excludes IDE master/slave setups (maximum
+number of devices per link is 2) and port-multiplier attached devices.
+
+Reported-by: Xingui Yang <yangxingui@huawei.com>
+Fixes: 41bda9c98035 ("libata-link: update hotplug to handle PMP links")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/Kconfig      | 28 ++++++++++++++--------------
- drivers/ata/libata-sff.c |  4 ++++
- 2 files changed, 18 insertions(+), 14 deletions(-)
+ drivers/ata/libata-scsi.c | 31 ++++++++++++++++++++++++-------
+ 1 file changed, 24 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 42b51c9812a0..c521cdc51f8c 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -557,7 +557,7 @@ comment "PATA SFF controllers with BMDMA"
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7bb12deab70c..3ba9cb258394 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2696,16 +2696,33 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
  
- config PATA_ALI
- 	tristate "ALi PATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select PATA_TIMINGS
- 	help
- 	  This option enables support for the ALi ATA interfaces
-@@ -567,7 +567,7 @@ config PATA_ALI
- 
- config PATA_AMD
- 	tristate "AMD/NVidia PATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select PATA_TIMINGS
- 	help
- 	  This option enables support for the AMD and NVidia PATA
-@@ -585,7 +585,7 @@ config PATA_ARASAN_CF
- 
- config PATA_ARTOP
- 	tristate "ARTOP 6210/6260 PATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables support for ARTOP PATA controllers.
- 
-@@ -612,7 +612,7 @@ config PATA_ATP867X
- 
- config PATA_CMD64X
- 	tristate "CMD64x PATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select PATA_TIMINGS
- 	help
- 	  This option enables support for the CMD64x series chips
-@@ -659,7 +659,7 @@ config PATA_CS5536
- 
- config PATA_CYPRESS
- 	tristate "Cypress CY82C693 PATA support (Very Experimental)"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select PATA_TIMINGS
- 	help
- 	  This option enables support for the Cypress/Contaq CY82C693
-@@ -707,7 +707,7 @@ config PATA_HPT366
- 
- config PATA_HPT37X
- 	tristate "HPT 370/370A/371/372/374/302 PATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables support for the majority of the later HPT
- 	  PATA controllers via the new ATA layer.
-@@ -716,7 +716,7 @@ config PATA_HPT37X
- 
- config PATA_HPT3X2N
- 	tristate "HPT 371N/372N/302N PATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables support for the N variant HPT PATA
- 	  controllers via the new ATA layer.
-@@ -819,7 +819,7 @@ config PATA_MPC52xx
- 
- config PATA_NETCELL
- 	tristate "NETCELL Revolution RAID support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables support for the Netcell Revolution RAID
- 	  PATA controller.
-@@ -855,7 +855,7 @@ config PATA_OLDPIIX
- 
- config PATA_OPTIDMA
- 	tristate "OPTI FireStar PATA support (Very Experimental)"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables DMA/PIO support for the later OPTi
- 	  controllers found on some old motherboards and in some
-@@ -865,7 +865,7 @@ config PATA_OPTIDMA
- 
- config PATA_PDC2027X
- 	tristate "Promise PATA 2027x support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables support for Promise PATA pdc20268 to pdc20277 host adapters.
- 
-@@ -873,7 +873,7 @@ config PATA_PDC2027X
- 
- config PATA_PDC_OLD
- 	tristate "Older Promise PATA controller support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables support for the Promise 20246, 20262, 20263,
- 	  20265 and 20267 adapters.
-@@ -901,7 +901,7 @@ config PATA_RDC
- 
- config PATA_SC1200
- 	tristate "SC1200 PATA support"
--	depends on PCI && (X86_32 || COMPILE_TEST)
-+	depends on PCI && (X86_32 || COMPILE_TEST) && HAS_IOPORT
- 	help
- 	  This option enables support for the NatSemi/AMD SC1200 SoC
- 	  companion chip used with the Geode processor family.
-@@ -919,7 +919,7 @@ config PATA_SCH
- 
- config PATA_SERVERWORKS
- 	tristate "SERVERWORKS OSB4/CSB5/CSB6/HT1000 PATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This option enables support for the Serverworks OSB4/CSB5/CSB6 and
- 	  HT1000 PATA controllers, via the new ATA layer.
-@@ -1183,7 +1183,7 @@ config ATA_GENERIC
- 
- config PATA_LEGACY
- 	tristate "Legacy ISA PATA support (Experimental)"
--	depends on (ISA || PCI)
-+	depends on (ISA || PCI) && HAS_IOPORT
- 	select PATA_TIMINGS
- 	help
- 	  This option enables support for ISA/VLB/PCI bus legacy PATA
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 9d28badfe41d..c8cb7ed28f83 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -3042,6 +3042,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_port_start32);
-  */
- int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
+ static struct ata_device *ata_find_dev(struct ata_port *ap, int devno)
  {
-+#ifdef CONFIG_HAS_IOPORT
- 	unsigned long bmdma = pci_resource_start(pdev, 4);
- 	u8 simplex;
+-	if (!sata_pmp_attached(ap)) {
+-		if (likely(devno >= 0 &&
+-			   devno < ata_link_max_devices(&ap->link)))
++	if (unlikely(devno < 0))
++		return NULL;
++
++	if (likely(!sata_pmp_attached(ap))) {
++		/*
++		 * For the non PMP case, the maximum number of devices per link
++		 * is 1 (e.g. SATA case), or 2 (IDE master + slave). The former
++		 * case includes libsas hosted devices which are numbered up to
++		 * the number of devices scanned on an HBA port, but with each
++		 * ata device having its own ata port and link. To accommodate
++		 * these, ignore devno and always use device number 0.
++		 */
++		switch (ata_link_max_devices(&ap->link)) {
++		case 1:
++			return &ap->link.device[0];
++		case 2:
++			if (devno >= 2)
++				return NULL;
+ 			return &ap->link.device[devno];
+-	} else {
+-		if (likely(devno >= 0 &&
+-			   devno < ap->nr_pmp_links))
+-			return &ap->pmp_link[devno].device[0];
++		default:
++			return NULL;
++		}
+ 	}
  
-@@ -3054,6 +3055,9 @@ int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
- 	if (simplex & 0x80)
- 		return -EOPNOTSUPP;
- 	return 0;
-+#else
-+	return -ENOENT;
-+#endif /* CONFIG_HAS_IOPORT */
++	if (devno < ap->nr_pmp_links)
++		return &ap->pmp_link[devno].device[0];
++
+ 	return NULL;
  }
- EXPORT_SYMBOL_GPL(ata_pci_bmdma_clear_simplex);
  
 -- 
-2.39.2
+2.40.1
 
