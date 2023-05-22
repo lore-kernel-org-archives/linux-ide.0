@@ -2,37 +2,37 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C91BC7EE39
-	for <linux-ide@archiver.kernel.org>; Mon, 22 May 2023 17:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D9CEC7EE2D
+	for <linux-ide@archiver.kernel.org>; Mon, 22 May 2023 17:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233131AbjEVRei (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 22 May 2023 13:34:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43460 "EHLO
+        id S233212AbjEVRek (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 22 May 2023 13:34:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233022AbjEVRef (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2023 13:34:35 -0400
+        with ESMTP id S233126AbjEVReg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2023 13:34:36 -0400
 Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 542B0109;
-        Mon, 22 May 2023 10:34:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9943BB9;
+        Mon, 22 May 2023 10:34:35 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-208-162.ewe-ip-backbone.de [91.248.208.162])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 1A51266058F2;
-        Mon, 22 May 2023 18:34:31 +0100 (BST)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 07FF06606E73;
+        Mon, 22 May 2023 18:34:34 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1684776871;
-        bh=2crkjF5hGrNF5+uW+vKBwvLEXML84W1Sv3l++t7Q9ZA=;
-        h=From:To:Cc:Subject:Date:From;
-        b=FredDntETk0AslrVHCX+RH6xREF10lt453u7qYeN4hyQLhYZJw4JMZx0VVkHzdndQ
-         OnrnnyGJu1TFLUTjoYP7nmih2gIzpkZodMYwAaXkEZMpUtwwzKvlmWqglhxh7Rv65J
-         zsXEHrvGl6U3+a/kGpoRjn3Jdgd1rbPAcm28WzKHsx7xzUitbnWmSkmf+1FR2YH9VF
-         ZysJ7OrbLg1Tvnji5swHCthwiKBHYH6ovufwOqbHu0AmUbyALT+IawhGawIUk6Q1s5
-         xPfkNs1fTgk31iaSpbJyErXTFQxtOgzv8Qk6gBqOlrm5KQeueqCb0DdOWEmPa58e1H
-         XBeDgviuGmdlg==
+        s=mail; t=1684776874;
+        bh=uHNhWU1jmIOWUBoodh01ywxlZr0fhauLWpShle6WDA0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=QdS+9VDGKETNE8Jl+/wmLcacEYcQJeNk3AOrQf05kefFP0aq/3VdjUQyxulx0rqq2
+         ytOe1Gy7P/pgimlLEhj4xdilYoXsp1xqINgN8diaMsfTw45C3cG6DNMgl8vgPq4qzF
+         jQySOffH7H2LihdTtDHGYrlaHzT8gLFbKxyIrHNVRvgm+ZYI9MLzTOlUpJIaTUBIIq
+         USWWwp3E4FKbYCtQ8CSfo1LpBF2ylhZe2jjtQnKjwE1kCUttO3pTTCzYtC8/3Ua4Dt
+         7vp4gkVFdrlngILc5h/XtbqBaK7CKBmzzfEWQaLy4Tl/S5ylDt9TozyNkWex3EkfIi
+         /ZJmj+zb0N3ug==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id 8950E4805CC; Mon, 22 May 2023 19:34:29 +0200 (CEST)
+        id 9248C4807F0; Mon, 22 May 2023 19:34:29 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     Heiko Stuebner <heiko@sntech.de>
 Cc:     Rob Herring <robh+dt@kernel.org>,
@@ -46,46 +46,126 @@ Cc:     Rob Herring <robh+dt@kernel.org>,
         linux-kernel@vger.kernel.org,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v2 0/6] Add RK3588 SATA support
-Date:   Mon, 22 May 2023 19:34:17 +0200
-Message-Id: <20230522173423.64691-1-sebastian.reichel@collabora.com>
+Subject: [PATCH v2 6/6] arm64: dts: rockchip: rk3588: add SATA support
+Date:   Mon, 22 May 2023 19:34:23 +0200
+Message-Id: <20230522173423.64691-7-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230522173423.64691-1-sebastian.reichel@collabora.com>
+References: <20230522173423.64691-1-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+Add all three SATA IP blocks to the RK3588 DT.
 
-This enables SATA support for RK3588.
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+---
+ arch/arm64/boot/dts/rockchip/rk3588.dtsi  | 23 +++++++++++
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi | 48 +++++++++++++++++++++++
+ 2 files changed, 71 insertions(+)
 
-Changes since PATCHv1:
- * https://lore.kernel.org/all/20230413182345.92557-1-sebastian.reichel@collabora.com/
- * Rebase to v6.4-rc1
- * Collect Acked-by for syscon DT binding update
- * Use ASIC clock description suggested by Serge Semin
- * Also add RBC clock (not used by RK3588)
- * Add extra patch narrowing down the allowed clocks for RK356x and RK3588
-
--- Sebastian
-
-Sebastian Reichel (6):
-  dt-bindings: soc: rockchip: add rk3588 pipe-phy syscon
-  dt-bindings: ata: ahci: add RK3588 AHCI controller
-  dt-bindings: ata: ahci: dwc: enforce rockchip clocks
-  dt-bindings: phy: rockchip: rk3588 has two reset lines
-  arm64: dts: rockchip: rk3588: add combo PHYs
-  arm64: dts: rockchip: rk3588: add SATA support
-
- .../bindings/ata/snps,dwc-ahci-common.yaml    |  8 +-
- .../bindings/ata/snps,dwc-ahci.yaml           | 40 +++++++--
- .../phy/phy-rockchip-naneng-combphy.yaml      |  8 +-
- .../devicetree/bindings/soc/rockchip/grf.yaml |  1 +
- arch/arm64/boot/dts/rockchip/rk3588.dtsi      | 44 +++++++++
- arch/arm64/boot/dts/rockchip/rk3588s.dtsi     | 90 +++++++++++++++++++
- 6 files changed, 183 insertions(+), 8 deletions(-)
-
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588.dtsi b/arch/arm64/boot/dts/rockchip/rk3588.dtsi
+index 9d8539b5309b..b9508cea34f1 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588.dtsi
+@@ -129,6 +129,29 @@ gmac0_mtl_tx_setup: tx-queues-config {
+ 		};
+ 	};
+ 
++	sata1: sata@fe220000 {
++		compatible = "rockchip,rk3588-dwc-ahci", "snps,dwc-ahci";
++		reg = <0 0xfe220000 0 0x1000>;
++		clocks = <&cru ACLK_SATA1>, <&cru CLK_PMALIVE1>,
++			 <&cru CLK_RXOOB1>, <&cru CLK_PIPEPHY1_REF>,
++			 <&cru CLK_PIPEPHY1_PIPE_ASIC_G>;
++		clock-names = "sata", "pmalive", "rxoob", "ref", "asic";
++		interrupts = <GIC_SPI 274 IRQ_TYPE_LEVEL_HIGH 0>;
++		ports-implemented = <0x1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++
++		sata-port@0 {
++			reg = <0>;
++			hba-port-cap = <HBA_PORT_FBSCP>;
++			phys = <&combphy1_ps PHY_TYPE_SATA>;
++			phy-names = "sata-phy";
++			snps,rx-ts-max = <32>;
++			snps,tx-ts-max = <32>;
++		};
++	};
++
+ 	combphy1_ps: phy@fee10000 {
+ 		compatible = "rockchip,rk3588-naneng-combphy";
+ 		reg = <0x0 0xfee10000 0x0 0x100>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+index 45ae457a22a4..00a91b08e3bb 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+@@ -9,6 +9,8 @@
+ #include <dt-bindings/power/rk3588-power.h>
+ #include <dt-bindings/reset/rockchip,rk3588-cru.h>
+ #include <dt-bindings/thermal/thermal.h>
++#include <dt-bindings/phy/phy.h>
++#include <dt-bindings/ata/ahci.h>
+ 
+ / {
+ 	compatible = "rockchip,rk3588";
+@@ -1717,6 +1719,52 @@ gmac1_mtl_tx_setup: tx-queues-config {
+ 		};
+ 	};
+ 
++	sata0: sata@fe210000 {
++		compatible = "rockchip,rk3588-dwc-ahci", "snps,dwc-ahci";
++		reg = <0 0xfe210000 0 0x1000>;
++		clocks = <&cru ACLK_SATA0>, <&cru CLK_PMALIVE0>,
++			 <&cru CLK_RXOOB0>, <&cru CLK_PIPEPHY0_REF>,
++			 <&cru CLK_PIPEPHY0_PIPE_ASIC_G>;
++		clock-names = "sata", "pmalive", "rxoob", "ref", "asic";
++		interrupts = <GIC_SPI 273 IRQ_TYPE_LEVEL_HIGH 0>;
++		ports-implemented = <0x1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++
++		sata-port@0 {
++			reg = <0>;
++			hba-port-cap = <HBA_PORT_FBSCP>;
++			phys = <&combphy0_ps PHY_TYPE_SATA>;
++			phy-names = "sata-phy";
++			snps,rx-ts-max = <32>;
++			snps,tx-ts-max = <32>;
++		};
++	};
++
++	sata2: sata@fe230000 {
++		compatible = "rockchip,rk3588-dwc-ahci", "snps,dwc-ahci";
++		reg = <0 0xfe230000 0 0x1000>;
++		clocks = <&cru ACLK_SATA2>, <&cru CLK_PMALIVE2>,
++			 <&cru CLK_RXOOB2>, <&cru CLK_PIPEPHY2_REF>,
++			 <&cru CLK_PIPEPHY2_PIPE_ASIC_G>;
++		clock-names = "sata", "pmalive", "rxoob", "ref", "asic";
++		interrupts = <GIC_SPI 275 IRQ_TYPE_LEVEL_HIGH 0>;
++		ports-implemented = <0x1>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		status = "disabled";
++
++		sata-port@0 {
++			reg = <0>;
++			hba-port-cap = <HBA_PORT_FBSCP>;
++			phys = <&combphy2_psu PHY_TYPE_SATA>;
++			phy-names = "sata-phy";
++			snps,rx-ts-max = <32>;
++			snps,tx-ts-max = <32>;
++		};
++	};
++
+ 	sdmmc: mmc@fe2c0000 {
+ 		compatible = "rockchip,rk3588-dw-mshc", "rockchip,rk3288-dw-mshc";
+ 		reg = <0x0 0xfe2c0000 0x0 0x4000>;
 -- 
 2.39.2
 
