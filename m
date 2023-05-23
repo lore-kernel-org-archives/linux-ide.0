@@ -2,127 +2,120 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B69FEC7EE26
-	for <linux-ide@archiver.kernel.org>; Tue, 23 May 2023 10:08:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 636FDC7EE29
+	for <linux-ide@archiver.kernel.org>; Tue, 23 May 2023 10:22:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235301AbjEWKId (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 23 May 2023 06:08:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46784 "EHLO
+        id S236534AbjEWKWe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 23 May 2023 06:22:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232871AbjEWKIc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2023 06:08:32 -0400
+        with ESMTP id S236556AbjEWKWb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2023 06:22:31 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4893BFA;
-        Tue, 23 May 2023 03:08:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DBFB18C
+        for <linux-ide@vger.kernel.org>; Tue, 23 May 2023 03:22:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D85A7609AE;
-        Tue, 23 May 2023 10:08:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 122AAC433EF;
-        Tue, 23 May 2023 10:08:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 918C663056
+        for <linux-ide@vger.kernel.org>; Tue, 23 May 2023 10:22:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 866BDC433D2;
+        Tue, 23 May 2023 10:22:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684836510;
-        bh=D3l0vlRfmlGlM4dfcP9O1kQ16yD7pSyIfio5CoFpRyI=;
+        s=k20201202; t=1684837349;
+        bh=7f43QGRVafYVM5O4WvlxBwlcasQOd9AZ9UA+Xk+tknw=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=UP/WTuoe3Dv4m6Hgxg+LP62R3MdNQvmTxu2IY5MwOvHQjNjUFb1M01cGGzl79oiP6
-         KgEuAq8/2ikAIZosRTlvvA8momVAjxrMO53S08RnB3zaSsJ/gzTBOoTBLGU1MRMEQZ
-         Pxmo5/0z2Q/wxQxuhz6CQVG3X5pV5pRDy7kpZCc1u8VXs+VYeoIAW7j7cC38gIVa3c
-         AQX+Fbrl7NW5XKLqgjGv8EC0ydq9una0T3v8SYjPm56LIDHc8diGXCNSUw8O6JW43s
-         rESMBLeiRqU8LfJpafoDjV7ASDPScCDi/MApVZJn3qFpBzZtutNsw7LcYaHHqPb8U+
-         75uvF6R0eqzAw==
-Message-ID: <09f5d62b-1bd4-3a25-e178-2225f1c7b603@kernel.org>
-Date:   Tue, 23 May 2023 19:08:27 +0900
+        b=qMrFHcsPAoftcJy/2VsVODrAovpqpQSgdLMLRf3wndpNKlBCwLS542Vi3Bqh/UIMj
+         O/m/Yvaq7Gbkwo88sEJ0F6dViydruR1MEgEGv89bvyuyQZMwYp69KXoxCmoJsU1rlG
+         7lYgdMz9pMLjVgBSndL53KJSgPoTPdOwc6E/lD8SlRfIfCQG39AQ/x+D/fBJezDH+a
+         lRvjAwic9tJpulGMyNtyEO7Buld8S81xxiDFpxKiwBekBcTZSeTOfreU2KLWm9V4W0
+         hu9gdJ0hvLgl8KioTqJ04O3Qr59l/NqRmtFSDh/R8Htdmb1D+BsxMGXvnDjAKBsv8c
+         kheiK6HsfP0JA==
+Message-ID: <af5fffde-252a-b18f-d061-1e2b5122b75f@kernel.org>
+Date:   Tue, 23 May 2023 19:22:27 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v7 00/19] Add Command Duration Limits support
+Subject: Re: [PATCH v3] ata: libata-scsi: Use correct device no in
+ ata_find_dev()
 Content-Language: en-US
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-References: <20230511011356.227789-1-nks@flawful.org>
- <yq1h6s4nix8.fsf@ca-mkp.ca.oracle.com> <ZGyN1KkCXsTo8ZwG@x1-carbon>
+To:     Jason Yan <yanaijie@huawei.com>,
+        John Garry <john.g.garry@oracle.com>, linux-ide@vger.kernel.org
+Cc:     Xingui Yang <yangxingui@huawei.com>
+References: <20230523080443.398912-1-dlemoal@kernel.org>
+ <1da247a6-57d3-a2dc-7375-e5a1fb02f9c1@oracle.com>
+ <4a48966b-c193-06c7-54b0-d175a9009de9@huawei.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <ZGyN1KkCXsTo8ZwG@x1-carbon>
+In-Reply-To: <4a48966b-c193-06c7-54b0-d175a9009de9@huawei.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 5/23/23 18:56, Niklas Cassel wrote:
-> On Mon, May 22, 2023 at 05:41:19PM -0400, Martin K. Petersen wrote:
+On 5/23/23 18:23, Jason Yan wrote:
+> On 2023/5/23 16:29, John Garry wrote:
+>> On 23/05/2023 09:04, Damien Le Moal wrote:
+>>> For devices not attached to a port multiplier and managed directly by
+>>> libata, the device number passed to ata_find_dev() must always be lower
+>>> than the maximum number of devices returned by ata_link_max_devices().
+>>> That is 1 for SATA devices or 2 for an IDE link with master+slave
+>>> devices. This device number is the scsi device ID which matches these
+>>> constraint as the ID are generated per port and so never exceed the
+>>> link maximum.
+>>>
+>>> However, for libsas managed devices, scsi device IDs are assigned per
+>>> scsi host, leading to device IDs for SATA devices that can be well in
+>>> excess of libata per-link maximum number of devices. This results in
+>>> ata_find_dev() always returning NULL for libsas managed devices except
+>>> for the first device of the host with ID (device number) 0. This issue
+>>> is visible by executing hdparm command, which fails:
+>>>
+>>> hdparm -i /dev/sdX
+>>> /dev/sdX:
+>>>    HDIO_GET_IDENTITY failed: No message of desired type
+>>>
+>>> Fix this by rewriting ata_find_dev() to ignore the device number for
+>>> non-pmp attached devices with a link with at most 1 device, that is SATA
+>>> devices on SATA ports. For these, device number 0 is always used to
+>>> return the correct ata_device struct of the port link. This change
+>>> excludes IDE master/slave setups (maximum number of devices per link
+>>> is 2) and port-multiplier attached devices. Also, to be consistant with
+>>> the fact that scsi device IDs and channel numbers used as device numbers
+>>> are both unsigned int, change the devno argument of ata_find_dev() to
+>>> unsinged int.
+>>>
+>>> Reported-by: Xingui Yang <yangxingui@huawei.com>
+>>> Fixes: 41bda9c98035 ("libata-link: update hotplug to handle PMP links")
+>>> Cc: stable@vger.kernel.org
+>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 >>
->> Niklas,
->>
->>> This series adds support for Command Duration Limits.
->>
->> Applied to 6.5/scsi-staging, thanks!
+>> Reviewed-by: John Garry <john.g.garry@oracle.com>
 > 
-> Thank you Martin!
+> Hi Damien & John,
 > 
+> I think we may missed something. What about if we do this:
 > 
-> Damien, Martin,
-> considering that the libata changes depend on the scsi changes,
-> and considering that further libata EH cleanups are planned for
-> 6.5 now when the IPR driver is gone, I think that the best move
-> is to follow the advice of:
-> https://docs.kernel.org/maintainer/rebasing-and-merging.html#merging-from-sibling-or-upstream-trees
+> echo "scsi add-single-device 0 0 100 0" >/proc/scsi/scsi
+> 
+> Then in ata_scsi_user_scan() we will return device "0 0 0 0 " and rescan 
+> this device, which is wrong?
 
-Hannes cleanup of EH will create a conflict with the scsi tree but can go in
-through the ata tree independently so I was not planning on doing a rebase,
-especially not on the scsi tree. I will notify Stephen about the conflict send
-him a resolution to apply and carry for linux-next. When the 6.5 merge window
-open, I will wait for the James to send the scsi PR and send my PR to Linus
-after that with the conflict resolution, as usual.
+On first review, I think it is OK because there is one scsi host per port. So
+when ata_scsi_user_scan() with ID 100, the shost passed to it corresponds to an
+ata_port that is for that device ID 100, and then ata_find_dev() changing devno
+from 100 to 0 is correct.
 
-So far, I do not see any big issue with that.
+But that "one shost == one port" seems to be correct only for pure libata, that
+is, AHCI and other SATA/PATA adapters. For libsas, I am not so sure: the initial
+"ap = ata_shost_to_port(shost)" in ata_scsi_user_scan() seems totally bogus for
+the libsas case, while it is clearly OK for AHCI... Hmm... Needs more digging.
+
 
 > 
-> Specifically:
-> "Merging another subsystem tree to resolve a dependency risks bringing in
-> other bugs and should almost never be done. If that subsystem tree fails
-> to be pulled upstream, whatever problems it had will block the merging of
-> your tree as well.
-> Preferable alternatives include agreeing with the maintainer to carry both
-> sets of changes in one of the trees or creating a topic branch dedicated
-> to the prerequisite commits that can be merged into both trees."
-> 
-> 
-> 
-> Martin created a topic branch/SHA1 for the CDL series:
-> 18bd7718b5c489b3161b6c2ab4685d57c1e2da3b
-> in order for him to be able to have a nice merge commit:
-> https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=6.5/scsi-staging&id=8b60e2189fcd8b10b592608256eb97aebfcff147
-> 
-> So, I suggest that, after this has been applied to
-> 6.5/scsi-queue (right now it is only in 6.5/scsi-staging),
-> that Damien merges the same topic branch/SHA1:
-> 18bd7718b5c489b3161b6c2ab4685d57c1e2da3b
-> to libata/for-6.5.
-> 
-> Perhaps the fix:
-> https://lore.kernel.org/linux-scsi/20230523074701.293502-1-dlemoal@kernel.org/T/#u
-> could be applied on top of that SHA1, or folded in,
-> the important thing is that libata merges the exact same SHA1
-> for the CDL series as scsi-queue.
-> (Especially since I noticed that Martin did some minor changes to
-> the ioprio hints patch, namely changed IO to I/O in the comments
-> describing the macros, so Damien can't just take the patches from
-> the list as is, as that would create conflicts for Linus when he
-> merges the two different subsystem trees.)
-> 
-> 
-> Kind regards,
-> Niklas
+> Thanks,
+> Jason
 
 -- 
 Damien Le Moal
