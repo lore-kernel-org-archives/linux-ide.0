@@ -2,132 +2,152 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB132C7EE29
-	for <linux-ide@archiver.kernel.org>; Wed, 24 May 2023 01:31:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 048D8C77B7A
+	for <linux-ide@archiver.kernel.org>; Mon, 29 May 2023 06:46:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230359AbjEXBbH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 23 May 2023 21:31:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36188 "EHLO
+        id S229556AbjE2GqH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 29 May 2023 02:46:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238994AbjEXBbG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2023 21:31:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CAC4136
-        for <linux-ide@vger.kernel.org>; Tue, 23 May 2023 18:31:05 -0700 (PDT)
+        with ESMTP id S229584AbjE2GqG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 29 May 2023 02:46:06 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EE91B2
+        for <linux-ide@vger.kernel.org>; Sun, 28 May 2023 23:46:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A255C637BA
-        for <linux-ide@vger.kernel.org>; Wed, 24 May 2023 01:31:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99178C433D2;
-        Wed, 24 May 2023 01:31:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F00CD621F9
+        for <linux-ide@vger.kernel.org>; Mon, 29 May 2023 06:46:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD00FC433EF;
+        Mon, 29 May 2023 06:45:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684891864;
-        bh=cdzhjgFxZiQ9xJ3tGFAp1j2mVdzZh9yPFSXHYSdn8VQ=;
+        s=k20201202; t=1685342760;
+        bh=xv8UOnr5jz5wvIMTy1XmgzgIvlHwzx3TQblHMUMh1dI=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Osx1Td0ZVyhejHQfYx2SDALuYewEjKoy3sUrsvKCPMAJG3Xqk9JW50iQ1oK9FyylX
-         5SmUHtFV6XKvHaiJlINgWZCQjQJ1PNp3K+7BpCaPbhAkC/p5JFYcs+p3OBtz9iKDDC
-         8biY2v5SKEWKB8TkouRAc1NPBK54l9Xnq5IyFPnfQG6Y1DOydIRK8ZeN+I6kN32bdV
-         FTeZdXznPhS+RUXlaavfG3sk0P3vLyHRGX8ygqyDqbDn6mXtxblqfYxG4zK0bQtP/R
-         l7rnn1oZtyQSiXnNkY3UjVOkrcMMwvs+MKgT7cgZAwWRR5XrKkafObMVKPhGnd/wj2
-         dHjE6yHxKG1pg==
-Message-ID: <18bd6b4f-0c08-2ea3-c676-1803f55de9bf@kernel.org>
-Date:   Wed, 24 May 2023 10:31:02 +0900
+        b=E6fqEmhv5uvcfUb8JU2tI0PBGHpdISqsfrNNaJs7G1FPkIgoI4Z5z88U53Y2TM9R1
+         L/kntpG4f3UmZcHldU49GeMvtIaBIqJtqsym2Unjza1ziyRI+Tw4cMG6wtAfENW3hg
+         Ch+2H78yeVILSQLpWY1olbTAO3NQOgbe0X7H+oM64OUUnUWWW4a0o5Xup9RYZPzix6
+         bvwyWA2ujTKuOp7vP89mP81/dbd0FOMt7X0n+QwcgzOQTR4QL1q3ZVZVicnTXJq01t
+         2UYWDASUlsaWNvb18U4iBs21O3wQ60WO+SnXophL6osqmqhpMAcMx9UaPiZQN5/O3f
+         FvRajZwXniO8w==
+Message-ID: <e68130f1-272c-c2f0-7725-5b287bffb22d@kernel.org>
+Date:   Mon, 29 May 2023 15:45:58 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v2] ata: libata-scsi: Use correct device no in
+Subject: Re: [PATCH v3] ata: libata-scsi: Use correct device no in
  ata_find_dev()
-To:     Jason Yan <yanaijie@huawei.com>, linux-ide@vger.kernel.org
-Cc:     John Garry <john.g.garry@oracle.com>,
-        Xingui Yang <yangxingui@huawei.com>
-References: <20230523023219.291253-1-dlemoal@kernel.org>
- <a291e973-32e3-f717-4b94-54a78c514800@huawei.com>
- <301a5198-9686-e3b5-74d8-4e5e85e6fc08@kernel.org>
- <cb2d18ed-2b61-6d92-96f4-4c84429ebe74@huawei.com>
 Content-Language: en-US
+To:     Jason Yan <yanaijie@huawei.com>,
+        John Garry <john.g.garry@oracle.com>, linux-ide@vger.kernel.org
+Cc:     Xingui Yang <yangxingui@huawei.com>
+References: <20230523080443.398912-1-dlemoal@kernel.org>
+ <1da247a6-57d3-a2dc-7375-e5a1fb02f9c1@oracle.com>
+ <4a48966b-c193-06c7-54b0-d175a9009de9@huawei.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <cb2d18ed-2b61-6d92-96f4-4c84429ebe74@huawei.com>
+In-Reply-To: <4a48966b-c193-06c7-54b0-d175a9009de9@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 5/23/23 21:29, Jason Yan wrote:
-> On 2023/5/23 19:52, Damien Le Moal wrote:
->>> I wonder if you can change the type of devno to 'unsigned int'? At a
->>> closer look I found the user can control this value and may pass in a
->>> bogus channel or id.
+On 5/23/23 18:23, Jason Yan wrote:
+> On 2023/5/23 16:29, John Garry wrote:
+>> On 23/05/2023 09:04, Damien Le Moal wrote:
+>>> For devices not attached to a port multiplier and managed directly by
+>>> libata, the device number passed to ata_find_dev() must always be lower
+>>> than the maximum number of devices returned by ata_link_max_devices().
+>>> That is 1 for SATA devices or 2 for an IDE link with master+slave
+>>> devices. This device number is the scsi device ID which matches these
+>>> constraint as the ID are generated per port and so never exceed the
+>>> link maximum.
 >>>
->>> proc_scsi_write
->>>       =>scsi_add_single_device
->>>           =>ata_scsi_user_scan
->>>               =>ata_find_dev
->> Reading more about scsi_add_single_device(), the comment says "Note:
->> this seems
->> to be aimed exclusively at SCSI parallel busses.". So I don't think we
->> should
->> worry about it. But then I also do not understand why libata is wired
->> to this at
->> all. Cannot have ATA device on a parallel SCSI bus...
-> 
-> The comment is kind of obsolete. It is not limited to SCSI parallel
-> busses only.
-> 
+>>> However, for libsas managed devices, scsi device IDs are assigned per
+>>> scsi host, leading to device IDs for SATA devices that can be well in
+>>> excess of libata per-link maximum number of devices. This results in
+>>> ata_find_dev() always returning NULL for libsas managed devices except
+>>> for the first device of the host with ID (device number) 0. This issue
+>>> is visible by executing hdparm command, which fails:
+>>>
+>>> hdparm -i /dev/sdX
+>>> /dev/sdX:
+>>>    HDIO_GET_IDENTITY failed: No message of desired type
+>>>
+>>> Fix this by rewriting ata_find_dev() to ignore the device number for
+>>> non-pmp attached devices with a link with at most 1 device, that is SATA
+>>> devices on SATA ports. For these, device number 0 is always used to
+>>> return the correct ata_device struct of the port link. This change
+>>> excludes IDE master/slave setups (maximum number of devices per link
+>>> is 2) and port-multiplier attached devices. Also, to be consistant with
+>>> the fact that scsi device IDs and channel numbers used as device numbers
+>>> are both unsigned int, change the devno argument of ata_find_dev() to
+>>> unsinged int.
+>>>
+>>> Reported-by: Xingui Yang <yangxingui@huawei.com>
+>>> Fixes: 41bda9c98035 ("libata-link: update hotplug to handle PMP links")
+>>> Cc: stable@vger.kernel.org
+>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 >>
->> On my system, I cannot get
->>
->> echo "scsi add-single-device X 0 100 0" >/proc/scsi/scsi
->>
->> to do anything and so I do not see how ata_scsi_user_scan can ever be
->> called...
->>
+>> Reviewed-by: John Garry <john.g.garry@oracle.com>
 > 
-> Did you enabled CONFIG_SCSI_PROC_FS ? I started a qemu and it still works.
+> Hi Damien & John,
 > 
-> [root@localhost ~]# cat /proc/scsi/scsi
-> Attached devices:
-> Host: scsi1 Channel: 00 Id: 00 Lun: 00
->   Vendor: QEMU     Model: QEMU DVD-ROM     Rev: 2.5+
->   Type:   CD-ROM                           ANSI  SCSI revision: 05
-> [root@localhost ~]# lsscsi
-> [1:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     2.5+  /dev/sr0
-> [root@localhost ~]#
-> [root@localhost ~]#
-> [root@localhost ~]# echo "scsi remove-single-device 1 0 0 0" >
-> /proc/scsi/scsi
-> [  639.747836] ata2.00: disable device
-> [root@localhost ~]#
-> [root@localhost ~]#
-> [root@localhost ~]# echo "scsi add-single-device 1 0 0 0" > /proc/scsi/scsi
-> [root@localhost ~]#
-> [root@localhost ~]#
-> [root@localhost ~]# lsscsi
-> [1:0:0:0]    cd/dvd  QEMU     QEMU DVD-ROM     2.5+  /dev/sr0
-> [root@localhost ~]#
-> [root@localhost ~]#
-> [root@localhost ~]# echo "scsi add-single-device 1 0 100 0" >
-> /proc/scsi/scsi
-> -bash: echo: write error: Invalid argument
-> [root@localhost ~]#
-> [root@localhost ~]#
+> I think we may missed something. What about if we do this:
 > 
+> echo "scsi add-single-device 0 0 100 0" >/proc/scsi/scsi
 > 
-> For a wrong scsi nubmer "1 0 100 0", it returns an error now. If our
-> patch is applied, it will return ok and will add "1 0 0 0" instead, I
-> guess.
+> Then in ata_scsi_user_scan() we will return device "0 0 0 0 " and rescan
+> this device, which is wrong?
 
-Indeed. Using ata_find_dev() in ata_scsi_user_scan() as it is is not
-broken. And ata_scsi_user_scan() is also likely broken in subtle ways
-for libsas due to the ata port being determined from the scsi host,
-which does not seem to be how libsas manages things. Need to dig further.
+I did some more digging into this. And I do not think there are any
+issues (I tested and it works). The reason is that the "shost" passed to
+ata_scsi_user_scan() corresponds to the scsi host for the ata_port of
+the ata_device in libsas (dev->sata_dev.ap). It is not the scsi_host
+representing the HBA itself (which has multiple devices).
 
-> 
-> 
-> Thanks,
-> Jason
+So changing the devno to 0 has no effect and deleting+rescanning
+particular devices leads to the correct IDs being used. E.g., on my
+system, I have 4 drives connected to the pm80xx:
+
+# lsscsi -g
+[0:0:0:0]    disk    ATA      WDC  WUH721818AL W232  /dev/sdc   /dev/sg3
+[0:0:1:0]    disk    ATA      WDC  WUH721818AL WTW2  /dev/sdb   /dev/sg1
+[0:0:2:0]    disk    ATA      WDC  WUH722222AL Wf86  /dev/sdd   /dev/sg2
+[0:0:3:0]    zbc     ATA      WDC  WSH722020AL W803  /dev/sda   /dev/sg0
+
+If I remove the first 0 and 2:
+
+# echo 1 > /sys/class/scsi_device/0:0:0:0/device/delete
+# echo 1 > /sys/class/scsi_device/0:0:2:0/device/delete
+# lsscsi -g
+[0:0:1:0]    disk    ATA      WDC  WUH721818AL WTW2  /dev/sdb   /dev/sg1
+[0:0:3:0]    zbc     ATA      WDC  WSH722020AL W803  /dev/sda   /dev/sg0
+
+And then manually rescan in reverse order of the removal:
+
+# echo "scsi add-single-device 0 0 2 0" > /proc/scsi/scsi
+# lsscsi -g
+[0:0:1:0]    disk    ATA      WDC  WUH721818AL WTW2  /dev/sdb   /dev/sg1
+[0:0:2:0]    disk    ATA      WDC  WUH722222AL Wf86  /dev/sdc   /dev/sg2
+[0:0:3:0]    zbc     ATA      WDC  WSH722020AL W803  /dev/sda   /dev/sg0
+
+# echo "scsi add-single-device 0 0 0 0" > /proc/scsi/scsi
+# lsscsi -g
+[0:0:0:0]    disk    ATA      WDC  WUH721818AL W232  /dev/sdd   /dev/sg3
+[0:0:1:0]    disk    ATA      WDC  WUH721818AL WTW2  /dev/sdb   /dev/sg1
+[0:0:2:0]    disk    ATA      WDC  WUH722222AL Wf86  /dev/sdc   /dev/sg2
+[0:0:3:0]    zbc     ATA      WDC  WSH722020AL W803  /dev/sda   /dev/sg0
+
+I get back all devices with the correct IDs.
+
+Note that I tried John's suggestion as well using an ata_for_each_dev()
+loop. That does work well for libsas as we do have ata_dev->sdev set to
+the scsi device already when scanning, but does not work for AHCI as we
+do not. I will keep doing some more tests with v3 (and correct typos and
+suggested) but I think this is all good.
 
 -- 
 Damien Le Moal
