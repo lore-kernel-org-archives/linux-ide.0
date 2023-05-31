@@ -2,234 +2,113 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DCE9C7EE24
-	for <linux-ide@archiver.kernel.org>; Tue, 30 May 2023 20:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06960C7EE23
+	for <linux-ide@archiver.kernel.org>; Wed, 31 May 2023 11:35:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231617AbjE3Uwt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 30 May 2023 16:52:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36748 "EHLO
+        id S232241AbjEaLfh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 31 May 2023 07:35:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232613AbjE3Uv4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2023 16:51:56 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CE9CBE;
-        Tue, 30 May 2023 13:51:50 -0700 (PDT)
-Received: from [192.168.1.103] (178.176.75.218) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 30 May
- 2023 23:51:39 +0300
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH v4 02/41] ata: add HAS_IOPORT dependencies
-To:     Niklas Schnelle <schnelle@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Damien Le Moal <dlemoal@kernel.org>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@kernel.org>,
+        with ESMTP id S230341AbjEaLfg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 May 2023 07:35:36 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D17E10B;
+        Wed, 31 May 2023 04:35:35 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id 2adb3069b0e04-4f3ba703b67so6381611e87.1;
+        Wed, 31 May 2023 04:35:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685532934; x=1688124934;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=YtaeayrxwnpVa64jGqwH3nylPnKgLH9664Qace/gSBA=;
+        b=aMaqn41hzNWiWfn+hx37ZzesODgofhDklubUC+rUH4M6gg6wyKrv92npnIYfoC61vR
+         3Ihs6LKRRZJdJwayqXPndJrJR8qpHwHyomoNocsKwxaxQ5Bl78XqIV5kJEi+klUfLg+W
+         NzlvX1s7P02BY1VD2YyHdn/dJSjCh75pHOpm49UzWR4v7ojAyrBVAc27ZIu5KwAZzgHa
+         WGX+c8wxbz/WIFpiu2bVMnaY7VBnxunWk2xGRr1X5xYdP0UhC+NaAzoLgQ+kQXpV62Gu
+         WZqL28ooj1Qtj9mVi5chfNG5lY8s43HoxjNNIxAp+Ak+kQPgHbd8OuS2MjaW2vv83h1z
+         z5dA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685532934; x=1688124934;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YtaeayrxwnpVa64jGqwH3nylPnKgLH9664Qace/gSBA=;
+        b=iY5uo/FKhWBq+14XJaIrdDAo+2dYBdBOIznVw3r+oxaTGK+0s8Hb30Rx5doLFVVxCK
+         HHtrO4WuTZaEv1lGue7jttwul+HRNUobbdT34kYQo2WBWW2KYhI611pgeUCNjXVspDNC
+         QRp39MGBV+rAMTZHwB3NTXJuIxYnVjGxDaurfx1lz4teJWIDAFdPDGgkliSyYwlGxtNy
+         gAO9ptpLkHwEcAaOEXew8zwzdkRGc/VK0c7oVh7lB0kRoESS2LpBuzEGRNhPTk4/eSdj
+         iT9W0RwL3XrtMXnmFxh26IWLKe4HUfqYs34QEEdQcUthcSR1of3jwgJ8YAXldpV+vmH3
+         VBJA==
+X-Gm-Message-State: AC+VfDzHFLFBQsbPhfPTElA14NGH8lM6kVFZb1x2F3cgQfwYXU4IhOfu
+        7gj6HpRrTT8chnnQ18DAnyE=
+X-Google-Smtp-Source: ACHHUZ4fnjb/mV3OvhnIK8X+bfU3M2FICrmkQDNJ91GcVsSM8BddGMIpS9+xFyVk2jpKrqeR3DnntQ==
+X-Received: by 2002:ac2:4859:0:b0:4f3:9930:5b8c with SMTP id 25-20020ac24859000000b004f399305b8cmr2382226lfy.25.1685532933569;
+        Wed, 31 May 2023 04:35:33 -0700 (PDT)
+Received: from mobilestation ([95.79.140.35])
+        by smtp.gmail.com with ESMTPSA id c15-20020a19760f000000b004f24e797c58sm675740lff.217.2023.05.31.04.35.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 31 May 2023 04:35:33 -0700 (PDT)
+Date:   Wed, 31 May 2023 14:35:31 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Sebastian Reichel <sebastian.reichel@collabora.com>
+Cc:     Heiko Stuebner <heiko@sntech.de>, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
- <20230516110038.2413224-3-schnelle@linux.ibm.com>
-Organization: Open Mobile Platform
-Message-ID: <3af407e3-76a4-23df-8742-8f7b9a98f088@omp.ru>
-Date:   Tue, 30 May 2023 23:51:38 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel@collabora.com
+Subject: Re: [PATCH v2 0/6] Add RK3588 SATA support
+Message-ID: <20230531113531.rxmupa2mbx4tn2re@mobilestation>
+References: <20230522173423.64691-1-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
-In-Reply-To: <20230516110038.2413224-3-schnelle@linux.ibm.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.75.218]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 05/30/2023 20:36:28
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 177729 [May 30 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 514 514 afae95493a83d1ad2cafbfa8c38dfd9c90c52a7a
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_phishing_log_reg_50_60}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.75.218 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.75.218:7.1.2;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.75.218
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 05/30/2023 20:41:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 5/30/2023 6:29:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230522173423.64691-1-sebastian.reichel@collabora.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Hello Sebastian
 
-Hello!
-
-On 5/16/23 1:59 PM, Niklas Schnelle wrote:
-
-> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-> not being declared. We thus need to add HAS_IOPORT as dependency for
-> those drivers using them.
+On Mon, May 22, 2023 at 07:34:17PM +0200, Sebastian Reichel wrote:
+> Hi,
 > 
-> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> ---
-> Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
->       per-subsystem patches may be applied independently
+> This enables SATA support for RK3588.
+
+Thanks for the updated series. I'll have a look at the DW AHCI SATA
+part of it on this week.
+
+-Serge(y)
+
 > 
->  drivers/ata/Kconfig       | 28 ++++++++++++++--------------
->  drivers/ata/ata_generic.c |  2 ++
->  drivers/ata/libata-sff.c  |  2 ++
->  include/linux/libata.h    |  2 ++
->  4 files changed, 20 insertions(+), 14 deletions(-)
+> Changes since PATCHv1:
+>  * https://lore.kernel.org/all/20230413182345.92557-1-sebastian.reichel@collabora.com/
+>  * Rebase to v6.4-rc1
+>  * Collect Acked-by for syscon DT binding update
+>  * Use ASIC clock description suggested by Serge Semin
+>  * Also add RBC clock (not used by RK3588)
+>  * Add extra patch narrowing down the allowed clocks for RK356x and RK3588
 > 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 42b51c9812a0..c521cdc51f8c 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-[...]
-
-   Shouldn't there be an entry for the ATIIXP driver here? It doesn't
-call in*/out*() but it does call ata_bmdma_{start|stop}() that call
-ioread*/iowrite*()...
-   And shouldn't there be an entry for APT867x driver too? It does call
-ioread*/iowrite*()...
- 
-[...]
-
-   Shouldn't there be an entry for the HPT3x3 driver too? It does call
-ioread*/iowrite*()... and also for the IT821x driver? And the Marvall
-driver?
-
-> @@ -819,7 +819,7 @@ config PATA_MPC52xx
->  
->  config PATA_NETCELL
->  	tristate "NETCELL Revolution RAID support"
-> -	depends on PCI
-> +	depends on PCI && HAS_IOPORT
-
-   Not clear why -- because it calls ata_pci_bmdma_clear_simplex()?
-
-[...]
-
-   Shouldn't there be an entry for the NS87415 driver too? It does
-call ioread*/iowrite*()...
-
-[...]
-> @@ -919,7 +919,7 @@ config PATA_SCH
->  
->  config PATA_SERVERWORKS
->  	tristate "SERVERWORKS OSB4/CSB5/CSB6/HT1000 PATA support"
-> -	depends on PCI
-> +	depends on PCI && HAS_IOPORT
-
-   Not clear why -- because it calls ata_pci_bmdma_clear_simplex()?
-
-[...]
-
-   Shouldn't there be an entry for the VIA driver too? It does call
-ioread*/iowrite*()... and SiL680 driver too... and Winbond SL82C105
-driver too... and OPTi PIO driver too... and PCMCIA driver too...
-
-[...]
-> @@ -1183,7 +1183,7 @@ config ATA_GENERIC
->  
->  config PATA_LEGACY
->  	tristate "Legacy ISA PATA support (Experimental)"
-> -	depends on (ISA || PCI)
-> +	depends on (ISA || PCI) && HAS_IOPORT
->  	select PATA_TIMINGS
-
-   Hm, won't it override the HAS_IOPORT dependency, if you enable
-PATA_QDI or PATA_WINBOD_VLB?
-
->  	help
->  	  This option enables support for ISA/VLB/PCI bus legacy PATA
-> diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-> index 2f57ec00ab82..2d391d117f74 100644
-> --- a/drivers/ata/ata_generic.c
-> +++ b/drivers/ata/ata_generic.c
-
-   This driver calls ioread8() as well...
-
-> @@ -197,8 +197,10 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
->  	if (!(command & PCI_COMMAND_IO))
->  		return -ENODEV;
->  
-> +#ifdef CONFIG_PATA_ALI
-
-   This #ifdef doesn't make sense to me -- pata_ali.c will call
-the below function anyway, no?
->  	if (dev->vendor == PCI_VENDOR_ID_AL)
->  		ata_pci_bmdma_clear_simplex(dev);
-> +#endif /* CONFIG_PATA_ALI */
->  	if (dev->vendor == PCI_VENDOR_ID_ATI) {
->  		int rc = pcim_enable_device(dev);
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 9d28badfe41d..80137edb7ebf 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -3031,6 +3031,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_port_start32);
->  
->  #ifdef CONFIG_PCI
->  
-> +#ifdef CONFIG_HAS_IOPORT
->  /**
->   *	ata_pci_bmdma_clear_simplex -	attempt to kick device out of simplex
->   *	@pdev: PCI device
-> @@ -3056,6 +3057,7 @@ int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(ata_pci_bmdma_clear_simplex);
-> +#endif /* CONFIG_HAS_IOPORT */
->  
->  static void ata_bmdma_nodma(struct ata_host *host, const char *reason)
->  {
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 311cd93377c7..90002d4a785b 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -2012,7 +2012,9 @@ extern int ata_bmdma_port_start(struct ata_port *ap);
->  extern int ata_bmdma_port_start32(struct ata_port *ap);
->  
->  #ifdef CONFIG_PCI
-> +#ifdef CONFIG_HAS_IOPORT
->  extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
-> +#endif /* CONFIG_HAS_IOPORT */
-
-   Hm, wouldn't it be better if you used #else and declare an inline
-variant of this function simply retirning an error?
-
-[...]
-
-MBR, Sergey
+> -- Sebastian
+> 
+> Sebastian Reichel (6):
+>   dt-bindings: soc: rockchip: add rk3588 pipe-phy syscon
+>   dt-bindings: ata: ahci: add RK3588 AHCI controller
+>   dt-bindings: ata: ahci: dwc: enforce rockchip clocks
+>   dt-bindings: phy: rockchip: rk3588 has two reset lines
+>   arm64: dts: rockchip: rk3588: add combo PHYs
+>   arm64: dts: rockchip: rk3588: add SATA support
+> 
+>  .../bindings/ata/snps,dwc-ahci-common.yaml    |  8 +-
+>  .../bindings/ata/snps,dwc-ahci.yaml           | 40 +++++++--
+>  .../phy/phy-rockchip-naneng-combphy.yaml      |  8 +-
+>  .../devicetree/bindings/soc/rockchip/grf.yaml |  1 +
+>  arch/arm64/boot/dts/rockchip/rk3588.dtsi      | 44 +++++++++
+>  arch/arm64/boot/dts/rockchip/rk3588s.dtsi     | 90 +++++++++++++++++++
+>  6 files changed, 183 insertions(+), 8 deletions(-)
+> 
+> -- 
+> 2.39.2
+> 
