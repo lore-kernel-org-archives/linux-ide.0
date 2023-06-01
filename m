@@ -2,46 +2,44 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1050BC77B7A
-	for <linux-ide@archiver.kernel.org>; Thu,  1 Jun 2023 05:46:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A63C77B7E
+	for <linux-ide@archiver.kernel.org>; Thu,  1 Jun 2023 05:47:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231448AbjFAFqx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 1 Jun 2023 01:46:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53430 "EHLO
+        id S231610AbjFAFrz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 1 Jun 2023 01:47:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231588AbjFAFqi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jun 2023 01:46:38 -0400
-X-Greylist: delayed 584 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 31 May 2023 22:46:17 PDT
-Received: from forward103a.mail.yandex.net (forward103a.mail.yandex.net [178.154.239.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D37F184;
-        Wed, 31 May 2023 22:46:16 -0700 (PDT)
+        with ESMTP id S231650AbjFAFrF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jun 2023 01:47:05 -0400
+Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [178.154.239.83])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D6DD1AD;
+        Wed, 31 May 2023 22:46:32 -0700 (PDT)
 Received: from mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:5e51:0:640:23ee:0])
-        by forward103a.mail.yandex.net (Yandex) with ESMTP id C3C9046C75;
-        Thu,  1 Jun 2023 08:46:12 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id pjGDMhnDduQ0-sAsX6ddU;
-        Thu, 01 Jun 2023 08:46:12 +0300
+        by forward100a.mail.yandex.net (Yandex) with ESMTP id CA84046D03;
+        Thu,  1 Jun 2023 08:46:29 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id pjGDMhnDduQ0-Nb8XSMqX;
+        Thu, 01 Jun 2023 08:46:29 +0300
 X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail; t=1685598372;
-        bh=8cV6gUYwDgcHjvA3y2Zr+z89V1euSyhB5rUH846uBY4=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail; t=1685598389;
+        bh=y+tFOwGnvCdi8X4QhhgzSNJA5jm6cyNcwe8cwo1VMts=;
         h=Message-Id:Date:In-Reply-To:Cc:Subject:References:To:From;
-        b=Dzlzl22CiudVvU1ZfRV7h+YBUhaKNBYpqBV82sTUXSptEdDpiHqn15Vsk3xPNN60T
-         PX5TJGg0sf1dxiET7qtEta6qcEyJtGQwTRI45Chcv9ucJcGCh3raLpqlD9YF+T05QE
-         J+UIbCQ4wTbuy19ujfm2OKY8t+6QaxXYcFRgJS5I=
+        b=cQb3tKUQqQU70xbxwmnmHG4A8rwFZcyB9S41GD/gqX9V1JYWmr0e4eDLzjCRc3uhf
+         in1wAxUUNe/s5ISLN4iPYu6wEn6nhKUU024TIpY4YMAyOjdHC0xUMb2g1JSUj84Nnx
+         bi6bkoJVdtByTvFxiQFLSu1UfOuNn0TZMbBRMxgo=
 Authentication-Results: mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
 From:   Nikita Shubin <nikita.shubin@maquefel.me>
 To:     Alexander Sverdlin <alexander.sverdlin@gmail.com>,
         Arnd Bergmann <arnd@arndb.de>,
         Linus Walleij <linus.walleij@linaro.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <dlemoal@kernel.org>
 Cc:     Nikita Shubin <nikita.shubin@maquefel.me>,
         Michael Peters <mpeters@embeddedTS.com>,
         Kris Bahnsen <kris@embeddedTS.com>, linux-ide@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 25/43] dt-bindings: ata: Add Cirrus EP93xx
-Date:   Thu,  1 Jun 2023 08:45:30 +0300
-Message-Id: <20230601054549.10843-7-nikita.shubin@maquefel.me>
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v1 38/43] pata: cirrus: drop legacy pinctrl
+Date:   Thu,  1 Jun 2023 08:45:43 +0300
+Message-Id: <20230601054549.10843-20-nikita.shubin@maquefel.me>
 X-Mailer: git-send-email 2.37.4
 In-Reply-To: <20230424123522.18302-1-nikita.shubin@maquefel.me>
 References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
@@ -51,73 +49,70 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add YAML bindings for ep93xx SoC PATA.
+Drop legacy acquire/release since we are using
+pinctrl for this now.
 
 Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
 ---
+ drivers/ata/pata_ep93xx.c | 25 ++++++-------------------
+ 1 file changed, 6 insertions(+), 19 deletions(-)
 
-Notes:
-    v0 -> v1:
-    
-    - renamed file to ep9312-pata
-    - changed email to dlemoal@kernel.org
-    - dropped label
-    - fixed ident
-
- .../bindings/ata/cirrus,ep9312-pata.yaml      | 44 +++++++++++++++++++
- 1 file changed, 44 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
-
-diff --git a/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml b/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
-new file mode 100644
-index 000000000000..3489be55a6fe
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
-@@ -0,0 +1,44 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/cirrus,ep9312-pata.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Cirrus Logic EP9312 PATA controller
-+
-+maintainers:
-+  - Damien Le Moal <dlemoal@kernel.org>
-+
-+properties:
-+  compatible:
-+    oneOf:
-+      - const: cirrus,ep9312-pata
-+      - items:
-+          - const: cirrus,ep9315-pata
-+          - const: cirrus,ep9312-pata
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    maxItems: 1
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    ide@800a0000 {
-+      compatible = "cirrus,ep9312-pata";
-+      reg = <0x800a0000 0x38>;
-+      interrupt-parent = <&vic1>;
-+      interrupts = <8>;
-+      pinctrl-names = "default";
-+      pinctrl-0 = <&ide_default_pins>;
-+    };
-+
-+...
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index 8d363bc71342..88cf31000000 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -921,28 +921,18 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 	void __iomem *ide_base;
+ 	int err;
+ 
+-	err = ep93xx_ide_acquire_gpio(pdev);
+-	if (err)
+-		return err;
+-
+ 	/* INT[3] (IRQ_EP93XX_EXT3) line connected as pull down */
+ 	irq = platform_get_irq(pdev, 0);
+-	if (irq < 0) {
+-		err = irq;
+-		goto err_rel_gpio;
+-	}
++	if (irq < 0)
++		return irq;
+ 
+ 	ide_base = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
+-	if (IS_ERR(ide_base)) {
+-		err = PTR_ERR(ide_base);
+-		goto err_rel_gpio;
+-	}
++	if (IS_ERR(ide_base))
++		return PTR_ERR(ide_base);
+ 
+ 	drv_data = devm_kzalloc(&pdev->dev, sizeof(*drv_data), GFP_KERNEL);
+-	if (!drv_data) {
+-		err = -ENXIO;
+-		goto err_rel_gpio;
+-	}
++	if (!drv_data)
++		return -ENXIO;
+ 
+ 	drv_data->pdev = pdev;
+ 	drv_data->ide_base = ide_base;
+@@ -1000,8 +990,6 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 
+ err_rel_dma:
+ 	ep93xx_pata_release_dma(drv_data);
+-err_rel_gpio:
+-	ep93xx_ide_release_gpio(pdev);
+ 	return err;
+ }
+ 
+@@ -1013,7 +1001,6 @@ static int ep93xx_pata_remove(struct platform_device *pdev)
+ 	ata_host_detach(host);
+ 	ep93xx_pata_release_dma(drv_data);
+ 	ep93xx_pata_clear_regs(drv_data->ide_base);
+-	ep93xx_ide_release_gpio(pdev);
+ 	return 0;
+ }
+ 
 -- 
 2.37.4
 
