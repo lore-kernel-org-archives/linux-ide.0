@@ -2,142 +2,65 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9947CC7EE23
-	for <linux-ide@archiver.kernel.org>; Thu,  1 Jun 2023 23:57:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 908EBC7EE23
+	for <linux-ide@archiver.kernel.org>; Fri,  2 Jun 2023 01:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229610AbjFAX5m (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 1 Jun 2023 19:57:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48146 "EHLO
+        id S230166AbjFBBxx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 1 Jun 2023 21:53:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbjFAX5l (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jun 2023 19:57:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47BCA136;
-        Thu,  1 Jun 2023 16:57:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D0A6864B02;
-        Thu,  1 Jun 2023 23:57:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE49FC433EF;
-        Thu,  1 Jun 2023 23:57:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685663859;
-        bh=NkkzfKpwW/saf1KcEfWJB55yAVfjvnM8hrbEMy081KY=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=DoNOCSDA9/nA+8zVLQZuV0+47vz27fi9pY+F4kR5iYfADTdGEl5ipeEYx7pxLU54v
-         bJ+FFLhZH9Poc7QKyXDTWYJV/Xh4+TpYCoy+tHKk3+KCS6F9SF/uOAeLEsd1gZ9Elw
-         fJWCwrRlJ3r7MIUuMygyfB4m7vw00zD/eLAAYtmWhNg80AbZsqCMASlNV2m6jQOIfO
-         E/sS+XQZAjSVHonoE8iLiPo7MUwqCt26NUshMCScUncqSyzXsVKAO3YZ62J/SwW3su
-         qIOSch2vXeez84KAZjChYTQPGeRZQm/lz8/PeIWyY0vquc4SWYM+me53YyxRe1C8sX
-         h3uRH9O32bqvw==
-Message-ID: <fe8bfbfc-0ce5-d4ea-a2a8-8608fe4e2f97@kernel.org>
-Date:   Fri, 2 Jun 2023 08:57:37 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v1 25/43] dt-bindings: ata: Add Cirrus EP93xx
-Content-Language: en-US
-To:     Nikita Shubin <nikita.shubin@maquefel.me>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+        with ESMTP id S229648AbjFBBxw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jun 2023 21:53:52 -0400
+X-Greylist: delayed 62 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 01 Jun 2023 18:53:51 PDT
+Received: from fgw23-7.mail.saunalahti.fi (fgw23-7.mail.saunalahti.fi [62.142.5.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FE75C0
+        for <linux-ide@vger.kernel.org>; Thu,  1 Jun 2023 18:53:51 -0700 (PDT)
+Received: from localhost (88-113-26-95.elisa-laajakaista.fi [88.113.26.95])
+        by fgw23.mail.saunalahti.fi (Halon) with ESMTP
+        id 2c58c2fe-00e8-11ee-b972-005056bdfda7;
+        Fri, 02 Jun 2023 04:52:47 +0300 (EEST)
+From:   andy.shevchenko@gmail.com
+Date:   Fri, 2 Jun 2023 04:52:47 +0300
+To:     Nikita Shubin <nikita.shubin@maquefel.me>
+Cc:     Alexander Sverdlin <alexander.sverdlin@gmail.com>,
         Arnd Bergmann <arnd@arndb.de>,
         Linus Walleij <linus.walleij@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc:     Michael Peters <mpeters@embeddedTS.com>,
-        Kris Bahnsen <kris@embeddedTS.com>, linux-ide@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Michael Peters <mpeters@embeddedts.com>,
+        Kris Bahnsen <kris@embeddedts.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 38/43] pata: cirrus: drop legacy pinctrl
+Message-ID: <ZHlLbzK5exaVzaPj@surfacebook>
 References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
- <20230601054549.10843-7-nikita.shubin@maquefel.me>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230601054549.10843-7-nikita.shubin@maquefel.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <20230601054549.10843-20-nikita.shubin@maquefel.me>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230601054549.10843-20-nikita.shubin@maquefel.me>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/1/23 14:45, Nikita Shubin wrote:
-> Add YAML bindings for ep93xx SoC PATA.
-> 
-> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
-> ---
-> 
-> Notes:
->     v0 -> v1:
->     
->     - renamed file to ep9312-pata
+Thu, Jun 01, 2023 at 08:45:43AM +0300, Nikita Shubin kirjoitti:
+> Drop legacy acquire/release since we are using
+> pinctrl for this now.
 
-Looks OK to me but given that this is both for the cirrus,ep9315-pata and
-cirrus,ep9312-pata, wouldn't it be better to name the file
-cirrus,ep931x-pata.yaml ?
+...
 
+>  	drv_data = devm_kzalloc(&pdev->dev, sizeof(*drv_data), GFP_KERNEL);
+> -	if (!drv_data) {
+> -		err = -ENXIO;
 
->     - changed email to dlemoal@kernel.org
->     - dropped label
->     - fixed ident
-> 
->  .../bindings/ata/cirrus,ep9312-pata.yaml      | 44 +++++++++++++++++++
->  1 file changed, 44 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml b/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
-> new file mode 100644
-> index 000000000000..3489be55a6fe
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
-> @@ -0,0 +1,44 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/cirrus,ep9312-pata.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Cirrus Logic EP9312 PATA controller
-> +
-> +maintainers:
-> +  - Damien Le Moal <dlemoal@kernel.org>
-> +
-> +properties:
-> +  compatible:
-> +    oneOf:
-> +      - const: cirrus,ep9312-pata
+Wondering why it's not ENOMEM even in the original code?
 
-I am not a DT specialist, but isn't this line superfluous since it is listed in
-the items ?
-
-> +      - items:
-> +          - const: cirrus,ep9315-pata
-> +          - const: cirrus,ep9312-pata
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +
-> +additionalProperties: false
-> +
-> +examples:
-> +  - |
-> +    ide@800a0000 {
-> +      compatible = "cirrus,ep9312-pata";
-> +      reg = <0x800a0000 0x38>;
-> +      interrupt-parent = <&vic1>;
-> +      interrupts = <8>;
-> +      pinctrl-names = "default";
-> +      pinctrl-0 = <&ide_default_pins>;
-> +    };
-> +
-> +...
+> -		goto err_rel_gpio;
+> -	}
+> +	if (!drv_data)
+> +		return -ENXIO;
 
 -- 
-Damien Le Moal
-Western Digital Research
+With Best Regards,
+Andy Shevchenko
+
 
