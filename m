@@ -2,129 +2,147 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78090C77B73
-	for <linux-ide@archiver.kernel.org>; Sun,  4 Jun 2023 16:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6FD5C7EE23
+	for <linux-ide@archiver.kernel.org>; Sun,  4 Jun 2023 18:58:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231841AbjFDQ3j (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 4 Jun 2023 12:29:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50924 "EHLO
+        id S232085AbjFDS6z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 4 Jun 2023 14:58:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231368AbjFDQ3j (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jun 2023 12:29:39 -0400
-Received: from forward502c.mail.yandex.net (forward502c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d502])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B060B3;
-        Sun,  4 Jun 2023 09:29:37 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net [IPv6:2a02:6b8:c14:c83:0:640:84f9:0])
-        by forward502c.mail.yandex.net (Yandex) with ESMTP id 8DE955E7D4;
-        Sun,  4 Jun 2023 19:29:35 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id YTUVaSkWwGk0-fmMbjBf0;
-        Sun, 04 Jun 2023 19:29:34 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail; t=1685896174;
-        bh=qoROymkVmkGkOdy5uIWZJj6wLlMG+g04m/Wm+5N/tGk=;
-        h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
-        b=mEfzG2iaO4HhMY8fIX+qHpwZa2R1nFWXq0KwfViPIRzFWmHCojnJwS8/CwlD+vyCW
-         OnccQ5Hd6tz/bBc+t1rTRBjTXXLMChYf6PmwugrasT1x0T1j8AEkRlR6Q4aN4gzQVk
-         BprNYVCDg2vV79T4ofn76F9GLUNefnuQkNYC7AQs=
-Authentication-Results: mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
-Message-ID: <b48f2218c0a13273f9976aa082ebb67c3e3d5e75.camel@maquefel.me>
-Subject: Re: [PATCH v1 26/43] pata: cirrus: add DT support for Cirrus EP93xx
-From:   Nikita Shubin <nikita.shubin@maquefel.me>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Damien Le Moal <dlemoal@kernel.org>
-Cc:     Michael Peters <mpeters@embeddedTS.com>,
-        Kris Bahnsen <kris@embeddedTS.com>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Sun, 04 Jun 2023 22:29:35 +0300
-In-Reply-To: <32a041b0-d02d-4353-4794-094b96271e3a@omp.ru>
-References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
-         <20230601054549.10843-8-nikita.shubin@maquefel.me>
-         <32a041b0-d02d-4353-4794-094b96271e3a@omp.ru>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 
+        with ESMTP id S230366AbjFDS6y (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jun 2023 14:58:54 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B6DFCE;
+        Sun,  4 Jun 2023 11:58:53 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-4f4bdcde899so4894859e87.0;
+        Sun, 04 Jun 2023 11:58:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685905131; x=1688497131;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=0uLDA7fQ1eFEBxyVgNGzB8pTMv55u419IbeoR7nu4AQ=;
+        b=MuCQKaUvVjjMXgniF8sNia9BsE7FRRYHz4Pk2pNq+aYgc4wvJ8CTRJGdo+nbfVftES
+         0hxG70Lob7NRmTRU/wZ7rFKxlOHaf+bLZfEXsEHXlPGGnwIjbHOxuqPlb+PCb1k9uFZB
+         L067AQi559bjdLcW3ShTD9ijZydSFUoyLMjtjHd+0mubagCLzd4hAEVcMoWANSfs0b/0
+         +W0q6iQxWYUZkysfY/GD86Xy8xsPmbE8VxSSF5ZMDRLJazBN7VWS/j7DZ7q1eciJgMeD
+         e38B0pNnrSxkLEjE7kMJYpSX1Eadx7Fb8cWNM3+6zrihsL6oC318QsCO7fOK365jKiHb
+         9UOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685905131; x=1688497131;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0uLDA7fQ1eFEBxyVgNGzB8pTMv55u419IbeoR7nu4AQ=;
+        b=HmfM9ZcK3+bsjV0bktpahVnl5YOX4FfwSvA7pGXbdHnRWU2RY7XQtglTmWwJgOjM+e
+         mQnVOqIZeeqwn4SP+9JqmJmv3v/CgLHBEqsIGseQShBHz0v5p3ikbEmuzTZn0PRNlv4H
+         2HfETI3ueVcUBZ4JAoa6uH99gYaNe5b7kZKvP5yZVtav8x8dm87hOjMOMbJ2h5MXGqtB
+         PTxCzL+AgmV/0w/x02bk1xtfXC+Sdi7AQweqDBbzeXk2nrLNRYJte7rAXx9RGxzBfx/C
+         4MabZraEAkbmH4VrONGHX7UCUGPKjur/NViqZoOr0bTKqWnLp+vuJqj5nJaKKkSJasi2
+         85Iw==
+X-Gm-Message-State: AC+VfDwHHgl5MIGH2fytV8xkhQ+o5dg1EtY5gRKPk+g/Gb3o0XY/PlMM
+        zP+L9ID5/r9A2nFuQD3/n0o=
+X-Google-Smtp-Source: ACHHUZ5EkaqP6x5GqtWx1BZ2gJzmxHf/jE8v3IHyZU6SL7aUosESZU4nC8UiF+0Xk6nOGWSAa+UFKA==
+X-Received: by 2002:ac2:5eca:0:b0:4f3:a0f5:92e5 with SMTP id d10-20020ac25eca000000b004f3a0f592e5mr3904178lfq.31.1685905130670;
+        Sun, 04 Jun 2023 11:58:50 -0700 (PDT)
+Received: from mobilestation ([95.79.140.35])
+        by smtp.gmail.com with ESMTPSA id u9-20020a056512040900b004eb0dcc52ddsm858329lfk.41.2023.06.04.11.58.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 04 Jun 2023 11:58:49 -0700 (PDT)
+Date:   Sun, 4 Jun 2023 21:58:47 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Sebastian Reichel <sebastian.reichel@collabora.com>
+Cc:     Heiko Stuebner <heiko@sntech.de>, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel@collabora.com
+Subject: Re: [PATCH v2 2/6] dt-bindings: ata: ahci: add RK3588 AHCI controller
+Message-ID: <20230604185847.r23v53eetd53okyg@mobilestation>
+References: <20230522173423.64691-1-sebastian.reichel@collabora.com>
+ <20230522173423.64691-3-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230522173423.64691-3-sebastian.reichel@collabora.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Sergey!
+On Mon, May 22, 2023 at 07:34:19PM +0200, Sebastian Reichel wrote:
+> Just like RK3568, the RK3588 has a DWC based AHCI controller.
+> 
+> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+> ---
+>  .../devicetree/bindings/ata/snps,dwc-ahci-common.yaml     | 8 ++++++--
+>  Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml  | 6 ++++--
+>  2 files changed, 10 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+> index c1457910520b..34c5bf65b02d 100644
 
-On Fri, 2023-06-02 at 23:03 +0300, Sergey Shtylyov wrote:
-> Hello!
->=20
-> On 6/1/23 8:45 AM, Nikita Shubin wrote:
->=20
-> > - find register range from the device tree
-> > - get interrupts from device tree
->=20
-> =C2=A0=C2=A0 Hm... I'm not seeing such changes in your patch?
+> --- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+> +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+> @@ -31,11 +31,11 @@ properties:
+>        PM-alive clock, RxOOB detection clock, embedded PHYs reference (Rx/Tx)
+>        clock, etc.
+>      minItems: 1
+> -    maxItems: 4
+> +    maxItems: 6
+>  
+>    clock-names:
+>      minItems: 1
+> -    maxItems: 4
+> +    maxItems: 6
+>      items:
+>        oneOf:
+>          - description: Application APB/AHB/AXI BIU clock
+> @@ -48,6 +48,10 @@ properties:
+>            const: pmalive
+>          - description: RxOOB detection clock
+>            const: rxoob
+> +        - description: PHY Transmit Clock
+> +          const: asic
+> +        - description: PHY Receive Clock
+> +          const: rbc
+>          - description: SATA Ports reference clock
+>            const: ref
 
-I meant that from now on it will take irq's and register from device
-tree:
-https://elixir.bootlin.com/linux/v6.4-rc4/source/drivers/ata/pata_ep93xx.c#=
-L928
+This part looks good but as I mentioned in my comment to the previous
+patchset revision these are generic clocks. Extending the common
+schema could be done in a framework of a preparation patch with
+the justification described in my comment back then.
 
-If CONFIG_OF_IRQ is enabled.
+>  
+> diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> index 5afa4b57ce20..c6a0d6c8b62c 100644
+> --- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> +++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+> @@ -23,9 +23,11 @@ properties:
+>          const: snps,dwc-ahci
+>        - description: SPEAr1340 AHCI SATA device
+>          const: snps,spear-ahci
 
-You are right
+> -      - description: Rockhip RK3568 AHCI controller
+> +      - description: Rockhip AHCI controller
+>          items:
+> -          - const: rockchip,rk3568-dwc-ahci
+> +          - enum:
+> +              - rockchip,rk3568-dwc-ahci
+> +              - rockchip,rk3588-dwc-ahci
 
-> > get interrupts from device tree
+Regarding this part. I would suggest to just create a separate
+DT-schema instead of extending the generic one. See my comment to the
+next patch in the series and my suggestion posted in a comment to
+the previous patchset revision.
 
-Is confusing.
+-Serge(y)
 
-
->=20
-> > Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
-> > ---
-> >=20
-> > Notes:
-> > =C2=A0=C2=A0=C2=A0 v0 -> v1:
-> > =C2=A0=C2=A0=C2=A0=20
-> > =C2=A0=C2=A0=C2=A0 - fixed headers
-> > =C2=A0=C2=A0=C2=A0 - dropped coma in id table
-> >=20
-> > =C2=A0drivers/ata/pata_ep93xx.c | 8 ++++++++
-> > =C2=A01 file changed, 8 insertions(+)
-> >=20
-> > diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-> > index c6e043e05d43..8d363bc71342 100644
-> > --- a/drivers/ata/pata_ep93xx.c
-> > +++ b/drivers/ata/pata_ep93xx.c
-> > @@ -40,6 +40,7 @@
-> > =C2=A0#include <linux/ata.h>
-> > =C2=A0#include <linux/libata.h>
-> > =C2=A0#include <linux/platform_device.h>
-> > +#include <linux/mod_devicetable.h>
-> > =C2=A0#include <linux/delay.h>
-> > =C2=A0#include <linux/dmaengine.h>
-> > =C2=A0#include <linux/ktime.h>
-> > @@ -1016,9 +1017,16 @@ static int ep93xx_pata_remove(struct
-> > platform_device *pdev)
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return 0;
-> > =C2=A0}
-> > =C2=A0
-> > +static const struct of_device_id ep93xx_pata_of_ids[] =3D {
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0{ .compatible =3D "cirrus,ep=
-9312-pata" },
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0{ /* sentinel */ }
-> > +};
-> > +MODULE_DEVICE_TABLE(of, ep93xx_pata_of_ids);
-> > +
-> > =C2=A0static struct platform_driver ep93xx_pata_platform_driver =3D {
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.driver =3D {
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0.name =3D DRV_NAME,
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0.of_match_table =3D ep93xx_pata_of_ids,
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0},
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.probe =3D ep93xx_pata_=
-probe,
-> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.remove =3D ep93xx_pata=
-_remove,
->=20
-> MBR, Sergey
-
+>            - const: snps,dwc-ahci
+>  
+>  patternProperties:
+> -- 
+> 2.39.2
+> 
