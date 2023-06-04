@@ -2,48 +2,47 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D9ADC77B73
-	for <linux-ide@archiver.kernel.org>; Sun,  4 Jun 2023 16:25:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78090C77B73
+	for <linux-ide@archiver.kernel.org>; Sun,  4 Jun 2023 16:29:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232016AbjFDQYt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 4 Jun 2023 12:24:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50050 "EHLO
+        id S231841AbjFDQ3j (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 4 Jun 2023 12:29:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231754AbjFDQYs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jun 2023 12:24:48 -0400
-Received: from forward501c.mail.yandex.net (forward501c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d501])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84A38B3;
-        Sun,  4 Jun 2023 09:24:47 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-36.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-36.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:2a06:0:640:53c4:0])
-        by forward501c.mail.yandex.net (Yandex) with ESMTP id 3F87E5E8D2;
-        Sun,  4 Jun 2023 19:24:45 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-36.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id iOUqx9kDcSw0-8qWdlqKb;
-        Sun, 04 Jun 2023 19:24:44 +0300
+        with ESMTP id S231368AbjFDQ3j (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jun 2023 12:29:39 -0400
+Received: from forward502c.mail.yandex.net (forward502c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d502])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B060B3;
+        Sun,  4 Jun 2023 09:29:37 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net [IPv6:2a02:6b8:c14:c83:0:640:84f9:0])
+        by forward502c.mail.yandex.net (Yandex) with ESMTP id 8DE955E7D4;
+        Sun,  4 Jun 2023 19:29:35 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id YTUVaSkWwGk0-fmMbjBf0;
+        Sun, 04 Jun 2023 19:29:34 +0300
 X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail; t=1685895884;
-        bh=+1ttS7pErZll0H0q/8Tb8XEtJl7bmBgeGkj1iSaH4eU=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail; t=1685896174;
+        bh=qoROymkVmkGkOdy5uIWZJj6wLlMG+g04m/Wm+5N/tGk=;
         h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
-        b=kMEgW+pB3bU6FxlMumd+nRHDMIqB9uhwGiK4+nrpHI1uErZmL4aBjIz1snJ+3seju
-         0KDjJAyiID4XmRv5awaMBgJw6khQc/w5rTDhO5utxAMx5a9tP5oajQkxbkZnHOqIi0
-         z6pn9S7vzoLsMJsrYYvZNpgXvtbV4+DyJuYAW9Ek=
-Authentication-Results: mail-nwsmtp-smtp-production-main-36.iva.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
-Message-ID: <3df4489939a5285f1e9d923d43bf0e656750a74d.camel@maquefel.me>
-Subject: Re: [PATCH v1 25/43] dt-bindings: ata: Add Cirrus EP93xx
+        b=mEfzG2iaO4HhMY8fIX+qHpwZa2R1nFWXq0KwfViPIRzFWmHCojnJwS8/CwlD+vyCW
+         OnccQ5Hd6tz/bBc+t1rTRBjTXXLMChYf6PmwugrasT1x0T1j8AEkRlR6Q4aN4gzQVk
+         BprNYVCDg2vV79T4ofn76F9GLUNefnuQkNYC7AQs=
+Authentication-Results: mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
+Message-ID: <b48f2218c0a13273f9976aa082ebb67c3e3d5e75.camel@maquefel.me>
+Subject: Re: [PATCH v1 26/43] pata: cirrus: add DT support for Cirrus EP93xx
 From:   Nikita Shubin <nikita.shubin@maquefel.me>
-To:     Damien Le Moal <dlemoal@kernel.org>,
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
         Alexander Sverdlin <alexander.sverdlin@gmail.com>,
         Arnd Bergmann <arnd@arndb.de>,
         Linus Walleij <linus.walleij@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+        Damien Le Moal <dlemoal@kernel.org>
 Cc:     Michael Peters <mpeters@embeddedTS.com>,
         Kris Bahnsen <kris@embeddedTS.com>, linux-ide@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Sun, 04 Jun 2023 22:24:45 +0300
-In-Reply-To: <fe8bfbfc-0ce5-d4ea-a2a8-8608fe4e2f97@kernel.org>
+        linux-kernel@vger.kernel.org
+Date:   Sun, 04 Jun 2023 22:29:35 +0300
+In-Reply-To: <32a041b0-d02d-4353-4794-094b96271e3a@omp.ru>
 References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
-         <20230601054549.10843-7-nikita.shubin@maquefel.me>
-         <fe8bfbfc-0ce5-d4ea-a2a8-8608fe4e2f97@kernel.org>
+         <20230601054549.10843-8-nikita.shubin@maquefel.me>
+         <32a041b0-d02d-4353-4794-094b96271e3a@omp.ru>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.46.3 
@@ -52,117 +51,80 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Damien!
+Hello Sergey!
 
-On Fri, 2023-06-02 at 08:57 +0900, Damien Le Moal wrote:
-> On 6/1/23 14:45, Nikita Shubin wrote:
-> > Add YAML bindings for ep93xx SoC PATA.
-> >=20
+On Fri, 2023-06-02 at 23:03 +0300, Sergey Shtylyov wrote:
+> Hello!
+>=20
+> On 6/1/23 8:45 AM, Nikita Shubin wrote:
+>=20
+> > - find register range from the device tree
+> > - get interrupts from device tree
+>=20
+> =C2=A0=C2=A0 Hm... I'm not seeing such changes in your patch?
+
+I meant that from now on it will take irq's and register from device
+tree:
+https://elixir.bootlin.com/linux/v6.4-rc4/source/drivers/ata/pata_ep93xx.c#=
+L928
+
+If CONFIG_OF_IRQ is enabled.
+
+You are right
+
+> > get interrupts from device tree
+
+Is confusing.
+
+
+>=20
 > > Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
 > > ---
 > >=20
 > > Notes:
 > > =C2=A0=C2=A0=C2=A0 v0 -> v1:
 > > =C2=A0=C2=A0=C2=A0=20
-> > =C2=A0=C2=A0=C2=A0 - renamed file to ep9312-pata
->=20
-> Looks OK to me but given that this is both for the cirrus,ep9315-pata
-> and
-> cirrus,ep9312-pata, wouldn't it be better to name the file
-> cirrus,ep931x-pata.yaml ?
-
-I was advised against using wildcards by Arnd and Krzysztof.
-
-See=C2=A0
-https://lore.kernel.org/all/c981e048-8925-deba-6916-9199844976b9@linaro.org=
-/
-
-As i understood we should have at least one fallback, in out case it's
-"cirrus,ep9312-pata" and one for each SoC variant that supports it.
-
-All other comments acknowledged and agreed.
-
-I will also change=20
-
-```
->> +	if (!drv_data)
->> +		return -ENXIO;
-```
-
-To ENOMEM, as a part of dt conversion patch in v2.
-
-
->=20
->=20
-> > =C2=A0=C2=A0=C2=A0 - changed email to dlemoal@kernel.org
-> > =C2=A0=C2=A0=C2=A0 - dropped label
-> > =C2=A0=C2=A0=C2=A0 - fixed ident
+> > =C2=A0=C2=A0=C2=A0 - fixed headers
+> > =C2=A0=C2=A0=C2=A0 - dropped coma in id table
 > >=20
-> > =C2=A0.../bindings/ata/cirrus,ep9312-pata.yaml=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 | 44
-> > +++++++++++++++++++
-> > =C2=A01 file changed, 44 insertions(+)
-> > =C2=A0create mode 100644
-> > Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
+> > =C2=A0drivers/ata/pata_ep93xx.c | 8 ++++++++
+> > =C2=A01 file changed, 8 insertions(+)
 > >=20
-> > diff --git a/Documentation/devicetree/bindings/ata/cirrus,ep9312-
-> > pata.yaml b/Documentation/devicetree/bindings/ata/cirrus,ep9312-
-> > pata.yaml
-> > new file mode 100644
-> > index 000000000000..3489be55a6fe
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
-> > @@ -0,0 +1,44 @@
-> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> > +%YAML 1.2
-> > +---
-> > +$id: http://devicetree.org/schemas/ata/cirrus,ep9312-pata.yaml#
-> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+> > index c6e043e05d43..8d363bc71342 100644
+> > --- a/drivers/ata/pata_ep93xx.c
+> > +++ b/drivers/ata/pata_ep93xx.c
+> > @@ -40,6 +40,7 @@
+> > =C2=A0#include <linux/ata.h>
+> > =C2=A0#include <linux/libata.h>
+> > =C2=A0#include <linux/platform_device.h>
+> > +#include <linux/mod_devicetable.h>
+> > =C2=A0#include <linux/delay.h>
+> > =C2=A0#include <linux/dmaengine.h>
+> > =C2=A0#include <linux/ktime.h>
+> > @@ -1016,9 +1017,16 @@ static int ep93xx_pata_remove(struct
+> > platform_device *pdev)
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return 0;
+> > =C2=A0}
+> > =C2=A0
+> > +static const struct of_device_id ep93xx_pata_of_ids[] =3D {
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0{ .compatible =3D "cirrus,ep=
+9312-pata" },
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0{ /* sentinel */ }
+> > +};
+> > +MODULE_DEVICE_TABLE(of, ep93xx_pata_of_ids);
 > > +
-> > +title: Cirrus Logic EP9312 PATA controller
-> > +
-> > +maintainers:
-> > +=C2=A0 - Damien Le Moal <dlemoal@kernel.org>
-> > +
-> > +properties:
-> > +=C2=A0 compatible:
-> > +=C2=A0=C2=A0=C2=A0 oneOf:
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 - const: cirrus,ep9312-pata
+> > =C2=A0static struct platform_driver ep93xx_pata_platform_driver =3D {
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.driver =3D {
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0.name =3D DRV_NAME,
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0.of_match_table =3D ep93xx_pata_of_ids,
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0},
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.probe =3D ep93xx_pata_=
+probe,
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.remove =3D ep93xx_pata=
+_remove,
 >=20
-> I am not a DT specialist, but isn't this line superfluous since it is
-> listed in
-> the items ?
->=20
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 - items:
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 - const: cirrus=
-,ep9315-pata
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 - const: cirrus=
-,ep9312-pata
-> > +
-> > +=C2=A0 reg:
-> > +=C2=A0=C2=A0=C2=A0 maxItems: 1
-> > +
-> > +=C2=A0 interrupts:
-> > +=C2=A0=C2=A0=C2=A0 maxItems: 1
-> > +
-> > +required:
-> > +=C2=A0 - compatible
-> > +=C2=A0 - reg
-> > +=C2=A0 - interrupts
-> > +
-> > +additionalProperties: false
-> > +
-> > +examples:
-> > +=C2=A0 - |
-> > +=C2=A0=C2=A0=C2=A0 ide@800a0000 {
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 compatible =3D "cirrus,ep9312-pata";
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 reg =3D <0x800a0000 0x38>;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 interrupt-parent =3D <&vic1>;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 interrupts =3D <8>;
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pinctrl-names =3D "default";
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pinctrl-0 =3D <&ide_default_pins>;
-> > +=C2=A0=C2=A0=C2=A0 };
-> > +
-> > +...
->=20
+> MBR, Sergey
 
