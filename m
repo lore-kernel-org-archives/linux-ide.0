@@ -2,174 +2,161 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18999C7EE32
-	for <linux-ide@archiver.kernel.org>; Mon,  5 Jun 2023 10:09:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6457BC77B73
+	for <linux-ide@archiver.kernel.org>; Mon,  5 Jun 2023 10:41:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231740AbjFEKJK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 5 Jun 2023 06:09:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39652 "EHLO
+        id S230466AbjFEKlD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 5 Jun 2023 06:41:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229604AbjFEKJH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jun 2023 06:09:07 -0400
+        with ESMTP id S229659AbjFEKlC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jun 2023 06:41:02 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC008E3;
-        Mon,  5 Jun 2023 03:09:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3DCBA6;
+        Mon,  5 Jun 2023 03:41:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7165B6142D;
-        Mon,  5 Jun 2023 10:09:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45A84C433EF;
-        Mon,  5 Jun 2023 10:09:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 49CDE61DCF;
+        Mon,  5 Jun 2023 10:41:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B5BDC433D2;
+        Mon,  5 Jun 2023 10:41:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685959745;
-        bh=vR126awxcUVwkB+vDMvPtCpzsX4o/jUNFWue4cfisK4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jGzB5Lk8x9cx95oG26XZOnRJk3ecWXQXEE07nQpVPtV0ldNyjBH+HF+PE67Y7BaJJ
-         Rr3ULQyt++0jpBkQcUB6dtzHGzTjv3M2ialKNinB+zPSqHMhJHjuOXl09E3kIINcDr
-         ainCX7TdvicCZowvSKu0Imjn3a2HSe+PaHRV5wCbfibFHwmjxecOKX/pBzY6MMJVH9
-         PRUd1U94/aMQLLs6h2roaIwCi2wKw54+JxUdln3ex3j1eeHU3sfXSFSi3sNId2DTA1
-         A9TVGDCBa3pkug7NMMjLVIV38slENc59CTNhjtBV91E1BeYMtSxuqGpEoGjEOJorUU
-         t+ravi9eHQa2Q==
-Date:   Mon, 5 Jun 2023 12:09:02 +0200
-From:   Wolfram Sang <wsa@kernel.org>
-To:     Michal Simek <michal.simek@amd.com>
-Cc:     piyush.mehta@amd.com, nava.kishore.manne@amd.com,
-        sai.krishna.potthuri@amd.com, shubhrajyoti.datta@amd.com,
-        vishal.sagar@amd.com, kalyani.akula@amd.com,
-        bharat.kumar.gogada@amd.com, linux-kernel@vger.kernel.org,
-        monstr@monstr.eu, michal.simek@xilinx.com, git@xilinx.com,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Jassi Brar <jassisinghbrar@gmail.com>,
-        Jolly Shah <jolly.shah@xilinx.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Manish Narani <manish.narani@xilinx.com>,
-        Mark Brown <broonie@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Moritz Fischer <mdf@kernel.org>,
-        Rajan Vaja <rajan.vaja@xilinx.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Srinivas Neeli <srinivas.neeli@amd.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Tom Rix <trix@redhat.com>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Wu Hao <hao.wu@intel.com>, Xu Yilun <yilun.xu@intel.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-clk@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-fpga@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-serial@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: xilinx: Switch xilinx.com emails to amd.com
-Message-ID: <ZH20PkU1WAqQ0rap@shikoro>
-Mail-Followup-To: Wolfram Sang <wsa@kernel.org>,
-        Michal Simek <michal.simek@amd.com>, piyush.mehta@amd.com,
-        nava.kishore.manne@amd.com, sai.krishna.potthuri@amd.com,
-        shubhrajyoti.datta@amd.com, vishal.sagar@amd.com,
-        kalyani.akula@amd.com, bharat.kumar.gogada@amd.com,
-        linux-kernel@vger.kernel.org, monstr@monstr.eu,
-        michal.simek@xilinx.com, git@xilinx.com,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Andrew Lunn <andrew@lunn.ch>, Bartosz Golaszewski <brgl@bgdev.pl>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Jassi Brar <jassisinghbrar@gmail.com>,
-        Jolly Shah <jolly.shah@xilinx.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Manish Narani <manish.narani@xilinx.com>,
-        Mark Brown <broonie@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Moritz Fischer <mdf@kernel.org>, Rajan Vaja <rajan.vaja@xilinx.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Srinivas Neeli <srinivas.neeli@amd.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>, Tom Rix <trix@redhat.com>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Wu Hao <hao.wu@intel.com>, Xu Yilun <yilun.xu@intel.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-clk@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-fpga@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-serial@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-References: <f5b2bd1e78407e4128fc8f0b5874ba723e710a88.1684245058.git.michal.simek@amd.com>
+        s=k20201202; t=1685961660;
+        bh=rZ7C9whXt2XlheKQaFftWtVJILVgQ+PfynL3tO3Mdtc=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=rojEmKojzTHqxT2o/r5mhJ+Vz3lK2iESY+HUAm0d8iU0mdNB9LLZ09ZG8+6WbZk6a
+         YNBpPlnpfTbcrQTYpEJ/Z/QRdPkSchHYXmZMFRLVmpBihc9NPvBAutsaAQ+Xm3c+0m
+         kDKrepD3gxRsMK/1EEC+BJkRUV/EMZcRjtsWsvuemD2f9xGEIrJfeDUZlv6ECqcogl
+         lNQ4AtGiPkjzYplWAC9AQpBUNKiIlMOZqYzeHAi8k8dujh5J+K66nDS/zHs0KlAlz+
+         E/3cULc38ajL3i1xVGUVHIBOCtY1pwUmapcEcnj8X9qDDaOi0uFdq8cmc+aHqGEom6
+         8zvwiZ2P/a94w==
+Message-ID: <edd27331-dabb-47e5-0043-a8219833df9e@kernel.org>
+Date:   Mon, 5 Jun 2023 19:40:59 +0900
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="m1s0pAgPK6Y5qfq2"
-Content-Disposition: inline
-In-Reply-To: <f5b2bd1e78407e4128fc8f0b5874ba723e710a88.1684245058.git.michal.simek@amd.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH 1/3] ata: libata-sata: Improve ata_change_queue_depth()
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jason Yan <yanaijie@huawei.com>
+References: <20230605013212.573489-1-dlemoal@kernel.org>
+ <20230605013212.573489-2-dlemoal@kernel.org>
+ <0b1a036c-d71b-3c6c-56b0-67a7ced0834e@oracle.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <0b1a036c-d71b-3c6c-56b0-67a7ced0834e@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 6/5/23 18:58, John Garry wrote:
+> On 05/06/2023 02:32, Damien Le Moal wrote:
+>> ata_change_queue_depth() implements different behaviors for ATA devices
+>> managed by libsas than for those managed by libata directly.
+>> Specifically, if a user attempts to set a device queue depth to a value
+>> larger than 32 (ATA_MAX_QUEUE), the queue depth is capped to the maximum
+>> and set to 32 for libsas managed devices whereas for libata managed
+>> devices, the queue depth is unchanged and an error returned to the user.
+>> This is due to the fact that for libsas devices, sdev->host->can_queue
+>> may indicate the host (HBA) maximum number of commands that can be
+>> queued rather than the device maximum queue depth.
+>>
+>> Change ata_change_queue_depth() to provide a consistent behavior for all
+>> devices by changing the queue depth capping code to a check that the
+>> user provided value does not exceed the device maximum queue depth.
+>> This check is moved before the code clearing or setting the
+>> ATA_DFLAG_NCQ_OFF flag to ensure that this flag is not modified when an
+>> invlaid queue depth is provided.
+>>
+>> While at it, two other small improvements are added:
+>> 1) Use ata_ncq_supported() instead of ata_ncq_enabled() and clear the
+>>     ATA_DFLAG_NCQ_OFF flag only and only if needed.
+>> 2) If the user provided queue depth is equal to the current queue depth,
+>>     do not return an error as that is useless.
+>>
+>> Overall, the behavior of ata_change_queue_depth() for libata managed
+>> devices is unchanged. The behavior with libsas managed devices becomes
+>> consistent with libata managed devices.
+>>
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> 
+> I have some nitpicks below. Regardless of those:
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> 
+> Thanks!!
+> 
+>> ---
+>>   drivers/ata/libata-sata.c | 25 +++++++++++++++----------
+>>   1 file changed, 15 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+>> index e3c9cb617048..56a1cd57a107 100644
+>> --- a/drivers/ata/libata-sata.c
+>> +++ b/drivers/ata/libata-sata.c
+>> @@ -1035,6 +1035,7 @@ int ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+>>   {
+>>   	struct ata_device *dev;
+>>   	unsigned long flags;
+>> +	int max_queue_depth;
+>>   
+>>   	spin_lock_irqsave(ap->lock, flags);
+>>   
+>> @@ -1044,22 +1045,26 @@ int ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+>>   		return sdev->queue_depth;
+>>   	}
+>>   
+>> -	/* NCQ enabled? */
+>> -	dev->flags &= ~ATA_DFLAG_NCQ_OFF;
+>> -	if (queue_depth == 1 || !ata_ncq_enabled(dev)) {
+>> +	/* limit queue depth */
+>> +	max_queue_depth = min(ATA_MAX_QUEUE, sdev->host->can_queue);
+>> +	max_queue_depth = min(max_queue_depth, ata_id_queue_depth(dev->id));
+>> +	if (queue_depth > max_queue_depth) {
+>> +		spin_unlock_irqrestore(ap->lock, flags);
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	/* NCQ supported ? */
+> 
+> nit: I find this comment so vague that it is ambiguous. The previous 
+> code had it. What exactly are we trying to say?
 
---m1s0pAgPK6Y5qfq2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I will detail this.
 
-On Tue, May 16, 2023 at 03:51:08PM +0200, Michal Simek wrote:
-> @xilinx.com is still working but better to switch to new amd.com after
-> AMD/Xilinx acquisition.
->=20
-> Signed-off-by: Michal Simek <michal.simek@amd.com>
+> 
+>> +	if (queue_depth == 1 || !ata_ncq_supported(dev)) {
+>>   		dev->flags |= ATA_DFLAG_NCQ_OFF;
+> 
+> super nit: I don't like checking a value and then setting it to the same 
+> pass if the check passes, so ...
+> 
+>>   		queue_depth = 1;
+>> +	} else {
+>> +		dev->flags &= ~ATA_DFLAG_NCQ_OFF;
+>>   	}
+>>   
+> 
+> .. we could have instead:
+> 
+> if (queue_depth == 1)
+> 	dev->flags |= ATA_DFLAG_NCQ_OFF;
+> else if (!ata_ncq_supported(dev)) {
+> 	dev->flags |= ATA_DFLAG_NCQ_OFF;
+> 	queue_depth = 1;
+> } else
+> 	dev->flags &= ~ATA_DFLAG_NCQ_OFF;
+> 	
+> Maybe too long-winded.
 
-Acked-by: Wolfram Sang <wsa@kernel.org> # for I2C
+Yes, that makes the code self-explanatory but is indeed a bit verbose. I will
+improve the comment instead.
 
+-- 
+Damien Le Moal
+Western Digital Research
 
---m1s0pAgPK6Y5qfq2
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmR9tD4ACgkQFA3kzBSg
-KbYxkhAAr/KV+7eVEy7Tyr1buRUjnSFHfeoi92WwdiRkwD3KEgGd3CGm8RFiHEH3
-xVJnR47Ii6/IU9NidYLsuN6WTYlCdGoQqY6ncEpZui1rIIZpJPEbHbw4IRrDEu+o
-/wd/3S/y3VvGjvsnBK2sbBpTOb8N10Xw084aSJTmFz8Ztzy9mZU9ub6TFxMZhWK2
-w0Unv2I6q+Yl0kEy05PAoEID7mXf33aFnz+j3iz0LtUU6nMQilQHdkfYSsec5c04
-jirw6YLgK+VBRncT55L3XKpAamfUKU7o3DY20/pPw8fSlDj2Z0aQkHM1P22cKwNF
-C1Q0epu85vIJVBW45SEBY7ccPLZuwjFNMl5Do8hRZGBtHJOxhqmRjOA3SWc0u4lx
-txwo97w+Ux9dMlS+UJhD5rWGFfF+HHqxg+M71SCOa94kg2Drs+WLHXd1NgG1YEcb
-FoHsGkzv0nvkBf0O6X3hd8tAdkks9l1370YbDSBvSXUUHxIefUNzEjvQVTdJUj0J
-y+X6CigfCUyYdoscjH8rCdA7fwbxnbeX5zSSXKKp2coIAwEl7ItMx8h8QwwQzZB2
-z/05V/3n4FekryCdpDn5/YH7k2rO6WgSN4L7n+8yDhjWtTwXPRB0XeomogN5CpGj
-T+DR5iqEdJHfmWETr4Pn7ttnc/rvH5ak5U9raBF2+SYA5p/XQGU=
-=PkRp
------END PGP SIGNATURE-----
-
---m1s0pAgPK6Y5qfq2--
