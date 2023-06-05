@@ -2,74 +2,116 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A3E9C7EE2E
-	for <linux-ide@archiver.kernel.org>; Mon,  5 Jun 2023 01:32:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D6CC7EE24
+	for <linux-ide@archiver.kernel.org>; Mon,  5 Jun 2023 07:57:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232627AbjFEBcU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 4 Jun 2023 21:32:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42562 "EHLO
+        id S229785AbjFEH5k (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 5 Jun 2023 03:57:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232602AbjFEBcS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jun 2023 21:32:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88CE4A1;
-        Sun,  4 Jun 2023 18:32:17 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S231851AbjFEH5T (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jun 2023 03:57:19 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72245116;
+        Mon,  5 Jun 2023 00:57:05 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 22F5561CD7;
-        Mon,  5 Jun 2023 01:32:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6475C4339B;
-        Mon,  5 Jun 2023 01:32:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685928736;
-        bh=v5d23/NZdpgwB/MjRjLHUqehpJQ8dARmruT3SeSfyT8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LOhoKSWcpvGBzYSMlBXa2MI12V2eMseGw1pWbgt1XjSNkiaAS3AWOVzHY84bF8ZoI
-         VEHpIgXr0z5jWOVAR2RRxn9hQeG05D3PaKUiRLgKNggPSMlQA4e4Wmg4bCXcY+Gk9M
-         Pb9vTX+nAaS2VwkmNZXveON5Vf221IiPgwqQWFOPmuJCDDrxxo30AL+GE9T9zDPRJh
-         lkDLvLYG3RGWq6ljIvpnvjAKIE4sEFKaFNOk1luonf+sNi9EdkE/0WmGGG7yGW0W0o
-         PbIPjAWFiok16X7418iecZ3MYRZ3tTaLDpvoKuoZn1cQ3zLzxZEXyX2o0YJyUHTpRP
-         9n2IVFFjZEDoQ==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 32149218F1;
+        Mon,  5 Jun 2023 07:57:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1685951824; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8thiXCYqQgDRsNK276xQ03oQP1hHA2/Xst1LyVZIPlw=;
+        b=ZTnMk0jcK+1Q+ShxLXibHkJ7O2AsKDKzk6UtXyCoGCmYXDpgG3pvBM+smaS71gTIufD/I9
+        bTVf9fgsW9XJDwz5gqhTF9OmfR2llqAWjwlVGB6l1VH1y/cLy7BSnUert2+Kj2ulQ2wPLH
+        yRpw2ex5vnpEr0WvYOXkRPFsOUnpXXU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1685951824;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8thiXCYqQgDRsNK276xQ03oQP1hHA2/Xst1LyVZIPlw=;
+        b=x/gyg6lxwa4J/DSmb43cnmGuce6+MOnknmkzsBBPVXuh4Ri+6Xa1vr3egRaOtseVfd7zal
+        hPXl4BUDvJ7ddoCQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0AF51139C8;
+        Mon,  5 Jun 2023 07:57:04 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id YorIAVCVfWTeeQAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 05 Jun 2023 07:57:04 +0000
+Message-ID: <9375665c-7789-21e9-d122-dca1a18e8d1b@suse.de>
+Date:   Mon, 5 Jun 2023 09:57:03 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH 1/3] ata: libata-sata: Improve ata_change_queue_depth()
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     John Garry <john.g.garry@oracle.com>,
         Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH 3/3] ata: libata-scsi: Use ata_ncq_supported in ata_scsi_dev_config()
-Date:   Mon,  5 Jun 2023 10:32:12 +0900
-Message-Id: <20230605013212.573489-4-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230605013212.573489-1-dlemoal@kernel.org>
 References: <20230605013212.573489-1-dlemoal@kernel.org>
-MIME-Version: 1.0
+ <20230605013212.573489-2-dlemoal@kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230605013212.573489-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In ata_scsi_dev_config(), instead of hardconing the test to check if
-an ATA device supports NCQ by looking at the ATA_DFLAG_NCQ flag, use
-ata_ncq_supported().
+On 6/5/23 03:32, Damien Le Moal wrote:
+> ata_change_queue_depth() implements different behaviors for ATA devices
+> managed by libsas than for those managed by libata directly.
+> Specifically, if a user attempts to set a device queue depth to a value
+> larger than 32 (ATA_MAX_QUEUE), the queue depth is capped to the maximum
+> and set to 32 for libsas managed devices whereas for libata managed
+> devices, the queue depth is unchanged and an error returned to the user.
+> This is due to the fact that for libsas devices, sdev->host->can_queue
+> may indicate the host (HBA) maximum number of commands that can be
+> queued rather than the device maximum queue depth.
+> 
+> Change ata_change_queue_depth() to provide a consistent behavior for all
+> devices by changing the queue depth capping code to a check that the
+> user provided value does not exceed the device maximum queue depth.
+> This check is moved before the code clearing or setting the
+> ATA_DFLAG_NCQ_OFF flag to ensure that this flag is not modified when an
+> invlaid queue depth is provided.
+> 
+> While at it, two other small improvements are added:
+> 1) Use ata_ncq_supported() instead of ata_ncq_enabled() and clear the
+>     ATA_DFLAG_NCQ_OFF flag only and only if needed.
+> 2) If the user provided queue depth is equal to the current queue depth,
+>     do not return an error as that is useless.
+> 
+> Overall, the behavior of ata_change_queue_depth() for libata managed
+> devices is unchanged. The behavior with libsas managed devices becomes
+> consistent with libata managed devices.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/libata-sata.c | 25 +++++++++++++++----------
+>   1 file changed, 15 insertions(+), 10 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/libata-scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 8ce90284eb34..22e2e9ab6b60 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1122,7 +1122,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
- 	if (dev->flags & ATA_DFLAG_AN)
- 		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
- 
--	if (dev->flags & ATA_DFLAG_NCQ)
-+	if (ata_ncq_supported(dev))
- 		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
- 	depth = min(ATA_MAX_QUEUE, depth);
- 	scsi_change_queue_depth(sdev, depth);
+Hannes
 -- 
-2.40.1
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
