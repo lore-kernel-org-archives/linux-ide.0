@@ -2,73 +2,96 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7A4FC7EE25
-	for <linux-ide@archiver.kernel.org>; Thu,  8 Jun 2023 12:35:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59315C7EE2E
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Jun 2023 16:22:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235659AbjFHMft (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 8 Jun 2023 08:35:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53732 "EHLO
+        id S229626AbjFHQWp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Jun 2023 12:22:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235638AbjFHMfr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jun 2023 08:35:47 -0400
-Received: from mail-il1-f170.google.com (mail-il1-f170.google.com [209.85.166.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 901482115;
-        Thu,  8 Jun 2023 05:35:43 -0700 (PDT)
-Received: by mail-il1-f170.google.com with SMTP id e9e14a558f8ab-33c37f62e24so1640915ab.3;
-        Thu, 08 Jun 2023 05:35:43 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686227743; x=1688819743;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/csj1p1/i9/Uv2jIjcn4J7tpvO0wFG79OIA7RaS7C6E=;
-        b=ZWyiYSDPICeja9StSLWNDL8fBu99JyqAsbr8eOUBaVWj4Gff5EhjWpTfjry32UHFMM
-         fCnGc/6EMqeyf37IRyYm5XQzkKJYtTJtLWJu8SBBD9eiDTTyOTDJoBcXBKGTavjxEi2P
-         eBcimEoTVm4f/bA+Vf9KL+OqxiMgXtKBupvs+gLM0i1a1zLWmYe2sAamT60O7zfG8myI
-         lceoJqV/0ttNLPL+B/WXCVq4Oo4+VRx3weSu67gKT0fnl+IgCsXelg0eaOfILY3lLApY
-         DqtdmGiW0b8t5x7M4LCVi7RmkFZDEedZDhueYXvEKcVVp43MQhaabPtnk+71x3qLINHA
-         rnQw==
-X-Gm-Message-State: AC+VfDy1dZ+EOjbahK+at7Cxii5uUJKgRwJD+cnos/QKO+fWH2DUbXmc
-        hTT0/4+uiFhuSThbafm8xQ==
-X-Google-Smtp-Source: ACHHUZ6Xe7FrsdGcfEVF9N5cm60s4Dmr7lpdn0u3iNPOKITzhRtmezvsaGC+eW+1oGdsw9cqV2wCXA==
-X-Received: by 2002:a05:6e02:4c8:b0:33e:7b40:18b7 with SMTP id f8-20020a056e0204c800b0033e7b4018b7mr1255443ils.0.1686227742713;
-        Thu, 08 Jun 2023 05:35:42 -0700 (PDT)
-Received: from robh_at_kernel.org ([64.188.179.250])
-        by smtp.gmail.com with ESMTPSA id r4-20020a92d984000000b0033079f435f7sm380583iln.65.2023.06.08.05.35.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Jun 2023 05:35:41 -0700 (PDT)
-Received: (nullmailer pid 2144446 invoked by uid 1000);
-        Thu, 08 Jun 2023 12:35:39 -0000
-Date:   Thu, 8 Jun 2023 06:35:39 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        linux-ide@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: Change documentation contact email
-Message-ID: <168622773529.2144329.4452345538163814722.robh@kernel.org>
-References: <20230514222614.115299-1-dlemoal@kernel.org>
+        with ESMTP id S229488AbjFHQWo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jun 2023 12:22:44 -0400
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B4582119;
+        Thu,  8 Jun 2023 09:22:43 -0700 (PDT)
+Received: from jupiter.universe (dyndsl-091-248-189-092.ewe-ip-backbone.de [91.248.189.92])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: sre)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id D5F2C6606F20;
+        Thu,  8 Jun 2023 17:22:41 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1686241362;
+        bh=FUovyx4uZxMWc91RhE6Xo+afuqEOehrwcyAViHLU/HU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Yk8lAERkgxCLZNAqSBy1hIwruaRpomWHSkmnjueVD2xRurgWIKlFfR7MklkAJzcql
+         l/ccXmgzN9Ovua+guJXIfaUt9fz9BUw8i8oZF4aXiQyESB5kicYSy3xxwViHRB70iR
+         hVyVyVl4D2fuoWnJpk5THwUNvwWmEkfF5EhIcuy65zcZZBczmxWW8AfTlWcZj6ZYsi
+         emshVIjAMw6ZtlfvRvpQM45eaVaB38Nlbda/0by76tuN1QJDflWDGpK/X5RghUWZ7r
+         3Hm15WPlVce2dtRRxx8tVXorV8KQ1W4r+I2fNfwq0p0DFyqjat51PH69g/5rkz2OfH
+         ZyXjyuX98gWKQ==
+Received: by jupiter.universe (Postfix, from userid 1000)
+        id C848F4805CC; Thu,  8 Jun 2023 18:22:39 +0200 (CEST)
+From:   Sebastian Reichel <sebastian.reichel@collabora.com>
+To:     Heiko Stuebner <heiko@sntech.de>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sebastian Reichel <sebastian.reichel@collabora.com>,
+        kernel@collabora.com
+Subject: [PATCH v3 0/5] Add RK3588 SATA support
+Date:   Thu,  8 Jun 2023 18:22:33 +0200
+Message-Id: <20230608162238.50078-1-sebastian.reichel@collabora.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230514222614.115299-1-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Hi,
 
-On Mon, 15 May 2023 07:26:14 +0900, Damien Le Moal wrote:
-> Change my email address to dlemoal@kernel.org.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  Documentation/devicetree/bindings/ata/ahci-common.yaml          | 2 +-
->  Documentation/devicetree/bindings/clock/canaan,k210-clk.yaml    | 2 +-
->  Documentation/devicetree/bindings/mfd/canaan,k210-sysctl.yaml   | 2 +-
->  .../devicetree/bindings/pinctrl/canaan,k210-fpioa.yaml          | 2 +-
->  Documentation/devicetree/bindings/reset/canaan,k210-rst.yaml    | 2 +-
->  Documentation/devicetree/bindings/riscv/canaan.yaml             | 2 +-
->  6 files changed, 6 insertions(+), 6 deletions(-)
-> 
+This enables SATA support for RK3588.
 
-Applied, thanks!
+Changes since PATCHv2:
+ * https://lore.kernel.org/all/20230522173423.64691-1-sebastian.reichel@collabora.com/
+ * Drop patch 1 (applied by Heiko)
+ * Update SATA DT binding to split Rockchip into its own file
+ * Enforce correct resets numbers for the rk3568/rk3588 combo PHY
+
+Changes since PATCHv1:
+ * https://lore.kernel.org/all/20230413182345.92557-1-sebastian.reichel@collabora.com/
+ * Rebase to v6.4-rc1
+ * Collect Acked-by for syscon DT binding update
+ * Use ASIC clock description suggested by Serge Semin
+ * Also add RBC clock (not used by RK3588)
+ * Add extra patch narrowing down the allowed clocks for RK356x and RK3588
+
+-- Sebastian
+
+Sebastian Reichel (5):
+  dt-bindings: ata: dwc-ahci: add PHY clocks
+  dt-bindings: ata: dwc-ahci: add Rockchip RK3588
+  dt-bindings: phy: rockchip: rk3588 has two reset lines
+  arm64: dts: rockchip: rk3588: add combo PHYs
+  arm64: dts: rockchip: rk3588: add SATA support
+
+ .../bindings/ata/rockchip,dwc-ahci.yaml       | 114 ++++++++++++++++++
+ .../bindings/ata/snps,dwc-ahci-common.yaml    |   8 +-
+ .../bindings/ata/snps,dwc-ahci.yaml           |  17 ++-
+ .../phy/phy-rockchip-naneng-combphy.yaml      |  34 +++++-
+ arch/arm64/boot/dts/rockchip/rk3588.dtsi      |  44 +++++++
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi     |  90 ++++++++++++++
+ 6 files changed, 298 insertions(+), 9 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml
+
+-- 
+2.39.2
 
