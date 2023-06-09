@@ -2,44 +2,44 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55E32C7EE29
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Jun 2023 15:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67915C7EE29
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Jun 2023 15:49:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241891AbjFIPtD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Jun 2023 11:49:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43804 "EHLO
+        id S241890AbjFIPtI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Jun 2023 11:49:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241887AbjFIPtC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jun 2023 11:49:02 -0400
+        with ESMTP id S241902AbjFIPtG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jun 2023 11:49:06 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5A28359D;
-        Fri,  9 Jun 2023 08:48:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6270C358C;
+        Fri,  9 Jun 2023 08:49:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686325738; x=1717861738;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=kOCx0QRpqvaaVLOmLE4ZMvn4JCpJBQVlhraQgfxDKLE=;
-  b=XS57XqNKFxynEclagnQwort/ASNV4+6pnEbSmoWnkwpK8Q07vq+DVFGV
-   NmgvurQKsCAq1qjU9w7Dwsw0sEPgAkamPgUY1S7x2Zgc4mWPhXLsd5/8w
-   qAEdbo20HmGM4NwPhT9ikRx/v9Rokf6fCD4efh8HUCvvZKkDRCzRxnBIJ
-   d8N2W2E4d9fbNkqAtpLZ8Upl82sdXABldq1GRIMmJv9bQZHHCwyuKisP0
-   GPfH/iqUC6YEZ+ruupIhHI0fQNby0Ls05uh61F0wwvNxO3UDNoBGoL6PK
-   pyU/Trn5mL3gVpmUKTdfPKaNik/URLgl90jDTAZopW9zR5ymWlcker2aK
+  t=1686325742; x=1717861742;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Y+zkYbO5YK9WS+hVnRuiIYSGEwkKq9bB3JyPjPdLmHk=;
+  b=SLyf/6tP4qRceqWuqNm70aTe0Pj2DCHDbVpxvpYL94IzfUzgoYkhORav
+   cyD4SMTCpfhRYM0k/y4/vbdw7HLu6ZImwikcKDFGuEfJDAYAX4I3i4/eG
+   AZMYlVnnYq91XXg/8CYWcuHmqi84zuY7CxqwTfERje3i1Ci3HkwARqbHd
+   OcX5K59R6lWstq388Xey6h+eyT+jVy55g83Skb+/xc/AlOMPLYhrtjL28
+   7wOkpNYcD71zvODFTCWkgenWPqlg/pLcN8wtMV/lpKFGrxv0gIiBfxOdM
+   adLzXQU05+yh6Tqr+Q9YHlEZagDQQZKdYayvU77GfZqi5lfcKs/hnchl7
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="423504352"
+X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="423504368"
 X-IronPort-AV: E=Sophos;i="6.00,229,1681196400"; 
-   d="scan'208";a="423504352"
+   d="scan'208";a="423504368"
 Received: from fmsmga001.fm.intel.com ([10.253.24.23])
   by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2023 08:48:58 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="854785635"
+X-IronPort-AV: E=McAfee;i="6600,9927,10736"; a="854785637"
 X-IronPort-AV: E=Sophos;i="6.00,229,1681196400"; 
-   d="scan'208";a="854785635"
+   d="scan'208";a="854785637"
 Received: from black.fi.intel.com ([10.237.72.28])
   by fmsmga001.fm.intel.com with ESMTP; 09 Jun 2023 08:48:54 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 4ECA234C; Fri,  9 Jun 2023 18:49:02 +0300 (EEST)
+        id 5E97534F; Fri,  9 Jun 2023 18:49:02 +0300 (EEST)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Damien Le Moal <dlemoal@kernel.org>,
         Serge Semin <Sergey.Semin@baikalelectronics.ru>,
@@ -53,44 +53,51 @@ Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
         Daniel Scally <djrscally@gmail.com>,
         Heikki Krogerus <heikki.krogerus@linux.intel.com>,
         Sakari Ailus <sakari.ailus@linux.intel.com>
-Subject: [PATCH v2 0/3] device property: Introduce device_is_compatible()
-Date:   Fri,  9 Jun 2023 18:48:57 +0300
-Message-Id: <20230609154900.43024-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 2/3] device property: Implement device_is_compatible()
+Date:   Fri,  9 Jun 2023 18:48:59 +0300
+Message-Id: <20230609154900.43024-3-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.40.0.1.gaa8946217a0b
+In-Reply-To: <20230609154900.43024-1-andriy.shevchenko@linux.intel.com>
+References: <20230609154900.43024-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Introduce a new helper to tell if device (node) is compatible to the
-given string value. This will help some drivers to get rid of unneeded
-OF APIs/etc and in may help others to be agnostic to OF/ACPI.
+Some users want to use the struct device pointer to see if the
+device is compatible in terms of Open Firmware specifications,
+i.e. if it has a 'compatible' property and it matches to the
+given value. Provide inline helper for the users.
 
-While doing it, I have noticed that ACPI_DEVICE_CLASS() macro seems
-defined in unsuitable location. Move it to the better one.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ include/linux/property.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Last patch is an example of what the first two are doing.
-
-The entire series can go, I believe, via ACPI (linux-pm) tree in case
-the last patch gets tag from the respective maintainer.
-
-In v2:
-- updated commit message and added kernel doc for a new API (Greg)
-- also replaced acpi_device_get_match_data() with the agnostic API
-- tried to keep header inclusions ordered (to some extent)
-
-Andy Shevchenko (3):
-  ACPI: Move ACPI_DEVICE_CLASS() to mod_devicetable.h
-  device property: Implement device_is_compatible()
-  ata: ahci_platform: Make code agnostic to OF/ACPI
-
- drivers/ata/ahci_platform.c     |  8 ++++----
- include/linux/acpi.h            | 14 --------------
- include/linux/mod_devicetable.h | 13 +++++++++++++
- include/linux/property.h        | 12 ++++++++++++
- 4 files changed, 29 insertions(+), 18 deletions(-)
-
+diff --git a/include/linux/property.h b/include/linux/property.h
+index 695053c60306..0222b77dd75c 100644
+--- a/include/linux/property.h
++++ b/include/linux/property.h
+@@ -85,6 +85,18 @@ bool fwnode_device_is_compatible(const struct fwnode_handle *fwnode, const char
+ 	return fwnode_property_match_string(fwnode, "compatible", compat) >= 0;
+ }
+ 
++/**
++ * device_is_compatible - match 'compatible' property of the device with a given string
++ * @dev: Pointer to the struct device
++ * @compat: The string to match 'compatible' property with
++ *
++ * Returns: true if matches, otherwise false.
++ */
++static inline bool device_is_compatible(const struct device *dev, const char *compat)
++{
++	return fwnode_device_is_compatible(dev_fwnode(dev), compat);
++}
++
+ int fwnode_property_get_reference_args(const struct fwnode_handle *fwnode,
+ 				       const char *prop, const char *nargs_prop,
+ 				       unsigned int nargs, unsigned int index,
 -- 
 2.40.0.1.gaa8946217a0b
 
