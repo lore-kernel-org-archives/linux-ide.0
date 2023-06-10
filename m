@@ -2,67 +2,111 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB39EC7EE29
-	for <linux-ide@archiver.kernel.org>; Sat, 10 Jun 2023 00:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E04C5C77B7A
+	for <linux-ide@archiver.kernel.org>; Sat, 10 Jun 2023 20:40:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229939AbjFJAaf convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Jun 2023 20:30:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49646 "EHLO
+        id S229689AbjFJUkD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 10 Jun 2023 16:40:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229890AbjFJAae (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jun 2023 20:30:34 -0400
-X-Greylist: delayed 1021 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 09 Jun 2023 17:30:33 PDT
-Received: from es.pcb.gov.my (es.pcb.gov.my [202.75.7.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 827511734
-        for <linux-ide@vger.kernel.org>; Fri,  9 Jun 2023 17:30:33 -0700 (PDT)
-X-ASG-Debug-ID: 1686355617-1488a971c006b40007-WJxGKN
-Received: from mail.pcb.gov.my (mail.pcb.gov.my [10.28.173.47]) by es.pcb.gov.my with ESMTP id amLgIa24Rz2662k9 for <linux-ide@vger.kernel.org>; Sat, 10 Jun 2023 08:12:56 +0800 (+08)
-X-Barracuda-Envelope-From: herdayu@pcb.gov.my
-Received: from [193.169.254.61] (193.169.254.61) by EXCHANGE01.BPA.pcb.gov.my
- (10.28.173.47) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.721.2; Fri, 9 Jun 2023
- 01:18:54 +0800
-Reply-To: <alicewalt63@gmail.com>
-X-Barracuda-Effective-Source-IP: UNKNOWN[193.169.254.61]
-X-Barracuda-Apparent-Source-IP: 193.169.254.61
-From:   Alice Walton <herdayu@pcb.gov.my>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?B?xI1lc3RpdGFt?=
-Date:   Thu, 8 Jun 2023 10:18:47 -0700
-X-ASG-Orig-Subj: =?UTF-8?B?xI1lc3RpdGFt?=
-Message-ID: <20230608101847.8B88DBC941D71112@pcb.gov.my>
+        with ESMTP id S229450AbjFJUkC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jun 2023 16:40:02 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06B2426B2;
+        Sat, 10 Jun 2023 13:39:56 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.85.118) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Sat, 10 Jun
+ 2023 23:40:13 +0300
+Subject: Re: [PATCH] ata: Use of_property_read_reg() to parse "reg"
+To:     Rob Herring <robh@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20230609183125.1765780-1-robh@kernel.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <26a907e3-f362-09c8-3cc6-fb68ba87c64c@omp.ru>
+Date:   Sat, 10 Jun 2023 23:39:46 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
+In-Reply-To: <20230609183125.1765780-1-robh@kernel.org>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
-X-ClientProxiedBy: EXCHANGE01.BPA.pcb.gov.my (10.28.173.47) To
- EXCHANGE01.BPA.pcb.gov.my (10.28.173.47)
-X-Barracuda-Connect: mail.pcb.gov.my[10.28.173.47]
-X-Barracuda-Start-Time: 1686355946
-X-Barracuda-URL: https://10.28.173.25:443/cgi-mod/mark.cgi
-X-Barracuda-License: Expired
-X-Barracuda-BRTS-Status: 1
-X-Virus-Scanned: by bsmtpd at pcb.gov.my
-X-Barracuda-Scan-Msg-Size: 570
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.85.118]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 06/10/2023 20:10:09
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 177977 [Jun 09 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 516 516 efd4d74ff4b68f90ca62ae34a19f27bf46d81db5
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_no_received}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.85.118 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.85.118
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/10/2023 20:16:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/10/2023 5:50:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-čestitam,
+Hello!
 
-      Vaša e-pošta osvojila je 5.000.000,00 USD od strane Alice 
-Walton 2023 humanitarnog programa podrške donacijama. 
-Kontaktirajte nas za više pojedinosti o tome kako možete 
-zatražiti svoj donacijski fond.
+On 6/9/23 9:31 PM, Rob Herring wrote:
 
-Hvala i Bog blagoslovio
-Zaklada Alice Walton
-=========================================
-Congratulation,
+> Use the recently added of_property_read_reg() helper to get the
+> untranslated "reg" address value.
+> 
+> Signed-off-by: Rob Herring <robh@kernel.org>
+[...]
 
-     Your email has won $5,000,000.00 USD by Alice Walton 2023 
-humanitarian donation support program. Contact us for more 
-details on how you can claim your donation fund.
 
-Thanks And God Bless
-Alice Walton Foundation
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+> diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+> index c47c3fb434d5..b3cc23d891d5 100644
+> --- a/drivers/ata/sata_svw.c
+[...]
+> @@ -319,10 +320,10 @@ static int k2_sata_show_info(struct seq_file *m, struct Scsi_Host *shost)
+>  	/* Match it to a port node */
+>  	index = (ap == ap->host->ports[0]) ? 0 : 1;
+>  	for (np = np->child; np != NULL; np = np->sibling) {
+> -		const u32 *reg = of_get_property(np, "reg", NULL);
+> -		if (!reg)
+> +		u64 reg;
+
+   An empty line wouldn't hurt here... :-)
+
+> +		if (of_property_read_reg(np, 0, &reg, NULL))
+>  			continue;
+> -		if (index == *reg) {
+> +		if (index == reg) {
+>  			seq_printf(m, "devspec: %pOF\n", np);
+>  			break;
+>  		}
+
+MBR, Sergey
