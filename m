@@ -2,156 +2,81 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA021C7EE43
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 08:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B07E9C7EE25
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 08:59:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233963AbjFLIwf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Jun 2023 04:52:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51594 "EHLO
+        id S232781AbjFLI7g (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Jun 2023 04:59:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233773AbjFLIwQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 04:52:16 -0400
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E92F1B3;
-        Mon, 12 Jun 2023 01:52:05 -0700 (PDT)
-Received: by mail-lj1-x229.google.com with SMTP id 38308e7fff4ca-2b1b06af50eso46999481fa.1;
-        Mon, 12 Jun 2023 01:52:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686559923; x=1689151923;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=vC6uwJ0JqcA9AI2hZ192LN4Lm6HljDsWRRLUQCbqRcI=;
-        b=ha+NLGOPK268A8Rm69MB2VrlRZ+bdLMoCKBLy0i1SKtuixABoEGpHl4oGE70nPdWrI
-         fWHYhWb5EBh38UF+ViInymqzwkg/Zad+alqWfDprpVo9fgantG3Tz2sziWPw8upec7ts
-         /Fv3t/yWt6xY9KXU53ybP9Y85wyqEazYhy6JiPo96nIX5SF4uRKG5GITBsqxWuCk1vQX
-         EkWAFhD8ZV+9RpimOe60IiIxpLQXcl/lff1tzJzFERRz1X4gJJh8cCQuDLq3wpAnM8wY
-         WWTst4ebBmy5XYqnnge0LQw1u/wcQ76+CfadGwNDS32TMQdIsStrT+N5jEUX9QHUrcCk
-         D7qQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686559923; x=1689151923;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vC6uwJ0JqcA9AI2hZ192LN4Lm6HljDsWRRLUQCbqRcI=;
-        b=i0l5Dbz4oZrBwXUAkXHVFeZ7TxK0rZA95I9mLV51H4+VshpWkkQ4M3cFRW1Wn77gCf
-         kwxhr0FBsSWBAUMrKCV94zMNtYjYH28KTNQ0kr3cmmJlG92z3AA0nSjfQJR2e7BKaOmF
-         yM+olLohriLVAsGE+RJICsSgOnGBkew11lYXORLPNUqWf86+QzJWqRlKFqv5YJ2A04Rn
-         qNSOZIGI2VN4454iqsXY8g+7hyevJMFguQ8a3LLDceGSAn5DnT6lEpQXMhZzAqWoXXxK
-         vgSsknsJMkBVJ3obSW5lFkVffTuIfub3MpJ4NgyMubAaXV7WMM3ky+a5PRqHbM6zyBk+
-         MNQg==
-X-Gm-Message-State: AC+VfDzHqtwgSNirCeCPQ8pNHmuHPaJ3rXs5268hQHdLRvuKsrkaOTjw
-        6fYCxRp0MfLCd4stLJFn/b8=
-X-Google-Smtp-Source: ACHHUZ7EKA8vldamQ7vDC+e0lKSYEpHmgr+nXY6Twa32SsY75+3B3FPeePjMNjp0U0aabyKDkLIrCw==
-X-Received: by 2002:a05:651c:1039:b0:2af:d2ef:49d4 with SMTP id w25-20020a05651c103900b002afd2ef49d4mr2231817ljm.1.1686559923246;
-        Mon, 12 Jun 2023 01:52:03 -0700 (PDT)
-Received: from mobilestation ([95.79.140.35])
-        by smtp.gmail.com with ESMTPSA id s9-20020a2e9c09000000b002b31e0be2d7sm1003800lji.90.2023.06.12.01.52.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jun 2023 01:52:02 -0700 (PDT)
-Date:   Mon, 12 Jun 2023 11:52:00 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Sebastian Reichel <sebastian.reichel@collabora.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel@collabora.com
-Subject: Re: [PATCH v3 2/5] dt-bindings: ata: dwc-ahci: add Rockchip RK3588
-Message-ID: <20230612085200.5okxcipiw5sofo62@mobilestation>
-References: <20230608162238.50078-1-sebastian.reichel@collabora.com>
- <20230608162238.50078-3-sebastian.reichel@collabora.com>
- <4c914503-c2e5-a5d8-97af-daaee0b4ec7c@linaro.org>
- <20230612083536.q3sq7w6cyiuxaqtv@mobilestation>
- <838ed0e6-985d-9a45-7ece-c607bda15871@linaro.org>
+        with ESMTP id S233238AbjFLI7E (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 04:59:04 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAB684C15;
+        Mon, 12 Jun 2023 01:56:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1686560186; x=1718096186;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=xy2e3u2eLop2iTdpDgrwak2FZeN59pMzNKD71Og9rzQ=;
+  b=WGivlqABS8heX5+NbLPfapvXY215MwfyFlk9uZXkp3mSWYs5KVSQA85a
+   lnHt6qL0UzadoQMPdh5W5ZwiGelVpe5dAof8xyKPCEr79hwSUDOkI3Sbl
+   LBjjf47WZbtdMbgeL217T0nva7Pn4/aZUikWPnBfRD3ENide6KzbITVYK
+   GCAE9oJJeoW+HS8wSvxkmeIeHujSjnQEXCqxAY/UMGy+o0FndOnva9OsA
+   /deT7c/sWlFxnUvM7BfpoCcZT0mmAPOx5nvXje/5nL8UsJA4eCF+9p7Za
+   oWgAZY/Ks4yHJisq1yaV6189RHLYL+tZHcV2VwP4CQUYW8ieWVQuqM2kW
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10738"; a="361333984"
+X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
+   d="scan'208";a="361333984"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 00:57:35 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10738"; a="705293664"
+X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
+   d="scan'208";a="705293664"
+Received: from turnipsi.fi.intel.com (HELO kekkonen.fi.intel.com) ([10.237.72.44])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 00:57:31 -0700
+Received: from kekkonen.localdomain (localhost [IPv6:::1])
+        by kekkonen.fi.intel.com (Postfix) with SMTP id B6663120BE1;
+        Mon, 12 Jun 2023 10:57:28 +0300 (EEST)
+Date:   Mon, 12 Jun 2023 07:57:28 +0000
+From:   Sakari Ailus <sakari.ailus@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Damien Le Moal <dlemoal@kernel.org>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Daniel Scally <djrscally@gmail.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Subject: Re: [PATCH v2 2/3] device property: Implement device_is_compatible()
+Message-ID: <ZIbP6OWq9tmEsjyJ@kekkonen.localdomain>
+References: <20230609154900.43024-1-andriy.shevchenko@linux.intel.com>
+ <20230609154900.43024-3-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <838ed0e6-985d-9a45-7ece-c607bda15871@linaro.org>
+In-Reply-To: <20230609154900.43024-3-andriy.shevchenko@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 10:39:57AM +0200, Krzysztof Kozlowski wrote:
-> On 12/06/2023 10:35, Serge Semin wrote:
-> > On Mon, Jun 12, 2023 at 10:24:06AM +0200, Krzysztof Kozlowski wrote:
-> >> On 08/06/2023 18:22, Sebastian Reichel wrote:
-> >>> This adds Rockchip RK3588 AHCI binding. In order to narrow down the
-> >>> allowed clocks without bloating the generic binding, the description
-> >>> of Rockchip's AHCI controllers has been moved to its own file.
-> >>>
-> >>> Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> >>> ---
-> >>
-> >> ...
-> >>
-> >>> +
-> >>> +properties:
-> >>> +  compatible:
-> >>> +    items:
-> >>> +      - enum:
-> >>> +          - rockchip,rk3568-dwc-ahci
-> >>> +          - rockchip,rk3588-dwc-ahci
-> >>> +      - const: snps,dwc-ahci
-> >>> +
-> >>> +  ports-implemented:
-> >>> +    const: 1
-> >>> +
-> >>> +patternProperties:
-> >>> +  "^sata-port@[0-9a-e]$":
-> >>> +    $ref: /schemas/ata/snps,dwc-ahci-common.yaml#/$defs/dwc-ahci-port
-> >>> +
-> >>> +    unevaluatedProperties: false
-> >>
-> > 
-> >> You should be able to skip this patternProperties entirely, because it
-> >> comes from dwc-ahci-common -> ahci-common schema. Did you try the patch
-> >> without it?
-> > 
+Hi Andy,
 
-> > Please see my message about this. The "sata-port@[0-9a-e]$" sub-node
-> > bindings could be updated with the "reg" property constraint which,
-> > based on the "ports-implemented" property value, most likely is
-> > supposed to be always set to const: 1.
+On Fri, Jun 09, 2023 at 06:48:59PM +0300, Andy Shevchenko wrote:
+> Some users want to use the struct device pointer to see if the
+> device is compatible in terms of Open Firmware specifications,
+> i.e. if it has a 'compatible' property and it matches to the
+> given value. Provide inline helper for the users.
 > 
-> Then anyway the pattern is wrong as it should be @1 always.
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-* I miscalculated a bit, it should have been zero but in general
-the pattern-property is indeed redundant.
+Reviewed-by: Sakari Ailus <sakari.ailus@linux.intel.com>
 
-As a conclusion the change should look like this:
-
-+properties:
-+  compatible:
-+    items:
-+      - enum:
-+          - rockchip,rk3568-dwc-ahci
-+          - rockchip,rk3588-dwc-ahci
-+      - const: snps,dwc-ahci
-+
-+  ports-implemented:
-+    const: 1
-+
-+  "sata-port@0":
-+    $ref: /schemas/ata/snps,dwc-ahci-common.yaml#/$defs/dwc-ahci-port
-+
-+    properties:
-+      reg:
-+        const: 0
-+
-+    unevaluatedProperties: false
-+
-+ ...
-
-Right?
-
--Serge(y)
-
-> 
-> Best regards,
-> Krzysztof
-> 
+-- 
+Sakari Ailus
