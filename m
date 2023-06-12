@@ -2,37 +2,37 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89191C7EE2F
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 17:13:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36620C88CB7
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 17:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233967AbjFLRNp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Jun 2023 13:13:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56064 "EHLO
+        id S237238AbjFLRNr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Jun 2023 13:13:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233174AbjFLRNn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 13:13:43 -0400
+        with ESMTP id S233188AbjFLRNo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 13:13:44 -0400
 Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5C0C10D0;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF37C10D3;
         Mon, 12 Jun 2023 10:13:42 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-210-131.ewe-ip-backbone.de [91.248.210.131])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id EC835660217A;
-        Mon, 12 Jun 2023 18:13:40 +0100 (BST)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 32D5A6606ED2;
+        Mon, 12 Jun 2023 18:13:41 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
         s=mail; t=1686590021;
-        bh=n54yxi0NbW+9j5w95zW2R5gmOueJZM48CLnOI1FoEB0=;
+        bh=D1KuKR+ZNBWiJnLkvJscHLEqZhzpGY7F8aiTg99e+O0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MikiQcRGOiFOSxmoBB/jq8DkOGToAcx9ny7kd5HyQLvOJjkUdEY7XMGZTAKrpavSG
-         qGB4EsjoXVQDOiPUjGooYvCiiep7/d5jSuNjnxqj6WADEQLNRChE5HFXJ2edmEzcxG
-         yWQ3+PEHRJ1NvULmUAnXYIyNTXScTFHb+7JAfAETjZP30wE6REdzg33bYru62aQcdT
-         ZDgsGDA8Wbc2bhRyFokFJFRMsmtuSPeUSwIcht+pW8DK3ECzJDjsu9s+0X9w3gsTYj
-         PxVcL1/D6Og+wgRyJVvqknab6ZAp9BIbYsyApKEZ5CYvHy6OGnVRRmfEjzPz7i5m2a
-         EbVUzTjnrP6VA==
+        b=Dc25F4tg8BzzDJwU/KA452v00Pk/TWG3XHaQOKWhZGngcDouQBUEUkzas1y2nshJ7
+         zlAEeK9IeRnWdrNZyfqCbblU2ZHNpdV+5ptXn81jsVhy1zIl4QxXny+Uc6OW9t8ZWW
+         w3SBKC/zM4qcpHhOxfDIVMPIGAIeeuMjwPHBYZm3CB9WJJK4RpMxBWl7m857cfiZpj
+         ryBUhF5wgKRbTu/ejLOzb7bYhweeGzIBnqY7fbn+uSbH9n9try7R+fPJ5sv4ZuMLys
+         m2M0++IP5ZtTbBNHxccZxYQhbORXrO1UjoF6Iv/lZBKtzOPJtEEed5bcb6NZVWrIv7
+         Lgb3GIBjw28Sg==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id A3C8D4805B8; Mon, 12 Jun 2023 19:13:38 +0200 (CEST)
+        id A76CB4807E2; Mon, 12 Jun 2023 19:13:38 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     Heiko Stuebner <heiko@sntech.de>
 Cc:     Rob Herring <robh+dt@kernel.org>,
@@ -47,9 +47,9 @@ Cc:     Rob Herring <robh+dt@kernel.org>,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v4 1/5] dt-bindings: ata: dwc-ahci: add PHY clocks
-Date:   Mon, 12 Jun 2023 19:13:33 +0200
-Message-Id: <20230612171337.74576-2-sebastian.reichel@collabora.com>
+Subject: [PATCH v4 3/5] dt-bindings: phy: rockchip: rk3588 has two reset lines
+Date:   Mon, 12 Jun 2023 19:13:35 +0200
+Message-Id: <20230612171337.74576-4-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230612171337.74576-1-sebastian.reichel@collabora.com>
 References: <20230612171337.74576-1-sebastian.reichel@collabora.com>
@@ -59,46 +59,68 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add PHY transmit and receive clocks as described by the
-DW SATA AHCI HW manual.
+The RK3588 has two reset lines for the combphy. One for the
+APB interface and one for the actual PHY.
 
-Suggested-by: Serge Semin <fancer.lancer@gmail.com>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 ---
- .../devicetree/bindings/ata/snps,dwc-ahci-common.yaml     | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ .../phy/phy-rockchip-naneng-combphy.yaml      | 34 ++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
-index c1457910520b..34c5bf65b02d 100644
---- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
-+++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
-@@ -31,11 +31,11 @@ properties:
-       PM-alive clock, RxOOB detection clock, embedded PHYs reference (Rx/Tx)
-       clock, etc.
-     minItems: 1
--    maxItems: 4
-+    maxItems: 6
+diff --git a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
+index 9ae514fa7533..d3cd7997879f 100644
+--- a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
++++ b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
+@@ -31,8 +31,14 @@ properties:
+       - const: pipe
  
-   clock-names:
-     minItems: 1
--    maxItems: 4
-+    maxItems: 6
+   resets:
++    minItems: 1
++    maxItems: 2
++
++  reset-names:
++    minItems: 1
      items:
-       oneOf:
-         - description: Application APB/AHB/AXI BIU clock
-@@ -48,6 +48,10 @@ properties:
-           const: pmalive
-         - description: RxOOB detection clock
-           const: rxoob
-+        - description: PHY Transmit Clock
-+          const: asic
-+        - description: PHY Receive Clock
-+          const: rbc
-         - description: SATA Ports reference clock
-           const: ref
+-      - description: exclusive PHY reset line
++      - const: phy
++      - const: apb
  
+   rockchip,enable-ssc:
+     type: boolean
+@@ -78,6 +84,32 @@ required:
+   - rockchip,pipe-phy-grf
+   - "#phy-cells"
+ 
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: rockchip,rk3568-naneng-combphy
++    then:
++      properties:
++        resets:
++          maxItems: 1
++        reset-names:
++          maxItems: 1
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: rockchip,rk3588-naneng-combphy
++    then:
++      properties:
++        resets:
++          minItems: 2
++        reset-names:
++          minItems: 2
++      required:
++        - reset-names
++
+ additionalProperties: false
+ 
+ examples:
 -- 
 2.39.2
 
