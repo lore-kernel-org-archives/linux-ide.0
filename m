@@ -2,88 +2,93 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D93DFC7EE23
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 13:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEE0DC88CB2
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 15:19:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230527AbjFLNU4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Jun 2023 09:20:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52072 "EHLO
+        id S236919AbjFLPTd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Jun 2023 11:19:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229781AbjFLNUz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 09:20:55 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54F50B8;
-        Mon, 12 Jun 2023 06:20:54 -0700 (PDT)
+        with ESMTP id S237684AbjFLPTa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 11:19:30 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7F9D1BF;
+        Mon, 12 Jun 2023 08:19:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686576054; x=1718112054;
+  t=1686583168; x=1718119168;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=sSKazqk8pLT68/V8f34A6Z/gkcMXHhg/HflTcf8eD9A=;
-  b=J6KwkvMR37ejyMO/iQG2r4naTqztlT5llD927RwHtw21NI7LW5uvs3o3
-   aW2YY8W0wCmCdWwPeNHuhcuRB7o0sLGJ1uLI0LKNKCM8rT0XZRanFCooo
-   OqEHZpbSseGGfSpmp2EEovsiZGY3FljkLhzozzXEquRkyDKKxGD0lvqQc
-   aAn8xyoceKRau7kfKBASlXY2ORCeS+LJJoOaAjbG1jlCq+dcvPmyDogDi
-   W9b9GyPaZHEshu2Is0q6sKUyRH4J0kzYRkzHY2hkBP80BNAqKZvktnTTn
-   zfR8NgrTrQeEgUDia7D5GdyHcnPR8bEUznk6yKkW79LmuteUOB62s6Ibo
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="338396092"
+  bh=PW9PXZwKMY7BWzJITAK+1Q8pomGm7fv3ToyFNWA8I7Y=;
+  b=KuEAXx9Mx4s3QaoSgI/lpIEGrZcQInPCsOvVu/87bnu9CljVHo7z29ZQ
+   pnk1pH1jBxXwh/mbgz6MBXopbUD5YMRh7k+uzWQ5gCO6ABeEiN8w3hgYv
+   hCHhjlWUzkverUrkbdX2QNyqA1aoliFfsdINkArokG6dfThfA5vK0OIZ3
+   ejGXDY4yUwNzK9Zq9Kho+vSyMs4uU693VQcAXPAtNMfTSs9uXJvgMsobe
+   3HsOCSLP+azqzvT1fLHtF/BSVa+3R+N8TpmOuObLYFVmULy526baymEWj
+   qaEqoHj2xNZcbLvH5EXPqf8vt8MGUWdEysFfLK8MD5Aq//P6nc50Cj1aa
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="360556257"
 X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
-   d="scan'208";a="338396092"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 06:20:53 -0700
+   d="scan'208";a="360556257"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 08:19:28 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="714401057"
+X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="741066735"
 X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
-   d="scan'208";a="714401057"
+   d="scan'208";a="741066735"
 Received: from smile.fi.intel.com ([10.237.72.54])
-  by fmsmga007.fm.intel.com with ESMTP; 12 Jun 2023 06:20:50 -0700
+  by orsmga008.jf.intel.com with ESMTP; 12 Jun 2023 08:19:25 -0700
 Received: from andy by smile.fi.intel.com with local (Exim 4.96)
         (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1q8hTV-0037fa-0V;
-        Mon, 12 Jun 2023 16:20:49 +0300
-Date:   Mon, 12 Jun 2023 16:20:48 +0300
+        id 1q8jKF-00397J-0c;
+        Mon, 12 Jun 2023 18:19:23 +0300
+Date:   Mon, 12 Jun 2023 18:19:22 +0300
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <dlemoal@kernel.org>,
+To:     Sakari Ailus <sakari.ailus@linux.intel.com>
+Cc:     Damien Le Moal <dlemoal@kernel.org>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        linux-acpi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Len Brown <lenb@kernel.org>,
         Daniel Scally <djrscally@gmail.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>
-Subject: Re: [PATCH v1 3/3] ata: ahci_platform: Make code agnostic to OF/ACPI
-Message-ID: <ZIcbsKxxZcAhLx+N@smile.fi.intel.com>
-References: <20230609152507.77649-1-andriy.shevchenko@linux.intel.com>
- <20230609152507.77649-4-andriy.shevchenko@linux.intel.com>
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Subject: Re: [PATCH v2 3/3] ata: ahci_platform: Make code agnostic to OF/ACPI
+Message-ID: <ZIc3enu+EW93WjW7@smile.fi.intel.com>
+References: <20230609154900.43024-1-andriy.shevchenko@linux.intel.com>
+ <20230609154900.43024-4-andriy.shevchenko@linux.intel.com>
+ <ZIbgLIEylgZsxXAB@kekkonen.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230609152507.77649-4-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <ZIbgLIEylgZsxXAB@kekkonen.localdomain>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jun 09, 2023 at 06:25:07PM +0300, Andy Shevchenko wrote:
-> With the help of a new device_is_compatible() make
-> the driver code agnostic to the OF/ACPI. This makes
-> it neater. As a side effect the header inclusions is
-> corrected (seems mod_devicetable.h was implicitly
-> included).
+On Mon, Jun 12, 2023 at 09:06:52AM +0000, Sakari Ailus wrote:
+> On Fri, Jun 09, 2023 at 06:49:00PM +0300, Andy Shevchenko wrote:
 
 ...
 
-> -	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
-> +	if (device_is_compatible(dev, "hisilicon,hisi-ahci"))
->  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
->  
->  	port = acpi_device_get_match_data(dev);
+> > -	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+> > +	if (device_is_compatible(dev, "hisilicon,hisi-ahci"))
+> >  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+> >  
+> > -	port = acpi_device_get_match_data(dev);
+> > +	port = device_get_match_data(dev);
+> 
+> There are just a handful of users for acpi_device_get_match_data() in the
+> tree. The code could be moved to acpi_fwnode_device_get_match_data() after
+> coverting these. May be out of scope of this set though.
 
-Oops, missed this one, will send a v2. This is Friday :-)
+Why do we need that one if we can use device_get_match_data() directly?
+It will be also flexible in case one of OF code will need something like
+this (custom info structure for the respective compatible string).
+That said, I don't think we need to change to acpi_*() whatever.
 
 -- 
 With Best Regards,
