@@ -2,37 +2,37 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B34FC7EE2F
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 17:13:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A20CEC88CB4
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 17:13:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237373AbjFLRNy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Jun 2023 13:13:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56088 "EHLO
+        id S237389AbjFLRNz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Jun 2023 13:13:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233336AbjFLRNo (ORCPT
+        with ESMTP id S232987AbjFLRNo (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 13:13:44 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 034D710DA;
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C129010D5;
         Mon, 12 Jun 2023 10:13:42 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-210-131.ewe-ip-backbone.de [91.248.210.131])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 0FFA76606ECF;
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 379786606ED8;
         Mon, 12 Jun 2023 18:13:41 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
         s=mail; t=1686590021;
-        bh=Bf6eekQkfS+tNXR2hhMUzuVzPovEGfpI2wuTSi/+qNc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=NKDg3R0ad4nTEofp9OPAxRwYSdVaJxwT44lcjFXKI4d7Xi+5x+bUQeGodtmYcg7lZ
-         CihWkGiV4YQGWK0XibuOsYBhPhKvBq5n2q++XkW34XRUU7hjedZvPWK45C6asQeytv
-         7HIznFxvsgFI2iSPYWq2Og73UhKwcKR99m82VmfFF9xtDaK7ErRHrShNnGe3Dv/OLq
-         BxYQbL67gBRVTOiG6Ts2iXwQgF5eUKvIU8/JItn9ZnimR5FsMTOqmWhysOgYFujqvh
-         Erp6KzRT109vU4ITvW+boUVxDRrWiJ9BODaLFbxN2cl7ZFC/CkhdyMdhf/3wftK5xL
-         wqxHgQwAIUznw==
+        bh=51auYTRk2rmb/OCj/B4amurTw9Zrd8rSx4SmfWqBalc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=RjCobkr+wtR194yCZS3lTknhUGX17QeL9U0W7leeJXxrFaVTU2EgECRQ7bpBawg9e
+         TUm5vmMYyXqqPgReqU5agL05JI55d2CU+qy6YuNvUP7bFpmKmCjJQNCIlPZpk8QAp/
+         M9kDQJUQ34YVbJYGvdlioCsV/HsDiMiDfSTu5bhcpzrVcrLc59fDNLtsvL0jVDL7k5
+         bV9nxY2EQEffj0dxbQx9T0mKzfm6M9R7t2TZuS0cnfYwUCZTjVPDSWHmktraxMVmDc
+         2lD/yAD+uxZuEC5Nirr5CnnBHUXMfuALsm4mGH44IqeJYeWU4rpjhBUHjhcIUkohY8
+         5TcVJUiD4R1Kw==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id A23304805CC; Mon, 12 Jun 2023 19:13:38 +0200 (CEST)
+        id A997C4807EF; Mon, 12 Jun 2023 19:13:38 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     Heiko Stuebner <heiko@sntech.de>
 Cc:     Rob Herring <robh+dt@kernel.org>,
@@ -46,65 +46,124 @@ Cc:     Rob Herring <robh+dt@kernel.org>,
         linux-kernel@vger.kernel.org,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v4 0/5] Add RK3588 SATA support
-Date:   Mon, 12 Jun 2023 19:13:32 +0200
-Message-Id: <20230612171337.74576-1-sebastian.reichel@collabora.com>
+Subject: [PATCH v4 4/5] arm64: dts: rockchip: rk3588: add combo PHYs
+Date:   Mon, 12 Jun 2023 19:13:36 +0200
+Message-Id: <20230612171337.74576-5-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230612171337.74576-1-sebastian.reichel@collabora.com>
+References: <20230612171337.74576-1-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+Add all 3 combo PHYs that can be found in RK3588.
+They are used for SATA, PCIe or USB3.
 
-This enables SATA support for RK3588.
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+---
+ arch/arm64/boot/dts/rockchip/rk3588.dtsi  | 21 ++++++++++++
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi | 42 +++++++++++++++++++++++
+ 2 files changed, 63 insertions(+)
 
-Changes since PATCHv3:
- * https://lore.kernel.org/all/20230608162238.50078-1-sebastian.reichel@collabora.com/
- * Add Reviewed-by from Serge and Krzysztof to patch 1
- * Update patch 2
-   - Add maxItems to 'clocks' property; without specifying minItems it's
-     implied to be the same
-   - Keep allOf above the properties in snps,dwc-ahci.yaml
-   - Add 'sata-port@0' to list of allowed properties
-   - Replace sata-port pattern property, so that it disallows using any
-     sata-port nodes besides @0 to override the pattern property from the
-     common binding
- * Add Reviewed-by from Krzysztof to patch 3
-
-Changes since PATCHv2:
- * https://lore.kernel.org/all/20230522173423.64691-1-sebastian.reichel@collabora.com/
- * Drop patch 1 (applied by Heiko)
- * Update SATA DT binding to split Rockchip into its own file
- * Enforce correct resets numbers for the rk3568/rk3588 combo PHY
-
-Changes since PATCHv1:
- * https://lore.kernel.org/all/20230413182345.92557-1-sebastian.reichel@collabora.com/
- * Rebase to v6.4-rc1
- * Collect Acked-by for syscon DT binding update
- * Use ASIC clock description suggested by Serge Semin
- * Also add RBC clock (not used by RK3588)
- * Add extra patch narrowing down the allowed clocks for RK356x and RK3588
-
--- Sebastian
-
-Sebastian Reichel (5):
-  dt-bindings: ata: dwc-ahci: add PHY clocks
-  dt-bindings: ata: dwc-ahci: add Rockchip RK3588
-  dt-bindings: phy: rockchip: rk3588 has two reset lines
-  arm64: dts: rockchip: rk3588: add combo PHYs
-  arm64: dts: rockchip: rk3588: add SATA support
-
- .../bindings/ata/rockchip,dwc-ahci.yaml       | 124 ++++++++++++++++++
- .../bindings/ata/snps,dwc-ahci-common.yaml    |   8 +-
- .../bindings/ata/snps,dwc-ahci.yaml           |  13 +-
- .../phy/phy-rockchip-naneng-combphy.yaml      |  34 ++++-
- arch/arm64/boot/dts/rockchip/rk3588.dtsi      |  44 +++++++
- arch/arm64/boot/dts/rockchip/rk3588s.dtsi     |  90 +++++++++++++
- 6 files changed, 306 insertions(+), 7 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/rockchip,dwc-ahci.yaml
-
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588.dtsi b/arch/arm64/boot/dts/rockchip/rk3588.dtsi
+index 8be75556af8f..9d8539b5309b 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588.dtsi
+@@ -7,6 +7,11 @@
+ #include "rk3588-pinctrl.dtsi"
+ 
+ / {
++	pipe_phy1_grf: syscon@fd5c0000 {
++		compatible = "rockchip,rk3588-pipe-phy-grf", "syscon";
++		reg = <0x0 0xfd5c0000 0x0 0x100>;
++	};
++
+ 	i2s8_8ch: i2s@fddc8000 {
+ 		compatible = "rockchip,rk3588-i2s-tdm";
+ 		reg = <0x0 0xfddc8000 0x0 0x1000>;
+@@ -123,4 +128,20 @@ gmac0_mtl_tx_setup: tx-queues-config {
+ 			queue1 {};
+ 		};
+ 	};
++
++	combphy1_ps: phy@fee10000 {
++		compatible = "rockchip,rk3588-naneng-combphy";
++		reg = <0x0 0xfee10000 0x0 0x100>;
++		#phy-cells = <1>;
++		clocks = <&cru CLK_REF_PIPE_PHY1>, <&cru PCLK_PCIE_COMBO_PIPE_PHY1>,
++			 <&cru PCLK_PHP_ROOT>;
++		clock-names = "ref", "apb", "pipe";
++		assigned-clocks = <&cru CLK_REF_PIPE_PHY1>;
++		assigned-clock-rates = <100000000>;
++		resets = <&cru SRST_REF_PIPE_PHY1>, <&cru SRST_P_PCIE2_PHY1>;
++		reset-names = "phy", "apb";
++		rockchip,pipe-grf = <&php_grf>;
++		rockchip,pipe-phy-grf = <&pipe_phy1_grf>;
++		status = "disabled";
++	};
+ };
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+index 01058fed8f96..45ae457a22a4 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+@@ -944,6 +944,16 @@ php_grf: syscon@fd5b0000 {
+ 		reg = <0x0 0xfd5b0000 0x0 0x1000>;
+ 	};
+ 
++	pipe_phy0_grf: syscon@fd5bc000 {
++		compatible = "rockchip,rk3588-pipe-phy-grf", "syscon";
++		reg = <0x0 0xfd5bc000 0x0 0x100>;
++	};
++
++	pipe_phy2_grf: syscon@fd5c4000 {
++		compatible = "rockchip,rk3588-pipe-phy-grf", "syscon";
++		reg = <0x0 0xfd5c4000 0x0 0x100>;
++	};
++
+ 	ioc: syscon@fd5f0000 {
+ 		compatible = "rockchip,rk3588-ioc", "syscon";
+ 		reg = <0x0 0xfd5f0000 0x0 0x10000>;
+@@ -2371,6 +2381,38 @@ dmac2: dma-controller@fed10000 {
+ 		#dma-cells = <1>;
+ 	};
+ 
++	combphy0_ps: phy@fee00000 {
++		compatible = "rockchip,rk3588-naneng-combphy";
++		reg = <0x0 0xfee00000 0x0 0x100>;
++		#phy-cells = <1>;
++		clocks = <&cru CLK_REF_PIPE_PHY0>, <&cru PCLK_PCIE_COMBO_PIPE_PHY0>,
++			 <&cru PCLK_PHP_ROOT>;
++		clock-names = "ref", "apb", "pipe";
++		assigned-clocks = <&cru CLK_REF_PIPE_PHY0>;
++		assigned-clock-rates = <100000000>;
++		resets = <&cru SRST_REF_PIPE_PHY0>, <&cru SRST_P_PCIE2_PHY0>;
++		reset-names = "phy", "apb";
++		rockchip,pipe-grf = <&php_grf>;
++		rockchip,pipe-phy-grf = <&pipe_phy0_grf>;
++		status = "disabled";
++	};
++
++	combphy2_psu: phy@fee20000 {
++		compatible = "rockchip,rk3588-naneng-combphy";
++		reg = <0x0 0xfee20000 0x0 0x100>;
++		#phy-cells = <1>;
++		clocks = <&cru CLK_REF_PIPE_PHY2>, <&cru PCLK_PCIE_COMBO_PIPE_PHY2>,
++			 <&cru PCLK_PHP_ROOT>;
++		clock-names = "ref", "apb", "pipe";
++		assigned-clocks = <&cru CLK_REF_PIPE_PHY2>;
++		assigned-clock-rates = <100000000>;
++		resets = <&cru SRST_REF_PIPE_PHY2>, <&cru SRST_P_PCIE2_PHY2>;
++		reset-names = "phy", "apb";
++		rockchip,pipe-grf = <&php_grf>;
++		rockchip,pipe-phy-grf = <&pipe_phy2_grf>;
++		status = "disabled";
++	};
++
+ 	system_sram2: sram@ff001000 {
+ 		compatible = "mmio-sram";
+ 		reg = <0x0 0xff001000 0x0 0xef000>;
 -- 
 2.39.2
 
