@@ -2,144 +2,103 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2147C88CB6
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 16:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89191C7EE2F
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Jun 2023 17:13:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233694AbjFLQNL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Jun 2023 12:13:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52376 "EHLO
+        id S233967AbjFLRNp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Jun 2023 13:13:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233276AbjFLQNB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 12:13:01 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04A32121;
-        Mon, 12 Jun 2023 09:12:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686586379; x=1718122379;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=g5CMxcjyPuwBUbQYS6NrFVzQ64pZZ5JjFvZIvTiqTxw=;
-  b=WcWyltRb5VYbZkkMyyZu+XWV45n171PaaKa0m5APEcTBXYsVttoNbhEg
-   qJe4/HlXhnm+NARdDovp2r39HXmstl8cZslMv7XROWLuSAitNv/b3Ufu1
-   JaP69BW8rTLqTPgRdebYJoBl18Ry6pLwmckR0zrlY6wGKcttM2zuR9xXW
-   kTaUIAbx0Wyi3HeVT9f8XKy5/Rjrli+LnB2Gf9NmkeBGRvmS5tMwycAt4
-   QmZvHy4dF92hpNd3Pxqe8jIf+u9goJ+lBCVydc2F66iFTXXcoK7b69Myo
-   hjOp4jGDw2zI0GUxpetOVlgYqG06hgr90Qriw0DiQ3277zFIG1RAst8AM
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="360572693"
-X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
-   d="scan'208";a="360572693"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 09:10:13 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="824031074"
-X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
-   d="scan'208";a="824031074"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga002.fm.intel.com with ESMTP; 12 Jun 2023 09:10:05 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id C934F34C; Mon, 12 Jun 2023 19:10:13 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Daniel Scally <djrscally@gmail.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH v3 1/3] ACPI: Move ACPI_DEVICE_CLASS() to mod_devicetable.h
-Date:   Mon, 12 Jun 2023 19:10:09 +0300
-Message-Id: <20230612161011.86871-2-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.40.0.1.gaa8946217a0b
-In-Reply-To: <20230612161011.86871-1-andriy.shevchenko@linux.intel.com>
-References: <20230612161011.86871-1-andriy.shevchenko@linux.intel.com>
+        with ESMTP id S233174AbjFLRNn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jun 2023 13:13:43 -0400
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5C0C10D0;
+        Mon, 12 Jun 2023 10:13:42 -0700 (PDT)
+Received: from jupiter.universe (dyndsl-091-248-210-131.ewe-ip-backbone.de [91.248.210.131])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: sre)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id EC835660217A;
+        Mon, 12 Jun 2023 18:13:40 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1686590021;
+        bh=n54yxi0NbW+9j5w95zW2R5gmOueJZM48CLnOI1FoEB0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=MikiQcRGOiFOSxmoBB/jq8DkOGToAcx9ny7kd5HyQLvOJjkUdEY7XMGZTAKrpavSG
+         qGB4EsjoXVQDOiPUjGooYvCiiep7/d5jSuNjnxqj6WADEQLNRChE5HFXJ2edmEzcxG
+         yWQ3+PEHRJ1NvULmUAnXYIyNTXScTFHb+7JAfAETjZP30wE6REdzg33bYru62aQcdT
+         ZDgsGDA8Wbc2bhRyFokFJFRMsmtuSPeUSwIcht+pW8DK3ECzJDjsu9s+0X9w3gsTYj
+         PxVcL1/D6Og+wgRyJVvqknab6ZAp9BIbYsyApKEZ5CYvHy6OGnVRRmfEjzPz7i5m2a
+         EbVUzTjnrP6VA==
+Received: by jupiter.universe (Postfix, from userid 1000)
+        id A3C8D4805B8; Mon, 12 Jun 2023 19:13:38 +0200 (CEST)
+From:   Sebastian Reichel <sebastian.reichel@collabora.com>
+To:     Heiko Stuebner <heiko@sntech.de>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sebastian Reichel <sebastian.reichel@collabora.com>,
+        kernel@collabora.com,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v4 1/5] dt-bindings: ata: dwc-ahci: add PHY clocks
+Date:   Mon, 12 Jun 2023 19:13:33 +0200
+Message-Id: <20230612171337.74576-2-sebastian.reichel@collabora.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230612171337.74576-1-sebastian.reichel@collabora.com>
+References: <20230612171337.74576-1-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The data type of struct acpi_device_id is defined in the
-mod_devicetable.h. It's suboptimal to require user with
-the almost agnostic code to include acpi.h solely for the
-macro that affects the data type defined elsewhere.
+Add PHY transmit and receive clocks as described by the
+DW SATA AHCI HW manual.
 
-Taking into account the above and for the sake of consistency
-move ACPI_DEVICE_CLASS() to mod_devicetable.h.
-
-Note, that with CONFIG_ACPI=n the ID table will be filed with data
-but it does not really matter because either it won't be used, or
-won't be compiled in some cases (when guarded by respective ifdeffery).
-
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Suggested-by: Serge Semin <fancer.lancer@gmail.com>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 ---
- include/linux/acpi.h            | 14 --------------
- include/linux/mod_devicetable.h | 13 +++++++++++++
- 2 files changed, 13 insertions(+), 14 deletions(-)
+ .../devicetree/bindings/ata/snps,dwc-ahci-common.yaml     | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index d41a05d68166..640f1c07c894 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -70,19 +70,6 @@ static inline void acpi_free_fwnode_static(struct fwnode_handle *fwnode)
- 	kfree(fwnode);
- }
+diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+index c1457910520b..34c5bf65b02d 100644
+--- a/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
++++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci-common.yaml
+@@ -31,11 +31,11 @@ properties:
+       PM-alive clock, RxOOB detection clock, embedded PHYs reference (Rx/Tx)
+       clock, etc.
+     minItems: 1
+-    maxItems: 4
++    maxItems: 6
  
--/**
-- * ACPI_DEVICE_CLASS - macro used to describe an ACPI device with
-- * the PCI-defined class-code information
-- *
-- * @_cls : the class, subclass, prog-if triple for this device
-- * @_msk : the class mask for this device
-- *
-- * This macro is used to create a struct acpi_device_id that matches a
-- * specific PCI class. The .id and .driver_data fields will be left
-- * initialized with the default value.
-- */
--#define ACPI_DEVICE_CLASS(_cls, _msk)	.cls = (_cls), .cls_msk = (_msk),
--
- static inline bool has_acpi_companion(struct device *dev)
- {
- 	return is_acpi_device_node(dev->fwnode);
-@@ -782,7 +769,6 @@ const char *acpi_get_subsystem_id(acpi_handle handle);
- #define ACPI_COMPANION_SET(dev, adev)	do { } while (0)
- #define ACPI_HANDLE(dev)		(NULL)
- #define ACPI_HANDLE_FWNODE(fwnode)	(NULL)
--#define ACPI_DEVICE_CLASS(_cls, _msk)	.cls = (0), .cls_msk = (0),
- 
- #include <acpi/acpi_numa.h>
- 
-diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
-index ccaaeda792c0..486747518aae 100644
---- a/include/linux/mod_devicetable.h
-+++ b/include/linux/mod_devicetable.h
-@@ -221,6 +221,19 @@ struct acpi_device_id {
- 	__u32 cls_msk;
- };
- 
-+/**
-+ * ACPI_DEVICE_CLASS - macro used to describe an ACPI device with
-+ * the PCI-defined class-code information
-+ *
-+ * @_cls : the class, subclass, prog-if triple for this device
-+ * @_msk : the class mask for this device
-+ *
-+ * This macro is used to create a struct acpi_device_id that matches a
-+ * specific PCI class. The .id and .driver_data fields will be left
-+ * initialized with the default value.
-+ */
-+#define ACPI_DEVICE_CLASS(_cls, _msk)	.cls = (_cls), .cls_msk = (_msk),
-+
- #define PNP_ID_LEN	8
- #define PNP_MAX_DEVICES	8
+   clock-names:
+     minItems: 1
+-    maxItems: 4
++    maxItems: 6
+     items:
+       oneOf:
+         - description: Application APB/AHB/AXI BIU clock
+@@ -48,6 +48,10 @@ properties:
+           const: pmalive
+         - description: RxOOB detection clock
+           const: rxoob
++        - description: PHY Transmit Clock
++          const: asic
++        - description: PHY Receive Clock
++          const: rbc
+         - description: SATA Ports reference clock
+           const: ref
  
 -- 
-2.40.0.1.gaa8946217a0b
+2.39.2
 
