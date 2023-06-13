@@ -2,122 +2,87 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE4D6C7EE29
-	for <linux-ide@archiver.kernel.org>; Tue, 13 Jun 2023 09:52:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9F0AEB64D7
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Jun 2023 15:14:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236659AbjFMJwc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 13 Jun 2023 05:52:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36226 "EHLO
+        id S241236AbjFMPOi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 13 Jun 2023 11:14:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234891AbjFMJwb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jun 2023 05:52:31 -0400
-Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8D5EE90;
-        Tue, 13 Jun 2023 02:52:29 -0700 (PDT)
-Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id A383EE0DEC;
-        Tue, 13 Jun 2023 12:52:28 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        baikalelectronics.ru; h=cc:cc:content-type:content-type:date
-        :from:from:in-reply-to:message-id:mime-version:references
-        :reply-to:subject:subject:to:to; s=post; bh=hhKnhKZ4s9GqWYXGkZxF
-        vGu3vgNA8L61Y7zmwmhPsUI=; b=S4aJU6/a/aTHLy6v6l4lI8OaIXtZRgVyn9ym
-        jjUYeqvz+jlIcFcHTplVua7yiobrcQCIBhpU1HDrKCfMwpZ78m1Ov6eF4g4nw7D7
-        Kpa8IEChTI9kXUeV4VEp3AQCy4LKsfksQnPz/avdR9EUhVRS6W2sSJJXXQziO1hb
-        twVopO4=
-Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 7EFFFE0DE4;
-        Tue, 13 Jun 2023 12:52:28 +0300 (MSK)
-Received: from mobilestation (10.8.30.34) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 13 Jun 2023 12:52:27 +0300
-Date:   Tue, 13 Jun 2023 12:52:27 +0300
-From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-CC:     Damien Le Moal <dlemoal@kernel.org>,
+        with ESMTP id S240619AbjFMPOh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jun 2023 11:14:37 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60050D2;
+        Tue, 13 Jun 2023 08:14:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1686669276; x=1718205276;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=1dqtMpffhBApmbkC9z66BtFzjGnGgIfDciQZLOFF+e4=;
+  b=hrWxgVG6OQprk8QN0YOslm7Uw9BfHk+W0crutwH4NraKrW6Hm6mEj9QH
+   hUcoQQSyvqf3KEvxsCcXbxhCj6Y8F4RRlWC8XDkzQHFN7o0Q/OYJ+GLyh
+   p7jLL3oeRLnPF16+FNToCVyjBzX0atZSGti4Ni9ModKiyQcoDW/kikD+m
+   qbo9x/Cm5J5dum4/RSjQ5mBleN4kUtjiiyK2E/x2A+V23Gl/7IHupzfde
+   hUDyjJSR4Q/0MdgETPQr1gCl0bR8gabA9J+HFGOVzib6pAeyP7nZjHWyD
+   lSQtg7+B0aK7FBmXzvcMzuihK9v/rGz8Jsv+zkWoQVMDeu/M4thga86CX
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361731765"
+X-IronPort-AV: E=Sophos;i="6.00,240,1681196400"; 
+   d="scan'208";a="361731765"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 08:14:35 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="824427658"
+X-IronPort-AV: E=Sophos;i="6.00,240,1681196400"; 
+   d="scan'208";a="824427658"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmsmga002.fm.intel.com with ESMTP; 13 Jun 2023 08:14:32 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1q95j4-003U5b-1f;
+        Tue, 13 Jun 2023 18:14:30 +0300
+Date:   Tue, 13 Jun 2023 18:14:30 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Damien Le Moal <dlemoal@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Len Brown <lenb@kernel.org>,
         Daniel Scally <djrscally@gmail.com>,
         Heikki Krogerus <heikki.krogerus@linux.intel.com>,
         Sakari Ailus <sakari.ailus@linux.intel.com>
-Subject: Re: [PATCH v2 3/3] ata: ahci_platform: Make code agnostic to OF/ACPI
-Message-ID: <20230613095227.fr5j7i7mcdfmyxse@mobilestation>
+Subject: Re: [PATCH v2 2/3] device property: Implement device_is_compatible()
+Message-ID: <ZIiH1iAbjLoUScyb@smile.fi.intel.com>
 References: <20230609154900.43024-1-andriy.shevchenko@linux.intel.com>
- <20230609154900.43024-4-andriy.shevchenko@linux.intel.com>
+ <20230609154900.43024-3-andriy.shevchenko@linux.intel.com>
+ <20230613094508.mnmktmmt4l657ymj@mobilestation>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230609154900.43024-4-andriy.shevchenko@linux.intel.com>
-X-Originating-IP: [10.8.30.34]
-X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
+In-Reply-To: <20230613094508.mnmktmmt4l657ymj@mobilestation>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jun 09, 2023 at 06:49:00PM +0300, Andy Shevchenko wrote:
-> With the help of a new device_is_compatible() make
-> the driver code agnostic to the OF/ACPI. This makes
-> it neater. As a side effect the header inclusions is
-> corrected (seems mod_devicetable.h was implicitly
-> included).
-
-I don't think the driver will get to be fully agnostic after this
-patch because for instance the ahci_platform_get_resources() method
-directly uses the OF-available functions, walks over the OF subnodes,
-touches the OF-properties, etc. So AFAICS in order to be fully OF/ACPI
-agnostic the entire libahci_platform.o driver needs to be converted
-too, but it's not trivial at all.
-
-Anyway as a start this patch looks good.
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
-
--Serge(y)
-
+On Tue, Jun 13, 2023 at 12:45:08PM +0300, Serge Semin wrote:
+> On Fri, Jun 09, 2023 at 06:48:59PM +0300, Andy Shevchenko wrote:
+> > Some users want to use the struct device pointer to see if the
+> > device is compatible in terms of Open Firmware specifications,
+> > i.e. if it has a 'compatible' property and it matches to the
+> > given value. Provide inline helper for the users.
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/ata/ahci_platform.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index ab30c7138d73..81fc63f6b008 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -9,14 +9,14 @@
->   */
->  
->  #include <linux/kernel.h>
-> +#include <linux/mod_devicetable.h>
->  #include <linux/module.h>
->  #include <linux/pm.h>
->  #include <linux/device.h>
-> -#include <linux/of_device.h>
->  #include <linux/platform_device.h>
-> +#include <linux/property.h>
->  #include <linux/libata.h>
->  #include <linux/ahci_platform.h>
-> -#include <linux/acpi.h>
->  #include <linux/pci_ids.h>
->  #include "ahci.h"
->  
-> @@ -56,10 +56,10 @@ static int ahci_probe(struct platform_device *pdev)
->  	if (rc)
->  		return rc;
->  
-> -	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
-> +	if (device_is_compatible(dev, "hisilicon,hisi-ahci"))
->  		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
->  
-> -	port = acpi_device_get_match_data(dev);
-> +	port = device_get_match_data(dev);
->  	if (!port)
->  		port = &ahci_port_info;
->  
-> -- 
-> 2.40.0.1.gaa8946217a0b
-> 
-> 
+> IMO much useful wrapper. Thanks for the patch.
+> Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+
+There is a v3. Do you mind to tag it as well?
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
 
