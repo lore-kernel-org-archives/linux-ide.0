@@ -2,87 +2,103 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A2FFC77B7A
-	for <linux-ide@archiver.kernel.org>; Tue, 13 Jun 2023 09:33:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22459C88CB4
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Jun 2023 09:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240050AbjFMJdv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 13 Jun 2023 05:33:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52544 "EHLO
+        id S240044AbjFMJpT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 13 Jun 2023 05:45:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239532AbjFMJdo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jun 2023 05:33:44 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 810FD18E;
-        Tue, 13 Jun 2023 02:33:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686648823; x=1718184823;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=s6xsUBvMQBvwXMxPKFv6VAm7oSub0u5Wh+bYY89/XOM=;
-  b=ilj4YJqbXjE1SW8c+YMvfye2v/IG6UOIJkyephe5uOXiQzGoQB0h4aTI
-   Fazfa7CvoVbJ/EMISG2LtP9fjELEF7HPDffHcMq+knb3MzInqUFVpZVGX
-   GIaNDByl8J0L3hxONpu0hUXs/ENQS4q4jYseOL5y5FTJBpV4ceUgmMEjR
-   l4QyExPnnllv8lJGqAOMBZDV044TMr9yy4tNTFD88uRsUOk+ToDnIFVj/
-   vak9O94haAuilPDVmf9kcXOCsy/EPJLfPYy4cdCly0x6IxxwjjuOLnaUk
-   JMpt4IX4+BiklNn2CaMqFUozz0MqiyljEqIPG4Yk9zUzMVhDbgC1yN5KH
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="360762828"
-X-IronPort-AV: E=Sophos;i="6.00,239,1681196400"; 
-   d="scan'208";a="360762828"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 02:33:43 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="776739520"
-X-IronPort-AV: E=Sophos;i="6.00,239,1681196400"; 
-   d="scan'208";a="776739520"
-Received: from turnipsi.fi.intel.com (HELO kekkonen.fi.intel.com) ([10.237.72.44])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2023 02:33:39 -0700
-Received: from kekkonen.localdomain (localhost [IPv6:::1])
-        by kekkonen.fi.intel.com (Postfix) with SMTP id 9A44011F9D2;
-        Tue, 13 Jun 2023 12:26:32 +0300 (EEST)
-Date:   Tue, 13 Jun 2023 09:26:32 +0000
-From:   Sakari Ailus <sakari.ailus@linux.intel.com>
+        with ESMTP id S241789AbjFMJpO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jun 2023 05:45:14 -0400
+Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C9A7AAC;
+        Tue, 13 Jun 2023 02:45:10 -0700 (PDT)
+Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 494B9E0DEC;
+        Tue, 13 Jun 2023 12:45:09 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        baikalelectronics.ru; h=cc:cc:content-type:content-type:date
+        :from:from:in-reply-to:message-id:mime-version:references
+        :reply-to:subject:subject:to:to; s=post; bh=j7ofUeP49paxvIgDMuJ8
+        em4j9tJ1KL/nPsMR7budhZA=; b=odWiLvP75WDQntxsQowgHxcFLsn2NozBrF5K
+        27xbiiIbFZHCz9o4m3q7GzI1V897l5Un6LPwXudI8S+QIAKkeB23pWMfKN2bmb/v
+        PoSe6N7qykf654Pg+SRBD8MFTG5x1I8IustJ+PEBnTvIbnSxQVD+a3xVj/DNNyYP
+        SC/LGPY=
+Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 1F878E0DE4;
+        Tue, 13 Jun 2023 12:45:09 +0300 (MSK)
+Received: from mobilestation (10.8.30.34) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 13 Jun 2023 12:45:08 +0300
+Date:   Tue, 13 Jun 2023 12:45:08 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+CC:     Damien Le Moal <dlemoal@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
         Len Brown <lenb@kernel.org>,
         Daniel Scally <djrscally@gmail.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Subject: Re: [PATCH v2 3/3] ata: ahci_platform: Make code agnostic to OF/ACPI
-Message-ID: <ZIg2SBegQW7d5QJf@kekkonen.localdomain>
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>
+Subject: Re: [PATCH v2 2/3] device property: Implement device_is_compatible()
+Message-ID: <20230613094508.mnmktmmt4l657ymj@mobilestation>
 References: <20230609154900.43024-1-andriy.shevchenko@linux.intel.com>
- <20230609154900.43024-4-andriy.shevchenko@linux.intel.com>
- <ZIbRJGhikaYEkuay@kekkonen.localdomain>
- <ZIc3sQD7U2Ifrneh@smile.fi.intel.com>
+ <20230609154900.43024-3-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-In-Reply-To: <ZIc3sQD7U2Ifrneh@smile.fi.intel.com>
+In-Reply-To: <20230609154900.43024-3-andriy.shevchenko@linux.intel.com>
+X-Originating-IP: [10.8.30.34]
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 06:20:17PM +0300, Andy Shevchenko wrote:
-> On Mon, Jun 12, 2023 at 08:02:44AM +0000, Sakari Ailus wrote:
-> > On Fri, Jun 09, 2023 at 06:49:00PM +0300, Andy Shevchenko wrote:
-> > > With the help of a new device_is_compatible() make
-> > > the driver code agnostic to the OF/ACPI. This makes
-> > > it neater. As a side effect the header inclusions is
-> > > corrected (seems mod_devicetable.h was implicitly
-> > > included).
-> > 
-> > You're wrapping the lines well before 75. Why?
+On Fri, Jun 09, 2023 at 06:48:59PM +0300, Andy Shevchenko wrote:
+> Some users want to use the struct device pointer to see if the
+> device is compatible in terms of Open Firmware specifications,
+> i.e. if it has a 'compatible' property and it matches to the
+> given value. Provide inline helper for the users.
+
+IMO much useful wrapper. Thanks for the patch.
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+
+-Serge(y)
+
 > 
-> Didn't pay attention to that much. Is it a problem? Should I send a new
-> version because of that?
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  include/linux/property.h | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/include/linux/property.h b/include/linux/property.h
+> index 695053c60306..0222b77dd75c 100644
+> --- a/include/linux/property.h
+> +++ b/include/linux/property.h
+> @@ -85,6 +85,18 @@ bool fwnode_device_is_compatible(const struct fwnode_handle *fwnode, const char
+>  	return fwnode_property_match_string(fwnode, "compatible", compat) >= 0;
+>  }
+>  
+> +/**
+> + * device_is_compatible - match 'compatible' property of the device with a given string
+> + * @dev: Pointer to the struct device
+> + * @compat: The string to match 'compatible' property with
+> + *
+> + * Returns: true if matches, otherwise false.
+> + */
+> +static inline bool device_is_compatible(const struct device *dev, const char *compat)
+> +{
+> +	return fwnode_device_is_compatible(dev_fwnode(dev), compat);
+> +}
+> +
+>  int fwnode_property_get_reference_args(const struct fwnode_handle *fwnode,
+>  				       const char *prop, const char *nargs_prop,
+>  				       unsigned int nargs, unsigned int index,
+> -- 
+> 2.40.0.1.gaa8946217a0b
+> 
+> 
 
-I guess not. But it's a good practice to wrap at 75 instead.
-
--- 
-Sakari Ailus
