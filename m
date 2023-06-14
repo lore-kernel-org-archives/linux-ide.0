@@ -2,335 +2,129 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2517EB64D9
-	for <linux-ide@archiver.kernel.org>; Wed, 14 Jun 2023 18:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D1DEB64D8
+	for <linux-ide@archiver.kernel.org>; Wed, 14 Jun 2023 19:00:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229576AbjFNSmx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 14 Jun 2023 14:42:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57938 "EHLO
+        id S229576AbjFNTAg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 14 Jun 2023 15:00:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233840AbjFNSmc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jun 2023 14:42:32 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A08A1BF9;
-        Wed, 14 Jun 2023 11:42:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686768150; x=1718304150;
-  h=date:from:to:cc:subject:message-id;
-  bh=NrAIYtXU/PqQjwGTIerTLpDp8yZRtzwBUpq6VeZVJPY=;
-  b=fszsXEDUSjKF6T7SLVNMcIsSZ29Jn7k6zN4LA4SKPxggjeMbI/kGQdQ2
-   OWVL8+o/80QgNx9ffSot1KvYUuw+pgI6PnsTg24uTzwAaTivlvXAe4nnt
-   lWcbdflkBjJ0slDIoUOEwX/ZmZqkOMqIcEGwqV7gQS8cYOZWMEjqTKz12
-   +KJRU5qCCn5eTLpl7B7IuUcOzaWo/9Lp6c5UgJv6je/nc+GWCVIFwq6Zn
-   ieCxue3QYSBZ591rnfOotPZgFy6pKmm/rku8IiGXUz6OD94uo8mVuiu3K
-   VrHFvTi3DgOddjcSbP4ubmJzJ9IWMzyeXmU0ByOR/5Q+vBgKrPqa45YGz
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10741"; a="358704653"
-X-IronPort-AV: E=Sophos;i="6.00,243,1681196400"; 
-   d="scan'208";a="358704653"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 11:42:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10741"; a="886371524"
-X-IronPort-AV: E=Sophos;i="6.00,243,1681196400"; 
-   d="scan'208";a="886371524"
-Received: from lkp-server02.sh.intel.com (HELO d59cacf64e9e) ([10.239.97.151])
-  by orsmga005.jf.intel.com with ESMTP; 14 Jun 2023 11:42:24 -0700
-Received: from kbuild by d59cacf64e9e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q9VRn-0000xZ-1f;
-        Wed, 14 Jun 2023 18:42:23 +0000
-Date:   Thu, 15 Jun 2023 02:42:10 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Linux Memory Management List <linux-mm@kvack.org>,
-        apparmor@lists.ubuntu.com, intel-gfx@lists.freedesktop.org,
-        kunit-dev@googlegroups.com, linux-cifs@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-kselftest@vger.kernel.org, linux-leds@vger.kernel.org,
-        linux-net-drivers@amd.com, linux-parisc@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-usb@vger.kernel.org, lvs-devel@vger.kernel.org,
-        netdev@vger.kernel.org, rcu@vger.kernel.org,
-        samba-technical@lists.samba.org
-Subject: [linux-next:master] BUILD REGRESSION
- b16049b21162bb649cdd8519642a35972b7910fe
-Message-ID: <202306150255.nUNQao5u-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S231823AbjFNTAf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jun 2023 15:00:35 -0400
+Received: from mail-io1-f50.google.com (mail-io1-f50.google.com [209.85.166.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 697D71A2;
+        Wed, 14 Jun 2023 12:00:34 -0700 (PDT)
+Received: by mail-io1-f50.google.com with SMTP id ca18e2360f4ac-77aec3ce39aso195554939f.0;
+        Wed, 14 Jun 2023 12:00:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686769233; x=1689361233;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fD8D25wPikGFFd99Ol9Rb+Ax0oXPcCmfRQUqnue5Bko=;
+        b=Xq+Cd/zTrE8zAbeHUTFuv5niMIBTzyghjMqGyiUFDZ7w5YZWnIGvbO2+K59GTpQEGY
+         u5zo96Wq1WpNXX+lXWh1YY0Pdvp3eE4mzeHj6xwACtQCF3NOSyHKACFAbhgzUnfu7d2a
+         y4wAPcvOtiE0mkpfA6LZkuZm7opa2PofPUOY1pfNUkszQckYqCN0/ndUtnvL7V025bKz
+         dkY2ua8Rd5dskWtHftx78lLXqTMk0QpztTM6F8TZmzM9OZNWxXIadqFpvHzBdMJvT72x
+         3+Ilxj4b8/RIP+ZWMIyI3Q0lyQ0YOA6iTRYK/fBvcI4aNEs5ortJldEx36VcxgObYRS5
+         8Ryg==
+X-Gm-Message-State: AC+VfDycCqz4yy3JcS6fw6Q73My9mcCdw5AMdo6BfVNZqbI/1vWbwYDv
+        J3snjbFXozFDP7y1CkUZvw==
+X-Google-Smtp-Source: ACHHUZ7dbwBc/2HjqzWfNYoD7dXSx0RVKX9Vkrhyz2da6vQ90zJUsp0Wzy6CF0asX1oG1VJ65XmHeQ==
+X-Received: by 2002:a6b:f915:0:b0:776:fc02:184e with SMTP id j21-20020a6bf915000000b00776fc02184emr13520209iog.14.1686769233561;
+        Wed, 14 Jun 2023 12:00:33 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id w12-20020a02968c000000b0041d7ad74b36sm5191797jai.17.2023.06.14.12.00.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jun 2023 12:00:32 -0700 (PDT)
+Received: (nullmailer pid 2553777 invoked by uid 1000);
+        Wed, 14 Jun 2023 19:00:30 -0000
+Date:   Wed, 14 Jun 2023 13:00:30 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Nikita Shubin <nikita.shubin@maquefel.me>,
+        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Michael Peters <mpeters@embeddedts.com>,
+        Kris Bahnsen <kris@embeddedts.com>, linux-ide@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 25/43] dt-bindings: ata: Add Cirrus EP93xx
+Message-ID: <20230614190030.GA2547354-robh@kernel.org>
+References: <20230424123522.18302-1-nikita.shubin@maquefel.me>
+ <20230601054549.10843-7-nikita.shubin@maquefel.me>
+ <fe8bfbfc-0ce5-d4ea-a2a8-8608fe4e2f97@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fe8bfbfc-0ce5-d4ea-a2a8-8608fe4e2f97@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: b16049b21162bb649cdd8519642a35972b7910fe  Add linux-next specific files for 20230614
+On Fri, Jun 02, 2023 at 08:57:37AM +0900, Damien Le Moal wrote:
+> On 6/1/23 14:45, Nikita Shubin wrote:
+> > Add YAML bindings for ep93xx SoC PATA.
+> > 
+> > Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
+> > ---
+> > 
+> > Notes:
+> >     v0 -> v1:
+> >     
+> >     - renamed file to ep9312-pata
+> 
+> Looks OK to me but given that this is both for the cirrus,ep9315-pata and
+> cirrus,ep9312-pata, wouldn't it be better to name the file
+> cirrus,ep931x-pata.yaml ?
 
-Error/Warning reports:
+cirrus,ep9312-pata makes sense given that is the common fallback.
 
-https://lore.kernel.org/oe-kbuild-all/202306122223.HHER4zOo-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306132237.Z4LJE8bP-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306140505.ZTBob65w-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306141702.ZaO9V2lk-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306141719.MJHClSrC-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306141920.TTvpsXwJ-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306141934.UKmM9bFX-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306142017.23VmBLmG-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202306142023.vjEaFkk5-lkp@intel.com
+Wildcards are okay in filenames (only) when there's not a common 
+fallback.
 
-Error/Warning: (recently discovered and may have been fixed)
+> >     - changed email to dlemoal@kernel.org
+> >     - dropped label
+> >     - fixed ident
+> > 
+> >  .../bindings/ata/cirrus,ep9312-pata.yaml      | 44 +++++++++++++++++++
+> >  1 file changed, 44 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
+> > 
+> > diff --git a/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml b/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
+> > new file mode 100644
+> > index 000000000000..3489be55a6fe
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/ata/cirrus,ep9312-pata.yaml
+> > @@ -0,0 +1,44 @@
+> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > +%YAML 1.2
+> > +---
+> > +$id: http://devicetree.org/schemas/ata/cirrus,ep9312-pata.yaml#
+> > +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> > +
+> > +title: Cirrus Logic EP9312 PATA controller
+> > +
+> > +maintainers:
+> > +  - Damien Le Moal <dlemoal@kernel.org>
+> > +
+> > +properties:
+> > +  compatible:
+> > +    oneOf:
+> > +      - const: cirrus,ep9312-pata
+> 
+> I am not a DT specialist, but isn't this line superfluous since it is listed in
+> the items ?
 
-Documentation/networking/device_drivers/ethernet/mellanox/mlx5/switchdev.rst:57: WARNING: Unexpected indentation.
-Documentation/networking/device_drivers/ethernet/mellanox/mlx5/switchdev.rst:66: WARNING: undefined label: documentation/networking/devlink/devlink-params.rst (if the link has no caption the label must precede a section header)
-arch/parisc/kernel/pdt.c:65:6: warning: no previous prototype for 'arch_report_meminfo' [-Wmissing-prototypes]
-drivers/ata/pata_octeon_cf.c:835:7: error: call to undeclared function 'of_property_read_reg'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-drivers/char/mem.c:164:25: error: implicit declaration of function 'unxlate_dev_mem_ptr'; did you mean 'xlate_dev_mem_ptr'? [-Werror=implicit-function-declaration]
-drivers/gpu/drm/i915/display/intel_display_power.h:255:70: error: declaration of 'struct seq_file' will not be visible outside of this function [-Werror,-Wvisibility]
-drivers/gpu/drm/i915/display/intel_display_power.h:256:70: error: declaration of 'struct seq_file' will not be visible outside of this function [-Werror,-Wvisibility]
-drivers/gpu/drm/i915/i915_driver.c:1806:17: error: use of undeclared identifier 'i915_drm_client_fdinfo'
-drivers/leds/leds-cht-wcove.c:144:21: warning: no previous prototype for 'cht_wc_leds_brightness_get' [-Wmissing-prototypes]
-drivers/net/ethernet/sfc/ef100_netdev.c:313: undefined reference to `efx_tc_netdev_event'
-drivers/net/ethernet/sfc/ef100_netdev.c:329: undefined reference to `efx_tc_netevent_event'
-kernel/rcu/rcuscale.c:301:20: error: use of undeclared identifier 'get_rcu_tasks_gp_kthread'; did you mean 'get_rcu_tasks_trace_gp_kthread'?
-kernel/rcu/rcuscale.c:322:14: error: use of undeclared identifier 'tasks_scale_read_lock'
-kernel/rcu/rcuscale.c:323:16: error: use of undeclared identifier 'tasks_scale_read_unlock'
-kernel/rcu/rcuscale.c:330:20: error: use of undeclared identifier 'get_rcu_tasks_rude_gp_kthread'; did you mean 'get_rcu_tasks_trace_gp_kthread'?
-kernel/rcu/tasks.h:1113:21: warning: no previous prototype for function 'get_rcu_tasks_gp_kthread' [-Wmissing-prototypes]
-lib/kunit/executor_test.c:138:4: warning: cast from 'void (*)(const void *)' to 'kunit_action_t *' (aka 'void (*)(void *)') converts to incompatible function type [-Wcast-function-type-strict]
-lib/kunit/test.c:775:38: warning: cast from 'void (*)(const void *)' to 'kunit_action_t *' (aka 'void (*)(void *)') converts to incompatible function type [-Wcast-function-type-strict]
-security/apparmor/policy_unpack.c:1144: warning: expecting prototype for verify_dfa_accept_xindex(). Prototype was for verify_dfa_accept_index() instead
+No, this entry is for ep9312. The next entry is for ep9315 which is 
+compatible with ep9312 version. The cirrus,ep9315-pata is there in case 
+a distinction (e.g. quirk/errata) needs to be made by the driver 
+without having to change the DT.
 
-Unverified Error/Warning (likely false positive, please contact us if interested):
+Rob
 
-drivers/char/tpm/tpm_tis_spi_main.c:137 tpm_tis_spi_transfer_half() error: uninitialized symbol 'ret'.
-drivers/net/ethernet/emulex/benet/be_main.c:2460 be_rx_compl_process_gro() error: buffer overflow '((skb_end_pointer(skb)))->frags' 17 <= u16max
-drivers/net/ethernet/mellanox/mlx5/core/lib/devcom.c:98 mlx5_devcom_register_device() error: uninitialized symbol 'tmp_dev'.
-drivers/usb/cdns3/cdns3-starfive.c:23: warning: expecting prototype for cdns3(). Prototype was for USB_STRAP_HOST() instead
-fs/smb/client/cifsfs.c:982 cifs_smb3_do_mount() warn: possible memory leak of 'cifs_sb'
-fs/smb/client/cifssmb.c:4089 CIFSFindFirst() warn: missing error code? 'rc'
-fs/smb/client/cifssmb.c:4216 CIFSFindNext() warn: missing error code? 'rc'
-fs/smb/client/connect.c:2775 cifs_match_super() error: 'tlink' dereferencing possible ERR_PTR()
-fs/smb/client/connect.c:2974 generic_ip_connect() error: we previously assumed 'socket' could be null (see line 2962)
-mm/mempolicy.c:1225 new_folio() error: uninitialized symbol 'address'.
-
-Error/Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- i386-allyesconfig
-|   `-- drivers-leds-leds-cht-wcove.c:warning:no-previous-prototype-for-cht_wc_leds_brightness_get
-|-- i386-randconfig-i014-20230614
-|   |-- drivers-net-ethernet-sfc-ef100_netdev.c:undefined-reference-to-efx_tc_netdev_event
-|   `-- drivers-net-ethernet-sfc-ef100_netdev.c:undefined-reference-to-efx_tc_netevent_event
-|-- i386-randconfig-m021-20230614
-|   |-- fs-smb-client-cifsfs.c-cifs_smb3_do_mount()-warn:possible-memory-leak-of-cifs_sb
-|   |-- fs-smb-client-cifssmb.c-CIFSFindFirst()-warn:missing-error-code-rc
-|   |-- fs-smb-client-cifssmb.c-CIFSFindNext()-warn:missing-error-code-rc
-|   |-- fs-smb-client-connect.c-cifs_match_super()-error:tlink-dereferencing-possible-ERR_PTR()
-|   `-- fs-smb-client-connect.c-generic_ip_connect()-error:we-previously-assumed-socket-could-be-null-(see-line-)
-|-- parisc-allyesconfig
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-defconfig
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-generic-64bit_defconfig
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-c004-20230614
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-r012-20230614
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-r024-20230612
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc-randconfig-s042-20230614
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- parisc64-defconfig
-|   `-- arch-parisc-kernel-pdt.c:warning:no-previous-prototype-for-arch_report_meminfo
-|-- riscv-allmodconfig
-|   `-- drivers-usb-cdns3-cdns3-starfive.c:warning:expecting-prototype-for-cdns3().-Prototype-was-for-USB_STRAP_HOST()-instead
-|-- riscv-allyesconfig
-|   `-- drivers-usb-cdns3-cdns3-starfive.c:warning:expecting-prototype-for-cdns3().-Prototype-was-for-USB_STRAP_HOST()-instead
-|-- riscv-randconfig-s031-20230612
-|   |-- arch-riscv-kernel-signal.c:sparse:sparse:incorrect-type-in-assignment-(different-address-spaces)-expected-void-noderef-__user-datap-got-void
-|   `-- arch-riscv-kernel-signal.c:sparse:sparse:incorrect-type-in-initializer-(different-address-spaces)-expected-void-__x-got-void-noderef-__user-assigned-datap
-|-- sh-allmodconfig
-|   `-- drivers-char-mem.c:error:implicit-declaration-of-function-unxlate_dev_mem_ptr
-|-- x86_64-allnoconfig
-|   |-- Documentation-networking-device_drivers-ethernet-mellanox-mlx5-switchdev.rst:WARNING:Unexpected-indentation.
-|   `-- Documentation-networking-device_drivers-ethernet-mellanox-mlx5-switchdev.rst:WARNING:undefined-label:documentation-networking-devlink-devlink-params.rst-(if-the-link-has-no-caption-the-label-must-prec
-|-- x86_64-allyesconfig
-|   `-- drivers-leds-leds-cht-wcove.c:warning:no-previous-prototype-for-cht_wc_leds_brightness_get
-|-- x86_64-randconfig-m001-20230612
-|   |-- drivers-net-ethernet-mellanox-mlx5-core-lib-devcom.c-mlx5_devcom_register_device()-error:uninitialized-symbol-tmp_dev-.
-|   |-- fs-smb-client-cifsfs.c-cifs_smb3_do_mount()-warn:possible-memory-leak-of-cifs_sb
-|   |-- fs-smb-client-cifssmb.c-CIFSFindFirst()-warn:missing-error-code-rc
-|   |-- fs-smb-client-cifssmb.c-CIFSFindNext()-warn:missing-error-code-rc
-|   |-- fs-smb-client-connect.c-cifs_match_super()-error:tlink-dereferencing-possible-ERR_PTR()
-|   `-- fs-smb-client-connect.c-generic_ip_connect()-error:we-previously-assumed-socket-could-be-null-(see-line-)
-`-- x86_64-randconfig-m031-20230611
-    |-- drivers-char-tpm-tpm_tis_spi_main.c-tpm_tis_spi_transfer_half()-error:uninitialized-symbol-ret-.
-    |-- drivers-net-ethernet-emulex-benet-be_main.c-be_rx_compl_process_gro()-error:buffer-overflow-((skb_end_pointer(skb)))-frags-u16max
-    `-- mm-mempolicy.c-new_folio()-error:uninitialized-symbol-address-.
-clang_recent_errors
-|-- arm-randconfig-r046-20230614
-|   |-- kernel-rcu-rcuscale.c:error:use-of-undeclared-identifier-get_rcu_tasks_gp_kthread
-|   `-- kernel-rcu-tasks.h:warning:no-previous-prototype-for-function-get_rcu_tasks_gp_kthread
-|-- hexagon-randconfig-r032-20230612
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- hexagon-randconfig-r041-20230612
-|   |-- lib-kunit-executor_test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- hexagon-randconfig-r041-20230614
-|   |-- kernel-rcu-rcuscale.c:error:use-of-undeclared-identifier-get_rcu_tasks_rude_gp_kthread
-|   |-- kernel-rcu-rcuscale.c:error:use-of-undeclared-identifier-tasks_scale_read_lock
-|   `-- kernel-rcu-rcuscale.c:error:use-of-undeclared-identifier-tasks_scale_read_unlock
-|-- hexagon-randconfig-r045-20230612
-|   |-- lib-kunit-executor_test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- i386-buildonly-randconfig-r005-20230614
-|   `-- drivers-gpu-drm-i915-display-intel_display_power.h:error:declaration-of-struct-seq_file-will-not-be-visible-outside-of-this-function-Werror-Wvisibility
-|-- i386-randconfig-i001-20230614
-|   `-- security-apparmor-policy_unpack.c:warning:expecting-prototype-for-verify_dfa_accept_xindex().-Prototype-was-for-verify_dfa_accept_index()-instead
-|-- mips-randconfig-r016-20230614
-|   |-- drivers-ata-pata_octeon_cf.c:error:call-to-undeclared-function-of_property_read_reg-ISO-C99-and-later-do-not-support-implicit-function-declarations
-|   |-- lib-kunit-executor_test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|   `-- lib-kunit-test.c:warning:cast-from-void-(-)(const-void-)-to-kunit_action_t-(aka-void-(-)(void-)-)-converts-to-incompatible-function-type
-|-- x86_64-buildonly-randconfig-r006-20230614
-|   `-- drivers-gpu-drm-i915-i915_driver.c:error:use-of-undeclared-identifier-i915_drm_client_fdinfo
-|-- x86_64-randconfig-a001-20230612
-|   `-- drivers-gpu-drm-i915-display-intel_display_power.h:error:declaration-of-struct-seq_file-will-not-be-visible-outside-of-this-function-Werror-Wvisibility
-`-- x86_64-randconfig-a005-20230614
-    `-- net-netfilter-ipvs-ip_vs_proto.o:warning:objtool:.init.text:unexpected-end-of-section
-
-elapsed time: 723m
-
-configs tested: 125
-configs skipped: 5
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r002-20230614   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r005-20230612   gcc  
-alpha                randconfig-r025-20230612   gcc  
-arc                              allyesconfig   gcc  
-arc          buildonly-randconfig-r003-20230614   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r043-20230612   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                     am200epdkit_defconfig   clang
-arm                                 defconfig   gcc  
-arm                            dove_defconfig   clang
-arm                            hisi_defconfig   gcc  
-arm                         lpc18xx_defconfig   gcc  
-arm                         lpc32xx_defconfig   clang
-arm                       multi_v4t_defconfig   gcc  
-arm                        mvebu_v5_defconfig   clang
-arm                  randconfig-r046-20230612   clang
-arm                       spear13xx_defconfig   clang
-arm                           sunxi_defconfig   gcc  
-arm                         vf610m4_defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-hexagon              randconfig-r032-20230612   clang
-hexagon              randconfig-r041-20230612   clang
-hexagon              randconfig-r045-20230612   clang
-i386                             alldefconfig   gcc  
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230614   clang
-i386                 randconfig-i002-20230614   clang
-i386                 randconfig-i003-20230614   clang
-i386                 randconfig-i004-20230614   clang
-i386                 randconfig-i005-20230614   clang
-i386                 randconfig-i006-20230614   clang
-i386                 randconfig-i011-20230614   gcc  
-i386                 randconfig-i012-20230614   gcc  
-i386                 randconfig-i013-20230614   gcc  
-i386                 randconfig-i014-20230614   gcc  
-i386                 randconfig-i015-20230614   gcc  
-i386                 randconfig-i016-20230614   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r021-20230612   gcc  
-loongarch            randconfig-r031-20230612   gcc  
-loongarch            randconfig-r035-20230612   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r004-20230612   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                            gpr_defconfig   gcc  
-mips                           jazz_defconfig   gcc  
-mips                    maltaup_xpa_defconfig   gcc  
-mips                 randconfig-r003-20230612   gcc  
-mips                 randconfig-r016-20230614   clang
-nios2                               defconfig   gcc  
-nios2                randconfig-r034-20230612   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                generic-64bit_defconfig   gcc  
-parisc               randconfig-r012-20230614   gcc  
-parisc               randconfig-r024-20230612   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc      buildonly-randconfig-r005-20230614   gcc  
-powerpc                   lite5200b_defconfig   clang
-powerpc                 mpc8540_ads_defconfig   gcc  
-powerpc                     sequoia_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv        buildonly-randconfig-r001-20230614   gcc  
-riscv        buildonly-randconfig-r004-20230614   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r002-20230612   clang
-riscv                randconfig-r006-20230612   clang
-riscv                randconfig-r023-20230612   gcc  
-riscv                randconfig-r042-20230612   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r011-20230614   gcc  
-s390                 randconfig-r014-20230614   gcc  
-s390                 randconfig-r044-20230612   gcc  
-sh                               alldefconfig   gcc  
-sh                               allmodconfig   gcc  
-sh           buildonly-randconfig-r006-20230614   gcc  
-sh                          polaris_defconfig   gcc  
-sh                   randconfig-r001-20230612   gcc  
-sh                   randconfig-r036-20230612   gcc  
-sh                           se7343_defconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-um                               alldefconfig   clang
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   clang
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230612   clang
-x86_64               randconfig-a002-20230612   clang
-x86_64               randconfig-a003-20230612   clang
-x86_64               randconfig-a004-20230612   clang
-x86_64               randconfig-a005-20230612   clang
-x86_64               randconfig-a006-20230612   clang
-x86_64               randconfig-a011-20230612   gcc  
-x86_64               randconfig-a012-20230612   gcc  
-x86_64               randconfig-a013-20230612   gcc  
-x86_64               randconfig-a014-20230612   gcc  
-x86_64               randconfig-a015-20230612   gcc  
-x86_64               randconfig-a016-20230612   gcc  
-x86_64               randconfig-r022-20230612   gcc  
-x86_64               randconfig-r033-20230612   clang
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                         virt_defconfig   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> 
+> > +      - items:
+> > +          - const: cirrus,ep9315-pata
+> > +          - const: cirrus,ep9312-pata
