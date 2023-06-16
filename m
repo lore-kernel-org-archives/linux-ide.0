@@ -2,160 +2,98 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C64EB64D7
-	for <linux-ide@archiver.kernel.org>; Fri, 16 Jun 2023 14:25:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3DA3EB64D8
+	for <linux-ide@archiver.kernel.org>; Fri, 16 Jun 2023 17:55:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229770AbjFPOZ0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 16 Jun 2023 10:25:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38886 "EHLO
+        id S1345067AbjFPRza convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 16 Jun 2023 13:55:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345416AbjFPOZZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jun 2023 10:25:25 -0400
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id EF89A30E3
-        for <linux-ide@vger.kernel.org>; Fri, 16 Jun 2023 07:25:22 -0700 (PDT)
-Received: (qmail 530651 invoked by uid 1000); 16 Jun 2023 10:25:22 -0400
-Date:   Fri, 16 Jun 2023 10:25:22 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH] ata: libata-scsi: Avoid deadlock on rescan after device
- resume
-Message-ID: <b819f0d7-af6a-406e-90ae-fa1e2f8c8b74@rowland.harvard.edu>
-References: <20230615083326.161875-1-dlemoal@kernel.org>
- <b35c2137-6469-4d30-a25c-096e4932fe1b@rowland.harvard.edu>
- <766f0f86-7b2e-51a7-6cc1-b670631105a4@kernel.org>
+        with ESMTP id S1344957AbjFPRzZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jun 2023 13:55:25 -0400
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF65C3A89;
+        Fri, 16 Jun 2023 10:55:19 -0700 (PDT)
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-94ea38c90ccso28993966b.1;
+        Fri, 16 Jun 2023 10:55:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686938118; x=1689530118;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=PmdUcFmDIHlF7HNhb9E+Wkb+wdo7Gt9DP5LMS8GUDQ8=;
+        b=cUfQu6dyYyQBOLVYERgd2yelS3heFp8ekktfScc4ItP/JXuaD1ELkWnPu+Ati3lefl
+         mb2GxwlWXowaihCn9No1R9QhnGol8ryxhRbTimLeBwXI1iUedvQPWAOSCmq0MO/8nVxi
+         DHZC2Hu1TJLy+7jGDgb7AtyKdSGI/O+EEwBccwBluV47oiA00V5l++9f6+tZk/T30kNo
+         bTbc0RnYriHqCPrjlkQpXNkfigjnd8NSFrZiAWVXv1Enr6eQn/zQvajfsiar1euKeau1
+         JQDmXG4U4Ittajc+hzSpSadz/PGAl+3+Cy4jgRsOtJyOCgmQm9fZKUeqRJYxGuF4Ep4y
+         rR8w==
+X-Gm-Message-State: AC+VfDwuY8BXPNkbUc68KQdK5/fCbywrkjcPASkjmCff8a22oZgw4WPf
+        IjJVpDZuSwIqBoRSL33PNygFpaq6oGmfk+3sf9AS3VM+
+X-Google-Smtp-Source: ACHHUZ6mZRWVEeHl7/kUKp1yAMVlNmsMXikDXdemoqUgcPXO7I1uW8lktQz9b924tyX9E9JBp8X7v17xDGxTuIOhyNQ=
+X-Received: by 2002:a17:906:7292:b0:982:a4ac:f79a with SMTP id
+ b18-20020a170906729200b00982a4acf79amr1964777ejl.7.1686938118240; Fri, 16 Jun
+ 2023 10:55:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <766f0f86-7b2e-51a7-6cc1-b670631105a4@kernel.org>
+References: <20230612161011.86871-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20230612161011.86871-1-andriy.shevchenko@linux.intel.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 16 Jun 2023 19:55:07 +0200
+Message-ID: <CAJZ5v0hgNMWNtkAF7YY24cFvsnGYYYHMW1c4NekaNmyqYf=0tA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/3] device property: Introduce device_is_compatible()
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Daniel Scally <djrscally@gmail.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jun 16, 2023 at 02:25:38PM +0900, Damien Le Moal wrote:
-> On 6/15/23 23:50, Alan Stern wrote:
-> > On Thu, Jun 15, 2023 at 05:33:26PM +0900, Damien Le Moal wrote:
-> >> When an ATA port is resumed from sleep, the port is reset and a power
-> >> management request issued to libata EH to reset the port and rescanning
-> >> the device(s) attached to the port. Device rescanning is done by
-> >> scheduling an ata_scsi_dev_rescan() work, which will execute
-> >> scsi_rescan_device().
-> >>
-> >> However, scsi_rescan_device() takes the generic device lock, which is
-> >> also taken by dpm_resume() when the SCSI device is resumed as well. If
-> >> a device rescan execution starts before the completion of the SCSI
-> >> device resume, the rcu locking used to refresh the cached VPD pages of
-> >> the device, combined with the generic device locking from
-> >> scsi_rescan_device() and from dpm_resume() can cause a deadlock.
-> >>
-> >> Avoid this situation by changing struct ata_port scsi_rescan_task to be
-> >> a delayed work instead of a simple work_struct. ata_scsi_dev_rescan() is
-> >> modified to check if the SCSI device associated with the ATA device that
-> >> must be rescanned is not suspended. If the SCSI device is still
-> >> suspended, ata_scsi_dev_rescan() returns early and reschedule itself for
-> >> execution after an arbitrary delay of 5ms.
-> > 
-> > I don't understand the nature of the relationship between the ATA port
-> > and the corresponding SCSI device.  Maybe you could explain it more
-> > fully, if you have time.
-> 
-> For ata devices, the parent -> child relationship is:
-> 
-> ata_host (the adapter) -> ata_port -> ata_link -> ata_device (HDD, SSD or ATAPI
-> CD/DVD)
-> 
-> For scsi devices representing ATA devices, it is:
-> 
-> ata_port -> scsi_host -> scsi_target -> scsi_device -> scsi_disk (or gendisk for
-> a CD/DVD)
-> 
-> When devices are scanned, libata will create ports and create a scsi_host for
-> each port, and a scsi device for each ata_device found on the link(s) for the
-> port. There is no direct relationship between an ata_device (the HDD or SSD) and
-> its scsi_device/scsi_disk (the device used to issue commands). The PM operations
-> we have are for ata_port and scsi_device. For the scsi device, the operations
-> are actually defined per device type, so in the scsi_disk driver (sd) for HDDs
-> and SSDs.
+On Mon, Jun 12, 2023 at 6:12 PM Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+>
+> Introduce a new helper to tell if device (node) is compatible to the
+> given string value. This will help some drivers to get rid of unneeded
+> OF APIs/etc and in may help others to be agnostic to OF/ACPI.
+>
+> While doing it, I have noticed that ACPI_DEVICE_CLASS() macro seems
+> defined in unsuitable location. Move it to the better one.
+>
+> Last patch is an example of what the first two are doing.
+>
+> The entire series can go, I believe, via ACPI (linux-pm) tree in case
+> the last patch gets tag from the respective maintainer.
+>
+> In v3:
+> - added tag to patch 1 (Rafael), patches 2&3 (Sakari)
+> - made commit message text wider in patch 3 (Sakari)
+>
+> In v2:
+> - updated commit message and added kernel doc for a new API (Greg)
+> - also replaced acpi_device_get_match_data() with the agnostic API
+> - tried to keep header inclusions ordered (to some extent)
+>
+> Andy Shevchenko (3):
+>   ACPI: Move ACPI_DEVICE_CLASS() to mod_devicetable.h
+>   device property: Implement device_is_compatible()
+>   ata: ahci_platform: Make code agnostic to OF/ACPI
+>
+>  drivers/ata/ahci_platform.c     |  8 ++++----
+>  include/linux/acpi.h            | 14 --------------
+>  include/linux/mod_devicetable.h | 13 +++++++++++++
+>  include/linux/property.h        | 12 ++++++++++++
+>  4 files changed, 29 insertions(+), 18 deletions(-)
+>
+> --
 
-Thanks for the explanation.  So there are two device structures in the 
-kernel representing the same physical piece of hardware.  No wonder you 
-sometimes run into trouble!
-
-On a more positive note, it sounds like each ata_device is always 
-created and registered before the corresponding scsi_device, which means 
-that synchronous suspends and resumes are guaranteed to work the way you 
-want.
-
-> > But in any case, this approach seems like a layering violation.  Why not 
-> 
-> The layering violation is I think only with the direct reference to the scsi
-> device power.is_suspended field, which is definitely not pretty. But there are
-> some other drivers doing something similar:
-> 
-> $ git grep "power\.is_suspended" | grep -v drivers/base/power/main.c
-> drivers/gpu/drm/i915/display/intel_display_power_well.c:	if
-> (!dev_priv->drm.dev->power.is_suspended)
-> drivers/net/ethernet/stmicro/stmmac/dwmac-stm32.c:	if
-> (!dwmac->dev->power.is_suspended) {
-> drivers/platform/surface/surface_acpi_notify.c:	if (d->dev->power.is_suspended) {
-> 
-> All the other code (ata calling scsi) is normal per the SCSI-to-ata translation
-> needed (all ata devices are represented as scsi devices in Linux, following the
-> SAT=scsi ATA translation specifications).
-> 
-> > instead call a SCSI utility routine to set a "needs_rescan" flag in the 
-> > scsi_device structure?  Then scsi_device_resume() could automatically 
-> > call scsi_rescan_device() -- or rather an internal version that assumes 
-> > the device lock is already held -- if the flag is set.  Or it could 
-> 
-> Yes, ideally, that is what we should do. Such fix is however more involved, and
-> so I prefer not to push for this right now as a fix for the regression at hand.
-> But I will definitively look into this.
-> 
-> > queue a non-delayed work routine to do this.  (Is it important to have 
-> > the rescan finish before userspace starts up and tries to access the ATA 
-> > device again?)
-> > 
-> > That, combined with a guaranteed order of resuming, would do what you 
-> > want, right?
-> 
-> Yes. But again more fixes needed:
-> 1) libata uses its error handling path to reset a port on resume and probe the
-> links again. The devices found are then revalidated (IDENTIFY command, reading
-> log pages etc). This call to EH is triggered in the pm->resume operation, but EH
-> runs as an asynchronous task. So the port->resume may complete before EH is
-> done. We need to change the EH call to be synchronous in ->resume
-> 2) We need to remove triggering the task that does scsi_rescan_device() in EH
-> and move that trigger to scsi_device ->resume.
-> 3) Modify scsi_device ->resume() to call scsi_rescan_device()
-> 
-> Safely doing (3) requires synchronization between ata_port->resume and
-> scsi_device->resume. We can do that by adding a device link between ata_device
-> and scsi_device. Doing so, the scsi device becomes the grandchild of the
-> ata_port and we are guaranteed that its ->resume will happen only once the ata
-> port ->resume is done.
-
-That change should be made in any case.  SCSI device drivers assume they 
-can send PM-related commands to the device as part of carrying out the 
-resume procedure.  (I don't remember whether they actually do so, but 
-they are allowed to make this assumption.)  Obviously such commands 
-won't work unless the ata_port is fully resumed first.
-
-> That will also improve things as we will be able to rescan the scsi device (and
-> thus catch any change to the device) *before* the device ->resume operation
-> re-enables issuing user commands by un-quiescing the device request queue.
-
-Just so.
-
-> As you can see, that is all beyond a quick fix for a regression... Will work on
-> this.
-
-It seems like a good plan of approach.
-
-Alan Stern
+All applied as 6.5 material, thanks!
