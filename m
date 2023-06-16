@@ -2,102 +2,105 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF575EB64D8
-	for <linux-ide@archiver.kernel.org>; Fri, 16 Jun 2023 19:07:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B6AEEB64D7
+	for <linux-ide@archiver.kernel.org>; Fri, 16 Jun 2023 19:46:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245744AbjFPTHV convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 16 Jun 2023 15:07:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45142 "EHLO
+        id S232824AbjFPTqZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 16 Jun 2023 15:46:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232355AbjFPTHU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jun 2023 15:07:20 -0400
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8F5CC3;
-        Fri, 16 Jun 2023 12:07:19 -0700 (PDT)
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-9827714a479so31203566b.1;
-        Fri, 16 Jun 2023 12:07:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686942438; x=1689534438;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fjd1Ph18xx56C7K7G9MOYBJwS203VPnnlb4VxXO3yFM=;
-        b=ITqjTp3ob0FmIJZ0yDdOhYg887uH/7z9UFfISkN15YKJvV//kBj0GFnvQwtk7jyyii
-         E8lOyNS17pP40TDXCSMwcGJ2FLg6rnkmkgXr+EPPDKwuKXLmXUNHQc51xmVBc0m/h/uG
-         fn/uv6SznPL7WU0s2G+UoEdk4MoXcxx//PAnk65TSIe6GInL9ihh8+m5jQJ7tEBcE9BS
-         LZX7uXkFPSQeGgqJ2vu79c9x/ygc4huTW93dmAhbJmF0GKm2PG8vlPddt8KgcsPTe9kZ
-         bPU7CdRjzri3uwNWvNcecugwhK8EeXpxAu8onQPIyQkd1sw+T7rVR2OH3MSJWeTokeX+
-         JJ9w==
-X-Gm-Message-State: AC+VfDxzHJN5FPHG/mGryB/PU7UoCFDFCz+EUKEOntfaiufEZyPs+1xF
-        vpktqMVqISqEhBRXMTEhHVRZSkwP9X6gDCdnlJE=
-X-Google-Smtp-Source: ACHHUZ7XWd4rjaEriHBuTzP8gLIxEf/ycmpr0I5QZAZNPdGq8Vbs3N01fPyoxpwESBUM2Zk4oHB9ALiRGeEbKjFEEOE=
-X-Received: by 2002:a17:906:11a:b0:94e:9efa:a9ed with SMTP id
- 26-20020a170906011a00b0094e9efaa9edmr2594740eje.7.1686942437885; Fri, 16 Jun
- 2023 12:07:17 -0700 (PDT)
+        with ESMTP id S229561AbjFPTqY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jun 2023 15:46:24 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC38630EC
+        for <linux-ide@vger.kernel.org>; Fri, 16 Jun 2023 12:46:22 -0700 (PDT)
+Received: from localhost.localdomain (31.173.81.71) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 16 Jun
+ 2023 22:46:13 +0300
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+To:     Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>
+Subject: [PATCH 0/8] Fix the remaining sloppy timeout typing in libata
+Date:   Fri, 16 Jun 2023 22:45:59 +0300
+Message-ID: <20230616194607.7351-1-s.shtylyov@omp.ru>
+X-Mailer: git-send-email 2.26.3
 MIME-Version: 1.0
-References: <20230612161011.86871-1-andriy.shevchenko@linux.intel.com> <CAJZ5v0hgNMWNtkAF7YY24cFvsnGYYYHMW1c4NekaNmyqYf=0tA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0hgNMWNtkAF7YY24cFvsnGYYYHMW1c4NekaNmyqYf=0tA@mail.gmail.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Fri, 16 Jun 2023 21:07:06 +0200
-Message-ID: <CAJZ5v0gX9h_Edj2aMcAvH=dvLTwg=+_aZbpcgbkz-8uK737SVg@mail.gmail.com>
-Subject: Re: [PATCH v3 0/3] device property: Introduce device_is_compatible()
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Daniel Scally <djrscally@gmail.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [31.173.81.71]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 06/16/2023 19:27:44
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 178086 [Jun 16 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 517 517 b0056c19d8e10afbb16cb7aad7258dedb0179a79
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_no_received}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;31.173.81.71:7.1.2
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.71
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/16/2023 19:33:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/16/2023 4:36:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jun 16, 2023 at 7:55 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
->
-> On Mon, Jun 12, 2023 at 6:12 PM Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com> wrote:
-> >
-> > Introduce a new helper to tell if device (node) is compatible to the
-> > given string value. This will help some drivers to get rid of unneeded
-> > OF APIs/etc and in may help others to be agnostic to OF/ACPI.
-> >
-> > While doing it, I have noticed that ACPI_DEVICE_CLASS() macro seems
-> > defined in unsuitable location. Move it to the better one.
-> >
-> > Last patch is an example of what the first two are doing.
-> >
-> > The entire series can go, I believe, via ACPI (linux-pm) tree in case
-> > the last patch gets tag from the respective maintainer.
-> >
-> > In v3:
-> > - added tag to patch 1 (Rafael), patches 2&3 (Sakari)
-> > - made commit message text wider in patch 3 (Sakari)
-> >
-> > In v2:
-> > - updated commit message and added kernel doc for a new API (Greg)
-> > - also replaced acpi_device_get_match_data() with the agnostic API
-> > - tried to keep header inclusions ordered (to some extent)
-> >
-> > Andy Shevchenko (3):
-> >   ACPI: Move ACPI_DEVICE_CLASS() to mod_devicetable.h
-> >   device property: Implement device_is_compatible()
-> >   ata: ahci_platform: Make code agnostic to OF/ACPI
-> >
-> >  drivers/ata/ahci_platform.c     |  8 ++++----
-> >  include/linux/acpi.h            | 14 --------------
-> >  include/linux/mod_devicetable.h | 13 +++++++++++++
-> >  include/linux/property.h        | 12 ++++++++++++
-> >  4 files changed, 29 insertions(+), 18 deletions(-)
-> >
-> > --
->
-> All applied as 6.5 material, thanks!
+Here are 8 patches against the 'for-next' branch of Damien's 'libata.git' repo.
 
-But I see that Greg has taken it too, so I'll drop it.
+The libata code still often uses the 'unsigned long' type for the millisecond
+timeouts, while the kernel functions like msecs_to_jiffies() or msleep() only
+take 'unsigned int' parameters for those. I've started fixing the timeout types
+from ata_exec_internal[_sg]() that tripped the Svace static analyzer and posted
+couple patches, promising to post a large continuation series somewhat later...
+in my worst nightmare I couldn't imagine that this would take a whole year! :-(
+
+Sergey Shtylyov (8):
+  ata: libata: fix parameter type of ata_deadline()
+  ata: libata-core: fix parameter types of ata_wait_register()
+  ata: libata-eh: fix reset timeout type
+  ata: fix debounce timings type
+  ata: libata-scsi: fix timeout type in ata_scsi_park_store()
+  ata: libahci: fix parameter type of ahci_exec_polled_cmd()
+  ata: ahci_xgene: fix parameter types of xgene_ahci_poll_reg_val()
+  ata: sata_sil24: fix parameter type of sil24_exec_polled_cmd()
+
+ drivers/ata/ahci.c          |  2 +-
+ drivers/ata/ahci_qoriq.c    |  2 +-
+ drivers/ata/ahci_xgene.c    |  7 +++----
+ drivers/ata/libahci.c       |  7 ++++---
+ drivers/ata/libata-core.c   |  6 +++---
+ drivers/ata/libata-eh.c     |  6 +++---
+ drivers/ata/libata-sata.c   | 16 ++++++++--------
+ drivers/ata/libata-scsi.c   |  4 ++--
+ drivers/ata/libata-sff.c    |  2 +-
+ drivers/ata/sata_highbank.c |  2 +-
+ drivers/ata/sata_inic162x.c |  2 +-
+ drivers/ata/sata_mv.c       |  2 +-
+ drivers/ata/sata_nv.c       |  2 +-
+ drivers/ata/sata_sil24.c    |  4 ++--
+ include/linux/libata.h      | 24 ++++++++++++------------
+ 15 files changed, 44 insertions(+), 44 deletions(-)
+
+-- 
+2.26.3
