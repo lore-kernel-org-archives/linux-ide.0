@@ -2,74 +2,96 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50812EB64D9
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Jun 2023 01:18:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62B3DEB64D8
+	for <linux-ide@archiver.kernel.org>; Wed, 21 Jun 2023 16:51:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229933AbjFTBS3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 19 Jun 2023 21:18:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52578 "EHLO
+        id S229806AbjFUQvr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 21 Jun 2023 12:51:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230104AbjFTBSV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jun 2023 21:18:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E0AF1991;
-        Mon, 19 Jun 2023 18:17:48 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B6EC860F66;
-        Tue, 20 Jun 2023 01:17:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8E8AC433C8;
-        Tue, 20 Jun 2023 01:17:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687223867;
-        bh=JhZIMKUZdfUZG1G2LF/l44rtxC/mRDQxMAGxL8IUqvc=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Dh3bgcsgx6qDhure1EUvQAns9alftceykHkXtqxvGfbodjpMqtPMmp98jFNhAOG1r
-         1NDK1Vlh9h/96366cR9HLSV56f1OSv7AtkVF9pLFv13vIQfv71/hL2/K/eNt4buEIx
-         J097jL1vOOAeKlcq+oVS0UBga6BidT18AZV2uIzjcJt9gyWjqMtXYmAXB+zbfJInVH
-         co4pU5/FT/b3Q44fR4qPO3XDN/nPx2sdDHTv/tGj41xSPFSKgp1Y9vRxIeYEd3yyH5
-         rgQ8YKDEMSQLrb0iaXF1UFhNa30I8saTcL0HLEgkZaX3H5GwuDyhV5O+aMO+1wCXWW
-         9/02GYdE0TbJw==
-Message-ID: <3b7c6fee-4af3-5541-5c24-a290e3243164@kernel.org>
-Date:   Tue, 20 Jun 2023 10:17:44 +0900
+        with ESMTP id S229872AbjFUQvn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2023 12:51:43 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FDBEE9;
+        Wed, 21 Jun 2023 09:51:41 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6685421cdb3so2972253b3a.1;
+        Wed, 21 Jun 2023 09:51:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687366300; x=1689958300;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=sU8FTn/iVcg+ffmvipIhzRVqOFXdIt6phQ9/bO8XkYw=;
+        b=DVlPUxaHKtrCjGveDjsHWv1JdRyofew/0AkVMPIeSQ0oc74T/OQiZS3wfq9LF8HpMl
+         QkakG8EwC5zx3C5PSt5l5caGBOWa6Yxt8kWQuQcIj9DD0XY2zMpNoO3nALANtpek8hVV
+         1MsPP25qG29buK36kgreNtVbTCv5U49N/yUbXmwr29v6dYEhrS91dQsr5TyNw+gKSdp4
+         M7ipDPgVb+jP9GH7EsavneBdHBtwVWjQSW1KN9wvZwwPpKg0KoeJ2hFuu1GXCR+P5732
+         bjlSRrJTXdoJZl5H0+g0X3eV/7eAwi0bdSH5Y0qWkqypZbqsiRcSYYcq/7WWmg4kpdiC
+         Dyow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687366300; x=1689958300;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sU8FTn/iVcg+ffmvipIhzRVqOFXdIt6phQ9/bO8XkYw=;
+        b=CgAboVtchCktij9FbbNfmK75g25yRyl5mTXXOK+Bx/RaS9Als04BbXu5KzOehlg3uW
+         Q6SpZy6wxmtXr8asmDcyu/syNJwwkbjmZUPe7xqe4g9xvIW1oVLyXw9XdL1jXW//I38G
+         BL+k7nB0dUpggt8/XND+vd3VRT5dAE2p7Wnudkr62sMCaZIeIwlq4bUwxadyZ8soBZuT
+         S4JA1nsM4+Q4kC8crG03G3hDlA5qM5MKXred5sxEKM/0dPmip5uB8HaaaKDgYfC4D/2d
+         PPwFpc14dN1oQ+nicEOOwqcLWTvCt+673lgfzGgco2w+uVsvsyx9t7u5bfPV/WKzggbN
+         bUvg==
+X-Gm-Message-State: AC+VfDzNaRlhP6mysavSDUPk9JRoa0JJFAr6hbeEEXpGeNVlKf3qJp9o
+        rCBK0F3VgADDvyHIRwNEUtIKMQP0XWo=
+X-Google-Smtp-Source: ACHHUZ7F1cfGzMYwNMZcRoVkjqtDDyS9YrKcKfwTGNi2T0bbBnpoHB0+OAb73+1RsiePa0TKeSKoFQ==
+X-Received: by 2002:a05:6a20:430c:b0:117:3c00:77ea with SMTP id h12-20020a056a20430c00b001173c0077eamr22503678pzk.0.1687366300339;
+        Wed, 21 Jun 2023 09:51:40 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id m26-20020a056a00165a00b0065992d334f4sm2533367pfc.177.2023.06.21.09.51.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Jun 2023 09:51:39 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date:   Wed, 21 Jun 2023 09:51:38 -0700
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Damien Le Moal <dlemoal@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        linux-ide@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] ata: octeon: Add compile test support
+Message-ID: <23325977-ba37-4360-afb5-4ab38a66107e@roeck-us.net>
+References: <20230614173633.2430653-1-robh@kernel.org>
+ <20230614173633.2430653-2-robh@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH v4 0/5] Add RK3588 SATA support
-To:     Sebastian Reichel <sebastian.reichel@collabora.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-ide@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel@collabora.com
-References: <20230612171337.74576-1-sebastian.reichel@collabora.com>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230612171337.74576-1-sebastian.reichel@collabora.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230614173633.2430653-2-robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/13/23 02:13, Sebastian Reichel wrote:
-> Hi,
+On Wed, Jun 14, 2023 at 11:36:33AM -0600, Rob Herring wrote:
+> Add COMPILE_TEST to enable building Cavium Octeon drivers in MIPS
+> allyesconfig/allmodconfig builds. There's a dependency on MIPS headers,
+> so other arches can't be enabled.
 > 
-> This enables SATA support for RK3588.
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+> Tested on allmodconfig build. Not sure if there's other MIPS configs 
+> where this doesn't work. We'll see what 0-day says.
 
-Applied 1-3 to libata for-6.5 branch. Thanks !
+Odd, in next-20230621 I get:
 
+Building mips:allmodconfig ... failed
+--------------
+Error log:
+ERROR: modpost: "__udivdi3" [drivers/ata/pata_octeon_cf.ko] undefined!
+ERROR: modpost: "octeon_get_io_clock_rate" [drivers/ata/pata_octeon_cf.ko] undefined!
+ERROR: modpost: "__tracepoint_ata_bmdma_stop" [drivers/ata/pata_octeon_cf.ko] undefined!
+ERROR: modpost: "__traceiter_ata_bmdma_stop" [drivers/ata/pata_octeon_cf.ko] undefined!
+ERROR: modpost: "__divdi3" [drivers/ata/pata_octeon_cf.ko] undefined!
+make[2]: [scripts/Makefile.modpost:144: Module.symvers] Error 1 (ignored)
+make[2]: *** No rule to make target 'kernel/locking/locktorture.ko', needed by '__modfinal'.  Stop.
+make[1]: [Makefile:1933: modules] Error 2 (ignored)
 
-
--- 
-Damien Le Moal
-Western Digital Research
-
+Guenter
