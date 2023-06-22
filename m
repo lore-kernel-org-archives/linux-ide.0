@@ -2,103 +2,97 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F1DEB64DA
-	for <linux-ide@archiver.kernel.org>; Thu, 22 Jun 2023 21:52:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEA5EB64DA
+	for <linux-ide@archiver.kernel.org>; Thu, 22 Jun 2023 23:49:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229830AbjFVVwG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 22 Jun 2023 17:52:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44146 "EHLO
+        id S230237AbjFVXtQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 22 Jun 2023 19:49:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229628AbjFVVwF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2023 17:52:05 -0400
+        with ESMTP id S231282AbjFVXtP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2023 19:49:15 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17EF2C3;
-        Thu, 22 Jun 2023 14:52:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E34BD2125
+        for <linux-ide@vger.kernel.org>; Thu, 22 Jun 2023 16:49:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A87FB61923;
-        Thu, 22 Jun 2023 21:52:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52A15C433C8;
-        Thu, 22 Jun 2023 21:52:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8097061935
+        for <linux-ide@vger.kernel.org>; Thu, 22 Jun 2023 23:49:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A78B0C433C8;
+        Thu, 22 Jun 2023 23:49:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687470724;
-        bh=dvLWGOBwNTXN6E/yM+CESlG/rZNvOG86KIsYDcJNubQ=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=baGy2bzOYdXCYc4YfBw/zVvO2zhb1DeCBmAjoIFxDO0dlvEJBA5BL+yzwZTGHr3BU
-         cTMS9lrjn9wCt9Aw3eKcm+UdF5RMnm3T4E2V/x8YY7OFUPh6+ima/DX82wb3Z0oLAq
-         Thh1meLV0NwX7iqtqYeKbazqI6h6NDvHtoKGT3SSpsWew2CE/fEnKY7os1UhRzXn4M
-         FQ5Icj/D2+Y222kt6DT6306ESdc63LSl0oDcougFFwcha30t+7MSWmZ4Q6H3wpoqB9
-         svVbiJoMH4wq6Dcy1WOszrrOvvIhKqsA3B105dWcJCU7Ixz1Yw48qMDRUHAqLd71Cd
-         VpWzO/dDXf0lA==
-Message-ID: <06ded84e-f5ba-c9e6-ce5b-72eaca56bc88@kernel.org>
-Date:   Fri, 23 Jun 2023 06:52:02 +0900
+        s=k20201202; t=1687477753;
+        bh=NgtpXHOz2UlRysL1SsmARbtKH4Rp3/d/XDOt/iR+xTw=;
+        h=Date:Subject:To:References:From:In-Reply-To:From;
+        b=SHx3HCAO7xtcD2OSZX4ADP5rTBy4HqXIO2KZ4lMKa8BkX14tpWTnUe/NkonewOWeq
+         /CqvaKnjOsAX4e4p6o3RsPUDjMdRzkiPi//+T6SWO6z7g+hKj9fYYX3CDfUowvoGm+
+         2vXqx8uE9t69ntIMcLSdNzACoikaFDkLsJt3N4yLWFtHFU+nzWUAhL6DRZvyfzfoZ4
+         wY8giRcCudlaZPJIwj2kFi0wYFIZQ9QFCtvlb62hmX2sJBVjn6b8UO0Es0YnEKJ1B2
+         a+wmPUFwva+GH39GoY4hyORDB7r4aQo4rNgYIvOb0+rHg1sjdxLxwe68fjhQLFSdUV
+         hTICkR/OB8bbw==
+Message-ID: <7f8b4eaf-e227-a069-a3c9-3deecf0e5c5a@kernel.org>
+Date:   Fri, 23 Jun 2023 08:49:12 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.12.0
-Subject: Re: [PATCH 2/2] ata: octeon: Add compile test support
+Subject: Re: [PATCH 0/8] Fix the remaining sloppy timeout typing in libata
 Content-Language: en-US
-To:     Rob Herring <robh@kernel.org>
-Cc:     Guenter Roeck <linux@roeck-us.net>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        linux-ide@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230614173633.2430653-1-robh@kernel.org>
- <20230614173633.2430653-2-robh@kernel.org>
- <23325977-ba37-4360-afb5-4ab38a66107e@roeck-us.net>
- <feef6589-d0d6-8e64-fefd-914c234dcfba@kernel.org>
- <167e83a0-8666-27af-5e2c-4ddda917795a@roeck-us.net>
- <78cce73d-16d1-e357-bee7-2176479604f4@kernel.org>
- <CAL_JsqLdEoiiCR6n1XqQe-6_9-9Hu1t_r17hXG9rTmSAMBZ9OA@mail.gmail.com>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
+References: <20230616194607.7351-1-s.shtylyov@omp.ru>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <CAL_JsqLdEoiiCR6n1XqQe-6_9-9Hu1t_r17hXG9rTmSAMBZ9OA@mail.gmail.com>
+In-Reply-To: <20230616194607.7351-1-s.shtylyov@omp.ru>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/22/23 22:41, Rob Herring wrote:
-> On Wed, Jun 21, 2023 at 10:26 PM Damien Le Moal <dlemoal@kernel.org> wrote:
->>
->> On 6/22/23 12:01, Guenter Roeck wrote:
->>> On 6/21/23 17:57, Damien Le Moal wrote:
->>>> On 6/22/23 01:51, Guenter Roeck wrote:
->>>>> On Wed, Jun 14, 2023 at 11:36:33AM -0600, Rob Herring wrote:
->>>>>> Add COMPILE_TEST to enable building Cavium Octeon drivers in MIPS
->>>>>> allyesconfig/allmodconfig builds. There's a dependency on MIPS headers,
->>>>>> so other arches can't be enabled.
->>>>>>
->>>>>> Signed-off-by: Rob Herring <robh@kernel.org>
->>>>>> ---
->>>>>> Tested on allmodconfig build. Not sure if there's other MIPS configs
->>>>>> where this doesn't work. We'll see what 0-day says.
->>>>>
->>>>> Odd, in next-20230621 I get:
->>>>>
->>>>> Building mips:allmodconfig ... failed
->>>>
->>>> Indeed odd. Given that this is an allmodconfig, I would assume that
->>>> CONFIG_CAVIUM_OCTEON_SOC is set ?
->>>>
->>>
->>> No, it is not. CONFIG_CAVIUM_OCTEON_SOC is a choice option,
->>> meaning only one of the choices can be set, and mips:allmodconfig
->>> selects a different choice.
->>
->> OK. Then I think I need to drop this patch as I do not see how to allow
->> COMPILE_TEST without CONFIG_CAVIUM_OCTEON_SOC being set.
->>
->> Rob ?
+On 6/17/23 04:45, Sergey Shtylyov wrote:
+> Here are 8 patches against the 'for-next' branch of Damien's 'libata.git' repo.
 > 
-> These could be fixed, but not sure it's worth the effort.
+> The libata code still often uses the 'unsigned long' type for the millisecond
+> timeouts, while the kernel functions like msecs_to_jiffies() or msleep() only
+> take 'unsigned int' parameters for those. I've started fixing the timeout types
+> from ata_exec_internal[_sg]() that tripped the Svace static analyzer and posted
+> couple patches, promising to post a large continuation series somewhat later...
+> in my worst nightmare I couldn't imagine that this would take a whole year! :-(
+> 
+> Sergey Shtylyov (8):
+>   ata: libata: fix parameter type of ata_deadline()
+>   ata: libata-core: fix parameter types of ata_wait_register()
+>   ata: libata-eh: fix reset timeout type
+>   ata: fix debounce timings type
+>   ata: libata-scsi: fix timeout type in ata_scsi_park_store()
+>   ata: libahci: fix parameter type of ahci_exec_polled_cmd()
+>   ata: ahci_xgene: fix parameter types of xgene_ahci_poll_reg_val()
+>   ata: sata_sil24: fix parameter type of sil24_exec_polled_cmd()
 
-Agreed. And given that we are at rc7 already, this effort should not be now
-anyway. I will drop this patch.
+We could merge patches 1-5 together as core updates, followed by driver patches.
 
+Anyway, looks all OK to me but we are a little too close to the merge window. So
+I will apply this once we have 6.5-rc1.
+
+> 
+>  drivers/ata/ahci.c          |  2 +-
+>  drivers/ata/ahci_qoriq.c    |  2 +-
+>  drivers/ata/ahci_xgene.c    |  7 +++----
+>  drivers/ata/libahci.c       |  7 ++++---
+>  drivers/ata/libata-core.c   |  6 +++---
+>  drivers/ata/libata-eh.c     |  6 +++---
+>  drivers/ata/libata-sata.c   | 16 ++++++++--------
+>  drivers/ata/libata-scsi.c   |  4 ++--
+>  drivers/ata/libata-sff.c    |  2 +-
+>  drivers/ata/sata_highbank.c |  2 +-
+>  drivers/ata/sata_inic162x.c |  2 +-
+>  drivers/ata/sata_mv.c       |  2 +-
+>  drivers/ata/sata_nv.c       |  2 +-
+>  drivers/ata/sata_sil24.c    |  4 ++--
+>  include/linux/libata.h      | 24 ++++++++++++------------
+>  15 files changed, 44 insertions(+), 44 deletions(-)
+> 
 
 -- 
 Damien Le Moal
