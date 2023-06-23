@@ -2,99 +2,122 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEA5EB64DA
-	for <linux-ide@archiver.kernel.org>; Thu, 22 Jun 2023 23:49:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AED6EB64D7
+	for <linux-ide@archiver.kernel.org>; Fri, 23 Jun 2023 18:36:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230237AbjFVXtQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 22 Jun 2023 19:49:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58026 "EHLO
+        id S231228AbjFWSgq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 23 Jun 2023 14:36:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231282AbjFVXtP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jun 2023 19:49:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E34BD2125
-        for <linux-ide@vger.kernel.org>; Thu, 22 Jun 2023 16:49:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8097061935
-        for <linux-ide@vger.kernel.org>; Thu, 22 Jun 2023 23:49:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A78B0C433C8;
-        Thu, 22 Jun 2023 23:49:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687477753;
-        bh=NgtpXHOz2UlRysL1SsmARbtKH4Rp3/d/XDOt/iR+xTw=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=SHx3HCAO7xtcD2OSZX4ADP5rTBy4HqXIO2KZ4lMKa8BkX14tpWTnUe/NkonewOWeq
-         /CqvaKnjOsAX4e4p6o3RsPUDjMdRzkiPi//+T6SWO6z7g+hKj9fYYX3CDfUowvoGm+
-         2vXqx8uE9t69ntIMcLSdNzACoikaFDkLsJt3N4yLWFtHFU+nzWUAhL6DRZvyfzfoZ4
-         wY8giRcCudlaZPJIwj2kFi0wYFIZQ9QFCtvlb62hmX2sJBVjn6b8UO0Es0YnEKJ1B2
-         a+wmPUFwva+GH39GoY4hyORDB7r4aQo4rNgYIvOb0+rHg1sjdxLxwe68fjhQLFSdUV
-         hTICkR/OB8bbw==
-Message-ID: <7f8b4eaf-e227-a069-a3c9-3deecf0e5c5a@kernel.org>
-Date:   Fri, 23 Jun 2023 08:49:12 +0900
+        with ESMTP id S231828AbjFWSgk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jun 2023 14:36:40 -0400
+X-Greylist: delayed 1011 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 23 Jun 2023 11:36:12 PDT
+Received: from mx.dolansoft.org (s2.dolansoft.org [212.51.146.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC6D8272C;
+        Fri, 23 Jun 2023 11:36:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=brun.one;
+        s=s1; h=MIME-Version:Message-Id:Date:Subject:Cc:To:From:In-Reply-To:
+        References:From:To:Subject:Date:Message-ID:Reply-To;
+        bh=IsmaMbieHmsIvUno8XVnMKWOAwIxRE280MRkqliioTI=; b=UdXxG1KPp32voSQQn1F9/wZ+hC
+        m2g3jkXks+Sk4yA1kGVIOrfg477b0sRq1hmda2ykubtPkISBYPaz160Kvl0h0rsfMwQ92ilohOfKk
+        /+p5NmY5n0ib3cOOYgpgf7s4EHTmJi4zzw9ImJUC6MxLvuKBZePLmdQYwmgR+j4ekjg9kqCAJcg5/
+        9+QP9w0RB/s18vaNrQH0x7zM+uamZb68bzOAufHsRQKUNyB/EqupBAvK1+m9IfdzJGigv/vjALws+
+        B7sEsXGqCOjqs4bhmRJG4DWmt8tuz7lse9HXl29joZtCrgxlaLfu4Wg8hPsTQP5/26qJMI4CWHLQd
+        A+2W1oDw==;
+Received: from [212.51.153.89] (helo=blacklava.cluster.local)
+        by mx.dolansoft.org with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+        (Exim 4.96)
+        (envelope-from <lorenz@dolansoft.org>)
+        id 1qClNN-003QH1-34;
+        Fri, 23 Jun 2023 18:19:17 +0000
+From:   Lorenz Brun <lorenz@brun.one>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: libata-scsi: fix bogus SCSI sense after abort
+Date:   Fri, 23 Jun 2023 20:19:07 +0200
+Message-Id: <20230623181908.2032764-1-lorenz@brun.one>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH 0/8] Fix the remaining sloppy timeout typing in libata
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <20230616194607.7351-1-s.shtylyov@omp.ru>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230616194607.7351-1-s.shtylyov@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Sender: lorenz@dolansoft.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/17/23 04:45, Sergey Shtylyov wrote:
-> Here are 8 patches against the 'for-next' branch of Damien's 'libata.git' repo.
-> 
-> The libata code still often uses the 'unsigned long' type for the millisecond
-> timeouts, while the kernel functions like msecs_to_jiffies() or msleep() only
-> take 'unsigned int' parameters for those. I've started fixing the timeout types
-> from ata_exec_internal[_sg]() that tripped the Svace static analyzer and posted
-> couple patches, promising to post a large continuation series somewhat later...
-> in my worst nightmare I couldn't imagine that this would take a whole year! :-(
-> 
-> Sergey Shtylyov (8):
->   ata: libata: fix parameter type of ata_deadline()
->   ata: libata-core: fix parameter types of ata_wait_register()
->   ata: libata-eh: fix reset timeout type
->   ata: fix debounce timings type
->   ata: libata-scsi: fix timeout type in ata_scsi_park_store()
->   ata: libahci: fix parameter type of ahci_exec_polled_cmd()
->   ata: ahci_xgene: fix parameter types of xgene_ahci_poll_reg_val()
->   ata: sata_sil24: fix parameter type of sil24_exec_polled_cmd()
+Since commit 058e55e120ca which fixed that commands without valid
+error/status codes did not result in any sense error, the returned sense
+errors were completely bogus as ata_to_sense_error did not have valid
+inputs in the first place.
 
-We could merge patches 1-5 together as core updates, followed by driver patches.
+For example the following ATA error
 
-Anyway, looks all OK to me but we are a little too close to the merge window. So
-I will apply this once we have 6.5-rc1.
+exception Emask 0x10 SAct 0x20c000 SErr 0x280100 action 0x6 frozen
+irq_stat 0x08000000, interface fatal error
+SError: { UnrecovData 10B8B BadCRC }
+failed command: READ FPDMA QUEUED
+cmd 60/e0:70:20:0a:00/00:00:00:00:00/40 tag 14 ncq dma 114688 in
+res 40/00:ac:20:5e:50/00:00:5d:01:00/40 Emask 0x10 (ATA bus error)
+status: { DRDY }
 
-> 
->  drivers/ata/ahci.c          |  2 +-
->  drivers/ata/ahci_qoriq.c    |  2 +-
->  drivers/ata/ahci_xgene.c    |  7 +++----
->  drivers/ata/libahci.c       |  7 ++++---
->  drivers/ata/libata-core.c   |  6 +++---
->  drivers/ata/libata-eh.c     |  6 +++---
->  drivers/ata/libata-sata.c   | 16 ++++++++--------
->  drivers/ata/libata-scsi.c   |  4 ++--
->  drivers/ata/libata-sff.c    |  2 +-
->  drivers/ata/sata_highbank.c |  2 +-
->  drivers/ata/sata_inic162x.c |  2 +-
->  drivers/ata/sata_mv.c       |  2 +-
->  drivers/ata/sata_nv.c       |  2 +-
->  drivers/ata/sata_sil24.c    |  4 ++--
->  include/linux/libata.h      | 24 ++++++++++++------------
->  15 files changed, 44 insertions(+), 44 deletions(-)
-> 
+got turned into the following nonsensical SCSI error
 
+FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=0s
+Sense Key : Illegal Request [current]
+Add. Sense: Unaligned write command
+CDB: Read(16) 88 00 00 00 00 00 00 00 0a 20 00 00 00 e0 00 00
+
+This has nothing to do with an unaligned write command, but is due to an
+ATA EH-triggered abort. But ata_to_sense_error only knows about
+status and error, both of which aren't even valid here as the command
+has been aborted.
+
+Add an additional section to ata_gen_ata_sense which handles
+errors not coming from the device first, before calling into
+ata_to_sense_error.
+
+According to the SAT-5 spec a reset should cause a Unit Attention event,
+which the SCSI subsystem should handle to retry its commands but I
+am not sure how much of that infra is present in Linux's SCSI layer, so
+this is a simpler solution.
+
+Signed-off-by: Lorenz Brun <lorenz@brun.one>
+---
+ drivers/ata/libata-scsi.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 551077cea4e4..61c6a4e8123a 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -13,6 +13,7 @@
+  *  - http://www.t13.org/
+  */
+ 
++#include "scsi/scsi_proto.h"
+ #include <linux/compat.h>
+ #include <linux/slab.h>
+ #include <linux/kernel.h>
+@@ -1013,6 +1014,21 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
+ 		ata_scsi_set_sense(dev, cmd, NOT_READY, 0x04, 0x21);
+ 		return;
+ 	}
++	if (qc->err_mask & (AC_ERR_HSM | AC_ERR_ATA_BUS | AC_ERR_HOST_BUS |
++		AC_ERR_SYSTEM | AC_ERR_OTHER)) {
++		/* Command aborted because of some issue with the ATA subsystem
++		 * Should technically cause unit attention, but this is better
++		 * than nothing, which results in nonsensical errors.
++		 * POWER ON, RESET, OR BUS DEVICE RESET OCCURRED
++		 */
++		ata_scsi_set_sense(dev, cmd, ABORTED_COMMAND, 0x29, 0x00);
++		return;
++	}
++	if (qc->err_mask & AC_ERR_TIMEOUT) {
++		/* COMMAND TIMEOUT DURING PROCESSING */
++		ata_scsi_set_sense(dev, cmd, ABORTED_COMMAND, 0x2e, 0x02);
++		return;
++	}
+ 	/* Use ata_to_sense_error() to map status register bits
+ 	 * onto sense key, asc & ascq.
+ 	 */
 -- 
-Damien Le Moal
-Western Digital Research
+2.40.1
 
