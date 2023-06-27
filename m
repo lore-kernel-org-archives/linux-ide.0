@@ -2,36 +2,22 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E50DEEB64D7
-	for <linux-ide@archiver.kernel.org>; Mon, 26 Jun 2023 13:02:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E2CEB64DC
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Jun 2023 00:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231371AbjFZNCt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 26 Jun 2023 09:02:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52834 "EHLO
+        id S229527AbjF0A3D (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 26 Jun 2023 20:29:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231163AbjFZNCl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jun 2023 09:02:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B40019F;
-        Mon, 26 Jun 2023 06:02:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F2FE960E86;
-        Mon, 26 Jun 2023 13:02:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F9A6C433C0;
-        Mon, 26 Jun 2023 13:02:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1687784546;
-        bh=qHCByCNDys2ECT6mI9nx7oOPVqRAJqAf0TdsDuDj2PI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=o53DZaDNvEAwptnEewGQrTiUVPR6v8FwlmTYX7yfgHWj/oUbJGR0mhRH1GL39WX5g
-         fp4oalcmiYuaNf5x8s65Ydy5ihYFrRckIWBUSM6GaHDjLwal1iUXFES1D/rhkOxDnz
-         cdPK4n96JJlMF7nWtd+JoN35UgJzBHocXT3XWUCw=
-Date:   Mon, 26 Jun 2023 15:02:22 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Byungchul Park <byungchul@sk.com>
+        with ESMTP id S229456AbjF0A3C (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jun 2023 20:29:02 -0400
+Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6F7F81704;
+        Mon, 26 Jun 2023 17:28:58 -0700 (PDT)
+X-AuditID: a67dfc5b-d85ff70000001748-51-649a2d4740c7
+Date:   Tue, 27 Jun 2023 09:27:20 +0900
+From:   Byungchul Park <byungchul@sk.com>
+To:     Greg KH <gregkh@linuxfoundation.org>
 Cc:     linux-kernel@vger.kernel.org, kernel_team@skhynix.com,
         torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
         linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
@@ -57,68 +43,131 @@ Cc:     linux-kernel@vger.kernel.org, kernel_team@skhynix.com,
         boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
         her0gyugyu@gmail.com
 Subject: Re: [PATCH v10 00/25] DEPT(Dependency Tracker)
-Message-ID: <2023062627-chooser-douche-6613@gregkh>
+Message-ID: <20230627002720.GA55700@system.software.com>
 References: <20230626115700.13873-1-byungchul@sk.com>
+ <2023062627-chooser-douche-6613@gregkh>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230626115700.13873-1-byungchul@sk.com>
+In-Reply-To: <2023062627-chooser-douche-6613@gregkh>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sb0xTZxTG87739r23jV3uqrJX2L50MVswKC4sHANxW7Jk98PMliybyUh0
+        zXqVZi2SQossMaJUwx8lwAIdhWwFTCFYBYvzb0v4E8CrGbLBWNcAUaab1SKm2tpahrYQM7+c
+        /PI8T55zPhye0dhIOm8oKpXMRTqjlqhY1eK69iwxy6HP7oupoOFENkSeVLHQ1usmMHn2NAL3
+        +SMYgqOfwJ/REILErzcZsDdNImi/PcfA+bF5BL7uowSm7rwG05ElAnJTLYHKzl4Cvz1YxjDb
+        3IjhtGcX3KjvwDAY/5cFe5BAq70SJ8c9DHFXDweuis2w0O3gYPn2dpDnZxTgC2yBlp9mCXh9
+        MgtjlxYwTF1pIzDvfq6AG2PXWJhsOKmAMw87CDyIuhhwRZY4+H3QiaHPliy6v+zDcPzxigLG
+        Tw4m6dQ5DNN/XUUwUHULg8c9Q2AkEsLQ72li4FnXKIKFukUOjp2Ic9B6pA5B7bFmFm7+N64A
+        2+z7kIi1kQ/zxJHQEiPa+stEX9TJitc7qHjZMceJtoEAJzo9FrG/O1Ps9Aax2B6OKERPTzUR
+        PeFGTqxZnMbi7IyXiA8nJjjx2o8J9vM3v1bl6yWjwSqZt+38RlXoGbHj4kj6wbpfqkkFcmys
+        QUqeCjk07p1nXnKosyvJPM8Km2l4al9KJsI71O+Pr0Y2CO/S4GiArUEqnhHmVHToWT2XMtYL
+        ubSusnk1pBaALl31r+oaYS/1D/zDrumvU7nlziozQib1rwRxahcjZNCuFT4lK5MnzD2VFSne
+        KLxNBy+M47XTJpTUfdG6xpvoULefrUeC45VWxyutjv9bnYjpQRpDkdWkMxhzthaWFxkObv32
+        gMmDkr/pOrRccAmFJ78YRgKPtOvUsbMteo1CZy0pNw0jyjPaDeq0mF2vUet15d9L5gN7zRaj
+        VDKMMnhW+4b6vWiZXiPs15VK30lSsWR+6WJemV6BfjZl5t4aP/XB37UBd0C5pzSjPWeb7Bvy
+        7rhLPtqdk1cwdOZJvq/REgy3hr7cknhUlWemhxP4uPxW725vwWdNwV0/XD/3KLQzO++PTxuM
+        8tPDlvw+6+Ov4jucpmJLWukh592YQTq6UBXL/bgsbWzavomrkP2Lwxf9Xc5oK0mrztKyJYW6
+        7ZmMuUT3AjQPjl2XAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUxTdxTG9//fV+qq1w70BrMsdsoU0Sm+7ETNsmSG3mhEsw8w/aA09m5t
+        eBFbYYIxQcFFUBsggY5aXAUtBBhsF9+hFSG8dERklrCOFILo0CpKgi1QYGjLsswvJ788z3nO
+        OR8OSyieUZGsLu24qE9TpyhpGSmL35G7XrXerNlY7FkLRRc2gt93jgRLQx0NvfW1COqun8bg
+        bVfBn5NjCGYfPCTAVNKL4MrjQQKudwwhsFefocH1dDH0+cdpcJacpyG3soGGP17OYfCUFmOo
+        lfZCd2EFhpbAMxJMXhoumXJxsDzHELDVMGDLWQ0j1WYG5h5vAudQPwVt5U4K7AProOyyh4Zm
+        u5OEjtsjGFx3LTQM1b2loLuji4TeoosU/PK6goaXkzYCbP5xBh61WDH8mhec9mLOjuHHN/MU
+        dF5sCdLV3zD0/dWEwHFuGINU109Dm38MQ6NUQsBMVTuCEeMrBs5eCDBw6bQRwfmzpSQ8/KeT
+        gjzPVpidttBf7RTaxsYJIa/xB8E+aSWF3yt44Y55kBHyHAOMYJUyhMbqaKGy2YuFKxN+SpBq
+        8mlBmihmhIJXfVjw9DfTwuueHkbo+mmW3P/xQdlOjZiiyxT1n3+ZJNNKbSac7o88YbyRT+cg
+        c0QBCmN5bgs/VllFFCCWJbnV/ITru5BMc5/xbneACHE4t4b3tg+QBUjGEtygjL8/U8iEjI+4
+        L3hjbulCk5wDfrzJvaAruMO82zFK/qsv5Z1lTxeY4KJ597wXh3YR3Aq+ap4NyWHBEwannFSI
+        I7hP+ZabnbgQyc3vpc3vpc3/p62IqEHhurTMVLUuZesGQ7I2K013YsORo6kSCr6f7dRc0W3k
+        c6laEcci5Yfy6foyjYJSZxqyUlsRzxLKcPmyaZNGIdeos7JF/dHD+owU0dCKVrCkcrl8d6KY
+        pOC+Vx8Xk0UxXdT/52I2LDIH3eMdGY+2JLXHSDqHcfPfq/ZWxS3eFaieirmFE/NPxibMaHPO
+        qFhMvfjAcPDJjp+zv96HPrlTv8gS1/Ct9tjoAV2Eae1AXLm+saar373Skf1mmy/eN588Vbvc
+        0BOVEZ9unj70vDxzODbhmyjV2wej3UuQNWHCt+ea67Jl+9KOsPxbStKgVW+KJvQG9Tt/39ah
+        egMAAA==
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Jun 26, 2023 at 08:56:35PM +0900, Byungchul Park wrote:
-> >From now on, I can work on LKML again! I'm wondering if DEPT has been
-> helping kernel debugging well even though it's a form of patches yet.
+On Mon, Jun 26, 2023 at 03:02:22PM +0200, Greg KH wrote:
+> On Mon, Jun 26, 2023 at 08:56:35PM +0900, Byungchul Park wrote:
+> > >From now on, I can work on LKML again! I'm wondering if DEPT has been
+> > helping kernel debugging well even though it's a form of patches yet.
+> > 
+> > I'm happy to see that DEPT reports a real problem in practice. See:
+> > 
+> >    https://lore.kernel.org/lkml/6383cde5-cf4b-facf-6e07-1378a485657d@I-love.SAKURA.ne.jp/#t
+> >    https://lore.kernel.org/lkml/1674268856-31807-1-git-send-email-byungchul.park@lge.com/
+> > 
+> > Nevertheless, I apologize for the lack of document. I promise to add it
+> > before it gets needed to use DEPT's APIs by users. For now, you can use
+> > DEPT just with CONFIG_DEPT on.
+> > 
+> > ---
+> > 
+> > Hi Linus and folks,
+> > 
+> > I've been developing a tool for detecting deadlock possibilities by
+> > tracking wait/event rather than lock(?) acquisition order to try to
+> > cover all synchonization machanisms. It's done on v6.2-rc2.
+> > 
+> > Benifit:
+> > 
+> > 	0. Works with all lock primitives.
+> > 	1. Works with wait_for_completion()/complete().
+> > 	2. Works with 'wait' on PG_locked.
+> > 	3. Works with 'wait' on PG_writeback.
+> > 	4. Works with swait/wakeup.
+> > 	5. Works with waitqueue.
+> > 	6. Works with wait_bit.
+> > 	7. Multiple reports are allowed.
+> > 	8. Deduplication control on multiple reports.
+> > 	9. Withstand false positives thanks to 6.
+> > 	10. Easy to tag any wait/event.
+> > 
+> > Future work:
+> > 
+> > 	0. To make it more stable.
+> > 	1. To separates Dept from Lockdep.
+> > 	2. To improves performance in terms of time and space.
+> > 	3. To use Dept as a dependency engine for Lockdep.
+> > 	4. To add any missing tags of wait/event in the kernel.
+> > 	5. To deduplicate stack trace.
 > 
-> I'm happy to see that DEPT reports a real problem in practice. See:
-> 
->    https://lore.kernel.org/lkml/6383cde5-cf4b-facf-6e07-1378a485657d@I-love.SAKURA.ne.jp/#t
->    https://lore.kernel.org/lkml/1674268856-31807-1-git-send-email-byungchul.park@lge.com/
-> 
-> Nevertheless, I apologize for the lack of document. I promise to add it
-> before it gets needed to use DEPT's APIs by users. For now, you can use
-> DEPT just with CONFIG_DEPT on.
-> 
-> ---
-> 
-> Hi Linus and folks,
-> 
-> I've been developing a tool for detecting deadlock possibilities by
-> tracking wait/event rather than lock(?) acquisition order to try to
-> cover all synchonization machanisms. It's done on v6.2-rc2.
-> 
-> Benifit:
-> 
-> 	0. Works with all lock primitives.
-> 	1. Works with wait_for_completion()/complete().
-> 	2. Works with 'wait' on PG_locked.
-> 	3. Works with 'wait' on PG_writeback.
-> 	4. Works with swait/wakeup.
-> 	5. Works with waitqueue.
-> 	6. Works with wait_bit.
-> 	7. Multiple reports are allowed.
-> 	8. Deduplication control on multiple reports.
-> 	9. Withstand false positives thanks to 6.
-> 	10. Easy to tag any wait/event.
-> 
-> Future work:
-> 
-> 	0. To make it more stable.
-> 	1. To separates Dept from Lockdep.
-> 	2. To improves performance in terms of time and space.
-> 	3. To use Dept as a dependency engine for Lockdep.
-> 	4. To add any missing tags of wait/event in the kernel.
-> 	5. To deduplicate stack trace.
+> If you run this today, does it find any issues with any subsystems /
+> drivers that the current lockdep code does not find?  Have you run your
 
-If you run this today, does it find any issues with any subsystems /
-drivers that the current lockdep code does not find?  Have you run your
-tool on patches sent to the different mailing lists for new drivers and
-code added to the tree to verify that it can find issues easily?
+Yes, it found some deadlocks. The following issue was about a deadlock
+by PG_locked detected by DEPT which lockdep couldn't. Check it out:
 
-In other words, why do we need this at all?  What makes it 'better' than
-what we already have that works for us today?  What benifit is it?
+   https://lore.kernel.org/lkml/6383cde5-cf4b-facf-6e07-1378a485657d@I-love.SAKURA.ne.jp/#t
+   https://lore.kernel.org/lkml/1674268856-31807-1-git-send-email-byungchul.park@lge.com/
 
-thanks,
+> tool on patches sent to the different mailing lists for new drivers and
+> code added to the tree to verify that it can find issues easily?
 
-greg k-h
+I had been co-working with GPU driver developers for their new drivers
+adding to their CI system to verify that it can find issues easily. Now
+that I've almost organized my stuff, I will re-start it.
+
+> In other words, why do we need this at all?  What makes it 'better' than
+> what we already have that works for us today?  What benifit is it?
+
+AS IS : It can detect deadlocks by wrong lock usage e.g. acqusition order.
+	Once it reports a issue, you must resolve it or work around to
+	see further reports even if it's not one you are into.
+
+TO BE : It can detect deadlocks by not only locks but also any waits e.g.
+	wait_for_completion(), PG_locked, PG_writeback, dma fence and
+	so on. Last but not least, DEPT can report issues multiple times
+	at a single system-up so that any issues that you are not into,
+	no longer prevent further reports that is valuable to you.
+
+However, yes. DEPT needs to be more matured. I'd like to do that together.
+
+	Byungchul
+
+> thanks,
+> 
+> greg k-h
