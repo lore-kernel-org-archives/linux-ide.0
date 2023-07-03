@@ -2,19 +2,19 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 955A2C04FE0
-	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C31F3C0729B
+	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231362AbjGCJtz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jul 2023 05:49:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50164 "EHLO
+        id S231375AbjGCJt4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 Jul 2023 05:49:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231281AbjGCJtv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:51 -0400
+        with ESMTP id S231310AbjGCJtx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:53 -0400
 Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BD15212C;
-        Mon,  3 Jul 2023 02:49:48 -0700 (PDT)
-X-AuditID: a67dfc5b-d85ff70000001748-86-64a299b34ffc
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C0B00BE;
+        Mon,  3 Jul 2023 02:49:49 -0700 (PDT)
+X-AuditID: a67dfc5b-d85ff70000001748-a6-64a299b3d23d
 From:   Byungchul Park <byungchul@sk.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
@@ -40,84 +40,124 @@ Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
         gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
         boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
         her0gyugyu@gmail.com
-Subject: [PATCH v10 rebased on v6.4 11/25] dept: Apply sdt_might_sleep_{start,end}() to hashed-waitqueue wait
-Date:   Mon,  3 Jul 2023 18:47:38 +0900
-Message-Id: <20230703094752.79269-12-byungchul@sk.com>
+Subject: [PATCH v10 rebased on v6.4 13/25] dept: Distinguish each work from another
+Date:   Mon,  3 Jul 2023 18:47:40 +0900
+Message-Id: <20230703094752.79269-14-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230703094752.79269-1-byungchul@sk.com>
 References: <20230703094752.79269-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSfUzMcRzHfb+/x05nvx2bH23YbcbymInPDMsf1s9Dxox5+IOb+9FxXbn0
-        aKaUpEe15fSA6+LcuvN0h4mylFKUosahjlooelrczbmKK/XPZ6+9P+/Pe+8/Piwhe0TNZlWa
-        E6JWo1DLaQkp6fM1LLHlG5TLe/PmQU7GcnD+SiWh6LaFhuZbZgSWe4kYemqC4Z2rF4GnsYkA
-        XV4zguKOdgLu1ToQVJjO0NDSNQ1anQM01Oel05BUcpuG1z+GMbRdzMVgtobAywsGDJXubyTo
-        emgo1CVh7+jG4DaWMmBMmA+dpgIGhjsCoN7xloKKD4sg/0obDeUV9STUPuzE0PKoiAaH5S8F
-        L2vrSGjOyaTgZr+Bhh8uIwFG5wADbyr1GO4ke4NSfo5S8DyzEkPKtbsYWt8/RvAk9TMGq+Ut
-        DdXOXgw2ax4Bf27UIOjM6mPgbIabgcLELATpZy+S0DTynILktkDw/C6ig9YI1b0DhJBsixEq
-        XHpSeGHghbKCdkZIfvKBEfTWKMFm8hdKynuwUDzkpARr6XlasA7lMkJaXysW+l+9YoS6Sx5S
-        6GrV4e1++yRrlaJaFS1ql60/KAn91p5DRdjZ2JFnZUwCstNpyIfluZW8W5/NTHLT9z/UGNPc
-        At5udxNjPIObx9syv3p1CUtw56bypsHG8ePpXBiflpgybiK5+fz5S/3jupRbxY86cyZC5/Lm
-        O5XjHh+v/uV3FhpjGRfIt+U7Jkpk+/Ddgzv+8yz+qclOXkBSPZpSimQqTXSYQqVeuTQ0TqOK
-        XXooPMyKvB9lPDW8/yEaat5ZhTgWyX2l9pPFShmliI6MC6tCPEvIZ0iTOq4qZVKlIi5e1IYf
-        0Eapxcgq5MeS8pnSFa4YpYw7ojghHhPFCFE7ucWsz+wEtO1TbUBaQqAuvaFOdi3mQFD1rg2f
-        UNnezY3HozUbcL7ar7jGvDveUdBV+HFOKd1R1bRVe3/x4Z0W39XhR9ZkHOxueeB556HmhC8M
-        jj0TvC5VIupCzLK+FVsbWIcyZeP16ljHEld50abLp3F2w6zACKUiaosuPmJ7SQY6+npB157L
-        cjIyVBHgT2gjFf8AEZjQbE0DAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxTH99yX516qXW4qZndoMtdpTDQqhqFnQsw+4TO3OT+YzOzDpLE3
-        UoFaW4uiYfIuoBBLggUFhbrUBvCFls3XmgoIFgIUS6Qa2ghBHMqLAYpAUVdY9uXkl9/5n/+n
-        w9OKKjaK12iPSXqtKkWJZYxsT1zOJkeFRR39/hEG07loCE4XMFB5sx6D50YdgvrGLApGHu+C
-        vplRBKHObhrMZR4ENQN+GhpbAwictmwM3qHPoTc4gcFddhZDztWbGHreLlDQf6GUgjr7z9Bx
-        3kKBa+41A+YRDJfMOVR4/EPBnLWWA2vmOhi0XeRgYWAruAPPWGiucrPgfLERKi73Y3jgdDPQ
-        emeQAu+9SgyB+k8sdLQ+YcBjKmbh+rgFw9sZKw3W4AQHT13VFNzKDbflT31koa3YRUH+nw0U
-        9D6/j+BhwUsK7PXPMDQHRylw2MtomL/2GMFgyRgHeefmOLiUVYLgbN4FBro/tLGQ2x8LodlK
-        /H0caR6doEmu4zhxzlQzpN0ikrsX/RzJffiCI9V2I3HYNpCrD0YoUjMZZIm9thAT+2QpR4rG
-        eiky3tXFkSflIYYM9Zqpvat/k8WrpRRNmqTfsjNRlvTab2J1Pv7Eh5a7XCby4SIUwYvCt2L3
-        m3l2kbGwXvT55uhFjhTWiI7i4bCX8bRwZploe9e5dLBCSBWLsvKXQoywTiwsH1/ycmGb+DFo
-        4v4r/Uqsu+VaykSE/avZErTICiFW7K8I4PNIVo0+q0WRGm1aqkqTErvZkJyUrtWc2HzwSKod
-        hZ/GmrFguoOmvbuakMAj5XK571SNWsGq0gzpqU1I5GllpDxn4IpaIVer0k9K+iMH9MYUydCE
-        VvGM8gv57l+lRIVwSHVMSpYknaT/f0vxEVGZqCUUlefVbNSFGnTlv3zXZVtLjiZ4HGXb9s3/
-        8fRQQkys5Sd/jNEvvHL9/U3L6ss/Ru6HtTHtiTr51+4+o9BTWJo1tcO5s3Py9309a4ZGdw+b
-        Gz3t3tuWwS+r1KGMlXkDZriS3TDb98MN7fbh+GijdnnGHr4jeSLjr5OnA21Few/LlIwhSbV1
-        A603qP4FQqFgYTADAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAAzXSbUxTZxQHcJ/n3vvcS6XmpmK8ajKXJsbMF9T5dlzmy/yyu8QtTdgHM0xm
+        Y6/S2CIpiKCS4aji0EvQiIiWScF0DXSAt8QgUkUYICJYtUoltZGKYkMRxyyBwWTUzS8nv5xz
+        8s/5cDhKc51ZyBlTMyRLqt6kJSpaNRxvX+kurTCsDjckwpnTqyH67iQNtloXAW9NNQJX/TEM
+        4bavoXcsgmCy+z4FJcVeBPb+ZxTUtwcReJw/E3g0MAd80RECncWnCORV1hJ4MDSFIXD+LIZq
+        5VvoKqrA0DwxSENJmMClkjw8U15jmHBUseDIXQIh50UWpvrXQGfwCQOevuVQ+muAQJOnk4b2
+        hhCGR402AkHXNANd7Xdo8J6RGfj9TQWBoTEHBY7oCAsPm8sx1Flngk789Z6BDrkZw4krVzH4
+        nt5AcPPkcwyK6wmB1mgEg1sppuDv39oQhAqHWTh+eoKFS8cKEZw6fp6G+/90MGANrIfJcRvZ
+        9oXYGhmhRKv7kOgZK6fFuxWCeP3iM1a03uxjxXLloOh2LhMrm8JYtI9GGVGp+oWIyuhZViwY
+        9mHxTU8PK965MEmLA74SrFv0g+pLg2QyZkqWVVt2q1JqXT4q7e3crN76eblI4QtQHCfw64Se
+        1mn80da+Iipmwi8V/P6JD07gPxXc8iumAKk4is+fLTjfdpMCxHFz+SQhMKqJ7dD8EuFesI7E
+        rOY3CPfkMuq/zMVCdV3zB8fN9F+OF6KYNfx6IVAaJLFMgc+PEy44nP8fsUC47fTTRUhdjmZV
+        IY0xNdOsN5rWJaZkpxqzEvccMCto5qEcOVPJDWjUm9SCeA5p49X+I3aDhtFnpmebW5DAUdoE
+        dV7/ZYNGbdBnH5YsB360HDRJ6S1oEUdr56s/Hztk0PD79BnSfklKkywfp5iLW5iLyjZcOzKU
+        ti3UkPTCP7W0K3/+4/jBb7YavVfN/ue2to7tyY2Rz74LfZWhQ59Y92bvf51XI3fvXiFbdf3T
+        8h6ZTTbpQ13D4caE0pxNkd4/R+TNT8eP+qzmnGjNw6adAybdOe+tn8q+r1e2eDYOrvCudQvv
+        dPY/zIPxu+DcjrtZth1aOj1Fv2YZZUnX/wuCRdYFTAMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAAzXSf0yMcRwHcN/v8zzf5+k4e3bCM0x2m5ksMuKzMTP+8Gh++4PxB8/cMx2V
+        dlcpP7bokHStIukH+rXT6ijPNb9Lrl11hOiW5NyU/LgpJS7l8qOYfz577fP+7P3Xh6M0+cw0
+        Th8dKxuipUgtUdGqDcuSQ2y5xbpQx/MpkJkWCr5vKTQUVFoJtFyrQGCtPobB61gDLwZ7EPgf
+        P6UgJ7sFQVHnawqqGzwIasqOE2jtngguXx8BZ/YZAskllQSefRrB4D6fhaFCWQ+PMoox1A1/
+        oCHHSyA/JxmPjo8Yhi3lLFiSZkNXWR4LI50LwelpY6D+opOBmo55kHvJTeBejZOGhltdGFrv
+        FBDwWH8z8KihiYaWTDMDVz8XE/g0aKHA4utj4XldIYYq02jbya+/GGg012E4WXodg+vlXQS1
+        KW8wKNY2AvW+Hgw2JZuCH1ccCLrSe1k4kTbMQv6xdARnTpyn4enPRgZM7jDwDxWQlcvE+p4+
+        SjTZDoo1g4W0+LBYEG/nvWZFU20HKxYqcaKtLFgsuefFYtGAjxGV8tNEVAayWDG114XFz0+e
+        sGLTBT8tdrty8KYZO1TLdXKkPl42LFixWxVRaXVRMf2TEl5UT05CCp+KAjiBXyyYOjKoMRN+
+        jtDePvzXgfwswWZ+z6QiFUfxp8YLZf2PSSriuEn8VsE9oBm7ofnZQrOnioxZzS8Rms0XqX+d
+        QUJFVd1fB4zu3w2lozFr+DDBneshGUhViMaVo0B9dHyUpI8Mm2/cH5EYrU+Yv+dAlIJGX8Zy
+        dCTzFvrWusaOeA5pJ6jbDxfpNIwUb0yMsiOBo7SB6uTOyzqNWiclHpINB3YZ4iJlox1N52jt
+        VHX4Nnm3ht8rxcr7ZTlGNvxPMRcwLQnZpoecqxKCG2/gbrI2LVBf1Ptl/SKFHr/y1PagnQ57
+        f0rczO+umJBmc2f5jY1LH6wuCfLffNvkP12aN9MZvsoy93tFn96/etHygq/VFx5cjr17fZCT
+        t3gd0pDgv9QWOnTEd1Z6F+q1t9xvvLl5X0NWtxcn2Kh4T23GOms4++pqhJY2RkgLgymDUfoD
+        Zj/+/y4DAAA=
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Makes Dept able to track dependencies by hashed-waitqueue waits.
+Workqueue already provides concurrency control. By that, any wait in a
+work doesn't prevents events in other works with the control enabled.
+Thus, each work would better be considered a different context.
+
+So let Dept assign a different context id to each work.
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- include/linux/wait_bit.h | 3 +++
- 1 file changed, 3 insertions(+)
+ include/linux/dept.h     |  2 ++
+ kernel/dependency/dept.c | 10 ++++++++++
+ kernel/workqueue.c       |  3 +++
+ 3 files changed, 15 insertions(+)
 
-diff --git a/include/linux/wait_bit.h b/include/linux/wait_bit.h
-index 7725b7579b78..fe89282c3e96 100644
---- a/include/linux/wait_bit.h
-+++ b/include/linux/wait_bit.h
-@@ -6,6 +6,7 @@
-  * Linux wait-bit related types and methods:
-  */
- #include <linux/wait.h>
-+#include <linux/dept_sdt.h>
+diff --git a/include/linux/dept.h b/include/linux/dept.h
+index f62c7b6f42c6..d9ca9dd50219 100644
+--- a/include/linux/dept.h
++++ b/include/linux/dept.h
+@@ -515,6 +515,7 @@ extern void dept_ecxt_exit(struct dept_map *m, unsigned long e_f, unsigned long
+ extern void dept_sched_enter(void);
+ extern void dept_sched_exit(void);
+ extern void dept_kernel_enter(void);
++extern void dept_work_enter(void);
  
- struct wait_bit_key {
- 	void			*flags;
-@@ -246,6 +247,7 @@ extern wait_queue_head_t *__var_waitqueue(void *p);
- 	struct wait_bit_queue_entry __wbq_entry;			\
- 	long __ret = ret; /* explicit shadow */				\
- 									\
-+	sdt_might_sleep_start(NULL);					\
- 	init_wait_var_entry(&__wbq_entry, var,				\
- 			    exclusive ? WQ_FLAG_EXCLUSIVE : 0);		\
- 	for (;;) {							\
-@@ -263,6 +265,7 @@ extern wait_queue_head_t *__var_waitqueue(void *p);
- 		cmd;							\
- 	}								\
- 	finish_wait(__wq_head, &__wbq_entry.wq_entry);			\
-+	sdt_might_sleep_end();						\
- __out:	__ret;								\
- })
+ static inline void dept_ecxt_enter_nokeep(struct dept_map *m)
+ {
+@@ -567,6 +568,7 @@ struct dept_task { };
+ #define dept_sched_enter()				do { } while (0)
+ #define dept_sched_exit()				do { } while (0)
+ #define dept_kernel_enter()				do { } while (0)
++#define dept_work_enter()				do { } while (0)
+ #define dept_ecxt_enter_nokeep(m)			do { } while (0)
+ #define dept_key_init(k)				do { (void)(k); } while (0)
+ #define dept_key_destroy(k)				do { (void)(k); } while (0)
+diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+index 4165cacf4ebb..6cf17f206b78 100644
+--- a/kernel/dependency/dept.c
++++ b/kernel/dependency/dept.c
+@@ -1977,6 +1977,16 @@ void dept_hardirqs_off_ip(unsigned long ip)
+ }
+ EXPORT_SYMBOL_GPL(dept_hardirqs_off_ip);
  
++/*
++ * Assign a different context id to each work.
++ */
++void dept_work_enter(void)
++{
++	struct dept_task *dt = dept_task();
++
++	dt->cxt_id[DEPT_CXT_PROCESS] += 1UL << DEPT_CXTS_NR;
++}
++
+ void dept_kernel_enter(void)
+ {
+ 	struct dept_task *dt = dept_task();
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index c913e333cce8..fa23d876a8b5 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -52,6 +52,7 @@
+ #include <linux/sched/debug.h>
+ #include <linux/nmi.h>
+ #include <linux/kvm_para.h>
++#include <linux/dept.h>
+ 
+ #include "workqueue_internal.h"
+ 
+@@ -2318,6 +2319,8 @@ __acquires(&pool->lock)
+ 
+ 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
+ #endif
++	dept_work_enter();
++
+ 	/* ensure we're on the correct CPU */
+ 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
+ 		     raw_smp_processor_id() != pool->cpu);
 -- 
 2.17.1
 
