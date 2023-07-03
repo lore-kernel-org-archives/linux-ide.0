@@ -2,19 +2,19 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0932AC19F4F
-	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34352C04FDF
+	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:50:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231678AbjGCJuQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jul 2023 05:50:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50242 "EHLO
+        id S231479AbjGCJt7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 Jul 2023 05:49:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231540AbjGCJuB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:50:01 -0400
+        with ESMTP id S231316AbjGCJtx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:53 -0400
 Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9FC04BE;
-        Mon,  3 Jul 2023 02:49:57 -0700 (PDT)
-X-AuditID: a67dfc5b-d85ff70000001748-6b-64a299b4c184
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D9E2D18D;
+        Mon,  3 Jul 2023 02:49:49 -0700 (PDT)
+X-AuditID: a67dfc5b-d85ff70000001748-b7-64a299b31b80
 From:   Byungchul Park <byungchul@sk.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
@@ -40,347 +40,311 @@ Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
         gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
         boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
         her0gyugyu@gmail.com
-Subject: [PATCH v10 rebased on v6.4 25/25] dept: Track the potential waits of PG_{locked,writeback}
-Date:   Mon,  3 Jul 2023 18:47:52 +0900
-Message-Id: <20230703094752.79269-26-byungchul@sk.com>
+Subject: [PATCH v10 rebased on v6.4 14/25] dept: Add a mechanism to refill the internal memory pools on running out
+Date:   Mon,  3 Jul 2023 18:47:41 +0900
+Message-Id: <20230703094752.79269-15-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230703094752.79269-1-byungchul@sk.com>
 References: <20230703094752.79269-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxiGfc/Hew7FmrNq9Kg/po0MUzIFI/rEODXR6JsYE42JJjqj1Z7Y
-        ZoDaIoofsVoUrYJg5EsQKc6uaTvBgqZTwA4URaJUQS0EiBAEG760rISvTSlmf55cue/c16+H
-        pxVudh6vS0iU9AnqOCWWMbL+6Zaf7+cVa6J9xoWQeSUagv9cZKCgxInBe9eBwFl+lgL/003w
-        frgPwfjLBhpysrwILB1tNJTXtiOotJ3D0Ng1A5qCgxjqsi5jMN0uwfC6d4KC1uxrFDhcW6A+
-        o5gCz2gPAzl+DPk5JmryfKJg1GrnwGqMgE7bDQ4mOmKgrv0dC5UtUZBX2IqhorKOgVp3JwWN
-        DwswtDu/slBf+5wBb2YaC38OFGPoHbbSYA0OcvDGU0RBacqk6MLQfyw8S/NQcOH3exQ0NT9C
-        UHXxAwUu5zsMNcE+CspcWTSM/fEUQWd6Pwfnr4xykH82HcHl89kMNPz7jIWU1lgYHynA61aR
-        mr5BmqSUHSOVw0UMeVEskr9utHEkpaqFI0Wuo6TMpiK3K/wUsQSCLHHZL2HiClzjiLm/iSID
-        r15x5HnuOEO6mnKorfN3yVZrpDhdkqRfumafTPvevONw287jQ4UrjCiXmBHPi8JyscF/xozC
-        prA5cJULMRYiRZ9vlA7xLGGBWJbWzZqRjKeF1HDR9vklDhUzhQOixTMwNWCECLHq0ecplgsr
-        xIeNQ+x36Y+io9QzJQqbzD+OpKMQK4RYsTWvHYekomAKE8f68unvg7ni3zYfk4HkRWiaHSl0
-        CUnxal3c8iXa5ATd8SUHDsW70OQ/WU9P7HajgHd7NRJ4pJwu9520aBSsOsmQHF+NRJ5WzpKb
-        Om5pFHKNOvmEpD+0V380TjJUo/k8o5wjXzZ8TKMQDqoTpd8k6bCk/7+l+LB5RrTYsWFmT8XI
-        Ro1w5+vsJ0NH9rcw3frrO2r2TWxS1RqdJr+9xdmgLWm+1+OO/rjdcVKMcC/y1melRvpK7apf
-        E3N/0fZmZyoN/Xnxp2PXM4tqvoR3wVj3qYyYhaqVdunLDzOchbbNFWtL3Tgy6W1U4HH4T4XJ
-        7AO7a2/qNsm552a4kjFo1TEqWm9QfwNgMMjtSwMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0iTYRiGe9/vNFeLryX0UVEx6GxmmPaAYRGVL4HVDymKoEb7yOGcspVp
-        UVhT85CHWWqmmdOYonaa0mlpQ1Ez8VAzM1PJdVI8lTpxaQc1+vNwcd/c169HQslzmKUStfa0
-        qNMqNQpWSkv3+xk2VWQXqLxSx73BeNULnOPxNOTeL2Oh9V4pgrKKSxj6awPg3cQggqmmFgqy
-        MloRmHq7Kaio60FQWXyZBfvnhdDmHGGhISOJBUPhfRZeD0xj6MpMx1BqCYTGtAIMNtc3GrL6
-        WcjJMuCZ04fBZS7hwBy9GhzFNzmY7t0CDT3tDNTcamCgsnMjZOd1sfC8soGGuicODPZnuSz0
-        lP1hoLHuJQ2txmQG7g4XsDAwYabA7Bzh4I0tH8ODmBlb3NhvBuqTbRji7jzE0PbeiqAq/iMG
-        S1k7CzXOQQzllgwKfhbVInCkDHEQe9XFQc6lFARJsZk0tPyqZyCmywemJnPZnX6kZnCEIjHl
-        Z0nlRD5NXhUI5OnNbo7EVHVyJN9yhpQXbyCFz/sxMY06GWIpSWCJZTSdI4lDbZgMNzdz5OWN
-        KZp8bsvCB5cflW5XiRp1hKjb7H9CGvwu8VB49+HIsTzfaHSDJCI3icBvFd6PpnKzzPJrhY4O
-        FzXL7vwqoTz5K5OIpBKKvzJfKP7exM4Wi/mTgsk2PDeg+dVClfX7HMt4X+GZfYz5J10plD6w
-        zYncZvIvkyloluW8j9CV3cOmIWk+mleC3NXaiFClWuPjqQ8JjtKqIz1PhoVa0MzLmC9MG5+g
-        cXtANeIlSLFA1nHepJIzygh9VGg1EiSUwl1m6L2tkstUyqhzoi7suO6MRtRXo2USWrFEtu+w
-        eELOn1KeFkNEMVzU/W+xxG1pNDricXH3nseu2rg1CZ3dfS/q431/HDfXmUiRdVeNMPRoYJu3
-        wvg2Muit3ZFRmrAoemIFSa0/1Woscnj7EQ+PuLPXA7E6hB9qWrj+wLrhyL5fj0ZeHcu+vVG7
-        ffneTzs0tH+sq/FDs7/sTmbarjef1gZ6BJgHPYMMk4esP661i4vNVgWtD1Zu2UDp9Mq/vizu
-        8S4DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSf0yMcRzHfb/PzzuOxzEetWE31iZSlH2YYfOHZ8zGzObXxnHPdFOX3SWX
+        ZiuVKDVMutPRdezcrijPmYWyk4m0ODp0dt0qhdYvOy6dCv2Yfz577f1+7/XXhyWUD6kIVqtL
+        FfU6dZKKlpPy/hm2FS6zTRNr7QW4dCEWQj/PkWCpqqTBc7cCQeX9LAw9z7fAx6E+BCPNbwgo
+        KfYgKO9oI+B+QwBBneMMDS1dM8EbGqShsbiAhuybVTS87R3F4L96GUOFtB2aLtowuMNfSSjp
+        oaG0JBuPn28YwnYnA/bMpdDpuMbAaEccNAY+UFD3KRrMN/w01NY1ktBQ04mh5ZGFhkDlXwqa
+        Gl6S4LlUSMGdARsNvUN2AuyhQQbeua0YqnPGRWd//KHgRaEbw9lb9zB4fY8RPDnXjkGq/EDD
+        s1AfBpdUTMDv288RdBb1M5B7IcxAaVYRgoLcqyS8GXtBQY4/AUaGLfSmdcKzvkFCyHGdFOqG
+        rKTwysYLD6+1MULOk0+MYJVOCC7HMuFmbQ8WyoMhSpCc52lBCl5mhPx+LxYGXr9mhJemEVLo
+        8pbgHZH75Os1YpI2TdSv3HBInmjJfYWPOzcZP/vcVCYqWJ2PWJbn4nmfIzUfyabQb2YmmOai
+        +NbWMDHBc7nFvKvwC5WP5CzB5U3nHd+b6YliDmfgzbXdk0xyS3npvQVNsIJbw5uandSUdBFf
+        Ue2eFMnG8+7hosmNkkvg/eYAPbXJk/HdWSumeAH/1NFKXkQKK5rmREqtLi1ZrU2Kj0lM12mN
+        MUdSkiU0/lD206P7a1DQs6secSxSzVC0ZpRrlJQ6zZCeXI94llDNVWR3lGmUCo06/ZSoTzmo
+        P5EkGupRJEuq5itWDZ3UKLmj6lTxmCgeF/X/W8zKIjIRu8FwID6AnIotNYq2DOzLKPM3zTuy
+        M+7zFY81MdUkRZt2Ny1M+WXnI9r7Rz4OZy4aa+nee/C6YzPeeiX51J68sihje2x4Z3qMk1+w
+        cdU209Mu456xB9P2LxngDp+XzfYv/zZryQ1N6ba1QXvFwgSz8YHX/jduZuhWdHVkcAB8OhVp
+        SFTHLSP0BvU/01gjckwDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSW0iTcRjG+/+/o6vV1xL6qKhYWamUSRkvdL4oPyIjgjC6qEb7cKtpsall
+        UWmbHTyhgdp0moeYY1PLzYsOGkvJWqFZmk2ZKy0rc2YHJ5lmqdHNy4/nefhdvSwhK6IWsOq4
+        eFEbp9DIaQkp2bNRv9phLFOunfAuhpyMteAfvkKC6VYlDa3VNgSVtSkY+h9FwusRH4Kx5ucE
+        5Oe2Iijt6SagtsmLoN5ykYa297Oh3T9Egys3nQZ9+S0aXgyMY/DkXcNgs0fBs+wyDM7RjyTk
+        99NQmK/Hk+cThlGzlQFzchD0WgoYGO8JB5e3g4LGIhcF9V2hYCz20FBX7yKh6U4vhrZ7Jhq8
+        lX8oeNb0hITWnEwKqr6U0TAwYibA7B9i4KWzBMNtw6Tt0o8JCh5nOjFculmDob3zPoIHV95i
+        sFd20NDo92Fw2HMJ+FXxCEFv1iADqRmjDBSmZCFIT80j4fnvxxQYPBEw9tNEb9soNPqGCMHg
+        OCXUj5SQwtMyXrhb0M0IhgddjFBiTxAclhChvK4fC6Xf/ZRgt16lBfv3a4yQNtiOhS8tLYzw
+        5PoYKbxvz8d7Fx2UbFKKGnWiqA3bckSiMqU+xSet206/63RSySh9XRoKYHluPd/pMTJTTHMr
+        ebd7lJjiQG4p78j8QKUhCUtwl2fylq/N9FQxj9Pxxrq+aSa5IN7+yoSmWMpt4K83W6l/0iW8
+        7bZzWhQwmff9zJreyLgI3mP00tlIUoJmWFGgOi4xVqHWRKzRHVclxalPrzl6ItaOJp/GfG48
+        5w4abotsQByL5LOk7rOlShmlSNQlxTYgniXkgVJ9zw2lTKpUJJ0RtScOaxM0oq4BLWRJ+Xzp
+        rmjxiIyLUcSLx0XxpKj932I2YEEyCqrBUed3Hlwabutj5x7rLw+Zs/mQu7H0g63bs6kDr19W
+        PTGDSd2qifn0Jnr5u5dOV7Fq+92qX6uy3bvPLs+qqGhVmLJr5+sLCF/G+WWva+99toUlDP8h
+        V6gv7JjzbdaFQVWYkyncZxmo9sXLWx4eCN5Q4Uzh9s+rCZ6ZEhrsUQ13yUmdShEeQmh1ir8q
+        62/RMAMAAA==
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Currently, Dept only tracks the real waits of PG_{locked,writeback} that
-actually happened having gone through __schedule() to avoid false
-positives. However, it ends in limited capacity for deadlock detection,
-because anyway there might be still way more potential dependencies by
-the waits that have yet to happen but may happen in the future so as to
-cause a deadlock.
+Dept engine works in a constrained environment. For example, Dept cannot
+make use of dynamic allocation e.g. kmalloc(). So Dept has been using
+static pools to keep memory chunks Dept uses.
 
-So let Dept assume that when PG_{locked,writeback} bit gets cleared,
-there might be waits on the bit to be woken up.
-
-Even though false positives may increase with the aggressive tracking,
-it's worth doing it because it's going to be useful in practice. See the
-following link for instance:
-
-   https://lore.kernel.org/lkml/1674268856-31807-1-git-send-email-byungchul.park@lge.com/
+However, Dept would barely work once any of the pools gets run out. So
+implemented a mechanism for the refill on the lack by any chance, using
+irq work and workqueue that fits on the contrained environment.
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- include/linux/mm_types.h   |   3 +
- include/linux/page-flags.h | 112 +++++++++++++++++++++++++++++++++----
- include/linux/pagemap.h    |   7 ++-
- mm/filemap.c               |  11 +++-
- mm/mm_init.c               |   3 +
- 5 files changed, 121 insertions(+), 15 deletions(-)
+ include/linux/dept.h            |  19 ++++--
+ kernel/dependency/dept.c        | 104 +++++++++++++++++++++++++++-----
+ kernel/dependency/dept_object.h |  10 +--
+ kernel/dependency/dept_proc.c   |   8 +--
+ 4 files changed, 112 insertions(+), 29 deletions(-)
 
-diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index 306a3d1a0fa6..ac5048b66e5c 100644
---- a/include/linux/mm_types.h
-+++ b/include/linux/mm_types.h
-@@ -19,6 +19,7 @@
- #include <linux/workqueue.h>
- #include <linux/seqlock.h>
- #include <linux/percpu_counter.h>
-+#include <linux/dept.h>
- 
- #include <asm/mmu.h>
- 
-@@ -228,6 +229,8 @@ struct page {
- #ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
- 	int _last_cpupid;
- #endif
-+	struct dept_ext_wgen PG_locked_wgen;
-+	struct dept_ext_wgen PG_writeback_wgen;
- } _struct_page_alignment;
- 
- /*
-diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
-index 92a2063a0a23..d91e67ed194c 100644
---- a/include/linux/page-flags.h
-+++ b/include/linux/page-flags.h
-@@ -196,6 +196,50 @@ enum pageflags {
- 
- #ifndef __GENERATING_BOUNDS_H
- 
-+#ifdef CONFIG_DEPT
-+#include <linux/kernel.h>
-+#include <linux/dept.h>
-+
-+extern struct dept_map PG_locked_map;
-+extern struct dept_map PG_writeback_map;
-+
-+/*
-+ * Place the following annotations in its suitable point in code:
-+ *
-+ *	Annotate dept_page_set_bit() around firstly set_bit*()
-+ *	Annotate dept_page_clear_bit() around clear_bit*()
-+ *	Annotate dept_page_wait_on_bit() around wait_on_bit*()
-+ */
-+
-+static inline void dept_page_set_bit(struct page *p, int bit_nr)
-+{
-+	if (bit_nr == PG_locked)
-+		dept_request_event(&PG_locked_map, &p->PG_locked_wgen);
-+	else if (bit_nr == PG_writeback)
-+		dept_request_event(&PG_writeback_map, &p->PG_writeback_wgen);
-+}
-+
-+static inline void dept_page_clear_bit(struct page *p, int bit_nr)
-+{
-+	if (bit_nr == PG_locked)
-+		dept_event(&PG_locked_map, 1UL, _RET_IP_, __func__, &p->PG_locked_wgen);
-+	else if (bit_nr == PG_writeback)
-+		dept_event(&PG_writeback_map, 1UL, _RET_IP_, __func__, &p->PG_writeback_wgen);
-+}
-+
-+static inline void dept_page_wait_on_bit(struct page *p, int bit_nr)
-+{
-+	if (bit_nr == PG_locked)
-+		dept_wait(&PG_locked_map, 1UL, _RET_IP_, __func__, 0, -1L);
-+	else if (bit_nr == PG_writeback)
-+		dept_wait(&PG_writeback_map, 1UL, _RET_IP_, __func__, 0, -1L);
-+}
-+#else
-+#define dept_page_set_bit(p, bit_nr)		do { } while (0)
-+#define dept_page_clear_bit(p, bit_nr)		do { } while (0)
-+#define dept_page_wait_on_bit(p, bit_nr)	do { } while (0)
-+#endif
-+
- #ifdef CONFIG_HUGETLB_PAGE_OPTIMIZE_VMEMMAP
- DECLARE_STATIC_KEY_FALSE(hugetlb_optimize_vmemmap_key);
- 
-@@ -377,44 +421,88 @@ static __always_inline int Page##uname(struct page *page)		\
- #define SETPAGEFLAG(uname, lname, policy)				\
- static __always_inline							\
- void folio_set_##lname(struct folio *folio)				\
--{ set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy)); }		\
-+{									\
-+	set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy));	\
-+	dept_page_set_bit(&folio->page, PG_##lname);			\
-+}									\
- static __always_inline void SetPage##uname(struct page *page)		\
--{ set_bit(PG_##lname, &policy(page, 1)->flags); }
-+{									\
-+	set_bit(PG_##lname, &policy(page, 1)->flags);			\
-+	dept_page_set_bit(page, PG_##lname);				\
-+}
- 
- #define CLEARPAGEFLAG(uname, lname, policy)				\
- static __always_inline							\
- void folio_clear_##lname(struct folio *folio)				\
--{ clear_bit(PG_##lname, folio_flags(folio, FOLIO_##policy)); }		\
-+{									\
-+	clear_bit(PG_##lname, folio_flags(folio, FOLIO_##policy));	\
-+	dept_page_clear_bit(&folio->page, PG_##lname);			\
-+}									\
- static __always_inline void ClearPage##uname(struct page *page)		\
--{ clear_bit(PG_##lname, &policy(page, 1)->flags); }
-+{									\
-+	clear_bit(PG_##lname, &policy(page, 1)->flags);			\
-+	dept_page_clear_bit(page, PG_##lname);				\
-+}
- 
- #define __SETPAGEFLAG(uname, lname, policy)				\
- static __always_inline							\
- void __folio_set_##lname(struct folio *folio)				\
--{ __set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy)); }		\
-+{									\
-+	__set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy));	\
-+	dept_page_set_bit(&folio->page, PG_##lname);			\
-+}									\
- static __always_inline void __SetPage##uname(struct page *page)		\
--{ __set_bit(PG_##lname, &policy(page, 1)->flags); }
-+{									\
-+	__set_bit(PG_##lname, &policy(page, 1)->flags);			\
-+	dept_page_set_bit(page, PG_##lname);				\
-+}
- 
- #define __CLEARPAGEFLAG(uname, lname, policy)				\
- static __always_inline							\
- void __folio_clear_##lname(struct folio *folio)				\
--{ __clear_bit(PG_##lname, folio_flags(folio, FOLIO_##policy)); }	\
-+{									\
-+	__clear_bit(PG_##lname, folio_flags(folio, FOLIO_##policy));	\
-+	dept_page_clear_bit(&folio->page, PG_##lname);			\
-+}									\
- static __always_inline void __ClearPage##uname(struct page *page)	\
--{ __clear_bit(PG_##lname, &policy(page, 1)->flags); }
-+{									\
-+	__clear_bit(PG_##lname, &policy(page, 1)->flags);		\
-+	dept_page_clear_bit(page, PG_##lname);				\
-+}
- 
- #define TESTSETFLAG(uname, lname, policy)				\
- static __always_inline							\
- bool folio_test_set_##lname(struct folio *folio)			\
--{ return test_and_set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy)); } \
-+{									\
-+	bool ret = test_and_set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy));\
-+	if (!ret)							\
-+		dept_page_set_bit(&folio->page, PG_##lname);		\
-+	return ret;							\
-+}									\
- static __always_inline int TestSetPage##uname(struct page *page)	\
--{ return test_and_set_bit(PG_##lname, &policy(page, 1)->flags); }
-+{									\
-+	bool ret = test_and_set_bit(PG_##lname, &policy(page, 1)->flags);\
-+	if (!ret)							\
-+		dept_page_set_bit(page, PG_##lname);			\
-+	return ret;							\
-+}
- 
- #define TESTCLEARFLAG(uname, lname, policy)				\
- static __always_inline							\
- bool folio_test_clear_##lname(struct folio *folio)			\
--{ return test_and_clear_bit(PG_##lname, folio_flags(folio, FOLIO_##policy)); } \
-+{									\
-+	bool ret = test_and_clear_bit(PG_##lname, folio_flags(folio, FOLIO_##policy));\
-+	if (ret)							\
-+		dept_page_clear_bit(&folio->page, PG_##lname);		\
-+	return ret;							\
-+}									\
- static __always_inline int TestClearPage##uname(struct page *page)	\
--{ return test_and_clear_bit(PG_##lname, &policy(page, 1)->flags); }
-+{									\
-+	bool ret = test_and_clear_bit(PG_##lname, &policy(page, 1)->flags);\
-+	if (ret)							\
-+		dept_page_clear_bit(page, PG_##lname);			\
-+	return ret;							\
-+}
- 
- #define PAGEFLAG(uname, lname, policy)					\
- 	TESTPAGEFLAG(uname, lname, policy)				\
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index a56308a9d1a4..a88e2430f415 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -915,7 +915,12 @@ void folio_unlock(struct folio *folio);
-  */
- static inline bool folio_trylock(struct folio *folio)
- {
--	return likely(!test_and_set_bit_lock(PG_locked, folio_flags(folio, 0)));
-+	bool ret = !test_and_set_bit_lock(PG_locked, folio_flags(folio, 0));
-+
-+	if (ret)
-+		dept_page_set_bit(&folio->page, PG_locked);
-+
-+	return likely(ret);
- }
- 
- /*
-diff --git a/mm/filemap.c b/mm/filemap.c
-index eed64dc88e43..f05208bb50dc 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1101,6 +1101,7 @@ static int wake_page_function(wait_queue_entry_t *wait, unsigned mode, int sync,
- 		if (flags & WQ_FLAG_CUSTOM) {
- 			if (test_and_set_bit(key->bit_nr, &key->folio->flags))
- 				return -1;
-+			dept_page_set_bit(&key->folio->page, key->bit_nr);
- 			flags |= WQ_FLAG_DONE;
- 		}
- 	}
-@@ -1210,6 +1211,7 @@ static inline bool folio_trylock_flag(struct folio *folio, int bit_nr,
- 	if (wait->flags & WQ_FLAG_EXCLUSIVE) {
- 		if (test_and_set_bit(bit_nr, &folio->flags))
- 			return false;
-+		dept_page_set_bit(&folio->page, bit_nr);
- 	} else if (test_bit(bit_nr, &folio->flags))
- 		return false;
- 
-@@ -1220,8 +1222,10 @@ static inline bool folio_trylock_flag(struct folio *folio, int bit_nr,
- /* How many times do we accept lock stealing from under a waiter? */
- int sysctl_page_lock_unfairness = 5;
- 
--static struct dept_map __maybe_unused PG_locked_map = DEPT_MAP_INITIALIZER(PG_locked_map, NULL);
--static struct dept_map __maybe_unused PG_writeback_map = DEPT_MAP_INITIALIZER(PG_writeback_map, NULL);
-+struct dept_map __maybe_unused PG_locked_map = DEPT_MAP_INITIALIZER(PG_locked_map, NULL);
-+struct dept_map __maybe_unused PG_writeback_map = DEPT_MAP_INITIALIZER(PG_writeback_map, NULL);
-+EXPORT_SYMBOL(PG_locked_map);
-+EXPORT_SYMBOL(PG_writeback_map);
- 
- static inline int folio_wait_bit_common(struct folio *folio, int bit_nr,
- 		int state, enum behavior behavior)
-@@ -1234,6 +1238,7 @@ static inline int folio_wait_bit_common(struct folio *folio, int bit_nr,
- 	unsigned long pflags;
- 	bool in_thrashing;
- 
-+	dept_page_wait_on_bit(&folio->page, bit_nr);
- 	if (bit_nr == PG_locked)
- 		sdt_might_sleep_start(&PG_locked_map);
- 	else if (bit_nr == PG_writeback)
-@@ -1331,6 +1336,7 @@ static inline int folio_wait_bit_common(struct folio *folio, int bit_nr,
- 		wait->flags |= WQ_FLAG_DONE;
- 		break;
- 	}
-+	dept_page_set_bit(&folio->page, bit_nr);
+diff --git a/include/linux/dept.h b/include/linux/dept.h
+index d9ca9dd50219..583e8fe2dd7b 100644
+--- a/include/linux/dept.h
++++ b/include/linux/dept.h
+@@ -336,9 +336,19 @@ struct dept_pool {
+ 	size_t				obj_sz;
  
  	/*
- 	 * If a signal happened, this 'finish_wait()' may remove the last
-@@ -1538,6 +1544,7 @@ void folio_unlock(struct folio *folio)
- 	BUILD_BUG_ON(PG_waiters != 7);
- 	BUILD_BUG_ON(PG_locked > 7);
- 	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
-+	dept_page_clear_bit(&folio->page, PG_locked);
- 	if (clear_bit_unlock_is_negative_byte(PG_locked, folio_flags(folio, 0)))
- 		folio_wake_bit(folio, PG_locked);
- }
-diff --git a/mm/mm_init.c b/mm/mm_init.c
-index 7f7f9c677854..a339f0cbe1b2 100644
---- a/mm/mm_init.c
-+++ b/mm/mm_init.c
-@@ -26,6 +26,7 @@
- #include <linux/pgtable.h>
- #include <linux/swap.h>
- #include <linux/cma.h>
-+#include <linux/dept.h>
- #include "internal.h"
- #include "slab.h"
- #include "shuffle.h"
-@@ -558,6 +559,8 @@ static void __meminit __init_single_page(struct page *page, unsigned long pfn,
- 	page_mapcount_reset(page);
- 	page_cpupid_reset_last(page);
- 	page_kasan_tag_reset(page);
-+	dept_ext_wgen_init(&page->PG_locked_wgen);
-+	dept_ext_wgen_init(&page->PG_writeback_wgen);
+-	 * the number of the static array
++	 * the remaining number of the object in spool
+ 	 */
+-	atomic_t			obj_nr;
++	int				obj_nr;
++
++	/*
++	 * the number of the object in spool
++	 */
++	int				tot_nr;
++
++	/*
++	 * accumulated amount of memory used by the object in byte
++	 */
++	atomic_t			acc_sz;
  
- 	INIT_LIST_HEAD(&page->lru);
- #ifdef WANT_PAGE_VIRTUAL
+ 	/*
+ 	 * offset of ->pool_node
+@@ -348,9 +358,10 @@ struct dept_pool {
+ 	/*
+ 	 * pointer to the pool
+ 	 */
+-	void				*spool;
++	void				*spool; /* static pool */
++	void				*rpool; /* reserved pool */
+ 	struct llist_head		boot_pool;
+-	struct llist_head __percpu	*lpool;
++	struct llist_head __percpu	*lpool; /* local pool */
+ };
+ 
+ struct dept_ecxt_held {
+diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+index 6cf17f206b78..8454f0a14d67 100644
+--- a/kernel/dependency/dept.c
++++ b/kernel/dependency/dept.c
+@@ -74,6 +74,9 @@
+ #include <linux/dept.h>
+ #include <linux/utsname.h>
+ #include <linux/kernel.h>
++#include <linux/workqueue.h>
++#include <linux/irq_work.h>
++#include <linux/vmalloc.h>
+ #include "dept_internal.h"
+ 
+ static int dept_stop;
+@@ -122,10 +125,12 @@ static int dept_per_cpu_ready;
+ 			WARN(1, "DEPT_STOP: " s);			\
+ 	})
+ 
+-#define DEPT_INFO_ONCE(s...) pr_warn_once("DEPT_INFO_ONCE: " s)
++#define DEPT_INFO_ONCE(s...)	pr_warn_once("DEPT_INFO_ONCE: " s)
++#define DEPT_INFO(s...)		pr_warn("DEPT_INFO: " s)
+ 
+ static arch_spinlock_t dept_spin = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
+ static arch_spinlock_t stage_spin = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
++static arch_spinlock_t dept_pool_spin = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
+ 
+ /*
+  * DEPT internal engine should be careful in using outside functions
+@@ -264,6 +269,7 @@ static inline bool valid_key(struct dept_key *k)
+ 
+ #define OBJECT(id, nr)							\
+ static struct dept_##id spool_##id[nr];					\
++static struct dept_##id rpool_##id[nr];					\
+ static DEFINE_PER_CPU(struct llist_head, lpool_##id);
+ 	#include "dept_object.h"
+ #undef  OBJECT
+@@ -272,14 +278,70 @@ struct dept_pool dept_pool[OBJECT_NR] = {
+ #define OBJECT(id, nr) {						\
+ 	.name = #id,							\
+ 	.obj_sz = sizeof(struct dept_##id),				\
+-	.obj_nr = ATOMIC_INIT(nr),					\
++	.obj_nr = nr,							\
++	.tot_nr = nr,							\
++	.acc_sz = ATOMIC_INIT(sizeof(spool_##id) + sizeof(rpool_##id)), \
+ 	.node_off = offsetof(struct dept_##id, pool_node),		\
+ 	.spool = spool_##id,						\
++	.rpool = rpool_##id,						\
+ 	.lpool = &lpool_##id, },
+ 	#include "dept_object.h"
+ #undef  OBJECT
+ };
+ 
++static void dept_wq_work_fn(struct work_struct *work)
++{
++	int i;
++
++	for (i = 0; i < OBJECT_NR; i++) {
++		struct dept_pool *p = dept_pool + i;
++		int sz = p->tot_nr * p->obj_sz;
++		void *rpool;
++		bool need;
++
++		arch_spin_lock(&dept_pool_spin);
++		need = !p->rpool;
++		arch_spin_unlock(&dept_pool_spin);
++
++		if (!need)
++			continue;
++
++		rpool = vmalloc(sz);
++
++		if (!rpool) {
++			DEPT_STOP("Failed to extend internal resources.\n");
++			break;
++		}
++
++		arch_spin_lock(&dept_pool_spin);
++		if (!p->rpool) {
++			p->rpool = rpool;
++			rpool = NULL;
++			atomic_add(sz, &p->acc_sz);
++		}
++		arch_spin_unlock(&dept_pool_spin);
++
++		if (rpool)
++			vfree(rpool);
++		else
++			DEPT_INFO("Dept object(%s) just got refilled successfully.\n", p->name);
++	}
++}
++
++static DECLARE_WORK(dept_wq_work, dept_wq_work_fn);
++
++static void dept_irq_work_fn(struct irq_work *w)
++{
++	schedule_work(&dept_wq_work);
++}
++
++static DEFINE_IRQ_WORK(dept_irq_work, dept_irq_work_fn);
++
++static void request_rpool_refill(void)
++{
++	irq_work_queue(&dept_irq_work);
++}
++
+ /*
+  * Can use llist no matter whether CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG is
+  * enabled or not because NMI and other contexts in the same CPU never
+@@ -315,19 +377,31 @@ static void *from_pool(enum object_t t)
+ 	/*
+ 	 * Try static pool.
+ 	 */
+-	if (atomic_read(&p->obj_nr) > 0) {
+-		int idx = atomic_dec_return(&p->obj_nr);
++	arch_spin_lock(&dept_pool_spin);
++
++	if (!p->obj_nr) {
++		p->spool = p->rpool;
++		p->obj_nr = p->rpool ? p->tot_nr : 0;
++		p->rpool = NULL;
++		request_rpool_refill();
++	}
++
++	if (p->obj_nr) {
++		void *ret;
++
++		p->obj_nr--;
++		ret = p->spool + (p->obj_nr * p->obj_sz);
++		arch_spin_unlock(&dept_pool_spin);
+ 
+-		if (idx >= 0)
+-			return p->spool + (idx * p->obj_sz);
++		return ret;
+ 	}
++	arch_spin_unlock(&dept_pool_spin);
+ 
+-	DEPT_INFO_ONCE("---------------------------------------------\n"
+-		"  Some of Dept internal resources are run out.\n"
+-		"  Dept might still work if the resources get freed.\n"
+-		"  However, the chances are Dept will suffer from\n"
+-		"  the lack from now. Needs to extend the internal\n"
+-		"  resource pools. Ask max.byungchul.park@gmail.com\n");
++	DEPT_INFO("------------------------------------------\n"
++		"  Dept object(%s) is run out.\n"
++		"  Dept is trying to refill the object.\n"
++		"  Nevertheless, if it fails, Dept will stop.\n",
++		p->name);
+ 	return NULL;
+ }
+ 
+@@ -3000,8 +3074,8 @@ void __init dept_init(void)
+ 	pr_info("... DEPT_MAX_ECXT_HELD  : %d\n", DEPT_MAX_ECXT_HELD);
+ 	pr_info("... DEPT_MAX_SUBCLASSES : %d\n", DEPT_MAX_SUBCLASSES);
+ #define OBJECT(id, nr)							\
+-	pr_info("... memory used by %s: %zu KB\n",			\
+-	       #id, B2KB(sizeof(struct dept_##id) * nr));
++	pr_info("... memory initially used by %s: %zu KB\n",		\
++	       #id, B2KB(sizeof(spool_##id) + sizeof(rpool_##id)));
+ 	#include "dept_object.h"
+ #undef  OBJECT
+ #define HASH(id, bits)							\
+@@ -3009,6 +3083,6 @@ void __init dept_init(void)
+ 	       #id, B2KB(sizeof(struct hlist_head) * (1 << (bits))));
+ 	#include "dept_hash.h"
+ #undef  HASH
+-	pr_info("... total memory used by objects and hashs: %zu KB\n", B2KB(mem_total));
++	pr_info("... total memory initially used by objects and hashs: %zu KB\n", B2KB(mem_total));
+ 	pr_info("... per task memory footprint: %zu bytes\n", sizeof(struct dept_task));
+ }
+diff --git a/kernel/dependency/dept_object.h b/kernel/dependency/dept_object.h
+index 0b7eb16fe9fb..4f936adfa8ee 100644
+--- a/kernel/dependency/dept_object.h
++++ b/kernel/dependency/dept_object.h
+@@ -6,8 +6,8 @@
+  * nr: # of the object that should be kept in the pool.
+  */
+ 
+-OBJECT(dep, 1024 * 8)
+-OBJECT(class, 1024 * 8)
+-OBJECT(stack, 1024 * 32)
+-OBJECT(ecxt, 1024 * 16)
+-OBJECT(wait, 1024 * 32)
++OBJECT(dep, 1024 * 4 * 2)
++OBJECT(class, 1024 * 4)
++OBJECT(stack, 1024 * 4 * 8)
++OBJECT(ecxt, 1024 * 4 * 2)
++OBJECT(wait, 1024 * 4 * 4)
+diff --git a/kernel/dependency/dept_proc.c b/kernel/dependency/dept_proc.c
+index 7d61dfbc5865..f07a512b203f 100644
+--- a/kernel/dependency/dept_proc.c
++++ b/kernel/dependency/dept_proc.c
+@@ -73,12 +73,10 @@ static int dept_stats_show(struct seq_file *m, void *v)
+ {
+ 	int r;
+ 
+-	seq_puts(m, "Availability in the static pools:\n\n");
++	seq_puts(m, "Accumulated amount of memory used by pools:\n\n");
+ #define OBJECT(id, nr)							\
+-	r = atomic_read(&dept_pool[OBJECT_##id].obj_nr);		\
+-	if (r < 0)							\
+-		r = 0;							\
+-	seq_printf(m, "%s\t%d/%d(%d%%)\n", #id, r, nr, (r * 100) / (nr));
++	r = atomic_read(&dept_pool[OBJECT_##id].acc_sz);		\
++	seq_printf(m, "%s\t%d KB\n", #id, r / 1024);
+ 	#include "dept_object.h"
+ #undef  OBJECT
+ 
 -- 
 2.17.1
 
