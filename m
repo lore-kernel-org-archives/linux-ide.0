@@ -2,160 +2,250 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EADC001DE
-	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F52AEB64DC
+	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 23:37:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230419AbjGCJu4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jul 2023 05:50:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50078 "EHLO
+        id S229870AbjGCXhp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 Jul 2023 19:37:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231217AbjGCJts (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:48 -0400
-Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8D0A01B6;
-        Mon,  3 Jul 2023 02:49:46 -0700 (PDT)
-X-AuditID: a67dfc5b-d85ff70000001748-46-64a299b2c9a4
-From:   Byungchul Park <byungchul@sk.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, peterz@infradead.org, will@kernel.org,
-        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
-        sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org,
-        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
-        viro@zeniv.linux.org.uk, jack@suse.cz, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
-        42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
-        gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
-        boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
-        her0gyugyu@gmail.com
-Subject: [PATCH v10 rebased on v6.4 07/25] dept: Apply sdt_might_sleep_{start,end}() to wait_for_completion()/complete()
-Date:   Mon,  3 Jul 2023 18:47:34 +0900
-Message-Id: <20230703094752.79269-8-byungchul@sk.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230703094752.79269-1-byungchul@sk.com>
-References: <20230703094752.79269-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxTH9zz33ufedlavlekzNdM1cRqM77CcLWqMX7zZZuJiSLaZTRt7
-        I90KmoJINSZVwBcEIkyovCktpuugm3KLEV/KOlQUVKjYICNALBEVoeLQory42WL8cvLL+Z/z
-        +/QXGO1lbrZgTE6Vzcl6k46oWXVoin2JUuwwLG+wrob8nOUQfnmEhbKzbgL+P6sRuGsPYOi/
-        vgHujwwiGL/TyoCt0I/AHuxmoLaxB4HXdZDAvYdTIRAeItBUeIxARuVZAncHJjB0FRVgqFY2
-        wq3jDgy+0ccs2PoJlNoycGQ8wTDqrOLBaV0Ava4SHiaCK6Cpp50Db+diKD7VReCKt4mFxrpe
-        DPculRHocf/Pwa3Gmyz483M5+OOZg8DAiJMBZ3iIhzZfBYZzmRHRoRf/cXAj14fh0JkaDIF/
-        LiOoP/IAg+JuJ3A1PIjBoxQyMPbbdQS9eSEesnJGeSg9kIfgWFYRC61vbnCQ2RUP46/LyLov
-        pauDQ4yU6dkjeUcqWKnZQaWLJd28lFnfyUsVym7J44qVKq/0Y8k+HOYkpeookZThAl7KDgWw
-        9KylhZdunhxnpYcBG9405wf1aoNsMqbJ5mVrt6kTB7whftdf09PL/dd4K6qdmo1UAhXjaN/9
-        Mfyea2s6uSgTcSHt6Bhlohwjzqee3EeRvVpgxMMfUtfzOyQazBDT6YtX9ZPMigtoccHQpEgj
-        xtOJdjf7TjqPVp/zTYpU4ue073UeirI2ctNV3EOiUir+qqI5Sjl59/Ax/dvVwR5Hmgr0QRXS
-        GpPTkvRGU9zSREuyMX3p9p1JCopUyrl/YksdGvZvbkCigHRTNB377AYtp09LsSQ1ICowuhhN
-        RvC0Qasx6C17ZfPOrebdJjmlAc0RWN0szcqRPQatuEOfKv8iy7tk8/sUC6rZVmR9Vcl+P/fn
-        57etv4ebz3xVnv5079MQu/LapzNbVPlt875wtl2ip/9NzRaWzbKM5cZ6dxTkL150wlVzovvr
-        LZ8ctGc13/3pRxRIWHP+5bSEb4LTP9qM7Kbz4meOygv2vpIinOCrW9/bGrf9u2kxahpvWXuy
-        dOuqi7ctG8psm771dAcLdTo2JVG/IpYxp+jfAl/A82VOAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0yTZxiG977fkW7Vz1rjt26JpBGNmgkmgk/mMpfsh++WbPGPJ/whjf20
-        DQdJqwjqErTonAoTNmRAUUApDVSoX2uCaJHAqBwiVGkQGkAhqGsAWYCCHHZoXfbnyZX7vnP9
-        enhKVcZoeGPaCcmUpkvRsgpa8f1Oy2dycaU+ru7XGMi/Ggeh2Us0WOsdLPjqahE43OcwBNt2
-        w/O5CQRLT3ooKCr0IagYGaLA7R1G4LGfZ6F3bAX4Q1MsdBReYcFyq56Fp+PLGAavF2Colb+D
-        rmuVGJoX3tBQFGShtMiCw+cPDAu2Gg5s2TEwai/hYHlkG3QM9zHQWtbBgCewBYpvDLLw0NNB
-        g7dhFENvo5WFYcc/DHR522nw5ecycOdtJQvjczYKbKEpDp41l2Nw5oRtF2f+ZuBxbjOGi7fv
-        YvAPPEDQdOklBtnRx0JraAKDSy6kYLG6DcFo3iQHF64ucFB6Lg/BlQvXaej56zEDOYPxsPTO
-        yn61k7ROTFEkx3WKeObKadJZKZL7JUMcyWkKcKRcPklc9s3k1sMgJhXTIYbINT+xRJ4u4Mjl
-        ST8mb7u7OdL+2xJNxvxFeM+niYov9FKKMUMyxX6ZpDCMeya59EerMst8v3PZyL3iMoriRWG7
-        6L4bYCLMChvF/v4FKsJqIVp05b4O5wqeEn78ULT/+YSNFKuFTHFmvuk900KMWFwwhSOsFOLF
-        5T4H/Z90nVjrbH4vihISxFfv8lCEVeHNYPEwew0pytEHNUhtTMtI1RlT4reakw1ZacbMrUeO
-        p8oo/DS2H5bzG9Bs7+4WJPBI+5Gy/0yFXsXoMsxZqS1I5CmtWmkZualXKfW6rNOS6fhh08kU
-        ydyCPuFp7Vrlt/ulJJVwTHdCSpakdMn0f4v5KE02cq7ZV/v1lslOxdL8ITFTLD1brQxqDq0M
-        zFbvjf4laZ2BCezN9388dFDj6bSquxMbY7vXnj86Lfvt3wxs2vXadiNhTzTxFgg7fJqzzjV9
-        L1421NVbFxuPVZVsiB1wz/fvMqyaWd36uanw3vY2NZ8tl/zsTV6//kB6leW22RVcTHJqabNB
-        t20zZTLr/gX+XJbcMAMAAA==
-X-CFilter-Loop: Reflected
+        with ESMTP id S229534AbjGCXho (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 19:37:44 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E26BA137
+        for <linux-ide@vger.kernel.org>; Mon,  3 Jul 2023 16:37:42 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 733066106C
+        for <linux-ide@vger.kernel.org>; Mon,  3 Jul 2023 23:37:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B561C433C8;
+        Mon,  3 Jul 2023 23:37:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1688427461;
+        bh=OYjs/NnqEeEmdG23Ikddj3qIi+RS1Kj2oIvFAGOhI0c=;
+        h=From:To:Cc:Subject:Date:From;
+        b=MO9LOQU0GwxwnSuO89EOUeNur2Lj0KYX3qVAhLQKUa9XU7sff19C7/ogWSIZvo4Wj
+         RlbMTkdCmxP6Pg3QmLA6y6Q5JyNdmmc80HdIGsK1J+i9Ogd/8HANJhag+zY8Ygqftx
+         IyK9Q2JICiJtsZSU+v7NXnhPVigADiNxLw+5p+J4VCqoi4mtyfDbMRMqgKbcgXg+mT
+         j322TZVIOgHIZLvTErF9Uhkl0S5vdnzApSfPbLiG0CIij7JatxfkwLl25k+EYgQZVs
+         taUaNnnvOrjwxEyt8UzfGAHzv6DAOTh6MgsLGIx4FaWryJp3NRjNjbcvzTjE23a6zl
+         l122Luciid8nQ==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
+Cc:     Ondrej Zary <linux@zary.sk>, Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: [PATCH] ata: pata_parport: Add mssing protocol modules description
+Date:   Tue,  4 Jul 2023 08:37:40 +0900
+Message-ID: <20230703233740.260401-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Makes Dept able to track dependencies by
-wait_for_completion()/complete().
+Most of the protocol modules for the pata_parport driver are missing a
+module description, causing warnings such as:
 
-Signed-off-by: Byungchul Park <byungchul@sk.com>
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/ata/pata_parport/aten.o
+
+when compiling with W=1. Add the missing MODULE_DESCRIPTION()
+definitions to avoid these warnings. While at it, also add the missing
+MODULE_AUTHOR() definitions.
+
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- include/linux/completion.h | 30 +++++++++++++++++++++++++-----
- 1 file changed, 25 insertions(+), 5 deletions(-)
+ drivers/ata/pata_parport/aten.c  | 2 ++
+ drivers/ata/pata_parport/bpck.c  | 2 ++
+ drivers/ata/pata_parport/bpck6.c | 3 ++-
+ drivers/ata/pata_parport/comm.c  | 2 ++
+ drivers/ata/pata_parport/dstr.c  | 2 ++
+ drivers/ata/pata_parport/epat.c  | 3 +++
+ drivers/ata/pata_parport/epia.c  | 3 +++
+ drivers/ata/pata_parport/fit2.c  | 3 +++
+ drivers/ata/pata_parport/fit3.c  | 3 +++
+ drivers/ata/pata_parport/friq.c  | 2 ++
+ drivers/ata/pata_parport/frpw.c  | 2 ++
+ drivers/ata/pata_parport/kbic.c  | 3 +++
+ drivers/ata/pata_parport/ktti.c  | 2 ++
+ drivers/ata/pata_parport/on20.c  | 2 ++
+ drivers/ata/pata_parport/on26.c  | 2 ++
+ 15 files changed, 35 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/completion.h b/include/linux/completion.h
-index 62b32b19e0a8..32d535abebf3 100644
---- a/include/linux/completion.h
-+++ b/include/linux/completion.h
-@@ -10,6 +10,7 @@
-  */
- 
- #include <linux/swait.h>
-+#include <linux/dept_sdt.h>
- 
- /*
-  * struct completion - structure used to maintain state for a "completion"
-@@ -26,14 +27,33 @@
- struct completion {
- 	unsigned int done;
- 	struct swait_queue_head wait;
-+	struct dept_map dmap;
+diff --git a/drivers/ata/pata_parport/aten.c b/drivers/ata/pata_parport/aten.c
+index 8328a49a95ef..620ce6c8da5c 100644
+--- a/drivers/ata/pata_parport/aten.c
++++ b/drivers/ata/pata_parport/aten.c
+@@ -139,4 +139,6 @@ static struct pi_protocol aten = {
  };
  
-+#define init_completion(x)				\
-+do {							\
-+	sdt_map_init(&(x)->dmap);			\
-+	__init_completion(x);				\
-+} while (0)
-+
-+/*
-+ * XXX: No use cases for now. Fill the body when needed.
-+ */
- #define init_completion_map(x, m) init_completion(x)
--static inline void complete_acquire(struct completion *x) {}
--static inline void complete_release(struct completion *x) {}
-+
-+static inline void complete_acquire(struct completion *x)
-+{
-+	sdt_might_sleep_start(&x->dmap);
-+}
-+
-+static inline void complete_release(struct completion *x)
-+{
-+	sdt_might_sleep_end();
-+}
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("ATEN EH-100 parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(aten);
+diff --git a/drivers/ata/pata_parport/bpck.c b/drivers/ata/pata_parport/bpck.c
+index 9f4309f9b57f..bba1eda65f36 100644
+--- a/drivers/ata/pata_parport/bpck.c
++++ b/drivers/ata/pata_parport/bpck.c
+@@ -502,4 +502,6 @@ static struct pi_protocol bpck = {
+ };
  
- #define COMPLETION_INITIALIZER(work) \
--	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
-+	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), \
-+	  .dmap = DEPT_MAP_INITIALIZER(work, NULL), }
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("MicroSolutions BACKPACK parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(bpck);
+diff --git a/drivers/ata/pata_parport/bpck6.c b/drivers/ata/pata_parport/bpck6.c
+index c6dbd14120d1..62c2b53325e1 100644
+--- a/drivers/ata/pata_parport/bpck6.c
++++ b/drivers/ata/pata_parport/bpck6.c
+@@ -459,5 +459,6 @@ static struct pi_protocol bpck6 = {
  
- #define COMPLETION_INITIALIZER_ONSTACK_MAP(work, map) \
- 	(*({ init_completion_map(&(work), &(map)); &(work); }))
-@@ -75,13 +95,13 @@ static inline void complete_release(struct completion *x) {}
- #endif
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Micro Solutions Inc.");
+-MODULE_DESCRIPTION("BACKPACK Protocol module, compatible with PARIDE");
++MODULE_DESCRIPTION("Micro Solutions BACKPACK parallel port IDE adapter "
++		   "(version 6 drives) protocol driver");
+ module_pata_parport_driver(bpck6);
+diff --git a/drivers/ata/pata_parport/comm.c b/drivers/ata/pata_parport/comm.c
+index cc5485bd0a5b..4839becbbd56 100644
+--- a/drivers/ata/pata_parport/comm.c
++++ b/drivers/ata/pata_parport/comm.c
+@@ -201,4 +201,6 @@ static struct pi_protocol comm = {
+ };
  
- /**
-- * init_completion - Initialize a dynamically allocated completion
-+ * __init_completion - Initialize a dynamically allocated completion
-  * @x:  pointer to completion structure that is to be initialized
-  *
-  * This inline function will initialize a dynamically created completion
-  * structure.
-  */
--static inline void init_completion(struct completion *x)
-+static inline void __init_completion(struct completion *x)
- {
- 	x->done = 0;
- 	init_swait_queue_head(&x->wait);
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("DataStor Commuter parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(comm);
+diff --git a/drivers/ata/pata_parport/dstr.c b/drivers/ata/pata_parport/dstr.c
+index 368d7c7962a9..88930bb1f07e 100644
+--- a/drivers/ata/pata_parport/dstr.c
++++ b/drivers/ata/pata_parport/dstr.c
+@@ -230,4 +230,6 @@ static struct pi_protocol dstr = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("DataStor EP2000 parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(dstr);
+diff --git a/drivers/ata/pata_parport/epat.c b/drivers/ata/pata_parport/epat.c
+index 016bd96bce89..3cb54fcbf0d0 100644
+--- a/drivers/ata/pata_parport/epat.c
++++ b/drivers/ata/pata_parport/epat.c
+@@ -358,5 +358,8 @@ static void __exit epat_exit(void)
+ }
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Shuttle Technologies EPAT parallel port IDE adapter "
++		   "protocol driver");
+ module_init(epat_init)
+ module_exit(epat_exit)
+diff --git a/drivers/ata/pata_parport/epia.c b/drivers/ata/pata_parport/epia.c
+index 920e9f40d401..7aaba474c671 100644
+--- a/drivers/ata/pata_parport/epia.c
++++ b/drivers/ata/pata_parport/epia.c
+@@ -306,4 +306,7 @@ static struct pi_protocol epia = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Shuttle Technologies EPIA parallel port IDE adapter "
++		   "protocol driver");
+ module_pata_parport_driver(epia);
+diff --git a/drivers/ata/pata_parport/fit2.c b/drivers/ata/pata_parport/fit2.c
+index 6524f3033b1e..de79cf91ad5f 100644
+--- a/drivers/ata/pata_parport/fit2.c
++++ b/drivers/ata/pata_parport/fit2.c
+@@ -132,4 +132,7 @@ static struct pi_protocol fit2 = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Fidelity International Technology parallel port IDE adapter"
++		   "(older models) protocol driver");
+ module_pata_parport_driver(fit2);
+diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
+index c172a38ae67d..bad7aa920cdc 100644
+--- a/drivers/ata/pata_parport/fit3.c
++++ b/drivers/ata/pata_parport/fit3.c
+@@ -193,4 +193,7 @@ static struct pi_protocol fit3 = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Fidelity International Technology parallel port IDE adapter"
++		   "(newer models) protocol driver");
+ module_pata_parport_driver(fit3);
+diff --git a/drivers/ata/pata_parport/friq.c b/drivers/ata/pata_parport/friq.c
+index dc428f54fe0c..7abe2ff40685 100644
+--- a/drivers/ata/pata_parport/friq.c
++++ b/drivers/ata/pata_parport/friq.c
+@@ -259,4 +259,6 @@ static struct pi_protocol friq = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Freecom IQ parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(friq);
+diff --git a/drivers/ata/pata_parport/frpw.c b/drivers/ata/pata_parport/frpw.c
+index 28d9bb2c6baf..7fa9b9857321 100644
+--- a/drivers/ata/pata_parport/frpw.c
++++ b/drivers/ata/pata_parport/frpw.c
+@@ -293,4 +293,6 @@ static struct pi_protocol frpw = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Freecom Power parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(frpw);
+diff --git a/drivers/ata/pata_parport/kbic.c b/drivers/ata/pata_parport/kbic.c
+index 6023e071516d..fca322627b82 100644
+--- a/drivers/ata/pata_parport/kbic.c
++++ b/drivers/ata/pata_parport/kbic.c
+@@ -301,5 +301,8 @@ static void __exit kbic_exit(void)
+ }
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("KingByte Information Systems KBIC-951A and KBIC-971A "
++		   "parallel port IDE adapter protocol driver");
+ module_init(kbic_init)
+ module_exit(kbic_exit)
+diff --git a/drivers/ata/pata_parport/ktti.c b/drivers/ata/pata_parport/ktti.c
+index bca6c20ef617..c078d1934862 100644
+--- a/drivers/ata/pata_parport/ktti.c
++++ b/drivers/ata/pata_parport/ktti.c
+@@ -106,4 +106,6 @@ static struct pi_protocol ktti = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("KT Technology parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(ktti);
+diff --git a/drivers/ata/pata_parport/on20.c b/drivers/ata/pata_parport/on20.c
+index 34e69da2bec8..7c70e5b13a2a 100644
+--- a/drivers/ata/pata_parport/on20.c
++++ b/drivers/ata/pata_parport/on20.c
+@@ -142,4 +142,6 @@ static struct pi_protocol on20 = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Onspec 90c20 parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(on20);
+diff --git a/drivers/ata/pata_parport/on26.c b/drivers/ata/pata_parport/on26.c
+index 5da317b394c1..c88e5d6f203e 100644
+--- a/drivers/ata/pata_parport/on26.c
++++ b/drivers/ata/pata_parport/on26.c
+@@ -310,4 +310,6 @@ static struct pi_protocol on26 = {
+ };
+ 
+ MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
++MODULE_DESCRIPTION("Onspec 90c26 parallel port IDE adapter protocol driver");
+ module_pata_parport_driver(on26);
 -- 
-2.17.1
+2.41.0
 
