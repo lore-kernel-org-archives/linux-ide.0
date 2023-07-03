@@ -2,201 +2,135 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E48E5EB64DC
-	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 529E0C0015E
+	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:49:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230397AbjGCJJT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jul 2023 05:09:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56322 "EHLO
+        id S230137AbjGCJtr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 Jul 2023 05:49:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230387AbjGCJJQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:09:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ADC21AA;
-        Mon,  3 Jul 2023 02:09:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5F40160E8B;
-        Mon,  3 Jul 2023 09:09:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 197C8C433C7;
-        Mon,  3 Jul 2023 09:09:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688375352;
-        bh=2sRwpF29lKch9gUGFa8Xo3m/1780odiTFeHlY6F3e5w=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=euOZ3FtkYVhTFBWJrw+SKaw8HbCJQoG95szohCEiWJ9i6rGUT//UFlcnvcg0BWYkA
-         TRXWKMsujDpj5q5+L7y1/h8SYQLCXusLFJjw/qK3jAvR6kcafZt6alJ2ty8etIzwA6
-         UtRsCJd9FTFwKVbR9mj2nqr6Ml+/ayCJTs9vOEJrBSmK1Iod4pjiZ/GyID5JvmeT1I
-         pqx7Qv++rn9W5aLm99jBnqTQ5rGp1RUXDssY89zM8Nz/n1yDjOZNfjZO/HGxD4F1E9
-         gzDza+ZyuzeuqCTmIdXlqYLn54i15byjN1dPI/KaksuZj+eyg32mzMTpaHYTJ83sqj
-         HTWdepogfb/pQ==
-Message-ID: <a0c5a05f-2836-08ec-8974-431e487fba3c@kernel.org>
-Date:   Mon, 3 Jul 2023 18:09:10 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH] ata: libata-scsi: fix bogus SCSI sense after abort
-Content-Language: en-US
-To:     Lorenz Brun <lorenz@brun.one>
-Cc:     Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230623181908.2032764-1-lorenz@brun.one>
- <1b44168a-195d-79bd-50cc-bc8baa0d8f16@kernel.org>
- <187b1b46-470c-8fe2-9969-051abf93199b@suse.de>
- <3373decb-56dc-2e18-5c3b-778f344bab4d@kernel.org>
- <ZY31XR.9LODJ0CBUU6X@brun.one>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZY31XR.9LODJ0CBUU6X@brun.one>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229709AbjGCJtq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:46 -0400
+Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 649B518D;
+        Mon,  3 Jul 2023 02:49:40 -0700 (PDT)
+X-AuditID: a67dfc5b-d85ff70000001748-e5-64a299b173bd
+From:   Byungchul Park <byungchul@sk.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, peterz@infradead.org, will@kernel.org,
+        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
+        sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, jack@suse.cz, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
+        42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
+        gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
+        boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
+        her0gyugyu@gmail.com
+Subject: [PATCH v10 rebased on v6.4 01/25] llist: Move llist_{head,node} definition to types.h
+Date:   Mon,  3 Jul 2023 18:47:28 +0900
+Message-Id: <20230703094752.79269-2-byungchul@sk.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230703094752.79269-1-byungchul@sk.com>
+References: <20230703094752.79269-1-byungchul@sk.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxiGec/He04rnSediWdinKvBLZqhLLo9Mc6YYeLrjzkN0R+QqJ09
+        kUZatCgCkwRWREVAIYEKIpSKtWlR8KCbAyGIEUFiqdowZkoHCJsoX0OLdiBKNf65cyX381y/
+        bp5WN7CLeL3xkGQyahM1WMkoR8OrvpZLbbrVLycUUJi3GgIvTzBQXluDwXPFhaDmWhYFw3c2
+        w59TIwim73fRYCn2IKjq76XhWpsfQZPjVwyPBj8Bb2AcQ0fxKQzmC7UYHjyfocBXUkSBS/4R
+        Os/YKGgJ/suAZRjDOYuZmounFATtTg7smZEw4CjjYKY/Gjr83Sw0PV4JpRU+DDebOhhouzFA
+        waOGcgz+mrcsdLa1M+ApzGfh8pgNw/MpOw32wDgHD1usFNRlz4lyXsyycDe/hYKc6qsUeP9q
+        RNB8oo8CuaYbw+3ACAX1cjEN/1+6g2CgYJSDY3lBDs5lFSA4dayEga43d1nI9q2F6dfleOM6
+        cntknCbZ9UdI05SVIfdsIvmjrJcj2c2POWKVD5N6xwpy4eYwRaomAyyRnScxkSeLOJI76qXI
+        mNvNkfaz0wwZ9FqobRFxyvU6KVGfIplWbdijTMh7+IQ9cF6ZOnQFMlEzn4sUvCisEZ91zTIf
+        2f7Ez4UYC1+KPT1BOsQLhKViff4/bC5S8rRwfJ7omLiPQ8Wnwi6x2uljQ8wIkeJIZ857Vglr
+        xcpgO/4g/Vx01bW8FymEb8Wh1wUoxOq5G1+pH4ekomBWiI5XFejDw2fiLUcPcwaprCjMidR6
+        Y4pBq09cE5WQZtSnRu1NMshoblH2jJn4G2jSE9uKBB5pwlU9v1Tp1Kw2JTnN0IpEntYsUJn7
+        K3VqlU6bli6ZknabDidKya0ogmc0C1XfTB3RqYV92kPSfkk6IJk+thSvWJSJzFuXfBHWvefV
+        06wle13blymtqVtjazW5TsvgaXtDmTu6z9U7+3PrdW9dxOjBq0xh386hhTsevIk1zM/4ziDE
+        xE9mbbx+sYCtbkzS/u3+KRD3n21T5PrFF6c3J7nTPVu+Ot4Y9cNveTJZrjoalhG+rNu9IYb7
+        /ft049Cm0t3Pdsbsz2/QMMkJ2ugVtClZ+w4jw7xDTQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0hTYRzGe99zznuOxxaHJXSooFhEYGRWGv8wJOhDx6KIIroQ6WqHNnIW
+        m5p2AWtm3slKTV3lJaaopW0F3RRRvCxpmYppraWWlXkLdebSLq7oy8MPnoffp4ejlGZmMaeL
+        ipYNUepIFeFpfleIac39vGJNYMnnAMhKDwT3ZDIN5qpKAm33KhBUPriAYbBxG7yeGkYw8+Il
+        BbnZbQiK+t5R8KDJhaCm7CKBjo8LoNM9RsCenUbAVFJF4NXQLAZnzlUMFdad0HqlGEOd5zMN
+        uYMECnJNeC6+YPBYylmwJKyE/rJ8Fmb71oHd1cVAw007AzVvVkPeLSeBZzV2Gpoe9WPoeGIm
+        4Kr8zUBrUwsNbVkZDNwdLSYwNGWhwOIeY6G9rhBDdeKcLWniFwPNGXUYku7cx9DZ8xRBbXIv
+        BmtlF4EG9zAGmzWbgh+ljQj6M0dYuJTuYaHgQiaCtEs5NLz82cxAojMYZqbNZEuI1DA8RkmJ
+        ttNSzVQhLT0vFqXH+e9YKbH2DSsVWmMkW5m/VPJsEEtF425GspanEMk6fpWVUkc6sTTqcLBS
+        y40ZWvrYmYt3Lz3Eb9bIkbpY2bA2NILXprd/YE7d5OMG7kECquVSkQ8nCkGi5YOL9TIRVond
+        3R7Ky37CctGW8YlJRTxHCZd9xbJvL4i3WCgcEe+UOxkv08JKcbg16S8rhGDxtqeF/JMuEyuq
+        6/6KfISN4sB0JvKycm7jzHORK4gvRPPKkZ8uKlav1kUGBxhPaOOjdHEBx07qrWjuM5bzs1mP
+        0GTHtnokcEg1X9F9tkijZNSxxnh9PRI5SuWnMPXd1igVGnX8GdlwMtwQEykb69ESjlYtUmzf
+        L0cohePqaPmELJ+SDf9bzPksTkB90Qv4tyNhSdrmLJIibz207HBBqWLTufGlVct7Nuzssc+M
+        Ps8fWu/4NbkiLZRvfMj76bcc2JEW/mUo8NNEjr9HuB42ookBfFQbZH6/uSks4sd3R0pQmH7S
+        kWEP+v1tT7rTpj1t0p7dXr3vScDANd/A61MTmw6GJn/tXejJV+81hqhoo1a9zp8yGNV/AArV
+        ij0vAwAA
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/30/23 04:11, Lorenz Brun wrote:
-> 
-> Am Mo, 26. Jun 2023 um 16:51:47 +09:00:00 schrieb Damien Le Moal 
-> <dlemoal@kernel.org>:
->> On 6/26/23 16:46, Hannes Reinecke wrote:
->>>  On 6/26/23 09:29, Damien Le Moal wrote:
->>>>  On 6/24/23 03:19, Lorenz Brun wrote:
->>>>>  Since commit 058e55e120ca which fixed that commands without valid
->>>>>  error/status codes did not result in any sense error, the 
->>>>> returned sense
->>>>>  errors were completely bogus as ata_to_sense_error did not have 
->>>>> valid
->>>>>  inputs in the first place.
->>>>>
->>>>>  For example the following ATA error
->>>>>
->>>>>  exception Emask 0x10 SAct 0x20c000 SErr 0x280100 action 0x6 frozen
->>>>>  irq_stat 0x08000000, interface fatal error
->>>>>  SError: { UnrecovData 10B8B BadCRC }
->>>>>  failed command: READ FPDMA QUEUED
->>>>>  cmd 60/e0:70:20:0a:00/00:00:00:00:00/40 tag 14 ncq dma 114688 in
->>>>>  res 40/00:ac:20:5e:50/00:00:5d:01:00/40 Emask 0x10 (ATA bus error)
->>>>>  status: { DRDY }
+llist_head and llist_node can be used by very primitives. For example,
+Dept for tracking dependency uses llist things in its header. To avoid
+header dependency, move those to types.h.
 
-If the command error field is non-zero, there should be a line printed here
-"error: { ... }". See the end of the function ata_eh_link_report(). Given that
-you do not seem to be getting this message, I assume it is 0. However, your
-status field only has ATA_DRDY set (0x40). With that, the function
-ata_to_sense_error() hits the second entry of stat_table, which is:
+Signed-off-by: Byungchul Park <byungchul@sk.com>
+---
+ include/linux/llist.h | 8 --------
+ include/linux/types.h | 8 ++++++++
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-{0x40,          ILLEGAL_REQUEST, 0x21, 0x04},
-// Device ready, unaligned write command
-
-(This table comments are extremely confusing and need cleanup)
-
-Hence the sense data error that you see. And if you check SAT section 11.6 (ATA
-Fixed error translation), you will see that this case is not defined in that
-table. In fact, only entry 4 is defined:
-
-{0x04,          RECOVERED_ERROR, 0x11, 0x00},
-// Recovered ECC error    Medium error, recovered
-
-The sense_table table cover the cases for the error field bits, separated from
-the status field bits, which is unlike what SAT defines. Not sure where these
-definitions come from, or if they are accumulated "black magic" from decades of
-dealing with weird ATA devices and adapters. Need to dig on that.
-
-[...]
-
->>>>  Did you check SATA IO specs and/or AHCI to see if that says 
->>>> anything about these
->>>>  ? And I wonder if we should check if we have something in 
->>>> tf->status and
->>>>  tf->error...
->>>>
->>>  We really should. The above combination of error masks seems pretty
->>>  arbitrary, as actually you do _not_ want to check for there error 
->>> mask,
->>>  but rather for the fact that the sense code is bogus.
->>>  So shouldn't we rather test for that one directly?
-> SCISI / ATA Translation (SAT)-5 has the following to say about it:
-> 
-> A SATL that detects a link reset sequence for a Serial ATA device or 
-> initiates any reset of an ATA device shall
-> establish a unit attention condition on behalf of the emulated logical 
-> unit corresponding to the ATA device with
-> the sense key set to UNIT ATTENTION and the additional sense code set 
-> to POWER ON, RESET, OR BUS
-> DEVICE RESET OCCURRED for the SCSI initiator port associated with each 
-> I_T nexus. The method a SATL
-> uses to detect a link reset sequence on the SATA link is vendor 
-> specific.
-> 
-> I am however not sufficiently familiar with SCSI and especially the 
-> SCSI midlayer in Linux to know how this Unit Attention causes the 
-> requests to be aborted.
-
-Yes, found that text as well. But my thiniking is that strictly speaking, the
-reset is not initiated by the translation code. It is libata-eh that decide that
-the bad CRC error you are getting is serious enough to warrant a reset. The
-point remain that for that command, the adpater returned an error field not
-having any of the ATA_ICRC | ATA_UNC | ATA_AMNF | ATA_IDNF | ATA_ABORTED bits
-set, and status field only having ATA_DRDY set. Which is weird. I would expect
-ATA_ICRC to be set in error and ATA_ERR to be set in status.
-
-> As a simpler fix I checked which err_maks cause a reset and in that 
-> case report this error. I'd be happier with the proper SAT-5 solution, 
-> but it looks like it would be quite a significant change.
-
-I have a setup that returns:
-
-[ 1531.680502] ata4: SError: { Proto TrStaTrns UnrecFIS }
-
-due to bad data transmission over the wire. But for these failures, I get:
-
-[ 1531.728008] ata4.00: status: { DRDY SENSE ERR }
-[ 1531.737741] ata4.00: error: { ICRC ABRT }
-
-Which gives me a hit on the sense_table entry:
-
-/* ICRC|ABRT */         /* NB: ICRC & !ABRT is BBD */
-{0x84,          ABORTED_COMMAND, 0x47, 0x00},
-
-SO an "internal target failure". Which makes more sense than the unaligned write
-error. Not sure why your setup is not more verbose with error and status. What
-adapter are you using ? AHCI ? If yes, which one ? (lspci)
-
-Need to dig further in SATA-IO to see if I can find more hints about how to
-handle this case.
-
-[...]
-
->> Need to check what SAT says about all this as well... Will do some 
->> spec reading.
->> The default sense code for when we cannot figure out proper sense 
->> based on
->> status and error is ABORTED COMMAND/0/0. That seems good enough to 
->> me. The issue
->> may be that we do not reach that default case when we have bogus 
->> status/error.
->> The test:
->>
->> 	if (qc->err_mask ||
->> 	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
->>
->> in ata_gen_ata_sense() is sketchy... Why is that qc->err_mask there ? 
->> It does
->> not seem needed at all. If removed, then we would fall back to 
->> aborted command
->> default.
->  From reading SAT-5 I think most of this function is bogus, but I don't 
-> know enough about the pieces involved to come up with the "correct" fix.
-
-I would not put it as "bogus". It is certainly hard to map this to the specs,
-but I suspect a lot of that is historical reason. Need to dig in git history,
-but most of this may actually predate git :)
-
-Let me dig further to see if I can come up with something. Can you reliably
-trigger these errors for testing any patch ?
-
+diff --git a/include/linux/llist.h b/include/linux/llist.h
+index 85bda2d02d65..99cc3c30f79c 100644
+--- a/include/linux/llist.h
++++ b/include/linux/llist.h
+@@ -53,14 +53,6 @@
+ #include <linux/stddef.h>
+ #include <linux/types.h>
+ 
+-struct llist_head {
+-	struct llist_node *first;
+-};
+-
+-struct llist_node {
+-	struct llist_node *next;
+-};
+-
+ #define LLIST_HEAD_INIT(name)	{ NULL }
+ #define LLIST_HEAD(name)	struct llist_head name = LLIST_HEAD_INIT(name)
+ 
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 688fb943556a..0ddb0d722b3d 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -193,6 +193,14 @@ struct hlist_node {
+ 	struct hlist_node *next, **pprev;
+ };
+ 
++struct llist_head {
++	struct llist_node *first;
++};
++
++struct llist_node {
++	struct llist_node *next;
++};
++
+ struct ustat {
+ 	__kernel_daddr_t	f_tfree;
+ #ifdef CONFIG_ARCH_32BIT_USTAT_F_TINODE
 -- 
-Damien Le Moal
-Western Digital Research
+2.17.1
 
