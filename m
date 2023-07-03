@@ -2,19 +2,19 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B22C0015E
-	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:50:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EADC001DE
+	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:50:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231219AbjGCJuw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jul 2023 05:50:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50128 "EHLO
+        id S230419AbjGCJu4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 Jul 2023 05:50:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231255AbjGCJtu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:50 -0400
-Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 369E8196;
-        Mon,  3 Jul 2023 02:49:47 -0700 (PDT)
-X-AuditID: a67dfc5b-d85ff70000001748-76-64a299b33678
+        with ESMTP id S231217AbjGCJts (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:48 -0400
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8D0A01B6;
+        Mon,  3 Jul 2023 02:49:46 -0700 (PDT)
+X-AuditID: a67dfc5b-d85ff70000001748-46-64a299b2c9a4
 From:   Byungchul Park <byungchul@sk.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
@@ -40,84 +40,122 @@ Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
         gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
         boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
         her0gyugyu@gmail.com
-Subject: [PATCH v10 rebased on v6.4 10/25] dept: Apply sdt_might_sleep_{start,end}() to waitqueue wait
-Date:   Mon,  3 Jul 2023 18:47:37 +0900
-Message-Id: <20230703094752.79269-11-byungchul@sk.com>
+Subject: [PATCH v10 rebased on v6.4 07/25] dept: Apply sdt_might_sleep_{start,end}() to wait_for_completion()/complete()
+Date:   Mon,  3 Jul 2023 18:47:34 +0900
+Message-Id: <20230703094752.79269-8-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230703094752.79269-1-byungchul@sk.com>
 References: <20230703094752.79269-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSXUxTZxjH977nnPecdnY5qWyc6cVME6NBUXS4PNnMsgsS35slRrzSRNfQ
-        M2kslLRSRMYE+RD5UkgAUVTaulKhDG3dRBCCEEDEDxCiXYOdZTrHpGJw7ewAJ0W9efLL/5//
-        7+oRGHUHt0LQpx+QTelag4YoWWVwmTXeU2/TJfz+UyxUlSdA6J8SFhraXARGfm5B4Lqcj2Gq
-        fxs8CE8jmLt9l4G6mhEE1sBDBi4P+BF0OY8QGHv8EYyHZggM1ZQRKLC3ERh9No9horYaQ4v7
-        Wxg+YcPQE3nKQt0UgdN1BXjx/IUh4mjmwZG3Giadp3iYD2yCIf99Drp866D+7ASBa11DLAy0
-        T2IY62gg4Hf9z8HwwA0WRqoqOGh9biPwLOxgwBGa4eFeTyOGi4WLouKXrzkYrOjBUHz+Eobx
-        3zoRdJc8wuB23SfQF5rG4HHXMPBfUz+CycogD0XlER5O51ciKCuqZeHuwiAHhRNbYO5VA/nm
-        S9o3PcPQQk8W7Qo3svSmTaJXTz3kaWG3j6eN7kzqccZR+7UpTK2zIY66m48R6p6t5mlpcBzT
-        53fu8PTGyTmWPh6vw9tX7lJu1ckGvUU2bfz6O2XqUGdOxgXFwe7jPpSHmvhSpBAkMVFq7e7D
-        73msLZ+JMhHXSF5vZIljxFWSp+JPrhQpBUY8+qHkfHGbRIvl4vfSrTNVbJRZcbV0vjq8JFKJ
-        X0hP/QPvpJ9JLRd7lkSKxfzJq0oUZbW4RZqo95OoVBKPK6RQ5A/u7eBT6brTy55Aqkb0QTNS
-        69MtaVq9IXFDana6/uCGFGOaGy1+lCN3fnc7mh1J7kWigDTLVN4cq07NaS3m7LReJAmMJkZV
-        EDinU6t02uxDssm415RpkM29aKXAamJVm8NZOrW4T3tA3i/LGbLpfYsFxYo8lNT/xMgdK0ke
-        /NHSkfDyX5+948Jw3tEaY9aqQVvkRdlXvvwjsVealr8uyw3uWxvgF3J2B6c/2frxA/fhzrmx
-        uKQfdmby69fabc2Rz63lM0KuYY9jNDkladS7Lm2H8aZFDtBfqxZ8ife8e//e8cvGItcjza5D
-        s0kKC7EX18YfNpl9Gtacqt0Ux5jM2jepiRhWTQMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0xTdxyG/f/PlUqXk4rxBMlkVeKim0IC+lPI1H3hhERnTIyZX6RZj9Jw
-        0bSCojGCrUyhgCViBUELmNJBBXYwjItljIZivRZoFElphKhIQFCkCINdqMu+vHnyvsnz6WUJ
-        RQUVzmoyToraDFWakpaRsn3x+m+lsmp19IuCBDAZoyEwe4mEikY7DZ6GegT2u7kYxnsS4fnc
-        JILFx08JMJd6EFSNDBNw1+VH4LBdoGHg1RfgDUzT4C4toEFf00hD38QSBt+1Egz10l54eKUa
-        Q9fCGAnmcRpumPV4Od5iWLDWMWDNiYJRWzkDSyMx4PY/o8BZ6abAMbQZym76aLjncJPgah3F
-        MNBeQYPf/g8FD133SfCYCim4M1VNw8SclQBrYJqB/i4LhibDsi3v498U9BZ2Yci7/SsG74sO
-        BJ2XXmKQ7M9ocAYmMTRLpQT8WduDYLToHQMXjQsM3MgtQlBw8RoJT//qpcDgi4PF+Qp6d7zg
-        nJwmBEPzKcExZyGFB9W80FY+zAiGziFGsEiZQrNtk1BzbxwLVTMBSpDqLtOCNFPCCPnvvFiY
-        evKEEe5fXySFV14z3h9xWJagFtM0WaJ263fJshR3x9kTv4Sc7iweQjmolslHISzPxfIDjblE
-        kGluIz84uPCZw7hIvrnwDZWPZCzB/bySt71/TAeHVdxR/lGliQwyyUXxt0vmcJDl3DZ+zO/C
-        /0nX8fVNXZ9FIcv96/kiFGQFF8f7yvz0FSSzoBV1KEyTkZWu0qTFbdGlpmRnaE5v+el4uoSW
-        P2M9t2RqRbMDid2IY5EyVD54tkqtoFRZuuz0bsSzhDJMrh+5pVbI1arsM6L2+BFtZpqo60Zr
-        WVK5Rp50SExWcMdUJ8VUUTwhav9fMRsSnoN+m2lIighb9fv2LPbB16Er+nr2loeu7/9yj/3H
-        pu+Hd5ijfbolV3FPa/KsZyo+taMtPOHCxC5T0vnR+V0tBrmldip0LHVnlTHR9j5pfW9TrDfy
-        g6P4mx/ObV5TVGCMdFb2n1rdrgmXth5wug9uUJbl61s+5Vzefd2YfpVoOXhV8dUfHiWpS1HF
-        bCK0OtW/ZFm/Ti8DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxTH9zz33ufedlavlekzNdM1cRqM77CcLWqMX7zZZuJiSLaZTRt7
+        I90KmoJINSZVwBcEIkyovCktpuugm3KLEV/KOlQUVKjYICNALBEVoeLQory42WL8cvLL+Z/z
+        +/QXGO1lbrZgTE6Vzcl6k46oWXVoin2JUuwwLG+wrob8nOUQfnmEhbKzbgL+P6sRuGsPYOi/
+        vgHujwwiGL/TyoCt0I/AHuxmoLaxB4HXdZDAvYdTIRAeItBUeIxARuVZAncHJjB0FRVgqFY2
+        wq3jDgy+0ccs2PoJlNoycGQ8wTDqrOLBaV0Ava4SHiaCK6Cpp50Db+diKD7VReCKt4mFxrpe
+        DPculRHocf/Pwa3Gmyz483M5+OOZg8DAiJMBZ3iIhzZfBYZzmRHRoRf/cXAj14fh0JkaDIF/
+        LiOoP/IAg+JuJ3A1PIjBoxQyMPbbdQS9eSEesnJGeSg9kIfgWFYRC61vbnCQ2RUP46/LyLov
+        pauDQ4yU6dkjeUcqWKnZQaWLJd28lFnfyUsVym7J44qVKq/0Y8k+HOYkpeookZThAl7KDgWw
+        9KylhZdunhxnpYcBG9405wf1aoNsMqbJ5mVrt6kTB7whftdf09PL/dd4K6qdmo1UAhXjaN/9
+        Mfyea2s6uSgTcSHt6Bhlohwjzqee3EeRvVpgxMMfUtfzOyQazBDT6YtX9ZPMigtoccHQpEgj
+        xtOJdjf7TjqPVp/zTYpU4ue073UeirI2ctNV3EOiUir+qqI5Sjl59/Ax/dvVwR5Hmgr0QRXS
+        GpPTkvRGU9zSREuyMX3p9p1JCopUyrl/YksdGvZvbkCigHRTNB377AYtp09LsSQ1ICowuhhN
+        RvC0Qasx6C17ZfPOrebdJjmlAc0RWN0szcqRPQatuEOfKv8iy7tk8/sUC6rZVmR9Vcl+P/fn
+        57etv4ebz3xVnv5079MQu/LapzNbVPlt875wtl2ip/9NzRaWzbKM5cZ6dxTkL150wlVzovvr
+        LZ8ctGc13/3pRxRIWHP+5bSEb4LTP9qM7Kbz4meOygv2vpIinOCrW9/bGrf9u2kxahpvWXuy
+        dOuqi7ctG8psm771dAcLdTo2JVG/IpYxp+jfAl/A82VOAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0yTZxiG977fkW7Vz1rjt26JpBGNmgkmgk/mMpfsh++WbPGPJ/whjf20
+        DQdJqwjqErTonAoTNmRAUUApDVSoX2uCaJHAqBwiVGkQGkAhqGsAWYCCHHZoXfbnyZX7vnP9
+        enhKVcZoeGPaCcmUpkvRsgpa8f1Oy2dycaU+ru7XGMi/Ggeh2Us0WOsdLPjqahE43OcwBNt2
+        w/O5CQRLT3ooKCr0IagYGaLA7R1G4LGfZ6F3bAX4Q1MsdBReYcFyq56Fp+PLGAavF2Colb+D
+        rmuVGJoX3tBQFGShtMiCw+cPDAu2Gg5s2TEwai/hYHlkG3QM9zHQWtbBgCewBYpvDLLw0NNB
+        g7dhFENvo5WFYcc/DHR522nw5ecycOdtJQvjczYKbKEpDp41l2Nw5oRtF2f+ZuBxbjOGi7fv
+        YvAPPEDQdOklBtnRx0JraAKDSy6kYLG6DcFo3iQHF64ucFB6Lg/BlQvXaej56zEDOYPxsPTO
+        yn61k7ROTFEkx3WKeObKadJZKZL7JUMcyWkKcKRcPklc9s3k1sMgJhXTIYbINT+xRJ4u4Mjl
+        ST8mb7u7OdL+2xJNxvxFeM+niYov9FKKMUMyxX6ZpDCMeya59EerMst8v3PZyL3iMoriRWG7
+        6L4bYCLMChvF/v4FKsJqIVp05b4O5wqeEn78ULT/+YSNFKuFTHFmvuk900KMWFwwhSOsFOLF
+        5T4H/Z90nVjrbH4vihISxFfv8lCEVeHNYPEwew0pytEHNUhtTMtI1RlT4reakw1ZacbMrUeO
+        p8oo/DS2H5bzG9Bs7+4WJPBI+5Gy/0yFXsXoMsxZqS1I5CmtWmkZualXKfW6rNOS6fhh08kU
+        ydyCPuFp7Vrlt/ulJJVwTHdCSpakdMn0f4v5KE02cq7ZV/v1lslOxdL8ITFTLD1brQxqDq0M
+        zFbvjf4laZ2BCezN9388dFDj6bSquxMbY7vXnj86Lfvt3wxs2vXadiNhTzTxFgg7fJqzzjV9
+        L1421NVbFxuPVZVsiB1wz/fvMqyaWd36uanw3vY2NZ8tl/zsTV6//kB6leW22RVcTHJqabNB
+        t20zZTLr/gX+XJbcMAMAAA==
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Makes Dept able to track dependencies by waitqueue waits.
+Makes Dept able to track dependencies by
+wait_for_completion()/complete().
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- include/linux/wait.h | 3 +++
- 1 file changed, 3 insertions(+)
+ include/linux/completion.h | 30 +++++++++++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/wait.h b/include/linux/wait.h
-index a0307b516b09..ff349e609da7 100644
---- a/include/linux/wait.h
-+++ b/include/linux/wait.h
-@@ -7,6 +7,7 @@
- #include <linux/list.h>
- #include <linux/stddef.h>
- #include <linux/spinlock.h>
+diff --git a/include/linux/completion.h b/include/linux/completion.h
+index 62b32b19e0a8..32d535abebf3 100644
+--- a/include/linux/completion.h
++++ b/include/linux/completion.h
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <linux/swait.h>
 +#include <linux/dept_sdt.h>
  
- #include <asm/current.h>
- #include <uapi/linux/wait.h>
-@@ -303,6 +304,7 @@ extern void init_wait_entry(struct wait_queue_entry *wq_entry, int flags);
- 	struct wait_queue_entry __wq_entry;					\
- 	long __ret = ret;	/* explicit shadow */				\
- 										\
-+	sdt_might_sleep_start(NULL);						\
- 	init_wait_entry(&__wq_entry, exclusive ? WQ_FLAG_EXCLUSIVE : 0);	\
- 	for (;;) {								\
- 		long __int = prepare_to_wait_event(&wq_head, &__wq_entry, state);\
-@@ -318,6 +320,7 @@ extern void init_wait_entry(struct wait_queue_entry *wq_entry, int flags);
- 		cmd;								\
- 	}									\
- 	finish_wait(&wq_head, &__wq_entry);					\
-+	sdt_might_sleep_end();							\
- __out:	__ret;									\
- })
+ /*
+  * struct completion - structure used to maintain state for a "completion"
+@@ -26,14 +27,33 @@
+ struct completion {
+ 	unsigned int done;
+ 	struct swait_queue_head wait;
++	struct dept_map dmap;
+ };
  
++#define init_completion(x)				\
++do {							\
++	sdt_map_init(&(x)->dmap);			\
++	__init_completion(x);				\
++} while (0)
++
++/*
++ * XXX: No use cases for now. Fill the body when needed.
++ */
+ #define init_completion_map(x, m) init_completion(x)
+-static inline void complete_acquire(struct completion *x) {}
+-static inline void complete_release(struct completion *x) {}
++
++static inline void complete_acquire(struct completion *x)
++{
++	sdt_might_sleep_start(&x->dmap);
++}
++
++static inline void complete_release(struct completion *x)
++{
++	sdt_might_sleep_end();
++}
+ 
+ #define COMPLETION_INITIALIZER(work) \
+-	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
++	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), \
++	  .dmap = DEPT_MAP_INITIALIZER(work, NULL), }
+ 
+ #define COMPLETION_INITIALIZER_ONSTACK_MAP(work, map) \
+ 	(*({ init_completion_map(&(work), &(map)); &(work); }))
+@@ -75,13 +95,13 @@ static inline void complete_release(struct completion *x) {}
+ #endif
+ 
+ /**
+- * init_completion - Initialize a dynamically allocated completion
++ * __init_completion - Initialize a dynamically allocated completion
+  * @x:  pointer to completion structure that is to be initialized
+  *
+  * This inline function will initialize a dynamically created completion
+  * structure.
+  */
+-static inline void init_completion(struct completion *x)
++static inline void __init_completion(struct completion *x)
+ {
+ 	x->done = 0;
+ 	init_swait_queue_head(&x->wait);
 -- 
 2.17.1
 
