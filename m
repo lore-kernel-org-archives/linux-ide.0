@@ -2,19 +2,19 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7126C04FE1
-	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:49:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA44C00528
+	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 09:49:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231260AbjGCJtv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jul 2023 05:49:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50072 "EHLO
+        id S231320AbjGCJtx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 Jul 2023 05:49:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231195AbjGCJtr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:47 -0400
-Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7E76C1B2;
-        Mon,  3 Jul 2023 02:49:40 -0700 (PDT)
-X-AuditID: a67dfc5b-d85ff70000001748-d9-64a299b1d587
+        with ESMTP id S231234AbjGCJtt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 05:49:49 -0400
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4A4E918D;
+        Mon,  3 Jul 2023 02:49:47 -0700 (PDT)
+X-AuditID: a67dfc5b-d85ff70000001748-66-64a299b232c5
 From:   Byungchul Park <byungchul@sk.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
@@ -40,319 +40,84 @@ Cc:     kernel_team@skhynix.com, torvalds@linux-foundation.org,
         gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
         boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
         her0gyugyu@gmail.com
-Subject: [PATCH v10 rebased on v6.4 00/25] DEPT(Dependency Tracker)
-Date:   Mon,  3 Jul 2023 18:47:27 +0900
-Message-Id: <20230703094752.79269-1-byungchul@sk.com>
+Subject: [PATCH v10 rebased on v6.4 09/25] dept: Apply sdt_might_sleep_{start,end}() to swait
+Date:   Mon,  3 Jul 2023 18:47:36 +0900
+Message-Id: <20230703094752.79269-10-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSe0iTexjH/f3eq6vF25LOW0HFQCKj0ih7ioig248gzMqCInK1l1xNjXlJ
-        OxaW09PxEmXpakrNKWup3TaDMlfL8t7FUnamqKVJJ9FpWRst7XS06J8vH/g8z/evL08pSpnZ
-        vCYuUdLFqbRKVkbLPFNLFtsum9WhOW4azueGgvfLGRqKb1Wy0HqzAkFl1SkMA3Wb4R/fEIKx
-        5y8pMBS0Iijp7aagqr4HgcN6moW2/mnQ7h1hoakgh4WM0lssvBocx9BVmI+hwrYVWs6ZMTj9
-        /9JgGGChyJCBJ+IDBr+lnANLejD0WY0cjPeGQVOPiwFH5yK4fKWLhRpHEw319/owtFUXs9BT
-        +YOBlvpGGlrP5zFwY9jMwqDPQoHFO8LBa6cJw239RFHW5/8YaMhzYsgqu4OhveMBgodn3mKw
-        VbpYeOIdwmC3FVDw7Vodgr6zHg4yc/0cFJ06iyAns5CGl98bGNB3rYCxr8XsutXkydAIRfT2
-        Y8ThM9Gk2SyS+8ZujugfdnLEZEsidmsIKa0ZwKRk1MsQW/nfLLGN5nMk29OOyfCLFxxpvDRG
-        k/52A942Z49sjVrSapIl3dK10bKYrIo6fLR6X4rpqx+no6GN2SiQF4XlovFRFfObXe983CSz
-        wgLR7fZTkxwkzBftee8nbmQ8Jfw1RbR+fM5OihnCevGN8cJPpoVg0Vmt/8lyYYXosmawv0rn
-        iRW3ndTksyh84cVPD4a5X2KW+Njqps+hKSYUUI4UmrjkWJVGu3xJTGqcJmXJwfhYG5qYjuXE
-        +N57aLR1Ry0SeKScKnf/WaJWMKrkhNTYWiTylDJIntF7Va2Qq1WpxyVd/H5dklZKqEVzeFr5
-        h3yZ75haIRxSJUpHJOmopPttMR84Ox0lPXV3XoxcWPs5bYZGfNW2K9R48m50AymYGxIcC/Ok
-        6OzTERHdG8febyoLf7rFXBjYkesYfGfvXbimY/pcT3PLqsRZ4a7xdc3bV0aOmA4HLc2cGblh
-        lSdqxyJt9U1/mON14YH6xk/SzpVl96NqnqW5v6XVbf8RYIjID0jpN4Rfj9odr6QTYlRhIZQu
-        QfU/cnbScjYDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSf0zMfxzHvd+fz+f9+XTfjo9kPvhuOG6MoazmNb5fsxm9Z/N7k9naOe4z
-        3VTsjkixuLv4RlbspB+4wrnVUe7a0A9OrZLWD0piidLQlOjb3Trl+1XMP889tsf2+OspMEEW
-        boagjzsoG+K0MSqiYBUbV5oW38nK14VYBudBxtkQ8A6dZiG3yEmg+XYhAmfJCQy91RHwwteH
-        YKShiYFMazOCvK7XDJTUdCKocJwk0NIzEVq9AwTqrGcImK4VEXj6aRRDx8XzGApdG6A+PR+D
-        x/+BhcxeAjmZJjw2HzH47QU82JPV0O3I5mG0KxTqOts4qLpcx0HFq0WQdaWDQHlFHQs197ox
-        tJTmEuh0/s9Bfc1jFpoz0ji49TmfwCefnQG7d4CHZx4bhmLzWC3l3/84qE3zYEi5fgdD68sy
-        BA9Ov8XgcrYRqPL2YXC7rAx8u1mNoPtcPw+Ws34eck6cQ3DGcpGFpu+1HJg7wmFkOJesXkmr
-        +gYYanYfphU+G0uf5Ev0fvZrnpofvOKpzXWIuh0L6bXyXkzzBr0cdRX8Q6hr8DxPU/tbMf3c
-        2MjTx5dGWNrTmok3/7lT8ZdOjtHHy4alq3YpolMKq/GB0qgjtmE/TkZ9a1NRgCCJYVLbOx8/
-        zkScL7W3+5lxDhZnS+6091wqUgiMeOoPyfGlgYyLKeIa6U32hZ/MimrJU2r+yUoxXGpzmMiv
-        6CypsNjDpCPBhiYUoGB9XHysVh8TvsS4LzohTn9kyZ79sS40dg77sdGMe2ioJaISiQJSBSrb
-        E/N0QZw23pgQW4kkgVEFK01dV3VBSp024ahs2K8xHIqRjZVopsCqpinXR8q7gsS92oPyPlk+
-        IBt+WywEzEhG7nTzjb+HNe2a0AXLv0yKiCzwB3gu5ExbFDa3AQVMT5xaNkwat876trY2cHv9
-        sas71kVpVleXlt9ctS1sTv/x2jL6cIWrZkoP6zv5sLvFavlapOr9QBOztkUliUWPkq0a4fkQ
-        TdqUFLLl2ZrvzmVNA2p1NL6bBIER9pKezepNk3erWGO0NnQhYzBqfwBW2XDWGAMAAA==
+In-Reply-To: <20230703094752.79269-1-byungchul@sk.com>
+References: <20230703094752.79269-1-byungchul@sk.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxTH9zz33udeOrvdFBMfX5KxRrNMFFHRnZhlMWbGuyxmxA0/aJat
+        896MZryYVqp1L0FeHCsvqTrsUKK0klqhTLg1EV/qGMwqI0DRqkiwCFGxArKwtRNhutbNLye/
+        /M85v5wPR2B057kFgjFvl2LKM+ToiYbVTMxxLvfVuOT09q7X4UBFOkT/KmOh9rSXQPDnRgTe
+        M/swRC5vgluxcQQz3b0MOKqDCJzDdxg4Ewgj8HuKCFy/9xqEopMEOqvLCRSfOE2gb2wWw+Dh
+        gxga1c3QZXdhaJseZcERIXDUUYzj5SGGaXcDD+7CJTDiOcLD7PBK6Azf5MA/kAo1xwYJXPR3
+        shBoHcFw/XwtgbD3OQddgassBA9UctD02EVgLOZmwB2d5OFaWx2G5pK4aP+fzzi4UtmGYX99
+        C4bQ7QsILpXdxaB6bxLoiI5j8KnVDDw9eRnBSNUED6UV0zwc3VeFoLz0MAu9/1zhoGRwDcw8
+        qSXr10kd45OMVOLbLfljdaz0u4tK547c4aWSSwO8VKcWSD7PUunExQiWnFNRTlIbfiCSOnWQ
+        l2wTISw97unhpas/zbDSvZADZy7cpnlXVnKMFsW04r3PNdk9FUF+Z0DYc9Y/wBWiXmJDSQIV
+        M6i91cu85AZbB5tgIr5F+/unX+RzxRTqq3zA2ZBGYMTvX6WeP7rjy4KQLH5KH45sTcyw4hL6
+        KHwXJ1grrqUD9nr2P+cbtLG57YUnKZ7ff1KFEqwT19DBmjBJOKl4KIkW20P/HzSf/urpZ+1I
+        W4deaUA6Y54l12DMyUjLtuYZ96TtyM9VUfyj3N/Obm9FU8GP25EoIP0cbf/XTlnHGSxma247
+        ogKjn6stHj4u67SywbpXMeV/ZirIUcztaKHA6udpV8V2yzrxS8Mu5StF2amYXnaxkLSgEH3U
+        /M7JrExt5EP/aDTVsb1oRYu/QM5IWVSkdm+0Wk6lfVeWu3bLN11ZT1c3oRa6LnmZ5f3I0NbM
+        t/veTP0ReT5omb1hTNm8+G9YNFTfTYOPbJs+canPanqUZcSeXx74pQ/ONqY3LY7Jkd/GXFmZ
+        G7Kc1lHiNJd+sX4o+TbodbKeNWcbVi5lTGbDv3+aBwVNAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSbUxTZxTHfZ5773Mv1bqbjsiNGueaGRPcnCSwnKgxxky5LG76wYExMdqs
+        N9AJhbTIRMMCFhny0hQT7JCqpWW1od3Q1mXqrCBMtBgpGy9Cg400voCALGiJCFpbl305+eV/
+        zv/36XCUwsIs5zTaQkmnVeUqiYyWfbPJ8JmnwabecD+QCnU1GyDyspIGS6ubQO9vLgTuy2UY
+        xm+lw/3ZSQTz9wIUmOt7ETSNPqDgclcIgc95nEDfo6XQH5km4K+vJmCwtxL4e2IBw8jpUxhc
+        nq/hrsmGoX3uKQ3mcQKNZgOOjTEMc44WFhylayDsPMPCwmgK+EODDHSe9TPgC66DhnMjBK77
+        /DR0XQlj6LtmIRByRxm423WHht66WgZ+fW4jMDHroMARmWbhn3YrhovlMVvFi7cM3K5tx1DR
+        fAlD//CfCG5UPsTgcQ8S6IxMYvB66il4feEWgrBxioUTNXMsNJYZEVSfOE1D4M1tBspH0mD+
+        lYVs3SR2Tk5TYrn3B9E3a6XFbpsgXj3zgBXLbwRZ0eo5LHqdyaL9+jgWm2YijOhpOUlEz8wp
+        Vqya6sfi854eVrzz8zwtPuo3490r98k2q6VcTZGk+3zLQVlOT00vW9DFHfnDF2RKUYBUoQRO
+        4FOFlqpOOs6EXysMDc1RcU7kVwve2idMFZJxFP/TYsH5771YgeM+5PcLY+HM+A3NrxGehR7i
+        OMv5L4SgqZn+z/mR4LrY/t6TEMsfvzKiOCv4NGGkIURMSGZFi1pQokZblKfS5Kat1x/KKdZq
+        jqz/Lj/Pg2I/4yhZqLuCXvaldyCeQ8ol8qFjTWoFoyrSF+d1IIGjlIlyw+h5tUKuVhUflXT5
+        B3SHcyV9B1rB0cok+VdZ0kEFn60qlA5JUoGk+3+LuYTlpQimo5+69mW9iJa0qV8vk4dMO/dy
+        F56SHSklA9lfRjO+7zak+5K6Vw/8ldmYOqXcvuPmMu8H1ZWM10DP7zk7GG0umPlk47Nw6Nsh
+        i32sOMuabyr7fSK4WftLZtJOPzTBHlcgI4M3Ok2uHz9uk++yG23D9ifGmwMVeqt5caV71TYl
+        rc9RpSRTOr3qHWmXBMkvAwAA
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From now on, I can work on LKML again! I'm wondering if DEPT has been
-helping kernel debugging well even though it's a form of patches yet.
+Makes Dept able to track dependencies by swaits.
 
-I'm happy to see that DEPT reports a real problem in practice. See:
-
-   https://lore.kernel.org/lkml/6383cde5-cf4b-facf-6e07-1378a485657d@I-love.SAKURA.ne.jp/#t
-   https://lore.kernel.org/lkml/1674268856-31807-1-git-send-email-byungchul.park@lge.com/
-
-Nevertheless, I apologize for the lack of document. I promise to add it
-before it gets needed to use DEPT's APIs by users. For now, you can use
-DEPT just with CONFIG_DEPT on.
-
+Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
+ include/linux/swait.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Hi Linus and folks,
-
-I've been developing a tool for detecting deadlock possibilities by
-tracking wait/event rather than lock(?) acquisition order to try to
-cover all synchonization machanisms. It's done on v6.4, the latest.
-
-Benifit:
-
-	0. Works with all lock primitives.
-	1. Works with wait_for_completion()/complete().
-	2. Works with 'wait' on PG_locked.
-	3. Works with 'wait' on PG_writeback.
-	4. Works with swait/wakeup.
-	5. Works with waitqueue.
-	6. Works with wait_bit.
-	7. Multiple reports are allowed.
-	8. Deduplication control on multiple reports.
-	9. Withstand false positives thanks to 6.
-	10. Easy to tag any wait/event.
-
-Future work:
-
-	0. To make it more stable.
-	1. To separates Dept from Lockdep.
-	2. To improves performance in terms of time and space.
-	3. To use Dept as a dependency engine for Lockdep.
-	4. To add any missing tags of wait/event in the kernel.
-	5. To deduplicate stack trace.
-
-How to interpret reports:
-
-	1. E(event) in each context cannot be triggered because of the
-	   W(wait) that cannot be woken.
-	2. The stack trace helping find the problematic code is located
-	   in each conext's detail.
-
-Thanks,
-Byungchul
-
----
-
-Changes from v9:
-
-	1. Fix a bug. SDT tracking didn't work well because of my big
-	   mistake that I should've used waiter's map to indentify its
-	   class but it had been working with waker's one. FYI,
-	   PG_locked and PG_writeback weren't affected. They still
-	   worked well. (reported by YoungJun)
-	
-Changes from v8:
-
-	1. Fix build error by adding EXPORT_SYMBOL(PG_locked_map) and
-	   EXPORT_SYMBOL(PG_writeback_map) for kernel module build -
-	   appologize for that. (reported by kernel test robot)
-	2. Fix build error by removing header file's circular dependency
-	   that was caused by "atomic.h", "kernel.h" and "irqflags.h",
-	   which I introduced - appolgize for that. (reported by kernel
-	   test robot)
-
-Changes from v7:
-
-	1. Fix a bug that cannot track rwlock dependency properly,
-	   introduced in v7. (reported by Boqun and lockdep selftest)
-	2. Track wait/event of PG_{locked,writeback} more aggressively
-	   assuming that when a bit of PG_{locked,writeback} is cleared
-	   there might be waits on the bit. (reported by Linus, Hillf
-	   and syzbot)
-	3. Fix and clean bad style code e.i. unnecessarily introduced
-	   a randome pattern and so on. (pointed out by Linux)
-	4. Clean code for applying DEPT to wait_for_completion().
-
-Changes from v6:
-
-	1. Tie to task scheduler code to track sleep and try_to_wake_up()
-	   assuming sleeps cause waits, try_to_wake_up()s would be the
-	   events that those are waiting for, of course with proper DEPT
-	   annotations, sdt_might_sleep_weak(), sdt_might_sleep_strong()
-	   and so on. For these cases, class is classified at sleep
-	   entrance rather than the synchronization initialization code.
-	   Which would extremely reduce false alarms.
-	2. Remove the DEPT associated instance in each page struct for
-	   tracking dependencies by PG_locked and PG_writeback thanks to
-	   the 1. work above.
-	3. Introduce CONFIG_DEPT_AGGRESIVE_TIMEOUT_WAIT to suppress
-	   reports that waits with timeout set are involved, for those
-	   who don't like verbose reporting.
-	4. Add a mechanism to refill the internal memory pools on
-	   running out so that DEPT could keep working as long as free
-	   memory is available in the system.
-	5. Re-enable tracking hashed-waitqueue wait. That's going to no
-	   longer generate false positives because class is classified
-	   at sleep entrance rather than the waitqueue initailization.
-	6. Refactor to make it easier to port onto each new version of
-	   the kernel.
-	7. Apply DEPT to dma fence.
-	8. Do trivial optimizaitions.
-
-Changes from v5:
-
-	1. Use just pr_warn_once() rather than WARN_ONCE() on the lack
-	   of internal resources because WARN_*() printing stacktrace is
-	   too much for informing the lack. (feedback from Ted, Hyeonggon)
-	2. Fix trivial bugs like missing initializing a struct before
-	   using it.
-	3. Assign a different class per task when handling onstack
-	   variables for waitqueue or the like. Which makes Dept
-	   distinguish between onstack variables of different tasks so
-	   as to prevent false positives. (reported by Hyeonggon)
-	4. Make Dept aware of even raw_local_irq_*() to prevent false
-	   positives. (reported by Hyeonggon)
-	5. Don't consider dependencies between the events that might be
-	   triggered within __schedule() and the waits that requires
-	    __schedule(), real ones. (reported by Hyeonggon)
-	6. Unstage the staged wait that has prepare_to_wait_event()'ed
-	   *and* yet to get to __schedule(), if we encounter __schedule()
-	   in-between for another sleep, which is possible if e.g. a
-	   mutex_lock() exists in 'condition' of ___wait_event().
-	7. Turn on CONFIG_PROVE_LOCKING when CONFIG_DEPT is on, to rely
-	   on the hardirq and softirq entrance tracing to make Dept more
-	   portable for now.
-
-Changes from v4:
-
-	1. Fix some bugs that produce false alarms.
-	2. Distinguish each syscall context from another *for arm64*.
-	3. Make it not warn it but just print it in case Dept ring
-	   buffer gets exhausted. (feedback from Hyeonggon)
-	4. Explicitely describe "EXPERIMENTAL" and "Dept might produce
-	   false positive reports" in Kconfig. (feedback from Ted)
-
-Changes from v3:
-
-	1. Dept shouldn't create dependencies between different depths
-	   of a class that were indicated by *_lock_nested(). Dept
-	   normally doesn't but it does once another lock class comes
-	   in. So fixed it. (feedback from Hyeonggon)
-	2. Dept considered a wait as a real wait once getting to
-	   __schedule() even if it has been set to TASK_RUNNING by wake
-	   up sources in advance. Fixed it so that Dept doesn't consider
-	   the case as a real wait. (feedback from Jan Kara)
-	3. Stop tracking dependencies with a map once the event
-	   associated with the map has been handled. Dept will start to
-	   work with the map again, on the next sleep.
-
-Changes from v2:
-
-	1. Disable Dept on bit_wait_table[] in sched/wait_bit.c
-	   reporting a lot of false positives, which is my fault.
-	   Wait/event for bit_wait_table[] should've been tagged in a
-	   higher layer for better work, which is a future work.
-	   (feedback from Jan Kara)
-	2. Disable Dept on crypto_larval's completion to prevent a false
-	   positive.
-
-Changes from v1:
-
-	1. Fix coding style and typo. (feedback from Steven)
-	2. Distinguish each work context from another in workqueue.
-	3. Skip checking lock acquisition with nest_lock, which is about
-	   correct lock usage that should be checked by Lockdep.
-
-Changes from RFC(v0):
-
-	1. Prevent adding a wait tag at prepare_to_wait() but __schedule().
-	   (feedback from Linus and Matthew)
-	2. Use try version at lockdep_acquire_cpus_lock() annotation.
-	3. Distinguish each syscall context from another.
-
-Byungchul Park (25):
-  llist: Move llist_{head,node} definition to types.h
-  dept: Implement Dept(Dependency Tracker)
-  dept: Add single event dependency tracker APIs
-  dept: Add lock dependency tracker APIs
-  dept: Tie to Lockdep and IRQ tracing
-  dept: Add proc knobs to show stats and dependency graph
-  dept: Apply sdt_might_sleep_{start,end}() to
-    wait_for_completion()/complete()
-  dept: Apply sdt_might_sleep_{start,end}() to PG_{locked,writeback}
-    wait
-  dept: Apply sdt_might_sleep_{start,end}() to swait
-  dept: Apply sdt_might_sleep_{start,end}() to waitqueue wait
-  dept: Apply sdt_might_sleep_{start,end}() to hashed-waitqueue wait
-  dept: Distinguish each syscall context from another
-  dept: Distinguish each work from another
-  dept: Add a mechanism to refill the internal memory pools on running
-    out
-  locking/lockdep, cpu/hotplus: Use a weaker annotation in AP thread
-  dept: Apply sdt_might_sleep_{start,end}() to dma fence wait
-  dept: Track timeout waits separately with a new Kconfig
-  dept: Apply timeout consideration to wait_for_completion()/complete()
-  dept: Apply timeout consideration to swait
-  dept: Apply timeout consideration to waitqueue wait
-  dept: Apply timeout consideration to hashed-waitqueue wait
-  dept: Apply timeout consideration to dma fence wait
-  dept: Record the latest one out of consecutive waits of the same class
-  dept: Make Dept able to work with an external wgen
-  dept: Track the potential waits of PG_{locked,writeback}
-
- arch/arm64/kernel/syscall.c         |    2 +
- arch/x86/entry/common.c             |    4 +
- drivers/dma-buf/dma-fence.c         |    5 +
- include/linux/completion.h          |   30 +-
- include/linux/dept.h                |  614 ++++++
- include/linux/dept_ldt.h            |   77 +
- include/linux/dept_sdt.h            |   66 +
- include/linux/hardirq.h             |    3 +
- include/linux/irqflags.h            |   22 +-
- include/linux/llist.h               |    8 -
- include/linux/local_lock_internal.h |    1 +
- include/linux/lockdep.h             |  102 +-
- include/linux/lockdep_types.h       |    3 +
- include/linux/mm_types.h            |    3 +
- include/linux/mutex.h               |    1 +
- include/linux/page-flags.h          |  112 +-
- include/linux/pagemap.h             |    7 +-
- include/linux/percpu-rwsem.h        |    2 +-
- include/linux/rtmutex.h             |    1 +
- include/linux/rwlock_types.h        |    1 +
- include/linux/rwsem.h               |    1 +
- include/linux/sched.h               |    3 +
- include/linux/seqlock.h             |    2 +-
- include/linux/spinlock_types_raw.h  |    3 +
- include/linux/srcu.h                |    2 +-
- include/linux/swait.h               |    3 +
- include/linux/types.h               |    8 +
- include/linux/wait.h                |    3 +
- include/linux/wait_bit.h            |    3 +
- init/init_task.c                    |    2 +
- init/main.c                         |    2 +
- kernel/Makefile                     |    1 +
- kernel/cpu.c                        |    2 +-
- kernel/dependency/Makefile          |    4 +
- kernel/dependency/dept.c            | 3167 +++++++++++++++++++++++++++
- kernel/dependency/dept_hash.h       |   10 +
- kernel/dependency/dept_internal.h   |   26 +
- kernel/dependency/dept_object.h     |   13 +
- kernel/dependency/dept_proc.c       |   93 +
- kernel/exit.c                       |    1 +
- kernel/fork.c                       |    2 +
- kernel/locking/lockdep.c            |   23 +
- kernel/module/main.c                |    4 +
- kernel/sched/completion.c           |    2 +-
- kernel/sched/core.c                 |    9 +
- kernel/workqueue.c                  |    3 +
- lib/Kconfig.debug                   |   37 +
- lib/locking-selftest.c              |    2 +
- mm/filemap.c                        |   18 +
- mm/mm_init.c                        |    3 +
- 50 files changed, 4461 insertions(+), 55 deletions(-)
- create mode 100644 include/linux/dept.h
- create mode 100644 include/linux/dept_ldt.h
- create mode 100644 include/linux/dept_sdt.h
- create mode 100644 kernel/dependency/Makefile
- create mode 100644 kernel/dependency/dept.c
- create mode 100644 kernel/dependency/dept_hash.h
- create mode 100644 kernel/dependency/dept_internal.h
- create mode 100644 kernel/dependency/dept_object.h
- create mode 100644 kernel/dependency/dept_proc.c
-
+diff --git a/include/linux/swait.h b/include/linux/swait.h
+index 6a8c22b8c2a5..02848211cef5 100644
+--- a/include/linux/swait.h
++++ b/include/linux/swait.h
+@@ -6,6 +6,7 @@
+ #include <linux/stddef.h>
+ #include <linux/spinlock.h>
+ #include <linux/wait.h>
++#include <linux/dept_sdt.h>
+ #include <asm/current.h>
+ 
+ /*
+@@ -161,6 +162,7 @@ extern void finish_swait(struct swait_queue_head *q, struct swait_queue *wait);
+ 	struct swait_queue __wait;					\
+ 	long __ret = ret;						\
+ 									\
++	sdt_might_sleep_start(NULL);					\
+ 	INIT_LIST_HEAD(&__wait.task_list);				\
+ 	for (;;) {							\
+ 		long __int = prepare_to_swait_event(&wq, &__wait, state);\
+@@ -176,6 +178,7 @@ extern void finish_swait(struct swait_queue_head *q, struct swait_queue *wait);
+ 		cmd;							\
+ 	}								\
+ 	finish_swait(&wq, &__wait);					\
++	sdt_might_sleep_end();						\
+ __out:	__ret;								\
+ })
+ 
 -- 
 2.17.1
 
