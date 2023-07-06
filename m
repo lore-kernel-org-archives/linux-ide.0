@@ -2,250 +2,131 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F52AEB64DC
-	for <linux-ide@archiver.kernel.org>; Mon,  3 Jul 2023 23:37:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 956F6EB64D9
+	for <linux-ide@archiver.kernel.org>; Thu,  6 Jul 2023 12:42:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229870AbjGCXhp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jul 2023 19:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52596 "EHLO
+        id S230466AbjGFMm6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 6 Jul 2023 08:42:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbjGCXho (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jul 2023 19:37:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E26BA137
-        for <linux-ide@vger.kernel.org>; Mon,  3 Jul 2023 16:37:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 733066106C
-        for <linux-ide@vger.kernel.org>; Mon,  3 Jul 2023 23:37:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B561C433C8;
-        Mon,  3 Jul 2023 23:37:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688427461;
-        bh=OYjs/NnqEeEmdG23Ikddj3qIi+RS1Kj2oIvFAGOhI0c=;
-        h=From:To:Cc:Subject:Date:From;
-        b=MO9LOQU0GwxwnSuO89EOUeNur2Lj0KYX3qVAhLQKUa9XU7sff19C7/ogWSIZvo4Wj
-         RlbMTkdCmxP6Pg3QmLA6y6Q5JyNdmmc80HdIGsK1J+i9Ogd/8HANJhag+zY8Ygqftx
-         IyK9Q2JICiJtsZSU+v7NXnhPVigADiNxLw+5p+J4VCqoi4mtyfDbMRMqgKbcgXg+mT
-         j322TZVIOgHIZLvTErF9Uhkl0S5vdnzApSfPbLiG0CIij7JatxfkwLl25k+EYgQZVs
-         taUaNnnvOrjwxEyt8UzfGAHzv6DAOTh6MgsLGIx4FaWryJp3NRjNjbcvzTjE23a6zl
-         l122Luciid8nQ==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
-Cc:     Ondrej Zary <linux@zary.sk>, Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH] ata: pata_parport: Add mssing protocol modules description
-Date:   Tue,  4 Jul 2023 08:37:40 +0900
-Message-ID: <20230703233740.260401-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-MIME-Version: 1.0
+        with ESMTP id S229787AbjGFMm5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jul 2023 08:42:57 -0400
+Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sgaapc01on2072b.outbound.protection.outlook.com [IPv6:2a01:111:f400:feab::72b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F220171A;
+        Thu,  6 Jul 2023 05:42:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fNhQfbZ90K9gaNnB44lCVEWysEe6bgKKoRvCzTGKFu76PpWFNBFdFCypgFEiTH/A7P6vJOSjlvuyVtXl/zSidb3aROpteoi01qkn9j9IeRasTTfQwzLuXBz31Pk/C+EOdaUk7xbCMmki2H0OH+xvU2TPM5Htd0FoVBea0zh2I/fj85z1SofQYaB+U/KF00cU0meDn2Tl34IN5J5pv9c7IrkTIIVJxe2GxDS9aAnwn1NvBjqbh+V2aOzgUHDRgpZtGxTM4c0pJz6RgmoDjeRL3rYPGiEB32/qUEzqt2HiwVeG6KtObS+sdPGvGn3fRR4j+Ec3ijaS4wlMcJlVkR6vmg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tTBEk3ERPwGYe9e803WybvcvhM/4AUThNLDY/pAo4aw=;
+ b=UzyrQ4HaDuQvhyGH3FDV8D/DaAl08yt3clXK7UFURaZyBsuepIOdq8i6KxKbN7Ye9StMy8QFHv3WY7rZpqGGAeIa9A2AFda4bZZvKdsDv9DQ414SAAVo5FXlrcHbFEQsFu7QI1iAhkrEwosEJctQv4f/lHOl8y0UuTWUv5bccRiM7YxldU4klDtZ9ppeTJ9HGZmkyRYCKkIokAayGTlS6U8I7x652x/FpiVRDxUHx3x0MtP/gXZSOwK+nXXQyGT/s8tvgFwQMKcmwIM27C+HpFLOC2l7cbfKKdQvya8zld8oE6RFjZy39ya+DXkBkILusNGWXR6SnAI/zNzUd3TOSg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tTBEk3ERPwGYe9e803WybvcvhM/4AUThNLDY/pAo4aw=;
+ b=qUyU7EH5UZWY1lvzpyb4usZDS6bGmrfXtMrJJrXlYZNo+klCumFv/kpiUiGgDKVhiTXE3IDEdvmMDGXBe0S7kMH1n8QtixYnjpOmJ3KOSPlLUKiAbQBbZyeSvVL1zjBFlWfGahqLrFK7XC3hnrnkdQcpITM443QDX9urb3b9pAZ0xKq15xUEEHQX6defDNUIuVeXc8ED1CzRtnz+J0mkAeJPhlHO1qyh05mdDWF0g/4folpLOfF21g5muVX8CS6bWKvSTf4RhhR7WFVa+10bH3V+BkTLPIBUrDNnf6V/8h+4l0Wkvn8jvCAixjhq1ZZwLjSIKAtt/IA79hiNmu8CiA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from SEZPR06MB5269.apcprd06.prod.outlook.com (2603:1096:101:78::6)
+ by PUZPR06MB5602.apcprd06.prod.outlook.com (2603:1096:301:e8::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.17; Thu, 6 Jul
+ 2023 12:42:50 +0000
+Received: from SEZPR06MB5269.apcprd06.prod.outlook.com
+ ([fe80::fa0e:6c06:7474:285c]) by SEZPR06MB5269.apcprd06.prod.outlook.com
+ ([fe80::fa0e:6c06:7474:285c%5]) with mapi id 15.20.6565.016; Thu, 6 Jul 2023
+ 12:42:50 +0000
+From:   Yangtao Li <frank.li@vivo.com>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Yangtao Li <frank.li@vivo.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/8] ata: ahci_seattle: Convert to devm_platform_ioremap_resource()
+Date:   Thu,  6 Jul 2023 20:42:32 +0800
+Message-Id: <20230706124239.23366-2-frank.li@vivo.com>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230706124239.23366-1-frank.li@vivo.com>
+References: <20230706124239.23366-1-frank.li@vivo.com>
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI1PR02CA0046.apcprd02.prod.outlook.com
+ (2603:1096:4:1f5::14) To SEZPR06MB5269.apcprd06.prod.outlook.com
+ (2603:1096:101:78::6)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SEZPR06MB5269:EE_|PUZPR06MB5602:EE_
+X-MS-Office365-Filtering-Correlation-Id: cd2fa995-15b7-49ef-0a89-08db7e1e8269
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: qlH1uPr0RlEXzB+T7hcphtmRLrwuqOlEDuX4Eb6j66sgcw/bYP+gwvzZnjVBq6uFB6S7Mjm0cQEmtHKK6kwUwLVHE+HwsWkmQS3bLD4Q9XIqKnSoTxYRda8uFajP0I/r7BVCKyn7sJpntwihz0RRm96ZqSuM0GXTd8oaWh/mFcKDNHVHfOPeTqbbNPvNia2SaDptfgR+A00q/tOq7AuWW9hb1bHSdFQnV5F1Ra2OEL3iPjoO0BccEre9bVdNr5KCcvdZfXyzHgwlscdc/DH2E0AqoZ2ol1SS4o3cjCoa9Ou00FCN9BsxwrKBG5HKt/evge0jYCw/NjgQS92yEwYmOcRjGuaE/I9WdmbAma/qWdPKGMEZK12bHX3q436EDdrdcdTXsFdy6VbVwn4qtOnRJHSbVn6T6tsGXrwUCdg/aeXjY8xqeQsQqjZA859zy0TR7mSIyWpBrZHE9OHsukQT5otWxyxHjTvdvy57rGum3FqXJOzzaIKXdKl4lA6T7QqyKfca4q150PpoUTHcEfV9oH01o2oW27LghJLD8OH8KhmJZJqz41VmWxnZNDVG3UQ5Tbs28OTn86/DIq4mNMwlZnH5fLtBeOBEd7Lb9v+2MITd8ov8iX6GlY+rQWz/vYK8
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SEZPR06MB5269.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(346002)(376002)(136003)(39860400002)(366004)(396003)(451199021)(4744005)(5660300002)(41300700001)(8936002)(8676002)(2906002)(316002)(83380400001)(2616005)(66476007)(38100700002)(66556008)(66946007)(6916009)(4326008)(38350700002)(6506007)(86362001)(186003)(1076003)(478600001)(26005)(52116002)(6486002)(6512007)(6666004)(36756003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?LlsSH25QuOpf6NLJE8S6KC4AkaBO0Z2FpuqgQkA0YT6QguEAerasXOzY7e+k?=
+ =?us-ascii?Q?cp5VpLhWpd5dbXNZlUqtOOih+oLfheYTinLj1jRMT/1XqnAh/VAsHr0aLvuR?=
+ =?us-ascii?Q?zIrJ2kk6/C+no0ulDt7w8zahTb6BOFOxrhlp16qbUhexE4h9sTuHrAS3whNl?=
+ =?us-ascii?Q?AMigs0oWCXYvCdxf22gr+aY6xDuwap8ZiCevKgnga0+cCX2axzbnAxsWG676?=
+ =?us-ascii?Q?gMUmF5jWgWbxxsOjPkMqTwarEkhuk5kwf+WFoJI1mXZ42HJticFgLiufEG64?=
+ =?us-ascii?Q?aq0xFMujldDHnG7LPDNbRzhpTpCiQBS9NvI/MNA2wP3TuWY3ccVWbnTqxhGj?=
+ =?us-ascii?Q?blmZQlOUuvXyIrRuxPNJ6+JAC/Zu5KB3DvAfglsQo2tbYDt+/MHw4fYprM8+?=
+ =?us-ascii?Q?MC/XeAjOauqXJ88vPziioSlOcaBithig3yRMRwlY53SRrHPz65sNpzpQHXwk?=
+ =?us-ascii?Q?XnyvhtPAht5So1h2qnVOyJIcHio3LACbU+TLKIe0OjquDaqf9NW422Zer2A8?=
+ =?us-ascii?Q?LXKWzn5Tm9prp8AEmxhgFRMRk39yfz+WBlSmoIgTLB75CTKyUok4XZ1wPJEY?=
+ =?us-ascii?Q?18P6EmuSBrlyBOpyJaPN959ESi4YQK+e3mR8hK/BmApkHljo3SEzUHwx+r0+?=
+ =?us-ascii?Q?4sg8gbZPHZNanGW70saFWQUVKELm/GEqBgqjhWco3N196DBMaKUx9jmtV9+Z?=
+ =?us-ascii?Q?gpIIQk/9D+cR4HGjOqedsyl2YxPu62WkZfTdCaQihr9T/0ok5hNPPzjZ67eS?=
+ =?us-ascii?Q?PE3uqKovgjN0ci60clJMLq4P1pmwUoFW8mLQdrOgco9Pp+E+fqdThNk/Eu5b?=
+ =?us-ascii?Q?PCg97nzjYgfkHGwG0lXkk66L0QG4bGWxSyKFIw83Ai9r48B/yJIOWHG2QViw?=
+ =?us-ascii?Q?mNI5zrUYRiCxTofXS4Ys/fa86OYwxD9FGOoeA25tfk/nRKVBSZN5/tq/q2xx?=
+ =?us-ascii?Q?HHOd2hlQlWHqJt3oZgauZjrqd3iB3OOLYG4674T+GRv1hA7H2SDup8MAPuqS?=
+ =?us-ascii?Q?rgH1GZ3biHxa202x+5iJTfyAQohQM8ETmwOI36gmlomiE9g1mkXE6a38pT/Q?=
+ =?us-ascii?Q?zn0ZEOTFuClwUvznKkjUxdkuBmdB65ix345FX0KL9syl7vfCSwnBGlXEfbkD?=
+ =?us-ascii?Q?kgUqWS+g6CorBEtPArImrMdhB6ox7GJoibTyWR1KxzSdSaPBXXQyubHT3Mi4?=
+ =?us-ascii?Q?8CqARgBKAlI+nqeOx0Xp4aDwzIa1Kj+TN0o9Jdm1v43U7j3LCXUqXJdJsYR6?=
+ =?us-ascii?Q?jBbWrCxkI0ipxFI93xPB80iJR7CVdhw99C4TOWIuKu7n+uc8WmMSxbPrhgCb?=
+ =?us-ascii?Q?cUXyz+wSnISX/Y3cdpql/XVG/lVoYvH64s5zDJDP7TMnY4axirNOO83LVjFL?=
+ =?us-ascii?Q?qao4v5s7YrqA6W0l80Ltcj+QvbrlfJnCEaQh/Sd205DyQb6oWcTM/F0M5Ycf?=
+ =?us-ascii?Q?LY2lKC+xueuk+A7nIYyGOyjYmr5pH7fPTLO/gjtrCLbnAe/EubN6BqcxwI5U?=
+ =?us-ascii?Q?QdoRoabBnrfaKIbc51E/LKj1k7CpPAK8n35DWXeNqJOxD5rnX7QzAV8AVxeF?=
+ =?us-ascii?Q?23umWK7Y6aLBqrIW8PebDMnUsVB3CnJSaiW7cj8D?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cd2fa995-15b7-49ef-0a89-08db7e1e8269
+X-MS-Exchange-CrossTenant-AuthSource: SEZPR06MB5269.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jul 2023 12:42:50.7034
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: zQHun7nelhsn+opAEsXFAaz791R5srfcRBX46jVEgbt09F5cveiwSirNg/WD1nDUTek0f0Ux6j/vx2x75AlhtA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PUZPR06MB5602
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Most of the protocol modules for the pata_parport driver are missing a
-module description, causing warnings such as:
+Use devm_platform_ioremap_resource() to simplify code.
 
-WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/ata/pata_parport/aten.o
-
-when compiling with W=1. Add the missing MODULE_DESCRIPTION()
-definitions to avoid these warnings. While at it, also add the missing
-MODULE_AUTHOR() definitions.
-
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Yangtao Li <frank.li@vivo.com>
 ---
- drivers/ata/pata_parport/aten.c  | 2 ++
- drivers/ata/pata_parport/bpck.c  | 2 ++
- drivers/ata/pata_parport/bpck6.c | 3 ++-
- drivers/ata/pata_parport/comm.c  | 2 ++
- drivers/ata/pata_parport/dstr.c  | 2 ++
- drivers/ata/pata_parport/epat.c  | 3 +++
- drivers/ata/pata_parport/epia.c  | 3 +++
- drivers/ata/pata_parport/fit2.c  | 3 +++
- drivers/ata/pata_parport/fit3.c  | 3 +++
- drivers/ata/pata_parport/friq.c  | 2 ++
- drivers/ata/pata_parport/frpw.c  | 2 ++
- drivers/ata/pata_parport/kbic.c  | 3 +++
- drivers/ata/pata_parport/ktti.c  | 2 ++
- drivers/ata/pata_parport/on20.c  | 2 ++
- drivers/ata/pata_parport/on26.c  | 2 ++
- 15 files changed, 35 insertions(+), 1 deletion(-)
+ drivers/ata/ahci_seattle.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_parport/aten.c b/drivers/ata/pata_parport/aten.c
-index 8328a49a95ef..620ce6c8da5c 100644
---- a/drivers/ata/pata_parport/aten.c
-+++ b/drivers/ata/pata_parport/aten.c
-@@ -139,4 +139,6 @@ static struct pi_protocol aten = {
- };
+diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
+index 2c32d58c6ae7..a64c9c4704cd 100644
+--- a/drivers/ata/ahci_seattle.c
++++ b/drivers/ata/ahci_seattle.c
+@@ -132,8 +132,7 @@ static const struct ata_port_info *ahci_seattle_get_port_info(
+ 	if (!plat_data)
+ 		return &ahci_port_info;
  
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("ATEN EH-100 parallel port IDE adapter protocol driver");
- module_pata_parport_driver(aten);
-diff --git a/drivers/ata/pata_parport/bpck.c b/drivers/ata/pata_parport/bpck.c
-index 9f4309f9b57f..bba1eda65f36 100644
---- a/drivers/ata/pata_parport/bpck.c
-+++ b/drivers/ata/pata_parport/bpck.c
-@@ -502,4 +502,6 @@ static struct pi_protocol bpck = {
- };
+-	plat_data->sgpio_ctrl = devm_ioremap_resource(dev,
+-			      platform_get_resource(pdev, IORESOURCE_MEM, 1));
++	plat_data->sgpio_ctrl = devm_platform_ioremap_resource(pdev, 1);
+ 	if (IS_ERR(plat_data->sgpio_ctrl))
+ 		return &ahci_port_info;
  
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("MicroSolutions BACKPACK parallel port IDE adapter protocol driver");
- module_pata_parport_driver(bpck);
-diff --git a/drivers/ata/pata_parport/bpck6.c b/drivers/ata/pata_parport/bpck6.c
-index c6dbd14120d1..62c2b53325e1 100644
---- a/drivers/ata/pata_parport/bpck6.c
-+++ b/drivers/ata/pata_parport/bpck6.c
-@@ -459,5 +459,6 @@ static struct pi_protocol bpck6 = {
- 
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Micro Solutions Inc.");
--MODULE_DESCRIPTION("BACKPACK Protocol module, compatible with PARIDE");
-+MODULE_DESCRIPTION("Micro Solutions BACKPACK parallel port IDE adapter "
-+		   "(version 6 drives) protocol driver");
- module_pata_parport_driver(bpck6);
-diff --git a/drivers/ata/pata_parport/comm.c b/drivers/ata/pata_parport/comm.c
-index cc5485bd0a5b..4839becbbd56 100644
---- a/drivers/ata/pata_parport/comm.c
-+++ b/drivers/ata/pata_parport/comm.c
-@@ -201,4 +201,6 @@ static struct pi_protocol comm = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("DataStor Commuter parallel port IDE adapter protocol driver");
- module_pata_parport_driver(comm);
-diff --git a/drivers/ata/pata_parport/dstr.c b/drivers/ata/pata_parport/dstr.c
-index 368d7c7962a9..88930bb1f07e 100644
---- a/drivers/ata/pata_parport/dstr.c
-+++ b/drivers/ata/pata_parport/dstr.c
-@@ -230,4 +230,6 @@ static struct pi_protocol dstr = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("DataStor EP2000 parallel port IDE adapter protocol driver");
- module_pata_parport_driver(dstr);
-diff --git a/drivers/ata/pata_parport/epat.c b/drivers/ata/pata_parport/epat.c
-index 016bd96bce89..3cb54fcbf0d0 100644
---- a/drivers/ata/pata_parport/epat.c
-+++ b/drivers/ata/pata_parport/epat.c
-@@ -358,5 +358,8 @@ static void __exit epat_exit(void)
- }
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Shuttle Technologies EPAT parallel port IDE adapter "
-+		   "protocol driver");
- module_init(epat_init)
- module_exit(epat_exit)
-diff --git a/drivers/ata/pata_parport/epia.c b/drivers/ata/pata_parport/epia.c
-index 920e9f40d401..7aaba474c671 100644
---- a/drivers/ata/pata_parport/epia.c
-+++ b/drivers/ata/pata_parport/epia.c
-@@ -306,4 +306,7 @@ static struct pi_protocol epia = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Shuttle Technologies EPIA parallel port IDE adapter "
-+		   "protocol driver");
- module_pata_parport_driver(epia);
-diff --git a/drivers/ata/pata_parport/fit2.c b/drivers/ata/pata_parport/fit2.c
-index 6524f3033b1e..de79cf91ad5f 100644
---- a/drivers/ata/pata_parport/fit2.c
-+++ b/drivers/ata/pata_parport/fit2.c
-@@ -132,4 +132,7 @@ static struct pi_protocol fit2 = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Fidelity International Technology parallel port IDE adapter"
-+		   "(older models) protocol driver");
- module_pata_parport_driver(fit2);
-diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
-index c172a38ae67d..bad7aa920cdc 100644
---- a/drivers/ata/pata_parport/fit3.c
-+++ b/drivers/ata/pata_parport/fit3.c
-@@ -193,4 +193,7 @@ static struct pi_protocol fit3 = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Fidelity International Technology parallel port IDE adapter"
-+		   "(newer models) protocol driver");
- module_pata_parport_driver(fit3);
-diff --git a/drivers/ata/pata_parport/friq.c b/drivers/ata/pata_parport/friq.c
-index dc428f54fe0c..7abe2ff40685 100644
---- a/drivers/ata/pata_parport/friq.c
-+++ b/drivers/ata/pata_parport/friq.c
-@@ -259,4 +259,6 @@ static struct pi_protocol friq = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Freecom IQ parallel port IDE adapter protocol driver");
- module_pata_parport_driver(friq);
-diff --git a/drivers/ata/pata_parport/frpw.c b/drivers/ata/pata_parport/frpw.c
-index 28d9bb2c6baf..7fa9b9857321 100644
---- a/drivers/ata/pata_parport/frpw.c
-+++ b/drivers/ata/pata_parport/frpw.c
-@@ -293,4 +293,6 @@ static struct pi_protocol frpw = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Freecom Power parallel port IDE adapter protocol driver");
- module_pata_parport_driver(frpw);
-diff --git a/drivers/ata/pata_parport/kbic.c b/drivers/ata/pata_parport/kbic.c
-index 6023e071516d..fca322627b82 100644
---- a/drivers/ata/pata_parport/kbic.c
-+++ b/drivers/ata/pata_parport/kbic.c
-@@ -301,5 +301,8 @@ static void __exit kbic_exit(void)
- }
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("KingByte Information Systems KBIC-951A and KBIC-971A "
-+		   "parallel port IDE adapter protocol driver");
- module_init(kbic_init)
- module_exit(kbic_exit)
-diff --git a/drivers/ata/pata_parport/ktti.c b/drivers/ata/pata_parport/ktti.c
-index bca6c20ef617..c078d1934862 100644
---- a/drivers/ata/pata_parport/ktti.c
-+++ b/drivers/ata/pata_parport/ktti.c
-@@ -106,4 +106,6 @@ static struct pi_protocol ktti = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("KT Technology parallel port IDE adapter protocol driver");
- module_pata_parport_driver(ktti);
-diff --git a/drivers/ata/pata_parport/on20.c b/drivers/ata/pata_parport/on20.c
-index 34e69da2bec8..7c70e5b13a2a 100644
---- a/drivers/ata/pata_parport/on20.c
-+++ b/drivers/ata/pata_parport/on20.c
-@@ -142,4 +142,6 @@ static struct pi_protocol on20 = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Onspec 90c20 parallel port IDE adapter protocol driver");
- module_pata_parport_driver(on20);
-diff --git a/drivers/ata/pata_parport/on26.c b/drivers/ata/pata_parport/on26.c
-index 5da317b394c1..c88e5d6f203e 100644
---- a/drivers/ata/pata_parport/on26.c
-+++ b/drivers/ata/pata_parport/on26.c
-@@ -310,4 +310,6 @@ static struct pi_protocol on26 = {
- };
- 
- MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Grant R. Guenther <grant@torque.net>");
-+MODULE_DESCRIPTION("Onspec 90c26 parallel port IDE adapter protocol driver");
- module_pata_parport_driver(on26);
 -- 
-2.41.0
+2.39.0
 
