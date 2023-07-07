@@ -2,109 +2,131 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE18DC0015E
-	for <linux-ide@archiver.kernel.org>; Fri,  7 Jul 2023 12:49:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABD15EB64D9
+	for <linux-ide@archiver.kernel.org>; Fri,  7 Jul 2023 18:58:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232285AbjGGMtm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 7 Jul 2023 08:49:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38218 "EHLO
+        id S229502AbjGGS6X (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 7 Jul 2023 14:58:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230040AbjGGMtl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2023 08:49:41 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7F2010EA;
-        Fri,  7 Jul 2023 05:49:39 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id 5b1f17b1804b1-3fbd33a57dcso20291135e9.0;
-        Fri, 07 Jul 2023 05:49:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1688734178; x=1691326178;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Va3gTS2j0Ri+TaCki30Zs9STlYulxibMuwQWnYz8AS4=;
-        b=hNgASXwoUU0YrmeQ5XA5ZVoVAPOUSHVsK0wt1UcYJlvur2vB/rG19e5gAntydXnkZO
-         w3uusptZWvnhBOL4ybghY12Oab3HcG/4SA9892eBpaNbOf2Uq/8hkq5AODWmtqb5/Gfh
-         D6DHk6FiWJ8LDACtqVemFfXqnmIjbNhZp/9QhsOnzQzg+RYtfgXihUg3kl1GlT09PXXi
-         o4fdkgdllMy58VTZhsp5BuaTJMaNXZgpkQv+i7DcvxBNWyX8F4GNyWDYECKhcmlrIsxy
-         1os01q/SiBxRb/SeTWXVM4IVXxmz3Zt2Rk/j+i4+Qi/jlTikn087lt88J8cjrctuWwLf
-         6FOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688734178; x=1691326178;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Va3gTS2j0Ri+TaCki30Zs9STlYulxibMuwQWnYz8AS4=;
-        b=k0EzlvxNsDvEIOYUJzv27Q0vRJEfQwNfFrxKXIMWUamF58hQeOh1uh+brg/MbIXRyz
-         nY3TiQy7FZgi+T0Ipnmvt/p55ZLkhNt8z3jM84tvZyilxS9IZu+JHA0vrriRnzk+kRX0
-         aQ2MZacs78+J0az/0U1migJmMPPRqSaZoQeXc8IpZhJTPemeCX/bLBS2RVP+gHe7yR38
-         ijFIjb93NQ1QQKA+7d1WM6bMizVBt3TdJLIoZOyQvMcikoa02kvql8rwv/Sf/+Xj+KKA
-         3r/KcNfCdOwtVdJdPdRBTnCBZxMF+J+oL6vT4XfWo91npPUSXf+bfR1dbJUl4TVhNEE6
-         NENQ==
-X-Gm-Message-State: ABy/qLa706Cn9O0GwwgVblGXdYInrM1Q0hyO+p8u4gW3LpkTN9eev95J
-        rDJg2RWyu/WaCqueJo+GRbo=
-X-Google-Smtp-Source: APBJJlFX5h/5Cp1ugMLiBnfzudJYd7a8Zbtz+ODTURxKx98aOWLCXSASNUlxrzpC+NPK6uiltearNQ==
-X-Received: by 2002:a7b:c445:0:b0:3fb:a46c:7eac with SMTP id l5-20020a7bc445000000b003fba46c7eacmr3684828wmi.7.1688734178223;
-        Fri, 07 Jul 2023 05:49:38 -0700 (PDT)
-Received: from orome (p200300e41f4b7100f22f74fffe1f3a53.dip0.t-ipconnect.de. [2003:e4:1f4b:7100:f22f:74ff:fe1f:3a53])
-        by smtp.gmail.com with ESMTPSA id l20-20020a7bc354000000b003fbb8c7c799sm2387690wmj.30.2023.07.07.05.49.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Jul 2023 05:49:37 -0700 (PDT)
-Date:   Fri, 7 Jul 2023 14:49:36 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Yangtao Li <frank.li@vivo.com>
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 04/11] ata: ahci_tegra: Convert to
- devm_platform_ioremap_resource()
-Message-ID: <ZKgJ4E9X_KcHj1WM@orome>
-References: <20230707095513.64224-1-frank.li@vivo.com>
- <20230707095513.64224-4-frank.li@vivo.com>
+        with ESMTP id S229542AbjGGS6V (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2023 14:58:21 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20D6E124;
+        Fri,  7 Jul 2023 11:58:20 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.86.230) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Fri, 7 Jul 2023
+ 21:58:10 +0300
+Subject: Re: [PATCH 6/8] pata: ixp4xx: Use
+ devm_platform_get_and_ioremap_resource()
+To:     Yangtao Li <frank.li@vivo.com>, Damien Le Moal <dlemoal@kernel.org>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20230706124239.23366-1-frank.li@vivo.com>
+ <20230706124239.23366-6-frank.li@vivo.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <f264a261-d8c7-5220-d8cd-f59e04230cb2@omp.ru>
+Date:   Fri, 7 Jul 2023 21:58:09 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="2ty/DDzd14/803Q9"
-Content-Disposition: inline
-In-Reply-To: <20230707095513.64224-4-frank.li@vivo.com>
-User-Agent: Mutt/2.2.10 (2023-03-25)
+In-Reply-To: <20230706124239.23366-6-frank.li@vivo.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.86.230]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 07/07/2023 18:33:35
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 178491 [Jul 07 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 520 520 ccb018a655251011855942a2571029252d3d69a2
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.230 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.86.230 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;31.173.86.230:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.230
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 07/07/2023 18:40:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 7/7/2023 3:11:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 7/6/23 3:42 PM, Yangtao Li wrote:
 
---2ty/DDzd14/803Q9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Jul 07, 2023 at 05:55:06PM +0800, Yangtao Li wrote:
-> Use devm_platform_ioremap_resource() to simplify code.
->=20
+> Convert platform_get_resource(), devm_ioremap_resource() to a single
+> call to devm_platform_get_and_ioremap_resource(), as this is exactly
+> what this function does.
+> 
 > Signed-off-by: Yangtao Li <frank.li@vivo.com>
 > ---
->  drivers/ata/ahci_tegra.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+>  drivers/ata/pata_ixp4xx_cf.c | 24 +++++++++---------------
+>  1 file changed, 9 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+> index b1daa4d3fcd9..246bb4f8f1f7 100644
+> --- a/drivers/ata/pata_ixp4xx_cf.c
+> +++ b/drivers/ata/pata_ixp4xx_cf.c
+[...]
+> @@ -271,18 +265,18 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> -	ixpp->cmd = devm_ioremap_resource(dev, cmd);
+> -	ixpp->ctl = devm_ioremap_resource(dev, ctl);
+> -	if (IS_ERR(ixpp->cmd) || IS_ERR(ixpp->ctl))
+> -		return -ENOMEM;
+> +	ixpp->cmd = devm_platform_get_and_ioremap_resource(pdev, 0, &cmd);
+> +	if (IS_ERR(ixpp->cmd))
+> +		return PTR_ERR(ixpp->cmd);
+> +
+> +	ixpp->ctl = devm_platform_get_and_ioremap_resource(pdev, 1, &ctl);
+> +	if (IS_ERR(ixpp->ctl))
+> +		return PTR_ERR(ixpp->ctl);
 
-Acked-by: Thierry Reding <treding@nvidia.com>
+   Looks good...
 
---2ty/DDzd14/803Q9
-Content-Type: application/pgp-signature; name="signature.asc"
+>  
+>  	irq = platform_get_irq(pdev, 0);
+> -	if (irq > 0)
+> -		irq_set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
+> -	else if (irq < 0)
+> +	if (irq < 0)
+>  		return irq;
+> -	else
+> -		return -EINVAL;
+> +	irq_set_irq_type(irq, IRQ_TYPE_EDGE_RISING);
 
------BEGIN PGP SIGNATURE-----
+   This change also looks good (but undescribed!), however it should be
+done in a separate patch.
+   For the future, try to follow a simple rule: do one thing per patch.
+Oh, and don't forget to describe everything you do in a patch...
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmSoCd0ACgkQ3SOs138+
-s6F66w/9Gx7wEbknyiiEmjGQohgnzFz9QdkY7uOPg/m+rSDytZXQto94H0Ym9TlA
-BxMSXlQvsmU0hgzamJUXcRvHp/TXUwiMTT1PFVROSk2HRRQfi49Na7KYCntkvUqt
-uJe97GNSZN1WXwpaDKYNCOcgOHycL5lenJEb5jrVbSfnn73DfzCWrhjaLdl/gt3V
-+D7/LsVKr9BfJzMJtF6IMl98pn8gGMpL3gbwZV/B9ckDmXwOuEbC7FL21//Xf7bF
-6Osh9sZ1AeN2Ijyz+8XKvEK+c0+dZNX0Dcua2+A4X6yZ4zHlYFIxmOpviEP329Sv
-zXLv954ru3RyCawTfERFjTFKrd1+XMbhXm3AzHsEXF3bdVRyAft1W0hZ96WRB5HV
-xvxDZM2V2sFuZ0T/+fpnpjmvxpF/z5enMTEfKPdbzGrWZy5VNABxhN6SebnLXwJ1
-OAbCAOCxfjS+oK2tyJMfCZY2Pff7KUlO3xTisGQdSljMa/c4p5Wa6sOWLvqIJs8c
-zvsrQz8epuYiKM1pqK3vGhAOg0EFtp09qe2FXpTXuCR8t09CsDmb6mQHQl87MEXc
-NGoreuG1xUIOxNDH4FWEXWieevX980qS89eVsEDbscqeQB4q7qRiyxOBAiWibvBn
-UYtSqnWfirCYfCgGzfjVA1Tg9APfeoqSDnU1mBkLHPBUlAWhWEs=
-=zriF
------END PGP SIGNATURE-----
+[...]
 
---2ty/DDzd14/803Q9--
+MBR, Sergey
