@@ -2,73 +2,148 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E20B0C0015E
-	for <linux-ide@archiver.kernel.org>; Tue, 11 Jul 2023 14:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAA6EEB64DC
+	for <linux-ide@archiver.kernel.org>; Tue, 11 Jul 2023 21:39:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232690AbjGKOtC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 11 Jul 2023 10:49:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54892 "EHLO
+        id S229551AbjGKVjW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 11 Jul 2023 17:39:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232748AbjGKOtA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jul 2023 10:49:00 -0400
-Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31E5D10E5;
-        Tue, 11 Jul 2023 07:48:53 -0700 (PDT)
-Received: from i53875a50.versanet.de ([83.135.90.80] helo=phil.lan)
-        by gloria.sntech.de with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <heiko@sntech.de>)
-        id 1qJEfZ-0000LD-4F; Tue, 11 Jul 2023 16:48:49 +0200
-From:   Heiko Stuebner <heiko@sntech.de>
-To:     Sebastian Reichel <sebastian.reichel@collabora.com>
-Cc:     Heiko Stuebner <heiko@sntech.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kernel@collabora.com, devicetree@vger.kernel.org,
-        Vinod Koul <vkoul@kernel.org>, linux-phy@lists.infradead.org,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>
-Subject: Re: (subset) [PATCH v4 0/5] Add RK3588 SATA support
-Date:   Tue, 11 Jul 2023 16:48:45 +0200
-Message-Id: <168908688815.1964886.16094073283802293132.b4-ty@sntech.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230612171337.74576-1-sebastian.reichel@collabora.com>
-References: <20230612171337.74576-1-sebastian.reichel@collabora.com>
+        with ESMTP id S229537AbjGKVjV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jul 2023 17:39:21 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A9DC127;
+        Tue, 11 Jul 2023 14:39:20 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b89d47ffb6so32097155ad.2;
+        Tue, 11 Jul 2023 14:39:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1689111560; x=1691703560;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=KtT4gFz6TTEFRseSk+gcMtJFveuGAwBprTn2TmvM3QM=;
+        b=qVGDef4XTDiy2pQQAH3Cwnbtqh8ZKWeDR0YpW5oBVmIf8Ft1FfiQFB9j/nigTkpw8I
+         82vXU59i3SdogLeNz/ABKCqINgA4PTDr9/ZdUPp6ZUB83Z6MdD4YHZx6qWrTB/+YO5SG
+         xt3gCozG7WIu1lWUXRr3EpK+TzZRAcw2ll3vth9VDJ1GAaRvrA2V8kIgGX9kdM2Wgg3l
+         stzdpWOedBvZ0uhTUpLtvsrBCTVN9HRCFZfzCFKFQAEkzZQTdhvlZETvKEQOgCpBxb1y
+         lgv7BtP9O20Qjyp/f7+CQeQ3LbV13czXSXJgwRbcUJP+TfmtuZqC2GkNl1o/MlSqRGEW
+         v5GA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689111560; x=1691703560;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=KtT4gFz6TTEFRseSk+gcMtJFveuGAwBprTn2TmvM3QM=;
+        b=hm8E4CWDWpbVZZ/+chXcJ7tdA4AR/wwkc6zVZU92wh0wHs5qBdenkc+UEB6mFSZ4XZ
+         8SJ5UAwVhW5mwC6+OrNEvwivGpCBvhuDzKI4tId4ng9Yf8BzmutY01tDT7m0gnqOu+yg
+         m4gMsrzsZj+OnXjDY/tAi1tuwoo2Vo420xOaPzZTe6yyrrR4a6eV/vF2zr0h0q6aB3pw
+         xF6n9AtDZhrtv7gkZteIzebInWjRv6qvq8LQ5D3Yemyds4oLFwI3y9BBiiJ9H8tu51Ij
+         OIsAk5FHDmvvpEKkrbWZET54CKfnJQisQEuxfcY0+Za2rbh1vSW1QW0WFRHkoO4+rLHG
+         cQbw==
+X-Gm-Message-State: ABy/qLY2MGoYPaQXvDgloKfTQQOhhNGNIDy5sCwAO/D0tbP/5sjIELhQ
+        4P4dsfoJXbL45Ui7piOqFVc=
+X-Google-Smtp-Source: APBJJlHvfrCF++DlafNT3B6O6EffAGKpXCrh8newwF9nz4kDCviiDR8GuVNpvkxYKklGu+rZ5VQk5Q==
+X-Received: by 2002:a17:903:24e:b0:1b6:80f0:d969 with SMTP id j14-20020a170903024e00b001b680f0d969mr15429164plh.11.1689111559501;
+        Tue, 11 Jul 2023 14:39:19 -0700 (PDT)
+Received: from localhost ([2620:10d:c090:400::5:9374])
+        by smtp.gmail.com with ESMTPSA id bd5-20020a170902830500b001b8761c739csm2362090plb.271.2023.07.11.14.39.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Jul 2023 14:39:19 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Tue, 11 Jul 2023 11:39:17 -1000
+From:   Tejun Heo <tj@kernel.org>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Lai Jiangshan <jiangshanlai@gmail.com>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        kernel-team@meta.com, Linux PM list <linux-pm@vger.kernel.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        linux-rtc@vger.kernel.org,
+        linux-riscv <linux-riscv@lists.infradead.org>,
+        netdev <netdev@vger.kernel.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: Re: Consider switching to WQ_UNBOUND messages (was: Re: [PATCH v2
+ 6/7] workqueue: Report work funcs that trigger automatic CPU_INTENSIVE
+ mechanism)
+Message-ID: <ZK3MBfPS-3-tJgjO@slm.duckdns.org>
+References: <20230511181931.869812-1-tj@kernel.org>
+ <20230511181931.869812-7-tj@kernel.org>
+ <ZF6WsSVGX3O1d0pL@slm.duckdns.org>
+ <CAMuHMdVCQmh6V182q4g---jvsWiTOP2hBPZKvma6oUN6535LEg@mail.gmail.com>
+ <CAMuHMdW1kxZ1RHKTRVRqDNAbj1Df2=v0fPn5KYK3kfX_kiXR6A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMuHMdW1kxZ1RHKTRVRqDNAbj1Df2=v0fPn5KYK3kfX_kiXR6A@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 12 Jun 2023 19:13:32 +0200, Sebastian Reichel wrote:
-> This enables SATA support for RK3588.
+Hello,
+
+On Tue, Jul 11, 2023 at 04:06:22PM +0200, Geert Uytterhoeven wrote:
+> On Tue, Jul 11, 2023 at 3:55 PM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> >
+> > Hi Tejun,
+> >
+> > On Fri, May 12, 2023 at 9:54 PM Tejun Heo <tj@kernel.org> wrote:
+> > > Workqueue now automatically marks per-cpu work items that hog CPU for too
+> > > long as CPU_INTENSIVE, which excludes them from concurrency management and
+> > > prevents stalling other concurrency-managed work items. If a work function
+> > > keeps running over the thershold, it likely needs to be switched to use an
+> > > unbound workqueue.
+> > >
+> > > This patch adds a debug mechanism which tracks the work functions which
+> > > trigger the automatic CPU_INTENSIVE mechanism and report them using
+> > > pr_warn() with exponential backoff.
+> > >
+> > > v2: Drop bouncing through kthread_worker for printing messages. It was to
+> > >     avoid introducing circular locking dependency but wasn't effective as it
+> > >     still had pool lock -> wci_lock -> printk -> pool lock loop. Let's just
+> > >     print directly using printk_deferred().
+> > >
+> > > Signed-off-by: Tejun Heo <tj@kernel.org>
+> > > Suggested-by: Peter Zijlstra <peterz@infradead.org>
+> >
+> > Thanks for your patch, which is now commit 6363845005202148
+> > ("workqueue: Report work funcs that trigger automatic CPU_INTENSIVE
+> > mechanism") in v6.5-rc1.
+> >
+> > I guess you are interested to know where this triggers.
+> > I enabled CONFIG_WQ_CPU_INTENSIVE_REPORT=y, and tested
+> > the result on various machines...
 > 
-> Changes since PATCHv3:
->  * https://lore.kernel.org/all/20230608162238.50078-1-sebastian.reichel@collabora.com/
->  * Add Reviewed-by from Serge and Krzysztof to patch 1
->  * Update patch 2
->    - Add maxItems to 'clocks' property; without specifying minItems it's
->      implied to be the same
->    - Keep allOf above the properties in snps,dwc-ahci.yaml
->    - Add 'sata-port@0' to list of allowed properties
->    - Replace sata-port pattern property, so that it disallows using any
->      sata-port nodes besides @0 to override the pattern property from the
->      common binding
->  * Add Reviewed-by from Krzysztof to patch 3
+> > OrangeCrab/Linux-on-LiteX-VexRiscV with ht16k33 14-seg display and ssd130xdrmfb:
+> >
+> >   workqueue: check_lifetime hogged CPU for >10000us 4 times, consider
+> > switching to WQ_UNBOUND
+> >   workqueue: drm_fb_helper_damage_work hogged CPU for >10000us 1024
+> > times, consider switching to WQ_UNBOUND
+> >   workqueue: fb_flashcursor hogged CPU for >10000us 128 times,
+> > consider switching to WQ_UNBOUND
+> >   workqueue: ht16k33_seg14_update hogged CPU for >10000us 128 times,
+> > consider switching to WQ_UNBOUND
+> >   workqueue: mmc_rescan hogged CPU for >10000us 128 times, consider
+> > switching to WQ_UNBOUND
 > 
-> [...]
+> Got one more after a while:
+> 
+> workqueue: neigh_managed_work hogged CPU for >10000us 4 times,
+> consider switching to WQ_UNBOUND
 
-Applied, thanks!
+I wonder whether the right thing to do here is somehow scaling the threshold
+according to the relative processing power. It's difficult to come up with a
+threshold which works well across the latest & fastest and really tiny CPUs.
+I'll think about it some more but if you have some ideas, please feel free
+to suggest.
 
-[4/5] arm64: dts: rockchip: rk3588: add combo PHYs
-      commit: 6ebd55b3bba383e0523b0c014f17c97f3ce80708
-[5/5] arm64: dts: rockchip: rk3588: add SATA support
-      commit: 34d6c15d8e86256ef2456c604b1c8d8242720871
+Thanks.
 
-Best regards,
 -- 
-Heiko Stuebner <heiko@sntech.de>
+tejun
