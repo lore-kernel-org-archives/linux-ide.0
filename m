@@ -2,79 +2,159 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E72BEB64DA
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Jul 2023 12:30:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DEFC001DD
+	for <linux-ide@archiver.kernel.org>; Tue, 11 Jul 2023 13:55:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231765AbjGJMaH convert rfc822-to-8bit (ORCPT
+        id S232975AbjGKNzm convert rfc822-to-8bit (ORCPT
         <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 10 Jul 2023 08:30:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36514 "EHLO
+        Tue, 11 Jul 2023 09:55:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231817AbjGJMaF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2023 08:30:05 -0400
-Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1DD7C7;
-        Mon, 10 Jul 2023 05:30:03 -0700 (PDT)
-Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-579dfae6855so55774237b3.1;
-        Mon, 10 Jul 2023 05:30:03 -0700 (PDT)
+        with ESMTP id S232537AbjGKNzm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jul 2023 09:55:42 -0400
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD8E594;
+        Tue, 11 Jul 2023 06:55:40 -0700 (PDT)
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-579ed2829a8so61177867b3.1;
+        Tue, 11 Jul 2023 06:55:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688992203; x=1691584203;
+        d=1e100.net; s=20221208; t=1689083740; x=1691675740;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=X8UwvHLGUzIhBAMSwcKUp8ui6YGrmrv4XLl1sm4Tehs=;
-        b=clVRFHqnBV8mxNT11OY1D4ZQhBHEbqLiyxuNAW4PlJtyXfaVZzwJ4oxXvXFyfiUU9n
-         WwqVzHLAx5ZtzqcD3ga5v2Kga7HMz1w4g0hziRePzQUr2mJ+z2xZI3UbbT9C+Ooe11Re
-         qFFm/T5V0nyEsem4bjc0UZsvlhHTFhBKlrlnSdfYkRK2l7rDhKEHI6nVgN3ZPJ6kN6UU
-         si/dJ2mvbHDUNtb/xBARCjwndw0fFxrPeyHi+QYtDsxu2meLym3nru59grZKlhjnW/GX
-         s9TIx+CvVN1SRWwOeBKgdLVhP2PvBBJqaQJ3kJt+JQsPIC+dEd2jgzLvrln+oZlTBY3p
-         K5Iw==
-X-Gm-Message-State: ABy/qLZUHOYTjG91g+QjnS2x/eKCxYPw9oJ8S389kAUXhtUJc/PrVY6d
-        VtBO0gWgtBvacER6yuKVy11MwoCv/wxBYg==
-X-Google-Smtp-Source: APBJJlEcurLVE+MbcZtmCHFLT6vkYEZxGC7xIdXUP2K8/ZUYI6lB36ocJbqI05yP5223DB8KbXvX4w==
-X-Received: by 2002:a0d:d890:0:b0:577:257d:bf0e with SMTP id a138-20020a0dd890000000b00577257dbf0emr12499890ywe.22.1688992202820;
-        Mon, 10 Jul 2023 05:30:02 -0700 (PDT)
-Received: from mail-yb1-f179.google.com (mail-yb1-f179.google.com. [209.85.219.179])
-        by smtp.gmail.com with ESMTPSA id g78-20020a0ddd51000000b0056d51c39c1fsm2979154ywe.23.2023.07.10.05.30.02
+        bh=ZXQMJc+mkFZtu2vLefW5Re8NpovkJxJKped5EUiUKOE=;
+        b=BtAaeM1r57mlTwANqrQdgSLT/BQzCsFQlocFdyHWa89EhRx/Tske8E/0U75RZXV/s1
+         vMyOFmR/2tI6KuRUXLHUKv4udaytrpPO6K3Fxy7kVfvnnBEFQMP1Ae5MfZuJKVuanSAl
+         0WygyPjzqFgohifL9lHygDSKSTwS6dX8GALt0KV1Jyqo+hEGDwHMIQcAbMEyiApjeDzZ
+         Q+mPxd6jF1+rjlyYvx06uYH7W3okrwsmfAtX0LGSuc/JGrlCBa7B4F2D8QXAgmHfKZz7
+         DC5P65Erc4VsIyW0Zy0MZTg0+mK6947XvoiBOxjgASDtC0xBppxfVYAcDFpeFnr90Z1w
+         Serw==
+X-Gm-Message-State: ABy/qLaFdqm9/3UmzRWN9Mp+o8X9X/Eg2BvChVvN3stetv8wyVdYUq8z
+        dp5K2aHCf1XZkRiXwGUur7aGl961CU8XjA==
+X-Google-Smtp-Source: APBJJlG2SP6QbX+lb4Zp1K7VfQDqff8Wq2bAVPCyWAjRlgmsdN76O/U7mI3WXYO0nzlsMPEK4vnd5w==
+X-Received: by 2002:a0d:d383:0:b0:561:b8a1:e7ef with SMTP id v125-20020a0dd383000000b00561b8a1e7efmr17947283ywd.41.1689083739787;
+        Tue, 11 Jul 2023 06:55:39 -0700 (PDT)
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com. [209.85.128.171])
+        by smtp.gmail.com with ESMTPSA id l10-20020a81d54a000000b0056ffdec590csm569466ywj.41.2023.07.11.06.55.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 Jul 2023 05:30:02 -0700 (PDT)
-Received: by mail-yb1-f179.google.com with SMTP id 3f1490d57ef6-c4dfe2a95fbso5184958276.3;
-        Mon, 10 Jul 2023 05:30:02 -0700 (PDT)
-X-Received: by 2002:a25:86c7:0:b0:c85:d8b6:c21d with SMTP id
- y7-20020a2586c7000000b00c85d8b6c21dmr2170442ybm.31.1688992202489; Mon, 10 Jul
- 2023 05:30:02 -0700 (PDT)
+        Tue, 11 Jul 2023 06:55:39 -0700 (PDT)
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-577497ec6c6so61279067b3.2;
+        Tue, 11 Jul 2023 06:55:39 -0700 (PDT)
+X-Received: by 2002:a81:6e8b:0:b0:570:85b2:e6dd with SMTP id
+ j133-20020a816e8b000000b0057085b2e6ddmr17111816ywc.17.1689083738977; Tue, 11
+ Jul 2023 06:55:38 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230710024550.59544-1-frank.li@vivo.com> <20230710024550.59544-7-frank.li@vivo.com>
-In-Reply-To: <20230710024550.59544-7-frank.li@vivo.com>
+References: <20230511181931.869812-1-tj@kernel.org> <20230511181931.869812-7-tj@kernel.org>
+ <ZF6WsSVGX3O1d0pL@slm.duckdns.org>
+In-Reply-To: <ZF6WsSVGX3O1d0pL@slm.duckdns.org>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 10 Jul 2023 14:29:49 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdWE1VDFJeUBWEHy=9jAi5P7d0HG+e1OgeQ0Wa1TkKa1RA@mail.gmail.com>
-Message-ID: <CAMuHMdWE1VDFJeUBWEHy=9jAi5P7d0HG+e1OgeQ0Wa1TkKa1RA@mail.gmail.com>
-Subject: Re: [PATCH v3 07/11] ata: sata_rcar: Convert to devm_platform_ioremap_resource()
-To:     Yangtao Li <frank.li@vivo.com>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+Date:   Tue, 11 Jul 2023 15:55:26 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVCQmh6V182q4g---jvsWiTOP2hBPZKvma6oUN6535LEg@mail.gmail.com>
+Message-ID: <CAMuHMdVCQmh6V182q4g---jvsWiTOP2hBPZKvma6oUN6535LEg@mail.gmail.com>
+Subject: Consider switching to WQ_UNBOUND messages (was: Re: [PATCH v2 6/7]
+ workqueue: Report work funcs that trigger automatic CPU_INTENSIVE mechanism)
+To:     Tejun Heo <tj@kernel.org>
+Cc:     Lai Jiangshan <jiangshanlai@gmail.com>,
+        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        kernel-team@meta.com, Linux PM list <linux-pm@vger.kernel.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        linux-rtc@vger.kernel.org,
+        linux-riscv <linux-riscv@lists.infradead.org>,
+        netdev <netdev@vger.kernel.org>,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Jul 10, 2023 at 4:47 AM Yangtao Li <frank.li@vivo.com> wrote:
-> Use devm_platform_ioremap_resource() to simplify code.
->
-> Signed-off-by: Yangtao Li <frank.li@vivo.com>
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Hi Tejun,
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+On Fri, May 12, 2023 at 9:54 PM Tejun Heo <tj@kernel.org> wrote:
+> Workqueue now automatically marks per-cpu work items that hog CPU for too
+> long as CPU_INTENSIVE, which excludes them from concurrency management and
+> prevents stalling other concurrency-managed work items. If a work function
+> keeps running over the thershold, it likely needs to be switched to use an
+> unbound workqueue.
+>
+> This patch adds a debug mechanism which tracks the work functions which
+> trigger the automatic CPU_INTENSIVE mechanism and report them using
+> pr_warn() with exponential backoff.
+>
+> v2: Drop bouncing through kthread_worker for printing messages. It was to
+>     avoid introducing circular locking dependency but wasn't effective as it
+>     still had pool lock -> wci_lock -> printk -> pool lock loop. Let's just
+>     print directly using printk_deferred().
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Suggested-by: Peter Zijlstra <peterz@infradead.org>
+
+Thanks for your patch, which is now commit 6363845005202148
+("workqueue: Report work funcs that trigger automatic CPU_INTENSIVE
+mechanism") in v6.5-rc1.
+
+I guess you are interested to know where this triggers.
+I enabled CONFIG_WQ_CPU_INTENSIVE_REPORT=y, and tested
+the result on various machines...
+
+SH/R-Mobile:
+
+  workqueue: genpd_power_off_work_fn hogged CPU for >10000us 4 times,
+consider switching to WQ_UNBOUND
+
+Atmark Techno Armadillo800-EVA with shmob_drm:
+
+  workqueue: drm_fb_helper_damage_work hogged CPU for >10000us 16
+times, consider switching to WQ_UNBOUND
+
+R-Car Gen2:
+
+  workqueue: rtc_timer_do_work hogged CPU for >10000us 4 times,
+consider switching to WQ_UNBOUND
+
+R-Car Gen2/Gen3:
+
+  workqueue: pm_runtime_work hogged CPU for >10000us 4 times, consider
+switching to WQ_UNBOUND
+
+R-Car Gen3:
+
+  workqueue: kfree_rcu_work hogged CPU for >10000us 4 times, consider
+switching to WQ_UNBOUND
+
+OrangeCrab/Linux-on-LiteX-VexRiscV with ht16k33 14-seg display and ssd130xdrmfb:
+
+  workqueue: check_lifetime hogged CPU for >10000us 4 times, consider
+switching to WQ_UNBOUND
+  workqueue: drm_fb_helper_damage_work hogged CPU for >10000us 1024
+times, consider switching to WQ_UNBOUND
+  workqueue: fb_flashcursor hogged CPU for >10000us 128 times,
+consider switching to WQ_UNBOUND
+  workqueue: ht16k33_seg14_update hogged CPU for >10000us 128 times,
+consider switching to WQ_UNBOUND
+  workqueue: mmc_rescan hogged CPU for >10000us 128 times, consider
+switching to WQ_UNBOUND
+
+Atari (ARAnyM):
+
+  workqueue: ata_sff_pio_task hogged CPU for >10000us 64 times,
+consider switching to WQ_UNBOUND
+
+The OrangeCrab is a slow machine, so it's not that surprising to see these
+messages...
 
 Gr{oetje,eeting}s,
 
                         Geert
 
--- 
+
+--
 Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
 In personal conversations with technical people, I call myself a hacker. But
