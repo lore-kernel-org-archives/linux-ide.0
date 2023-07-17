@@ -2,84 +2,65 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E4F0C001B0
-	for <linux-ide@archiver.kernel.org>; Mon, 17 Jul 2023 00:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37FD3EB64DD
+	for <linux-ide@archiver.kernel.org>; Mon, 17 Jul 2023 00:44:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbjGQAcE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 16 Jul 2023 20:32:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54740 "EHLO
+        id S229564AbjGQAor (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 16 Jul 2023 20:44:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229491AbjGQAcD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jul 2023 20:32:03 -0400
+        with ESMTP id S229547AbjGQAor (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jul 2023 20:44:47 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A6E3D9;
-        Sun, 16 Jul 2023 17:32:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3BCBF1;
+        Sun, 16 Jul 2023 17:44:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DF01D60EE1;
-        Mon, 17 Jul 2023 00:32:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FD69C433C7;
-        Mon, 17 Jul 2023 00:31:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5881760C61;
+        Mon, 17 Jul 2023 00:44:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BDE4C433C7;
+        Mon, 17 Jul 2023 00:44:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689553921;
-        bh=paHDLzbIxR4t35jchB7wP2+mUhpnQT7MXpvr4zdD+90=;
+        s=k20201202; t=1689554684;
+        bh=GZajVsWW/s80ddVKhYj9EUiUEU7y3xOxGtR9CYJ4i0g=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=NGAwd27d2QSwibXdeiJQOvz80aVEcGN2o1X5Hjn3a5g2reDFRFyB8/0fLCXReMZvu
-         OCdiN07ufnxbNjv8XKO9AB3fOzYhNQX9hRRd+h/U1a4skPAGtkOUSbo89sE0UTSZq4
-         MHxDW+6VsYq82Ji4usFwSlv9djC0J4miWFaoqvasAbn6A77yUoHokntrBKnmK+ojeX
-         73TPMhXlvwcSxQFh7SGJ2BMSqaMzIgF+6HqiY1QUz4pygGHzK6d7wKw1w2jlCzhIu+
-         UHgvoPArgFVA7qlBSHffdZr9a/oxJYOdh+fvM2oFhj21Q2AA9ed2m1alBHdtOf000/
-         8V30k5AiPZ+Yg==
-Message-ID: <ec511842-b978-b16d-fec3-248e6af37b07@kernel.org>
-Date:   Mon, 17 Jul 2023 09:31:58 +0900
+        b=K+CDsmm4A7MQqQXpIAlUP093CKWVlk4FiKlF5GgeHUnfSXGHLfCiW1it1PTzQcWET
+         3r3qOxAFu0GpmcgrdLaR6Cqv4fbybPEaU3nWq1051BuWSH3IVyIvpZHGcA422yqpJ9
+         ujRFRY+mKWNvRIw1PGzg93MvhphPSt1SEBzSQd7u3XIqw/gPKAiJirw60JNHS3z9fc
+         cO7G2DjxwreAyE49ZfXAHmsN1fgRJehOaH3X4naBpifT+57vXHL7TwEZWyWjgsRue4
+         7MvBVhQrGpBf2dbyv0A1YEuzpdKLEGPI2UtfsOOnajm5oH7WsihgqMR4oEDdBUzpRT
+         WFnJKmJQSrB0g==
+Message-ID: <d8cb9a46-8f6e-ad47-12d1-2989ab99ca3f@kernel.org>
+Date:   Mon, 17 Jul 2023 09:44:43 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: Explicitly include correct DT includes
+Subject: Re: [PATCH v3 01/11] ata: ahci_octeon: Convert to
+ devm_platform_ioremap_resource()
 Content-Language: en-US
-To:     Rob Herring <robh@kernel.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Samuel Holland <samuel@sholland.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Linus Walleij <linus.walleij@linaro.org>
-Cc:     devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-sunxi@lists.linux.dev,
-        linux-tegra@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-References: <20230714174052.4040857-1-robh@kernel.org>
+To:     Yangtao Li <frank.li@vivo.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230710024550.59544-1-frank.li@vivo.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230714174052.4040857-1-robh@kernel.org>
+In-Reply-To: <20230710024550.59544-1-frank.li@vivo.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/15/23 02:40, Rob Herring wrote:
-> The DT of_device.h and of_platform.h date back to the separate
-> of_platform_bus_type before it as merged into the regular platform bus.
-> As part of that merge prepping Arm DT support 13 years ago, they
-> "temporarily" include each other. They also include platform_device.h
-> and of.h. As a result, there's a pretty much random mix of those include
-> files used throughout the tree. In order to detangle these headers and
-> replace the implicit includes with struct declarations, users need to
-> explicitly include the correct includes.
+On 7/10/23 11:45, Yangtao Li wrote:
+> Use devm_platform_ioremap_resource() to simplify code.
 > 
-> Signed-off-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Yangtao Li <frank.li@vivo.com>
 
-Applied to for-6.6. Thanks !
+Applied the series to for-6.6. Thanks !
+
+(next time, please add a cover letter for a multi-patch series)
+
 
 -- 
 Damien Le Moal
