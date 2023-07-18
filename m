@@ -2,39 +2,38 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B226EB64DA
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 09:44:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13BA7EB64DA
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 09:47:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229995AbjGRJoQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Jul 2023 05:44:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44916 "EHLO
+        id S231216AbjGRJrH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Jul 2023 05:47:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230168AbjGRJoQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 05:44:16 -0400
+        with ESMTP id S229579AbjGRJrG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 05:47:06 -0400
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E802BE0;
-        Tue, 18 Jul 2023 02:44:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D031FB;
+        Tue, 18 Jul 2023 02:47:05 -0700 (PDT)
 Received: from [192.168.1.103] (31.173.85.68) by msexch01.omp.ru (10.188.4.12)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 18 Jul
- 2023 12:44:04 +0300
-Subject: Re: [PATCH] ata: remove whitespace after '(' and before ')'
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+ 2023 12:46:57 +0300
+Subject: Re: [PATCH] drivers: ata: Added missing spaces
 To:     <hanyu001@208suo.com>, <dlemoal@kernel.org>
 CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <tencent_6714ED434F83826DD33A8EE7B99064165309@qq.com>
- <07f7ac9c59d027f959a69836fee9940c@208suo.com>
- <5b055482-1adc-6915-b693-f3a95ebc64a1@gmail.com>
+References: <tencent_BF5CCE8322052C3E2AE2861606F1D8AE740A@qq.com>
+ <c34db7fdcd7ac86046fe481cb91a9a48@208suo.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <f83d3930-ea43-aa19-b060-2658c1612fd6@omp.ru>
-Date:   Tue, 18 Jul 2023 12:44:01 +0300
+Message-ID: <531e5d71-e3d1-7382-d80b-876e8ac57d84@omp.ru>
+Date:   Tue, 18 Jul 2023 12:46:54 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <5b055482-1adc-6915-b693-f3a95ebc64a1@gmail.com>
+In-Reply-To: <c34db7fdcd7ac86046fe481cb91a9a48@208suo.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [31.173.85.68]
 X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
  (10.188.4.12)
@@ -49,12 +48,12 @@ X-KSE-AntiSpam-Info: Version: 5.9.59.0
 X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
 X-KSE-AntiSpam-Info: LuaCore: 523 523 523027ce26ed1d9067f7a52a4756a876e54db27c
 X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_arrow_text}
 X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
 X-KSE-AntiSpam-Info: {relay has no DNS name}
 X-KSE-AntiSpam-Info: {SMTP from is not routable}
 X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.85.68 in (user)
  b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.85.68 in (user) dbl.spamhaus.org}
 X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
 X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.85.68
 X-KSE-AntiSpam-Info: {DNS response errors}
@@ -76,23 +75,29 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/18/23 12:12 PM, Sergei Shtylyov wrote:
+   You should CC me on the PATA patches.
+   And your subject should look like this:
 
->> This patch fixes the following checkpatch errors:
->>
->> ./drivers/ata/pata_sis.c:691: ERROR: space prohibited after that open parenthesis '('
->> ./drivers/ata/pata_sis.c:691: ERROR: space prohibited before that close parenthesis ')'
->>
->> Signed-off-by: Yu Han <    hanyu001@208suo.com>
-> 
->    What happened to your email? :-)
-> 
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
->    Altho I'm not sure whether Damien would want to apply that...
+ata: pata_triflex: Added missing spaces
 
-   Oh, and the subject should look like this:
+On 7/18/23 12:12 PM, hanyu001@208suo.com wrote:
 
-ata: pata_sis: remove whitespace after '(' and before ')'
+> Added spaces needed in the proper places to address:
+> 
+> ./drivers/ata/pata_triflex.c:88: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:90: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:92: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:96: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:98: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:100: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:102: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:104: ERROR: space required after that ';' (ctx:VxV)
+> ./drivers/ata/pata_triflex.c:106: ERROR: space required after that ';' (ctx:VxV)
+> 
+> Signed-off-by: Yu Han <hanyu001@208suo.com>
+
+   Aside from the issue with the subject:
+
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
 MBR, Sergey
