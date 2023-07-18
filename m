@@ -2,87 +2,81 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1887EB64DA
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 09:16:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC65EB64DC
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 09:30:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229480AbjGRJQB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Jul 2023 05:16:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53694 "EHLO
+        id S231642AbjGRJav (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Jul 2023 05:30:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232179AbjGRJPm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 05:15:42 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5A9B170C;
-        Tue, 18 Jul 2023 02:15:38 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-4fa16c6a85cso8706673e87.3;
-        Tue, 18 Jul 2023 02:15:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689671736; x=1690276536;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZSJUm/Yd7shnvenHepkcjFVUM0ifKlW2CRs/h0RG3ew=;
-        b=VM6EpdYIg155VnamqqOEwTGggCQ7ZoCpYTYcptTlmQEzNj6rTcEVI48PgdMu8Ji7Kj
-         lpv3Jlo9BE2631bwLO+4sHveneeriZFKCITZhuDn/rmrkZ17wRJW0jMrViQP8MdxN65E
-         U5gPg3VCJunDz4XHOFfo2IghTrhguK0uG1SEMu1U/7pHf2AOKR2AmCNug+tIo+wFLncy
-         Tz67wzmA7OnnrLRr9a4NNPsBtDwLWTE7mupA9g5aP0osWbYnC7LSD5VI0CaWwGAjMyAe
-         PVhrXB4kLZgxweJA03yTipkowJ79ZnTfvQzJbPZug2FP8eKU0yrYlOInLe4fz+yNcjTR
-         bylw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689671736; x=1690276536;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZSJUm/Yd7shnvenHepkcjFVUM0ifKlW2CRs/h0RG3ew=;
-        b=BBjP4OPMrfugOZvqX+DABbDXLmOFul72vLeTydbeiINpdI5ifNeBi/rPq9cWRKBYM1
-         qrfob34kutFWVUhKwS2HTSgshQcAvl1sBERI7LxW28TL5dvD9/EmnASTVk/911v8rqZd
-         /7/E1yBUF1/7H59xoR4ZG+FJhVQe19Rnv9MI9an2hikkEXOrSdlc3px9OAccqI9ADT5x
-         KeIXd+TILuCegwmLUXJgMCU3sMDN8pb708wJRkhbFcgjaExT+7We+Un+1jcrMvAglVmq
-         JXTG/mrEum6cCsWajk+JZDK2017hIjG093nepioBcq7mwQc3SiG6lA1xo/6HaNK+uxOd
-         MkRA==
-X-Gm-Message-State: ABy/qLb7I1akxWDYTqtfDMOj7mAXOwquFTgs+bE1vKGK6S7Swmkfweea
-        QHXiS8u1+IHI32/tMMcGxN/v9KK/yRA=
-X-Google-Smtp-Source: APBJJlEBGvUZbxDP/THXggMtb+iJuY6yuqpuZ3vuFGrFc+I7w4ab3WCbbZh+9hRriPtOPAVcXseHQg==
-X-Received: by 2002:a05:6512:2202:b0:4f6:2a02:fc1a with SMTP id h2-20020a056512220200b004f62a02fc1amr11207986lfu.17.1689671736436;
-        Tue, 18 Jul 2023 02:15:36 -0700 (PDT)
-Received: from [192.168.1.103] ([31.173.85.68])
-        by smtp.gmail.com with ESMTPSA id p1-20020a19f001000000b004f4b42e2d7dsm338370lfc.230.2023.07.18.02.15.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Jul 2023 02:15:35 -0700 (PDT)
-Subject: Re: [PATCH] wifi: ata: pata_parport: epat.c Added missing spaces
-To:     hanyu001@208suo.com, dlemoal@kernel.org
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <tencent_DAE8C1D6AAA3633E096977B14E5133F42705@qq.com>
- <5a75c59282fbe38bc4637c95c66f9151@208suo.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <e76b0b7a-6cc1-b9a4-dc99-7d88640cafee@gmail.com>
-Date:   Tue, 18 Jul 2023 12:15:34 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S230152AbjGRJat (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 05:30:49 -0400
+Received: from mail.208.org (unknown [183.242.55.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 115D7AF
+        for <linux-ide@vger.kernel.org>; Tue, 18 Jul 2023 02:30:48 -0700 (PDT)
+Received: from mail.208.org (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTP id 4R4twj6rD5zBR0gv
+        for <linux-ide@vger.kernel.org>; Tue, 18 Jul 2023 17:30:45 +0800 (CST)
+Authentication-Results: mail.208.org (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)" header.d=208.org
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
+        content-transfer-encoding:content-type:message-id:user-agent
+        :references:in-reply-to:subject:to:from:date:mime-version; s=
+        dkim; t=1689672645; x=1692264646; bh=4gedVbL7S7MH4j3jlvs633IMoV8
+        +4e8hGBJoYgg3gIY=; b=aDyPUMWBFZTU9DxX0RElDmf01O02AIui4LgO1PYkPKW
+        JYvRBoKx8nvgC3sdwHw5gBXs/eKsldFl19E2bftcG0MHUlCYxnLEOF8P85fqY7KD
+        qrqoTQuV9nMUpO8S76jk454dM01BuXXnQ2LOvC8eFPpkf4/bhJ+YcXC6Y2/kWjYd
+        SImy8Z0hm6rkSWnXU+TLdqKTGSiZQJNFWDLUuVgym3xyjJAr3qpOL4g0Ebh9D6sq
+        sNxbD3nh03Qj0Pv0lMdhASAy9nEmSqiVhGPs5sHLXlyLF7T8bGcTUdKvu/PntkG/
+        zF+tOfstGQo3ofbUlfJxdf/HptfT7rsKM3HGncnjBFw==
+X-Virus-Scanned: amavisd-new at mail.208.org
+Received: from mail.208.org ([127.0.0.1])
+        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id NZs-RzeBqNYl for <linux-ide@vger.kernel.org>;
+        Tue, 18 Jul 2023 17:30:45 +0800 (CST)
+Received: from localhost (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTPSA id 4R4twj562VzBJBfd;
+        Tue, 18 Jul 2023 17:30:45 +0800 (CST)
 MIME-Version: 1.0
-In-Reply-To: <5a75c59282fbe38bc4637c95c66f9151@208suo.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Date:   Tue, 18 Jul 2023 17:30:45 +0800
+From:   hanyu001@208suo.com
+To:     dlemoal@kernel.org, s.shtylyov@omp.ru
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: "foo * bar" should be "foo *bar"
+In-Reply-To: <tencent_B3697156112E542F68C876BB0362BE18A905@qq.com>
+References: <tencent_B3697156112E542F68C876BB0362BE18A905@qq.com>
+User-Agent: Roundcube Webmail
+Message-ID: <28f4481572293230e84275db48a69462@208suo.com>
+X-Sender: hanyu001@208suo.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/18/23 10:57 AM, hanyu001@208suo.com wrote:
+This patch fixes the checkpatch.pl error:
 
-> Added spaces needed in the proper places to address:
-> 
-> ./drivers/ata/pata_parport/epat.c:283: ERROR: spaces required around that '=' (ctx:VxV)
-> ./drivers/ata/pata_parport/epat.c:283: ERROR: space required after that ';' (ctx:VxV)
-> ./drivers/ata/pata_parport/epat.c:283: ERROR: spaces required around that '<' (ctx:VxV)
-> ./drivers/ata/pata_parport/epat.c:283: ERROR: space required after that ';' (ctx:VxV)
+./drivers/ata/pata_serverworks.c:305: ERROR: "foo * bar" should be "foo 
+*bar"
 
-   Is that from checkpatch.pl?
+Signed-off-by: 	Yu Han <hanyu001@208suo.com>
+---
+  drivers/ata/pata_serverworks.c | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Signed-off-by: Yu Han <hanyu001@208suo.com>
+diff --git a/drivers/ata/pata_serverworks.c 
+b/drivers/ata/pata_serverworks.c
+index 549ff24..b348784 100644
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -302,7 +302,7 @@ static int serverworks_fixup_csb(struct pci_dev 
+*pdev)
 
-   Aside from the issue with the subject:
-
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
-MBR, Sergey
+      /* Third Channel Test */
+      if (!(PCI_FUNC(pdev->devfn) & 1)) {
+-        struct pci_dev * findev = NULL;
++        struct pci_dev *findev = NULL;
+          u32 reg4c = 0;
+          findev = pci_get_device(PCI_VENDOR_ID_SERVERWORKS,
+              PCI_DEVICE_ID_SERVERWORKS_CSB5, NULL);
