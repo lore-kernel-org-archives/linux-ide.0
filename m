@@ -2,104 +2,103 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD742EB64DC
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 10:46:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0DD0EB64DA
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 10:49:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229625AbjGRKqH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Jul 2023 06:46:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47146 "EHLO
+        id S230256AbjGRKtQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Jul 2023 06:49:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229811AbjGRKqG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 06:46:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C51F189;
-        Tue, 18 Jul 2023 03:46:05 -0700 (PDT)
+        with ESMTP id S229872AbjGRKtP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 06:49:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11BD594;
+        Tue, 18 Jul 2023 03:49:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CBD0D6150C;
-        Tue, 18 Jul 2023 10:46:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6C48C433C7;
-        Tue, 18 Jul 2023 10:46:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9A6FF61510;
+        Tue, 18 Jul 2023 10:49:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A85ECC433C7;
+        Tue, 18 Jul 2023 10:49:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689677164;
-        bh=NP8hk+WVflZAzc8MTekAOt7HnsMBveyW+5Dxwu+GBX0=;
+        s=k20201202; t=1689677354;
+        bh=7PuKfUbT6USNeApOTjrCEwazNajiRjhN8ITdMPSKfEk=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=rRayySnLiFad+UOmpBaN2mLBnxnQh1wllU8eTCNLufhk78DLxJBFIdesN6gKVzT8D
-         2QTNUxZ/mvaU9NW7feMxVB2RWb45upzDZp6ctvJVNjZjIyrnVXvW/l0i9VabOimkYY
-         ngTF7morzLcEPF+E40V7aYYHxMFSa3G1O2RpoGRYepVY3xztihhQ5CBshdh1iq5dDq
-         0VVpcaNIkbhnEos87Ubki5fW3izjRCVeM9qfeLwy1IXLsujPLTonRC8+SXNy0IzmXa
-         FkClfe8Q5SjrbAf4Zx5l+ls3zATGyOhNdjHu53+jzzwADUnXRV6zhnAGEhIBB4VR4b
-         CKgTSyyzBCqSA==
-Message-ID: <da716584-253b-8c8e-ff28-7ba207d0bd7d@kernel.org>
-Date:   Tue, 18 Jul 2023 19:46:02 +0900
+        b=tGr1dQZGbwwUXSI2i67E2GhUCIHAZwJ1xRNNzVQFufQmiFiSIXsCAg60FzyMnGKBd
+         Yrvjjak311rpKf5wqWOLhnRoGY0DMLwRs3xM3R8nKQDTCOKA4ac8K+HAI3FT3UT8GU
+         Qmvr/HPrwCQy97hTA0b5cRbGxg1CcbiX2v3/K80X2lSmprEAZZgarSXDrN9hzuEZOz
+         05E/DG4JPgNgVfNUOMvmECm5tBl5C2riR0zf3JGT7s+fMy0mBtIn0W/X1XfyDzatdP
+         TANbppvvJcPsQvGAoaeAL0H0iLumM/xVtP43IPnVAXKIWz4r1557DqCjj62q9vsEK8
+         nRzW+EHsliRzQ==
+Message-ID: <e7340950-5854-add1-a383-fa57fc208b29@kernel.org>
+Date:   Tue, 18 Jul 2023 19:49:12 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: remove whitespace after '(' and before ')'
+Subject: Re: [PATCH] ata: space required after that ','
 Content-Language: en-US
 To:     hanyu001@208suo.com
 Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <tencent_6714ED434F83826DD33A8EE7B99064165309@qq.com>
- <07f7ac9c59d027f959a69836fee9940c@208suo.com>
+References: <tencent_1D2A7704CC3721452CCE2B2E86EE04F5D90A@qq.com>
+ <a1b3139f2635446abf6f3c39306aa164@208suo.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <07f7ac9c59d027f959a69836fee9940c@208suo.com>
+In-Reply-To: <a1b3139f2635446abf6f3c39306aa164@208suo.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/18/23 17:53, hanyu001@208suo.com wrote:
-> This patch fixes the following checkpatch errors:
+On 7/18/23 18:48, hanyu001@208suo.com wrote:
+> Fixes the following checkpatch errors:
 
-The subject should be:
-
-ata: pata_sis: xxx
-
-But in any case, the above message says that this is a warning from checkpatch.
-But what are you patching to get this ? If you run checkpatch directly on
-drivers/ata/pata_sis.c, you will get *a lot* more warnings than just this. And I
-would not want patches to fix that, unless the warnings are also generated with
-"make W=1" or "make C=1".
-
-If you actually fix a bug in this driver that touches code around the lines you
-touch, then it is fine to fix that to avoid the warnings, but not just for the
-sake of it. libata code overall has a lot of code style issues that will trigger
-checkpatch warnings. When code is changed, fixing the code style at the same
-time is fine.
-
-Exception to this is again if you see warnings with "make W=1" or "make C=1". I
-applied a lot of patches recently to fix the code style in the pata_parport
-protocol modules because they were generating compilation warnings.
+Same comment as in my previous email. What patch triggers this ?
+Yes it is a bad code style and changing the code in that area will definitely
+trigger warnings with checkpatch. But you are not changing anything...
+So let's avoid churn please. If you actually fix something in that area, then
+OK, add this syntax change as well.
 
 > 
-> ./drivers/ata/pata_sis.c:691: ERROR: space prohibited after that open 
-> parenthesis '('
-> ./drivers/ata/pata_sis.c:691: ERROR: space prohibited before that close 
-> parenthesis ')'
+> ./drivers/ata/libata-transport.c:92: ERROR: space required after that 
+> ',' (ctx:VxV)
+> ./drivers/ata/libata-transport.c:92: ERROR: space required after that 
+> ',' (ctx:VxV)
+> ./drivers/ata/libata-transport.c:92: ERROR: space required after that 
+> ',' (ctx:VxV)
+> ./drivers/ata/libata-transport.c:92: ERROR: space required after that 
+> ',' (ctx:VxV)
+> ./drivers/ata/libata-transport.c:94: ERROR: space required after that 
+> ',' (ctx:VxV)
+> ./drivers/ata/libata-transport.c:94: ERROR: space required after that 
+> ',' (ctx:VxV)
+> ./drivers/ata/libata-transport.c:94: ERROR: space required after that 
+> ',' (ctx:VxV)
 > 
 > Signed-off-by: Yu Han <	hanyu001@208suo.com>
 > ---
->   drivers/ata/pata_sis.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/ata/libata-transport.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-> index 31de06b..2019777 100644
-> --- a/drivers/ata/pata_sis.c
-> +++ b/drivers/ata/pata_sis.c
-> @@ -688,7 +688,7 @@ static void sis_fixup(struct pci_dev *pdev, struct 
-> sis_chipset *sis)
+> diff --git a/drivers/ata/libata-transport.c 
+> b/drivers/ata/libata-transport.c
+> index e4fb9d1..4e87f77 100644
+> --- a/drivers/ata/libata-transport.c
+> +++ b/drivers/ata/libata-transport.c
+> @@ -89,9 +89,9 @@ struct ata_internal {
+>   /*
+>    * Hack to allow attributes of the same name in different objects.
+>    */
+> -#define ATA_DEVICE_ATTR(_prefix,_name,_mode,_show,_store) \
+> +#define ATA_DEVICE_ATTR(_prefix, _name, _mode, _show, _store) \
+>       struct device_attribute device_attr_##_prefix##_##_name = \
+> -    __ATTR(_name,_mode,_show,_store)
+> +    __ATTR(_name, _mode, _show, _store)
 > 
->       if (sis->info == &sis_info33) {
->           pci_read_config_byte(pdev, PCI_CLASS_PROG, &reg);
-> -        if (( reg & 0x0F ) != 0x00)
-> +        if ((reg & 0x0F) != 0x00)
->               pci_write_config_byte(pdev, PCI_CLASS_PROG, reg & 0xF0);
->           /* Fall through to ATA16 fixup below */
->       }
+>   #define ata_bitfield_name_match(title, table)            \
+>   static ssize_t                            \
 
 -- 
 Damien Le Moal
