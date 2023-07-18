@@ -2,159 +2,90 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E130EB64DA
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 09:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C72B5EB64DA
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Jul 2023 10:08:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232444AbjGRJ4f convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Jul 2023 05:56:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48428 "EHLO
+        id S229939AbjGRKIO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Jul 2023 06:08:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232388AbjGRJ4K (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 05:56:10 -0400
-Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6C7626B2;
-        Tue, 18 Jul 2023 02:55:12 -0700 (PDT)
-Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-c2cf4e61bc6so5807310276.3;
-        Tue, 18 Jul 2023 02:55:12 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689674112; x=1692266112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dkfu4+zrfsEvNM/oP4wLx2h/8nsgQPK5hugPJnR2T8Y=;
-        b=bpbkAuFRysVLakByeshb8zpAsRtDwSouyWI2zK8LDbire43Ga6Px797CbkzAEiYTKh
-         piTAc/yW/QL3vr53oUbNpxFt5cPJkATey1YCK71ZQagCHeVXrO32uIis8HA7XLQFfqsW
-         S5n52bvq5HBIybyTxHoC8tZ3iUO5lzXGf0Oai+tGxmOCqcyqyD9P34lpYl0pQppd/BLd
-         xFtARFHae+ozxOlCh1aIc0RgweteWxn/3C7dNypw34JcK45OkiqAiJGGCJUzpWg6mavK
-         PqldY9eDrQR3+uGc4HbfLWR05ihT06SvVrQh22NKEjO2C3COV1RX6dSdLs3T51QHncMi
-         yoeg==
-X-Gm-Message-State: ABy/qLaKFV4gKKmCio9VcszED83JhY/l94h7gsHuaSgsQvcG/fREdS2p
-        Sq903AZKZLFu6PblYNwErObL3XvKfNFUbA==
-X-Google-Smtp-Source: APBJJlGPc04fhgxz0E0wgRdcDYs3513a4we7nVqGeT+GTp9gDnYZ0rkf654mHClpLr/GNVPMHelMGg==
-X-Received: by 2002:a25:6fc2:0:b0:c91:717e:7658 with SMTP id k185-20020a256fc2000000b00c91717e7658mr2408070ybc.2.1689674111749;
-        Tue, 18 Jul 2023 02:55:11 -0700 (PDT)
-Received: from mail-yb1-f178.google.com (mail-yb1-f178.google.com. [209.85.219.178])
-        by smtp.gmail.com with ESMTPSA id x71-20020a25ce4a000000b00cec105e03d1sm123056ybe.38.2023.07.18.02.55.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Jul 2023 02:55:10 -0700 (PDT)
-Received: by mail-yb1-f178.google.com with SMTP id 3f1490d57ef6-bc379e4c1cbso5811573276.2;
-        Tue, 18 Jul 2023 02:55:10 -0700 (PDT)
-X-Received: by 2002:a25:860f:0:b0:cec:59f7:b352 with SMTP id
- y15-20020a25860f000000b00cec59f7b352mr989091ybk.58.1689674110647; Tue, 18 Jul
- 2023 02:55:10 -0700 (PDT)
+        with ESMTP id S230449AbjGRKHx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 06:07:53 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9420C10C0;
+        Tue, 18 Jul 2023 03:07:44 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.85.68) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 18 Jul
+ 2023 13:07:36 +0300
+Subject: Re: [PATCH] ata: "foo * bar" should be "foo *bar"
+To:     <hanyu001@208suo.com>, <dlemoal@kernel.org>, <s.shtylyov@omp.ru>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <tencent_B3697156112E542F68C876BB0362BE18A905@qq.com>
+ <28f4481572293230e84275db48a69462@208suo.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <8dc7934a-6980-83fb-8e71-fccff2472ab9@omp.ru>
+Date:   Tue, 18 Jul 2023 13:07:33 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-References: <20230511181931.869812-1-tj@kernel.org> <20230511181931.869812-7-tj@kernel.org>
- <ZF6WsSVGX3O1d0pL@slm.duckdns.org> <CAMuHMdVCQmh6V182q4g---jvsWiTOP2hBPZKvma6oUN6535LEg@mail.gmail.com>
- <CAMuHMdW1kxZ1RHKTRVRqDNAbj1Df2=v0fPn5KYK3kfX_kiXR6A@mail.gmail.com>
- <ZK3MBfPS-3-tJgjO@slm.duckdns.org> <ZK30CR196rs-OWLq@slm.duckdns.org>
- <CAMuHMdUCXPi+aS-7bR3qRetKF9T3W9jk_HKjvaXmfHv5SEeuFg@mail.gmail.com> <ZLXIvXBvhsnL-ik_@slm.duckdns.org>
-In-Reply-To: <ZLXIvXBvhsnL-ik_@slm.duckdns.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 18 Jul 2023 11:54:58 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdU8CGhsU-1PZNdWH1xjbWcWSg2s2RFAegXi+vs=d-0t8Q@mail.gmail.com>
-Message-ID: <CAMuHMdU8CGhsU-1PZNdWH1xjbWcWSg2s2RFAegXi+vs=d-0t8Q@mail.gmail.com>
-Subject: Re: Consider switching to WQ_UNBOUND messages (was: Re: [PATCH v2
- 6/7] workqueue: Report work funcs that trigger automatic CPU_INTENSIVE mechanism)
-To:     Tejun Heo <tj@kernel.org>
-Cc:     Lai Jiangshan <jiangshanlai@gmail.com>,
-        "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        kernel-team@meta.com, Linux PM list <linux-pm@vger.kernel.org>,
-        DRI Development <dri-devel@lists.freedesktop.org>,
-        linux-rtc@vger.kernel.org,
-        linux-riscv <linux-riscv@lists.infradead.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <28f4481572293230e84275db48a69462@208suo.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [31.173.85.68]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 07/18/2023 09:20:15
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 178672 [Jul 18 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 523 523 523027ce26ed1d9067f7a52a4756a876e54db27c
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.85.68 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.85.68
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 07/18/2023 09:25:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 7/18/2023 8:14:00 AM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Tejun,
+   Your subject should look like:
 
-On Tue, Jul 18, 2023 at 1:03 AM Tejun Heo <tj@kernel.org> wrote:
-> Can you please the following patch and see how many reports you get? Looking
-> back at your reports, I think some of them probably should be converted to
-> UNBOUND but we should have a better idea with the adjusted threshold.
->
-> Thanks.
->
-> From 8555cbd4b22e5f85eb2bdcb84fd1d1f519a0a0d3 Mon Sep 17 00:00:00 2001
-> From: Tejun Heo <tj@kernel.org>
-> Date: Mon, 17 Jul 2023 12:50:02 -1000
-> Subject: [PATCH] workqueue: Scale up wq_cpu_intensive_thresh_us if BogoMIPS is
->  below 1000
->
-> wq_cpu_intensive_thresh_us is used to detect CPU-hogging per-cpu work items.
-> Once detected, they're excluded from concurrency management to prevent them
-> from blocking other per-cpu work items. If CONFIG_WQ_CPU_INTENSIVE_REPORT is
-> enabled, repeat offenders are also reported so that the code can be updated.
->
-> The default threshold is 10ms which is long enough to do fair bit of work on
-> modern CPUs while short enough to be usually not noticeable. This
-> unfortunately leads to a lot of, arguable spurious, detections on very slow
-> CPUs. Using the same threshold across CPUs whose performance levels may be
-> apart by multiple levels of magnitude doesn't make whole lot of sense.
->
-> This patch scales up wq_cpu_intensive_thresh_us upto 1 second when BogoMIPS
-> is below 1000. This is obviously very inaccurate but it doesn't have to be
-> accurate to be useful. The mechanism is still useful when the threshold is
-> fully scaled up and the benefits of reports are usually shared with everyone
-> regardless of who's reporting, so as long as there are sufficient number of
-> fast machines reporting, we don't lose much.
->
-> Some (or is it all?) ARM CPUs systemtically report significantly lower
-> BogoMIPS. While this doesn't break anything, given how widespread ARM CPUs
-> are, it's at least a missed opportunity and it probably would be a good idea
-> to teach workqueue about it.
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+ata: pata_serverworks: "foo * bar" should be "foo *bar"
 
-Thanks!
+> This patch fixes the checkpatch.pl error:
+> 
+> ./drivers/ata/pata_serverworks.c:305: ERROR: "foo * bar" should be "foo *bar"
+> 
+> Signed-off-by:     Yu Han <hanyu001@208suo.com>
 
-I gave it a try on a system with an 800 MHz Cortex A9, only to discover
-it makes no difference, as that machine has 1600 BogoMIPS:
+   Aside from the issue with the subject:
 
-workqueue: drm_fb_helper_damage_work hogged CPU for >10000us 4 times,
-consider switching to WQ_UNBOUND
-workqueue: drm_fb_helper_damage_work hogged CPU for >10000us 8 times,
-consider switching to WQ_UNBOUND
-workqueue: genpd_power_off_work_fn hogged CPU for >10000us 4 times,
-consider switching to WQ_UNBOUND
-workqueue: blk_mq_run_work_fn hogged CPU for >10000us 4 times,
-consider switching to WQ_UNBOUND
-workqueue: pm_runtime_work hogged CPU for >10000us 4 times, consider
-switching to WQ_UNBOUND
-workqueue: phy_state_machine hogged CPU for >10000us 4 times, consider
-switching to WQ_UNBOUND
-workqueue: drm_mode_rmfb_work_fn hogged CPU for >10000us 4 times,
-consider switching to WQ_UNBOUND
-workqueue: sync_hw_clock hogged CPU for >10000us 4 times, consider
-switching to WQ_UNBOUND
-workqueue: rtc_timer_do_work hogged CPU for >10000us 4 times, consider
-switching to WQ_UNBOUND
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Artificially low BogoMIPS numbers only happen on systems that have
-the related timers (Cortex A7/A15 and later, Cortex A9 MPCore,
-and arm64).
-
-I will test on more systems, but that will probably not happen until
-next week...
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+MBR, Sergey
