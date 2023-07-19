@@ -2,81 +2,88 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9905EB64DC
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jul 2023 02:02:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72427C001DC
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jul 2023 09:42:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229765AbjGSCCQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Jul 2023 22:02:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44994 "EHLO
+        id S229774AbjGSJmh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Jul 2023 05:42:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbjGSCCP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2023 22:02:15 -0400
-Received: from mail.208.org (unknown [183.242.55.162])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B87210B
-        for <linux-ide@vger.kernel.org>; Tue, 18 Jul 2023 19:02:11 -0700 (PDT)
-Received: from mail.208.org (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTP id 4R5Jn96M9yzBRYmF
-        for <linux-ide@vger.kernel.org>; Wed, 19 Jul 2023 09:55:41 +0800 (CST)
-Authentication-Results: mail.208.org (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)" header.d=208.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
-        content-transfer-encoding:content-type:message-id:user-agent
-        :references:in-reply-to:subject:to:from:date:mime-version; s=
-        dkim; t=1689731741; x=1692323742; bh=yKSd7cxWjShDjglwegTmMtByAjU
-        2HTzhwkcLswWUnSc=; b=CzQ8R5HaQukQMuwIRnAUJQw/m6yCltyonp+tBI2dKDw
-        NWZEuNwr0oNkLk+TuHLDuUAhIrDMM3sVKH5T9QEEQbtyCBf5kvf4f6WBQE66dIF6
-        AOKfu3x8wBegS/CNrVIHR/BMzGU/CTzxD4vJDYAYb8vKIl69lbiYWEkjnQRn8xkw
-        bMHjzEDYdheRt968wZsNIrm/pBwYMqBU21GwFSfRCWcCYFXoJpMlW/1aTVGmX+9+
-        kbh9S78BEl5/l+AGDO+6RpklS5WrAehk8JiWemrHivnqZ8KcqgSktrWwWHjpVFJg
-        ltNuqcTv5JDKXBozAeFmfVvR0bek5R5o9sQOM+d32PA==
-X-Virus-Scanned: amavisd-new at mail.208.org
-Received: from mail.208.org ([127.0.0.1])
-        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id z7hBvI6JUzFu for <linux-ide@vger.kernel.org>;
-        Wed, 19 Jul 2023 09:55:41 +0800 (CST)
-Received: from localhost (email.208.org [127.0.0.1])
-        by mail.208.org (Postfix) with ESMTPSA id 4R5JlY3g0BzBtk6C;
-        Wed, 19 Jul 2023 09:54:17 +0800 (CST)
+        with ESMTP id S230354AbjGSJmY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2023 05:42:24 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A923C10CC;
+        Wed, 19 Jul 2023 02:42:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 40F3D61331;
+        Wed, 19 Jul 2023 09:42:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 063C0C433C7;
+        Wed, 19 Jul 2023 09:42:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689759742;
+        bh=VUUMVFRdDD+K3SsdpeBN5Pr1IQErJJ9Z1IMYmvDtRWk=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=qX8RP0YoMkFQGnMYToXqpkLx3i6P1sVy2uKaGNGCB7PD1YM9sT2T9uVZlHOJxcE8z
+         lBDDhZKehTgHeuP/T+pRYP+emgIay3xu5xdJEu9wUGuwEAGJb2RR39n78i1KM+M3iN
+         oHZ6FaWOXCKWeZq9Xbo77c5q1kYlI+REyZZaF+Auy3L9L300lY7GOnDa90KuNaqm1W
+         9wf5qHtsJfBuju5eeNEfDQ2s5/UlnSqxTn8kg8k7RJA8dZ5FxbUlgpfICHCpUb44lD
+         3Hg4ary0ZIX4pM0RtxftPm3G5TQ/oS6bnuwVPemPQoCvSBfkmrBpifoYt4KD9TFgAA
+         OjvHo+0UwYjYA==
+Message-ID: <642db1d9-5e22-30ac-a1be-6825ac871c06@kernel.org>
+Date:   Wed, 19 Jul 2023 18:42:19 +0900
 MIME-Version: 1.0
-Date:   Wed, 19 Jul 2023 09:54:17 +0800
-From:   hanyu001@208suo.com
-To:     dlemoal@kernel.org
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ata: pata_serverworks: "foo * bar" should be "foo *bar"
-In-Reply-To: <tencent_FAA8D636BA8369FE01896CB144F12E543905@qq.com>
-References: <tencent_FAA8D636BA8369FE01896CB144F12E543905@qq.com>
-User-Agent: Roundcube Webmail
-Message-ID: <fee05ac48ee8c60b0843a7d63260ba1d@208suo.com>
-X-Sender: hanyu001@208suo.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v1] ata: pata_arasan_cf: Use dev_err_probe() instead
+ dev_err() in data_xfer()
+To:     =?UTF-8?B?5p2c5pWP5p2w?= <duminjie@vivo.com>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Viresh Kumar <vireshk@kernel.org>,
+        "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Cc:     "opensource.kernel" <opensource.kernel@vivo.com>
+References: <20230719073140.4971-1-duminjie@vivo.com>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230719073140.4971-1-duminjie@vivo.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This patch fixes the checkpatch.pl error:
+On 7/19/23 16:31, 杜敏杰 wrote:
+> It is possible for dma_request_chan() to return EPROBE_DEFER, which means
+> acdev->host->dev is not ready yet.
+> At this point dev_err() will have no output.
+> 
+> Signed-off-by: Minjie Du <duminjie@vivo.com>
+> ---
+>  drivers/ata/pata_arasan_cf.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+> index 6ab294322..fd54682f1 100644
+> --- a/drivers/ata/pata_arasan_cf.c
+> +++ b/drivers/ata/pata_arasan_cf.c
+> @@ -529,7 +529,8 @@ static void data_xfer(struct work_struct *work)
+>  	/* dma_request_channel may sleep, so calling from process context */>  	acdev->dma_chan = dma_request_chan(acdev->host->dev, "data");
+>  	if (IS_ERR(acdev->dma_chan)) {
+> -		dev_err(acdev->host->dev, "Unable to get dma_chan\n");
+> +		dev_err_probe(acdev->host->dev, PTR_ERR(acdev->dma_chan),
+> +						"Unable to get dma_chan\n");
 
-./drivers/ata/pata_serverworks.c:305: ERROR: "foo * bar" should be "foo 
-*bar"
+Please align the string argument after "(".
 
-Signed-off-by: 	Yu Han <hanyu001@208suo.com>
----
-  drivers/ata/pata_serverworks.c | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
+>  		acdev->dma_chan = NULL;
+>  		goto chan_request_fail;
+>  	}
 
-diff --git a/drivers/ata/pata_serverworks.c 
-b/drivers/ata/pata_serverworks.c
-index b348784..549ff24 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -302,7 +302,7 @@ static int serverworks_fixup_csb(struct pci_dev 
-*pdev)
+-- 
+Damien Le Moal
+Western Digital Research
 
-      /* Third Channel Test */
-      if (!(PCI_FUNC(pdev->devfn) & 1)) {
--        struct pci_dev *findev = NULL;
-+        struct pci_dev * findev = NULL;
-          u32 reg4c = 0;
-          findev = pci_get_device(PCI_VENDOR_ID_SERVERWORKS,
-              PCI_DEVICE_ID_SERVERWORKS_CSB5, NULL);
