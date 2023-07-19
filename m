@@ -2,86 +2,85 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72427C001DC
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jul 2023 09:42:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D173EB64DA
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jul 2023 09:44:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229774AbjGSJmh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Jul 2023 05:42:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47362 "EHLO
+        id S229601AbjGSJoN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Jul 2023 05:44:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230354AbjGSJmY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2023 05:42:24 -0400
+        with ESMTP id S229809AbjGSJnp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2023 05:43:45 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A923C10CC;
-        Wed, 19 Jul 2023 02:42:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECD411BFD;
+        Wed, 19 Jul 2023 02:43:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 40F3D61331;
-        Wed, 19 Jul 2023 09:42:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 063C0C433C7;
-        Wed, 19 Jul 2023 09:42:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 83BA461355;
+        Wed, 19 Jul 2023 09:43:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E45AC433C9;
+        Wed, 19 Jul 2023 09:43:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689759742;
-        bh=VUUMVFRdDD+K3SsdpeBN5Pr1IQErJJ9Z1IMYmvDtRWk=;
+        s=k20201202; t=1689759822;
+        bh=O05gYRt4tnmtGMhoOJ98YjOddIc4z4YFM2DBhuss2PI=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=qX8RP0YoMkFQGnMYToXqpkLx3i6P1sVy2uKaGNGCB7PD1YM9sT2T9uVZlHOJxcE8z
-         lBDDhZKehTgHeuP/T+pRYP+emgIay3xu5xdJEu9wUGuwEAGJb2RR39n78i1KM+M3iN
-         oHZ6FaWOXCKWeZq9Xbo77c5q1kYlI+REyZZaF+Auy3L9L300lY7GOnDa90KuNaqm1W
-         9wf5qHtsJfBuju5eeNEfDQ2s5/UlnSqxTn8kg8k7RJA8dZ5FxbUlgpfICHCpUb44lD
-         3Hg4ary0ZIX4pM0RtxftPm3G5TQ/oS6bnuwVPemPQoCvSBfkmrBpifoYt4KD9TFgAA
-         OjvHo+0UwYjYA==
-Message-ID: <642db1d9-5e22-30ac-a1be-6825ac871c06@kernel.org>
-Date:   Wed, 19 Jul 2023 18:42:19 +0900
+        b=pPC/JQfaKSN9jJb8qejSES0aMcIeBHme5q9ampwNQgiNJ0ioLad84EKefPP3VI8px
+         tvxiPmLKizxEl7rk3sF/YcyoMd0MhxDxXbgAFgR6ucYI9rWv15RKMtXjKQFXOKUIJn
+         jcA/qNSIEEOn/xgStqJH1vrpwmCnv0zZ0WdTQbxJpL20XDTwwC/dAfMYqBP3AFAMxc
+         SjFW8Qglf7zPIJeaPrdNy7E/ZMYGhqqRIkdP9tAirqNS8Wv9dNtcMWwxwQM0ce0YHz
+         q80Al5SoJWFD6fCmvyyDIhIC5BE63E30fvZSPr6wNRfHxh877J8iyKR8RoU2Web8Es
+         Jd/WJztFiNEqA==
+Message-ID: <231b4e0c-bc58-1f4f-ac26-30fc0036887f@kernel.org>
+Date:   Wed, 19 Jul 2023 18:43:41 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH v1] ata: pata_arasan_cf: Use dev_err_probe() instead
- dev_err() in data_xfer()
-To:     =?UTF-8?B?5p2c5pWP5p2w?= <duminjie@vivo.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Viresh Kumar <vireshk@kernel.org>,
-        "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Cc:     "opensource.kernel" <opensource.kernel@vivo.com>
-References: <20230719073140.4971-1-duminjie@vivo.com>
+Subject: Re: [PATCH] ata: pata_serverworks: "foo * bar" should be "foo *bar"
 Content-Language: en-US
+To:     hanyu001@208suo.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <tencent_FAA8D636BA8369FE01896CB144F12E543905@qq.com>
+ <fee05ac48ee8c60b0843a7d63260ba1d@208suo.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230719073140.4971-1-duminjie@vivo.com>
+In-Reply-To: <fee05ac48ee8c60b0843a7d63260ba1d@208suo.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/19/23 16:31, 杜敏杰 wrote:
-> It is possible for dma_request_chan() to return EPROBE_DEFER, which means
-> acdev->host->dev is not ready yet.
-> At this point dev_err() will have no output.
+On 7/19/23 10:54, hanyu001@208suo.com wrote:
+> This patch fixes the checkpatch.pl error:
 > 
-> Signed-off-by: Minjie Du <duminjie@vivo.com>
+> ./drivers/ata/pata_serverworks.c:305: ERROR: "foo * bar" should be "foo
+> *bar"
+> 
+> Signed-off-by:     Yu Han <hanyu001@208suo.com>
+
+Please stop sending patches like this. I will not apply such patch
+unless you actually fix a bug or a compilation warning.
+
 > ---
->  drivers/ata/pata_arasan_cf.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  drivers/ata/pata_serverworks.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-> index 6ab294322..fd54682f1 100644
-> --- a/drivers/ata/pata_arasan_cf.c
-> +++ b/drivers/ata/pata_arasan_cf.c
-> @@ -529,7 +529,8 @@ static void data_xfer(struct work_struct *work)
->  	/* dma_request_channel may sleep, so calling from process context */>  	acdev->dma_chan = dma_request_chan(acdev->host->dev, "data");
->  	if (IS_ERR(acdev->dma_chan)) {
-> -		dev_err(acdev->host->dev, "Unable to get dma_chan\n");
-> +		dev_err_probe(acdev->host->dev, PTR_ERR(acdev->dma_chan),
-> +						"Unable to get dma_chan\n");
-
-Please align the string argument after "(".
-
->  		acdev->dma_chan = NULL;
->  		goto chan_request_fail;
->  	}
+> diff --git a/drivers/ata/pata_serverworks.c
+> b/drivers/ata/pata_serverworks.c
+> index b348784..549ff24 100644
+> --- a/drivers/ata/pata_serverworks.c
+> +++ b/drivers/ata/pata_serverworks.c
+> @@ -302,7 +302,7 @@ static int serverworks_fixup_csb(struct pci_dev *pdev)
+> 
+>      /* Third Channel Test */
+>      if (!(PCI_FUNC(pdev->devfn) & 1)) {
+> -        struct pci_dev *findev = NULL;
+> +        struct pci_dev * findev = NULL;
+>          u32 reg4c = 0;
+>          findev = pci_get_device(PCI_VENDOR_ID_SERVERWORKS,
+>              PCI_DEVICE_ID_SERVERWORKS_CSB5, NULL);
 
 -- 
 Damien Le Moal
