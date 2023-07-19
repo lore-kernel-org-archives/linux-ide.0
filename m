@@ -2,92 +2,84 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51051EB64DA
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jul 2023 09:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 306DBEB64DA
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jul 2023 10:02:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230297AbjGSJws (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Jul 2023 05:52:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54250 "EHLO
+        id S230426AbjGSKCI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Jul 2023 06:02:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbjGSJwr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2023 05:52:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E544DEC;
-        Wed, 19 Jul 2023 02:52:46 -0700 (PDT)
+        with ESMTP id S230509AbjGSKBZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2023 06:01:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A17522106;
+        Wed, 19 Jul 2023 03:01:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7E0A46134C;
-        Wed, 19 Jul 2023 09:52:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 108ABC433C7;
-        Wed, 19 Jul 2023 09:52:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CA39F61355;
+        Wed, 19 Jul 2023 10:01:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6302C433C7;
+        Wed, 19 Jul 2023 10:01:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689760365;
-        bh=p+VPpRPArB1Uz3WdiGB0Q/lkKspNzGEsJXp0xntNTak=;
+        s=k20201202; t=1689760861;
+        bh=SSeHiXUfSG7Z7jlkcplDS675enDfnxq4QJm6cA2jMPI=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Z2abMUCWvgN0XC/hFUeMnoraY3M5H4fMDZRTWHPLtOgiRZ537ho5YDalpZPLAwvKe
-         43IOiBWoLFBmgfopQKpevAknmbqSAn2D16htatfxHAl35e3leKXTT9BrdrYfbZovL0
-         ZAJMWBN259/aumSwifFgPxHg0bUm9L3vjvf0zI8uNbw8CAI+nkVOwwW7JcbX3FrG7J
-         TZZ+r8LoT8aFp78cAeR9t7xhoDBifxW9KK86OqxjzfV8F0Edgeen8j2AE3kJ1bRJHo
-         elCtZ7lOaeqSADv+LRMr4OyqEMB/qeCXkVNyPJ6ZBV9KZkhOtL+brCmBDHH+wPo+7T
-         DcEqa5KQs+eNQ==
-Message-ID: <66dcf813-af1d-c7a0-5c02-3d2585ff6cc7@kernel.org>
-Date:   Wed, 19 Jul 2023 18:52:44 +0900
+        b=c0lWD6Nk72NWD0M4r6k7PSYwI6H9kEf685fbrQP35C3DzvzapPOT38KE3sd4LRxsE
+         3FZijP0YmZArQkXgYxU/fCKnmdi+QOnEthe0OSTDvQn/fYCJw2bwNHF2pKrLdMAI1I
+         YdCCcPDTesToygGLZJZJFXbj28fsMp/4L4yu2oLdeX6HChBgg8QB/AgkFGVLaC0wy6
+         ASGTA61JuVBKwLIMrZIAYZ7BdC29tnou7d5jvHca9BY6jj87IjAFOoGuOPa5vTZRru
+         VKgWOvTGDObGRn7v/8SS96iyTyDFCNaYgpZND/+rsgdBm5d6ExtPRNkYhIIjtyptN7
+         eu1vDNKo9p4+w==
+Message-ID: <ba6fd61f-cf72-85b2-10a2-7dbe1813e54f@kernel.org>
+Date:   Wed, 19 Jul 2023 19:00:59 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH v2] ata: pata_arasan_cf: Use dev_err_probe() instead
- dev_err() in data_xfer()
+Subject: Re: [PATCH] ata: Fix comment typo
 Content-Language: en-US
-To:     =?UTF-8?B?5p2c5pWP5p2w?= <duminjie@vivo.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Viresh Kumar <vireshk@kernel.org>,
-        "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Cc:     "opensource.kernel" <opensource.kernel@vivo.com>
-References: <20230719094902.5643-1-duminjie@vivo.com>
+To:     zhumao001@208suo.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230718161444.1710-1-dengshaomin@cdjrlc.com>
+ <20230718161444.1710-2-dengshaomin@cdjrlc.com>
+ <56b15d6a54bb736314a3182a3aa1ba27@208suo.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230719094902.5643-1-duminjie@vivo.com>
+In-Reply-To: <56b15d6a54bb736314a3182a3aa1ba27@208suo.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/19/23 18:49, 杜敏杰 wrote:
-> It is possible for dma_request_chan() to return EPROBE_DEFER, which means
-> acdev->host->dev is not ready yet.
-> At this point dev_err() will have no output.
+On 7/19/23 01:21, zhumao001@208suo.com wrote:
+> Delete repeated word in comment.
+
+Please fix the patch title to:
+
+ata: sata_dwc_460ex: Remove repeated word in comment
+
 > 
-> Signed-off-by: Minjie Du <duminjie@vivo.com>
+> Signed-off-by: Mao Zhu <zhumao001@208suo.com>
 > ---
->  drivers/ata/pata_arasan_cf.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  drivers/ata/sata_dwc_460ex.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-> index 6ab294322..fd54682f1 100644
-> --- a/drivers/ata/pata_arasan_cf.c
-> +++ b/drivers/ata/pata_arasan_cf.c
-> @@ -529,7 +529,8 @@ static void data_xfer(struct work_struct *work)
->  	/* dma_request_channel may sleep, so calling from process context */
->  	acdev->dma_chan = dma_request_chan(acdev->host->dev, "data");
->  	if (IS_ERR(acdev->dma_chan)) {
-> -		dev_err(acdev->host->dev, "Unable to get dma_chan\n");
-> +		dev_err_probe(acdev->host->dev, PTR_ERR(acdev->dma_chan),
-> +					  "Unable to get dma_chan\n");
-
-Still not aligned...
-
-        dev_err_probe(acdev->host->dev, PTR_ERR(acdev->dma_chan),
-                      "Unable to get dma_chan\n");
-
-Like this please.
-
->  		acdev->dma_chan = NULL;
->  		goto chan_request_fail;
->  	}
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index fabdd1e380f9..28c0e31cc128 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -1081,7 +1081,7 @@ static const struct scsi_host_template
+> sata_dwc_sht = {
+>      /*
+>       * test-only: Currently this driver doesn't handle NCQ
+>       * correctly. We enable NCQ but set the queue depth to a
+> -     * max of 1. This will get fixed in in a future release.
+> +     * max of 1. This will get fixed in a future release.
+>       */
+>      .sg_tablesize        = LIBATA_MAX_PRD,
+>      /* .can_queue        = ATA_MAX_QUEUE, */
 
 -- 
 Damien Le Moal
