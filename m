@@ -2,183 +2,123 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3A0BEB64DC
-	for <linux-ide@archiver.kernel.org>; Fri, 21 Jul 2023 16:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCE6AC04E69
+	for <linux-ide@archiver.kernel.org>; Fri, 21 Jul 2023 16:35:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230497AbjGUQfj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 21 Jul 2023 12:35:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33008 "EHLO
+        id S230457AbjGUQf4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 21 Jul 2023 12:35:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230218AbjGUQf2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jul 2023 12:35:28 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CA0C30FF;
-        Fri, 21 Jul 2023 09:35:04 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-4fb863edcb6so3444584e87.0;
-        Fri, 21 Jul 2023 09:35:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689957303; x=1690562103;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature:dkim-signature
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=KpzF2rgPJTiOjlV43Ae8Cak+dUfUHpv6b31nNa1ErFQ=;
-        b=dAOsCVNryRaIGj0z+I2lcSytX57xyDfOj4i8pwSlAgkCs68PPnWOtt/x+xrmZFIqiy
-         aSXAG7me/GT0Rr8qYiLRGXEMEkxTJxQgJLRK8+48S1DKsqbDDfXDwihVVmTH5VKTVMQ9
-         dIuoAtrhPFaUSY3tbn1ghV88dETGvLMpY4xvnsCRca9dVDssxA3FngEwPXnOVxp2A7hi
-         AMOsP08OJexD4XDCWNX/Y+Z2kQQmWdG/uLUFlZZVmZZcKc/sUYXrsTWdw0XcSK8xCql+
-         XLC0rfkwPL3QMir3Ea6ieEA6HsvGDi2zg4AulMB38oQd3wqtYljXkcU0dCEdaJsvijfy
-         So9w==
-X-Gm-Message-State: ABy/qLadahbNp9rwptPHa/EjS1dsqyEmVARZmhX3V7YOjQZUlwsopHhy
-        UQ/RSv4j6ATC3HCROvaMhpBZ4IW7Lxdhkw==
-X-Google-Smtp-Source: APBJJlH2SBc6QaIVnPZbLCoX05kHRVQHECojaXQYp62YwCVtrg76M7u6WJUYHYi6AuVirNkwcHebTw==
-X-Received: by 2002:a19:ca5a:0:b0:4fd:d862:72a6 with SMTP id h26-20020a19ca5a000000b004fdd86272a6mr1645176lfj.53.1689957302618;
-        Fri, 21 Jul 2023 09:35:02 -0700 (PDT)
-Received: from flawful.org (c-f5f0e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.240.245])
-        by smtp.gmail.com with ESMTPSA id d12-20020ac244cc000000b004fddb0eb960sm800044lfm.165.2023.07.21.09.35.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jul 2023 09:35:02 -0700 (PDT)
-Received: by flawful.org (Postfix, from userid 112)
-        id 14BE13F57; Fri, 21 Jul 2023 18:35:01 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1689957301; bh=7cpMffNeJO8A4cB2BFaFa1KTEwdrYSuoMIiy/LHLj4Q=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F33jcl0jRxk7mAtNoQ5Kaj9o8Q3DpOiQo7kotHHgd4DVtc16hCOE/TAxN7Dxy2mSV
-         u8nciUOwzeRTExSewsj04DlxxUH4z4VhlU2cu4BeUt+k34N0N9gt7C87lbRHsVtP23
-         XxSSuKq3iaRES/Xot1jCLGG4+DcgMT2k1onL58AM=
-Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by flawful.org (Postfix) with ESMTPSA id BBBFD3F2E;
-        Fri, 21 Jul 2023 18:32:51 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-        t=1689957171; bh=7cpMffNeJO8A4cB2BFaFa1KTEwdrYSuoMIiy/LHLj4Q=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IkZQN/iqrqRinhSaJpvDFNjNVM3pjL5zXKXkOvfOVbJ97NXJLUYgVSxYR3Oj6YbKK
-         FSed0sTNkWj4kNd3T4CHdQshh/O0q2hnMf8R7v/J2YNDRujHnbsghn+aOIETnyOn3a
-         7Wkg2uRVGFkWSNClhAplbu9ynwkTVZ/E3yzUaqL4=
-From:   Niklas Cassel <nks@flawful.org>
-To:     Damien Le Moal <dlemoal@kernel.org>,
-        John Garry <john.g.garry@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Hannes Reinecke <hare@suse.com>, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Niklas Cassel <niklas.cassel@wdc.com>
-Subject: [PATCH v3 2/9] ata,scsi: remove ata_sas_port_{start,stop} callbacks
-Date:   Fri, 21 Jul 2023 18:32:13 +0200
-Message-ID: <20230721163229.399676-3-nks@flawful.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230721163229.399676-1-nks@flawful.org>
-References: <20230721163229.399676-1-nks@flawful.org>
+        with ESMTP id S231261AbjGUQfo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jul 2023 12:35:44 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1FDC3C01;
+        Fri, 21 Jul 2023 09:35:24 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10778"; a="370668031"
+X-IronPort-AV: E=Sophos;i="6.01,222,1684825200"; 
+   d="scan'208";a="370668031"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2023 09:32:19 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.01,202,1684825200"; 
+   d="scan'208";a="868287915"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmsmga001.fm.intel.com with ESMTP; 21 Jul 2023 09:32:08 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andy@kernel.org>)
+        id 1qMt2w-00Ca3G-35;
+        Fri, 21 Jul 2023 19:32:02 +0300
+Date:   Fri, 21 Jul 2023 19:32:02 +0300
+From:   Andy Shevchenko <andy@kernel.org>
+To:     nikita.shubin@maquefel.me
+Cc:     Hartley Sweeten <hsweeten@visionengravers.com>,
+        Lennert Buytenhek <kernel@wantstofly.org>,
+        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Lukasz Majewski <lukma@denx.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Mark Brown <broonie@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+        soc@kernel.org, Liam Girdwood <lgirdwood@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        Michael Peters <mpeters@embeddedts.com>,
+        Kris Bahnsen <kris@embeddedts.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-gpio@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-rtc@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
+        netdev@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-input@vger.kernel.org, alsa-devel@alsa-project.org,
+        Andrew Lunn <andrew@lunn.ch>
+Subject: Re: [PATCH v3 20/42] net: cirrus: add DT support for Cirrus EP93xx
+Message-ID: <ZLqzAhWoZ2h7kNEP@smile.fi.intel.com>
+References: <20230605-ep93xx-v3-0-3d63a5f1103e@maquefel.me>
+ <20230605-ep93xx-v3-20-3d63a5f1103e@maquefel.me>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230605-ep93xx-v3-20-3d63a5f1103e@maquefel.me>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+On Thu, Jul 20, 2023 at 02:29:20PM +0300, Nikita Shubin via B4 Relay wrote:
+> From: Nikita Shubin <nikita.shubin@maquefel.me>
+> 
+> - add OF ID match table
+> - get phy_id from the device tree, as part of mdio
+> - copy_addr is now always used, as there is no SoC/board that aren't
+> - dropped platform header
 
-Callbacks are empty now, so remove them.
+...
 
-Also, remove the call to ap->ops->port_start() in ata_sas_port_init(),
-as this would otherwise cause a NULL pointer dereference, now when the
-callback is gone.
+> +	base_addr = ioremap(mem->start, resource_size(mem));
+> +	if (!base_addr)
+> +		return dev_err_probe(&pdev->dev, -EIO, "Failed to ioremap ethernet registers\n");
+> +
+> +	np = of_parse_phandle(pdev->dev.of_node, "phy-handle", 0);
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-[niklas: remove the call to ap->ops->port_start() in ata_sas_port_init()]
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
----
- drivers/ata/libata-sata.c     | 38 -----------------------------------
- drivers/scsi/libsas/sas_ata.c |  2 --
- include/linux/libata.h        |  2 --
- 3 files changed, 42 deletions(-)
+Isn't it something which is done in PHY core should do for you?
+Maybe Andrew Lunn can comment on this.
 
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 99d4ab04bcce..a8256cb08763 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1144,40 +1144,6 @@ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
- 
--/**
-- *	ata_sas_port_start - Set port up for dma.
-- *	@ap: Port to initialize
-- *
-- *	Called just after data structures for each port are
-- *	initialized.
-- *
-- *	May be used as the port_start() entry in ata_port_operations.
-- *
-- *	LOCKING:
-- *	Inherited from caller.
-- */
--int ata_sas_port_start(struct ata_port *ap)
--{
--	/* the port is marked as frozen at allocation time */
--	return 0;
--}
--EXPORT_SYMBOL_GPL(ata_sas_port_start);
--
--/**
-- *	ata_sas_port_stop - Undo ata_sas_port_start()
-- *	@ap: Port to shut down
-- *
-- *	May be used as the port_stop() entry in ata_port_operations.
-- *
-- *	LOCKING:
-- *	Inherited from caller.
-- */
--
--void ata_sas_port_stop(struct ata_port *ap)
--{
--}
--EXPORT_SYMBOL_GPL(ata_sas_port_stop);
--
- /**
-  * ata_sas_async_probe - simply schedule probing and return
-  * @ap: Port to probe
-@@ -1211,10 +1177,6 @@ EXPORT_SYMBOL_GPL(ata_sas_sync_probe);
- 
- int ata_sas_port_init(struct ata_port *ap)
- {
--	int rc = ap->ops->port_start(ap);
--
--	if (rc)
--		return rc;
- 	ap->print_id = atomic_inc_return(&ata_print_id);
- 	return 0;
- }
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 77714a495cbb..7ead1f1be97f 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -565,8 +565,6 @@ static struct ata_port_operations sas_sata_ops = {
- 	.qc_prep		= ata_noop_qc_prep,
- 	.qc_issue		= sas_ata_qc_issue,
- 	.qc_fill_rtf		= sas_ata_qc_fill_rtf,
--	.port_start		= ata_sas_port_start,
--	.port_stop		= ata_sas_port_stop,
- 	.set_dmamode		= sas_ata_set_dmamode,
- 	.sched_eh		= sas_ata_sched_eh,
- 	.end_eh			= sas_ata_end_eh,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 3eeea76c30de..5faf2d5d3da5 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1244,10 +1244,8 @@ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- extern void ata_sas_async_probe(struct ata_port *ap);
- extern int ata_sas_sync_probe(struct ata_port *ap);
- extern int ata_sas_port_init(struct ata_port *);
--extern int ata_sas_port_start(struct ata_port *ap);
- extern int ata_sas_tport_add(struct device *parent, struct ata_port *ap);
- extern void ata_sas_tport_delete(struct ata_port *ap);
--extern void ata_sas_port_stop(struct ata_port *ap);
- extern int ata_sas_slave_configure(struct scsi_device *, struct ata_port *);
- extern int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap);
- extern void ata_tf_to_fis(const struct ata_taskfile *tf,
+> +	if (!np)
+
+Yeah, right, let's leak mapped IO address space...
+And so on.
+
+> +		return dev_err_probe(&pdev->dev, -ENODEV, "Please provide \"phy-handle\"\n");
+
 -- 
-2.41.0
+With Best Regards,
+Andy Shevchenko
+
 
