@@ -2,104 +2,144 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A0EC001DC
-	for <linux-ide@archiver.kernel.org>; Sun, 23 Jul 2023 22:56:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38351C001DE
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Jul 2023 07:09:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229541AbjGWW4l (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 23 Jul 2023 18:56:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60502 "EHLO
+        id S229441AbjGXHJU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Jul 2023 03:09:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229499AbjGWW4l (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 23 Jul 2023 18:56:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56C691B7
-        for <linux-ide@vger.kernel.org>; Sun, 23 Jul 2023 15:56:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DE06B60DFE
-        for <linux-ide@vger.kernel.org>; Sun, 23 Jul 2023 22:56:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2CE0C433C7;
-        Sun, 23 Jul 2023 22:56:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690152999;
-        bh=NfhFVYD2Rt3iO1WaZz+OcwodpRSD5mfzqwA+bQ9iJbo=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=hgAACI6abaRYwAXjZH/PlxLkpnciF36gK7FJ13czZvA4WnGGdVcAAaMIQ4PXPQNBa
-         FWWwPKSTshmhJGayQAWuz2Nng4PEgIY1VvhYXKj1/Dm452NQYA3DEIY3hUdV8NG6R6
-         kndPkDzzuIY9k1isjgIVJWrvQBxwqf3x8PpfRjMRhriGQMy7a7BJaJsM3TdLfYkLkj
-         /ktszrk6YyerkG8sRDqhDBrFxZiPTKGrzURLd3GboRyGRwWXMPtOMI1R8ZFnTKhYbQ
-         3aJ7fMpyfBu8doZWJGxHg54bn3ms0n+oqi59eagpmBV0NQuOx8USyjY/F0nJ470miR
-         +WyALZ7yLaWMw==
-Message-ID: <7f98734b-979e-41b5-2bc0-ab3dabffb3e5@kernel.org>
-Date:   Mon, 24 Jul 2023 07:56:37 +0900
+        with ESMTP id S229468AbjGXHJT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jul 2023 03:09:19 -0400
+Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::221])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B22C6138;
+        Mon, 24 Jul 2023 00:09:14 -0700 (PDT)
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 6C2E524000E;
+        Mon, 24 Jul 2023 07:09:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1690182552;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0OTdgWQ6Vo/4tl1ZM7En0YdjITPLKGIP2IIxkkPFJRM=;
+        b=iC5ZIY44VFrCSUNoeMIdYmOyqSrlrW7N4tyY+Hq53oXBVph3jCQ5ij8fsDynsYh6NybKfF
+        47iBUwR964ggu52YB13yaU1E18wok2aDQAXdbpXfZnCVzqeybMcvNBEm04M8MJv49vz912
+        60p20TKBhztddQMV6EZbSo0vTLzFb3Ok+FWErn92iDiDFjDyPmqRh1JKdYw5xT3hwpwVlV
+        u4k2GthKUnBFuRNrRP/XoPSerupU1HIaiVySzO/QpWk35FaiLI3dwdIhQ2brWGTyOPPUCM
+        8E3/Ier83smwYkYCv/LsZ20OWFpB5I2g8A5epoX659Pa/Omr3Rckh60nqnZ+5A==
+Date:   Mon, 24 Jul 2023 09:09:02 +0200
+From:   Miquel Raynal <miquel.raynal@bootlin.com>
+To:     Andy Shevchenko <andy@kernel.org>
+Cc:     nikita.shubin@maquefel.me,
+        Hartley Sweeten <hsweeten@visionengravers.com>,
+        Lennert Buytenhek <kernel@wantstofly.org>,
+        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Lukasz Majewski <lukma@denx.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Uwe =?UTF-8?B?S2xlaW5lLUvDtm5pZw==?= 
+        <u.kleine-koenig@pengutronix.de>, Mark Brown <broonie@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+        soc@kernel.org, Liam Girdwood <lgirdwood@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        Michael Peters <mpeters@embeddedts.com>,
+        Kris Bahnsen <kris@embeddedts.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-gpio@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-rtc@vger.kernel.org,
+        linux-watchdog@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
+        netdev@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-input@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: Re: [PATCH v3 24/42] mtd: nand: add support for ts72xx
+Message-ID: <20230724090902.679ea56d@xps-13>
+In-Reply-To: <ZLqx+Osn3gcHjUph@smile.fi.intel.com>
+References: <20230605-ep93xx-v3-0-3d63a5f1103e@maquefel.me>
+        <20230605-ep93xx-v3-24-3d63a5f1103e@maquefel.me>
+        <ZLqx+Osn3gcHjUph@smile.fi.intel.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: fix when to fetch sense data for successful commands
-To:     Niklas Cassel <nks@flawful.org>,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Borislav Petkov <bp@alien8.de>, linux-ide@vger.kernel.org
-References: <20230723130315.427513-1-nks@flawful.org>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230723130315.427513-1-nks@flawful.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-GND-Sasl: miquel.raynal@bootlin.com
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/23/23 22:03, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
-> 
-> The condition to fetch sense data was supposed to be:
-> ATA_SENSE set AND either
-> 1) Command was NCQ and ATA_DFLAG_CDL_ENABLED flag set (flag
->    ATA_DFLAG_CDL_ENABLED will only be set if the Successful NCQ command
->    sense data supported bit is set); or
-> 2) Command was non-NCQ and regular sense data reporting is enabled.
-> 
-> However the check in 2) accidentally had the negation at the wrong place,
-> causing it to try to fetch sense data if it was a non-NCQ command _or_
-> if regular sense data reporting was _not_ enabled.
-> 
-> Fix this by removing the extra parentheses that should not be there,
-> such that only the correct return (ata_is_ncq()) is negated.
-> 
-> Fixes: 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL commands using policy 0xD")
-> Reported-by: Borislav Petkov <bp@alien8.de>
-> Closes: https://lore.kernel.org/linux-ide/20230722155621.GIZLv8JbURKzHtKvQE@fat_crate.local/
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> ---
->  drivers/ata/libata-core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index d37ab6087f2f..04db0f2c683a 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4938,8 +4938,8 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
->  		if (qc->result_tf.status & ATA_SENSE &&
->  		    ((ata_is_ncq(qc->tf.protocol) &&
->  		      dev->flags & ATA_DFLAG_CDL_ENABLED) ||
-> -		     (!(ata_is_ncq(qc->tf.protocol) &&
-> -			ata_id_sense_reporting_enabled(dev->id))))) {
-> +		     (!ata_is_ncq(qc->tf.protocol) &&
+Hi Andy,
 
-Even though it is not necessary, to be extra clear, it would be nice to have
-parenthesis around "!ata_is_ncq(qc->tf.protocol)". I will add that when applying.
+> > +static int ts72xx_nand_attach_chip(struct nand_chip *chip)
+> > +{
+> > +	switch (chip->ecc.engine_type) {
+> > +	case NAND_ECC_ENGINE_TYPE_SOFT:
+> > +		if (chip->ecc.algo =3D=3D NAND_ECC_ALGO_UNKNOWN)
+> > +			chip->ecc.algo =3D NAND_ECC_ALGO_HAMMING;
+> > +		break;
+> > +	case NAND_ECC_ENGINE_TYPE_ON_HOST:
+> > +		return -EINVAL;
+> > +	default: =20
+>=20
+> > +		break; =20
+>=20
+> Here it will return 0, is it a problem?
 
-> +		      ata_id_sense_reporting_enabled(dev->id)))) {
->  			/*
->  			 * Tell SCSI EH to not overwrite scmd->result even if
->  			 * this command is finished with result SAM_STAT_GOOD.
+Seems ok, there are two other situations: on-die ECC engine and no ECC
+engine, both do not require any specific handling on the controller
+side.
 
--- 
-Damien Le Moal
-Western Digital Research
+>=20
+> > +	}
+> > +
+> > +	return 0;
+> > +} =20
+>=20
+> ...
+>=20
+> > +static void ts72xx_nand_remove(struct platform_device *pdev)
+> > +{
+> > +	struct ts72xx_nand_data *data =3D platform_get_drvdata(pdev);
+> > +	struct nand_chip *chip =3D &data->chip;
+> > +	int ret;
+> > +
+> > +	ret =3D mtd_device_unregister(nand_to_mtd(chip)); =20
+>=20
+> > +	WARN_ON(ret); =20
+>=20
+> Why?!  Is it like this in other MTD drivers?
 
+Yes, we did not yet change the internal machinery to return void, and
+we don't want people to think getting errors there is normal.
+
+> > +	nand_cleanup(chip);
+> > +} =20
+>=20
+
+Thanks,
+Miqu=C3=A8l
