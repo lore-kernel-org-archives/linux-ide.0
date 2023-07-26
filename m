@@ -2,57 +2,116 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4303CC001DE
-	for <linux-ide@archiver.kernel.org>; Wed, 26 Jul 2023 07:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25816C0015E
+	for <linux-ide@archiver.kernel.org>; Wed, 26 Jul 2023 08:48:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230140AbjGZHoc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 26 Jul 2023 03:44:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36908 "EHLO
+        id S233185AbjGZIss (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 26 Jul 2023 04:48:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231229AbjGZHn4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jul 2023 03:43:56 -0400
-Received: from mail.strategicvision.pl (mail.strategicvision.pl [217.61.105.98])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62D112139
-        for <linux-ide@vger.kernel.org>; Wed, 26 Jul 2023 00:39:36 -0700 (PDT)
-Received: by mail.strategicvision.pl (Postfix, from userid 1002)
-        id A58A884737; Wed, 26 Jul 2023 09:36:49 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=strategicvision.pl;
-        s=mail; t=1690357061;
-        bh=Z0N5VlX9/JlryGOL5I747Le9USomZJCRNNGRT3LbbKc=;
-        h=Date:From:To:Subject:From;
-        b=ZMYk4zd1xyAnJjkc0Z4BSC83bLKxxpBDcUR3/TQvUecOPGMekeNtm/HXmgZ67Mz5T
-         0lIHnhqNHD9KwcnX/XkgsgADF8XMAn5GpK+atoKDVpxEO5/GmE1ARkRSp/MC8K26O5
-         /TFH90SRlIhRtBINWcWUPP9FY9wqddakL++iDcB7/8ULwzIwX1prHtCwdePnMSywd3
-         thZt+Ek8VvuZg+G5TUVoldnQTboeVTSwCWWVvfZ1ph57l1hsOVP8Wev7RUUsD0URhG
-         6snH8OOr+HI/+R6TeLYGgVCQOMfWVq1lFUQiaX6PWuU/HgO/DDqltkJ21lLF0iYhu2
-         DkvuVjXpkBk5w==
-Received: by mail.strategicvision.pl for <linux-ide@vger.kernel.org>; Wed, 26 Jul 2023 07:35:40 GMT
-Message-ID: <20230726084502-0.1.k.8meo.0.sze25j4dum@strategicvision.pl>
-Date:   Wed, 26 Jul 2023 07:35:40 GMT
-From:   "Adam Charachuta" <adam.charachuta@strategicvision.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania?=
-X-Mailer: mail.strategicvision.pl
+        with ESMTP id S233192AbjGZIsT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jul 2023 04:48:19 -0400
+Received: from mail-lj1-x236.google.com (mail-lj1-x236.google.com [IPv6:2a00:1450:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 037DD44B8
+        for <linux-ide@vger.kernel.org>; Wed, 26 Jul 2023 01:41:25 -0700 (PDT)
+Received: by mail-lj1-x236.google.com with SMTP id 38308e7fff4ca-2b9aa1d3029so20836141fa.2
+        for <linux-ide@vger.kernel.org>; Wed, 26 Jul 2023 01:41:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1690360883; x=1690965683;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=WjbnNFixw3CqUy+1p99LdaySKRJAH3wBo6V+ARVn8OQ=;
+        b=Spk55jjD7C3BXGVRqo8tDI2MATd4Zt3P2nNUwDC+bUuNBLWHKq7Mq2LTnE+IfoUQ0b
+         xMPThTgvW28cRbbXVeyinwgw1dngHYzzfLbxT5fxtN6Ty6ViJutRp/igJmKanvRoZ40F
+         cwLL9aQQRXRuUCYUPhTJ1sRw2i+oz0JJO2ae9lOa2f86X/BJHlR6ZovXQxOoY8cXIKdY
+         1AfX1mwi2hsCTshShI57kId/dWcT1OLyGG+mVWxYcpMDgTowS+EKjO/ja1dH73v2DMNs
+         qYuJgUpzdK7tvudpxn5behb4JsAOBpsWMx7JVKdn4Qxn1OauAgxlf1u4Gl1OS649+4kB
+         ibbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690360883; x=1690965683;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=WjbnNFixw3CqUy+1p99LdaySKRJAH3wBo6V+ARVn8OQ=;
+        b=gvNE/VzjTyibdfN+UVJyVnGBkMNXdacf6ES9uzPXzoyINCbD8uCZIEvkDN/SnImJWJ
+         5HoIgR+So3S2Jb+QiDssemjF5eKielFf+lrtLmjxe4k+spOCSFu1yQrFwdDOfutDybz5
+         Xu/wqaZ1A/d+NIIZcKedvOeSp2W0BKmrkzK0DPApXt4amD4cb45XTiXWQ85H8gPFI/it
+         5I1sIifwgmO1hqJ0+oteYPPDLaNI5DIXZtNa3mGfUNM0qqxGKH84yfDe3tXqODNHlm+D
+         1gVpUsV7JMgq1mtytaYh5sNpMLMTbSIATWaE9ut9IocM7/9qPyfn/hmuSjRC7kqz2tiG
+         sTMA==
+X-Gm-Message-State: ABy/qLYGamWawI4/KZnKSo8gSp4ZRM4Kfgd5B3I0qHPVgDfp4k1ewJl6
+        +hAX6d6B34gJ/JP7Y+bb7eBUjA6KwOE=
+X-Google-Smtp-Source: APBJJlEOK7GFdYOi/tFQgqJmY+KTeH5QHRqTOc+Iwp01uo4cUNft1JUpWju4csRbBYoewhLUoChKyQ==
+X-Received: by 2002:a2e:8455:0:b0:2b9:3883:a765 with SMTP id u21-20020a2e8455000000b002b93883a765mr970817ljh.31.1690360882592;
+        Wed, 26 Jul 2023 01:41:22 -0700 (PDT)
+Received: from [192.168.1.103] ([31.173.84.156])
+        by smtp.gmail.com with ESMTPSA id s20-20020a2e9c14000000b002b94aed74d5sm3975379lji.72.2023.07.26.01.41.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 26 Jul 2023 01:41:22 -0700 (PDT)
+Subject: Re: [PATCH 0/8] Fix the remaining sloppy timeout typing in libata
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
+References: <20230616194607.7351-1-s.shtylyov@omp.ru>
+ <190e84cb-8e14-8488-f0a8-f809f8640984@kernel.org>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <3d3fc1d5-029a-e240-eb3f-5aba1614ff39@gmail.com>
+Date:   Wed, 26 Jul 2023 11:41:20 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <190e84cb-8e14-8488-f0a8-f809f8640984@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 7/26/23 2:36 AM, Damien Le Moal wrote:
+[...]
+>> Here are 8 patches against the 'for-next' branch of Damien's 'libata.git' repo.
+>>
+>> The libata code still often uses the 'unsigned long' type for the millisecond
+>> timeouts, while the kernel functions like msecs_to_jiffies() or msleep() only
+>> take 'unsigned int' parameters for those. I've started fixing the timeout types
+>> from ata_exec_internal[_sg]() that tripped the Svace static analyzer and posted
+>> couple patches, promising to post a large continuation series somewhat later...
+>> in my worst nightmare I couldn't imagine that this would take a whole year! :-(
+> 
+> Sergey,
+> 
+> Ping ? Are you resending this ?
+> Need a rebase as this does not apply cleanly.
 
-zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
-=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
-o dalszych rozm=C3=B3w.=20
+   I need to find the time for doing this...
 
-Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
-=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
-=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
-strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
+>>
+>> Sergey Shtylyov (8):
+>>   ata: libata: fix parameter type of ata_deadline()
+>>   ata: libata-core: fix parameter types of ata_wait_register()
+>>   ata: libata-eh: fix reset timeout type
+>>   ata: fix debounce timings type
+>>   ata: libata-scsi: fix timeout type in ata_scsi_park_store()
+>>   ata: libahci: fix parameter type of ahci_exec_polled_cmd()
+>>   ata: ahci_xgene: fix parameter types of xgene_ahci_poll_reg_val()
+>>   ata: sata_sil24: fix parameter type of sil24_exec_polled_cmd()
+>>
+>>  drivers/ata/ahci.c          |  2 +-
+>>  drivers/ata/ahci_qoriq.c    |  2 +-
+>>  drivers/ata/ahci_xgene.c    |  7 +++----
+>>  drivers/ata/libahci.c       |  7 ++++---
+>>  drivers/ata/libata-core.c   |  6 +++---
+>>  drivers/ata/libata-eh.c     |  6 +++---
+>>  drivers/ata/libata-sata.c   | 16 ++++++++--------
+>>  drivers/ata/libata-scsi.c   |  4 ++--
+>>  drivers/ata/libata-sff.c    |  2 +-
+>>  drivers/ata/sata_highbank.c |  2 +-
+>>  drivers/ata/sata_inic162x.c |  2 +-
+>>  drivers/ata/sata_mv.c       |  2 +-
+>>  drivers/ata/sata_nv.c       |  2 +-
+>>  drivers/ata/sata_sil24.c    |  4 ++--
+>>  include/linux/libata.h      | 24 ++++++++++++------------
+>>  15 files changed, 44 insertions(+), 44 deletions(-)
 
-Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
-
-
-Pozdrawiam
-Adam Charachuta
+MBR, Sergey
