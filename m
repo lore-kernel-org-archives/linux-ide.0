@@ -2,84 +2,93 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 314A1EB64DD
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Jul 2023 23:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95EABC001E0
+	for <linux-ide@archiver.kernel.org>; Fri, 28 Jul 2023 02:05:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbjG0Xyn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Jul 2023 19:54:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44654 "EHLO
+        id S229483AbjG1CFj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Jul 2023 22:05:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229539AbjG0Xym (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jul 2023 19:54:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23379E0
-        for <linux-ide@vger.kernel.org>; Thu, 27 Jul 2023 16:54:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AB55E61F24
-        for <linux-ide@vger.kernel.org>; Thu, 27 Jul 2023 23:54:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F73BC433C8;
-        Thu, 27 Jul 2023 23:54:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690502081;
-        bh=4VcpDwLxvBGwD4UWZHNLM6w62eClU9YfLKmhZb9nE8c=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=dGUqJP1zNqog5TLfn9dSFAhWPf27GZlRNRsihq6BUte4aWbbgGxOmBiTHilPkfEDw
-         7OvhGyOcrITIsz6/zPyL/U09u2MvfkhWZV1CdF4ZWmLuSIJLa7fjuiauYcVy8R8Jpq
-         XC7HPjgP4nVIeKah3vuP7EMicR2rz44BlemsjZpukrfdeEXGy2IJ6hHb8dDxVQcGji
-         tPvnj5bCXhJRK9LsQc5S8sbh57sv1CfIKzgzL4ufi5NtgvO6oD00wwNIAtSHDdfHBQ
-         ItK4oKh+FowVnTQhMHtt9ksc9ibr3vTumjWVzoWhrhtUKny+PpdHMhL/8y1k4E32AG
-         9zElEA4AMpm/g==
-Message-ID: <fde085a6-b212-9b77-2a60-ca9cd5419532@kernel.org>
-Date:   Fri, 28 Jul 2023 08:54:39 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: fix when to fetch sense data for successful commands
-Content-Language: en-US
+        with ESMTP id S231768AbjG1CFh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jul 2023 22:05:37 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 379D335A9;
+        Thu, 27 Jul 2023 19:05:26 -0700 (PDT)
+Received: from canpemm100004.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RBrVH2wYjzNmbT;
+        Fri, 28 Jul 2023 10:01:59 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm100004.china.huawei.com (7.192.105.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Fri, 28 Jul 2023 10:05:19 +0800
+Subject: Re: [PATCH v3 1/9] ata: remove reference to non-existing
+ error_handler()
 To:     Niklas Cassel <nks@flawful.org>,
-        Niklas Cassel <niklas.cassel@wdc.com>,
+        Damien Le Moal <dlemoal@kernel.org>
+CC:     Hannes Reinecke <hare@suse.com>,
+        John Garry <john.g.garry@oracle.com>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Borislav Petkov <bp@alien8.de>, linux-ide@vger.kernel.org
-References: <20230723130315.427513-1-nks@flawful.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230723130315.427513-1-nks@flawful.org>
-Content-Type: text/plain; charset=UTF-8
+        Niklas Cassel <niklas.cassel@wdc.com>
+References: <20230721163229.399676-1-nks@flawful.org>
+ <20230721163229.399676-2-nks@flawful.org>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <5c47b29e-02f0-9da3-78cf-2d1ca41a7823@huawei.com>
+Date:   Fri, 28 Jul 2023 10:05:19 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+MIME-Version: 1.0
+In-Reply-To: <20230721163229.399676-2-nks@flawful.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ canpemm100004.china.huawei.com (7.192.105.92)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/23/23 22:03, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
-> 
-> The condition to fetch sense data was supposed to be:
-> ATA_SENSE set AND either
-> 1) Command was NCQ and ATA_DFLAG_CDL_ENABLED flag set (flag
->    ATA_DFLAG_CDL_ENABLED will only be set if the Successful NCQ command
->    sense data supported bit is set); or
-> 2) Command was non-NCQ and regular sense data reporting is enabled.
-> 
-> However the check in 2) accidentally had the negation at the wrong place,
-> causing it to try to fetch sense data if it was a non-NCQ command _or_
-> if regular sense data reporting was _not_ enabled.
-> 
-> Fix this by removing the extra parentheses that should not be there,
-> such that only the correct return (ata_is_ncq()) is negated.
-> 
-> Fixes: 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL commands using policy 0xD")
-> Reported-by: Borislav Petkov <bp@alien8.de>
-> Closes: https://lore.kernel.org/linux-ide/20230722155621.GIZLv8JbURKzHtKvQE@fat_crate.local/
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+On 2023/7/22 0:32, Niklas Cassel wrote:
+> +	/* Non-internal qc has failed.  Fill the result TF and summon EH. */
+> +	if (unlikely(qc->flags & ATA_QCFLAG_EH)) {
+> +		fill_result_tf(qc);
+> +		trace_ata_qc_complete_failed(qc);
+> +		ata_qc_schedule_eh(qc);
+> +		return;
+> +	}
+>   
+> -		WARN_ON_ONCE(ata_port_is_frozen(ap));
+> +	WARN_ON_ONCE(ata_port_is_frozen(ap));
+>   
+> -		/* read result TF if requested */
+> -		if (qc->flags & ATA_QCFLAG_RESULT_TF)
+> -			fill_result_tf(qc);
+> +	/* read result TF if requested */
+> +	if (qc->flags & ATA_QCFLAG_RESULT_TF)
+> +		fill_result_tf(qc);
+>   
+> -		trace_ata_qc_complete_done(qc);
+> +	trace_ata_qc_complete_done(qc);
+>   
+> +	/*
+> +	 * For CDL commands that completed without an error, check if we have
+> +	 * sense data (ATA_SENSE is set). If we do, then the command may have
+> +	 * been aborted by the device due to a limit timeout using the policy
+> +	 * 0xD. For these commands, invoke EH to get the command sense data.
+> +	 */
+> +	if (qc->result_tf.status & ATA_SENSE &&
+> +	    ((ata_is_ncq(qc->tf.protocol) &&
+> +	      dev->flags & ATA_DFLAG_CDL_ENABLED) ||
+> +	     (!(ata_is_ncq(qc->tf.protocol) &&
+> +		ata_id_sense_reporting_enabled(dev->id))))) {
 
-Applied to for-6.5-fixes. Thanks !
+Hmm, this code is a little bit unreadable. Maybe factoring out a 
+function is a choice. But I think it is not directly related to this 
+change and can be done in a separate patch later. So:
 
+Reviewed-by: Jason Yan <yanaijie@huawei.com>
 
--- 
-Damien Le Moal
-Western Digital Research
-
+Thanks,
+Jason
