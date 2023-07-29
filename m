@@ -2,157 +2,93 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B411C0015E
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Jul 2023 08:25:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35AA9C0015E
+	for <linux-ide@archiver.kernel.org>; Sat, 29 Jul 2023 01:05:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232086AbjG1IZK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 28 Jul 2023 04:25:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60052 "EHLO
+        id S234540AbjG2BFG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 28 Jul 2023 21:05:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234972AbjG1IYb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jul 2023 04:24:31 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D95C49C2;
-        Fri, 28 Jul 2023 01:23:34 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-4fe1b00fce2so2211975e87.3;
-        Fri, 28 Jul 2023 01:23:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690532612; x=1691137412;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=a0xhbAiUbjd2h8hrbYvNKZ3J3fpbP+0wJ7Vc6YuSc5c=;
-        b=jrdmr35Ma2osjBpAw3b9zN2kpLkQsvLEfbCx5UHTMTNqBNBjhTPut7YAnI1ip2Me9E
-         yzozyIliQB4+szgNhW0g0Q4bblCOsZLbMn4ryQ95yGJCoL71J5dZ42Q3M2xBLvGVTNPp
-         LcyNALkje5B3N3kOTp2uN8zdRm7YP7l6y4qwUPR4u9PL8kKPH3sKDTUnYikFKf8ptMsq
-         YU1jL/0+FPTbtIWCnpf3Tbek+0YJvm2JFtIgL9QUnlg6OqEfX6FF3e2xh1CCKQo2r81+
-         hrKsVO1ierOOMs4LcFnOlzmEcHpJSZYhMstv5dGnsH0pXMmC2Y7WpIGZ1x6muN8i1vm7
-         qoEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690532612; x=1691137412;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=a0xhbAiUbjd2h8hrbYvNKZ3J3fpbP+0wJ7Vc6YuSc5c=;
-        b=KSIRjIfu6lXfXAt3R8zmjPTMOgzO5rWvNdVUxYEKFmj7B5NOy4lLBwKxzLCIlQNiHW
-         WFMtInuRb4Co7VwJGQONgaHbtvkdQHMpOiOYWrweIGJxPKuSbzFVVlypXOBBQYeEEskX
-         JiGKOdXp6xGbfwWlnX+cZqAv9G4AQAIdnCJGc6A8mFRvNjRJCW4qAjOd5ZROekhfte79
-         /0yRQftJJnIBpzFv4AW5KdlvaOsaDZOcBIP8VwAwoAixZOh0FoK6aMCIeb1rPx98pRNj
-         xK7g22WcQAisIa53A2UZaenjK1u947b8C4YGejK1TdrUcfE4pDO8qNS/Gl1Lea/8DhSv
-         QB+g==
-X-Gm-Message-State: ABy/qLboI3a2GQMc2UjPA2oG5Nuf3xgsIorWzLP2L6U0lsYxvYuCaPGw
-        3/7tCxlA1A2yYPEYxJXpqFQ=
-X-Google-Smtp-Source: APBJJlFYN35PMSaGWFsU7bOEaiX1P6f6+mU/fUJluxRlPtCVWghClcGBDgOqdbqj5ReW0PmnIoHbWg==
-X-Received: by 2002:a05:6512:3256:b0:4fb:9e1a:e592 with SMTP id c22-20020a056512325600b004fb9e1ae592mr1042977lfr.4.1690532612150;
-        Fri, 28 Jul 2023 01:23:32 -0700 (PDT)
-Received: from orome (p200300e41f1bd600f22f74fffe1f3a53.dip0.t-ipconnect.de. [2003:e4:1f1b:d600:f22f:74ff:fe1f:3a53])
-        by smtp.gmail.com with ESMTPSA id p17-20020aa7d311000000b005224f840130sm1528577edq.60.2023.07.28.01.23.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Jul 2023 01:23:31 -0700 (PDT)
-Date:   Fri, 28 Jul 2023 10:23:29 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     nikita.shubin@maquefel.me
-Cc:     Hartley Sweeten <hsweeten@visionengravers.com>,
-        Lennert Buytenhek <kernel@wantstofly.org>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Lukasz Majewski <lukma@denx.de>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Sebastian Reichel <sre@kernel.org>,
-        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>, Mark Brown <broonie@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-        soc@kernel.org, Liam Girdwood <lgirdwood@gmail.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        Andy Shevchenko <andy@kernel.org>,
-        Michael Peters <mpeters@embeddedts.com>,
-        Kris Bahnsen <kris@embeddedts.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-gpio@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-rtc@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
-        netdev@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-input@vger.kernel.org, alsa-devel@alsa-project.org
-Subject: Re: [PATCH v3 37/42] pwm: ep93xx: drop legacy pinctrl
-Message-ID: <ZMN7AQozKJ-WvEtD@orome>
-References: <20230605-ep93xx-v3-0-3d63a5f1103e@maquefel.me>
- <20230605-ep93xx-v3-37-3d63a5f1103e@maquefel.me>
+        with ESMTP id S237012AbjG2BFD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jul 2023 21:05:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A248271D
+        for <linux-ide@vger.kernel.org>; Fri, 28 Jul 2023 18:05:01 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B2BF62210
+        for <linux-ide@vger.kernel.org>; Sat, 29 Jul 2023 00:56:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44DE6C433C7;
+        Sat, 29 Jul 2023 00:56:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690592173;
+        bh=ZL93ecGBPKquopCcdsI+IBKaPU31VvdVMNVnaSYyijQ=;
+        h=From:To:Subject:Date:From;
+        b=J4Id5u85sf6yjl8oZNZi+Ib+ZLY2eY1FiXALAaZJyxcIvKq+4HAyyL3evwLzcEqCH
+         e/JXoXYKyoIQqzQoDCsybzN4txbiem/VVdvKEOXABcUvKtH18WNnxRUA2fo+ZUiwky
+         hwm6+DBeoCkieKJcA9LzxKPzmLjEUDDoxT0k39W8p4ma7o9o/qaG+di+6HKRb4B+hA
+         TUE0yHObTgu7Q6FSSI3SVEY9ZR+ZgIVXKEKnhgw36il4P/LkADU7dFEZQP91UIosMg
+         iwj3rmEUl0oA6jCFYIq3t3ZtZBUX4aP0+Hi1SMQjC/7r/5+ZdEAnkdMHr1IwVM4owz
+         GIbhnIbBImgLg==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Subject: [GIT PULL] ata fixes for 6.5-rc4
+Date:   Sat, 29 Jul 2023 09:56:12 +0900
+Message-ID: <20230729005612.424560-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="wGJHzmMJDSXZkkT2"
-Content-Disposition: inline
-In-Reply-To: <20230605-ep93xx-v3-37-3d63a5f1103e@maquefel.me>
-User-Agent: Mutt/2.2.10 (2023-03-25)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Linus,
 
---wGJHzmMJDSXZkkT2
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The following changes since commit cec148c2476a6e06cf8190b20de81f98983b53ca:
 
-On Thu, Jul 20, 2023 at 02:29:37PM +0300, Nikita Shubin via B4 Relay wrote:
-> From: Nikita Shubin <nikita.shubin@maquefel.me>
->=20
-> Drop legacy gpio request/free since we are using
-> pinctrl for this now.
->=20
-> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
-> Acked-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
-> ---
->  arch/arm/mach-ep93xx/core.c       | 42 ---------------------------------=
-------
->  drivers/pwm/pwm-ep93xx.c          | 18 -----------------
->  include/linux/soc/cirrus/ep93xx.h |  4 ----
->  3 files changed, 64 deletions(-)
+  ata: pata_parport: Add missing protocol modules description (2023-07-17 08:30:41 +0900)
 
-Acked-by: Thierry Reding <thierry.reding@gmail.com>
+are available in the Git repository at:
 
---wGJHzmMJDSXZkkT2
-Content-Type: application/pgp-signature; name="signature.asc"
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.5-rc4
 
------BEGIN PGP SIGNATURE-----
+for you to fetch changes up to 3ac873c76d79f055e1712754d9f2e90e41582f04:
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmTDewAACgkQ3SOs138+
-s6Fe1xAAmWGPXd//baY5gEQfFUeoZOB6tksL9wdhNTccZsdUbLbxDijfBzSgF8LC
-4mvLpGWCiVebT2hMwacsnHquq26aZ3xvnlVRB/0ic5Y2kxa86bm12Y4pBsVjTSJJ
-G4lOWY+DsW30C6I5FsCrnXfk0WQBj41lSHodIBmwHL9qac0hyJfTytGObyLB5oiF
-ac/Jss8xCi9FzacqnbKVCcWJQp070a/ptFCyXiXkc5sCZUii5eVbVyvjNvvuxUml
-BBdPYMMs4C+kocreEgCn7FI6anxgJ+IpqdxtMTwxUmocdA93Fif8XS75ystxbrRv
-SN0WMNlM6br95MU2Y/M0B21LivCfGu4PMreELcuoabHDN+TJwZk3AJzv6dv1hmhb
-Yy5Ptu2ZrR8xaV5LnHv1sDI5+RxSp1Pvt0Y8ap5MDHQDuL5oyzqBPVhhtPijSy1J
-qTZ3+vNGJAHWTGl5o748veQ8cu5tAdKANos5DSk1ihUcgdjopOrNVbAwpbStloRb
-1XGCOp8jBHitHVIibWOzq1iYX39CGqTR4IGzoPaE4vC7MwbJ/3gHxfMoyVLwpuEj
-+XLcWlwcAfKINSGGx4yLHXAJF0bUbwHwom7p61rS8GeN0FCzkMO8ydTI6ZTh06lj
-sMd10ehwOllaHRNRjzZ8l3IozZoq+jDoPJPkeDuS8lTmKu2PKNk=
-=Y8RN
------END PGP SIGNATURE-----
+  ata: libata-core: fix when to fetch sense data for successful commands (2023-07-28 11:30:34 +0900)
 
---wGJHzmMJDSXZkkT2--
+----------------------------------------------------------------
+ata fixes for 6.5-rc4
+
+ - Fix error message output in the pata_arasan_cf driver (Minjie).
+
+ - Fix invalid error return in the pata_octeon_cf driver initialization
+   (Yingliang).
+
+ - Fix a compilation warning due to a missing static function
+   declaration in the pata_ns87415 driver (Arnd).
+
+ - Fix the condition evaluating when to fetch sense data for successful
+   completions, which should be done only when command duration limits
+   are being used (Niklas).
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      ata: pata_ns87415: mark ns87560_tf_read static
+
+Minjie Du (1):
+      ata: pata_arasan_cf: Use dev_err_probe() instead dev_err() in data_xfer()
+
+Niklas Cassel (1):
+      ata: libata-core: fix when to fetch sense data for successful commands
+
+Yang Yingliang (1):
+      ata: pata_octeon_cf: fix error return code in octeon_cf_probe()
+
+ drivers/ata/libata-core.c    | 4 ++--
+ drivers/ata/pata_arasan_cf.c | 3 ++-
+ drivers/ata/pata_ns87415.c   | 2 +-
+ drivers/ata/pata_octeon_cf.c | 6 +++---
+ 4 files changed, 8 insertions(+), 7 deletions(-)
