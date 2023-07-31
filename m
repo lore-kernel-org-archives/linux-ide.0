@@ -2,43 +2,44 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2537C001DC
-	for <linux-ide@archiver.kernel.org>; Mon, 31 Jul 2023 09:16:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8724C001E0
+	for <linux-ide@archiver.kernel.org>; Mon, 31 Jul 2023 09:16:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232091AbjGaJQy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 31 Jul 2023 05:16:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45054 "EHLO
+        id S231963AbjGaJQz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 31 Jul 2023 05:16:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231963AbjGaJQt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2023 05:16:49 -0400
+        with ESMTP id S231998AbjGaJQu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2023 05:16:50 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4E78127
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35F0D11A
         for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2023 02:16:47 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1qQP1C-0000CH-64; Mon, 31 Jul 2023 11:16:46 +0200
+        id 1qQP1B-0000CF-W4; Mon, 31 Jul 2023 11:16:46 +0200
 Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <ukl@pengutronix.de>)
-        id 1qQP1B-0005lC-Gz; Mon, 31 Jul 2023 11:16:45 +0200
+        id 1qQP1B-0005l6-BR; Mon, 31 Jul 2023 11:16:45 +0200
 Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <ukl@pengutronix.de>)
-        id 1qQP1A-009GVh-34; Mon, 31 Jul 2023 11:16:44 +0200
+        id 1qQP19-009GVe-T2; Mon, 31 Jul 2023 11:16:43 +0200
 From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>
 To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, kernel@pengutronix.de
-Subject: [PATCH 08/12] ata/sata_dwc_460ex: Convert to platform remove callback returning void
-Date:   Mon, 31 Jul 2023 11:16:32 +0200
-Message-Id: <20230731091636.693193-9-u.kleine-koenig@pengutronix.de>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        kernel@pengutronix.de
+Subject: [PATCH 07/12] ata/pata_rb532_cf: Convert to platform remove callback returning void
+Date:   Mon, 31 Jul 2023 11:16:31 +0200
+Message-Id: <20230731091636.693193-8-u.kleine-koenig@pengutronix.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230731091636.693193-1-u.kleine-koenig@pengutronix.de>
 References: <20230731091636.693193-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1805; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=3ZOxtfMDX9p6lg8iNSG8mCBmBipw/6wbtZ/uN6BmuW0=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBkx3uGzAt+YBbc19b0tySW4agFVMW7HvIQ0x1Ud BdOdboHuQaJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZMd7hgAKCRCPgPtYfRL+ TguHCACcvPVGhIB5/Qm+mYDSStxBnaVShBEb68FqPyrtvYAsbf6NNcW5VJ67beicyWhFQ1/c318 1UrXS4BjClV2XtCf+iYGjFVQQQb+3dtEST9i1ALGCdfQ/GvfgONWv5hC0JYVlxxPgUH0cA21W6B t60tgLv2nhf4XD5Esx08KFo322ASoVlOw2grn4B0jtwclkDls8z2FWvBaS8nNq3Tdz7o9SNELyn 6QxW8hl14Xus362N1UbXMHZB6Mev4Fij9woJdHZsBNkCv9a/MvHPjC3v2HPvGZHkha0VhGRhGPy OvIu/lQVRaQ+DLAF5ZkRnxtvdWHfmB1LPbEo/XEaQexLXnG/
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1614; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=z2UqSp5tRAXikZAh57VKvvgme/U/5Kex+AA0GT6+ioY=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBkx3uFNRnCp2tDT76wWDm/FnxUmGyPO8pVVlcWw wGJAKiVucaJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZMd7hQAKCRCPgPtYfRL+ TufBB/0XmIlG78KcX0DeMPDf7uxI8jnP32VYTkA8XCqiqKgIaCvl1ALIY8yd+gvztnGoas4RMH7 prPZASfYS4W4IPHRUwlff2sTV5y5Zi53AW3SqWulUFYSFQOH4CngLcr832DDPDlreWYLWq5+tZ+ 3TYx/4PGLtLOCV7Yn/fTJ27/aaRFTWJwWBYgqyx+FshnjJGNezStGVIjGUR3twjM9TAnPLRSZIh 2UAOzQpX46wYQrRE4Ubuy7PHE13Qc8RPKjIeFHmixfvr0DdCBEIDU+rtAdwCC5uz/kTSa8v4j5i CSeCUBY7V8W9dd4dhtIMJfCRP1ChR+eKPrs0nDCI2+kDgrO4
 X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -63,39 +64,34 @@ callback to the void returning variant.
 
 Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
- drivers/ata/sata_dwc_460ex.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/ata/pata_rb532_cf.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index fabdd1e380f9..20ac56da6b47 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1211,7 +1211,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	return err;
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index 3974d294a341..0fa253ad7c93 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -155,18 +155,16 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+ 	return 0;
  }
  
--static int sata_dwc_remove(struct platform_device *ofdev)
-+static void sata_dwc_remove(struct platform_device *ofdev)
+-static int rb532_pata_driver_remove(struct platform_device *pdev)
++static void rb532_pata_driver_remove(struct platform_device *pdev)
  {
- 	struct device *dev = &ofdev->dev;
- 	struct ata_host *host = dev_get_drvdata(dev);
-@@ -1227,7 +1227,6 @@ static int sata_dwc_remove(struct platform_device *ofdev)
- #endif
+ 	struct ata_host *ah = platform_get_drvdata(pdev);
  
- 	dev_dbg(dev, "done\n");
+ 	ata_host_detach(ah);
+-
 -	return 0;
  }
  
- static const struct of_device_id sata_dwc_match[] = {
-@@ -1242,7 +1241,7 @@ static struct platform_driver sata_dwc_driver = {
- 		.of_match_table = sata_dwc_match,
+ static struct platform_driver rb532_pata_platform_driver = {
+ 	.probe		= rb532_pata_driver_probe,
+-	.remove		= rb532_pata_driver_remove,
++	.remove_new	= rb532_pata_driver_remove,
+ 	.driver	 = {
+ 		.name   = DRV_NAME,
  	},
- 	.probe = sata_dwc_probe,
--	.remove = sata_dwc_remove,
-+	.remove_new = sata_dwc_remove,
- };
- 
- module_platform_driver(sata_dwc_driver);
 -- 
 2.39.2
 
