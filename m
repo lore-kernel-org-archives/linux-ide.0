@@ -2,37 +2,37 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44567C001DC
-	for <linux-ide@archiver.kernel.org>; Mon, 31 Jul 2023 17:03:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F722C001DE
+	for <linux-ide@archiver.kernel.org>; Mon, 31 Jul 2023 17:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233796AbjGaRD0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 31 Jul 2023 13:03:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59482 "EHLO
+        id S232982AbjGaRDf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 31 Jul 2023 13:03:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233952AbjGaRDD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2023 13:03:03 -0400
+        with ESMTP id S233483AbjGaRDO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2023 13:03:14 -0400
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2F7C133
-        for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2023 10:02:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 230B51996
+        for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2023 10:03:13 -0700 (PDT)
 Received: from [192.168.1.103] (31.173.81.169) by msexch01.omp.ru
  (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 31 Jul
- 2023 20:02:41 +0300
-Subject: Re: [PATCH 05/12] ata/pata_mpc52xx: Convert to platform remove
- callback returning void
+ 2023 20:03:10 +0300
+Subject: Re: [PATCH 06/12] ata/pata_pxa: Convert to platform remove callback
+ returning void
 To:     =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
         Damien Le Moal <dlemoal@kernel.org>
 CC:     <linux-ide@vger.kernel.org>, <kernel@pengutronix.de>
 References: <20230731091636.693193-1-u.kleine-koenig@pengutronix.de>
- <20230731091636.693193-6-u.kleine-koenig@pengutronix.de>
+ <20230731091636.693193-7-u.kleine-koenig@pengutronix.de>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <0e2653ab-81db-1a22-04ce-a2cb5b98c80d@omp.ru>
-Date:   Mon, 31 Jul 2023 20:02:40 +0300
+Message-ID: <320eb8c7-a3a7-2f4d-6e5e-304dfa4e2525@omp.ru>
+Date:   Mon, 31 Jul 2023 20:03:10 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <20230731091636.693193-6-u.kleine-koenig@pengutronix.de>
+In-Reply-To: <20230731091636.693193-7-u.kleine-koenig@pengutronix.de>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -57,7 +57,7 @@ X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.169 in (user)
  b.barracudacentral.org}
 X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.169 in (user)
  dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;31.173.81.169:7.1.2
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;31.173.81.169:7.1.2,7.7.1
 X-KSE-AntiSpam-Info: FromAlignment: s
 X-KSE-AntiSpam-Info: {rdns complete}
 X-KSE-AntiSpam-Info: {fromrtbl complete}
