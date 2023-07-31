@@ -2,181 +2,118 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A84B6C001DE
-	for <linux-ide@archiver.kernel.org>; Mon, 31 Jul 2023 18:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23303C001DE
+	for <linux-ide@archiver.kernel.org>; Mon, 31 Jul 2023 19:43:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229464AbjGaSwR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 31 Jul 2023 14:52:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38504 "EHLO
+        id S230152AbjGaTn4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 31 Jul 2023 15:43:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230098AbjGaSwQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2023 14:52:16 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E23B18F;
-        Mon, 31 Jul 2023 11:52:15 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36VDTGsG014486;
-        Mon, 31 Jul 2023 18:51:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2023-03-30;
- bh=lResbmgqTZP2oWHAQD9Yvv2hI33RhY5P+ad+79ZJqeQ=;
- b=COM/Hx4IrM65DNNEV8sHh0YSki67Fs5BNJy0w38r6u8wYNqjXIiGAFJQDz9VPfxmgIvO
- 7yzXJYDxUzK/zKnNC4VbIiZIMK78KjxVKS03xUAC6gS412yWHSlZQwl0GuQyqmbCJke9
- /mmzcnrr5VYJmxjgEjQqIF68929AdMbiIoDTJPrGeqvZrY7Tn224thmsQy2zAlzFX6XQ
- lKP1H/HYnsoGuaMMQauSlJzJrxXBi0z78d8KjkHzt155tgn9tViflwm3roxnpzsRhP/i
- X6x4IfH/rmih5PPLFh+0rRHMVvpdbO36uhIL6ewI8rreP0gZo47bbQbMb5ecBJPEXM1m UQ== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s4s6e3bdh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 31 Jul 2023 18:51:42 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36VHlAGh000723;
-        Mon, 31 Jul 2023 18:51:41 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2169.outbound.protection.outlook.com [104.47.73.169])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3s4s753atq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 31 Jul 2023 18:51:41 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Uv9A+vYdvWHkrDHExS/ocKxwd8vzda5dPLpUD+6ResoExqNIlo0kapWBNBK+En1vfHOCgtkQGp63alUs1CiEsdP+c8QwmIi8eHiKHNbHfAew5LVxg+il2Mmz5nbzxTOvlVN0tLMf9twcAQta5+5/hi3ynEkFWLetRkGdJtNWLEKaMUcZOMEL/CbC05xFQzj9ipklhPF+kivpVOLMroFe+eSp8ty8Hk+/uj5o9TssMYeNZs9rZwguWj8fQshg1XPIRVm1yiOWxVqU3d84U20iDE9DlqIjo7bQTMjBPKN6jZqcwc+D/osqw1mr3Cs9a2o1r1o/QQd8qfs0vnHlpzMF3Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lResbmgqTZP2oWHAQD9Yvv2hI33RhY5P+ad+79ZJqeQ=;
- b=XnvAzXkyd8gQvxZ78jSYvU8sjxhTAFC+tSXd2EjgLz/A7xnAYzIuKPA2E5Oi63qnzRVjUqEfqNQ8rhMwTHiTfMolH3UKG6ue/j0XCzQA+qbrKxcEA+fXVKoemNaV6oJx3Dk/1qCbUbD1+FfMQbb2tb0YWLjQcU3x0VmsmIk+mRYPMM3zqbnimiwNFqyaRwsE9DI27C6Y+0/u9KDtRWfVqEy5TD9npmGo2bnyj8UUTnfWwMdfLjqTl8eyTme0XXzenT5QEy7EQcLBv0FPoxEZSng4dUUJoYMBTFGOhFmivY2dhT4yL+OqvTTQaRuaUEQzNRX8AODzX2Vfl5YbTcJClQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S229992AbjGaTnz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jul 2023 15:43:55 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34ED71BB
+        for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2023 12:43:54 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1bbbbb77b38so28498185ad.3
+        for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2023 12:43:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lResbmgqTZP2oWHAQD9Yvv2hI33RhY5P+ad+79ZJqeQ=;
- b=hS82I79vPEWFzNa6lij1thN685JT95nFX3CYSOucSjLkYHBFhdKmqxGbcSzZmmXlSRqtvh7OrrXsxijRlTdCdS3R5yT8RIydrMcI0YdFv9zvYKeZRpqsOswyTwIxN6W0D9H+PDkBjUgobUumO9qMfsp9wHgml3qviWjg+tjYk3Q=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by SJ2PR10MB7618.namprd10.prod.outlook.com (2603:10b6:a03:548::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.42; Mon, 31 Jul
- 2023 18:51:39 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::2dff:95b6:e767:d012]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::2dff:95b6:e767:d012%4]) with mapi id 15.20.6631.041; Mon, 31 Jul 2023
- 18:51:39 +0000
-To:     Niklas Cassel <nks@flawful.org>
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Xiang Chen <chenxiang66@hisilicon.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Hannes Reinecke <hare@suse.com>, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH v4 00/10] libata: remove references to 'old' error handler
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq11qgnrk2u.fsf@ca-mkp.ca.oracle.com>
-References: <20230731143432.58886-1-nks@flawful.org>
-Date:   Mon, 31 Jul 2023 14:51:37 -0400
-In-Reply-To: <20230731143432.58886-1-nks@flawful.org> (Niklas Cassel's message
-        of "Mon, 31 Jul 2023 16:34:11 +0200")
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0030.namprd03.prod.outlook.com
- (2603:10b6:a03:33a::35) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=soe.ucsc.edu; s=soe-google-2018; t=1690832633; x=1691437433;
+        h=content-transfer-encoding:in-reply-to:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=2srF+VwsfZK2mGTSZ1/Lzy6JxU0qS8lMwLV+lKLY4gk=;
+        b=KNrPgz59EKXF/Cdi8VB+MqUgLmWvFCd6rarGZ1xw8oblswwKFiFfdzqnrAx986D6G8
+         9w0qN93ko6rlHDKeGSQwrvCCITCfv5GNQcsqd+3Cs5Ul3UnWJkm0y11UFqoYbZY3VdYP
+         iPtKz5KMpW319YBzaF+LNP7PxRGKF/OX7TPiRyVPJ1Low21ZPP5RiwLgt6fh98m9Skxz
+         LCvCyroPQTP92S66ctbcg/BMXU2bTOHLXBSpbEiqFZUYHBSmNkCNdT1kYFCQNq3a2saj
+         F+hgE1kp9CoK24xq50ISNYRW1PuiCqihCNZpQhxaeDrZFol/PK03QQKKCgXpV7+09Hl+
+         qGvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690832633; x=1691437433;
+        h=content-transfer-encoding:in-reply-to:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2srF+VwsfZK2mGTSZ1/Lzy6JxU0qS8lMwLV+lKLY4gk=;
+        b=Nk/ubj1AAwFeaNwetU7qD8CgAwsgWT5ieRlsp160Ab8zTRCtysLpLdgA6aTxX1M+ez
+         m/q2Ua2NVcieBxEZd7Aj36q5cF1CP1PJ/ZsU+oacgCUPuig7cizGCsx7EcvLGXztRfxP
+         a3r67DC5/2cMKarpqS4Flx480Mq7RUOZ8dbtgmWAH9y5SrJtpbX5ggTtKTdZAGlVpSNl
+         MQ/wpWt/ifd0unX2UT4ChbI5yFUINTTX4Q6w73lE6/P7BErN7AnahnkVyGeGMzbeu3YA
+         lE112qFb6XACikISZfaXqMrQ44/TrO+CYOEdQBz4dGaTC2q5t/w6EQZDVKCklaqiEjLO
+         HhVA==
+X-Gm-Message-State: ABy/qLbAMu+uKtqmpOTR1iHZo8B/P3H8qxXYlabOAaHGj4UQQHGzEZ2t
+        GcVzDJQSgoqF560m5tuSu7WV+g==
+X-Google-Smtp-Source: APBJJlH1fVcQ97yyq8Zt7838/qVW3ws0AdnOmmS0wxBtL/mM82/pvD3MXZ7hdqU8RKAFXjjF4TkV2A==
+X-Received: by 2002:a17:90b:1003:b0:25e:d727:6fb4 with SMTP id gm3-20020a17090b100300b0025ed7276fb4mr9340515pjb.2.1690832633462;
+        Mon, 31 Jul 2023 12:43:53 -0700 (PDT)
+Received: from [192.168.1.50] (99-189-239-182.lightspeed.sntcca.sbcglobal.net. [99.189.239.182])
+        by smtp.gmail.com with ESMTPSA id p21-20020a17090adf9500b00263d3448141sm6574393pjv.8.2023.07.31.12.43.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 31 Jul 2023 12:43:52 -0700 (PDT)
+From:   Paul Ausbeck <paula@soe.ucsc.edu>
+X-Google-Original-From: Paul Ausbeck <paula@alumni.cse.ucsc.edu>
+Message-ID: <a8d35a0e-fe01-e889-615a-2f2e104e2492@alumni.cse.ucsc.edu>
+Date:   Mon, 31 Jul 2023 12:43:51 -0700
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|SJ2PR10MB7618:EE_
-X-MS-Office365-Filtering-Correlation-Id: 80ed6025-299c-4f29-538b-08db91f72c69
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: PPKDZ4fLNFpPNwytGXEISEZTLzUqCvc531nomq4AZpzeK8Sh6Vwu7v9j362SFYI4v2URjVdPKx3Pz1Aew5wjV4VHXrzxsII9PKCHJx1xpPXQMIksmBKMsUYREJ1xDXqRZyqnkdL5YQrlDqmYLnrctK9KhIqHCNhBl2coyrDANNjRKXOEDlk09rDfOGz+HNYHqcagYMFAaMqHSKtAiaEViF8XcKj4MV1Thc+w/w9ESVSLz9i6ctIOb/jCOkcPAEe42bdR54pQI+FfkZTL549fKxL22nUXOyfny4RmitgtxRvESDh7kzIx+iGl0DNGU92tAC3GXxDRRJ992SjhLN8CEHFXfN+9wLxwsC0TXlEhNnWCk5SUwxYF7vmWgw5HB6cKoR24Bgzz5RXLYPyYLZ8D9ugm5bGCUxPytVXPLYQloGj9UUZ0A4I5dGRpBPwFasRWIngoKoZJT+jdTykEz/iAP78kDr9485D9+Q0wtCWM3IyompiFeObZi1+5RUTRPCB0SmESiyBx9wH9EE1yxFO+cD4vJU03oSIiae2AEuwjWDsofi8kB++6VkF6hXTvB+Vq
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(396003)(366004)(39860400002)(136003)(376002)(346002)(451199021)(2906002)(66476007)(66946007)(6916009)(66556008)(4326008)(5660300002)(4744005)(54906003)(41300700001)(316002)(7416002)(6486002)(36916002)(8936002)(6506007)(8676002)(26005)(186003)(478600001)(38100700002)(6512007)(86362001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VtNJuulTWUHzwgX9gTy8EnMAXxTDbFAo0sZhEsI/qGaXezvS3EB2G7dWmxzO?=
- =?us-ascii?Q?BZKFQttPOT+MHcPST/u8F2CMFdq0vOGBHpkQkUry6DMitJhRjbKXdX7OVqKn?=
- =?us-ascii?Q?TXDFViwi/KGl1ke9i3uQUt1lnKS4WUNKaEcNYkdcrk9MMN/FvyUOhMEA3YLO?=
- =?us-ascii?Q?4nkau4pOEuiqOJRrSP3yxuCSYGGRYrK8dzJTgRkXosijUr9QGHJvGsPcHbrS?=
- =?us-ascii?Q?DCz1LiPsRdJmgAh7n6GdsyqiNL24a92F3wnxYNMrmMUwCSN52IfAvnYcMvKz?=
- =?us-ascii?Q?MZ7/8YGGXWtyO7mjuHy0Zwe4YroI/EyKZRGCpKlA0GWwy/nRkwk5CCPV2zz0?=
- =?us-ascii?Q?VTJET54tcE6tt7dRe7xhaW8+phJo91B4etm9RdbmeDo7C5chdpJME06KjZjH?=
- =?us-ascii?Q?1KlDN4QyTlAcKq/c6S1oBlexVB/3tqDKN5p7u4t4I2ndaN1lZVzvHVRc+ww8?=
- =?us-ascii?Q?K3G5dgFR/YnMNsgRYe9m/jkuXLDfz9iMn7D1tsnOdCDCJMsK/Gnvw1ayz0Xo?=
- =?us-ascii?Q?jEGVeRjfMAeTpX5ytQX8zYuNqtzIhiSNYZyCdx2qCAOk7QyIjh3N67Dr0NEQ?=
- =?us-ascii?Q?NkFbOsqRfh/qIqfhqkkFVaDGcgtM20MJbb8Ovwk5lwtjNmK91/l+79JgaYnH?=
- =?us-ascii?Q?MPKv2/isFvnc3xy4ehdQ1TGO5Z9l1v9LKvOAB731gYxWewazWviKVS1DVY3z?=
- =?us-ascii?Q?40906KzmgnwgI2oyfuewHeNKnlPUNqs1TCqsOuDf1qCGuDD6NZw4d6QMdmVk?=
- =?us-ascii?Q?QlQxg+mTWkR00P0SnalR8ZQRwX84ZAeZTc6Q1LqD3rLpC2iCZq3sw481iVEJ?=
- =?us-ascii?Q?/lzmEEUK5VaYbMhob98U/pGUo86M7k1iZgUMN4aNRbZ07VJlArUhhusR2/iI?=
- =?us-ascii?Q?O6ZAq/kqjbQQUeQWXFEeoMOV4sb2KoD3G8mhPGjAe0dvGJAKB7cSifG9nRQo?=
- =?us-ascii?Q?pIHSUi+g1o97VctMC9Hc4KvHcVfof5KEEyN2Bo5I72MFtJV0xGxx75aY5/xF?=
- =?us-ascii?Q?8Yx81NujHNK0o/XzAewm76GZalORP9JrRPJyXPbiQJRARZyeSLJiESlIQ8v/?=
- =?us-ascii?Q?BiTXWUN1fEhqU3rM+M41P/Xd5Don2qN1GV65w8dKJqi7Vo5pj3rt0SxGrA2S?=
- =?us-ascii?Q?kYV9+xjuDIp9boS3n6V8UTw3fuoSMPelHyDxx3nBesgwKopKDy14cto9x0p+?=
- =?us-ascii?Q?DzBaAEG7w2URXnKuOoAmVokPBMcLEoCOJE6PuiZwrZhrOjDD3WsmW+4Jc0lI?=
- =?us-ascii?Q?Z+VafV3SZl0Jht6f6FZEc18lLfftibc95d5emHxtpEFpIYdhT0QnqK8K4C2+?=
- =?us-ascii?Q?Oh9MvlOwZec2UN/BPNwCOv8poSRlJZWIYy4HOG4KhfKIToh4XQF235v3h9Wg?=
- =?us-ascii?Q?53uaJIsxWLeSsUTGGLhicmzeKq2X+S9gg1huGU6+wDI4mZQTTYIZGAsWueY/?=
- =?us-ascii?Q?ILsPqaXNxKnt9SofaO8oiB+t172cYffF/yxcLy+dOagG4oiQVAUovfpEqrnV?=
- =?us-ascii?Q?9JDxMoohR+ln/xx8Sco99VLVEy3g3TBUGqvY97IW1sUjjjC9Q1Le4sUBkhMK?=
- =?us-ascii?Q?hBjoYQ6oV0a+wfF6ABhV0pQZw2hM29fUOfzsBRyqDWFKCedpFlnaA3f7r0wg?=
- =?us-ascii?Q?Lw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?sZwP0AQAL+MoCOLRFz6u4IVQM2iJEfz3Xgw+tu/Rqm55LejgybPtk6cPfDW0?=
- =?us-ascii?Q?iM1fLrIbcBHci9c//WXLyoWhy+ABaVSjRothlO9CpOuI/f98M62ot1y9leX4?=
- =?us-ascii?Q?j8gEvICT9FzVB2IPYsbM4GSlfbhHoNdAor4NRHN4n/xy0/Me3zcUgc5S6Slr?=
- =?us-ascii?Q?+YqnnyuKkhtblhwwPoSso5jHCtLvgrWSo9WQndeWtvMH4bD1PJ36PJpxYXc/?=
- =?us-ascii?Q?gLnQC67eQqbig+/MKfyGoRb6ztoavFKHQ8qL81767tnPd9fXSoZ1BDYykA+r?=
- =?us-ascii?Q?niIcrLd4I+lOE94ilUGMQEGNndRqaZAOVwk092RmheJO6W0/dEY+20R/hq3M?=
- =?us-ascii?Q?+iGqvt6KhQ72yDyoMNuMf4gU5a4Jc1Fr9RuUzyh5x07XAHy8cJo252vYpxDG?=
- =?us-ascii?Q?e+QXkLFUhKXx5MPbixA7wyTc5K8zKHV8Dc25jVRyC1Dcgucw81HwPxWqvxen?=
- =?us-ascii?Q?sBYlnxvM8JQfFm0Zi1DSWeneFTGzKO2lWkmpOLEwZnC4cuaQAbMdQWlT4oaw?=
- =?us-ascii?Q?WsOhY6XY5YrUQ4zsNkVJ+S9a6lDTGeoviPxNov4smhEvGlxr4xP9zVGsM9I8?=
- =?us-ascii?Q?q4QXMNsZr7X3iMtMXZvc+exvpCSP/sTTaq+K6GQYyMvel9EirR8/BdP9DGh4?=
- =?us-ascii?Q?AZkf1ruI13fEN3dEAJqMtbwMCM0jnneQImPmnpniiVq6C3oEGQEpxikkGP9R?=
- =?us-ascii?Q?5dHYMVNEV7TM1FfGhwyMJvvOIWrS8U18hQm4EXrzkxKGLQxlh1d7P/ukIta3?=
- =?us-ascii?Q?MlNU2pMSEj3OG9/04COuWKcWc16HeKQXEggFj+TfTGjEJ51LjxpEjEJaR/IA?=
- =?us-ascii?Q?IiArsGfqor5vjvRr675crrmJbdT1VFJ5wM5dDuxtPBErxuU4CDaQ4P2vROV1?=
- =?us-ascii?Q?+mnp5NMXyMeIa+eKFWG6rBhvpPwwBwTfA2fcdKjICqQTq40HwjaBrfYnmWTA?=
- =?us-ascii?Q?JjAwG6JqccznMQv1mMbdIhhCVRg2wJF/nxdtR5wlqPCo/JUftV64JlWvgHJ5?=
- =?us-ascii?Q?2P9t?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 80ed6025-299c-4f29-538b-08db91f72c69
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Jul 2023 18:51:39.2287
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 88bhDq0y/HMttfuf0GO9Kcnpp4e96Nj8IRt6oimSR1RJE5YBDEj9pHLSGSed8ZgAh0YOExKxdvvv5ADYIr6FSIrqsq/IOkLMtqnHr3AjNLA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR10MB7618
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-31_12,2023-07-31_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 suspectscore=0
- mlxlogscore=999 malwarescore=0 mlxscore=0 adultscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
- definitions=main-2307310170
-X-Proofpoint-GUID: V24B8P1AYIsrwFNSzbfl0m6NuMnp0dIg
-X-Proofpoint-ORIG-GUID: V24B8P1AYIsrwFNSzbfl0m6NuMnp0dIg
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Paul Ausbeck <paula@soe.ucsc.edu>,
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
+        Bart Van Assche <bvanassche@acm.org>
+References: <20230731003956.572414-1-dlemoal@kernel.org>
+In-Reply-To: <20230731003956.572414-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 7/30/23 17:39, Damien Le Moal wrote:
+> During system resume, ata_port_pm_resume() triggers ata EH to
+> 1) Resume the controller
+> 2) Reset and rescan the ports
+> 3) Revalidate devices
+> This EH execution is started asynchronously from ata_port_pm_resume(),
+> which means that when sd_resume() is executed, none or only part of the
+> above processing may have been executed. However, sd_resume() issues a
+> START STOP UNIT to wake up the drive from sleep mode. This command is
+> translated to ATA with ata_scsi_start_stop_xlat() and issued to the
+> device. However, depending on the state of execution of the EH process
+> and revalidation triggerred by ata_port_pm_resume(), two things may
+> happen:
+> 1) The START STOP UNIT fails if it is received before the controller has
+>     been reenabled at the beginning of the EH execution. This is visible
+>     with error messages like:
+> 
+> ata10.00: device reported invalid CHS sector 0
+> sd 9:0:0:0: [sdc] Start/Stop Unit failed: Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+> sd 9:0:0:0: [sdc] Sense Key : Illegal Request [current]
+> sd 9:0:0:0: [sdc] Add. Sense: Unaligned write command
+> sd 9:0:0:0: PM: dpm_run_callback(): scsi_bus_resume+0x0/0x90 returns -5
+> sd 9:0:0:0: PM: failed to resume async: error -5
+> 
+> 2) The START STOP UNIT command is received while the EH process is
+>     on-going, which mean that it is stopped and must wait for its
+>     completion, at which point the command is rather useless as the drive
+>     is already fully spun up already. This case results also in a
+>     significant delay in sd_resume() which is observable by users as
+>     the entire system resume completion is delayed.
+> 
+> Given that ATA devices will be woken up by libata activity on resume,
+> sd_resume() has no need to issue a START STOP UNIT command, which solves
+> the above mentioned problems. Do not issue this command by introducing
+> the new scsi_device flag no_start_on_resume and setting this flag to 1
+> in ata_scsi_dev_config(). sd_resume() is modified to issue a START STOP
+> UNIT command only if this flag is not set.
+> 
+> Reported-by: Paul Ausbeck<paula@soe.ucsc.edu>
+> Closes:https://bugzilla.kernel.org/show_bug.cgi?id=215880
+> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
+> Signed-off-by: Damien Le Moal<dlemoal@kernel.org>
 
-Niklas,
-
-> now that the ipr driver has been modified to not hook into libata
-> all drivers now use the 'new' error handler, so we can remove any
-> references to it. And do a general cleanup to remove callbacks
-> which are no longer needed.
-
-LGTM.
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Tested-by: Paul Ausbeck <paula@soe.ucsc.edu>
