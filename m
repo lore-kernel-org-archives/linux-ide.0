@@ -2,61 +2,69 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD82C04A6A
-	for <linux-ide@archiver.kernel.org>; Tue,  1 Aug 2023 11:52:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1CBDC0015E
+	for <linux-ide@archiver.kernel.org>; Tue,  1 Aug 2023 18:36:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234098AbjHALws (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 1 Aug 2023 07:52:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46460 "EHLO
+        id S229618AbjHASgY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 1 Aug 2023 14:36:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231815AbjHALwg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Aug 2023 07:52:36 -0400
-Received: from mail.cothiafon.pl (mail.cothiafon.pl [217.61.106.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78B26170D
-        for <linux-ide@vger.kernel.org>; Tue,  1 Aug 2023 04:52:33 -0700 (PDT)
-Received: by mail.cothiafon.pl (Postfix, from userid 1002)
-        id E28008374E; Mon, 31 Jul 2023 10:36:32 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=cothiafon.pl; s=mail;
-        t=1690792630; bh=dwoca0X6C9VXklO/zRgFQCPapTk5LFz4tKaENdvy6Po=;
-        h=Date:From:To:Subject:From;
-        b=NLhcdvDTBJUmIbtl0byYh9GEXEGmjb2B3OBjWXuGtkGiR4+Hwfu+BTgN9RFqZFAJS
-         GhqHWnqYzHgvuex7anAo9VFvleB+e4Ye9fDtdjGwwvGOj6FOmsZ4dn2lW/jZGrivK7
-         pJM3ZaXCoiHO6w+f9jfBDF6Hk6oAYy/dxIdtcNR51MqI7qRTgj+q89YPq4ZPJVchQZ
-         3MD1DfBVH5PbAC9+1p2D5jyjnJUQpYhDIwuoAyEmPUr0czPt0tIO3qUX494XfWwf4n
-         aw3UgC9o/vRDnRcVN2q8HxhVQM+Bp4KCviIzAnJLIWjjCAdYlQmFf8S3yeGfWPURIo
-         mv3Kw4/TNvx8Q==
-Received: by mail.cothiafon.pl for <linux-ide@vger.kernel.org>; Mon, 31 Jul 2023 08:35:48 GMT
-Message-ID: <20230731095940-0.1.28.onho.0.ukbi1y4gpx@cothiafon.pl>
-Date:   Mon, 31 Jul 2023 08:35:48 GMT
-From:   =?UTF-8?Q? "Rados=C5=82aw_Grabowski" ?= 
-        <radoslaw.grabowski@cothiafon.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: W sprawie samochodu
-X-Mailer: mail.cothiafon.pl
+        with ESMTP id S229718AbjHASgX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Aug 2023 14:36:23 -0400
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E154B1FC6;
+        Tue,  1 Aug 2023 11:36:22 -0700 (PDT)
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1bbc64f9a91so50562415ad.0;
+        Tue, 01 Aug 2023 11:36:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690914982; x=1691519782;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fcfz0R863zI3puuV2hq31o7wiMDL/GrNDWB4uRz0UMA=;
+        b=CtNuTotdx1+JSm3a0FyrdbPSCfx/gadOgo18i9XZUaSc2kQxc8500Np1EmyyLcoKbO
+         7RLx/7yp6/yDVsbUq7y7DS9TTGwy+ZJvjJ5Zb3MhvjKdpJo7twsk/MgK1n3N8mTj+1WY
+         CbYljhyLLFjGIxfQTj4bwvayyqUPJmyKGCspW8v89WJQnHcG8MAPRelEXSgFOfyBPnKf
+         rx9kODyD7khFb2nIGGH0puUkQKesPIh0Txw2HwlFYsFkXRv7XK+jtyGw5q0GIyppc4aw
+         WG3hKHNgVcIeZlKtcKxxFWjD9fGuR0K9SPKI1Jr5bDfE6j3A81iGHIMifAo31RZIAyml
+         Uawg==
+X-Gm-Message-State: ABy/qLa6SENrvDgMZZxQEzVauxogOXRgfoJQJwNahKkyR9QE9EBZg4WS
+        ws2mcoxGVTqHCZjc5uPikY9+S9aRGlg=
+X-Google-Smtp-Source: APBJJlFEZHbhrk80IMySZCiA2wwL94qZptM+hPS4ANLpvhWT/1MzxDDnzuzluExdej7RBTRIydy0fA==
+X-Received: by 2002:a17:902:d4c3:b0:1b7:e355:d1ea with SMTP id o3-20020a170902d4c300b001b7e355d1eamr15212995plg.24.1690914982313;
+        Tue, 01 Aug 2023 11:36:22 -0700 (PDT)
+Received: from [192.168.51.14] ([98.51.102.78])
+        by smtp.gmail.com with ESMTPSA id a2-20020a170902ee8200b001b04c2023e3sm10785049pld.218.2023.08.01.11.36.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Aug 2023 11:36:21 -0700 (PDT)
+Message-ID: <8c8f38de-f418-6ffb-8949-f6eb85602d98@acm.org>
+Date:   Tue, 1 Aug 2023 11:36:20 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Paul Ausbeck <paula@soe.ucsc.edu>,
+        Thorsten Leemhuis <regressions@leemhuis.info>,
+        TW <dalzot@gmail.com>, regressions@lists.linux.dev
+References: <20230731003956.572414-1-dlemoal@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230731003956.572414-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 7/30/23 17:39, Damien Le Moal wrote:
+> Given that ATA devices will be woken up by libata activity on resume,
+> sd_resume() has no need to issue a START STOP UNIT command, which solves
+> the above mentioned problems. Do not issue this command by introducing
+> the new scsi_device flag no_start_on_resume and setting this flag to 1
+> in ata_scsi_dev_config(). sd_resume() is modified to issue a START STOP
+> UNIT command only if this flag is not set.
 
-chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
-, je=C5=9Bli chodzi o system monitoringu GPS.
-
-Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
-e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
-a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
-
-Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
-dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
-szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
-mne znaczenie.
-
-Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
-b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
-
-
-Pozdrawiam
-Rados=C5=82aw Grabowski
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
