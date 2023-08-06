@@ -2,140 +2,78 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA0CCC001DE
-	for <linux-ide@archiver.kernel.org>; Sun,  6 Aug 2023 09:51:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 544DDC001B0
+	for <linux-ide@archiver.kernel.org>; Sun,  6 Aug 2023 17:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230194AbjHFJv5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 6 Aug 2023 05:51:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39244 "EHLO
+        id S229747AbjHFRiE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 6 Aug 2023 13:38:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjHFJvz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Aug 2023 05:51:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7C2B199A
-        for <linux-ide@vger.kernel.org>; Sun,  6 Aug 2023 02:51:54 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 38EE361012
-        for <linux-ide@vger.kernel.org>; Sun,  6 Aug 2023 09:51:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 300CFC433C7;
-        Sun,  6 Aug 2023 09:51:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691315513;
-        bh=2j7EcAIl/VN1sfHNeZB/g2M73UeMqODtzEc7QIMZQCg=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=nmVea4JdsokBirjuhN/eBv9EXOJpMKzBjZxikt2bHVT81n5o0bUNEqdUvySw2qUBy
-         GEYwq8xCpfi/y+uHgNf8TONeiPpLYriH0wwsJ73ATV2kxeCDIXhGELIEbJprgk2IA7
-         O1u2AHKVBTiYYq1cS0N2t3MIhIq4cNDS8CqFW2Pkjt7akqkqHyTMHxXteOP9k0XEXi
-         /OnA8j9IjKxoPmGd1YEZrAh284URoN73Q6eh07QHLXH4ucu+C4MhRe3t5++kCxGuWE
-         TFZjZ+hbdgDvScZBqODR/pjQy28V8SNahOzaSgAOvRcg0ZF4qCa72eqh9bS3OOtTmv
-         KKQi9t+g23nag==
-Message-ID: <e3357241-3cbe-4cc4-59a3-a97002443ba9@kernel.org>
-Date:   Sun, 6 Aug 2023 18:51:51 +0900
+        with ESMTP id S229558AbjHFRiD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Aug 2023 13:38:03 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B523107
+        for <linux-ide@vger.kernel.org>; Sun,  6 Aug 2023 10:38:03 -0700 (PDT)
+Received: by mail-lf1-x12f.google.com with SMTP id 2adb3069b0e04-4fe457ec6e7so6229134e87.3
+        for <linux-ide@vger.kernel.org>; Sun, 06 Aug 2023 10:38:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1691343481; x=1691948281;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=LAcQC93rqO7hwJniSEja/eFfujqBNe5oILUJ36mqy84=;
+        b=Ec7Vq84wX7JKGHtRuwV4yL3yv0kctHfuRI/uCGVF7LnaHw+fOkHr3EtAsbXrvLtnrY
+         TUz5FybRbe4VvoOdeYQ6Zq4FMA1C8I3iVO3xhQDmB1FlSdgcUp07e2fnf74UACfeiKqs
+         41aoDPcbIiMDIT3MHH5nZcvdrPaD+dWTze+zw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691343481; x=1691948281;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=LAcQC93rqO7hwJniSEja/eFfujqBNe5oILUJ36mqy84=;
+        b=SLT4eV4sZ8JoHiu6OiZ9hlNos9glnObO9lkS0RtHjIrn5l8Hw7bigYSdtEw7F8CEKA
+         SCmwk4s4hpEGrHfHSJG98EG46cvHQOVZS92YQlUe0VRp3yZazHEG3SbkqQF6SfAaAb4K
+         WYveTWNjbD3o0kpmVHoH2vDcbqXZ8clUfitw+RrYCmR4M24ZSghqAFMOiBhIm1JZF+ER
+         wAxNmeQTdi3v1EkLVlZ6QuQErN303gtoRZQmN/HviWGOi8NCJUos1lc0zq//qkcpm8Qf
+         yVHPm1ae4pda46XoKAjLyXudenBNVDayct8Ymm2HV0GAOhBnilr6HiwoK6P11lYDfJ6A
+         0UyQ==
+X-Gm-Message-State: AOJu0Yy8mowgTRgJl8D+t0+zr0eyw1eK0n7oSG9O5BFo6SvlSe0AQ3mx
+        JIf6jhyH2E0KBAha5ghWDSCKsE9BcaFA1mFm0nb4mZSS
+X-Google-Smtp-Source: AGHT+IF/NR41auRR5usoMax+esuKv6b4H+trcA8M319iLGQM/eoHtAEGaMPVbJ6ZVRFzlcw095p/Xg==
+X-Received: by 2002:a05:6512:401b:b0:4fe:1e69:c379 with SMTP id br27-20020a056512401b00b004fe1e69c379mr4829431lfb.13.1691343480884;
+        Sun, 06 Aug 2023 10:38:00 -0700 (PDT)
+Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com. [209.85.208.178])
+        by smtp.gmail.com with ESMTPSA id l17-20020ac24a91000000b004fdb913af80sm1186834lfp.209.2023.08.06.10.37.59
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 06 Aug 2023 10:38:00 -0700 (PDT)
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2b9a828c920so57093961fa.1
+        for <linux-ide@vger.kernel.org>; Sun, 06 Aug 2023 10:37:59 -0700 (PDT)
+X-Received: by 2002:a2e:9bd8:0:b0:2b5:89a6:c12b with SMTP id
+ w24-20020a2e9bd8000000b002b589a6c12bmr5049959ljj.10.1691343479526; Sun, 06
+ Aug 2023 10:37:59 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
+References: <20230806012901.250817-1-dlemoal@kernel.org> <CAHk-=wjkDNZeE1ounYLv-BDy9Y-Wz6H=nbe4itqqrpsdeHSSHQ@mail.gmail.com>
+ <CAHk-=wi9cRUcAY1b-NvjVwysGadMPJ2W+UiTzXxzEKk==WdHxg@mail.gmail.com> <e3357241-3cbe-4cc4-59a3-a97002443ba9@kernel.org>
+In-Reply-To: <e3357241-3cbe-4cc4-59a3-a97002443ba9@kernel.org>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sun, 6 Aug 2023 10:37:42 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wgEP_mgNDs7tDtgD=+KMa=SiKYstDa4yyuQofwRGuVoqQ@mail.gmail.com>
+Message-ID: <CAHk-=wgEP_mgNDs7tDtgD=+KMa=SiKYstDa4yyuQofwRGuVoqQ@mail.gmail.com>
 Subject: Re: [GIT PULL] ata fixes for 6.5-rc5
-Content-Language: en-US
-To:     Linus Torvalds <torvalds@linux-foundation.org>
+To:     Damien Le Moal <dlemoal@kernel.org>
 Cc:     linux-ide@vger.kernel.org
-References: <20230806012901.250817-1-dlemoal@kernel.org>
- <CAHk-=wjkDNZeE1ounYLv-BDy9Y-Wz6H=nbe4itqqrpsdeHSSHQ@mail.gmail.com>
- <CAHk-=wi9cRUcAY1b-NvjVwysGadMPJ2W+UiTzXxzEKk==WdHxg@mail.gmail.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <CAHk-=wi9cRUcAY1b-NvjVwysGadMPJ2W+UiTzXxzEKk==WdHxg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/6/23 11:55, Linus Torvalds wrote:
-> On Sat, 5 Aug 2023 at 19:26, Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
->>
->>  (a) split manage_start_stop into three bits for the three actual
->> cases it deals with: (stop_on_suspend, stop_on_shutdown,
->> start_on_resume).
->>
->>  (b) then not set the "start_on_resume" bit
-> 
-> Side note: the ATA layer already has
-> 
->  - ATA_FLAG_NO_POWEROFF_SPINDOWN
-> 
-> which seems to basically be very close to "don't send stop on shutdown"
-> 
-> And in fact, it looks like
-> 
->  - ATA_FLAG_NO_HIBERNATE_SPINDOWN
-> 
-> is in turn very close to "don't send stop on suspend". So if that
-> manage_start_stop had been just split into those three actions, it
-> sounds like those ATA_FLAG flags we have would basically have
-> translated to setting those bits too.
+On Sun, 6 Aug 2023 at 02:51, Damien Le Moal <dlemoal@kernel.org> wrote:
+>
+> Hannes suggested doing all ATA start/stop processing solely relying on libata,
+> that is, not using manage_start_stop at all. This is another option I am
+> considering.
 
-Indeed.
+That definitely sounds like the best option to me, so if it is doable
+that sounds worth pursuing.
 
-> And the whole "start" seems to be translated to "ATA_CMD_VERIFY for
-> the first sector", which would seem to be literally just a random
-> command intentionally chosen to not return any actual data.
-
-This likely was added to force the drive to spinup, to avoid subsequent commands
-to fail. The start process doing a port reset and then revalidating the drive,
-which starts by issuing an IDENTIFY command, definitely will wake up the drive.
-There is no need for relying on scsi to do it.
-
-However, I am still not convinced that the revalidate should be done at all,
-unless the scsi layer does do it too. As you said, this may be causing
-unwarranted spinup for cases when the drive is not used after resuming. But
-again here, scsi and ATA revalidate are not linked either. One does not trigger
-the other.
-
-> The *only* effect of doing that 'start' is to cause extra disk IO
-> early that is then ignored. Logically it doesn't actually do anything
-> useful, and it would seem like it might actually be an actively bad
-> thing (ie spinning up a disk on a laptop for potentially no actual
-> good reason, and waiting for this all to happen).
-> 
-> End result: it really smells like ATA fundamentally doesn't want the
-> whole 'manage_start_stop' noise AT ALL.
-
-Hannes suggested doing all ATA start/stop processing solely relying on libata,
-that is, not using manage_start_stop at all. This is another option I am
-considering.
-
-> 
-> You just removed the nasty early start with that 'no_start_on_resume'
-> bit, and the spindown seems to be questionable on at least some
-> machines too.
-
-Yes it is. I have seen issues with the shutdown side, most of the time showing
-as a synchronize cache failure. But until now, I had no clear understanding
-how/why that happened. I understand it now and will be fixing that.
-
-> So I wonder: did somebody test just removing the setting of that flag entirely?
-> 
-> I guess ATA is legacy enough these days that people want to make
-> minimal changes, although that 'no_start_on_resume' really doesn't
-> smell all that much more minimal to me than not sending spindown
-> commands.
-
-I will revisit everything around PM operations. ATA is indeed legacy-ish for
-most desktop/laptop users as NVMe has taken over most systems. But there are
-still a lot of enterprise deployments using ATA drives, and a lot of users
-running old hardware. The former is rather easy to deal with as the hardware is
-most of the time very recent, and so better than old devices. The former is a
-constant source of headaches due to the sheer amount of buggy hardware out
-there. The potential for regressions when changing something is high, so I try
-to be prudent with changes.
-
-Thank you for your comments.
-
--- 
-Damien Le Moal
-Western Digital Research
-
+            Linus
