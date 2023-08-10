@@ -2,104 +2,109 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEDEC001DB
-	for <linux-ide@archiver.kernel.org>; Thu, 10 Aug 2023 05:06:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1507AC001B0
+	for <linux-ide@archiver.kernel.org>; Thu, 10 Aug 2023 05:12:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230311AbjHJFGh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 10 Aug 2023 01:06:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39416 "EHLO
+        id S229782AbjHJFMR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 10 Aug 2023 01:12:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230093AbjHJFGf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2023 01:06:35 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C16592;
-        Wed,  9 Aug 2023 22:06:35 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1bd9b4f8e0eso2652045ad.1;
-        Wed, 09 Aug 2023 22:06:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1691643995; x=1692248795;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=RbIZ6+TF5sZsQZ7FDf5OkaqBqtNyqV1bMcvI7Ewy41s=;
-        b=QXiF/GbzwsW4oVqUHfJu86el/xjbFoEnq2N+uZLq3HhhmbKQ/q9GbeJhnluiGqznD0
-         4sG0UzDQMNkFaAJTjihkPgrP+/uWwGeVD2aC5nliyHfaqRxple7JS5gYiIRgJCbCYAsK
-         Je3vD7wdwgXFqfK0L/JZgpG6a8qnn43MpyfIiP6q5hKtwZ9BSJU47XduMZ6MZGUghmfU
-         /EArVIwI2rD+AzskR7VDn/YBszQf6I0TAUq7b95wJm2bPzjlBFEWEWVT0JDi/YDtENix
-         3jLE+hbxn/eL1FgtNikXIzn+9JX+l8v63WfrNjfQhhjrpBoUMtT1QF+1cQ5ErRoyXeUF
-         n6/g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691643995; x=1692248795;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=RbIZ6+TF5sZsQZ7FDf5OkaqBqtNyqV1bMcvI7Ewy41s=;
-        b=af2D8ywT1xez3pTHiS0lI19ZBywdYtqXUBmE95Kzjyff4mco2CqecCPLbK1zLgvLz6
-         eOdo3iENzmEYyOHV0Nw+uQqBMEZG99HkJycmGrfx1HBZ8BzH/oJ8Jtd8+sLK8wcXkTPy
-         KTK56UeAsJk3udeQipK9+9mRSVbvRjV0gO00RuaXDs9mYljpcq89afYHmAu+v4FN2Jsg
-         gQZLj7WqBpl8PBCB3IVvrLPv2Cb6WwAMz6FA1m40IShYgXnSXm/IcZImwAQBlcvY3azf
-         qlkXOBgSpwPOcpuDz3VQexDcEGKZf2HFbeOMbcO9z6sxbWNlrMf8jAdEUJ2UNV2JEpOG
-         LKnw==
-X-Gm-Message-State: AOJu0YxES58yop1GGWMbLdLnDPJvwRnCePUQdhMWQrBo9Z0W7hXkC1C5
-        w7SIfmdXOa/wLLy4pVvPE13MzghFcGKLmw==
-X-Google-Smtp-Source: AGHT+IEPTfFXlaMWdXsW6iRDmvLV9Z8jrnhQg24iKCYXncpOHQig80qbPmUp6nLYeqFXB+TQm31ynA==
-X-Received: by 2002:a17:903:41c8:b0:1b3:d6c8:7008 with SMTP id u8-20020a17090341c800b001b3d6c87008mr1258509ple.57.1691643994669;
-        Wed, 09 Aug 2023 22:06:34 -0700 (PDT)
-Received: from sw.. (220-128-98-63.hinet-ip.hinet.net. [220.128.98.63])
-        by smtp.gmail.com with ESMTPSA id e10-20020a170902b78a00b001bba7aab826sm519880pls.163.2023.08.09.22.06.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Aug 2023 22:06:34 -0700 (PDT)
-From:   Szuying Chen <chensiying21@gmail.com>
-X-Google-Original-From: Szuying Chen <Chloe_Chen@asmedia.com.tw>
-To:     dlemoal@kernel.org, linux-ide@vger.kernel.org,
+        with ESMTP id S229765AbjHJFMQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2023 01:12:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E51F196;
+        Wed,  9 Aug 2023 22:12:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 33B5D633A7;
+        Thu, 10 Aug 2023 05:12:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D28F3C433C7;
+        Thu, 10 Aug 2023 05:12:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691644334;
+        bh=R2QLrgv7LuJ7RfJsajq+FqkV9S/7dE3u5AygldaBQSs=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=tfA8TuEPBFq93KpZ2aaFO2fUUGXiTfNH9AIE0ssRMtgvqQb3EPhd7pz0MQmlJWnDg
+         9UixSyz+QZbMguN8nJezaX7kfPsnPVcrGZyfXgleqJICh0MOJsXEY0ZCE34RUFoSS8
+         O7c1slh3H2OatQxgO7ayi7p7BAl4tFNgqbFnoBxXFKe5DG9CjviosUVGOSwWDaHal4
+         XgX+ARkPB/chx4MB9WpULSZH66fR5Osklaq/GJz/RfQu/6LKOwmAA3ycllCqSbfpdi
+         NanE0XpxbV9wF7/WzEr4cn1gKA7uXBVGZPwchKVSn4MVy3rMqWJuLNCagIA6X3Ei6L
+         naZykZKCy8LgQ==
+Message-ID: <23cc546e-bf87-b3c7-6b75-b895c1241a4b@kernel.org>
+Date:   Thu, 10 Aug 2023 14:12:12 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ahci: libahci: clear pending interrupt status
+Content-Language: en-US
+To:     Szuying Chen <chensiying21@gmail.com>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     Jesse1_Chang@asmedia.com.tw, Richard_Hsu@asmedia.com.tw,
-        Chloe_chen@asmedia.com.tw, Szuying Chen <Chloe_Chen@asmedia.com.tw>
-Subject: [PATCH] ahci: libahci: clear pending interrupt status
-Date:   Thu, 10 Aug 2023 13:05:31 +0800
-Message-Id: <20230810050531.43505-1-Chloe_Chen@asmedia.com.tw>
-X-Mailer: git-send-email 2.39.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Chloe_chen@asmedia.com.tw
+References: <20230810050531.43505-1-Chloe_Chen@asmedia.com.tw>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230810050531.43505-1-Chloe_Chen@asmedia.com.tw>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-When ISR handle interface fatal error with error recovery after clear PxIS
-and PxIE. Another FIS(SDB FIS with err) that set PxIS.IFS to 1 is recevied
-during error recovery, which causing the HBA not issue any new commands
-after cmd.ST set 1.
+On 8/10/23 14:05, Szuying Chen wrote:
+> When ISR handle interface fatal error with error recovery after clear PxIS
+> and PxIE. Another FIS(SDB FIS with err) that set PxIS.IFS to 1 is recevied
+> during error recovery, which causing the HBA not issue any new commands
+> after cmd.ST set 1.
 
-Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
----
- drivers/ata/libahci.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+This is not very clear. If there was a fatal error, the drive should be in
+error state and no other SDB FIS can be received as the drive does absolutely
+nothing while in error state (it only waits for a read log 10h command to be
+issued to get it out of error state). So if you are seeing 2 SDB FIS with
+errors one after the other, you have a buggy device...
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 06aec35f88f2..0ae51fd95d46 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -679,9 +679,21 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+However, I may be misunderstanding your issue here. Could you provide more
+details and a dmesg output example of the issue ?
 
- void ahci_start_engine(struct ata_port *ap)
- {
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	u32 tmp;
+> 
+> Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
+> ---
+>  drivers/ata/libahci.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 06aec35f88f2..0ae51fd95d46 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -679,9 +679,21 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+> 
+>  void ahci_start_engine(struct ata_port *ap)
+>  {
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+>  	void __iomem *port_mmio = ahci_port_base(ap);
+>  	u32 tmp;
+> 
+> +	/* clear SError */
+> +	tmp = readl(port_mmio + PORT_SCR_ERR);
+> +	writel(tmp, port_mmio + PORT_SCR_ERR);
+> +
+> +	/* clear port IRQ */
+> +	tmp = readl(port_mmio + PORT_IRQ_STAT);
+> +	if (tmp)
+> +		writel(tmp, port_mmio + PORT_IRQ_STAT);
+> +
+> +	writel(1 << ap->port_no, hpriv->mmio + PORT_IRQ_STAT);
+> +
+>  	/* start DMA */
+>  	tmp = readl(port_mmio + PORT_CMD);
+>  	tmp |= PORT_CMD_START;
+> --
+> 2.39.2
+> 
 
-+	/* clear SError */
-+	tmp = readl(port_mmio + PORT_SCR_ERR);
-+	writel(tmp, port_mmio + PORT_SCR_ERR);
-+
-+	/* clear port IRQ */
-+	tmp = readl(port_mmio + PORT_IRQ_STAT);
-+	if (tmp)
-+		writel(tmp, port_mmio + PORT_IRQ_STAT);
-+
-+	writel(1 << ap->port_no, hpriv->mmio + PORT_IRQ_STAT);
-+
- 	/* start DMA */
- 	tmp = readl(port_mmio + PORT_CMD);
- 	tmp |= PORT_CMD_START;
---
-2.39.2
+-- 
+Damien Le Moal
+Western Digital Research
 
