@@ -2,146 +2,104 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C291DEB64DD
-	for <linux-ide@archiver.kernel.org>; Thu, 10 Aug 2023 02:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEDEC001DB
+	for <linux-ide@archiver.kernel.org>; Thu, 10 Aug 2023 05:06:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230105AbjHJCtz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Aug 2023 22:49:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60524 "EHLO
+        id S230311AbjHJFGh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 10 Aug 2023 01:06:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229665AbjHJCty (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Aug 2023 22:49:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87EC91AA;
-        Wed,  9 Aug 2023 19:49:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0742464313;
-        Thu, 10 Aug 2023 02:49:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 712E4C433C8;
-        Thu, 10 Aug 2023 02:49:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691635792;
-        bh=ebULMWhvsPCO8F3ADghLHgSJcz00/IYtgPSSnkAJqnU=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=rc4gKSUXbCrMBCNr5W60PtLJzUAdG73P4Pfl4Y1yEm/Usx1y85vlEuXEoAdgCI60R
-         E4eVAxXPtNzrn8pS8NiXWm6TRiFU0tr6PRV2L2RpnPcMu3AeC2AGhHyEb8te28fD21
-         OrbOXryYFlgpcfglPd8lKGNkmlGjlhc7shbLHkWAK6qZclpD/O6hVclwjFOMMYkMxs
-         qYrrwHeq9WSYdd/qiJ8mBL9+NIru0iSlchsdLrFoE+muF5Kw2AV00J5vydyerED/LD
-         WjX64NdjdukO91jwSipS11W6kgKyZV4lHL76JgSRJdw4w5wwb3pulxFANKP5OKjBXR
-         ix7fkL7+PrIlg==
-Message-ID: <25c1aca7-d885-0fff-2639-bb68a7dff44f@kernel.org>
-Date:   Thu, 10 Aug 2023 11:49:50 +0900
+        with ESMTP id S230093AbjHJFGf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2023 01:06:35 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C16592;
+        Wed,  9 Aug 2023 22:06:35 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1bd9b4f8e0eso2652045ad.1;
+        Wed, 09 Aug 2023 22:06:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1691643995; x=1692248795;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=RbIZ6+TF5sZsQZ7FDf5OkaqBqtNyqV1bMcvI7Ewy41s=;
+        b=QXiF/GbzwsW4oVqUHfJu86el/xjbFoEnq2N+uZLq3HhhmbKQ/q9GbeJhnluiGqznD0
+         4sG0UzDQMNkFaAJTjihkPgrP+/uWwGeVD2aC5nliyHfaqRxple7JS5gYiIRgJCbCYAsK
+         Je3vD7wdwgXFqfK0L/JZgpG6a8qnn43MpyfIiP6q5hKtwZ9BSJU47XduMZ6MZGUghmfU
+         /EArVIwI2rD+AzskR7VDn/YBszQf6I0TAUq7b95wJm2bPzjlBFEWEWVT0JDi/YDtENix
+         3jLE+hbxn/eL1FgtNikXIzn+9JX+l8v63WfrNjfQhhjrpBoUMtT1QF+1cQ5ErRoyXeUF
+         n6/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691643995; x=1692248795;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=RbIZ6+TF5sZsQZ7FDf5OkaqBqtNyqV1bMcvI7Ewy41s=;
+        b=af2D8ywT1xez3pTHiS0lI19ZBywdYtqXUBmE95Kzjyff4mco2CqecCPLbK1zLgvLz6
+         eOdo3iENzmEYyOHV0Nw+uQqBMEZG99HkJycmGrfx1HBZ8BzH/oJ8Jtd8+sLK8wcXkTPy
+         KTK56UeAsJk3udeQipK9+9mRSVbvRjV0gO00RuaXDs9mYljpcq89afYHmAu+v4FN2Jsg
+         gQZLj7WqBpl8PBCB3IVvrLPv2Cb6WwAMz6FA1m40IShYgXnSXm/IcZImwAQBlcvY3azf
+         qlkXOBgSpwPOcpuDz3VQexDcEGKZf2HFbeOMbcO9z6sxbWNlrMf8jAdEUJ2UNV2JEpOG
+         LKnw==
+X-Gm-Message-State: AOJu0YxES58yop1GGWMbLdLnDPJvwRnCePUQdhMWQrBo9Z0W7hXkC1C5
+        w7SIfmdXOa/wLLy4pVvPE13MzghFcGKLmw==
+X-Google-Smtp-Source: AGHT+IEPTfFXlaMWdXsW6iRDmvLV9Z8jrnhQg24iKCYXncpOHQig80qbPmUp6nLYeqFXB+TQm31ynA==
+X-Received: by 2002:a17:903:41c8:b0:1b3:d6c8:7008 with SMTP id u8-20020a17090341c800b001b3d6c87008mr1258509ple.57.1691643994669;
+        Wed, 09 Aug 2023 22:06:34 -0700 (PDT)
+Received: from sw.. (220-128-98-63.hinet-ip.hinet.net. [220.128.98.63])
+        by smtp.gmail.com with ESMTPSA id e10-20020a170902b78a00b001bba7aab826sm519880pls.163.2023.08.09.22.06.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Aug 2023 22:06:34 -0700 (PDT)
+From:   Szuying Chen <chensiying21@gmail.com>
+X-Google-Original-From: Szuying Chen <Chloe_Chen@asmedia.com.tw>
+To:     dlemoal@kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Jesse1_Chang@asmedia.com.tw, Richard_Hsu@asmedia.com.tw,
+        Chloe_chen@asmedia.com.tw, Szuying Chen <Chloe_Chen@asmedia.com.tw>
+Subject: [PATCH] ahci: libahci: clear pending interrupt status
+Date:   Thu, 10 Aug 2023 13:05:31 +0800
+Message-Id: <20230810050531.43505-1-Chloe_Chen@asmedia.com.tw>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] scsi: ata: Fix a race condition between scsi error
- handler and ahci interrupt
-Content-Language: en-US
-To:     linan666@huaweicloud.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
-        houtao1@huawei.com, yangerkun@huawei.com
-References: <20230810014848.2148316-1-linan666@huaweicloud.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230810014848.2148316-1-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/10/23 10:48, linan666@huaweicloud.com wrote:
-> From: Li Nan <linan122@huawei.com>
-> 
+When ISR handle interface fatal error with error recovery after clear PxIS
+and PxIE. Another FIS(SDB FIS with err) that set PxIS.IFS to 1 is recevied
+during error recovery, which causing the HBA not issue any new commands
+after cmd.ST set 1.
 
-Please explain the problem first instead of starting with a function call
-timeline which cannot ba analized without explanations.
+Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
+---
+ drivers/ata/libahci.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-> interrupt                            scsi_eh
-> 
-> ahci_error_intr
->   =>ata_port_freeze
->     =>__ata_port_freeze
->       =>ahci_freeze (turn IRQ off)
->     =>ata_port_abort
->       =>ata_port_schedule_eh
->         =>shost->host_eh_scheduled++;
->         host_eh_scheduled = 1
->                                      scsi_error_handler
->                                        =>ata_scsi_error
->                                          =>ata_scsi_port_error_handler
->                                            =>ahci_error_handler
->                                            . =>sata_pmp_error_handler
->                                            .   =>ata_eh_thaw_port
->                                            .     =>ahci_thaw (turn IRQ on)
-> ahci_error_intr                            .
->   =>ata_port_freeze                        .
->     =>__ata_port_freeze                    .
->       =>ahci_freeze (turn IRQ off)         .
->     =>ata_port_abort                       .
->       =>ata_port_schedule_eh               .
->         =>shost->host_eh_scheduled++;      .
->         host_eh_scheduled = 2              .
->                                            =>ata_std_end_eh
->                                              =>host->host_eh_scheduled = 0;
-> 
-> 'host_eh_scheduled' is 0 and scsi eh thread will not be scheduled again,
-> and the ata port remain freeze and will never be enabled.
-> 
-> If EH thread is already running, no need to freeze port and schedule
-> EH again.
-> 
-> Reported-by: luojian <luojian5@huawei.com>
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->  drivers/ata/libahci.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index e2bacedf28ef..0dfb0b807324 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -1840,9 +1840,17 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
->  
->  	/* okay, let's hand over to EH */
->  
-> -	if (irq_stat & PORT_IRQ_FREEZE)
-> +	if (irq_stat & PORT_IRQ_FREEZE) {
-> +		/*
-> +		 * EH already running, this may happen if the port is
-> +		 * thawed in the EH. But we cannot freeze it again
-> +		 * otherwise the port will never be thawed.
-> +		 */
-> +		if (ap->pflags & (ATA_PFLAG_EH_PENDING |
-> +			ATA_PFLAG_EH_IN_PROGRESS))
-> +			return;
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 06aec35f88f2..0ae51fd95d46 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -679,9 +679,21 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
 
-This is definitely not correct because EH may have been scheduled for a non
-fatal action like a device revalidate or to get sense data for successful
-commands. With this change, the port will NOT be frozen when a hard error IRQ
-comes while EH is waiting to start, that is, while EH waits for all commands to
-complete first.
+ void ahci_start_engine(struct ata_port *ap)
+ {
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 tmp;
 
-Furthermore, if you get an IRQ that requires the port to be frozen, it means
-that you had a failed command. In that case, the drive is in error state per
-ATA specs and stops all communication until a read log 10h command is issued.
-So you should never ever see 2 error IRQs one after the other. If you do, it
-very likely means that you have buggy hardware.
-
-How do you get into this situation ? What adapter and disk are you using ?
-
->  		ata_port_freeze(ap);
-> -	else if (fbs_need_dec) {
-> +	} else if (fbs_need_dec) {
->  		ata_link_abort(link);
->  		ahci_fbs_dec_intr(ap);
->  	} else
-
--- 
-Damien Le Moal
-Western Digital Research
++	/* clear SError */
++	tmp = readl(port_mmio + PORT_SCR_ERR);
++	writel(tmp, port_mmio + PORT_SCR_ERR);
++
++	/* clear port IRQ */
++	tmp = readl(port_mmio + PORT_IRQ_STAT);
++	if (tmp)
++		writel(tmp, port_mmio + PORT_IRQ_STAT);
++
++	writel(1 << ap->port_no, hpriv->mmio + PORT_IRQ_STAT);
++
+ 	/* start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+ 	tmp |= PORT_CMD_START;
+--
+2.39.2
 
