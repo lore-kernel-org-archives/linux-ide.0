@@ -2,140 +2,60 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D0EC04A94
-	for <linux-ide@archiver.kernel.org>; Thu, 10 Aug 2023 10:00:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA8DEB64DD
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Aug 2023 08:11:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235204AbjHJKAn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 10 Aug 2023 06:00:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58666 "EHLO
+        id S231254AbjHKIL2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Aug 2023 04:11:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235206AbjHJKAR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2023 06:00:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B798211B;
-        Thu, 10 Aug 2023 02:59:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EF1A3656DA;
-        Thu, 10 Aug 2023 09:59:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEBB5C433CA;
-        Thu, 10 Aug 2023 09:59:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691661579;
-        bh=tZc2QoE3nz8xkaCTNRvdEugBH9AUTd2t85+e5AqKrtE=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=E208qzHV/zGeeBahwPbqcofF723S3g67W/2omkRJEZkcw8ksMHFOkjPKqIsZA9KF6
-         CpZpbZPSmpIJtznkpmF+vJM49P1Yxa205kLfeHQdW2IlL0x+3OoaZ5FWMLLbQu38gH
-         2tK87jaAjtQ/dHUdVmTjncUuEo3ZXQmtpVJVlVJ2F5uN1SXRdmaycsPQBlMY3QDYM0
-         II35F37cF6ArJNW2cOdTqwq2I22VbgTAWgRpfx1pEu1zQfJo1v88EQmhrqVomdlIiK
-         Hd9lOY0NCaJfysImIRI/kjG/omIzVfmPaUNS+ELVsriD3NhSvjeR3KOLJP56L/6KtZ
-         eUiptqhfiHMeg==
-Message-ID: <987e0190-869f-76e0-9a0f-4ba122ce217a@kernel.org>
-Date:   Thu, 10 Aug 2023 18:59:37 +0900
+        with ESMTP id S229544AbjHKIL2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Aug 2023 04:11:28 -0400
+Received: from mail.venturelinkbiz.com (mail.venturelinkbiz.com [51.195.119.142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 176BB2130
+        for <linux-ide@vger.kernel.org>; Fri, 11 Aug 2023 01:11:26 -0700 (PDT)
+Received: by mail.venturelinkbiz.com (Postfix, from userid 1002)
+        id CA700460D3; Fri, 11 Aug 2023 08:11:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=venturelinkbiz.com;
+        s=mail; t=1691741483;
+        bh=Mjfq+hZZ0+rPTC06HjjASvlnsTMgj1yAndWxi/OAu2M=;
+        h=Date:From:To:Subject:From;
+        b=U2DywYFrbeEYhwEDEIGz1l6OUUI4DrcG0HJhZs8cuXydHTIfOnenVM/p83QP+ImbO
+         ns0qcdraWV5sTTx/CeUHQ9sjB8HH6QXIkeCyQEybWsIJdrNCASV+roODv9eESQVOzh
+         TVYMWitUS5L2c4HEami8P9ZKMJRyYHnDWIqvkoRBY/SSGfGOUX+3QcVyP79EKDP+ac
+         xn5edj+DVoTvROVSew2YkGftCgtgZAdTl+NVvMw8O70+P4WbYLj7Z9KML9nzscSb8i
+         xu9qRWlVnVH/2e4wSJ5Mp0SgReqeCcKJeJupib57qWNA/+DXPfhSVi1KKM6O7TyjW2
+         xy5zCVoN532Mg==
+Received: by mail.venturelinkbiz.com for <linux-ide@vger.kernel.org>; Fri, 11 Aug 2023 08:11:11 GMT
+Message-ID: <20230811064500-0.1.1r.4lm8.0.dm17syfmqa@venturelinkbiz.com>
+Date:   Fri, 11 Aug 2023 08:11:11 GMT
+From:   "Michal Rmoutil" <michal.rmoutil@venturelinkbiz.com>
+To:     <linux-ide@vger.kernel.org>
+Subject: =?UTF-8?Q?Syst=C3=A9m_sledov=C3=A1n=C3=AD_a_optimalizace_v=C3=BDroby?=
+X-Mailer: mail.venturelinkbiz.com
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ahci: libahci: clear pending interrupt status
-Content-Language: en-US
-To:     Szuying Chen <chensiying21@gmail.com>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Jesse1_Chang@asmedia.com.tw, Richard_Hsu@asmedia.com.tw,
-        Szuying Chen <Chloe_Chen@asmedia.com.tw>
-References: <20230810093147.45678-1-Chloe_Chen@asmedia.com.tw>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230810093147.45678-1-Chloe_Chen@asmedia.com.tw>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/10/23 18:31, Szuying Chen wrote:
-> On 8/10/23 14:12, Damien Le Moal wrote: 
->>    On 8/10/23 14:05, Szuying Chen wrote:
->>    > When ISR handle interface fatal error with error recovery after clear PxIS
->>    > and PxIE. Another FIS(SDB FIS with err) that set PxIS.IFS to 1 is recevied
->>    > during error recovery, which causing the HBA not issue any new commands
->>    > after cmd.ST set 1.
->>
->>    This is not very clear. If there was a fatal error, the drive should be in
->>    error state and no other SDB FIS can be received as the drive does absolutely
->>    nothing while in error state (it only waits for a read log 10h command to be>
->>    issued to get it out of error state). So if you are seeing 2 SDB FIS with
->>    errors one after the other, you have a buggy device...
->>
->>    However, I may be misunderstanding your issue here. Could you provide more
->>    details and a dmesg output example of the issue ?
-> 
-> According to AHCI 1.3.1 specification ch6.1.9, when an R_ERR is received
-> on an H2D Data FIS in normal operation, the HBA sets PxIS.IFS to 1
-> (fatal error) and halts operation. Referring to SATA 3.0 specification we
-> know the device will halt queued command processing and transmit SDB FIS to
-> host with ERR bit in Status field set to one(set PxIS.TFES to 1).
+Dobr=C3=A9 r=C3=A1no
 
-Sure, but that SBD FIS should be completely ignored by the adapter since it
-stopped operation. If you see it, then it means that the handling of the first
-error was incomplete.
+Zn=C3=A1te syst=C3=A9m, kter=C3=BD nejen hl=C3=ADd=C3=A1, ale i optimaliz=
+uje v=C3=BDrobu a p=C5=99in=C3=A1=C5=A1=C3=AD st=C3=A1l=C3=BD p=C5=99=C3=AD=
+jem?
 
-> In our case, the ISR handles fatal errors(PxIS.IFS) and enters error 
-> recovery after cleaning up PxIS and PxIE. Then a SDB FIS is received 
-> with interrupt bit(PxIS.TFES) set to 1. According to AHCI 1.3.1 
-> specification ch6.2.2, HBA can't issue(cmd.ST set to 1) any new commands
-> under PxIS.TFES alive during error recovery.
+D=C3=ADky nejnov=C4=9Bj=C5=A1=C3=ADm technologi=C3=ADm a anal=C3=BDze dat=
+ na=C5=A1e =C5=99e=C5=A1en=C3=AD identifikuje oblasti optimalizace, zv=C3=
+=BD=C5=A1en=C3=AD efektivity a sn=C3=AD=C5=BEen=C3=AD n=C3=A1klad=C5=AF. =
+Na=C5=A1i klienti zaznamenali n=C3=A1r=C5=AFst p=C5=99=C3=ADjm=C5=AF v pr=
+=C5=AFm=C4=9Bru o 20 % a dnes si to m=C5=AF=C5=BEete vyzkou=C5=A1et na 60=
+ dn=C3=AD zdarma.
 
-But how come you see a new command being issued ? This entire situation should
-result in a port reset with the first error. I do not see how this is possible.
-Are you saying that the port reset is not cleaning things up properly ? Could
-you share the dmesg output of this case ?
+Pokud chcete dal=C5=A1=C3=AD podrobnosti, odpov=C4=9Bzte pros=C3=ADm na k=
+ontaktn=C3=AD =C4=8D=C3=ADslo.
 
-> 
->>    >
->>    > Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
->>    > ---
->>    >  drivers/ata/libahci.c | 12 ++++++++++++
->>    >  1 file changed, 12 insertions(+)
->>    >
->>    > diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
->>    > index 06aec35f88f2..0ae51fd95d46 100644
->>    > --- a/drivers/ata/libahci.c
->>    > +++ b/drivers/ata/libahci.c
->>    > @@ -679,9 +679,21 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
->>    >
->>    >  void ahci_start_engine(struct ata_port *ap)
->>    >  {
->>    > +     struct ahci_host_priv *hpriv = ap->host->private_data;
->>    >       void __iomem *port_mmio = ahci_port_base(ap);
->>    >       u32 tmp;
->>    >
->>    > +     /* clear SError */
->>    > +     tmp = readl(port_mmio + PORT_SCR_ERR);
->>    > +     writel(tmp, port_mmio + PORT_SCR_ERR);
->>    > +
->>    > +     /* clear port IRQ */
->>    > +     tmp = readl(port_mmio + PORT_IRQ_STAT);
->>    > +     if (tmp)
->>    > +             writel(tmp, port_mmio + PORT_IRQ_STAT);
->>    > +
->>    > +     writel(1 << ap->port_no, hpriv->mmio + PORT_IRQ_STAT);
->>    > +
->>    >       /* start DMA */
->>    >       tmp = readl(port_mmio + PORT_CMD);
->>    >       tmp |= PORT_CMD_START;
->>    > --
->>    > 2.39.2
->>   >
->>
->>   -- 
->>   Damien Le Moal
->>    Western Digital Research
->>
-> Thanks. 
-> 
 
--- 
-Damien Le Moal
-Western Digital Research
-
+Pozdravy
+Michal Rmoutil
