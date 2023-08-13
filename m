@@ -2,60 +2,90 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA8DEB64DD
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Aug 2023 08:11:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F9FEC001B0
+	for <linux-ide@archiver.kernel.org>; Sun, 13 Aug 2023 15:53:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231254AbjHKIL2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Aug 2023 04:11:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33348 "EHLO
+        id S231620AbjHMPxo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 13 Aug 2023 11:53:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229544AbjHKIL2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Aug 2023 04:11:28 -0400
-Received: from mail.venturelinkbiz.com (mail.venturelinkbiz.com [51.195.119.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 176BB2130
-        for <linux-ide@vger.kernel.org>; Fri, 11 Aug 2023 01:11:26 -0700 (PDT)
-Received: by mail.venturelinkbiz.com (Postfix, from userid 1002)
-        id CA700460D3; Fri, 11 Aug 2023 08:11:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=venturelinkbiz.com;
-        s=mail; t=1691741483;
-        bh=Mjfq+hZZ0+rPTC06HjjASvlnsTMgj1yAndWxi/OAu2M=;
-        h=Date:From:To:Subject:From;
-        b=U2DywYFrbeEYhwEDEIGz1l6OUUI4DrcG0HJhZs8cuXydHTIfOnenVM/p83QP+ImbO
-         ns0qcdraWV5sTTx/CeUHQ9sjB8HH6QXIkeCyQEybWsIJdrNCASV+roODv9eESQVOzh
-         TVYMWitUS5L2c4HEami8P9ZKMJRyYHnDWIqvkoRBY/SSGfGOUX+3QcVyP79EKDP+ac
-         xn5edj+DVoTvROVSew2YkGftCgtgZAdTl+NVvMw8O70+P4WbYLj7Z9KML9nzscSb8i
-         xu9qRWlVnVH/2e4wSJ5Mp0SgReqeCcKJeJupib57qWNA/+DXPfhSVi1KKM6O7TyjW2
-         xy5zCVoN532Mg==
-Received: by mail.venturelinkbiz.com for <linux-ide@vger.kernel.org>; Fri, 11 Aug 2023 08:11:11 GMT
-Message-ID: <20230811064500-0.1.1r.4lm8.0.dm17syfmqa@venturelinkbiz.com>
-Date:   Fri, 11 Aug 2023 08:11:11 GMT
-From:   "Michal Rmoutil" <michal.rmoutil@venturelinkbiz.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?Syst=C3=A9m_sledov=C3=A1n=C3=AD_a_optimalizace_v=C3=BDroby?=
-X-Mailer: mail.venturelinkbiz.com
+        with ESMTP id S231893AbjHMPxE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 13 Aug 2023 11:53:04 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6FDC1BF9;
+        Sun, 13 Aug 2023 08:52:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 88BC863345;
+        Sun, 13 Aug 2023 15:52:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75E24C433C8;
+        Sun, 13 Aug 2023 15:52:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691941954;
+        bh=CIoXN1vFQHFotOHTx6OeSkrhly9vPo0mvFHSoT31VUw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=AZwufX9r+36F8KClRNvy8A5I7B1hecLsbypujqrF5acjj5wTv30l00XORF5sWUgZq
+         VvbmwyDiq4JMNWVIhAKjQMQAfd/komVPzM8fRcVqhbH7kBxWkml6IF+Dh64ycgefj2
+         oDkXSw1n+p+A/y3P2YJrqiZxdygT0a21i35RJH7DBf+XhIiDjH3+wwCZvyVcJwyorR
+         m8EJbrE4GujPHmWiUGAISHjfTsqr46LdERwq7+cCWhHoA/UXNmsKzwvzLYblnqQVr6
+         NSNVDCfNA4/si1HzOs/Px3sRicx0axgv9d6eErNVrLeAhZqbPQ8ENzSQELnoJxVEbD
+         aZN8Fkz2jxuvg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Minjie Du <duminjie@vivo.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, vireshk@kernel.org,
+        linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.4 46/54] ata: pata_arasan_cf: Use dev_err_probe() instead dev_err() in data_xfer()
+Date:   Sun, 13 Aug 2023 11:49:25 -0400
+Message-Id: <20230813154934.1067569-46-sashal@kernel.org>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230813154934.1067569-1-sashal@kernel.org>
+References: <20230813154934.1067569-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.4.10
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dobr=C3=A9 r=C3=A1no
+From: Minjie Du <duminjie@vivo.com>
 
-Zn=C3=A1te syst=C3=A9m, kter=C3=BD nejen hl=C3=ADd=C3=A1, ale i optimaliz=
-uje v=C3=BDrobu a p=C5=99in=C3=A1=C5=A1=C3=AD st=C3=A1l=C3=BD p=C5=99=C3=AD=
-jem?
+[ Upstream commit 4139f992c49356391fb086c0c8ce51f66c26d623 ]
 
-D=C3=ADky nejnov=C4=9Bj=C5=A1=C3=ADm technologi=C3=ADm a anal=C3=BDze dat=
- na=C5=A1e =C5=99e=C5=A1en=C3=AD identifikuje oblasti optimalizace, zv=C3=
-=BD=C5=A1en=C3=AD efektivity a sn=C3=AD=C5=BEen=C3=AD n=C3=A1klad=C5=AF. =
-Na=C5=A1i klienti zaznamenali n=C3=A1r=C5=AFst p=C5=99=C3=ADjm=C5=AF v pr=
-=C5=AFm=C4=9Bru o 20 % a dnes si to m=C5=AF=C5=BEete vyzkou=C5=A1et na 60=
- dn=C3=AD zdarma.
+It is possible for dma_request_chan() to return EPROBE_DEFER, which
+means acdev->host->dev is not ready yet. At this point dev_err() will
+have no output. Use dev_err_probe() instead.
 
-Pokud chcete dal=C5=A1=C3=AD podrobnosti, odpov=C4=9Bzte pros=C3=ADm na k=
-ontaktn=C3=AD =C4=8D=C3=ADslo.
+Signed-off-by: Minjie Du <duminjie@vivo.com>
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/pata_arasan_cf.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index 6ab294322e792..314eaa1679540 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -529,7 +529,8 @@ static void data_xfer(struct work_struct *work)
+ 	/* dma_request_channel may sleep, so calling from process context */
+ 	acdev->dma_chan = dma_request_chan(acdev->host->dev, "data");
+ 	if (IS_ERR(acdev->dma_chan)) {
+-		dev_err(acdev->host->dev, "Unable to get dma_chan\n");
++		dev_err_probe(acdev->host->dev, PTR_ERR(acdev->dma_chan),
++			      "Unable to get dma_chan\n");
+ 		acdev->dma_chan = NULL;
+ 		goto chan_request_fail;
+ 	}
+-- 
+2.40.1
 
-Pozdravy
-Michal Rmoutil
