@@ -2,89 +2,59 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF84BC001E0
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Aug 2023 15:37:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 654D1C27C6D
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Aug 2023 22:53:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239417AbjHPPhS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 16 Aug 2023 11:37:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40902 "EHLO
+        id S1347028AbjHPWw2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Aug 2023 18:52:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344288AbjHPPhJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Aug 2023 11:37:09 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A9CE2684
-        for <linux-ide@vger.kernel.org>; Wed, 16 Aug 2023 08:37:04 -0700 (PDT)
-Received: from [192.168.1.103] (178.176.73.142) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 16 Aug
- 2023 18:36:59 +0300
+        with ESMTP id S1347040AbjHPWwK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Aug 2023 18:52:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88CF8FD
+        for <linux-ide@vger.kernel.org>; Wed, 16 Aug 2023 15:52:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 25C9464EE7
+        for <linux-ide@vger.kernel.org>; Wed, 16 Aug 2023 22:52:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D9D5C433C8;
+        Wed, 16 Aug 2023 22:52:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692226328;
+        bh=plNu6aC0mFjKzXNxMqWpXvbYxui7oXvcEIjMyDShaC0=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=Zj8ZzdUnx11yz93AUTFUi2l+PItUWu5fr4BVsuZDaUztR0TrdyNwDYRGDNUpVk84L
+         XPCW6N0EAAUgeKG0m5zkgjsvy7oPgS1mmepSP1gFiu/t9ghTYOav2LEHfqvT5yjAVI
+         6i3r/pgwy5YDMk7FfKogLAEDvDVNUHCK2B7E0fRuENaKgPjru4hqXOaE9OrJptjymt
+         8CgAEsB2vYRVWZ7dxCMJOMuanf+hht9/EuDfDq6gzqyPBuieBKZIBJaii8PrFjwLno
+         5JmChp4tgDmMxywQRF/T+2x2SMK1ncniaqaspJ05FaklD8zc2D9ksp4VGBZYsyXEiA
+         7DdEqKG1P4ohA==
+Message-ID: <e3d16a5d-f0c1-7aa4-d977-3b70c6b0d995@kernel.org>
+Date:   Thu, 17 Aug 2023 07:52:06 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
 Subject: Re: [PATCH -next] ata: pata_imx: Use helper function
  devm_clk_get_enabled()
-To:     Li Zetao <lizetao1@huawei.com>, <dlemoal@kernel.org>,
-        <shawnguo@kernel.org>, <s.hauer@pengutronix.de>,
-        <kernel@pengutronix.de>, <festevam@gmail.com>, <linux-imx@nxp.com>
-CC:     <linux-ide@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+To:     Li Zetao <lizetao1@huawei.com>, s.shtylyov@omp.ru,
+        shawnguo@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de,
+        festevam@gmail.com, linux-imx@nxp.com
+Cc:     linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 References: <20230815151352.1907861-1-lizetao1@huawei.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <511dcf36-1530-b9bb-3113-55d3bc22a0a5@omp.ru>
-Date:   Wed, 16 Aug 2023 18:36:59 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-MIME-Version: 1.0
-In-Reply-To: <20230815151352.1907861-1-lizetao1@huawei.com>
-Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230815151352.1907861-1-lizetao1@huawei.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.73.142]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 08/16/2023 15:16:09
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 179287 [Aug 16 2023]
-X-KSE-AntiSpam-Info: Version: 5.9.59.0
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 526 526 7a6a9b19f6b9b3921b5701490f189af0e0cd5310
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.73.142 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.73.142 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;178.176.73.142:7.1.2,7.7.3,7.4.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: {iprep_blacklist}
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: {rdns complete}
-X-KSE-AntiSpam-Info: {fromrtbl complete}
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.73.142
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 08/16/2023 15:20:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 8/16/2023 12:01:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-On 8/15/23 6:13 PM, Li Zetao wrote:
-
+On 8/16/23 00:13, Li Zetao wrote:
 > After the commit 7ef9651e9792 ("clk: Provide new devm_clk helpers for
 > prepared and enabled clocks"), it can replace the pair of functions,
 > devm_clk_get() and clk_prepare_enable() with a single helper function
@@ -92,13 +62,13 @@ On 8/15/23 6:13 PM, Li Zetao wrote:
 > (or enabled) during the whole lifetime of the driver, it is unnecessary to
 > unprepare or disable clock explicitly when remove driver or in the error
 > handling path.
-
-  At last! :-)
-
+> 
 > Signed-off-by: Li Zetao <lizetao1@huawei.com>
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Applied to for-6.6. Thanks !
 
-[...]
 
-MBR, Sergey
+-- 
+Damien Le Moal
+Western Digital Research
+
