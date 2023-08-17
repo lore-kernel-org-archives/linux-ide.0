@@ -2,62 +2,62 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD8DC6FD22
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68F0FC678DD
 	for <linux-ide@archiver.kernel.org>; Thu, 17 Aug 2023 22:14:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355682AbjHQWNd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Aug 2023 18:13:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58522 "EHLO
+        id S1355596AbjHQWNc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Aug 2023 18:13:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355707AbjHQWNN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2023 18:13:13 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8964A3A8F;
-        Thu, 17 Aug 2023 15:12:42 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-68879fc4871so278349b3a.0;
-        Thu, 17 Aug 2023 15:12:42 -0700 (PDT)
+        with ESMTP id S1355692AbjHQWNG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2023 18:13:06 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 747FC35B5;
+        Thu, 17 Aug 2023 15:12:41 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id 41be03b00d2f7-5656a5c6721so265043a12.1;
+        Thu, 17 Aug 2023 15:12:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692310362; x=1692915162;
+        d=gmail.com; s=20221208; t=1692310361; x=1692915161;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=hlMQ1n8i16f6KTaYagTbQKQg5/+PxgAfX9lPv9C6FfY=;
-        b=jLdQipN8I8KtJXWpazvTpCkcBtdCgJP5Z90wBfKwN/ZtqZWihNlG8BtTG2IB6ChDHj
-         HzxNt5dZtu0FWmCHDl3oqiOS56WLhC/6eWf+Ror3YpnbE3TjL4yj73AAiQZMdJhYeR68
-         cEMv/TBVNaiQ3EpGx9kLVhUAaPSFIMoBq5VDQHkFOsa2RbzzTPSCGc8hXCidYisyrFCd
-         3qeiU8esIyIgq9iLkpzdWtZHvHVGTmXlVix/9GrNTWEJkm7XB5J0H51L3Olx4S9Zn8f3
-         nqJxGBgWn1XmLTGp4WdO3N5RaFlzb8TrlZPyIQtw/UdKuyFNwTXFKKE4sw/31gdOF4Iu
-         cxhQ==
+        bh=350+Yr4pUsoYLbgryjPyHNFc7BOKfJLnct3uHCEqK6Q=;
+        b=Os8cW5mjxuPiKUCLQQeMklRvmgF4ZSChK1relXTWQEEi50TQVPqw8W2Mlq8IaQE8Bu
+         Gs9zIBjC/mCuSCTrLzbEhYhY3G45Dgrxk1J3Krk+rP2E6RYHvYf6YhbrglCKaBElXKKS
+         7DnrVcEIqwXHMaOaAmlbFPoKlYK7OfAAXrgql8aLiwah43KCWL3uleWbrBvNdkPbtB2f
+         HsRutGyHE+zX4sXMQ+tbrslAiPKXgg6PM4NxCN1Sbx5LhUd379BNWgesxHqWuJWUIG/Y
+         5OHuAT8wCeURdGNhw6Hn3p4L5/kN9N0eYI68U3aXCoFGJAxHcx+Broq9OOa6XzRjDWeF
+         IpWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692310362; x=1692915162;
+        d=1e100.net; s=20221208; t=1692310361; x=1692915161;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hlMQ1n8i16f6KTaYagTbQKQg5/+PxgAfX9lPv9C6FfY=;
-        b=PykLGnqsaOaweFXRfpOUsR6eHWR7IivUr06m6bOXtVD0q0gR7A5FC0DQJ28+CKCCnd
-         pWOddJqWZMmZOoUGJiSZoKGAhKxmR9Wu8Dx4TbGKWGlCDQAacxUQxRvHQWD101RQYtEF
-         Sq76ga0ImA8AwpGBL4MZfN/qmLG5ruH0DjKWs5MMwkeeS2eLgOKSNmurYfQ49o42ZJaj
-         MpYzD1zz2jx2kVCKj4RsLxSLTyqgUgV1sNOpvGBa0WroVauJUKl473O/cjeZPBRR7M/0
-         AS09BcQL1AGqvkVu4ZyloDEfJV2Czes0ZreIDd5Tg0i/15RR+nqxZobnRikOSXuTkS5u
-         GveQ==
-X-Gm-Message-State: AOJu0YxSXJqHds9aTpzs5U28pcAq2pR2uXAhuIaWtKjpmV6VdtiqffPU
-        NjfWFQ2uxeJDzcFjy8ba+Pw=
-X-Google-Smtp-Source: AGHT+IEGBNqCs1utYxbpcyOrB4mdDO/MyAF19cAR/MC6Nknf3DrfmrazBhEYCfZFo4TcNksijRmRlA==
-X-Received: by 2002:a05:6a00:98d:b0:682:3126:961a with SMTP id u13-20020a056a00098d00b006823126961amr1050674pfg.5.1692310361977;
-        Thu, 17 Aug 2023 15:12:41 -0700 (PDT)
+        bh=350+Yr4pUsoYLbgryjPyHNFc7BOKfJLnct3uHCEqK6Q=;
+        b=lJEjb3+ygm730Ol2I1WVOne9TxSXF4RqlMu/ibCuJgL+mjy7zwCro+/e8v6ZlAgS4k
+         8E+f2VPdXh6xcqmoFcS6+iZLs1Z5SAI2NoHdTvv2vpTlRsi2ymjwck3mTNihhF0lPg5w
+         agDPL/aA4+JDlcqGDilQQlbKYHj9DVoRP1vBOknHnHAAPmql7ke9zOFT7yZT7gqiuUVH
+         V4dBbqTcmDl/l62hFOk4jSDh156ZaoZgTN3UHleTxqBCKTTVmxcxHcr/ByN+sr1Y3iGO
+         nmC8N1BHJu4hgBCT2+Tb5q2RS2YetqprUOzieppZG2x0Ctfs/1KoINo9pKDajsyKBCvg
+         Wo6g==
+X-Gm-Message-State: AOJu0YwcB49aVibPWrXR0jaubiQPCaYS9f9zvJ+uHNsCjVYqq/S8h9hs
+        9Gt+I1fVYWHLUEQv2ETvaVU=
+X-Google-Smtp-Source: AGHT+IHRlafKM6qKSEbveuFEqNK5vhvbbHqQ/uPa3EAtoF/6KD+5Uocj0tiz/ONJX0bBTC8GjfGs5Q==
+X-Received: by 2002:a05:6a20:4420:b0:131:f504:a631 with SMTP id ce32-20020a056a20442000b00131f504a631mr1334482pzb.51.1692310360909;
+        Thu, 17 Aug 2023 15:12:40 -0700 (PDT)
 Received: from xplor.waratah.dyndns.org (122-62-141-252-fibre.sparkbb.co.nz. [122.62.141.252])
-        by smtp.gmail.com with ESMTPSA id b21-20020a637155000000b0054fa8539681sm180609pgn.34.2023.08.17.15.12.41
+        by smtp.gmail.com with ESMTPSA id b5-20020aa78705000000b0068746ab9aebsm253230pfo.14.2023.08.17.15.12.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Aug 2023 15:12:41 -0700 (PDT)
+        Thu, 17 Aug 2023 15:12:40 -0700 (PDT)
 Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
-        id 703B536043B; Fri, 18 Aug 2023 10:12:37 +1200 (NZST)
+        id B56DB360370; Fri, 18 Aug 2023 10:12:36 +1200 (NZST)
 From:   Michael Schmitz <schmitzmic@gmail.com>
 To:     s.shtylyov@omp.ru, linux-ide@vger.kernel.org,
         linux-m68k@vger.kernel.org
 Cc:     will@sowerbutts.com, rz@linux-m68k.org, geert@linux-m68k.org,
-        Michael Schmitz <schmitzmic@gmail.com>,
+        Michael Schmitz <schmitzmic@gmail.com>, stable@vger.kernel.org,
         Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH 2/3] m68k/q40: add data_swab option for pata_falcon to byte-swap disk data
-Date:   Fri, 18 Aug 2023 10:12:31 +1200
-Message-Id: <20230817221232.22035-3-schmitzmic@gmail.com>
+Subject: [PATCH 1/3] m68k/q40: fix IO base selection for Q40 in pata_falcon.c
+Date:   Fri, 18 Aug 2023 10:12:30 +1200
+Message-Id: <20230817221232.22035-2-schmitzmic@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230817221232.22035-1-schmitzmic@gmail.com>
 References: <20230817221232.22035-1-schmitzmic@gmail.com>
@@ -65,123 +65,139 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Some users of pata_falcon on Q40 have IDE disks in default
-IDE little endian byte order, whereas legacy disks use
-host-native big-endian byte order as on the Atari Falcon.
+With commit 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver
+with pata_falcon and falconide"), the Q40 IDE driver was
+replaced by pata_falcon.c.
 
-Add module parameter 'data_swab' to allow connecting drives
-with non-native data byte order. Drives selected by the
-data_swap bit mask will have their user data byte-swapped to
-host byte order, i.e. 'pata_falcon.data_swab=2' will byte-swap
-all user data on drive B, leaving data on drive A in native
-byte order. On Q40, drives on a second IDE interface may be
-added to the bit mask as bits 2 and 3.
+Both IO and memory resources were defined for the Q40 IDE
+platform device, but definition of the IDE register addresses
+was modeled after the Falcon case, both in use of the memory
+resources and in including register scale and byte vs. word
+offset in the address.
 
-Default setting is no byte swapping, i.e. compatibility with
-the native Falcon or Q40 operating system disk format.
+This was correct for the Falcon case, which does not apply
+any address translation to the register addresses. In the
+Q40 case, all of device base address, byte access offset
+and register scaling is included in the platform specific
+ISA access translation (in asm/mm_io.h).
 
-Cc: William R Sowerbutts <will@sowerbutts.com>
+As a consequence, such address translation gets applied
+twice, and register addresses are mangled.
+
+Use the device base address from the platform IO resource,
+and use standard register offsets from that base in order
+to calculate register addresses (the IO address translation
+will then apply the correct ISA window base and scaling).
+
+Encode PIO_OFFSET into IO port addresses for all registers
+except the data transfer register. Encode the MMIO offset
+there (pata_falcon_data_xfer() directly uses raw IO with
+no address translation).
+
+Reported-by: William R Sowerbutts <will@sowerbutts.com>
+Closes: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
+Link: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
+Fixes: 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver with pata_falcon and falconide")
+Cc: <stable@vger.kernel.org> # 5.14
 Cc: Finn Thain <fthain@linux-m68k.org>
 Cc: Geert Uytterhoeven <geert@linux-m68k.org>
 Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
 
 ---
 
-Changes since RFC v4:
+Changes from RFC v3:
+
+- split off byte swap option into separate patch
 
 Geert Uytterhoeven:
-- don't shift static module parameter for drive 3/4 bitmask
-- simplify bit mask calculation to always use pdev->id
+- review comments
+
+Changes from RFC v2:
+- add driver parameter 'data_swap' as bit mask for drives to swap
+
+Changes from RFC v1:
 
 Finn Thain:
-- correct bit numbers for drive 3/4
-
-Changes since RFC v3:
-
-- split off this byte swap handling into separate patch
-
-- add hint regarding third and fourth drive on Q40
-
-Finn Thain:
-- rename module parameter to 'data_swab' to better reflect its use
-
-William Sowerbutts:
-- correct IDE drive number used in data swap conditional
+- take care to supply IO address suitable for ioread8/iowrite8
+- use MMIO address for data transfer
 ---
- drivers/ata/pata_falcon.c | 26 +++++++++++++++++++++++++-
- 1 file changed, 25 insertions(+), 1 deletion(-)
+ drivers/ata/pata_falcon.c | 55 ++++++++++++++++++++++++---------------
+ 1 file changed, 34 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/ata/pata_falcon.c b/drivers/ata/pata_falcon.c
-index 346259e3bbc8..90488f565d6f 100644
+index 996516e64f13..346259e3bbc8 100644
 --- a/drivers/ata/pata_falcon.c
 +++ b/drivers/ata/pata_falcon.c
-@@ -33,6 +33,16 @@
- #define DRV_NAME "pata_falcon"
- #define DRV_VERSION "0.1.0"
- 
-+static int pata_falcon_swap_mask;
-+
-+module_param_named(data_swab, pata_falcon_swap_mask, int, 0444);
-+MODULE_PARM_DESC(data_swab, "Data byte swap enable/disable bitmap (0x1==drive1, 0x2==drive2, 0x4==drive3, 0x8==drive4, default==0)");
-+
-+struct pata_falcon_priv {
-+	unsigned int swap_mask;
-+	bool swap_data;
-+};
-+
- static const struct scsi_host_template pata_falcon_sht = {
- 	ATA_PIO_SHT(DRV_NAME),
- };
-@@ -44,13 +54,15 @@ static unsigned int pata_falcon_data_xfer(struct ata_queued_cmd *qc,
- 	struct ata_device *dev = qc->dev;
- 	struct ata_port *ap = dev->link->ap;
- 	void __iomem *data_addr = ap->ioaddr.data_addr;
-+	struct pata_falcon_priv *priv = ap->private_data;
- 	unsigned int words = buflen >> 1;
- 	struct scsi_cmnd *cmd = qc->scsicmd;
-+	int dev_id = dev->devno;
- 	bool swap = 1;
- 
- 	if (dev->class == ATA_DEV_ATA && cmd &&
- 	    !blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)))
--		swap = 0;
-+		swap = priv->swap_data && (priv->swap_mask & BIT(dev_id));
- 
- 	/* Transfer multiple of 2 bytes */
- 	if (rw == READ) {
-@@ -123,6 +135,7 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
+@@ -123,8 +123,8 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
  	struct resource *base_res, *ctl_res, *irq_res;
  	struct ata_host *host;
  	struct ata_port *ap;
-+	struct pata_falcon_priv *priv;
- 	void __iomem *base, *ctl_base;
- 	int irq = 0, io_offset = 1, reg_scale = 4;
+-	void __iomem *base;
+-	int irq = 0;
++	void __iomem *base, *ctl_base;
++	int irq = 0, io_offset = 1, reg_scale = 4;
  
-@@ -165,6 +178,13 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
+ 	dev_info(&pdev->dev, "Atari Falcon and Q40/Q60 PATA controller\n");
+ 
+@@ -165,26 +165,39 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
  	ap->pio_mask = ATA_PIO4;
  	ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
  
-+	priv = devm_kzalloc(&pdev->dev,
-+		sizeof(struct pata_falcon_priv), GFP_KERNEL);
-+	if (!priv)
-+		return -ENOMEM;
-+
-+	ap->private_data = priv;
-+
+-	base = (void __iomem *)base_mem_res->start;
  	/* N.B. this assumes data_addr will be used for word-sized I/O only */
- 	ap->ioaddr.data_addr = (void __iomem *)base_mem_res->start;
- 
-@@ -199,6 +219,10 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
- 	ap->ioaddr.altstatus_addr	= ctl_base + io_offset;
- 	ap->ioaddr.ctl_addr		= ctl_base + io_offset;
- 
-+	priv->swap_mask = pata_falcon_swap_mask >> (2 * pdev->id);
-+	if (priv->swap_mask)
-+		priv->swap_data = 1;
+-	ap->ioaddr.data_addr		= base + 0 + 0 * 4;
+-	ap->ioaddr.error_addr		= base + 1 + 1 * 4;
+-	ap->ioaddr.feature_addr		= base + 1 + 1 * 4;
+-	ap->ioaddr.nsect_addr		= base + 1 + 2 * 4;
+-	ap->ioaddr.lbal_addr		= base + 1 + 3 * 4;
+-	ap->ioaddr.lbam_addr		= base + 1 + 4 * 4;
+-	ap->ioaddr.lbah_addr		= base + 1 + 5 * 4;
+-	ap->ioaddr.device_addr		= base + 1 + 6 * 4;
+-	ap->ioaddr.status_addr		= base + 1 + 7 * 4;
+-	ap->ioaddr.command_addr		= base + 1 + 7 * 4;
+-
+-	base = (void __iomem *)ctl_mem_res->start;
+-	ap->ioaddr.altstatus_addr	= base + 1;
+-	ap->ioaddr.ctl_addr		= base + 1;
+-
+-	ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
+-		      (unsigned long)base_mem_res->start,
+-		      (unsigned long)ctl_mem_res->start);
++	ap->ioaddr.data_addr = (void __iomem *)base_mem_res->start;
 +
++	if (base_res) {		/* only Q40 has IO resources */
++		io_offset = 0x10000;
++		reg_scale = 1;
++		base = (void __iomem *)base_res->start;
++		ctl_base = (void __iomem *)ctl_res->start;
++
++		ata_port_desc(ap, "cmd %pa ctl %pa",
++			      &base_res->start,
++			      &ctl_res->start);
++	} else {
++		base = (void __iomem *)base_mem_res->start;
++		ctl_base = (void __iomem *)ctl_mem_res->start;
++
++		ata_port_desc(ap, "cmd %pa ctl %pa",
++			      &base_mem_res->start,
++			      &ctl_mem_res->start);
++	}
++
++	ap->ioaddr.error_addr	= base + io_offset + 1 * reg_scale;
++	ap->ioaddr.feature_addr	= base + io_offset + 1 * reg_scale;
++	ap->ioaddr.nsect_addr	= base + io_offset + 2 * reg_scale;
++	ap->ioaddr.lbal_addr	= base + io_offset + 3 * reg_scale;
++	ap->ioaddr.lbam_addr	= base + io_offset + 4 * reg_scale;
++	ap->ioaddr.lbah_addr	= base + io_offset + 5 * reg_scale;
++	ap->ioaddr.device_addr	= base + io_offset + 6 * reg_scale;
++	ap->ioaddr.status_addr	= base + io_offset + 7 * reg_scale;
++	ap->ioaddr.command_addr	= base + io_offset + 7 * reg_scale;
++
++	ap->ioaddr.altstatus_addr	= ctl_base + io_offset;
++	ap->ioaddr.ctl_addr		= ctl_base + io_offset;
+ 
  	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
  	if (irq_res && irq_res->start > 0) {
- 		irq = irq_res->start;
 -- 
 2.17.1
 
