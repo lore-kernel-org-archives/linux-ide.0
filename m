@@ -2,33 +2,45 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F513C3DA53
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Aug 2023 16:09:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 357F5C3DA50
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Aug 2023 16:40:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353290AbjHQQI2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Aug 2023 12:08:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59758 "EHLO
+        id S233815AbjHQQjl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Aug 2023 12:39:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353502AbjHQQID (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2023 12:08:03 -0400
-Received: from laurent.telenet-ops.be (laurent.telenet-ops.be [IPv6:2a02:1800:110:4::f00:19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F07EF35BD
-        for <linux-ide@vger.kernel.org>; Thu, 17 Aug 2023 09:07:57 -0700 (PDT)
-Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed40:d85a:258d:2c59:b44])
-        by laurent.telenet-ops.be with bizsmtp
-        id ag7i2A0054QHFyo01g7i1F; Thu, 17 Aug 2023 18:07:55 +0200
-Received: from rox.of.borg ([192.168.97.57])
-        by ramsan.of.borg with esmtp (Exim 4.95)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1qWfX4-000uIv-EU;
-        Thu, 17 Aug 2023 18:07:42 +0200
-Received: from geert by rox.of.borg with local (Exim 4.95)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1qWfXB-007YEt-Th;
-        Thu, 17 Aug 2023 18:07:41 +0200
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-To:     Russell King <linux@armlinux.org.uk>,
-        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        with ESMTP id S1353723AbjHQQji (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2023 12:39:38 -0400
+Received: from mailrelay1-1.pub.mailoutpod2-cph3.one.com (mailrelay1-1.pub.mailoutpod2-cph3.one.com [IPv6:2a02:2350:5:400::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F22502D4A
+        for <linux-ide@vger.kernel.org>; Thu, 17 Aug 2023 09:39:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ravnborg.org; s=rsa1;
+        h=in-reply-to:content-type:mime-version:references:message-id:subject:cc:to:
+         from:date:from;
+        bh=vIZEApjN48v7cjxMWecDniUYGxJ1pBYdlqtVcwGIpD4=;
+        b=afbiIZBkDs4heKfhbghMmeD4NDauTO4zHYXx7GwvDSoUudh5dRzdfzzzZ9TKJYNq5o2Zg9gPPzx/2
+         pO1mBnTUHH68D10xoCEu/g/ELHOKcwA42C5FOdHCySvCwKAHDebv8MqGiWexGlAcBu57+ejcULfnjt
+         psejozQNn0kflhd4mUCCOVy1UGLKwe1oK9Eq6FxqQFHjpAZAQqFgXDq4NcLE5HBd7opM9kFrnU6/sG
+         FDik21/qNeoWx9b651AEYuM9i2W6oZB/9CoSVodFUEQBfZkonFXsRbw1NcNqUqLFVrJfu1KiTvWU5U
+         jU48fKXHb2ME7TvDFkcX0nn6TsxXioQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed;
+        d=ravnborg.org; s=ed1;
+        h=in-reply-to:content-type:mime-version:references:message-id:subject:cc:to:
+         from:date:from;
+        bh=vIZEApjN48v7cjxMWecDniUYGxJ1pBYdlqtVcwGIpD4=;
+        b=aU7GlH1EhJat8ieYjr1tdfY1IaPGhPENN3XtgpOGEdP2VKMUUpnLUAsd17kC/5B3icem4A1j4Pt4I
+         BGw03biAg==
+X-HalOne-ID: a3bc9125-3d1c-11ee-8c77-c5367ef0e45e
+Received: from ravnborg.org (2-105-2-98-cable.dk.customer.tdc.net [2.105.2.98])
+        by mailrelay1 (Halon) with ESMTPSA
+        id a3bc9125-3d1c-11ee-8c77-c5367ef0e45e;
+        Thu, 17 Aug 2023 16:39:33 +0000 (UTC)
+Date:   Thu, 17 Aug 2023 18:39:31 +0200
+From:   Sam Ravnborg <sam@ravnborg.org>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Russell King <linux@armlinux.org.uk>,
+        "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
         Helge Deller <deller@gmx.de>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Nicholas Piggin <npiggin@gmail.com>,
@@ -37,78 +49,26 @@ To:     Russell King <linux@armlinux.org.uk>,
         Arnd Bergmann <arnd@arndb.de>,
         Sergey Shtylyov <s.shtylyov@omp.ru>,
         Damien Le Moal <dlemoal@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-arm-kernel@lists.infradead.org, linux-parisc@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-arm-kernel@lists.infradead.org, linux-parisc@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, sparclinux@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 5/9] asm-generic: Remove ide_iops.h
-Date:   Thu, 17 Aug 2023 18:07:36 +0200
-Message-Id: <54ed1ce4b29346803bd732aac560a74896d1ecfe.1692288018.git.geert@linux-m68k.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1692288018.git.geert@linux-m68k.org>
+        linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/9] sparc: Remove <asm/ide.h>
+Message-ID: <20230817163931.GA93297@ravnborg.org>
 References: <cover.1692288018.git.geert@linux-m68k.org>
+ <d26247f29e65b017c06e993f8aedece13a100369.1692288018.git.geert@linux-m68k.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d26247f29e65b017c06e993f8aedece13a100369.1692288018.git.geert@linux-m68k.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The last user of ide_iops.h was removed in commit b7fb14d3ac63117e
-("ide: remove the legacy ide driver") in v5.14.
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
- include/asm-generic/ide_iops.h | 39 ----------------------------------
- 1 file changed, 39 deletions(-)
- delete mode 100644 include/asm-generic/ide_iops.h
-
-diff --git a/include/asm-generic/ide_iops.h b/include/asm-generic/ide_iops.h
-deleted file mode 100644
-index 81dfa3ee5e0697b7..0000000000000000
---- a/include/asm-generic/ide_iops.h
-+++ /dev/null
-@@ -1,39 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/* Generic I/O and MEMIO string operations.  */
--
--#define __ide_insw	insw
--#define __ide_insl	insl
--#define __ide_outsw	outsw
--#define __ide_outsl	outsl
--
--static __inline__ void __ide_mm_insw(void __iomem *port, void *addr, u32 count)
--{
--	while (count--) {
--		*(u16 *)addr = readw(port);
--		addr += 2;
--	}
--}
--
--static __inline__ void __ide_mm_insl(void __iomem *port, void *addr, u32 count)
--{
--	while (count--) {
--		*(u32 *)addr = readl(port);
--		addr += 4;
--	}
--}
--
--static __inline__ void __ide_mm_outsw(void __iomem *port, void *addr, u32 count)
--{
--	while (count--) {
--		writew(*(u16 *)addr, port);
--		addr += 2;
--	}
--}
--
--static __inline__ void __ide_mm_outsl(void __iomem * port, void *addr, u32 count)
--{
--	while (count--) {
--		writel(*(u32 *)addr, port);
--		addr += 4;
--	}
--}
--- 
-2.34.1
-
+On Thu, Aug 17, 2023 at 06:07:35PM +0200, Geert Uytterhoeven wrote:
+> As of commit b7fb14d3ac63117e ("ide: remove the legacy ide driver") in
+> v5.14, there are no more generic users of <asm/ide.h>.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Acked-by: Sam Ravnborg <sam@ravnborg.org>
