@@ -2,50 +2,85 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 670E4C7113E
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Aug 2023 09:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14F05C7113C
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Aug 2023 13:00:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358873AbjHRJCy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Aug 2023 05:02:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59218 "EHLO
+        id S1352429AbjHRM7o (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Aug 2023 08:59:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359012AbjHRJCU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2023 05:02:20 -0400
-X-Greylist: delayed 1492 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 18 Aug 2023 02:01:58 PDT
-Received: from mail.leachkin.pl (mail.leachkin.pl [217.61.97.203])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7675B3C24
-        for <linux-ide@vger.kernel.org>; Fri, 18 Aug 2023 02:01:58 -0700 (PDT)
-Received: by mail.leachkin.pl (Postfix, from userid 1001)
-        id 1FAB0848DB; Fri, 18 Aug 2023 09:16:59 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leachkin.pl; s=mail;
-        t=1692346637; bh=elHzctRz/z3PfTIhGYJKd0TeBTmca98Y+JNgX4gfsPI=;
-        h=Date:From:To:Subject:From;
-        b=Oc5RnZwrME/68Nd5ZGOt7jv/fU2X2+l/iLEB9/0hlbSL/UqHqHEc+CCAW5dQihwOr
-         Ye1utpvSeiVZD3GZnEM7C3YUAT5ps5xjdL3IzHeNGIsiOZ1hudWFiAdkRP5oDXr5bj
-         HsTRkUt8PMvx7yQTZWZwzvpTxHIpV+TNGMvrcCaYGYzBq+eSqPpzFIoqrybIT7bOyl
-         v4MqpYRjbEAtzKttrSAMlaQ+avUjLGj1Ak3pycxQdVxdoS4Pa1zc4C0fwoKIMpFvBI
-         11taKItsfWu7JJvdni4ceAEb/37UHNHu3IhyhfKeEIgUtrOxpFkH2TzZ/3DNnaXyjz
-         hN3OBPa7WybKw==
-Received: by mail.leachkin.pl for <linux-ide@vger.kernel.org>; Fri, 18 Aug 2023 08:15:51 GMT
-Message-ID: <20230818074501-0.1.4u.cusu.0.eeursk31el@leachkin.pl>
-Date:   Fri, 18 Aug 2023 08:15:51 GMT
-From:   "Jakub Lemczak" <jakub.lemczak@leachkin.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
-X-Mailer: mail.leachkin.pl
+        with ESMTP id S1377019AbjHRM70 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2023 08:59:26 -0400
+X-Greylist: delayed 9095 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 18 Aug 2023 05:59:20 PDT
+Received: from server.dsmega.com (server.dsmega.com [185.186.208.16])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DEEF3C04
+        for <linux-ide@vger.kernel.org>; Fri, 18 Aug 2023 05:59:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=remzavod.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:Message-ID:Date:Subject:To:From:Reply-To:Sender:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=thoNrXbQv25mMK/3RviWbIqjmSGPAZCcCyNvsgRjrpM=; b=ZHRYIAwbcvbum9n6sBdx3w7Bjb
+        vvHWw6aZh6phGAoh8sn/5Ip+pmk5htsE3C0fUjtuCtdpVUPy+bjGGUq6KcaHC+HDxdol8V8UrnGHX
+        xbOCeTom4bUIcHjmvxikSsaps87gHk42+lI+n4Y43eB45aCcDUJ2lgIz4QSAB+jHf/owWKISS085q
+        P1CKRVNpBCw3/QcJp6l6F/MCbNgdoFWzmAdAQ2DEbByNI7zyjQRI5wTSpCnOP/gdshEkPM8+veDo1
+        i8pVY5wdgSp2AON8zZQ/ql1UpwOrdnIvcvqsQq0LarP/AlheExTuKkd2nno7Q2XlVUjSwQe1mWLn2
+        V6qCNTlw==;
+Received: from [85.195.105.114] (port=53913 helo=gmail.com)
+        by server.dsmega.com with esmtpa (Exim 4.93)
+        (envelope-from <roberthelmut144@gmail.com>)
+        id 1qWwhj-0002n1-CY
+        for linux-ide@vger.kernel.org; Fri, 18 Aug 2023 13:27:43 +0300
+Reply-To: robert.helmut@selectlaboratoriesltd.co.uk
+From:   Robert Helmut <roberthelmut144@gmail.com>
+To:     linux-ide@vger.kernel.org
+Subject: Re: Supply
+Date:   18 Aug 2023 03:27:42 -0700
+Message-ID: <20230818032742.5BAB6B4D5DF1A2B0@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+        charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - server.dsmega.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - gmail.com
+X-Get-Message-Sender-Via: server.dsmega.com: authenticated_id: info@remzavod.com
+X-Authenticated-Sender: server.dsmega.com: info@remzavod.com
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Greetings,
 
-Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
-torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
-ich utrzymania?=20
+I have a business plan that will benefit you from my company
+where i work as the head of research and dev. Contact me through
+my company provided email addresss and i will give you details of
+my intent for your consideration.
+
+Sincerely
+Robert Helmut
+Research & Dev Dept.
+Select Pharma Lab. Ltd .UK
+---------------------------------
+Email: robert.helmut@selectlaboratoriesltd.co.uk
+Select Pharma Lab. Ltd .UK
+First Floor, Quay 2, 139 Fountain bridge, Edinburgh, EH3 9QG,
+United Kingdom
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3DDISCLAIMER NOTICE=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+The content of this message is confidential. If you have received=20
+it by mistake, please inform us by an email reply and then delete=20
+the message. It is forbidden to copy, forward, or in any way=20
+reveal the contents of this message to anyone. The integrity and=20
+security of this email cannot be guaranteed over the Internet.=20
+Therefore, the sender will not be held liable for any damage=20
+caused by the message.
+
+=C2=A9 Copyright 2023 Select Pharma Lab. Ltd. All Right Reserved.
 
 
-Pozdrawiam,
-Jakub Lemczak
