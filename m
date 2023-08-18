@@ -2,93 +2,73 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A11CC7113B
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Aug 2023 05:34:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8CA9C7112F
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Aug 2023 06:39:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348977AbjHRFdi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Aug 2023 01:33:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40390 "EHLO
+        id S1357861AbjHRGjT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Aug 2023 02:39:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357903AbjHRFdY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2023 01:33:24 -0400
-Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com [66.111.4.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C4DD1706;
-        Thu, 17 Aug 2023 22:33:22 -0700 (PDT)
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.nyi.internal (Postfix) with ESMTP id 2308B5C00D1;
-        Fri, 18 Aug 2023 01:33:19 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Fri, 18 Aug 2023 01:33:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; t=1692336799; x=1692423199; bh=Gc15qWvK649Gi
-        on2Drq5HT+hHTu1NHG5OYl6MDmkzx8=; b=1WjoWEpIiIi59tu822LZZkMN5IJTH
-        xCgRaQ9uamnnsxuS8DqOUK81oFgP1c4Spe/Q8o2QaF2/79kIaTUxoWLmy3xu8i5S
-        vaVM+/8nO2//Kzd0lPL7j3/mn9aUiUZB3O8rifUUYgsmW+2tF28OGby/oob+NW3w
-        q2i9HYmhOYhIdTKp/cZA+uesaMA0VkPtDYG0Juej+fJAMOX4KUIKSFSft585GaKD
-        cnBqPq3fkjhj5Nqj29HhzYYzSNlzmK2kVSKVmCH8D/43pQqNtg/shtt5Hfci+rHp
-        eJHoT3VRzy6IxP28ddIFHtUd+GYIaR7iMgQ259HzSlufS4LScHg5Nockw==
-X-ME-Sender: <xms:ngLfZCBoHPYvtZG7Wxc7YL2dtH-NPygbjWoZdaQUinVh7g2KTFm6Kw>
-    <xme:ngLfZMgxG1X7cHIwpSbW1GnysRvWIPl6q5TSFpX_qUlY76wFzJjdf-QhN_fKcLlHp
-    nooaQA4kULNrghgWB8>
-X-ME-Received: <xmr:ngLfZFk6DvdFj5F4n5jmx1YdW0aeHyYf8e4IvYhfjCNIXdrFmq1P5sGG7_LWXRkXUJGzg3aakI2Ob1DqHQ3j0QtAdzzF9u0-bLE>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrudduvddgleeiucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeefieehjedvtefgiedtudethfekieelhfevhefgvddtkeekvdekhefftdek
-    vedvueenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivg
-    eptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthhgrihhnsehlihhnuhigqdhmieek
-    khdrohhrgh
-X-ME-Proxy: <xmx:ngLfZAw6ajbDA8fh9OOLKMFhMdNfNDMur9BwPV4Nc8cbQOhYoiH-wg>
-    <xmx:ngLfZHRDtcKYaB0zppdEMgbJsLbKAQduu2KwKsVPvM7SszCV1kLtug>
-    <xmx:ngLfZLaMngko4vNM2g7H2MRG6ELIA8t5K-6D1VEvUkPPvzDcdF72Pg>
-    <xmx:nwLfZGEV9I-6suDbJVywE8_d352Y_50RfF63QN74pDiD5u4dT0kxyw>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 18 Aug 2023 01:33:15 -0400 (EDT)
-Date:   Fri, 18 Aug 2023 15:33:29 +1000 (AEST)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     Michael Schmitz <schmitzmic@gmail.com>
-cc:     Damien Le Moal <dlemoal@kernel.org>, s.shtylyov@omp.ru,
-        linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org,
-        will@sowerbutts.com, rz@linux-m68k.org, geert@linux-m68k.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 1/3] m68k/q40: fix IO base selection for Q40 in
- pata_falcon.c
-In-Reply-To: <a75c21bc-c776-cf19-a5b2-9163af035d65@gmail.com>
-Message-ID: <ef903aa8-25aa-779b-cf88-33840b498282@linux-m68k.org>
-References: <20230817221232.22035-1-schmitzmic@gmail.com> <20230817221232.22035-2-schmitzmic@gmail.com> <ca753d89-ad51-d901-4058-d974fea7e658@kernel.org> <a75c21bc-c776-cf19-a5b2-9163af035d65@gmail.com>
+        with ESMTP id S236187AbjHRGiv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Aug 2023 02:38:51 -0400
+Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A892C3AAC;
+        Thu, 17 Aug 2023 23:38:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+        s=201909; t=1692340724;
+        bh=hlt2WR9VKRQdnR39jECZXVVWv2cQfPKmwJiDfWtBxo4=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=Y0iReFoYSlL0+BxRV/n3nIxMdr6AyjmsO0dXwn9j+x+KduX7OhC0wklzd198xTaee
+         9XcmQrl8GmmaMLE9O6icF7RHt6SPWQGb8Alc9TWqL1TXJ9u7InrnjGNGIsGQntC4Ew
+         DUbEKBPT8AhYv5vfCcDGZaWz6sznFTeVHvju8DMx4amt8ewj1PY9jfDaqMYXPeO3CZ
+         3f9CJKC/oH2D5/c7THyB6sR31THVNRSMvVKePdhVMhqU6jpQ32j9WShQOrvLYjKZde
+         ym6SvEJqJ/fj1aBuf2tNjZtZ8kmblI8YJQqXJu5uNfXDIZcvJQhE2wqAaktwzCRup8
+         SokeUBqcMPITA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4RRsdp689Wz4wy8;
+        Fri, 18 Aug 2023 16:38:38 +1000 (AEST)
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-arm-kernel@lists.infradead.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, sparclinux@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 3/9] powerpc: Remove <asm/ide.h>
+In-Reply-To: <eb79960c5f9f72013b3b2f6d19461e5d8134fcc2.1692288018.git.geert@linux-m68k.org>
+References: <cover.1692288018.git.geert@linux-m68k.org>
+ <eb79960c5f9f72013b3b2f6d19461e5d8134fcc2.1692288018.git.geert@linux-m68k.org>
+Date:   Fri, 18 Aug 2023 16:38:36 +1000
+Message-ID: <87bkf4x3bn.fsf@mail.lhotse>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 18 Aug 2023, Michael Schmitz wrote:
+Geert Uytterhoeven <geert@linux-m68k.org> writes:
+> As of commit b7fb14d3ac63117e ("ide: remove the legacy ide driver") in
+> v5.14, there are no more generic users of <asm/ide.h>.
+>
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> ---
+>  arch/powerpc/include/asm/ide.h | 18 ------------------
+>  1 file changed, 18 deletions(-)
+>  delete mode 100644 arch/powerpc/include/asm/ide.h
 
-> >> Cc: <stable@vger.kernel.org> # 5.14
-> >
-> > 5.14+ ? But I do not think you need to specify anything anyway since 
-> > you have the Fixes tag.
-> 
-> 5.14+ perhaps. I'll check the docs again to see whether Fixes: obsoletes 
-> the stable backport tag. I've so far used both together...
-> 
+Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
 
-You'd specify a "# x.y+" limit along with a "Fixes" tag if you don't want 
-to backport as far back as the buggy commit (because some other 
-pre-requisite isn't present on the older branches). But that does not 
-apply in this case.
-
-Writing "# 5.14" is surprising because (according to www.kernel.org 
-landing page) that branch was abandoned, and no live branch was named. 
-But in "git log" you can see that people write this anyway.
-
-Writing "# 5.14+" or "# 5.15+" is clear enough but is normally omitted 
-when it can be inferred from the Fixes tag. That's been my experience, at 
-least.
+cheers
