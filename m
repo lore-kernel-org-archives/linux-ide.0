@@ -2,69 +2,69 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24308C3DA66
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Aug 2023 02:54:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95E51C71136
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Aug 2023 03:09:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357331AbjHRCxc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Aug 2023 22:53:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37828 "EHLO
+        id S1357430AbjHRDJV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Aug 2023 23:09:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357375AbjHRCxY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2023 22:53:24 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB08F3A9F;
-        Thu, 17 Aug 2023 19:53:20 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1bda9207132so3985125ad.0;
-        Thu, 17 Aug 2023 19:53:20 -0700 (PDT)
+        with ESMTP id S1343839AbjHRDIn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2023 23:08:43 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47F863A8B;
+        Thu, 17 Aug 2023 20:08:39 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1bf3a2f44ffso1381445ad.1;
+        Thu, 17 Aug 2023 20:08:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692327200; x=1692932000;
+        d=gmail.com; s=20221208; t=1692328119; x=1692932919;
         h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
          :message-id:from:cc:references:to:subject:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=rFdQg13s6mOpRmarJ14t6fkWGA8UwDkTquU8FxA9ysA=;
-        b=aRqotHA0wr4M0Lw6hXieDga90ZQ2DD8n/tzkqbfi73XLR+xsZ4jBqXi1lqh13bz74y
-         sOfWD9qqQa5S8wUS+2JHiPWmxQxugCNGHziqUwidVdZRLhxersGv0oiX2k6sd7NEBmxZ
-         PKzTPDjNPacyhA306i8TiGXhpNUvO6ZLQjCNGkWcD2Lax2d2r2h2+SQuCWb13gJTqU5E
-         E3ofIC3p6g7ZUHMkpwduG2KtWl9HH3E902krBO8VNR96goGrBouxBh9NSO15w6QOHhJ4
-         uL6CJdopRIYhkEPP46pLtbxRxfw7oQi3stxbQb7G3LhkDt+WCyIoxr4XGajs+sVU21dy
-         aPkw==
+        bh=1x/LxOjE9ZdZqh9bZjLl2/cPAjvqFFkZgzei3We2v1E=;
+        b=UQyptG+qqECKhAOzwWIq0mWBa4biD/OEFDskAuDiQwgp0vper/IUwmLykobMLfuLDa
+         bz/CJIAIWfmbqk88BsZOidwBvkOQaxMiy6WgZtSLSpTvJiOHoIfy6UyqZKFLrNKm96c9
+         UANQFIQU/Dg5XHLiKwzyYiWOzC8nhk/XAialDm5HyV7bLlR1+MOa6nf9c3mVWO+binOW
+         OoJyjRqhwG8p9aHwtZW6O7DqbeF6eAW0KlTqsHPpuCL1Gw5omwJeAruPscMh+rnTHKhe
+         Mru/k+FyluPfWKIm0hD90rU7uPAkUo7UGCa3bkiUsnS55H4fFFw3qGuDQxrPih7RXHLh
+         28Cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692327200; x=1692932000;
+        d=1e100.net; s=20221208; t=1692328119; x=1692932919;
         h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
          :message-id:from:cc:references:to:subject:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=rFdQg13s6mOpRmarJ14t6fkWGA8UwDkTquU8FxA9ysA=;
-        b=BMjCWNrvq3DQrGJPrxWE7CNb3wM0ikXOtLcPeaGFjwRVArF4HJjBiE9oRCgJNkAJOK
-         qHu8mW+SDmVqhDvvTUqY/GTBYUIAPmAkVRD4bq2YCzukNLKS31LlZb3NkwytQgi4kape
-         dIcxz5jwKuVVagVZTLN8pTi5/IDgInIUmqza1zgNrzq8fq1LN9Yp1SmE09K3z0rCK3HM
-         7dcMozFgt0BPpq7ahMhRcv+gvzp9yUubiPuVQ9NyheXNp/IpuWEsGmvapYFVTZvNTtrK
-         ERVzyKgTJmweY3R3PWibWSpizC6Pr9N+j82KndfKAt8TAUOpjt5KfxL+rgrPH4iN0I2g
-         IJpA==
-X-Gm-Message-State: AOJu0Yw7LjzmXtbZJt+WPbkH0ZFL+30hvMbYhiEDP2S4DhbjODNye+Ka
-        8R/sOU/ZlCdUOrKescjEIjk=
-X-Google-Smtp-Source: AGHT+IF0dwAX5/39BBQ385fDjAoDX09nzBFXSGG+umy2zqP1kXboGx0OOs28gSq78GmWjZC5dPfUGw==
-X-Received: by 2002:a17:903:11c4:b0:1bb:9b48:ea94 with SMTP id q4-20020a17090311c400b001bb9b48ea94mr1408013plh.32.1692327200107;
-        Thu, 17 Aug 2023 19:53:20 -0700 (PDT)
+        bh=1x/LxOjE9ZdZqh9bZjLl2/cPAjvqFFkZgzei3We2v1E=;
+        b=FGG8yySuS0hTXMxVgj43AHmeCyKv/YD7nTicvHwecTo5HHXOsU6V8x6UuO0I2F7Qrw
+         ASnuxsOvRzfmX/3h/vHieV/AWsxmXRReNauaw7YlcZ1N2aZGHQznHE7BBDv75tVDthul
+         v0FtpmyU9Y2SMNXEkayamNvUITPKo+oXJpdVJ3W71C1Q+SUl5eZkrl1t6BaB0Zr4sh2q
+         7ABjnyZNndulbZ0VDbY+xyItBRIBUQUmkRJGhX6E6E1JqsUymnxqSfA6vVy10YjrCWyr
+         GBdACnfmFmtWPqzBrU+2aRPfDU6KsAScADX/K7dWbfX5QNLbXxj/wsC/JE0IxCs0i7Zi
+         DZ3Q==
+X-Gm-Message-State: AOJu0YwqHm/fso0NCD37eVALXLaOY43CphODpajdgs0tWYD1E0QMJblX
+        KIYPiYvp7Z6ASUq8OZTUtq3B2EvgmJU=
+X-Google-Smtp-Source: AGHT+IGeXHb9fKhBbZDcsKXjd6q9mIvq2gvc+3p8o8LhWrqJ+ENr8LudlBT170kieJU+AJp6r7GVJg==
+X-Received: by 2002:a17:902:eb49:b0:1bc:671d:6d31 with SMTP id i9-20020a170902eb4900b001bc671d6d31mr1287536pli.3.1692328118686;
+        Thu, 17 Aug 2023 20:08:38 -0700 (PDT)
 Received: from [10.1.1.24] (122-62-141-252-fibre.sparkbb.co.nz. [122.62.141.252])
-        by smtp.gmail.com with ESMTPSA id x19-20020a170902ea9300b001b8b0ac2258sm485010plb.174.2023.08.17.19.53.12
+        by smtp.gmail.com with ESMTPSA id d7-20020a170902cec700b001bc45408d26sm504356plg.36.2023.08.17.20.08.33
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Aug 2023 19:53:19 -0700 (PDT)
-Subject: Re: [PATCH 1/3] m68k/q40: fix IO base selection for Q40 in
- pata_falcon.c
+        Thu, 17 Aug 2023 20:08:38 -0700 (PDT)
+Subject: Re: [PATCH 2/3] m68k/q40: add data_swab option for pata_falcon to
+ byte-swap disk data
 To:     Damien Le Moal <dlemoal@kernel.org>, s.shtylyov@omp.ru,
         linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org
 References: <20230817221232.22035-1-schmitzmic@gmail.com>
- <20230817221232.22035-2-schmitzmic@gmail.com>
- <ca753d89-ad51-d901-4058-d974fea7e658@kernel.org>
+ <20230817221232.22035-3-schmitzmic@gmail.com>
+ <a09f4d25-55c7-b93c-94cb-d0f74d3bb84d@kernel.org>
 Cc:     will@sowerbutts.com, rz@linux-m68k.org, geert@linux-m68k.org,
-        stable@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>
+        Finn Thain <fthain@linux-m68k.org>
 From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <a75c21bc-c776-cf19-a5b2-9163af035d65@gmail.com>
-Date:   Fri, 18 Aug 2023 14:53:09 +1200
+Message-ID: <390a202a-c448-3945-ced0-c1c2b4657e27@gmail.com>
+Date:   Fri, 18 Aug 2023 15:08:31 +1200
 User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
  Icedove/45.4.0
 MIME-Version: 1.0
-In-Reply-To: <ca753d89-ad51-d901-4058-d974fea7e658@kernel.org>
+In-Reply-To: <a09f4d25-55c7-b93c-94cb-d0f74d3bb84d@kernel.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -73,162 +73,167 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Hi Damien,
 
-thanks for your review!
+thanks for the review ...
 
-Am 18.08.2023 um 12:42 schrieb Damien Le Moal:
+Am 18.08.2023 um 12:51 schrieb Damien Le Moal:
 > On 2023/08/18 7:12, Michael Schmitz wrote:
->> With commit 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver
->> with pata_falcon and falconide"), the Q40 IDE driver was
->> replaced by pata_falcon.c.
->
-> Please change the patch title to:
->
-> ata: pata_falcon: fix IO base selection for Q40
-
-Will do.
-
->
+>> Some users of pata_falcon on Q40 have IDE disks in default
+>> IDE little endian byte order, whereas legacy disks use
+>> host-native big-endian byte order as on the Atari Falcon.
 >>
->> Both IO and memory resources were defined for the Q40 IDE
->> platform device, but definition of the IDE register addresses
->> was modeled after the Falcon case, both in use of the memory
->> resources and in including register scale and byte vs. word
->> offset in the address.
+>> Add module parameter 'data_swab' to allow connecting drives
+>> with non-native data byte order. Drives selected by the
+>> data_swap bit mask will have their user data byte-swapped to
+>> host byte order, i.e. 'pata_falcon.data_swab=2' will byte-swap
+>> all user data on drive B, leaving data on drive A in native
+>> byte order. On Q40, drives on a second IDE interface may be
+>> added to the bit mask as bits 2 and 3.
 >>
->> This was correct for the Falcon case, which does not apply
->> any address translation to the register addresses. In the
->> Q40 case, all of device base address, byte access offset
->> and register scaling is included in the platform specific
->> ISA access translation (in asm/mm_io.h).
+>> Default setting is no byte swapping, i.e. compatibility with
+>> the native Falcon or Q40 operating system disk format.
 >>
->> As a consequence, such address translation gets applied
->> twice, and register addresses are mangled.
->>
->> Use the device base address from the platform IO resource,
->> and use standard register offsets from that base in order
->> to calculate register addresses (the IO address translation
->> will then apply the correct ISA window base and scaling).
->>
->> Encode PIO_OFFSET into IO port addresses for all registers
->> except the data transfer register. Encode the MMIO offset
->> there (pata_falcon_data_xfer() directly uses raw IO with
->> no address translation).
->>
->> Reported-by: William R Sowerbutts <will@sowerbutts.com>
->> Closes: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
->> Link: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
->> Fixes: 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver with pata_falcon and falconide")
->> Cc: <stable@vger.kernel.org> # 5.14
->
-> 5.14+ ? But I do not think you need to specify anything anyway since you have
-> the Fixes tag.
-
-5.14+ perhaps. I'll check the docs again to see whether Fixes: obsoletes 
-the stable backport tag. I've so far used both together...
-
-Cheers,
-
-	Michael
-
-
->
+>> Cc: William R Sowerbutts <will@sowerbutts.com>
 >> Cc: Finn Thain <fthain@linux-m68k.org>
 >> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
 >> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
 >>
 >> ---
 >>
->> Changes from RFC v3:
->>
->> - split off byte swap option into separate patch
+>> Changes since RFC v4:
 >>
 >> Geert Uytterhoeven:
->> - review comments
->>
->> Changes from RFC v2:
->> - add driver parameter 'data_swap' as bit mask for drives to swap
->>
->> Changes from RFC v1:
+>> - don't shift static module parameter for drive 3/4 bitmask
+>> - simplify bit mask calculation to always use pdev->id
 >>
 >> Finn Thain:
->> - take care to supply IO address suitable for ioread8/iowrite8
->> - use MMIO address for data transfer
+>> - correct bit numbers for drive 3/4
+>>
+>> Changes since RFC v3:
+>>
+>> - split off this byte swap handling into separate patch
+>>
+>> - add hint regarding third and fourth drive on Q40
+>>
+>> Finn Thain:
+>> - rename module parameter to 'data_swab' to better reflect its use
+>>
+>> William Sowerbutts:
+>> - correct IDE drive number used in data swap conditional
 >> ---
->>  drivers/ata/pata_falcon.c | 55 ++++++++++++++++++++++++---------------
->>  1 file changed, 34 insertions(+), 21 deletions(-)
+>>  drivers/ata/pata_falcon.c | 26 +++++++++++++++++++++++++-
+>>  1 file changed, 25 insertions(+), 1 deletion(-)
 >>
 >> diff --git a/drivers/ata/pata_falcon.c b/drivers/ata/pata_falcon.c
->> index 996516e64f13..346259e3bbc8 100644
+>> index 346259e3bbc8..90488f565d6f 100644
 >> --- a/drivers/ata/pata_falcon.c
 >> +++ b/drivers/ata/pata_falcon.c
->> @@ -123,8 +123,8 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
+>> @@ -33,6 +33,16 @@
+>>  #define DRV_NAME "pata_falcon"
+>>  #define DRV_VERSION "0.1.0"
+>>
+>> +static int pata_falcon_swap_mask;
+>> +
+>> +module_param_named(data_swab, pata_falcon_swap_mask, int, 0444);
+>> +MODULE_PARM_DESC(data_swab, "Data byte swap enable/disable bitmap (0x1==drive1, 0x2==drive2, 0x4==drive3, 0x8==drive4, default==0)");
+>> +
+>> +struct pata_falcon_priv {
+>> +	unsigned int swap_mask;
+>> +	bool swap_data;
+>> +};
+>> +
+>>  static const struct scsi_host_template pata_falcon_sht = {
+>>  	ATA_PIO_SHT(DRV_NAME),
+>>  };
+>> @@ -44,13 +54,15 @@ static unsigned int pata_falcon_data_xfer(struct ata_queued_cmd *qc,
+>>  	struct ata_device *dev = qc->dev;
+>>  	struct ata_port *ap = dev->link->ap;
+>>  	void __iomem *data_addr = ap->ioaddr.data_addr;
+>> +	struct pata_falcon_priv *priv = ap->private_data;
+>>  	unsigned int words = buflen >> 1;
+>>  	struct scsi_cmnd *cmd = qc->scsicmd;
+>> +	int dev_id = dev->devno;
+>>  	bool swap = 1;
+>>
+>>  	if (dev->class == ATA_DEV_ATA && cmd &&
+>>  	    !blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)))
+>> -		swap = 0;
+>> +		swap = priv->swap_data && (priv->swap_mask & BIT(dev_id));
+>>
+>>  	/* Transfer multiple of 2 bytes */
+>>  	if (rw == READ) {
+>> @@ -123,6 +135,7 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
 >>  	struct resource *base_res, *ctl_res, *irq_res;
 >>  	struct ata_host *host;
 >>  	struct ata_port *ap;
->> -	void __iomem *base;
->> -	int irq = 0;
->> +	void __iomem *base, *ctl_base;
->> +	int irq = 0, io_offset = 1, reg_scale = 4;
+>> +	struct pata_falcon_priv *priv;
+>>  	void __iomem *base, *ctl_base;
+>>  	int irq = 0, io_offset = 1, reg_scale = 4;
 >>
->>  	dev_info(&pdev->dev, "Atari Falcon and Q40/Q60 PATA controller\n");
->>
->> @@ -165,26 +165,39 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
+>> @@ -165,6 +178,13 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
 >>  	ap->pio_mask = ATA_PIO4;
 >>  	ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
 >>
->> -	base = (void __iomem *)base_mem_res->start;
+>> +	priv = devm_kzalloc(&pdev->dev,
+>> +		sizeof(struct pata_falcon_priv), GFP_KERNEL);
+>> +	if (!priv)
+>> +		return -ENOMEM;
+>> +
+>> +	ap->private_data = priv;
+>> +
 >>  	/* N.B. this assumes data_addr will be used for word-sized I/O only */
->> -	ap->ioaddr.data_addr		= base + 0 + 0 * 4;
->> -	ap->ioaddr.error_addr		= base + 1 + 1 * 4;
->> -	ap->ioaddr.feature_addr		= base + 1 + 1 * 4;
->> -	ap->ioaddr.nsect_addr		= base + 1 + 2 * 4;
->> -	ap->ioaddr.lbal_addr		= base + 1 + 3 * 4;
->> -	ap->ioaddr.lbam_addr		= base + 1 + 4 * 4;
->> -	ap->ioaddr.lbah_addr		= base + 1 + 5 * 4;
->> -	ap->ioaddr.device_addr		= base + 1 + 6 * 4;
->> -	ap->ioaddr.status_addr		= base + 1 + 7 * 4;
->> -	ap->ioaddr.command_addr		= base + 1 + 7 * 4;
->> -
->> -	base = (void __iomem *)ctl_mem_res->start;
->> -	ap->ioaddr.altstatus_addr	= base + 1;
->> -	ap->ioaddr.ctl_addr		= base + 1;
->> -
->> -	ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
->> -		      (unsigned long)base_mem_res->start,
->> -		      (unsigned long)ctl_mem_res->start);
->> +	ap->ioaddr.data_addr = (void __iomem *)base_mem_res->start;
->> +
->> +	if (base_res) {		/* only Q40 has IO resources */
->> +		io_offset = 0x10000;
->> +		reg_scale = 1;
->> +		base = (void __iomem *)base_res->start;
->> +		ctl_base = (void __iomem *)ctl_res->start;
->> +
->> +		ata_port_desc(ap, "cmd %pa ctl %pa",
->> +			      &base_res->start,
->> +			      &ctl_res->start);
->> +	} else {
->> +		base = (void __iomem *)base_mem_res->start;
->> +		ctl_base = (void __iomem *)ctl_mem_res->start;
->> +
->> +		ata_port_desc(ap, "cmd %pa ctl %pa",
->> +			      &base_mem_res->start,
->> +			      &ctl_mem_res->start);
->> +	}
->> +
->> +	ap->ioaddr.error_addr	= base + io_offset + 1 * reg_scale;
->> +	ap->ioaddr.feature_addr	= base + io_offset + 1 * reg_scale;
->> +	ap->ioaddr.nsect_addr	= base + io_offset + 2 * reg_scale;
->> +	ap->ioaddr.lbal_addr	= base + io_offset + 3 * reg_scale;
->> +	ap->ioaddr.lbam_addr	= base + io_offset + 4 * reg_scale;
->> +	ap->ioaddr.lbah_addr	= base + io_offset + 5 * reg_scale;
->> +	ap->ioaddr.device_addr	= base + io_offset + 6 * reg_scale;
->> +	ap->ioaddr.status_addr	= base + io_offset + 7 * reg_scale;
->> +	ap->ioaddr.command_addr	= base + io_offset + 7 * reg_scale;
->> +
->> +	ap->ioaddr.altstatus_addr	= ctl_base + io_offset;
->> +	ap->ioaddr.ctl_addr		= ctl_base + io_offset;
+>>  	ap->ioaddr.data_addr = (void __iomem *)base_mem_res->start;
 >>
+>> @@ -199,6 +219,10 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
+>>  	ap->ioaddr.altstatus_addr	= ctl_base + io_offset;
+>>  	ap->ioaddr.ctl_addr		= ctl_base + io_offset;
+>>
+>> +	priv->swap_mask = pata_falcon_swap_mask >> (2 * pdev->id);
+>
+> I do not understand the shift here. It seems that it will lead to
+> priv->swap_mask always being 0...
+
+On Q40, it is possible to have two ISA IDE adapters, and two platform 
+devices are defined (in arch/m68k/q40/config.c) One will have 
+pdev->id==0, the other will have pdev->id==1.
+
+In the pdev->id==0 case, there's no shift of the bit mask passed in as 
+module parameter, so the data transfer function will examine bits 0 and 
+1. That case we've verified in testing.
+In the other case, we shift down by two bits, so the data transfer 
+function will now examine bits 2 and 3 from the module parameter.
+
+>
+>> +	if (priv->swap_mask)
+>> +		priv->swap_data = 1;
+>
+> I do not understand why priv->swap_data is needed, given that it is set to 1 if
+> priv->swap_mask != 0, the above:
+>
+> 	swap = priv->swap_data && (priv->swap_mask & BIT(dev_id));
+>
+> should be equivalent to the simpler:
+>
+> 	swap = priv->swap_mask & BIT(dev_id);
+>
+> No ? Am I missing something ?
+
+I had hoped to avoid the pointer dereference and bit shift in the 
+default (and by far most common) case where none of the bits are set.
+
+Compared to the simpler version, I actually just save the bit shift, so 
+it's probably a pointless optimization.
+
+Finn had suggested to simplify this even further, and use ap->private as 
+bit mask directly (saving the kzalloc()). If you're OK with that, I'll 
+change the code accordingly.
+
+Cheers,
+
+	Michael
+
+
+>> +
 >>  	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
 >>  	if (irq_res && irq_res->start > 0) {
+>>  		irq = irq_res->start;
 >
