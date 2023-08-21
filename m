@@ -2,166 +2,237 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29CB6EE49A5
-	for <linux-ide@archiver.kernel.org>; Mon, 21 Aug 2023 07:50:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35448EE4996
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Aug 2023 13:51:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229757AbjHUHuw convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 21 Aug 2023 03:50:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42788 "EHLO
+        id S235269AbjHUNvZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 21 Aug 2023 09:51:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233783AbjHUHuw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2023 03:50:52 -0400
-Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CA56C0;
-        Mon, 21 Aug 2023 00:50:48 -0700 (PDT)
-Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-58fc4eaa04fso15675297b3.0;
-        Mon, 21 Aug 2023 00:50:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692604247; x=1693209047;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=m45Hh8p8kmMhNIID8xMBwPWwp+qRb3TqygQoUrMVJXU=;
-        b=bVmnJ7E3H1btuLavJadslw8KSSK4+qQ5WPUoEOqTob2GlO/3OwDh4mM+oq94ZnV3iS
-         AqpMkWhFF/46O3ACUQh3h1R2z9FFZJjqmwRsG/muTFIvt3btKDAbKp6/b6k1FZ3NDwRQ
-         qL+e/QmaWfykpQFNPiRx+Meg3go/BmqXlPQ7oNIwyocRPcfxkHPI0+cIZ6BbDEyVr2FG
-         1Qy3gEz6qLtV10DX7GGglQHB8BZ/1IhVKtCcZm/qGpSg3bxH1QqqCSQdKoHqXH36Kl16
-         16wk68mANn6ngVA/AT1Opl6v1FFWbTIWrtS4MHgnUJDcK+fhqU53gFQulJt/u0EZw8nJ
-         UtSw==
-X-Gm-Message-State: AOJu0YzLmqZTtHIosuJFXQASgg/v/F8BlZImqSiHAb5sDebD7X2WcVNe
-        Mqa8v84pcNqOMNM8XlQci6i00/Ote2G6PQ==
-X-Google-Smtp-Source: AGHT+IGXLdQfleiQtiQ3ylW/53c2Lp2932DTVC3+rbSc1/YkDrU8uk/t8vLl7v2aE4V1cLKv+s1gHQ==
-X-Received: by 2002:a81:8395:0:b0:589:fb69:a4ef with SMTP id t143-20020a818395000000b00589fb69a4efmr5155373ywf.3.1692604247528;
-        Mon, 21 Aug 2023 00:50:47 -0700 (PDT)
-Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com. [209.85.219.172])
-        by smtp.gmail.com with ESMTPSA id j1-20020a0dc701000000b0058ddb62f99bsm2145361ywd.38.2023.08.21.00.50.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Aug 2023 00:50:47 -0700 (PDT)
-Received: by mail-yb1-f172.google.com with SMTP id 3f1490d57ef6-d712d86eb96so2763447276.3;
-        Mon, 21 Aug 2023 00:50:47 -0700 (PDT)
-X-Received: by 2002:a25:d149:0:b0:d55:370b:aa2e with SMTP id
- i70-20020a25d149000000b00d55370baa2emr6832480ybg.25.1692604246943; Mon, 21
- Aug 2023 00:50:46 -0700 (PDT)
+        with ESMTP id S232370AbjHUNvY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2023 09:51:24 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73BB2BC;
+        Mon, 21 Aug 2023 06:51:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1692625882; x=1724161882;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=TEWqR1JLO8eErfCPcDmN+7QmZh2zBIlQ28CDK73TsjE=;
+  b=GcygPfVhDSV0bXicJU6G47iQfwFcl/V7x1q3NA3HtT3rynoi4Ebkm/4m
+   B9STJH+zWRJ4Q31LjQiYL9ejyPBC0IR/xvLhMZZs/DuskXhLOmyIj4fDl
+   EScwvW92G9ra0rdT9n8+GbnmYkVsrqiGMx4maiDPowqKNIYN3p96T03G+
+   MS9cGfFq/sKU8qBeoPog7I65bRCUT6WiTowDPp/EDza987dQwUK7mfuzZ
+   kaFwGqZRlQcR7Im1qS3WAkOp71F2XTF0OBZlvJ/ZlYxYUzEpwDcYRol1V
+   RRWe4HWh2VKmJNN0hXKZ+9dKRB2sqDoElx15XXQbQ0569KSGOviN+2tWa
+   g==;
+X-IronPort-AV: E=Sophos;i="6.01,190,1684771200"; 
+   d="scan'208";a="242030426"
+Received: from mail-bn8nam11lp2169.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.169])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Aug 2023 21:51:20 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dowydE9sYOnidtUlorNqySOWCCHA0SRmfj3hhGromrHje14QV7L8LUvflv+cXOfYIJU4h39irPjEImLp9WC1QErK+eqMauAjGvcPD6XXdD52FMdz6AazsZcTncJ57fcEvozCgSy5pChs17eA93eI+4XSYtnyPvRhWw+Cod5Ez2kblkL12VnuMAgv3VFQaU1YMgAbfu9iNE7SRWKtVJlDGQVtUCg70Y6sG/o7duSnifV8VsfBDiYH5o/3IFFuRWfhUOCC3ul/zUYJy3sgdeeyZgds5HvJn7HsKGSnpC0rHG4EXiDuryDQurYa/WFSbu68CjeIG6eFwuAZUgQ2R/TZLA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=QTe+yQpZXQVCqIrC5CqOpExxxYApSANXEkTMkvDwwoo=;
+ b=L7oKMvkBzAGfdtNAUeJsDadrvyiDmYT6tXQo3MMcuNgHJePv57Elr1R5YTIEQs4plR6/TBZulE/P7sI5dOqzZpqpIosCn9/0rBBwwugMX+DAGZ8F3OSih75GUl3QNT4ZMrIJXEHRGtzxRj+FT0UDNQEFa0TDJQHDiucrbq1r9wZ6VU2QWvGqGocyrY3tuOzZ+uOTggbUxKj3mD7ODAXTpi7m9oMbXPsNgjOh85cHKEzfifS44BZH+LDiEc66FvuVTiEQ15kG6xtOOw2FKawIQMZIC3xfcmLDSS0ANmB+QTpAcCNYSi1utCX4ZSXjd7YkVp2F6SEYtFQt6LnUs5Pd9Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QTe+yQpZXQVCqIrC5CqOpExxxYApSANXEkTMkvDwwoo=;
+ b=RcYrG/tCey9IimmasihIN/BhBy2ZaEYbxZR1EfrmaObdABYT3zKnMC0O+sgPfgedflVikAfC3eXtR0f/umpNeO3bPDZkLah6pLCWtngRFQsgDK4gZtupnDvsy2ljeqTPdUCf/wXbwy2Wo/KOs2MBhXFcFkuRj1wAeOSFpYwM+MY=
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
+ by BL3PR04MB8009.namprd04.prod.outlook.com (2603:10b6:208:344::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6723.14; Mon, 21 Aug
+ 2023 13:51:19 +0000
+Received: from MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::d093:80b3:59e5:c8a9]) by MN2PR04MB6272.namprd04.prod.outlook.com
+ ([fe80::d093:80b3:59e5:c8a9%6]) with mapi id 15.20.6723.013; Mon, 21 Aug 2023
+ 13:51:18 +0000
+From:   Niklas Cassel <Niklas.Cassel@wdc.com>
+To:     "linan666@huaweicloud.com" <linan666@huaweicloud.com>
+CC:     "dlemoal@kernel.org" <dlemoal@kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linan122@huawei.com" <linan122@huawei.com>,
+        "yukuai3@huawei.com" <yukuai3@huawei.com>,
+        "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
+        "houtao1@huawei.com" <houtao1@huawei.com>,
+        "yangerkun@huawei.com" <yangerkun@huawei.com>
+Subject: Re: [PATCH] scsi: ata: Fix a race condition between scsi error
+ handler and ahci interrupt
+Thread-Topic: [PATCH] scsi: ata: Fix a race condition between scsi error
+ handler and ahci interrupt
+Thread-Index: AQHZ1DaPr2epsK7l90GFuVSrpD3hog==
+Date:   Mon, 21 Aug 2023 13:51:18 +0000
+Message-ID: <ZONr0f26IT/QKsSu@x1-carbon>
+References: <20230810014848.2148316-1-linan666@huaweicloud.com>
+In-Reply-To: <20230810014848.2148316-1-linan666@huaweicloud.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|BL3PR04MB8009:EE_
+x-ms-office365-filtering-correlation-id: 7c9ac0a8-29d3-40c9-cb7f-08dba24db22a
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: FhIgw3qvP6bK9UCAFXhT8QA4Cqgt79PZJ52pDS/+jIY1T8U519VIhtJ+hz33qyKUkPe9LZKsNWwMqdLzMu5E9/vn37jAiw9fd+i5LkvRik3O7L3hyPE7EfNRHBQBEfNdjJblqAt1rrojFhFi4NT9HzxE65hBhimn9UK8ghTwzYg3okkNVYspp0pK23VDwZvgv79yMVnR5hfCDPfi70yh/Uim+JDeFU7plOLvCnIFANCB7CT901VWgZ/rLveCjDXeVrxlv4h2zeHKBP3CqI8MB2c4lV90aH08O79awEk43u9MlFSMkLLZ9PK+g70xu/JtzUr9xiw9JyNk6bkK26C6cpgIA3b7bSewicIexgS99TcQEsWDakbqqKenre4LTMYBuYCOdxhFcAD/d4jHrCFkdZaoJrpghwJfeogp/UUGYi9uBPycmtmTJPkrLXJJrtsX+LhuhPgrZGUEqpgjXffmsystD5EPU/QL2JFengZFmIdOD5zPSrzeJ2XJK2xy/xDMJmm4u0UDtqfmw1wy2By6UTKxZpQd8MdOf0no3S5xh5Gty3yArx6EI1EjsUMMyb7fCNylqVDfl0KpDDY7djrMFusQ2Pb+y7NCuNUoR7nIxJ4BKC5nItHc0BKT+h1mGf6ItcpQj9c1LCLzketXxmVnLw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(346002)(366004)(39860400002)(376002)(136003)(396003)(451199024)(186009)(1800799009)(2906002)(38100700002)(38070700005)(6506007)(6486002)(5660300002)(26005)(86362001)(8676002)(8936002)(4326008)(316002)(9686003)(66946007)(6512007)(64756008)(54906003)(6916009)(66446008)(66556008)(76116006)(66476007)(91956017)(82960400001)(966005)(478600001)(122000001)(71200400001)(41300700001)(33716001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?4Ms++/jmgYS0g8o7D6Vmlek16CseRUJnopqqGnvqTh3cInwixIwYBkvvgy7O?=
+ =?us-ascii?Q?09SSnSotaYo9LXQvKSlScf90KqqwYwKN4eNl5rAU+W7zlU6eNatr1VBU5Zzt?=
+ =?us-ascii?Q?gNOoyZsSIosQTAaoZ08Gsbw5gdQyxz/dNiEhhfuHylJTSsHjkpFvYg7nN66y?=
+ =?us-ascii?Q?0TaFuxBhirBc+UKE7Di1/N5+Jg8MNoslYI4gx6ueLVzhViP4U0pEvXj+rDBU?=
+ =?us-ascii?Q?kZpcZuz6KCYzC5rrqKI88z7GUyKT/2CgThGW47xiXmok5w2FF5O7o+IFM49j?=
+ =?us-ascii?Q?6v5Jz2tfoKR68EyfJngHkIfUyO2+kr2QKHUUNWIpWD6VXSg8v+YoXQ7sszVa?=
+ =?us-ascii?Q?P4byG0oUTBt3j+dtLzXOxu2ww8Ih6cbg81CAacoeaDRsF3c/VRvxeX5BJhrw?=
+ =?us-ascii?Q?1XXnFbWtpOWcluXYbZ7uZgXJo2xvMb9ooF2IGNLFJHIS8qUWAGnmy9Qw7520?=
+ =?us-ascii?Q?cRLNBML3FuBNub+/PaCeq4x6EvmXvoBsYZe2MY/kRIiCcstdV+yliM1RjNZ4?=
+ =?us-ascii?Q?+qjPYthX47GHPuCRkyknkAbfCe5ewzm2TyM5bVb9KIXcnGV3YEaEG0XescQw?=
+ =?us-ascii?Q?hw9Jz1Jpcut1OZ6U0i2AddlUD9RiEtnI/DF+Kh0oWTprITajfKIacgK+5ywC?=
+ =?us-ascii?Q?wcvcHnuXmKW8TjuBA5HPCHmfnTCmx33qgySAG7wOtXzc82tTWG4Af2G/aPJ9?=
+ =?us-ascii?Q?vMvmufw1Yxrl3DzuqVGRJ1beoOmxwOq9uOKtXkpmMK/mNd2/twoV1ls4QS/H?=
+ =?us-ascii?Q?2VNDs3yWx/LM9BJJ+mEShxy81OxKX2gmfU3dmcrRbNsXb7gy2yW45JNdIGSB?=
+ =?us-ascii?Q?lyMefFLdrIgEAtXXu3idiiA3jDFWcE48o7Eg84Zr+RO6larMyfUxJrsldaDj?=
+ =?us-ascii?Q?lTs8SX/dM7hFKr0zsV+nn+cVcW29iasKpfHVgIEUje8Yfd3GXgs4umJ6XGa4?=
+ =?us-ascii?Q?V11sTb8H3JSZFFWQ7/iSgzi1AkzCWgQYOAdrYerITWUc1c3mow3zmWaCp+HY?=
+ =?us-ascii?Q?6jg/ti3UUwBztgq15aQJW86HLdSaYZldGYxuafWPPFvIBb1Mm0n6B+JUxn+x?=
+ =?us-ascii?Q?69Lx9HOALGu5Cu9Y01L5/qPaD2VOCGrpSmlmTvLv+tanVXk4ir+fschdw2Hp?=
+ =?us-ascii?Q?mpBFSyyVsxvVjK7y0aC441BlIda+DMHsVehtSkYiapAsAMd/KBAJBOlt3x20?=
+ =?us-ascii?Q?xTvG+WK4oSDu7NkDFvdcPzMXFjhK3y8QPkRWyL4imF4O3OA30lq9pnrEqlbw?=
+ =?us-ascii?Q?AnqXWwsx40u+7Wi7hyRmDPsWRpjMYya0d21rYj0e3HmCOXAKoIRh/tGMjpZ8?=
+ =?us-ascii?Q?gPq8Tk5ZanOwkpwBk68id2HlsFfuvFLnHBh6R659FkMxZOZZNJlnPWtyJzOL?=
+ =?us-ascii?Q?7ntz/Cd8HsP6snub1UHBDtYSJUhv77AjPjnidQUqbmBrCyqx3ISFd4VrttFX?=
+ =?us-ascii?Q?Erb6Qe47so0f9OwTEslZgTPZbx+DP2RFJDczgGFChf7ChFsPe3SFzpv/q81d?=
+ =?us-ascii?Q?Fg1ChedHeQM0pIe8ytEyNv3zPByP7fmFIcPJXD7tBamZwaXeEiYHEK1wurk/?=
+ =?us-ascii?Q?NZM+3qM8d7iF7c1PHcozfzcLTa91lmABgt1xWZGhD7DoBKTZJno36AaqypDR?=
+ =?us-ascii?Q?YA=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <EC08F64B11430B4C817480857E698731@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <20230818234903.9226-1-schmitzmic@gmail.com> <20230818234903.9226-2-schmitzmic@gmail.com>
-In-Reply-To: <20230818234903.9226-2-schmitzmic@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 21 Aug 2023 09:50:35 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUdqRZcwHnWCb0SJ34JM3BqEyejsgWajwsbe_F+6xZMjg@mail.gmail.com>
-Message-ID: <CAMuHMdUdqRZcwHnWCb0SJ34JM3BqEyejsgWajwsbe_F+6xZMjg@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] ata: pata_falcon: fix IO base selection for Q40
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     dlemoal@kernel.org, linux-ide@vger.kernel.org,
-        linux-m68k@vger.kernel.org, will@sowerbutts.com, rz@linux-m68k.org,
-        stable@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: QfhjErLLrkEQL71FRBXUbnfmIN/vphyqsmdJCvQUQNfj/hMpHPBv1DxWMhUx+sLDg9xYecgXqhGc2sE6QRq2/keWsYT3STWQrXaIgdD/ZzEr27+zwsmTCe2AJCBRPUdE7zHg0KdwezXfcVnGrIm0jPSEdxpg+mgYBy5+GgDrqJ/34K7WTEDlJjaVTpg78zCZnazIudymaifB6zI9dCwGcsfadMZenDbw9iRFd9pr6BpG0Y0rB7d3xWXcAfKSNN1KJzyLMHALHg072ci9biiFJOXaNOjNbVAaQsi+FnjiPKGLv2dFbBw2DfAb87i7NAHsdCN1nVoNB+Bv8ZxJrV3bqKS+Q4uNJEKasHdrYKmU5PlTclKHgS4vvQ5reNpVtI4PK+UfQRf/d+5xgDL5xIEtvLuYcnKMDk8J8ca3eHM4mU6sWk2/3ofNZQIBlbDggteMoMDSltwI4wDT3KpoY6c5ik5quACoN2LcVJJ98XAsY7BhpZd9FPQh/rkqo5arOh5P6iEmWZNnv35DLoyR1n8xYrY/WDstXXgZo/CWRnYEkgu8nI1x270OBZ3ISGr9WKuPxHkqDtgGBg2P45F0DxbaOnCnKqYrffGHCCa+rtL4bEKe8HgV9zEGbjpKTigDl/0v0W2/hzqWmkGBRmHVXHGc4PsIKa5JZD10NwS6PHbKUuqOE6Lm+IeRMVP390RIhQlHIRY8Jsd9613+vMjEzQiV5sb/G0Z4ewzgVxFDp9Wj0iCi5NyZVL4FIRaV6DSCM9CkybtMc/G3Yw8npzcomUIKjQfiUSxzXgtarKtUIOaMGGAdqHCIbfEvXTA18Z5ciQWd5mr1zariG66fTCLdmhJFWoWiffDd7qTfTDjq0t1N+ut+ffby5CNxeYXp9kUxIBPZ
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7c9ac0a8-29d3-40c9-cb7f-08dba24db22a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Aug 2023 13:51:18.8157
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: sCRdefl8+JRU4EI6sScgd2V1QOiFsOJkmvAPXLqCpgPWsXSB/WvkqR+A7uJ7SpGASdHMIoLMPwuYW7piKDZkyA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR04MB8009
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+On Thu, Aug 10, 2023 at 09:48:48AM +0800, linan666@huaweicloud.com wrote:
+> From: Li Nan <linan122@huawei.com>
+>=20
+> interrupt                            scsi_eh
+>=20
+> ahci_error_intr
+>   =3D>ata_port_freeze
+>     =3D>__ata_port_freeze
+>       =3D>ahci_freeze (turn IRQ off)
+>     =3D>ata_port_abort
+>       =3D>ata_port_schedule_eh
+>         =3D>shost->host_eh_scheduled++;
+>         host_eh_scheduled =3D 1
+>                                      scsi_error_handler
+>                                        =3D>ata_scsi_error
+>                                          =3D>ata_scsi_port_error_handler
+>                                            =3D>ahci_error_handler
+>                                            . =3D>sata_pmp_error_handler
+>                                            .   =3D>ata_eh_thaw_port
+>                                            .     =3D>ahci_thaw (turn IRQ =
+on)
+> ahci_error_intr                            .
+>   =3D>ata_port_freeze                        .
+>     =3D>__ata_port_freeze                    .
+>       =3D>ahci_freeze (turn IRQ off)         .
+>     =3D>ata_port_abort                       .
+>       =3D>ata_port_schedule_eh               .
+>         =3D>shost->host_eh_scheduled++;      .
+>         host_eh_scheduled =3D 2              .
+>                                            =3D>ata_std_end_eh
+>                                              =3D>host->host_eh_scheduled =
+=3D 0;
 
-On Sat, Aug 19, 2023 at 1:49 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> With commit 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver
-> with pata_falcon and falconide"), the Q40 IDE driver was
-> replaced by pata_falcon.c.
->
-> Both IO and memory resources were defined for the Q40 IDE
-> platform device, but definition of the IDE register addresses
-> was modeled after the Falcon case, both in use of the memory
-> resources and in including register scale and byte vs. word
-> offset in the address.
->
-> This was correct for the Falcon case, which does not apply
-> any address translation to the register addresses. In the
-> Q40 case, all of device base address, byte access offset
-> and register scaling is included in the platform specific
-> ISA access translation (in asm/mm_io.h).
->
-> As a consequence, such address translation gets applied
-> twice, and register addresses are mangled.
->
-> Use the device base address from the platform IO resource,
-> and use standard register offsets from that base in order
-> to calculate register addresses (the IO address translation
-> will then apply the correct ISA window base and scaling).
->
-> Encode PIO_OFFSET into IO port addresses for all registers
-> except the data transfer register. Encode the MMIO offset
-> there (pata_falcon_data_xfer() directly uses raw IO with
-> no address translation).
->
-> Reported-by: William R Sowerbutts <will@sowerbutts.com>
-> Closes: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
-> Link: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
-> Fixes: 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver with pata_falcon and falconide")
-> Cc: stable@vger.kernel.org
-> Cc: Finn Thain <fthain@linux-m68k.org>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Tested-by: William R Sowerbutts <will@sowerbutts.com>
-> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+Hello Li Nan,
 
-Thanks for the update!
+I do not understand why the code in:
+https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L72=
+2-L731
 
-> --- a/drivers/ata/pata_falcon.c
-> +++ b/drivers/ata/pata_falcon.c
-> @@ -165,26 +165,39 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
->         ap->pio_mask = ATA_PIO4;
->         ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
->
-> -       base = (void __iomem *)base_mem_res->start;
->         /* N.B. this assumes data_addr will be used for word-sized I/O only */
-> -       ap->ioaddr.data_addr            = base + 0 + 0 * 4;
-> -       ap->ioaddr.error_addr           = base + 1 + 1 * 4;
-> -       ap->ioaddr.feature_addr         = base + 1 + 1 * 4;
-> -       ap->ioaddr.nsect_addr           = base + 1 + 2 * 4;
-> -       ap->ioaddr.lbal_addr            = base + 1 + 3 * 4;
-> -       ap->ioaddr.lbam_addr            = base + 1 + 4 * 4;
-> -       ap->ioaddr.lbah_addr            = base + 1 + 5 * 4;
-> -       ap->ioaddr.device_addr          = base + 1 + 6 * 4;
-> -       ap->ioaddr.status_addr          = base + 1 + 7 * 4;
-> -       ap->ioaddr.command_addr         = base + 1 + 7 * 4;
-> -
-> -       base = (void __iomem *)ctl_mem_res->start;
-> -       ap->ioaddr.altstatus_addr       = base + 1;
-> -       ap->ioaddr.ctl_addr             = base + 1;
-> -
-> -       ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
-> -                     (unsigned long)base_mem_res->start,
-> -                     (unsigned long)ctl_mem_res->start);
-> +       ap->ioaddr.data_addr = (void __iomem *)base_mem_res->start;
-> +
-> +       if (base_res) {         /* only Q40 has IO resources */
-> +               io_offset = 0x10000;
-> +               reg_scale = 1;
-> +               base = (void __iomem *)base_res->start;
-> +               ctl_base = (void __iomem *)ctl_res->start;
-> +
-> +               ata_port_desc(ap, "cmd %pa ctl %pa",
-> +                             &base_res->start,
-> +                             &ctl_res->start);
+does not kick in, and repeats EH.
 
-This can be  moved outside the else, using %px to format base and
-ctl_base.
 
-> +       } else {
-> +               base = (void __iomem *)base_mem_res->start;
-> +               ctl_base = (void __iomem *)ctl_mem_res->start;
-> +
-> +               ata_port_desc(ap, "cmd %pa ctl %pa",
-> +                             &base_mem_res->start,
-> +                             &ctl_mem_res->start);
-> +       }
+EH_PENDING is cleared before ->error_handler() is called:
+https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L69=
+7
 
-Gr{oetje,eeting}s,
+So ahci_error_intr() from the second error interrupt, which is called after
+thawing the port, should have called ata_std_sched_eh(), which calls
+ata_eh_set_pending(), which should have set EH_PENDING:
+https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L88=
+4
 
-                        Geert
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+My only guess is that after thawing the port:
+https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L28=
+07
+
+The second error irq comes, and sets EH_PENDING,
+but then this silly code might clear it:
+https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L28=
+25-L2837
+
+I think the best way would be if we could improve this "spurious error
+condition check"... because if this is indeed the code that clears EH_PENDI=
+NG
+for you, then this code basically makes the "goto repeat" code in
+ata_scsi_port_error_handler() useless...
+
+
+
+An alternative to improving the "spurious error condition check" might be f=
+or
+you to try something like:
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 35e03679b0bf..82f032934ae1 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -962,7 +962,7 @@ void ata_std_end_eh(struct ata_port *ap)
+ {
+        struct Scsi_Host *host =3D ap->scsi_host;
+=20
+-       host->host_eh_scheduled =3D 0;
++       host->host_eh_scheduled--;
+ }
+ EXPORT_SYMBOL(ata_std_end_eh);
+
+
+
+...and see if that improves things for you.
+
+
+
+Kind regards,
+Niklas=
