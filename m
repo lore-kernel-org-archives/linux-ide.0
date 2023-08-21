@@ -2,134 +2,117 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 560EFEE4996
-	for <linux-ide@archiver.kernel.org>; Mon, 21 Aug 2023 04:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6E16EE49AE
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Aug 2023 07:46:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233066AbjHUEyq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 21 Aug 2023 00:54:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39340 "EHLO
+        id S233841AbjHUHqU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 21 Aug 2023 03:46:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229535AbjHUEyp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2023 00:54:45 -0400
-Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 031D9A3;
-        Sun, 20 Aug 2023 21:54:41 -0700 (PDT)
-X-AuditID: a67dfc5b-d85ff70000001748-91-64e2ee0f13f7
-Date:   Mon, 21 Aug 2023 13:51:36 +0900
-From:   Byungchul Park <byungchul@sk.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-kernel@vger.kernel.org, kernel_team@skhynix.com,
-        torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
-        tytso@mit.edu, david@fromorbit.com, amir73il@gmail.com,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org,
-        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
-        viro@zeniv.linux.org.uk, jack@suse.cz, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
-        42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
-        gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
-        boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
-        her0gyugyu@gmail.com
-Subject: Re: [RESEND PATCH v10 25/25] dept: Track the potential waits of
- PG_{locked,writeback}
-Message-ID: <20230821045136.GB73328@system.software.com>
-References: <20230821034637.34630-1-byungchul@sk.com>
- <20230821034637.34630-26-byungchul@sk.com>
- <ZOLnRSdH4Wcrl67L@casper.infradead.org>
+        with ESMTP id S233844AbjHUHqT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2023 03:46:19 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB9C0B5;
+        Mon, 21 Aug 2023 00:46:16 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1bf5c314a57so4313555ad.1;
+        Mon, 21 Aug 2023 00:46:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1692603976; x=1693208776;
+        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
+         :message-id:from:cc:references:to:subject:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wLag0Z0HRE6pIAHnpxT0qgRuGZis2m6NT4juYzJgVHM=;
+        b=et1cL7LdO+GBNyPQgA4GjDd2zZizCPvJG/l4gpLdo3uqjnX7Ef/C7RJ7EWm5qZSNJS
+         Uh4ECT/G/Oxf7Tfdfq16pG+juUiMmP4bh+ANiRCaEo8cbAzIDkhH6C8LHFEHlM4wj1AM
+         TRkMFD4BjUR8LSdRSMMWhhw/QB67pdVehdJMxrHnrNUv9y/OLg9uI/VB0ZOXFw5Xq47q
+         85fZIeHMzhM99dK4RF2+gSG9SsjYJcEGGQrzKhd70JCdW7ChapFWATnwbcw69GuKo9Xi
+         3urr7G5iRxBtVdrqN9JSMFXFT8KN5GXi4tjLLepsOJekcCUBwKctqP7aju+oRs+GgnVf
+         oi3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692603976; x=1693208776;
+        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
+         :message-id:from:cc:references:to:subject:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=wLag0Z0HRE6pIAHnpxT0qgRuGZis2m6NT4juYzJgVHM=;
+        b=Zy6k4jM9dePttN1vJcEzZSMSluzEPW9yCzf0N4dnP7JSr++0+cLlc3/xq+bOiF9qei
+         mUY1xSrRarcL2DCzq6lojTz6x0M6Lmm0+33Z8QYNoUujTMVH6O9BzjfkZW5ONb1K0wvB
+         InVn8WfbqtsjPd8RxupzfowEIVBrnlp0XLY47Htutkz+xTtZvP+eaP0Q4YNHtIjus7/5
+         vghCZqP2wKMRuXTH3A0RHHfVWbdihZJxRsINAQJz7GgGjyzjoAMIzoqkDD985sEyx4ML
+         POTI3srUeXkSFcKesrdvbw4OVSitGHDf6dFkNqnyN+mWjyFJ8tXeS2/4mVy8F4R5IYIT
+         YIIQ==
+X-Gm-Message-State: AOJu0Yxc/Axv9WLEOvHiCXytue4Xw8mhZlDb7upW6fTWiR0tJDX/Ggf+
+        H4wigyVMWUHIXgHD+BzPfxg=
+X-Google-Smtp-Source: AGHT+IEUnqYOnPAG6QcssE2jsng8EwAq1YOa/bDZ5Htjt2St/e6pHVugiiS6/LRej2ZgbnKhf4IXmA==
+X-Received: by 2002:a17:902:e881:b0:1bd:c9cb:ffdc with SMTP id w1-20020a170902e88100b001bdc9cbffdcmr4636534plg.7.1692603976166;
+        Mon, 21 Aug 2023 00:46:16 -0700 (PDT)
+Received: from [10.1.1.24] (125-236-136-221-fibre.sparkbb.co.nz. [125.236.136.221])
+        by smtp.gmail.com with ESMTPSA id 10-20020a170902c20a00b001a9b29b6759sm1247679pll.183.2023.08.21.00.46.11
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 21 Aug 2023 00:46:15 -0700 (PDT)
+Subject: Re: [PATCH 1/3] m68k/q40: fix IO base selection for Q40 in
+ pata_falcon.c
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        linux-m68k@vger.kernel.org
+References: <20230817221232.22035-1-schmitzmic@gmail.com>
+ <20230817221232.22035-2-schmitzmic@gmail.com>
+ <82f37617-949b-bcfa-8531-c0a9790aaf48@omp.ru>
+ <3afffc69-62a3-2a11-0c22-8301300e0d50@gmail.com>
+Cc:     will@sowerbutts.com, rz@linux-m68k.org, geert@linux-m68k.org,
+        stable@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>,
+        Damien Le Moal <dlemoal@kernel.org>
+From:   Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <f15858a3-de77-32fb-4854-521e2c18c4fd@gmail.com>
+Date:   Mon, 21 Aug 2023 19:46:08 +1200
+User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
+ Icedove/45.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZOLnRSdH4Wcrl67L@casper.infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUxTZxTH9zz39rm3nXXX6rJHWDbt4rZgJi9xyYkuy7LE7Vm2JSa6D7oP
-        0K030lDQFEUgMcFZFXmtJsCo3VJgK4gVtRDFabWAUpgOmCBWBDI6NkFaSMCi5c21c2Z+Ofnl
-        /HN++X84IqfJIzGiIWOvbMrQGbVExauCy6ree2XSr0/4yxcPx4sSIPQonwfbWSeBnobTCJxN
-        BzGM3/gU7s4GEMz/1s1BRVkPgqqRIQ6a2ocRuOu+I9A7uhz6QlMEOssKCRyqOUvg94kFDIPl
-        JzCcdn0JNy3VGDzhBzxUjBM4WXEIR8YYhrCjXgBH3jrw11kFWBhJhM7hfgW4B9ZD5Y+DBK64
-        O3lob/Zj6P3FRmDY+VQBN9s7eOg5XqyAM5PVBCZmHRw4QlMC3PbYMZwzR0RHZpYU4C32YDjy
-        03kMffcuI7ia/wcGl7OfQFsogKHRVcbBXO0NBP6SoACHi8ICnDxYgqDwcDkP3YteBZgH34f5
-        Jzby0SbWFpjimLlxP3PP2nn2azVll6xDAjNfHRCY3bWPNdbFsZor45hVTYcUzFV/jDDX9AmB
-        FQT7MJvs6hJYx/fzPBvtq8BbY3eqPtDLRkOWbIr/MEWVeid4it+zoM4eaJ7m8tCcqgApRSpt
-        pI+8XvKcba3HhCjz0jpqu1jDR5lI71CfL8wVIFFcJb1LA01J0TUndahoqS03yiulFBqeKVVE
-        WS0BvXs0FGGVqJGKEP178fF/wQraWTnKPzuOo76lcRx1clIsrV0So2tlpILVEfi3zqvSW9Rz
-        wYujHiq1Kelg2IKf9VxNW+p8vAVJ1he01he01v+1dsTVI40hIytdZzBu3JCak2HI3vDt7nQX
-        ivyl48DC181oumdbK5JEpF2mTnndr9codFmZOemtiIqcdpU69vGIXqPW63JyZdPuZNM+o5zZ
-        imJFXvuaOml2v14j7dLtldNkeY9sep5iURmTh/Iv1qaVin+uuZYbszz+i13a5C3dQ1NHP37w
-        5Kn9K7tmDTemtWy+ntiwZfumYqOzqn+s5WffkvzyaBJrKekvfOlhsOz+/Vvw5uffxLy94t6l
-        ys/WX+tdO+MVCs7P+Q8kb+VIua6w4eEPOy5f6DKMrZ0wJ2TP5O5M039icb9x3X5KuXjOo+Uz
-        U3WJcZwpU/cPbz3LRJMDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUyTZxSGfZ73k2ad7zqMT4A/62LcWKYyJTkJC5kZCU+mW/bDuYVp7Ov6
-        ZjQU0FaZkJngAFFEBLdaqZ0psBTEbs5CHH5gmiKFClMUVMawGx2bYxbYwOIqBddmM/PPyZVz
-        57pzfhyR0QS5JNFQsEsxFchGLa9iVe9klL26dCqoX9PavBTqqtdA+MEBFuxnXDwMfHMagat9
-        H4aJ7my4MxdCMP/9dQaslgEEDWN3GWj3BRB0tnzGw+D4szAUnubBbznEQ1nTGR5u3I9iGD12
-        FMNp99vQV9uIwRO5x4J1gocT1jIcG79jiDhbBXCWroBgi02A6Fga+AO3Oej60s9B58grUH9y
-        lIdLnX4WfB1BDIMX7DwEXI856PP1sjBQd5iDr6caebg/52TAGZ4W4KbHgeHb8ljb/tlFDnoO
-        ezDs/+oshqEfLiK4fOBnDG7XbR66wiEMbW4LA4+auxEEayYFqKiOCHBiXw2CQxXHWLi+0MNB
-        +Wg6zP9t59/IoF2haYaWt31CO+ccLL3aSOh5212Bll8eEajDvZu2taTSpksTmDbMhDnqbj3I
-        U/fMUYFWTQ5hOnXtmkB7j8+zdHzIit9NyVG9rleMhiLFtDpTp8q9NXmK3RFV7xnpmGFK0SNV
-        FUoQibSO2L0HhTiz0gpi/66JjTMvrSTDwxGmColiovQSCbW/Fl8zUq+KHLGXxPl5SUcis0e4
-        OKslIHcqwzFWiRqpGpHfFh7+FzxH/PXj7L9yKhlenMDxTkZKJs2LYnydEDvB5gzxcV4mvUg8
-        53pwLVLbnrJtT9m2/20HYlpRoqGgKF82GNNXmfNyiwsMe1Z9VJjvRrHPc+6N1nWgB4PZXiSJ
-        SPuMWpcS1Gs4uchcnO9FRGS0ierkh2N6jVovF5copsJtpt1GxexFySKrXa5+631Fp5E+lncp
-        eYqyQzE9SbGYkFSKlst+3ctrnasTgvXGYNSbkrRZ9lW2RAKWQE7apiUv7N346+jZ0kz6Re2W
-        gPWPtdu3/tT/ecbxbDus78hMG/nxlGND5rLHuor+bSunTecq+z4sPN+vajCVrKshH/wyJvz5
-        3vadliyblIjSPxWLXFfu/eULZOW9SYpzZ9cv2LI8ge4BLWvOldNSGZNZ/gfo2omcdQMAAA==
-X-CFilter-Loop: Reflected
+In-Reply-To: <3afffc69-62a3-2a11-0c22-8301300e0d50@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Aug 21, 2023 at 05:25:41AM +0100, Matthew Wilcox wrote:
-> On Mon, Aug 21, 2023 at 12:46:37PM +0900, Byungchul Park wrote:
-> > @@ -377,44 +421,88 @@ static __always_inline int Page##uname(struct page *page)		\
-> >  #define SETPAGEFLAG(uname, lname, policy)				\
-> >  static __always_inline						\
-> >  void folio_set_##lname(struct folio *folio)			\
-> > -{ set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy)); }	\
-> > +{									\
-> > +	set_bit(PG_##lname, folio_flags(folio, FOLIO_##policy));	\
-> > +	dept_page_set_bit(&folio->page, PG_##lname);			\
-> 
-> The PG_locked and PG_writeback bits only actually exist in the folio;
-> the ones in struct page are just legacy and never actually used.
-> Perhaps we could make the APIs more folio-based and less page-based?
+Hi Sergey,
 
-Yeah. I need to make it more folio-based. I will work on it. Thank you.
+Am 21.08.2023 um 07:19 schrieb Michael Schmitz:
+>>> diff --git a/drivers/ata/pata_falcon.c b/drivers/ata/pata_falcon.c
+>>> index 996516e64f13..346259e3bbc8 100644
+>>> --- a/drivers/ata/pata_falcon.c
+>>> +++ b/drivers/ata/pata_falcon.c
+>>> @@ -123,8 +123,8 @@ static int __init pata_falcon_init_one(struct
+>>> platform_device *pdev)
+>>>       struct resource *base_res, *ctl_res, *irq_res;
+>>>       struct ata_host *host;
+>>>       struct ata_port *ap;
+>>> -    void __iomem *base;
+>>> -    int irq = 0;
+>>> +    void __iomem *base, *ctl_base;
+>>> +    int irq = 0, io_offset = 1, reg_scale = 4;
+>>     Maybe reg_step?
+>
+> Could name it that, too. I can't recall where I picked up the term
+> 'register scaling'...
+>
+> I'll see what's the consensus (if any) in drivers/.
 
-> >  static __always_inline void SetPage##uname(struct page *page)	\
-> > -{ set_bit(PG_##lname, &policy(page, 1)->flags); }
-> > +{									\
-> > +	set_bit(PG_##lname, &policy(page, 1)->flags);			\
-> > +	dept_page_set_bit(page, PG_##lname);				\
-> > +}
-> 
-> I don't think we ever call this for PG_writeback or PG_locked.  If
-> I'm wrong, we can probably fix that ;-)
+I've seen some use of 'step' but mostly use of 'shift'.
 
-Okay then, I will assume this will never be used. So are you asking me
-to get rid of this part, right?
+Rewriting pata_falcon_init_one() to use register shift instead of 
+register step is trivial, so unless anyone objects, I'll send that 
+version as v4.
 
-> >  static __always_inline void __SetPage##uname(struct page *page)	\
-> > -{ __set_bit(PG_##lname, &policy(page, 1)->flags); }
-> > +{									\
-> > +	__set_bit(PG_##lname, &policy(page, 1)->flags);			\
-> > +	dept_page_set_bit(page, PG_##lname);				\
-> > +}
-> 
-> Umm.  We do call __SetPageLocked() though ... I'll fix those up to
-> be __set_folio_locked().
+Cheers,
 
-Haha Okay. Lemme know when you get done on it. Thanks.
+	Michael
 
-	Byungchul
+>
+> Cheers,
+>
+>     Michael
+>
+>
+>>
+>> [...]
+>>
+>> MBR, Sergey
