@@ -2,70 +2,68 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A02EE49AC
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Aug 2023 07:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B33BEE49A3
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Aug 2023 08:27:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229782AbjHVH15 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Aug 2023 03:27:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50910 "EHLO
+        id S233809AbjHVI1P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Aug 2023 04:27:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233092AbjHVH1t (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Aug 2023 03:27:49 -0400
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23009132;
-        Tue, 22 Aug 2023 00:27:42 -0700 (PDT)
-Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-68a3082c771so1647369b3a.0;
-        Tue, 22 Aug 2023 00:27:42 -0700 (PDT)
+        with ESMTP id S233701AbjHVI1M (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Aug 2023 04:27:12 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 134E112C;
+        Tue, 22 Aug 2023 01:27:11 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-68a41035828so1472066b3a.1;
+        Tue, 22 Aug 2023 01:27:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692689261; x=1693294061;
+        d=gmail.com; s=20221208; t=1692692830; x=1693297630;
         h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
          :message-id:from:cc:references:to:subject:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5OTbjyPhWofsS3uxKEauMLS7RlGyzuvbf/K2kko+lhc=;
-        b=aPBBGiRGxcMbUgeWBPhGL7I0qlUtDoAqJdpzJHk91WNWjDoNiNahtuMhtyds/ph2H0
-         UBgtIT1j7Ex/bDCJx50zyls7ODCR6veHDrwDbZreuLEnfJTrFVppD7bdwYnMvcsaTifd
-         JYGxylc5kFA4RkHUQ7bdv5/JGVaaduOEcbbOOBCCGrjXtbJadj08XcPnB/CYQ0ri+Kwy
-         5HW2ktYFbK9Fjb2g082YvwL4oXEEVvxsItQ423kESXP4j83BMVRG4Ba1qCczD3J5Az7o
-         DD5YPvzE4K5eD1vr42p25d47LZ69QaMoPJEjaI93LBE0WPI7M17u6z/pEHUdGqGB9TjS
-         BTKQ==
+        bh=H82FZhA87NjWkAJ0bEHD1nwjofTts9jm2ulKk5lEn4E=;
+        b=ce7P2hHuUgkiy/b8Enzv2RaqGVDa5yzrtEDXS+0SHcMqmTrG7uRwoYn1So+9ZR+v0E
+         mXy2fvE99FiPdsbjQR1eanuoGn+n5ot09lZT9pXQQXIT8v04oSTAni3HPGPGwhvacNpM
+         OOwGvVbX/kgEps/OMILigQBiYrqqIbvWfCbxx62tLAmOZ7VXHR70R2wp5hjxg/GhhS8/
+         hW7F9+qY1e9aPZh5fTAfFwew+kbq+yeq8OwklkeFHNGdVc2sinIYbzq3h1dX4//ffK3q
+         TQxDOa67lxyvkSR6n+1KH+t7HrNdSjp4MfbzfZn1M4zHMZy0mb3hsy57xaxa568vGPFY
+         QiLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692689261; x=1693294061;
+        d=1e100.net; s=20221208; t=1692692830; x=1693297630;
         h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
          :message-id:from:cc:references:to:subject:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=5OTbjyPhWofsS3uxKEauMLS7RlGyzuvbf/K2kko+lhc=;
-        b=aSiaZy96S9Gg1zhy5mx8ZMn4ROTncjLOB6C09wQfYseXdVm2oMy0Q0LanN/ybod8k9
-         OM/YV+r7GTLp6nATYwyhbVhtckLLgVKt41cuuOfuX/Wc7JEtv5SQR/PXOQQti5BVeCd6
-         VkWznpR0tXdF2rS0nuO6OIrAzWDxSKfm7T/MH1FhZcmLcqyRjKNYW0tAJcTWcySbCkld
-         lxkwpsT1Wx2MIT4oASucPZprsDHceBdqQTkavYguLy9GNg3m+IVE+mRn41woMHZajBl7
-         eytahf4mvHPw/fQgCUqvmViUw1KoM0eKYMIcbISmeNuMd1w6/54e2qh7UVHqHuOXX/hh
-         EedA==
-X-Gm-Message-State: AOJu0YxO2pMOsk/L4XvipMWGk9dGA0wvfJOhWoOJa1Fy4tcvINFDT7aL
-        dfh+FgNKtom7pKHiA3o2Rbg=
-X-Google-Smtp-Source: AGHT+IH36Gyo+XxQL33GMRQKjYjkpRuzSDJhgbApsWGJG9HysRW3FaKcGG0iGaShVGyXLjAI0q8O1w==
-X-Received: by 2002:a05:6a20:1615:b0:13d:71f4:fd8a with SMTP id l21-20020a056a20161500b0013d71f4fd8amr11807099pzj.13.1692689261476;
-        Tue, 22 Aug 2023 00:27:41 -0700 (PDT)
+        bh=H82FZhA87NjWkAJ0bEHD1nwjofTts9jm2ulKk5lEn4E=;
+        b=KvMLiWS4RRLvsUexuOpFySW0EqRSBhIjsD9rpiGTjGqKP1sdXOc+JjHHvvTZcthlsm
+         1mlR/BFSdkGIfjxf+7XgrZ5lAZafCXBIa17AKs71f77F/c01lK/yfbb+ZEQtK/xtVXsE
+         KXMpmWWDubcPwMerUMmNyMQDJY0xEx25+2gA5vDGHE7f202fUyUFqVGP89MjQ49FWKNd
+         ztXB4uMC3R+1Pg9uCED0Y7XrYGntM1AVvc+U3+6ZYNN/DSixV3QTSe8ZWPuE42zFtHFn
+         pJHjE3RVvBd0IFUiBiZ4u7VjQzasO7vo6ewLMg+bkpQTqBb7xFhtfvseFXVcPXZ+DpbH
+         b7cA==
+X-Gm-Message-State: AOJu0YyBnAC/matArrLVrKWrANuztrkkA5eaLMnIX9P7PNdj27fp7Yp4
+        JwvSOizOLrnRvsPXpj1Em2U=
+X-Google-Smtp-Source: AGHT+IEsZKxfoPvVjUvPkJkMGeGj5E+PYJoqV5HNe4uUc3NTWUUueL5Sid2GDg/7YQ+uuF+JY8VI/A==
+X-Received: by 2002:a05:6a20:3943:b0:138:92ef:78f9 with SMTP id r3-20020a056a20394300b0013892ef78f9mr8576589pzg.6.1692692830378;
+        Tue, 22 Aug 2023 01:27:10 -0700 (PDT)
 Received: from [10.1.1.24] (125-236-136-221-fibre.sparkbb.co.nz. [125.236.136.221])
-        by smtp.gmail.com with ESMTPSA id e9-20020aa78249000000b00688435a9915sm7188566pfn.189.2023.08.22.00.27.36
+        by smtp.gmail.com with ESMTPSA id w6-20020a170902d3c600b001bdb0483e65sm8425540plb.265.2023.08.22.01.27.05
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 22 Aug 2023 00:27:40 -0700 (PDT)
+        Tue, 22 Aug 2023 01:27:09 -0700 (PDT)
 Subject: Re: [PATCH v3 1/2] ata: pata_falcon: fix IO base selection for Q40
 To:     Geert Uytterhoeven <geert@linux-m68k.org>
 References: <20230818234903.9226-1-schmitzmic@gmail.com>
  <20230818234903.9226-2-schmitzmic@gmail.com>
  <CAMuHMdUdqRZcwHnWCb0SJ34JM3BqEyejsgWajwsbe_F+6xZMjg@mail.gmail.com>
- <07f8a1f9-e145-2b0a-61f0-ac5fe5a8fa58@gmail.com>
- <CAMuHMdWNm7RdZcTa5EaWaFZ4NhPi75y8i31C2dkzJ5Hc4rtSJA@mail.gmail.com>
 Cc:     dlemoal@kernel.org, linux-ide@vger.kernel.org,
         linux-m68k@vger.kernel.org, will@sowerbutts.com, rz@linux-m68k.org,
         stable@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>
 From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <aabc6bd8-6407-3fa3-c620-69b290b3108c@gmail.com>
-Date:   Tue, 22 Aug 2023 19:27:34 +1200
+Message-ID: <fd0b71fa-783e-41c0-ab2b-02656286d2ab@gmail.com>
+Date:   Tue, 22 Aug 2023 20:27:03 +1200
 User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
  Icedove/45.4.0
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdWNm7RdZcTa5EaWaFZ4NhPi75y8i31C2dkzJ5Hc4rtSJA@mail.gmail.com>
+In-Reply-To: <CAMuHMdUdqRZcwHnWCb0SJ34JM3BqEyejsgWajwsbe_F+6xZMjg@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -74,35 +72,48 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Hi Geert,
 
-Am 22.08.2023 um 19:05 schrieb Geert Uytterhoeven:
->>>> +       if (base_res) {         /* only Q40 has IO resources */
->>>> +               io_offset = 0x10000;
->>>> +               reg_scale = 1;
->>>> +               base = (void __iomem *)base_res->start;
->>>> +               ctl_base = (void __iomem *)ctl_res->start;
->>>> +
->>>> +               ata_port_desc(ap, "cmd %pa ctl %pa",
->>>> +                             &base_res->start,
->>>> +                             &ctl_res->start);
->>> This can be  moved outside the else, using %px to format base and
->>> ctl_base.
->>
->> Right - do we need some additional message spelling out what address Q40
->> uses for data transfers? (Redundant for Falcon, of course ...)
->>
->> Though that could be handled outside the else, too:
->>
->> ata_port_desc(ap, "cmd %px ctl %px data %pa",
->>                base, ctl_base, &ap->ioaddr.data_addr);
+Am 21.08.2023 um 19:50 schrieb Geert Uytterhoeven:
+>> +       ap->ioaddr.data_addr = (void __iomem *)base_mem_res->start;
+>> +
+>> +       if (base_res) {         /* only Q40 has IO resources */
+>> +               io_offset = 0x10000;
+>> +               reg_scale = 1;
+>> +               base = (void __iomem *)base_res->start;
+>> +               ctl_base = (void __iomem *)ctl_res->start;
+>> +
+>> +               ata_port_desc(ap, "cmd %pa ctl %pa",
+>> +                             &base_res->start,
+>> +                             &ctl_res->start);
 >
-> I guess that wouldn't hurt.
+> This can be  moved outside the else, using %px to format base and
+> ctl_base.
 
-Done - I'll send out v4 tomorrow.
+I get a checkpatch warning for %px, but not for %pa (used for . 
+&ap->ioaddr.data_addr). What gives?
+
+
+WARNING: Using vsprintf specifier '%px' potentially exposes the kernel 
+memory layout, if you don't really need the address please consider 
+using '%p'.
+#148: FILE: drivers/ata/pata_falcon.c:194:
++	ata_port_desc(ap, "cmd %px ctl %px data %pa",
++		      base, ctl_base, &ap->ioaddr.data_addr);
+
+Using %pa and &base, &ctl_base just to shut that up seems a little silly ...
 
 Cheers,
 
 	Michael
 
+>
+>> +       } else {
+>> +               base = (void __iomem *)base_mem_res->start;
+>> +               ctl_base = (void __iomem *)ctl_mem_res->start;
+>> +
+>> +               ata_port_desc(ap, "cmd %pa ctl %pa",
+>> +                             &base_mem_res->start,
+>> +                             &ctl_mem_res->start);
+>> +       }
 >
 > Gr{oetje,eeting}s,
 >
