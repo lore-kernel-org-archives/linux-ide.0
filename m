@@ -2,168 +2,109 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C28E6EE49A5
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Aug 2023 07:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A02EE49AC
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Aug 2023 07:27:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233146AbjHVHFl convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Aug 2023 03:05:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45742 "EHLO
+        id S229782AbjHVH15 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Aug 2023 03:27:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233048AbjHVHFk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Aug 2023 03:05:40 -0400
-Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38736130;
-        Tue, 22 Aug 2023 00:05:38 -0700 (PDT)
-Received: by mail-ot1-f54.google.com with SMTP id 46e09a7af769-6b9e478e122so3014179a34.1;
-        Tue, 22 Aug 2023 00:05:38 -0700 (PDT)
+        with ESMTP id S233092AbjHVH1t (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Aug 2023 03:27:49 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23009132;
+        Tue, 22 Aug 2023 00:27:42 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-68a3082c771so1647369b3a.0;
+        Tue, 22 Aug 2023 00:27:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1692689261; x=1693294061;
+        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
+         :message-id:from:cc:references:to:subject:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5OTbjyPhWofsS3uxKEauMLS7RlGyzuvbf/K2kko+lhc=;
+        b=aPBBGiRGxcMbUgeWBPhGL7I0qlUtDoAqJdpzJHk91WNWjDoNiNahtuMhtyds/ph2H0
+         UBgtIT1j7Ex/bDCJx50zyls7ODCR6veHDrwDbZreuLEnfJTrFVppD7bdwYnMvcsaTifd
+         JYGxylc5kFA4RkHUQ7bdv5/JGVaaduOEcbbOOBCCGrjXtbJadj08XcPnB/CYQ0ri+Kwy
+         5HW2ktYFbK9Fjb2g082YvwL4oXEEVvxsItQ423kESXP4j83BMVRG4Ba1qCczD3J5Az7o
+         DD5YPvzE4K5eD1vr42p25d47LZ69QaMoPJEjaI93LBE0WPI7M17u6z/pEHUdGqGB9TjS
+         BTKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692687937; x=1693292737;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=iP+rN1To96ZQXN7U+PR1AbeNniKJvG7oUIaVqHzjBVA=;
-        b=aMGRmJ/h8n3Dedq2jcNv3UzInaJd+Z0kCZSGw5aAa6Oa/5rAL8kNGNn6apMQbbD/yh
-         BukbfpQQFnbUMett49DgDgmXIpG7QubK9ZaqI+XFOLU1yTZBKlbxl2A8QP0z2wEsgFUN
-         fPgtUBSpz46SvEXmZw+GN0JykcCzSuPZR4qlF8gWEm1ZFnBOil47W+LdLvyQI47mZbjn
-         OTDxNCxtQb98vCqytrn/Ln/pNPrOYKi7B+URDKYVIkoHtgHeTRs/ZXxs/lCWzNptNxmk
-         Xhhx5EmOTlQj0s3a66x2ryucZ6HOcwOJnMCPXeDFccCO5lEXST5eENnW2+v0mPolnjSQ
-         Sb6g==
-X-Gm-Message-State: AOJu0YwPDBqFQDCVjqwas3iS1FHWWPjyGXAAfLK8dbJ/RtaGcOKSg5Sz
-        AtHI7fLRTGTfeYA02NtRtunJUKCV/d1J0Q==
-X-Google-Smtp-Source: AGHT+IEESA9ekd/cOzcINSehY57L9fJJjfhPDsdM2WDpqZHxunCDX1BbUo5QGY0qkaUdOj74evFhGg==
-X-Received: by 2002:a9d:631a:0:b0:6bb:1071:ea72 with SMTP id q26-20020a9d631a000000b006bb1071ea72mr9407843otk.36.1692687937203;
-        Tue, 22 Aug 2023 00:05:37 -0700 (PDT)
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com. [209.85.167.176])
-        by smtp.gmail.com with ESMTPSA id x5-20020a05683000c500b006b8a959ac32sm4337024oto.48.2023.08.22.00.05.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Aug 2023 00:05:36 -0700 (PDT)
-Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-3a8614fe8c4so886413b6e.1;
-        Tue, 22 Aug 2023 00:05:36 -0700 (PDT)
-X-Received: by 2002:a05:6358:c1d:b0:134:cb65:fbbe with SMTP id
- f29-20020a0563580c1d00b00134cb65fbbemr10587247rwj.13.1692687936653; Tue, 22
- Aug 2023 00:05:36 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230818234903.9226-1-schmitzmic@gmail.com> <20230818234903.9226-2-schmitzmic@gmail.com>
- <CAMuHMdUdqRZcwHnWCb0SJ34JM3BqEyejsgWajwsbe_F+6xZMjg@mail.gmail.com> <07f8a1f9-e145-2b0a-61f0-ac5fe5a8fa58@gmail.com>
-In-Reply-To: <07f8a1f9-e145-2b0a-61f0-ac5fe5a8fa58@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 22 Aug 2023 09:05:25 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdWNm7RdZcTa5EaWaFZ4NhPi75y8i31C2dkzJ5Hc4rtSJA@mail.gmail.com>
-Message-ID: <CAMuHMdWNm7RdZcTa5EaWaFZ4NhPi75y8i31C2dkzJ5Hc4rtSJA@mail.gmail.com>
+        d=1e100.net; s=20221208; t=1692689261; x=1693294061;
+        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
+         :message-id:from:cc:references:to:subject:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=5OTbjyPhWofsS3uxKEauMLS7RlGyzuvbf/K2kko+lhc=;
+        b=aSiaZy96S9Gg1zhy5mx8ZMn4ROTncjLOB6C09wQfYseXdVm2oMy0Q0LanN/ybod8k9
+         OM/YV+r7GTLp6nATYwyhbVhtckLLgVKt41cuuOfuX/Wc7JEtv5SQR/PXOQQti5BVeCd6
+         VkWznpR0tXdF2rS0nuO6OIrAzWDxSKfm7T/MH1FhZcmLcqyRjKNYW0tAJcTWcySbCkld
+         lxkwpsT1Wx2MIT4oASucPZprsDHceBdqQTkavYguLy9GNg3m+IVE+mRn41woMHZajBl7
+         eytahf4mvHPw/fQgCUqvmViUw1KoM0eKYMIcbISmeNuMd1w6/54e2qh7UVHqHuOXX/hh
+         EedA==
+X-Gm-Message-State: AOJu0YxO2pMOsk/L4XvipMWGk9dGA0wvfJOhWoOJa1Fy4tcvINFDT7aL
+        dfh+FgNKtom7pKHiA3o2Rbg=
+X-Google-Smtp-Source: AGHT+IH36Gyo+XxQL33GMRQKjYjkpRuzSDJhgbApsWGJG9HysRW3FaKcGG0iGaShVGyXLjAI0q8O1w==
+X-Received: by 2002:a05:6a20:1615:b0:13d:71f4:fd8a with SMTP id l21-20020a056a20161500b0013d71f4fd8amr11807099pzj.13.1692689261476;
+        Tue, 22 Aug 2023 00:27:41 -0700 (PDT)
+Received: from [10.1.1.24] (125-236-136-221-fibre.sparkbb.co.nz. [125.236.136.221])
+        by smtp.gmail.com with ESMTPSA id e9-20020aa78249000000b00688435a9915sm7188566pfn.189.2023.08.22.00.27.36
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 22 Aug 2023 00:27:40 -0700 (PDT)
 Subject: Re: [PATCH v3 1/2] ata: pata_falcon: fix IO base selection for Q40
-To:     Michael Schmitz <schmitzmic@gmail.com>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+References: <20230818234903.9226-1-schmitzmic@gmail.com>
+ <20230818234903.9226-2-schmitzmic@gmail.com>
+ <CAMuHMdUdqRZcwHnWCb0SJ34JM3BqEyejsgWajwsbe_F+6xZMjg@mail.gmail.com>
+ <07f8a1f9-e145-2b0a-61f0-ac5fe5a8fa58@gmail.com>
+ <CAMuHMdWNm7RdZcTa5EaWaFZ4NhPi75y8i31C2dkzJ5Hc4rtSJA@mail.gmail.com>
 Cc:     dlemoal@kernel.org, linux-ide@vger.kernel.org,
         linux-m68k@vger.kernel.org, will@sowerbutts.com, rz@linux-m68k.org,
         stable@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+From:   Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <aabc6bd8-6407-3fa3-c620-69b290b3108c@gmail.com>
+Date:   Tue, 22 Aug 2023 19:27:34 +1200
+User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
+ Icedove/45.4.0
+MIME-Version: 1.0
+In-Reply-To: <CAMuHMdWNm7RdZcTa5EaWaFZ4NhPi75y8i31C2dkzJ5Hc4rtSJA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+Hi Geert,
 
-On Tue, Aug 22, 2023 at 1:57 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> On 21/08/23 19:50, Geert Uytterhoeven wrote:
-> > On Sat, Aug 19, 2023 at 1:49 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> >> With commit 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver
-> >> with pata_falcon and falconide"), the Q40 IDE driver was
-> >> replaced by pata_falcon.c.
-> >>
-> >> Both IO and memory resources were defined for the Q40 IDE
-> >> platform device, but definition of the IDE register addresses
-> >> was modeled after the Falcon case, both in use of the memory
-> >> resources and in including register scale and byte vs. word
-> >> offset in the address.
-> >>
-> >> This was correct for the Falcon case, which does not apply
-> >> any address translation to the register addresses. In the
-> >> Q40 case, all of device base address, byte access offset
-> >> and register scaling is included in the platform specific
-> >> ISA access translation (in asm/mm_io.h).
-> >>
-> >> As a consequence, such address translation gets applied
-> >> twice, and register addresses are mangled.
-> >>
-> >> Use the device base address from the platform IO resource,
-> >> and use standard register offsets from that base in order
-> >> to calculate register addresses (the IO address translation
-> >> will then apply the correct ISA window base and scaling).
-> >>
-> >> Encode PIO_OFFSET into IO port addresses for all registers
-> >> except the data transfer register. Encode the MMIO offset
-> >> there (pata_falcon_data_xfer() directly uses raw IO with
-> >> no address translation).
-> >>
-> >> Reported-by: William R Sowerbutts <will@sowerbutts.com>
-> >> Closes: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
-> >> Link: https://lore.kernel.org/r/CAMuHMdUU62jjunJh9cqSqHT87B0H0A4udOOPs=WN7WZKpcagVA@mail.gmail.com
-> >> Fixes: 44b1fbc0f5f3 ("m68k/q40: Replace q40ide driver with pata_falcon and falconide")
-> >> Cc: stable@vger.kernel.org
-> >> Cc: Finn Thain <fthain@linux-m68k.org>
-> >> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> >> Tested-by: William R Sowerbutts <will@sowerbutts.com>
-> >> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
-> > Thanks for the update!
-> >
-> >> --- a/drivers/ata/pata_falcon.c
-> >> +++ b/drivers/ata/pata_falcon.c
-> >> @@ -165,26 +165,39 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
-> >>          ap->pio_mask = ATA_PIO4;
-> >>          ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
-> >>
-> >> -       base = (void __iomem *)base_mem_res->start;
-> >>          /* N.B. this assumes data_addr will be used for word-sized I/O only */
-> >> -       ap->ioaddr.data_addr            = base + 0 + 0 * 4;
-> >> -       ap->ioaddr.error_addr           = base + 1 + 1 * 4;
-> >> -       ap->ioaddr.feature_addr         = base + 1 + 1 * 4;
-> >> -       ap->ioaddr.nsect_addr           = base + 1 + 2 * 4;
-> >> -       ap->ioaddr.lbal_addr            = base + 1 + 3 * 4;
-> >> -       ap->ioaddr.lbam_addr            = base + 1 + 4 * 4;
-> >> -       ap->ioaddr.lbah_addr            = base + 1 + 5 * 4;
-> >> -       ap->ioaddr.device_addr          = base + 1 + 6 * 4;
-> >> -       ap->ioaddr.status_addr          = base + 1 + 7 * 4;
-> >> -       ap->ioaddr.command_addr         = base + 1 + 7 * 4;
-> >> -
-> >> -       base = (void __iomem *)ctl_mem_res->start;
-> >> -       ap->ioaddr.altstatus_addr       = base + 1;
-> >> -       ap->ioaddr.ctl_addr             = base + 1;
-> >> -
-> >> -       ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
-> >> -                     (unsigned long)base_mem_res->start,
-> >> -                     (unsigned long)ctl_mem_res->start);
-> >> +       ap->ioaddr.data_addr = (void __iomem *)base_mem_res->start;
-> >> +
-> >> +       if (base_res) {         /* only Q40 has IO resources */
-> >> +               io_offset = 0x10000;
-> >> +               reg_scale = 1;
-> >> +               base = (void __iomem *)base_res->start;
-> >> +               ctl_base = (void __iomem *)ctl_res->start;
-> >> +
-> >> +               ata_port_desc(ap, "cmd %pa ctl %pa",
-> >> +                             &base_res->start,
-> >> +                             &ctl_res->start);
-> > This can be  moved outside the else, using %px to format base and
-> > ctl_base.
+Am 22.08.2023 um 19:05 schrieb Geert Uytterhoeven:
+>>>> +       if (base_res) {         /* only Q40 has IO resources */
+>>>> +               io_offset = 0x10000;
+>>>> +               reg_scale = 1;
+>>>> +               base = (void __iomem *)base_res->start;
+>>>> +               ctl_base = (void __iomem *)ctl_res->start;
+>>>> +
+>>>> +               ata_port_desc(ap, "cmd %pa ctl %pa",
+>>>> +                             &base_res->start,
+>>>> +                             &ctl_res->start);
+>>> This can be  moved outside the else, using %px to format base and
+>>> ctl_base.
+>>
+>> Right - do we need some additional message spelling out what address Q40
+>> uses for data transfers? (Redundant for Falcon, of course ...)
+>>
+>> Though that could be handled outside the else, too:
+>>
+>> ata_port_desc(ap, "cmd %px ctl %px data %pa",
+>>                base, ctl_base, &ap->ioaddr.data_addr);
 >
-> Right - do we need some additional message spelling out what address Q40
-> uses for data transfers? (Redundant for Falcon, of course ...)
+> I guess that wouldn't hurt.
+
+Done - I'll send out v4 tomorrow.
+
+Cheers,
+
+	Michael
+
 >
-> Though that could be handled outside the else, too:
+> Gr{oetje,eeting}s,
 >
-> ata_port_desc(ap, "cmd %px ctl %px data %pa",
->                base, ctl_base, &ap->ioaddr.data_addr);
-
-I guess that wouldn't hurt.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+>                         Geert
+>
