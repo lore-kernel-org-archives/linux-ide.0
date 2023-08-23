@@ -2,105 +2,121 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF57EE49A0
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Aug 2023 09:24:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CBD1EE49B0
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Aug 2023 09:50:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235151AbjHWJYt convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Aug 2023 05:24:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40558 "EHLO
+        id S235095AbjHWJuB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Aug 2023 05:50:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235383AbjHWJVn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Aug 2023 05:21:43 -0400
-Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 637DD4224;
-        Wed, 23 Aug 2023 02:10:20 -0700 (PDT)
-Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-58fba83feb0so41622237b3.3;
-        Wed, 23 Aug 2023 02:10:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692781819; x=1693386619;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=LMzl4BCA4DRK0lVs2u4Le4t7NjTwoBo2Uy8T/CZNDNA=;
-        b=UTs1/WXyezY1ZCT6o36w904awdjyTNc/0K05Ys1W+sGVBdgocExLU2Lqz1juvEDJdb
-         0YLLsH1sVl1NQyynQlyriddwonNVin71P9Ho8Rmn4Hnbwp1vGtE0mVlOFjml/TKs4cKe
-         mUe2IKe5nVps1uKTBAPQvIRHewQWjsveJReHk7iXpfTwzUFXcrGwP+AOqY70PbUwEUKI
-         cs5Jm2q+eo9De5/hBROZ8WfX2F4Kjef9sX4YMsMcYVAoS6sLTIARnyS+1TrNk0lsNOfS
-         vFNKYUXO3EqskFKcYUCDvso8ChDSpFEwar4qDsaud+WVqIvvgdOOES+fVvdOFxtn7rN9
-         DTUQ==
-X-Gm-Message-State: AOJu0YxhmqanqiFH7OBtBleNdJacDImHc2EfmK5y5N3O1CkIRTbM+g73
-        lKBA5S0Rzd4wsz7dn32nFLl/n6oeuf3qWQ==
-X-Google-Smtp-Source: AGHT+IGOBImwo3b34QiGySjbOWRxFagPOaNTFZ6splzu43TSjVMcZaprVgnSXVJNOeGjdlel67CWEA==
-X-Received: by 2002:a0d:e291:0:b0:58c:873e:3174 with SMTP id l139-20020a0de291000000b0058c873e3174mr9646373ywe.6.1692781819315;
-        Wed, 23 Aug 2023 02:10:19 -0700 (PDT)
-Received: from mail-yb1-f174.google.com (mail-yb1-f174.google.com. [209.85.219.174])
-        by smtp.gmail.com with ESMTPSA id a186-20020a0df1c3000000b005840861b15fsm3248693ywf.13.2023.08.23.02.10.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 23 Aug 2023 02:10:19 -0700 (PDT)
-Received: by mail-yb1-f174.google.com with SMTP id 3f1490d57ef6-d7260fae148so5351079276.1;
-        Wed, 23 Aug 2023 02:10:18 -0700 (PDT)
-X-Received: by 2002:a25:9782:0:b0:ca2:f20:4139 with SMTP id
- i2-20020a259782000000b00ca20f204139mr10885616ybo.64.1692781818517; Wed, 23
- Aug 2023 02:10:18 -0700 (PDT)
+        with ESMTP id S236163AbjHWJtd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Aug 2023 05:49:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B23E810B;
+        Wed, 23 Aug 2023 02:47:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4B73062A5D;
+        Wed, 23 Aug 2023 09:47:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 81AC4C433CB;
+        Wed, 23 Aug 2023 09:47:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692784058;
+        bh=BgJoy5WrNNunfZnzqn99cjCrMrRRSaZhBdRfquCyX+U=;
+        h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+        b=hbOwMTX30a6QoY4/iBxfF/gRUOFRxyy3ybKtYSzn9U2JsVO+o3De8I/TQ+ElEoBXU
+         lbp148Kb9bFkQ9KlnLFfZqQvBuYAI04LAnwRnslTA9RMOQzVEcMjwEhsvzvoclXeZQ
+         CPSmSRZOk5v9sW1h4ZTlqQVVZJiWNyYXbtvlSWiDMOZOh7suIORflgdIQAnZ9gm01p
+         fITuV1gi2SzipF9d6AZqLIZ0NEtTVuMtEb5bUen2ql2Zdsb1K1A2HtmvKIOZlc4NsP
+         Tjk+4EOZ5tzIkNnC+0x34EJmkmRtsuMiYr+KhpXivW9x2XhmFWgV3x9Wc7d9SQeEMG
+         PIj1t95/5NoQg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.lore.kernel.org (Postfix) with ESMTP id 5709CEE49B5;
+        Wed, 23 Aug 2023 09:47:38 +0000 (UTC)
+From:   Nikita Shubin via B4 Relay 
+        <devnull+nikita.shubin.maquefel.me@kernel.org>
+Date:   Wed, 23 Aug 2023 12:47:28 +0300
+Subject: [PATCH 2/2] ata: pata_ep93xx: use soc_device_match for UDMA modes
 MIME-Version: 1.0
-References: <20230822221359.31024-1-schmitzmic@gmail.com> <20230822221359.31024-3-schmitzmic@gmail.com>
-In-Reply-To: <20230822221359.31024-3-schmitzmic@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 23 Aug 2023 11:10:07 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdWaDzG_FJPnc_YEBB7RYrNcwfceeN4QgB-3Z_7PFqCGUw@mail.gmail.com>
-Message-ID: <CAMuHMdWaDzG_FJPnc_YEBB7RYrNcwfceeN4QgB-3Z_7PFqCGUw@mail.gmail.com>
-Subject: Re: [PATCH v4 2/2] ata: pata_falcon: add data_swab option to
- byte-swap disk data
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     sergei.shtylyov@gmail.com, dlemoal@kernel.org,
-        linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org,
-        will@sowerbutts.com, rz@linux-m68k.org,
-        Finn Thain <fthain@linux-m68k.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20230823-ep93xx_pata_fixes-v1-2-d7e7229be148@maquefel.me>
+References: <20230823-ep93xx_pata_fixes-v1-0-d7e7229be148@maquefel.me>
+In-Reply-To: <20230823-ep93xx_pata_fixes-v1-0-d7e7229be148@maquefel.me>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nikita Shubin <nikita.shubin@maquefel.me>
+X-Mailer: b4 0.12.1
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1692784059; l=1745;
+ i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
+ bh=S/mHeNOqmdky76OBBe9mnLniUEhK/mD6hu3snL8cYnQ=; =?utf-8?q?b=3DZh3hEy1066mg?=
+ =?utf-8?q?5eGLVabyipHBoWgKlB/mlIUlnn3UXSC5kJzVHxfeCrDPtloT6CVJEy6typOP/Xr/?=
+ dVZGid7DB4vtZGfpF9FlFskH0r6PPnwSJwFO0y+J3BDXN2HhVqMM
+X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
+ pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
+X-Endpoint-Received: by B4 Relay for nikita.shubin@maquefel.me/20230718 with auth_id=65
+X-Original-From: Nikita Shubin <nikita.shubin@maquefel.me>
+Reply-To: <nikita.shubin@maquefel.me>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Aug 23, 2023 at 12:14 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Some users of pata_falcon on Q40 have IDE disks in default
-> IDE little endian byte order, whereas legacy disks use
-> host-native big-endian byte order as on the Atari Falcon.
->
-> Add module parameter 'data_swab' to allow connecting drives
-> with non-native data byte order. Drives selected by the
-> data_swap bit mask will have their user data byte-swapped to
-> host byte order, i.e. 'pata_falcon.data_swab=2' will byte-swap
-> all user data on drive B, leaving data on drive A in native
-> byte order. On Q40, drives on a second IDE interface may be
-> added to the bit mask as bits 2 and 3.
->
-> Default setting is no byte swapping, i.e. compatibility with
-> the native Falcon or Q40 operating system disk format.
->
-> Cc: William R Sowerbutts <will@sowerbutts.com>
-> Cc: Finn Thain <fthain@linux-m68k.org>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Tested-by: William R Sowerbutts <will@sowerbutts.com>
-> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
->
-> ---
->
-> Changes since v2:
->
-> Geert Uytterhoeven:
-> - only shift swap bitmask if pdev->id > 0
+From: Nikita Shubin <nikita.shubin@maquefel.me>
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Replace ep93xx_chip_revision() with soc_device_match(), so
+ep93xx_chip_revision() can be safetly dropped from exported functions.
 
-Gr{oetje,eeting}s,
+Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
+---
+ drivers/ata/pata_ep93xx.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-                        Geert
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index 4ce0f37c7a89..3f91b6cff353 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -40,6 +40,7 @@
+ #include <linux/ata.h>
+ #include <linux/libata.h>
+ #include <linux/platform_device.h>
++#include <linux/sys_soc.h>
+ #include <linux/delay.h>
+ #include <linux/dmaengine.h>
+ #include <linux/ktime.h>
+@@ -910,6 +911,12 @@ static struct ata_port_operations ep93xx_pata_port_ops = {
+ 	.port_start		= ep93xx_pata_port_start,
+ };
+ 
++static const struct soc_device_attribute ep93xx_soc_table[] = {
++	{ .revision = "E1", .data = (void *)ATA_UDMA3 },
++	{ .revision = "E2", .data = (void *)ATA_UDMA4 },
++	{ /* sentinel */ }
++};
++
+ static int ep93xx_pata_probe(struct platform_device *pdev)
+ {
+ 	struct ep93xx_pata_data *drv_data;
+@@ -976,12 +983,11 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 	 * so this driver supports only UDMA modes.
+ 	 */
+ 	if (drv_data->dma_rx_channel && drv_data->dma_tx_channel) {
+-		int chip_rev = ep93xx_chip_revision();
++		const struct soc_device_attribute *match;
+ 
+-		if (chip_rev == EP93XX_CHIP_REV_E1)
+-			ap->udma_mask = ATA_UDMA3;
+-		else if (chip_rev == EP93XX_CHIP_REV_E2)
+-			ap->udma_mask = ATA_UDMA4;
++		match = soc_device_match(ep93xx_soc_table);
++		if (match)
++			ap->udma_mask = (unsigned int) match->data;
+ 		else
+ 			ap->udma_mask = ATA_UDMA2;
+ 	}
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+2.39.2
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
