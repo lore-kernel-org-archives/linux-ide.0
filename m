@@ -2,61 +2,94 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C47CC71145
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Aug 2023 22:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9C28C71153
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Aug 2023 22:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236151AbjHWWwx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Aug 2023 18:52:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50450 "EHLO
+        id S238807AbjHWWzG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Aug 2023 18:55:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238851AbjHWWwi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Aug 2023 18:52:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B6AC1AD
-        for <linux-ide@vger.kernel.org>; Wed, 23 Aug 2023 15:52:37 -0700 (PDT)
+        with ESMTP id S238804AbjHWWyk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Aug 2023 18:54:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF1F210C1;
+        Wed, 23 Aug 2023 15:54:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DE505639F3
-        for <linux-ide@vger.kernel.org>; Wed, 23 Aug 2023 22:52:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71475C433C8;
-        Wed, 23 Aug 2023 22:52:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6902165B04;
+        Wed, 23 Aug 2023 22:54:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7428FC433CC;
+        Wed, 23 Aug 2023 22:54:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692831156;
-        bh=AeKvyONfWzkOqRCnUm3QYz6X7XhML7H+OhaIDY8pJ/Y=;
-        h=From:To:Cc:Subject:Date:From;
-        b=uZguXIkQTSd98UrmV6dAcAmsP8UBxewb8wiF958DygKVHPQCEJZVLRALKlK1i7oU0
-         7pVv9vMHNLemKPX+eJxyG/J7tMA17HK2vWSKuoYFzY0C2axyV4bLgd9YJQtoPusRNt
-         VfQSBD9KD9EYfOIfGMlEIimvjz13z7kS7IzUA7uP6WeUl86bqrYgwQy3noMN5O166g
-         Nik5hMR49syVfXOxsLKaURO0Np3JsTr7HBxVF0K23FZd37vJPfbvGlGJs2Tji8eJsD
-         z4GFyeln+piIB0IAxlkgb1KChF6SGuVMT8Ps4ErVEDY7JNsrC2EAj78Q+aMoNPlETm
-         +YPKNybgKjSaw==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
-Cc:     Linus Walleij <linus.walleij@linaro.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH 0/2] Fix compilation warnings
-Date:   Thu, 24 Aug 2023 07:52:31 +0900
-Message-ID: <20230823225234.36354-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
+        s=k20201202; t=1692831276;
+        bh=Za+r7k8kNmKfD+jB1gV4EVeEhZ5OQ+xqB0xO5nRoNGo=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=HrQJpQMFG8z4Pd+cnV17RBTVU3kL43S/rZkcN6RIotCKi6UP/J1NRFFhQ2RWJTGQo
+         5IuTKoaJgK8stu8UeAGu7WDUSVmcdIg9yzVIQ7eeaiPLId3n82NCL10NE0/qvZvKHu
+         vmnh4mUv4clyjYC04MfmF8EV8UveyIfhgMlLFLgvH+H/37yIkjYlWPt0BnDDTEGWiG
+         5tfdb2aV7Yar2QPvV47ceAaWs7SlHgGSJ5kO++W1oI2tWfqBwtzobm9Fh0QBvm4OK9
+         g8pdfJtHvBGcLBddj+qM8JcYxKC/uls6YeOwsRpyoX2KdGbNKjmXNTWL8xBv0GR0dg
+         +1V5A9r7dzEIw==
+Message-ID: <f8080469-a5e5-5345-3454-a697ee7ae120@kernel.org>
+Date:   Thu, 24 Aug 2023 07:54:31 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH treewide 0/9] Remove obsolete IDE headers
+To:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        "David S . Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-arm-kernel@lists.infradead.org, linux-parisc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, sparclinux@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <cover.1692288018.git.geert@linux-m68k.org>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <cover.1692288018.git.geert@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add missing MODULE_DESCRIPTION to avoid warnings when compiling
-with W=1.
+On 8/18/23 01:07, Geert Uytterhoeven wrote:
+> 	Hi all,
+> 
+> This patch series removes all unused <asm/ide.h> headers and
+> <asm-generic/ide_iops.h>.  <asm/ide.h> was still included by 3 PATA
+> drivers for m68k platforms, but without any real need.
+> 
+> The first 5 patches have no dependencies.
+> The last patch depends on the 3 pata patches.
+> 
+> Thanks for your comments!
+> 
+> Geert Uytterhoeven (9):
+>   ARM: Remove <asm/ide.h>
+>   parisc: Remove <asm/ide.h>
+>   powerpc: Remove <asm/ide.h>
+>   sparc: Remove <asm/ide.h>
+>   asm-generic: Remove ide_iops.h
+>   ata: pata_buddha: Remove #include <asm/ide.h>
+>   ata: pata_falcon: Remove #include <asm/ide.h>
+>   ata: pata_gayle: Remove #include <asm/ide.h>
+>   m68k: Remove <asm/ide.h>
 
-Damien Le Moal (2):
-  ata: pata_ftide010: Add missing MODULE_DESCRIPTION
-  ata: sata_gemini: Add missing MODULE_DESCRIPTION
-
- drivers/ata/pata_ftide010.c | 1 +
- drivers/ata/sata_gemini.c   | 1 +
- 2 files changed, 2 insertions(+)
+Applied to libata for-6.6. Thanks !
 
 -- 
-2.41.0
+Damien Le Moal
+Western Digital Research
 
