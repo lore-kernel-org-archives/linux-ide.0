@@ -2,79 +2,94 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC47C27C40
-	for <linux-ide@archiver.kernel.org>; Thu, 24 Aug 2023 08:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D9A0C3DA6F
+	for <linux-ide@archiver.kernel.org>; Thu, 24 Aug 2023 10:01:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229704AbjHXIaF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 24 Aug 2023 04:30:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38236 "EHLO
+        id S234576AbjHXKAz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 24 Aug 2023 06:00:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240463AbjHXI3m (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Aug 2023 04:29:42 -0400
-Received: from mail-yb1-xb31.google.com (mail-yb1-xb31.google.com [IPv6:2607:f8b0:4864:20::b31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 683701980
-        for <linux-ide@vger.kernel.org>; Thu, 24 Aug 2023 01:29:32 -0700 (PDT)
-Received: by mail-yb1-xb31.google.com with SMTP id 3f1490d57ef6-d73c595b558so6291884276.2
-        for <linux-ide@vger.kernel.org>; Thu, 24 Aug 2023 01:29:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1692865771; x=1693470571;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=W23dUDoYPVM+Albz/fV7buPvXshVz7q37yEa393WS6U=;
-        b=rNNdxiH5IkcE2W6izEaA/RjXtQay2euQ4SKKZgVceqhfRBVMZBby5WhB8m+2ycLzb9
-         cucGeYwuHkIuKrzMMM1U1RHHjMryrJa+s4Si8A3NpWULQBJ8HMv9Nnfeo1bZqd9v4YbU
-         D2tgpb0uuaoQgrLdywDnObbtTddD3GTObZiTjYRnxazBI6NvAVbjnC84Xv+GbmuXrCmK
-         g63+PNm8kXkAw8RU54nWRPcSgqnD5i2tFjbOrS9+BoWmuGmUftW5ks7ssgvUTC9W5uyn
-         sv1sfpR7io/LMVwUMmasruvrPZtZavhZPXK9IwqYmqFwjCahVXrOP0JnHmnIl/eOTi4S
-         RnGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692865771; x=1693470571;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=W23dUDoYPVM+Albz/fV7buPvXshVz7q37yEa393WS6U=;
-        b=f1NNc9m+aoG4LP+MQw7/EKorbeiO7wcWwGWLcmYG749aeH72kjf6Q2HOnz8a/5lU3V
-         4QVqUWm8M4sVS0Nb3Zw3a3n43i5CWiK9iS10G9fnlOgSMzH2Cunt6goBB2ak/T2omgin
-         SaR8ZYTORd7w1Xl1DcYGF8zONPzvEZpNm971YRkpTDrDxHq1fpuxiVSRs/M/MZj56HMJ
-         +K3loSwC5GA0hgye4C+3CGdFRdxKVrsNBNwXNlzhdfG2AiSJ4JgMzIs6V7v3lvTO+Ky0
-         LA2xmdSAVX/LBLTjfYbkkwcAZg10YS32RVFI3Tz+4Hnm+LbeRA/ZmJAxIu7W9zoHshpm
-         KdHQ==
-X-Gm-Message-State: AOJu0Yz/FUKFWj32YFYqy/CKS+KDjVIgHiMHLdTX+n4nGz5Xi7xPOJZP
-        +uTO+xK0+SGIXIcNPLgmbxtRDg7hwP7N2IgDWRW1aFdWNqbgzKPM
-X-Google-Smtp-Source: AGHT+IEl4L2FUHZquf36cH0eKeiAqrKkzoBDEQmxyTV1nygM0st6nbzsX8cOpP5PeXx3gdS01tXwYrnbVJZwAhEn8RE=
-X-Received: by 2002:a25:804f:0:b0:d77:de72:592b with SMTP id
- a15-20020a25804f000000b00d77de72592bmr3070562ybn.48.1692865771594; Thu, 24
- Aug 2023 01:29:31 -0700 (PDT)
+        with ESMTP id S240903AbjHXKAy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Aug 2023 06:00:54 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDCBA19B4;
+        Thu, 24 Aug 2023 03:00:27 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.81.28) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Thu, 24 Aug
+ 2023 13:00:22 +0300
+Subject: Re: [PATCH v4 1/2] ata: pata_falcon: fix IO base selection for Q40
+To:     Michael Schmitz <schmitzmic@gmail.com>, <dlemoal@kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-m68k@vger.kernel.org>
+CC:     <will@sowerbutts.com>, <rz@linux-m68k.org>, <geert@linux-m68k.org>,
+        <stable@vger.kernel.org>, Finn Thain <fthain@linux-m68k.org>,
+        Sergei Shtylyov <sergei.shtylyov@gmail.com>
+References: <20230822221359.31024-1-schmitzmic@gmail.com>
+ <20230822221359.31024-2-schmitzmic@gmail.com>
+ <34db6315-ed69-6775-efc1-97a351198713@omp.ru>
+ <0d490219-a0e2-94d9-4427-39c151fb90b5@gmail.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <082127a7-1c38-1045-df28-0ad43dcde0d8@omp.ru>
+Date:   Thu, 24 Aug 2023 13:00:21 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-References: <20230823225234.36354-1-dlemoal@kernel.org>
-In-Reply-To: <20230823225234.36354-1-dlemoal@kernel.org>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Thu, 24 Aug 2023 10:29:20 +0200
-Message-ID: <CACRpkdY8S_03a9RyJRK6uAh3aFC2K76+_M+rmwEX=sOwr04mkA@mail.gmail.com>
-Subject: Re: [PATCH 0/2] Fix compilation warnings
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, Sergey Shtylyov <s.shtylyov@omp.ru>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <0d490219-a0e2-94d9-4427-39c151fb90b5@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [31.173.81.28]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 08/24/2023 08:48:29
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 179420 [Aug 24 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 527 527 5bb611be2ca2baa31d984ccbf4ef4415504fc308
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_arrow_text}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1;31.173.81.28:7.1.2
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: {rdns complete}
+X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.28
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 08/24/2023 08:53:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 8/24/2023 6:01:00 AM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Aug 24, 2023 at 12:52=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org=
-> wrote:
+On 8/24/23 4:56 AM, Michael Schmitz wrote:
+[...]
 
-> Add missing MODULE_DESCRIPTION to avoid warnings when compiling
-> with W=3D1.
->
-> Damien Le Moal (2):
->   ata: pata_ftide010: Add missing MODULE_DESCRIPTION
->   ata: sata_gemini: Add missing MODULE_DESCRIPTION
+>>     I prefer CCing my OMP account when you send the PATA patches,
+>> as is returned by scripts/get_maintainer.pl...
 
-For both:
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Sorry, I was left with the impression OMP was rejecting list messages from linux-ide ...
 
-Thanks for fixing this Damien!
+   No, it rejected my reply to you for some reason.
+   However, the msgs from linux-ide seem to be still stuck somewhere
+as well...
 
-Yours,
-Linus Walleij
+MBR, Sergey
