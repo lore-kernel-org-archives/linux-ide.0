@@ -2,143 +2,93 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FCF0C71133
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Aug 2023 07:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3F2C3DA6F
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Aug 2023 08:11:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235307AbjHYHqo convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Aug 2023 03:46:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47296 "EHLO
+        id S232201AbjHYIK4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 25 Aug 2023 04:10:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232871AbjHYHqR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Aug 2023 03:46:17 -0400
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A60B1FCA;
-        Fri, 25 Aug 2023 00:46:15 -0700 (PDT)
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-58dfe2d5b9aso9768677b3.1;
-        Fri, 25 Aug 2023 00:46:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692949574; x=1693554374;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Hmuu7tjKFZL2mLy2Y+9/5DqiZXG4gabZ0aTQgtMWJjg=;
-        b=SC/wgkFOluzIuyHcZvI0GTJn/IT28o4QRwqQIw+ILcomaTEaUUQ+gnlppXviliWDUL
-         n+emuHrBXeGic23y4UOVYLFeEsIEaE6uXeIXnCv0S35Xxr8vw7acwor7evvvTcIth5w3
-         7Rf+fmAftDY5384/6hWt59CsHyZ8j3NmLcTt1AlCv7lyxnzyLedq5+rN82CNlNL+8htT
-         9K3v7bmKJHkV+I2qNAz/aYkiFH/UQxDFLb3TODGObcLKHr11KmugSqFc21gOxBcnh/Su
-         ztMek0eFKkP5WcaXpgLAMldLow4Z58X6wrzwwqe8FXCXI4sP9hscreF4xQE2TD5l8LWU
-         VoWg==
-X-Gm-Message-State: AOJu0YyBeTXRcfz42WduPjBCo5ZAqchhqth6kl9ePAAKnV2MFQzZ8hIK
-        wDtNt/4Pgzw9AfwrYnJduTzxfXGFOqQtRQ==
-X-Google-Smtp-Source: AGHT+IHTBAIaBUottLmggBqPb5omOjnlmf/dvwEIEeYVKjIEsIS0jqKkFSH0p6cG7ZaD9X6Dww0hGw==
-X-Received: by 2002:a0d:ca0b:0:b0:57a:3942:bb74 with SMTP id m11-20020a0dca0b000000b0057a3942bb74mr16612403ywd.17.1692949574319;
-        Fri, 25 Aug 2023 00:46:14 -0700 (PDT)
-Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com. [209.85.219.169])
-        by smtp.gmail.com with ESMTPSA id z4-20020a816504000000b00576c727498dsm376606ywb.92.2023.08.25.00.46.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Aug 2023 00:46:13 -0700 (PDT)
-Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-d74a012e613so978242276.1;
-        Fri, 25 Aug 2023 00:46:13 -0700 (PDT)
-X-Received: by 2002:a25:a28e:0:b0:d6b:1531:bc6c with SMTP id
- c14-20020a25a28e000000b00d6b1531bc6cmr16464181ybi.6.1692949573305; Fri, 25
- Aug 2023 00:46:13 -0700 (PDT)
+        with ESMTP id S241806AbjHYIK2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Aug 2023 04:10:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91D741FF6;
+        Fri, 25 Aug 2023 01:10:26 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2690A66EEB;
+        Fri, 25 Aug 2023 08:10:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4322C433C8;
+        Fri, 25 Aug 2023 08:10:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692951025;
+        bh=MZiSPi7PsqNW/QQ5weCras7ssRcqxOoTx+NhIZgDiWE=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=e5AOOo7hoVXLo7H1x5MKH+DqM5YhKYzGx9SYVUivQ2jx1ZmkcTiH/0/yk5IODk4uX
+         UwBGX5K6sUD7af8uFQ6Fpnqi2Qnp3qPF0qmHPlSaMyQ01zo4gXZoPKVlhyHu5KeGOj
+         p9XN5srdk1BZ3EVh4Fgb+wqi9tewoZPd600oG1o+iRZnHCQZXllgwTKVOU7mC3B62a
+         8M1uUG/utLk/6SUH6XZ5tXeUyLKX9x0VPGYlFw7bnv3kAUFq3ecvYNleS+pAqjs/c2
+         0PmQo++aUxAEO4Ug631QmPY5KLhPY4nX2aWevyIrQGXV3UibfymHaPH0ZzcKiz4ioc
+         tBJtwgzjo57Kw==
+Message-ID: <689cfe0d-a323-b48c-8543-4ddd74258fc0@kernel.org>
+Date:   Fri, 25 Aug 2023 17:10:23 +0900
 MIME-Version: 1.0
-References: <20230825011335.25808-1-schmitzmic@gmail.com> <20230825011335.25808-3-schmitzmic@gmail.com>
-In-Reply-To: <20230825011335.25808-3-schmitzmic@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 25 Aug 2023 09:46:02 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUhw-mvGXRRimfp1SAMaRzOfQuO=k81LaZbXuNPV0igQQ@mail.gmail.com>
-Message-ID: <CAMuHMdUhw-mvGXRRimfp1SAMaRzOfQuO=k81LaZbXuNPV0igQQ@mail.gmail.com>
-Subject: Re: [PATCH v5 2/2] ata: pata_falcon: add data_swab option to
- byte-swap disk data
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     s.shtylyov@omp.ru, dlemoal@kernel.org, linux-ide@vger.kernel.org,
-        linux-m68k@vger.kernel.org, will@sowerbutts.com, rz@linux-m68k.org,
-        Finn Thain <fthain@linux-m68k.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH 1/2] ata: pata_ep93xx: fix error return code in probe
+Content-Language: en-US
+To:     Nikita Shubin <nikita.shubin@maquefel.me>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230823-ep93xx_pata_fixes-v1-0-d7e7229be148@maquefel.me>
+ <20230823-ep93xx_pata_fixes-v1-1-d7e7229be148@maquefel.me>
+ <00462bc7-43ee-784a-3296-8051d69575df@kernel.org>
+ <913a0bc0dfcd3ecd28f65fb52db789033097d831.camel@maquefel.me>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <913a0bc0dfcd3ecd28f65fb52db789033097d831.camel@maquefel.me>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+On 8/25/23 17:05, Nikita Shubin wrote:
+> Hi Damien!
+> 
+> On Thu, 2023-08-24 at 08:07 +0900, Damien Le Moal wrote:
+>> On 8/23/23 18:47, Nikita Shubin via B4 Relay wrote:
+>>> From: Nikita Shubin <nikita.shubin@maquefel.me>
+>>>
+>>> Return -ENOMEM from ep93xx_pata_probe() if devm_kzalloc() or
+>>> ata_host_alloc() fails.
+>>>
+>>> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
+>>
+>> Doesn't this need a Fixes tag and Cc: stable ?
+>>
+>> This is not really a bug fix, but might as well be complete with the
+>> fix :)
+> 
+> Well... This would be fix for:
+> 
+> ```
+> commit 2fff27512600f9ad91335577e485a8552edb0abf
+> Author: Rafal Prylowski <prylowski@metasoft.pl>
+> Date:   Thu Apr 12 14:13:16 2012 +0200
+> ```
+> 
+> v3.4-rc6-6-g2fff27512600
+> 
+> Are you sure we wanna tag so solid and time proven commit as Fixes: :)
+> ?
 
-On Fri, Aug 25, 2023 at 3:13 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Some users of pata_falcon on Q40 have IDE disks in default
-> IDE little endian byte order, whereas legacy disks use
-> host-native big-endian byte order as on the Atari Falcon.
->
-> Add module parameter 'data_swab' to allow connecting drives
-> with non-native data byte order. Drives selected by the
-> data_swap bit mask will have their user data byte-swapped to
-> host byte order, i.e. 'pata_falcon.data_swab=2' will byte-swap
-> all user data on drive B, leaving data on drive A in native
-> byte order. On Q40, drives on a second IDE interface may be
-> added to the bit mask as bits 2 and 3.
->
-> Default setting is no byte swapping, i.e. compatibility with
-> the native Falcon or Q40 operating system disk format.
->
-> Cc: William R Sowerbutts <will@sowerbutts.com>
-> Cc: Finn Thain <fthain@linux-m68k.org>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Tested-by: William R Sowerbutts <will@sowerbutts.com>
-> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
->
-> ---
->
-> Changes since v4:
->
-> Damien Le Moal:
-> - spell out bitmask shift calculation
-
-Thanks for the update!
-
-Sorry to bother you again...
-
-> --- a/drivers/ata/pata_falcon.c
-> +++ b/drivers/ata/pata_falcon.c
-
-> @@ -124,7 +129,7 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
->         struct ata_host *host;
->         struct ata_port *ap;
->         void __iomem *base, *ctl_base;
-> -       int irq = 0, io_offset = 1, reg_shift = 2; /* Falcon defaults */
-> +       int irq = 0, io_offset = 1, reg_shift = 2, mask_shift; /* Falcon defaults */
-
-The comment does not apply to the mask_shift variable, unless you
-pre-initialize it to 0...
-
->
->         dev_info(&pdev->dev, "Atari Falcon and Q40/Q60 PATA controller\n");
->
-> @@ -194,6 +199,12 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
->         ata_port_desc(ap, "cmd %px ctl %px data %px",
->                       base, ctl_base, ap->ioaddr.data_addr);
->
-> +       if (pdev->id > 0)
-> +               mask_shift = 2;
-> +       else
-> +               mask_shift = 0;
-
-... and drop the else.
-
-> +       ap->private_data = (void *)(uintptr_t)(pata_falcon_swap_mask >> mask_shift);
-> +
->         irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
->         if (irq_res && irq_res->start > 0) {
->                 irq = irq_res->start;
-
-Gr{oetje,eeting}s,
-
-                        Geert
+Yeah, this is fine without the fixes tag. As I said, not exactly a bug fix but
+rather an improvement :)
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Damien Le Moal
+Western Digital Research
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
