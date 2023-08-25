@@ -2,93 +2,118 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3F2C3DA6F
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Aug 2023 08:11:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CD46C3DA66
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Aug 2023 08:13:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232201AbjHYIK4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Aug 2023 04:10:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41896 "EHLO
+        id S236327AbjHYIMc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 25 Aug 2023 04:12:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241806AbjHYIK2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Aug 2023 04:10:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91D741FF6;
-        Fri, 25 Aug 2023 01:10:26 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2690A66EEB;
-        Fri, 25 Aug 2023 08:10:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4322C433C8;
-        Fri, 25 Aug 2023 08:10:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692951025;
-        bh=MZiSPi7PsqNW/QQ5weCras7ssRcqxOoTx+NhIZgDiWE=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=e5AOOo7hoVXLo7H1x5MKH+DqM5YhKYzGx9SYVUivQ2jx1ZmkcTiH/0/yk5IODk4uX
-         UwBGX5K6sUD7af8uFQ6Fpnqi2Qnp3qPF0qmHPlSaMyQ01zo4gXZoPKVlhyHu5KeGOj
-         p9XN5srdk1BZ3EVh4Fgb+wqi9tewoZPd600oG1o+iRZnHCQZXllgwTKVOU7mC3B62a
-         8M1uUG/utLk/6SUH6XZ5tXeUyLKX9x0VPGYlFw7bnv3kAUFq3ecvYNleS+pAqjs/c2
-         0PmQo++aUxAEO4Ug631QmPY5KLhPY4nX2aWevyIrQGXV3UibfymHaPH0ZzcKiz4ioc
-         tBJtwgzjo57Kw==
-Message-ID: <689cfe0d-a323-b48c-8543-4ddd74258fc0@kernel.org>
-Date:   Fri, 25 Aug 2023 17:10:23 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
+        with ESMTP id S243420AbjHYIMQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Aug 2023 04:12:16 -0400
+X-Greylist: delayed 414 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 25 Aug 2023 01:12:12 PDT
+Received: from forward500a.mail.yandex.net (forward500a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d500])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 649821FF9
+        for <linux-ide@vger.kernel.org>; Fri, 25 Aug 2023 01:12:12 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:5e51:0:640:23ee:0])
+        by forward500a.mail.yandex.net (Yandex) with ESMTP id 38B715E943;
+        Fri, 25 Aug 2023 11:05:16 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id F5H80IKDaqM0-MiP4n5N0;
+        Fri, 25 Aug 2023 11:05:15 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail; t=1692950715;
+        bh=okl4esfBnnzgq8d0K6vscEpYCEHFmM+J8GQFV0E2GSE=;
+        h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
+        b=coWb/+6y/oJR5yhd5JpL5YW/VDxAkAIVZMgkeFn0SUqx0ZHJ4O2jEAHfYwZRd27wC
+         eChBBQpO/erAqu7OCJ5qJnWTjM4Se+hjU45RB3shjOXS9717vAAa7xGb2rLaKdBpbn
+         7JMTi/q2HUSRM6aH4o4L9O7pCO5eNOXCm83VFiWc=
+Authentication-Results: mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
+Message-ID: <913a0bc0dfcd3ecd28f65fb52db789033097d831.camel@maquefel.me>
 Subject: Re: [PATCH 1/2] ata: pata_ep93xx: fix error return code in probe
-Content-Language: en-US
-To:     Nikita Shubin <nikita.shubin@maquefel.me>,
+From:   Nikita Shubin <nikita.shubin@maquefel.me>
+To:     Damien Le Moal <dlemoal@kernel.org>,
         Sergey Shtylyov <s.shtylyov@omp.ru>
 Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Fri, 25 Aug 2023 11:05:15 +0300
+In-Reply-To: <00462bc7-43ee-784a-3296-8051d69575df@kernel.org>
 References: <20230823-ep93xx_pata_fixes-v1-0-d7e7229be148@maquefel.me>
- <20230823-ep93xx_pata_fixes-v1-1-d7e7229be148@maquefel.me>
- <00462bc7-43ee-784a-3296-8051d69575df@kernel.org>
- <913a0bc0dfcd3ecd28f65fb52db789033097d831.camel@maquefel.me>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <913a0bc0dfcd3ecd28f65fb52db789033097d831.camel@maquefel.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+         <20230823-ep93xx_pata_fixes-v1-1-d7e7229be148@maquefel.me>
+         <00462bc7-43ee-784a-3296-8051d69575df@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.3 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/25/23 17:05, Nikita Shubin wrote:
-> Hi Damien!
-> 
-> On Thu, 2023-08-24 at 08:07 +0900, Damien Le Moal wrote:
->> On 8/23/23 18:47, Nikita Shubin via B4 Relay wrote:
->>> From: Nikita Shubin <nikita.shubin@maquefel.me>
->>>
->>> Return -ENOMEM from ep93xx_pata_probe() if devm_kzalloc() or
->>> ata_host_alloc() fails.
->>>
->>> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
->>
->> Doesn't this need a Fixes tag and Cc: stable ?
->>
->> This is not really a bug fix, but might as well be complete with the
->> fix :)
-> 
-> Well... This would be fix for:
-> 
-> ```
-> commit 2fff27512600f9ad91335577e485a8552edb0abf
-> Author: Rafal Prylowski <prylowski@metasoft.pl>
-> Date:   Thu Apr 12 14:13:16 2012 +0200
-> ```
-> 
-> v3.4-rc6-6-g2fff27512600
-> 
-> Are you sure we wanna tag so solid and time proven commit as Fixes: :)
-> ?
+Hi Damien!
 
-Yeah, this is fine without the fixes tag. As I said, not exactly a bug fix but
-rather an improvement :)
+On Thu, 2023-08-24 at 08:07 +0900, Damien Le Moal wrote:
+> On 8/23/23 18:47, Nikita Shubin via B4 Relay wrote:
+> > From: Nikita Shubin <nikita.shubin@maquefel.me>
+> >=20
+> > Return -ENOMEM from ep93xx_pata_probe() if devm_kzalloc() or
+> > ata_host_alloc() fails.
+> >=20
+> > Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
+>=20
+> Doesn't this need a Fixes tag and Cc: stable ?
+>=20
+> This is not really a bug fix, but might as well be complete with the
+> fix :)
 
--- 
-Damien Le Moal
-Western Digital Research
+Well... This would be fix for:
+
+```
+commit 2fff27512600f9ad91335577e485a8552edb0abf
+Author: Rafal Prylowski <prylowski@metasoft.pl>
+Date:   Thu Apr 12 14:13:16 2012 +0200
+```
+
+v3.4-rc6-6-g2fff27512600
+
+Are you sure we wanna tag so solid and time proven commit as Fixes: :)
+?
+
+>=20
+> > ---
+> > =C2=A0drivers/ata/pata_ep93xx.c | 4 ++--
+> > =C2=A01 file changed, 2 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+> > index c6e043e05d43..4ce0f37c7a89 100644
+> > --- a/drivers/ata/pata_ep93xx.c
+> > +++ b/drivers/ata/pata_ep93xx.c
+> > @@ -939,7 +939,7 @@ static int ep93xx_pata_probe(struct
+> > platform_device *pdev)
+> > =C2=A0
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0drv_data =3D devm_kzall=
+oc(&pdev->dev, sizeof(*drv_data),
+> > GFP_KERNEL);
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!drv_data) {
+> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0err =3D -ENXIO;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0err =3D -ENOMEM;
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0goto err_rel_gpio;
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
+> > =C2=A0
+> > @@ -952,7 +952,7 @@ static int ep93xx_pata_probe(struct
+> > platform_device *pdev)
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/* allocate host */
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0host =3D ata_host_alloc=
+(&pdev->dev, 1);
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!host) {
+> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0err =3D -ENXIO;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0err =3D -ENOMEM;
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0goto err_rel_dma;
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
+> > =C2=A0
+> >=20
+>=20
 
