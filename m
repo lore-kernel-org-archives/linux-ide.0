@@ -2,116 +2,75 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA65C83F1A
-	for <linux-ide@archiver.kernel.org>; Sun, 27 Aug 2023 01:27:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D861C71153
+	for <linux-ide@archiver.kernel.org>; Sun, 27 Aug 2023 02:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229888AbjH0B0b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 26 Aug 2023 21:26:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49002 "EHLO
+        id S229512AbjH0CHM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 26 Aug 2023 22:07:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229661AbjH0B0M (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 26 Aug 2023 21:26:12 -0400
-Received: from mail-vk1-xa35.google.com (mail-vk1-xa35.google.com [IPv6:2607:f8b0:4864:20::a35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 656F31B3;
-        Sat, 26 Aug 2023 18:26:10 -0700 (PDT)
-Received: by mail-vk1-xa35.google.com with SMTP id 71dfb90a1353d-48d165bd108so750889e0c.0;
-        Sat, 26 Aug 2023 18:26:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693099569; x=1693704369;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7xuNUQVzyH4q9w7U5IcaVXKqDoFBqxRmFznUwrjO/e0=;
-        b=mMxr0cPde0fK/iVz41ij4KiatKsc3M16NsYEwrO9IKNceAzB0HPgOeHhf1QyiWaBQL
-         YUWomRlSjlwF6AS0qY8cvNhoATRw3wJ3Lajon8nPm28a05x5bSCDDbA8J+xLLdIJFgrw
-         fM3zmDvWJL8mrg3voyrJqTd26gjsbH9RSVURMtFDco+TlcXfWesH8Agxtn0JZDAO/ySt
-         qfi5cHFmm/xknbAnjG+fSWBLiJIxs2pwe4fTEiL1MUja6NQ9WAvQOatq6IPWqLHJ31X8
-         2RYx/Qpej6AZ3f/DymDtCETrHqMO8Tf5SMhYKE1UxfuyPQ/jDx2/CN47xly7xp9BaXze
-         i6eg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693099569; x=1693704369;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7xuNUQVzyH4q9w7U5IcaVXKqDoFBqxRmFznUwrjO/e0=;
-        b=TFsYg01Bz/3ha0ZO+7+Wm2anyvaa/CT+vnRqV2G6PIL4ZRlCf8R49CdyB7mfR+r8kC
-         LQOOntDmJB7Eii0QsJx4L5Y4ugQzX3ok7MpujNlb9UF0XtSmwuV9ZgRFBFLnkwQJkqVR
-         frblnQXh2QV4ozR5PllsMKmWJF0dzdForKGdh4LFJiCLt/oCRmW7TmZgv8DmVaBbZCPC
-         wGYrtSGHAnCDxXccHQBN2K7G0dHrLehnsir5Pc466j/hNTVjr/sU8Qdvx00duhjJ5GXs
-         MKkH41pQVkJgJ/6VzaWJxVVJAMTmgqUhZzxcX3bl8z+67PPUad+95DKSQ7KJR+bYRDT6
-         9g1w==
-X-Gm-Message-State: AOJu0YxDEHrfCTJ5jlf/PcvhEWP9ykR6UREnuZtoRRJURoIUOZDJ539k
-        TIkh3BEiBG0G5JHDE09NEXLxGLLQNYcQ3rtXYBg=
-X-Google-Smtp-Source: AGHT+IHhRnDtR8YyOA5ldzZA5xzHhtH8ifpqM4IyuWPDUX3URZBYZlGS8mnlziK3b7eOZJIkGRPgz9uNFJqrvjUYDS8=
-X-Received: by 2002:a05:6102:2446:b0:44d:521b:8ec with SMTP id
- g6-20020a056102244600b0044d521b08ecmr12127978vss.20.1693099569314; Sat, 26
- Aug 2023 18:26:09 -0700 (PDT)
-MIME-Version: 1.0
-References: <CA+jjjYTk=5wn2o46uNB+bJYX8xLgMP==dsJuvC94DvtN2f_6Yw@mail.gmail.com>
- <ZOqg9VovoVanfuR0@debian.me>
-In-Reply-To: <ZOqg9VovoVanfuR0@debian.me>
-From:   Joshua Hudson <joshudson@gmail.com>
-Date:   Sat, 26 Aug 2023 18:25:58 -0700
-Message-ID: <CA+jjjYT6+NJwB2Kn0jWLKtmz3dWH6UnVJNA6vDbPXnnJnHMf9Q@mail.gmail.com>
-Subject: Re: Cache coherency bug: stale reads on /dev/sda1
-To:     Bagas Sanjaya <bagasdotme@gmail.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        with ESMTP id S229478AbjH0CGn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 26 Aug 2023 22:06:43 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77884119;
+        Sat, 26 Aug 2023 19:06:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=+9WTEtdJoJCdWG/RW/iQ4SvvA0PSXrKGPAz3wgthcMM=; b=v98jyUypfXy2g3KPttVluyqAaX
+        Wv05VqDdXl4GcezmDMflND5YpP3R9szkoVnwJCR0HFMfkAmaAidU0nzDWpZOcaDJV0Ex74z3RXl8X
+        zMIh+11cKBYDjtreX22RKoiBFKBwEMcrUK1fVqzlUY9o0KWlSMg73pziPR6FAawHVV9xwZ7lwslnx
+        YjF62Tu6pKljXWrDjBjKqpXl8Cjg12d5Qag4GoRWWflAVQgAUxL8MwG+uMQEwzpPbHs6B12kQXk+F
+        M5P0ycqT8BWC+O2MwfakU8NI5QaGnmeb6VdZfU+9yAZzJOu14gvRACWY23eaB9BQt4uRdokNRvoaa
+        Qwf8OQiQ==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qa5Ah-001D9H-0v;
+        Sun, 27 Aug 2023 02:06:35 +0000
+Date:   Sun, 27 Aug 2023 03:06:35 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Joshua Hudson <joshudson@gmail.com>
+Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Linux IDE and libata <linux-ide@vger.kernel.org>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>,
         Damien Le Moal <dlemoal@kernel.org>,
         OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: Cache coherency bug: stale reads on /dev/sda1
+Message-ID: <20230827020635.GQ3390869@ZenIV>
+References: <CA+jjjYTk=5wn2o46uNB+bJYX8xLgMP==dsJuvC94DvtN2f_6Yw@mail.gmail.com>
+ <ZOqg9VovoVanfuR0@debian.me>
+ <CA+jjjYT6+NJwB2Kn0jWLKtmz3dWH6UnVJNA6vDbPXnnJnHMf9Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+jjjYT6+NJwB2Kn0jWLKtmz3dWH6UnVJNA6vDbPXnnJnHMf9Q@mail.gmail.com>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-I am presuming you mean "Are you sure this not a hardware issue?"
+On Sat, Aug 26, 2023 at 06:25:58PM -0700, Joshua Hudson wrote:
+> I am presuming you mean "Are you sure this not a hardware issue?"
+> 
+> I am sure it is not, for two reasons.
+> 
+> 1) If it were a hardware issue I would still expect the two device
+> nodes (whole disk and partition) to report the *same* data.
+> 
+> 2) I have since developed a workaround involving BLKFLSDEV. The
+> workaround is really ugly.
 
-I am sure it is not, for two reasons.
+Whole disk and all partitions have page caches of their own.
+There is no coherency between those; write through one, then
+read through another and you are not guaranteed that read won't
+see the stale cached data.
 
-1) If it were a hardware issue I would still expect the two device
-nodes (whole disk and partition) to report the *same* data.
+Doctor, it hurts when I do it...
 
-2) I have since developed a workaround involving BLKFLSDEV. The
-workaround is really ugly.
+Incidentally, read from device/write to the place you've read via
+file/read from device again also has no coherency warranties, for
+exact same reason.
 
-On Sat, Aug 26, 2023 at 6:03=E2=80=AFPM Bagas Sanjaya <bagasdotme@gmail.com=
-> wrote:
->
-> On Sat, Aug 26, 2023 at 02:59:45PM -0700, Joshua Hudson wrote:
-> > uname -a
-> > Linux nova 6.4.12 #1 SMP PREEMPT_DYNAMIC Sat Aug 26 09:11:27 PDT 2023
-> > x86_64 GNU/Linux
-> >
-> > Kernel source is
-> > https://mirrors.edge.kernel.org/pub/linux/kernel/v6.x/linux-6.4.12.tar.=
-xz
-> >
-> > Can reliably reproduce as follows:
-> >
-> > # hexedit /dev/sda1 (this is my EFI partition)
-> > PgDn
-> > # hexedit /dev/sda
-> > G 100000  (your value may vary--we want to seek to the start of the
-> > EFI partition)
-> > PgDn
-> > PgDn
-> > ^C
-> > write a marker to the padding between the BPB and the first FAT sector.
-> > (If your system doesn't have one, edit an error message in the boot sec=
-tor)
-> > ^X
-> > # hexedit /dev/sda1
-> > PgDn
-> > Look for marker written above, find it's not there !!!
-> > ^C
-> >
-> > I discovered this one trying to defragment my EFI partition after a
-> > grub upgrade left it very fragmented due to replacing logos.
->
-> Are you sure this is hardware issue?
->
-> --
-> An old man doll... just what I always wanted! - Clara
+IOW, not a bug.
