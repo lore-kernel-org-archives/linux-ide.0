@@ -2,121 +2,72 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0C03C6FA8F
-	for <linux-ide@archiver.kernel.org>; Sun, 27 Aug 2023 02:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B1FC83F11
+	for <linux-ide@archiver.kernel.org>; Sun, 27 Aug 2023 04:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229531AbjH0CvI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 26 Aug 2023 22:51:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50326 "EHLO
+        id S229669AbjH0EOP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 27 Aug 2023 00:14:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229831AbjH0Cux (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 26 Aug 2023 22:50:53 -0400
-Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61FD4FA;
-        Sat, 26 Aug 2023 19:50:51 -0700 (PDT)
-Received: by mail-qt1-x835.google.com with SMTP id d75a77b69052e-41095b84d8eso13897451cf.2;
-        Sat, 26 Aug 2023 19:50:51 -0700 (PDT)
+        with ESMTP id S229492AbjH0EN7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 27 Aug 2023 00:13:59 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B3C81AC;
+        Sat, 26 Aug 2023 21:13:55 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id af79cd13be357-76d7b5e374fso142683385a.2;
+        Sat, 26 Aug 2023 21:13:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693104650; x=1693709450;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=MIw9Q5r09NfZUTqarX7Iy/jkPLDDRLQ9DQT1RqFnR3Y=;
-        b=kOl2hRWSxWCriLB9sFGb002Zaoa8KZGxKdfMb4QBHLderLFmnWMv7HAY9oKY2hgPt3
-         rsCsEvkVqdTi+qJGudo1xbfiMGoDNtmKO2scFOdew5c1otjzENK/Jphlk3lGqgubR+ho
-         SbPAbptbz2slPYs4PppPNc/dm+0UDentv8R+hO8eqO6/3sNKWO0CkX/aLpT8pRVSPdV7
-         C8rGQUcU3A9Jwth5rUbxnckXtpkmtp4TOu51+QEwcc7D1n9h1WDhHteFjyGuZtWJqAyU
-         PERGSnFnDvJz0Mpv6gq6snSpTJIymm5IE976PQYsw56M6/S+oddNSLSLbY/6ajehopjj
-         mdTA==
+        d=gmail.com; s=20221208; t=1693109634; x=1693714434;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1qg02qKk+w2DzK/TtLkjAeK4hPNPaPX6Icpe7TDyMPc=;
+        b=h4sT4jriRBnmZ5IrFsdJJqzB/DyCWijGa8xrudAc5udTvcyZ8HAZwT0/tP7psuI0yc
+         1nKBSqpOUrwiI8B9yPxI2w3VPGQQCUJaQUcIjQ6Rve8JoBm3hLUJl/UTisFSAcemSbrj
+         95xpSQfvnDy2IjkT30YEoHch+u9Sjn2s6ZQmYM/g7M0Sidx5+Vn1HA0+nK9q88+UQcGw
+         VWQ4N0cn5Alke4FDGSdazDgMv0w+zIjyEbjkYk7BEEYoo1HEcfBlb1nKYJOo3hCHeAdB
+         HwlNDGkoM3tefZKnkTFeKE6g2MfwTycKQfH88hDg+tekEp3XUI2NY7+IX4YjJedNAcbV
+         bv7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693104650; x=1693709450;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MIw9Q5r09NfZUTqarX7Iy/jkPLDDRLQ9DQT1RqFnR3Y=;
-        b=KTNygRfXvJeUraqBrV1DPaQNYFjmcT3F9oVAEn1MHT9HRdi5Rwwf2uv1TgqNmeVryn
-         s493sWbz8tYlV0FAm4usMRCeJRGr1K4EVKJnHdg7oHZKnoGFHRqzMLe9y+8djBjspVKc
-         XDQ9zZp9xuSMoqhMczhzvJrodLlR2EkmP7/p0YwY4Wz5n5QRLS4h/yXKHONGehe6OKhA
-         Y0jL3tK/pVMdI9BlMpPZH/MccE8PEBhqN8x/WV9AlPc9t8HQ75aIUqRAwOVSHUx9S4nK
-         TCQJlK/QHZesZwbjAr2vKeRQ02OtfVKUBJoqWHgI69PCpzIwVu4kYE0+RuoLPfgtbFcd
-         F9Kw==
-X-Gm-Message-State: AOJu0YxEZ7WECboiXq1CZae15lxc/6CbrTKISQdiPdYAKVkOzoU9llnO
-        J9vyH8lAy8b0wXxlxfvMPHfL8Lxe0rA=
-X-Google-Smtp-Source: AGHT+IFKtR6ptyowRAiBmNvqL6eepFITkIOnRdFz5KyEAkPiJJqcLS3WFsT7VTVVAbWOSGjuSpue0Q==
-X-Received: by 2002:ac8:5909:0:b0:403:c687:bfbb with SMTP id 9-20020ac85909000000b00403c687bfbbmr25298335qty.1.1693104650429;
-        Sat, 26 Aug 2023 19:50:50 -0700 (PDT)
-Received: from [192.168.0.105] ([103.124.138.83])
-        by smtp.gmail.com with ESMTPSA id u7-20020a17090341c700b001bdb8f757besm4440223ple.23.2023.08.26.19.50.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 26 Aug 2023 19:50:49 -0700 (PDT)
-Message-ID: <e644366b-8387-c228-78cb-f108453b0b1d@gmail.com>
-Date:   Sun, 27 Aug 2023 09:50:46 +0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: Cache coherency bug: stale reads on /dev/sda1
-Content-Language: en-US
-To:     Joshua Hudson <joshudson@gmail.com>,
-        Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-References: <CA+jjjYTk=5wn2o46uNB+bJYX8xLgMP==dsJuvC94DvtN2f_6Yw@mail.gmail.com>
- <ZOqg9VovoVanfuR0@debian.me>
- <CA+jjjYT6+NJwB2Kn0jWLKtmz3dWH6UnVJNA6vDbPXnnJnHMf9Q@mail.gmail.com>
- <20230827020635.GQ3390869@ZenIV>
- <CA+jjjYRr3SHvXhVZLfACkUrN98n3W8aMBe1e8zqUNDuRZt17=A@mail.gmail.com>
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-In-Reply-To: <CA+jjjYRr3SHvXhVZLfACkUrN98n3W8aMBe1e8zqUNDuRZt17=A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        d=1e100.net; s=20221208; t=1693109634; x=1693714434;
+        h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1qg02qKk+w2DzK/TtLkjAeK4hPNPaPX6Icpe7TDyMPc=;
+        b=XiAV5tLMmFbuR7mO1GCar1P3AZn87FUrIo+ix6KXzxqf+kCb6oAf1JCOpji9wB8b5e
+         C6LmgO5TqHxXpUQ5NJrc5tm8hGxAlZDiXZF8GpBlRfBQPWeh9TI5IAp4mmiAJs5TPgyH
+         EsCrPhwj9Z3uO4uANgaO4qHTNmJdV9vpZ5OcJ6UjclIFqN6486Yi8LQR15ItMBmyvmGv
+         huKxV4XALAYmMv9T/1+oltKAGosgbMYKjwZxmoMYSiJQt9r/WxcGS6PtC+oQqpKNT1gD
+         eEyL2mlQeXmXssamDYek/06tymxasSLDse4pylRNHF7vyCNSvMyRqHPU1BG/k+/qGqoK
+         7B9Q==
+X-Gm-Message-State: AOJu0YwhQkiAlswZKnuac65INA0xmwabWGNT1gKogmJ0/7mvDYxjYdN/
+        xjQvrrAzSttRrfk0FizCDEc=
+X-Google-Smtp-Source: AGHT+IEO7RuDNkR6rn67Qx/NGfUrwgGBEINJkFHcRfOd163njWvPBsjfXKZte+fWZaR1pEi5W0kPBw==
+X-Received: by 2002:a05:620a:4415:b0:767:2bbc:fcc7 with SMTP id v21-20020a05620a441500b007672bbcfcc7mr27793278qkp.14.1693109634654;
+        Sat, 26 Aug 2023 21:13:54 -0700 (PDT)
+Received: from xplor.waratah.dyndns.org (125-236-136-221-fibre.sparkbb.co.nz. [125.236.136.221])
+        by smtp.gmail.com with ESMTPSA id u18-20020a63b552000000b005501b24b1c9sm4463328pgo.62.2023.08.26.21.13.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 26 Aug 2023 21:13:54 -0700 (PDT)
+Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
+        id 5A1AB360439; Sun, 27 Aug 2023 16:13:50 +1200 (NZST)
+From:   Michael Schmitz <schmitzmic@gmail.com>
+To:     s.shtylyov@omp.ru, dlemoal@kernel.org, linux-ide@vger.kernel.org,
+        linux-m68k@vger.kernel.org
+Cc:     will@sowerbutts.com, rz@linux-m68k.org, geert@linux-m68k.org
+Subject: [PATCH v6 0/2] Q40 IDE fixes
+Date:   Sun, 27 Aug 2023 16:13:46 +1200
+Message-Id: <20230827041348.18887-1-schmitzmic@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 27/08/2023 09:38, Joshua Hudson wrote:
-> "Whole disk and all partitions have page caches of their own."
-> 
-> That's so bad.
-> 
-> I can think of numerous cases where this will cause problems; including
-> some I encountered last year and did not understand at the time. Manipulating
-> EFI partitions through the whole disk device makes sense because FAT filesystems
-> *know their offset on the disk*, and some of the existing tools really
-> don't like being
-> given a partition device.
-> 
-> There's also the astounding: write stuff to disk, umount everything,
-> copy one disk to
-> another using the whole disk device doesn't work because reading the whole disk
-> yields a stale cache (sometimes).
-> 
-> On the other hand, I can think of very few cases where the file vs
-> disk buffer pool
-> matters, because the loop device is unaffected (writing to a loop
-> block device is
-> coherent with the file).
-> 
+Version 6 of the pata_falcon bugfix patch for Q40 support,
+addressing the latest comments by Geert and Damien.
 
-tl;dr:
+No logic changes from v5 which was tested by William.
 
-> A: http://en.wikipedia.org/wiki/Top_post
-> Q: Were do I find info about this thing called top-posting?
-> A: Because it messes up the order in which people normally read text.
-> Q: Why is top-posting such a bad thing?
-> A: Top-posting.
-> Q: What is the most annoying thing in e-mail?
-> 
-> A: No.
-> Q: Should I include quotations after my reply?
-> 
-> http://daringfireball.net/2007/07/on_top
+Cheers,
 
-What cases on the loop devices?
+   Michael
 
--- 
-An old man doll... just what I always wanted! - Clara
 
