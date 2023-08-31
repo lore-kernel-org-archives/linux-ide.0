@@ -2,232 +2,179 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF17CC83F10
-	for <linux-ide@archiver.kernel.org>; Thu, 31 Aug 2023 06:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA4A7C83F3C
+	for <linux-ide@archiver.kernel.org>; Thu, 31 Aug 2023 19:08:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241708AbjHaGzZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 31 Aug 2023 02:55:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43766 "EHLO
+        id S1346057AbjHaTIi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 31 Aug 2023 15:08:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242097AbjHaGzY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 31 Aug 2023 02:55:24 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D097E0;
-        Wed, 30 Aug 2023 23:55:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S1345369AbjHaTIh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 31 Aug 2023 15:08:37 -0400
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D766AE66
+        for <linux-ide@vger.kernel.org>; Thu, 31 Aug 2023 12:08:34 -0700 (PDT)
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 17D3DB8214E;
-        Thu, 31 Aug 2023 06:55:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB377C433C7;
-        Thu, 31 Aug 2023 06:55:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693464913;
-        bh=grzKBzpetMZY5pdHGAMbnhEOjQCjw9xTNEpumNTXwc0=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=sspU5rM1PBNw//1BbhEu4+mqq94+fmuemobfJp5WDzZsgguk+bGecuAatllWXvuGM
-         mVc9JlEnqfLb4Cxqu3SdIP4JA093SJsWiGy/83LDTIrXklcN6QewyDTpsCdl565QY9
-         zGyVuytze8UgNF9kbkYLkX2OYSmHenaNIaBB7/PF/Gz5sOLLdWSqFNtDxJPAsv1ku0
-         XTMJ3qEi6xIuwLVxqYumt1onQ/HwwqpIPoV7ysqquYsCR3RQBt5HJPas5wie21+MuB
-         nk0Om86w4MwsHy8wq6B8sYKCjSB+/UWjGbfReszLgPnTLcCFS2juv58SFOwcMsZ4kD
-         rhjvvyOVFVIBQ==
-Message-ID: <33be5c62-fd51-0485-ed4d-d9c79f26d85a@kernel.org>
-Date:   Thu, 31 Aug 2023 15:55:10 +0900
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 96DA441D3D
+        for <linux-ide@vger.kernel.org>; Thu, 31 Aug 2023 19:08:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1693508913;
+        bh=Op7fxAIWtBLIvQXGgVokid+e/ObCoPcBqtedoiAumTs=;
+        h=From:To:Subject:Date:Message-Id:MIME-Version;
+        b=WtBYRZgZ1gF9Q3cMBC2wyaZqypGUm8XCZfsodeqIfXhXmwscWUf8c4V8zznJpQzxK
+         3XU3ZNDIfDhnr6mA4cFq60llcBgyLk7DSuSM7dY5uHWyJ0T4R9XM0EqutsYiPt/Xnt
+         jEcqF31+hafVcWbfxc3jilA9KZ1BS1m2yaVNngwbH+3foYT/tTzR3FdauLy0WQFR/2
+         yz93/wCiGJGZSs5sSjH/8KmiYqcXuS9yJgvbesvA8abp/ygHzh/ba9xfyXEIbRygrC
+         O3++lYCuCIp5GzV5zB8adwmITzwaaNvRxQkkVGd37TvSvKYnuxGOEcR6xcyIsVvL12
+         aHirWcVai7NwQ==
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1c093862623so12864715ad.1
+        for <linux-ide@vger.kernel.org>; Thu, 31 Aug 2023 12:08:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693508911; x=1694113711;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Op7fxAIWtBLIvQXGgVokid+e/ObCoPcBqtedoiAumTs=;
+        b=F9cCFQcYOmfpdnpKxrg04uC5Es/viflG3NE79f32oPZ7xF4quNy5a+JjUlv7sGRzvx
+         /pkpIjK9GidEqh4RoZ/R0uRL3fC2ZpFFnY4Hf9YxyYS5ZvEDURQdCHWsWu5iyLaeuD+k
+         +OFFCLF2xRYnixwqhgxbCMIATfRVIUPsuzV85MVr5FZYV+THPG11CsoJp6UM09/5oh1P
+         A2MEeXlsAbSqDbxgXSsiPT9CJlRCFXwaZuzH6B0RcAimQpjkwY9l9UVf3aRGZ9j47O3X
+         EditItMEiTO5Ty+evI3/X3JsgdeQw/8GnXA94d9bBqBWNRq1zPriqyBXvqYMFVqzo428
+         wsYg==
+X-Gm-Message-State: AOJu0YwgR9EjvCU8V0lKxjd3AUcG6jPcTA4gK5sLYuXf+61UjGAiIpZa
+        XcHc8VfLOoP5Zs4x5DFdvC2pdjIhxbLXZA8qc3wreifJEFLwDSyeatkwf+GWuOzg6Smx0sfxFhl
+        XnaLgQFYMPVCrSTsLFwwM7r/OtS/9TDbBYX+0n+GvY5i6qg==
+X-Received: by 2002:a17:902:778f:b0:1bf:6a06:7b60 with SMTP id o15-20020a170902778f00b001bf6a067b60mr478253pll.66.1693508911188;
+        Thu, 31 Aug 2023 12:08:31 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG3o+mppazCZbvNYk+zhhvZDlmVRjKovq05ObDAQ/t5Hta6nnpC/bUvXEekEnU/yK//v/AC4A==
+X-Received: by 2002:a17:902:778f:b0:1bf:6a06:7b60 with SMTP id o15-20020a170902778f00b001bf6a067b60mr478232pll.66.1693508910741;
+        Thu, 31 Aug 2023 12:08:30 -0700 (PDT)
+Received: from canonical.com (211-75-139-218.hinet-ip.hinet.net. [211.75.139.218])
+        by smtp.gmail.com with ESMTPSA id e21-20020a170902d39500b001b51b3e84cesm1574527pld.166.2023.08.31.12.08.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Aug 2023 12:08:29 -0700 (PDT)
+From:   Koba Ko <koba.ko@canonical.com>
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: libata: add workaround to flip LPM during suspend/resume
+Date:   Fri,  1 Sep 2023 03:08:28 +0800
+Message-Id: <20230831190828.1171119-1-koba.ko@canonical.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
-Content-Language: en-US
-To:     Rodrigo Vivi <rodrigo.vivi@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Thorsten Leemhuis <regressions@leemhuis.info>,
-        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
-        Linux Power Management <linux-pm@vger.kernel.org>
-References: <20230731003956.572414-1-dlemoal@kernel.org>
- <ZOehTysWO+U3mVvK@rdvivi-mobl4>
- <40adc06d-0835-2786-0bfb-83239f546d92@kernel.org>
- <ZOjgJl4nlieu3+kL@rdvivi-mobl4>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZOjgJl4nlieu3+kL@rdvivi-mobl4>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/26/23 02:09, Rodrigo Vivi wrote:
-> I have the CONFIG_PM_DEBUG here with no_console_suspend.
-> If you remember any other config or parameter that would help, please let
-> me know that I collect it again:
+Due to TigerLake/Adler Lake AHCI controller's LPM regression,
+can't apply LPM on TigerLake/AdlerLake AHCI controller.
 
-Coming back to this previous dmesg output as I am in fact seeing something very
-similar now. See below.
+Add a workaround to flip LPM during suspend/resume.
+When suspneding, apply LPM on TigerLake/AdlerLake AHCI.
+Restore it to target_lpm_policy after resuming.
 
-> [  104.571459] PM: suspend entry (deep)
-> [  104.585967] Filesystems sync: 0.010 seconds
-> [  104.618685] Freezing user space processes
-> [  104.625374] Freezing user space processes completed (elapsed 0.002 seconds)
-> [  104.632448] OOM killer disabled.
-> [  104.635712] Freezing remaining freezable tasks
-> [  104.641899] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=217775
+Signed-off-by: Koba Ko <koba.ko@canonical.com>
+---
+ drivers/ata/ahci.c      | 29 +++++++++++++++++++++++++++++
+ drivers/ata/libata-eh.c |  8 ++++++++
+ include/linux/libata.h  |  1 +
+ 3 files changed, 38 insertions(+)
 
-suspend start and freezes the user tasks, as expected.
-
-> [  104.669767] wlp6s0: deauthenticating from 08:36:c9:85:df:ef by local choice (Reason: 3=DEAUTH_LEAVING)
-> [  104.679812] serial 00:01: disabled
-> [  104.683466] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
-> [  104.688902] sd 7:0:0:0: [sdc] Stopping disk
-> [  104.693176] sd 5:0:0:0: [sdb] Synchronizing SCSI cache
-> [  104.698419] sd 4:0:0:0: [sda] Synchronizing SCSI cache
-> [  104.703730] sd 4:0:0:0: [sda] Stopping disk
-> [  104.885912] sd 5:0:0:0: [sdb] Stopping disk
-> [  106.163215] PM: suspend devices took 1.514 seconds
-
-All devices are suspended. No issues. Then resume starts...
-
-> [  107.003217] serial 00:01: activated
-> [  107.076779] nvme nvme0: 16/0/0 default/read/poll queues
-> [  107.123917] r8169 0000:07:00.0 enp7s0: Link is Down
-> [  107.208945] PM: resume devices took 0.241 seconds
-> [  107.214746] pcieport 0000:00:1c.0: PCI bridge to [bus 06]
-> [  107.220274] pcieport 0000:00:1c.0:   bridge window [mem 0x43700000-0x437fffff]
-> [  107.227538] OOM killer enabled.
-> [  107.230710] Restarting tasks ...
-
-... remember this one ...
-
-> [  107.231803] pcieport 0000:00:1c.2: PCI bridge to [bus 07]
-> [  107.236474] done.
-> [  107.240599] pcieport 0000:00:1c.2:   bridge window [io  0x4000-0x4fff]
-> [  107.242574] random: crng reseeded on system resumption
-> [  107.249119] pcieport 0000:00:1c.2:   bridge window [mem 0x43600000-0x436fffff]
-> [  107.249405] pcieport 0000:00:1c.6: PCI bridge to [bus 08]
-> [  107.259714] PM: suspend exit
-> [  107.261623] pcieport 0000:00:1c.6:   bridge window [io  0x3000-0x3fff]
-> [  107.276554] pcieport 0000:00:1c.6:   bridge window [mem 0x43500000-0x435fffff]
-> [  107.283849] pcieport 0000:00:1c.6:   bridge window [mem 0x70900000-0x709fffff 64bit pref]
-> [  107.293567] ata7: SATA link down (SStatus 4 SControl 300)
-> [  107.304150] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> [  107.310975] ata6: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> [  107.319173] ata5.00: configured for UDMA/133
-> [  107.324620] ata5.00: Enabling discard_zeroes_data
-> [  107.398370] ata6.00: configured for UDMA/133
-
-started bringing back up devices, but suspend comes back again.
-
-> [  108.563229] PM: suspend entry (deep)
-> [  108.573610] Filesystems sync: 0.006 seconds
-> [  108.580617] Freezing user space processes
-> [  108.586774] Freezing user space processes completed (elapsed 0.002 seconds)
-> [  108.593793] OOM killer disabled.
-> [  108.597055] Freezing remaining freezable tasks
-> [  108.603246] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
-
-which freezes the tasks, again.
-
-> [  108.621515] sd 7:0:0:0: [sdc] Synchronizing SCSI cache
-> [  108.621522] sd 5:0:0:0: [sdb] Synchronizing SCSI cache
-> [  108.622018] serial 00:01: disabled
-> [  108.635420] sd 4:0:0:0: [sda] Synchronizing SCSI cache
-> [  108.640747] sd 4:0:0:0: [sda] Stopping disk
-> [  108.644148] sd 5:0:0:0: [sdb] Stopping disk
-> [  108.983487] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> [  108.991923] ata8.00: configured for UDMA/133
-> [  108.996423] sd 7:0:0:0: [sdc] Stopping disk
-> [  109.973722] PM: suspend devices took 1.363 seconds
-
-And suspend finishes, followed by resume starting.
-
-> [  110.721600] serial 00:01: activated
-> [  110.802094] nvme nvme0: 16/0/0 default/read/poll queues
-> [  110.873036] r8169 0000:07:00.0 enp7s0: Link is Down
-> [  111.032278] ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> [  111.038583] ata7: SATA link down (SStatus 4 SControl 300)
-> [  111.044065] ata6: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> [  111.051326] ata5.00: configured for UDMA/133
-> [  111.056118] ata5.00: Enabling discard_zeroes_data
-> [  111.131795] ata6.00: configured for UDMA/133
-> [  112.713764] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> [  112.724250] ata8.00: configured for UDMA/133
-
-Resume restarted the devices, but there is no "Restarting tasks" ! So the user
-tasks are frozen, hence the "hang". There are no user processes to run, so no
-coming back to the shell.
-
-So even without the libata patches fixing the resume mess, this issue does not
-look like a libata issue. I think your bisect hitting the no_start_on_resume
-patch is simply because that patch changes the timing of things and makes it
-easier to hit this issue.
-
-Adding PM folks because I am out of my depth on this one...
-
-PM folks,
-
-Rodrigo hit an issue doing suspend+resume cycles in a loop, with the resume
-triggered a very short time (wakealarm) after starting resume. This ends up
-with a hang. I could recreate the same in qemu. I cannot get wakealarm to work
-for some reason, but I have a virtio device not supporting suspend which
-triggers the resume in the middle of suspend. And repeating "systemctl suspend"
-again and again, I end up with a similar hang:
-
-[   98.455929] PM: suspend entry (s2idle)
-[   98.466622] Filesystems sync: 0.008 seconds
-[   98.473871] Freezing user space processes
-[   98.476372] Freezing user space processes completed (elapsed 0.001 seconds)
-[   98.478197] OOM killer disabled.
-[   98.479199] Freezing remaining freezable tasks
-[   98.481887] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
-
-suspend starts, freezineg the tasks.
-
-[   98.493890] virtio-fs: suspend/resume not yet supported
-[   98.493971] sd 2:0:0:0: [sdc] Synchronizing SCSI cache
-[   98.499658] virtio-pci 0000:00:05.0: PM: pci_pm_suspend():
-virtio_pci_freeze+0x0/0x50 returns -95
-[   98.504241] virtio-pci 0000:00:05.0: PM: dpm_run_callback():
-pci_pm_suspend+0x0/0x230 returns -95
-[   98.507762] virtio-pci 0000:00:05.0: PM: failed to suspend async: error -95
-
-Failure of the virtio device suspend which will trigger pm_recover+resume.
-
-[   98.509451] ata3.00: Entering standby power mode
-[   98.511197] sd 1:0:0:0: [sdb] Synchronizing SCSI cache
-[   98.512917] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-
-Here, the scsi devices already suspended (asynchronously) do their thing.
-
-[   98.515562] PM: Some devices failed to suspend, or early wake event detected
-[   98.521098] virtio_blk virtio3: 4/0/0 default/read/poll queues
-[   98.548229] OOM killer enabled.
-[   98.549338] Restarting tasks ... done.
-
-The tasks are restarted due to the suspend error above.
-
-[   98.551734] random: crng reseeded on system resumption
-[   98.559697] PM: suspend exit
-[   98.561038] PM: suspend entry (s2idle)
-[   98.566692] Filesystems sync: 0.004 seconds
-[   98.574461] Freezing user space processes
-[   98.577265] Freezing user space processes completed (elapsed 0.001 seconds)
-[   98.579351] OOM killer disabled.
-[   98.580341] Freezing remaining freezable tasks
-[   98.583109] Freezing remaining freezable tasks completed (elapsed 0.001 seconds)
-
-but here, for whatever reason, the tasks are suspended again despite the fact
-that we should be resuming. After this, I only see the scsi&ata devices
-finishing suspend and then being resumed all normally. But no coming back to
-the shell. It is frozen...
-
-Any idea ?
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 02503e903e4a8..5c9196cd2c738 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -95,6 +95,8 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ #ifdef CONFIG_PM
+ static int ahci_pci_device_runtime_suspend(struct device *dev);
+ static int ahci_pci_device_runtime_resume(struct device *dev);
++static int ahci_intel_port_suspend(struct ata_port *ap, pm_message_t mesg);
++static int ahci_intel_port_resume(struct ata_port *ap);
+ #ifdef CONFIG_PM_SLEEP
+ static int ahci_pci_device_suspend(struct device *dev);
+ static int ahci_pci_device_resume(struct device *dev);
+@@ -1025,6 +1027,30 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
+ 		ap->link.flags |= ATA_LFLAG_NO_SRST | ATA_LFLAG_ASSUME_ATA;
+ 	}
+ }
++/*
++ * Intel TGL/ADL workaround, when suspending, put port into LPM,
++ * recover to max power after resuming.
++ */
++static void ahci_intel_ahci_workaround(struct ata_host *host)
++{
++	struct pci_dev *pdev = to_pci_dev(host->dev);
++	int i;
++	static const struct pci_device_id ids[] = {
++		{ PCI_VDEVICE(INTEL, 0xa0d3)}, /* Tiger Lake UP{3,4} AHCI */
++		{ PCI_VDEVICE(INTEL, 0x7ae2)}, /* Alder Lake AHCI*/
++		{}
++	};
++
++	dev_info(&pdev->dev, "enabling Intel AHCI workaround\n");
++
++	if (pci_match_id(ids, pdev)) {
++		for (i = 0; i < host->n_ports; i++) {
++			struct ata_port *ap = host->ports[i];
++
++			ap->flags |= ATA_LFLAG_NO_LPM_RECOVER;
++		}
++	}
++}
+ 
+ /*
+  * Macbook7,1 firmware forcibly disables MCP89 AHCI and changes PCI ID when
+@@ -1905,6 +1931,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* apply workaround for ASUS P5W DH Deluxe mainboard */
+ 	ahci_p5wdh_workaround(host);
+ 
++	/* apply workaround for Intel AHCI */
++	ahci_intel_ahci_workaround(host);
++
+ 	/* apply gtf filter quirk */
+ 	ahci_gtf_filter_workaround(host);
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 159ba6ba19ebb..de29e50843f99 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -4000,6 +4000,11 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
+ 	int rc = 0;
+ 	struct ata_device *dev;
+ 
++	ata_for_each_dev(dev, &ap->link, ENABLED) {
++		ata_eh_set_lpm(&ap->link, ATA_LPM_MED_POWER_WITH_DIPM, &dev);
++	}
++
++
+ 	/* are we suspending? */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 	if (!(ap->pflags & ATA_PFLAG_PM_PENDING) ||
+@@ -4087,6 +4092,9 @@ static void ata_eh_handle_port_resume(struct ata_port *ap)
+ 	if (ap->ops->port_resume)
+ 		ap->ops->port_resume(ap);
+ 
++	ata_for_each_dev(dev, &ap->link, ENABLED) {
++		ata_eh_set_lpm(&ap->link, ap->target_lpm_policy, &dev);
++	}
+ 	/* tell ACPI that we're resuming */
+ 	ata_acpi_on_resume(ap);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 52d58b13e5eee..e720fed6dbd7f 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -147,6 +147,7 @@ enum {
+ 	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
+ 	ATA_LFLAG_CHANGED	= (1 << 10), /* LPM state changed on this link */
+ 	ATA_LFLAG_NO_DEBOUNCE_DELAY = (1 << 11), /* no debounce delay on link resume */
++	ATA_LFLAG_NO_LPM_RECOVER = (1 << 12), /* disable LPM on this link */
+ 
+ 	/* struct ata_port flags */
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
 
