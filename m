@@ -2,114 +2,121 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC52EC83F29
-	for <linux-ide@archiver.kernel.org>; Thu, 31 Aug 2023 03:09:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A11A5C83F10
+	for <linux-ide@archiver.kernel.org>; Thu, 31 Aug 2023 05:30:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236912AbjHaDJl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 30 Aug 2023 23:09:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57990 "EHLO
+        id S235726AbjHaFaJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 31 Aug 2023 01:30:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229693AbjHaDJk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 30 Aug 2023 23:09:40 -0400
-Received: from mail-oo1-xc30.google.com (mail-oo1-xc30.google.com [IPv6:2607:f8b0:4864:20::c30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0A30CC2;
-        Wed, 30 Aug 2023 20:09:37 -0700 (PDT)
-Received: by mail-oo1-xc30.google.com with SMTP id 006d021491bc7-5734b893a11so284862eaf.1;
-        Wed, 30 Aug 2023 20:09:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693451377; x=1694056177; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=9RXlB9MIgueAa9gzs3f/OTKyoQLTxJwUBTOdXek0lCk=;
-        b=BlMK6Pe0cdUsUIwcBwJjKV+W7Fupm8mhQx+YtcGGQFYJwyPw1mF0ekOKNhqA0HhfRZ
-         7NAI/f8GTUCEqDdB1jtmS0l43qJZ7hDDzh/0Pqy74e2/LhZM3I+9J+Ov2mouuwNjebr9
-         40M/FoIk3urrrlFjLhlZA4A3foiJ9dhDPz7pDO5nSDoPskP8Bvl3FfBx/sCrt98bVur1
-         qQ/VQ15r3lMusVfiKibD+lExihbCIfek9kmp2xI80mt8Q75PwgS5w0lvMQR/Bc9zfobJ
-         us0NHSTn2hWveyeG23WIBHQQz0IK2gko9eBNy7ubaRdnn1qTdJwl1Dr1SRjttmOKJEZ5
-         8GTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693451377; x=1694056177;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=9RXlB9MIgueAa9gzs3f/OTKyoQLTxJwUBTOdXek0lCk=;
-        b=ZApkyUBhKRGRdnpczvVJdualb0ptNIqVvZXJEuLGURcRhCU40KhaNid3zGz4zVmFYv
-         0xcNDT/c6/1/mLzFWPWd87lCbV6/8g1eqJyw4nF5Sx4yo1a7linEIqydxEOjq5Lvgjud
-         7umuYDBQo26BP6J7Sv0MWTpct7r3wTKL/81T9f+AnvMObkR9nl5xxcJ2UyhhDQ8xykgq
-         nNgvZJEEN5jecV0t9BylXIJGkTVqIkVAyPkFN7G7A0aLoDpE1BzSR+MbdOjh6VHeLcvN
-         ObrTL5D2X3oLHr4LpyFtEHQRwOU9qxvpB+quuN6hS0lTBdek/n/TbGnMj0WtiN5adjla
-         4gsQ==
-X-Gm-Message-State: AOJu0YyBo2wexQx8uSNXXpSqEUPiW1iv81+/HHzCenu/4C9K/p07OypR
-        ga0jZH02zhZEwjpU51LtyfRMI/FU8cwAag==
-X-Google-Smtp-Source: AGHT+IHihW/Qoho00/zN7hAUukH8tbuDBfaQFXuoK0uJ9RpVZhoXnelnCOZDNnYfCHvxt1w5G3QyRQ==
-X-Received: by 2002:a05:6358:9308:b0:139:c75f:63eb with SMTP id x8-20020a056358930800b00139c75f63ebmr3420297rwa.21.1693451377048;
-        Wed, 30 Aug 2023 20:09:37 -0700 (PDT)
-Received: from sw.. (220-128-98-63.hinet-ip.hinet.net. [220.128.98.63])
-        by smtp.gmail.com with ESMTPSA id x7-20020a63b207000000b00563df2ba23bsm324514pge.50.2023.08.30.20.09.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Aug 2023 20:09:36 -0700 (PDT)
-From:   Szuying Chen <chensiying21@gmail.com>
-X-Google-Original-From: Szuying Chen <Chloe_Chen@asmedia.com.tw>
-To:     Niklas.Cassel@wdc.com, dlemoal@kernel.org,
+        with ESMTP id S229924AbjHaFaI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 31 Aug 2023 01:30:08 -0400
+X-Greylist: delayed 475 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 30 Aug 2023 22:30:02 PDT
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1DEFE8;
+        Wed, 30 Aug 2023 22:30:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 286FBCE1FDF;
+        Thu, 31 Aug 2023 05:22:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AA7DC433C7;
+        Thu, 31 Aug 2023 05:22:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693459322;
+        bh=Weo6gLzi6uW4TlpJXEw9lfsi5qsrk+jOI56FqbLKSy0=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=MpnK8VubwrNwY5Tx3sd3EsZ71IgksGJQo73lhm3DT+/tmw2t6Z/Pn5akp5PSvcV42
+         l7V7JrfrYwhJc/+fT/TP2aNqG5sxAW0+VFtP6YLTK2vkd+qk7W056vHQ6E+u4iI2an
+         T+MrldS2RqwCDDQuNXMtmW6MxaXVcEyZWFj34a4Mf6eN/veKdlxQNpAeoM3bUy+IqM
+         EvImLl1amfv0KQLmHegxtHQgt5FHmerY1Br8jk2HcD6CPKFIPkUHdJERHZ2IIil1mY
+         zpK1rPO20ojD7W04m3gZ97FQIlTZyOq56XTIkWLqiCXooOkh1w2q/s8o4u/q6oylMp
+         EamvtSBQsOSOg==
+Message-ID: <2876b3bf-14e4-3570-064f-4d5f9b00314b@kernel.org>
+Date:   Thu, 31 Aug 2023 14:22:00 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ahci: libahci: clear pending interrupt status
+Content-Language: en-US
+To:     Szuying Chen <chensiying21@gmail.com>, Niklas.Cassel@wdc.com,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Jesse1_Chang@asmedia.com.tw, Richard_Hsu@asmedia.com.tw,
         Chloe_Chen@asmedia.com.tw
-Subject: [PATCH] ahci: libahci: clear pending interrupt status
-Date:   Thu, 31 Aug 2023 11:09:24 +0800
-Message-Id: <20230831030924.21960-1-Chloe_Chen@asmedia.com.tw>
-X-Mailer: git-send-email 2.39.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230831030924.21960-1-Chloe_Chen@asmedia.com.tw>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230831030924.21960-1-Chloe_Chen@asmedia.com.tw>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This patch adds the function to clear pending interrupt before COMRESET.
-It follows the  AHCI1.3.1 - section6.2.2.2 specification.
+On 8/31/23 12:09, Szuying Chen wrote:
+> This patch adds the function to clear pending interrupt before COMRESET.
+> It follows the  AHCI1.3.1 - section6.2.2.2 specification.
 
-Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
----
- drivers/ata/libahci.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Please explain here the relevant part of that section.
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 06aec35f88f2..1ae788251a6c 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1584,6 +1584,23 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
- 	return rc;
- }
+> 
+> Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
+> ---
+>  drivers/ata/libahci.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+> 
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 06aec35f88f2..1ae788251a6c 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1584,6 +1584,23 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
+>  	return rc;
+>  }
+> 
+> +static void PortClearPendingInterrupt(struct ata_port *ap)
 
-+static void PortClearPendingInterrupt(struct ata_port *ap)
-+{
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	u32 tmp;
-+
-+	/* clear port SERR */
-+	tmp = readl(port_mmio + PORT_SCR_ERR);
-+	writel(tmp, port_mmio + PORT_SCR_ERR);
-+
-+	/* clear port IRQ */
-+	tmp = readl(port_mmio + PORT_IRQ_STAT);
-+	writel(tmp, port_mmio + PORT_IRQ_STAT);
-+
-+	writel(1 << ap->port_no, hpriv->mmio + HOST_IRQ_STAT);
-+}
-+
- int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
- 		      unsigned long deadline, bool *online)
- {
-@@ -1602,6 +1619,9 @@ int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
- 	tf.status = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+No CaMeLCaSe please ! Call this ahci_port_clear_peinding_irq().
 
-+	/* clear pending Interrupt */
-+	PortClearPendingInterrupt(ap);
-+
- 	rc = sata_link_hardreset(link, timing, deadline, online,
- 				 ahci_check_ready);
+> +{
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	void __iomem *port_mmio = ahci_port_base(ap);
+> +	u32 tmp;
+> +
+> +	/* clear port SERR */
+> +	tmp = readl(port_mmio + PORT_SCR_ERR);
+> +	writel(tmp, port_mmio + PORT_SCR_ERR);
+> +
+> +	/* clear port IRQ */
+> +	tmp = readl(port_mmio + PORT_IRQ_STAT);
+> +	writel(tmp, port_mmio + PORT_IRQ_STAT);
+> +
+> +	writel(1 << ap->port_no, hpriv->mmio + HOST_IRQ_STAT);
 
---
-2.39.2
+This code is nearly identical to what ahci_port_init() does. So better make it
+common: keep the debug messages that are in ahci_port_init() and modify that
+function to call this new helper.
+
+> +}
+> +
+>  int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
+>  		      unsigned long deadline, bool *online)
+>  {
+> @@ -1602,6 +1619,9 @@ int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
+>  	tf.status = ATA_BUSY;
+>  	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+> 
+> +	/* clear pending Interrupt */
+> +	PortClearPendingInterrupt(ap);
+> +
+>  	rc = sata_link_hardreset(link, timing, deadline, online,
+>  				 ahci_check_ready);
+> 
+> --
+> 2.39.2
+> 
+
+-- 
+Damien Le Moal
+Western Digital Research
 
