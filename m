@@ -2,92 +2,97 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2256ACA0FF6
-	for <linux-ide@archiver.kernel.org>; Sat,  2 Sep 2023 03:09:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A67CA0FE9
+	for <linux-ide@archiver.kernel.org>; Sat,  2 Sep 2023 03:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229437AbjIBDJ6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 1 Sep 2023 23:09:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42566 "EHLO
+        id S229793AbjIBDLa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 1 Sep 2023 23:11:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229780AbjIBDJ5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Sep 2023 23:09:57 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31A4410FF
-        for <linux-ide@vger.kernel.org>; Fri,  1 Sep 2023 20:09:54 -0700 (PDT)
+        with ESMTP id S229780AbjIBDL3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Sep 2023 23:11:29 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 146071702;
+        Fri,  1 Sep 2023 20:11:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DE43FB826C3
-        for <linux-ide@vger.kernel.org>; Sat,  2 Sep 2023 03:09:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E6BBC433C8;
-        Sat,  2 Sep 2023 03:09:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9F56B617FF;
+        Sat,  2 Sep 2023 03:11:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FF57C433C7;
+        Sat,  2 Sep 2023 03:11:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693624191;
-        bh=i1PWj03a5yiyLSNJB03YBgjwficd9HTWzOZklfPNjVE=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=inDZf77mqyQYZSuPIF/f/Mss2qZ5HXH1dxtbf0xHKHAl2iZXrfpNWO8ZPWDBiGRr+
-         UykTc1RDp6aKITdYlceFGOoSI8bzmQbtkiz0CSU+eHLZBSMhjfMPRn0h3AqC1a6lq/
-         DPyNmvzuHAaJUcBEoifkxoxblqHlp8X3Me3z5Y6bZtnijBMtyzJsX6UKCKqHybR4X0
-         JkG2iK6rPFCx3u9ahWDhB2eZfb6X5TeP1Tp4AoEzDaC26ajHzzqGgNu53YZnmPb0mP
-         d98UuEwTf8NJz83mbUYsEL9Wm+OiphTTYWhilveD34RXiTKtABQYRoFOTezQz/9FLl
-         lIZ51pC3uKvGQ==
-Message-ID: <a8b37277-9c20-d9c2-5e9a-4374f9222cd0@kernel.org>
-Date:   Sat, 2 Sep 2023 12:09:50 +0900
+        s=k20201202; t=1693624285;
+        bh=X28DUTrrakziC1R8ljW6NezQrkXnBXwDTB+t/6P2T1I=;
+        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+        b=Pop7jan0dxtwYaJoigLcuWNCYAOHFkT90DxtQN46LjD44g4yeryuIiVIU/LzufWsC
+         ZzEbRVMNg6xVB5cOvxePcJEaqEFgKFpzCew680OyJdYSjVjJRXzmDEqkfWNXdBRdBB
+         uyWj+wEH/lFdTwgnjh5xAaMYreKT6IiwSliEvGUNOIVDDZ+h2CZmQe2pLr6K20cbuy
+         vYTL+nyLITV1i6SjfYdrC6YNIMUOcjUmuYRtnmDqtVVa6sfSRTbiQFJTZy2fLzuv3H
+         Em2OCWThwY7q1vlm7Qe8gXb/Ms++KfVgppX3wrygYt3lmRqM4KmFmZaVsvKSp0Z+5G
+         yrg4cFACEC92A==
+Message-ID: <b3bb71ed-2303-d715-2efe-4fac8e6048d9@kernel.org>
+Date:   Sat, 2 Sep 2023 12:11:23 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH v2] ata: ahci: Add Elkhart Lake AHCI controller
+Subject: Re: [PATCH v3] ata: Disable NCQ_TRIM on Micron 1100 drives
 Content-Language: en-US
-To:     Werner Fischer <devlists@wefi.net>, linux-ide@vger.kernel.org
-References: <4cbde7d33f5b73b33f798b56b6e3cd3ce3764647.camel@wefi.net>
 From:   Damien Le Moal <dlemoal@kernel.org>
+To:     Pawel Zmarzly <pzmarzly@meta.com>, Niklas.Cassel@wdc.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <ZPIyxg+iSWa+W93Q@x1-carbon>
+ <20230901200220.3891806-1-pzmarzly@meta.com>
+ <91dc19a5-ea7f-1abf-1c35-5a9582036b83@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <4cbde7d33f5b73b33f798b56b6e3cd3ce3764647.camel@wefi.net>
+In-Reply-To: <91dc19a5-ea7f-1abf-1c35-5a9582036b83@kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/29/23 20:33, Werner Fischer wrote:
-> Elkhart Lake is the successor of Apollo Lake and Gemini Lake. These
-> CPUs and their PCHs are used in mobile and embedded environments.
+On 9/2/23 11:54, Damien Le Moal wrote:
+> On 9/2/23 05:02, Pawel Zmarzly wrote:
+>> Micron 1100 drives lock up when encountering queued TRIM command.
+>> It is a quite old hardware series, for past years we have been
+>> running our machines with these drives using
+>> libata.force=noncqtrim.
+>>
+>> Signed-off-by: Pawel Zmarzly <pzmarzly@meta.com>
 > 
-> With this patch I suggest that Elkhart Lake SATA controllers [1] should
-> use the default LPM policy for mobile chipsets.
-> The disadvantage of missing hot-plug support with this setting should
-> not be an issue, as those CPUs are used in embedded environments and
-> not in servers with hot-plug backplanes.
-> 
-> We discovered that the Elkhart Lake SATA controllers have been missing
-> in ahci.c after a customer reported the throttling of his SATA SSD
-> after a short period of higher I/O. We determined the high temperature
-> of the SSD controller in idle mode as the root cause for that.
-> 
-> Depending on the used SSD, we have seen up to 1.8 Watt lower system
-> idle power usage and up to 30°C lower SSD controller temperatures in
-> our tests, when we set med_power_with_dipm manually. I have provided a
-> table showing seven different SATA SSDs from ATP, Intel/Solidigm and
-> Samsung [2].
-> 
-> Intel lists a total of 3 SATA controller IDs (4B60, 4B62, 4B63) in [1]
-> for those mobile PCHs.
-> This commit just adds 0x4b63 as I do not have test systems with 0x4b60
-> and 0x4b62 SATA controllers.
-> I have tested this patch with a system which uses 0x4b63 as SATA
-> controller.
-> 
-> [1] https://sata-io.org/product/8803
-> [2] https://www.thomas-krenn.com/en/wiki/SATA_Link_Power_Management#Example_LES_v4
-> 
-> Signed-off-by: Werner Fischer <devlists@wefi.net>
-> Cc: stable@vger.kernel.org
+> This does not apply cleanly on the fo-6.6 branch. Can you rebase your patch
+> please and make sure it applies to libata tree for-6.6 branch ?
 
-Applied to for-6.6. Thanks !
+Don't bother. I applied the patch manually with some minor tweaks.
+It is now queued for 6.6. Thanks.
 
-Note: when sending patches, please also add the maintainer(s) to your email
-"to:" list.
+> 
+>> ---
+>> V1 -> V2: Fixed formatting.
+>> V2 -> V3: Added missing Signed off line. Sorry, this is my
+>> first time upstreaming.
+>>
+>>  drivers/ata/libata-core.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 175b2a9dc000..116f5fd6e3f7 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -4564,6 +4564,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>>  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+>>  	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+>>  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+>> +	{ "Micron_1100_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+>> +						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+>>
+>>  	/* devices that don't properly handle TRIM commands */
+>>  	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
+>> --
+>> 2.39.3
+> 
 
 -- 
 Damien Le Moal
