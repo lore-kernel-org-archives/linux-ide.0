@@ -2,98 +2,181 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E55BC71153
-	for <linux-ide@archiver.kernel.org>; Mon,  4 Sep 2023 10:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E519C71153
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Sep 2023 11:46:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233731AbjIDKzt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 Sep 2023 06:55:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51800 "EHLO
+        id S230395AbjIDLqC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 Sep 2023 07:46:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233259AbjIDKzr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2023 06:55:47 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1320099;
-        Mon,  4 Sep 2023 03:55:43 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1qd7F6-0006Xs-JL; Mon, 04 Sep 2023 12:55:40 +0200
-Message-ID: <fec02836-b3d4-6ec3-d0a5-cc5172095837@leemhuis.info>
-Date:   Mon, 4 Sep 2023 12:55:39 +0200
+        with ESMTP id S232492AbjIDLqC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2023 07:46:02 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7836F1AB;
+        Mon,  4 Sep 2023 04:45:58 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4RfRfT6zsNz4f3n5t;
+        Mon,  4 Sep 2023 19:45:53 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgA3x6lvw_VkE_JgCQ--.36724S3;
+        Mon, 04 Sep 2023 19:45:55 +0800 (CST)
+Message-ID: <5d37add3-41ce-e2af-b45a-d701eaf36a6c@huaweicloud.com>
+Date:   Mon, 4 Sep 2023 19:45:51 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] [V2] ata: libata: add workaround to flip LPM during
- suspend/resume
-Content-Language: en-US, de-DE
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Koba Ko <koba.ko@canonical.com>
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] scsi: ata: Fix a race condition between scsi error
+ handler and ahci interrupt
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "dlemoal@kernel.org" <dlemoal@kernel.org>,
         "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linux kernel regressions list <regressions@lists.linux.dev>
-References: <20230901023457.8655-1-koba.ko@canonical.com>
- <ZPJGGlAQYSXguJEk@x1-carbon>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <ZPJGGlAQYSXguJEk@x1-carbon>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1693824943;54886c2f;
-X-HE-SMSGID: 1qd7F6-0006Xs-JL
+        "yukuai3@huawei.com" <yukuai3@huawei.com>,
+        "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
+        "houtao1@huawei.com" <houtao1@huawei.com>,
+        "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <20230810014848.2148316-1-linan666@huaweicloud.com>
+ <ZONr0f26IT/QKsSu@x1-carbon>
+ <f33816ef-ce26-1501-99b6-c75f91c6d8f5@huaweicloud.com>
+ <ZOSONbLwc6RtQnS0@x1-carbon>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <ZOSONbLwc6RtQnS0@x1-carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgA3x6lvw_VkE_JgCQ--.36724S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJFWfKryUJr4UJry5Kr45Jrb_yoW5ZFW5pF
+        WkJayqkr1DXr40yr4vqa1Fva4Fqan7Kry7ZryDW3s7ZF1qg34rtr4kCFZ8WFnagw1kGw4a
+        vw4jgr9rAF4UXrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
+        5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67
+        AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07Al
+        zVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUFf
+        HjUUUUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 01.09.23 22:14, Niklas Cassel wrote:
-> On Fri, Sep 01, 2023 at 10:34:57AM +0800, Koba Ko wrote:
->> Due to TigerLake/Adler Lake AHCI controller's LPM regression,
->> can't apply LPM on TigerLake/AdlerLake AHCI controller.
+
+
+在 2023/8/22 18:30, Niklas Cassel 写道:
+> On Tue, Aug 22, 2023 at 05:20:33PM +0800, Li Nan wrote:
+>> Thanks for your reply, Niklas.
 >>
->> Add a workaround to flip LPM during suspend/resume.
->> When suspneding,
-
-Side note: s/suspneding/suspending/
-
->> apply LPM on TigerLake/AdlerLake AHCI.
->> Restore it to target_lpm_policy after resuming.
+>> 在 2023/8/21 21:51, Niklas Cassel 写道:
+>>> On Thu, Aug 10, 2023 at 09:48:48AM +0800, linan666@huaweicloud.com wrote:
 >>
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217775
->> Signed-off-by: Koba Ko <koba.ko@canonical.com>
->> ---
+>> [snip]
+>>
+>>>
+>>> Hello Li Nan,
+>>>
+>>> I do not understand why the code in:
+>>> https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L722-L731
+>>>
+>>> does not kick in, and repeats EH.
+>>>
+>>>
+>>> EH_PENDING is cleared before ->error_handler() is called:
+>>> https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L697
+>>>
+>>> So ahci_error_intr() from the second error interrupt, which is called after
+>>> thawing the port, should have called ata_std_sched_eh(), which calls
+>>> ata_eh_set_pending(), which should have set EH_PENDING:
+>>> https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L884
+>>>
+>>>
+>>>
+>>> My only guess is that after thawing the port:
+>>> https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L2807
+>>>
+>>> The second error irq comes, and sets EH_PENDING,
+>>> but then this silly code might clear it:
+>>> https://github.com/torvalds/linux/blob/v6.5-rc7/drivers/ata/libata-eh.c#L2825-L2837
+>>>
+>>
+>> Yeah, I think so.
+>>
+>>> I think the best way would be if we could improve this "spurious error
+>>> condition check"... because if this is indeed the code that clears EH_PENDING
+>>> for you, then this code basically makes the "goto repeat" code in
+>>> ata_scsi_port_error_handler() useless...
+>>>
+>>>
+>>> An alternative to improving the "spurious error condition check" might be for
+>>> you to try something like:
+>>>
+>>
+>> We have used this solution before, but it will case WARN_ON in
+>> ata_eh_finish() as below:
+>>
+>>    WARNING: CPU: 1 PID: 118 at ../drivers/ata/libata-eh.c:4016
+>> ata_eh_finish+0x15a/0x170
 > 
-> I understand that it is very frustrating to not be able to go to the
-> deepest C-state.
+> Ok.
 > 
-> If you want LPM, we should add the PCI device and vendor id as a
-> board_ahci_low_power entry.
+> How about if you simply move the WARN_ON to ata_scsi_port_error_handler()
+> as well:
 > 
-> I am awake that a lot of people reported regressions when that entry was
-> added, and that is was thus reverted.
-> [...]
-> If you do own one of those systems, isn't it better if we instead:
-> 1) re-introduce the TigerLake AHCI board_ahci_low_power entry
-> 2) debug and fix the root cause of the regressions on TigerLake laptops
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 35e03679b0bf..5be2fc651131 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -741,6 +741,12 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+>                   */
+>                  ap->ops->end_eh(ap);
+>   
+> +               if (!ap->scsi_host->host_eh_scheduled) {
+> +                       /* make sure nr_active_links is zero after EH */
+> +                       WARN_ON(ap->nr_active_links);
+> +                       ap->nr_active_links = 0;
+> +               }
+> +
+>                  spin_unlock_irqrestore(ap->lock, flags);
+>                  ata_eh_release(ap);
+>          } else {
+> @@ -962,7 +968,7 @@ void ata_std_end_eh(struct ata_port *ap)
+>   {
+>          struct Scsi_Host *host = ap->scsi_host;
+>   
+> -       host->host_eh_scheduled = 0;
+> +       host->host_eh_scheduled--;
+>   }
+>   EXPORT_SYMBOL(ata_std_end_eh);
+>   
+> @@ -3948,10 +3954,6 @@ void ata_eh_finish(struct ata_port *ap)
+>                          }
+>                  }
+>          }
+> -
+> -       /* make sure nr_active_links is zero after EH */
+> -       WARN_ON(ap->nr_active_links);
+> -       ap->nr_active_links = 0;
+>   }
+>   
+>   /**
+> 
+> 
+> 
+> Kind regards,
+> Niklas
 
-Three stupid questions from the cheap seats, as I'm not involved in this
-at all (the questions thus might not help at all or even confuse things;
-so feel free to ignore or tell me). But it's one of those tricky
-situations I more than once encountered as regression tracker, so maybe
-sharing a few thoughts from my point might help to lessen the problem
-for some users:
+We have tested this patch and it can fix the bug. Thank you so much. :)
 
-- Was something done so to free ourselves from this tricky situation in
-the future? E.g. something like "for any future Intel controllers,
-enable LPM by default (as then it's not a regression if things don't
-work, which might be a better base to get down to the root of the problem)"
+Feel free to add:
 
-- is the LPM working fine on the Laptops affected by
-https://bugzilla.kernel.org/show_bug.cgi?id=217114 with the
-pre-installed OS (e.g. Windows)
+Tested-by: Li Nan <linan122@huawei.com>
 
-- is switching to LPM maybe safe when there is nothing connected to that
-controller (which I guess might be the case on some of those Laptops?)
-In that case we might be able to improve the sitaution for some users.
+-- 
+Thanks,
+Nan
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
