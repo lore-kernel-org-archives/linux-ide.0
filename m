@@ -2,99 +2,98 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A67CA0FE9
-	for <linux-ide@archiver.kernel.org>; Sat,  2 Sep 2023 03:11:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E55BC71153
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Sep 2023 10:55:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229793AbjIBDLa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 1 Sep 2023 23:11:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56460 "EHLO
+        id S233731AbjIDKzt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 Sep 2023 06:55:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229780AbjIBDL3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Sep 2023 23:11:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 146071702;
-        Fri,  1 Sep 2023 20:11:26 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9F56B617FF;
-        Sat,  2 Sep 2023 03:11:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FF57C433C7;
-        Sat,  2 Sep 2023 03:11:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693624285;
-        bh=X28DUTrrakziC1R8ljW6NezQrkXnBXwDTB+t/6P2T1I=;
-        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-        b=Pop7jan0dxtwYaJoigLcuWNCYAOHFkT90DxtQN46LjD44g4yeryuIiVIU/LzufWsC
-         ZzEbRVMNg6xVB5cOvxePcJEaqEFgKFpzCew680OyJdYSjVjJRXzmDEqkfWNXdBRdBB
-         uyWj+wEH/lFdTwgnjh5xAaMYreKT6IiwSliEvGUNOIVDDZ+h2CZmQe2pLr6K20cbuy
-         vYTL+nyLITV1i6SjfYdrC6YNIMUOcjUmuYRtnmDqtVVa6sfSRTbiQFJTZy2fLzuv3H
-         Em2OCWThwY7q1vlm7Qe8gXb/Ms++KfVgppX3wrygYt3lmRqM4KmFmZaVsvKSp0Z+5G
-         yrg4cFACEC92A==
-Message-ID: <b3bb71ed-2303-d715-2efe-4fac8e6048d9@kernel.org>
-Date:   Sat, 2 Sep 2023 12:11:23 +0900
+        with ESMTP id S233259AbjIDKzr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2023 06:55:47 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1320099;
+        Mon,  4 Sep 2023 03:55:43 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qd7F6-0006Xs-JL; Mon, 04 Sep 2023 12:55:40 +0200
+Message-ID: <fec02836-b3d4-6ec3-d0a5-cc5172095837@leemhuis.info>
+Date:   Mon, 4 Sep 2023 12:55:39 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v3] ata: Disable NCQ_TRIM on Micron 1100 drives
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     Pawel Zmarzly <pzmarzly@meta.com>, Niklas.Cassel@wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <ZPIyxg+iSWa+W93Q@x1-carbon>
- <20230901200220.3891806-1-pzmarzly@meta.com>
- <91dc19a5-ea7f-1abf-1c35-5a9582036b83@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <91dc19a5-ea7f-1abf-1c35-5a9582036b83@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] [V2] ata: libata: add workaround to flip LPM during
+ suspend/resume
+Content-Language: en-US, de-DE
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Koba Ko <koba.ko@canonical.com>
+Cc:     Damien Le Moal <dlemoal@kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linux kernel regressions list <regressions@lists.linux.dev>
+References: <20230901023457.8655-1-koba.ko@canonical.com>
+ <ZPJGGlAQYSXguJEk@x1-carbon>
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+In-Reply-To: <ZPJGGlAQYSXguJEk@x1-carbon>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1693824943;54886c2f;
+X-HE-SMSGID: 1qd7F6-0006Xs-JL
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/2/23 11:54, Damien Le Moal wrote:
-> On 9/2/23 05:02, Pawel Zmarzly wrote:
->> Micron 1100 drives lock up when encountering queued TRIM command.
->> It is a quite old hardware series, for past years we have been
->> running our machines with these drives using
->> libata.force=noncqtrim.
+On 01.09.23 22:14, Niklas Cassel wrote:
+> On Fri, Sep 01, 2023 at 10:34:57AM +0800, Koba Ko wrote:
+>> Due to TigerLake/Adler Lake AHCI controller's LPM regression,
+>> can't apply LPM on TigerLake/AdlerLake AHCI controller.
 >>
->> Signed-off-by: Pawel Zmarzly <pzmarzly@meta.com>
-> 
-> This does not apply cleanly on the fo-6.6 branch. Can you rebase your patch
-> please and make sure it applies to libata tree for-6.6 branch ?
+>> Add a workaround to flip LPM during suspend/resume.
+>> When suspneding,
 
-Don't bother. I applied the patch manually with some minor tweaks.
-It is now queued for 6.6. Thanks.
+Side note: s/suspneding/suspending/
 
-> 
+>> apply LPM on TigerLake/AdlerLake AHCI.
+>> Restore it to target_lpm_policy after resuming.
+>>
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217775
+>> Signed-off-by: Koba Ko <koba.ko@canonical.com>
 >> ---
->> V1 -> V2: Fixed formatting.
->> V2 -> V3: Added missing Signed off line. Sorry, this is my
->> first time upstreaming.
->>
->>  drivers/ata/libata-core.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 175b2a9dc000..116f5fd6e3f7 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -4564,6 +4564,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->>  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
->>  	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
->>  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
->> +	{ "Micron_1100_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
->> +						ATA_HORKAGE_ZERO_AFTER_TRIM, },
->>
->>  	/* devices that don't properly handle TRIM commands */
->>  	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
->> --
->> 2.39.3
 > 
+> I understand that it is very frustrating to not be able to go to the
+> deepest C-state.
+> 
+> If you want LPM, we should add the PCI device and vendor id as a
+> board_ahci_low_power entry.
+> 
+> I am awake that a lot of people reported regressions when that entry was
+> added, and that is was thus reverted.
+> [...]
+> If you do own one of those systems, isn't it better if we instead:
+> 1) re-introduce the TigerLake AHCI board_ahci_low_power entry
+> 2) debug and fix the root cause of the regressions on TigerLake laptops
 
--- 
-Damien Le Moal
-Western Digital Research
+Three stupid questions from the cheap seats, as I'm not involved in this
+at all (the questions thus might not help at all or even confuse things;
+so feel free to ignore or tell me). But it's one of those tricky
+situations I more than once encountered as regression tracker, so maybe
+sharing a few thoughts from my point might help to lessen the problem
+for some users:
 
+- Was something done so to free ourselves from this tricky situation in
+the future? E.g. something like "for any future Intel controllers,
+enable LPM by default (as then it's not a regression if things don't
+work, which might be a better base to get down to the root of the problem)"
+
+- is the LPM working fine on the Laptops affected by
+https://bugzilla.kernel.org/show_bug.cgi?id=217114 with the
+pre-installed OS (e.g. Windows)
+
+- is switching to LPM maybe safe when there is nothing connected to that
+controller (which I guess might be the case on some of those Laptops?)
+In that case we might be able to improve the sitaution for some users.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
