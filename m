@@ -2,63 +2,92 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E46BCA0FF8
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Sep 2023 16:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AAD8CA0FFE
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Sep 2023 16:20:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234289AbjIEQUm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:20:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50812 "EHLO
+        id S236967AbjIEQUp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:20:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354071AbjIEJeY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2023 05:34:24 -0400
-X-Greylist: delayed 4137 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 05 Sep 2023 02:34:21 PDT
-Received: from mail.equinoxrise.pl (mail.equinoxrise.pl [217.61.112.157])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 271B71A7
-        for <linux-ide@vger.kernel.org>; Tue,  5 Sep 2023 02:34:21 -0700 (PDT)
-Received: by mail.equinoxrise.pl (Postfix, from userid 1002)
-        id 080A282F19; Mon,  4 Sep 2023 09:40:58 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=equinoxrise.pl;
-        s=mail; t=1693813315;
-        bh=v6OgBfK5dN7P5dQ0wCu59rOfZaiqziJeLNblJ8dOcGI=;
-        h=Date:From:To:Subject:From;
-        b=DT60S4GucsVd+fTSNtw5oeU//IO9DLop0s25zDNDaXiVobxwwrloiFMQNU3Nu1qef
-         qzLB8vrAeofFr+q2VNjKlY5Z5IpZkf2sB3JZkV4DscnM1MaHofdXv2iFaEAzt+lJk1
-         fzmzbwnF5PKnNhK2rW85Z+0GEZf3zUjEl2qblPnR7kRpok+aIHnnNSE4VnItk1ST8B
-         zgu83GQA9GF+OQuBHG50qnILaxjCkUKxbTohokvSw+qOk9XgXEdLWGmnM5FwjWSY6t
-         veO/z41y2I7XY5MdIEBXmN46QgP+zt//5ZMsAId230ZWS7JnfVKA87Et02yH8jhlm+
-         mwbbBQP6kT+kg==
-Received: by mail.equinoxrise.pl for <linux-ide@vger.kernel.org>; Mon,  4 Sep 2023 07:40:34 GMT
-Message-ID: <20230904084500-0.1.7.qjp.0.dkub6ygl4p@equinoxrise.pl>
-Date:   Mon,  4 Sep 2023 07:40:34 GMT
-From:   "Mateusz Talaga" <mateusz.talaga@equinoxrise.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Prezentacja
-X-Mailer: mail.equinoxrise.pl
+        with ESMTP id S1350519AbjIEFEK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2023 01:04:10 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09A3CCC5;
+        Mon,  4 Sep 2023 22:04:06 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 15C2ACE1020;
+        Tue,  5 Sep 2023 05:04:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3746C433C7;
+        Tue,  5 Sep 2023 05:04:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693890242;
+        bh=rNZ6gSz952FnYbdOwNayc8WW+NGygaXz472YSAOluYk=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=b0GC0EYlTsTH7sHYMimcCh/EOaOHV4uGQ7vqQf/HuRw9Qulq+4xw75y80YOFRnkv9
+         b4LwteX6i6uFW4Fi/ztQKY0pa4fXglePRsstW5agm7HVr4h21wC+8G73P3d1omz09n
+         GGU1bpU3WQG8xLoTtxpVnQnHg6fx0QC3kZW9vs1ru7oUifErFtuAMkxJEKXZ7d4ht6
+         sryxO7lp4qym/OQ1QPl3o9iWxAJOcuRmQROuIxNSbTxRonsykbGilksIMBUfibE0jK
+         Q7wJoHWgM41x5ogHEVlUfkVJZSQroVIQvuP5b5/gvHNG2/fsm7hFKRlU03NC6GpKOD
+         +ekqiIr73cSXQ==
+Message-ID: <b5dcc85d-f709-a3a3-e7ad-9c71f278842a@kernel.org>
+Date:   Tue, 5 Sep 2023 14:04:00 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ata: sata_mv: Fix incorrect string length computation in
+ mv_dump_mem()
+Content-Language: en-US
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-ide@vger.kernel.org
+References: <1a35e114a3dcc33053ca7cca41cb06b8426d8c40.1693857262.git.christophe.jaillet@wanadoo.fr>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <1a35e114a3dcc33053ca7cca41cb06b8426d8c40.1693857262.git.christophe.jaillet@wanadoo.fr>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry!
+On 9/5/23 04:54, Christophe JAILLET wrote:
+> snprintf() returns the "number of characters which *would* be generated for
+> the given input", not the size *really* generated.
+> 
+> In order to avoid too large values for 'o' (and potential negative values
+> for "sizeof(linebuf) o") use scnprintf() instead of snprintf().
+> 
+> Note that given the "w < 4" in the for loop, the buffer can NOT
+> overflow, but using the *right* function is always better.
+> 
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
-=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
-zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
+Doesn't this need Fixes and CC stable tags ?
 
-Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
-=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
-dostaw.
+> ---
+>  drivers/ata/sata_mv.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index d105db5c7d81..45e48d653c60 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -1255,8 +1255,8 @@ static void mv_dump_mem(struct device *dev, void __iomem *start, unsigned bytes)
+>  
+>  	for (b = 0; b < bytes; ) {
+>  		for (w = 0, o = 0; b < bytes && w < 4; w++) {
+> -			o += snprintf(linebuf + o, sizeof(linebuf) - o,
+> -				      "%08x ", readl(start + b));
+> +			o += scnprintf(linebuf + o, sizeof(linebuf) - o,
+> +				       "%08x ", readl(start + b));
+>  			b += sizeof(u32);
+>  		}
+>  		dev_dbg(dev, "%s: %p: %s\n",
 
-Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
-nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
- co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
+-- 
+Damien Le Moal
+Western Digital Research
 
-Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
-=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
-zania w Pa=C5=84stwa firmie.
-
-
-Pozdrawiam
-Mateusz Talaga
