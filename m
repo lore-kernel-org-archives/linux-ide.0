@@ -2,168 +2,155 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BECFCA0FE2
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Sep 2023 16:21:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3F2C83F2C
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Sep 2023 16:21:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344350AbjIEQVC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:21:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58900 "EHLO
+        id S233083AbjIEQVG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:21:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245752AbjIEC3W (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2023 22:29:22 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A1CFCC6
-        for <linux-ide@vger.kernel.org>; Mon,  4 Sep 2023 19:29:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 3E7E4CE0FBE
-        for <linux-ide@vger.kernel.org>; Tue,  5 Sep 2023 02:29:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3F8AC433C8;
-        Tue,  5 Sep 2023 02:29:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693880955;
-        bh=gV6x/IK6A/XHXy35QuxNeoJfRxgv49bWbPzPDLXKliA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=CNVaKw8MdbWLoNVXo9xuW8oWGNmKpYwmL4Bpry8w/fCphr/n2FOgBcgE7oPcEeC33
-         uTW7+pWXXYGndWR5K7pE1YF5F8kusqHiOUhs7eBjw7AEaV7mSgA/+ECsG835b38Az5
-         t0zH8P3RlGzXlCarsTjKktGrUU6h+hqaZDmoblRa69FPQS7c0sX7tUIHlBxveHo73A
-         EU2aHO8xT6N4nFqTKvhcM/HvylqW+Zud8hB17z3s8wHZQMDYoMap1iZuuR1a3e/IPW
-         ut5Oppmij58mdb610gO7pOgTby1TAarzZtqryg7l/FA6t+EE4v0y0EFmU2aLZgAzB/
-         ql+HP72BPx55Q==
-Message-ID: <f83f8d45-b506-118f-d038-507bc87eeeef@kernel.org>
-Date:   Tue, 5 Sep 2023 11:29:13 +0900
+        with ESMTP id S1344772AbjIEDxj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Sep 2023 23:53:39 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32A77CCB;
+        Mon,  4 Sep 2023 20:53:34 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rfs6y0QmDz4f3wt3;
+        Tue,  5 Sep 2023 11:53:30 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+        by APP4 (Coremail) with SMTP id gCh0CgDHVqk5pvZkQLWYCQ--.57068S4;
+        Tue, 05 Sep 2023 11:53:31 +0800 (CST)
+From:   linan666@huaweicloud.com
+To:     dlemoal@kernel.org
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+Subject: [PATCH v2] scsi: ata: Fix a race condition between scsi error handler and ahci interrupt
+Date:   Tue,  5 Sep 2023 11:48:40 +0800
+Message-Id: <20230905034840.478332-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: libata: disallow dev-initiated LPM transitions to
- unsupported states
-To:     Niklas Cassel <nks@flawful.org>
-Cc:     Runa Guo-oc <RunaGuo-oc@zhaoxin.com>,
-        Niklas Cassel <niklas.cassel@wdc.com>,
-        linux-ide@vger.kernel.org
-References: <20230904204257.3296685-1-nks@flawful.org>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230904204257.3296685-1-nks@flawful.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgDHVqk5pvZkQLWYCQ--.57068S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZFy7XF4DWFWxGr1ftw1DZFb_yoW5JFy7pF
+        Z8Zw1DWryUtry2qr4qq3WrXryrGaykK3y2gryDGw1Svr4qka4rt39rCF90gFy3Kr97XF13
+        uan0g3sxCF18Zr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487
+        Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aV
+        AFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4kE6xkIj40E
+        w7xC0wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
+        v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkG
+        c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_
+        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwc_TUU
+        UUU
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/5/23 05:42, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
-> 
-> In AHCI 1.3.1, the register description for CAP.SSC:
-> "When cleared to ‘0’, software must not allow the HBA to initiate
-> transitions to the Slumber state via agressive link power management nor
-> the PxCMD.ICC field in each port, and the PxSCTL.IPM field in each port
-> must be programmed to disallow device initiated Slumber requests."
-> 
-> In AHCI 1.3.1, the register description for CAP.PSC:
-> "When cleared to ‘0’, software must not allow the HBA to initiate
-> transitions to the Partial state via agressive link power management nor
-> the PxCMD.ICC field in each port, and the PxSCTL.IPM field in each port
-> must be programmed to disallow device initiated Partial requests."
-> 
-> Ensure that we always set the corresponding bits in PxSCTL.IPM, such that
-> a device is not allowed to initiate transitions to power states which are
-> unsupported by the HBA.
-> 
-> DevSleep is always initiated by the HBA, however, for completeness, set the
-> corresponding bit in PxSCTL.IPM such that agressive link power management
-> cannot transition to DevSleep if DevSleep is not supported.
-> 
-> sata_link_scr_lpm() is used by libahci, ata_piix and libata-pmp.
-> However, only libahci has the ability to read the CAP/CAP2 register to see
-> if these features are supported. Therefore, in order to not introduce any
-> regressions on ata_piix or libata-pmp, create flags that indicate that the
-> respective feature is NOT supported. This way, the behavior for ata_piix
-> and libata-pmp should remain unchanged.
-> 
-> This change is based on a patch originally submitted by Runa Guo-oc.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+From: Li Nan <linan122@huawei.com>
 
-Looks good, but don't we need a Fixes tag for this ?
+If a disk is removed and quickly inserted when an I/O error is processing,
+the disk may not be able to be re-added. The function call timeline is as
+follows:
 
-> ---
->  drivers/ata/ahci.c        |  9 +++++++++
->  drivers/ata/libata-sata.c | 19 ++++++++++++++++---
->  include/linux/libata.h    |  4 ++++
->  3 files changed, 29 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index abb5911c9d09..08745e7db820 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1883,6 +1883,15 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	else
->  		dev_info(&pdev->dev, "SSS flag set, parallel bus scan disabled\n");
->  
-> +	if (!(hpriv->cap & HOST_CAP_PART))
-> +		host->flags |= ATA_HOST_NO_PART;
-> +
-> +	if (!(hpriv->cap & HOST_CAP_SSC))
-> +		host->flags |= ATA_HOST_NO_SSC;
-> +
-> +	if (!(hpriv->cap2 & HOST_CAP2_SDS))
-> +		host->flags |= ATA_HOST_NO_DEVSLP;
-> +
->  	if (pi.flags & ATA_FLAG_EM)
->  		ahci_reset_em(host);
->  
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index 5d31c08be013..a701e1538482 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -396,10 +396,23 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->  	case ATA_LPM_MED_POWER_WITH_DIPM:
->  	case ATA_LPM_MIN_POWER_WITH_PARTIAL:
->  	case ATA_LPM_MIN_POWER:
-> -		if (ata_link_nr_enabled(link) > 0)
-> -			/* no restrictions on LPM transitions */
-> +		if (ata_link_nr_enabled(link) > 0) {
-> +			/* assume no restrictions on LPM transitions */
->  			scontrol &= ~(0x7 << 8);
-> -		else {
-> +
-> +			/*
-> +			 * If the controller does not support partial, slumber,
-> +			 * or devsleep, then disallow these transitions.
-> +			 */
-> +			if (link->ap->host->flags & ATA_HOST_NO_PART)
-> +				scontrol |= (0x1 << 8);
-> +
-> +			if (link->ap->host->flags & ATA_HOST_NO_SSC)
-> +				scontrol |= (0x2 << 8);
-> +
-> +			if (link->ap->host->flags & ATA_HOST_NO_DEVSLP)
-> +				scontrol |= (0x4 << 8);
-> +		} else {
->  			/* empty port, power off */
->  			scontrol &= ~0xf;
->  			scontrol |= (0x1 << 2);
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 52d58b13e5ee..bf4913f4d7ac 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -222,6 +222,10 @@ enum {
->  	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
->  	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
->  
-> +	ATA_HOST_NO_PART	= (1 << 4), /* Host does not support partial */
-> +	ATA_HOST_NO_SSC		= (1 << 5), /* Host does not support slumber */
-> +	ATA_HOST_NO_DEVSLP	= (1 << 6), /* Host does not support devslp */
-> +
->  	/* bits 24:31 of host->flags are reserved for LLD specific flags */
->  
->  	/* various lengths of time */
+  interrupt                            scsi_eh
 
+  ahci_error_intr
+   ata_port_freeze
+    __ata_port_freeze
+     =>ahci_freeze (turn IRQ off)
+    ata_port_abort
+     ata_do_link_abort
+      ata_port_schedule_eh
+       =>ata_std_sched_eh
+        ata_eh_set_pending
+	 set EH_PENDING
+        scsi_schedule_eh
+         shost->host_eh_scheduled++ (=1)
+                                       scsi_error_handler
+                                        =>ata_scsi_error
+                                         ata_scsi_port_error_handler
+					  clear EH_PENDING
+                                          =>ahci_error_handler
+                                          . sata_pmp_error_handler
+                                          .  ata_eh_reset
+                                          .   ata_eh_thaw_port
+                                          .   . =>ahci_thaw (turn IRQ on)
+  ahci_error_intr			  .   .
+   ata_port_freeze			  .   .
+    __ata_port_freeze			  .   .
+     =>ahci_freeze (turn IRQ off)	  .   .
+    ...					  .   .
+        ata_eh_set_pending		  .   .
+	 set EH_PENDING			  .   .
+        scsi_schedule_eh		  .   .
+         shost->host_eh_scheduled++ (=2)  .   .
+					  .   clear EH_PENDING
+					  check EH_PENDING
+                                          =>ata_std_end_eh
+                                           host->host_eh_scheduled = 0;
+
+'host_eh_scheduled' is 0 and scsi eh thread will not be scheduled again.
+The ata port remain freeze and will never be enabled.
+
+Decrease ’host_eh_scheduled‘ instead of set it to 0 roughly and move
+WARN_ON of nr_active_links to ata_scsi_port_error_handler().
+
+Reported-by: luojian <luojian5@huawei.com>
+Signed-off-by: Li Nan <linan122@huawei.com>
+---
+Changes in v2:
+  - fix the bug by decrease 'host_eh_scheduled’
+  - improve commit message.
+
+ drivers/ata/libata-eh.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 159ba6ba19eb..b9454756ecde 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -735,6 +735,12 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+ 	 */
+ 	ap->ops->end_eh(ap);
+ 
++	if (!ap->scsi_host->host_eh_scheduled) {
++		/* make sure nr_active_links is zero after EH */
++		WARN_ON(ap->nr_active_links);
++		ap->nr_active_links = 0;
++	}
++
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 	ata_eh_release(ap);
+ 
+@@ -948,7 +954,7 @@ void ata_std_end_eh(struct ata_port *ap)
+ {
+ 	struct Scsi_Host *host = ap->scsi_host;
+ 
+-	host->host_eh_scheduled = 0;
++	host->host_eh_scheduled--;
+ }
+ EXPORT_SYMBOL(ata_std_end_eh);
+ 
+@@ -3922,10 +3928,6 @@ void ata_eh_finish(struct ata_port *ap)
+ 			}
+ 		}
+ 	}
+-
+-	/* make sure nr_active_links is zero after EH */
+-	WARN_ON(ap->nr_active_links);
+-	ap->nr_active_links = 0;
+ }
+ 
+ /**
 -- 
-Damien Le Moal
-Western Digital Research
+2.39.2
 
