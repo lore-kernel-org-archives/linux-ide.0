@@ -2,243 +2,195 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6FDC83F2C
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Sep 2023 16:21:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E035CA0FE2
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Sep 2023 16:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343751AbjIEQUz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:20:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43678 "EHLO
+        id S1343870AbjIEQU5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:20:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353674AbjIEHML (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2023 03:12:11 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3166CCCB
-        for <linux-ide@vger.kernel.org>; Tue,  5 Sep 2023 00:12:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 51D7CCE10AF
-        for <linux-ide@vger.kernel.org>; Tue,  5 Sep 2023 07:12:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39526C433C8;
-        Tue,  5 Sep 2023 07:12:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693897923;
-        bh=7g1ifMrfvCF57osZsx6cfyzLKmrBKUVcyn3S7gC6kIY=;
-        h=From:To:Subject:Date:From;
-        b=hbNawfSy6URxYc446Vb/V5lFGQvSjLpGIok6dJ4UCNE793awKAzc88O535+G82pev
-         U2h8hhfTMjX1R7NNGy5/h9TerIlPiv701PV//h4DLPUZ51wh00m/SOd+PxMTfaQvsr
-         4GMmbtBAvcq4FeUM5EWegWjG+AzxmPlIwqVB1Yy1t0EkuhcTGTouPSckYg+/cxUfDQ
-         VACrLx0dYZ+0TTxJIz4j0prA0ZItjHtbxuMmsmGz228lxhQdS6vCeFV1VPTSbuyf3j
-         kiIqgYz6YTAuqAc5EyUTQoZgQ8UkvCQy/eK2ynsuRHQj5DJA+By7rrq00vkz8IpIba
-         Dbh8Gh9SOYg7w==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata changes for 6.6-rc1
-Date:   Tue,  5 Sep 2023 16:11:54 +0900
-Message-ID: <20230905071201.277320-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
+        with ESMTP id S1354634AbjIENJT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2023 09:09:19 -0400
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EBC7127;
+        Tue,  5 Sep 2023 06:09:14 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Rg5S45Njzz4f3pFl;
+        Tue,  5 Sep 2023 21:09:08 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgA3xqhyKPdkZYq4CQ--.15031S3;
+        Tue, 05 Sep 2023 21:09:10 +0800 (CST)
+Message-ID: <8a34d182-0adb-fcf5-6c3f-0ffa8392f615@huaweicloud.com>
+Date:   Tue, 5 Sep 2023 21:09:06 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v2] scsi: ata: Fix a race condition between scsi error
+ handler and ahci interrupt
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+References: <20230905034840.478332-1-linan666@huaweicloud.com>
+ <c4d397c4-1969-935f-6dc3-cf7775d96f5c@kernel.org>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <c4d397c4-1969-935f-6dc3-cf7775d96f5c@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgA3xqhyKPdkZYq4CQ--.15031S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxArWrGr48tw47Ary7GrWDXFb_yoW5Kr17pF
+        Z8J3WqgryUtry2vrsFq3W5XFyFgay8Kry2qrn8Gw1fZr4qya4rK39rCrZ0gF92kr97J3WI
+        9a1Yg39xCF10vaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
+        5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67
+        AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07Al
+        zVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAFwI0_
+        Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
+        VOJ7UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
 
-The following changes since commit 5d0c230f1de8c7515b6567d9afba1f196fb4e2f4:
 
-  Linux 6.5-rc4 (2023-07-30 13:23:47 -0700)
+在 2023/9/5 15:44, Damien Le Moal 写道:
+> On 9/5/23 12:48, linan666@huaweicloud.com wrote:
+>> From: Li Nan <linan122@huawei.com>
+> 
+> Please change the patch title to something like:
+> 
+> ata: libata-eh: Honor all EH scheduling requests
+> 
+> Because the issue could happen I think with other ata drivers than AHCI.
+> 
+> 
+>>
+>> If a disk is removed and quickly inserted when an I/O error is processing,
+>> the disk may not be able to be re-added. The function call timeline is as
+>> follows:
+>>
+>>    interrupt                            scsi_eh
+>>
+>>    ahci_error_intr
+>>     ata_port_freeze
+>>      __ata_port_freeze
+>>       =>ahci_freeze (turn IRQ off)
+>>      ata_port_abort
+>>       ata_do_link_abort
+>>        ata_port_schedule_eh
+>>         =>ata_std_sched_eh
+>>          ata_eh_set_pending
+>> 	 set EH_PENDING
+>>          scsi_schedule_eh
+>>           shost->host_eh_scheduled++ (=1)
+>>                                         scsi_error_handler
+>>                                          =>ata_scsi_error
+>>                                           ata_scsi_port_error_handler
+>> 					  clear EH_PENDING
+>>                                            =>ahci_error_handler
+>>                                            . sata_pmp_error_handler
+>>                                            .  ata_eh_reset
+>>                                            .   ata_eh_thaw_port
+>>                                            .   . =>ahci_thaw (turn IRQ on)
+>>    ahci_error_intr			  .   .
+>>     ata_port_freeze			  .   .
+>>      __ata_port_freeze			  .   .
+>>       =>ahci_freeze (turn IRQ off)	  .   .
+>>      ...					  .   .
+>>          ata_eh_set_pending		  .   .
+>> 	 set EH_PENDING			  .   .
+>>          scsi_schedule_eh		  .   .
+>>           shost->host_eh_scheduled++ (=2)  .   .
+>> 					  .   clear EH_PENDING
+>> 					  check EH_PENDING
+>>                                            =>ata_std_end_eh
+>>                                             host->host_eh_scheduled = 0;
+>>
+>> 'host_eh_scheduled' is 0 and scsi eh thread will not be scheduled again.
+>> The ata port remain freeze and will never be enabled.
+> 
+> s/remain freeze/remains frozen
+> 
+>>
+>> Decrease ’host_eh_scheduled‘ instead of set it to 0 roughly and move
+>> WARN_ON of nr_active_links to ata_scsi_port_error_handler().
+> 
+> To fix this issue, decrease ’host_eh_scheduled‘ instead of setting it to 0 so
+> that EH is scheduled again to re-enable the port. Also move the update of
+> nr_active_links to 0 when host_eh_scheduled is 0 to ata_scsi_port_error_handler().
+> 
 
-are available in the Git repository at:
+Thanks for your review. I will improve the commmit message.
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc1
+>>
+>> Reported-by: luojian <luojian5@huawei.com>
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>> Changes in v2:
+>>    - fix the bug by decrease 'host_eh_scheduled’
+>>    - improve commit message.
+>>
+>>   drivers/ata/libata-eh.c | 12 +++++++-----
+>>   1 file changed, 7 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index 159ba6ba19eb..b9454756ecde 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -735,6 +735,12 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+>>   	 */
+>>   	ap->ops->end_eh(ap);
+>>   
+>> +	if (!ap->scsi_host->host_eh_scheduled) {
+>> +		/* make sure nr_active_links is zero after EH */
+>> +		WARN_ON(ap->nr_active_links);
+>> +		ap->nr_active_links = 0;> +	}
+>> +
+>>   	spin_unlock_irqrestore(ap->lock, flags);
+>>   	ata_eh_release(ap);
+>>   
+>> @@ -948,7 +954,7 @@ void ata_std_end_eh(struct ata_port *ap)
+>>   {
+>>   	struct Scsi_Host *host = ap->scsi_host;
+>>   
+>> -	host->host_eh_scheduled = 0;
+>> +	host->host_eh_scheduled--;
+> 
+> While at it, please drop the host variable:
+> 
+> 	ap->scsi_host->host_eh_scheduled--;
+> 
+> is just fine.
+> 
 
-for you to fetch changes up to 27fd071040e3a5bbea9f44548c93f1092b451714:
+I agree. I will change it in next version.
 
-  ata: libata-core: Disable NCQ_TRIM on Micron 1100 drives (2023-09-02 12:04:51 +0900)
+>>   }
+>>   EXPORT_SYMBOL(ata_std_end_eh);
+>>   
+>> @@ -3922,10 +3928,6 @@ void ata_eh_finish(struct ata_port *ap)
+>>   			}
+>>   		}
+>>   	}
+>> -
+>> -	/* make sure nr_active_links is zero after EH */
+>> -	WARN_ON(ap->nr_active_links);
+>> -	ap->nr_active_links = 0;
+>>   }
+>>   
+>>   /**
+> 
 
-----------------------------------------------------------------
-ata changes for 6.6
+-- 
+Thanks,
+Nan
 
- - Fix OF include file for ata platform drivers (Rob).
-
- - Simplify various ahci, sata and pata platform drivers using the
-   function devm_platform_ioremap_resource() (Yangtao).
-
- - Cleanup libata time related argument types (e.g. timeouts values)
-   (Sergey).
-
- - Cleanup libata code around error handling as all ata drivers now
-   define a error_handler operation (Hannes and Niklas).
-
- - Remove functions intended for libsas that are in fact unused
-   (Niklas).
-
- - Change the remove device callback of platform drivers to a null
-   function (Uwe).
-
- - Simplify the pata_imx driver using devm_clk_get_enabled() (Li).
-
- - Remove old and uinused remnants of the ide code in arm, parisc,
-   powerpc, sparc and m68k architectures and associated drivers
-   (pata_buddha, pata_falcon and pata_gayle) (Geert).
-
- - Add missing MODULE_DESCRIPTION() in the sata_gemini and pata_ftide010
-   drivers (me).
-
- - Several fixes for the pata_ep93xx and pata_falcon drivers (Nikita,
-   Michael).
-
- - Add Elkhart Lake AHCI controller support to the ahci driver (Werner).
-
- - Disable NCQ trim on Micron 1100 drives (Pawel).
-
-----------------------------------------------------------------
-Damien Le Moal (2):
-      ata: pata_ftide010: Add missing MODULE_DESCRIPTION
-      ata: sata_gemini: Add missing MODULE_DESCRIPTION
-
-Geert Uytterhoeven (9):
-      ARM: Remove <asm/ide.h>
-      parisc: Remove <asm/ide.h>
-      powerpc: Remove <asm/ide.h>
-      sparc: Remove <asm/ide.h>
-      asm-generic: Remove ide_iops.h
-      ata: pata_buddha: Remove #include <asm/ide.h>
-      ata: pata_falcon: Remove #include <asm/ide.h>
-      ata: pata_gayle: Remove #include <asm/ide.h>
-      m68k: Remove <asm/ide.h>
-
-Hannes Reinecke (6):
-      ata: libata: remove references to non-existing error_handler()
-      ata,scsi: remove ata_sas_port_{start,stop} callbacks
-      ata,scsi: remove ata_sas_port_destroy()
-      ata: libata-sata: remove ata_sas_sync_probe()
-      ata: libata-core: inline ata_port_probe()
-      ata,scsi: cleanup __ata_port_probe()
-
-Li Zetao (1):
-      ata: pata_imx: Use helper function devm_clk_get_enabled()
-
-Michael Schmitz (2):
-      ata: pata_falcon: fix IO base selection for Q40
-      ata: pata_falcon: add data_swab option to byte-swap disk data
-
-Nikita Shubin (2):
-      ata: pata_ep93xx: fix error return code in probe
-      ata: pata_ep93xx: use soc_device_match for UDMA modes
-
-Niklas Cassel (4):
-      ata,scsi: remove ata_sas_port_init()
-      ata: sata_sx4: drop already completed TODO
-      ata: libata-core: remove ata_bus_probe()
-      ata: libata: remove deprecated EH callbacks
-
-Pawel Zmarzly (1):
-      ata: libata-core: Disable NCQ_TRIM on Micron 1100 drives
-
-Rob Herring (1):
-      ata: Explicitly include correct DT includes
-
-Sergey Shtylyov (8):
-      ata: libata: fix parameter type of ata_deadline()
-      ata: libata-core: fix parameter types of ata_wait_register()
-      ata: libata-eh: fix reset timeout type
-      ata: fix debounce timings type
-      ata: libata-scsi: fix timeout type in ata_scsi_park_store()
-      ata: libahci: fix parameter type of ahci_exec_polled_cmd()
-      ata: ahci_xgene: fix parameter types of xgene_ahci_poll_reg_val()
-      ata: sata_sil24: fix parameter type of sil24_exec_polled_cmd()
-
-Uwe Kleine-König (12):
-      ata: pata_arasan_cf: Convert to platform remove callback returning void
-      ata: pata_ep93xx: Convert to platform remove callback returning void
-      ata: pata_ftide010: Convert to platform remove callback returning void
-      ata: pata_imx: Convert to platform remove callback returning void
-      ata: pata_mpc52xx: Convert to platform remove callback returning void
-      ata: pata_pxa: Convert to platform remove callback returning void
-      ata: pata_rb532_cf: Convert to platform remove callback returning void
-      ata: sata_dwc_460ex: Convert to platform remove callback returning void
-      ata: sata_fsl: Convert to platform remove callback returning void
-      ata: sata_gemini: Convert to platform remove callback returning void
-      ata: sata_mv: Convert to platform remove callback returning void
-      ata: sata_rcar: Convert to platform remove callback returning void
-
-Werner Fischer (1):
-      ata: ahci: Add Elkhart Lake AHCI controller
-
-Yangtao Li (11):
-      ata: ahci_octeon: Convert to devm_platform_ioremap_resource()
-      ata: ahci_seattle: Convert to devm_platform_ioremap_resource()
-      ata: ahci_xgene: Convert to devm_platform_ioremap_resource()
-      ata: ahci_tegra: Convert to devm_platform_ioremap_resource()
-      ata: sata_rcar: drop useless initializer
-      ata: sata_rcar: Remove unnecessary return value check
-      ata: sata_rcar: Convert to devm_platform_ioremap_resource()
-      ata: pata_ixp4xx: Use devm_platform_get_and_ioremap_resource()
-      ata: pata_ixp4xx: Remove unnecessary return value check
-      ata: pata_ftide010: Use devm_platform_get_and_ioremap_resource()
-      ata: pata_imx: Use devm_platform_get_and_ioremap_resource()
-
- Documentation/driver-api/libata.rst   |  38 +---
- arch/arm/include/asm/ide.h            |  24 ---
- arch/m68k/include/asm/ide.h           |  67 -------
- arch/parisc/include/asm/ide.h         |  54 -----
- arch/powerpc/include/asm/ide.h        |  18 --
- arch/sparc/include/asm/ide.h          |  97 ---------
- drivers/ata/ahci.c                    |   4 +-
- drivers/ata/ahci_ceva.c               |   2 +-
- drivers/ata/ahci_dwc.c                |   2 +-
- drivers/ata/ahci_mtk.c                |   1 +
- drivers/ata/ahci_mvebu.c              |   2 +-
- drivers/ata/ahci_octeon.c             |   4 +-
- drivers/ata/ahci_qoriq.c              |   4 +-
- drivers/ata/ahci_seattle.c            |   4 +-
- drivers/ata/ahci_sunxi.c              |   2 +-
- drivers/ata/ahci_tegra.c              |   5 +-
- drivers/ata/ahci_xgene.c              |  16 +-
- drivers/ata/libahci.c                 |   7 +-
- drivers/ata/libahci_platform.c        |   1 +
- drivers/ata/libata-core.c             | 367 +++++++++-------------------------
- drivers/ata/libata-eh.c               | 158 ++++++---------
- drivers/ata/libata-sata.c             | 112 +----------
- drivers/ata/libata-scsi.c             | 165 ++-------------
- drivers/ata/libata-sff.c              |  32 +--
- drivers/ata/libata.h                  |   3 -
- drivers/ata/pata_arasan_cf.c          |   6 +-
- drivers/ata/pata_buddha.c             |   1 -
- drivers/ata/pata_ep93xx.c             |  25 ++-
- drivers/ata/pata_falcon.c             |  63 +++---
- drivers/ata/pata_ftide010.c           |  16 +-
- drivers/ata/pata_gayle.c              |   1 -
- drivers/ata/pata_imx.c                |  37 +---
- drivers/ata/pata_ixp4xx_cf.c          |  24 +--
- drivers/ata/pata_mpc52xx.c            |  10 +-
- drivers/ata/pata_pxa.c                |   6 +-
- drivers/ata/pata_rb532_cf.c           |   6 +-
- drivers/ata/pata_sl82c105.c           |   3 +-
- drivers/ata/sata_dwc_460ex.c          |   8 +-
- drivers/ata/sata_fsl.c                |  12 +-
- drivers/ata/sata_gemini.c             |  10 +-
- drivers/ata/sata_highbank.c           |   4 +-
- drivers/ata/sata_inic162x.c           |   2 +-
- drivers/ata/sata_mv.c                 |   7 +-
- drivers/ata/sata_nv.c                 |   2 +-
- drivers/ata/sata_rcar.c               |  17 +-
- drivers/ata/sata_sil24.c              |   4 +-
- drivers/ata/sata_sx4.c                |   1 -
- drivers/scsi/hisi_sas/hisi_sas_main.c |   2 +-
- drivers/scsi/libsas/sas_ata.c         |   9 +-
- drivers/scsi/libsas/sas_discover.c    |   2 +-
- include/asm-generic/ide_iops.h        |  39 ----
- include/linux/libata.h                |  40 ++--
- 52 files changed, 355 insertions(+), 1191 deletions(-)
- delete mode 100644 arch/arm/include/asm/ide.h
- delete mode 100644 arch/m68k/include/asm/ide.h
- delete mode 100644 arch/parisc/include/asm/ide.h
- delete mode 100644 arch/powerpc/include/asm/ide.h
- delete mode 100644 arch/sparc/include/asm/ide.h
- delete mode 100644 include/asm-generic/ide_iops.h
