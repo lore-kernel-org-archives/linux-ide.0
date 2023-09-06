@@ -2,107 +2,158 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F85BEB8FAD
-	for <linux-ide@archiver.kernel.org>; Wed,  6 Sep 2023 06:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEC92EB8FAF
+	for <linux-ide@archiver.kernel.org>; Wed,  6 Sep 2023 06:49:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjIFGsJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 6 Sep 2023 02:48:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47580 "EHLO
+        id S233989AbjIFGtd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 6 Sep 2023 02:49:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234292AbjIFGsJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Sep 2023 02:48:09 -0400
+        with ESMTP id S230104AbjIFGtc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Sep 2023 02:49:32 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F329EE4F
-        for <linux-ide@vger.kernel.org>; Tue,  5 Sep 2023 23:48:04 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A924EC433C8;
-        Wed,  6 Sep 2023 06:48:03 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C245CC3;
+        Tue,  5 Sep 2023 23:49:29 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1417FC433C8;
+        Wed,  6 Sep 2023 06:49:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693982884;
-        bh=nSwfREI5tM6aQmLaLWEGeAv6ygt7PNOu9+0s9kLrl7Q=;
+        s=k20201202; t=1693982969;
+        bh=uasGGamLNhO03kpRJBSDvMhv53fkVk6TGqwr6D9fAUM=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=gWxrhCo6qBefbkQhUa4/aToanb4k9XNIZv9mWkMUmmA/FmugHAcGGApf3/cgP8wDu
-         yyMG1SfG6XcnfVgEkJ3UbYeMG2TVK2pfUQcs/BPaaP7ESyujWyAZlBxWqxICD1BkKo
-         v6ie9H8K3smwKJuCZAM7IHHvnCF2HDcAdh/WZ78fYFIkT5e4h24Kh3+0Ur/erXdfRh
-         HHoZDAfiNr1iEzIoIW1C6zhp+iih5/SKl64+byRhOp60Hl+urxymVALciS3/V7Sb+i
-         2d43AOjMPM/y0lvfL3D/33eUHsfxnBWGgim9kbmQYy++aRSuIqtrYvR6cVpqsFy7GB
-         6Ud+0haF8NJpw==
-Message-ID: <be820ba7-7aa8-6338-7bee-201443aae5c1@kernel.org>
-Date:   Wed, 6 Sep 2023 15:48:02 +0900
+        b=ZTV4w53S1Ii+kDtOeQ5PC9Jvkg4JkabOW2cGFCrMOjSUOh0B+9I7Lc+ZSFElqPrVb
+         cZj8johtSRAlTGszjIxIJuuAQbxNeSSmhDJlpg3OTMIK98Ao5+ZUfQc9oxrF4gSZkf
+         5keAtyf41z4W+PoI5WfzibIbRGAWDqQd7Pdhl/xK/ZOc1BS5xvE5VeMER+LBrVkk45
+         Hf6k29t5lKzHlgIty8tYPorrXuqaAIM4R4yBokQsBNC1l1WKCJGudGQhWYLFgvH1J5
+         4K05RnLHDwPH0NCDuAmXYnZwvSFWKzGGVsu3UWR02oNubTQReslh0PTUHLNSpEFHIx
+         DwIzm9adZgxRw==
+Message-ID: <a01dc25c-16c0-2d72-23f1-d0955007fcc0@kernel.org>
+Date:   Wed, 6 Sep 2023 15:49:27 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: ahci: print the lpm policy on boot
+Subject: Re: [PATCH v3] ata: libata-eh: Honor all EH scheduling requests
 Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>
-Cc:     Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
-References: <20230905124909.3334046-1-nks@flawful.org>
+To:     linan666@huaweicloud.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+        houtao1@huawei.com, yangerkun@huawei.com
+References: <20230906063321.905103-1-linan666@huaweicloud.com>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230905124909.3334046-1-nks@flawful.org>
+In-Reply-To: <20230906063321.905103-1-linan666@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/5/23 21:49, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
+On 9/6/23 15:33, linan666@huaweicloud.com wrote:
+> From: Li Nan <linan122@huawei.com>
 > 
-> The target LPM policy can be set using either a Kconfig or a kernel module
-> parameter.
+> If a disk is removed and quickly inserted when an I/O error is processing,
+> the disk may not be able to be re-added. The function call timeline is as
+> follows:
 > 
-> However, if the board type is set to anything but board_ahci_low_power,
-> then the LPM policy will overridden and set to ATA_LPM_UNKNOWN.
+>   interrupt                            scsi_eh
 > 
-> Additionally, if the default suspend is suspend to idle, depending on the
-> hardware capabilities of the HBA, ahci_update_initial_lpm_policy() might
-> override the LPM policy to either ATA_LPM_MIN_POWER_WITH_PARTIAL or
-> ATA_LPM_MIN_POWER.
+>   ahci_error_intr
+>    ata_port_freeze
+>     __ata_port_freeze
+>      =>ahci_freeze (turn IRQ off)
+>     ata_port_abort
+>      ata_do_link_abort
+>       ata_port_schedule_eh
+>        =>ata_std_sched_eh
+>         ata_eh_set_pending
+> 	 set EH_PENDING
+>         scsi_schedule_eh
+>          shost->host_eh_scheduled++ (=1)
+>                                        scsi_error_handler
+>                                         =>ata_scsi_error
+>                                          ata_scsi_port_error_handler
+> 					  clear EH_PENDING
+>                                           =>ahci_error_handler
+>                                           . sata_pmp_error_handler
+>                                           .  ata_eh_reset
+>                                           .   ata_eh_thaw_port
+>                                           .   . =>ahci_thaw (turn IRQ on)
+>   ahci_error_intr			  .   .
+>    ata_port_freeze			  .   .
+>     __ata_port_freeze			  .   .
+>      =>ahci_freeze (turn IRQ off)	  .   .
+>     ...					  .   .
+>         ata_eh_set_pending		  .   .
+> 	 set EH_PENDING			  .   .
+>         scsi_schedule_eh		  .   .
+>          shost->host_eh_scheduled++ (=2)  .   .
+> 					  .   clear EH_PENDING
+> 					  check EH_PENDING
+>                                           =>ata_std_end_eh
+>                                            host->host_eh_scheduled = 0;
 > 
-> All this means that it is very hard to know which LPM policy a user will
-> actually be using on a given system.
+> 'host_eh_scheduled' is 0 and scsi eh thread will not be scheduled again.
+> The ata port remains frozen and will never be enabled.
 > 
-> In order to make it easier to debug LPM related issues, print the LPM
-> policy on boot.
+> To fix this issue, decrease 'host_eh_scheduled' instead of setting it to 0
+> so that EH is scheduled again to re-enable the port. Also move the update
+> of 'nr_active_links' to 0 when 'host_eh_scheduled' is 0 to
+> ata_scsi_port_error_handler().
 > 
-> One common LPM related issue is that the device fails to link up.
-> Because of that, we cannot add this print to ata_dev_configure(), as that
-> function is only called after a successful link up. Instead, add the info
-> using ata_port_desc(). The port description is printed once during boot.
-> 
-> Before changes:
-> ata1: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780100 irq 170
-> ata2: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780180 irq 170
-> 
-> After changes:
-> ata1: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780100 lpm-pol 4 irq 170
-> ata2: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780180 lpm-pol 4 irq 170
+> Reported-by: luojian <luojian5@huawei.com>
+> Signed-off-by: Li Nan <linan122@huawei.com>
 
-Looks good, but maybe print the lpm-pol value at the end, after the IRQ number,
-to preserve the beginning of the message as it was before.
+Looks good to me, but I think this needs a Fixes tag, and "Cc: stable".
+Please add that.
 
-Or even better: why not print the LPM modes supported by the port and the target
-lpm policy (lpm-pol) as a new ata_port_info() message right after the port desc
-message ?
-
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 > ---
->  drivers/ata/ahci.c | 1 +
->  1 file changed, 1 insertion(+)
+> Changes in v3:
+>  - change patch title, previously it was: "scsi: ata: Fix a race condition
+>    between scsi error handler and ahci interrupt".
+>  - drop the variable 'host' in ata_std_end_eh().
+>  - improve commit message.
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index abb5911c9d09..541f6ec7f395 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1898,6 +1898,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  			ap->em_message_type = hpriv->em_msg_type;
+>  drivers/ata/libata-eh.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 159ba6ba19eb..2d5ecd68b7e0 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -735,6 +735,12 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+>  	 */
+>  	ap->ops->end_eh(ap);
 >  
->  		ahci_update_initial_lpm_policy(ap, hpriv);
-> +		ata_port_desc(ap, "lpm-pol %d", ap->target_lpm_policy);
+> +	if (!ap->scsi_host->host_eh_scheduled) {
+> +		/* make sure nr_active_links is zero after EH */
+> +		WARN_ON(ap->nr_active_links);
+> +		ap->nr_active_links = 0;
+> +	}
+> +
+>  	spin_unlock_irqrestore(ap->lock, flags);
+>  	ata_eh_release(ap);
 >  
->  		/* disabled/not-implemented port */
->  		if (!(hpriv->port_map & (1 << i)))
+> @@ -946,9 +952,7 @@ EXPORT_SYMBOL_GPL(ata_std_sched_eh);
+>   */
+>  void ata_std_end_eh(struct ata_port *ap)
+>  {
+> -	struct Scsi_Host *host = ap->scsi_host;
+> -
+> -	host->host_eh_scheduled = 0;
+> +	ap->scsi_host->host_eh_scheduled--;
+>  }
+>  EXPORT_SYMBOL(ata_std_end_eh);
+>  
+> @@ -3922,10 +3926,6 @@ void ata_eh_finish(struct ata_port *ap)
+>  			}
+>  		}
+>  	}
+> -
+> -	/* make sure nr_active_links is zero after EH */
+> -	WARN_ON(ap->nr_active_links);
+> -	ap->nr_active_links = 0;
+>  }
+>  
+>  /**
 
 -- 
 Damien Le Moal
