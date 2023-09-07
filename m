@@ -2,238 +2,304 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5030EC8726
-	for <linux-ide@archiver.kernel.org>; Thu,  7 Sep 2023 17:47:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 481E1EC8743
+	for <linux-ide@archiver.kernel.org>; Thu,  7 Sep 2023 18:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234300AbjIGRrM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 7 Sep 2023 13:47:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44096 "EHLO
+        id S233927AbjIGSA6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 7 Sep 2023 14:00:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242212AbjIGRrL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Sep 2023 13:47:11 -0400
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0254171C;
-        Thu,  7 Sep 2023 10:46:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1694108801; x=1725644801;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
+        with ESMTP id S235420AbjIGSA4 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Sep 2023 14:00:56 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 609B9CE7;
+        Thu,  7 Sep 2023 11:00:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694109636; x=1725645636;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
    mime-version;
-  bh=UL2bh0ZRsbv+b2Yel1Qb4FBpwWvH18+7f3RIup1TmgU=;
-  b=E/yeCT0ojACLKN/xJT3PL7hm7SUReLv6XfrBrAsk4tPSy6XjOhUr/ftg
-   FK7k3Iy+7Ap+sHbAsTU3uXrBzRxE7+eImIQgocBVUgwv+0Z4PHX4M2jP9
-   w+SPia/pWEqigK7JE1jUZtafJ7JbEGME4ZFWlHBmjmz3TPixZUuBirX69
-   It8RWItynGhwPC5FVliGScOPqwlUst3QnTHZ3kHquVjR5xKOoGOMwC7Hz
-   m72r4CMeV1yOvFsK5kMVHpKLSh6Dc43q77xwZ8fAQ/4lnCt5Mz844nDHZ
-   WNiV5WfZ6dUUvD8Lr4BO0aBhqooKKj0Uh6V13xSCJthu+LUrKPzSflvYX
+  bh=ZBvrjKkFu99H+xzyZvYNohpQnWfUT4DGFLFK8WAZ2pA=;
+  b=QWWl8a88LE6eqqtxlPa1XaLVBNG6qUOBE87FTCLbP9zFa22nojByefTM
+   j+9SBZZFJZ7wCLE1yqH6t5tHjL2xpfO+hRmwke04y/ssjQUmmfG3aWSIL
+   9fAxHzmwmf2PWDwvAuUo4ot6mhF8MwaO/ljeZ0W5mHS6aASMqXYo5KI+g
+   9OnSLLFBKhrOn1hb4OKJr3WQm1aO72G6L9rBmVAUe3G+mWgTGSfReGSTn
+   +vLpWUPGJksODYSgxlY2ZJc8mRuilULtq5LQ2fE+0GDhOY8XkQYl299J5
+   kfufTDqVDMXvYNZelcHmPoinVz+oA9ZNWFyblKHi5YBLJROqOsSWwNd5+
    A==;
-X-CSE-ConnectionGUID: DnO6vLcrQeifZxv4b440aA==
-X-CSE-MsgGUID: dhRQu8P/SS2nScNZcbWXbQ==
-X-IronPort-AV: E=Sophos;i="6.02,234,1688400000"; 
-   d="scan'208";a="355274627"
-Received: from mail-mw2nam12lp2042.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.42])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Sep 2023 16:30:36 +0800
+X-IronPort-AV: E=McAfee;i="6600,9927,10825"; a="443669676"
+X-IronPort-AV: E=Sophos;i="6.02,234,1688454000"; 
+   d="scan'208";a="443669676"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2023 00:43:35 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10825"; a="988656437"
+X-IronPort-AV: E=Sophos;i="6.02,234,1688454000"; 
+   d="scan'208";a="988656437"
+Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
+  by fmsmga006.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 07 Sep 2023 00:43:34 -0700
+Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.32; Thu, 7 Sep 2023 00:43:33 -0700
+Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
+ orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.32 via Frontend Transport; Thu, 7 Sep 2023 00:43:33 -0700
+Received: from NAM02-BN1-obe.outbound.protection.outlook.com (104.47.51.49) by
+ edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.27; Thu, 7 Sep 2023 00:43:33 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DScqzK1+a7cae3oaBShu9TAj2dAKMmwGrPAZMpUc5VzNP46EK2URnxT3c6hnx2s/oiqoeguPYT3HmMI27qWpoQJzsK6rEBMgb/OLRTzrfRtkpOaMHn8fUIxAZV3TaJBJ3juGMStbP/LyQQWpTEaN0ShqSU7K9dIknkGcs8uUZpokglip3oLcNgQ90iZlwRx4a9AOtVl/BSv/m0w01m1B5P9OL9OiyKjJy39piF3gH3a208Wct6yW7QcyTuzkriEPlvz/XX39dPYjaFKeZq9dKCO5vcyLows0Q74JNZ4SOtRdcMTOVB0A21w2xYP2NJEE/EE7C9Z9KMSJ+3GgMibzYA==
+ b=nnw97aLqMjuuCCzrj17k9ZC1lwcIKGyKO4IozBFpoPHE801v8OpE66z7WNlWFlONTK/LN7eq/EHjn+QiElWpHtAoRzygTsaK+UoeyJZ4XL9N8XTDDT2R05thTfgtTjjip9HTqUTFcwy4OnTt/Ot3Y+pmJl3anKynMqRF2I1lNjKKfU4Xd2ogbsKCbDWYa0Afu5TupMpMdTHDGi1x147NNusyjwZBb+HXJR/sjPgkYwHh/KjpXrB/b2bkgScJ3qr3MVmvbkkuxbWyeO09+/gh0xFTz94shm2biCBhBmSrOXIRrbcQlGkaO5Y+iVmLcB+rltQjNyRI0XiyB6cwGYuiEg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gFHPz0vPYHi3mZ81yaRseEUCo5RoVj9MRoLuV/P/H6s=;
- b=oOzMA2B5RJqBCIqtINGESKyP6H4+KZjOOpi0y0lRWj7JS7H7zaiivVYLMkYEdzEkzdPNdRSraPnT7SFSnOG2HvK/wxh8ctFVX38Te7jt1FF5Y51Bxia3Y16NRNsXl1X8TQQGemZXXYIDnMr6WeNjxj1mktKcmEt5N3aB1z/4zpkR+zGH7/hTqbh0McP90QNotAQqnjg+idOaieOMKpd3PcGHeSfR2D3MXXX6di4XRsi+QZaYdkg9nwcr6ODAB1ocIXyEjhwv4FEEGUubqbG7lAljH1UqKYW+TDyV7B4UMtRkuX4akSDXfh5rf7usHvM9A3MXR4TwWiEKohbAVxsD7Q==
+ bh=KJs/8gcqTHZNs9zB896PtPlkvLZiW/+FtUpSRJWBTXs=;
+ b=LsBFFURelPmwz09G4kazf3Mo3z1pi5FvIcTGLqDpX+RHaqqRueSpMYfje99FZQt6dSGSfOwkUt9Zan0fGzKoBzX4HYwprP2DtjNGBwL1jIcyzX9bVXKws9/wt6jCfzq/Z5a3XUUo3fK9BroyL2wwmkceTqLTdfeRlz8t4XNmcgHcDAbdxpPRIBEFU7Sapi/nNm9JRVWT071F9B8/LimIb4WZAQ7Tg6yJTyOEb4EKLOL57xcaks8VCPJU9KsklPPsntOImHxPg6dz9ZRXHE8b+ePZRWiVTCE5DyzseWA1c9Si5vdtT92Ir4v9RK1IqHdNQYF7n0nAjAckR1vuVtMeSw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gFHPz0vPYHi3mZ81yaRseEUCo5RoVj9MRoLuV/P/H6s=;
- b=yoLtZZ4XDFYhIfMzTdsVxRy1HNjMCdP+R5V+yGSlTcrNr+NVbCJcTVzHuzDOw1Xi3jbRt7HHiLAziiHct7ROFRIwXwmCyg74HMO1PcQBRBv1oqHEZ17bMA3bCFoUcEDgoD3prvJTS7uGiZZ61dEIHTqvf8u+UnpDmqAtsER21i8=
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
- by BN8PR04MB6370.namprd04.prod.outlook.com (2603:10b6:408:d5::17) with
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB6779.namprd11.prod.outlook.com (2603:10b6:510:1ca::17)
+ by CO1PR11MB4788.namprd11.prod.outlook.com (2603:10b6:303:97::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6768.27; Thu, 7 Sep
- 2023 08:30:34 +0000
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::ac1f:2999:a2a6:35a5]) by MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::ac1f:2999:a2a6:35a5%2]) with mapi id 15.20.6768.024; Thu, 7 Sep 2023
- 08:30:34 +0000
-From:   Niklas Cassel <Niklas.Cassel@wdc.com>
-To:     Szuying Chen <chensiying21@gmail.com>
-CC:     "dlemoal@kernel.org" <dlemoal@kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Jesse1_Chang@asmedia.com.tw" <Jesse1_Chang@asmedia.com.tw>,
-        "Richard_Hsu@asmedia.com.tw" <Richard_Hsu@asmedia.com.tw>,
-        "Chloe_Chen@asmedia.com.tw" <Chloe_Chen@asmedia.com.tw>
-Subject: Re: [PATCH v4] ahci: libahci: clear pending interrupt status
-Thread-Topic: [PATCH v4] ahci: libahci: clear pending interrupt status
-Thread-Index: AQHZ4WO5uiby/Pbc+k2nL3bBHZzyU7APCFcA
-Date:   Thu, 7 Sep 2023 08:30:34 +0000
-Message-ID: <ZPmKJglA9NOpwjF9@x1-carbon>
-References: <20230907081710.4946-1-Chloe_Chen@asmedia.com.tw>
-In-Reply-To: <20230907081710.4946-1-Chloe_Chen@asmedia.com.tw>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|BN8PR04MB6370:EE_
-x-ms-office365-filtering-correlation-id: 5f719ca5-c8a0-4a01-d0ed-08dbaf7cb489
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: rmS4rHEVk71ldTvwYkXf8cVwfqLLN1XJj8Sos4jXXAT0n4xAPbAweWiGRRyWsGPaC1adKcw5i0S1h5t49CdqIIqzZHrPJ8okDkopsyI7Kk3d/gavriK1vP52/SnmIt4MDMgsb3+p3VO4gJcK+7+h6w7fwkGK2ITYklwmAu9r91GrOfEZKwHQtE/v1bg5VlgOObvZ9vuSjq+CGql0rueR9/Yz8TssLSjDU7TPcStCN7vgKv7r9IoTt6HgaDQJqyR7kHjfdrMJa14z35FkSsydiP41GcYpP8VrVUFmirqY7P5aTRekxVl/hjftXTXGMt+8Cg3Ta9N1isfwd2+r1hfcd6SZ1HhAomcmWWWqzlqM+3+oKWVoCbU/d2UGn0P71vWkO5p50/L73ccWzNsuAISEDOYlxwoQ+/3WzTYCuVtlkNn0hl7QmSpl4ljKUCxHEy85fI5k8c0tkXCvLamCdwhCVS8EH2B2Nm5icqClGeIwWYOHFdYaOAOEMBi4897xC5esFhIT0rbiJL7a41/7sRz8Jw2tLHtRXtv8OQG2NW/AKiwvIwGNXcujWSCCfpJUBQaQRxRJUwmfSQCn/2pj5rFZFkYKCS915PlQoFvgN509pYmcBUy0HSLGFhgDmV1vjkqo
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(396003)(136003)(346002)(39860400002)(376002)(366004)(451199024)(186009)(1800799009)(122000001)(9686003)(6486002)(6506007)(71200400001)(38100700002)(82960400001)(38070700005)(86362001)(2906002)(26005)(83380400001)(91956017)(66946007)(316002)(8676002)(76116006)(4326008)(8936002)(478600001)(5660300002)(6512007)(41300700001)(6916009)(33716001)(66556008)(64756008)(66446008)(66476007)(54906003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?f9uuQKJlRDe2MBxTwz5gAZism4sjTIp2csuhESOcOevjTVzXVmStnMuHmeX1?=
- =?us-ascii?Q?S0LcJkqW3IXrkTHmHpF3yvs9533bzy971HRx+Xg0Dbqn1bUjnMtbjO3LJm1K?=
- =?us-ascii?Q?LaC/2pKgkr91iVRXtCZMJzMrFb9UgiKbpwNSdl5fwz1zeBwUyOwMCIU+VwKz?=
- =?us-ascii?Q?z2ePcbjAWiqiE8flTCIYqVJjgGBMFmlu309XqGg90k2mnC52RhWxeh+KTX+3?=
- =?us-ascii?Q?ll768ooUzkLIu7rEhiNQ4vA34cTwa30omVp8YEjpnIPqlbHFBKSWXngQUw0G?=
- =?us-ascii?Q?fDFyT89s8ymN0wMyrAWSX7/Qnr0dad2SKZdW+fposJg4zOCFCw5ZHe5YRyu4?=
- =?us-ascii?Q?/e5N8FYqSe9GjZG1z05BnJtoIWlEF6VzscbwQjV9Ypzckj/h0hsbw10goL3w?=
- =?us-ascii?Q?+lPvEwSE4CVwLAkcIqmh57Vc/8owpfKee+3nbZdwwOnQ/30bu7dVXbErXaUm?=
- =?us-ascii?Q?evWOjyuiMwJak+AaSiG2B8Ni+Z1DgUYE8lV7rL9DzxDRlvFHHpm+DTkH/L6I?=
- =?us-ascii?Q?3EDkIJurSjia0L62At27xEmMAJRI+sZAJ37DJhM5BhnbJwG8tzIN/cVQW3Gm?=
- =?us-ascii?Q?1QHFJ6LSHPy/Ll5Kp95ThGWsUUwlp2HNNsysaHzzyygELbfe5HaDWmudneTh?=
- =?us-ascii?Q?msar32q5573PbkbXzi3tfNDBawsuzHIJQUVjrM/uXtYRIQv6geU4k3Gdfbvj?=
- =?us-ascii?Q?N6O3efyZ1PNzR/pWiHfWoxndqG4xbSvvwt7gtjlQQLO/SCr5pFyr4tQw6dP+?=
- =?us-ascii?Q?KYIQDQxil6AgFwJnaQuoyHTVGndGI6tTWv5fMwDuAoAwfJn5cqeKNR/wVktp?=
- =?us-ascii?Q?McXPNDIkwCG5tNz5uac/DffkbwopCtJEOKZSfRlXtXlWhqyMQTsCxRwdjqUH?=
- =?us-ascii?Q?GPJtRHxJgDgRIePGweOlrM3RW8a8mVM41jUYkg/a5UNrTCDdI6uVS6+F8UBc?=
- =?us-ascii?Q?FrHQwz0tZ+uAoa7LhLjZZ3/p9gXks4NKmz2KnF30QtF9IcU/0EPjXI++JTpZ?=
- =?us-ascii?Q?MjNAjjsPv3qOYMsz4UCMm/UHgDAvIOdMAGIjdSGFLhAZdTHfQZWo4Q/QIiWG?=
- =?us-ascii?Q?shanLY8Q7MetfTwf0PMsXyxXA53NjMW3JfXB1gCbYa0FLezYoZABkqRJRxju?=
- =?us-ascii?Q?naWMy56uEDe06cqLLBArLuV2Kn15lxSMOFBhb4vkvryx7NdtBRU3MDEtna/+?=
- =?us-ascii?Q?i+nbiqCHcDgtbDIszMBkpfB50vdpVFz/2IyObU08g8J2JoRy7yeKMMokOVFt?=
- =?us-ascii?Q?b5KkPwoa4NeircJhNxKc1v3nCANIj90jQc9d2NXe1NGTv3yqLmdVzICRIm3d?=
- =?us-ascii?Q?e9s5ppCtowXWM+Lvk0GzJRa4lbBm97mTTP0V9qCIyS4J+M3yOVrDme1fUsrW?=
- =?us-ascii?Q?5fDU37EFnBH60krzG4s0gb2PsvYkvYs/DFB15jDqRt7oMbJvUi63RCg6EP7v?=
- =?us-ascii?Q?ONphDsRwBx6j3tPatKnxFLR/P6Vw+tS+wZB0mH2agpKmmDxycddT17ZJYunT?=
- =?us-ascii?Q?8e0neSYGMy1fBPMJfMLAUVy57YMkKz7d4jbog95nqMtRHsNM/Bf/dnOT4Gjd?=
- =?us-ascii?Q?pibvj2ITHEA2YCwCHVCs47i1wm3KUL/3sslw/BB4QsfqZxO/2snJGf6+EWLx?=
- =?us-ascii?Q?DQ=3D=3D?=
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.34; Thu, 7 Sep
+ 2023 07:43:31 +0000
+Received: from PH8PR11MB6779.namprd11.prod.outlook.com
+ ([fe80::73c6:1231:e700:924]) by PH8PR11MB6779.namprd11.prod.outlook.com
+ ([fe80::73c6:1231:e700:924%4]) with mapi id 15.20.6745.034; Thu, 7 Sep 2023
+ 07:43:31 +0000
+Date:   Thu, 7 Sep 2023 15:43:19 +0800
+From:   kernel test robot <oliver.sang@intel.com>
+To:     <linan666@huaweicloud.com>
+CC:     <oe-lkp@lists.linux.dev>, <lkp@intel.com>,
+        luojian <luojian5@huawei.com>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        <linux-ide@vger.kernel.org>, <dlemoal@kernel.org>,
+        <htejun@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <linan122@huawei.com>, <yukuai3@huawei.com>, <yi.zhang@huawei.com>,
+        <houtao1@huawei.com>, <yangerkun@huawei.com>,
+        <oliver.sang@intel.com>
+Subject: Re: [PATCH v4] ata: libata-eh: Honor all EH scheduling requests
+Message-ID: <202309071557.3a90e7a8-oliver.sang@intel.com>
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <B2BAB38EA654B44883190BA83F96CF65@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+In-Reply-To: <20230906084212.1016634-1-linan666@huaweicloud.com>
+X-ClientProxiedBy: SI2PR01CA0013.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:191::9) To PH8PR11MB6779.namprd11.prod.outlook.com
+ (2603:10b6:510:1ca::17)
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: KG9ie6NAKuSRyps6l4BBwnYINuOJ6zKqyTUsqf/oKW4IcOMRQevDzgjVhJAtaMDZbdvVePYYR+aHVH72gmdwujx5ET+mQQ/im/RWeKia73ebiM0CucoHYxsPkZ1uMI7e8keq8MlRW11smYS+jGAkceWfz+FXAAlee/FLxk1Yd4JT29lSLq8PPEisrNp73D0NFV/7HXYI7lYx5wx7r35zficNNsaqpkuCb9FvVlXndKFHli4y5oLDa3stv5uEldcNP3BaVT1hORbl7ekG1sZrVHizk/EBC981oJL3LMjbvL9SnCE5J1VtAi+u4x2GEi3llvX44zFVLvFYQ/A3iZUObh/B078LLO1bUKpMB0v5T7XncwDb5q4l60yNxV3EQ7niGV2Vc84NvHXvHZjAcIAJGuywHKqOy3dhmDp5WRD6rGg/azdb7/+UKu9vAoKxgqdL23zhzkqSQpDWnHxGUZhM/GBRyEI3SZjr1+LilM2UI72IqQlasuxoIGEnseOYwUFUhKEPokgasRtNL9LIgusSomzjJ5y1WuZBkX3Gf7CzJEKeGNUM5a+m8SE2TPkEpCsF6yaUiGEUuxE5BfYZnwDKHPYZo+/gqJ8jYZpXZFa4GQvgd9N2g01aXyG8OFKJiYFno3PyTMCqnDpvELlLn53lOH3B1iuxz2/3FlrWs/33v3yHdT7rYFNSVIPj7RIL3ZImGvrOKlxq8N7gWVST+eOHr7u6akcuee4r4fc3is8dgZSd2Y3dfK/9Jrosb+nTTic3e01/gBzI4kj0lIuuSJPQxyNy1jVyDwwPgDSzpaZAMrvXJaQR5cCA2+lrUFm2RANZLtL4hjotciDJPnvR98GhpzO3h50uWJSCFNHwnSKNftZrYuW0Ch9dr2lVJ0dlQcLT
-X-OriginatorOrg: wdc.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB6779:EE_|CO1PR11MB4788:EE_
+X-MS-Office365-Filtering-Correlation-Id: 58ab98f0-b6ed-4f33-fa36-08dbaf762191
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: InQb0bQS62FrBIJFMynT2F4wrVf10E3sggvnCvr1ZE+4fEd3kSn5kvE1jcTxg6t9To+Zk+VmNPRNaK4X7oQvkkI9yfQW9lzRxVDS3BQB3NLv/lsE77id1S7VBZ74HJJmpdLxuaft24furXlBuvJaRQNi2Bz+hcg9VulkIfCUGMdxU/MVXt8Mn/BkDVlzKzIG51NbVxQaqivYWI/dpXaZ/U4pcrDrjoM2YieMWFOvbSW+8K61JMuWF2UCkwAXmQlcldKCqwEyKJim/VpD5vRACIe+rf7Q+vAXFp1fjL/e7rWnaV6T7Rc5MVG+U8wnlQPv6RRhfzQZkDugkZzvSuqi5gIFSozB1QyMIw3ua9ZAJYmFA5EQqPrcf+8hlQw/ng9LIu62THmuVpgRtWUmmLWMd0qxV4OpeXzFESgJYHageJJ9bpFtR4OWnEkWgXiuUkZzCxLJ6wYyhD6DpAOkH5a9yJRRYVFCo2SSn7TG517bOCJSajC6P26mfBGs9B7o2apx0YgLVtZbd+S1yNdQHjs8D/U6bTr1R29awMStQV0RreV9Yo0NSLib4dpEPWZlA9EXo3vwaHC+9/SIQZsKKYHpvA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB6779.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(39860400002)(366004)(136003)(346002)(396003)(186009)(1800799009)(451199024)(2906002)(966005)(86362001)(26005)(1076003)(2616005)(107886003)(6666004)(6486002)(36756003)(45080400002)(6506007)(6512007)(38100700002)(83380400001)(82960400001)(478600001)(7416002)(41300700001)(8676002)(8936002)(4326008)(5660300002)(6916009)(316002)(66946007)(66476007)(54906003)(66556008);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?6L7xAOVXGhHpHtES3NsOl2QlMuhiF74BWqQ+iasfZq21fE4e9GSOMPRHqAJM?=
+ =?us-ascii?Q?sW8fSWEKgDxuBnMaIB+bZEKOiBPmy7K4x0qU3X3fup4pDmdT0apPYSgGvUoJ?=
+ =?us-ascii?Q?buM0U5cXtdM1RUP18a3X9e/dQLc+i2hEijMiCvy0hO8jEj9NE8U1OTj/4bqY?=
+ =?us-ascii?Q?92xIKgdPG9Y4yjErZvjyPPbNU5vduhG9WkAbH3WCkqKi+Nfwu2B38/IN9bkC?=
+ =?us-ascii?Q?OcmUVmSaJ19j406jiSliJIg6wHEkFqvTJHEgYNA/2nILA/fAHSTVhIIa7orY?=
+ =?us-ascii?Q?5akUAGUGx35pX+ZLnI9ulBKJRnnJbsQXugQwWUyT9HzXd6hu7Hl+Qlb/ZMv8?=
+ =?us-ascii?Q?gOJ3MxMJoqjet9RSbOoH+gpMg97YKEZNoqRUJOHP8UQ7ALSd69MFPLAiTmh9?=
+ =?us-ascii?Q?fNKJuI9mkwOFS4DG8vJCfDMfQW+79VcXvasmlgXicTThbIHnWdEeHbDCtK/3?=
+ =?us-ascii?Q?KoiouiWbbMrxUnNdd8OMLigo0wW7nJ85RWXSjBSyby9rNpUBudNofqYgRZYF?=
+ =?us-ascii?Q?ecjprFmHIydj3i++rny7jxX/V7ZCnTeeA1Ot855wt6Aw7MQ24Mu+tQ3f38gY?=
+ =?us-ascii?Q?rUOAi4IpSz9fHFcS2XWmu8MTtha5zJavc40XSLn7/qF/3jIpEaSxHM+Y8PBG?=
+ =?us-ascii?Q?/bMBoSpL2VxIdJlUcH9wtTculaw4uFhxtaRvHn4faVCiiTHAwV5rQ9AhZHJE?=
+ =?us-ascii?Q?NTFeJOQTXGtVr+XJwI2LH64yXgUpOBggwtx/P3QgcHP7Gv0Hku3bG4XYGD+u?=
+ =?us-ascii?Q?cLAAl6w+Hf0603DXOZ1FnjkXARzV4GWl1/ZKeze0PbIw+vSrR4PpltpFT0yx?=
+ =?us-ascii?Q?eIyxgJiOHqwjiBwno4M5zieurPRuAllbx14w2wO/nq0qKNtDjVL79HClV8FT?=
+ =?us-ascii?Q?6tFftb3pgkUsutWRTYDbLXMSIYwgvuNY3nSGz0NljCwAF6lTYaB8StpN8VSj?=
+ =?us-ascii?Q?ve/w/6jTRBVBvtp9OHicm3puTX3mxACQM7Ec9Nec0XJKQC91K1c2ClPGMjt9?=
+ =?us-ascii?Q?RH8OUHk7TbGwMmAptEKGq6o7z7JzdTsuRngF3TSKcCmXwePzO6OJmSCwGlF7?=
+ =?us-ascii?Q?iA+/SJpL+Tf3rQf7eQBcNfSlgfk/6vktBrghgWs/Z9YnUDc3odtvQJt5/aPV?=
+ =?us-ascii?Q?SXwS+JXfHzvCpHp7se6qUbureojcwAy4NpOcRb0dnHOP2lWB/lFI+oHFafHZ?=
+ =?us-ascii?Q?fog2a7iHsB+JRkzutl5ciAiaMZqUZmzUZeQbQXwwhV9bPuipjG1wCNTzOpnH?=
+ =?us-ascii?Q?iZVfsWatFoDaAjWXADkWxQkUBvS5Jws0QaIiDNGYDWxjlIQCE/Esy0Kjqwg4?=
+ =?us-ascii?Q?8SVmpcXsObvfSOw+oJlN5hLXqR4UO2wNHw38eMGTuP8Nwvfvy8iUkDH135Rd?=
+ =?us-ascii?Q?qgCBEuKIOqPDVjtl61jFAvBVKBJ6EniS70mxzC3phAbWL3e3RimjNp1diMnT?=
+ =?us-ascii?Q?DC3JdbYCx2NOiKhulamk3BW2RGmbCH6Tx4r4JAaf0KqkWF3WTYuKadvoa2lc?=
+ =?us-ascii?Q?M8TLrLDfII1eCTApGGOSk34nGAEppqnYkXetvBYl5b7Z/9RbF3ZBlTzLtZrJ?=
+ =?us-ascii?Q?40o+IfER3RpIfo5pfXAwA5Er1yjUI3o9cnS3crVYNqa5Rfp/VOfFkSEzUbaP?=
+ =?us-ascii?Q?EA=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 58ab98f0-b6ed-4f33-fa36-08dbaf762191
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB6779.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5f719ca5-c8a0-4a01-d0ed-08dbaf7cb489
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Sep 2023 08:30:34.2752
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Sep 2023 07:43:31.1389
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qlgcyzNTNMxaXGuPdtkWZPqnR3tH1GjcqdF9os7/nKC9AQniEir71KnJw2H1XNiS+SdedncywALA4NUaFqsB5g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR04MB6370
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CoPcRbk8wM1r0m7mGfZe8XU55L6AWKJWj9pTOuZG2azbrwPguRAFBWRm9ClsnUF2B6EmMyIuh+VswXytiCKt0w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR11MB4788
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Sep 07, 2023 at 04:17:10PM +0800, Szuying Chen wrote:
-> When a CRC error occurs, the HBA asserts an interrupt to indicate an
-> interface fatal error(PxIS.IFS). The ISR clear PxIE and PxIS, then do
-> error recovery. Before recovery process, HBA receives another SDB FIS
-> with the error(PxIS.TFES) from device. This can't be serviced due to
-> PxIE be cleared already. During error recovery process, the HBA can't
-> issue any new command after setting PxCMD.ST to 1 due to PxIS.TFES
-> still alive.
->=20
-> According to AHCI 1.3.1 - section 6.2.2 specification. Fatal errors
-> (signified by the setting of PxIS.HBFS, PxIS.HBDS, PxIS.IFS or PxIS.TFES)
-> will cause the HBA to enter the ERR:Fatal state. In this state, the HBA
-> shall not issue any new commands.
->=20
-> To avoid this, introduce the function ahci_port_clear_pending_irq()
-> to clear pending interrupts before executing a COMRESET. This follows
-> the AHCI 1.3.1 - section 6.2.2.2 specification.
->=20
-> Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
-> ---
-> V1->V2: On suggestion by Damien to renamed helper function and modified=20
-> ahci_port_init() to make use of the helper.
-> V2->V3: On suggestion by Niklas to modify commit log and delete the extra=
-=20
-> describe.
-> V3->V4: On suggestion by Damien to modify problem statement on commit log=
-.
->=20
->  drivers/ata/libahci.c | 35 +++++++++++++++++++++++------------
->  1 file changed, 23 insertions(+), 12 deletions(-)
->=20
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index e2bacedf28ef..f1263364fa97 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -1256,6 +1256,26 @@ static ssize_t ahci_activity_show(struct ata_devic=
-e *dev, char *buf)
->  	return sprintf(buf, "%d\n", emp->blink_policy);
->  }
->=20
-> +static void ahci_port_clear_pending_irq(struct ata_port *ap)
-> +{
-> +	struct ahci_host_priv *hpriv =3D ap->host->private_data;
-> +	void __iomem *port_mmio =3D ahci_port_base(ap);
-> +	u32 tmp;
-> +
-> +	/* clear SError */
-> +	tmp =3D readl(port_mmio + PORT_SCR_ERR);
-> +	dev_dbg(ap->host->dev, "PORT_SCR_ERR 0x%x\n", tmp);
-> +	writel(tmp, port_mmio + PORT_SCR_ERR);
-> +
-> +	/* clear port IRQ */
-> +	tmp =3D readl(port_mmio + PORT_IRQ_STAT);
-> +	dev_dbg(ap->host->dev, "PORT_IRQ_STAT 0x%x\n", tmp);
-> +	if (tmp)
-> +		writel(tmp, port_mmio + PORT_IRQ_STAT);
-> +
-> +	writel(1 << ap->port_no, hpriv->mmio + HOST_IRQ_STAT);
-> +}
-> +
->  static void ahci_port_init(struct device *dev, struct ata_port *ap,
->  			   int port_no, void __iomem *mmio,
->  			   void __iomem *port_mmio)
-> @@ -1270,18 +1290,7 @@ static void ahci_port_init(struct device *dev, str=
-uct ata_port *ap,
->  	if (rc)
->  		dev_warn(dev, "%s (%d)\n", emsg, rc);
->=20
-> -	/* clear SError */
-> -	tmp =3D readl(port_mmio + PORT_SCR_ERR);
-> -	dev_dbg(dev, "PORT_SCR_ERR 0x%x\n", tmp);
-> -	writel(tmp, port_mmio + PORT_SCR_ERR);
-> -
-> -	/* clear port IRQ */
-> -	tmp =3D readl(port_mmio + PORT_IRQ_STAT);
-> -	dev_dbg(dev, "PORT_IRQ_STAT 0x%x\n", tmp);
-> -	if (tmp)
-> -		writel(tmp, port_mmio + PORT_IRQ_STAT);
-> -
-> -	writel(1 << port_no, mmio + HOST_IRQ_STAT);
-> +	ahci_port_clear_pending_irq(ap);
->=20
->  	/* mark esata ports */
->  	tmp =3D readl(port_mmio + PORT_CMD);
-> @@ -1603,6 +1612,8 @@ int ahci_do_hardreset(struct ata_link *link, unsign=
-ed int *class,
->  	tf.status =3D ATA_BUSY;
->  	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
->=20
-> +	ahci_port_clear_pending_irq(ap);
-> +
->  	rc =3D sata_link_hardreset(link, timing, deadline, online,
->  				 ahci_check_ready);
->=20
-> --
-> 2.39.2
->=20
 
-Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>=
+
+Hello,
+
+kernel test robot noticed "kernel_BUG_at_drivers/ata/libata-sff.c" on:
+
+commit: d3d099d5c2dd38db84abd96df39f9f0828c16b7b ("[PATCH v4] ata: libata-eh: Honor all EH scheduling requests")
+url: https://github.com/intel-lab-lkp/linux/commits/linan666-huaweicloud-com/ata-libata-eh-Honor-all-EH-scheduling-requests/20230906-164907
+base: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git 65d6e954e37872fd9afb5ef3fc0481bb3c2f20f4
+patch link: https://lore.kernel.org/all/20230906084212.1016634-1-linan666@huaweicloud.com/
+patch subject: [PATCH v4] ata: libata-eh: Honor all EH scheduling requests
+
+in testcase: boot
+
+compiler: gcc-12
+test machine: qemu-system-x86_64 -enable-kvm -cpu SandyBridge -smp 2 -m 16G
+
+(please refer to attached dmesg/kmsg for entire log/backtrace)
+
+
++------------------------------------------+------------+------------+
+|                                          | 65d6e954e3 | d3d099d5c2 |
++------------------------------------------+------------+------------+
+| boot_successes                           | 8          | 0          |
+| boot_failures                            | 0          | 4          |
+| kernel_BUG_at_drivers/ata/libata-sff.c   | 0          | 4          |
+| invalid_opcode:#[##]                     | 0          | 4          |
+| RIP:ata_sff_pio_task[libata]             | 0          | 4          |
+| Kernel_panic-not_syncing:Fatal_exception | 0          | 4          |
++------------------------------------------+------------+------------+
+
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <oliver.sang@intel.com>
+| Closes: https://lore.kernel.org/oe-lkp/202309071557.3a90e7a8-oliver.sang@intel.com
+
+
+[   29.974031][    T8] ------------[ cut here ]------------
+[   29.974432][    T8] kernel BUG at drivers/ata/libata-sff.c:1220!
+[   29.974866][    T8] invalid opcode: 0000 [#1] SMP PTI
+[   29.975228][    T8] CPU: 0 PID: 8 Comm: kworker/0:0 Not tainted 6.5.0-11939-gd3d099d5c2dd #1
+[   29.975817][    T8] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+[   29.976529][    T8] Workqueue: ata_sff ata_sff_pio_task [libata]
+[ 29.977003][ T8] RIP: 0010:ata_sff_pio_task (drivers/ata/libata-sff.c:1220 (discriminator 1)) libata
+[ 29.977518][ T8] Code: 35 a6 0d 01 00 48 8d 90 b8 00 00 00 e8 da a6 fb f4 e9 cc fe ff ff 84 c0 0f 89 e7 fe ff ff e9 4b ff ff ff 0f 0b e9 1c ff ff ff <0f> 0b 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 2e 0f 1f 84 00 00 00
+All code
+========
+   0:	35 a6 0d 01 00       	xor    $0x10da6,%eax
+   5:	48 8d 90 b8 00 00 00 	lea    0xb8(%rax),%rdx
+   c:	e8 da a6 fb f4       	callq  0xfffffffff4fba6eb
+  11:	e9 cc fe ff ff       	jmpq   0xfffffffffffffee2
+  16:	84 c0                	test   %al,%al
+  18:	0f 89 e7 fe ff ff    	jns    0xffffffffffffff05
+  1e:	e9 4b ff ff ff       	jmpq   0xffffffffffffff6e
+  23:	0f 0b                	ud2    
+  25:	e9 1c ff ff ff       	jmpq   0xffffffffffffff46
+  2a:*	0f 0b                	ud2    		<-- trapping instruction
+  2c:	66 66 2e 0f 1f 84 00 	data16 nopw %cs:0x0(%rax,%rax,1)
+  33:	00 00 00 00 
+  37:	66                   	data16
+  38:	66                   	data16
+  39:	2e                   	cs
+  3a:	0f                   	.byte 0xf
+  3b:	1f                   	(bad)  
+  3c:	84 00                	test   %al,(%rax)
+	...
+
+Code starting with the faulting instruction
+===========================================
+   0:	0f 0b                	ud2    
+   2:	66 66 2e 0f 1f 84 00 	data16 nopw %cs:0x0(%rax,%rax,1)
+   9:	00 00 00 00 
+   d:	66                   	data16
+   e:	66                   	data16
+   f:	2e                   	cs
+  10:	0f                   	.byte 0xf
+  11:	1f                   	(bad)  
+  12:	84 00                	test   %al,(%rax)
+	...
+[   29.978931][    T8] RSP: 0018:ffffb84cc004be40 EFLAGS: 00010046
+[   29.979363][    T8] RAX: 0000000000000000 RBX: ffff88a1d49180b8 RCX: ffff88a4efc2d5e8
+[   29.979906][    T8] RDX: 0000000000000001 RSI: 0000000000000001 RDI: ffff88a1fa6299c0
+[   29.980449][    T8] RBP: ffff88a1d49180b8 R08: ff6565725e607360 R09: ffff88a4ea0e32c0
+[   29.980994][    T8] R10: 0000000000000008 R11: fefefefefefefeff R12: ffff88a4ea592200
+[   29.981559][    T8] R13: 0000000000000000 R14: ffff88a4ea592205 R15: ffff88a1d49180c0
+[   29.982108][    T8] FS:  0000000000000000(0000) GS:ffff88a4efc00000(0000) knlGS:0000000000000000
+[   29.982720][    T8] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   29.983173][    T8] CR2: 00007f1549cb1028 CR3: 000000011465a000 CR4: 00000000000406f0
+[   29.983726][    T8] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   29.984856][    T8] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   29.986008][    T8] Call Trace:
+[   29.987041][    T8]  <TASK>
+[ 29.987799][ T8] ? die (arch/x86/kernel/dumpstack.c:421 arch/x86/kernel/dumpstack.c:434 arch/x86/kernel/dumpstack.c:447) 
+[ 29.988599][ T8] ? do_trap (arch/x86/kernel/traps.c:112 arch/x86/kernel/traps.c:153) 
+[ 29.989418][ T8] ? ata_sff_pio_task (drivers/ata/libata-sff.c:1220 (discriminator 1)) libata
+[ 29.990388][ T8] ? do_error_trap (arch/x86/include/asm/traps.h:59 arch/x86/kernel/traps.c:174) 
+[ 29.991210][ T8] ? ata_sff_pio_task (drivers/ata/libata-sff.c:1220 (discriminator 1)) libata
+[ 29.992148][ T8] ? exc_invalid_op (arch/x86/kernel/traps.c:265) 
+[ 29.992972][ T8] ? ata_sff_pio_task (drivers/ata/libata-sff.c:1220 (discriminator 1)) libata
+[ 29.993919][ T8] ? asm_exc_invalid_op (arch/x86/include/asm/idtentry.h:568) 
+[ 29.994748][ T8] ? ata_sff_pio_task (drivers/ata/libata-sff.c:1220 (discriminator 1)) libata
+[ 29.995668][ T8] process_one_work (kernel/workqueue.c:2635) 
+[ 29.996515][ T8] worker_thread (kernel/workqueue.c:2697 kernel/workqueue.c:2784) 
+[ 29.997328][ T8] ? __pfx_worker_thread (kernel/workqueue.c:2730) 
+[ 29.998163][ T8] kthread (kernel/kthread.c:388) 
+[ 29.998902][ T8] ? __pfx_kthread (kernel/kthread.c:341) 
+[ 29.999685][ T8] ret_from_fork (arch/x86/kernel/process.c:153) 
+[ 30.000452][ T8] ? __pfx_kthread (kernel/kthread.c:341) 
+[ 30.001228][ T8] ret_from_fork_asm (arch/x86/entry/entry_64.S:312) 
+[   30.002045][    T8]  </TASK>
+[   30.002705][    T8] Modules linked in: intel_rapl_msr sr_mod intel_rapl_common crct10dif_pclmul crc32_pclmul crc32c_intel cdrom bochs ghash_clmulni_intel drm_vram_helper drm_kms_helper drm_ttm_helper sha512_ssse3 ttm ata_generic rapl ppdev drm ata_piix joydev serio_raw libata i2c_piix4 parport_pc parport
+[   30.005504][    T8] ---[ end trace 0000000000000000 ]---
+[ 30.006390][ T8] RIP: 0010:ata_sff_pio_task (drivers/ata/libata-sff.c:1220 (discriminator 1)) libata
+[ 30.007379][ T8] Code: 35 a6 0d 01 00 48 8d 90 b8 00 00 00 e8 da a6 fb f4 e9 cc fe ff ff 84 c0 0f 89 e7 fe ff ff e9 4b ff ff ff 0f 0b e9 1c ff ff ff <0f> 0b 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 2e 0f 1f 84 00 00 00
+All code
+========
+   0:	35 a6 0d 01 00       	xor    $0x10da6,%eax
+   5:	48 8d 90 b8 00 00 00 	lea    0xb8(%rax),%rdx
+   c:	e8 da a6 fb f4       	callq  0xfffffffff4fba6eb
+  11:	e9 cc fe ff ff       	jmpq   0xfffffffffffffee2
+  16:	84 c0                	test   %al,%al
+  18:	0f 89 e7 fe ff ff    	jns    0xffffffffffffff05
+  1e:	e9 4b ff ff ff       	jmpq   0xffffffffffffff6e
+  23:	0f 0b                	ud2    
+  25:	e9 1c ff ff ff       	jmpq   0xffffffffffffff46
+  2a:*	0f 0b                	ud2    		<-- trapping instruction
+  2c:	66 66 2e 0f 1f 84 00 	data16 nopw %cs:0x0(%rax,%rax,1)
+  33:	00 00 00 00 
+  37:	66                   	data16
+  38:	66                   	data16
+  39:	2e                   	cs
+  3a:	0f                   	.byte 0xf
+  3b:	1f                   	(bad)  
+  3c:	84 00                	test   %al,(%rax)
+	...
+
+Code starting with the faulting instruction
+===========================================
+   0:	0f 0b                	ud2    
+   2:	66 66 2e 0f 1f 84 00 	data16 nopw %cs:0x0(%rax,%rax,1)
+   9:	00 00 00 00 
+   d:	66                   	data16
+   e:	66                   	data16
+   f:	2e                   	cs
+  10:	0f                   	.byte 0xf
+  11:	1f                   	(bad)  
+  12:	84 00                	test   %al,(%rax)
+
+
+The kernel config and materials to reproduce are available at:
+https://download.01.org/0day-ci/archive/20230907/202309071557.3a90e7a8-oliver.sang@intel.com
+
+
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
