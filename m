@@ -2,94 +2,92 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF71CA0EC3
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 22:11:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C401BCA0EC6
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 22:11:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237342AbjIKWJQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Sep 2023 18:09:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41838 "EHLO
+        id S236316AbjIKWJS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 18:09:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236316AbjIKKPF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 06:15:05 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 078DCE5F;
-        Mon, 11 Sep 2023 03:15:01 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-502a4f33440so3805175e87.1;
-        Mon, 11 Sep 2023 03:15:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694427299; x=1695032099; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UHCnoccZNiz4HQ8Bo9b1jZ414TiCPpgUdOpHpw/rPXw=;
-        b=c1Sq9ZgjSYTJXSXnjb/fXBWFdtviDwrR/xxzraHb5Qe3mkeVZ4y6gqiugdFn2DmrfK
-         3hXeC4A0Gv9jVyIh1AVqFhQ5LPLvTbQ940omt9msE7CXyJx9gRXS7vyBqWA6UbnbDl0N
-         rLHZ/J+TpzIBUs5IAfVML3N4SI2YdcdFHUeZboEJ2Cu0POOzV7HgweiitgZ9DzX8J/5m
-         0izqa9YWkHL8rCBz7/KY1ZKvDJFdO14deqziDGdJmxPoAhLU+lwOJNe7DEsFWXgR+Opn
-         jeMNblwWtYVdAn+7dblPH1O789ul+ZXSw+9gPjUDD8Cja5V9vbQyFpsO2LV22oPhitLa
-         GQOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694427299; x=1695032099;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UHCnoccZNiz4HQ8Bo9b1jZ414TiCPpgUdOpHpw/rPXw=;
-        b=TfWn3VyQVF6fuL61Fp6w4HBL0+FDuBwYSroTIAzLXSD/1OBlXrzJKnA/Do41MY9YQD
-         T2fXJ0B7bcxjdX+pFOwZwphFdoxIGzvssDGo9T6OywZSDoHB1Yc6tTYitr8AEIjt5sky
-         SOkAvzrxa9wXJ4hmHYqH02YERjduGxW0oD3F1KhwIWckHqaaheTTljxqN5/LN7LPngrc
-         Kjv9GkAg6HmK9HAF3sNLbG+sBRUpgGm/H/FGqRDL2qAh6Je8nQKE9Z70SyZPaXMJ+GcE
-         Cg+FEnWhF73y+tfOmcXKVKIaERwy83AGsxbqEiqvhCyO7h3qU+ZFBFlvSOiUvRJYCE01
-         pndA==
-X-Gm-Message-State: AOJu0YxmSl+MIaRlQdJAcL7Ul+7oIXs7e/bQTxGCmQIXRrnggq5Geff3
-        9IZ9ITrfcCO5JsjA5MDfaE0=
-X-Google-Smtp-Source: AGHT+IEBzImGafYSjy+sKGHiF/inpe78xQ3N0eED9tvnQyipiObNqw+8hKQHd3OOq3uiMbbz8quuUQ==
-X-Received: by 2002:a19:ca18:0:b0:4f8:62a6:8b2 with SMTP id a24-20020a19ca18000000b004f862a608b2mr6380933lfg.46.1694427298875;
-        Mon, 11 Sep 2023 03:14:58 -0700 (PDT)
-Received: from [192.168.1.103] ([178.176.75.0])
-        by smtp.gmail.com with ESMTPSA id q1-20020a19a401000000b005009c4ba3f0sm1291041lfc.72.2023.09.11.03.14.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 Sep 2023 03:14:58 -0700 (PDT)
-Subject: Re: [PATCH 18/19] ata: libata-eh: Reduce "disable device" message
- verbosity
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-19-dlemoal@kernel.org>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <3df11a20-bd80-304b-0a78-9875fa1a9e9b@gmail.com>
-Date:   Mon, 11 Sep 2023 13:14:56 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S236803AbjIKL02 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 07:26:28 -0400
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E7CFF5;
+        Mon, 11 Sep 2023 04:26:23 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Rkktc1bvGz4f3kG1;
+        Mon, 11 Sep 2023 19:26:16 +0800 (CST)
+Received: from [10.174.179.247] (unknown [10.174.179.247])
+        by APP4 (Coremail) with SMTP id gCh0CgDHXd1W+f5klhzLAA--.27685S3;
+        Mon, 11 Sep 2023 19:26:18 +0800 (CST)
+Message-ID: <1cf7abfa-df99-38af-021f-fcaeea8f6ee1@huaweicloud.com>
+Date:   Mon, 11 Sep 2023 19:26:14 +0800
 MIME-Version: 1.0
-In-Reply-To: <20230911040217.253905-19-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v4] ata: libata-eh: Honor all EH scheduling requests
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        kernel test robot <oliver.sang@intel.com>
+Cc:     "oe-lkp@lists.linux.dev" <oe-lkp@lists.linux.dev>,
+        "lkp@intel.com" <lkp@intel.com>, luojian <luojian5@huawei.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "dlemoal@kernel.org" <dlemoal@kernel.org>,
+        "htejun@gmail.com" <htejun@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linan122@huawei.com" <linan122@huawei.com>,
+        "yukuai3@huawei.com" <yukuai3@huawei.com>,
+        "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
+        "houtao1@huawei.com" <houtao1@huawei.com>,
+        "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <20230906084212.1016634-1-linan666@huaweicloud.com>
+ <202309071557.3a90e7a8-oliver.sang@intel.com> <ZPo6fXqTbmwDyopr@x1-carbon>
+From:   Li Nan <linan666@huaweicloud.com>
+In-Reply-To: <ZPo6fXqTbmwDyopr@x1-carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: gCh0CgDHXd1W+f5klhzLAA--.27685S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrGF4DKF45Zr1rJF47WF43Awb_yoWxGFgE9w
+        4v93srGw1DXr40ka12kFs3tryDGF98ZwnrCr1FqF12gr1DJr93Crs5Kr1rtryxJ34ruFZx
+        WFy5ZrWDZr1DWjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbaAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+        67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l
+        5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67
+        AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2
+        Y2ka0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4
+        IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
+        MI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
+        WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3
+        Jr0E3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8Jr
+        UvcSsGvfC2KfnxnUUI43ZEXa7IU1VOJ7UUUUU==
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
 
-On 9/11/23 7:02 AM, Damien Le Moal wrote:
 
-> There is no point in warning about a device being diabled when we expect
+在 2023/9/8 5:02, Niklas Cassel 写道:
+> On Thu, Sep 07, 2023 at 03:43:19PM +0800, kernel test robot wrote:
 
-   Disabled. :-)
+[snip]
 
-> it to be, that is, on suspend, shutdown or when detaching a device.
-> Suppress this message for these cases by introducing the EH static
-> function ata_eh_dev_disable() and by using it in ata_eh_unload() and
-> ata_eh_detach_dev(). ata_dev_disable() code is modified to call this new
-> function after printing the "disable device" message.
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-[...]
+> It might be worth mentioning that the race window for the bug that the patch
+> in $subject is fixing, should be much smaller after this patch is in:
+> https://lore.kernel.org/linux-ide/20230907081710.4946-1-Chloe_Chen@asmedia.com.tw/
+> 
+> Li Nan, perhaps you could see if you can still reproduce your original
+> problem with the patch from the ASMedia guys?
+> 
 
-MBR, Sergey
+Thanks for your suggestion. We have briefly tested this patch and it can
+fix the original problem . More tests is underway.
+
+-- 
+Thanks,
+Nan
+
