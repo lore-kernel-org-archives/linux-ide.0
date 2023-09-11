@@ -2,89 +2,103 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FF7CEE57DF
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 06:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E25EE57DF
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 06:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230380AbjIKG1O (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Sep 2023 02:27:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44538 "EHLO
+        id S231259AbjIKGek (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 02:34:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230001AbjIKG1O (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 02:27:14 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D940EC
-        for <linux-ide@vger.kernel.org>; Sun, 10 Sep 2023 23:27:10 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5133EC433C8;
-        Mon, 11 Sep 2023 06:27:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694413629;
-        bh=xZiOoxVpkbuEAvqVOqky+geLerxYaZdf9+yFVS+nBdA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=hvDhjcoBEvGk0RaJntrHa3Q9+m52irD/aSSDIpZJoru/2AwEToGLUp6F0sT5qbpvE
-         ZVdjuyFwn4YsJ6a9McrTh3lFjyJLCQaCffQ+wtGVtCCOxKyn/Vfb5rQL8BVAp6tvn5
-         G8QVzWUQPXs7YdT/aimTLgchmLdNBmjmVH4AZ1HG0VQVlwQuOsQi/5sKyUVVALtKDB
-         cqApRWcjFD0qm3QebkvyJXtFPNRsqypPEkxltzeGrKsF/+uPvKjq0t3DlGRKZB09he
-         qt8Xfei7MhIS5T2YxGj9EiqRUVXtxOAcKXMD6f6hBpxEyomd4WuD5DUU5iwQ6Kokm9
-         Z/i453X10t7NA==
-Message-ID: <955fa865-894e-01bd-ea95-36ece6042528@kernel.org>
-Date:   Mon, 11 Sep 2023 15:27:08 +0900
+        with ESMTP id S234060AbjIKGek (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 02:34:40 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26D74EA;
+        Sun, 10 Sep 2023 23:34:35 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id B73F11F460;
+        Mon, 11 Sep 2023 06:34:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1694414073; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4Liqnv5C9u1WHhOFs/fW4H5rN+Pdwcw1Js6uR9GkKos=;
+        b=Du2y4LIrZN0R0QLzj9cXUTesWrIqsj5vwQ7StDTY5u+g4WktfvKgiWf3F7TRVHm6jP96rX
+        9h3qN96k42BoDf0JOwITHm5HgL92EGvA96tHbyO1NkimI7YkMWBsioJfvzz3vBDMDAbrcy
+        1wieXfs+qqpKSa/Ob4KKKgCe8wU09Yo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1694414073;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4Liqnv5C9u1WHhOFs/fW4H5rN+Pdwcw1Js6uR9GkKos=;
+        b=abNxOQo8Wxv8W+d06te0dX4E1URCmAYGMT/oOcb9zczdkv8I//ulttZRs69Ybs/PtnOJtg
+        V2fxO7oPohpKCbBQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 02C1213780;
+        Mon, 11 Sep 2023 06:34:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id NNMvN/i0/mS1SAAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 11 Sep 2023 06:34:32 +0000
+Message-ID: <36c6e364-a003-4879-831c-82d2eef87137@suse.de>
+Date:   Mon, 11 Sep 2023 08:34:32 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v2] ata: ahci: print the lpm policy on boot
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/19] ata: libata-core: Fix ata_port_request_pm() locking
 Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>
-Cc:     linux-ide@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230906092232.3396200-1-nks@flawful.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230906092232.3396200-1-nks@flawful.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230911040217.253905-1-dlemoal@kernel.org>
+ <20230911040217.253905-2-dlemoal@kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230911040217.253905-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/6/23 18:22, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
+On 9/11/23 06:01, Damien Le Moal wrote:
+> The function ata_port_request_pm() checks the port flag
+> ATA_PFLAG_PM_PENDING and calls ata_port_wait_eh() if this flag is set to
+> ensure that power management operations for a port are not secheduled
+> simultaneously. However, this flag check is done without holding the
+> port lock.
 > 
-> The target LPM policy can be set using either a Kconfig or a kernel module
-> parameter.
+> Fix this by taking the port lock on entry to the function and checking
+> the flag under this lock. The lock is released and re-taken if
+> ata_port_wait_eh() needs to be called.
 > 
-> However, if the board type is set to anything but board_ahci_low_power,
-> then the LPM policy will overridden and set to ATA_LPM_UNKNOWN.
+> Fixes: 5ef41082912b ("ata: add ata port system PM callbacks")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/libata-core.c | 17 +++++++++--------
+>   1 file changed, 9 insertions(+), 8 deletions(-)
 > 
-> Additionally, if the default suspend is suspend to idle, depending on the
-> hardware capabilities of the HBA, ahci_update_initial_lpm_policy() might
-> override the LPM policy to either ATA_LPM_MIN_POWER_WITH_PARTIAL or
-> ATA_LPM_MIN_POWER.
-> 
-> All this means that it is very hard to know which LPM policy a user will
-> actually be using on a given system.
-> 
-> In order to make it easier to debug LPM related issues, print the LPM
-> policy on boot.
-> 
-> One common LPM related issue is that the device fails to link up.
-> Because of that, we cannot add this print to ata_dev_configure(), as that
-> function is only called after a successful link up. Instead, add the info
-> using ata_port_desc(), with the help of a new ata_port_desc_misc() helper.
-> The port description is printed once per port during boot.
-> 
-> Before changes:
-> ata1: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780100 irq 170
-> ata2: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780180 irq 170
-> 
-> After changes:
-> ata1: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780100 irq 170 lpm-pol 4
-> ata2: SATA max UDMA/133 abar m524288@0xa5780000 port 0xa5780180 irq 170 lpm-pol 4
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Applied to for-6.7. Thanks !
+Cheers,
 
-
+Hannes
 -- 
-Damien Le Moal
-Western Digital Research
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
