@@ -2,165 +2,199 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72036EE7FF4
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 07:09:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7ADEE801F
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 07:17:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230045AbjIKHJm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Sep 2023 03:09:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39422 "EHLO
+        id S231483AbjIKHRG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 03:17:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231159AbjIKHJl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 03:09:41 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA996133;
-        Mon, 11 Sep 2023 00:09:36 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 76B4B2185A;
-        Mon, 11 Sep 2023 07:09:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1694416175; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NXyDhJ3vm99Li2kxO+VIr8z65wM94zAD06ZnQQuPSeU=;
-        b=pW7wfYI2jSFskrVldaopIpoqLRB/exBSp2LxwEprBzKY3lBSRXTh93ZSCKokgbFKuH2rlq
-        Q83392VC6M1unYwWQrm+peScxmFjEXncZ3yQS2u5/1+GE2fY79BvfsZpfe+XKVv4Ff9lUe
-        QKPfTgxPFazDVc3eHzZUDqYFgY42ci0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1694416175;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NXyDhJ3vm99Li2kxO+VIr8z65wM94zAD06ZnQQuPSeU=;
-        b=rvgALndwG52LmqVmVvZ8KCNiA0jSC1SwMlRGcBTmlfsee0J6l9MzIzjf2BqqieSfQ8jVsH
-        +rcYx57l8UNmQVAQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EA0E213780;
-        Mon, 11 Sep 2023 07:09:34 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id oDkyNS69/mQKVwAAMHmgww
-        (envelope-from <hare@suse.de>); Mon, 11 Sep 2023 07:09:34 +0000
-Message-ID: <82d68ebf-bde9-4046-b6bf-3e908a94a8eb@suse.de>
-Date:   Mon, 11 Sep 2023 09:09:34 +0200
+        with ESMTP id S229865AbjIKHRF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 03:17:05 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B235CCD;
+        Mon, 11 Sep 2023 00:16:59 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A87CAC433C7;
+        Mon, 11 Sep 2023 07:16:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694416618;
+        bh=lWO/C3U3yqJl7tGyp46raVBwGBuyZj7w0yX4db1mPx8=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=Xdd4B/wTOAbv4WtkaHdz8hIcZ4t47IDoYOXCjU77wxDiMHSey+J52iTQLul0adktJ
+         V3J7bD/qZHjFNWYvjy81zuU9seURlGdPVVH3SEe0w9/Z+mUfTKrCNIPXdwxib3oOUa
+         vgShLAyVEuNC9YKkiZKbuk4TkZeFVKM9xC/eRlCA1x0JDGwMyP3SosIXjzH1dQepNF
+         FM2qPf+fc/4gITGtfw2l6l24d/QHSXDOi/C2QsAedKAmGrhce9fipEB5XZdqpyUPWc
+         VUXXtRvAaE7Vvo0HgTcIyCJjvzFFCKQdBEsU5eMsq6NUmEp1M6p72CTYfcFExkPZAS
+         LzBU/RAfTgIiw==
+Message-ID: <d88625ca-9bc7-cf33-2fa7-9e71d4153e7f@kernel.org>
+Date:   Mon, 11 Sep 2023 16:16:55 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 04/19] ata: libata-scsi: Disable scsi device
- manage_start_stop
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH v4] ata: libata-eh: Honor all EH scheduling requests
 Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-References: <20230911040217.253905-1-dlemoal@kernel.org>
- <20230911040217.253905-5-dlemoal@kernel.org>
- <0d7e1e2d-06a8-4992-be0b-7a97646c170d@suse.de>
- <8ca4afdb-bf15-c964-c225-b5f6d7b4d670@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <8ca4afdb-bf15-c964-c225-b5f6d7b4d670@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        kernel test robot <oliver.sang@intel.com>
+Cc:     "linan666@huaweicloud.com" <linan666@huaweicloud.com>,
+        "oe-lkp@lists.linux.dev" <oe-lkp@lists.linux.dev>,
+        "lkp@intel.com" <lkp@intel.com>, luojian <luojian5@huawei.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "htejun@gmail.com" <htejun@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linan122@huawei.com" <linan122@huawei.com>,
+        "yukuai3@huawei.com" <yukuai3@huawei.com>,
+        "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
+        "houtao1@huawei.com" <houtao1@huawei.com>,
+        "yangerkun@huawei.com" <yangerkun@huawei.com>
+References: <20230906084212.1016634-1-linan666@huaweicloud.com>
+ <202309071557.3a90e7a8-oliver.sang@intel.com> <ZPo6fXqTbmwDyopr@x1-carbon>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZPo6fXqTbmwDyopr@x1-carbon>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/11/23 08:59, Damien Le Moal wrote:
-> On 9/11/23 15:46, Hannes Reinecke wrote:
->> On 9/11/23 06:02, Damien Le Moal wrote:
->>> The introduction of a device link to create a consumer/supplier
->>> relationship between the scsi device of an ATA device and the ATA port
->>> of the ATA device fixed the ordering of the suspend and resume
->>> operations. For suspend, the scsi device is suspended first and the ata
->>> port after it. This is fine as this allows the synchronize cache and
->>> START STOP UNIT commands issued by the scsi disk driver to be executed
->>> before the ata port is disabled.
->>>
->>> For resume operations, the ata port is resumed first, followed
->>> by the scsi device. This allows having the request queue of the scsi
->>> device to be unfrozen after the ata port restart is scheduled in EH,
->>> thus avoiding to see new requests issued to the ATA device prematurely.
->>> However, since libata sets manage_start_stop to 1, the scsi disk resume
->>> operation also results in issuing a START STOP UNIT command to wakeup
->>> the device. This is too late and that must be done before libata EH
->>> resume handling starts revalidating the drive with IDENTIFY etc
->>> commands. Commit 0a8589055936 ("ata,scsi: do not issue START STOP UNIT
->>> on resume") disabled issuing the START STOP UNIT command to avoid
->>> issues with it. However, this is incorrect as transitioning a device to
->>> the active power mode from the standby power mode set on suspend
->>> requires a media access command. The device link reset and subsequent
->>> SET FEATURES, IDENTIFY and READ LOG commands executed in libata EH
->>> context triggered by the ata port resume operation may thus fail.
->>>
->>> Fix this by handling a device power mode transitions for suspend and
->>> resume in libata EH context without relying on the scsi disk management
->>> triggered with the manage_start_stop flag.
->>>
->>> To do this, the following libata helper functions are introduced:
->>>
->>> 1) ata_dev_power_set_standby():
->>>
->>> This function issues a STANDBY IMMEDIATE command to transitiom a device
->>> to the standby power mode. For HDDs, this spins down the disks. This
->>> function applies only to ATA and ZAC devices and does nothing otherwise.
->>> This function also does nothing for devices that have the
->>> ATA_FLAG_NO_POWEROFF_SPINDOWN or ATA_FLAG_NO_HIBERNATE_SPINDOWN flag
->>> set.
->>>
->>> For suspend, call ata_dev_power_set_standby() in
->>> ata_eh_handle_port_suspend() before the port is disabled and frozen.
->>> ata_eh_unload() is also modified to transition all enabled devices to
->>> the standby power mode when the system is shutdown or devices removed.
->>>
->>> 2) ata_dev_power_set_active() and
->>>
->>> This function applies to ATA or ZAC devices and issues a VERIFY command
->>> for 1 sector at LBA 0 to transition the device to the active power mode.
->>> For HDDs, since this function will complete only once the disk spin up.
->>> Its execution uses the same timeouts as for reset, to give the drive
->>> enough time to complete spinup without triggering a command timeout.
->>>
->> Neat. But why VERIFY?
+On 9/8/23 06:02, Niklas Cassel wrote:
+> On Thu, Sep 07, 2023 at 03:43:19PM +0800, kernel test robot wrote:
+>>
+>>
+>> Hello,
+>>
+>> kernel test robot noticed "kernel_BUG_at_drivers/ata/libata-sff.c" on:
+>>
+>> commit: d3d099d5c2dd38db84abd96df39f9f0828c16b7b ("[PATCH v4] ata: libata-eh: Honor all EH scheduling requests")
+>> url: https://github.com/intel-lab-lkp/linux/commits/linan666-huaweicloud-com/ata-libata-eh-Honor-all-EH-scheduling-requests/20230906-164907
+>> base: https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git 65d6e954e37872fd9afb5ef3fc0481bb3c2f20f4
+>> patch link: https://lore.kernel.org/all/20230906084212.1016634-1-linan666@huaweicloud.com/
+>> patch subject: [PATCH v4] ata: libata-eh: Honor all EH scheduling requests
+>>
+>> in testcase: boot
+>>
+>> compiler: gcc-12
+>> test machine: qemu-system-x86_64 -enable-kvm -cpu SandyBridge -smp 2 -m 16G
 > 
-> Ask that to T13 :) Need a media access command to get out of sleep state...
-> Could use a read, but then need a buffer, which is silly for just waking up a
-> drive. VERIFY is a mandatory command.
+> Unfortunately the problem reported by the kernel test robot is very real.
+> I could reproduce without too much effort in QEMU.
 > 
->> Isn't there a dedicated command (ie the opposite of STANDBY IMMEDIATE)?
->> And can we be sure that VERIFY is implemented everywhere?
->> It's not that this command had been in active use until now ...
+> The problem is basically that we cannot simply perform a host_eh_scheduled--;
+> in ata_std_end_eh().
 > 
-> START STOP UNIT with start == 1 has been translated to a VERIFY command since
-> forever. This is according to SAT specs. There is no command to explicitly get
-> out of standby-mode. Even a reset should not change the drive power state
-> (though I do see a lot of drive waking up on COMRESET). A media access command
-> does that. See ACS specs "Power Management states and transitions". The only
-> exception is that you can use SET FEATURE command to wake up a drive, but only
-> from PUIS state (Power-Up in Standby), which is a different feature that is not
-> necessarilly supported by a device.
+> ata_std_end_eh() is called at the end of ata_scsi_port_error_handler(),
+> so it is called once every time ata_scsi_port_error_handler() is called.
 > 
-Sheesh. Why make life simple if you can also make it complicated...
-But if we've been using VERIFY already I'm fine with this change.
+> However, ata_scsi_port_error_handler() will be called by SCSI EH each
+> time SCSI wakes up.
+> 
+> SCSI EH will sleep as long as:
+> if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
+>                     shost->host_failed != scsi_host_busy(shost)) {
+> 	schedule();
+> 	continue;
+> }
+> 
+> 
+> The methods in libata which we use to trigger EH are:
+> 
+> 1) ata_std_sched_eh(), which calls scsi_schedule_eh(), which does
+> host_eh_scheduled++;
+> 
+> 2) ata_qc_schedule_eh(), which will end up in scsi_timeout,
+> which calls scsi_eh_scmd_add() which does:
+> host_failed++;
+> 
+> 
+> So before this patch, setting host_eh_scheduled = 0; in ata_std_end_eh()
+> makes us say that works because it only negates the EH scheduled by
+> ata_std_sched_eh().
+> 
+> However, if we do host_eh_scheduled--, then if the EH was triggered by
+> ata_qc_schedule_eh(), then host_eh_scheduled will decrease < 0,
+> which will trigger SCSI EH to wake up again :)
+> 
+> We could do something like only decreasing host_eh_scheduled if it is > 0.
+> The QCs added to EH using ata_qc_schedule_eh() will be handled by
+> ata_eh_finish(), which will iterate over all QCs owned by EH, and will
+> either fail or retry each QC. After that scsi_error_handler() has finished
+> the call to eh_strategy_handler() (ata_scsi_error()) it will unconditionally
+> set host_failed to 0:
+> https://github.com/torvalds/linux/blob/v6.5/drivers/scsi/scsi_error.c#L2331-L2337
+> 
+> So something like this on top of the patch in $subject:
+> 
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 2d5ecd68b7e0..9ab12d7f6d9f 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -952,7 +952,13 @@ EXPORT_SYMBOL_GPL(ata_std_sched_eh);
+>   */
+>  void ata_std_end_eh(struct ata_port *ap)
+>  {
+> -       ap->scsi_host->host_eh_scheduled--;
+> +       struct Scsi_Host *host = ap->scsi_host;
+> +       unsigned long flags;
+> +
+> +       spin_lock_irqsave(host->host_lock, flags);
+> +       if (host->host_eh_scheduled > 0)
+> +               host->host_eh_scheduled--;
+> +       spin_unlock_irqrestore(host->host_lock, flags);
+>  }
+>  EXPORT_SYMBOL(ata_std_end_eh);
+> 
+> 
+> With that incremental patch, I can no longer reproduce the crash reported
+> by the kernel test robot in my QEMU setup.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+I am not confident that playing with host_eh_schedule count is the right
+approach. A better solution may be to change the timing of clearing
+ATA_PFLAG_EH_PENDING. Right now, this is done on entry to
+ata_scsi_port_error_handler(), unconditionally. So ata_eh_reset() should not
+need to clear the flag again. If we remove that, then a new interrupt received
+after ata_eh_thaw() and setting EH_PENDING would be cought by the retry loop in
+ata_scsi_port_error_handler(), which would run again ap->ops->error_handler(ap).
 
-Cheers,
+So let's try this fix instead:
 
-Hannes
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 159ba6ba19eb..d1d081aa0c95 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2807,7 +2807,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
+        memset(&link->eh_info, 0, sizeof(link->eh_info));
+        if (slave)
+                memset(&slave->eh_info, 0, sizeof(link->eh_info));
+-       ap->pflags &= ~ATA_PFLAG_EH_PENDING;
+        spin_unlock_irqrestore(link->ap->lock, flags);
+
+        if (ata_port_is_frozen(ap))
+
+Li,
+
+Can you please test this ?
+
+> 
+> 
+> 
+> It might be worth mentioning that the race window for the bug that the patch
+> in $subject is fixing, should be much smaller after this patch is in:
+> https://lore.kernel.org/linux-ide/20230907081710.4946-1-Chloe_Chen@asmedia.com.tw/
+> 
+> Li Nan, perhaps you could see if you can still reproduce your original
+> problem with the patch from the ASMedia guys?
+
+
+> 
+> However, even with the ASMedia patch, it should still be theoretically
+> possible to get an error irq after ata_eh_reset() has called ahci_thaw(),
+> so I suppose that this patch still makes some sense...
+> 
+> 
+> Kind regards,
+> Niklas
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+Damien Le Moal
+Western Digital Research
 
