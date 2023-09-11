@@ -2,142 +2,107 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6EF7EE57C0
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Sep 2023 05:19:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E4FC71153
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 04:02:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234915AbjIHFTG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 8 Sep 2023 01:19:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42398 "EHLO
+        id S232470AbjIKEC2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 00:02:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234391AbjIHFTG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Sep 2023 01:19:06 -0400
-Received: from smtp.smtpout.orange.fr (smtp-30.smtpout.orange.fr [80.12.242.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A11DD19B0
-        for <linux-ide@vger.kernel.org>; Thu,  7 Sep 2023 22:19:01 -0700 (PDT)
-Received: from [192.168.1.18] ([86.243.2.178])
-        by smtp.orange.fr with ESMTPA
-        id eTtSq3ExTwJ7JeTtSquAk1; Fri, 08 Sep 2023 07:18:59 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-        s=t20230301; t=1694150339;
-        bh=1aKK5/OKSU14ilyxwV1rrS2kE29ll/URZdd4NMDeNTc=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=q4q6Wh9m0Z8Hyd9KGJQn1ZO4FH++Lpx9m0OUr59vZqQ09pZgTASZweCl/EWRilv89
-         TeGiAtBOWhxs/cPalwIIDYqhItW+UBPH1jc46eCW5pDp0vhsmLhpY0USFPiFXbVrB5
-         wOQAfmhfXxkOpCRbSLogIrEYmelyAeyMRT8f+lv/HaWAqbM1OM4A0Mbh0PnOMcVypW
-         khEh+QB4PIKDwUYXUddtGezVBq+z2zJccttUhRV4PHd+oyvDnFL1IHiH/GzM/YWEsG
-         7JGof2Jpy+mcfswNUoltHNWW9Ju2/uXrJ0o7V3MckF78PzcZeE8U1L6MyOAaIZ7tY5
-         DuyqKGuSVJzSw==
-X-ME-Helo: [192.168.1.18]
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Fri, 08 Sep 2023 07:18:59 +0200
-X-ME-IP: 86.243.2.178
-Message-ID: <2b36ae3d-de9b-4125-a0e3-e1083a67cf4a@wanadoo.fr>
-Date:   Fri, 8 Sep 2023 07:18:58 +0200
+        with ESMTP id S230438AbjIKEC0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 00:02:26 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB03AD2;
+        Sun, 10 Sep 2023 21:02:21 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 940A9C433C8;
+        Mon, 11 Sep 2023 04:02:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694404941;
+        bh=TfhDaF3S0ATCU9aRMX5kSkFK0+cqdLggDLfPiU8jYTM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=kQ7B49nsKVc/QyOAxuN2adPBemX34iW22RJmuHwptyLeDrbkrPSxLul0ICes1mcK4
+         kq6SUwvqnNRfsgp7ViNhnzfqp1rXSFP9at+Gywk2oLswzxAsf6JpAUaNL8oPIcgmeY
+         soa5PsgpylumY753lJmqbZkALhWxBHz78zZK6Wn8AH4XQ6bPdi1+y2sr+7sI4kOAeK
+         oqdRy6vFVpmhfLurN1GnxZb6cT1iLUhcPTxiUEpFDtmSHiXLBfakPpZ/IeBbkdXYdc
+         ebnTzeDHjQRrqN4gn/khxFPDb540NsJVz53YoyIyMzfYiapy8b8a8RD6JaA3+azD7G
+         I7m6X8cnsmT6A==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+Subject: [PATCH 00/19] Fix libata suspend/resume handling and code cleanup
+Date:   Mon, 11 Sep 2023 13:01:58 +0900
+Message-ID: <20230911040217.253905-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: sata_mv: Fix incorrect string length computation in
- mv_dump_mem()
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <1a35e114a3dcc33053ca7cca41cb06b8426d8c40.1693857262.git.christophe.jaillet@wanadoo.fr>
- <b5dcc85d-f709-a3a3-e7ad-9c71f278842a@kernel.org>
- <9150d691-49b8-c102-a5de-d1fa207d61ed@wanadoo.fr>
- <3b7f0d1d-57ec-7870-fc6e-0449e3112461@kernel.org>
-Content-Language: fr, en-US
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <3b7f0d1d-57ec-7870-fc6e-0449e3112461@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Le 06/09/2023 à 03:11, Damien Le Moal a écrit :
-> On 9/6/23 00:28, Christophe JAILLET wrote:
->>
->>
->> Le 05/09/2023 à 07:04, Damien Le Moal a écrit :
->>> On 9/5/23 04:54, Christophe JAILLET wrote:
->>>> snprintf() returns the "number of characters which *would* be generated for
->>>> the given input", not the size *really* generated.
->>>>
->>>> In order to avoid too large values for 'o' (and potential negative values
->>>> for "sizeof(linebuf) o") use scnprintf() instead of snprintf().
->>>>
->>>> Note that given the "w < 4" in the for loop, the buffer can NOT
->>>> overflow, but using the *right* function is always better.
->>>>
->>>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
->>>
->>> Doesn't this need Fixes and CC stable tags ?
->>
->> I don't think so.
->> As said in the commit message :
->>      Note that given the "w < 4" in the for loop, the buffer can NOT
->>      overflow, but using the *right* function is always better.
->>
->> linebuf is 38 chars.
->> In each iteration, we write 9 bytes + NULL.
->> We write only 4 elements per line (because of w < 4), so 9 * 4 + 1 = 37
->> bytes are needed.
->> 9 is for %08x<space>
->>
->> It can't overflow.
->> Moreover, it is really unlikely that the size of linebuf or the number
->> of elements on each line change in a stable kernel.
->>
->> So, from my POV, this patch is more a clean-up than anything else.
->>
->> I would even agree that it is maybe not even needed. But should someone
->> cut'n'paste it one day, then using the correct function could maybe help
->> him.
-> 
-> OK. Fine. But then maybe the patch title should be something like "Improve
-> string length computation in mv_dump_mem()" as the "Fix" word you used seems to
-> be somewhat misleading. With the patch title as is, the stable bot will likely
-> pick up that patch for stable. Fine with me, unless you see an issue with that.
+The first 7 patch of this series fix several issues with suspend/resume
+power management operations in libata. The most important change
+introduced is in patch 4, where the manage_start_stop of scsi devices
+associated with ata devices is disabled and this functionality replaced
+by a direct handling within libata EH of device suspend/resume (i.e.
+spin down for suspend and spin up for resume).
 
-Hi,
+The remaining patches are code cleanup that do not introduce any
+significant functional change.
 
-up to you to tweak it if desired.
+This series was tested on qemu and on various PCs and servers. I am
+CC-ing people who recently reported issues with suspend/resume.
+Additional testing would be much appreciated.
 
-My POV is that it *fixes* the length calculation, but having it "wrong" 
-is harmless.
-Should it trigger a backport, it wouldn't be a real issue either. And we 
-can still ask to remove it from the backport list when notified.
+Of note is that there is no change to the overall suspend/resume model
+of libata where suspend and resume operations are tied to the ata port.
+This is somewhat broken as a port may have multiple devices (e.g. pata
+and port multiplier cases). Fixing this model (to be more similar to
+what libsas does) will be the next step.
 
-And as said, leaving things as-is looks also fine to me.
+Damien Le Moal (19):
+  ata: libata-core: Fix ata_port_request_pm() locking
+  ata: libata-core: Fix port and device removal
+  ata: libata-scsi: link ata port and scsi device
+  ata: libata-scsi: Disable scsi device manage_start_stop
+  ata: libata-scsi: Fix delayed scsi_rescan_device() execution
+  ata: libata-core: Do not register PM operations for SAS ports
+  scsi: sd: Do not issue commands to suspended disks on remove
+  scsi: Remove scsi device no_start_on_resume flag
+  ata: libata-scsi: Cleanup ata_scsi_start_stop_xlat()
+  ata: libata-core: Synchronize ata_port_detach() with hotplug
+  ata: libata-core: Detach a port devices on shutdown
+  ata: libata-core: Remove ata_port_suspend_async()
+  ata: libata-core: Remove ata_port_resume_async()
+  ata: libata-core: skip poweroff for devices that are runtime suspended
+  ata: libata-core: Do not resume ports that have been runtime suspended
+  ata: libata-sata: Improve ata_sas_slave_configure()
+  ata: libata-eh: Improve reset error messages
+  ata: libata-eh: Reduce "disable device" message verbosity
+  ata: libata: Cleanup inline DMA helper functions
 
-I let you choose the best option.
+ drivers/ata/libata-core.c      | 239 +++++++++++++++++++++++++--------
+ drivers/ata/libata-eh.c        |  74 ++++++++--
+ drivers/ata/libata-sata.c      |   5 +-
+ drivers/ata/libata-scsi.c      | 143 ++++++++++----------
+ drivers/ata/libata-transport.c |   9 +-
+ drivers/ata/libata.h           |   7 +
+ drivers/ata/pata_macio.c       |   1 +
+ drivers/ata/sata_mv.c          |   1 +
+ drivers/ata/sata_nv.c          |   2 +
+ drivers/ata/sata_sil24.c       |   1 +
+ drivers/scsi/scsi_scan.c       |  12 +-
+ drivers/scsi/sd.c              |  10 +-
+ include/linux/libata.h         |  27 ++--
+ include/scsi/scsi_device.h     |   1 -
+ include/scsi/scsi_host.h       |   2 +-
+ 15 files changed, 370 insertions(+), 164 deletions(-)
 
-CJ
-
-> 
->>
->> CJ
->>
->>>
->>>> ---
->>>>    drivers/ata/sata_mv.c | 4 ++--
->>>>    1 file changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
->>>> index d105db5c7d81..45e48d653c60 100644
->>>> --- a/drivers/ata/sata_mv.c
->>>> +++ b/drivers/ata/sata_mv.c
->>>> @@ -1255,8 +1255,8 @@ static void mv_dump_mem(struct device *dev, void __iomem *start, unsigned bytes)
->>>>    
->>>>    	for (b = 0; b < bytes; ) {
->>>>    		for (w = 0, o = 0; b < bytes && w < 4; w++) {
->>>> -			o += snprintf(linebuf + o, sizeof(linebuf) - o,
->>>> -				      "%08x ", readl(start + b));
->>>> +			o += scnprintf(linebuf + o, sizeof(linebuf) - o,
->>>> +				       "%08x ", readl(start + b));
->>>>    			b += sizeof(u32);
->>>>    		}
->>>>    		dev_dbg(dev, "%s: %p: %s\n",
->>>
-> 
+-- 
+2.41.0
 
