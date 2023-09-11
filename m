@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA46EEB580
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 04:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F00A4EE7FF4
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 04:03:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233639AbjIKEDQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Sep 2023 00:03:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53376 "EHLO
+        id S233700AbjIKEDa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 00:03:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233637AbjIKEDA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 00:03:00 -0400
+        with ESMTP id S233682AbjIKEDG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 00:03:06 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 415AACE0;
-        Sun, 10 Sep 2023 21:02:53 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FA96C433C9;
-        Mon, 11 Sep 2023 04:02:51 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE685CD1;
+        Sun, 10 Sep 2023 21:02:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46CDBC433CB;
+        Mon, 11 Sep 2023 04:02:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694404972;
-        bh=rv7s8lvB7fQVRZeV3XRC9Sf248ndIl+ZYZHCj5lOseg=;
+        s=k20201202; t=1694404976;
+        bh=PglKl+2cZKAn6/abU6Om/fmPGDXe+6D9MEqoWlkSk90=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vMIJOpXxiqJ0o1uAoT7LqfTah2Mj/uaexyJHZcL31HqNjy3lif3jNGxqDwGEQrELv
-         DcyKX6RuTLBuPMXDf83m3n167EsbquxLg0HzLaV0WRLupofpZVSfaT7zVfW0w2jfsA
-         Zpke3AWM17NE8u4xvLKqxFPq0Jy2qH3UbJ6E39wGOFvCxiqIV6jUFtEaex17jgps5i
-         gpJXaHjCHYIQSdU7ofreXEoYs/TFD190gUbDipmHkIBfDnTOPh8eJ7PSjDKcmA73EG
-         brNQiwiuPZieqVNeL1nC/Mb0Chn7l/H9KKfWNq50cwE8cYP9qjEH1V9+6VrgKaeAFc
-         ukiTAdemjr6rA==
+        b=m9+O1ivdMSnKT/uMvaVBeIxdKK8pGsUlmEhaegmd75+rH8JaeJlc4C0Iwq8ac1qSv
+         PDng6Rlr+f3ZNz8kJApaXTdHcsGU8Zn3TaZT/beQ0QuQfAa6FC4s4/gVl1ZYhePERq
+         SXnUcSFV1m2TkVSOdukmkVN4/pqeOQtrgPgmb8KLhFuG6ydMFj5zpDMH0O3Wnw9f1i
+         TTPCDhZibpvoaXShMUHrq5JoNhIQ5u6UaGCPVU1Xbc95tRIT/WTomS7IrrSIyVF1mv
+         XGS1aliYFvIN3ClDNUfGwNQYtA0EPC+PhymCzf4bZKqcnDBll5WI+dS9DV+M5v0+wu
+         ab/wpF0Dqr/Xw==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH 17/19] ata: libata-eh: Improve reset error messages
-Date:   Mon, 11 Sep 2023 13:02:15 +0900
-Message-ID: <20230911040217.253905-18-dlemoal@kernel.org>
+Subject: [PATCH 19/19] ata: libata: Cleanup inline DMA helper functions
+Date:   Mon, 11 Sep 2023 13:02:17 +0900
+Message-ID: <20230911040217.253905-20-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230911040217.253905-1-dlemoal@kernel.org>
 References: <20230911040217.253905-1-dlemoal@kernel.org>
@@ -47,52 +47,51 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Some drives are really slow to spinup on resume, resulting is a very
-slow response to COMRESET and to error messages such as:
-
-ata1: COMRESET failed (errno=-16)
-ata1: link is slow to respond, please be patient (ready=0)
-ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-ata1.00: configured for UDMA/133
-
-Given that the slowness of the response is indicated with the message
-"link is slow to respond..." and that resets are retried until the
-device is detected as online after up to 1min (ata_eh_reset_timeouts),
-there is no point in printing the "COMRESET failed" error message. Let's
-not scare the user with non fatal errors and only warn about reset
-failures in ata_eh_reset() when all reset retries have been exhausted.
+Simplify the inline DMA helper functions ata_using_mwdma(),
+ata_using_udma() and ata_dma_enabled() to directly return as a boolean
+the result of their test condition.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/libata-eh.c   | 2 ++
- drivers/ata/libata-sata.c | 1 -
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ include/linux/libata.h | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 43b0a1509548..bbc522d16f44 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2919,6 +2919,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		 */
- 		if (ata_is_host_link(link))
- 			ata_eh_thaw_port(ap);
-+		ata_link_warn(link, "%sreset failed\n",
-+			      reset == hardreset ? "hard" : "soft");
- 		goto out;
- 	}
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6593c79b7290..f48fe27dae94 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1878,23 +1878,21 @@ static inline unsigned long ata_deadline(unsigned long from_jiffies,
+    change in future hardware and specs, secondly 0xFF means 'no DMA' but is
+    > UDMA_0. Dyma ddreigiau */
  
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 0748e9ea4f5f..00674aae1696 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -608,7 +608,6 @@ int sata_link_hardreset(struct ata_link *link, const unsigned int *timing,
- 		/* online is set iff link is online && reset succeeded */
- 		if (online)
- 			*online = false;
--		ata_link_err(link, "COMRESET failed (errno=%d)\n", rc);
- 	}
- 	return rc;
+-static inline int ata_using_mwdma(struct ata_device *adev)
++static inline bool ata_using_mwdma(struct ata_device *adev)
+ {
+-	if (adev->dma_mode >= XFER_MW_DMA_0 && adev->dma_mode <= XFER_MW_DMA_4)
+-		return 1;
+-	return 0;
++	return adev->dma_mode >= XFER_MW_DMA_0 &&
++		adev->dma_mode <= XFER_MW_DMA_4;
  }
+ 
+-static inline int ata_using_udma(struct ata_device *adev)
++static inline bool ata_using_udma(struct ata_device *adev)
+ {
+-	if (adev->dma_mode >= XFER_UDMA_0 && adev->dma_mode <= XFER_UDMA_7)
+-		return 1;
+-	return 0;
++	return adev->dma_mode >= XFER_UDMA_0 &&
++		adev->dma_mode <= XFER_UDMA_7;
+ }
+ 
+-static inline int ata_dma_enabled(struct ata_device *adev)
++static inline bool ata_dma_enabled(struct ata_device *adev)
+ {
+-	return (adev->dma_mode == 0xFF ? 0 : 1);
++	return adev->dma_mode != 0xFF;
+ }
+ 
+ /**************************************************************************
 -- 
 2.41.0
 
