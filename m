@@ -2,130 +2,90 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA29EEB580
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 04:03:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C3BEE7FF4
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Sep 2023 06:12:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233688AbjIKEDa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Sep 2023 00:03:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58140 "EHLO
+        id S230430AbjIKGMl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 02:12:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233656AbjIKEDG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 00:03:06 -0400
+        with ESMTP id S234356AbjIKGMk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 02:12:40 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 599C41B9;
-        Sun, 10 Sep 2023 21:02:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52609C433CA;
-        Mon, 11 Sep 2023 04:02:53 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41F2411F
+        for <linux-ide@vger.kernel.org>; Sun, 10 Sep 2023 23:12:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 677A1C433C7;
+        Mon, 11 Sep 2023 06:12:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694404974;
-        bh=Dgf8t8rvF95CKc1xqlbfk/7IBYHIUJKutmuItoRyjiE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PU0vaAhY4Bsv0sxM3UbSBIR99xY+n8YrZMEnMRnNrUdqC3Q5svOUPd86NBP6XXGD5
-         4nQWcDrLS04+x5kikYxXHDIIosoRQUbI5GqWUyE4pnOt6kot/YakUuese0r5H9PaVJ
-         xtrLFDaONKXCsh7NcQw3vUGZWnSTMw0tjU1dMuHcIKYOED0P/J+EoI1kQa543XMHWZ
-         KoKbJ++TD3fmreythi5QBVsPmG7m5tKd5FVohzME9jAaiiP4ZD+sbJRQ7N74LQ+ilu
-         /sCMExDQpazo/4UyIsLjr7TUccYQSDrlBz1I+m1eFnBWqto+vYjjiRRMScmy/ndYQl
-         hVnpZBFc2whlQ==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH 18/19] ata: libata-eh: Reduce "disable device" message verbosity
-Date:   Mon, 11 Sep 2023 13:02:16 +0900
-Message-ID: <20230911040217.253905-19-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230911040217.253905-1-dlemoal@kernel.org>
-References: <20230911040217.253905-1-dlemoal@kernel.org>
+        s=k20201202; t=1694412754;
+        bh=d0bX68z5EeOGvgA8sIRuK6ti+F6IWeOcQ4nWR8wVUyA=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=jlVJk5JVUQZ5N0/YW/tB4aFo26K99zkYtOG7XWecBNGqtd8HdX+XhnhhOgDX4Ubqx
+         X/oAubzIw6S/rzzRXtw3QDW0AbMb5f8L3f/FgS5aWGc0uaYyEk+SRwtKgsmSRQClDT
+         3wth9eVzULMqB2PVYT5RA+T1PBzNTjzmR7ZwRqHE7m1Lyw4Nj7QGCtI1m5GnMDouxy
+         dLk410I/CaB2iJIqKrz26yH6wgi5UmgvC0AvPJ6m89W6RfdPu7XXkVxQPSHrAur7DB
+         kJ5Ijg5TFnhdD6tCOJN5kG5dXA3ehNc0MCJzKN/dMztZ+LZOEceS1oAYYJveHw+NZd
+         XGklY9aHPikUg==
+Message-ID: <f4b2b1e2-5148-169a-0581-bb1a0d56f896@kernel.org>
+Date:   Mon, 11 Sep 2023 15:12:32 +0900
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] ata: libata: disallow dev-initiated LPM transitions to
+ unsupported states
+To:     Niklas Cassel <nks@flawful.org>
+Cc:     Runa Guo-oc <RunaGuo-oc@zhaoxin.com>,
+        Niklas Cassel <niklas.cassel@wdc.com>,
+        linux-ide@vger.kernel.org
+References: <20230904204257.3296685-1-nks@flawful.org>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230904204257.3296685-1-nks@flawful.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There is no point in warning about a device being diabled when we expect
-it to be, that is, on suspend, shutdown or when detaching a device.
-Suppress this message for these cases by introducing the EH static
-function ata_eh_dev_disable() and by using it in ata_eh_unload() and
-ata_eh_detach_dev(). ata_dev_disable() code is modified to call this new
-function after printing the "disable device" message.
+On 9/5/23 05:42, Niklas Cassel wrote:
+> From: Niklas Cassel <niklas.cassel@wdc.com>
+> 
+> In AHCI 1.3.1, the register description for CAP.SSC:
+> "When cleared to ‘0’, software must not allow the HBA to initiate
+> transitions to the Slumber state via agressive link power management nor
+> the PxCMD.ICC field in each port, and the PxSCTL.IPM field in each port
+> must be programmed to disallow device initiated Slumber requests."
+> 
+> In AHCI 1.3.1, the register description for CAP.PSC:
+> "When cleared to ‘0’, software must not allow the HBA to initiate
+> transitions to the Partial state via agressive link power management nor
+> the PxCMD.ICC field in each port, and the PxSCTL.IPM field in each port
+> must be programmed to disallow device initiated Partial requests."
+> 
+> Ensure that we always set the corresponding bits in PxSCTL.IPM, such that
+> a device is not allowed to initiate transitions to power states which are
+> unsupported by the HBA.
+> 
+> DevSleep is always initiated by the HBA, however, for completeness, set the
+> corresponding bit in PxSCTL.IPM such that agressive link power management
+> cannot transition to DevSleep if DevSleep is not supported.
+> 
+> sata_link_scr_lpm() is used by libahci, ata_piix and libata-pmp.
+> However, only libahci has the ability to read the CAP/CAP2 register to see
+> if these features are supported. Therefore, in order to not introduce any
+> regressions on ata_piix or libata-pmp, create flags that indicate that the
+> respective feature is NOT supported. This way, the behavior for ata_piix
+> and libata-pmp should remain unchanged.
+> 
+> This change is based on a patch originally submitted by Runa Guo-oc.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/libata-eh.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+Applied to for-6.6-fixes. Thanks !
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index bbc522d16f44..5bad5dabffe0 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -494,6 +494,18 @@ void ata_eh_release(struct ata_port *ap)
- 	mutex_unlock(&ap->host->eh_mutex);
- }
- 
-+static void ata_eh_dev_disable(struct ata_device *dev)
-+{
-+	ata_acpi_on_disable(dev);
-+	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
-+	dev->class++;
-+
-+	/* From now till the next successful probe, ering is used to
-+	 * track probe failures.  Clear accumulated device error info.
-+	 */
-+	ata_ering_clear(&dev->ering);
-+}
-+
- static void ata_eh_unload(struct ata_port *ap)
- {
- 	struct ata_link *link;
-@@ -517,8 +529,8 @@ static void ata_eh_unload(struct ata_port *ap)
- 	 */
- 	ata_for_each_link(link, ap, PMP_FIRST) {
- 		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol & 0xff0);
--		ata_for_each_dev(dev, link, ALL)
--			ata_dev_disable(dev);
-+		ata_for_each_dev(dev, link, ENABLED)
-+			ata_eh_dev_disable(dev);
- 	}
- 
- 	/* freeze and set UNLOADED */
-@@ -1211,14 +1223,8 @@ void ata_dev_disable(struct ata_device *dev)
- 		return;
- 
- 	ata_dev_warn(dev, "disable device\n");
--	ata_acpi_on_disable(dev);
--	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
--	dev->class++;
- 
--	/* From now till the next successful probe, ering is used to
--	 * track probe failures.  Clear accumulated device error info.
--	 */
--	ata_ering_clear(&dev->ering);
-+	ata_eh_dev_disable(dev);
- }
- EXPORT_SYMBOL_GPL(ata_dev_disable);
- 
-@@ -1240,12 +1246,12 @@ void ata_eh_detach_dev(struct ata_device *dev)
- 
- 	/*
- 	 * If the device is still enabled, transition it to standby power mode
--	 * (i.e. spin down HDDs).
-+	 * (i.e. spin down HDDs) and disable it.
- 	 */
--	if (ata_dev_enabled(dev))
-+	if (ata_dev_enabled(dev)) {
- 		ata_dev_power_set_standby(dev);
--
--	ata_dev_disable(dev);
-+		ata_eh_dev_disable(dev);
-+	}
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
+
 -- 
-2.41.0
+Damien Le Moal
+Western Digital Research
 
