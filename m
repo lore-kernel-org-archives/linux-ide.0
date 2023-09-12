@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B67B9CA0ED2
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Sep 2023 02:07:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3CC6CA0ED8
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Sep 2023 02:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236598AbjILCH4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S236577AbjILCH4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Mon, 11 Sep 2023 22:07:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36228 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237144AbjILCCA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:00 -0400
+        with ESMTP id S237210AbjILCCC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:02 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167A31A39AE;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 838841A4BCB;
         Mon, 11 Sep 2023 18:32:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 811E4C36AE6;
-        Tue, 12 Sep 2023 00:57:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE6CFC32791;
+        Tue, 12 Sep 2023 00:57:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694480248;
-        bh=SUQ1ONHLZRQICe+mf6elU/cxoVog56qhZUq3IY+ouMw=;
+        s=k20201202; t=1694480227;
+        bh=44l0Mp8cg8u5dMXZhVw61tV4c5nbQZJ+oJw++vvJt+A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Vy/gMpafUy7Nf++ggk6vRr0IYGbu3oJNKGY13g/vA1IEog2hVwr3FQriSP8TrGuUs
-         VoUYZs7J++5RLZirz9nY/UBGr1p1zWypBaTf4K8XOQFn+/6gmfjxj1bGMKrDeH9SqI
-         WdSm1k4wLPe7onJb8jebgiwvNu74qL8E26hGlc5Xhnt3pEyNIzYPgAEhADSmpvSayV
-         j/pjrY0ExEwqZl/LILBlRB8SL0PSJXV9kWf347RmAJ1gsSRSnUcwDV3kExratUqheT
-         lIR4meqExNVh7OHEf/AcFNZxxx7xjYGSdaMSAKgWLLykQu8a2bJ+ULThdSUntWoPf+
-         hN7cTk+hgXTgw==
+        b=omJcYTSHdDWHGBcu7bJ1/f+ab5Eb908etpse/yre3YdYBQs7fN2eWJ9tMB0jr3XiN
+         fwjlfiCEK/5KYWGlNIcPsJleedkh33vT7x+VAxQp40ozdKOnU+R5UUPGiX/TLuRgId
+         pRZu5cfzjIfhaPJlkkejHZvtEteZZbfTgTjphpuCHjht1fu73oan8WPCQs/zUpgX4K
+         V3hHUABfCC5WrBD9YFe/1UmghLKt9/5LbPcpxrGtjyhp5/e5fnLzU25l7/A9Fb9GNY
+         dsyO3BOs+TEeVxFG59ONtr805M/7AMQhfczlrb3DBLxDibF3TtvixEk6F5F64tHj6J
+         Yl/LglI4I+AMQ==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH v2 21/21] ata: libata: Cleanup inline DMA helper functions
-Date:   Tue, 12 Sep 2023 09:56:55 +0900
-Message-ID: <20230912005655.368075-22-dlemoal@kernel.org>
+Subject: [PATCH v2 06/21] ata: libata-core: Do not register PM operations for SAS ports
+Date:   Tue, 12 Sep 2023 09:56:40 +0900
+Message-ID: <20230912005655.368075-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230912005655.368075-1-dlemoal@kernel.org>
 References: <20230912005655.368075-1-dlemoal@kernel.org>
@@ -47,52 +47,80 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Simplify the inline DMA helper functions ata_using_mwdma(),
-ata_using_udma() and ata_dma_enabled() to directly return as a boolean
-the result of their test condition.
+libsas does its own domain based power management of ports. For such
+ports, libata should not use a device type defining power management
+operations as executing these operations for suspend/resume in addition
+to libsas calls to ata_sas_port_suspend() and ata_sas_port_resume() is
+not necessary (and likely dangerous to do, even though problems are not
+seen currently).
 
+Introduce the new ata_port_sas_type device_type for ports managed by
+libsas. This new device type is used in ata_tport_add() and is defined
+without power management operations.
+
+Fixes: 2fcbdcb4c802 ("[SCSI] libata: export ata_port suspend/resume infrastructure for sas")
+Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- include/linux/libata.h | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/ata/libata-core.c      | 2 +-
+ drivers/ata/libata-transport.c | 9 ++++++++-
+ drivers/ata/libata.h           | 2 ++
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 6593c79b7290..f48fe27dae94 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1878,23 +1878,21 @@ static inline unsigned long ata_deadline(unsigned long from_jiffies,
-    change in future hardware and specs, secondly 0xFF means 'no DMA' but is
-    > UDMA_0. Dyma ddreigiau */
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 0479493e54bd..18b2a0da9e54 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5339,7 +5339,7 @@ EXPORT_SYMBOL_GPL(ata_host_resume);
+ #endif
  
--static inline int ata_using_mwdma(struct ata_device *adev)
-+static inline bool ata_using_mwdma(struct ata_device *adev)
- {
--	if (adev->dma_mode >= XFER_MW_DMA_0 && adev->dma_mode <= XFER_MW_DMA_4)
--		return 1;
--	return 0;
-+	return adev->dma_mode >= XFER_MW_DMA_0 &&
-+		adev->dma_mode <= XFER_MW_DMA_4;
+ const struct device_type ata_port_type = {
+-	.name = "ata_port",
++	.name = ATA_PORT_TYPE_NAME,
+ #ifdef CONFIG_PM
+ 	.pm = &ata_port_pm_ops,
+ #endif
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index e4fb9d1b9b39..3e49a877500e 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -266,6 +266,10 @@ void ata_tport_delete(struct ata_port *ap)
+ 	put_device(dev);
  }
  
--static inline int ata_using_udma(struct ata_device *adev)
-+static inline bool ata_using_udma(struct ata_device *adev)
- {
--	if (adev->dma_mode >= XFER_UDMA_0 && adev->dma_mode <= XFER_UDMA_7)
--		return 1;
--	return 0;
-+	return adev->dma_mode >= XFER_UDMA_0 &&
-+		adev->dma_mode <= XFER_UDMA_7;
- }
++static const struct device_type ata_port_sas_type = {
++	.name = ATA_PORT_TYPE_NAME,
++};
++
+ /** ata_tport_add - initialize a transport ATA port structure
+  *
+  * @parent:	parent device
+@@ -283,7 +287,10 @@ int ata_tport_add(struct device *parent,
+ 	struct device *dev = &ap->tdev;
  
--static inline int ata_dma_enabled(struct ata_device *adev)
-+static inline bool ata_dma_enabled(struct ata_device *adev)
- {
--	return (adev->dma_mode == 0xFF ? 0 : 1);
-+	return adev->dma_mode != 0xFF;
- }
+ 	device_initialize(dev);
+-	dev->type = &ata_port_type;
++	if (ap->flags & ATA_FLAG_SAS_HOST)
++		dev->type = &ata_port_sas_type;
++	else
++		dev->type = &ata_port_type;
  
- /**************************************************************************
+ 	dev->parent = parent;
+ 	ata_host_get(ap->host);
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index a5ee06f0234a..c57e094c3af9 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -30,6 +30,8 @@ enum {
+ 	ATA_DNXFER_QUIET	= (1 << 31),
+ };
+ 
++#define ATA_PORT_TYPE_NAME	"ata_port"
++
+ extern atomic_t ata_print_id;
+ extern int atapi_passthru16;
+ extern int libata_fua;
 -- 
 2.41.0
 
