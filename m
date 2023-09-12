@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD509CA0ECF
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Sep 2023 02:07:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B99F6CA0ED1
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Sep 2023 02:07:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236244AbjILCHs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Sep 2023 22:07:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36366 "EHLO
+        id S236318AbjILCHt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 22:07:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237212AbjILCCC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:02 -0400
+        with ESMTP id S237197AbjILCCB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:01 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E26D1A5314;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F13A1A39BA;
         Mon, 11 Sep 2023 18:32:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17E3FC3279F;
-        Tue, 12 Sep 2023 00:57:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 727BDC3279A;
+        Tue, 12 Sep 2023 00:57:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694480247;
-        bh=UkSDNVnPQ7nwSIXNpb1Ao231W+LFpzXKNtCJu20pubM=;
+        s=k20201202; t=1694480238;
+        bh=a0wxcfxkOAkD5UcmOCxrqbeKQnLtGqAoCHXPqHtLklQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V4TdvnWxvNqQru2ZcIyMW7u1OD1FScSYGxrJ8M0M2RnsapU+N9ZzXQacLOs5/GVw9
-         QGwAbMx97cUX8vi1nh8EfiWo3lFs97wpfLQxf+LmyjWb0/9bFzHmzXvB2+yGu8zzEN
-         kFhNVID6mvoS5QPzANcsFYRZaLRijp3WgLGCdRMvVu39BKGhyWPavAEtgxu3vo2hcf
-         ZX42Z9cZeD23Gn00p6WbFyfT20Clm5VFQNEZp6117V2b9maGBGZ9mZLq7LMj9gEsGq
-         mmaLeTLE+4un0yqgzUH1YeMTz4NFXCqJoYafRkas9C5na5s7VxQV9jh4QeBOnhrIQS
-         GA/LToXyVz4tQ==
+        b=Wi6ylEGVGGu+aHAJ/ZoICOvaa+CTOCStTuKvNebOMXjimLcW7tOhA4X2GmTJYOd/b
+         yBYbijqXR22bhH/yv3jEHTIIMVyuryRpsaVUh1Hd8GaAGGBbmfkELKjNXYs1evlBVO
+         ArBN9AHwblFxUDDxPv+UIszwY+2SuF+8KIUPnYvWzyU6jtYk097fU7geGP46LmujIc
+         UA5fCAbhmQCqZZegGATIJPbFA2BkALbwbWqJwoAWTbttITo+xC0zNNsaaghidtF5xI
+         QD4Uf6W/IfVDiXqC8jwg6JDQ2Zb7imZYqpMgVLD3q+sAVu9YqR6cQwoHwT4QSL6hK1
+         2xaSquihlelXw==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH v2 20/21] ata: libata-eh: Reduce "disable device" message verbosity
-Date:   Tue, 12 Sep 2023 09:56:54 +0900
-Message-ID: <20230912005655.368075-21-dlemoal@kernel.org>
+Subject: [PATCH v2 14/21] ata: libata-core: Remove ata_port_suspend_async()
+Date:   Tue, 12 Sep 2023 09:56:48 +0900
+Message-ID: <20230912005655.368075-15-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230912005655.368075-1-dlemoal@kernel.org>
 References: <20230912005655.368075-1-dlemoal@kernel.org>
@@ -47,88 +47,117 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There is no point in warning about a device being disabled when we
-expect it to be, that is, on suspend, shutdown or when detaching the
-device.
-
-Suppress the message "disable device" for these cases by introducing the
-EH static function ata_eh_dev_disable() and by using it in
-ata_eh_unload() and ata_eh_detach_dev(). ata_dev_disable() code is
-modified to call this new function after printing the "disable device"
-message.
+ata_port_suspend_async() is only called by ata_sas_port_suspend().
+Modify ata_port_suspend() with an additional bool argument indicating an
+asynchronous or synchronous suspend to allow removing that helper
+function. With this change, the variable ata_port_resume_ehi can also be
+removed and its value (ATA_EHI_XXX flags passed directly to
+ata_port_request_pm().
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-eh.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+ drivers/ata/libata-core.c | 46 +++++++++++++++------------------------
+ 1 file changed, 17 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 2b933e7a357a..9cad16bcbebc 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -494,6 +494,18 @@ void ata_eh_release(struct ata_port *ap)
- 	mutex_unlock(&ap->host->eh_mutex);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 7d110e5454bf..cdfe71ae6a6c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5170,18 +5170,8 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 		ata_port_wait_eh(ap);
  }
  
-+static void ata_eh_dev_disable(struct ata_device *dev)
-+{
-+	ata_acpi_on_disable(dev);
-+	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
-+	dev->class++;
-+
-+	/* From now till the next successful probe, ering is used to
-+	 * track probe failures.  Clear accumulated device error info.
-+	 */
-+	ata_ering_clear(&dev->ering);
-+}
-+
- static void ata_eh_unload(struct ata_port *ap)
- {
- 	struct ata_link *link;
-@@ -517,8 +529,8 @@ static void ata_eh_unload(struct ata_port *ap)
- 	 */
- 	ata_for_each_link(link, ap, PMP_FIRST) {
- 		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol & 0xff0);
--		ata_for_each_dev(dev, link, ALL)
--			ata_dev_disable(dev);
-+		ata_for_each_dev(dev, link, ENABLED)
-+			ata_eh_dev_disable(dev);
- 	}
- 
- 	/* freeze and set UNLOADED */
-@@ -1211,14 +1223,8 @@ void ata_dev_disable(struct ata_device *dev)
- 		return;
- 
- 	ata_dev_warn(dev, "disable device\n");
--	ata_acpi_on_disable(dev);
--	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
--	dev->class++;
- 
--	/* From now till the next successful probe, ering is used to
--	 * track probe failures.  Clear accumulated device error info.
--	 */
--	ata_ering_clear(&dev->ering);
-+	ata_eh_dev_disable(dev);
- }
- EXPORT_SYMBOL_GPL(ata_dev_disable);
- 
-@@ -1240,12 +1246,12 @@ void ata_eh_detach_dev(struct ata_device *dev)
- 
- 	/*
- 	 * If the device is still enabled, transition it to standby power mode
--	 * (i.e. spin down HDDs).
-+	 * (i.e. spin down HDDs) and disable it.
- 	 */
--	if (ata_dev_enabled(dev))
-+	if (ata_dev_enabled(dev)) {
- 		ata_dev_power_set_standby(dev);
+-/*
+- * On some hardware, device fails to respond after spun down for suspend.  As
+- * the device won't be used before being resumed, we don't need to touch the
+- * device.  Ask EH to skip the usual stuff and proceed directly to suspend.
+- *
+- * http://thread.gmane.org/gmane.linux.ide/46764
+- */
+-static const unsigned int ata_port_suspend_ehi = ATA_EHI_QUIET
+-						 | ATA_EHI_NO_AUTOPSY
+-						 | ATA_EHI_NO_RECOVERY;
 -
--	ata_dev_disable(dev);
-+		ata_eh_dev_disable(dev);
-+	}
+-static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg)
++static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg,
++			     bool async)
+ {
+ 	/*
+ 	 * We are about to suspend the port, so we do not care about
+@@ -5191,20 +5181,18 @@ static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg)
+ 	 */
+ 	cancel_delayed_work_sync(&ap->scsi_rescan_task);
  
- 	spin_lock_irqsave(ap->lock, flags);
+-	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, false);
+-}
+-
+-static void ata_port_suspend_async(struct ata_port *ap, pm_message_t mesg)
+-{
+ 	/*
+-	 * We are about to suspend the port, so we do not care about
+-	 * scsi_rescan_device() calls scheduled by previous resume operations.
+-	 * The next resume will schedule the rescan again. So cancel any rescan
+-	 * that is not done yet.
++	 * On some hardware, device fails to respond after spun down for
++	 * suspend. As the device wil not t be used until being resumed, we
++	 * do not need to touch the device. Ask EH to skip the usual stuff
++	 * and proceed directly to suspend.
++	 *
++	 * http://thread.gmane.org/gmane.linux.ide/46764
+ 	 */
+-	cancel_delayed_work_sync(&ap->scsi_rescan_task);
+-
+-	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, true);
++	ata_port_request_pm(ap, mesg, 0,
++			    ATA_EHI_QUIET | ATA_EHI_NO_AUTOPSY |
++			    ATA_EHI_NO_RECOVERY,
++			    async);
+ }
+ 
+ static int ata_port_pm_suspend(struct device *dev)
+@@ -5214,7 +5202,7 @@ static int ata_port_pm_suspend(struct device *dev)
+ 	if (pm_runtime_suspended(dev))
+ 		return 0;
+ 
+-	ata_port_suspend(ap, PMSG_SUSPEND);
++	ata_port_suspend(ap, PMSG_SUSPEND, false);
+ 	return 0;
+ }
+ 
+@@ -5225,13 +5213,13 @@ static int ata_port_pm_freeze(struct device *dev)
+ 	if (pm_runtime_suspended(dev))
+ 		return 0;
+ 
+-	ata_port_suspend(ap, PMSG_FREEZE);
++	ata_port_suspend(ap, PMSG_FREEZE, false);
+ 	return 0;
+ }
+ 
+ static int ata_port_pm_poweroff(struct device *dev)
+ {
+-	ata_port_suspend(to_ata_port(dev), PMSG_HIBERNATE);
++	ata_port_suspend(to_ata_port(dev), PMSG_HIBERNATE, false);
+ 	return 0;
+ }
+ 
+@@ -5283,7 +5271,7 @@ static int ata_port_runtime_idle(struct device *dev)
+ 
+ static int ata_port_runtime_suspend(struct device *dev)
+ {
+-	ata_port_suspend(to_ata_port(dev), PMSG_AUTO_SUSPEND);
++	ata_port_suspend(to_ata_port(dev), PMSG_AUTO_SUSPEND, false);
+ 	return 0;
+ }
+ 
+@@ -5313,7 +5301,7 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+  */
+ void ata_sas_port_suspend(struct ata_port *ap)
+ {
+-	ata_port_suspend_async(ap, PMSG_SUSPEND);
++	ata_port_suspend(ap, PMSG_SUSPEND, true);
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_port_suspend);
  
 -- 
 2.41.0
