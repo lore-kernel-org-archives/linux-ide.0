@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D474CA0ECE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F43FCA0ECB
 	for <linux-ide@archiver.kernel.org>; Tue, 12 Sep 2023 02:07:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236186AbjILCHq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Sep 2023 22:07:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56422 "EHLO
+        id S236158AbjILCHp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Sep 2023 22:07:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237192AbjILCCB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:01 -0400
+        with ESMTP id S237228AbjILCCC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:02 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5699A1A39B6;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 997C81A77B5;
         Mon, 11 Sep 2023 18:32:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 647B8C32794;
-        Tue, 12 Sep 2023 00:57:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93D3EC32798;
+        Tue, 12 Sep 2023 00:57:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694480228;
-        bh=rdBLpZr0nte9cBd9BX1sL7lfQw3Y7w0fgD+Dbtdw+H0=;
+        s=k20201202; t=1694480235;
+        bh=H7S9CWSwBWcMvM02J9ciRDGglwiD271p01jp7fyH4pk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EWa8BEgsBswvonlZxZjVc/6V6Nwuz1bAvQGQy3r4sSKqUWSVoA2bIEX2aVO1yFw2K
-         lA7h7eIoP2W8gWGh5xK5UI/l3onF/JKbmRcG1+M8g83zUDdNVPRw5SqmMUMHbsvwDp
-         SOZqNss3BGOeB08bzpgrJ+cNYSc2UzJY+xlA2Rp6T87S8nKih1s7WUH6oaMIOHDZS6
-         SofDU81SkKzvibuYw5m8r5sVwPhdZw8mnq3hMW9HzXN+zio1p3erYbUVB4XaVSkUlF
-         p9YeZFZg5OXaNdSlK7ls5OwxkZjiTR6Ri9yLUGzNqeXutWIB5bDAzxJCQ3LkRA5c6T
-         HVGnYB0qh83bQ==
+        b=cspCOxtURVcDKek2r5iVQ31ehN4TWbzGhO5++0k/JNfJ9No1D386oCznYY5Benjk8
+         f3Q3zfiGY/febzHtVt0QnyI3iXsR5H3qyWYZSrXZFNTJyRSTJWWDUPfsp3lLhygBZt
+         23vp/FPDT/p8CjrvQlp82rYqbQT6YLRTf1vvbugioM22bKWaFX9kWp8eBgrjGXLeR0
+         9wJRMXfOUV9oHGmXnCa80SIW8J3YLCjjEL0awkz3kfxC2NigQeq1/9GSzOMGjO6uLE
+         /2HkDCqcw0QW73EX1zfv+8E8w1Gu+1hH93K7m6WkiOlvUG7u3B2ilNZPEG9IDnBYLT
+         RhkoUB5Hx9UEA==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH v2 07/21] scsi: sd: Do not issue commands to suspended disks on remove
-Date:   Tue, 12 Sep 2023 09:56:41 +0900
-Message-ID: <20230912005655.368075-8-dlemoal@kernel.org>
+Subject: [PATCH v2 12/21] ata: libata-core: Synchronize ata_port_detach() with hotplug
+Date:   Tue, 12 Sep 2023 09:56:46 +0900
+Message-ID: <20230912005655.368075-13-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230912005655.368075-1-dlemoal@kernel.org>
 References: <20230912005655.368075-1-dlemoal@kernel.org>
@@ -47,38 +47,44 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-If an error occurs when resuming a host adapter before the devices
-attached to the adapter are resumed, the adapter low level driver may
-remove the scsi host, resulting in a call to sd_remove() for the
-disks of the host. However, since this function calls sd_shutdown(),
-a synchronize cache command and a start stop unit may be issued with the
-drive still sleeping and the HBA non-functional. This causes PM resume
-to hang, forcing a reset of the machine to recover.
+The call to async_synchronize_cookie() to synchronize a port removal
+and hotplug probe is done in ata_host_detach() right before calling
+ata_port_detach(). Move this call at the beginning of ata_port_detach()
+to ensure that this operation is always synchronized with probe.
 
-Fix this by checking a device host state in sd_shutdown() and by
-returning early doing nothing if the host state is not SHOST_RUNNING.
-
-Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/sd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c92a317ba547..a415abb721d3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3763,7 +3763,8 @@ static void sd_shutdown(struct device *dev)
- 	if (!sdkp)
- 		return;         /* this can happen */
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 8d1949302a8a..9f05ad187c9e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6069,6 +6069,9 @@ static void ata_port_detach(struct ata_port *ap)
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
  
--	if (pm_runtime_suspended(dev))
-+	if (pm_runtime_suspended(dev) ||
-+	    sdkp->device->host->shost_state != SHOST_RUNNING)
- 		return;
++	/* Ensure ata_port probe has completed */
++	async_synchronize_cookie(ap->cookie + 1);
++
+ 	/* Wait for any ongoing EH */
+ 	ata_port_wait_eh(ap);
  
- 	if (sdkp->WCE && sdkp->media_present) {
+@@ -6133,11 +6136,8 @@ void ata_host_detach(struct ata_host *host)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < host->n_ports; i++) {
+-		/* Ensure ata_port probe has completed */
+-		async_synchronize_cookie(host->ports[i]->cookie + 1);
++	for (i = 0; i < host->n_ports; i++)
+ 		ata_port_detach(host->ports[i]);
+-	}
+ 
+ 	/* the host is dead now, dissociate ACPI */
+ 	ata_acpi_dissociate(host);
 -- 
 2.41.0
 
