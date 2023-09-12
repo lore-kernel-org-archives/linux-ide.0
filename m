@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B64CA0EC3
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Sep 2023 02:07:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B07ECA0ECE
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Sep 2023 02:07:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236341AbjILCHu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S236394AbjILCHu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Mon, 11 Sep 2023 22:07:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36344 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237186AbjILCCB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:01 -0400
+        with ESMTP id S237155AbjILCCA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Sep 2023 22:02:00 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55DA61A39B5;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 204CB1A39AF;
         Mon, 11 Sep 2023 18:32:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A21C7C36AF1;
-        Tue, 12 Sep 2023 00:57:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8533AC3278F;
+        Tue, 12 Sep 2023 00:57:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694480245;
-        bh=Z/v7NOE3M1uGlrINRjlOVhHyTmqLhygKsJp7wW+7CQs=;
+        s=k20201202; t=1694480225;
+        bh=j32/Ww1hTEmvhZzvDA47Z41PVrHfRlBlxaraEUtiDIM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OtW8Vyn7szeG/Eqrs8yT8CvFGlUADi86Ry8l/yJ1f0Y0dGjEyaBPotw9dlEc3UrwO
-         9OdBfwGgRbE/9rLoakEDDYdvYTIV8UeVvqMGzyDAa4YfNb8pVZq6Uv4u3W5RTHSi0N
-         1HPYUrSV7KHNSEETfdhA0SGPG/wSnm0mABfrIpk2agS8YX2YIyvyeUnbaIva9VyqtU
-         wp1rlWEmdlDiX8ivjeYVR659o9E91pB4saTeCDYraDIndvduGmOitQwOtk/DU/hGxv
-         ZFl55Duas3hRJjRgLG70ZBquROZHR9lfL/ZRNXEqCAS/Z9xmJwJ12JaaWCKAsnlYlG
-         PZOBRSeLJXg2w==
+        b=OhTxAOlvdmenjAWGRqI2oUtg+AILV9ZdhsgC6osBZ0ZFsvWIaLi34LOd1H7ZZAR9/
+         IJQ//ADD38/O3PsZ6RyT6P9jDthmu/wZPifUll+maXgCOA3ItvYwQBKZDNkF+w0YSG
+         5pn2iSMkzozG/fbXxLnRt+/STHTE3UM1w4qLrzmWTyEgSGBelcqjQW9i2B8uAMvUPL
+         6dNBN5lCpdzSEQn7q1N3cbb3dSGgr0T/GKTOiEx2M4yOhoyuvFOJ3xJTe8qw4MZsgU
+         HVSU4EFY8gSc1RRhmUECaUYeiEbTQj68WS/ODSxaQgJ/AAObavRW72R+TgBjT1RA/V
+         07E6pRUFvVeVQ==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>
-Subject: [PATCH v2 19/21] ata: libata-eh: Improve reset error messages
-Date:   Tue, 12 Sep 2023 09:56:53 +0900
-Message-ID: <20230912005655.368075-20-dlemoal@kernel.org>
+Subject: [PATCH v2 05/21] ata: libata-scsi: Fix delayed scsi_rescan_device() execution
+Date:   Tue, 12 Sep 2023 09:56:39 +0900
+Message-ID: <20230912005655.368075-6-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230912005655.368075-1-dlemoal@kernel.org>
 References: <20230912005655.368075-1-dlemoal@kernel.org>
@@ -47,53 +47,197 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Some drives are really slow to spinup on resume, resulting is a very
-slow response to COMRESET and to error messages such as:
+Commit 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after
+device resume") modified ata_scsi_dev_rescan() to check the scsi device
+"is_suspended" power field to ensure that the scsi device associated
+with an ATA device is fully resumed when scsi_rescan_device() is
+executed. However, this fix is problematic as:
+1) it relies on a PM internal field that should not be used without PM
+   device locking protection.
+2) The check for is_suspended and the call to ata_scsi_dev_rescan() are
+   not atomic and a suspend PM even may be triggered between them,
+   casuing ata_scsi_dev_rescan() to be called on a suspended device,
+   resulting in that function blocking while holding the scsi device
+   lock, which would deadlock a following resume operation.
+These problems can trigger PM deadlocks on resume, especially with
+resume operations triggered quickly after or during suspend operations.
+E.g., a simple bash script like:
 
-ata1: COMRESET failed (errno=-16)
-ata1: link is slow to respond, please be patient (ready=0)
-ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-ata1.00: configured for UDMA/133
+for (( i=0; i<10; i++ )); do
+	echo "+2 > /sys/class/rtc/rtc0/wakealarm
+	echo mem > /sys/power/state
+done
 
-Given that the slowness of the response is indicated with the message
-"link is slow to respond..." and that resets are retried until the
-device is detected as online after up to 1min (ata_eh_reset_timeouts),
-there is no point in printing the "COMRESET failed" error message. Let's
-not scare the user with non fatal errors and only warn about reset
-failures in ata_eh_reset() when all reset retries have been exhausted.
+that triggers a resume 2 seconds after starting suspending a system can
+quickly lead to a PM deadlock preventing the system from correctly
+resuming.
 
+Fix this by replacing the check on is_suspended with a check on the scsi
+device state inside ata_scsi_dev_rescan(), while holding the scsi device
+lock, thus making the device rescan atomic with regard to PM operations.
+Additionnly, make sure that scheduled rescan tasks are first cancelled
+before suspending an ata port.
+
+Fixes: 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after device resume")
+Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-eh.c   | 2 ++
- drivers/ata/libata-sata.c | 1 -
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c | 16 ++++++++++++++++
+ drivers/ata/libata-scsi.c | 36 ++++++++++++++++++------------------
+ drivers/scsi/scsi_scan.c  | 12 +++++++++++-
+ include/scsi/scsi_host.h  |  2 +-
+ 4 files changed, 46 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 03c45630a35b..2b933e7a357a 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2919,6 +2919,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		 */
- 		if (ata_is_host_link(link))
- 			ata_eh_thaw_port(ap);
-+		ata_link_warn(link, "%s failed\n",
-+			      reset == hardreset ? "hardreset" : "softreset");
- 		goto out;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 0cf0caf77907..0479493e54bd 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5172,11 +5172,27 @@ static const unsigned int ata_port_suspend_ehi = ATA_EHI_QUIET
+ 
+ static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg)
+ {
++	/*
++	 * We are about to suspend the port, so we do not care about
++	 * scsi_rescan_device() calls scheduled by previous resume operations.
++	 * The next resume will schedule the rescan again. So cancel any rescan
++	 * that is not done yet.
++	 */
++	cancel_delayed_work_sync(&ap->scsi_rescan_task);
++
+ 	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, false);
+ }
+ 
+ static void ata_port_suspend_async(struct ata_port *ap, pm_message_t mesg)
+ {
++	/*
++	 * We are about to suspend the port, so we do not care about
++	 * scsi_rescan_device() calls scheduled by previous resume operations.
++	 * The next resume will schedule the rescan again. So cancel any rescan
++	 * that is not done yet.
++	 */
++	cancel_delayed_work_sync(&ap->scsi_rescan_task);
++
+ 	ata_port_request_pm(ap, mesg, 0, ata_port_suspend_ehi, true);
+ }
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 9bb1ace8bf79..f2d4460ab450 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4750,7 +4750,7 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 	unsigned long flags;
+-	bool delay_rescan = false;
++	int ret = 0;
+ 
+ 	mutex_lock(&ap->scsi_scan_mutex);
+ 	spin_lock_irqsave(ap->lock, flags);
+@@ -4759,37 +4759,37 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+ 		ata_for_each_dev(dev, link, ENABLED) {
+ 			struct scsi_device *sdev = dev->sdev;
+ 
++			/*
++			 * If the port was suspended before this was scheduled,
++			 * bail out.
++			 */
++			if (ap->pflags & ATA_PFLAG_SUSPENDED)
++				goto unlock;
++
+ 			if (!sdev)
+ 				continue;
+ 			if (scsi_device_get(sdev))
+ 				continue;
+ 
+-			/*
+-			 * If the rescan work was scheduled because of a resume
+-			 * event, the port is already fully resumed, but the
+-			 * SCSI device may not yet be fully resumed. In such
+-			 * case, executing scsi_rescan_device() may cause a
+-			 * deadlock with the PM code on device_lock(). Prevent
+-			 * this by giving up and retrying rescan after a short
+-			 * delay.
+-			 */
+-			delay_rescan = sdev->sdev_gendev.power.is_suspended;
+-			if (delay_rescan) {
+-				scsi_device_put(sdev);
+-				break;
+-			}
+-
+ 			spin_unlock_irqrestore(ap->lock, flags);
+-			scsi_rescan_device(sdev);
++			ret = scsi_rescan_device(sdev);
+ 			scsi_device_put(sdev);
+ 			spin_lock_irqsave(ap->lock, flags);
++
++			if (ret)
++				goto unlock;
+ 		}
  	}
  
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 0748e9ea4f5f..00674aae1696 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -608,7 +608,6 @@ int sata_link_hardreset(struct ata_link *link, const unsigned int *timing,
- 		/* online is set iff link is online && reset succeeded */
- 		if (online)
- 			*online = false;
--		ata_link_err(link, "COMRESET failed (errno=%d)\n", rc);
- 	}
- 	return rc;
++unlock:
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 	mutex_unlock(&ap->scsi_scan_mutex);
+ 
+-	if (delay_rescan)
++	/*
++	 * Reschedule with a delay if scsi_rescan_device() returned an error
++	 * and the port has not been suspended.
++	 */
++	if (ret && !(ap->pflags & ATA_PFLAG_SUSPENDED))
+ 		schedule_delayed_work(&ap->scsi_rescan_task,
+ 				      msecs_to_jiffies(5));
  }
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 52014b2d39e1..6650f63afec9 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1619,12 +1619,18 @@ int scsi_add_device(struct Scsi_Host *host, uint channel,
+ }
+ EXPORT_SYMBOL(scsi_add_device);
+ 
+-void scsi_rescan_device(struct scsi_device *sdev)
++int scsi_rescan_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev;
++	int ret = 0;
+ 
+ 	device_lock(dev);
+ 
++	if (sdev->sdev_state != SDEV_RUNNING) {
++		ret = -ENXIO;
++		goto unlock;
++	}
++
+ 	scsi_attach_vpd(sdev);
+ 	scsi_cdl_check(sdev);
+ 
+@@ -1638,7 +1644,11 @@ void scsi_rescan_device(struct scsi_device *sdev)
+ 			drv->rescan(dev);
+ 		module_put(dev->driver->owner);
+ 	}
++
++unlock:
+ 	device_unlock(dev);
++
++	return ret;
+ }
+ EXPORT_SYMBOL(scsi_rescan_device);
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 49f768d0ff37..4c2dc8150c6d 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -764,7 +764,7 @@ scsi_template_proc_dir(const struct scsi_host_template *sht);
+ #define scsi_template_proc_dir(sht) NULL
+ #endif
+ extern void scsi_scan_host(struct Scsi_Host *);
+-extern void scsi_rescan_device(struct scsi_device *);
++extern int scsi_rescan_device(struct scsi_device *sdev);
+ extern void scsi_remove_host(struct Scsi_Host *);
+ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
+ extern int scsi_host_busy(struct Scsi_Host *shost);
 -- 
 2.41.0
 
