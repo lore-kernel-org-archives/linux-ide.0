@@ -2,171 +2,187 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97234EE0210
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Sep 2023 22:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FF5DEE020F
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Sep 2023 22:20:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232903AbjIMWID (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 13 Sep 2023 18:08:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33694 "EHLO
+        id S229743AbjIMWUn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 13 Sep 2023 18:20:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229918AbjIMWID (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Sep 2023 18:08:03 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E22B173A;
-        Wed, 13 Sep 2023 15:07:59 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ABA3C433C7;
-        Wed, 13 Sep 2023 22:07:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694642878;
-        bh=1e/Se42acMmJti+HN3eVxt9x2rw0ic65YcpeSMc4Zbo=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=aMl3F7xth2Kh8w6hc9Se2I0pApgEdRXKbLK1NhRIedOxIO/oXpRQUMwrGDk23WtVe
-         PKXn453J58OztswNm1W6bg8gMOSxaCdxx+ortVoXlsBxvMaW70pE4kj1qnl2jSKHqM
-         QDnK4Tfd+aLace/cZy0cHJq1tS/bhmZxliSFPzfHoQ+JuU72DLN0ierhaNCft7Bs9Z
-         wwwfIZ6X8z8q0d57Q7Fx410YB3kTjARxRDY8U4Od2+rreoALO04y0ARgidK/PpOtUZ
-         52CLnqy/vlemDtEeCy3NJgwH/u1u6+KUd8UakodVur/FdSP2cBgdtY2MHh5cufs6uY
-         aGRdcUUrkbvGw==
-Message-ID: <0f164526-d1b6-64d3-a802-aa2a6c7951ee@kernel.org>
-Date:   Thu, 14 Sep 2023 07:07:56 +0900
+        with ESMTP id S232889AbjIMWUm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Sep 2023 18:20:42 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 584E6E0
+        for <linux-ide@vger.kernel.org>; Wed, 13 Sep 2023 15:20:38 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-500bbe3ef0eso426362e87.1
+        for <linux-ide@vger.kernel.org>; Wed, 13 Sep 2023 15:20:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694643636; x=1695248436;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:dkim-signature:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=kmlJkuQehsZq+nIm4WnuUzyOl3bWUtn+JX5OpEXp6+I=;
+        b=OH0PjaVgHrqC+8Ve1uTpL+dUJ1HIkjepPhwgiP9cpU9RnlRvhVeuinuKortBXahN3M
+         MPdzcaEOVBLki3XQ7pEuP+Cr2m1z6l7N2x1R5EGPbINzV/3etl0i5iSTxP1BtaCUBZrf
+         pc827PjvMcPbQ/VDZoAqL5gQQ5yXwp5w7CXwxzYYk4zy96B1293coy2ZoekUEdyI/dIH
+         nwsyrvGAlK+w4DGpu+IdgtzV58TdFxyEFeWqqpjiU4JPe3xsLzG33cRAdNScd4AkWRSf
+         g+CQXbW1B5xjbDRKvymHvJqVJXB22rk4Gj0l7CZbIe1vSQRbE1zImoU78vXE8MgXK1Fj
+         VorA==
+X-Gm-Message-State: AOJu0Yw+SRx/ofzinCw6x2qjCvz+p/6OpEPn6nrH9ez9rm4DeUyKBoOU
+        p57rq9pZWez5OvbQQO3/o+VMCKMvXeCiXfI/
+X-Google-Smtp-Source: AGHT+IE90KoYNG0EoRLOj1Fvz1Mw9vBKBPDx4mhqs9agnatEYbEYTjmYGaMuEoqKEvpxveoOWgUSNA==
+X-Received: by 2002:ac2:4e08:0:b0:4ff:af21:442b with SMTP id e8-20020ac24e08000000b004ffaf21442bmr13062lfr.23.1694643636454;
+        Wed, 13 Sep 2023 15:20:36 -0700 (PDT)
+Received: from flawful.org (c-f5f0e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.240.245])
+        by smtp.gmail.com with ESMTPSA id v22-20020ac25936000000b00502d9fe08fcsm19735lfi.218.2023.09.13.15.20.35
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Sep 2023 15:20:36 -0700 (PDT)
+Received: by flawful.org (Postfix, from userid 112)
+        id D1908B9CA; Thu, 14 Sep 2023 00:20:34 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1694643634; bh=prOrdWE8C3DZcMSKeArrvjKLg50HfcrvzqL4AB9/bdM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=JDE+flEurtFYvzpPobzDyYz2zwTAaBFHHVaTqiR6lF8id/gSXWTE3+NlOegsmRuej
+         mP9xb4TrSZ+fTW603tEbsqQlRFHMagg/qg39DfrIjivlG+qZI3Jnp0JFvC6ztB3/Dh
+         a7HRHmXkgohLSrqTRJFDUpA7IZhjFPhHeQ8rNDsw=
+Received: from x1-carbon.wdc.com (unknown [129.253.182.62])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by flawful.org (Postfix) with ESMTPSA id 0A69F213C;
+        Thu, 14 Sep 2023 00:19:47 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1694643598; bh=prOrdWE8C3DZcMSKeArrvjKLg50HfcrvzqL4AB9/bdM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ar2q5PW+TPNL0G2dSyvVQVLHEUwsd+bNDFxRbATXvdh3t6RHuRrK8GoGdrAbUOE9d
+         +A8wJUgXseWWPvobTIn66xg606Nzpfr5P7721J5KnUoVTU+qHmAcCsVc4gSuRsA1R7
+         N6S6YArX7Zvq9K4S8Jrt+UQ6sLb8/53D8AhJeGpg=
+From:   Niklas Cassel <nks@flawful.org>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Li Nan <linan122@huawei.com>, Li Nan <linan666@huaweicloud.com>,
+        linux-ide@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH 1/2] ata: libata-eh: do not clear ATA_PFLAG_EH_PENDING in ata_eh_reset()
+Date:   Thu, 14 Sep 2023 00:19:16 +0200
+Message-ID: <20230913221917.1217856-1-nks@flawful.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata,scsi: do not issue START STOP UNIT on resume
-Content-Language: en-US
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Thorsten Leemhuis <regressions@leemhuis.info>,
-        TW <dalzot@gmail.com>, regressions@lists.linux.dev,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-renesas-soc@vger.kernel.org
-References: <20230731003956.572414-1-dlemoal@kernel.org>
- <8be9c370-2f1-5815-431-f68ab868669@linux-m68k.org>
- <ffc1442b-698e-65ab-9aaf-e4ca076b697c@kernel.org>
- <CAMuHMdXK-pnzMNzbNw=zWaMbQtWtca850eYv98oUjQkypgBfwg@mail.gmail.com>
- <CAMuHMdUN5M3CkUn+HyPmgynT+9QLnE1GW_-v7gH5xOObQHfz2Q@mail.gmail.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <CAMuHMdUN5M3CkUn+HyPmgynT+9QLnE1GW_-v7gH5xOObQHfz2Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/13/23 19:34, Geert Uytterhoeven wrote:
-> Hi Damien,
-> 
-> On Wed, Sep 13, 2023 at 12:21 PM Geert Uytterhoeven
-> <geert@linux-m68k.org> wrote:
->> On Wed, Sep 13, 2023 at 12:58 AM Damien Le Moal <dlemoal@kernel.org> wrote:
->>> On 9/13/23 02:39, Geert Uytterhoeven wrote:
->>>> On Mon, 31 Jul 2023, Damien Le Moal wrote:
->>>>> During system resume, ata_port_pm_resume() triggers ata EH to
->>>>> 1) Resume the controller
->>>>> 2) Reset and rescan the ports
->>>>> 3) Revalidate devices
->>>>> This EH execution is started asynchronously from ata_port_pm_resume(),
->>>>> which means that when sd_resume() is executed, none or only part of the
->>>>> above processing may have been executed. However, sd_resume() issues a
->>>>> START STOP UNIT to wake up the drive from sleep mode. This command is
->>>>> translated to ATA with ata_scsi_start_stop_xlat() and issued to the
->>>>> device. However, depending on the state of execution of the EH process
->>>>> and revalidation triggerred by ata_port_pm_resume(), two things may
->>>>> happen:
->>>>> 1) The START STOP UNIT fails if it is received before the controller has
->>>>>   been reenabled at the beginning of the EH execution. This is visible
->>>>>   with error messages like:
->>>>>
->>>>> ata10.00: device reported invalid CHS sector 0
->>>>> sd 9:0:0:0: [sdc] Start/Stop Unit failed: Result: hostbyte=DID_OK driverbyte=DRIVER_OK
->>>>> sd 9:0:0:0: [sdc] Sense Key : Illegal Request [current]
->>>>> sd 9:0:0:0: [sdc] Add. Sense: Unaligned write command
->>>>> sd 9:0:0:0: PM: dpm_run_callback(): scsi_bus_resume+0x0/0x90 returns -5
->>>>> sd 9:0:0:0: PM: failed to resume async: error -5
->>>>>
->>>>> 2) The START STOP UNIT command is received while the EH process is
->>>>>   on-going, which mean that it is stopped and must wait for its
->>>>>   completion, at which point the command is rather useless as the drive
->>>>>   is already fully spun up already. This case results also in a
->>>>>   significant delay in sd_resume() which is observable by users as
->>>>>   the entire system resume completion is delayed.
->>>>>
->>>>> Given that ATA devices will be woken up by libata activity on resume,
->>>>> sd_resume() has no need to issue a START STOP UNIT command, which solves
->>>>> the above mentioned problems. Do not issue this command by introducing
->>>>> the new scsi_device flag no_start_on_resume and setting this flag to 1
->>>>> in ata_scsi_dev_config(). sd_resume() is modified to issue a START STOP
->>>>> UNIT command only if this flag is not set.
->>>>>
->>>>> Reported-by: Paul Ausbeck <paula@soe.ucsc.edu>
->>>>> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=215880
->>>>> Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
->>>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->>>>
->>>> Thanks for your patch, which is now commit 0a8589055936d8fe
->>>> ("ata,scsi: do not issue START STOP UNIT on resume") in v6.5-rc5.
->>>> Sorry for being late to the party, but this commit landed upstream
->>>> during my summer holidays, and apparently I wasn't that focussed on
->>>> noticing small behavioral changes after getting back to work...
->>>>
->>>> I noticed an oddity after s2idle or s2ram on Renesas Salvator-XS (R-Car
->>>> H3 ES2.0) with an old (spinning rust) SATA drive, and bisected it to
->>>> this commit: when accessing the drive after system resume, there is now
->>>> a delay of ca. 5s before data is returned, presumably due to starting
->>>> the drive, and having to wait for it to spin up to be able to read data.
->>>> But the good news is that the actual system resume takes less time than
->>>> before (reduced by even more than ca. 5s!), so this looks like a net
->>>> win...
->>>
->>> Thanks for the report. The delay for the first data access from user space right
->>> after resume is 100% expected, with or without this patch. The reason is that
->>> waking up the drive (spinning it up) is done asynchronously from the PM resume
->>> context, so when you get "PM suspend exit" message signaling that the system is
->>> resumed, the drive may not yet be spinning. Any access will wait for that to
->>> happen before proceeding. Depending on the drive that can take up to 10s or so.
->>
->> That does not match with what I am seeing: before this patch, there
->> was no delay on first data access from user space, as the drive is fully
->> spun up when system resume returns.
->> With this patch, system resume returns earlier, and the drive is only
->> spun up when user space starts accessing data.
->>
->> Note that I do not have any file system mounted, and use
->> "hd /dev/sda | head -70" to access the disk.
->>
->>> I am not entirely sure where the net win you see come from. But the patch you
->>> mention is in fact completely wrong and does not fix the underlying issues with
->>> ata suspend/resume and potential deadlocks in PM due to ata ports relationship
->>> with scsi devices. So I have been working on fixing this for the last 2 weeks,
->>> after another user also reported issues with the patch you mention [1].
->>>
->>> Could you try libata for-next branch on your system ? There are 7 fix patches in
->>> there that I plan to send out for 6.6-rc2 to fix the patch in question and other
->>> issues potentially causing deadlocks on resume. The patches were posted also [2].
->>>
->>> https://lore.kernel.org/linux-ide/20230912005655.368075-1-dlemoal@kernel.org/T/#t
->>
->> Unfortunately that didn't work, as /dev/sda no longer exists.
->> Will reply to the patch I bisected the issue to...
-> 
-> With libata/for-next (fa2259a59966c005 ("ata: libata: Cleanup inline
-> DMA helper functions")) and commit 99626085d036ec32 ("ata: libata-scsi:
-> link ata port and scsi device") reverted, it behaves as before (disk
-> is spun up when system resume completes, no delay when accessing the
-> disk from userspace).
+From: Niklas Cassel <niklas.cassel@wdc.com>
 
-I will check the ata platform driver for R-CAR. I may have overlooked something
-in that area. I tested with AHCI and libsas adapters only as I do not have ATA
-on the few ARM SBC boards I have. And I do not have an R-CAR board.
+ata_scsi_port_error_handler() starts off by clearing ATA_PFLAG_EH_PENDING,
+before calling ap->ops->error_handler() (without holding the ap->lock).
 
-What surprises me is that you need to revert ata: libata: Cleanup inline DMA
-helper functions". This patch has 0 functional changes and really is only a code
-cleanup... Nothing should change with it. Can you confirm that you really need
-to revert that patch to get things working again ?
+If an error IRQ is received while ap->ops->error_handler() is running,
+the irq handler will set ATA_PFLAG_EH_PENDING.
 
+Once ap->ops->error_handler() returns, ata_scsi_port_error_handler()
+checks if ATA_PFLAG_EH_PENDING is set, and if it is, another iteration
+of ATA EH is performed.
+
+The problem is that ATA_PFLAG_EH_PENDING is not only cleared by
+ata_scsi_port_error_handler(), it is also cleared by ata_eh_reset().
+
+ata_eh_reset() is called by ap->ops->error_handler(). This additional
+clearing done by ata_eh_reset() breaks the whole retry logic in
+ata_scsi_port_error_handler(). Thus, if an error IRQ is received while
+ap->ops->error_handler() is running, the port will currently remain
+frozen and will never get re-enabled.
+
+The additional clearing in ata_eh_reset() was introduced in commit
+1e641060c4b5 ("libata: clear eh_info on reset completion").
+
+Looking at the original error report:
+https://marc.info/?l=linux-ide&m=124765325828495&w=2
+
+We can see the following happening:
+[    1.074659] ata3: XXX port freeze
+[    1.074700] ata3: XXX hardresetting link, stopping engine
+[    1.074746] ata3: XXX flipping SControl
+
+[    1.411471] ata3: XXX irq_stat=400040 CONN|PHY
+[    1.411475] ata3: XXX port freeze
+
+[    1.420049] ata3: XXX starting engine
+[    1.420096] ata3: XXX rc=0, class=1
+[    1.420142] ata3: XXX clearing IRQs for thawing
+[    1.420188] ata3: XXX port thawed
+[    1.420234] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+
+We are not supposed to be able to receive an error IRQ while the port is
+frozen (PxIE is set to 0, i.e. all IRQs for the port are disabled).
+
+AHCI 1.3.1 section 10.7.1.1 First Tier (IS Register) states:
+"Each bit location can be thought of as reporting a '1' if the virtual
+"interrupt line" for that port is indicating it wishes to generate an
+interrupt. That is, if a port has one or more interrupt status bit set,
+and the enables for those status bits are set, then this bit shall be set."
+
+Additionally, AHCI state P:ComInit clearly shows that the state machine
+will only jump to P:ComInitSetIS (which sets IS.IPS(x) to '1'), if PxIE.PCE
+is set to '1'. In our case, PxIE is set to 0, so IS.IPS(x) won't get set.
+
+So IS.IPS(x) only gets set if PxIS and PxIE is set.
+
+AHCI 1.3.1 section 10.7.1.1 First Tier (IS Register) also states:
+"The bits in this register are read/write clear. It is set by the level of
+the virtual interrupt line being a set, and cleared by a write of '1' from
+the software."
+
+So if IS.IPS(x) is set, you need to explicitly clear it by writing a 1 to
+IS.IPS(x) for that port.
+
+Since PxIE is cleared, the only way to get an interrupt while the port is
+frozen, is if IS.IPS(x) is set, and the only way IS.IPS(x) can be set when
+the port is frozen, is if it was set before the port was frozen.
+
+However, since commit 94152042eaa9 ("ata: libahci: clear pending interrupt
+status"), we clear both PxIS and IS.IPS(x) after freezing the port, but
+before the COMRESET, so the problem that commit 1e641060c4b5 ("libata:
+clear eh_info on reset completion") fixed can no longer happen.
+
+Thus, revert commit 1e641060c4b5 ("libata: clear eh_info on reset
+completion"), so that the retry logic in ata_scsi_port_error_handler()
+works once again. (The retry logic is still needed, since we can still
+get an error IRQ _after_ the port has been thawed, but before
+ata_scsi_port_error_handler() takes the ap->lock in order to check
+if ATA_PFLAG_EH_PENDING is set.)
+
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+---
+ drivers/ata/libata-eh.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 159ba6ba19eb..5c493b6316eb 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2796,18 +2796,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 		}
+ 	}
+ 
+-	/*
+-	 * Some controllers can't be frozen very well and may set spurious
+-	 * error conditions during reset.  Clear accumulated error
+-	 * information and re-thaw the port if frozen.  As reset is the
+-	 * final recovery action and we cross check link onlineness against
+-	 * device classification later, no hotplug event is lost by this.
+-	 */
++	/* clear cached SError */
+ 	spin_lock_irqsave(link->ap->lock, flags);
+-	memset(&link->eh_info, 0, sizeof(link->eh_info));
++	link->eh_info.serror = 0;
+ 	if (slave)
+-		memset(&slave->eh_info, 0, sizeof(link->eh_info));
+-	ap->pflags &= ~ATA_PFLAG_EH_PENDING;
++		slave->eh_info.serror = 0;
+ 	spin_unlock_irqrestore(link->ap->lock, flags);
+ 
+ 	if (ata_port_is_frozen(ap))
 -- 
-Damien Le Moal
-Western Digital Research
+2.41.0
 
