@@ -2,114 +2,108 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACCE8EE0212
-	for <linux-ide@archiver.kernel.org>; Thu, 14 Sep 2023 00:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 120FEEE0214
+	for <linux-ide@archiver.kernel.org>; Thu, 14 Sep 2023 00:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233172AbjINAOs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 13 Sep 2023 20:14:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41154 "EHLO
+        id S232828AbjINA33 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 13 Sep 2023 20:29:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232828AbjINAOr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Sep 2023 20:14:47 -0400
+        with ESMTP id S229485AbjINA32 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Sep 2023 20:29:28 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7CBF170B
-        for <linux-ide@vger.kernel.org>; Wed, 13 Sep 2023 17:14:43 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5FB2C433C7;
-        Thu, 14 Sep 2023 00:14:42 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D73C1720;
+        Wed, 13 Sep 2023 17:29:25 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89DBFC433C8;
+        Thu, 14 Sep 2023 00:29:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694650483;
-        bh=gXrLH7y+gBmqjOWam1fVsEJTW+eegIb2ICjINuhaNJ8=;
+        s=k20201202; t=1694651364;
+        bh=u75AjhzI2I2y64qVe0s0JRA14+U1Zh/SSzRPBRMoxkE=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=DipnJLOd6l8fz3vhPswXJq1BGJokm/8pfRDE1r+p7GMRe8ZfnFvg3cUtG3i36jGNp
-         H+7rE+U8lZof8gBM72kg4822ZzsRmxMbNzfCXFkFTis/b+LO9CCs2pfkMEL4FYtEBs
-         kAjQ8nne41nu+769ryDCA2o0cq12nNqaoT+qWqKMLIbE4Hp/ssG+d7LFgn+NUJo4hh
-         VIJNfXVSwUKts3TV20Daw7KTwqToDs9nhs8Kt2CQNSTa4oVkd5z4jQ0x39tdtva/LU
-         QOHIeXEeiyYIOHQOdkh46TUQi5rpxEFt9xGFcXGFXaG97beeLvr8sMJbIB0kBeNOLw
-         2Bq1iTS9pb52Q==
-Message-ID: <7e28a353-c372-8185-b6c1-b3ec0fd2e966@kernel.org>
-Date:   Thu, 14 Sep 2023 09:14:41 +0900
+        b=ru7wNoyMU+gUN8+MNpfgqzeLwwBQWG5zJ/jRhAG/Tejq+ypoHXrFVFN7MkIkkE5JP
+         d+wyXQZo2TR1szLBvu59jdN2t9tQzPTRYi/PYwS08ewyJq6YXlw413QPuB0plgh0MY
+         eGhNd3Jfhf7J5fvx6JAd+bUkXuPk4vdVFAUtTu76VsJl+1lDE3bUDvILcsN6WEU9t2
+         1AnphfEuIeGoEOk6dFHydJofY8euGuTdyixGc+3BekBGOr+W3PQ2DfS+lgaz2vqbTf
+         xrQV9dWl4ty3+vQrY1OyJMooNnFzHwUBpjG09ejiAzafeH76/BA2AI7WsOlAok3QLc
+         EBfMhmSHZBICw==
+Message-ID: <7471ad70-e72c-473c-3c50-7e52b6bad69b@kernel.org>
+Date:   Thu, 14 Sep 2023 09:29:22 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: libata-core: fetch sense data for successful
- commands iff CDL enabled
+Subject: Re: [PATCH 07/19] scsi: sd: Do not issue commands to suspended disks
+ on remove
 Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>
-Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        patenteng <dimitar@daskalov.co.uk>, linux-ide@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230913150443.1200790-1-nks@flawful.org>
+To:     Bart Van Assche <bvanassche@acm.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>
+References: <20230911040217.253905-1-dlemoal@kernel.org>
+ <20230911040217.253905-8-dlemoal@kernel.org>
+ <c3a4ccb9-2e4d-906c-3c8f-1985a2d444a8@acm.org>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230913150443.1200790-1-nks@flawful.org>
+In-Reply-To: <c3a4ccb9-2e4d-906c-3c8f-1985a2d444a8@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/14/23 00:04, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
+On 9/14/23 05:50, Bart Van Assche wrote:
+> On 9/10/23 21:02, Damien Le Moal wrote:
+>> If an error occurs when resuming a host adapter before the devices
+>> attached to the adapter are resumed, the adapter low level driver may
+>> remove the scsi host, resulting in a call to sd_remove() for the
+>> disks of the host. However, since this function calls sd_shutdown(),
+>> a synchronize cache command and a start stop unit may be issued with the
+>> drive still sleeping and the HBA non-functional. This causes PM resume
+>> to hang, forcing a reset of the machine to recover.
+>>
+>> Fix this by checking a device host state in sd_shutdown() and by
+>> returning early doing nothing if the host state is not SHOST_RUNNING.
+>>
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>> ---
+>>   drivers/scsi/sd.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index c92a317ba547..a415abb721d3 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -3763,7 +3763,8 @@ static void sd_shutdown(struct device *dev)
+>>   	if (!sdkp)
+>>   		return;         /* this can happen */
+>>   
+>> -	if (pm_runtime_suspended(dev))
+>> +	if (pm_runtime_suspended(dev) ||
+>> +	    sdkp->device->host->shost_state != SHOST_RUNNING)
+>>   		return;
+>>   
+>>   	if (sdkp->WCE && sdkp->media_present) {
 > 
-> Currently, we fetch sense data for a _successful_ command if either:
-> 1) Command was NCQ and ATA_DFLAG_CDL_ENABLED flag set (flag
->    ATA_DFLAG_CDL_ENABLED will only be set if the Successful NCQ command
->    sense data supported bit is set); or
-> 2) Command was non-NCQ and regular sense data reporting is enabled.
-> 
-> This means that case 2) will trigger for a non-NCQ command which has
-> ATA_SENSE bit set, regardless if CDL is enabled or not.
-> 
-> This decision was by design. If the device reports that it has sense data
-> available, it makes sense to fetch that sense data, since the sk/asc/ascq
-> could be important information regardless if CDL is enabled or not.
-> 
-> However, the fetching of sense data for a successful command is done via
-> ATA EH. Considering how intricate the ATA EH is, we really do not want to
-> invoke ATA EH unless absolutely needed.
-> 
-> Before commit 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL
-> commands using policy 0xD") we never fetched sense data for successful
-> non-NCQ commands.
-> 
-> In order to not invoke the ATA EH unless absolutely necessary, even if the
-> device claims support for sense data reporting, only fetch sense data for
-> successful (NCQ and non-NCQ commands) if CDL is supported and enabled.
-> 
-> Fixes: 3ac873c76d79 ("ata: libata-core: fix when to fetch sense data for successful commands")
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> ---
->  drivers/ata/libata-core.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 74314311295f..2f7f72994cd7 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4784,10 +4784,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
->  	 * 0xD. For these commands, invoke EH to get the command sense data.
->  	 */
->  	if (qc->result_tf.status & ATA_SENSE &&
-> -	    ((ata_is_ncq(qc->tf.protocol) &&
-> -	      dev->flags & ATA_DFLAG_CDL_ENABLED) ||
-> -	     (!ata_is_ncq(qc->tf.protocol) &&
-> -	      ata_id_sense_reporting_enabled(dev->id)))) {
-> +	    dev->flags & ATA_DFLAG_CDL_ENABLED) {
+> Why to test the host state instead of dev->power.runtime_status? I don't
+> think that it is safe to skip shutdown if the error handler is active.
+> If the error handler can recover the device a SYNCHRONIZE CACHE command
+> should be submitted.
 
-Agree. That is safer. ATA has the device statistics feature set, which if
-enabled, can also generates sense data for successful commands. But we do not
-support this feature and so would likely be doing the wrong things with the
-sense data.
+But there is no synchronization with EH that I can see anyway. At least for
+sd_remove(), I would assume that this is called only once the device references
+were all dropped, so presumably EH is not doing anything with the drive when
+that happen, no ?
 
-Note that I would also add "qc->flags & ATA_QCFLAG_HAS_CDL &&":
-
-        if (qc->result_tf.status & ATA_SENSE &&
-            qc->flags & ATA_QCFLAG_HAS_CDL &&
-            dev->flags & ATA_DFLAG_CDL_ENABLED) {
-
-since for the case where the command did not use CDL we can still get the
-ATA_SENSE flag set because of a CDL command having been aborted, but we do not
-need to do anything for that non-CDL command.
+In any case, looking at dev->power.runtime_status is not correct as this is set
+to RPM_ACTIVE when the device is suspended through system suspend. We could
+replace the test "sdkp->device->host->shost_state != SHOST_RUNNING" with
+"dev->power.is_suspended", as that indicates true (1) for a suspended device.
+However, I really do not like that as that is a PM internal field and should not
+be accessing it directly. The PM code comments say as much. Any better idea ?
 
 
 -- 
