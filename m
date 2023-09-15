@@ -2,114 +2,206 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA320EE3F2F
-	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 06:32:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 047AFEE6420
+	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 06:54:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232032AbjIOGc6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 15 Sep 2023 02:32:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48308 "EHLO
+        id S232462AbjIOGyk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 15 Sep 2023 02:54:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230101AbjIOGc5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 02:32:57 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECEB5CCD
-        for <linux-ide@vger.kernel.org>; Thu, 14 Sep 2023 23:32:52 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBAB3C433C8;
-        Fri, 15 Sep 2023 06:32:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694759572;
-        bh=h7cfZPMYhlPN0RrMtyJscrBfq/a3hAOJA+6MhPD0P84=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=sLjBj6Wllf1p0sWrhBa7Osg/73+P3YTAXSfK11iB5N5KPFDGEGrGffP3tudx+0EW6
-         gFYWByOIUOOL9iTJQhmxMiZCucIn35BoiZEayuQH3nnwP5bWObRgMA67cNlUMNvBOQ
-         fsGIGZt6LHrLlYMSuRbWDX+F36gNECi33TVdw8NvtlKVANxzVeVutdKqbJ6/Cc6Nxd
-         Qq/hivLB8sQ+dqwnZ3SZJF9wL1JAhors/Rm/Hc/Lef5cN6gACkbwKdZl92yseLRTUk
-         vACCVwKIytccfywUA8jpIYMDoC01zD21XP+LtnoR2cItw/TP/2skkUeBAPK8dD0SzS
-         JiMThvHA7H3Fw==
-Message-ID: <e6fd1980-cbc2-65a1-770b-af745c89a787@kernel.org>
-Date:   Fri, 15 Sep 2023 15:32:50 +0900
+        with ESMTP id S230109AbjIOGyj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 02:54:39 -0400
+X-Greylist: delayed 12719 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 14 Sep 2023 23:54:26 PDT
+Received: from sphereful.davidgow.net (sphereful.davidgow.net [IPv6:2404:9400:4:0:216:3eff:fee2:5328])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2417271D;
+        Thu, 14 Sep 2023 23:54:26 -0700 (PDT)
+Received: by sphereful.davidgow.net (Postfix, from userid 119)
+        id A95151D5805; Fri, 15 Sep 2023 14:54:24 +0800 (AWST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
+        s=201606; t=1694760864;
+        bh=XQJ2LhjuNHohn0bHVIdFmH9hk8s09g6V1/dd6q+mxl4=;
+        h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
+        b=Hi7bUTflxnCeGBuuAKp14El2swhWK5tWcAapHEg3de2fTQU6NBfDRPKa4jXx2zmUe
+         P3OS1/0zKsB0I0ubf/NJLGCyc2TnTCE16rlAvDg0GOMR0xVDCI4qNZ1QZVAO8qxY6J
+         udSVZJQG7wgRG5FbYBcOyEOsQ8s/OzsZcAuESJ0aaePWqWt65nBk0CxLeOpKJNh3Gn
+         DbLWw+i1FrhidC5iGnOYXIzw//tiqa4JHbGheXZe98W/TCFD7kV1TaBTjDzn3h15Lz
+         8gIijtfs6seGFfwgbuOJKW8l0hlScP/oXIhh3Pyef616LpuaqkMBHU5g16TNJ1c8oD
+         Q0b5RvN/COip609Jmc48of4fiTtZdHY/0U7ifuMa7PTF/QN3OJuh8VG6r+mgBikNEX
+         bTUz4uAp2e5wcfBjOYQQDYfQEzHdazOs4nR5gBoQKNxRt6zY+YX86O0E1t2taUvVsa
+         BsBPgTz+uIdkx4gD2z9qxZXMpIVcTfvhSsxwIMaG0drLHcrQJ2zsM/nerJeXdkATnW
+         dqp3hMyKbvn0fACk4hCwVR0TwgWIwSs1j+W7D0DMXDXeCE8YQZyDOWb9mzbnCqjtgR
+         w3DMqvnfuHx2PJhY07WvXoXlMlWBptgG6OSebLag6FOjlY3SY/WWEsizMX+wXbRdsL
+         SRD3S/bYUwwkqz7xuEMgRVD8=
+Received: from [IPV6:2001:8003:8824:9e00::bec] (unknown [IPv6:2001:8003:8824:9e00::bec])
+        by sphereful.davidgow.net (Postfix) with ESMTPSA id BBF301D57EA;
+        Fri, 15 Sep 2023 14:54:22 +0800 (AWST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
+        s=201606; t=1694760862;
+        bh=XQJ2LhjuNHohn0bHVIdFmH9hk8s09g6V1/dd6q+mxl4=;
+        h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
+        b=Jej7U/B4T8o2MgYP5f8UWtS28guozrDrTC7WC6oqvXoSKGqaWbRMEGVpKUhrEZQGg
+         EbibmUQ6IxYXOSlKUPfQKpVFC6cIGeBnb2D4c06lfpshqqNValvN/dlh+WBk20t6cE
+         fNtZKkQ64+PLc1ISP7u4li7ZivHnHKdWovnlxw23nfDnt0DaKPNk547v9mDpv8IBci
+         WHyIutQ8GYLYc1X9fKbMpcWircDacFZbfkm/NbE3eyuNo3yJIBhJUeZ5kNIukNgM1d
+         dIEG7A2RbBu8Ln6cyy+ZzhKNp1raRpn6XGHoM2HY7+NYhV0TCQ2l0xbHb+xqZlgaPz
+         aCE1Bj9LKLbaNEmPbfREQy7a+C2midogYrFUcij2iFM86fDe36r2nMluOOVonw6k/z
+         xERgOWxCroNQ/vj5flzR7RFU9Bb5LNAojq+8JFKuVH32aB9GL1ji84DuD0NHtsSvrR
+         9B1C2zkTyyTUNm0yx0vE0C/ucxIUZ/yFtNFsnB40Y/3VMT2iI1WNjTijxTEF+9S/q3
+         C3SV0L3/OUrt5Q5crk3gab5Q6jbxX2C4fUw7jW0oE/7ayZL+6BXpdH37gdr5PtZ4vz
+         3T3Jj+qCetW8q62Epm0SotdKBUB1avEM5Q81zdeayxq9uxFrrb9/L4wn6ZZ7BZNB9N
+         qd9VQgBgjMiN+AXVVTxi7SlU=
+Message-ID: <658b9285-e030-4987-86a7-57cdb6c7f161@davidgow.net>
+Date:   Fri, 15 Sep 2023 14:54:19 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH] ata: libata-core: fetch sense data for successful
- commands iff CDL enabled
-Content-Language: en-US
-To:     Niklas Cassel <nks@flawful.org>
-Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        patenteng <dimitar@daskalov.co.uk>, linux-ide@vger.kernel.org,
-        Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230913150443.1200790-1-nks@flawful.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20230913150443.1200790-1-nks@flawful.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+From:   David Gow <david@davidgow.net>
+Subject: Re: Fwd: Kernel 6.5.2 Causes Marvell Technology Group 88SE9128 PCIe
+ SATA to Constantly Reset
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Bagas Sanjaya <bagasdotme@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        patenteng <dimitar@daskalov.co.uk>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <dacb34e4-ce58-bc0e-8206-672d743a3e34@gmail.com>
+ <ZQHRQHAPQdG+Nu1o@x1-carbon>
+ <59f6ff78-6b45-465a-bd41-28c7a5d10931@davidgow.net>
+ <10f65dfe-5e8a-10ab-4d89-efe693c07caa@kernel.org>
+Content-Language: fr
+In-Reply-To: <10f65dfe-5e8a-10ab-4d89-efe693c07caa@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/14/23 00:04, Niklas Cassel wrote:
-> From: Niklas Cassel <niklas.cassel@wdc.com>
+Le 2023/09/15 à 13:41, Damien Le Moal a écrit :
+> On 9/15/23 12:22, David Gow wrote:
+>> Le 2023/09/13 à 23:12, Niklas Cassel a écrit :
+>>> On Wed, Sep 13, 2023 at 06:25:31PM +0700, Bagas Sanjaya wrote:
+>>>> Hi,
+>>>>
+>>>> I notice a regression report on Bugzilla [1]. Quoting from it:
+>>>>
+>>>>> After upgrading to 6.5.2 from 6.4.12 I keep getting the following kernel messages around three times per second:
+>>>>>
+>>>>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>>>> [ 9683.270399] ata16.00: configured for UDMA/66
+>>>>>
+>>>>> So I've tracked the offending device:
+>>>>>
+>>>>> ll /sys/class/ata_port/ata16
+>>>>> lrwxrwxrwx 1 root root 0 Sep 10 21:51 /sys/class/ata_port/ata16 -> ../../devices/pci0000:00/0000:00:1c.7/0000:0a:00.0/ata16/ata_port/ata16
+>>>>>
+>>>>> cat /sys/bus/pci/devices/0000:0a:00.0/uevent
+>>>>> DRIVER=ahci
+>>>>> PCI_CLASS=10601
+>>>>> PCI_ID=1B4B:9130
+>>>>> PCI_SUBSYS_ID=1043:8438
+>>>>> PCI_SLOT_NAME=0000:0a:00.0
+>>>>> MODALIAS=pci:v00001B4Bd00009130sv00001043sd00008438bc01sc06i01
+>>>>>
+>>>>> lspci | grep 0a:00.0
+>>>>> 0a:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe SATA 6 Gb/s RAID controller with HyperDuo (rev 11)
+>>>>>
+>>>>> I am not using the 88SE9128, so I have no way of knowing whether it works or not. It may simply be getting reset a couple of times per second or it may not function at all.
+>>>>
+>>>> See Bugzilla for the full thread.
+>>>>
+>>>> patenteng: I have asked you to bisect this regression. Any conclusion?
+>>>>
+>>>> Anyway, I'm adding this regression to regzbot:
+>>>>
+>>>> #regzbot: introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?id=217902
+>>>
+>>> Hello Bagas, patenteng,
+>>>
+>>>
+>>> FYI, the prints:
+>>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>> [ 9683.270399] ata16.00: configured for UDMA/66
+>>>
+>>> Just show that ATA error handler has been invoked.
+>>> There was no reset performed.
+>>>
+>>> If there was a reset, you would have seen something like:
+>>> [    1.441326] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>> [    1.541250] ata8.00: configured for UDMA/133
+>>> [    1.541411] ata8: hard resetting link
+>>>
+>>>
+>>> Could you please try this patch and see if it improves things for you:
+>>> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
+>>>
+>>
+>> FWIW, I'm seeing a very similar issue both in 6.5.2 and in git master
+>> [aed8aee11130 ("Merge tag 'pmdomain-v6.6-rc1' of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/linux-pm") with that
+>> patch applied.
+>>
+>>
+>> The log is similar (the last two lines repeat several times a second):
+>> [    0.369632] ata14: SATA max UDMA/133 abar m2048@0xf7c10000 port
+>> 0xf7c10480 irq 33
+>> [    0.683693] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> [    1.031662] ata14.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
+>> [    1.031852] ata14.00: configured for UDMA/66
+>> [    1.414145] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> [    1.414505] ata14.00: configured for UDMA/66
+>> [    1.744094] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> [    1.744368] ata14.00: configured for UDMA/66
+>> [    2.073916] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> [    2.074276] ata14.00: configured for UDMA/66
+>>
+>>
+>> lspci shows:
+>> 09:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230 PCIe 2.0
+>> x2 4-port SATA 6 Gb/s RAID Controller (rev 10) (prog-if 01 [AHCI 1.0])
+>>           Subsystem: Gigabyte Technology Co., Ltd Device b000
+>>           Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>           Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>           Latency: 0, Cache Line Size: 64 bytes
+>>           Interrupt: pin A routed to IRQ 33
+>>           Region 0: I/O ports at b050 [size=8]
+>>           Region 1: I/O ports at b040 [size=4]
+>>           Region 2: I/O ports at b030 [size=8]
+>>           Region 3: I/O ports at b020 [size=4]
+>>           Region 4: I/O ports at b000 [size=32]
+>>           Region 5: Memory at f7c10000 (32-bit, non-prefetchable) [size=2K]
+>>           Expansion ROM at f7c00000 [disabled] [size=64K]
+>>           Capabilities: <access denied>
+>>           Kernel driver in use: ahci
+>>
+>> The controller in question lives on a Gigabyte Z87X-UD5H-CF motherboard.
+>> I'm using the controller for several drives, and it's working, it's just
+>> spammy. (At worst, there's some performance hitching, but that might
+>> just be journald rotating logs as they fill up with the message).
+>>
+>> I haven't had a chance to bisect yet (this is a slightly awkward machine
+>> for me to install test kernels on), but can also confirm it worked with
+>> 6.4.12.
+>>
+>> Hopefully that's useful. I'll get back to you if I manage to bisect it.
 > 
-> Currently, we fetch sense data for a _successful_ command if either:
-> 1) Command was NCQ and ATA_DFLAG_CDL_ENABLED flag set (flag
->    ATA_DFLAG_CDL_ENABLED will only be set if the Successful NCQ command
->    sense data supported bit is set); or
-> 2) Command was non-NCQ and regular sense data reporting is enabled.
+> Bisect will definitely be welcome. But first, please try adding the patch that
+> Niklas mentioned above:
 > 
-> This means that case 2) will trigger for a non-NCQ command which has
-> ATA_SENSE bit set, regardless if CDL is enabled or not.
+> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
 > 
-> This decision was by design. If the device reports that it has sense data
-> available, it makes sense to fetch that sense data, since the sk/asc/ascq
-> could be important information regardless if CDL is enabled or not.
+> If that fixes the issue, we know the culprit :)
 > 
-> However, the fetching of sense data for a successful command is done via
-> ATA EH. Considering how intricate the ATA EH is, we really do not want to
-> invoke ATA EH unless absolutely needed.
-> 
-> Before commit 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL
-> commands using policy 0xD") we never fetched sense data for successful
-> non-NCQ commands.
-> 
-> In order to not invoke the ATA EH unless absolutely necessary, even if the
-> device claims support for sense data reporting, only fetch sense data for
-> successful (NCQ and non-NCQ commands) if CDL is supported and enabled.
-> 
-> Fixes: 3ac873c76d79 ("ata: libata-core: fix when to fetch sense data for successful commands")
-> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-> ---
->  drivers/ata/libata-core.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 74314311295f..2f7f72994cd7 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4784,10 +4784,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
->  	 * 0xD. For these commands, invoke EH to get the command sense data.
->  	 */
->  	if (qc->result_tf.status & ATA_SENSE &&
-> -	    ((ata_is_ncq(qc->tf.protocol) &&
-> -	      dev->flags & ATA_DFLAG_CDL_ENABLED) ||
-> -	     (!ata_is_ncq(qc->tf.protocol) &&
-> -	      ata_id_sense_reporting_enabled(dev->id)))) {
-> +	    dev->flags & ATA_DFLAG_CDL_ENABLED) {
 
-Applied to for-6.6-fixes with a tweak:
 
-	if (qc->flags & ATA_QCFLAG_HAS_CDL &&
-	    qc->result_tf.status & ATA_SENSE) {
+Sorry: I wasn't clear. I did try with that patch (applied on top of 
+torvalds/master), and the issue remained.
 
-is the test I tweaked. This allows ignoring command that do not use CDL. And
-seeing ATA_QCFLAG_HAS_CDL set implies that dev->flags & ATA_DFLAG_CDL_ENABLED is
-true. So this is better I think.
+I've started bisecting, but fear it'll take a while.
 
->  		/*
->  		 * Tell SCSI EH to not overwrite scmd->result even if this
->  		 * command is finished with result SAM_STAT_GOOD.
-
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+-- David
 
