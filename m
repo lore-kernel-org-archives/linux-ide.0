@@ -2,194 +2,327 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEEB7EE6424
-	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 07:01:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 023AFEE644B
+	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 08:12:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232351AbjIOHBX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 15 Sep 2023 03:01:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58686 "EHLO
+        id S232881AbjIOIMQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 15 Sep 2023 04:12:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232562AbjIOHBX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 03:01:23 -0400
+        with ESMTP id S232808AbjIOIMO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 04:12:14 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0BD81BCF;
-        Fri, 15 Sep 2023 00:00:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1203C433C7;
-        Fri, 15 Sep 2023 07:00:53 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CED52710;
+        Fri, 15 Sep 2023 01:12:08 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id ED4DEC433C9;
+        Fri, 15 Sep 2023 08:12:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694761255;
-        bh=zk/u7pwKKCmAwgpZiiGCO+Nap+PLbat+f4RroAbfWVk=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Frn/IgXeecdf/Md4ljAbOZA1STCAcCgVOLbScVfZWcoXNzAXfEx4MxH5EXVsKOqxO
-         h8nKRs1Qgy/T/qPzdelivJj1tCaUKClkqrAttOFU2RGUtxIM3gm5US0WgBkRBdDwPU
-         u1eJU//v7hXLdyqNCOwobvZPROGtuwRQFIZ8Ap7SEqpWkJrb4y/07vZtn8gCvnOdfF
-         8YkzHK8hLxDyV1kh9vP87E4i5JdR/HLD+ailPIhF6eeTLiwwfAxbUhiApfkKpbbxwg
-         npBC01QbNIZgzgS6DuS5YAQJZadVvfZxgYKXu1sneVZH/WHP848vYE+F5Y3LvRyghI
-         zZZNv4NFsO5YA==
-Message-ID: <3436e410-5396-e40e-ab55-3e5a9b1f090a@kernel.org>
-Date:   Fri, 15 Sep 2023 16:00:52 +0900
+        s=k20201202; t=1694765528;
+        bh=agloKg28g9/YDRsW6JpbMHgCzMLCcZvfA0DO3+uFT6U=;
+        h=From:Subject:Date:To:Cc:Reply-To:From;
+        b=biImRSYA1Gz9ex5hNnBvsCHN9Ke70AUTaJ/1oXos0Jp7PNytynhYDldZqmwGGwqIG
+         wBDKtPE0OTqUI1L63BvWt/+LCgVBbLdZCfr41q3wmoGf4wSW/aJrIfFwombizAcdZg
+         qvSoZF/En9YlofX7qoeahgKwyA5XkjPRaozJcx0YgybsjABHPXaJjBTEuBtzK8LPQW
+         jobWx6+oa9+BDtivYaoAnYXnxx8o2rsLE386o7+u+Um3TgcOPHoXDeCO9Jw/08P+7h
+         vQQ0+r6aW6E3rdL67GLQm+1B22ApzP0EDxkQv5g6EBJoCtur/p98vje3l/BQ6kXwd+
+         Ok5Q7hby1Jxgw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.lore.kernel.org (Postfix) with ESMTP id C23FEEE6436;
+        Fri, 15 Sep 2023 08:12:07 +0000 (UTC)
+From:   Nikita Shubin via B4 Relay 
+        <devnull+nikita.shubin.maquefel.me@kernel.org>
+Subject: [PATCH v4 00/42] ep93xx device tree conversion
+Date:   Fri, 15 Sep 2023 11:10:42 +0300
+Message-Id: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: Fwd: Kernel 6.5.2 Causes Marvell Technology Group 88SE9128 PCIe
- SATA to Constantly Reset
-Content-Language: en-US
-To:     David Gow <david@davidgow.net>,
-        Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Bagas Sanjaya <bagasdotme@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        patenteng <dimitar@daskalov.co.uk>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <dacb34e4-ce58-bc0e-8206-672d743a3e34@gmail.com>
- <ZQHRQHAPQdG+Nu1o@x1-carbon>
- <59f6ff78-6b45-465a-bd41-28c7a5d10931@davidgow.net>
- <10f65dfe-5e8a-10ab-4d89-efe693c07caa@kernel.org>
- <658b9285-e030-4987-86a7-57cdb6c7f161@davidgow.net>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <658b9285-e030-4987-86a7-57cdb6c7f161@davidgow.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAIMRBGUC/2WOzQ6CMBCEX8X07JJ2lx/15HsYDwUWu1GKtkgwh
+ ncXuBjj8ctMvpm3ihyEozps3irwIFE6P0O63ajKWX9hkHpmhRpJ5zoDvu9pHEGbqsjJFIw1qrl
+ c2shQBusrt9RbG3sOS3AP3Mi4LpzOMzeha6F3ge3Xm2JqkDLExOxIIxjwcpXeJtE9S/HH1j6e3
+ PAtaXlROol9F17r54EW8d+9gUAD1TnZrDFGE/84ztM0fQBYHN69+gAAAA==
+To:     Hartley Sweeten <hsweeten@visionengravers.com>,
+        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Lukasz Majewski <lukma@denx.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Andy Shevchenko <andy@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Nikita Shubin <nikita.shubin@maquefel.me>,
+        Sebastian Reichel <sre@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+        Mark Brown <broonie@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>
+Cc:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
+        netdev@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-input@vger.kernel.org, alsa-devel@alsa-project.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Andrew Lunn <andrew@lunn.ch>
+X-Mailer: b4 0.13-dev-e3e53
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1694765525; l=10008;
+ i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
+ bh=agloKg28g9/YDRsW6JpbMHgCzMLCcZvfA0DO3+uFT6U=; =?utf-8?q?b=3DlFhzja5WXyxz?=
+ =?utf-8?q?/PLTphurB/M7+sirpyh84veoDhmItUYEygTnM2rKc8vgA4hyFJjn2QEJembynYrr?=
+ my3ZXC3QCmFL6iSycW9kRWpVdxebuBU00lnoSjSyA95RpVxeZd1i
+X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
+ pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
+X-Endpoint-Received: by B4 Relay for nikita.shubin@maquefel.me/20230718 with auth_id=65
+X-Original-From: Nikita Shubin <nikita.shubin@maquefel.me>
+Reply-To: <nikita.shubin@maquefel.me>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/15/23 15:54, David Gow wrote:
-> Le 2023/09/15 à 13:41, Damien Le Moal a écrit :
->> On 9/15/23 12:22, David Gow wrote:
->>> Le 2023/09/13 à 23:12, Niklas Cassel a écrit :
->>>> On Wed, Sep 13, 2023 at 06:25:31PM +0700, Bagas Sanjaya wrote:
->>>>> Hi,
->>>>>
->>>>> I notice a regression report on Bugzilla [1]. Quoting from it:
->>>>>
->>>>>> After upgrading to 6.5.2 from 6.4.12 I keep getting the following kernel messages around three times per second:
->>>>>>
->>>>>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>>>> [ 9683.270399] ata16.00: configured for UDMA/66
->>>>>>
->>>>>> So I've tracked the offending device:
->>>>>>
->>>>>> ll /sys/class/ata_port/ata16
->>>>>> lrwxrwxrwx 1 root root 0 Sep 10 21:51 /sys/class/ata_port/ata16 -> ../../devices/pci0000:00/0000:00:1c.7/0000:0a:00.0/ata16/ata_port/ata16
->>>>>>
->>>>>> cat /sys/bus/pci/devices/0000:0a:00.0/uevent
->>>>>> DRIVER=ahci
->>>>>> PCI_CLASS=10601
->>>>>> PCI_ID=1B4B:9130
->>>>>> PCI_SUBSYS_ID=1043:8438
->>>>>> PCI_SLOT_NAME=0000:0a:00.0
->>>>>> MODALIAS=pci:v00001B4Bd00009130sv00001043sd00008438bc01sc06i01
->>>>>>
->>>>>> lspci | grep 0a:00.0
->>>>>> 0a:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe SATA 6 Gb/s RAID controller with HyperDuo (rev 11)
->>>>>>
->>>>>> I am not using the 88SE9128, so I have no way of knowing whether it works or not. It may simply be getting reset a couple of times per second or it may not function at all.
->>>>>
->>>>> See Bugzilla for the full thread.
->>>>>
->>>>> patenteng: I have asked you to bisect this regression. Any conclusion?
->>>>>
->>>>> Anyway, I'm adding this regression to regzbot:
->>>>>
->>>>> #regzbot: introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?id=217902
->>>>
->>>> Hello Bagas, patenteng,
->>>>
->>>>
->>>> FYI, the prints:
->>>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [ 9683.270399] ata16.00: configured for UDMA/66
->>>>
->>>> Just show that ATA error handler has been invoked.
->>>> There was no reset performed.
->>>>
->>>> If there was a reset, you would have seen something like:
->>>> [    1.441326] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>>> [    1.541250] ata8.00: configured for UDMA/133
->>>> [    1.541411] ata8: hard resetting link
->>>>
->>>>
->>>> Could you please try this patch and see if it improves things for you:
->>>> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
->>>>
->>>
->>> FWIW, I'm seeing a very similar issue both in 6.5.2 and in git master
->>> [aed8aee11130 ("Merge tag 'pmdomain-v6.6-rc1' of
->>> git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/linux-pm") with that
->>> patch applied.
->>>
->>>
->>> The log is similar (the last two lines repeat several times a second):
->>> [    0.369632] ata14: SATA max UDMA/133 abar m2048@0xf7c10000 port
->>> 0xf7c10480 irq 33
->>> [    0.683693] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>> [    1.031662] ata14.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
->>> [    1.031852] ata14.00: configured for UDMA/66
->>> [    1.414145] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>> [    1.414505] ata14.00: configured for UDMA/66
->>> [    1.744094] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>> [    1.744368] ata14.00: configured for UDMA/66
->>> [    2.073916] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>> [    2.074276] ata14.00: configured for UDMA/66
->>>
->>>
->>> lspci shows:
->>> 09:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230 PCIe 2.0
->>> x2 4-port SATA 6 Gb/s RAID Controller (rev 10) (prog-if 01 [AHCI 1.0])
->>>           Subsystem: Gigabyte Technology Co., Ltd Device b000
->>>           Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>           Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>           Latency: 0, Cache Line Size: 64 bytes
->>>           Interrupt: pin A routed to IRQ 33
->>>           Region 0: I/O ports at b050 [size=8]
->>>           Region 1: I/O ports at b040 [size=4]
->>>           Region 2: I/O ports at b030 [size=8]
->>>           Region 3: I/O ports at b020 [size=4]
->>>           Region 4: I/O ports at b000 [size=32]
->>>           Region 5: Memory at f7c10000 (32-bit, non-prefetchable) [size=2K]
->>>           Expansion ROM at f7c00000 [disabled] [size=64K]
->>>           Capabilities: <access denied>
->>>           Kernel driver in use: ahci
->>>
->>> The controller in question lives on a Gigabyte Z87X-UD5H-CF motherboard.
->>> I'm using the controller for several drives, and it's working, it's just
->>> spammy. (At worst, there's some performance hitching, but that might
->>> just be journald rotating logs as they fill up with the message).
->>>
->>> I haven't had a chance to bisect yet (this is a slightly awkward machine
->>> for me to install test kernels on), but can also confirm it worked with
->>> 6.4.12.
->>>
->>> Hopefully that's useful. I'll get back to you if I manage to bisect it.
->>
->> Bisect will definitely be welcome. But first, please try adding the patch that
->> Niklas mentioned above:
->>
->> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
->>
->> If that fixes the issue, we know the culprit :)
->>
-> 
-> 
-> Sorry: I wasn't clear. I did try with that patch (applied on top of 
-> torvalds/master), and the issue remained.
-> 
-> I've started bisecting, but fear it'll take a while.
+This series aims to convert ep93xx from platform to full device tree support.
 
-OK. Thanks.
+The main goal is to receive ACK's to take it via Arnd's arm-soc branch.
 
-> 
-> Thanks,
-> -- David
-> 
+Major changes:
+- drop newline at the end from each YAML files
+- rename dma and clk bindings headers to match first compatible
+- shrink SoC exported functions number to only 2
+- dropped some ep93xx_pata fixes from these series
+- dropped m48t86 stuff from these series
 
+Bit thanks to Andy Shevchenko for thorough review.
+
+Some parts are were sent in advance, so these series depends on the
+following:
+
+Link: https://lore.kernel.org/all/20230823-m48t86_device_tree-v2-0-21ff275f949d@maquefel.me/
+Link: https://lore.kernel.org/all/20230823-ep93xx_pata_fixes-v1-0-d7e7229be148@maquefel.me/
+
+---
+Changes in v4:
+
+- gpio: ep93xx: split device in multiple
+  - s/generic_handle_irq/generic_handle_domain_irq/
+  - s/int offset/irq_hw_number_t offset/ though now it looks a bit odd to me
+  - drop i = 0
+  - drop 'error'
+  - use dev_err_probe withour printing devname once again
+
+dt-bindings: clock: Add Cirrus EP93xx
+  - renamed cirrus,ep93xx-clock.h -> cirrus,ep9301-clk.h
+
+clk: ep93xx: add DT support for Cirrus EP93xx
+  - drop unused includes
+  - use .name only for xtali, pll1, pll2 parents
+  - convert // to /*
+  - pass clk_parent_data instead of char* clock name
+
+dt-bindings: pinctrl: Add Cirrus EP93xx
+  - s/additionalProperties/unevaluatedProperties/
+
+dt-bindings: soc: Add Cirrus EP93xx
+  - move syscon to soc directory
+  - add vendor prefix
+  - make reboot same style as pinctrl, clk
+  - use absolute path for ref
+  - expand example
+
+soc: Add SoC driver for Cirrus ep93xx
+  - s/0xf0000000/GENMASK(31, 28)/
+  - s/ret/ep93xx_chip_revision(map)/
+  - drop symbol exports
+  - convert to platform driver
+
+dt-bindings: rtc: Add Cirrus EP93xx
+  - allOf: with $ref to rtc.yaml
+  - s/additionalProperties/unevaluatedProperties/
+
+dt-bindings: watchdog: Add Cirrus EP93x
+  - drop description
+  - reword
+
+power: reset: Add a driver for the ep93xx reset
+  - lets use 'GPL-2.0+' instead of '(GPL-2.0)'
+  - s/of_device/of/
+  - drop mdelay with warning
+  - return 0 at the end
+
+net: cirrus: add DT support for Cirrus EP93xx
+  - fix leaking np
+
+mtd: nand: add support for ts72xx
+  - +bits.h
+  - drop comment
+  - ok to fwnode_get_next_child_node
+  - use goto to put handle and nand and report error
+
+ARM: dts: add Cirrus EP93XX SoC .dtsi
+  - add simple-bus for ebi, as we don't require to setup anything
+  - add arm,pl011 compatible to uart nodes
+  - drop i2c-gpio, as it's isn't used anywhere
+
+ARM: dts: ep93xx: add ts7250 board
+  - generic node name for temperature-sensor
+  - drop i2c
+  - move nand, rtc, watchdog to ebi node
+ 
+- Link to v3: https://lore.kernel.org/r/20230605-ep93xx-v3-0-3d63a5f1103e@maquefel.me
+
+---
+Alexander Sverdlin (2):
+      ARM: dts: ep93xx: Add EDB9302 DT
+      ASoC: cirrus: edb93xx: Delete driver
+
+Nikita Shubin (40):
+      gpio: ep93xx: split device in multiple
+      ARM: ep93xx: add swlocked prototypes
+      dt-bindings: clock: Add Cirrus EP93xx
+      clk: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: pinctrl: Add Cirrus EP93xx
+      pinctrl: add a Cirrus ep93xx SoC pin controller
+      dt-bindings: power: reset: Add ep93xx reset
+      power: reset: Add a driver for the ep93xx reset
+      dt-bindings: soc: Add Cirrus EP93xx
+      soc: Add SoC driver for Cirrus ep93xx
+      dt-bindings: timers: Add Cirrus EP93xx
+      clocksource: ep93xx: Add driver for Cirrus Logic EP93xx
+      dt-bindings: rtc: Add Cirrus EP93xx
+      rtc: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: watchdog: Add Cirrus EP93x
+      watchdog: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: pwm: Add Cirrus EP93xx
+      pwm: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: spi: Add Cirrus EP93xx
+      spi: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: net: Add Cirrus EP93xx
+      net: cirrus: add DT support for Cirrus EP93xx
+      dt-bindings: dma: Add Cirrus EP93xx
+      dma: cirrus: add DT support for Cirrus EP93xx
+      dt-bindings: mtd: Add ts7200 nand-controller
+      mtd: nand: add support for ts72xx
+      dt-bindings: ata: Add Cirrus EP93xx
+      ata: pata_ep93xx: add device tree support
+      dt-bindings: input: Add Cirrus EP93xx keypad
+      input: keypad: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: wdt: Add ts72xx
+      wdt: ts72xx: add DT support for ts72xx
+      gpio: ep93xx: add DT support for gpio-ep93xx
+      ARM: dts: add Cirrus EP93XX SoC .dtsi
+      ARM: dts: ep93xx: add ts7250 board
+      ARM: ep93xx: DT for the Cirrus ep93xx SoC platforms
+      pwm: ep93xx: drop legacy pinctrl
+      ata: pata_ep93xx: remove legacy pinctrl use
+      ARM: ep93xx: delete all boardfiles
+      ARM: ep93xx: soc: drop defines
+
+ .../bindings/arm/cirrus/cirrus,ep9301.yaml         |   38 +
+ .../bindings/ata/cirrus,ep9312-pata.yaml           |   42 +
+ .../bindings/clock/cirrus,ep9301-clk.yaml          |   46 +
+ .../bindings/dma/cirrus,ep9301-dma-m2m.yaml        |   69 +
+ .../bindings/dma/cirrus,ep9301-dma-m2p.yaml        |  121 ++
+ .../bindings/input/cirrus,ep9307-keypad.yaml       |   87 ++
+ .../devicetree/bindings/mtd/technologic,nand.yaml  |   45 +
+ .../devicetree/bindings/net/cirrus,ep9301-eth.yaml |   59 +
+ .../bindings/pinctrl/cirrus,ep9301-pinctrl.yaml    |   57 +
+ .../bindings/power/reset/cirrus,ep9301-reboot.yaml |   34 +
+ .../devicetree/bindings/pwm/cirrus,ep9301-pwm.yaml |   46 +
+ .../devicetree/bindings/rtc/cirrus,ep9301-rtc.yaml |   42 +
+ .../bindings/soc/cirrus/cirrus,ep9301-syscon.yaml  |   71 +
+ .../devicetree/bindings/spi/cirrus,ep9301-spi.yaml |   61 +
+ .../bindings/timer/cirrus,ep9301-timer.yaml        |   49 +
+ .../bindings/watchdog/cirrus,ep9301-wdt.yaml       |   42 +
+ .../bindings/watchdog/technologic,ts7200-wdt.yaml  |   45 +
+ arch/arm/Makefile                                  |    1 -
+ arch/arm/boot/dts/cirrus/Makefile                  |    4 +
+ arch/arm/boot/dts/cirrus/ep93xx-bk3.dts            |  124 ++
+ arch/arm/boot/dts/cirrus/ep93xx-edb9302.dts        |  180 +++
+ arch/arm/boot/dts/cirrus/ep93xx-ts7250.dts         |  143 ++
+ arch/arm/boot/dts/cirrus/ep93xx.dtsi               |  454 +++++++
+ arch/arm/mach-ep93xx/Kconfig                       |   20 +-
+ arch/arm/mach-ep93xx/Makefile                      |   11 -
+ arch/arm/mach-ep93xx/clock.c                       |  733 ----------
+ arch/arm/mach-ep93xx/core.c                        | 1017 --------------
+ arch/arm/mach-ep93xx/dma.c                         |  114 --
+ arch/arm/mach-ep93xx/edb93xx.c                     |  344 -----
+ arch/arm/mach-ep93xx/ep93xx-regs.h                 |   38 -
+ arch/arm/mach-ep93xx/gpio-ep93xx.h                 |  111 --
+ arch/arm/mach-ep93xx/hardware.h                    |   25 -
+ arch/arm/mach-ep93xx/irqs.h                        |   76 --
+ arch/arm/mach-ep93xx/platform.h                    |   42 -
+ arch/arm/mach-ep93xx/soc.h                         |  212 ---
+ arch/arm/mach-ep93xx/ts72xx.c                      |  422 ------
+ arch/arm/mach-ep93xx/ts72xx.h                      |   94 --
+ arch/arm/mach-ep93xx/vision_ep9307.c               |  311 -----
+ drivers/ata/pata_ep93xx.c                          |   33 +-
+ drivers/clk/Kconfig                                |    8 +
+ drivers/clk/Makefile                               |    1 +
+ drivers/clk/clk-ep93xx.c                           |  753 +++++++++++
+ drivers/clocksource/Kconfig                        |   11 +
+ drivers/clocksource/Makefile                       |    1 +
+ .../clocksource}/timer-ep93xx.c                    |  155 ++-
+ drivers/dma/ep93xx_dma.c                           |  125 +-
+ drivers/gpio/gpio-ep93xx.c                         |  331 ++---
+ drivers/input/keyboard/ep93xx_keypad.c             |   74 +-
+ drivers/mtd/nand/raw/Kconfig                       |    7 +
+ drivers/mtd/nand/raw/Makefile                      |    1 +
+ drivers/mtd/nand/raw/technologic-nand-controller.c |  166 +++
+ drivers/net/ethernet/cirrus/ep93xx_eth.c           |   63 +-
+ drivers/pinctrl/Kconfig                            |    7 +
+ drivers/pinctrl/Makefile                           |    1 +
+ drivers/pinctrl/pinctrl-ep93xx.c                   | 1429 ++++++++++++++++++++
+ drivers/power/reset/Kconfig                        |   10 +
+ drivers/power/reset/Makefile                       |    1 +
+ drivers/power/reset/ep93xx-restart.c               |   85 ++
+ drivers/pwm/pwm-ep93xx.c                           |   26 +-
+ drivers/rtc/rtc-ep93xx.c                           |    8 +
+ drivers/soc/Kconfig                                |    1 +
+ drivers/soc/Makefile                               |    1 +
+ drivers/soc/cirrus/Kconfig                         |   12 +
+ drivers/soc/cirrus/Makefile                        |    2 +
+ drivers/soc/cirrus/soc-ep93xx.c                    |  215 +++
+ drivers/spi/spi-ep93xx.c                           |   28 +-
+ drivers/watchdog/ep93xx_wdt.c                      |    8 +
+ drivers/watchdog/ts72xx_wdt.c                      |    8 +
+ include/dt-bindings/clock/cirrus,ep9301-clk.h      |   41 +
+ include/dt-bindings/dma/cirrus,ep93xx-dma.h        |   26 +
+ include/linux/platform_data/dma-ep93xx.h           |   25 +-
+ include/linux/platform_data/eth-ep93xx.h           |   10 -
+ include/linux/platform_data/keypad-ep93xx.h        |   32 -
+ include/linux/soc/cirrus/ep93xx.h                  |   29 +-
+ sound/soc/cirrus/Kconfig                           |    9 -
+ sound/soc/cirrus/Makefile                          |    4 -
+ sound/soc/cirrus/edb93xx.c                         |  117 --
+ 77 files changed, 5126 insertions(+), 4168 deletions(-)
+---
+base-commit: bdc09c8e8b16d494ccd1c56e903e78dd76455a35
+change-id: 20230605-ep93xx-01c76317e2d2
+
+Best regards,
 -- 
-Damien Le Moal
-Western Digital Research
+Nikita Shubin <nikita.shubin@maquefel.me>
 
