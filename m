@@ -2,277 +2,214 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8935DEE6457
-	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 12:27:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89674EE6457
+	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 12:27:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234759AbjIOM1Q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 15 Sep 2023 08:27:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57014 "EHLO
+        id S234772AbjIOM2D (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 15 Sep 2023 08:28:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234900AbjIOM1P (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 08:27:15 -0400
-Received: from sphereful.davidgow.net (sphereful.davidgow.net [IPv6:2404:9400:4:0:216:3eff:fee2:5328])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAF1C2119;
-        Fri, 15 Sep 2023 05:27:06 -0700 (PDT)
-Received: by sphereful.davidgow.net (Postfix, from userid 119)
-        id E1F391D5819; Fri, 15 Sep 2023 20:27:04 +0800 (AWST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
-        s=201606; t=1694780824;
-        bh=hnw4+F5CXXiG5poJbVxyNM5eJG1cjLqBF2kaMkJl0BE=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=TxAAlBJPFVqzL5j2iwYtGs7mBBQ/yKL1dlnrWvpkKxXMg3zmQLkokz1LgK2na3hyy
-         +h6/HT48rgVqpm6bQaSFOFiOHBqVsWwXaezs0JVuS9IteiuUQXGgfarvlOa01eVKdp
-         wJs80VPWh2Ey6Zj9gKZsxxIqwtWq6cL9du1+Md0WLDKWWP1xNcQwWPY1YQruAelOzR
-         dvtW2Aa4WRClAoxlaS9Qp7DxP/B4P94Ay1UERSSqwgTHXUL35gX3RDb6wuz78smsqw
-         Stul+Ii4Ph3WyutepaBHYWbAmBjZpUcfmpEzt28TJtXVN41b3peOkN9B0tFXR9TJx6
-         e182cwHt0mCk8aHHzVctogl2ozDKIT9o8LAqJonWQWXHc8kiNnerCY8A7f0ET16qXd
-         xh+ljsxHIn3rdH+HUmdzjRIG+Dn9QjJTHOcOkdofzxAvItWRbD+3JvwG1FBwd677b4
-         coSTKmF0lvmr57xcv51zOEe6tJfCpfpMdXBqxqWupIPERsjD9ra1I9BLYoR0gjpXZ9
-         e4G69UbqD0moCQFpvsgig5g3ah1WnagsicVirVnNwpMK2m09tPwla9YfakakTJFNk3
-         sQdewDiiHHhcTMFjKaD80HA4aws6jgXbo/wfQ99jAw3r0jpGYK/fcYVlUMS5nyzQZ3
-         SoUhb+pBnBf+6BhQzfEygQ+8=
-Received: from [IPV6:2001:8003:8824:9e00::bec] (unknown [IPv6:2001:8003:8824:9e00::bec])
-        by sphereful.davidgow.net (Postfix) with ESMTPSA id 8B6BA1D5811;
-        Fri, 15 Sep 2023 20:27:01 +0800 (AWST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
-        s=201606; t=1694780821;
-        bh=hnw4+F5CXXiG5poJbVxyNM5eJG1cjLqBF2kaMkJl0BE=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=elX93ZgJtmwnMCrAD2oBI6HWJnjcy9PNuzOd3e4eJyOtbszyDSKZQoQYoi+JH9clH
-         SqpQwsqAGdn6J5reO9koZ++WxMvFFXVU1Nv/OxaPnRs5TXKk4xt0wl2uAMPDqAe7Ju
-         Z1X39iB7bev37B+NYUfvrnzHky5wefVyMFrCqBGPA0mkXq1D2yAYHGFuc59tpOCIX7
-         cygWhQVbs8rp8wZoglyLPlAhy/64JtSAVooYUI6+2Y0K2z2F5xZPOLNyonK7PWNGpO
-         RZhV6mMfr6xQCAJ3vwVyDiyNO9KWCUrbU8xVafJCH4jSbDrIe+BoE1K+YxMVbh3EV2
-         6bqP3XQYvAN8+wUehyvAEHXeeyXBtppeSquAYNt2F8wNIBvSOzWcS9K+ZJXUNOEIS6
-         eHRxYrV377uKCvegcxdT2/wOg8IMeai7KGSm9YJuylqVphBEHWDQ0ms65sbgHRmNgT
-         tUJK2OpBaKr9CN7lgcHsqKHG+2hX/5UnAvThy2qmTDvOZpYjlFiOFEwYilsu0FZwYs
-         i5mRH1hqc0fDkBFAT7AeXowq8Jxl6v0jji3GRS6tEr6yTrJeYcr65sWlonw9kElwPd
-         6PlAvyBsedAF0D++e2p+6sYvaDaI/Gb3ynqDMudnnIy1YIkjnjLM/ZREaf7z8MbWEa
-         TRFKuB55Eae8ZYxvRmq9w93c=
-Message-ID: <49d92af6-4968-4066-b33c-0fd06f8fdf28@davidgow.net>
-Date:   Fri, 15 Sep 2023 20:26:58 +0800
+        with ESMTP id S229841AbjIOM2C (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 08:28:02 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6361D2721;
+        Fri, 15 Sep 2023 05:27:47 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 20C541F894;
+        Fri, 15 Sep 2023 12:27:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1694780866; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+        bh=qOXlC1iWbH0cLIupFushnx0fcpoAStfjTAxu7eGncv8=;
+        b=SHa/PDx1dKprBlec+hTOSwyQ+3FKkCB2YYRA85/F7aSO8Y/5rGJ9n2K1Jbn9hcqcqGSsxp
+        s5i+0fewZ2HpB4gUxFup3ACoBwwV9pQGAjEh+Od5P77jQcmSBVadVBxJ+63VDtehWRVNgY
+        K9Ah6oRZH5fn2yuRwkR3lYgUd++cWGA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1694780866;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+        bh=qOXlC1iWbH0cLIupFushnx0fcpoAStfjTAxu7eGncv8=;
+        b=Nahu0uWpdnNnGnFim3uV2ZlDxLDBfGscK8gYQnd2Z+EBeg3TJhROBDY0kOM76d6KrwvebS
+        cjJCx0gL3PC/G8Bw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EA48C13251;
+        Fri, 15 Sep 2023 12:27:45 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id MDUIOMFNBGX6PwAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 15 Sep 2023 12:27:45 +0000
+Message-ID: <a909935f-ef5e-535a-08ae-b60d8c83e25a@suse.de>
+Date:   Fri, 15 Sep 2023 14:27:45 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: Fwd: Kernel 6.5.2 Causes Marvell Technology Group 88SE9128 PCIe
- SATA to Constantly Reset
-Content-Language: fr
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Damien Le Moal <dlemoal@kernel.org>
-Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        patenteng <dimitar@daskalov.co.uk>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <dacb34e4-ce58-bc0e-8206-672d743a3e34@gmail.com>
- <ZQHRQHAPQdG+Nu1o@x1-carbon>
- <59f6ff78-6b45-465a-bd41-28c7a5d10931@davidgow.net>
- <10f65dfe-5e8a-10ab-4d89-efe693c07caa@kernel.org>
- <658b9285-e030-4987-86a7-57cdb6c7f161@davidgow.net>
- <ZQQa0QRhm1BuI5IT@x1-carbon>
-From:   David Gow <david@davidgow.net>
-In-Reply-To: <ZQQa0QRhm1BuI5IT@x1-carbon>
+Subject: Re: [PATCH v3 05/23] ata: libata-scsi: Disable scsi device
+ manage_system_start_stop
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230915081507.761711-1-dlemoal@kernel.org>
+ <20230915081507.761711-6-dlemoal@kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+Autocrypt: addr=hare@suse.de; keydata=
+ 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
+ YwtooKEemPj2lg==
+In-Reply-To: <20230915081507.761711-6-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Le 2023/09/15 à 16:50, Niklas Cassel a écrit :
-> On Fri, Sep 15, 2023 at 02:54:19PM +0800, David Gow wrote:
->> Le 2023/09/15 à 13:41, Damien Le Moal a écrit :
->>> On 9/15/23 12:22, David Gow wrote:
->>>> Le 2023/09/13 à 23:12, Niklas Cassel a écrit :
->>>>> On Wed, Sep 13, 2023 at 06:25:31PM +0700, Bagas Sanjaya wrote:
->>>>>> Hi,
->>>>>>
->>>>>> I notice a regression report on Bugzilla [1]. Quoting from it:
->>>>>>
->>>>>>> After upgrading to 6.5.2 from 6.4.12 I keep getting the following kernel messages around three times per second:
->>>>>>>
->>>>>>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>>>>> [ 9683.270399] ata16.00: configured for UDMA/66
->>>>>>>
->>>>>>> So I've tracked the offending device:
->>>>>>>
->>>>>>> ll /sys/class/ata_port/ata16
->>>>>>> lrwxrwxrwx 1 root root 0 Sep 10 21:51 /sys/class/ata_port/ata16 -> ../../devices/pci0000:00/0000:00:1c.7/0000:0a:00.0/ata16/ata_port/ata16
->>>>>>>
->>>>>>> cat /sys/bus/pci/devices/0000:0a:00.0/uevent
->>>>>>> DRIVER=ahci
->>>>>>> PCI_CLASS=10601
->>>>>>> PCI_ID=1B4B:9130
->>>>>>> PCI_SUBSYS_ID=1043:8438
->>>>>>> PCI_SLOT_NAME=0000:0a:00.0
->>>>>>> MODALIAS=pci:v00001B4Bd00009130sv00001043sd00008438bc01sc06i01
->>>>>>>
->>>>>>> lspci | grep 0a:00.0
->>>>>>> 0a:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe SATA 6 Gb/s RAID controller with HyperDuo (rev 11)
->>>>>>>
->>>>>>> I am not using the 88SE9128, so I have no way of knowing whether it works or not. It may simply be getting reset a couple of times per second or it may not function at all.
->>>>>>
->>>>>> See Bugzilla for the full thread.
->>>>>>
->>>>>> patenteng: I have asked you to bisect this regression. Any conclusion?
->>>>>>
->>>>>> Anyway, I'm adding this regression to regzbot:
->>>>>>
->>>>>> #regzbot: introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?id=217902
->>>>>
->>>>> Hello Bagas, patenteng,
->>>>>
->>>>>
->>>>> FYI, the prints:
->>>>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>>> [ 9683.270399] ata16.00: configured for UDMA/66
->>>>>
->>>>> Just show that ATA error handler has been invoked.
->>>>> There was no reset performed.
->>>>>
->>>>> If there was a reset, you would have seen something like:
->>>>> [    1.441326] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>>>> [    1.541250] ata8.00: configured for UDMA/133
->>>>> [    1.541411] ata8: hard resetting link
->>>>>
->>>>>
->>>>> Could you please try this patch and see if it improves things for you:
->>>>> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
->>>>>
->>>>
->>>> FWIW, I'm seeing a very similar issue both in 6.5.2 and in git master
->>>> [aed8aee11130 ("Merge tag 'pmdomain-v6.6-rc1' of
->>>> git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/linux-pm") with that
->>>> patch applied.
->>>>
->>>>
->>>> The log is similar (the last two lines repeat several times a second):
->>>> [    0.369632] ata14: SATA max UDMA/133 abar m2048@0xf7c10000 port
->>>> 0xf7c10480 irq 33
->>>> [    0.683693] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [    1.031662] ata14.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
->>>> [    1.031852] ata14.00: configured for UDMA/66
->>>> [    1.414145] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [    1.414505] ata14.00: configured for UDMA/66
->>>> [    1.744094] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [    1.744368] ata14.00: configured for UDMA/66
->>>> [    2.073916] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [    2.074276] ata14.00: configured for UDMA/66
->>>>
->>>>
->>>> lspci shows:
->>>> 09:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230 PCIe 2.0
->>>> x2 4-port SATA 6 Gb/s RAID Controller (rev 10) (prog-if 01 [AHCI 1.0])
->>>>            Subsystem: Gigabyte Technology Co., Ltd Device b000
->>>>            Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>>            Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>>            Latency: 0, Cache Line Size: 64 bytes
->>>>            Interrupt: pin A routed to IRQ 33
->>>>            Region 0: I/O ports at b050 [size=8]
->>>>            Region 1: I/O ports at b040 [size=4]
->>>>            Region 2: I/O ports at b030 [size=8]
->>>>            Region 3: I/O ports at b020 [size=4]
->>>>            Region 4: I/O ports at b000 [size=32]
->>>>            Region 5: Memory at f7c10000 (32-bit, non-prefetchable) [size=2K]
->>>>            Expansion ROM at f7c00000 [disabled] [size=64K]
->>>>            Capabilities: <access denied>
->>>>            Kernel driver in use: ahci
->>>>
->>>> The controller in question lives on a Gigabyte Z87X-UD5H-CF motherboard.
->>>> I'm using the controller for several drives, and it's working, it's just
->>>> spammy. (At worst, there's some performance hitching, but that might
->>>> just be journald rotating logs as they fill up with the message).
->>>>
->>>> I haven't had a chance to bisect yet (this is a slightly awkward machine
->>>> for me to install test kernels on), but can also confirm it worked with
->>>> 6.4.12.
->>>>
->>>> Hopefully that's useful. I'll get back to you if I manage to bisect it.
->>>
->>> Bisect will definitely be welcome. But first, please try adding the patch that
->>> Niklas mentioned above:
->>>
->>> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
->>>
->>> If that fixes the issue, we know the culprit :)
->>>
->>
->>
->> Sorry: I wasn't clear. I did try with that patch (applied on top of
->> torvalds/master), and the issue remained.
->>
->> I've started bisecting, but fear it'll take a while.
+On 9/15/23 10:14, Damien Le Moal wrote:
+> The introduction of a device link to create a consumer/supplier
+> relationship between the scsi device of an ATA device and the ATA port
+> of that ATA device fixes the ordering of system suspend and resume
+> operations. For suspend, the scsi device is suspended first and the ata
+> port after it. This is fine as this allows the synchronize cache and
+> START STOP UNIT commands issued by the scsi disk driver to be executed
+> before the ata port is disabled.
 > 
-> I can recommend using QEMU and PCI passthrough to bisect, as it is much
-> faster to boot a kernel using QEMU with KVM than to do a real reboot.
+> For resume operations, the ata port is resumed first, followed
+> by the scsi device. This allows having the request queue of the scsi
+> device to be unfrozen after the ata port resume is scheduled in EH,
+> thus avoiding to see new requests prematurely issued to the ATA device.
+> Since libata sets manage_system_start_stop to 1, the scsi disk resume
+> operation also results in issuing a START STOP UNIT command to the
+> device being resumed so that the device exits standby power mode.
 > 
-> It takes a while to set up the first time, but you know what they say:
-> "give a man a fish and you feed him for a day;
-> teach a man to fish and you feed him for a lifetime".
+> However, restoring the ATA device to the active power mode must be
+> synchronized with libata EH processing of the port resume operation to
+> avoid either 1) seeing the start stop unit command being received too
+> early when the port is not yet resumed and ready to accept commands, or
+> after the port resume process issues commands such as IDENTIFY to
+> revalidate the device. In this last case, the risk is that the device
+> revalidation fails with timeout errors as the drive is still spun down.
 > 
-> There are many ways to do it, but here is an example guide:
-> https://github.com/floatious/qemu-bisect-doc
+> Commit 0a8589055936 ("ata,scsi: do not issue START STOP UNIT on resume")
+> disabled issuing the START STOP UNIT command to avoid issues with it.
+> But this is incorrect as transitioning a device to the active power
+> mode from the standby power mode set on suspend requires a media access
+> command. The IDENTIFY, READ LOG and SET FEATURES commands executed in
+> libata EH context triggered by the ata port resume operation may thus
+> fail.
 > 
+> Fix these synchronization issues is by handling a device power mode
+> transitions for system suspend and resume directly in libata EH context,
+> without relying on the scsi disk driver management triggered with the
+> manage_system_start_stop flag.
+> 
+> To do this, the following libata helper functions are introduced:
+> 
+> 1) ata_dev_power_set_standby():
+> 
+> This function issues a STANDBY IMMEDIATE command to transitiom a device
+> to the standby power mode. For HDDs, this spins down the disks. This
+> function applies only to ATA and ZAC devices and does nothing otherwise.
+> This function also does nothing for devices that have the
+> ATA_FLAG_NO_POWEROFF_SPINDOWN or ATA_FLAG_NO_HIBERNATE_SPINDOWN flag
+> set.
+> 
+> For suspend, call ata_dev_power_set_standby() in
+> ata_eh_handle_port_suspend() before the port is disabled and frozen.
+> ata_eh_unload() is also modified to transition all enabled devices to
+> the standby power mode when the system is shutdown or devices removed.
+> 
+> 2) ata_dev_power_set_active() and
+> 
+> This function applies to ATA or ZAC devices and issues a VERIFY command
+> for 1 sector at LBA 0 to transition the device to the active power mode.
+> For HDDs, since this function will complete only once the disk spin up.
+> Its execution uses the same timeouts as for reset, to give the drive
+> enough time to complete spinup without triggering a command timeout.
+> 
+> For resume, call ata_dev_power_set_active() in
+> ata_eh_revalidate_and_attach() after the port has been enabled and
+> before any other command is issued to the device.
+> 
+> With these changes, the manage_system_start_stop and no_start_on_resume
+> scsi device flags do not need to be set in ata_scsi_dev_config(). The
+> flag manage_runtime_start_stop is still set to allow the sd driver to
+> spinup/spindown a disk through the sd runtime operations.
+> 
+> Fixes: 0a8589055936 ("ata,scsi: do not issue START STOP UNIT on resume")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/libata-core.c | 90 +++++++++++++++++++++++++++++++++++++++
+>   drivers/ata/libata-eh.c   | 46 +++++++++++++++++++-
+>   drivers/ata/libata-scsi.c | 16 +++----
+>   drivers/ata/libata.h      |  2 +
+>   include/linux/libata.h    |  6 ++-
+>   5 files changed, 148 insertions(+), 12 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Thanks. Alas, this machine doesn't have an IOMMU, which makes that 
-difficult. I've definitely saved the link for the future, though.
+Cheers,
 
-In any case, the bisect is done:
-
-624885209f31eb9985bf51abe204ecbffe2fdeea is the first bad commit
-commit 624885209f31eb9985bf51abe204ecbffe2fdeea
-Author: Damien Le Moal <dlemoal@kernel.org>
-Date:   Thu May 11 03:13:41 2023 +0200
-
-     scsi: core: Detect support for command duration limits
-
-     Introduce the function scsi_cdl_check() to detect if a device supports
-     command duration limits (CDL). Support for the READ 16, WRITE 16, 
-READ 32
-     and WRITE 32 commands are checked using the function 
-scsi_report_opcode()
-     to probe the rwcdlp and cdlp bits as they indicate the mode page 
-defining
-     the command duration limits descriptors that apply to the command being
-     tested.
-
-     If any of these commands support CDL, the field cdl_supported of struct
-     scsi_device is set to 1 to indicate that the device supports CDL.
-
-     Support for CDL for a device is advertizes through sysfs using the new
-     cdl_supported device attribute. This attribute value is 1 for a device
-     supporting CDL and 0 otherwise.
-
-     Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-     Reviewed-by: Hannes Reinecke <hare@suse.de>
-     Co-developed-by: Niklas Cassel <niklas.cassel@wdc.com>
-     Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
-     Link: https://lore.kernel.org/r/20230511011356.227789-9-nks@flawful.org
-     Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-  Documentation/ABI/testing/sysfs-block-device |  9 ++++
-  drivers/scsi/scsi.c                          | 81 
-++++++++++++++++++++++++++++
-  drivers/scsi/scsi_scan.c                     |  3 ++
-  drivers/scsi/scsi_sysfs.c                    |  2 +
-  include/scsi/scsi_device.h                   |  3 ++
-  5 files changed, 98 insertions(+)
-
-
-This seems to match what was found on the Arch Linux forums, too:
-https://bbs.archlinux.org/viewtopic.php?id=288723&p=3
-
-I haven't tried it yet, but according to that forum thread, removing the 
-calls to scsi_cdl_check() seems to resolve the issue. This is all well 
-beyond my SCSI knowledge, but maybe a quirk to disable these CDL checks 
-for these older marvell controllers is required? Though it seems odd 
-that the device would be rescanned and/or scsi_add_lun called multiple 
-times a second -- is that normal?
-
-In any case, this seems to be the cause.
-
-Thanks!
--- David
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Frankenstr. 146, 90461 Nürnberg
+Managing Directors: I. Totev, A. Myers, A. McDonald, M. B. Moerman
+(HRB 36809, AG Nürnberg)
 
