@@ -2,244 +2,123 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A13B0EE6446
-	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 08:13:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4448FEE6440
+	for <linux-ide@archiver.kernel.org>; Fri, 15 Sep 2023 08:21:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232925AbjIOINg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 15 Sep 2023 04:13:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48012 "EHLO
+        id S232242AbjIOIVk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 15 Sep 2023 04:21:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233080AbjIOIMz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 04:12:55 -0400
+        with ESMTP id S232830AbjIOIVO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 Sep 2023 04:21:14 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD41A2D41;
-        Fri, 15 Sep 2023 01:12:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 64DDFC32774;
-        Fri, 15 Sep 2023 08:12:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB2184204;
+        Fri, 15 Sep 2023 01:19:09 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2017C433CA;
+        Fri, 15 Sep 2023 08:15:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694765530;
-        bh=p+tfRZ3pQvswdqiustDmxA1N43Os4gY9YGvnB/EY5Ho=;
-        h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-        b=vPgmoq5JXp3l322/VeHyVhFKrGb7qUVL8Ys6yKEMNAZ2f2aTnVyxfNarvTsfl6khR
-         GPjh0iQFEyAsbeuRg9FEJ0AZNpgQrpGO/8sMKgzvQIg3bSVzLPbbPcpXYvjhnLrowN
-         wYYyEDj4jgZHBK/bKYRE1Ap5QsVZv2LquSJ3YWOkzu5rrNSnqNIzPoJ8L7X1Luq2qB
-         V+7UMnAKmZhtNtsKsY6986X7Sl0Uz+U4ixfDrgNAqfyvMjps/brO1YL7K9eAwNCcD6
-         FZ9Xhp8R3L+DGLVacqodiSZWRaE4tUOJ7U4o3IXsDZP95ymj1wN/69S+XiMXCegUyJ
-         gTwGGurFqONVQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.lore.kernel.org (Postfix) with ESMTP id 5020EEE6446;
-        Fri, 15 Sep 2023 08:12:10 +0000 (UTC)
-From:   Nikita Shubin via B4 Relay 
-        <devnull+nikita.shubin.maquefel.me@kernel.org>
-Date:   Fri, 15 Sep 2023 11:11:20 +0300
-Subject: [PATCH v4 38/42] ata: pata_ep93xx: remove legacy pinctrl use
+        s=k20201202; t=1694765714;
+        bh=zOe28gJJSf8OTmDL6uLvodfOenut1Ucwv+kF4u8YqrA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=jZevBuWmlLJy5rYtNxT5rqc+Lo/bSVe9MwKHgH579AjTTtd00RKXY2erboUOLsosv
+         gSX93Be3oA7BKvzvRedIDiGq/5LEP9qXzEEhf0+6q6XFjCKfN3gZ5UZfXlegYUaJVv
+         8WjwDpAhxdn9iIAuWx0I+4HSksXQJtJjyGr0+mNvX04XFKqzct7apzisWGkE6ONm90
+         2qmz/D4z2bheg5cV16jDRbbbAPcQxIyTCPzRGFcm9QixCJ5mLzPDaBWHE5TmT3WfvM
+         NR0TKjEi+7PB8MKvqXuQe4S6L9fKMHf78o+PcUQesKn2MOoS71VnWMyzuj9HepIo2R
+         yhB5nZVG54vVA==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+Subject: [PATCH v3 02/23] ata: libata-core: Fix port and device removal
+Date:   Fri, 15 Sep 2023 17:14:46 +0900
+Message-ID: <20230915081507.761711-3-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230915081507.761711-1-dlemoal@kernel.org>
+References: <20230915081507.761711-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20230915-ep93xx-v4-38-a1d779dcec10@maquefel.me>
-References: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
-In-Reply-To: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
-To:     Hartley Sweeten <hsweeten@visionengravers.com>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Nikita Shubin <nikita.shubin@maquefel.me>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Cc:     =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>
-X-Mailer: b4 0.13-dev-e3e53
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1694765525; l=5262;
- i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
- bh=clQMc6L/CZou9DWOlYtYYIgz0cXmxb3L8zWECLnFfFI=; =?utf-8?q?b=3DN12UH/nt/oLW?=
- =?utf-8?q?/ODhnWSBW1yzNMHRjkCNxZpvKAtMQpH9Y6CSwJvFlA49hqsDTQUj+sMbP8z0X5Sj?=
- 7Rb5AdCXCa0QRwKS33sIBueC+Zk4bXaANLI73kDYHPDOxSI8o1ev
-X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
- pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
-X-Endpoint-Received: by B4 Relay for nikita.shubin@maquefel.me/20230718 with auth_id=65
-X-Original-From: Nikita Shubin <nikita.shubin@maquefel.me>
-Reply-To: <nikita.shubin@maquefel.me>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Nikita Shubin <nikita.shubin@maquefel.me>
+Whenever an ATA adapter driver is removed (e.g. rmmod),
+ata_port_detach() is called repeatedly for all the adapter ports to
+remove (unload) the devices attached to the port and delete the port
+device itself. Removing of devices is done using libata EH with the
+ATA_PFLAG_UNLOADING port flag set. This causes libata EH to execute
+ata_eh_unload() which disables all devices attached to the port.
 
-Drop legacy acquire/release since we are using pinctrl for this now.
+ata_port_detach() finishes by calling scsi_remove_host() to remove the
+scsi host associated with the port. This function will trigger the
+removal of all scsi devices attached to the host and in the case of
+disks, calls to sd_shutdown() which will flush the device write cache
+and stop the device. However, given that the devices were already
+disabled by ata_eh_unload(), the synchronize write cache command and
+start stop unit commands fail. E.g. running "rmmod ahci" with first
+removing sd_mod results in error messages like:
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
+ata13.00: disable device
+sd 0:0:0:0: [sda] Synchronizing SCSI cache
+sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+sd 0:0:0:0: [sda] Stopping disk
+sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+
+Fix this by removing all scsi devices of the ata devices connected to
+the port before scheduling libata EH to disable the ATA devices.
+
+Fixes: 720ba12620ee ("[PATCH] libata-hp: update unload-unplug")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 ---
- arch/arm/mach-ep93xx/core.c       | 72 ---------------------------------------
- drivers/ata/pata_ep93xx.c         | 25 ++++----------
- include/linux/soc/cirrus/ep93xx.h |  4 ---
- 3 files changed, 6 insertions(+), 95 deletions(-)
+ drivers/ata/libata-core.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/mach-ep93xx/core.c b/arch/arm/mach-ep93xx/core.c
-index 9afc6095d1c1..66dba9b4a6f9 100644
---- a/arch/arm/mach-ep93xx/core.c
-+++ b/arch/arm/mach-ep93xx/core.c
-@@ -778,78 +778,6 @@ void __init ep93xx_register_ide(void)
- 	platform_device_register(&ep93xx_ide_device);
- }
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c4898483d716..693cb3cd70cd 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5952,11 +5952,30 @@ static void ata_port_detach(struct ata_port *ap)
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
  
--int ep93xx_ide_acquire_gpio(struct platform_device *pdev)
--{
--	int err;
--	int i;
--
--	err = gpio_request(EP93XX_GPIO_LINE_EGPIO2, dev_name(&pdev->dev));
--	if (err)
--		return err;
--	err = gpio_request(EP93XX_GPIO_LINE_EGPIO15, dev_name(&pdev->dev));
--	if (err)
--		goto fail_egpio15;
--	for (i = 2; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_E(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_e;
--	}
--	for (i = 4; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_G(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_g;
--	}
--	for (i = 0; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_H(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_h;
--	}
--
--	/* GPIO ports E[7:2], G[7:4] and H used by IDE */
--	ep93xx_devcfg_clear_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
--				 EP93XX_SYSCON_DEVCFG_GONIDE |
--				 EP93XX_SYSCON_DEVCFG_HONIDE);
--	return 0;
--
--fail_gpio_h:
--	for (--i; i >= 0; --i)
--		gpio_free(EP93XX_GPIO_LINE_H(i));
--	i = 8;
--fail_gpio_g:
--	for (--i; i >= 4; --i)
--		gpio_free(EP93XX_GPIO_LINE_G(i));
--	i = 8;
--fail_gpio_e:
--	for (--i; i >= 2; --i)
--		gpio_free(EP93XX_GPIO_LINE_E(i));
--	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
--fail_egpio15:
--	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
--	return err;
--}
--EXPORT_SYMBOL(ep93xx_ide_acquire_gpio);
--
--void ep93xx_ide_release_gpio(struct platform_device *pdev)
--{
--	int i;
--
--	for (i = 2; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_E(i));
--	for (i = 4; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_G(i));
--	for (i = 0; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_H(i));
--	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
--	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
--
--
--	/* GPIO ports E[7:2], G[7:4] and H used by GPIO */
--	ep93xx_devcfg_set_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
--			       EP93XX_SYSCON_DEVCFG_GONIDE |
--			       EP93XX_SYSCON_DEVCFG_HONIDE);
--}
--EXPORT_SYMBOL(ep93xx_ide_release_gpio);
--
- /*************************************************************************
-  * EP93xx ADC
-  *************************************************************************/
-diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index 47686dc1fed6..bcf90e46bad4 100644
---- a/drivers/ata/pata_ep93xx.c
-+++ b/drivers/ata/pata_ep93xx.c
-@@ -928,28 +928,18 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
- 	void __iomem *ide_base;
- 	int err;
+-	/* tell EH we're leaving & flush EH */
++	/* Wait for any ongoing EH */
++	ata_port_wait_eh(ap);
++
++	mutex_lock(&ap->scsi_scan_mutex);
+ 	spin_lock_irqsave(ap->lock, flags);
++
++	/* Remove scsi devices */
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		ata_for_each_dev(dev, link, ALL) {
++			if (dev->sdev) {
++				spin_unlock_irqrestore(ap->lock, flags);
++				scsi_remove_device(dev->sdev);
++				spin_lock_irqsave(ap->lock, flags);
++				dev->sdev = NULL;
++			}
++		}
++	}
++
++	/* Tell EH to disable all devices */
+ 	ap->pflags |= ATA_PFLAG_UNLOADING;
+ 	ata_port_schedule_eh(ap);
++
+ 	spin_unlock_irqrestore(ap->lock, flags);
++	mutex_unlock(&ap->scsi_scan_mutex);
  
--	err = ep93xx_ide_acquire_gpio(pdev);
--	if (err)
--		return err;
--
- 	/* INT[3] (IRQ_EP93XX_EXT3) line connected as pull down */
- 	irq = platform_get_irq(pdev, 0);
--	if (irq < 0) {
--		err = irq;
--		goto err_rel_gpio;
--	}
-+	if (irq < 0)
-+		return irq;
- 
- 	ide_base = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
--	if (IS_ERR(ide_base)) {
--		err = PTR_ERR(ide_base);
--		goto err_rel_gpio;
--	}
-+	if (IS_ERR(ide_base))
-+		return PTR_ERR(ide_base);
- 
- 	drv_data = devm_kzalloc(&pdev->dev, sizeof(*drv_data), GFP_KERNEL);
--	if (!drv_data) {
--		err = -ENOMEM;
--		goto err_rel_gpio;
--	}
-+	if (!drv_data)
-+		return -ENOMEM;
- 
- 	drv_data->pdev = pdev;
- 	drv_data->ide_base = ide_base;
-@@ -1006,8 +996,6 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
- 
- err_rel_dma:
- 	ep93xx_pata_release_dma(drv_data);
--err_rel_gpio:
--	ep93xx_ide_release_gpio(pdev);
- 	return err;
- }
- 
-@@ -1019,7 +1007,6 @@ static int ep93xx_pata_remove(struct platform_device *pdev)
- 	ata_host_detach(host);
- 	ep93xx_pata_release_dma(drv_data);
- 	ep93xx_pata_clear_regs(drv_data->ide_base);
--	ep93xx_ide_release_gpio(pdev);
- 	return 0;
- }
- 
-diff --git a/include/linux/soc/cirrus/ep93xx.h b/include/linux/soc/cirrus/ep93xx.h
-index 0df0f3322487..3212a145ae0f 100644
---- a/include/linux/soc/cirrus/ep93xx.h
-+++ b/include/linux/soc/cirrus/ep93xx.h
-@@ -12,15 +12,11 @@ struct regmap;
- #define EP93XX_CHIP_REV_E2	7
- 
- #if defined(CONFIG_EP93XX_SOC_COMMON)
--int ep93xx_ide_acquire_gpio(struct platform_device *pdev);
--void ep93xx_ide_release_gpio(struct platform_device *pdev);
- int ep93xx_i2s_acquire(void);
- void ep93xx_i2s_release(void);
- unsigned int ep93xx_chip_revision(void);
- 
- #else
--static inline int ep93xx_ide_acquire_gpio(struct platform_device *pdev) { return 0; }
--static inline void ep93xx_ide_release_gpio(struct platform_device *pdev) {}
- static inline int ep93xx_i2s_acquire(void) { return 0; }
- static inline void ep93xx_i2s_release(void) {}
- static inline unsigned int ep93xx_chip_revision(void) { return 0; }
-
+ 	/* wait till EH commits suicide */
+ 	ata_port_wait_eh(ap);
 -- 
-2.39.2
+2.41.0
 
