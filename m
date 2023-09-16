@@ -2,104 +2,62 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 477ABCD37BB
-	for <linux-ide@archiver.kernel.org>; Sat, 16 Sep 2023 12:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D19C2BA1A
+	for <linux-ide@archiver.kernel.org>; Sat, 16 Sep 2023 19:00:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231226AbjIPMTA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 16 Sep 2023 08:19:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47570 "EHLO
+        id S231315AbjIPTAb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 16 Sep 2023 15:00:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238935AbjIPMSs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 16 Sep 2023 08:18:48 -0400
+        with ESMTP id S239403AbjIPTAV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 16 Sep 2023 15:00:21 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B2FC18E
-        for <linux-ide@vger.kernel.org>; Sat, 16 Sep 2023 05:18:43 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2416C433C8;
-        Sat, 16 Sep 2023 12:18:42 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9795CCF0
+        for <linux-ide@vger.kernel.org>; Sat, 16 Sep 2023 12:00:16 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 529F0C433A9;
+        Sat, 16 Sep 2023 19:00:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694866723;
-        bh=MK9RIWmDSpdRdCNm7J3Nuu4i8MzR92DK5iSuM01uvrw=;
-        h=From:To:Subject:Date:From;
-        b=PwYhooCbGVkMXtdQfy5/pjOeycVOhAb+TEkAX/oG9Dy3oFWTbjLEFanV5n5gRkoMo
-         tQCXqt8z1qfN8aLlI9o+ChKFXyuL9JxNMy8DAqZxiegh+GZr2QWcrQ1axO55anXluB
-         Ax1juaO0iFK8NwKkqhTsqFS/fSu+qySju6EvxGT9JYVdF6OdOOg28bt8d2AFR4WkHk
-         b+1fnln2KPYb7zvYR8/iuIDmiuuW+0i5A5tyFV2+RfUdqOHQ8t04Jrd0M4FEROOgx5
-         0eq1csjgE+Pl+592cflq730saC32jG6tadeBz9wMOREC8SPKs4+FCxjk9cQ/+obDSK
-         U5B0M7J4+uplA==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        s=k20201202; t=1694890816;
+        bh=Q2L1efWa9xTfKNy6jFG5otyac4lcaXbSSWsKR+0H6R0=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=aHQSIly/WTRqSa9J+/tXaUcgv2sWyGKstyH4p2PtLpCDc36bHNJdatpoaSwyRtGyp
+         GeMsgAOK5J+3za80kaSQ6lAstO0vWBgrsmoU8x8apOevOsmnP/hI0SsK4HNcTb9Pr+
+         E2d6TCMYypk6MhgIEwpPf+2moTQTNFnphpcnT7X7BuhroLxQdv9sqKBCOWh4XecSd/
+         ErJ0cQa7uVjxg1Km5C8URJ4r7jvOgglsSpZ98SAEOgCawUXIGVHvR91piMY9G/LRs4
+         ILJ1o6QSGo2U/jEJIu4N6KOMOIEjXzga2yhI7OYLt+A/I6Py7jqPYmLi1mb+6ZPq0O
+         Y2DtP3G4ygNZA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 3A2FBE26884;
+        Sat, 16 Sep 2023 19:00:16 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.6-rc2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20230916121841.778684-1-dlemoal@kernel.org>
+References: <20230916121841.778684-1-dlemoal@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20230916121841.778684-1-dlemoal@kernel.org>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc2
+X-PR-Tracked-Commit-Id: 5e35a9ac3fe3a0d571b899a16ca84253e53dc70c
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: cc3e5afc6a8c5d9d1c30e7612da80ca327e43552
+Message-Id: <169489081623.3998.17942451048543763066.pr-tracker-bot@kernel.org>
+Date:   Sat, 16 Sep 2023 19:00:16 +0000
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
         linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 6.6-rc2
-Date:   Sat, 16 Sep 2023 21:18:41 +0900
-Message-ID: <20230916121841.778684-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+The pull request you sent on Sat, 16 Sep 2023 21:18:41 +0900:
 
-The following changes since commit 0bb80ecc33a8fb5a682236443c1e740d5c917d1d:
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc2
 
-  Linux 6.6-rc1 (2023-09-10 16:28:41 -0700)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/cc3e5afc6a8c5d9d1c30e7612da80ca327e43552
 
-are available in the Git repository at:
+Thank you!
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc2
-
-for you to fetch changes up to 5e35a9ac3fe3a0d571b899a16ca84253e53dc70c:
-
-  ata: libata-core: fetch sense data for successful commands iff CDL enabled (2023-09-16 21:12:19 +0900)
-
-Fixes for the "no start on resume" libata suspend/resume mess posted late in the
-6.5 cycle are still under test and will be sent next week if all goes well.
-
-----------------------------------------------------------------
-ata changes for 6.6-rc2
-
- - Fix link power management transitions to disallow unsupported
-   states (Niklas).
-
- - A small string handling fix for the sata_mv driver (Christophe).
-
- - Clear port pending interrupts before reset, as per AHCI
-   specifications (Szuying). Followup fixes for this one are to not
-   clear ATA_PFLAG_EH_PENDING in ata_eh_reset() to allow EH to
-   continue on with other actions recorded with error interrupts
-   triggered before EH completes. A~Nd an additional fix to avoid
-   thawing a port twice in EH (Niklas).
-
- - Small code style fixes in the pata_parport driver to silence the
-   build bot as it keeps complaining about bad indentation (me).
-
- - A fix for the recent CDL code to avoid fetching sense data for
-   successful commands when not necessary for correct operation
-   (Niklas).
-
-----------------------------------------------------------------
-Christophe JAILLET (1):
-      ata: sata_mv: Fix incorrect string length computation in mv_dump_mem()
-
-Damien Le Moal (1):
-      ata: pata_parport: Fix code style issues
-
-Niklas Cassel (4):
-      ata: libata: disallow dev-initiated LPM transitions to unsupported states
-      ata: libata-eh: do not clear ATA_PFLAG_EH_PENDING in ata_eh_reset()
-      ata: libata-eh: do not thaw the port twice in ata_eh_reset()
-      ata: libata-core: fetch sense data for successful commands iff CDL enabled
-
-Szuying Chen (1):
-      ata: libahci: clear pending interrupt status
-
- drivers/ata/ahci.c              |  9 +++++++++
- drivers/ata/libahci.c           | 35 +++++++++++++++++++++++------------
- drivers/ata/libata-core.c       |  7 ++-----
- drivers/ata/libata-eh.c         | 16 +++-------------
- drivers/ata/libata-sata.c       | 19 ++++++++++++++++---
- drivers/ata/pata_parport/comm.c |  9 ++++-----
- drivers/ata/sata_mv.c           |  4 ++--
- include/linux/libata.h          |  4 ++++
- 8 files changed, 63 insertions(+), 40 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
