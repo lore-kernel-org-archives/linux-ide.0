@@ -2,129 +2,106 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C9A8CD37B0
-	for <linux-ide@archiver.kernel.org>; Mon, 18 Sep 2023 07:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13BE6CD37B0
+	for <linux-ide@archiver.kernel.org>; Mon, 18 Sep 2023 20:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231451AbjIRH5N (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 18 Sep 2023 03:57:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44082 "EHLO
+        id S229898AbjIRUZR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 18 Sep 2023 16:25:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240568AbjIRH4v (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2023 03:56:51 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17ACBE6E;
-        Mon, 18 Sep 2023 00:56:31 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-68fb898ab3bso3144028b3a.3;
-        Mon, 18 Sep 2023 00:56:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695023780; x=1695628580; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Xqxu9XqJgrwv9dQeN2TLGjQoXj5OVfZLMHNwc4EUVI4=;
-        b=fri4usmzfsSAKW2/JSUKtvomJJfQ1I8O+rJMeaQ2Eu3DtFOTsMHXrScAyyzOWY5bdK
-         3USxc32fhvX09jfbBmp3PTUA52kmq/xwjthFGxwx3JoloS2AsVSxR7PzeJ802QECmeR1
-         g6Ae/uwpFyiTbn4rVzRD9B9VodIXg6SNhJm6x+iYpSpbbbM+nJoJikJFfF8u46+GUAZQ
-         C/QGLBvSMc0hSEbj9bRe9SIBwp2p6NI6YxQxr5EIMXErnDFchcSJa5v5crTLvMcIDFQb
-         2mRs3P9Pd/ST/gkrT2fu1Pb10y5uJXo+CFJOGE/GXbOoA6BUw0aDCxBcXmp5w4SeEXqs
-         bCiA==
+        with ESMTP id S229936AbjIRUZQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2023 16:25:16 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF626114
+        for <linux-ide@vger.kernel.org>; Mon, 18 Sep 2023 13:25:08 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id 2adb3069b0e04-50325ce89e9so1085928e87.0
+        for <linux-ide@vger.kernel.org>; Mon, 18 Sep 2023 13:25:08 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695023780; x=1695628580;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Xqxu9XqJgrwv9dQeN2TLGjQoXj5OVfZLMHNwc4EUVI4=;
-        b=Hp7Tt+HNejyXvR1nNp35mrs7+YuwxqgeuTB9/YfZnixqBJpQpBRGVbFh95zDZnjwXH
-         4x3s5mI9f9kh5cRzYKVEmTst3HwDiXz1EppZ8kb7bb/iQEFaeNISAnZQs61AwKDeNa4V
-         mfWxhFZjA1YzEvZzCa+eGJLvIxjzG7Vlw5TxsT3WeN4JAVcvGGFUZMyyKLk2WW4GMro8
-         2K2eMhWLqOMflX5eCMHSZ/N/wfVnWn+vUaeBG5GUzRfvmn5lxBFPbiko5dA3yOiSvlpg
-         Yy88pGyNy72H16tDh+LmGDKwI05v6jbqJV1zCwFyAGLNXDGqlTI/xKu8ad4kSbNNhHSj
-         OMlg==
-X-Gm-Message-State: AOJu0Yxx4ZYEmCieA8tz7/RDZ4DNrglxOiwtF/wzxXRbYmBBfpXkBHjY
-        jY8+oxRssLTHYA3VoTy4eNc=
-X-Google-Smtp-Source: AGHT+IH/qxcDfX7UFoxk/ogaqzsqV1A4Qsvo/qqLJzoiAwIwKRGOhAmWzzeFeLJSkwIVnH5SmhaxVA==
-X-Received: by 2002:a05:6a00:181c:b0:68e:351b:15b8 with SMTP id y28-20020a056a00181c00b0068e351b15b8mr8287951pfa.12.1695023779938;
-        Mon, 18 Sep 2023 00:56:19 -0700 (PDT)
-Received: from debian.me ([103.124.138.83])
-        by smtp.gmail.com with ESMTPSA id k10-20020a637b4a000000b00573f958f6a3sm6503830pgn.5.2023.09.18.00.56.19
+        d=1e100.net; s=20230601; t=1695068707; x=1695673507;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:dkim-signature:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8fyf1MByTyYIqOV14i5n7qtJNDGQcO9Hg7V0y6z/yas=;
+        b=edC/eJjIe5kDprh35dDJn8sjuXOtP3fdc/ElaqyKMpS95nXbjOI0q3qiDzbm1NjHfg
+         IFEApFAn6pNXeERft8Y7DH62ZwwJgP+tYqo7VKNp7ke+HW1JBKiLz+m5hXj3ag2EOsPF
+         3/RODDecRGnyVaAbVOiLQ6g0QJYij59Z4mcZpSMsUGNWXPEz0CAGq5arEaTzzpLs8IyE
+         N+hjQJJ1weEmF8Jfv8qD8vEvek8cUOTywfzyADl1Pd8rDDsVrNX2w5B4Q1fhONq+F5jm
+         3/KDXeB3fS4YWlWKcVh7fU1rI1TlZKmkq5S9tSJ/+UQoHbL9axidB9PJ1bSqHoBrCA6u
+         PylA==
+X-Gm-Message-State: AOJu0Yym6QuwtuChD6tzZV5vbAJ/Y37armcbTiSmHWcBECjbJe+0Pbsc
+        nurafliAuibmuveF9SD5phYy8wIb0gY=
+X-Google-Smtp-Source: AGHT+IE9xNrw8C7H8F9oss9XM3S7yFmTd9QPwf+IYRJ+hFZtamwXExXLXAlUChwHQrL++PdqH83IlQ==
+X-Received: by 2002:a05:6512:3144:b0:500:bbd4:970f with SMTP id s4-20020a056512314400b00500bbd4970fmr8076895lfi.5.1695068706533;
+        Mon, 18 Sep 2023 13:25:06 -0700 (PDT)
+Received: from flawful.org (c-f5f0e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.240.245])
+        by smtp.gmail.com with ESMTPSA id a28-20020ac2521c000000b005008cd93961sm1943302lfl.192.2023.09.18.13.25.04
+        for <linux-ide@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 00:56:19 -0700 (PDT)
-Received: by debian.me (Postfix, from userid 1000)
-        id 361B2978D56F; Mon, 18 Sep 2023 14:56:17 +0700 (WIB)
-Date:   Mon, 18 Sep 2023 14:56:16 +0700
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux SCSI <linux-scsi@vger.kernel.org>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>,
-        Linux RAID <linux-raid@vger.kernel.org>
-Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
-Message-ID: <ZQgCoJ17UioOtdOJ@debian.me>
-References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
- <ZQf9mh3v5qfN5Tm0@x1-carbon>
+        Mon, 18 Sep 2023 13:25:05 -0700 (PDT)
+Received: by flawful.org (Postfix, from userid 112)
+        id 48EC5B9ED; Mon, 18 Sep 2023 22:25:03 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1695068703; bh=ZttXkeYTvpHUObuSkg6+y978YO6qRJEBoOKcoOCDzUs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=sFWPysnhC/tK/WHkj9+EQPwEvr1mJzgwC2Q/Ruy04dh77LmOP8GKDbhtaerobm5vX
+         HDF2zcuokwz2HHQ4D9RE7z2jk8Tax4qTmjdPt++aumv4bc/RdAK+pNLykKfpDfUeu2
+         /JTx+Tnj44B47/YzV5xKiMUolkhyeZTpAZIV+5hk=
+Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by flawful.org (Postfix) with ESMTPSA id EB1FDB98B;
+        Mon, 18 Sep 2023 22:24:57 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+        t=1695068698; bh=ZttXkeYTvpHUObuSkg6+y978YO6qRJEBoOKcoOCDzUs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=XQk/4fTOYkSJUNZrxgUyiJvkxnukIs6n5GYfD3ft/ShJmP0FF2Mf4hpCx4UvvW/C1
+         HjWsoV9enw4wOBSNGBj84qmuaR9Wh5yIdYkyctF3inNWTH9QM1m1/q2PQVcS8rqQF4
+         jJRsm1hvOCLtBeEJxHHBj6P8kBdOiZHCyJcBZs6o=
+From:   Niklas Cassel <nks@flawful.org>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: [PATCH] ata: libata-scsi: ignore reserved bits for REPORT SUPPORTED OPERATION CODES
+Date:   Mon, 18 Sep 2023 22:24:50 +0200
+Message-ID: <20230918202450.19635-1-nks@flawful.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="kc+WLW1HFUSqWTkE"
-Content-Disposition: inline
-In-Reply-To: <ZQf9mh3v5qfN5Tm0@x1-carbon>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+From: Niklas Cassel <niklas.cassel@wdc.com>
 
---kc+WLW1HFUSqWTkE
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+For REPORT SUPPORTED OPERATION CODES command, the service action field is
+defined as bits 0-4 in the second byte in the CDB. Bits 5-7 in the second
+byte are reserved.
 
-On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
-> On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
-> > Hi,
-> >=20
-> > I notice a regression report on Bugzilla [1]. Quoting from it:
-> >=20
-> > Anyway, I'm adding this regression to be tracked by regzbot:
-> >=20
-> > #regzbot introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cg=
-i?id=3D217920
-> > #regzbot title: UDMA configured spam on Marvell RAID controller
-> >=20
-> > Thanks.
-> >=20
-> > [1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D217920
->=20
-> Hello Bagas,
->=20
-> This is a duplicate of:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D217902
->=20
-> Problem is solved by:
-> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel=
-=2Eorg/
->=20
->=20
+Only look at the service action field in the second byte when determining
+if the MAINTENANCE IN opcode is a REPORT SUPPORTED OPERATION CODES command.
 
-I have asked the reporter on Bugzilla to check the fix above. When he
-reports back successfully, I'll mark this report as fixed.
+This matches how we only look at the service action field in the second
+byte when determining if the SERVICE ACTION IN(16) opcode is a READ
+CAPACITY(16) command (reserved bits 5-7 in the second byte are ignored).
 
-Thanks.
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+---
+ drivers/ata/libata-scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-An old man doll... just what I always wanted! - Clara
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d3f28b82c97b..fb73c145b49a 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4312,7 +4312,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+ 		break;
+ 
+ 	case MAINTENANCE_IN:
+-		if (scsicmd[1] == MI_REPORT_SUPPORTED_OPERATION_CODES)
++		if ((scsicmd[1] & 0x1f) == MI_REPORT_SUPPORTED_OPERATION_CODES)
+ 			ata_scsi_rbuf_fill(&args, ata_scsiop_maint_in);
+ 		else
+ 			ata_scsi_set_invalid_field(dev, cmd, 1, 0xff);
+-- 
+2.41.0
 
---kc+WLW1HFUSqWTkE
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZQgCoAAKCRD2uYlJVVFO
-o55MAP9OtvCLRaHNTrxGJhOPpui1xIREaJ0wkOwmLE+BjudivQD9ETPSmeIq6maO
-Zk4SipJureLWv7qF9uJiIx2qzKDqbQg=
-=w8vJ
------END PGP SIGNATURE-----
-
---kc+WLW1HFUSqWTkE--
