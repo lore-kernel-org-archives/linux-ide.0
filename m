@@ -2,116 +2,129 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02387C46CA1
-	for <linux-ide@archiver.kernel.org>; Mon, 18 Sep 2023 07:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C9A8CD37B0
+	for <linux-ide@archiver.kernel.org>; Mon, 18 Sep 2023 07:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239937AbjIRHmr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 18 Sep 2023 03:42:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41056 "EHLO
+        id S231451AbjIRH5N (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 18 Sep 2023 03:57:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240339AbjIRHmc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2023 03:42:32 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 035FB1AE;
-        Mon, 18 Sep 2023 00:39:39 -0700 (PDT)
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="382333083"
-X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="382333083"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 00:39:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="811259953"
-X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="811259953"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by fmsmga008.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 00:39:24 -0700
-Received: from andy by smile.fi.intel.com with local (Exim 4.97-RC0)
-        (envelope-from <andy@kernel.org>)
-        id 1qi8qk-0000000EvwK-3qGW;
-        Mon, 18 Sep 2023 10:39:18 +0300
-Date:   Mon, 18 Sep 2023 10:39:18 +0300
-From:   Andy Shevchenko <andy@kernel.org>
-To:     nikita.shubin@maquefel.me
-Cc:     Hartley Sweeten <hsweeten@visionengravers.com>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Lukasz Majewski <lukma@denx.de>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>, Mark Brown <broonie@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
+        with ESMTP id S240568AbjIRH4v (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2023 03:56:51 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17ACBE6E;
+        Mon, 18 Sep 2023 00:56:31 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-68fb898ab3bso3144028b3a.3;
+        Mon, 18 Sep 2023 00:56:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695023780; x=1695628580; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Xqxu9XqJgrwv9dQeN2TLGjQoXj5OVfZLMHNwc4EUVI4=;
+        b=fri4usmzfsSAKW2/JSUKtvomJJfQ1I8O+rJMeaQ2Eu3DtFOTsMHXrScAyyzOWY5bdK
+         3USxc32fhvX09jfbBmp3PTUA52kmq/xwjthFGxwx3JoloS2AsVSxR7PzeJ802QECmeR1
+         g6Ae/uwpFyiTbn4rVzRD9B9VodIXg6SNhJm6x+iYpSpbbbM+nJoJikJFfF8u46+GUAZQ
+         C/QGLBvSMc0hSEbj9bRe9SIBwp2p6NI6YxQxr5EIMXErnDFchcSJa5v5crTLvMcIDFQb
+         2mRs3P9Pd/ST/gkrT2fu1Pb10y5uJXo+CFJOGE/GXbOoA6BUw0aDCxBcXmp5w4SeEXqs
+         bCiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695023780; x=1695628580;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Xqxu9XqJgrwv9dQeN2TLGjQoXj5OVfZLMHNwc4EUVI4=;
+        b=Hp7Tt+HNejyXvR1nNp35mrs7+YuwxqgeuTB9/YfZnixqBJpQpBRGVbFh95zDZnjwXH
+         4x3s5mI9f9kh5cRzYKVEmTst3HwDiXz1EppZ8kb7bb/iQEFaeNISAnZQs61AwKDeNa4V
+         mfWxhFZjA1YzEvZzCa+eGJLvIxjzG7Vlw5TxsT3WeN4JAVcvGGFUZMyyKLk2WW4GMro8
+         2K2eMhWLqOMflX5eCMHSZ/N/wfVnWn+vUaeBG5GUzRfvmn5lxBFPbiko5dA3yOiSvlpg
+         Yy88pGyNy72H16tDh+LmGDKwI05v6jbqJV1zCwFyAGLNXDGqlTI/xKu8ad4kSbNNhHSj
+         OMlg==
+X-Gm-Message-State: AOJu0Yxx4ZYEmCieA8tz7/RDZ4DNrglxOiwtF/wzxXRbYmBBfpXkBHjY
+        jY8+oxRssLTHYA3VoTy4eNc=
+X-Google-Smtp-Source: AGHT+IH/qxcDfX7UFoxk/ogaqzsqV1A4Qsvo/qqLJzoiAwIwKRGOhAmWzzeFeLJSkwIVnH5SmhaxVA==
+X-Received: by 2002:a05:6a00:181c:b0:68e:351b:15b8 with SMTP id y28-20020a056a00181c00b0068e351b15b8mr8287951pfa.12.1695023779938;
+        Mon, 18 Sep 2023 00:56:19 -0700 (PDT)
+Received: from debian.me ([103.124.138.83])
+        by smtp.gmail.com with ESMTPSA id k10-20020a637b4a000000b00573f958f6a3sm6503830pgn.5.2023.09.18.00.56.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Sep 2023 00:56:19 -0700 (PDT)
+Received: by debian.me (Postfix, from userid 1000)
+        id 361B2978D56F; Mon, 18 Sep 2023 14:56:17 +0700 (WIB)
+Date:   Mon, 18 Sep 2023 14:56:16 +0700
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Damien Le Moal <dlemoal@kernel.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
-        netdev@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-input@vger.kernel.org, alsa-devel@alsa-project.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [PATCH v4 00/42] ep93xx device tree conversion
-Message-ID: <ZQf+pps0Ffsak+BA@smile.fi.intel.com>
-References: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
+        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>,
+        Linux RAID <linux-raid@vger.kernel.org>
+Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
+Message-ID: <ZQgCoJ17UioOtdOJ@debian.me>
+References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
+ <ZQf9mh3v5qfN5Tm0@x1-carbon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="kc+WLW1HFUSqWTkE"
 Content-Disposition: inline
-In-Reply-To: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <ZQf9mh3v5qfN5Tm0@x1-carbon>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 11:10:42AM +0300, Nikita Shubin via B4 Relay wrote:
-> This series aims to convert ep93xx from platform to full device tree support.
-> 
-> The main goal is to receive ACK's to take it via Arnd's arm-soc branch.
-> 
-> Major changes:
-> - drop newline at the end from each YAML files
-> - rename dma and clk bindings headers to match first compatible
-> - shrink SoC exported functions number to only 2
-> - dropped some ep93xx_pata fixes from these series
-> - dropped m48t86 stuff from these series
-> 
-> Bit thanks to Andy Shevchenko for thorough review.
 
-You are welcome!
+--kc+WLW1HFUSqWTkE
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Dunno if you have used --patience when formatted the patches, but I think
-you should, if hadn't, for the next version. It will help a lot in reviewing
-and understanding the changes.
+On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
+> On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
+> > Hi,
+> >=20
+> > I notice a regression report on Bugzilla [1]. Quoting from it:
+> >=20
+> > Anyway, I'm adding this regression to be tracked by regzbot:
+> >=20
+> > #regzbot introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cg=
+i?id=3D217920
+> > #regzbot title: UDMA configured spam on Marvell RAID controller
+> >=20
+> > Thanks.
+> >=20
+> > [1]: https://bugzilla.kernel.org/show_bug.cgi?id=3D217920
+>=20
+> Hello Bagas,
+>=20
+> This is a duplicate of:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D217902
+>=20
+> Problem is solved by:
+> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel=
+=2Eorg/
+>=20
+>=20
 
--- 
-With Best Regards,
-Andy Shevchenko
+I have asked the reporter on Bugzilla to check the fix above. When he
+reports back successfully, I'll mark this report as fixed.
 
+Thanks.
 
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--kc+WLW1HFUSqWTkE
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZQgCoAAKCRD2uYlJVVFO
+o55MAP9OtvCLRaHNTrxGJhOPpui1xIREaJ0wkOwmLE+BjudivQD9ETPSmeIq6maO
+Zk4SipJureLWv7qF9uJiIx2qzKDqbQg=
+=w8vJ
+-----END PGP SIGNATURE-----
+
+--kc+WLW1HFUSqWTkE--
