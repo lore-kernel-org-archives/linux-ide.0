@@ -2,36 +2,38 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AAECCE79A8
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Sep 2023 16:27:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B048ECE79AA
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Sep 2023 16:31:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229770AbjISQ1m (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Sep 2023 12:27:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41274 "EHLO
+        id S231866AbjISQbT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Sep 2023 12:31:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229648AbjISQ1m (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Sep 2023 12:27:42 -0400
+        with ESMTP id S231737AbjISQbS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Sep 2023 12:31:18 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A50B092;
-        Tue, 19 Sep 2023 09:27:36 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78516C433C7;
-        Tue, 19 Sep 2023 16:27:35 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00019BA;
+        Tue, 19 Sep 2023 09:31:06 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E8FCC4339A;
+        Tue, 19 Sep 2023 16:31:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695140856;
-        bh=/YtV+6W6LsODiFxiATsenledXoIGVof4Rjz+HVc9CFM=;
+        s=k20201202; t=1695141066;
+        bh=6YJginIl4d1otkR4Lb85rezGiPQkb1c3KK5wqQgF/gw=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=ey/ijgBoAm4dBs1RlT+Ryr35UkeRsRrjeuR0x7w/3SAcOA3Mh5dfIvoyDq9Hkxq6i
-         C3pUSIah0Am3OxoENWZvAtPhksXOg4qBxrurco4pkmc3lJlDnZ4GAZmAmBDqCU6PAk
-         ZAbzdoVRmECqAOKW+M1Y89cNEIzGtHYLE7KCWfUlKEOADRUKWxWeRxj6MZPaHSO+5a
-         pPPSNhXkIyhSJNkF5Me7gDoYD2KtIcmmiWHgPBzevwgUEjv/PAFySOSPBd3LcxNya4
-         qdpH0j6Ifftvo07nPH151ujyQnyomg1zphNkvi64rM8/i8ldijglvkCMOa+hRRMp8q
-         b8vQPpn1qGO3A==
-Message-ID: <be4525e4-2761-897a-f186-0759e092ab14@kernel.org>
-Date:   Tue, 19 Sep 2023 09:27:34 -0700
+        b=kiTB3o2TPE2Vh6lsGZmS5XlqcJHmJrnI4C5MOhJcS0Osfs7rHc79mHae9cEYMyCDb
+         lQrfTIefMSnZgNlCxSZ3x/Ey9fRuXU7kg8k7RILNTQzf4TXCl5McisdABcJcbG/td8
+         H1E4ZRPDHRepipxKU2QRdgAhl5+ZDeLC5FtDu5DpgPkgxzOJR/N7d2LgC4cdUvcgUd
+         u0jXB7WanqS5uJJh4OUMrmTTNCZTGxgtfGzvau8FE4IG7hVFEaDQCcVT7kBGilKw3n
+         O5sUcAfKg5brk0akMYDQTmpLuTMlkJG4OM/zakWJTVWglHMT9AYehIFTIkcvuTBq4e
+         yVxvSDPT+J/jA==
+Message-ID: <0c2c5b5b-85b5-89c6-5d62-c4d3a029fb2b@kernel.org>
+Date:   Tue, 19 Sep 2023 09:31:04 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.15.0
-Subject: Re: [PATCH v3 03/23] ata: libata-scsi: link ata port and scsi device
+Subject: Re: [PATCH v3 01/23] ata: libata-core: Fix ata_port_request_pm()
+ locking
+Content-Language: en-US
 To:     Niklas Cassel <Niklas.Cassel@wdc.com>
 Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
@@ -44,11 +46,10 @@ Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
 References: <20230915081507.761711-1-dlemoal@kernel.org>
- <20230915081507.761711-4-dlemoal@kernel.org> <ZQmgU/j8OD8t4KLs@x1-carbon>
-Content-Language: en-US
+ <20230915081507.761711-2-dlemoal@kernel.org> <ZQmgNUCLV8rDXg5I@x1-carbon>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <ZQmgU/j8OD8t4KLs@x1-carbon>
+In-Reply-To: <ZQmgNUCLV8rDXg5I@x1-carbon>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -56,43 +57,81 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 2023/09/19 6:21, Niklas Cassel wrote:
->> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
->> index 17f6ccee53c7..32968b4cf8e4 100644
->> --- a/drivers/ata/pata_macio.c
->> +++ b/drivers/ata/pata_macio.c
->> @@ -918,6 +918,7 @@ static const struct scsi_host_template pata_macio_sht = {
->>  	 * use 64K minus 256
+> On Fri, Sep 15, 2023 at 05:14:45PM +0900, Damien Le Moal wrote:
+>> The function ata_port_request_pm() checks the port flag
+>> ATA_PFLAG_PM_PENDING and calls ata_port_wait_eh() if this flag is set to
+>> ensure that power management operations for a port are not secheduled
+> 
+> s/secheduled/scheduled/
+> 
+>> simultaneously. However, this flag check is done without holding the
+>> port lock.
+>>
+>> Fix this by taking the port lock on entry to the function and checking
+>> the flag under this lock. The lock is released and re-taken if
+>> ata_port_wait_eh() needs to be called.
+>>
+>> Fixes: 5ef41082912b ("ata: add ata port system PM callbacks")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
+>> ---
+>>  drivers/ata/libata-core.c | 17 +++++++++--------
+>>  1 file changed, 9 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 74314311295f..c4898483d716 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -5040,17 +5040,20 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+>>  	struct ata_link *link;
+>>  	unsigned long flags;
+>>  
+>> -	/* Previous resume operation might still be in
+>> -	 * progress.  Wait for PM_PENDING to clear.
+>> +	spin_lock_irqsave(ap->lock, flags);
+>> +
+>> +	/*
+>> +	 * A previous PM operation might still be in progress. Wait for
+>> +	 * ATA_PFLAG_PM_PENDING to clear.
 >>  	 */
->>  	.max_segment_size	= MAX_DBDMA_SEG,
->> +	.slave_alloc		= ata_scsi_slave_alloc,
->>  	.slave_configure	= pata_macio_slave_config,
->>  	.sdev_groups		= ata_common_sdev_groups,
->>  	.can_queue		= ATA_DEF_QUEUE,
->> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
->> index d105db5c7d81..353ac7b2f14a 100644
->> --- a/drivers/ata/sata_mv.c
->> +++ b/drivers/ata/sata_mv.c
->> @@ -673,6 +673,7 @@ static const struct scsi_host_template mv6_sht = {
->>  	.sdev_groups		= ata_ncq_sdev_groups,
->>  	.change_queue_depth	= ata_scsi_change_queue_depth,
->>  	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
->> +	.slave_alloc		= ata_scsi_slave_alloc,
+>>  	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
+>> +		spin_unlock_irqrestore(ap->lock, flags);
+>>  		ata_port_wait_eh(ap);
+>> +		spin_lock_irqsave(ap->lock, flags);
+>>  		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+>>  	}
+>>  
+>> -	/* request PM ops to EH */
+>> -	spin_lock_irqsave(ap->lock, flags);
+>> -
+>> +	/* Request PM operation to EH */
+>>  	ap->pm_mesg = mesg;
+>>  	ap->pflags |= ATA_PFLAG_PM_PENDING;
+>>  	ata_for_each_link(link, ap, HOST_FIRST) {
+>> @@ -5062,10 +5065,8 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+>>  
+>>  	spin_unlock_irqrestore(ap->lock, flags);
+>>  
+>> -	if (!async) {
+>> +	if (!async)
+>>  		ata_port_wait_eh(ap);
+>> -		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
 > 
-> It seems wrong to add .slave_alloc to all different ata_port_operations structs.
-> The .slave_configure is added on all different ata_port_operations structs,
-> because the callback can be different for different drivers.
+> Perhaps you should mention why this WARN_ON() is removed in the commit
+> message.
 > 
-> However, adding the device link is done in .ata_scsi_slave_alloc,
-> removing the device link is done in .ata_scsi_slave_destroy.
-> 
-> Thus, I suggest that we only add the
-> .slave_alloc = ata_scsi_slave_alloc,
-> 
-> to __ATA_BASE_SHT() in libata.h, which is currently the only
-> place which has .slave_destroy defined.
+> I don't understand why you keep the WARN_ON() higher up in this function,
+> but remove this WARN_ON(). They seem to have equal worth to me.
+> Perhaps just take and release the lock around the WARN_ON() here as well?
 
-Good point. I will make this change.
-
+Yes, they have the same worth == not super useful... I kept the one higher up as
+it is OK because we hold the lock, but removed the second one as checking pflags
+without the lock is just plain wrong. Thinking of it, the first WRN_ON() is also
+wrong I think because EH could be rescheduled right after wait_eh and before we
+take the lock. In that case, the warn on would be a flase positive. I will
+remove it as well.
 
 -- 
 Damien Le Moal
