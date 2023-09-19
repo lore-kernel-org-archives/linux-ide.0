@@ -2,50 +2,85 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72077CD5488
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Sep 2023 07:37:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C6A7CD54B6
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Sep 2023 11:32:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231792AbjISHhk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Sep 2023 03:37:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49358 "EHLO
+        id S230351AbjISLcf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Sep 2023 07:32:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231811AbjISHhf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Sep 2023 03:37:35 -0400
-X-Greylist: delayed 389 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 19 Sep 2023 00:37:29 PDT
-Received: from mail.leeswilly.pl (mail.leeswilly.pl [89.116.26.225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB2BE12A
-        for <linux-ide@vger.kernel.org>; Tue, 19 Sep 2023 00:37:28 -0700 (PDT)
-Received: by mail.leeswilly.pl (Postfix, from userid 1001)
-        id 424E476130B; Tue, 19 Sep 2023 09:30:24 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leeswilly.pl; s=mail;
-        t=1695108659; bh=qCQG4c3C0tvkuSSy6okg6Td4OKi9mrw7rI9pE9SwJ9g=;
-        h=Date:From:To:Subject:From;
-        b=fVNOTq1EBFt0iD6VdAB8G/+nsiHO8RVDTkXM5zdMXFXsG1g8DIeuW2rmm2ddbszmz
-         MG8JfoSJMLsisZLGw7D6Y5R2FS+LnMIOZ4uNGSmtiezQyf7Qm0pcxIptZWlwt6alkT
-         1o+mrk/LnDJkDvmIUPE4N6WgRPtfory/hby+SQk266en2CVV5+6vHbknh9tIVaOT5z
-         483g5YdnFElCUYqXfTv0ceguVDgkJLoKUFVKtWAu/Tqi0690PdfWurY0pHDpdH2cem
-         LIsKv6VHEp5qy5/FzxtJMuhleVBqTB2FEhNHA7KRDPS2P38yDscWS8p6hoKkwBFKgP
-         1cr1TFKPZ1Faw==
-Received: by mail.leeswilly.pl for <linux-ide@vger.kernel.org>; Tue, 19 Sep 2023 07:30:18 GMT
-Message-ID: <20230919084500-0.1.3z.bbjr.0.oz840hpwe4@leeswilly.pl>
-Date:   Tue, 19 Sep 2023 07:30:18 GMT
-From:   "Jakub Lemczak" <jakub.lemczak@leeswilly.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
-X-Mailer: mail.leeswilly.pl
+        with ESMTP id S229497AbjISLce (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Sep 2023 07:32:34 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D9A894;
+        Tue, 19 Sep 2023 04:32:27 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qiYxq-0007SV-K9; Tue, 19 Sep 2023 13:32:22 +0200
+Message-ID: <9c791f68-bbfe-4722-9cbb-5e791ce042ec@leemhuis.info>
+Date:   Tue, 19 Sep 2023 13:32:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: Fwd: Marvell RAID Controller issues since 6.5.x
+Content-Language: en-US, de-DE
+To:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Song Liu <song@kernel.org>, Timo Gurr <timo.gurr@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux SCSI <linux-scsi@vger.kernel.org>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>,
+        Linux RAID <linux-raid@vger.kernel.org>
+References: <224f10a4-7a6a-48bb-88be-491faf8ecff7@gmail.com>
+ <ZQf9mh3v5qfN5Tm0@x1-carbon> <ZQgCoJ17UioOtdOJ@debian.me>
+ <ZQlFg4GsULu633P1@debian.me>
+From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <ZQlFg4GsULu633P1@debian.me>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1695123147;844ed6a3;
+X-HE-SMSGID: 1qiYxq-0007SV-K9
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+[TLDR: This mail in primarily relevant for Linux kernel regression
+tracking. See link in footer if these mails annoy you.]
 
-Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
-torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
-ich utrzymania?=20
+On 19.09.23 08:53, Bagas Sanjaya wrote:
+> On Mon, Sep 18, 2023 at 02:56:16PM +0700, Bagas Sanjaya wrote:
+>> On Mon, Sep 18, 2023 at 07:34:50AM +0000, Niklas Cassel wrote:
+>>> On Mon, Sep 18, 2023 at 07:18:28AM +0700, Bagas Sanjaya wrote:
+>>>
+>>> This is a duplicate of:
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=217902
+>>>
+>>> Problem is solved by:
+>>> https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
+>>
+>> I have asked the reporter on Bugzilla to check the fix above. When he
+>> reports back successfully, I'll mark this report as fixed.
+>>
+> 
+> Another user has confirmed the fix (see Bugzilla), so:
+> 
+> #regzbot fix: https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
 
+Bagas, FWIW, using "#regzbot fix" is not supported (maybe it should, but
+I have other priorities currently), hence let me fix this up:
 
-Pozdrawiam
-Jakub Lemczak
+#regzbot fix: scsi: Do no try to probe for CDL on old drives
+#regzbot monitor:
+https://lore.kernel.org/linux-scsi/20230915022034.678121-1-dlemoal@kernel.org/
+#regzbot ignore-activity
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
