@@ -2,80 +2,85 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 552F5CE79A9
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Sep 2023 17:19:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ADC6CE79A9
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Sep 2023 17:27:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231593AbjISRTi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Sep 2023 13:19:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40716 "EHLO
+        id S232066AbjISR1W (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Sep 2023 13:27:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229969AbjISRTi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Sep 2023 13:19:38 -0400
+        with ESMTP id S232042AbjISR1U (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Sep 2023 13:27:20 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB9DEA6;
-        Tue, 19 Sep 2023 10:19:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4FF1C433C8;
-        Tue, 19 Sep 2023 17:19:31 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9913C133
+        for <linux-ide@vger.kernel.org>; Tue, 19 Sep 2023 10:27:13 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0548C433C7;
+        Tue, 19 Sep 2023 17:27:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695143972;
-        bh=0FzohlduMMKtgDdiJ9ExxJvjBavWbhnZ0AuCWrDjN+w=;
+        s=k20201202; t=1695144433;
+        bh=shV2Xm80eFeLXxUHIZgqa3zdcZIZuSDcqN/m8P3HQlU=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=nuY/o1OyGCMXR9OIR6jCcLNIYS6JF7AMiw9dwXcWYrqFlUUiRAfCsGPV31bElxvSd
-         tw0pUR1LK49PmCn40U0ITagB5IkWTR215i6ve09R6qATJRC1YJfX4dnIBhLVTLmHV5
-         QBYsHv1unE0uy+4eZwLtYxN4jEe43MDBrR/VXzqndRwVfQeNC9EhXRxAZCe/8ZD6ja
-         q5vOGQ4zlN+y7ImENkcdLdkdC4vv9OWqaZBqRfm5wppXs6uzN9U07DIzl0fwFJqtxQ
-         aeVGP9rl6Msc5Hltj1iRUskRGoDAWd+KgKTH0PRQBfzLh+6r9xzADjKmwh7xM53Hn+
-         kr7UHLWw6zqsA==
-Message-ID: <18e21ab0-fcd3-590f-af89-95e1b141acb3@kernel.org>
-Date:   Tue, 19 Sep 2023 10:19:30 -0700
+        b=hIpSHO9TUrvpffV8QnT3hcxJTVpDgvkmenL9Wcxme29P9PJqmsaLfFwp6cAAZioWh
+         k3Itsb0ti+1OM1tzlGLt8BlWNTejyPoSutVL6zKew/5No6blGn7VudA8OIHyqxBcuS
+         yhetAmry/XGmVcE++y7ixXR5QMHvc8DVk2vx0qPd0CJsiuc//yCdk+r8facb3wtJbu
+         qNzSX/2nXDMhucvOev1Baa41XRKI6ocZevXlvUHyUovOLM1Cme/g7nxard9EjFO9GO
+         jki37n5AuaffB3GbfnWZHn/9wBZaDNy4C/26EihduZdQN8mcv3a2AzcsH/gBk+vimK
+         BXzbYoNgnsOSg==
+Message-ID: <78532355-e4a4-f07e-d544-436b63b60153@kernel.org>
+Date:   Tue, 19 Sep 2023 10:27:12 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.15.0
-Subject: Re: [PATCH] dt-bindings: ata: pata-common: Add missing
- additionalProperties on child nodes
+Subject: Re: [PATCH] ata: libata-scsi: ignore reserved bits for REPORT
+ SUPPORTED OPERATION CODES
 Content-Language: en-US
-To:     Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>
-Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230915201626.4180606-1-robh@kernel.org>
+To:     Niklas Cassel <nks@flawful.org>
+Cc:     linux-ide@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+References: <20230918202450.19635-1-nks@flawful.org>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20230915201626.4180606-1-robh@kernel.org>
+In-Reply-To: <20230918202450.19635-1-nks@flawful.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2023/09/15 13:16, Rob Herring wrote:
-> The PATA child node schema is missing constraints to prevent unknown
-> properties. As none of the users of this common binding extend the child
-> nodes with additional properties, adding "additionalProperties: false"
-> here is sufficient.
+On 2023/09/18 13:24, Niklas Cassel wrote:
+> From: Niklas Cassel <niklas.cassel@wdc.com>
 > 
-> Signed-off-by: Rob Herring <robh@kernel.org>
+> For REPORT SUPPORTED OPERATION CODES command, the service action field is
+> defined as bits 0-4 in the second byte in the CDB. Bits 5-7 in the second
+> byte are reserved.
+> 
+> Only look at the service action field in the second byte when determining
+> if the MAINTENANCE IN opcode is a REPORT SUPPORTED OPERATION CODES command.
+> 
+> This matches how we only look at the service action field in the second
+> byte when determining if the SERVICE ACTION IN(16) opcode is a READ
+> CAPACITY(16) command (reserved bits 5-7 in the second byte are ignored).
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
 
-Applied to for-6.6-fixes. Thanks !
+Applied to for-6.6-fixes with the Fixes tag added. Thanks !
 
 > ---
->  Documentation/devicetree/bindings/ata/pata-common.yaml | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/ata/libata-scsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/pata-common.yaml b/Documentation/devicetree/bindings/ata/pata-common.yaml
-> index 337ddf1113c4..4e867dd4d402 100644
-> --- a/Documentation/devicetree/bindings/ata/pata-common.yaml
-> +++ b/Documentation/devicetree/bindings/ata/pata-common.yaml
-> @@ -38,6 +38,7 @@ patternProperties:
->        ID number 0 and the slave drive will have ID number 1. The PATA port
->        nodes will be named "ide-port".
->      type: object
-> +    additionalProperties: false
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index d3f28b82c97b..fb73c145b49a 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -4312,7 +4312,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+>  		break;
 >  
->      properties:
->        reg:
+>  	case MAINTENANCE_IN:
+> -		if (scsicmd[1] == MI_REPORT_SUPPORTED_OPERATION_CODES)
+> +		if ((scsicmd[1] & 0x1f) == MI_REPORT_SUPPORTED_OPERATION_CODES)
+>  			ata_scsi_rbuf_fill(&args, ata_scsiop_maint_in);
+>  		else
+>  			ata_scsi_set_invalid_field(dev, cmd, 1, 0xff);
 
 -- 
 Damien Le Moal
