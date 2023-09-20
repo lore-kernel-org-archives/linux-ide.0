@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0937ECE79CE
-	for <linux-ide@archiver.kernel.org>; Wed, 20 Sep 2023 13:56:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58205CE79D2
+	for <linux-ide@archiver.kernel.org>; Wed, 20 Sep 2023 13:56:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236606AbjITN4J (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 20 Sep 2023 09:56:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50028 "EHLO
+        id S236536AbjITN4L (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 20 Sep 2023 09:56:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236616AbjITNzj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 20 Sep 2023 09:55:39 -0400
+        with ESMTP id S236632AbjITNzk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 20 Sep 2023 09:55:40 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 629181BF;
-        Wed, 20 Sep 2023 06:55:10 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FC21C433C9;
-        Wed, 20 Sep 2023 13:55:08 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E096BF2;
+        Wed, 20 Sep 2023 06:55:19 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C02E1C43391;
+        Wed, 20 Sep 2023 13:55:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695218110;
-        bh=UV6LXx9s3TSryZ3qsIn1nQK8SJjbA4fQxR6ePepNgLg=;
+        s=k20201202; t=1695218119;
+        bh=lmI/yQR3mXjTNExyBjMUNn39lcUmMCzc9DGZmawQH6U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nplZTTzaFWe2h9LTlx8n42aeF9bV09+zrk4FzcF0aaqS0akdD2SPgjWz4M2w4fcAr
-         wKV7Rj/a+jGZC2W/hVEw1B1dKYK/smNkfdOHqHqHO99WYzlyNxDI2eWSqpuCpqpMSA
-         sGp8vrnYysxbgXz2WKafIQiaSdOCD2glLnIu4mYjHyeIufLI8IuS1ycyM1KC5b9/7y
-         XpqUhmbE7deUnd391r2vzHmNu9/fHp6Ti1Mmx2scplCZEyoMh0IMaAYBoEUkkfRyah
-         jC3+6mmn5r6sJhSJOb3uk4WyZmclFKjBy6s8si3I/UqYS+dQxyX7s60xyQaXQH4j//
-         YlALWnf6l08ZQ==
+        b=JpbQtQgmZNdIFLR1rn4IeYtRyHwBevQCcwh2WAZw5JmmEjUrFAdRW2yMPT8IMOOC0
+         saCbElmebUl5SJpERXrXTNOa8dzULaDE+YVBOoEhGv7rLl9oZifbIYZr0N/Np25S5z
+         Pkx+G312q56ogw8gUvNNXR4vBa1zp97auDOtA0kCDWApJDnlX9IUdjgwZcJKAryMEV
+         CgqSrIQZ+6L3cXfgPTW6B0jYdUInskdsTgUILGKYE8XQAJLftYeHpVh8SZjG6W/YGl
+         QDZYs3M0iJ5R/e4wzmlc6qVTpAG6Uc0EIfq974GR3jGaoz7i+8FSkL7iVS0GBIy3U8
+         r+yGKzyVJJEPA==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,9 +37,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v4 15/23] ata: libata-core: Detach a port devices on shutdown
-Date:   Wed, 20 Sep 2023 22:54:31 +0900
-Message-ID: <20230920135439.929695-16-dlemoal@kernel.org>
+Subject: [PATCH v4 20/23] ata: libata-sata: Improve ata_sas_slave_configure()
+Date:   Wed, 20 Sep 2023 22:54:36 +0900
+Message-ID: <20230920135439.929695-21-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230920135439.929695-1-dlemoal@kernel.org>
 References: <20230920135439.929695-1-dlemoal@kernel.org>
@@ -49,47 +49,32 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Modify ata_pci_shutdown_one() to schedule EH to unload a port devices
-before freezing and thawing the port. This ensures that drives are
-cleanly disabled and transitioned to standby power mode when
-a PCI adapter is removed or the system is powered off.
+Change ata_sas_slave_configure() to return the return value of
+ata_scsi_dev_config() to ensure that any error from that function is
+propagated to libsas.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
 Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 ---
- drivers/ata/libata-core.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/ata/libata-sata.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index de661780a31e..6b38ebaad019 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6164,10 +6164,24 @@ EXPORT_SYMBOL_GPL(ata_pci_remove_one);
- void ata_pci_shutdown_one(struct pci_dev *pdev)
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index a701e1538482..83a9497e48e1 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1182,8 +1182,8 @@ EXPORT_SYMBOL_GPL(ata_sas_tport_delete);
+ int ata_sas_slave_configure(struct scsi_device *sdev, struct ata_port *ap)
  {
- 	struct ata_host *host = pci_get_drvdata(pdev);
-+	struct ata_port *ap;
-+	unsigned long flags;
- 	int i;
- 
-+	/* Tell EH to disable all devices */
- 	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
-+		ap = host->ports[i];
-+		spin_lock_irqsave(ap->lock, flags);
-+		ap->pflags |= ATA_PFLAG_UNLOADING;
-+		ata_port_schedule_eh(ap);
-+		spin_unlock_irqrestore(ap->lock, flags);
-+	}
+ 	ata_scsi_sdev_config(sdev);
+-	ata_scsi_dev_config(sdev, ap->link.device);
+-	return 0;
 +
-+	for (i = 0; i < host->n_ports; i++) {
-+		ap = host->ports[i];
-+
-+		/* Wait for EH to complete before freezing the port */
-+		ata_port_wait_eh(ap);
- 
- 		ap->pflags |= ATA_PFLAG_FROZEN;
++	return ata_scsi_dev_config(sdev, ap->link.device);
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_slave_configure);
  
 -- 
 2.41.0
