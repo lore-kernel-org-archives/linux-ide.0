@@ -2,112 +2,105 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08F9BC04AAB
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Sep 2023 17:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 947B6E7D0A4
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Sep 2023 17:28:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229852AbjIURBW convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Sep 2023 13:01:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40416 "EHLO
+        id S230031AbjIUR2T (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Sep 2023 13:28:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229870AbjIURBF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Sep 2023 13:01:05 -0400
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF98FCFC;
-        Thu, 21 Sep 2023 10:00:31 -0700 (PDT)
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1c1e3a4a06fso9671505ad.3;
-        Thu, 21 Sep 2023 10:00:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695315510; x=1695920310;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=idFDQKNDkzP5RSqt/nkSyZRNM7uFs093DSH/JN+PAAU=;
-        b=fFTvydo4h1rhHMSkuOsaU5d86+b6eIFARZ0Msf8qKg6gcPKeNpiGggU4mw2y577Tkn
-         CXCoDADizXKU8O4IYhUrbqE0cI0NJp0F6D2+X6e7Zl/7u13hIuDwo0uSh6Ot7OsNtJ7/
-         CiLF9+nQax0U9bpa+WTt80G8o7LaipzfhE9KDx/XtfIA7p7rPr4JHqKBOcrf9gl2P/8E
-         6bajL0LNKsbttu4j+xti70fwazDlyPjV6msd5UK8vy596KQvlkGl/VU4KQL56vX8YL5n
-         sX7OgZ+YwMfHwmyzGJGbAxSIGkVptjOfD4Zomitiik0sU6UoOtMsOAZhHVz8DAwQzeYS
-         /nQQ==
-X-Gm-Message-State: AOJu0YwPdTMzzJQXtPnJUswQNN11fUB1WWidrKBLYNRIGihuXgsTmK+O
-        LzMw7PEabOis5DmtZ/UHHn2xtr9DrjYHgUaF
-X-Google-Smtp-Source: AGHT+IG9TawMETPzBfgvTvEik3uLo+46CYkwSSW145R4ndL8xfUPnjLov+cYq7MQY9IKWRebCjtByg==
-X-Received: by 2002:a81:4f4a:0:b0:576:7dfc:e73e with SMTP id d71-20020a814f4a000000b005767dfce73emr5263457ywb.32.1695288144779;
-        Thu, 21 Sep 2023 02:22:24 -0700 (PDT)
-Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com. [209.85.128.172])
-        by smtp.gmail.com with ESMTPSA id x202-20020a81a0d3000000b0057399b3bd26sm232511ywg.33.2023.09.21.02.22.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Sep 2023 02:22:24 -0700 (PDT)
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-59c0442a359so9002237b3.0;
-        Thu, 21 Sep 2023 02:22:24 -0700 (PDT)
-X-Received: by 2002:a0d:ea15:0:b0:59b:c11:ad7c with SMTP id
- t21-20020a0dea15000000b0059b0c11ad7cmr4927105ywe.18.1695288143988; Thu, 21
- Sep 2023 02:22:23 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230920135439.929695-1-dlemoal@kernel.org> <CAMuHMdWHXC=qPTcLS9VeqfFy7Js84pd84oZqqWdd7E+bAHrcqw@mail.gmail.com>
-In-Reply-To: <CAMuHMdWHXC=qPTcLS9VeqfFy7Js84pd84oZqqWdd7E+bAHrcqw@mail.gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 21 Sep 2023 11:22:13 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdXeeDNjwErH7HfCtnxSYF2o-6ZnkDuOe8u_mX14WKqqBQ@mail.gmail.com>
-Message-ID: <CAMuHMdXeeDNjwErH7HfCtnxSYF2o-6ZnkDuOe8u_mX14WKqqBQ@mail.gmail.com>
-Subject: Re: [PATCH v4 00/23] Fix libata suspend/resume handling and code cleanup
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        with ESMTP id S229790AbjIUR1q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Sep 2023 13:27:46 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 070A4E53;
+        Thu, 21 Sep 2023 10:02:03 -0700 (PDT)
+Received: from [192.168.1.103] (31.173.80.103) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Thu, 21 Sep
+ 2023 10:32:25 +0300
+Subject: Re: [PATCH v4 19/23] ata: libata-core: Do not resume runtime
+ suspended ports
+To:     Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        "Rodrigo Vivi" <rodrigo.vivi@intel.com>,
         Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        "Kai-Heng Feng" <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>,
-        Chia-Lin Kao <acelan.kao@canonical.com>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230920135439.929695-1-dlemoal@kernel.org>
+ <20230920135439.929695-20-dlemoal@kernel.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <cb714cbb-0fba-6774-f525-726b829af02e@omp.ru>
+Date:   Thu, 21 Sep 2023 10:32:24 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <20230920135439.929695-20-dlemoal@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [31.173.80.103]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 09/21/2023 07:11:12
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 180015 [Sep 21 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 534 534 808c2ea49f7195c68d40844e073217da4fa0d1e3
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.80.103 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;31.173.80.103:7.4.1,7.7.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: {cloud_iprep_silent}
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: {rdns complete}
+X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.80.103
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/21/2023 07:16:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 9/21/2023 5:19:00 AM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Sep 21, 2023 at 11:21 AM Geert Uytterhoeven
-<geert@linux-m68k.org> wrote:
-> On Wed, Sep 20, 2023 at 3:54 PM Damien Le Moal <dlemoal@kernel.org> wrote:
-> > The first 9 patches of this series fix several issues with suspend/resume
-> > power management operations in scsi and libata. The most significant
-> > changes introduced are in patch 4 and 5, where the manage_start_stop
-> > flag of scsi devices is split into the manage_system_start_stop and
-> > manage_runtime_start_stop flags to allow keeping scsi runtime power
-> > operations for spining up/down ATA devices but have libata do its own
-> > system suspend/resume device power state management using EH.
-> >
-> > The remaining patches are code cleanup that do not introduce any
-> > significant functional change.
-> >
-> > This series was tested on qemu and on various PCs and servers. I am
-> > CC-ing people who recently reported issues with suspend/resume.
-> > Additional testing would be much appreciated.
-> >
-> > Changes from v3:
-> >  * Corrected pathc 1 (typo in commit message and WARN_ON() removal)
-> >  * Changed path 3 as suggested by Niklas (moved definition of
-> >    ->slave_alloc)
-> >  * Rebased on rc2
-> >  * Added review tags
->
-> Thanks for the update!
->
-> I gave this a try on Renesas Salvator-XS with R-Car H3 ES2.0 and
-> a SATA hard drive:
->   - The drive is spun up during system resume,
->   - Accessing the drive after the system was resumed is instantaneous.
+On 9/20/23 4:54 PM, Damien Le Moal wrote:
 
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> The scsi disk driver does not resume disks that have been runtime
+> suspended by the user. To be consistent with this behavior, do the same
+> for ata ports and skip the PM request in ata_port_pm_resume() if the
+> port was already runtime suspended. With this change, it is no longer
+> necessary to for the PM state of the port to ACTIVE as the PM core code
+            ^^^^^^
+   Can't parse this. :-)
 
-Gr{oetje,eeting}s,
+> will take care of that when handling runtime resume.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
+[...]
 
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+MBR, Sergey
