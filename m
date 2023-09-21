@@ -2,174 +2,116 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BA7AE7D0AC
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Sep 2023 20:33:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5779E7D0AA
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Sep 2023 20:47:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231640AbjIUUd3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:33:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52874 "EHLO
+        id S231639AbjIUUrV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Sep 2023 16:47:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231617AbjIUUdJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Sep 2023 16:33:09 -0400
+        with ESMTP id S232260AbjIUUrH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Sep 2023 16:47:07 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A56CB0115;
-        Thu, 21 Sep 2023 11:08:06 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1444CC433C8;
-        Thu, 21 Sep 2023 18:08:04 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3D3E81FFE;
+        Thu, 21 Sep 2023 10:36:34 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72AB3C433C9;
+        Thu, 21 Sep 2023 17:30:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695319686;
-        bh=8hABsLOS+0tD/beZ7PSGfLZG49udVrK1JwN5r0pQTUg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GL++TrZI777gfrkj4X9e0RO5ZiSLJqoT6YCq6S3funyLjNycWWnJNk9GJs2/1rtJq
-         8ANtLdTh5EYUpAnu6AyFvJ+MbP+6hg4IZMZYs8rb6S4RGXrWaug73VOUkfvY2TzlXm
-         k0Td0OMKGiT/OluvVMKdQNUUDO5T13xjq6fO19VpGK5LASdhrMlsV6ZmlsBjuBWWv3
-         TWdd9cnX57reVO6Rkka9eq5UrMG3cE05MLX+n6tpZgleWz/oEIiMeS+yrGNQuMt0au
-         B+c8X1J3qoiNmKo0rwNOf1mhaDI+DpzO3003CPNHQdhrk4jN+Hs31K/uTsuhi/V5Wt
-         NVy6TyeCfFAoQ==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
+        s=k20201202; t=1695317428;
+        bh=eddwPnBiRc58KTRuW67Y0mwiLdLjVpwMPN9Kc012Nrw=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=VZPkzXOBkkwCrPZl25Ie63srC1FMRQKxkcufqIYEeB85XeRwGdbUsEyEr0hbwD0iY
+         zSleFI7GLIGdBAzuGA2d/LseoUGALHkssv34NuiVCskS7GiHMNCgDfpSXwLbNNiuj8
+         h1CAkJqV5Nr3x99ygJCNTOwpfIcj/PlTIfewo5C7cL5Zl6W03vZ52IFr96L6lSF0++
+         3K899oqJtuXpNdytOsHZxURD5gbe+8G7+aEoc1xBtP1kCS714xsbfE47/O16FNN/ix
+         Scb0D0VWATW4VYytWBzRsuAfNkxKrdhCIoIT0JLcCs6yh4SAWz6245apdUnvelUu68
+         Jwb2YRX0Z2uSg==
+Message-ID: <2699e173-7fb5-59f5-c87c-32988c8cc90e@kernel.org>
+Date:   Thu, 21 Sep 2023 10:30:27 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Subject: Re: [PATCH v4 03/23] ata: libata-scsi: link ata port and scsi device
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
         Paul Ausbeck <paula@soe.ucsc.edu>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v5 03/23] ata: libata-scsi: link ata port and scsi device
-Date:   Fri, 22 Sep 2023 03:07:38 +0900
-Message-ID: <20230921180758.955317-4-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230921180758.955317-1-dlemoal@kernel.org>
-References: <20230921180758.955317-1-dlemoal@kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230920135439.929695-1-dlemoal@kernel.org>
+ <20230920135439.929695-4-dlemoal@kernel.org>
+ <906621de-eba1-5a1c-dd26-c3030ad7b983@oracle.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <906621de-eba1-5a1c-dd26-c3030ad7b983@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There is no direct device ancestry defined between an ata_device and
-its scsi device which prevents the power management code from correctly
-ordering suspend and resume operations. Create such ancestry with the
-ata device as the parent to ensure that the scsi device (child) is
-suspended before the ata device and that resume handles the ata device
-before the scsi device.
+On 2023/09/21 7:16, John Garry wrote:
+> On 20/09/2023 14:54, Damien Le Moal wrote:
+>> +int ata_scsi_dev_alloc(struct scsi_device *sdev, struct ata_port *ap)
+> 
+> nit: why not static? I could not see it used elsewhere. Indeed, I am not 
+> sure why it is not inlined in its only caller, ata_scsi_slave_alloc().
 
-The parent-child (supplier-consumer) relationship is established between
-the ata_port (parent) and the scsi device (child) with the function
-device_add_link(). The parent used is not the ata_device as the PM
-operations are defined per port and the status of all devices connected
-through that port is controlled from the port operations.
+The initial version of this patchset used this function for libsas as well. But
+that is now gone, so I can indeed inline this.
+Note that with the STATELESS flag added, the linking of ata dev and scsi dev
+should work just fine for libsas now, so we could add it. But I am still not
+convinced that is necessary... Will have a look as a follow up.
 
-The device link is established with the new function
-ata_scsi_slave_alloc(), and this function is used to define the
-->slave_alloc callback of the scsi host template of all ata drivers.
+> 
+> Thanks,
+> John
+> 
+>> +{
+>> +	struct device_link *link;
+>> +
+>> +	ata_scsi_sdev_config(sdev);
+>> +
+>> +	/*
+>> +	 * Create a link from the ata_port device to the scsi device to ensure
+>> +	 * that PM does suspend/resume in the correct order: the scsi device is
+>> +	 * consumer (child) and the ata port the supplier (parent).
+>> +	 */
+>> +	link = device_link_add(&sdev->sdev_gendev, &ap->tdev,
+>> +			       DL_FLAG_STATELESS |
+>> +			       DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
+>> +	if (!link) {
+>> +		ata_port_err(ap, "Failed to create link to scsi device %s\n",
+>> +			     dev_name(&sdev->sdev_gendev));
+>> +		return -ENODEV;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +/**
+>> + *	ata_scsi_slave_alloc - Early setup of SCSI device
+>> + *	@sdev: SCSI device to examine
+>> + *
+>> + *	This is called from scsi_alloc_sdev() when the scsi device
+>> + *	associated with an ATA device is scanned on a port.
+>> + *
+>> + *	LOCKING:
+>> + *	Defined by SCSI layer.  We don't really care.
+>> + */
+>> +
+>> +int ata_scsi_slave_alloc(struct scsi_device *sdev)
+>> +{
+>> +	return ata_scsi_dev_alloc(sdev, ata_shost_to_port(sdev->host));
+>> +}
+>> +EXPORT_SYMBOL_GPL(ata_scsi_slave_alloc);
+> 
 
-Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/ata/libata-scsi.c | 45 ++++++++++++++++++++++++++++++++++-----
- include/linux/libata.h    |  2 ++
- 2 files changed, 42 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index fb73c145b49a..8b43290ca2cd 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1089,6 +1089,42 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
- 	return 0;
- }
- 
-+/**
-+ *	ata_scsi_slave_alloc - Early setup of SCSI device
-+ *	@sdev: SCSI device to examine
-+ *
-+ *	This is called from scsi_alloc_sdev() when the scsi device
-+ *	associated with an ATA device is scanned on a port.
-+ *
-+ *	LOCKING:
-+ *	Defined by SCSI layer.  We don't really care.
-+ */
-+
-+int ata_scsi_slave_alloc(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	struct device_link *link;
-+
-+	ata_scsi_sdev_config(sdev);
-+
-+	/*
-+	 * Create a link from the ata_port device to the scsi device to ensure
-+	 * that PM does suspend/resume in the correct order: the scsi device is
-+	 * consumer (child) and the ata port the supplier (parent).
-+	 */
-+	link = device_link_add(&sdev->sdev_gendev, &ap->tdev,
-+			       DL_FLAG_STATELESS |
-+			       DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
-+	if (!link) {
-+		ata_port_err(ap, "Failed to create link to scsi device %s\n",
-+			     dev_name(&sdev->sdev_gendev));
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_scsi_slave_alloc);
-+
- /**
-  *	ata_scsi_slave_config - Set SCSI device attributes
-  *	@sdev: SCSI device to examine
-@@ -1105,14 +1141,11 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
- {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
- 	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
--	int rc = 0;
--
--	ata_scsi_sdev_config(sdev);
- 
- 	if (dev)
--		rc = ata_scsi_dev_config(sdev, dev);
-+		return ata_scsi_dev_config(sdev, dev);
- 
--	return rc;
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
- 
-@@ -1136,6 +1169,8 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
- 	unsigned long flags;
- 	struct ata_device *dev;
- 
-+	device_link_remove(&sdev->sdev_gendev, &ap->tdev);
-+
- 	spin_lock_irqsave(ap->lock, flags);
- 	dev = __ata_scsi_find_dev(ap, sdev);
- 	if (dev && dev->sdev) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bf4913f4d7ac..4ece1b7a2a5b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1148,6 +1148,7 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
- 			      struct block_device *bdev,
- 			      sector_t capacity, int geom[]);
- extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
-+extern int ata_scsi_slave_alloc(struct scsi_device *sdev);
- extern int ata_scsi_slave_config(struct scsi_device *sdev);
- extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
-@@ -1396,6 +1397,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
- 	.this_id		= ATA_SHT_THIS_ID,		\
- 	.emulated		= ATA_SHT_EMULATED,		\
- 	.proc_name		= drv_name,			\
-+	.slave_alloc		= ata_scsi_slave_alloc,		\
- 	.slave_destroy		= ata_scsi_slave_destroy,	\
- 	.bios_param		= ata_std_bios_param,		\
- 	.unlock_native_capacity	= ata_scsi_unlock_native_capacity,\
 -- 
-2.41.0
+Damien Le Moal
+Western Digital Research
 
