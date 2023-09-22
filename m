@@ -2,122 +2,111 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B238FCD4846
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Sep 2023 17:00:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECE63CD484D
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Sep 2023 17:53:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229971AbjIVRA1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Sep 2023 13:00:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58526 "EHLO
+        id S233527AbjIVRxl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Sep 2023 13:53:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229538AbjIVRA0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 13:00:26 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26139198;
-        Fri, 22 Sep 2023 10:00:21 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E59EC433C7;
-        Fri, 22 Sep 2023 17:00:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695402020;
-        bh=gNJdx2KEzg/GbGHrx6/0KklUJxm7urAUi4uZrKp0uAA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=IwkkXt1425A30Tfwm7LCROzVDxS8DJyflGF3Fk0MWpg8grkolMjM7thmfEm3eHVII
-         ynnw4slSrgAqteX+ps7n8Na9yrxp8MNB2E+21f0aESSti1dFzvB8kGEIRbaU7ElaWQ
-         a9QTpDUfktkkeJNMwFZT57iUUvAxTgryr3qibQ7YM0bVh2n+0QJFCyTT6ym+VfIg8J
-         XwrQ0ctbzCidhcvY9cKIt3/TvOXH8SF4W76PgAkBpxq925C2tfpqZNXWeZiIqwlgnk
-         Oh+Gkb+lQXrvbCj3+IG8qzXJyL6JYtbc+4yDz/bSiOlX1uBSPcwEQurEn9QkyBaUMD
-         FIBcE5WPDSyow==
-Message-ID: <dc0defb8-6520-508d-9dbc-b81a7861bc08@kernel.org>
-Date:   Fri, 22 Sep 2023 10:00:19 -0700
+        with ESMTP id S233225AbjIVRxV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 13:53:21 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AB0410C6
+        for <linux-ide@vger.kernel.org>; Fri, 22 Sep 2023 10:52:13 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1c5c91bece9so21532385ad.3
+        for <linux-ide@vger.kernel.org>; Fri, 22 Sep 2023 10:52:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1695405133; x=1696009933; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=P4lFdFSF/WMtJZ1n0IFqHz6mtLvevkit742tpw5OZis=;
+        b=TUltBHeCRYJUzVo8fVnGboc37KWD2XGgCL6pMasy80W4bhqo4tBxLiHWPwkomfGOnn
+         p2S3UeiOUOaoK14y2ATMxh1h/eRsSjtcpz4zOEGZTi58msCxUxAQ38qVJB19e7bHofgx
+         HKvV/9RB7HLpB+ilyMejoIoCHrdxcIllBq1ak=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695405133; x=1696009933;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=P4lFdFSF/WMtJZ1n0IFqHz6mtLvevkit742tpw5OZis=;
+        b=rve49vV0w1BdzCnS8SNg1m4wXs/gEN+byny0gKYQwx6Rk/KFudN0YawXNhaa36WOYk
+         IuHObMThn6kzV+VTQeucjFGJBVFj6oUImtSFjx/fy3IXGzj8BXkjow0EhHwALraxSL43
+         IpPfZm4x9elp255ngn+6Vl2Xqiq7bwTvkqtoVYrKVpFK39DudhV8eBq43F9VSEQ9xYzh
+         EswE7mBulYEOVHl1pV6upH1lIdI5akRDICGnAA5VaIiN/JKIuplSrtmqnHUqGGYkiIqx
+         syI+CzFNPVGqhoiCn1jbhDH9hBaP4eVMQYrXKmC1RUzcSmxEdinJcELQqXyWIrL48EsN
+         uCyQ==
+X-Gm-Message-State: AOJu0YzuHRtCoJxrc8DgmQQX8Oge9bJPdTxnHEYVPU1bEU/MQM+//Qg4
+        rqU1qCqmIM3jx8qdfXXFfZm/kw==
+X-Google-Smtp-Source: AGHT+IFNUyiAriBD2um7pITTD+eP5MvtFjnaKTM4jvzlaWc7m2Pz8Xlfs5hzadPTiz+e5UX0XZawsg==
+X-Received: by 2002:a17:902:a407:b0:1c0:aa07:1792 with SMTP id p7-20020a170902a40700b001c0aa071792mr169699plq.36.1695405132793;
+        Fri, 22 Sep 2023 10:52:12 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id w12-20020a170902e88c00b001c5b8087fe5sm3784878plg.94.2023.09.22.10.52.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 22 Sep 2023 10:52:12 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Kees Cook <keescook@chromium.org>, linux-ide@vger.kernel.org,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
+Subject: [PATCH] libata: Annotate struct ata_cpr_log with __counted_by
+Date:   Fri, 22 Sep 2023 10:52:11 -0700
+Message-Id: <20230922175210.work.239-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [PATCH v4 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-Content-Language: en-US
-To:     Bart Van Assche <bvanassche@acm.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230920135439.929695-1-dlemoal@kernel.org>
- <20230920135439.929695-5-dlemoal@kernel.org>
- <3cfe137b-59f5-434f-a40b-2ed14b4aa408@acm.org>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <3cfe137b-59f5-434f-a40b-2ed14b4aa408@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1046; i=keescook@chromium.org;
+ h=from:subject:message-id; bh=ei96zfUMfrVFB3I3JdJNLz4izHCeTaYCT55cR6z67TQ=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBlDdRLFoAwT1mCQLgtm1SMCJS/1dZx+seXgkUyx
+ yYvrZTRLmuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZQ3USwAKCRCJcvTf3G3A
+ Jm/NEACCMtnhoEgknOC6Ec69yaNMsjXyzdjGfPY/uDjWB8+n6l4ZY/abY54yTq6xlFNSbERWzy8
+ tTgTWRYZDHWLWFGja0Ov7FyVjLOC4LQcdhbsOu31k8bck/BANRCs2UHtkK5AVLxBnVqZ1zDWQNa
+ W2CdnFimXRaOo8wIg4eyi2gKj4pA95HuBP8w4WIzCkuucorP7rfyu5lPvE1/SmwfIf6j89Q2W82
+ suLkFQycstU6zebJDhPSs+V0gswuVmna0ifYiKJ+CnBVqQE4Vct/HJKGFxycica7769JXfk3DCX
+ /c/MwvwlYinM8lTmzRUjbZVCfPx/mMO4MmSmmIUpl5+BELtQqZ+2TaP8tbJ8gmbLoy4uqx44huH
+ +ks/vzrsMA2RdTm4+mZ+qekAIBc7wlp8EG+heSZ7BqKhgulEnhWg0wuKGID2fo5MlQw8+Ax4Vu7
+ uxlfbml1ExdKOuuFoD5Iwi8jbQEJYM8fpdArxCmQPCa8MMJ3J9HuCmmX6dtQqQQMS4J9kvDaiTx
+ VQVH4SdBkWJTgt96MILMcCvQNVZLXqimqbWvXGQQ1C7QX+CtwPZiOSI/wteKNiWnSUwc2iMLKFB
+ p45aN0buN27a4uTP2QaKsutqZT1vM/vbj7jSDTlcmLITJjEBl1uMh8SVnPLEYHnfOJvkWs4kjiZ
+ 0d4Giey 7//WndUQ==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2023/09/21 14:45, Bart Van Assche wrote:
-> On 9/20/23 06:54, Damien Le Moal wrote:
->> The underlying device and driver of a scsi disk may have different
->> system and runtime power mode control requirements. This is because
->> runtime power management affects only the scsi disk, while sustem level
->> power management affects all devices, including the controller for the
->> scsi disk.
->>
->> For instance, issuing a START STOP UNIT command when a scsi disk is
->> runtime suspended and resumed is fine: the command is translated to a
->> STANDBY IMMEDIATE command to spin down the ATA disk and to a VERIFY
->> command to wake it up. The scsi disk runtime operations have no effect
->> on the ata port device used to connect the ATA disk. However, for
->> system suspend/resume operations, the ATA port used to connect the
->> device will also be suspended and resumed, with the resum operation
-> 
-> resum -> resume
-> 
->> requiring re-validating the device link and the device itseld. In this
-> 
-> itseld -> itself
-> 
->> -static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
->> +static inline bool sd_do_start_stop(struct scsi_device *sdev, bool runtime)
->> +{
->> +	return (sdev->manage_system_start_stop && !runtime) ||
->> +		(sdev->manage_runtime_start_stop && runtime);
->> +}
-> 
-> This function wouldn't be necessary if the sd_suspend_common() callers 
-> would pass sdev->manage_system_start_stop / 
-> sdev->manage_runtime_start_stop as an additional argument to 
-> sd_suspend_common().
+Prepare for the coming implementation by GCC and Clang of the __counted_by
+attribute. Flexible array members annotated with __counted_by can have
+their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
+(for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
+functions).
 
-Sure, but then we need to get the sdkp for the struct device and use
-sdkp->device in both sd_suspend_runtime() and sd_suspend_system(). This is in my
-opinion not as clean as the little inline helper. But if you insist, I can make
-that change.
+As found with Coccinelle[1], add __counted_by for struct ata_cpr_log.
 
-> 
->> -		if (ignore_stop_errors)
->> +		if (!runtime)
->>   			ret = 0;
->>   	}
-> 
-> The old code was self-documenting. If the name of the "runtime" argument 
-> is retained, a comment above this if-statement that explains why stop 
-> errors are ignored during a system suspend would be welcome.
+[1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
 
-There is a comment already (unchanged) above the call to sd_start_stop_device(),
-one line above the "if".
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ include/linux/libata.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> Otherwise this patch looks good to me.
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> 
-
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 3c17a5053f00..f91e8e7f1c00 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -656,7 +656,7 @@ struct ata_cpr {
+ 
+ struct ata_cpr_log {
+ 	u8			nr_cpr;
+-	struct ata_cpr		cpr[];
++	struct ata_cpr		cpr[] __counted_by(nr_cpr);
+ };
+ 
+ struct ata_device {
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
 
