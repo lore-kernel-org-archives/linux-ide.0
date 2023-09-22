@@ -2,293 +2,109 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6088CD484C
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Sep 2023 18:59:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBB01CD4850
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Sep 2023 19:10:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230086AbjIVS71 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Sep 2023 14:59:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53722 "EHLO
+        id S231283AbjIVTKR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Sep 2023 15:10:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229630AbjIVS70 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 14:59:26 -0400
+        with ESMTP id S229630AbjIVTKQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 15:10:16 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5563392;
-        Fri, 22 Sep 2023 11:59:19 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6CA3C433C8;
-        Fri, 22 Sep 2023 18:59:18 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45E6FAC;
+        Fri, 22 Sep 2023 12:10:10 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84B7FC433C8;
+        Fri, 22 Sep 2023 19:10:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695409158;
-        bh=iSnEOGLJZ5U5AXpCkG2AiQGgo0+Vev0o6BaPC0heOGM=;
+        s=k20201202; t=1695409809;
+        bh=PxxJ5uhMTMxcZvzE3B+Ljv3jSEHCni1MO0GsigA7COI=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=IVVODYyATaPLvQsRuc4D1lRbatSKK2T7we9HJARFVZwCxX6LmWEkLkeGbrOI/EJ3Z
-         UG5DwtezKxmlR1nBl04ulCsDTvhH0yKAInfOuPAuZMJ1rxG1V9yWH1GrWTL/uTuYfi
-         tHt5clEEV5ktVORmt0wQkAGZ0x0BB2o1gXMqgQffRmAXSnxMdAN5er//Eqqp4y6cuT
-         eejpIzJWXIckaSYahsk/EOSs7zBf1zRDUEOb8f5VDpa5qtisLtnre4nUDnR2q1h28f
-         msqUSCeH/MuIcyAY8C/vQoHUwhk054jUXeN/xRh+e3U5uoMnYbqpGCKvACvf6eDadf
-         jRY9nSGvTN8zA==
-Message-ID: <1ed7c4dc-f026-4ac5-2011-afcdb1e962b0@kernel.org>
-Date:   Fri, 22 Sep 2023 11:59:18 -0700
+        b=ejzotZ/Y5R7Us7f0zjdMHtsyUYsI1ah+uK+md3hy4Ujd+ZW9ZHS2IxP2emw3XHWcv
+         P4Nw+0IMDuWJNnfqueaHnbeAgehwu5mEm052FHRFNVPvTsbqzh1K+IfuFBFAhtXIGL
+         zKhGI4BPg/oUIe92DXwDSRZdqi0SrmYLEDCbtdhl8pVY7QoUQElLloW+OeHu8NQUx4
+         nzlJ1tXa8fSZTHJq3z8Mp1bQI5JnK01JQfzem5mrettN6VYU71rAfy4zxZJtlgj6VR
+         UVJZ44nQVpfFCSF0Cfph2lbEL/y/KONMwH4dE3cwXmRxc2wGwDngJobHztwkj0MbWY
+         P+vV7qCnCJU2w==
+Message-ID: <1166d617-529f-a85b-eb51-427e8c2e8e45@kernel.org>
+Date:   Fri, 22 Sep 2023 12:10:08 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [RFC] ata: libata: increase PMP SRST timeout to 10s
+Subject: Re: [PATCH v5 09/23] scsi: sd: Do not issue commands to suspended
+ disks on shutdown
 Content-Language: en-US
-To:     Matthias Schiffer <mschiffer@universe-factory.net>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <dcbe606ac716e01f103f8aa62f0201cdb8f3efa0.1695394865.git.mschiffer@universe-factory.net>
- <6309e45e-b1f7-0167-ff54-f1a86437a910@kernel.org>
- <f52aab50-fe43-4336-b214-d81185a67ac4@universe-factory.net>
+To:     Bart Van Assche <bvanassche@acm.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230921180758.955317-1-dlemoal@kernel.org>
+ <20230921180758.955317-10-dlemoal@kernel.org>
+ <49f609ca-f862-4dce-95d8-616acbbc3e0e@acm.org>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <f52aab50-fe43-4336-b214-d81185a67ac4@universe-factory.net>
+In-Reply-To: <49f609ca-f862-4dce-95d8-616acbbc3e0e@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2023/09/22 11:47, Matthias Schiffer wrote:
-> On 22/09/2023 18:36, Damien Le Moal wrote:
->> On 2023/09/22 9:18, Matthias Schiffer wrote:
->>> On certain devices(*), this device probe failures for SATA disks after
->>> wakeup from S2RAM, which often led to the disks not to be detected again.
->>>
->>>      ata1: softreset failed (1st FIS failed)
->>>
->>> (*) Observed for disks connected to the internal SATA controller of the
->>> QNAP TS-453B, which is a "SATA controller: Intel Corporation
->>> Celeron/Pentium Silver Processor SATA Controller (rev 06)".
->>>
->>> Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
->>> ---
->>>
->>> I'm sending this as an RFC, as I don't think it makes sense to increase the
->>> timeout unconditionally - maybe it should be some kind of device quirk, if
->>> there isn't any better fix.
->>>
->>> See text below for more information.
->>>
->>>   include/linux/libata.h | 2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/include/linux/libata.h b/include/linux/libata.h
->>> index be2f0cee1601..9194030527b6 100644
->>> --- a/include/linux/libata.h
->>> +++ b/include/linux/libata.h
->>> @@ -256,7 +256,7 @@ enum {
->>>   	 * advised to wait only for the following duration before
->>>   	 * doing SRST.
->>>   	 */
->>> -	ATA_TMOUT_PMP_SRST_WAIT	= 5000,
->>> +	ATA_TMOUT_PMP_SRST_WAIT	= 10000,
->>>   
->>>   	/* When the LPM policy is set to ATA_LPM_MAX_POWER, there might
->>>   	 * be a spurious PHY event, so ignore the first PHY event that
->>> ---
->>>
->>> I'm running plain Debian 12 rather than the QNAP OS (I believe the original
->>> software does not support S2RAM at all). The issue I'm describing exists at
->>> least since kernel 5.15; I've never run older kernels on this hardware. The
->>> mainboard has 2 SATA controllers, both handled by the ahci driver:
->>>
->>>      # lspci | grep SATA
->>>      00:12.0 SATA controller: Intel Corporation Celeron/Pentium Silver Processor SATA Controller (rev 06)
->>>      02:00.0 SATA controller: ASMedia Technology Inc. 106x SATA/RAID Controller (rev 01)
->>>
->>> The first two channels ata1 and ata2 are connected to the Intel controller,
->>> while the ASMedia is responsible for ata3 through ata14. I have the same hard
->>> drives connected to ata2, ata3, and ata4 (ata1 has a different model), and I'm
->>> seeing the timeout issue after suspend only on ata1 and ata2, so it is specific
->>> to the Intel controller rather than the drive model.
->>>
->>> On Debian's default 6.1.52 kernel, a wakeup looks like the following *in the
->>> good case*, where all disks are successfully brought up again (unfortunately,
->>> journald doesn't seem to have recorded correct timing information; roughly
->>> 22 seconds pass between the "starting disk" and final "link up"). I have
->>> redacted lines for the unused ata{5..14} ports for conciseness.
->>>
->>>      ACPI: PM: Waking up from system sleep state S3
->>>      sd 2:0:0:0: [sdc] Starting disk
->>>      sd 3:0:0:0: [sdd] Starting disk
->>>      sd 1:0:0:0: [sdb] Starting disk
->>>      sd 0:0:0:0: [sda] Starting disk
->>>      ata3: link is slow to respond, please be patient (ready=0)
->>>      ata4: link is slow to respond, please be patient (ready=0)
->>>      ata2: found unknown device (class 0)
->>>      ata1: found unknown device (class 0)
->>>      ata1: softreset failed (1st FIS failed)
->>>      ata2: softreset failed (1st FIS failed)
->>>      ata3: COMRESET failed (errno=-16)
->>>      ata4: COMRESET failed (errno=-16)
->>>      ata1: found unknown device (class 0)
->>>      ata2: found unknown device (class 0)
->>>      ata3: link is slow to respond, please be patient (ready=0)
->>>      ata4: link is slow to respond, please be patient (ready=0)
->>>      ata3: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      ata3.00: configured for UDMA/133
->>>      ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      ata4.00: configured for UDMA/133
->>>      ata1: softreset failed (1st FIS failed)
->>>      ata2: softreset failed (1st FIS failed)
->>>      ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      ata2.00: configured for UDMA/133
->>>      ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      ata1.00: configured for UDMA/133
->>>
->>> On the same kernel, another wakeup might look like this:
->>>
->>>      ACPI: PM: Waking up from system sleep state S3
->>>      sd 2:0:0:0: [sdd] Starting disk
->>>      sd 3:0:0:0: [sdc] Starting disk
->>>      sd 0:0:0:0: [sda] Starting disk
->>>      sd 1:0:0:0: [sdb] Starting disk
->>>      ata2: SATA link down (SStatus 0 SControl 300)
->>>      ata3: link is slow to respond, please be patient (ready=0)
->>>      ata4: link is slow to respond, please be patient (ready=0)
->>>      ata1: SATA link down (SStatus 0 SControl 300)
->>>      ata3: COMRESET failed (errno=-16)
->>>      ata4: COMRESET failed (errno=-16)
->>>      ata1: SATA link down (SStatus 0 SControl 300)
->>>      ata1: limiting SATA link speed to <unknown>
->>>      ata3: link is slow to respond, please be patient (ready=0)
->>>      ata4: link is slow to respond, please be patient (ready=0)
->>>      ata2: SATA link down (SStatus 0 SControl 300)
->>>      ata2: limiting SATA link speed to <unknown>
->>>      ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      ata3: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      ata3.00: configured for UDMA/133
->>>      ata4.00: configured for UDMA/133
->>>      ata1: SATA link down (SStatus 0 SControl 3F0)
->>>      ata1.00: disable device
->>>      ata2: SATA link down (SStatus 0 SControl 3F0)
->>>      ata2.00: disable device
->>>      sd 1:0:0:0: rejecting I/O to offline device
->>>      sd 0:0:0:0: rejecting I/O to offline device
->>>      ata2.00: detaching (SCSI 1:0:0:0)
->>>      ata1.00: detaching (SCSI 0:0:0:0)
->>>      sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
->>>      sd 1:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
->>>      sd 0:0:0:0: PM: dpm_run_callback(): scsi_bus_resume+0x0/0x90 [scsi_mod] returns -5
->>>      sd 1:0:0:0: PM: dpm_run_callback(): scsi_bus_resume+0x0/0x90 [scsi_mod] returns -5
->>>      sd 0:0:0:0: PM: failed to resume async: error -5
->>>      sd 1:0:0:0: PM: failed to resume async: error -5
->>>
->>> With my patch applied, the following log is generated instead:
->>>
->>>      [   63.748299] ACPI: PM: Waking up from system sleep state S3
->>>      [   63.767111] sd 2:0:0:0: [sdc] Starting disk
->>>      [   63.767181] sd 3:0:0:0: [sdd] Starting disk
->>>      [   63.776402] sd 0:0:0:0: [sdb] Starting disk
->>>      [   63.776500] sd 1:0:0:0: [sda] Starting disk
->>>      [   69.121513] ata4: link is slow to respond, please be patient (ready=0)
->>>      [   69.125531] ata3: link is slow to respond, please be patient (ready=0)
->>>      [   69.133538] ata2: link is slow to respond, please be patient (ready=0)
->>>      [   69.133557] ata1: link is slow to respond, please be patient (ready=0)
->>>      [   73.803763] ata4: COMRESET failed (errno=-16)
->>>      [   73.807805] ata3: COMRESET failed (errno=-16)
->>>      [   73.815780] ata2: found unknown device (class 0)
->>>      [   73.815800] ata1: found unknown device (class 0)
->>>      [   73.975799] ata2: softreset failed (device not ready)
->>>      [   73.975813] ata1: softreset failed (device not ready)
->>>      [   79.157124] ata4: link is slow to respond, please be patient (ready=0)
->>>      [   79.161116] ata3: link is slow to respond, please be patient (ready=0)
->>>      [   79.329119] ata1: link is slow to respond, please be patient (ready=0)
->>>      [   79.329129] ata2: link is slow to respond, please be patient (ready=0)
->>>      [   80.781376] ata3: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      [   80.792790] ata3.00: configured for UDMA/133
->>>      [   80.837437] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      [   80.843358] ata4.00: configured for UDMA/133
->>>      [   82.309565] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      [   82.334217] ata2.00: configured for UDMA/133
->>>      [   84.009745] ata1: found unknown device (class 0)
->>>      [   84.169743] ata1: softreset failed (device not ready)
->>>      [   85.425859] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      [   85.486518] ata1.00: configured for UDMA/133
->>>
->>> Compared to the previous "good" log
->>> - ata1 and ata2 got "link is slow to respond" messages
->>> - the "softreset failed" error changed from "1st FIS failed" to "device not
->>>    ready"
->>> - I haven't seen any failures to bring up drives in 10+ wakeups, where it would
->>>    fail in roughly 1 out of 3 tries without the increased timeout
->>>
->>> I also saw the resume improvements going on in
->>> https://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata.git/, so next I
->>> took kernel 6.5.4 and applied all patches from the for-6.6 and for-6.7 branches
->>> from that repo on top. The first thing I noticed with this new kernel was a
->>> regression:
->>>
->>>      16:24:25 : PM: suspend exit
->>>      16:24:25 : ata2: SATA link down (SStatus 0 SControl 300)
->>>      16:24:25 : ata2.00: Entering active power mode
->>>      16:24:25 : ata1: SATA link down (SStatus 0 SControl 300)
->>>      16:24:25 : ata1.00: Entering active power mode
->>>      16:24:30 : ata3: link is slow to respond, please be patient (ready=0)
->>>      16:24:30 : ata4: link is slow to respond, please be patient (ready=0)
->>>      16:24:35 : ata2.00: qc timeout after 10000 msecs (cmd 0x40)
->>>      16:24:35 : ata1.00: qc timeout after 10000 msecs (cmd 0x40)
->>>      16:24:35 : ata1.00: VERIFY failed (err_mask=0x4)
->>>      16:24:35 : ata2.00: VERIFY failed (err_mask=0x4)
->>>      16:24:35 : ata2: SATA link down (SStatus 0 SControl 300)
->>>      16:24:35 : ata2: limiting SATA link speed to <unknown>
->>>      16:24:41 : ata4: link is slow to respond, please be patient (ready=0)
->>>      16:24:41 : ata3: link is slow to respond, please be patient (ready=0)
->>>      16:24:41 : ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      16:24:41 : ata4.00: Entering active power mode
->>>      16:24:41 : ata3: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>      16:24:41 : ata3.00: Entering active power mode
->>>      16:24:41 : ata4.00: configured for UDMA/133
->>>      16:24:41 : ata3.00: configured for UDMA/133
->>>      16:24:41 : ata1: SATA link down (SStatus 0 SControl 300)
->>>      16:24:41 : ata1: limiting SATA link speed to <unknown>
->>>      16:24:47 : ata1: SATA link down (SStatus 0 SControl 3F0)
->>>      16:24:47 : ata1.00: disable device
->>>      16:24:47 : ata2: SATA link down (SStatus 0 SControl 3F0)
->>>      16:24:47 : ata2.00: disable device
->>>      16:24:47 : ata1.00: detaching (SCSI 0:0:0:0)
->>>      16:24:47 : ata2.00: detaching (SCSI 1:0:0:0)
->>>
->>> For the ASMedia controller, the new kernel fixes the "COMRESET failed" messages,
->>> but on the Intel controller, two new errors have appeared ("qc timeout" and
->>> "VERIFY failed"), and my drives are missing again.
->>
->> These errors are being address by a series that is about to be applied:
->>
->> https://lore.kernel.org/linux-ide/yq134z7577n.fsf@ca-mkp.ca.oracle.com/T/#m255ef5cc9b64b971765e8b6551aacee860fd1325
->>
->> This series addresses various issues with libata resume, including what you are
->> seeing above, which causes the drives to fail resume and disappear, or worth, a
->> hang on resume. Could you please try to apply these patches and test with them ?
->> The "link is slow to respond" message is fairly normal and overall, there is up
->> to 1min timeout before giving up on the drive. So this should not be an issue.
->>
->> If you still see a problem with your system, we can increase the timeout to
->> avoid that "1st FIS failed" error.
+On 2023/09/22 11:14, Bart Van Assche wrote:
+> On 9/21/23 11:07, Damien Le Moal wrote:
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 1d106c8ad5af..d86306d42445 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -3727,7 +3727,8 @@ static int sd_remove(struct device *dev)
+>>   
+>>   	device_del(&sdkp->disk_dev);
+>>   	del_gendisk(sdkp->disk);
+>> -	sd_shutdown(dev);
+>> +	if (sdkp->device->sdev_state == SDEV_RUNNING)
+>> +		sd_shutdown(dev);
+>>   
+>>   	put_disk(sdkp->disk);
+>>   	return 0;
 > 
-> Thanks for your quick reply!
-> 
-> My previous test contained an older version of that patch series (from your 
-> for-6.7 branch), I've updated to v5 now.
-> 
-> I've not seen the "qc timeout" or "VERIFY failed" again with the new build 
-> even if I don't set libata.ata_probe_timeout=30. I'm not sure whether that 
-> was a one-time fluke or it was fixed between versions of the patch series; 
-> I'll report back if I ever see that error again.
-> 
-> Your series definitely improves wakeup behavior - I'm still seeing the "1st 
-> FIS failed", but the drives seem to come up reliably regardless.
-> 
-> Feel free to add
-> Tested-by: Matthias Schiffer <mschiffer@universe-factory.net>
-> for the whole series.
-> 
-> Even with the latest series applied, I still need my 
-> ATA_TMOUT_PMP_SRST_WAIT change to avoid the "softreset failed (1st FIS 
-> failed)" message (and get "softreset failed (device not ready)" instead).
+> Doesn't this patch involve a behavior change? I'm concerned the above patch
+> will always cause the sd_shutdown() call to be skipped if scsi_remove_host()
+> is called, whether or not the scsi_remove_host() call is triggered by a
+> resume failure.
 
-OK. Thank you for testing.
-For increasing the timeout, please send a proper patch. I will queue it.
+I guess the point is: what are the possible states of the scsi device when
+sd_remove() is called ? From what I have seen so far, it is RUNNING. But I am
+not 100% sure this true all the time. But given that sd_shutdown() issues
+commands, I would guess that it makes sense that it is always running.
 
+Looking at the code, scsi_remove_host() calls scsi_forget_host() which calls
+__scsi_remove_device() for any device that is not in the SDEV_DEL state.
+__scsi_remove_device() then sets the state to SDEV_CANCEL. So it appears that
+the state should always be CANCEL and not running. However, my tests showed it
+to be running. I am not fully understanding how sd_remove() end up being called...
+
+I will run tests again without this patch for libata suspend/resume. This patch
+was added because of the hang I saw with the pm80xx driver (using libsas/libata)
+failing to resume. That resume failure is fixed and libata does not need this
+patch I think. But I will double check and drop it for now.
+
+I think we should investigate this further though, to make sure that we can
+always safely call sd_shutdown(). __scsi_remove_device() has this comment:
+
+/*
+ * If blocked, we go straight to DEL and restart the queue so
+ * any commands issued during driver shutdown (like sync
+ * cache) are errored immediately.
+ */
+
+Which kind of give a hint that we should probably not blindy always try to call
+sd_shutdown().
 
 -- 
 Damien Le Moal
