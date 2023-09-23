@@ -2,48 +2,32 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A886CE7A86
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Sep 2023 21:32:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A99ECE7A88
+	for <linux-ide@archiver.kernel.org>; Sat, 23 Sep 2023 00:29:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230100AbjIVVcl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Sep 2023 17:32:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56286 "EHLO
+        id S230432AbjIWA3m (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Sep 2023 20:29:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230053AbjIVVch (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 17:32:37 -0400
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03F93198;
-        Fri, 22 Sep 2023 14:32:19 -0700 (PDT)
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-690bfd4f3ebso2494109b3a.3;
-        Fri, 22 Sep 2023 14:32:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695418339; x=1696023139;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=5J6YExrFCJDMoWcxoNn02wSEAXi/AuqJGzHniqoK5f4=;
-        b=pNvIwitDQRb28cR8orgrJW22uDZZQYuhyxT4Lu8vouhljMzBnHwpDJ0vajOuasBM7K
-         7JIVPjvJRdVGZIXgghDMk03BJBMn4eRn789VJM70olL28m25clStyht4i865ZpwHQ2Rw
-         HeQar6zGZb6MQlvI4HGiVyzid1uelxXtimsj9VWA0hS5tcrKgc+DX0Z9NTtZrI6f8zZV
-         cxB2+5LW42eznkhSaQHHTtmQupwuQyB679qUhJXlp1J7MAgwib+iNJVVqYIuzCg1ucq/
-         vbU5CPIQ+uA0fUEwvyz3Y/Jr+pdW7OT2BsAp7D5heNPi0HpxsLnsIQcfregl8juD5r71
-         uQgA==
-X-Gm-Message-State: AOJu0YwWdkAU9/fZeTs+fbxlAIy6MECmMnE5CoDMWay/lZq29V07K/6b
-        4RdJaWIcaj7aHLg3tjiAR2I=
-X-Google-Smtp-Source: AGHT+IG5fP2Jd2ZDvBNmNDAgAXFyRoHIZQs8Rt6Memrqlqm6ezU+O2cPdDLdFtR4j0nZviLgTHcNYg==
-X-Received: by 2002:a05:6a20:4424:b0:154:c959:f157 with SMTP id ce36-20020a056a20442400b00154c959f157mr937700pzb.30.1695418339047;
-        Fri, 22 Sep 2023 14:32:19 -0700 (PDT)
-Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
-        by smtp.gmail.com with ESMTPSA id k9-20020aa78209000000b00690c926d73bsm3645933pfi.79.2023.09.22.14.32.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Sep 2023 14:32:18 -0700 (PDT)
-Message-ID: <e638233c-60dc-4da7-9ff2-a3adcca18f7b@acm.org>
-Date:   Fri, 22 Sep 2023 14:32:13 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 09/23] scsi: sd: Do not issue commands to suspended
- disks on shutdown
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+        with ESMTP id S229586AbjIWA3l (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 20:29:41 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C8AA1A7;
+        Fri, 22 Sep 2023 17:29:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77870C433C8;
+        Sat, 23 Sep 2023 00:29:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695428974;
+        bh=zumr4uNM7Mw28lOq3N5L0uP4pr8jvfyEfGuXp6++sb4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=CC8hFxpHPvWkeT6iy9plGKbd/ld5spdgWOxFCG6dbU7sm32NDItVboxAmBJRaOZMw
+         3QPNSVTwcla9aeUzAs8r95wpKVDfsmlJVZQrXI4DpQQdvE3lyzb5LRT8sQPkVjBUJC
+         cHyL4z8DyeoSfFD6WROOOyYBRi22BqMNn8QgSccG4jmxGep9aZ0x6VKQ/ugE45eAmY
+         I4ZfHfUuuNsHX0xdCIOgAhSNOBNMOHlWya8T1MBljOMJgEu4A+QuqpFvjkwjcO5tbg
+         wAHS8mpkBqNnCuG3Gpltlo/2HzfgVBLVawtzskxcf+RpMxkQMAUcMw+Gpb+ob/EaZx
+         Oj4WHfM4fLTYA==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         John Garry <john.g.garry@oracle.com>,
@@ -53,38 +37,110 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230921180758.955317-1-dlemoal@kernel.org>
- <20230921180758.955317-10-dlemoal@kernel.org>
- <49f609ca-f862-4dce-95d8-616acbbc3e0e@acm.org>
- <1166d617-529f-a85b-eb51-427e8c2e8e45@kernel.org>
- <a745a2a7-e740-4bf3-a775-e22bc55dbe58@acm.org>
- <881dd17e-cc23-0cdc-f3bf-99bd571dbdf0@kernel.org>
-Content-Language: en-US
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <881dd17e-cc23-0cdc-f3bf-99bd571dbdf0@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v6 00/23] Fix libata suspend/resume handling and code cleanup
+Date:   Sat, 23 Sep 2023 09:29:09 +0900
+Message-ID: <20230923002932.1082348-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/22/23 13:36, Damien Le Moal wrote:
-> On 2023/09/22 13:08, Bart Van Assche wrote:
->> Does that comment perhaps refer to the SDEV_BLOCK / SDEV_CREATED_BLOCK
->> states? Anyway, I'm wondering whether there are better ways to prevent
->> that it is attempted to queue SCSI commands if a SCSI device is
->> suspended, e.g. by checking the suspended state from inside
->> scsi_device_state_check() or scsi_dispatch_cmd().
-> 
-> Using information in the device ->power structure is not reliable without
-> holding the device lock(), so we should not do that. But we can add a
-> "suspended" scsi_device flag that we maintain on execution of
-> sd_suspend_system() and sd_resume_system(). Many drivers do that...
-> Thoughts ?
+The first 9 patches of this series fix several issues with suspend/resume
+power management operations in scsi and libata. The most significant
+changes introduced are in patch 4 and 5, where the manage_start_stop
+flag of scsi devices is split into the manage_system_start_stop and
+manage_runtime_start_stop flags to allow keeping scsi runtime power
+operations for spining up/down ATA devices but have libata do its own
+system suspend/resume device power state management using EH.
 
-That sounds good to me.
+The remaining patches are code cleanup that do not introduce any
+significant functional change.
 
-Thanks,
+This series was tested on qemu and on various PCs and servers. I am
+CC-ing people who recently reported issues with suspend/resume.
+Additional testing would be much appreciated.
 
-Bart.
+Changes from v5:
+ * Typo and style corrections in patch 4 commit message
+ * Changed patch 9 to use a new flag to track a disk suspended state
+   instead of using the scsi device state
+ * Added review tags
+
+Changes from v4:
+ * Remove ata_scsi_dev_alloc() function in patch 3, coding it directly
+   in ata_scsi_slave_alloc()
+ * Correct typo in patch 19 commit message
+ * Added Tested and review tags
+
+Changes from v3:
+ * Corrected patch 1 (typo in commit message and WARN_ON() removal)
+ * Changed path 3 as suggested by Niklas (moved definition of
+   ->slave_alloc)
+ * Rebased on rc2
+ * Added review tags
+
+Changes from v2:
+ * Added patch 4 as simply disabling manage_start_stop from libata was
+   breaking individual disk runtime suspend/autosuspend. Patch 5 was
+   reworked accordingly to the changes in patch 4.
+ * Fixed patch 3: applying the link creation was missing and the link
+   creation itself was also incorrect, preventing sd probe to execute
+   correctly. Thanks to Geert for testing and reporting this issue.
+ * Split the "Fix delayed scsi_rescan_device() execution" patch into
+   patch 6 (scsi part) and patch 7 (ata part).
+ * Modified patch 9 to not call sd_shutdown() from sd_remove() for
+   devices that are not running.
+ * Added Chia-Lin Tested tag to unchanged patches
+
+Changes from v1:
+ * Added patch 8 and 9 to fix compilation warnings with W=1
+ * Addressed John comment in patch 19
+ * Fixed patch 20 commit message (Sergei)
+ * Added Hannes Review tag
+
+Damien Le Moal (23):
+  ata: libata-core: Fix ata_port_request_pm() locking
+  ata: libata-core: Fix port and device removal
+  ata: libata-scsi: link ata port and scsi device
+  scsi: sd: Differentiate system and runtime start/stop management
+  ata: libata-scsi: Disable scsi device manage_system_start_stop
+  scsi: Do not attempt to rescan suspended devices
+  ata: libata-scsi: Fix delayed scsi_rescan_device() execution
+  ata: libata-core: Do not register PM operations for SAS ports
+  scsi: sd: Do not issue commands to suspended disks on shutdown
+  ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
+  ata: libata-eh: Fix compilation warning in ata_eh_link_report()
+  scsi: Remove scsi device no_start_on_resume flag
+  ata: libata-scsi: Cleanup ata_scsi_start_stop_xlat()
+  ata: libata-core: Synchronize ata_port_detach() with hotplug
+  ata: libata-core: Detach a port devices on shutdown
+  ata: libata-core: Remove ata_port_suspend_async()
+  ata: libata-core: Remove ata_port_resume_async()
+  ata: libata-core: Do not poweroff runtime suspended ports
+  ata: libata-core: Do not resume runtime suspended ports
+  ata: libata-sata: Improve ata_sas_slave_configure()
+  ata: libata-eh: Improve reset error messages
+  ata: libata-eh: Reduce "disable device" message verbosity
+  ata: libata: Cleanup inline DMA helper functions
+
+ drivers/ata/libata-core.c      | 242 +++++++++++++++++++++++++--------
+ drivers/ata/libata-eh.c        |  76 +++++++++--
+ drivers/ata/libata-sata.c      |   5 +-
+ drivers/ata/libata-scsi.c      | 142 ++++++++++---------
+ drivers/ata/libata-transport.c |   9 +-
+ drivers/ata/libata.h           |   6 +
+ drivers/firewire/sbp2.c        |   9 +-
+ drivers/scsi/scsi_scan.c       |  18 ++-
+ drivers/scsi/sd.c              | 102 +++++++++++---
+ drivers/scsi/sd.h              |   1 +
+ include/linux/libata.h         |  26 ++--
+ include/scsi/scsi_device.h     |   4 +-
+ include/scsi/scsi_host.h       |   2 +-
+ 13 files changed, 457 insertions(+), 185 deletions(-)
+
+-- 
+2.41.0
 
