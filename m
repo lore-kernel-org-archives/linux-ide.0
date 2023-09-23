@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9858CCE7A8A
-	for <linux-ide@archiver.kernel.org>; Sat, 23 Sep 2023 00:29:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAC6BCE7A8E
+	for <linux-ide@archiver.kernel.org>; Sat, 23 Sep 2023 00:29:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230462AbjIWA3w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Sep 2023 20:29:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49274 "EHLO
+        id S230472AbjIWA3y (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Sep 2023 20:29:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230440AbjIWA3p (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 20:29:45 -0400
+        with ESMTP id S230457AbjIWA3u (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 20:29:50 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2DEC1A8;
-        Fri, 22 Sep 2023 17:29:39 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1243EC433C7;
-        Sat, 23 Sep 2023 00:29:37 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AC0B1B0;
+        Fri, 22 Sep 2023 17:29:44 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1EFCC433C9;
+        Sat, 23 Sep 2023 00:29:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695428979;
-        bh=6/gHyN2ekZWWjPRG6Y55Waf1Y/Wfg30IYpSFTS1WmfE=;
+        s=k20201202; t=1695428983;
+        bh=k/n1E/0sX1Kh1J/5A7PeVx3HzBPcsCroCRQBlVX2+y4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cv0ltgDIPb9IJfbITwAu2L+WOOMZ9R3bUsZk21gUFrcjpshYztcw36I8Phk//brd3
-         T59Tm1EwIgigbgz3CM6hSIXzXxHlq0HEiTDPIEOBJ0Ybfr/5/U/NanJPfo192Ov2LM
-         FNO0W9wxWA+jnXk0B6piex0f9cMw275ao1SUKlYFx9lN4tKZRem3ZVsVnC5qZ1yZy8
-         QyxE2XpW2iAuMrDPXqEt7ckONIpnImDZ7I5C1QBNhL3iQY+/hX5jgVd5PXlZJ8EyIS
-         dD2onQCPBGQOxb2wAvJ9XxNc+fJ/h+zek3kI1yhGydpH7Om15jZ6UDLwCDspAgrrEi
-         pCEOm8gKFt7/w==
+        b=n2vLeUm9pAZl24FNr5syL9oQp/oVX1CWMGfGPVFcTTnusRkWYUbvIFUfD+a5/GVIh
+         dB/f0RiilsjImr03os0zDxwGjO/7/IOn2qlnW1VPuf5eRPqsRDPOisvN4cHSCTuMmK
+         9DMt3MLCqbxFTwp2qF1812TBmJnD9bfOuQj0dhYxGbEiTkbfjES4N9JZQbJmJclxoX
+         GjviXu2eZ7QhPYet6Z2oxoCrTmVooAUVmvYc997dlb+9q+Cl8JOD6g6JSfip8n3yLB
+         l97i8eaaX29iUy8Bf3oky/amnrugSoH+o7XXFZLFTtMUg0Zz9dxOCryotJLTug2lRM
+         uakbYrhWmwH4g==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,9 +37,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v6 03/23] ata: libata-scsi: link ata port and scsi device
-Date:   Sat, 23 Sep 2023 09:29:12 +0900
-Message-ID: <20230923002932.1082348-4-dlemoal@kernel.org>
+Subject: [PATCH v6 06/23] scsi: Do not attempt to rescan suspended devices
+Date:   Sat, 23 Sep 2023 09:29:15 +0900
+Message-ID: <20230923002932.1082348-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230923002932.1082348-1-dlemoal@kernel.org>
 References: <20230923002932.1082348-1-dlemoal@kernel.org>
@@ -49,129 +49,89 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There is no direct device ancestry defined between an ata_device and
-its scsi device which prevents the power management code from correctly
-ordering suspend and resume operations. Create such ancestry with the
-ata device as the parent to ensure that the scsi device (child) is
-suspended before the ata device and that resume handles the ata device
-before the scsi device.
+scsi_rescan_device() takes a scsi device lock before executing a device
+handler and device driver rescan methods. Waiting for the completion of
+any command issued to the device by these methods will thus be done with
+the device lock held. As a result, there is a risk of deadlocking within
+the power management code if scsi_rescan_device() is called to handle a
+device resume with the associated scsi device not yet resumed.
 
-The parent-child (supplier-consumer) relationship is established between
-the ata_port (parent) and the scsi device (child) with the function
-device_add_link(). The parent used is not the ata_device as the PM
-operations are defined per port and the status of all devices connected
-through that port is controlled from the port operations.
+Avoid such situation by checking that the target scsi device is in the
+running state, that is, fully capable of executing commands, before
+proceeding with the rescan and bailout returning -EWOULDBLOCK otherwise.
+With this error return, the caller can retry rescaning the device after
+a delay.
 
-The device link is established with the new function
-ata_scsi_slave_alloc(), and this function is used to define the
-->slave_alloc callback of the scsi host template of all ata drivers.
+The state check is done with the device lock held and is thus safe
+against incoming suspend power management operations.
 
-Fixes: a19a93e4c6a9 ("scsi: core: pm: Rely on the device driver core for async power management")
+Fixes: 6aa0365a3c85 ("ata: libata-scsi: Avoid deadlock on rescan after device resume")
 Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
 Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/ata/libata-scsi.c | 45 ++++++++++++++++++++++++++++++++++-----
- include/linux/libata.h    |  2 ++
- 2 files changed, 42 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_scan.c | 18 +++++++++++++++++-
+ include/scsi/scsi_host.h |  2 +-
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index fb73c145b49a..8b43290ca2cd 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1089,6 +1089,42 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
- 	return 0;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 52014b2d39e1..3db4d31a03a1 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1619,12 +1619,24 @@ int scsi_add_device(struct Scsi_Host *host, uint channel,
  }
+ EXPORT_SYMBOL(scsi_add_device);
  
-+/**
-+ *	ata_scsi_slave_alloc - Early setup of SCSI device
-+ *	@sdev: SCSI device to examine
-+ *
-+ *	This is called from scsi_alloc_sdev() when the scsi device
-+ *	associated with an ATA device is scanned on a port.
-+ *
-+ *	LOCKING:
-+ *	Defined by SCSI layer.  We don't really care.
-+ */
-+
-+int ata_scsi_slave_alloc(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	struct device_link *link;
-+
-+	ata_scsi_sdev_config(sdev);
-+
+-void scsi_rescan_device(struct scsi_device *sdev)
++int scsi_rescan_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev;
++	int ret = 0;
+ 
+ 	device_lock(dev);
+ 
 +	/*
-+	 * Create a link from the ata_port device to the scsi device to ensure
-+	 * that PM does suspend/resume in the correct order: the scsi device is
-+	 * consumer (child) and the ata port the supplier (parent).
++	 * Bail out if the device is not running. Otherwise, the rescan may
++	 * block waiting for commands to be executed, with us holding the
++	 * device lock. This can result in a potential deadlock in the power
++	 * management core code when system resume is on-going.
 +	 */
-+	link = device_link_add(&sdev->sdev_gendev, &ap->tdev,
-+			       DL_FLAG_STATELESS |
-+			       DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE);
-+	if (!link) {
-+		ata_port_err(ap, "Failed to create link to scsi device %s\n",
-+			     dev_name(&sdev->sdev_gendev));
-+		return -ENODEV;
++	if (sdev->sdev_state != SDEV_RUNNING) {
++		ret = -EWOULDBLOCK;
++		goto unlock;
 +	}
 +
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_scsi_slave_alloc);
+ 	scsi_attach_vpd(sdev);
+ 	scsi_cdl_check(sdev);
+ 
+@@ -1638,7 +1650,11 @@ void scsi_rescan_device(struct scsi_device *sdev)
+ 			drv->rescan(dev);
+ 		module_put(dev->driver->owner);
+ 	}
 +
- /**
-  *	ata_scsi_slave_config - Set SCSI device attributes
-  *	@sdev: SCSI device to examine
-@@ -1105,14 +1141,11 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
- {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
- 	struct ata_device *dev = __ata_scsi_find_dev(ap, sdev);
--	int rc = 0;
--
--	ata_scsi_sdev_config(sdev);
- 
- 	if (dev)
--		rc = ata_scsi_dev_config(sdev, dev);
-+		return ata_scsi_dev_config(sdev, dev);
- 
--	return rc;
-+	return 0;
++unlock:
+ 	device_unlock(dev);
++
++	return ret;
  }
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
+ EXPORT_SYMBOL(scsi_rescan_device);
  
-@@ -1136,6 +1169,8 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
- 	unsigned long flags;
- 	struct ata_device *dev;
- 
-+	device_link_remove(&sdev->sdev_gendev, &ap->tdev);
-+
- 	spin_lock_irqsave(ap->lock, flags);
- 	dev = __ata_scsi_find_dev(ap, sdev);
- 	if (dev && dev->sdev) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bf4913f4d7ac..4ece1b7a2a5b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1148,6 +1148,7 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
- 			      struct block_device *bdev,
- 			      sector_t capacity, int geom[]);
- extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
-+extern int ata_scsi_slave_alloc(struct scsi_device *sdev);
- extern int ata_scsi_slave_config(struct scsi_device *sdev);
- extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
-@@ -1396,6 +1397,7 @@ extern const struct attribute_group *ata_common_sdev_groups[];
- 	.this_id		= ATA_SHT_THIS_ID,		\
- 	.emulated		= ATA_SHT_EMULATED,		\
- 	.proc_name		= drv_name,			\
-+	.slave_alloc		= ata_scsi_slave_alloc,		\
- 	.slave_destroy		= ata_scsi_slave_destroy,	\
- 	.bios_param		= ata_std_bios_param,		\
- 	.unlock_native_capacity	= ata_scsi_unlock_native_capacity,\
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 49f768d0ff37..4c2dc8150c6d 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -764,7 +764,7 @@ scsi_template_proc_dir(const struct scsi_host_template *sht);
+ #define scsi_template_proc_dir(sht) NULL
+ #endif
+ extern void scsi_scan_host(struct Scsi_Host *);
+-extern void scsi_rescan_device(struct scsi_device *);
++extern int scsi_rescan_device(struct scsi_device *sdev);
+ extern void scsi_remove_host(struct Scsi_Host *);
+ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
+ extern int scsi_host_busy(struct Scsi_Host *shost);
 -- 
 2.41.0
 
