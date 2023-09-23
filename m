@@ -2,139 +2,128 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 124CFCE7A8E
-	for <linux-ide@archiver.kernel.org>; Sat, 23 Sep 2023 00:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB1FCE7A8C
+	for <linux-ide@archiver.kernel.org>; Sat, 23 Sep 2023 15:01:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230506AbjIWAbR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Sep 2023 20:31:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39934 "EHLO
+        id S231878AbjIWPCA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 23 Sep 2023 11:02:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231136AbjIWAax (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Sep 2023 20:30:53 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4A2C1B0;
-        Fri, 22 Sep 2023 17:30:08 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 217B0C433C9;
-        Sat, 23 Sep 2023 00:30:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695429008;
-        bh=zkev2ircY3fnbSzJ0bCWRHN59K1mwL4l6wGAngimylw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kS4h11z6UqxH/cHJGYC2xIy6Ls7dmPTD1th+A/oKyMeeyqzTlwkiedMoxJ2AhcPfl
-         siXB803wypcEb4NqaMSYNQcLWETNT6C3tZDonxjba9/OQfdcM45KDgyqkD+R0hHAgw
-         3rvsipyHoIP7q1UKhUfcU+VdfW0IHZiMCbcT+dKqDp3UTEv5bY+i6QiZA0p7jY+IfW
-         oCxVDiQOI5JVsCTFOxKjMDoCdPiuOQex8sVnsiN4UXAxqpsXOV/RXm9WADh3NED1yP
-         x17l9S9iulg+RcEW+h6rnJtepKQ5Y+FgdLWxAX9KrTYlhLDgSkcflG4VzsaQCCv+M3
-         b/4RTHdoN3Whw==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v6 22/23] ata: libata-eh: Reduce "disable device" message verbosity
-Date:   Sat, 23 Sep 2023 09:29:31 +0900
-Message-ID: <20230923002932.1082348-23-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230923002932.1082348-1-dlemoal@kernel.org>
-References: <20230923002932.1082348-1-dlemoal@kernel.org>
+        with ESMTP id S231937AbjIWPB5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 23 Sep 2023 11:01:57 -0400
+Received: from omta034.useast.a.cloudfilter.net (omta034.useast.a.cloudfilter.net [44.202.169.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B2C819A;
+        Sat, 23 Sep 2023 08:01:51 -0700 (PDT)
+Received: from eig-obgw-5010a.ext.cloudfilter.net ([10.0.29.199])
+        by cmsmtp with ESMTP
+        id jyvyqGzeoez0Ck48MqCMc8; Sat, 23 Sep 2023 15:01:26 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTPS
+        id k48jqC7HqIDdmk48kqCw9u; Sat, 23 Sep 2023 15:01:50 +0000
+X-Authority-Analysis: v=2.4 cv=HcYH8wI8 c=1 sm=1 tr=0 ts=650efdde
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=P7XfKmiOJ4/qXqHZrN7ymg==:17
+ a=OWjo9vPv0XrRhIrVQ50Ab3nP57M=:19 a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19
+ a=IkcTkHD0fZMA:10 a=zNV7Rl7Rt7sA:10 a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8
+ a=VwQbUJbxAAAA:8 a=cm27Pg_UAAAA:8 a=HvF037n1xESchLcPDVoA:9 a=QEXdDO2ut3YA:10
+ a=AjGcO6oz07-iQ99wixmX:22 a=xmb-EsYY8bH0VWELuYED:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=EabzJG2rVzengUzDcWBcKvR8fjGQXhmX4ki6ncLymxs=; b=gbIV+wQRirZt/G48bleKQNkkZA
+        Hz2yDIjD4PHK3btnm/PH2fllBsDAu7wmnm4YAG6C0wXhEdqaSiiJ1FPKDeqcN+0vVvMDl2FQjVL0P
+        e+YD0jNxVhHJzQgwb74SaU+Gaug5y4N7YAoaJk+V+qHCOJIBFfdMicBDgUNIX7eG+vqtRc+BbsOOI
+        kKdto1Gw5d1iShBJqkdXi4U22T5H22gS+I1vMIrGnvvSNwhqjKvi85XfqNIFp6xwK0dj2O79wSGMK
+        tEfoFd+WDiO9iAi2vZHw+HhTrl9wvfFyqw5CT+jbxl636BBLPlZUOEfuq3PX1xq9jBTWgu2U0tl0M
+        EYnHPA+w==;
+Received: from [94.239.20.48] (port=46296 helo=[192.168.1.98])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.96)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1qjy5R-003dKL-0q;
+        Sat, 23 Sep 2023 03:34:01 -0500
+Message-ID: <17cda7da-a70f-8d0d-4224-c82b0ddc4364@embeddedor.com>
+Date:   Sat, 23 Sep 2023 10:35:07 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH] libata: Annotate struct ata_cpr_log with __counted_by
+Content-Language: en-US
+To:     Kees Cook <keescook@chromium.org>,
+        Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
+References: <20230922175210.work.239-kees@kernel.org>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <20230922175210.work.239-kees@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 94.239.20.48
+X-Source-L: No
+X-Exim-ID: 1qjy5R-003dKL-0q
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.1.98]) [94.239.20.48]:46296
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 0
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfLObdDCitD7CqE3EpOs3qVYVbj7OD5XNZe8p2p0A5cXFT/8OZStJZgBdnvKfynbslQg9EnK3AyG98klPkd1RibzZChdS9FwxcCp+Ckgv+2s9+pTZUOxC
+ DbKEM/eCKMQIayKV8E7J2GdUZJkBQsmm0WtARvDamo2Q0p/KacT25cCTNTEZKQHXK8I9KfcCP9h8Kztqx0z/Pnr3Td+meyqxQJPza8Hy0oIn7YxqRPxxlwts
+ 9O9G/Lo+XaQTwaDtjdY9aLCVm5jv775cAv786UMD1GaiKdbFrwWb3wQDGI4d/+bdLRElh9om/ma3IA2Ntn4okA==
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There is no point in warning about a device being disabled when we
-expect it to be, that is, on suspend, shutdown or when detaching the
-device.
 
-Suppress the message "disable device" for these cases by introducing the
-EH static function ata_eh_dev_disable() and by using it in
-ata_eh_unload() and ata_eh_detach_dev(). ata_dev_disable() code is
-modified to call this new function after printing the "disable device"
-message.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/ata/libata-eh.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+On 9/22/23 11:52, Kees Cook wrote:
+> Prepare for the coming implementation by GCC and Clang of the __counted_by
+> attribute. Flexible array members annotated with __counted_by can have
+> their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
+> (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
+> functions).
+> 
+> As found with Coccinelle[1], add __counted_by for struct ata_cpr_log.
+> 
+> [1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
+> 
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: linux-ide@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 67387d602735..945675f6b822 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -494,6 +494,18 @@ void ata_eh_release(struct ata_port *ap)
- 	mutex_unlock(&ap->host->eh_mutex);
- }
- 
-+static void ata_eh_dev_disable(struct ata_device *dev)
-+{
-+	ata_acpi_on_disable(dev);
-+	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
-+	dev->class++;
-+
-+	/* From now till the next successful probe, ering is used to
-+	 * track probe failures.  Clear accumulated device error info.
-+	 */
-+	ata_ering_clear(&dev->ering);
-+}
-+
- static void ata_eh_unload(struct ata_port *ap)
- {
- 	struct ata_link *link;
-@@ -517,8 +529,8 @@ static void ata_eh_unload(struct ata_port *ap)
- 	 */
- 	ata_for_each_link(link, ap, PMP_FIRST) {
- 		sata_scr_write(link, SCR_CONTROL, link->saved_scontrol & 0xff0);
--		ata_for_each_dev(dev, link, ALL)
--			ata_dev_disable(dev);
-+		ata_for_each_dev(dev, link, ENABLED)
-+			ata_eh_dev_disable(dev);
- 	}
- 
- 	/* freeze and set UNLOADED */
-@@ -1211,14 +1223,8 @@ void ata_dev_disable(struct ata_device *dev)
- 		return;
- 
- 	ata_dev_warn(dev, "disable device\n");
--	ata_acpi_on_disable(dev);
--	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
--	dev->class++;
- 
--	/* From now till the next successful probe, ering is used to
--	 * track probe failures.  Clear accumulated device error info.
--	 */
--	ata_ering_clear(&dev->ering);
-+	ata_eh_dev_disable(dev);
- }
- EXPORT_SYMBOL_GPL(ata_dev_disable);
- 
-@@ -1240,12 +1246,12 @@ void ata_eh_detach_dev(struct ata_device *dev)
- 
- 	/*
- 	 * If the device is still enabled, transition it to standby power mode
--	 * (i.e. spin down HDDs).
-+	 * (i.e. spin down HDDs) and disable it.
- 	 */
--	if (ata_dev_enabled(dev))
-+	if (ata_dev_enabled(dev)) {
- 		ata_dev_power_set_standby(dev);
--
--	ata_dev_disable(dev);
-+		ata_eh_dev_disable(dev);
-+	}
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
+Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+
+Thanks
 -- 
-2.41.0
+Gustavo
 
+> ---
+>   include/linux/libata.h | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 3c17a5053f00..f91e8e7f1c00 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -656,7 +656,7 @@ struct ata_cpr {
+>   
+>   struct ata_cpr_log {
+>   	u8			nr_cpr;
+> -	struct ata_cpr		cpr[];
+> +	struct ata_cpr		cpr[] __counted_by(nr_cpr);
+>   };
+>   
+>   struct ata_device {
