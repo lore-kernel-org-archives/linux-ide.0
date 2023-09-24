@@ -2,45 +2,45 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD3A2CE7A88
-	for <linux-ide@archiver.kernel.org>; Sun, 24 Sep 2023 13:30:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC87DCE7A8A
+	for <linux-ide@archiver.kernel.org>; Sun, 24 Sep 2023 13:31:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231722AbjIXNbA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 24 Sep 2023 09:31:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38908 "EHLO
+        id S231162AbjIXNbF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 24 Sep 2023 09:31:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230391AbjIXNaL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Sep 2023 09:30:11 -0400
+        with ESMTP id S231167AbjIXNaT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Sep 2023 09:30:19 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B4D32136;
-        Sun, 24 Sep 2023 06:20:31 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BFD1C433CA;
-        Sun, 24 Sep 2023 13:20:30 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB2061FCD;
+        Sun, 24 Sep 2023 06:18:54 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C902BC433B8;
+        Sun, 24 Sep 2023 13:18:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695561631;
-        bh=bKpYZaaO+iiLFYP+82ATtwkGTINxcZa5s8RVfhEqoW8=;
+        s=k20201202; t=1695561534;
+        bh=1tQxGOwriu6TnlgQ5xxIDrDJ06dwB7VRGwlMF2ZvqbI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AcfbYk2eANwVenz1dWFjA4KwagzIQ2PhvfXNvDPrN5R+MeXw2A6tOPrq6Xzm59J9d
-         xDq1O2NRsbLh3wRNUE79CAmJieiGah8m07Ipmifxmkkwv2/uMclBCTTPmhKwivgqsR
-         GA6fQHZcoAAlPbmaDQfpqdvoOIHPWP5nxC0r6vwI+0DuV0igMDk0dADtjiX2E0L6HD
-         JfceO9dgyDTrox43XmfFGNPMTFV6WUnRJ/6u8oVCqto95qZm49AhfFuAyHf/Jsz7kN
-         s/MsZX+8NdRcNzFjgrPWdnPqvHs640bhoWpfPrKoZoqdFVRm0ccBtNu1uddZnbwuR6
-         nofLrB1gBhvdg==
+        b=eoZCLwGcLnOS1Pt9lejqsXMsEnfFycAaaqbmtu3H/42Nx3e7TmCpw22oxj9v+B2CO
+         iAHCQuOd8ID9/UkFnd6ivN6JfJRypiEBRFUiupXZbLaslG9Ys6CxPm+xNTdYObkcXP
+         GS62fHY9Sa8FUO2gU31ehLtCIU2FZBkA6sL5OM7SxBUx6XLyXg8D1Bk+Rs+mxJOadt
+         0ySsI++uDNqflvIuOstbQIPOynPSRsWjS/Nld86v2whCz/wD2nXsOZJYLIVygBfhhn
+         nOiG0rSqrJljdYwL3U+OD9dm14USx2mCaoIXmDjYEJYcEfh9pF14h2HrNRRYrepFv0
+         eh113V31hi9uQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Niklas Cassel <niklas.cassel@wdc.com>,
         Damien Le Moal <dlemoal@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 7/7] ata: libata-eh: do not clear ATA_PFLAG_EH_PENDING in ata_eh_reset()
-Date:   Sun, 24 Sep 2023 09:20:14 -0400
-Message-Id: <20230924132015.1276811-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 28/28] ata: libata-eh: do not clear ATA_PFLAG_EH_PENDING in ata_eh_reset()
+Date:   Sun, 24 Sep 2023 09:17:45 -0400
+Message-Id: <20230924131745.1275960-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230924132015.1276811-1-sashal@kernel.org>
-References: <20230924132015.1276811-1-sashal@kernel.org>
+In-Reply-To: <20230924131745.1275960-1-sashal@kernel.org>
+References: <20230924131745.1275960-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.257
+X-stable-base: Linux 6.1.55
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -136,11 +136,11 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5c91183b5b736..54b6ec44d3be4 100644
+index a3ae5fc2a42fc..6d4c80b6daaef 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -2901,18 +2901,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 			postreset(slave, classes);
+@@ -2704,18 +2704,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 		}
  	}
  
 -	/*
