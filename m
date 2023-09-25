@@ -2,77 +2,81 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5577CE7A89
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Sep 2023 07:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92B02CE7A81
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Sep 2023 08:05:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232471AbjIYHMW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 25 Sep 2023 03:12:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50610 "EHLO
+        id S230250AbjIYIFt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 25 Sep 2023 04:05:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232501AbjIYHMT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2023 03:12:19 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99BF3136;
-        Mon, 25 Sep 2023 00:12:11 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90360C433CD;
-        Mon, 25 Sep 2023 07:12:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695625931;
-        bh=6Dr90FXidnenbYzY2VdDgQp3Cbw7imf3JMYhlHYthww=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=WQb5w9gYIlCIasAEgSIf/oexPVyKpMoDU3WbMlURebjGMkLD+r3bNQFYG/y+duPdX
-         0cA9uDSBgdeaSBjuU8ziiOcXE+fkmTL+zstI0COL+dM44AbsCvK5nnV+eNc7ojcwXV
-         pL0lyfQFn4rABMpqKf2TgdgwNue6kaxZ4geygT7WMZUYMkYzKG3asUe+nZazoHPusm
-         vJkU7HLIoX/68tXJ4EspOHRJZ+/tcPHHDDrCOIWjGmnF4Vh+dnliux82QJLM5KY3uG
-         XUsIh4YIj+HcR9oQm/vSU0XczCUBH9vga4xRKk7Z2xMIgmRBRf2DKf3OvzUpJOagsb
-         wctBwxf4RyV3w==
-Message-ID: <b55b0ec2-7afe-3c63-64b7-ae748db8b7ec@kernel.org>
-Date:   Mon, 25 Sep 2023 09:12:09 +0200
+        with ESMTP id S229473AbjIYIFs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2023 04:05:48 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CE82A2
+        for <linux-ide@vger.kernel.org>; Mon, 25 Sep 2023 01:05:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1695629142; x=1727165142;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=syiQraget6ZL8dQ7L7eUwdxzXetHoeUZ/4wW4Yej5CM=;
+  b=hDi7OTfq35VtDqtNfGf/O7L03AVrHnR4HzWxG3EOcCVU90bYpmNRn9HL
+   omNOhk2DuE4pcLPwnESpneu+AwmfTT/6IFo5Ys3jCr0X3GtxvisT3+dEL
+   Qu88zC41It5HYufAZTgBddrl5SYlyr0heZTCYi+94HDpxxR2Z7jzpgbi/
+   Y3RfDtB/d0ppfgFZwBsGKVYeOAbaBB6ug/zrbLsp8H8KC2pR7akbOs0lL
+   JTQIA9EG6uCWqtH/Qkinc6i+sC8A5C/qnAnGwYMJH+h4KecqGu4Cmq78P
+   ljF53th8pFo6gU7qaLcSJqtWMOd0VFg7fH2HhBL25pteOt2iHrr1/pRHa
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10843"; a="366253684"
+X-IronPort-AV: E=Sophos;i="6.03,174,1694761200"; 
+   d="scan'208";a="366253684"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Sep 2023 01:05:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10843"; a="921895137"
+X-IronPort-AV: E=Sophos;i="6.03,174,1694761200"; 
+   d="scan'208";a="921895137"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga005.jf.intel.com with ESMTP; 25 Sep 2023 01:05:39 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 830F12E9; Mon, 25 Sep 2023 11:05:38 +0300 (EEST)
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-ide@vger.kernel.org, Koba Ko <koba.ko@canonical.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] ata: ahci: Add Intel Alder Lake-P AHCI controller to low power chipsets list
+Date:   Mon, 25 Sep 2023 11:05:38 +0300
+Message-Id: <20230925080538.2894982-1-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [PATCH] ata: libata: increase PMP SRST timeout to 10s
-Content-Language: en-US
-To:     Matthias Schiffer <mschiffer@universe-factory.net>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <d55400d247e5f00f7c72af2ba442da7b1bed760f.1695415885.git.mschiffer@universe-factory.net>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <d55400d247e5f00f7c72af2ba442da7b1bed760f.1695415885.git.mschiffer@universe-factory.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2023/09/22 22:55, Matthias Schiffer wrote:
-> On certain SATA controllers, softreset fails after wakeup from S2RAM with
-> the message "softreset failed (1st FIS failed)", sometimes resulting in
-> drives not being detected again. With the increased timeout, this issue
-> is avoided. Instead, "softreset failed (device not ready)" is now
-> logged 1-2 times; this later failure seems to cause fewer problems
-> however, and the drives are detected reliably once they've spun up and
-> the probe is retried.
-> 
-> The issue was observed with the primary SATA controller of the QNAP
-> TS-453B, which is an "Intel Corporation Celeron/Pentium Silver Processor
-> SATA Controller [8086:31e3] (rev 06)" integrated in the Celeron J4125 CPU,
-> and the following drives:
-> 
-> - Seagate IronWolf ST12000VN0008
-> - Seagate IronWolf ST8000NE0004
-> 
-> The SATA controller seems to be more relevant to this issue than the
-> drives, as the same drives are always detected reliably on the secondary
-> SATA controller on the same board (an ASMedia 106x) without any "softreset
-> failed" errors even without the increased timeout.
-> 
-> Fixes: e7d3ef13d52a ("libata: change drive ready wait after hard reset to 5s")
-> Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+Intel Alder Lake-P AHCI controller needs to be added to the mobile
+chipsets list in order to have link power management enabled. Without
+this the CPU cannot enter lower power C-states making idle power
+consumption high.
 
-Applied to for-6.6-fixes. Thanks !
+Cc: Koba Ko <koba.ko@canonical.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/ata/ahci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 08745e7db820..d96f80b6ff5d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -423,6 +423,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_low_power }, /* Comet Lake PCH RAID */
+ 	/* Elkhart Lake IDs 0x4b60 & 0x4b62 https://sata-io.org/product/8803 not tested yet */
+ 	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci_low_power }, /* Elkhart Lake AHCI */
++	{ PCI_VDEVICE(INTEL, 0x7ae2), board_ahci_low_power }, /* Alder Lake-P AHCI */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
 -- 
-Damien Le Moal
-Western Digital Research
+2.40.1
 
