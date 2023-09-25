@@ -2,26 +2,50 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F22ACE7AAF
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Sep 2023 17:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF0C2CD54BF
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Sep 2023 20:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230230AbjIYRdT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 25 Sep 2023 13:33:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33080 "EHLO
+        id S229513AbjIYUWl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 25 Sep 2023 16:22:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbjIYRdT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2023 13:33:19 -0400
-Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C00510D;
-        Mon, 25 Sep 2023 10:33:12 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 75A4713B36A; Mon, 25 Sep 2023 13:33:11 -0400 (EDT)
-References: <20230923002932.1082348-1-dlemoal@kernel.org>
- <20230923002932.1082348-20-dlemoal@kernel.org>
-User-agent: mu4e 1.7.12; emacs 27.1
-From:   Phillip Susi <phill@thesusis.net>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        with ESMTP id S229481AbjIYUWl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2023 16:22:41 -0400
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D6BD10E;
+        Mon, 25 Sep 2023 13:22:34 -0700 (PDT)
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-68fb85afef4so5702713b3a.1;
+        Mon, 25 Sep 2023 13:22:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695673354; x=1696278154;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Fn4PvOS3cobLZw9sn1qRokgQm99iBveZqnHYoHWO0k8=;
+        b=vR+BpMIqRk3eS+ezN1rBv93+AtfWa9iG/67H306mNXC3cpY9iGlPyDmDEthEzAxBLn
+         tyCwy51MzMTf/YZEVhjEARYk0VFZ87VNkPtaKIv5GUEhQqpow1oA2sull37ZMXlfgLLq
+         urn66FJBnN6qcXwUnfF8fQh6U+F0DFe5iHq9GGC6+b+L/dhgL85ECCs8gw9kjUgv1DzQ
+         fQlbFqLsCq8gQSDn8Vun+/PKvrbEnpj2KKvtIObSID7FT51Z13uGOsN6ZCc6eUMqcUpq
+         ecxNcDHFwnm07TGXaV5TUdjRthRI7xT/tsO4EYDMOgbrBkwhWPT3aPVMaxAu4bnsS0hw
+         +nOQ==
+X-Gm-Message-State: AOJu0Yz58//ATIdmc0SkkzOTn/O6zb5IW7gJbtUsgUF73IEfFwmXpdU5
+        H8MQjFcFarUxGMMoLuxms7M=
+X-Google-Smtp-Source: AGHT+IHlKM29M22c5XDkMSjpHEGx6k9+wPkuzNPNMPrPOeClikIfF2Q2Y8z84YUG3zl7O6tqKh0ZKA==
+X-Received: by 2002:a05:6a20:8f18:b0:125:517c:4f18 with SMTP id b24-20020a056a208f1800b00125517c4f18mr6789496pzk.8.1695673353853;
+        Mon, 25 Sep 2023 13:22:33 -0700 (PDT)
+Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
+        by smtp.gmail.com with ESMTPSA id n5-20020a170902e54500b001b8c6890623sm9348733plf.7.2023.09.25.13.22.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Sep 2023 13:22:33 -0700 (PDT)
+Message-ID: <ca064bd3-2496-4d79-b68c-beff775228c3@acm.org>
+Date:   Mon, 25 Sep 2023 13:22:31 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 09/23] scsi: sd: Do not issue commands to suspended
+ disks on shutdown
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         John Garry <john.g.garry@oracle.com>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
@@ -30,36 +54,48 @@ Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v6 19/23] ata: libata-core: Do not resume runtime
- suspended ports
-Date:   Mon, 25 Sep 2023 13:26:09 -0400
-In-reply-to: <20230923002932.1082348-20-dlemoal@kernel.org>
-Message-ID: <87msxaupig.fsf@vps.thesusis.net>
-MIME-Version: 1.0
-Content-Type: text/plain
+References: <20230923002932.1082348-1-dlemoal@kernel.org>
+ <20230923002932.1082348-10-dlemoal@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230923002932.1082348-10-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 9/22/23 17:29, Damien Le Moal wrote:
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 5eea762f84d1..4d42392fae07 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -150,6 +150,7 @@ struct scsi_disk {
+>   	unsigned	urswrz : 1;
+>   	unsigned	security : 1;
+>   	unsigned	ignore_medium_access_errors : 1;
+> +	unsigned	suspended : 1;
+>   };
+>   #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
 
-Damien Le Moal <dlemoal@kernel.org> writes:
+If the 'suspended' member is retained, please do not use a bitfield for the
+but use type 'bool' instead. Updates of instances of type 'bool' are atomic
+while there is no guarantee in the C standard that bitfield updates will be
+atomic. Bitfield updates are typically translated into a combination of &,
+| and ~ operations.
 
-> The scsi disk driver does not resume disks that have been runtime
-> suspended by the user. To be consistent with this behavior, do the same
-> for ata ports and skip the PM request in ata_port_pm_resume() if the
-> port was already runtime suspended. With this change, it is no longer
-> necessary to force the PM state of the port to ACTIVE as the PM core
-> code will take care of that when handling runtime resume.
+Additionally, I'm not convinced that we need the new 'suspended' member.
+The Linux kernel runtime PM subsystem serializes I/O and system-wide power
+operations. No I/O happens during system-wide suspend or resume operations
+and no system-wide suspend or resume callbacks are invoked while I/O is
+ongoing. The only exception is I/O that is initiated as the result of error
+handling by suspend or resume callbacks, e.g. the SCSI commands submitted
+by sd_shutdown(). Even if sd_shutdown() is called indirectly by a suspend
+or resume callback, I don't think that it can happen that a suspend or
+resume operation is ongoing for the device sd_shutdown() operates on. If
+scsi_remove_host() is called from inside a resume callback, resuming of the
+devices affected by sd_shutdown() will only be attempted after the host
+adapter resume callback has finished.
 
-The problem with this is that ATA disks normally spin up on their own
-after system resume.  As a result, if the disk was put to sleep with
-runtime pm before the system suspend, then after resume, the kernel will
-still show that it is runtime suspended, even though it is not.  Then
-the disk will keep spinning forever.
+Thanks,
 
-We need to check the drive on system resume to see if it is in standby
-or not, and force the runtime pm state to match.  I couldn't quite work
-out how to do that properly before.  I dug up my old patch series and
-have been reviewing it.  If you are interested, it can be found here:
-
-https://lore.kernel.org/all/1387236657-4852-5-git-send-email-psusi@ubuntu.com/
+Bart.
