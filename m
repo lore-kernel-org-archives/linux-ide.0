@@ -2,46 +2,47 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 638AEE7E65A
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 17:28:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CC9BE7E654
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 18:07:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233251AbjIZR27 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Sep 2023 13:28:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59340 "EHLO
+        id S229570AbjIZSHK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Sep 2023 14:07:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233826AbjIZR26 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 13:28:58 -0400
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C5F211D;
-        Tue, 26 Sep 2023 10:28:52 -0700 (PDT)
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-690ce3c55f1so6949982b3a.0;
-        Tue, 26 Sep 2023 10:28:52 -0700 (PDT)
+        with ESMTP id S229505AbjIZSHJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 14:07:09 -0400
+Received: from mail-oi1-f171.google.com (mail-oi1-f171.google.com [209.85.167.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1047910A;
+        Tue, 26 Sep 2023 11:07:03 -0700 (PDT)
+Received: by mail-oi1-f171.google.com with SMTP id 5614622812f47-3ae5e6a536bso472902b6e.1;
+        Tue, 26 Sep 2023 11:07:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695749331; x=1696354131;
+        d=1e100.net; s=20230601; t=1695751622; x=1696356422;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Zs50Qz9USNcScot/XlrAoh9zCUc1fHtC2EKiaFK5zYE=;
-        b=hhI849lI0SxbsgYnrppExyJTFgh4kxnKkw4qqj4b4QsNy0aXpOmtLhdsHgNtfipYs8
-         VCqQdc7IYbv+8UJReH7FvpaL/eZ1cO41CunG5ido6fHletE0eL8ieoXAdHMCrLDzhLfr
-         GeYNyVpawPcYA89HRW62xL4uFCstSzYaEevlWP+zS4kzeXXtahQBSr2kwiDjprDMIUj0
-         QWICw0T6Ez0Ks5fvjGe0NrIaUdeANyqZ8BoOc4qbLZLt5ZBNccoRmNmeoEDALker/MdD
-         f71OCX8bznPBgW2ttyYLB/0f1PdztvzdbZET2LmO/yQlYphFdkiso6Fcergxv4qWxdhI
-         YZyA==
-X-Gm-Message-State: AOJu0YzK0tMOtirhwG+i6e6NcN2sYWZlAa1paa2Kx6GQLmR3zwRubZEV
-        XopoOg+Oi/LnovgdmhDDpIM=
-X-Google-Smtp-Source: AGHT+IFxkPcPtdCySeWyE8EBrXo7l4ExkX8Vk2tIiage7ZhitShl+d5mW2WlEiBfrEi1dvIsHG2ckw==
-X-Received: by 2002:a05:6a21:a5a2:b0:15d:fc71:1b9e with SMTP id gd34-20020a056a21a5a200b0015dfc711b9emr11277786pzc.49.1695749331406;
-        Tue, 26 Sep 2023 10:28:51 -0700 (PDT)
+        bh=O4h3glyafNratQ6PLmDtCxCOMTVFUaWeD69YAlktx1Y=;
+        b=Vxx3k1Idvf5pD15x5S2Iu2+Q2NbSQXcProMUyet2OJ07XfijvLUQDcvtUYYAfyxSoe
+         mHA139d1IqX7FxbmYCPPjcdSOwhVEubbP97JLqdza7dK2Nw8+uwpMVZ7DPLrfz2PBRVN
+         EYI79tHEHCO6VChVrNenBeu6tD0bODdzhCqdMJRcFXv3QoFFYKgIkapCwIwJ8DCde1v/
+         fCsSLRRUD/L/pBeSLwDbG8Z/gmUJnruVbD58nL0L8YoGL75c9MxrIz7BC7t72N4a+BjE
+         ZsVJiTqX04czz/43CUhG21d44EXIu+hrE6JPmg4F+Jq0VdScJSENzGaB1Ngq+2erq8F1
+         UrOw==
+X-Gm-Message-State: AOJu0YwmvmbgvuSkq6HK27v/GEL2iYU39LUTJgstQtBqQZm/29nveoVK
+        qrQj9CDGt3YENviMZZvc/fY=
+X-Google-Smtp-Source: AGHT+IG5S4/lhxlx6yu/G49gBcpwTq6Isq9X4JnyrafkQqc7tzfCkpC92vJgVYEecYRaIyV7vjb7hA==
+X-Received: by 2002:aca:2208:0:b0:3ad:fc5b:464e with SMTP id b8-20020aca2208000000b003adfc5b464emr12737107oic.43.1695751622265;
+        Tue, 26 Sep 2023 11:07:02 -0700 (PDT)
 Received: from ?IPV6:2620:15c:211:201:a80d:6f65:53d4:d1bf? ([2620:15c:211:201:a80d:6f65:53d4:d1bf])
-        by smtp.gmail.com with ESMTPSA id q2-20020a170902edc200b001c631e9ddffsm1678503plk.170.2023.09.26.10.28.50
+        by smtp.gmail.com with ESMTPSA id a10-20020a62bd0a000000b00682a908949bsm2998067pff.92.2023.09.26.11.07.00
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Sep 2023 10:28:51 -0700 (PDT)
-Message-ID: <f5a23f12-bd74-40ea-9c25-cd32933ee555@acm.org>
-Date:   Tue, 26 Sep 2023 10:28:48 -0700
+        Tue, 26 Sep 2023 11:07:01 -0700 (PDT)
+Message-ID: <e0784522-3e6a-4cda-b382-5d731c12eb0e@acm.org>
+Date:   Tue, 26 Sep 2023 11:07:00 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 02/23] ata: libata-core: Fix port and device removal
+Subject: Re: [PATCH v6 04/23] scsi: sd: Differentiate system and runtime
+ start/stop management
 Content-Language: en-US
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -54,9 +55,9 @@ Cc:     linux-scsi@vger.kernel.org,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
 References: <20230923002932.1082348-1-dlemoal@kernel.org>
- <20230923002932.1082348-3-dlemoal@kernel.org>
+ <20230923002932.1082348-5-dlemoal@kernel.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230923002932.1082348-3-dlemoal@kernel.org>
+In-Reply-To: <20230923002932.1082348-5-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -64,34 +65,27 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 9/22/23 17:29, Damien Le Moal wrote:
-> Also delete the WAR_ON() call checking that the ATA_PFLAG_UNLOADING flag
-> was cleared as that is done without holding the port lock.
+>   static const struct dev_pm_ops sd_pm_ops = {
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index b9230b6add04..b7df1e6da969 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -193,7 +193,8 @@ struct scsi_device {
+>   	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
+>   	unsigned no_start_on_add:1;	/* do not issue start on add */
+>   	unsigned allow_restart:1; /* issue START_UNIT in error handler */
+> -	unsigned manage_start_stop:1;	/* Let HLD (sd) manage start/stop */
+> +	unsigned manage_system_start_stop:1; /* Let HLD (sd) manage system start/stop */
+> +	unsigned manage_runtime_start_stop:1; /* Let HLD (sd) manage runtime start/stop */
+>   	unsigned no_start_on_resume:1; /* Do not issue START_STOP_UNIT on resume */
+>   	unsigned start_stop_pwr_cond:1;	/* Set power cond. in START_STOP_UNIT */
+>   	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
 
-Hmm ... I don't see any WARN_ON() statement being removed by this patch?
-
-> -	/* tell EH we're leaving & flush EH */
-> +	/* Wait for any ongoing EH */
-> +	ata_port_wait_eh(ap);
-> +
-> +	mutex_lock(&ap->scsi_scan_mutex);
->   	spin_lock_irqsave(ap->lock, flags);
-> +
-> +	/* Remove scsi devices */
-> +	ata_for_each_link(link, ap, HOST_FIRST) {
-> +		ata_for_each_dev(dev, link, ALL) {
-> +			if (dev->sdev) {
-> +				spin_unlock_irqrestore(ap->lock, flags);
-> +				scsi_remove_device(dev->sdev);
-> +				spin_lock_irqsave(ap->lock, flags);
-> +				dev->sdev = NULL;
-> +			}
-> +		}
-> +	}
-
-Can the lists ata_for_each_link() and ata_for_each_dev() iterate over change
-while ap->lock is unlocked? If not, does this perhaps have to be explained in
-a comment? If these lists can be changed, should these lists perhaps be examined
-from the start after every unlock of ap->lock?
+This is probably a good opportunity to change 'manage_system_start_stop' and
+'manage_runtime_start_stop' from bitfields into booleans. Although unlikely, a
+user could try to change both attributes from different threads. If this happens,
+because bitfield changes are not atomic, this could cause one of the two updates
+to be lost.
 
 Thanks,
 
