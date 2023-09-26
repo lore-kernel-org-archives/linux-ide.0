@@ -2,100 +2,119 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF0C2CD54BF
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Sep 2023 20:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9920E8181D
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 04:55:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229513AbjIYUWl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 25 Sep 2023 16:22:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57376 "EHLO
+        id S229722AbjIZEz3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Sep 2023 00:55:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbjIYUWl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 25 Sep 2023 16:22:41 -0400
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D6BD10E;
-        Mon, 25 Sep 2023 13:22:34 -0700 (PDT)
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-68fb85afef4so5702713b3a.1;
-        Mon, 25 Sep 2023 13:22:34 -0700 (PDT)
+        with ESMTP id S229516AbjIZEz2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 00:55:28 -0400
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1478DB8
+        for <linux-ide@vger.kernel.org>; Mon, 25 Sep 2023 21:55:21 -0700 (PDT)
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 6D1DA3F67B
+        for <linux-ide@vger.kernel.org>; Tue, 26 Sep 2023 04:55:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1695704120;
+        bh=TG8Rt/d1azM9gj2JLuofNR1IVRAB55K8pMnEf0yZiig=;
+        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+         To:Cc:Content-Type;
+        b=okkUPeVHVBF2YstyMU5/zcA5HlYzr8quDixXylCDkmdBsBsRvIwrTb/7SxwWnv/Ga
+         gzUuKKZ/szyqiiN1GByIbAGcixv/gIclkwcdp5kRvHzFIl1ZT+ucl+APNK8iXRSXYo
+         ZcsWgiSdX2tmqjlDPcyM8IDjLT/FgoaHYRq5eknHYpWszhzpxS/AsA5cXG5/E+Ta4P
+         lieQniK7An5l++NOcGVNoc+HQnRPebXdfxioVLNXWarp9iurb/n7Q1wYuLawsgWCpP
+         NCxLgq4qqKNDo8cP4xF6YKnKh/w863118T9V/ipsvAlUsi/IzgUR5FvyN6XKCvJlWG
+         BFjabcxHIptOw==
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-27733adfb12so5940242a91.1
+        for <linux-ide@vger.kernel.org>; Mon, 25 Sep 2023 21:55:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695673354; x=1696278154;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Fn4PvOS3cobLZw9sn1qRokgQm99iBveZqnHYoHWO0k8=;
-        b=vR+BpMIqRk3eS+ezN1rBv93+AtfWa9iG/67H306mNXC3cpY9iGlPyDmDEthEzAxBLn
-         tyCwy51MzMTf/YZEVhjEARYk0VFZ87VNkPtaKIv5GUEhQqpow1oA2sull37ZMXlfgLLq
-         urn66FJBnN6qcXwUnfF8fQh6U+F0DFe5iHq9GGC6+b+L/dhgL85ECCs8gw9kjUgv1DzQ
-         fQlbFqLsCq8gQSDn8Vun+/PKvrbEnpj2KKvtIObSID7FT51Z13uGOsN6ZCc6eUMqcUpq
-         ecxNcDHFwnm07TGXaV5TUdjRthRI7xT/tsO4EYDMOgbrBkwhWPT3aPVMaxAu4bnsS0hw
-         +nOQ==
-X-Gm-Message-State: AOJu0Yz58//ATIdmc0SkkzOTn/O6zb5IW7gJbtUsgUF73IEfFwmXpdU5
-        H8MQjFcFarUxGMMoLuxms7M=
-X-Google-Smtp-Source: AGHT+IHlKM29M22c5XDkMSjpHEGx6k9+wPkuzNPNMPrPOeClikIfF2Q2Y8z84YUG3zl7O6tqKh0ZKA==
-X-Received: by 2002:a05:6a20:8f18:b0:125:517c:4f18 with SMTP id b24-20020a056a208f1800b00125517c4f18mr6789496pzk.8.1695673353853;
-        Mon, 25 Sep 2023 13:22:33 -0700 (PDT)
-Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
-        by smtp.gmail.com with ESMTPSA id n5-20020a170902e54500b001b8c6890623sm9348733plf.7.2023.09.25.13.22.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Sep 2023 13:22:33 -0700 (PDT)
-Message-ID: <ca064bd3-2496-4d79-b68c-beff775228c3@acm.org>
-Date:   Mon, 25 Sep 2023 13:22:31 -0700
+        d=1e100.net; s=20230601; t=1695704118; x=1696308918;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=TG8Rt/d1azM9gj2JLuofNR1IVRAB55K8pMnEf0yZiig=;
+        b=CqSvxyRFUE0evgvwMu919i+E+V8h158o4fzIvaE4HM3Dv9hnRn74xz/lKedM2x2c0H
+         JwKWlz1+BjzdXaeGrkKv/eiAXQYiwcmc1JFdDPg5QKa1petJhoUBRec5uDKXJOaBSNif
+         RXDjYX/mPTlek+BiLnQl/J8BQU222H6qX5rYE0qpyAZ6S9/Dp6FxB3K04t5FNa1WDdPW
+         Sc68WMQIcQwlr3y7j83PtadJ09Jn/NrBZWd/8WQcY+R+56bEtEVC/M1x3BKdZrQ5KjZG
+         dAKx/znQzPVubB2UDkH8Fzhs8zJpv0mZ8zAAO5ee+4Kj/B1rn27TgggZmkIYvCmzUJ6J
+         JYLA==
+X-Gm-Message-State: AOJu0Yxe1eZTNRg7WolbAceQH528pidHoMEhmu60Tr5fqNbfDoqaFyNL
+        iW306ZvawQBPKvL77dzlPlGSE5GF/Ku3HX65GlPkeOHbf+kpLsl/NNBctXlZCG9VBAUNgAOdZMK
+        uOXdKaPtkfy9s/ZP9h6KDV4uOChxTnB1+YNIm5PMmxQ2YqHujWyEuE0WwuGtrbQ==
+X-Received: by 2002:a17:90a:c70f:b0:276:78f2:5d31 with SMTP id o15-20020a17090ac70f00b0027678f25d31mr2311862pjt.21.1695704117784;
+        Mon, 25 Sep 2023 21:55:17 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEHlRiODAX6m21kiNVY8pm8nbHRyh8sG/5R5u50qKgeoRNs40ptqZjxvjX0JQAtYWXuJu+p/ZFbMA2HHxfcCEo=
+X-Received: by 2002:a17:90a:c70f:b0:276:78f2:5d31 with SMTP id
+ o15-20020a17090ac70f00b0027678f25d31mr2311845pjt.21.1695704117402; Mon, 25
+ Sep 2023 21:55:17 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 09/23] scsi: sd: Do not issue commands to suspended
- disks on shutdown
-Content-Language: en-US
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230923002932.1082348-1-dlemoal@kernel.org>
- <20230923002932.1082348-10-dlemoal@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230923002932.1082348-10-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20230925080538.2894982-1-mika.westerberg@linux.intel.com>
+ <e58ddf0f-3b7e-9599-dd7d-c6ed322d1184@kernel.org> <20230925091339.GM3208943@black.fi.intel.com>
+ <385141b8-4d02-cecb-7393-7375f095198f@kernel.org>
+In-Reply-To: <385141b8-4d02-cecb-7393-7375f095198f@kernel.org>
+From:   Koba Ko <koba.ko@canonical.com>
+Date:   Tue, 26 Sep 2023 12:55:05 +0800
+Message-ID: <CAJB-X+UdB-+O8O97hCRQNbFpU7CuNisVCQkaJZ4JD01qZ-JqJA@mail.gmail.com>
+Subject: Re: [PATCH] ata: ahci: Add Intel Alder Lake-P AHCI controller to low
+ power chipsets list
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/22/23 17:29, Damien Le Moal wrote:
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index 5eea762f84d1..4d42392fae07 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -150,6 +150,7 @@ struct scsi_disk {
->   	unsigned	urswrz : 1;
->   	unsigned	security : 1;
->   	unsigned	ignore_medium_access_errors : 1;
-> +	unsigned	suspended : 1;
->   };
->   #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
+On Mon, Sep 25, 2023 at 5:27=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+>
+> On 2023/09/25 11:13, Mika Westerberg wrote:
+> > Hi,
+> >
+> > On Mon, Sep 25, 2023 at 11:09:01AM +0200, Damien Le Moal wrote:
+> >> On 2023/09/25 10:05, Mika Westerberg wrote:
+> >>> Intel Alder Lake-P AHCI controller needs to be added to the mobile
+> >>> chipsets list in order to have link power management enabled. Without
+> >>> this the CPU cannot enter lower power C-states making idle power
+> >>> consumption high.
+> >>>
+> >>> Cc: Koba Ko <koba.ko@canonical.com>
+> >>> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> >>
+> >> Looks OK, but given that there is a tendency of the low power stuff to=
+ be buggy,
+> >> was this well tested ?
+> >
+> > Yes it was tested (Koba Cc'd can confirm this). We also confirmed from
+> > Intel AHCI folks that the ADL (and RPL) AHCI controllers fully support
+> > this configuration.
 
-If the 'suspended' member is retained, please do not use a bitfield for the
-but use type 'bool' instead. Updates of instances of type 'bool' are atomic
-while there is no guarantee in the C standard that bitfield updates will be
-atomic. Bitfield updates are typically translated into a combination of &,
-| and ~ operations.
+I verified on an ADL platform with odd and disk devices and
+they work fine.
 
-Additionally, I'm not convinced that we need the new 'suspended' member.
-The Linux kernel runtime PM subsystem serializes I/O and system-wide power
-operations. No I/O happens during system-wide suspend or resume operations
-and no system-wide suspend or resume callbacks are invoked while I/O is
-ongoing. The only exception is I/O that is initiated as the result of error
-handling by suspend or resume callbacks, e.g. the SCSI commands submitted
-by sd_shutdown(). Even if sd_shutdown() is called indirectly by a suspend
-or resume callback, I don't think that it can happen that a suspend or
-resume operation is ongoing for the device sd_shutdown() operates on. If
-scsi_remove_host() is called from inside a resume callback, resuming of the
-devices affected by sd_shutdown() will only be attempted after the host
-adapter resume callback has finished.
-
-Thanks,
-
-Bart.
+> >
+> >> Also, does this need a Fixes/CC stable tag ? If not, I
+> >> will queue this for 6.7.
+> >
+> > Up to you :) Typically PCI ID additions can go to stable as well. No
+> > fixes tag needed, though (there is no commit that this one fixes).
+>
+> OK. I will not add a CC stable for now. If requested, we can trivially ba=
+ckport
+> this later.
+>
+> >
+> > Thanks!
+>
+> --
+> Damien Le Moal
+> Western Digital Research
+>
