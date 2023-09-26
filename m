@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27244E7D24F
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6868E7D251
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231649AbjIZIPj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Sep 2023 04:15:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43020 "EHLO
+        id S233965AbjIZIPl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Sep 2023 04:15:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233920AbjIZIPh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 04:15:37 -0400
+        with ESMTP id S233937AbjIZIPc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 04:15:32 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69773101;
-        Tue, 26 Sep 2023 01:15:30 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B078C433C8;
-        Tue, 26 Sep 2023 08:15:28 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90E5AB4;
+        Tue, 26 Sep 2023 01:15:26 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 521BEC433C8;
+        Tue, 26 Sep 2023 08:15:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695716130;
-        bh=Nuc+MZpf4KfLgN19GmaNjXBJFuRsq9TSy5jYG3r6bX4=;
+        s=k20201202; t=1695716126;
+        bh=CljvVIVxFNHJc2Ic3izyRBe4muX/ukU24KeSDfkZp7E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ill1uADfWFoEIO/lc96Dy5uZ6Z1MitSjljdX0Qy65ALRCv8HHizhxFsoOLUAejdnl
-         cl3SLWhQ1iiCMUUFbQorlsBk2ZrmYEiGMgNBYz/dRG1tP/TsVc8QU8hbPzxR2o5nSn
-         vRQ74BNiLcLtfX5GdA8PUVDIa2kcBCTqxHtHz1c93dEpkR7KsPucDSkPYaW01uyA2U
-         5P1u92xHWC2Rus02u8V8CqMD81w6JjiQUGig6OxFVavbVjnPx9VlqxcLykLiuxYS78
-         XNDkpOIrBX5TJqIEo+CjjXyVYe2tbA0/uapehuAt6P2SSMcfByGiKRpp5+tU/81tAH
-         0/3cpJsSnHBbQ==
+        b=l9EBZqSilr4Z2Vb7qo0D5RVId22SjKzNzPQs5tSOL4pR4xJYF6S8Sb0aNzCiKXaWX
+         nfQZxR9QDD+8nFPLM4IwcrWxEPerJAr1vnnmGeNmtp9Ak6wIJ1qNPEIXiinqG2ZhWL
+         C4YIwA0WGtyHREjP2mKh4udRiDsPR9zuGbQArE46aQGrznc2z8ZDQeuCNHM29iq/1u
+         k1yZ1jPodOA4ZKNb9UcEou9d4HMx1hdDSJw4STlvGGUQVOf5v3D8LX3dpo0jMMarjR
+         /zcoE8UgritefyfZN9WJ6bF+Jdb0LZxcrV5do/mjGV1AnsWktxTDVZPhnP1qjFv86F
+         BFgRmStE8An7Q==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,63 +37,96 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v7 10/23] ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
-Date:   Tue, 26 Sep 2023 17:14:54 +0900
-Message-ID: <20230926081507.69346-11-dlemoal@kernel.org>
+Subject: [PATCH v7 08/23] ata: libata-core: Do not register PM operations for SAS ports
+Date:   Tue, 26 Sep 2023 17:14:52 +0900
+Message-ID: <20230926081507.69346-9-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230926081507.69346-1-dlemoal@kernel.org>
 References: <20230926081507.69346-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The 24 bytes length allocated to the ncq_desc string in
-ata_dev_config_lba() for ata_dev_config_ncq() to use is too short,
-causing the following gcc compilation warnings when compiling with W=1:
+libsas does its own domain based power management of ports. For such
+ports, libata should not use a device type defining power management
+operations as executing these operations for suspend/resume in addition
+to libsas calls to ata_sas_port_suspend() and ata_sas_port_resume() is
+not necessary (and likely dangerous to do, even though problems are not
+seen currently).
 
-drivers/ata/libata-core.c: In function ‘ata_dev_configure’:
-drivers/ata/libata-core.c:2378:56: warning: ‘%d’ directive output may be truncated writing between 1 and 2 bytes into a region of size between 1 and 11 [-Wformat-truncation=]
- 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
-      |                                                        ^~
-In function ‘ata_dev_config_ncq’,
-    inlined from ‘ata_dev_config_lba’ at drivers/ata/libata-core.c:2649:8,
-    inlined from ‘ata_dev_configure’ at drivers/ata/libata-core.c:2952:9:
-drivers/ata/libata-core.c:2378:41: note: directive argument in the range [1, 32]
- 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
-      |                                         ^~~~~~~~~~~~~~~~~~~~~
-drivers/ata/libata-core.c:2378:17: note: ‘snprintf’ output between 16 and 31 bytes into a destination of size 24
- 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 2379 |                         ddepth, aa_desc);
-      |                         ~~~~~~~~~~~~~~~~
+Introduce the new ata_port_sas_type device_type for ports managed by
+libsas. This new device type is used in ata_tport_add() and is defined
+without power management operations.
 
-Avoid these warnings and the potential truncation by changing the size
-of the ncq_desc string to 32 characters.
-
+Fixes: 2fcbdcb4c802 ("[SCSI] libata: export ata_port suspend/resume infrastructure for sas")
+Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/ata/libata-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/libata-core.c      | 2 +-
+ drivers/ata/libata-transport.c | 9 ++++++++-
+ drivers/ata/libata.h           | 2 ++
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 261445c1851b..d8cc1e27a125 100644
+index 092372334e92..261445c1851b 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2619,7 +2619,7 @@ static int ata_dev_config_lba(struct ata_device *dev)
- {
- 	const u16 *id = dev->id;
- 	const char *lba_desc;
--	char ncq_desc[24];
-+	char ncq_desc[32];
- 	int ret;
+@@ -5335,7 +5335,7 @@ EXPORT_SYMBOL_GPL(ata_host_resume);
+ #endif
  
- 	dev->flags |= ATA_DFLAG_LBA;
+ const struct device_type ata_port_type = {
+-	.name = "ata_port",
++	.name = ATA_PORT_TYPE_NAME,
+ #ifdef CONFIG_PM
+ 	.pm = &ata_port_pm_ops,
+ #endif
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index e4fb9d1b9b39..3e49a877500e 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -266,6 +266,10 @@ void ata_tport_delete(struct ata_port *ap)
+ 	put_device(dev);
+ }
+ 
++static const struct device_type ata_port_sas_type = {
++	.name = ATA_PORT_TYPE_NAME,
++};
++
+ /** ata_tport_add - initialize a transport ATA port structure
+  *
+  * @parent:	parent device
+@@ -283,7 +287,10 @@ int ata_tport_add(struct device *parent,
+ 	struct device *dev = &ap->tdev;
+ 
+ 	device_initialize(dev);
+-	dev->type = &ata_port_type;
++	if (ap->flags & ATA_FLAG_SAS_HOST)
++		dev->type = &ata_port_sas_type;
++	else
++		dev->type = &ata_port_type;
+ 
+ 	dev->parent = parent;
+ 	ata_host_get(ap->host);
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 820299bd9d06..05ac80da8ebc 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -30,6 +30,8 @@ enum {
+ 	ATA_DNXFER_QUIET	= (1 << 31),
+ };
+ 
++#define ATA_PORT_TYPE_NAME	"ata_port"
++
+ extern atomic_t ata_print_id;
+ extern int atapi_passthru16;
+ extern int libata_fua;
 -- 
 2.41.0
 
