@@ -2,32 +2,49 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47410E7D256
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 08:16:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE46E7E63F
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 14:51:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234014AbjIZIQ0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Sep 2023 04:16:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55174 "EHLO
+        id S234846AbjIZOvf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Sep 2023 10:51:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233994AbjIZIQQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 04:16:16 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB191139;
-        Tue, 26 Sep 2023 01:15:47 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C20F0C433C9;
-        Tue, 26 Sep 2023 08:15:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695716147;
-        bh=R1tYu+zCjKRGxXsPNNRChzgkkzMhM2utM9Va0s9nexk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O3YPeUoiGGIh7llRrR8KL4Il7nRd/J/40k2J8KqqDD6/t4d4+17ifDks3N1ONPXAw
-         VBroHseuQtAqNmODqgRshpxZemKxJokhmrnTsqDbtXVfH99Fw8eI24NffbKMbueLcF
-         aGxbPXWm6HZGZLLlbqIUEN+BN30icYjWDmciBlHda+hqyosO9lgbrmDfmuSoalKw/e
-         6rRkq9P3XTriPCM3g4WxASxPkh3RrG+7YGgaC7er/wXQz7Kph6GAwSeUEhwyIB2WLM
-         BwCIKnltL+nzPIAzs4+N4qk/sgF1mpZvCp9g1oIboxskPSebTRrmk8nUCvQ9SPoBzk
-         DS1m8MV6MQKBw==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     linux-ide@vger.kernel.org
+        with ESMTP id S229726AbjIZOve (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 10:51:34 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7ADA10E;
+        Tue, 26 Sep 2023 07:51:27 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-690bd8f89baso6902453b3a.2;
+        Tue, 26 Sep 2023 07:51:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695739887; x=1696344687;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3BwbRp2F/tb5cUm85OuYg9OjMFBfBS+G/rpfZCqPJh0=;
+        b=umVOsSCGenv9SanSqt5Vn1jtsWglGdYT92cAg4RkK4XdO8rK19cqb302CXUv0Dum3/
+         lfdlhJoAtdPpKChqk0xbz0nKP90GNzU4YPoMKNyaViYoxMWhzy431qn5u/CzZ66YL1Fy
+         yfUspkdfvsSlrOJZRemQutqTVHNnXmz3huGoR9PquDdONWzu5XhI2hwD2xTewYf2QwxY
+         jMdYh0ozqMMvkfYvjF3sV7r8xH9KjnHs5J8U5EU6xnHDKRN1Q36u6Ppj93xqATapO+bx
+         EONutcSVYgM4CAbDp/QY2EAkomas1Q06hE3nOg7QNef0Bsj1FTsRjAPEs5XdzklmBnIY
+         YYDw==
+X-Gm-Message-State: AOJu0Yz8mQG+w3npXl06RQIq6SG7oDM+lndSn8jYPWpXnFJ2HnlpAOrQ
+        /S7TBbihdyv18xwJdlnzxqU=
+X-Google-Smtp-Source: AGHT+IHPiZlm81hL02gpKTxE1NWNnr0uPiUccnw7pTgT6eRWpvETqTVHqKx9A/QBSzcx9VbsIZDhsw==
+X-Received: by 2002:a05:6a20:2583:b0:14c:c393:6af with SMTP id k3-20020a056a20258300b0014cc39306afmr8524674pzd.0.1695739886948;
+        Tue, 26 Sep 2023 07:51:26 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id g23-20020aa78197000000b00684ca1b45b9sm10310701pfi.149.2023.09.26.07.51.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Sep 2023 07:51:26 -0700 (PDT)
+Message-ID: <8acc0983-79f2-4704-9963-e8e7f2dc03ed@acm.org>
+Date:   Tue, 26 Sep 2023 07:51:24 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 09/23] scsi: sd: Do not issue commands to suspended
+ disks on shutdown
+Content-Language: en-US
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         John Garry <john.g.garry@oracle.com>,
@@ -37,51 +54,36 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v7 19/23] ata: libata-core: Do not resume runtime suspended ports
-Date:   Tue, 26 Sep 2023 17:15:03 +0900
-Message-ID: <20230926081507.69346-20-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230926081507.69346-1-dlemoal@kernel.org>
-References: <20230926081507.69346-1-dlemoal@kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230923002932.1082348-1-dlemoal@kernel.org>
+ <20230923002932.1082348-10-dlemoal@kernel.org>
+ <ca064bd3-2496-4d79-b68c-beff775228c3@acm.org>
+ <2b3ceca3-9e1c-7266-1f60-19e5f032c3e3@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <2b3ceca3-9e1c-7266-1f60-19e5f032c3e3@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The scsi disk driver does not resume disks that have been runtime
-suspended by the user. To be consistent with this behavior, do the same
-for ata ports and skip the PM request in ata_port_pm_resume() if the
-port was already runtime suspended. With this change, it is no longer
-necessary to force the PM state of the port to ACTIVE as the PM core
-code will take care of that when handling runtime resume.
+On 9/25/23 23:00, Damien Le Moal wrote:
+> It seems that you are suggesting that we should use some information 
+> from the scsi_device->power structure to detect the suspended 
+> state...
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/ata/libata-core.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Yes, that's indeed what I'm suggesting.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index df6ed386e6fc..58f03031a259 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5230,10 +5230,8 @@ static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
- 
- static int ata_port_pm_resume(struct device *dev)
- {
--	ata_port_resume(to_ata_port(dev), PMSG_RESUME, true);
--	pm_runtime_disable(dev);
--	pm_runtime_set_active(dev);
--	pm_runtime_enable(dev);
-+	if (!pm_runtime_suspended(dev))
-+		ata_port_resume(to_ata_port(dev), PMSG_RESUME, true);
- 	return 0;
- }
- 
--- 
-2.41.0
+> But as mentioned before, these are PM internal and should not be 
+> touched without the device lock held. So the little "suspended" flag 
+> simplifies things a lot.
 
+Hmm ... I think there is plenty of code in the Linux kernel that reads
+variables that can be modified by another thread without using locking.
+Hasn't the READ_ONCE() macro been introduced for this purpose? Anyway, I
+don't have a strong opinion about whether to read directly from the
+scsi_device->power data structure or whether to introduce the new
+'suspended' member.
+
+Thanks,
+
+Bart.
