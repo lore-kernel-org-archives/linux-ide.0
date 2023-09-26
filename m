@@ -2,47 +2,49 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 323BBE7F127
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 20:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C09AE7F150
+	for <linux-ide@archiver.kernel.org>; Wed, 27 Sep 2023 01:52:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235914AbjIZUmj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Sep 2023 16:42:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46042 "EHLO
+        id S230415AbjI0BwR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Sep 2023 21:52:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235911AbjIZUmh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 16:42:37 -0400
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3FE9121;
-        Tue, 26 Sep 2023 13:42:30 -0700 (PDT)
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1c47309a8ccso79454315ad.1;
-        Tue, 26 Sep 2023 13:42:30 -0700 (PDT)
+        with ESMTP id S229825AbjI0BuR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 21:50:17 -0400
+Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 510AE1F9CE;
+        Tue, 26 Sep 2023 16:30:54 -0700 (PDT)
+Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-3ae5ee80c0dso713028b6e.3;
+        Tue, 26 Sep 2023 16:30:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695760950; x=1696365750;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20230601; t=1695771053; x=1696375853;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nFirs3a2dJlXlflKvwTL4w4i69/0aKC6EzTD/RsrBrg=;
-        b=KXM0qmKddKIQGQ6QlP3gP/SBxZ/EOXZ2WdbWHOEwC/IZQ0w2P3qmqwiijKMewm730z
-         pgmkIq6psmCu61HNQXXKeuHFGYepZX070OGbrf29vPS9QdmlTq7lXSJVPKxHhbd9oaa9
-         MSku//lfEed4WoIs9gxlcDyvSIokp03gqvKvU2kugjGiNHZV1tslPwQYxuUF8qwYfrFZ
-         RCdUvW2jNotGcuSu3WtTH7GfwA9kWpfXje2ZgX6+IZ62O89mnuroFJ/1v5V4mjHukDhe
-         1qNP3wv3ktBbf0+rU2TvQbm+Z0m3Wclt1xSOYUqfgbJkLGc9WXUMw/lYj4SyV5cTHK0m
-         1iRQ==
-X-Gm-Message-State: AOJu0Yw+qnvcoReWRzavyRdCOjWlFMZi/lJJTYb/WtZb5Z3gSh8segWe
-        6gd+ZEQoSOp3J5Dry9N3n/M=
-X-Google-Smtp-Source: AGHT+IGvdjkSzAdf4+xtWTo5fRiNaDoKSXjD1Rp6l2jFft8ctuW78khLlQUi68T1isCkISewUidhbQ==
-X-Received: by 2002:a17:902:ecca:b0:1c3:432f:9f69 with SMTP id a10-20020a170902ecca00b001c3432f9f69mr26490plh.23.1695760950244;
-        Tue, 26 Sep 2023 13:42:30 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:a80d:6f65:53d4:d1bf? ([2620:15c:211:201:a80d:6f65:53d4:d1bf])
-        by smtp.gmail.com with ESMTPSA id c24-20020a170902d91800b001bf846dd2d0sm11479149plz.13.2023.09.26.13.42.29
+        bh=qpqjxGv637godH0bTfk5Je3fLHGyFwQagbqNm+b/J+g=;
+        b=cB7uCMLQV5fN0R5THJRxQYWgme5LUCzvntv6CW/R3TSiwcg7NLB/AatKaF3xShrEUy
+         kmy+epTew2VpHyly1wdrMxn3AG3udJaoawuCqtWZ0H+XBnBQrrgFP5XkYmefA3wTdlIi
+         wti2lOc0a9MLMbmpBEDO8neq8zRASNaBikJxp5PV0dSJcs5tx3BuZ9drzd0SJCjBRNwM
+         xwh3UxUX7hRFYk7SN3UHsz6A5AGdgdYg3ykAh5DagOiGdZj3LtTNIrgOHurIwNa9KSQ5
+         FG/1+2jZOmNJ1qdhYIEdQcS+x3ZF8QtRU+ghW/7vX9969cKmyTd8ilSTTRrGZlKCRPiK
+         1R5A==
+X-Gm-Message-State: AOJu0YzpwzrIbIZZSfF9bS7sjaLgWlsszX/dCr92F/tvsmoZo+5bIwQz
+        oJF28zFYvUbqNFh3ceOuSHA=
+X-Google-Smtp-Source: AGHT+IFWLP23MZC43ocbQN2sWQYB3tQQL000/vwi3GFjKFnjygXIOnm9cPVO85UtAkeHFk0cKaq1qQ==
+X-Received: by 2002:aca:2101:0:b0:3a3:95f9:c99b with SMTP id 1-20020aca2101000000b003a395f9c99bmr506927oiz.35.1695771053282;
+        Tue, 26 Sep 2023 16:30:53 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id fm1-20020a056a002f8100b00679a4b56e41sm10560926pfb.43.2023.09.26.16.30.51
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Sep 2023 13:42:29 -0700 (PDT)
-Message-ID: <2f7f884b-d4ce-4908-a69c-4110d9ee5907@acm.org>
-Date:   Tue, 26 Sep 2023 13:42:28 -0700
+        Tue, 26 Sep 2023 16:30:52 -0700 (PDT)
+Message-ID: <6a47b269-6481-40c3-8b32-90d7d6985401@acm.org>
+Date:   Tue, 26 Sep 2023 16:30:48 -0700
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 12/23] scsi: Remove scsi device no_start_on_resume flag
+Subject: Re: [PATCH v6 09/23] scsi: sd: Do not issue commands to suspended
+ disks on shutdown
 Content-Language: en-US
+From:   Bart Van Assche <bvanassche@acm.org>
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -54,69 +56,37 @@ Cc:     linux-scsi@vger.kernel.org,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
 References: <20230923002932.1082348-1-dlemoal@kernel.org>
- <20230923002932.1082348-13-dlemoal@kernel.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230923002932.1082348-13-dlemoal@kernel.org>
+ <20230923002932.1082348-10-dlemoal@kernel.org>
+ <ca064bd3-2496-4d79-b68c-beff775228c3@acm.org>
+ <2b3ceca3-9e1c-7266-1f60-19e5f032c3e3@kernel.org>
+ <8acc0983-79f2-4704-9963-e8e7f2dc03ed@acm.org>
+In-Reply-To: <8acc0983-79f2-4704-9963-e8e7f2dc03ed@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/22/23 17:29, Damien Le Moal wrote:
-> The scsi device flag no_start_on_resume is not set by any scsi low
-> level driver. Remove it. This reverts the changes introduced by commit
-> 0a8589055936 ("ata,scsi: do not issue START STOP UNIT on resume").
+On 9/26/23 07:51, Bart Van Assche wrote:
+> On 9/25/23 23:00, Damien Le Moal wrote:
+>> But as mentioned before, these are PM internal and should not be 
+>> touched without the device lock held. So the little "suspended" flag 
+>> simplifies things a lot.
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
-> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->   drivers/scsi/sd.c          | 13 ++++---------
->   include/scsi/scsi_device.h |  1 -
->   2 files changed, 4 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index bff8663be7e0..e372834bf56f 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3900,20 +3900,15 @@ static int sd_resume(struct device *dev, bool runtime)
->   	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
->   		return 0;
->   
-> -	if (!sd_do_start_stop(sdkp->device, runtime)) {
-> -		sdkp->suspended = 0;
-> -		return 0;
-> -	}
-> -
-> -	if (!sdkp->device->no_start_on_resume) {
-> +	if (sd_do_start_stop(sdkp->device, runtime)) {
->   		sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
->   		ret = sd_start_stop_device(sdkp, 1);
-> +		if (!ret)
-> +			opal_unlock_from_suspend(sdkp->opal_dev);
->   	}
->   
-> -	if (!ret) {
-> -		opal_unlock_from_suspend(sdkp->opal_dev);
-> +	if (!ret)
->   		sdkp->suspended = 0;
-> -	}
->   
->   	return ret;
->   }
+> Hmm ... I think there is plenty of code in the Linux kernel that reads
+> variables that can be modified by another thread without using locking.
+> Hasn't the READ_ONCE() macro been introduced for this purpose? Anyway, I
+> don't have a strong opinion about whether to read directly from the
+> scsi_device->power data structure or whether to introduce the new
+> 'suspended' member.
 
-I'm fine with removing the no_start_on_resume member but it seems to me
-that the above patch makes sd_resume() harder to read. I like the
-original approach (early return if sd_do_start_stop() returns false)
-better than the new approach (set ret inside an if-statement and clear
-sdkp->suspended after the sd_start_stop_device() call if ret == 0).
+(replying to my own email)
 
-In case others prefer the new flow: shouldn't that new flow have been
-introduced in patch 4/23 of this series instead of in this patch?
+I think we need the new 'suspended' flag. device_resume(), a function
+executed during system-wide resume, executes the following code whether
+or not resuming succeeds:
 
-Thanks,
+	dev->power.is_suspended = false;
 
 Bart.
+
