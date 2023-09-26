@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D972E7D24F
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 621E4E7D250
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Sep 2023 08:15:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233848AbjIZIPV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Sep 2023 04:15:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43064 "EHLO
+        id S233908AbjIZIPX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Sep 2023 04:15:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229776AbjIZIPR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 04:15:17 -0400
+        with ESMTP id S232778AbjIZIPV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 04:15:21 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 936ECB4;
-        Tue, 26 Sep 2023 01:15:10 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0EEDC433C8;
-        Tue, 26 Sep 2023 08:15:08 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62F30101;
+        Tue, 26 Sep 2023 01:15:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A15BC433C9;
+        Tue, 26 Sep 2023 08:15:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695716110;
-        bh=Ae9fgOKJgOYcoF9tLXrNWjYClA2QHehJv44Xrwl/UXw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=FqRxt2aRTtsNC25aHqklCgF0i7YLTuk1gr+uQbuLrClQjWkE6U/uL9kNeYnpzBa/o
-         ElTx6ez9EW7HhtOEg6dW7l26oIwFnyVnxZ2IcQVVIaQHV9ZB8/bhO8xxs9+0aH8gYV
-         /oPt/4svg2VOst1pUy8nxNoPWqEsrJGO2BGPSEYX5txsys1EdePHu+I4gr7eOP+a8V
-         Vafo0GYMMlBJ7erRYyTSs6V/TTKw8bz+b1ytEB6EmdovKcTv6+GQZJCB26mgo1PYb4
-         S4ieb0ZESQ64p2TJcPEvdm4MyfwOmnd1YRB2LkpeSVXkDSY1foZw1jLwrXZPwl3/Eg
-         SJZ4fyWq/AH2Q==
+        s=k20201202; t=1695716114;
+        bh=F1kHzoLUbhF3Y8aKwH4/dIwyg9TVGg/PIsUNzSFF1QE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=RuZ4hnlrJFz/845mYfeBBB/2i2EHG+9RcWR5/bQkOSLM6LDA73xS7SuJc0S2TWjAo
+         T2DZEdxKHDmeFkm/r3gsr5H8VKch+oiQBONmG26pxYK3VCPbZr+994WKe+q/CHU5Hd
+         X9LyOFQ1+4VqmomHUIUWNjnAKT5D4KYXRHF8v+3BUTzG8cqCSFv2GG/QTM5NN2WWtf
+         NQ2loX2I+uIMUCrynw/XkCwiYM+/Q1/ovfdsukmv3JXxIFyorzWPisx+SlrZlprbnL
+         ftULnZiS9KP3NqbipIdt0WYc55heXrfNO3uYRS4s8qee9wazDSIJ9wV/g4LL+kb3vK
+         bwoS0ZFuKhhEg==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
@@ -37,113 +37,93 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: [PATCH v7 00/23] Fix libata suspend/resume handling and code cleanup
-Date:   Tue, 26 Sep 2023 17:14:44 +0900
-Message-ID: <20230926081507.69346-1-dlemoal@kernel.org>
+Subject: [PATCH v7 02/23] ata: libata-core: Fix port and device removal
+Date:   Tue, 26 Sep 2023 17:14:46 +0900
+Message-ID: <20230926081507.69346-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230926081507.69346-1-dlemoal@kernel.org>
+References: <20230926081507.69346-1-dlemoal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The first 9 patches of this series fix several issues with suspend/resume
-power management operations in scsi and libata. The most significant
-changes introduced are in patch 4 and 5, where the manage_start_stop
-flag of scsi devices is split into the manage_system_start_stop and
-manage_runtime_start_stop flags to allow keeping scsi runtime power
-operations for spining up/down ATA devices but have libata do its own
-system suspend/resume device power state management using EH.
+Whenever an ATA adapter driver is removed (e.g. rmmod),
+ata_port_detach() is called repeatedly for all the adapter ports to
+remove (unload) the devices attached to the port and delete the port
+device itself. Removing of devices is done using libata EH with the
+ATA_PFLAG_UNLOADING port flag set. This causes libata EH to execute
+ata_eh_unload() which disables all devices attached to the port.
 
-The remaining patches are code cleanup that do not introduce any
-significant functional change.
+ata_port_detach() finishes by calling scsi_remove_host() to remove the
+scsi host associated with the port. This function will trigger the
+removal of all scsi devices attached to the host and in the case of
+disks, calls to sd_shutdown() which will flush the device write cache
+and stop the device. However, given that the devices were already
+disabled by ata_eh_unload(), the synchronize write cache command and
+start stop unit commands fail. E.g. running "rmmod ahci" with first
+removing sd_mod results in error messages like:
 
-This series was tested on qemu and on various PCs and servers. I am
-CC-ing people who recently reported issues with suspend/resume.
-Additional testing would be much appreciated.
+ata13.00: disable device
+sd 0:0:0:0: [sda] Synchronizing SCSI cache
+sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+sd 0:0:0:0: [sda] Stopping disk
+sd 0:0:0:0: [sda] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
 
-Changes from v6:
- * Changed patch 9 to use a bool for the new suspended flag.
+Fix this by removing all scsi devices of the ata devices connected to
+the port before scheduling libata EH to disable the ATA devices.
+Also delete the WAR_ON() call checking that the ATA_PFLAG_UNLOADING flag
+was cleared as that is done without holding the port lock.
 
-Changes from v5:
- * Typo and style corrections in patch 4 commit message
- * Changed patch 9 to use a new flag to track a disk suspended state
-   instead of using the scsi device state
- * Added review tags
+Fixes: 720ba12620ee ("[PATCH] libata-hp: update unload-unplug")
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
+Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
+Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/ata/libata-core.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-Changes from v4:
- * Remove ata_scsi_dev_alloc() function in patch 3, coding it directly
-   in ata_scsi_slave_alloc()
- * Correct typo in patch 19 commit message
- * Added Tested and review tags
-
-Changes from v3:
- * Corrected patch 1 (typo in commit message and WARN_ON() removal)
- * Changed path 3 as suggested by Niklas (moved definition of
-   ->slave_alloc)
- * Rebased on rc2
- * Added review tags
-
-Changes from v2:
- * Added patch 4 as simply disabling manage_start_stop from libata was
-   breaking individual disk runtime suspend/autosuspend. Patch 5 was
-   reworked accordingly to the changes in patch 4.
- * Fixed patch 3: applying the link creation was missing and the link
-   creation itself was also incorrect, preventing sd probe to execute
-   correctly. Thanks to Geert for testing and reporting this issue.
- * Split the "Fix delayed scsi_rescan_device() execution" patch into
-   patch 6 (scsi part) and patch 7 (ata part).
- * Modified patch 9 to not call sd_shutdown() from sd_remove() for
-   devices that are not running.
- * Added Chia-Lin Tested tag to unchanged patches
-
-Changes from v1:
- * Added patch 8 and 9 to fix compilation warnings with W=1
- * Addressed John comment in patch 19
- * Fixed patch 20 commit message (Sergei)
- * Added Hannes Review tag
-
-Damien Le Moal (23):
-  ata: libata-core: Fix ata_port_request_pm() locking
-  ata: libata-core: Fix port and device removal
-  ata: libata-scsi: link ata port and scsi device
-  scsi: sd: Differentiate system and runtime start/stop management
-  ata: libata-scsi: Disable scsi device manage_system_start_stop
-  scsi: Do not attempt to rescan suspended devices
-  ata: libata-scsi: Fix delayed scsi_rescan_device() execution
-  ata: libata-core: Do not register PM operations for SAS ports
-  scsi: sd: Do not issue commands to suspended disks on shutdown
-  ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
-  ata: libata-eh: Fix compilation warning in ata_eh_link_report()
-  scsi: Remove scsi device no_start_on_resume flag
-  ata: libata-scsi: Cleanup ata_scsi_start_stop_xlat()
-  ata: libata-core: Synchronize ata_port_detach() with hotplug
-  ata: libata-core: Detach a port devices on shutdown
-  ata: libata-core: Remove ata_port_suspend_async()
-  ata: libata-core: Remove ata_port_resume_async()
-  ata: libata-core: Do not poweroff runtime suspended ports
-  ata: libata-core: Do not resume runtime suspended ports
-  ata: libata-sata: Improve ata_sas_slave_configure()
-  ata: libata-eh: Improve reset error messages
-  ata: libata-eh: Reduce "disable device" message verbosity
-  ata: libata: Cleanup inline DMA helper functions
-
- drivers/ata/libata-core.c      | 242 +++++++++++++++++++++++++--------
- drivers/ata/libata-eh.c        |  76 +++++++++--
- drivers/ata/libata-sata.c      |   5 +-
- drivers/ata/libata-scsi.c      | 142 ++++++++++---------
- drivers/ata/libata-transport.c |   9 +-
- drivers/ata/libata.h           |   6 +
- drivers/firewire/sbp2.c        |   9 +-
- drivers/scsi/scsi_scan.c       |  18 ++-
- drivers/scsi/sd.c              | 102 +++++++++++---
- drivers/scsi/sd.h              |   1 +
- include/linux/libata.h         |  26 ++--
- include/scsi/scsi_device.h     |   4 +-
- include/scsi/scsi_host.h       |   2 +-
- 13 files changed, 457 insertions(+), 185 deletions(-)
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 732f3d0b4fd9..8e35afe5e560 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5948,11 +5948,30 @@ static void ata_port_detach(struct ata_port *ap)
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 
+-	/* tell EH we're leaving & flush EH */
++	/* Wait for any ongoing EH */
++	ata_port_wait_eh(ap);
++
++	mutex_lock(&ap->scsi_scan_mutex);
+ 	spin_lock_irqsave(ap->lock, flags);
++
++	/* Remove scsi devices */
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		ata_for_each_dev(dev, link, ALL) {
++			if (dev->sdev) {
++				spin_unlock_irqrestore(ap->lock, flags);
++				scsi_remove_device(dev->sdev);
++				spin_lock_irqsave(ap->lock, flags);
++				dev->sdev = NULL;
++			}
++		}
++	}
++
++	/* Tell EH to disable all devices */
+ 	ap->pflags |= ATA_PFLAG_UNLOADING;
+ 	ata_port_schedule_eh(ap);
++
+ 	spin_unlock_irqrestore(ap->lock, flags);
++	mutex_unlock(&ap->scsi_scan_mutex);
+ 
+ 	/* wait till EH commits suicide */
+ 	ata_port_wait_eh(ap);
 -- 
 2.41.0
 
