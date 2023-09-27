@@ -2,49 +2,59 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C09AE7F150
-	for <linux-ide@archiver.kernel.org>; Wed, 27 Sep 2023 01:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C534FE80A9A
+	for <linux-ide@archiver.kernel.org>; Wed, 27 Sep 2023 07:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230415AbjI0BwR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Sep 2023 21:52:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60024 "EHLO
+        id S229901AbjI0Hqa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 27 Sep 2023 03:46:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229825AbjI0BuR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Sep 2023 21:50:17 -0400
-Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 510AE1F9CE;
-        Tue, 26 Sep 2023 16:30:54 -0700 (PDT)
-Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-3ae5ee80c0dso713028b6e.3;
-        Tue, 26 Sep 2023 16:30:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695771053; x=1696375853;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qpqjxGv637godH0bTfk5Je3fLHGyFwQagbqNm+b/J+g=;
-        b=cB7uCMLQV5fN0R5THJRxQYWgme5LUCzvntv6CW/R3TSiwcg7NLB/AatKaF3xShrEUy
-         kmy+epTew2VpHyly1wdrMxn3AG3udJaoawuCqtWZ0H+XBnBQrrgFP5XkYmefA3wTdlIi
-         wti2lOc0a9MLMbmpBEDO8neq8zRASNaBikJxp5PV0dSJcs5tx3BuZ9drzd0SJCjBRNwM
-         xwh3UxUX7hRFYk7SN3UHsz6A5AGdgdYg3ykAh5DagOiGdZj3LtTNIrgOHurIwNa9KSQ5
-         FG/1+2jZOmNJ1qdhYIEdQcS+x3ZF8QtRU+ghW/7vX9969cKmyTd8ilSTTRrGZlKCRPiK
-         1R5A==
-X-Gm-Message-State: AOJu0YzpwzrIbIZZSfF9bS7sjaLgWlsszX/dCr92F/tvsmoZo+5bIwQz
-        oJF28zFYvUbqNFh3ceOuSHA=
-X-Google-Smtp-Source: AGHT+IFWLP23MZC43ocbQN2sWQYB3tQQL000/vwi3GFjKFnjygXIOnm9cPVO85UtAkeHFk0cKaq1qQ==
-X-Received: by 2002:aca:2101:0:b0:3a3:95f9:c99b with SMTP id 1-20020aca2101000000b003a395f9c99bmr506927oiz.35.1695771053282;
-        Tue, 26 Sep 2023 16:30:53 -0700 (PDT)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id fm1-20020a056a002f8100b00679a4b56e41sm10560926pfb.43.2023.09.26.16.30.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Sep 2023 16:30:52 -0700 (PDT)
-Message-ID: <6a47b269-6481-40c3-8b32-90d7d6985401@acm.org>
-Date:   Tue, 26 Sep 2023 16:30:48 -0700
+        with ESMTP id S230044AbjI0Hq1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 27 Sep 2023 03:46:27 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C803E11D;
+        Wed, 27 Sep 2023 00:46:25 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 715E121872;
+        Wed, 27 Sep 2023 07:46:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1695800784; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CbbQbrR06MjuXJUkpqQ4i2ColyIF9+FuLCUuRd70zN0=;
+        b=cehsKSIGqrkzjvuS+YRKKGY6hP4E+LsLP4CRw76jTvsSZZDZsIf6+ENVwusqslQbcRwLlh
+        YsluFvIeoz5EIfmKm1ZzA4EEfbJTIZ8dtaBwvY+my0wCg39ysRzZg+kNULIIBCUdW7gHG5
+        4Alo4nDaWcdgoDR+9ULJ3n8k6mTEN10=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1695800784;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CbbQbrR06MjuXJUkpqQ4i2ColyIF9+FuLCUuRd70zN0=;
+        b=IVVBb5U0XradsI9rNxG1aZiQ1Q5NON1UR3IgDTsrpzSZB/oR0HYjzxezTaa0Q2ZuZc9U3e
+        awWq63TCjs1Ti/BA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C79F61338F;
+        Wed, 27 Sep 2023 07:46:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id NAMeLs/dE2UmUQAAMHmgww
+        (envelope-from <hare@suse.de>); Wed, 27 Sep 2023 07:46:23 +0000
+Message-ID: <a08aa90e-7d3b-4601-812f-64c10bb6f10d@suse.de>
+Date:   Wed, 27 Sep 2023 09:46:23 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 09/23] scsi: sd: Do not issue commands to suspended
+Subject: Re: [PATCH v7 09/23] scsi: sd: Do not issue commands to suspended
  disks on shutdown
 Content-Language: en-US
-From:   Bart Van Assche <bvanassche@acm.org>
 To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
 Cc:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -55,38 +65,50 @@ Cc:     linux-scsi@vger.kernel.org,
         Joe Breuer <linux-kernel@jmbreuer.net>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230923002932.1082348-1-dlemoal@kernel.org>
- <20230923002932.1082348-10-dlemoal@kernel.org>
- <ca064bd3-2496-4d79-b68c-beff775228c3@acm.org>
- <2b3ceca3-9e1c-7266-1f60-19e5f032c3e3@kernel.org>
- <8acc0983-79f2-4704-9963-e8e7f2dc03ed@acm.org>
-In-Reply-To: <8acc0983-79f2-4704-9963-e8e7f2dc03ed@acm.org>
+References: <20230926081507.69346-1-dlemoal@kernel.org>
+ <20230926081507.69346-10-dlemoal@kernel.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230926081507.69346-10-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/26/23 07:51, Bart Van Assche wrote:
-> On 9/25/23 23:00, Damien Le Moal wrote:
->> But as mentioned before, these are PM internal and should not be 
->> touched without the device lock held. So the little "suspended" flag 
->> simplifies things a lot.
+On 9/26/23 10:14, Damien Le Moal wrote:
+> If an error occurs when resuming a host adapter before the devices
+> attached to the adapter are resumed, the adapter low level driver may
+> remove the scsi host, resulting in a call to sd_remove() for the
+> disks of the host. This in turn results in a call to sd_shutdown() which
+> will issue a synchronize cache command and a start stop unit command to
+> spindown the disk. sd_shutdown() issues the commands only if the device
+> is not already runtime suspended but does not check the power state for
+> system-wide suspend/resume. That is, the commands may be issued with the
+> device in a suspended state, which causes PM resume to hang, forcing a
+> reset of the machine to recover.
 > 
-> Hmm ... I think there is plenty of code in the Linux kernel that reads
-> variables that can be modified by another thread without using locking.
-> Hasn't the READ_ONCE() macro been introduced for this purpose? Anyway, I
-> don't have a strong opinion about whether to read directly from the
-> scsi_device->power data structure or whether to introduce the new
-> 'suspended' member.
+> Fix this by tracking the suspended state of a disk by introducing the
+> suspended boolean field in the scsi_disk structure. This flag is set to
+> true when the disk is suspended is sd_suspend_common() and resumed with
+> sd_resume(). When suspended is true, sd_shutdown() is not executed from
+> sd_remove().
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/scsi/sd.c | 17 +++++++++++++----
+>   drivers/scsi/sd.h |  1 +
+>   2 files changed, 14 insertions(+), 4 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-(replying to my own email)
+Cheers,
 
-I think we need the new 'suspended' flag. device_resume(), a function
-executed during system-wide resume, executes the following code whether
-or not resuming succeeds:
-
-	dev->power.is_suspended = false;
-
-Bart.
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
 
