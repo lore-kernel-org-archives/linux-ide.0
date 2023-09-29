@@ -2,129 +2,122 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D439CE71D35
-	for <linux-ide@archiver.kernel.org>; Fri, 29 Sep 2023 13:33:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50660E71D36
+	for <linux-ide@archiver.kernel.org>; Fri, 29 Sep 2023 13:37:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233139AbjI2Nda (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 29 Sep 2023 09:33:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53650 "EHLO
+        id S233266AbjI2Nhc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 29 Sep 2023 09:37:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232997AbjI2Nd3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Sep 2023 09:33:29 -0400
+        with ESMTP id S233342AbjI2Nhc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Sep 2023 09:37:32 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CA9D1A8
-        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2023 06:33:27 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CE88C433C8;
-        Fri, 29 Sep 2023 13:33:26 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BB951AB;
+        Fri, 29 Sep 2023 06:37:29 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F230C433C9;
+        Fri, 29 Sep 2023 13:37:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695994406;
-        bh=cC8mzHbpxY4PLk7i2WSmnNQYu4Ui6S6CCP+tcqZn+nw=;
-        h=From:To:Subject:Date:From;
-        b=ZEjQsWWpeyFu+N2IYCHUnHucNWerLg2ISv6Sv6WWkovuJN5IYi2wxC0IvIl3dFNHW
-         ta5zfAL2pe1v3EOP5ehabe5Kzvki97P18ZsWLiZPUqjXr8KxsCaHkKu8YBW4qQLzdV
-         emWaW64o6XYfGsFejUBIFIDPPT7b3rbds0i7zCpGmiG6uGmxr3NUNaufoHM4ldljzS
-         tZwpnUNTCWS9aYVBQ2ZR0/BxXvS7GP7Th4ZAwuWYQ02CRW9JVvIz4AquHvxSSL5tql
-         oSKQkbIMZQ9x/8XroDAuEPLSdM4MQ0Lz0hYbLwFeh3DLjFWIlSt8Wva6a7XRli30fb
-         Pn5YHSTVnKMng==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 6.6-rc4
-Date:   Fri, 29 Sep 2023 22:33:24 +0900
-Message-ID: <20230929133324.164211-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
+        s=k20201202; t=1695994648;
+        bh=WILwX/6d/wbJr0WfvDO9QF7WH2LpqgVnaecJ+E9s4yU=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=vJX1YlzUdiwa2pPYhtgSbLnoFNtBI2VcbfRnedTLlccM8bIpbMwJ9xAkt5qku6VlM
+         Y/vezh2hRTnQB9a8qeI71pMMQvxdHGxqZcTf5G2PQMy4Xea5cRWGrmDn6c8Owq4CpH
+         v7ycDW2y9OZVLXzdIiViI1KJrG5hc0ISm20639zPJwLyGpeT7l8CWDahYkxmGHUNnD
+         orXR2b9foBGUZibr3K5Wdm4hJ1IQU6t+rrIEZF69J1WdcBQ6GprpY4Nl/cUX29cIVy
+         jMGzDymNz0Zb69nsPvneYfSPTFIWxTbZvblu7jR8T/Ex52A2GfbJ7yZtccfdBnQz4O
+         UcD85eWnI+SRQ==
+Message-ID: <3a0e6a4d-1a82-0643-e1c0-9a7b1cc55b18@kernel.org>
+Date:   Fri, 29 Sep 2023 15:37:24 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Subject: Re: [PATCH v7 00/23] Fix libata suspend/resume handling and code
+ cleanup
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+References: <20230926081507.69346-1-dlemoal@kernel.org>
+ <CAMuHMdX_aNX2FZoydqgZTF+DA1uTt0zxbXcu1FXqeO5tUqry=Q@mail.gmail.com>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <CAMuHMdX_aNX2FZoydqgZTF+DA1uTt0zxbXcu1FXqeO5tUqry=Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+On 2023/09/28 14:26, Geert Uytterhoeven wrote:
+> Hi Damien,
+> 
+> (oops, found a two-day old email still in draft)
+> 
+> On Tue, Sep 26, 2023 at 10:15 AM Damien Le Moal <dlemoal@kernel.org> wrote:
+>> The first 9 patches of this series fix several issues with suspend/resume
+>> power management operations in scsi and libata. The most significant
+>> changes introduced are in patch 4 and 5, where the manage_start_stop
+>> flag of scsi devices is split into the manage_system_start_stop and
+>> manage_runtime_start_stop flags to allow keeping scsi runtime power
+>> operations for spining up/down ATA devices but have libata do its own
+>> system suspend/resume device power state management using EH.
+>>
+>> The remaining patches are code cleanup that do not introduce any
+>> significant functional change.
+>>
+>> This series was tested on qemu and on various PCs and servers. I am
+>> CC-ing people who recently reported issues with suspend/resume.
+>> Additional testing would be much appreciated.
+> 
+> JFTR, with current libata/for-next[*], I saw the following with
+> rcar-sata, once (interesting lines marked with "!"):
+> 
+>     PM: suspend entry (s2idle)
+>     Filesystems sync: 0.026 seconds
+>     Freezing user space processes
+>  !  ata1.00: qc timeout after 10000 msecs (cmd 0x40)
+>     Freezing user space processes completed (elapsed 0.007 seconds)
+>  !  ata1.00: VERIFY failed (err_mask=0x4)
+>     OOM killer disabled.
+>  !  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+>     Freezing remaining freezable tasks
+>  !  ata1.00: revalidation failed (errno=-5)
+>     Freezing remaining freezable tasks completed (elapsed 0.002 seconds)
+>     sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>     ata1: link resume succeeded after 1 retries
+>     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>     ata1.00: configured for UDMA/133
+>     ata1.00: Entering active power mode
+>     ata1.00: Entering standby power mode
+>     ravb e6800000.ethernet eth0: Link is Down
+>     Micrel KSZ9031 Gigabit PHY e6800000.ethernet-ffffffff:00: attached
+> PHY driver (mii_bus:phy_addr=e6800000.ethernet-ffffffff:00, irq=136)
+>     OOM killer enabled.
+>     Restarting tasks ... done.
+>     random: crng reseeded on system resumption
+>     PM: suspend exit
+>     ata1: link resume succeeded after 1 retries
+>     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>     ata1.00: Entering active power mode
+>     ata1.00: configured for UDMA/133
+>     ravb e6800000.ethernet eth0: Link is Up - 1Gbps/Full - flow control off
+> 
+> Regardless, the disk worked fine after resume.
+> 
+> Note that I saw this only once.
 
-The following changes since commit 6465e260f48790807eef06b583b38ca9789b6072:
+I think I found the reason for this, but to confirm, were you doing a suspend
+right after resuming the system ? If yes, that I think I exactly understand the
+issue and why you saw it only once (it is a subtle race with scheduling
+libata-EH suspend/resume operations). I will send a fix next week.
 
-  Linux 6.6-rc3 (2023-09-24 14:31:13 -0700)
+-- 
+Damien Le Moal
+Western Digital Research
 
-are available in the Git repository at:
-
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc4
-
-for you to fetch changes up to 49728bdc702391902a473b9393f1620eea32acb0:
-
-  ata: libata-eh: Fix compilation warning in ata_eh_link_report() (2023-09-28 21:24:18 +0900)
-
-----------------------------------------------------------------
-ATA fixes for 6.6-rc4
-
-A larger than usual set of fixes for 6.6-rc4 due to the unexpected
-number of fixes needed to address ATA disks suspend/resume issues.
-In more details:
-
- - Add missing additionalProperties on child nodes to the pata-common DT
-   bindings (Rob).
-
- - Fix handling of the REPORT SUPPORTED OPERATION CODES command to
-   ignore reserved bits (Niklas).
-
- - Increase port multiplier soft reset timeout to accomodate slow
-   devices and avoid issues on wakeup (Matthias).
-
- - A couple of minor code fixes to avoid compilation warnings in
-   libata-core and libata-eh (me).
-
- - Many patches from me to address suspend/resume issues, and in
-   particular a potential deadlock on resume due to the SCSI disk driver
-   resume operation not being synchronized with libata EH port resume
-   handling.  This is addressed by changing the scsi disk driver disk
-   start/stop control to allow libata to execute disk suspend (spin
-   down) and resume (spin up) on its own during system suspend/resume.
-   Runtime suspend/resume control remains with the SCSI disk driver.
-   Other fixes include:
-    - Fix libata power management request issuing to avoid races.
-    - Establish a link between ATA ports and SCSI devices to order PM
-      operations.
-    - Fix device removal to avoid issues with driver rmmod removal.
-    - Fix synchronization of libata device rescan and SCSI disk resume
-      operation.
-    - Remove libsas PM operations as suspend/resume is handled directly
-      by the sas controller resume.
-    - Fix the SCSI disk driver to not issue commands to suspended disks,
-      thus avoiding potential system lock-up on resume.
-
-----------------------------------------------------------------
-Damien Le Moal (11):
-      ata: libata-core: Fix ata_port_request_pm() locking
-      ata: libata-core: Fix port and device removal
-      ata: libata-scsi: link ata port and scsi device
-      scsi: sd: Differentiate system and runtime start/stop management
-      ata: libata-scsi: Disable scsi device manage_system_start_stop
-      scsi: Do not attempt to rescan suspended devices
-      ata: libata-scsi: Fix delayed scsi_rescan_device() execution
-      ata: libata-core: Do not register PM operations for SAS ports
-      scsi: sd: Do not issue commands to suspended disks on shutdown
-      ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
-      ata: libata-eh: Fix compilation warning in ata_eh_link_report()
-
-Matthias Schiffer (1):
-      ata: libata-sata: increase PMP SRST timeout to 10s
-
-Niklas Cassel (1):
-      ata: libata-scsi: ignore reserved bits for REPORT SUPPORTED OPERATION CODES
-
-Rob Herring (1):
-      dt-bindings: ata: pata-common: Add missing additionalProperties on child nodes
-
- .../devicetree/bindings/ata/pata-common.yaml       |   1 +
- drivers/ata/libata-core.c                          | 149 +++++++++++++++++++--
- drivers/ata/libata-eh.c                            |  48 ++++++-
- drivers/ata/libata-scsi.c                          |  97 +++++++++-----
- drivers/ata/libata-transport.c                     |   9 +-
- drivers/ata/libata.h                               |   4 +
- drivers/firewire/sbp2.c                            |   9 +-
- drivers/scsi/scsi_scan.c                           |  18 ++-
- drivers/scsi/sd.c                                  | 101 +++++++++++---
- drivers/scsi/sd.h                                  |   1 +
- include/linux/libata.h                             |  10 +-
- include/scsi/scsi_device.h                         |   5 +-
- include/scsi/scsi_host.h                           |   2 +-
- 13 files changed, 378 insertions(+), 76 deletions(-)
