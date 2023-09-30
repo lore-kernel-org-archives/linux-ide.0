@@ -2,62 +2,143 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68D89CE7AF3
-	for <linux-ide@archiver.kernel.org>; Fri, 29 Sep 2023 20:48:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B011CE728E1
+	for <linux-ide@archiver.kernel.org>; Sat, 30 Sep 2023 19:25:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233820AbjI2UsO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 29 Sep 2023 16:48:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40826 "EHLO
+        id S234734AbjI3TZX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 30 Sep 2023 15:25:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233450AbjI2UsO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Sep 2023 16:48:14 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C46091A7
-        for <linux-ide@vger.kernel.org>; Fri, 29 Sep 2023 13:48:12 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6C091C433C8;
-        Fri, 29 Sep 2023 20:48:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696020492;
-        bh=S9PZJ3seC8l5+5ovvaI6o8XrAd6O8kzh22gL0tUHy+U=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=O6Z2trFWJcLlyHr6GCrmTI+uQxshRykKtkT7msnCBBV/G7GfYYG6Y/V70y8rwAhIG
-         jY+Yu2KMzoPeRBlUGENNoe1+x7G6fqMi5IvnqaSmed4+wff4P7pV7wI15uLhUD2QA/
-         D2dryyzB3/02IOCWrXjDnNWifz0VE70FnmaKWCgjMS4je9wHCkkteuoo6X/4Ns9jlD
-         2AfHELkz7OAyUNsA6wyAAd08FNJqMO9ySsQ09hP0K8SqLrcwKDHsP6v0zf/2tmIyJF
-         bx3ZD196PP4P6C5uPgJUQusnk1SUVJ0E00/ZgSUIKh16WOqsFocNmgeJePOXrpSmHj
-         Sa7YnFwgzITBA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 52728C395C5;
-        Fri, 29 Sep 2023 20:48:12 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.6-rc4
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20230929133324.164211-1-dlemoal@kernel.org>
-References: <20230929133324.164211-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20230929133324.164211-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc4
-X-PR-Tracked-Commit-Id: 49728bdc702391902a473b9393f1620eea32acb0
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 95289e49f0a05f729a9ff86243c9aff4f34d4041
-Message-Id: <169602049233.6106.15402327378791787825.pr-tracker-bot@kernel.org>
-Date:   Fri, 29 Sep 2023 20:48:12 +0000
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
+        with ESMTP id S233050AbjI3TZX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 30 Sep 2023 15:25:23 -0400
+X-Greylist: delayed 591 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 30 Sep 2023 12:25:21 PDT
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1CD31C6;
+        Sat, 30 Sep 2023 12:25:21 -0700 (PDT)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 59A087A03B4;
+        Sat, 30 Sep 2023 21:15:28 +0200 (CEST)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] pata_parport: add custom version of wait_after_reset
+Date:   Sat, 30 Sep 2023 21:15:10 +0200
+Message-Id: <20230930191511.24994-4-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20230930191511.24994-1-linux@zary.sk>
+References: <20230930191511.24994-1-linux@zary.sk>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Fri, 29 Sep 2023 22:33:24 +0900:
+Some parallel adapters (e.g. EXP Computer MC-1285B EPP Cable) return
+bogus values when there's no master device present. This can cause
+reset to fail, preventing the lone slave device (such as EXP Computer
+CD-865) from working.
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc4
+Add custom version of wait_after_reset that ignores master failure when
+a slave device is present. The custom version is also needed because
+the generic ata_sff_wait_after_reset uses direct port I/O for slave
+device detection.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/95289e49f0a05f729a9ff86243c9aff4f34d4041
+Signed-off-by: Ondrej Zary <linux@zary.sk>
+---
+ drivers/ata/pata_parport/pata_parport.c | 65 ++++++++++++++++++++++++-
+ 1 file changed, 64 insertions(+), 1 deletion(-)
 
-Thank you!
-
+diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+index cf87bbb52f1f..b3db953e615a 100644
+--- a/drivers/ata/pata_parport/pata_parport.c
++++ b/drivers/ata/pata_parport/pata_parport.c
+@@ -80,6 +80,69 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
+ 	return (nsect == 0x55) && (lbal == 0xaa);
+ }
+ 
++static int pata_parport_wait_after_reset(struct ata_link *link,
++					 unsigned int devmask,
++					 unsigned long deadline)
++{
++	struct ata_port *ap = link->ap;
++	struct pi_adapter *pi = ap->host->private_data;
++	unsigned int dev0 = devmask & (1 << 0);
++	unsigned int dev1 = devmask & (1 << 1);
++	int rc, ret = 0;
++
++	ata_msleep(ap, ATA_WAIT_AFTER_RESET);
++
++	/* always check readiness of the master device */
++	rc = ata_sff_wait_ready(link, deadline);
++	/* some adapters return bogus values if master device is not present,
++	 * so don't abort now if a slave device is present
++	 */
++	if (rc) {
++		if (!dev1)
++			return rc;
++		ret = -ENODEV;
++	}
++
++	/* if device 1 was found in ata_devchk, wait for register
++	 * access briefly, then wait for BSY to clear.
++	 */
++	if (dev1) {
++		int i;
++
++		pata_parport_dev_select(ap, 1);
++
++		/* Wait for register access.  Some ATAPI devices fail
++		 * to set nsect/lbal after reset, so don't waste too
++		 * much time on it.  We're gonna wait for !BSY anyway.
++		 */
++		for (i = 0; i < 2; i++) {
++			u8 nsect, lbal;
++
++			nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
++			lbal = pi->proto->read_regr(pi, 0, ATA_REG_LBAL);
++			if ((nsect == 1) && (lbal == 1))
++				break;
++			ata_msleep(ap, 50);	/* give drive a breather */
++		}
++
++		rc = ata_sff_wait_ready(link, deadline);
++		if (rc) {
++			if (rc != -ENODEV)
++				return rc;
++			ret = rc;
++		}
++	}
++
++	/* is all this really necessary? */
++	pata_parport_dev_select(ap, 0);
++	if (dev1)
++		pata_parport_dev_select(ap, 1);
++	if (dev0)
++		pata_parport_dev_select(ap, 0);
++
++	return ret;
++}
++
+ static int pata_parport_bus_softreset(struct ata_port *ap, unsigned int devmask,
+ 				      unsigned long deadline)
+ {
+@@ -94,7 +157,7 @@ static int pata_parport_bus_softreset(struct ata_port *ap, unsigned int devmask,
+ 	ap->last_ctl = ap->ctl;
+ 
+ 	/* wait the port to become ready */
+-	return ata_sff_wait_after_reset(&ap->link, devmask, deadline);
++	return pata_parport_wait_after_reset(&ap->link, devmask, deadline);
+ }
+ 
+ static int pata_parport_softreset(struct ata_link *link, unsigned int *classes,
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Ondrej Zary
+
