@@ -2,92 +2,117 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A510E784A4
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Oct 2023 06:21:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0FA1E7490C
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Oct 2023 18:43:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235488AbjJBGV2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 2 Oct 2023 02:21:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39850 "EHLO
+        id S238823AbjJBSnS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 2 Oct 2023 14:43:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235495AbjJBGV0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Oct 2023 02:21:26 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1D63A7
-        for <linux-ide@vger.kernel.org>; Sun,  1 Oct 2023 23:21:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696227683; x=1727763683;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=S62AwAKNDm/m2EK7pgZ2AOtrcjlexBkTmciv5g4BtXo=;
-  b=Q0q6v5W8TrW4IcENYiv5VfbO7JaOuUxMWVotWJ3eKdQrIOn+IrKlTVwf
-   UCMX21cf/e9FApJfT2H4UPXVFnE19gjs5p/deLBaKFkI55rbaSBezZSC+
-   dsLmCNVJ7PgNcdcGY6rc7CmRTIj0NtvBxIbN7/B5kUQw6/g+XPjS5NLnC
-   uHlN456IMyeDafIaNS1fpshBYEklGPA2U0hVQZoSXFZ73lyScv/JvbDJS
-   NNJaRinR1gg7N22Xnn/XVke+W/xMtCn7y6XHh+yw3mQpTs0KVNdMP5wqk
-   f5UYglPcveFOOg/Vr8J+MiDXCtTp2byZ+5U947vsRshb3iYvgTRce6tc2
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="381472256"
-X-IronPort-AV: E=Sophos;i="6.03,193,1694761200"; 
-   d="scan'208";a="381472256"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2023 23:21:23 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="750493827"
-X-IronPort-AV: E=Sophos;i="6.03,193,1694761200"; 
-   d="scan'208";a="750493827"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga002.jf.intel.com with ESMTP; 01 Oct 2023 23:21:21 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 167A894; Mon,  2 Oct 2023 09:21:20 +0300 (EEST)
-Date:   Mon, 2 Oct 2023 09:21:20 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Koba Ko <koba.ko@canonical.com>
-Cc:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: ahci: Add Intel Alder Lake-P AHCI controller to low
- power chipsets list
-Message-ID: <20231002062120.GB3208943@black.fi.intel.com>
-References: <20230925080538.2894982-1-mika.westerberg@linux.intel.com>
- <e58ddf0f-3b7e-9599-dd7d-c6ed322d1184@kernel.org>
- <20230925091339.GM3208943@black.fi.intel.com>
- <385141b8-4d02-cecb-7393-7375f095198f@kernel.org>
- <CAJB-X+UdB-+O8O97hCRQNbFpU7CuNisVCQkaJZ4JD01qZ-JqJA@mail.gmail.com>
+        with ESMTP id S232711AbjJBSnS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Oct 2023 14:43:18 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B416EAB;
+        Mon,  2 Oct 2023 11:43:14 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.75.5) by msexch01.omp.ru (10.188.4.12)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Mon, 2 Oct 2023
+ 21:43:10 +0300
+Subject: Re: [PATCH 1/4] pata_parport: fix pata_parport_devchk
+To:     Ondrej Zary <linux@zary.sk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+CC:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, <linux-block@vger.kernel.org>,
+        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20230930191511.24994-1-linux@zary.sk>
+ <20230930191511.24994-2-linux@zary.sk>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <d040b3f7-4222-a027-34d0-5cf62aa63605@omp.ru>
+Date:   Mon, 2 Oct 2023 21:43:09 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJB-X+UdB-+O8O97hCRQNbFpU7CuNisVCQkaJZ4JD01qZ-JqJA@mail.gmail.com>
+In-Reply-To: <20230930191511.24994-2-linux@zary.sk>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.75.5]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 10/02/2023 18:24:27
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 180294 [Oct 02 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 535 535 da804c0ea8918f802fc60e7a20ba49783d957ba2
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.75.5 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: {rdns complete}
+X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.75.5
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 10/02/2023 18:30:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 10/2/2023 5:26:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Sep 26, 2023 at 12:55:05PM +0800, Koba Ko wrote:
-> On Mon, Sep 25, 2023 at 5:27 PM Damien Le Moal <dlemoal@kernel.org> wrote:
-> >
-> > On 2023/09/25 11:13, Mika Westerberg wrote:
-> > > Hi,
-> > >
-> > > On Mon, Sep 25, 2023 at 11:09:01AM +0200, Damien Le Moal wrote:
-> > >> On 2023/09/25 10:05, Mika Westerberg wrote:
-> > >>> Intel Alder Lake-P AHCI controller needs to be added to the mobile
-> > >>> chipsets list in order to have link power management enabled. Without
-> > >>> this the CPU cannot enter lower power C-states making idle power
-> > >>> consumption high.
-> > >>>
-> > >>> Cc: Koba Ko <koba.ko@canonical.com>
-> > >>> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > >>
-> > >> Looks OK, but given that there is a tendency of the low power stuff to be buggy,
-> > >> was this well tested ?
-> > >
-> > > Yes it was tested (Koba Cc'd can confirm this). We also confirmed from
-> > > Intel AHCI folks that the ADL (and RPL) AHCI controllers fully support
-> > > this configuration.
+Hello!
+
+On 9/30/23 10:15 PM, Ondrej Zary wrote:
+
+> There's a 'x' missing in 0x55 in pata_parport_devchk(), causing the
+> detection to always fail. Fix it.
 > 
-> I verified on an ADL platform with odd and disk devices and
-> they work fine.
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
 
-Thanks!
+   I think we need a Fixes: tag here...
 
-@Damien, just checking whether this fell through cracks because I do not
-see it applied to libata.git next branches?
+> ---
+>  drivers/ata/pata_parport/pata_parport.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+> index 1af64d435d3c..258d189f42e5 100644
+> --- a/drivers/ata/pata_parport/pata_parport.c
+> +++ b/drivers/ata/pata_parport/pata_parport.c
+> @@ -64,7 +64,7 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
+>  	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0xaa);
+>  	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0x55);
+>  
+> -	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 055);
+> +	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0x55);
+
+   Oh, Gawd! How did this ever work?! :-/
+   This bug seems to predate the Big PARIDE move...
+
+>  	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0xaa);
+>  
+>  	nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
+> 
+
+MBR, Sergey
