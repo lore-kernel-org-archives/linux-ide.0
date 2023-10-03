@@ -2,237 +2,187 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75487E7AD7A
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 16:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4DEAE7AD7B
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 16:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240445AbjJCQsq convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 Oct 2023 12:48:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39134 "EHLO
+        id S240491AbjJCQzX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Oct 2023 12:55:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240459AbjJCQsq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 12:48:46 -0400
-Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DDCA9E;
-        Tue,  3 Oct 2023 09:48:39 -0700 (PDT)
-Received: by mail-ot1-f44.google.com with SMTP id 46e09a7af769-6c61dd1c229so237969a34.0;
-        Tue, 03 Oct 2023 09:48:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696351718; x=1696956518;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=irb00cVove17+s3Tf7TW9K24fCe6oxVKboZAuQ072O0=;
-        b=cxf2zSQum0DnoOQxgHN49ZCKzIf+ctiMSmqP5Zl3jwTYVTs3J2Q6TrRnXY1MN6f3NW
-         x8iMsWHbtdD5joMcp47hoYOH/KU1H6O5vozgiER8W9y9122k7H7jNQwKEQOe7fLehdha
-         Zo8V/ELzWZFyA4RO8v/4KqGufuqZ++7t6+nblWo0+5J9G047V32/F4IWZ0LLKKgTotMC
-         fhrSBXnBRYcfQqeM6cCzmq7HDJSHaeefi9cReoumuYH2x83bv4ad4J1Mog6vJBzeTdiR
-         W8l4iZyGUOvVENvhTtkUXmo9X0OZ7nO0p+7w4gJUM84BN4ovey8li0TIP5NceLfc5Q8+
-         BBMA==
-X-Gm-Message-State: AOJu0YxUP8mTMceiNBBuI9ZVrWtY8B3s+BOBS4yLhQU1DiV1svJcNjqQ
-        ov2BUKx+MEOFx5TTXGgwvzlfTUz1wqAFeQktA+/rSg2X
-X-Google-Smtp-Source: AGHT+IFQ+KqgeV7IQ9MDWiLEf0kK/iY0szcNCNKZ0GNhxgmiWKmgiNTw9y1PgT0RIhPSlFlqMvG6defNA1tpWcBpy3A=
-X-Received: by 2002:a05:6808:1a27:b0:3a9:e40c:683c with SMTP id
- bk39-20020a0568081a2700b003a9e40c683cmr138131oib.1.1696351718442; Tue, 03 Oct
- 2023 09:48:38 -0700 (PDT)
+        with ESMTP id S231388AbjJCQzW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 12:55:22 -0400
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EBE8B7;
+        Tue,  3 Oct 2023 09:55:18 -0700 (PDT)
+Received: from [192.168.1.103] (178.176.78.48) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Tue, 3 Oct 2023
+ 19:55:08 +0300
+Subject: Re: [PATCH 3/4] pata_parport: add custom version of wait_after_reset
+To:     Damien Le Moal <dlemoal@kernel.org>, Ondrej Zary <linux@zary.sk>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+CC:     Christoph Hellwig <hch@lst.de>, Tim Waugh <tim@cyberelk.net>,
+        <linux-parport@lists.infradead.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20230930191511.24994-1-linux@zary.sk>
+ <20230930191511.24994-4-linux@zary.sk>
+ <d2fd9a3c-3efd-dbfe-7b2a-dc36989b8379@kernel.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <14129ea5-1597-efce-e782-23a95f3c0bd9@omp.ru>
+Date:   Tue, 3 Oct 2023 19:55:07 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-References: <20230930122054.3cf727a4@meshulam> <20231003113135.38384a87@meshulam.tesarici.cz>
- <CAJZ5v0i-FV29TUq8E=FGxB_dRKEJvdoKxzwPGAX0C9vnD7O8eg@mail.gmail.com>
- <20231003130240.0c64bc2e@meshulam.tesarici.cz> <CAJZ5v0hvEyVAwA3r5OWv4W_vTbRXt_Oxv+Avvn6N0=1RoN=NCg@mail.gmail.com>
- <20231003144019.24566b05@meshulam.tesarici.cz> <CAJZ5v0jttFqKE_CLpF+-vJ_wDAuOo_BUS33htpFUs6idNMugKg@mail.gmail.com>
- <20231003145110.1f22adfb@meshulam.tesarici.cz> <CAJZ5v0jbT0DaDpFpLbzO46-Yg6QJ-MrcZAuP+c60q9KpFHAtpQ@mail.gmail.com>
- <20231003171710.2c6a913c@meshulam.tesarici.cz>
-In-Reply-To: <20231003171710.2c6a913c@meshulam.tesarici.cz>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 3 Oct 2023 18:48:27 +0200
-Message-ID: <CAJZ5v0hXZx3ghWrfcTmTzwDJzYqLpzeBhx+CqBjg65Dngc2eRg@mail.gmail.com>
-Subject: Re: Thinkpad E595 system deadlock on resume from S3
-To:     =?UTF-8?B?UGV0ciBUZXNhxZnDrWs=?= <petr@tesarici.cz>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        linux-pm@vger.kernel.org, linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <d2fd9a3c-3efd-dbfe-7b2a-dc36989b8379@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [178.176.78.48]
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 5.9.59, Database issued on: 10/03/2023 16:33:34
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 180330 [Oct 03 2023]
+X-KSE-AntiSpam-Info: Version: 5.9.59.0
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 535 535 da804c0ea8918f802fc60e7a20ba49783d957ba2
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: 127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;178.176.78.48:7.1.2
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: {rdns complete}
+X-KSE-AntiSpam-Info: {fromrtbl complete}
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.78.48
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=none header.from=omp.ru;spf=none
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 10/03/2023 16:37:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 10/3/2023 12:09:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Oct 3, 2023 at 5:18 PM Petr Tesařík <petr@tesarici.cz> wrote:
->
-> On Tue, 3 Oct 2023 14:57:46 +0200
-> "Rafael J. Wysocki" <rafael@kernel.org> wrote:
->
-> > On Tue, Oct 3, 2023 at 2:51 PM Petr Tesařík <petr@tesarici.cz> wrote:
-> > >
-> > > On Tue, 3 Oct 2023 14:48:13 +0200
-> > > "Rafael J. Wysocki" <rafael@kernel.org> wrote:
-> > >
-> > > > On Tue, Oct 3, 2023 at 2:40 PM Petr Tesařík <petr@tesarici.cz> wrote:
-> > > > >
-> > > > > On Tue, 3 Oct 2023 14:34:56 +0200
-> > > > > "Rafael J. Wysocki" <rafael@kernel.org> wrote:
-> > > > >
-> > > > > > On Tue, Oct 3, 2023 at 1:02 PM Petr Tesařík <petr@tesarici.cz> wrote:
-> > > > > > >
-> > > > > > > On Tue, 3 Oct 2023 12:15:10 +0200
-> > > > > > > "Rafael J. Wysocki" <rafael@kernel.org> wrote:
-> > > > > > >
-> > > > > > > > On Tue, Oct 3, 2023 at 11:31 AM Petr Tesařík <petr@tesarici.cz> wrote:
-> > > > > > > > >
-> > > > > > > > > Hi again (adding more recipients),
-> > > > > > > > >
-> > > > > > > > > On Sat, 30 Sep 2023 12:20:54 +0200
-> > > > > > > > > Petr Tesařík <petr@tesarici.cz> wrote:
-> > > > > > > > >
-> > > > > > > > > > Hi all,
-> > > > > > > > > >
-> > > > > > > > > > this time no patch (yet). In short, my Thinkpad running v6.6-rc3 fails
-> > > > > > > > > > to resume from S3. It also fails the same way with Tumbleweed v6.5
-> > > > > > > > > > kernel. I was able to capture a crash dump of the v6.5 kernel, and
-> > > > > > > > > > here's my analysis:
-> > > > > > > > > >
-> > > > > > > > > > The system never gets to waking up my SATA SSD disk:
-> > > > > > > > > >
-> > > > > > > > > > [0:0:0:0]    disk    ATA      KINGSTON SEDC600 H5.1  /dev/sda
-> > > > > > > > > >
-> > > > > > > > > > There is a pending resume work for kworker/u32:12 (PID 11032), but this
-> > > > > > > > > > worker is stuck in 'D' state:
-> > > > > > > > > >
-> > > > > > > > > > >>> prog.stack_trace(11032)
-> > > > > > > > > > #0  context_switch (../kernel/sched/core.c:5381:2)
-> > > > > > > > > > #1  __schedule (../kernel/sched/core.c:6710:8)
-> > > > > > > > > > #2  schedule (../kernel/sched/core.c:6786:3)
-> > > > > > > > > > #3  schedule_preempt_disabled (../kernel/sched/core.c:6845:2)
-> > > > > > > > > > #4  __mutex_lock_common (../kernel/locking/mutex.c:679:3)
-> > > > > > > > > > #5  __mutex_lock (../kernel/locking/mutex.c:747:9)
-> > > > > > > > > > #6  acpi_device_hotplug (../drivers/acpi/scan.c:382:2)
-> > > > > > > > > > #7  acpi_hotplug_work_fn (../drivers/acpi/osl.c:1162:2)
-> > > > > > > > > > #8  process_one_work (../kernel/workqueue.c:2600:2)
-> > > > > > > > > > #9  worker_thread (../kernel/workqueue.c:2751:4)
-> > > > > > > > > > #10 kthread (../kernel/kthread.c:389:9)
-> > > > > > > > > > #11 ret_from_fork (../arch/x86/kernel/process.c:145:3)
-> > > > > > > > > > #12 ret_from_fork_asm+0x1b/0x20 (../arch/x86/entry/entry_64.S:304)
-> > > > > > > > > >
-> > > > > > > > > > acpi_device_hotplug() tries to acquire acpi_scan_lock, which is held by
-> > > > > > > > > > systemd-sleep (PID 11002). This task is also in 'D' state:
-> > > > > > > > > >
-> > > > > > > > > > >>> prog.stack_trace(11002)
-> > > > > > > > > > #0  context_switch (../kernel/sched/core.c:5381:2)
-> > > > > > > > > > #1  __schedule (../kernel/sched/core.c:6710:8)
-> > > > > > > > > > #2  schedule (../kernel/sched/core.c:6786:3)
-> > > > > > > > > > #3  schedule_preempt_disabled (../kernel/sched/core.c:6845:2)
-> > > > > > > > > > #4  __mutex_lock_common (../kernel/locking/mutex.c:679:3)
-> > > > > > > > > > #5  __mutex_lock (../kernel/locking/mutex.c:747:9)
-> > > > > > > > > > #6  device_lock (../include/linux/device.h:958:2)
-> > > > > > > > > > #7  device_complete (../drivers/base/power/main.c:1063:2)
-> > > > > > > > > > #8  dpm_complete (../drivers/base/power/main.c:1121:3)
-> > > > > > > > > > #9  suspend_devices_and_enter (../kernel/power/suspend.c:516:2)
-> > > > > > > > >
-> > > > > > > > > I believe the issue must be somewhere here. The whole suspend and
-> > > > > > > > > resume logic in suspend_devices_and_enter() is framed by
-> > > > > > > > > platform_suspend_begin() and platform_resume_end().
-> > > > > > > > >
-> > > > > > > > > My system is an ACPI system, so suspend_ops contains:
-> > > > > > > > >
-> > > > > > > > >         .begin = acpi_suspend_begin,
-> > > > > > > > >         .end = acpi_pm_end,
-> > > > > > > > >
-> > > > > > > > > Now, acpi_suspend_begin() acquires acpi_scan_lock through
-> > > > > > > > > acpi_pm_start(), and the lock is not released until acpi_pm_end().
-> > > > > > > > > Since dpm_complete() waits for the completion of a work that tries to
-> > > > > > > > > acquire acpi_scan_lock, the system will deadlock.
-> > > > > > > >
-> > > > > > > > So holding acpi_scan_lock across suspend-resume is basically to
-> > > > > > > > prevent the hotplug from taking place then IIRC.
-> > > > > > > >
-> > > > > > > > > AFAICS either:
-> > > > > > > > >
-> > > > > > > > > a. the ACPI lock cannot be held while dpm_complete() runs, or
-> > > > > > > > > b. ata_scsi_dev_rescan() must not be scheduled before the system is
-> > > > > > > > > resumed, or
-> > > > > > > > > c. acpi_device_hotplug() must be implemented without taking dev->mutex.
-> > > > > > > > >
-> > > > > > > > > My gut feeling is that b. is the right answer.
-> > > > > > > >
-> > > > > > > > It's been a while since I looked at that code last time, but then it
-> > > > > > > > has not changed for quite some time too.
-> > > > > > > >
-> > > > > > > > It looks like the acpi_device_hotplug() path attempts to acquire
-> > > > > > > > acpi_scan_lock() while holding dev->mutex which is kind of silly.  I
-> > > > > > > > need to check that, though.
-> > > > > > >
-> > > > > > > Thanks for your willingness. Well, it's not quite what you describe. If
-> > > > > > > it was a simple ABBA deadlock, then it would be reported by lockdep.
-> > > > > > > No, it's more complicated:
-> > > > > > >
-> > > > > > > 1. suspend_devices_and_enter() holds acpi_scan_lock,
-> > > > > > > 2. an ACPI hotplug work runs, but acpi_device_hotplug() goes to sleep
-> > > > > > >    when it gets to acquiring acpi_scan_lock,
-> > > > > > > 3. ata_scsi_dev_rescan() submits a SCSI command and waits for its
-> > > > > > >    completion while holding dev->mutex,
-> > > > > > > 4. the SCSI completion work happens to be put on the same workqueue as
-> > > > > > >    the ACPI hotplug work in step 2,
-> > > > > > >    ^^^--- THIS is how the two events are serialized!
-> > > > > >
-> > > > > > Which is unexpected.
-> > > > > >
-> > > > > > And quite honestly I'm not sure how this can happen, because
-> > > > > > acpi_hotplug_schedule() uses a dedicated workqueue and it is called
-> > > > > > from (a) the "eject" sysfs attribute (which cannot happen while system
-> > > > > > suspend-resume is in progress) and (b) acpi_bus_notify() which has
-> > > > > > nothing to do with SCSI.
-> > > > >
-> > > > > Oh, you're right, and I was too quick. They cannot be on the same
-> > > > > queue...
-> > > > >
-> > > > > > Maybe the workqueue used for the SCSI completion is freezable?
-> > > > >
-> > > > > Yes, that's it:
-> > > > >
-> > > > > *(struct workqueue_struct *)0xffff97d240b2fe00 = {
-> > > > > /* ... */
-> > > > >         .flags = (unsigned int)4,
-> > > > > /* WQ_FREEZABLE            = 1 << 2 */
-> > > > >
-> > > > > Good. But if this workqueue is frozen, the system still cannot make
-> > > > > progress.
-> > > >
-> > > > The problem seems to be that dev->mutex is held while the work item
-> > > > goes to a freezable workqueue and is waited for, which is an almost
-> > > > guaranteed deadlock scenario.
-> > >
-> > > Ah. Thanks for explanation and direction! I'm going to dive into the
-> > > block layer and/or SCSI code and bug other people with my findings.
-> >
-> > Please feel free to CC me on that in case I can help.
->
-> And here I am again... The frozen workqueue is in fact pm_wq, and the
-> work item that is waited for is pm_runtime_work. The block layer calls
-> pm_request_resume() on the device to resume the queue.
+On 10/3/23 3:55 AM, Damien Le Moal wrote:
 
-If it called pm_runtime_resume() instead, this might work.
+[...]
+>> Some parallel adapters (e.g. EXP Computer MC-1285B EPP Cable) return
+>> bogus values when there's no master device present. This can cause
+>> reset to fail, preventing the lone slave device (such as EXP Computer
+>> CD-865) from working.
+>>
+>> Add custom version of wait_after_reset that ignores master failure when
+>> a slave device is present. The custom version is also needed because
+>> the generic ata_sff_wait_after_reset uses direct port I/O for slave
+>> device detection.
+>>
+>> Signed-off-by: Ondrej Zary <linux@zary.sk>
+>> ---
+>>  drivers/ata/pata_parport/pata_parport.c | 65 ++++++++++++++++++++++++-
+>>  1 file changed, 64 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+>> index cf87bbb52f1f..b3db953e615a 100644
+>> --- a/drivers/ata/pata_parport/pata_parport.c
+>> +++ b/drivers/ata/pata_parport/pata_parport.c
+>> @@ -80,6 +80,69 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
+>>  	return (nsect == 0x55) && (lbal == 0xaa);
+>>  }
+>>  
+>> +static int pata_parport_wait_after_reset(struct ata_link *link,
+>> +					 unsigned int devmask,
+>> +					 unsigned long deadline)
+>> +{
+>> +	struct ata_port *ap = link->ap;
+>> +	struct pi_adapter *pi = ap->host->private_data;
+>> +	unsigned int dev0 = devmask & (1 << 0);
+>> +	unsigned int dev1 = devmask & (1 << 1);
+>> +	int rc, ret = 0;
+>> +
+>> +	ata_msleep(ap, ATA_WAIT_AFTER_RESET);
+>> +
+>> +	/* always check readiness of the master device */
+>> +	rc = ata_sff_wait_ready(link, deadline);
+>> +	/* some adapters return bogus values if master device is not present,
+>> +	 * so don't abort now if a slave device is present
+>> +	 */
+> 
+> In addition to Sergey's comment, please move this comment inside the "if", or
+> even better, merge it with the otherwise not very useful "always check
+> readiness..." comment.
 
-> I bet the queue should not be resumed this early. In fact, it seems
-> that this is somewhat known to the ATA developers, because
-> ata_scsi_dev_rescan() contains this beautiful comment and code:
->
->                         /*
->                          * If the rescan work was scheduled because of a resume
->                          * event, the port is already fully resumed, but the
->                          * SCSI device may not yet be fully resumed. In such
->                          * case, executing scsi_rescan_device() may cause a
->                          * deadlock with the PM code on device_lock(). Prevent
->                          * this by giving up and retrying rescan after a short
->                          * delay.
->                          */
->                         delay_rescan = sdev->sdev_gendev.power.is_suspended;
->                         if (delay_rescan) {
->                                 scsi_device_put(sdev);
->                                 break;
->                         }
->
-> It just doesn't seem to work as expected, at least not in my case.
+   That comment was copied from ata_sff_wait_after_reset(), I think...
 
-Well, calling pm_request_resume() and waiting for the resume to
-actually happen is problematic regardless.  It is just better to call
-pm_runtime_resume() to synchronously resume the device instead.
+[...]
+>> +	/* if device 1 was found in ata_devchk, wait for register
+>> +	 * access briefly, then wait for BSY to clear.
+>> +	 */
+>> +	if (dev1) {
+>> +		int i;
+>> +
+>> +		pata_parport_dev_select(ap, 1);
+>> +
+>> +		/* Wait for register access.  Some ATAPI devices fail
+>> +		 * to set nsect/lbal after reset, so don't waste too
+>> +		 * much time on it.  We're gonna wait for !BSY anyway.
+>> +		 */
+>> +		for (i = 0; i < 2; i++) {
+>> +			u8 nsect, lbal;
+>> +
+>> +			nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
+>> +			lbal = pi->proto->read_regr(pi, 0, ATA_REG_LBAL);
+>> +			if ((nsect == 1) && (lbal == 1))
+>> +				break;
+>> +			ata_msleep(ap, 50);	/* give drive a breather */
+> 
+> Please move the comment on its own line above the sleep call.
+
+   Again, copied verbatim from ata_sff_wait_after_reset()...
+
+>> +		}
+>> +
+>> +		rc = ata_sff_wait_ready(link, deadline);
+>> +		if (rc) {
+>> +			if (rc != -ENODEV)
+>> +				return rc;
+>> +			ret = rc;
+>> +		}
+>> +	}
+>> +
+>> +	/* is all this really necessary? */
+> 
+> I don't know. It is your driver... So either drop this comment, or clearly
+> explain why this is done.
+
+   And again, copied verbatim from ata_sff_wait_after_reset()...
+
+>> +	pata_parport_dev_select(ap, 0);
+>> +	if (dev1)
+>> +		pata_parport_dev_select(ap, 1);
+>> +	if (dev0)
+>> +		pata_parport_dev_select(ap, 0);
+> 
+> Can you have dev1 && dev0 == true ? This seems like the second if should be an
+> "else if", but it is not clear what this is doing.
+
+   I guess this tries to leave the valid taskfile regs readable on a channel, instead
+of just 0xff...
+
+[...]
+
+MBR, Sergey
