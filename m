@@ -2,54 +2,109 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E19D9E8FDBC
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 21:32:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A87E1E8FDBF
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 23:44:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232288AbjJCVci (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 Oct 2023 17:32:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38040 "EHLO
+        id S237474AbjJCXop (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Oct 2023 19:44:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232084AbjJCVch (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 17:32:37 -0400
-X-Greylist: delayed 590 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 03 Oct 2023 14:32:34 PDT
-Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AAC3A1;
-        Tue,  3 Oct 2023 14:32:34 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 9A49013DDF4; Tue,  3 Oct 2023 17:22:40 -0400 (EDT)
-Date:   Tue, 3 Oct 2023 17:22:40 -0400
-From:   Phillip Susi <phill@thesusis.net>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v8 00/23] Fix libata suspend/resume handling and code
- cleanup
-Message-ID: <ZRyGIE+NpmtMu7XK@thesusis.net>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <874jj8sia5.fsf@vps.thesusis.net>
- <87h6n87dac.fsf@vps.thesusis.net>
- <269e2876-58fd-b73c-0c0d-1593c17c2809@kernel.org>
+        with ESMTP id S236153AbjJCXoo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 19:44:44 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DEE0AC;
+        Tue,  3 Oct 2023 16:44:42 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CABD1C433C8;
+        Tue,  3 Oct 2023 23:44:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696376681;
+        bh=rO7tjPN6uZm4/JITt2OVrxGgcksZSVWaqqA8pZ0ZOyI=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=lqtIhGPHVnvZMhDfApG/78p4SAY3mcJ2ttjU9K4k5PG820Ykucd8bDs/rZvELZ4KE
+         AAMFm9HT/4lOLaAi+C71LpWnp/7GYUbmLAAROIJgyOGfGV4xckXlHft5vSOo3Vl87f
+         fPjTBryghCREO9zCrWxHOp91nEmZyraVzpmoO5uVkHyKnTQEpxM6klAzZNHmCBRc+u
+         nSuqOdKAvzwQPD8UDEbw5lBFiEEUyaDOuTYBmBb6A/3jhUtlQI1OVqczGk7kQEg7zp
+         gzkzKghKdRldVETkYSvlms60Sdc+DXGwb8b8mrc95b6Z/yvXZ+nqLKbm73VT3eTLu4
+         N7I3+QggorWIw==
+Message-ID: <32bda4e5-946d-44fd-8d80-e227f6b6dd18@kernel.org>
+Date:   Wed, 4 Oct 2023 08:44:39 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <269e2876-58fd-b73c-0c0d-1593c17c2809@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH 3/4] pata_parport: add custom version of wait_after_reset
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, Ondrej Zary <linux@zary.sk>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Tim Waugh <tim@cyberelk.net>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230930191511.24994-1-linux@zary.sk>
+ <20230930191511.24994-4-linux@zary.sk>
+ <d2fd9a3c-3efd-dbfe-7b2a-dc36989b8379@kernel.org>
+ <14129ea5-1597-efce-e782-23a95f3c0bd9@omp.ru>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <14129ea5-1597-efce-e782-23a95f3c0bd9@omp.ru>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Oct 03, 2023 at 09:44:50AM +0900, Damien Le Moal wrote:
-> Hmmm... So this could be the fs suspend then, which issues a sync but the device
-> is already suspended and was synced already. In that case, we should turn that
-> sync into a nop to not wakeup the drive unnecessarily. The fix may be needed on
-> scsi sd side rather than libata.
+On 10/4/23 01:55, Sergey Shtylyov wrote:
+> On 10/3/23 3:55 AM, Damien Le Moal wrote:
+> 
+> [...]
+>>> Some parallel adapters (e.g. EXP Computer MC-1285B EPP Cable) return
+>>> bogus values when there's no master device present. This can cause
+>>> reset to fail, preventing the lone slave device (such as EXP Computer
+>>> CD-865) from working.
+>>>
+>>> Add custom version of wait_after_reset that ignores master failure when
+>>> a slave device is present. The custom version is also needed because
+>>> the generic ata_sff_wait_after_reset uses direct port I/O for slave
+>>> device detection.
+>>>
+>>> Signed-off-by: Ondrej Zary <linux@zary.sk>
+>>> ---
+>>>  drivers/ata/pata_parport/pata_parport.c | 65 ++++++++++++++++++++++++-
+>>>  1 file changed, 64 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+>>> index cf87bbb52f1f..b3db953e615a 100644
+>>> --- a/drivers/ata/pata_parport/pata_parport.c
+>>> +++ b/drivers/ata/pata_parport/pata_parport.c
+>>> @@ -80,6 +80,69 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
+>>>  	return (nsect == 0x55) && (lbal == 0xaa);
+>>>  }
+>>>  
+>>> +static int pata_parport_wait_after_reset(struct ata_link *link,
+>>> +					 unsigned int devmask,
+>>> +					 unsigned long deadline)
+>>> +{
+>>> +	struct ata_port *ap = link->ap;
+>>> +	struct pi_adapter *pi = ap->host->private_data;
+>>> +	unsigned int dev0 = devmask & (1 << 0);
+>>> +	unsigned int dev1 = devmask & (1 << 1);
+>>> +	int rc, ret = 0;
+>>> +
+>>> +	ata_msleep(ap, ATA_WAIT_AFTER_RESET);
+>>> +
+>>> +	/* always check readiness of the master device */
+>>> +	rc = ata_sff_wait_ready(link, deadline);
+>>> +	/* some adapters return bogus values if master device is not present,
+>>> +	 * so don't abort now if a slave device is present
+>>> +	 */
+>>
+>> In addition to Sergey's comment, please move this comment inside the "if", or
+>> even better, merge it with the otherwise not very useful "always check
+>> readiness..." comment.
+> 
+>    That comment was copied from ata_sff_wait_after_reset(), I think...
 
-I did some tracing today on a test ext4 fs I created on a loopback device, and it
-seems that the superblocks are written every time you sync, even if no files on the
-filesystem have even been opened for read access.
+Even if that is the case. let's not copy bad stuff as is but rather improve it.
+
+
+-- 
+Damien Le Moal
+Western Digital Research
+
