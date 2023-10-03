@@ -2,113 +2,117 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D77E7AD78
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 17:13:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4ACFE7AD78
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 17:18:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231760AbjJCRNf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 Oct 2023 13:13:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56740 "EHLO
+        id S231844AbjJCRS3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Oct 2023 13:18:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231344AbjJCRNe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 13:13:34 -0400
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D1556AF;
-        Tue,  3 Oct 2023 10:13:30 -0700 (PDT)
-Received: from [192.168.0.2] (chello085216244195.chello.sk [85.216.244.195])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id DD7817A0090;
-        Tue,  3 Oct 2023 19:13:29 +0200 (CEST)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH 4/4] pata_parport-fit3: implement IDE command set registers
-Date:   Tue, 3 Oct 2023 19:13:27 +0200
-User-Agent: KMail/1.9.10
+        with ESMTP id S230119AbjJCRS2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 13:18:28 -0400
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99778AC;
+        Tue,  3 Oct 2023 10:18:25 -0700 (PDT)
+Received: by mail-ej1-x62c.google.com with SMTP id a640c23a62f3a-9ad8a822508so218814766b.0;
+        Tue, 03 Oct 2023 10:18:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1696353504; x=1696958304; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=2DR69r77jNGqyCUFfEWX0oQOxCdNx+7+uV9QErXJGao=;
+        b=Fe9lIc4J5J0xqbXfjTsvNfqDgEGLiyua1aI3XdTAkPnn860g2Kc4NkdZ3MFb9NO5S6
+         tvUcLsONCJfKnXifSVPyjtUwzknvD/Igf4/zgvW9XNVwuxVIU6QXidFBfCpH25yttmOU
+         GQj7O4R4QVtZL4HMo3BDsoFAzQTwFtPzkOi8mSqDzQQ63tZp5IYgMZozRU5BiciQlvT9
+         sIUWtX2EbWKUpUSUBmd82gRSP+lYzgyy7Ja5Dcn4d2vN6tUx/ijGBBpfhoof0d0nn9HF
+         7ZovfESe5hPWhngCudpFWTtRhwTheYVdeSOgoEiFfALibiNiNLHJgMReq+maWVCoQMMX
+         dOZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696353504; x=1696958304;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2DR69r77jNGqyCUFfEWX0oQOxCdNx+7+uV9QErXJGao=;
+        b=nnoHi+5daz7yGynr/Tjb+zvZ1E639qUCpi2Z4pcKJ5N+vtYjnuGBqeYyYFHSN6QzBS
+         ktiEF0jZCctaUV4KTqlxthPNVajbg9ambcNpMoWbCNCRWhXNXs/jObMW1l+Bku6vhiWY
+         2Gq6luZcihbPpy6EXwvYwbQwvQRP0SdDohCZFv8W/EHjaPPeAI/uQjhXGSX2xttYEsHc
+         uJrC3+4qSJWEfveRDrWND21JgN81QY3SJcWVf7aFTygEwUF3qrV2JzWZRTOVg0Bqq+DW
+         SELeoKq1rgP24t4klV93qq8qcwpqTV0OE4077WxonUZkUpXsjW+q5vx1/71gDKJ5zhJf
+         ufXA==
+X-Gm-Message-State: AOJu0YyvSWr+UhGo5Geyob70Vs6NodvudT491EO/O+B4CJw9otEtYZi3
+        Gnl5K1GuXaS7DgFc00krJaf4e9cc4no=
+X-Google-Smtp-Source: AGHT+IEou8/vKABLVNviTnGbjABbqCX+m/ZAMPy7dXtGW1mdrYeT+Bq4axlJudGszRfIknYaY9BrBg==
+X-Received: by 2002:a17:906:7383:b0:9ae:5aa5:ee6c with SMTP id f3-20020a170906738300b009ae5aa5ee6cmr15060319ejl.12.1696353503426;
+        Tue, 03 Oct 2023 10:18:23 -0700 (PDT)
+Received: from [192.168.1.103] ([178.176.78.48])
+        by smtp.gmail.com with ESMTPSA id k13-20020a05651c060d00b002bcb89e92dcsm315647lje.6.2023.10.03.10.18.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 03 Oct 2023 10:18:22 -0700 (PDT)
+Subject: Re: [PATCH 1/4] pata_parport: fix pata_parport_devchk
+To:     Ondrej Zary <linux@zary.sk>, Sergey Shtylyov <s.shtylyov@omp.ru>
 Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
         Christoph Hellwig <hch@lst.de>, Tim Waugh <tim@cyberelk.net>,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-References: <20230930191511.24994-1-linux@zary.sk> <20230930191511.24994-5-linux@zary.sk> <e35003ab-4dfe-6154-5873-cc90f65008a8@omp.ru>
-In-Reply-To: <e35003ab-4dfe-6154-5873-cc90f65008a8@omp.ru>
-X-KMail-QuotePrefix: > 
+References: <20230930191511.24994-1-linux@zary.sk>
+ <20230930191511.24994-2-linux@zary.sk>
+ <d040b3f7-4222-a027-34d0-5cf62aa63605@omp.ru>
+ <202310031907.45632.linux@zary.sk>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <a3b4dc62-20f7-4900-b9db-87edc9131063@gmail.com>
+Date:   Tue, 3 Oct 2023 20:18:21 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
+In-Reply-To: <202310031907.45632.linux@zary.sk>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <202310031913.27387.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Monday 02 October 2023 22:06:52 Sergey Shtylyov wrote:
-> On 9/30/23 10:15 PM, Ondrej Zary wrote:
-> 
-> > fit3 protocol driver does not support accessing IDE control registers
-> > (device control/altstatus). The DOS driver does not use these registers
-> > either (as observed from DOSEMU trace). But the HW seems to be capable
-> > of accessing these registers - I simply tried bit 3 and it works!
-> > 
-> > The control register is required to properly reset ATAPI devices or
-> > they will be detected only once (after a power cycle).
-> > 
-> > Tested with EXP Computer CD-865 with MC-1285B EPP cable and
-> > TransDisk 3000.
-> > 
-> > Signed-off-by: Ondrej Zary <linux@zary.sk>
-> > ---
-> >  drivers/ata/pata_parport/fit3.c | 16 ++++------------
-> >  1 file changed, 4 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
-> > index bad7aa920cdc..86b39966755b 100644
-> > --- a/drivers/ata/pata_parport/fit3.c
-> > +++ b/drivers/ata/pata_parport/fit3.c
-> [...]
-> > @@ -35,10 +30,11 @@
-> >   * cont = 1 - access the IDE command set
-> >   */
-> >  
-> > +static int cont_map[] = { 0x00, 0x08 };
-> 
->    const?
+On 10/3/23 8:07 PM, Ondrej Zary wrote:
+[...]
 
-There's no 'const' in other protocol drivers. Maybe it should be added to all of them.
-
-> > +
-> >  static void fit3_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
-> >  {
-> > -	if (cont == 1)
-> > -		return;
-> > +	regr += cont_map[cont];
+>>> There's a 'x' missing in 0x55 in pata_parport_devchk(), causing the
+>>> detection to always fail. Fix it.
+>>>
+>>> Signed-off-by: Ondrej Zary <linux@zary.sk>
+>>
+>>    I think we need a Fixes: tag here...
+>>
+>>> ---
+>>>  drivers/ata/pata_parport/pata_parport.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+>>> index 1af64d435d3c..258d189f42e5 100644
+>>> --- a/drivers/ata/pata_parport/pata_parport.c
+>>> +++ b/drivers/ata/pata_parport/pata_parport.c
+>>> @@ -64,7 +64,7 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
+>>>  	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0xaa);
+>>>  	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0x55);
+>>>  
+>>> -	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 055);
+>>> +	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0x55);
+>>
+>>    Oh, Gawd! How did this ever work?! :-/
+>>    This bug seems to predate the Big PARIDE move...
 > 
->    Perhaps regr += cont << 3 instead?
+> This code was not present in PARIDE - it's my bug.
 
-I matched the style used by other protocol drivers.
+   Yes, I finally figured -- hence the Fixes: tag I suggested later....
 
-> >  
-> >  	switch (pi->mode) {
-> >  	case 0:
-> > @@ -59,11 +55,7 @@ static int fit3_read_regr(struct pi_adapter *pi, int cont, int regr)
-> >  {
-> >  	int  a, b;
-> >  
-> > -	if (cont) {
-> > -		if (regr != 6)
-> > -			return 0xff;
-> > -		regr = 7;
-> > -	}
-> > +	regr += cont_map[cont];
-> 
->    Likewise here?
-> 
-> [...]
-> 
-> MBR, Sergey
-> 
+> The function is a clone of ata_devchk() without direct port access.
 
+   The libata's taskfile methods suck big time -- I even used to have
+the plans to clean this stuff up at some point...
 
--- 
-Ondrej Zary
+> It's called only from softreset so nobody notices the breakage until something goes wrong. The CD-865 drive needs a reset to start working.
+
+   I thought the SRST reset is used at the initial detection phase as well...
+
+MBR, Sergey
