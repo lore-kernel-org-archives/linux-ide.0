@@ -2,104 +2,261 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53E3BE75420
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 04:36:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6E5E7AD6E
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 15:24:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230152AbjJCEg2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 Oct 2023 00:36:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34222 "EHLO
+        id S231591AbjJCPYy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Oct 2023 11:24:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230128AbjJCEg2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 00:36:28 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F45A4
-        for <linux-ide@vger.kernel.org>; Mon,  2 Oct 2023 21:36:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696307785; x=1727843785;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=rGaJabltA5jr13RlIMzbyz2XumCD3+oReazU11Fs30E=;
-  b=RtmveB0om06NulJIL6OC6/6RtjVE7/ejlBZlNm1vezo9R1ihr1ZCqn3y
-   vf2IkT9bhX237UGflyGHIQqGZiMaNHkZTwp9xJvigcuc440QjA80odlFm
-   MKFrBaZPnhCRk9dKNcp7Zp8S8vBdZDYeC0DWaCIUgDPzVqK8z996v/JIl
-   PX6FoURkgKF0yvVxBGmsRIKHspCO5zz1DPQJNMUJn1Z1PbFzaTL1une7I
-   K1nfOWzhU0PrjkA/L5Lwk1vi4NuJ+X6vTUvMCt+3SFZrZUQ0sLGAYVqKA
-   e/th0BSGSTdHs/qajZ6X7sz3gXPWdhVqU4Nx9aOGL4kGaVHVWjMLb2+ES
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10851"; a="386667815"
-X-IronPort-AV: E=Sophos;i="6.03,196,1694761200"; 
-   d="scan'208";a="386667815"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2023 21:36:24 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10851"; a="700556624"
-X-IronPort-AV: E=Sophos;i="6.03,196,1694761200"; 
-   d="scan'208";a="700556624"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga003.jf.intel.com with ESMTP; 02 Oct 2023 21:36:23 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id F396B163; Tue,  3 Oct 2023 07:36:21 +0300 (EEST)
-Date:   Tue, 3 Oct 2023 07:36:21 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Koba Ko <koba.ko@canonical.com>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: ahci: Add Intel Alder Lake-P AHCI controller to low
- power chipsets list
-Message-ID: <20231003043621.GE3208943@black.fi.intel.com>
-References: <20230925080538.2894982-1-mika.westerberg@linux.intel.com>
- <e58ddf0f-3b7e-9599-dd7d-c6ed322d1184@kernel.org>
- <20230925091339.GM3208943@black.fi.intel.com>
- <385141b8-4d02-cecb-7393-7375f095198f@kernel.org>
- <CAJB-X+UdB-+O8O97hCRQNbFpU7CuNisVCQkaJZ4JD01qZ-JqJA@mail.gmail.com>
- <20231002062120.GB3208943@black.fi.intel.com>
- <42141dac-88eb-cbb7-0836-5fe51e35ac36@kernel.org>
+        with ESMTP id S230238AbjJCPYx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 11:24:53 -0400
+X-Greylist: delayed 377 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 03 Oct 2023 08:24:50 PDT
+Received: from bee.tesarici.cz (bee.tesarici.cz [77.93.223.253])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 205F783
+        for <linux-ide@vger.kernel.org>; Tue,  3 Oct 2023 08:24:50 -0700 (PDT)
+Received: from meshulam.tesarici.cz (dynamic-2a00-1028-83b8-1e7a-4427-cc85-6706-c595.ipv6.o2.cz [IPv6:2a00:1028:83b8:1e7a:4427:cc85:6706:c595])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by bee.tesarici.cz (Postfix) with ESMTPSA id 5FA0C18D67E;
+        Tue,  3 Oct 2023 17:18:30 +0200 (CEST)
+Authentication-Results: mail.tesarici.cz; dmarc=fail (p=none dis=none) header.from=tesarici.cz
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tesarici.cz; s=mail;
+        t=1696346310; bh=1CujshXz8GCIw8PsRmFcl4lb/juGa+lsbhI57czNbSI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=bSHpRQ6lneyJBmVPxmFiX+7IesQ6YIIT4kGj5k+mbTj8wpyY7PVLvdbT5lrGvvvCU
+         mMD7tAg0L72QK34ozM9a2zdZYTyUt5GSURFBmw3w0B5yjY3llMpR214wqRfFuDO/db
+         rCT0kaKCcLipb99dP2mTB6OaiC2SM5V/O0ayFikqwWmf8GzzGeVno0/TnexqR3vWsW
+         nNqjRRgqH+9TxAsop3SUdeSRP9wtEAoQPSr/iA+Lh2wyO5k27OpdJMklv63eayYC8v
+         bJqGjYXug0ZdsHS1U4hHoAwdbSiE2o9yRvNOegCxDsV/YFANNMjG1P1Iu58B4mQS5e
+         ApyHSLOWOeQEA==
+Date:   Tue, 3 Oct 2023 17:18:24 +0200
+From:   Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
+To:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Damien Le Moal <dlemoal@kernel.org>
+Cc:     linux-pm@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: Thinkpad E595 system deadlock on resume from S3
+Message-ID: <20231003171710.2c6a913c@meshulam.tesarici.cz>
+In-Reply-To: <CAJZ5v0jbT0DaDpFpLbzO46-Yg6QJ-MrcZAuP+c60q9KpFHAtpQ@mail.gmail.com>
+References: <20230930122054.3cf727a4@meshulam>
+        <20231003113135.38384a87@meshulam.tesarici.cz>
+        <CAJZ5v0i-FV29TUq8E=FGxB_dRKEJvdoKxzwPGAX0C9vnD7O8eg@mail.gmail.com>
+        <20231003130240.0c64bc2e@meshulam.tesarici.cz>
+        <CAJZ5v0hvEyVAwA3r5OWv4W_vTbRXt_Oxv+Avvn6N0=1RoN=NCg@mail.gmail.com>
+        <20231003144019.24566b05@meshulam.tesarici.cz>
+        <CAJZ5v0jttFqKE_CLpF+-vJ_wDAuOo_BUS33htpFUs6idNMugKg@mail.gmail.com>
+        <20231003145110.1f22adfb@meshulam.tesarici.cz>
+        <CAJZ5v0jbT0DaDpFpLbzO46-Yg6QJ-MrcZAuP+c60q9KpFHAtpQ@mail.gmail.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-suse-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <42141dac-88eb-cbb7-0836-5fe51e35ac36@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+On Tue, 3 Oct 2023 14:57:46 +0200
+"Rafael J. Wysocki" <rafael@kernel.org> wrote:
 
-On Tue, Oct 03, 2023 at 09:49:20AM +0900, Damien Le Moal wrote:
-> On 10/2/23 15:21, Mika Westerberg wrote:
-> > On Tue, Sep 26, 2023 at 12:55:05PM +0800, Koba Ko wrote:
-> >> On Mon, Sep 25, 2023 at 5:27 PM Damien Le Moal <dlemoal@kernel.org> wrote:
-> >>>
-> >>> On 2023/09/25 11:13, Mika Westerberg wrote:
-> >>>> Hi,
-> >>>>
-> >>>> On Mon, Sep 25, 2023 at 11:09:01AM +0200, Damien Le Moal wrote:
-> >>>>> On 2023/09/25 10:05, Mika Westerberg wrote:
-> >>>>>> Intel Alder Lake-P AHCI controller needs to be added to the mobile
-> >>>>>> chipsets list in order to have link power management enabled. Without
-> >>>>>> this the CPU cannot enter lower power C-states making idle power
-> >>>>>> consumption high.
-> >>>>>>
-> >>>>>> Cc: Koba Ko <koba.ko@canonical.com>
-> >>>>>> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> >>>>>
-> >>>>> Looks OK, but given that there is a tendency of the low power stuff to be buggy,
-> >>>>> was this well tested ?
-> >>>>
-> >>>> Yes it was tested (Koba Cc'd can confirm this). We also confirmed from
-> >>>> Intel AHCI folks that the ADL (and RPL) AHCI controllers fully support
-> >>>> this configuration.
-> >>
-> >> I verified on an ADL platform with odd and disk devices and
-> >> they work fine.
-> > 
-> > Thanks!
-> > 
-> > @Damien, just checking whether this fell through cracks because I do not
-> > see it applied to libata.git next branches?
-> 
-> Sorry about the delay. I was traveling and the suspend/resume fixes used all my
-> bandwidth. Will queue this today. Do you want this for 6.7 or as a fix for 6.6 ?
-> The latter is OK.
+> On Tue, Oct 3, 2023 at 2:51=E2=80=AFPM Petr Tesa=C5=99=C3=ADk <petr@tesar=
+ici.cz> wrote:
+> >
+> > On Tue, 3 Oct 2023 14:48:13 +0200
+> > "Rafael J. Wysocki" <rafael@kernel.org> wrote:
+> > =20
+> > > On Tue, Oct 3, 2023 at 2:40=E2=80=AFPM Petr Tesa=C5=99=C3=ADk <petr@t=
+esarici.cz> wrote: =20
+> > > >
+> > > > On Tue, 3 Oct 2023 14:34:56 +0200
+> > > > "Rafael J. Wysocki" <rafael@kernel.org> wrote:
+> > > > =20
+> > > > > On Tue, Oct 3, 2023 at 1:02=E2=80=AFPM Petr Tesa=C5=99=C3=ADk <pe=
+tr@tesarici.cz> wrote: =20
+> > > > > >
+> > > > > > On Tue, 3 Oct 2023 12:15:10 +0200
+> > > > > > "Rafael J. Wysocki" <rafael@kernel.org> wrote:
+> > > > > > =20
+> > > > > > > On Tue, Oct 3, 2023 at 11:31=E2=80=AFAM Petr Tesa=C5=99=C3=AD=
+k <petr@tesarici.cz> wrote: =20
+> > > > > > > >
+> > > > > > > > Hi again (adding more recipients),
+> > > > > > > >
+> > > > > > > > On Sat, 30 Sep 2023 12:20:54 +0200
+> > > > > > > > Petr Tesa=C5=99=C3=ADk <petr@tesarici.cz> wrote:
+> > > > > > > > =20
+> > > > > > > > > Hi all,
+> > > > > > > > >
+> > > > > > > > > this time no patch (yet). In short, my Thinkpad running v=
+6.6-rc3 fails
+> > > > > > > > > to resume from S3. It also fails the same way with Tumble=
+weed v6.5
+> > > > > > > > > kernel. I was able to capture a crash dump of the v6.5 ke=
+rnel, and
+> > > > > > > > > here's my analysis:
+> > > > > > > > >
+> > > > > > > > > The system never gets to waking up my SATA SSD disk:
+> > > > > > > > >
+> > > > > > > > > [0:0:0:0]    disk    ATA      KINGSTON SEDC600 H5.1  /dev=
+/sda
+> > > > > > > > >
+> > > > > > > > > There is a pending resume work for kworker/u32:12 (PID 11=
+032), but this
+> > > > > > > > > worker is stuck in 'D' state:
+> > > > > > > > > =20
+> > > > > > > > > >>> prog.stack_trace(11032) =20
+> > > > > > > > > #0  context_switch (../kernel/sched/core.c:5381:2)
+> > > > > > > > > #1  __schedule (../kernel/sched/core.c:6710:8)
+> > > > > > > > > #2  schedule (../kernel/sched/core.c:6786:3)
+> > > > > > > > > #3  schedule_preempt_disabled (../kernel/sched/core.c:684=
+5:2)
+> > > > > > > > > #4  __mutex_lock_common (../kernel/locking/mutex.c:679:3)
+> > > > > > > > > #5  __mutex_lock (../kernel/locking/mutex.c:747:9)
+> > > > > > > > > #6  acpi_device_hotplug (../drivers/acpi/scan.c:382:2)
+> > > > > > > > > #7  acpi_hotplug_work_fn (../drivers/acpi/osl.c:1162:2)
+> > > > > > > > > #8  process_one_work (../kernel/workqueue.c:2600:2)
+> > > > > > > > > #9  worker_thread (../kernel/workqueue.c:2751:4)
+> > > > > > > > > #10 kthread (../kernel/kthread.c:389:9)
+> > > > > > > > > #11 ret_from_fork (../arch/x86/kernel/process.c:145:3)
+> > > > > > > > > #12 ret_from_fork_asm+0x1b/0x20 (../arch/x86/entry/entry_=
+64.S:304)
+> > > > > > > > >
+> > > > > > > > > acpi_device_hotplug() tries to acquire acpi_scan_lock, wh=
+ich is held by
+> > > > > > > > > systemd-sleep (PID 11002). This task is also in 'D' state:
+> > > > > > > > > =20
+> > > > > > > > > >>> prog.stack_trace(11002) =20
+> > > > > > > > > #0  context_switch (../kernel/sched/core.c:5381:2)
+> > > > > > > > > #1  __schedule (../kernel/sched/core.c:6710:8)
+> > > > > > > > > #2  schedule (../kernel/sched/core.c:6786:3)
+> > > > > > > > > #3  schedule_preempt_disabled (../kernel/sched/core.c:684=
+5:2)
+> > > > > > > > > #4  __mutex_lock_common (../kernel/locking/mutex.c:679:3)
+> > > > > > > > > #5  __mutex_lock (../kernel/locking/mutex.c:747:9)
+> > > > > > > > > #6  device_lock (../include/linux/device.h:958:2)
+> > > > > > > > > #7  device_complete (../drivers/base/power/main.c:1063:2)
+> > > > > > > > > #8  dpm_complete (../drivers/base/power/main.c:1121:3)
+> > > > > > > > > #9  suspend_devices_and_enter (../kernel/power/suspend.c:=
+516:2) =20
+> > > > > > > >
+> > > > > > > > I believe the issue must be somewhere here. The whole suspe=
+nd and
+> > > > > > > > resume logic in suspend_devices_and_enter() is framed by
+> > > > > > > > platform_suspend_begin() and platform_resume_end().
+> > > > > > > >
+> > > > > > > > My system is an ACPI system, so suspend_ops contains:
+> > > > > > > >
+> > > > > > > >         .begin =3D acpi_suspend_begin,
+> > > > > > > >         .end =3D acpi_pm_end,
+> > > > > > > >
+> > > > > > > > Now, acpi_suspend_begin() acquires acpi_scan_lock through
+> > > > > > > > acpi_pm_start(), and the lock is not released until acpi_pm=
+_end().
+> > > > > > > > Since dpm_complete() waits for the completion of a work tha=
+t tries to
+> > > > > > > > acquire acpi_scan_lock, the system will deadlock. =20
+> > > > > > >
+> > > > > > > So holding acpi_scan_lock across suspend-resume is basically =
+to
+> > > > > > > prevent the hotplug from taking place then IIRC.
+> > > > > > > =20
+> > > > > > > > AFAICS either:
+> > > > > > > >
+> > > > > > > > a. the ACPI lock cannot be held while dpm_complete() runs, =
+or
+> > > > > > > > b. ata_scsi_dev_rescan() must not be scheduled before the s=
+ystem is
+> > > > > > > > resumed, or
+> > > > > > > > c. acpi_device_hotplug() must be implemented without taking=
+ dev->mutex.
+> > > > > > > >
+> > > > > > > > My gut feeling is that b. is the right answer. =20
+> > > > > > >
+> > > > > > > It's been a while since I looked at that code last time, but =
+then it
+> > > > > > > has not changed for quite some time too.
+> > > > > > >
+> > > > > > > It looks like the acpi_device_hotplug() path attempts to acqu=
+ire
+> > > > > > > acpi_scan_lock() while holding dev->mutex which is kind of si=
+lly.  I
+> > > > > > > need to check that, though. =20
+> > > > > >
+> > > > > > Thanks for your willingness. Well, it's not quite what you desc=
+ribe. If
+> > > > > > it was a simple ABBA deadlock, then it would be reported by loc=
+kdep.
+> > > > > > No, it's more complicated:
+> > > > > >
+> > > > > > 1. suspend_devices_and_enter() holds acpi_scan_lock,
+> > > > > > 2. an ACPI hotplug work runs, but acpi_device_hotplug() goes to=
+ sleep
+> > > > > >    when it gets to acquiring acpi_scan_lock,
+> > > > > > 3. ata_scsi_dev_rescan() submits a SCSI command and waits for i=
+ts
+> > > > > >    completion while holding dev->mutex,
+> > > > > > 4. the SCSI completion work happens to be put on the same workq=
+ueue as
+> > > > > >    the ACPI hotplug work in step 2,
+> > > > > >    ^^^--- THIS is how the two events are serialized! =20
+> > > > >
+> > > > > Which is unexpected.
+> > > > >
+> > > > > And quite honestly I'm not sure how this can happen, because
+> > > > > acpi_hotplug_schedule() uses a dedicated workqueue and it is call=
+ed
+> > > > > from (a) the "eject" sysfs attribute (which cannot happen while s=
+ystem
+> > > > > suspend-resume is in progress) and (b) acpi_bus_notify() which has
+> > > > > nothing to do with SCSI. =20
+> > > >
+> > > > Oh, you're right, and I was too quick. They cannot be on the same
+> > > > queue...
+> > > > =20
+> > > > > Maybe the workqueue used for the SCSI completion is freezable? =20
+> > > >
+> > > > Yes, that's it:
+> > > >
+> > > > *(struct workqueue_struct *)0xffff97d240b2fe00 =3D {
+> > > > /* ... */
+> > > >         .flags =3D (unsigned int)4,
+> > > > /* WQ_FREEZABLE            =3D 1 << 2 */
+> > > >
+> > > > Good. But if this workqueue is frozen, the system still cannot make
+> > > > progress. =20
+> > >
+> > > The problem seems to be that dev->mutex is held while the work item
+> > > goes to a freezable workqueue and is waited for, which is an almost
+> > > guaranteed deadlock scenario. =20
+> >
+> > Ah. Thanks for explanation and direction! I'm going to dive into the
+> > block layer and/or SCSI code and bug other people with my findings. =20
+>=20
+> Please feel free to CC me on that in case I can help.
 
-6.7 is fine, thanks!
+And here I am again... The frozen workqueue is in fact pm_wq, and the
+work item that is waited for is pm_runtime_work. The block layer calls
+pm_request_resume() on the device to resume the queue.
+
+I bet the queue should not be resumed this early. In fact, it seems
+that this is somewhat known to the ATA developers, because
+ata_scsi_dev_rescan() contains this beautiful comment and code:
+
+			/*
+			 * If the rescan work was scheduled because of a resume
+			 * event, the port is already fully resumed, but the
+			 * SCSI device may not yet be fully resumed. In such
+			 * case, executing scsi_rescan_device() may cause a
+			 * deadlock with the PM code on device_lock(). Prevent
+			 * this by giving up and retrying rescan after a short
+			 * delay.
+			 */
+			delay_rescan =3D sdev->sdev_gendev.power.is_suspended;
+			if (delay_rescan) {
+				scsi_device_put(sdev);
+				break;
+			}
+
+It just doesn't seem to work as expected, at least not in my case.
+
+Petr T
