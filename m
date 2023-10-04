@@ -2,75 +2,117 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D97E8FDBF
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Oct 2023 23:46:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5337BE8FDC4
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Oct 2023 01:25:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238456AbjJCXrA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 Oct 2023 19:47:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47838 "EHLO
+        id S232430AbjJDBZw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Oct 2023 21:25:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238629AbjJCXq7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 19:46:59 -0400
+        with ESMTP id S232432AbjJDBZw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2023 21:25:52 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23D7690;
-        Tue,  3 Oct 2023 16:46:56 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF154C433C7;
-        Tue,  3 Oct 2023 23:46:53 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D8EFAF;
+        Tue,  3 Oct 2023 18:25:49 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53ED1C433C8;
+        Wed,  4 Oct 2023 01:25:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696376815;
-        bh=5xKSNTSw2RYzEDddcwiPLExFg5N2zhaGw4448ZpIO8I=;
+        s=k20201202; t=1696382749;
+        bh=JgS3ramVNVketws5bP39lQI7MhPBuaFXkJRlYH9Eai0=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=TVcmKVPPUhYCfhI1jUSw4Qn+voXTT74oWpLs4pogL5bsPPsE/TB+KxTwfP8oGIW2n
-         5UmsKCdCBM+b9F0n8uv37yNMjZkzVWAixeDhrN+nMnG61vRdqHyTDzdvQGQfTP+tmq
-         QnyUd4mso8XjGrtkDiOFI7T+wx7rHek4DzFUm7bl91QmOYyKdSjBv9IUOQqHQ2x3ZY
-         ywlLaoQ3MDEZ+BWmRVBhNurRHES1Pt2DX6ZnrL9NeppqJLvROhLms+6bwC2fOeoxce
-         yuaX3kFy059ma5xfVG6FGcYapFRn+wegt1Ncz4MI1SqNHUi6KmHHFz+phWRAE3a746
-         98GZrzf5Z95hQ==
-Message-ID: <3aae2b14-ce32-261a-46a4-cc8d5f3adab4@kernel.org>
-Date:   Wed, 4 Oct 2023 08:46:52 +0900
+        b=F6khxS13Ro8IJNttSfiMSm/ZLpzxJQ+4fIyFMTcbxWuMUjbWT3oIc2Ory1GTe75kn
+         CS/95sMudVM2GxvE4UBtMat3PXKYgbDjcfehOVud5uAEt2NvavLneA1+flQCezIK69
+         dDKHeSp3uqvHaw+iq0czeQzKtfdAYPrG08HCQXH6hpb+kID68FJyXEb2932x8/YBsJ
+         iMOz+s0HPTrbJuJXeb0qMcof2GTN6HM7PdSymG8pUsN0OAj984pn4/nZ52vJAC/1b9
+         3kEBumiz+vzj7WcZFhgWec6s4pUK564Q/LER+8cL2Ad/N5kT55HOXoKcfPJmykbGwY
+         VoGVXOPclMnCw==
+Message-ID: <539ec93d-b4f4-1c36-632b-48b89537c9dd@kernel.org>
+Date:   Wed, 4 Oct 2023 10:25:47 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.1
-Subject: Re: [PATCH v8 00/23] Fix libata suspend/resume handling and code
- cleanup
+Subject: Re: Thinkpad E595 system deadlock on resume from S3
 Content-Language: en-US
-To:     Phillip Susi <phill@thesusis.net>
-Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <874jj8sia5.fsf@vps.thesusis.net> <87h6n87dac.fsf@vps.thesusis.net>
- <269e2876-58fd-b73c-0c0d-1593c17c2809@kernel.org>
- <ZRyGIE+NpmtMu7XK@thesusis.net>
+To:     =?UTF-8?B?UGV0ciBUZXNhxZnDrWs=?= <petr@tesarici.cz>,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     linux-pm@vger.kernel.org, linux-ide@vger.kernel.org
+References: <20230930122054.3cf727a4@meshulam>
+ <20231003113135.38384a87@meshulam.tesarici.cz>
+ <CAJZ5v0i-FV29TUq8E=FGxB_dRKEJvdoKxzwPGAX0C9vnD7O8eg@mail.gmail.com>
+ <20231003130240.0c64bc2e@meshulam.tesarici.cz>
+ <CAJZ5v0hvEyVAwA3r5OWv4W_vTbRXt_Oxv+Avvn6N0=1RoN=NCg@mail.gmail.com>
+ <20231003144019.24566b05@meshulam.tesarici.cz>
+ <CAJZ5v0jttFqKE_CLpF+-vJ_wDAuOo_BUS33htpFUs6idNMugKg@mail.gmail.com>
+ <20231003145110.1f22adfb@meshulam.tesarici.cz>
+ <CAJZ5v0jbT0DaDpFpLbzO46-Yg6QJ-MrcZAuP+c60q9KpFHAtpQ@mail.gmail.com>
+ <20231003171710.2c6a913c@meshulam.tesarici.cz>
+ <CAJZ5v0hXZx3ghWrfcTmTzwDJzYqLpzeBhx+CqBjg65Dngc2eRg@mail.gmail.com>
+ <20231003220744.07c4fa0a@meshulam.tesarici.cz>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <ZRyGIE+NpmtMu7XK@thesusis.net>
+In-Reply-To: <20231003220744.07c4fa0a@meshulam.tesarici.cz>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/4/23 06:22, Phillip Susi wrote:
-> On Tue, Oct 03, 2023 at 09:44:50AM +0900, Damien Le Moal wrote:
->> Hmmm... So this could be the fs suspend then, which issues a sync but the device
->> is already suspended and was synced already. In that case, we should turn that
->> sync into a nop to not wakeup the drive unnecessarily. The fix may be needed on
->> scsi sd side rather than libata.
+On 10/4/23 05:07, Petr Tesařík wrote:
+> I just want to confirm that my understanding of the issue is correct
+> now. After applying the patch below, my laptop has just survived half a
+> dozen suspend/resume cycles with autosuspend enabled for the SATA SSD
+> disk. Without the patch, it usually freezes on first attempt.
 > 
-> I did some tracing today on a test ext4 fs I created on a loopback device, and it
-> seems that the superblocks are written every time you sync, even if no files on the
-> filesystem have even been opened for read access.
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index a371b497035e..87000f89319e 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -4768,6 +4768,14 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+>  		ata_for_each_dev(dev, link, ENABLED) {
+>  			struct scsi_device *sdev = dev->sdev;
+>  
+> +			/*
+> +			 * If the queue accepts only PM, bail out.
+> +			 */
+> +			if (blk_queue_pm_only(sdev->request_queue)) {
+> +				ret = -EAGAIN;
+> +				goto unlock;
+> +			}
+> +
+>  			/*
+>  			 * If the port was suspended before this was scheduled,
+>  			 * bail out.
 
-OK. So a fix would need to be on the FS side then if one wants to avoid that
-useless resume. However, this may clash with the FS need to record stuff in its
-sb and so we may not be able to avoid that.
+This seems sensible to me: scsi_rescan_device() only checks that the device is
+running, without checking that the device queue is also resumed. So the right
+place for this check is scsi_rescan_device():
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3db4d31a03a1..b05a55f498a2 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1627,12 +1627,13 @@ int scsi_rescan_device(struct scsi_device *sdev)
+        device_lock(dev);
+
+        /*
+-        * Bail out if the device is not running. Otherwise, the rescan may
+-        * block waiting for commands to be executed, with us holding the
+-        * device lock. This can result in a potential deadlock in the power
+-        * management core code when system resume is on-going.
++        * Bail out if the device or its queue are not running. Otherwise,
++        * the rescan may block waiting for commands to be executed, with us
++        * holding the device lock. This can result in a potential deadlock
++        * in the power management core code when system resume is on-going.
+         */
+-       if (sdev->sdev_state != SDEV_RUNNING) {
++       if (sdev->sdev_state != SDEV_RUNNING ||
++           blk_queue_pm_only(sdev->request_queue)) {
+                ret = -EWOULDBLOCK;
+                goto unlock;
+        }
+
+Can you try the above to confirm it works for you ? It should, as that is
+essentially the same as you did.
 
 -- 
 Damien Le Moal
