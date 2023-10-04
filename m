@@ -2,23 +2,23 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D18E7C4ED
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA61FE7C4EF
 	for <linux-ide@archiver.kernel.org>; Wed,  4 Oct 2023 18:53:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244598AbjJDSxN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 Oct 2023 14:53:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46896 "EHLO
+        id S244620AbjJDSxO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 Oct 2023 14:53:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244550AbjJDSxM (ORCPT
+        with ESMTP id S244503AbjJDSxM (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Oct 2023 14:53:12 -0400
 Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 27FF5EB;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 369C1EE;
         Wed,  4 Oct 2023 11:52:46 -0700 (PDT)
 Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id BCC0B7A073C;
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 657617A062F;
         Wed,  4 Oct 2023 20:52:45 +0200 (CEST)
 From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <dlemoal@kernel.org>,
@@ -28,9 +28,9 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Tim Waugh <tim@cyberelk.net>,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] ata: pata_parport: fit3: implement IDE command set registers
-Date:   Wed,  4 Oct 2023 20:52:35 +0200
-Message-Id: <20231004185235.27417-5-linux@zary.sk>
+Subject: [PATCH 1/4] ata: pata_parport: fix pata_parport_devchk
+Date:   Wed,  4 Oct 2023 20:52:32 +0200
+Message-Id: <20231004185235.27417-2-linux@zary.sk>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20231004185235.27417-1-linux@zary.sk>
 References: <20231004185235.27417-1-linux@zary.sk>
@@ -40,65 +40,28 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-fit3 protocol driver does not support accessing IDE control registers
-(device control/altstatus). The DOS driver does not use these registers
-either (as observed from DOSEMU trace). But the HW seems to be capable
-of accessing these registers - I simply tried bit 3 and it works!
+There's a 'x' missing in 0x55 in pata_parport_devchk(), causing the
+detection to always fail. Fix it.
 
-The control register is required to properly reset ATAPI devices or
-they will be detected only once (after a power cycle).
-
-Tested with EXP Computer CD-865 with MC-1285B EPP cable and
-TransDisk 3000.
-
+Fixes: 246a1c4c6b7f ("ata: pata_parport: add driver (PARIDE replacement)")
 Signed-off-by: Ondrej Zary <linux@zary.sk>
 ---
- drivers/ata/pata_parport/fit3.c | 16 ++++------------
- 1 file changed, 4 insertions(+), 12 deletions(-)
+ drivers/ata/pata_parport/pata_parport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
-index bad7aa920cdc..86b39966755b 100644
---- a/drivers/ata/pata_parport/fit3.c
-+++ b/drivers/ata/pata_parport/fit3.c
-@@ -9,11 +9,6 @@
-  *
-  * The TD-2000 and certain older devices use a different protocol.
-  * Try the fit2 protocol module with them.
-- *
-- * NB:  The FIT adapters do not appear to support the control
-- * registers.  So, we map ALT_STATUS to STATUS and NO-OP writes
-- * to the device control register - this means that IDE reset
-- * will not work on these devices.
-  */
+diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+index 1af64d435d3c..258d189f42e5 100644
+--- a/drivers/ata/pata_parport/pata_parport.c
++++ b/drivers/ata/pata_parport/pata_parport.c
+@@ -64,7 +64,7 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
+ 	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0xaa);
+ 	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0x55);
  
- #include <linux/module.h>
-@@ -35,10 +30,11 @@
-  * cont = 1 - access the IDE command set
-  */
+-	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 055);
++	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0x55);
+ 	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0xaa);
  
-+static int cont_map[] = { 0x00, 0x08 };
-+
- static void fit3_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
- {
--	if (cont == 1)
--		return;
-+	regr += cont_map[cont];
- 
- 	switch (pi->mode) {
- 	case 0:
-@@ -59,11 +55,7 @@ static int fit3_read_regr(struct pi_adapter *pi, int cont, int regr)
- {
- 	int  a, b;
- 
--	if (cont) {
--		if (regr != 6)
--			return 0xff;
--		regr = 7;
--	}
-+	regr += cont_map[cont];
- 
- 	switch (pi->mode) {
- 	case 0:
+ 	nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
 -- 
 Ondrej Zary
 
