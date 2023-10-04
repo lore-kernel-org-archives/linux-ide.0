@@ -2,37 +2,36 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45FDAE936EB
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Oct 2023 22:43:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9ACFE936EB
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Oct 2023 22:44:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233587AbjJDWnI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 Oct 2023 18:43:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56532 "EHLO
+        id S234784AbjJDWog (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 Oct 2023 18:44:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233822AbjJDWnH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Oct 2023 18:43:07 -0400
+        with ESMTP id S233822AbjJDWof (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Oct 2023 18:44:35 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73C0EC9;
-        Wed,  4 Oct 2023 15:43:03 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09409C433C7;
-        Wed,  4 Oct 2023 22:43:01 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1A2290;
+        Wed,  4 Oct 2023 15:44:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62CF2C433C7;
+        Wed,  4 Oct 2023 22:44:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696459383;
-        bh=xiFYyd2cMCEdaqtSn5Y6qReiUUe9LSLHDqPkOd4T3mc=;
+        s=k20201202; t=1696459472;
+        bh=S6YkqsS+jM8OhnVJzdkiTNUfaHH2wWNp3iTGptEgCzA=;
         h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=GCOAAS+P7+NvLI5JaKLawgdhMJp0ItYh/ofLWCIpsZXt1uNTpoa8JQFsPWFTYnFYH
-         F+pHT/mYsD/C9LfDu/L5smS2kOYuZXgJ4Kpn66xLLxLtNVXMYROPp60feChJvIx4IU
-         60a0kcd1Y2oH0BBH+/D4TPMx9KKGq5lbdPnRgNGlZLn5fsW+E5yt321jjgx2xbQDYW
-         YSxT1zeijL81hxYMoKkN7bpSL9wIwbjnIOqa+WwuWTyelfgWkSGuyBm2LzFY/XVxLb
-         3T7osJ3DGW+nTHbwBpDKbroIMx69pRuRw0nQd7Gc081ByWGiiplD0iZS4WRn8nLbtu
-         UFfMpiOwyrYQg==
-Message-ID: <640e1c7a-4356-70b7-d881-df13c8d72447@kernel.org>
-Date:   Thu, 5 Oct 2023 07:43:01 +0900
+        b=ibVTPqmvQyVnrSSZSKOocBhyIV5caI8By7gsDftqS4PNEKoque9dR5vw1PQbFytFf
+         YQ+UPgrVSiQ0Qrd4aV9II+1RpxFZ4x65y+4M9VqSrokw9SHK7KNichOr1JHgBNvt//
+         MzyUA8Soovh7VlxlRko8AVSLuyxPXlP0d3pAhCl1UL9jT0Xa5p23oFQuGp7b2+r6Hh
+         97IPCwYt9fpuTEJ0rmnEO/UzkGH09Qn3LmEzCIMPn6dqLgZeywQVW3nl5IdIsV/7+V
+         F942g6QF+7GaMlkYoW2wDj4d0disd4y5Ex2N2pCgBkRDOyH3EaP4lpvB7ctffOA9NN
+         p2zAw8ASECynw==
+Message-ID: <583d9807-764b-9266-bf55-e6aefe8c4b82@kernel.org>
+Date:   Thu, 5 Oct 2023 07:44:30 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.1
-Subject: Re: [PATCH 4/4] ata: pata_parport: fit3: implement IDE command set
- registers
+Subject: Re: [PATCH 2/4] ata: pata_parport: implement set_devctl
 Content-Language: en-US
 To:     Ondrej Zary <linux@zary.sk>,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>
@@ -42,10 +41,10 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
 References: <20231004185235.27417-1-linux@zary.sk>
- <20231004185235.27417-5-linux@zary.sk>
+ <20231004185235.27417-3-linux@zary.sk>
 From:   Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20231004185235.27417-5-linux@zary.sk>
+In-Reply-To: <20231004185235.27417-3-linux@zary.sk>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -53,69 +52,45 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 10/5/23 03:52, Ondrej Zary wrote:
-> fit3 protocol driver does not support accessing IDE control registers
-> (device control/altstatus). The DOS driver does not use these registers
-> either (as observed from DOSEMU trace). But the HW seems to be capable
-> of accessing these registers - I simply tried bit 3 and it works!
+> Add missing ops->sff_set_devctl implementation.
 > 
-> The control register is required to properly reset ATAPI devices or
-> they will be detected only once (after a power cycle).
-> 
-> Tested with EXP Computer CD-865 with MC-1285B EPP cable and
-> TransDisk 3000.
-> 
+> Fixes: 246a1c4c6b7f ("ata: pata_parport: add driver (PARIDE replacement)")
+
+Missing "Cc: stable@vger.kernel.org" here. Same comment for patch 1.
+Otherwise, looks OK.
+
+> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 > Signed-off-by: Ondrej Zary <linux@zary.sk>
 > ---
->  drivers/ata/pata_parport/fit3.c | 16 ++++------------
->  1 file changed, 4 insertions(+), 12 deletions(-)
+>  drivers/ata/pata_parport/pata_parport.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
-> index bad7aa920cdc..86b39966755b 100644
-> --- a/drivers/ata/pata_parport/fit3.c
-> +++ b/drivers/ata/pata_parport/fit3.c
-> @@ -9,11 +9,6 @@
->   *
->   * The TD-2000 and certain older devices use a different protocol.
->   * Try the fit2 protocol module with them.
-> - *
-> - * NB:  The FIT adapters do not appear to support the control
-> - * registers.  So, we map ALT_STATUS to STATUS and NO-OP writes
-> - * to the device control register - this means that IDE reset
-> - * will not work on these devices.
->   */
+> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+> index 258d189f42e5..cf87bbb52f1f 100644
+> --- a/drivers/ata/pata_parport/pata_parport.c
+> +++ b/drivers/ata/pata_parport/pata_parport.c
+> @@ -51,6 +51,13 @@ static void pata_parport_dev_select(struct ata_port *ap, unsigned int device)
+>  	ata_sff_pause(ap);
+>  }
 >  
->  #include <linux/module.h>
-> @@ -35,10 +30,11 @@
->   * cont = 1 - access the IDE command set
->   */
->  
-> +static int cont_map[] = { 0x00, 0x08 };
+> +static void pata_parport_set_devctl(struct ata_port *ap, u8 ctl)
+> +{
+> +	struct pi_adapter *pi = ap->host->private_data;
 > +
->  static void fit3_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
+> +	pi->proto->write_regr(pi, 1, 6, ctl);
+> +}
+> +
+>  static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
 >  {
-> -	if (cont == 1)
-> -		return;
-> +	regr += cont_map[cont];
-
-It is a little silly to have that cont_map array for this only... Why not simply
-"regr += cont << 3;" ? Sergey suggested that already I think.
-
+>  	struct pi_adapter *pi = ap->host->private_data;
+> @@ -252,6 +259,7 @@ static struct ata_port_operations pata_parport_port_ops = {
+>  	.hardreset		= NULL,
 >  
->  	switch (pi->mode) {
->  	case 0:
-> @@ -59,11 +55,7 @@ static int fit3_read_regr(struct pi_adapter *pi, int cont, int regr)
->  {
->  	int  a, b;
->  
-> -	if (cont) {
-> -		if (regr != 6)
-> -			return 0xff;
-> -		regr = 7;
-> -	}
-> +	regr += cont_map[cont];
->  
->  	switch (pi->mode) {
->  	case 0:
+>  	.sff_dev_select		= pata_parport_dev_select,
+> +	.sff_set_devctl		= pata_parport_set_devctl,
+>  	.sff_check_status	= pata_parport_check_status,
+>  	.sff_check_altstatus	= pata_parport_check_altstatus,
+>  	.sff_tf_load		= pata_parport_tf_load,
 
 -- 
 Damien Le Moal
