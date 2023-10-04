@@ -2,87 +2,103 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D144CE8FDDB
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Oct 2023 08:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D18E7C4ED
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Oct 2023 18:53:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241846AbjJDI6I (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 Oct 2023 04:58:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52764 "EHLO
+        id S244598AbjJDSxN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 Oct 2023 14:53:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232554AbjJDI6I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Oct 2023 04:58:08 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 682F7A6;
-        Wed,  4 Oct 2023 01:58:05 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 640A4C433C7;
-        Wed,  4 Oct 2023 08:58:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696409885;
-        bh=kaUcGXGYsxr4dX4XEVnR9qTr7F181aGeqx7apSckpUk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=rFSLAVyu5Ug8LIABDlehtbtllCyvihcLuDYMyYhF6viv+XG2VCZu3wOJtch/1otsp
-         KO/Dck3sxvUM4NtvaP7/uKclqkhbe259jZ3wQjwalWSq2sPrMe6ZXsg8xvWIrcCgoJ
-         PrCyO5OiWfVcJ8oiqZkdQ8EBJWKlAyjEvgTRLC+RO608KwDJB9vkW1z1ZO2N9Vs+ox
-         JBl7yqflDHWNCLIvh0AW2G57Vos/uNu44MCUh1iS3ZENkzwRNkOYjr0bdxpHbqtKGX
-         7DHbbuOHQV7MDxN+k8RtyDHVHV3rxdx/zX4X0IFZH743UbBk1AKdtQdD5W+va6QBEv
-         mmJ5iN63W2a0w==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Cc:     Petr Tesarik <petr@tesarici.cz>
-Subject: [PATCH] scsi: Do not rescan devices with a suspended queue
-Date:   Wed,  4 Oct 2023 17:58:03 +0900
-Message-ID: <20231004085803.130722-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
+        with ESMTP id S244550AbjJDSxM (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Oct 2023 14:53:12 -0400
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 27FF5EB;
+        Wed,  4 Oct 2023 11:52:46 -0700 (PDT)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id BCC0B7A073C;
+        Wed,  4 Oct 2023 20:52:45 +0200 (CEST)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Tim Waugh <tim@cyberelk.net>,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] ata: pata_parport: fit3: implement IDE command set registers
+Date:   Wed,  4 Oct 2023 20:52:35 +0200
+Message-Id: <20231004185235.27417-5-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20231004185235.27417-1-linux@zary.sk>
+References: <20231004185235.27417-1-linux@zary.sk>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Commit ff48b37802e5 ("scsi: Do not attempt to rescan suspended devices")
-modified scsi_rescan_device() to avoid attempting rescanning a suspended
-device. However, the modification added a check to verify that a SCSI
-device is in the running state without checking if the device request
-queue (in the case of block device) is also running, thus allowing the
-exectuion of internal requests. Without checking the device request
-queue, commit ff48b37802e5 fix is incomplete and deadlocks on resume can
-still happen. Use blk_queue_pm_only() to check if the device request
-queue allows executing commands in addition to checking the SCSI device
-state.
+fit3 protocol driver does not support accessing IDE control registers
+(device control/altstatus). The DOS driver does not use these registers
+either (as observed from DOSEMU trace). But the HW seems to be capable
+of accessing these registers - I simply tried bit 3 and it works!
 
-Reported-by: Petr Tesarik <petr@tesarici.cz>
-Fixes: ff48b37802e5 ("scsi: Do not attempt to rescan suspended devices")
-Cc: stable@vger.kernel.org
-Tested-by: Petr Tesarik <petr@tesarici.cz>
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+The control register is required to properly reset ATAPI devices or
+they will be detected only once (after a power cycle).
+
+Tested with EXP Computer CD-865 with MC-1285B EPP cable and
+TransDisk 3000.
+
+Signed-off-by: Ondrej Zary <linux@zary.sk>
 ---
- drivers/scsi/scsi_scan.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/ata/pata_parport/fit3.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3db4d31a03a1..b05a55f498a2 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1627,12 +1627,13 @@ int scsi_rescan_device(struct scsi_device *sdev)
- 	device_lock(dev);
+diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
+index bad7aa920cdc..86b39966755b 100644
+--- a/drivers/ata/pata_parport/fit3.c
++++ b/drivers/ata/pata_parport/fit3.c
+@@ -9,11 +9,6 @@
+  *
+  * The TD-2000 and certain older devices use a different protocol.
+  * Try the fit2 protocol module with them.
+- *
+- * NB:  The FIT adapters do not appear to support the control
+- * registers.  So, we map ALT_STATUS to STATUS and NO-OP writes
+- * to the device control register - this means that IDE reset
+- * will not work on these devices.
+  */
  
- 	/*
--	 * Bail out if the device is not running. Otherwise, the rescan may
--	 * block waiting for commands to be executed, with us holding the
--	 * device lock. This can result in a potential deadlock in the power
--	 * management core code when system resume is on-going.
-+	 * Bail out if the device or its queue are not running. Otherwise,
-+	 * the rescan may block waiting for commands to be executed, with us
-+	 * holding the device lock. This can result in a potential deadlock
-+	 * in the power management core code when system resume is on-going.
- 	 */
--	if (sdev->sdev_state != SDEV_RUNNING) {
-+	if (sdev->sdev_state != SDEV_RUNNING ||
-+	    blk_queue_pm_only(sdev->request_queue)) {
- 		ret = -EWOULDBLOCK;
- 		goto unlock;
- 	}
+ #include <linux/module.h>
+@@ -35,10 +30,11 @@
+  * cont = 1 - access the IDE command set
+  */
+ 
++static int cont_map[] = { 0x00, 0x08 };
++
+ static void fit3_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
+ {
+-	if (cont == 1)
+-		return;
++	regr += cont_map[cont];
+ 
+ 	switch (pi->mode) {
+ 	case 0:
+@@ -59,11 +55,7 @@ static int fit3_read_regr(struct pi_adapter *pi, int cont, int regr)
+ {
+ 	int  a, b;
+ 
+-	if (cont) {
+-		if (regr != 6)
+-			return 0xff;
+-		regr = 7;
+-	}
++	regr += cont_map[cont];
+ 
+ 	switch (pi->mode) {
+ 	case 0:
 -- 
-2.41.0
+Ondrej Zary
 
