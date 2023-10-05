@@ -2,88 +2,68 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D8CFE9371C
-	for <linux-ide@archiver.kernel.org>; Thu,  5 Oct 2023 20:46:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4748E9371D
+	for <linux-ide@archiver.kernel.org>; Thu,  5 Oct 2023 20:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230317AbjJEUqn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 5 Oct 2023 16:46:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34494 "EHLO
+        id S230203AbjJEU4K (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 5 Oct 2023 16:56:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229526AbjJEUqm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 5 Oct 2023 16:46:42 -0400
+        with ESMTP id S230029AbjJEU4J (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 5 Oct 2023 16:56:09 -0400
 Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2ACFD95;
-        Thu,  5 Oct 2023 13:46:41 -0700 (PDT)
-Received: from [192.168.0.2] (chello085216244195.chello.sk [85.216.244.195])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9E18C9F;
+        Thu,  5 Oct 2023 13:56:07 -0700 (PDT)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 3DC607A001E;
-        Thu,  5 Oct 2023 22:46:40 +0200 (CEST)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 95EEE7A01D5;
+        Thu,  5 Oct 2023 22:56:06 +0200 (CEST)
 From:   Ondrej Zary <linux@zary.sk>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH 4/4] ata: pata_parport: fit3: implement IDE command set registers
-Date:   Thu, 5 Oct 2023 22:46:37 +0200
-User-Agent: KMail/1.9.10
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, Tim Waugh <tim@cyberelk.net>,
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Tim Waugh <tim@cyberelk.net>,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-References: <20231005192440.4047-1-linux@zary.sk> <20231005192440.4047-5-linux@zary.sk> <c2e074e0-ad91-e8b4-debf-00661ad5c720@omp.ru>
-In-Reply-To: <c2e074e0-ad91-e8b4-debf-00661ad5c720@omp.ru>
-X-KMail-QuotePrefix: > 
+Subject: [PATCH 1/4] ata: pata_parport: fix pata_parport_devchk
+Date:   Thu,  5 Oct 2023 22:55:56 +0200
+Message-Id: <20231005205559.6504-2-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20231005205559.6504-1-linux@zary.sk>
+References: <20231005205559.6504-1-linux@zary.sk>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <202310052246.37625.linux@zary.sk>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thursday 05 October 2023 21:53:44 Sergey Shtylyov wrote:
-> On 10/5/23 10:24 PM, Ondrej Zary wrote:
-> 
-> > fit3 protocol driver does not support accessing IDE control registers
-> > (device control/altstatus). The DOS driver does not use these registers
-> > either (as observed from DOSEMU trace). But the HW seems to be capable
-> > of accessing these registers - I simply tried bit 3 and it works!
-> > 
-> > The control register is required to properly reset ATAPI devices or
-> > they will be detected only once (after a power cycle).
-> > 
-> > Tested with EXP Computer CD-865 with MC-1285B EPP cable and
-> > TransDisk 3000.
-> > 
-> > Signed-off-by: Ondrej Zary <linux@zary.sk>
-> 
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> > ---
-> >  drivers/ata/pata_parport/fit3.c | 14 ++------------
-> >  1 file changed, 2 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
-> > index bad7aa920cdc..d2b81cf2e16d 100644
-> > --- a/drivers/ata/pata_parport/fit3.c
-> > +++ b/drivers/ata/pata_parport/fit3.c
-> [...]
-> > @@ -59,11 +53,7 @@ static int fit3_read_regr(struct pi_adapter *pi, int cont, int regr)
-> >  {
-> >  	int  a, b;
-> >  
-> > -	if (cont) {
-> > -		if (regr != 6)
-> > -			return 0xff;
-> > -		regr = 7;
-> > -	}
-> > +	regr += cont << 3;
-> 
->    So, is regr == 7 instead of 8 intentional?
+There's a 'x' missing in 0x55 in pata_parport_devchk(), causing the
+detection to always fail. Fix it.
 
-The original code read ATA_REG_STATUS (7) in context 0 instead of ALT_STATUS (6) in context 1.
+Fixes: 246a1c4c6b7f ("ata: pata_parport: add driver (PARIDE replacement)")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ondrej Zary <linux@zary.sk>
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+---
+ drivers/ata/pata_parport/pata_parport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+index 1af64d435d3c..258d189f42e5 100644
+--- a/drivers/ata/pata_parport/pata_parport.c
++++ b/drivers/ata/pata_parport/pata_parport.c
+@@ -64,7 +64,7 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
+ 	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0xaa);
+ 	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0x55);
+ 
+-	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 055);
++	pi->proto->write_regr(pi, 0, ATA_REG_NSECT, 0x55);
+ 	pi->proto->write_regr(pi, 0, ATA_REG_LBAL, 0xaa);
+ 
+ 	nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
 -- 
 Ondrej Zary
+
