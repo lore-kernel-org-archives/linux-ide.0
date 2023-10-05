@@ -2,144 +2,88 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E5EE9272D
-	for <linux-ide@archiver.kernel.org>; Thu,  5 Oct 2023 19:24:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A51E92731
+	for <linux-ide@archiver.kernel.org>; Thu,  5 Oct 2023 19:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231337AbjJETY6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 5 Oct 2023 15:24:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33896 "EHLO
+        id S229601AbjJETlx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 5 Oct 2023 15:41:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231314AbjJETY4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 5 Oct 2023 15:24:56 -0400
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2CE6CE4;
-        Thu,  5 Oct 2023 12:24:50 -0700 (PDT)
-Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 018EE7A062F;
-        Thu,  5 Oct 2023 21:24:48 +0200 (CEST)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Damien Le Moal <dlemoal@kernel.org>,
+        with ESMTP id S231357AbjJETlv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 5 Oct 2023 15:41:51 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 563AAE7;
+        Thu,  5 Oct 2023 12:41:49 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id 2adb3069b0e04-5056ca2b6d1so1702890e87.1;
+        Thu, 05 Oct 2023 12:41:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1696534907; x=1697139707; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=fPAvwi8YA99Xf45ZeLAPc7eM1W0BiMyMfMXa0USvgDQ=;
+        b=lusx4EFN4iL2qf6bW6HCd07yIeXTFBq+E3OYoIYue2uPXcDrSUKJaHF9IntA5+YbdV
+         Clxgx5/ExwHqwtpMo43dddtshAWq72pDE70qsVI6bsr4lMVr5ux519wYuJEAqax02YF4
+         kiPhuIrbHvtt3bs9B7qBHFRe7THQuh/4xpO4qGL9IDT1F706A2dkSTfcwe+v323TM/cS
+         +diIO8xTsQb8aXqpwHIo2jLPywgQ2izUGp3JuXah275Edzukb4aw2HitAGF8Hi6K9+Hv
+         GIDddKBs1SoF/TzvxM10rTOoSUizgY1MZO4an1mzYHTXXEnhh44ZWe+tWkCAZqY4yNSZ
+         7ZXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696534907; x=1697139707;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fPAvwi8YA99Xf45ZeLAPc7eM1W0BiMyMfMXa0USvgDQ=;
+        b=mr7ZTUbFf2fI3psCzPaIFfo/LKjyi5quPpM0Ek7xj9lYWuO+qPpFG21bKCBj8l6ZDM
+         eXu1hWOcvlP0QQP9kdzrIvwjXEYEo2H1Fpe+Y81Gk5TD4PY1bfeaCHaJI2k8b1ID+YbP
+         CTlxMH/QPgqFGUnNxEFxVSb7Iyf06dRK2UeUB2e+P+jHLVR6EgvYYgNbQ017OHv/AR68
+         9ZJlphtotkEoNgIrfHtM71lceaIevMoKJUwtRSArv6r3LbRWO0GmUnd+B5HZ+rd/MfDS
+         x1MRYF9ro3Uv7YkTor3SYWhPwoZh3KGf4Q1YexGwtvwHEqfUuwHLNxlj5eR72VabX2Eg
+         nUKw==
+X-Gm-Message-State: AOJu0Yy46cAvRpJybl+FN+q2FhBkxxJpRw9eW5BRYi9eIyLDcLjsyLMX
+        6P5wEdtlnHZt9Q7abofIlq2rJYFS1+Y=
+X-Google-Smtp-Source: AGHT+IHqTabc1IGY1RZWJdXcF/NPsCmiKxtiFcWUSfw/FqlkoLm3vuBxwkuA1AyoGcEYFp4v5tUjIQ==
+X-Received: by 2002:a05:6512:230c:b0:504:7d7e:78dd with SMTP id o12-20020a056512230c00b005047d7e78ddmr3442962lfu.23.1696534906926;
+        Thu, 05 Oct 2023 12:41:46 -0700 (PDT)
+Received: from [192.168.1.103] ([178.176.73.3])
+        by smtp.gmail.com with ESMTPSA id l29-20020ac2555d000000b004fdba93b92asm415325lfk.252.2023.10.05.12.41.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Oct 2023 12:41:46 -0700 (PDT)
+Subject: Re: [PATCH 1/4] ata: pata_parport: fix pata_parport_devchk
+To:     Ondrej Zary <linux@zary.sk>, Damien Le Moal <dlemoal@kernel.org>,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         Sergey Shtylyov <s.shtylyov@omp.ru>,
         Tim Waugh <tim@cyberelk.net>,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] ata: pata_parport: add custom version of wait_after_reset
-Date:   Thu,  5 Oct 2023 21:24:39 +0200
-Message-Id: <20231005192440.4047-4-linux@zary.sk>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20231005192440.4047-1-linux@zary.sk>
 References: <20231005192440.4047-1-linux@zary.sk>
+ <20231005192440.4047-2-linux@zary.sk>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <5ee61099-2868-864d-2d3b-e82404885787@gmail.com>
+Date:   Thu, 5 Oct 2023 22:41:43 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231005192440.4047-2-linux@zary.sk>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Some parallel adapters (e.g. EXP Computer MC-1285B EPP Cable) return
-bogus values when there's no master device present. This can cause
-reset to fail, preventing the lone slave device (such as EXP Computer
-CD-865) from working.
+On 10/5/23 10:24 PM, Ondrej Zary wrote:
 
-Add custom version of wait_after_reset that ignores master failure when
-a slave device is present. The custom version is also needed because
-the generic ata_sff_wait_after_reset uses direct port I/O for slave
-device detection.
+> There's a 'x' missing in 0x55 in pata_parport_devchk(), causing the
+> detection to always fail. Fix it.
+> 
+> Fixes: 246a1c4c6b7f ("ata: pata_parport: add driver (PARIDE replacement)")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
 
-Signed-off-by: Ondrej Zary <linux@zary.sk>
----
- drivers/ata/pata_parport/pata_parport.c | 67 ++++++++++++++++++++++++-
- 1 file changed, 66 insertions(+), 1 deletion(-)
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
-index cf87bbb52f1f..318b2ce2d8d1 100644
---- a/drivers/ata/pata_parport/pata_parport.c
-+++ b/drivers/ata/pata_parport/pata_parport.c
-@@ -80,6 +80,71 @@ static bool pata_parport_devchk(struct ata_port *ap, unsigned int device)
- 	return (nsect == 0x55) && (lbal == 0xaa);
- }
- 
-+static int pata_parport_wait_after_reset(struct ata_link *link,
-+					 unsigned int devmask,
-+					 unsigned long deadline)
-+{
-+	struct ata_port *ap = link->ap;
-+	struct pi_adapter *pi = ap->host->private_data;
-+	unsigned int dev0 = devmask & (1 << 0);
-+	unsigned int dev1 = devmask & (1 << 1);
-+	int rc, ret = 0;
-+
-+	ata_msleep(ap, ATA_WAIT_AFTER_RESET);
-+
-+	/* always check readiness of the master device */
-+	rc = ata_sff_wait_ready(link, deadline);
-+	if (rc) {
-+		/*
-+		 * some adapters return bogus values if master device is not
-+		 * present, so don't abort now if a slave device is present
-+		 */
-+		if (!dev1)
-+			return rc;
-+		ret = -ENODEV;
-+	}
-+
-+	/*
-+	 * if device 1 was found in ata_devchk, wait for register
-+	 * access briefly, then wait for BSY to clear.
-+	 */
-+	if (dev1) {
-+		int i;
-+
-+		pata_parport_dev_select(ap, 1);
-+		/*
-+		 * Wait for register access.  Some ATAPI devices fail
-+		 * to set nsect/lbal after reset, so don't waste too
-+		 * much time on it.  We're gonna wait for !BSY anyway.
-+		 */
-+		for (i = 0; i < 2; i++) {
-+			u8 nsect, lbal;
-+
-+			nsect = pi->proto->read_regr(pi, 0, ATA_REG_NSECT);
-+			lbal = pi->proto->read_regr(pi, 0, ATA_REG_LBAL);
-+			if ((nsect == 1) && (lbal == 1))
-+				break;
-+			/* give drive a breather */
-+			ata_msleep(ap, 50);
-+		}
-+
-+		rc = ata_sff_wait_ready(link, deadline);
-+		if (rc) {
-+			if (rc != -ENODEV)
-+				return rc;
-+			ret = rc;
-+		}
-+	}
-+
-+	pata_parport_dev_select(ap, 0);
-+	if (dev1)
-+		pata_parport_dev_select(ap, 1);
-+	if (dev0)
-+		pata_parport_dev_select(ap, 0);
-+
-+	return ret;
-+}
-+
- static int pata_parport_bus_softreset(struct ata_port *ap, unsigned int devmask,
- 				      unsigned long deadline)
- {
-@@ -94,7 +159,7 @@ static int pata_parport_bus_softreset(struct ata_port *ap, unsigned int devmask,
- 	ap->last_ctl = ap->ctl;
- 
- 	/* wait the port to become ready */
--	return ata_sff_wait_after_reset(&ap->link, devmask, deadline);
-+	return pata_parport_wait_after_reset(&ap->link, devmask, deadline);
- }
- 
- static int pata_parport_softreset(struct ata_link *link, unsigned int *classes,
--- 
-Ondrej Zary
+[...]
 
+MBR, Sergey
