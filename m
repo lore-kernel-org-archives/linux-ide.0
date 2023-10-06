@@ -2,100 +2,72 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E5AEE92FC0
-	for <linux-ide@archiver.kernel.org>; Thu,  5 Oct 2023 20:56:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EECBE92FFA
+	for <linux-ide@archiver.kernel.org>; Fri,  6 Oct 2023 09:47:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231661AbjJEU4M (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 5 Oct 2023 16:56:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46918 "EHLO
+        id S231439AbjJFJrb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 6 Oct 2023 05:47:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231124AbjJEU4K (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 5 Oct 2023 16:56:10 -0400
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6230FC0;
-        Thu,  5 Oct 2023 13:56:08 -0700 (PDT)
-Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 175AE7A072E;
-        Thu,  5 Oct 2023 22:56:07 +0200 (CEST)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Damien Le Moal <dlemoal@kernel.org>,
+        with ESMTP id S231429AbjJFJra (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 6 Oct 2023 05:47:30 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC4089F;
+        Fri,  6 Oct 2023 02:47:28 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5000DC433C8;
+        Fri,  6 Oct 2023 09:47:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696585648;
+        bh=Yl15YQeFlc8bzC6oSZ0ClIT+LMOvWWe4T1wyTMdQweQ=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=GDXRlib3O1Le5bWbTLHB6PgNtXJL+0OHtFGWLEGfe1PVHz1ASUZs3dV0LIuEsSKYF
+         EZ1CUHgo/0oR5L8+6P2ynTmsW0CGQFxpBj9Dsb/c+f+5u4Meurhn6YOiqYOEc2ButZ
+         nVsh2Re/XvHRw56MHOwh26rocm21yBZg2tIk4f9l34XmN2Ud/crC7xs3hYua4VNd40
+         /fj+VvK1tugZZEpNnFCaYkiZfpGZvzL/SqNd3xoukROobjF5g/aLg1iPwe2XANuMMA
+         d52FT8acCRJPiXQt9E4Cv4UmYG6tHD5LooLSh5brELHCZ+0QY3QQk5Si+p+hHpdELx
+         tk7qkluolK49A==
+Message-ID: <cf16e053-2303-e60e-dfa3-368393b54cec@kernel.org>
+Date:   Fri, 6 Oct 2023 18:47:25 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v4 0/4] ata: pata_parport: fix EXP Computer CD-865 with
+ MC-1285B EPP cable
+Content-Language: en-US
+To:     Ondrej Zary <linux@zary.sk>,
         Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Tim Waugh <tim@cyberelk.net>,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        Tim Waugh <tim@cyberelk.net>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] ata: pata_parport: fit3: implement IDE command set registers
-Date:   Thu,  5 Oct 2023 22:55:59 +0200
-Message-Id: <20231005205559.6504-5-linux@zary.sk>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20231005205559.6504-1-linux@zary.sk>
 References: <20231005205559.6504-1-linux@zary.sk>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20231005205559.6504-1-linux@zary.sk>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-fit3 protocol driver does not support accessing IDE control registers
-(device control/altstatus). The DOS driver does not use these registers
-either (as observed from DOSEMU trace). But the HW seems to be capable
-of accessing these registers - I simply tried bit 3 and it works!
+On 10/6/23 05:55, Ondrej Zary wrote:
+> 
+> Two bugfixes, one workaround and IDE command set registers support for fit3
+> driver. All needed for EXP Computer CD-865 drive with MC-1285B EPP cable to
+> work.
+> 
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
+> ---
+> Changes in v4:
+>  - coding style fixes in patch 3
+> 
+>  drivers/ata/pata_parport/fit3.c         | 14 +-----
+>  drivers/ata/pata_parport/pata_parport.c | 78 ++++++++++++++++++++++++++++++++-
+>  2 files changed, 78 insertions(+), 14 deletions(-)
 
-The control register is required to properly reset ATAPI devices or
-they will be detected only once (after a power cycle).
+Applied to for-6.6-fixes. Thanks !
 
-Tested with EXP Computer CD-865 with MC-1285B EPP cable and
-TransDisk 3000.
-
-Signed-off-by: Ondrej Zary <linux@zary.sk>
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
----
- drivers/ata/pata_parport/fit3.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
-index bad7aa920cdc..d2b81cf2e16d 100644
---- a/drivers/ata/pata_parport/fit3.c
-+++ b/drivers/ata/pata_parport/fit3.c
-@@ -9,11 +9,6 @@
-  *
-  * The TD-2000 and certain older devices use a different protocol.
-  * Try the fit2 protocol module with them.
-- *
-- * NB:  The FIT adapters do not appear to support the control
-- * registers.  So, we map ALT_STATUS to STATUS and NO-OP writes
-- * to the device control register - this means that IDE reset
-- * will not work on these devices.
-  */
- 
- #include <linux/module.h>
-@@ -37,8 +32,7 @@
- 
- static void fit3_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
- {
--	if (cont == 1)
--		return;
-+	regr += cont << 3;
- 
- 	switch (pi->mode) {
- 	case 0:
-@@ -59,11 +53,7 @@ static int fit3_read_regr(struct pi_adapter *pi, int cont, int regr)
- {
- 	int  a, b;
- 
--	if (cont) {
--		if (regr != 6)
--			return 0xff;
--		regr = 7;
--	}
-+	regr += cont << 3;
- 
- 	switch (pi->mode) {
- 	case 0:
 -- 
-Ondrej Zary
+Damien Le Moal
+Western Digital Research
 
