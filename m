@@ -2,103 +2,75 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FF53E94125
-	for <linux-ide@archiver.kernel.org>; Fri,  6 Oct 2023 21:44:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C554CE92FFD
+	for <linux-ide@archiver.kernel.org>; Sat,  7 Oct 2023 07:42:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233769AbjJFVo4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 6 Oct 2023 17:44:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39174 "EHLO
+        id S1343690AbjJGHm3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 7 Oct 2023 03:42:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233783AbjJFVoy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 6 Oct 2023 17:44:54 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11378F9;
-        Fri,  6 Oct 2023 14:44:48 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89A98C433C8;
-        Fri,  6 Oct 2023 21:44:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696628688;
-        bh=mu/lIRhJDrCa7DuHJvaUMHjw/zy7mbs5KoPEOxnbT0k=;
-        h=From:To:Cc:Subject:Date:From;
-        b=TSBhAOcJ40um/DnGW6VF0LUGqiQWQtk5DVI0qLo0afN46m9Xmuh4QXssoH8qNRmER
-         qXE953NsjLMgoaALnMZ/Swe93zYeNA42nsxeSJZEs7y1B6dfpg9J5hdjPgHTLFGUh1
-         rHLP3mWhnoHLW3KSB8Ac+rPr528O/+FT2DSjP5Rq8MDmqqlQnxCmV9OhzSs/WKccGS
-         akG1DmD1dKVSWmWf9CibKm8RsO/d4dj36xQoSgT1hg5kPq43ISOieD0HCajAujqH2/
-         Qejz3uvnqZ+XTFfUuhhMWFhKRa9LE43DKR9O2hDnNlMZ5lZdpECHH4brC6fH+xhLf8
-         norMmTCcH1T/A==
-Received: (nullmailer pid 339997 invoked by uid 1000);
-        Fri, 06 Oct 2023 21:44:46 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Damien Le Moal <dlemoal@kernel.org>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>
-Cc:     linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] ata: imx: Use device_get_match_data()
-Date:   Fri,  6 Oct 2023 16:44:42 -0500
-Message-Id: <20231006214442.339890-1-robh@kernel.org>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S1343611AbjJGHm2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 Oct 2023 03:42:28 -0400
+Received: from m15.mail.163.com (m15.mail.163.com [45.254.50.219])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 89F1CBF
+        for <linux-ide@vger.kernel.org>; Sat,  7 Oct 2023 00:42:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=WB7nK
+        i52YjLc4sG3q3T1xtcsv16IVqBRlO8CrGHAiyQ=; b=TWSEngi9Ng51AvfcInrg1
+        XNiGPvm3Qd1zYFdbMnUqX+CRFkdintfb07NQ/aBH8gmGfT2FBNdkiiuBb4Gsf3aZ
+        /NWKABl0x2Ry9cM1fcW5KTWibu+07QtUoAAhu6JAaCsInoPOIt+sDy022Q13hRSP
+        EvTmijHUD/Pa5MH9geMWqQ=
+Received: from icess-ProLiant-DL380-Gen10.. (unknown [183.174.60.14])
+        by zwqz-smtp-mta-g1-2 (Coremail) with SMTP id _____wDncjVDCCFlWnx6EA--.50896S4;
+        Sat, 07 Oct 2023 15:27:06 +0800 (CST)
+From:   Ma Ke <make_ruc2021@163.com>
+To:     dlemoal@kernel.org
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ma Ke <make_ruc2021@163.com>
+Subject: [PATCH] ata: sata_mv: aspeed: fix value check in mv_platform_probe()
+Date:   Sat,  7 Oct 2023 15:26:57 +0800
+Message-Id: <20231007072657.4001311-1-make_ruc2021@163.com>
+X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _____wDncjVDCCFlWnx6EA--.50896S4
+X-Coremail-Antispam: 1Uf129KBjvdXoW7Jr4rAw4fGw18tFy5tr17Awb_yoWfXwbEka
+        yxu39rWr429Fsrt345Xw13ArWxKF4vvFn0va4Iyw1ayr17Xa13JrWDXwsxu39xWw48AFy0
+        vr1UC3y3Cry5GjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRthFxDUUUUU==
+X-Originating-IP: [183.174.60.14]
+X-CM-SenderInfo: 5pdnvshuxfjiisr6il2tof0z/1tbivgoCC1ZcjAVt3wAAsM
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Use preferred device_get_match_data() instead of of_match_device() to
-get the driver match data. With this, adjust the includes to explicitly
-include the correct headers.
+In mv_platform_probe(), check the return value of clk_prepare_enable()
+and return the error code if clk_prepare_enable() returns an
+unexpected value.
 
-Signed-off-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Ma Ke <make_ruc2021@163.com>
 ---
- drivers/ata/ahci_imx.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/ata/sata_mv.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 9fa005965f3b..cb768f66f0a7 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -9,10 +9,11 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/platform_device.h>
-+#include <linux/property.h>
- #include <linux/regmap.h>
- #include <linux/ahci_platform.h>
- #include <linux/gpio/consumer.h>
--#include <linux/of_device.h>
-+#include <linux/of.h>
- #include <linux/mfd/syscon.h>
- #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
- #include <linux/libata.h>
-@@ -1050,16 +1051,11 @@ static int imx8_sata_probe(struct device *dev, struct imx_ahci_priv *imxpriv)
- static int imx_ahci_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
--	const struct of_device_id *of_id;
- 	struct ahci_host_priv *hpriv;
- 	struct imx_ahci_priv *imxpriv;
- 	unsigned int reg_val;
- 	int ret;
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 45e48d653c60..96f9841aae6c 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4125,8 +4125,11 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 	hpriv->clk = clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(hpriv->clk))
+ 		dev_notice(&pdev->dev, "cannot get optional clkdev\n");
+-	else
+-		clk_prepare_enable(hpriv->clk);
++	else {
++		rc = clk_prepare_enable(hpriv->clk);
++		if (rc)
++			return rc;
++	}
  
--	of_id = of_match_device(imx_ahci_of_match, dev);
--	if (!of_id)
--		return -EINVAL;
--
- 	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
- 	if (!imxpriv)
- 		return -ENOMEM;
-@@ -1067,7 +1063,7 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 	imxpriv->ahci_pdev = pdev;
- 	imxpriv->no_device = false;
- 	imxpriv->first_time = true;
--	imxpriv->type = (unsigned long)of_id->data;
-+	imxpriv->type = (enum ahci_imx_type)device_get_match_data(dev);
- 
- 	imxpriv->sata_clk = devm_clk_get(dev, "sata");
- 	if (IS_ERR(imxpriv->sata_clk)) {
+ 	for (port = 0; port < n_ports; port++) {
+ 		char port_number[16];
 -- 
-2.40.1
+2.37.2
 
