@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85FBEE95A67
-	for <linux-ide@archiver.kernel.org>; Sun,  8 Oct 2023 00:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1577EE95A87
+	for <linux-ide@archiver.kernel.org>; Sun,  8 Oct 2023 00:51:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234437AbjJHAvG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 7 Oct 2023 20:51:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44402 "EHLO
+        id S234272AbjJHAvR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 7 Oct 2023 20:51:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234448AbjJHAun (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 Oct 2023 20:50:43 -0400
+        with ESMTP id S234276AbjJHAut (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 Oct 2023 20:50:49 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6037D10F7;
-        Sat,  7 Oct 2023 17:49:47 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09F77C433CA;
-        Sun,  8 Oct 2023 00:49:45 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D9491BF4;
+        Sat,  7 Oct 2023 17:50:08 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F40E4C433CB;
+        Sun,  8 Oct 2023 00:50:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696726186;
-        bh=5KotYUTkzsyrnu9qGiXLrjGII64q0hedJroY7+9qYk4=;
+        s=k20201202; t=1696726204;
+        bh=dQuFp9LbxT5HDqh2T4QVw+A5eVEt9TDxJ4S7un6epD4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hdz9bRrSsOj9HdxDmuz5X3J0aJzol3yZVZx/8HstywhH68OPmFIVF+W8lTmbYGNYS
-         e+/9SELjk8h1GFKtAW4p+BEXJ2SErGUmpb6jiUcI9QU/u4hPrm3+xDN6x6kMcnuaKa
-         u+MA3Oc2EXVXa/ZIKb9JFpfUpvONqXMZoLjGRCP1QT8JBDAwtotKXhuhbuUWshnHSW
-         b1RYigXceVzC19j77mg2OtLpV58hpPQYWXAhJ4Y2fgkncvGb4s81bti8aaRcTxMeax
-         6IIdoxDq7uMJA55IS3rAF8F43mAxPO7QJuFbL5e7RikwX5f7v700c/56Y2GV7HAbct
-         zU58e6lCB0p/w==
+        b=tSlsGw/HhdDsHL1fzPYWRRlIl2mYS05xHiOiZsXDKkTdIG70fAi/uA+k8Zx1Qhw6O
+         IP+5s+mwxx+HZnccGSOSC7+J+apt+k3SmpgJ+SoENZ1ByFtsQT6RNiRf1JUm1JQf4e
+         RAngplkAETgr5ieZKU98/Rh5qqZEu7+r/u9KJ8pgKgvf5URHVCa/kxYg/0O5fVo5JA
+         VbF3bODONEAY3WK661W2gOPiIGHAcrASvkLAloEs7bQhDxqLNJBfNiCmaIGLJjxpyK
+         iy/KjjDobW70ldmls1AkmZ/YiEyraLB+Isn+1nwumjy9cUrjBKKPegIw3GAiFQhvJc
+         mfjrV3qnDKRGA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Damien Le Moal <dlemoal@kernel.org>,
@@ -33,17 +33,17 @@ Cc:     Damien Le Moal <dlemoal@kernel.org>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 11/12] ata: libata-eh: Fix compilation warning in ata_eh_link_report()
-Date:   Sat,  7 Oct 2023 20:49:28 -0400
-Message-Id: <20231008004929.3767992-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 08/10] ata: libata-core: Fix compilation warning in ata_dev_config_ncq()
+Date:   Sat,  7 Oct 2023 20:49:47 -0400
+Message-Id: <20231008004950.3768189-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231008004929.3767992-1-sashal@kernel.org>
-References: <20231008004929.3767992-1-sashal@kernel.org>
+In-Reply-To: <20231008004950.3768189-1-sashal@kernel.org>
+References: <20231008004950.3768189-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.56
+X-stable-base: Linux 5.15.134
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -51,25 +51,30 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Damien Le Moal <dlemoal@kernel.org>
 
-[ Upstream commit 49728bdc702391902a473b9393f1620eea32acb0 ]
+[ Upstream commit ed518d9ba980dc0d27c7d1dea1e627ba001d1977 ]
 
-The 6 bytes length of the tries_buf string in ata_eh_link_report() is
-too short and results in a gcc compilation warning with W-!:
+The 24 bytes length allocated to the ncq_desc string in
+ata_dev_config_lba() for ata_dev_config_ncq() to use is too short,
+causing the following gcc compilation warnings when compiling with W=1:
 
-drivers/ata/libata-eh.c: In function ‘ata_eh_link_report’:
-drivers/ata/libata-eh.c:2371:59: warning: ‘%d’ directive output may be truncated writing between 1 and 11 bytes into a region of size 4 [-Wformat-truncation=]
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                                                           ^~
-drivers/ata/libata-eh.c:2371:56: note: directive argument in the range [-2147483648, 4]
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                                                        ^~~~~~
-drivers/ata/libata-eh.c:2371:17: note: ‘snprintf’ output between 4 and 14 bytes into a destination of size 6
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 2372 |                          ap->eh_tries);
-      |                          ~~~~~~~~~~~~~
+drivers/ata/libata-core.c: In function ‘ata_dev_configure’:
+drivers/ata/libata-core.c:2378:56: warning: ‘%d’ directive output may be truncated writing between 1 and 2 bytes into a region of size between 1 and 11 [-Wformat-truncation=]
+ 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+      |                                                        ^~
+In function ‘ata_dev_config_ncq’,
+    inlined from ‘ata_dev_config_lba’ at drivers/ata/libata-core.c:2649:8,
+    inlined from ‘ata_dev_configure’ at drivers/ata/libata-core.c:2952:9:
+drivers/ata/libata-core.c:2378:41: note: directive argument in the range [1, 32]
+ 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+      |                                         ^~~~~~~~~~~~~~~~~~~~~
+drivers/ata/libata-core.c:2378:17: note: ‘snprintf’ output between 16 and 31 bytes into a destination of size 24
+ 2378 |                 snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 2379 |                         ddepth, aa_desc);
+      |                         ~~~~~~~~~~~~~~~~
 
-Avoid this warning by increasing the string size to 16B.
+Avoid these warnings and the potential truncation by changing the size
+of the ncq_desc string to 32 characters.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -77,22 +82,22 @@ Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/libata-eh.c | 2 +-
+ drivers/ata/libata-core.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index a3ae5fc2a42fc..28b1fe644cfee 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2212,7 +2212,7 @@ static void ata_eh_link_report(struct ata_link *link)
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_queued_cmd *qc;
- 	const char *frozen, *desc;
--	char tries_buf[6] = "";
-+	char tries_buf[16] = "";
- 	int tag, nr_failed = 0;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 025260b80a94c..ca7e887bad36d 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2382,7 +2382,7 @@ static int ata_dev_config_lba(struct ata_device *dev)
+ 	struct ata_port *ap = dev->link->ap;
+ 	const u16 *id = dev->id;
+ 	const char *lba_desc;
+-	char ncq_desc[24];
++	char ncq_desc[32];
+ 	int ret;
  
- 	if (ehc->i.flags & ATA_EHI_QUIET)
+ 	dev->flags |= ATA_DFLAG_LBA;
 -- 
 2.40.1
 
