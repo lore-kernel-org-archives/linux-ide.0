@@ -2,30 +2,30 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFF2BE95A87
-	for <linux-ide@archiver.kernel.org>; Sun,  8 Oct 2023 01:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DFBE95A86
+	for <linux-ide@archiver.kernel.org>; Sun,  8 Oct 2023 01:17:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234265AbjJHBMZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 7 Oct 2023 21:12:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56138 "EHLO
+        id S234263AbjJHBRQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 7 Oct 2023 21:17:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234338AbjJHBMS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 Oct 2023 21:12:18 -0400
+        with ESMTP id S234223AbjJHBRO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 Oct 2023 21:17:14 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 491CD3592;
-        Sat,  7 Oct 2023 17:52:25 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BD66C116A4;
-        Sun,  8 Oct 2023 00:51:03 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DD7410E2;
+        Sat,  7 Oct 2023 17:50:39 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79E73C433B8;
+        Sun,  8 Oct 2023 00:50:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696726264;
-        bh=0pBYOUF9hqHS5pUtktUEo6Y2BBDCAqwXN/wja+8ATKQ=;
+        s=k20201202; t=1696726236;
+        bh=IK9sp6t+PxGd3Ufk8rWJ19TDGbKz3NNFRkBLW/fhOS8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=a2PhjTAABLf2v36NBIxYEzL1P+RdqyQopdcEmcpjHWHUvObTFfVzULCKK1oBpApB4
-         vahMSRtrs1+/qd62GuuT4UWAbJuaT41sRl8eVFY36N0lKg7ZWhUbfcGfZIiFtInvLs
-         rKHi0PbD5+963s+jSshVm7jBSbrr68bKhyzrQ8zq0ECiodgKmnD3hcDoudHwYSLyn9
-         2egKzD9EuMkuvzLN1JBRbyZ2LznYxI4KYuCoVzKlFjtlTXf/+rKHHgxXj+BYtkFLyI
-         ppPCWtwnmFVpGx0qsuEuWb68QOBrNiHP3d8W021qf963Jlx2riC5HTkxRmE100j+Y6
-         zjBzmep5hLdKA==
+        b=BpHyZT3QkUGGpYlEyNmaHV7dnCdl3NeO9CM5WWK2ch/wKh9G/e2IlO2Em6CD6hQFr
+         FMwo9lkL+xjZCsdGkTkkJJp5Xktm9PQtG6FSNet7aj/E9BsUm5YLhCxwyRMEmoeK51
+         c4E3oFZXv12hxC/FBSIUBEu3k8RmoY/m0FaCKUJCrXMvuy10kduZcQqOl8pr5RxoWX
+         4B7B/tkG4MZti6jz+tbg1Xt5fhOb53vSS2/jOndQlS/8iqjbHtGSjEoMaSbB0SWcct
+         llsLcPEcM/nbkUOrZDrTw5KG0sRdqh4XAyzLC/969u7RmjBsr8uQerYFdmLStGoAYt
+         Bpw1LVb5xzJxw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Damien Le Moal <dlemoal@kernel.org>,
@@ -33,17 +33,17 @@ Cc:     Damien Le Moal <dlemoal@kernel.org>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 6/7] ata: libata-eh: Fix compilation warning in ata_eh_link_report()
-Date:   Sat,  7 Oct 2023 20:50:52 -0400
-Message-Id: <20231008005053.3768625-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 7/8] ata: libata-eh: Fix compilation warning in ata_eh_link_report()
+Date:   Sat,  7 Oct 2023 20:50:23 -0400
+Message-Id: <20231008005024.3768418-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231008005053.3768625-1-sashal@kernel.org>
-References: <20231008005053.3768625-1-sashal@kernel.org>
+In-Reply-To: <20231008005024.3768418-1-sashal@kernel.org>
+References: <20231008005024.3768418-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.14.326
+X-stable-base: Linux 5.4.257
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -81,12 +81,12 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index cbe9af624a06f..bb47bbe20ef28 100644
+index 5c91183b5b736..011f51e55c930 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -2466,7 +2466,7 @@ static void ata_eh_link_report(struct ata_link *link)
- 	struct ata_port *ap = link->ap;
+@@ -2422,7 +2422,7 @@ static void ata_eh_link_report(struct ata_link *link)
  	struct ata_eh_context *ehc = &link->eh_context;
+ 	struct ata_queued_cmd *qc;
  	const char *frozen, *desc;
 -	char tries_buf[6] = "";
 +	char tries_buf[16] = "";
