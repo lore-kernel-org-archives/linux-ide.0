@@ -2,97 +2,109 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DFBE95A86
-	for <linux-ide@archiver.kernel.org>; Sun,  8 Oct 2023 01:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55F7FE95A8D
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Oct 2023 06:17:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234263AbjJHBRQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 7 Oct 2023 21:17:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41584 "EHLO
+        id S1345176AbjJIGRp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 9 Oct 2023 02:17:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234223AbjJHBRO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 Oct 2023 21:17:14 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DD7410E2;
-        Sat,  7 Oct 2023 17:50:39 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79E73C433B8;
-        Sun,  8 Oct 2023 00:50:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696726236;
-        bh=IK9sp6t+PxGd3Ufk8rWJ19TDGbKz3NNFRkBLW/fhOS8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BpHyZT3QkUGGpYlEyNmaHV7dnCdl3NeO9CM5WWK2ch/wKh9G/e2IlO2Em6CD6hQFr
-         FMwo9lkL+xjZCsdGkTkkJJp5Xktm9PQtG6FSNet7aj/E9BsUm5YLhCxwyRMEmoeK51
-         c4E3oFZXv12hxC/FBSIUBEu3k8RmoY/m0FaCKUJCrXMvuy10kduZcQqOl8pr5RxoWX
-         4B7B/tkG4MZti6jz+tbg1Xt5fhOb53vSS2/jOndQlS/8iqjbHtGSjEoMaSbB0SWcct
-         llsLcPEcM/nbkUOrZDrTw5KG0sRdqh4XAyzLC/969u7RmjBsr8uQerYFdmLStGoAYt
-         Bpw1LVb5xzJxw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 7/8] ata: libata-eh: Fix compilation warning in ata_eh_link_report()
-Date:   Sat,  7 Oct 2023 20:50:23 -0400
-Message-Id: <20231008005024.3768418-7-sashal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231008005024.3768418-1-sashal@kernel.org>
-References: <20231008005024.3768418-1-sashal@kernel.org>
+        with ESMTP id S1345217AbjJIGRp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 Oct 2023 02:17:45 -0400
+Received: from bee.tesarici.cz (bee.tesarici.cz [77.93.223.253])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66EFCCF;
+        Sun,  8 Oct 2023 23:17:41 -0700 (PDT)
+Received: from meshulam.tesarici.cz (dynamic-2a00-1028-83b8-1e7a-4427-cc85-6706-c595.ipv6.o2.cz [IPv6:2a00:1028:83b8:1e7a:4427:cc85:6706:c595])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by bee.tesarici.cz (Postfix) with ESMTPSA id B18BF194F40;
+        Mon,  9 Oct 2023 08:17:38 +0200 (CEST)
+Authentication-Results: mail.tesarici.cz; dmarc=fail (p=none dis=none) header.from=tesarici.cz
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tesarici.cz; s=mail;
+        t=1696832258; bh=cSotfQwbGSibXtsizQ/xjKnpycVo566GkyDdz3BdcMg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=43CGV8jcblIvmjT5SYlDA948jVfgK2O5uSw35YsJ29jrMMOINc/BysNJq5ibBi67Y
+         6Wm4B+OaQ1a2s7cGcGHav/VlaSUmjLq9ZTlodjB0IT/D9TBBiz/zPtxfiBe+Lqfk6a
+         EQ4yXX1w0gGs7aY/sKymc+RK17c8Sq3J46lZDmBhgW/8t8lHlwmJHDTJef8tq2ce5s
+         r/vcHxd6mPp7kPOSt3HXpy/CCLt5D5uaP9HkPsGN0WeG5p/nrzjRNQNGIZOnI+7OKr
+         Dm7h1CNn8h7QF0gB92OqtLYvsXS6D31aeM3T5+BCwP8u56qbt8qsedayoReDZHV47j
+         sqHMjUU8cgoAQ==
+Date:   Mon, 9 Oct 2023 08:17:36 +0200
+From:   Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org
+Subject: Re: [PATCH] scsi: Do not rescan devices with a suspended queue
+Message-ID: <20231009081736.28ddb5fe@meshulam.tesarici.cz>
+In-Reply-To: <20231004085803.130722-1-dlemoal@kernel.org>
+References: <20231004085803.130722-1-dlemoal@kernel.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-suse-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.257
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Damien Le Moal <dlemoal@kernel.org>
+Hi, (adding James)
 
-[ Upstream commit 49728bdc702391902a473b9393f1620eea32acb0 ]
+On Wed,  4 Oct 2023 17:58:03 +0900
+Damien Le Moal <dlemoal@kernel.org> wrote:
 
-The 6 bytes length of the tries_buf string in ata_eh_link_report() is
-too short and results in a gcc compilation warning with W-!:
+> Commit ff48b37802e5 ("scsi: Do not attempt to rescan suspended devices")
+> modified scsi_rescan_device() to avoid attempting rescanning a suspended
+> device. However, the modification added a check to verify that a SCSI
+> device is in the running state without checking if the device request
+> queue (in the case of block device) is also running, thus allowing the
+> exectuion of internal requests. Without checking the device request
+> queue, commit ff48b37802e5 fix is incomplete and deadlocks on resume can
+> still happen. Use blk_queue_pm_only() to check if the device request
+> queue allows executing commands in addition to checking the SCSI device
+> state.
 
-drivers/ata/libata-eh.c: In function ‘ata_eh_link_report’:
-drivers/ata/libata-eh.c:2371:59: warning: ‘%d’ directive output may be truncated writing between 1 and 11 bytes into a region of size 4 [-Wformat-truncation=]
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                                                           ^~
-drivers/ata/libata-eh.c:2371:56: note: directive argument in the range [-2147483648, 4]
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                                                        ^~~~~~
-drivers/ata/libata-eh.c:2371:17: note: ‘snprintf’ output between 4 and 14 bytes into a destination of size 6
- 2371 |                 snprintf(tries_buf, sizeof(tries_buf), " t%d",
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 2372 |                          ap->eh_tries);
-      |                          ~~~~~~~~~~~~~
+FTR this fix is still needed for rc5. Is there any chance it goes into
+fixes before v6.6 is final?
 
-Avoid this warning by increasing the string size to 16B.
+Petr T
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/libata-eh.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5c91183b5b736..011f51e55c930 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2422,7 +2422,7 @@ static void ata_eh_link_report(struct ata_link *link)
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_queued_cmd *qc;
- 	const char *frozen, *desc;
--	char tries_buf[6] = "";
-+	char tries_buf[16] = "";
- 	int tag, nr_failed = 0;
- 
- 	if (ehc->i.flags & ATA_EHI_QUIET)
--- 
-2.40.1
+> Reported-by: Petr Tesarik <petr@tesarici.cz>
+> Fixes: ff48b37802e5 ("scsi: Do not attempt to rescan suspended
+> devices") Cc: stable@vger.kernel.org
+> Tested-by: Petr Tesarik <petr@tesarici.cz>
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  drivers/scsi/scsi_scan.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 3db4d31a03a1..b05a55f498a2 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1627,12 +1627,13 @@ int scsi_rescan_device(struct scsi_device
+> *sdev) device_lock(dev);
+>  
+>  	/*
+> -	 * Bail out if the device is not running. Otherwise, the
+> rescan may
+> -	 * block waiting for commands to be executed, with us
+> holding the
+> -	 * device lock. This can result in a potential deadlock in
+> the power
+> -	 * management core code when system resume is on-going.
+> +	 * Bail out if the device or its queue are not running.
+> Otherwise,
+> +	 * the rescan may block waiting for commands to be executed,
+> with us
+> +	 * holding the device lock. This can result in a potential
+> deadlock
+> +	 * in the power management core code when system resume is
+> on-going. */
+> -	if (sdev->sdev_state != SDEV_RUNNING) {
+> +	if (sdev->sdev_state != SDEV_RUNNING ||
+> +	    blk_queue_pm_only(sdev->request_queue)) {
+>  		ret = -EWOULDBLOCK;
+>  		goto unlock;
+>  	}
 
