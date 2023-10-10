@@ -2,78 +2,64 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5682CCD80C1
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Oct 2023 12:44:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5927ACD80C1
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Oct 2023 13:10:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231894AbjJJMoz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Oct 2023 08:44:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41994 "EHLO
+        id S231663AbjJJNKC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Oct 2023 09:10:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231937AbjJJMoy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Oct 2023 08:44:54 -0400
-Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.216])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BCE8499
-        for <linux-ide@vger.kernel.org>; Tue, 10 Oct 2023 05:44:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=BY3yD
-        GeIefIcA+vHv8W2LLY7z7fayTNU7z5yohmsntw=; b=LWoGh2C/IearcCMUiW1Y7
-        dJcrvRz3AOju/9s45pzB4qHJT5Y2TMPFycHwpbUi/RCv3l9WPW+IZopRflnawPke
-        zOg+jbFmQ4qFRiYpbOfTI72d9yQiGB5vQ7xeIBiny4xTqnCHXqccFvOGu+q/sZPh
-        8AVccGaxgBAxA5XeFOcMWo=
-Received: from icess-ProLiant-DL380-Gen10.. (unknown [183.174.60.14])
-        by zwqz-smtp-mta-g4-0 (Coremail) with SMTP id _____wBnTtWdQyVlOE+vAA--.52111S4;
-        Tue, 10 Oct 2023 20:29:30 +0800 (CST)
-From:   Ma Ke <make_ruc2021@163.com>
-To:     dlemoal@kernel.org
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ma Ke <make_ruc2021@163.com>
-Subject: [PATCH v3] ata: sata_mv: aspeed: fix value check in mv_platform_probe()
-Date:   Tue, 10 Oct 2023 20:29:16 +0800
-Message-Id: <20231010122916.4080132-1-make_ruc2021@163.com>
-X-Mailer: git-send-email 2.37.2
+        with ESMTP id S231400AbjJJNKB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Oct 2023 09:10:01 -0400
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F7F0A7;
+        Tue, 10 Oct 2023 06:10:00 -0700 (PDT)
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+        id 4F10B143E62; Tue, 10 Oct 2023 09:09:59 -0400 (EDT)
+From:   Phillip Susi <phill@thesusis.net>
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
+ start/stop management
+In-Reply-To: <20230927141828.90288-5-dlemoal@kernel.org>
+References: <20230927141828.90288-1-dlemoal@kernel.org>
+ <20230927141828.90288-5-dlemoal@kernel.org>
+Date:   Tue, 10 Oct 2023 09:09:59 -0400
+Message-ID: <874jiybp3s.fsf@vps.thesusis.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _____wBnTtWdQyVlOE+vAA--.52111S4
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Jr4rAw4fGw18tFy5tr17Awb_yoWftFgEya
-        yxu39rWr429FnFy3s8Xr15ArWxKFWvvFnYvas2yw1ayFy7Xw43JryDXwn8uwsrWw4kuFy0
-        yr1UC3y3Cry5JjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRthFxDUUUUU==
-X-Originating-IP: [183.174.60.14]
-X-CM-SenderInfo: 5pdnvshuxfjiisr6il2tof0z/1tbivhQFC1ZcjDjUDwAAsB
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In mv_platform_probe(), check the return value of clk_prepare_enable()
-and return the error code if clk_prepare_enable() returns an
-unexpected value.
+Damien Le Moal <dlemoal@kernel.org> writes:
 
-Signed-off-by: Ma Ke <make_ruc2021@163.com>
----
- drivers/ata/sata_mv.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+> system suspend/resume operations, the ATA port used to connect the
+> device will also be suspended and resumed, with the resume operation
+> requiring re-validating the device link and the device itself. In this
+> case, issuing a VERIFY command to spinup the disk must be done before
+> starting to revalidate the device, when the ata port is being resumed.
+> In such case, we must not allow the SCSI disk driver to issue START STOP
+> UNIT commands.
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 45e48d653c60..e82786c63fbd 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -4123,10 +4123,13 @@ static int mv_platform_probe(struct platform_device *pdev)
- 	hpriv->base -= SATAHC0_REG_BASE;
- 
- 	hpriv->clk = clk_get(&pdev->dev, NULL);
--	if (IS_ERR(hpriv->clk))
-+	if (IS_ERR(hpriv->clk)) {
- 		dev_notice(&pdev->dev, "cannot get optional clkdev\n");
--	else
--		clk_prepare_enable(hpriv->clk);
-+	} else {
-+		rc = clk_prepare_enable(hpriv->clk);
-+		if (rc)
-+			goto err;
-+	}
- 
- 	for (port = 0; port < n_ports; port++) {
- 		char port_number[16];
--- 
-2.37.2
+Why must a VERIFY be issued to spinup the disk before revalidating?
+Before these patches, by default, manage_start_stop was on, and so sd
+would cause a VERIFY in the system resume path.  That resume however (
+sd and its issuing START UNIT ), would have happened AFTER the link was
+resumed and the ATA device was revalidated, woudldn't it?  So at that
+point, the drive would already be spinning.  And if manage_start_stop
+was disabled, then there would be no VERIFY at all, and this did not
+seem to cause a problem before.
 
+If this VERIFY were skipped, the next thing that would happen is for
+ata_dev_revalidate() to issue IDENTIFY, which would wait for the drive
+to spin up before returning wouldn't it? ( unless the drive has PuiS
+enabled ).
