@@ -2,97 +2,66 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F79DCDB46E
-	for <linux-ide@archiver.kernel.org>; Thu, 12 Oct 2023 07:18:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D030CDB47E
+	for <linux-ide@archiver.kernel.org>; Thu, 12 Oct 2023 07:18:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347100AbjJLHSG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S1347095AbjJLHSG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Thu, 12 Oct 2023 03:18:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34658 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347098AbjJLHSF (ORCPT
+        with ESMTP id S1347096AbjJLHSF (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Oct 2023 03:18:05 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD066CF
-        for <linux-ide@vger.kernel.org>; Thu, 12 Oct 2023 00:18:03 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E351DC433C7;
-        Thu, 12 Oct 2023 07:18:02 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAA84C0
+        for <linux-ide@vger.kernel.org>; Thu, 12 Oct 2023 00:18:02 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07872C433C8;
+        Thu, 12 Oct 2023 07:18:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697095083;
-        bh=MsLoOVEv/wxEK2vHrrsy6BnjG8FoUuX8k/1vA7fmr7U=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iAjclp0d3/yY2ZMPD8nFvrYa63SxIp+DrifGlNm1zOTwWp6iJGuaD1maMXOG1jYFe
-         t5Ytu/mePOsAMAebFsBIOsXuYqoteaGjURBkqvCu0TL3A6F6blEsMCntgxnr2A0/w4
-         Iyd9ivXKEu5XQjXoCjq3HZsba+CX5j0W+F2ORBmO67lY2jrXaFJ3PTSgUzlsd0R+GX
-         /s7QSEvYU319wmBhkj3BftnsGgnBRGN67cHwRwPmXmKDcl9o0foZuNqpyhYUmoC99Z
-         iBdZRsEaVXkOtkP8zWYYCVlBzzd3mATXTCilBVRZzbekgmabnopc6hd+dRETVH0xk9
-         3RuDgtorzMHIg==
+        s=k20201202; t=1697095082;
+        bh=Db17adVfC3SM75AQgGJMoQoWjRkJ73u65gmSOcf+FNA=;
+        h=From:To:Cc:Subject:Date:From;
+        b=gMbmoufNvKueG/uhhMNbcJ1yLQFgY9ODXM/sUxINwqEQlyedLBdhD6w40P4j7WEPw
+         2ahDcIYU9Xu1ZTFIjmifMHReOcedkfNk40qLSVqNBbJiOZxRo3CXVAx8CC9wtwynfa
+         KwKkUfqn73iuGssovyjBrb18rlKjrfQySnXUUp+9hkmEkRSIw1Ubiyd6pZCUFmPNIn
+         MMu7515o5Td45VT75HZwfwtdhTsJDwZVs+7L/X8KxKj5bzGZTH2FiNYYVt8/+rA/Ms
+         pQkvmzDvS3lPptKZRdtdIT/IrkcV31ng944waqlq9OCY9mgqk2gHam9RBxi1Qt4miu
+         WP8ej5IPpML9A==
 From:   Damien Le Moal <dlemoal@kernel.org>
 To:     linux-ide@vger.kernel.org
 Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
         Phillip Susi <phill@thesusis.net>
-Subject: [PATCH 1/2] ata: libata-eh: Spinup disk on resume after revalidation
-Date:   Thu, 12 Oct 2023 16:17:59 +0900
-Message-ID: <20231012071800.468868-2-dlemoal@kernel.org>
+Subject: [PATCH 0/2] Improve drive spinup on resume
+Date:   Thu, 12 Oct 2023 16:17:58 +0900
+Message-ID: <20231012071800.468868-1-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20231012071800.468868-1-dlemoal@kernel.org>
-References: <20231012071800.468868-1-dlemoal@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Move the call to ata_dev_power_set_active() to transition a disk in
-standby power mode to the active power mode from
-ata_eh_revalidate_and_attach() before doing revalidation to the end of
-ata_eh_recover(), after the link speed for the device is reconfigured
-(if that was necessary). This is safer as this ensure that the VERIFY
-command executed to spinup the disk is executed with the drive properly
-reconfigured first.
+Two patches to improve disk spinup on resume:
+ - Patch 1: Move the spinup operation to after the drive revalidation to
+   ensure that the VERIFY command is executed with the link speed
+   properly setup.
+ - Patch 2: Attempt to spinup the drive only if it is not already spun
+   up.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/libata-eh.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+Geert,
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 945675f6b822..b0d6e69c4a5b 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3051,15 +3051,6 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 		if (ehc->i.flags & ATA_EHI_DID_RESET)
- 			readid_flags |= ATA_READID_POSTRESET;
- 
--		/*
--		 * When resuming, before executing any command, make sure to
--		 * transition the device to the active power mode.
--		 */
--		if ((action & ATA_EH_SET_ACTIVE) && ata_dev_enabled(dev)) {
--			ata_dev_power_set_active(dev);
--			ata_eh_done(link, dev, ATA_EH_SET_ACTIVE);
--		}
--
- 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
- 			WARN_ON(dev->class == ATA_DEV_PMP);
- 
-@@ -3856,6 +3847,17 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			}
- 		}
- 
-+		/*
-+		 * Make sure to transition devices to the active power mode
-+		 * if needed (e.g. if we were scheduled on system resume).
-+		 */
-+		ata_for_each_dev(dev, link, ENABLED) {
-+			if (ehc->i.dev_action[dev->devno] & ATA_EH_SET_ACTIVE) {
-+				ata_dev_power_set_active(dev);
-+				ata_eh_done(link, dev, ATA_EH_SET_ACTIVE);
-+			}
-+		}
-+
- 		/* retry flush if necessary */
- 		ata_for_each_dev(dev, link, ALL) {
- 			if (dev->class != ATA_DEV_ATA &&
+It would be great if you could test this with your RCAR setup. I ran
+this on my usual machines and qemu. All good. But your setup has been
+useful to flush out issues before :)
+Thanks !
+
+Damien Le Moal (2):
+  ata: libata-eh: Spinup disk on resume after revalidation
+  ata: libata-core: Improve ata_dev_power_set_active()
+
+ drivers/ata/libata-core.c | 34 ++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-eh.c   | 20 +++++++++++---------
+ 2 files changed, 45 insertions(+), 9 deletions(-)
+
 -- 
 2.41.0
 
