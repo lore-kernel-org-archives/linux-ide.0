@@ -2,62 +2,97 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D79CDB47E
-	for <linux-ide@archiver.kernel.org>; Wed, 11 Oct 2023 20:58:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F79DCDB46E
+	for <linux-ide@archiver.kernel.org>; Thu, 12 Oct 2023 07:18:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233554AbjJKU6j (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 11 Oct 2023 16:58:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43192 "EHLO
+        id S1347100AbjJLHSG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 12 Oct 2023 03:18:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235170AbjJKU6i (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 Oct 2023 16:58:38 -0400
+        with ESMTP id S1347098AbjJLHSF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Oct 2023 03:18:05 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B709D91
-        for <linux-ide@vger.kernel.org>; Wed, 11 Oct 2023 13:58:37 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 640CCC433C7;
-        Wed, 11 Oct 2023 20:58:37 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD066CF
+        for <linux-ide@vger.kernel.org>; Thu, 12 Oct 2023 00:18:03 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E351DC433C7;
+        Thu, 12 Oct 2023 07:18:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697057917;
-        bh=zJf/zLfxKDJckx7J3aIdVeHEW15WNHVs0XQuVOUel+k=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=t5u6kyOwbQ+fX6yxQxJ0Gon8WseRe6dAZttOAdK6VDPfuIuwtfxEp7Ao6JYh1zK1y
-         GANjOR8vYp3LzoyvRiTkCcFm8YwBlUf42NlHE4dAB9xWKsXH1Xj6VhTjFQm9ZowbP+
-         yfResEg9RvXwaDe4VvgHqr3jP1zxfUr6ixl7ItxXAMOa57GlxTv0Y38K2L32XRYt0W
-         vpspVZKoYWmeEj9Mslb/4Blqq+zatRPUh5tjIehbmskPd54/9jjYCdTBs0e/Ire6xH
-         fz35/OsdTrhxLKipV+McmNroxtWeBYV6sInBJK2QZOWRfpw6ovDJi9KVfD3Qd7mnVh
-         RO2YYRTVMVfmQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 469D2C595C4;
-        Wed, 11 Oct 2023 20:58:37 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.6-rc6
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20231011084942.22372-1-dlemoal@kernel.org>
-References: <20231011084942.22372-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20231011084942.22372-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc6
-X-PR-Tracked-Commit-Id: 626b13f015e080e434b1dee9a0c116ddbf4fb695
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8182d7a3f1b8982c0136dca82a846ea375a4d6e9
-Message-Id: <169705791728.2785.183758018597609314.pr-tracker-bot@kernel.org>
-Date:   Wed, 11 Oct 2023 20:58:37 +0000
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
+        s=k20201202; t=1697095083;
+        bh=MsLoOVEv/wxEK2vHrrsy6BnjG8FoUuX8k/1vA7fmr7U=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=iAjclp0d3/yY2ZMPD8nFvrYa63SxIp+DrifGlNm1zOTwWp6iJGuaD1maMXOG1jYFe
+         t5Ytu/mePOsAMAebFsBIOsXuYqoteaGjURBkqvCu0TL3A6F6blEsMCntgxnr2A0/w4
+         Iyd9ivXKEu5XQjXoCjq3HZsba+CX5j0W+F2ORBmO67lY2jrXaFJ3PTSgUzlsd0R+GX
+         /s7QSEvYU319wmBhkj3BftnsGgnBRGN67cHwRwPmXmKDcl9o0foZuNqpyhYUmoC99Z
+         iBdZRsEaVXkOtkP8zWYYCVlBzzd3mATXTCilBVRZzbekgmabnopc6hd+dRETVH0xk9
+         3RuDgtorzMHIg==
+From:   Damien Le Moal <dlemoal@kernel.org>
+To:     linux-ide@vger.kernel.org
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Phillip Susi <phill@thesusis.net>
+Subject: [PATCH 1/2] ata: libata-eh: Spinup disk on resume after revalidation
+Date:   Thu, 12 Oct 2023 16:17:59 +0900
+Message-ID: <20231012071800.468868-2-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20231012071800.468868-1-dlemoal@kernel.org>
+References: <20231012071800.468868-1-dlemoal@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Wed, 11 Oct 2023 17:49:42 +0900:
+Move the call to ata_dev_power_set_active() to transition a disk in
+standby power mode to the active power mode from
+ata_eh_revalidate_and_attach() before doing revalidation to the end of
+ata_eh_recover(), after the link speed for the device is reconfigured
+(if that was necessary). This is safer as this ensure that the VERIFY
+command executed to spinup the disk is executed with the drive properly
+reconfigured first.
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-rc6
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-eh.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8182d7a3f1b8982c0136dca82a846ea375a4d6e9
-
-Thank you!
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 945675f6b822..b0d6e69c4a5b 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3051,15 +3051,6 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 		if (ehc->i.flags & ATA_EHI_DID_RESET)
+ 			readid_flags |= ATA_READID_POSTRESET;
+ 
+-		/*
+-		 * When resuming, before executing any command, make sure to
+-		 * transition the device to the active power mode.
+-		 */
+-		if ((action & ATA_EH_SET_ACTIVE) && ata_dev_enabled(dev)) {
+-			ata_dev_power_set_active(dev);
+-			ata_eh_done(link, dev, ATA_EH_SET_ACTIVE);
+-		}
+-
+ 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
+ 			WARN_ON(dev->class == ATA_DEV_PMP);
+ 
+@@ -3856,6 +3847,17 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 			}
+ 		}
+ 
++		/*
++		 * Make sure to transition devices to the active power mode
++		 * if needed (e.g. if we were scheduled on system resume).
++		 */
++		ata_for_each_dev(dev, link, ENABLED) {
++			if (ehc->i.dev_action[dev->devno] & ATA_EH_SET_ACTIVE) {
++				ata_dev_power_set_active(dev);
++				ata_eh_done(link, dev, ATA_EH_SET_ACTIVE);
++			}
++		}
++
+ 		/* retry flush if necessary */
+ 		ata_for_each_dev(dev, link, ALL) {
+ 			if (dev->class != ATA_DEV_ATA &&
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.41.0
+
