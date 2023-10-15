@@ -2,118 +2,107 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D786CDB47E
-	for <linux-ide@archiver.kernel.org>; Sun, 15 Oct 2023 21:18:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D0DCDB47E
+	for <linux-ide@archiver.kernel.org>; Sun, 15 Oct 2023 22:09:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229877AbjJOVSQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 15 Oct 2023 17:18:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52202 "EHLO
+        id S229518AbjJOWJh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 15 Oct 2023 18:09:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229500AbjJOVSP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 15 Oct 2023 17:18:15 -0400
-Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 429C0A1;
-        Sun, 15 Oct 2023 14:18:11 -0700 (PDT)
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 80B0EC0004;
-        Sun, 15 Oct 2023 21:18:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1697404689;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QyLwk8RWeHwb+iTYV4j14/CAsO9UnmgTLhIoR7pcM84=;
-        b=G5I8ztJvdFI8tTwSCy0AWY+6MRhNlKLte1yNV4fIGQl6O23J6Xdoh0CefROrNByOpZhwE7
-        P/dmdthsO5WAs8rqcbBfrDUN9cugU7l4OxjWmfddhyL0LuZ/a6CfmZiXNmu06TC7W2khE9
-        NDZu0i9NIxBjr696iBip4sRRM3d0VMBYV0oc5glex8E5b5g9pnVjfW5fIkCPQERxPzL1Jd
-        mjqglreUfQeV1UDlGgRG/+b2MG2/c1Vo/UDOnu2p9/qVGfq8Q3Iz2g50VMtUD0J76grZyh
-        DkuCxT22BotwyKZelbq33dd3q4OFLHJ92smEnKVwc5a4qUfDVLMQmLsddUpmAw==
-Date:   Sun, 15 Oct 2023 23:17:56 +0200
-From:   Alexandre Belloni <alexandre.belloni@bootlin.com>
-To:     Hartley Sweeten <hsweeten@visionengravers.com>,
-        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Lukasz Majewski <lukma@denx.de>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Andy Shevchenko <andy@kernel.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>, Mark Brown <broonie@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        Nikita Shubin <nikita.shubin@maquefel.me>
-Cc:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org,
-        linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
-        netdev@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-input@vger.kernel.org, alsa-devel@alsa-project.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>
-Subject: Re: (subset) [PATCH v4 00/42] ep93xx device tree conversion
-Message-ID: <169740466288.180093.13375010968334465004.b4-ty@bootlin.com>
-References: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
+        with ESMTP id S229500AbjJOWJh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 15 Oct 2023 18:09:37 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 084BAAD
+        for <linux-ide@vger.kernel.org>; Sun, 15 Oct 2023 15:09:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3D68C433C7;
+        Sun, 15 Oct 2023 22:09:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697407773;
+        bh=fdg1pOjhuHtc3gGyP6r6jOEuJ+CTzojTEZfUGFXQ4Bg=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=ZB/uAb/Bcm7TmZgZdSzZ5vjBAFW15e9gljFa6LX86JGGg6lKOPoMs8SEveq4burLC
+         TReHMGPISOvXORvpYugPNclwXtz27PLvPrPXpVTypfEPqUVlyRtzHaXVcJ6EKX0jpZ
+         FHLvEvEHt4h5FOMIvOcIPB8ke+6UoIQ0eSmxx8wwyePF1Y71eMS8ykIedvBRJjrx71
+         59WncK0sX7tpYAAnWyjbioyvHeNOU4Vw7Lfi5389hD2t6Qq3XXrK6G+yJQlwFwKseU
+         CsujCLP+GiMt2SQo37SgOkr4vomqH3bcR6XsUA1rLQrv84E4WhGMc7rXfSwUitKydt
+         2ooz0uSv5OA7g==
+Message-ID: <ff334ece-ca5b-490b-91d7-6bb51fd2e2b3@kernel.org>
+Date:   Mon, 16 Oct 2023 07:09:30 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
-X-GND-Sasl: alexandre.belloni@bootlin.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
+ start/stop management
+To:     Phillip Susi <phill@thesusis.net>
+Cc:     linux-ide@vger.kernel.org
+References: <87edhz3bry.fsf@vps.thesusis.net>
+ <672365d4-bdd6-47c9-b0be-6756f523db59@kernel.org>
+ <871qdyh9na.fsf@vps.thesusis.net>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <871qdyh9na.fsf@vps.thesusis.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-On Fri, 15 Sep 2023 11:10:42 +0300, Nikita Shubin wrote:
-> This series aims to convert ep93xx from platform to full device tree support.
+On 10/13/23 23:36, Phillip Susi wrote:
+> Damien Le Moal <dlemoal@kernel.org> writes:
 > 
-> The main goal is to receive ACK's to take it via Arnd's arm-soc branch.
+>> Yes. I rechecked the specs regarding this and there is nothing preventing
+>> IDENTIFY from completing with the drive spun down. The only corner case is when
+>> PUIS is enabled, in which case IDENTIFY may return incomplete data. But that is
+>> handled already and that is not something we can get with a system
+>> suspend/resume or runtime suspend/resume.
 > 
-> Major changes:
-> - drop newline at the end from each YAML files
-> - rename dma and clk bindings headers to match first compatible
-> - shrink SoC exported functions number to only 2
-> - dropped some ep93xx_pata fixes from these series
-> - dropped m48t86 stuff from these series
+> It *IS* something we get on suspend/resume.  During suspend the drive
+> loses power, and on resume, it regains power.  As far as the drive is
+> concerned, the computer was shutdown and booted back up, so it powers up
+> in standby.
+
+In the hybernate (suspend to disk) case, yes, but not in the suspend to RAM
+case. Anyway, the PUIS incomplete IDENTIFY case is already handled, so there are
+no issues.
+
+>> From re-reading the specs and testing with all my drives, the port reset spins
+>> up the drives and IDENTIFY completes OK before the spinup completes, so there
+>> is no delay.
 > 
-> [...]
+> Interesting.  I was under the impression that most disks have to read
+> their sererial number and possibly other information from the media in
+> order to report that in IDENTIFY, and therefore, they would have to
+> finish spinning up before they could return complete information.
 
-Applied, thanks!
+Depends on the disk implementation. Not all disks put their metadata on media.
+So some disks can start replying to commands like IDENTIFY even with the disks
+not fully spun up yet. This difference shows up with (sometimes) seeing
+"IDENTIFY failed" due to a timeout on resume. I have old drives that are slow to
+spinup and show that. But that is handled with the retries with increased
+timeouts. I think it would be nice to patch that though, with longer timeout for
+IDENTIFY on resume, to avoid these error messages.
 
-[13/42] dt-bindings: rtc: Add Cirrus EP93xx
-        commit: 207bddd97881913bcb8bef84737c0971e712fbee
-[14/42] rtc: ep93xx: add DT support for Cirrus EP93xx
-        commit: 1d70f9fe5f1c8fbd5d838223b8aec27c69a7e609
+>> I CC-ed you a couple of patches that move the VERIFY command
+>> issuin to after revalidation (so execution of IDENTIFY, READ LOG etc). That
+>> works well. I also added a CHECK POWER MODE command to check if sending the
+>> verify is actually needed. And even while the disks are spinning up, I get
+>> power mode 0xFF indicating ACTIVE state, so no need to send the VERIFY command
+>> at all. The end result is that we get to finish the libata EH context doing the
+>> resume well before the disk finishes spinning up (which can take 10+ seconds).
+>>
+>> With this, the first read or write command following the resume will be delayed
+>> until the drive finishes spinning up. But that is fine given the default 30s
+>> tiemout and retries. I do not expect any problems with that.
+> 
+> That looks very good.  I think I will try to adapt my old patch to allow
+> the eh to return -EAGAIN and leave the drive in standby rather than
+> force it to wake up with the VERIFY in the system resume path.  The eh
+> can be retried later when the drive is actually accessed and that time
+> it can force it to spin up.
 
-Best regards,
+I am not following. What problem are you trying to fix ?
 
 -- 
-Alexandre Belloni, co-owner and COO, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Damien Le Moal
+Western Digital Research
+
