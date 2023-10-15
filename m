@@ -2,48 +2,118 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 181DACDB482
-	for <linux-ide@archiver.kernel.org>; Sun, 15 Oct 2023 16:14:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D786CDB47E
+	for <linux-ide@archiver.kernel.org>; Sun, 15 Oct 2023 21:18:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230010AbjJOQOk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 15 Oct 2023 12:14:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57356 "EHLO
+        id S229877AbjJOVSQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 15 Oct 2023 17:18:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229522AbjJOQOk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 15 Oct 2023 12:14:40 -0400
-Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22637A3;
-        Sun, 15 Oct 2023 09:14:39 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 3C656144BDD; Sun, 15 Oct 2023 12:14:38 -0400 (EDT)
-From:   Phillip Susi <phill@thesusis.net>
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-In-Reply-To: <20230927141828.90288-5-dlemoal@kernel.org>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org>
-Date:   Sun, 15 Oct 2023 12:14:38 -0400
-Message-ID: <87v8b73lsh.fsf@vps.thesusis.net>
+        with ESMTP id S229500AbjJOVSP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 15 Oct 2023 17:18:15 -0400
+Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 429C0A1;
+        Sun, 15 Oct 2023 14:18:11 -0700 (PDT)
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 80B0EC0004;
+        Sun, 15 Oct 2023 21:18:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1697404689;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=QyLwk8RWeHwb+iTYV4j14/CAsO9UnmgTLhIoR7pcM84=;
+        b=G5I8ztJvdFI8tTwSCy0AWY+6MRhNlKLte1yNV4fIGQl6O23J6Xdoh0CefROrNByOpZhwE7
+        P/dmdthsO5WAs8rqcbBfrDUN9cugU7l4OxjWmfddhyL0LuZ/a6CfmZiXNmu06TC7W2khE9
+        NDZu0i9NIxBjr696iBip4sRRM3d0VMBYV0oc5glex8E5b5g9pnVjfW5fIkCPQERxPzL1Jd
+        mjqglreUfQeV1UDlGgRG/+b2MG2/c1Vo/UDOnu2p9/qVGfq8Q3Iz2g50VMtUD0J76grZyh
+        DkuCxT22BotwyKZelbq33dd3q4OFLHJ92smEnKVwc5a4qUfDVLMQmLsddUpmAw==
+Date:   Sun, 15 Oct 2023 23:17:56 +0200
+From:   Alexandre Belloni <alexandre.belloni@bootlin.com>
+To:     Hartley Sweeten <hsweeten@visionengravers.com>,
+        Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Lukasz Majewski <lukma@denx.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Andy Shevchenko <andy@kernel.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Mark Brown <broonie@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        Nikita Shubin <nikita.shubin@maquefel.me>
+Cc:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-rtc@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
+        netdev@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-input@vger.kernel.org, alsa-devel@alsa-project.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Andrew Lunn <andrew@lunn.ch>
+Subject: Re: (subset) [PATCH v4 00/42] ep93xx device tree conversion
+Message-ID: <169740466288.180093.13375010968334465004.b4-ty@bootlin.com>
+References: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me>
+X-GND-Sasl: alexandre.belloni@bootlin.com
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-For SCSI disks that are runtime suspended, it looks like they skip
-waking the disk on system resume, leaving them in runtime suspend.
-After these patches, it looks like libata always wakes up the disk, but
-I don't see any calls to pm_runtime_disable/set_active/enable to mark
-the scsi disk as active after the system resume.  That should result in
-a disk that is spinning, but runtime pm thinks is not, and so will not
-put it into suspend after the inactivity timeout.
+
+On Fri, 15 Sep 2023 11:10:42 +0300, Nikita Shubin wrote:
+> This series aims to convert ep93xx from platform to full device tree support.
+> 
+> The main goal is to receive ACK's to take it via Arnd's arm-soc branch.
+> 
+> Major changes:
+> - drop newline at the end from each YAML files
+> - rename dma and clk bindings headers to match first compatible
+> - shrink SoC exported functions number to only 2
+> - dropped some ep93xx_pata fixes from these series
+> - dropped m48t86 stuff from these series
+> 
+> [...]
+
+Applied, thanks!
+
+[13/42] dt-bindings: rtc: Add Cirrus EP93xx
+        commit: 207bddd97881913bcb8bef84737c0971e712fbee
+[14/42] rtc: ep93xx: add DT support for Cirrus EP93xx
+        commit: 1d70f9fe5f1c8fbd5d838223b8aec27c69a7e609
+
+Best regards,
+
+-- 
+Alexandre Belloni, co-owner and COO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
