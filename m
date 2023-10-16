@@ -2,132 +2,82 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68D96CDB465
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Oct 2023 12:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D57ECDB465
+	for <linux-ide@archiver.kernel.org>; Mon, 16 Oct 2023 15:56:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233482AbjJPM4E (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 16 Oct 2023 08:56:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47190 "EHLO
+        id S233884AbjJPP4P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 16 Oct 2023 11:56:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233501AbjJPM4D (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2023 08:56:03 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A510AD;
-        Mon, 16 Oct 2023 05:56:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E42A9C433C7;
-        Mon, 16 Oct 2023 12:55:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697460960;
-        bh=659l+cz6qcNGGpHPccDq5p1cqkPcaNzpdmWAwoKEYN8=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=TWzxV8a+w4lWsn19i5tM0Sl1FCBoVqHfIw+wPt+ur0IeBW7V6tSvH8s+C5tTZpxHL
-         SAkE7cmKU3RHjYHk+7yAvX4LJvyq+qoWuvl2f4v5l+YzhbLZAr1jSL1FyaTb0QQCqC
-         J8re0qRK6n46NHoQj/oIkDq7DlJSCVeGnpgOCr++0tBEQGopNIe5Havh+Vje1CHamd
-         rdeAsDu/OBCSbqf+wJX0P5E/GGRDcwTxnrVhdvaIQgS1I3W2FRdG4bLPf5J6exPNqg
-         t/rk/PqDd34dAH7CRdwVkzNejMd4iTKp+YKCYUFOdE1LRb5whWIyrYsE2Go/blmFby
-         EfcwpqlzH28/g==
-Message-ID: <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
-Date:   Mon, 16 Oct 2023 21:55:57 +0900
+        with ESMTP id S233920AbjJPP4I (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2023 11:56:08 -0400
+Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A39AB;
+        Mon, 16 Oct 2023 08:56:02 -0700 (PDT)
+Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-6c67060fdfbso3366761a34.2;
+        Mon, 16 Oct 2023 08:56:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697471762; x=1698076562;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=MK37q1XJzWSoKvjEt9e5ahg/V9ZLCNMRU55JDeXGR3I=;
+        b=qvG/pr5FWjLuwpqTd2pwkVoJOMuAoBtK9trGHayaLILnmR8Vwen8g/1faYcXaBPXIm
+         TSUgIlkNkloTUsRo0Zt5GsOk6trBR7EtPZN7emV95I/U8N4XeN6ZaWosjhUtbLcIXpo1
+         tYPAc30t7U/9hmo8Ug1kYrJhp7/QDDgueaLNBJefzF8j0TsdiHVXzQqAtJRIcWQnWgRq
+         m+7R/lkhGXDCCLpqs6todiTEBdGlYjndn0aguKifsNgQS1IAySPZ0ZeZR6n+FdcNLTsr
+         wl3CULG36KUnlVQv2z0Q6v7gI08gLQLrGwgRC3vTIej+VjA/aFTOHZySCt4H6QAHWVk/
+         +uKQ==
+X-Gm-Message-State: AOJu0YwMNdF8OBDMB8/5lhFxUtFP4km/Eets1xziXfcXRozsuOKaVzG2
+        OIkCXw14joOe8qbQLLT1W9ObT0R6wA==
+X-Google-Smtp-Source: AGHT+IFq89bwTY6QgYTGDazR8YRF0lHfhQCysfNHhc6pISdMHgdvtPJ2K4X5/IPm/p+CbDmwMU+quA==
+X-Received: by 2002:a9d:6849:0:b0:6c4:c026:a658 with SMTP id c9-20020a9d6849000000b006c4c026a658mr39826634oto.26.1697471762060;
+        Mon, 16 Oct 2023 08:56:02 -0700 (PDT)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id a24-20020a056830009800b006b4281cf424sm1731229oto.4.2023.10.16.08.56.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Oct 2023 08:56:01 -0700 (PDT)
+Received: (nullmailer pid 2974154 invoked by uid 1000);
+        Mon, 16 Oct 2023 15:55:58 -0000
+From:   Rob Herring <robh@kernel.org>
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>
+Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] dt-bindings: ata: tegra: Disallow undefined properties
+Date:   Mon, 16 Oct 2023 10:55:54 -0500
+Message-ID: <20231016155555.2974051-1-robh@kernel.org>
+X-Mailer: git-send-email 2.42.0
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-Content-Language: en-US
-To:     Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org> <87v8b73lsh.fsf@vps.thesusis.net>
- <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
- <87r0luspvx.fsf@vps.thesusis.net>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <87r0luspvx.fsf@vps.thesusis.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/16/23 21:39, Phillip Susi wrote:
-> Damien Le Moal <dlemoal@kernel.org> writes:
-> 
->> Yes, correct, but this does not create any issues in practice beside the
->> undesired disk spinup.
-> 
-> The issue it creates is the opposite of that: it breaks the desired spin
-> down.  After some period of inactivity, the disk should be suspended,
-> but after a system resume, the kernel thinks that it already is, and so
-> won't suspend it again.
+Device specific bindings should not allow undefined properties. This is
+accomplished in json-schema with 'additionalProperties: false'.
 
-That one should be fixable, though it I do not see an elegant method to do it.
-It would be easy with ugly code, e.g. tweaking the scsi device runtime pm state
-from libata... Not great.
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
->> Fixing that is not trivial because using runtime suspend/resume on the SCSI disk
->> is just that, it will affect *only* the SCSI disk and not the ATA device and its
->> port. In other words, a runtime suspend of the SCSI disk will spin down the
->> drive but it will not runtime suspend the ATA port. So if you suspend
->> the
-> 
-> I tested this last week and it appeared to work.  I enabled runtime pm
-> on the disk, as well as the ata port, and as soon as the disk suspended,
-> the port did as well.
-
-Never saw that in my tests when enabling runtime pm on the scsi disk only. Which
-is the important point here: there is no propagation of the suspend state down
-to the device parent it seems.
-
-> 
->> system, on resume, the ATA port will not be runtime suspended and so it will be
->> resumed. The SCSI disk will not be resumed, but the ATA port resume will have
->> spun up the disk, which we do not really want in that case.
-> 
-> Right, I would rather the disk stay asleep if it has PuiS enabled, and
-> I'm working on a patch for that.  In the process of doing that though, I
-> noticed that despite waking the disk up, it does not inform runtime pm
-> about that.
-
-But there are no runtime PM operations defined for ATA devices, only for ports.
-So not sure that matters... I am probably still missing something about runtime
-PM and devices ancestry. I focused a lot on system suspend/resume to fix the
-issues. runtime suspend/resume is next.
-
-> 
->> I am looking into this. Again, that is not a trivial fix. The other thing to
->> notice here is that ATA port runtime suspend/resume is in fact broken: it does
->> not track accesses to the device(s) connected to the port. And given that more
->> than one device may be connected to a port, we need PM runtime reference
->> counting to be done for this to work correctly. That is
->> missing. Solutions are:
-> 
-> Again, it seems to me that the child reference counting IS working.
-
-I am not sure of that, especially with cases of ATA ports with multiple disks
-(e.g. pmp or IDE).
-
-> 
->> fix everything or simply do not support ATA port runtime suspend/resume (i.e.
->> remove code doing it). I am leaning toward the latter as it seems that no one
->> actually noticed these issues because no one is actually using ATA port runtime
->> suspend/resume...
-> 
-> Probably nobody is using it yes, but that doesn't mean we shouldn't try
-> to get it working.  It would be nice to have the drive go into deep
-> SLEEP instead of standby, as well as suspend the ata port, and possibly
-> even the whole AHCI controller rather than relying on the old APM drive
-> internal auto standby mode.
-> 
-
+diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+index 3c7a2425f3e6..a17297cbefcb 100644
+--- a/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
++++ b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+@@ -151,7 +151,7 @@ allOf:
+         - interconnects
+         - power-domains
+ 
+-additionalProperties: true
++additionalProperties: false
+ 
+ examples:
+   - |
 -- 
-Damien Le Moal
-Western Digital Research
+2.42.0
 
