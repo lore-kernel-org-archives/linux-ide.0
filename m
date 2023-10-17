@@ -2,105 +2,99 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D0BCCDB474
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 23:33:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DFF5CDB474
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 23:36:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234650AbjJQXdI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Oct 2023 19:33:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36772 "EHLO
+        id S234793AbjJQXgw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Oct 2023 19:36:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230219AbjJQXdH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 19:33:07 -0400
-Received: from mail-oi1-x236.google.com (mail-oi1-x236.google.com [IPv6:2607:f8b0:4864:20::236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 488A692;
-        Tue, 17 Oct 2023 16:33:06 -0700 (PDT)
-Received: by mail-oi1-x236.google.com with SMTP id 5614622812f47-3af604c3f8fso3893212b6e.1;
-        Tue, 17 Oct 2023 16:33:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697585585; x=1698190385; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=jjkHOk4Tl+PMz9btl3eeh+G4Ft68VD7L+21fdtBMWng=;
-        b=ERyDOGyL/HopseXcs9wRWTtq9HZ09RM/nXnTM1/hAPi4+h/U/Snh+xb36+jWPiEwrd
-         HS7JiQpeFQSVytJEsl/HoC56CJmRHu/34+KPUw+EwoxQOdVrXTT/2UrZaBRc19jtl8M+
-         ILr0JK3Yb15dCEWaYP2cHBzkniRoXcC6t8NaZNkDMHTyzFllQeqpjPMjwns1T57euX2O
-         LtIs19/8mShia4glY+xh4j3NUbvwFyen0Y0O8A7Stmnbd21xi2hj9RBgt5IWHV1/5gTf
-         WZfg2b+ryFIOvwmPBBd4kKVyEBITfLuwcFJfpdK04OAwyTjdLhCHmFHVo6Be3JE47uDM
-         LDpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697585585; x=1698190385;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=jjkHOk4Tl+PMz9btl3eeh+G4Ft68VD7L+21fdtBMWng=;
-        b=uOWsVEqUD7V/TzGpjfwsWW1JEKyRnfsyzALvc7TdwGePr4cEe+6dBJPuKALrPeRD85
-         nuP0AHqyMTaAC0j0RBGHxET0B75npItrYU6oYg8LUOOWEqv//+26Gt/m6tkPeCh0JzqX
-         /c/fmCatmhR80nJ73sHMGZ0NHm/OHPQZWVDBI02CSh41FOnSPWqmskl49cHqsZim2vme
-         S2FS5pEuVC2E6EkhPeN5BgvjZVVsl9hNRFqrx+weOE3mFztRNCAhvZoTdbBS24mR9zQM
-         im8GDMuFjfZF8M5+ayAvO8q6Li/LS4gw0BwEUJZfRudIp8kK6GBn+fxYk8M7/dSiMi9D
-         K7tw==
-X-Gm-Message-State: AOJu0YytrEKvDVCrr1WE0co9aFFM6N6hBVdcF7AFXd9ABKv2YUzgbAYk
-        +T6mQvW58RyJiD5I8oAldRM=
-X-Google-Smtp-Source: AGHT+IH6LQzdxhx6NuPouGkt6n49J3Xq8AODkPSJHAU/07oU3fWko2bM3AKlZ8s4Bm3ghLIMCot5dA==
-X-Received: by 2002:a05:6808:683:b0:3ae:126b:8c2b with SMTP id k3-20020a056808068300b003ae126b8c2bmr3845643oig.30.1697585585476;
-        Tue, 17 Oct 2023 16:33:05 -0700 (PDT)
-Received: from lanran-u22.. ([169.235.25.167])
-        by smtp.googlemail.com with ESMTPSA id s132-20020a63778a000000b005897bfc2ed3sm425848pgc.93.2023.10.17.16.33.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Oct 2023 16:33:04 -0700 (PDT)
-From:   Haonan Li <lihaonan1105@gmail.com>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Haonan Li <lihaonan1105@gmail.com>
-Subject: [PATCH] pata_lagacy: Handle failed ATA timing computation in opti82c46x_set_piomode
-Date:   Tue, 17 Oct 2023 23:32:34 +0000
-Message-Id: <20231017233234.2170437-1-lihaonan1105@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S234650AbjJQXgw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 19:36:52 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C20D3B0;
+        Tue, 17 Oct 2023 16:36:50 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0809C433C8;
+        Tue, 17 Oct 2023 23:36:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697585810;
+        bh=vWDxX5Zfp3qv9pYv4nE5+avCskI58/L69mzMGCW3v4g=;
+        h=Date:Subject:To:References:From:In-Reply-To:From;
+        b=h2kg+QHGDrbxf0pir+DJUzTxg/YtnHssBSxqcJ6qkto8Y0zFc9boBKiKC8waR/8zj
+         JeMOaFgZ27RedCfglkjVDgDQJo9oJJaLhGYuzeTHdbaBYkzkLbxjIRhA7zvm/vfWdM
+         tQ5k1qI4rPRvKdkw59f/yxI0Sd+EMhuLOJHeLZQsZEHtWLll5dQfzIyRNrgLqh0sR/
+         LEp5nlZlMSwbAnI+LBaUExp2JfBR4N5wI7GEEJRv4wWmOnrkWlf+AcPRNtuAY0Z2PP
+         YIHp/SBX4XQuQ15dW8HTGFB7IonsiJO+Dkb3A8bLaNVChf+6i4wVtmQKYGaE1khd6p
+         TSgZaWf1J5EWQ==
+Message-ID: <1a0c4378-29b2-43b4-982b-0d92dfb8ed4f@kernel.org>
+Date:   Wed, 18 Oct 2023 08:36:48 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] pata_lagacy: Handle failed ATA timing computation in
+ opti82c46x_set_piomode
+Content-Language: en-US
+To:     Haonan Li <lihaonan1105@gmail.com>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20231017233234.2170437-1-lihaonan1105@gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20231017233234.2170437-1-lihaonan1105@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The function opti82c46x_set_piomode utilizes the ata_timing_compute()
-to determine the appropriate ATA timings for a given device. However,
-in certain conditions where the ata_timing_find_mode() function does
-not find a valid mode, ata_timing_compute() returns an error (-EINVAL),
-leaving the tp struct uninitialized.
+On 10/18/23 08:32, Haonan Li wrote:
+> The function opti82c46x_set_piomode utilizes the ata_timing_compute()
+> to determine the appropriate ATA timings for a given device. However,
+> in certain conditions where the ata_timing_find_mode() function does
+> not find a valid mode, ata_timing_compute() returns an error (-EINVAL),
+> leaving the tp struct uninitialized.
+> 
+> This patch checks the return value of ata_timing_compute().
+> This avoids any potential use of uninitialized `tp` struct in the
+> opti82c46x_set_piomode function.
+> 
+> Signed-off-by: Haonan Li <lihaonan1105@gmail.com>
+> ---
+>  drivers/ata/pata_legacy.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+> index 448a511cb..d94c365cb 100644
+> --- a/drivers/ata/pata_legacy.c
+> +++ b/drivers/ata/pata_legacy.c
+> @@ -579,12 +579,16 @@ static void opti82c46x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+>  	clock = 1000000000 / khz[sysclk];
+>  
+>  	/* Get the timing data in cycles */
+> -	ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000);
+> +	if (ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000)) {
+> +		return;
+> +	}
 
-This patch checks the return value of ata_timing_compute().
-This avoids any potential use of uninitialized `tp` struct in the
-opti82c46x_set_piomode function.
+You need a message here to tell the user something is wrong. See pata_amd.c for
+an example.
 
-Signed-off-by: Haonan Li <lihaonan1105@gmail.com>
----
- drivers/ata/pata_legacy.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+>  
+>  	/* Setup timing is shared */
+>  	if (pair) {
+>  		struct ata_timing tp;
+> -		ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000);
+> +		if (ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000)) {
+> +			return;
+> +		}
 
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 448a511cb..d94c365cb 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -579,12 +579,16 @@ static void opti82c46x_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 	clock = 1000000000 / khz[sysclk];
- 
- 	/* Get the timing data in cycles */
--	ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000);
-+	if (ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000)) {
-+		return;
-+	}
- 
- 	/* Setup timing is shared */
- 	if (pair) {
- 		struct ata_timing tp;
--		ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000);
-+		if (ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000)) {
-+			return;
-+		}
- 
- 		ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
- 	}
+Same here. And while at it, please add a blank line after the declaration and
+before your change.
+
+>  
+>  		ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
+>  	}
+
 -- 
-2.34.1
+Damien Le Moal
+Western Digital Research
 
