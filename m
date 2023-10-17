@@ -2,71 +2,62 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B7DCDB482
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 18:03:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5255AC41513
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 23:08:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234922AbjJQSDt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Oct 2023 14:03:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33438 "EHLO
+        id S231944AbjJQXIv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Oct 2023 19:08:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233170AbjJQSDs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 14:03:48 -0400
-Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A23C83;
-        Tue, 17 Oct 2023 11:03:44 -0700 (PDT)
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-        id 7B60F14517D; Tue, 17 Oct 2023 14:03:43 -0400 (EDT)
-From:   Phillip Susi <phill@thesusis.net>
-To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-In-Reply-To: <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org>
- <87v8b73lsh.fsf@vps.thesusis.net>
- <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
- <87r0luspvx.fsf@vps.thesusis.net>
- <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
-Date:   Tue, 17 Oct 2023 14:03:43 -0400
-Message-ID: <87y1g1unwg.fsf@vps.thesusis.net>
+        with ESMTP id S229459AbjJQXIu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 19:08:50 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EB6FA4;
+        Tue, 17 Oct 2023 16:08:48 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDF05C433C8;
+        Tue, 17 Oct 2023 23:08:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697584128;
+        bh=Qmn/cv9pbKyZyD094B9+g5d/a/JtJybAPrMLLFxlQ2Q=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=trZNIvNo6P66NpnY/WfCIv8B6Jq1ibuMzU9Sq07cAYpa0MhXeVFvcBVWVESTtNu15
+         4ic4Prep/HnQZ4ET5Fr7cGit681kPLibNqK8mfPDihjHGH1/IQ7xQ+9XoSkHVP+R2i
+         FeIMgcse7Lo12fS2HU58r88oWYV2OaVr0XrlbMMCTqtuTdiu8QHYL2VLNb7drn5U89
+         R9h2izpmbq4G81BIyvyAo0My0vUUP4tlUCo1CsQMb/EePkdz0ZOnKGDjpgc9OR48TT
+         arC7HmKZ2HJx8s7Rhsvq6BoBfzADqvv21jb/QzLYhpV4EGrRoaz6kEHNPvuce7toWA
+         c0vR8IVo55yBg==
+Message-ID: <93f6cc7c-54d5-4347-a107-eca1bd5a4ac0@kernel.org>
+Date:   Wed, 18 Oct 2023 08:08:44 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] dt-bindings: ata: tegra: Disallow undefined properties
+To:     Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>
+Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20231016155555.2974051-1-robh@kernel.org>
+Content-Language: en-US
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20231016155555.2974051-1-robh@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Damien Le Moal <dlemoal@kernel.org> writes:
+On 10/17/23 00:55, Rob Herring wrote:
+> Device specific bindings should not allow undefined properties. This is
+> accomplished in json-schema with 'additionalProperties: false'.
+> 
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-> That one should be fixable, though it I do not see an elegant method to do it.
-> It would be easy with ugly code, e.g. tweaking the scsi device runtime pm state
-> from libata... Not great.
+Applied to for-6.7. Thanks !
 
-What would be not great about it?  libata already takes over the system
-suspend/resume from sd.  I'm currently testing having libata do just
-this right now.  I just got ahold of some jumpers today to put the
-drives back into PuiS and do some further testing tonight.
+-- 
+Damien Le Moal
+Western Digital Research
 
-> Never saw that in my tests when enabling runtime pm on the scsi disk only. Which
-> is the important point here: there is no propagation of the suspend state down
-> to the device parent it seems.
-
-Last night I again saw the port auto suspend when the scsi disk was
-runtime suspended.  Tonight I'll test with PuiS, as well as with system
-resume while runtime suspended.  Maybe I'll even try to get the whole
-AHCI controller to auto suspend.  It seems like it should once all of
-the ports do.
-
-> I am not sure of that, especially with cases of ATA ports with multiple disks
-> (e.g. pmp or IDE).
-
-Good point.  I have an eSATA dock with PMP.  I'll check tonight if the
-children are counted properly.
