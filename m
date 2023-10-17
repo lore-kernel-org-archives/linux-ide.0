@@ -2,82 +2,101 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D57ECDB465
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Oct 2023 15:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EABDECDB474
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 10:51:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233884AbjJPP4P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 16 Oct 2023 11:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40154 "EHLO
+        id S234899AbjJQKvI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Oct 2023 06:51:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233920AbjJPP4I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Oct 2023 11:56:08 -0400
-Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A39AB;
-        Mon, 16 Oct 2023 08:56:02 -0700 (PDT)
-Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-6c67060fdfbso3366761a34.2;
-        Mon, 16 Oct 2023 08:56:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697471762; x=1698076562;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=MK37q1XJzWSoKvjEt9e5ahg/V9ZLCNMRU55JDeXGR3I=;
-        b=qvG/pr5FWjLuwpqTd2pwkVoJOMuAoBtK9trGHayaLILnmR8Vwen8g/1faYcXaBPXIm
-         TSUgIlkNkloTUsRo0Zt5GsOk6trBR7EtPZN7emV95I/U8N4XeN6ZaWosjhUtbLcIXpo1
-         tYPAc30t7U/9hmo8Ug1kYrJhp7/QDDgueaLNBJefzF8j0TsdiHVXzQqAtJRIcWQnWgRq
-         m+7R/lkhGXDCCLpqs6todiTEBdGlYjndn0aguKifsNgQS1IAySPZ0ZeZR6n+FdcNLTsr
-         wl3CULG36KUnlVQv2z0Q6v7gI08gLQLrGwgRC3vTIej+VjA/aFTOHZySCt4H6QAHWVk/
-         +uKQ==
-X-Gm-Message-State: AOJu0YwMNdF8OBDMB8/5lhFxUtFP4km/Eets1xziXfcXRozsuOKaVzG2
-        OIkCXw14joOe8qbQLLT1W9ObT0R6wA==
-X-Google-Smtp-Source: AGHT+IFq89bwTY6QgYTGDazR8YRF0lHfhQCysfNHhc6pISdMHgdvtPJ2K4X5/IPm/p+CbDmwMU+quA==
-X-Received: by 2002:a9d:6849:0:b0:6c4:c026:a658 with SMTP id c9-20020a9d6849000000b006c4c026a658mr39826634oto.26.1697471762060;
-        Mon, 16 Oct 2023 08:56:02 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id a24-20020a056830009800b006b4281cf424sm1731229oto.4.2023.10.16.08.56.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Oct 2023 08:56:01 -0700 (PDT)
-Received: (nullmailer pid 2974154 invoked by uid 1000);
-        Mon, 16 Oct 2023 15:55:58 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Damien Le Moal <dlemoal@kernel.org>,
+        with ESMTP id S234877AbjJQKvF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 06:51:05 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2F7711A;
+        Tue, 17 Oct 2023 03:51:03 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7994CC433C8;
+        Tue, 17 Oct 2023 10:51:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697539863;
+        bh=I+hZXCRSadJ6Ma6lmW3r6cYmgD3Kp3hZpu79EC10yHM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=TCSzJHabUzcbY0Ftxmk3DZ934hJeRo43luzPuEcl4P6rQyrO5+Q/M+JTXRGHLpT31
+         9w5+DxCbryRStjrKzka2iSyCYCSfjUyh3sWm7f2Dcotq3qz4hBytpx3LYESSzNUv1h
+         6bZnXgGbsTdGPzV91qkyvlG5gRshzbQlRk4hxe5E/mboxjAcMD8WX1ud+07KdDnraq
+         hus+MJuWPEDOnS+tA97VidHfGhdwMtfkvVNBNLC//7pzkE/sUzU4ErnZVoBr24qw7h
+         byBUsQ6PvuI+f/0eM0DXyAgsqTBNeKAJn5RltNAYAOH2JfyRsmgsbmiY694Sdn0Hu8
+         YI2tSSJp9wvzA==
+Date:   Tue, 17 Oct 2023 11:50:59 +0100
+From:   Conor Dooley <conor@kernel.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Damien Le Moal <dlemoal@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Conor Dooley <conor+dt@kernel.org>,
         Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>
-Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: ata: tegra: Disallow undefined properties
-Date:   Mon, 16 Oct 2023 10:55:54 -0500
-Message-ID: <20231016155555.2974051-1-robh@kernel.org>
-X-Mailer: git-send-email 2.42.0
+Subject: Re: [PATCH] dt-bindings: ata: tegra: Disallow undefined properties
+Message-ID: <20231017-headscarf-reenact-0a5f589cc0a8@spud>
+References: <20231016155555.2974051-1-robh@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="D+7CrOTvugCnq/Gc"
+Content-Disposition: inline
+In-Reply-To: <20231016155555.2974051-1-robh@kernel.org>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Device specific bindings should not allow undefined properties. This is
-accomplished in json-schema with 'additionalProperties: false'.
 
-Signed-off-by: Rob Herring <robh@kernel.org>
----
- Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--D+7CrOTvugCnq/Gc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
-index 3c7a2425f3e6..a17297cbefcb 100644
---- a/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
-+++ b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
-@@ -151,7 +151,7 @@ allOf:
-         - interconnects
-         - power-domains
- 
--additionalProperties: true
-+additionalProperties: false
- 
- examples:
-   - |
--- 
-2.42.0
+On Mon, Oct 16, 2023 at 10:55:54AM -0500, Rob Herring wrote:
+> Device specific bindings should not allow undefined properties. This is
+> accomplished in json-schema with 'additionalProperties: false'.
+>=20
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+
+Thanks,
+Conor.
+
+> ---
+>  Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml=
+ b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+> index 3c7a2425f3e6..a17297cbefcb 100644
+> --- a/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+> +++ b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+> @@ -151,7 +151,7 @@ allOf:
+>          - interconnects
+>          - power-domains
+> =20
+> -additionalProperties: true
+> +additionalProperties: false
+> =20
+>  examples:
+>    - |
+> --=20
+> 2.42.0
+>=20
+>=20
+
+--D+7CrOTvugCnq/Gc
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZS5nEwAKCRB4tDGHoIJi
+0qzPAPwPTStgsGxo3i7fsXQp2OINfuKyEV3O6xG5wvRqPuUZ1QEA0a/b4tlrqCso
+Xdvq0NzJCTV9apOqJbMlYt7JIXavZwQ=
+=lhzd
+-----END PGP SIGNATURE-----
+
+--D+7CrOTvugCnq/Gc--
