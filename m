@@ -2,111 +2,105 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D769ECDB482
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 23:32:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D0BCCDB474
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 23:33:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234836AbjJQXcO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Oct 2023 19:32:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49054 "EHLO
+        id S234650AbjJQXdI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Oct 2023 19:33:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234819AbjJQXcO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 19:32:14 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0CF893;
-        Tue, 17 Oct 2023 16:32:12 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CB4DC433C7;
-        Tue, 17 Oct 2023 23:32:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697585532;
-        bh=VHN2NjRcVJC0+/skQntQTR2Y2jVEs9N3Yhiohr/OmiI=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=cTkTWK8Vj38ueMpqogqSR/n1ATRctZSWd8vz62yEC+k5gTIbEisASB8M6QQ33lX2l
-         Me+tjjM8NodY4or83BIEGe0fVHU2xMfZLdywpJtoOCPSpO+8Fgr57C1L455nc2aJrU
-         udiqLxfC55LIrpPBmvOyoX1TXdGeayiLGMNS3E7/BNTxCQ2DIeTkYlDG5nU2wfWOOw
-         qEiIWhU33aZ/ABzSLZlp2cAxxrZ0wlbir1YcoI0S1sFMiFbMQjA/1ZZTyOqmirf/4Q
-         41TBoO2fuRhZjDnXjNBqfr/qLcK3oVcPHCIctqcqlXoOB5msIf+jH0hwJeMi4+V6V1
-         INQNeRg42Na1Q==
-Message-ID: <26de72d5-02d3-489c-a789-b2b709ae073e@kernel.org>
-Date:   Wed, 18 Oct 2023 08:32:10 +0900
+        with ESMTP id S230219AbjJQXdH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 19:33:07 -0400
+Received: from mail-oi1-x236.google.com (mail-oi1-x236.google.com [IPv6:2607:f8b0:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 488A692;
+        Tue, 17 Oct 2023 16:33:06 -0700 (PDT)
+Received: by mail-oi1-x236.google.com with SMTP id 5614622812f47-3af604c3f8fso3893212b6e.1;
+        Tue, 17 Oct 2023 16:33:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697585585; x=1698190385; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jjkHOk4Tl+PMz9btl3eeh+G4Ft68VD7L+21fdtBMWng=;
+        b=ERyDOGyL/HopseXcs9wRWTtq9HZ09RM/nXnTM1/hAPi4+h/U/Snh+xb36+jWPiEwrd
+         HS7JiQpeFQSVytJEsl/HoC56CJmRHu/34+KPUw+EwoxQOdVrXTT/2UrZaBRc19jtl8M+
+         ILr0JK3Yb15dCEWaYP2cHBzkniRoXcC6t8NaZNkDMHTyzFllQeqpjPMjwns1T57euX2O
+         LtIs19/8mShia4glY+xh4j3NUbvwFyen0Y0O8A7Stmnbd21xi2hj9RBgt5IWHV1/5gTf
+         WZfg2b+ryFIOvwmPBBd4kKVyEBITfLuwcFJfpdK04OAwyTjdLhCHmFHVo6Be3JE47uDM
+         LDpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697585585; x=1698190385;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jjkHOk4Tl+PMz9btl3eeh+G4Ft68VD7L+21fdtBMWng=;
+        b=uOWsVEqUD7V/TzGpjfwsWW1JEKyRnfsyzALvc7TdwGePr4cEe+6dBJPuKALrPeRD85
+         nuP0AHqyMTaAC0j0RBGHxET0B75npItrYU6oYg8LUOOWEqv//+26Gt/m6tkPeCh0JzqX
+         /c/fmCatmhR80nJ73sHMGZ0NHm/OHPQZWVDBI02CSh41FOnSPWqmskl49cHqsZim2vme
+         S2FS5pEuVC2E6EkhPeN5BgvjZVVsl9hNRFqrx+weOE3mFztRNCAhvZoTdbBS24mR9zQM
+         im8GDMuFjfZF8M5+ayAvO8q6Li/LS4gw0BwEUJZfRudIp8kK6GBn+fxYk8M7/dSiMi9D
+         K7tw==
+X-Gm-Message-State: AOJu0YytrEKvDVCrr1WE0co9aFFM6N6hBVdcF7AFXd9ABKv2YUzgbAYk
+        +T6mQvW58RyJiD5I8oAldRM=
+X-Google-Smtp-Source: AGHT+IH6LQzdxhx6NuPouGkt6n49J3Xq8AODkPSJHAU/07oU3fWko2bM3AKlZ8s4Bm3ghLIMCot5dA==
+X-Received: by 2002:a05:6808:683:b0:3ae:126b:8c2b with SMTP id k3-20020a056808068300b003ae126b8c2bmr3845643oig.30.1697585585476;
+        Tue, 17 Oct 2023 16:33:05 -0700 (PDT)
+Received: from lanran-u22.. ([169.235.25.167])
+        by smtp.googlemail.com with ESMTPSA id s132-20020a63778a000000b005897bfc2ed3sm425848pgc.93.2023.10.17.16.33.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Oct 2023 16:33:04 -0700 (PDT)
+From:   Haonan Li <lihaonan1105@gmail.com>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Haonan Li <lihaonan1105@gmail.com>
+Subject: [PATCH] pata_lagacy: Handle failed ATA timing computation in opti82c46x_set_piomode
+Date:   Tue, 17 Oct 2023 23:32:34 +0000
+Message-Id: <20231017233234.2170437-1-lihaonan1105@gmail.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
- start/stop management
-Content-Language: en-US
-To:     Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Paul Ausbeck <paula@soe.ucsc.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Joe Breuer <linux-kernel@jmbreuer.net>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chia-Lin Kao <acelan.kao@canonical.com>
-References: <20230927141828.90288-1-dlemoal@kernel.org>
- <20230927141828.90288-5-dlemoal@kernel.org> <87v8b73lsh.fsf@vps.thesusis.net>
- <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
- <87r0luspvx.fsf@vps.thesusis.net>
- <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
- <87y1g1unwg.fsf@vps.thesusis.net>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <87y1g1unwg.fsf@vps.thesusis.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/18/23 03:03, Phillip Susi wrote:
-> Damien Le Moal <dlemoal@kernel.org> writes:
-> 
->> That one should be fixable, though it I do not see an elegant method to do it.
->> It would be easy with ugly code, e.g. tweaking the scsi device runtime pm state
->> from libata... Not great.
-> 
-> What would be not great about it?  libata already takes over the system
+The function opti82c46x_set_piomode utilizes the ata_timing_compute()
+to determine the appropriate ATA timings for a given device. However,
+in certain conditions where the ata_timing_find_mode() function does
+not find a valid mode, ata_timing_compute() returns an error (-EINVAL),
+leaving the tp struct uninitialized.
 
-To have to add code in libata that touches the scsi device PM status is what's
-not going to be great. Such code should stay in sd.c and scsi_pm.c. But not sure
-we actually need anything.
+This patch checks the return value of ata_timing_compute().
+This avoids any potential use of uninitialized `tp` struct in the
+opti82c46x_set_piomode function.
 
-> suspend/resume from sd.  I'm currently testing having libata do just
-> this right now.  I just got ahold of some jumpers today to put the
-> drives back into PuiS and do some further testing tonight.
-> 
->> Never saw that in my tests when enabling runtime pm on the scsi disk only. Which
->> is the important point here: there is no propagation of the suspend state down
->> to the device parent it seems.
-> 
-> Last night I again saw the port auto suspend when the scsi disk was
-> runtime suspended.  Tonight I'll test with PuiS, as well as with system
-> resume while runtime suspended.  Maybe I'll even try to get the whole
-> AHCI controller to auto suspend.  It seems like it should once all of
-> the ports do.
+Signed-off-by: Haonan Li <lihaonan1105@gmail.com>
+---
+ drivers/ata/pata_legacy.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-With my tests, I never set the ata port power/control to "auto", which may be
-why I did not see the port being runtime suspended when the scsi disk was
-runtime suspended. Will try again.
-
->> I am not sure of that, especially with cases of ATA ports with multiple disks
->> (e.g. pmp or IDE).
-> 
-> Good point.  I have an eSATA dock with PMP.  I'll check tonight if the
-> children are counted properly.
-
-With the device links in place between port and scsi devices, we should be OK.
-But still need to check that we do not need runtime_get/put calls added.
-Ideally, we should have the chain:
-
-scsi disk -> scsi target -> scsi host -> ata port
-
-for runtime suspend, and the reverse for runtime resume. If there is a system
-suspend/resume between runtime suspend/resume, the port should not be resumed if
-it is runtime suspended.
-
-
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index 448a511cb..d94c365cb 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -579,12 +579,16 @@ static void opti82c46x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	clock = 1000000000 / khz[sysclk];
+ 
+ 	/* Get the timing data in cycles */
+-	ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000);
++	if (ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000)) {
++		return;
++	}
+ 
+ 	/* Setup timing is shared */
+ 	if (pair) {
+ 		struct ata_timing tp;
+-		ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000);
++		if (ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000)) {
++			return;
++		}
+ 
+ 		ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
+ 	}
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
 
