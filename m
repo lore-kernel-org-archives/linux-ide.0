@@ -2,99 +2,99 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DFF5CDB474
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Oct 2023 23:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EECBECDB474
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Oct 2023 00:50:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234793AbjJQXgw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Oct 2023 19:36:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51178 "EHLO
+        id S233726AbjJRAu7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Oct 2023 20:50:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234650AbjJQXgw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 19:36:52 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C20D3B0;
-        Tue, 17 Oct 2023 16:36:50 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0809C433C8;
-        Tue, 17 Oct 2023 23:36:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697585810;
-        bh=vWDxX5Zfp3qv9pYv4nE5+avCskI58/L69mzMGCW3v4g=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=h2kg+QHGDrbxf0pir+DJUzTxg/YtnHssBSxqcJ6qkto8Y0zFc9boBKiKC8waR/8zj
-         JeMOaFgZ27RedCfglkjVDgDQJo9oJJaLhGYuzeTHdbaBYkzkLbxjIRhA7zvm/vfWdM
-         tQ5k1qI4rPRvKdkw59f/yxI0Sd+EMhuLOJHeLZQsZEHtWLll5dQfzIyRNrgLqh0sR/
-         LEp5nlZlMSwbAnI+LBaUExp2JfBR4N5wI7GEEJRv4wWmOnrkWlf+AcPRNtuAY0Z2PP
-         YIHp/SBX4XQuQ15dW8HTGFB7IonsiJO+Dkb3A8bLaNVChf+6i4wVtmQKYGaE1khd6p
-         TSgZaWf1J5EWQ==
-Message-ID: <1a0c4378-29b2-43b4-982b-0d92dfb8ed4f@kernel.org>
-Date:   Wed, 18 Oct 2023 08:36:48 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+        with ESMTP id S232009AbjJRAu6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Oct 2023 20:50:58 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7954D92;
+        Tue, 17 Oct 2023 17:50:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697590257; x=1729126257;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=hBCoNzwppuYtIv3HP0cVy+EIKrWqggclGyfBNO0tN+U=;
+  b=J1CIECijkai8JE7H3YAWTqSGVNIgLAlegoFwXJ+RuANQJcEpFSfx1W2G
+   Ul4lFl6S/fukXfzzuvwompr5iKj9H8KpRdwN4pLZuVaN/FxRUY06E0N36
+   oF7pqHdSTxcKjq4DyDB2yLJtoDmJ7W8/JEvfoRo1lyMTzdgUFT3dFILLf
+   6kcaSx3Ow+YgsH77TwBjEdhuI2XJjI7ag+tswFGbu5ZHPchze2wbYZedT
+   EZ/y8aeuzgLYLqZi7hBKC0KjfGtjqyDsNeT7bk7Fpi1ovD5KXeLPb2Hys
+   VObET3xLbzWdRMKWBEYdMsLO0IQHSg4NyLeuwMr0xfPYQnVnIX7TgqktW
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="384789516"
+X-IronPort-AV: E=Sophos;i="6.03,233,1694761200"; 
+   d="scan'208";a="384789516"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 17:50:57 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="785672766"
+X-IronPort-AV: E=Sophos;i="6.03,233,1694761200"; 
+   d="scan'208";a="785672766"
+Received: from lkp-server02.sh.intel.com (HELO f64821696465) ([10.239.97.151])
+  by orsmga008.jf.intel.com with ESMTP; 17 Oct 2023 17:50:54 -0700
+Received: from kbuild by f64821696465 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qsulw-000AI3-2B;
+        Wed, 18 Oct 2023 00:50:52 +0000
+Date:   Wed, 18 Oct 2023 08:50:11 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Haonan Li <lihaonan1105@gmail.com>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     oe-kbuild-all@lists.linux.dev
 Subject: Re: [PATCH] pata_lagacy: Handle failed ATA timing computation in
  opti82c46x_set_piomode
-Content-Language: en-US
-To:     Haonan Li <lihaonan1105@gmail.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+Message-ID: <202310180858.o7Wjw0A2-lkp@intel.com>
 References: <20231017233234.2170437-1-lihaonan1105@gmail.com>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20231017233234.2170437-1-lihaonan1105@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/18/23 08:32, Haonan Li wrote:
-> The function opti82c46x_set_piomode utilizes the ata_timing_compute()
-> to determine the appropriate ATA timings for a given device. However,
-> in certain conditions where the ata_timing_find_mode() function does
-> not find a valid mode, ata_timing_compute() returns an error (-EINVAL),
-> leaving the tp struct uninitialized.
-> 
-> This patch checks the return value of ata_timing_compute().
-> This avoids any potential use of uninitialized `tp` struct in the
-> opti82c46x_set_piomode function.
-> 
-> Signed-off-by: Haonan Li <lihaonan1105@gmail.com>
-> ---
->  drivers/ata/pata_legacy.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-> index 448a511cb..d94c365cb 100644
-> --- a/drivers/ata/pata_legacy.c
-> +++ b/drivers/ata/pata_legacy.c
-> @@ -579,12 +579,16 @@ static void opti82c46x_set_piomode(struct ata_port *ap, struct ata_device *adev)
->  	clock = 1000000000 / khz[sysclk];
->  
->  	/* Get the timing data in cycles */
-> -	ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000);
-> +	if (ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000)) {
-> +		return;
-> +	}
+Hi Haonan,
 
-You need a message here to tell the user something is wrong. See pata_amd.c for
-an example.
+kernel test robot noticed the following build warnings:
 
->  
->  	/* Setup timing is shared */
->  	if (pair) {
->  		struct ata_timing tp;
-> -		ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000);
-> +		if (ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000)) {
-> +			return;
-> +		}
+[auto build test WARNING on linus/master]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Same here. And while at it, please add a blank line after the declaration and
-before your change.
+url:    https://github.com/intel-lab-lkp/linux/commits/Haonan-Li/pata_lagacy-Handle-failed-ATA-timing-computation-in-opti82c46x_set_piomode/20231018-073451
+base:   linus/master
+patch link:    https://lore.kernel.org/r/20231017233234.2170437-1-lihaonan1105%40gmail.com
+patch subject: [PATCH] pata_lagacy: Handle failed ATA timing computation in opti82c46x_set_piomode
+reproduce: (https://download.01.org/0day-ci/archive/20231018/202310180858.o7Wjw0A2-lkp@intel.com/reproduce)
 
->  
->  		ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
->  	}
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202310180858.o7Wjw0A2-lkp@intel.com/
+
+# many are suggestions rather than must-fix
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#31: FILE: drivers/ata/pata_legacy.c:582:
++	if (ata_timing_compute(adev, adev->pio_mode, &t, clock, 1000)) {
++		return;
++	}
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#39: FILE: drivers/ata/pata_legacy.c:589:
++		if (ata_timing_compute(pair, pair->pio_mode, &tp, clock, 1000)) {
++			return;
++		}
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
