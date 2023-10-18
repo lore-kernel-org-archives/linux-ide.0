@@ -2,102 +2,109 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A6ACDB47E
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Oct 2023 17:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42272CDB47E
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Oct 2023 18:00:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230148AbjJRRPi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 18 Oct 2023 13:15:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40122 "EHLO
+        id S232542AbjJRSAO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 18 Oct 2023 14:00:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230183AbjJRRPh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2023 13:15:37 -0400
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C0CC113;
-        Wed, 18 Oct 2023 10:15:35 -0700 (PDT)
-Received: from [192.168.1.103] (178.176.75.93) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.986.14; Wed, 18 Oct
- 2023 20:15:26 +0300
-Subject: Re: [PATCH] pata_lagacy: Handle failed ATA timing computation in
- opti82c46x_set_piomode
-To:     Haonan Li <lihaonan1105@gmail.com>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <1a0c4378-29b2-43b4-982b-0d92dfb8ed4f@kernel.org>
- <20231018005220.2551586-1-lihaonan1105@gmail.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <8332cf70-1451-6903-562f-1d16e4c243ae@omp.ru>
-Date:   Wed, 18 Oct 2023 20:15:25 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S232333AbjJRSAA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2023 14:00:00 -0400
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2AEC1705;
+        Wed, 18 Oct 2023 10:59:32 -0700 (PDT)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-5a7b92cd0ccso89023377b3.1;
+        Wed, 18 Oct 2023 10:59:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697651971; x=1698256771; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BlNVWCi4tE73KJBUGhTGPmq/A6sZ0EfC9I/MgZZhxjI=;
+        b=Ivo44lRY4SQth2GmoEFWR1n9WqSv5s+EVSv4Es1Q6RoNe1JId2iytw7Jv0ReRQCcYz
+         AvSHiMsKel0FFRfW6Dnx5Fcu4pDCLYf9iSMh9mNJIvxPbEPYHdseDBI+JjE1g41bW+A2
+         L7PFnoM2CbXybZfc+NWB4AXzRrR8lXbl6qyoGgXzqGNaj2rLo56any2oQD1BZa1l0PVI
+         yGl83XQiUsLeHBNa/ZK2I6QumPeXeqmMAkmKyDReFlFwzu7MFWZ/KnXg327Gu3p0gQ6V
+         NuVPxlK+gp9ADR4+IjLbEHcHPmPc8PdTTGdzupSzfAP4bS6BD83phz9wlj0YuxKTxl+M
+         VQGw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697651971; x=1698256771;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BlNVWCi4tE73KJBUGhTGPmq/A6sZ0EfC9I/MgZZhxjI=;
+        b=NNtRaSCgKexKwS3Di6u+HmP3tnH0dsdIJn9kLDsNFMxGycBVzaJW2oW31D0ADfG7BG
+         Tmv18Re1rfde+yAyeTXtu9h5WMuJglTXCL/70Bvt/J3YrASqMT6VDhiz+RqI5qTLFm9t
+         YaP8mCwTQd3OZ/SsoDZQIaMU5ZGwuEu1EBFSuAJcNEZi+fZE2wuikJD2CJX0Ev8/t2IR
+         GJ0EXmlbKoJhqvSK/1pWrpnmMnruDWF8+GvCCQiqWTRorrGxjW4o6M2qXMWgVNaPrj9D
+         m/ekLcYOyNDgFpwjZEklkD540uz7VOQrHaZHu6sZO0/9Gs0FGGTQzX1o5Gm9DQA2gPuC
+         cJaA==
+X-Gm-Message-State: AOJu0YxA2U/2zcayiQugMSYxa2deKcbjaAAJJ6LA+V6Wy7CKsgnvY+T4
+        vKj7Sh3fTj1B4gx+c+HjJSs/JKCwhjzuXyGuzUM=
+X-Google-Smtp-Source: AGHT+IFMyKYl82McilUEskZqL7Dc31EK4FlzSOjTjDfmE9ABll/uYNWrGeOW76WuNKalR/CJUMgf/LwJVFwHxxZg+rw=
+X-Received: by 2002:a0d:cc04:0:b0:5a8:277f:b378 with SMTP id
+ o4-20020a0dcc04000000b005a8277fb378mr15878ywd.1.1697651971126; Wed, 18 Oct
+ 2023 10:59:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20231018005220.2551586-1-lihaonan1105@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [178.176.75.93]
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.0.0, Database issued on: 10/18/2023 17:00:15
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 180713 [Oct 18 2023]
-X-KSE-AntiSpam-Info: Version: 6.0.0.2
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 541 541 6f62a06a82e8ec968d29b8e7c7bba6aeceb34f57
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.75.93 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info: omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.75.93
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/18/2023 17:05:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 10/18/2023 2:17:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+References: <1a0c4378-29b2-43b4-982b-0d92dfb8ed4f@kernel.org>
+ <20231018005220.2551586-1-lihaonan1105@gmail.com> <8332cf70-1451-6903-562f-1d16e4c243ae@omp.ru>
+In-Reply-To: <8332cf70-1451-6903-562f-1d16e4c243ae@omp.ru>
+From:   Haonan Li <lihaonan1105@gmail.com>
+Date:   Wed, 18 Oct 2023 10:59:13 -0700
+Message-ID: <CAE4BR8L-SODeOa3OAV9Z5h5jMfLpRnKwDnSMx7y6nXH-M2NkUQ@mail.gmail.com>
+Subject: Re: [PATCH] pata_lagacy: Handle failed ATA timing computation in opti82c46x_set_piomode
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>
+Cc:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+Hello Sergey,
 
-On 10/18/23 3:52 AM, Haonan Li wrote:
+Thank you for pointing that out. My main concern was the potential
+for ata_timing_find_mode() to return NULL, causing ata_timing_compute()
+to return -EINVAL. While this might be rare, I thought it would be
+safer to handle such cases.
 
-> The function opti82c46x_set_piomode utilizes the ata_timing_compute()
-> to determine the appropriate ATA timings for a given device. However,
-> in certain conditions where the ata_timing_find_mode() function does
-> not find a valid mode, ata_timing_compute() returns an error (-EINVAL),
-> leaving the tp struct uninitialized.
+However, if the common practice in drivers/ata/ is to ignore the result
+of ata_timing_compute(), let's drop the patch as needed.
 
-   Looks like it's very common to ignore the result of ata_timing_compute()
-in drivers/ata/...
-   Mind sharing the "certain conditions"? :-) I don't think the set_piomode()
-method can be called by libata itself with an unsupported xfer mode...
+Thank you for your time and feedback.
 
-> This patch checks the return value of ata_timing_compute() and print
-> err message. This avoids any potential use of uninitialized `tp`
-> struct in the opti82c46x_set_piomode function.
-> 
-> Signed-off-by: Haonan Li <lihaonan1105@gmail.com>
-[...]
+Best,
+Haonan
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
-MBR, Sergey
+On Wed, Oct 18, 2023 at 10:15=E2=80=AFAM Sergey Shtylyov <s.shtylyov@omp.ru=
+> wrote:
+>
+> Hello!
+>
+> On 10/18/23 3:52 AM, Haonan Li wrote:
+>
+> > The function opti82c46x_set_piomode utilizes the ata_timing_compute()
+> > to determine the appropriate ATA timings for a given device. However,
+> > in certain conditions where the ata_timing_find_mode() function does
+> > not find a valid mode, ata_timing_compute() returns an error (-EINVAL),
+> > leaving the tp struct uninitialized.
+>
+>    Looks like it's very common to ignore the result of ata_timing_compute=
+()
+> in drivers/ata/...
+>    Mind sharing the "certain conditions"? :-) I don't think the set_piomo=
+de()
+> method can be called by libata itself with an unsupported xfer mode...
+>
+> > This patch checks the return value of ata_timing_compute() and print
+> > err message. This avoids any potential use of uninitialized `tp`
+> > struct in the opti82c46x_set_piomode function.
+> >
+> > Signed-off-by: Haonan Li <lihaonan1105@gmail.com>
+> [...]
+>
+> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>
+> MBR, Sergey
