@@ -2,109 +2,73 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42272CDB47E
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Oct 2023 18:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D43C001DF
+	for <linux-ide@archiver.kernel.org>; Fri, 20 Oct 2023 19:00:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232542AbjJRSAO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 18 Oct 2023 14:00:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60842 "EHLO
+        id S229437AbjJTTA1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 20 Oct 2023 15:00:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232333AbjJRSAA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2023 14:00:00 -0400
-Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2AEC1705;
-        Wed, 18 Oct 2023 10:59:32 -0700 (PDT)
-Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-5a7b92cd0ccso89023377b3.1;
-        Wed, 18 Oct 2023 10:59:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697651971; x=1698256771; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BlNVWCi4tE73KJBUGhTGPmq/A6sZ0EfC9I/MgZZhxjI=;
-        b=Ivo44lRY4SQth2GmoEFWR1n9WqSv5s+EVSv4Es1Q6RoNe1JId2iytw7Jv0ReRQCcYz
-         AvSHiMsKel0FFRfW6Dnx5Fcu4pDCLYf9iSMh9mNJIvxPbEPYHdseDBI+JjE1g41bW+A2
-         L7PFnoM2CbXybZfc+NWB4AXzRrR8lXbl6qyoGgXzqGNaj2rLo56any2oQD1BZa1l0PVI
-         yGl83XQiUsLeHBNa/ZK2I6QumPeXeqmMAkmKyDReFlFwzu7MFWZ/KnXg327Gu3p0gQ6V
-         NuVPxlK+gp9ADR4+IjLbEHcHPmPc8PdTTGdzupSzfAP4bS6BD83phz9wlj0YuxKTxl+M
-         VQGw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697651971; x=1698256771;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BlNVWCi4tE73KJBUGhTGPmq/A6sZ0EfC9I/MgZZhxjI=;
-        b=NNtRaSCgKexKwS3Di6u+HmP3tnH0dsdIJn9kLDsNFMxGycBVzaJW2oW31D0ADfG7BG
-         Tmv18Re1rfde+yAyeTXtu9h5WMuJglTXCL/70Bvt/J3YrASqMT6VDhiz+RqI5qTLFm9t
-         YaP8mCwTQd3OZ/SsoDZQIaMU5ZGwuEu1EBFSuAJcNEZi+fZE2wuikJD2CJX0Ev8/t2IR
-         GJ0EXmlbKoJhqvSK/1pWrpnmMnruDWF8+GvCCQiqWTRorrGxjW4o6M2qXMWgVNaPrj9D
-         m/ekLcYOyNDgFpwjZEklkD540uz7VOQrHaZHu6sZO0/9Gs0FGGTQzX1o5Gm9DQA2gPuC
-         cJaA==
-X-Gm-Message-State: AOJu0YxA2U/2zcayiQugMSYxa2deKcbjaAAJJ6LA+V6Wy7CKsgnvY+T4
-        vKj7Sh3fTj1B4gx+c+HjJSs/JKCwhjzuXyGuzUM=
-X-Google-Smtp-Source: AGHT+IFMyKYl82McilUEskZqL7Dc31EK4FlzSOjTjDfmE9ABll/uYNWrGeOW76WuNKalR/CJUMgf/LwJVFwHxxZg+rw=
-X-Received: by 2002:a0d:cc04:0:b0:5a8:277f:b378 with SMTP id
- o4-20020a0dcc04000000b005a8277fb378mr15878ywd.1.1697651971126; Wed, 18 Oct
- 2023 10:59:31 -0700 (PDT)
+        with ESMTP id S229473AbjJTTA0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 20 Oct 2023 15:00:26 -0400
+Received: from vps.thesusis.net (vps.thesusis.net [IPv6:2600:1f18:60b9:2f00:6f85:14c6:952:bad3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CA1114;
+        Fri, 20 Oct 2023 12:00:23 -0700 (PDT)
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+        id C3506145852; Fri, 20 Oct 2023 15:00:22 -0400 (EDT)
+From:   Phillip Susi <phill@thesusis.net>
+To:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Paul Ausbeck <paula@soe.ucsc.edu>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Breuer <linux-kernel@jmbreuer.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chia-Lin Kao <acelan.kao@canonical.com>
+Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
+ start/stop management
+In-Reply-To: <26de72d5-02d3-489c-a789-b2b709ae073e@kernel.org>
+References: <20230927141828.90288-1-dlemoal@kernel.org>
+ <20230927141828.90288-5-dlemoal@kernel.org>
+ <87v8b73lsh.fsf@vps.thesusis.net>
+ <0177ab41-6a7b-42ff-bf84-97d173efb838@kernel.org>
+ <87r0luspvx.fsf@vps.thesusis.net>
+ <1a6f1768-fd48-42df-9f1a-4b203baf6ddf@kernel.org>
+ <87y1g1unwg.fsf@vps.thesusis.net>
+ <26de72d5-02d3-489c-a789-b2b709ae073e@kernel.org>
+Date:   Fri, 20 Oct 2023 15:00:22 -0400
+Message-ID: <87edhpi0ft.fsf@vps.thesusis.net>
 MIME-Version: 1.0
-References: <1a0c4378-29b2-43b4-982b-0d92dfb8ed4f@kernel.org>
- <20231018005220.2551586-1-lihaonan1105@gmail.com> <8332cf70-1451-6903-562f-1d16e4c243ae@omp.ru>
-In-Reply-To: <8332cf70-1451-6903-562f-1d16e4c243ae@omp.ru>
-From:   Haonan Li <lihaonan1105@gmail.com>
-Date:   Wed, 18 Oct 2023 10:59:13 -0700
-Message-ID: <CAE4BR8L-SODeOa3OAV9Z5h5jMfLpRnKwDnSMx7y6nXH-M2NkUQ@mail.gmail.com>
-Subject: Re: [PATCH] pata_lagacy: Handle failed ATA timing computation in opti82c46x_set_piomode
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc:     Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Sergey,
+Damien Le Moal <dlemoal@kernel.org> writes:
 
-Thank you for pointing that out. My main concern was the potential
-for ata_timing_find_mode() to return NULL, causing ata_timing_compute()
-to return -EINVAL. While this might be rare, I thought it would be
-safer to handle such cases.
+> With the device links in place between port and scsi devices, we should be OK.
+> But still need to check that we do not need runtime_get/put calls added.
+> Ideally, we should have the chain:
+>
+> scsi disk -> scsi target -> scsi host -> ata port
 
-However, if the common practice in drivers/ata/ is to ignore the result
-of ata_timing_compute(), let's drop the patch as needed.
+It looks to me like there is an additional generic block device that
+sits on top and that is what actually has the idle timeout.  Or maybe
+that's the scsi disk, since it's name incldues the SCSI LUN, but in the
+structure, its called sdev_gendev.  But then there's also sdev_dev, and
+sdev_target.
 
-Thank you for your time and feedback.
+> for runtime suspend, and the reverse for runtime resume. If there is a system
+> suspend/resume between runtime suspend/resume, the port should not be resumed if
+> it is runtime suspended.
 
-Best,
-Haonan
+I'm not sure about it.  The port has to be resumed so that we can
+attempt to revalidate the devices on it.  For disks that have spun up on
+their own, we should not leave then marked as runtime suspended, but
+really they are spinning.  I suppose we could put them to sleep, though
+I was leaning to just marking them as active, and leaving the runtime pm
+timer to put them to sleep later, which then could allow the port to
+suspend again.
 
-On Wed, Oct 18, 2023 at 10:15=E2=80=AFAM Sergey Shtylyov <s.shtylyov@omp.ru=
-> wrote:
->
-> Hello!
->
-> On 10/18/23 3:52 AM, Haonan Li wrote:
->
-> > The function opti82c46x_set_piomode utilizes the ata_timing_compute()
-> > to determine the appropriate ATA timings for a given device. However,
-> > in certain conditions where the ata_timing_find_mode() function does
-> > not find a valid mode, ata_timing_compute() returns an error (-EINVAL),
-> > leaving the tp struct uninitialized.
->
->    Looks like it's very common to ignore the result of ata_timing_compute=
-()
-> in drivers/ata/...
->    Mind sharing the "certain conditions"? :-) I don't think the set_piomo=
-de()
-> method can be called by libata itself with an unsupported xfer mode...
->
-> > This patch checks the return value of ata_timing_compute() and print
-> > err message. This avoids any potential use of uninitialized `tp`
-> > struct in the opti82c46x_set_piomode function.
-> >
-> > Signed-off-by: Haonan Li <lihaonan1105@gmail.com>
-> [...]
->
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->
-> MBR, Sergey
