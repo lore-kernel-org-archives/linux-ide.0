@@ -2,110 +2,132 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DFBC25B48
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Oct 2023 02:11:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E8B3C0032E
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Oct 2023 07:01:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231292AbjJYCLP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 Oct 2023 22:11:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55394 "EHLO
+        id S231254AbjJYHBY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 Oct 2023 03:01:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbjJYCLO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Oct 2023 22:11:14 -0400
+        with ESMTP id S229498AbjJYHBX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 Oct 2023 03:01:23 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB0ABE5;
-        Tue, 24 Oct 2023 19:11:12 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BD15C433C7;
-        Wed, 25 Oct 2023 02:11:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06039E5;
+        Wed, 25 Oct 2023 00:01:19 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA710C433C7;
+        Wed, 25 Oct 2023 07:01:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698199872;
-        bh=XqSsIpjt0jIyZn7qo3bPFPqEdb+PQBuF8ciog/cTS3k=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=TVWETUnaYoM74TyyGZNyWwa9rzO5bBRy5EHR8Bk9H4fieHqpt+dmZpTNC2wdiEnkU
-         teFwryJJotMK4JcDktGOaXMzL5fic8dej3ViDt+rtfkyIIdf3oDG6n7Ro8UFX3kVnV
-         sWFfla00iE0xEL9jWMO3evQcx6IJH6iv3mQnJB9WTkEQt4WdkaI/2QAzpfxY6JZvlW
-         /XN2P+vrOEd4JhQbMTFhuV+Il7r/2ON+25CaFeozA1MT73BZcPT5+jctYBYQhkDUF+
-         zrTSeAgDJ5A467sNR80kkOi5IzY4MSqpq0nCmEBKekkc9hrOxVSN/UYLYMYqch3Hrf
-         ELz4ZncJ/ZPVQ==
-Message-ID: <ba2115a9-46a5-4bc7-be5d-97ee2c0a0492@kernel.org>
-Date:   Wed, 25 Oct 2023 11:11:09 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Fwd: bbbf096ea227607cbb348155eeda7af71af1a35b results in "dirty"
- shutdown
-To:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>
-Cc:     Hannes Reinecke <hare@suse.de>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Tejun Heo <tj@kernel.org>,
-        Totallyreal Name <kotversuchung@gmail.com>,
-        loqs <kernel_bugzilla@entropy-collector.net>
-References: <cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com>
-Content-Language: en-US
+        s=k20201202; t=1698217279;
+        bh=OODyHkkGXKWL1r/C0vYVi24gXpxLo7+GLWxa7CSn0Vg=;
+        h=From:To:Subject:Date:From;
+        b=sfFFSYodLtDpYQT6FnsrZTMybqz4YAfrRfQeXF1Kac5P4YhrYZlX2SDWUEGlO6aVs
+         8ZQbbEis+DbGnZuJEv6UASaz++xtdxGY68DD6Ut60BTc0af6vwnCHEY7vfphk/uU9A
+         nLIH5ixPDhdnfkL1FkTU48IsmkX3vnmhkV/orjzj8JPR7bgvDJXvT8oWqYArt1Ho85
+         OgwhlnTzh3zoZnmoLHg5m2pdDWMdafeZ2AnvscRKeLrftPtbrc8rdbokG/3wCJUjj7
+         dsTnYwKjxM2tu3zgB1RSBoK2jn/7UA5HynDyRRwJRavrDOWLJbKRY3IhPBMuxzWKo5
+         P9aeYvx1jyDiA==
 From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH] scsi: sd: Introduce manage_shutdown device flag
+Date:   Wed, 25 Oct 2023 16:01:17 +0900
+Message-ID: <20231025070117.464903-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.41.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/25/23 09:40, Bagas Sanjaya wrote:
-> Hi,
-> 
-> I notice a regression report on Bugzilla that seems to have been
-> handled already there [1]. Quoting from it:
-> 
->> I have noticed that after each shutdown SMART would log +1 on each raw_value of drives that count power related issues.
->>
->> Here are some of the smart values where i noticed increase among different drives
->>
->> POR_Recovery_Count 
->> Unexpect_Power_Loss_Ct  
->> Power-Off_Retract_Count 
->>
->> That doesn't happen on previous Kernels.. and it stops as soon as i switch back to LTS.
->> I seeked through the Bug Reports but couldn't really find the issue. So i don't know if this has been reported or patched already.
-> 
-> Another reporter had found the culprit:
-> 
->>
->>
->> This has been reported as being introduced in stable 6.5.8 [1].  Reverting commit 	bbbf096ea227607cbb348155eeda7af71af1a35b is reported to solve the issue [2]. bbbf096ea227607cbb348155eeda7af71af1a35b [3] is mainline commit aa3998dbeb3abce63653b7f6d4542e7dcd022590 [4] which was introduced in 6.6-rc4 which matches the original report.
->>
->> [1]: https://bugs.archlinux.org/task/80064
->> [2]: https://bugs.archlinux.org/task/80064#comment223100
->> [3]: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=bbbf096ea227607cbb348155eeda7af71af1a35b
->> [4]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=aa3998dbeb3abce63653b7f6d4542e7dcd022590
-> 
-> See Bugzilla for the full thread.
+Commit aa3998dbeb3a ("ata: libata-scsi: Disable scsi device
+manage_system_start_stop") change setting the manage_system_start_stop
+flag to false for libata managed disks to enable libata internal
+management of disk suspend/resume. However, a side effect of this change
+is that on system shutdown, disks are no longer being stopped (set to
+standby mode with the heads unloaded). While this is not a critical
+issue, this unclean shutdown is not recommended and shows up with
+increased smart counters (e.g. the unexpected power loss counter
+"Unexpect_Power_Loss_Ct").
 
-I am aware of this and looking into it. The patch mentioned above seems to have
-introduced the issue that drives are not being stopped on shutdown with real
-PCs. But they are with qemu VM. So this seems to relate to ACPI shutdown as
-well. Not sure, looking into it.
+Instead of defining a shutdown driver method for all ATA adapter
+drivers (not all of them define that operation), this patch resolves
+this issue by further refining the sd driver start/stop control of disks
+using the new flag manage_shutdown. If set to true, the function
+sd_shutdown() will issue a START STOP UNIT command with the start
+argument set to 0 when a disk is shutdown on system power off
+(system_state == SYSTEM_POWER_OFF).
 
-The main issue I have is that I cannot reproduce the old behavior mentioned in
-this case, which is, the counters not incrementing on shutdown. They do increase
-for me, always, even prior to the patch mentioned above.
+Fixes: aa3998dbeb3a ("ata: libata-scsi: Disable scsi device manage_system_start_stop")
+Cc: stable@vger.kernel.org
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218038
+Link: https://lore.kernel.org/all/cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com/
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-scsi.c  | 5 +++--
+ drivers/firewire/sbp2.c    | 1 +
+ drivers/scsi/sd.c          | 6 ++++--
+ include/scsi/scsi_device.h | 1 +
+ 4 files changed, 9 insertions(+), 4 deletions(-)
 
-Digging.
-
-> Anyway, I'm adding this regression to regzbot:
-> 
-> #regzbot introduced: aa3998dbeb3abc https://bugzilla.kernel.org/show_bug.cgi?id=218038
-> #regzbot title: dirty shutdown due to disabling manage_system_start_stop on SCSI devices
-> #regzbot link: https://bugs.archlinux.org/task/80064
-> 
-> Thanks.
-> 
-> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=218038
-> 
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a371b497035e..3a957c4da409 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1053,10 +1053,11 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+ 
+ 		/*
+ 		 * Ask the sd driver to issue START STOP UNIT on runtime suspend
+-		 * and resume only. For system level suspend/resume, devices
+-		 * power state is handled directly by libata EH.
++		 * and resume and shutdown only. For system level suspend/resume,
++		 * devices power state is handled directly by libata EH.
+ 		 */
+ 		sdev->manage_runtime_start_stop = true;
++		sdev->manage_shutdown = true;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index 749868b9e80d..7edf2c95282f 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1521,6 +1521,7 @@ static int sbp2_scsi_slave_configure(struct scsi_device *sdev)
+ 	if (sbp2_param_exclusive_login) {
+ 		sdev->manage_system_start_stop = true;
+ 		sdev->manage_runtime_start_stop = true;
++		sdev->manage_shutdown = true;
+ 	}
+ 
+ 	if (sdev->type == TYPE_ROM)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 83b6a3f3863b..52fa266d976f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3819,8 +3819,10 @@ static void sd_shutdown(struct device *dev)
+ 		sd_sync_cache(sdkp, NULL);
+ 	}
+ 
+-	if (system_state != SYSTEM_RESTART &&
+-	    sdkp->device->manage_system_start_stop) {
++	if ((system_state != SYSTEM_RESTART &&
++	     sdkp->device->manage_system_start_stop) ||
++	    (system_state == SYSTEM_POWER_OFF &&
++	     sdkp->device->manage_shutdown)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index fd41fdac0a8e..7edefb73bf69 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -164,6 +164,7 @@ struct scsi_device {
+ 
+ 	bool manage_system_start_stop; /* Let HLD (sd) manage system start/stop */
+ 	bool manage_runtime_start_stop; /* Let HLD (sd) manage runtime start/stop */
++	bool manage_shutdown;	/* Let HLD (sd) manage shutdown */
+ 
+ 	unsigned removable:1;
+ 	unsigned changed:1;	/* Data invalid due to media change */
 -- 
-Damien Le Moal
-Western Digital Research
+2.41.0
 
