@@ -2,127 +2,104 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82108C25B6B
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Oct 2023 09:32:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD2DDC25B48
+	for <linux-ide@archiver.kernel.org>; Thu, 26 Oct 2023 12:01:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229653AbjJZJc5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 26 Oct 2023 05:32:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60966 "EHLO
+        id S229980AbjJZMBK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 26 Oct 2023 08:01:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbjJZJc5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Oct 2023 05:32:57 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7C0D186;
-        Thu, 26 Oct 2023 02:32:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S229803AbjJZMBJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Oct 2023 08:01:09 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97AA19C;
+        Thu, 26 Oct 2023 05:01:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1698321665;
+        bh=kF2UFLghMNovt0IBC7kLh7kUmS4+nkpCLYwbQ9dsJiA=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=lV7NZD2fJHZo0NrqX8ukxBz4jkiyAgmnalqoz7xA2aBfK8pHvkTkaRWujeOCgjtDB
+         FjC9iHO5QJjFISJq7j/Q34cT5bUTz3WsZfSkiW8ToPsSFzTb2zR3cnWD6ekCtT/hQ2
+         +ryZiLaYTtuKZLem2b0jMHp2MPbq3Ps2rrFukPXI=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 5222512867B6;
+        Thu, 26 Oct 2023 08:01:05 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id o-y0OTZ32oB1; Thu, 26 Oct 2023 08:01:05 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1698321665;
+        bh=kF2UFLghMNovt0IBC7kLh7kUmS4+nkpCLYwbQ9dsJiA=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=lV7NZD2fJHZo0NrqX8ukxBz4jkiyAgmnalqoz7xA2aBfK8pHvkTkaRWujeOCgjtDB
+         FjC9iHO5QJjFISJq7j/Q34cT5bUTz3WsZfSkiW8ToPsSFzTb2zR3cnWD6ekCtT/hQ2
+         +ryZiLaYTtuKZLem2b0jMHp2MPbq3Ps2rrFukPXI=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::c14])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D52F41F86A;
-        Thu, 26 Oct 2023 09:32:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1698312772; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZCF3DsmymDtF8fUv0+BY3IUy4DiIU1FmoqsBvICzOhw=;
-        b=lh4Ry4bjpm4VhGi+PoNUmxh+4E+5G+E4CVtoJeGVgPVwGXxyjPVWW3V///HJ2MKq+kU/BV
-        jdORWQVlBDGg9NL6hV2ZiNNQaePgKk6dJT+UpfhIMompZXlCdfncw7P2J5eouGOcw75H5c
-        Fw7sJYMuNz83SlVEcyzn2ad8BlJbeJw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1698312772;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZCF3DsmymDtF8fUv0+BY3IUy4DiIU1FmoqsBvICzOhw=;
-        b=4AkHXOUhCoUSOPJDcL4IJG6ng6IGxQiYGQCBThYlJd9sjq0NuPZiz5uK0nGI3AQRo9o44B
-        i1A/hP0BqhrrSqAQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B42C0133F5;
-        Thu, 26 Oct 2023 09:32:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id ceFuK0QyOmXWMAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 26 Oct 2023 09:32:52 +0000
-Message-ID: <2ad32008-cbcf-4927-b37d-45b933f47177@suse.de>
-Date:   Thu, 26 Oct 2023 11:32:52 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] scsi: sd: Introduce manage_shutdown device flag
-Content-Language: en-US
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits))
+        (Client did not present a certificate)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id B194A1281C67;
+        Thu, 26 Oct 2023 08:01:04 -0400 (EDT)
+Message-ID: <c3dfca871ddddfeef004fdb74432630a148300f2.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: sd: Introduce manage_shutdown device flag
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
 To:     Damien Le Moal <dlemoal@kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-References: <20231026090748.130959-1-dlemoal@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20231026090748.130959-1-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date:   Thu, 26 Oct 2023 08:01:03 -0400
+In-Reply-To: <bf780d7a-30f3-4744-adde-73b4c2723d6b@kernel.org>
+References: <20231025070117.464903-1-dlemoal@kernel.org>
+         <39fef5f8e090d50eb22d73d6bb39b21edf62b565.camel@HansenPartnership.com>
+         <bf780d7a-30f3-4744-adde-73b4c2723d6b@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
+MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/26/23 11:07, Damien Le Moal wrote:
-> Commit aa3998dbeb3a ("ata: libata-scsi: Disable scsi device
-> manage_system_start_stop") change setting the manage_system_start_stop
-> flag to false for libata managed disks to enable libata internal
-> management of disk suspend/resume. However, a side effect of this change
-> is that on system shutdown, disks are no longer being stopped (set to
-> standby mode with the heads unloaded). While this is not a critical
-> issue, this unclean shutdown is not recommended and shows up with
-> increased smart counters (e.g. the unexpected power loss counter
-> "Unexpect_Power_Loss_Ct").
+On Thu, 2023-10-26 at 06:30 +0900, Damien Le Moal wrote:
+> On 10/25/23 20:57, James Bottomley wrote:
+> > On Wed, 2023-10-25 at 16:01 +0900, Damien Le Moal wrote:
+> > > +++ b/include/scsi/scsi_device.h
+> > > @@ -164,6 +164,7 @@ struct scsi_device {
+> > >  
+> > >         bool manage_system_start_stop; /* Let HLD (sd) manage
+> > > system
+> > > start/stop */
+> > >         bool manage_runtime_start_stop; /* Let HLD (sd) manage
+> > > runtime start/stop */
+> > > +       bool manage_shutdown;   /* Let HLD (sd) manage shutdown
+> > > */
+> > >  
+> > 
+> > I think at least 85% of the world gets confused about the
+> > difference
+> > between runtime/system start/stop and shutdown.  Could we at least
+> > point to a doc explaining it in a comment here?
 > 
-> Instead of defining a shutdown driver method for all ATA adapter
-> drivers (not all of them define that operation), this patch resolves
-> this issue by further refining the sd driver start/stop control of disks
-> using the new flag manage_shutdown. If this new flag is set to true by
-> a low level driver, the function sd_shutdown() will issue a
-> START STOP UNIT command with the start argument set to 0 when a disk
-> needs to be powered off (suspended) on system power off, that is, when
-> system_state is equal to SYSTEM_POWER_OFF.
+> Would improving the comments here be enough ? E.g. something like:
 > 
-> Similarly to the other manage_xxx flags, the new manage_shutdown flag is
-> exposed through sysfs as a read-write device attribute.
+>         /* Let the HLD (sd) manage system suspend (start) and resume
+> (stop).
+>          * This applies to both suspend to RAM and suspend to disk
+>          * (hybernation).
+>          */
+>         bool manage_system_start_stop;
 > 
-> To avoid any confusion between manage_shutdown and
-> manage_system_start_stop, the comments describing these flags in
-> include/scsi/scsi.h are also improved.
+>         /*
+>          * Let the HLD (sd) manage device runtime suspend (stop) and
+>          * resume (start).
+>          */
+>         bool manage_runtime_start_stop;
 > 
-> Fixes: aa3998dbeb3a ("ata: libata-scsi: Disable scsi device manage_system_start_stop")
-> Cc: stable@vger.kernel.org
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218038
-> Link: https://lore.kernel.org/all/cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com/
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>
-> ---
-> Changes from v2:
->   * Fixed typo in the comments added to include/scsi/scsi_device.h
->   * Added Niklas's review tag
-> Changes from v1:
->   * Improved flags description in include/scsi/scsi_device.h
->   * Added missing sysfs export of manage_shutdown
-> 
->   drivers/ata/libata-scsi.c  |  5 +++--
->   drivers/firewire/sbp2.c    |  1 +
->   drivers/scsi/sd.c          | 39 +++++++++++++++++++++++++++++++++++---
->   include/scsi/scsi_device.h | 20 +++++++++++++++++--
->   4 files changed, 58 insertions(+), 7 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+>         /* Let the HLD (sd) manage system power-off (shutdown) */
+>         bool manage_shutdown;
 
-Cheers,
+Heh, well, I was going to say we should still point to the doc, but I
+simply can't find it, so the above is perhaps the best we can do,
+thanks!
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
-Myers, Andrew McDonald, Martje Boudien Moerman
+James
 
