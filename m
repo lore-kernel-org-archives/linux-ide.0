@@ -2,72 +2,103 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A16C25B67
-	for <linux-ide@archiver.kernel.org>; Fri, 27 Oct 2023 07:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 918C2C25B47
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Oct 2023 07:41:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235017AbjJ0Hbj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 27 Oct 2023 03:31:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58998 "EHLO
+        id S1345289AbjJ0Hlf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 27 Oct 2023 03:41:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345578AbjJ0HbZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 27 Oct 2023 03:31:25 -0400
+        with ESMTP id S234963AbjJ0Hlf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 27 Oct 2023 03:41:35 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BDEE1705
-        for <linux-ide@vger.kernel.org>; Fri, 27 Oct 2023 00:31:17 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7CD7C433C7;
-        Fri, 27 Oct 2023 07:31:16 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A747116;
+        Fri, 27 Oct 2023 00:41:33 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A645AC433C8;
+        Fri, 27 Oct 2023 07:41:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698391877;
-        bh=83Npn6lP//bZWIRXGC9KUviMtipSYP51x3/4c9RWfuo=;
-        h=From:To:Subject:Date:From;
-        b=Rsnd+rovorrk539wUrBO8+d9eYTN27lcEhotmFVyY6hBA+VaRgxBezJIfTOj9ojMo
-         8LoqMYmV0exbgIqJciVP9g88IJQYHatS+wAb+0Gr1kBXzqpLZgauul19/MerYsv4mr
-         0EdO67FDkVmb4lPJfHa60rawx9TcwDy5vFlko1s2TZLSPwqdKJm89kVP+y3lGiYz3b
-         nrWwfS9bfIVg7VOlD3F+u6tnouCNOF64/uNcB6H490NZ6YK3Q2jLLkNn603nLZ6URo
-         5EiNT+awTesL65M0dblut1VhtiMZlV8ye/GokswdYi2CWigC+9LGsjonFVVVvDWEjm
-         QQi2DCGpvln+g==
-From:   Damien Le Moal <dlemoal@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 6.6-final
-Date:   Fri, 27 Oct 2023 16:31:15 +0900
-Message-ID: <20231027073115.170201-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.41.0
+        s=k20201202; t=1698392492;
+        bh=NvacY1hEpnqQButdl2GZZQ6vULuGFAPU0qOtVRd1wRo=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=e/5k/Mhyzvsd0Sz+hPynIiHfCMpBcCwbq4rpPw5o6xUJBpa24Xjb48yTiUTxabp7i
+         xFe7psurwgdbDN1OuYTczgK1JvLGzeg8czCoLoWHuUEqcMdq+EgGwz4IfoIEkD3WU5
+         VfClx8D9TFTSShSpiL6Nw0r5JFWaE+q6yTwOInz1O+SXvHFODkLaFQBjZyCBwkgH0f
+         YMaqfugGIKT4LnxjfpyUbqiOe3u2HE5vf47x7p3/1FEJynq/hAqRduNgSpVD0KeTOC
+         Eanb/0NG99tTsEYzGgWTQfPi9B7Brec3BbUbBMMFM+ewsniotp9vTCpTqaC2DX3e2u
+         0G18SbH5kXxYA==
+Message-ID: <a704bb1e-4be0-46f8-8118-a18b0547375f@kernel.org>
+Date:   Fri, 27 Oct 2023 16:41:30 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: Fwd: bbbf096ea227607cbb348155eeda7af71af1a35b results in "dirty"
+ shutdown
+Content-Language: en-US
+To:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Tejun Heo <tj@kernel.org>,
+        Totallyreal Name <kotversuchung@gmail.com>,
+        loqs <kernel_bugzilla@entropy-collector.net>
+References: <cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <cd397c88-bf53-4768-9ab8-9d107df9e613@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+On 10/25/23 09:40, Bagas Sanjaya wrote:
+> Hi,
+> 
+> I notice a regression report on Bugzilla that seems to have been
+> handled already there [1]. Quoting from it:
+> 
+>> I have noticed that after each shutdown SMART would log +1 on each raw_value of drives that count power related issues.
+>>
+>> Here are some of the smart values where i noticed increase among different drives
+>>
+>> POR_Recovery_Count 
+>> Unexpect_Power_Loss_Ct  
+>> Power-Off_Retract_Count 
+>>
+>> That doesn't happen on previous Kernels.. and it stops as soon as i switch back to LTS.
+>> I seeked through the Bug Reports but couldn't really find the issue. So i don't know if this has been reported or patched already.
+> 
+> Another reporter had found the culprit:
+> 
+>>
+>>
+>> This has been reported as being introduced in stable 6.5.8 [1].  Reverting commit 	bbbf096ea227607cbb348155eeda7af71af1a35b is reported to solve the issue [2]. bbbf096ea227607cbb348155eeda7af71af1a35b [3] is mainline commit aa3998dbeb3abce63653b7f6d4542e7dcd022590 [4] which was introduced in 6.6-rc4 which matches the original report.
+>>
+>> [1]: https://bugs.archlinux.org/task/80064
+>> [2]: https://bugs.archlinux.org/task/80064#comment223100
+>> [3]: https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=bbbf096ea227607cbb348155eeda7af71af1a35b
+>> [4]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=aa3998dbeb3abce63653b7f6d4542e7dcd022590
+> 
+> See Bugzilla for the full thread.
+> 
+> Anyway, I'm adding this regression to regzbot:
+> 
+> #regzbot introduced: aa3998dbeb3abc https://bugzilla.kernel.org/show_bug.cgi?id=218038
+> #regzbot title: dirty shutdown due to disabling manage_system_start_stop on SCSI devices
+> #regzbot link: https://bugs.archlinux.org/task/80064
 
-The following changes since commit 626b13f015e080e434b1dee9a0c116ddbf4fb695:
+#regzbot fixed-by: 24eca2dce0f8d19db808c972b0281298d0bafe99
 
-  scsi: Do not rescan devices with a suspended queue (2023-10-10 14:42:22 +0900)
 
-are available in the Git repository at:
+> 
+> Thanks.
+> 
+> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=218038
+> 
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.6-final
+-- 
+Damien Le Moal
+Western Digital Research
 
-for you to fetch changes up to 24eca2dce0f8d19db808c972b0281298d0bafe99:
-
-  scsi: sd: Introduce manage_shutdown device flag (2023-10-27 10:00:19 +0900)
-
-----------------------------------------------------------------
-ATA fixes for 6.6-final
-
-A single patch to fix a regression introduced by the recent
-suspend/resume fixes. The regression is that ATA disks are not stopped
-on system shutdown, which is not recommended and increases the disks
-SMART counters for unclean power off events. This patch fixes this by
-refining the recent rework of the scsi device manage_xxx flags.
-
-----------------------------------------------------------------
-Damien Le Moal (1):
-      scsi: sd: Introduce manage_shutdown device flag
-
- drivers/ata/libata-scsi.c  |  5 +++--
- drivers/firewire/sbp2.c    |  1 +
- drivers/scsi/sd.c          | 39 ++++++++++++++++++++++++++++++++++++---
- include/scsi/scsi_device.h | 20 ++++++++++++++++++--
- 4 files changed, 58 insertions(+), 7 deletions(-)
