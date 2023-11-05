@@ -2,58 +2,94 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73BAEC4332F
-	for <linux-ide@archiver.kernel.org>; Sat,  4 Nov 2023 04:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49E81C4332F
+	for <linux-ide@archiver.kernel.org>; Sun,  5 Nov 2023 15:01:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233707AbjKDE6L (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 4 Nov 2023 00:58:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44852 "EHLO
+        id S229608AbjKEPBC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 5 Nov 2023 10:01:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229509AbjKDE6K (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 4 Nov 2023 00:58:10 -0400
-X-Greylist: delayed 4270 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 03 Nov 2023 21:58:08 PDT
-Received: from mail.profitpathwaygo.com (mail.profitpathwaygo.com [141.94.21.238])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E168112
-        for <linux-ide@vger.kernel.org>; Fri,  3 Nov 2023 21:58:08 -0700 (PDT)
-Received: by mail.profitpathwaygo.com (Postfix, from userid 1002)
-        id 80812518A9; Mon, 30 Oct 2023 08:30:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=profitpathwaygo.com;
-        s=mail; t=1698654824;
-        bh=qp3Ofokho6Ql+WtI8ZPVilyHYhskXL7fod7u9CWs8W4=;
-        h=Date:From:To:Subject:From;
-        b=k10pYOUamjyU+vzKX5JCJrGt5UD/5KPOTXftkNaOvSePoesBlXiWTxvaCEHhX+DIP
-         GHji0hwEDn7CYVwkv9AT2lB6LU7vGkRopy/n8y7vT+LBFf8bQmJTe/0P0lytkKUDOr
-         SerotL4aGzOJu31ihQxrx1ogRdfypdv6IGwsQuW9GYFE/zzgyM8cT+i5ssUZx5PbRz
-         KDjOBxa/YlCpTj31B0Wg/Rtvy00f2UbCLsAtD/Q7dHE9eABHiS0N7Yy3WY4AIdL/VM
-         wSLGhjbY7FlgLFf/ThI4vQd8Yi5adnccuIhpHBL3NKk1kbL1rBV/A2aFzbyu4k5AZ9
-         5aFLAJtsDzkCg==
-Received: by mail.profitpathwaygo.com for <linux-ide@vger.kernel.org>; Mon, 30 Oct 2023 08:30:28 GMT
-Message-ID: <20231030074500-0.1.2s.154gf.0.w78ranapp3@profitpathwaygo.com>
-Date:   Mon, 30 Oct 2023 08:30:28 GMT
-From:   "Adam Charachuta" <adam.charachuta@profitpathwaygo.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania_?=
-X-Mailer: mail.profitpathwaygo.com
+        with ESMTP id S230260AbjKEPBB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 5 Nov 2023 10:01:01 -0500
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5A31E0
+        for <linux-ide@vger.kernel.org>; Sun,  5 Nov 2023 07:00:58 -0800 (PST)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qzecR-0002zF-7V; Sun, 05 Nov 2023 16:00:55 +0100
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qzecQ-006oU3-Am; Sun, 05 Nov 2023 16:00:54 +0100
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qzecQ-00DBt0-1a; Sun, 05 Nov 2023 16:00:54 +0100
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        kernel@pengutronix.de, linux-kbuild@vger.kernel.org
+Subject: [PATCH 0/4] ata: Drop platform_driver_probe() and convert to platform remove callback returning void (part II)
+Date:   Sun,  5 Nov 2023 16:00:35 +0100
+Message-ID: <20231105150037.3724669-6-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.42.0.482.g2e8e77cbac8a.dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1896; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=zQwS8Il+WgtfBqkO69r1zQOhOBlGGdfD3HH7HJrmADc=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlR64VeSiUDnZzDgKQRHabjxLzSqL9HyGnyr2AB NpP/+Jqwp6JATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZUeuFQAKCRCPgPtYfRL+ TlA2B/4/9VMQvRNJN/yOZODybuHUfIiaVLoQu44ePCFv9bfdwm5S23DLJw9klopgEJHb3vOK0Mr a7sN9ABzdEnegf7HloWEVkMhJbhmmWKRchXXUGNYVLyoOj8UrQWpyiYYkYd236Rz9f7poRN7c74 c6DvrjX/y8i/kO9CgkZbEBPObQZxwkBZ/gy4PM9aLle3jzzaAH2VkhCyDJnIgSwBsqeQjmSWIVH yb3mAMqp3kF08Nw6O4MKnR1dI8et4ATut7OfgXmtxsQRcb1CVk3LbCBDNeT8VLwQyuWO8AAL2NY vXAkOlsImQyyVjEakHCkuTRUdp6AOoizuPjh2GRdVPMsOQK3
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hello,
 
-zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
-=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
-o dalszych rozm=C3=B3w.=20
+there are two different types of patches here that would justify to
+different series. But as the patches are not independent I chose to put
+them in a single series.
 
-Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
-=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
-=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
-strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
+The first two patches drop usage of platform_driver_probe(). This is a
+concept that isn't so relevant any more today. I didn't check, but it
+saves typically only a few 100k and there are thoughts to deprecate it
+to simplify the core. Getting the usage right is not trivial though the
+drivers here got it nearly right. The alternative to these patches is to
+add __refdata to the driver struct ideally with a comment describing the
+need like is e.g. done in commit 5b44abbc39ca ("platform/x86: hp-wmi::
+Mark driver struct with __refdata to prevent section mismatch warning").
+Note that the warning only happens starting with commit f177cd0c15fc
+("modpost: Don't let "driver"s reference .exit.*") that is expected to
+be part of v6.7-rc1.
 
-Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
+The remaining two patches convert the platform drivers to .remove_new(),
+see commit 5c5a7680e67b ("platform: Provide a remove callback that
+returns no value") for an extended explanation and the eventual goal.
+All conversions are trivial as the remove functions return zero
+unconditionally. The other ata drivers were already converted earlier,
+my coccinelle script just missed these two drivers (because of the
+__exit_p macro).
+
+Best regards
+Uwe
+
+Uwe Kleine-König (4):
+  ata: pata_falcon: Stop using module_platform_driver_probe()
+  ata: pata_gayle: Stop using module_platform_driver_probe()
+  ata: pata_falcon: Convert to platform remove callback returning void
+  ata: pata_gayle: Convert to platform remove callback returning void
+
+ drivers/ata/pata_falcon.c | 11 +++++------
+ drivers/ata/pata_gayle.c  | 11 +++++------
+ 2 files changed, 10 insertions(+), 12 deletions(-)
 
 
-Pozdrawiam serdecznie
-Adam Charachuta
+base-commit: e27090b1413ff236ca1aec26d6b022149115de2c
+-- 
+2.42.0
+
