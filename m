@@ -2,112 +2,76 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CDE1C001B0
-	for <linux-ide@archiver.kernel.org>; Sun,  5 Nov 2023 15:01:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 388C8C4332F
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Nov 2023 02:32:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230422AbjKEPBP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 5 Nov 2023 10:01:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38586 "EHLO
+        id S229671AbjKFCc4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 5 Nov 2023 21:32:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230312AbjKEPBC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 5 Nov 2023 10:01:02 -0500
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51B45D8
-        for <linux-ide@vger.kernel.org>; Sun,  5 Nov 2023 07:01:00 -0800 (PST)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qzecR-0002zQ-9D; Sun, 05 Nov 2023 16:00:55 +0100
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qzecQ-006oU9-Si; Sun, 05 Nov 2023 16:00:54 +0100
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qzecQ-00DBt7-HJ; Sun, 05 Nov 2023 16:00:54 +0100
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
-        kernel@pengutronix.de, linux-kbuild@vger.kernel.org
-Subject: [PATCH 2/4] ata: pata_gayle: Stop using module_platform_driver_probe()
-Date:   Sun,  5 Nov 2023 16:00:37 +0100
-Message-ID: <20231105150037.3724669-8-u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.42.0.482.g2e8e77cbac8a.dirty
-In-Reply-To: <20231105150037.3724669-6-u.kleine-koenig@pengutronix.de>
-References: <20231105150037.3724669-6-u.kleine-koenig@pengutronix.de>
+        with ESMTP id S229486AbjKFCcz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 5 Nov 2023 21:32:55 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03407D6
+        for <linux-ide@vger.kernel.org>; Sun,  5 Nov 2023 18:32:53 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D129C433C7;
+        Mon,  6 Nov 2023 02:32:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699237972;
+        bh=WLdP1MtfipHOEX5i8gjLWUGJTuwStA0dYSQURRItWoY=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=PeBZxjSOQjGDO5zkso/Ix2e8E5Ki1UaFHFRrVZsDJL/UvIZJd8WiNX7jb0jETut4i
+         VmkSsCnjrNbtybSSFrw1G6j1Oihl3SNB7wzpzhY0BodnyEkhmXVeuyYQdL3Mj0xen2
+         o3lkwED7ul6qpdFaCZtoA158hUA8zhIfhmu6ql23YBjBTgEZ3gblnbogVvkAk5nw2Y
+         VwBsl894HKHRRZPvbor4ExbBG8QxeasdSfg8bhlnoIEjZ5KPKJbXwWRBMMVzUGwIi2
+         iqQA4zLb2ox0jaOiNbz11lOi2lElC8wXrpgqC+rcJYCf/xdw6rNHgP8lRqUTiHAsHn
+         p+ukzUdqqsMzQ==
+Message-ID: <e469fbc3-9b7f-422d-8ff7-08c426eafbaf@kernel.org>
+Date:   Mon, 6 Nov 2023 11:32:51 +0900
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 04/23] scsi: sd: Differentiate system and runtime
+ start/stop management
+Content-Language: en-US
+To:     Phillip Susi <phill@thesusis.net>
+Cc:     linux-ide@vger.kernel.org
+References: <87edhz3bry.fsf@vps.thesusis.net>
+ <672365d4-bdd6-47c9-b0be-6756f523db59@kernel.org>
+ <871qdyh9na.fsf@vps.thesusis.net>
+ <ff334ece-ca5b-490b-91d7-6bb51fd2e2b3@kernel.org>
+ <87sf63hnbg.fsf@vps.thesusis.net>
+ <969790e6-7050-43b9-bb0b-4b55baa21cc9@kernel.org>
+ <87h6m24srm.fsf@vps.thesusis.net> <87wmuyqw5t.fsf@vps.thesusis.net>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <87wmuyqw5t.fsf@vps.thesusis.net>
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2275; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=LbK9Tg1XnSWlrNwILoe3+9o72vLYA7IUvjJ2HdrJ/cs=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlR64XEu0h8i3Tbes67W9npNlv/lwt06zlgG/K5 /ZRHdbeqEWJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZUeuFwAKCRCPgPtYfRL+ ThTSB/9g0RCxSIo6WdKyLlV9ylF4jzAFCJGslrSm8ZPYQtbR1H+WQjvAeM9YaNK3r5y3H3Oczzn z+OV9jdWRlhPZkR+wUCnEvyT1xvuGjb8FWxB2U0lvq+dsJ7xFcG0qJimU16CM+xewvO2V8s3kwh +WPMUQ5W/k5wbXT5LoRYrHqhHB03VHJpUkvOA4vl7qmsWtYvzTZi/exJ12yweSPQeFeDnTHnJ5+ UB8zUuQVH/5WIhFuolME7epMZ5vjkQrEr6cxy7lrGnTwevvyX35Exhlyym5DshlKIxr7da9xv/Q k5ph2+m6zA4gkAFmxA2I6yqDWzH/nN0tyECJE9q9FIAcH4x5
-X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On today's platforms the benefit of platform_driver_probe() isn't that
-relevant any more. It allows to drop some code after booting (or module
-loading) for .probe() and discard the .remove() function completely if
-the driver is built-in. This typically saves a few 100k.
+On 11/4/23 08:01, Phillip Susi wrote:
+> Here is the patch.  The hang I saw before appears to be related to how
+> I'm trying to force the runtime_pm status in
+> ata_eh_revalidate_and_attach().  If I comment that part out, the hang
+> goes away.  I'm not sure why I can't work out the right way to force the
+> runtime pm status of the block device to agree with the actual status of
+> the disk as known to libata during system resume.  Even with a disk not
+> behind a PMP, while it does not cause a hang, it does not manage to get
+> the runtime pm state to reflect reality.  It still says active even
+> though the PuiS disk was left asleep.
 
-The downside of platform_driver_probe() is that the driver cannot be
-bound and unbound at runtime which is ancient and so slightly
-complicates testing. There are also thoughts to deprecate
-platform_driver_probe() because it adds some complexity in the driver
-core for little gain. Also many drivers don't use it correctly. This
-driver for example misses to mark the driver struct with __ref which is
-needed to suppress a (W=1) modpost warning.
+That is because the PM operations are defined for the *port*, not the *device*
+(struct ata_device). With the missing PM ops for the device, PM core simply
+sets the device as active.
 
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
----
- drivers/ata/pata_gayle.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Also, the port PM runtime resume operation is synchronous with EH, that is, it
+waits for EH to complete before returning. This wait is done with the device
+lock held, so calling any PM function that takes the device lock within EH
+context can deadlock... That is very likely what you are seeing.
 
-diff --git a/drivers/ata/pata_gayle.c b/drivers/ata/pata_gayle.c
-index 3bdbe2b65a2b..e10411b02047 100644
---- a/drivers/ata/pata_gayle.c
-+++ b/drivers/ata/pata_gayle.c
-@@ -124,7 +124,7 @@ static struct ata_port_operations pata_gayle_a4000_ops = {
- 	.set_mode	= pata_gayle_set_mode,
- };
- 
--static int __init pata_gayle_init_one(struct platform_device *pdev)
-+static int pata_gayle_init_one(struct platform_device *pdev)
- {
- 	struct resource *res;
- 	struct gayle_ide_platform_data *pdata;
-@@ -193,7 +193,7 @@ static int __init pata_gayle_init_one(struct platform_device *pdev)
- 	return 0;
- }
- 
--static int __exit pata_gayle_remove_one(struct platform_device *pdev)
-+static int pata_gayle_remove_one(struct platform_device *pdev)
- {
- 	struct ata_host *host = platform_get_drvdata(pdev);
- 
-@@ -203,13 +203,14 @@ static int __exit pata_gayle_remove_one(struct platform_device *pdev)
- }
- 
- static struct platform_driver pata_gayle_driver = {
--	.remove = __exit_p(pata_gayle_remove_one),
-+	.probe = pata_gayle_init_one,
-+	.remove = pata_gayle_remove_one,
- 	.driver   = {
- 		.name	= "amiga-gayle-ide",
- 	},
- };
- 
--module_platform_driver_probe(pata_gayle_driver, pata_gayle_init_one);
-+module_platform_driver(pata_gayle_driver);
- 
- MODULE_AUTHOR("Bartlomiej Zolnierkiewicz");
- MODULE_DESCRIPTION("low-level driver for Amiga Gayle PATA");
 -- 
-2.42.0
+Damien Le Moal
+Western Digital Research
 
