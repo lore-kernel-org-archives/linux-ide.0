@@ -2,38 +2,37 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F25D9C4167D
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Nov 2023 09:56:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F092C4332F
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Nov 2023 09:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230231AbjKFJ4H (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 6 Nov 2023 04:56:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60986 "EHLO
+        id S229922AbjKFJ5E (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Nov 2023 04:57:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230299AbjKFJ4H (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Nov 2023 04:56:07 -0500
+        with ESMTP id S229689AbjKFJ5D (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Nov 2023 04:57:03 -0500
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 670E3DB;
-        Mon,  6 Nov 2023 01:56:04 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A954FB6
+        for <linux-ide@vger.kernel.org>; Mon,  6 Nov 2023 01:57:00 -0800 (PST)
 Received: from [192.168.1.103] (178.176.74.73) by msexch01.omp.ru
  (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Mon, 6 Nov
- 2023 12:55:57 +0300
-Subject: Re: [PATCH 2/4] ata: pata_gayle: Stop using
- module_platform_driver_probe()
+ 2023 12:56:53 +0300
+Subject: Re: [PATCH 3/4] ata: pata_falcon: Convert to platform remove callback
+ returning void
 To:     =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
         Damien Le Moal <dlemoal@kernel.org>
-CC:     <linux-ide@vger.kernel.org>, <kernel@pengutronix.de>,
-        <linux-kbuild@vger.kernel.org>
+CC:     <linux-ide@vger.kernel.org>, <kernel@pengutronix.de>
 References: <20231105150037.3724669-6-u.kleine-koenig@pengutronix.de>
- <20231105150037.3724669-8-u.kleine-koenig@pengutronix.de>
+ <20231105150037.3724669-9-u.kleine-koenig@pengutronix.de>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <236150f7-265c-db55-7bf4-c57159cbeee0@omp.ru>
-Date:   Mon, 6 Nov 2023 12:55:56 +0300
+Message-ID: <87597e61-77b4-06db-41b3-37b93ab3e517@omp.ru>
+Date:   Mon, 6 Nov 2023 12:56:53 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <20231105150037.3724669-8-u.kleine-koenig@pengutronix.de>
+In-Reply-To: <20231105150037.3724669-9-u.kleine-koenig@pengutronix.de>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -81,18 +80,18 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 On 11/5/23 6:00 PM, Uwe Kleine-König wrote:
 
-> On today's platforms the benefit of platform_driver_probe() isn't that
-> relevant any more. It allows to drop some code after booting (or module
-> loading) for .probe() and discard the .remove() function completely if
-> the driver is built-in. This typically saves a few 100k.
+> The .remove() callback for a platform driver returns an int which makes
+> many driver authors wrongly assume it's possible to do error handling by
+> returning an error code. However the value returned is ignored (apart
+> from emitting a warning) and this typically results in resource leaks.
 > 
-> The downside of platform_driver_probe() is that the driver cannot be
-> bound and unbound at runtime which is ancient and so slightly
-> complicates testing. There are also thoughts to deprecate
-> platform_driver_probe() because it adds some complexity in the driver
-> core for little gain. Also many drivers don't use it correctly. This
-> driver for example misses to mark the driver struct with __ref which is
-> needed to suppress a (W=1) modpost warning.
+> To improve here there is a quest to make the remove callback return
+> void. In the first step of this quest all drivers are converted to
+> .remove_new(), which already returns void. Eventually after all drivers
+> are converted, .remove_new() will be renamed to .remove().
+> 
+> Trivially convert this driver from always returning zero in the remove
+> callback to the void returning variant.
 > 
 > Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 
