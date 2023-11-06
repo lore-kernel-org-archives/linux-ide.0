@@ -2,27 +2,27 @@ Return-Path: <linux-ide-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E1E7C4332F
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Nov 2023 13:07:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D6DC4332F
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Nov 2023 13:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231676AbjKFNHC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 6 Nov 2023 08:07:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47616 "EHLO
+        id S229934AbjKFNLf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Nov 2023 08:11:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231958AbjKFNHB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Nov 2023 08:07:01 -0500
+        with ESMTP id S231980AbjKFNLf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Nov 2023 08:11:35 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97BBBD;
-        Mon,  6 Nov 2023 05:06:56 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 034C2C433C8;
-        Mon,  6 Nov 2023 13:06:55 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BD6FBF;
+        Mon,  6 Nov 2023 05:11:31 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7480EC433C7;
+        Mon,  6 Nov 2023 13:11:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1699276016;
-        bh=G5sZf6fK1nlx5R2QsxpiaiyqCfWcniUa2WPxg93+PZQ=;
+        s=korg; t=1699276290;
+        bh=5bz3rwC+vpDTPXQU00TSgGFpTbB1V4Jfm5S1P0L0nEE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CgfVzfG9Jy6J3HITw8iAsQMnKBOsajUEv8kvqNiFqCzpxz6rvRmj3LooptwatSHLr
-         TBcr3qxCb/wEHx2QETKsg0rGSx1KCR3ri1V4KuOdF8lsyWL9ZIyp0Zgen+O08/bGXR
-         sf9yhyNgVM2HRoz0PWLYzRdT48Fw86R7uuX4xdJw=
+        b=CjyA7MwIR3w/HhoEOePox2qfr91PqFqgKBT56IbWAhpeeiJfkvBuhepjRdvyBHRDZ
+         rCYZ7cdJvX4Wg6ze4RBA1ACsi6Ijop5V/g1FLzF4WOcnBMnY1Qmaq/L3i7JabxM2Xp
+         O6XUKBz6oblU8GNgyeIrgrMf1I51RC6DecoVNED0=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     stable@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -32,12 +32,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Randy Dunlap <rdunlap@infradead.org>,
         Arnd Bergmann <arnd@arndb.de>,
         Paul Barker <paul.barker.ct@bp.renesas.com>
-Subject: [PATCH 4.14 40/48] ata: ahci: fix enum constants for gcc-13
-Date:   Mon,  6 Nov 2023 14:03:31 +0100
-Message-ID: <20231106130259.233022820@linuxfoundation.org>
+Subject: [PATCH 4.19 54/61] ata: ahci: fix enum constants for gcc-13
+Date:   Mon,  6 Nov 2023 14:03:50 +0100
+Message-ID: <20231106130301.439069976@linuxfoundation.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231106130257.862199836@linuxfoundation.org>
-References: <20231106130257.862199836@linuxfoundation.org>
+In-Reply-To: <20231106130259.573843228@linuxfoundation.org>
+References: <20231106130259.573843228@linuxfoundation.org>
 User-Agent: quilt/0.67
 X-stable: review
 X-Patchwork-Hint: ignore
@@ -47,7 +47,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-4.14-stable review patch.  If anyone has any objections, please let me know.
+4.19-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -86,12 +86,12 @@ Cc: Randy Dunlap <rdunlap@infradead.org>
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 Tested-by: Luis Machado <luis.machado@arm.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-[Backport to linux-4.14.y]
+[Backport to linux-4.19.y]
 Signed-off-by: Paul Barker <paul.barker.ct@bp.renesas.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/ata/ahci.h |  230 ++++++++++++++++++++++++++---------------------------
- 1 file changed, 116 insertions(+), 114 deletions(-)
+ drivers/ata/ahci.h |  232 ++++++++++++++++++++++++++---------------------------
+ 1 file changed, 117 insertions(+), 115 deletions(-)
 
 --- a/drivers/ata/ahci.h
 +++ b/drivers/ata/ahci.h
@@ -288,7 +288,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  
  	/* PORT_DEVSLP bits */
  	PORT_DEVSLP_DM_OFFSET	= 25,             /* DITO multiplier offset */
-@@ -213,44 +215,44 @@ enum {
+@@ -213,45 +215,45 @@ enum {
  	PORT_DEVSLP_DITO_OFFSET	= 15,             /* DITO offset */
  	PORT_DEVSLP_MDAT_OFFSET	= 10,             /* Minimum assertion time */
  	PORT_DEVSLP_DETO_OFFSET	= 2,              /* DevSlp exit timeout */
@@ -353,14 +353,16 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 -	AHCI_HFLAG_YES_ALPM		= (1 << 23), /* force ALPM cap on */
 -	AHCI_HFLAG_NO_WRITE_TO_RO	= (1 << 24), /* don't write to read
 -							only registers */
+-	AHCI_HFLAG_IS_MOBILE		= (1 << 25), /* mobile chipset, use
 +	AHCI_HFLAG_WAKE_BEFORE_STOP	= BIT(22), /* wake before DMA stop */
 +	AHCI_HFLAG_YES_ALPM		= BIT(23), /* force ALPM cap on */
 +	AHCI_HFLAG_NO_WRITE_TO_RO	= BIT(24), /* don't write to read
 +						      only registers */
++	AHCI_HFLAG_IS_MOBILE		= BIT(25), /* mobile chipset, use
+ 							SATA_MOBILE_LPM_POLICY
+ 							as default lpm_policy */
  
- 	/* ap->flags bits */
- 
-@@ -264,22 +266,22 @@ enum {
+@@ -269,22 +271,22 @@ enum {
  	EM_MAX_RETRY			= 5,
  
  	/* em_ctl bits */
