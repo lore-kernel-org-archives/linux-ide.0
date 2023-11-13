@@ -1,116 +1,109 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C15EA12B96;
-	Mon, 13 Nov 2023 10:23:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA7A22F11
+	for <linux-ide@vger.kernel.org>; Mon, 13 Nov 2023 19:15:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FKPymDsO"
-Received: from mail-yw1-x1132.google.com (mail-yw1-x1132.google.com [IPv6:2607:f8b0:4864:20::1132])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1418D75;
-	Mon, 13 Nov 2023 02:23:32 -0800 (PST)
-Received: by mail-yw1-x1132.google.com with SMTP id 00721157ae682-5bf5d6eaf60so43584527b3.2;
-        Mon, 13 Nov 2023 02:23:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699871012; x=1700475812; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ISelrhUz+tUwTPOpVjAn5G1ABI4YmRZvCmOYJcKmy7Q=;
-        b=FKPymDsO6DcEeuw50V07tfIdJBSarXf+j18wnrkYVnw2RmkMZhphzbR3iiVlDR2PYF
-         mYPFD6CtTLHlr+mzzHwFHDrEyOH7t8B2nWftiAPhHGeQ2etaYOlopkjSHTSG4iYjiXKU
-         26/nSzQ+dAGlokiHLt667qktFJiB3bMulkr6aIWn+BcPj6Ourj/nn1dbXUswHiRMiRW6
-         4N310Ld2MvfaA4b1Q0VBqGIGgcFXEDIix8jTNaugmFWyqlQVZ1vTonDQ0yaHxknym6VV
-         IEtCPqGctWVWWiSnaEKAwNbdqfCXAgC5scAMby3VNYJTEtk8tYylV1kxb07K6H6SLDsF
-         8JaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699871012; x=1700475812;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ISelrhUz+tUwTPOpVjAn5G1ABI4YmRZvCmOYJcKmy7Q=;
-        b=sc67gZCiBaFg49cXXypw+w4ElFoz4eT2QRhx0B8IWbN2SkuJnSDRjq1QEo8v4eEp8J
-         zM4FipFrNRAU32G2/+0Jnwu4qubtgTAbX5hi9AfHZz+0teHs0bQA3NoMcShn8X0T6GRN
-         cVTse907IV5t4g/LNwEcTtRGNdJNOCWgOBbKsWCalG7aSRNwU+RYx8TaDzXmrjapSLRS
-         F3ODeUc9fIBS1EjtU0cfmgMG1dnMpzigLaR8qsQxCU5bf0kw2pDGcLoiGYrsM1jnCbuY
-         CR9kPIbhQt7R8MfQ6f1K00y2gRQ1U/QxgojyF1NAVf0uy3DhRWlWLSXqB1QHyzO1Yq3/
-         rgOQ==
-X-Gm-Message-State: AOJu0YxPmRyPoMeWR3mSDABUzksR4caSuPpNJQUWSJZDhXS5ja/jwVGm
-	alOdGOHKblf9seHw8IU67osSAhfbmad/FK5firU=
-X-Google-Smtp-Source: AGHT+IGeFMq6OPRYVFpLBqn7U8F7RLctOzbaeZinyDCceNJQA9yzq0afSM1d3lxBYSz248sE7pBipt1geSP2uWLF31w=
-X-Received: by 2002:a81:4782:0:b0:5a7:a817:be43 with SMTP id
- u124-20020a814782000000b005a7a817be43mr6070415ywa.6.1699871011907; Mon, 13
- Nov 2023 02:23:31 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="Vus6hJZd"
+Received: from smtp.smtpout.orange.fr (smtp-19.smtpout.orange.fr [80.12.242.19])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC5773859
+	for <linux-ide@vger.kernel.org>; Mon, 13 Nov 2023 11:14:44 -0800 (PST)
+Received: from [192.168.1.18] ([86.243.2.178])
+	by smtp.orange.fr with ESMTPA
+	id 2cNFrerPZFh5i2cOPrKNl3; Mon, 13 Nov 2023 20:14:42 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1699902882;
+	bh=cw7DzfrPCld7xSzODOtzNR7CsG05Gedc/Tg0+WmnlFY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Vus6hJZdgAD6gPCyctSi31zSnS0OffNGTJcUNC8rjmd7KNN8TVaQHEsaYDS0DbwfE
+	 BNjCprzVTYa0zAKJSAOnNn1BWahlyLOoeqgyL7L//dd3zzr35cfjlQ3Er4/xgMhNSa
+	 rkgvBPTxuq4KV40bgzZQ+PBA33/XWVHoSsP30vch+9OCwYhmTWtzOM+pkJNu0x/P4I
+	 oJrrPJWNjjMYh+Ocfww8DN+wDBzbH1U8rtPstYuMm6mGtJVEJxpb6s6bkRKk2mtuA+
+	 GRLBzAlkeqejoUEIsr8O9gKrpldQ3i4myYLIO7WAV6s9TV1ZV+Rzol11mzFSz/SvNO
+	 0xBX2LYqcD6ng==
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Mon, 13 Nov 2023 20:14:42 +0100
+X-ME-IP: 86.243.2.178
+Message-ID: <cc2273ef-3539-41c3-b333-f87b309e895b@wanadoo.fr>
+Date: Mon, 13 Nov 2023 20:14:40 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20230605-ep93xx-v3-0-3d63a5f1103e@maquefel.me>
- <20230605-ep93xx-v3-14-3d63a5f1103e@maquefel.me> <ZLq0Z0QgBdCoDpV+@smile.fi.intel.com>
- <fcfdc6f05926db494ea0105e5523cc21ecfdf4e7.camel@gmail.com>
-In-Reply-To: <fcfdc6f05926db494ea0105e5523cc21ecfdf4e7.camel@gmail.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 13 Nov 2023 12:22:56 +0200
-Message-ID: <CAHp75VcsF8GtmE2iDf2xPWi7U5WXhi1ZFUSeA_Y+TfHQn72Jrg@mail.gmail.com>
-Subject: Re: [PATCH v3 14/42] power: reset: Add a driver for the ep93xx reset
-To: Alexander Sverdlin <alexander.sverdlin@gmail.com>
-Cc: Andy Shevchenko <andy@kernel.org>, nikita.shubin@maquefel.me, 
-	Hartley Sweeten <hsweeten@visionengravers.com>, Lennert Buytenhek <kernel@wantstofly.org>, 
-	Russell King <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>, 
-	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Thomas Gleixner <tglx@linutronix.de>, 
-	Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, 
-	Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Sebastian Reichel <sre@kernel.org>, Thierry Reding <thierry.reding@gmail.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Vinod Koul <vkoul@kernel.org>, Miquel Raynal <miquel.raynal@bootlin.com>, 
-	Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, 
-	Sergey Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, soc@kernel.org, 
-	Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Michael Peters <mpeters@embeddedts.com>, Kris Bahnsen <kris@embeddedts.com>, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-clk@vger.kernel.org, linux-rtc@vger.kernel.org, 
-	linux-watchdog@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org, netdev@vger.kernel.org, 
-	dmaengine@vger.kernel.org, linux-mtd@lists.infradead.org, 
-	linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
-	alsa-devel@alsa-project.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: pata_pxa: convert not to use
+ dma_request_slave_channel()
+Content-Language: fr
+To: Sergey Shtylyov <s.shtylyov@omp.ru>, Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+ "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+References: <f177835b7f0db810a132916c8a281bbdaf47f9d3.1699801657.git.christophe.jaillet@wanadoo.fr>
+ <ZVHYK1rI9Z8DcKJP@x1-carbon> <6e798343-1880-1c58-dd8e-1bd556f6a75b@omp.ru>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <6e798343-1880-1c58-dd8e-1bd556f6a75b@omp.ru>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 13, 2023 at 12:07=E2=80=AFPM Alexander Sverdlin
-<alexander.sverdlin@gmail.com> wrote:
-> On Fri, 2023-07-21 at 19:37 +0300, Andy Shevchenko wrote:
-> > > +       /* Issue the reboot */
->             ^^^^^^^^^^^^^^^^^^^^^^
-> This is the relevant comment, one can extend it, but looks already quite
-> informative considering EP93XX_SYSCON_DEVCFG_SWRST register name.
+Le 13/11/2023 à 11:17, Sergey Shtylyov a écrit :
+> On 11/13/23 11:05 AM, Niklas Cassel wrote:
+> [...]
+>>> dma_request_slave_channel() is deprecated. dma_request_chan() should
+>>> be used directly instead.
+>>>
+>>> Switch to the preferred function and update the error handling accordingly.
+>>>
+>>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+>>> ---
+>>>   drivers/ata/pata_pxa.c | 5 ++---
+>>>   1 file changed, 2 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+>>> index 5275c6464f57..0c9c9cf63d36 100644
+>>> --- a/drivers/ata/pata_pxa.c
+>>> +++ b/drivers/ata/pata_pxa.c
+>>> @@ -274,9 +274,8 @@ static int pxa_ata_probe(struct platform_device *pdev)
+>>>   	/*
+>>>   	 * Request the DMA channel
+>>>   	 */
+>>> -	data->dma_chan =
+>>> -		dma_request_slave_channel(&pdev->dev, "data");
+>>> -	if (!data->dma_chan)
+>>> +	data->dma_chan = dma_request_chan(&pdev->dev, "data");
+>>
+>> While the previous API could only return NULL on failure, the new API can
+>> return an actual error.
+>>
+>> I think we should return the actual error instead of -EBUSY.
+>>
+>> i.e.:
+>>
+>> if (IS_ERR(data->dma_chan))
+>> 	return PTR_ERR(data->dma_chan);
+> 
+>     Agreed. Christophe, please fix.
 
-This does not explain the necessity of the mdelay() below.
+Will do.
 
-> But Nikita would be able to include more verbose comment if
-> you'd have a suggestion.
+Thx for both of you for the review.
 
-Please,add one.
+CJ
 
-> > > +       ep93xx_devcfg_set_clear(priv->map, EP93XX_SYSCON_DEVCFG_SWRST=
-, 0x00);
-> > > +       ep93xx_devcfg_set_clear(priv->map, 0x00, EP93XX_SYSCON_DEVCFG=
-_SWRST);
-> >
-> >
-> > > +       mdelay(1000);
-> >
-> > Atomic?! Such a huge delay must be explained, esp. why it's atomic.
+> 
+> [...]
+>>> +	if (IS_ERR(data->dma_chan))
+>>>   		return -EBUSY;
+>>>   	ret = dmaengine_slave_config(data->dma_chan, &config);
+>>>   	if (ret < 0) {
+> [...]
+> 
+>> Kind regards,
+>> Niklas
+> 
+> MBR, Sergey
+> 
 
---=20
-With Best Regards,
-Andy Shevchenko
