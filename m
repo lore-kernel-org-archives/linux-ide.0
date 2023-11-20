@@ -1,32 +1,24 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79069E7;
-	Mon, 20 Nov 2023 08:06:15 -0800 (PST)
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1cc1ee2d8dfso40078855ad.3;
-        Mon, 20 Nov 2023 08:06:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700496375; x=1701101175;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rZ+qxFVgfW5BGuEHfemUGledCCSHjF9+1apkMtOgt7A=;
-        b=FechNfgou7vZhZ8fz+A3Larbb3Mr8tgXX1Oz5I5dp+g+zGVnDd3lwo5OKr/qYgnDVS
-         LpMQXf94L3JnZ8i2FeJEZGntE/qaO3LdjDSAptaLO+Qp1P1QVXccrE9EHVPY+j2oss8A
-         P4WkcwWgbWFqhJr2Gqn8Di4IqhglIryWaSMfJg1s9TvJWDd3zaI5FdCBylvOkxjVxhRh
-         TSdex6FBpgflFR2C3DUlI55IZ+JT0HZBLmzRbjbOVcRAp8LZuoC6Xfky7yOFQ9SJPzf8
-         9ZYdQWztS3FaR7GBgnYp729n7e2AmnKdpZUkpsgFQ9qD5qo54S1WqAMbSc0EpQ+tceIo
-         qslg==
-X-Gm-Message-State: AOJu0YzLzynqExMWfneHzu+o60Fyx3AZrEMJJeRROqCnTAMnr1K073Ic
-	UyBd8OrrfuDL3YvLMHLmx90=
-X-Google-Smtp-Source: AGHT+IEKwYcjxy/2FOoOpNM+rxurrLukEavkbSPBxZ932+gx9dYeNlp7sawMdEJHWC8fhwdykjpd9w==
-X-Received: by 2002:a17:902:7d84:b0:1ca:e491:f525 with SMTP id a4-20020a1709027d8400b001cae491f525mr8009399plm.31.1700496374679;
-        Mon, 20 Nov 2023 08:06:14 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id a22-20020a1709027d9600b001bf8779e051sm6186941plm.289.2023.11.20.08.06.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 20 Nov 2023 08:06:14 -0800 (PST)
-Message-ID: <6e72b067-15a3-47e2-98c3-fdeed054dfba@acm.org>
-Date: Mon, 20 Nov 2023 08:06:10 -0800
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8D9839864
+	for <linux-ide@vger.kernel.org>; Mon, 20 Nov 2023 22:53:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mxh9lEhJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89101C433C8;
+	Mon, 20 Nov 2023 22:53:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1700520830;
+	bh=aW9oiZ3o4UGPxFMSHXh5t1d8o/tBWYebBgReCYTpbkk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=mxh9lEhJ3xJlLKVaB60eVEkz0Dnf3NlNEQeQNJzKBhoosaKucxdmLfI3hyINl/Y72
+	 RGrCzzaceqz0yU8iZ/K4XZmnWhuSMhcMHu5Ikx6XbeUJrsF45pQ1UqUEuZHWmUPJRf
+	 lhPzTh919DXomilLCQhe54ocWRgpUu7rp2HhodpIx9djRRpCo4WhPA9Nf9oW8NK4Qd
+	 I1kv12hmxeZ6E5QbLlLH+pzDt/vCX/4Nb7iAYNxW6Hdn3x/KJEzxX18HxxePqNOHuz
+	 XwRxJBZ4pAJQgOdZcjK9Ru2/3ctqY7Ta3sGgopNKaGojK3x4pGFS5pDxOxCUAGWDmK
+	 l3TdKeKhqERDw==
+Message-ID: <8b9d4663-dca5-496a-a173-feb5d7bf01bc@kernel.org>
+Date: Tue, 21 Nov 2023 07:53:48 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -36,52 +28,68 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 1/2] scsi: Change scsi device boolean fields to single bit
  flags
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>,
+To: Bart Van Assche <bvanassche@acm.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
  James Bottomley <James.Bottomley@HansenPartnership.com>,
  linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 Cc: Phillip Susi <phill@thesusis.net>
 References: <20231120073522.34180-1-dlemoal@kernel.org>
  <20231120073522.34180-2-dlemoal@kernel.org>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231120073522.34180-2-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <6e72b067-15a3-47e2-98c3-fdeed054dfba@acm.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <6e72b067-15a3-47e2-98c3-fdeed054dfba@acm.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/19/23 23:35, Damien Le Moal wrote:
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 10480eb582b2..1fb460dfca0c 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -167,19 +167,19 @@ struct scsi_device {
->   	 * power state for system suspend/resume (suspend to RAM and
->   	 * hibernation) operations.
->   	 */
-> -	bool manage_system_start_stop;
-> +	unsigned manage_system_start_stop:1;
->   
->   	/*
->   	 * If true, let the high-level device driver (sd) manage the device
->   	 * power state for runtime device suspand and resume operations.
->   	 */
-> -	bool manage_runtime_start_stop;
-> +	unsigned manage_runtime_start_stop:1;
->   
->   	/*
->   	 * If true, let the high-level device driver (sd) manage the device
->   	 * power state for system shutdown (power off) operations.
->   	 */
-> -	bool manage_shutdown;
-> +	unsigned manage_shutdown:1;
->   
->   	unsigned removable:1;
->   	unsigned changed:1;	/* Data invalid due to media change */
+On 11/21/23 01:06, Bart Van Assche wrote:
+> On 11/19/23 23:35, Damien Le Moal wrote:
+>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>> index 10480eb582b2..1fb460dfca0c 100644
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -167,19 +167,19 @@ struct scsi_device {
+>>   	 * power state for system suspend/resume (suspend to RAM and
+>>   	 * hibernation) operations.
+>>   	 */
+>> -	bool manage_system_start_stop;
+>> +	unsigned manage_system_start_stop:1;
+>>   
+>>   	/*
+>>   	 * If true, let the high-level device driver (sd) manage the device
+>>   	 * power state for runtime device suspand and resume operations.
+>>   	 */
+>> -	bool manage_runtime_start_stop;
+>> +	unsigned manage_runtime_start_stop:1;
+>>   
+>>   	/*
+>>   	 * If true, let the high-level device driver (sd) manage the device
+>>   	 * power state for system shutdown (power off) operations.
+>>   	 */
+>> -	bool manage_shutdown;
+>> +	unsigned manage_shutdown:1;
+>>   
+>>   	unsigned removable:1;
+>>   	unsigned changed:1;	/* Data invalid due to media change */
+> 
+> Is there any code that modifies the above flags from different
+> threads simultaneously? I'm wondering whether this patch introduces
+> one or more race conditions related to changing these flags.
 
-Is there any code that modifies the above flags from different
-threads simultaneously? I'm wondering whether this patch introduces
-one or more race conditions related to changing these flags.
+These are set once when the LLD probes and initialize the scsi device and never
+changed again by the LLD. The manage_xxx_start_stop flags can be changed through
+sysfs though, but doing so would be a mistake as things would stop working as
+expected... I do think that we should change these flags to be RO in sysfs.
 
-Thanks,
+Note that only libata and the firewire/sbp2 driver use these flags.
 
-Bart.
+> 
+> Thanks,
+> 
+> Bart.
+
+-- 
+Damien Le Moal
+Western Digital Research
+
