@@ -1,84 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from mail-il1-f182.google.com (mail-il1-f182.google.com [209.85.166.182])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 197701BC;
-	Wed, 22 Nov 2023 03:02:42 -0800 (PST)
-Received: by mail-il1-f182.google.com with SMTP id e9e14a558f8ab-35af64a180eso12470775ab.1;
-        Wed, 22 Nov 2023 03:02:42 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700650961; x=1701255761;
-        h=date:subject:message-id:references:in-reply-to:cc:to:from
-         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=37b50Ev+C321yHURRCxSYatL1XpG82qMnHWxKFeqz/s=;
-        b=V9gg+DWH+UALwDhLexAIu2u3laaZFByY91pxPH2DESRn+hRrvEq9xvaFx2a8+SxsSm
-         qiUEjOlp5BiDJj3L31b9YrSYmuhW05Z21uE98a+CGgMwrzvqm37Y9k/05iTaUDmmKimC
-         K2dbrGFhdDOald90xhvWBfm1+KAmj4OOd0fmI4wu+1mWAHIVQM1FYoJyw08tqPYhRnc2
-         Q9bYsMqjbOD0geWkRhKipqWnkrR6wQRlWHZ02zw0xVysM5pqv1URooNalH3X9WKF/ZG5
-         0WQAXRFTfhfqq9X9a8Cm8FqiBLxfM/nBGZGKwkykHK5d2A8NGA8L9BUogxPKBMrfhbug
-         gPpw==
-X-Gm-Message-State: AOJu0Yz6OQ9RNHz8JWCiQtCKtcMH69wrlaKSk9bmhNSn3sjP25mf89X9
-	1HnKnFVEszxDX+LuBo+J+Q==
-X-Google-Smtp-Source: AGHT+IH6ogt517iqYk9AZoAU+//31SbIw+1vYBRUiEwIBYneASGtzIQRQL3D6XoUTRBzx+i5pSFJbQ==
-X-Received: by 2002:a92:d48f:0:b0:35b:ac:51d3 with SMTP id p15-20020a92d48f000000b0035b00ac51d3mr1730631ilg.0.1700650961322;
-        Wed, 22 Nov 2023 03:02:41 -0800 (PST)
-Received: from herring.priv ([64.188.179.252])
-        by smtp.gmail.com with ESMTPSA id s16-20020a02cf30000000b0046676167055sm636827jar.129.2023.11.22.03.02.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Nov 2023 03:02:40 -0800 (PST)
-Received: (nullmailer pid 116322 invoked by uid 1000);
-	Wed, 22 Nov 2023 11:02:29 -0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ermd5uac"
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 272BD273E;
+	Wed, 22 Nov 2023 04:25:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1700655941; x=1732191941;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=hVCT4/npLTdjlg5tixDfLXiqiZYzc2CLBiSEe1vpvPk=;
+  b=ermd5uacni5beL/NzTxmMZPHhVVGw66OOI/DJuc+ZTSQKj2FaTD6wvnz
+   mMvO7iqWo/5ftFjob/G3vR25veQa3UTzmsuTxa44LzCO9MraeGFQsbzhl
+   e2mUcMDdyO/VFyjFatVJOpQigMJCyT9QVBa4xlTgFLO6md/wImxI6J1R9
+   2fOoxGgD3h02valP4mYxXECJASQk/xsrs8JJI+ivVGUPnAtmkK01miSlD
+   mGrgNO4qZ4RmnDZ1Bo/TxbbJqJr7OR99tWXrXWI1yt/yGdMoNlhoCnDv5
+   k0bG83k1pPjhDoDr8pSLYKb4045BD3bMVcseptJ2i2Fqea+GKpZIeSOq+
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10901"; a="10704213"
+X-IronPort-AV: E=Sophos;i="6.04,218,1695711600"; 
+   d="scan'208";a="10704213"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Nov 2023 04:25:40 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10901"; a="857709524"
+X-IronPort-AV: E=Sophos;i="6.04,218,1695711600"; 
+   d="scan'208";a="857709524"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by FMSMGA003.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Nov 2023 04:25:38 -0800
+Received: from andy by smile.fi.intel.com with local (Exim 4.97)
+	(envelope-from <andriy.shevchenko@intel.com>)
+	id 1r5mIS-0000000G5Rf-0h7d;
+	Wed, 22 Nov 2023 14:25:36 +0200
+Date: Wed, 22 Nov 2023 14:25:35 +0200
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Nikita Shubin <nikita.shubin@maquefel.me>
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexander Sverdlin <alexander.sverdlin@gmail.com>
+Subject: Re: [PATCH v5 21/39] ata: pata_ep93xx: add device tree support
+Message-ID: <ZV3zP65l91aq6hNw@smile.fi.intel.com>
+References: <20231122-ep93xx-v5-0-d59a76d5df29@maquefel.me>
+ <20231122-ep93xx-v5-21-d59a76d5df29@maquefel.me>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Rob Herring <robh@kernel.org>
-To: Nikita Shubin <nikita.shubin@maquefel.me>
-Cc: Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>, Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Alexander Sverdlin <alexander.sverdlin@gmail.com>, Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, devicetree@vger.kernel.org
-In-Reply-To: <20231122-ep93xx-v5-20-d59a76d5df29@maquefel.me>
-References: <20231122-ep93xx-v5-0-d59a76d5df29@maquefel.me>
- <20231122-ep93xx-v5-20-d59a76d5df29@maquefel.me>
-Message-Id: <170065094061.116059.15829335537567838120.robh@kernel.org>
-Subject: Re: [PATCH v5 20/39] dt-bindings: ata: Add Cirrus EP93xx
-Date: Wed, 22 Nov 2023 04:02:29 -0700
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231122-ep93xx-v5-21-d59a76d5df29@maquefel.me>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
+On Wed, Nov 22, 2023 at 11:59:59AM +0300, Nikita Shubin wrote:
+> - add OF ID match table
+> - drop platform DMA and filters
+> - change DMA setup to OF, so we can defer probe
 
-On Wed, 22 Nov 2023 11:59:58 +0300, Nikita Shubin wrote:
-> Add YAML bindings for ep93xx SoC PATA.
-> 
-> Acked-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
-> ---
->  .../bindings/ata/cirrus,ep9312-pata.yaml           | 42 ++++++++++++++++++++++
->  1 file changed, 42 insertions(+)
-> 
+...
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
+> +	drv_data->dma_rx_channel = dma_request_chan(dev, "rx");
+> +	if (IS_ERR(drv_data->dma_rx_channel)) {
+> +		ret = PTR_ERR(drv_data->dma_rx_channel);
+> +		return dev_err_probe(dev, ret, "rx DMA setup failed");
+> +	}
 
-yamllint warnings/errors:
+PTR_ERR_OR_ZERO() as suggested in another patch?
 
-dtschema/dtc warnings/errors:
+...
 
+> +	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
+> +	if (IS_ERR(drv_data->dma_tx_channel)) {
+> +		ret = PTR_ERR(drv_data->dma_tx_channel);
+> +		dev_err_probe(dev, ret, "tx DMA setup failed");
+> +		goto fail_release_rx;
+>  	}
 
-doc reference errors (make refcheckdocs):
+Ditto.
 
-See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20231122-ep93xx-v5-20-d59a76d5df29@maquefel.me
+-- 
+With Best Regards,
+Andy Shevchenko
 
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
 
