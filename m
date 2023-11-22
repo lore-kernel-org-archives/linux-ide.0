@@ -1,245 +1,413 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6FB61D69A;
+	Wed, 22 Nov 2023 09:01:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="c7fspq/E";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="DmkfVtoW"
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B57394;
-	Tue, 21 Nov 2023 01:28:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1700558894; x=1732094894;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=TK4daTsTWzO0o22yiK5QGLiaAOh4HOC2Drk/FY8Z/vU=;
-  b=c7fspq/EtQnKb/Ubvs/LaMe9vehC9td10fCYFhYLthrlqM9RUZafUnN0
-   6r5iQFlQBdq07HBJrnHFNPdA2isl7bj9qhVl4NK3Dnpx/lkkViLWUj9gz
-   Nlue3OHRw2qxaczZzLsxH90OTpkJuvnrEdxzpmExNsbAp8Rr/R11doC94
-   D/NyvoMfCYRkUao1GelyK2hb5+IhEEAN05e3U/WSwRLU6rASZ0P7AIy8Y
-   cFodb6bFPOnHhm4IrJtKJlXuzZNPCJYfnJ78l4cRooUZnjnbvfvov05D9
-   suuMsOxyoje+R5WVzP79S2cScepI5xmyv21TUAjhg2Rp9aNpCEqLm2PuM
-   w==;
-X-CSE-ConnectionGUID: O9SRw58CQb2PgS1WzAxxmw==
-X-CSE-MsgGUID: CXSQdZWhQvmQciWcuw/Pmg==
-X-IronPort-AV: E=Sophos;i="6.04,215,1695657600"; 
-   d="scan'208";a="2912972"
-Received: from mail-mw2nam10lp2101.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.101])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Nov 2023 17:28:13 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gVKiY0keBb87nipeN8aNuHBe3RwCEzbVEmXJj7ZiM4kHNrotNPMcYta7/QerezQRUjsnxrYkcUjPFgojs+AqMB9ziK+V33/oFnn/gPvOwkFjuceuY/IP5fgXVP8FEHlyptJfkm8NLSq0fdLave1lASvr6Js+pudw2pp4gIm2b1JrknCgVCZQ/X4yLbgU3sf2a5+0jkhe7xhK6hiMOHAX8pi2Fpc9QwSwlJScQJsPo7Q0kkmwSmxgwxF6j3niF9TkkqpfM0PveH0ziu8FlOh8P/sSPqDSxT6FfrJzyevK3j8xWRtPe+UnRia9yFzKycAOK7ZIo5DONxreoGbuWL691A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lqdkrZozIJvpKclvas6997eWj0FASL8YphdCrbBd+xI=;
- b=ZofDx1euWbF8T3p19R/qICu8cUQNoBpNsQ9ZFFiu0uNG8k8JfbEOg/wSCZlbCy8qJshRSG8/tBZqHh8pbCXHZoNDcemiVzoYM5qPMchs23DvfYw+v4leJRRMA0H8v4PD0f6nVDL8vftp4BF7BT4sAaVvkfT9infvZD06cvcwAr+YYea/VeAWpMP4rAUG+ZWMO4x8mC19wr1zdidLUDdtGBSTmWMjwmrGcG/AYr+H4gLueHNOc7beOXru9Iv8wtWB6MwovWYz0uZK3cQtVhxdfNgUJUxCGJXJ8WoHLGsTahm9Ih4DTp6NrlnHR66zf2BwUdrBUGUstOkuD4sO4T5pUw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lqdkrZozIJvpKclvas6997eWj0FASL8YphdCrbBd+xI=;
- b=DmkfVtoWgA3kN13c9vAymaWxAgHttPfjS5++vaZdiOdlce3mkBNpsScAhEbN7ZZ3DgUJH+x6bD5Y+ynayXafIlao5SJHj+91EhSVXNxocM29fcEak4ZiBu/igPKXgm/8OPXDYao+P7AZUhUpZpfIKzLn3NWvZ1/ZXFpl7vdXhK0=
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com (2603:10b6:208:e0::27)
- by CYYPR04MB8839.namprd04.prod.outlook.com (2603:10b6:930:c5::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7002.27; Tue, 21 Nov
- 2023 09:28:11 +0000
-Received: from MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::ffca:609a:2e2:8fa0]) by MN2PR04MB6272.namprd04.prod.outlook.com
- ([fe80::ffca:609a:2e2:8fa0%4]) with mapi id 15.20.7002.027; Tue, 21 Nov 2023
- 09:28:11 +0000
-From: Niklas Cassel <Niklas.Cassel@wdc.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-CC: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley
-	<James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org"
-	<linux-ide@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>, Phillip
- Susi <phill@thesusis.net>
-Subject: Re: [PATCH v2 1/2] scsi: Change scsi device boolean fields to single
- bit flags
-Thread-Topic: [PATCH v2 1/2] scsi: Change scsi device boolean fields to single
- bit flags
-Thread-Index: AQHaHF0LQyMIfoRcdkSyI2VgPwcBtA==
-Date: Tue, 21 Nov 2023 09:28:10 +0000
-Message-ID: <ZVx4Hf18KxroooB+@x1-carbon>
-References: <20231120225631.37938-1-dlemoal@kernel.org>
- <20231120225631.37938-2-dlemoal@kernel.org>
-In-Reply-To: <20231120225631.37938-2-dlemoal@kernel.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN2PR04MB6272:EE_|CYYPR04MB8839:EE_
-x-ms-office365-filtering-correlation-id: eccd7a70-6aae-45ea-79be-08dbea742ddf
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info:
- DlsPKNhZO+fK/CeTUeTZuwknEEhIJJ3wwiVH5GoAHJ67tq5yan+ACLvH/DQl0zdkjbR5PLzayNaKkreJCGjyEUOFJSyEe8ZHZJ7LksWSZDTc2iKF/WrzVpgoTZXPbHMvHdKb7WrLuP9M7LaHxR/Qn+26N5A7gxAE95MRpInMRv+iCPXzhvKX+bK+41sQzk/nW5J+vSnfGACnBH6OLzrjaMHmlyM4LY1tcy8BSGP/8sfm0cnodM/Bsz8my54hxabfwDejTpO3kULW07Q69gyl7jyHLI+uVkBdJ1hEa5SDiPCqNroX4YbTqWTk093Gf5UjJQ4MUSp+iPt/sFyHu+vkweMn5vcVDN90YKEUokKEid0romEVEblM2d7EifhrN+Pvvd1sKHzFIWwZ5jWdhAceUvy/JL0PBYLU4zIkoRv7xiF4nxFkULSfB9H6W6ynVERY4Slgs41wQtcgNgMDVPj/e7UU1jDmPFWOHAWhrAXtnBjNm6opdM7xpBiXHIatL3xfpa2er85fP5smx0dk38yRnw2LEaPxS7NP7khNENbvvjRN90rvLXHjwvzgBnkoLHWZ/nra+sfCsmH6HvRiwFKpqpGzUYnVlBTKzoktk+Oa+9E5uurkudjF2xQRtPAwT/Gwej7Py49xcXiWLjRZ/g8mhg==
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR04MB6272.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(346002)(366004)(39860400002)(396003)(376002)(136003)(230922051799003)(451199024)(186009)(64100799003)(1800799012)(26005)(41300700001)(86362001)(5660300002)(2906002)(38070700009)(33716001)(9686003)(6512007)(6486002)(478600001)(122000001)(6506007)(71200400001)(83380400001)(8936002)(66946007)(38100700002)(8676002)(316002)(6916009)(4326008)(82960400001)(91956017)(76116006)(64756008)(54906003)(66556008)(66476007)(66446008)(21314003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?8VedHpSMj7hBoantapFRAPESoVs4WYgPuhtGJrlxgoKSwhPjw06aEjsHUjX0?=
- =?us-ascii?Q?meb14fsCUB7FmYIEYm7wuEiV9KLi+Okgg+ts1lkqKbDMlI446m0sw40FXwmh?=
- =?us-ascii?Q?84eZNSj4bzZ21OMkQLFhyhV2CkcHneM9/oBQF6GLClzYJ+l2eDJ8uGoCCn/g?=
- =?us-ascii?Q?4COiBXbOV4JVHhiDIhv8HTKLO7El/9RkQFfNYaDu6vGKY8Bs3isnz6CFvt/C?=
- =?us-ascii?Q?Fl5mhSrThz5fyK9fXkwJZHytJoZ+fv7JeWYiyW81FUD+a2gISdMEcPuZesWC?=
- =?us-ascii?Q?XNryVf/f8h2urWlWVbWJSxn7ysXnrF/aTPnK7YDGgYuWHiS4lOjV7Sm+h2hd?=
- =?us-ascii?Q?Y5lM2Pj+8DCjH4Vey9Y9YmGX8JhXfRQVGGrsN0hbvB1K72Jd0cYsdXHNC1gq?=
- =?us-ascii?Q?kNk2o63mA39/cTAuaOcqLAfGjAGPckh0Av11PKhuywzx23K3WBa4Cn0DsiVw?=
- =?us-ascii?Q?3qImzPLyzFGtexRFRxiuUKedKDIXZoWmHDFBYmHCfv73L8EoTyy4jXCsQPJW?=
- =?us-ascii?Q?kxDQqPTErUF5+YqMISFfxhQzJXnVLx7PSHaR+ikQgaUrCFda6YJPZVcdH3XK?=
- =?us-ascii?Q?xe1AmP+pJ9qHZUZsNGr/96FYIz9k4uEcq/e5zb4l6cowL1yoX9w7EzWNC6IE?=
- =?us-ascii?Q?m+zGbxccj+as+0OXSlzs5HtyONDxqMVGiootWmXJ4/shgu6Q3cyfYGjDSXfM?=
- =?us-ascii?Q?vzCv8Eph8pVaYIELyFjYtLoez8Cxahn689pk2lcn/JLCwtakuUwLKQkh2geZ?=
- =?us-ascii?Q?TSRvGsWgSiy0TOa4ygW05ryoQfsPOVaHkMmXdJ2Jk3SobLfLcKLsSIn47I98?=
- =?us-ascii?Q?0n0VIaJlPZV+wHIPKhrqVGVLocAIRnG+mgfMGPjMcIKeeivb3XJDhxDer7tV?=
- =?us-ascii?Q?HIvARXtbq3A6aaVrdPOf/ul9wmYVje7jhG2rgRTwS/Xzr9evD5BN3KdRbeAq?=
- =?us-ascii?Q?GL86HAioQ+RX4PNqbHJxZN19mfeNdwZcoru1lqLI/4IK161R1IUx0uqBYEkO?=
- =?us-ascii?Q?7SweRGbNSbz2DZrKIRyPwYVlbAN817RVCGNdss/8dlUjNK09wFl3/1z0XuNc?=
- =?us-ascii?Q?nhvz3gZW0CjZUMt34Ja0IpGNYkmqm3hra1fH6wdpc18pk+QapYuB7Y4FlIBP?=
- =?us-ascii?Q?e7VL8F9iILJa15xFMwfRFyTI+JcpeVcTmdclUxrQDGwXjgMC6XhXIG+ZHRds?=
- =?us-ascii?Q?sHaLP13yxWTl6LgXm95NRXuG/cvpSw1cN9qRFLfgrl+euoZl82YHztnEaYdV?=
- =?us-ascii?Q?mBfDppoORCCzRhpZlE71kw1xmGnJnyLp3g+KZG3319Q+wyqTOkV/NwTqgmUZ?=
- =?us-ascii?Q?+oVgb6vtI+RcfhVTAaulljKdB7E2MKha+tbjeUZuakRRgehW3gjWGLtmNBeM?=
- =?us-ascii?Q?OxTD0Fb/qEhfZZim/xwNwcSE820mtAXMOjcMXLlglTQy58oA63I2lo2HhDnF?=
- =?us-ascii?Q?F9F67DcU2SkYbSPt9YafIu/zTbIjFSMAEDBoFD0tnuj0arczw2LtC025a/hZ?=
- =?us-ascii?Q?PEIwK5kF5ePTsaTrtEfu/KxJlfI8qkFTm8UnKjim0V1w2Fjhf/0+Yfpzu6IP?=
- =?us-ascii?Q?IYPG6lUaTJIejh7/q6IMHeiugzylcXZEo2Be8mE4He73ttqHNPomGmyRj/1b?=
- =?us-ascii?Q?4A=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <888FD790D23DDE48B8D88D3D5F23C294@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ayx/+bGr"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5BC97C433C8;
+	Wed, 22 Nov 2023 09:01:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1700643674;
+	bh=YfNv2uqY6jpXX11dkmdghWjVP3xVlwDVv4WSgO4lXlc=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=Ayx/+bGrAJUPf+yY5cuaPfWUunuWfvHEmP5+Fx79GgB++9kLuLvhBmBtYlZ+Pqhqi
+	 lDZQ3RVU0ZLJ3wE3cW8QFodWbgHSi2tk4MGOqNsQweY2IrEG7VdHIgf6cKUhJncoxw
+	 IXHhliLrVE/CLsNvzIpw1jSA9M2RQ8/NBxHn7Jfg6DnuW9yIH7bVKs1oUn9CCtnEux
+	 cYmX/wq+hGZ/BaM+pCppDibaMlwu8/lB0R48OEzAS6u4Rkd+mr94O+fqa/rj9tyZ5l
+	 zM959Dolc6PPjrE+BWIbQh3iina1qtAy5xr4RRzJpL729OQtItBmt+g5pSiE4+8iqA
+	 Pia9UvTydOr1g==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD1CC072A2;
+	Wed, 22 Nov 2023 09:01:14 +0000 (UTC)
+From:
+ Nikita Shubin via B4 Relay <devnull+nikita.shubin.maquefel.me@kernel.org>
+Subject: [PATCH v5 00/39] ep93xx device tree conversion
+Date: Wed, 22 Nov 2023 11:59:38 +0300
+Message-Id: <20231122-ep93xx-v5-0-d59a76d5df29@maquefel.me>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	=?us-ascii?Q?I+4GPr02OWc/1p9XdDvTHQgCxdvIDv0BdvU7icDJpAorerIyjMJwg0dELnoQ?=
- =?us-ascii?Q?SWruaUp/wsXXyDeOsxl7D9RtT6P7HIUaKZaQKtkhfM0JPLpjFs4F2iotRG5j?=
- =?us-ascii?Q?vz8Uid7kAp7Jao6PXfyJzgJE4xwn3ekbfRgLLNZOz5gK7onOnho0JqbaESsk?=
- =?us-ascii?Q?KQ96grnGihwsfwVpNTEexj6CXuVmnbbvA79XnFratjlWGD1EuLcN3LVZUrmz?=
- =?us-ascii?Q?VCqrQNSJppBDcJichmO206Ao+CpSJrVFq/a8h0NNDiv0fSIaXEgJ24rgQpK0?=
- =?us-ascii?Q?JL9+7PbesUb513m7TimfwGIOEaG+Ds4ZQ6+ucxEFTy2f88nTIo64ZTw3w4eq?=
- =?us-ascii?Q?laQEbK9P9foqRvfJRC50kcj6TCJ+eoG4ogbEXR7UuHGhKk0eieSvpkqocOBQ?=
- =?us-ascii?Q?ZHRDF/s72jVAoXEhItgm0rC2Gq7ccDgCU4bXij+dmWLFWmbXIACWmECVWWo6?=
- =?us-ascii?Q?vmC9NI62wHVa3r+pxV0xgwQaYp/nfQ/iVXt/q+2z+wBl2KOae9m95wXy0H8v?=
- =?us-ascii?Q?dKRpSufMun0wZmMUA4CgDzHeLmfNXNaWamCAfd0+GOxR8C1SWf55IvqGQ6E/?=
- =?us-ascii?Q?VA3nxUxupAIchWoOOnvbjFJiTCNkbUvHY0IGtXUA4n4vmAJGg5aSE36Y6EXf?=
- =?us-ascii?Q?AfZ0X5oO1Magh4RT0mjPZ0+yQuy/Phg6BPJDMdcaCcapiSC7ue7ZmTCqmRfH?=
- =?us-ascii?Q?OzrhX/tLHTaLYGKLDbvg2gICYDJ1ViKmFj1QedlI3YtFt9i8RwUgFSmadlHU?=
- =?us-ascii?Q?onpQphWsa9fPah6rFhl633Xf3V59KopG4yGeRGPsJVeTBd1bhfefAv2Hol6z?=
- =?us-ascii?Q?/CXfdOlQ/fU+W+JdUoFh584IAv0G9B83Wz08LvBl/xs77qw8TmdmUGVlBtex?=
- =?us-ascii?Q?DKWjDoZHSPQ7sUC9ZpGrXyKh7P/KRtvfGgBZr6gTtlqfspyiMgzD1b6F/ayD?=
- =?us-ascii?Q?veFnhF6YOzcHJrNdWug7dA=3D=3D?=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR04MB6272.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: eccd7a70-6aae-45ea-79be-08dbea742ddf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2023 09:28:10.9683
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4fzHelRov60SNDalW97q0o18InReL1o1mleCj6YdC8xvN/On/xAM2Vh5IUUbxMU59ruv4Oknjb+8a7Tm+eQk3Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYYPR04MB8839
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAPrCXWUC/2WOy27DIBBFfyVi3bEYxo86q/5H1QWGcUGtcQqO5
+ SjyvweysaIur+aeM/cuEkfPSZxPdxF59cnPIYfm7SSM0+GbwduchZKKZCsb4EtP2wYSTdcSdqy
+ sErk86MQwRB2MK/VJp4VjOVwij357fvj8ynmM8wSLi6wPb61qVNQoVeE7SQUIwf/4RVfJXQcfP
+ ib9d+WRf6uJi9L5tMzx9ty8UhH/m7cSSCDbkm5GREn84ig71voAezzAOoMabdf11rBB+Qru+/4
+ A1KSSfTMBAAA=
+To: Hartley Sweeten <hsweeten@visionengravers.com>, 
+ Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
+ Russell King <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>, 
+ Linus Walleij <linus.walleij@linaro.org>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ Stephen Boyd <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+ Rob Herring <robh+dt@kernel.org>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Nikita Shubin <nikita.shubin@maquefel.me>, Vinod Koul <vkoul@kernel.org>, 
+ Wim Van Sebroeck <wim@linux-watchdog.org>, 
+ Guenter Roeck <linux@roeck-us.net>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+ Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+ Paolo Abeni <pabeni@redhat.com>, Miquel Raynal <miquel.raynal@bootlin.com>, 
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
+ Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Takashi Iwai <tiwai@suse.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org, 
+ linux-pm@vger.kernel.org, devicetree@vger.kernel.org, 
+ dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org, 
+ linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org, 
+ netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
+ linux-sound@vger.kernel.org, 
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+ Andrew Lunn <andrew@lunn.ch>, Andy Shevchenko <andy.shevchenko@gmail.com>
+X-Mailer: b4 0.13-dev-e3e53
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1700643671; l=13702;
+ i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
+ bh=YfNv2uqY6jpXX11dkmdghWjVP3xVlwDVv4WSgO4lXlc=; =?utf-8?q?b=3D4eixXzQUKlt8?=
+ =?utf-8?q?ITFwAedShd7qdEmN09LtXIKl7HWExNvqe/7ceFqkOAeix/b0l58dyI5YUbJscfsL?=
+ LwbWvPmsCefF8yqWMXjfBacsxfCG0W4TFAEDrqSbo+yd3j6RUV7B
+X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
+ pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
+X-Endpoint-Received:
+ by B4 Relay for nikita.shubin@maquefel.me/20230718 with auth_id=65
+X-Original-From: Nikita Shubin <nikita.shubin@maquefel.me>
+Reply-To: <nikita.shubin@maquefel.me>
 
-On Tue, Nov 21, 2023 at 07:56:30AM +0900, Damien Le Moal wrote:
-> Commit 3cc2ffe5c16d ("scsi: sd: Differentiate system and runtime
-> start/stop management") changed the single bit manage_start_stop flag
-> into 2 boolean fields of the SCSI device structure. Commit 24eca2dce0f8
-> ("scsi: sd: Introduce manage_shutdown device flag") introduced the
-> manage_shutdown boolean field for the same structure. Together, these 2
-> commits increase the size of struct scsi_device by 8 bytes by using
-> booleans instead of defining the manage_xxx fields as single bit flags,
-> similarly to other flags of this structure.
->=20
-> Avoid this unnecessary structure size increase and be consistent with
-> the definition of other flags by reverting the definitions of the
-> manage_xxx fields as single bit flags.
->=20
-> Fixes: 3cc2ffe5c16d ("scsi: sd: Differentiate system and runtime start/st=
-op management")
-> Fixes: 24eca2dce0f8 ("scsi: sd: Introduce manage_shutdown device flag")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/ata/libata-scsi.c  | 4 ++--
->  drivers/firewire/sbp2.c    | 6 +++---
->  include/scsi/scsi_device.h | 6 +++---
->  3 files changed, 8 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index c10ff8985203..63317449f6ea 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1056,8 +1056,8 @@ int ata_scsi_dev_config(struct scsi_device *sdev, s=
-truct ata_device *dev)
->  		 * and resume and shutdown only. For system level suspend/resume,
->  		 * devices power state is handled directly by libata EH.
->  		 */
-> -		sdev->manage_runtime_start_stop =3D true;
-> -		sdev->manage_shutdown =3D true;
-> +		sdev->manage_runtime_start_stop =3D 1;
-> +		sdev->manage_shutdown =3D 1;
->  	}
-> =20
->  	/*
-> diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
-> index 7edf2c95282f..e779d866022b 100644
-> --- a/drivers/firewire/sbp2.c
-> +++ b/drivers/firewire/sbp2.c
-> @@ -1519,9 +1519,9 @@ static int sbp2_scsi_slave_configure(struct scsi_de=
-vice *sdev)
->  	sdev->use_10_for_rw =3D 1;
-> =20
->  	if (sbp2_param_exclusive_login) {
-> -		sdev->manage_system_start_stop =3D true;
-> -		sdev->manage_runtime_start_stop =3D true;
-> -		sdev->manage_shutdown =3D true;
-> +		sdev->manage_system_start_stop =3D 1;
-> +		sdev->manage_runtime_start_stop =3D 1;
-> +		sdev->manage_shutdown =3D 1;
->  	}
-> =20
->  	if (sdev->type =3D=3D TYPE_ROM)
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 10480eb582b2..1fb460dfca0c 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -167,19 +167,19 @@ struct scsi_device {
->  	 * power state for system suspend/resume (suspend to RAM and
->  	 * hibernation) operations.
->  	 */
-> -	bool manage_system_start_stop;
-> +	unsigned manage_system_start_stop:1;
-> =20
->  	/*
->  	 * If true, let the high-level device driver (sd) manage the device
->  	 * power state for runtime device suspand and resume operations.
->  	 */
-> -	bool manage_runtime_start_stop;
-> +	unsigned manage_runtime_start_stop:1;
-> =20
->  	/*
->  	 * If true, let the high-level device driver (sd) manage the device
->  	 * power state for system shutdown (power off) operations.
->  	 */
-> -	bool manage_shutdown;
-> +	unsigned manage_shutdown:1;
-> =20
->  	unsigned removable:1;
->  	unsigned changed:1;	/* Data invalid due to media change */
-> --=20
-> 2.42.0
->=20
+This series aims to convert ep93xx from platform to full device tree support.
 
-Reviewed-by: Niklas Cassel <niklas.cassel@wdc.com>=
+The main goal is to receive ACK's to take it via Arnd's arm-soc branch.
+
+Bit thanks to Krzysztof Kozlowski for his zero-day review.
+
+Krzysztof, Sergey, i've changed some files that you have already provided tag:
+- dt-bindings: spi: Add Cirrus EP93xx
+- ata: pata_ep93xx: add device tree support
+
+Added DMA and renamed clock header file.
+
+Sergey, Damien, i've changed some files that you have already provided tag:
+- ata: pata_ep93xx: add device tree support
+
+Added OF DMA setup and dropped platform file.
+
+Mark, i've changed some files that you have already provided tag:
+- spi: ep93xx: add DT support for Cirrus EP93xx
+
+Added OF DMA setup and dropped platform file.
+
+Major updates:
+
+- reboot, pinctrl, clk are now auxiliary and instantiated from SoC driver as
+  Stephen Boyd suggested
+- i moved all clock code to clk-ep93xx.c, as it no longer has a separate dt node, 
+  so XTALI is externalk for this driver and passed as index 0, and pll1, pll2 are
+  internal and passed via pointer for parent_data
+- reboot bindings dropped
+- pinctrl and clk bindings moved to syscon YAML
+- xlate added for DMA, so now all DMA users use it via device tree, otherwise probe 
+  order messed up and we might end up probing before DMA with no possibility to defer probing
+- DMA port bindings dropped, they are described in YAML file
+- DMA platform code dropped
+- i2s, spi, pata now use OF DMA
+- YAML and dtsi/dts changed to reflect auxiliary conversion and DMA changes
+
+Patches should be now formated with '--patience'
+
+---
+Changes in v5:
+
+- gpio: ep93xx: split device in multiple
+  - ordered headers
+  - use irqd_to_hwirq()
+  - s/platform_get_irq()/platform_get_irq_optional()/
+ 
+- [PATCH v4 02/42] ARM: ep93xx: add swlocked prototypes
+  - replaced with ARM: ep93xx: add regmap aux_dev
+
+- [PATCH v4 03/42] dt-bindings: clock: Add Cirrus EP93xx
+  - fixed identation
+  - removed EP93XX_CLK_END
+  - and dropped it
+  - clock bindings moved to syscon with renaming to cirrus,ep9301-syscon.h
+
+- clk: ep93xx: add DT support for Cirrus EP93xx
+  - convert to auxiliary and use parent device tree node
+  - moved all clocks except XTALI here
+  - used devm version everywhere and *_parent_hw() instead of passing name where it's possible
+  - unfortunately devm_clk_hw_register_fixed_rate doesn't have a parent index version
+
+- [PATCH v4 05/42] dt-bindings: pinctrl: Add Cirrus EP93xx
+  - "unevaluatedProperties: false" for pins
+  - returned "additionalProperties: false" where it was
+  - and dropped it
+
+- pinctrl: add a Cirrus ep93xx SoC pin controller
+  - sorted includes
+  - convert to auxiliary and use parent device tree node
+
+- power: reset: Add a driver for the ep93xx reset
+  - convert to auxiliary device
+
+- dt-bindings: soc: Add Cirrus EP93xx
+  - dropped all ref to reboot, clk, pinctrl subnodes
+  - added pins, as it's now used for pinctrl
+  - added #clock-cells, as it's now used for clk
+
+- dt-bindings: pwm: Add Cirrus EP93xx
+  - $ref to pwm.yaml
+  - fixed 'pwm-cells'
+  - s/additionalProperties/unevaluatedProperties/
+
+- soc: Add SoC driver for Cirrus ep93xx
+  - removed clocks, they are moved to clk auxiliary driver, as we dropped the clk dt node
+  - removed all swlocked exported functions
+  - dropped static spinlock
+  - added instantiating auxiliary reboot, clk, pinctrl
+
+- dt-bindings: spi: Add Cirrus EP93xx
+  - Document DMA support
+
+- spi: ep93xx: add DT support for Cirrus EP93xx
+  - dropped CONFIG_OF and SPI/DMA platform data entirely
+  - s/master/host/
+  - reworked DMA setup so we can use probe defer
+
+- dt-bindings: dma: Add Cirrus EP93xx
+  - dropped bindings header (moved ports description to YAML)
+  - changed '#dma-cells' to 2, we use port, direction in cells so we can drop platform code completely
+
+- dma: cirrus: add DT support for Cirrus EP93xx
+  - dropped platform probing completely
+  - dropped struct ep93xx_dma_data replaced with internal struct ep93xx_dma_chan_cfg with port/direction
+  - added xlate functions for m2m/m2p
+  - we require filters to set dma_cfg before hw_setup
+
+- dt-bindings: ata: Add Cirrus EP93xx
+  - Document DMA support 
+
+- ata: pata_ep93xx: add device tree support
+  - drop DMA platform header with data
+  - use DMA OF so we can defer probing until DMA is up
+
+- ARM: dts: add Cirrus EP93XX SoC .dtsi
+- ARM: dts: ep93xx: add ts7250 board
+- ARM: dts: ep93xx: Add EDB9302 DT
+  - replaced "eclk: clock-controller" to syscon reference
+  - replaced "pinctrl: pinctrl" to syscon reference
+  - gpios are now "enabled" by default
+  - reworked i2s node
+  - change all dma nodes and refs
+
+- new additions to I2S
+  - Document DMA
+  - Document Audio Port usage
+  - drop legacy DMA support
+
+- Link to v4: https://lore.kernel.org/r/20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me
+
+Changes in v4:
+
+- gpio: ep93xx: split device in multiple
+  - s/generic_handle_irq/generic_handle_domain_irq/
+  - s/int offset/irq_hw_number_t offset/ though now it looks a bit odd to me
+  - drop i = 0
+  - drop 'error'
+  - use dev_err_probe withour printing devname once again
+
+dt-bindings: clock: Add Cirrus EP93xx
+  - renamed cirrus,ep93xx-clock.h -> cirrus,ep9301-clk.h
+
+clk: ep93xx: add DT support for Cirrus EP93xx
+  - drop unused includes
+  - use .name only for xtali, pll1, pll2 parents
+  - convert // to /*
+  - pass clk_parent_data instead of char* clock name
+
+dt-bindings: pinctrl: Add Cirrus EP93xx
+  - s/additionalProperties/unevaluatedProperties/
+
+dt-bindings: soc: Add Cirrus EP93xx
+  - move syscon to soc directory
+  - add vendor prefix
+  - make reboot same style as pinctrl, clk
+  - use absolute path for ref
+  - expand example
+
+soc: Add SoC driver for Cirrus ep93xx
+  - s/0xf0000000/GENMASK(31, 28)/
+  - s/ret/ep93xx_chip_revision(map)/
+  - drop symbol exports
+  - convert to platform driver
+
+dt-bindings: rtc: Add Cirrus EP93xx
+  - allOf: with $ref to rtc.yaml
+  - s/additionalProperties/unevaluatedProperties/
+
+dt-bindings: watchdog: Add Cirrus EP93x
+  - drop description
+  - reword
+
+power: reset: Add a driver for the ep93xx reset
+  - lets use 'GPL-2.0+' instead of '(GPL-2.0)'
+  - s/of_device/of/
+  - drop mdelay with warning
+  - return 0 at the end
+
+net: cirrus: add DT support for Cirrus EP93xx
+  - fix leaking np
+
+mtd: nand: add support for ts72xx
+  - +bits.h
+  - drop comment
+  - ok to fwnode_get_next_child_node
+  - use goto to put handle and nand and report error
+
+ARM: dts: add Cirrus EP93XX SoC .dtsi
+  - add simple-bus for ebi, as we don't require to setup anything
+  - add arm,pl011 compatible to uart nodes
+  - drop i2c-gpio, as it's isn't used anywhere
+
+ARM: dts: ep93xx: add ts7250 board
+  - generic node name for temperature-sensor
+  - drop i2c
+  - move nand, rtc, watchdog to ebi node
+ 
+- Link to v3: https://lore.kernel.org/r/20230605-ep93xx-v3-0-3d63a5f1103e@maquefel.me
+
+---
+Alexander Sverdlin (3):
+      ASoC: ep93xx: Drop legacy DMA support
+      ARM: dts: ep93xx: Add EDB9302 DT
+      ASoC: cirrus: edb93xx: Delete driver
+
+Nikita Shubin (36):
+      gpio: ep93xx: split device in multiple
+      ARM: ep93xx: add regmap aux_dev
+      clk: ep93xx: add DT support for Cirrus EP93xx
+      pinctrl: add a Cirrus ep93xx SoC pin controller
+      power: reset: Add a driver for the ep93xx reset
+      dt-bindings: soc: Add Cirrus EP93xx
+      soc: Add SoC driver for Cirrus ep93xx
+      dt-bindings: dma: Add Cirrus EP93xx
+      dma: cirrus: add DT support for Cirrus EP93xx
+      dt-bindings: watchdog: Add Cirrus EP93x
+      watchdog: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: pwm: Add Cirrus EP93xx
+      pwm: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: spi: Add Cirrus EP93xx
+      spi: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: net: Add Cirrus EP93xx
+      net: cirrus: add DT support for Cirrus EP93xx
+      dt-bindings: mtd: Add ts7200 nand-controller
+      mtd: rawnand: add support for ts72xx
+      dt-bindings: ata: Add Cirrus EP93xx
+      ata: pata_ep93xx: add device tree support
+      dt-bindings: input: Add Cirrus EP93xx keypad
+      input: keypad: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: wdt: Add ts72xx
+      wdt: ts72xx: add DT support for ts72xx
+      gpio: ep93xx: add DT support for gpio-ep93xx
+      ASoC: dt-bindings: ep93xx: Document DMA support
+      ASoC: dt-bindings: ep93xx: Document Audio Port support
+      ARM: dts: add Cirrus EP93XX SoC .dtsi
+      ARM: dts: ep93xx: add ts7250 board
+      ARM: ep93xx: DT for the Cirrus ep93xx SoC platforms
+      pwm: ep93xx: drop legacy pinctrl
+      ata: pata_ep93xx: remove legacy pinctrl use
+      ARM: ep93xx: delete all boardfiles
+      ARM: ep93xx: soc: drop defines
+      dma: cirrus: remove platform code
+
+ .../bindings/arm/cirrus/cirrus,ep9301.yaml         |   38 +
+ .../bindings/ata/cirrus,ep9312-pata.yaml           |   42 +
+ .../bindings/dma/cirrus,ep9301-dma-m2m.yaml        |   84 ++
+ .../bindings/dma/cirrus,ep9301-dma-m2p.yaml        |  144 ++
+ .../bindings/input/cirrus,ep9307-keypad.yaml       |   87 ++
+ .../devicetree/bindings/mtd/technologic,nand.yaml  |   45 +
+ .../devicetree/bindings/net/cirrus,ep9301-eth.yaml |   59 +
+ .../devicetree/bindings/pwm/cirrus,ep9301-pwm.yaml |   53 +
+ .../bindings/soc/cirrus/cirrus,ep9301-syscon.yaml  |   83 ++
+ .../bindings/sound/cirrus,ep9301-i2s.yaml          |   16 +
+ .../devicetree/bindings/spi/cirrus,ep9301-spi.yaml |   70 +
+ .../bindings/watchdog/cirrus,ep9301-wdt.yaml       |   42 +
+ .../bindings/watchdog/technologic,ts7200-wdt.yaml  |   45 +
+ arch/arm/Makefile                                  |    1 -
+ arch/arm/boot/dts/cirrus/Makefile                  |    4 +
+ arch/arm/boot/dts/cirrus/ep93xx-bk3.dts            |  126 ++
+ arch/arm/boot/dts/cirrus/ep93xx-edb9302.dts        |  182 +++
+ arch/arm/boot/dts/cirrus/ep93xx-ts7250.dts         |  145 ++
+ arch/arm/boot/dts/cirrus/ep93xx.dtsi               |  442 ++++++
+ arch/arm/mach-ep93xx/Kconfig                       |   20 +-
+ arch/arm/mach-ep93xx/Makefile                      |   11 -
+ arch/arm/mach-ep93xx/clock.c                       |  733 ----------
+ arch/arm/mach-ep93xx/core.c                        | 1017 --------------
+ arch/arm/mach-ep93xx/dma.c                         |  114 --
+ arch/arm/mach-ep93xx/edb93xx.c                     |  344 -----
+ arch/arm/mach-ep93xx/ep93xx-regs.h                 |   38 -
+ arch/arm/mach-ep93xx/gpio-ep93xx.h                 |  111 --
+ arch/arm/mach-ep93xx/hardware.h                    |   25 -
+ arch/arm/mach-ep93xx/irqs.h                        |   76 --
+ arch/arm/mach-ep93xx/platform.h                    |   42 -
+ arch/arm/mach-ep93xx/soc.h                         |  212 ---
+ arch/arm/mach-ep93xx/timer-ep93xx.c                |  143 --
+ arch/arm/mach-ep93xx/ts72xx.c                      |  422 ------
+ arch/arm/mach-ep93xx/ts72xx.h                      |   94 --
+ arch/arm/mach-ep93xx/vision_ep9307.c               |  311 -----
+ drivers/ata/pata_ep93xx.c                          |  106 +-
+ drivers/clk/Kconfig                                |    8 +
+ drivers/clk/Makefile                               |    1 +
+ drivers/clk/clk-ep93xx.c                           |  855 ++++++++++++
+ drivers/dma/ep93xx_dma.c                           |  292 +++-
+ drivers/gpio/gpio-ep93xx.c                         |  345 ++---
+ drivers/input/keyboard/ep93xx_keypad.c             |   74 +-
+ drivers/mtd/nand/raw/Kconfig                       |    7 +
+ drivers/mtd/nand/raw/Makefile                      |    1 +
+ drivers/mtd/nand/raw/technologic-nand-controller.c |  223 +++
+ drivers/net/ethernet/cirrus/ep93xx_eth.c           |   63 +-
+ drivers/pinctrl/Kconfig                            |    7 +
+ drivers/pinctrl/Makefile                           |    1 +
+ drivers/pinctrl/pinctrl-ep93xx.c                   | 1433 ++++++++++++++++++++
+ drivers/power/reset/Kconfig                        |   10 +
+ drivers/power/reset/Makefile                       |    1 +
+ drivers/power/reset/ep93xx-restart.c               |   81 ++
+ drivers/pwm/pwm-ep93xx.c                           |   26 +-
+ drivers/soc/Kconfig                                |    1 +
+ drivers/soc/Makefile                               |    1 +
+ drivers/soc/cirrus/Kconfig                         |   13 +
+ drivers/soc/cirrus/Makefile                        |    2 +
+ drivers/soc/cirrus/soc-ep93xx.c                    |  247 ++++
+ drivers/spi/spi-ep93xx.c                           |   68 +-
+ drivers/watchdog/ep93xx_wdt.c                      |    8 +
+ drivers/watchdog/ts72xx_wdt.c                      |    8 +
+ include/dt-bindings/soc/cirrus,ep9301-syscon.h     |   46 +
+ include/linux/platform_data/dma-ep93xx.h           |   94 --
+ include/linux/platform_data/eth-ep93xx.h           |   10 -
+ include/linux/platform_data/keypad-ep93xx.h        |   32 -
+ include/linux/platform_data/spi-ep93xx.h           |   15 -
+ include/linux/soc/cirrus/ep93xx.h                  |   47 +-
+ sound/soc/cirrus/Kconfig                           |    9 -
+ sound/soc/cirrus/Makefile                          |    4 -
+ sound/soc/cirrus/edb93xx.c                         |  117 --
+ sound/soc/cirrus/ep93xx-i2s.c                      |   19 -
+ sound/soc/cirrus/ep93xx-pcm.c                      |   19 +-
+ 72 files changed, 5200 insertions(+), 4515 deletions(-)
+---
+base-commit: be3ca57cfb777ad820c6659d52e60bbdd36bf5ff
+change-id: 20230605-ep93xx-01c76317e2d2
+
+Best regards,
+-- 
+Nikita Shubin <nikita.shubin@maquefel.me>
+
