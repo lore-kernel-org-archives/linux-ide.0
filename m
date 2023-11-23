@@ -1,73 +1,60 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46267405FD
+	for <linux-ide@vger.kernel.org>; Thu, 23 Nov 2023 23:47:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GZMUg9Gc"
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECB5BCB;
-	Wed, 22 Nov 2023 04:31:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1700656288; x=1732192288;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=BBCCOb13D6V1+k0L3ZDSfb8MooCW3vyJXHnVN3aQm0E=;
-  b=GZMUg9GcfghE6gfKYkcfiGqF/Qlo3agYujkfRqgUNbbz7fMO2NLnXJwX
-   d71X49rO5h6LbHXmtxNd8T0Ol6isp9YjxMOkgbnfLe6FSXLsfD3trmd8U
-   DX3CtMjE52/ruDtVinu6nvSIsSmRfHXXaScH5hADvMtAPrciUbYgIZxyL
-   h8eo0lO6f5h3t5+j1q8nwoQ63nHn6ACGPosXB+I0vlQrLN6a9+rt7xkZE
-   UuA+bO5U9NSYpXb7kk1sQAdDGNR+GfvW4oHDsAOtZQ6/4HxtRqIyebmtY
-   LrUhxDJizb5lNHUNUOtYAe0RIFjYavB1GtrL+EFSrWJ9iyVBOv0yCPjTP
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10901"; a="382440194"
-X-IronPort-AV: E=Sophos;i="6.04,218,1695711600"; 
-   d="scan'208";a="382440194"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Nov 2023 04:31:27 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10901"; a="833000109"
-X-IronPort-AV: E=Sophos;i="6.04,218,1695711600"; 
-   d="scan'208";a="833000109"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by fmsmga008.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Nov 2023 04:31:24 -0800
-Received: from andy by smile.fi.intel.com with local (Exim 4.97)
-	(envelope-from <andriy.shevchenko@linux.intel.com>)
-	id 1r5mLd-0000000G5Uh-3mPn;
-	Wed, 22 Nov 2023 14:28:53 +0200
-Date: Wed, 22 Nov 2023 14:28:53 +0200
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Nikita Shubin <nikita.shubin@maquefel.me>
-Cc: Hartley Sweeten <hsweeten@visionengravers.com>,
-	Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G/4VBGmq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43340C433C7;
+	Thu, 23 Nov 2023 23:47:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1700783236;
+	bh=uehVteHjhX5v7aiIdl3BDpoGRy6w1Uf0NE7KBkTNb5k=;
+	h=From:To:Subject:Date:From;
+	b=G/4VBGmq3iNXFotdBiS1IbYrSb2ZDsdqvSDenuX0cR7iAqcpT/kZVih65aNgp+dYs
+	 RXD4sFZhBIbjR5pHVgCVb30WkJpeEvJNlBl5WyBmnm2wgbD9/2rooFkhN8/PvvYR9m
+	 s/dxDq1FRSbkkslnBtox5OKyu6NezgWnH8Pl3NIBBQfoEeqk1Ln1keCXqjltqbmYfI
+	 UkMXuln2XCPnn+3oUzijD1hFmKfgfrp6t20d2sH3BRjiBZgb1reLGNl/sjG233XAB7
+	 PpCFcZLfDsCCsh3iqvzHQ4cYyliwRXD+AUOEF2kVp8mgs49tC8jtYPSamMfUFIgrnP
+	 oQU68MQYMnTXg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v5 35/39] ata: pata_ep93xx: remove legacy pinctrl use
-Message-ID: <ZV30BfLTsWVSSH9l@smile.fi.intel.com>
-References: <20231122-ep93xx-v5-0-d59a76d5df29@maquefel.me>
- <20231122-ep93xx-v5-35-d59a76d5df29@maquefel.me>
+Subject: [GIT PULL] ata fixes for 6.7-rc3
+Date: Fri, 24 Nov 2023 08:47:14 +0900
+Message-ID: <20231123234715.35765-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231122-ep93xx-v5-35-d59a76d5df29@maquefel.me>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 22, 2023 at 12:00:13PM +0300, Nikita Shubin wrote:
-> Drop legacy acquire/release since we are using pinctrl for this now.
+Linus,
 
-FWIW,
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+The following changes since commit 98b1cc82c4affc16f5598d4fa14b1858671b2263:
 
--- 
-With Best Regards,
-Andy Shevchenko
+  Linux 6.7-rc2 (2023-11-19 15:02:14 -0800)
 
+are available in the Git repository at:
 
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.7-rc3
+
+for you to fetch changes up to a6925165ea82b7765269ddd8dcad57c731aa00de:
+
+  ata: pata_isapnp: Add missing error check for devm_ioport_map() (2023-11-20 09:22:26 +0900)
+
+----------------------------------------------------------------
+ata fixes for 6.7-rc3
+
+ - Add a missing error check in the adapter initialization of the
+   pata_isapnp driver (Chen).
+
+----------------------------------------------------------------
+Chen Ni (1):
+      ata: pata_isapnp: Add missing error check for devm_ioport_map()
+
+ drivers/ata/pata_isapnp.c | 3 +++
+ 1 file changed, 3 insertions(+)
