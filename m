@@ -1,55 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179AF625
-	for <linux-ide@vger.kernel.org>; Fri, 24 Nov 2023 01:51:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l8RjPJUE"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6EEA0C433C8;
-	Fri, 24 Nov 2023 01:51:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700790685;
-	bh=yTqOVWis/n7iNezUROwK0SZXWY+b6X5eZBTUNaczXok=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=l8RjPJUEfRTuntA5d3KHszjBwjlngqMnATnCYrfVW6VVebhh3xmje3NyOLlrMLxfO
-	 Lg6iAP395Wlqt078IIh+FuHe0Dyqnr9cPgzSbQR8YbHW/tSptL9bIaHrvA2/MMYFI0
-	 Ro1doXtiPHNg4UA4Gy75rbBH1boyFUIFFZ2Uxi+W75MdobnmmMdON+PBm898uchHfP
-	 PUu8/cor+YY/Ms2EUMwMi57S+bdDaTL5Qib7svngaC2/XJ4DsbMjC5h6Lh4vgM5s4t
-	 T382WSlgdxhqQ6SsJRMef0G+HwlyaqeuWWq5xXPpzISw7AoD7ammPjuc/g4C2qKTys
-	 kkUAueyCwn2lg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 53EE3EAA95A;
-	Fri, 24 Nov 2023 01:51:25 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.7-rc3
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20231123234715.35765-1-dlemoal@kernel.org>
-References: <20231123234715.35765-1-dlemoal@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20231123234715.35765-1-dlemoal@kernel.org>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.7-rc3
-X-PR-Tracked-Commit-Id: a6925165ea82b7765269ddd8dcad57c731aa00de
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: f1a09972a45ae63efbd1587337c4be13b1893330
-Message-Id: <170079068534.3340.6994740604338426232.pr-tracker-bot@kernel.org>
-Date: Fri, 24 Nov 2023 01:51:25 +0000
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z1Jd2iBt"
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED5141990;
+	Fri, 24 Nov 2023 18:53:53 -0800 (PST)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP2dChY004721;
+	Sat, 25 Nov 2023 02:53:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-11-20;
+ bh=ePTKydImVNIFpNDWnTWJEULjDXSFh4p7Dw4UCqdPR+A=;
+ b=Z1Jd2iBtvUI6gc7xkAx/ZbhxI+lGf8QMqljrQLUaX+CQmHRub/cPnewWklqnlmXO8Mvs
+ P4HFlRDCkAyxWQ3BMsQOLltE7zF1Ma54sOrk24zB/+yYu4I4V/3HUhR+eCHgSUFwAn6i
+ NHfVYCdSy9O6mEjS+lKpO+N/p4a7blXJJbYv/I7K92dDwhmwghbCfaxaVp2WBPm0g2wY
+ XjovDYg6I5u8fitulwSjnt1Y/tzI/6y0Z83SJWzujse9c5Y1xUNtcEuGFf4MZrf790Tw
+ q5hUAwwTMTps+RbYJ/7BNcYCCljYgyPqWQ5mZ+YStkQ9U0oFb9kfFn6UEulDNuYwfJZ4 JA== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uk7ber1n9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 25 Nov 2023 02:53:46 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3AP1YJRV013555;
+	Sat, 25 Nov 2023 02:53:46 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uk7c8sr38-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 25 Nov 2023 02:53:46 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AP2rjMV036557;
+	Sat, 25 Nov 2023 02:53:45 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3uk7c8sr2v-1;
+	Sat, 25 Nov 2023 02:53:45 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Damien Le Moal <dlemoal@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Phillip Susi <phill@thesusis.net>
+Subject: Re: [PATCH v2 0/2] Fix runtime suspended device resume
+Date: Fri, 24 Nov 2023 21:53:34 -0500
+Message-ID: <170088060609.1367702.5631085509425573780.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.42.1
+In-Reply-To: <20231120225631.37938-1-dlemoal@kernel.org>
+References: <20231120225631.37938-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-25_01,2023-11-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 mlxscore=0
+ malwarescore=0 adultscore=0 suspectscore=0 spamscore=0 mlxlogscore=616
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311250020
+X-Proofpoint-ORIG-GUID: CegJFLZjVS4wt4lgnFCqsOnuH2m0HgP5
+X-Proofpoint-GUID: CegJFLZjVS4wt4lgnFCqsOnuH2m0HgP5
 
-The pull request you sent on Fri, 24 Nov 2023 08:47:14 +0900:
+On Tue, 21 Nov 2023 07:56:29 +0900, Damien Le Moal wrote:
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-6.7-rc3
+> The first patch changes the use of the bool type back to the regular
+> unsigned:1 for the manage_xxx scsi device flags. This is marked as a fix
+> and CC-stable to avoid issues with later eventual fixes in this area.
+> 
+> The second patch addresses an issue with system resume with devices that
+> were runtime suspended. For ATA devices, this leads to a disk still
+> being reported as suspended while it is in fact spun up due to how ATA
+> resume is done (port reset).
+> 
+> [...]
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f1a09972a45ae63efbd1587337c4be13b1893330
+Applied to 6.7/scsi-fixes, thanks!
 
-Thank you!
+[1/2] scsi: Change scsi device boolean fields to single bit flags
+      https://git.kernel.org/mkp/scsi/c/6371be7aeb98
+[2/2] scsi: sd: fix system start for ATA devices
+      https://git.kernel.org/mkp/scsi/c/b09d7f8fd50f
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Martin K. Petersen	Oracle Linux Engineering
