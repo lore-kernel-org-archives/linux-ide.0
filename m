@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="MH6J1PFz"
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A79918D
-	for <linux-ide@vger.kernel.org>; Tue,  5 Dec 2023 07:56:42 -0800 (PST)
-Received: by mail-wm1-x32d.google.com with SMTP id 5b1f17b1804b1-40c05ce04a8so37083465e9.0
-        for <linux-ide@vger.kernel.org>; Tue, 05 Dec 2023 07:56:42 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bpZGeEk3"
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A34991A4
+	for <linux-ide@vger.kernel.org>; Tue,  5 Dec 2023 08:01:12 -0800 (PST)
+Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-40c09d0b045so30339715e9.0
+        for <linux-ide@vger.kernel.org>; Tue, 05 Dec 2023 08:01:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701791800; x=1702396600; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1701792071; x=1702396871; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=CFwmTmTH8S3Krb2dT6x0xVQdw0/3EUfnKzGAYpnyti4=;
-        b=MH6J1PFzpjQuAW1ZiYnjIIquaE9yxjNw7CqC88sevQXEWSMf4dDrN/QKgB6yGax+BQ
-         tyAPoS44fVZ+O2CbJMoJnfGZJwuEzm+itxSXBEKk3wCztZKOIOR2fopgzgTF9QUImKN6
-         CKcOBC+izhrIzIFENaajyUsNk7yyRoNfT7A9WvOQuMIr7HqySpkPFHYJFU6XCTMkso61
-         ukiiwB0y1Gci0jqY6rE6Gx/N9xvmx9DJ7DEqXGtbz0spj1etEAiMMEOobsjMJZC056Wr
-         C0XNTB4+nXd1x78X06NNN11afzvaEv36szpMYQvolM/lYQwkl0LlbBRsLjEAh4LVf7fV
-         Oskw==
+        bh=EITfd3r5nf7P48LA181bNkau3CscdZfUTize8JbXHBE=;
+        b=bpZGeEk3IJu2/UJtLw5aX6mNw5LDaS30BUScuz+PjEXh4vgWn44QcPj5ehMsSdhwN6
+         HM9Tw0vBm7bEayFlgNcM7+1DRpjAFh4Clu+fY2hpkzgdFLZ9m6WtPahEWoadk0GJCxxG
+         39b/CYYYUppTxZO3yHZ0oTryYHm8mRgHy31z07lGzouSU/BeajoiF4wi0ik3/4zSjNWX
+         GDzMcsPrJp44vo5Nr4iU0ffyWkbIWLIi6dw8UXizVW+sjOmYtBNtdoLI5v8zFwCWROlw
+         f5RxQIRC1bnpC/jlhhuD5yqTNlEdiEwHRkBa9CDL8CYnjp3DFnUJKwz57B0PJBQtGVDh
+         J1xg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701791800; x=1702396600;
+        d=1e100.net; s=20230601; t=1701792071; x=1702396871;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=CFwmTmTH8S3Krb2dT6x0xVQdw0/3EUfnKzGAYpnyti4=;
-        b=oo1uuuy/3LJHYY8SNi6lY8QdLii7ODYmJ6cPnQ7Z8lFm6+tnE63saAym0396ZJ93Fj
-         fLes4a38toZGm1oSz6TjhLp/tKSiYms3ObHMIzT2Jb5zVsn0JEQSDZNKkmkCdB+bIAis
-         0lKiIQafixQSMHn8q9b3wUrw4jtJLkeRnnq8I6p0hd0Mw+2uvgh3UmrJiba2dnx6BUKI
-         7keDTToPGQL4TaKdMHmMJUoiJwGylv0jiY/gzO6kvMfcj/e0ocwc9UOomnDENpwI92mt
-         19roK4eQ3xvcuh8mpo8hGxg+YSWGKY9GtV3HjsNWooXqJ0VruAYgGFa/SKI/9MAt7iW5
-         o0aQ==
-X-Gm-Message-State: AOJu0YwLKyB9cNflJWggUHnvnivtbFVMmLmZ/ulYob3BQAT/E7w24OOO
-	efDN4JU45x5ujBZwNPOZrnsrWg==
-X-Google-Smtp-Source: AGHT+IGSuke5ouaZMSsbPV7HneHxjT56xIRiCskInLE+L5gFFjfA3c0ZUMGMrjlUzozfoRemKDn52w==
-X-Received: by 2002:a05:600c:1f92:b0:40b:5f03:b3d2 with SMTP id je18-20020a05600c1f9200b0040b5f03b3d2mr1668273wmb.244.1701791800640;
-        Tue, 05 Dec 2023 07:56:40 -0800 (PST)
+        bh=EITfd3r5nf7P48LA181bNkau3CscdZfUTize8JbXHBE=;
+        b=BLd5Ke0tm8adp/iJGFJMmHWrwGu2KduexEno6sIsN20C9v+t371SLqtSy0PO1FWl/t
+         0iA2xVzvP1i8VLRsK0j+OhZvPVJ9+dMUY+A4PBAxkBfJRtz6CqVdoCAq5vbsP+2258tE
+         HXIx+iGUoe44Op5YFs3EA8SqxNxvnorOopzNtYYF/2N/0S85XqNwBUWMezKTVm8wliph
+         JOaLqBt53620Aj+u3PFWqS3LL9at72dhOuXZN+8CH12M2jk1OPgpwoq2Ky6JNS/K5RVd
+         7CEQBlfWg5kAhhbqJ5jSvtCJvEZfyvXugigk+aOTFPHf2cMxB42KtKWLfIr/J2FmVre7
+         iSjg==
+X-Gm-Message-State: AOJu0YwbZlyDn5OXgc93nqEUxFQ6G7okjzWbonPWQ4cULJB+g5U7cmu0
+	DMSRMJks7R7WAhmZKeGLMfwKZw==
+X-Google-Smtp-Source: AGHT+IH9gChkUItZ8Bdn3aOa1zE9knEu7O0Iec2wEcQGBv+8gvgTNBUTm7//Mist2brtq83hisd4Rw==
+X-Received: by 2002:a05:600c:cb:b0:40c:b79:1f8 with SMTP id u11-20020a05600c00cb00b0040c0b7901f8mr454890wmm.229.1701792070246;
+        Tue, 05 Dec 2023 08:01:10 -0800 (PST)
 Received: from [192.168.1.20] ([178.197.218.27])
-        by smtp.gmail.com with ESMTPSA id bg24-20020a05600c3c9800b0040b3d33ab55sm23007490wmb.47.2023.12.05.07.56.35
+        by smtp.gmail.com with ESMTPSA id i17-20020a1709064fd100b00a1b70ff43e8sm3007438ejw.6.2023.12.05.08.01.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Dec 2023 07:56:40 -0800 (PST)
-Message-ID: <cd405624-6871-4d79-a28c-aa0a31ab7207@linaro.org>
-Date: Tue, 5 Dec 2023 16:56:34 +0100
+        Tue, 05 Dec 2023 08:01:09 -0800 (PST)
+Message-ID: <a5a7769c-4e35-4717-9cd8-33df11fc572e@linaro.org>
+Date: Tue, 5 Dec 2023 17:01:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,17 +47,16 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [DO NOT MERGE v5 22/37] dt-bindings: display: smi,sm501: SMI
- SM501 binding json-schema
+Subject: Re: [DO NOT MERGE v5 04/37] dt-bindings: interrupt-controller: Add
+ header for Renesas SH3/4 INTC.
 Content-Language: en-US
-To: Arnd Bergmann <arnd@arndb.de>, Yoshinori Sato
- <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org
+To: Yoshinori Sato <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>,
  Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
  Conor Dooley <conor+dt@kernel.org>,
  Geert Uytterhoeven <geert+renesas@glider.be>,
  Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
- <sboyd@kernel.org>, Dave Airlie <airlied@gmail.com>,
+ <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
  Daniel Vetter <daniel@ffwll.ch>,
  Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
  Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
@@ -70,15 +69,15 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>,
  Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>,
  John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
  Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
- =?UTF-8?Q?Heiko_St=C3=BCbner?= <heiko@sntech.de>,
- Jernej Skrabec <jernej.skrabec@gmail.com>,
+ Heiko Stuebner <heiko@sntech.de>, Jernej Skrabec <jernej.skrabec@gmail.com>,
  Chris Morgan <macromorgan@hotmail.com>,
  Linus Walleij <linus.walleij@linaro.org>,
- Randy Dunlap <rdunlap@infradead.org>, Hyeonggon Yoo <42.hyeyoo@gmail.com>,
- David Rientjes <rientjes@google.com>, Vlastimil Babka <vbabka@suse.cz>,
- Baoquan He <bhe@redhat.com>, Andrew Morton <akpm@linux-foundation.org>,
- Guenter Roeck <linux@roeck-us.net>, Stephen Rothwell <sfr@canb.auug.org.au>,
- guoren <guoren@kernel.org>, Javier Martinez Canillas <javierm@redhat.com>,
+ Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
+ Hyeonggon Yoo <42.hyeyoo@gmail.com>, David Rientjes <rientjes@google.com>,
+ Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck
+ <linux@roeck-us.net>, Stephen Rothwell <sfr@canb.auug.org.au>,
+ Guo Ren <guoren@kernel.org>, Javier Martinez Canillas <javierm@redhat.com>,
  Azeem Shaikh <azeemshaikh38@gmail.com>, Palmer Dabbelt
  <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>,
  Max Filippov <jcmvbkbc@gmail.com>, Tom Rix <trix@redhat.com>,
@@ -91,14 +90,12 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>,
  Sergey Shtylyov <s.shtylyov@omp.ru>,
  Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
  linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
  linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
  linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
  linux-fbdev@vger.kernel.org
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
- <f671beae8a8ebfd361f4c903bccce713135a169f.1701768028.git.ysato@users.sourceforge.jp>
- <2a5ce0d0-ad0a-49d7-84a6-055c4b729eec@app.fastmail.com>
+ <7b00e02e77d8c9fec4f5ecb5176e28837c87b062.1701768028.git.ysato@users.sourceforge.jp>
 From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
  xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
@@ -144,24 +141,54 @@ Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
  KQ06ztUMRrj8eVtpImjsWCd0bDWRaaR4vqhCHvAG9iWXZu4qh3ipie2Y0oSJygcZT7H3UZxq
  fyYKiqEmRuqsvv6dcbblD8ZLkz1EVZL6djImH5zc5x8qpVxlA0A0i23v5QvN00m6G9NFF0Le
  D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <2a5ce0d0-ad0a-49d7-84a6-055c4b729eec@app.fastmail.com>
+In-Reply-To: <7b00e02e77d8c9fec4f5ecb5176e28837c87b062.1701768028.git.ysato@users.sourceforge.jp>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 05/12/2023 14:36, Arnd Bergmann wrote:
-> On Tue, Dec 5, 2023, at 10:45, Yoshinori Sato wrote:
->> Define SM501 functions and modes.
->>
->> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
->> ---
->>  .../bindings/display/smi,sm501.yaml           | 134 ++++++++++++++++++
->>  include/dt-bindings/display/sm501.h           |  25 ++++
+On 05/12/2023 10:45, Yoshinori Sato wrote:
+> Renesas SH7751 Interrupt controller priority register define.
 > 
-> It looks like we already have a binding at
-> Documentation/devicetree/bindings/display/sm501fb.txt
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+> ---
+>  .../interrupt-controller/sh7751-intc.h        | 21 +++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+>  create mode 100644 include/dt-bindings/interrupt-controller/sh7751-intc.h
 
-Which I asked to do three months ago. Several comments were simply
-ignored and never responded to.
+Still missing vendor prefix. This applies to all your bindings.
+
+> 
+> diff --git a/include/dt-bindings/interrupt-controller/sh7751-intc.h b/include/dt-bindings/interrupt-controller/sh7751-intc.h
+> new file mode 100644
+> index 000000000000..5783ec72d70f
+> --- /dev/null
+> +++ b/include/dt-bindings/interrupt-controller/sh7751-intc.h
+> @@ -0,0 +1,21 @@
+> +/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> + *
+> + * SH3/4 INTC EVT - IRQ conversion
+> + */
+> +
+> +#ifndef __DT_BINDINGS_RENESAS_SH7751_INTC
+> +#define __DT_BINDINGS_RENESAS_SH7751_INTC
+> +
+> +#define evt2irq(evt)		((evt) >> 5)
+
+Still not a binding.
+
+> +
+> +#define IPRA			0
+> +#define IPRB			4
+> +#define IPRC			8
+> +#define IPRD			12
+> +#define INTPRI00		256
+> +#define IPR_B12			12
+> +#define IPR_B8			8
+> +#define IPR_B4			4
+> +#define IPR_B0			0
+
+Neither these. Your commit msg says these are register values, so not
+bindings.
+
 
 Best regards,
 Krzysztof
