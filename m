@@ -1,9 +1,9 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4FDC1A7;
-	Tue,  5 Dec 2023 01:55:32 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id DA836A9;
+	Tue,  5 Dec 2023 01:55:33 -0800 (PST)
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 153D61C050D;
-	Tue,  5 Dec 2023 18:46:15 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id EA7A91C0497;
+	Tue,  5 Dec 2023 18:46:08 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -70,9 +70,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v5 07/37] sh: Fix COMMON_CLK support in CONFIG_OF=y.
-Date: Tue,  5 Dec 2023 18:45:26 +0900
-Message-Id: <2bf3ae9e8b48d86acc771656ed7eb6a0ee9613ea.1701768028.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v5 04/37] dt-bindings: interrupt-controller: Add header for Renesas SH3/4 INTC.
+Date: Tue,  5 Dec 2023 18:45:23 +0900
+Message-Id: <7b00e02e77d8c9fec4f5ecb5176e28837c87b062.1701768028.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1701768028.git.ysato@users.sourceforge.jp>
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
@@ -84,102 +84,40 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Initialize the clock and timer using the COMMON_CLK procedure.
-sh's earlytimer mechanism doesn't work properly in OF,
-so timer initialization is delayed.
-If CONFIG_OF=y, perform the general timer initialization procedure.
+Renesas SH7751 Interrupt controller priority register define.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- arch/sh/boards/of-generic.c | 28 ++++------------------------
- arch/sh/kernel/time.c       | 12 ++++++++++++
- 2 files changed, 16 insertions(+), 24 deletions(-)
+ .../interrupt-controller/sh7751-intc.h        | 21 +++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+ create mode 100644 include/dt-bindings/interrupt-controller/sh7751-intc.h
 
-diff --git a/arch/sh/boards/of-generic.c b/arch/sh/boards/of-generic.c
-index f7f3e618e85b..f1ca5a914c11 100644
---- a/arch/sh/boards/of-generic.c
-+++ b/arch/sh/boards/of-generic.c
-@@ -8,6 +8,7 @@
- #include <linux/of.h>
- #include <linux/of_clk.h>
- #include <linux/of_fdt.h>
-+#include <linux/of_platform.h>
- #include <linux/clocksource.h>
- #include <linux/irqchip.h>
- #include <asm/machvec.h>
-@@ -98,16 +99,7 @@ static void sh_of_smp_probe(void)
- 
- #endif
- 
--static void noop(void)
--{
--}
--
--static int noopi(void)
--{
--	return 0;
--}
--
--static void __init sh_of_mem_reserve(void)
-+static void __init sh_of_mem_init(void)
- {
- 	early_init_fdt_reserve_self();
- 	early_init_fdt_scan_reserved_mem();
-@@ -140,25 +132,13 @@ static void __init sh_of_init_irq(void)
- 	irqchip_init();
- }
- 
--static int __init sh_of_clk_init(void)
--{
--#ifdef CONFIG_COMMON_CLK
--	/* Disabled pending move to COMMON_CLK framework. */
--	pr_info("SH generic board support: scanning for clk providers\n");
--	of_clk_init(NULL);
--#endif
--	return 0;
--}
--
- static struct sh_machine_vector __initmv sh_of_generic_mv = {
- 	.mv_setup	= sh_of_setup,
- 	.mv_name	= "devicetree", /* replaced by DT root's model */
- 	.mv_irq_demux	= sh_of_irq_demux,
- 	.mv_init_irq	= sh_of_init_irq,
--	.mv_clk_init	= sh_of_clk_init,
--	.mv_mode_pins	= noopi,
--	.mv_mem_init	= noop,
--	.mv_mem_reserve	= sh_of_mem_reserve,
-+	.mv_mode_pins	= generic_mode_pins,
-+	.mv_mem_init	= sh_of_mem_init,
- };
- 
- struct sh_clk_ops;
-diff --git a/arch/sh/kernel/time.c b/arch/sh/kernel/time.c
-index 821a09cbd605..ce5b7c2f8628 100644
---- a/arch/sh/kernel/time.c
-+++ b/arch/sh/kernel/time.c
-@@ -19,7 +19,9 @@
- #include <asm/clock.h>
- #include <asm/rtc.h>
- #include <asm/platform_early.h>
-+#include <linux/of_clk.h>
- 
-+#ifndef CONFIG_SH_DEVICE_TREE
- static void __init sh_late_time_init(void)
- {
- 	/*
-@@ -43,3 +45,13 @@ void __init time_init(void)
- 
- 	late_time_init = sh_late_time_init;
- }
-+#else
-+/* CONFIG_SH_DEVICE_TREE */
-+void __init time_init(void)
-+{
-+	pr_info("SH generic board support: scanning for clk providers\n");
+diff --git a/include/dt-bindings/interrupt-controller/sh7751-intc.h b/include/dt-bindings/interrupt-controller/sh7751-intc.h
+new file mode 100644
+index 000000000000..5783ec72d70f
+--- /dev/null
++++ b/include/dt-bindings/interrupt-controller/sh7751-intc.h
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * SH3/4 INTC EVT - IRQ conversion
++ */
 +
-+	of_clk_init(NULL);
-+	timer_probe();
-+}
++#ifndef __DT_BINDINGS_RENESAS_SH7751_INTC
++#define __DT_BINDINGS_RENESAS_SH7751_INTC
++
++#define evt2irq(evt)		((evt) >> 5)
++
++#define IPRA			0
++#define IPRB			4
++#define IPRC			8
++#define IPRD			12
++#define INTPRI00		256
++#define IPR_B12			12
++#define IPR_B8			8
++#define IPR_B4			4
++#define IPR_B0			0
++
 +#endif
 -- 
 2.39.2
