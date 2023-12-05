@@ -1,150 +1,141 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABE14D49
-	for <linux-ide@vger.kernel.org>; Tue,  5 Dec 2023 02:13:51 -0800 (PST)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <ukl@pengutronix.de>)
-	id 1rASOC-0008F0-3E; Tue, 05 Dec 2023 11:10:52 +0100
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <ukl@pengutronix.de>)
-	id 1rASO5-00Diid-K1; Tue, 05 Dec 2023 11:10:45 +0100
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-	(envelope-from <ukl@pengutronix.de>)
-	id 1rASO5-00Ee1U-8q; Tue, 05 Dec 2023 11:10:45 +0100
-Date: Tue, 5 Dec 2023 11:10:45 +0100
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Rich Felker <dalias@libc.org>,
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Chris Morgan <macromorgan@hotmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
-	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-	David Rientjes <rientjes@google.com>,
-	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Guo Ren <guoren@kernel.org>,
-	Javier Martinez Canillas <javierm@redhat.com>,
-	Azeem Shaikh <azeemshaikh38@gmail.com>,
-	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>,
-	Max Filippov <jcmvbkbc@gmail.com>, Tom Rix <trix@redhat.com>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Jacky Huang <ychuang3@nuvoton.com>,
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Biju Das <biju.das.jz@bp.renesas.com>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	linux-fbdev@vger.kernel.org
-Subject: Re: [DO NOT MERGE v5 14/37] clk: Compatible with narrow registers
-Message-ID: <20231205101045.tl43oexzbtelcazr@pengutronix.de>
-References: <cover.1701768028.git.ysato@users.sourceforge.jp>
- <e27ae1458bd2caabef5423e4ed79fe49813e13b1.1701768028.git.ysato@users.sourceforge.jp>
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="cvgOgYA7";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="yacRC4BU"
+Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 677D385;
+	Tue,  5 Dec 2023 05:01:56 -0800 (PST)
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailout.nyi.internal (Postfix) with ESMTP id 2E2795C02C6;
+	Tue,  5 Dec 2023 08:01:53 -0500 (EST)
+Received: from imap51 ([10.202.2.101])
+  by compute5.internal (MEProxy); Tue, 05 Dec 2023 08:01:53 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:sender
+	:subject:subject:to:to; s=fm3; t=1701781313; x=1701867713; bh=Vz
+	5fHcnpm58kiwXE8hZp/Ye9ElTOS3WdqAMkMGNeaRk=; b=cvgOgYA7MGSeQTnroK
+	55TwaexI6T0Ar7/K3PpDbIQ/J0PV5KguP1FtgugKmTAtVlWgSKaeDt70Qbpm6NA2
+	fjtBpR9W4wctFEprPmxR0FZxklq02d1JmOTx58/pVUsu+haKEvj1rkrhLWZ8Lhse
+	as4s2nBA47xUgpqBf/Lw+bZ4Mh0Gs5QMo+yq7uoF3GkXPuhTTKKW+QqQED268YnK
+	kF4sLhZ0HzT+UiaqkpDkgi0Ko21Sm5UzxkxHz1IsAoYoCk8/Mf3MtZNerezo5kbM
+	u1e6g1fDnlJSsccZwhH3xpohgzt0KVwiT8jUdF58GIvmOpp0X7geJSAhUTfPKxyB
+	TQPA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:sender:subject
+	:subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+	:x-sasl-enc; s=fm1; t=1701781313; x=1701867713; bh=Vz5fHcnpm58ki
+	wXE8hZp/Ye9ElTOS3WdqAMkMGNeaRk=; b=yacRC4BUn+jelBSr1r50xeLrSUMCB
+	P6gWdxS8PNmXvS2lwcnI9DrOi1wvxBhoMf/rcRbUuFB9uSFgQlC8vNL90sum4vES
+	5q1gG8eL1N3/1BmRTf4XZb/EQmj5fWHyvMdVvY/ZiHzXWIcpC2xpump8q1MVBWNv
+	gRarAcCi277E4wzsJ91n7IkgGZgzHpjqG6XkHKiQC5zMujdFUyrNlzsRKqnr1vkP
+	S3Y5IDoMX/vCYkl1ca9CMMKzPLtTt6E5P6Cxhe1WfvVhQcyzYfESDXxG/suwT7WS
+	WQrFbEVBupeGfe/ARqv0OnG9byGFqiTYywlG1j0UNEzxpD48p52h5rCsw==
+X-ME-Sender: <xms:Px9vZe8BGJJcjAaWpIBNmHZHQUAg5lk32PhyHWI1PPVAghG_Bel7Vg>
+    <xme:Px9vZeuoPxhZ3ok-vivHK_BSKpjPpWEB3H3KnipZsv-A-LA4xvbJHzK71WgZbELkv
+    LfrV8sKhSIKdBdSyU4>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvkedrudejkedggeejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:Px9vZUBm4v5Q7KA2WQXF-XiajbjsnXVqTq21-2-MlaAkifDTqyf91w>
+    <xmx:Px9vZWd1JvaRpUqFk01U31zGT8hK5cwc_w-5CO1Xs2BI5_uYCZXc4w>
+    <xmx:Px9vZTNLEiUB2a9YJPLTUaVVi1yA8GFJ9bz4xkqAkoe-d2tMhCPxaw>
+    <xmx:QR9vZQla8R70Vm7nNVfKk--auJl8wCkKe6hUzvCK5V4k3_Sw8810jQ>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+	id 7D516B60089; Tue,  5 Dec 2023 08:01:51 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.9.0-alpha0-1178-geeaf0069a7-fm-20231114.001-geeaf0069
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="apda54f5ixgehnv6"
-Content-Disposition: inline
-In-Reply-To: <e27ae1458bd2caabef5423e4ed79fe49813e13b1.1701768028.git.ysato@users.sourceforge.jp>
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+Message-Id: <d76fc75e-15c8-4177-a150-6f906233b82e@app.fastmail.com>
+In-Reply-To: 
+ <d6c242c0ab6e25e775284ec1d4b29a1ddd888af0.1701768028.git.ysato@users.sourceforge.jp>
+References: <cover.1701768028.git.ysato@users.sourceforge.jp>
+ <d6c242c0ab6e25e775284ec1d4b29a1ddd888af0.1701768028.git.ysato@users.sourceforge.jp>
+Date: Tue, 05 Dec 2023 14:01:31 +0100
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Yoshinori Sato" <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org
+Cc: "Damien Le Moal" <dlemoal@kernel.org>,
+ "Rob Herring" <robh+dt@kernel.org>,
+ "Krzysztof Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
+ "Conor Dooley" <conor+dt@kernel.org>,
+ "Geert Uytterhoeven" <geert+renesas@glider.be>,
+ "Michael Turquette" <mturquette@baylibre.com>,
+ "Stephen Boyd" <sboyd@kernel.org>, "Dave Airlie" <airlied@gmail.com>,
+ "Daniel Vetter" <daniel@ffwll.ch>,
+ "Maarten Lankhorst" <maarten.lankhorst@linux.intel.com>,
+ "Maxime Ripard" <mripard@kernel.org>,
+ "Thomas Zimmermann" <tzimmermann@suse.de>,
+ "Thomas Gleixner" <tglx@linutronix.de>,
+ "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>,
+ "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+ "Jiri Slaby" <jirislaby@kernel.org>,
+ "Magnus Damm" <magnus.damm@gmail.com>,
+ "Daniel Lezcano" <daniel.lezcano@linaro.org>,
+ "Rich Felker" <dalias@libc.org>,
+ "John Paul Adrian Glaubitz" <glaubitz@physik.fu-berlin.de>,
+ "Lee Jones" <lee@kernel.org>, "Helge Deller" <deller@gmx.de>,
+ =?UTF-8?Q?Heiko_St=C3=BCbner?= <heiko@sntech.de>,
+ "Jernej Skrabec" <jernej.skrabec@gmail.com>,
+ "Chris Morgan" <macromorgan@hotmail.com>,
+ "Linus Walleij" <linus.walleij@linaro.org>,
+ "Randy Dunlap" <rdunlap@infradead.org>,
+ "Hyeonggon Yoo" <42.hyeyoo@gmail.com>,
+ "David Rientjes" <rientjes@google.com>,
+ "Vlastimil Babka" <vbabka@suse.cz>, "Baoquan He" <bhe@redhat.com>,
+ "Andrew Morton" <akpm@linux-foundation.org>,
+ "Guenter Roeck" <linux@roeck-us.net>,
+ "Stephen Rothwell" <sfr@canb.auug.org.au>, guoren <guoren@kernel.org>,
+ "Javier Martinez Canillas" <javierm@redhat.com>,
+ "Azeem Shaikh" <azeemshaikh38@gmail.com>,
+ "Palmer Dabbelt" <palmer@rivosinc.com>, "Bin Meng" <bmeng@tinylab.org>,
+ "Max Filippov" <jcmvbkbc@gmail.com>, "Tom Rix" <trix@redhat.com>,
+ "Herve Codina" <herve.codina@bootlin.com>,
+ "Jacky Huang" <ychuang3@nuvoton.com>,
+ "Lukas Bulwahn" <lukas.bulwahn@gmail.com>,
+ "Jonathan Corbet" <corbet@lwn.net>,
+ "Biju Das" <biju.das.jz@bp.renesas.com>,
+ =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+ "Sam Ravnborg" <sam@ravnborg.org>,
+ "Michael Karcher" <kernel@mkarcher.dialup.fu-berlin.de>,
+ "Sergey Shtylyov" <s.shtylyov@omp.ru>,
+ "Laurent Pinchart" <laurent.pinchart+renesas@ideasonboard.com>,
+ linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+ linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+ linux-fbdev@vger.kernel.org
+Subject: Re: [DO NOT MERGE v5 35/37] sh: RTS7751R2D Plus OF defconfig
+Content-Type: text/plain
 
+On Tue, Dec 5, 2023, at 10:45, Yoshinori Sato wrote:
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+> ---
+>  arch/sh/configs/rts7751r2dplus-of_defconfig | 93 +++++++++++++++++++++
 
---apda54f5ixgehnv6
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This is very similar to the landisk config, so it may be
+easier to just have one of them that works for both, as well
+as future ones.
 
-Hello,
+> +CONFIG_LOG_BUF_SHIFT=14
+> +CONFIG_NAMESPACES=y
+> +CONFIG_EXPERT=y
 
-On Tue, Dec 05, 2023 at 06:45:33PM +0900, Yoshinori Sato wrote:
-> @@ -675,13 +681,17 @@ struct clk_div_table {
->   * CLK_DIVIDER_BIG_ENDIAN - By default little endian register accesses a=
-re used
->   *	for the divider register.  Setting this flag makes the register acces=
-ses
->   *	big endian.
-> + * CLK_DIVIDER_REG_8BIT - by default 32bit register accesses are used for
-> + *	the gate register.  Setting this flag makes the register accesses 8bi=
-t.
-> + * CLK_DIVIDER_REG_16BIT - by default 32bit register accesses are used f=
-or
-> + *	the gate register.  Setting this flag makes the register accesses 16b=
-it.
->   */
->  struct clk_divider {
->  	struct clk_hw	hw;
->  	void __iomem	*reg;
->  	u8		shift;
->  	u8		width;
-> -	u8		flags;
-> +	u32		flags;
->  	const struct clk_div_table	*table;
->  	spinlock_t	*lock;
->  };
+You should not normally need to enable CONFIG_EXPERT in a
+defconfig. Is there any particular reason for this?
 
-I wonder why .flags was made bigger here. The two new flag values would
-still fit into the u8, right?
-
-Best regards
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
-
---apda54f5ixgehnv6
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmVu9yQACgkQj4D7WH0S
-/k5q9gf/eD5pj/8ERjn9GwHl1uStF4vOGLa/uZ8iRNZpMi1Kvits+6Yri1aT0IG9
-cVW6KuG3Gmw0GpkFkppfZNMPa9C1NzLJhD5aFtSoSfIkAVA8JNVweDRBV9xaiLxc
-eI1t6ze8m74Pxtm/kTa3kPnm+x6Oe1SRZwF+0D5yEMKwGz4GEhFkGNHK3TI+nYm9
-3gfZcJAeydHL0ORJU8XS4Plj7jQ3WE9a+zxy4Odn3V+KS/2Ck2Kqp6kzJSH5CAVn
-YxeDRNGxrm3AY8y4d2jI/vBTB+4VwJofVczJ1y5ksyistGiyWT59kYjhDLxo87th
-4lS0y2d0FfwkAxslCSxm22vlDDZ+Sw==
-=TMZa
------END PGP SIGNATURE-----
-
---apda54f5ixgehnv6--
+    Arnd
