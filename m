@@ -1,116 +1,370 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08BE3433B9;
+	Thu,  7 Dec 2023 16:37:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vcx1QLG6"
-Received: from mail-yw1-x1132.google.com (mail-yw1-x1132.google.com [IPv6:2607:f8b0:4864:20::1132])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29E7FD3
-	for <linux-ide@vger.kernel.org>; Tue,  5 Dec 2023 13:48:53 -0800 (PST)
-Received: by mail-yw1-x1132.google.com with SMTP id 00721157ae682-5d33574f64eso68601577b3.3
-        for <linux-ide@vger.kernel.org>; Tue, 05 Dec 2023 13:48:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701812932; x=1702417732; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5eP0uI2tmZM9ZtqjfsWxJwWzFVr6JH04FbBdTmyNv/w=;
-        b=vcx1QLG6WwxECp6bKqCg4qzU+3z0twyYAm/fKxldOfbA0WT56rifsYRjs4CMIYCITy
-         aCAuzONwK7DCLR79+Wq9XgzHQiJt5eyvZuKwUHgqqP2BVud0kuHKDyCUvYuAJ0zJmV7b
-         U47iSy0ilrmbYL+Ig3V7i06FYB4fsP0hA5kxYxGpOSHVmSo4Mxz9u0AdYe8mWtTIsVXJ
-         2e/UlpJMgTltzCcqk818OWNmMQPdEVbjojQQoSI8FmevbYke5EDsmrPD4AbgfVI8FEzG
-         6mzfV/A3hV5n40HIiA0Xf8gYZD8L9E1rdzo4m353KTeFLzqEp627WSWrPzsrT1mZPnvX
-         ns4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701812932; x=1702417732;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5eP0uI2tmZM9ZtqjfsWxJwWzFVr6JH04FbBdTmyNv/w=;
-        b=aF4vcbJ5hhAcDnSia30U6B7ETh9Y3EVVUd4ZqjkcPLI1VxR4SP2aT5aUjrixZkQirC
-         TmYDwKnDDHiwbiH771hNqmQ0hId+5IhmB1w4ewr1uKRLUe+VkxuD3R/HrPlri0MXF72g
-         XFv48U4nabczxfwqnX2dBwdv1VmZkDIf1DwN9FBopcOioJwpslhROpbXllV8vHJU+YGb
-         zwxsJQbGAEFpvyuFeyoPNY/cNEHdrOmjxIiFiBo9TCiOzeIbea3YegAvtJT8Co+VZYmq
-         C7ApnMNbtiDDoAwBWtnlfmiU4CKWUDbeQb7VtMl6OMDmO0PYhl9uPHiDydhyr/LTuczW
-         g25w==
-X-Gm-Message-State: AOJu0YxOVn666mht+zR1YDXZ6pYbvWqcegocMSn8sy6eeLVr+kCcymNC
-	7vv+NfZ0bX5oOel568dq2xzEcr21q79XzCd8nKbD9g==
-X-Google-Smtp-Source: AGHT+IEC7pNshX6Y57af6XTx4hp1z/Y9MEpMHk/hv4YF7sUJybFapw88Qbjz6GB2s4WrIdgZn+IiEoCY/A4u2lTVAiA=
-X-Received: by 2002:a25:aac2:0:b0:db7:dacf:59d1 with SMTP id
- t60-20020a25aac2000000b00db7dacf59d1mr4535677ybi.69.1701812932200; Tue, 05
- Dec 2023 13:48:52 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jsyj37ME"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E549AC433C8;
+	Thu,  7 Dec 2023 16:36:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701967020;
+	bh=uEkhnjutevPAm25NTL1T2cWhqwdWKvVdlSIRkmlGW/Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Jsyj37MEnASgngEkCP3344dgv2GrsxWSHtLxGIEQ/9s34NVdpLZRLsrsE4SDgS/JA
+	 mc0317PwgDtwwTkAmP1RRbW2adquZpiIjXkasmLtRvPXC2aWNm84ZPwzHvAr7rlaf5
+	 saUt9oxzpmL7T4dlWIyTkKHTxYRWbFlr1aSBc5WFZCIAjAa1hzlERxP/WU+nfjM2pi
+	 Kz3xB8FnCtmKl54BEDbYAPychlzI+6X5VexA7iyRJr6swM1JcI5YU8YYqygaIuDWOk
+	 fBMNDfDiXd0CNir523/P9MwQWIjetgdg7JUg78tjgXgg4nopVpVj5qfFMvMV7fX/al
+	 S6KkDeyCeQ88A==
+Date: Thu, 7 Dec 2023 16:36:44 +0000
+From: Lee Jones <lee@kernel.org>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
+	Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Helge Deller <deller@gmx.de>, Heiko Stuebner <heiko@sntech.de>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Chris Morgan <macromorgan@hotmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	David Rientjes <rientjes@google.com>,
+	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Guo Ren <guoren@kernel.org>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Azeem Shaikh <azeemshaikh38@gmail.com>,
+	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>,
+	Max Filippov <jcmvbkbc@gmail.com>, Tom Rix <trix@redhat.com>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [DO NOT MERGE v5 23/37] mfd: sm501: Convert platform_data to OF
+ property
+Message-ID: <20231207163644.GB111411@google.com>
+References: <cover.1701768028.git.ysato@users.sourceforge.jp>
+ <68532082074b0c8fe9945b481678aab77520f517.1701768028.git.ysato@users.sourceforge.jp>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1701768028.git.ysato@users.sourceforge.jp>
- <602e1ba4f02489fcbc47e8f9904f3c1db1c9f14a.1701768028.git.ysato@users.sourceforge.jp>
- <2ef81211-9525-4f96-a6b2-3fcfbed0c6e5@app.fastmail.com>
-In-Reply-To: <2ef81211-9525-4f96-a6b2-3fcfbed0c6e5@app.fastmail.com>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Tue, 5 Dec 2023 22:48:41 +0100
-Message-ID: <CACRpkdZUAMXJ4YM9+xW2Snzt0Dx5mxWjcwHZifsXPJH9ozL5bg@mail.gmail.com>
-Subject: Re: [DO NOT MERGE v5 11/37] pci: pci-sh7751: Add SH7751 PCI driver
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org, 
-	Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Dave Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Lee Jones <lee@kernel.org>, 
-	Helge Deller <deller@gmx.de>, =?UTF-8?Q?Heiko_St=C3=BCbner?= <heiko@sntech.de>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Chris Morgan <macromorgan@hotmail.com>, 
-	Randy Dunlap <rdunlap@infradead.org>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
-	David Rientjes <rientjes@google.com>, Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Stephen Rothwell <sfr@canb.auug.org.au>, guoren <guoren@kernel.org>, 
-	Javier Martinez Canillas <javierm@redhat.com>, Azeem Shaikh <azeemshaikh38@gmail.com>, 
-	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>, 
-	Max Filippov <jcmvbkbc@gmail.com>, Tom Rix <trix@redhat.com>, 
-	Herve Codina <herve.codina@bootlin.com>, Jacky Huang <ychuang3@nuvoton.com>, 
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Biju Das <biju.das.jz@bp.renesas.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Sam Ravnborg <sam@ravnborg.org>, Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>, 
-	Sergey Shtylyov <s.shtylyov@omp.ru>, 
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Linux-Renesas <linux-renesas-soc@vger.kernel.org>, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <68532082074b0c8fe9945b481678aab77520f517.1701768028.git.ysato@users.sourceforge.jp>
 
-On Tue, Dec 5, 2023 at 2:26=E2=80=AFPM Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tue, Dec 5, 2023, at 10:45, Yoshinori Sato wrote:
+On Tue, 05 Dec 2023, Yoshinori Sato wrote:
 
-> > +     if (of_property_read_u32_array(pdev->dev.of_node,
-> > +                                    "renesas,memory", memory, 2) < 0) =
-{
-> > +             /*
-> > +              * If no memory range is specified,
-> > +              *  the entire main memory will be targeted for DMA.
-> > +              */
-> > +             memory[0] =3D memory_start;
-> > +             memory[1] =3D memory_end - memory_start;
-> > +     }
->
-> There is a generic "dma-ranges" proerty for describing
-> which memory is visible by a bus.
+> Various parameters of SM501 can be set using platform_data,
+> so parameters cannot be passed in the DeviceTree target.
+> Expands the parameters set in platform_data so that they can be
+> specified using DeviceTree properties.
+> 
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+> ---
+>  drivers/mfd/sm501.c           | 99 +++++++++++++++++++++++++++++++++++
+>  drivers/video/fbdev/sm501fb.c | 82 +++++++++++++++++++++++++++++
+>  2 files changed, 181 insertions(+)
+> 
+> diff --git a/drivers/mfd/sm501.c b/drivers/mfd/sm501.c
+> index 28027982cf69..f0104fdf0f34 100644
+> --- a/drivers/mfd/sm501.c
+> +++ b/drivers/mfd/sm501.c
+> @@ -1370,6 +1370,99 @@ static int sm501_init_dev(struct sm501_devdata *sm)
+>  	return 0;
+>  }
+>  
+> +static void sm501_of_read_reg_init(struct device_node *np,
+> +				   const char *propname, struct sm501_reg_init *val)
+> +{
+> +	u32 u32_val[2];
 
-It's really a headache to use, so I put a bit of documentation here:
-https://elinux.org/Device_Tree_Usage#PCI_DMA_Address_Translation
+Encoding the size of the variable in the variable name is odd.
 
-Yoshinoro, you can look at these bindings and drivers that use
-dma-ranges for help:
-Documentation/devicetree/bindings/pci/intel,ixp4xx-pci.yaml
-drivers/pci/controller/pci-ixp4xx.c
-Documentation/devicetree/bindings/pci/faraday,ftpci100.yaml
-drivers/pci/controller/pci-ftpci100.c
+> +
+> +	if (!of_property_read_u32_array(np, propname, u32_val, sizeof(u32_val))) {
+> +		val->set = u32_val[0];
+> +		val->mask = u32_val[1];
 
-Yours,
-Linus Walleij
+Masks and register values stored as DT properties?  This is generally
+not permitted.  Please seek counsel from the DT maintainers.
+
+> +	}
+> +}
+> +
+> +/* Read GPIO I2C configuration */
+> +static int sm501_parse_dt_gpio_i2c(struct device *dev, struct sm501_platdata *plat,
+> +				   struct device_node *np)
+> +{
+> +	struct sm501_platdata_gpio_i2c *gpio_i2c_p;
+> +	struct property *prop;
+> +	u32 gpio_i2c[5];
+
+Why 5?  Please define all magic numbers.
+
+> +	const __be32 *p;
+> +	unsigned int i;
+> +	u32 i2c_nr;
+> +
+> +	prop = of_find_property(np, "smi,gpio-i2c", NULL);
+> +	if (!prop)
+> +		return 0;
+> +
+> +	i2c_nr = of_property_count_u32_elems(np, "smi,gpio-i2c");
+
+Why do you need both of these probing functions?  What does
+of_property_count_u32_elems() return if smi,gpio-i2c doesn't exist?
+
+> +	/* GPIO I2C define 5 words per channel. */
+> +	if (i2c_nr % 5)
+> +		return -EINVAL;
+> +	i2c_nr /= 5;
+
+'\n'
+
+> +	plat->gpio_i2c = devm_kzalloc(dev, sizeof(*plat->gpio_i2c) * i2c_nr,
+> +				      GFP_KERNEL);
+> +	if (!plat->gpio_i2c)
+> +		return -ENOMEM;
+> +
+> +	plat->gpio_i2c_nr = i2c_nr;
+> +	gpio_i2c_p = plat->gpio_i2c;
+
+What's the purpose of this intermediary variable?
+
+> +
+> +	for (; i2c_nr > 0; i2c_nr--) {
+
+You can define 'p' in here, right?
+
+> +		for (i = 0; i < ARRAY_SIZE(gpio_i2c); i++) {
+> +			p = of_prop_next_u32(prop, p, &gpio_i2c[i]);
+> +			if (!p)
+> +				return -EINVAL;
+> +		}
+> +		gpio_i2c_p->bus_num = gpio_i2c[0];
+> +		gpio_i2c_p->pin_sda = gpio_i2c[1];
+> +		gpio_i2c_p->pin_scl = gpio_i2c[2];
+> +		gpio_i2c_p->udelay  = gpio_i2c[3];
+> +		gpio_i2c_p->timeout = gpio_i2c[4];
+
+I'm not even going to ask.  I'll leave this to the DT maintainers.
+
+> +		gpio_i2c_p++;
+> +	}
+> +	return 0;
+> +}
+> +
+> +/* Build platform_data from OF property */
+> +static int sm501_parse_dt(struct sm501_devdata *sm, struct device_node *np)
+> +{
+> +	struct sm501_platdata *plat;
+> +	u32 u32_val;
+> +	int ret;
+> +
+> +	plat = devm_kzalloc(sm->dev, sizeof(*plat), GFP_KERNEL);
+> +	if (!plat)
+> +		return -ENOMEM;
+> +
+> +	plat->init = devm_kzalloc(sm->dev, sizeof(*plat->init), GFP_KERNEL);
+
+Why not grab all of the memory at once?
+
+Maybe make this 'init' thing a non-pointer.
+
+> +	if (!plat->init)
+> +		return -ENOMEM;
+> +
+> +	if (!of_property_read_u32(np, "smi,devices", &u32_val))
+> +		plat->init->devices = u32_val;
+
+What happens if you do:
+
+	of_property_read_u32(np, "smi,devices", &plat->init->devices);
+
+> +	if (!of_property_read_u32(np, "smi,mclk", &u32_val))
+> +		plat->init->mclk = u32_val;
+> +	if (!of_property_read_u32(np, "smi,m1xclk", &u32_val))
+> +		plat->init->m1xclk = u32_val;
+> +
+> +	sm501_of_read_reg_init(np, "smi,misc-timing", &plat->init->misc_timing);
+> +	sm501_of_read_reg_init(np, "smi,misc-control", &plat->init->misc_control);
+> +	sm501_of_read_reg_init(np, "smi,gpio-low", &plat->init->gpio_low);
+> +	sm501_of_read_reg_init(np, "smi,gpio-high", &plat->init->gpio_high);
+> +
+> +	if (IS_ENABLED(CONFIG_MFD_SM501_GPIO) &&
+> +	    (plat->init->devices & SM501_USE_GPIO)) {
+
+That's over-bracketed, right?
+
+plat->init->devices is a bit mask of enable devices stored in DT?
+
+Okay, I think this is going to need a lot of work on the DT side.
+
+Leaving the review here for now.
+
+> +		ret = sm501_parse_dt_gpio_i2c(sm->dev, plat, np);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +	sm->platdata = plat;
+> +	return 0;
+> +}
+> +
+>  static int sm501_plat_probe(struct platform_device *dev)
+>  {
+>  	struct sm501_devdata *sm;
+> @@ -1406,6 +1499,12 @@ static int sm501_plat_probe(struct platform_device *dev)
+>  		goto err_res;
+>  	}
+>  
+> +	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
+> +		ret = sm501_parse_dt(sm, dev->dev.of_node);
+> +		if (ret)
+> +			goto err_res;
+> +	}
+> +
+>  	platform_set_drvdata(dev, sm);
+>  
+>  	sm->regs = ioremap(sm->io_res->start, resource_size(sm->io_res));
+> diff --git a/drivers/video/fbdev/sm501fb.c b/drivers/video/fbdev/sm501fb.c
+> index d6fdc1737cd2..d35285819d28 100644
+> --- a/drivers/video/fbdev/sm501fb.c
+> +++ b/drivers/video/fbdev/sm501fb.c
+> @@ -1932,6 +1932,82 @@ static int sm501fb_start_one(struct sm501fb_info *info,
+>  	return 0;
+>  }
+>  
+> +#if defined(CONFIG_OF)
+> +/* parse CRT / panel configuration */
+> +static struct sm501_platdata_fbsub *dt_fbsub(struct device *dev,
+> +					     struct device_node *np,
+> +					     const char *name)
+> +{
+> +	struct sm501_platdata_fbsub *fbsub = NULL;
+> +	struct fb_videomode *def_mode = NULL;
+> +	struct device_node *child;
+> +	const void *p_edid;
+> +	u32 flags = 0;
+> +	u32 bpp = 0;
+> +	int len;
+> +
+> +	child = of_get_child_by_name(np, name);
+> +	if (child == NULL)
+> +		return NULL;
+> +
+> +	p_edid = of_get_property(child, "edid", &len);
+> +	if (p_edid && len == EDID_LENGTH) {
+> +		struct fb_monspecs *specs;
+> +		u8 *edid;
+> +
+> +		edid = kmemdup(p_edid, EDID_LENGTH, GFP_KERNEL);
+> +		if (edid) {
+> +			specs = kzalloc(sizeof(*specs), GFP_KERNEL);
+> +			if (specs) {
+> +				fb_edid_to_monspecs(edid, specs);
+> +				def_mode = specs->modedb;
+> +			}
+> +		}
+> +		kfree(edid);
+> +	}
+> +
+> +	of_property_read_u32(child, "bpp", &bpp);
+> +
+> +	/* If flags property is obtained, fbsub is returned. */
+> +	if (!of_property_read_u32(child, "smi,flags", &flags)) {
+> +		fbsub = devm_kzalloc(dev, sizeof(*fbsub), GFP_KERNEL);
+> +		if (fbsub) {
+> +			fbsub->def_mode = def_mode;
+> +			fbsub->def_bpp = bpp;
+> +			fbsub->flags = flags;
+> +		}
+> +	}
+> +	return fbsub;
+> +}
+> +
+> +/* Build platform_data from OF property */
+> +static struct sm501_platdata_fb *pdata_from_dt(struct device *dev, struct device_node *np)
+> +{
+> +	enum sm501_fb_routing fb_route = SM501_FB_OWN;
+> +	struct sm501_platdata_fb *pdata = NULL;
+> +	struct sm501_platdata_fbsub *fb_crt;
+> +	struct sm501_platdata_fbsub *fb_pnl;
+> +	unsigned int flags = 0;
+> +
+> +	if (of_property_read_bool(np, "route-crt-panel"))
+> +		fb_route = SM501_FB_CRT_PANEL;
+> +	if (of_property_read_bool(np, "swap-fb-endian"))
+> +		flags = SM501_FBPD_SWAP_FB_ENDIAN;
+> +	fb_crt = dt_fbsub(dev, np, "crt");
+> +	fb_pnl = dt_fbsub(dev, np, "panel");
+> +	if (fb_crt || fb_pnl) {
+> +		pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
+> +		if (pdata) {
+> +			pdata->fb_route = fb_route;
+> +			pdata->flags = flags;
+> +			pdata->fb_crt = fb_crt;
+> +			pdata->fb_pnl = fb_pnl;
+> +		}
+> +	}
+> +	return pdata;
+> +}
+> +#endif
+> +
+>  static int sm501fb_probe(struct platform_device *pdev)
+>  {
+>  	struct sm501fb_info *info;
+> @@ -1974,6 +2050,12 @@ static int sm501fb_probe(struct platform_device *pdev)
+>  				if (info->edid_data)
+>  					found = 1;
+>  			}
+> +			/* Get platform data compatible configuration */
+> +			if (!found) {
+> +				info->pdata = pdata_from_dt(dev, np);
+> +				if (info->pdata)
+> +					found = 1;
+> +			}
+>  		}
+>  #endif
+>  		if (!found) {
+> -- 
+> 2.39.2
+> 
+
+-- 
+Lee Jones [李琼斯]
