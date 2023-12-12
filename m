@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFD5A1C28C
-	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2023 08:22:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E1A74C3A9
+	for <linux-ide@vger.kernel.org>; Tue, 12 Dec 2023 08:22:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dIImFFBi"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id A1075C43391;
-	Tue, 12 Dec 2023 08:22:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VCcbILFs"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5660EC3278A;
+	Tue, 12 Dec 2023 08:22:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702369325;
-	bh=89sGbAwtHZLmywU3Spbtojj19E+yEgyLt9lhMdOjUSA=;
+	s=k20201202; t=1702369326;
+	bh=m5SQvsz1vhRXNtl3JSUfWJRem/gUR0HGkRHb/F5Ra/A=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=dIImFFBiLiySlYMTK3eQB2V8Ile7TqEzJykaq3/PG18PX41ecENDP8fffznr2Mz3g
-	 EpfbU/KyX2wkDsz+OvlFQpXVp/qq0h/ltg7WuJz1mRZ7kjpu5M8SXuWQLSixfga579
-	 XvcaVkIBvfAPq5/1DjzdHBTrlfw3SoSZqlh9oAJIISSARqITt4gVRsX/K5Gl4kpVtu
-	 mkskLqKYRgXEQJvKkt47+AKJRsXtQPiCQGWRDhygz+iS3/w8YE3I/mI2gRr9ZBFHaH
-	 iSXiwhNHSDroWKwJh5W3TmvHNQfRWhH+8h5sbg5fQ25CVwE40gHYid7DjTVT0lhSzv
-	 Y1ROMkcxu3nQg==
+	b=VCcbILFsDOuv4LiKU8YJW+ycPcd/SRNdAPbxN2799cY3zE0B05Al40bzoB07DuFPT
+	 5I+lOcrcARNMgcQL+1QIgJO/jGe8lkIrFt9KkdhTX18PL/L8BDK/e32VGPxtmSc109
+	 EMRggfmgv8yn2HtsoZ2G2v0uM2Ah+79MzS4JzQZNWXzkyTFfREZedMBL97uU5cUmsr
+	 UJQ2JJ+Rfxle9U6PMGDhDanK5aSC197KxHWTJJt4NU2bPAohn5eAVp5IqSmsKazIsr
+	 7Tdsmf+oRtKf9qptGTMK7jwcr+xmQ0pS9saFXZJjbyFTv9zJKXSlgJ7tiMOjBFMHgm
+	 Ch9yBjcx7UF5w==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F0C7C38145;
-	Tue, 12 Dec 2023 08:22:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4628EC4167D;
+	Tue, 12 Dec 2023 08:22:06 +0000 (UTC)
 From:
  Nikita Shubin via B4 Relay <devnull+nikita.shubin.maquefel.me@kernel.org>
-Date: Tue, 12 Dec 2023 11:20:39 +0300
-Subject: [PATCH v6 22/40] ata: pata_ep93xx: add device tree support
+Date: Tue, 12 Dec 2023 11:20:53 +0300
+Subject: [PATCH v6 36/40] ata: pata_ep93xx: remove legacy pinctrl use
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -32,19 +32,26 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231212-ep93xx-v6-22-c307b8ac9aa8@maquefel.me>
+Message-Id: <20231212-ep93xx-v6-36-c307b8ac9aa8@maquefel.me>
 References: <20231212-ep93xx-v6-0-c307b8ac9aa8@maquefel.me>
 In-Reply-To: <20231212-ep93xx-v6-0-c307b8ac9aa8@maquefel.me>
-To: Sergey Shtylyov <s.shtylyov@omp.ru>, 
- Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Arnd Bergmann <arnd@arndb.de>
+To: Hartley Sweeten <hsweeten@visionengravers.com>, 
+ Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
+ Russell King <linux@armlinux.org.uk>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+ Damien Le Moal <dlemoal@kernel.org>, 
+ Nikita Shubin <nikita.shubin@maquefel.me>, 
+ Linus Walleij <linus.walleij@linaro.org>, 
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
 X-Mailer: b4 0.13-dev-e3e53
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1702369322; l=5845;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1702369322; l=6137;
  i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
- bh=w72U3jG1No6t3pMwmT+VIpbkZKZCCOKZg354x7Q6zUs=; =?utf-8?q?b=3DZBTBlVAt7T1u?=
- =?utf-8?q?sAWcLql10mqgDcsTcqq05KM7WjIdqaZNG4WxJllH8/pFXjOyVp43RIxNx/hHAiUX?=
- v/dAw2AAB2ooaUpTUDKTPPK1tJdgmghLLpoqNkblHWqLbycL+/mL
+ bh=fcGoDtjMaCymQOqZ9xZV3x0EFLV2n2MxDeTkBga5QNs=; =?utf-8?q?b=3Dh3AzSery0ME/?=
+ =?utf-8?q?p2ZlhFfk6hnbCeiKj4zMZODVsHinLp3/1h3YIDz7pHDxLAQcpoIuB3Qh/cnh2ONr?=
+ qfToS2nJBrt7I35kx20WFYEF0g71yTuTot3Zzk2z7pPsLfuNlBAL
 X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
  pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
 X-Endpoint-Received:
@@ -54,175 +61,194 @@ Reply-To: <nikita.shubin@maquefel.me>
 
 From: Nikita Shubin <nikita.shubin@maquefel.me>
 
-- add OF ID match table
-- drop platform DMA and filters
-- change DMA setup to OF, so we can defer probe
+Drop legacy acquire/release since we are using pinctrl for this now.
 
 Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 Acked-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
 ---
- drivers/ata/pata_ep93xx.c | 81 +++++++++++++++++++++++++----------------------
- 1 file changed, 43 insertions(+), 38 deletions(-)
+ arch/arm/mach-ep93xx/core.c       | 72 ---------------------------------------
+ drivers/ata/pata_ep93xx.c         | 29 +++++-----------
+ include/linux/soc/cirrus/ep93xx.h |  4 ---
+ 3 files changed, 8 insertions(+), 97 deletions(-)
 
+diff --git a/arch/arm/mach-ep93xx/core.c b/arch/arm/mach-ep93xx/core.c
+index 4ddf1a4cba33..9c6154bb37b5 100644
+--- a/arch/arm/mach-ep93xx/core.c
++++ b/arch/arm/mach-ep93xx/core.c
+@@ -779,78 +779,6 @@ void __init ep93xx_register_ide(void)
+ 	platform_device_register(&ep93xx_ide_device);
+ }
+ 
+-int ep93xx_ide_acquire_gpio(struct platform_device *pdev)
+-{
+-	int err;
+-	int i;
+-
+-	err = gpio_request(EP93XX_GPIO_LINE_EGPIO2, dev_name(&pdev->dev));
+-	if (err)
+-		return err;
+-	err = gpio_request(EP93XX_GPIO_LINE_EGPIO15, dev_name(&pdev->dev));
+-	if (err)
+-		goto fail_egpio15;
+-	for (i = 2; i < 8; i++) {
+-		err = gpio_request(EP93XX_GPIO_LINE_E(i), dev_name(&pdev->dev));
+-		if (err)
+-			goto fail_gpio_e;
+-	}
+-	for (i = 4; i < 8; i++) {
+-		err = gpio_request(EP93XX_GPIO_LINE_G(i), dev_name(&pdev->dev));
+-		if (err)
+-			goto fail_gpio_g;
+-	}
+-	for (i = 0; i < 8; i++) {
+-		err = gpio_request(EP93XX_GPIO_LINE_H(i), dev_name(&pdev->dev));
+-		if (err)
+-			goto fail_gpio_h;
+-	}
+-
+-	/* GPIO ports E[7:2], G[7:4] and H used by IDE */
+-	ep93xx_devcfg_clear_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
+-				 EP93XX_SYSCON_DEVCFG_GONIDE |
+-				 EP93XX_SYSCON_DEVCFG_HONIDE);
+-	return 0;
+-
+-fail_gpio_h:
+-	for (--i; i >= 0; --i)
+-		gpio_free(EP93XX_GPIO_LINE_H(i));
+-	i = 8;
+-fail_gpio_g:
+-	for (--i; i >= 4; --i)
+-		gpio_free(EP93XX_GPIO_LINE_G(i));
+-	i = 8;
+-fail_gpio_e:
+-	for (--i; i >= 2; --i)
+-		gpio_free(EP93XX_GPIO_LINE_E(i));
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
+-fail_egpio15:
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
+-	return err;
+-}
+-EXPORT_SYMBOL(ep93xx_ide_acquire_gpio);
+-
+-void ep93xx_ide_release_gpio(struct platform_device *pdev)
+-{
+-	int i;
+-
+-	for (i = 2; i < 8; i++)
+-		gpio_free(EP93XX_GPIO_LINE_E(i));
+-	for (i = 4; i < 8; i++)
+-		gpio_free(EP93XX_GPIO_LINE_G(i));
+-	for (i = 0; i < 8; i++)
+-		gpio_free(EP93XX_GPIO_LINE_H(i));
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
+-
+-
+-	/* GPIO ports E[7:2], G[7:4] and H used by GPIO */
+-	ep93xx_devcfg_set_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
+-			       EP93XX_SYSCON_DEVCFG_GONIDE |
+-			       EP93XX_SYSCON_DEVCFG_HONIDE);
+-}
+-EXPORT_SYMBOL(ep93xx_ide_release_gpio);
+-
+ /*************************************************************************
+  * EP93xx ADC
+  *************************************************************************/
 diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index c84a20892f1b..3f33916c2d23 100644
+index 3f33916c2d23..83c2a0162cb0 100644
 --- a/drivers/ata/pata_ep93xx.c
 +++ b/drivers/ata/pata_ep93xx.c
-@@ -44,8 +44,8 @@
- #include <linux/delay.h>
- #include <linux/dmaengine.h>
- #include <linux/ktime.h>
-+#include <linux/mod_devicetable.h>
- 
--#include <linux/platform_data/dma-ep93xx.h>
- #include <linux/soc/cirrus/ep93xx.h>
- 
- #define DRV_NAME	"ep93xx-ide"
-@@ -126,7 +126,7 @@ enum {
- };
- 
- struct ep93xx_pata_data {
--	const struct platform_device *pdev;
-+	struct platform_device *pdev;
- 	void __iomem *ide_base;
- 	struct ata_timing t;
- 	bool iordy;
-@@ -135,9 +135,7 @@ struct ep93xx_pata_data {
- 	unsigned long udma_out_phys;
- 
- 	struct dma_chan *dma_rx_channel;
--	struct ep93xx_dma_data dma_rx_data;
- 	struct dma_chan *dma_tx_channel;
--	struct ep93xx_dma_data dma_tx_data;
- };
- 
- static void ep93xx_pata_clear_regs(void __iomem *base)
-@@ -637,20 +635,13 @@ static void ep93xx_pata_release_dma(struct ep93xx_pata_data *drv_data)
- 	}
- }
- 
--static bool ep93xx_pata_dma_filter(struct dma_chan *chan, void *filter_param)
-+static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- {
--	if (ep93xx_dma_chan_is_m2p(chan))
--		return false;
--
--	chan->private = filter_param;
--	return true;
--}
--
--static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
--{
--	const struct platform_device *pdev = drv_data->pdev;
-+	struct platform_device *pdev = drv_data->pdev;
-+	struct device *dev = &pdev->dev;
- 	dma_cap_mask_t mask;
- 	struct dma_slave_config conf;
-+	int ret;
- 
- 	dma_cap_zero(mask);
- 	dma_cap_set(DMA_SLAVE, mask);
-@@ -660,22 +651,17 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	 * to request only one channel, and reprogram it's direction at
+@@ -652,13 +652,13 @@ static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
  	 * start of new transfer.
  	 */
--	drv_data->dma_rx_data.port = EP93XX_DMA_IDE;
--	drv_data->dma_rx_data.direction = DMA_DEV_TO_MEM;
--	drv_data->dma_rx_data.name = "ep93xx-pata-rx";
--	drv_data->dma_rx_channel = dma_request_channel(mask,
--		ep93xx_pata_dma_filter, &drv_data->dma_rx_data);
--	if (!drv_data->dma_rx_channel)
--		return;
-+	drv_data->dma_rx_channel = dma_request_chan(dev, "rx");
-+	if (IS_ERR(drv_data->dma_rx_channel)) {
-+		ret = PTR_ERR(drv_data->dma_rx_channel);
-+		return dev_err_probe(dev, ret, "rx DMA setup failed");
-+	}
- 
--	drv_data->dma_tx_data.port = EP93XX_DMA_IDE;
--	drv_data->dma_tx_data.direction = DMA_MEM_TO_DEV;
--	drv_data->dma_tx_data.name = "ep93xx-pata-tx";
--	drv_data->dma_tx_channel = dma_request_channel(mask,
--		ep93xx_pata_dma_filter, &drv_data->dma_tx_data);
--	if (!drv_data->dma_tx_channel) {
--		dma_release_channel(drv_data->dma_rx_channel);
--		return;
-+	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
-+	if (IS_ERR(drv_data->dma_tx_channel)) {
-+		ret = PTR_ERR(drv_data->dma_tx_channel);
-+		dev_err_probe(dev, ret, "tx DMA setup failed");
-+		goto fail_release_rx;
+ 	drv_data->dma_rx_channel = dma_request_chan(dev, "rx");
+-	if (IS_ERR(drv_data->dma_rx_channel)) {
++	if (PTR_ERR_OR_ZERO(drv_data->dma_rx_channel)) {
+ 		ret = PTR_ERR(drv_data->dma_rx_channel);
+ 		return dev_err_probe(dev, ret, "rx DMA setup failed");
  	}
  
- 	/* Configure receive channel direction and source address */
-@@ -683,10 +669,10 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	conf.direction = DMA_DEV_TO_MEM;
- 	conf.src_addr = drv_data->udma_in_phys;
- 	conf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
--	if (dmaengine_slave_config(drv_data->dma_rx_channel, &conf)) {
--		dev_err(&pdev->dev, "failed to configure rx dma channel\n");
--		ep93xx_pata_release_dma(drv_data);
--		return;
-+	ret = dmaengine_slave_config(drv_data->dma_rx_channel, &conf);
-+	if (ret) {
-+		dev_err_probe(dev, ret, "failed to configure rx dma channel");
-+		goto fail_release_dma;
- 	}
+ 	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
+-	if (IS_ERR(drv_data->dma_tx_channel)) {
++	if (PTR_ERR_OR_ZERO(drv_data->dma_tx_channel)) {
+ 		ret = PTR_ERR(drv_data->dma_tx_channel);
+ 		dev_err_probe(dev, ret, "tx DMA setup failed");
+ 		goto fail_release_rx;
+@@ -923,28 +923,18 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 	void __iomem *ide_base;
+ 	int err;
  
- 	/* Configure transmit channel direction and destination address */
-@@ -694,10 +680,20 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	conf.direction = DMA_MEM_TO_DEV;
- 	conf.dst_addr = drv_data->udma_out_phys;
- 	conf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
--	if (dmaengine_slave_config(drv_data->dma_tx_channel, &conf)) {
--		dev_err(&pdev->dev, "failed to configure tx dma channel\n");
--		ep93xx_pata_release_dma(drv_data);
-+	ret = dmaengine_slave_config(drv_data->dma_tx_channel, &conf);
-+	if (ret) {
-+		dev_err_probe(dev, ret, "failed to configure tx dma channel");
-+		goto fail_release_dma;
- 	}
-+
-+	return 0;
-+
-+fail_release_rx:
-+	dma_release_channel(drv_data->dma_rx_channel);
-+fail_release_dma:
-+	ep93xx_pata_release_dma(drv_data);
-+
-+	return ret;
- }
+-	err = ep93xx_ide_acquire_gpio(pdev);
+-	if (err)
+-		return err;
+-
+ 	/* INT[3] (IRQ_EP93XX_EXT3) line connected as pull down */
+ 	irq = platform_get_irq(pdev, 0);
+-	if (irq < 0) {
+-		err = irq;
+-		goto err_rel_gpio;
+-	}
++	if (irq < 0)
++		return irq;
  
- static void ep93xx_pata_dma_start(struct ata_queued_cmd *qc)
-@@ -954,7 +950,9 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 	ide_base = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
+-	if (IS_ERR(ide_base)) {
+-		err = PTR_ERR(ide_base);
+-		goto err_rel_gpio;
+-	}
++	if (IS_ERR(ide_base))
++		return PTR_ERR(ide_base);
+ 
+ 	drv_data = devm_kzalloc(&pdev->dev, sizeof(*drv_data), GFP_KERNEL);
+-	if (!drv_data) {
+-		err = -ENOMEM;
+-		goto err_rel_gpio;
+-	}
++	if (!drv_data)
++		return -ENOMEM;
+ 
+ 	drv_data->pdev = pdev;
  	drv_data->ide_base = ide_base;
- 	drv_data->udma_in_phys = mem_res->start + IDEUDMADATAIN;
- 	drv_data->udma_out_phys = mem_res->start + IDEUDMADATAOUT;
--	ep93xx_pata_dma_init(drv_data);
-+	err = ep93xx_pata_dma_init(drv_data);
-+	if (err)
-+		return err;
+@@ -1003,8 +993,6 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
  
- 	/* allocate host */
- 	host = ata_host_alloc(&pdev->dev, 1);
-@@ -1021,9 +1019,16 @@ static void ep93xx_pata_remove(struct platform_device *pdev)
- 	ep93xx_ide_release_gpio(pdev);
+ err_rel_dma:
+ 	ep93xx_pata_release_dma(drv_data);
+-err_rel_gpio:
+-	ep93xx_ide_release_gpio(pdev);
+ 	return err;
  }
  
-+static const struct of_device_id ep93xx_pata_of_ids[] = {
-+	{ .compatible = "cirrus,ep9312-pata" },
-+	{ /* sentinel */ }
-+};
-+MODULE_DEVICE_TABLE(of, ep93xx_pata_of_ids);
-+
- static struct platform_driver ep93xx_pata_platform_driver = {
- 	.driver = {
- 		.name = DRV_NAME,
-+		.of_match_table = ep93xx_pata_of_ids,
- 	},
- 	.probe = ep93xx_pata_probe,
- 	.remove_new = ep93xx_pata_remove,
+@@ -1016,7 +1004,6 @@ static void ep93xx_pata_remove(struct platform_device *pdev)
+ 	ata_host_detach(host);
+ 	ep93xx_pata_release_dma(drv_data);
+ 	ep93xx_pata_clear_regs(drv_data->ide_base);
+-	ep93xx_ide_release_gpio(pdev);
+ }
+ 
+ static const struct of_device_id ep93xx_pata_of_ids[] = {
+diff --git a/include/linux/soc/cirrus/ep93xx.h b/include/linux/soc/cirrus/ep93xx.h
+index fc4a2f9d4729..da8bdfc36526 100644
+--- a/include/linux/soc/cirrus/ep93xx.h
++++ b/include/linux/soc/cirrus/ep93xx.h
+@@ -37,15 +37,11 @@ struct ep93xx_regmap_adev {
+ 	container_of((_adev), struct ep93xx_regmap_adev, adev)
+ 
+ #ifdef CONFIG_ARCH_EP93XX
+-int ep93xx_ide_acquire_gpio(struct platform_device *pdev);
+-void ep93xx_ide_release_gpio(struct platform_device *pdev);
+ int ep93xx_i2s_acquire(void);
+ void ep93xx_i2s_release(void);
+ unsigned int ep93xx_chip_revision(void);
+ 
+ #else
+-static inline int ep93xx_ide_acquire_gpio(struct platform_device *pdev) { return 0; }
+-static inline void ep93xx_ide_release_gpio(struct platform_device *pdev) {}
+ static inline int ep93xx_i2s_acquire(void) { return 0; }
+ static inline void ep93xx_i2s_release(void) {}
+ static inline unsigned int ep93xx_chip_revision(void) { return 0; }
 
 -- 
 2.41.0
