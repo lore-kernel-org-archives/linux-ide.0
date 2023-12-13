@@ -1,53 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cHLgaY2e"
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D85A12E;
-	Wed, 13 Dec 2023 10:16:33 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FkaYmIf1"
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C17F8A7;
+	Wed, 13 Dec 2023 10:19:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1702491393; x=1734027393;
+  t=1702491592; x=1734027592;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=HHpVgwc81Z6qFsooEeCAHjTWxZ9ctdHQjE1DZWDlYOg=;
-  b=cHLgaY2eaUJkt7x2V2pq7Eal+6mdyr79iSNa1A+V6wdbivYreR2ClWyh
-   q3Dhw053/nPs0l/OfYp/lIhtlnu/G7VnrQiVwI/USjlpXV1eLIB40PIvt
-   vhxju7kDATibBogVSb2WkUIVbdL/F3YdpGGHtErDoBXZ/sS1+2CMMp67+
-   sRWkqUugiz+pD9klZ7Cif1McY8QJLoTYmvtOqICSBSkKJR3A61MoChweV
-   PqABeTu/3aH+F9VYUNQV8SP455/Q3I97Jpv7RPIAe0+PkS2JJ9qevs6HT
-   rpRs4rbyTnBzae4BVtOtjpNmbRy1rPeTLu/7cFtm660brxyLVUuOu3h1O
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="16556040"
+  bh=HnMRtyfCaqa5qx++e5SRvsIJVqQa81BV0RtqDj1CTtk=;
+  b=FkaYmIf1JfYsfqGyLCkdsTaoT6EY+CK3oQJns8y+lqGAxs1GymPiBRds
+   T+/XeGqB9Ye7Vod6bym8Hc0gX7/KwTqQYOZI5fLb6sm+39rIKBMCTnpOB
+   6M57V0EMwcS8XP1nNnJzeY+WRe4JHTO1LjqY4lsigdOUzTla3UItWALlH
+   /rOUy0kxYRf91oM4dZwpLv37g3LY7cbQUkj4JagvqqtPkA4Ed5rKVBL70
+   HmmUVrcGjJZEm1Drll/TQxyFkts3Dj/NpSjNQUpOzJqPp092XLBd1Z0uO
+   GrgcRmUkZ0Nd+Xrt5MJIENL5DnKAA/rw2oWu+FKnV21yFES3Ncd41doLZ
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="13704390"
 X-IronPort-AV: E=Sophos;i="6.04,273,1695711600"; 
-   d="scan'208";a="16556040"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 10:16:33 -0800
+   d="scan'208";a="13704390"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 10:19:52 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="1105393970"
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="808247705"
 X-IronPort-AV: E=Sophos;i="6.04,273,1695711600"; 
-   d="scan'208";a="1105393970"
+   d="scan'208";a="808247705"
 Received: from smile.fi.intel.com ([10.237.72.54])
-  by fmsmga005.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 10:16:30 -0800
+  by orsmga001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 10:19:50 -0800
 Received: from andy by smile.fi.intel.com with local (Exim 4.97)
-	(envelope-from <andriy.shevchenko@linux.intel.com>)
-	id 1rDTmU-00000005bdu-1rty;
-	Wed, 13 Dec 2023 20:16:26 +0200
-Date: Wed, 13 Dec 2023 20:16:26 +0200
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+	(envelope-from <andriy.shevchenko@intel.com>)
+	id 1rDTpj-00000005bfy-2IrG;
+	Wed, 13 Dec 2023 20:19:47 +0200
+Date: Wed, 13 Dec 2023 20:19:47 +0200
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
 To: Nikita Shubin <nikita.shubin@maquefel.me>
-Cc: Hartley Sweeten <hsweeten@visionengravers.com>,
-	Alexander Sverdlin <alexander.sverdlin@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v6 36/40] ata: pata_ep93xx: remove legacy pinctrl use
-Message-ID: <ZXn0-pHxIztvRFLK@smile.fi.intel.com>
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v6 22/40] ata: pata_ep93xx: add device tree support
+Message-ID: <ZXn1w4hP4JitgdhS@smile.fi.intel.com>
 References: <20231212-ep93xx-v6-0-c307b8ac9aa8@maquefel.me>
- <20231212-ep93xx-v6-36-c307b8ac9aa8@maquefel.me>
+ <20231212-ep93xx-v6-22-c307b8ac9aa8@maquefel.me>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -56,42 +49,40 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231212-ep93xx-v6-36-c307b8ac9aa8@maquefel.me>
+In-Reply-To: <20231212-ep93xx-v6-22-c307b8ac9aa8@maquefel.me>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-On Tue, Dec 12, 2023 at 11:20:53AM +0300, Nikita Shubin wrote:
-> Drop legacy acquire/release since we are using pinctrl for this now.
+On Tue, Dec 12, 2023 at 11:20:39AM +0300, Nikita Shubin wrote:
+> - add OF ID match table
+> - drop platform DMA and filters
+> - change DMA setup to OF, so we can defer probe
 
 ...
 
-> -	if (IS_ERR(drv_data->dma_rx_channel)) {
-> +	if (PTR_ERR_OR_ZERO(drv_data->dma_rx_channel)) {
+> +	drv_data->dma_rx_channel = dma_request_chan(dev, "rx");
+> +	if (IS_ERR(drv_data->dma_rx_channel)) {
+> +		ret = PTR_ERR(drv_data->dma_rx_channel);
+> +		return dev_err_probe(dev, ret, "rx DMA setup failed");
+> +	}
 
-This seems incorrect.
+See the comments to other patches about PTR_ERR_OR_ZERO() use and
+returning dev_err_probe().
 
->  		ret = PTR_ERR(drv_data->dma_rx_channel);
->  		return dev_err_probe(dev, ret, "rx DMA setup failed");
+...
 
-		return dev_err_probe(...);
-
+> +	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
+> +	if (IS_ERR(drv_data->dma_tx_channel)) {
+> +		ret = PTR_ERR(drv_data->dma_tx_channel);
+> +		dev_err_probe(dev, ret, "tx DMA setup failed");
+> +		goto fail_release_rx;
 >  	}
 
-I think you wanted
-
-	ret = PTR_ERR_OR_ZERO(drv_data->dma_rx_channel);
-	if (ret)
-		return dev_err_probe(dev, ret, "rx DMA setup failed");
+Ditto.
 
 ...
 
->  	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
-> -	if (IS_ERR(drv_data->dma_tx_channel)) {
-> +	if (PTR_ERR_OR_ZERO(drv_data->dma_tx_channel)) {
->  		ret = PTR_ERR(drv_data->dma_tx_channel);
->  		dev_err_probe(dev, ret, "tx DMA setup failed");
->  		goto fail_release_rx;
-
-Ditto.
+Seems like broken rebase or so as some of the latter changes in this file
+should be done here.
 
 -- 
 With Best Regards,
