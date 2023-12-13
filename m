@@ -1,65 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50D2783;
-	Wed, 13 Dec 2023 09:59:52 -0800 (PST)
-X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="385419697"
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cHLgaY2e"
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D85A12E;
+	Wed, 13 Dec 2023 10:16:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702491393; x=1734027393;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=HHpVgwc81Z6qFsooEeCAHjTWxZ9ctdHQjE1DZWDlYOg=;
+  b=cHLgaY2eaUJkt7x2V2pq7Eal+6mdyr79iSNa1A+V6wdbivYreR2ClWyh
+   q3Dhw053/nPs0l/OfYp/lIhtlnu/G7VnrQiVwI/USjlpXV1eLIB40PIvt
+   vhxju7kDATibBogVSb2WkUIVbdL/F3YdpGGHtErDoBXZ/sS1+2CMMp67+
+   sRWkqUugiz+pD9klZ7Cif1McY8QJLoTYmvtOqICSBSkKJR3A61MoChweV
+   PqABeTu/3aH+F9VYUNQV8SP455/Q3I97Jpv7RPIAe0+PkS2JJ9qevs6HT
+   rpRs4rbyTnBzae4BVtOtjpNmbRy1rPeTLu/7cFtm660brxyLVUuOu3h1O
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="16556040"
 X-IronPort-AV: E=Sophos;i="6.04,273,1695711600"; 
-   d="scan'208";a="385419697"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 09:59:51 -0800
+   d="scan'208";a="16556040"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 10:16:33 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="864707289"
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="1105393970"
 X-IronPort-AV: E=Sophos;i="6.04,273,1695711600"; 
-   d="scan'208";a="864707289"
+   d="scan'208";a="1105393970"
 Received: from smile.fi.intel.com ([10.237.72.54])
-  by FMSMGA003.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 09:59:40 -0800
+  by fmsmga005.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 10:16:30 -0800
 Received: from andy by smile.fi.intel.com with local (Exim 4.97)
-	(envelope-from <andy@kernel.org>)
-	id 1rDTWB-00000005bJa-0XiK;
-	Wed, 13 Dec 2023 19:59:35 +0200
-Date: Wed, 13 Dec 2023 19:59:34 +0200
-From: Andy Shevchenko <andy@kernel.org>
+	(envelope-from <andriy.shevchenko@linux.intel.com>)
+	id 1rDTmU-00000005bdu-1rty;
+	Wed, 13 Dec 2023 20:16:26 +0200
+Date: Wed, 13 Dec 2023 20:16:26 +0200
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Nikita Shubin <nikita.shubin@maquefel.me>
 Cc: Hartley Sweeten <hsweeten@visionengravers.com>,
 	Alexander Sverdlin <alexander.sverdlin@gmail.com>,
 	Russell King <linux@armlinux.org.uk>,
-	Lukasz Majewski <lukma@denx.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>, Vinod Koul <vkoul@kernel.org>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
-	Mark Brown <broonie@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
 	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
 	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Liam Girdwood <lgirdwood@gmail.com>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
-	linux-pm@vger.kernel.org, devicetree@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org,
-	linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
-	netdev@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-ide@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-sound@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [PATCH v6 00/40] ep93xx device tree conversion
-Message-ID: <ZXnxBtqbneUMbvwq@smile.fi.intel.com>
+	linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v6 36/40] ata: pata_ep93xx: remove legacy pinctrl use
+Message-ID: <ZXn0-pHxIztvRFLK@smile.fi.intel.com>
 References: <20231212-ep93xx-v6-0-c307b8ac9aa8@maquefel.me>
+ <20231212-ep93xx-v6-36-c307b8ac9aa8@maquefel.me>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -68,40 +56,42 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231212-ep93xx-v6-0-c307b8ac9aa8@maquefel.me>
+In-Reply-To: <20231212-ep93xx-v6-36-c307b8ac9aa8@maquefel.me>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-On Tue, Dec 12, 2023 at 11:20:17AM +0300, Nikita Shubin wrote:
-> No major changes since last version all changes are cometic.
-> 
-> Following patches require attention from Stephen Boyd, as they were converted to aux_dev as suggested:
-> 
-> - ARM: ep93xx: add regmap aux_dev
-> - clk: ep93xx: add DT support for Cirrus EP93xx
-> 
-> DMA related patches still require Acked or Reviewed tags.
-> 
-> got approval LGTM from Miquel:
-> - mtd: rawnand: add support for ts72xx
-> Link: https://lore.kernel.org/lkml/20231004103911.2aa65354@xps-13/
-> 
-> new patches:
-> 
-> ARM: ep93xx:  Add terminator to gpiod_lookup_table
->   - fixed terminator in gpiod_lockup_table
-> 
-> So mostly all patches got approval.
-> 
-> Patches should be now formated with '--histogram'
+On Tue, Dec 12, 2023 at 11:20:53AM +0300, Nikita Shubin wrote:
+> Drop legacy acquire/release since we are using pinctrl for this now.
 
-It _feels_ like some tags might be missing.
-In any case I suggest to use `b4` tool to retrieve tags when preparing
-the next version:
+...
 
-	git checkout -b vXX v6.7-rcX
-	b4 am -slt $MSG_ID_OF_v(XX-1)
-	git am ...
-	git rebase --interactive ... # to address comments
+> -	if (IS_ERR(drv_data->dma_rx_channel)) {
+> +	if (PTR_ERR_OR_ZERO(drv_data->dma_rx_channel)) {
+
+This seems incorrect.
+
+>  		ret = PTR_ERR(drv_data->dma_rx_channel);
+>  		return dev_err_probe(dev, ret, "rx DMA setup failed");
+
+		return dev_err_probe(...);
+
+>  	}
+
+I think you wanted
+
+	ret = PTR_ERR_OR_ZERO(drv_data->dma_rx_channel);
+	if (ret)
+		return dev_err_probe(dev, ret, "rx DMA setup failed");
+
+...
+
+>  	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
+> -	if (IS_ERR(drv_data->dma_tx_channel)) {
+> +	if (PTR_ERR_OR_ZERO(drv_data->dma_tx_channel)) {
+>  		ret = PTR_ERR(drv_data->dma_tx_channel);
+>  		dev_err_probe(dev, ret, "tx DMA setup failed");
+>  		goto fail_release_rx;
+
+Ditto.
 
 -- 
 With Best Regards,
