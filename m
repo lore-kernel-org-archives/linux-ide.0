@@ -1,75 +1,95 @@
-Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25C72BA37
-	for <linux-ide@vger.kernel.org>; Sat, 30 Dec 2023 18:21:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-	id 8EC6D14FB3C; Sat, 30 Dec 2023 13:21:54 -0500 (EST)
-From: Phillip Susi <phill@thesusis.net>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	Phillip Susi <phill@thesusis.net>
-Subject: [PATCH 1/1] libata: only wake a drive once on system resume
-Date: Sat, 30 Dec 2023 13:21:28 -0500
-Message-Id: <20231230182128.296675-2-phill@thesusis.net>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20231230182128.296675-1-phill@thesusis.net>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43244DDA9
+	for <linux-ide@vger.kernel.org>; Sat, 30 Dec 2023 19:42:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.1.104] (31.173.85.145) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Sat, 30 Dec
+ 2023 22:42:26 +0300
+Subject: Re: [PATCH 1/1] libata: only wake a drive once on system resume
+To: Phillip Susi <phill@thesusis.net>, Damien Le Moal <dlemoal@kernel.org>
+CC: <linux-ide@vger.kernel.org>
 References: <20231225151915.258816-1-phill@thesusis.net>
  <20231230182128.296675-1-phill@thesusis.net>
+ <20231230182128.296675-2-phill@thesusis.net>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <dbe2b528-1b70-9f3b-858d-40efa699152e@omp.ru>
+Date: Sat, 30 Dec 2023 22:42:25 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231230182128.296675-2-phill@thesusis.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 12/30/2023 19:27:53
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 182446 [Dec 30 2023]
+X-KSE-AntiSpam-Info: Version: 6.1.0.3
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 7 0.3.7 6d6bf5bd8eea7373134f756a2fd73e9456bb7d1a
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.85.145 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info:
+	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.85.145
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 12/30/2023 19:33:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 12/30/2023 2:00:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-In the event that more than one pass of EH is needed during system resume,
-only request the drive be started once.
----
- drivers/ata/libata-core.c | 4 ++--
- drivers/ata/libata-eh.c   | 4 ----
- 2 files changed, 2 insertions(+), 6 deletions(-)
+On 12/30/23 9:21 PM, Phillip Susi wrote:
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d1389ce6943e..ca3ca8107a3e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5223,7 +5223,7 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	/* on system resume, don't wake PuiS drives */
- 	if (mesg.event == PM_EVENT_RESUME)
- 		ehi_flags |= ATA_EHI_NOSTART;
--	
-+
- 	/* Request PM operation to EH */
- 	ap->pm_mesg = mesg;
- 	ap->pflags |= ATA_PFLAG_PM_PENDING;
-@@ -5297,7 +5297,7 @@ static int ata_port_pm_poweroff(struct device *dev)
- static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
- 			    bool async)
- {
--	ata_port_request_pm(ap, mesg, ATA_EH_RESET,
-+	ata_port_request_pm(ap, mesg, ATA_EH_RESET | ATA_EH_SET_ACTIVE,
- 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET,
- 			    async);
- }
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 120f7d7fb450..f44ce7068a8b 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -711,10 +711,6 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
- 			ehc->saved_xfer_mode[devno] = dev->xfer_mode;
- 			if (ata_ncq_enabled(dev))
- 				ehc->saved_ncq_enabled |= 1 << devno;
--
--			/* If we are resuming, wake up the device */
--			if (ap->pflags & ATA_PFLAG_RESUMING)
--				ehc->i.dev_action[devno] |= ATA_EH_SET_ACTIVE;
- 		}
- 	}
- 
--- 
-2.30.2
+> In the event that more than one pass of EH is needed during system resume,
+> only request the drive be started once.
+> ---
+>  drivers/ata/libata-core.c | 4 ++--
+>  drivers/ata/libata-eh.c   | 4 ----
+>  2 files changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index d1389ce6943e..ca3ca8107a3e 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5223,7 +5223,7 @@ static void ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+>  	/* on system resume, don't wake PuiS drives */
+>  	if (mesg.event == PM_EVENT_RESUME)
+>  		ehi_flags |= ATA_EHI_NOSTART;
+> -	
+> +
 
+   Unrelated whitespace change? :-)
+
+[...]
+
+MBR, Sergey
