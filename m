@@ -1,113 +1,81 @@
-Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F6B3224CA
-	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2024 14:05:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-	id 4EA13151C63; Thu,  4 Jan 2024 09:05:39 -0500 (EST)
-From: Phillip Susi <phill@thesusis.net>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Subject: Re: [PATCH 1/1] libata: only wake a drive once on system resume
-In-Reply-To: <0f53d7b2-9980-4223-92f5-519207e9b486@kernel.org>
-References: <20231225151915.258816-1-phill@thesusis.net>
- <20231230182128.296675-1-phill@thesusis.net>
- <20231230182128.296675-2-phill@thesusis.net>
- <decd3317-ed44-4ddc-b6b3-5b33bc72727c@kernel.org>
- <87il4am8tn.fsf@vps.thesusis.net>
- <0f53d7b2-9980-4223-92f5-519207e9b486@kernel.org>
-Date: Thu, 04 Jan 2024 09:05:39 -0500
-Message-ID: <87y1d5kxcc.fsf@vps.thesusis.net>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A032C698;
+	Thu,  4 Jan 2024 21:17:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ty799Qn8"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=p5F8u3xrKU8ESZxmcg8jQ8IAjNp1yE/fjU1J5AXQvGQ=; b=ty799Qn8Fd+rytCk14M0ZVq25I
+	YiBoR7XxLbFmlNS85l+O0gooTrHaDk5fhLePvNU0dGp4e1aMmTnss9STQyHl1VejW4/57v7YeIMBT
+	ZP9rfvynFQ/IN6FqUpfPmxtyPBqFFxwyJMh/iOFqQYxJdTTEz1eSljsz03RUgd9NPFc9D695RfHwk
+	+08zzTszFt8/e9TS1tjVeg0a9Dg7clSrdazeYNx0BSMUnh50XbIuN4hkn2wwogAacauBJO2ucG1rP
+	JnlzoMgHsQUMwe3gYgnlXHjcmHCDNYpPswNwzduYNn/s2OLszGXp84YD0ABSGA9UbbP+tu1yvCFeQ
+	WLAfi1sQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+	id 1rLV5Y-00G1t1-Vo; Thu, 04 Jan 2024 21:17:17 +0000
+Date: Thu, 4 Jan 2024 21:17:16 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+Message-ID: <ZZcgXI46AinlcBDP@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Damien Le Moal <dlemoal@kernel.org> writes:
+This is primarily a _FILESYSTEM_ track topic.  All the work has already
+been done on the MM side; the FS people need to do their part.  It could
+be a joint session, but I'm not sure there's much for the MM people
+to say.
 
-> Correct, if it succeeds, no need to do it again. The problem with clearing the
-> flag though is that ATA_EH_SET_ACTIVE is for the device and that is set only if
-> ATA_PFLAG_RESUMING is set, but that one is for the port. So if resume for the
-> device succeeds, you can clear the ATA_PFLAG_RESUMING flag *only* if there is
-> only a single link/device for that port. If not, other devices on the port may
-> need a retry so we cannot clear ATA_PFLAG_RESUMING.
+There are situations where we need to allocate memory, but cannot call
+into the filesystem to free memory.  Generally this is because we're
+holding a lock or we've started a transaction, and attempting to write
+out dirty folios to reclaim memory would result in a deadlock.
 
-Rather than clear ATA_PFLAG_RESUMING, I was thinking of keeping my
-previus change to specify ATA_EH_SET_ACTIVE in the request_pm path
-rather than by setting it based on ATA_PFLAG_RESUMING, but just adding a
-check to see if the VERIFY fails, and if so, set ATA_EH_SET_ACTIVE again.
+The old way to solve this problem is to specify GFP_NOFS when allocating
+memory.  This conveys little information about what is being protected
+against, and so it is hard to know when it might be safe to remove.
+It's also a reflex -- many filesystem authors use GFP_NOFS by default
+even when they could use GFP_KERNEL because there's no risk of deadlock.
 
-> Ah, now I think I understand: is it your patch that prevents resuming a drive if
-> it has PUIS on ? If yes, then sure, the verify command to spin-up the drive will
-> indeed fail immediately if the drive is in standby from PUIS, since getting out
-> of standby state driven by PUIS requires a set features spinup. So... with your
-> patch, things will not work.
+The new way is to use the scoped APIs -- memalloc_nofs_save() and
+memalloc_nofs_restore().  These should be called when we start a
+transaction or take a lock that would cause a GFP_KERNEL allocation to
+deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
+can see the nofs situation is in effect and will not call back into
+the filesystem.
 
-Right... unless you also apply this patch to make sure that
-ATA_EH_SET_ACTIVE isn't turned on again after it is cleared when PuiS is detected.
+This results in better code within your filesystem as you don't need to
+pass around gfp flags as much, and can lead to better performance from
+the memory allocators as GFP_NOFS will not be used unnecessarily.
 
-> If PUIS is not enabled, the only thing wasted is a check power mode command. If
-> the drive confirms that it is active, verify command is not issued.
+The memalloc_nofs APIs were introduced in May 2017, but we still have
+over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which is
+really sad).  This session is for filesystem developers to talk about
+what they need to do to fix up their own filesystem, or share stories
+about how they made their filesystem better by adopting the new APIs.
 
-Ahh, right... I forgot you did add a CHECK POWER MODE first.
+My interest in this is that I'd like to get rid of the FGP_NOFS flag.
+It'd also be good to get rid of the __GFP_FS flag since there's always
+demand for more GFP flags.  I have a git branch with some work in this
+area, so there's a certain amount of conference-driven development going
+on here too.
 
-> With PUIS enabled though, if you leave the drive in standby mode, when/how do
-> you actually wake it up ?
-
-Initially I just set the ATA_DFLAG_SLEEPING flag as if the drive had been
-put into SLEEP mode, which triggers EH to wake it up when the drive is
-accessed.  I have since switched to actually putting the drive to SLEEP
-mode when PuiS is detected since it will save a little more power than
-leaving it in STANDBY.
-
-> Scratching my head about this, I think that doing this cleanly should be
-> possible if:
-> 1) The dive gives complete identify data when that command is issued with the
-> drive in standby state driven by PUIS.
-
-I think you can do it even if the IDENTIFY data is incomplete, as long
-as a revalidate_and_attach is done eventually, when waking the drive up.
-
-> 2) The call to ata_dev_configure() executed by ata EH started from system resume
-> does not spinup the device if requested not to (libata module & sysfs parameter
-> can do that). But I think this requires that the drive be instead put into a
-> state equivalent to *runtime* suspend, that is, with the scsi disk associated
-> with the device must also be in runtime suspend state.
-
-Yea, I was trying to make it work with runtime suspend before, but you
-indicated that the current device hierarchy seems to make that
-impossible, so I put that aside for now.  Currently runtime pm thinks
-the drive is running even though it isn't, but that isn't any different
-than when you hdparm -y or hdparm -Y, or hdparm -S and let the drive
-decide to auto standby.  Eventually I'll try to get the runtime pm
-sorted but I figured I'd try to get the basic concept working first.
-
-> With that, it would only be a matter of adding a device flag to remember that
-> the drive is in "PUIS stnadby" instead of regular standby, and then have
-> ata_dev_power_set_active() use a set feature spinup command instead of a verify.
-> Drive spinup will then be cleanly driven by accesses to the scsi disk, similarly
-> to a regular runtime suspend.
-
-Right now I'm using the SLEEP flag to do this, and when the disk is
-accessed, it triggers a round of EH that does the revalidate_and_attach
-and in the process, issues the SET FEATURES command to wake the drive.
-
-> With such changes, everything would be cleaner and safer and all work as
-> expected. The exception will be drives that do not give complete identify data
-> when PUIS is on. For these, it is too risky to not wake them up to get the full
-> information first.
->
-> Do you want to try to tackle this ? If you do not feel like it, I can give it a
-> try too.
-
-I've already got it working ;)
-
-I think I sent you an earlier version of the patch a few weeks ago.
-I'll post my whole series tonight, after I fix the case of retrying the
-VERIFY if it fails.
-
+We could mutatis mutandi for GFP_NOIO, memalloc_noio_save/restore,
+__GFP_IO, etc, so maybe the block people are also interested.  I haven't
+looked into that in any detail though.  I guess we'll see what interest
+this topic gains.
