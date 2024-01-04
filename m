@@ -1,81 +1,124 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A032C698;
-	Thu,  4 Jan 2024 21:17:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ty799Qn8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=p5F8u3xrKU8ESZxmcg8jQ8IAjNp1yE/fjU1J5AXQvGQ=; b=ty799Qn8Fd+rytCk14M0ZVq25I
-	YiBoR7XxLbFmlNS85l+O0gooTrHaDk5fhLePvNU0dGp4e1aMmTnss9STQyHl1VejW4/57v7YeIMBT
-	ZP9rfvynFQ/IN6FqUpfPmxtyPBqFFxwyJMh/iOFqQYxJdTTEz1eSljsz03RUgd9NPFc9D695RfHwk
-	+08zzTszFt8/e9TS1tjVeg0a9Dg7clSrdazeYNx0BSMUnh50XbIuN4hkn2wwogAacauBJO2ucG1rP
-	JnlzoMgHsQUMwe3gYgnlXHjcmHCDNYpPswNwzduYNn/s2OLszGXp84YD0ABSGA9UbbP+tu1yvCFeQ
-	WLAfi1sQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-	id 1rLV5Y-00G1t1-Vo; Thu, 04 Jan 2024 21:17:17 +0000
-Date: Thu, 4 Jan 2024 21:17:16 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
-Message-ID: <ZZcgXI46AinlcBDP@casper.infradead.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17E212C6A8
+	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2024 22:40:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+	id 09579151D59; Thu,  4 Jan 2024 17:40:04 -0500 (EST)
+From: Phillip Susi <phill@thesusis.net>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	Phillip Susi <phill@thesusis.net>
+Subject: [PATCH 1/4] libata: only wake a drive once on system resume
+Date: Thu,  4 Jan 2024 17:39:37 -0500
+Message-Id: <20240104223940.339290-1-phill@thesusis.net>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <87y1d5kxcc.fsf@vps.thesusis.net>
+References: <87y1d5kxcc.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-This is primarily a _FILESYSTEM_ track topic.  All the work has already
-been done on the MM side; the FS people need to do their part.  It could
-be a joint session, but I'm not sure there's much for the MM people
-to say.
+In the event that more than one pass of EH is needed during system resume,
+only request the drive be started once.
+---
+ drivers/ata/libata-core.c | 9 +++++----
+ drivers/ata/libata-eh.c   | 8 +++-----
+ drivers/ata/libata.h      | 2 +-
+ 3 files changed, 9 insertions(+), 10 deletions(-)
 
-There are situations where we need to allocate memory, but cannot call
-into the filesystem to free memory.  Generally this is because we're
-holding a lock or we've started a transaction, and attempting to write
-out dirty folios to reclaim memory would result in a deadlock.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 09ed67772fae..a2d8cc0097a8 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2080,7 +2080,7 @@ static bool ata_dev_power_is_active(struct ata_device *dev)
+  *	LOCKING:
+  *	Kernel thread context (may sleep).
+  */
+-void ata_dev_power_set_active(struct ata_device *dev)
++unsigned int ata_dev_power_set_active(struct ata_device *dev)
+ {
+ 	struct ata_taskfile tf;
+ 	unsigned int err_mask;
+@@ -2090,14 +2090,14 @@ void ata_dev_power_set_active(struct ata_device *dev)
+ 	 * if supported by the device.
+ 	 */
+ 	if (!ata_dev_power_init_tf(dev, &tf, true))
+-		return;
++		return AC_ERR_OTHER;
+ 
+ 	/*
+ 	 * Check the device power state & condition and force a spinup with
+ 	 * VERIFY command only if the drive is not already ACTIVE or IDLE.
+ 	 */
+ 	if (ata_dev_power_is_active(dev))
+-		return;
++		return AC_ERR_OK;
+ 
+ 	ata_dev_notice(dev, "Entering active power mode\n");
+ 
+@@ -2105,6 +2105,7 @@ void ata_dev_power_set_active(struct ata_device *dev)
+ 	if (err_mask)
+ 		ata_dev_err(dev, "VERIFY failed (err_mask=0x%x)\n",
+ 			    err_mask);
++	return err_mask;
+ }
+ 
+ /**
+@@ -5257,7 +5258,7 @@ static int ata_port_pm_poweroff(struct device *dev)
+ static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
+ 			    bool async)
+ {
+-	ata_port_request_pm(ap, mesg, ATA_EH_RESET,
++	ata_port_request_pm(ap, mesg, ATA_EH_RESET | ATA_EH_SET_ACTIVE,
+ 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET,
+ 			    async);
+ }
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b0d6e69c4a5b..799a1b8bc384 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -710,10 +710,6 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+ 			ehc->saved_xfer_mode[devno] = dev->xfer_mode;
+ 			if (ata_ncq_enabled(dev))
+ 				ehc->saved_ncq_enabled |= 1 << devno;
+-
+-			/* If we are resuming, wake up the device */
+-			if (ap->pflags & ATA_PFLAG_RESUMING)
+-				ehc->i.dev_action[devno] |= ATA_EH_SET_ACTIVE;
+ 		}
+ 	}
+ 
+@@ -3853,7 +3849,9 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		 */
+ 		ata_for_each_dev(dev, link, ENABLED) {
+ 			if (ehc->i.dev_action[dev->devno] & ATA_EH_SET_ACTIVE) {
+-				ata_dev_power_set_active(dev);
++				unsigned int err_mask = ata_dev_power_set_active(dev);
++				if (err_mask)
++					link->eh_info.dev_action[dev->devno] |= ATA_EH_SET_ACTIVE;
+ 				ata_eh_done(link, dev, ATA_EH_SET_ACTIVE);
+ 			}
+ 		}
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 5c685bb1939e..43ad1ef9b63a 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -65,7 +65,7 @@ extern int ata_dev_configure(struct ata_device *dev);
+ extern bool ata_dev_power_init_tf(struct ata_device *dev,
+ 				  struct ata_taskfile *tf, bool set_active);
+ extern void ata_dev_power_set_standby(struct ata_device *dev);
+-extern void ata_dev_power_set_active(struct ata_device *dev);
++extern unsigned int ata_dev_power_set_active(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
+ extern unsigned int ata_dev_set_feature(struct ata_device *dev,
+-- 
+2.30.2
 
-The old way to solve this problem is to specify GFP_NOFS when allocating
-memory.  This conveys little information about what is being protected
-against, and so it is hard to know when it might be safe to remove.
-It's also a reflex -- many filesystem authors use GFP_NOFS by default
-even when they could use GFP_KERNEL because there's no risk of deadlock.
-
-The new way is to use the scoped APIs -- memalloc_nofs_save() and
-memalloc_nofs_restore().  These should be called when we start a
-transaction or take a lock that would cause a GFP_KERNEL allocation to
-deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
-can see the nofs situation is in effect and will not call back into
-the filesystem.
-
-This results in better code within your filesystem as you don't need to
-pass around gfp flags as much, and can lead to better performance from
-the memory allocators as GFP_NOFS will not be used unnecessarily.
-
-The memalloc_nofs APIs were introduced in May 2017, but we still have
-over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which is
-really sad).  This session is for filesystem developers to talk about
-what they need to do to fix up their own filesystem, or share stories
-about how they made their filesystem better by adopting the new APIs.
-
-My interest in this is that I'd like to get rid of the FGP_NOFS flag.
-It'd also be good to get rid of the __GFP_FS flag since there's always
-demand for more GFP flags.  I have a git branch with some work in this
-area, so there's a certain amount of conference-driven development going
-on here too.
-
-We could mutatis mutandi for GFP_NOIO, memalloc_noio_save/restore,
-__GFP_IO, etc, so maybe the block people are also interested.  I haven't
-looked into that in any detail though.  I guess we'll see what interest
-this topic gains.
