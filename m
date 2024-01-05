@@ -1,154 +1,136 @@
-Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B8EC2C863
-	for <linux-ide@vger.kernel.org>; Thu,  4 Jan 2024 22:40:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-	id 0F3B3151D64; Thu,  4 Jan 2024 17:40:21 -0500 (EST)
-From: Phillip Susi <phill@thesusis.net>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org,
-	Phillip Susi <phill@thesusis.net>
-Subject: [PATCH 4/4] libata: don't start PuiS disks on resume
-Date: Thu,  4 Jan 2024 17:39:40 -0500
-Message-Id: <20240104223940.339290-4-phill@thesusis.net>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20240104223940.339290-1-phill@thesusis.net>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CFE3219FE
+	for <linux-ide@vger.kernel.org>; Fri,  5 Jan 2024 08:46:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JX5iG7jE"
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-2cd053d5683so15959491fa.2
+        for <linux-ide@vger.kernel.org>; Fri, 05 Jan 2024 00:46:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1704444366; x=1705049166; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/+IddIIw8i9dtTHBTN43F9n5BL4Go10LXOdXLOP+AkM=;
+        b=JX5iG7jEY8vw8oA1JhpF0Nfic4VU47mnGtpMRZ0UEbF3m2ay7oOqX0AJ4uIDgYtzsr
+         0MBpHiknQjIWUqrIg0I0irDahliho1Ih1LJztKy1lOWpmXE5fJk8IX/nhLrIlzIFlErM
+         52wO7aDOSUWGaqrQZA5BfWCmho2+uoy5LWdVCRBoO4JjPym5q7189WwcJc84R1Pd8iyg
+         aWqnbbvx/sc206K0AwBQj85jH+fHdAGvodnEUCGCjvp7XFTkfxAH4D+l/F3XMVY28dRg
+         j91zE/CmWKN6eBdaM5Fmd/ayajriQIR7Hq5io9AqjnFOOrARDyCWqzdHeC3RHFt8/FkV
+         r2Iw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704444366; x=1705049166;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/+IddIIw8i9dtTHBTN43F9n5BL4Go10LXOdXLOP+AkM=;
+        b=SuZlo4nIKVPObqycqnV0VWBcppjlQEAUhFOZV7Oy/PU035l5XvffmoVGbkkFNchutP
+         dWcvkfvWTOet19aYRkj8oWzdMMV6CcIjQJk2FN0SWYH+k9HpBq6kgG0fcS4nxJfnLJ7I
+         8Xi7/rZLOdHla/52+75eMf/YLYYULqoWyUq4UzDwLkPqIhGi52BsZBBK3T72zYOYT7Qr
+         Kod6u4xDmebukSmv7jdn0M0ORr6T/ylwPV6FtpmlRy5NT82zU/2bmqYLbJ2sNNeCTBUu
+         7/WI2B6Hnqovi3Uf2iH2bk8ogC/JOpinVbLU17HpPS8IhYVltRgO/gBU3GUlKRCtmcds
+         +9bg==
+X-Gm-Message-State: AOJu0Yw9vmuCWdXQCw90KRnCADE3hNZQyH2G/qs/y5yHRPHaGfEjr/j0
+	O41uV8QMjwLyQ5V0MBmX4pudm3x7GX8=
+X-Google-Smtp-Source: AGHT+IE8OgjG0fyhzyiv3xBMnUiFjNMOp4LDoSA5Vrmh+PqpgRCvznKLEKBucK13nd//QNKXurQ3Jg==
+X-Received: by 2002:a2e:9d81:0:b0:2c8:39fc:acf5 with SMTP id c1-20020a2e9d81000000b002c839fcacf5mr869312ljj.2.1704444365967;
+        Fri, 05 Jan 2024 00:46:05 -0800 (PST)
+Received: from [192.168.1.104] ([178.176.73.147])
+        by smtp.gmail.com with ESMTPSA id t16-20020a05651c205000b002cd12db0546sm236910ljo.117.2024.01.05.00.46.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 Jan 2024 00:46:05 -0800 (PST)
+Subject: Re: [PATCH 3/4] libata: avoid waking disk for several commands
+To: Phillip Susi <phill@thesusis.net>, Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org
 References: <87y1d5kxcc.fsf@vps.thesusis.net>
  <20240104223940.339290-1-phill@thesusis.net>
+ <20240104223940.339290-3-phill@thesusis.net>
+From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <13374917-5c23-1cb4-8484-479cc7d20e7b@gmail.com>
+Date: Fri, 5 Jan 2024 11:46:03 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240104223940.339290-3-phill@thesusis.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 
-Disks with Power Up In Standby enabled that required the
-SET FEATURES command to start up were being issued the
-command during resume.  Suppress this until the disk
-is actually accessed.
----
- drivers/ata/libata-core.c | 24 ++++++++++++++++++++++--
- drivers/ata/libata-eh.c   | 12 +++++++++++-
- drivers/ata/libata.h      |  1 +
- include/linux/libata.h    |  1 +
- 4 files changed, 35 insertions(+), 3 deletions(-)
+Hello!
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d9e889fa2881..3f6187c75b16 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1912,7 +1912,25 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 			goto err_out;
- 	}
- 
--	if (!tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
-+	if (flags & ATA_READID_NOSTART && id[2] == 0x37c8)
-+	{
-+		/*
-+		 * the drive has powered up in standby, and returned incomplete IDENTIFY info
-+		 * so we can't revalidate it yet.  We have also been asked to avoid starting the
-+		 * drive, so stop  here and leave the drive asleep and the EH pending, to be
-+		 * restarted on later IO request
-+		 */
-+		ata_tf_init(dev, &tf);
-+		tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-+		tf.protocol = ATA_PROT_NODATA;
-+		tf.command = ATA_CMD_SLEEP;
-+		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+		ata_dev_info(dev, "PuiS detected, putting drive to sleep");
-+		return -EAGAIN;
-+	}
-+
-+	if (!(flags & ATA_READID_NOSTART) &&
-+	    !tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
- 		tried_spinup = 1;
- 		/*
- 		 * Drive powered-up in standby mode, and requires a specific
-@@ -3973,6 +3991,8 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 
- 	/* re-read ID */
- 	rc = ata_dev_reread_id(dev, readid_flags);
-+	if (rc == -EAGAIN)
-+		return rc;
- 	if (rc)
- 		goto fail;
- 
-@@ -5241,7 +5261,7 @@ static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg,
- 	 * http://thread.gmane.org/gmane.linux.ide/46764
- 	 */
- 	ata_port_request_pm(ap, mesg, 0,
--			    ATA_EHI_QUIET | ATA_EHI_NO_AUTOPSY |
-+			    ATA_EHI_QUIET | ATA_EHI_NO_AUTOPSY | ATA_EHI_NOSTART
- 			    ATA_EHI_NO_RECOVERY,
- 			    async);
- }
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 799a1b8bc384..74e0d54a204e 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -22,6 +22,7 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
- #include "../scsi/scsi_transport_api.h"
-+#include <linux/pm_runtime.h>
- 
- #include <linux/libata.h>
- 
-@@ -3046,6 +3047,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 
- 		if (ehc->i.flags & ATA_EHI_DID_RESET)
- 			readid_flags |= ATA_READID_POSTRESET;
-+		if (ehc->i.flags & ATA_EHI_NOSTART)
-+			readid_flags |= ATA_READID_NOSTART;
- 
- 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
- 			WARN_ON(dev->class == ATA_DEV_PMP);
-@@ -3075,9 +3078,16 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 			ata_eh_about_to_do(link, dev, ATA_EH_REVALIDATE);
- 			rc = ata_dev_revalidate(dev, ehc->classes[dev->devno],
- 						readid_flags);
--			if (rc)
-+			if (rc == -EAGAIN) {
-+				rc = 0; /* start required but suppressed, handle later */
-+				ehc->i.dev_action[dev->devno] &= ~ATA_EH_SET_ACTIVE;
-+				ata_dev_warn(dev, "Leaving PuiS disk asleep for now");
-+				continue;
-+			}
-+			else if (rc)
- 				goto err;
- 
-+			pm_runtime_resume(&dev->sdev->sdev_gendev);
- 			ata_eh_done(link, dev, ATA_EH_REVALIDATE);
- 
- 			/* Configuration may have changed, reconfigure
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 43ad1ef9b63a..cff3facad055 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -19,6 +19,7 @@
- enum {
- 	/* flags for ata_dev_read_id() */
- 	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
-+	ATA_READID_NOSTART	= (1 << 1), /* do not start drive */
- 
- 	/* selector for ata_down_xfermask_limit() */
- 	ATA_DNXFER_PIO		= 0,	/* speed down PIO */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1dbb14daccfa..50d6fa933946 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -328,6 +328,7 @@ enum {
- 
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
-+	ATA_EHI_NOSTART		= (1 << 1),  /* don't start the disk */
- 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
- 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
- 	ATA_EHI_NO_RECOVERY	= (1 << 4),  /* no recovery */
--- 
-2.30.2
+On 1/5/24 1:39 AM, Phillip Susi wrote:
 
+> When a disk is in SLEEP mode it can not respond to any
+> commands.  Instead of waking up the sleeping disk, fake the
+> commands.  The commands include:
+> 
+> CHECK POWER
+
+  This command is "officially" called CHECK POWER MODE... 
+
+> FLUSH CACHE
+> SLEEP
+> STANDBY IMMEDIATE
+> IDENTIFY
+> 
+> If we konw the disk is sleeping, we don't need to wake it up
+
+   Know.
+
+> to to find out if it is in standby, so just pretend it is in
+
+   Double "to".
+
+> standby.  While alseep, there's no dirty pages in the cache,
+
+   Asleep.
+
+> so there's no need to flush it.  There's no point in waking
+> a disk from sleep just to put it back to sleep.  We also have
+> a cache of the IDENTIFY information so just return that
+> instead of waking the disk.
+> ---
+>  drivers/ata/libata-core.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 1244da8f77e2..d9e889fa2881 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5045,6 +5045,22 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
+>  
+>  	/* if device is sleeping, schedule reset and abort the link */
+>  	if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
+> +		if (unlikely(qc->tf.command == ATA_CMD_CHK_POWER ||
+> +			     qc->tf.command == ATA_CMD_SLEEP ||
+> +			     qc->tf.command == ATA_CMD_FLUSH ||
+> +			     qc->tf.command == ATA_CMD_FLUSH_EXT ||
+> +			     qc->tf.command == ATA_CMD_STANDBYNOW1 ||
+> +			     (qc->tf.command == ATA_CMD_ID_ATA &&
+> +			      !ata_tag_internal(qc->tag))))
+
+   How about a *switch* instead?
+
+> +		{
+> +			/* fake reply to avoid waking drive */
+> +			qc->flags |= ATA_QCFLAG_RTF_FILLED;
+> +			qc->result_tf.nsect = 0;
+> +			if (qc->tf.command == ATA_CMD_ID_ATA)
+> +				sg_copy_from_buffer(qc->sg, 1, qc->dev->id, 2 * ATA_ID_WORDS);
+> +			ata_qc_complete(qc);
+> +			return;
+> +		}
+>  		link->eh_info.action |= ATA_EH_RESET;
+>  		ata_ehi_push_desc(&link->eh_info, "waking up from sleep");
+>  		ata_link_abort(link);
+> 
+
+MBR, Sergey
