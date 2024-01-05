@@ -1,135 +1,128 @@
-Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
+Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56C3622316
-	for <linux-ide@vger.kernel.org>; Fri,  5 Jan 2024 08:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63F6724B52
+	for <linux-ide@vger.kernel.org>; Fri,  5 Jan 2024 10:13:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dubeyko.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FVc54dGF"
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-50e7abe4be4so1709662e87.2
-        for <linux-ide@vger.kernel.org>; Fri, 05 Jan 2024 00:57:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b="zxslvjPl"
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2ccec119587so16889101fa.0
+        for <linux-ide@vger.kernel.org>; Fri, 05 Jan 2024 02:13:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1704445064; x=1705049864; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JamPgMG/L41NlkUbMkzq9RLf2HYV3ezJt3uDw4u+NoE=;
-        b=FVc54dGF+lb1ggC1/vIjniQkfWfqMttr1UuTBQb6v6JQvtXDugXUpmvugnQKW9Vw1+
-         2MgDJswxHyIavWIDHTf2tEbnoEdZmzp/DRn5aZ1hgvfBju1PVWdhyI3ezw5jOEhmseXl
-         TYcYkoWAlr37Jzzc2Y2VsIAG2Z7zXBNqESM/Cz9StUSIbzSQgGz4a98LuC2snhNNLVuH
-         xQsKAdZlAPh9fveRcLMaGU0Ef9tZely5JpMrX9aZA8N9XVpQXNJUSCQbyNiaaQTjZudQ
-         Tnn2TjnWo5QsSiOa9yjnf5HAdGejSs6TGAo+zJd1aU2MqHDhN/WiBzmHAJDT6ubrdPSX
-         GdjA==
+        d=dubeyko-com.20230601.gappssmtp.com; s=20230601; t=1704449597; x=1705054397; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pb8qWmhccm9eam1IG6/mzCzwkOR/9EGblOaiwee7lpg=;
+        b=zxslvjPlfpEGbydppSZROS4yK9PFl/WyX0EkqitzSpEcuqQb8fYGxbXasU+SmJn1pu
+         0rPIL9a/hYppQy3+SCQxYBeiVGlAc3JL1eedwa67OMwVfBMaVIy3o3uKsgEgGeEP8kJZ
+         kDn2XrRhEN2+Eivt+R0/pv4yd14Nd+zm0VYzJ+azJfd5mihiXZd39vQIswvudDwVnOJx
+         EsFuAaKGE7JOBYkQFdkSHqF2xzf/nbrccglUuZSt7MJZ6bigKmsDSgBIign0NlmGiquB
+         ywd+7flGkHvnkBNzwbiGNmVhsMywddOpoSzOjIwikHTTf7CbonOyKzB3Er+rJ8DWZVWL
+         G6nQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704445064; x=1705049864;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JamPgMG/L41NlkUbMkzq9RLf2HYV3ezJt3uDw4u+NoE=;
-        b=W5K3bDOQNPVd6eVNdO2SzBv9ODFEzlbf+BmJQeqamfavXPbIXAG/q2413yv0ReewDZ
-         EUCP1OGUYFM2//t5ggF+QbePqgNXWW3q29/6UlPvaI0BTBagkPWyxy7dskVVr7KblRXy
-         UDi31/orfXRLlwl0xxyhB+EfHe1vnFMteX1acZcUrlYPjgt0vuN1dbkvr4vfZeZTfSiL
-         duFUDdrKBzuz6xds8s1RqJxAbWlzUEwdK2/f1IgKV5UzkA5c9gkpm5BEK5MEN1Y60Qil
-         h/2h6RQ7BGtB553jsA5yAaeHKBGbgiONBtjuCabOTPecFLkN0JvopDkTFr3rbvaNBFS2
-         iwrw==
-X-Gm-Message-State: AOJu0Yw1p+dy26AysxU+aJhRacn79ZaUcjSdG3AEEzZuhEFlRXlNQCF4
-	n6hYSavVCEnrJ1yy1RqQEvzPOITCjC8=
-X-Google-Smtp-Source: AGHT+IEhfHdSnt7MXPyc7g8j5s6ZcmhNsicUbPO1XiOyXw0I5ZFO5MMC8qYaIjALMji/miXlRIJh8g==
-X-Received: by 2002:ac2:5f57:0:b0:50e:7281:6e72 with SMTP id 23-20020ac25f57000000b0050e72816e72mr859036lfz.109.1704445063753;
-        Fri, 05 Jan 2024 00:57:43 -0800 (PST)
-Received: from [192.168.1.104] ([178.176.73.147])
-        by smtp.gmail.com with ESMTPSA id p10-20020ac24eca000000b0050e84c6bf99sm178656lfr.249.2024.01.05.00.57.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 Jan 2024 00:57:43 -0800 (PST)
-Subject: Re: [PATCH 4/4] libata: don't start PuiS disks on resume
-To: Phillip Susi <phill@thesusis.net>, Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org
-References: <87y1d5kxcc.fsf@vps.thesusis.net>
- <20240104223940.339290-1-phill@thesusis.net>
- <20240104223940.339290-4-phill@thesusis.net>
-From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <5f450363-0518-7559-34ca-7c22b32746bb@gmail.com>
-Date: Fri, 5 Jan 2024 11:57:42 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        d=1e100.net; s=20230601; t=1704449597; x=1705054397;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=pb8qWmhccm9eam1IG6/mzCzwkOR/9EGblOaiwee7lpg=;
+        b=Q1KnSR107WdZomWtzxx+ntBGi/ioVvlcHAajxaX46PMhycH+/HfC0nro+rwsZXPNxR
+         gTFxDD/48HswTrQTGP9gE4utIUDXIPUzbFwHSObIcaN+J/TnZvfT6fgULglTSHG7LLUP
+         5oTY8vjTFTKIz0YGKIT1RL11V8SRaw3t4REgjo92gBx/GKyqRJm5IQpGOL2o92d75OFs
+         /kMyT01qYI9pTdMnh9ZEd/SlOU3rOLqxBOpAAdq/1u2EN2I9II9zmTSbX5tBcwwLdY2L
+         bWyOPG5jiM5qrCPkhn+rBZAf9WEkpxgqgkIJopC1yEkF5wx7hxkX2+e14x4wFSAKtohh
+         6WfQ==
+X-Gm-Message-State: AOJu0YzREZu53n/WOyHq2WxPlu+nWMaERo89WfBTt+uatzcmb+QepqKe
+	fL1AaQwfaRFiqqwRFhXWGO4+/5UuRXOsyA==
+X-Google-Smtp-Source: AGHT+IERFwtvcyoPP3L+QB9SFl8+7lNrV2k0KLfbM/7+3R7xK9hX+EDB4G+sBp41ebG01fKH0Phabg==
+X-Received: by 2002:a2e:be93:0:b0:2cd:1d5d:322e with SMTP id a19-20020a2ebe93000000b002cd1d5d322emr1306524ljr.10.1704449597179;
+        Fri, 05 Jan 2024 02:13:17 -0800 (PST)
+Received: from smtpclient.apple ([2a00:1370:81a4:169c:3983:bdeb:5f19:e2e9])
+        by smtp.gmail.com with ESMTPSA id n23-20020a2e82d7000000b002ccb9f5ffcasm262090ljh.93.2024.01.05.02.13.16
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 05 Jan 2024 02:13:16 -0800 (PST)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20240104223940.339290-4-phill@thesusis.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.4\))
+Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+From: Viacheslav Dubeyko <slava@dubeyko.com>
+In-Reply-To: <ZZcgXI46AinlcBDP@casper.infradead.org>
+Date: Fri, 5 Jan 2024 13:13:11 +0300
+Cc: lsf-pc@lists.linux-foundation.org,
+ Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+ linux-mm@kvack.org,
+ linux-block@vger.kernel.org,
+ linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org,
+ linux-nvme@lists.infradead.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <2EEB5F76-1D68-4B17-82B6-4A459D91E4BF@dubeyko.com>
+References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+To: Matthew Wilcox <willy@infradead.org>
+X-Mailer: Apple Mail (2.3696.120.41.1.4)
 
-On 1/5/24 1:39 AM, Phillip Susi wrote:
 
-> Disks with Power Up In Standby enabled that required the
-> SET FEATURES command to start up were being issued the
-> command during resume.  Suppress this until the disk
-> is actually accessed.
-> ---
->  drivers/ata/libata-core.c | 24 ++++++++++++++++++++++--
->  drivers/ata/libata-eh.c   | 12 +++++++++++-
->  drivers/ata/libata.h      |  1 +
->  include/linux/libata.h    |  1 +
->  4 files changed, 35 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index d9e889fa2881..3f6187c75b16 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1912,7 +1912,25 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
->  			goto err_out;
->  	}
->  
-> -	if (!tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
-> +	if (flags & ATA_READID_NOSTART && id[2] == 0x37c8)
-> +	{
-> +		/*
-> +		 * the drive has powered up in standby, and returned incomplete IDENTIFY info
 
-   s/the/The/.
+> On Jan 5, 2024, at 12:17 AM, Matthew Wilcox <willy@infradead.org> =
+wrote:
+>=20
+> This is primarily a _FILESYSTEM_ track topic.  All the work has =
+already
+> been done on the MM side; the FS people need to do their part.  It =
+could
+> be a joint session, but I'm not sure there's much for the MM people
+> to say.
+>=20
+> There are situations where we need to allocate memory, but cannot call
+> into the filesystem to free memory.  Generally this is because we're
+> holding a lock or we've started a transaction, and attempting to write
+> out dirty folios to reclaim memory would result in a deadlock.
+>=20
+> The old way to solve this problem is to specify GFP_NOFS when =
+allocating
+> memory.  This conveys little information about what is being protected
+> against, and so it is hard to know when it might be safe to remove.
+> It's also a reflex -- many filesystem authors use GFP_NOFS by default
+> even when they could use GFP_KERNEL because there's no risk of =
+deadlock.
+>=20
+> The new way is to use the scoped APIs -- memalloc_nofs_save() and
+> memalloc_nofs_restore().  These should be called when we start a
+> transaction or take a lock that would cause a GFP_KERNEL allocation to
+> deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
+> can see the nofs situation is in effect and will not call back into
+> the filesystem.
+>=20
+> This results in better code within your filesystem as you don't need =
+to
+> pass around gfp flags as much, and can lead to better performance from
+> the memory allocators as GFP_NOFS will not be used unnecessarily.
+>=20
+> The memalloc_nofs APIs were introduced in May 2017, but we still have
+> over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which is
+> really sad).  This session is for filesystem developers to talk about
+> what they need to do to fix up their own filesystem, or share stories
+> about how they made their filesystem better by adopting the new APIs.
+>=20
 
-> +		 * so we can't revalidate it yet.  We have also been asked to avoid starting the
-> +		 * drive, so stop  here and leave the drive asleep and the EH pending, to be
+Many file systems are still heavily using GFP_NOFS for kmalloc and
+kmem_cache_alloc family methods even if  memalloc_nofs_save() and
+memalloc_nofs_restore() pair is used too. But I can see that GFP_NOFS
+is used in radix_tree_preload(), bio_alloc(), posix_acl_clone(),
+sb_issue_zeroout, sb_issue_discard(), alloc_inode_sb(), =
+blkdev_issue_zeroout(),
+blkdev_issue_secure_erase(), blkdev_zone_mgmt(), etc.
 
-   Double space...
+Would it be safe to switch on =
+memalloc_nofs_save()/memalloc_nofs_restore() for
+all possible cases? Any potential issues or downsides?
 
-> +		 * restarted on later IO request
+Thanks,
+Slava.
 
-   I think more common form is I/O.
-
-[...]
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 799a1b8bc384..74e0d54a204e 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-[...]
-> @@ -3075,9 +3078,16 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
->  			ata_eh_about_to_do(link, dev, ATA_EH_REVALIDATE);
->  			rc = ata_dev_revalidate(dev, ehc->classes[dev->devno],
->  						readid_flags);
-> -			if (rc)
-> +			if (rc == -EAGAIN) {
-> +				rc = 0; /* start required but suppressed, handle later */
-> +				ehc->i.dev_action[dev->devno] &= ~ATA_EH_SET_ACTIVE;
-> +				ata_dev_warn(dev, "Leaving PuiS disk asleep for now");
-> +				continue;
-> +			}
-> +			else if (rc)
-
-			} else if (rc) {
-
->  				goto err;
-
-			}
-
-   You need {} on all *if* branches if at least one has it, as dictated
-by the kernel coding style...
-
-[...]
-
-MBR, Sergey
