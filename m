@@ -1,188 +1,148 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94AC02C85B;
-	Fri,  5 Jan 2024 10:57:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9DD2D601
+	for <linux-ide@vger.kernel.org>; Fri,  5 Jan 2024 12:13:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MKKjungj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="4FVik9ep";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MKKjungj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="4FVik9ep"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id A8354220B7;
-	Fri,  5 Jan 2024 10:57:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1704452256; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=MKKjungjIvGWCqbk0Vf4SBIt53LzaJID/tvg9uLrkg6ZvBfMm0/3NvfIX4H3zTrxSvMjK8
-	Mme8raMtSEGYLgrC8FnZJrGRsc72iI4GiAdmYWpBtkOaRZBPXvxaNjohitwW0mRpsIqetd
-	PNI533+jSBdMQ+x69VEGvnZDvktdkIQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1704452256;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=4FVik9epYGd6eXdIFPsDiIvAoOAZNYgVhdckcBQ6otxliwcT7727hvm+6Cy7c2U3FUIAQs
-	bmkQznNaureYqQDw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1704452256; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=MKKjungjIvGWCqbk0Vf4SBIt53LzaJID/tvg9uLrkg6ZvBfMm0/3NvfIX4H3zTrxSvMjK8
-	Mme8raMtSEGYLgrC8FnZJrGRsc72iI4GiAdmYWpBtkOaRZBPXvxaNjohitwW0mRpsIqetd
-	PNI533+jSBdMQ+x69VEGvnZDvktdkIQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1704452256;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=4FVik9epYGd6eXdIFPsDiIvAoOAZNYgVhdckcBQ6otxliwcT7727hvm+6Cy7c2U3FUIAQs
-	bmkQznNaureYqQDw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9A4A4136F5;
-	Fri,  5 Jan 2024 10:57:36 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id xfs2JaDgl2XhZwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 05 Jan 2024 10:57:36 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 49C52A07EF; Fri,  5 Jan 2024 11:57:36 +0100 (CET)
-Date: Fri, 5 Jan 2024 11:57:36 +0100
-From: Jan Kara <jack@suse.cz>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Removing GFP_NOFS
-Message-ID: <20240105105736.24jep6q6cd7vsnmz@quack3>
-References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G5SlDLN+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 721CFC433C7;
+	Fri,  5 Jan 2024 12:13:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704456835;
+	bh=CyEGuKDvSN9K2C+DEf6MMDq7P/DBT0CI2YF+NTGEC8o=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=G5SlDLN+jAjayh2DtsATmqVi6fD+UAqcvZxPdphicKb5zMzURVIOUdRGhR2GzJ3RH
+	 NED6mkKWJm9k1x84Dpgk6v8X8oshpJf+vhNOWTKV130DiXpHbk4e99SaIg+u12ODcF
+	 G/RFiaVlUb3flUxiAxrfDtdsuqZrUoBzGw295peQRYr6h1lvnHZ04YTTK1sMFRpi+R
+	 G76ObiyII37mvaZQ1uECqfg6TlspNhmolm1kmanf8ddf56ZAFrt/2DZaF2iiVHYjdM
+	 vNQBh5am1Q0+3JefN70qV5TpnAR675IjxQgAKEm6zJwxGG5Ka9IpWET7d1BpsVmIsv
+	 zPJFMGj3dAWsg==
+Message-ID: <f47ef1a9-3bd4-48c2-a7de-2c0e74c55647@kernel.org>
+Date: Fri, 5 Jan 2024 21:13:53 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZZcgXI46AinlcBDP@casper.infradead.org>
-X-Spam-Level: 
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spam-Level: 
-X-Spam-Score: -3.80
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 URIBL_BLOCKED(0.00)[suse.com:email];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 MIME_GOOD(-0.10)[text/plain];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 RCPT_COUNT_SEVEN(0.00)[8];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[];
-	 BAYES_HAM(-3.00)[100.00%]
-X-Spam-Flag: NO
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/4] libata: only wake a drive once on system resume
+Content-Language: en-US
+To: Phillip Susi <phill@thesusis.net>
+Cc: linux-ide@vger.kernel.org
+References: <87y1d5kxcc.fsf@vps.thesusis.net>
+ <20240104223940.339290-1-phill@thesusis.net>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240104223940.339290-1-phill@thesusis.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello,
-
-On Thu 04-01-24 21:17:16, Matthew Wilcox wrote:
-> This is primarily a _FILESYSTEM_ track topic.  All the work has already
-> been done on the MM side; the FS people need to do their part.  It could
-> be a joint session, but I'm not sure there's much for the MM people
-> to say.
+On 1/5/24 07:39, Phillip Susi wrote:
+> In the event that more than one pass of EH is needed during system resume,
+> only request the drive be started once.
+> ---
+>  drivers/ata/libata-core.c | 9 +++++----
+>  drivers/ata/libata-eh.c   | 8 +++-----
+>  drivers/ata/libata.h      | 2 +-
+>  3 files changed, 9 insertions(+), 10 deletions(-)
 > 
-> There are situations where we need to allocate memory, but cannot call
-> into the filesystem to free memory.  Generally this is because we're
-> holding a lock or we've started a transaction, and attempting to write
-> out dirty folios to reclaim memory would result in a deadlock.
-> 
-> The old way to solve this problem is to specify GFP_NOFS when allocating
-> memory.  This conveys little information about what is being protected
-> against, and so it is hard to know when it might be safe to remove.
-> It's also a reflex -- many filesystem authors use GFP_NOFS by default
-> even when they could use GFP_KERNEL because there's no risk of deadlock.
-> 
-> The new way is to use the scoped APIs -- memalloc_nofs_save() and
-> memalloc_nofs_restore().  These should be called when we start a
-> transaction or take a lock that would cause a GFP_KERNEL allocation to
-> deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
-> can see the nofs situation is in effect and will not call back into
-> the filesystem.
-> 
-> This results in better code within your filesystem as you don't need to
-> pass around gfp flags as much, and can lead to better performance from
-> the memory allocators as GFP_NOFS will not be used unnecessarily.
-> 
-> The memalloc_nofs APIs were introduced in May 2017, but we still have
-> over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which is
-> really sad).  This session is for filesystem developers to talk about
-> what they need to do to fix up their own filesystem, or share stories
-> about how they made their filesystem better by adopting the new APIs.
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 09ed67772fae..a2d8cc0097a8 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2080,7 +2080,7 @@ static bool ata_dev_power_is_active(struct ata_device *dev)
+>   *	LOCKING:
+>   *	Kernel thread context (may sleep).
+>   */
+> -void ata_dev_power_set_active(struct ata_device *dev)
+> +unsigned int ata_dev_power_set_active(struct ata_device *dev)
+>  {
+>  	struct ata_taskfile tf;
+>  	unsigned int err_mask;
+> @@ -2090,14 +2090,14 @@ void ata_dev_power_set_active(struct ata_device *dev)
+>  	 * if supported by the device.
+>  	 */
+>  	if (!ata_dev_power_init_tf(dev, &tf, true))
+> -		return;
+> +		return AC_ERR_OTHER;
 
-I agree this is a worthy goal and the scoped API helped us a lot in the
-ext4/jbd2 land. Still we have some legacy to deal with:
+Nope. This is wrong. ata_dev_power_init_tf() returns a bool, not an error. The
+bool indicates if the drive supports power management.
 
-~> git grep "NOFS" fs/jbd2/ | wc -l
-15
-~> git grep "NOFS" fs/ext4/ | wc -l
-71
+But beside this, I still do not understand what this fixes... Calling again
+ata_dev_power_set_active() will do nothing but issue a check power mode command
+if the drive is already active. So I do not see the need for this added complexity.
 
-When you are asking about what would help filesystems with the conversion I
-actually have one wish. The most common case is that you need to annotate
-some lock that can be grabbed in the reclaim path and thus you must avoid
-GFP_FS allocations from under it. For example to deal with reclaim
-deadlocks in the writeback paths we had to introduce wrappers like:
+>  
+>  	/*
+>  	 * Check the device power state & condition and force a spinup with
+>  	 * VERIFY command only if the drive is not already ACTIVE or IDLE.
+>  	 */
+>  	if (ata_dev_power_is_active(dev))
+> -		return;
+> +		return AC_ERR_OK;
+>  
+>  	ata_dev_notice(dev, "Entering active power mode\n");
+>  
+> @@ -2105,6 +2105,7 @@ void ata_dev_power_set_active(struct ata_device *dev)
+>  	if (err_mask)
+>  		ata_dev_err(dev, "VERIFY failed (err_mask=0x%x)\n",
+>  			    err_mask);
+> +	return err_mask;
+>  }
+>  
+>  /**
+> @@ -5257,7 +5258,7 @@ static int ata_port_pm_poweroff(struct device *dev)
+>  static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
+>  			    bool async)
+>  {
+> -	ata_port_request_pm(ap, mesg, ATA_EH_RESET,
+> +	ata_port_request_pm(ap, mesg, ATA_EH_RESET | ATA_EH_SET_ACTIVE,
+>  			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET,
+>  			    async);
+>  }
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index b0d6e69c4a5b..799a1b8bc384 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -710,10 +710,6 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+>  			ehc->saved_xfer_mode[devno] = dev->xfer_mode;
+>  			if (ata_ncq_enabled(dev))
+>  				ehc->saved_ncq_enabled |= 1 << devno;
+> -
+> -			/* If we are resuming, wake up the device */
+> -			if (ap->pflags & ATA_PFLAG_RESUMING)
+> -				ehc->i.dev_action[devno] |= ATA_EH_SET_ACTIVE;
+>  		}
+>  	}
+>  
+> @@ -3853,7 +3849,9 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+>  		 */
+>  		ata_for_each_dev(dev, link, ENABLED) {
+>  			if (ehc->i.dev_action[dev->devno] & ATA_EH_SET_ACTIVE) {
+> -				ata_dev_power_set_active(dev);
+> +				unsigned int err_mask = ata_dev_power_set_active(dev);
+> +				if (err_mask)
+> +					link->eh_info.dev_action[dev->devno] |= ATA_EH_SET_ACTIVE;
+>  				ata_eh_done(link, dev, ATA_EH_SET_ACTIVE);
+>  			}
+>  		}
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 5c685bb1939e..43ad1ef9b63a 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -65,7 +65,7 @@ extern int ata_dev_configure(struct ata_device *dev);
+>  extern bool ata_dev_power_init_tf(struct ata_device *dev,
+>  				  struct ata_taskfile *tf, bool set_active);
+>  extern void ata_dev_power_set_standby(struct ata_device *dev);
+> -extern void ata_dev_power_set_active(struct ata_device *dev);
+> +extern unsigned int ata_dev_power_set_active(struct ata_device *dev);
+>  extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
+>  extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
+>  extern unsigned int ata_dev_set_feature(struct ata_device *dev,
 
-static inline int ext4_writepages_down_read(struct super_block *sb)
-{
-        percpu_down_read(&EXT4_SB(sb)->s_writepages_rwsem);
-        return memalloc_nofs_save();
-}
-
-static inline void ext4_writepages_up_read(struct super_block *sb, int ctx)
-{
-        memalloc_nofs_restore(ctx);
-        percpu_up_read(&EXT4_SB(sb)->s_writepages_rwsem);
-}
-
-When you have to do it for 5 locks in your filesystem it gets a bit ugly
-and it would be nice to have some generic way to deal with this. We already
-have the spin_lock_irqsave() precedent we might follow (and I don't
-necessarily mean the calling convention which is a bit weird for today's
-standards)?
-
-Even more lovely would be if we could actually avoid passing around the
-returned reclaim state because sometimes the locks get acquired / released
-in different functions and passing the state around requires quite some
-changes and gets ugly. That would mean we'd have to have
-fs-reclaim-forbidden counter instead of just a flag in task_struct. OTOH
-then we could just mark the lock (mutex / rwsem / whatever) as
-fs-reclaim-unsafe during init and the rest would just magically happen.
-That would be super-easy to use.
-
-								Honza
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Damien Le Moal
+Western Digital Research
+
