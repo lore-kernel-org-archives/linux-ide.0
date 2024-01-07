@@ -1,20 +1,20 @@
 Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 682A313FE0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6833713FE5
 	for <linux-ide@vger.kernel.org>; Sun,  7 Jan 2024 18:03:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
 Received: by vps.thesusis.net (Postfix, from userid 1000)
-	id 9E42315231F; Sun,  7 Jan 2024 13:03:01 -0500 (EST)
+	id A7F55152323; Sun,  7 Jan 2024 13:03:01 -0500 (EST)
 From: Phillip Susi <phill@thesusis.net>
 To: linux-ide@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Sergey Shtylyov <s.shtylyov@omp.ru>,
 	Phillip Susi <phill@thesusis.net>
-Subject: [PATCH 1/3] libata: avoid waking disk for several commands
-Date: Sun,  7 Jan 2024 13:02:56 -0500
-Message-Id: <20240107180258.360886-2-phill@thesusis.net>
+Subject: [PATCH 2/3] libata: only wake a drive once on system resume
+Date: Sun,  7 Jan 2024 13:02:57 -0500
+Message-Id: <20240107180258.360886-3-phill@thesusis.net>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20240107180258.360886-1-phill@thesusis.net>
 References: <87msthdo11.fsf@vps.thesusis.net>
@@ -27,61 +27,100 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When a disk is in SLEEP mode it can not respond to any
-any commands.  Several commands are simply a NOOP to a disk
-that is in standby mode, but when a disk is in SLEEP mode,
-they frequencly cause the disk to spin up for no reason.
-To avoid this, complete these commands in libata without
-waking the disk.  These commands are:
-
-CHECK POWER MODE
-FLUSH CACHE
-SLEEP
-STANDBY IMMEDIATE
-IDENTIFY
-
-If we know the disk is sleeping, we don't need to wake it up
-to find out if it is in standby, so just pretend it is in
-standby.  While asleep, there's no dirty pages in the cache,
-so there's no need to flush it.  There's no point in waking
-a disk from sleep just to put it back to sleep.  We also have
-a cache of the IDENTIFY information so just return that
-instead of waking the disk.
+In the event that more than one pass of EH is needed during system resume,
+only request the drive be started once ( if the first time worked ).
 ---
- drivers/ata/libata-core.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/ata/libata-core.c | 9 +++++----
+ drivers/ata/libata-eh.c   | 8 +++-----
+ drivers/ata/libata.h      | 2 +-
+ 3 files changed, 9 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 09ed67772fae..6c5269de4bf2 100644
+index 6c5269de4bf2..ef6a2349a6f8 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -5040,6 +5040,26 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
+@@ -2080,7 +2080,7 @@ static bool ata_dev_power_is_active(struct ata_device *dev)
+  *	LOCKING:
+  *	Kernel thread context (may sleep).
+  */
+-void ata_dev_power_set_active(struct ata_device *dev)
++unsigned int ata_dev_power_set_active(struct ata_device *dev)
+ {
+ 	struct ata_taskfile tf;
+ 	unsigned int err_mask;
+@@ -2090,14 +2090,14 @@ void ata_dev_power_set_active(struct ata_device *dev)
+ 	 * if supported by the device.
+ 	 */
+ 	if (!ata_dev_power_init_tf(dev, &tf, true))
+-		return;
++		return AC_ERR_OK;
  
- 	/* if device is sleeping, schedule reset and abort the link */
- 	if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
-+		switch (qc->tf.command)
-+		{
-+		case ATA_CMD_CHK_POWER:
-+		case ATA_CMD_SLEEP:
-+		case ATA_CMD_FLUSH:
-+		case ATA_CMD_FLUSH_EXT:
-+		case ATA_CMD_STANDBYNOW1:
-+			if (qc->tf.command == ATA_CMD_ID_ATA)
-+			{
-+				/* only fake the reply for IDENTIFY if it is from userspace */
-+				if (ata_tag_internal(qc->tag))
-+					break;
-+				sg_copy_from_buffer(qc->sg, 1, qc->dev->id, 2 * ATA_ID_WORDS);
-+			}
-+			/* fake reply to avoid waking drive */
-+			qc->flags |= ATA_QCFLAG_RTF_FILLED;
-+			qc->result_tf.nsect = 0;
-+			ata_qc_complete(qc);
-+			return;
-+		}
- 		link->eh_info.action |= ATA_EH_RESET;
- 		ata_ehi_push_desc(&link->eh_info, "waking up from sleep");
- 		ata_link_abort(link);
+ 	/*
+ 	 * Check the device power state & condition and force a spinup with
+ 	 * VERIFY command only if the drive is not already ACTIVE or IDLE.
+ 	 */
+ 	if (ata_dev_power_is_active(dev))
+-		return;
++		return AC_ERR_OK;
+ 
+ 	ata_dev_notice(dev, "Entering active power mode\n");
+ 
+@@ -2105,6 +2105,7 @@ void ata_dev_power_set_active(struct ata_device *dev)
+ 	if (err_mask)
+ 		ata_dev_err(dev, "VERIFY failed (err_mask=0x%x)\n",
+ 			    err_mask);
++	return err_mask;
+ }
+ 
+ /**
+@@ -5277,7 +5278,7 @@ static int ata_port_pm_poweroff(struct device *dev)
+ static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
+ 			    bool async)
+ {
+-	ata_port_request_pm(ap, mesg, ATA_EH_RESET,
++	ata_port_request_pm(ap, mesg, ATA_EH_RESET | ATA_EH_SET_ACTIVE,
+ 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET,
+ 			    async);
+ }
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b0d6e69c4a5b..799a1b8bc384 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -710,10 +710,6 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+ 			ehc->saved_xfer_mode[devno] = dev->xfer_mode;
+ 			if (ata_ncq_enabled(dev))
+ 				ehc->saved_ncq_enabled |= 1 << devno;
+-
+-			/* If we are resuming, wake up the device */
+-			if (ap->pflags & ATA_PFLAG_RESUMING)
+-				ehc->i.dev_action[devno] |= ATA_EH_SET_ACTIVE;
+ 		}
+ 	}
+ 
+@@ -3853,7 +3849,9 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		 */
+ 		ata_for_each_dev(dev, link, ENABLED) {
+ 			if (ehc->i.dev_action[dev->devno] & ATA_EH_SET_ACTIVE) {
+-				ata_dev_power_set_active(dev);
++				unsigned int err_mask = ata_dev_power_set_active(dev);
++				if (err_mask)
++					link->eh_info.dev_action[dev->devno] |= ATA_EH_SET_ACTIVE;
+ 				ata_eh_done(link, dev, ATA_EH_SET_ACTIVE);
+ 			}
+ 		}
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 5c685bb1939e..43ad1ef9b63a 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -65,7 +65,7 @@ extern int ata_dev_configure(struct ata_device *dev);
+ extern bool ata_dev_power_init_tf(struct ata_device *dev,
+ 				  struct ata_taskfile *tf, bool set_active);
+ extern void ata_dev_power_set_standby(struct ata_device *dev);
+-extern void ata_dev_power_set_active(struct ata_device *dev);
++extern unsigned int ata_dev_power_set_active(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
+ extern unsigned int ata_dev_set_feature(struct ata_device *dev,
 -- 
 2.30.2
 
