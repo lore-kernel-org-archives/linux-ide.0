@@ -1,24 +1,58 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC47EC2E6
-	for <linux-ide@vger.kernel.org>; Mon,  8 Jan 2024 08:48:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.1.104] (31.173.81.242) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Mon, 8 Jan
- 2024 11:48:10 +0300
-Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
-To: Phillip Susi <phill@thesusis.net>, <linux-ide@vger.kernel.org>
-CC: Damien Le Moal <dlemoal@kernel.org>
-References: <87msthdo11.fsf@vps.thesusis.net>
- <20240107180258.360886-1-phill@thesusis.net>
- <20240107180258.360886-2-phill@thesusis.net>
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <14fbc9fa-0876-23c7-b4d3-46a431c2de40@omp.ru>
-Date: Mon, 8 Jan 2024 11:48:09 +0300
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55E731170A
+	for <linux-ide@vger.kernel.org>; Mon,  8 Jan 2024 08:57:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NRwrZL58"
+Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-2cd0f4f306fso16940011fa.0
+        for <linux-ide@vger.kernel.org>; Mon, 08 Jan 2024 00:57:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1704704231; x=1705309031; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=n5CXD7c0UGH987jW9OXIXFw1njivBjhL3diRiFSG+u4=;
+        b=NRwrZL58rU75bKgy0ZZgVWhO3EKSD0Z+wy+Ee3BXlJk477XaG4EhwQjsY0c9nkzSdg
+         nTqlYwbS01wOdkMSSzxe9KW4jvwtjSQccOcPl0rKFetTVaFZboG9v/EfK550Az/ZobEw
+         8d9qUSZMoT5hlj6JZ3ctV10sORmxC03CIn+rWl3N7MZoP1od8rsnzKEvmnL29tYQvRWf
+         r/s2CsD5hXPAg9ZeNV7Iq2Jg8fo7HLb87GZ40Hx4foMY43VyrvzmynOni2TL4IlHchel
+         oLewuJL0lkq5l5a3jO0XDkII0OljLG70SjTTHxrhOM+h5L9nDsUGDrta7Q5GUkDf9oco
+         yxYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704704231; x=1705309031;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=n5CXD7c0UGH987jW9OXIXFw1njivBjhL3diRiFSG+u4=;
+        b=hSk7Q2IeeqmfTQf7KRnds6jl4qkC+KrY+EiyDMKFoecmts2KTOMWZYzHgpdDEDjYaf
+         vzReduG42Zmri/UNgDw6SUBACUzbCBSlPRu3btSg9Q6LHMENaYn/KP1FJlcfhxKvmSsr
+         uGx4uvtpRdSqAN1QMasOheAqP3811xlg4Cth6SS3ElcEyh+74FJsxQUZomO4n2fuzcP+
+         bkSX6GUZoYEtVA1ET7BfysoObbMq5HGmoQg9IISsGHvXxK2zILJqo25/DgtiEEwIgCJD
+         qFpaFZkAOznpvsUtc5lcSmzfJBTtLyd/D326854GYR/yXoQx9MjijhbxP9zqwHQjH/7C
+         vm2g==
+X-Gm-Message-State: AOJu0YxBJVa3P/SKd5/+MobV/lItLlJFTRoh7g9jAR7D9I4WZGoiCOzZ
+	OF+rsmMQJHtyElO+4wXc0sGgMB6+FGg=
+X-Google-Smtp-Source: AGHT+IHWtn2/86zIB+ixyLycP5jofvJOCM9L/Xh28g6sNLvxkQC6FxmIkoUdDVyCmiY5dRfiWcdJqw==
+X-Received: by 2002:a05:651c:10ae:b0:2cd:463f:6c2f with SMTP id k14-20020a05651c10ae00b002cd463f6c2fmr1049298ljn.72.1704704230670;
+        Mon, 08 Jan 2024 00:57:10 -0800 (PST)
+Received: from [192.168.1.104] ([31.173.81.242])
+        by smtp.gmail.com with ESMTPSA id f8-20020a2e6a08000000b002ccac895a03sm1462968ljc.140.2024.01.08.00.57.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 08 Jan 2024 00:57:09 -0800 (PST)
+Subject: Re: [PATCH 3/4] libata: avoid waking disk for several commands
+To: Phillip Susi <phill@thesusis.net>, Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org
+References: <87y1d5kxcc.fsf@vps.thesusis.net>
+ <20240104223940.339290-1-phill@thesusis.net>
+ <20240104223940.339290-3-phill@thesusis.net>
+ <13374917-5c23-1cb4-8484-479cc7d20e7b@gmail.com>
+ <87bk9yyzlt.fsf@vps.thesusis.net>
+From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <fe5f6d90-0546-3b74-8d15-bb0ea1094d69@gmail.com>
+Date: Mon, 8 Jan 2024 11:57:08 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 Precedence: bulk
@@ -27,118 +61,21 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240107180258.360886-2-phill@thesusis.net>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <87bk9yyzlt.fsf@vps.thesusis.net>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 01/08/2024 08:32:36
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 182479 [Jan 08 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.3
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 7 0.3.7 6d6bf5bd8eea7373134f756a2fd73e9456bb7d1a
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.242 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info:
-	31.173.81.242:7.1.2;omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.242
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 01/08/2024 08:38:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 1/8/2024 6:15:00 AM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On 1/7/24 9:02 PM, Phillip Susi wrote:
-
-> When a disk is in SLEEP mode it can not respond to any
-> any commands.  Several commands are simply a NOOP to a disk
-> that is in standby mode, but when a disk is in SLEEP mode,
-> they frequencly cause the disk to spin up for no reason.
-
-   Frequently.
-
-> To avoid this, complete these commands in libata without
-> waking the disk.  These commands are:
-> 
-> CHECK POWER MODE
-> FLUSH CACHE
-> SLEEP
-> STANDBY IMMEDIATE
-> IDENTIFY
-> 
-> If we know the disk is sleeping, we don't need to wake it up
-> to find out if it is in standby, so just pretend it is in
-> standby.  While asleep, there's no dirty pages in the cache,
-> so there's no need to flush it.  There's no point in waking
-> a disk from sleep just to put it back to sleep.  We also have
-> a cache of the IDENTIFY information so just return that
-> instead of waking the disk.
+On 1/6/24 11:29 PM, Phillip Susi wrote:
 [...]
 
-   Did you run your patches thru scripts/checkpatch.pl? Looking
-at this patch, I think you didn't... :-)
+>>    How about a *switch* instead?
+> 
+> So what's the status on switch case fall through these days?  I thought
+> you just had to add a /* fallthrough */ comment to make it explicit, but
+> gcc is still complaining.
 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 09ed67772fae..6c5269de4bf2 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5040,6 +5040,26 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
->  
->  	/* if device is sleeping, schedule reset and abort the link */
->  	if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
-> +		switch (qc->tf.command)
-> +		{
-
-		switch (qc->tf.command) {
-
-> +		case ATA_CMD_CHK_POWER:
-> +		case ATA_CMD_SLEEP:
-> +		case ATA_CMD_FLUSH:
-> +		case ATA_CMD_FLUSH_EXT:
-> +		case ATA_CMD_STANDBYNOW1:
-> +			if (qc->tf.command == ATA_CMD_ID_ATA)
-
-   This can't happen, you forgot:
-
-		case ATA_CMD_ID_ATA:
-
-> +			{
-
-			if (qc->tf.command == ATA_CMD_ID_ATA) {
-
-> +				/* only fake the reply for IDENTIFY if it is from userspace */
-> +				if (ata_tag_internal(qc->tag))
-> +					break;
-> +				sg_copy_from_buffer(qc->sg, 1, qc->dev->id, 2 * ATA_ID_WORDS);
-> +			}
-> +			/* fake reply to avoid waking drive */
-> +			qc->flags |= ATA_QCFLAG_RTF_FILLED;
-> +			qc->result_tf.nsect = 0;
-> +			ata_qc_complete(qc);
-> +			return;
-> +		}
->  		link->eh_info.action |= ATA_EH_RESET;
->  		ata_ehi_push_desc(&link->eh_info, "waking up from sleep");
->  		ata_link_abort(link);
+   There's a fallthrough macro in <linux//compiler_attributes.h> now,
+I think you're suppoed to use it now...
 
 MBR, Sergey
