@@ -1,108 +1,198 @@
-Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 682D913FE1
-	for <linux-ide@vger.kernel.org>; Sun,  7 Jan 2024 18:03:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-	id 9BF1415231D; Sun,  7 Jan 2024 13:03:01 -0500 (EST)
-From: Phillip Susi <phill@thesusis.net>
-To: linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Phillip Susi <phill@thesusis.net>
-Subject: [PATCH 0/3] Let sleeping disks lie
-Date: Sun,  7 Jan 2024 13:02:55 -0500
-Message-Id: <20240107180258.360886-1-phill@thesusis.net>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <87msthdo11.fsf@vps.thesusis.net>
-References: <87msthdo11.fsf@vps.thesusis.net>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F287A8BED
+	for <linux-ide@vger.kernel.org>; Mon,  8 Jan 2024 06:03:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eAYeBztZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9875C433C8;
+	Mon,  8 Jan 2024 06:03:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704693789;
+	bh=w02qwklkdGtAzbSjXn5JqkqFrwK44cI3dzC5tbPsMPk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=eAYeBztZ2EiaSapdBNxG1c24reF3iJYSfR5dJ4Rv6ZigMUbh9grF1tFRQk86kPkcK
+	 /FqAVLOXnCzgHIO/ej2dt7ZMnPYlCaiOTUjHtbneW8yPzlARZsUo78u3CAaxDKUQJV
+	 axeT4LVOXs23JhgCe1Qdq/CaAC4o3+2clLv5M+FgiMM94YIV4zZtMKt3aeZkJ+o/5h
+	 eonqxqBEyIUeVmS9G5rfvGSTYYbVXdwIgA2UDNfd2H7sL1tC/DO3/4b2BTICsDrn7/
+	 sy8z/AwtqchXUV6etYNYXCDctaVcmrL6OsfrZSjGUySpHPIgupbjnx9ZcCY2/M0Han
+	 vTsD6wNkeVKHQ==
+Message-ID: <e6f6aebf-0566-4113-8304-bccd88926f20@kernel.org>
+Date: Mon, 8 Jan 2024 15:03:06 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] libata: don't start PuiS disks on resume
+Content-Language: en-US
+To: Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
+References: <87msthdo11.fsf@vps.thesusis.net>
+ <20240107180258.360886-1-phill@thesusis.net>
+ <20240107180258.360886-4-phill@thesusis.net>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240107180258.360886-4-phill@thesusis.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-These patches attempt to help disks that are spun down stay that way,
-until they are actually accessed.  The first patch deals with disks in
-SLEEP mode ( hdparm -Y ).  SLEEP mode is a lower power mode than
-STANDBY.  Linux has had support for it for a long time, however, if
-you try to make use of it, you quickly find that the disk wakes up for
-no apparent reason.  This is because in SLEEP mode, the disk
-electronics are powered off so that it can not respond to any command.
-Waking the disk up requires a SATA link reset.  There are a number of
-commands that are regularly issued to a disk in standby that the disk
-treats as a NOOP, but in SLEEP mode, these commands trigger the SATA
-link reset to wake up the drive in order to send the command to the
-drive.  This patch deals with this by completing the commands in
-libata rather than waking the drive.
+On 1/8/24 03:02, Phillip Susi wrote:
+> Disks with Power Up In Standby enabled that required the
+> SET FEATURES command to start up were being issued the
+> command during resume.  Recently this was extended to
+> include PuiS disks that don't require the SET FEATURES
+> command.  Suppress this and leave the disk in standby
+> until the disk is actually accessed.
 
-The third patch is about how system suspend/resume effects disks in
-standby.  Archive disks that are very rarely accessed may spend most
-of their lives in standby, but every time the system is suspended and
-resumed, they spin up, only to be spun back down again.  This wastes
-power and puts wear and tear on the drive that is not neccesary.  ATA
-drives have a feature called Power Up In Standby that allows the drive
-to not automatically spin up when the system is resumed.
+Please use full 72-char lines for commit messages. The commit message also does
+not clearly describe what the patch does (completely silent on forcing the drive
+to sleep).
 
-There are two different types of PuiS: one that acts like regular
-standby, in that any command that requires access to the disk will
-automatically spin the disk up, and another that requires an explicit
-SET FEATURES command to bring it out of PuiS mode.  The kernel used to
-let the former type remain in standby after system resume, but recent
-changes have changed that behavior.  This patch attempts to allow both
-types to remain spun down after system resume, until they are actually
-accessed.
+But this patch is anyway not acceptable (see below) and out of place in this
+series (it is not about sleep).
 
-It currently has two paths for doing so.  The one that is currently
-active is to simply set the ATA_DFLAG_SLEEPING flag and leave the
-drive in standby mode.  This flag causes a later attempt to access the
-drive to trigger a round of EH that resets the SATA link, revalidates
-the drive, and if needed, issude the SET FEATURES command to bring it
-out of PuiS mode.  The alternative path ( currently #if 0'd out )
-actually issues the SLEEP command to put the drive into SLEEP mode.
-This can possibly save a little more power than leaving it in standby
-mode, but the transition from standby to sleep may not be legal
-according ot the ATA standards.  This therefore, may upset some drives
-( though it works fine with mine ).  It therefore is not suitable as a
-default.
+> ---
+>  drivers/ata/libata-core.c | 32 ++++++++++++++++++++++++++++----
+>  drivers/ata/libata-eh.c   | 12 +++++++++++-
+>  drivers/ata/libata.h      |  1 +
+>  include/linux/libata.h    |  1 +
+>  4 files changed, 41 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index ef6a2349a6f8..f758fc88ac19 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1912,7 +1912,30 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+>  			goto err_out;
+>  	}
+>  
+> -	if (!tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
+> +	if (flags & ATA_READID_NOSTART && id[2] == 0x37c8)
+> +	{
+> +		/*
+> +		 * The drive has powered up in standby, and returned incomplete IDENTIFY info
+> +		 * so we can't revalidate it yet.  We have also been asked to avoid starting the
+> +		 * drive, so stop here and leave the drive asleep and the EH pending, to be
+> +		 * restarted on later I/O request
+> +		 */
+> +#if 0
+> +		ata_tf_init(dev, &tf);
+> +		tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+> +		tf.protocol = ATA_PROT_NODATA;
+> +		tf.command = ATA_CMD_SLEEP;
+> +		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
+> +		ata_dev_info(dev, "PuiS detected, putting drive to sleep");
 
-I am thinking of adding a sysfs knob to control the PuiS behavior with
-3 states:
+I already commented that this is not following the ACS specifications and thus
+should not be done. So again, nack.
 
-0: wake the disk anyhow ( current behavior )
-1: leave the disk in standby mode
-2: put the disk to SLEEP
-
-I think the worst thing that can happen with the third option is that
-some disks might error and you will get some clutter in your syslog
-while EH happens.  People can try this option and fall back to #1 if
-they encounter issues.  Otherwise, they can enjoy the added power
-savings.
-
-Finally, the second patch addresses an issue where the third patch's
-clearing of the SET_ACTIVE flag was countermanded.  This was because
-the flag is set every time the EH starts during system resume.  In my
-case, putting the drive to SLEEP caused a second round of EH to happen
-as the SATA PHY is shut down during SLEEP.  That turned on the
-SET_ACTIVE flag again, causing a VERIFY command to try to start the
-drive, which failed because the drive requires the SET FEATURES
-command to come out of PuiS mode.
-
-Phillip Susi (3):
-  libata: avoid waking disk for several commands
-  libata: only wake a drive once on system resume
-  libata: don't start PuiS disks on resume
-
- drivers/ata/libata-core.c | 61 ++++++++++++++++++++++++++++++++++-----
- drivers/ata/libata-eh.c   | 20 +++++++++----
- drivers/ata/libata.h      |  3 +-
- include/linux/libata.h    |  1 +
- 4 files changed, 70 insertions(+), 15 deletions(-)
+> +#else
+> +		dev->flags |= ATA_DFLAG_SLEEPING;
+> +		ata_dev_info(dev, "PuiS detected, leaving drive in standby");
+> +#endif
+> +		return -EAGAIN;
+> +	}
+> +
+> +	if (!(flags & ATA_READID_NOSTART) &&
+> +	    !tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
+>  		tried_spinup = 1;
+>  		/*
+>  		 * Drive powered-up in standby mode, and requires a specific
+> @@ -3969,6 +3992,8 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+>  
+>  	/* re-read ID */
+>  	rc = ata_dev_reread_id(dev, readid_flags);
+> +	if (rc == -EAGAIN)
+> +		return rc;
+>  	if (rc)
+>  		goto fail;
+>  
+> @@ -5241,8 +5266,7 @@ static void ata_port_suspend(struct ata_port *ap, pm_message_t mesg,
+>  	 * http://thread.gmane.org/gmane.linux.ide/46764
+>  	 */
+>  	ata_port_request_pm(ap, mesg, 0,
+> -			    ATA_EHI_QUIET | ATA_EHI_NO_AUTOPSY |
+> -			    ATA_EHI_NO_RECOVERY,
+> +			    ATA_EHI_QUIET | ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY,
+>  			    async);
+>  }
+>  
+> @@ -5279,7 +5303,7 @@ static void ata_port_resume(struct ata_port *ap, pm_message_t mesg,
+>  			    bool async)
+>  {
+>  	ata_port_request_pm(ap, mesg, ATA_EH_RESET | ATA_EH_SET_ACTIVE,
+> -			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET,
+> +			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET | ATA_EHI_NOSTART,
+>  			    async);
+>  }
+>  
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 799a1b8bc384..e45e60112951 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -22,6 +22,7 @@
+>  #include <scsi/scsi_cmnd.h>
+>  #include <scsi/scsi_dbg.h>
+>  #include "../scsi/scsi_transport_api.h"
+> +#include <linux/pm_runtime.h>
+>  
+>  #include <linux/libata.h>
+>  
+> @@ -3046,6 +3047,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+>  
+>  		if (ehc->i.flags & ATA_EHI_DID_RESET)
+>  			readid_flags |= ATA_READID_POSTRESET;
+> +		if (ehc->i.flags & ATA_EHI_NOSTART)
+> +			readid_flags |= ATA_READID_NOSTART;
+>  
+>  		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
+>  			WARN_ON(dev->class == ATA_DEV_PMP);
+> @@ -3075,8 +3078,15 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+>  			ata_eh_about_to_do(link, dev, ATA_EH_REVALIDATE);
+>  			rc = ata_dev_revalidate(dev, ehc->classes[dev->devno],
+>  						readid_flags);
+> -			if (rc)
+> +			if (rc == -EAGAIN) {
+> +				rc = 0; /* start required but suppressed, handle later */
+> +				ehc->i.dev_action[dev->devno] &= ~ATA_EH_SET_ACTIVE;
+> +				continue;
+> +			}
+> +			else if (rc)
+> +			{
+>  				goto err;
+> +			}
+>  
+>  			ata_eh_done(link, dev, ATA_EH_REVALIDATE);
+>  
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 43ad1ef9b63a..cff3facad055 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -19,6 +19,7 @@
+>  enum {
+>  	/* flags for ata_dev_read_id() */
+>  	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
+> +	ATA_READID_NOSTART	= (1 << 1), /* do not start drive */
+>  
+>  	/* selector for ata_down_xfermask_limit() */
+>  	ATA_DNXFER_PIO		= 0,	/* speed down PIO */
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 1dbb14daccfa..50d6fa933946 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -328,6 +328,7 @@ enum {
+>  
+>  	/* ata_eh_info->flags */
+>  	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
+> +	ATA_EHI_NOSTART		= (1 << 1),  /* don't start the disk */
+>  	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
+>  	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
+>  	ATA_EHI_NO_RECOVERY	= (1 << 4),  /* no recovery */
 
 -- 
-2.30.2
+Damien Le Moal
+Western Digital Research
 
