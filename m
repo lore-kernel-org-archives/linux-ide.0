@@ -1,108 +1,231 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782D539FC1
-	for <linux-ide@vger.kernel.org>; Tue,  9 Jan 2024 15:20:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B2C3A1AA;
+	Tue,  9 Jan 2024 15:47:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BwxPDmZ4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7BB1C433C7;
-	Tue,  9 Jan 2024 15:20:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704813622;
-	bh=Qn1+8FMHSe8YPHzHflimwTjDnOQbrPBa9kLEPT8/ZhA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BwxPDmZ4SJdhWsWwBYlenqYecuysuwmJEN2ySA7iG2TRLD6KGhix55pTlEKim/5Rm
-	 h6RITj7pHNuP5ORJhfX0HFSdC3vMnfTccrLrGvOBnUZXp8n4rduTVIgMNX4MEHuPnq
-	 T4TGtEMn0DGVf5qYhWybocNH/BJkusxt4sSQgO2eYNEY81NEIEIK8x4VyR5/mL+0a0
-	 05soXpgqPT3GqzwAO9n/Um0Vjrs/4/ViBcCTe4sXxow5ha8cWuHiwY9cfmk9J/h5/K
-	 IXk5pa/h5urvP75TlCA42OYhqmn+pZoWxh7Fqlzr0/Xy0rytA4eLBT50sawmbvlVwl
-	 w+9dN+afxX7pg==
-Date: Tue, 9 Jan 2024 16:20:18 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Phillip Susi <phill@thesusis.net>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH 0/1 v2] Only activate drive once during system resume
-Message-ID: <ZZ1kMrTzRxyjF00T@x1-carbon>
-References: <20231225151915.258816-1-phill@thesusis.net>
- <20231230182128.296675-1-phill@thesusis.net>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="yuCqZmQz";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="u9NJlJkP";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="yuCqZmQz";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="u9NJlJkP"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 201881F813;
+	Tue,  9 Jan 2024 15:47:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1704815258; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pLXaYBDIft5KFgQ9nA2lRfdPYbiij75xCMbxbUzR9gg=;
+	b=yuCqZmQzW1AAbNHxGs02nXFdpNObqdmT7cVUPlqGZWUY2Cjiadfxm2GwFhE5pUV0k2q9SN
+	XxqN1xL0dzQCrxK7q8vAkKY39a7taea0SFd1iFJjtLq3PYYPchZvayNHmstm4eWqjc2zeU
+	k3scUPV7z9DUCe9dn5HUACVOChF+A8s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1704815258;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pLXaYBDIft5KFgQ9nA2lRfdPYbiij75xCMbxbUzR9gg=;
+	b=u9NJlJkPptNUeNQYK1ziJmCupDfn9OeuOVZWW9JWyDy66jNu/ayoh/itXoAY1xVygKBm2E
+	58Uk61P1oab9WTDA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1704815258; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pLXaYBDIft5KFgQ9nA2lRfdPYbiij75xCMbxbUzR9gg=;
+	b=yuCqZmQzW1AAbNHxGs02nXFdpNObqdmT7cVUPlqGZWUY2Cjiadfxm2GwFhE5pUV0k2q9SN
+	XxqN1xL0dzQCrxK7q8vAkKY39a7taea0SFd1iFJjtLq3PYYPchZvayNHmstm4eWqjc2zeU
+	k3scUPV7z9DUCe9dn5HUACVOChF+A8s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1704815258;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pLXaYBDIft5KFgQ9nA2lRfdPYbiij75xCMbxbUzR9gg=;
+	b=u9NJlJkPptNUeNQYK1ziJmCupDfn9OeuOVZWW9JWyDy66jNu/ayoh/itXoAY1xVygKBm2E
+	58Uk61P1oab9WTDA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 22D0713CB0;
+	Tue,  9 Jan 2024 15:47:37 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id WtI6BJlqnWVnVQAAD6G6ig
+	(envelope-from <lhenriques@suse.de>); Tue, 09 Jan 2024 15:47:37 +0000
+Received: from localhost (brahms.olymp [local])
+	by brahms.olymp (OpenSMTPD) with ESMTPA id d854d863;
+	Tue, 9 Jan 2024 15:47:32 +0000 (UTC)
+From: Luis Henriques <lhenriques@suse.de>
+To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc: Jan Kara <jack@suse.cz>,  Matthew Wilcox <willy@infradead.org>,
+  "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
+  "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+  "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+  "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+  "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+  "linux-mm@kvack.org" <linux-mm@kvack.org>,
+  "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+  "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+In-Reply-To: <20f3de31-fbb0-4d8b-8f34-aa1beba9afc9@wdc.com> (Johannes
+	Thumshirn's message of "Mon, 8 Jan 2024 11:47:11 +0000")
+References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+	<20240105105736.24jep6q6cd7vsnmz@quack3>
+	<20f3de31-fbb0-4d8b-8f34-aa1beba9afc9@wdc.com>
+Date: Tue, 09 Jan 2024 15:47:32 +0000
+Message-ID: <87cyua33vv.fsf@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231230182128.296675-1-phill@thesusis.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Spam-Level: *****
+X-Spam-Level: 
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=yuCqZmQz;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=u9NJlJkP
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-2.01 / 50.00];
+	 ARC_NA(0.00)[];
+	 TO_DN_EQ_ADDR_SOME(0.00)[];
+	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	 DWL_DNSWL_MED(-2.00)[suse.de:dkim];
+	 DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	 NEURAL_HAM_SHORT(-0.20)[-1.000];
+	 RCVD_COUNT_THREE(0.00)[4];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 DKIM_TRACE(0.00)[suse.de:+];
+	 MX_GOOD(-0.01)[];
+	 RCPT_COUNT_SEVEN(0.00)[11];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[wdc.com:email];
+	 NEURAL_SPAM_LONG(3.50)[1.000];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 RCVD_TLS_LAST(0.00)[];
+	 MID_RHS_MATCH_FROM(0.00)[];
+	 BAYES_HAM(-3.00)[99.99%]
+X-Spam-Score: -2.01
+X-Rspamd-Queue-Id: 201881F813
+X-Spam-Flag: NO
 
-On Sat, Dec 30, 2023 at 01:21:27PM -0500, Phillip Susi wrote:
-> This version also works and may be a bit cleaner
+Johannes Thumshirn <Johannes.Thumshirn@wdc.com> writes:
 
-Hello Phillip,
+> On 05.01.24 11:57, Jan Kara wrote:
+>> Hello,
+>>=20
+>> On Thu 04-01-24 21:17:16, Matthew Wilcox wrote:
+>>> This is primarily a _FILESYSTEM_ track topic.  All the work has already
+>>> been done on the MM side; the FS people need to do their part.  It could
+>>> be a joint session, but I'm not sure there's much for the MM people
+>>> to say.
+>>>
+>>> There are situations where we need to allocate memory, but cannot call
+>>> into the filesystem to free memory.  Generally this is because we're
+>>> holding a lock or we've started a transaction, and attempting to write
+>>> out dirty folios to reclaim memory would result in a deadlock.
+>>>
+>>> The old way to solve this problem is to specify GFP_NOFS when allocating
+>>> memory.  This conveys little information about what is being protected
+>>> against, and so it is hard to know when it might be safe to remove.
+>>> It's also a reflex -- many filesystem authors use GFP_NOFS by default
+>>> even when they could use GFP_KERNEL because there's no risk of deadlock.
+>>>
+>>> The new way is to use the scoped APIs -- memalloc_nofs_save() and
+>>> memalloc_nofs_restore().  These should be called when we start a
+>>> transaction or take a lock that would cause a GFP_KERNEL allocation to
+>>> deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
+>>> can see the nofs situation is in effect and will not call back into
+>>> the filesystem.
+>>>
+>>> This results in better code within your filesystem as you don't need to
+>>> pass around gfp flags as much, and can lead to better performance from
+>>> the memory allocators as GFP_NOFS will not be used unnecessarily.
+>>>
+>>> The memalloc_nofs APIs were introduced in May 2017, but we still have
+>>> over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which is
+>>> really sad).  This session is for filesystem developers to talk about
+>>> what they need to do to fix up their own filesystem, or share stories
+>>> about how they made their filesystem better by adopting the new APIs.
+>>=20
+>> I agree this is a worthy goal and the scoped API helped us a lot in the
+>> ext4/jbd2 land. Still we have some legacy to deal with:
+>>=20
+>> ~> git grep "NOFS" fs/jbd2/ | wc -l
+>> 15
+>> ~> git grep "NOFS" fs/ext4/ | wc -l
+>> 71
+>>
+>
+> For everyone following out there being curious:
+> 1 - affs
+> 1 - cachefiles
+> 1 - ecryptfs
+> 1 - fscache
+> 1 - notify
+> 1 - squashfs
+> 1 - vboxsf
+> 1 - zonefs
+> 2 - hfsplus
+> 2 - tracefs
+> 3 - 9p
+> 3 - ext2
+> 3 - iomap
+> 5 - befs
+> 5 - exfat
+> 5 - fat
+> 5 - udf
+> 5 - ufs
+> 7 - erofs
+> 10 - fuse
+> 11 - smb
+> 14 - hpfs
+> 15 - jbd2
+> 17 - crypto
+> 17 - jfs
+> 17 - quota
+> 17 - reiserfs
+> 18 - nfs
+> 18 - nilfs2
+> 21 - ntfs
+> 30 - xfs
+> 37 - bcachefs
+> 46 - gfs2
+> 47 - afs
+> 55 - dlm
+> 61 - f2fs
+> 63 - ceph
+> 66 - ext4
+> 71 - ocfs2
+> 74 - ntfs3
+> 84 - ubifs
+> 199 - btrfs
+>
+> As I've already feared we (as in btrfs) are the worst here.
 
-Thank you for your series!
+It probably won't make you feel any better, but the value for ceph isn't
+correct as you're just taking into account the code in 'fs/ceph/'.  If you
+also take 'net/ceph/', it brings it much closer to btrfs: 63 + 48 =3D 111
 
-
-Some small advice:
-
-1) Your patches are missing a Signed-off-by tag.
-Without this, we can't accept your changes, see:
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin
-
-
-2) The cover letter should explain and summarize the
-overall problem that the patch series addresses.
-
-It is also nice with a small change log, so we know
-what changed between V1 and V2.
-
-
-3) The commit messages should explain the specific
-problem that the commit fixes in greater detail, see:
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
-
-After the problem is established, describe what you
-are actually doing about it in technical detail.
-
-
-""I have been wondering why I kept seeing drives activated
-twice during system resume since this got added.""
-
-If possible, please reference a specific SHA1, otherwise we
-might not know what "this got added" actually refers to.
-
-
-4) Please use git format-patch and git send-email.
-
-Looking at
-https://lore.kernel.org/linux-ide/
-as well as my local inbox,
-the threading seems very wrong.
-
-There is a [PATCH 0/1], and then a patch "[PATCH 0/1 v2]"
-that replies to the [PATCH 0/1].
-
-Additionally, there is also a [PATCH 1/4] that also replies
-to the [PATCH 0/1].
-
-It is just impossible to follow.
-
-For more info, see:
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#explicit-in-reply-to-headers
-
-
-If you simply use:
-$ git format-patch -v 1 -o my-series-v1 v6.7..
-$ git send-email my-series-v1/*.patch
-
-for v1 of your series. And then:
-
-$ git format-patch -v 2 -o my-series-v2 v6.7..
-$ git send-email my-series-v2/*.patch
-
-for v2 of your series, there will be no explicit
-In-Reply-To headers that messes up the threading.
-
-
-Kind regards,
-Niklas
+Cheers,
+--=20
+Lu=C3=ADs
