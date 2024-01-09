@@ -1,199 +1,108 @@
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C88F381C3
-	for <linux-ide@vger.kernel.org>; Tue,  9 Jan 2024 12:43:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782D539FC1
+	for <linux-ide@vger.kernel.org>; Tue,  9 Jan 2024 15:20:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QeIOoMPx"
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-5ed10316e22so24123227b3.3
-        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2024 04:43:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1704804184; x=1705408984; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YRdzfj7JEW1eBQjWfVgccO0cPj0nGjhcrGXH3osu83E=;
-        b=QeIOoMPxJmnP7J6Ahz9RoFYBBAyFE1JBl58mDEbiOpjOXlXa4xctkyQ4nrjf58hZKM
-         UXAqgSfKfhBETJo7a6hI3NqYN/e/itjolyWBN7FXOOc1GVl4LoyzphSDupJkrBa6CcUx
-         uhg8+zb05cg3wX8odOqH1lntKqpAMgurMrtZCrBQHowdaKJVPOJ+e0AXNkXtdjlgelGx
-         e+KH88M4t756B0qSvZN4tKYQFQflFf4mg2QDBHbjdVtjW53sR3LDi55rkiBQ0f84/fuJ
-         bjjACC4hup/9yntLNcJlH8FzrZr8+C15ucKIwwVU8w2GBCAXJrzU3XiImhpFHY+eE/Ve
-         zvaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704804184; x=1705408984;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YRdzfj7JEW1eBQjWfVgccO0cPj0nGjhcrGXH3osu83E=;
-        b=X6Kr8ddNAKmINW3Gb93s0Jw1Qh1VPuTbEG2sHETolC7zvZH194yKrb/iVL7SyTOOXk
-         hBuCYJuRRuQvnZjH5bz00GUd7u1NUUjWgvo7d6J5LD70PjlOS/tg/3bYNNbEeEbb5gxJ
-         AZB8YoO+XW1J0RQ3HpJ4Jmppz0TgxAAjqQ1gm7cb2jtLWKlLlpmVR7DX6hi4e7+wxTV/
-         ojv1MRxsTPaxIMMcsCGrhPat9ARy+uYEIlQh9zv+2CJqOR2vNcXv8K1nIc5Tm9JmSYRr
-         iUDajGh5sTaNaU/F2EDmw+4WZC0e3SNTXTWN16CERPlJhlSlPiMyZzMRo6C9y/Oy21vo
-         woPQ==
-X-Gm-Message-State: AOJu0YzUEdtZo5slvt95Al9PUd3hE0i8jFT7X3s7Q2zEcrJ9fJ4PcKpG
-	atPPSqI9i4MTQYVNJmJhwzz2LP2A78jQ3YffEU8d+3bqJBbk3w==
-X-Google-Smtp-Source: AGHT+IGP2TpOD/2aQljjLpEh7rgxkZ1rPK7JLdhb+SJI4gzWB4npHJxZY6IBNmQ0p0RFR21+Q3sEEaYhEw7pDx3EeW0=
-X-Received: by 2002:a0d:cb85:0:b0:5f1:7189:b9d with SMTP id
- n127-20020a0dcb85000000b005f171890b9dmr2932736ywd.82.1704804184379; Tue, 09
- Jan 2024 04:43:04 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BwxPDmZ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7BB1C433C7;
+	Tue,  9 Jan 2024 15:20:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704813622;
+	bh=Qn1+8FMHSe8YPHzHflimwTjDnOQbrPBa9kLEPT8/ZhA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BwxPDmZ4SJdhWsWwBYlenqYecuysuwmJEN2ySA7iG2TRLD6KGhix55pTlEKim/5Rm
+	 h6RITj7pHNuP5ORJhfX0HFSdC3vMnfTccrLrGvOBnUZXp8n4rduTVIgMNX4MEHuPnq
+	 T4TGtEMn0DGVf5qYhWybocNH/BJkusxt4sSQgO2eYNEY81NEIEIK8x4VyR5/mL+0a0
+	 05soXpgqPT3GqzwAO9n/Um0Vjrs/4/ViBcCTe4sXxow5ha8cWuHiwY9cfmk9J/h5/K
+	 IXk5pa/h5urvP75TlCA42OYhqmn+pZoWxh7Fqlzr0/Xy0rytA4eLBT50sawmbvlVwl
+	 w+9dN+afxX7pg==
+Date: Tue, 9 Jan 2024 16:20:18 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Phillip Susi <phill@thesusis.net>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH 0/1 v2] Only activate drive once during system resume
+Message-ID: <ZZ1kMrTzRxyjF00T@x1-carbon>
+References: <20231225151915.258816-1-phill@thesusis.net>
+ <20231230182128.296675-1-phill@thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1704788539.git.ysato@users.sourceforge.jp> <160ee086771703c951c5522d997662aeac122a28.1704788539.git.ysato@users.sourceforge.jp>
-In-Reply-To: <160ee086771703c951c5522d997662aeac122a28.1704788539.git.ysato@users.sourceforge.jp>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Tue, 9 Jan 2024 13:42:53 +0100
-Message-ID: <CACRpkdZMkyJdkFt_x-6iubLZ-KzewvmT0zi4HAas0Xy9DpPn3g@mail.gmail.com>
-Subject: Re: [DO NOT MERGE v6 12/37] dt-bindings: pci: pci-sh7751: Add SH7751 PCI
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
-	Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Thomas Gleixner <tglx@linutronix.de>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Lee Jones <lee@kernel.org>, 
-	Helge Deller <deller@gmx.de>, Heiko Stuebner <heiko@sntech.de>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Chris Morgan <macromorgan@hotmail.com>, 
-	Yang Xiwen <forbidden405@foxmail.com>, Sebastian Reichel <sre@kernel.org>, 
-	Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>, Vlastimil Babka <vbabka@suse.cz>, 
-	Hyeonggon Yoo <42.hyeyoo@gmail.com>, David Rientjes <rientjes@google.com>, Baoquan He <bhe@redhat.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Stephen Rothwell <sfr@canb.auug.org.au>, Azeem Shaikh <azeemshaikh38@gmail.com>, 
-	Javier Martinez Canillas <javierm@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>, 
-	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>, 
-	Jonathan Corbet <corbet@lwn.net>, Jacky Huang <ychuang3@nuvoton.com>, 
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>, Biju Das <biju.das.jz@bp.renesas.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
-	Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>, 
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231230182128.296675-1-phill@thesusis.net>
 
-Hi Yoshinori,
+On Sat, Dec 30, 2023 at 01:21:27PM -0500, Phillip Susi wrote:
+> This version also works and may be a bit cleaner
 
-thanks for your patch!
+Hello Phillip,
 
-On Tue, Jan 9, 2024 at 9:24=E2=80=AFAM Yoshinori Sato
-<ysato@users.sourceforge.jp> wrote:
+Thank you for your series!
 
-> Renesas SH7751 PCI Controller json-schema.
->
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
-(...)
-> +  renesas,bus-arbit-round-robin:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set DMA bus arbitration to round robin.
-> +
-> +  pci-command-reg-fast-back-to-back:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI command register Fast Back-to-Back enable bit.
-> +
-> +  pci-command-reg-serr:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI command register SERR# enable.
-> +
-> +  pci-command-reg-wait-cycle-control:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI command register Wait cycle control bit.
-> +
-> +  pci-command-reg-parity-error-response:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI Command register Parity error response bit.
-> +
-> +  pci-command-reg-vga-snoop:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI Command register VGA palette snoop bit.
-> +
-> +  pci-command-reg-write-invalidate:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI Command register Memory write and invaldate enable bit=
-.
-> +
-> +  pci-command-reg-special-cycle:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI Command register Special cycle bit.
-> +
-> +  pci-command-reg-bus-master:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI Command register Bus master bit.
-> +
-> +  pci-command-reg-memory-space:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI Command register Memory space bit.
-> +
-> +  pci-command-reg-io-space:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: |
-> +      Set for PCI Command register I/O space bit.
 
-Do you really need to configure all these things? It seems they are
-just set to default values anyway?
+Some small advice:
 
-Can't you just look at the compatible "renesas,sh7751-pci" and
-set it to the values you know are needed for that compatible?
+1) Your patches are missing a Signed-off-by tag.
+Without this, we can't accept your changes, see:
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin
 
-> +  pci-bar:
-> +    $ref: /schemas/types.yaml#/definitions/uint32-matrix
-> +    description: Overwrite to  PCI CONFIG Base Address Registers value.
-> +    items:
-> +      items:
-> +        - description: BAR register number
-> +        - description: BAR register value
-> +    minItems: 1
-> +    maxItems: 6
 
-Same with this, isn't this always the same (hardcoded) values
-for "renesas,sh7751-pci" if used?
+2) The cover letter should explain and summarize the
+overall problem that the patch series addresses.
 
-> +            interrupt-map =3D <0x0000 0 0 1 &julianintc 5>,
-> +                            <0x0000 0 0 2 &julianintc 6>,
-> +                            <0x0000 0 0 3 &julianintc 7>,
-> +                            <0x0000 0 0 4 &julianintc 8>,
-> +                            <0x0800 0 0 1 &julianintc 6>,
-> +                            <0x0800 0 0 2 &julianintc 7>,
-> +                            <0x0800 0 0 3 &julianintc 8>,
-> +                            <0x0800 0 0 4 &julianintc 5>,
-> +                            <0x1000 0 0 1 &julianintc 7>,
-> +                            <0x1000 0 0 2 &julianintc 8>,
-> +                            <0x1000 0 0 3 &julianintc 5>,
-> +                            <0x1000 0 0 4 &julianintc 6>;
+It is also nice with a small change log, so we know
+what changed between V1 and V2.
 
-This interrupt-map looks very strange, usually the last cell is the polarit=
-y
-flag and here it is omitted? I would expect something like:
 
-<0x0000 0 0 1 &julianintc 5 IRQ_TYPE_LEVEL_LOW>, (...)
+3) The commit messages should explain the specific
+problem that the commit fixes in greater detail, see:
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
 
-The interrupt-map schema in dtschema isn't really looking at this
-so it is easy to get it wrong.
+After the problem is established, describe what you
+are actually doing about it in technical detail.
 
-Yours,
-Linus Walleij
+
+""I have been wondering why I kept seeing drives activated
+twice during system resume since this got added.""
+
+If possible, please reference a specific SHA1, otherwise we
+might not know what "this got added" actually refers to.
+
+
+4) Please use git format-patch and git send-email.
+
+Looking at
+https://lore.kernel.org/linux-ide/
+as well as my local inbox,
+the threading seems very wrong.
+
+There is a [PATCH 0/1], and then a patch "[PATCH 0/1 v2]"
+that replies to the [PATCH 0/1].
+
+Additionally, there is also a [PATCH 1/4] that also replies
+to the [PATCH 0/1].
+
+It is just impossible to follow.
+
+For more info, see:
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html#explicit-in-reply-to-headers
+
+
+If you simply use:
+$ git format-patch -v 1 -o my-series-v1 v6.7..
+$ git send-email my-series-v1/*.patch
+
+for v1 of your series. And then:
+
+$ git format-patch -v 2 -o my-series-v2 v6.7..
+$ git send-email my-series-v2/*.patch
+
+for v2 of your series, there will be no explicit
+In-Reply-To headers that messes up the threading.
+
+
+Kind regards,
+Niklas
