@@ -1,126 +1,101 @@
-Received: from mail-il1-f178.google.com (mail-il1-f178.google.com [209.85.166.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD0643C48F
-	for <linux-ide@vger.kernel.org>; Tue,  9 Jan 2024 22:44:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55C21376;
+	Wed, 10 Jan 2024 02:06:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NuvkG/vS"
-Received: by mail-il1-f178.google.com with SMTP id e9e14a558f8ab-36082f3cb05so13310265ab.0
-        for <linux-ide@vger.kernel.org>; Tue, 09 Jan 2024 14:44:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704840263; x=1705445063; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=L9xTLocbxJtZ/EsVzz8IzAHiTCzUNRLczzpqZlO0pg4=;
-        b=NuvkG/vSLcINgXnC03k23QL0l9G3KqxZ/jrQxVTTiEBbPXQ1xJYEq51nshbMeSaVBs
-         FduTo7bxzBnBArU4Q5YfBLCe8Aogk1SD3vXrMMsyg73NmbXjUkG/iOPwhu4gTGDgUyYu
-         wqidBfoBjQhgZrXecI9nDlgC1m935d1Qpo2hr4hgzNJOU7QkwS0CMwZV1Kc8Cyqrh2KF
-         Y9e2bJZqoFQ1p4zIPWLHEJW+Rj6C/Jf7Yy0FsDXcTc3XUdb8qZzbpEUs/6PJuAtF7YVY
-         Wz2QfD9o1jvgTV0+iPlpX+7VdFyq2izIzbvfLA0aFyhJ+IXTQA0utor42UsDtO5je72N
-         DFzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704840263; x=1705445063;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=L9xTLocbxJtZ/EsVzz8IzAHiTCzUNRLczzpqZlO0pg4=;
-        b=i9K/I6OUJEQXgtfhICBNnChtz2UP803EsoLf0cXP1bUyMl6o1sENNBJcdCxU/HrnAU
-         j1WEoBfQyOyoif5aesj82EyeMtACbw+ZP9m5MCJIhheLP+qm2Vk1uu8/UOg6+E0RE6SM
-         wCBqpw3tysn/rh45PqmCghum9gr9CFIjy7ITTAVPhBjNNmtiNRnriLNaZL49zu5X5Z6i
-         fVqk/fiGHmAD2j5L8Zin2h0lYA2GL9T7v7VW5vVsXolyDMrPBcUXbiRra74p5o9DAxSP
-         lTttCIVmqHZ9PALJ/8qCOaRXr+ylRtTrz7bdmyvVdAGtgm0KgkEiEOPMVtOV13MYQreV
-         ibZQ==
-X-Gm-Message-State: AOJu0YxKqy01uFOKMl6LyU4jlo8XEz/8W/05PK6odZ2gz24AoWCmUpNt
-	bxbQaARxlo96/FXXSmTSQnkgtNkBcutyuBZOxctagHl+ib0=
-X-Google-Smtp-Source: AGHT+IHSKNtjcO8bUbdBcwmcDlNZLFhTfOw5pswdA67ew28nBq3+gGgOSAobh3nBsnKFOjOmUdXBuw==
-X-Received: by 2002:a05:6e02:1845:b0:35f:bd12:5488 with SMTP id b5-20020a056e02184500b0035fbd125488mr183647ilv.30.1704840262829;
-        Tue, 09 Jan 2024 14:44:22 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id o5-20020a634e45000000b0050f85ef50d1sm2059281pgl.26.2024.01.09.14.44.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jan 2024 14:44:22 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rNKpX-008G6o-07;
-	Wed, 10 Jan 2024 09:44:19 +1100
-Date: Wed, 10 Jan 2024 09:44:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
-Message-ID: <ZZ3MQ1nFcyaMVuCv@dread.disaster.area>
-References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hEUsXdPE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18AEAC433F1;
+	Wed, 10 Jan 2024 02:06:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704852375;
+	bh=K20e8jhxQctdn0EQe0a64CVvGFTYjmTc3LS7asQogyo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=hEUsXdPExgJ/6tyvorNMmv2xbbnN/ksrlzf9XWoz4XzMSpDxk/Su9jRai8A6JmPqT
+	 CROg9vyX/uPgMa6hC3+dIv1+9VwRJuYOHwCZqh4PPAT20xe0N58/U93+wqZ4eMep+N
+	 C9Y9/Yl2ILJOSVXmlxmhAbkx+aAbO4RSpzEDkemhkakgnE8rlLiL7DE1D79+kIKw62
+	 c5+A6TL8g0sDmmmyWP6zXo51r4mcIw9+uHa66sJvr6wGG+GkGqe1ewkKXIi+ONI0Fz
+	 xX64W1DE45sKKqohJS8CPYy6lPEmA17vOTByyqBIbrhq4wLzLuEHnHNC1j3EhDfzcF
+	 aA908fHMhDbXQ==
+Message-ID: <c2f88d7b-cded-42ab-bc5c-3d9a723daa1f@kernel.org>
+Date: Wed, 10 Jan 2024 11:06:06 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZZcgXI46AinlcBDP@casper.infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [DO NOT MERGE v6 27/37] dt-bindings: ata: ata-generic: Add new
+ targets
+Content-Language: en-US
+To: Yoshinori Sato <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
+ <sboyd@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
+ David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Jiri Slaby <jirislaby@kernel.org>, Magnus Damm <magnus.damm@gmail.com>,
+ Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>,
+ John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+ Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
+ Heiko Stuebner <heiko@sntech.de>, Jernej Skrabec <jernej.skrabec@gmail.com>,
+ Chris Morgan <macromorgan@hotmail.com>, Yang Xiwen
+ <forbidden405@foxmail.com>, Sebastian Reichel <sre@kernel.org>,
+ Linus Walleij <linus.walleij@linaro.org>,
+ Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
+ Vlastimil Babka <vbabka@suse.cz>, Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+ David Rientjes <rientjes@google.com>, Baoquan He <bhe@redhat.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck
+ <linux@roeck-us.net>, Stephen Rothwell <sfr@canb.auug.org.au>,
+ Azeem Shaikh <azeemshaikh38@gmail.com>,
+ Javier Martinez Canillas <javierm@redhat.com>,
+ Max Filippov <jcmvbkbc@gmail.com>, Palmer Dabbelt <palmer@rivosinc.com>,
+ Bin Meng <bmeng@tinylab.org>, Jonathan Corbet <corbet@lwn.net>,
+ Jacky Huang <ychuang3@nuvoton.com>, Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+ Biju Das <biju.das.jz@bp.renesas.com>,
+ =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+ Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>,
+ Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
+ Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+ linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+ linux-fbdev@vger.kernel.org
+References: <cover.1704788539.git.ysato@users.sourceforge.jp>
+ <06fdb2cf7927681acf3099b826390ef75ba321af.1704788539.git.ysato@users.sourceforge.jp>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <06fdb2cf7927681acf3099b826390ef75ba321af.1704788539.git.ysato@users.sourceforge.jp>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
-> This is primarily a _FILESYSTEM_ track topic.  All the work has already
-> been done on the MM side; the FS people need to do their part.  It could
-> be a joint session, but I'm not sure there's much for the MM people
-> to say.
+On 1/9/24 17:23, Yoshinori Sato wrote:
+> Added new ata-generic target.
+> - iodata,usl-5p-ata
+> - renesas,rts7751r2d-ata
 > 
-> There are situations where we need to allocate memory, but cannot call
-> into the filesystem to free memory.  Generally this is because we're
-> holding a lock or we've started a transaction, and attempting to write
-> out dirty folios to reclaim memory would result in a deadlock.
-> 
-> The old way to solve this problem is to specify GFP_NOFS when allocating
-> memory.  This conveys little information about what is being protected
-> against, and so it is hard to know when it might be safe to remove.
-> It's also a reflex -- many filesystem authors use GFP_NOFS by default
-> even when they could use GFP_KERNEL because there's no risk of deadlock.
+> Each boards have simple IDE Interface. Use ATA generic driver.
 
-Another thing that needs to be considered: GFP_NOFS has been used to
-avoid lockdep false positives due to GFP_KERNEL allocations also
-being used as scoped GFP_NOFS allocations via different call
-chains.
+This looks OK to me, so feel free to add:
 
-That is, if a code path does a GFP_KERNEL allocation by default,
-lockdep will track this as a "reclaim allowed" allocation context.
-If that same code is then executed from a scoped NOFS context
-(e.g. inside a transaction context), then lockdep will see it as
-a "no reclaim allowed" allocation context.
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 
-The problem then arises when the next GFP_KERNEL allocation occurs,
-the code enters direct reclaim, grabs a filesystem lock and lockdep
-then throws out a warning that filesystem locks are being taken
-in an allocation context that doesn't allow reclaim to take
-filesystem locks.
+Note: The "DO NOT MERGE" patch prefix almost got me to immediately delete this
+37 patches in my inbox... If you wish to get this work merged after review,
+please use the regular "PATCH" prefix. No worries, the series will not be merged
+until is is reviewed :)
 
-These are typically false positives.
-
-Prior to __GFP_NOLOCKDEP existing, we used GFP_NOFS unconditionally
-in these shared context paths to avoid lockdep from seeing a
-GFP_KERNEL allocation context from this allocation path. Now that we
-are getting rid of GFP_NOFS and replacing these instances with
-GFP_KERNEL and scoped constraints, we're removing the anti-lockdep
-false positive mechanism.
-
-IOWs, we have to replace GFP_NOFS with GFP_KERNEL | __GFP_NOLOCKDEP
-in these cases to prevent false positive reclaim vs lock inversion
-detections. There's at least a dozen of these cases in XFS and we
-generally know where they are, but this will likely be an ongoing
-issue for filesystems as we switch over to using scoped memory
-allocation contexts.
-
-I'm not sure there's a good solution to this. However, we need to
-make sure people are aware that GFP_NOFS will need to be converted
-to GFP_KERNEL | __GFP_NOLOCKDEP for allocations that can occur in
-mixed contexts.
-
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Damien Le Moal
+Western Digital Research
+
