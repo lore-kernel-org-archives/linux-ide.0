@@ -1,24 +1,24 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55C21376;
-	Wed, 10 Jan 2024 02:06:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3659D15C0
+	for <linux-ide@vger.kernel.org>; Wed, 10 Jan 2024 02:19:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hEUsXdPE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18AEAC433F1;
-	Wed, 10 Jan 2024 02:06:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ds5MACKz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37627C433C7;
+	Wed, 10 Jan 2024 02:19:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704852375;
-	bh=K20e8jhxQctdn0EQe0a64CVvGFTYjmTc3LS7asQogyo=;
+	s=k20201202; t=1704853152;
+	bh=h1H/p1dVlZdOnD/te/UBB2zcyMPIGeD3lOqf/fEAJuI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=hEUsXdPExgJ/6tyvorNMmv2xbbnN/ksrlzf9XWoz4XzMSpDxk/Su9jRai8A6JmPqT
-	 CROg9vyX/uPgMa6hC3+dIv1+9VwRJuYOHwCZqh4PPAT20xe0N58/U93+wqZ4eMep+N
-	 C9Y9/Yl2ILJOSVXmlxmhAbkx+aAbO4RSpzEDkemhkakgnE8rlLiL7DE1D79+kIKw62
-	 c5+A6TL8g0sDmmmyWP6zXo51r4mcIw9+uHa66sJvr6wGG+GkGqe1ewkKXIi+ONI0Fz
-	 xX64W1DE45sKKqohJS8CPYy6lPEmA17vOTByyqBIbrhq4wLzLuEHnHNC1j3EhDfzcF
-	 aA908fHMhDbXQ==
-Message-ID: <c2f88d7b-cded-42ab-bc5c-3d9a723daa1f@kernel.org>
-Date: Wed, 10 Jan 2024 11:06:06 +0900
+	b=Ds5MACKzQ7QyIZf2p/u4YW4bqMr+4FV17araLr3v0BBp57jO+xE3B5QWWj0KaUgFB
+	 y7bFSrJVWENZopFLk/A2OcJ1YjvkoaW+1XL7JWqEvN/QqOpNkujiMbnL+p1mQPVp19
+	 5fd18UxDBnmS86vvXbHVFLvvDwOgCzyRRze3GZV9EuSb4wuT7a4qOMDqv3HNcgm4el
+	 +Iqvrc1gDsW6iSvO317QZLGXuVW2waEC7So8vUiGBGSGNURUYJ2bAWZavE0yTwR/wx
+	 way9f5qhqi9J1EiWIpEHunXPOcql2T7egD/ovqW+9GcKZzbZcuCJ0UfDdsgCRLAA2e
+	 8hQu7tCdpGp9Q==
+Message-ID: <b76a1b51-7dc4-4055-b7ac-a8265a3957bc@kernel.org>
+Date: Wed, 10 Jan 2024 11:19:12 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -26,74 +26,48 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [DO NOT MERGE v6 27/37] dt-bindings: ata: ata-generic: Add new
- targets
+Subject: Re: [PATCH 3/3] libata: don't start PuiS disks on resume
 Content-Language: en-US
-To: Yoshinori Sato <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org
-Cc: Rob Herring <robh+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
- <sboyd@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
- Thomas Gleixner <tglx@linutronix.de>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Jiri Slaby <jirislaby@kernel.org>, Magnus Damm <magnus.damm@gmail.com>,
- Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>,
- John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
- Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
- Heiko Stuebner <heiko@sntech.de>, Jernej Skrabec <jernej.skrabec@gmail.com>,
- Chris Morgan <macromorgan@hotmail.com>, Yang Xiwen
- <forbidden405@foxmail.com>, Sebastian Reichel <sre@kernel.org>,
- Linus Walleij <linus.walleij@linaro.org>,
- Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
- Vlastimil Babka <vbabka@suse.cz>, Hyeonggon Yoo <42.hyeyoo@gmail.com>,
- David Rientjes <rientjes@google.com>, Baoquan He <bhe@redhat.com>,
- Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck
- <linux@roeck-us.net>, Stephen Rothwell <sfr@canb.auug.org.au>,
- Azeem Shaikh <azeemshaikh38@gmail.com>,
- Javier Martinez Canillas <javierm@redhat.com>,
- Max Filippov <jcmvbkbc@gmail.com>, Palmer Dabbelt <palmer@rivosinc.com>,
- Bin Meng <bmeng@tinylab.org>, Jonathan Corbet <corbet@lwn.net>,
- Jacky Huang <ychuang3@nuvoton.com>, Lukas Bulwahn <lukas.bulwahn@gmail.com>,
- Biju Das <biju.das.jz@bp.renesas.com>,
- =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
- Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>,
- Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
- Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
- linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
- linux-fbdev@vger.kernel.org
-References: <cover.1704788539.git.ysato@users.sourceforge.jp>
- <06fdb2cf7927681acf3099b826390ef75ba321af.1704788539.git.ysato@users.sourceforge.jp>
+To: Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
+References: <87msthdo11.fsf@vps.thesusis.net>
+ <20240107180258.360886-1-phill@thesusis.net>
+ <20240107180258.360886-4-phill@thesusis.net>
+ <e6f6aebf-0566-4113-8304-bccd88926f20@kernel.org>
+ <871qasuepz.fsf@vps.thesusis.net>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <06fdb2cf7927681acf3099b826390ef75ba321af.1704788539.git.ysato@users.sourceforge.jp>
+In-Reply-To: <871qasuepz.fsf@vps.thesusis.net>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 1/9/24 17:23, Yoshinori Sato wrote:
-> Added new ata-generic target.
-> - iodata,usl-5p-ata
-> - renesas,rts7751r2d-ata
+On 1/8/24 22:39, Phillip Susi wrote:
+> Damien Le Moal <dlemoal@kernel.org> writes:
 > 
-> Each boards have simple IDE Interface. Use ATA generic driver.
+>> Please use full 72-char lines for commit messages. The commit message also does
+>> not clearly describe what the patch does (completely silent on forcing the drive
+>> to sleep).
+> 
+> It currently doesn't put it to sleep.
+> 
+>>> +#if 0
+>>> +		ata_tf_init(dev, &tf);
+>>> +		tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+>>> +		tf.protocol = ATA_PROT_NODATA;
+>>> +		tf.command = ATA_CMD_SLEEP;
+>>> +		err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
+>>> +		ata_dev_info(dev, "PuiS detected, putting drive to sleep");
+>>
+>> I already commented that this is not following the ACS specifications and thus
+>> should not be done. So again, nack.
+> 
+> It is #if 0'd out.  I also addressed this in the cover letter.  Sure,
+> this shouldn't be done by default, but I don't see a problem with
+> leaving it as an option that can be activated by those whose drives
+> don't have a problem with this.
 
-This looks OK to me, so feel free to add:
-
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
-
-Note: The "DO NOT MERGE" patch prefix almost got me to immediately delete this
-37 patches in my inbox... If you wish to get this work merged after review,
-please use the regular "PATCH" prefix. No worries, the series will not be merged
-until is is reviewed :)
+We never add dead code. And code under a "#if 0" is by design dead...
+So please do not do that.
 
 -- 
 Damien Le Moal
