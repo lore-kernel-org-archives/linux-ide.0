@@ -1,72 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43D1C15484
-	for <linux-ide@vger.kernel.org>; Thu, 11 Jan 2024 11:21:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B48915482;
+	Thu, 11 Jan 2024 11:35:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qk35Lg8q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58EC0C433C7;
-	Thu, 11 Jan 2024 11:21:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IvFJ3gZn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69AFEC433F1;
+	Thu, 11 Jan 2024 11:35:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704972086;
-	bh=k2O7fKia8kB+O/LHBkA0GHJ3qvC7k0gbuB3QC2hLlE4=;
-	h=Date:Subject:From:To:References:In-Reply-To:From;
-	b=qk35Lg8qVvTtG9KAYSq1/PbKfF3/94rcAAPCC8qcBWJDK6vbXZzBlv+7Hh/akFK7l
-	 txMss97Rs3+ZGilQhi3NZb8Obd972N6De77H/7mfPrJLd8ndLl4iIIXS+kwEktV5b5
-	 oL+sJjBLvPJjU/NFktkFiDiYhu/wJjX4r1/+bOGThA6I4Rd98S4v1BxaTVqy9D6Mov
-	 ZbEqDnLd+qhKxY2CecSxe0afkE11GFtNoYyTvty+V4BfdVke1SHXX8xFWksJ99nruW
-	 8ghuEtbL7bUMozbmkjwS/bmkhFpP0ly9QVu9LtWIcFIfOBOtVXtDjxXZro2tuRLyHn
-	 b8XiDVGebN/Mg==
-Message-ID: <8ac10be3-a3aa-4886-850a-afa51d104410@kernel.org>
-Date: Thu, 11 Jan 2024 20:21:24 +0900
+	s=k20201202; t=1704972955;
+	bh=aBdXrdu7Fc3ywB3LGukHqXOp/HVe7tj8vpqYpP1GRMc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IvFJ3gZnJZmOW4n1hDb23BAssZ0EUOybEz7w/eZDwzNSg5bilSn8XI9BXJJ93D/0d
+	 o09I04nLNlA3Cow6eZT+PujIFuptFMcf9eUDNW4/nTJCqwOl7iWyVUTZwo9hs+OXin
+	 y2gDzAAfeTSFB0im9juwXFPOpR4dsX9yshWNxTXZwcnDMtps8uQPbeU+EDjq3ElIrY
+	 N1XqwjNc02YboOdua/+DnwuYUdKah9CSZ6vhEAsofIaGvd1HDRccJAh4DUTdcHVwZ5
+	 0FPsse1MSDcaCS6sx5uUIBSOScPpXiJbtYDqM44o/fGRMiRUn8P9XMVj1QSBKga5eF
+	 hhSYZuH+NvKCA==
+Date: Thu, 11 Jan 2024 11:35:41 +0000
+From: Lee Jones <lee@kernel.org>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Helge Deller <deller@gmx.de>, Heiko Stuebner <heiko@sntech.de>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Chris Morgan <macromorgan@hotmail.com>,
+	Yang Xiwen <forbidden405@foxmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	David Rientjes <rientjes@google.com>, Baoquan He <bhe@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Azeem Shaikh <azeemshaikh38@gmail.com>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [DO NOT MERGE v6 23/37] mfd: sm501: Convert platform_data to OF
+ property
+Message-ID: <20240111113541.GH1678981@google.com>
+References: <cover.1704788539.git.ysato@users.sourceforge.jp>
+ <569f0bfb4fa3fcec8fbd64f67fc4fd2d1cba3f77.1704788539.git.ysato@users.sourceforge.jp>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-core: Do not try to set sleeping devices to
- standby
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
-References: <20240111111512.1255875-1-dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240111111512.1255875-1-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <569f0bfb4fa3fcec8fbd64f67fc4fd2d1cba3f77.1704788539.git.ysato@users.sourceforge.jp>
 
-On 1/11/24 20:15, Damien Le Moal wrote:
-> In ata ata_dev_power_set_standby(), check that the target device is not
-> sleeping. If it is, there is no need to do anything.
+On Tue, 09 Jan 2024, Yoshinori Sato wrote:
+
+> Various parameters of SM501 can be set using platform_data,
+> so parameters cannot be passed in the DeviceTree target.
+> Expands the parameters set in platform_data so that they can be
+> specified using DeviceTree properties.
 > 
-> Fixes: aa3998dbeb3a ("ata: libata-scsi: Disable scsi device manage_system_start_stop")
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-
-Forgot to add Cc: stable. Resending.
-
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 > ---
->  drivers/ata/libata-core.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 09ed67772fae..d9f80f4f70f5 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -2017,6 +2017,10 @@ void ata_dev_power_set_standby(struct ata_device *dev)
->  	struct ata_taskfile tf;
->  	unsigned int err_mask;
->  
-> +	/* If the device is already sleeping, do nothing. */
-> +	if (dev->flags & ATA_DFLAG_SLEEPING)
-> +		return;
-> +
->  	/*
->  	 * Some odd clown BIOSes issue spindown on power off (ACPI S4 or S5)
->  	 * causing some drives to spin up and down again. For these, do nothing
+>  drivers/mfd/sm501.c           | 436 ++++++++++++++++++++++++++++++++++
+
+How has this grown from 99 lines to 436 lines?
+
+Most of it almost certainly needs moving (back?) out to the leaf
+drivers.  A great deal of the properties parsed in here are only
+relevant to a single device (display for instance).  Please move all
+non-generic handling out to the relevant subsystems.
+
+>  drivers/video/fbdev/sm501fb.c | 106 +++++++++
+>  2 files changed, 542 insertions(+)
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+Lee Jones [李琼斯]
