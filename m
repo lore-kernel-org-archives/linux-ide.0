@@ -1,175 +1,139 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB3B154AC;
-	Thu, 11 Jan 2024 11:51:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35D6E390;
+	Thu, 11 Jan 2024 14:59:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PbixFO9R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEED8C43394;
-	Thu, 11 Jan 2024 11:51:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nHYalyDO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F65AC43390;
+	Thu, 11 Jan 2024 14:59:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704973888;
-	bh=eur3+uCQkJRvTvIYjNHVxvd9Ld4JIv8SwItCymE3X/E=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=PbixFO9RV/zxZ/W2yzPs+G/WKIbFVnCtZnCDJRbbbUsBuiWR5WLMUM1IgwjUDQQsu
-	 se3sSmCHa1YhBq2XFujRvstXdbVxbxzRK+MBXqpXvQ9h/kuVdlG9AJodky8XRg7Ber
-	 aUDChDsu91yUwJL4SgH6WvvJ7rMy4nlwNYPLwS6u7YSHMPbY+x6FHMB6euaU4sxYjA
-	 BoeOiEZA/LHgA58tiairsMMxpNzshEPBIzqmaucVu1XMz7UQ0gajZ/yhqb2dRDFD6e
-	 pep2W0rY9dY3flP0R/Yb3thpZEVtvEv9H7bIRfmFJUwA3dCMbwGxoDsMxB77/GBIo7
-	 e7x9SnTIC+uzQ==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Dieter Mummenschanz <dmummenschanz@web.de>,
-	Wang Zhihao <wangzhihao9@hotmail.com>,
-	linux-regressions <regressions@lists.linux.dev>
-Subject: [PATCH 2/2] ata: libata-core: Revert "ata: libata-core: Fix ata_pci_shutdown_one()"
-Date: Thu, 11 Jan 2024 20:51:23 +0900
-Message-ID: <20240111115123.1258422-3-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240111115123.1258422-1-dlemoal@kernel.org>
-References: <20240111115123.1258422-1-dlemoal@kernel.org>
+	s=k20201202; t=1704985170;
+	bh=obzljcLiJ4GpVaa5SSKo4cJxW9OvkYGDmnjlyQfIlZI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nHYalyDOvAOPCXFghAM1koa8SyyhhJbx2NS7oaSccjGMgH7hd8K6PgCbgUYNNxNlV
+	 RmGKdU8H/qelbOpHbdK6lY3z94gtQDkXFLwmXpIo6se2QKdb2/eJHuEYRWwCvqRZqz
+	 d6c/2VhyfKTHc2AOeMEj2o2oEeAhfzNCGN+6T/O6RApd1aGtGh6rdqf/jl/505e4yX
+	 2vkmubzDVpwuYZ5TSUe6C8cnpmoESUorVaftbQJbcjgGD8ONaUd6KceQOl+dy+Jwil
+	 R5sfhQjmbOfzkWmuihvw8I2rFw5SlSma30PRhfosHts/KPzeyEknOc/usqeCbKIhN0
+	 6Aj8MjPf72M2w==
+Date: Thu, 11 Jan 2024 08:59:28 -0600
+From: Rob Herring <robh@kernel.org>
+To: Conor Dooley <conor@kernel.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Yoshinori Sato <ysato@users.sourceforge.jp>,
+	linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Chris Morgan <macromorgan@hotmail.com>,
+	Yang Xiwen <forbidden405@foxmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Randy Dunlap <rdunlap@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	David Rientjes <rientjes@google.com>, Baoquan He <bhe@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Azeem Shaikh <azeemshaikh38@gmail.com>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [DO NOT MERGE v6 26/37] dt-bindings: vendor-prefixes: Add smi
+Message-ID: <20240111145928.GA538344-robh@kernel.org>
+References: <cover.1704788539.git.ysato@users.sourceforge.jp>
+ <c8aaf67e3fcdb7e60632c53a784691aabfc7733e.1704788539.git.ysato@users.sourceforge.jp>
+ <20240109-fructose-bundle-05d01033277b@spud>
+ <CAMuHMdU1z64QHJOVd3jUsOfyuDApB1+khkUV8PvjoKbwsi327g@mail.gmail.com>
+ <20240110-sincere-tripod-9d34175fcbce@spud>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240110-sincere-tripod-9d34175fcbce@spud>
 
-This reverts commit fd3a6837d8e18cb7be80dcca1283276290336a7a.
+On Wed, Jan 10, 2024 at 04:11:44PM +0000, Conor Dooley wrote:
+> On Wed, Jan 10, 2024 at 12:23:37PM +0100, Geert Uytterhoeven wrote:
+> > Hi Conor,
+> > 
+> > On Tue, Jan 9, 2024 at 7:06 PM Conor Dooley <conor@kernel.org> wrote:
+> > > On Tue, Jan 09, 2024 at 05:23:23PM +0900, Yoshinori Sato wrote:
+> > > > Add Silicon Mortion Technology Corporation
+> > 
+> > Motion
+> > 
+> > > > https://www.siliconmotion.com/
+> > > >
+> > > > Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+> > > > ---
+> > > >  Documentation/devicetree/bindings/vendor-prefixes.yaml | 2 ++
+> > > >  1 file changed, 2 insertions(+)
+> > > >
+> > > > diff --git a/Documentation/devicetree/bindings/vendor-prefixes.yaml b/Documentation/devicetree/bindings/vendor-prefixes.yaml
+> > > > index 94ed63d9f7de..a338bdd743ab 100644
+> > > > --- a/Documentation/devicetree/bindings/vendor-prefixes.yaml
+> > > > +++ b/Documentation/devicetree/bindings/vendor-prefixes.yaml
+> > > > @@ -1283,6 +1283,8 @@ patternProperties:
+> > > >      description: Skyworks Solutions, Inc.
+> > > >    "^smartlabs,.*":
+> > > >      description: SmartLabs LLC
+> > > > +  "^smi,.*":
+> > > > +    description: Silicon Motion Technology Corporation
+> > >
+> > > How come "smi" is used for a company with this name?
+> > > Why is it not something like SMTC? There's probably some history here
+> > > that I am unaware of.
+> > 
+> > See Documentation/devicetree/bindings/display/sm501fb.txt
+> > The stock ticker is "SIMO", though.
+> > https://www.nasdaq.com/market-activity/stocks/simo
+> 
+> If there's an existing user, there's little reason to stand in the way I
+> think.
+> Acked-by: Conor Dooley <conor.dooley@microchip.com>
 
-Several users have signaled issues with commit fd3a6837d8e1 ("ata:
-libata-core: Fix ata_pci_shutdown_one()") which causes failure of the
-system SoC to go to a low power state. The reason for this problem
-is not well understood but given that this patch is harmless with the
-improvements to ata_dev_power_set_standby(), restore it to allow system
-lower power state transitions.
+Or reason not to apply, so I'm applying this.
 
-For regular system shutdown, ata_dev_power_set_standby() will be
-executed twice: once the scsi device is removed and another when
-ata_pci_shutdown_one() executes and EH completes unloading the devices.
-Make the second call to ata_dev_power_set_standby() do nothing by using
-ata_dev_power_is_active() and return if the device is already in
-standby.
+BTW, 'RFC' is the standard way to say 'DO NOT MERGE'.
 
-Fixes: fd3a6837d8e1 ("ata: libata-core: Fix ata_pci_shutdown_one()")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/libata-core.c | 75 +++++++++++++++++++++++----------------
- 1 file changed, 45 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d9f80f4f70f5..20a366942626 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2001,6 +2001,33 @@ bool ata_dev_power_init_tf(struct ata_device *dev, struct ata_taskfile *tf,
- 	return true;
- }
- 
-+static bool ata_dev_power_is_active(struct ata_device *dev)
-+{
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
-+
-+	ata_tf_init(dev, &tf);
-+	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-+	tf.protocol = ATA_PROT_NODATA;
-+	tf.command = ATA_CMD_CHK_POWER;
-+
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+	if (err_mask) {
-+		ata_dev_err(dev, "Check power mode failed (err_mask=0x%x)\n",
-+			    err_mask);
-+		/*
-+		 * Assume we are in standby mode so that we always force a
-+		 * spinup in ata_dev_power_set_active().
-+		 */
-+		return false;
-+	}
-+
-+	ata_dev_dbg(dev, "Power mode: 0x%02x\n", tf.nsect);
-+
-+	/* Active or idle */
-+	return tf.nsect == 0xff;
-+}
-+
- /**
-  *	ata_dev_power_set_standby - Set a device power mode to standby
-  *	@dev: target device
-@@ -2017,8 +2044,9 @@ void ata_dev_power_set_standby(struct ata_device *dev)
- 	struct ata_taskfile tf;
- 	unsigned int err_mask;
- 
--	/* If the device is already sleeping, do nothing. */
--	if (dev->flags & ATA_DFLAG_SLEEPING)
-+	/* If the device is already sleeping or in standby, do nothing. */
-+	if ((dev->flags & ATA_DFLAG_SLEEPING) ||
-+	    !ata_dev_power_is_active(dev))
- 		return;
- 
- 	/*
-@@ -2046,33 +2074,6 @@ void ata_dev_power_set_standby(struct ata_device *dev)
- 			    err_mask);
- }
- 
--static bool ata_dev_power_is_active(struct ata_device *dev)
--{
--	struct ata_taskfile tf;
--	unsigned int err_mask;
--
--	ata_tf_init(dev, &tf);
--	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
--	tf.protocol = ATA_PROT_NODATA;
--	tf.command = ATA_CMD_CHK_POWER;
--
--	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
--	if (err_mask) {
--		ata_dev_err(dev, "Check power mode failed (err_mask=0x%x)\n",
--			    err_mask);
--		/*
--		 * Assume we are in standby mode so that we always force a
--		 * spinup in ata_dev_power_set_active().
--		 */
--		return false;
--	}
--
--	ata_dev_dbg(dev, "Power mode: 0x%02x\n", tf.nsect);
--
--	/* Active or idle */
--	return tf.nsect == 0xff;
--}
--
- /**
-  *	ata_dev_power_set_active -  Set a device power mode to active
-  *	@dev: target device
-@@ -6184,10 +6185,24 @@ EXPORT_SYMBOL_GPL(ata_pci_remove_one);
- void ata_pci_shutdown_one(struct pci_dev *pdev)
- {
- 	struct ata_host *host = pci_get_drvdata(pdev);
-+	struct ata_port *ap;
-+	unsigned long flags;
- 	int i;
- 
-+	/* Tell EH to disable all devices */
- 	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
-+		ap = host->ports[i];
-+		spin_lock_irqsave(ap->lock, flags);
-+		ap->pflags |= ATA_PFLAG_UNLOADING;
-+		ata_port_schedule_eh(ap);
-+		spin_unlock_irqrestore(ap->lock, flags);
-+	}
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		ap = host->ports[i];
-+
-+		/* Wait for EH to complete before freezing the port */
-+		ata_port_wait_eh(ap);
- 
- 		ap->pflags |= ATA_PFLAG_FROZEN;
- 
--- 
-2.43.0
-
+Rob
