@@ -1,59 +1,59 @@
-Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com [209.85.128.175])
+Received: from mail-yb1-f178.google.com (mail-yb1-f178.google.com [209.85.219.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54944FC11;
-	Mon, 15 Jan 2024 09:52:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE90C17584;
+	Mon, 15 Jan 2024 13:59:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-5e76948cda7so77666167b3.3;
-        Mon, 15 Jan 2024 01:52:49 -0800 (PST)
+Received: by mail-yb1-f178.google.com with SMTP id 3f1490d57ef6-dbedb1ee3e4so7115395276.3;
+        Mon, 15 Jan 2024 05:59:22 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705312368; x=1705917168;
+        d=1e100.net; s=20230601; t=1705327161; x=1705931961;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=wsMhOFSC0mxjAJYvrikbFmAm65pBG0U6QI3j9yJqaic=;
-        b=NqW2mCDtcUyTwgZFAA/rkTMwmahWtBYNzWc32YZPKxNlkm0yMW0+8HOjveMxShuxBy
-         CQcHx+Msh/CWIuQxKxaPkIPXMN/G+5Z2e8g8ISXK/Yjc4+w8vNr3nUS9fgey+uTk+fK2
-         oZzyLlN2CaMWRWehm60qBBYaXqBTu1GEtBVOQH0QeL96x1EN+koc3aPHVxdo6atY5h3R
-         LRf/i8kG84+bhDXyaHj+Lu81cV0ZSKJV8bSKDsaOSjH7n/TWEOtQPeuM8nTNKWhFKvGX
-         Zo7uJl/lwyrGDQzCIk5PIReijBY10X23ny24PH0mO2I69pGmfNF7H7iMjU1mI4muKq8b
-         i7qA==
-X-Gm-Message-State: AOJu0YyjDcFNHqPCE7Bn5PhldVqqWrg8jbyb6Z/+i9fnqy8Rf+XHhjUe
-	lVw2vQYIGyA0BD9THlzr3wSSNvnngfGL5A==
-X-Google-Smtp-Source: AGHT+IEX6uvZVQqpdyFdUkuf26ZeiFhzlynOzPs10JRGhXeNHWRABsgvivhCcxnO9Zwq6nEck/W7MQ==
-X-Received: by 2002:a81:7613:0:b0:5f7:b18e:9298 with SMTP id r19-20020a817613000000b005f7b18e9298mr3674121ywc.67.1705312368108;
-        Mon, 15 Jan 2024 01:52:48 -0800 (PST)
-Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com. [209.85.128.169])
-        by smtp.gmail.com with ESMTPSA id l6-20020a0de206000000b005ff3b4a89a8sm271889ywe.107.2024.01.15.01.52.47
+        bh=nCoI6wmXQhas4p+QHjRACvDabiOp6RlTb///RFp+bYk=;
+        b=tiSTZFK9+adD4pS2CiBp3H8TjNvhxoFkiEeyDJM3qLno8Xx43Uvjdy/whJLepRGP40
+         f/JUNxXcbwBC1NiMKrPQ5O6mjxsEMayOZw+l7hP+OGkvJ0cIlp9/xrESL6ud2rc14k5c
+         +g4LU/CdOIf1P42IpSu7NCDGmFEWWr8a34O/gElzv6KrM0MO5K/Qxo1/E4zAPazwrvcz
+         iAzMy4H6DJ4l8hwdexcGGRgmLQxnHtYDmYYfHnlNJC6S723bxAXTI6frA3GfAEDGGtJ0
+         idx+3WYRQKDVqknRh6cJB2Lh44m1MIyWNgsSDwT+H0KWkJS4ugZ3/y4ecfpbQ2cOsGwi
+         VyKw==
+X-Gm-Message-State: AOJu0Yw+ysJ8APvGt4ir1qpo8FTztilyNSmmUF09L5UA6NgCR2jYtVdT
+	g/D3hUPw+w1FiPxLKxUmpTfNug4I8TlWKw==
+X-Google-Smtp-Source: AGHT+IE88cEfoMkTPLs3uXh1bjP2h2ZDA1PqvxGd+SApFuHgdVhtMFJ+iBdwagRwRd4K9ubiXU6JRg==
+X-Received: by 2002:a05:6902:2687:b0:db5:c77d:1fae with SMTP id dx7-20020a056902268700b00db5c77d1faemr2834232ybb.29.1705327161525;
+        Mon, 15 Jan 2024 05:59:21 -0800 (PST)
+Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com. [209.85.219.180])
+        by smtp.gmail.com with ESMTPSA id c6-20020a25a2c6000000b00d9caecd5c86sm3481218ybn.62.2024.01.15.05.59.20
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 15 Jan 2024 01:52:47 -0800 (PST)
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-5e76948cda7so77665967b3.3;
-        Mon, 15 Jan 2024 01:52:47 -0800 (PST)
-X-Received: by 2002:a81:6d41:0:b0:5f6:46b:b0be with SMTP id
- i62-20020a816d41000000b005f6046bb0bemr2963784ywc.61.1705312367679; Mon, 15
- Jan 2024 01:52:47 -0800 (PST)
+        Mon, 15 Jan 2024 05:59:20 -0800 (PST)
+Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-dbed5d2ad18so7074363276.0;
+        Mon, 15 Jan 2024 05:59:20 -0800 (PST)
+X-Received: by 2002:a25:ad8b:0:b0:dbe:e4d3:bbb7 with SMTP id
+ z11-20020a25ad8b000000b00dbee4d3bbb7mr2479427ybi.99.1705327159968; Mon, 15
+ Jan 2024 05:59:19 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1704788539.git.ysato@users.sourceforge.jp> <9c3a9caaa1e2fc7e515cac67f07a20af071bd1be.1704788539.git.ysato@users.sourceforge.jp>
-In-Reply-To: <9c3a9caaa1e2fc7e515cac67f07a20af071bd1be.1704788539.git.ysato@users.sourceforge.jp>
+References: <cover.1704788539.git.ysato@users.sourceforge.jp> <183bc01316cab97a7ae96df525a5a450c477210d.1704788539.git.ysato@users.sourceforge.jp>
+In-Reply-To: <183bc01316cab97a7ae96df525a5a450c477210d.1704788539.git.ysato@users.sourceforge.jp>
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 15 Jan 2024 10:52:36 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdWSR3ikL7VZYkNOb1Y8mPU5LaUnc8+WLj-Ec99EOWxs_w@mail.gmail.com>
-Message-ID: <CAMuHMdWSR3ikL7VZYkNOb1Y8mPU5LaUnc8+WLj-Ec99EOWxs_w@mail.gmail.com>
-Subject: Re: [DO NOT MERGE v6 22/37] dt-bindings: display: smi,sm501: SMI
- SM501 binding json-schema
+Date: Mon, 15 Jan 2024 14:59:08 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdW-Ak6P3nFH7cdomSYec9=WZf8mZaVwmG=qoYHz1thLMQ@mail.gmail.com>
+Message-ID: <CAMuHMdW-Ak6P3nFH7cdomSYec9=WZf8mZaVwmG=qoYHz1thLMQ@mail.gmail.com>
+Subject: Re: [DO NOT MERGE v6 09/37] dt-bindings: timer: renesas,tmu: add renesas,tmu-sh7750
 To: Yoshinori Sato <ysato@users.sourceforge.jp>
 Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
 	Rob Herring <robh+dt@kernel.org>, 
 	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Michael Turquette <mturquette@baylibre.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
 	Thomas Gleixner <tglx@linutronix.de>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
 	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
 	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -85,156 +85,131 @@ Content-Transfer-Encoding: quoted-printable
 
 Hi Sato-san,
 
-On Tue, Jan 9, 2024 at 9:24=E2=80=AFAM Yoshinori Sato
+On Tue, Jan 9, 2024 at 9:23=E2=80=AFAM Yoshinori Sato
 <ysato@users.sourceforge.jp> wrote:
+> Add SH7750 TMU entry.
+>
+> I wanted to replace interrupts and interrupt-names in the if compatible i=
+s
+> "renesas,tmu-7750", but it seems that I can't rewrite it as expected.
+> This resulted in a redundant conditional statement.
+>
 > Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 
 Thanks for your patch!
 
-> ---
->  .../bindings/display/smi,sm501.yaml           | 417 ++++++++++++++++++
->  1 file changed, 417 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/display/smi,sm501.y=
-aml
+> --- a/Documentation/devicetree/bindings/timer/renesas,tmu.yaml
+> +++ b/Documentation/devicetree/bindings/timer/renesas,tmu.yaml
+> @@ -39,14 +39,15 @@ properties:
+>            - renesas,tmu-r8a779a0 # R-Car V3U
+>            - renesas,tmu-r8a779f0 # R-Car S4-8
+>            - renesas,tmu-r8a779g0 # R-Car V4H
+> +          - renesas,tmu-sh7750   # SH7750
 
-Surely Documentation/devicetree/bindings/display/sm501fb.txt should
-be removed, too?
+OK
 
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/display/smi,sm501.yaml
-
-> +  crt:
-> +    type: object
-> +    description: CRT output control
-> +    properties:
-> +      edid:
-> +        $ref: /schemas/types.yaml#/definitions/uint8-array
-> +        description: |
-> +          verbatim EDID data block describing attached display.
-> +          Data from the detailed timing descriptor will be used to
-> +          program the display controller.
+>        - const: renesas,tmu
+>
+>    reg:
+>      maxItems: 1
+>
+> -  interrupts:
+> -    minItems: 2
+> -    maxItems: 3
+> +  interrupts: true
 > +
-> +      smi,flags:
-> +        $ref: /schemas/types.yaml#/definitions/string-array
-> +        description: Display control flags.
-> +        items:
-> +          anyOf:
-> +            - const: use-init-done
-> +            - const: disable-at-exit
-> +            - const: use-hwcursor
-> +            - const: use-hwaccel
+> +  interrupt-names: true
 
-The "use-*" flags look like software policy, not hardware description,
-and thus do not belong in DT?
+I would drop this change (see below).
 
-> +            - const: panel-no-fpen
-> +            - const: panel-no-vbiasen
-> +            - const: panel-inv-fpen
-> +            - const: panel-inv-vbiasen
-> +        maxItems: 8
-> +
-> +      bpp:
-> +        $ref: /schemas/types.yaml#/definitions/uint32
-> +        description: Color depth
-> +
-> +  panel:
-> +    type: object
-> +    description: Panel output control
-> +    properties:
-> +      edid:
-> +        $ref: /schemas/types.yaml#/definitions/uint8-array
-> +        description: |
-> +          verbatim EDID data block describing attached display.
-> +          Data from the detailed timing descriptor will be used to
-> +          program the display controller.
-> +
-> +      smi,flags:
-> +        $ref: /schemas/types.yaml#/definitions/string-array
-> +        description: Display control flags.
-> +        items:
-> +          anyOf:
-> +            - const: use-init-done
-> +            - const: disable-at-exit
-> +            - const: use-hwcursor
-> +            - const: use-hwaccel
+>
+>    clocks:
+>      maxItems: 1
+> @@ -75,21 +76,55 @@ required:
+>    - clock-names
+>    - power-domains
+>
+> -if:
+> -  not:
+> -    properties:
+> -      compatible:
+> -        contains:
+> -          enum:
+> -            - renesas,tmu-r8a7740
+> -            - renesas,tmu-r8a7778
+> -            - renesas,tmu-r8a7779
+> -then:
+> -  required:
+> -    - resets
+> -
+>  additionalProperties: false
+>
+> +allOf:
+> +  - if:
+> +      not:
+> +        properties:
+> +          compatible:
+> +            contains:
+> +              enum:
+> +                - renesas,tmu-r8a7740
+> +                - renesas,tmu-r8a7778
+> +                - renesas,tmu-r8a7779
+> +                - renesas,tmu-sh7750
 
-The "use-*" flags look like software policy, not hardware description,
-and thus do not belong in DT?
-
-> +            - const: panel-no-fpen
-> +            - const: panel-no-vbiasen
-> +            - const: panel-inv-fpen
-> +            - const: panel-inv-vbiasen
-> +        maxItems: 8
-> +
-> +      bpp:
-> +        $ref: /schemas/types.yaml#/definitions/uint32
-> +        description: Color depth
-> +
-> +  smi,devices:
-> +    $ref: /schemas/types.yaml#/definitions/string-array
-> +    description: Select SM501 device functions.
-> +    items:
-> +      anyOf:
-> +        - const: usb-host
-> +        - const: usb-slave
-> +        - const: ssp0
-> +        - const: ssp1
-> +        - const: uart0
-> +        - const: uart1
-> +        - const: fbaccel
-> +        - const: ac97
-> +        - const: i2s
-> +        - const: gpio
-> +    minItems: 1
-> +    maxItems: 10
-
-I think it would be better to have individual subnodes for the sub devices,
-with status =3D "ok"/"disabled".
-
-If you go that route, you do need some fallback code to handle the lack
-of subnodes in the existing user in arch/powerpc/boot/dts/charon.dts.
-
-BTW, why can sm501_pci_initdata get away with setting ".devices
-=3D SM501_USE_ALL"?  Or, would it hurt to enable all subdevices
-unconditionally?
+Adding renesas,tmu-sh7750 to this list is OK.
 
 > +
-> +  smi,mclk:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: mclk frequency.
+> +    then:
+> +      required:
+> +        - resets
 > +
-> +  smi,m1xclk:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: m1xclk frequency.
-
-These two should be clock specifiers (i.e. phandles pointing to clock
-nodes + optional clock indices).
-
+> +  - if:
+> +      not:
+> +        properties:
+> +          compatible:
+> +            contains:
+> +              enum:
+> +                - renesas,tmu-sh7750
 > +
-> +  misc-timing:
-> +    type: object
-> +    description: Miscellaneous Timing register values.
-> +    properties:
-> +      ex:
-> +        $ref: /schemas/types.yaml#/definitions/uint32
-> +        description: Extend bus holding time.
-> +        enum: [0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, =
-208, 224, 240]
+> +    then:
+> +      properties:
+> +        interrupts:
+> +          minItems: 2
+> +          maxItems: 3
+> +        interrupt-names:
+> +          items:
+> +            - const: tuni0
+> +            - const: tuni1
+> +            - const: tuni2
 > +
-> +      xc:
-> +        $ref: /schemas/types.yaml#/definitions/string
-> +        description: Xscale clock input select.
-> +        items:
-> +          enum:
-> +            - internal-pll
-> +            - hclk
-> +            - gpio33
+> +    else:
+> +      properties:
+> +        interrupts:
+> +          minItems: 2
+> +          maxItems: 4
+> +        interrupt-names:
+> +          items:
+> +            - const: tuni0
+> +            - const: tuni1
+> +            - const: tuni2
+> +            - const: ticpi2
+> +
+>  examples:
+>    - |
+>      #include <dt-bindings/clock/r8a7779-clock.h>
 
-Software policy instead of hardware description again?
+The new interrupt logic is not really correct: several TMU instances
+on other SoCs do support the fourth interrupt.  It just was not
+documented before, or supported by the driver.
 
-I am not familiar with how the SM501 works, so I cannot comment on
-the other properties, but several of them look like they need rework.
+I have sent a patch to document the fourth interrupt[1].  Once that
+patch has been applied, adding support for sh7751 involves adding just
+two new lines.
+
+[1] "PATCH] dt-bindings: timer: renesas,tmu: Document input capture
+     interrupt"
+    https://lore.kernel.org/r/fb1e38c93e62221f94304edd980a2fb79c1f2995.1705=
+325608.git.geert+renesas@glider.be
 
 Gr{oetje,eeting}s,
 
