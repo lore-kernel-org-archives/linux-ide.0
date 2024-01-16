@@ -1,34 +1,30 @@
 Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1CC1CD00
-	for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2024 17:13:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E48971CAB2
+	for <linux-ide@vger.kernel.org>; Tue, 16 Jan 2024 17:23:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.238.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705425185; cv=none; b=MqAx+EdVEw+lLDmY8NwXPlIhUMlPw1Ovcj+0JNuJrcnyBSzy98JBdWvcZotuLfZWVDPS46LDJpzoFCQvVQxMQ/0qdiSP8k22Ox2MFoVhWqIlkndahXgzxXcqujusJrKqy+gGuc70jBo1NXOrkzqTYcOGQisA4x4hLjQ7IdtXQz8=
+	t=1705425786; cv=none; b=G/TaugV+pazbQoNlrvO/T/Rnc4mqpWzK2UuByqprxIT5asApj1PtFHXHsskH7RmpU5HH9M3L83r1Ky0IYR7Fk10O5WalIqBOoBvoCNGCR8KAdJu1Ary/sIIiCGtzlO//mOUsy9d+51pOkxS/Os+I0zTDNqfZZl1JSdA6tqg1RPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705425185; c=relaxed/simple;
-	bh=SnDEBiJXSHRS0Cw2yrYXGF1BI15W/Y+Yk7GBylDkXkI=;
+	s=arc-20240116; t=1705425786; c=relaxed/simple;
+	bh=cDuCftDHAq178CXCIRdNIPqC5eXtatqHCuqwW3bwKAQ=;
 	h=Received:From:To:Cc:Subject:In-Reply-To:References:Date:
-	 Message-ID:MIME-Version:Content-Type; b=DhjuWEQNonXf+HUSwOEfSkKFP+/xAMMDVydl4DXbionqL25HqvDiIq5PqnibCWK4wOHMdgqyMX/5tMCcdVYHMlv1lqsKcwNatL9Fz7rA9Q58l7fDfZdZDUQ9THXgB0+OKVjEy6h7UqRds0mRX8iYeUtB0zJT+pILh7cdgUzhwCo=
+	 Message-ID:MIME-Version:Content-Type; b=UL7kc1kZPvmT4z6f/+VgLyTTiJWtaMVCQtinrIAGkKP0G5KVdLbvx+5XOOEp4a1nVOBlisWpbeK9jeEzu6QbU6XAKiDxg9ibGVPwW4fvEoJXvfjknDxHhueQ1Mou7SX5Rv6VbLHR408rSL+fiWzG+5yPndX4zUE0hH2Qjjy0wnY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.238.73
 Received: by vps.thesusis.net (Postfix, from userid 1000)
-	id 65F231537B3; Tue, 16 Jan 2024 12:13:03 -0500 (EST)
+	id EE5F61537C4; Tue, 16 Jan 2024 12:23:03 -0500 (EST)
 From: Phillip Susi <phill@thesusis.net>
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH 3/3] libata: don't start PuiS disks on resume
-In-Reply-To: <b76a1b51-7dc4-4055-b7ac-a8265a3957bc@kernel.org>
-References: <87msthdo11.fsf@vps.thesusis.net>
- <20240107180258.360886-1-phill@thesusis.net>
- <20240107180258.360886-4-phill@thesusis.net>
- <e6f6aebf-0566-4113-8304-bccd88926f20@kernel.org>
- <871qasuepz.fsf@vps.thesusis.net>
- <b76a1b51-7dc4-4055-b7ac-a8265a3957bc@kernel.org>
-Date: Tue, 16 Jan 2024 12:13:03 -0500
-Message-ID: <877ck9b3s0.fsf@vps.thesusis.net>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH 0/1 v2] Only activate drive once during system resume
+In-Reply-To: <ZZ1kMrTzRxyjF00T@x1-carbon>
+References: <20231225151915.258816-1-phill@thesusis.net>
+ <20231230182128.296675-1-phill@thesusis.net> <ZZ1kMrTzRxyjF00T@x1-carbon>
+Date: Tue, 16 Jan 2024 12:23:03 -0500
+Message-ID: <874jfdb3bc.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -37,16 +33,42 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Damien Le Moal <dlemoal@kernel.org> writes:
+Niklas Cassel <cassel@kernel.org> writes:
 
-> We never add dead code. And code under a "#if 0" is by design dead...
-> So please do not do that.
+> 1) Your patches are missing a Signed-off-by tag.
+> Without this, we can't accept your changes, see:
+> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin
 
-I left it that way temporarily so you could switch it to an #if 1 if you
-wanted to test it with your army of drives to see if any of them don't
-like it, and to see where I was proposing a runtime selection knob to
-switch which branch the code would take there.
+Yea, they aren't ready to merge yet, so I didn't add the tag.  I suppose
+I could have put RFC in the subject.
 
-Would you be OK with leaving the PuiS -> SLEEP transition code in, but
-disabled by default?  Then people who know their drives are OK with it
-can choose to enable it.
+> 4) Please use git format-patch and git send-email.
+
+I did.
+
+> Looking at
+> https://lore.kernel.org/linux-ide/
+> as well as my local inbox,
+> the threading seems very wrong.
+>
+> There is a [PATCH 0/1], and then a patch "[PATCH 0/1 v2]"
+> that replies to the [PATCH 0/1].
+
+Yes; I sent the second version as a reply to the first.  Isn't that the
+usual way of doing it?  So that you can see the whole thread going back
+through the older versions?
+
+> Additionally, there is also a [PATCH 1/4] that also replies
+> to the [PATCH 0/1].
+
+That's a few replies down from [PATCH 0/1].  There was some discussion
+first, then I sent that patch series as a reply to that discussion.
+
+> It is just impossible to follow.
+
+The flow makes perfect sense to me.
+
+> For more info, see:
+> https://www.kernel.org/doc/html/latest/process/submitting-patches.html#explicit-in-reply-to-headers
+
+I see.  I guess I'll avoid that in the future then.
