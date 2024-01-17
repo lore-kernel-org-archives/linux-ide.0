@@ -1,181 +1,171 @@
-Received: from www62.your-server.de (www62.your-server.de [213.133.104.62])
+Received: from mail.wantstofly.org (hmm.wantstofly.org [213.239.204.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAB3A1F5F7;
-	Wed, 17 Jan 2024 13:37:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.133.104.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF322561B;
+	Wed, 17 Jan 2024 21:14:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.239.204.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705498668; cv=none; b=B5KUoLOVCVYA5pMy2KmFwPP4p0lXo3GI6jLEgDu6c+Qnyqtm6MOk52NCwx+x8ZH5dmhf+aAcvpVEhAZFzkkUHEbrpk5+BEfeUPzvZVe5l9zksSNVIIzsDyKW8/UiQVLkhAJ9zWKJZ0nJ0EIeVoQT/XKfPhMgja1OSnt3RvtUQJg=
+	t=1705526081; cv=none; b=DwCB3MzUs6rhDdFlZF9kiv8WkDfHWk56fD9TxMdlw80StJfQmZJYqgKHRTgBH5rUGhM7NzU/DF2ddBD3xYWzhyO5k1kTqcHqc0lEv8+Rt5iJTOMYJxogo5lk2z2FUM366rCU9/UpTYpIwsExB0HHzxM9zBBhtM7NHVzsN97QNF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705498668; c=relaxed/simple;
-	bh=a0o55pxxDCLHmqaWvxrygvI6niPdHttBqY/E85EhHew=;
-	h=DKIM-Signature:Received:Received:Subject:From:To:Cc:References:
-	 Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:Content-Type:
-	 Content-Language:Content-Transfer-Encoding:X-Authenticated-Sender:
-	 X-Virus-Scanned; b=iKGkQOtampxcIClUmVv8tX3N9MbzIz200z1UJvn0ZLjNfPJLpz41xXGqpbXT74z6ZMVPQpV3o72bMqteDzZ3vsTiWi7FNTxwgDy0eNnll+oZwwSfHX7gayt1DdL9kdA2Cm1xYnZm4hb3chfsyOBHhUpGceIp5naUw2nSzVBy+TU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net; spf=pass smtp.mailfrom=iogearbox.net; dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b=DEGHyY+4; arc=none smtp.client-ip=213.133.104.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iogearbox.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b="DEGHyY+4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=iogearbox.net; s=default2302; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:MIME-Version:Date:Message-ID:References:Cc:To:From:Subject:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
-	bh=EUpvZ7ImcN6iRBfQR5QrQA+ZGjPdmy3aiW0Hd3hcrnQ=; b=DEGHyY+49LEH3JYxGgz1hw+W01
-	u8ZPQ5hafPlp6u04J2wN52hOOGCB3BQLSYBSxcAeo1w+RKoiyUBhGnNg0Sz3l5VCByCNn+JzxzsIr
-	5HU91Q3fKkxhIEhuZIxOnJzyqJvtzz3JDCJ143149F0dx/695qfuSJZIb6uncyA0Eszq9kdWqY5Us
-	DAISHVTJ3azdLRkAb+v7THDFfp3dk5oROIAFY3mDvTU26s7HwXOMao46pD6RbkTRBlR/0pTXv13JB
-	PQunZBTeSUjfhN1b9tPLnHan9qvIDeOhXeDJ/0y9/C0aVlrREfowX/rZRib95Gc/G2nqY0SVSd1LD
-	2mWUk//Q==;
-Received: from sslproxy01.your-server.de ([78.46.139.224])
-	by www62.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <daniel@iogearbox.net>)
-	id 1rQ66w-000ExX-1L; Wed, 17 Jan 2024 14:37:42 +0100
-Received: from [85.1.206.226] (helo=linux.home)
-	by sslproxy01.your-server.de with esmtpsa (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <daniel@iogearbox.net>)
-	id 1rQ66v-000EvW-F7; Wed, 17 Jan 2024 14:37:41 +0100
-Subject: LSF/MM/BPF: 2024: Call for Proposals [Reminder]
-From: Daniel Borkmann <daniel@iogearbox.net>
-To: lsf-pc@lists.linuxfoundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-nvme@lists.infradead.org, bpf@vger.kernel.org, netdev@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
- <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
-Message-ID: <c91530f0-2688-647d-2603-a7b1673f8e42@iogearbox.net>
-Date: Wed, 17 Jan 2024 14:37:41 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+	s=arc-20240116; t=1705526081; c=relaxed/simple;
+	bh=uZZZcDpaYstX/m9EAYE17yFQT4QDVYHscrtHVl/4fIQ=;
+	h=Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To; b=J2baWErXdEhW4nDtUSd469MMBuIcn9hrSInQ0N5ysBYAiUaIuv1oLIwy2HrOJw4x4xUK6JPpQojQK5CAT09X0X6jcQWduVXZDbybu8SCxS4jLkGY7b94x58CWRJNLSKmhxc3Cp9a7TDVrNpUlgLLPLuwc+OBC99BBxqRAdZEpcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wantstofly.org; spf=pass smtp.mailfrom=wantstofly.org; arc=none smtp.client-ip=213.239.204.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wantstofly.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wantstofly.org
+Received: by mail.wantstofly.org (Postfix, from userid 1000)
+	id 06BAA7F5DA; Wed, 17 Jan 2024 23:14:30 +0200 (EET)
+Date: Wed, 17 Jan 2024 23:14:30 +0200
+From: Lennert Buytenhek <kernel@wantstofly.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: ASMedia ASM1062 (AHCI) hang after "ahci 0000:28:00.0: Using
+ 64-bit DMA addresses"
+Message-ID: <ZahDNr97MSPNSHW_@wantstofly.org>
+References: <ZaZ2PIpEId-rl6jv@wantstofly.org>
+ <ZaaQpiW3OOZTSyXw@x1-carbon>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Authenticated-Sender: daniel@iogearbox.net
-X-Virus-Scanned: Clear (ClamAV 0.103.10/27157/Wed Jan 17 10:41:11 2024)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZaaQpiW3OOZTSyXw@x1-carbon>
 
-The annual Linux Storage, Filesystem, Memory Management, and BPF
-(LSF/MM/BPF) Summit for 2024 will be held from May 13 to May 15
-at the Hilton Salt Lake City Center in Salt Lake City, Utah, USA.
+On Tue, Jan 16, 2024 at 03:20:23PM +0100, Niklas Cassel wrote:
 
-LSF/MM/BPF is an invitation-only technical workshop to map out
-improvements to the Linux storage, filesystem, BPF, and memory
-management subsystems that will make their way into the mainline
-kernel within the coming years.
+> Hello Lennert,
 
-LSF/MM/BPF 2024 will be a three day, stand-alone conference with
-four subsystem-specific tracks, cross-track discussions, as well
-as BoF and hacking sessions:
+Hi Niklas,
 
-          https://events.linuxfoundation.org/lsfmmbpf/
+Thanks for your reply!
 
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
 
-If advance notice is required for visa applications then please
-point that out in your proposal or request to attend, and submit
-the topic as soon as possible.
+> > On kernel 6.6.x, with an ASMedia ASM1062 (AHCI) controller, on an
 
-We are asking that you please let us know you want to be invited
-by March 1, 2024. We realize that travel is an ever changing target,
-but it helps us to get an idea of possible attendance numbers.
-Clearly things can and will change, so consider the request to
-attend deadline more about planning and less about concrete plans.
+Minor correction to this: lspci says that this is an ASM1062, but it's
+actually an ASM1061.  I think that the two parts share a PCI device ID,
+and I've submitted a PCI ID DB change here:
 
-1) Fill out the following Google form to request attendance and
-suggest any topics for discussion:
+https://admin.pci-ids.ucw.cz/read/PC/1b21/0612
 
-          https://forms.gle/TGCgBDH1x5pXiWFo7
 
-In previous years we have accidentally missed people's attendance
-requests because they either did not Cc lsf-pc@ or we simply missed
-them in the flurry of emails we get. Our community is large and our
-volunteers are busy, filling this out will help us to make sure we
-do not miss anybody.
+> > ASUSTeK Pro WS WRX80E-SAGE SE WIFI mainboard, PCI ID 1b21:0612 and
+> > subsystem ID 1043:858d, I got a total apparent controller hang,
+> > rendering the two attached SATA devices unavailable, that was
+> > immediately preceded by the following kernel messages:
+> > 
+> > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: Using 64-bit DMA addresses
+> > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00000 flags=0x0000]
+> > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00300 flags=0x0000]
+> > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00380 flags=0x0000]
+> > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00400 flags=0x0000]
+> > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00680 flags=0x0000]
+> > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00700 flags=0x0000]
+> > 
+> > It seems as if the controller has problems with 64-bit DMA addresses,
+> > and the comments around the source of the message in
+> > drivers/iommu/dma-iommu.c seem to point into that same direction:
+> > 
+> >         /*
+> >          * Try to use all the 32-bit PCI addresses first. The original SAC vs.
+> >          * DAC reasoning loses relevance with PCIe, but enough hardware and
+> >          * firmware bugs are still lurking out there that it's safest not to
+> >          * venture into the 64-bit space until necessary.
+> >          *
+> >          * If your device goes wrong after seeing the notice then likely either
+> >          * its driver is not setting DMA masks accurately, the hardware has
+> >          * some inherent bug in handling >32-bit addresses, or not all the
+> >          * expected address bits are wired up between the device and the IOMMU.
+> >          */
+> >         if (dma_limit > DMA_BIT_MASK(32) && dev->iommu->pci_32bit_workaround) {
+> >                 iova = alloc_iova_fast(iovad, iova_len,
+> >                                        DMA_BIT_MASK(32) >> shift, false);
+> >                 if (iova)
+> >                         goto done;
+> > 
+> >                 dev->iommu->pci_32bit_workaround = false;
+> >                 dev_notice(dev, "Using %d-bit DMA addresses\n", bits_per(dma_limit));
+> >         }
+> 
+> The DMA mask is set here:
+> https://github.com/torvalds/linux/blob/v6.7/drivers/ata/ahci.c#L967
+> 
+> And should be called using:
+> hpriv->cap & HOST_CAP_64
+> https://github.com/torvalds/linux/blob/v6.7/drivers/ata/ahci.c#L1929
+> 
+> Where hpriv->cap is capabilities reported by the AHCI controller itself.
+> So it definitely seems like your controller supports 64-bit addressing.
 
-2) Proposals for agenda topics should ideally still be sent to the
-following lists to allow for discussion among your peers. This will
-help us figure out which topics are important for the agenda:
+Perhaps, or maybe it's misreporting its capabilities, as it is an old
+part (from 2011 or before), and given that it doesn't seem to support
+64-bit MSI addressing, either, which for a part with a 64-bit DMA engine
+would be an odd restriction:
 
-          lsf-pc@lists.linux-foundation.org
+# lspci -s 28:00.0 -vv | grep -A1 MSI:
+        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit-
+                Address: fee00000  Data: 0000
+#
 
-... and Cc the mailing lists that are relevant for the topic in
-question:
+(I checked the available datasheets, but there is no mention of whether
+or not the part supports 64-bit DMA.)
 
-          FS:     linux-fsdevel@vger.kernel.org
-          MM:     linux-mm@kvack.org
-          Block:  linux-block@vger.kernel.org
-          ATA:    linux-ide@vger.kernel.org
-          SCSI:   linux-scsi@vger.kernel.org
-          NVMe:   linux-nvme@lists.infradead.org
-          BPF:    bpf@vger.kernel.org
 
-Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier
-to track. In addition, please make sure to start a new thread for
-each topic rather than following up to an existing one. Agenda
-topics and attendees will be selected by the program committee,
-but the final agenda will be formed by consensus of the attendees
-on the day.
+> I guess it could be some problem with your BIOS.
+> Have you tried updating your BIOS?
 
-3) This year we would also like to try and make sure we are
-including new members in the community that the program committee
-may not be familiar with. The Google form has an area for people to
-add required/optional attendees. Please encourage new members of the
-community to submit a request for an invite as well, but additionally
-if maintainers or long term community members could add nominees to
-the form it would help us make sure that new members get the proper
-consideration.
+The machine is running the latest BIOS available from the vendor at
+the time of this writing, version 1201:
 
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks in order for sessions to be
-productive; the sessions are supposed to be interactive, inclusive
-discussions.
+# dmidecode | grep -A2 "^BIOS Information"
+BIOS Information
+        Vendor: American Megatrends Inc.
+        Version: 1201
+#
 
-We are still looking into the virtual component. We will likely run
-something similar to what we did last year, but details on that will
-be forthcoming.
+Per:
 
-2023: https://lwn.net/Articles/lsfmmbpf2023/
+	https://www.asus.com/motherboards-components/motherboards/workstation/pro-ws-wrx80e-sage-se-wifi/helpdesk_bios?model2Name=Pro-WS-WRX80E-SAGE-SE-WIFI
 
-2022: https://lwn.net/Articles/lsfmm2022/
+However, some Googling suggests that the ASM106x loads its own firmware
+from a directly attached SPI flash chip, and there are several versions
+of this firmware available in the wild, with different versions of the
+firmware apparently available for legacy IDE mode and for AHCI mode.  If
+(some of) the AHCI logic is indeed contained inside the firmware, I
+could see a firmware bug leading to the controller incorrectly presenting
+itself as being 64-bit DMA capable.
 
-2019: https://lwn.net/Articles/lsfmm2019/
+Some poking around in the BIOS image suggests that there is no copy of
+the ASM106x firmware inside the BIOS image.  In other words, it could be
+that, even though the machine is running the latest available BIOS, the
+ASM1061 might be running an older firmware version.
 
-2018: https://lwn.net/Articles/lsfmm2018/
+The ASM1061 firmware does not seem to be readable from software via a
+ROM BAR, and it doesn't seem to readable from software in general (the
+vendor-supplied DOS .exe updater tool only allows you to erase or
+update the SPI flash), so I can't check which firmware version it is
+currently using.
 
-2017: https://lwn.net/Articles/lsfmm2017/
 
-2016: https://lwn.net/Articles/lsfmm2016/
+> If that does not work, perhaps you could try this (completely untested) patch:
+> (You might need to modify the strings to match the exact strings reported by
+> your BIOS.)
 
-2015: https://lwn.net/Articles/lsfmm2015/
+Thanks for the patch!
 
-2014: http://lwn.net/Articles/LSFMM2014/
+I will do some tests with PCI passthrough to a VM, to see whether, and if
+it does, exactly how the controller mangles DMA addresses.
 
-4) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
+I've also ordered a discrete PCIe card with an ASM1061 chip on it, and I
+will perform similar tests with that card, to see exactly where the issue
+is, i.e. whether it is specific to this mainboard or not.
 
-          lsf-pc@lists.linux-foundation.org
+I will follow up once I will have more information.
 
-Thank you on behalf of the program committee:
-
-          Amir Goldstein (Filesystems)
-          Jan Kara (Filesystems)
-          Martin K. Petersen (Storage)
-          Javier González (Storage)
-          Michal Hocko (MM)
-          Dan Williams (MM)
-          Daniel Borkmann (BPF)
-          Martin KaFai Lau (BPF)
+Kind regards,
+Lennert
