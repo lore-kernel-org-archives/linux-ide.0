@@ -1,209 +1,514 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC64286B4;
-	Wed, 17 Jan 2024 22:52:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DABDB664;
+	Thu, 18 Jan 2024 08:22:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705531951; cv=none; b=FmEZ607rw+0+aUW+Siyz0FG9W26i8pM7I5rE+rY0QTLtwXcv6v8FDk/Nw2LjAxYKyae8hCBP+kgwDR5jzLE8lCkNwFVrxgAvLb/xBGHskDigJ08YDkHduHhQfje73CSYL88GGyaSJFM7OkVezVLo+MRaI8tZwNreePaY/KDlJEU=
+	t=1705566179; cv=none; b=XpcmJXh5Frm8nwsWmTBO16w6PFTwb6dosDQnuKNlKeoN9Z1dQ6hTW2AgHfIv9d2SjHBJsJKtz8LC8jMlG6HvV6//z1XpVwM3A3cSvAmfJm1HhXOphasHHBR3KMmM9Q9ZqaTlNqCUsJM9QuYMtnHsloyDN+rjqnjQ/y+/rRphdbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705531951; c=relaxed/simple;
-	bh=doFhJfl05v+z3nBhsaH55fnA1hNGIVH9nafMEuRT5eo=;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To; b=oREhnQfFsxnu5qOJW2bP30jt6ho5RPPTwGqRtfVnXO1yN7y5GyWdCgyb/NEWiyc/j52R/7MTOSbWMKIdz2aiUrEXGlsCES/xSV9ZG3/WRi0Ehe+L8YIZVJqYc5zS7LPfCE7hqRaU4EcFqtoB/P4hEzY9DqdvmxkMBA5dLjnAEUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h2N70P7B; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1705566179; c=relaxed/simple;
+	bh=OAhC8ySXYO2X+1aEqw9cRtEGfgcPu1KCicMgKtzOquQ=;
+	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
+	 To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-Endpoint-Received:X-Original-From:Reply-To; b=ofmUPYOUflSEUN4HBqJocnK4XLEM/vtzPz/QRt6UEujkD+KV5kjq4Uhv60cBSyJudi5W7W1WlNfo/usAqY3DP5zHhI/KHclMjsRZNi9TRCxtD7ZtFHIzzJ1hn0dckOhF+Nv/5PCGsQs9JwQiL99KrVlM4DHzHqQ3nkMPawBmk04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bHD+3fYF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h2N70P7B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2685C433F1;
-	Wed, 17 Jan 2024 22:52:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bHD+3fYF"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A8BE6C43390;
+	Thu, 18 Jan 2024 08:22:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705531951;
-	bh=doFhJfl05v+z3nBhsaH55fnA1hNGIVH9nafMEuRT5eo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=h2N70P7BMGUXLK6Qr3U4BMXvlsuJHU1R6xM5cjyddSnaOa2/2JVfJNQr+ZVe+OI1B
-	 aZ6/hf2eVLwVTE39E8ZVH6I8bswK1oxMSM9p7xRV9py9Zi4M6vYvMcH5Q+gOZlDD3g
-	 6ig8D406FeoTa7JMVtf0NSFyjahAN2a7sQ3UM+GPGcaqBa7E9wVHcFBQ91fgCuSYdn
-	 CSCYXmrVdWkGTmSh72dcles0VKALlL7+pnupHJPvkjbtjOsXqX1w3q8cT9XqMXvnxs
-	 3j6wNDyoPHJHZl1L1Z1pw5DGeJB9aNnA4NwaJ1Jzs9f3hFJeGDspzaUzsCXZE18JjW
-	 p3D2BIp9kpxyg==
-Date: Wed, 17 Jan 2024 23:52:25 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Lennert Buytenhek <kernel@wantstofly.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: ASMedia ASM1062 (AHCI) hang after "ahci 0000:28:00.0: Using
- 64-bit DMA addresses"
-Message-ID: <ZahaKaV1jlHQ0sUx@x1-carbon>
-References: <ZaZ2PIpEId-rl6jv@wantstofly.org>
- <ZaaQpiW3OOZTSyXw@x1-carbon>
- <ZahDNr97MSPNSHW_@wantstofly.org>
+	s=k20201202; t=1705566178;
+	bh=OAhC8ySXYO2X+1aEqw9cRtEGfgcPu1KCicMgKtzOquQ=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=bHD+3fYFbs0eA4H3NQ1Xvnw3zrtqNkAXlDFiBXMEWMuqbayteUJgVwGN97cJidvEI
+	 TI8ixXTQmQWyTr1HYq6YHwExslgOjS8MZmE8fv0AGuOpB8uVpqmEr3lJah6+uu7lCR
+	 AAYm4cbDrI9Dpgu0d4UNX0fh8rhIa/xhigFOaFlaU3GkSoaFNPbSc3PKrH+7lqGrdl
+	 TveFI6k5vNvwsrfjN0neQhk3tjB/WIgm6BFShp8+AMv90Zp4S3i7DKqx2tAZfXXFgc
+	 A49m6b59m95vcG5B4IklRuX5OG0/EH3PZa+eCy0FP4Nv6D6PBI0QQ1roiAsZbVg9VX
+	 jO6Wopl+9NnBg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8274FC4707B;
+	Thu, 18 Jan 2024 08:22:58 +0000 (UTC)
+From:
+ Nikita Shubin via B4 Relay <devnull+nikita.shubin.maquefel.me@kernel.org>
+Subject: [PATCH v7 00/39] ep93xx device tree conversion
+Date: Thu, 18 Jan 2024 11:20:43 +0300
+Message-Id: <20240118-ep93xx-v7-0-d953846ae771@maquefel.me>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZahDNr97MSPNSHW_@wantstofly.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAFvfqGUC/2XOQW6DMBAF0KtEXtfIM8Y4ZNV7VF0M9lCsFkhtg
+ qgi7l6TRVDE8svzvv9dJI6Bk7ic7iLyHFIYhxzs20m4joYvlsHnLFChVpUykq+1XhapwNlKg2X
+ 0KPJxQ4llE2lw3XbeU5o4bg/XyG1YHj98fObcxrGXUxeZ9t4SS0BtEAs4a4US5BC+w0RF6m5NG
+ N57+r1xyz9Fz1tlF9I0xr/H5llvxYd5s5ZKal9pMi2A0vzSse2Yyx3WsMMyQwJvbe0dO1BHaJ4
+ QAPEJTYbe1GQrb3yL9RFWO0TYYZWh08o2Z3I10fkVruv6D8JqzTylAQAA
+To: Hartley Sweeten <hsweeten@visionengravers.com>, 
+ Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
+ Russell King <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>, 
+ Linus Walleij <linus.walleij@linaro.org>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ Stephen Boyd <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+ Rob Herring <robh+dt@kernel.org>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Nikita Shubin <nikita.shubin@maquefel.me>, Vinod Koul <vkoul@kernel.org>, 
+ Wim Van Sebroeck <wim@linux-watchdog.org>, 
+ Guenter Roeck <linux@roeck-us.net>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+ Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+ Paolo Abeni <pabeni@redhat.com>, Miquel Raynal <miquel.raynal@bootlin.com>, 
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
+ Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Takashi Iwai <tiwai@suse.com>, Ralf Baechle <ralf@linux-mips.org>, 
+ "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
+ Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org, 
+ linux-pm@vger.kernel.org, devicetree@vger.kernel.org, 
+ dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org, 
+ linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org, 
+ netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
+ linux-sound@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, 
+ Andy Shevchenko <andriy.shevchenko@intel.com>, 
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ Andrew Lunn <andrew@lunn.ch>, Andy Shevchenko <andy.shevchenko@gmail.com>
+X-Mailer: b4 0.13-dev-e3e53
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1705566176; l=16525;
+ i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
+ bh=OAhC8ySXYO2X+1aEqw9cRtEGfgcPu1KCicMgKtzOquQ=; =?utf-8?q?b=3Dw8QhO8lmSTda?=
+ =?utf-8?q?m1p3HK3zCc04jA4JbUSDHG0VvQO0iIrpSV+RucH4Bu7xwaXfuuw2gSlOCoFyvTSl?=
+ u6z14qdtDv3Fa6w1sFIGtzEP7rJ48nMNlIFF/XivaLl3aPiVGDgb
+X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
+ pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
+X-Endpoint-Received:
+ by B4 Relay for nikita.shubin@maquefel.me/20230718 with auth_id=65
+X-Original-From: Nikita Shubin <nikita.shubin@maquefel.me>
+Reply-To: <nikita.shubin@maquefel.me>
 
-Hello Lennert,
+The goal is to recieve ACKs for all patches in series to merge it via Arnd branch.
 
-On Wed, Jan 17, 2024 at 11:14:30PM +0200, Lennert Buytenhek wrote:
-> On Tue, Jan 16, 2024 at 03:20:23PM +0100, Niklas Cassel wrote:
-> 
-> > > On kernel 6.6.x, with an ASMedia ASM1062 (AHCI) controller, on an
-> 
-> Minor correction to this: lspci says that this is an ASM1062, but it's
-> actually an ASM1061.  I think that the two parts share a PCI device ID,
-> and I've submitted a PCI ID DB change here:
-> 
-> https://admin.pci-ids.ucw.cz/read/PC/1b21/0612
+No major changes since last version (v6) all changes are cometic.
 
-FWIW, the kernel states that 0x0612 is ASM1062, and 0x0611 is ASM1061:
-https://github.com/torvalds/linux/blob/v6.7/drivers/ata/ahci.c#L603-L604
+Following patches require attention from Stephen Boyd, as they were converted to aux_dev as suggested:
 
-But that could of course be incorrect.
+- ARM: ep93xx: add regmap aux_dev
+- clk: ep93xx: add DT support for Cirrus EP93xx
 
+Following patches require attention from Vinod Koul:
 
-When you are dumping the LnkCap in the PCI ID DB change request,
-are you dumping the LnkCap for the AHCI controller or the PCI bridge?
+- dma: cirrus: Convert to DT for Cirrus EP93xx
+- dma: cirrus: remove platform code
 
-(Because you use # lspci -s 27:00.0 in the PCI ID DB change request,
-but # lspci -s 28:00.0 further down in this email.)
+Following patches are dropped:
+- dt-bindings: wdt: Add ts72xx (pulled requested by Wim Van Sebroeck)
 
-(Perhaps the PCI bride only has one PCI lane, but the AHCI controller has two?)
+Big Thanks to Andy Shevchenko once again.
 
+Patches should be formated with '--histogram'
 
-> > The DMA mask is set here:
-> > https://github.com/torvalds/linux/blob/v6.7/drivers/ata/ahci.c#L967
-> > 
-> > And should be called using:
-> > hpriv->cap & HOST_CAP_64
-> > https://github.com/torvalds/linux/blob/v6.7/drivers/ata/ahci.c#L1929
-> > 
-> > Where hpriv->cap is capabilities reported by the AHCI controller itself.
-> > So it definitely seems like your controller supports 64-bit addressing.
-> 
-> Perhaps, or maybe it's misreporting its capabilities, as it is an old
-> part (from 2011 or before), and given that it doesn't seem to support
-> 64-bit MSI addressing, either, which for a part with a 64-bit DMA engine
-> would be an odd restriction:
-> 
-> # lspci -s 28:00.0 -vv | grep -A1 MSI:
->         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit-
->                 Address: fee00000  Data: 0000
-> #
+---
+Changes in v7:
 
-That just claims that MSIs have to use a 32-bit PCI address.
+mtd: rawnand: add support for ts72xx
+    - fixed KConfig description
 
-See e.g.:
-00:02.0 VGA compatible controller: Intel Corporation Haswell-ULT Integrated Graphics Controller (rev 0b) (prog-if 00 [VGA controller])
-  Subsystem: Lenovo Device 3978
-  Flags: bus master, fast devsel, latency 0, IRQ 58
-  Memory at b0000000 (64-bit, non-prefetchable) [size=4M]
-  Memory at a0000000 (64-bit, prefetchable) [size=256M]
-  I/O ports at 4000 [size=64]
-  Expansion ROM at <unassigned> [disabled]
-  Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
-  Capabilities: [d0] Power Management version 2
-  Capabilities: [a4] PCI Advanced Features
-  Kernel driver in use: i915
+ARM: ep93xx: Add terminator to gpiod_lookup_table
+    - + Reported-by, Fixes
 
-It has 64-bit BARs, but does not support 64-bit MSIs.
+ARM: ep93xx: add regmap aux_dev
+    - + trailing comma
+    - - #include <linux/spinlock.h>
 
+clk: ep93xx: add DT support for Cirrus EP93xx
+    - dropped unused defines
+    - return from default in ep93xx_mux_get_parent()
+    - use guard() in ep93xx_mux_set_parent_lock()
+    - <math.h> header for abs_diff()
+    - fixed comments
 
-> 
-> (I checked the available datasheets, but there is no mention of whether
-> or not the part supports 64-bit DMA.)
+pinctrl: add a Cirrus ep93xx SoC pin controller
+    - dropped comments for DEVCFG defines
+    - <linux/array_size.h> for ARRAY_SIZE()
+    - + default in ep93xx_get_group_name()
+    - correct cast for id->driver_data
+    - s/device_set_of_node_from_dev()/device_set_node()/
 
-If you are curious, hpriv->cap is the HBA capabilities reported by the
-device, see:
-https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/serial-ata-ahci-spec-rev1-3-1.pdf
+power: reset: Add a driver for the ep93xx reset
+    - Add <linux/container_of.h>, <linux/errno.h>, <linux/slab.h>
+    - Add <linux/module.h>, <linux/mod_devicetable.h>
+    - Remove <platform_device.h>
 
-3.1.1 Offset 00h: CAP – HBA Capabilities
+spi: ep93xx: add DT support for Cirrus EP93xx
+    - Replace with ret = dev_err_probe(...);
 
-Bit 31 - Supports 64-bit Addressing (S64A).
+ata: pata_ep93xx: add device tree support
+    - fixed wrong rebase with some partes leaked in "ata: pata_ep93xx: remove legacy pinctrl use"
+    - fix dma_request_chan() error processing
 
-It seems a bit silly that the AHCI controller vendor accidentally set this
-bit to 1.
+dma: cirrus: Convert to DT for Cirrus EP93xx
+    - fixed commit message (dropped explicit "only")
+    - fixed clk_get() processing to defer probe and log spamming
+    - refactor ep93xx_m2p_dma_filter()
+    - dropped blank line in ep93xx_m2p_dma_of_xlate()
+    - refactor ep93xx_m2m_dma_of_xlate()
 
+dma: cirrus: remove platform code
+    - s/dma/DMA/ in commit message
 
-> Per:
-> 
-> 	https://www.asus.com/motherboards-components/motherboards/workstation/pro-ws-wrx80e-sage-se-wifi/helpdesk_bios?model2Name=Pro-WS-WRX80E-SAGE-SE-WIFI
-> 
-> However, some Googling suggests that the ASM106x loads its own firmware
-> from a directly attached SPI flash chip, and there are several versions
-> of this firmware available in the wild, with different versions of the
-> firmware apparently available for legacy IDE mode and for AHCI mode.  If
-> (some of) the AHCI logic is indeed contained inside the firmware, I
-> could see a firmware bug leading to the controller incorrectly presenting
-> itself as being 64-bit DMA capable.
-> 
-> Some poking around in the BIOS image suggests that there is no copy of
-> the ASM106x firmware inside the BIOS image.  In other words, it could be
-> that, even though the machine is running the latest available BIOS, the
-> ASM1061 might be running an older firmware version.
-> 
-> The ASM1061 firmware does not seem to be readable from software via a
-> ROM BAR, and it doesn't seem to readable from software in general (the
-> vendor-supplied DOS .exe updater tool only allows you to erase or
-> update the SPI flash), so I can't check which firmware version it is
-> currently using.
-> 
-> 
-> > If that does not work, perhaps you could try this (completely untested) patch:
-> > (You might need to modify the strings to match the exact strings reported by
-> > your BIOS.)
-> 
-> Thanks for the patch!
+soc: Add SoC driver for Cirrus ep93xx
+    - add period
+    - use cleanup and guard() for spinlocking
+    - correct cast for device_get_match_data()
+    - dropped dev_info() with SoC revision - i can't find it anywhere since 2.6 :/,
+      don't know why i was so sured that ep93xx always printed that
 
-Assuming that you just have ASM106x controllers in your system,
-you could also replace it with a simple:
+ata: pata_ep93xx: remove legacy pinctrl use
+    - made error handling in DMA as Uwe suggested
 
-@@ -1799,6 +1823,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
-        if (ahci_broken_devslp(pdev))
-                hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
- 
-+       /* must set flag prior to save config in order to take effect */
-+       hpriv->flags |= AHCI_HFLAG_32BIT_ONLY;
-+
- #ifdef CONFIG_ARM64
-        if (pdev->vendor == PCI_VENDOR_ID_HUAWEI &&
-            pdev->device == 0xa235 &&
+- Link to v6: https://lore.kernel.org/r/20231212-ep93xx-v6-0-c307b8ac9aa8@maquefel.me
 
+Changes in v6:
 
-Just for testing.
+- clk: ep93xx: add DT support for Cirrus EP93xx
+  - s/spin_lock_irqsave()/guard()/
+  - refactor index check in ep93xx_mux_set_parent_lock() to something more readable
+  - use in_range in ep93xx_mux_set_parent_lock()/ep93xx_ddiv_set_rate()
+  - use GENMASK() in ep93xx_ddiv_recalc_rate()
+  - comment reserved bit in ep93xx_ddiv_set_rate()
+  - move out from loop ClkDiv value assigment
+  - some style fixes
 
+Andy, i was i asked to set index of XTALI explicitly, i am not setting ddiv_pdata
+there becouse only XTALI is jnown in advance, and i think setting them in one place is more convenient.
 
-> 
-> I will do some tests with PCI passthrough to a VM, to see whether, and if
-> it does, exactly how the controller mangles DMA addresses.
+- pinctrl: add a Cirrus ep93xx SoC pin controller
+  - drop OF from Kconfig
+  - droped linux/of.h include
+  - add space to */ where it is applicable
+  - add coma in multiline assigment
+  - "return NULL" as default case in ep93xx_get_group_name()
+  - fixed casting id->driver_data
+  - use device_set_of_node_from_dev()
+  - use dev_err_probe()
 
-Were you running in a VM when testing this?
-(Usually you need to pass through all PCI devices in the same iommu group.)
+- power: reset: Add a driver for the ep93xx reset
+  - drop linux/of.h include
 
-The errors from your previous email:
-[IO_PAGE_FAULT domain=0x0035 address=0x7fffff00000 flags=0x0000]
-[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged
+- soc: Add SoC driver for Cirrus ep93xx
+  - s/GPL-2.0/GPL-2.0-only/
+  - drop linux/kernel.h include
+  - + blank line before linux/soc/cirrus/ep93xx.h
+  - + blank line after ep93xx_get_soc_rev()
+  - + coma for pinctrl_names
+  - valid casting to int for of_device_get_match_data() return value
 
-could also suggest an iommu issue. Have you tried booting with iommu=off
-and/or amd_iommu=off on the kernel command line?
-(Or temporarily disable the iommu in BIOS.)
+- mtd: rawnand: add support for ts72xx
+  - return as part of switch case
+  - s/iowrite8/iowrite8_rep/
 
+- net: cirrus: add DT support for Cirrus EP93xx
+  - fix header sorting
 
-> 
-> I've also ordered a discrete PCIe card with an ASM1061 chip on it, and I
-> will perform similar tests with that card, to see exactly where the issue
-> is, i.e. whether it is specific to this mainboard or not.
-> 
-> I will follow up once I will have more information.
+- dma: cirrus: Convert to DT for Cirrus EP93xx
+  - use devm_clk_get
+  - use is_slave_direction
 
-Looking forward to hear your findings :)
+Changes in v5:
 
+- gpio: ep93xx: split device in multiple
+  - ordered headers
+  - use irqd_to_hwirq()
+  - s/platform_get_irq()/platform_get_irq_optional()/
 
-Kind regards,
-Niklas
+- [PATCH v4 02/42] ARM: ep93xx: add swlocked prototypes
+  - replaced with ARM: ep93xx: add regmap aux_dev
+
+- [PATCH v4 03/42] dt-bindings: clock: Add Cirrus EP93xx
+  - fixed identation
+  - removed EP93XX_CLK_END
+  - and dropped it
+  - clock bindings moved to syscon with renaming to cirrus,ep9301-syscon.h
+
+- clk: ep93xx: add DT support for Cirrus EP93xx
+  - convert to auxiliary and use parent device tree node
+  - moved all clocks except XTALI here
+  - used devm version everywhere and *_parent_hw() instead of passing name where it's possible
+  - unfortunately devm_clk_hw_register_fixed_rate doesn't have a parent index version
+
+- [PATCH v4 05/42] dt-bindings: pinctrl: Add Cirrus EP93xx
+  - "unevaluatedProperties: false" for pins
+  - returned "additionalProperties: false" where it was
+  - and dropped it
+
+- pinctrl: add a Cirrus ep93xx SoC pin controller
+  - sorted includes
+  - convert to auxiliary and use parent device tree node
+
+- power: reset: Add a driver for the ep93xx reset
+  - convert to auxiliary device
+
+- dt-bindings: soc: Add Cirrus EP93xx
+  - dropped all ref to reboot, clk, pinctrl subnodes
+  - added pins, as it's now used for pinctrl
+  - added #clock-cells, as it's now used for clk
+
+- dt-bindings: pwm: Add Cirrus EP93xx
+  - $ref to pwm.yaml
+  - fixed 'pwm-cells'
+  - s/additionalProperties/unevaluatedProperties/
+
+- soc: Add SoC driver for Cirrus ep93xx
+  - removed clocks, they are moved to clk auxiliary driver, as we dropped the clk dt node
+  - removed all swlocked exported functions
+  - dropped static spinlock
+  - added instantiating auxiliary reboot, clk, pinctrl
+
+- dt-bindings: spi: Add Cirrus EP93xx
+  - Document DMA support
+
+- spi: ep93xx: add DT support for Cirrus EP93xx
+  - dropped CONFIG_OF and SPI/DMA platform data entirely
+  - s/master/host/
+  - reworked DMA setup so we can use probe defer
+
+- dt-bindings: dma: Add Cirrus EP93xx
+  - dropped bindings header (moved ports description to YAML)
+  - changed '#dma-cells' to 2, we use port, direction in cells so we can drop platform code completely
+
+- dma: cirrus: add DT support for Cirrus EP93xx
+  - dropped platform probing completely
+  - dropped struct ep93xx_dma_data replaced with internal struct ep93xx_dma_chan_cfg with port/direction
+  - added xlate functions for m2m/m2p
+  - we require filters to set dma_cfg before hw_setup
+
+- dt-bindings: ata: Add Cirrus EP93xx
+  - Document DMA support
+
+- ata: pata_ep93xx: add device tree support
+  - drop DMA platform header with data
+  - use DMA OF so we can defer probing until DMA is up
+
+- ARM: dts: add Cirrus EP93XX SoC .dtsi
+- ARM: dts: ep93xx: add ts7250 board
+- ARM: dts: ep93xx: Add EDB9302 DT
+  - replaced "eclk: clock-controller" to syscon reference
+  - replaced "pinctrl: pinctrl" to syscon reference
+  - gpios are now "enabled" by default
+  - reworked i2s node
+  - change all dma nodes and refs
+
+- new additions to I2S
+  - Document DMA
+  - Document Audio Port usage
+  - drop legacy DMA support
+
+- Link to v4: https://lore.kernel.org/r/20230915-ep93xx-v4-0-a1d779dcec10@maquefel.me
+
+Changes in v4:
+
+- gpio: ep93xx: split device in multiple
+  - s/generic_handle_irq/generic_handle_domain_irq/
+  - s/int offset/irq_hw_number_t offset/ though now it looks a bit odd to me
+  - drop i = 0
+  - drop 'error'
+  - use dev_err_probe withour printing devname once again
+
+dt-bindings: clock: Add Cirrus EP93xx
+  - renamed cirrus,ep93xx-clock.h -> cirrus,ep9301-clk.h
+
+clk: ep93xx: add DT support for Cirrus EP93xx
+  - drop unused includes
+  - use .name only for xtali, pll1, pll2 parents
+  - convert // to /*
+  - pass clk_parent_data instead of char* clock name
+
+dt-bindings: pinctrl: Add Cirrus EP93xx
+  - s/additionalProperties/unevaluatedProperties/
+
+dt-bindings: soc: Add Cirrus EP93xx
+  - move syscon to soc directory
+  - add vendor prefix
+  - make reboot same style as pinctrl, clk
+  - use absolute path for ref
+  - expand example
+
+soc: Add SoC driver for Cirrus ep93xx
+  - s/0xf0000000/GENMASK(31, 28)/
+  - s/ret/ep93xx_chip_revision(map)/
+  - drop symbol exports
+  - convert to platform driver
+
+dt-bindings: rtc: Add Cirrus EP93xx
+  - allOf: with $ref to rtc.yaml
+  - s/additionalProperties/unevaluatedProperties/
+
+dt-bindings: watchdog: Add Cirrus EP93x
+  - drop description
+  - reword
+
+power: reset: Add a driver for the ep93xx reset
+  - lets use 'GPL-2.0+' instead of '(GPL-2.0)'
+  - s/of_device/of/
+  - drop mdelay with warning
+  - return 0 at the end
+
+net: cirrus: add DT support for Cirrus EP93xx
+  - fix leaking np
+
+mtd: nand: add support for ts72xx
+  - +bits.h
+  - drop comment
+  - ok to fwnode_get_next_child_node
+  - use goto to put handle and nand and report error
+
+ARM: dts: add Cirrus EP93XX SoC .dtsi
+  - add simple-bus for ebi, as we don't require to setup anything
+  - add arm,pl011 compatible to uart nodes
+  - drop i2c-gpio, as it's isn't used anywhere
+
+ARM: dts: ep93xx: add ts7250 board
+  - generic node name for temperature-sensor
+  - drop i2c
+  - move nand, rtc, watchdog to ebi node
+
+- Link to v3: https://lore.kernel.org/r/20230605-ep93xx-v3-0-3d63a5f1103e@maquefel.me
+
+---
+Alexander Sverdlin (3):
+      ASoC: ep93xx: Drop legacy DMA support
+      ARM: dts: ep93xx: Add EDB9302 DT
+      ASoC: cirrus: edb93xx: Delete driver
+
+Nikita Shubin (36):
+      ARM: ep93xx:  Add terminator to gpiod_lookup_table
+      gpio: ep93xx: split device in multiple
+      ARM: ep93xx: add regmap aux_dev
+      clk: ep93xx: add DT support for Cirrus EP93xx
+      pinctrl: add a Cirrus ep93xx SoC pin controller
+      power: reset: Add a driver for the ep93xx reset
+      dt-bindings: soc: Add Cirrus EP93xx
+      soc: Add SoC driver for Cirrus ep93xx
+      dt-bindings: dma: Add Cirrus EP93xx
+      dma: cirrus: Convert to DT for Cirrus EP93xx
+      dt-bindings: watchdog: Add Cirrus EP93x
+      watchdog: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: pwm: Add Cirrus EP93xx
+      pwm: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: spi: Add Cirrus EP93xx
+      spi: ep93xx: add DT support for Cirrus EP93xx
+      dt-bindings: net: Add Cirrus EP93xx
+      net: cirrus: add DT support for Cirrus EP93xx
+      dt-bindings: mtd: Add ts7200 nand-controller
+      mtd: rawnand: add support for ts72xx
+      dt-bindings: ata: Add Cirrus EP93xx
+      ata: pata_ep93xx: add device tree support
+      dt-bindings: input: Add Cirrus EP93xx keypad
+      input: keypad: ep93xx: add DT support for Cirrus EP93xx
+      wdt: ts72xx: add DT support for ts72xx
+      gpio: ep93xx: add DT support for gpio-ep93xx
+      ASoC: dt-bindings: ep93xx: Document DMA support
+      ASoC: dt-bindings: ep93xx: Document Audio Port support
+      ARM: dts: add Cirrus EP93XX SoC .dtsi
+      ARM: dts: ep93xx: add ts7250 board
+      ARM: ep93xx: DT for the Cirrus ep93xx SoC platforms
+      pwm: ep93xx: drop legacy pinctrl
+      ata: pata_ep93xx: remove legacy pinctrl use
+      ARM: ep93xx: delete all boardfiles
+      ARM: ep93xx: soc: drop defines
+      dma: cirrus: remove platform code
+
+ .../bindings/arm/cirrus/cirrus,ep9301.yaml         |   38 +
+ .../bindings/ata/cirrus,ep9312-pata.yaml           |   42 +
+ .../bindings/dma/cirrus,ep9301-dma-m2m.yaml        |   84 ++
+ .../bindings/dma/cirrus,ep9301-dma-m2p.yaml        |  144 ++
+ .../bindings/input/cirrus,ep9307-keypad.yaml       |   87 ++
+ .../devicetree/bindings/mtd/technologic,nand.yaml  |   45 +
+ .../devicetree/bindings/net/cirrus,ep9301-eth.yaml |   59 +
+ .../devicetree/bindings/pwm/cirrus,ep9301-pwm.yaml |   53 +
+ .../bindings/soc/cirrus/cirrus,ep9301-syscon.yaml  |   94 ++
+ .../bindings/sound/cirrus,ep9301-i2s.yaml          |   16 +
+ .../devicetree/bindings/spi/cirrus,ep9301-spi.yaml |   70 +
+ .../bindings/watchdog/cirrus,ep9301-wdt.yaml       |   42 +
+ arch/arm/Makefile                                  |    1 -
+ arch/arm/boot/dts/cirrus/Makefile                  |    4 +
+ arch/arm/boot/dts/cirrus/ep93xx-bk3.dts            |  126 ++
+ arch/arm/boot/dts/cirrus/ep93xx-edb9302.dts        |  182 +++
+ arch/arm/boot/dts/cirrus/ep93xx-ts7250.dts         |  145 ++
+ arch/arm/boot/dts/cirrus/ep93xx.dtsi               |  441 ++++++
+ arch/arm/mach-ep93xx/Kconfig                       |   20 +-
+ arch/arm/mach-ep93xx/Makefile                      |   11 -
+ arch/arm/mach-ep93xx/clock.c                       |  733 ----------
+ arch/arm/mach-ep93xx/core.c                        | 1017 --------------
+ arch/arm/mach-ep93xx/dma.c                         |  114 --
+ arch/arm/mach-ep93xx/edb93xx.c                     |  368 -----
+ arch/arm/mach-ep93xx/ep93xx-regs.h                 |   38 -
+ arch/arm/mach-ep93xx/gpio-ep93xx.h                 |  111 --
+ arch/arm/mach-ep93xx/hardware.h                    |   25 -
+ arch/arm/mach-ep93xx/irqs.h                        |   76 --
+ arch/arm/mach-ep93xx/platform.h                    |   42 -
+ arch/arm/mach-ep93xx/soc.h                         |  212 ---
+ arch/arm/mach-ep93xx/timer-ep93xx.c                |  143 --
+ arch/arm/mach-ep93xx/ts72xx.c                      |  422 ------
+ arch/arm/mach-ep93xx/ts72xx.h                      |   94 --
+ arch/arm/mach-ep93xx/vision_ep9307.c               |  321 -----
+ drivers/ata/pata_ep93xx.c                          |  106 +-
+ drivers/clk/Kconfig                                |    8 +
+ drivers/clk/Makefile                               |    1 +
+ drivers/clk/clk-ep93xx.c                           |  840 ++++++++++++
+ drivers/dma/ep93xx_dma.c                           |  287 +++-
+ drivers/gpio/gpio-ep93xx.c                         |  345 ++---
+ drivers/input/keyboard/ep93xx_keypad.c             |   74 +-
+ drivers/mtd/nand/raw/Kconfig                       |    6 +
+ drivers/mtd/nand/raw/Makefile                      |    1 +
+ drivers/mtd/nand/raw/technologic-nand-controller.c |  220 +++
+ drivers/net/ethernet/cirrus/ep93xx_eth.c           |   63 +-
+ drivers/pinctrl/Kconfig                            |    7 +
+ drivers/pinctrl/Makefile                           |    1 +
+ drivers/pinctrl/pinctrl-ep93xx.c                   | 1434 ++++++++++++++++++++
+ drivers/power/reset/Kconfig                        |   10 +
+ drivers/power/reset/Makefile                       |    1 +
+ drivers/power/reset/ep93xx-restart.c               |   84 ++
+ drivers/pwm/pwm-ep93xx.c                           |   26 +-
+ drivers/soc/Kconfig                                |    1 +
+ drivers/soc/Makefile                               |    1 +
+ drivers/soc/cirrus/Kconfig                         |   13 +
+ drivers/soc/cirrus/Makefile                        |    2 +
+ drivers/soc/cirrus/soc-ep93xx.c                    |  241 ++++
+ drivers/spi/spi-ep93xx.c                           |   66 +-
+ drivers/watchdog/ep93xx_wdt.c                      |    8 +
+ drivers/watchdog/ts72xx_wdt.c                      |    8 +
+ include/dt-bindings/clock/cirrus,ep9301-syscon.h   |   46 +
+ include/linux/platform_data/dma-ep93xx.h           |   94 --
+ include/linux/platform_data/eth-ep93xx.h           |   10 -
+ include/linux/platform_data/keypad-ep93xx.h        |   32 -
+ include/linux/platform_data/spi-ep93xx.h           |   15 -
+ include/linux/soc/cirrus/ep93xx.h                  |   47 +-
+ sound/soc/cirrus/Kconfig                           |    9 -
+ sound/soc/cirrus/Makefile                          |    4 -
+ sound/soc/cirrus/edb93xx.c                         |  116 --
+ sound/soc/cirrus/ep93xx-i2s.c                      |   19 -
+ sound/soc/cirrus/ep93xx-pcm.c                      |   19 +-
+ 71 files changed, 5137 insertions(+), 4548 deletions(-)
+---
+base-commit: 052d534373b7ed33712a63d5e17b2b6cdbce84fd
+change-id: 20230605-ep93xx-01c76317e2d2
+
+Best regards,
+-- 
+Nikita Shubin <nikita.shubin@maquefel.me>
+
