@@ -1,250 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AFE520B18;
-	Thu, 18 Jan 2024 08:23:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38BC0200B2
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jan 2024 09:32:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705566180; cv=none; b=cVdPMD3ni7iRWvxdE/NMuRILBKDjtCb2Wwe0xCdwH4Khic7PqQIv6gRFVh+yp1+MM3ocHtrzzp6m43KSIsXSgfnwY2budieskNNf9o5Xz9qBDr3nBe11fmWuWXSIHQeYY//B64sD7Cv+MK4kHO1Qp14i3HUfcKs0uAs61/tsR94=
+	t=1705570356; cv=none; b=MGkhtULLACykAd68tTnfmj+IhXqHkwFaVW41DxVUEtJpsmzAJL6ZrD3tXkRr7xE16y6lY85gU+yYvvYINR/7otpkB/e8IV+PrRW+1kqpRl+KCaJuVtncMC7dmGOJV6ynb52lJNRFszE1e49XcPt+XMcI6pNwWBlvRhwc1xNilSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705566180; c=relaxed/simple;
-	bh=9WwsBITMItklQJrOsXkyC5Z2uBAIdB41XN+G4RoUL10=;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To; b=o7ttMkOcggA5o9AqbIlykmJ4W20LzQn46y3zchZVdcGAS1HBsNgkomBybBf7CdxkNjeVA2jd84LUmgL+gq7QO8M8OykpdymaahFWBqyYcwrw25jkaxx7Lj8kwiaw19TXHsY6ys+0NC8gX+OaUjxhPl+MYDufIv6m0rJXA8HCVE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ly3cQlnS; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ly3cQlnS"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 60C07C4E74A;
-	Thu, 18 Jan 2024 08:23:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705566180;
-	bh=9WwsBITMItklQJrOsXkyC5Z2uBAIdB41XN+G4RoUL10=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=ly3cQlnSsRtrFOeYLE3X+0jiXCnW48fewprPux4CvvKrHx2B3F0CTQqJsuYfjBqJg
-	 grn5nTYZvCScn+9zrzB1OdEJ1Rrw+/Tvuak3vL2pwzTyq4NPcsCGWxPwtMpio5naCq
-	 6AbVICbSod0MlheaxIAdGfocgCYKFGqAil5HA0PUm78/yyz5CQdngLWAvW0t+SP+vU
-	 JawCwDJh5BUAF7npfyL5aUSP20+38phN+Mp84txmUNNUF/vvYtifsESi//BHwPjT2L
-	 QyWhA6Vt/6t9Brtw3yLotd5ippwSnfE3UJp/HZ+51iJ+FMPOiJyccbXpLrbfEfZyL/
-	 fOcVSPd+IMxyQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C8C5C47DB3;
-	Thu, 18 Jan 2024 08:23:00 +0000 (UTC)
-From:
- Nikita Shubin via B4 Relay <devnull+nikita.shubin.maquefel.me@kernel.org>
-Date: Thu, 18 Jan 2024 11:21:18 +0300
-Subject: [PATCH v7 35/39] ata: pata_ep93xx: remove legacy pinctrl use
+	s=arc-20240116; t=1705570356; c=relaxed/simple;
+	bh=x4OR2QnV/+fgMTmdwS/QmOKbvtbDOKH/eK433t7NRV0=;
+	h=Received:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-SA-Exim-Connect-IP:X-SA-Exim-Mail-From:
+	 X-SA-Exim-Scanned:X-PTX-Original-Recipient; b=WkVQhjbpTxqpCW5oE6JHVE78EIIOllo+1YDTIsRax5pT+Aul5qxC0GN0Bl1AZBoLWyC8LNyJuPEOhrze8LKcRgiS0ERZd0k7wldf0eefPUfV12B34fmFvkZC37vsNsi455ekEaokmYrYxF6xl9UG0OzaMiUepI66OLK9NdAKIbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rQOj3-0002xz-Tn; Thu, 18 Jan 2024 10:30:17 +0100
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rQOiy-000etK-Ax; Thu, 18 Jan 2024 10:30:12 +0100
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.96)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rQOiy-002Ifg-0Y;
+	Thu, 18 Jan 2024 10:30:12 +0100
+Date: Thu, 18 Jan 2024 10:30:11 +0100
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To: nikita.shubin@maquefel.me
+Cc: Hartley Sweeten <hsweeten@visionengravers.com>, 
+	Alexander Sverdlin <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
+	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
+	Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Vinod Koul <vkoul@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>, 
+	Guenter Roeck <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>, 
+	Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Miquel Raynal <miquel.raynal@bootlin.com>, 
+	Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>, Liam Girdwood <lgirdwood@gmail.com>, 
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
+	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org, devicetree@vger.kernel.org, 
+	dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-spi@vger.kernel.org, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+	linux-ide@vger.kernel.org, linux-input@vger.kernel.org, linux-sound@vger.kernel.org, 
+	Arnd Bergmann <arnd@arndb.de>, Andy Shevchenko <andriy.shevchenko@intel.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>, 
+	Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v7 00/39] ep93xx device tree conversion
+Message-ID: <a54csycouodnmj6qarfel7cvgupaerl7uhrruixuy7uaekqgzw@2whufrjqunme>
+References: <20240118-ep93xx-v7-0-d953846ae771@maquefel.me>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240118-ep93xx-v7-35-d953846ae771@maquefel.me>
-References: <20240118-ep93xx-v7-0-d953846ae771@maquefel.me>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="s7rbtueqy4vwjth4"
+Content-Disposition: inline
 In-Reply-To: <20240118-ep93xx-v7-0-d953846ae771@maquefel.me>
-To: Hartley Sweeten <hsweeten@visionengravers.com>, 
- Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
- Russell King <linux@armlinux.org.uk>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- Nikita Shubin <nikita.shubin@maquefel.me>, 
- Linus Walleij <linus.walleij@linaro.org>, 
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
- Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-X-Mailer: b4 0.13-dev-e3e53
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1705566176; l=5459;
- i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
- bh=smQqDg52j8Zk5Y6n19Hy7jlJdfoJYJf4tbxkECWJUo4=; =?utf-8?q?b=3DOFCF9QW5JJfp?=
- =?utf-8?q?I8KLUivCQPXHXV3JkMbWpKLgrpYAvSd0YqzZqUUzg1UWlddavJOngwYOpyOumoQ0?=
- 2Iy8Py9mCVDMXm3QE3+4UBkaloKvVOmlCVDN2IGY9gaT+5NgIK23
-X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
- pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
-X-Endpoint-Received:
- by B4 Relay for nikita.shubin@maquefel.me/20230718 with auth_id=65
-X-Original-From: Nikita Shubin <nikita.shubin@maquefel.me>
-Reply-To: <nikita.shubin@maquefel.me>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-ide@vger.kernel.org
 
-From: Nikita Shubin <nikita.shubin@maquefel.me>
 
-Drop legacy acquire/release since we are using pinctrl for this now.
+--s7rbtueqy4vwjth4
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
----
- arch/arm/mach-ep93xx/core.c       | 72 ---------------------------------------
- drivers/ata/pata_ep93xx.c         | 25 ++++----------
- include/linux/soc/cirrus/ep93xx.h |  4 ---
- 3 files changed, 6 insertions(+), 95 deletions(-)
+Hello,
 
-diff --git a/arch/arm/mach-ep93xx/core.c b/arch/arm/mach-ep93xx/core.c
-index 4ddf1a4cba33..9c6154bb37b5 100644
---- a/arch/arm/mach-ep93xx/core.c
-+++ b/arch/arm/mach-ep93xx/core.c
-@@ -779,78 +779,6 @@ void __init ep93xx_register_ide(void)
- 	platform_device_register(&ep93xx_ide_device);
- }
- 
--int ep93xx_ide_acquire_gpio(struct platform_device *pdev)
--{
--	int err;
--	int i;
--
--	err = gpio_request(EP93XX_GPIO_LINE_EGPIO2, dev_name(&pdev->dev));
--	if (err)
--		return err;
--	err = gpio_request(EP93XX_GPIO_LINE_EGPIO15, dev_name(&pdev->dev));
--	if (err)
--		goto fail_egpio15;
--	for (i = 2; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_E(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_e;
--	}
--	for (i = 4; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_G(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_g;
--	}
--	for (i = 0; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_H(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_h;
--	}
--
--	/* GPIO ports E[7:2], G[7:4] and H used by IDE */
--	ep93xx_devcfg_clear_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
--				 EP93XX_SYSCON_DEVCFG_GONIDE |
--				 EP93XX_SYSCON_DEVCFG_HONIDE);
--	return 0;
--
--fail_gpio_h:
--	for (--i; i >= 0; --i)
--		gpio_free(EP93XX_GPIO_LINE_H(i));
--	i = 8;
--fail_gpio_g:
--	for (--i; i >= 4; --i)
--		gpio_free(EP93XX_GPIO_LINE_G(i));
--	i = 8;
--fail_gpio_e:
--	for (--i; i >= 2; --i)
--		gpio_free(EP93XX_GPIO_LINE_E(i));
--	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
--fail_egpio15:
--	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
--	return err;
--}
--EXPORT_SYMBOL(ep93xx_ide_acquire_gpio);
--
--void ep93xx_ide_release_gpio(struct platform_device *pdev)
--{
--	int i;
--
--	for (i = 2; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_E(i));
--	for (i = 4; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_G(i));
--	for (i = 0; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_H(i));
--	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
--	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
--
--
--	/* GPIO ports E[7:2], G[7:4] and H used by GPIO */
--	ep93xx_devcfg_set_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
--			       EP93XX_SYSCON_DEVCFG_GONIDE |
--			       EP93XX_SYSCON_DEVCFG_HONIDE);
--}
--EXPORT_SYMBOL(ep93xx_ide_release_gpio);
--
- /*************************************************************************
-  * EP93xx ADC
-  *************************************************************************/
-diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index 2bc446bdea06..1ad848371cda 100644
---- a/drivers/ata/pata_ep93xx.c
-+++ b/drivers/ata/pata_ep93xx.c
-@@ -923,28 +923,18 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
- 	void __iomem *ide_base;
- 	int err;
- 
--	err = ep93xx_ide_acquire_gpio(pdev);
--	if (err)
--		return err;
--
- 	/* INT[3] (IRQ_EP93XX_EXT3) line connected as pull down */
- 	irq = platform_get_irq(pdev, 0);
--	if (irq < 0) {
--		err = irq;
--		goto err_rel_gpio;
--	}
-+	if (irq < 0)
-+		return irq;
- 
- 	ide_base = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
--	if (IS_ERR(ide_base)) {
--		err = PTR_ERR(ide_base);
--		goto err_rel_gpio;
--	}
-+	if (IS_ERR(ide_base))
-+		return PTR_ERR(ide_base);
- 
- 	drv_data = devm_kzalloc(&pdev->dev, sizeof(*drv_data), GFP_KERNEL);
--	if (!drv_data) {
--		err = -ENOMEM;
--		goto err_rel_gpio;
--	}
-+	if (!drv_data)
-+		return -ENOMEM;
- 
- 	drv_data->pdev = pdev;
- 	drv_data->ide_base = ide_base;
-@@ -1003,8 +993,6 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
- 
- err_rel_dma:
- 	ep93xx_pata_release_dma(drv_data);
--err_rel_gpio:
--	ep93xx_ide_release_gpio(pdev);
- 	return err;
- }
- 
-@@ -1016,7 +1004,6 @@ static void ep93xx_pata_remove(struct platform_device *pdev)
- 	ata_host_detach(host);
- 	ep93xx_pata_release_dma(drv_data);
- 	ep93xx_pata_clear_regs(drv_data->ide_base);
--	ep93xx_ide_release_gpio(pdev);
- }
- 
- static const struct of_device_id ep93xx_pata_of_ids[] = {
-diff --git a/include/linux/soc/cirrus/ep93xx.h b/include/linux/soc/cirrus/ep93xx.h
-index f6376edc1b33..142c33a2d7db 100644
---- a/include/linux/soc/cirrus/ep93xx.h
-+++ b/include/linux/soc/cirrus/ep93xx.h
-@@ -37,15 +37,11 @@ struct ep93xx_regmap_adev {
- 	container_of((_adev), struct ep93xx_regmap_adev, adev)
- 
- #ifdef CONFIG_ARCH_EP93XX
--int ep93xx_ide_acquire_gpio(struct platform_device *pdev);
--void ep93xx_ide_release_gpio(struct platform_device *pdev);
- int ep93xx_i2s_acquire(void);
- void ep93xx_i2s_release(void);
- unsigned int ep93xx_chip_revision(void);
- 
- #else
--static inline int ep93xx_ide_acquire_gpio(struct platform_device *pdev) { return 0; }
--static inline void ep93xx_ide_release_gpio(struct platform_device *pdev) {}
- static inline int ep93xx_i2s_acquire(void) { return 0; }
- static inline void ep93xx_i2s_release(void) {}
- static inline unsigned int ep93xx_chip_revision(void) { return 0; }
+On Thu, Jan 18, 2024 at 11:20:43AM +0300, Nikita Shubin via B4 Relay wrote:
+> No major changes since last version (v6) all changes are cometic.
 
--- 
-2.41.0
+Never saw changes described as "cometic". I guess that means "fast" and
+"high impact"?
 
+SCNR
+Uwe
+
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--s7rbtueqy4vwjth4
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmWo76MACgkQj4D7WH0S
+/k5uKAf/Z0JDYxAVHNppDOc31mQ8q/h4mL5VX4NFHWitBkLRBX5sufWi6uUBbK7h
+KA9Z1DHWGNNXUXsV2IsXKsw6WcsC+Wj/g+hUfWMx2kvbnvD8JtYBl1+MJALeBVlt
+aQCy1yMPL36xcy8vSLyh63vZXUHyBaWuooRwVqOhklHSg7/rwSEwECEZZqsg748Z
+iiYmSVRjLlktw1yUtJBvlO1fXWQ41DSbyaQWaIJvbym8B5+2XXW2BTGZOg7CuDz5
+HG9KvXf2AnAEM4RAV6Oo/WKBBEq0kfQ/UBkkH85YOaXrDlNblggfMix84LyansxB
+43g95kkMn3JP3koNgEA+nk73+SCctA==
+=1qlI
+-----END PGP SIGNATURE-----
+
+--s7rbtueqy4vwjth4--
