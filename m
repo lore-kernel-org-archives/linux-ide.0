@@ -1,78 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32890156C1
-	for <linux-ide@vger.kernel.org>; Sun, 21 Jan 2024 00:37:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C478383BD
+	for <linux-ide@vger.kernel.org>; Sun, 21 Jan 2024 21:00:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705797477; cv=none; b=XCuccXP0HJkMJiLGyUBvQcc8kjldXIrM4PbqN4hdHT5wkr5pvccf0s7Dqq02Uwc5qMH21wTPcL2urYX9pm7B0Pa6758Od7o2x/xVEH2lS4EE71fk6b/18ZbLLdLB60m6RvLkoMAMzV8RJ+w7vUPRm6BchA82hU4oKEjZlF3v7OE=
+	t=1705870843; cv=none; b=IoKL1j8IADAyhofLO25ksJrEmUjXo08Q+rtWd7Z0zAFnkQR3fhHJQVzMhFjjs5E6SdDfmVuZF/qFtbcn/RoOIqEdLCR8pSmthz9X2sKhTVs9YygeKRwaAwob9dRFbQ6mRPhdOQbuHu1YjPN9f/7J/WvtOKfRjY1Uw+PNV1SiQpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705797477; c=relaxed/simple;
-	bh=Id9adSf/xrm7uFuNgauf5bsOud7KJF4d3tLXAKtnYHs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cSp+pSACqYU3RbUx6PRmopjYtb9S4nIU1BaHI5VPvcL8OoV2uThgf6BRvyU/B+FfRtHEO4z6F/y+/d3c2TLxyY2DhkHfIwNIuJYa/R/6QjC3OdSwwhsNvcMa4cvU7ZZKN1msll2FeyiCDy35Y5wRnTejuGr2UTfFneSXnUkhR/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D3ZkLo9A; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1705870843; c=relaxed/simple;
+	bh=zlLzIMc0K+Hs3GtHLMJf/u6sjUkTFUvpoYJN1dC9mdA=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=kr+jCGgKLyeSzJarInM0nIdjIw3pjtAXPocM9aQupcR3489IVZSN/dEEh+PxkLUkNb62xfT/j+F520RhDsTnFGRG1Rfxu0k0hlkCMsGORDWT/4WHMAZs3paEiLuu22PnFc+iAX3NOQ1tiE8xzUOgQ08PQ1HFABT/CWzDmmD9P+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=RDmcjE0i; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D3ZkLo9A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 540F0C43394;
-	Sun, 21 Jan 2024 00:37:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705797477;
-	bh=Id9adSf/xrm7uFuNgauf5bsOud7KJF4d3tLXAKtnYHs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=D3ZkLo9AppiiHYeVQKPuRAo9YKe6LmuYQKFN1EntJIsspAPxUJ2kssUzwKUtZc7QB
-	 /OQzR9YbtvwEUm5usz0Q+6lI2OJrMYAMAfWq8A1r5gFm8ox3T7SnQOi6saPs5gCn3p
-	 jgxATyGy31T7mYqma5+zLijgsChKD1o3nvZkJqMNu+edzIh84+cdFDaYaWhljY0pxh
-	 zjp2tr808Kt2Cls4daOJKTd4U5gjxQagKvvA5qetQvGQB85xr0RGv4/g93YD/1X8qa
-	 4klQe8qOFGASbEBLgxp6s9cgkcw7QarvooF5oPbQyBDSj8trCZXtRItHBtuyGNNlIw
-	 ST6QZvqs1N/DA==
-Message-ID: <1f0aaf07-f2f4-41a7-a15d-7074a8be7f5f@kernel.org>
-Date: Sun, 21 Jan 2024 09:37:56 +0900
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RDmcjE0i"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1d72043fa06so105215ad.1
+        for <linux-ide@vger.kernel.org>; Sun, 21 Jan 2024 13:00:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1705870842; x=1706475642; darn=vger.kernel.org;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=cRZzT2f1JofCE2kB4k8BjPK4SbjBTzmzlRfHn5i6bdY=;
+        b=RDmcjE0itntM4wI6gOXAdwNnKxIs7qzYEiR/bZzE/EobVpaMGxkjEAlnjS4uazePq/
+         xzoGq+kxJ27WD7FOtHh2QsvSzs06gVCqny10oB6/ESAkYr3fO8TsU2RdoiRFsLUaOyAi
+         wG6cYi+RHABY1g+o88gFSiL+4pyVWwQYqwvVbFX2n2kFqBMwJ28DcIRn7PsnTePT2z/v
+         BAy/QvqrUS/4+GD4Dj+QjOkZG9AkptWLkVoki8UJHwQ1QAa6r+Lm98Omh50dEnbUtb7e
+         J6gadp7bZZuYuohw5NY3fcZbWK7SpCELQog/M7Y76+vBANsvLEWcURHsY4D9HXTjMNZN
+         fl8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705870842; x=1706475642;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=cRZzT2f1JofCE2kB4k8BjPK4SbjBTzmzlRfHn5i6bdY=;
+        b=E7oeAgO8aTDIRyYWg9PbUE7s1FdSZIC9aqEXXsmWOdIUuPQsgmAgiIWvw1qLwfD9Wh
+         l/A6XIvV+I2yCdD32hZ3So0W3SKOCPSFG6eZnf+gMRJVcwjsnoAlW4yjVjkvd8q8M3fW
+         LhMseUoHJfWIc+cOaqZiUzKVtlnR2Jfh6fADSlU6ScBqlWES9BHuC7ztqs2t5uOxxxEl
+         eE7LA3axeBzJ0wXuxqogKLFjObYb6LlfOVUP/VU46EGUQUD78VindJlLylkkMwHt0nmx
+         V05G2w7rg8bDbfrzDPG8Jc8ZICMp1K04w0OcCTHLV0Regf3rxOm8+jUPT6tYjfn51iCd
+         zqPA==
+X-Gm-Message-State: AOJu0YzBWHHGZfmcPWjFQnDcfn08DKE5Tcoqj7CNY60JFyRlQiqNCUjw
+	TGdFFc818Qk0HBilsFk/zygXoinyhC51
+X-Google-Smtp-Source: AGHT+IEXMNPZIS3H5wZZueT2jT74eobFzGlQuvq//fhxcAORa46mOSrn/8EHf0mLkfzQHYyU7j+f5w==
+X-Received: by 2002:a17:902:ecce:b0:1d6:ffb7:4af9 with SMTP id a14-20020a170902ecce00b001d6ffb74af9mr161181plh.14.1705870841493;
+        Sun, 21 Jan 2024 13:00:41 -0800 (PST)
+Received: from [2620:0:1008:15:9c9c:e5a:9eed:f21b] ([2620:0:1008:15:9c9c:e5a:9eed:f21b])
+        by smtp.gmail.com with ESMTPSA id sl7-20020a17090b2e0700b0028b6759d8c1sm8191663pjb.29.2024.01.21.13.00.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Jan 2024 13:00:40 -0800 (PST)
+Date: Sun, 21 Jan 2024 13:00:40 -0800 (PST)
+From: David Rientjes <rientjes@google.com>
+To: Matthew Wilcox <willy@infradead.org>, Pasha Tatashin <tatashin@google.com>, 
+    Sourav Panda <souravpanda@google.com>
+cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, 
+    linux-mm@kvack.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, 
+    linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, 
+    bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
+In-Reply-To: <ZaqiPSj1wMrTMdHa@casper.infradead.org>
+Message-ID: <b04b65df-b25f-4457-8952-018dd4479651@google.com>
+References: <ZaqiPSj1wMrTMdHa@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
-Content-Language: en-US
-To: Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
-References: <87msthdo11.fsf@vps.thesusis.net>
- <20240107180258.360886-1-phill@thesusis.net>
- <20240107180258.360886-2-phill@thesusis.net>
- <f6110204-338d-42b5-8ec2-153dd862e799@kernel.org>
- <878r50uf97.fsf@vps.thesusis.net>
- <abd85855-0767-4e48-a8a7-8046cd339f9c@kernel.org>
- <87a5p5b426.fsf@vps.thesusis.net> <878r4l12c5.fsf@vps.thesusis.net>
- <87plxvnahn.fsf@vps.thesusis.net>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <87plxvnahn.fsf@vps.thesusis.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 
-On 1/21/24 03:08, Phillip Susi wrote:
-> Phillip Susi <phill@thesusis.net> writes:
+On Fri, 19 Jan 2024, Matthew Wilcox wrote:
+
+> It's probably worth doing another roundup of where we are on our journey
+> to separating folios, slabs, pages, etc.  Something suitable for people
+> who aren't MM experts, and don't care about the details of how page
+> allocation works.  I can talk for hours about whatever people want to
+> hear about but some ideas from me:
 > 
->> I was trying to do this.  I think the right place is in
->> blkdev_issue_flush(), but apparently bdev->bd_device is not the same
->> struct device that gets suspended.  I can't seem to work out where the
->> right struct device is to pass to pm_runtime_suspended() and skip the
->> flush operation.
+>  - Overview of how the conversion is going
+>  - Convenience functions for filesystem writers
+>  - What's next?
+>  - What's the difference between &folio->page and page_folio(folio, 0)?
+>  - What are we going to do about bio_vecs?
+>  - How does all of this work with kmap()?
 > 
-> I don't know what I was thinking yesterday.  It can't rely on
-> pm_runtime_suspended() because it would continue to flush and reset the
-> suspend timer before it ever gets suspended.  I wonder if it could use
-> the performance counters?  Whenever a flush is done, and also when
-> suspending, store the value of the write counter, and only if it has
-> changed, issue the flush, otherwise skip it?
+> I'm sure people would like to suggest other questions they have that
+> aren't adequately answered already and might be of interest to a wider
+> audience.
+> 
 
-See my reply to your previous comment.
-What you are trying to do is not the correct approach.
+Thanks for proposing this again, Matthew, I'd definitely like to be 
+involved in the discussion as I think a couple of my colleagues, cc'd, 
+would has well.  Memory efficiency is a top priority for 2024 and, thus, 
+getting on a pathway toward reducing the overhead of struct page is very 
+important for our hosts that are not using large amounts of 1GB hugetlb.
 
--- 
-Damien Le Moal
-Western Digital Research
+I've seen your other thread regarding how the page allocator can be 
+enlightened for memdesc, so I'm hoping that can either be covered in this 
+topic or a separate topic.
 
+Especially important for us would be the division of work so that we can 
+parallelize development as much as possible for things like memdesc.  If 
+there are any areas that just haven't been investigated yet but we *know* 
+we'll need to address to get to the new world of memdesc, I think we'd 
+love to discuss that.
