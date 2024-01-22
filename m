@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FF8E3C693;
-	Mon, 22 Jan 2024 13:02:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D7903CF63;
+	Mon, 22 Jan 2024 13:28:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705928578; cv=none; b=d4YxRHdTmmBYv7d+BNZun9B1HeznnyFZNxyYaiFCPCetuxAZmOyNeg/c/6I6eYrAzwfbzRjsn6jfPXxUvPbEZ9+IGXQqRdCQBC5ua0TNsZYZdX1RfonbuUnnvprX+MiWbhcmP7IOM6rfuG+rDg0i7hStbU1L808valnIfJzsBOg=
+	t=1705930120; cv=none; b=m6cS1cQTZjOEu9hGfOOmRmcveM7q8pbFqPclY9Xvha5+OEwqPfIziwcWSGGYqfaoy2SBbkDhYUuk2nyaHU/WPspYddsnX1qMqIrqIS1s3lCD4UKVDqpeu9Gmf5CTOIBx529DmAuaM5z+ZrUFsala4iIdck+LtUM24aMW53sDv+A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705928578; c=relaxed/simple;
-	bh=HyHjYdHa+L59MRE2OXPZJnIepLxyNNeoKImVqWz4UOo=;
+	s=arc-20240116; t=1705930120; c=relaxed/simple;
+	bh=AznU8j2SdYTSEwJC02gNSrCDmEKaUE5Gb5SSkPG/ikk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SKx/wI/pb0yKLujb+17srcxZ+ZusKjhT+zCrqz7AeX1iX1CsII8dzEn2+iJJAR+O89LG+Pa9fkaP4ok47N0iyEYJT6WcnnHCXeFWQ/CYTyI2+xvAOfULbRBuoFfePBxLUSuswuyqlMvxW1K63OeNxOk+aJc+c7htuuZMMyVQzhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZxcRMHt; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=T5anx7uZMEB28NQ9rLf5QBfGVhaMYjLobVh/teqb84YjfhaNi2D3EHK5J2131MWQ2824I+sggrWfm6FH3Si2yGheQ9A/BZEcNO6inJ4ViJTRE6JMYQ/jVuyCHD+WqpOH3k3yYrSvY4+BwxlQrn9tUMh0CeOrb+nsPu1/dcu3BH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Orqi7aiC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZxcRMHt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6313EC43394;
-	Mon, 22 Jan 2024 13:02:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Orqi7aiC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 597BAC433F1;
+	Mon, 22 Jan 2024 13:28:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705928577;
-	bh=HyHjYdHa+L59MRE2OXPZJnIepLxyNNeoKImVqWz4UOo=;
+	s=k20201202; t=1705930119;
+	bh=AznU8j2SdYTSEwJC02gNSrCDmEKaUE5Gb5SSkPG/ikk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jZxcRMHtb0FwHVxpUFkqUmkIFmkxdncVqtzpfyOPF6x1irzegi2AhaiocRE4emT+S
-	 DghN1LP9G0ctAKEX60ln2k8dFAjAkhsANBOt1TNnA6M15Z+yDtFmWV4kNOVwXEpDll
-	 20kR7PWBmirzynSbndcCTQLbGxq1avq+6b7o87e7ZlQxfQ8vEtW8/xjD+eBVGRS3S3
-	 xf4SvifTr62lmmXsDolcQZg5YEU94BuXPsT7YB1/0aZ6VNmvJE00/MJvw3H7IRL76J
-	 ZJY8Y48xrBjNfw+19qgXLeXLWVik4llhztCcpD6DJgZWelfETSvvHuY+BM3n57sq3q
-	 dcEKEu+vMEuxw==
-Date: Mon, 22 Jan 2024 14:02:48 +0100
+	b=Orqi7aiC+MyAfrSUnAhgP70oXz5dI7MFqSKqRDMj+ItUyiUhpnc0EkdZbiF1uRd+D
+	 GdGn4aHFa0wrO8UzM9Lkl+JoDb2gEv35fDMn+p0fxkZTjAIHV6cPgHrcNWIaZ69yvA
+	 qbsE1jDGAnMzcPieSig70g02DgIo49lf3PGqweQlCUmu4y2CayoEBVFM+k8InFT7BV
+	 doe8bzRFgDFwtVt44nIb74UYVfLOyH7TAhKTZT54VlcPWJc1fXJYZRX2QhClsuE54n
+	 7T4BR/ILR3EK8ORRDsOuKacfvP4q01IQZa5WVgNsyWavrLNpSgDt44NtpjTJ+IjyNd
+	 Jj/Cw4KQG62tQ==
+Date: Mon, 22 Jan 2024 14:28:32 +0100
 From: Niklas Cassel <cassel@kernel.org>
 To: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
 Cc: dlemoal@kernel.org, richardcochran@gmail.com, piyush.mehta@xilinx.com,
 	axboe@kernel.dk, michal.simek@amd.com, linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org, git@amd.com,
 	Piyush Mehta <piyush.mehta@amd.com>
-Subject: Re: [PATCH 1/2] ata: ahci_ceva: fix error handling for Xilinx GT PHY
- support
-Message-ID: <Za5neDYN9Dh+GwRG@x1-carbon>
+Subject: Re: [PATCH 2/2] ata: ahci_ceva: add missing enable regulator API for
+ Xilinx GT PHY support
+Message-ID: <Za5tgFKxylHR91KF@x1-carbon>
 References: <1705604904-471889-1-git-send-email-radhey.shyam.pandey@amd.com>
- <1705604904-471889-2-git-send-email-radhey.shyam.pandey@amd.com>
+ <1705604904-471889-3-git-send-email-radhey.shyam.pandey@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -46,185 +46,90 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1705604904-471889-2-git-send-email-radhey.shyam.pandey@amd.com>
+In-Reply-To: <1705604904-471889-3-git-send-email-radhey.shyam.pandey@amd.com>
 
 Hello Radhey,
 
-On Fri, Jan 19, 2024 at 12:38:23AM +0530, Radhey Shyam Pandey wrote:
+On Fri, Jan 19, 2024 at 12:38:24AM +0530, Radhey Shyam Pandey wrote:
 > From: Piyush Mehta <piyush.mehta@amd.com>
 > 
-> Platform clock and phy error resources are not cleaned up in Xilinx GT PHY
-> error path. To fix introduce error label for ahci_platform_disable_clks and
-> phy_power_off/exit and call them in error path. No functional change.
+> The regulators API are disabled and enabled, during suspend and resume,
+> respectively. The following warning notice shows up on the initial suspend
+> because the enable regulators API is unaddressed in the probe:
+
+Please be a bit more specific in your commit message.
+
+e.g. during system suspend, ahci_platform_suspend() calls
+ahci_platform_disable_resources() which calls
+ahci_platform_disable_regulators() which calls
+regulator_disable() for all regulators found in the controller.
+
+
+> 
+> regulator-dummy: Underflow of regulator enable count
+> 
+> Added the ahci_platform_enable_regulators API in probe to maintain the
+> regulator enabled and disabled ref count.
+
+s/Added/Add/
+
+"Describe your changes in imperative mood, e.g. "make xyzzy do frotz" instead of "[This patch] makes xyzzy do frotz" or "[I] changed xyzzy to do frotz", as if you are giving orders to the codebase to change its behaviour."
+
+see:
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+
 > 
 > Fixes: 9a9d3abe24bb ("ata: ahci: ceva: Update the driver to support xilinx GT phy")
 > Signed-off-by: Piyush Mehta <piyush.mehta@amd.com>
 > Signed-off-by: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
 > ---
-> ---
->  drivers/ata/ahci_ceva.c | 47 +++++++++++++++++++++++++++++------------
->  1 file changed, 33 insertions(+), 14 deletions(-)
+>  drivers/ata/ahci_ceva.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-> index 64f7f7d6ba84..bfc513f1d0b3 100644
+> index bfc513f1d0b3..1c56f0cabb11 100644
 > --- a/drivers/ata/ahci_ceva.c
 > +++ b/drivers/ata/ahci_ceva.c
-> @@ -196,7 +196,7 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  	struct ahci_host_priv *hpriv;
->  	struct ceva_ahci_priv *cevapriv;
->  	enum dev_dma_attr attr;
-> -	int rc;
-> +	int rc, i;
->  
->  	cevapriv = devm_kzalloc(dev, sizeof(*cevapriv), GFP_KERNEL);
->  	if (!cevapriv)
-> @@ -219,8 +219,6 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+> @@ -219,9 +219,14 @@ static int ceva_ahci_probe(struct platform_device *pdev)
 >  		if (rc)
 >  			return rc;
 >  	} else {
-> -		int i;
-> -
->  		rc = ahci_platform_enable_clks(hpriv);
+> -		rc = ahci_platform_enable_clks(hpriv);
+> +		rc = ahci_platform_enable_regulators(hpriv);
 >  		if (rc)
 >  			return rc;
-> @@ -229,8 +227,11 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  
->  		for (i = 0; i < hpriv->nports; i++) {
->  			rc = phy_init(hpriv->phys[i]);
-> -			if (rc)
-> -				return rc;
-> +			if (rc) {
-> +				while (--i >= 0)
-> +					phy_exit(hpriv->phys[i]);
+> +
+> +		rc = ahci_platform_enable_clks(hpriv);
+> +		if (rc)
+> +			goto disable_regulator;
+> +
 
-It is ugly to have a loop both here and at the end of the function.
-Why don't you just goto disable_phys here?
+Like I wrote in patch 1/2, I would prefer if you could somehow get
+ahci_platform_enable_resources() to work for your platform, so that you
+don't need to copy paste all of ahci_platform_enable_resources() to
+your driver.
 
-Just like how it is done in ahci_platform_enable_phys():
-https://github.com/torvalds/linux/blob/v6.7/drivers/ata/libahci_platform.c#L52-L54
-
-
-> +				goto disable_clks;
-> +			}
->  		}
->  
->  		/* De-assert the controller reset */
-> @@ -240,7 +241,7 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  			rc = phy_power_on(hpriv->phys[i]);
->  			if (rc) {
->  				phy_exit(hpriv->phys[i]);
-> -				return rc;
-> +				goto disable_phys;
->  			}
->  		}
->  	}
-> @@ -252,52 +253,60 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  	if (of_property_read_u8_array(np, "ceva,p0-cominit-params",
->  					(u8 *)&cevapriv->pp2c[0], 4) < 0) {
->  		dev_warn(dev, "ceva,p0-cominit-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	if (of_property_read_u8_array(np, "ceva,p1-cominit-params",
->  					(u8 *)&cevapriv->pp2c[1], 4) < 0) {
->  		dev_warn(dev, "ceva,p1-cominit-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	/* Read OOB timing value for COMWAKE from device-tree*/
->  	if (of_property_read_u8_array(np, "ceva,p0-comwake-params",
->  					(u8 *)&cevapriv->pp3c[0], 4) < 0) {
->  		dev_warn(dev, "ceva,p0-comwake-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	if (of_property_read_u8_array(np, "ceva,p1-comwake-params",
->  					(u8 *)&cevapriv->pp3c[1], 4) < 0) {
->  		dev_warn(dev, "ceva,p1-comwake-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	/* Read phy BURST timing value from device-tree */
->  	if (of_property_read_u8_array(np, "ceva,p0-burst-params",
->  					(u8 *)&cevapriv->pp4c[0], 4) < 0) {
->  		dev_warn(dev, "ceva,p0-burst-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	if (of_property_read_u8_array(np, "ceva,p1-burst-params",
->  					(u8 *)&cevapriv->pp4c[1], 4) < 0) {
->  		dev_warn(dev, "ceva,p1-burst-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	/* Read phy RETRY interval timing value from device-tree */
->  	if (of_property_read_u16_array(np, "ceva,p0-retry-params",
->  					(u16 *)&cevapriv->pp5c[0], 2) < 0) {
->  		dev_warn(dev, "ceva,p0-retry-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	if (of_property_read_u16_array(np, "ceva,p1-retry-params",
->  					(u16 *)&cevapriv->pp5c[1], 2) < 0) {
->  		dev_warn(dev, "ceva,p1-retry-params property not defined\n");
-> -		return -EINVAL;
-> +		rc = -EINVAL;
-> +		goto disable_phys;
->  	}
->  
->  	/*
-> @@ -321,6 +330,16 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  
->  disable_resources:
->  	ahci_platform_disable_resources(hpriv);
-
-Looking at ahci_platform_disable_resources(),
-it calls ahci_platform_disable_phys(), which calls
-phy_power_off() and phy_exit().
-
-This means that if you jump to disable_resources,
-you will call phy_power_off() and phy_exit() twice.
-Looking at the phy code, it does not handle these functions being called
-twice.
-
-
-You already call ahci_platform_get_resources(), so why don't you just set
-AHCI_PLATFORM_GET_RESETS, that way you should be able to remove a bunch of
-duplicated code from this driver.
-
-One major difference seems to be that ahci_platform_enable_resources() does
-not assert reset before deasserting it.
-Can't we just add a reset_control_assert() + some small usleep
-(e.g. usleep_range(1000, 1500)) before the reset_control_deassert()?
-Have you tried doing that?
+If it does not work to simply add a reset_control_assert() + usleep(),
+considering that this function is essentially a copy paste of
+ahci_platform_enable_resources(), I would still prefer the addition of
+a new flag, and keep the extra logic needed in libahci_platform.c, so that
+the code is kept in the same place, rather than to copy paste the whole
+function to your driver.
 
 
 Kind regards,
 Niklas
 
-> +
-> +disable_phys:
-> +	while (--i >= 0) {
-> +		phy_power_off(hpriv->phys[i]);
-> +		phy_exit(hpriv->phys[i]);
-> +	}
-> +
-> +disable_clks:
-> +	ahci_platform_disable_clks(hpriv);
+>  		/* Assert the controller reset */
+>  		reset_control_assert(cevapriv->rst);
+>  
+> @@ -340,6 +345,9 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  disable_clks:
+>  	ahci_platform_disable_clks(hpriv);
+>  
+> +disable_regulator:
+> +	ahci_platform_disable_regulators(hpriv);
 > +
 >  	return rc;
 >  }
