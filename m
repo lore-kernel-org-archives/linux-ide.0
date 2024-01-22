@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 213FF3AC01;
-	Mon, 22 Jan 2024 10:23:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32BF43A8C2;
+	Mon, 22 Jan 2024 10:28:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705919012; cv=none; b=Ek9SIFKL4Vivt/7PjQ7fMEHtKun+ww01PpaJZI9E0bfKCyY2PWvDswm6zxs9R2rxCaYJauI66cb5wbESQl5G9T7QIhovWC5ITGOjPymEV+TAf6Gwn0GREFZmhrdt+c+aH6Tp2XQpwoAz7iocdFNoFGIrHsn+l+qE7BOPK24eHIw=
+	t=1705919337; cv=none; b=Jfz8mw9Obuuzx+D0/xapo6HFQbYGiGM9jdEkspoDWCm13Rs5mrSunkp/aq/l0QhiKG9eM9J3ijkfnRnDfIWZiTWlKmNnWn+Bg1xoVlydYBUzKOv1HHz2YTuLFAJfyN7EyJ3IeaS8VsCBUhkWSWyPwxGE3uso+g6Clj3W/0XoPcE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705919012; c=relaxed/simple;
-	bh=Viq3Gt3uXsNc55QdCbV4jAxAoQZ5O2Q6OyzzTlHeaWg=;
+	s=arc-20240116; t=1705919337; c=relaxed/simple;
+	bh=95rHbImR/xTdye5RZNlBGJeqFbCDoI6e9sN2Lxr2wcc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SPXvNorX2C8Rtx0sJHAbFOlmQ33xD419JJVrMjVA7FOUZPqw7SgHYtcTbEEnfNZKdu1uNx1id+1YpaawMhDOD+TYV1Dt+LTxnWIEiLUGA+Z2Elq0RHukVUlavvJj8nUguUom126mWYi4BjeZBtztCDme0fy0w2tbQ1yLs3dD0B0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o+t94u7h; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=BGPKB0CzRBvrTZfX/LtpFtRnbSoqA4PO4ogPYee+1dGH9kxnv08BnbUYbvptxbgeK9MXFx+PY7MBHKOrSr3BWB0vPDkz99huRvS5eDxnFE9YSaTcGBc2yX8qcq2VpfMJ/DHBUx2Tu/7U78p9tFGNwgMShFm41WtopfdRpKAnCIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kbhOMe24; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o+t94u7h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C17BC433F1;
-	Mon, 22 Jan 2024 10:23:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kbhOMe24"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C3FC433F1;
+	Mon, 22 Jan 2024 10:28:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705919011;
-	bh=Viq3Gt3uXsNc55QdCbV4jAxAoQZ5O2Q6OyzzTlHeaWg=;
+	s=k20201202; t=1705919336;
+	bh=95rHbImR/xTdye5RZNlBGJeqFbCDoI6e9sN2Lxr2wcc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=o+t94u7h/GfVo1LTBIJCVvN6iikLSbLbGVeGamUL+rL/RMIxUm8R3yVfWrrl1IM5J
-	 2QSttI+mP8qNiZVKFNipPsPb/PblfHJ5xYxUZLDqJPEDlG9LVY5es7fnRT8fuMbdxV
-	 F9DMmVUnq9WWBxu0BTWK57GAIu3s8zD72uT+25DbjARpogBy0yBEut5pFMBKZtxwkx
-	 YobDbm2sweKOOCXhvSgUixX0S8z+D4cEwwK6Xnv4hTs3Y2BZ6KS5cIGi9Y45Z7aCV+
-	 hlAqcIrAvqcKfUbH62PLIZrbh5o4Suxs2rKoItxuOxcPvyoDK2a5lO0QftfmR6CS8j
-	 OZhGr7Ic6QDwA==
-Message-ID: <5f6debb5-666a-4e19-b483-d85186f3959f@kernel.org>
-Date: Mon, 22 Jan 2024 19:23:27 +0900
+	b=kbhOMe24YOTG+vzVrgXLbepwRfyTu0U3/MOGSTxTMYXHWZaWBn9a5fhsZTFCIjLrM
+	 xIG1m/A16kfEOsltZWQTYn5/FbdQ/kn84qLAfjQd45GPNAmIA34qH64DlokEFH11Qn
+	 MxyTqsFySR0QPCCzeq1LTOmDydGoKJM6SfIy1bZw15rR8UY8M0gRwO3iE93Cw4Wn1x
+	 DYHMNKoHbk4olo9SoBhXVpZtA8b1Q4zTB1/5pkHUXkhE5nxBnOeUMcZZ8nDLG0Mhqp
+	 /HCngCcyX4lr8esCDzdPv5tG4D0LwP/Ae1n6uPS1m4VCzYRUGBTu6ujKjSVwxRdVaO
+	 RL6cPDAqsAjwA==
+Message-ID: <069e3e67-fd93-4af4-905e-d4087a5b3153@kernel.org>
+Date: Mon, 22 Jan 2024 19:28:53 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,127 +35,41 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] dt-bindings: xilinx: replace Piyush Mehta maintainership
+Subject: Re: [PATCH 1/2] ata: ahci_ceva: fix error handling for Xilinx GT PHY
+ support
 Content-Language: en-US
 To: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>, cassel@kernel.org,
- robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
- linus.walleij@linaro.org, brgl@bgdev.pl, michal.simek@amd.com,
- p.zabel@pengutronix.de, gregkh@linuxfoundation.org, piyush.mehta@amd.com,
- mubin.sayyed@amd.com
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-usb@vger.kernel.org, git@amd.com
-References: <1705664181-722937-1-git-send-email-radhey.shyam.pandey@amd.com>
+ richardcochran@gmail.com, piyush.mehta@xilinx.com, axboe@kernel.dk,
+ michal.simek@amd.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, git@amd.com,
+ Piyush Mehta <piyush.mehta@amd.com>
+References: <1705604904-471889-1-git-send-email-radhey.shyam.pandey@amd.com>
+ <1705604904-471889-2-git-send-email-radhey.shyam.pandey@amd.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <1705664181-722937-1-git-send-email-radhey.shyam.pandey@amd.com>
+In-Reply-To: <1705604904-471889-2-git-send-email-radhey.shyam.pandey@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 1/19/24 20:36, Radhey Shyam Pandey wrote:
-> As Piyush is leaving AMD, he handed over ahci-ceva, ZynqMP Mode Pin GPIO
-> controller, Zynq UltraScale+ MPSoC and Versal reset, Xilinx SuperSpeed
-> DWC3 USB SoC controller, Microchip USB5744 4-port Hub Controller and
-> Xilinx udc controller maintainership duties to Mubin and Radhey.
+On 1/19/24 04:08, Radhey Shyam Pandey wrote:
+> From: Piyush Mehta <piyush.mehta@amd.com>
 > 
+> Platform clock and phy error resources are not cleaned up in Xilinx GT PHY
+> error path. To fix introduce error label for ahci_platform_disable_clks and
+> phy_power_off/exit and call them in error path. No functional change.
+> 
+> Fixes: 9a9d3abe24bb ("ata: ahci: ceva: Update the driver to support xilinx GT phy")
+> Signed-off-by: Piyush Mehta <piyush.mehta@amd.com>
 > Signed-off-by: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
-
-Acked-by from Mubin is missing.
-
 > ---
->  Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml      | 3 ++-
->  .../devicetree/bindings/gpio/xlnx,zynqmp-gpio-modepin.yaml     | 3 ++-
->  Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml | 3 ++-
->  Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml         | 3 ++-
->  Documentation/devicetree/bindings/usb/microchip,usb5744.yaml   | 3 ++-
->  Documentation/devicetree/bindings/usb/xlnx,usb2.yaml           | 3 ++-
->  6 files changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> index b29ce598f9aa..9952e0ef7767 100644
-> --- a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> +++ b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Ceva AHCI SATA Controller
->  
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->  
->  description: |
->    The Ceva SATA controller mostly conforms to the AHCI interface with some
-> diff --git a/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-modepin.yaml b/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-modepin.yaml
-> index b1fd632718d4..bb93baa88879 100644
-> --- a/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-modepin.yaml
-> +++ b/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-modepin.yaml
-> @@ -12,7 +12,8 @@ description:
->    PS_MODE). Every pin can be configured as input/output.
->  
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->  
->  properties:
->    compatible:
-> diff --git a/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml b/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml
-> index 49db66801429..1f1b42dde94d 100644
-> --- a/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml
-> +++ b/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Zynq UltraScale+ MPSoC and Versal reset
->  
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->  
->  description: |
->    The Zynq UltraScale+ MPSoC and Versal has several different resets.
-> diff --git a/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml b/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml
-> index bb373eb025a5..00f87a558c7d 100644
-> --- a/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml
-> +++ b/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Xilinx SuperSpeed DWC3 USB SoC controller
->  
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->  
->  properties:
->    compatible:
-> diff --git a/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml b/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml
-> index 6d4cfd943f58..445183d9d6db 100644
-> --- a/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml
-> +++ b/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml
-> @@ -16,8 +16,9 @@ description:
->    USB 2.0 traffic.
->  
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
->    - Michal Simek <michal.simek@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->  
->  properties:
->    compatible:
-> diff --git a/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml b/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml
-> index 868dffe314bc..a7f75fe36665 100644
-> --- a/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml
-> +++ b/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Xilinx udc controller
->  
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->  
->  properties:
->    compatible:
+> ---
+
+Your patch format is strange... There is one too many "---" line here.
+
+Other than that, looks OK to me.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
 
 -- 
 Damien Le Moal
