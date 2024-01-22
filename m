@@ -1,554 +1,234 @@
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2068.outbound.protection.outlook.com [40.107.94.68])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 334733A8C5
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2024 10:32:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.94.68
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705919526; cv=fail; b=TtncKGynZkbSWkuw8Wh50mLnFupj8y5/iRtEI7C0Dh1YYYhWItYs1/S448FUbA3TLKKK+7zEv8UGc7s2xxy/qy+n5lT3VRFm6t1JSBRD/244Pvabi/e2j7uj1OSQ0KxoMnVTlAJa9+Y34hHlkTmUD676BsC+wMYvew+i3xwDP4E=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705919526; c=relaxed/simple;
-	bh=fTr+E2zJ0Dghdvz+5hJLZA8KkNKIG44bQNsIW8rK7KU=;
-	h=Content-Type:From:To:CC:Subject:Date:Message-ID:References:
-	 In-Reply-To:MIME-Version; b=OVTRzUYQnHLGxWDNZpng7lwhQrIxtEiWDa3UW29YGFJBj14DAOjWp4fQxvlrEb0rxFQ4Xg1BM9ZqpTeuwrO5zM0vBFfEZjfvqJYPIhUs4s/ZM4eTN651/OTLDrezE6+Q/2dtN5rfwOiEZGj51lYFVarXaDxa2eB3jHNoTmf84c8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=IcQGQB/B; arc=fail smtp.client-ip=40.107.94.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FF8E3C693;
+	Mon, 22 Jan 2024 13:02:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1705928578; cv=none; b=d4YxRHdTmmBYv7d+BNZun9B1HeznnyFZNxyYaiFCPCetuxAZmOyNeg/c/6I6eYrAzwfbzRjsn6jfPXxUvPbEZ9+IGXQqRdCQBC5ua0TNsZYZdX1RfonbuUnnvprX+MiWbhcmP7IOM6rfuG+rDg0i7hStbU1L808valnIfJzsBOg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1705928578; c=relaxed/simple;
+	bh=HyHjYdHa+L59MRE2OXPZJnIepLxyNNeoKImVqWz4UOo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SKx/wI/pb0yKLujb+17srcxZ+ZusKjhT+zCrqz7AeX1iX1CsII8dzEn2+iJJAR+O89LG+Pa9fkaP4ok47N0iyEYJT6WcnnHCXeFWQ/CYTyI2+xvAOfULbRBuoFfePBxLUSuswuyqlMvxW1K63OeNxOk+aJc+c7htuuZMMyVQzhg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZxcRMHt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="IcQGQB/B"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=bscIhd2kIyKwgqf119Y9q13S0KlgrkDqVzb7pw0DNQfIpFhxskkeG3nuUEwyaTEql/bF9Dxh9A/r7d4nvV65E/bmI0y6xzuhw1EpUpK1V+Eu1u7oBwR9wS5A6UgyyLItBgeWe8IxtWxwwfUToPRpPb2TDYqn/Bj2caUo48HH0Y6qOIDkAzYAiUT+umBt4nZLtWhiPAcp4xyOq0ehC4d+DbvCADl2Y0c1kXIWLXnQX7wFgKXTcGbHeWIemOVc+/qG/j1RO4ROAyWTU9i02+6bVyKTs8WGX/EbEnGhXdtxlPUTRr9tQBTYkTsiFcmQifuHzis/Sy0kDqqTY6nptI+w5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=h/PLPUGrNg0wcj9q7CO1Bwyv+1A+ZNthgmAe1huAJ3s=;
- b=SKgXV5FcIf1ph7zpZ9jubZH41vUW8wKg51ZN1635VzKZFVfiuWW2QdA/eql99JvVfTMIst99FGEFt60/iO4Kg7cqIMEw+cO6m67PCfz/uSYSq6AlxPL5+95R9E2o0VKyUM76MGWZJM8GEdYF/AHP6it60X/cOC56n+3WL0xFucQb0uquzBH6N8G6ISV53mHtzX00zpMYaxUWJsBj6V6C4H9yFmrP7fAmHFGWZDTGDq993VwnP7GnX3Es2Bo/0Xjg9DCcRfbraNC6oNVPoX5r7A3cZmNtZlibMFRWxyDcj/NsgTPJS9bTMXqVX00VXkWRfe4UoJt0wHKLcK8ZSGETpw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=h/PLPUGrNg0wcj9q7CO1Bwyv+1A+ZNthgmAe1huAJ3s=;
- b=IcQGQB/BBUmow4dpLA2u6T7is7arJood18hLKFbqjTlBT4+hIcK6JvdwqqqZSZmUvKz5aSAOTvtZbcdUVjm91YKpGVVCfuNGGGnA6R7bcXDjwJCaE5RXIJjbkaaddfNiuV+J9lI7iEfS/FzRQFBumK+BhX4NeICPSN5n8IGFZ84=
-Received: from DM4PR12MB5938.namprd12.prod.outlook.com (2603:10b6:8:69::9) by
- CH2PR12MB4875.namprd12.prod.outlook.com (2603:10b6:610:35::24) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7202.32; Mon, 22 Jan 2024 10:32:01 +0000
-Received: from DM4PR12MB5938.namprd12.prod.outlook.com
- ([fe80::2436:a622:c7ca:cbcb]) by DM4PR12MB5938.namprd12.prod.outlook.com
- ([fe80::2436:a622:c7ca:cbcb%4]) with mapi id 15.20.7202.031; Mon, 22 Jan 2024
- 10:32:01 +0000
-Content-Type: multipart/mixed;
-	boundary="_000_DM4PR12MB59388E96AFBE5C1AD3A7C9FF9D752DM4PR12MB5938namp_"
-From: "Sayyed, Mubin" <mubin.sayyed@amd.com>
-To: "Pandey, Radhey Shyam" <radhey.shyam.pandey@amd.com>, "dlemoal@kernel.org"
-	<dlemoal@kernel.org>, "cassel@kernel.org" <cassel@kernel.org>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"krzysztof.kozlowski+dt@linaro.org" <krzysztof.kozlowski+dt@linaro.org>,
-	"conor+dt@kernel.org" <conor+dt@kernel.org>, "linus.walleij@linaro.org"
-	<linus.walleij@linaro.org>, "brgl@bgdev.pl" <brgl@bgdev.pl>, "Simek, Michal"
-	<michal.simek@amd.com>, "p.zabel@pengutronix.de" <p.zabel@pengutronix.de>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "Mehta, Piyush"
-	<piyush.mehta@amd.com>, "Pandey, Radhey Shyam" <radhey.shyam.pandey@amd.com>
-CC: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-usb@vger.kernel.org"
-	<linux-usb@vger.kernel.org>, "git (AMD-Xilinx)" <git@amd.com>
-Subject: RE: [PATCH] dt-bindings: xilinx: replace Piyush Mehta maintainership
-Thread-Topic: [PATCH] dt-bindings: xilinx: replace Piyush Mehta maintainership
-Thread-Index: AQHaSsvSozYxmIi7AkmoVI8kTsLKPbDlpl8Q
-Date: Mon, 22 Jan 2024 10:32:01 +0000
-Message-ID:
- <DM4PR12MB59388E96AFBE5C1AD3A7C9FF9D752@DM4PR12MB5938.namprd12.prod.outlook.com>
-References: <1705664181-722937-1-git-send-email-radhey.shyam.pandey@amd.com>
-In-Reply-To: <1705664181-722937-1-git-send-email-radhey.shyam.pandey@amd.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
- <DM4PR12MB59388E96AFBE5C1AD3A7C9FF9D752@DM4PR12MB5938.namprd12.prod.outlook.com>
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM4PR12MB5938:EE_|CH2PR12MB4875:EE_
-x-ms-office365-filtering-correlation-id: 23e7ea79-c137-42c5-32ab-08dc1b355eb4
-x-ld-processed: 3dd8961f-e488-4e60-8e11-a82d994e183d,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info:
- TFrhBBMnGZeHrf8xH0ToqazzC+oklNOzn9Czlw/SosxfaoT2lnETrMgvfrIaoWvqq71eRqORmw3KCkUhFrcDzMG7rLezqY3jJYcJn99zsC5tEqwYEl7jaisciLdrBU1AXL7kQx5i7N1g/3WFcfhJlHsw7vCik1k/CUMVJTONJtKB7yfGGofirL/krn0GVZ2DsWG9UZ4S4djw+/neN7davcfLeDPxNAUqejqgLjKri1sTphyTh0KkJX1ZA0IsuNZIVVHKHe6L2SX0bnDYUA3AAgQdAVf2OEZ1dJUybux2ZfLbF765rm8xuMDGAGudljbWVsgBOeJlGoDHuYE3VQkAMc9se/t5z1dy4pJLgLNHkEBIVNSVYo97eGzvx7Kff/QC4p+g9aRlen8n5FSzUy1aK6/R4/QgwCQInFPG70cITcdGDO5uqzaBF/ZXkAhUS5QzCaZswwcblW1xa5aTTDYrlaN9u44tuLIEA2Mr4ah563fMESHvmFtev6e8hVz0aWfXh/kkGRVTMjTtCzHZI/1ZswxVazfde7hkJ5IU85dsdxfmtYivZC05MPAazm6tQyw1Xe8ihyXj/tHiiEe9L6oTfnsuSv8ejuz42F4xHKMmOr2mMFYqw+Ok7OP/LE5rHbB0
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR12MB5938.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(136003)(376002)(39860400002)(366004)(396003)(230922051799003)(186009)(451199024)(1800799012)(64100799003)(921011)(38070700009)(7696005)(6506007)(53546011)(122000001)(71200400001)(478600001)(966005)(55016003)(9686003)(316002)(8676002)(8936002)(4326008)(52536014)(38100700002)(76116006)(54906003)(110136005)(64756008)(66446008)(66946007)(6636002)(66476007)(66556008)(83380400001)(26005)(86362001)(41300700001)(33656002)(5660300002)(2906002)(7416002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?SATEIX7X+jgRdRxXOtXdYt1v67jKHnZZxJyFyBUpzny0jyAPBjJEERZQCvvo?=
- =?us-ascii?Q?JLYKTBRA0p5pED1HBzVBZlW/BAa46Y+1ho0jhDkGGDY5UPqjt0ncaGxkHUY5?=
- =?us-ascii?Q?NdcavuJRVMCHjPbWmodrVDsbH9+4hR0fzRSOIn5oL93SYZmAWqTiT/ChtDfC?=
- =?us-ascii?Q?ui6eKEk4CpKr1tuPcC4wGNz48TZoexHtOB2VOoyvRXuXlmct1yz85qV0yGxq?=
- =?us-ascii?Q?ZA3mtarOJdCRiZDpX6S11AaAjhO/fKvFjAVHjudVrPnEYq73fcAcVhhn6MIl?=
- =?us-ascii?Q?FYftv9WApNWaOu8CebrZ2NiMef1vilsYFGQgtVUF+evUhUoAz2RmG2EBYgqG?=
- =?us-ascii?Q?P4RshIIaQzx8jERNA5N0K9jlr8+86AVwsSgYhltXqsn3U/8NsDNX7GQtMoUl?=
- =?us-ascii?Q?lHiUty4ozmEyAflD6xEp5bnOLmoLRjLWd02M2FpjofHpNKs69splAWcoc8y1?=
- =?us-ascii?Q?RGObphxbMvacP2gG0A5uQQWJtY4xJXxMAUEDXtRNExyXflED6Hy+3KJ0U1eZ?=
- =?us-ascii?Q?PesdF75D6vf7MxE6fZL2ONnZf6ir5o2hGHbEeMYLqaeiREJpSzYdI57MHHzE?=
- =?us-ascii?Q?5x5GzctD0E5cJJJoX2TH5aAVk4YngwjzmOmjjn+IgK0ZcHH2H9Li5N4ruwgv?=
- =?us-ascii?Q?pKJsoA/lfwUjN+Ezy7QX0cuXGUUrxTWzM0SysAkd7njnumVlr9Twy7txs+TT?=
- =?us-ascii?Q?0z0vikP3PLpedxgY5RuPJHrkYQzZxeMi28KoPZNnqwP2chSiDTZWQnrVZvWx?=
- =?us-ascii?Q?Bku/qkJiQ4T5wYLfApt0u7Bl5jy5XHp1KbGFlVI6B2HqxEPVY38eqrDFNr0Q?=
- =?us-ascii?Q?qfmQCA898j5okPxkfe7Xvmu2VESOHF9bb+r0WNfYF5oFY3vqY5GnH2BSTeVG?=
- =?us-ascii?Q?kY/gOyxjUmc/PLeN6Kw37XCAV5rLQKBCeLjCL9CNDztyJ1Ej3jg00dZbxh/g?=
- =?us-ascii?Q?TTecOEtme9iqjK24o0P8pZkyY7U1UWYKXgl2n/OE/6CCmCYlIq1KWgUnNmbU?=
- =?us-ascii?Q?TQ3xdQaEycq9kb1AfDs670S8mIMPqNMwzXv8mCSgir2KDhd4IJ7qTqcSPBuI?=
- =?us-ascii?Q?ZqUhqZ5x7TYeXWm9cDm0/eaIQppgbf16dwVECDKEiImNBqmYlhKUiiu5yLVK?=
- =?us-ascii?Q?JCg2JHLw0IXFk3aWo9GumrN6ly8f8YE7OmgPQsdMg8RvSfFLOkPWuwvOc6LA?=
- =?us-ascii?Q?8LYsWY2130GGx/5suA9DCKhBMO2+oOd2XUhzWvGxSOAenlTAsiSPY4ByXp3h?=
- =?us-ascii?Q?URgVOKhQHlNZ7V04I6APGKP29cehoDQnpOTeW4h1GWaxyVi8bzhtRfJQb+dn?=
- =?us-ascii?Q?p4+T3HoQaG7gTTz/7ILLS8/DfLFmlqwPqwVQKB6fY1ngTfDujdb/iZxz/cCB?=
- =?us-ascii?Q?Ze5+AyXN9ipZQiU0xNbnPq3MqyVdfKdtZrTVFrOPHpaSDmSBQurTkLjAftCs?=
- =?us-ascii?Q?/DUgn8pnfJNQiwGRL8DcenxSwJHwgd0aKIqRkF0JNGgMtAVryef2GpsNddZs?=
- =?us-ascii?Q?F0I03QLXqDRP+YTR+fIKaCZ+9MYcPgCfOTV//fPORYlylwGYD0MdsOPron1Y?=
- =?us-ascii?Q?qME0+vSchA/bLsswwYg=3D?=
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZxcRMHt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6313EC43394;
+	Mon, 22 Jan 2024 13:02:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1705928577;
+	bh=HyHjYdHa+L59MRE2OXPZJnIepLxyNNeoKImVqWz4UOo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jZxcRMHtb0FwHVxpUFkqUmkIFmkxdncVqtzpfyOPF6x1irzegi2AhaiocRE4emT+S
+	 DghN1LP9G0ctAKEX60ln2k8dFAjAkhsANBOt1TNnA6M15Z+yDtFmWV4kNOVwXEpDll
+	 20kR7PWBmirzynSbndcCTQLbGxq1avq+6b7o87e7ZlQxfQ8vEtW8/xjD+eBVGRS3S3
+	 xf4SvifTr62lmmXsDolcQZg5YEU94BuXPsT7YB1/0aZ6VNmvJE00/MJvw3H7IRL76J
+	 ZJY8Y48xrBjNfw+19qgXLeXLWVik4llhztCcpD6DJgZWelfETSvvHuY+BM3n57sq3q
+	 dcEKEu+vMEuxw==
+Date: Mon, 22 Jan 2024 14:02:48 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
+Cc: dlemoal@kernel.org, richardcochran@gmail.com, piyush.mehta@xilinx.com,
+	axboe@kernel.dk, michal.simek@amd.com, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, git@amd.com,
+	Piyush Mehta <piyush.mehta@amd.com>
+Subject: Re: [PATCH 1/2] ata: ahci_ceva: fix error handling for Xilinx GT PHY
+ support
+Message-ID: <Za5neDYN9Dh+GwRG@x1-carbon>
+References: <1705604904-471889-1-git-send-email-radhey.shyam.pandey@amd.com>
+ <1705604904-471889-2-git-send-email-radhey.shyam.pandey@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR12MB5938.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 23e7ea79-c137-42c5-32ab-08dc1b355eb4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Jan 2024 10:32:01.5765
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: X8EwNoiF+NF5gh9YOm7Zxt3PBMInuwetlP2ulmQamAkv83RMBrk5fF8LzoUDtfa1pA7b6Orxe4Tr8L94z7Yr+g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4875
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1705604904-471889-2-git-send-email-radhey.shyam.pandey@amd.com>
 
---_000_DM4PR12MB59388E96AFBE5C1AD3A7C9FF9D752DM4PR12MB5938namp_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hello Radhey,
 
-> -----Original Message-----
-> From: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
-> Sent: Friday, January 19, 2024 5:06 PM
-> To: dlemoal@kernel.org; cassel@kernel.org; robh+dt@kernel.org;
-> krzysztof.kozlowski+dt@linaro.org; conor+dt@kernel.org;
-> linus.walleij@linaro.org; brgl@bgdev.pl; Simek, Michal
-> <michal.simek@amd.com>; p.zabel@pengutronix.de;
-> gregkh@linuxfoundation.org; Mehta, Piyush <piyush.mehta@amd.com>;
-> Sayyed, Mubin <mubin.sayyed@amd.com>; Pandey, Radhey Shyam
-> <radhey.shyam.pandey@amd.com>
-> Cc: linux-ide@vger.kernel.org; devicetree@vger.kernel.org; linux-
-> kernel@vger.kernel.org; linux-gpio@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linux-usb@vger.kernel.org; git (AMD-Xilinx)
-> <git@amd.com>
-> Subject: [PATCH] dt-bindings: xilinx: replace Piyush Mehta maintainership
->=20
-> As Piyush is leaving AMD, he handed over ahci-ceva, ZynqMP Mode Pin GPIO
-> controller, Zynq UltraScale+ MPSoC and Versal reset, Xilinx SuperSpeed
-> DWC3 USB SoC controller, Microchip USB5744 4-port Hub Controller and Xili=
-nx
-> udc controller maintainership duties to Mubin and Radhey.
->=20
+On Fri, Jan 19, 2024 at 12:38:23AM +0530, Radhey Shyam Pandey wrote:
+> From: Piyush Mehta <piyush.mehta@amd.com>
+> 
+> Platform clock and phy error resources are not cleaned up in Xilinx GT PHY
+> error path. To fix introduce error label for ahci_platform_disable_clks and
+> phy_power_off/exit and call them in error path. No functional change.
+> 
+> Fixes: 9a9d3abe24bb ("ata: ahci: ceva: Update the driver to support xilinx GT phy")
+> Signed-off-by: Piyush Mehta <piyush.mehta@amd.com>
 > Signed-off-by: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
-Acked-by: Mubin Sayyed <mubin.sayyed@amd.com>
-
-Thanks,
-Mubin
 > ---
->  Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml      | 3 ++-
->  .../devicetree/bindings/gpio/xlnx,zynqmp-gpio-modepin.yaml     | 3 ++-
->  Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml | 3 ++-
->  Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml         | 3 ++-
->  Documentation/devicetree/bindings/usb/microchip,usb5744.yaml   | 3 ++-
->  Documentation/devicetree/bindings/usb/xlnx,usb2.yaml           | 3 ++-
->  6 files changed, 12 insertions(+), 6 deletions(-)
->=20
-> diff --git a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> index b29ce598f9aa..9952e0ef7767 100644
-> --- a/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> +++ b/Documentation/devicetree/bindings/ata/ceva,ahci-1v84.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Ceva AHCI SATA Controller
->=20
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->=20
->  description: |
->    The Ceva SATA controller mostly conforms to the AHCI interface with so=
-me
-> diff --git a/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-
-> modepin.yaml b/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-
-> modepin.yaml
-> index b1fd632718d4..bb93baa88879 100644
-> --- a/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-
-> modepin.yaml
-> +++ b/Documentation/devicetree/bindings/gpio/xlnx,zynqmp-gpio-
-> modepin.ya
-> +++ ml
-> @@ -12,7 +12,8 @@ description:
->    PS_MODE). Every pin can be configured as input/output.
->=20
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->=20
->  properties:
->    compatible:
-> diff --git a/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.ya=
-ml
-> b/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml
-> index 49db66801429..1f1b42dde94d 100644
-> --- a/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml
-> +++ b/Documentation/devicetree/bindings/reset/xlnx,zynqmp-reset.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Zynq UltraScale+ MPSoC and Versal reset
->=20
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->=20
->  description: |
->    The Zynq UltraScale+ MPSoC and Versal has several different resets.
-> diff --git a/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml
-> b/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml
-> index bb373eb025a5..00f87a558c7d 100644
-> --- a/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml
-> +++ b/Documentation/devicetree/bindings/usb/dwc3-xilinx.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Xilinx SuperSpeed DWC3 USB SoC controller
->=20
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->=20
->  properties:
->    compatible:
-> diff --git a/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml
-> b/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml
-> index 6d4cfd943f58..445183d9d6db 100644
-> --- a/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml
-> +++ b/Documentation/devicetree/bindings/usb/microchip,usb5744.yaml
-> @@ -16,8 +16,9 @@ description:
->    USB 2.0 traffic.
->=20
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
->    - Michal Simek <michal.simek@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->=20
->  properties:
->    compatible:
-> diff --git a/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml
-> b/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml
-> index 868dffe314bc..a7f75fe36665 100644
-> --- a/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml
-> +++ b/Documentation/devicetree/bindings/usb/xlnx,usb2.yaml
-> @@ -7,7 +7,8 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
->  title: Xilinx udc controller
->=20
->  maintainers:
-> -  - Piyush Mehta <piyush.mehta@amd.com>
-> +  - Mubin Sayyed <mubin.sayyed@amd.com>
-> +  - Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
->=20
->  properties:
->    compatible:
-> --
+> ---
+>  drivers/ata/ahci_ceva.c | 47 +++++++++++++++++++++++++++++------------
+>  1 file changed, 33 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+> index 64f7f7d6ba84..bfc513f1d0b3 100644
+> --- a/drivers/ata/ahci_ceva.c
+> +++ b/drivers/ata/ahci_ceva.c
+> @@ -196,7 +196,7 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  	struct ahci_host_priv *hpriv;
+>  	struct ceva_ahci_priv *cevapriv;
+>  	enum dev_dma_attr attr;
+> -	int rc;
+> +	int rc, i;
+>  
+>  	cevapriv = devm_kzalloc(dev, sizeof(*cevapriv), GFP_KERNEL);
+>  	if (!cevapriv)
+> @@ -219,8 +219,6 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  		if (rc)
+>  			return rc;
+>  	} else {
+> -		int i;
+> -
+>  		rc = ahci_platform_enable_clks(hpriv);
+>  		if (rc)
+>  			return rc;
+> @@ -229,8 +227,11 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  
+>  		for (i = 0; i < hpriv->nports; i++) {
+>  			rc = phy_init(hpriv->phys[i]);
+> -			if (rc)
+> -				return rc;
+> +			if (rc) {
+> +				while (--i >= 0)
+> +					phy_exit(hpriv->phys[i]);
+
+It is ugly to have a loop both here and at the end of the function.
+Why don't you just goto disable_phys here?
+
+Just like how it is done in ahci_platform_enable_phys():
+https://github.com/torvalds/linux/blob/v6.7/drivers/ata/libahci_platform.c#L52-L54
+
+
+> +				goto disable_clks;
+> +			}
+>  		}
+>  
+>  		/* De-assert the controller reset */
+> @@ -240,7 +241,7 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  			rc = phy_power_on(hpriv->phys[i]);
+>  			if (rc) {
+>  				phy_exit(hpriv->phys[i]);
+> -				return rc;
+> +				goto disable_phys;
+>  			}
+>  		}
+>  	}
+> @@ -252,52 +253,60 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  	if (of_property_read_u8_array(np, "ceva,p0-cominit-params",
+>  					(u8 *)&cevapriv->pp2c[0], 4) < 0) {
+>  		dev_warn(dev, "ceva,p0-cominit-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	if (of_property_read_u8_array(np, "ceva,p1-cominit-params",
+>  					(u8 *)&cevapriv->pp2c[1], 4) < 0) {
+>  		dev_warn(dev, "ceva,p1-cominit-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	/* Read OOB timing value for COMWAKE from device-tree*/
+>  	if (of_property_read_u8_array(np, "ceva,p0-comwake-params",
+>  					(u8 *)&cevapriv->pp3c[0], 4) < 0) {
+>  		dev_warn(dev, "ceva,p0-comwake-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	if (of_property_read_u8_array(np, "ceva,p1-comwake-params",
+>  					(u8 *)&cevapriv->pp3c[1], 4) < 0) {
+>  		dev_warn(dev, "ceva,p1-comwake-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	/* Read phy BURST timing value from device-tree */
+>  	if (of_property_read_u8_array(np, "ceva,p0-burst-params",
+>  					(u8 *)&cevapriv->pp4c[0], 4) < 0) {
+>  		dev_warn(dev, "ceva,p0-burst-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	if (of_property_read_u8_array(np, "ceva,p1-burst-params",
+>  					(u8 *)&cevapriv->pp4c[1], 4) < 0) {
+>  		dev_warn(dev, "ceva,p1-burst-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	/* Read phy RETRY interval timing value from device-tree */
+>  	if (of_property_read_u16_array(np, "ceva,p0-retry-params",
+>  					(u16 *)&cevapriv->pp5c[0], 2) < 0) {
+>  		dev_warn(dev, "ceva,p0-retry-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	if (of_property_read_u16_array(np, "ceva,p1-retry-params",
+>  					(u16 *)&cevapriv->pp5c[1], 2) < 0) {
+>  		dev_warn(dev, "ceva,p1-retry-params property not defined\n");
+> -		return -EINVAL;
+> +		rc = -EINVAL;
+> +		goto disable_phys;
+>  	}
+>  
+>  	/*
+> @@ -321,6 +330,16 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  
+>  disable_resources:
+>  	ahci_platform_disable_resources(hpriv);
+
+Looking at ahci_platform_disable_resources(),
+it calls ahci_platform_disable_phys(), which calls
+phy_power_off() and phy_exit().
+
+This means that if you jump to disable_resources,
+you will call phy_power_off() and phy_exit() twice.
+Looking at the phy code, it does not handle these functions being called
+twice.
+
+
+You already call ahci_platform_get_resources(), so why don't you just set
+AHCI_PLATFORM_GET_RESETS, that way you should be able to remove a bunch of
+duplicated code from this driver.
+
+One major difference seems to be that ahci_platform_enable_resources() does
+not assert reset before deasserting it.
+Can't we just add a reset_control_assert() + some small usleep
+(e.g. usleep_range(1000, 1500)) before the reset_control_deassert()?
+Have you tried doing that?
+
+
+Kind regards,
+Niklas
+
+> +
+> +disable_phys:
+> +	while (--i >= 0) {
+> +		phy_power_off(hpriv->phys[i]);
+> +		phy_exit(hpriv->phys[i]);
+> +	}
+> +
+> +disable_clks:
+> +	ahci_platform_disable_clks(hpriv);
+> +
+>  	return rc;
+>  }
+>  
+> -- 
 > 2.34.1
-
-
---_000_DM4PR12MB59388E96AFBE5C1AD3A7C9FF9D752DM4PR12MB5938namp_
-Content-Disposition: attachment; filename="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Type: application/ms-tnef; name="winmail.dat"
-
-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
-AGEAeQB5AGUAZABAAGEAbQBkAC4AYwBvAG0AAAAAAB8AZAABAAAACgAAAFMATQBUAFAAAAAAAAIB
-QQABAAAAaAAAAAAAAACBKx+kvqMQGZ1uAN0BD1QCAAAAgFMAYQB5AHkAZQBkACwAIABNAHUAYgBp
-AG4AAABTAE0AVABQAAAAbQB1AGIAaQBuAC4AcwBhAHkAeQBlAGQAQABhAG0AZAAuAGMAbwBtAAAA
-HwACXQEAAAAqAAAAbQB1AGIAaQBuAC4AcwBhAHkAeQBlAGQAQABhAG0AZAAuAGMAbwBtAAAAAAAf
-AOVfAQAAADIAAABzAGkAcAA6AG0AdQBiAGkAbgAuAHMAYQB5AHkAZQBkAEAAYQBtAGQALgBjAG8A
-bQAAAAAAHwAaDAEAAAAcAAAAUwBhAHkAeQBlAGQALAAgAE0AdQBiAGkAbgAAAB8AHwwBAAAAKgAA
-AG0AdQBiAGkAbgAuAHMAYQB5AHkAZQBkAEAAYQBtAGQALgBjAG8AbQAAAAAAHwAeDAEAAAAKAAAA
-UwBNAFQAUAAAAAAAAgEZDAEAAABoAAAAAAAAAIErH6S+oxAZnW4A3QEPVAIAAACAUwBhAHkAeQBl
-AGQALAAgAE0AdQBiAGkAbgAAAFMATQBUAFAAAABtAHUAYgBpAG4ALgBzAGEAeQB5AGUAZABAAGEA
-bQBkAC4AYwBvAG0AAAAfAAFdAQAAACoAAABtAHUAYgBpAG4ALgBzAGEAeQB5AGUAZABAAGEAbQBk
-AC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBOAG8AdABlAAAAAAADAPE/
-CQQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAAA3PocP1eA2QokUY1Fq2fDZAwAXAAEAAABA
-ADkAgObjOx5N2gFAAAgwKjU5PB5N2gELACkAAAAAAB8A2T8BAAAA/gEAAD4AIAAtAC0ALQAtAC0A
-TwByAGkAZwBpAG4AYQBsACAATQBlAHMAcwBhAGcAZQAtAC0ALQAtAC0ADQAKAD4AIABGAHIAbwBt
-ADoAIABSAGEAZABoAGUAeQAgAFMAaAB5AGEAbQAgAFAAYQBuAGQAZQB5ACAAPAByAGEAZABoAGUA
-eQAuAHMAaAB5AGEAbQAuAHAAYQBuAGQAZQB5AEAAYQBtAGQALgBjAG8AbQA+AA0ACgA+ACAAUwBl
-AG4AdAA6ACAARgByAGkAZABhAHkALAAgAEoAYQBuAHUAYQByAHkAIAAxADkALAAgADIAMAAyADQA
-IAA1ADoAMAA2ACAAUABNAA0ACgA+ACAAVABvADoAIABkAGwAZQBtAG8AYQBsAEAAawBlAHIAbgBl
-AGwALgBvAHIAZwA7ACAAYwBhAHMAcwBlAGwAQABrAGUAcgBuAGUAbAAuAG8AcgBnADsAIAByAG8A
-YgBoACsAZAB0AEAAawBlAHIAbgBlAGwALgBvAHIAZwA7AA0ACgA+ACAAawByAHoAeQBzAHoAdABv
-AGYALgBrAG8AegBsAG8AdwBzAGsAaQArAGQAdABAAGwAaQBuAGEAcgBvAC4AbwByAGcAOwAgAGMA
-bwBuAG8AcgArAGQAdABAAGsAZQByAG4AZQBsAC4AbwByAGcAOwAAAAAACwAAgAggBgAAAAAAwAAA
-AAAAAEYAAAAAFIUAAAAAAAALACMAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAABhAGMA
-YwBlAHAAdABsAGEAbgBnAHUAYQBnAGUAAAAAAAEAAAAMAAAAZQBuAC0AVQBTAAAAAwAAgAggBgAA
-AAAAwAAAAAAAAEYBAAAAMgAAAEUAeABjAGgAYQBuAGcAZQBBAHAAcABsAGkAYwBhAHQAaQBvAG4A
-RgBsAGEAZwBzAAAAAAAgAAAASAAAgAggBgAAAAAAwAAAAAAAAEYBAAAAIgAAAE4AZQB0AHcAbwBy
-AGsATQBlAHMAcwBhAGcAZQBJAGQAAAAAAHnq5yM3wcVCMqsI3Bs1XrQfAACAE4/yQfSDFEGlhO7b
-WmsL/wEAAAAWAAAAQwBsAGkAZQBuAHQASQBuAGYAbwAAAAAAAQAAACoAAABDAGwAaQBlAG4AdAA9
-AE0AUwBFAHgAYwBoAGEAbgBnAGUAUgBQAEMAAAAAAB8A+j8BAAAAHAAAAFMAYQB5AHkAZQBkACwA
-IABNAHUAYgBpAG4AAAALAACACCAGAAAAAADAAAAAAAAARgAAAAAGhQAAAAAAAB8ANwABAAAAigAA
-AFIARQA6ACAAWwBQAEEAVABDAEgAXQAgAGQAdAAtAGIAaQBuAGQAaQBuAGcAcwA6ACAAeABpAGwA
-aQBuAHgAOgAgAHIAZQBwAGwAYQBjAGUAIABQAGkAeQB1AHMAaAAgAE0AZQBoAHQAYQAgAG0AYQBp
-AG4AdABhAGkAbgBlAHIAcwBoAGkAcAAAAAAAHwA9AAEAAAAKAAAAUgBFADoAIAAAAAAAAwA2AAAA
-AAADAC4AAAAAAB8AQhABAAAAggAAADwAMQA3ADAANQA2ADYANAAxADgAMQAtADcAMgAyADkAMwA3
-AC0AMQAtAGcAaQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHIAYQBkAGgAZQB5AC4AcwBoAHkA
-YQBtAC4AcABhAG4AZABlAHkAQABhAG0AZAAuAGMAbwBtAD4AAAAAAAIBcQABAAAAGwAAAAEB2krL
-0qM2MZiIuwJJqFSPJE7Cyj2w5aZfEAAfAHAAAQAAAIIAAABbAFAAQQBUAEMASABdACAAZAB0AC0A
-YgBpAG4AZABpAG4AZwBzADoAIAB4AGkAbABpAG4AeAA6ACAAcgBlAHAAbABhAGMAZQAgAFAAaQB5
-AHUAcwBoACAATQBlAGgAdABhACAAbQBhAGkAbgB0AGEAaQBuAGUAcgBzAGgAaQBwAAAAAAAfADUQ
-AQAAAKIAAAA8AEQATQA0AFAAUgAxADIATQBCADUAOQAzADgAOABFADkANgBBAEYAQgBFADUAQwAx
-AEEARAAzAEEANwBDADkARgBGADkARAA3ADUAMgBAAEQATQA0AFAAUgAxADIATQBCADUAOQAzADgA
-LgBuAGEAbQBwAHIAZAAxADIALgBwAHIAbwBkAC4AbwB1AHQAbABvAG8AawAuAGMAbwBtAD4AAAAA
-AB8AORABAAAAggAAADwAMQA3ADAANQA2ADYANAAxADgAMQAtADcAMgAyADkAMwA3AC0AMQAtAGcA
-aQB0AC0AcwBlAG4AZAAtAGUAbQBhAGkAbAAtAHIAYQBkAGgAZQB5AC4AcwBoAHkAYQBtAC4AcABh
-AG4AZABlAHkAQABhAG0AZAAuAGMAbwBtAD4AAAAAAAMA3j+fTgAACwAAgAggBgAAAAAAwAAAAAAA
-AEYAAAAAA4UAAAAAAAADAACACCAGAAAAAADAAAAAAAAARgAAAAABhQAAAAAAAAMAgBD/////AwAT
-EgAAAAACAQCAE4/yQfSDFEGlhO7bWmsL/wEAAAAuAAAASABlAGEAZABlAHIAQgBvAGQAeQBGAHIA
-YQBnAG0AZQBuAHQATABpAHMAdAAAAAAAAQAAADYAAAABAAoAAAAEAAAAAQAAABQAAAAAAAAAAAAA
-AAAAAAAAAAAAFAAAAAAAAAAAAQAA/////wAAAAAAAAsAAIATj/JB9IMUQaWE7ttaawv/AQAAABwA
-AABIAGEAcwBRAHUAbwB0AGUAZABUAGUAeAB0AAAAAQAAAAsAAIATj/JB9IMUQaWE7ttaawv/AQAA
-ACgAAABJAHMAUQB1AG8AdABlAGQAVABlAHgAdABDAGgAYQBuAGcAZQBkAAAAAQAAAAIBAIATj/JB
-9IMUQaWE7ttaawv/AQAAAEAAAABDAG8AbgB2AGUAcgBzAGEAdABpAG8AbgBUAHIAZQBlAFAAYQBy
-AGUAbgB0AFIAZQBjAG8AcgBkAEsAZQB5AAAAAQAAAC4AAAAAAAAA8Sh7r/V4pEWBE2Ly+Y24AwEA
-iUEkaRFmMkuSQH+fFmENCQAB7GkKugAAAABAAAcwrynmOx5N2gELAAIAAQAAAAMAJgAAAAAACwAr
-AAAAAAALAAYMAAAAAAIBEDABAAAARgAAAAAAAADxKHuv9XikRYETYvL5jbgDBwCJQSRpEWYyS5JA
-f58WYQ0JAAAAAAELAACJQSRpEWYyS5JAf58WYQ0JAAHeAkThAAAAAAIBEzABAAAAEAAAAKM2MZiI
-uwJJqFSPJE7Cyj0CARQwAQAAAAwAAABlAQAAZwd9aj4AAAADAFszAQAAAAMAWjYAAAAAAwBoNg0A
-AAALAPo2AQAAAB8A+D8BAAAAHAAAAFMAYQB5AHkAZQBkACwAIABNAHUAYgBpAG4AAAAfACJAAQAA
-AAYAAABFAFgAAAAAAB8AI0ABAAAAAgEAAC8ATwA9AEUAWABDAEgAQQBOAEcARQBMAEEAQgBTAC8A
-TwBVAD0ARQBYAEMASABBAE4ARwBFACAAQQBEAE0ASQBOAEkAUwBUAFIAQQBUAEkAVgBFACAARwBS
-AE8AVQBQACAAKABGAFkARABJAEIATwBIAEYAMgAzAFMAUABEAEwAVAApAC8AQwBOAD0AUgBFAEMA
-SQBQAEkARQBOAFQAUwAvAEMATgA9ADAARgA1ADcANwA1AEIAMQBEAEMANQA4ADQARgAxADYAOABC
-ADAANABFADAAQwBFADAANAA2AEUANABFAEYANwAtAFMAQQBZAFkARQBEACwAIABNAFUAQgAAAAAA
-HwAkQAEAAAAGAAAARQBYAAAAAAAfACVAAQAAAAIBAAAvAE8APQBFAFgAQwBIAEEATgBHAEUATABB
-AEIAUwAvAE8AVQA9AEUAWABDAEgAQQBOAEcARQAgAEEARABNAEkATgBJAFMAVABSAEEAVABJAFYA
-RQAgAEcAUgBPAFUAUAAgACgARgBZAEQASQBCAE8ASABGADIAMwBTAFAARABMAFQAKQAvAEMATgA9
-AFIARQBDAEkAUABJAEUATgBUAFMALwBDAE4APQAwAEYANQA3ADcANQBCADEARABDADUAOAA0AEYA
-MQA2ADgAQgAwADQARQAwAEMARQAwADQANgBFADQARQBGADcALQBTAEEAWQBZAEUARAAsACAATQBV
-AEIAAAAAAB8AMEABAAAAHAAAAFMAYQB5AHkAZQBkACwAIABNAHUAYgBpAG4AAAAfADFAAQAAABwA
-AABTAGEAeQB5AGUAZAAsACAATQB1AGIAaQBuAAAAHwA4QAEAAAAcAAAAUwBhAHkAeQBlAGQALAAg
-AE0AdQBiAGkAbgAAAB8AOUABAAAAHAAAAFMAYQB5AHkAZQBkACwAIABNAHUAYgBpAG4AAAADAFlA
-AAAAAAMAWkAAAAAAAwA3UAEAAAADAAlZAQAAAB8ACl0BAAAAKgAAAG0AdQBiAGkAbgAuAHMAYQB5
-AHkAZQBkAEAAYQBtAGQALgBjAG8AbQAAAAAAHwALXQEAAAAqAAAAbQB1AGIAaQBuAC4AcwBhAHkA
-eQBlAGQAQABhAG0AZAAuAGMAbwBtAAAAAAACARVdAQAAABIAAAACH5bYPYjkYE6OEagtmU4YPQEA
-AAIBFl0BAAAAEgAAAAIfltg9iORgTo4RqC2ZThg9AQAAAwAAgFDjYwvMnNARvNsAgF/MzgQBAAAA
-JAAAAEkAbgBkAGUAeABpAG4AZwBFAHIAcgBvAHIAQwBvAGQAZQAAABsAAAAfAACAUONjC8yc0BG8
-2wCAX8zOBAEAAAAqAAAASQBuAGQAZQB4AGkAbgBnAEUAcgByAG8AcgBNAGUAcwBzAGEAZwBlAAAA
-AAABAAAAcAAAAEkAbgBkAGUAeABpAG4AZwAgAFAAZQBuAGQAaQBuAGcAIAB3AGgAaQBsAGUAIABC
-AGkAZwBGAHUAbgBuAGUAbABQAE8ASQBJAHMAVQBwAFQAbwBEAGEAdABlACAAaQBzACAAZgBhAGwA
-cwBlAC4AAAALAACAUONjC8yc0BG82wCAX8zOBAEAAAAmAAAASQBzAFAAZQByAG0AYQBuAGUAbgB0
-AEYAYQBpAGwAdQByAGUAAAAAAAAAAAAfAACAH6TrM6h6LkK+e3nhqY5UswEAAAA4AAAAQwBvAG4A
-dgBlAHIAcwBhAHQAaQBvAG4ASQBuAGQAZQB4AFQAcgBhAGMAawBpAG4AZwBFAHgAAAABAAAA/AEA
-AEkASQA9AFsAQwBJAEQAPQA5ADgAMwAxADMANgBhADMALQBiAGIAOAA4AC0ANAA5ADAAMgAtAGEA
-OAA1ADQALQA4AGYAMgA0ADQAZQBjADIAYwBhADMAZAA7AEkARABYAEgARQBBAEQAPQAwADEARABB
-ADQAQQBDAEIARAAyADsASQBEAFgAQwBPAFUATgBUAD0AMgBdADsAUwBCAE0ASQBEAD0AMQA7AFMA
-MQA9ADwAMQA3ADAANQA2ADYANAAxADgAMQAtADcAMgAyADkAMwA3AC0AMQAtAGcAaQB0AC0AcwBl
-AG4AZAAtAGUAbQBhAGkAbAAtAHIAYQBkAGgAZQB5AC4AcwBoAHkAYQBtAC4AcABhAG4AZABlAHkA
-QABhAG0AZAAuAGMAbwBtAD4AOwBSAFQAUAA9AEQAaQByAGUAYwB0AEMAaABpAGwAZAA7AFQARgBS
-AD0AVABoAHIAZQBhAGQARgBvAHIAawBpAG4AZwBJAHMARABpAHMAYQBiAGwAZQBkADsAVgBlAHIA
-cwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADUALgAyADAAIAAoAEIAdQBpAGwAZAAgADcAMgAw
-ADIALgAwACkALAAgAFMAdABhAGcAZQA9AEgAMQA7AFUAUAA9ADEAMAA7AEQAUAA9ADEAAAADAACA
-CCAGAAAAAADAAAAAAAAARgAAAAAQhQAAAAAAAAsAAIAIIAYAAAAAAMAAAAAAAABGAAAAAIKFAAAA
-AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAGIUAAAAAAAALAACACCAGAAAAAADAAAAAAAAARgAA
-AAAOhQAAAAAAAB8AAIAIIAYAAAAAAMAAAAAAAABGAAAAANiFAAABAAAAEgAAAEkAUABNAC4ATgBv
-AHQAZQAAAAAAAgEAgAggBgAAAAAAwAAAAAAAAEYBAAAANgAAAEkAbgBUAHIAYQBuAHMAaQB0AE0A
-ZQBzAHMAYQBnAGUAQwBvAHIAcgBlAGwAYQB0AG8AcgAAAAAAAQAAABAAAABEw5/sHYU6RKF7yzlv
-3rcoAwANNP0/AAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAuAAAAYQB1AHQAaABlAG4AdABpAGMA
-YQB0AGkAbwBuAC0AcgBlAHMAdQBsAHQAcwAAAAAAAQAAALIAAABkAGsAaQBtAD0AbgBvAG4AZQAg
-ACgAbQBlAHMAcwBhAGcAZQAgAG4AbwB0ACAAcwBpAGcAbgBlAGQAKQAgAGgAZQBhAGQAZQByAC4A
-ZAA9AG4AbwBuAGUAOwBkAG0AYQByAGMAPQBuAG8AbgBlACAAYQBjAHQAaQBvAG4APQBuAG8AbgBl
-ACAAaABlAGEAZABlAHIALgBmAHIAbwBtAD0AYQBtAGQALgBjAG8AbQA7AAAAAAAfAACAhgMCAAAA
-AADAAAAAAAAARgEAAAAgAAAAeAAtAG0AcwAtAGgAYQBzAC0AYQB0AHQAYQBjAGgAAAABAAAAAgAA
-AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAuAAAAeAAtAG0AcwAtAHAAdQBiAGwAaQBjAHQA
-cgBhAGYAZgBpAGMAdAB5AHAAZQAAAAAAAQAAAAwAAABFAG0AYQBpAGwAAAAfAACAhgMCAAAAAADA
-AAAAAAAARgEAAAA2AAAAeAAtAG0AcwAtAHQAcgBhAGYAZgBpAGMAdAB5AHAAZQBkAGkAYQBnAG4A
-bwBzAHQAaQBjAAAAAAABAAAASAAAAEQATQA0AFAAUgAxADIATQBCADUAOQAzADgAOgBFAEUAXwB8
-AEMASAAyAFAAUgAxADIATQBCADQAOAA3ADUAOgBFAEUAXwAAAB8AAICGAwIAAAAAAMAAAAAAAABG
-AQAAAFAAAAB4AC0AbQBzAC0AbwBmAGYAaQBjAGUAMwA2ADUALQBmAGkAbAB0AGUAcgBpAG4AZwAt
-AGMAbwByAHIAZQBsAGEAdABpAG8AbgAtAGkAZAAAAAEAAABKAAAAMgAzAGUANwBlAGEANwA5AC0A
-YwAxADMANwAtADQAMgBjADUALQAzADIAYQBiAC0AMAA4AGQAYwAxAGIAMwA1ADUAZQBiADQAAAAA
-AB8AAICGAwIAAAAAAMAAAAAAAABGAQAAAB4AAAB4AC0AbABkAC0AcAByAG8AYwBlAHMAcwBlAGQA
-AAAAAAEAAABaAAAAMwBkAGQAOAA5ADYAMQBmAC0AZQA0ADgAOAAtADQAZQA2ADAALQA4AGUAMQAx
-AC0AYQA4ADIAZAA5ADkANABlADEAOAAzAGQALABFAHgAdABBAGQAZAByAAAAAAAfAACAhgMCAAAA
-AADAAAAAAAAARgEAAAA4AAAAeAAtAG0AcwAtAGUAeABjAGgAYQBuAGcAZQAtAHMAZQBuAGQAZQBy
-AGEAZABjAGgAZQBjAGsAAAABAAAABAAAADEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAA6AAAA
-eAAtAG0AcwAtAGUAeABjAGgAYQBuAGcAZQAtAGEAbgB0AGkAcwBwAGEAbQAtAHIAZQBsAGEAeQAA
-AAAAAQAAAAQAAAAwAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAKgAAAHgALQBtAGkAYwByAG8A
-cwBvAGYAdAAtAGEAbgB0AGkAcwBwAGEAbQAAAAAAAQAAAA4AAABCAEMATAA6ADAAOwAAAAAAHwAA
-gIYDAgAAAAAAwAAAAAAAAEYBAAAARAAAAHgALQBtAGkAYwByAG8AcwBvAGYAdAAtAGEAbgB0AGkA
-cwBwAGEAbQAtAG0AZQBzAHMAYQBnAGUALQBpAG4AZgBvAAAAAQAAAAIFAABUAEYAcgBoAEIAQgBN
-AG4ARwBaAGUASAByAGYAOAB4AEgAMABUAG8AcQBhAHoAegBDACsAbwBrAGwATgBPAHoAbgA5AEMA
-egBsAHcALwBTAG8AcwB4AGYAYQBvAFQAMgBsAG4ARQBUAHIATQBnAHYAZgByAEkAYQBvAFcAdgBx
-AHEANwAxAGUAUgBxAE8AUgBtAHcAMwBLAEMAawBVAGgARgByAGMARAB6AE0ARwA3AHIATABlAHoA
-cQBZADMAagBKAFkAYwBKAG4AOQA5AHoAcwBDADUAdABFAHEAdwBZAEUAbAA3AGoAYQBpAHMAYwBp
-AEwAZAByAEIAVQAxAEEAWABMADcAawBRAHgANQBpADcATgAxAGcALwAzAFcARgBjAGYAaABKAGwA
-SABzAHcANwB2AEMAaQBrADEAawAvAEMAVQBNAFYASgBUAE8ATgBKAHQASwBCADcAeQBmAEcARwBv
-AGYAaQByAEwALwBrAHIAbgAwAEcAVgBaADIARABzAFcARwA5AFUAWgA0AFMANABkAGoAdwArAC8A
-bgBlAE4ANwBkAGEAdgBjAGYATABlAEQAUAB4AE4AQQBVAHEAZQBqAHEAZwBMAGoASwByAGkAMQBz
-AFQAcABoAHkAVABoADAASwBrAEoAWAAxAFoAQQAwAEkAcwB1AE4AWgBJAFYAVgBIAEsASABlADYA
-TAAyAFMAWAAwAGIAbgBEAFkAVQBBADMAQQBBAGcAUQBkAEEAVgBmADIATwBFAFoAMQBkAEoAVQB5
-AGIAdQB4ADIAWgBmAEwAYgBGADcANgA1AHIAbQA4AHgAdQBNAEQARwBBAEcAdQBkAGwAagBiAFcA
-VgBzAGcAQgBPAGUASgBsAEcAbwBEAEgAdQBZAEUAMwBWAFEAawBBAE0AYwA5AHMAZQAvAHQANQB6
-ADEAZAB5ADQAcABKAEwAZwBMAE4ASABrAEUAQgBJAFYATgBTAFYAWQBvADkANwBlAEcAegB2AHgA
-NwBLAGYAZgAvAFEAQwA0AHAAKwBnADkAYQBSAGwAZQBuADgAbgA1AEYAUwB6AFUAeQAxAGEASwA2
-AC8AUgA0AC8AUQBnAHcAQwBRAEkAbgBGAFAARwA3ADAAYwBJAFQAYwBkAEcARABPADUAdQBxAHoA
-YQBCAEYALwBaAFgAawBBAGgAVQBTADUAUQB6AEMAYQBaAHMAdwB3AGMAYgBsAFcAMQB4AGEANQBh
-AFQAVABEAFkAcgBsAGEATgA5AHUANAA0AHQAdQBMAEkARQBBADIATQByADQAYQBoADUANgAzAGYA
-TQBFAFMASAB2AG0ARgB0AGUAdgA2AGUAOABoAFYAegAwAGEAVwBmAFgAaAAvAGsAawBHAFIAVgBU
-AE0AagBUAHQAQwB6AEgAWgBJAC8AMQBaAHMAdwB4AFYAYQB6AGYAZABlADcAaABrAEoANQBJAFUA
-OAA1AGQAcwBkAHgAZgBtAHQAWQBpAHYAWgBDADAANQBNAFAAQQBhAHoAbQA2AHQAUQB5AHcAMQBY
-AGUAOABpAGgAeQBYAGoALwB0AEgAaQBpAEUAZQA5AEwANgBvAFQAZgBuAHMAdQBTAHYAOABlAGoA
-dQB6ADQAMgBGADQAeABIAEsATQBtAE8AcgAyAG0ATQBGAFkAcQB3ACsATwBrADcATwBQAC8ATABF
-ADUAcgBIAGIAQgAwAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAA4AAAAeAAtAGYAbwByAGUA
-ZgByAG8AbgB0AC0AYQBuAHQAaQBzAHAAYQBtAC0AcgBlAHAAbwByAHQAAAABAAAAvgQAAEMASQBQ
-ADoAMgA1ADUALgAyADUANQAuADIANQA1AC4AMgA1ADUAOwBDAFQAUgBZADoAOwBMAEEATgBHADoA
-ZQBuADsAUwBDAEwAOgAxADsAUwBSAFYAOgA7AEkAUABWADoATgBMAEkAOwBTAEYAVgA6AE4AUwBQ
-AE0AOwBIADoARABNADQAUABSADEAMgBNAEIANQA5ADMAOAAuAG4AYQBtAHAAcgBkADEAMgAuAHAA
-cgBvAGQALgBvAHUAdABsAG8AbwBrAC4AYwBvAG0AOwBQAFQAUgA6ADsAQwBBAFQAOgBOAE8ATgBF
-ADsAUwBGAFMAOgAoADEAMwAyADMAMAAwADMAMQApACgAMwA0ADYAMAAwADIAKQAoADEAMwA2ADAA
-MAAzACkAKAAzADcANgAwADAAMgApACgAMwA5ADgANgAwADQAMAAwADAAMAAyACkAKAAzADYANgAw
-ADAANAApACgAMwA5ADYAMAAwADMAKQAoADIAMwAwADkAMgAyADAANQAxADcAOQA5ADAAMAAzACkA
-KAAxADgANgAwADAAOQApACgANAA1ADEAMQA5ADkAMAAyADQAKQAoADEAOAAwADAANwA5ADkAMAAx
-ADIAKQAoADYANAAxADAAMAA3ADkAOQAwADAAMwApACgAOQAyADEAMAAxADEAKQAoADMAOAAwADcA
-MAA3ADAAMAAwADAAOQApACgANwA2ADkANgAwADAANQApACgANgA1ADAANgAwADAANwApACgANQAz
-ADUANAA2ADAAMQAxACkAKAAxADIAMgAwADAAMAAwADAAMQApACgANwAxADIAMAAwADQAMAAwADAA
-MAAxACkAKAA0ADcAOAA2ADAAMAAwADAAMQApACgAOQA2ADYAMAAwADUAKQAoADUANQAwADEANgAw
-ADAAMwApACgAOQA2ADgANgAwADAAMwApACgAMwAxADYAMAAwADIAKQAoADgANgA3ADYAMAAwADIA
-KQAoADgAOQAzADYAMAAwADIAKQAoADQAMwAyADYAMAAwADgAKQAoADUAMgA1ADMANgAwADEANAAp
-ACgAMwA4ADEAMAAwADcAMAAwADAAMAAyACkAKAA3ADYAMQAxADYAMAAwADYAKQAoADUANAA5ADAA
-NgAwADAAMwApACgAMQAxADAAMQAzADYAMAAwADUAKQAoADYANAA3ADUANgAwADAAOAApACgANgA2
-ADQANAA2ADAAMAA4ACkAKAA2ADYAOQA0ADYAMAAwADcAKQAoADYANgAzADYAMAAwADIAKQAoADYA
-NgA0ADcANgAwADAANwApACgANgA2ADUANQA2ADAAMAA4ACkAKAA4ADMAMwA4ADAANAAwADAAMAAw
-ADEAKQAoADIANgAwADAANQApACgAOAA2ADMANgAyADAAMAAxACkAKAA0ADEAMwAwADAANwAwADAA
-MAAwADEAKQAoADMAMwA2ADUANgAwADAAMgApACgANQA2ADYAMAAzADAAMAAwADAAMgApACgAMgA5
-ADAANgAwADAAMgApACgANwA0ADEANgAwADAAMgApADsARABJAFIAOgBPAFUAVAA7AFMARgBQADoA
-MQAxADAAMQA7AAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAABcAAAAeAAtAG0AcwAtAGUAeABj
-AGgAYQBuAGcAZQAtAGEAbgB0AGkAcwBwAGEAbQAtAG0AZQBzAHMAYQBnAGUAZABhAHQAYQAtAGMA
-aAB1AG4AawBjAG8AdQBuAHQAAAABAAAABAAAADEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAABK
-AAAAeAAtAG0AcwAtAGUAeABjAGgAYQBuAGcAZQAtAGEAbgB0AGkAcwBwAGEAbQAtAG0AZQBzAHMA
-YQBnAGUAZABhAHQAYQAtADAAAAAAAAEAAABaDAAAUwBBAFQARQBJAFgANwBYACsAagBnAFIAZABS
-AHgAWABPAHQAWABkAFkAdAAxAHYANgA3AGoASwBIAG4AWgBaAHgASgB5AEYAeQBCAFUAcAB6AG4A
-eQAwAGoAeQBBAFAAQgBqAEoARQBFAFIAWgBRAEMAdgB2AG8ASgBMAFkASwBUAEIAUgBBADAAcAA1
-AHAARQBEADEASABCAHoAVgBCAFoAbABXAC8AQgBBAGEANAA2AFkAKwAxAGgAbwAwAGoAaABEAGsA
-RwBHAEQAWQA1AFUAUABxAGoAdAAwAG4AYwBhAEcAeABrAEgAVQBZADUATgBkAGMAYQB2AHUASgBS
-AFYATQBDAEgAagBQAGIAVwBtAG8AZAByAFYARABzAGIASAA5ACsANABoAFIAMABmAHoAUgBTAE8A
-SQBuADUAbwBMADkAMwBTAFkAWgBtAEEAVwBxAFQAaQBUAC8AQwBoAHQARABmAEMAdQBpADYAZQBL
-AEUAawA0AEMAcABLAHIAMQB0AHUAUABjAEMANAB3AEcATgB6ADQAOABUAFoAbwBlAHgASAB0AE8A
-QgAyAFYATwBvAHkAdgBSAFgAdQBYAGwAbQBjAHQAMQB5AHoAOAA1AHEAVgAwAHkARwB4AHEAWgBB
-ADMAbQB0AGEAcgBPAEoAZABDAFIAaQBaAEQAcABYADYAUwAxADEAQQBhAEEAagBoAE8ALwBmAEsA
-dgBGAGoAQQBWAEgAagB1AGQAVgByAFAAbgBFAFkAcQA3ADMAZgBjAEEAYwBWAGgAaABuADYATQBJ
-AGwARgBZAGYAdAB2ADkAVwBBAHAATgBXAGEATwB1ADgAQwBlAGIAcgBaADIATgBpAE0AZQBmADEA
-dgBpAGwAcwBZAEYARwBRAGcAdABWAFUARgArAGUAdgBVAGgAVQBvAEEAegAyAFIAbQBHADIARQBC
-AFkAZwBxAEcAUAA0AFIAcwBoAEkASQBhAFEAegB4ADgAagBFAFIATgBBADUATgAwAEsAOQBqAGwA
-cgA4ACsAOAA2AEEAVgB3AHMAUwBnAFkAaABsAHQAWABxAHMAbgAzAFUALwA4AE4AcwBEAE4AWAA3
-AEcAUQB0AE0AbwBVAGwAbABIAGkAVQB0AHkANABvAHoAbQBFAHkAQQBmAGwARAA2AHgARQBwADUA
-YgBuAE8ATABtAG8ATABSAGoATABXAGQAMAAyAE0AMgBGAHAAagBvAGYASABwAE4ASwBzADYAOQBz
-AHAAbABBAFcAYwBvAGMAOAB5ADEAUgBHAE8AYgBwAGgAeABiAE0AdgBhAGMAUAAyAGcARwAwAEEA
-NQB1AFEAUQBXAEoAdABZADQAeABKAFgAeABNAEEAVQBFAEQAWAB0AFIATgBFAHgAeQBYAGYAbABF
-AEQANgBIAHkAKwAzAEsASgAwAFUAMQBlAFoAUABlAHMAZABGADcANQBEADYAdgBmADcATQB4AEUA
-NgBmAFoATAAyAE8ATgBuAFoAZgA2AGkAcgA1AG8AMgBoAEcASABiAEUAZQBNAFkATABxAGEAZQBp
-AFIARQBKAHAAUwB6AFkAZABJADUANwBNAEgASAB6AEUANQB4ADUARwB6AGMAdABEADAARQA1AGMA
-SgBKAEoAbwBYADIAVABIADUAYQBBAFYAawA0AFkAbgBnAHcAagB6AG0ATwBtAGoAagBuACsASQBn
-AEsAMABaAGMASABIADIASAA5AEwAaQA1AE4ANAByAHUAdwBnAHYAcABLAEoAcwBvAEEALwBsAGYA
-dwBVAGoATgArAEUAegB5ADcAUQBYADAAYwB1AFgARwBVAFUAcgB4AFQAVwB6AE0AMABTAHkAcwBB
-AGsAZAA3AG4AagBuAHUAbQBWAGwAcgA5AFQAdwB5ADcAdAB4AHMAKwBUAFQAMAB6ADAAdgBpAGsA
-UAAzAFAATABwAGUAZAB4AGcAWQA1AFIAdQBQAEoASAByAGsAWQBRAHoAWgB4AGUATQBpADIAOABL
-AG8AUABaAE4AbgBxAHcAUAAyAGMAaABTAGkARABUAFoAVwBRAG4AcgBWAFoAdgBXAHgAQgBrAHUA
-LwBxAGsASgBpAFEANABUADUAdwBZAEwAZgBBAHAAdAAwAHUANwBCAGwANQBqAHkANQBYAEgAcAAx
-AEsAYgBHAEYAbABWAEkANgBCADIASABxAHgARQBQAFYAWQAzADgAZQBxAHIARABGAE4AcgAwAFEA
-cQBmAG0AUQBDAEEAOAA5ADgAagA1AG8AawBQAHgAawBmAGUANwBYAHYAbQB1ADIAVgBFAFMATwBI
-AEYAOQBiAGIAKwByADAAVwBOAGYAWQBGADUAbwBGAFkAMwB2AHEAWQA1AEcAbgBIADIAQgBTAFQA
-ZQBWAEcAawBZAC8AZwBPAHkAeABqAFUAbQBjAC8AUABMAGUATgA2AEsAdwAzADcAWABDAEEAVgA1
-AHIATABRAEsAQgBDAGUATABqAEMATAA5AEMATgBEAHoAdAB5AEoAMQBFAGoAMwBqAGcAMAAwAGQA
-WgBiAHgAaAAvAGcAVABUAGUAYwBPAEUAdABtAGUAOQBpAHEAagBLADIANABvADAAUAA4AHAAWgBr
-AHkAWQA3AFUAMQBVAFcAWQBLAFgAZwBsADIAbgAvAE8ARQAvADYAQwBDAG0AQwBZAGwASQBxADEA
-SwBXAGcAVQBuAE4AbQBiAFUAVABRADMAeABkAFEAYQBFAHkAYwBxADkAawBiADEAQQBmAEQAcwA2
-ADcAMABTADgAbQBJAE0AUABxAE4ATQB3AHoAWAB2ADgAbQBDAFMAZwBpAHIAMgBLAEQAaABkADQA
-SQBKADcAcQBUAHEAYwBTAFAAQgB1AEkAWgBxAFUAaABxAFoANQB4ADcAVABZAGUAWABXAG0AOQBj
-AEQAbQAwAC8AZQBhAEkAUQBwAHAAZwBiAGYAMQA2AGQAdwBWAEUAQwBEAEsARQBpAEkAbQBOAEIA
-cQBtAFkAbABoAEsAVQBpAGkAdQA1AHkATABWAEsASgBDAGcAMgBKAEgATAB3ADAASQBYAEYAawAz
-AGEAVwBvADkARwB1AG0AcgBOADYAbAB5ADgAZgA4AFkARQA3AE8AbQBnAFAAUQBzAGQATQBnADgA
-UgB2AFMAZgBGAEwATwBrAFAAVwB1AHcAdgBPAGMANgBMAEEAOABMAFkAcwBXAFkAMgAxADMAMABH
-AEcAeAAvADUAcwB1AEEAOQBEAEMASwBoAEIATQBPADIAKwBvAE8AZAAyAFgAVQBoAHoAVwB2AEcA
-eABTAE8AQQBlAG4AbABUAEEAcwBpAFMAUABZADQAQgB5AFgAcAAzAGgAVQBSAGcAVgBPAEsAaABR
-AEgAbABOAFoANwBWADAANABJADYAQQBQAEcASwBQADIAOQBjAGUAaABvAEQAUQBuAHAATwBUAGUA
-VwA0AGgAMQBHAFcAYQB4AHkAVgBpADgAYgB6AGgAdABSAGYASgBRAGIAKwBkAG4AcAA0ACsAVAAz
-AEgAbwBRAGEARwA3AGcAVABUAHoALwA3AEkATABMAFMAOAAvAEQAZgBMAEYAbQBsAHEAdwBQAHEA
-dwBWAFEASwBCADYAZgBZADEAbgBnAFQAZgBEAHUAagBkAGIALwBpAFoAeAB6AC8AYwBDAEIAWgBl
-ADUAKwBBAHkAWABOADkAaQBwAFoAUQBpAFUAMAB4AE4AYgBuAFAAcQAzAE0AcQB5AFYAZABmAEsA
-ZAB0AFoAcgBUAFYARgByAE8AUABIAHAAYQBTAEQAbQBTAEIAUQB1AHIAVABrAEwAagBBAGYAdABD
-AHMALwBEAFUAZwBuADgAcABuAGYASgBOAFEAaQB3AEcAUgBMADgARABjAGUAbgB4AFMAdwBKAEgA
-dwBnAGQAMABhAEsASQBxAFIAawBGADAASgBOAEcAZwBNAHQAQQBWAHIAeQBlAGYAMgBHAHAAcwBO
-AGQAZABaAHMARgAwAEkAMAAzAFEATABYAHEARABSAFAAKwBZAFQAUgArAGYASQBLAGEAQwBaACsA
-OQBNAFkAYwBQAGcAQwBmAE8AVABWAC8ALwBmAFAATwBSAFkAbAB5AGwAdwBHAFkARAAwAE0AZABz
-AE8AUAByAG8AbgAxAFkAcQBNAEUAMAArAHYAUwBjAGgAQQAvAGIATABzAHMAdwB3AFkAZwA9AAAA
-AACegA==
-
---_000_DM4PR12MB59388E96AFBE5C1AD3A7C9FF9D752DM4PR12MB5938namp_--
+> 
