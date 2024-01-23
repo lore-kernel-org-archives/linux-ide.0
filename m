@@ -1,65 +1,65 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0219823B6
-	for <linux-ide@vger.kernel.org>; Tue, 23 Jan 2024 18:41:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20D3D811F3
+	for <linux-ide@vger.kernel.org>; Tue, 23 Jan 2024 19:04:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706035300; cv=none; b=sx5G5T+kVBN5yDA+B9rhl26zdhCnNvYGkLpcuStphWm8toLi3pDpM/0e5c7jA9iOStpurPZhZBDwgJrYKFSUNKznqVCkLQnMQn5sMddGVSfCRdWPJPCrI/JiTc2vSj0IHif3KZbdA2yoHXqPdK6+ERvovgiWfM7BsIhAYIzpJJs=
+	t=1706036700; cv=none; b=V39rStppK5IjPDsgirU908iFNX48DErM+iPHjhC9kaxAQIrVny4AKSJApgeeGiuNOy81SS5mNEbHRT16/a9xhUJMqtE9+TsZUBEI0X6igsHsZOIh0m6e+HJboazZkP8VZoEQ7CVY+gfzTJRmYD+Er/TKSnzVy2GygFc4GwnLtdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706035300; c=relaxed/simple;
-	bh=ckAqz4et9lSFLsJorrvqjyjEG3gH8tYqrFit4l7uedI=;
+	s=arc-20240116; t=1706036700; c=relaxed/simple;
+	bh=inpYRunu7a+/P69OHKJdfPr+xzfMvH62XScswjJIiSA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RYR6PbkSonDXzyHobLJz3DQP/zkhiUm6psFi8H43D9lpf8KR/LsYgRYjvQ0fx24O87UxApXzNEdcphqwC/R79mqWIQanaaV4LDyQcGNsVliz/iTkymHzxi4cGaBKISu7Mp0Ck1ly9HBwCYuLXETQTmgNkDHIu6UO3YqUKtkSvDw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ah2CqZVb; arc=none smtp.client-ip=170.10.129.124
+	 In-Reply-To:Content-Type; b=SDgucBj8wRpK8onqwcWQWfTPbpULdei6jA7At5lRDJb+R92GM6C/E+QaycgBWZWLzo4S4Y0fBB2tOK4wp4SZ0m3v5rpKwDDSDM5EKIEFylXRBusQ3lGD+/HU7JvDTbqrb1j/TEfJkCfeZB48X8RDjvQ1scIZe+7xa3wqpapeYmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OLcNyvox; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ah2CqZVb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OLcNyvox"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706035297;
+	s=mimecast20190719; t=1706036698;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Vg/uqbZoTrsSlKS8IoprBAUYcnSyOGvCkbfDVP4S0ko=;
-	b=ah2CqZVbLQ/cq29lT506eECg2LPhVGHewcidTB8VYDbHXhVhjyJyhvHj6xUzz8r5urvi1F
-	bsU2KXw3SYl7Yf+p9rkh6UQjtQ7uZH7v9YuYx24DG2eSDWC1Re3Py1dL2d7VC0lZCOY4zz
-	gO4b1jWf2A3IJOhtgvMfmMFT+10ei1Q=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=L/sN5hulO719YCIZsmMNq+K6W2dI39cuVDmxC+XWuWg=;
+	b=OLcNyvoxFJuBCHMz/E0PVCNKRG9TyB+Dud97QZysK1XarYSPtw74rDlLR6NUiRjJDLqN2u
+	jfO3Hv8Xw3IT3XOOK7t444qvhYc2H4sD9G9kYIOPrXmLMZN0khLpu52PtKjZIXONK813uC
+	YU/O07nI5RKdT1Ed7F665vDZB+hlbeo=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-151-7--NqiXPN9qmRiw74IfvVg-1; Tue, 23 Jan 2024 13:41:33 -0500
-X-MC-Unique: 7--NqiXPN9qmRiw74IfvVg-1
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-a2b6c2a5fddso216746266b.1
-        for <linux-ide@vger.kernel.org>; Tue, 23 Jan 2024 10:41:33 -0800 (PST)
+ us-mta-321-0Y7VEny_PpKhTSL5DwyhFQ-1; Tue, 23 Jan 2024 14:04:56 -0500
+X-MC-Unique: 0Y7VEny_PpKhTSL5DwyhFQ-1
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-50e81d186e2so5396969e87.0
+        for <linux-ide@vger.kernel.org>; Tue, 23 Jan 2024 11:04:56 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706035292; x=1706640092;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1706036694; x=1706641494;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Vg/uqbZoTrsSlKS8IoprBAUYcnSyOGvCkbfDVP4S0ko=;
-        b=vwHjTmyKjd930/jBmFaoau+40CnjV+kjIy/khU7OL5ISpdhGJw373kIK74uLpa2OPY
-         kGUjQqidme5mUM0/nHVHaSyPV+GohhKvDWs9MoOrHV+U+Pi6Ly0HuQmYUZlnuoFiULKz
-         1cf5LGYmoypZPb6L2InGhFDPC9OgdRoaWE4JRFEI+R+QePYrEaBWJ8FS3RAFfEGXzw41
-         h4Q0nelvrkmJ+gKzs726bgPDrKaCUvbTiIzQt0GtA9iDuJ97YXwPoHxHTrsfBwXEsRg6
-         ud8QRaS5BLq0NzJbgK+RzMJN75ls1aXAL4KZnfQMsDxP42Ceep4e57JOiafK7+/Z3LiC
-         Yhxw==
-X-Gm-Message-State: AOJu0YxVuWj9448j5suyVYoxOW4r1jdVwGW1t9iy6HFKNg4AAU8L4vbQ
-	CW1jOEKQIMsYh5NdWWK/ByRdwTLCPokeUpyRXjAHDY6BjReDe1bZHh93UMif1uSESePI3kJ/1GE
-	tK8ehlkMFj2meEWaXwyLjdmBKt3skV1ealjLD/FH4Dhnc4XHEPXrU/+G4QkxOMEJaOGuA8nBykk
-	z8Jdaeaeifa0rz4JSVwUsNDQgtQAEEZKlpfGyAe8ry1Q==
-X-Received: by 2002:a17:906:e212:b0:a2f:cd67:32f8 with SMTP id gf18-20020a170906e21200b00a2fcd6732f8mr182667ejb.84.1706035292338;
-        Tue, 23 Jan 2024 10:41:32 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHFTZM38PkaEhlGSaQgFhiQmH/t/JCGY5C0+hgF4qoiSsNuehPxqLGBffq9i6qI+AxDQ3zL7A==
-X-Received: by 2002:a17:906:e212:b0:a2f:cd67:32f8 with SMTP id gf18-20020a170906e21200b00a2fcd6732f8mr182657ejb.84.1706035291946;
-        Tue, 23 Jan 2024 10:41:31 -0800 (PST)
+        bh=L/sN5hulO719YCIZsmMNq+K6W2dI39cuVDmxC+XWuWg=;
+        b=uGPo8GsYOBZ2iVpKEiNPM8FA9ToC11lXMBi5v/71P6TUU1YHWOPYMjbGbeCe5zSTH8
+         nMMdduep5E4U9g4WnhPrE0p7cAenYmMFUGKYcV0vYerojZ5KAKc2ViQU0lzjj2DSZ4bs
+         4qXRbyCjDOU9j10XVuswGPIgt70sud4qP3muwzShxXznE3zVvTAXcRFq74QMgjUbCNIo
+         9Yu0C6R0x1zYymHJbL07jrrf3XBC21Tkm054mif+jxTuuCyj/y/me7LYN0pfC6+X5mlL
+         4dMc95M1h7clPYYiAY9TgEqjX0iPn3saVdgJ6exNBN8boS7fSpDABhByEsO/cJKjm/Rg
+         bGsQ==
+X-Gm-Message-State: AOJu0YxyQd5ff3w4MEe0bohlO0nX0ExBMbo1nA30Hy+3Sbvjv71I5zx0
+	qvsq0plYbBJeJnZSdUon8b55m8GTeHSxq4Y5TFyc6A0iAhoOd6sXiT6a9XLNm1uE2jcWTWkld9M
+	iBAFmT+Bi5JeeJEm6ZwPo/NgQnAuPbO0lbI5wBeY+VDbcPnxGD4xAxVXcmJMnNyl/3wtaXO9lGA
+	Kr9YleDJhYifFZF7xu3WEPvpbov50aDaqiOu5FWS7RmA==
+X-Received: by 2002:a05:6512:2256:b0:510:e05:4361 with SMTP id i22-20020a056512225600b005100e054361mr160057lfu.3.1706036694552;
+        Tue, 23 Jan 2024 11:04:54 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IELdDdUxhnmzOyCMSiWHb7nJmmPa4jYjqQ90Y7Q/9boZpyaEPI4tuKbVIU7sH1yj2FDxMnD/Q==
+X-Received: by 2002:a05:6512:2256:b0:510:e05:4361 with SMTP id i22-20020a056512225600b005100e054361mr160048lfu.3.1706036694162;
+        Tue, 23 Jan 2024 11:04:54 -0800 (PST)
 Received: from ?IPV6:2001:1c00:c32:7800:5bfa:a036:83f0:f9ec? (2001-1c00-0c32-7800-5bfa-a036-83f0-f9ec.cable.dynamic.v6.ziggo.nl. [2001:1c00:c32:7800:5bfa:a036:83f0:f9ec])
-        by smtp.gmail.com with ESMTPSA id j25-20020a1709066dd900b00a26af4d96c6sm14712314ejt.4.2024.01.23.10.41.31
+        by smtp.gmail.com with ESMTPSA id vs7-20020a170907a58700b00a2caa85c0c1sm13758772ejc.30.2024.01.23.11.04.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 23 Jan 2024 10:41:31 -0800 (PST)
-Message-ID: <1776d48f-6bc8-4636-af7e-ee54800845b2@redhat.com>
-Date: Tue, 23 Jan 2024 19:41:30 +0100
+        Tue, 23 Jan 2024 11:04:53 -0800 (PST)
+Message-ID: <c0d59d12-edf3-44eb-adfd-29c3dc1bde23@redhat.com>
+Date: Tue, 23 Jan 2024 20:04:53 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -68,16 +68,16 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] ahci: asm1166: correct count of reported ports
+Content-Language: en-US, nl
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: dlemoal@kernel.org
 References: <20240123183002.15499-1-conikost@gentoo.org>
-Content-Language: en-US, nl
 From: Hans de Goede <hdegoede@redhat.com>
 In-Reply-To: <20240123183002.15499-1-conikost@gentoo.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-Hi,
+Hi Conrad,
 
 On 1/23/24 19:30, Conrad Kostecki wrote:
 > The ASM1166 SATA host controller always reports wrongly,
@@ -98,15 +98,16 @@ On 1/23/24 19:30, Conrad Kostecki wrote:
 > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218346
 > Signed-off-by: Conrad Kostecki <conikost@gentoo.org>
 
-Thanks, patch looks good to me:
+Looks like this is a double submission of the earlier
+version (which did make it to the list).
+
+Anyways this version looks good to me too:
 
 Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
 Regards,
 
 Hans
-
-
 
 
 
@@ -130,4 +131,6 @@ Hans
 >  	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
 >  		dev_info(&pdev->dev, "JMB361 has only one port\n");
 >  		hpriv->saved_port_map = 1;
+
+
 
