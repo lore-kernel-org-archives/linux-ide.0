@@ -1,71 +1,65 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 401AE495F1
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jan 2024 21:34:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391415D907
+	for <linux-ide@vger.kernel.org>; Tue, 23 Jan 2024 11:52:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705959241; cv=none; b=DPr0LdQgZQ/bQfKBTb//g4t0zBNqfGrLg2WVfmHGR/RTNgvbc0Cms0XeKaKH/3Z1ydzTdd/tMwvrX3C4sxuAB5KhpbIH7OQ4BhIUPzCbGoAuM4lhtMOnmKDaEahBw/GHGPyfIDC5fqLuCIX4gzqhEXBc40Tq1N0jOLCCFIMZvuM=
+	t=1706010775; cv=none; b=Cz0agAVu6hCytOzpCg50beCuf6D77+5gEjZykShblC3gp3ugP5TgHlfj51N0MI4QuJ4pQYpoH6sabbdijYKEANMXNQXkgiw4nX6/hia0U5DMZ1WfEEH6y9tdS2lW41q6u4is94WwzIJPU+Y1/YPSFOXK9s1qlijPw0+Iiwlw2lE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705959241; c=relaxed/simple;
-	bh=epSrRaz8cbvoETGfHrVMjhXyAAn4OCSfj25OTFMbtE0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hl7Fqh9r7SeZvdGzLY/gAm6dltYhc3w2UMWU1YcSDqMfOah/a484VErSQYSbT3RF8a7vIpOdaOPiimdq5/O9xGkSENDKDwn+95kztYAnxSxgLA/ReVkX37nOsFUUAIH06jlAOZj/K8ma9w8xfR9/EaF+7QgjipCOlt5f4oeHFu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lv5LTybC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706010775; c=relaxed/simple;
+	bh=Qkzg1uFAGM8CXcOb+Pi03EOAO7m3tw8PpvAi/cL/+9A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ZSLbeGPyEbKkHUKlJza0LWVYKrUoGwHnZKfWexvk36ac9qersnXpo7jnuOixbeMJdSfxEY7eGnlNG1fkFnLaudh7q1jM1580vCeZL1sm8Qdye6IuiSfrLndCmLHb04w73KPfnQjHwJa5g/eB6EoABNwS+v3Dps4jvuUsDm+dqzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YVRGt0SA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lv5LTybC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0555AC43390;
-	Mon, 22 Jan 2024 21:33:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YVRGt0SA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E49EC433F1;
+	Tue, 23 Jan 2024 11:52:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705959241;
-	bh=epSrRaz8cbvoETGfHrVMjhXyAAn4OCSfj25OTFMbtE0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=lv5LTybCNdVWS6u6i8jZ1H5Dt9Z5yITSHMGNC1hCy/v2cpHPtyZPrcoKjWb+Zm6Eq
-	 fD77VNqHw1rAiz11AAbNncbn4g4M1nbaK6dNAZcsk6F5d0yrPKO1m4oOfhuF0xM4NV
-	 A1b9HsCeqO7VKkibQkdIxwaG/5h9of1k9CIfnBG96lpFcDb7kJDXXrpiRdhzLbrwfd
-	 YL9dSR5VjLMo4lepqyxFtBQMOIMyal2mTtL1e/8KJu/J2Yu48eCAtxxmSYJ2fQZB3I
-	 typQ0JHzPWHUjIsaEWOtOSxSFW1Tb+GlZt6SzhPTxNvfpUofwW27dGmVZToAPQ/8uf
-	 b1M9ATx0Nbqvg==
-Date: Mon, 22 Jan 2024 22:33:55 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-sata: improve sysfs description for
- ATA_LPM_UNKNOWN
-Message-ID: <Za7fQwOvbAjeSBD9@x1-carbon>
-References: <20240111165745.3653361-1-cassel@kernel.org>
+	s=k20201202; t=1706010774;
+	bh=Qkzg1uFAGM8CXcOb+Pi03EOAO7m3tw8PpvAi/cL/+9A=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=YVRGt0SAs1qN7cC+CYJsYuQCkMAfrS+Z+kDqO9vQKKvMsgqljjxuiEx4fbdxNpzfz
+	 2C9q6AlDxsel0tMf0/5PBK53l1jWEbYJ53m/zYezICPRvpcdxPzVVMHaKVdv7auNYB
+	 qW0ixhpY5yDE7uEr3Sb+enMAn2N20k4zfUXWyUrVoyNcEw1LXeXQ76ss9O8GoyfyFS
+	 ln4zliapj9QQHVjvGWlquGPgHUoGjJGw2D4kBm3u2CemxV5Lkso0/hDJDEPuN3P1j/
+	 YG4Iy6+uqs8Wtmqe+2vsUl7YCsK4odVp38m1DWFJebK4JMQ/o3BQnE5Q2BZB3FBzzH
+	 +AN7JMqgkMJAw==
+Message-ID: <a72daedd-48c4-4eaf-9a77-a34679636a8c@kernel.org>
+Date: Tue, 23 Jan 2024 20:52:54 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240111165745.3653361-1-cassel@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: Aw: Re: [PATCH 0/2] Power management fixes
+Content-Language: en-US
+To: Dieter Mummenschanz <dmummenschanz@web.de>, linux-ide@vger.kernel.org
+References: <20240111115123.1258422-1-dlemoal@kernel.org>
+ <DU0P251MB082515FC8FE77424231B475CF4682@DU0P251MB0825.EURP251.PROD.OUTLOOK.COM>
+ <345be856-8959-4148-bcae-00b3fbcd0d08@kernel.org>
+ <trinity-0be6e8a8-e6d3-4d60-be0d-59592a9edd65-1706010022623@3c-app-webde-bap10>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <trinity-0be6e8a8-e6d3-4d60-be0d-59592a9edd65-1706010022623@3c-app-webde-bap10>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jan 11, 2024 at 05:57:44PM +0100, Niklas Cassel wrote:
-> Currently, both ATA_LPM_UNKNOWN (0) and ATA_LPM_MAX_POWER (1) displays
-> as "max_performance" in sysfs.
-> 
-> This is quite misleading as they are not the same.
-> 
-> For ATA_LPM_UNKNOWN, ata_eh_set_lpm() will not be called at all,
-> leaving the configuration in unknown state.
-> For ATA_LPM_MAX_POWER, ata_eh_set_lpm() is called, and setting the
-> policy to ATA_LPM_MAX_POWER.
-> 
-> This also matches the description of the SATA_MOBILE_LPM_POLICY Kconfig:
-> 0 => Keep firmware settings
-> 1 => Maximum performance
-> 
-> Thus, update the sysfs description for ATA_LPM_UNKNOWN to match reality.
-> 
-> While at it, update libata.h to mention that the ascii descriptions
-> are in libata-sata.c and not in libata-scsi.c.
-> 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
+On 1/23/24 20:40, Dieter Mummenschanz wrote:
+> Damien,
+> sorry for getting back to you so late. So is this patch series just a revert or 
+> is it something new? Can I patch and test against 6.8-rc or should I use 6.7? 
+> Anyway I need at least a couple of days since I'm very busy ATM.
 
-Applied:
-https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-6.8-fixes
+Yes, the second patch is essentially a revert. If you can test with 6.8-rc1 it
+would be great.
+
+Thanks.
+
+-- 
+Damien Le Moal
+Western Digital Research
+
