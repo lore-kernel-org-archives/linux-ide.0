@@ -1,65 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391415D907
-	for <linux-ide@vger.kernel.org>; Tue, 23 Jan 2024 11:52:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3634823D5;
+	Tue, 23 Jan 2024 18:30:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.211.166.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706010775; cv=none; b=Cz0agAVu6hCytOzpCg50beCuf6D77+5gEjZykShblC3gp3ugP5TgHlfj51N0MI4QuJ4pQYpoH6sabbdijYKEANMXNQXkgiw4nX6/hia0U5DMZ1WfEEH6y9tdS2lW41q6u4is94WwzIJPU+Y1/YPSFOXK9s1qlijPw0+Iiwlw2lE=
+	t=1706034610; cv=none; b=FjiIDX+SYnoGDZ7I1kAmKDFSbSpwEByndTi3VIZ3cQCqf1YNOSGvCo6l6cOU9qkBxn11EjsmNRUc29e9iWqW+vsskGmUK5qH4EdAkRRoM4KzIRUuv6WSQqRwgGdDrN73LbMwp5OSHjA0eype/NHr5pYr9rqi6Lmk3k+rEXniSFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706010775; c=relaxed/simple;
-	bh=Qkzg1uFAGM8CXcOb+Pi03EOAO7m3tw8PpvAi/cL/+9A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ZSLbeGPyEbKkHUKlJza0LWVYKrUoGwHnZKfWexvk36ac9qersnXpo7jnuOixbeMJdSfxEY7eGnlNG1fkFnLaudh7q1jM1580vCeZL1sm8Qdye6IuiSfrLndCmLHb04w73KPfnQjHwJa5g/eB6EoABNwS+v3Dps4jvuUsDm+dqzM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YVRGt0SA; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YVRGt0SA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E49EC433F1;
-	Tue, 23 Jan 2024 11:52:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706010774;
-	bh=Qkzg1uFAGM8CXcOb+Pi03EOAO7m3tw8PpvAi/cL/+9A=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=YVRGt0SAs1qN7cC+CYJsYuQCkMAfrS+Z+kDqO9vQKKvMsgqljjxuiEx4fbdxNpzfz
-	 2C9q6AlDxsel0tMf0/5PBK53l1jWEbYJ53m/zYezICPRvpcdxPzVVMHaKVdv7auNYB
-	 qW0ixhpY5yDE7uEr3Sb+enMAn2N20k4zfUXWyUrVoyNcEw1LXeXQ76ss9O8GoyfyFS
-	 ln4zliapj9QQHVjvGWlquGPgHUoGjJGw2D4kBm3u2CemxV5Lkso0/hDJDEPuN3P1j/
-	 YG4Iy6+uqs8Wtmqe+2vsUl7YCsK4odVp38m1DWFJebK4JMQ/o3BQnE5Q2BZB3FBzzH
-	 +AN7JMqgkMJAw==
-Message-ID: <a72daedd-48c4-4eaf-9a77-a34679636a8c@kernel.org>
-Date: Tue, 23 Jan 2024 20:52:54 +0900
+	s=arc-20240116; t=1706034610; c=relaxed/simple;
+	bh=8i78LrYAny+ucwGZHvYyL/nhtG4lVxGC0FsadYuuP2Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WYhdsD3WX95lxpdDUyDtm2A2VOLEPM3AJEHRpdHJOZ/wmx9Yz+mAo06vCPsJoOhS5AO6p1PrtkTywmptw8s71esQDqlHJ4b5n6Bo8Qd542H5iyUKBbNQmnNdpfg4ZCxf38ISypZFlJj7iLTe1TBXE169/F5Pdi4a6Ia26M5E/cY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org; spf=pass smtp.mailfrom=gentoo.org; arc=none smtp.client-ip=140.211.166.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
+From: Conrad Kostecki <conikost@gentoo.org>
+To: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: dlemoal@kernel.org,
+	hdegoede@redhat.com
+Subject: [PATCH] ahci: asm1166: correct count of reported ports
+Date: Tue, 23 Jan 2024 19:30:02 +0100
+Message-ID: <20240123183002.15499-1-conikost@gentoo.org>
+X-Mailer: git-send-email 2.43.0
+Reply-To: linux-ide@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Aw: Re: [PATCH 0/2] Power management fixes
-Content-Language: en-US
-To: Dieter Mummenschanz <dmummenschanz@web.de>, linux-ide@vger.kernel.org
-References: <20240111115123.1258422-1-dlemoal@kernel.org>
- <DU0P251MB082515FC8FE77424231B475CF4682@DU0P251MB0825.EURP251.PROD.OUTLOOK.COM>
- <345be856-8959-4148-bcae-00b3fbcd0d08@kernel.org>
- <trinity-0be6e8a8-e6d3-4d60-be0d-59592a9edd65-1706010022623@3c-app-webde-bap10>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <trinity-0be6e8a8-e6d3-4d60-be0d-59592a9edd65-1706010022623@3c-app-webde-bap10>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 1/23/24 20:40, Dieter Mummenschanz wrote:
-> Damien,
-> sorry for getting back to you so late. So is this patch series just a revert or 
-> is it something new? Can I patch and test against 6.8-rc or should I use 6.7? 
-> Anyway I need at least a couple of days since I'm very busy ATM.
+The ASM1166 SATA host controller always reports wrongly,
+that it has 32 ports. But in reality, it only has six ports.
 
-Yes, the second patch is essentially a revert. If you can test with 6.8-rc1 it
-would be great.
+This seems to be a hardware issue, as all tested ASM1166
+SATA host controllers reports such high count of ports.
 
-Thanks.
+Example output: ahci 0000:09:00.0: AHCI 0001.0301
+32 slots 32 ports 6 Gbps 0xffffff3f impl SATA mode.
 
+By adjusting the port_map, the count is limited to six ports.
+
+New output: ahci 0000:09:00.0: AHCI 0001.0301
+32 slots 32 ports 6 Gbps 0x3f impl SATA mode.
+
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=211873
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218346
+Signed-off-by: Conrad Kostecki <conikost@gentoo.org>
+---
+ drivers/ata/ahci.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 3a5f3255f51b..762c5d8b7c1a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -663,6 +663,11 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
+ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ 					 struct ahci_host_priv *hpriv)
+ {
++	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
++		dev_info(&pdev->dev, "ASM1166 has only six ports\n");
++		hpriv->saved_port_map = 0x3f;
++	}
++
+ 	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
+ 		dev_info(&pdev->dev, "JMB361 has only one port\n");
+ 		hpriv->saved_port_map = 1;
 -- 
-Damien Le Moal
-Western Digital Research
+2.43.0
 
