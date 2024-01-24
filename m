@@ -1,35 +1,31 @@
 Received: from mail.wantstofly.org (hmm.wantstofly.org [213.239.204.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB9D77654;
-	Wed, 24 Jan 2024 12:40:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3CD877F16;
+	Wed, 24 Jan 2024 13:55:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.239.204.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706100057; cv=none; b=mMUS4cF+1NVmTbF8iUXZjAHvN8Soec9icbax/e9z+NU/FWOeOrUqE0ai3DHg1J5fUAPpXo8i02UTzXxjPaJWllUldhXBT/czLcm994dYYfB7lXSMcMnSfIjT70bqNKOdo0n/jd7HeLZ0WUVwJY98kE7xM9jJYZMVnKydhWZK/UE=
+	t=1706104505; cv=none; b=NeR449l+qFzXSH1mf8XXSHYvkUPx3GWhun1aAsK2qRi+Po6n9gJl6YlhXkP/FNNcO155f56k02V8MTUFgmB04AS9YAKslFu0qTb/xa07sYT4H3w/On6d8D/j/6synkRElya/iN+osumQn40TzYtfY9kx8i66lg+xBIU5h++GnFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706100057; c=relaxed/simple;
-	bh=BYm3NH99pVOBTU4P7iAI8QFB06WkmURzy0AgZjwq83Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ryJOYdnzQPfmnVY50YgEd3INnKkG1Z/OSWwycVMhD6Q9/uhgLn0eVVM/dZRs8KWIBxXpnFtzBvDRMrRIGlLjpiMJFtrbWblEofM0wH1UqEtQ4RQFvBSSmvqP7Gc07E+4P2uyWrMYbk2grG4unEQpG+vN/iLvsAmDilwbU+ihsMg=
+	s=arc-20240116; t=1706104505; c=relaxed/simple;
+	bh=8haVjCiq+vlCoXGm5UH6s23J8C9hHt3qKegbnlAICkc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=S2djWK9+Y548zv63XfA4KVJhNd+plpeNWnfnDlXteQKbEz9y59swd2/10mwV1j/RnVptDSITNmSSfowuofvyE2q7alMnsXC0ZyndnVvzgjEpl92R3kJLe6mu6cAGw99781hcmHDH5Wq2xfhNgUkWVdJ14nnu8LksT7eCQO7wMDg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wantstofly.org; spf=pass smtp.mailfrom=wantstofly.org; arc=none smtp.client-ip=213.239.204.108
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wantstofly.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wantstofly.org
 Received: by mail.wantstofly.org (Postfix, from userid 1000)
-	id 8A0DA7F712; Wed, 24 Jan 2024 14:40:51 +0200 (EET)
-Date: Wed, 24 Jan 2024 14:40:51 +0200
+	id E658E7F712; Wed, 24 Jan 2024 15:54:58 +0200 (EET)
+Date: Wed, 24 Jan 2024 15:54:58 +0200
 From: Lennert Buytenhek <kernel@wantstofly.org>
-To: Niklas Cassel <nks@flawful.org>
-Cc: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ASMedia ASM1062 (AHCI) hang after "ahci 0000:28:00.0: Using
- 64-bit DMA addresses"
-Message-ID: <ZbEFU-rycTXxOtfW@wantstofly.org>
-References: <ZaZ2PIpEId-rl6jv@wantstofly.org>
- <ZaaQpiW3OOZTSyXw@x1-carbon>
- <ZahDNr97MSPNSHW_@wantstofly.org>
- <ZahaKaV1jlHQ0sUx@x1-carbon>
- <ZbAo_LqpbiGMfTtW@wantstofly.org>
- <ZbDjL0TDnUfzknZS@x1-carbon>
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+	linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Robin Murphy <robin.murphy@arm.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Joerg Roedel <jroedel@suse.de>
+Subject: [PATCH] ahci: add 43-bit DMA address quirk for ASMedia ASM106x
+ controllers
+Message-ID: <ZbEWsp4KT-V9YUaC@wantstofly.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -38,140 +34,153 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZbDjL0TDnUfzknZS@x1-carbon>
 
-On Wed, Jan 24, 2024 at 11:15:11AM +0100, Niklas Cassel wrote:
+With one of the on-board ASM1061 AHCI controllers (1b21:0612) on an
+ASUSTeK Pro WS WRX80E-SAGE SE WIFI mainboard, a controller hang was
+observed that was immediately preceded by the following kernel messages:
 
-> > This all suggests to me that the ASM1061 drops the upper 21 bits of all
-> > DMA addresses.  Going back to the original report, on the Asus Pro WS
-> > WRX80E-SAGE SE WIFI, we also see DMA addresses that seem to have been
-> > capped to 43 bits:
-> > 
-> > > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: Using 64-bit DMA addresses
-> > > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00000 flags=0x0000]
-> > > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00300 flags=0x0000]
-> > > [Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00380 flags=0x0000]
-> > 
-> > Since in this test the X570 AHCI controller is inside the chipset and
-> > the ASM1061 in a PCIe slot, this doesn't 100% prove that the ASM1061 is
-> > at fault (e.g. the upstream IOMMUs for the X570 AHCI controller and the
-> > ASM1061 could be behaving differently), and to 100% prove this theory I
-> > would have to find a non-ASM1061 AHCI controller and put it in the same
-> > PCIe slot as the ASM1061 is currently in, and try to make it DMA to
-> > address 0xffffffff00000000, and verify that the I/O page faults on the
-> > host report 0xffffffff00000000 and not 0x7fffff00000 -- but I think that
-> > the current evidence is perhaps good enough?
-> 
-> It does indeed look like the same issue on the internal ASMedia ASM1061 on
-> your Asus Pro WS WRX80E-SAGE SE WIFI and the stand alone ASMedia ASM1061
-> PCI card connected to your other X570 based motherboard.
-> 
-> However, ASMedia ASM1061 seems to be quite common, so I'm surprised that
-> no one has ever reported this problem before, so what has changed?
-> Perhaps there is some recent kernel patch that introduced this?
-> 
-> The commit was introduced:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4bf7fda4dce22214c70c49960b1b6438e6260b67
-> was reverted:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=af3e9579ecfbe1796334bb25a2f0a6437983673a
-> and was then introduced in a new form:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=791c2b17fb4023f21c3cbf5f268af01d9b8cb7cc
-> 
-> I suppose that these commits might be recent enough that we have not received
-> any bug reports for ASMedia ASM1061 since then.
+[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: Using 64-bit DMA addresses
+[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00000 flags=0x0000]
+[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00300 flags=0x0000]
+[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00380 flags=0x0000]
+[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00400 flags=0x0000]
+[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00680 flags=0x0000]
+[Thu Jan  4 23:12:54 2024] ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00700 flags=0x0000]
 
-I don't know exactly what triggered the I/O page faults that started
-this email thread, but note that it was working OK for a week or two
-before this happened.  When the issue originally triggered, there was
-a lot of write I/O going on to a pair of (slow) QLC SSDs connected to
-the ASM1061, so there may have been timeouts or I/O errors involved.
+The first message is produced by code in drivers/iommu/dma-iommu.c which
+is accompanied by the following comment that seems to apply:
 
-This system is new and it has never run any kernel older than 6.6, so
-I don't have data for older kernels.
+        /*
+         * Try to use all the 32-bit PCI addresses first. The original SAC vs.
+         * DAC reasoning loses relevance with PCIe, but enough hardware and
+         * firmware bugs are still lurking out there that it's safest not to
+         * venture into the 64-bit space until necessary.
+         *
+         * If your device goes wrong after seeing the notice then likely either
+         * its driver is not setting DMA masks accurately, the hardware has
+         * some inherent bug in handling >32-bit addresses, or not all the
+         * expected address bits are wired up between the device and the IOMMU.
+         */
 
-Also note that this is 2022 CPU on a 2023 mainboard with 256 GiB of
-RAM with a 2011 PCIe 2.0 SATA controller, which might not be the most
-common of combinations.
+Asking the ASM1061 on a discrete PCIe card to DMA from I/O virtual
+address 0xffffffff00000000 produces the following I/O page faults:
 
+[Tue Jan 23 21:31:55 2024] vfio-pci 0000:07:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000000 flags=0x0010]
+[Tue Jan 23 21:31:55 2024] vfio-pci 0000:07:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000500 flags=0x0010]
 
-> If you can find another PCIe card (e.g. a AHCI controller or NVMe
-> controller) that you can plug in to the same slot on the X570
-> motherboard, I agree that it would confirm your theory.
+Note that the upper 21 bits of the logged DMA address are zero.  (When
+asking a different PCIe device in the same PCIe slot to DMA to the same
+I/O virtual address, we do see all the upper 32 bits of the DMA address
+as 1, so this is not an issue with the chipset or IOMMU configuration on
+the test system.)
 
-I don't have another PCIe AHCI controller handy right now, but I do
-have another PCIe card that I can make DMA to arbitrary addresses, a
-SuperMicro AOC-SAS2LP-MV8 PCIe SAS controller.
+Finally, hacking libahci to always set the upper 21 bits of all DMA
+addresses to 1 produces no discernible effect on the behavior of the
+ASM1061, and mkfs/mount/scrub/etc work as without this hack.
 
-However, since the ASM1061 card was in a mechanically x1 slot, and
-this SAS controller is a x8 card, I've had to both re-try the ASM1061
-in another, larger slot, as well as test the SAS controller in that
-same slot.
+This all strongly suggests that the ASM1061 has a 43 bit DMA address
+limit, and this commit therefore adds a quirk to deal with this limit.
+We apply the quirk to the other known ASMedia parts as well, since they
+are similar and likely to be affected by the same issue.
 
-So, with the ASM1061 moved to another (x16) slot (where it is now
-04:00.0, instead of 07:00.0 which it was before), with the same patch
-as before:
+Link: https://lore.kernel.org/linux-ide/ZaZ2PIpEId-rl6jv@wantstofly.org/
+Signed-off-by: Lennert Buytenhek <kernel@wantstofly.org>
+---
+ drivers/ata/ahci.c | 38 +++++++++++++++++++++++++++-----------
+ drivers/ata/ahci.h |  1 +
+ 2 files changed, 28 insertions(+), 11 deletions(-)
 
-+               if (qc->dma_dir == DMA_TO_DEVICE)
-+                       addr = 0xffffffff00000000;
-
-In this new slot, the I/O page faults generated look the same as before,
-that is, with the upper 21 bits of the DMA addresses dropped:
-
-[Wed Jan 24 13:59:45 2024] vfio-pci 0000:04:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000000 flags=0x0010]
-[Wed Jan 24 13:59:45 2024] vfio-pci 0000:04:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000700 flags=0x0010]
-
-After replacing the ASM1061 card with the SAS controller, which is:
-
-04:00.0 RAID bus controller: Marvell Technology Group Ltd. 88SE9485 SAS/SATA 6Gb/s controller (rev c3)
-
-And with the following patch applied to the mvsas driver:
-
-diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index fc0b8eb68204..11886e73a625 100644
---- a/drivers/scsi/mvsas/mv_94xx.c
-+++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -788,7 +788,7 @@ static void mvs_94xx_make_prd(struct scatterlist *scatter, int nr, void *prd)
-        struct mvs_prd_imt im_len;
-        *(u32 *)&im_len = 0;
-        for_each_sg(scatter, sg, nr, i) {
--               buf_prd->addr = cpu_to_le64(sg_dma_address(sg));
-+               buf_prd->addr = cpu_to_le64(0xffffffff00000000UL);
-                im_len.len = sg_dma_len(sg);
-                buf_prd->im_len = cpu_to_le32(*(u32 *)&im_len);
-                buf_prd++;
-
-The corresponding I/O page faults in the host look like this:
-
-[Wed Jan 24 14:08:33 2024] vfio-pci 0000:04:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0xffffffff00000000 flags=0x0030]
-[Wed Jan 24 14:08:33 2024] vfio-pci 0000:04:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0xffffffff00000180 flags=0x0030]
-
-That is, with the upper 32 bits of the DMA address fully intact.
-
-I think this shows pretty conclusively that the ASM1061 is dropping
-the upper 21 bits of DMA addresses.
-
-
-> > There are two ways to handle this -- either set the DMA mask for ASM106x
-> > parts to 43 bits, or take the lazy route and just use AHCI_HFLAG_32BIT_ONLY
-> > for these parts.  I feel that the former would be more appropriate, as
-> > there seem to be plenty of bits beyond bit 31 that do work, but I will
-> > defer to your judgement on this matter.  What do you think the right way
-> > to handle this apparent hardware quirk is?
-> 
-> I've seen something similar for NVMe, where some NVMe controllers from
-> Amazon was violating the spec, and only supported 48-bit DMA addresses,
-> even though NVMe spec requires you to support 64-bit DMA addresses, see:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4bdf260362b3be529d170b04662638fd6dc52241
-> 
-> It is possible that ASMedia ASM1061 has a similar problem (but for AHCI)
-> and only supports 43-bit DMA addresses, even though it sets AHCI CAP.S64A,
-> which says "Indicates whether the HBA can access 64-bit data structures.".
-> 
-> I think the best thing is to do a similar quirk, where we set the dma_mask
-> accordingly.
-
-I'll give that a try.
-
-
-Kind regards,
-Lennert
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 08745e7db820..dc86c73019ce 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -58,6 +58,7 @@ enum board_ids {
+ 
+ 	/* board IDs for specific chipsets in alphabetical order */
+ 	board_ahci_al,
++	board_ahci_asm106x,
+ 	board_ahci_avn,
+ 	board_ahci_mcp65,
+ 	board_ahci_mcp77,
+@@ -185,6 +186,13 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
++	[board_ahci_asm106x] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_43BIT_ONLY),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ 	[board_ahci_avn] = {
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+@@ -596,14 +604,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
+ 	{ PCI_VDEVICE(PROMISE, 0x3781), board_ahci },   /* FastTrak TX8660 ahci-mode */
+ 
+-	/* Asmedia */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0601), board_ahci },	/* ASM1060 */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0602), board_ahci },	/* ASM1060 */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0621), board_ahci },   /* ASM1061R */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0622), board_ahci },   /* ASM1062R */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0624), board_ahci },   /* ASM1062+JMB575 */
++	/* ASMedia, 43 bit DMA address limit */
++	{ PCI_VDEVICE(ASMEDIA, 0x0601), board_ahci_asm106x },	/* ASM1060 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0602), board_ahci_asm106x },	/* ASM1060 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci_asm106x },	/* ASM1061 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci_asm106x },	/* ASM1061/1062 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0621), board_ahci_asm106x },   /* ASM1061R */
++	{ PCI_VDEVICE(ASMEDIA, 0x0622), board_ahci_asm106x },   /* ASM1062R */
++	{ PCI_VDEVICE(ASMEDIA, 0x0624), board_ahci_asm106x },   /* ASM1062+JMB575 */
+ 
+ 	/*
+ 	 * Samsung SSDs found on some macbooks.  NCQ times out if MSI is
+@@ -943,11 +951,19 @@ static int ahci_pci_device_resume(struct device *dev)
+ 
+ #endif /* CONFIG_PM */
+ 
+-static int ahci_configure_dma_masks(struct pci_dev *pdev, int using_dac)
++static int ahci_configure_dma_masks(struct pci_dev *pdev,
++				    struct ahci_host_priv *hpriv)
+ {
+-	const int dma_bits = using_dac ? 64 : 32;
++	int dma_bits;
+ 	int rc;
+ 
++	if (!(hpriv->cap & HOST_CAP_64))
++		dma_bits = 32;
++	else if (hpriv->flags & AHCI_HFLAG_43BIT_ONLY)
++		dma_bits = 43;
++	else
++		dma_bits = 64;
++
+ 	/*
+ 	 * If the device fixup already set the dma_mask to some non-standard
+ 	 * value, don't extend it here. This happens on STA2X11, for example.
+@@ -1920,7 +1936,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	ahci_gtf_filter_workaround(host);
+ 
+ 	/* initialize adapter */
+-	rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
++	rc = ahci_configure_dma_masks(pdev, hpriv);
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 4bae95b06ae3..df8f8a1a3a34 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -247,6 +247,7 @@ enum {
+ 	AHCI_HFLAG_SUSPEND_PHYS		= BIT(26), /* handle PHYs during
+ 						      suspend/resume */
+ 	AHCI_HFLAG_NO_SXS		= BIT(28), /* SXS not supported */
++	AHCI_HFLAG_43BIT_ONLY		= BIT(29), /* 43bit DMA addr limit */
+ 
+ 	/* ap->flags bits */
+ 
+-- 
+2.43.0
