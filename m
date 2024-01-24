@@ -1,99 +1,170 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D07AE107B6
-	for <linux-ide@vger.kernel.org>; Wed, 24 Jan 2024 10:41:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2EA7B60DD7;
+	Wed, 24 Jan 2024 11:59:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706092885; cv=none; b=tmQzMNlG9OUUEUOQxw4Ry9jkd6I1lvHbQZFy7mszL2NtF2ItKmPbjleTIOGeohrpOAoITt8nEWG15ph1fm8TeUOHhiCqRRvpT1WZ7kbbDmGPRR5pbmkKdqYPSUCYO7+q+MCJPGHhz8a2fGKjDXKqjBcALX4oWIcssSfSB5SWofo=
+	t=1706097601; cv=none; b=LFFLGPSlqiLCq3KdlOeEed6BebJ+crXSlhTzPW9e1h2LORu2W2MzrUAJs+9nDOJbCMSu/dVqhqdkEmkSDe+y5z/RB4CugMslbmApfGVtWnvikSElOisJlHJgu15/qkKl53t+MD5ObJqywTdYOlFwoYoUuXMP8Ngw7jwyi0FzuVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706092885; c=relaxed/simple;
-	bh=aQV5wdtHG6XVbVmskbVq/ID3RemofwlXNGFh3SBPOFs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JTpUWJBuQbA7WXHKE5tMw4HZFuZoj53eB9a+EGjcYQqPLXCwGj8GPrTlbEhPJVoW6D7z8MU0hD5m4y/DDZPNDaCLgkRhnwYKOgP5WDBxBK3oBizXAuJhduyAMy51kVTpqelUsvKnIIPpiWhrfTwX7/k+4UCyl/LqRwv6uU5pDi8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sbp9/74E; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sbp9/74E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0DF2C433F1;
-	Wed, 24 Jan 2024 10:41:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706092885;
-	bh=aQV5wdtHG6XVbVmskbVq/ID3RemofwlXNGFh3SBPOFs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Sbp9/74EmRDp6a03JeRwTTam8jTaG48wsugt5Myla2tJqbd4T6N/zlW7E9VAM75xm
-	 TM3OkZ+vikJS1XVXlc1VAGxPwj9woEBaE5MMF74f+AMm6+C3UN4VdSNY55avjo83jp
-	 FfOz6cIXtbYvEHcmSGb0+1WfbunN0OsegpoEaVrv3kPSzd7/TcKJbvX/LECjbA68Xd
-	 aqku1E4zW0G6BfPgfPowyRNoLYEA01rJ7e49CaXAqSgkRNgk+bYlZLLwF5XFk9htOP
-	 psQ8P6Vcahpm6VjcU14np7X3uvJkjwJVUx7rdtKQ7xa2J/lAMv1MP0SMxZz9GIf4/b
-	 KhZGZwUF+akCw==
-Date: Wed, 24 Jan 2024 11:41:18 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Szuying Chen <chensiying21@gmail.com>,
-	"Jesse1_Chang@asmedia.com.tw" <Jesse1_Chang@asmedia.com.tw>,
-	"Richard_Hsu@asmedia.com.tw" <Richard_Hsu@asmedia.com.tw>,
-	Szuying Chen <Chloe_Chen@asmedia.com.tw>
-Cc: Lennert Buytenhek <kernel@wantstofly.org>,
-	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Subject: Re: ASMedia ASM1062 (AHCI) hang after "ahci 0000:28:00.0: Using
- 64-bit DMA addresses"
-Message-ID: <ZbDpTrt0lU/llRMp@x1-carbon>
-References: <ZaZ2PIpEId-rl6jv@wantstofly.org>
- <ZaaQpiW3OOZTSyXw@x1-carbon>
- <ZahDNr97MSPNSHW_@wantstofly.org>
- <ZahaKaV1jlHQ0sUx@x1-carbon>
- <ZbAo_LqpbiGMfTtW@wantstofly.org>
- <ZbDjL0TDnUfzknZS@x1-carbon>
+	s=arc-20240116; t=1706097601; c=relaxed/simple;
+	bh=3z6wcnzZigmy1AnwKW6EWYXgb3eqsvFGY6rKaYlxPHE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=ekfg+IvEPUpwhPYg7+kM8VobWCLZ2ApkQAVSaIDG77RoExaAbqcl1Y7bsXFYC4rZk0eqXLSpGOzgGFkcJO9nqwi2Lr7PTZnsj0WDv12MErKEu3ud6XQzu0C4Oe8k7iI8fy3g50hLbf+tg5L3dLv40t9nKWuoEPIeonfa86LZkow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
+X-AuditID: a67dfc5b-d85ff70000001748-51-65b0fbb4aca7
+From: Byungchul Park <byungchul@sk.com>
+To: linux-kernel@vger.kernel.org
+Cc: kernel_team@skhynix.com,
+	torvalds@linux-foundation.org,
+	damien.lemoal@opensource.wdc.com,
+	linux-ide@vger.kernel.org,
+	adilger.kernel@dilger.ca,
+	linux-ext4@vger.kernel.org,
+	mingo@redhat.com,
+	peterz@infradead.org,
+	will@kernel.org,
+	tglx@linutronix.de,
+	rostedt@goodmis.org,
+	joel@joelfernandes.org,
+	sashal@kernel.org,
+	daniel.vetter@ffwll.ch,
+	duyuyang@gmail.com,
+	johannes.berg@intel.com,
+	tj@kernel.org,
+	tytso@mit.edu,
+	willy@infradead.org,
+	david@fromorbit.com,
+	amir73il@gmail.com,
+	gregkh@linuxfoundation.org,
+	kernel-team@lge.com,
+	linux-mm@kvack.org,
+	akpm@linux-foundation.org,
+	mhocko@kernel.org,
+	minchan@kernel.org,
+	hannes@cmpxchg.org,
+	vdavydov.dev@gmail.com,
+	sj@kernel.org,
+	jglisse@redhat.com,
+	dennis@kernel.org,
+	cl@linux.com,
+	penberg@kernel.org,
+	rientjes@google.com,
+	vbabka@suse.cz,
+	ngupta@vflare.org,
+	linux-block@vger.kernel.org,
+	josef@toxicpanda.com,
+	linux-fsdevel@vger.kernel.org,
+	viro@zeniv.linux.org.uk,
+	jack@suse.cz,
+	jlayton@kernel.org,
+	dan.j.williams@intel.com,
+	hch@infradead.org,
+	djwong@kernel.org,
+	dri-devel@lists.freedesktop.org,
+	rodrigosiqueiramelo@gmail.com,
+	melissa.srw@gmail.com,
+	hamohammed.sa@gmail.com,
+	42.hyeyoo@gmail.com,
+	chris.p.wilson@intel.com,
+	gwan-gyeong.mun@intel.com,
+	max.byungchul.park@gmail.com,
+	boqun.feng@gmail.com,
+	longman@redhat.com,
+	hdanton@sina.com,
+	her0gyugyu@gmail.com
+Subject: [PATCH v11 01/26] llist: Move llist_{head,node} definition to types.h
+Date: Wed, 24 Jan 2024 20:59:12 +0900
+Message-Id: <20240124115938.80132-2-byungchul@sk.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240124115938.80132-1-byungchul@sk.com>
+References: <20240124115938.80132-1-byungchul@sk.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSW0wTaRTH/b6Z+WboUjMpGkd8QBurCcYLBs1xo4ZkH3Z40JhojJFEbWSU
+	slxMy3WzRkQEF0RBU1CsWkBrU6Bgi9EVSipqoRKhYsN2CSASd5EVRMGycvHSsvpy8ss5//xy
+	Hv4cpWhiwjlNSpqkTVEnKYmMlo2FVq5tnG2QNkx4NkLp2Q3g/3CGBkN9LQGPtQZBbeNJDCOP
+	f4Y/p0YRzD7toqBc70FQ+bKfgkbXAAKHOZfA81cLwesfJ+DWFxE4VV1P4NmbOQx9ZRcw1Nh2
+	QEdJFQbn9DAN5SMErpSfwoHxGsO0ycKCKUcFQ+YKFuZeRoF7oIcBR+8auHytj0Czw02D694Q
+	huf3DQQGar8w0OFqp8FTWsxA3dsqAm+mTBSY/OMsdDuNGBryAqL8yc8MtBU7MeTfuI3B+1cT
+	gpYzgxhstT0EHvpHMdhtegpmbj1GMHRujIXTZ6dZuHLyHIKi02U0dH1qYyCvbxPMfjSQmB/F
+	h6PjlJhnzxQdU0ZafFIliH9U9LNiXksvKxpt6aLdHClWN49gsXLCz4g2y+9EtE1cYMXCMS8W
+	33Z2smL7pVlafOUtx7uW7ZdtjZeSNBmSdv32Q7KE/M5r7LGrsizjzTskB7VwhSiEE/ho4WJu
+	G/OdHXWTJMiEXy34fNNUkBfxywV78T+BjIyj+IIfBPO7p/OhMH6n4Cgax0GmeZXwb1c3HWQ5
+	v0m47rLS/0sjhJoG57wohN8s1F3und8rAplBy3k2KBX4ghDB0lH47YulwgOzjy5BciNaYEEK
+	TUpGslqTFL0uITtFk7XucGqyDQUqZTo+F3cPTXh2tyKeQ8pQeYylXlIw6gxddnIrEjhKuUju
+	W2qVFPJ4dfavkjb1oDY9SdK1omUcrVwi3ziVGa/gj6rTpF8k6Zik/X7FXEh4DtI7dKuGS1Kl
+	9d7ImYN3PL7f7qpLa6L3xR7ZfTdu8knEgm5jxEwmdaDf2h2amL1yr8OZ82BP2QmDyur2Vxxe
+	kS6b+Xz/aGxsXHJ4+DYhNO3D4iXmT6rzBTsMivd2fWOYzrXlp7+JL4I9kFgRo1S5Xz/72Hyo
+	57+hR++LTuxvejGcu0ZJ6xLUUZGUVqf+Ctduq0FOAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSf0yMcRzH+36f5/k+T8fZ08k8YmM3ZCEZtY9l1j94Zqtl/vBjpBsP3frB
+	7kgZW7mEcgiJujjhtOunp5Afl1up5EelQlrdqjVEydTFuURl/vnstff7vddfH45S5TI+nDbu
+	gKSL08SoiYJWhAUblpa7S6UAxzUfyDgdAM7hkzSYSgoJNBUXICgsT8bQV7Me3o30I3C/aqQg
+	K7MJwfXuTgrKax0IbPnHCLT0ToNW5yCB+sx0AoYbJQRefxnF0HHpPIYCORRenMvDYHd9pCGr
+	j0BOlgGPn08YXBYrC5akBdCTn83CaPdyqHe8ZaA6t54BW/tiuHK1g8BjWz0NtRU9GFoemgg4
+	Cv8w8KL2GQ1NGUYGir7mEfgyYqHA4hxkodluxlCaMm5LHRpjoM5ox5B68w6G1vePEFSe7MIg
+	F74lUO3sx1AmZ1Lw63YNgp4zAywcP+1iISf5DIL045doaPxdx0BKRyC4f5pISLBY3T9IiSll
+	h0TbiJkWn+cJ4oPsTlZMqWxnRbN8UCzL9xNvPO7D4vXvTkaUraeIKH8/z4ppA61Y/NrQwIrP
+	Lrtpsbc1C4fP2aZYvVuK0cZLumVrIhVRqQ1X2f25igTzrbskCVVyaciTE/iVgq1oiEww4X2F
+	tjYXNcHe/DyhzPiBSUMKjuJPTBHyv72aHE3nwwRb+iCeYJpfIHxubKYnWMkHCtdqi+l/0rlC
+	Qal9UuTJBwlFV9onc9X4pst6lj2HFGbkYUXe2rj4WI02JtBfHx2VGKdN8N+1L1ZG409jOTqa
+	UYGGW9ZXIZ5D6qnKEGuJpGI08frE2CokcJTaW9k2q1hSKXdrEg9Lun07dQdjJH0Vms3R6pnK
+	DZulSBW/V3NAipak/ZLuf4s5T58k9HLh/HivwPA39oiho3cNQyjNfmes87066GlzQrR84fKn
+	JxH3N9VVrPJrCl203fUwOfuHh3H0jdc9khS5TnZEtPfO2KHBz71ClbZ5Fz1ig/3pnYt7jKYj
+	4dPdYSh0OGjJqoB3vw3JAVNC9qz1tW+92d218VjQFm2fqeh1dk7NqUVjK9S0Pkqz3I/S6TV/
+	AentXzAwAwAA
+X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZbDjL0TDnUfzknZS@x1-carbon>
 
-Hello ASMedia guys,
+llist_head and llist_node can be used by very primitives. For example,
+Dept for tracking dependency uses llist things in its header. To avoid
+header dependency, move those to types.h.
 
+Signed-off-by: Byungchul Park <byungchul@sk.com>
+---
+ include/linux/llist.h | 8 --------
+ include/linux/types.h | 8 ++++++++
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-It seems like ASMedia ASM1061 does not work with recent Linux kernel versions:
-https://lore.kernel.org/linux-ide/ZbAo_LqpbiGMfTtW@wantstofly.org/T/#m2e12f7f0060f0f6cbf3fcb9ec8eecc2c1d1b5799
-
-Lennert on the linux-ide mailing list has done some detective work that
-strongly suggests that ASMedia ASM1061 ignores the upper 21 bits of all
-DMA addresses.
-
-
-See full analysis here:
-https://lore.kernel.org/linux-ide/ZbAo_LqpbiGMfTtW@wantstofly.org/T/#m02d07243492868085b56c6173efe42e814359017
-
-Basically he modifies libahci.c:
-
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1667,6 +1667,12 @@ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
-                dma_addr_t addr = sg_dma_address(sg);
-                u32 sg_len = sg_dma_len(sg);
-
-+               printk(KERN_INFO "mapping dma_address=%.16lx sg_len=%.8lx dma_dir=%d\n",
-+                       (unsigned long)addr, (unsigned long)sg_len, qc->dma_dir);
+diff --git a/include/linux/llist.h b/include/linux/llist.h
+index 2c982ff7475a..3ac071857612 100644
+--- a/include/linux/llist.h
++++ b/include/linux/llist.h
+@@ -53,14 +53,6 @@
+ #include <linux/stddef.h>
+ #include <linux/types.h>
+ 
+-struct llist_head {
+-	struct llist_node *first;
+-};
+-
+-struct llist_node {
+-	struct llist_node *next;
+-};
+-
+ #define LLIST_HEAD_INIT(name)	{ NULL }
+ #define LLIST_HEAD(name)	struct llist_head name = LLIST_HEAD_INIT(name)
+ 
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 253168bb3fe1..10d94b7f9e5d 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -199,6 +199,14 @@ struct hlist_node {
+ 	struct hlist_node *next, **pprev;
+ };
+ 
++struct llist_head {
++	struct llist_node *first;
++};
 +
-+               if (qc->dma_dir == DMA_TO_DEVICE)
-+                       addr |= 0xfffff80000000000;
++struct llist_node {
++	struct llist_node *next;
++};
 +
-                ahci_sg[si].addr = cpu_to_le32(addr & 0xffffffff);
-                ahci_sg[si].addr_hi = cpu_to_le32((addr >> 16) >> 16);
-                ahci_sg[si].flags_size = cpu_to_le32(sg_len - 1);
+ struct ustat {
+ 	__kernel_daddr_t	f_tfree;
+ #ifdef CONFIG_ARCH_32BIT_USTAT_F_TINODE
+-- 
+2.17.1
 
-So he force sets all the upper 21 bits in the address sent to the device,
-but can still mkfs.btrfs, mount and scrub the filesystem.
-This should of course not have worked, and should have resulted in a bunch
-of IOMMU page fault errors in the log, but it doesn't.
-
-Can you guys verify that ASMedia ASM1061 only supports 43-bit DMA addresses,
-even though it sets AHCI CAP.S64A, which says "Indicates whether the HBA can
-access 64-bit data structures." ?
-
-
-Kind regards,
-Niklas
