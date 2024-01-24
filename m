@@ -1,97 +1,65 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 344BF7CF03;
-	Wed, 24 Jan 2024 16:14:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from gentwo.org (gentwo.org [62.72.0.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C09711272CF;
+	Wed, 24 Jan 2024 17:51:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.72.0.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706112889; cv=none; b=D1upao8EZxYybuYv8tuv4fn8b/w6+LTz9+G6MCjulu2P198O0eJOVfEwQOEajafi8PlwbZDa/pCMOXljI+im5vXUdKq7vlf5YUfPBpV2U0brTMU1XGqesIoC/VET5oMD3FJU31scr0pMWG03vJwf5eaUUX0yjoH6XnQ+ImhgXhU=
+	t=1706118666; cv=none; b=KhGMe1X3nROfgzqpxv6U7g0B3/xQCusvF8kN2yDTgyYt7B26GGXErNWCXyN5UJ3X589FbhsxTf4ZBefyPH3SpUmaleRWni2v3d64SmpruJtsVk6Hn+qHo17/ToHxAgbeYo4TaPnIGYJhwFoi7angcQU4J3zRysXnTRWymL2n2Cw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706112889; c=relaxed/simple;
-	bh=q1Hn7Di1un3vGjw/pWuBZtI2ypUfglqG7TORIqEdXJc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=o0MLAzho3nc2mj9tUvhYWFx3mGPPv8JBOKPu2eE/SqV3Trt02/sA/Hmk8r5uifs1kRCRIrx7XOW5pDl5FXhFzc+5ZbADy4r9bd59/LGUXT9WEAZfb3MeipaL+f6TdcxAlV6o6Vo8uLSNOHFANmcuArcfVFHJZT8NCzg1tghu3GU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9D5001FB;
-	Wed, 24 Jan 2024 08:15:31 -0800 (PST)
-Received: from [10.1.196.40] (e121345-lin.cambridge.arm.com [10.1.196.40])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DB4743F762;
-	Wed, 24 Jan 2024 08:14:45 -0800 (PST)
-Message-ID: <83a89509-42cb-4915-94dc-a2b9d5a63311@arm.com>
-Date: Wed, 24 Jan 2024 16:14:37 +0000
+	s=arc-20240116; t=1706118666; c=relaxed/simple;
+	bh=w7rEBfdQN1/zYVzqjkLSQ1tMJOL/dF1Tae38s5/U7yQ=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=OAIt0yqmbBSxk1DxizoBQ7gftR/KI/1EdvloI1ximUo1TAONBmP2D5x2gcspW0ompBG8ylweWACyHwASNOVKgi/GhxD8V+fe/hUJVeyNn9xu92JKKGXBZXU+IvQj1ekKj/iqRCEUMN3cTB7ePwcjFnZbc59GQQ2/R7aE0iAu0f4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=fail smtp.mailfrom=linux.com; arc=none smtp.client-ip=62.72.0.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=linux.com
+Received: by gentwo.org (Postfix, from userid 1003)
+	id 854D340A94; Wed, 24 Jan 2024 09:51:02 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by gentwo.org (Postfix) with ESMTP id 838C840787;
+	Wed, 24 Jan 2024 09:51:02 -0800 (PST)
+Date: Wed, 24 Jan 2024 09:51:02 -0800 (PST)
+From: "Christoph Lameter (Ampere)" <cl@linux.com>
+To: Matthew Wilcox <willy@infradead.org>
+cc: David Rientjes <rientjes@google.com>, Pasha Tatashin <tatashin@google.com>, 
+    Sourav Panda <souravpanda@google.com>, lsf-pc@lists.linux-foundation.org, 
+    linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+    linux-block@vger.kernel.org, linux-ide@vger.kernel.org, 
+    linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, 
+    bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
+In-Reply-To: <Za2lS-jG1s-HCqbx@casper.infradead.org>
+Message-ID: <aa94b8fe-fc08-2838-50b5-d1c98058b1e0@linux.com>
+References: <ZaqiPSj1wMrTMdHa@casper.infradead.org> <b04b65df-b25f-4457-8952-018dd4479651@google.com> <Za2lS-jG1s-HCqbx@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: ASMedia ASM1062 (AHCI) hang after "ahci 0000:28:00.0: Using
- 64-bit DMA addresses"
-Content-Language: en-GB
-To: Lennert Buytenhek <kernel@wantstofly.org>, Niklas Cassel <nks@flawful.org>
-Cc: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <ZaZ2PIpEId-rl6jv@wantstofly.org> <ZaaQpiW3OOZTSyXw@x1-carbon>
- <ZahDNr97MSPNSHW_@wantstofly.org> <ZahaKaV1jlHQ0sUx@x1-carbon>
- <ZbAo_LqpbiGMfTtW@wantstofly.org> <ZbDjL0TDnUfzknZS@x1-carbon>
- <ZbEFU-rycTXxOtfW@wantstofly.org> <ZbEXcFJkw4zXKxqb@wantstofly.org>
-From: Robin Murphy <robin.murphy@arm.com>
-In-Reply-To: <ZbEXcFJkw4zXKxqb@wantstofly.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-On 24/01/2024 1:58 pm, Lennert Buytenhek wrote:
-> On Wed, Jan 24, 2024 at 02:40:51PM +0200, Lennert Buytenhek wrote:
-> 
->>>> There are two ways to handle this -- either set the DMA mask for ASM106x
->>>> parts to 43 bits, or take the lazy route and just use AHCI_HFLAG_32BIT_ONLY
->>>> for these parts.  I feel that the former would be more appropriate, as
->>>> there seem to be plenty of bits beyond bit 31 that do work, but I will
->>>> defer to your judgement on this matter.  What do you think the right way
->>>> to handle this apparent hardware quirk is?
->>>
->>> I've seen something similar for NVMe, where some NVMe controllers from
->>> Amazon was violating the spec, and only supported 48-bit DMA addresses,
->>> even though NVMe spec requires you to support 64-bit DMA addresses, see:
->>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4bdf260362b3be529d170b04662638fd6dc52241
->>>
->>> It is possible that ASMedia ASM1061 has a similar problem (but for AHCI)
->>> and only supports 43-bit DMA addresses, even though it sets AHCI CAP.S64A,
->>> which says "Indicates whether the HBA can access 64-bit data structures.".
->>>
->>> I think the best thing is to do a similar quirk, where we set the dma_mask
->>> accordingly.
->>
->> I'll give that a try.
-> 
-> I've sent out a patch that appears (from printk debugging) to do the
-> right thing, but I haven't validated that that patch fixes the original
-> issue, as the original issue is not trivial to trigger, and the hardware
-> that it triggered on is currently unavailable.
+On Sun, 21 Jan 2024, Matthew Wilcox wrote:
 
-The missing piece of the puzzle is that *something* has to use up all 
-the available 32-bit IOVA space to make you spill over into the 64-bit 
-space to begin with. It can happen just from having many large buffers 
-mapped simultaneously (particularly if there are several devices in the 
-same IOMMU group), or it could be that something is leaking DMA mappings 
-over time.
+>
+> I'd like to keep this topic relevant to as many people as possible.
+> I can add a proposal for a topic on both the PCP and Buddy allocators
+> (I have a series of Thoughts on how the PCP allocator works in a memdesc
+> world that I haven't written down & sent out yet).
 
-An easy way to confirm the device behaviour should be to boot with 
-"iommu.forcedac=1", then all devices will have their full DMA mask 
-exercised straight away.
+Well the PCP cache's  (I would not call it an allocator) intent is to 
+provide cache hot / tlb hot pages. In some ways this is like the SLAB/SLUB 
+situation. I.e. lists of objects vs. service objects that are 
+locally related.
 
-Cheers,
-Robin.
+Can we come up with a design that uses a huge page (or some 
+arbitrary page size) and the breaks out portions of the large page? That 
+way potentially TLB use can be reduced (multiple sections of a large page 
+use the same TLB) and defragmentation occurs because allocs and frees 
+focus on a selection of large memory sections.
 
-> I've also made the quirk apply to all ASMedia ASM106x parts, because I
-> expect them to be affected by the same issue, but let's see what the
-> ASMedia folks have to say about that.
-> 
-> Thanks for your help!
-> 
-> 
-> Kind regards,
-> Lennert
-> 
+This is rougly equivalent to a per cpu page (folio?) in SLUB where cache 
+hot objects can be served from a single memory section and also freed back 
+without too much interaction with higher level more expensive components 
+of the allocator.
