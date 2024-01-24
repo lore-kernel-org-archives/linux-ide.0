@@ -1,80 +1,85 @@
-Received: from mail.wantstofly.org (hmm.wantstofly.org [213.239.204.108])
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FCA377658;
-	Wed, 24 Jan 2024 13:58:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.239.204.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3F0D7A725
+	for <linux-ide@vger.kernel.org>; Wed, 24 Jan 2024 16:04:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.238.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706104693; cv=none; b=F1SNGpKWyks0zO8/3N/FJV96GGSWX6BvOa/WLnL3F1NDmn6vrdW/9E8xNwE4UBMku6IMAUkzAGHLs4PExM3XmQS2ALxoxuKbD2gS1dnC6GQb8TZ6yq4dpOFoZ6cRuVSr+/iIMLngjenRU7te39eTGQyDTG2syeX9JHkmcbnjSf8=
+	t=1706112297; cv=none; b=gWOKjK4U6CdFX+28JRUzrsHkRYTVVI0qkOD2ovshQn6gSaIO96j/bopMBw1yGH7ElDO1NJLXAfujjlCJo4GEl7hsCVuNrvX5TxXTbBHibYcd0FjYaVzltgPJC1xqtIBjOdI/fA2eSwUg4tojNSGY0kokXuMsDhNO7t1eZaOyFMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706104693; c=relaxed/simple;
-	bh=q/2/V58ITZlDDjL2VM6IfKb7G4x7oTR6z6aY16ImCkw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q/cBE641TscChXDNAUbG+64BIEafA2KmYnrc38qYLkBt70WjIdQTvgbzfbvQFZwfZ/4RPOblCaNI+BKz7qUMpjvgI+p6R91Z2kcbpAWFboKecwesMVDHKAuUtfAtuSoAbbw8zMknW0YuUmuLZe26bEWF3+XpPVnvr0ej926bITM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wantstofly.org; spf=pass smtp.mailfrom=wantstofly.org; arc=none smtp.client-ip=213.239.204.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wantstofly.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wantstofly.org
-Received: by mail.wantstofly.org (Postfix, from userid 1000)
-	id 8EDCB7F712; Wed, 24 Jan 2024 15:58:08 +0200 (EET)
-Date: Wed, 24 Jan 2024 15:58:08 +0200
-From: Lennert Buytenhek <kernel@wantstofly.org>
-To: Niklas Cassel <nks@flawful.org>
-Cc: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ASMedia ASM1062 (AHCI) hang after "ahci 0000:28:00.0: Using
- 64-bit DMA addresses"
-Message-ID: <ZbEXcFJkw4zXKxqb@wantstofly.org>
-References: <ZaZ2PIpEId-rl6jv@wantstofly.org>
- <ZaaQpiW3OOZTSyXw@x1-carbon>
- <ZahDNr97MSPNSHW_@wantstofly.org>
- <ZahaKaV1jlHQ0sUx@x1-carbon>
- <ZbAo_LqpbiGMfTtW@wantstofly.org>
- <ZbDjL0TDnUfzknZS@x1-carbon>
- <ZbEFU-rycTXxOtfW@wantstofly.org>
+	s=arc-20240116; t=1706112297; c=relaxed/simple;
+	bh=DHd/pO85Gwkr4NYm0+YPCVhjb2Gq584joeqot/5TXvs=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=AwQHnwwdof1VFagoaoh+6ZsJzgYN/X7RN4PJP/D3ZWKcJHulzTvmQtSIYpsS4sioo5tPk87quo3Zr5SagawWdxmshIR9tiIO4k63diHl4rCu8xA+YDkjkrAei0dCRk8ZkC9nNwYYBsa4vs36XXTGzLDHVvJZUMoTHPgibo0133E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net; spf=pass smtp.mailfrom=thesusis.net; arc=none smtp.client-ip=34.202.238.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=thesusis.net
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+	id 99A60154BD8; Wed, 24 Jan 2024 11:04:49 -0500 (EST)
+From: Phillip Susi <phill@thesusis.net>
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
+In-Reply-To: <d058a699-2929-4829-859b-8450f4bf497e@kernel.org>
+References: <87msthdo11.fsf@vps.thesusis.net>
+ <20240107180258.360886-1-phill@thesusis.net>
+ <20240107180258.360886-2-phill@thesusis.net>
+ <f6110204-338d-42b5-8ec2-153dd862e799@kernel.org>
+ <878r50uf97.fsf@vps.thesusis.net>
+ <abd85855-0767-4e48-a8a7-8046cd339f9c@kernel.org>
+ <87a5p5b426.fsf@vps.thesusis.net> <878r4l12c5.fsf@vps.thesusis.net>
+ <d058a699-2929-4829-859b-8450f4bf497e@kernel.org>
+Date: Wed, 24 Jan 2024 11:04:49 -0500
+Message-ID: <875xziiuou.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZbEFU-rycTXxOtfW@wantstofly.org>
+Content-Type: text/plain
 
-On Wed, Jan 24, 2024 at 02:40:51PM +0200, Lennert Buytenhek wrote:
+Damien Le Moal <dlemoal@kernel.org> writes:
 
-> > > There are two ways to handle this -- either set the DMA mask for ASM106x
-> > > parts to 43 bits, or take the lazy route and just use AHCI_HFLAG_32BIT_ONLY
-> > > for these parts.  I feel that the former would be more appropriate, as
-> > > there seem to be plenty of bits beyond bit 31 that do work, but I will
-> > > defer to your judgement on this matter.  What do you think the right way
-> > > to handle this apparent hardware quirk is?
-> > 
-> > I've seen something similar for NVMe, where some NVMe controllers from
-> > Amazon was violating the spec, and only supported 48-bit DMA addresses,
-> > even though NVMe spec requires you to support 64-bit DMA addresses, see:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4bdf260362b3be529d170b04662638fd6dc52241
-> > 
-> > It is possible that ASMedia ASM1061 has a similar problem (but for AHCI)
-> > and only supports 43-bit DMA addresses, even though it sets AHCI CAP.S64A,
-> > which says "Indicates whether the HBA can access 64-bit data structures.".
-> > 
-> > I think the best thing is to do a similar quirk, where we set the dma_mask
-> > accordingly.
-> 
-> I'll give that a try.
+> Flush issuing is a lot more complicated than just blkdev_issue_flush(). There is
+> a whole file dedicated to handling flushes (block/blk-flush.c).
+>
+> But that is beside the point, which is that trying to not execute flush is
+> simply completely wrong. Please stop trying.
 
-I've sent out a patch that appears (from printk debugging) to do the
-right thing, but I haven't validated that that patch fixes the original
-issue, as the original issue is not trivial to trigger, and the hardware
-that it triggered on is currently unavailable.
+I tried before to have libata ignore the useless flush and you said to
+stop the flush from happening in the first place.  Now you say that's wrong?
 
-I've also made the quirk apply to all ASMedia ASM106x parts, because I
-expect them to be affected by the same issue, but let's see what the
-ASMedia folks have to say about that.
+> For your case, which is a drive put to sleep with hdparm -Y, only libata is
+> aware that the drive is sleeping. That first needs to change if you want the
+> kernel overall to be able to do anything. As I proposed already, using runtime
+> PM with sleep mode instead of standby would be a good start.
 
-Thanks for your help!
+No, I'm working on runtime pm now, as you suggested.  If you try using
+runtime pm with disks, you quickly see that it does not work.
 
+> Regarding the flushes and other commands you see that are waking up the drive
+> for no *apparent* good reasons, please identify what application/component is
+> issuing these commands and look there to see why the commands are being issued
+> and if that is done with awareness for the device power state.
 
-Kind regards,
-Lennert
+Filesystems flush every few seconds.  So does anyone calling sync(),
+which the kernel does when you suspend to ram.
+
+Either the filesystems need to keep track of whether a flush is needed
+and skip it, or if they all call the same place ( blkdev_issue_flush ),
+then it only needs done once in that place.
+
+The core logic needs to be "if nothing has been written, then nothing
+needs to be flushed".  Right now filesystems just flush periodically or
+when their sync method is called to make sure that anything that has
+been written is stable.
+
+In userspace you have smartd and udisks2 to worry about.  The
+information they need to know is whether the disk has otherwise been in
+recent use and so they should not poll the SMART data.  I don't see
+anything exported in the power/ directory that would give an indication
+of the current *remaining* time until autosuspend, or how long it has
+been since the last access.  Either one would be useful for userspace to
+decide that nobody else seems to be using the disk, so I'll leave it
+alone for now so it can go to sleep.
