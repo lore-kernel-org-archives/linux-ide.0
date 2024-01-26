@@ -1,91 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC1B2249E4
-	for <linux-ide@vger.kernel.org>; Fri, 26 Jan 2024 20:49:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B602375D
+	for <linux-ide@vger.kernel.org>; Fri, 26 Jan 2024 23:29:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706302180; cv=none; b=ORK/XnS3tzikCDQgtUhYUXfrifBG/Z1s+fY37YDBdnDcWw8NNBvWMmm3HkcQGbg2T5kQchlEsp/ro6/Aj3vTh+KHbwi3z1kbsZpN2KsxLGkm3ZGf+y5KFXaZ2kKJorneNZgNM79J0wyocrxN+WCg8iBukiOKXdbYvE8ns4Dnfyo=
+	t=1706311750; cv=none; b=cTkgyRBDAAxQhXLSSNmcWheIUTHvuavHvAom6866H4equQp7ld9lEUUOVxN06j7zxDuiUrG19RP7IZz2nG5gxskyA2JGqCusEiAhcGyDt2sB9dKawJQtWGz/J3P9vEQo44LHQ2Wlpg1Gw3Aj+EBLj5+fAYb1MrXLiEQP1P8PaJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706302180; c=relaxed/simple;
-	bh=3ydZ5tIbcCXuAo9x7kv38IAl8givWLC8zTksHbzEZr8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TRFz5eiSi9NobvaJHbDWeIi3WHyy0i7L36dJHQjN0ek2MA/MqgcHKcmQm7bpb9CCN8+i3fvVXqrCiMFKgF+xbgpjdb9aBCFdtqzHmDDAb7zD4g0maVvjvXY+YpPBXeIPKswmHpD9bx847Lz4T7q3gWEPJzOLuZerOW9KbWW8qO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O49M5YdQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706311750; c=relaxed/simple;
+	bh=W7QVFrinDVL+xZi4HWwSoAxDB5LSoB6jUd7NhcE/IYk=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=Zb5+oOItAsvl7IpfvwfGtJ6OrYG0g+JoRfegKP1h9Baco5leeRLZg9ILuii10cuUfzHD4sGk783Vpd014tJiPkPJ54bwtH6ygD5E5EY1Z/L4c0sXF3q5rByZCDdC+MzbFeqq07bj3dERWEF6TXiOB3RTBXbY2DS2K9PdaZ12Rwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hGg8vU3W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O49M5YdQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12A58C433C7;
-	Fri, 26 Jan 2024 20:49:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGg8vU3W"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id DDAADC433C7;
+	Fri, 26 Jan 2024 23:29:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706302180;
-	bh=3ydZ5tIbcCXuAo9x7kv38IAl8givWLC8zTksHbzEZr8=;
-	h=From:To:Cc:Subject:Date:From;
-	b=O49M5YdQQZOpCG9S+k+D7H99F6F6IMYAv3mOzXlWwsRB5EAuLTPNchQuGLk4y6OuP
-	 OqMJQCDIcMrtGC2d25PAKPwX1UbX0mKb0Ln/t1rnyf06IE+PhGrFWwWtNzHXljFDbc
-	 ompPHzVM8urRiXb7Q/OIPaE+pME3jwUgM8j1P/waWyoggSxlNdBwNFMpspz2x3lNlK
-	 iZgYYTFrQD6ald5oJ6HvMd+JG4A1R3NX8ibwvpm4aWFAL4/X1GpkLUcz2V3wfL37e2
-	 nQJT79W7wHRBLp1FsRwF51NlYvFzczjTa+BWMFVtXwfSBT5O2fk4yPD0FlDnKOpVEN
-	 XNKkaNCiTnoRQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata fixes for 6.8-rc2
-Date: Fri, 26 Jan 2024 21:49:27 +0100
-Message-ID: <20240126204927.4168716-1-cassel@kernel.org>
-X-Mailer: git-send-email 2.43.0
+	s=k20201202; t=1706311749;
+	bh=W7QVFrinDVL+xZi4HWwSoAxDB5LSoB6jUd7NhcE/IYk=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=hGg8vU3WSypcJB5ekrF+2LwD5gncwYlwLezQ90jWidotNLQzSpa85LLfFiWFo6lhs
+	 2TFksjytIyNM84O/wRkDoSmuziRBPZ8xceMMkzDl+8oMIplnMilNlv2mgeT7g1UKDs
+	 RskDbf2s/tx1MmoQCHGj7YId4tXnlksxzojp5ec7YUFWcnH0VKbaVByjtR5OK4of4u
+	 q8bI7G9eTZIUipf2igbr0t6e2WkiAOZPJaGWLQdfHsscO624nCbh/866kKEF3KFvDB
+	 9twdbanEcuwCWoLcEHSClK4h1Hw8qKujutw9HE5V75Db00XXJpPSDQOxpjPCo+0wgq
+	 YrfA9nAGphQ1A==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C5384DFF760;
+	Fri, 26 Jan 2024 23:29:09 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.8-rc2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20240126204927.4168716-1-cassel@kernel.org>
+References: <20240126204927.4168716-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20240126204927.4168716-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc2
+X-PR-Tracked-Commit-Id: 20730e9b277873deeb6637339edcba64468f3da3
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 3a5879d495b226d0404098e3564462d5f1daa33b
+Message-Id: <170631174979.8231.16751461089664136940.pr-tracker-bot@kernel.org>
+Date: Fri, 26 Jan 2024 23:29:09 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Linus,
+The pull request you sent on Fri, 26 Jan 2024 21:49:27 +0100:
 
-The following changes since commit 6613476e225e090cc9aad49be7fa504e290dd33d:
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc2
 
-  Linux 6.8-rc1 (2024-01-21 14:11:32 -0800)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/3a5879d495b226d0404098e3564462d5f1daa33b
 
-are available in the Git repository at:
+Thank you!
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc2
-
-for you to fetch changes up to 20730e9b277873deeb6637339edcba64468f3da3:
-
-  ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers (2024-01-25 16:59:09 +0100)
-
-----------------------------------------------------------------
-ata changes for 6.8-rc2
-
- - Fix an incorrect link_power_management_policy sysfs attribute
-   value. We were previously using the same attribute value for
-   two different LPM policies (me).
-
- - Add a ASMedia ASM1166 quirk. The SATA host controller always
-   reports that it has 32 ports, even though it only has six ports.
-   Add a quirk that overrides the value reported by the controller
-   (Conrad).
-
- - Add a ASMedia ASM1061 quirk. The SATA host controller completely
-   ignores the upper 21 bits of the DMA address. This causes IOMMU
-   error events when a (valid) DMA address actually has any of the
-   upper 21 bits set. Add a quirk that limits the dma_mask to
-   43-bits (Lennert).
-
-----------------------------------------------------------------
-Conrad Kostecki (1):
-      ahci: asm1166: correct count of reported ports
-
-Lennert Buytenhek (1):
-      ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers
-
-Niklas Cassel (1):
-      ata: libata-sata: improve sysfs description for ATA_LPM_UNKNOWN
-
- drivers/ata/ahci.c        | 34 ++++++++++++++++++++++++++++------
- drivers/ata/ahci.h        |  1 +
- drivers/ata/libata-sata.c |  2 +-
- include/linux/libata.h    |  2 +-
- 4 files changed, 31 insertions(+), 8 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
