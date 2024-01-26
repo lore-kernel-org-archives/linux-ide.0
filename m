@@ -1,97 +1,91 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 445532232D;
-	Fri, 26 Jan 2024 17:30:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC1B2249E4
+	for <linux-ide@vger.kernel.org>; Fri, 26 Jan 2024 20:49:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706290206; cv=none; b=L5YvgZjs770hr3tZmtODHg5gAj7dOKu0ac/byP00eN1b4geL7ZVfyc4vJhoxBOsHqJLnySm2quOzKkAVsa0Qmt705was782T0lkULPNJatUaK3p7Q1LDCNlsSrWwbYlph2HpQK9hiXuD7+l0xC29z/THstn1aoPnRf3VB80e7yo=
+	t=1706302180; cv=none; b=ORK/XnS3tzikCDQgtUhYUXfrifBG/Z1s+fY37YDBdnDcWw8NNBvWMmm3HkcQGbg2T5kQchlEsp/ro6/Aj3vTh+KHbwi3z1kbsZpN2KsxLGkm3ZGf+y5KFXaZ2kKJorneNZgNM79J0wyocrxN+WCg8iBukiOKXdbYvE8ns4Dnfyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706290206; c=relaxed/simple;
-	bh=AY8Cks8zfkNSy5SPyTgmyBUVqOof+a8pLzc/7ONF3ao=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=tO008iGdDgwW2UsvOL6xI0dD8oonNyeMrNQM/Yd6SuS0udpyHQWKwKl/jDobxLwwNg5xzxM9CKAOXYGMknR0dbPph9AfyjuXn7Gx/NFn94rhEvnZtvPdTy1VtFrz9iGTPSlz4koV+00K+zdChgVYJn/5aISnMqySDurzbIT6TVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=bGdeKoUW; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=tuzagaiU; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1706302180; c=relaxed/simple;
+	bh=3ydZ5tIbcCXuAo9x7kv38IAl8givWLC8zTksHbzEZr8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TRFz5eiSi9NobvaJHbDWeIi3WHyy0i7L36dJHQjN0ek2MA/MqgcHKcmQm7bpb9CCN8+i3fvVXqrCiMFKgF+xbgpjdb9aBCFdtqzHmDDAb7zD4g0maVvjvXY+YpPBXeIPKswmHpD9bx847Lz4T7q3gWEPJzOLuZerOW9KbWW8qO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O49M5YdQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="bGdeKoUW";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="tuzagaiU"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1706290203;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=y16NGcUWXAd/jpol4Aw++3XVEwkU5CL0GFzr1MU53XY=;
-	b=bGdeKoUW9WdLqEtKEsxkWkPluiF27VXCxZSKAv3EF91of84hHPJu/t+7B9mlIfqDmwyhVQ
-	5Wy0Ak8LYkBMFC536ObQrarSAFKXlxaX18tfj4mZezpiUfaQdkDMG9wQCtqs11xhoOwLv7
-	pA8thEtSPHwm3lmTvJ07FPxtZYE52z+dy31Yz3fjNkM6LKIgSZ5nuds6Q52aKp/nVmBSyY
-	+spk4CBBiK/sbO9HcOKfH2EIVtfT4fH6iY90wZoZZeksjxdCmGo7r0pBec73lzMMxFQhVc
-	xpFa/bEbvEtI2gao8tw9CtiPgX/FYFPnpnN4YzjNzl3kjaWgFj/y/mmB8OSJKQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1706290203;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=y16NGcUWXAd/jpol4Aw++3XVEwkU5CL0GFzr1MU53XY=;
-	b=tuzagaiUxCjRffYVMgp6n3kaVE2tR+Ydl0coEnXTNFJKMgQQ2tLfSrtS+THdp+B8unTwvq
-	SjL+Cz4iYZ9oxJBQ==
-To: Byungchul Park <byungchul@sk.com>, linux-kernel@vger.kernel.org
-Cc: kernel_team@skhynix.com, torvalds@linux-foundation.org,
- damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
- adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org, mingo@redhat.com,
- peterz@infradead.org, will@kernel.org, rostedt@goodmis.org,
- joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
- duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
- willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
- gregkh@linuxfoundation.org, kernel-team@lge.com, linux-mm@kvack.org,
- akpm@linux-foundation.org, mhocko@kernel.org, minchan@kernel.org,
- hannes@cmpxchg.org, vdavydov.dev@gmail.com, sj@kernel.org,
- jglisse@redhat.com, dennis@kernel.org, cl@linux.com, penberg@kernel.org,
- rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
- linux-block@vger.kernel.org, josef@toxicpanda.com,
- linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, jack@suse.cz,
- jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
- djwong@kernel.org, dri-devel@lists.freedesktop.org,
- rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
- hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com, chris.p.wilson@intel.com,
- gwan-gyeong.mun@intel.com, max.byungchul.park@gmail.com,
- boqun.feng@gmail.com, longman@redhat.com, hdanton@sina.com,
- her0gyugyu@gmail.com
-Subject: Re: [PATCH v11 14/26] locking/lockdep, cpu/hotplus: Use a weaker
- annotation in AP thread
-In-Reply-To: <20240124115938.80132-15-byungchul@sk.com>
-References: <20240124115938.80132-1-byungchul@sk.com>
- <20240124115938.80132-15-byungchul@sk.com>
-Date: Fri, 26 Jan 2024 18:30:02 +0100
-Message-ID: <87il3ggfz9.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O49M5YdQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12A58C433C7;
+	Fri, 26 Jan 2024 20:49:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706302180;
+	bh=3ydZ5tIbcCXuAo9x7kv38IAl8givWLC8zTksHbzEZr8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=O49M5YdQQZOpCG9S+k+D7H99F6F6IMYAv3mOzXlWwsRB5EAuLTPNchQuGLk4y6OuP
+	 OqMJQCDIcMrtGC2d25PAKPwX1UbX0mKb0Ln/t1rnyf06IE+PhGrFWwWtNzHXljFDbc
+	 ompPHzVM8urRiXb7Q/OIPaE+pME3jwUgM8j1P/waWyoggSxlNdBwNFMpspz2x3lNlK
+	 iZgYYTFrQD6ald5oJ6HvMd+JG4A1R3NX8ibwvpm4aWFAL4/X1GpkLUcz2V3wfL37e2
+	 nQJT79W7wHRBLp1FsRwF51NlYvFzczjTa+BWMFVtXwfSBT5O2fk4yPD0FlDnKOpVEN
+	 XNKkaNCiTnoRQ==
+From: Niklas Cassel <cassel@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 6.8-rc2
+Date: Fri, 26 Jan 2024 21:49:27 +0100
+Message-ID: <20240126204927.4168716-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jan 24 2024 at 20:59, Byungchul Park wrote:
+Linus,
 
-Why is lockdep in the subsystem prefix here? You are changing the CPU
-hotplug (not hotplus) code, right?
+The following changes since commit 6613476e225e090cc9aad49be7fa504e290dd33d:
 
-> cb92173d1f0 ("locking/lockdep, cpu/hotplug: Annotate AP thread") was
-> introduced to make lockdep_assert_cpus_held() work in AP thread.
->
-> However, the annotation is too strong for that purpose. We don't have to
-> use more than try lock annotation for that.
+  Linux 6.8-rc1 (2024-01-21 14:11:32 -0800)
 
-This lacks a proper explanation why this is too strong.
+are available in the Git repository at:
 
-> Furthermore, now that Dept was introduced, false positive alarms was
-> reported by that. Replaced it with try lock annotation.
+  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc2
 
-I still have zero idea what this is about.
+for you to fetch changes up to 20730e9b277873deeb6637339edcba64468f3da3:
 
-Thanks,
+  ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers (2024-01-25 16:59:09 +0100)
 
-        tglx
+----------------------------------------------------------------
+ata changes for 6.8-rc2
+
+ - Fix an incorrect link_power_management_policy sysfs attribute
+   value. We were previously using the same attribute value for
+   two different LPM policies (me).
+
+ - Add a ASMedia ASM1166 quirk. The SATA host controller always
+   reports that it has 32 ports, even though it only has six ports.
+   Add a quirk that overrides the value reported by the controller
+   (Conrad).
+
+ - Add a ASMedia ASM1061 quirk. The SATA host controller completely
+   ignores the upper 21 bits of the DMA address. This causes IOMMU
+   error events when a (valid) DMA address actually has any of the
+   upper 21 bits set. Add a quirk that limits the dma_mask to
+   43-bits (Lennert).
+
+----------------------------------------------------------------
+Conrad Kostecki (1):
+      ahci: asm1166: correct count of reported ports
+
+Lennert Buytenhek (1):
+      ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers
+
+Niklas Cassel (1):
+      ata: libata-sata: improve sysfs description for ATA_LPM_UNKNOWN
+
+ drivers/ata/ahci.c        | 34 ++++++++++++++++++++++++++++------
+ drivers/ata/ahci.h        |  1 +
+ drivers/ata/libata-sata.c |  2 +-
+ include/linux/libata.h    |  2 +-
+ 4 files changed, 31 insertions(+), 8 deletions(-)
