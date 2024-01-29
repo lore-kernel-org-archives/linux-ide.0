@@ -1,65 +1,49 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42DC01F945;
-	Sun, 28 Jan 2024 15:59:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8942314AAA;
+	Mon, 29 Jan 2024 04:21:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706457582; cv=none; b=GiCm6qUzS2ZW4PMLqNig2ChMMX78Mx5MILXjPU9FfbBHDigPWZ7lAaB+5c1NDRkZ1LsvabyP+dbajsxh3/R4V6JncYbgrgSOe72/R/sMsDQRgVU0TYbR1+U6C4lLrzsr2YGKfGPn/MGTs8JFTKCLeismmRBlYVW71IaaCgB/ABM=
+	t=1706502074; cv=none; b=O21hvGkGh1AC0260mqyRrWj7y0+UFS2YTL1xAZ+lX/6BxJD5iJ2/QpApfQR29oOzC27ms7T9VHKCk2wjfD8tKvwEmKlNyRTBqcF8VkzfrAogX+KkipSqrJBhuJ3gCwjP6nKN0Bx5Sjf2jAsRgZ8s1HbWT4C5TNF0kdNz1vnfHpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706457582; c=relaxed/simple;
-	bh=vt7QapGb0fiuypTY9c2VIltgIvC8yztVDtRDQjAAGLc=;
+	s=arc-20240116; t=1706502074; c=relaxed/simple;
+	bh=p9WW5tw9S4aGXrjQWbwDneSN3suFm+njtOg9nHFdRRg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jX/qmRLFKu+sNLh1FMuGq96IMlibuTSCy6lMzLTQ+gLMNCZpCT9EQETTPZVKaKzLjyFsDywYkmTBwynlvvdU8u4r9CzZUdczI+saLeiFe8aFUQ2Ht9Ft+i63Y1qtdUO0cxDUHdYqRjPpnhLp/JrDXhDVSMN2BRgcU3rfLE3pp1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WZw7rZ1u; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WZw7rZ1u"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1706457581; x=1737993581;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=vt7QapGb0fiuypTY9c2VIltgIvC8yztVDtRDQjAAGLc=;
-  b=WZw7rZ1uGz4zgea7LoLjTK+12KiH8iLzt8ImYU6OvDZmwHh0rWiNMo50
-   C6qVti8zOcnmKQuRZMRmSjLQrT/OU3ceVSrVYpGSK0RqdNX6hFJoV7ay7
-   aqQk+LEFXPLn2EPynz/FKzIYaCAw55pr1TZD+yS+H0taBnGQHmFD4PcGw
-   /nSvPxzMEVcoAGJoTSoQloq9mSot68gNCBKMICTzqBRrIskeR6IhIFkK3
-   RfhMGyuqbYmgTFDsoJjKiX+mrYIreSRSGcRjCPOHmqV7Q35lYP3vLlVM7
-   4SrMvkJfpEKNWfykml2taek6YVY8W0Uc7HgpBujO6eUChexeV/ntxVzWZ
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10967"; a="10170660"
-X-IronPort-AV: E=Sophos;i="6.05,220,1701158400"; 
-   d="scan'208";a="10170660"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jan 2024 07:59:40 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.05,220,1701158400"; 
-   d="scan'208";a="3056368"
-Received: from lkp-server01.sh.intel.com (HELO 370188f8dc87) ([10.239.97.150])
-  by orviesa005.jf.intel.com with ESMTP; 28 Jan 2024 07:59:31 -0800
-Received: from kbuild by 370188f8dc87 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rU7ZB-0003W9-0Q;
-	Sun, 28 Jan 2024 15:59:29 +0000
-Date: Sun, 28 Jan 2024 23:58:48 +0800
-From: kernel test robot <lkp@intel.com>
-To: Byungchul Park <byungchul@sk.com>, linux-kernel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, kernel_team@skhynix.com,
+	 Content-Type:Content-Disposition:In-Reply-To; b=VkFQriJ8vTZDCUn5pPIfGKeDFJpmi8iUvxnlPHKY+ptx0TblM4sek4qQyFo9kvw1Nwk/az7EQ2cGMp8RmmHvWYFooKLOwusi8gABeXiLMmD28UZ8AZw6TYPFzNnukMNE/JTy5HrFz19HpjHJdfaL2Sy/sZVjXIPrsXeuxnbFplE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
+X-AuditID: a67dfc5b-d6dff70000001748-0b-65b727aa4de6
+Date: Mon, 29 Jan 2024 13:20:52 +0900
+From: Byungchul Park <byungchul@sk.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-kernel@vger.kernel.org, kernel_team@skhynix.com,
 	torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
 	linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
 	linux-ext4@vger.kernel.org, mingo@redhat.com, peterz@infradead.org,
-	will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-	joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-	duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
-	tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
-	amir73il@gmail.com, gregkh@linuxfoundation.org, kernel-team@lge.com,
-	linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-	minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com
-Subject: Re: [PATCH v11 05/26] dept: Tie to Lockdep and IRQ tracing
-Message-ID: <202401282340.oDsdGzj2-lkp@intel.com>
-References: <20240124115938.80132-6-byungchul@sk.com>
+	will@kernel.org, rostedt@goodmis.org, joel@joelfernandes.org,
+	sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
+	johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+	willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+	gregkh@linuxfoundation.org, kernel-team@lge.com, linux-mm@kvack.org,
+	akpm@linux-foundation.org, mhocko@kernel.org, minchan@kernel.org,
+	hannes@cmpxchg.org, vdavydov.dev@gmail.com, sj@kernel.org,
+	jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+	penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+	ngupta@vflare.org, linux-block@vger.kernel.org,
+	josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+	viro@zeniv.linux.org.uk, jack@suse.cz, jlayton@kernel.org,
+	dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+	dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+	melissa.srw@gmail.com, hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com,
+	chris.p.wilson@intel.com, gwan-gyeong.mun@intel.com,
+	max.byungchul.park@gmail.com, boqun.feng@gmail.com,
+	longman@redhat.com, hdanton@sina.com, her0gyugyu@gmail.com
+Subject: Re: [PATCH v11 14/26] locking/lockdep, cpu/hotplus: Use a weaker
+ annotation in AP thread
+Message-ID: <20240129042052.GA64402@system.software.com>
+References: <20240124115938.80132-1-byungchul@sk.com>
+ <20240124115938.80132-15-byungchul@sk.com>
+ <87il3ggfz9.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -68,100 +52,85 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240124115938.80132-6-byungchul@sk.com>
+In-Reply-To: <87il3ggfz9.ffs@tglx>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Brightmail-Tracker: H4sIAAAAAAAAA03SX0xTVxzAcc+5f9vQ5a5DPZOXpcbgMPh/22/L5pa9eJOFzW08aTZt5EYa
+	StWLouhcYFZT/k6IUK3oSjGlgW6OwhwT0QKBUv9Ah9UhAgo2bo1UMmabVbAbF7LMl5NPzvmd
+	b87D4SntLLOMN5j2SbJJb9SxalodSapLb0z9WVrbMr4SKsvWQvSphYbaC24WAj80IXC3FmEI
+	92yG32KTCGZuDlBgrQ4gqBsfpaC1dwxBh+sbFm6FXoJgdIoFf3UpC0frL7Dw6+NZDCM1VRia
+	PBlw/YQDgzf+Ow3WMAtnrEfx3PIHhrizkQNn4QqYcNk4mB1fB/6xOwx0DK+C0+dGWLjc4aeh
+	t20Cw61LtSyMuf9h4HpvHw2BynIGvn/iYOFxzEmBMzrFwaDXjuFH81zo+F8JBnzlXgzHzzdj
+	CN5tR3DF8gCDx32Hhe7oJIYWTzUFzxp6EExURDg4Vhbn4ExRBYLSYzU0DDz3MWAeeQNm/q5l
+	P3hH7J6cokRzywGxI2anxWsOIv5iG+VE85VhTrR79ostrjSx/nIYi3XTUUb0NBazome6ihNL
+	IkEsPunv58S+UzO0GApa8ZaUrep3sySjIV+S12zaoc4ebTuF99QkHYzcDqFCdFVVgnieCBtJ
+	xPlxCVLN09vvQoppYQUZae2cNyukkqGhOKU4WVhJmgeH500JfjUJOD5U/Iqwk9x92MkoSY0A
+	xOrLVKgVDpHWksXKhEZ4mfhPh+iFm2lkKBHGygglpJCGBK9sqwQdqbKYWcWLheXEe9GHFx7W
+	riIDz0wLfpV0uoboE0iwvVC1vVC1/V+1I6oRaQ2m/Fy9wbhxdXaByXBw9c7duR409yedR2a3
+	taHpwOddSOCRLknDF12UtIw+P68gtwsRntIla+Kv/yRpNVn6gkOSvHu7vN8o5XWhFJ7WLdWs
+	jx3I0gq79PukHEnaI8n/nWJetawQHb6d3rPtfqL+0aL0tyvvGbvf6jp5OHeD6VPHDcvZDHZ9
+	7CvQrwrLDU1b5GtrzpJ7qVtd34W2lz088tqfJ89TXyY+SmTuHXMXZ/LqtD5fOZ/y9dPS9h0V
+	S5ds+uwTO725UkwO5uieNz/a0GB5kOH9dtKUfen+8pzim4NfvBnf+7686L0+HZ2XrV+XRsl5
+	+n8BEUqc/48DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0yTZxTH8zzvtQ0lrxXYo/ipTkG8YaLLibhF/aDv3OZGojFRozT6Co2A
+	rkUUExIYlSCoERKoVsZqWQqpKFAK4gWsEKnVCAgMCgGErskkXOrUEisXpS6Lfjn55Zz/73z6
+	85RyhFnKa1LTJG2qOlnFymn57rictdao21LsG4sMCi/Egv9tHg2l1VUsdN66gaDKno1h7NFO
+	6JueQDDzrIMCQ3EnguujQxTY24YRNFX+xkK3NxR6/D4WXMUFLOSUV7PwfHwWw2BJEYYbtp/g
+	6WUzBkfgHxoMYyxcM+TghfESQ8Bi5cCStQI8lUYOZkc3gGu4l4HW310MNA2shqtlgyzcb3LR
+	0NbowdB9t5SF4aoPDDxte0xDZ+FFBm5OmVkYn7ZQYPH7OOhymDDU6Be+5b6ZZ8B50YEh989a
+	DD399xA0541gsFX1stDqn8BQZyum4H3FIwSeS5McnLsQ4OBa9iUEBedKaOiYczKgH9wEM+9K
+	2a1xYuuEjxL1dafFpmkTLT4xE/GOcYgT9c0DnGiynRLrKmPE8vtjWLz+2s+INut5VrS9LuLE
+	/MkeLE61t3Pi4ysztOjtMeBflu2XbzkqJWvSJe367xLkSUONV/DJkpAzk395URZ6IMtHMp4I
+	G4mjvRIFmRZWkEH7w0/MClHE7Q5QQQ4Toklt18AnpgSXnHSatwd5sXCE9P/9kMlHPK8QgBic
+	e4KoFM4Se354MKEQFhHXVS/9nxlD3PNjOBihhEhSMc8H1zJBRYry9GyQw4XlxNHgxJeRwviF
+	bfzCNn62TYiyojBNanqKWpO8aZ3ueFJGqubMuiMnUmxooXeWzNnCRvS2e2cLEnikClHw2Q2S
+	klGn6zJSWhDhKVWYIrCqXlIqjqozzkraE4e1p5IlXQuK5GnVV4pd+6QEpZCoTpOOS9JJSfv/
+	FfOypVloZKo36vupkPXfeGIjVptDk0aWGH/enrtSxTpNZfrMgh3NOS1r+m/nJe4vT9y1dWOM
+	sa/NF+F17/3aExh99e2vpbM/krK4FxQ3PncgdN/40Olw/qD935cHK87X/LDZF71neeSh+giT
+	fnrzIqPc3Vf3R/zetDlr5q2MgdoXo8fiNQnblqhoXZJ6Qwyl1ak/AnGPtF9zAwAA
+X-CFilter-Loop: Reflected
 
-Hi Byungchul,
+On Fri, Jan 26, 2024 at 06:30:02PM +0100, Thomas Gleixner wrote:
+> On Wed, Jan 24 2024 at 20:59, Byungchul Park wrote:
+> 
+> Why is lockdep in the subsystem prefix here? You are changing the CPU
+> hotplug (not hotplus) code, right?
 
-kernel test robot noticed the following build warnings:
+I will fix the typo ;( Thank you.
 
-[auto build test WARNING on 0dd3ee31125508cd67f7e7172247f05b7fd1753a]
+I referred to the commit cb92173d1f047. I will remove the prefix if the
+way is more desirable.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Byungchul-Park/llist-Move-llist_-head-node-definition-to-types-h/20240124-200243
-base:   0dd3ee31125508cd67f7e7172247f05b7fd1753a
-patch link:    https://lore.kernel.org/r/20240124115938.80132-6-byungchul%40sk.com
-patch subject: [PATCH v11 05/26] dept: Tie to Lockdep and IRQ tracing
-config: microblaze-allyesconfig (https://download.01.org/0day-ci/archive/20240128/202401282340.oDsdGzj2-lkp@intel.com/config)
-compiler: microblaze-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240128/202401282340.oDsdGzj2-lkp@intel.com/reproduce)
+> > cb92173d1f0 ("locking/lockdep, cpu/hotplug: Annotate AP thread") was
+> > introduced to make lockdep_assert_cpus_held() work in AP thread.
+> >
+> > However, the annotation is too strong for that purpose. We don't have to
+> > use more than try lock annotation for that.
+> 
+> This lacks a proper explanation why this is too strong.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202401282340.oDsdGzj2-lkp@intel.com/
+rwsem_acquire() implies:
 
-All warnings (new ones prefixed by >>):
+   1. might be a waiter on contention of the lock.
+   2. enter to the critical section of the lock.
 
-   In file included from fs/ext4/mballoc.c:7000:
-   fs/ext4/mballoc-test.c: In function 'test_new_blocks_simple':
->> fs/ext4/mballoc-test.c:298:1: warning: the frame size of 1120 bytes is larger than 1024 bytes [-Wframe-larger-than=]
-     298 | }
-         | ^
---
-   In file included from drivers/net/ethernet/microchip/vcap/vcap_api.c:3598:
-   drivers/net/ethernet/microchip/vcap/vcap_api_kunit.c: In function 'vcap_api_next_lookup_advanced_test':
->> drivers/net/ethernet/microchip/vcap/vcap_api_kunit.c:2001:1: warning: the frame size of 1260 bytes is larger than 1024 bytes [-Wframe-larger-than=]
-    2001 | }
-         | ^
+All we need in here is to act 2, not 1. That's why I suggested trylock
+version of annotation for that purpose.
 
+Now that dept partially replies on lockdep annotaions for the waiters
+and events, dept is interpeting rwsem_acquire() as a potential waiter
+and reports a deadlock by the wait.
 
-vim +298 fs/ext4/mballoc-test.c
+Of course, the first priority should be not to change the current
+behavior. I think the change from non-trylock to trylock for the
+annotation won't. Or am I missing something?
 
-7c9fa399a36954 Kemeng Shi 2023-09-29  245  
-7c9fa399a36954 Kemeng Shi 2023-09-29  246  static void test_new_blocks_simple(struct kunit *test)
-7c9fa399a36954 Kemeng Shi 2023-09-29  247  {
-7c9fa399a36954 Kemeng Shi 2023-09-29  248  	struct super_block *sb = (struct super_block *)test->priv;
-7c9fa399a36954 Kemeng Shi 2023-09-29  249  	struct inode inode = { .i_sb = sb, };
-7c9fa399a36954 Kemeng Shi 2023-09-29  250  	struct ext4_allocation_request ar;
-7c9fa399a36954 Kemeng Shi 2023-09-29  251  	ext4_group_t i, goal_group = TEST_GOAL_GROUP;
-7c9fa399a36954 Kemeng Shi 2023-09-29  252  	int err = 0;
-7c9fa399a36954 Kemeng Shi 2023-09-29  253  	ext4_fsblk_t found;
-7c9fa399a36954 Kemeng Shi 2023-09-29  254  	struct ext4_sb_info *sbi = EXT4_SB(sb);
-7c9fa399a36954 Kemeng Shi 2023-09-29  255  
-7c9fa399a36954 Kemeng Shi 2023-09-29  256  	ar.inode = &inode;
-7c9fa399a36954 Kemeng Shi 2023-09-29  257  
-7c9fa399a36954 Kemeng Shi 2023-09-29  258  	/* get block at goal */
-7c9fa399a36954 Kemeng Shi 2023-09-29  259  	ar.goal = ext4_group_first_block_no(sb, goal_group);
-7c9fa399a36954 Kemeng Shi 2023-09-29  260  	found = ext4_mb_new_blocks_simple(&ar, &err);
-7c9fa399a36954 Kemeng Shi 2023-09-29  261  	KUNIT_ASSERT_EQ_MSG(test, ar.goal, found,
-7c9fa399a36954 Kemeng Shi 2023-09-29  262  		"failed to alloc block at goal, expected %llu found %llu",
-7c9fa399a36954 Kemeng Shi 2023-09-29  263  		ar.goal, found);
-7c9fa399a36954 Kemeng Shi 2023-09-29  264  
-7c9fa399a36954 Kemeng Shi 2023-09-29  265  	/* get block after goal in goal group */
-7c9fa399a36954 Kemeng Shi 2023-09-29  266  	ar.goal = ext4_group_first_block_no(sb, goal_group);
-7c9fa399a36954 Kemeng Shi 2023-09-29  267  	found = ext4_mb_new_blocks_simple(&ar, &err);
-7c9fa399a36954 Kemeng Shi 2023-09-29  268  	KUNIT_ASSERT_EQ_MSG(test, ar.goal + EXT4_C2B(sbi, 1), found,
-7c9fa399a36954 Kemeng Shi 2023-09-29  269  		"failed to alloc block after goal in goal group, expected %llu found %llu",
-7c9fa399a36954 Kemeng Shi 2023-09-29  270  		ar.goal + 1, found);
-7c9fa399a36954 Kemeng Shi 2023-09-29  271  
-7c9fa399a36954 Kemeng Shi 2023-09-29  272  	/* get block after goal group */
-7c9fa399a36954 Kemeng Shi 2023-09-29  273  	mbt_ctx_mark_used(sb, goal_group, 0, EXT4_CLUSTERS_PER_GROUP(sb));
-7c9fa399a36954 Kemeng Shi 2023-09-29  274  	ar.goal = ext4_group_first_block_no(sb, goal_group);
-7c9fa399a36954 Kemeng Shi 2023-09-29  275  	found = ext4_mb_new_blocks_simple(&ar, &err);
-7c9fa399a36954 Kemeng Shi 2023-09-29  276  	KUNIT_ASSERT_EQ_MSG(test,
-7c9fa399a36954 Kemeng Shi 2023-09-29  277  		ext4_group_first_block_no(sb, goal_group + 1), found,
-7c9fa399a36954 Kemeng Shi 2023-09-29  278  		"failed to alloc block after goal group, expected %llu found %llu",
-7c9fa399a36954 Kemeng Shi 2023-09-29  279  		ext4_group_first_block_no(sb, goal_group + 1), found);
-7c9fa399a36954 Kemeng Shi 2023-09-29  280  
-7c9fa399a36954 Kemeng Shi 2023-09-29  281  	/* get block before goal group */
-7c9fa399a36954 Kemeng Shi 2023-09-29  282  	for (i = goal_group; i < ext4_get_groups_count(sb); i++)
-7c9fa399a36954 Kemeng Shi 2023-09-29  283  		mbt_ctx_mark_used(sb, i, 0, EXT4_CLUSTERS_PER_GROUP(sb));
-7c9fa399a36954 Kemeng Shi 2023-09-29  284  	ar.goal = ext4_group_first_block_no(sb, goal_group);
-7c9fa399a36954 Kemeng Shi 2023-09-29  285  	found = ext4_mb_new_blocks_simple(&ar, &err);
-7c9fa399a36954 Kemeng Shi 2023-09-29  286  	KUNIT_ASSERT_EQ_MSG(test,
-7c9fa399a36954 Kemeng Shi 2023-09-29  287  		ext4_group_first_block_no(sb, 0) + EXT4_C2B(sbi, 1), found,
-7c9fa399a36954 Kemeng Shi 2023-09-29  288  		"failed to alloc block before goal group, expected %llu found %llu",
-7c9fa399a36954 Kemeng Shi 2023-09-29  289  		ext4_group_first_block_no(sb, 0 + EXT4_C2B(sbi, 1)), found);
-7c9fa399a36954 Kemeng Shi 2023-09-29  290  
-7c9fa399a36954 Kemeng Shi 2023-09-29  291  	/* no block available, fail to allocate block */
-7c9fa399a36954 Kemeng Shi 2023-09-29  292  	for (i = 0; i < ext4_get_groups_count(sb); i++)
-7c9fa399a36954 Kemeng Shi 2023-09-29  293  		mbt_ctx_mark_used(sb, i, 0, EXT4_CLUSTERS_PER_GROUP(sb));
-7c9fa399a36954 Kemeng Shi 2023-09-29  294  	ar.goal = ext4_group_first_block_no(sb, goal_group);
-7c9fa399a36954 Kemeng Shi 2023-09-29  295  	found = ext4_mb_new_blocks_simple(&ar, &err);
-7c9fa399a36954 Kemeng Shi 2023-09-29  296  	KUNIT_ASSERT_NE_MSG(test, err, 0,
-7c9fa399a36954 Kemeng Shi 2023-09-29  297  		"unexpectedly get block when no block is available");
-7c9fa399a36954 Kemeng Shi 2023-09-29 @298  }
-7c9fa399a36954 Kemeng Shi 2023-09-29  299  
+	Byungchul
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> > Furthermore, now that Dept was introduced, false positive alarms was
+> > reported by that. Replaced it with try lock annotation.
+> 
+> I still have zero idea what this is about.
+> 
+> Thanks,
+> 
+>         tglx
