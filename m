@@ -1,43 +1,49 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB7E3C47A;
-	Mon, 29 Jan 2024 04:32:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id EC06D36AE9;
+	Tue, 30 Jan 2024 02:58:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706502733; cv=none; b=SZr5c9EyMtrq7X3NcWzWK3p8fhwy+lAhf1Vm4c2mwGvs/ePYzRTxMJYJ1wbYkyISwj7rwnlFLn9DP1F/pckqhcvnq2J6/7Cti8bpQZRfP1E/tR4wJdrwCHC14O+Mxd+t6KuxzAFtZsI52R+Hsoadx81qoyHE3aYCbQpZUYmHVzg=
+	t=1706583530; cv=none; b=HBarTKCqYR6Y61lDLKYeCnYE/CxI/wsxcDbh3hvYd8BwiGJOKGSdK7MyLoSP5+sYY87bIpj5mRoGf3Ep8VfsQ4QWRQlKxAG6jKDyuoOfY4gJjqeb7mO1D9FfR1aWk9WBzgVIr1khnQhrUy6tC4i8jSaDv41XSAn7MIqhFkjTlY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706502733; c=relaxed/simple;
-	bh=vnBCw+VEsZoMU7uXPkz67lpbjtbkGDarP0i7dAApyj4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=NhBXoMBjM73xUg9IjM1tpSs8RzrpyvaUCLwDLFyesSA0HAaN+Pn5Cit6qzT5mUS2MspY0Q6biT7v1/FNtCtNAYrY749gtQOAD1dbAngqjqlKEU0zcv9d47T/7AoqiuqcQAgltrLjYBt/9qW9obQPDfZkXgBXyXYVETVMtEjzzNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WLe6nUl3; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WLe6nUl3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=H8WTJ8NBmRpbZtf94nTTt/tZUYzTLnihYXaoQXGtdRA=; b=WLe6nUl3NiNOhbZzoHeryOF0bU
-	P5+xpXLngxxGVebSFsePFiFuI/Tje4zs+Zsk0N8ZJB99kB7M5AanK0s0NzdnlE8eRw+vuYTO7UKYw
-	GuYzR0j2zpvVPfRPNwSJ1JNVPTbd4KlXaXcLyUpbS/AMy938NTCRo8+GPJ0oE76c4XVH6RPNdXt+I
-	FaQFBumBWxrEMciRiP6PwVK8WLIHygrOro+u9TQHSSK0waUD4WD+doKz2NHNFX8a9pmVRw7vlEcW3
-	CE1Deh9g/lgotxHlH9x9TsKC402E2Ze1tzLTttiJTWI+L055MOwTe4bpnXfM80IRGtNESiLNW5uVB
-	t24sKqEQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rUJJT-00000005VPu-4AB6;
-	Mon, 29 Jan 2024 04:32:04 +0000
-Date: Mon, 29 Jan 2024 04:32:03 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-	bpf@vger.kernel.org
-Subject: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
-Message-ID: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
+	s=arc-20240116; t=1706583530; c=relaxed/simple;
+	bh=AbZE0B3FO5+TtB5HOi5ZjpCgzTcHcZXFvQyGWmlwlXQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YtIBHI26ClMrkER7F2wcUdoPaXPSvejAaDbRP2mwpUECXQS/WP6cy9BfCqqfy7CpWJsnnIxZgt+Q37F+yqCu6tuU3PdCo0hO7FnFq+wXB0Q+AVyo22BPQZMAxkPxwbKIajViFHTmceNq2xiG8dc+a++F2VR8Yenl+/A3nWVvPRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
+X-AuditID: a67dfc5b-d85ff70000001748-1d-65b865e1c3ac
+Date: Tue, 30 Jan 2024 11:58:36 +0900
+From: Byungchul Park <byungchul@sk.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-kernel@vger.kernel.org, kernel_team@skhynix.com,
+	torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+	linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+	linux-ext4@vger.kernel.org, mingo@redhat.com, peterz@infradead.org,
+	will@kernel.org, rostedt@goodmis.org, joel@joelfernandes.org,
+	sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
+	johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+	willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+	gregkh@linuxfoundation.org, kernel-team@lge.com, linux-mm@kvack.org,
+	akpm@linux-foundation.org, mhocko@kernel.org, minchan@kernel.org,
+	hannes@cmpxchg.org, vdavydov.dev@gmail.com, sj@kernel.org,
+	jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+	penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+	ngupta@vflare.org, linux-block@vger.kernel.org,
+	josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+	viro@zeniv.linux.org.uk, jack@suse.cz, jlayton@kernel.org,
+	dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+	dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
+	melissa.srw@gmail.com, hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com,
+	chris.p.wilson@intel.com, gwan-gyeong.mun@intel.com,
+	max.byungchul.park@gmail.com, boqun.feng@gmail.com,
+	longman@redhat.com, hdanton@sina.com, her0gyugyu@gmail.com
+Subject: Re: [PATCH v11 14/26] locking/lockdep, cpu/hotplus: Use a weaker
+ annotation in AP thread
+Message-ID: <20240130025836.GA49173@system.software.com>
+References: <20240124115938.80132-1-byungchul@sk.com>
+ <20240124115938.80132-15-byungchul@sk.com>
+ <87il3ggfz9.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -46,24 +52,82 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <87il3ggfz9.ffs@tglx>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUyTVxTHc5/3NpQ8VpxX+LCsC9PB5nBqPFmWxSx7uXEz0bgv02VblSfS
+	jbcVqJTMBbQwBsq0C3YUYlo0tSlMZtttbBNXwIKdE4sQVhgSxS6jCmKoZVZqWQsx88vNL+f8
+	7++cD0eglYtsuqApLJW0hep8FSdn5DMp1hcnpU4pp29EgONHciByv5aBlo52Dvxn2xC0u6so
+	CHnfhj/npxEsXLlKg6nRj8B68zoN7r4JBF32QxwMBVNhODLLga+xnoPDpzo4GLwTo2D8hJGC
+	Nud2uHyslQJP9B8GTCEOmk2HqcQzRUHU5uDBVpkJk3YzD7GbG8A3McJC11g2NJ0c5+B8l4+B
+	vs5JCoZ+aeFgon2Rhct9lxjwHz/Kwnd3Wzm4M2+jwRaZ5eGax0LB94aEqCYcZ6H/qIeCmtPn
+	KBge/RXBhdobFDjbRzjojUxT4HI20vDwjBfBZMMMD9VHojw0VzUgqK8+wcDVR/0sGMY3w8KD
+	Fm7rK6R3epYmBtcB0jVvYcjvrZj8bL7OE8OFMZ5YnGXEZc8ip86HKGKdi7DE6fiKI845I0/q
+	ZoYpcndggCeXvl1gSHDYRO3I2C1/NVfK1+gk7UuvfSzPcw3+RRd3p5Rbw9V0Jbonq0MyAYub
+	sNMTZB+zK77AJ5kRM7G9d4BLMieuxYFAlE5ymrgOn7s2tsS06JNjf+vrSV4p7sOjt7qXPAoR
+	8MXTxkRGEJRiBXbXrVour8C+piCz/DULB+IhKhmhxQx8Ji4kyzJRhY21hqWpq8RnsefH/kRE
+	ntisQ4b9oSv88pprcLc9wBxDovkJrfkJrfl/rQXRDqTUFOoK1Jr8Tevz9IWa8vX7igqcKHGW
+	toOxPZ1ozr+rB4kCUqUotn7zk6Rk1boSfUEPwgKtSlNEn/9BUipy1foKSVv0kbYsXyrpQRkC
+	o1qteHn+QK5S3K8ulT6VpGJJ+7hLCbL0SpRb1Rwsf2YwJruo8bLjK3ZY20rveZ9+v+E5t3Hx
+	S1LfkOri15l22d3Zu7/eaGI9D9+JWbaVvbFx76OAThdO1R+6PSHu/eK+VJO+sujzs+Bw7Nz2
+	4VvvZW9Rr3kTvbB/9JOndPp4TmZ46I/V4c9++9vbnNb9oOnd7VP/xocq9ox8UDyVomJK8tQb
+	smhtifo/4an4aJIDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SbWxLYRTH8zz33ufeNjpXDTf4IPU+8TJZOUFEJOwSb5GIIGLFjdXeaPdK
+	JJt1zDaLlSo1spV0y4zRDhsms9mmFrNZw1SNzYTFGKOL6oyVCF9Ofjnn/zvny+EoZQczltPG
+	xku6WE20ishp+ZqF6TM7pAppzufcaZCXMwe8XzNpyC8rJdB8+SKC0vI0DN114fC0vweB/+Ej
+	CsymZgSFHS8oKK9vR1BVfJBAa1cQuLy9BJymbALp58sItLwfwOA5acRw0b4aGo9ZMVT73tJg
+	7iZwxpyOh8o7DD5bCQu21MnQWWxhYaAjFJztTxioPetkoMo9A06f8xC4XeWkob6iE0PrzXwC
+	7aU/GWisv09Dc95RBi59tBJ432+jwObtZeFxdQGGK4ahbYe+DDLQcLQaw6ELVzG4nt1CcCfz
+	FQZ76RMCtd4eDA67iYLvRXUIOnM/sJCR42PhTFouguyMkzQ8+tHAgMGjBv+3fLJkoVjb00uJ
+	BkeSWNVfQIsPrIJYaXnBioY7blYssCeIjuIQ8fztbiwW9nkZ0V5yhIj2PiMrZn1wYfFjUxMr
+	3j/lp8UulxmvG79ZvminFK1NlHSzF0fIIx0tz6k9d4clF37JoFLRJ1kWknECHyY4Bv1sgGl+
+	slBc20QCTPipQlubjwpwMD9NuPrY/Zsp3ikXmq1LAzyS3yE8e32XCbCCB+HeBeNQhuOU/D6h
+	PGvUn/YIwXm6i/6jhghtg904EKH4cULRIBdoy3iVYMw0/L46ip8oVF9vwMeQwvKfbfnPtvyz
+	CxBVgoK1sYkxGm20epY+KjIlVps8a0dcjB0NPZ7twEBeBfraGl6DeA6phikiym5ISkaTqE+J
+	qUECR6mCFb7p1ySlYqcmZZ+ki9umS4iW9DVoHEerxihWbpQilPwuTbwUJUl7JN3fKeZkY1NR
+	BZq7KmjE/LLWz3u3h8q2MhGHE/wqtTotrCfM44p8+ZzoutatGGk6xSTvJhPW7zdV2pOS9C19
+	87xr47a5N0yZsfxa0M2ZR7ae+2llFTlbohKWhS8wjSbzh9c5DjcqTxjy47M3tRuk40y/uSj0
+	8gH3JPWYeKPnbdAJf+Wb10l0i05F6yM1oSGUTq/5Bd0J6+p0AwAA
+X-CFilter-Loop: Reflected
 
-Our documentation of the current page flags is ... not great.  I think
-I can improve it for the page cache side of things; I understand the
-meanings of locked, writeback, uptodate, dirty, head, waiters, slab,
-mlocked, mappedtodisk, error, hwpoison, readahead, anon_exclusive,
-has_hwpoisoned, hugetlb and large_remappable.
+On Fri, Jan 26, 2024 at 06:30:02PM +0100, Thomas Gleixner wrote:
+> On Wed, Jan 24 2024 at 20:59, Byungchul Park wrote:
+> 
+> Why is lockdep in the subsystem prefix here? You are changing the CPU
+> hotplug (not hotplus) code, right?
+> 
+> > cb92173d1f0 ("locking/lockdep, cpu/hotplug: Annotate AP thread") was
+> > introduced to make lockdep_assert_cpus_held() work in AP thread.
+> >
+> > However, the annotation is too strong for that purpose. We don't have to
+> > use more than try lock annotation for that.
+> 
+> This lacks a proper explanation why this is too strong.
+> 
+> > Furthermore, now that Dept was introduced, false positive alarms was
+> > reported by that. Replaced it with try lock annotation.
+> 
+> I still have zero idea what this is about.
 
-Where I'm a lot more shaky is the meaning of the more "real MM" flags,
-like active, referenced, lru, workingset, reserved, reclaim, swapbacked,
-unevictable, young, idle, swapcache, isolated, and reported.
+1. can track PG_locked that is a potential deadlock trigger.
 
-Perhaps we could have an MM session where we try to explain slowly and
-carefully to each other what all these flags actually mean, talk about
-what combinations of them make sense, how we might eliminate some of
-them to make more space in the flags word, and what all this looks like
-in a memdesc world.
+   https://lore.kernel.org/lkml/1674268856-31807-1-git-send-email-byungchul.park@lge.com/
 
-And maybe we can get some documentation written about it!  Not trying
-to nerd snipe Jon into attending this session, but if he did ...
+2. can track any waits/events e.g. wait_for_xxx(), dma fence and so on.
 
-[thanks to Amir for reminding me that I meant to propose this topic]
+3. easy to annotate using dept_wait() on waits, dept_event() on events.
+
+4. track read lock better way instead of the ugly way, by assinging wait
+   or event annotations onto read lock and write lock. For instrance, a
+   read lock is annotated as a potential waiter for its write unlock,
+   and a write lock is annotated as a potential waiter for either write
+   unlock or read unlock.
+
+I'd like to remove unnecessary complexity on deadlock detection and add
+additional functionality by making it do what the type of tool exactly
+should do.
+
+	Byungchul
+
+> Thanks,
+> 
+>         tglx
