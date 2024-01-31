@@ -1,104 +1,124 @@
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 010AC69D14
-	for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2024 08:57:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B608B69D39;
+	Wed, 31 Jan 2024 10:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706691425; cv=none; b=MYWu+xeqATiJUJS/lYc1Rn7DqOvGq9vAmZLnmVmSCmraBxOYMuW57oFjf6nIfIuZkUXj3oYuYNljKzGVtrFwugrI5it1ZBXYNPpdnrRxNvC7e4TYccqQtwqrG4qeVxVOAlNQicgiLLXy+lsbYsu9BMR7+TXiLa6YoJCNSkeN/NM=
+	t=1706698669; cv=none; b=cYZtg1HBJIUZMn8mTsfWx8n9t8JEmdrXgLlt6XegLxkRii9o61AqOwQp3T0rBjH16CP1AlGz9LVZ71xuwfQCaCMZxhieDt/KnJaaGBPMjYBdwjYl5O6HkuBA4Tkbvq4lJWUpTdkr0rdKV+nnPwIcvA3FMcp2G2Skb9O0A5BIhDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706691425; c=relaxed/simple;
-	bh=PKv1oho1laKgagdEbM4KbckuWDsfrLBNKB+tjbPNi3M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BM6pLS2vNOLH2XPghXgwGZ5yqwiDU0uQi7V7wlVm3307n9Rt9RtPZbfFEP67lGvwz90M0Yeg3bZgAbBT9dJcE8qWKUUMcTapy97azNXomk7/Xvok8Sfd0PdtZENMJUUi/QmC6ZrvX8SeUsOpJwxQ0Kl/ZvQm8ItB7bMnaeS+gr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endlessos.org; spf=pass smtp.mailfrom=endlessos.org; dkim=pass (2048-bit key) header.d=endlessos.org header.i=@endlessos.org header.b=IgJxrBM+; arc=none smtp.client-ip=209.85.128.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endlessos.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=endlessos.org
+	s=arc-20240116; t=1706698669; c=relaxed/simple;
+	bh=lLdNASUUSAW/vwijOg8ZDB4AJvgTlx50ujLdt2AbEhk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qQ2mqqMYauAkq62N6iW5YEFQVGWrJwYUsnk+PiugDfZLIbpPKIoksHVomzXFb0f/WUav3Wp6XqsUGKUFj4l2KcK1L2gDw/KbUkqaF91FEHAwoTZ/36DRpbPRNCfIcPEOeR2e2VrtTP8gkRWIAxmoYjehMJqixF20AV7fqgdklMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a+o10Gyq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessos.org header.i=@endlessos.org header.b="IgJxrBM+"
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-6040e7ebf33so1916547b3.0
-        for <linux-ide@vger.kernel.org>; Wed, 31 Jan 2024 00:57:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessos.org; s=google; t=1706691423; x=1707296223; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PKv1oho1laKgagdEbM4KbckuWDsfrLBNKB+tjbPNi3M=;
-        b=IgJxrBM+2Ws/5QsIxdv95oTwl5UAoPG5XIJPXncZ47xfU7k/N2oqOAZw5ChVg0llDX
-         4qrlGRHrUo9EI9CqIEAX2QB8vx4abLHe4mLWpEL77WOiEsWyLZOUwPw/jJZKVfWDNYgg
-         6EZTO/61DcUg404oh90qSt5srbSjSqZNsjdy3XTadQcxihze0nPYQ+gC8Bvt2p9my69+
-         uGYNNLLL5QoW9M1Ck2jDiS5mEoLtp8Fuz6reSEzZ5ktLinP1W/a4qBRcKah2KutuDyr5
-         0SKcamLORZyUYYp1L7+qHkOnjv3QjolOt+gy2RyfWVJ5KNfxlV+Ic3R2OtdD+xg+eZ5T
-         EAVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706691423; x=1707296223;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PKv1oho1laKgagdEbM4KbckuWDsfrLBNKB+tjbPNi3M=;
-        b=q6p8nIhVfpwiM1ApmY+WmX2oTk/sYm4ThQMf1vAXsTgxmNnXzf/2FbkrJ251R1ZKN1
-         vtm+h/FUIgifqnjljKp3y2Twp8PI+HrQ2Yihu6vpTXuMpMNdF6DgQXuyou8DNfn5vqh4
-         UIp8oAjOiT8ppWDscmtABmi5ge9I8kzaY8ufDapwrmp2+hRABsD5R3IfW7U+V1YweHxY
-         lDgUUEV2S0fw6WQdS1++/RdHDy9tHDJcQUFqwamGXCRRv/N1uMrT58Wat7V8Uf8NZdV9
-         YB69uNsgxZmquDQz2BUBAmi29wqlC9GLJWoA78j0xlx1EN16rGs8xgdWsT3KSvw1tzzE
-         QmyA==
-X-Gm-Message-State: AOJu0Yz9jcYaYABwgJIdQ7yMXWwLCOcZoo/AoughrCt7v0Fe7wXUSWND
-	oqWkQPqtkZpFJJ6UwiAtWGCeD3qBR5DJ3QepuvIwa7QQQZNaF8flsbT18ZWeqEKu9Nz7UUJJOD8
-	r7ZGsGC5vU/nMqNPIOjvpnwt8875nft0oB9fvLA==
-X-Google-Smtp-Source: AGHT+IEurEtJTDYK3AVBhc4LATERu/lu8Wto+rGGt4fDZxRZeeNTLdsLZXKV6YQFlqOMO/7asswXfe4jQzkS04JOTfs=
-X-Received: by 2002:a0d:eb48:0:b0:604:3ef:a729 with SMTP id
- u69-20020a0deb48000000b0060403efa729mr1442117ywe.15.1706691422846; Wed, 31
- Jan 2024 00:57:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a+o10Gyq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51711C433C7;
+	Wed, 31 Jan 2024 10:57:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706698669;
+	bh=lLdNASUUSAW/vwijOg8ZDB4AJvgTlx50ujLdt2AbEhk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=a+o10GyqrwYwZNT9xLVn33bySqifWeG82B4UwnkdI0pnDfIacopHS4hSqWHWmVZMa
+	 fgKl0FLfKmQXgm8xw4gwdksIHpopiRkdWgIR74e/eZNwA/va4WK2AIpZLm84IwHchc
+	 +vwAS2SDH0XKYDsNl8K8hymY85L0hua3PTayDkEoVLFSltzJrkHF3xpkK1TBrGfdyi
+	 lrL+6vCHtdSISI/0GuqAYQM51yivnV0rL3xPzUrYzRr28yICl2nZm0/Opt6QcHJdsJ
+	 XcF+rGBpzyvXBrdQzaZ+3DbWIEk9GLncBGEsWD6GYivhfh0FTzaWwPQy1Mo9uc8N/w
+	 1sPm4L+DGrwjg==
+Date: Wed, 31 Jan 2024 11:57:42 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Jian-Hong Pan <jhp@endlessos.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	David Box <david.e.box@linux.intel.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux@endlessos.org
+Subject: Re: [PATCH 1/2] ata: ahci: Add force LPM policy quirk for ASUS
+ B1400CEAE
+Message-ID: <Zbonprq/1SircQon@x1-carbon>
+References: <20240130095933.14158-1-jhp@endlessos.org>
+ <20240130101335.GU2543524@black.fi.intel.com>
+ <CAPpJ_ef4KuZzBaMupH-iW0ricyY_9toa7A4rB2vyeaFu7ROiDA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240130095933.14158-1-jhp@endlessos.org> <20240130101335.GU2543524@black.fi.intel.com>
-In-Reply-To: <20240130101335.GU2543524@black.fi.intel.com>
-From: Jian-Hong Pan <jhp@endlessos.org>
-Date: Wed, 31 Jan 2024 16:56:27 +0800
-Message-ID: <CAPpJ_ef4KuZzBaMupH-iW0ricyY_9toa7A4rB2vyeaFu7ROiDA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ata: ahci: Add force LPM policy quirk for ASUS B1400CEAE
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: David Box <david.e.box@linux.intel.com>, Damien Le Moal <dlemoal@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-	Jonathan Derrick <jonathan.derrick@linux.dev>, linux-ide@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux@endlessos.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAPpJ_ef4KuZzBaMupH-iW0ricyY_9toa7A4rB2vyeaFu7ROiDA@mail.gmail.com>
 
-Mika Westerberg <mika.westerberg@linux.intel.com> =E6=96=BC 2024=E5=B9=B41=
-=E6=9C=8830=E6=97=A5 =E9=80=B1=E4=BA=8C =E4=B8=8B=E5=8D=886:13=E5=AF=AB=E9=
-=81=93=EF=BC=9A
->
-> Hi,
->
-> On Tue, Jan 30, 2024 at 05:59:33PM +0800, Jian-Hong Pan wrote:
-> > Some systems, like ASUS B1400CEAE equipped with the SATA controller
-> > [8086:a0d3] can use LPM policy to save power, especially for s2idle.
+On Wed, Jan 31, 2024 at 04:56:27PM +0800, Jian-Hong Pan wrote:
+> Mika Westerberg <mika.westerberg@linux.intel.com> 於 2024年1月30日 週二 下午6:13寫道：
 > >
-> > However, the same controller may be failed on other platforms. So,
-> > commit (ata: ahci: Revert "ata: ahci: Add Tiger Lake UP{3,4} AHCI
-> > controller") drops LPM policy for [8086:a0d3]. But, this blocks going
-> > to deeper CPU Package C-state when s2idle with enabled Intel VMD.
->
-> Tiger Lake really should support this with no issues (as are the
-> generations after it). I suggest trying to figure out what was the root
-> cause of the original problem that triggered the revert, if possible at
-> all, perhaps it is is something not related to LPM and that would allow
-> us to enable this unconditionally on all Tiger Lake.
->
-> I'm pretty sure the platform where this was reported suffers the same
-> s2idle issue you are seeing without this patch.
+> > Hi,
+> >
+> > On Tue, Jan 30, 2024 at 05:59:33PM +0800, Jian-Hong Pan wrote:
+> > > Some systems, like ASUS B1400CEAE equipped with the SATA controller
+> > > [8086:a0d3] can use LPM policy to save power, especially for s2idle.
+> > >
+> > > However, the same controller may be failed on other platforms. So,
+> > > commit (ata: ahci: Revert "ata: ahci: Add Tiger Lake UP{3,4} AHCI
+> > > controller") drops LPM policy for [8086:a0d3]. But, this blocks going
+> > > to deeper CPU Package C-state when s2idle with enabled Intel VMD.
+> >
+> > Tiger Lake really should support this with no issues (as are the
+> > generations after it). I suggest trying to figure out what was the root
+> > cause of the original problem that triggered the revert, if possible at
+> > all, perhaps it is is something not related to LPM and that would allow
+> > us to enable this unconditionally on all Tiger Lake.
+> >
+> > I'm pretty sure the platform where this was reported suffers the same
+> > s2idle issue you are seeing without this patch.
+> 
+> Simply applying LPM policy to [8086:a0d3] sounds like a good idea!
+> 
+> I installed an SATA storage into ASUS B1400CEAE and tested with
+> enabled & disabled VMD again. Both the NVMe and SATA storage work with
+> applying LPM policy to [8086:a0d3], which means that it does not hit
+> the issue mentioned in the commit (ata: ahci: Revert "ata: ahci: Add
+> Tiger Lake UP{3,4} AHCI controller").
 
-Simply applying LPM policy to [8086:a0d3] sounds like a good idea!
+We would like to enable LPM for Tiger Lake again, but last time we tried
+to do so, we got a bunch of reports:
+https://bugzilla.kernel.org/show_bug.cgi?id=217114
+https://bbs.archlinux.org/viewtopic.php?id=283906
 
-I installed an SATA storage into ASUS B1400CEAE and tested with
-enabled & disabled VMD again. Both the NVMe and SATA storage work with
-applying LPM policy to [8086:a0d3], which means that it does not hit
-the issue mentioned in the commit (ata: ahci: Revert "ata: ahci: Add
-Tiger Lake UP{3,4} AHCI controller").
+Where people complained that their SATA drive dissappeared as a result.
 
-Jian-Hong Pan
+
+The bug reports were reported on the following hardware:
+ASUS Vivobook 15 X513EAN
+Lenovo L3-15ITL6 IdeaPad
+Acer A515-56-32DK
+Acer A514
+HP Pavilion 14-dv0589na
+
+Usually, when a single vendor manages to mess something up in their
+platform firmware, and we deal with that by adding a quirk for that
+specific vendor.
+
+But here it is four different vendors... This kind of suggests that
+there could be a some more fundamental LPM related issue at play here.
+
+
+Yes, we are fully aware that on some other platforms, not having
+LPM enabled stops those platforms from entering the lowest CPU power
+states. So right now we are doomed if we do enable LPM, doomed if we
+don't.
+
+However, having some systems drawing more power than needed is better
+than some other systems not detecting their SATA drives at all.
+
+Unfortunately, we don't have any of these laptops that has a Tiger Lake
+AHCI controller (with a disappearing drive), so until someone who does
+debugs this, I think we are stuck at status quo.
+
+
+Kind regards,
+Niklas
