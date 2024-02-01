@@ -1,102 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E705CDF8;
-	Thu,  1 Feb 2024 15:01:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C24779E9
+	for <linux-ide@vger.kernel.org>; Thu,  1 Feb 2024 16:15:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706799708; cv=none; b=MEbRDr/As2W+1HYFG3081YMHC+sM4vKxqt/r7C3mWVPCOOX0jxfaM6Tn54gajuYigz6F/mgw1QYlZ+9yU8Q+GX/TZwavK8bORMJxFppEBmc5RIGRYyqxWQ4mzN9wcbxrDXHYnG96tj74AatLDyU2JBpCNN8KCXjReIeI7gtrcPs=
+	t=1706804114; cv=none; b=cZquHrPSAuEYcTtN3uIVmd8KXs5UzaPZGkL6+Sq3BjUxvNlh+KBcWUEynF+KDCh5htKUtQObua6vv+IpXWKCs7Ycm2FnjUU0s7B5SwCXleeByVVX6aRHDz7XFFAf2njgP63teMeDvu8nz4dkw7WZKeQvCWyYbOv3Qsey0SWYXT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706799708; c=relaxed/simple;
-	bh=fyS4E6dCzTmikshMEzUqt7RbzPw9XaUCcGp0oaYwbvw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S7vCTNJq7iEYlfPiZasjZHjMHQVlkofHn7HChYvF5B1LDAu+z/ySSltQo7jVsRr6Dlll9LJx0T1xTVbErHnDiM5mCn/HtSFpIcDn+ft9efhChWvQe3Hm++fhAwzA6KWDVqN30sZfyQdrLty6Dg5Mr4PmW2HLS3InkoaymNnFY/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JHGASKvr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706804114; c=relaxed/simple;
+	bh=D3rrIc2rRazaJGMNRmGlS3XRE8sUXRQrJDLO06XVgw4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TeTgIPeeMgyAapgptlGu6JEotcptcrC0AjDGUTlEr2/2zc3kALPbYOswAC67tJ5Z/vM1AAZaHksxkNTFEZdmvDZR7ax3YlxjzE6aF6j62Zp0QbNCL9+CC8kmYn76r65303pPPWxi/xrt3Bbeq9hWgYCM+S4iaPuVjGe6OLYFsMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Oi1fA/27; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JHGASKvr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23B71C433F1;
-	Thu,  1 Feb 2024 15:01:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Oi1fA/27"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 534B9C433C7;
+	Thu,  1 Feb 2024 16:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706799708;
-	bh=fyS4E6dCzTmikshMEzUqt7RbzPw9XaUCcGp0oaYwbvw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JHGASKvrmM3ACF7dACXxR5LVFZ309w8Y+Oe5Tmi/uyIgXkFWB2WJ+IJUWadUG1PG2
-	 LpA1eYx1KtOryTb6fp4Q8TirguIZvuH/CQr9cCP4MRfd99cFJaGI/5EUufDgqzzaAI
-	 jnm9fqq6sdesM/lXyi2JA/k1ZQ/ypEgExbP/4znbW4sBWm1zSaB+9dDCz3pX0jUaY2
-	 ghSNPgK1cc+Pcuf6hn6HSlZy6HyPGIVaKrTcDdMmOrmYp4ovah40D60RWwF5w9rvFJ
-	 8e5oYEoiLmkH1oSPU3IIeJCrGybRSCOM6en2MPR7adJ1IqNMly64fLp0oJtTh6HYeI
-	 IrleBlpjTbPuA==
-Date: Thu, 1 Feb 2024 16:01:41 +0100
+	s=k20201202; t=1706804113;
+	bh=D3rrIc2rRazaJGMNRmGlS3XRE8sUXRQrJDLO06XVgw4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Oi1fA/27LDI1REYhFyEVBMZoCW99sP8vy8oTRWr4wWW7W9hMRTKEwYhsuvXmRx3Ob
+	 kKgdS98Do6FKkSrdxzvcz43JpScMF/qfTAI65WjrRNKS0QGuENnP82sa+I/dJud5PM
+	 K4ZFhXQqR+1VSxdNDzVj7K/oww/ZW8K5S1ITN2RYjIzNjatIUCGd6NCfyoavJWVx25
+	 MNkTFxp8Np+o5VmMxHIlwEcriqH7PspqJqPRjxl1MGVqA/FjENQVUmDsA1OqAQrWby
+	 bwEUQmS+njBZA0liUOHtpS59f1tybDOmy/EdgN1V0Y9jZS7YyhyM81pMun0eyhQsqd
+	 45o41UyvWrPyA==
 From: Niklas Cassel <cassel@kernel.org>
-To: Daniel Drake <drake@endlessos.org>,
-	Vitalii Solomonov <solomonov.v@gmail.com>
-Cc: Jian-Hong Pan <jhp@endlessos.org>,
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Werner Fischer <devlists@wefi.net>,
+	Daniel Drake <drake@endlessos.org>,
 	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	David Box <david.e.box@linux.intel.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux@endlessos.org
-Subject: Re: [PATCH 1/2] ata: ahci: Add force LPM policy quirk for ASUS
- B1400CEAE
-Message-ID: <ZbuyVbMEBWKi729y@x1-carbon>
-References: <20240130095933.14158-1-jhp@endlessos.org>
- <20240130101335.GU2543524@black.fi.intel.com>
- <CAPpJ_ef4KuZzBaMupH-iW0ricyY_9toa7A4rB2vyeaFu7ROiDA@mail.gmail.com>
- <Zbonprq/1SircQon@x1-carbon>
- <CAD8Lp47SH+xcCbZ9qdRwrk2KOHNoHUE5AMieVHoSMbVsMrdiNg@mail.gmail.com>
- <ZbrNLxHL03R66PxQ@x1-carbon>
+	Jian-Hong Pan <jhp@endlessos.org>,
+	Dieter Mummenschanz <dmummenschanz@web.de>,
+	linux-ide@vger.kernel.org
+Subject: [PATCH 0/5] drop low power policy board type
+Date: Thu,  1 Feb 2024 17:14:57 +0100
+Message-ID: <20240201161507.1147521-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZbrNLxHL03R66PxQ@x1-carbon>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jan 31, 2024 at 11:43:59PM +0100, Niklas Cassel wrote:
-> On Wed, Jan 31, 2024 at 07:08:12AM -0400, Daniel Drake wrote:
-
-(snip)
-
-> In libata we perform a reset of the port at boot, see:
-> libata-sata.c:sata_link_hardreset()
-> after writing to SControl, we call
-> libata-core.c:ata_wait_ready() that will poll for the port being ready
-> by calling the check_ready callback.
-> For AHCI, this callback funcion is set to:
-> libahci.c:ahci_check_ready().
-> 
-> A reset should take the device out of deep power state and should be
-> sufficient to establish a connection (and that also seems to be the
-> case when not using Intel VMD).
-> 
-> However, if you want to debug, I would start by adding prints to
-> libata-sata.c:sata_link_hardreset()
-> libata-core.c:ata_wait_ready()
-> libahci.c:ahci_check_ready().
-
-FWIW, this will dump SStatus.DET every time the check_ready callback function
-(ahci_check_ready()) is called:
+The series is based on top of:
+https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-next
 
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 1a63200ea437..0467e150601e 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1533,6 +1533,12 @@ int ahci_check_ready(struct ata_link *link)
- {
-        void __iomem *port_mmio = ahci_port_base(link->ap);
-        u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
-+       u32 cur = 0;
-+
-+       sata_scr_read(link, SCR_STATUS, &cur);
-+
-+       ata_link_info(link, "BUSY ? %d (status: %#x) SStatus.DET: %#x\n",
-+                     status & ATA_BUSY, status, cur & 0xf);
- 
-        return ata_check_ready(status);
- }
+Hello all,
+
+This revives a patch sent out almost two years ago from Mario Limonciello:
+https://lore.kernel.org/linux-ide/20220524170508.563-1-mario.limonciello@amd.com/T/#u
+
+The reason why we did not merge it back then, is because LPM and hotplug
+events are mutually exclusive.
+
+The difference with this series compared to what was sent out back then:
+I've added a patch that checks if the port is external, i.e. either
+hotplug capable or eSATA. For external ports, we never enable LPM, as
+that will break hotplug.
+
+For ports that do not advertise themselves as external (typically laptops),
+we set the LPM policy as requested.
+
+This matches how Microsoft Windows does things.
+Thanks to Werner Fischer for suggesting something like this at last year's
+ALPSS conference.
+
+There might of course be some platform firmware that e.g. incorrectly marks
+its port as internal, even though it is external, but if we find any such
+platforms we will need to deal with them using quirks.
+
+
+Also note that we even if the user requested a certain policy, there is
+no guarantee that he will get all the features for that policy, see:
+https://github.com/torvalds/linux/blob/master/drivers/ata/libata-sata.c#L403-L414
+
+However, I'd rather we not try to map all the combinations of
+partial/slumber/devsleep in to a single policy represented by a single
+integer, thus I do not try to "change" the requested policy.
+The user will get all the features that are included in the requested
+policy AND supported by the HBA.
+
+Another difference (compared to an earlier version of Mario's series)
+is that we do not try to change the default CONFIG_SATA_MOBILE_LPM_POLICY
+value from 0 to 3, it will continue to be 0.
+If you really don't want LPM even if your HBA supports it, and your port
+is internal, one option is to leave the Kconfig set to the default value.
+
+Note: in current mainline, there is an issue related to Intel VMD
+which causes the link to not come up when VMD is enabled.
+(The link does comes up when VMD is disabled in BIOS.)
+In order to not get a bunch of bug reports related to LPM, we probably
+want to wait with this series until we have fixed the VMD bug.
+
+
+Kind regards,
+Niklas
+
+
+Mario Limonciello (1):
+  ata: ahci: Drop low power policy board type
+
+Niklas Cassel (4):
+  ata: ahci: move marking of external port earlier
+  ata: ahci: a hotplug capable port is an external port
+  ata: ahci: drop hpriv param from ahci_update_initial_lpm_policy()
+  ata: ahci: do not enable LPM on external ports
+
+ drivers/ata/Kconfig   |   5 +-
+ drivers/ata/ahci.c    | 134 +++++++++++++++++++++++-------------------
+ drivers/ata/ahci.h    |   9 +--
+ drivers/ata/libahci.c |   7 ---
+ 4 files changed, 77 insertions(+), 78 deletions(-)
+
+-- 
+2.43.0
+
