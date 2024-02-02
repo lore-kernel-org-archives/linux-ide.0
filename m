@@ -1,101 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29ACE15DF1D;
-	Fri,  2 Feb 2024 18:42:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F8581732
+	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 19:53:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.238.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706899359; cv=none; b=tILsGjMvMZ95CqE1gkppvMyhtd5739zQ/XwroKlV1/iIcyBkycreS6oBPVosrHDK3+nyvbnk4uR4wspr/P8tautOlQeEny9gTt4xwENvcmfGtl47Tc0a5h96KvpOuJr0thFG7Kas0TqzBepP7cyUgDNvN86Ox20waNuCutMc84o=
+	t=1706903613; cv=none; b=pIpbaG8iqRzNm0S87XSdQrVLeMPamJQy17ddRfEcHpzuX2o17zPr0TrltnDzEiKd4hdUrOWCpYTrji7K8yqtn8x62fpEABOmc15JucsMr9sLRJhXMvoiXFFTGyB1ro1nKqhz1T4epO+N3YcjVY8ogqf8tSHmSPQ9VJtCKLhKRSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706899359; c=relaxed/simple;
-	bh=TG38hp9r6X6Rv446nvg3drtlUQpDJO2JSwvII2DOXPE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NThHtcRREWF/WnN1LpyyaJWR9DtBt/kZpcdn10a5pGjsctZ+7xZ64nzmLMjTISEMWotv5KzaGREme0yQRf3whlZfFIyklltLXia5/pVT1uLpCWyqVXgK1gc600657XQOltdnB4qH35aLLSlQGqHxP8Vx0cNYPn6H8cIM3NrPWo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q3sNs6+S; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q3sNs6+S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 130D8C43399;
-	Fri,  2 Feb 2024 18:42:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706899359;
-	bh=TG38hp9r6X6Rv446nvg3drtlUQpDJO2JSwvII2DOXPE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Q3sNs6+S1NqmOx1AmLioWn4bbeBL4xxn4KFSGPi59Mg54Ck2A7JrFyU+EDctKujqx
-	 S72Z1PEZyNvUM5gWiABebHEhsz8wc2+e8jnB6rlAi804cPKp6hG/5Ytq/jzb7KvZ8T
-	 Zmv/MAHKjqvSh+WibitBAmE+9rJLvyTyyVjWiV7nPaTWqJN1n06qE4LqcruxzbsCK1
-	 btPid23+1sBCnlIryeX9vaaqjuqFb3HFf4/daD5dFMkhQQQsZXX0C4MAA3FLiJeo1v
-	 VDDVQUl1+wN5d7yYjrMvTKxwKEi1DZDvdO5bz1cJITUtaAwnAuHOUQpSShzHOdTKDL
-	 JxF2cpxGrlNHQ==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Conrad Kostecki <conikost@gentoo.org>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	dlemoal@kernel.org,
-	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 5/5] ahci: asm1166: correct count of reported ports
-Date: Fri,  2 Feb 2024 13:42:26 -0500
-Message-ID: <20240202184229.542298-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240202184229.542298-1-sashal@kernel.org>
-References: <20240202184229.542298-1-sashal@kernel.org>
+	s=arc-20240116; t=1706903613; c=relaxed/simple;
+	bh=H48ltEALErPjet86dTLPNRY+Y2BBnu2ds6SLX+cUiw0=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=egpLLx/JzhrloeexTqx2MFyg5FZrePWH7Mx7T4dGgh17Fj0HNONWo2TyAxqPfh39SIbJPjwK6L2acHtJkmOrYM4rucv9byAg/W8ZfEwOUW5xxgKuEJ8iFklh6oo2Wozl+QVTBUz2T1x300RE/S9rosak/UNnSTC9hFWLu35syQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net; spf=none smtp.mailfrom=vps.thesusis.net; arc=none smtp.client-ip=34.202.238.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=vps.thesusis.net
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+	id BFD8321EC0; Fri,  2 Feb 2024 14:53:30 -0500 (EST)
+From: Phillip Susi <phill@thesusis.net>
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
+In-Reply-To: <58834dd7-0946-45ad-8ada-303c0d735164@kernel.org>
+References: <87msthdo11.fsf@vps.thesusis.net>
+ <20240107180258.360886-1-phill@thesusis.net>
+ <20240107180258.360886-2-phill@thesusis.net>
+ <f6110204-338d-42b5-8ec2-153dd862e799@kernel.org>
+ <878r50uf97.fsf@vps.thesusis.net>
+ <abd85855-0767-4e48-a8a7-8046cd339f9c@kernel.org>
+ <87a5p5b426.fsf@vps.thesusis.net> <878r4l12c5.fsf@vps.thesusis.net>
+ <d058a699-2929-4829-859b-8450f4bf497e@kernel.org>
+ <875xziiuou.fsf@vps.thesusis.net>
+ <7e324bce-9984-4291-8b5f-0907483e7bc1@kernel.org>
+ <87sf2ct0ma.fsf@vps.thesusis.net>
+ <58834dd7-0946-45ad-8ada-303c0d735164@kernel.org>
+Date: Fri, 02 Feb 2024 14:53:30 -0500
+Message-ID: <87fryafxs5.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.306
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-From: Conrad Kostecki <conikost@gentoo.org>
+Damien Le Moal <dlemoal@kernel.org> writes:
 
-[ Upstream commit 0077a504e1a4468669fd2e011108db49133db56e ]
+> Yes, but only for drives that report full identify data when PUIS is enabled.
+> For drives that report incomplete identify data, we have no choice but to wake
+> them up. And yes, we need integration with runtime pm to set the
+> initial power
 
-The ASM1166 SATA host controller always reports wrongly,
-that it has 32 ports. But in reality, it only has six ports.
+Why was that again?  I think you said something about needing to set the
+speed correctly so you at least need to know if this drive requires a
+lower speed than the other in the PATA master/slave pair?  Wouldn't that
+only require the speed information, not all identify data?
 
-This seems to be a hardware issue, as all tested ASM1166
-SATA host controllers reports such high count of ports.
+> state of the drive to standby (instead of "on") for both the ata device and its
+> scsi device.
 
-Example output: ahci 0000:09:00.0: AHCI 0001.0301
-32 slots 32 ports 6 Gbps 0xffffff3f impl SATA mode.
+You mean if the whole device hierarchy were changed so that instead of
+the scsi_host being a child of the port with the links and devices
+hanging off to the side, the scsi_host would be the child of the ata device?
 
-By adjusting the port_map, the count is limited to six ports.
+> I need to check that. I think there may be a better/easier way to get the
+> current power state of a drive. Will get back to you on that.
 
-New output: ahci 0000:09:00.0: AHCI 0001.0301
-32 slots 32 ports 6 Gbps 0x3f impl SATA mode.
-
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=211873
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218346
-Signed-off-by: Conrad Kostecki <conikost@gentoo.org>
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/ahci.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index ab3ea47ecce3..abdfd440987b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -634,6 +634,11 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
- static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 					 struct ahci_host_priv *hpriv)
- {
-+	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
-+		dev_info(&pdev->dev, "ASM1166 has only six ports\n");
-+		hpriv->saved_port_map = 0x3f;
-+	}
-+
- 	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
- 		dev_info(&pdev->dev, "JMB361 has only one port\n");
- 		hpriv->force_port_map = 1;
--- 
-2.43.0
-
+That would be good.  At one point that was the way I found, and also I
+think it was in the SAT-3 spec that is how REQUEST SENSE should be
+implemented for ATA disks.
