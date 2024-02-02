@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B337AD47
-	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 02:09:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A7B3748E
+	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 02:12:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706839755; cv=none; b=aYvIaL+PmwswlB5pTaKqH+UPoks9hZKHJCL829KgiI6Ynxc5TyM9MVetJ7JguNR4vd1U/nHR7eED9aZHM0K987YfnJL1WpVunIlOPZuzOHbxhC9nQ9K9rCze9kzZb1JR4hSeNlk05cdy5p1/bSBmrDWurGQo3vp54LsapeQHBVI=
+	t=1706839941; cv=none; b=obKD7HPA5xba4HNN9uHP/2ScGvbdi+FpoBBsMKAGxfkryQV9RgwS76DfXQk0huA8xXBZh7aEV7DxyOFVIpPmkLQ5iRiRW+Bfzh6IsIDLn2cgDmDEKRFC5rOJoxWdXMo/bwAUK7hpSu685TQLpSoUZrv2VbAStA/kybetfc+yq54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706839755; c=relaxed/simple;
-	bh=sFHDO2UJF1mSRxZz4IA8fF1LdDi+ylOFoQV7OQkxGh0=;
+	s=arc-20240116; t=1706839941; c=relaxed/simple;
+	bh=j6ITNWjCYnHsuEgL4vvO9gj/ofIqMlzMHSfiJN1niww=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IDU/oL/lpkQVna5IOM8K5w2uhzBQNwPACReWmwfk6ZbDJKy1Hpxx1g06PNzpDOi2aca1yGK24muQ2wD4eGMe1rDz9vRVXRwXCdwJRKUgdAXViNmk3AxOV2cmhvhorZW9c270ee/wB5i17s351Iay5RCy9NYQxw9Dolec3HDvA40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WUIuI5+9; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=mlv6qMrwTjZOwU2L3i8VrIENakLzrG9CMnnGEOIuAxcIkMTKPDIMDhrwZuO25qs+AwlAWrFjCBed2eTfcH5YDLKsNcNmW9h04AyaSw59IyVaRU+SKW4guZ65vF2QO4NS/eWHjzNqElZOmv20zIpF0MvstXrJdTOQW0L9M+it3to=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZvjWQHq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WUIuI5+9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF10FC433C7;
-	Fri,  2 Feb 2024 02:09:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZvjWQHq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 005D7C433C7;
+	Fri,  2 Feb 2024 02:12:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706839755;
-	bh=sFHDO2UJF1mSRxZz4IA8fF1LdDi+ylOFoQV7OQkxGh0=;
+	s=k20201202; t=1706839940;
+	bh=j6ITNWjCYnHsuEgL4vvO9gj/ofIqMlzMHSfiJN1niww=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=WUIuI5+9PXBkfvs05GUcyYbhEVFBL6B18iFFFFvOEIi4wI+aAAgeIx/KS1xI4vMLG
-	 oJI95gWHfuDYmSuploBMuesfAAA3e2iMucnGcR0rLv7lz8NAF05vw6SH/JdXvCd0sM
-	 0BRfo1iEgghBL4tdEiY96mxgEpy0//gw110H3ibLClELwCIG5hW0V+CAVPEyiUMrxz
-	 aYVVlM7ICTbEZQGFl3wrFYTjWtkfJIYgk2/8MugkyiVTymtM1wqCc18WSBWbUAcPrP
-	 hA9VVyHyCbd4JZonfQRNwujie/SPEP65RMiXnmqa0kleP+q1a8F5t4gO0SVVjuloUs
-	 FmPYezaTAB7qw==
-Message-ID: <6f3135f0-73c7-4ddf-b4c6-916eab32c237@kernel.org>
-Date: Fri, 2 Feb 2024 11:09:12 +0900
+	b=jZvjWQHqAgdF+Uelgh54s/NNTIdragyLoNH8NIMMKVYIR1m+Z8NHYszsJoEpifqSQ
+	 QmNoXjRdcqlhh2u0/aK4QOz9f4DL4ksxQEHsqC0Q2VAeNhIkbJT31ohjxWEiTaw59X
+	 s5UJT4dyWUiESVeITUhBe3q0tpRDKK1D0ZruNkB7dvKpWc4GTYLkX/oprLYIxyJTI/
+	 CLkFl9rliheAdGHzwOYCxVklNHYgunL/vqRYBbi2aP1CgyBAnbd4pu1mtr9LPZFSVb
+	 K2/KBJGp/jPXvquMnQ0weosApliRzdkvjERte6E0RVfhwjcjprihyVSFYnGuWEPwpL
+	 AmMN17L0H/R8w==
+Message-ID: <c8b84364-580c-4bd2-8730-290a888c546e@kernel.org>
+Date: Fri, 2 Feb 2024 11:12:17 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,60 +35,43 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/5] ata: ahci: do not enable LPM on external ports
+Subject: Re: [PATCH 5/5] ata: ahci: Drop low power policy board type
 Content-Language: en-US
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Werner Fischer <devlists@wefi.net>, Daniel Drake <drake@endlessos.org>,
  Mika Westerberg <mika.westerberg@linux.intel.com>,
  Jian-Hong Pan <jhp@endlessos.org>, Dieter Mummenschanz
- <dmummenschanz@web.de>, linux-ide@vger.kernel.org
+ <dmummenschanz@web.de>, Mario Limonciello <mario.limonciello@amd.com>,
+ Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>,
+ linux-ide@vger.kernel.org
 References: <20240201161507.1147521-1-cassel@kernel.org>
- <20240201161507.1147521-5-cassel@kernel.org>
+ <20240201161507.1147521-6-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240201161507.1147521-5-cassel@kernel.org>
+In-Reply-To: <20240201161507.1147521-6-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 2/2/24 01:15, Niklas Cassel wrote:
-> The SATA specification contains a known incompatibility between LPM and
-> hot-plug events, thus do not enable LPM if the port advertises itself as
-> being an external SATA port (i.e. either hot-plug capable or eSATA).
+> From: Mario Limonciello <mario.limonciello@amd.com>
 > 
-> This matches the power policy used in Microsoft Windows, which disables
-> LPM for external SATA ports, such that hot-plug events can be received.
+> The low power policy board type was introduced to allow systems
+> to get into deep states reliably.  Before it was introduced `min_power`
+> was causing problems for a number of drives.  New power policies
+> `min_power_with_partial` and `med_power_with_dipm` have been introduced
+> which provide a more stable baseline for systems.
 > 
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Acked-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> [cassel: rebase patch and fix trivial conflicts]
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/ahci.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 19b605c98d42..d50d1ae44e7f 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1664,6 +1664,14 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
->  	if (!(hpriv->flags & AHCI_HFLAG_USE_LPM_POLICY))
->  		return;
->  
-> +	/*
-> +	 * The SATA specification contains a known incompatibility between LPM
-> +	 * and hot-plug events, thus do not enable LPM if the port advertises
-> +	 * itself as an external port (i.e. either hot-plug capable or eSATA).
-> +	 */
 
-s/SATA/Serial ATA Revision 3.5a ?
-s/contains/warns about ?
+Looks good.
 
-I see section 5.3.10 "Potential external SATA incompatibility issues" but it
-does not mention LPM. Where is this stated in SATA-IO ?
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-> +	if (ap->pflags & ATA_PFLAG_EXTERNAL)
-> +		return;
-> +
->  	/* user modified policy via module param */
->  	if (mobile_lpm_policy != -1) {
->  		policy = mobile_lpm_policy;
+Let's get this in linux-next ASAP so that it gets plenty of testing.
 
 -- 
 Damien Le Moal
