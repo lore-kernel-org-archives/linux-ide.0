@@ -1,76 +1,75 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FD561474CD;
-	Fri,  2 Feb 2024 16:29:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49D2A14AD2B
+	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 17:11:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706891345; cv=none; b=KR25YcmyX34HSbuxdi4Eoh9NM69tE+RdwA0QJxHkSFOzRm5fdEwaMIuaTFQqQxZdPfncTwrIbqk3I5qN5RrfUPJNFy/uY4m0hnog0QqOoj/Vnr0u3MOruFmXC5xzFxw7Wp3CfJ504TY5yvVZJ6weA2S16C9TLEdh7jDFrdvLEXE=
+	t=1706893919; cv=none; b=Vo9wkUOgAZx0XcTEJJFRok56sl7vmSrl38eDeK8bpdtGUjX61a3TmGr0uXW+EcwNIrlE7qtPILuHvjMQX8R1WqYTEUF45/EPCjzHZF2RaUHzGdPdsAZnTmjezO/5NBjGO78Jqyo8ZcjL56PPPUXFIxYrcbs6/601UmeI8B00xx0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706891345; c=relaxed/simple;
-	bh=yTf2N5hieH76/snamkyDPuaivV84pXMLNyFSjKDEC/w=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Ffa6dC7eRSC/sIINOvnt0T6mVt3bjPxFJqe3r5sNvejGaFH11zmn7Z9dGrpu41XLrS834LSAyNX7W20k9m7jjmZ9R+1N+rbMYFKIk+8PifiB70FSX3RrJ+H7T0EhiKIkMytc5tBR6wNQ7omqGU4KVoXI244TBhkGQLxHs5ujI84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LupnOBpP; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1706893919; c=relaxed/simple;
+	bh=t+aUMTKogAzFhLLonoSvP2MS76xyMnlu0/mU9uqaEas=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hXd8pbs4ykhuwH9TTLARTOUxdoXF+G0SH6+X9AsRgTjcRuN3lv3Mrk8Nzb2u9yJx389de2hmoyVPE7yR+3TJ6sO4lyFnUAJTTg2SDOZxkJVFjTm86gdLfSwKWTMXKjSiYca58IcFv9gWVH5pW1kzXFTcb5yG1oie9FWyoDsF7hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SxXjiqmv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LupnOBpP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=Yv89qsijhL8lE7JeRJ9pRE/QquGa9JQWLz2IsajqlBs=; b=LupnOBpPM7vOxUoL0szt/IoMn2
-	F66A8AOYNKkWiA5U7g6aqHrhkZQpS5bHjROLG3EPb6L3eMYFzEveKlh3osmMmSpsWTYzDrJWsscSU
-	WRoqUj0aaThljAVKz6Zodjnx4h6FV0bN7zCia1RxICB3IglElc/83cb5NtDG4SSksdqu+1N/ryFIa
-	9NC5aoxlMipUHLI2BH7grBhfY88f/CH0js/1SDCgucWZo0gcD2A1jQXLtsD2yZgARPWzuR+wkqsY7
-	D4qsG1S9OYcqW4slm3kn5GW/RJ8z1any9KcewnC7RTupQkpkhHRwA/Tikl6BoYJ6TjXuZJGI+2QtT
-	hWeDhWzQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rVwPS-00000001Wnv-2KCT;
-	Fri, 02 Feb 2024 16:28:58 +0000
-Date: Fri, 2 Feb 2024 16:28:58 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-	bpf@vger.kernel.org
-Subject: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
-Message-ID: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SxXjiqmv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C189C433F1;
+	Fri,  2 Feb 2024 17:11:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706893918;
+	bh=t+aUMTKogAzFhLLonoSvP2MS76xyMnlu0/mU9uqaEas=;
+	h=From:To:Cc:Subject:Date:From;
+	b=SxXjiqmvJ2KzafiEntjHfHV9oYadbuM03/1CeJ9lK+lDvcM1K3MD/5NtvaOqZkUAP
+	 i3etDgOG05sWnqdMrE+sWV4A6OozWNh4mWJywbXLRn6WO3m2kFnZ5lsqov/RULXG9t
+	 H6/KfhTtRpWdzpq0q7XHtmsP8vfRkEwD6jRnNxM/F1dE9VXdTKx++0I73C+xaKVpLB
+	 4Ny6OtyTr0oOKVGZdppR4lOdo5napQdVyOismj7+bQI3/6kWr9zuY0dcKZu+EFnOu6
+	 ZS9h0E9zN/6ne6aWv3k5N8LCzpdcwsbNUKOXeqNXXR2+5s4wAinzCyjsoHZSneUvSr
+	 XY5J0tLw+XEFg==
+From: Niklas Cassel <cassel@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 6.8-rc3
+Date: Fri,  2 Feb 2024 18:11:46 +0100
+Message-ID: <20240202171146.1299344-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Message-ID: <20240202162858.Ls92Xc_5ujibp6MKKLacpn7ZJoRy5v-IqVIwYhM8BmI@z>
+Content-Transfer-Encoding: 8bit
 
-LFrom willy@infradead.org Fri Feb  2 16:28:25 2024
-Date: Fri, 2 Feb 2024 16:28:25 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [resend, PATCH v1 1/1] logic_pio: Use RESOURCE_SIZE_MAX
- definition
-References: <20231016132611.1201402-1-andriy.shevchenko@linux.intel.com>
- <Zb0LzpBkE71wWyqO@smile.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zb0LzpBkE71wWyqO@smile.fi.intel.com>
-X-Mutt-References: <Zb0LzpBkE71wWyqO@smile.fi.intel.com>
-X-Mutt-Fcc: ~/sent
-Status: RO
-Content-Length: 237
-Lines: 7
+Linus,
 
-On Fri, Feb 02, 2024 at 05:35:42PM +0200, Andy Shevchenko wrote:
-> On Mon, Oct 16, 2023 at 04:26:11PM +0300, Andy Shevchenko wrote:
-> > Use a predefined limit instead of hardcoding it.
-> 
-> Can we apply this one?
+The following changes since commit 20730e9b277873deeb6637339edcba64468f3da3:
 
-Why are you asking me?
+  ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers (2024-01-25 16:59:09 +0100)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc3
+
+for you to fetch changes up to 51af8f255bdaca6d501afc0d085b808f67b44d91:
+
+  ahci: Extend ASM1061 43-bit DMA address quirk to other ASM106x parts (2024-01-31 12:09:34 +0100)
+
+----------------------------------------------------------------
+ata changes for 6.8-rc3
+
+ - Following up on last week's ASMedia ASM1061 43-bit dma_mask quirk, we
+   sent an email to ASMedia developers that have previously been active on
+   the mailing list, asking exactly which SATA controllers that are
+   affected by this hardware limitation.
+   We got a reply that it affects all the SATA controllers in the ASM106x
+   family, thus extend the existing 43-bit dma_mask quirk to apply to all
+   the affected ASMedia SATA controllers.
+
+----------------------------------------------------------------
+Lennert Buytenhek (1):
+      ahci: Extend ASM1061 43-bit DMA address quirk to other ASM106x parts
+
+ drivers/ata/ahci.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
