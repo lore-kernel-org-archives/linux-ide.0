@@ -1,70 +1,63 @@
-Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F8581732
-	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 19:53:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.238.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C893CF5B
+	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 20:43:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706903613; cv=none; b=pIpbaG8iqRzNm0S87XSdQrVLeMPamJQy17ddRfEcHpzuX2o17zPr0TrltnDzEiKd4hdUrOWCpYTrji7K8yqtn8x62fpEABOmc15JucsMr9sLRJhXMvoiXFFTGyB1ro1nKqhz1T4epO+N3YcjVY8ogqf8tSHmSPQ9VJtCKLhKRSg=
+	t=1706906626; cv=none; b=atopvcZABnFsRHAKRTlE0aaFt98T2orIEboyGNwdK5b9FCclUhxTWHbUG6QeywZlC9r3l5qFB9lRWcXj9ruuSAaYI2gEYIaGdHIL+afKJ0dqu5VE2CwiSaP882G+Sos7Ru/XWRunOn1Y30t8AjzBE/pDxAXVbIgXsNpavsG0a6w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706903613; c=relaxed/simple;
-	bh=H48ltEALErPjet86dTLPNRY+Y2BBnu2ds6SLX+cUiw0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=egpLLx/JzhrloeexTqx2MFyg5FZrePWH7Mx7T4dGgh17Fj0HNONWo2TyAxqPfh39SIbJPjwK6L2acHtJkmOrYM4rucv9byAg/W8ZfEwOUW5xxgKuEJ8iFklh6oo2Wozl+QVTBUz2T1x300RE/S9rosak/UNnSTC9hFWLu35syQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net; spf=none smtp.mailfrom=vps.thesusis.net; arc=none smtp.client-ip=34.202.238.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=vps.thesusis.net
-Received: by vps.thesusis.net (Postfix, from userid 1000)
-	id BFD8321EC0; Fri,  2 Feb 2024 14:53:30 -0500 (EST)
-From: Phillip Susi <phill@thesusis.net>
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
-Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
-In-Reply-To: <58834dd7-0946-45ad-8ada-303c0d735164@kernel.org>
-References: <87msthdo11.fsf@vps.thesusis.net>
- <20240107180258.360886-1-phill@thesusis.net>
- <20240107180258.360886-2-phill@thesusis.net>
- <f6110204-338d-42b5-8ec2-153dd862e799@kernel.org>
- <878r50uf97.fsf@vps.thesusis.net>
- <abd85855-0767-4e48-a8a7-8046cd339f9c@kernel.org>
- <87a5p5b426.fsf@vps.thesusis.net> <878r4l12c5.fsf@vps.thesusis.net>
- <d058a699-2929-4829-859b-8450f4bf497e@kernel.org>
- <875xziiuou.fsf@vps.thesusis.net>
- <7e324bce-9984-4291-8b5f-0907483e7bc1@kernel.org>
- <87sf2ct0ma.fsf@vps.thesusis.net>
- <58834dd7-0946-45ad-8ada-303c0d735164@kernel.org>
-Date: Fri, 02 Feb 2024 14:53:30 -0500
-Message-ID: <87fryafxs5.fsf@vps.thesusis.net>
+	s=arc-20240116; t=1706906626; c=relaxed/simple;
+	bh=ohguyQyowtAwxjLnNeJ/VDgYi8jZeDtuUV4zK0o9E8s=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=FZdNkMx6HOTsXH5kh63m8e3Aj+voRrdpPilJIXRTgeRV4TJkbqUHeDEZSO9RdmqAFZOkLNsXghKfEq7Kc7bVa/m9YnKD4IZm0Nh9ipREQsd1TqqYqR9f0heh8ooP5T9fgDi53tT/8rTdbjXw+fqx3MtbAmeRHCAK+m+qZPk5YaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HHyMmVwX; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HHyMmVwX"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6ADF2C433F1;
+	Fri,  2 Feb 2024 20:43:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706906626;
+	bh=ohguyQyowtAwxjLnNeJ/VDgYi8jZeDtuUV4zK0o9E8s=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=HHyMmVwX1gxTq3fhxVlnOI7ZhXbFnTxF/8MS22X/0hEuTmr2CnKKwzZF1cts0+zPd
+	 CqhgjigWZE9GNJpf4ihQZ9HdxNU6H98DGgxV63ZZEpDDFG+UgdcigR5FvUn+7dsBiK
+	 2ibI/1in3GelL7JaLkcUPrgan4x/HeSOxWj8oB/1rE3lCNNASbsodIZy+JmVGiYAO3
+	 2QJkqw3BhvYHvhrA3eCvNT+lAxYkBJoPHuyrV6qmHJRo3B9ZrhTuq5XVIjsro0Bx95
+	 iT7AzodkBdq9HCuosLeuN0SvRx2LA6CVDjnNjML0xINLrvGIxHWmZofXdVi1pc8gMk
+	 kbgh1i5mUkr+g==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4D7D6C04E27;
+	Fri,  2 Feb 2024 20:43:46 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.8-rc3
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20240202171146.1299344-1-cassel@kernel.org>
+References: <20240202171146.1299344-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20240202171146.1299344-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc3
+X-PR-Tracked-Commit-Id: 51af8f255bdaca6d501afc0d085b808f67b44d91
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 035032753bfcf0a1bb8875de79449ad996dd96eb
+Message-Id: <170690662631.32059.4949605633050732937.pr-tracker-bot@kernel.org>
+Date: Fri, 02 Feb 2024 20:43:46 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Damien Le Moal <dlemoal@kernel.org> writes:
+The pull request you sent on Fri,  2 Feb 2024 18:11:46 +0100:
 
-> Yes, but only for drives that report full identify data when PUIS is enabled.
-> For drives that report incomplete identify data, we have no choice but to wake
-> them up. And yes, we need integration with runtime pm to set the
-> initial power
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc3
 
-Why was that again?  I think you said something about needing to set the
-speed correctly so you at least need to know if this drive requires a
-lower speed than the other in the PATA master/slave pair?  Wouldn't that
-only require the speed information, not all identify data?
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/035032753bfcf0a1bb8875de79449ad996dd96eb
 
-> state of the drive to standby (instead of "on") for both the ata device and its
-> scsi device.
+Thank you!
 
-You mean if the whole device hierarchy were changed so that instead of
-the scsi_host being a child of the port with the links and devices
-hanging off to the side, the scsi_host would be the child of the ata device?
-
-> I need to check that. I think there may be a better/easier way to get the
-> current power state of a drive. Will get back to you on that.
-
-That would be good.  At one point that was the way I found, and also I
-think it was in the SAT-3 spec that is how REQUEST SENSE should be
-implemented for ATA disks.
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
