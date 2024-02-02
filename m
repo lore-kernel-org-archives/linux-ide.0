@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A7B3748E
-	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 02:12:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6029CB67C
+	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 02:13:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706839941; cv=none; b=obKD7HPA5xba4HNN9uHP/2ScGvbdi+FpoBBsMKAGxfkryQV9RgwS76DfXQk0huA8xXBZh7aEV7DxyOFVIpPmkLQ5iRiRW+Bfzh6IsIDLn2cgDmDEKRFC5rOJoxWdXMo/bwAUK7hpSu685TQLpSoUZrv2VbAStA/kybetfc+yq54=
+	t=1706840023; cv=none; b=pnahwoJYSjBJoF98ggQoJK2eKjj/qw5ql7L4E3MynusifXULcLyCkleB+MTWKn7xyCVW0hPK3JjzvTHNPjEMM6ZUZP+oxptJUd9oh9J1bhM4nYjys72cnI/TCe8DcjVKiIphrCgLAUqnGPH1TaQ3Ht89ArGXLoZi2+aN99BctzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706839941; c=relaxed/simple;
-	bh=j6ITNWjCYnHsuEgL4vvO9gj/ofIqMlzMHSfiJN1niww=;
+	s=arc-20240116; t=1706840023; c=relaxed/simple;
+	bh=sIcXO77voXn1gEfP/ztw2+Cq/X0wtTPrNeDWRexw8Og=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mlv6qMrwTjZOwU2L3i8VrIENakLzrG9CMnnGEOIuAxcIkMTKPDIMDhrwZuO25qs+AwlAWrFjCBed2eTfcH5YDLKsNcNmW9h04AyaSw59IyVaRU+SKW4guZ65vF2QO4NS/eWHjzNqElZOmv20zIpF0MvstXrJdTOQW0L9M+it3to=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jZvjWQHq; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=cYdsq1zCIm8hWl4WSlOBoAI3b0wuIizgLuJOnYs1B5HAVMmni9QWZgUdyMsN+4UYeD48YOkrwF66a00LojI5FyfdJOc+42lkpyKEk59uEjDxqizfQ+NzihpoVrLuSTmAfEVKDFvVpB3vAsw/gNHUpnG/mUTQAAcPiHpEVoVWMis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OkvWqhMH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jZvjWQHq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 005D7C433C7;
-	Fri,  2 Feb 2024 02:12:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OkvWqhMH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4E22C433C7;
+	Fri,  2 Feb 2024 02:13:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706839940;
-	bh=j6ITNWjCYnHsuEgL4vvO9gj/ofIqMlzMHSfiJN1niww=;
+	s=k20201202; t=1706840022;
+	bh=sIcXO77voXn1gEfP/ztw2+Cq/X0wtTPrNeDWRexw8Og=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=jZvjWQHqAgdF+Uelgh54s/NNTIdragyLoNH8NIMMKVYIR1m+Z8NHYszsJoEpifqSQ
-	 QmNoXjRdcqlhh2u0/aK4QOz9f4DL4ksxQEHsqC0Q2VAeNhIkbJT31ohjxWEiTaw59X
-	 s5UJT4dyWUiESVeITUhBe3q0tpRDKK1D0ZruNkB7dvKpWc4GTYLkX/oprLYIxyJTI/
-	 CLkFl9rliheAdGHzwOYCxVklNHYgunL/vqRYBbi2aP1CgyBAnbd4pu1mtr9LPZFSVb
-	 K2/KBJGp/jPXvquMnQ0weosApliRzdkvjERte6E0RVfhwjcjprihyVSFYnGuWEPwpL
-	 AmMN17L0H/R8w==
-Message-ID: <c8b84364-580c-4bd2-8730-290a888c546e@kernel.org>
-Date: Fri, 2 Feb 2024 11:12:17 +0900
+	b=OkvWqhMHVgMiDS9EL4JGB943zOgcnv2a3EXAoMP0XqmEPpdFAeZPL3gMlR9rUVw48
+	 sd1Sm109dFZt+bycFZNSJ6x44opePEEXMe7k7M9R/otut46I3XRJSJh/gZSNZPcy3A
+	 nmXiQCUfZHPpvufraYKOuyOamZ98XWP+p/zkTVEfpNqezCseEBMe2D9vOG+Cq/1Lnd
+	 wWG83Qya08WMV2uNBlF55Bv9YqfprY6co/yqnKyuQGjVEabqOM8glR1/kAbJikYFro
+	 wG3m/h0Rs4lNoaLSF815fCL9wzY1UZ4loM8gEE2rbZa29hRSQOjuMIDQCdlOfap9Ud
+	 clA+M4V+x1UnQ==
+Message-ID: <e9833187-b4ff-4d7e-89ab-c8460d7f6f11@kernel.org>
+Date: Fri, 2 Feb 2024 11:13:41 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,43 +35,32 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/5] ata: ahci: Drop low power policy board type
+Subject: Re: [PATCH 0/5] drop low power policy board type
 Content-Language: en-US
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Werner Fischer <devlists@wefi.net>, Daniel Drake <drake@endlessos.org>,
  Mika Westerberg <mika.westerberg@linux.intel.com>,
  Jian-Hong Pan <jhp@endlessos.org>, Dieter Mummenschanz
- <dmummenschanz@web.de>, Mario Limonciello <mario.limonciello@amd.com>,
- Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>,
- linux-ide@vger.kernel.org
+ <dmummenschanz@web.de>, linux-ide@vger.kernel.org
 References: <20240201161507.1147521-1-cassel@kernel.org>
- <20240201161507.1147521-6-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240201161507.1147521-6-cassel@kernel.org>
+In-Reply-To: <20240201161507.1147521-1-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2/2/24 01:15, Niklas Cassel wrote:
-> From: Mario Limonciello <mario.limonciello@amd.com>
+On 2/2/24 01:14, Niklas Cassel wrote:
+> The series is based on top of:
+> https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-next
 > 
-> The low power policy board type was introduced to allow systems
-> to get into deep states reliably.  Before it was introduced `min_power`
-> was causing problems for a number of drives.  New power policies
-> `min_power_with_partial` and `med_power_with_dipm` have been introduced
-> which provide a more stable baseline for systems.
 > 
-> Suggested-by: Christoph Hellwig <hch@infradead.org>
-> Acked-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> [cassel: rebase patch and fix trivial conflicts]
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> Hello all,
+> 
+> This revives a patch sent out almost two years ago from Mario Limonciello:
+> https://lore.kernel.org/linux-ide/20220524170508.563-1-mario.limonciello@amd.com/T/#u
 
-Looks good.
+You forgot to CC Mario.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-Let's get this in linux-next ASAP so that it gets plenty of testing.
 
 -- 
 Damien Le Moal
