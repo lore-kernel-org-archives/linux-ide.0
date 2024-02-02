@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA72014D930;
-	Fri,  2 Feb 2024 18:41:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3180414E989;
+	Fri,  2 Feb 2024 18:41:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706899275; cv=none; b=GlngSvj83pwjzRAOWgdXbdivmDm2t7LZfxdhrQtj8HR3RZw0M/SkNhD1dwLh8MUq6Pf9F+SvukXC5BNW+zfiOG6jeq7h76fJa479xrYebmQ2SFPGuoqabAyiLhKzYiIapkURLrZq38/NQkI45GJ79L68pgCNZTDysBrqm2QeJtA=
+	t=1706899282; cv=none; b=X5PSSIHfwtFu/NOU70/xClrQKuqcANDML3OY1mf87nLbL41aR15/hdLQAE0E/smw4yRjFVFaSadxS58rQNbHJCPjgqlD/Em25+Pe9/wYkcOPws9eKQ2fJmtTa+qhW0kAdfd5hMrfDJIxdFB6ifKGUZOnRk/PsRellU9NlZSISi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706899275; c=relaxed/simple;
-	bh=qY2wf8ZS/PzeqxscDBrSKGYywkObzeogAJNumJRou+s=;
+	s=arc-20240116; t=1706899282; c=relaxed/simple;
+	bh=V6tCEK4RA/MS/xeGmih4cDBfRRjlRGQXl8TMfO53j0Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cyhQBFcRdVxZbGnmfHWf8WNn17hKbgrIFmAmXSxHlQ0jr2WFcRkTTbGJW6Xif9MUHpoFZP344Kd1YjQtwj2KzmMW/aK/NdPUa2SbP93S9dXvK1lKPh2Tm2LTaSoxapCBIkVGcFrarpNrlmXPqu2Cj0AM3J4c8iLyykCtDfWMSJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n9SyraTx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=XycrEPzXipsO6j7lX8alhOmLaUNPSLFAuH0R8QWjD1JZZij9fK+NmSChXXfxZQMrz0BH7/TXOnlthqRCZHQJwMR7cZz+j1xJB8DOe62BRNHgRqah0k6z9Gy6dq7jv++PdIVRs6qdmTBpqgtnu8VU32Pnmw0lwibdIa+4nwghHok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fecEKRkk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n9SyraTx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DE9EC433F1;
-	Fri,  2 Feb 2024 18:41:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fecEKRkk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCA9CC433F1;
+	Fri,  2 Feb 2024 18:41:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706899275;
-	bh=qY2wf8ZS/PzeqxscDBrSKGYywkObzeogAJNumJRou+s=;
+	s=k20201202; t=1706899281;
+	bh=V6tCEK4RA/MS/xeGmih4cDBfRRjlRGQXl8TMfO53j0Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=n9SyraTxIcJx2q1CyLBeayTLZu9wk+mSpLlOaJJ7xcu6+DVqGR/XUTQcSVjGxFPps
-	 iPLs9nHdGP3tgaDfQQdMz/PYmRLG0MZANS9sbTw+PKRqjPYkJW/ZklXJnwH/2sdNiB
-	 LrajS1+eg7w6Qbp5Dupj5xjsbBXxXVryqTTkPV/eqhYRHX/iFM64aJVUaT90T901GT
-	 XfSlgOsjX1KkD36t+E8Ko7dJ1Lt758VRRp/pQU/qczgWiss8ZDJpmIjv4g/wkij5EA
-	 vTPMGqZlKXW/rY1p5xbxCeA7x19AEiI21IEZqyO894SYf/W9ra79Caz4RaE+EVh94U
-	 JByVVlMiDUfmw==
+	b=fecEKRkkEcHHUHbzFNKRxKM1G6+nppaL0RktsqAGMExrC72X/03lmRks4pBPctCCy
+	 ZkrIToeiXO+n6fJ+NTFGHhsJYIQiwJJV4uCz4ywzEDdxHqYty0cIzDcyce55jhS/Yn
+	 gAHsTHa+KdyxA0tCYGoe8G2jU7p9T0zDZ3UjSfHFwfLTN8SFmGOZoDfp9uY74ugUBG
+	 mn11qX25uFZpp5QlIhPuvYFt1KEXjCVP1H4YKMMKf9EZ33gVR+jOrEbNgsnj3WoZjO
+	 UB1T4c3nKV9qoiInHBaH/oB0pnbE6LX8ZwmDRz9GCbZ+NcKn25OaANzANrQEEmRZj0
+	 QzI9Ncwx8+kMQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Conrad Kostecki <conikost@gentoo.org>,
-	Hans de Goede <hdegoede@redhat.com>,
+Cc: Lennert Buytenhek <kernel@wantstofly.org>,
 	Niklas Cassel <cassel@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
 	dlemoal@kernel.org,
 	linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 10/15] ahci: asm1166: correct count of reported ports
-Date: Fri,  2 Feb 2024 13:40:47 -0500
-Message-ID: <20240202184057.541411-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 13/15] ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers
+Date: Fri,  2 Feb 2024 13:40:50 -0500
+Message-ID: <20240202184057.541411-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240202184057.541411-1-sashal@kernel.org>
 References: <20240202184057.541411-1-sashal@kernel.org>
@@ -52,50 +51,157 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.76
 Content-Transfer-Encoding: 8bit
 
-From: Conrad Kostecki <conikost@gentoo.org>
+From: Lennert Buytenhek <kernel@wantstofly.org>
 
-[ Upstream commit 0077a504e1a4468669fd2e011108db49133db56e ]
+[ Upstream commit 20730e9b277873deeb6637339edcba64468f3da3 ]
 
-The ASM1166 SATA host controller always reports wrongly,
-that it has 32 ports. But in reality, it only has six ports.
+With one of the on-board ASM1061 AHCI controllers (1b21:0612) on an
+ASUSTeK Pro WS WRX80E-SAGE SE WIFI mainboard, a controller hang was
+observed that was immediately preceded by the following kernel
+messages:
 
-This seems to be a hardware issue, as all tested ASM1166
-SATA host controllers reports such high count of ports.
+ahci 0000:28:00.0: Using 64-bit DMA addresses
+ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00000 flags=0x0000]
+ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00300 flags=0x0000]
+ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00380 flags=0x0000]
+ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00400 flags=0x0000]
+ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00680 flags=0x0000]
+ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00700 flags=0x0000]
 
-Example output: ahci 0000:09:00.0: AHCI 0001.0301
-32 slots 32 ports 6 Gbps 0xffffff3f impl SATA mode.
+The first message is produced by code in drivers/iommu/dma-iommu.c
+which is accompanied by the following comment that seems to apply:
 
-By adjusting the port_map, the count is limited to six ports.
+        /*
+         * Try to use all the 32-bit PCI addresses first. The original SAC vs.
+         * DAC reasoning loses relevance with PCIe, but enough hardware and
+         * firmware bugs are still lurking out there that it's safest not to
+         * venture into the 64-bit space until necessary.
+         *
+         * If your device goes wrong after seeing the notice then likely either
+         * its driver is not setting DMA masks accurately, the hardware has
+         * some inherent bug in handling >32-bit addresses, or not all the
+         * expected address bits are wired up between the device and the IOMMU.
+         */
 
-New output: ahci 0000:09:00.0: AHCI 0001.0301
-32 slots 32 ports 6 Gbps 0x3f impl SATA mode.
+Asking the ASM1061 on a discrete PCIe card to DMA from I/O virtual
+address 0xffffffff00000000 produces the following I/O page faults:
 
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=211873
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218346
-Signed-off-by: Conrad Kostecki <conikost@gentoo.org>
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+vfio-pci 0000:07:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000000 flags=0x0010]
+vfio-pci 0000:07:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000500 flags=0x0010]
+
+Note that the upper 21 bits of the logged DMA address are zero.  (When
+asking a different PCIe device in the same PCIe slot to DMA to the
+same I/O virtual address, we do see all the upper 32 bits of the DMA
+address as 1, so this is not an issue with the chipset or IOMMU
+configuration on the test system.)
+
+Also, hacking libahci to always set the upper 21 bits of all DMA
+addresses to 1 produces no discernible effect on the behavior of the
+ASM1061, and mkfs/mount/scrub/etc work as without this hack.
+
+This all strongly suggests that the ASM1061 has a 43 bit DMA address
+limit, and this commit therefore adds a quirk to deal with this limit.
+
+This issue probably applies to (some of) the other supported ASMedia
+parts as well, but we limit it to the PCI IDs known to refer to
+ASM1061 parts, as that's the only part we know for sure to be affected
+by this issue at this point.
+
+Link: https://lore.kernel.org/linux-ide/ZaZ2PIpEId-rl6jv@wantstofly.org/
+Signed-off-by: Lennert Buytenhek <kernel@wantstofly.org>
+[cassel: drop date from error messages in commit log]
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/ahci.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/ata/ahci.c | 29 +++++++++++++++++++++++------
+ drivers/ata/ahci.h |  1 +
+ 2 files changed, 24 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 805645efb3cc..e22124f42183 100644
+index e22124f42183..42c6b660550c 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -658,6 +658,11 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
- static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 					 struct ahci_host_priv *hpriv)
+@@ -49,6 +49,7 @@ enum {
+ enum board_ids {
+ 	/* board IDs by feature in alphabetical order */
+ 	board_ahci,
++	board_ahci_43bit_dma,
+ 	board_ahci_ign_iferr,
+ 	board_ahci_low_power,
+ 	board_ahci_no_debounce_delay,
+@@ -129,6 +130,13 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
++	[board_ahci_43bit_dma] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_43BIT_ONLY),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ 	[board_ahci_ign_iferr] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR),
+ 		.flags		= AHCI_FLAG_COMMON,
+@@ -597,11 +605,11 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
+ 	{ PCI_VDEVICE(PROMISE, 0x3781), board_ahci },   /* FastTrak TX8660 ahci-mode */
+ 
+-	/* Asmedia */
++	/* ASMedia */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0601), board_ahci },	/* ASM1060 */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0602), board_ahci },	/* ASM1060 */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci_43bit_dma },	/* ASM1061 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci_43bit_dma },	/* ASM1061/1062 */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0621), board_ahci },   /* ASM1061R */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0622), board_ahci },   /* ASM1062R */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0624), board_ahci },   /* ASM1062+JMB575 */
+@@ -949,11 +957,20 @@ static int ahci_pci_device_resume(struct device *dev)
+ 
+ #endif /* CONFIG_PM */
+ 
+-static int ahci_configure_dma_masks(struct pci_dev *pdev, int using_dac)
++static int ahci_configure_dma_masks(struct pci_dev *pdev,
++				    struct ahci_host_priv *hpriv)
  {
-+	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
-+		dev_info(&pdev->dev, "ASM1166 has only six ports\n");
-+		hpriv->saved_port_map = 0x3f;
+-	const int dma_bits = using_dac ? 64 : 32;
++	int dma_bits;
+ 	int rc;
+ 
++	if (hpriv->cap & HOST_CAP_64) {
++		dma_bits = 64;
++		if (hpriv->flags & AHCI_HFLAG_43BIT_ONLY)
++			dma_bits = 43;
++	} else {
++		dma_bits = 32;
 +	}
 +
- 	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
- 		dev_info(&pdev->dev, "JMB361 has only one port\n");
- 		hpriv->saved_port_map = 1;
+ 	/*
+ 	 * If the device fixup already set the dma_mask to some non-standard
+ 	 * value, don't extend it here. This happens on STA2X11, for example.
+@@ -1926,7 +1943,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	ahci_gtf_filter_workaround(host);
+ 
+ 	/* initialize adapter */
+-	rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
++	rc = ahci_configure_dma_masks(pdev, hpriv);
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index ff8e6ae1c636..f9c5906a8afa 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -247,6 +247,7 @@ enum {
+ 	AHCI_HFLAG_SUSPEND_PHYS		= BIT(26), /* handle PHYs during
+ 						      suspend/resume */
+ 	AHCI_HFLAG_NO_SXS		= BIT(28), /* SXS not supported */
++	AHCI_HFLAG_43BIT_ONLY		= BIT(29), /* 43bit DMA addr limit */
+ 
+ 	/* ap->flags bits */
+ 
 -- 
 2.43.0
 
