@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1D11523E
-	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 01:08:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C12FEC2C7
+	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 01:52:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706836107; cv=none; b=BUXc7lwjAvOm7/WVlYWBhM1YdK5CFCvSCClbEzh3rk+396H9XuuEiaEGeOB6bLhulyPVbpA+vsD3YvIcILIwO1J2z7wVZagw8IG67gCSDxMYMWKOlJkOQV3IDJs3IyifG0Y1MaBuyXLCO2M1BsgeFAP0THa0hy4oHbaWw8J0nic=
+	t=1706838772; cv=none; b=uIEE5MexsuyCUsKc+068FOmKihL6meVoMXYSUKmf1AFAD9kUYix6W/iJwBx8NgSLhvKTmQs/iFtFnFxFr/aDQjxI/cfSiPb8unzQARYJaXP7gQc1ieltieuKsU4qGjB2g9euXzyn8wpAET2jsROiZU4iWU0D5HuryZiPD7SpLZs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706836107; c=relaxed/simple;
-	bh=X0l7ktbWO0WFhgPBB/sD25WB4T0sUC+0tzuXIRlBwv8=;
+	s=arc-20240116; t=1706838772; c=relaxed/simple;
+	bh=hxytyUCWGvNjdl1otvoD7pJao6deowy+w2y5jT8Qb7A=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sQds4lb65ojW9exRqMyrQEQxyZDpux8MXNw7kYzvRV1lqegle7GUAZWiYt4sNFlyEezuaXYBiOdtpCN4Z3qZwrn2BTSONF6fTtFytFB5zKs7P99tUi9Br8XaBoGN9nQ3NjTCc+TZhykq4pbBypJGEtZPNobdmw0RGR0ieMN2TVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LKe+swRY; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Opz7tuxS5YWpZLFREi1uHpfAhPx239FyABYhlVawIGBQ5Xs1SyBoGR0ieUY+rhbfogcsQnfUPr6jDkuSV7FATmiEQUIE3ClaqytZiQ93S7MEF7KU5NabLztuFtdrf7p3avVQRw6yLu+d1JyDijITAAZnjAWqTVxh3BIJp0xUL8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uts0rcne; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LKe+swRY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9728DC433F1;
-	Fri,  2 Feb 2024 01:08:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uts0rcne"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 204FDC433F1;
+	Fri,  2 Feb 2024 01:52:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706836107;
-	bh=X0l7ktbWO0WFhgPBB/sD25WB4T0sUC+0tzuXIRlBwv8=;
+	s=k20201202; t=1706838772;
+	bh=hxytyUCWGvNjdl1otvoD7pJao6deowy+w2y5jT8Qb7A=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=LKe+swRYx6At4HUlzlV+bZRQAReR+Th26r1S12wmnSn509PzPZzlmqt0PZKdSZnSI
-	 m/DrNO8rRxX9I8aoPTIefqB+8+uMXBEKfggEK/89152JiZylTdE5jfNuujrHgf3N09
-	 cl6ZaXRw4nFKTsIICPVA263hG1Zr4VSYKBUWHiy+HcL5OMDUYz2E/WjcfRwc1CJD6A
-	 cjl38F0tH8I9kZs81IE40mIIvOt1RHZlg83wdlskoBfJMCZCLjxy4yb8qetweG5RGU
-	 mI0g669vWrLAzd+Ku2iq6ywXphcUwCxLTw6CNv5717yVGPu12d9W/s7eG6JTRZwxNv
-	 mMm2XVDEMvcAw==
-Message-ID: <58834dd7-0946-45ad-8ada-303c0d735164@kernel.org>
-Date: Fri, 2 Feb 2024 10:08:24 +0900
+	b=uts0rcneZNsZPKtR1crPYwcIi39Fq8+FlL4O4+xln98fwUHfBlxnwHhMmAuuRN7v6
+	 92YrFPrPcNmrTMNtggG4tEHxAQ0tRSQQMPq6Ow/LilOVNxhiPzsv6FIXF1HtpR3TaG
+	 0+gua9eLigHHFUXbF3Ci8Xw4+VlksjOGHyBAUROOs4H/B90T25iCydLuCsPigTm/Ha
+	 0DNaHCvCppDZeJtMfJkrUeKA+bKbu5akE7TErsDV8lK4gmVp31kDFUj26lfT20zavM
+	 U6wrfNRSFI9fx94TTm+MX9xi4+QLrsgYqvC0Jdb9nY/b6sc1LvZDGuJRAwbkHPBlYo
+	 QTgP0YgKrPdSw==
+Message-ID: <5e422443-06f5-4885-9738-84419514a9af@kernel.org>
+Date: Fri, 2 Feb 2024 10:52:49 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,61 +35,100 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
+Subject: Re: [PATCH 1/5] ata: ahci: move marking of external port earlier
 Content-Language: en-US
-To: Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
-References: <87msthdo11.fsf@vps.thesusis.net>
- <20240107180258.360886-1-phill@thesusis.net>
- <20240107180258.360886-2-phill@thesusis.net>
- <f6110204-338d-42b5-8ec2-153dd862e799@kernel.org>
- <878r50uf97.fsf@vps.thesusis.net>
- <abd85855-0767-4e48-a8a7-8046cd339f9c@kernel.org>
- <87a5p5b426.fsf@vps.thesusis.net> <878r4l12c5.fsf@vps.thesusis.net>
- <d058a699-2929-4829-859b-8450f4bf497e@kernel.org>
- <875xziiuou.fsf@vps.thesusis.net>
- <7e324bce-9984-4291-8b5f-0907483e7bc1@kernel.org>
- <87sf2ct0ma.fsf@vps.thesusis.net>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Werner Fischer <devlists@wefi.net>, Daniel Drake <drake@endlessos.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Jian-Hong Pan <jhp@endlessos.org>, Dieter Mummenschanz
+ <dmummenschanz@web.de>, linux-ide@vger.kernel.org
+References: <20240201161507.1147521-1-cassel@kernel.org>
+ <20240201161507.1147521-2-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <87sf2ct0ma.fsf@vps.thesusis.net>
+In-Reply-To: <20240201161507.1147521-2-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2/2/24 05:01, Phillip Susi wrote:
-> Damien Le Moal <dlemoal@kernel.org> writes:
+On 2/2/24 01:14, Niklas Cassel wrote:
+> Move the marking of an external port earlier in the call chain.
+> This is needed for further cleanups.
+> No functional change intended.
 > 
->> What does not work ? Everything is fine with my testing: the drive is always
->> woken up whenever someone (FS, applications etc) issue a block IO (including
->> flush) to the block layer. That is the expected behavior. If you want to have
->> the disk keep sleeping, the device users must stop poking at the drive.
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/ata/ahci.c    | 14 ++++++++++++++
+>  drivers/ata/libahci.c |  7 -------
+>  2 files changed, 14 insertions(+), 7 deletions(-)
 > 
-> It seems that I have put my foot in my mouth.  When I first started
-> working on these patches way back when, I did see flushes without any
-> writes in the blktrace keeping the drive awake.  I assumed that was
-> still a problem that I needed to tackle.  I should have tested it
-> first.  It seems this problem has been fixed already.
-> 
-> ext4 does still seem to issue a flush with no writes in the sync path
-> though, causing a drive to spin up for no reason, then right back down
-> when you suspend-to-ram.  I guess I'll ask about this on the ext4 list.
-> 
-> Circling back to the PuiS patch, did I understand correctly that you are
-> fine with that as long as it integrates with runtime pm?
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index da2e74fce2d9..157ab88bdf75 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1642,6 +1642,17 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+>  	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
+>  }
+>  
+> +static void ahci_mark_external_port(struct ata_port *ap)
+> +{
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	void __iomem *port_mmio = ahci_port_base(ap);
+> +	u32 tmp;
+> +
+> +	tmp = readl(port_mmio + PORT_CMD);
+> +	if ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS))
+> +		ap->pflags |= ATA_PFLAG_EXTERNAL;
+> +}
+> +
+>  static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+>  					   struct ahci_host_priv *hpriv)
+>  {
+> @@ -1934,6 +1945,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  		if (ap->flags & ATA_FLAG_EM)
+>  			ap->em_message_type = hpriv->em_msg_type;
+>  
+> +		/* mark esata ports */
+> +		ahci_mark_external_port(ap);
 
-Yes, but only for drives that report full identify data when PUIS is enabled.
-For drives that report incomplete identify data, we have no choice but to wake
-them up. And yes, we need integration with runtime pm to set the initial power
-state of the drive to standby (instead of "on") for both the ata device and its
-scsi device.
+Nit: the comment is rather useless as the function name is clear. It is also
+rather incorrect since this is for both esata as well as hot-plug capable ports
+(later in the series). So maybe drop it ?
 
-> I had tried at one point to add support for REQUEST SENSE to libata so
-> that sd can issue that to find out if the disk is powered up or not, and
-> set the runtime_pm status of the disk accordingly.  Does that make sense
-> to you?
+Otherwise, looks OK to me.
 
-I need to check that. I think there may be a better/easier way to get the
-current power state of a drive. Will get back to you on that.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
+> +
+>  		ahci_update_initial_lpm_policy(ap, hpriv);
+>  
+>  		/* disabled/not-implemented port */
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 1a63200ea437..fca376f03c9e 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1280,10 +1280,8 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+>  			   int port_no, void __iomem *mmio,
+>  			   void __iomem *port_mmio)
+>  {
+> -	struct ahci_host_priv *hpriv = ap->host->private_data;
+>  	const char *emsg = NULL;
+>  	int rc;
+> -	u32 tmp;
+>  
+>  	/* make sure port is not active */
+>  	rc = ahci_deinit_port(ap, &emsg);
+> @@ -1291,11 +1289,6 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+>  		dev_warn(dev, "%s (%d)\n", emsg, rc);
+>  
+>  	ahci_port_clear_pending_irq(ap);
+> -
+> -	/* mark esata ports */
+> -	tmp = readl(port_mmio + PORT_CMD);
+> -	if ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS))
+> -		ap->pflags |= ATA_PFLAG_EXTERNAL;
+>  }
+>  
+>  void ahci_init_controller(struct ata_host *host)
 
 -- 
 Damien Le Moal
