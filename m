@@ -1,116 +1,84 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67F0E7765D
-	for <linux-ide@vger.kernel.org>; Fri,  2 Feb 2024 23:17:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B93C9210F8;
+	Sun,  4 Feb 2024 10:39:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706915877; cv=none; b=qEbWo4b8Q1Z/hfe6k/vO6eU/gi3XyXyLBNQT4GGUPvPDxNr6RRkusUGEL7fwIWjBgQ9xp6wvneP+FD679kIgexZ47M4OO9HCaREsUGNzfii5IDvMNw++occjHOOL7WJBtrLEZTM40dv6kf7DP8Z+OpY7ntt1EVZeByaiZysxjsE=
+	t=1707043183; cv=none; b=tn1FNRf9SxmcFZGe8DM0KMoEOD1bJp2MXCfKaaSk1GdiVom6ijV4mDOOyt9Be/67U1pn1Q3A3N8sesVuqig4ESE8wEx8wx0RtsMc/fvn7gQPkHzDxSq8cou9aRqtB75qJRTZADxZgjP4fSG4WJ6vMSrpEgEWv7F9rgksmPMjCQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706915877; c=relaxed/simple;
-	bh=IFK/wYKoAyG9G+RyXEmmiKzR3XB+mEx08zm8XiL5UxE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a6OfW1QHQ/DigBKVlRr1xlMgZMksBflI1ReUOENX9Y6FNxaiMgE8ohsEtMgslR2EY1l+wIqMLruEz++uS2yNO0IpdEFyPOZCDr+b8DqWwpvEvGJ4yk0ghG+MgXMCL+BuhY5Qc+IIPpZ2zGGjyXt2SwPkRXa9IeAwV6gXMFxtmlA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ix1xj7B/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707043183; c=relaxed/simple;
+	bh=iyoxJyYS1ovHgfgZClsPvcow6R3PPCC0we47Uz+xt0M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fiMmWHZl52+XCPXiF8jhmVUHL+LVtyh6jr5zXfJYlvePxoq/JCBv+r6Ha7sO+ntDCnffaFO6mXw3k6G8EhLidHB2bFT6B0aQBRbXJB+G7WFS8VcjduFUU4sPyYEdcL8wOlm/P2aAoMpa2pGUodPm8u0xaOo6Yl/Fe6fhHKKYZrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R0+vADoN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ix1xj7B/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30B84C433F1;
-	Fri,  2 Feb 2024 23:17:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R0+vADoN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 182E9C433C7;
+	Sun,  4 Feb 2024 10:39:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706915876;
-	bh=IFK/wYKoAyG9G+RyXEmmiKzR3XB+mEx08zm8XiL5UxE=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ix1xj7B/vCEYrp6sm8bTENMrNSmG0sqT9yVjufJfWMpfzqwXzBhPtSKamuosr792i
-	 vpbX/9JUdMQdQX7rxygNZSoOlcBdL1t6ezfgSX1nCP4f/rftJxmrnpYiNfKVJer63w
-	 Lsm8a5cwIYr9UWMuPM5S6z2spUKON28pDa4hWyRNxDCogEeSAi0AcAKzHHosBQzBR8
-	 nWxLgGNKIwymbness72E6VXxXxt1a39euaqHO14KgOnB/pivG5r8rbQmD2m7fmEsfk
-	 +WjlA9qlBPw4x2kvGeTCcVVUsdM/9pm27LS/idSqWruO3SC0OYVrT2SLSZULZY39FC
-	 v+W0txD3XVWYw==
-Message-ID: <c12cc683-1fbd-4f9b-92f4-dba01ae235bf@kernel.org>
-Date: Sat, 3 Feb 2024 08:17:54 +0900
+	s=k20201202; t=1707043183;
+	bh=iyoxJyYS1ovHgfgZClsPvcow6R3PPCC0we47Uz+xt0M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=R0+vADoNlIEK5wCnNQUPTWplg8vqRoOQ4lErZPgwdFQHb6X028MomFpHeBXXxYqQW
+	 ewbTxmEY40Ffr8SbpyQqvQCmf5eAb9Gbi2qIc0eqUyRdmKwkrS8K+EE12tFZpAgSDb
+	 duK0oUTehJb7GDqCv+SeDW+buwKdH/1sxkFn49uTRHpkxRCJbWYINuL3Z3CeY/46GE
+	 eANkCxw7ZyWaPDphTfuuQ6nme1uck+O3CAxa1n9lCCHqS2YFK309CEOXohK+ggkkZE
+	 dtoZtoe8t+kA8hwH9jeFbG/l3ydjG65LLwk17sCIr5C9D1NAfZf7JwE8mtaSSU2pkO
+	 qBHfhlIXCe33w==
+Date: Sun, 4 Feb 2024 11:39:33 +0100
+From: Mike Rapoport <rppt@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
+Message-ID: <Zb9pZTmyb0lPMQs8@kernel.org>
+References: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
-Content-Language: en-US
-To: Phillip Susi <phill@thesusis.net>, linux-ide@vger.kernel.org
-Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
-References: <87msthdo11.fsf@vps.thesusis.net>
- <20240107180258.360886-1-phill@thesusis.net>
- <20240107180258.360886-2-phill@thesusis.net>
- <f6110204-338d-42b5-8ec2-153dd862e799@kernel.org>
- <878r50uf97.fsf@vps.thesusis.net>
- <abd85855-0767-4e48-a8a7-8046cd339f9c@kernel.org>
- <87a5p5b426.fsf@vps.thesusis.net> <878r4l12c5.fsf@vps.thesusis.net>
- <d058a699-2929-4829-859b-8450f4bf497e@kernel.org>
- <875xziiuou.fsf@vps.thesusis.net>
- <7e324bce-9984-4291-8b5f-0907483e7bc1@kernel.org>
- <87sf2ct0ma.fsf@vps.thesusis.net>
- <58834dd7-0946-45ad-8ada-303c0d735164@kernel.org>
- <87fryafxs5.fsf@vps.thesusis.net>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <87fryafxs5.fsf@vps.thesusis.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
 
-On 2/3/24 04:53, Phillip Susi wrote:
-> Damien Le Moal <dlemoal@kernel.org> writes:
+On Mon, Jan 29, 2024 at 04:32:03AM +0000, Matthew Wilcox wrote:
+> Our documentation of the current page flags is ... not great.  I think
+> I can improve it for the page cache side of things; I understand the
+> meanings of locked, writeback, uptodate, dirty, head, waiters, slab,
+> mlocked, mappedtodisk, error, hwpoison, readahead, anon_exclusive,
+> has_hwpoisoned, hugetlb and large_remappable.
 > 
->> Yes, but only for drives that report full identify data when PUIS is enabled.
->> For drives that report incomplete identify data, we have no choice but to wake
->> them up. And yes, we need integration with runtime pm to set the
->> initial power
+> Where I'm a lot more shaky is the meaning of the more "real MM" flags,
+> like active, referenced, lru, workingset, reserved, reclaim, swapbacked,
+> unevictable, young, idle, swapcache, isolated, and reported.
 > 
-> Why was that again?  I think you said something about needing to set the
-> speed correctly so you at least need to know if this drive requires a
-> lower speed than the other in the PATA master/slave pair?  Wouldn't that
-> only require the speed information, not all identify data?
-
-See ata_dev_revalidate() and ata_dev_configure() and all the drive features that
-are checked using the identify data. We need to preserve that to ensure that
-nothing changed on the drive so that its representation in libata is kept in
-sync with the drive config. That is why drive starting with PUIS and not giving
-full identify data *must* be woken up, which is the current libata behavior.
-
->> state of the drive to standby (instead of "on") for both the ata device and its
->> scsi device.
+> Perhaps we could have an MM session where we try to explain slowly and
+> carefully to each other what all these flags actually mean, talk about
+> what combinations of them make sense, how we might eliminate some of
+> them to make more space in the flags word, and what all this looks like
+> in a memdesc world.
 > 
-> You mean if the whole device hierarchy were changed so that instead of
-> the scsi_host being a child of the port with the links and devices
-> hanging off to the side, the scsi_host would be the child of the ata device?
+> And maybe we can get some documentation written about it!  Not trying
+> to nerd snipe Jon into attending this session, but if he did ...
 
-You do not need to change the hierarchy of devices. An ata_dev is already a
-child of its scsi_dev. So if you want to set the ata device to runtime suspend
-state, you have to have the parent in the same state too. runtime suspend work
-top-to-bottom in the device chain. You cannot have random device in the middle
-of the chain going to suspend without the devices above it also being suspended.
+I suspect Jon will be there anyway, but not sure he'd be willing to do the
+writing :)
 
-Also, the user does not use ata devices directly. They use the scsi device
-representing the ata device. You must thus have that in sync with the ata device
-state.
+I was going to propose the "mm docs" session again, but this one seems more
+useful than talking yet again about how hard it is to get MM documentation
+done.
 
->> I need to check that. I think there may be a better/easier way to get the
->> current power state of a drive. Will get back to you on that.
+And I can take on myself putting the explanations from this session into
+writing.
+ 
+> [thanks to Amir for reminding me that I meant to propose this topic]
 > 
-> That would be good.  At one point that was the way I found, and also I
-> think it was in the SAT-3 spec that is how REQUEST SENSE should be
-> implemented for ATA disks.
-
-TEST UNIT READY is the command to use. I need to check the specs again about how
-it reports the device state though. I think it is through sense data. The scsi
-disk driver issues that command already to check that the drive is spun-up. See
-sd_revalidate_disk() calling sd_spinup_disk(). So that will also need to change
-to be aware of the initial power state to not spinup the drive if not wanted.
-That will need to be done extremely carefully though to only affect ata devices
-with PUIS. Likely some additional scsi device flag will be needed for this. I
-have not looked into that yet.
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+Sincerely yours,
+Mike.
