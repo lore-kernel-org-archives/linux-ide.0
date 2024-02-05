@@ -1,53 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from vps.thesusis.net (vps.thesusis.net [34.202.238.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD371482F3;
-	Mon,  5 Feb 2024 19:04:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC5CC482E4
+	for <linux-ide@vger.kernel.org>; Mon,  5 Feb 2024 19:52:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=34.202.238.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707159849; cv=none; b=H3/dXtdc8o7Iqg6jgkm38ATIrvOYe9K7gLVmbXxft70enRDQFI3zqFsMCWlP1YbGI9Gsg+yZ+/0TGBxgGOAU0C4LUBLVbufeZoOEA2Hp36yr8T81DbUUjlrPjHW1v6niQVBzTo3MVyPNfulgzt9PONY2VnVKfov33bcDf5G/1SE=
+	t=1707162730; cv=none; b=lZe3+ZdNQirDgtpG6TaebXFlOmAlFHnkGSoZU/awxCGSx2dUIMWwlHCC5wnJuPvbb+5TbeiwdQqrzIusfsNYfzmyi0g369rUvqsb34Lh3HNHYOJHra5M661hBmMMrTNlvBQ4TgH6rCAM0qJu0EF+h3sspt1L6gWZ2M/m6vmfy7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707159849; c=relaxed/simple;
-	bh=2X0beJ3dmfA+cwC1iXbunu8iUPuukUKOrL3cq5ZA8ZU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jV3JHSbeH6oDeHg41h83l7A2+agLIvn4Kcg7FgxDN06KF0FyKJUkrVGnC9jOY1sdfCf3O65eFzff6Qbcepq8tPerEIFcv2YFrKCACTPu7fUvgq0kYUtVPr6aQQsy9GX23LUScVhU/uJ7Pb13Ny/0VXcCn9mypKGwHFFB5vJz5Z8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=WYStd+iK; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="WYStd+iK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A15BC43390;
-	Mon,  5 Feb 2024 19:04:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1707159849;
-	bh=2X0beJ3dmfA+cwC1iXbunu8iUPuukUKOrL3cq5ZA8ZU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WYStd+iKd+2So2kDrSMMyTih3ROQAIUWkWpwxk17wXdTS6kx+hJSilmhUYJC3lCbe
-	 chWZGGaRCrJC4ZY+msoO5eFEOhYRYRkKGqoC7FoNcMkxUtb7wW4tEYIEL5QItuJ7l1
-	 wJ7NakcylCA9AdxLgYiPcIxBYlMhFSZ+DMShIWno=
-Date: Mon, 5 Feb 2024 04:51:19 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Ricardo B. Marliere" <ricardo@marliere.net>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ata: pata_parport: make pata_parport_bus_type const
-Message-ID: <2024020516-decipher-unvaried-202a@gregkh>
-References: <20240204-bus_cleanup-ata-v1-1-2bdc1fadf356@marliere.net>
+	s=arc-20240116; t=1707162730; c=relaxed/simple;
+	bh=JWJTkqKSUcYDl9NK3GHU9ZvNqL7gCyQI0I7BP/ElSok=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=qdHnibpe3aZANAou44VlPcwFGgsKUJAa6UKQnLZ+LnGTCo+CjfIXOcklbPSiYqZo+tTmohrRSl31V9tmPcengkQfT043D61q6TzkvMfvg8zxl8Ic+DqBvO26891iuTuNdQj+4v2VRsLHzjLxqyASGdCJ2lKmPSxuf0dRfq5Wo6E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net; spf=none smtp.mailfrom=vps.thesusis.net; arc=none smtp.client-ip=34.202.238.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=thesusis.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=vps.thesusis.net
+Received: by vps.thesusis.net (Postfix, from userid 1000)
+	id D934F223AC; Mon,  5 Feb 2024 14:52:01 -0500 (EST)
+From: Phillip Susi <phill@thesusis.net>
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH 1/3] libata: avoid waking disk for several commands
+In-Reply-To: <c12cc683-1fbd-4f9b-92f4-dba01ae235bf@kernel.org>
+References: <87msthdo11.fsf@vps.thesusis.net>
+ <20240107180258.360886-1-phill@thesusis.net>
+ <20240107180258.360886-2-phill@thesusis.net>
+ <f6110204-338d-42b5-8ec2-153dd862e799@kernel.org>
+ <878r50uf97.fsf@vps.thesusis.net>
+ <abd85855-0767-4e48-a8a7-8046cd339f9c@kernel.org>
+ <87a5p5b426.fsf@vps.thesusis.net> <878r4l12c5.fsf@vps.thesusis.net>
+ <d058a699-2929-4829-859b-8450f4bf497e@kernel.org>
+ <875xziiuou.fsf@vps.thesusis.net>
+ <7e324bce-9984-4291-8b5f-0907483e7bc1@kernel.org>
+ <87sf2ct0ma.fsf@vps.thesusis.net>
+ <58834dd7-0946-45ad-8ada-303c0d735164@kernel.org>
+ <87fryafxs5.fsf@vps.thesusis.net>
+ <c12cc683-1fbd-4f9b-92f4-dba01ae235bf@kernel.org>
+Date: Mon, 05 Feb 2024 14:52:01 -0500
+Message-ID: <87ttmmit9a.fsf@vps.thesusis.net>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240204-bus_cleanup-ata-v1-1-2bdc1fadf356@marliere.net>
+Content-Type: text/plain
 
-On Sun, Feb 04, 2024 at 12:23:29PM -0300, Ricardo B. Marliere wrote:
-> Now that the driver core can properly handle constant struct bus_type,
-> move the pata_parport_bus_type variable to be a constant structure as well,
-> placing it into read-only memory which can not be modified at runtime.
-> 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Ricardo B. Marliere <ricardo@marliere.net>
+Damien Le Moal <dlemoal@kernel.org> writes:
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> See ata_dev_revalidate() and ata_dev_configure() and all the drive features that
+> are checked using the identify data. We need to preserve that to ensure that
+> nothing changed on the drive so that its representation in libata is kept in
+> sync with the drive config. That is why drive starting with PUIS and not giving
+> full identify data *must* be woken up, which is the current libata behavior.
+
+Yes, the information is needed to revalidate, but why must this
+revalidation be done during system resume, rather than postponed until later?
+
+> You do not need to change the hierarchy of devices. An ata_dev is already a
+> child of its scsi_dev. So if you want to set the ata device to runtime
+> suspend
+
+How is an ata_dev a child of its own scsi_dev?  Or did you mean to say
+the reverse: the scsi_dev is a child of the ata_dev?  But that isn't the
+case either.  In sysfs, you have:
+
+ata_port
+ - scsi_host
+   - scsi_target
+     - scsi_lun
+ - ata_link
+   - ata_dev
+
+The link and dev hang off to the side, not in the ancestry of the scsi
+disk.
+
+> state, you have to have the parent in the same state too. runtime suspend work
+> top-to-bottom in the device chain. You cannot have random device in the middle
+> of the chain going to suspend without the devices above it also being suspended.
+>
+> Also, the user does not use ata devices directly. They use the scsi device
+> representing the ata device. You must thus have that in sync with the ata device
+> state.
+
+Right... so when the system is resumed, first the ata_port is resumed,
+then it has to be on for the scsi host, target, and lun to resume.  At
+that point sd could check if the disk is actually spinning, and if not,
+force it to suspend, which then allows the target to suspend, wich then
+allows the host to suspend, and finally the ata_port.
