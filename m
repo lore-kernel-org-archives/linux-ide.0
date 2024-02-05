@@ -1,66 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD13FBE4C;
-	Sun,  4 Feb 2024 23:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780761758C;
+	Mon,  5 Feb 2024 10:52:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707089554; cv=none; b=ICUe8Eic07Ynx0t0OX76jveg26GcosmHZnsfnEqADmXsd/pKsZLPdsvOKfshPRX5Yy/3SjmN4dAp8E+ZQqAyCD+qU6Oiewy7IcVlUwWnO6sCWsdBTFC+Bi+GR9ocGZ5yyQ5BVbX7/qb7pM4k/uxV6ArjEWH8esEGNIyIh2ExjLc=
+	t=1707130370; cv=none; b=VkiH6dZdCOccyIuiKfOnLQEgrnkexKeyZ7Ac1GINWbEcEK3ViX950c8Pxh5thzs0jmQKRUmduz1o+YyCYKH6vKAeeDpgBy1u3I3PYXLCOmr5lyyQTvBhhmAxxydjGG+mfQbXwFPgBIJL1cyvReCJDSzkTlK0cZxBjmJq9kEqW3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707089554; c=relaxed/simple;
-	bh=weao2nZbuJbl0lCTTQA6jQBl3YJvBZE2uI/j1YAW7sc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P5YsxhFcwdkSttuZBg6CUvPXtwsBejT0rW7pkPIeVSr16adWlK2nL050JeCWgOypHHnYQN7a9cLhjKe3lnXIfj1Bdco+EXkzMS2wrudW6cc8M7PidQDxAaynCATXVIjo1q9ANJedQHIgY40Bw2QKottOyt40pZeQHV39AnBiYog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fkzET7ls; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707130370; c=relaxed/simple;
+	bh=OoxdaFQj/xPguPbjAhoi8W1Hwqp+a2TelEoY0w5int4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cblSTVGigP5R+ni93WZvOcTgaFMW7HxePmmOBEoIMru3xa7Qlqlcde2lJblDoNwFFEXzr+1JUanCgda3H/B0uQVW58wWTfFFjWm3va8ZF0g/CTjhtRqWtjRfDAfYDkIMXTo/j4hx5qlC13JGvOkIynKfTJWPg9uu+YJ+4Sae+xk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=mnT6BSXb; arc=none smtp.client-ip=68.232.154.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=microchip.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fkzET7ls"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EEBCC43390;
-	Sun,  4 Feb 2024 23:32:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707089553;
-	bh=weao2nZbuJbl0lCTTQA6jQBl3YJvBZE2uI/j1YAW7sc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=fkzET7lsImBZI4+lhRM3QHl8vkm0OknStQgXOTjySvOaGEYcGOTmm5YsKuHCa3Xge
-	 OCgUljIHx2oM8U9QTHiGs4JktbY5pIhezWSPlzvfp6uXeh8gLoUfq8mJ+zV35yPPQ4
-	 FuyouX0u31inPG8Ea1RE0xh0s5kWV7v/z47uMB698k4ohsghVIFX6cEU/iA0QziTxH
-	 23NY6Eqd1x5LoSbLRUpw2Pw8fmNYXJ/ropVOaWT3YH8WM+EkwmurBZIRekroSkfV8C
-	 TdcutF5h49h2Gh71nPjhvsnFJYF3lHF+rMwUJn8LhbypqtrzaYoTZ9lIH5mkdD5wuN
-	 fGTQ/ZMf7KfhA==
-Message-ID: <3dd03711-cbcd-4c91-8c69-f8f28e61de50@kernel.org>
-Date: Mon, 5 Feb 2024 08:32:31 +0900
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="mnT6BSXb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1707130368; x=1738666368;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=OoxdaFQj/xPguPbjAhoi8W1Hwqp+a2TelEoY0w5int4=;
+  b=mnT6BSXbzqh0nRA0Id4bszZnzD1ypjJclkuchG3nmZYcjLFEWfimAcdk
+   QluKhCOcWOo4YsX2dCeTvBypFEqikpHKnN1rSDr01wsvW/a/U/J+WAavj
+   6kEEVB5JcfXc5vIUQwA5HLD6h9n1HByr13ezANOqMxyJdVIofLKRmuTKQ
+   ZJuzITRLOypB+bbbFnCJyhEnCsBSC0/Cq1m2KdKoreyrKN5P/oJUPh1E2
+   hQA1jwT2gW2+Wi0vmxkPIqDCI4a94+9rp5/KBjP5vNXEdQ3N8ez6t8Eet
+   T+xd0Eq8TyyOzhYXkaBF6YSc7hIQdNBNnqzh2NEFYTmVbY55YIV0czWB4
+   A==;
+X-CSE-ConnectionGUID: en2EpxwLQDuVOCyI9OpQuw==
+X-CSE-MsgGUID: cZQiVEcWRLSBLV6E78EZZQ==
+X-IronPort-AV: E=Sophos;i="6.05,245,1701154800"; 
+   d="scan'208";a="15780387"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Feb 2024 03:52:47 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Mon, 5 Feb 2024 03:52:07 -0700
+Received: from che-lt-i63539.microchip.com (10.10.85.11) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server id
+ 15.1.2507.35 via Frontend Transport; Mon, 5 Feb 2024 03:52:02 -0700
+From: Hari Prasath Gujulan Elango <Hari.PrasathGE@microchip.com>
+To: <dlemoal@kernel.org>, <cassel@kernel.org>, <robh+dt@kernel.org>,
+	<krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>
+CC: <nicolas.ferre@microchip.com>, <alexandre.belloni@bootlin.com>,
+	<claudiu.beznea@tuxon.dev>, <linux-ide@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, Hari Prasath Gujulan Elango
+	<Hari.PrasathGE@microchip.com>
+Subject: [PATCH] dt-bindings: ata: atmel: remove at91 compact flash documentation
+Date: Mon, 5 Feb 2024 16:22:01 +0530
+Message-ID: <20240205105201.81060-1-Hari.PrasathGE@microchip.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: pata_parport: make pata_parport_bus_type const
-Content-Language: en-US
-To: "Ricardo B. Marliere" <ricardo@marliere.net>,
- Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20240204-bus_cleanup-ata-v1-1-2bdc1fadf356@marliere.net>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240204-bus_cleanup-ata-v1-1-2bdc1fadf356@marliere.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-On 2/5/24 00:23, Ricardo B. Marliere wrote:
-> Now that the driver core can properly handle constant struct bus_type,
-> move the pata_parport_bus_type variable to be a constant structure as well,
-> placing it into read-only memory which can not be modified at runtime.
-> 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Ricardo B. Marliere <ricardo@marliere.net>
+The compatible "at91rm9200-cf" is not used by any driver,hence remove the
+corresponding documentation.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Hari Prasath Gujulan Elango <Hari.PrasathGE@microchip.com>
+---
+ .../devicetree/bindings/ata/atmel-at91_cf.txt | 19 -------------------
+ 1 file changed, 19 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
 
-
+diff --git a/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt b/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
+deleted file mode 100644
+index c1d22b3ae134..000000000000
+--- a/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
++++ /dev/null
+@@ -1,19 +0,0 @@
+-Atmel AT91RM9200 CompactFlash
+-
+-Required properties:
+-- compatible : "atmel,at91rm9200-cf".
+-- reg : should specify localbus address and size used.
+-- gpios : specifies the gpio pins to control the CF device. Detect
+-  and reset gpio's are mandatory while irq and vcc gpio's are
+-  optional and may be set to 0 if not present.
+-
+-Example:
+-compact-flash@50000000 {
+-	compatible = "atmel,at91rm9200-cf";
+-	reg = <0x50000000 0x30000000>;
+-	gpios = <&pioC 13 0	/* irq */
+-		 &pioC 15 0 	/* detect */
+-		 0		/* vcc */
+-		 &pioC  5 0	/* reset */
+-		>;
+-};
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
 
