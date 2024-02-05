@@ -1,102 +1,175 @@
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780761758C;
-	Mon,  5 Feb 2024 10:52:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8C118E28;
+	Mon,  5 Feb 2024 11:33:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707130370; cv=none; b=VkiH6dZdCOccyIuiKfOnLQEgrnkexKeyZ7Ac1GINWbEcEK3ViX950c8Pxh5thzs0jmQKRUmduz1o+YyCYKH6vKAeeDpgBy1u3I3PYXLCOmr5lyyQTvBhhmAxxydjGG+mfQbXwFPgBIJL1cyvReCJDSzkTlK0cZxBjmJq9kEqW3Q=
+	t=1707132822; cv=none; b=BhrwbQC3lUudXvs4vTaM4xtRlhe+rCNsiDpAV7khM0opgW696bZYKk9muhFniihI+DxIwj5tLUHRCG8Rl1iDtJZKoXiEyjzXzbYdiY81qSIJK7JEQi+zYYrdMN1crK2s+x4YxqelLPkWcI4ELjY7zWKuhFTW8MqNcCVl494W5vg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707130370; c=relaxed/simple;
-	bh=OoxdaFQj/xPguPbjAhoi8W1Hwqp+a2TelEoY0w5int4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cblSTVGigP5R+ni93WZvOcTgaFMW7HxePmmOBEoIMru3xa7Qlqlcde2lJblDoNwFFEXzr+1JUanCgda3H/B0uQVW58wWTfFFjWm3va8ZF0g/CTjhtRqWtjRfDAfYDkIMXTo/j4hx5qlC13JGvOkIynKfTJWPg9uu+YJ+4Sae+xk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=mnT6BSXb; arc=none smtp.client-ip=68.232.154.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=microchip.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
+	s=arc-20240116; t=1707132822; c=relaxed/simple;
+	bh=1MwSAUc78W5tJXQDmXiVVWL6LW0tWArwoySoZ/FGdlY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mah912x7cgX6ozTZ+cpAyiPJixHVA/0LjUhfxVTo5rCpNnQpTtWkjrxCmfbI8QMMZtVXqOhDybNfpoFW235/V71c/fwHMdnx814Zu0d8JF4IA2gwVYQDjlY+VGfqHIwjEgnaA8OGXZBGSpFevPG3TCWDbkJB5SfuScPJUHa5Juk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TpXloMUH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="mnT6BSXb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1707130368; x=1738666368;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=OoxdaFQj/xPguPbjAhoi8W1Hwqp+a2TelEoY0w5int4=;
-  b=mnT6BSXbzqh0nRA0Id4bszZnzD1ypjJclkuchG3nmZYcjLFEWfimAcdk
-   QluKhCOcWOo4YsX2dCeTvBypFEqikpHKnN1rSDr01wsvW/a/U/J+WAavj
-   6kEEVB5JcfXc5vIUQwA5HLD6h9n1HByr13ezANOqMxyJdVIofLKRmuTKQ
-   ZJuzITRLOypB+bbbFnCJyhEnCsBSC0/Cq1m2KdKoreyrKN5P/oJUPh1E2
-   hQA1jwT2gW2+Wi0vmxkPIqDCI4a94+9rp5/KBjP5vNXEdQ3N8ez6t8Eet
-   T+xd0Eq8TyyOzhYXkaBF6YSc7hIQdNBNnqzh2NEFYTmVbY55YIV0czWB4
-   A==;
-X-CSE-ConnectionGUID: en2EpxwLQDuVOCyI9OpQuw==
-X-CSE-MsgGUID: cZQiVEcWRLSBLV6E78EZZQ==
-X-IronPort-AV: E=Sophos;i="6.05,245,1701154800"; 
-   d="scan'208";a="15780387"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 05 Feb 2024 03:52:47 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Mon, 5 Feb 2024 03:52:07 -0700
-Received: from che-lt-i63539.microchip.com (10.10.85.11) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server id
- 15.1.2507.35 via Frontend Transport; Mon, 5 Feb 2024 03:52:02 -0700
-From: Hari Prasath Gujulan Elango <Hari.PrasathGE@microchip.com>
-To: <dlemoal@kernel.org>, <cassel@kernel.org>, <robh+dt@kernel.org>,
-	<krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>
-CC: <nicolas.ferre@microchip.com>, <alexandre.belloni@bootlin.com>,
-	<claudiu.beznea@tuxon.dev>, <linux-ide@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, Hari Prasath Gujulan Elango
-	<Hari.PrasathGE@microchip.com>
-Subject: [PATCH] dt-bindings: ata: atmel: remove at91 compact flash documentation
-Date: Mon, 5 Feb 2024 16:22:01 +0530
-Message-ID: <20240205105201.81060-1-Hari.PrasathGE@microchip.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TpXloMUH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36F10C433C7;
+	Mon,  5 Feb 2024 11:33:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707132821;
+	bh=1MwSAUc78W5tJXQDmXiVVWL6LW0tWArwoySoZ/FGdlY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TpXloMUHVvgOT++sJP7NBERncauAvbB6ry4KrcJTiSaciNWRV+DSyRYS+aG8Sioma
+	 t6iLwz1RM85qLT6G9Ca/U6FC+XoRgFdiD4kLjovPNM+SVaRqBiJH5791i6WyWYiQos
+	 FmttZ3GJk4+4F6djl9PeTMvUq0PonAfvWXtfDYi5SZQba0/Zg+PlqptTC/pfIMtZGL
+	 bjEboxt4JN/Q/9y6zfZ4fkdwI3X1oDizR4dA1v8QcPZ6tQnKT0rHmkt4yTc1baR/fj
+	 g2SBCEbI/D+HFbVapiKdMQE0fstZtVWBdvgD/IqHZNQ3hz1K3AL0tkeSdbg4VKKgW0
+	 6j1xiFneU7IEw==
+Date: Mon, 5 Feb 2024 12:33:34 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Jian-Hong Pan <jhp@endlessos.org>
+Cc: Daniel Drake <drake@endlessos.org>,
+	Vitalii Solomonov <solomonov.v@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	David Box <david.e.box@linux.intel.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux@endlessos.org
+Subject: Re: [PATCH 1/2] ata: ahci: Add force LPM policy quirk for ASUS
+ B1400CEAE
+Message-ID: <ZcDHjsYJNlJ/9nNT@x1-carbon>
+References: <20240130095933.14158-1-jhp@endlessos.org>
+ <20240130101335.GU2543524@black.fi.intel.com>
+ <CAPpJ_ef4KuZzBaMupH-iW0ricyY_9toa7A4rB2vyeaFu7ROiDA@mail.gmail.com>
+ <Zbonprq/1SircQon@x1-carbon>
+ <CAD8Lp47SH+xcCbZ9qdRwrk2KOHNoHUE5AMieVHoSMbVsMrdiNg@mail.gmail.com>
+ <ZbrNLxHL03R66PxQ@x1-carbon>
+ <ZbuyVbMEBWKi729y@x1-carbon>
+ <CAPpJ_efmzy_FU0urdHDmO5htOBCPaX-T5W+Er7AmWYhqUTwnyA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+In-Reply-To: <CAPpJ_efmzy_FU0urdHDmO5htOBCPaX-T5W+Er7AmWYhqUTwnyA@mail.gmail.com>
 
-The compatible "at91rm9200-cf" is not used by any driver,hence remove the
-corresponding documentation.
+On Fri, Feb 02, 2024 at 04:49:00PM +0800, Jian-Hong Pan wrote:
+> Niklas Cassel <cassel@kernel.org> 於 2024年2月1日 週四 下午11:01寫道：
+> >
+> > On Wed, Jan 31, 2024 at 11:43:59PM +0100, Niklas Cassel wrote:
+> > > On Wed, Jan 31, 2024 at 07:08:12AM -0400, Daniel Drake wrote:
+> >
+> > (snip)
+> >
+> > > In libata we perform a reset of the port at boot, see:
+> > > libata-sata.c:sata_link_hardreset()
+> > > after writing to SControl, we call
+> > > libata-core.c:ata_wait_ready() that will poll for the port being ready
+> > > by calling the check_ready callback.
+> > > For AHCI, this callback funcion is set to:
+> > > libahci.c:ahci_check_ready().
+> > >
+> > > A reset should take the device out of deep power state and should be
+> > > sufficient to establish a connection (and that also seems to be the
+> > > case when not using Intel VMD).
+> > >
+> > > However, if you want to debug, I would start by adding prints to
+> > > libata-sata.c:sata_link_hardreset()
+> > > libata-core.c:ata_wait_ready()
+> > > libahci.c:ahci_check_ready().
+> >
+> > FWIW, this will dump SStatus.DET every time the check_ready callback function
+> > (ahci_check_ready()) is called:
+> >
+> >
+> > diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> > index 1a63200ea437..0467e150601e 100644
+> > --- a/drivers/ata/libahci.c
+> > +++ b/drivers/ata/libahci.c
+> > @@ -1533,6 +1533,12 @@ int ahci_check_ready(struct ata_link *link)
+> >  {
+> >         void __iomem *port_mmio = ahci_port_base(link->ap);
+> >         u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
+> > +       u32 cur = 0;
+> > +
+> > +       sata_scr_read(link, SCR_STATUS, &cur);
+> > +
+> > +       ata_link_info(link, "BUSY ? %d (status: %#x) SStatus.DET: %#x\n",
+> > +                     status & ATA_BUSY, status, cur & 0xf);
+> >
+> >         return ata_check_ready(status);
+> >  }
+> 
+> I think I can join the test based on kernel v6.8-rc2, too.
+> 
+> The original ASUS B1400CEAE has only one NVMe SSD.  I prepare the
+> patch ("ata: ahci: Add force LPM policy quirk for ASUS B1400CEAE") to
+> fix the power consumption issue for s2idle with enabled VMD.
+> 
+> The patch is a quirk limiting ASUS B1400CEAE only, not generic for the
+> SATA controller [8086:a0d3].  Then, I install another SATA HDD into
+> ASUS B1400CEAE for test.  The SATA HDD shows up and works.
+> 
+> $ dmesg | grep SATA
+> [    0.785120] ahci 10000:e0:17.0: AHCI 0001.0301 32 slots 1 ports 6
+> Gbps 0x1 impl SATA mode
+> [    0.785269] ata1: SATA max UDMA/133 abar m2048@0x76102000 port
+> 0x76102100 irq 144 lpm-pol 3
+> [    1.096684] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> 
+> However, if I simply revert the commit 6210038aeaf4 ("ata: ahci:
+> Revert "ata: ahci: Add Tiger Lake UP{3,4} AHCI controller"") (fix the
+> conflict, of course), then the SATA HDD disappears!!?  Both
+> CONFIG_SATA_MOBILE_LPM_POLICY=3 and 0 can reproduce the issue.
+> 
+> $ dmesg | grep SATA
+> [    0.783211] ahci 10000:e0:17.0: AHCI 0001.0301 32 slots 1 ports 6
+> Gbps 0x1 impl SATA mode
+> [    0.783399] ata1: SATA max UDMA/133 abar m2048@0x76102000 port
+> 0x76102100 irq 144 lpm-pol 3
+> [    1.096685] ata1: SATA link down (SStatus 4 SControl 300)
+> 
+> Here is the dmesg of reverting ("ata: ahci: Revert "ata: ahci: Add
+> Tiger Lake UP{3,4} AHCI controller"")
+> https://bugzilla.kernel.org/show_bug.cgi?id=217114#c27
+> The code already includes the debug message in ahci_check_ready() from
+> Niklas.  However, the dmesg does not show the "BUSY ? ..." from
+> ahci_check_ready().
+> 
+> From these scenarios mentioned above, they all apply LPM policy to the
+> SATA controller [8086:a0d3].  But, they apply LPM policy at different
+> time:
+> * The patch ("ata: ahci: Add force LPM policy quirk for ASUS
+> B1400CEAE") applies LPM policy in early ahci_init_one(), which is the
+> probe callback.
+> * Reverting 6210038aeaf4 ("ata: ahci: Revert "ata: ahci: Add Tiger
+> Lake UP{3,4} AHCI controller"") applies LPM policy via "ahci_pci_tbl"
+> table.
 
-Signed-off-by: Hari Prasath Gujulan Elango <Hari.PrasathGE@microchip.com>
----
- .../devicetree/bindings/ata/atmel-at91_cf.txt | 19 -------------------
- 1 file changed, 19 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
+I don't see why it should matter if we set the AHCI_HFLAG_USE_LPM_POLICY
+flag using ahci_pci_tbl, or by your suggested quirk in ahci_init_one(),
+as in both cases the flag will be set before ahci_init_one() calls
+ahci_update_initial_lpm_policy().
 
-diff --git a/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt b/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
-deleted file mode 100644
-index c1d22b3ae134..000000000000
---- a/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
-+++ /dev/null
-@@ -1,19 +0,0 @@
--Atmel AT91RM9200 CompactFlash
--
--Required properties:
--- compatible : "atmel,at91rm9200-cf".
--- reg : should specify localbus address and size used.
--- gpios : specifies the gpio pins to control the CF device. Detect
--  and reset gpio's are mandatory while irq and vcc gpio's are
--  optional and may be set to 0 if not present.
--
--Example:
--compact-flash@50000000 {
--	compatible = "atmel,at91rm9200-cf";
--	reg = <0x50000000 0x30000000>;
--	gpios = <&pioC 13 0	/* irq */
--		 &pioC 15 0 	/* detect */
--		 0		/* vcc */
--		 &pioC  5 0	/* reset */
--		>;
--};
--- 
-2.34.1
 
+Could it perhaps be that in order for libata to be able to detect your
+drive, when VMD is enabled, we also need your patch
+"PCI: vmd: enable PCI PM's L1 substates of remapped PCIe port and NVMe" ?
+
+
+If that is not the case, and there actually is a difference between using
+ahci_pci_tbl and your suggested quirk, then my next suggestion would be to
+add prints to libata-sata.c:sata_link_scr_lpm(). That way you can dump the
+exact SCR writes that are being done for the working case vs. the
+non-working case. (Since I assume that there must be some difference.)
+
+
+Kind regards,
+Niklas
