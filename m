@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06CF61B942
-	for <linux-ide@vger.kernel.org>; Tue,  6 Feb 2024 21:14:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0A1F1B949
+	for <linux-ide@vger.kernel.org>; Tue,  6 Feb 2024 21:14:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707254053; cv=none; b=Nga/4/dfa+0U65ECW3pXHYRXlFsNADBDv1bPjUTAXdGUxogLrgs2C0ahgU/EXjtMaI/AhPYkiGUIRruUp8vCCZWiNxegQUjQnoaRMNRg7nPrH6bOcDlqzPgX1IF4eX+TwI5j0hjmEE7jTLK3H4qUfLThBC48yDEPI5HzI98TjZ4=
+	t=1707254059; cv=none; b=eAgc6ux/avJKXMnyr0sRMfXXYObkZPOC+oQ4uU8J327+5rcaLEUSZesfAfHNcbso6XJxN8gB5LOvOlHJ9S3aUTcwoM+uknMI0QLHveOPKBEQmtWrMJXYhkhw5/tXuL9PaHkf3IzyXCnOR+wb2mWVaIBaLPIes4LQ5ociAWOr4XE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707254053; c=relaxed/simple;
-	bh=+fHjn2hZCGVXN4jHrX3ddEVXHTNtjbin+EE5y8EEdOw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=utXd1/cRc+hcPIYidriuNIYo6395pBX/Saes0qA3gxEATpAHgh4r9IzOgvs2vXKNm+cn5llJeBZ8/iYU+0jxmZb0rv3rnUyoPa9p04ST6+I+otXynrH5XKPiV3Ytyo1hwGpZg66+kXeUzLjgyp0L8Ig8k2BfNckNpifIhiv36LQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LZF7n3vo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707254059; c=relaxed/simple;
+	bh=9MGWFAs7sgQVDULmFL5uVDRT2VWDSFs6SCFgQwDALRI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=kYU1nJh3xeeg58MV+T3GrmoeW582YV0dKkmEbYOWRFU+ihAv/FvHO2HU4/ro+yl3RY1gmrFK7hjeFsrlpPym+uap9MNmXiED9EJJ80oYId1oLxsmrvxCVB4HaTax39iMdovIBhe0Xen9bXOkXgJNxqpLF0klgi6rPVTucSckwHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kFDaNHu9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LZF7n3vo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 680E0C433F1;
-	Tue,  6 Feb 2024 21:14:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kFDaNHu9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0660BC433C7;
+	Tue,  6 Feb 2024 21:14:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707254052;
-	bh=+fHjn2hZCGVXN4jHrX3ddEVXHTNtjbin+EE5y8EEdOw=;
-	h=From:To:Cc:Subject:Date:From;
-	b=LZF7n3voCCP6DdqSlWSry93bd7M4+PF5szDQK88KC/YXFkiE1ATapk3DWrWW8wXTw
-	 04425ezx1p+8KLPEUd6KT7NN5+fPTfWtzp1RzavvWqkxmAIWKOsQSQS4BAXIu6sUHN
-	 Oo+5U2ni4Jtq+TYW6q18aa0q/2TsGLqbuUH2DiLMsDV8oZ2jldk8KVnDvAaavKRS/w
-	 N4QjnXTLvJrAZXk9r8lGcqIghxVF0WKNDOp4yBh7rKSjHbAhOIQdQberzh+eebMP7G
-	 KocEWoXHlu324P16fJmXwap1jj00CVyNFaB/wW+h8DV2NFxx5AmpNEfEugn4eE9IX7
-	 EdUy769OK/Wrw==
+	s=k20201202; t=1707254058;
+	bh=9MGWFAs7sgQVDULmFL5uVDRT2VWDSFs6SCFgQwDALRI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=kFDaNHu95L/CAwG4plS4U+RznOGwTf68i1mFdSCU6V+ZeBW/uM5dVNSZl7l4PSGtE
+	 /vebB20AxXP5bPiZHXl9W93Go2bvZIMqItIXRR/41Ct+7/dBj8I/qwgTc4Xtvh6+HT
+	 QZNU/0xPqRkRJuiOxKfn1ufv1OW64gJSkh/JeTky7olnn3PF/81q7EUZU6emSFOx/P
+	 MPFV66Pzm+MNjxtfQG2JogxjPd8+L0JaDP0rjuXEFqq9sppDls5MJuCgdYkwuUJj/Y
+	 yGt3w5y5kKYS0WpuoUWQrLD8Mw6Mvca6ug1+zBXQaz5iSIfsCPm5gJ0v496OEYn60v
+	 ViAqm166WOqhw==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
@@ -35,104 +36,90 @@ Cc: Werner Fischer <devlists@wefi.net>,
 	Dieter Mummenschanz <dmummenschanz@web.de>,
 	Mario Limonciello <mario.limonciello@amd.com>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH v2 0/5] drop low power policy board type
-Date: Tue,  6 Feb 2024 22:13:41 +0100
-Message-ID: <20240206211352.1664816-1-cassel@kernel.org>
+Subject: [PATCH v2 1/5] ata: ahci: move marking of external port earlier
+Date: Tue,  6 Feb 2024 22:13:42 +0100
+Message-ID: <20240206211352.1664816-2-cassel@kernel.org>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240206211352.1664816-1-cassel@kernel.org>
+References: <20240206211352.1664816-1-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The series is based on top of:
-https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-next
+Move the marking of an external port earlier in the call chain.
+This is needed for further cleanups.
+No functional change intended.
 
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/ahci.c    | 14 ++++++++++++++
+ drivers/ata/libahci.c |  7 -------
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
-Hello all,
-
-This revives a patch sent out almost two years ago from Mario Limonciello:
-https://lore.kernel.org/linux-ide/20220524170508.563-1-mario.limonciello@amd.com/T/#u
-
-The reason why we did not merge it back then, is because LPM and hotplug
-events are mutually exclusive.
-
-The difference with this series compared to what was sent out back then:
-I've added a patch that checks if the port is external, i.e. either
-hotplug capable or eSATA. For external ports, we never enable LPM, as
-that will break hotplug.
-
-For ports that do not advertise themselves as external (typically laptops),
-we set the LPM policy as requested.
-
-This matches how Microsoft Windows does things, see:
-https://studylib.net/doc/10034428/esata---microsoft-center
-
-Thanks to Werner Fischer for suggesting something like this at last year's
-ALPSS conference.
-
-There might of course be some platform firmware that e.g. incorrectly marks
-its port as internal, even though it is external, but if we find any such
-platforms we will need to deal with them using quirks.
-
-
-Also note that we even if the user requested a certain policy, there is
-no guarantee that he will get all the features for that policy, see:
-https://github.com/torvalds/linux/blob/master/drivers/ata/libata-sata.c#L403-L414
-
-However, I'd rather we not try to map all the combinations of
-partial/slumber/devsleep in to a single policy represented by a single
-integer, thus I do not try to "change" the requested policy.
-The user will get all the features that are included in the requested
-policy AND supported by the HBA.
-
-Another difference (compared to an earlier version of Mario's series)
-is that we do not try to change the default CONFIG_SATA_MOBILE_LPM_POLICY
-value from 0 to 3, it will continue to be 0.
-If you really don't want LPM even if your HBA supports it, and your port
-is internal, one option is to leave the Kconfig set to the default value.
-
-Damien: considering that the Intel VMD + ahci_intel_pcs_quirk() bug turned
-out to have nothing to do with LPM, it was simply the fact that the
-ahci_intel_pcs_quirk() was only applied if there was an explicit entry in
-ahci_pci_tbl. So since that bug is totally unrelated to LPM, I no longer
-think that this series need to wait for a fix for that bug.
-
-
-Link to v1:
-https://lore.kernel.org/linux-ide/20240201161507.1147521-1-cassel@kernel.org/
-
-Changes since v1:
--Picked up tags from Damien.
--Moved the comment in front of ahci_mark_external_port() to inside the
- function.
--Modified the comment in patch 4/5 to more clearly state hotplug removal
- events.
--Rewrote the commit message for patch 4/5 to be more detailed.
-
-
-Kind regards,
-Niklas
-
-
-Mario Limonciello (1):
-  ata: ahci: Drop low power policy board type
-
-Niklas Cassel (4):
-  ata: ahci: move marking of external port earlier
-  ata: ahci: a hotplug capable port is an external port
-  ata: ahci: drop hpriv param from ahci_update_initial_lpm_policy()
-  ata: ahci: do not enable LPM on external ports
-
- drivers/ata/Kconfig   |   5 +-
- drivers/ata/ahci.c    | 135 +++++++++++++++++++++++-------------------
- drivers/ata/ahci.h    |   9 +--
- drivers/ata/libahci.c |   7 ---
- 4 files changed, 78 insertions(+), 78 deletions(-)
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index da2e74fce2d9..aa58ce615e79 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1642,6 +1642,18 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
+ }
+ 
++static void ahci_mark_external_port(struct ata_port *ap)
++{
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u32 tmp;
++
++	/* mark esata ports */
++	tmp = readl(port_mmio + PORT_CMD);
++	if ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS))
++		ap->pflags |= ATA_PFLAG_EXTERNAL;
++}
++
+ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+ 					   struct ahci_host_priv *hpriv)
+ {
+@@ -1934,6 +1946,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		if (ap->flags & ATA_FLAG_EM)
+ 			ap->em_message_type = hpriv->em_msg_type;
+ 
++		ahci_mark_external_port(ap);
++
+ 		ahci_update_initial_lpm_policy(ap, hpriv);
+ 
+ 		/* disabled/not-implemented port */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 1a63200ea437..fca376f03c9e 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1280,10 +1280,8 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ 			   int port_no, void __iomem *mmio,
+ 			   void __iomem *port_mmio)
+ {
+-	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	const char *emsg = NULL;
+ 	int rc;
+-	u32 tmp;
+ 
+ 	/* make sure port is not active */
+ 	rc = ahci_deinit_port(ap, &emsg);
+@@ -1291,11 +1289,6 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ 		dev_warn(dev, "%s (%d)\n", emsg, rc);
+ 
+ 	ahci_port_clear_pending_irq(ap);
+-
+-	/* mark esata ports */
+-	tmp = readl(port_mmio + PORT_CMD);
+-	if ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS))
+-		ap->pflags |= ATA_PFLAG_EXTERNAL;
+ }
+ 
+ void ahci_init_controller(struct ata_host *host)
 -- 
 2.43.0
 
