@@ -1,40 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D660212D75F;
-	Tue,  6 Feb 2024 09:58:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AFF012DD91;
+	Tue,  6 Feb 2024 09:59:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707213525; cv=none; b=jxAYmqVeoecSkL3iq9msKeywUqfWZ8+OE18K0DA3PcVjWuRNMvumThP3O2KLea+yagOej//3xzhGrDbZTToU8WdSxenAF+1BMSdesdpS3FLw0fvRPGFo7E3OaO40g38jz0PA3rEjXTAU2MRJfo3a6TIK4KHDBK7TxamyuCD1N/g=
+	t=1707213574; cv=none; b=Rd0ZMoBE9DvOrq6Sn2eIbCMd6zy7rrXt47N70UY9Y9T1WgSfExkRwZYSkhaaECFpJCsZvb6hKpkaNe4VQCUy4wUzV8jvuBM3+EI0Ac1QIdo/myvqx6TMtQ5jwNYRYCUl0UsaUIId+90p21F2v0Y+eDUcekLma8JZSwF8j3ALOB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707213525; c=relaxed/simple;
-	bh=KIw9pkwtzkhaYD3K7hUNGz3stRQS87xMY9nZNhbOoZI=;
+	s=arc-20240116; t=1707213574; c=relaxed/simple;
+	bh=Ig8ijTw3hCT/GkZgw1zFTglUsDgaQwNI3+0+e16OyXA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jdmoW5nNo8x92jQO/OnVybcWyeOuRSM3w3Mn2bfEMDCaIvJWGUasj74Yxkim/UiloPOaPOVqzAyr+ZdpxnXuKwzoe6Inb8oxqWOuOZGBiLkPPXz9UoiBr/YUbLwVLDhTqgKeSckZVi/UYlVTUzLxP+07aP9WctigrWC5PyqAY2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kkyj0Nmt; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=uQq9VPzIoWcTYsN+XjrTbWxMZEVtE06iaG26hxxFl6T22CeWSS5dWdWi7V9FeZ8nSF3LNgz9ObuK3zCYacYovZ5J63r+Y5pQ0m3islxW298oo2xyQmpv8E+548NokIW/ie2zDZEU850ZvRmhHGuwwejdTxnGIupErJDOodYx2O8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aLuKKcQv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kkyj0Nmt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB6CDC433F1;
-	Tue,  6 Feb 2024 09:58:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aLuKKcQv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 668A8C433F1;
+	Tue,  6 Feb 2024 09:59:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707213525;
-	bh=KIw9pkwtzkhaYD3K7hUNGz3stRQS87xMY9nZNhbOoZI=;
+	s=k20201202; t=1707213573;
+	bh=Ig8ijTw3hCT/GkZgw1zFTglUsDgaQwNI3+0+e16OyXA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Kkyj0Nmtn5Vq9L1QSAB8+ysOyWl8xHDC/o6ySNtFlntKlNnSKHzlR/ekfHAbnlQ4D
-	 Y2GkK3MqW//zdj9DGqyGVd4SJp2INPWmQW+Om9xgb3291nR5D2w6KHbt4xTXRMAYCA
-	 BtSEolJQ6BGHl6EvvLR+t8Ni6WfBquO6jBOsTaGUx+kCAAr7WT8/WWThrCh4zdAdcE
-	 +OwIqwlI0KxT7cSZesx5AKouDp5lx8EVsrDv0U+AG8gNWSsjFJgFXqon3aiQuuipRv
-	 MQYowdIRiwhHlxm0hsGlnmbNP5/EhsFApmavZNr/aQeGbt97v/gFjMio4Z97+DwvP8
-	 msOrTreFrUX/w==
-Date: Tue, 6 Feb 2024 10:58:38 +0100
+	b=aLuKKcQvVvD2zJsExDgivbWwcPaG3Ay56C06p/YQGyrgd6R+SMTceoDfjuQaomhFa
+	 JSrzO44v+l/EsFYkQBTFlSHQNcstUtrtJOHSBEjGS7+TUjsXbJztzWxx8MmFEikoCb
+	 Lfh+/kLSmF+xv+MuyRyGwSvu/yYEmgIdLXbyAOO82qSjY67PmMHIj+LzBnbbLnaidU
+	 SegePhHwR9ot3na3p5hcKcWxOUt08XhSQUI7g9mIPj4IUj6vac65YfvNdJoP2Shi++
+	 ENc0EKE5WI+AwPe3aMKUadmrCJll/bm7TDqxcc7SX3D6l3y43tsBvYAJxHfw30VQJe
+	 jT3FsIBZ0oadw==
+Date: Tue, 6 Feb 2024 10:59:26 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: "Ricardo B. Marliere" <ricardo@marliere.net>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] ata: pata_parport: make pata_parport_bus_type const
-Message-ID: <ZcICztae//cs8tep@x1-carbon>
-References: <20240204-bus_cleanup-ata-v1-1-2bdc1fadf356@marliere.net>
+To: Hari Prasath Gujulan Elango <Hari.PrasathGE@microchip.com>
+Cc: dlemoal@kernel.org, robh+dt@kernel.org,
+	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+	nicolas.ferre@microchip.com, alexandre.belloni@bootlin.com,
+	claudiu.beznea@tuxon.dev, linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: ata: atmel: remove at91 compact flash
+ documentation
+Message-ID: <ZcIC/gP0WeI4BYU3@x1-carbon>
+References: <20240205105201.81060-1-Hari.PrasathGE@microchip.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -43,41 +47,45 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240204-bus_cleanup-ata-v1-1-2bdc1fadf356@marliere.net>
+In-Reply-To: <20240205105201.81060-1-Hari.PrasathGE@microchip.com>
 
-On Sun, Feb 04, 2024 at 12:23:29PM -0300, Ricardo B. Marliere wrote:
-> Now that the driver core can properly handle constant struct bus_type,
-> move the pata_parport_bus_type variable to be a constant structure as well,
-> placing it into read-only memory which can not be modified at runtime.
+On Mon, Feb 05, 2024 at 04:22:01PM +0530, Hari Prasath Gujulan Elango wrote:
+> The compatible "at91rm9200-cf" is not used by any driver,hence remove the
+> corresponding documentation.
 > 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Ricardo B. Marliere <ricardo@marliere.net>
+> Signed-off-by: Hari Prasath Gujulan Elango <Hari.PrasathGE@microchip.com>
 > ---
->  drivers/ata/pata_parport/pata_parport.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  .../devicetree/bindings/ata/atmel-at91_cf.txt | 19 -------------------
+>  1 file changed, 19 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
 > 
-> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
-> index a7adfdcb5e27..9a2cb9ca9d1d 100644
-> --- a/drivers/ata/pata_parport/pata_parport.c
-> +++ b/drivers/ata/pata_parport/pata_parport.c
-> @@ -464,7 +464,7 @@ static void pata_parport_bus_release(struct device *dev)
->  	/* nothing to do here but required to avoid warning on device removal */
->  }
->  
-> -static struct bus_type pata_parport_bus_type = {
-> +static const struct bus_type pata_parport_bus_type = {
->  	.name = DRV_NAME,
->  };
->  
-> 
-> ---
-> base-commit: c8474c7273ac3bad718c33118aa82efb7b374f6e
-> change-id: 20240204-bus_cleanup-ata-bd1625fdab09
-> 
-> Best regards,
+> diff --git a/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt b/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
+> deleted file mode 100644
+> index c1d22b3ae134..000000000000
+> --- a/Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
+> +++ /dev/null
+> @@ -1,19 +0,0 @@
+> -Atmel AT91RM9200 CompactFlash
+> -
+> -Required properties:
+> -- compatible : "atmel,at91rm9200-cf".
+> -- reg : should specify localbus address and size used.
+> -- gpios : specifies the gpio pins to control the CF device. Detect
+> -  and reset gpio's are mandatory while irq and vcc gpio's are
+> -  optional and may be set to 0 if not present.
+> -
+> -Example:
+> -compact-flash@50000000 {
+> -	compatible = "atmel,at91rm9200-cf";
+> -	reg = <0x50000000 0x30000000>;
+> -	gpios = <&pioC 13 0	/* irq */
+> -		 &pioC 15 0 	/* detect */
+> -		 0		/* vcc */
+> -		 &pioC  5 0	/* reset */
+> -		>;
+> -};
 > -- 
-> Ricardo B. Marliere <ricardo@marliere.net>
+> 2.34.1
 > 
 
 Applied:
