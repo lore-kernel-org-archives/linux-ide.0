@@ -1,83 +1,130 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04F4976C9D
-	for <linux-ide@vger.kernel.org>; Wed,  7 Feb 2024 13:42:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F369E7FBD9;
+	Wed,  7 Feb 2024 15:52:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707313342; cv=none; b=oWk2WAIRCR9o9P2b+rqRkiw8FWoyQjvYgZFvdvJc4fvhulCVsd6ywyiaXCFlVNEaphp3O5MrzrwNPMWmJTW5PZ8Tzf/a20Is3MI5z7ArFBHBTBLS1F3AJ2MFuhJ767uU3TS3o+/MiiJuslw9sZ0Y0GJ2LacCuVtfKKFYnsLMXwQ=
+	t=1707321125; cv=none; b=rzwMcSxkdI+S6o7jSrlyGaRsuUGKS+LIRyTghzFY5ueqVs2BWzoiDv/OdiIiYonA7dFyyWo5dvsf2kESW3B5ZGfmM/iGZh84/wZS/lU1ajEedyWdWnzlxWppNXIUW3QO20I1C5EUJnSYvvbcWF0TKiKSnC/c1BzJbHXLeEszP2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707313342; c=relaxed/simple;
-	bh=XhGHWUT4UYfVip2ITziNa2gAEigwHRWG/KnIPbeEFCM=;
+	s=arc-20240116; t=1707321125; c=relaxed/simple;
+	bh=/1x7h2DpHjWcd/k76A8g5THiTurxMbwv+SYlEW+93sc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cL/7VAhmJtlHtzcgbOghDBiK7D6Hu9pHB/aIFMx+DSQyPXxct/vuY2DO8UF0nsGQf0y76KVzZ46OOZ6Xo+/yGFBtexxfMpd9Tq9l06f9dhecEJ3jfe1F+eUoUa1qhgMYKkmwxZxeWYSLBQHv0oYBlBmdeym3zU1hPkbBZKNP9XA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hZBvh803; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=q6hng+cGwy959ErJkpp6V5JzKjivlCDbLsPZ4feC9upV8jiSDOZlxwE8ClUV9Zj7zNhF14PwfG3SOHaDr/hg3vsuxuZgI5RKUDKlRN9/O3/VErZ1PpqJ8sboLE9DzqFKfRCRS7BB8MdDX8QLurUbfXGD1mPn87+HQH2sz3QxcA4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S4roDxo8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hZBvh803"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707313341; x=1738849341;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=XhGHWUT4UYfVip2ITziNa2gAEigwHRWG/KnIPbeEFCM=;
-  b=hZBvh803PVTlF7eREg3zEswyTHR4Ps1JZNwq0WfgJYpBwKoZp8sfqiXg
-   hv+/7+q5xdd44kM14fDYQyOmI/kkhYfoBraTSKy29Ja39e6EP5OArHxyW
-   U+R4sRKcD5jxjqHbGTKbSHh8y6ErTHKyNElhvlAbGd7nDbaNrclBwRqDA
-   +pdbQJp0jH5WZjkFHPrMWy6uvgzYHm4esbVSaeBIJcRE4+MFVvcAUNIQk
-   0pYkpYxSlKeO0IpeFsbAWErzsVs3CCYl6E791OQmQrd/F6kTIDp/qW2kd
-   n4WKjUlpK+AjFe+WikH/1h8dxVd/INSlXZa4DP7hZ39+rShrJLFg9743O
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10976"; a="12346397"
-X-IronPort-AV: E=Sophos;i="6.05,251,1701158400"; 
-   d="scan'208";a="12346397"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2024 05:42:20 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10976"; a="909996621"
-X-IronPort-AV: E=Sophos;i="6.05,251,1701158400"; 
-   d="scan'208";a="909996621"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga002.fm.intel.com with ESMTP; 07 Feb 2024 05:42:18 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-	id 7414B86; Wed,  7 Feb 2024 08:35:56 +0200 (EET)
-Date: Wed, 7 Feb 2024 08:35:56 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Werner Fischer <devlists@wefi.net>,
-	Daniel Drake <drake@endlessos.org>,
-	Jian-Hong Pan <jhp@endlessos.org>,
-	Dieter Mummenschanz <dmummenschanz@web.de>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] drop low power policy board type
-Message-ID: <20240207063556.GO8454@black.fi.intel.com>
-References: <20240206211352.1664816-1-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S4roDxo8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D9B4C43394;
+	Wed,  7 Feb 2024 15:52:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707321123;
+	bh=/1x7h2DpHjWcd/k76A8g5THiTurxMbwv+SYlEW+93sc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=S4roDxo8tVqC2GezTlb3cfXFcp6weQcwLaiGZmdf1pdhhuOhtMsuGhDXsDCMV8GbO
+	 RLxAo3vtpqHJdWUBeO1ZdBUc+YJEiBqPKnzeW10gKgdzx5yAj262qNEjatFr2oewA5
+	 U96gkG8+cuJWYr/hLXC31VNHfddrz7/y70HWgLAxw3ppS44aI4YAdO6JffVBmwOlG8
+	 XU9HW6HuV+8zPXv4xQ3gBEg6Ps5noXk7cufMK2v4qV4yePWova47vaD8FNN7s7EdTb
+	 NB9oCYbsmwivsZGgDOIpD/iQoZTqpkGenaDhqgpVnREaQgX0b1oUD9pyX7pTlppedD
+	 uLYLbPbnYYeQg==
+Date: Wed, 7 Feb 2024 17:51:44 +0200
+From: Mike Rapoport <rppt@kernel.org>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
+Message-ID: <ZcOnEGyr6y3jei68@kernel.org>
+References: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
+ <Zb9pZTmyb0lPMQs8@kernel.org>
+ <ZcACya-MJr_fNRSH@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240206211352.1664816-1-cassel@kernel.org>
+In-Reply-To: <ZcACya-MJr_fNRSH@casper.infradead.org>
 
-Hi Niklas,
-
-On Tue, Feb 06, 2024 at 10:13:41PM +0100, Niklas Cassel wrote:
-> Mario Limonciello (1):
->   ata: ahci: Drop low power policy board type
+On Sun, Feb 04, 2024 at 09:34:01PM +0000, Matthew Wilcox wrote:
+> On Sun, Feb 04, 2024 at 11:39:33AM +0100, Mike Rapoport wrote:
+> > On Mon, Jan 29, 2024 at 04:32:03AM +0000, Matthew Wilcox wrote:
+> > > Our documentation of the current page flags is ... not great.  I think
+> > > I can improve it for the page cache side of things; I understand the
+> > > meanings of locked, writeback, uptodate, dirty, head, waiters, slab,
+> > > mlocked, mappedtodisk, error, hwpoison, readahead, anon_exclusive,
+> > > has_hwpoisoned, hugetlb and large_remappable.
+> > > 
+> > > Where I'm a lot more shaky is the meaning of the more "real MM" flags,
+> > > like active, referenced, lru, workingset, reserved, reclaim, swapbacked,
+> > > unevictable, young, idle, swapcache, isolated, and reported.
+> > > 
+> > > Perhaps we could have an MM session where we try to explain slowly and
+> > > carefully to each other what all these flags actually mean, talk about
+> > > what combinations of them make sense, how we might eliminate some of
+> > > them to make more space in the flags word, and what all this looks like
+> > > in a memdesc world.
+> > > 
+> > > And maybe we can get some documentation written about it!  Not trying
+> > > to nerd snipe Jon into attending this session, but if he did ...
+> > 
+> > I suspect Jon will be there anyway, but not sure he'd be willing to do the
+> > writing :)
+> > 
+> > I was going to propose the "mm docs" session again, but this one seems more
+> > useful than talking yet again about how hard it is to get MM documentation
+> > done.
 > 
-> Niklas Cassel (4):
->   ata: ahci: move marking of external port earlier
->   ata: ahci: a hotplug capable port is an external port
->   ata: ahci: drop hpriv param from ahci_update_initial_lpm_policy()
->   ata: ahci: do not enable LPM on external ports
+> I'm doing my best to write documentation as I go.  I think we're a bit
+> better off than we were last year.  Do we have scripts to tell us which
+> public functions (ie EXPORT_SYMBOL and static inline functions in header
+> files) have kernel-doc?  And could we run them against kernels from, say,
+> April 2023, 2022, 2021, 2020, 2019 (and in two months against April 2024)
+> and see how we're doing in terms of percentage undocumented functions?
 
-Looks good to me. Thanks for looking into it!
+We didn't have such script, but it was easy to compare "grep
+EXPORT_SYMBOL\|static inline" with ".. c:function" in kernel-doc.
+We do improve slowly, but we are still below 50% with kernel-doc for
+EXPORT_SYMBOL functions and slightly above 10% for static inlines.
 
-For the series,
+Although with static inlines it's quite possible that the percentage of
+actual public API documentation is higher because some of the functions in
+inlcude/linux/ are only used inside mm.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+There are also APIs that are not EXPORT_SYMBOL, but I didn't find an easy
+way to check how well there are documented.
+
+EXPORT_SYMBOL
+version     	funcs	docs	percent
+v5.0        	514	177	34
+v5.6        	538	208	38
+v5.12       	550	209	38
+v5.17       	580	228	39
+v6.3        	580	235	40
+v6.8-rc1    	565	238	42
+
+static inline
+version     	funcs	docs	percent
+v5.0        	581	33	5
+v5.6        	596	41	6
+v5.12       	629	42	6
+v5.17       	746	74	9
+v6.3        	867	95	10
+v6.8-rc1    	944	116	12
+
+ 
+> There's also the problem of getting long-form documentation done.
+> But I think that's a different problem from getting kernel-doc written.
+> Looking at the 55 commits in the last year to Documentation/mm, we seems
+> to be doing a pretty good job of keeping the documentation we have up
+> to date.  Just not a great job of adding new documentation.
+
+I agree that long-form documentation is a different problem from getting
+kernel-doc written and we are not doing a great job in writing new
+documentation.
+
+-- 
+Sincerely yours,
+Mike.
