@@ -1,122 +1,83 @@
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96901AACC;
-	Wed,  7 Feb 2024 11:28:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04F4976C9D
+	for <linux-ide@vger.kernel.org>; Wed,  7 Feb 2024 13:42:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707305318; cv=none; b=LJgeQFOl9QAcJtmSJTMmn+B6oCKV2zuN0nceId1/9VOh8NUktGikQRS6L9NVn+cHziEEBw92EgyyifGAUGCVBkMdyfhztKh+03p5Qk7RNo+fwB2DUUPdh+QUtCuW+h72p8HpVfeLzyggtigtl/4TVa8Hkdsv6Vz0Qf1Za/R9id8=
+	t=1707313342; cv=none; b=oWk2WAIRCR9o9P2b+rqRkiw8FWoyQjvYgZFvdvJc4fvhulCVsd6ywyiaXCFlVNEaphp3O5MrzrwNPMWmJTW5PZ8Tzf/a20Is3MI5z7ArFBHBTBLS1F3AJ2MFuhJ767uU3TS3o+/MiiJuslw9sZ0Y0GJ2LacCuVtfKKFYnsLMXwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707305318; c=relaxed/simple;
-	bh=mChLLvfn+WsSX/4Ol3EUABXaUd0ZI/tG6Zz98KwoPc8=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=OBfM5tvUk4HhwVAaWUltDX8WhNvf0cXyBbZhHOBozNOyVmSQ/A+TEoe+frBRr3SDhyqtnN6vLAfc+sw4vyyUqmujV1Ie1j6Eluls0Xrq1nAgir5gNw8R3Eckq0XIN6hwkbL8I0kMaIX4iawfm36zVURCoZWjBNZMmGW9cd0zCow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fcItn1I3; arc=none smtp.client-ip=209.85.208.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1707313342; c=relaxed/simple;
+	bh=XhGHWUT4UYfVip2ITziNa2gAEigwHRWG/KnIPbeEFCM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cL/7VAhmJtlHtzcgbOghDBiK7D6Hu9pHB/aIFMx+DSQyPXxct/vuY2DO8UF0nsGQf0y76KVzZ46OOZ6Xo+/yGFBtexxfMpd9Tq9l06f9dhecEJ3jfe1F+eUoUa1qhgMYKkmwxZxeWYSLBQHv0oYBlBmdeym3zU1hPkbBZKNP9XA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hZBvh803; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fcItn1I3"
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2d0512f6e32so6382881fa.1;
-        Wed, 07 Feb 2024 03:28:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1707305315; x=1707910115; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1gcUDslEA/Bw1BsVVSuc8cGc8YlbjxoxUNk/ASpPHtQ=;
-        b=fcItn1I34GrrLxVAC3blwnZCWOfGDhkbPiH7wr8aBKBZacDEPfyyruh9Jc+/l/XwKN
-         aw+QXgFsC43T3DHpofjL1RJCP0kepJEgyd5mcVlCp2CCsPlfp6BhN3lP5xQ8XO59l4zk
-         AKJW0WiUV/QXJatYfM3GxxEu06v9iMPrKCtxVZsT//ndN/qQqvnphTUdUCvpo3FEw+2c
-         XZD7jtQKkoXFYklSAMibRu+eviAfX0zUNRM7RA0wHtnmle/HRkevFaD9X28wxQwj9oyi
-         40TF820bo65CrI8TXfcdqqmJNaW9cY6WFrStH0AfkMP+Pa/bor/jg/aqbEEZeFOMnJXO
-         oaZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707305315; x=1707910115;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1gcUDslEA/Bw1BsVVSuc8cGc8YlbjxoxUNk/ASpPHtQ=;
-        b=pqDtjaooSTABkGlPxEw6BcG/IWxweq6GXMgpT5g39ddpGf4wyXIZ7/9Q843WNbUX9t
-         K6T2pAFR8bPu56oJCiqbukigrYm25p7j6q9OFgOEWGHAtXzItLDdtFpZiRVBEUqT857s
-         /jWsw+vgaz5lk+j7xFPEnFZi3yGO58tP9Hxf7KpJwDib5aE0q+pJ8jeYFCGpLz6KVCFQ
-         KAQv1iFwy9eAy7MHJgKhpHsDV4CdfBfUXLg/gHXJTdvPQPkvAUJYUpXQNk1Rtgg7wahp
-         raZuGxv9GcV9BRffyPm6r7qszohYjDcc+P9usgB41uWTmCc0bdEryh2PNb8ByIK+kbqg
-         aCkQ==
-X-Gm-Message-State: AOJu0YzhWP7qP5uOhz0sVGNVkBYK3cSwUUBWZSjh49dCVqEgQszOnsPb
-	n56IxCISsCxrp6lghff+1LzlEctXYj1JjW2b+C4fTNrgSIJIr1Mq
-X-Google-Smtp-Source: AGHT+IFNRXDFAOkcXrn2c+JUyuqEXiC3mt4GsQhBZg/UU6aYKE28T7UtCDIb7BE3huf/0GRfOqulxA==
-X-Received: by 2002:a2e:bb95:0:b0:2d0:c9b5:7257 with SMTP id y21-20020a2ebb95000000b002d0c9b57257mr755754lje.8.1707305314678;
-        Wed, 07 Feb 2024 03:28:34 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVroSiFaR5ihQieFacoRUgcGAmUc85HOb1iiHk5sO3ix0iPsdZpc2MojpiVStXx4aaDY3KCxsbGroSTujTAmDKKXYNV6tGfpjBP3A56EXJXGJfiRkAtnyWOXQl7Y2Y9uRg+e65GwSg2nojmbSTKxo6HJU0PkjoO1SXFf2y+
-Received: from [192.168.1.105] ([178.176.77.110])
-        by smtp.gmail.com with ESMTPSA id bd9-20020a05651c168900b002d0a10d7618sm148184ljb.75.2024.02.07.03.28.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Feb 2024 03:28:34 -0800 (PST)
-Subject: Re: [PATCH] ahci: asm1064: correct count of reported ports
-To: "Andrey Jr. Melnikov" <temnota.am@gmail.com>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Cc: dlemoal@kernel.org, hdegoede@redhat.com
-References: <vbpzr7uqpfemb3qa6xy2fxioct44l5vugg2wkywyolfpzqcmau@jgrrhmk2scaj>
-From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <7559d940-f191-4fe0-e147-17ffa6c1dfc4@gmail.com>
-Date: Wed, 7 Feb 2024 14:28:32 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hZBvh803"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707313341; x=1738849341;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=XhGHWUT4UYfVip2ITziNa2gAEigwHRWG/KnIPbeEFCM=;
+  b=hZBvh803PVTlF7eREg3zEswyTHR4Ps1JZNwq0WfgJYpBwKoZp8sfqiXg
+   hv+/7+q5xdd44kM14fDYQyOmI/kkhYfoBraTSKy29Ja39e6EP5OArHxyW
+   U+R4sRKcD5jxjqHbGTKbSHh8y6ErTHKyNElhvlAbGd7nDbaNrclBwRqDA
+   +pdbQJp0jH5WZjkFHPrMWy6uvgzYHm4esbVSaeBIJcRE4+MFVvcAUNIQk
+   0pYkpYxSlKeO0IpeFsbAWErzsVs3CCYl6E791OQmQrd/F6kTIDp/qW2kd
+   n4WKjUlpK+AjFe+WikH/1h8dxVd/INSlXZa4DP7hZ39+rShrJLFg9743O
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10976"; a="12346397"
+X-IronPort-AV: E=Sophos;i="6.05,251,1701158400"; 
+   d="scan'208";a="12346397"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2024 05:42:20 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10976"; a="909996621"
+X-IronPort-AV: E=Sophos;i="6.05,251,1701158400"; 
+   d="scan'208";a="909996621"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga002.fm.intel.com with ESMTP; 07 Feb 2024 05:42:18 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+	id 7414B86; Wed,  7 Feb 2024 08:35:56 +0200 (EET)
+Date: Wed, 7 Feb 2024 08:35:56 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Werner Fischer <devlists@wefi.net>,
+	Daniel Drake <drake@endlessos.org>,
+	Jian-Hong Pan <jhp@endlessos.org>,
+	Dieter Mummenschanz <dmummenschanz@web.de>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 0/5] drop low power policy board type
+Message-ID: <20240207063556.GO8454@black.fi.intel.com>
+References: <20240206211352.1664816-1-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <vbpzr7uqpfemb3qa6xy2fxioct44l5vugg2wkywyolfpzqcmau@jgrrhmk2scaj>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <20240206211352.1664816-1-cassel@kernel.org>
 
-On 2/7/24 12:58 PM, Andrey Jr. Melnikov wrote:
+Hi Niklas,
 
-> The ASM1064 SATA host controller always reports wrongly,
-> that it has 24 ports. But in reality, it only has four ports.
+On Tue, Feb 06, 2024 at 10:13:41PM +0100, Niklas Cassel wrote:
+> Mario Limonciello (1):
+>   ata: ahci: Drop low power policy board type
 > 
-> before:
-> ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
-> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
-> ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst 
-> 
-> after:
-> ahci 0000:04:00.0: ASM1064 has only four ports
-> ahci 0000:04:00.0: forcing port_map 0xffff0f -> 0xf
-> ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
-> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
-> ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst 
-> 
-> 
-> Signed-off-by: Andrey Jr. Melnikov <temnota.am@gmail.com>
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index da2e74fce2d9..ec30d8330d16 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -671,9 +671,14 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
->  static void ahci_pci_save_initial_config(struct pci_dev *pdev,
->  					 struct ahci_host_priv *hpriv)
->  {
-> -	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
-> -		dev_info(&pdev->dev, "ASM1166 has only six ports\n");
-> -		hpriv->saved_port_map = 0x3f;
-> +	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA) {
-> +		if (pdev->device == 0x1166) {
+> Niklas Cassel (4):
+>   ata: ahci: move marking of external port earlier
+>   ata: ahci: a hotplug capable port is an external port
+>   ata: ahci: drop hpriv param from ahci_update_initial_lpm_policy()
+>   ata: ahci: do not enable LPM on external ports
 
-   Maybe *switch* instead?
+Looks good to me. Thanks for looking into it!
 
-> +			dev_info(&pdev->dev, "ASM1166 has only six ports\n");
-> +			hpriv->saved_port_map = 0x3f;
-> +		} else if (pdev->device == 0x1064) {
-> +			dev_info(&pdev->dev, "ASM1064 has only four ports\n");
-> +			hpriv->saved_port_map = 0xf;
-> +		}
->  	}
->  
->  	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
+For the series,
 
-MBR, Sergey
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
