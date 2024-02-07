@@ -1,71 +1,69 @@
-Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3221F1CD2D
-	for <linux-ide@vger.kernel.org>; Wed,  7 Feb 2024 06:32:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE26F1CF90
+	for <linux-ide@vger.kernel.org>; Wed,  7 Feb 2024 06:36:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707287528; cv=none; b=hAjtEmgVhbh9HPMwvQghFYxmFNe8wQEagihuNQKVHp7WcchKA4qPMvEzFPW+0m5oK+BntBn3dVK+7ixdehUk3u8uk9QWEWbrenFor/B4uM78TBZLFcy7McYtFGNdaCzlg3DXW3/pAwmV4Ebe53bQ+aI6nnXIpnbgx/pjziy4Pu8=
+	t=1707287764; cv=none; b=XiInXIHgkC5T2zpGnmBKzBSiRd6J8TwkNLBejSecVtPk2P+WolJ3rAr5esU5odViNqiXYRTJhj9ZzkFbhJ4eRs6Nwl62gu5s1cwcGLBpQO05Ig1QIOo8QLcEkIhh6pLPVXpAUtsDR4uBo7PsdkeMLqDvi7DnUzMy5gDYZ91k+eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707287528; c=relaxed/simple;
-	bh=jtmLBplwCG56G8uZAmBLDccQpfNCfshXHxvjHmht6Uc=;
+	s=arc-20240116; t=1707287764; c=relaxed/simple;
+	bh=QiVRFoKs2wFwGHvDewmSG3cFDRhh5i4srunXDFEJBWA=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FH5yboGBec2c+UdbVe9o7PDS5S2BiHvY3C6/jOwPyOAf2meTHvsRi0Ejk0rZiCWtLgR84dbNqxJ+O7Y0zyE7jKHT9o3+5GxzPcKeAu6T91U64RAgJkPqZSTzAQwr7NK0Vg17P5y5Josi8SLTGlH0B3LQwgi+rDXRGxrs/e3gNK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endlessos.org; spf=pass smtp.mailfrom=endlessos.org; dkim=pass (2048-bit key) header.d=endlessos.org header.i=@endlessos.org header.b=u2BJ1zHU; arc=none smtp.client-ip=209.85.128.174
+	 To:Cc:Content-Type; b=LM8UWCC1QjRF9+DAQTlJAFDuif2ExF5ezVDlrovoYJst+NWwMxOQAlAzQYImQGZHV4dXAbNKRwLf3Cna3SfgtaDHIpW5umFDvEpRhm3RrVZupoIZDWqIn5WqNY9n8aHxUQNiq6NZGS2W0MUOvI056eYyMsJgF9mSRH8RS3GgL84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endlessos.org; spf=pass smtp.mailfrom=endlessos.org; dkim=pass (2048-bit key) header.d=endlessos.org header.i=@endlessos.org header.b=dkbOrG1X; arc=none smtp.client-ip=209.85.128.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=endlessos.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=endlessos.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessos.org header.i=@endlessos.org header.b="u2BJ1zHU"
-Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-6049165bc6eso2462357b3.1
-        for <linux-ide@vger.kernel.org>; Tue, 06 Feb 2024 22:32:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=endlessos.org header.i=@endlessos.org header.b="dkbOrG1X"
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-60482b91650so3110177b3.3
+        for <linux-ide@vger.kernel.org>; Tue, 06 Feb 2024 22:36:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessos.org; s=google; t=1707287525; x=1707892325; darn=vger.kernel.org;
+        d=endlessos.org; s=google; t=1707287761; x=1707892561; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2MLmYhwM6V0Q4nXC/yPki6tk1W/Oozpyls+lfDZ2B0U=;
-        b=u2BJ1zHU1zzwhH+jvFH3/papExRRABjBxZua6Ro/OHim9XFUsdC4MmxAoqnIGEsCLp
-         197knX75EplRV4X/XP3KmOu7tfVibqM233XYjV4BnbYxq2X7S0mK3nyQdGR7S9UcOVFH
-         PdS/gSqUMnSmWEkuiCJUZFBF2nj88eAGcXGNJya9wfJbX2ARDi0jDvOHnSwlpXWZEy9d
-         d16V/fyITKB/KuGqV11T0QMx6P+GiXk46ba3WXqjvRBtxFxvLIoACGhtl4CgA7Ko5vAK
-         Vu0xcaKWmLJNOgTt3LYkdUx3rMKf8K/0FTQDwu9D/RqbQQuhg4vnRSOPqnqGwoA8CoDe
-         pDLA==
+        bh=ttQuRjkrOA882sgmcciq24ruU2hERRsTyaxuyMWHbh8=;
+        b=dkbOrG1XWijAb1mBt+e3Tcvk3fXB3L3EU9yeLVWg2gni89iNrWb7y6cjMyiX3LSCos
+         xbNyCbAx9EZJgaL4IifEyBZuY9hX2CsWYM49q6rsegjTH8E24Te0SgJ+99jTKVLpC2pU
+         CaDeggoeOw62ANnwErHSpHo7z/oavJDgGraeU2KDsRmvY3fTatdH0B3C7z2+LbTtd/7G
+         2rCtkjujVlK2LZbfkTnXVubgSSjr0Qq5KifEN2bAb7tqgyHKordpQ1HwklesJqBsv0ds
+         bT+ZHV8j4ZtT9aw+oR2RUEO409HCg+75Rv3+haNTsPXhbTjKzDo0Y6gcXa0Altwbk85q
+         HoNw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707287525; x=1707892325;
+        d=1e100.net; s=20230601; t=1707287761; x=1707892561;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2MLmYhwM6V0Q4nXC/yPki6tk1W/Oozpyls+lfDZ2B0U=;
-        b=ggUDZjApWCnIxuZhbTQfMGDLb/VUAniYknOvKqYNIdwa78jhEb8Fsg9E/oC96VbpdP
-         lb4yxXt097eBNJTpvFupfzC1k4S4WYCnOSAHl7M0jfFCNy0mJRul0y/bjqbQTLbs6eGy
-         4pt//dyZVpXzUv3jGYJlspPgknbXw3v1ocHdCIK4tcXwkCU0L8D1cMD6yibEzUc4zS0C
-         LUHWus0meJ3KgG+HZvbPZjI14rpoPEnb3DVOuNS2LWHpNn5KyhzyTwEL+xfjV4VUrapX
-         zEgX9eNKQqiqUMLNolwsP/1Dd0hc9uIkbIOUdvTeVGsoT1RuPm6dvsHFwHjylT1HDueE
-         fNGw==
-X-Forwarded-Encrypted: i=1; AJvYcCUa6dXd3bhMtqyPCfCuBGKn8WAw2z2GqKsbrZIV465GQw40lFQzC15CETJJOPDFecXQ6n8fxKswqqSqM2J9bfE+Y/Z6W9znxl8Z
-X-Gm-Message-State: AOJu0Yx0l2MQfF+VwoNjRly2Rk4GmHzlItqgqZbc0VIiX3bPm67D7gEn
-	Hu46vJB5JthRA20BjLgJwiZ4eCgyJhl8y0o8LXKu/sb5vgcG5QGH8FM2C6gn5B2FoBzx+zG7gSo
-	/fmNH6Oz4reog/vD+WuSEYKI5gfdql7CX7cPajQ==
-X-Google-Smtp-Source: AGHT+IH785L7G8bGbuWEDhetEWGon5IfyyMyXQ4okyvhpWeiGgm8OmTnGt7st1LaD+Jkftr3t7dJuZ8/QQQTflhkoow=
-X-Received: by 2002:a81:bc54:0:b0:5eb:1d7a:2664 with SMTP id
- b20-20020a81bc54000000b005eb1d7a2664mr3698543ywl.29.1707287524989; Tue, 06
- Feb 2024 22:32:04 -0800 (PST)
+        bh=ttQuRjkrOA882sgmcciq24ruU2hERRsTyaxuyMWHbh8=;
+        b=qrs+h+ScX1HRgcXWfJk9JFWLGcw6i926mUUYbVbRglgF07oa3g9DQHGY5Km6tkKW/d
+         bzOa8LkcVGpzwEcVDOl5ZPMgAlrNDdFlK4C4Orl2f1sTzXn1pKvVAuxsa1GEpRmcVUJw
+         mTquoE4PivXqp4rbTWCRRXpX0LVOagtERLTXoBYEpu4oJ7B7yuXUMz4vhP5JCG6W8ptD
+         /eA9J4NXk/nAQd23WrcIeBTAbIua+LwAx3rYiWF3jdgkdr/gc34FKKNOv/qzSqUke7aW
+         PKXGRrpf1wI/tNSftpKWUt3QR2KRdUfmJjswINPWOSCdNpmnoZn4wJ9wTqFVjGl0cmpb
+         y4WQ==
+X-Gm-Message-State: AOJu0YxOJC/+l0iYBcJLWbyCjnUdvjHMpwVfucLVS3oNZ0ZV1FfPEK2n
+	ujCDonxqBj5iYu5+WKrT1ECYWARCQ7C+TjAddpX3hhOSFlCEXhFDkD9XeCGuvKahZip/zfLcuLI
+	Zc1csHiEBIvUCM60p2ykm7qoO5epuZgfjc5QwCA==
+X-Google-Smtp-Source: AGHT+IGRQSD7/G3US7FQsqMFcZuSRjgmauTOX5yuwX13yVK8gg7Th7dxWZX6pUSaCG+Bw69sRmzn3MOyMNmGk0SRIJ4=
+X-Received: by 2002:a81:7e11:0:b0:603:d575:e2e8 with SMTP id
+ o17-20020a817e11000000b00603d575e2e8mr3720535ywn.10.1707287761664; Tue, 06
+ Feb 2024 22:36:01 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240130095933.14158-1-jhp@endlessos.org> <20240130101335.GU2543524@black.fi.intel.com>
- <CAPpJ_ef4KuZzBaMupH-iW0ricyY_9toa7A4rB2vyeaFu7ROiDA@mail.gmail.com>
+References: <20240130101335.GU2543524@black.fi.intel.com> <CAPpJ_ef4KuZzBaMupH-iW0ricyY_9toa7A4rB2vyeaFu7ROiDA@mail.gmail.com>
  <Zbonprq/1SircQon@x1-carbon> <CAD8Lp47SH+xcCbZ9qdRwrk2KOHNoHUE5AMieVHoSMbVsMrdiNg@mail.gmail.com>
  <ZbrNLxHL03R66PxQ@x1-carbon> <ZbuyVbMEBWKi729y@x1-carbon> <CAPpJ_efmzy_FU0urdHDmO5htOBCPaX-T5W+Er7AmWYhqUTwnyA@mail.gmail.com>
  <ZcDHjsYJNlJ/9nNT@x1-carbon> <CAPpJ_ec0H6zr6wcNstFn9dRcFgPXspU3MYvgGMNAS5wnw-0pTw@mail.gmail.com>
- <ZcIwMb0WPZLG85LR@x1-carbon>
-In-Reply-To: <ZcIwMb0WPZLG85LR@x1-carbon>
+ <ZcIwMb0WPZLG85LR@x1-carbon> <ZcKtqs2Usj99FRPE@x1-carbon>
+In-Reply-To: <ZcKtqs2Usj99FRPE@x1-carbon>
 From: Jian-Hong Pan <jhp@endlessos.org>
-Date: Wed, 7 Feb 2024 14:31:29 +0800
-Message-ID: <CAPpJ_efbRDqA9ybmdJ9iNunVmoHukGekuFtEE3X-nwOxfYivcg@mail.gmail.com>
+Date: Wed, 7 Feb 2024 14:35:25 +0800
+Message-ID: <CAPpJ_ecHqxWWEOChiS3AopAaQR3FdaxjXqUtvGRAk53dMwe--w@mail.gmail.com>
 Subject: Re: [PATCH 1/2] ata: ahci: Add force LPM policy quirk for ASUS B1400CEAE
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Dan Williams <dan.j.williams@intel.com>, Daniel Drake <drake@endlessos.org>, 
@@ -77,337 +75,54 @@ Cc: Dan Williams <dan.j.williams@intel.com>, Daniel Drake <drake@endlessos.org>,
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Niklas Cassel <cassel@kernel.org> =E6=96=BC 2024=E5=B9=B42=E6=9C=886=E6=97=
-=A5 =E9=80=B1=E4=BA=8C =E4=B8=8B=E5=8D=889:12=E5=AF=AB=E9=81=93=EF=BC=9A
+Niklas Cassel <cassel@kernel.org> =E6=96=BC 2024=E5=B9=B42=E6=9C=887=E6=97=
+=A5 =E9=80=B1=E4=B8=89 =E4=B8=8A=E5=8D=886:07=E5=AF=AB=E9=81=93=EF=BC=9A
 >
-> On Tue, Feb 06, 2024 at 04:39:02PM +0800, Jian-Hong Pan wrote:
-> > Niklas Cassel <cassel@kernel.org> =E6=96=BC 2024=E5=B9=B42=E6=9C=885=E6=
-=97=A5 =E9=80=B1=E4=B8=80 =E4=B8=8B=E5=8D=887:33=E5=AF=AB=E9=81=93=EF=BC=9A
-> >
-> > Have the comparison:
-> >
-> > * Bind LPM policy with the patch "ata: ahci: Add force LPM policy
-> > quirk for ASUS B1400CEAE" based on kernel v6.8-rc2:
-> >
-> > $ dmesg | grep -E "(SATA|ata1|ahci)"
-> > [    0.791497] ahci 10000:e0:17.0: version 3.0
-> > [    0.791499] ahci 10000:e0:17.0: force controller follow LPM policy
-> > [    0.791517] ahci 10000:e0:17.0: can't derive routing for PCI INT A
-> > [    0.791518] ahci 10000:e0:17.0: PCI INT A: no GSI
-> > [    0.791637] ahci 10000:e0:17.0: ahci_update_initial_lpm_policy: poli=
-cy 3
-> > [    0.791652] ahci 10000:e0:17.0: ahci_intel_pcs_quirk: not Intel,
-> > the vendor is 0xffffffff
-> > [    0.791662] ahci 10000:e0:17.0: AHCI 0001.0301 32 slots 1 ports 6
-> > Gbps 0x1 impl SATA mode
-> > [    0.791663] ahci 10000:e0:17.0: flags: 64bit ncq sntf pm clo only
-> > pio slum part deso sadm sds
-> > [    0.791771] scsi host0: ahci
-> > [    0.791806] ata1: SATA max UDMA/133 abar m2048@0x76102000 port
-> > 0x76102100 irq 145 lpm-pol 3
-> > [    0.791808] ahci 10000:e0:17.0: ahci_init_one: probed
-> > [    1.109393] ata1: sata_link_resume: rc=3D0
-> > [    1.109415] ata1: BUSY ? 0 (status: 0x50) SStatus.DET: 0x3
-> > [    1.109418] ata1: sata_link_hardreset: is 0
-> > [    1.109420] ata1: sata_link_hardreset: is on line, returns 0
-> > [    1.109444] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> > [    1.110161] ata1.00: ATA-10: WDC WD10SPZX-80Z10T2, 04.01A04, max UDM=
-A/133
-> > [    1.112047] ata1.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth =
-32), AA
-> > [    1.112054] ata1.00: Features: NCQ-prio
-> > [    1.114814] ata1.00: configured for UDMA/133
-> > [    1.114821] ata1: ahci_set_lpm: policy=3D3
-> > [    1.114837] ata1: sata_link_scr_lpm: policy is 3 and original
-> > scontrol 0x00000300
-> > [    1.114840] ata1: sata_link_scr_lpm: write scontrol 0x00000000
-> >
-> > The SATA link is up and SATA storage shows up.
-> > Full dmesg as the attachment of
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D217114#c28
-> >
-> > * Bind LPM policy with PCI IDs like commit 104ff59af73a ("ata: ahci:
-> > Add Tiger Lake UP{3,4} AHCI controller"):
-> >
-> > $ dmesg | grep -E "(SATA|ata1|ahci)"
-> > [    0.783125] ahci 10000:e0:17.0: version 3.0
-> > [    0.783143] ahci 10000:e0:17.0: can't derive routing for PCI INT A
-> > [    0.783145] ahci 10000:e0:17.0: PCI INT A: no GSI
-> > [    0.783257] ahci 10000:e0:17.0: ahci_update_initial_lpm_policy: poli=
-cy 3
-> > [    0.783280] ahci 10000:e0:17.0: ahci_intel_pcs_quirk: PCS_6 is 0x000=
-0
-> > [    0.783281] ahci 10000:e0:17.0: ahci_intel_pcs_quirk: write PCS_6 wi=
-th 0x0001
-> > [    0.783296] ahci 10000:e0:17.0: AHCI 0001.0301 32 slots 1 ports 6
-> > Gbps 0x1 impl SATA mode
-> > [    0.783298] ahci 10000:e0:17.0: flags: 64bit ncq sntf pm clo only
-> > pio slum part deso sadm sds
-> > [    0.783402] scsi host0: ahci
-> > [    0.783440] ata1: SATA max UDMA/133 abar m2048@0x76102000 port
-> > 0x76102100 irq 144 lpm-pol 3
-> > [    0.783442] ahci 10000:e0:17.0: ahci_init_one: probed
-> > [    1.096930] ata1: sata_link_resume: rc=3D0
-> > [    1.096960] ata1: sata_link_hardreset: ata_phys_link_offline is True
-> > [    1.096962] ata1: sata_link_hardreset: is off line, returns 0
-> > [    1.097000] ata1: SATA link down (SStatus 4 SControl 300)
-> > [    1.097025] ata1: ahci_set_lpm: policy=3D3
-> > [    1.097051] ata1: sata_link_scr_lpm: policy is 3 and original
-> > scontrol 0x00000300
-> > [    1.097054] ata1: sata_link_scr_lpm: write scontrol 0x00000304
-> >
-> > The SATA link is down and SATA storage disappears.
-> > Full dmesg as the attachment of
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D217114#c29
-> >
+> On Tue, Feb 06, 2024 at 02:12:17PM +0100, Niklas Cassel wrote:
+> > On Tue, Feb 06, 2024 at 04:39:02PM +0800, Jian-Hong Pan wrote:
+> > > Niklas Cassel <cassel@kernel.org> =E6=96=BC 2024=E5=B9=B42=E6=9C=885=
+=E6=97=A5 =E9=80=B1=E4=B8=80 =E4=B8=8B=E5=8D=887:33=E5=AF=AB=E9=81=93=EF=BC=
+=9A
 >
-> So in summary:
-> When Intel VMD is on, and the ahci_intel_pcs_quirk is applied =3D> NOT OK
-> When Intel VMD is on, and the ahci_intel_pcs_quirk is not applied =3D> OK
+> (snip)
 >
-> When Intel VMD is off, and the ahci_intel_pcs_quirk is applied =3D> OK
-> When Intel VMD is off, and the ahci_intel_pcs_quirk is not applied =3D> ?
+> >
+> > It seems that at least Intel AHCI controllers that also have Intel VMD
+> > enabled break when this quirk is applied.
+> >
+> > I guess one way would be to do a:
+> > git show c312ef176399:drivers/ata/ahci.c | grep "PCI_VDEVICE(INTEL"
+> > and replace everything that is not: board_ahci_pcs7
+> > with a board_ahci_pcs_quirk, board_ahci_low_power_pcs_quirk, and
+> > board_ahci_avn_pcs_quirk, and after that change all board_ahci_pcs7
+> > entries to board_ahci, and assume that entries added since c312ef176399
+> > do not need the quirk.
+> >
+> > But it would be nice if someone from Intel could clean this up.
+>
+> While it would still be nice if someone cleaned up the intel_pcs_quirk.
+>
+>
+> Jian-Hong, perhaps you can try my series:
+> https://lore.kernel.org/linux-ide/20240206211352.1664816-1-cassel@kernel.=
+org/
+>
+> Also available here:
+> https://github.com/floatious/linux/tree/external-port-v2
+>
+> With that series, you should not need an explicit "board_ahci_low_power"
+> entry for Tiger Lake to get working LPM.
+>
+> If fact, you want to ensure that you do not have any Tiger Lake entry in
+> ahci_pci_tbl, as that will apply intel_pcs_quirk and break your platform.
+>
+> Testing is appreciated :)
+>
+> Let's hope that LPM is enabled and that you can also enter low-power
+> C-states.
 
-When Intel VMD is off, and the ahci_intel_pcs_quirk is not applied =3D> OK
+Yes!  That patch series binds LPM policy by default and avoids
+disappeared SATA storage issue.
 
-> Excellent find!
->
->
->
-> In the bad case:
->
-> sata_link_hardreset() sets SControl.DET to 1, to establish the interface
-> communication. Then sleeps for 1 ms.
->
-> Then it calls sata_link_resume(), which clears SControl.DET to 0.
-> (This matches the AHCI spec which says that SControl.DET should be set
-> to 1 for at least 1 ms.)
->
-> sata_link_hardreset() then calls ata_phys_link_offline(),
-> which is essentially defined as: return !(SStatus.DET =3D=3D 0x3)
-> ata_phys_link_offline() returns true, since SStatus.DET =3D=3D 0x4.
->
-> SStatus.DET =3D=3D 0x4 means: Phy in offline mode as a result of the
-> interface being disabled or running in a BIST loopback mode.
->
-> If the physical link is not established, there is no point to call
-> ata_wait_ready() (which waits for the device to become ready on the
-> protocol level), as the physical link could not even be established.
->
-> After that, we write SControl.DET to set bit 4 to disable the port,
-> in order to save power. This is only done because sata_link_hardreset()
-> failed to establish a link after toggling SControl.DET =3D=3D 1.
->
-> So the problem is that SStatus.DET never changed to 0x3 after toggling
-> SControl.DET =3D=3D 1.
->
->
-> >
-> > However, I notice more interesting thing:
-> > "drivers/ata/ahci.c:ahci_intel_pcs_quirk()"!
-> > If bind LPM policy with PCI IDs matching, then it does the PCS quirk.
-> > But, binding with the patch "ata: ahci: Add force LPM policy quirk for
-> > ASUS B1400CEAE" does not, because the vendor is ANY vendor, not Intel.
-> >
-> > So, I did following test:
-> >
-> > If I modify the PCI vendor check condition with the pdev, not the PCI
-> > ID's vendor:
-> >
-> > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> > index 7ecd56c8262a..ece709ac20d6 100644
-> > --- a/drivers/ata/ahci.c
-> > +++ b/drivers/ata/ahci.c
-> > @@ -1706,12 +1709,16 @@ static void ahci_intel_pcs_quirk(struct
-> > pci_dev *pdev, struct ahci_host_priv *hp
-> >         /*
-> >          * Only apply the 6-port PCS quirk for known legacy platforms.
-> >          */
-> > -       if (!id || id->vendor !=3D PCI_VENDOR_ID_INTEL)
-> > +       if (!id || pdev->vendor !=3D PCI_VENDOR_ID_INTEL) {
-> > +               dev_info(&pdev->dev, "%s: not Intel, the vendor is
-> > 0x%08x\n", __func__, id->vendor);
-> >                 return;
-> > +       }
->
-> The reason why you are seeing this is because Tiger Lake does not have
-> an entry in the ahci_pci_tbl in mainline, so it uses the generic entry
-> which matches on the AHCI class code:
-> https://github.com/torvalds/linux/blob/v6.8-rc3/drivers/ata/ahci.c#L636
->
-> If you revert 6210038aeaf4 ("ata: ahci: Revert "ata: ahci: Add Tiger Lake
-> UP{3,4} AHCI controller""), you will get an explicit entry in the
-> ahci_pci_tbl.
->
-> But to clarify, I think that it would make sense to add:
->
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index d2460fa985b7..e462509a45e8 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1672,12 +1672,18 @@ static void ahci_update_initial_lpm_policy(struct=
- ata_port *ap,
->
->  static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_=
-priv *hpriv)
->  {
-> -       const struct pci_device_id *id =3D pci_match_id(ahci_pci_tbl, pde=
-v);
-> +       const struct pci_device_id *id;
->         u16 tmp16;
->
-> +       /* If the detected PCI device is not an Intel device, skip. */
-> +       if (pdev->vendor !=3D PCI_VENDOR_ID_INTEL)
-> +               return;
-> +
->         /*
-> -        * Only apply the 6-port PCS quirk for known legacy platforms.
-> +        * See if there is an explicit entry for this PCI device in
-> +        * ahci_pci_tbl, if there is not, do not apply the quirk.
->          */
-> +       id =3D pci_match_id(ahci_pci_tbl, pdev);
->         if (!id || id->vendor !=3D PCI_VENDOR_ID_INTEL)
->                 return;
->
->
->
-> >
-> > Then, the SATA HDD always disappears like binding the LPM policy with
-> > PCI IDs matching, even with the patch "ata: ahci: Add force LPM policy
-> > quirk for ASUS B1400CEAE".
-> > So, I think ahci_intel_pcs_quirk() is the key point.
->
-> I agree.
->
->
-> Can you verify that things work as expected when doing a:
-> $ git revert 6210038aeaf49c395c2da57572246d93ec67f6d4
-> to re-add the explicit entry, if you also do a:
->
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1672,6 +1672,7 @@ static void ahci_update_initial_lpm_policy(struct a=
-ta_port *ap,
->
->  static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_=
-priv *hpriv)
->  {
-> +#if 0
->         const struct pci_device_id *id =3D pci_match_id(ahci_pci_tbl, pde=
-v);
->         u16 tmp16;
->
-> @@ -1698,6 +1699,7 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pd=
-ev, struct ahci_host_priv *hp
->                 tmp16 |=3D hpriv->port_map;
->                 pci_write_config_word(pdev, PCS_6, tmp16);
->         }
-> +#endif
->  }
->
-> To make the quirk a no-op?
-
-Here is the test result:
-
-Both enabled & disabled VMD with no-op ahci_intel_pcs_quirk() shows
-the SATA storage on ASUS B1400CEAE. =3D> OK
-
-$ cat /tmp/dmesg.log
-[    0.799439] ahci 10000:e0:17.0: version 3.0
-[    0.799459] ahci 10000:e0:17.0: can't derive routing for PCI INT A
-[    0.799460] ahci 10000:e0:17.0: PCI INT A: no GSI
-[    0.799582] ahci 10000:e0:17.0: ahci_update_initial_lpm_policy: policy 3
-[    0.799615] ahci 10000:e0:17.0: AHCI 0001.0301 32 slots 1 ports 6
-Gbps 0x1 impl SATA mode
-[    0.799617] ahci 10000:e0:17.0: flags: 64bit ncq sntf pm clo only
-pio slum part deso sadm sds
-[    0.799722] scsi host0: ahci
-[    0.799760] ata1: SATA max UDMA/133 abar m2048@0x76102000 port
-0x76102100 irq 144 lpm-pol 3
-[    0.799761] ahci 10000:e0:17.0: ahci_init_one: probed
-[    1.112519] ata1: sata_link_resume: rc=3D0
-[    1.112541] ata1: BUSY ? 0 (status: 0x50) SStatus.DET: 0x3
-[    1.112545] ata1: sata_link_hardreset: is 0
-[    1.112547] ata1: sata_link_hardreset: is on line, returns 0
-[    1.112571] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-[    1.113280] ata1.00: ATA-10: WDC WD10SPZX-80Z10T2, 04.01A04, max UDMA/13=
-3
-[    1.114880] ata1.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 32),=
- AA
-[    1.114887] ata1.00: Features: NCQ-prio
-[    1.117148] ata1.00: configured for UDMA/133
-[    1.117154] ata1: ahci_set_lpm: policy=3D3
-[    1.117169] ata1: sata_link_scr_lpm: policy is 3 and original
-scontrol 0x00000300
-[    1.117172] ata1: sata_link_scr_lpm: write scontrol 0x00000000
-
+Thanks!
 Jian-Hong Pan
-
-> To be honest, this quirk looks horrible.
->
-> Looking at the original commit:
-> c312ef176399 ("libata/ahci: Drop PCS quirk for Denverton and beyond")
->
-> It claims that:
->
-> Rather than try to fix the PCS quirk to consider the DNV register layout
-> instead require explicit opt-in. The assumption is that the OS driver
-> need not touch this register, and platforms can be added with a new
-> boad_ahci_pcs7 board-id when / if problematic platforms are found in the
-> future.
->
-> However, it does NOT require an explicit opt-in!
->
-> If we were to add an entry with board type "board_ahci" or
-> "board_ahci_low_power" for Tiger Lake, the quirk gets applied...
->
-> See also:
-> 09d6ac8dc51a ("libata/ahci: Fix PCS quirk application")
->
-> So basically, what ahci_intel_pcs_quirk() does is that it checks
-> if there is an explicit entry in ahci_pci_tbl.
-> If there is not, the quirk is not applied.
->
-> If there is an entry, and the enum for that board has a value that
-> is less than board_ahci_pcs7, the quirk is applied...
->
-> But that will be *ALL* other board types since board_ahci_pcs7 is
-> defined last in the enum:
-> https://github.com/torvalds/linux/blob/v6.8-rc3/drivers/ata/ahci.c#L75
->
-> Not only that but the comment for that enum is wrong:
-> https://github.com/torvalds/linux/blob/v6.8-rc3/drivers/ata/ahci.c#L71-L7=
-4
->
->         /*
->          * board IDs for Intel chipsets that support more than 6 ports
->          * *and* end up needing the PCS quirk.
->          */
->
-> Is is the opposite... board IDs that do NOT need the PCS quirk...
->
-> But this is not the way we add quirks.
-> We add a flag and a new board_id and mark the PCI device and vendor ids
-> that are affected to use that board, see e.g.
-> 20730e9b2778 ("ahci: add 43-bit DMA address quirk for ASMedia ASM1061 con=
-trollers")
->
-> We don't add a quirk and apply it for everything (board_ahci,
-> board_ahci_low_power) except for a specific entry (board_ahci_pcs7).
->
-> It seems that at least Intel AHCI controllers that also have Intel VMD
-> enabled break when this quirk is applied.
->
-> I guess one way would be to do a:
-> git show c312ef176399:drivers/ata/ahci.c | grep "PCI_VDEVICE(INTEL"
-> and replace everything that is not: board_ahci_pcs7
-> with a board_ahci_pcs_quirk, board_ahci_low_power_pcs_quirk, and
-> board_ahci_avn_pcs_quirk, and after that change all board_ahci_pcs7
-> entries to board_ahci, and assume that entries added since c312ef176399
-> do not need the quirk.
->
-> But it would be nice if someone from Intel could clean this up.
->
->
-> Kind regards,
-> Niklas
