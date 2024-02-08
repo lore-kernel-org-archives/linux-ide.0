@@ -1,151 +1,138 @@
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [217.72.192.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FFD86E2B3;
-	Thu,  8 Feb 2024 12:04:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C50DC76412
+	for <linux-ide@vger.kernel.org>; Thu,  8 Feb 2024 14:38:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707393888; cv=none; b=JirCvfdXc+U28Ur56qw8rbXMrxnSZj4r9tqmRfeEZCTaK1tG+igNFGe6X6GXAhwJiZRsRAZ4bKKFx/99DhLI84HagodGGVwPjahIXO3oUwPJfO242j9d6+86B1tslchVKCJWLFZQlybtufpbclrvF5i7+oNDm4BiXC1HjzKn5uQ=
+	t=1707403090; cv=none; b=mug6qzqKs/o7NXDnFoCTevUWUU7zhY/LIeCTKZhx6Xr8ejPidNa+kRaI+hWHn/7p4clA9ZX5aLTHSJFDdglNo0+RS3uNEOu1g32YDM+0J50vJJlzHiBKmnJPZF0pHXbvPpwVVgahnj+wYp98eUu72DZuPNx2KOlfsKwVPkO5Lvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707393888; c=relaxed/simple;
-	bh=hb449Ho5oQwZ/CAXVghNPHUSQ5nwpa3g/EF0X0oC1IM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FC3qN6xLMHkIddfIj7iabrgwtLBBGD+dnrG+PRZMtNLJVtfCkw95lwxZBxRwZw/bd00bIsaL1Jpj1snqiVPbCXeY1pz777RSKSN5uJr0KFmHbz3Q78c/LAUIYNvhVXvP4OEBo+JnZCzLD3bkxK91NrLJqeZZenRtAG2rALx5L8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CslA+hOd; arc=none smtp.client-ip=209.85.167.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1707403090; c=relaxed/simple;
+	bh=pTYlkiVuMVcCEj8oWInse55yAQt4wuql3uqmrHaDnbU=;
+	h=MIME-Version:Message-ID:From:To:Cc:Subject:Content-Type:Date:
+	 In-Reply-To:References; b=YvMlL07nHJ611RPvtuPnXYzvuj1dQyB4HrpzhdO4TBJUvL58uabFvGeI6xuTBKsOinFIaVI/yZF6lZKa9f18rQrUXPlZ4QOCx9i8NbzsjfKkz1ENjnWaULtdW1m55UpvcCPaWi6xlE/VziXN/hUWiOSIyoHnLLuVQ6sj2b5w/94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=dmummenschanz@web.de header.b=c3lOL7dT; arc=none smtp.client-ip=217.72.192.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CslA+hOd"
-Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3beab443a63so1210482b6e.3;
-        Thu, 08 Feb 2024 04:04:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1707393886; x=1707998686; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Dym7YOFYPe9uA2peOh1YfvXFFiPfyy6wB1LmCQQC+qU=;
-        b=CslA+hOdIat9QMAGilvBFX/9x8uK+4Bo5a1x36RXb1Hq6s1cHzYLW6uyNV5Nf2YAbW
-         HSj1uzaiN/l/moC41cghpX+v7YVJCkMI+s/SRGqaDgbOArhucHrk7c22NbRKPnPgyHDD
-         DoWjeHeG8CqR3avnOTRTHE44RGBH7bGfnjmb0KnbJMgRNbUHcOVdyE/b9y3IJlcLvY3O
-         b5KZ7g22Q/S9a8GySHdk7xRI+B6G8OuTxPcimLk2PbqkO/UUA19GfPNRpsJIhIQSgEeX
-         XS9X47NZIAmicVxDLtnblu7i3cKHzhzHHSltHPTcwEcJKMw5Ei5YpR37h4ddQGr1tmpD
-         YkJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707393886; x=1707998686;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Dym7YOFYPe9uA2peOh1YfvXFFiPfyy6wB1LmCQQC+qU=;
-        b=s8q8lUqphB63vb4a5KFWz9Ry8rQLM2qhcnsUD6deX2Zy8QzIIYbCilNvtxC9aRHCwo
-         ZvkacOZEBatXZALjXlE6cIz/3P+vPevwXVXhrWvY2URyRqBI2f3RPR6GcagaVgunriZa
-         cdZfjHBQjm5m0+5BfO5CEfyVEseqXoZ8v3Cbd6PyKskq8bOJBkKYHp+Apv4JJj7zi0tv
-         WOIMO1OTK4e4IOwXZdTi4k4tJdEdIDG2XNbmeUzyANn00WONGzAA6ibFZhHd7Cw4XlXu
-         N5ks2mM9ky/RZuJS7Pcvyp66fmoofeJxWSSR1nuG9d43z9yJ3EkhOcLap3cHDf2z1UcB
-         VR2Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXecGkEv5aaUkZZsyA+AAKbUIhD8iroWrvUF2AbrlnH9jgJrO00A3lwRQqyVgnaUZcJrLImKor7vNIkbcTsEd0eZ4Ici7Oz+1X0cQm8FRQmGbPDJ3dbpzWq/ju8Tx0P/wbd9trUW9PQ
-X-Gm-Message-State: AOJu0YyYw1MzNBqRMMVdKKrtoPvAx1o1vx3sEX28SufLDgc5ONY86EK9
-	uijCHAnV5rwZ/pdPddKELdbEcospXeNbLIVFPMBNd5gi1kBlEjm6e//U8lJ6qKMySdWySFSR2t0
-	wiyYA76K40dBfuZIrxkF+qllXJow=
-X-Google-Smtp-Source: AGHT+IHKyES6KmPf+Rgk1Hlq0aKd3vvc9CupFSUiG4sdZLOyzU+Bk69uBF/abiXOyqFvgA+wfdcNErpgGBoGKW3e3sc=
-X-Received: by 2002:a05:6808:f0d:b0:3bf:efd2:b852 with SMTP id
- m13-20020a0568080f0d00b003bfefd2b852mr3670560oiw.36.1707393886101; Thu, 08
- Feb 2024 04:04:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=web.de header.i=dmummenschanz@web.de header.b="c3lOL7dT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de; s=s29768273;
+	t=1707403068; x=1708007868; i=dmummenschanz@web.de;
+	bh=pTYlkiVuMVcCEj8oWInse55yAQt4wuql3uqmrHaDnbU=;
+	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:
+	 References;
+	b=c3lOL7dT8w+7AKS9XJol0VJLTdve7I4JdFiTnjDf1xJCxXLBIOqq0gokR9lnmOjc
+	 n48pUcwHeKJ8j57GOqjwHqvbBAyUcyjzswY140hTY2DBFxlvTAuiH+aWPSqA9/yrd
+	 DKcLmeJAekMxC/s16qahndKv9FO3jBJThOBZnOVZPlyXvHtDlSst47982f6A9+2VS
+	 99oW5UjuKLjcFZ/vK2XURs0FNpH34njx56FLLBC7/aF5P7m7BSoqIBXA0/QeMDeQK
+	 ZcWJtMQ81Yqf9BibAE/t5HfchvZiLcUmdWgHk4rPFnTaW3TRw/mmuwQ6KPaZ1la9B
+	 Qw3gMnSPc3C8CyOG8Q==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [213.109.200.100] ([213.109.200.100]) by web-mail.web.de
+ (3c-app-webde-bap33.server.lan [172.19.172.33]) (via HTTP); Thu, 8 Feb 2024
+ 15:37:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <vbpzr7uqpfemb3qa6xy2fxioct44l5vugg2wkywyolfpzqcmau@jgrrhmk2scaj>
- <7559d940-f191-4fe0-e147-17ffa6c1dfc4@gmail.com> <CA+PODjpOE=LGPi1G1ebvEwGeXAfpuZ+s_k4uMUwu3i6st9y--g@mail.gmail.com>
- <ZcSSzDI2qL3LSQvr@x1-carbon>
-In-Reply-To: <ZcSSzDI2qL3LSQvr@x1-carbon>
-From: Andrey Melnikov <temnota.am@gmail.com>
-Date: Thu, 8 Feb 2024 15:04:33 +0300
-Message-ID: <CA+PODjqTwko0+2cw227OpcLzP7DD3CouU26jQ=j-MirSHFEGEg@mail.gmail.com>
-Subject: Re: [PATCH] ahci: asm1064: correct count of reported ports
+Message-ID: <trinity-65caccf7-138b-4625-8e2e-afac802dd2da-1707403068697@3c-app-webde-bap33>
+From: Dieter Mummenschanz <dmummenschanz@web.de>
 To: Niklas Cassel <cassel@kernel.org>
-Cc: Serge Semin <fancer.lancer@gmail.com>, Sergei Shtylyov <sergei.shtylyov@gmail.com>, 
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, dlemoal@kernel.org, 
-	hdegoede@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+Subject: Aw: Re: Re: Re: Re:  Re: Re: [PATCH 0/2] Power management fixes
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 8 Feb 2024 15:37:48 +0100
+Importance: normal
+Sensitivity: Normal
+In-Reply-To: <ZcKopITjwjKYNM9C@x1-carbon>
+References: <trinity-0be6e8a8-e6d3-4d60-be0d-59592a9edd65-1706010022623@3c-app-webde-bap10>
+ <a72daedd-48c4-4eaf-9a77-a34679636a8c@kernel.org>
+ <trinity-0df92d73-be55-433c-bdb2-4387f7ea590b-1706686178879@3c-app-webde-bap43>
+ <3f7cef2a-5ba4-465b-a1f5-77e2bcc50ddb@kernel.org>
+ <ZboztvrqKKdLQ1mt@x1-carbon>
+ <trinity-61f604a0-1db3-4b6e-a316-fc7e609f38f4-1706771411065@3c-app-webde-bs18>
+ <Zbt3qD8dMSqGYl8Q@x1-carbon>
+ <trinity-78c294c6-cd07-4a27-befa-3f3fc9bd79da-1706885616508@3c-app-webde-bs04>
+ <ZcEwa4fOzMif8lCd@x1-carbon>
+ <trinity-0bc8e6ea-7808-4508-af3a-be22281abf24-1707231996854@3c-app-webde-bs42>
+ <ZcKopITjwjKYNM9C@x1-carbon>
+X-UI-Message-Type: mail
+X-Priority: 3
+X-Provags-ID: V03:K1:RG5yF/QqWqI6pXxxX9MkjJrsDbQi3XemwOOuyWh9G7AAXdJRyiWT1Mk0lZc8s3+UAplEb
+ iQ090ilnBO0iN9q4vQ73OryywMMdXLZBMzIxapuXtAe8eFWNNZImmtL9kP6ebjU4EQ7qbiASW99j
+ MMXmZ6bo2bWj0WyVcSo8Js9Oge3UieWIJqUsR3qPaw335NiXhH69T4N3b6rCamumtzmU8Lca5e5d
+ hJ6bQBOT13Itr94FlkgqCqdtWjMfehRG4vMu2tLrMWoRd8odwT53rYU5PhRzc/BIXZpu3tlECAXM
+ ns=
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:5RUBDHHxJ+E=;wQ0mFiydA0pyeLmWSL0jHP05MP+
+ Nk9AbLFD2y4wEr9c+dTRU1/geR+4uBGnfDR83zLX7LgnHkTd9VvVx8YG9KHOm7loePa98sT+/
+ rk5Pa7ce090UnSZH/nEjbEhakxKehfEsWzlFkHiZYQVNp3XbiHTvEXvJWjCX7358bR+6k/uIB
+ 1K0RCKrYGQnz/1Tg0MnJFQeDSfoGHpA80tkJc+wFPPiKYBkra9jaHHXyuVZORs4I1vy65yxaG
+ ME1li2XuwaQEetBRbvro8ZNZTYXNrGkaEpTBdDRCitN7dhEPw5bfQNARZuvtlsp9pbGZ20Td/
+ gx78LAjhKFGBEidTATQXdRA4413DmnJHnKM76QNLkW5OxfO5LIG1yaftvWqQiOY9uaqUCQPE+
+ nVE/Dw0FQdS/fLSfgXQjJA3L/YJXZO3VwzKZPofW/ID0OG49d8GxMLaqx3DhNFOytGEGMLooy
+ h5eKbHUp82Zqemumu85t+BThiOQ49EcW03xvNx0rgbpusBag0+d6G7WzKKzwNVHpzlEFO89q3
+ irTYCRRIDjq0JRQCfiqlQHUchSUQa3lfr7T5Ba2WZT50+Ra/hf3qPn3YXcfGcajIXbcdoC9KA
+ WofcqGjfY6GnWkXeMf7fUQJ6RdmlCq6AWpHKchpNrTl+mmVLumwzpKHbsVUPBD3P8fxOVRfs9
+ Hd42k2TvSy8MUCD9If6CCtCvPThxVLkVKywnJmTX0pBVtQuL8T/Fxqx6HRVEkMM=
 
-Hello.
+Hello Niklas,
 
-> Hello Serge, Andrey,
->
-> On Thu, Feb 08, 2024 at 10:27:11AM +0300, Andrey Melnikov wrote:
-> > > On 2/7/24 12:58 PM, Andrey Jr. Melnikov wrote:
-> > >
-> > > > The ASM1064 SATA host controller always reports wrongly,
-> > > > that it has 24 ports. But in reality, it only has four ports.
-> > > >
-> > > > before:
-> > > > ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
-> > > > ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
-> > > > ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
-> > > >
-> > > > after:
-> > > > ahci 0000:04:00.0: ASM1064 has only four ports
-> > > > ahci 0000:04:00.0: forcing port_map 0xffff0f -> 0xf
-> > > > ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
-> > > > ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
-> > > > ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
-> > > >
-> > > >
-> > > > Signed-off-by: Andrey Jr. Melnikov <temnota.am@gmail.com>
-> > > >
-> > > > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> > > > index da2e74fce2d9..ec30d8330d16 100644
-> > > > --- a/drivers/ata/ahci.c
-> > > > +++ b/drivers/ata/ahci.c
-> > > > @@ -671,9 +671,14 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
-> > > >  static void ahci_pci_save_initial_config(struct pci_dev *pdev,
-> > > >                                        struct ahci_host_priv *hpriv)
-> > > >  {
-> > > > -     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
-> > > > -             dev_info(&pdev->dev, "ASM1166 has only six ports\n");
-> > > > -             hpriv->saved_port_map = 0x3f;
-> > > > +     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA) {
-> > > > +             if (pdev->device == 0x1166) {
-> > >
-> > >    Maybe *switch* instead?
-> >
-> > Ok.
-> > Can someone explain to me - which method I should use here - override
-> > portmap via hpriv->saved_port_map or mask it via hpriv->mask_port_map
-> > ?
->
-> Serge, you seem to be the last person to touch this in
-> commit 88589772e80c ("ata: libahci: Discard redundant force_port_map
-> parameter"), where you removed force_port_map, so you are already
-> familiar with this code.
->
-> From my quick look, it looks like mask_port_map is used to disable one or
-> more ports from the port_map.
->
-> But do you know if there is a reason why platforms that need to do that
-> can't just change saved_port map directly?
 
-Well, after deep dive into git history - initially, overriding
-port_map introduced by commits
-d799e083a80b220f3681d7790f11e77d1704022b (jmb361 workaround) and
-cd70c26617f4686355263be4533ce8030242740e (marvel 6145 support), both
-override port mapping, but in different ways - first set to 1, second
-- apply masks. Logically - port_map = 1 and port_map &= 1 - are the
-same.
-Later, in commit 394d6e535f15c6f2d3c7fe2e228ee595acf0648c this two
-hacks moved around, and setting port_map splitted into two ways - set
-it directly via force_port_map (jmb361 workaround) and apply mask via
-mask_port_map (marvel 6145 hack).
-And now, we have two knobs which do the same! After that, commit
-566d1827df2ef0cbe921d3d6946ac3007b1a6938 add checking AHCI version
-(yet another SATA glitches workaround, user report [1] shows 8 port
-and bitmask 0xff - 32 ports)  and this break updating saved_port_map
-for AHCI >= 1.3. Later, commit
-2fd0f46cb1b82587c7ae4a616d69057fb9bd0af7 fix saving port_map again,
-and now overriding port_map completely splitted. saved_port_map is
-really saved (and written back to HOST_PORTS_IMPL register on
-saved_port map()) for all AHCI versions, mask_port_map is applied and
-not updated saved_port_map.
+> It should be ready for testing:
+> https://github.com/floatious/linux/tree/external-port-v2[https://github.com/floatious/linux/tree/external-port-v2]
 
-1. https://lists.openwall.net/linux-kernel/2016/01/13/171
+> With this, you should no longer need:
+> for foo in /sys/class/scsi_host/host*/link_power_management_policy;
+> do echo med_power_with_dipm > $foo;
+> done
+
+> (Assuming you have compiled your kernel with CONFIG_SATA_MOBILE_LPM_POLICY=3).
+
+Oh sweet! Will give it a spin over the weekend if I find the time.
+
+
+> You shouldn't need to do:
+> $ hdparm -Y
+
+> As that bypasses some of the internal logic in libata.
+
+> I assume that you didn't need this on v6.6 and older?
+
+> (Instead libata should put the device to standby or sleep itself,
+> it shouldn't need to be done explicitly by the user.)
+
+I'm at a loss either. No idea why this is actually working. When I encountered the low-power issue I searched the web and stumbled upon hdparm -Y and gave it a shot.
+
+> How certain are you that v6.6 works?
+
+Let's put it this way: I've installed most 6.6-rc's so I had it running for several weeks and I always have an eye on conky showing me the c-states in 5 second interval. And during all that time and several suspends it never occured.
+
+It definately started with the first 6.7 -rc I've installed (don't recall wich one first). There were no hardware changes and no BIOS updates during that time. If I find some spare time, I'm gonna give the latest 6.6 from kernel.org a spin to verify.
+
+> Could it be the same problem there, that it works sometimes and doesn't
+> work sometimes?
+
+Again I've never encountered this issue with 6.6 or any other kernel before. I would have remembered that.
+
+> The reason why I'm asking is that Damien's major changes got included
+> in v6.6-rc4:
+> https://lore.kernel.org/linux-ide/20230929133324.164211-1-dlemoal@kernel.org/[https://lore.kernel.org/linux-> ide/20230929133324.164211-1-dlemoal@kernel.org/]
+
+> So I would be less surprised if you said that you can enter pc8 on every
+> boot on v6.5, but on v6.6 it only works occasionally.
+
+To be sure I would have to switch back to 6.6. If I find the time I'll give it a shot.
+
+> But if you can enter pc8 on every boot on v6.6, but not on v6.7,
+> then it is probably easier to figure out which commit that broke
+> things, as there were not that many suspend/resume related changes
+> added in v6.7.
+
+Maybe you could point them out so I can try to bisect?
+
+Kind regards,
+Dieter
+
