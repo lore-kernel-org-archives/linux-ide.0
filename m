@@ -1,199 +1,93 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C970823A0;
-	Thu,  8 Feb 2024 17:34:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F49E1DA2F
+	for <linux-ide@vger.kernel.org>; Thu,  8 Feb 2024 18:37:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707413644; cv=none; b=BsBOgOO8s7XmABC1ZwtGAyVji/UYxSw6pFxunfTslks9RmtqPesdNem8V2nmCEvyQK+6olDZH3HKtR7VMD8JUbFpWo7Ve681AaoYYvnf28NnnZxk5hO16tD+BMbLxMuAdoENqo/+Wnds7Jz9ukBCyOCmZieB59xYnN3db86+fUw=
+	t=1707417449; cv=none; b=OCSkb9uG5Rq0zatIjKjAeGz/LFrRVQu6VvFzN581gaRmKH+0PBD4kdTN5dZds4AnJUNgEaYiUY/BylXycOUUNwq6lNbLAC2aSijvCxFWwoEhHTBdYF7uq5UtfIkSphh4/4gOkqdbqZRZFHlTNudxvI2uSKHLUB3yMBV3fwXYaF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707413644; c=relaxed/simple;
-	bh=HnXjnbgKicph7V1VdO85ucEbEZHWUNgzF4rtQ9rqLXU=;
+	s=arc-20240116; t=1707417449; c=relaxed/simple;
+	bh=TVM5yl0qA8js6hS+yKnK0nKrrOeE8hgR0HXZPV32EWs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hLn5IU6hvvlXAg1YPk+irBzkZkXfk2S53ebPIEyuOiBAllQtxivUTFN6TRFi3hSoTmwjciixr1Z1MiKT1Pvvvg0TbI79RXPKlRaz61V3Tj8nn6ynXrPyjLa3MF15yCmrCj2F+JVBT/UxZpyx/z4qcZzHcEXvuy7i14c16xiAQb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=PVo85f/e; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=PVo85f/e; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=jM9zghO2bKaE4nxcTlDjI/38GYAmWftmiKdpNOgm7k7AFanks95+iBEY2Z46RDi9TcS5wceQHgUvyPFz/AHtvKVlnfpg7ZlPE1VYQx7cyjAUxnKCw1ubH+aiHvWwUrAMNKtDwJhM1rR6xyjr9PMeod3AsNnwGA2qV1x8J8VIEuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QinOxiS5; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="PVo85f/e";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="PVo85f/e"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id B4EE31FCF9;
-	Thu,  8 Feb 2024 17:34:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1707413640; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h+0yrZSpModLNFXQZ0NEsCQ5tcdSJqQ6dM1FajfCnoo=;
-	b=PVo85f/e969ansHigCZ/BOT2nRHWSGTtyW7NhAYAtWxIm5uDdmmXtqnXuglrPVa8S7yKQa
-	ETmZvxkSepFS893Tiks6wNVWNNAyQDFyA8kfnKIX9N7ofuAkTGF8lW0NfTwYfL34Q2NuXo
-	Zw65V8TjJ6szvDqKcrQlAb1m/0JDwSU=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1707413640; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h+0yrZSpModLNFXQZ0NEsCQ5tcdSJqQ6dM1FajfCnoo=;
-	b=PVo85f/e969ansHigCZ/BOT2nRHWSGTtyW7NhAYAtWxIm5uDdmmXtqnXuglrPVa8S7yKQa
-	ETmZvxkSepFS893Tiks6wNVWNNAyQDFyA8kfnKIX9N7ofuAkTGF8lW0NfTwYfL34Q2NuXo
-	Zw65V8TjJ6szvDqKcrQlAb1m/0JDwSU=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 98F9513984;
-	Thu,  8 Feb 2024 17:34:00 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id qh9aIogQxWUQHwAAD6G6ig
-	(envelope-from <mhocko@suse.com>); Thu, 08 Feb 2024 17:34:00 +0000
-Date: Thu, 8 Feb 2024 18:33:51 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>,
-	Matthew Wilcox <willy@infradead.org>,
-	lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
-Message-ID: <ZcUQfzfQ9R8X0s47@tiehlicka>
-References: <ZZcgXI46AinlcBDP@casper.infradead.org>
- <ZZzP6731XwZQnz0o@dread.disaster.area>
- <3ba0dffa-beea-478f-bb6e-777b6304fb69@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QinOxiS5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707417448; x=1738953448;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=TVM5yl0qA8js6hS+yKnK0nKrrOeE8hgR0HXZPV32EWs=;
+  b=QinOxiS5blJCZV0meD6Hf3VsS+lZ8T66tAjknTWyeC2SEsTlYw+cfYKu
+   Vuk8NHIkLP/g1Z5YhAMtCVyC4xEoTm/9juvodykx5CEIL3HYex7PfB6wQ
+   1ve+WuKx7vUncydlOA1FRNUeAEgVNDwSXLVE0QCWVuts0c/Tr9qvfIh/w
+   iHq2fHpqvU0b4QKyrKOoPi1IjyuySOhF78dP45F5vzkoDi5ANdmAFr+6G
+   /sRgEvnY4bmpMGkXMzrzeSu4pHisFo4VKF+dhBKHT+GV+wOrjRptcasMM
+   DvWrFfM/mFvVUMSsypVy6NUcgUV6AzVpXJaswA6NR+8DQwBFJaJfFGsi5
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10978"; a="1183801"
+X-IronPort-AV: E=Sophos;i="6.05,254,1701158400"; 
+   d="scan'208";a="1183801"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2024 10:37:27 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10978"; a="934213122"
+X-IronPort-AV: E=Sophos;i="6.05,254,1701158400"; 
+   d="scan'208";a="934213122"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga001.fm.intel.com with ESMTP; 08 Feb 2024 10:37:26 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+	id B3E9586; Thu,  8 Feb 2024 18:09:20 +0200 (EET)
+Date: Thu, 8 Feb 2024 18:09:20 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ahci: document and clarify unconventional intel quirk
+Message-ID: <20240208160920.GT8454@black.fi.intel.com>
+References: <20240207091054.1697236-1-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <3ba0dffa-beea-478f-bb6e-777b6304fb69@kernel.org>
-X-Spam-Level: 
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.com header.s=susede1 header.b="PVo85f/e"
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-2.51 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	 TO_DN_SOME(0.00)[];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_TRACE(0.00)[suse.com:+];
-	 MX_GOOD(-0.01)[];
-	 RCPT_COUNT_SEVEN(0.00)[11];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 BAYES_HAM(-3.00)[100.00%];
-	 ARC_NA(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
-	 FROM_HAS_DN(0.00)[];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 TAGGED_RCPT(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:dkim];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 FREEMAIL_CC(0.00)[fromorbit.com,infradead.org,lists.linux-foundation.org,vger.kernel.org,kvack.org,lists.infradead.org,gmail.com];
-	 RCVD_TLS_ALL(0.00)[];
-	 SUSPICIOUS_RECIPS(1.50)[];
-	 RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from]
-X-Spam-Score: -2.51
-X-Rspamd-Queue-Id: B4EE31FCF9
-X-Spam-Flag: NO
+In-Reply-To: <20240207091054.1697236-1-cassel@kernel.org>
 
-On Thu 08-02-24 17:02:07, Vlastimil Babka (SUSE) wrote:
-> On 1/9/24 05:47, Dave Chinner wrote:
-> > On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
-> >> This is primarily a _FILESYSTEM_ track topic.  All the work has already
-> >> been done on the MM side; the FS people need to do their part.  It could
-> >> be a joint session, but I'm not sure there's much for the MM people
-> >> to say.
-> >> 
-> >> There are situations where we need to allocate memory, but cannot call
-> >> into the filesystem to free memory.  Generally this is because we're
-> >> holding a lock or we've started a transaction, and attempting to write
-> >> out dirty folios to reclaim memory would result in a deadlock.
-> >> 
-> >> The old way to solve this problem is to specify GFP_NOFS when allocating
-> >> memory.  This conveys little information about what is being protected
-> >> against, and so it is hard to know when it might be safe to remove.
-> >> It's also a reflex -- many filesystem authors use GFP_NOFS by default
-> >> even when they could use GFP_KERNEL because there's no risk of deadlock.
-> >> 
-> >> The new way is to use the scoped APIs -- memalloc_nofs_save() and
-> >> memalloc_nofs_restore().  These should be called when we start a
-> >> transaction or take a lock that would cause a GFP_KERNEL allocation to
-> >> deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
-> >> can see the nofs situation is in effect and will not call back into
-> >> the filesystem.
-> > 
-> > So in rebasing the XFS kmem.[ch] removal patchset I've been working
-> > on, there is a clear memory allocator function that we need to be
-> > scoped: __GFP_NOFAIL.
-> > 
-> > All of the allocations done through the existing XFS kmem.[ch]
-> > interfaces (i.e just about everything) have __GFP_NOFAIL semantics
-> > added except in the explicit cases where we add KM_MAYFAIL to
-> > indicate that the allocation can fail.
-> > 
-> > The result of this conversion to remove GFP_NOFS is that I'm also
-> > adding *dozens* of __GFP_NOFAIL annotations because we effectively
-> > scope that behaviour.
-> > 
-> > Hence I think this discussion needs to consider that __GFP_NOFAIL is
-> > also widely used within critical filesystem code that cannot
-> > gracefully recover from memory allocation failures, and that this
-> > would also be useful to scope....
-> > 
-> > Yeah, I know, mm developers hate __GFP_NOFAIL. We've been using
-> > these semantics NOFAIL in XFS for over 2 decades and the sky hasn't
-> > fallen. So can we get memalloc_nofail_{save,restore}() so that we
-> > can change the default allocation behaviour in certain contexts
-> > (e.g. the same contexts we need NOFS allocations) to be NOFAIL
-> > unless __GFP_RETRY_MAYFAIL or __GFP_NORETRY are set?
+On Wed, Feb 07, 2024 at 10:10:53AM +0100, Niklas Cassel wrote:
+> The ahci_intel_pcs_quirk is unconventional in several ways:
+> First of all because it has a board ID for which the quirk should NOT be
+> applied (board_ahci_pcs7), instead of the usual way where we have a board
+> ID for which the quirk should be applied.
 > 
-> Your points and Kent's proposal of scoped GFP_NOWAIT [1] suggests to me this
-> is no longer FS-only topic as this isn't just about converting to the scoped
-> apis, but also how they should be improved.
-
-Scoped GFP_NOFAIL context is slightly easier from the semantic POV than
-scoped GFP_NOWAIT as it doesn't add a potentially unexpected failure
-mode. It is still tricky to deal with GFP_NOWAIT requests inside the
-NOFAIL scope because that makes it a non failing busy wait for an
-allocation if we need to insist on scope NOFAIL semantic. 
-
-On the other hand we can define the behavior similar to what you
-propose with RETRY_MAYFAIL resp. NORETRY. Existing NOWAIT users should
-better handle allocation failures regardless of the external allocation
-scope.
-
-Overriding that scoped NOFAIL semantic with RETRY_MAYFAIL or NORETRY
-resembles the existing PF_MEMALLOC and GFP_NOMEMALLOC semantic and I do
-not see an immediate problem with that.
-
-Having more NOFAIL allocations is not great but if you need to
-emulate those by implementing the nofail semantic outside of the
-allocator then it is better to have those retries inside the allocator
-IMO.
-
-> [1] http://lkml.kernel.org/r/Zbu_yyChbCO6b2Lj@tiehlicka
+> The second reason is that other than only excluding board_ahci_pcs7 from
+> the quirk, PCI devices that make use of the generic entry in ahci_pci_tbl
+> (which matches on AHCI class code) are also excluded.
 > 
-> > We already have memalloc_noreclaim_{save/restore}() for turning off
-> > direct memory reclaim for a given context (i.e. equivalent of
-> > clearing __GFP_DIRECT_RECLAIM), so if we are going to embrace scoped
-> > allocation contexts, then we should be going all in and providing
-> > all the contexts that filesystems actually need....
-> > 
-> > -Dave.
+> This can of course lead to very subtle breakage, and did indeed do so in:
+> commit 104ff59af73a ("ata: ahci: Add Tiger Lake UP{3,4} AHCI controller"),
+> which added an explicit entry with board_ahci_low_power to ahci_pci_tbl.
+> 
+> This caused many users to complain that their SATA drives disappeared.
+> The logical assumption was of course that the issue was related to LPM,
+> and was therefore reverted in commit 6210038aeaf4 ("ata: ahci: Revert
+> "ata: ahci: Add Tiger Lake UP{3,4} AHCI controller"").
+> 
+> It took a lot of time to figure out that this was all completely unrelated
+> to LPM, and was instead caused by an unconventional Intel quirk.
+> 
+> While this quirk should definitely be cleaned up to be implemented like
+> all other quirks, for now, at least document the behavior of this quirk.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217114
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
--- 
-Michal Hocko
-SUSE Labs
+Thanks!
+
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
