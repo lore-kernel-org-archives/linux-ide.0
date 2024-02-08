@@ -1,93 +1,124 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F49E1DA2F
-	for <linux-ide@vger.kernel.org>; Thu,  8 Feb 2024 18:37:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC6D37711;
+	Thu,  8 Feb 2024 19:55:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707417449; cv=none; b=OCSkb9uG5Rq0zatIjKjAeGz/LFrRVQu6VvFzN581gaRmKH+0PBD4kdTN5dZds4AnJUNgEaYiUY/BylXycOUUNwq6lNbLAC2aSijvCxFWwoEhHTBdYF7uq5UtfIkSphh4/4gOkqdbqZRZFHlTNudxvI2uSKHLUB3yMBV3fwXYaF4=
+	t=1707422110; cv=none; b=Gy8Cy24bRqg8NleDnrFkX4UXYDLxNRcUqTzzl1gS6hvzXcxgaqY0uxD0OrZUhV5Yvj7C6eNg/HHo1WNvGRSzLX70QnIEIbwkX5fQlUTq4qvICYKQKm2vW8yoUsXprm8Ay9ZyUOS+y6JLgWyxjnFWTzFmO9hnN0j7xpfGA1TbEZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707417449; c=relaxed/simple;
-	bh=TVM5yl0qA8js6hS+yKnK0nKrrOeE8hgR0HXZPV32EWs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jM9zghO2bKaE4nxcTlDjI/38GYAmWftmiKdpNOgm7k7AFanks95+iBEY2Z46RDi9TcS5wceQHgUvyPFz/AHtvKVlnfpg7ZlPE1VYQx7cyjAUxnKCw1ubH+aiHvWwUrAMNKtDwJhM1rR6xyjr9PMeod3AsNnwGA2qV1x8J8VIEuc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QinOxiS5; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1707422110; c=relaxed/simple;
+	bh=lOfJwpXUdnEs4NdD2l4UxOLwSgcIGRsZp7hL7KAWBwk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bEKbI34yHN4R2eSAXGVCN+35wrxOf5XMT8u3xJZEOe9d15i4MlMX2wqP/CGmpqF9wvLUZu7BgtwNCJBJWbcfrhAPpvQqA7bCkPLDJpTb8c7nloE6/hxXetrOQcJI3xWBudJ50m6ahNjjXSh9/mUfmb3mZ30maymzTIQyViu2kYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fHFRsg6W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QinOxiS5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707417448; x=1738953448;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=TVM5yl0qA8js6hS+yKnK0nKrrOeE8hgR0HXZPV32EWs=;
-  b=QinOxiS5blJCZV0meD6Hf3VsS+lZ8T66tAjknTWyeC2SEsTlYw+cfYKu
-   Vuk8NHIkLP/g1Z5YhAMtCVyC4xEoTm/9juvodykx5CEIL3HYex7PfB6wQ
-   1ve+WuKx7vUncydlOA1FRNUeAEgVNDwSXLVE0QCWVuts0c/Tr9qvfIh/w
-   iHq2fHpqvU0b4QKyrKOoPi1IjyuySOhF78dP45F5vzkoDi5ANdmAFr+6G
-   /sRgEvnY4bmpMGkXMzrzeSu4pHisFo4VKF+dhBKHT+GV+wOrjRptcasMM
-   DvWrFfM/mFvVUMSsypVy6NUcgUV6AzVpXJaswA6NR+8DQwBFJaJfFGsi5
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10978"; a="1183801"
-X-IronPort-AV: E=Sophos;i="6.05,254,1701158400"; 
-   d="scan'208";a="1183801"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2024 10:37:27 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10978"; a="934213122"
-X-IronPort-AV: E=Sophos;i="6.05,254,1701158400"; 
-   d="scan'208";a="934213122"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga001.fm.intel.com with ESMTP; 08 Feb 2024 10:37:26 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-	id B3E9586; Thu,  8 Feb 2024 18:09:20 +0200 (EET)
-Date: Thu, 8 Feb 2024 18:09:20 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ahci: document and clarify unconventional intel quirk
-Message-ID: <20240208160920.GT8454@black.fi.intel.com>
-References: <20240207091054.1697236-1-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fHFRsg6W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C640C433F1;
+	Thu,  8 Feb 2024 19:55:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707422110;
+	bh=lOfJwpXUdnEs4NdD2l4UxOLwSgcIGRsZp7hL7KAWBwk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=fHFRsg6WccEchUFyrMTDbpsND8UtEeB7G2dQt7WSwW8EOSdvsfxtiFUpL1Bdc8Bek
+	 mh+UH3E7pdkOXekpzAzB2Pte0DAjqeQI7oJCq5r591oq0M4sd/i3vPYbBzncVnNDqg
+	 VdQaxpWDwOL96HRfsQNAt52NDO1G0JOuNMlGofKNd9hhSd8oBzVG7s6bJ8A8fR5LBJ
+	 yysBINVtEdH6Xnc0eqoSx/ALVkQLvXDJRAk7TG96ukqW5tcoESko0YM4DQ9pryNltg
+	 B7qluL+vCL/+79c0MwGCki1auhtFUIYmiLQZ3ztfxrpEONfxrA79RQpZ5zr/curMdQ
+	 h/meCLWH4APjQ==
+Message-ID: <3aa399bb-5007-4d12-88ae-ed244e9a653f@kernel.org>
+Date: Thu, 8 Feb 2024 20:55:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20240207091054.1697236-1-cassel@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+Content-Language: en-US
+To: Michal Hocko <mhocko@suse.com>
+Cc: Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>,
+ lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Kent Overstreet <kent.overstreet@gmail.com>
+References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+ <ZZzP6731XwZQnz0o@dread.disaster.area>
+ <3ba0dffa-beea-478f-bb6e-777b6304fb69@kernel.org>
+ <ZcUQfzfQ9R8X0s47@tiehlicka>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+In-Reply-To: <ZcUQfzfQ9R8X0s47@tiehlicka>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 07, 2024 at 10:10:53AM +0100, Niklas Cassel wrote:
-> The ahci_intel_pcs_quirk is unconventional in several ways:
-> First of all because it has a board ID for which the quirk should NOT be
-> applied (board_ahci_pcs7), instead of the usual way where we have a board
-> ID for which the quirk should be applied.
+On 2/8/24 18:33, Michal Hocko wrote:
+> On Thu 08-02-24 17:02:07, Vlastimil Babka (SUSE) wrote:
+>> On 1/9/24 05:47, Dave Chinner wrote:
+>> > On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
+>> 
+>> Your points and Kent's proposal of scoped GFP_NOWAIT [1] suggests to me this
+>> is no longer FS-only topic as this isn't just about converting to the scoped
+>> apis, but also how they should be improved.
 > 
-> The second reason is that other than only excluding board_ahci_pcs7 from
-> the quirk, PCI devices that make use of the generic entry in ahci_pci_tbl
-> (which matches on AHCI class code) are also excluded.
+> Scoped GFP_NOFAIL context is slightly easier from the semantic POV than
+> scoped GFP_NOWAIT as it doesn't add a potentially unexpected failure
+> mode. It is still tricky to deal with GFP_NOWAIT requests inside the
+> NOFAIL scope because that makes it a non failing busy wait for an
+> allocation if we need to insist on scope NOFAIL semantic. 
 > 
-> This can of course lead to very subtle breakage, and did indeed do so in:
-> commit 104ff59af73a ("ata: ahci: Add Tiger Lake UP{3,4} AHCI controller"),
-> which added an explicit entry with board_ahci_low_power to ahci_pci_tbl.
+> On the other hand we can define the behavior similar to what you
+> propose with RETRY_MAYFAIL resp. NORETRY. Existing NOWAIT users should
+> better handle allocation failures regardless of the external allocation
+> scope.
 > 
-> This caused many users to complain that their SATA drives disappeared.
-> The logical assumption was of course that the issue was related to LPM,
-> and was therefore reverted in commit 6210038aeaf4 ("ata: ahci: Revert
-> "ata: ahci: Add Tiger Lake UP{3,4} AHCI controller"").
+> Overriding that scoped NOFAIL semantic with RETRY_MAYFAIL or NORETRY
+> resembles the existing PF_MEMALLOC and GFP_NOMEMALLOC semantic and I do
+> not see an immediate problem with that.
 > 
-> It took a lot of time to figure out that this was all completely unrelated
-> to LPM, and was instead caused by an unconventional Intel quirk.
-> 
-> While this quirk should definitely be cleaned up to be implemented like
-> all other quirks, for now, at least document the behavior of this quirk.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=217114
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> Having more NOFAIL allocations is not great but if you need to
+> emulate those by implementing the nofail semantic outside of the
+> allocator then it is better to have those retries inside the allocator
+> IMO.
 
-Thanks!
+I see potential issues in scoping both the NOWAIT and NOFAIL
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+- NOFAIL - I'm assuming Dave is adding __GFP_NOFAIL to xfs allocations or
+adjacent layers where he knows they must not fail for his transaction. But
+could the scope affect also something else underneath that could fail
+without the failure propagating in a way that it affects xfs? Maybe it's a
+high-order allocation with a low-order fallback that really should not be
+__GFP_NOFAIL? We would need to hope it has something like RETRY_MAYFAIL or
+NORETRY already. But maybe it just relies on >costly order being more likely
+to fail implicitly, and those costly orders should be kept excluded from the
+scoped NOFAIL? Maybe __GFP_NOWARN should also override the scoped nofail?
+
+- NOWAIT - as said already, we need to make sure we're not turning an
+allocation that relied on too-small-to-fail into a null pointer exception or
+BUG_ON(!page). It's probably not feasible to audit everything that can be
+called underneath when adding a new scoped NOWAIT. Static analysis probably
+won't be powerful enough as well. Kent suggested fault injection [1]. We
+have the framework for a system-wide one but I don't know if anyone is
+running it and how successful it is. But maybe we could have a special fault
+injection mode (CONFIG_ option or something) for the NOWAIT scoped
+allocations only. If everything works as expected, there are no crashes and
+the pattern Kent described in [1] has a fallback that's slower but still
+functional. If not, we get a report and known which place to fix, and the
+testing only focuses on the relevant parts. When a new scoped NOWAIT is
+added and bots/CIs running this fault injection config report no issues, we
+can be reasonably sure it's fine?
+
+[1]
+https://lore.kernel.org/all/zup5yilebkgkrypis4g6zkbft7pywqi57k5aztoio2ufi5ujsd@mfnqu4rarort/
+
+>> [1] http://lkml.kernel.org/r/Zbu_yyChbCO6b2Lj@tiehlicka
+>> 
+>> > We already have memalloc_noreclaim_{save/restore}() for turning off
+>> > direct memory reclaim for a given context (i.e. equivalent of
+>> > clearing __GFP_DIRECT_RECLAIM), so if we are going to embrace scoped
+>> > allocation contexts, then we should be going all in and providing
+>> > all the contexts that filesystems actually need....
+>> > 
+>> > -Dave.
+> 
+
