@@ -1,142 +1,543 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D163FDF
-	for <linux-ide@vger.kernel.org>; Fri,  9 Feb 2024 10:01:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79882376ED
+	for <linux-ide@vger.kernel.org>; Fri,  9 Feb 2024 13:03:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707472866; cv=none; b=c/4lVI5RFz8tCZ0MJDozaDTByQh/7aaV8rqPWCVzyke3t3rbgkx6DgT8nVat0JwhdJrFfa83zyyXqpJMqpLimNL2RHkeKynDbOHoNmsOuy8yZE+CcM2+0MDZYcOeEg4flwugZs5LWonPD5b1dl98uNqOaSSd/5EvcA39CNbj3rk=
+	t=1707483795; cv=none; b=fo0Kp2hwgsoT5QE5SZ0cx+8HsjOs5I411USuuwC5NJf+f77JWUGCIMZGFhw8y2WUH3Sh4myH/p8A2XrgzWj2lSC+tEfkJEIHKuBlCiKC+XAjCKcA10trCaoeZf8cYYjbdTEWn9CASnQ3xLekzJOaapSH8h0BbmYmebPsUnKHwEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707472866; c=relaxed/simple;
-	bh=HBb/n7wFCGhHsPAMUpLVnirehASy6pKs2PvblM1JVo4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U2Jd5wJoqYnE3jQocwvDhSZcTQGS0su5yhh9JaExeMzz0Nr6Eu7M+NX5Z4YtD5Zh3ZuCffARs4Y3FvwHlMzgDcTpojm1xQ+BoPysIpPEkpGDUT5Xs2VgT6UDY/lzHB8NHhd/viCDetH2kYCezQxl7dPxMbqXczBJzS/5twU066s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b/9+roGk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707483795; c=relaxed/simple;
+	bh=q5AFIQS8uJrP9/BgH5EuZwsIKwwz5UXUewOyUZYYa60=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=agdgDFAa6ziq+FcXDw3hj0ar8NS/xcu2r30qai0VvfokrMb8wYHwc9d8x+ggfzoySv0u0zqwGKJjp95+hBmpxEawujMYuSalFcQszwYfeBf6tp4itBr3MM6YBgg1rwKa+tr/o6p0GiHDk7+exUdBtxtvzaurmetQs3fTzPVZUX8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DWPPFGCb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b/9+roGk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 781EBC433C7;
-	Fri,  9 Feb 2024 10:01:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DWPPFGCb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEF63C433F1;
+	Fri,  9 Feb 2024 13:03:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707472866;
-	bh=HBb/n7wFCGhHsPAMUpLVnirehASy6pKs2PvblM1JVo4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=b/9+roGkWT2UUvNWDxJb1UTGW+LVW8+eDXT1qNAb/sznxd2r06bvjFa0DHwfd93z4
-	 zPxql4qbHY3dLXX6gSfoU+a2M0FFd/L56EvGvQw06uXiMycwOMvnoE+DaUFAf9Dyfs
-	 MEwkw6zJ8x6vxCixMZ2UY3MXBkUqFI4P1FhpL3bzeDF4rJ7alNbBGasaNBUeXjOQ/F
-	 pBdrk7aaiIw9DZPDsm4bdxpU5EfgTsw0GenUmoRxv7a5Qn3vNBSVs4/sXdyZd4fn/k
-	 JGHi3tLjdL2WGDzQFrU1wdIqk+Wgk7Go7PsQpC1SQgmlxDfGN/OurSvc+Pf8vKWb2F
-	 4Gh2lUCYypBtw==
-Date: Fri, 9 Feb 2024 11:01:00 +0100
+	s=k20201202; t=1707483794;
+	bh=q5AFIQS8uJrP9/BgH5EuZwsIKwwz5UXUewOyUZYYa60=;
+	h=From:To:Cc:Subject:Date:From;
+	b=DWPPFGCb9vFYmSL2w5n8ER3QT9onCXy7NG1uh9VIYA3muvHyk1Q2IRhOmyuMM7SUm
+	 ECR2Rev36/91BfCK+UP6K6o5CgaSLGFtvE+s3+w5642jPbA7lJo2zy2QIE5GJph4Z8
+	 XSg2K3XATnHhH7DU8vMFzlopEEAeeI14TceM5iVvcF4xgi4S7p8fACgafHkV0p7Anb
+	 vglOPaAQ/yuacmqjNaw8bSdFqEAXZI2xOBbiyK9a+3LiMkljqB9F0eTpZd24pH0z7f
+	 Z/kpxG9V7l2E395PjaxOHz99XeOikDfRdP7XwmBRpGGtVNlH5AXcsm+SRcv+/uiwkv
+	 FUd4dECjAuRhQ==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Werner Fischer <devlists@wefi.net>, Daniel Drake <drake@endlessos.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Jian-Hong Pan <jhp@endlessos.org>,
-	Dieter Mummenschanz <dmummenschanz@web.de>,
-	Mario Limonciello <mario.limonciello@amd.com>,
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
 	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] drop low power policy board type
-Message-ID: <ZcX33BLsEnDGez0z@x1-carbon>
-References: <20240206211352.1664816-1-cassel@kernel.org>
+Subject: [PATCH v2] ahci: clean up intel_pcs_quirk
+Date: Fri,  9 Feb 2024 14:03:06 +0100
+Message-ID: <20240209130307.39113-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240206211352.1664816-1-cassel@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Feb 06, 2024 at 10:13:41PM +0100, Niklas Cassel wrote:
-> The series is based on top of:
-> https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-next
-> 
-> 
-> Hello all,
-> 
-> This revives a patch sent out almost two years ago from Mario Limonciello:
-> https://lore.kernel.org/linux-ide/20220524170508.563-1-mario.limonciello@amd.com/T/#u
-> 
-> The reason why we did not merge it back then, is because LPM and hotplug
-> events are mutually exclusive.
-> 
-> The difference with this series compared to what was sent out back then:
-> I've added a patch that checks if the port is external, i.e. either
-> hotplug capable or eSATA. For external ports, we never enable LPM, as
-> that will break hotplug.
-> 
-> For ports that do not advertise themselves as external (typically laptops),
-> we set the LPM policy as requested.
-> 
-> This matches how Microsoft Windows does things, see:
-> https://studylib.net/doc/10034428/esata---microsoft-center
-> 
-> Thanks to Werner Fischer for suggesting something like this at last year's
-> ALPSS conference.
-> 
-> There might of course be some platform firmware that e.g. incorrectly marks
-> its port as internal, even though it is external, but if we find any such
-> platforms we will need to deal with them using quirks.
-> 
-> 
-> Also note that we even if the user requested a certain policy, there is
-> no guarantee that he will get all the features for that policy, see:
-> https://github.com/torvalds/linux/blob/master/drivers/ata/libata-sata.c#L403-L414
-> 
-> However, I'd rather we not try to map all the combinations of
-> partial/slumber/devsleep in to a single policy represented by a single
-> integer, thus I do not try to "change" the requested policy.
-> The user will get all the features that are included in the requested
-> policy AND supported by the HBA.
-> 
-> Another difference (compared to an earlier version of Mario's series)
-> is that we do not try to change the default CONFIG_SATA_MOBILE_LPM_POLICY
-> value from 0 to 3, it will continue to be 0.
-> If you really don't want LPM even if your HBA supports it, and your port
-> is internal, one option is to leave the Kconfig set to the default value.
-> 
-> Damien: considering that the Intel VMD + ahci_intel_pcs_quirk() bug turned
-> out to have nothing to do with LPM, it was simply the fact that the
-> ahci_intel_pcs_quirk() was only applied if there was an explicit entry in
-> ahci_pci_tbl. So since that bug is totally unrelated to LPM, I no longer
-> think that this series need to wait for a fix for that bug.
-> 
-> 
-> Link to v1:
-> https://lore.kernel.org/linux-ide/20240201161507.1147521-1-cassel@kernel.org/
-> 
-> Changes since v1:
-> -Picked up tags from Damien.
-> -Moved the comment in front of ahci_mark_external_port() to inside the
->  function.
-> -Modified the comment in patch 4/5 to more clearly state hotplug removal
->  events.
-> -Rewrote the commit message for patch 4/5 to be more detailed.
-> 
-> 
-> Kind regards,
-> Niklas
-> 
-> 
-> Mario Limonciello (1):
->   ata: ahci: Drop low power policy board type
-> 
-> Niklas Cassel (4):
->   ata: ahci: move marking of external port earlier
->   ata: ahci: a hotplug capable port is an external port
->   ata: ahci: drop hpriv param from ahci_update_initial_lpm_policy()
->   ata: ahci: do not enable LPM on external ports
-> 
->  drivers/ata/Kconfig   |   5 +-
->  drivers/ata/ahci.c    | 135 +++++++++++++++++++++++-------------------
->  drivers/ata/ahci.h    |   9 +--
->  drivers/ata/libahci.c |   7 ---
->  4 files changed, 78 insertions(+), 78 deletions(-)
-> 
-> -- 
-> 2.43.0
-> 
+The comment in front of board_ahci_pcs7 is completely wrong.
+It claims that board_ahci_pcs7 is needing the quirk, but in fact,
+the logic implemented in ahci_intel_pcs_quirk() is the exact opposite,
+only board_ahci_pcs7 is _excluded_ from the quirk.
 
-Applied:
-https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-6.9
+This way of implementing a quirk is unconventional in several ways:
+First of all because it has a board ID for which the quirk should _not_ be
+applied (board_ahci_pcs7), instead of the usual way where we have a board
+ID for which the quirk should be applied.
+
+The second reason is that other than only excluding board_ahci_pcs7 from
+the quirk, PCI devices that make use of the generic entry in ahci_pci_tbl
+(which matches on AHCI class code) are also excluded.
+
+This can of course lead to very subtle breakage, and did indeed do so in:
+commit 104ff59af73a ("ata: ahci: Add Tiger Lake UP{3,4} AHCI controller"),
+which added an explicit entry with board_ahci_low_power to ahci_pci_tbl.
+
+This caused many users to complain that their SATA drives disappeared.
+The logical assumption was of course that the issue was related to LPM,
+and was therefore reverted in commit 6210038aeaf4 ("ata: ahci: Revert
+"ata: ahci: Add Tiger Lake UP{3,4} AHCI controller"").
+
+It took a lot of time to figure out that this was all completely unrelated
+to LPM, and was instead caused by an unconventional Intel quirk.
+
+Clean up the quirk so that it behaves like other quirks, i.e. define a
+board where the quirk is applied. Platforms that were using
+board_ahci_pcs7 are converted to use board_ahci, this is safe since the
+boards were identical, and board_ahci_pcs7 did not define any custom
+port_ops.
+
+This way, new Intel platforms can be added using the correct "board_ahci"
+board, without getting any unexpected quirks applied.
+
+This means that we currently have some modern platforms defined that are
+using the Intel PCS quirk, but that is identical to the behavior that
+was there before this commit.
+
+No functional changes intended.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=217114
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+Changes since v1: Just do the actual cleanup instead of documenting how
+weird the existing quirk is. (Simply documenting the quirk would not have
+stopped people from encountering the same problem as we encountered when
+trying to add support for Tiger Lake.)
+
+ drivers/ata/ahci.c | 361 ++++++++++++++++++++++-----------------------
+ drivers/ata/ahci.h |   1 +
+ 2 files changed, 180 insertions(+), 182 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ae0a592e2185..41b4c9777c85 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -54,6 +54,14 @@ enum board_ids {
+ 	board_ahci_nomsi,
+ 	board_ahci_noncq,
+ 	board_ahci_nosntf,
++	/*
++	 * board_ahci_pcs_quirk is for legacy Intel platforms.
++	 * Modern Intel platforms should use board_ahci instead.
++	 * (Some modern Intel platforms might have been added with
++	 * board_ahci_pcs_quirk, however, we cannot change them to board_ahci
++	 * without testing that the platform actually works without the quirk.)
++	 */
++	board_ahci_pcs_quirk,
+ 	board_ahci_yes_fbs,
+ 
+ 	/* board IDs for specific chipsets in alphabetical order */
+@@ -67,12 +75,6 @@ enum board_ids {
+ 	board_ahci_sb700,	/* for SB700 and SB800 */
+ 	board_ahci_vt8251,
+ 
+-	/*
+-	 * board IDs for Intel chipsets that support more than 6 ports
+-	 * *and* end up needing the PCS quirk.
+-	 */
+-	board_ahci_pcs7,
+-
+ 	/* aliases */
+ 	board_ahci_mcp_linux	= board_ahci_mcp65,
+ 	board_ahci_mcp67	= board_ahci_mcp65,
+@@ -164,7 +166,15 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.port_ops	= &ahci_ops,
+ 	},
+ 	[board_ahci_nosntf] = {
+-		AHCI_HFLAGS	(AHCI_HFLAG_NO_SNTF),
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_SNTF |
++				 AHCI_HFLAG_INTEL_PCS_QUIRK),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
++	[board_ahci_pcs_quirk] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_INTEL_PCS_QUIRK),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+@@ -186,6 +196,7 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.port_ops	= &ahci_ops,
+ 	},
+ 	[board_ahci_avn] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_INTEL_PCS_QUIRK),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+@@ -244,119 +255,113 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_vt8251_ops,
+ 	},
+-	[board_ahci_pcs7] = {
+-		.flags		= AHCI_FLAG_COMMON,
+-		.pio_mask	= ATA_PIO4,
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
+-	},
+ };
+ 
+ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Intel */
+-	{ PCI_VDEVICE(INTEL, 0x06d6), board_ahci }, /* Comet Lake PCH-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0x2652), board_ahci }, /* ICH6 */
+-	{ PCI_VDEVICE(INTEL, 0x2653), board_ahci }, /* ICH6M */
+-	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci }, /* ICH7 */
+-	{ PCI_VDEVICE(INTEL, 0x27c5), board_ahci }, /* ICH7M */
+-	{ PCI_VDEVICE(INTEL, 0x27c3), board_ahci }, /* ICH7R */
++	{ PCI_VDEVICE(INTEL, 0x06d6), board_ahci_pcs_quirk }, /* Comet Lake PCH-H RAID */
++	{ PCI_VDEVICE(INTEL, 0x2652), board_ahci_pcs_quirk }, /* ICH6 */
++	{ PCI_VDEVICE(INTEL, 0x2653), board_ahci_pcs_quirk }, /* ICH6M */
++	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci_pcs_quirk }, /* ICH7 */
++	{ PCI_VDEVICE(INTEL, 0x27c5), board_ahci_pcs_quirk }, /* ICH7M */
++	{ PCI_VDEVICE(INTEL, 0x27c3), board_ahci_pcs_quirk }, /* ICH7R */
+ 	{ PCI_VDEVICE(AL, 0x5288), board_ahci_ign_iferr }, /* ULi M5288 */
+-	{ PCI_VDEVICE(INTEL, 0x2681), board_ahci }, /* ESB2 */
+-	{ PCI_VDEVICE(INTEL, 0x2682), board_ahci }, /* ESB2 */
+-	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
+-	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci }, /* ICH7-M DH */
+-	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci }, /* ICH8 */
++	{ PCI_VDEVICE(INTEL, 0x2681), board_ahci_pcs_quirk }, /* ESB2 */
++	{ PCI_VDEVICE(INTEL, 0x2682), board_ahci_pcs_quirk }, /* ESB2 */
++	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci_pcs_quirk }, /* ESB2 */
++	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci_pcs_quirk }, /* ICH7-M DH */
++	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci_pcs_quirk }, /* ICH8 */
+ 	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8/Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci }, /* ICH8 */
+-	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci }, /* ICH8M */
+-	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci }, /* ICH8M */
+-	{ PCI_VDEVICE(INTEL, 0x2922), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2923), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
+-	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+-	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
+-	{ PCI_VDEVICE(INTEL, 0x3a22), board_ahci }, /* ICH10 */
+-	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci }, /* ICH10 */
+-	{ PCI_VDEVICE(INTEL, 0x3b22), board_ahci }, /* PCH AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x3b23), board_ahci }, /* PCH AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
+-	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
+-	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci }, /* PCH M AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
+-	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b0), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b1), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b2), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b3), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b4), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b5), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b6), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b7), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19bE), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19bF), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c0), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c1), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c2), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c3), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c4), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c5), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c6), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c7), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19cE), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19cF), board_ahci_pcs7 }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci }, /* CPT AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci }, /* CPT M AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci }, /* CPT RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci }, /* CPT M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1c06), board_ahci }, /* CPT RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1c07), board_ahci }, /* CPT RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1d04), board_ahci }, /* PBG RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1d06), board_ahci }, /* PBG RAID */
+-	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci }, /* DH89xxCC AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci }, /* Panther Point AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci }, /* Panther M AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1e04), board_ahci }, /* Panther Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1e05), board_ahci }, /* Panther Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1e06), board_ahci }, /* Panther Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci }, /* Panther M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1e0e), board_ahci }, /* Panther Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c02), board_ahci }, /* Lynx Point AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci }, /* Lynx M AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8c04), board_ahci }, /* Lynx Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci }, /* Lynx M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c06), board_ahci }, /* Lynx Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci }, /* Lynx M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c0e), board_ahci }, /* Lynx Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci }, /* Lynx M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci }, /* Lynx LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci }, /* Lynx LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci }, /* Lynx LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c05), board_ahci }, /* Lynx LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c06), board_ahci }, /* Lynx LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci }, /* Lynx LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci }, /* Lynx LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci }, /* Lynx LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9dd3), board_ahci }, /* Cannon Lake PCH-LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1f22), board_ahci }, /* Avoton AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1f23), board_ahci }, /* Avoton AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1f24), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f25), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f26), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f27), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f2e), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f2f), board_ahci }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci_pcs_quirk }, /* ICH8 */
++	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci_pcs_quirk }, /* ICH8M */
++	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci_pcs_quirk }, /* ICH8M */
++	{ PCI_VDEVICE(INTEL, 0x2922), board_ahci_pcs_quirk }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2923), board_ahci_pcs_quirk }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci_pcs_quirk }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci_pcs_quirk }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci_pcs_quirk }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci_pcs_quirk }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci_pcs_quirk }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci_pcs_quirk }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci_pcs_quirk }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_pcs_quirk }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci_pcs_quirk }, /* ICH9 */
++	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_pcs_quirk }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci_pcs_quirk }, /* Tolapai */
++	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci_pcs_quirk }, /* Tolapai */
++	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci_pcs_quirk }, /* ICH10 */
++	{ PCI_VDEVICE(INTEL, 0x3a22), board_ahci_pcs_quirk }, /* ICH10 */
++	{ PCI_VDEVICE(INTEL, 0x3a25), board_ahci_pcs_quirk }, /* ICH10 */
++	{ PCI_VDEVICE(INTEL, 0x3b22), board_ahci_pcs_quirk }, /* PCH AHCI */
++	{ PCI_VDEVICE(INTEL, 0x3b23), board_ahci_pcs_quirk }, /* PCH AHCI */
++	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci_pcs_quirk }, /* PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci_pcs_quirk }, /* PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci_pcs_quirk }, /* PCH M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci_pcs_quirk }, /* PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci_pcs_quirk }, /* PCH M RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci_pcs_quirk }, /* PCH AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b0), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b1), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b2), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b3), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b4), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b5), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b6), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b7), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19bE), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19bF), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c0), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c1), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c2), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c3), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c4), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c5), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c6), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c7), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19cE), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19cF), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci_pcs_quirk }, /* CPT AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci_pcs_quirk }, /* CPT M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci_pcs_quirk }, /* CPT RAID */
++	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci_pcs_quirk }, /* CPT M RAID */
++	{ PCI_VDEVICE(INTEL, 0x1c06), board_ahci_pcs_quirk }, /* CPT RAID */
++	{ PCI_VDEVICE(INTEL, 0x1c07), board_ahci_pcs_quirk }, /* CPT RAID */
++	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci_pcs_quirk }, /* PBG AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1d04), board_ahci_pcs_quirk }, /* PBG RAID */
++	{ PCI_VDEVICE(INTEL, 0x1d06), board_ahci_pcs_quirk }, /* PBG RAID */
++	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci_pcs_quirk }, /* DH89xxCC AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci_pcs_quirk }, /* Panther Point AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci_pcs_quirk }, /* Panther M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1e04), board_ahci_pcs_quirk }, /* Panther Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x1e05), board_ahci_pcs_quirk }, /* Panther Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x1e06), board_ahci_pcs_quirk }, /* Panther Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci_pcs_quirk }, /* Panther M RAID */
++	{ PCI_VDEVICE(INTEL, 0x1e0e), board_ahci_pcs_quirk }, /* Panther Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c02), board_ahci_pcs_quirk }, /* Lynx Point AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci_pcs_quirk }, /* Lynx M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c04), board_ahci_pcs_quirk }, /* Lynx Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci_pcs_quirk }, /* Lynx M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c06), board_ahci_pcs_quirk }, /* Lynx Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci_pcs_quirk }, /* Lynx M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c0e), board_ahci_pcs_quirk }, /* Lynx Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci_pcs_quirk }, /* Lynx M RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci_pcs_quirk }, /* Lynx LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci_pcs_quirk }, /* Lynx LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci_pcs_quirk }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c05), board_ahci_pcs_quirk }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c06), board_ahci_pcs_quirk }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci_pcs_quirk }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci_pcs_quirk }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci_pcs_quirk }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9dd3), board_ahci_pcs_quirk }, /* Cannon Lake PCH-LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1f22), board_ahci_pcs_quirk }, /* Avoton AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1f23), board_ahci_pcs_quirk }, /* Avoton AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1f24), board_ahci_pcs_quirk }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f25), board_ahci_pcs_quirk }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f26), board_ahci_pcs_quirk }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f27), board_ahci_pcs_quirk }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f2e), board_ahci_pcs_quirk }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f2f), board_ahci_pcs_quirk }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f32), board_ahci_avn }, /* Avoton AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1f33), board_ahci_avn }, /* Avoton AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1f34), board_ahci_avn }, /* Avoton RAID */
+@@ -365,65 +370,65 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg/Lewisburg AHCI*/
+-	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* *burg SATA0 'RAID' */
+-	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* *burg SATA1 'RAID' */
+-	{ PCI_VDEVICE(INTEL, 0x282f), board_ahci }, /* *burg SATA2 'RAID' */
+-	{ PCI_VDEVICE(INTEL, 0x43d4), board_ahci }, /* Rocket Lake PCH-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0x43d5), board_ahci }, /* Rocket Lake PCH-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0x43d6), board_ahci }, /* Rocket Lake PCH-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0x43d7), board_ahci }, /* Rocket Lake PCH-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8d04), board_ahci }, /* Wellsburg RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8d06), board_ahci }, /* Wellsburg RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8d0e), board_ahci }, /* Wellsburg RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8d62), board_ahci }, /* Wellsburg AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8d64), board_ahci }, /* Wellsburg RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8d66), board_ahci }, /* Wellsburg RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8d6e), board_ahci }, /* Wellsburg RAID */
+-	{ PCI_VDEVICE(INTEL, 0x23a3), board_ahci }, /* Coleto Creek AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c83), board_ahci }, /* Wildcat LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci }, /* Wildcat LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci }, /* Wildcat LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci }, /* Wildcat LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c82), board_ahci }, /* 9 Series AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci }, /* 9 Series M AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8c84), board_ahci }, /* 9 Series RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci }, /* 9 Series M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c86), board_ahci }, /* 9 Series RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci }, /* 9 Series RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci }, /* Sunrise LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci }, /* Sunrise LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci }, /* Sunrise LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0xa102), board_ahci }, /* Sunrise Point-H AHCI */
+-	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise M AHCI */
+-	{ PCI_VDEVICE(INTEL, 0xa105), board_ahci }, /* Sunrise Point-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0xa106), board_ahci }, /* Sunrise Point-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise M RAID */
+-	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
+-	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0xa1d6), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0xa202), board_ahci }, /* Lewisburg AHCI*/
+-	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0xa252), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0xa256), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0xa356), board_ahci }, /* Cannon Lake PCH-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0x06d7), board_ahci }, /* Comet Lake-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0xa386), board_ahci }, /* Comet Lake PCH-V RAID */
+-	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci }, /* Bay Trail AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci }, /* Bay Trail AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci }, /* Cherry Tr. AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci }, /* ApolloLake AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci }, /* Ice Lake LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x02d3), board_ahci }, /* Comet Lake PCH-U AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci }, /* Comet Lake PCH RAID */
++	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci_pcs_quirk }, /* Wellsburg/Lewisburg AHCI*/
++	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci_pcs_quirk }, /* *burg SATA0 'RAID' */
++	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci_pcs_quirk }, /* *burg SATA1 'RAID' */
++	{ PCI_VDEVICE(INTEL, 0x282f), board_ahci_pcs_quirk }, /* *burg SATA2 'RAID' */
++	{ PCI_VDEVICE(INTEL, 0x43d4), board_ahci_pcs_quirk }, /* Rocket Lake PCH-H RAID */
++	{ PCI_VDEVICE(INTEL, 0x43d5), board_ahci_pcs_quirk }, /* Rocket Lake PCH-H RAID */
++	{ PCI_VDEVICE(INTEL, 0x43d6), board_ahci_pcs_quirk }, /* Rocket Lake PCH-H RAID */
++	{ PCI_VDEVICE(INTEL, 0x43d7), board_ahci_pcs_quirk }, /* Rocket Lake PCH-H RAID */
++	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci_pcs_quirk }, /* Wellsburg AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8d04), board_ahci_pcs_quirk }, /* Wellsburg RAID */
++	{ PCI_VDEVICE(INTEL, 0x8d06), board_ahci_pcs_quirk }, /* Wellsburg RAID */
++	{ PCI_VDEVICE(INTEL, 0x8d0e), board_ahci_pcs_quirk }, /* Wellsburg RAID */
++	{ PCI_VDEVICE(INTEL, 0x8d62), board_ahci_pcs_quirk }, /* Wellsburg AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8d64), board_ahci_pcs_quirk }, /* Wellsburg RAID */
++	{ PCI_VDEVICE(INTEL, 0x8d66), board_ahci_pcs_quirk }, /* Wellsburg RAID */
++	{ PCI_VDEVICE(INTEL, 0x8d6e), board_ahci_pcs_quirk }, /* Wellsburg RAID */
++	{ PCI_VDEVICE(INTEL, 0x23a3), board_ahci_pcs_quirk }, /* Coleto Creek AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c83), board_ahci_pcs_quirk }, /* Wildcat LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci_pcs_quirk }, /* Wildcat LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci_pcs_quirk }, /* Wildcat LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci_pcs_quirk }, /* Wildcat LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c82), board_ahci_pcs_quirk }, /* 9 Series AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci_pcs_quirk }, /* 9 Series M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c84), board_ahci_pcs_quirk }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci_pcs_quirk }, /* 9 Series M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c86), board_ahci_pcs_quirk }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci_pcs_quirk }, /* 9 Series M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci_pcs_quirk }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci_pcs_quirk }, /* 9 Series M RAID */
++	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci_pcs_quirk }, /* Sunrise LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci_pcs_quirk }, /* Sunrise LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci_pcs_quirk }, /* Sunrise LP RAID */
++	{ PCI_VDEVICE(INTEL, 0xa102), board_ahci_pcs_quirk }, /* Sunrise Point-H AHCI */
++	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci_pcs_quirk }, /* Sunrise M AHCI */
++	{ PCI_VDEVICE(INTEL, 0xa105), board_ahci_pcs_quirk }, /* Sunrise Point-H RAID */
++	{ PCI_VDEVICE(INTEL, 0xa106), board_ahci_pcs_quirk }, /* Sunrise Point-H RAID */
++	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci_pcs_quirk }, /* Sunrise M RAID */
++	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci_pcs_quirk }, /* Sunrise Point-H RAID */
++	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci_pcs_quirk }, /* Lewisburg AHCI*/
++	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci_pcs_quirk }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci_pcs_quirk }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0xa1d6), board_ahci_pcs_quirk }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0xa202), board_ahci_pcs_quirk }, /* Lewisburg AHCI*/
++	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci_pcs_quirk }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0xa252), board_ahci_pcs_quirk }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0xa256), board_ahci_pcs_quirk }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0xa356), board_ahci_pcs_quirk }, /* Cannon Lake PCH-H RAID */
++	{ PCI_VDEVICE(INTEL, 0x06d7), board_ahci_pcs_quirk }, /* Comet Lake-H RAID */
++	{ PCI_VDEVICE(INTEL, 0xa386), board_ahci_pcs_quirk }, /* Comet Lake PCH-V RAID */
++	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci_pcs_quirk }, /* Bay Trail AHCI */
++	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci_pcs_quirk }, /* Bay Trail AHCI */
++	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci_pcs_quirk }, /* Cherry Tr. AHCI */
++	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci_pcs_quirk }, /* ApolloLake AHCI */
++	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci_pcs_quirk }, /* Ice Lake LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x02d3), board_ahci_pcs_quirk }, /* Comet Lake PCH-U AHCI */
++	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_pcs_quirk }, /* Comet Lake PCH RAID */
+ 	/* Elkhart Lake IDs 0x4b60 & 0x4b62 https://sata-io.org/product/8803 not tested yet */
+-	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci }, /* Elkhart Lake AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x7ae2), board_ahci }, /* Alder Lake-P AHCI */
++	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci_pcs_quirk }, /* Elkhart Lake AHCI */
++	{ PCI_VDEVICE(INTEL, 0x7ae2), board_ahci_pcs_quirk }, /* Alder Lake-P AHCI */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+@@ -458,7 +463,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 
+ 	/* Dell S140/S150 */
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, PCI_SUBVENDOR_ID_DELL, PCI_ANY_ID,
+-	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
++	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci_pcs_quirk },
+ 
+ 	/* VIA */
+ 	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
+@@ -1681,17 +1686,9 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
+ 
+ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
+ {
+-	const struct pci_device_id *id = pci_match_id(ahci_pci_tbl, pdev);
+ 	u16 tmp16;
+ 
+-	/*
+-	 * Only apply the 6-port PCS quirk for known legacy platforms.
+-	 */
+-	if (!id || id->vendor != PCI_VENDOR_ID_INTEL)
+-		return;
+-
+-	/* Skip applying the quirk on Denverton and beyond */
+-	if (((enum board_ids) id->driver_data) >= board_ahci_pcs7)
++	if (!(hpriv->flags & AHCI_HFLAG_INTEL_PCS_QUIRK))
+ 		return;
+ 
+ 	/*
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 4a0a602c6b16..344c87210d8f 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -245,6 +245,7 @@ enum {
+ 						      suspend/resume */
+ 	AHCI_HFLAG_NO_SXS		= BIT(26), /* SXS not supported */
+ 	AHCI_HFLAG_43BIT_ONLY		= BIT(27), /* 43bit DMA addr limit */
++	AHCI_HFLAG_INTEL_PCS_QUIRK	= BIT(28), /* apply Intel PCS quirk */
+ 
+ 	/* ap->flags bits */
+ 
+-- 
+2.43.0
+
