@@ -1,125 +1,257 @@
-Received: from invmail4.hynix.com (exvmail4.skhynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C1FD418059;
-	Tue, 13 Feb 2024 01:33:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F3B175AC;
+	Tue, 13 Feb 2024 07:48:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707788004; cv=none; b=ifshXZGkWDxmSXekUdDgBY77Q7eiAlB8pHCd6kfbVQddtabzR5IUieRRcWFwzNbQ5tVEA+M1WiO8gLmF+Ul458SwtqtiF6EGrNNF9fej5awEquVU9sEJYriBGeoCDTyDykVuARvZVzpZl8xFV0fL3vur5kjtiVy9ZikW7YNGttM=
+	t=1707810486; cv=none; b=cQsZ0y7enMjhX4m2vKztuY7p2upf8RUFBB/bkVY3WIEexIJQ6qo3U/ViYhFkMROxEJQ9/ymVs9qNPiLEG/f9ck6Qag6T1wSW6UExH4Ra0JkqNi8Xv2a1tBhLpY6WJizSDQEpVUxjLcvorNCTLomddxFDzUc6o3OZz0E6mashhko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707788004; c=relaxed/simple;
-	bh=oMSbIyb+LZ3e01aikg72/MR6b0mA4KQo1k/aocJA1wM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Any6deIM5bvBg19UphHBdErRDDbWUOozAsupX99DQ9F3gvGahat0P+qO2XEHiJSjwGxqWRR6vmLU3SFF3hFCc5yCCn8wq0OCAAqWKtle6N7mlKKJ5BpnImbxy+t2qZ63o0+0jukqoqiMWQ8X7z1uq6vIL/YXunRDpf88whyGSK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-d85ff70000001748-64-65cac3510c41
-Date: Tue, 13 Feb 2024 10:18:04 +0900
-From: Byungchul Park <byungchul@sk.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: linux-kernel@vger.kernel.org, kernel_team@skhynix.com,
-	torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-	linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-	linux-ext4@vger.kernel.org, mingo@redhat.com, peterz@infradead.org,
-	will@kernel.org, rostedt@goodmis.org, joel@joelfernandes.org,
-	sashal@kernel.org, daniel.vetter@ffwll.ch, duyuyang@gmail.com,
-	johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-	willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-	gregkh@linuxfoundation.org, kernel-team@lge.com, linux-mm@kvack.org,
-	akpm@linux-foundation.org, mhocko@kernel.org, minchan@kernel.org,
-	hannes@cmpxchg.org, vdavydov.dev@gmail.com, sj@kernel.org,
-	jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-	penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-	ngupta@vflare.org, linux-block@vger.kernel.org,
-	josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
-	viro@zeniv.linux.org.uk, jack@suse.cz, jlayton@kernel.org,
-	dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-	dri-devel@lists.freedesktop.org, rodrigosiqueiramelo@gmail.com,
-	melissa.srw@gmail.com, hamohammed.sa@gmail.com, 42.hyeyoo@gmail.com,
-	chris.p.wilson@intel.com, gwan-gyeong.mun@intel.com,
-	max.byungchul.park@gmail.com, boqun.feng@gmail.com,
-	longman@redhat.com, hdanton@sina.com, her0gyugyu@gmail.com
-Subject: Re: [PATCH v11 14/26] locking/lockdep, cpu/hotplus: Use a weaker
- annotation in AP thread
-Message-ID: <20240213011804.GA4147@system.software.com>
-References: <20240124115938.80132-1-byungchul@sk.com>
- <20240124115938.80132-15-byungchul@sk.com>
- <87il3ggfz9.ffs@tglx>
- <20240130025836.GA49173@system.software.com>
- <871q9hlnl2.ffs@tglx>
+	s=arc-20240116; t=1707810486; c=relaxed/simple;
+	bh=O7o6nrStpO/q/9GtQ75zQ0rTf7m6SOpylrVSW4RtKYk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=Sx9Dmcosnh+VE3nqr6oCQz+YHMpQlga86dCca1IQPdTQ0hLWseAIj1LOkQE+C7ihZHD8S/BeHjninaIIOlzwtph9FLPnSg/Bok50FI5TTNfcrxWN7PLRgM9n7BfSP0zKutPIA5/RisMnq9VJrjk6A7jTewc/U3IJBBf0ABHIQhw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HifzyN0T; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HifzyN0T"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-55fcceb5f34so4568103a12.3;
+        Mon, 12 Feb 2024 23:48:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1707810483; x=1708415283; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=YVvE6JGrrW+bdoM2H4XHHoW+Iw01AOmS4Rx/471szCE=;
+        b=HifzyN0T7+f4Lrs4HMTjdq81KP6MNRq6TmjFIbRJIPBNMOw15KHFCQyX2oE7vPrKkg
+         +EuEktevY5c2/WrbW+KyrKNy9vOPds/DJzN4Xqx9tz/lLHFGNLJ8KZRktvi49lnFyLbU
+         Y09AlQmOrZyYbF3MM8E7G16TFwDUkgZ5bEWbnmcG2DiOmp0YDKLljPkk8Rw4TLlbPb12
+         ZFVhFw3WVZypJjdKIf3nqji07TpSYJ7Wyd9pF7PTf/Kt+Z9WaYhMTayzF40o6S3Zhpwl
+         R4IaBAomi1E4TBvEVJDqLmFMFy3oZA8qidfXhu6ElW5EJl6Qxm+BBZs+GvMWL0o4MTO9
+         iSJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707810483; x=1708415283;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=YVvE6JGrrW+bdoM2H4XHHoW+Iw01AOmS4Rx/471szCE=;
+        b=h44TQiakWk0bfeiOsQomn3B4JdOywICUYa9idvu+vy25mDjpovOiOP+IPfhZvSHjbE
+         vBDhAuP9maJySKxx6lxaJuXJEVAEyg5iZ+d5Y7zlpClFomSEv8wxrfr3nJRtFh+W6mHT
+         Y15xEAtxAaPTqqPv+WaXMPv8fi/6Jl29Wy5IScW0u7gEelc0CBUBumY8mEmnXdFMDuA5
+         2tJFRjexrxuQXVnXkLvstocKhhY4IvnvO1MUHH+W7ybctA4r7PF5l3EnzCEpzwmfrc7l
+         GGLoXgSCsKjTJxuE4roa1OkGNyZ3xzI+oDquN0zOsj8iQif8yxebWMFYziVZ1A5g0mwA
+         X96A==
+X-Forwarded-Encrypted: i=1; AJvYcCX1IgsJRR2pU7kNH07hRewbC6phUjWloZ1Vwcauc4k+/492ajpjM9nyfwUNAUx+SpvKwiGX4IGDHlMZ0UAw6cRFJaSeEVThY1utfRpRpMVH782hsvFKg6ns3v7P7ENLqPeWk/bkukOZx/tQUNO69Eh0DSR3ZZCT+dKyD6XuFx1hmjEWbw==
+X-Gm-Message-State: AOJu0YyrPnF5MqfNJXLlHGjMD1XsPsEh9Ieq3XyLwYbg+lHYZ+AYaEzC
+	NiVSIBx/qm/KgPdgE6NaxYOPzVyf43kBdtJ8QkmC7RF81c4UO2NuTFQDw6mU
+X-Google-Smtp-Source: AGHT+IF0gttBNcV8sh6ab8bf5+rN66Ur/dk0idrz9NdowKTUw3UVn+HwH+clIeE2oz8xxvtquJ3uyA==
+X-Received: by 2002:a17:906:80c5:b0:a3c:c614:82bf with SMTP id a5-20020a17090680c500b00a3cc61482bfmr2868502ejx.76.1707810482394;
+        Mon, 12 Feb 2024 23:48:02 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCV6Vv+QdIy1Uwbyf/48Qht/36JdZFbwumkD4KHX7ZovhK07p7UCvN6ULGkxfVnjjVaVMnF02VxgWpUCOfLlY2PIR6cJ8V29xfsYRnhLZjUVuyvUxgSETT69/hN4PUxkaoCEH5lM+i+95sFu+cbq3gFcDN+qllWKq5+/YrAz4n+ehgkY2ALBRIGdmVbzEHw7RFr31brz5OtJmS/VkU8WG/ctiW4O7dDqHB+gVD2lpd6/YXsJJZru+kIy63uj/18PJhzsvQYAY9aj3mEEZhhgkk5P3Dlc8YGxLHg3/1mwdtW483HaYmnYg7VRbVzFJPgsmYK8mp1jIIUnPC/gYdV0tLb6P56r0X8lUb2wvwwYPYig1YpZNrGXxtHA93qk5xKFBtRC5PiP+iHy6JFHGvUiUzKhXJ0mUEhyy3D40JygSix9q8pHtsChj2Y/F/AHe6bPaxIc+iDPEFkWqkc8SftFW2RFGbKtvYwjbBKT8XNU1ULfgwMPr80HNVbegj4UVw==
+Received: from localhost.lan (031011218106.poznan.vectranet.pl. [31.11.218.106])
+        by smtp.gmail.com with ESMTPSA id vw3-20020a170907a70300b00a36c5b01ef3sm1015845ejc.225.2024.02.12.23.48.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Feb 2024 23:48:02 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] dt-bindings: ata: convert MediaTek controller to the json-schema
+Date: Tue, 13 Feb 2024 08:47:47 +0100
+Message-Id: <20240213074747.26151-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <871q9hlnl2.ffs@tglx>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUxTVxjHc86999zbxi53FfUMkm2WyQyLiobNZ4vZzJZlN3vLlhk/6KI0
-	cCONQEmrKHsLykuYIBMMLy3ElGpqAwhSDMGXshZioTSDCkyQQTcYBJm8RLbiGAxWSsz8cvLL
-	ef7PL/8Pj8CoV7lIQZd2QjakaVM0RMkqZzZU7/i8vUuO65wEKC6Mg+Bf+SxUNdQR8NfXIqi7
-	cQbD1N0PYGBhGsHSTz0MlJf6EVSPjjBwwxNA4LSfJdA3/hz0B+cIeEsLCGRfbiBw79EyhuGy
-	Egy1jk/Ad8GKwbU4yUL5FIHK8mwceh5iWLTV8GDL2gZjdjMPy6O7wRu4z4Fz6DUwXRomcMfp
-	ZcHTMoah71YVgUDdKgc+TycL/uLzHFybtRJ4tGBjwBac46HXZcFwPSckyvtzhYOO8y4MeVca
-	MfQ/uI2gNf83DI66+wTag9MYmhylDPxz9S6CsaIZHnILF3moPFOEoCC3jIWefzs4yBl+HZb+
-	riL735Lap+cYKafplORcsLBSl5VKN80jvJTTOsRLFsdJqckeK12+M4Wl6vkgJzlqvieSY76E
-	l87N9GNptrublzorllhpvL8cfxZ1SLkvSU7RZciGXW8nKJOv9w2Q9NvK0/UWmoWqhXNIIVAx
-	nlqfdOOn3Jb9mKwxK26jtcU/MGtMxFfp4OBimCPE7bSxdyjMjOhVUr/13TXeKCbSB7+7uTVW
-	iXupO/Aw7FSLbkR9jfvX/5+nXtM4u74bSwdXpkIZIcRR9OpKuI5C1FB7d204skmMpq7mjlBE
-	GarWpKAXXSZmvecL1G0fZC8g0fyM1vyM1vy/1oKYGqTWpWWkanUp8TuTM9N0p3cm6lMdKHSW
-	tm+XD7egef8XbUgUkGaDKuGVLlnNaTOMmaltiAqMJkLVW9Epq1VJ2syvZIP+qOFkimxsQ1EC
-	q9mi2rNwKkktHtOekI/LcrpseDrFgiIyCyW9/M7E8QMNv0bb4wYujahLN25qTkj+Q2y5V08i
-	8wZ6X6x4z1PwS/6Ooq09+kn2YC532POkpHB1gn9/tMzdU2l682jMxwc/TPxGv+xrXYn+8tND
-	lS1fR03o52K+27U3XrH11ktXsszG9o/2benb/kaEyvej6WKzc/bx2c17AjFHfnam+8c0rDFZ
-	uzuWMRi1/wG/hCFpkgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SW0yTWRDHPee70ljzbcV4AvpgFXYDETVZ4kSNtwc9MdHogxr1QRr4Io3c
-	bAVFswZtUbygYgS0oBbQgtBFKYZ4q3IJl9IVkBLAikRYohARUCkRQbTFGH2Z/DLz/03mYURG
-	1cMFiNq4g7IuThOj5hWsYstKw+JtNY3yUpthAWScWwqe0TQWcu9YeWgpLUFgvXccw0DtRugY
-	G0Qw8ayZgezMFgR5Pa8YuFfXjcBedIIHV98saPMM8+DIPMuDoeAOD8/fTWLoyrqEocS2GZwX
-	8zFUjr9lIXuAh5xsA/aWfgzjlmIBLClB0FtkEmCyZxk4uts5qLnm4MDuDoWr17t4eGx3sFB3
-	vxeD62EuD93Wbxw46xpYaMlI5+DfoXwe3o1ZGLB4hgVorTRjuGv0bjv5aYqD+vRKDCdvlmFo
-	e/EIwZO01xhs1nYeajyDGMptmQx8KaxF0Hv+vQCp58YFyDl+HsHZ1CwWmr/Wc2DsCoeJz7n8
-	2pW0ZnCYocbyQ9Q+ZmZpYz6hD0yvBGp84hao2ZZIy4tCaMHjAUzzPno4ais+zVPbx0sCPfO+
-	DdOhpiaBNlyZYGlfWzbeOm+3YlWUHKNNknVLVkcoou+6OviER4rDpWaSgvLEM8hPJNLfpNrw
-	gfcxKwWRkowLjI956U/S2Tk+zf7SX6Ss1T3NjORQkJb89T6eLUWSF/9XcT5WSstJVXc/9rFK
-	qkLEWbb2R/8P4rjax/5wQ0jn1IA3I3o5kBROTZ/gJ6lJUVPJdGSOtJBUVtTji0hp+s02/Wab
-	ftlmxBQjf21cUqxGGxMept8fnRynPRwWGR9rQ97Hs/wzmXEfjbo2ViNJROqZyohFjbKK0yTp
-	k2OrEREZtb+y9UqDrFJGaZKPyLr4vbrEGFlfjQJFVj1XuWmnHKGS9mkOyvtlOUHW/Zxi0S8g
-	BR0NfenelLrtWemt9Kr5K54Wbnid67i8ne6JdBlHhwpHnBXXpIIbUrQ5eKr9zdEsu9YY7FwT
-	rwxOSEs3tY59211vmvyUrGXCT1wP+8/oloJw6ayOdZp5UbcrckaSQp2LrV/6L+wgWosnIHEL
-	0P5Tgce6RmrX7DpQNto3o/N588ztalYfrVkWwuj0mu/gxPrBdAMAAA==
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Feb 12, 2024 at 04:16:41PM +0100, Thomas Gleixner wrote:
-> On Tue, Jan 30 2024 at 11:58, Byungchul Park wrote:
-> > On Fri, Jan 26, 2024 at 06:30:02PM +0100, Thomas Gleixner wrote:
-> >> On Wed, Jan 24 2024 at 20:59, Byungchul Park wrote:
-> >> 
-> >> Why is lockdep in the subsystem prefix here? You are changing the CPU
-> >> hotplug (not hotplus) code, right?
-> >> 
-> >> > cb92173d1f0 ("locking/lockdep, cpu/hotplug: Annotate AP thread") was
-> >> > introduced to make lockdep_assert_cpus_held() work in AP thread.
-> >> >
-> >> > However, the annotation is too strong for that purpose. We don't have to
-> >> > use more than try lock annotation for that.
-> >> 
-> >> This lacks a proper explanation why this is too strong.
-> >> 
-> >> > Furthermore, now that Dept was introduced, false positive alarms was
-> >> > reported by that. Replaced it with try lock annotation.
-> >> 
-> >> I still have zero idea what this is about.
-> >
-> > 1. can track PG_locked that is a potential deadlock trigger.
-> >
-> >    https://lore.kernel.org/lkml/1674268856-31807-1-git-send-email-byungchul.park@lge.com/
-> 
-> Sure, but that wants to be explicitely explained in the changelog and
-> not with a link. 'Now that Dept was introduced ...' is not an
-> explanation.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Admit. I will fix it from the next spin. Thanks.
+This helps validating DTS files.
 
-	Byungchul
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ .../devicetree/bindings/ata/ahci-mtk.txt      | 51 ----------
+ .../bindings/ata/mediatek,mtk-ahci.yaml       | 98 +++++++++++++++++++
+ 2 files changed, 98 insertions(+), 51 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-mtk.txt b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
+deleted file mode 100644
+index d2aa696b161b..000000000000
+--- a/Documentation/devicetree/bindings/ata/ahci-mtk.txt
++++ /dev/null
+@@ -1,51 +0,0 @@
+-MediaTek Serial ATA controller
+-
+-Required properties:
+- - compatible	   : Must be "mediatek,<chip>-ahci", "mediatek,mtk-ahci".
+-		     When using "mediatek,mtk-ahci" compatible strings, you
+-		     need SoC specific ones in addition, one of:
+-		     - "mediatek,mt7622-ahci"
+- - reg		   : Physical base addresses and length of register sets.
+- - interrupts	   : Interrupt associated with the SATA device.
+- - interrupt-names : Associated name must be: "hostc".
+- - clocks	   : A list of phandle and clock specifier pairs, one for each
+-		     entry in clock-names.
+- - clock-names	   : Associated names must be: "ahb", "axi", "asic", "rbc", "pm".
+- - phys		   : A phandle and PHY specifier pair for the PHY port.
+- - phy-names	   : Associated name must be: "sata-phy".
+- - ports-implemented : See ./ahci-platform.txt for details.
+-
+-Optional properties:
+- - power-domains   : A phandle and power domain specifier pair to the power
+-		     domain which is responsible for collapsing and restoring
+-		     power to the peripheral.
+- - resets	   : Must contain an entry for each entry in reset-names.
+-		     See ../reset/reset.txt for details.
+- - reset-names	   : Associated names must be: "axi", "sw", "reg".
+- - mediatek,phy-mode : A phandle to the system controller, used to enable
+-		       SATA function.
+-
+-Example:
+-
+-	sata: sata@1a200000 {
+-		compatible = "mediatek,mt7622-ahci",
+-			     "mediatek,mtk-ahci";
+-		reg = <0 0x1a200000 0 0x1100>;
+-		interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>;
+-		interrupt-names = "hostc";
+-		clocks = <&pciesys CLK_SATA_AHB_EN>,
+-			 <&pciesys CLK_SATA_AXI_EN>,
+-			 <&pciesys CLK_SATA_ASIC_EN>,
+-			 <&pciesys CLK_SATA_RBC_EN>,
+-			 <&pciesys CLK_SATA_PM_EN>;
+-		clock-names = "ahb", "axi", "asic", "rbc", "pm";
+-		phys = <&u3port1 PHY_TYPE_SATA>;
+-		phy-names = "sata-phy";
+-		ports-implemented = <0x1>;
+-		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
+-		resets = <&pciesys MT7622_SATA_AXI_BUS_RST>,
+-			 <&pciesys MT7622_SATA_PHY_SW_RST>,
+-			 <&pciesys MT7622_SATA_PHY_REG_RST>;
+-		reset-names = "axi", "sw", "reg";
+-		mediatek,phy-mode = <&pciesys>;
+-	};
+diff --git a/Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml b/Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
+new file mode 100644
+index 000000000000..a34bd2e9c352
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
+@@ -0,0 +1,98 @@
++# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/mediatek,mtk-ahci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: MediaTek Serial ATA controller
++
++maintainers:
++  - Ryder Lee <ryder.lee@mediatek.com>
++
++allOf:
++  - $ref: ahci-common.yaml#
++
++properties:
++  compatible:
++    items:
++      - enum:
++          - mediatek,mt7622-ahci
++      - const: mediatek,mtk-ahci
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  interrupt-names:
++    const: hostc
++
++  clocks:
++    maxItems: 5
++
++  clock-names:
++    items:
++      - const: ahb
++      - const: axi
++      - const: asic
++      - const: rbc
++      - const: pm
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 3
++
++  reset-names:
++    items:
++      - const: axi
++      - const: sw
++      - const: reg
++
++  mediatek,phy-mode:
++    description: System controller phandle, used to enable SATA function
++    $ref: /schemas/types.yaml#/definitions/phandle
++
++required:
++  - reg
++  - interrupts
++  - interrupt-names
++  - clocks
++  - clock-names
++  - phys
++  - phy-names
++  - ports-implemented
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/mt7622-clk.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/phy/phy.h>
++    #include <dt-bindings/power/mt7622-power.h>
++    #include <dt-bindings/reset/mt7622-reset.h>
++
++    sata@1a200000 {
++        compatible = "mediatek,mt7622-ahci", "mediatek,mtk-ahci";
++        reg = <0x1a200000 0x1100>;
++        interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>;
++        interrupt-names = "hostc";
++        clocks = <&pciesys CLK_SATA_AHB_EN>,
++                 <&pciesys CLK_SATA_AXI_EN>,
++                 <&pciesys CLK_SATA_ASIC_EN>,
++                 <&pciesys CLK_SATA_RBC_EN>,
++                 <&pciesys CLK_SATA_PM_EN>;
++        clock-names = "ahb", "axi", "asic", "rbc", "pm";
++        phys = <&u3port1 PHY_TYPE_SATA>;
++        phy-names = "sata-phy";
++        ports-implemented = <0x1>;
++        power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
++        resets = <&pciesys MT7622_SATA_AXI_BUS_RST>,
++                 <&pciesys MT7622_SATA_PHY_SW_RST>,
++                 <&pciesys MT7622_SATA_PHY_REG_RST>;
++        reset-names = "axi", "sw", "reg";
++        mediatek,phy-mode = <&pciesys>;
++    };
+-- 
+2.35.3
+
