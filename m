@@ -1,42 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F88C50A99
-	for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2024 13:07:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D47E05FDAD
+	for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2024 15:56:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707829667; cv=none; b=EayoneT+qk5I+pK23Hu3Am3XBkUsnRnhc1HSHfkGTw6Ebr1ZbXeQ57WB5qQg4a4YCoPacT4KNJiWe2sJUc7HP5oAXAWmnWBK3xqqD3GJ22xXGwA1xqlQT1IwK5St7nqUxi2G9WFz+x2Gd6qO1LvaawThTWDEfIIxb480zcOu+tg=
+	t=1707839786; cv=none; b=YwNkRxw05QWqGlYRLsW25aCeAzAvO1BYu9X2+byoDipEn+Em5pShHd1Zs5A0fjQF55/mcuZ+u2CMhh7Aax6lLBEaUELzC4YbH3F4xf7iKCoS/S7vV/W/QJm/a5n8zCFknQFYGQEILmyOKfZQ53Gh7SB/YSqeCgWuC3eWIC8Yu68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707829667; c=relaxed/simple;
-	bh=ZcWhaKYaaRTI+n+DJjlGOLWb9vNfQZYd+RGuGXGlPYw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ikn+6MmFbR1EKcdRBy8+y2S3lNz5HFI3hpPSDkfS6srSJjblUeRQAFEuMcpqzNPl610dsv8vWzo1E7CMdfN8F5PkBtB7F/8rG390ZBkw1Q+oA3qbzsGuZabDDdpaYOpYfK29EBBK4TxkHG/IBSLQyz+itBvxLmQL7neGioLMLEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OTLMY0Kb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707839786; c=relaxed/simple;
+	bh=XpLXI0LnBTNIqQNfJMeVnhf0ylUcgKeJkCbWR/RYJ5E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lN8vEGXC05ZuJi6avedb3+iZnPu/JQqaocFOmEGu+kVaY+jWz+hBH2Yrpol/h2FjHGbDVSxftMumRiMVjK/RJGJDPJp7ku93FX+dRdWtci08kT38+65rA3O+29NuTVi59JzMn++A/0wCMWwphAV2uX4eCFRPJycNUpJsceoyzGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jBl9HbgU; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OTLMY0Kb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CEF8C433F1;
-	Tue, 13 Feb 2024 13:07:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707829667;
-	bh=ZcWhaKYaaRTI+n+DJjlGOLWb9vNfQZYd+RGuGXGlPYw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OTLMY0KbfHqho69azm+kQyk6PNAquO+zLjXahThjYsCEqO5gGx7BJOu1hIS7og1AG
-	 R5GuBzqobhItdnwuezA5eAPnlwHii5YS69WZF5aic137HyJUmD7olCv62k+yQdFSI7
-	 vBC6B6whe4WhRcbQ92Zr8y0TbGY3NKom69gwMPSULNSSAsM2zreMTRIUHvQApcb/MR
-	 T0j9iNYPIb2/GXwnqTD6en1/FjVYDXl/PJMKVDRuJBG72s5ex1JUQjbYsq0o/4uwTb
-	 l2+k6L0glBUXLSX0sFFozaM89v9mZEbQu+kskdvSmKAvClfW5TPCF0+ZLbWl6mm9XC
-	 GIbbQlqJwAsYQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH 2/2] ahci: clean up ahci_broken_devslp quirk
-Date: Tue, 13 Feb 2024 14:07:31 +0100
-Message-ID: <20240213130733.819524-3-cassel@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240213130733.819524-1-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jBl9HbgU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707839785; x=1739375785;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=XpLXI0LnBTNIqQNfJMeVnhf0ylUcgKeJkCbWR/RYJ5E=;
+  b=jBl9HbgU2pPtkwZRqc4CpL/g3UlMceyjlAnqdhZAmruscQNL5+cu1MoC
+   1Ej3zLtottMqkHdVgrGekt6FAacF/tCFMu92RA9YiXCfTFcsplyPZkSpu
+   yCtZQ9Xu8a6npFjY2e+D8O/gz8Y2J9fuaJLTn9yEUUXKCk5dgX84Bkwti
+   SZhjRJogQ1frp1CpfbZ3Rb6ZRyKwy1upq74toQjyRZcypHoPmiYnPv75X
+   1US6aJBGYiKwKTbzpL2LAtTgL0o8nj4S6GMpb3S1WoX4vvZv/lM7M5ER5
+   hhCnoGFCOIcXg37A1s0D24bgkkcnTarv/pEJdeMHoM1Vu6l0XRNmjlxMH
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10982"; a="1975393"
+X-IronPort-AV: E=Sophos;i="6.06,157,1705392000"; 
+   d="scan'208";a="1975393"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2024 07:56:24 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10982"; a="935375578"
+X-IronPort-AV: E=Sophos;i="6.06,157,1705392000"; 
+   d="scan'208";a="935375578"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga001.fm.intel.com with ESMTP; 13 Feb 2024 07:56:22 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+	id 56634184; Tue, 13 Feb 2024 17:56:21 +0200 (EET)
+Date: Tue, 13 Feb 2024 17:56:21 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH 0/2] ahci minor quirk cleanups
+Message-ID: <20240213155621.GA8454@black.fi.intel.com>
 References: <20240213130733.819524-1-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -44,93 +56,24 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20240213130733.819524-1-cassel@kernel.org>
 
-Most quirks are applied using a specific board type board_ahci_no*
-(e.g. board_ahci_nomsi, board_ahci_noncq), which then sets a flag
-representing the specific quirk.
+On Tue, Feb 13, 2024 at 02:07:29PM +0100, Niklas Cassel wrote:
+> Hello all,
+> 
+> Here comes some minor AHCI quirk cleanups.
+> 
+> 
+> Kind regards,
+> Niklas
+> 
+> 
+> Niklas Cassel (2):
+>   ahci: rename board_ahci_nosntf
+>   ahci: clean up ahci_broken_devslp quirk
 
-ahci_pci_tbl (which is the table of all supported PCI devices), then
-uses that board type for the PCI vendor and device IDs which need to
-be quirked.
+Both,
 
-The ahci_broken_devslp quirk is not implemented in this standard way.
-
-Modify the ahci_broken_devslp quirk to be implemented like the other
-quirks. This way, we will not have the same PCI device and vendor ID
-scattered over ahci.c. It will simply be defined in a single location.
-
-Suggested-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index c28ad3f4b59e..1e1533d01803 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -51,6 +51,7 @@ enum board_ids {
- 	board_ahci_43bit_dma,
- 	board_ahci_ign_iferr,
- 	board_ahci_no_debounce_delay,
-+	board_ahci_no_devslp_pcs_quirk,
- 	board_ahci_nomsi,
- 	board_ahci_noncq,
- 	board_ahci_nosntf_pcs_quirk,
-@@ -151,6 +152,14 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
-+	[board_ahci_no_devslp_pcs_quirk] = {
-+		AHCI_HFLAGS	(AHCI_HFLAG_NO_DEVSLP |
-+				 AHCI_HFLAG_INTEL_PCS_QUIRK),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
- 	[board_ahci_nomsi] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_MSI),
- 		.flags		= AHCI_FLAG_COMMON,
-@@ -420,7 +429,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x06d7), board_ahci_pcs_quirk }, /* Comet Lake-H RAID */
- 	{ PCI_VDEVICE(INTEL, 0xa386), board_ahci_pcs_quirk }, /* Comet Lake PCH-V RAID */
- 	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci_pcs_quirk }, /* Bay Trail AHCI */
--	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci_pcs_quirk }, /* Bay Trail AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci_no_devslp_pcs_quirk }, /* Bay Trail AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci_pcs_quirk }, /* Cherry Tr. AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci_pcs_quirk }, /* ApolloLake AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci_pcs_quirk }, /* Ice Lake LP AHCI */
-@@ -1420,17 +1429,6 @@ static bool ahci_broken_online(struct pci_dev *pdev)
- 	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
- }
- 
--static bool ahci_broken_devslp(struct pci_dev *pdev)
--{
--	/* device with broken DEVSLP but still showing SDS capability */
--	static const struct pci_device_id ids[] = {
--		{ PCI_VDEVICE(INTEL, 0x0f23)}, /* Valleyview SoC */
--		{}
--	};
--
--	return pci_match_id(ids, pdev);
--}
--
- #ifdef CONFIG_ATA_ACPI
- static void ahci_gtf_filter_workaround(struct ata_host *host)
- {
-@@ -1823,10 +1821,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 				&dev_attr_remapped_nvme.attr,
- 				NULL);
- 
--	/* must set flag prior to save config in order to take effect */
--	if (ahci_broken_devslp(pdev))
--		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
--
- #ifdef CONFIG_ARM64
- 	if (pdev->vendor == PCI_VENDOR_ID_HUAWEI &&
- 	    pdev->device == 0xa235 &&
--- 
-2.43.0
-
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
