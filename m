@@ -1,257 +1,129 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward500b.mail.yandex.net (forward500b.mail.yandex.net [178.154.239.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F3B175AC;
-	Tue, 13 Feb 2024 07:48:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD0924B23;
+	Tue, 13 Feb 2024 09:56:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707810486; cv=none; b=cQsZ0y7enMjhX4m2vKztuY7p2upf8RUFBB/bkVY3WIEexIJQ6qo3U/ViYhFkMROxEJQ9/ymVs9qNPiLEG/f9ck6Qag6T1wSW6UExH4Ra0JkqNi8Xv2a1tBhLpY6WJizSDQEpVUxjLcvorNCTLomddxFDzUc6o3OZz0E6mashhko=
+	t=1707818186; cv=none; b=QI7nBdzTdNc4W0bA9jmM5hHsnvmhg/HKtoT/6Mk+y/tZUirFBIeCclB//pfVQ611ADmfF7v6xH9FzT8c58o77YDIlvvwYWCrkLXTnt6FAZ74wFdfDMe8h/q/aE3diqXcuKWLcwh26l9aMUT/sBRi8udWRZEXGW67LNluUaYk9tM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707810486; c=relaxed/simple;
-	bh=O7o6nrStpO/q/9GtQ75zQ0rTf7m6SOpylrVSW4RtKYk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=Sx9Dmcosnh+VE3nqr6oCQz+YHMpQlga86dCca1IQPdTQ0hLWseAIj1LOkQE+C7ihZHD8S/BeHjninaIIOlzwtph9FLPnSg/Bok50FI5TTNfcrxWN7PLRgM9n7BfSP0zKutPIA5/RisMnq9VJrjk6A7jTewc/U3IJBBf0ABHIQhw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HifzyN0T; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1707818186; c=relaxed/simple;
+	bh=BNSX9WQo4fdZixPgrChnndimSE1LeUip7SbHQG3EiRk=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=lnVHOfnO/tsUVI4Dqx9fzVPhFcYxDlxJLDe7xuZgHe1Ld7yh54uLGNwD6EeINwBugvtkNZw1W36Tt2BL9uErg9apphFAj82+QqqWfQ50RFTi9oTJYxTD/7iT7t31xoNP/L1/fI9zk6scWUsKoD/hRAkc1QDXr2UYPgfZ6FdX6Yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me; spf=pass smtp.mailfrom=maquefel.me; dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b=tHSpq6lL; arc=none smtp.client-ip=178.154.239.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maquefel.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HifzyN0T"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-55fcceb5f34so4568103a12.3;
-        Mon, 12 Feb 2024 23:48:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1707810483; x=1708415283; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=YVvE6JGrrW+bdoM2H4XHHoW+Iw01AOmS4Rx/471szCE=;
-        b=HifzyN0T7+f4Lrs4HMTjdq81KP6MNRq6TmjFIbRJIPBNMOw15KHFCQyX2oE7vPrKkg
-         +EuEktevY5c2/WrbW+KyrKNy9vOPds/DJzN4Xqx9tz/lLHFGNLJ8KZRktvi49lnFyLbU
-         Y09AlQmOrZyYbF3MM8E7G16TFwDUkgZ5bEWbnmcG2DiOmp0YDKLljPkk8Rw4TLlbPb12
-         ZFVhFw3WVZypJjdKIf3nqji07TpSYJ7Wyd9pF7PTf/Kt+Z9WaYhMTayzF40o6S3Zhpwl
-         R4IaBAomi1E4TBvEVJDqLmFMFy3oZA8qidfXhu6ElW5EJl6Qxm+BBZs+GvMWL0o4MTO9
-         iSJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707810483; x=1708415283;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=YVvE6JGrrW+bdoM2H4XHHoW+Iw01AOmS4Rx/471szCE=;
-        b=h44TQiakWk0bfeiOsQomn3B4JdOywICUYa9idvu+vy25mDjpovOiOP+IPfhZvSHjbE
-         vBDhAuP9maJySKxx6lxaJuXJEVAEyg5iZ+d5Y7zlpClFomSEv8wxrfr3nJRtFh+W6mHT
-         Y15xEAtxAaPTqqPv+WaXMPv8fi/6Jl29Wy5IScW0u7gEelc0CBUBumY8mEmnXdFMDuA5
-         2tJFRjexrxuQXVnXkLvstocKhhY4IvnvO1MUHH+W7ybctA4r7PF5l3EnzCEpzwmfrc7l
-         GGLoXgSCsKjTJxuE4roa1OkGNyZ3xzI+oDquN0zOsj8iQif8yxebWMFYziVZ1A5g0mwA
-         X96A==
-X-Forwarded-Encrypted: i=1; AJvYcCX1IgsJRR2pU7kNH07hRewbC6phUjWloZ1Vwcauc4k+/492ajpjM9nyfwUNAUx+SpvKwiGX4IGDHlMZ0UAw6cRFJaSeEVThY1utfRpRpMVH782hsvFKg6ns3v7P7ENLqPeWk/bkukOZx/tQUNO69Eh0DSR3ZZCT+dKyD6XuFx1hmjEWbw==
-X-Gm-Message-State: AOJu0YyrPnF5MqfNJXLlHGjMD1XsPsEh9Ieq3XyLwYbg+lHYZ+AYaEzC
-	NiVSIBx/qm/KgPdgE6NaxYOPzVyf43kBdtJ8QkmC7RF81c4UO2NuTFQDw6mU
-X-Google-Smtp-Source: AGHT+IF0gttBNcV8sh6ab8bf5+rN66Ur/dk0idrz9NdowKTUw3UVn+HwH+clIeE2oz8xxvtquJ3uyA==
-X-Received: by 2002:a17:906:80c5:b0:a3c:c614:82bf with SMTP id a5-20020a17090680c500b00a3cc61482bfmr2868502ejx.76.1707810482394;
-        Mon, 12 Feb 2024 23:48:02 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCV6Vv+QdIy1Uwbyf/48Qht/36JdZFbwumkD4KHX7ZovhK07p7UCvN6ULGkxfVnjjVaVMnF02VxgWpUCOfLlY2PIR6cJ8V29xfsYRnhLZjUVuyvUxgSETT69/hN4PUxkaoCEH5lM+i+95sFu+cbq3gFcDN+qllWKq5+/YrAz4n+ehgkY2ALBRIGdmVbzEHw7RFr31brz5OtJmS/VkU8WG/ctiW4O7dDqHB+gVD2lpd6/YXsJJZru+kIy63uj/18PJhzsvQYAY9aj3mEEZhhgkk5P3Dlc8YGxLHg3/1mwdtW483HaYmnYg7VRbVzFJPgsmYK8mp1jIIUnPC/gYdV0tLb6P56r0X8lUb2wvwwYPYig1YpZNrGXxtHA93qk5xKFBtRC5PiP+iHy6JFHGvUiUzKhXJ0mUEhyy3D40JygSix9q8pHtsChj2Y/F/AHe6bPaxIc+iDPEFkWqkc8SftFW2RFGbKtvYwjbBKT8XNU1ULfgwMPr80HNVbegj4UVw==
-Received: from localhost.lan (031011218106.poznan.vectranet.pl. [31.11.218.106])
-        by smtp.gmail.com with ESMTPSA id vw3-20020a170907a70300b00a36c5b01ef3sm1015845ejc.225.2024.02.12.23.48.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Feb 2024 23:48:02 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] dt-bindings: ata: convert MediaTek controller to the json-schema
-Date: Tue, 13 Feb 2024 08:47:47 +0100
-Message-Id: <20240213074747.26151-1-zajec5@gmail.com>
-X-Mailer: git-send-email 2.35.3
+	dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b="tHSpq6lL"
+Received: from mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:3019:0:640:a0d4:0])
+	by forward500b.mail.yandex.net (Yandex) with ESMTPS id 9CCD561154;
+	Tue, 13 Feb 2024 12:48:16 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id Amja449YvOs0-Ohe7AJJt;
+	Tue, 13 Feb 2024 12:48:14 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail;
+	t=1707817694; bh=BNSX9WQo4fdZixPgrChnndimSE1LeUip7SbHQG3EiRk=;
+	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
+	b=tHSpq6lLbJRzMUl5S+AQdH+yFWqgLs5dAvYesqMe255xcZfmaDSgVPRqcA1r0bzrw
+	 TkfIPDSLR62NkdUlPI+s/lCQcEhokM08txNkwukmx6USimZGbDh66EHaLNxEHxEu27
+	 3BeQU0snEq2nQPzdmEknsfQ0A1hkYVGjcAylct3Y=
+Authentication-Results: mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
+Message-ID: <84444657b86c7a25ea2e6031ea85978917f33342.camel@maquefel.me>
+Subject: Re: [PATCH v7 00/39] ep93xx device tree conversion
+From: Nikita Shubin <nikita.shubin@maquefel.me>
+To: andy.shevchenko@gmail.com, Vinod Koul <vkoul@kernel.org>, Stephen Boyd
+	 <sboyd@kernel.org>
+Cc: Hartley Sweeten <hsweeten@visionengravers.com>, Alexander Sverdlin
+ <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>,
+ Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>,
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>,
+ Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
+ <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>, Rob Herring
+ <robh+dt@kernel.org>, Krzysztof Kozlowski
+ <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+ Vinod Koul <vkoul@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>,
+ Guenter Roeck <linux@roeck-us.net>, Thierry Reding
+ <thierry.reding@gmail.com>, Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?=
+ <u.kleine-koenig@pengutronix.de>, Mark Brown <broonie@kernel.org>, "David
+ S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
+ Kicinski <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>, Miquel Raynal
+ <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, Vignesh
+ Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, Sergey
+ Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, Ralf Baechle <ralf@linux-mips.org>,  "Wu,
+ Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, Olof Johansson
+ <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-pm@vger.kernel.org,  devicetree@vger.kernel.org,
+ dmaengine@vger.kernel.org,  linux-watchdog@vger.kernel.org,
+ linux-pwm@vger.kernel.org,  linux-spi@vger.kernel.org,
+ netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
+ linux-sound@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Andy Shevchenko
+ <andriy.shevchenko@intel.com>, Bartosz Golaszewski
+ <bartosz.golaszewski@linaro.org>, Krzysztof Kozlowski
+ <krzysztof.kozlowski@linaro.org>, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>
+Date: Tue, 13 Feb 2024 12:48:11 +0300
+In-Reply-To: <Zb_DfISgoNyTKWMp@surfacebook.localdomain>
+References: <20240118-ep93xx-v7-0-d953846ae771@maquefel.me>
+	 <Zb_DfISgoNyTKWMp@surfacebook.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On Sun, 2024-02-04 at 19:03 +0200, andy.shevchenko@gmail.com wrote:
+> Thu, Jan 18, 2024 at 11:20:43AM +0300, Nikita Shubin kirjoitti:
+> > The goal is to recieve ACKs for all patches in series to merge it
+> > via Arnd branch.
+> >=20
+> > No major changes since last version (v6) all changes are cometic.
+> >=20
+> > Following patches require attention from Stephen Boyd, as they were
+> > converted to aux_dev as suggested:
+> >=20
+> > - ARM: ep93xx: add regmap aux_dev
+> > - clk: ep93xx: add DT support for Cirrus EP93xx
+> >=20
+> > Following patches require attention from Vinod Koul:
+> >=20
+> > - dma: cirrus: Convert to DT for Cirrus EP93xx
+> > - dma: cirrus: remove platform code
+> >=20
+> > Following patches are dropped:
+> > - dt-bindings: wdt: Add ts72xx (pulled requested by Wim Van
+> > Sebroeck)
+> >=20
+> > Big Thanks to Andy Shevchenko once again.
+>=20
+> You're welcome!
+>=20
 
-This helps validating DTS files.
+Thank you Andy!
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- .../devicetree/bindings/ata/ahci-mtk.txt      | 51 ----------
- .../bindings/ata/mediatek,mtk-ahci.yaml       | 98 +++++++++++++++++++
- 2 files changed, 98 insertions(+), 51 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
- create mode 100644 Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
+> I have a few minor comments, I believe if you send a new version it
+> will be
+> final (at least from my p.o.v.).
+>=20
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-mtk.txt b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
-deleted file mode 100644
-index d2aa696b161b..000000000000
---- a/Documentation/devicetree/bindings/ata/ahci-mtk.txt
-+++ /dev/null
-@@ -1,51 +0,0 @@
--MediaTek Serial ATA controller
--
--Required properties:
-- - compatible	   : Must be "mediatek,<chip>-ahci", "mediatek,mtk-ahci".
--		     When using "mediatek,mtk-ahci" compatible strings, you
--		     need SoC specific ones in addition, one of:
--		     - "mediatek,mt7622-ahci"
-- - reg		   : Physical base addresses and length of register sets.
-- - interrupts	   : Interrupt associated with the SATA device.
-- - interrupt-names : Associated name must be: "hostc".
-- - clocks	   : A list of phandle and clock specifier pairs, one for each
--		     entry in clock-names.
-- - clock-names	   : Associated names must be: "ahb", "axi", "asic", "rbc", "pm".
-- - phys		   : A phandle and PHY specifier pair for the PHY port.
-- - phy-names	   : Associated name must be: "sata-phy".
-- - ports-implemented : See ./ahci-platform.txt for details.
--
--Optional properties:
-- - power-domains   : A phandle and power domain specifier pair to the power
--		     domain which is responsible for collapsing and restoring
--		     power to the peripheral.
-- - resets	   : Must contain an entry for each entry in reset-names.
--		     See ../reset/reset.txt for details.
-- - reset-names	   : Associated names must be: "axi", "sw", "reg".
-- - mediatek,phy-mode : A phandle to the system controller, used to enable
--		       SATA function.
--
--Example:
--
--	sata: sata@1a200000 {
--		compatible = "mediatek,mt7622-ahci",
--			     "mediatek,mtk-ahci";
--		reg = <0 0x1a200000 0 0x1100>;
--		interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>;
--		interrupt-names = "hostc";
--		clocks = <&pciesys CLK_SATA_AHB_EN>,
--			 <&pciesys CLK_SATA_AXI_EN>,
--			 <&pciesys CLK_SATA_ASIC_EN>,
--			 <&pciesys CLK_SATA_RBC_EN>,
--			 <&pciesys CLK_SATA_PM_EN>;
--		clock-names = "ahb", "axi", "asic", "rbc", "pm";
--		phys = <&u3port1 PHY_TYPE_SATA>;
--		phy-names = "sata-phy";
--		ports-implemented = <0x1>;
--		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
--		resets = <&pciesys MT7622_SATA_AXI_BUS_RST>,
--			 <&pciesys MT7622_SATA_PHY_SW_RST>,
--			 <&pciesys MT7622_SATA_PHY_REG_RST>;
--		reset-names = "axi", "sw", "reg";
--		mediatek,phy-mode = <&pciesys>;
--	};
-diff --git a/Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml b/Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
-new file mode 100644
-index 000000000000..a34bd2e9c352
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
-@@ -0,0 +1,98 @@
-+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/mediatek,mtk-ahci.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: MediaTek Serial ATA controller
-+
-+maintainers:
-+  - Ryder Lee <ryder.lee@mediatek.com>
-+
-+allOf:
-+  - $ref: ahci-common.yaml#
-+
-+properties:
-+  compatible:
-+    items:
-+      - enum:
-+          - mediatek,mt7622-ahci
-+      - const: mediatek,mtk-ahci
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    maxItems: 1
-+
-+  interrupt-names:
-+    const: hostc
-+
-+  clocks:
-+    maxItems: 5
-+
-+  clock-names:
-+    items:
-+      - const: ahb
-+      - const: axi
-+      - const: asic
-+      - const: rbc
-+      - const: pm
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 3
-+
-+  reset-names:
-+    items:
-+      - const: axi
-+      - const: sw
-+      - const: reg
-+
-+  mediatek,phy-mode:
-+    description: System controller phandle, used to enable SATA function
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+
-+required:
-+  - reg
-+  - interrupts
-+  - interrupt-names
-+  - clocks
-+  - clock-names
-+  - phys
-+  - phy-names
-+  - ports-implemented
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/mt7622-clk.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/phy/phy.h>
-+    #include <dt-bindings/power/mt7622-power.h>
-+    #include <dt-bindings/reset/mt7622-reset.h>
-+
-+    sata@1a200000 {
-+        compatible = "mediatek,mt7622-ahci", "mediatek,mtk-ahci";
-+        reg = <0x1a200000 0x1100>;
-+        interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>;
-+        interrupt-names = "hostc";
-+        clocks = <&pciesys CLK_SATA_AHB_EN>,
-+                 <&pciesys CLK_SATA_AXI_EN>,
-+                 <&pciesys CLK_SATA_ASIC_EN>,
-+                 <&pciesys CLK_SATA_RBC_EN>,
-+                 <&pciesys CLK_SATA_PM_EN>;
-+        clock-names = "ahb", "axi", "asic", "rbc", "pm";
-+        phys = <&u3port1 PHY_TYPE_SATA>;
-+        phy-names = "sata-phy";
-+        ports-implemented = <0x1>;
-+        power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
-+        resets = <&pciesys MT7622_SATA_AXI_BUS_RST>,
-+                 <&pciesys MT7622_SATA_PHY_SW_RST>,
-+                 <&pciesys MT7622_SATA_PHY_REG_RST>;
-+        reset-names = "axi", "sw", "reg";
-+        mediatek,phy-mode = <&pciesys>;
-+    };
--- 
-2.35.3
+Still waiting for some comment from Stephen Boyd and Vinod Koul on:
+
+- ARM: ep93xx: add regmap aux_dev
+- clk: ep93xx: add DT support for Cirrus EP93xx
+
+- dma: cirrus: Convert to DT for Cirrus EP93xx
+- dma: cirrus: remove platform code
+
+
+
+
 
