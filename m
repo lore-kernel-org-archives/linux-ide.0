@@ -1,79 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D47E05FDAD
-	for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2024 15:56:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF64F5FBAB;
+	Tue, 13 Feb 2024 17:19:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707839786; cv=none; b=YwNkRxw05QWqGlYRLsW25aCeAzAvO1BYu9X2+byoDipEn+Em5pShHd1Zs5A0fjQF55/mcuZ+u2CMhh7Aax6lLBEaUELzC4YbH3F4xf7iKCoS/S7vV/W/QJm/a5n8zCFknQFYGQEILmyOKfZQ53Gh7SB/YSqeCgWuC3eWIC8Yu68=
+	t=1707844757; cv=none; b=dOZwZE8LNiTtSHEQr7aE2tfpkvaAx1LWUUj1Dk/0N/7odjwc7n2WKdGuwKPOcifn70mRmZwGFpe0ZM+bvnIM/GFxNVG67NvRWKyx6xlXegQDFFAnKjVXuiFuABk6f54gi1iqP255q2uOskj+Q6HQa1TwaC8qP6y23Wl0mATRo5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707839786; c=relaxed/simple;
-	bh=XpLXI0LnBTNIqQNfJMeVnhf0ylUcgKeJkCbWR/RYJ5E=;
+	s=arc-20240116; t=1707844757; c=relaxed/simple;
+	bh=R/B40q9CR1/8RE3F5SfXeRo7pDhszA/djBNLhnRhU8E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lN8vEGXC05ZuJi6avedb3+iZnPu/JQqaocFOmEGu+kVaY+jWz+hBH2Yrpol/h2FjHGbDVSxftMumRiMVjK/RJGJDPJp7ku93FX+dRdWtci08kT38+65rA3O+29NuTVi59JzMn++A/0wCMWwphAV2uX4eCFRPJycNUpJsceoyzGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jBl9HbgU; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=JlCcM5KxMx32AgOMIIY+K2RiFkafkz5MUA12v0okzgB7rxdh12L7dGT6Uh3UicLlwD4s+AWxUS4+urBdZodO783Frv7NuKR0SX740OC1+pdIUWnQt5QJRBq6cMycQF7Unc9QEfCZVdic4yt8sKTedLpITIQ9cgJksKQ0uQ+Vncc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K85XESiv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jBl9HbgU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707839785; x=1739375785;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=XpLXI0LnBTNIqQNfJMeVnhf0ylUcgKeJkCbWR/RYJ5E=;
-  b=jBl9HbgU2pPtkwZRqc4CpL/g3UlMceyjlAnqdhZAmruscQNL5+cu1MoC
-   1Ej3zLtottMqkHdVgrGekt6FAacF/tCFMu92RA9YiXCfTFcsplyPZkSpu
-   yCtZQ9Xu8a6npFjY2e+D8O/gz8Y2J9fuaJLTn9yEUUXKCk5dgX84Bkwti
-   SZhjRJogQ1frp1CpfbZ3Rb6ZRyKwy1upq74toQjyRZcypHoPmiYnPv75X
-   1US6aJBGYiKwKTbzpL2LAtTgL0o8nj4S6GMpb3S1WoX4vvZv/lM7M5ER5
-   hhCnoGFCOIcXg37A1s0D24bgkkcnTarv/pEJdeMHoM1Vu6l0XRNmjlxMH
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10982"; a="1975393"
-X-IronPort-AV: E=Sophos;i="6.06,157,1705392000"; 
-   d="scan'208";a="1975393"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2024 07:56:24 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10982"; a="935375578"
-X-IronPort-AV: E=Sophos;i="6.06,157,1705392000"; 
-   d="scan'208";a="935375578"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga001.fm.intel.com with ESMTP; 13 Feb 2024 07:56:22 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-	id 56634184; Tue, 13 Feb 2024 17:56:21 +0200 (EET)
-Date: Tue, 13 Feb 2024 17:56:21 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH 0/2] ahci minor quirk cleanups
-Message-ID: <20240213155621.GA8454@black.fi.intel.com>
-References: <20240213130733.819524-1-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K85XESiv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62108C433F1;
+	Tue, 13 Feb 2024 17:19:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707844757;
+	bh=R/B40q9CR1/8RE3F5SfXeRo7pDhszA/djBNLhnRhU8E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=K85XESiv7C47l3z1V3SZKplk1fWQ1VqiGUTwBuk2tMkNZtCI+MW9b5ugtQDEJ/lbG
+	 GlYnDR0TFMcciYKYP6jMjrWxA93h84VzSAPzuFNwpr390Jdl3nmEwP6pdgX+y3MBj/
+	 nEe6fNZG+47+io+ke0XKekodgRzxv6z4N41CFrSoM2MXVwbynu1wRLlx3tGNzNonpZ
+	 Kj5bT/e+hY2iqoocVxojDP6m+wYT/hgvHx4FFGkbvNdEDOvnNMucxGor9XFIYR2o31
+	 ewDTM5jmWLvCvPxEfs1tg8Pk5khAXJykFGi30mScSt/HHcooeNo+2ey8pTIgwivDIF
+	 O19xRuLzqppvA==
+Date: Tue, 13 Feb 2024 18:19:10 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Andrey Melnikov <temnota.am@gmail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@gmail.com>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dlemoal@kernel.org,
+	hdegoede@redhat.com
+Subject: Re: [PATCH] ahci: asm1064: correct count of reported ports
+Message-ID: <Zcukjucb4VEbKK9x@x1-carbon>
+References: <vbpzr7uqpfemb3qa6xy2fxioct44l5vugg2wkywyolfpzqcmau@jgrrhmk2scaj>
+ <7559d940-f191-4fe0-e147-17ffa6c1dfc4@gmail.com>
+ <CA+PODjpOE=LGPi1G1ebvEwGeXAfpuZ+s_k4uMUwu3i6st9y--g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240213130733.819524-1-cassel@kernel.org>
+In-Reply-To: <CA+PODjpOE=LGPi1G1ebvEwGeXAfpuZ+s_k4uMUwu3i6st9y--g@mail.gmail.com>
 
-On Tue, Feb 13, 2024 at 02:07:29PM +0100, Niklas Cassel wrote:
-> Hello all,
+On Thu, Feb 08, 2024 at 10:27:11AM +0300, Andrey Melnikov wrote:
+> > On 2/7/24 12:58 PM, Andrey Jr. Melnikov wrote:
+> >
+> > > The ASM1064 SATA host controller always reports wrongly,
+> > > that it has 24 ports. But in reality, it only has four ports.
+> > >
+> > > before:
+> > > ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
+> > > ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
+> > > ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
+> > >
+> > > after:
+> > > ahci 0000:04:00.0: ASM1064 has only four ports
+> > > ahci 0000:04:00.0: forcing port_map 0xffff0f -> 0xf
+> > > ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
+> > > ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
+> > > ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
+> > >
+> > >
+> > > Signed-off-by: Andrey Jr. Melnikov <temnota.am@gmail.com>
+> > >
+> > > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> > > index da2e74fce2d9..ec30d8330d16 100644
+> > > --- a/drivers/ata/ahci.c
+> > > +++ b/drivers/ata/ahci.c
+> > > @@ -671,9 +671,14 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
+> > >  static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+> > >                                        struct ahci_host_priv *hpriv)
+> > >  {
+> > > -     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
+> > > -             dev_info(&pdev->dev, "ASM1166 has only six ports\n");
+> > > -             hpriv->saved_port_map = 0x3f;
+> > > +     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA) {
+> > > +             if (pdev->device == 0x1166) {
+> >
+> >    Maybe *switch* instead?
 > 
-> Here comes some minor AHCI quirk cleanups.
-> 
-> 
-> Kind regards,
-> Niklas
-> 
-> 
-> Niklas Cassel (2):
->   ahci: rename board_ahci_nosntf
->   ahci: clean up ahci_broken_devslp quirk
+> Ok.
 
-Both,
+Hello Andrey,
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+do you intend to send out a v2 that uses a switch instead?
+
+And perhaps take Damien's patch as patch 1/2
+(with Suggested-by: Damien ... of course),
+so that the before/after print in your commit message shows
+the override value.
+
+
+Kind regards,
+Niklas
