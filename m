@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB8EE7F;
-	Wed, 14 Feb 2024 00:09:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C68E7F
+	for <linux-ide@vger.kernel.org>; Wed, 14 Feb 2024 00:12:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707869386; cv=none; b=B6vJFaHITaEd9JcrcIl1o15m3nLWbqRZ8YHVMrzWWnry/DIArfMD6tCA5lDtFkBW2zi+t11sVeYJPbqGGy5m4R8eily5+CFsS/MhwthZLu2iitoRHaHgxj/UoOANGikeKSCMhUcCLPPqeo6rHHl1NJkGcVLCVX3HAGXIrP8akOA=
+	t=1707869545; cv=none; b=PAmVe0poa2bihUHEDqGV/hIdWdw5tSht4PDkidX5O4tdqSsbgqg4dDoRJNo7N7XGSu5ghnWKkCkc1xf7MSGMSmLn2OQy2vJ8CdTnUw9TSEtQHvNb1bWhhjujrkaZpqorwu/Kj0BH6//dEQxFGm7/MtYkHyl1G2VrV5fCCALRCGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707869386; c=relaxed/simple;
-	bh=XGF57pUD1lmuUaWsfaETEZITZpWlnPt6/M5D/Up5LbA=;
+	s=arc-20240116; t=1707869545; c=relaxed/simple;
+	bh=2WZnm1s72wFatTEuPunfI8o/uFeY/Ku2XzYCs0OhmmQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XL1V2jVmbJDT3VNQJyHvr/MIKAvrpJ7NiEEr/1H+D2g/kgsbza6d3+OdPebwHuC4UjftFjSYqcp99HnH/htXKNB9FzoMHb9WRipVJR7Ez1UugwnL1B2sZsPH6kVaZVAO03g6SUjaAsYHEMsQPoIkL7ybOWK/7wGr/OLF97hTj6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u8ip9JAz; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=TenQ01qU8eY+DdI8kQ1Wvq8lqaIZvYDZmd7RWVfAKGrxta6lL6uKv7tMbL2jVYbt8RfKpJu+9E/4PHYAHZWVbSRvx1gdImk0xxiPHX7/wfbnTLkKG24aZUN3QoGRXLeohmJdXViwVlPZQ5P5sWx3lQ1HOx2aE0KkuVA6NhEzcZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VQqEWbml; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u8ip9JAz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D763C433F1;
-	Wed, 14 Feb 2024 00:09:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VQqEWbml"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF389C433F1;
+	Wed, 14 Feb 2024 00:12:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707869385;
-	bh=XGF57pUD1lmuUaWsfaETEZITZpWlnPt6/M5D/Up5LbA=;
+	s=k20201202; t=1707869544;
+	bh=2WZnm1s72wFatTEuPunfI8o/uFeY/Ku2XzYCs0OhmmQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=u8ip9JAzdkIcb3TcwM4qD6FbBawPsJw72koMHQp1u7S4tNYyLTRQB0eNhsHVSk8eb
-	 W5oUtVrmvtvKyPyQK35+cerSuRnZf/dTlBVNA2p1MVx1L+3gWUsOkbk/7+D0L7+M7N
-	 CnltdzI+S6AcX/5C+SIf50NxayQqOjHoibccvFlt+7QdFhHafx2O5qClqlK0eEJ1vm
-	 4La/59C03Eu6OUgg3G6Cv0dlg8HVkan5E1DVjKzsCbk+q3G3Sdot5gWDYNQ+RcJh55
-	 ClbpjD8LQAskSSvGe4yi9N40hIy4R/Le977Xey4yYkTk+U9T6KqTUICx0fmqdGx59C
-	 nhvvteXWkh5YQ==
-Message-ID: <e2d6dded-dea6-4832-ba16-6a97e3060992@kernel.org>
-Date: Wed, 14 Feb 2024 09:09:42 +0900
+	b=VQqEWbmlW0HkNWnhtB5oKdyS71ZfOAuuf2ypFMPJbZCzwn0hlU53z+ynXqv23sNFg
+	 GuCooZJSvaUXIWRXemsN9RkWQPSzQ/7BY4dO7MjY7pd6Peg/TGCfyv1htBW79l2BZl
+	 LoKOeMzS2qBPaBqNxc33wbYt9IY4J3yEH+x6fWfAAfV3snha7j0TAxrhwnE85yrwFT
+	 AC0xdYotrdeu4EAfy4BhFkypP7IKcBRfubxV2xWDFk4hPtxLu+I3vEIu9HrnNiDhm+
+	 ZXLmDahfy/VLCRQ8+nFNWgcOYZS7ThGhbyI0wgfdwOt2oxHd8A9t1SqFZqig/Az3Sb
+	 ILoHi0eB5KULg==
+Message-ID: <5a183bb9-e551-4a56-a99b-13a7ac716f19@kernel.org>
+Date: Wed, 14 Feb 2024 09:12:20 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,134 +35,85 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ahci: asm1064: correct count of reported ports
-To: Niklas Cassel <cassel@kernel.org>, Andrey Melnikov <temnota.am@gmail.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@gmail.com>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, hdegoede@redhat.com
-References: <vbpzr7uqpfemb3qa6xy2fxioct44l5vugg2wkywyolfpzqcmau@jgrrhmk2scaj>
- <7559d940-f191-4fe0-e147-17ffa6c1dfc4@gmail.com>
- <CA+PODjpOE=LGPi1G1ebvEwGeXAfpuZ+s_k4uMUwu3i6st9y--g@mail.gmail.com>
- <Zcukjucb4VEbKK9x@x1-carbon> <Zcuvbzoo7/7c/F1q@x1-carbon>
+Subject: Re: [PATCH 1/2] ahci: rename board_ahci_nosntf
 Content-Language: en-US
+To: Niklas Cassel <cassel@kernel.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Dan Williams <dan.j.williams@intel.com>
+Cc: linux-ide@vger.kernel.org
+References: <20240213130733.819524-1-cassel@kernel.org>
+ <20240213130733.819524-2-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <Zcuvbzoo7/7c/F1q@x1-carbon>
+In-Reply-To: <20240213130733.819524-2-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2/14/24 03:05, Niklas Cassel wrote:
-> On Tue, Feb 13, 2024 at 06:19:10PM +0100, Niklas Cassel wrote:
->> On Thu, Feb 08, 2024 at 10:27:11AM +0300, Andrey Melnikov wrote:
->>>> On 2/7/24 12:58 PM, Andrey Jr. Melnikov wrote:
->>>>
->>>>> The ASM1064 SATA host controller always reports wrongly,
->>>>> that it has 24 ports. But in reality, it only has four ports.
->>>>>
->>>>> before:
->>>>> ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
->>>>> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
->>>>> ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
->>>>>
->>>>> after:
->>>>> ahci 0000:04:00.0: ASM1064 has only four ports
->>>>> ahci 0000:04:00.0: forcing port_map 0xffff0f -> 0xf
->>>>> ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
->>>>> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
->>>>> ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
->>>>>
->>>>>
->>>>> Signed-off-by: Andrey Jr. Melnikov <temnota.am@gmail.com>
->>>>>
->>>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>>>> index da2e74fce2d9..ec30d8330d16 100644
->>>>> --- a/drivers/ata/ahci.c
->>>>> +++ b/drivers/ata/ahci.c
->>>>> @@ -671,9 +671,14 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
->>>>>  static void ahci_pci_save_initial_config(struct pci_dev *pdev,
->>>>>                                        struct ahci_host_priv *hpriv)
->>>>>  {
->>>>> -     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
->>>>> -             dev_info(&pdev->dev, "ASM1166 has only six ports\n");
->>>>> -             hpriv->saved_port_map = 0x3f;
->>>>> +     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA) {
->>>>> +             if (pdev->device == 0x1166) {
->>>>
->>>>    Maybe *switch* instead?
->>>
->>> Ok.
->>
->> Hello Andrey,
->>
->> do you intend to send out a v2 that uses a switch instead?
->>
->> And perhaps take Damien's patch as patch 1/2
->> (with Suggested-by: Damien ... of course),
->> so that the before/after print in your commit message shows
->> the override value.
+On 2/13/24 22:07, Niklas Cassel wrote:
+> Commit 7edbb6059274 ("ahci: clean up intel_pcs_quirk") added a new board
+> type (board_ahci_pcs_quirk) which applies the Intel PCS quirk for legacy
+> platforms. However, it also modified board_ahci_avn and board_ahci_nosntf
+> to apply the same quirk.
 > 
-> On second thought, just go ahead and respin your patch using a switch,
-> as I don't think Damien's patch is fully correct.
+> board_ahci_avn is defined under the label:
+> /* board IDs for specific chipsets in alphabetical order */
+> This is a board for a specific chipset, so the naming is perfectly fine.
+> (The name does not need to be suffixed with _pcs_quirk, since all
+> controllers for this chipset require the quirk to be applied).
 > 
-> He suggested to use hpriv->saved_port_map.
+> board_ahci_nosntf is defined under the label:
+> /* board IDs by feature in alphabetical order */
+> This is a board for a specific feature/quirk. However, it is used to
+> apply two different quirks.
 > 
-> However, that will show the wrong result for platforms using
-> hpriv->mask_port_map.
+> Rename board_ahci_nosntf to more clearly highlight that this board ID
+> applies two different quirks.
 > 
-> As when hpriv->mask_port_map is used, saved_port_map is not set:
-> https://github.com/torvalds/linux/blob/v6.8-rc4/drivers/ata/libahci.c#L536-L548
+> Fixes: 7edbb6059274 ("ahci: clean up intel_pcs_quirk")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/ata/ahci.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> However, the local variable "port_map" is updated for both
-> saved_port_map and mask_port_map cases.
-> 
-> And then at the end:
-> hpriv->port_map = port_map;
-> https://github.com/torvalds/linux/blob/v6.8-rc4/drivers/ata/libahci.c#L597
-> 
-> So I think we should print hpriv->port_map,
-> and not hpriv->saved_port_map.
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 41b4c9777c85..c28ad3f4b59e 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -53,7 +53,7 @@ enum board_ids {
+>  	board_ahci_no_debounce_delay,
+>  	board_ahci_nomsi,
+>  	board_ahci_noncq,
+> -	board_ahci_nosntf,
+> +	board_ahci_nosntf_pcs_quirk,
+>  	/*
+>  	 * board_ahci_pcs_quirk is for legacy Intel platforms.
+>  	 * Modern Intel platforms should use board_ahci instead.
+> @@ -165,7 +165,7 @@ static const struct ata_port_info ahci_port_info[] = {
+>  		.udma_mask	= ATA_UDMA6,
+>  		.port_ops	= &ahci_ops,
+>  	},
+> -	[board_ahci_nosntf] = {
+> +	[board_ahci_nosntf_pcs_quirk] = {
+>  		AHCI_HFLAGS	(AHCI_HFLAG_NO_SNTF |
+>  				 AHCI_HFLAG_INTEL_PCS_QUIRK),
+>  		.flags		= AHCI_FLAG_COMMON,
+> @@ -271,7 +271,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci_pcs_quirk }, /* ESB2 */
+>  	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci_pcs_quirk }, /* ICH7-M DH */
+>  	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci_pcs_quirk }, /* ICH8 */
+> -	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8/Lewisburg RAID*/
+> +	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf_pcs_quirk }, /* ICH8/Lewisburg RAID*/
 
-Indeed, good catch...
+Minor nit: I would name the board board_ahci_pcs_quirk_nosntf to make it easier
+to see that this is a sub case of the general board_ahci_pcs_quirk.
 
-> However.. hpriv->port_map is already printed:
-> https://github.com/torvalds/linux/blob/v6.8-rc4/drivers/ata/libahci.c#L2617
-> in the "0x%x impl" print.
-> 
-> So
->> before:
->> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
-> 
->> after:
->> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
-> 
-> Actually prints the number of *implemented* ports.
-> 
-> 
-> I have to admit that this is a bit confusing.
-> 
-> Personally I would have preferred if we simply printed
-> "%u ports", hpriv->port_map,
-> 
-> and simply dropped the "0x%x impl" part of the print,
-> but I'm a bit worried that someone parses this print from user space,
-> but I guess we must be allowed to improve prints if they are confusing.
-> 
-> Damien, what do you think?
+>  	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci_pcs_quirk }, /* ICH8 */
+>  	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci_pcs_quirk }, /* ICH8M */
+>  	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci_pcs_quirk }, /* ICH8M */
 
-...but port_map is a mask, not a count of ports. So this would still be wrong.
-I think we simply need a small helper that look something like:
+With that, this look good.
 
-int ahci_nr_ports(struct ata_host *host)
-{
-        struct ahci_host_priv *hpriv = host->private_data;
-	int i, n = 0;
-
-	for_each_set_bit(i, &hpriv->port_map, AHCI_MAX_PORTS)
-		n++;
-
-	return n;
-}
-
-and print that instead together with the mask.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
