@@ -1,96 +1,181 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from www62.your-server.de (www62.your-server.de [213.133.104.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B46E52F7C
-	for <linux-ide@vger.kernel.org>; Wed, 14 Feb 2024 13:01:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38507535B4;
+	Wed, 14 Feb 2024 13:19:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.133.104.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707915686; cv=none; b=jQ1VP6oISSL1B/fpg1Mh2EeyB577fJn8r/Cf78BNIDvk/r5v5OlYxD8bBAwGNJIhbUesZyGUqK5pJt7LCLlcLpKVTc/H67hgZpu+NTVgdenE6SVwsfNx/Cq2jzMNo9VHgHOUjuNHior2iFHbkzz/5FtODFIlRXwzg1OXDNcIuVA=
+	t=1707916775; cv=none; b=E3u0yeTu5IO1sa2+UhzHl7UCbAqDFfHpa1FQoYFSKWjbL6oMHywtXNOsohdc0oD1d3xigUSvC7l4W0AaRpFdCO1bp5lVCg3a4OMFbP2xST2vsx656ImSjdfKc80L0KIRYBsBUjIVwQwFl51Q+xJWngcQtvgaz4ynrbs7gUrv2PY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707915686; c=relaxed/simple;
-	bh=PvHGi+JDdKZZF6VbMXBXMx1RFAPK0PLlLCK2+SPKpmE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZUjq7D/3IRMNGAGZtjhForKwOmJd1ZRHeifPqdKsRTw5+jFJfu0wXynICzxMxGpEIZTpvciu+HSGX0B/JLhtQrbCbN+W/V5sbq9pEmGTLdp37W7IzaCkl/mX6ztagz8qvCG4KNLong2cxkKWuxI1tcDo2ZA6MrXvKZyPN508ru0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W85qg4gp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707916775; c=relaxed/simple;
+	bh=a0o55pxxDCLHmqaWvxrygvI6niPdHttBqY/E85EhHew=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=pblTYUtifmTS/IfY575inb+wucongsyJjmtppSatK8YQ60AlswnCx8SZ6516uZUi++yK69cRfoBIfTv09aAjRw7np3l0//wCosQpqgXqHpg57rNfGH+5rIIl6Rao7RKU9qilItaGoATw9nq6EomlY4OYt3VpzUnXfNsqY9jY3lY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net; spf=pass smtp.mailfrom=iogearbox.net; dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b=MwpGtHQU; arc=none smtp.client-ip=213.133.104.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iogearbox.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W85qg4gp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4D9BC433C7;
-	Wed, 14 Feb 2024 13:01:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707915685;
-	bh=PvHGi+JDdKZZF6VbMXBXMx1RFAPK0PLlLCK2+SPKpmE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=W85qg4gpepZLhKZxXcQX/dwuNylQHToqEA9xOHrX7JkLbfH6M4PPYZm1pXvGkqrl5
-	 FEL9FRdv4kgWw8z8ay+k+DQ/dCc8FZkHeNgwfCk0bgPLiThs96sLS+aCxNn/B/bLRX
-	 Ur5OzkDVz3C0d5/4N5btuEfdUPWV66NcStzRP5pZGGWWeIm1mkcH46dZPQ2XR/vEda
-	 4apU/zLBVLY+QbnIFoycoy4nelWsVK2SIq7NY61nLTFu3/oM4QtvZJC3W+p/vzpzIw
-	 xXlgZmi9TQZcuRL63uHjgQ0Gw+pF17vHZxX9l+vRwZBp3Oqpeya44TnLdlKUx6Nicg
-	 vS3rp17uMlvnw==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH v2 4/4] ahci: rename board_ahci_nomsi
-Date: Wed, 14 Feb 2024 14:00:12 +0100
-Message-ID: <20240214130015.952685-5-cassel@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240214130015.952685-1-cassel@kernel.org>
-References: <20240214130015.952685-1-cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b="MwpGtHQU"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=iogearbox.net; s=default2302; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
+	bh=EUpvZ7ImcN6iRBfQR5QrQA+ZGjPdmy3aiW0Hd3hcrnQ=; b=MwpGtHQUzHdeNgQIAJKrYkQir0
+	wL3rGSdwthLpVi6rJBVqink5DidYuAH714ElJOQB18JgkPnzLzshB5K6MexPqnWaCceoLwBQSt5NU
+	Obd5t8XnCd90jFPygROaIlqcGcdFbE3Mbvu/awSVtILfJgE8HCc68BYxaKlyUXOvisb2VlJKcpe3y
+	SjKwhh0tbhX+Mzh8RWpVKaG0NxFwqkMfX99jwZFtevDK1yU+y2ux93FizBw04G1QuR/gS5DsbGljX
+	89R7B1iYhmLU1ogaxm3nfe0mawbV8xNQfC2r08dtHxNkCtRQ1masq6dNVYtlENtrfxgx2niHI31jf
+	qdYN+lqQ==;
+Received: from sslproxy03.your-server.de ([88.198.220.132])
+	by www62.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <daniel@iogearbox.net>)
+	id 1raEvF-000AMv-Dv; Wed, 14 Feb 2024 14:03:33 +0100
+Received: from [85.1.206.226] (helo=linux.home)
+	by sslproxy03.your-server.de with esmtpsa (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <daniel@iogearbox.net>)
+	id 1raEvE-000MWP-Sy; Wed, 14 Feb 2024 14:03:32 +0100
+Subject: LSF/MM/BPF: 2024: Call for Proposals [Final Reminder]
+To: lsf-pc@lists.linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+ linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, bpf@vger.kernel.org
+References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
+ <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
+ <c91530f0-2688-647d-2603-a7b1673f8e42@iogearbox.net>
+From: Daniel Borkmann <daniel@iogearbox.net>
+Message-ID: <013f8741-4468-b1a4-0569-aee5e1d6b1a8@iogearbox.net>
+Date: Wed, 14 Feb 2024 14:03:32 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <c91530f0-2688-647d-2603-a7b1673f8e42@iogearbox.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Authenticated-Sender: daniel@iogearbox.net
+X-Virus-Scanned: Clear (ClamAV 0.103.10/27185/Wed Feb 14 10:22:57 2024)
 
-The naming format of the board_ahci_no* boards are:
-board_ahci_no_debounce_delay
-board_ahci_pcs_quirk_no_devslp
-board_ahci_pcs_quirk_no_sntf
+The annual Linux Storage, Filesystem, Memory Management, and BPF
+(LSF/MM/BPF) Summit for 2024 will be held from May 13 to May 15
+at the Hilton Salt Lake City Center in Salt Lake City, Utah, USA.
 
-Rename board_ahci_nomsi to board_ahci_no_msi to match the other boards.
+LSF/MM/BPF is an invitation-only technical workshop to map out
+improvements to the Linux storage, filesystem, BPF, and memory
+management subsystems that will make their way into the mainline
+kernel within the coming years.
 
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+LSF/MM/BPF 2024 will be a three day, stand-alone conference with
+four subsystem-specific tracks, cross-track discussions, as well
+as BoF and hacking sessions:
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 9bff90fb0591..006312f5d73c 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -51,7 +51,7 @@ enum board_ids {
- 	board_ahci_43bit_dma,
- 	board_ahci_ign_iferr,
- 	board_ahci_no_debounce_delay,
--	board_ahci_nomsi,
-+	board_ahci_no_msi,
- 	/*
- 	 * board_ahci_pcs_quirk is for legacy Intel platforms.
- 	 * Modern Intel platforms should use board_ahci instead.
-@@ -151,7 +151,7 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
- 	},
--	[board_ahci_nomsi] = {
-+	[board_ahci_no_msi] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_MSI),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.pio_mask	= ATA_PIO4,
-@@ -621,8 +621,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	 * Samsung SSDs found on some macbooks.  NCQ times out if MSI is
- 	 * enabled.  https://bugzilla.kernel.org/show_bug.cgi?id=60731
- 	 */
--	{ PCI_VDEVICE(SAMSUNG, 0x1600), board_ahci_nomsi },
--	{ PCI_VDEVICE(SAMSUNG, 0xa800), board_ahci_nomsi },
-+	{ PCI_VDEVICE(SAMSUNG, 0x1600), board_ahci_no_msi },
-+	{ PCI_VDEVICE(SAMSUNG, 0xa800), board_ahci_no_msi },
- 
- 	/* Enmotus */
- 	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
--- 
-2.43.0
+          https://events.linuxfoundation.org/lsfmmbpf/
+
+On behalf of the committee I am issuing a call for agenda proposals
+that are suitable for cross-track discussion as well as technical
+subjects for the breakout sessions.
+
+If advance notice is required for visa applications then please
+point that out in your proposal or request to attend, and submit
+the topic as soon as possible.
+
+We are asking that you please let us know you want to be invited
+by March 1, 2024. We realize that travel is an ever changing target,
+but it helps us to get an idea of possible attendance numbers.
+Clearly things can and will change, so consider the request to
+attend deadline more about planning and less about concrete plans.
+
+1) Fill out the following Google form to request attendance and
+suggest any topics for discussion:
+
+          https://forms.gle/TGCgBDH1x5pXiWFo7
+
+In previous years we have accidentally missed people's attendance
+requests because they either did not Cc lsf-pc@ or we simply missed
+them in the flurry of emails we get. Our community is large and our
+volunteers are busy, filling this out will help us to make sure we
+do not miss anybody.
+
+2) Proposals for agenda topics should ideally still be sent to the
+following lists to allow for discussion among your peers. This will
+help us figure out which topics are important for the agenda:
+
+          lsf-pc@lists.linux-foundation.org
+
+... and Cc the mailing lists that are relevant for the topic in
+question:
+
+          FS:     linux-fsdevel@vger.kernel.org
+          MM:     linux-mm@kvack.org
+          Block:  linux-block@vger.kernel.org
+          ATA:    linux-ide@vger.kernel.org
+          SCSI:   linux-scsi@vger.kernel.org
+          NVMe:   linux-nvme@lists.infradead.org
+          BPF:    bpf@vger.kernel.org
+
+Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier
+to track. In addition, please make sure to start a new thread for
+each topic rather than following up to an existing one. Agenda
+topics and attendees will be selected by the program committee,
+but the final agenda will be formed by consensus of the attendees
+on the day.
+
+3) This year we would also like to try and make sure we are
+including new members in the community that the program committee
+may not be familiar with. The Google form has an area for people to
+add required/optional attendees. Please encourage new members of the
+community to submit a request for an invite as well, but additionally
+if maintainers or long term community members could add nominees to
+the form it would help us make sure that new members get the proper
+consideration.
+
+For discussion leaders, slides and visualizations are encouraged to
+outline the subject matter and focus the discussions. Please refrain
+from lengthy presentations and talks in order for sessions to be
+productive; the sessions are supposed to be interactive, inclusive
+discussions.
+
+We are still looking into the virtual component. We will likely run
+something similar to what we did last year, but details on that will
+be forthcoming.
+
+2023: https://lwn.net/Articles/lsfmmbpf2023/
+
+2022: https://lwn.net/Articles/lsfmm2022/
+
+2019: https://lwn.net/Articles/lsfmm2019/
+
+2018: https://lwn.net/Articles/lsfmm2018/
+
+2017: https://lwn.net/Articles/lsfmm2017/
+
+2016: https://lwn.net/Articles/lsfmm2016/
+
+2015: https://lwn.net/Articles/lsfmm2015/
+
+2014: http://lwn.net/Articles/LSFMM2014/
+
+4) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+          lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+          Amir Goldstein (Filesystems)
+          Jan Kara (Filesystems)
+          Martin K. Petersen (Storage)
+          Javier González (Storage)
+          Michal Hocko (MM)
+          Dan Williams (MM)
+          Daniel Borkmann (BPF)
+          Martin KaFai Lau (BPF)
 
