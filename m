@@ -1,109 +1,170 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56B5D1428F
-	for <linux-ide@vger.kernel.org>; Tue, 13 Feb 2024 20:02:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB8EE7F;
+	Wed, 14 Feb 2024 00:09:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707854534; cv=none; b=aiNgSpk7pNZw5DSBiIaIC7ma35cZUvMSOZFM5zNOD82iCQ6rJNa5QlBNKSW4fcbQTF+YUWeGkNE/AGwsqXxTehDccrzkC27QwZLnc3vw6XZbhUzZIbSaVSGOswCpmO0wLIMu9ZuMS0ZI9xzhIQ0zk/qhxiza2mbrdAYLXL/spfU=
+	t=1707869386; cv=none; b=B6vJFaHITaEd9JcrcIl1o15m3nLWbqRZ8YHVMrzWWnry/DIArfMD6tCA5lDtFkBW2zi+t11sVeYJPbqGGy5m4R8eily5+CFsS/MhwthZLu2iitoRHaHgxj/UoOANGikeKSCMhUcCLPPqeo6rHHl1NJkGcVLCVX3HAGXIrP8akOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707854534; c=relaxed/simple;
-	bh=WgFw3Rnn2224L7tXcrzMESz1QBBvPJYtU+lCuCw9AAQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ssc0LI37zSuoKaftZZiJ2Jcqrrjvi59tqCwdkUhp8R1BKNwSP8o3CUKJy5ECmorfEBScHIYrs9Ntg7NyQIMhbV/DHU9DxaNKt38kg3Q+14G8H2Y3jFgKvKluobmcwa/jeknplr7qW74kNX5UFuonuKZajze5j5WLgqAJ3TZucTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KK8TPKoT; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707869386; c=relaxed/simple;
+	bh=XGF57pUD1lmuUaWsfaETEZITZpWlnPt6/M5D/Up5LbA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XL1V2jVmbJDT3VNQJyHvr/MIKAvrpJ7NiEEr/1H+D2g/kgsbza6d3+OdPebwHuC4UjftFjSYqcp99HnH/htXKNB9FzoMHb9WRipVJR7Ez1UugwnL1B2sZsPH6kVaZVAO03g6SUjaAsYHEMsQPoIkL7ybOWK/7wGr/OLF97hTj6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u8ip9JAz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KK8TPKoT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61F15C433C7;
-	Tue, 13 Feb 2024 20:02:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u8ip9JAz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D763C433F1;
+	Wed, 14 Feb 2024 00:09:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707854533;
-	bh=WgFw3Rnn2224L7tXcrzMESz1QBBvPJYtU+lCuCw9AAQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KK8TPKoT2NktxDMCnzY/Y2wl3wQsdNbTXH7MWFS+EuBYIQhkDs/jKKW+x/FRkzjCf
-	 kw5/+Z6oD8ytwFRrqc0ZdMqSERpkSwGKT2VS2gmhPlBvgLhUi+69CnzVScp40YhbRJ
-	 O1UGYnrMTK1GtpF406HrIODyi9ztdgaIO16WgI1uz2E3RNbHsSmdhfkPutRPq2A5eL
-	 J0oNk9bX/M+uri9Eztlx6ecsa7g+tXjAaG4GXoaBb4woNIv424nvEjL3Niy9d7+cuN
-	 SYhqIqn2fIuNa+X7yTn4uiDr+FSHUkioBF1RG+jgHz2f8dPlp8AMVWmM2RZwdNAUu8
-	 8/SNccq2aM2CA==
-Date: Tue, 13 Feb 2024 21:02:08 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Dieter Mummenschanz <dmummenschanz@web.de>
-Cc: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: Re: Re: Re: Re:  Re: Re: [PATCH 0/2] Power management fixes
-Message-ID: <ZcvKwDQ+Gq/xhgk5@x1-carbon>
-References: <trinity-0df92d73-be55-433c-bdb2-4387f7ea590b-1706686178879@3c-app-webde-bap43>
- <3f7cef2a-5ba4-465b-a1f5-77e2bcc50ddb@kernel.org>
- <ZboztvrqKKdLQ1mt@x1-carbon>
- <trinity-61f604a0-1db3-4b6e-a316-fc7e609f38f4-1706771411065@3c-app-webde-bs18>
- <Zbt3qD8dMSqGYl8Q@x1-carbon>
- <trinity-78c294c6-cd07-4a27-befa-3f3fc9bd79da-1706885616508@3c-app-webde-bs04>
- <ZcEwa4fOzMif8lCd@x1-carbon>
- <trinity-0bc8e6ea-7808-4508-af3a-be22281abf24-1707231996854@3c-app-webde-bs42>
- <ZcKopITjwjKYNM9C@x1-carbon>
- <trinity-65caccf7-138b-4625-8e2e-afac802dd2da-1707403068697@3c-app-webde-bap33>
+	s=k20201202; t=1707869385;
+	bh=XGF57pUD1lmuUaWsfaETEZITZpWlnPt6/M5D/Up5LbA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=u8ip9JAzdkIcb3TcwM4qD6FbBawPsJw72koMHQp1u7S4tNYyLTRQB0eNhsHVSk8eb
+	 W5oUtVrmvtvKyPyQK35+cerSuRnZf/dTlBVNA2p1MVx1L+3gWUsOkbk/7+D0L7+M7N
+	 CnltdzI+S6AcX/5C+SIf50NxayQqOjHoibccvFlt+7QdFhHafx2O5qClqlK0eEJ1vm
+	 4La/59C03Eu6OUgg3G6Cv0dlg8HVkan5E1DVjKzsCbk+q3G3Sdot5gWDYNQ+RcJh55
+	 ClbpjD8LQAskSSvGe4yi9N40hIy4R/Le977Xey4yYkTk+U9T6KqTUICx0fmqdGx59C
+	 nhvvteXWkh5YQ==
+Message-ID: <e2d6dded-dea6-4832-ba16-6a97e3060992@kernel.org>
+Date: Wed, 14 Feb 2024 09:09:42 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <trinity-65caccf7-138b-4625-8e2e-afac802dd2da-1707403068697@3c-app-webde-bap33>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ahci: asm1064: correct count of reported ports
+To: Niklas Cassel <cassel@kernel.org>, Andrey Melnikov <temnota.am@gmail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@gmail.com>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, hdegoede@redhat.com
+References: <vbpzr7uqpfemb3qa6xy2fxioct44l5vugg2wkywyolfpzqcmau@jgrrhmk2scaj>
+ <7559d940-f191-4fe0-e147-17ffa6c1dfc4@gmail.com>
+ <CA+PODjpOE=LGPi1G1ebvEwGeXAfpuZ+s_k4uMUwu3i6st9y--g@mail.gmail.com>
+ <Zcukjucb4VEbKK9x@x1-carbon> <Zcuvbzoo7/7c/F1q@x1-carbon>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <Zcuvbzoo7/7c/F1q@x1-carbon>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello Dieter,
-
-On Thu, Feb 08, 2024 at 03:37:48PM +0100, Dieter Mummenschanz wrote:
-
-> > I assume that you didn't need this on v6.6 and older?
+On 2/14/24 03:05, Niklas Cassel wrote:
+> On Tue, Feb 13, 2024 at 06:19:10PM +0100, Niklas Cassel wrote:
+>> On Thu, Feb 08, 2024 at 10:27:11AM +0300, Andrey Melnikov wrote:
+>>>> On 2/7/24 12:58 PM, Andrey Jr. Melnikov wrote:
+>>>>
+>>>>> The ASM1064 SATA host controller always reports wrongly,
+>>>>> that it has 24 ports. But in reality, it only has four ports.
+>>>>>
+>>>>> before:
+>>>>> ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
+>>>>> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
+>>>>> ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
+>>>>>
+>>>>> after:
+>>>>> ahci 0000:04:00.0: ASM1064 has only four ports
+>>>>> ahci 0000:04:00.0: forcing port_map 0xffff0f -> 0xf
+>>>>> ahci 0000:04:00.0: SSS flag set, parallel bus scan disabled
+>>>>> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
+>>>>> ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
+>>>>>
+>>>>>
+>>>>> Signed-off-by: Andrey Jr. Melnikov <temnota.am@gmail.com>
+>>>>>
+>>>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>>>>> index da2e74fce2d9..ec30d8330d16 100644
+>>>>> --- a/drivers/ata/ahci.c
+>>>>> +++ b/drivers/ata/ahci.c
+>>>>> @@ -671,9 +671,14 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
+>>>>>  static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+>>>>>                                        struct ahci_host_priv *hpriv)
+>>>>>  {
+>>>>> -     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1166) {
+>>>>> -             dev_info(&pdev->dev, "ASM1166 has only six ports\n");
+>>>>> -             hpriv->saved_port_map = 0x3f;
+>>>>> +     if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA) {
+>>>>> +             if (pdev->device == 0x1166) {
+>>>>
+>>>>    Maybe *switch* instead?
+>>>
+>>> Ok.
+>>
+>> Hello Andrey,
+>>
+>> do you intend to send out a v2 that uses a switch instead?
+>>
+>> And perhaps take Damien's patch as patch 1/2
+>> (with Suggested-by: Damien ... of course),
+>> so that the before/after print in your commit message shows
+>> the override value.
 > 
-> > (Instead libata should put the device to standby or sleep itself,
-> > it shouldn't need to be done explicitly by the user.)
+> On second thought, just go ahead and respin your patch using a switch,
+> as I don't think Damien's patch is fully correct.
 > 
-> I'm at a loss either. No idea why this is actually working. When I encountered the low-power issue I searched the web and stumbled upon hdparm -Y and gave it a shot.
-
-Are you saying that you always do this before suspending?
-Both on v6.6 and v6.7?
-
-
-> > But if you can enter pc8 on every boot on v6.6, but not on v6.7,
-> > then it is probably easier to figure out which commit that broke
-> > things, as there were not that many suspend/resume related changes
-> > added in v6.7.
+> He suggested to use hpriv->saved_port_map.
 > 
-> Maybe you could point them out so I can try to bisect?
+> However, that will show the wrong result for platforms using
+> hpriv->mask_port_map.
+> 
+> As when hpriv->mask_port_map is used, saved_port_map is not set:
+> https://github.com/torvalds/linux/blob/v6.8-rc4/drivers/ata/libahci.c#L536-L548
+> 
+> However, the local variable "port_map" is updated for both
+> saved_port_map and mask_port_map cases.
+> 
+> And then at the end:
+> hpriv->port_map = port_map;
+> https://github.com/torvalds/linux/blob/v6.8-rc4/drivers/ata/libahci.c#L597
+> 
+> So I think we should print hpriv->port_map,
+> and not hpriv->saved_port_map.
 
-Sure.
+Indeed, good catch...
 
-These are the libata (and related SCSI) patches added in v6.7
-(that are not in v6.6):
+> However.. hpriv->port_map is already printed:
+> https://github.com/torvalds/linux/blob/v6.8-rc4/drivers/ata/libahci.c#L2617
+> in the "0x%x impl" print.
+> 
+> So
+>> before:
+>> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
+> 
+>> after:
+>> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
+> 
+> Actually prints the number of *implemented* ports.
+> 
+> 
+> I have to admit that this is a bit confusing.
+> 
+> Personally I would have preferred if we simply printed
+> "%u ports", hpriv->port_map,
+> 
+> and simply dropped the "0x%x impl" part of the print,
+> but I'm a bit worried that someone parses this print from user space,
+> but I guess we must be allowed to improve prints if they are confusing.
+> 
+> Damien, what do you think?
 
-b09d7f8fd50f scsi: sd: Fix system start for ATA devices
-6371be7aeb98 scsi: Change SCSI device boolean fields to single bit flags
-fd3a6837d8e1 ata: libata-core: Fix ata_pci_shutdown_one()
-2da4c5e24e86 ata: libata-core: Improve ata_dev_power_set_active()
-54d7211da7cd ata: libata-eh: Spinup disk on resume after revalidation
-1b947279798f ata: libata: Cleanup inline DMA helper functions
-0fecb50891aa ata: libata-eh: Reduce "disable device" message verbosity
-7f95731c74d7 ata: libata-eh: Improve reset error messages
-88b9f8928678 ata: libata-sata: Improve ata_sas_slave_configure()
-3341b82368fb ata: libata-core: Do not resume runtime suspended ports
-3a94af2488bf ata: libata-core: Do not poweroff runtime suspended ports
-09b055cfb0e9 ata: libata-core: Remove ata_port_resume_async()
-6702255d700a ata: libata-core: Remove ata_port_suspend_async()
-5b6fba546da2 ata: libata-core: Detach a port devices on shutdown
-cfead0dd81de ata: libata-core: Synchronize ata_port_detach() with hotplug
-8c1f08170694 ata: libata-scsi: Cleanup ata_scsi_start_stop_xlat()
-c4367ac83805 scsi: Remove scsi device no_start_on_resume flag
+...but port_map is a mask, not a count of ports. So this would still be wrong.
+I think we simply need a small helper that look something like:
 
-I would start with v6.6 and apply them one by one.
-(Starting with c4367ac83805)
+int ahci_nr_ports(struct ata_host *host)
+{
+        struct ahci_host_priv *hpriv = host->private_data;
+	int i, n = 0;
 
-However, it is also possible that the regression is completely unrelated
-to libata changes (e.g. caused by a ACPI suspend/resume patch), and in
-that case, you will need a complete bisection.
+	for_each_set_bit(i, &hpriv->port_map, AHCI_MAX_PORTS)
+		n++;
 
+	return n;
+}
 
-Kind regards,
-Niklas
+and print that instead together with the mask.
+
+-- 
+Damien Le Moal
+Western Digital Research
+
