@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 034B752F6E
-	for <linux-ide@vger.kernel.org>; Wed, 14 Feb 2024 13:01:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B46E52F7C
+	for <linux-ide@vger.kernel.org>; Wed, 14 Feb 2024 13:01:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707915683; cv=none; b=s6kMKAH70T7PqlXogvuRRwSMXdSzyDh3UhOzSro8wH6iIV1eSUyLYDcGdEGQYzSHkPnREUPygJwYDf7xK8I8C7NnDngsrrSIVt7wVVVlZWOI3HE4YsogaTtF+ox5iw6pF5RqXHY2CDn/S0/e+5jp8ZZpNBEcOIRiPC84gl1ib/E=
+	t=1707915686; cv=none; b=jQ1VP6oISSL1B/fpg1Mh2EeyB577fJn8r/Cf78BNIDvk/r5v5OlYxD8bBAwGNJIhbUesZyGUqK5pJt7LCLlcLpKVTc/H67hgZpu+NTVgdenE6SVwsfNx/Cq2jzMNo9VHgHOUjuNHior2iFHbkzz/5FtODFIlRXwzg1OXDNcIuVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707915683; c=relaxed/simple;
-	bh=6NgQKlzYmOU6+vffAr++oN2Zi/2QxjKiPC8KoDmxzPs=;
+	s=arc-20240116; t=1707915686; c=relaxed/simple;
+	bh=PvHGi+JDdKZZF6VbMXBXMx1RFAPK0PLlLCK2+SPKpmE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Wk4k7AYSRoeEsuXIe4WnC/UoG/OrwpZ5GRtQu5BBeA6YF8lc1csuosxpOLngoYnkVScfvTJ/FWIkstdZrHex2qHVoADqylVgQz98OMcqE/uxtB/va28Xs2kSebPFsgp+nOH/0s8JtZoNF3XYqQptb95wOxNmQ7rDMKvFxrTSXdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T7yIt3iu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ZUjq7D/3IRMNGAGZtjhForKwOmJd1ZRHeifPqdKsRTw5+jFJfu0wXynICzxMxGpEIZTpvciu+HSGX0B/JLhtQrbCbN+W/V5sbq9pEmGTLdp37W7IzaCkl/mX6ztagz8qvCG4KNLong2cxkKWuxI1tcDo2ZA6MrXvKZyPN508ru0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W85qg4gp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T7yIt3iu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 462E7C433F1;
-	Wed, 14 Feb 2024 13:01:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W85qg4gp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4D9BC433C7;
+	Wed, 14 Feb 2024 13:01:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707915682;
-	bh=6NgQKlzYmOU6+vffAr++oN2Zi/2QxjKiPC8KoDmxzPs=;
+	s=k20201202; t=1707915685;
+	bh=PvHGi+JDdKZZF6VbMXBXMx1RFAPK0PLlLCK2+SPKpmE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=T7yIt3iuuU6alxe9g1bsYATBxQ/+l22XXPJvqzKvz+HWuUAbbyq3kmTNBmcQhqQ+f
-	 UPfqS9nhhz809BM4oqpheeXBAUw78FVa7vCvOjuw8Segp3IS+pcF+XSGcER/wuXHj0
-	 l0gGs18y1qwIXlsNs7+sgxiPitfzWXVZ9fduYe861Cr3HggtFheCu6aHymsPh0v/Sm
-	 aEG+H5OuDpD5u0KZea4h5fxrqU0cDjuqPweZ0cNnQ4BidZ4ahJDSXcvO1fEpF7jIce
-	 B6NKcpEbGWtO3zlse3jNcFG+VmvIz1+LgvjdCxDvqpiNeA3/GBBs4v5GtwCEMg+/ts
-	 eCe5Hnv5nHHCA==
+	b=W85qg4gpepZLhKZxXcQX/dwuNylQHToqEA9xOHrX7JkLbfH6M4PPYZm1pXvGkqrl5
+	 FEL9FRdv4kgWw8z8ay+k+DQ/dCc8FZkHeNgwfCk0bgPLiThs96sLS+aCxNn/B/bLRX
+	 Ur5OzkDVz3C0d5/4N5btuEfdUPWV66NcStzRP5pZGGWWeIm1mkcH46dZPQ2XR/vEda
+	 4apU/zLBVLY+QbnIFoycoy4nelWsVK2SIq7NY61nLTFu3/oM4QtvZJC3W+p/vzpzIw
+	 xXlgZmi9TQZcuRL63uHjgQ0Gw+pF17vHZxX9l+vRwZBp3Oqpeya44TnLdlKUx6Nicg
+	 vS3rp17uMlvnw==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
 Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
 	Dan Williams <dan.j.williams@intel.com>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH v2 3/4] ahci: drop unused board_ahci_noncq
-Date: Wed, 14 Feb 2024 14:00:11 +0100
-Message-ID: <20240214130015.952685-4-cassel@kernel.org>
+Subject: [PATCH v2 4/4] ahci: rename board_ahci_nomsi
+Date: Wed, 14 Feb 2024 14:00:12 +0100
+Message-ID: <20240214130015.952685-5-cassel@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240214130015.952685-1-cassel@kernel.org>
 References: <20240214130015.952685-1-cassel@kernel.org>
@@ -46,45 +46,51 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Since commit 66a7cbc303f4 ("ahci: disable MSI instead of NCQ on Samsung
-pci-e SSDs on macbooks") there is not a single entry in ahci_pci_tbl
-which uses board_ahci_noncq.
+The naming format of the board_ahci_no* boards are:
+board_ahci_no_debounce_delay
+board_ahci_pcs_quirk_no_devslp
+board_ahci_pcs_quirk_no_sntf
 
-Since this is dead code, let's remove it.
-We cannot remove AHCI_HFLAG_NO_NCQ, as this flag is still used by other
-boards.
+Rename board_ahci_nomsi to board_ahci_no_msi to match the other boards.
 
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/ata/ahci.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/ata/ahci.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index d8e5b26524f6..9bff90fb0591 100644
+index 9bff90fb0591..006312f5d73c 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -52,7 +52,6 @@ enum board_ids {
+@@ -51,7 +51,7 @@ enum board_ids {
+ 	board_ahci_43bit_dma,
  	board_ahci_ign_iferr,
  	board_ahci_no_debounce_delay,
- 	board_ahci_nomsi,
--	board_ahci_noncq,
+-	board_ahci_nomsi,
++	board_ahci_no_msi,
  	/*
  	 * board_ahci_pcs_quirk is for legacy Intel platforms.
  	 * Modern Intel platforms should use board_ahci instead.
-@@ -159,13 +158,6 @@ static const struct ata_port_info ahci_port_info[] = {
+@@ -151,7 +151,7 @@ static const struct ata_port_info ahci_port_info[] = {
  		.udma_mask	= ATA_UDMA6,
  		.port_ops	= &ahci_ops,
  	},
--	[board_ahci_noncq] = {
--		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ),
--		.flags		= AHCI_FLAG_COMMON,
--		.pio_mask	= ATA_PIO4,
--		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_ops,
--	},
- 	[board_ahci_pcs_quirk] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_INTEL_PCS_QUIRK),
+-	[board_ahci_nomsi] = {
++	[board_ahci_no_msi] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_MSI),
  		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+@@ -621,8 +621,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	 * Samsung SSDs found on some macbooks.  NCQ times out if MSI is
+ 	 * enabled.  https://bugzilla.kernel.org/show_bug.cgi?id=60731
+ 	 */
+-	{ PCI_VDEVICE(SAMSUNG, 0x1600), board_ahci_nomsi },
+-	{ PCI_VDEVICE(SAMSUNG, 0xa800), board_ahci_nomsi },
++	{ PCI_VDEVICE(SAMSUNG, 0x1600), board_ahci_no_msi },
++	{ PCI_VDEVICE(SAMSUNG, 0xa800), board_ahci_no_msi },
+ 
+ 	/* Enmotus */
+ 	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
 -- 
 2.43.0
 
