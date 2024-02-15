@@ -1,132 +1,141 @@
-Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 353651E4B7
-	for <linux-ide@vger.kernel.org>; Wed, 14 Feb 2024 19:33:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D41D6DDD1
+	for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2024 08:01:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707939207; cv=none; b=Ndw3vP3vUGjbGclrLo4erq5azP7272dd/FbIrEOyCV48/2p8bJSntBF5Mj4PvlxlriG3tvtUNF13JmU1kMpoD4PmL1O2pU8rzcEOVSY65ABx4Gl9JQEB5Mifu4iqybCp1cbbVDTx3g/Ifb0HlG0wqXHcnobVvypvtpi6OvBuLAE=
+	t=1707984097; cv=none; b=rNcf8GN/L3mHj7BJercEUdfxt2VklK8Ft1/n+uqjBmh0aaXsd1heTWUm849HGP5uK9ahbJZN3OvLFZwb6ptZvepsS89ySpYYifyDzzlfK12otCvOTqhmbcdT1fIW6HvzllI7nVpljyItmVF/KLuMYX0BcrBeFtZhY0HrPZ3Vz3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707939207; c=relaxed/simple;
-	bh=PSDAYGyTnXi+TlFuTpvL8jdZlU3ID1muuQgeBMTMymI=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=KZMFqt3l+IR0XTGgZX8PCShI0BX6nYLDI/1oaRL1+Umgcsj2lph6FfErAu22dujRT9TFuBsTovCrV0CxfYgzU04qsxBud3EU/hY9EMt70M6w4KBavD4azScE55ZXz3NCxUJf+WkPhRMPNDm4n7pe3EOFO+fcUhYh2yMZGfqDJTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QW/PrtjZ; arc=none smtp.client-ip=209.85.167.53
+	s=arc-20240116; t=1707984097; c=relaxed/simple;
+	bh=RCuKcn0lAZQmBwNqN1ew04a0SUpVrTeQr7Dl/Qw+Wgk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=LlENNahtFDwyU9H5fAKe98/jNQLaZIz+YjG0kgRnxOoNqB9pWf/MgFi8GpwZQNCg71kZeLS0W+ZOtNdyjWfstWmTQeT3DSkWxUyiSu2Fi4FnsNzJLmRalk78TRZWlJ9brc79IqyAX9nY4gLIDJjchfz8O72J9hAOYGNi3W3hRpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CHAVqiGp; arc=none smtp.client-ip=209.85.160.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QW/PrtjZ"
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-51182f8590bso87079e87.0
-        for <linux-ide@vger.kernel.org>; Wed, 14 Feb 2024 11:33:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CHAVqiGp"
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-42a35c720b8so1809011cf.3
+        for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2024 00:01:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1707939204; x=1708544004; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=RT2VmwPT+IvtReZOYNaGeuQWG2xOnYWOdlj2aiUjygI=;
-        b=QW/PrtjZXFO6SM3kZf0DQchSqh+0IrCPc9yDJwd1587o9CP6mY7p1qn86EwIAYoVSJ
-         d9utVfpf/4RCWRiHRCO30DL6BRi2IueFXCTE6LvsW9y83VSnrqgfo3e8rWSkMBptSQQj
-         QGJ2TKL6MPooJXB/e4y4COJkfQuVZINGNSnhTsldF9VEPJp4MM4qKAQ4i5nS93VknWCg
-         48VULmjadbU2HKvRA7+jkvsdDGS74ec+rtez8pr1DJKEtnWjqsIg9vteu1lTUWAkOQcQ
-         aHjkcdiw4s6oQQODrSV2aUT99T8SPSCEivCWc0YmbVqduNcVgbOMj1y6GmdE+wcGpZ7L
-         a72Q==
+        d=gmail.com; s=20230601; t=1707984094; x=1708588894; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Zvjh53I+fE0xG0bUExbZjOZdpiAC5DZlryszFk1zZ2Y=;
+        b=CHAVqiGp4/RDavXuO92aSV0cxTx9JT7vmcX04BD1oA2Mk1Y6jrkea+zeqzDeTgbNj1
+         EzowDKX0rUOHokIaEfNh16ELLaItitexg1DmaZjAQt6BuhlSkZzuuyR2vz59r1FStqG+
+         yQ11Brp+/BDCLi6GM21SaBCsVtKDsxpjx6/SHiLel6pO93TC+iP8+4p6gLLl+Gyj08xs
+         KzzjvMT2piy4oJj/wp2HdkRJ/Gcy+Cas7vswIFkV6GbbSXNPkEd5j5aAVgmXhLDFePHZ
+         dzjQv5A+t9QtgU1UHU7fjvkd9XEDl8mrKEeW+PmjFbrXp/6ETqvgkjBbZvL6JsouwAll
+         /1Mw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707939204; x=1708544004;
-        h=content-transfer-encoding:content-language:in-reply-to:mime-version
-         :user-agent:date:message-id:from:references:cc:to:subject
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RT2VmwPT+IvtReZOYNaGeuQWG2xOnYWOdlj2aiUjygI=;
-        b=EauhJ9otL11dwaBo55p0dnV0quob8hM8BsDP183ykH32xar7oE7TVIBDqWTzusEdA7
-         j60Reroy9Fn2ajHBda7h2Rno7rvkbehIgAqyMqXQkdYnq6L55iEcyTiZ+CGjGcenGZqW
-         CbVzhL6/Io+aqv+oQdN7ri+CQJ0Av+8lzovnpTs1E108VVL6VGHhzxnQ/t6uxPqw/O0B
-         RvDIQfx0TxJPgbc3L6pU8LUkZR3mc4V3af5XH5uSI695i+r3RfrBTK21BTpehF0I9+J5
-         qydD2wwMQA8rGl8Fo4gT3dkyxPc4LnyOZZ5lu3YpB+YZ2CpiYvkuZK2Y5jNKeE7kXDZ5
-         +agA==
-X-Forwarded-Encrypted: i=1; AJvYcCVGoMBob8t8RH8YXcXGD/u0byJNS5DsmyzHzeVVo5MsXTwrP7BAxZVxZP9wx+6RpodmFgdooNnKt19oSpwmfKO5UsuzLh10gKrx
-X-Gm-Message-State: AOJu0YxeK9IrjZOD7oNRq1SZaipSLoSKrfiK87XvlmPzMVgdypE6D5sT
-	YJxBEE94aAIyHNNZ8hT6Rk/q5GCtolHcEBR6gsz8yOe1Mwh4Y+Gy8SpGZkOL
-X-Google-Smtp-Source: AGHT+IE7mo/yUuluNsixzzna4UTQ008P8I27FChNXU0bWDLiisF4Ga3t92DrnP+c8USivkzl2jfhMg==
-X-Received: by 2002:a05:6512:39c2:b0:511:a803:7e63 with SMTP id k2-20020a05651239c200b00511a8037e63mr2550928lfu.54.1707939203500;
-        Wed, 14 Feb 2024 11:33:23 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXmHduDNPB0DLwt5k0Jp7cL/ECIWYOWIVWUH4r147RZTfPw1eFh5I5JW+7iyuvWGLbx8SFvpc6NDV8S/iLV/e63D8sRBH4NTVR4VI/9c+OBYKQr+Uqg98z4NzA8dzg=
-Received: from [192.168.1.105] ([178.176.73.178])
-        by smtp.gmail.com with ESMTPSA id k18-20020a0565123d9200b005116f7d1873sm1795759lfv.301.2024.02.14.11.33.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Feb 2024 11:33:22 -0800 (PST)
-Subject: Re: [PATCH] ahci: print the number of implemented ports
-To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
-Cc: Andrey Melnikov <temnota.am@gmail.com>, linux-ide@vger.kernel.org
-References: <20240214182031.1004788-1-cassel@kernel.org>
-From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <16121e16-df38-b422-8e8a-124f333e40c8@gmail.com>
-Date: Wed, 14 Feb 2024 22:33:21 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        d=1e100.net; s=20230601; t=1707984094; x=1708588894;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Zvjh53I+fE0xG0bUExbZjOZdpiAC5DZlryszFk1zZ2Y=;
+        b=B1j/bwF/Emtyg29J/yrMlVMs92HKWSt2TtEJVBKniGviu/DIiRc0p8X/nFYO2RV6CY
+         C2csUavLR2gou8LM42ohIXnJkF+m6kMqN/GBKwf+K+YyTyuzviHcm6yxNPtWDdJp7r7I
+         BTsYlkBwzbVayEUg05r7Ckg0JmNq/HiC3AlpacXenqV59T/b+dWs71dqeTrRVz/AsF9D
+         h/bEDqcZDwVY+AhbTTxcDbPiiEiDf9E8D7dmhO8KwZ6UUmcyBa9VcDSUife+76SuCxtQ
+         tJcp1F9NyAo1UX3hP8qGC2BHICbFPkYfQO4gWyVDVeC586s5Vcms6oU5iqnhkgbehDN8
+         3VMw==
+X-Forwarded-Encrypted: i=1; AJvYcCUM1RBnEGXpS62rDxJqL+d7FK2jczpnwO5ay0450z/WnVSvwuv5DC61kqduUVnEOMAsVDDz5HbdwmLbNvDds2MKumW3JETcKRKW
+X-Gm-Message-State: AOJu0YwMJZQxWP0/xIlMdmeGhfN1yWI7jiNtoZBXKODjQI723ag4EtNn
+	SYbTrZcdXkqCIVmH3R2HVRkPLNvhZGaquZjs+0mWQIkln9nqSDrZ8TAGvzIeFfkzviNoEJlTfjd
+	27EazbJB8+uGB+JPaSG15K4H9CDU2PF2g
+X-Google-Smtp-Source: AGHT+IGEahy6OFSIDLkmpfowBQZIXbipS3gOTTfW6/S6H3oHItUI14IL9/ibbVC9MBa/0BKQTR1Z+hNzAfk9Jt3JHsQ=
+X-Received: by 2002:ac8:5dcd:0:b0:42c:5a27:e35f with SMTP id
+ e13-20020ac85dcd000000b0042c5a27e35fmr1321161qtx.50.1707984094579; Thu, 15
+ Feb 2024 00:01:34 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20240214182031.1004788-1-cassel@kernel.org>
 In-Reply-To: <20240214182031.1004788-1-cassel@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+From: Andrey Melnikov <temnota.am@gmail.com>
+Date: Thu, 15 Feb 2024 11:01:23 +0300
+Message-ID: <CA+PODjqp9q1VeCsDvhn1TZ6bgnghX9t8P2m-7aEjFfSiBuk0iQ@mail.gmail.com>
+Subject: Re: [PATCH] ahci: print the number of implemented ports
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2/14/24 9:20 PM, Niklas Cassel wrote:
-
+=D1=81=D1=80, 14 =D1=84=D0=B5=D0=B2=D1=80. 2024=E2=80=AF=D0=B3. =D0=B2 21:2=
+0, Niklas Cassel <cassel@kernel.org>:
+>
 > We are currently printing the CAP.NP field.
 > CAP.NP is a 0's based value indicating the maximum number of ports
 > supported by the HBA silicon. Note that the number of ports indicated
 > in this field may be more than the number of ports indicated in the
 > PI (ports implemented) register. (See AHCI 1.3.1, section 3.1.1 -
-> Offset 00h: CAP – HBA Capabilities.)
-> 
+> Offset 00h: CAP =E2=80=93 HBA Capabilities.)
+>
 > Print the port_map instead, which is the value read by the PI (ports
 > implemented) register (after fixups).
-> 
+>
 > PI (ports implemented) register is a field that has a bit set to '1'
 > if that specific port is implemented. This register is allowed to have
 > zeroes mixed with ones, i.e. a port in the middle is allowed to be
-> unimplemented. (See AHCI 1.3.1, section 3.1.4 - Offset 0Ch: PI – Ports
+> unimplemented. (See AHCI 1.3.1, section 3.1.4 - Offset 0Ch: PI =E2=80=93 =
+Ports
 > Implemented.)
-> 
+>
 > Fix the libata print to only print the number of implemented ports,
 > instead of the theoretical number of ports supported by the HBA.
-> 
+
+NAK.
+Kernel must report what it got from silicone/addon-board. Different
+revisions may implement different numbers of ports.
+If you want to report real (usable) ports - add it after the mask.
+
 > Suggested-by: Damien Le Moal <dlemoal@kernel.org>
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > ---
 >  drivers/ata/ahci.h    | 11 +++++++++++
 >  drivers/ata/libahci.c |  2 +-
 >  2 files changed, 12 insertions(+), 1 deletion(-)
-> 
+>
 > diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
 > index df8f8a1a3a34..92d29a059763 100644
 > --- a/drivers/ata/ahci.h
 > +++ b/drivers/ata/ahci.h
 > @@ -455,4 +455,15 @@ static inline int ahci_nr_ports(u32 cap)
->  	return (cap & 0x1f) + 1;
+>         return (cap & 0x1f) + 1;
 >  }
->  
+>
 > +static inline int ahci_nr_ports_in_map(u32 map)
 > +{
-> +	unsigned long port_map = map;
-
-   Why cast to potentially 64-bit type?
-
-> +	int i, n = 0;
+> +       unsigned long port_map =3D map;
+> +       int i, n =3D 0;
 > +
-> +	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS)
-> +		n++;
-
-   There's hweight32() for that, IIUC.
-
+> +       for_each_set_bit(i, &port_map, AHCI_MAX_PORTS)
+> +               n++;
 > +
-> +	return n;
+> +       return n;
 > +}
 > +
 >  #endif /* _AHCI_H */
-[...]
-
-MBR, Sergey
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 1a63200ea437..82ebe911a327 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -2637,7 +2637,7 @@ void ahci_print_info(struct ata_host *host, const c=
+har *scc_s)
+>                 vers & 0xff,
+>
+>                 ((cap >> 8) & 0x1f) + 1,
+> -               (cap & 0x1f) + 1,
+> +               ahci_nr_ports_in_map(impl),
+>                 speed_s,
+>                 impl,
+>                 scc_s);
+> --
+> 2.43.0
+>
