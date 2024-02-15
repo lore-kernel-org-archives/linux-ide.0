@@ -1,160 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55DE512AAD6
-	for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2024 11:19:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 941EA13398C
+	for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2024 15:23:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707995978; cv=none; b=j4o+bELLDg20SrdecWwzUmSLLkvjdpgMCMMQDK60nuRLtow+w/+OsyzkgOAHWxB4NQW703ZpmNuioRakMfltsMQjv0TFIzN94vPxNQ5DNTA8bUHdEqyy37o7fY4ctqQVogDyG6690Wep5Mb2p581DlB1F6nKgB5fWsKM3ztYfqI=
+	t=1708010583; cv=none; b=ggebzT4cTQMcL9SUgHedenn3XkXG3GcFhZS7Z3GQO4g+aa60mY6f2aCJpE93jsyqAS0oSwd/E1xmsr6+sIEXEu8Y/QXLoJua6cLb7O22b/kNizXulax1QZ4N9KKwm2KSHSlJTplYrCiGXImwEuxwF8Kv5GA7gp6fjcr+sWOCIsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707995978; c=relaxed/simple;
-	bh=F3OGgVMjsJrC3Gg2mkeqQcvb3G4ILSTxzM4A4GZC7rs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kfq60foWI6X58WlrOigQmLTPvzTWT4aarKa8+otIuPFyXQov/SvhyBrrfVy3ACV+byU1decDNc/RNSTBfso/8yovfjPKlUgIdQgHL4mz1QZk8VQyN5snMpObLD7pSoC3mrsDQjMonIPEQw9KOcTlnXbyvOgwFiHWzFyF5MdbLN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhikTF/U; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708010583; c=relaxed/simple;
+	bh=PL72pL08vJLWNTF69b6M6GVZXXDj5c3k64IHI48YWxI=;
+	h=Subject:From:To:Cc:References:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=nhC+3i0+1LzyZfVICyS2Wn5lDpbAyxX2ZSUQ2qtkeiVLn6nTy3Dp9Nhka4G3VKekqs9FfmgCQMXQ1WCJhQarpOSi09UMiHAAdtS5B2sVVidRtuvRnfqnlr6RN/x04Kwa6Kbszwh87xCMP8Jxfu4YUTg3F3WaVK/YYyb/KdQsynY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RJ5tbL6h; arc=none smtp.client-ip=209.85.167.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhikTF/U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2B72C433C7;
-	Thu, 15 Feb 2024 11:19:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707995977;
-	bh=F3OGgVMjsJrC3Gg2mkeqQcvb3G4ILSTxzM4A4GZC7rs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fhikTF/UPqmdlvVaYDd1+xsGQNI/vrGrtGoWdDybeaaffoT2D745nWZo9OQ00+GWL
-	 nV4yKXzfcXUIDQUOD44WZTPfEL1mHXokiRgNSLZSh01mkcKZ/iwxjx+e9+LLk2HMXf
-	 TLgi+6T3K9yU+qV+JZEDzZYVqUwpVCPZgtlfASSf7QAC0/pHoRJgRIBl35QNOFpbhB
-	 YFB5/KPOnXBlU8c2ASWBPS5OPKyN+6QWEDQjuzxvySu8q+fdJ6AOSuDLSEo/Ap2ima
-	 yGqP95anNXQePGBzOWDSrOpWrBdWaTIYGHplpvWTYCclnfrtr9azvqeye6JTcjtsEa
-	 SOBZYagfvvJGQ==
-Date: Thu, 15 Feb 2024 12:19:33 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Andrey Melnikov <temnota.am@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RJ5tbL6h"
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-51182ece518so1161303e87.3
+        for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2024 07:23:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1708010579; x=1708615379; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:references:cc:to:from:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=HnxJ/ju8DOvCzZ2alxzgBKtpF8LbyY5jQuCnN2xtt0c=;
+        b=RJ5tbL6hAwf0KGRX4jxDJx7JUEiuQFIjtir0irkBj+AxbJz6Ojcjw21NyM4H+ki+No
+         vi0omgc8pgsGmMd3ahdRPXMHlaeEmHC7scmphyg67II2Q7ut5XlolFeLLLe1rSzmSfXX
+         z95XN9UkqoTl47VE1HtxhnKQw16sO0OXf+9+v3+Pd1WDUvMKu3jdzA0OAOSIWYXpTUU5
+         DqfhD7dja2MyzrDrrsDRhhH1x4SY8RIuYqBjxEtBoulePlbvMEWPZT2FkLmfB1k2CLi1
+         piP5iR2RUiPsCv9cc0e8zsYuNSo2DLMgqwDyoLswmUGIk3JuYiYsTzHwMrVU+SQyHW0i
+         y4Vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708010579; x=1708615379;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:references:cc:to:from:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HnxJ/ju8DOvCzZ2alxzgBKtpF8LbyY5jQuCnN2xtt0c=;
+        b=X61mSsrw5dN4DHy3WZN9iRjRj4m3h/cZlMS6NQyFFBES1OWyTE54RSwKhczN5YQjZQ
+         a849ytqbm7GJmkbSQiExx5tYexPfNb70182br2b5wtpX7aetfuyQdNH3sCrR0Ffi8cjw
+         4vDxzlvwYwGn4B+tjrXfw/Ga6pghRNem/g8hIZacyKRTPZhbVw4G7WKwk/yY3C3fTBOP
+         X/B6kdxd24P1hzenQZ+RgjmwPJb5F4C7wNlqQwb7lmtVPHsuw+Htegz3EzNaUD6/kUcF
+         u2k9jks6v+ndOF4MGKL8lvhQWirqmL9oCmr7JFCEorJ4tDZx0Z8o0NQTJVtKes//o7WI
+         nlIg==
+X-Forwarded-Encrypted: i=1; AJvYcCUkdhQHehRZM1MHvynkZXCHuiyzfZ1k3efJnpNq6tDDBGm73VG+PaRSri2TAH8cukl+gZ0NOGu555b3WA7s0DOiikeR7Dgd61U8
+X-Gm-Message-State: AOJu0Yxaxixz/iTz1wvC57/3eQwxutLD9QGiT3HECFxD4ajhMqp0nbrq
+	p6ihMVnE+BSP3EHo7jf2Exb18deLzRa2KnKOH4AYC+2UpB3NmJYpNPqQcQnP
+X-Google-Smtp-Source: AGHT+IEuJkcHjR8B6Ga1no4vbcuxZxM/fZdb1ejTopByFpwChbyXW4wHZGz42Awbo7lljnOKBvK5eg==
+X-Received: by 2002:a05:6512:138c:b0:511:5411:1144 with SMTP id fc12-20020a056512138c00b0051154111144mr2006164lfb.14.1708010578724;
+        Thu, 15 Feb 2024 07:22:58 -0800 (PST)
+Received: from [192.168.1.105] ([178.176.74.227])
+        by smtp.gmail.com with ESMTPSA id f25-20020a193819000000b00511a0a3b2bbsm285616lfa.87.2024.02.15.07.22.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Feb 2024 07:22:58 -0800 (PST)
 Subject: Re: [PATCH] ahci: print the number of implemented ports
-Message-ID: <Zc3zRXFy1OXyNMZt@x1-carbon>
+From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+Cc: Andrey Melnikov <temnota.am@gmail.com>, linux-ide@vger.kernel.org
 References: <20240214182031.1004788-1-cassel@kernel.org>
- <CA+PODjqp9q1VeCsDvhn1TZ6bgnghX9t8P2m-7aEjFfSiBuk0iQ@mail.gmail.com>
+ <16121e16-df38-b422-8e8a-124f333e40c8@gmail.com>
+Message-ID: <eae22518-cd67-0cc4-130b-55eb6b3f3e70@gmail.com>
+Date: Thu, 15 Feb 2024 18:22:56 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <16121e16-df38-b422-8e8a-124f333e40c8@gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+PODjqp9q1VeCsDvhn1TZ6bgnghX9t8P2m-7aEjFfSiBuk0iQ@mail.gmail.com>
 
-Hello Andrey,
+On 2/14/24 10:33 PM, Sergei Shtylyov wrote:
+[...]
 
-On Thu, Feb 15, 2024 at 11:01:23AM +0300, Andrey Melnikov wrote:
-> ср, 14 февр. 2024 г. в 21:20, Niklas Cassel <cassel@kernel.org>:
-> >
-> > We are currently printing the CAP.NP field.
-> > CAP.NP is a 0's based value indicating the maximum number of ports
-> > supported by the HBA silicon. Note that the number of ports indicated
-> > in this field may be more than the number of ports indicated in the
-> > PI (ports implemented) register. (See AHCI 1.3.1, section 3.1.1 -
-> > Offset 00h: CAP – HBA Capabilities.)
-> >
-> > Print the port_map instead, which is the value read by the PI (ports
-> > implemented) register (after fixups).
-> >
-> > PI (ports implemented) register is a field that has a bit set to '1'
-> > if that specific port is implemented. This register is allowed to have
-> > zeroes mixed with ones, i.e. a port in the middle is allowed to be
-> > unimplemented. (See AHCI 1.3.1, section 3.1.4 - Offset 0Ch: PI – Ports
-> > Implemented.)
-> >
-> > Fix the libata print to only print the number of implemented ports,
-> > instead of the theoretical number of ports supported by the HBA.
+>> We are currently printing the CAP.NP field.
+>> CAP.NP is a 0's based value indicating the maximum number of ports
+>> supported by the HBA silicon. Note that the number of ports indicated
+>> in this field may be more than the number of ports indicated in the
+>> PI (ports implemented) register. (See AHCI 1.3.1, section 3.1.1 -
+>> Offset 00h: CAP – HBA Capabilities.)
+>>
+>> Print the port_map instead, which is the value read by the PI (ports
+>> implemented) register (after fixups).
+>>
+>> PI (ports implemented) register is a field that has a bit set to '1'
+>> if that specific port is implemented. This register is allowed to have
+>> zeroes mixed with ones, i.e. a port in the middle is allowed to be
+>> unimplemented. (See AHCI 1.3.1, section 3.1.4 - Offset 0Ch: PI – Ports
+>> Implemented.)
+>>
+>> Fix the libata print to only print the number of implemented ports,
+>> instead of the theoretical number of ports supported by the HBA.
+>>
+>> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+>> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+>> ---
+>>  drivers/ata/ahci.h    | 11 +++++++++++
+>>  drivers/ata/libahci.c |  2 +-
+>>  2 files changed, 12 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+>> index df8f8a1a3a34..92d29a059763 100644
+>> --- a/drivers/ata/ahci.h
+>> +++ b/drivers/ata/ahci.h
+>> @@ -455,4 +455,15 @@ static inline int ahci_nr_ports(u32 cap)
+>>  	return (cap & 0x1f) + 1;
+>>  }
+>>  
+>> +static inline int ahci_nr_ports_in_map(u32 map)
+>> +{
+>> +	unsigned long port_map = map;
 > 
-> NAK.
-> Kernel must report what it got from silicone/addon-board. Different
-> revisions may implement different numbers of ports.
+>    Why cast to potentially 64-bit type?
 
-Strong words here... "NAK", "must"...
-Could you please give some more constructive criticism?
+  Ah, I figured it's for find_next_bit()....
 
+> 
+>> +	int i, n = 0;
+>> +
+>> +	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS)
+>> +		n++;
+> 
+>    There's hweight32() for that, IIUC.
 
-This is only a print at boot, so it is simply meant to provide information
-to the user.
+   Yeah, it replaces this whole function... :-)
 
-Currently this print already contains the mask, printed as impl 0x%x.
-This value is after fixups, so this value does not necessarily report
-"what the silcone reports".
+[...]
 
+MBR, Sergey
 
-From AHCI 1.3.1 - 3.1.4 Offset 0Ch: PI – Ports Implemented:
-"""
-This register indicates which ports are exposed by the HBA.
-It is loaded by the BIOS. It indicates which ports that the HBA supports
-are available for software to use. For example, on an HBA that supports
-6 ports as indicated in CAP.NP, only ports 1 and 3 could be available,
-with ports 0, 2, 4, and 5 being unavailable.
-
-Software must not read or write to registers within unavailable ports.
-"""
-
-
-So
-1) the impl value (the port mask) is the value read by PI register,
-and additionally after fixups.
-2) Software must not read or write ports that are unimplemented.
-
-
-This is with current mainline (without my patch) on Intel Tiger Lake:
-[    0.379525] ahci 0000:00:17.0: AHCI 0001.0301 32 slots 3 ports 6 Gbps 0x31 impl SATA mode
-[    0.379531] ahci 0000:00:17.0: flags: 64bit ncq sntf stag pm clo only pio slum part ems sxs deso sadm sds apst
-[    0.399005] ata1: SATA max UDMA/133 abar m2048@0x42233000 port 0x42233100 irq 125 lpm-pol 0
-[    0.399009] ata2: DUMMY
-[    0.399010] ata3: DUMMY
-[    0.399011] ata4: DUMMY
-[    0.399012] ata5: SATA max UDMA/133 abar m2048@0x42233000 port 0x42233300 irq 125 lpm-pol 0
-[    0.399015] ata6: SATA max UDMA/133 abar m2048@0x42233000 port 0x42233380 irq 125 lpm-pol 0
-
-Here, CAP.NP reports that the maximum supported number of ports is 3.
-
-So for this specific platform CAP.NP (maximum) is set to the same as
-the number of implemented ports.
-
-But as we can see for the description of the CAP.NP field:
-"Note that the number of ports indicated in this field may be more than
-the number of ports indicated in the PI register."
-
-So the case that "maximum number of ports == number implemented" may not be
-the case for all HBAs.
-
-Another HBA could have CAP.NP set at 6.
-But PI reports that mask 0x31.
-
-Why should this platform not print number of ports as 3?
-In other words, what value does knowing the maximum number of ports
-theoretically supported by the HBA provide the average user?
-
-I would expect that the average user would rather see the number of implemented
-ports, because that is the number of ports that Linux will be able to use.
-The device driver is not allowed to touch unimplemented ports, so why should
-the print by the device driver include these?
-
-If you want to see that, I think you can use tools to dump the HBA regs.
-
-What caused me to write this patch in the first place was that someone was
-surprised to see:
-
-> before:
-> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
->
-> after:
-> ahci 0000:04:00.0: forcing port_map 0xffff0f -> 0xf
-> ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xf impl SATA mode
-
-And I have to agree. Why report 24 ports?
-We had a fixup that corrected the incorrect PI register to 0xf.
-The print is there to provide information, but reporting that we have 24 ports
-(instead of reporting 4 ports), causes more confusion to the user, rather than
-providing userful information IMO.
-
-
-Kind regards,
-Niklas
