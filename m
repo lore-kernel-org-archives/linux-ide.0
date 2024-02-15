@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCE2D1E4AE
-	for <linux-ide@vger.kernel.org>; Thu, 15 Feb 2024 22:36:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E23813AA3F;
+	Thu, 15 Feb 2024 22:45:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708036568; cv=none; b=Ub3QymYbZOW8R6Q8RPZXaVfjEaZC37QRp6OGP5Q+iAjE9jgHod/X+IpmIwwO5c51qM1XErzOHINwFNIQj5uIOQjdBAJB4l+Ed6X+9VZJ3cZInCjnyn1V2vjbEZT19vBsPBZaX3DZcHvw/4mCfh3pCCNL+1y18lQShMy+4rvqiAg=
+	t=1708037114; cv=none; b=J1r1IINnL3G9d4b4USuwq53hF+m39GDWPF2mtCRiKwK9XWZm1NB9DpJZgebtavJigdVZ+EJMfh411Jwk/2ZQ7uzqlQ3b8bJYMF81HBD0I6XslbiN+V9EUziP8ygZwytKlweqiOmmYgKsmvzUh2AZ2TPoQFAItlHFAcIlMV+44mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708036568; c=relaxed/simple;
-	bh=7mdSnFTkHZs18WqVyOhH6sOkDfUb8VJTbPBB+oPI52w=;
+	s=arc-20240116; t=1708037114; c=relaxed/simple;
+	bh=L76Sg0D6O8zeR7pfF8vTouMZ0eSszIjsF07eYosEf6k=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Uz15nNX7nH9Bf3s7skwaqPpobClsyK9JnamMAv2rx0068y1P6i09eHYKXuuUaJEP6Cgk5TXAfJ8yFDx5UJ1zVZMruc6DOXFxlOlmTMAuaY2qA1pOCk+HyFh+UUAKqc8JCH0NvuwdgQHnPpp3C9DtpwRVrUGvkFjGsJcqmxBXJK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TyQTnzjO; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=j+hCQDhJXoRpKK4BbZF2DpDbsW+Dke5Jd49Asy3Q1K9c7LYwuGx72VJyBVt4ahP4In2PWfoR9uqh2FcHAGKbRnFd6328xqgcqZq2Rb5Z2vwva/guhFJsODQiFTXHLhlMOKJ35yOvo+loeBNwSEl26igXp49fon8pknstoNDLPf0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lA4Jb1iX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TyQTnzjO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94AE8C433C7;
-	Thu, 15 Feb 2024 22:36:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lA4Jb1iX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 293FAC433F1;
+	Thu, 15 Feb 2024 22:45:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708036568;
-	bh=7mdSnFTkHZs18WqVyOhH6sOkDfUb8VJTbPBB+oPI52w=;
+	s=k20201202; t=1708037114;
+	bh=L76Sg0D6O8zeR7pfF8vTouMZ0eSszIjsF07eYosEf6k=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=TyQTnzjO0nOoDUBz3GlnrKP7H0cAAxfiFD2BXTMBMhfF4cfun1jzv1DeNIQM/4Rad
-	 cSR7r9/Y2BbaqFatYMnOmR7jenhZv0SWcICfYH8GD5CE9d/SDoEmwyklI1G2HdGy4L
-	 4R9lCe21/TMUvWQQtta7bHcJvkwojBNQSmjer5A4d+DL0cRgvFrrJ1K/C8YHGj5JQj
-	 ksO69yhlImxyzTO9NRBE6mak1UkxD6Ga7rPgABlN8jyw6hWK60NlQuB8ahu1C9+HjR
-	 2aUgVHZh8bmOEyXGTdcbU1exHKTYvGOaCBxSyVsrzeGpnoNfuwd1D/R+7avOt0xTax
-	 EiLebfkEBrMNw==
-Message-ID: <80fb74e2-080c-41db-8f18-715ec79441bf@kernel.org>
-Date: Fri, 16 Feb 2024 07:36:07 +0900
+	b=lA4Jb1iXhKL08Bf1XFoqRi8T42e8irvjslvPN6NkiJTTg51Buf3Xif+58Pumhaf9T
+	 l3aypLUahg9+/WUiRERb6EoTr/R7qkBdUhY3dGml8eUNTT0P9z15OfbgTNmNdZTbkO
+	 ukdK1KyBFjiOHiE3HQ6Z+35+Fz/XeI6pBsAt24PvTpFpS+oYXolrZiVlpEvznxVqGs
+	 8OrIjt6DxnGzB2l6GS5uRWCqBhddgJqEXSJE58uX4oZetCw+F6hVrzU7cF2G3Vn6DQ
+	 Jjd8QOR8SMTo1pX+eHT3G4UysDyZHVO4HrI+T1hPUj5zzJdttJ+YZ0mIASm8sqYcNR
+	 9WQ4tqOOn/wDA==
+Message-ID: <0b57d422-6b7f-43e2-8068-8ebae15dd1bc@kernel.org>
+Date: Fri, 16 Feb 2024 07:45:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,30 +35,56 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 4/4] ahci: rename board_ahci_nomsi
+Subject: Re: [PATCH v2] ata: ahci_ceva: fix error handling for Xilinx GT PHY
+ support
 Content-Language: en-US
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
- Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org
-References: <20240214130015.952685-1-cassel@kernel.org>
- <20240214130015.952685-5-cassel@kernel.org>
+To: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>, cassel@kernel.org,
+ p.zabel@pengutronix.de, axboe@kernel.dk, michal.simek@amd.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1708020060-1439879-1-git-send-email-radhey.shyam.pandey@amd.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240214130015.952685-5-cassel@kernel.org>
+In-Reply-To: <1708020060-1439879-1-git-send-email-radhey.shyam.pandey@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2/14/24 22:00, Niklas Cassel wrote:
-> The naming format of the board_ahci_no* boards are:
-> board_ahci_no_debounce_delay
-> board_ahci_pcs_quirk_no_devslp
-> board_ahci_pcs_quirk_no_sntf
+On 2/16/24 03:01, Radhey Shyam Pandey wrote:
+> Platform clock and phy error resources are not cleaned up in Xilinx GT PHY
+> error path.
 > 
-> Rename board_ahci_nomsi to board_ahci_no_msi to match the other boards.
-> 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> To fix it create a wrapper ceva_ahci_platform_enable_resources() API which
 
-Looks good.
+create a wrapper ceva_ahci_platform_enable_resources() API -> introduce the
+function ceva_ahci_platform_enable_resources()
+
+> is a customized version of ahci_platform_enable_resources() and inline with
+> SATA IP programming sequence it does:
+> 
+> - Assert SATA reset
+> - Program PS GTR phy
+> - Bring SATA by de-asserting the reset
+> - Wait for GT lane PLL to be locked
+> 
+> It switches to ceva_ahci_platform_enable_resources() in resume path
+> as same SATA programming sequence (as in probe) should be followed.
+
+What is "It" ?
+
+> It also cleanup mix usage of ahci_platform_enable_resources() and custom
+> implementation in probe function as both are not required.
+
+Same here, but may be "It" == "this commit" ?
+If that is the case, then simply rewrite your sentences simply like:
+
+ceva_ahci_platform_enable_resources() is also used in the resume path
+as the same SATA programming sequence (as in probe) should be followed.
+Also cleanup the mixed usage of ahci_platform_enable_resources() and custom
+implementation in the probe function as both are not required.
+
+> Fixes: 9a9d3abe24bb ("ata: ahci: ceva: Update the driver to support xilinx GT phy")
+> Signed-off-by: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
+
+Other than these nits, this looks OK to me.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
