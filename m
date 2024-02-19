@@ -1,72 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5812F28DD5;
-	Mon, 19 Feb 2024 10:23:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD226BA4D
+	for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2024 10:37:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708338201; cv=none; b=CP/wJKTZVgnjfvCrR4q+y3LxP7aBf4UWk2qZdNO023LG29fkWyVgWOqTjG5DPiqBE+FEtLFrLpt7d2Iu4pMhWMMQgM8Q9trAriUbzUD7zLCq9U5CQ4H0mlN0/1TF66EmGQxQHlJXEnOVgiSJk3Y4K0nv7JaJs+2qjfLLod8L8aI=
+	t=1708339033; cv=none; b=JpVxpCWSztbc2yN2s8/Izig4HSwVvdQgJERKyKsiROa0ofERGdZATjYWNkT+BvKW8MhmXGKwl84KRGJ3ozOUnGBz9zJVVy76jZh+pQVCq+IkvwLlp44DIiXUaco/GLkphIt/ZCsEJBU85YUF1R5csy63o0q6M/kSpNA0tigI4aY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708338201; c=relaxed/simple;
-	bh=dKJLsTHvNevwcvhcDeaXvz7IVccXObxg2f+AAqsJdY8=;
+	s=arc-20240116; t=1708339033; c=relaxed/simple;
+	bh=KotdvC0JkA1/7MxB4fuFTqcv8WYS7ZBp7Fr6DVFDhqc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k9dP1R1SpUS+jfzwFcRSFztcoz64T2P5/W3f0bnMaDlAfdfxhG0RNAifCQbr27a55F33KosaMDFXwHbxDajcgDCPgsi1zMDL0+tsQO4Zb44W1wikAWXZQ9qa4RjhkEV77oLWY47uNI+/iDToSgdUkytClkXOqCAnkatGZX52Brw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qOHrTtsZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bfCw9jldv7M8V56ofoX2GINr2LPLVRXvtr5OhDzkoG51OD4cR+XlsvTAbo6FSXqXScsqnyBOI4Wt0JyajdedEDeIDzmC0PIl8C0YryryunnQos+uHgos5pMTN0k7fAXleHZt9aXL/bh7ivBj/aIc69+Ds4wmdYU5b4xhGlCtgaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P3ckuHIx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qOHrTtsZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49292C433A6;
-	Mon, 19 Feb 2024 10:23:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P3ckuHIx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12993C433C7;
+	Mon, 19 Feb 2024 10:37:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708338200;
-	bh=dKJLsTHvNevwcvhcDeaXvz7IVccXObxg2f+AAqsJdY8=;
+	s=k20201202; t=1708339033;
+	bh=KotdvC0JkA1/7MxB4fuFTqcv8WYS7ZBp7Fr6DVFDhqc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qOHrTtsZRDJFlYS2TF/KtO3C+utLQAvQG0V8QTeNVMmn5vaBWkl9tORwHW31s9441
-	 2A2s/rKkqm6libyRc1Axf0Ota85WGg70bsnC5HliD8c5cYPBvzxJa1G44V3fyskWDt
-	 svMOPRGTpIY5Q6mDmfyuWjfeEIKikxHnW57xBQHbhJP+1iuIvYsIy2WR9k0SpplnWQ
-	 LP1aETY/g8udTWzf0SvsNt05iQtYCPaddm0fxsXn/rlVHVVQ09IwdXWgFj/P+wcnRr
-	 JceaxsrzkrEyrcJczephzSPq1d5eYD7eXQLASOuhrDSnYAbhdlZ3Su2hvD2YrYitOk
-	 9vKRVmMRp+Aqw==
-Date: Mon, 19 Feb 2024 11:23:13 +0100
+	b=P3ckuHIxx1wBc8IcgXVyAs49MEnvjduZbuVMrNsrWNb3XzqdbpWAnAGFmohghFJet
+	 QJp539FTNuHRQSmQe47/tG0fKLbUHGDEHEz1o2xtMfmGy/Q0oLa53u5EKG0bUABGPU
+	 FkUbzHPLJ8H2hWuJPQRlmj+IE4f9V1FpyQNCHGy8WA9Pl9re1mQvC2GnbBbJEzs4PG
+	 QqG2TkVqKMI0AbxcTM3ptXLUjGkyca2jCiphDbFSrcynydZzHJA4+eIvcM4HDRZEDZ
+	 skW21pHKAT47ooiu0vCZ5LpAMvdBUWBM98N+thxNkLKP7R11SgYWYCZ53UfxpSg0lx
+	 2mavj7b22tWFg==
+Date: Mon, 19 Feb 2024 11:37:08 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Ryder Lee <ryder.lee@mediatek.com>, linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Subject: Re: [PATCH] dt-bindings: ata: convert MediaTek controller to the
- json-schema
-Message-ID: <ZdMsEW2AnYVAB7Qf@x1-carbon>
-References: <20240213074747.26151-1-zajec5@gmail.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: "Andrey Jr. Melnikov" <temnota.am@gmail.com>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2] ahci: asm1064: correct count of reported ports
+Message-ID: <ZdMvVPY5/51aoxOa@x1-carbon>
+References: <20240214165758.986896-1-cassel@kernel.org>
+ <ZdMfn5bp19qd3vft@x1-carbon>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240213074747.26151-1-zajec5@gmail.com>
+In-Reply-To: <ZdMfn5bp19qd3vft@x1-carbon>
 
-On Tue, Feb 13, 2024 at 08:47:47AM +0100, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> This helps validating DTS files.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
->  .../devicetree/bindings/ata/ahci-mtk.txt      | 51 ----------
->  .../bindings/ata/mediatek,mtk-ahci.yaml       | 98 +++++++++++++++++++
->  2 files changed, 98 insertions(+), 51 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
-> 
+On Mon, Feb 19, 2024 at 10:30:07AM +0100, Niklas Cassel wrote:
+> On Wed, Feb 14, 2024 at 05:57:57PM +0100, Niklas Cassel wrote:
 
-Applied:
-https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-6.9
+(snip)
+
+> While I agree with Andrey that we should change the quirks that use
+> saved_port_map to instead use force_port_map (so that we don't have
+> two different ways to apply port_map quirks), that clean up can be
+> done on top of this fix.
+
+s/force_port_map/mask_port_map/
+
+(force_port_map was the third way of applying these quirks,
+but it has been removed already.)
+
+
+Kind regards,
+Niklas
