@@ -1,129 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20FE92C18E
-	for <linux-ide@vger.kernel.org>; Mon, 19 Feb 2024 20:47:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D06B2119;
+	Mon, 19 Feb 2024 22:45:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708375671; cv=none; b=tMXAaIinreFJ4foJZvYc4rjw2QStm+OK5IRxyMu4rmP6AdxL6wNimXBlWdYvGRuBUVP7HBEQ6zO7VX80YrUmtNNqLHepMy4JtLqFqVElJa0xX1mP8nbm8h8QGVL3hzDFuqS8nmaeUmU5MCYsZxtHYK6el9Ulws/jhr37qevL+ks=
+	t=1708382752; cv=none; b=NUyIe4WI3Ar/5QykRGpbd9eUZrhiY1wgcKfVVQE3bRZuAsDlMrWhHuYmLCkUVjl0YxBqDqchLtA2nfnE5aAcXhQ8wWMYtO5ilMMuRU7SfWzVDnoe38hDptdTDnX9/6NfBQxp1+XiUKpUHE3S2YGDk/A/4jz/Tj/lwjBb/kiHmi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708375671; c=relaxed/simple;
-	bh=hr3TQJcpeVBchiHfUMulkbtkqsPfXJJOMckcUvpJRak=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fTmp3uEgBrB0BGCosuCfbuPSh0+N93IKbheYR7XZmJdiZqaXIhweTbNxdPDsT/4tkx/BYo/W1m7dsTtZBbJHQgHuNXJpueDnhExxSl2eORmMx0kZm/gDtwG7vt8xOSGHsrsD3jaNe3l0NUhPxLWyHcrWm1q9rn8iZ4QbwaODX28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NE6OCxEW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708382752; c=relaxed/simple;
+	bh=NW4f/1OTgzRld+lN2nF72siYdQvyEC7OkmPvulrhh/k=;
+	h=Content-Type:MIME-Version:From:To:Cc:Subject:In-reply-to:
+	 References:Date:Message-id; b=oOcgOPJmBfWWn9Yjw45Mk4c1oCNgiYlcTvaacWx4UzqonLRtc9nsUFq0JP4pF2W7EFri9qRwU3eyfPpYEgaiAkHTXbcegFXLNdC7htPCJL/vmD0/BDvkiseipiKn6H3aoi+0zbItw5Wy6SGuGdAnHRayd9+O1/XH1Rljlsnucgw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ffBLsxdk; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qSDppZHj; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ffBLsxdk; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qSDppZHj; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NE6OCxEW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3955C433C7;
-	Mon, 19 Feb 2024 20:47:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708375670;
-	bh=hr3TQJcpeVBchiHfUMulkbtkqsPfXJJOMckcUvpJRak=;
-	h=From:To:Cc:Subject:Date:From;
-	b=NE6OCxEWmqzOgxocOcBxd8/h2B7RkU/1XmNKhBqCO4ClMK6uLm4LvhwtZ+G/fF4DT
-	 /95EDZbHK+4SureM8/FN/5Fb4U47ELrEomwXBmvnywffdZUF9sl71gtHfQVQksquP/
-	 Nfust5ZH1iiYlKmxphA5p8b1hiEEnEmQXCiZWF4zEw9JhWQsyxM9udfC9Sen7yMMn/
-	 ov+blO8i1zWM2f+IOnfR1PXq8xCdLvBe1AdvUWsnhVs+2nuIkBHwvFdJJQfSTMUWIK
-	 k0dhTGFINkjis7QbSPeZGioEo9aU4VIHHDgo9fpYb/Ti2ScocJgEh6/rxK/MuioiX7
-	 6ShZCrQ/9/OxA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Sergei Shtylyov <sergei.shtylyov@gmail.com>,
-	Andrey Melnikov <temnota.am@gmail.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH v3] ahci: print the number of implemented ports
-Date: Mon, 19 Feb 2024 21:47:43 +0100
-Message-ID: <20240219204744.1365567-1-cassel@kernel.org>
-X-Mailer: git-send-email 2.43.2
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ffBLsxdk";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qSDppZHj";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ffBLsxdk";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qSDppZHj"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id B8E85220C1;
+	Mon, 19 Feb 2024 22:45:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1708382742; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jhVHfbYrXzhfXFBgvCaTvPo61AcJ2SJpQ0r3nOcOMWo=;
+	b=ffBLsxdkxs2Vl2iAehHqNwc/J/goXUBfsvO3BNlP2NGTF1DhODsMjvGv1o/JZf/aFhBx7k
+	jsDKJmnyATkUa2KxIqRua8yDpw/ferwWezTZN1hzjjbcnHgUbPW4jmp9J4fypF+b/rRs6/
+	w1WN/hkgkKf3ys8LyQqTkzAanKcx7HU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1708382742;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jhVHfbYrXzhfXFBgvCaTvPo61AcJ2SJpQ0r3nOcOMWo=;
+	b=qSDppZHj9xv7ph4gNovDdeF0vGhlKJd4Cwy3Dz0LIkby7qqEPkEO+ZjfJ1aqKVFqPl7cCc
+	zcV8tkGZfhuNHcDg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1708382742; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jhVHfbYrXzhfXFBgvCaTvPo61AcJ2SJpQ0r3nOcOMWo=;
+	b=ffBLsxdkxs2Vl2iAehHqNwc/J/goXUBfsvO3BNlP2NGTF1DhODsMjvGv1o/JZf/aFhBx7k
+	jsDKJmnyATkUa2KxIqRua8yDpw/ferwWezTZN1hzjjbcnHgUbPW4jmp9J4fypF+b/rRs6/
+	w1WN/hkgkKf3ys8LyQqTkzAanKcx7HU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1708382742;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jhVHfbYrXzhfXFBgvCaTvPo61AcJ2SJpQ0r3nOcOMWo=;
+	b=qSDppZHj9xv7ph4gNovDdeF0vGhlKJd4Cwy3Dz0LIkby7qqEPkEO+ZjfJ1aqKVFqPl7cCc
+	zcV8tkGZfhuNHcDg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 784A8139D0;
+	Mon, 19 Feb 2024 22:45:39 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id khfXCxPa02ULVQAAD6G6ig
+	(envelope-from <neilb@suse.de>); Mon, 19 Feb 2024 22:45:39 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: "NeilBrown" <neilb@suse.de>
+To: "Matthew Wilcox" <willy@infradead.org>
+Cc: "Mike Rapoport" <rppt@kernel.org>, lsf-pc@lists.linux-foundation.org,
+ linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+ bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
+In-reply-to: <ZdO2eABfGoPNnR07@casper.infradead.org>
+References: <Zbcn-P4QKgBhyxdO@casper.infradead.org>,
+ <Zb9pZTmyb0lPMQs8@kernel.org>, <ZcACya-MJr_fNRSH@casper.infradead.org>,
+ <ZcOnEGyr6y3jei68@kernel.org>, <ZdO2eABfGoPNnR07@casper.infradead.org>
+Date: Tue, 20 Feb 2024 09:45:36 +1100
+Message-id: <170838273655.1530.946393725104206593@noble.neil.brown.name>
+Authentication-Results: smtp-out1.suse.de;
+	none
+X-Spam-Level: 
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 NEURAL_HAM_SHORT(-0.20)[-0.998];
+	 RCPT_COUNT_SEVEN(0.00)[10];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 BAYES_HAM(-3.00)[100.00%];
+	 ARC_NA(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 MIME_GOOD(-0.10)[text/plain];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 RCVD_TLS_ALL(0.00)[]
+X-Spam-Flag: NO
 
-We are currently printing the CAP.NP field.
-CAP.NP is a 0's based value indicating the maximum number of ports
-supported by the HBA silicon. Note that the number of ports indicated
-in this field may be more than the number of ports indicated in the
-PI (ports implemented) register. (See AHCI 1.3.1, section 3.1.1 -
-Offset 00h: CAP – HBA Capabilities.)
+On Tue, 20 Feb 2024, Matthew Wilcox wrote:
+> On Wed, Feb 07, 2024 at 05:51:44PM +0200, Mike Rapoport wrote:
+> > On Sun, Feb 04, 2024 at 09:34:01PM +0000, Matthew Wilcox wrote:
+> > > I'm doing my best to write documentation as I go.  I think we're a bit
+> > > better off than we were last year.  Do we have scripts to tell us which
+> > > public functions (ie EXPORT_SYMBOL and static inline functions in header
+> > > files) have kernel-doc?  And could we run them against kernels from, sa=
+y,
+> > > April 2023, 2022, 2021, 2020, 2019 (and in two months against April 202=
+4)
+> > > and see how we're doing in terms of percentage undocumented functions?
+> >=20
+> > We didn't have such script, but it was easy to compare "grep
+> > EXPORT_SYMBOL\|static inline" with ".. c:function" in kernel-doc.
+> > We do improve slowly, but we are still below 50% with kernel-doc for
+> > EXPORT_SYMBOL functions and slightly above 10% for static inlines.
+>=20
+> Thanks for doing this!  Data is good ;-)
+>=20
+> I just came across an interesting example of a function which I believe
+> should NOT have kernel-doc.  But it should have documentation for why it
+> doesn't have kernel-doc!  Any thoughts about how we might accomplish that?
+>=20
+> The example is filemap_range_has_writeback().  It's EXPORT_SYMBOL_GPL()
+> and it's a helper function for filemap_range_needs_writeback().
+> filemap_range_needs_writeback() has kernel-doc, but nobody should be
+> calling filemap_range_has_writeback() directly, so it shouldn't even
+> exist in the htmldocs.  But we should have a comment on it saying
+> "Use filemap_range_needs_writeback(), don't use this", in case anyone
+> discovers it.  And the existance of that comment should be enough to
+> tell our tools to not flag this as a function that needs kernel-doc.
+>=20
 
-PI (ports implemented) register is a field that has a bit set to '1'
-if that specific port is implemented. This register is allowed to have
-zeroes mixed with ones, i.e. a port in the middle is allowed to be
-unimplemented. (See AHCI 1.3.1, section 3.1.4 - Offset 0Ch: PI – Ports
-Implemented.)
+Don't we use a __prefix for internal stuff that shouldn't be used?
 
-Since the number of ports implemented might be smaller than the maximum
-number of ports supported by the HBA silicon, print the number of
-implemented ports as well.
-
-While at it, clarify the properties being printed, and add a separator
-(,), as that is currently missing, making it very easy to get confused
-if the number before or after <property> belongs to <property>.
-
-before:
-ahci 0000:00:03.0: masking port_map 0x3f -> 0x2f
-ahci 0000:00:03.0: AHCI 0001.0000 32 slots 6 ports 1.5 Gbps 0x2f impl SATA mode
-ahci 0000:00:03.0: flags: 64bit ncq only
-
-after:
-ahci 0000:00:03.0: masking port_map 0x3f -> 0x2f
-ahci 0000:00:03.0: AHCI vers 0001.0000, 32 command slots, 1.5 Gbps, SATA mode
-ahci 0000:00:03.0: 5/6 ports implemented (port mask 0x2f)
-ahci 0000:00:03.0: flags: 64bit ncq only
-
-Suggested-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
-Changes since V2:
--Print both number of implemented ports and max number of ports.
--Clarify the properties being printed.
--Add a separator (,) between the printed properties.
--Prints two lines instead of one, as it would otherwise be a very
- long line being printed.
-
- drivers/ata/libahci.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index fca376f03c9e..83431aae74d8 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2620,8 +2620,8 @@ void ahci_print_info(struct ata_host *host, const char *scc_s)
- 		speed_s = "?";
- 
- 	dev_info(host->dev,
--		"AHCI %02x%02x.%02x%02x "
--		"%u slots %u ports %s Gbps 0x%x impl %s mode\n"
-+		"AHCI vers %02x%02x.%02x%02x, "
-+		"%u command slots, %s Gbps, %s mode\n"
- 		,
- 
- 		(vers >> 24) & 0xff,
-@@ -2630,11 +2630,17 @@ void ahci_print_info(struct ata_host *host, const char *scc_s)
- 		vers & 0xff,
- 
- 		((cap >> 8) & 0x1f) + 1,
--		(cap & 0x1f) + 1,
- 		speed_s,
--		impl,
- 		scc_s);
- 
-+	dev_info(host->dev,
-+		"%u/%u ports implemented (port mask 0x%x)\n"
-+		,
-+
-+		hweight32(impl),
-+		(cap & 0x1f) + 1,
-+		impl);
-+
- 	dev_info(host->dev,
- 		"flags: "
- 		"%s%s%s%s%s%s%s"
--- 
-2.43.2
-
+NeilBrown
