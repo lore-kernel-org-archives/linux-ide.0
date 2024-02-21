@@ -1,93 +1,170 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E65D122F0C
-	for <linux-ide@vger.kernel.org>; Wed, 21 Feb 2024 05:31:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1C44F3D3A7;
+	Wed, 21 Feb 2024 09:49:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708493505; cv=none; b=IzYITwWJIDoleTK0GzAOEEexT02MCYWtVfbXLZhFaNBhE6cyLIbT7yWBC4m+cc0x2ngZ6hY9bcu00iVyodEad8coTox3uOaLgEWwM67LtH4ZY3LZoZN0OEGpa/ffUoxLTF8HEhumjsNvUfe75rLeEfPPWlpJncR/ddXt1CuS8kg=
+	t=1708508996; cv=none; b=B3ehnE+L8HHmubv6fVl80SVz/+keDdAhyb1MkGtu2Kl0LJNQ5uhi3mXh90JX8xdRYeTDfCoe3hSW3BXQ9jdXDFcA+QVw9KEAyU3pJUoLcXOpyEBUnrzjH2PssN3xRwsn2b/HPgU+M6k8hbcCyugYryj+EoMHnIl4HxXpMYtPlM0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708493505; c=relaxed/simple;
-	bh=8Dv7nIuH8UsIQ1xV6QHyvSp0kXARfcCkLNHnobcwqx8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tISHcJ6pPm5FqPLNd4+l5CtifvU38w9snIFk9Yhq9cPe+6FtgV8fWEo2Mezi5JLS6tibAcvf6/BhYk3042L4TXBHHUcC42kny9VoJF+BymaOsEgjQHw0Heehz+o5VWU1ew/dftT8K+9b8f69VycAOrKAtxlWV5IXV4toKeBjH0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gcaszAej; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gcaszAej"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D703DC433C7;
-	Wed, 21 Feb 2024 05:31:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708493504;
-	bh=8Dv7nIuH8UsIQ1xV6QHyvSp0kXARfcCkLNHnobcwqx8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gcaszAej6jxncdlr4p/odzYFbOIeoHXuIl1v/fIZUwYe90eUV2KeDhtl8stKkJx9R
-	 phn8wNnEcHuUkaHD4Ad8XnrGOv86tadzUBvAWzocjvPgvqs28Rd9sihuIn2khhdLbm
-	 MicNsiZ7Fi15sYbliajH3WTuxsX6eKpfa3m9I+g1lWZIfOJFTgkKihmUq3yQG9ZW3x
-	 OFxk8lwoYVVzppYA6VJzBR8v3lyHE1zejOgmrV5XK9ISii8/wn7wCuuO8chCj5VdpS
-	 eCHSCM55xSSYqQ7CXudHmUQC4vJfhzIJE9mx55dlAYgRN6XpKTqh9CGhwEt8w3g5Zr
-	 EqnySd9v8AmFw==
-Message-ID: <07c154cb-c869-4247-858b-002e36ed8f8a@kernel.org>
-Date: Wed, 21 Feb 2024 14:31:42 +0900
+	s=arc-20240116; t=1708508996; c=relaxed/simple;
+	bh=3z6wcnzZigmy1AnwKW6EWYXgb3eqsvFGY6rKaYlxPHE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=pd/ia2amR2KX9FI+m9ITsBApz4TLSvyjk6RXADwglwoxdslZUV/jcR5em3qLrQKn0UQ6/IpwWR5z32KN5nMa9gjIgfdbc5Tn8q0dCAY4uAm5DpuIwX4QtzgKkVe97FIYMDm9mXXkRDkWwuZ4f8LjQq6QeOWHObR1gfdgvGgW79w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
+X-AuditID: a67dfc5b-d85ff70000001748-96-65d5c7387f8b
+From: Byungchul Park <byungchul@sk.com>
+To: linux-kernel@vger.kernel.org
+Cc: kernel_team@skhynix.com,
+	torvalds@linux-foundation.org,
+	damien.lemoal@opensource.wdc.com,
+	linux-ide@vger.kernel.org,
+	adilger.kernel@dilger.ca,
+	linux-ext4@vger.kernel.org,
+	mingo@redhat.com,
+	peterz@infradead.org,
+	will@kernel.org,
+	tglx@linutronix.de,
+	rostedt@goodmis.org,
+	joel@joelfernandes.org,
+	sashal@kernel.org,
+	daniel.vetter@ffwll.ch,
+	duyuyang@gmail.com,
+	johannes.berg@intel.com,
+	tj@kernel.org,
+	tytso@mit.edu,
+	willy@infradead.org,
+	david@fromorbit.com,
+	amir73il@gmail.com,
+	gregkh@linuxfoundation.org,
+	kernel-team@lge.com,
+	linux-mm@kvack.org,
+	akpm@linux-foundation.org,
+	mhocko@kernel.org,
+	minchan@kernel.org,
+	hannes@cmpxchg.org,
+	vdavydov.dev@gmail.com,
+	sj@kernel.org,
+	jglisse@redhat.com,
+	dennis@kernel.org,
+	cl@linux.com,
+	penberg@kernel.org,
+	rientjes@google.com,
+	vbabka@suse.cz,
+	ngupta@vflare.org,
+	linux-block@vger.kernel.org,
+	josef@toxicpanda.com,
+	linux-fsdevel@vger.kernel.org,
+	viro@zeniv.linux.org.uk,
+	jack@suse.cz,
+	jlayton@kernel.org,
+	dan.j.williams@intel.com,
+	hch@infradead.org,
+	djwong@kernel.org,
+	dri-devel@lists.freedesktop.org,
+	rodrigosiqueiramelo@gmail.com,
+	melissa.srw@gmail.com,
+	hamohammed.sa@gmail.com,
+	42.hyeyoo@gmail.com,
+	chris.p.wilson@intel.com,
+	gwan-gyeong.mun@intel.com,
+	max.byungchul.park@gmail.com,
+	boqun.feng@gmail.com,
+	longman@redhat.com,
+	hdanton@sina.com,
+	her0gyugyu@gmail.com
+Subject: [PATCH v12 01/27] llist: Move llist_{head,node} definition to types.h
+Date: Wed, 21 Feb 2024 18:49:07 +0900
+Message-Id: <20240221094933.36348-2-byungchul@sk.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240221094933.36348-1-byungchul@sk.com>
+References: <20240221094933.36348-1-byungchul@sk.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAAzXSa0xTZxgHcN5zec+h0nlSyXbELC4Vxft0inuye1zC3kUlZi7RoMZ1cmKr
+	BbVFkCUuRbm4So24ABPQFHC1g6JyKtFN23QwqUjECtUxghWIUZAik63NKkxtNX558stz+X96
+	eFp1mU3iddk5kiFbo1djBaMYS6hdAt7b0rLOoiQoK10GoX8PM1BzzoHBd7YRgeNCAQUjV7+A
+	P8NBBJM3btJQWe5DUDt4l4YL7QEELvtBDD333wB/aBxDR/kRDIfqz2G4NTpFQX/FcQoa5XXQ
+	eayOAk/kIQOVIxiqKw9R0TJMQcTWwIHNNBeG7FUcTA0uh47AHRZcfYvgxKl+DFdcHQy0Xxqi
+	oOe3GgwBx3MWOtuvMeArs7DQ9LgOw2jYRoMtNM5Bt8dKwfnCaFDxP89Y8Fo8FBSfbqbA/9dl
+	BO7DAxTIjjsY2kJBCpxyOQ1Pz1xFMHR0jIOi0ggH1QVHERwpqmDg5v9eFgr7U2Hyvxr82Qek
+	LThOk0JnHnGFrQy5XieSX6vucqTQ3ccRq7yPOO0LSf2VEYrUToRYIjf8gIk8cZwj5jE/RR53
+	dXHk2k+TDLnvr6TWz8pQfJQp6XW5kuHdT75RaIu7TnF7Tir2W39uwSbk5s0onheFlaLXbOFe
+	W37S+tJYSBF7eyN0zInCO6LT8oA1IwVPCyXTRPvfN3BsMENIF9uetKOYGWGu2O18ysSsFFLF
+	Zvke/Sp0tth43vPS8cIq8ZfqIBuzKrpz+1YLHQsVhZJ4sbnDz746mCn+bu9ljiGlFcU1IJUu
+	OzdLo9OvXKrNz9btX7p9d5aMoi9lOzC1+RKa8G1oRQKP1AlK7UW/pGI1ucb8rFYk8rQ6Ucnk
+	RVvKTE3+d5Jh9zbDPr1kbEWzeEb9lvK9cF6mStihyZF2SdIeyfB6SvHxSSaUX+PZ7uub83G6
+	Y/rMjOSAO/F5sXHtl6umhXdgLrJkhVWf8uOWtEdfzclBi60DcV+nxun+2Lxl9rfX530/uMa8
+	Vrt4IFC1KaGntCR1tXera3hFyuemt+OaCg5+augyZQQe1L1pcY/WB8u6328qWZ+80+Lb+2Ha
+	cPLGBblp5EBL+omh1fPVjFGrWb6QNhg1LwC9bUM1TgMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAAzXSf0yMcRwHcN/v8zzf5+k4e5Y2jx/z47bm16RG9pkMfxgPxowN87ObHu5W
+	l9wlMmflUqSiLKGyKzmpQ56roZTWzeVEHR1iCc2vJkpccxW5Y/757LXP+7P3Xx+OCixkxnPa
+	2HhJH6uOUREFrVgTYZoNjU+l0KsuDNkZoeD5cYyGgutWAq5r5QislckYuu4th+f93QgGH7VQ
+	kJfrQlD09hUFlY4OBLWlRwi0vhsNbk8PAWfuCQKmi9cJPP48hKH9TA6Gcnk1NJ0qxlDv/UhD
+	XheB/DwT9o1PGLyWMhYsScHQWXqehaG3YeDseMaAvdDJQO3LWXDuQjuBO7VOGhy3OjG0VhcQ
+	6LAOM9DkuE+DKzuTgatfiwl87rdQYPH0sPCk3oyhIsXXlvr9NwONmfUYUktuYHC/qEFQd+wN
+	Btn6jIDd043BJudSMHD5HoLOrC8sHM3wspCfnIXgxNEzNLT8amQgpT0cBn8WkCURor27hxJT
+	bPvF2n4zLT4oFsTb51+xYkrdS1Y0y/tEW+lM8eKdLiwW9XkYUS47TkS5L4cV07+4sfi1uZkV
+	758dpMV37jy8duJmxcIoKUabIOnnLIpUaFKbL7BxhYoD5ktVJAnVcekogBP4eYL8rYH1m/DT
+	hLY2L+V3ED9FsGV+YNKRgqP4tJFCae8j4g/G8GsE+zcH8pvmg4UntgHabyUfLtyQX1P/SicL
+	5RX1fx3Azxeu5Hczfgf6bp4+rqJOIYUZjShDQdrYBJ1aGxMeYojWJMZqD4Ts3KOTke9pLMah
+	7FvoR+vyBsRzSDVKqbnplgIZdYIhUdeABI5SBSnp/b6VMkqdeFDS79mh3xcjGRrQBI5WjVWu
+	3ChFBvK71fFStCTFSfr/KeYCxiehu8kObfyy6etqhpWjjORwm77lnHPRgqIJe9dHbtpspgYq
+	pvZmZ6SVlMct3pH50bLJEjLJrK8arMia8XpdY5P1Yc5coZ8aGxzw/sHzjfZVp71jjLs0C8eN
+	q+x1VW+4dNx0syPthVHdpzN1bivZoltx0HgolHxwbd86HBmxZenJGaqouyraoFGHzaT0BvUf
+	NFPz6TADAAA=
+X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] ahci: print the number of implemented ports
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Sergei Shtylyov <sergei.shtylyov@gmail.com>,
- Andrey Melnikov <temnota.am@gmail.com>, linux-ide@vger.kernel.org
-References: <20240219204744.1365567-1-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240219204744.1365567-1-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-On 2/20/24 05:47, Niklas Cassel wrote:
-> We are currently printing the CAP.NP field.
-> CAP.NP is a 0's based value indicating the maximum number of ports
-> supported by the HBA silicon. Note that the number of ports indicated
-> in this field may be more than the number of ports indicated in the
-> PI (ports implemented) register. (See AHCI 1.3.1, section 3.1.1 -
-> Offset 00h: CAP – HBA Capabilities.)
-> 
-> PI (ports implemented) register is a field that has a bit set to '1'
-> if that specific port is implemented. This register is allowed to have
-> zeroes mixed with ones, i.e. a port in the middle is allowed to be
-> unimplemented. (See AHCI 1.3.1, section 3.1.4 - Offset 0Ch: PI – Ports
-> Implemented.)
-> 
-> Since the number of ports implemented might be smaller than the maximum
-> number of ports supported by the HBA silicon, print the number of
-> implemented ports as well.
-> 
-> While at it, clarify the properties being printed, and add a separator
-> (,), as that is currently missing, making it very easy to get confused
-> if the number before or after <property> belongs to <property>.
-> 
-> before:
-> ahci 0000:00:03.0: masking port_map 0x3f -> 0x2f
-> ahci 0000:00:03.0: AHCI 0001.0000 32 slots 6 ports 1.5 Gbps 0x2f impl SATA mode
-> ahci 0000:00:03.0: flags: 64bit ncq only
-> 
-> after:
-> ahci 0000:00:03.0: masking port_map 0x3f -> 0x2f
-> ahci 0000:00:03.0: AHCI vers 0001.0000, 32 command slots, 1.5 Gbps, SATA mode
-> ahci 0000:00:03.0: 5/6 ports implemented (port mask 0x2f)
-> ahci 0000:00:03.0: flags: 64bit ncq only
-> 
-> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+llist_head and llist_node can be used by very primitives. For example,
+Dept for tracking dependency uses llist things in its header. To avoid
+header dependency, move those to types.h.
 
-Nice !
+Signed-off-by: Byungchul Park <byungchul@sk.com>
+---
+ include/linux/llist.h | 8 --------
+ include/linux/types.h | 8 ++++++++
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
+diff --git a/include/linux/llist.h b/include/linux/llist.h
+index 2c982ff7475a..3ac071857612 100644
+--- a/include/linux/llist.h
++++ b/include/linux/llist.h
+@@ -53,14 +53,6 @@
+ #include <linux/stddef.h>
+ #include <linux/types.h>
+ 
+-struct llist_head {
+-	struct llist_node *first;
+-};
+-
+-struct llist_node {
+-	struct llist_node *next;
+-};
+-
+ #define LLIST_HEAD_INIT(name)	{ NULL }
+ #define LLIST_HEAD(name)	struct llist_head name = LLIST_HEAD_INIT(name)
+ 
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 253168bb3fe1..10d94b7f9e5d 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -199,6 +199,14 @@ struct hlist_node {
+ 	struct hlist_node *next, **pprev;
+ };
+ 
++struct llist_head {
++	struct llist_node *first;
++};
++
++struct llist_node {
++	struct llist_node *next;
++};
++
+ struct ustat {
+ 	__kernel_daddr_t	f_tfree;
+ #ifdef CONFIG_ARCH_32BIT_USTAT_F_TINODE
 -- 
-Damien Le Moal
-Western Digital Research
+2.17.1
 
