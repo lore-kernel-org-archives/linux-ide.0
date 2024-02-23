@@ -1,65 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D7512B6A
-	for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2024 06:40:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96072186A
+	for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2024 16:43:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708670431; cv=none; b=AbV38KbvcXG3cLqqe5q+WEI4HyCSwTa3ZbVjz7ksXDnQjEmAWgGsqATreWer3kN+Nd+PfU9pEWE7pLdCX3ARxsDPvkM/+vW7FjitQOETj2HCn22qyjYH4CIB0qgMLzdWA1Qq+uoaw7LDVwqpk2h2I1OKG1FbRhuYOG2/6cf8PaE=
+	t=1708706598; cv=none; b=QG0PXXmUph1+edHG9qTZEDwzbBEtGlpeX0SE8Lp9eF6McuJOGMgFdzwh3pmyFuPSRVzT6KTmytlZbw7A+38Vp2yv7FaOngOofu4/vT/dyptuugJPMbUyhadRSmCxVAaDvzrlGoQDls1/cs13so66LuKrC1LEpxfDOJW3R9VSiGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708670431; c=relaxed/simple;
-	bh=ql4o9KxyWAWPrpwzbv+TwDequkParPqXWzRixX6voFk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AOhTW/LYIrID5g6YqxafIc0brPZWOaigK23ghhIeytCrHUAsS6EeGPqxbcz6QeSvmkTdp8nAD7v+aYgjmGgHV2EbJtNrreoiuQ/VQ0VyZiRnCgxRw3wVBDriYLHjrm6AA2o6t3S9q5Wr9yUhlMPpTcWSi3o/UFkLZfvQdPwS3yQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P84pCgAK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708706598; c=relaxed/simple;
+	bh=CpNo77ckprgmf9oC/l5pY69qBusCpUSku9e8wVcFnY8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HW1Fej1CTm7UoDt9LW2AYXNUPftPgzZbyObRhJ5klFqBWfjuDgT3+PcjH97rtNQo52vEUbYjb05repjijY1hlxgGcieEX2UV03VFsILFHGNkIyi88r+/caxl2DmVMjuAzrJiHcftLFUf8tuAGuEvjGE2Mg8vv4KRsu/RMYiwN/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHX8jwPK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P84pCgAK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3254C433C7;
-	Fri, 23 Feb 2024 06:40:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHX8jwPK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 571B5C433F1;
+	Fri, 23 Feb 2024 16:43:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708670430;
-	bh=ql4o9KxyWAWPrpwzbv+TwDequkParPqXWzRixX6voFk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=P84pCgAKgu4ymPKX2KPcy7hZd2eQ3Zu3DGTjE1AMN97oPIQBNrhsVtEss9CpJB2Bf
-	 JKpu9+32Kp8xmDSMRxXSCDkAmyk5Xa/DYSA7ol2EK+UzdyjBaPJdVTAwxwYlU32QVO
-	 UjK4ToVKRcb/7W51liBIKlYn8rZUAv2F8L6ztmqfdmEUm6cL1wl95MO2hty/BOXEMf
-	 WKhcUmBh9lLKjfa+5kxQCHAKROqWltUVcNKu66+GrCLpKvxowd3pcYYqbyV0DU4ees
-	 ee+++n+5kL8UHpCkTkSvxOpOoVBEwNEez9zQnWJZLtngyaMLhq+fre/fkmCJBxhEb6
-	 hJ4Whjcukx15A==
-Message-ID: <c1b5f55c-7baf-41fc-b0be-05585321ed0d@kernel.org>
-Date: Fri, 23 Feb 2024 15:40:29 +0900
+	s=k20201202; t=1708706598;
+	bh=CpNo77ckprgmf9oC/l5pY69qBusCpUSku9e8wVcFnY8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=FHX8jwPKTfoSVFqobiv8awb9g6jOBeOBRsUVeLdV0vxEfXkxXedVTJ2hMTjmiR/22
+	 KrxzYDiw8vUQLAlBvxW0jk+urVu6NW9KeoIC9eTAfw8CJIZ3r3bCn1ItnMzMIDBB1B
+	 hsf9eWcfPOQDdwpJFUg3g5IZ909dFGQp9HYy1Mn9X8aq9P6lSl3Xr7C5rf0IDiu6tR
+	 6/i2eOTwpyGMsUIFl4s940Cthq7+6NEiP06mhBEz698XKjqd8AVdCZ2ZEnYNJZc1/Q
+	 oLFFFkGusfdI8lLH97rH4v8GWf+YHaxQKuUu8wESN2nFdg2NsBdwz/WOvkuK4QYGyF
+	 Yi7yf5J+gYEXg==
+From: Niklas Cassel <cassel@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 6.8-rc6
+Date: Fri, 23 Feb 2024 17:43:02 +0100
+Message-ID: <20240223164302.193697-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.43.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] libata-sata: Check SDB_FIS for completion of DMA transfer
- before completing the commands.
-Content-Language: en-US
-To: Saurav Kashyap <skashyap@marvell.com>, linux-ide@vger.kernel.org
-Cc: soochon@google.com, Manoj Phadtare <mphadtare@marvell.com>
-References: <20240223060752.4926-1-skashyap@marvell.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240223060752.4926-1-skashyap@marvell.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2/23/24 15:07, Saurav Kashyap wrote:
-> Sequence leading to an issue as per PCIe trace
-> - PxSact is read with slots 7 and 24 being cleared.
-> - Host starts processing these commands while data is not in system
->   memory yet.
-> - Last pkt of 512B was sent to host.
-> - SDB.FIS is copied, telling host command slot 24 is done.
+Linus,
 
-And send patches to the maintainers as well as to the list.
+The following changes since commit 51af8f255bdaca6d501afc0d085b808f67b44d91:
 
-scripts/get_maintainer.pl drivers/ata/
+  ahci: Extend ASM1061 43-bit DMA address quirk to other ASM106x parts (2024-01-31 12:09:34 +0100)
 
--- 
-Damien Le Moal
-Western Digital Research
+are available in the Git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc6
+
+for you to fetch changes up to 9cec467d0502b24660f413a0e8fc782903b46d5b:
+
+  ata: libata-core: Do not call ata_dev_power_set_standby() twice (2024-02-21 19:09:17 +0100)
+
+----------------------------------------------------------------
+ata changes for 6.8-rc6
+
+ - Do not try to set a sleeping device to standby. Sleep is a deeper
+   sleep state than standby, and needs a reset to wake up the drive.
+   A system resume will reset the port. Sending a command other than
+   reset to a sleeping device is not wise, as the command will timeout.
+   (Damien Le Moal)
+
+ - Do not try to put a device to standby twice during system shutdown.
+   ata_dev_power_set_standby() is currently called twice during
+   shutdown, once after the scsi device is removed, and another when
+   ata_pci_shutdown_one() executes. Modify ata_dev_power_set_standby()
+   to do nothing if the device is already in standby. (Damien Le Moal)
+
+ - Add a quirk for ASM1064 to fixup the number of implemented ports.
+   We probe all ports that the hardware reports to be implemented.
+   Probing ports that are not implemented causes significantly increased
+   boot time. (Andrey Jr. Melnikov)
+
+ - Fix error handling for the ahci_ceva driver.
+   Ensure that the ahci_ceva driver does a proper cleanup of its
+   resources in the error path. (Radhey Shyam Pandey)
+
+----------------------------------------------------------------
+Andrey Jr. Melnikov (1):
+      ahci: asm1064: correct count of reported ports
+
+Damien Le Moal (2):
+      ata: libata-core: Do not try to set sleeping devices to standby
+      ata: libata-core: Do not call ata_dev_power_set_standby() twice
+
+Radhey Shyam Pandey (1):
+      ata: ahci_ceva: fix error handling for Xilinx GT PHY support
+
+ drivers/ata/ahci.c        |  14 ++++--
+ drivers/ata/ahci_ceva.c   | 125 +++++++++++++++++++++++++++++-----------------
+ drivers/ata/libata-core.c |  59 ++++++++++++----------
+ 3 files changed, 122 insertions(+), 76 deletions(-)
