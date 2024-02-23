@@ -1,147 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1BC91474BF;
-	Thu, 22 Feb 2024 14:58:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1791D101E3
+	for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2024 06:08:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708613926; cv=none; b=BHK1H79zU3h/t8ZKPGe30FuEnnMevkxhOe/1v0jBTI52Z0+sf5BfTj+FgwcZafJgj61ZS1HQ8VqFz01Ehx9f+jO2Xqiwn7NWZtzzWetctuoSJNUqd1ZmZU+eoN8eicDg0K0bjMBOreayYrkwNUak2Ar8NZ7yszKUFnO+1okw+DA=
+	t=1708668489; cv=none; b=JBOyxblQrFlpV1OEASwLQXf/gXwZWoveNDlt5k0/6a4HLD+kTUiAVNXU+NDxCrJAk3lgHHOvxw4YKom25k3g9Rn8SZnWXAPeDsLqu0TOYXr3OLgRxgGvnpBETzCAmfupi1UtOEtNLxjEQUb3EYUHvIZBe80FNfFgwfqZWFMnYhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708613926; c=relaxed/simple;
-	bh=sU70cMz1yfymjOqSB1LBgx6TJXTSzu9SGscJYJXAATw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Li2ieQXzRF6EGwbsdN6Me5CSJ7UNf83yRszFE7r/Dto4NCYEzOuC/xohawTmWIpXfRus7t9l46Wpj7apP8jPbabdjAj5HoMCm8NSViRf/Uge8zYgwEf5r/Ohic3cFKlWEShlQnieC3+gE8vZHPE9Wp+GbVGgBUBZjE1Vc9AtI8c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ALJmU1DO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708668489; c=relaxed/simple;
+	bh=eQK7qVEXnFyJxYuajKtR5Gilf9EU1VOgbNlr2ET6vec=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=grsdJdla54PN6TN0YamVdI7q46NcPu8nnyhEPtpm+Xx1Z68SV3KTULe8GvfwZZ6qr/M1ZokiK2Fa5k2O4MsU6cUlkC8CHniKTpZ5KNRwD/7WU50z65DSsvPuXuvoazKSgb134J2lUxhc2jrotKD+BE8y++ZsVKJf0IvHFiREixQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=D/kUIiiE; arc=none smtp.client-ip=67.231.148.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ALJmU1DO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9FCC433C7;
-	Thu, 22 Feb 2024 14:58:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708613925;
-	bh=sU70cMz1yfymjOqSB1LBgx6TJXTSzu9SGscJYJXAATw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ALJmU1DOFbaEnQAP2l/WnjDpdmPh9P9A8yzVVGUqxm/iULpw25DtYbnepbDpWljFZ
-	 nswvWaUHszQQImYnnozcHN9TXtv7vvg+8ZH0YLQUPKGE4c31fqInZgIvjvDrY5c+fc
-	 snVVhKsccDTX3G7XNGYsQI37fEDXcJOYXNW6h2rINqWe8xtxO+fiC+X37fKi39EoEN
-	 BUbAPzY25/QUo0NGzGDJOVr8cL1+DUyIBOogA6NswC6d5bmreGJfo9yzvbMKG8Zv4e
-	 JdAbvGJOV9nDODKeK8G74ENKRxKHXX3sTLFwezHpfTQ3jG0w81qMBb9EC2/lzhwcGS
-	 GHldtfp9zRtUQ==
-Date: Thu, 22 Feb 2024 15:58:39 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Sasha Levin <sashal@kernel.org>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	Lennert Buytenhek <kernel@wantstofly.org>, dlemoal@kernel.org,
-	linux-ide@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 6.7 19/23] ahci: add 43-bit DMA address quirk for
- ASMedia ASM1061 controllers
-Message-ID: <ZddhH_NIP17azp6i@fedora>
-References: <20240202183926.540467-1-sashal@kernel.org>
- <20240202183926.540467-19-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="D/kUIiiE"
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 41N1rSWx005281;
+	Thu, 22 Feb 2024 22:08:05 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	from:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding:content-type; s=pfpt0220; bh=KpPsTwIE
+	BbVb1Nlmt63TsnfDJxUk8yRFnMG9NzVfb8A=; b=D/kUIiiE+8DPEtPIJpIk/XIY
+	TPt7nzPhEW1KhriG2+c6ygNlAQtjWYn7sUHPE02i3wZy3G7ttc3owiFUtzcbmpM1
+	p9EWG/yMmzQpT87sBnOmayxg2bSGVZjQ7BE7AXNfwAYyPZktwjqNCkBTqsL0SffD
+	lF0sHMT/oTe+nsly31XYNl6zBFb86oGNimpYkI+D8DvaiM+ZkLkSidSDp/fL4U0a
+	q/VDl2lTm7zMtAbO8FUdBGfAFSAWNBJ05LgHNGmnXAB59ZuQAmvINpjI4FdTn/aL
+	w6EfU/W6ACTmhA4q6AJfE5Z7B9Rzkm54nLj+LnQ7NG0R8QhdoK5F7ZqmxKcQAA==
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3wej3j8mmy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+	Thu, 22 Feb 2024 22:08:05 -0800 (PST)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH02.marvell.com (10.69.176.39) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.48; Thu, 22 Feb 2024 22:08:04 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Thu, 22 Feb
+ 2024 22:08:04 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Thu, 22 Feb 2024 22:08:03 -0800
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
+	by maili.marvell.com (Postfix) with ESMTP id 0B5383F714F;
+	Thu, 22 Feb 2024 22:08:01 -0800 (PST)
+From: Saurav Kashyap <skashyap@marvell.com>
+To: <linux-ide@vger.kernel.org>
+CC: <skashyap@marvell.com>, <soochon@google.com>,
+        Manoj Phadtare
+	<mphadtare@marvell.com>
+Subject: [PATCH] libata-sata: Check SDB_FIS for completion of DMA transfer before completing the commands.
+Date: Fri, 23 Feb 2024 11:37:52 +0530
+Message-ID: <20240223060752.4926-1-skashyap@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240202183926.540467-19-sashal@kernel.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: nH61b4ZguGkAqiD31WguC3A-4kaoOtQK
+X-Proofpoint-ORIG-GUID: nH61b4ZguGkAqiD31WguC3A-4kaoOtQK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-22_15,2024-02-22_01,2023-05-22_02
 
-Hello Sasha,
+Sequence leading to an issue as per PCIe trace
+- PxSact is read with slots 7 and 24 being cleared.
+- Host starts processing these commands while data is not in system
+  memory yet.
+- Last pkt of 512B was sent to host.
+- SDB.FIS is copied, telling host command slot 24 is done.
 
-On Fri, Feb 02, 2024 at 01:39:15PM -0500, Sasha Levin wrote:
-> From: Lennert Buytenhek <kernel@wantstofly.org>
-> 
-> [ Upstream commit 20730e9b277873deeb6637339edcba64468f3da3 ]
-> 
-> With one of the on-board ASM1061 AHCI controllers (1b21:0612) on an
-> ASUSTeK Pro WS WRX80E-SAGE SE WIFI mainboard, a controller hang was
-> observed that was immediately preceded by the following kernel
-> messages:
-> 
-> ahci 0000:28:00.0: Using 64-bit DMA addresses
-> ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00000 flags=0x0000]
-> ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00300 flags=0x0000]
-> ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00380 flags=0x0000]
-> ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00400 flags=0x0000]
-> ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00680 flags=0x0000]
-> ahci 0000:28:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0035 address=0x7fffff00700 flags=0x0000]
-> 
-> The first message is produced by code in drivers/iommu/dma-iommu.c
-> which is accompanied by the following comment that seems to apply:
-> 
->         /*
->          * Try to use all the 32-bit PCI addresses first. The original SAC vs.
->          * DAC reasoning loses relevance with PCIe, but enough hardware and
->          * firmware bugs are still lurking out there that it's safest not to
->          * venture into the 64-bit space until necessary.
->          *
->          * If your device goes wrong after seeing the notice then likely either
->          * its driver is not setting DMA masks accurately, the hardware has
->          * some inherent bug in handling >32-bit addresses, or not all the
->          * expected address bits are wired up between the device and the IOMMU.
->          */
-> 
-> Asking the ASM1061 on a discrete PCIe card to DMA from I/O virtual
-> address 0xffffffff00000000 produces the following I/O page faults:
-> 
-> vfio-pci 0000:07:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000000 flags=0x0010]
-> vfio-pci 0000:07:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT domain=0x0021 address=0x7ff00000500 flags=0x0010]
-> 
-> Note that the upper 21 bits of the logged DMA address are zero.  (When
-> asking a different PCIe device in the same PCIe slot to DMA to the
-> same I/O virtual address, we do see all the upper 32 bits of the DMA
-> address as 1, so this is not an issue with the chipset or IOMMU
-> configuration on the test system.)
-> 
-> Also, hacking libahci to always set the upper 21 bits of all DMA
-> addresses to 1 produces no discernible effect on the behavior of the
-> ASM1061, and mkfs/mount/scrub/etc work as without this hack.
-> 
-> This all strongly suggests that the ASM1061 has a 43 bit DMA address
-> limit, and this commit therefore adds a quirk to deal with this limit.
-> 
-> This issue probably applies to (some of) the other supported ASMedia
-> parts as well, but we limit it to the PCI IDs known to refer to
-> ASM1061 parts, as that's the only part we know for sure to be affected
-> by this issue at this point.
-> 
-> Link: https://lore.kernel.org/linux-ide/ZaZ2PIpEId-rl6jv@wantstofly.org/
-> Signed-off-by: Lennert Buytenhek <kernel@wantstofly.org>
-> [cassel: drop date from error messages in commit log]
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Sasha Levin <sashal@kernel.org>
-> ---
+Cc: Soochon Radee <soochon@google.com>
+Tested-by: Manoj Phadtare <mphadtare@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+---
+ drivers/ata/libata-sata.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-I still don't see this commit in stable/linux-6.7.y branch?
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index b6656c287175..b2310f3a2a02 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -14,9 +14,11 @@
+ #include <scsi/scsi_eh.h>
+ #include <linux/libata.h>
+ #include <asm/unaligned.h>
++#include <linux/pci.h>
+ 
+ #include "libata.h"
+ #include "libata-transport.h"
++#include "ahci.h"
+ 
+ /* debounce timing parameters in msecs { interval, duration, timeout } */
+ const unsigned int sata_deb_timing_normal[]		= {   5,  100, 2000 };
+@@ -649,6 +651,7 @@ EXPORT_SYMBOL_GPL(sata_link_hardreset);
+ int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active)
+ {
+ 	u64 done_mask, ap_qc_active = ap->qc_active;
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int nr_done = 0;
+ 
+ 	/*
+@@ -677,7 +680,30 @@ int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active)
+ 		unsigned int tag = __ffs64(done_mask);
+ 
+ 		qc = ata_qc_from_tag(ap, tag);
+-		if (qc) {
++		if (pdev->vendor == PCI_VENDOR_ID_MARVELL_EXT &&
++		    (pdev->device == 0x9215 || pdev->device == 0x9235)) {
++			struct ahci_port_priv *pp = ap->private_data;
++			u8 *rx_fis = pp->rx_fis;
++
++			if (pp->fbs_enabled)
++				rx_fis += ap->link.pmp * AHCI_RX_FIS_SZ;
++
++			if (!qc)
++				continue;
++
++			if (ata_is_ncq(qc->tf.protocol)) {
++				u32 *fis = (u32 *)(rx_fis + RX_FIS_SDB);
++				u32 fis_active = fis[1];
++
++				if ((fis_active & (1 << tag))) {
++					ata_qc_complete(qc);
++					nr_done++;
++				}
++			} else {
++				ata_qc_complete(qc);
++				nr_done++;
++			}
++		} else if (qc) {
+ 			ata_qc_complete(qc);
+ 			nr_done++;
+ 		}
+-- 
+2.23.1
 
-Nor in:
-https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git
-
-What am I missing?
-
-($subject had this patch marked as AUTOSEL, so I would have assumed that
-it should have been merged by now, since this was 20 days ago.)
-
-
-This patch in $subject is needed for another follow up patch which
-failed to be backported because $subject patch is not in stable/linux-6.7.y:
-https://lore.kernel.org/stable/2024021945-jockey-spending-9e68@gregkh/
-
-(The follup up patch had CC: stable tag, but the patch in $subject
-unfortunately forgot to add CC: stable tag.)
-
-Could you please help to get both:
-20730e9b2778 ("ahci: add 43-bit DMA address quirk for ASMedia ASM1061 controllers")
-and
-51af8f255bda ("ahci: Extend ASM1061 43-bit DMA address quirk to other ASM106x parts")
-
-backported to kernel 6.6 and 6.7.
-
-No need to backport to older kernels, as this problem was first exposed by:
-791c2b17fb40 ("iommu: Optimise PCI SAC address trick")
-which started to put devices into >4GB DMA address range.
-
-
-Kind regards,
-Niklas
