@@ -1,97 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96072186A
-	for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2024 16:43:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2605512D21D
+	for <linux-ide@vger.kernel.org>; Fri, 23 Feb 2024 17:11:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708706598; cv=none; b=QG0PXXmUph1+edHG9qTZEDwzbBEtGlpeX0SE8Lp9eF6McuJOGMgFdzwh3pmyFuPSRVzT6KTmytlZbw7A+38Vp2yv7FaOngOofu4/vT/dyptuugJPMbUyhadRSmCxVAaDvzrlGoQDls1/cs13so66LuKrC1LEpxfDOJW3R9VSiGI=
+	t=1708708304; cv=none; b=nGWBekmphUMJqyJkwKkWFG8X2nu7Nuzp9r/BJjKan6YktIfPyYzjz7GMA3cvgowjHzWvKTp83fAJwm/NMhQvSvrm6ZEMux5Vy36Mv8dZZuzn87PhXpgNqNaa2yMhRwry8yrlYTbdK0HNBdu4qJ6bC3MMVdp9So5Mh4GyuV689Zw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708706598; c=relaxed/simple;
-	bh=CpNo77ckprgmf9oC/l5pY69qBusCpUSku9e8wVcFnY8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HW1Fej1CTm7UoDt9LW2AYXNUPftPgzZbyObRhJ5klFqBWfjuDgT3+PcjH97rtNQo52vEUbYjb05repjijY1hlxgGcieEX2UV03VFsILFHGNkIyi88r+/caxl2DmVMjuAzrJiHcftLFUf8tuAGuEvjGE2Mg8vv4KRsu/RMYiwN/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHX8jwPK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708708304; c=relaxed/simple;
+	bh=0zrhxNsyKD+bGNSEufwy8046BNznlqjeQoNCNNGz1dA=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=Xsir0tcKl2/TZEn8imcQCzhZxF7n+ZemXaaqMTp1fQLh1O4F4VVbXTPbZ/c5TF2FM8JgwuFqH4AZEuNBdXr9EvWqk6rNbX7G43XSmUAnBARYHYdfcOsu9RDPJutTXP/PcULCoK775PhXb3y4x864C6TCnwK4HLTLR+tBiXv+Fs0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jeC6UBPK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHX8jwPK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 571B5C433F1;
-	Fri, 23 Feb 2024 16:43:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jeC6UBPK"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0403BC43399;
+	Fri, 23 Feb 2024 17:11:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708706598;
-	bh=CpNo77ckprgmf9oC/l5pY69qBusCpUSku9e8wVcFnY8=;
-	h=From:To:Cc:Subject:Date:From;
-	b=FHX8jwPKTfoSVFqobiv8awb9g6jOBeOBRsUVeLdV0vxEfXkxXedVTJ2hMTjmiR/22
-	 KrxzYDiw8vUQLAlBvxW0jk+urVu6NW9KeoIC9eTAfw8CJIZ3r3bCn1ItnMzMIDBB1B
-	 hsf9eWcfPOQDdwpJFUg3g5IZ909dFGQp9HYy1Mn9X8aq9P6lSl3Xr7C5rf0IDiu6tR
-	 6/i2eOTwpyGMsUIFl4s940Cthq7+6NEiP06mhBEz698XKjqd8AVdCZ2ZEnYNJZc1/Q
-	 oLFFFkGusfdI8lLH97rH4v8GWf+YHaxQKuUu8wESN2nFdg2NsBdwz/WOvkuK4QYGyF
-	 Yi7yf5J+gYEXg==
-From: Niklas Cassel <cassel@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata fixes for 6.8-rc6
-Date: Fri, 23 Feb 2024 17:43:02 +0100
-Message-ID: <20240223164302.193697-1-cassel@kernel.org>
-X-Mailer: git-send-email 2.43.2
+	s=k20201202; t=1708708304;
+	bh=0zrhxNsyKD+bGNSEufwy8046BNznlqjeQoNCNNGz1dA=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=jeC6UBPK3fWj2OLrFDF5TyjXIHb2DbPzQzNdFVMmUI82jArUzK62nkONFHmtcqJNy
+	 HR78gq1Yo1PyyQxWwwoUvBULoT7xBkYCL1h0bUeho11YnxNroun7JtfKYU+D0HDKWU
+	 luDuR9Z3RfEwngdFf8iH7I3uE+lLD4Z2QFztKM4wkAvU26V43ItX5/KeZyAmyET99N
+	 P6jplJflixNkjKTqxgdEjfkPHlyWiQZK5U5mtRZGwWHWDdXrs+X9bbomuZDbclLfy4
+	 dpT2kUoDzSxN6jDyuQ+Fyba4rHRWW5oDGAnEYiUY4FL+9gbFsNm8uk9kok+hB/NdAZ
+	 2rXs7KmeIGPoQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id E0560C39563;
+	Fri, 23 Feb 2024 17:11:43 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.8-rc6
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20240223164302.193697-1-cassel@kernel.org>
+References: <20240223164302.193697-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20240223164302.193697-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc6
+X-PR-Tracked-Commit-Id: 9cec467d0502b24660f413a0e8fc782903b46d5b
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: b6d69282db550689ab5980e06eedd23b64584a73
+Message-Id: <170870830391.25757.680399675973472374.pr-tracker-bot@kernel.org>
+Date: Fri, 23 Feb 2024 17:11:43 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Linus,
+The pull request you sent on Fri, 23 Feb 2024 17:43:02 +0100:
 
-The following changes since commit 51af8f255bdaca6d501afc0d085b808f67b44d91:
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc6
 
-  ahci: Extend ASM1061 43-bit DMA address quirk to other ASM106x parts (2024-01-31 12:09:34 +0100)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/b6d69282db550689ab5980e06eedd23b64584a73
 
-are available in the Git repository at:
+Thank you!
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.8-rc6
-
-for you to fetch changes up to 9cec467d0502b24660f413a0e8fc782903b46d5b:
-
-  ata: libata-core: Do not call ata_dev_power_set_standby() twice (2024-02-21 19:09:17 +0100)
-
-----------------------------------------------------------------
-ata changes for 6.8-rc6
-
- - Do not try to set a sleeping device to standby. Sleep is a deeper
-   sleep state than standby, and needs a reset to wake up the drive.
-   A system resume will reset the port. Sending a command other than
-   reset to a sleeping device is not wise, as the command will timeout.
-   (Damien Le Moal)
-
- - Do not try to put a device to standby twice during system shutdown.
-   ata_dev_power_set_standby() is currently called twice during
-   shutdown, once after the scsi device is removed, and another when
-   ata_pci_shutdown_one() executes. Modify ata_dev_power_set_standby()
-   to do nothing if the device is already in standby. (Damien Le Moal)
-
- - Add a quirk for ASM1064 to fixup the number of implemented ports.
-   We probe all ports that the hardware reports to be implemented.
-   Probing ports that are not implemented causes significantly increased
-   boot time. (Andrey Jr. Melnikov)
-
- - Fix error handling for the ahci_ceva driver.
-   Ensure that the ahci_ceva driver does a proper cleanup of its
-   resources in the error path. (Radhey Shyam Pandey)
-
-----------------------------------------------------------------
-Andrey Jr. Melnikov (1):
-      ahci: asm1064: correct count of reported ports
-
-Damien Le Moal (2):
-      ata: libata-core: Do not try to set sleeping devices to standby
-      ata: libata-core: Do not call ata_dev_power_set_standby() twice
-
-Radhey Shyam Pandey (1):
-      ata: ahci_ceva: fix error handling for Xilinx GT PHY support
-
- drivers/ata/ahci.c        |  14 ++++--
- drivers/ata/ahci_ceva.c   | 125 +++++++++++++++++++++++++++++-----------------
- drivers/ata/libata-core.c |  59 ++++++++++++----------
- 3 files changed, 122 insertions(+), 76 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
