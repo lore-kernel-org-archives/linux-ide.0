@@ -1,115 +1,103 @@
-Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward501a.mail.yandex.net (forward501a.mail.yandex.net [178.154.239.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2264D4F896;
-	Tue, 27 Feb 2024 18:48:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29EAE2C842;
+	Wed, 28 Feb 2024 08:28:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709059706; cv=none; b=YLLPKGjvNGtfqe6En1Kt+QT7ZvIeHAagE5BGVTtXnb9ExDYIMKWy9AEbsE2C3YQ0drXkx1Zf6jyr2POqTxY+DmzDlyAVq8OnhCJRNBDelHB+6lXl5NOWmi13jWShWUwFUZUauDL5BbboNP/AdIczO37ygYyfBmc8SVfl72wEbiY=
+	t=1709108928; cv=none; b=p7n6Q4/bj5Epbu/Gpo2xybAjoIH8/m4FBG0lDVDP8R3ci8QPDnQV8kYVYlq+hvSE9F31RcYFKWuypxMykdiK6NEC8eftIT+eAwKEW473AsT7czqZAPARjswycb04RPQOOtAMyNIYqmRpk7NSe81EmQ5bkGmMhTedQBTqRP2fHj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709059706; c=relaxed/simple;
-	bh=K6sBGdbZzNVAu30o0m9zj5R6b0ZvSIScFMAacNUig9k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=A9L8f+yCZiWrsb9KFzREKfCR9sCKBAgVji3Y2ouVkSSIBu0BUatdVNH9K9JNvfIRINxvuaQIgo2se0RQ792Ypy7pa3E16+nSKk/XZuY0a5/lQCcxA1qSJo8gYWpsgic6ATP7+KIQZTo8eRsXxOGZI3zThVdxV1vOSmVtfYxmZ4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-607e54b6cf5so636757b3.0;
-        Tue, 27 Feb 2024 10:48:23 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709059703; x=1709664503;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZBLgqi5po9yo82z/olqeDeT73/ia9ZIG/TwGXRPLny8=;
-        b=duqhZPgkWmeoxbNs7ktjq+XRA1m9gLxuWC99Ub1nfIbCpbiohp88opEaFLo/haU3L7
-         7pAMS52PDb6kwRYcmk2P0EckVMrTw58qhZZN1Mkd0kV8c9YOUJjQfkqBVm+v9ZnMa01c
-         sGO3Dxtsn4FGRxpEkt4VTt3f8SIQRqZPk1ClMCh4wF2Z4rbJl9Ch5jb3hVIlN6hUK9QX
-         bb1VnYXh42KcjJrvk/c0uPVLDjMzDPETwrERa4M629O0LrPufFbIa+zK5Ljov/wdR1MW
-         yBkTU9jFYsZXa62aukcdgsO3ty5ulYVMxwLQ40FsZJg2pS8tAgyvhuPxVCXEzPw0qmWk
-         rCmw==
-X-Forwarded-Encrypted: i=1; AJvYcCWu7F2I90K4SWitxrjT90gyrCacDx0G9zUeRvajk8JusIFZj3CT2sDk0VgoVSZk7u8zUf4EXpZTpmFxVVcu4BuofNYWplGVMeeauFIxmTiEIFh2b69Y94WZzFtpWJOQKv8MXduGzS5mugpVsq1WA4n1302hVeS08nxRo33RXV1xNuivKJwVoRc1XwyjZYttQNQTiJy8CH+GhVfZiHJKq+B5mfiPWV4U42WEofHVe8CD6wjENqnVKJCNRSbDRUzyphPveQwpqtdUTlpEDsILjKXGedwCJpJKB2k0Lb4nfBaDjlUaqN0JvpX0xWLZa5kkbcoK1gAeFzg7YjEjvTODzNis7AlCNH88bEuZ6qwcyUsz6OEGEwMEbGo=
-X-Gm-Message-State: AOJu0YxW6cXm9QGzKfil3bq9p9KV44qxAz2yeSDQBprfSlR+t0INSkIm
-	KtJgkItIbKgqdA9Ys0846GGIF4vMxK9hah65qk2QLV3enx+p2+A2M9JiojLThQc9ww==
-X-Google-Smtp-Source: AGHT+IHp4ttFqyGxEuYRKTECeut2dpV2OBGlwHOfXPHFmeefIycTWfO9rwvdcCsBB23ujkYLAW1KtA==
-X-Received: by 2002:a81:84d7:0:b0:609:106b:5bbb with SMTP id u206-20020a8184d7000000b00609106b5bbbmr183556ywf.9.1709059703123;
-        Tue, 27 Feb 2024 10:48:23 -0800 (PST)
-Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com. [209.85.219.176])
-        by smtp.gmail.com with ESMTPSA id d199-20020a0ddbd0000000b0060867d09de2sm1909370ywe.29.2024.02.27.10.48.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 Feb 2024 10:48:23 -0800 (PST)
-Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-dbed179f0faso56062276.1;
-        Tue, 27 Feb 2024 10:48:23 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXfuBPDJb2rm861gPTQwoiwXHdP1paOOqnalj+4pZEw0ubdMsjI0JKEuYXJAFnyQ2XOAP78A2M/j3AFM9Q5B8oIvzRfTIXTy1F0rQ0YDw4VsHPad8VRXx8jN+A682GpBQgC7XVuF+IbnX7hx3ttVRqvdWzvWnTZIxlpJPrr8nscLSlTl9/EsRNtQWA3eRh9aZjC8VODywahcnXGX2hmNJItGTEgMFjravnW2YOdwmgHitMo8EIL2JeGyE6KYFH/YIJZXQM96KLW9LXWrGoxzmuvVf4ny74n3JEasqbyXWws0UKPeFp6IDnqfOSTORYkzcNDilElpLtNSuwOvuVBIx0/ZL2jN0dXSh9cDdNthCM39asos+vE2mc=
-X-Received: by 2002:a25:414a:0:b0:dc7:494e:ff33 with SMTP id
- o71-20020a25414a000000b00dc7494eff33mr220625yba.7.1709059702806; Tue, 27 Feb
- 2024 10:48:22 -0800 (PST)
+	s=arc-20240116; t=1709108928; c=relaxed/simple;
+	bh=5C6vD/fRuXGe615n6PpX9VIOEIZkOgWqNNFadbqmy4M=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=KR25EONeFJRXlMbm6own874XiOPOzSDXw3ZTFIfzn5HUca4cEO9ydIRC/v495/2AfayPp25dI/9h+qaQiZYrLbUlVcikg09RErBJZQy0GNwXPy2o3vk0OJWSZQ4DCPc7uUUaA/Wue8jdItUxE1PVIVKDPGDhHWi1u6fJkbUEvlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me; spf=pass smtp.mailfrom=maquefel.me; dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b=EalO3ZTM; arc=none smtp.client-ip=178.154.239.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maquefel.me
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b="EalO3ZTM"
+Received: from mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:8c9b:0:640:8c33:0])
+	by forward501a.mail.yandex.net (Yandex) with ESMTPS id 7184B61680;
+	Wed, 28 Feb 2024 11:23:10 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 2NUOVYANd8c0-nNSnKwOK;
+	Wed, 28 Feb 2024 11:23:08 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail;
+	t=1709108588; bh=5C6vD/fRuXGe615n6PpX9VIOEIZkOgWqNNFadbqmy4M=;
+	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
+	b=EalO3ZTMGKQby2mNKqzwTBWhRSR2vOdtx+YGi+0dATxHc9Ne404mREzk3ONsmowJQ
+	 Sbt6ELQEiXojAyllpQkuQc6yuKN4UbpwNHkcrWbSfpHM6co896dWu7EcWBkPxvOZZi
+	 FlkHZDOUFmF5J3w7ul6ZRoH0jf1AGJ+fqIZrkwaY=
+Authentication-Results: mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
+Message-ID: <154df7fd17dd05fdb6ba21d5f4d84ecfdb476091.camel@maquefel.me>
+Subject: Re: [PATCH v8 00/38] ep93xx device tree conversion
+From: Nikita Shubin <nikita.shubin@maquefel.me>
+To: Mark Brown <broonie@kernel.org>
+Cc: Hartley Sweeten <hsweeten@visionengravers.com>, Alexander Sverdlin
+ <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>,
+ Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>,
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>,
+ Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
+ <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>, Rob Herring
+ <robh+dt@kernel.org>, Krzysztof Kozlowski
+ <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+ Vinod Koul <vkoul@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>,
+ Guenter Roeck <linux@roeck-us.net>, Thierry Reding
+ <thierry.reding@gmail.com>, Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?=
+ <u.kleine-koenig@pengutronix.de>, "David S. Miller" <davem@davemloft.net>, 
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
+ Abeni <pabeni@redhat.com>,  Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, Liam Girdwood
+ <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai
+ <tiwai@suse.com>, Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron"
+ <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, Olof Johansson
+ <olof@lixom.net>,  Niklas Cassel <cassel@kernel.org>,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-pm@vger.kernel.org,  devicetree@vger.kernel.org,
+ dmaengine@vger.kernel.org,  linux-watchdog@vger.kernel.org,
+ linux-pwm@vger.kernel.org,  linux-spi@vger.kernel.org,
+ netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
+ linux-sound@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Bartosz
+ Golaszewski <bartosz.golaszewski@linaro.org>, Krzysztof Kozlowski
+ <krzysztof.kozlowski@linaro.org>, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>, Andy
+ Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 28 Feb 2024 11:23:02 +0300
+In-Reply-To: <168fd3d7-d1e9-467e-bdd0-36c12aa81b68@sirena.org.uk>
+References: <20240226-ep93xx-v8-0-3136dca7238f@maquefel.me>
+	 <168fd3d7-d1e9-467e-bdd0-36c12aa81b68@sirena.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1704788539.git.ysato@users.sourceforge.jp> <f1f58604dd76520005c12479fada0b70ac210f89.1704788539.git.ysato@users.sourceforge.jp>
-In-Reply-To: <f1f58604dd76520005c12479fada0b70ac210f89.1704788539.git.ysato@users.sourceforge.jp>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 27 Feb 2024 19:48:10 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUxZzBD0WRhx07MYdLvamg+1twRvAxGMRM5+4-pYeDTRQ@mail.gmail.com>
-Message-ID: <CAMuHMdUxZzBD0WRhx07MYdLvamg+1twRvAxGMRM5+4-pYeDTRQ@mail.gmail.com>
-Subject: Re: [DO NOT MERGE v6 34/37] sh: Add dtbs target support.
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
-	Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Thomas Gleixner <tglx@linutronix.de>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Lee Jones <lee@kernel.org>, 
-	Helge Deller <deller@gmx.de>, Heiko Stuebner <heiko@sntech.de>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Chris Morgan <macromorgan@hotmail.com>, 
-	Yang Xiwen <forbidden405@foxmail.com>, Sebastian Reichel <sre@kernel.org>, 
-	Linus Walleij <linus.walleij@linaro.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	Arnd Bergmann <arnd@arndb.de>, Vlastimil Babka <vbabka@suse.cz>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
-	David Rientjes <rientjes@google.com>, Baoquan He <bhe@redhat.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Stephen Rothwell <sfr@canb.auug.org.au>, Azeem Shaikh <azeemshaikh38@gmail.com>, 
-	Javier Martinez Canillas <javierm@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>, 
-	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>, 
-	Jonathan Corbet <corbet@lwn.net>, Jacky Huang <ychuang3@nuvoton.com>, 
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>, Biju Das <biju.das.jz@bp.renesas.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
-	Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>, 
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jan 9, 2024 at 9:24=E2=80=AFAM Yoshinori Sato
-<ysato@users.sourceforge.jp> wrote:
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+Hello Mark!
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+On Mon, 2024-02-26 at 13:34 +0000, Mark Brown wrote:
+> On Mon, Feb 26, 2024 at 10:29:56AM +0300, Nikita Shubin via B4 Relay
+> wrote:
+>=20
+> > The goal is to receive ACKs for all patches in series to merge it
+> > via Arnd branch.
+>=20
+> What are the actual dependencies here?
 
-Gr{oetje,eeting}s,
+More than a half of patches makes device drivers incompatible with
+"platform" approach, this is intentionally cause we don't want any
+leftovers - ep93xx should be fully converted to dt or left as is.
 
-                        Geert
+Currently only 4 patches that require review/ack left:
 
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
+- ARM: ep93xx: add regmap aux_dev
+- clk: ep93xx: add DT support for Cirrus EP93xx
+- dma: cirrus: Convert to DT for Cirrus EP93xx
+- dma: cirrus: remove platform code
