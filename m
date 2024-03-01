@@ -1,241 +1,155 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11FA26E5E3;
-	Fri,  1 Mar 2024 12:22:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A32538DE7;
+	Fri,  1 Mar 2024 17:47:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709295769; cv=none; b=nzoJ+22PDZ5wkuPvCTs9grt4bho6iA6TNpFhdIy58U7dAOyjXOQCD9GNjIDWBbcWlkrJnUY3xFP9NXfNGOYmzYetju73/oZQM0o724BOilTZFV9sIzifCeNoXFgu6WuW7kEq2eB9Sz5kTQRS+sF4ShIlOSB6NvZkL3N1r9mkH9g=
+	t=1709315275; cv=none; b=m33KxoYlKc6QNDVeA4+I+WMFKJYgMQoQn97U49fiXW1cgBJ8zgY2mD6Ji1I5jXTJU9UuLjaNr0D6KdYC3oJy1/qH1CNz1UZcF6PJT8Ot2JkuIjAJdLgl6Ay2o6KiJ0vf4PDMwtqcO9mDO1XS4HDloBZXzZaVZEpGrVAVCRVTZhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709295769; c=relaxed/simple;
-	bh=CRnowRjLCq+kORKKl47Vuo6OyiXmlws02WybHbJRUtY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oAml5Ac0dcXRDYR5E7LcJTaB+Pzhrcss4fXrznWDR/lX40yNOiqplrZOxWisWWRJamxHvxqcm1SCusPifzQQC/slEWBeeghNrdTvrASdNMSnbBiMbxcpmbPR1v5orF2JLmDJKD/+SAptLMYb5ZZ+5gL+GSGt6UvxWR74Xz9cer0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aqtMsfNA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709315275; c=relaxed/simple;
+	bh=K8c2wBorxqggjEKYwjSzH32E/7kyU6uSehkmDr1/e8Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Z4OUYUk06sb6b4/iTNaMnDGEItxVX0CHaQHKfjePQ7JPAUxMtecpNarpmpHGUhPsV6YC/iwMOKC8b5O7khHtvS6VBCPpqKCQwDEzn0D2zv7Iu+Pf6dBt7OsGzXv0pBQd+4GyY5VhBkmdSZdV2M2+NIe4r9XmSmV6iHZF0Kc/RSk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XBGd3eSe; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aqtMsfNA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 418F1C433C7;
-	Fri,  1 Mar 2024 12:22:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709295768;
-	bh=CRnowRjLCq+kORKKl47Vuo6OyiXmlws02WybHbJRUtY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=aqtMsfNAR2OO6tIf5w0VRZoJVrzX3aqu9nDKPy/fQofWPzDN+jOA9/9O3QYIHx5fM
-	 sR4xldaBJb+JkXylQffa4od2bwQlbZ2jqyyrE5oIpepMdLkr745POXouywD/2p6bDJ
-	 ICjmx33b2GDko/jaK9PjXi1gRxUv1H8JmZ4alqPqacM1VOunD422KE9k+Cyi8+cPYE
-	 11uEe1QAhwA/W9BdfpmZHeRUOHRD8zDDGLS3rblgQN2DEwMnce3O+D7bApEaxew78v
-	 XmtjxTBNYohLRm5wk1g6D4RKH6irJE2tGlRbeAMWNGbWsg3Mm96tdR9SlQ0fNDUgAA
-	 7eqikxGlZ4BQg==
-Message-ID: <85c669ac-8592-46c7-9716-1e76f5aae220@kernel.org>
-Date: Fri, 1 Mar 2024 04:22:47 -0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XBGd3eSe"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1dca3951ad9so22259285ad.3;
+        Fri, 01 Mar 2024 09:47:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709315273; x=1709920073; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=t5K43xaydVTO1PuV43+YCPcsWOpQXQNoMQ4Cz9/+c2w=;
+        b=XBGd3eSeEQfecxYV0Bw+Qk64LZTb2jVzv2sKQF5ZukUuNzmxlhZKZ0md4p8jIg/01v
+         bb0nPSoCg6kLh8+fUUkNbnyA+ABtCEiDJNc0RHuMmm3JfCwzSmR7eCP+YFgUMBzdJVos
+         V9WWQVdTAFTsYUu3eeHmdeRC/UhdV9vFfWEltYk9vonExN7FqTySyM5xRzoWwCH5HiLu
+         vQEO1AiVxG5Kwk3CAd4voOVnkcczaRc2BPXNoxUXaJRry54P0JYfgAdfclFIhBS1VC6W
+         rlz/jzFZmeEjry0aWSy6uX8TE2rBT1DHr5V0ZkTB1YNEU3nownUrdyg5qRSJPcybBPxG
+         VbHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709315273; x=1709920073;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=t5K43xaydVTO1PuV43+YCPcsWOpQXQNoMQ4Cz9/+c2w=;
+        b=rwyNR9C24XIRaVor5sdMKHe8/Fr7iqa0RvuoIle3u7vSkeOBD/6Z0Rp4eczt48TxlV
+         Fnvjit9QNaGVk6+rxOB3o9GL5zD9ZZlaPyTZvu8psi3Fr1O9HYb51H7ck0ppdEYDeeeH
+         bUigfQOmkbDt5KLBdME0LmLrk4ea32KiGq2OlxZiEuZGy2G9FZ3zGnrwRVSSTKzIB8lR
+         nqQbAZ9e9A0+Oc6d90r/NSmQsci8cq5or8LZDyTtBJzbUutsBW1pipynn0QrnWDWhR40
+         Hn7vWbgN6PxKo3toXRAStdtTGfhmaoawV1JfztPxLPYcuJF/oyAL/u6dEXbqgYfvWqYT
+         ko/g==
+X-Forwarded-Encrypted: i=1; AJvYcCXnD79C0gpuSat/o5iZtHNrAoZpsXvkKskwgpkeKLqAAfWGsTx2o/0u19v6X76bP3sXyUmYl+PKvtbh5pD0+oG6WyvUnGjqN6dSdTxsO3pHNmAZOGLa21YowjL7XbP9UuOBi+2+e9ViQ61LNfw4oHLKUWqG344NEch81Cq+5dAJWHFI7g==
+X-Gm-Message-State: AOJu0YzFMeST/hPK3quGIlDI0D9/LOCVvNEMycKUch5PZnPCKwl3ovvq
+	khOZO9ROb7p4yr81CDY+NFhXNGoqDaX/qJQwETLVUVXklbWVuZxm
+X-Google-Smtp-Source: AGHT+IF1CHMaxJVofw46VYsGcVxC3/eoKJaOwO77Vy/Fjpjn1DtXabpklwX0BKS+jltF5s4dQFC7fQ==
+X-Received: by 2002:a17:903:2445:b0:1dc:afff:9f96 with SMTP id l5-20020a170903244500b001dcafff9f96mr2762237pls.44.1709315273558;
+        Fri, 01 Mar 2024 09:47:53 -0800 (PST)
+Received: from localhost.localdomain ([2409:40f4:24:c27e:10bb:63fc:b695:4c40])
+        by smtp.googlemail.com with ESMTPSA id x6-20020a170902a38600b001db86c48221sm3796974pla.22.2024.03.01.09.47.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 01 Mar 2024 09:47:53 -0800 (PST)
+From: Animesh Agarwal <animeshagarwal28@gmail.com>
+To: 
+Cc: dlemoal@kernel.org,
+	Animesh Agarwal <animeshagarwal28@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	NXP Linux Team <linux-imx@nxp.com>,
+	linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] dt-bindings: imx-pata: Convert to dtschema
+Date: Fri,  1 Mar 2024 23:17:21 +0530
+Message-ID: <20240301174729.238869-1-animeshagarwal28@gmail.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/3] scsi: libsas: Define NCQ Priority sysfs attributes
- for SATA devices
-Content-Language: en-US
-To: John Garry <john.g.garry@oracle.com>, Igor Pylypiv <ipylypiv@google.com>,
- Niklas Cassel <cassel@kernel.org>, Jason Yan <yanaijie@huawei.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, TJ Adams <tadamsjr@google.com>
-References: <20240301013759.516817-1-ipylypiv@google.com>
- <20240301013759.516817-3-ipylypiv@google.com>
- <b10df0c1-5d8a-4c4d-b8bd-c0dbb53ea0d1@oracle.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <b10df0c1-5d8a-4c4d-b8bd-c0dbb53ea0d1@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2024/03/01 3:57, John Garry wrote:
-> On 01/03/2024 01:37, Igor Pylypiv wrote:
->> Libata sysfs attributes cannot be used for libsas managed SATA devices
->> because the ata_port location is different for libsas.
->>
->> Defined sysfs attributes (visible for SATA devices only):
->> - /sys/block/*/device/sas_ncq_prio_enable
->> - /sys/block/*/device/sas_ncq_prio_supported
+Convert the imx-pata bindings to DT schema.
 
-Please no ! I know that the Broadcom mpt3sas driver has this attribute named
-sas_ncq_prio_*, but I really think that it was a very unfortunate choice as that
-makes it different from the attribute for libata, which does not have the sas_
-prefix. That means that an attribute controlling a *device* feature has 2
-different name depending on the hba used for the device. That is super annoying
-to deal with in user space... So please, let's name this ncq_prio_*, same as for
-AHCI. SAS does have a concept of priority, but that is for data frames and has
-nothing to do with the actual command being transported. So mixing up sas and
-ncq in the same name is only confusing...
+Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
+---
+ .../devicetree/bindings/ata/imx-pata.txt      | 16 ---------
+ .../devicetree/bindings/ata/imx-pata.yaml     | 34 +++++++++++++++++++
+ 2 files changed, 34 insertions(+), 16 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/imx-pata.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/imx-pata.yaml
 
-For the Broadcom mpt3sas driver, we can define a link to have that same name for
-the attributes to have everything consistent.
-
-> 
-> it would be good to show the full path
-> 
->>
->> The newly defined attributes will pass the correct ata_port to libata
->> helper functions.
->>
->> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
->> Reviewed-by: TJ Adams <tadamsjr@google.com>
->> ---
->>   drivers/scsi/libsas/sas_ata.c | 87 +++++++++++++++++++++++++++++++++++
->>   include/scsi/sas_ata.h        |  6 +++
->>   2 files changed, 93 insertions(+)
->>
->> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
->> index 12e2653846e3..e0b19eee09b5 100644
->> --- a/drivers/scsi/libsas/sas_ata.c
->> +++ b/drivers/scsi/libsas/sas_ata.c
->> @@ -964,3 +964,90 @@ int sas_execute_ata_cmd(struct domain_device *device, u8 *fis, int force_phy_id)
->>   			       force_phy_id, &tmf_task);
->>   }
->>   EXPORT_SYMBOL_GPL(sas_execute_ata_cmd);
->> +
->> +static ssize_t sas_ncq_prio_supported_show(struct device *device,
->> +					   struct device_attribute *attr,
->> +					   char *buf)
->> +{
->> +	struct scsi_device *sdev = to_scsi_device(device);
->> +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
->> +	int res;
->> +
->> +	// This attribute shall be visible for SATA devices only
-> 
-> Please don't use c99 comment style
-> 
->> +	if (WARN_ON(!dev_is_sata(ddev)))
->> +		return -EINVAL;
->> +
->> +	res = ata_ncq_prio_supported(ddev->sata_dev.ap, sdev);
->> +	if (res < 0)
->> +		return res;
->> +
->> +	return sysfs_emit(buf, "%u\n", res);
->> +}
->> +static DEVICE_ATTR_RO(sas_ncq_prio_supported);
->> +
->> +static ssize_t sas_ncq_prio_enable_show(struct device *device,
->> +					struct device_attribute *attr,
->> +					char *buf)
->> +{
->> +	struct scsi_device *sdev = to_scsi_device(device);
->> +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
->> +	int res;
->> +
->> +	// This attribute shall be visible for SATA devices only
->> +	if (WARN_ON(!dev_is_sata(ddev)))
->> +		return -EINVAL;
->> +
->> +	res = ata_ncq_prio_enabled(ddev->sata_dev.ap, sdev);
->> +	if (res < 0)
->> +		return res;
->> +
->> +	return sysfs_emit(buf, "%u\n", res);
->> +}
->> +
->> +static ssize_t sas_ncq_prio_enable_store(struct device *device,
->> +					 struct device_attribute *attr,
->> +					 const char *buf, size_t len)
->> +{
->> +	struct scsi_device *sdev = to_scsi_device(device);
->> +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
->> +	long input;
->> +	int res;
->> +
->> +	// This attribute shall be visible for SATA devices only
->> +	if (WARN_ON(!dev_is_sata(ddev)))
->> +		return -EINVAL;
->> +
->> +	res = kstrtol(buf, 10, &input);
-> 
-> I think that kstrtobool_from_user() could be used. But 
-> kstrtobool_from_user() handles more than 0/1, so that would be a 
-> different behaviour, so maybe better not to use.
-> 
-> I would also suggest factor out some of ata_ncq_prio_enable_store() with 
-> this, but a public API which accepts char * would be a bit odd.
-
-kstrtobool() is I think the standard way of parsing bool sysfs attributes.
-
-> 
-> 
->> +	if (res)
->> +		return res;
->> +	if ((input < 0) || (input > 1))
->> +		return -EINVAL;
->> +
->> +	return ata_ncq_prio_enable(ddev->sata_dev.ap, sdev, input) ? : len;
-> 
-> Please don't use ternary operator like this. This seems more 
-> straightforfward:
-> 
-> res = ata_ncq_prio_enable();
-> if (res)
-> 	return res;
-> return len;
-> 
->> +}
->> +static DEVICE_ATTR_RW(sas_ncq_prio_enable);
->> +
->> +static struct attribute *sas_ata_sdev_attrs[] = {
->> +	&dev_attr_sas_ncq_prio_supported.attr,
->> +	&dev_attr_sas_ncq_prio_enable.attr,
->> +	NULL
->> +};
->> +
->> +static umode_t sas_ata_attr_is_visible(struct kobject *kobj,
->> +				       struct attribute *attr, int i)
->> +{
->> +	struct device *dev = kobj_to_dev(kobj);
->> +	struct scsi_device *sdev = to_scsi_device(dev);
->> +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
->> +
->> +	if (!dev_is_sata(ddev))
->> +		return 0;
->> +
->> +	return attr->mode;
->> +}
->> +
->> +const struct attribute_group sas_ata_sdev_attr_group = {
->> +	.attrs = sas_ata_sdev_attrs,
->> +	.is_visible = sas_ata_attr_is_visible,
->> +};
->> +EXPORT_SYMBOL_GPL(sas_ata_sdev_attr_group);
->> diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
->> index 2f8c719840a6..cded782fdf33 100644
->> --- a/include/scsi/sas_ata.h
->> +++ b/include/scsi/sas_ata.h
->> @@ -39,6 +39,8 @@ int smp_ata_check_ready_type(struct ata_link *link);
->>   int sas_discover_sata(struct domain_device *dev);
->>   int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *phy,
->>   		    struct domain_device *child, int phy_id);
->> +
->> +extern const struct attribute_group sas_ata_sdev_attr_group;
->>   #else
->>   
->>   static inline void sas_ata_disabled_notice(void)
->> @@ -123,6 +125,10 @@ static inline int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *p
->>   	sas_ata_disabled_notice();
->>   	return -ENODEV;
->>   }
->> +
->> +static const struct attribute_group sas_ata_sdev_attr_group = {
->> +	.attrs = NULL,
->> +};
->>   #endif
->>   
->>   #endif /* _SAS_ATA_H_ */
-> 
-
+diff --git a/Documentation/devicetree/bindings/ata/imx-pata.txt b/Documentation/devicetree/bindings/ata/imx-pata.txt
+deleted file mode 100644
+index f1172f00188a..000000000000
+--- a/Documentation/devicetree/bindings/ata/imx-pata.txt
++++ /dev/null
+@@ -1,16 +0,0 @@
+-* Freescale i.MX PATA Controller
+-
+-Required properties:
+-- compatible: "fsl,imx27-pata"
+-- reg: Address range of the PATA Controller
+-- interrupts: The interrupt of the PATA Controller
+-- clocks: the clocks for the PATA Controller
+-
+-Example:
+-
+-	pata: pata@83fe0000 {
+-		compatible = "fsl,imx51-pata", "fsl,imx27-pata";
+-		reg = <0x83fe0000 0x4000>;
+-		interrupts = <70>;
+-		clocks = <&clks 161>;
+-	};
+diff --git a/Documentation/devicetree/bindings/ata/imx-pata.yaml b/Documentation/devicetree/bindings/ata/imx-pata.yaml
+new file mode 100644
+index 000000000000..78a562587fb5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/imx-pata.yaml
+@@ -0,0 +1,34 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/imx-pata.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Freescale i.MX PATA Controller
++
++maintainers:
++  - Animesh Agarwal <animeshagarwal28@gmail.com>
++
++properties:
++  compatible: 
++    enum:
++      - fsl,imx27
++  reg:
++    maxItems: 1
++  interrupts:
++    items:
++      - description: PATA Controller interrupts
++  clocks:
++    items:
++      - description: PATA Controller clocks
++
++additionalProperties: false
++
++examples:
++  - |
++    pata: pata@83fe0000 {
++        compatible = "fsl,imx51-pata", "fsl,imx27-pata";
++        reg = <0x83fe0000 0x4000>;
++        interrupts = <70>;
++        clocks = <&clks 161>;
++    };
 -- 
-Damien Le Moal
-Western Digital Research
+2.44.0
 
