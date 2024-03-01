@@ -1,123 +1,204 @@
-Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC8A38DDB
-	for <linux-ide@vger.kernel.org>; Fri,  1 Mar 2024 01:38:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 029BB6A351
+	for <linux-ide@vger.kernel.org>; Fri,  1 Mar 2024 09:32:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709257116; cv=none; b=lQpUrvQbLS7zsx47LwX47IRx+L6r0zWdnc9IxD6Q69TwMwjhJnoEQK19dnKjapb8aAzUfy0ffSZOL/3al4m1ipR7Xt/2XwCZlRZm1EY1ZGr0szTVaR8xyi7UmBrVgdTyGvzLDEan6HSL7lgApT2tXsM2fv4Rupz4Z6G2VRDQouY=
+	t=1709285577; cv=none; b=oTIm0fUBkjNeAW0UTk6wuwpxt7avN3yls3HAYA9ldF3ZRLhv+JQPOG+7rihN8WKYUhYr4fyaxq1JB0fGTfcku0ajqU0HxJb2592Zajwi3MrMXVBByqG2ogIKGq9x5JlRMNT8YQmh739hzqS/alS78o0Lt/yH70gRbLvZYxYuR8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709257116; c=relaxed/simple;
-	bh=BHm3bafsiy1rPpFyzr2QCqwbYutNJj2AhwXm2Nw+tbo=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=CzPJV/Wo/uQplLfiECExeNyD2BH1nTKnWs4hvl88d8O4VfqrYxWhdrVfVXOZlu0EVUr8OtFb1xGnZZDXpPHSg9YIB8Xu0dvYogszJSrnw+TfjTo+8EDLnd0OMi2jAaZAQ92KFCCgQrumtuylRhyC0NUF29k7F4uGmkzEw7ImaFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=I5p8Jb4k; arc=none smtp.client-ip=209.85.128.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+	s=arc-20240116; t=1709285577; c=relaxed/simple;
+	bh=Ge/nLoDJwKBTNn89sfF75oEYy19UNAoTfTFaHEVsAj4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=juWuqH8v0f+sHlhKNKsLIZNzbN9dem5Z4mCaiLWdX24RBPzpM8U8tVSN4jt3KwbUQzo+y1gTykReGi/GnA/8xKb21AEWoRyg8DbienHcVora0AnXO7tHxiQKSVVgdv5WAO7zPvuQ0OwKpyBQsdsxjcV+74CpVwwbqmWEHdXw+wg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O5ote/Rr; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="I5p8Jb4k"
-Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-608dc99b401so26783047b3.0
-        for <linux-ide@vger.kernel.org>; Thu, 29 Feb 2024 17:38:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O5ote/Rr"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5131316693cso2370827e87.0
+        for <linux-ide@vger.kernel.org>; Fri, 01 Mar 2024 01:32:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709257113; x=1709861913; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=avuTBfkDXK1hv1D4bL2KM6unjJu36TT8oh9Ptp0s5ao=;
-        b=I5p8Jb4kUHB/kLPAWKq9jA7ke/gbWnb0Uq+9Pbk8Xztvg1Ynnmc9sa6PLKrZVe/Ana
-         rhdi8bD2VD0yf5uyomkqWk0zU+W9NKANjNEInWkUuPyDHsuKLgkjv7Loxtx3Xp4UAiZt
-         t2sgCv4J/Ed/YupGQLzM4RCF2krnEazj3lDGEyt99/VRxLexDffy4TJUZp5QW8VDViKu
-         3BIXKQY42/mSgqdLv2URhNoY5f011FGbfwP93nlxA+JghadG7jhnoMH5cQd2rfvlWNDJ
-         GDWmi3AhXuBYqnlFdqssK0+PFa1cRRNyIj7Z9zJa2QuduAtaoxcabUxKOKYbZRFbecam
-         M8GA==
+        d=gmail.com; s=20230601; t=1709285574; x=1709890374; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OrqtIe3UQ8Q3eBCOxPPS34n+kTZG+hv0uBlFFT4E78I=;
+        b=O5ote/RrEBtjYP13v92WmmO7l/BgnkBN77y/qGh2ISu/jd4hV0XdiBMu1GW10YdRW7
+         U8jGqDSL1l59nCIAMJU5Bx9ly87UytEuostqAdfArGPJwWABKM8WfZ0PKtpnCwLjalgX
+         U+PQl7FzUuRhe394t5kRVTCFWSJ3OjDzcZrmANYaGvxCJT3axjlY/XgayJAb8kf+iymP
+         lYkKzvOiHTOpgjG0Bc0/gcIdln/TEB1W4tgoYuU173egj8B8PYGFP0YECnUqnJK0TaoH
+         fTeg71hPSyOuGyUR0vUCBksiCNOJq2awZ6EMCoLsou1yMipl3TqBGvEXWrhvWVeBKYIe
+         PrJQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709257113; x=1709861913;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=avuTBfkDXK1hv1D4bL2KM6unjJu36TT8oh9Ptp0s5ao=;
-        b=Ndn55aNvMc8JuiJcRr2ntovC2HmuRx10vfPCSTmclyp+UtXpRRvvf4nDnWGc0xDiG+
-         IzQmaW85Gn/NjSEzE8q6QCzaK0mZYA1QdsSqbM26//pWiNQJqRPGpiOhpFnSw41iwr8W
-         xEMCDrj/BITGdDOuXGO4LcAXY+d92tTEy56AIhosEUigS3oHq3lCJx09pcbRiA9cHVTl
-         19WAdgGyYo9Typ1IisBl9jo/5GNNogPrrl+idsO86Xftiugc0vrlnLMdGpjSMbDNCFtQ
-         3aAJCHzeSOloMk1EDQUQ/PVXnxkb18sSAFl+mO6hNQrMtxtfIgRAnSzzEEb1jjmA90ds
-         5nmw==
-X-Gm-Message-State: AOJu0Ywi17Dc9mXaulDON4Lel3Zdpfb8z0tP7BdtGi0B3psuCVA29pzA
-	qRAvoX+rDbvhykF3GOEg4C1kIdQLB8edgwP+xWviUeFhc0kNJGXV8hAjKhMVkdEvzntNI4ZFRzY
-	xVVPAZWPlIg==
-X-Google-Smtp-Source: AGHT+IEC0MPeDboQHO/1B3vR+Iq5QjH11ZYMccDwztB1zAvvRbVdodFYQk+/U00WFKidW8wJFALdRMRUrASHwA==
-X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:3564:51b2:6cdf:92fb])
- (user=ipylypiv job=sendgmr) by 2002:a05:690c:e18:b0:609:247a:bdc5 with SMTP
- id cp24-20020a05690c0e1800b00609247abdc5mr59222ywb.4.1709257113724; Thu, 29
- Feb 2024 17:38:33 -0800 (PST)
-Date: Thu, 29 Feb 2024 17:37:59 -0800
-In-Reply-To: <20240301013759.516817-1-ipylypiv@google.com>
+        d=1e100.net; s=20230601; t=1709285574; x=1709890374;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OrqtIe3UQ8Q3eBCOxPPS34n+kTZG+hv0uBlFFT4E78I=;
+        b=bhNDW+HeL3klPspx6ubd5Q3tz/ybQfpthq+O+kXlgXDxUTyZV6lBn9jh9LOZw8osqs
+         k+yl/HSrG7gYDZkmnl/rtc7/SNAEjCdHR2xw4bQmpJbDX9z3ehM0MqSmcd8b/x0HQ7PU
+         olZQazduhTxIDpIBqpyMuVu4t9lDUW18zzClEELMA6DaAJqrpyXYJY3j0lItZR9sh9xK
+         4KCnUn0dYUwRSB1bJDmEYMze3oLn3xovVo0Cd3v1PdcC/NU3r0Hb7YK9IGM1AgoWq28p
+         /4sI97JIAz3Kgfc/csCGXfd43AmW8nDQX9IsHmoBIPXjgG/y9U0nmG0Yhm/ZjZW8/8UL
+         zcrA==
+X-Forwarded-Encrypted: i=1; AJvYcCXVZpCuc420CTKlq/F7Km+B591l1b4c2rd28bzqaeH/jEMIdGQgjEX2b4VywEwkY7hvuDkHH1u84yT8ws4M+On1ExbnMLZYtihL
+X-Gm-Message-State: AOJu0YwMO/1/H5qQsAveNM0ViVFdg6XxhWtc0QMNnt8zzFiMVNoTecNv
+	02mmv1mutRGy3moMtnc1LAOcyAC8tjtigoC54KDMH3kmqe4tx54C
+X-Google-Smtp-Source: AGHT+IG9BYElqH2Dj6D1DMsCIRftpEhINoWURWeE4dXzFtzNS2GO9rub9sy6kHFfilhQWW+9K/1Efg==
+X-Received: by 2002:a05:6512:3ba8:b0:513:1e8a:f1a5 with SMTP id g40-20020a0565123ba800b005131e8af1a5mr1146082lfv.5.1709285573643;
+        Fri, 01 Mar 2024 01:32:53 -0800 (PST)
+Received: from mobilestation ([178.176.56.174])
+        by smtp.gmail.com with ESMTPSA id ep2-20020a056512484200b005131434454bsm551352lfb.228.2024.03.01.01.32.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 01 Mar 2024 01:32:53 -0800 (PST)
+Date: Fri, 1 Mar 2024 12:32:50 +0300
+From: Serge Semin <fancer.lancer@gmail.com>
+To: Niklas Cassel <cassel@kernel.org>, 
+	"Andrey Jr. Melnikov" <temnota.am@gmail.com>
+Cc: Serge Semin <Sergey.Semin@baikalelectronics.ru>, 
+	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: ahci: stop using saved_port_map for quircks
+Message-ID: <uu2exwldqvbdjus6t4r3cxuto5jpeqtjfvc7qiikulfwiyntf3@j4btf2bt23ld>
+References: <bc76towgdmpv3xilmhlerrshpubrd7feecl2tu6xanwtbkv3ze@zwizzrmcu43w>
+ <ZdxgdOTtoqNF2ch7@fedora>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20240301013759.516817-1-ipylypiv@google.com>
-X-Mailer: git-send-email 2.44.0.278.ge034bb2e1d-goog
-Message-ID: <20240301013759.516817-4-ipylypiv@google.com>
-Subject: [PATCH 3/3] scsi: pm80xx: Add libsas SATA sysfs attributes group
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>, 
-	TJ Adams <tadamsjr@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZdxgdOTtoqNF2ch7@fedora>
 
-The added sysfs attributes group enables the configuration of NCQ Priority
-feature for HBAs that rely on libsas to manage SATA devices.
+Hi Niklas, Andrey
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Reviewed-by: TJ Adams <tadamsjr@google.com>
----
- drivers/scsi/pm8001/pm8001_ctl.c  | 5 +++++
- drivers/scsi/pm8001/pm8001_init.c | 1 +
- drivers/scsi/pm8001/pm8001_sas.h  | 1 +
- 3 files changed, 7 insertions(+)
+On Mon, Feb 26, 2024 at 10:57:08AM +0100, Niklas Cassel wrote:
+> Hello Andrey,
+> 
+> On Sun, Feb 25, 2024 at 12:55:42PM +0300, Andrey Jr. Melnikov wrote:
+> > 
+> > Stop using saved_port_map for masking port quirks, use force_port_map
+> > instead.
+> > 
+> > Signed-off-by: Andrey Jr. Melnikov <temnota.am@gmail.com>
+> > 
+> > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> > index 682ff550ccfb..066e3118801c 100644
+> > --- a/drivers/ata/ahci.c
+> > +++ b/drivers/ata/ahci.c
+> > @@ -675,18 +675,18 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+> >  		switch (pdev->device) {
+> >  		case 0x1166:
+> >  			dev_info(&pdev->dev, "ASM1166 has only six ports\n");
+> > -			hpriv->saved_port_map = 0x3f;
+> > +			hpriv->mask_port_map = 0x3f;
+> >  			break;
+> >  		case 0x1064:
+> >  			dev_info(&pdev->dev, "ASM1064 has only four ports\n");
+> > -			hpriv->saved_port_map = 0xf;
+> > +			hpriv->mask_port_map = 0xf;
+> >  			break;
+> >  		}
+> >  	}
+> >  
+> >  	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
+> >  		dev_info(&pdev->dev, "JMB361 has only one port\n");
+> > -		hpriv->saved_port_map = 1;
+> > +		hpriv->mask_port_map = 1;
+> >  	}
+> >  
+> >  	/*
+> > diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> > index 1a63200ea437..cc705d3bdc50 100644
+> > --- a/drivers/ata/libahci.c
+> > +++ b/drivers/ata/libahci.c
+> > @@ -531,16 +531,10 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+> >  		cap &= ~HOST_CAP_SXS;
+> >  	}
+> >  
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 5c26a13ffbd2..9ffe1a868d0f 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -1039,3 +1039,8 @@ const struct attribute_group *pm8001_host_groups[] = {
- 	&pm8001_host_attr_group,
- 	NULL
- };
-+
-+const struct attribute_group *pm8001_sdev_groups[] = {
-+	&sas_ata_sdev_attr_group,
-+	NULL
-+};
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index ed6b7d954dda..e6b1108f6117 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -134,6 +134,7 @@ static const struct scsi_host_template pm8001_sht = {
- 	.compat_ioctl		= sas_ioctl,
- #endif
- 	.shost_groups		= pm8001_host_groups,
-+	.sdev_groups		= pm8001_sdev_groups,
- 	.track_queue_depth	= 1,
- 	.cmd_per_lun		= 32,
- 	.map_queues		= pm8001_map_queues,
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 3ccb7371902f..ced6721380a8 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -717,6 +717,7 @@ int pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha);
- void pm8001_free_dev(struct pm8001_device *pm8001_dev);
- /* ctl shared API */
- extern const struct attribute_group *pm8001_host_groups[];
-+extern const struct attribute_group *pm8001_sdev_groups[];
- 
- #define PM8001_INVALID_TAG	((u32)-1)
- 
--- 
-2.44.0.278.ge034bb2e1d-goog
+> > -	/* Override the HBA ports mapping if the platform needs it */
+> >  	port_map = readl(mmio + HOST_PORTS_IMPL);
+> > -	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
+> > -		dev_info(dev, "forcing port_map 0x%lx -> 0x%x\n",
+> > -			 port_map, hpriv->saved_port_map);
+> > -		port_map = hpriv->saved_port_map;
+> > -	} else {
+> > -		hpriv->saved_port_map = port_map;
+> > -	}
+> > +	hpriv->saved_port_map = port_map;
+> >  
+> > +	/* Override the HBA ports mapping if the platform needs it */
+> >  	if (hpriv->mask_port_map) {
+> >  		dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
+> >  			port_map,
+> >  
+> 
+> Before this patch, if there was a quirk, e.g. saved_port_map was set in
+> ahci_pci_save_initial_config():
+> 
+> then in ahci_save_initial_config(),
+> we would not store/overwrite saved_port_map with readl(HOST_PORTS_IMPL).
+> 
+> After this patch, saved_port_map will contain ports that might
+> have been "disabled" by a quirk.
+> 
+> 
+> Have you verified that this logical change is okay in all the
+> places where saved_port_map is used?
+> 
+> E.g.
+> drivers/ata/ahci_dwc.c:ahci_dwc_check_cap() seems to iterate over:
+> unsigned long port_map = hpriv->saved_port_map | hpriv->mask_port_map;
+> 
+> which would be different before and after this patch.
+> 
+> Serge, any comment?
+> 
+> 
+> 
+> Also ahci_platform_get_firmware() seems to set
+> saved_port_map based of device tree property "ports-implemented".
+> 
+> Before this patch, saved_port map would still contain that value from
+> device tree, after this patch, that saved_port_map will be overwritten
+> with readl(HOST_PORTS_IMPL).
+> 
+> Again, this code is authored by Serge. Serge, comments?
 
+Absolutely right. The change breaks the saved_port_map semantics. The
+main purpose of all the ahci_host_priv::saved_* fields is to
+save-restore the controller capabilities across device resets
+(suspend/resume). About two years ago the semantics of
+ahci_host_priv::{saved_cap,saved_port_map,saved_port_cap[*]} was
+extended so the fields could be pre-initialized with data by the
+low-level drivers thus overriding malfunction or uninitialized
+controller ports mapping and capabilities. Andrey's patch breaks the
+last part by force-writing to the ahci_host_priv::saved_port_map not
+taking into account that it could have been pre-initialized. Moreover
+ahci_host_priv:mask_port_map semantics is different from what is
+implied by ahci_host_priv::saved_port_map:
+1. saved_port_map defines the ports actually available on the host
+controller.
+2. mask_port_map masks out the unused ports if it's initialized,
+otherwise all available ports will be initialized and utilized.
+
+So the later field can't be that easily replaced with the former one.
+Thus if this patch is applied:
+
+1. The "ports-implemented" DT-property will no longer work since it's
+primary goal is to override the data in normal circumstance retrieved
+from the PI register.
+
+2. The ahci_pci_save_initial_config() will be broken for Asmedia and
+JMicron, since the number of available ports will be retrieved from
+the PI register while the original semantics implied forcing it to a
+particular value.
+
+-Serge(y)
+
+> 
+> 
+> Kind regards,
+> Niklas
