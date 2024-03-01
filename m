@@ -1,123 +1,90 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f201.google.com (mail-yb1-f201.google.com [209.85.219.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E97E36D528
-	for <linux-ide@vger.kernel.org>; Thu, 29 Feb 2024 22:05:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019592BAE9
+	for <linux-ide@vger.kernel.org>; Fri,  1 Mar 2024 01:38:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709244321; cv=none; b=OB243E7dtA380foLAKRsgZd6GJIAxlzBgKgdqSeqReycCYMUGq4jdWu4ZHT+C06a/IBJ/QmIaqZceBpmV3IcZbHKxvUey31zUGPSG3M0J4sykKtJxT3HNGmJb89Buv0SY5yS0eu6X2dDtTBW1oJbpol7uycLS7I7AhNm+ZDTeeE=
+	t=1709257099; cv=none; b=DDTomB6eao+MNRVFG3j+a4JokxaOX/qR6LzKvqICq7CaQSAEqydn7pPJQYiw7kSjdG/wQGboWocK+/6IRLjTFeYEa+jHI/V305ih9zH9a5iMr/zii98xVxid6w13DXZnhhlNHIOXlKFbrGi770V7/RlKlDTArLsVC2c/A1tetqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709244321; c=relaxed/simple;
-	bh=5DbVUHySeDB9YEJSKPkg8srk8wvvGFrP3vfhRWS7FHE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IClsM82r4RtQgp7X1kHiLSolm9oOaj2kCTi6MD06PJ33F76/5Dn0SNbMgo0GK6+Qtrpi7nxI3SKIs0YlwrQu9OOjbtt+OHHRBksEk5XnHqkBhbCPJAk7BpM4vYra+KlzGbncPdcGsealIVrf+Zqjl2B1NGxz+kExHxa3yByEDck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=opensource.wdc.com; spf=pass smtp.mailfrom=opensource.wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=JgZ47PXi; dkim=pass (2048-bit key) header.d=opensource.wdc.com header.i=@opensource.wdc.com header.b=PKgyndpq; arc=none smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=opensource.wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=opensource.wdc.com
+	s=arc-20240116; t=1709257099; c=relaxed/simple;
+	bh=KMpxKpbpjeoQqcOIhlHPKvhUGkSROvNhsAYmAL2oE2k=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=ZPw5m8T3ZWG/nb5YX8tPWj4TNfJSCagu8InWhBIktkAlrmMwXn42Y/AivlDOrQyp5jlZdRRXK0QXvkhpLYEZKxIOE8qNKit+J/eUsELM9ccS4cW9HsFyk7MIqXF6+Q4bQ5vJ5msVfnstftaBLC6jNd7PDidaAMrtHmjBRKDBjCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fIvwGQoO; arc=none smtp.client-ip=209.85.219.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="JgZ47PXi";
-	dkim=pass (2048-bit key) header.d=opensource.wdc.com header.i=@opensource.wdc.com header.b="PKgyndpq"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1709244318; x=1740780318;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=5DbVUHySeDB9YEJSKPkg8srk8wvvGFrP3vfhRWS7FHE=;
-  b=JgZ47PXi0eNmQfSt15QSH31v3VB+LfC7IVZQwGk+F3rbWqtnPSXGaiCT
-   fUXm84WU0EpdvPhdcoCQ0+A7kp5QU/D2sUgjlTlrv+9tYmyccwceM+B6+
-   jcwVzOx5dzkvAhi1Jr4JUS6uVVUZ1TXeG5OekCrXl6sh6ukd5XVZhRY9o
-   3giTiWqRmDx4M9WfIm3syITn4EtzR5e2htX/jmn3H737t0MN84I52o5sI
-   RA/C9jlT/lcuhp/Mdh+vBGeGvE0oyOlBFCFqJ93ivj9kpNoFrs68Col6Y
-   2wfaUqcFRKEd4LImit47JRG0ZYi91vhjX0+pDLeF3c7gKD7qG+nZL+WvQ
-   w==;
-X-CSE-ConnectionGUID: akzXG9MpQ2+fAycrBIx5Cw==
-X-CSE-MsgGUID: u9ozvTT5SY2wuvGGIBft8w==
-X-IronPort-AV: E=Sophos;i="6.06,194,1705334400"; 
-   d="scan'208";a="10764781"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Mar 2024 06:05:12 +0800
-IronPort-SDR: 6ZKA9IO9Ck1xKAdGYMJueZwXl2+b2w0NNr0bao5MG98yBfHBj/3L5Fv3al2L59pq5hGhxCHFYv
- gIRsEWhbIZqA==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Feb 2024 13:14:28 -0800
-IronPort-SDR: TcYSiqCngzmvvGW5kF0I90S6D3ace7rFTnN+/YLkOEdeT3Nq2uf5qeNjqIONJBFvu9wnw/hH4A
- lzQ0JOSrR4Vg==
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Feb 2024 14:05:12 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-	by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Tm4yv6J1Gz1RtVN
-	for <linux-ide@vger.kernel.org>; Thu, 29 Feb 2024 14:05:11 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-	reason="pass (just generated, assumed good)"
-	header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-	opensource.wdc.com; h=content-transfer-encoding:content-type
-	:in-reply-to:organization:from:references:to:content-language
-	:subject:user-agent:mime-version:date:message-id; s=dkim; t=
-	1709244297; x=1711836298; bh=5DbVUHySeDB9YEJSKPkg8srk8wvvGFrP3vf
-	hRWS7FHE=; b=PKgyndpqPaoVtbkHJHnNngynZ8i3Cnbj5CubPIpPguFVaxaW79b
-	yfdudKrjmX+iQfkitUX5H3wrJCm41H+wcM2lYznfLBNqQQOFifBIlGT7nm5nEWAa
-	ki9w4jIlxp1ETlzaZYoVCbgId94JOJmmabmJrsKwQcoCq546jsU/vZYNV9cainvs
-	LUOb6SefCZoP39xsxJwjILrSEn6v3APatlMJggXzRpdqnRfROt2BebEPvUThewa5
-	EgZKie41VUPR+7xpclyRTdLCmFz65+YJdZ4+9ChnP1x4+5C00UAt6IgnQxbSouHa
-	faAg0EbwbEK6zbheCI5MHUIMChadcMv51cA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-	by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id Vfcf882kXvit for <linux-ide@vger.kernel.org>;
-	Thu, 29 Feb 2024 14:04:57 -0800 (PST)
-Received: from [10.111.69.9] (c02drav6md6t.sdcorp.global.sandisk.com [10.111.69.9])
-	by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Tm4yc5T89z1RtVG;
-	Thu, 29 Feb 2024 14:04:56 -0800 (PST)
-Message-ID: <18490fc9-7fda-41ee-803a-bda874c2b42d@opensource.wdc.com>
-Date: Thu, 29 Feb 2024 14:04:56 -0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fIvwGQoO"
+Received: by mail-yb1-f201.google.com with SMTP id 3f1490d57ef6-dbf216080f5so2665620276.1
+        for <linux-ide@vger.kernel.org>; Thu, 29 Feb 2024 17:38:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1709257097; x=1709861897; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=CWSEzr83qDpP+Sd5Vt8txQd9Oa0cdIaTZ7C0izQO4eA=;
+        b=fIvwGQoOvFWge1dBEWoKXM+lpbDLzacvG2+mc+8DzCbwZlmiZF/obxOftllakc873O
+         TO1JAaEdhcyW1oj3MlxBj5oj8+omC5oldVHdO1oqTckZ0rqlehWEX5A3jfGq5y1dZRZ8
+         oDXkYw0KEQoRMqahc2bykMoM1c9YRJvITd14Z5HfesnJQpOyxWnKwjM+Vl7OnUecC8Dl
+         1LmHspnJILDxt+6g5FjvP4KA0va/P6kLLEkivlm7KnOwKeEvU0mHvYqYlWGBXUN/DOMT
+         lMjuTFrC5GnV0u5/bW6bpMKZPBFBX2IqVr9uBmLLK/x3CBkmCmqRmT2DlcqEFRSOelQe
+         sDfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709257097; x=1709861897;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=CWSEzr83qDpP+Sd5Vt8txQd9Oa0cdIaTZ7C0izQO4eA=;
+        b=jMSnyrEKgRG+HqxVvR1YQAnArMbtWPlDV6QIqxGSH6DN1enFHuuPJqrTuvvs1pPVsU
+         /KqlomqyXPdnFzyp5DaqtQOZ4xO2vtvvpfjrAyvCqyFQJVkQ61qSA0Uue1r6c3AllzQ0
+         JrHyr5XjlTnnurC/8Y/eNlA/RWemlNs53sJVPiOZEDsIq5W6iOx2OTHOfAL0TTiK7KMJ
+         BwtVQ0HC6+PmisSaHnnM8eYwAtr18+dVcNKT6XUey8ELKzNVi9ahKaKvBoGwNNqwgdDc
+         6XUAkXXY9Zv5xzx1RULsCP0u5bRzJsW5UFRdYimVtiagBhFrlAjwslxV+9cieJNcnRjq
+         f7nw==
+X-Gm-Message-State: AOJu0Yx/NCDTGInR9Loewoo1t1g6o2aBG677AI094CIsyXpDIuOPqTp7
+	RpY1zgFZOHz0vFdCxaE8OEJiAKwqwKXXn8lvPaWoKBNLSjRVh8MayrDTfohscBLNowjsrPutylg
+	XfySTCf8B5A==
+X-Google-Smtp-Source: AGHT+IE404rz7EDy2MtSWy82xprXTyrLWHNGQHVJXAyHGYB3tIhAtfRmvWt9ht+SCiuuaQ95Ip2J5VNwdGzIlA==
+X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:3564:51b2:6cdf:92fb])
+ (user=ipylypiv job=sendgmr) by 2002:a05:6902:728:b0:dc2:1f34:fac4 with SMTP
+ id l8-20020a056902072800b00dc21f34fac4mr42691ybt.2.1709257097144; Thu, 29 Feb
+ 2024 17:38:17 -0800 (PST)
+Date: Thu, 29 Feb 2024 17:37:56 -0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ipr: Remove SATA support
-Content-Language: en-US
-To: Elektrokinesis DJ <cpubuilder2@gmail.com>, brking@linux.vnet.ibm.com,
- "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: jejb@linux.ibm.com, john.g.garry@oracle.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, wenxiong@linux.ibm.com,
- Niklas Cassel <cassel@kernel.org>
-References: <CABa-fKRfE8B2TLVJASB9xQaOXDiYH3YCw0YEEg1UcGu2Le8xWw@mail.gmail.com>
-From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <CABa-fKRfE8B2TLVJASB9xQaOXDiYH3YCw0YEEg1UcGu2Le8xWw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.44.0.278.ge034bb2e1d-goog
+Message-ID: <20240301013759.516817-1-ipylypiv@google.com>
+Subject: [PATCH 0/3] NCQ Priority sysfs sttributes for libsas
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 2024/02/29 9:31, Elektrokinesis DJ wrote:
-> I am dissatisfied with the decision to remove SATA from the ipr driver, I
-> have multiple machines in my homelab that now require manual patching every
-> time I would like to update the kernel and initrd image. Bladecenter PS700
-> uses the ipr SCSI driver if you install a common SATA SSD into the Planar
-> SAS slots. This limits me from being able to use newer kernels without
-> patching, unless I would like to procure expensive SAS SSDs.
+This patch series adds sas_ncq_prio_supported and sas_ncq_prio_enable
+sysfs sttributes for libsas managed SATA devices. Existing libata sysfs
+attributes cannot be used directly because the ata_port location is
+different for libsas.
 
-The ipr driver was the only libsas/ATA driver that had not been converted to the
-new libata error handling, and was thus preventing necessary cleanups in libata.
-When it was removed, it seemed that no-one was using ATA devices with IPR beside
-SATA DVDs, and very few people had this hardware to test anything.
+Igor Pylypiv (3):
+  ata: libata-sata: Factor out NCQ Priority configuration helpers
+  scsi: libsas: Define NCQ Priority sysfs attributes for SATA devices
+  scsi: pm80xx: Add libsas SATA sysfs attributes group
 
-So it seems that devices beside DVDs were/are actually used.
-
-We can try to reintroduce the support for ATA in ipr, but that will not be a
-simple revert as the new EH handling needs to be supported.
-
-Brian,
-
-Any comment ? Is this feasible ?
-I do not have the hardware to work on this, so patches will have to be done by
-you or someone with access.
+ drivers/ata/libata-sata.c         | 130 ++++++++++++++++++++----------
+ drivers/scsi/libsas/sas_ata.c     |  87 ++++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_ctl.c  |   5 ++
+ drivers/scsi/pm8001/pm8001_init.c |   1 +
+ drivers/scsi/pm8001/pm8001_sas.h  |   1 +
+ include/linux/libata.h            |   4 +
+ include/scsi/sas_ata.h            |   6 ++
+ 7 files changed, 190 insertions(+), 44 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.44.0.278.ge034bb2e1d-goog
 
