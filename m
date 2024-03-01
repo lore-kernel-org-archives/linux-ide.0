@@ -1,225 +1,339 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8F7524B23
-	for <linux-ide@vger.kernel.org>; Fri,  1 Mar 2024 19:33:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11CAE5E3D8
+	for <linux-ide@vger.kernel.org>; Fri,  1 Mar 2024 22:58:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709321604; cv=none; b=OYksZRft4EAv0ldprX4AgpH0SapLDsQ/mw+iMFe6jiHRhtr5K9uZtMMC4L+M2WmRRjwTplIl/80gdWoYVzxmcx1a8JDhelRO380YDWa4QW7HhZSqU5ZS8YC41tO14dl42xmJpCUc680hZiGiqo6qILLfCaJQiJcUB4SINN/wtZ0=
+	t=1709333904; cv=none; b=lTjdpMB69tPwLG7F4D/PF8WoXavIJ3GSiJuwJe73dn8zC7GQjLUpwKPlGbu+j8401CjDtnZ2eBWYXGiM5GnTIg5//dSXba96jvGTpfDqtjFZqd4/8ZkYG8V6B1tqD/Q78l603lY/8rLk1t39H3arKk7rAZ0i1U71xK47dSXw6mE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709321604; c=relaxed/simple;
-	bh=XTFuknoUuPcp9/oYoIaNvUMyaRQoWoDN4bAvT5zMykg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=c/xkQUVcH5Y98nt1ZkAFF2QW3GYsd8M6zFLDCcz1uELuLFkaBZm4Fd4zSGSjhzEFZMMLZy+gGfLh2ZeHckR8W1V39moXVEfgtlixC9DPHd7ItSffHPn7UdCinC9E5W/onE3mo8rlv/JSvs9YMReKZ3wa6pBDJp9cKd15EipyTGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=D44hhj8z; arc=none smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1709333904; c=relaxed/simple;
+	bh=51KB5+vvp50PJGbtC9xrC66p7mH4YglnZrE21oCXX2U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M8g392s45Ej7HLQ9MbcejmnOW95MUoVTH1pLwbbKoA7C5AKCnw1jnkdOIzsJe/1T2YTHUfVcA/cGHuSd/viEulyGsg3FO63I3/S4wjg5/+pPXzBbdQQp8k5gcR3LJhBzSmUnhTYbEOZZgTHiKmt88MMPtkaM74d5L7FjDkcSw/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ZBh2Fiqx; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="D44hhj8z"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-563cb3ba9daso3390068a12.3
-        for <linux-ide@vger.kernel.org>; Fri, 01 Mar 2024 11:33:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZBh2Fiqx"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1dcd0431f00so20069445ad.3
+        for <linux-ide@vger.kernel.org>; Fri, 01 Mar 2024 14:58:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1709321601; x=1709926401; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=yfVmzkkW0SO5rGs/RCaiwFTIf6vb/6LRct9FefOPUc4=;
-        b=D44hhj8z5/RAljKixdUGp3g5K+yzt8ZhHIm7/Qdvis0DL3oJ5yj/YYhrWYKTnNeZU/
-         sNAFSjUv8XiX8JPvfBXJ5bF9b6B0Ej1kLjLVIkL7rmnAchK5+qMS2+IqECvvmQhId9bw
-         25D7BGfXIrjY4sQtMOHiupjBixqI7BKmdjMYkd+42jXMzOCTRk29VSKmYuWVnJwftNmF
-         OxNtM1VVju+14xiOSqFzhgqnH3uqvHiOfk4M+Fu568nY2Y6kDOhUZZ9dy+OtDPOp7JO8
-         MMPrN6y7mH0rSvzwXJzkmStRJKhkViEARC4q/TfnL7XIN++n1cqPBhTYs1MDy+zJkIto
-         6Gaw==
+        d=google.com; s=20230601; t=1709333901; x=1709938701; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=j6g1OLHSuggYt4HmBeuvmTIADaRmlIR+NeOpy8jozz8=;
+        b=ZBh2FiqxuGh6J3n/qlqLeg65p3yniyLzTx12J3bQX1wTgp4xh5f61RcaOjoDeyUILr
+         mrKdE0HtKJjGtg8zxdSnMUotNeVm9jdoZajLK83n0METqy0W2alHnYxbvx1kk1gLMmmG
+         6dCdEMdBTRvUIC/wZV1R7imfBZuGAdtpIdiCaHwdXXt42dwvfyVuCf0dCRDe1Kv60AK0
+         XAmM3QgC//Cu3HEpqXPK6jP8/VxGJY3PFwMG/rEpZ7waTJ1IiNTeDA4dHGDl3AtSVqCe
+         vKkXdjJL1ck5zkSuSrxKYWBYWYtN+HXTQzYXn0z/5YYikDXmyMNXL1f2DndRxuWNLWCN
+         SxnA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709321601; x=1709926401;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=yfVmzkkW0SO5rGs/RCaiwFTIf6vb/6LRct9FefOPUc4=;
-        b=E07W6JyVzElEPACn0w9kV9WL7UGg2aqP2eYVqDahT//6MTqWA2w7QKpyml0qGz5yoC
-         C9tGW4l6JgjyeNX+t0iHo6oBLkTZamxZPRtvHNHOAeOIhQYJmhUI/x5cxNdoZ1JCwoA9
-         hZb/0TeW2hkOlVMYVtjTjDEO+upWL4GbA5sQyWeDWa5PuMw1jM/loqAyEaHFJ0EMa0GM
-         yJHis5Y6J1EeFo5U6Mr2FL3272LUK6Yo+tIeNzAxW4NXQFBZnVZVEczzZLw8PGpoKAkF
-         kBgGfYJFgjQAA1s/TmRv6JOlNZy2OdwEcrI2ET85TLeM7p+6MybW3/DdvKdkcrtFlH/2
-         7jDg==
-X-Forwarded-Encrypted: i=1; AJvYcCW9dTR05Pxj0y4RjpDSQp0d/6qiucK6iq38Qo28sMGUJqY2s/klrE7LHw0ENPTwQC+XbZQpGmwlKwVHvJ9mf+VDnJWOJ5ZfsI2q
-X-Gm-Message-State: AOJu0YxRT3bN+auguUyULDxqnn07vz9tKT1+cR7M1EzJL3gjjqfMZXL0
-	2rVtslKVwVajG1+3I+/MiI3+eBj1gcylHEI0hsRk7KkKeyrsbsb3X+Q0o9OED0U=
-X-Google-Smtp-Source: AGHT+IHL/7W01t2ZC17BSXkhtHuGhFsgLjLRWIJCMSmpag3u6JF5C+aWz4hR6jT48H1ZxV2FtACNEQ==
-X-Received: by 2002:a50:c88c:0:b0:565:f90c:1263 with SMTP id d12-20020a50c88c000000b00565f90c1263mr1899623edh.9.1709321601115;
-        Fri, 01 Mar 2024 11:33:21 -0800 (PST)
-Received: from [192.168.1.20] ([178.197.222.97])
-        by smtp.gmail.com with ESMTPSA id es14-20020a056402380e00b00566d9c8e6cesm686484edb.21.2024.03.01.11.33.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Mar 2024 11:33:20 -0800 (PST)
-Message-ID: <81e42a64-03c5-4372-914d-9f2df517dcf7@linaro.org>
-Date: Fri, 1 Mar 2024 20:33:18 +0100
+        d=1e100.net; s=20230601; t=1709333901; x=1709938701;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=j6g1OLHSuggYt4HmBeuvmTIADaRmlIR+NeOpy8jozz8=;
+        b=mbIvxyNrYhAKGLNeZdHXivTtXlZnmiLccXuj7yQw9XF7XtWC3a36TK5WM0lg/4wDfK
+         ZNnjReagklwgEykW50n/5QXOzgqMKrZ/KvNNX8GR+BiSChROiScv32UhkBjKiAJZaEFk
+         81zzr4Q3ZGY2OGmB6p+yM4QzZaQwM/uYPVNA0vRxAvjwwViAOu1jKNnngc7BXrgKP9A2
+         O2nxXM3LY96WBSaTGmhRY5CfbTe3cFamLLteeQrjvYolH0qm8NDSSkFWXPfRzfFkuibO
+         V8kmnRp4GsU0EoaB0uTUHEEF0HHFD7amOClafYEzA3YRYTxKGiaP10moincuFIu76ZHl
+         C9Ug==
+X-Forwarded-Encrypted: i=1; AJvYcCVYAuKyjvOBQwpJTc6tSUOJpWfe44B6I1psMqClxXHVg4ttSajoyX1+/HmktO4OtLeWVhVaOp01LH1AuZuMju4adIdunNjyEwVO
+X-Gm-Message-State: AOJu0YyvpABkgnjwgDqPSptOSzizBrL+QK0FPeU2JZJJHLhR6Ksxiv+/
+	ovvRCB5ahce7HKmqvgbrnshFLVYl5inoK4bPw0FBU5nYudLNDhTiuCmL4KsI9w==
+X-Google-Smtp-Source: AGHT+IETYSjSOG6KqSy6QCk4leF3enmG7L6jYEl8vFqW/GClW+wK0VLRCN407+12espzX+46qWkfzg==
+X-Received: by 2002:a17:902:ccc2:b0:1db:c6a0:288b with SMTP id z2-20020a170902ccc200b001dbc6a0288bmr3464674ple.7.1709333901046;
+        Fri, 01 Mar 2024 14:58:21 -0800 (PST)
+Received: from google.com ([2620:15c:2c5:13:2afe:1a8e:f846:999f])
+        by smtp.gmail.com with ESMTPSA id kv13-20020a17090328cd00b001d911dd145esm3980166plb.219.2024.03.01.14.58.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 01 Mar 2024 14:58:20 -0800 (PST)
+Date: Fri, 1 Mar 2024 14:58:15 -0800
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	TJ Adams <tadamsjr@google.com>
+Subject: Re: [PATCH 1/3] ata: libata-sata: Factor out NCQ Priority
+ configuration helpers
+Message-ID: <ZeJdhyYsUVUwpCL8@google.com>
+References: <20240301013759.516817-1-ipylypiv@google.com>
+ <20240301013759.516817-2-ipylypiv@google.com>
+ <cee98fdf-d285-44da-8bcb-9d9150a19e5e@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] dt-bindings: imx-pata: Convert to dtschema
-Content-Language: en-US
-To: Animesh Agarwal <animeshagarwal28@gmail.com>
-Cc: dlemoal@kernel.org, Rob Herring <robh+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
- Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>, NXP Linux Team <linux-imx@nxp.com>,
- linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <20240301174729.238869-1-animeshagarwal28@gmail.com>
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <20240301174729.238869-1-animeshagarwal28@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cee98fdf-d285-44da-8bcb-9d9150a19e5e@kernel.org>
 
-On 01/03/2024 18:47, Animesh Agarwal wrote:
-> Convert the imx-pata bindings to DT schema.
+On Fri, Mar 01, 2024 at 04:16:46AM -0800, Damien Le Moal wrote:
 
-It does not look like you tested the bindings, at least after quick
-look. Please run `make dt_binding_check` (see
-Documentation/devicetree/bindings/writing-schema.rst for instructions).
-Maybe you need to update your dtschema and yamllint.
+Thank you for the review Damien!
+
+> On 2024/02/29 17:37, Igor Pylypiv wrote:
+> > Export libata NCQ Priority configuration helpers to be reused
+> > for libsas managed SATA devices.
+> > 
+> > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> > Reviewed-by: TJ Adams <tadamsjr@google.com>
+> 
+> Please drop this tag as the email signaling the review was not sent to the
+> list/in-reply to this email. The name of the reviewer should also be fully
+> spelled out. Same comment for the other 2 patches as they also have this review tag.
+> 
+> > ---
+> >  drivers/ata/libata-sata.c | 130 +++++++++++++++++++++++++-------------
+> >  include/linux/libata.h    |   4 ++
+> >  2 files changed, 90 insertions(+), 44 deletions(-)
+> > 
+> > diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> > index 0fb1934875f2..9c6c69d7feab 100644
+> > --- a/drivers/ata/libata-sata.c
+> > +++ b/drivers/ata/libata-sata.c
+> > @@ -848,80 +848,104 @@ DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
+> >  	    ata_scsi_lpm_show, ata_scsi_lpm_store);
+> >  EXPORT_SYMBOL_GPL(dev_attr_link_power_management_policy);
+> >  
+> > +/**
+> > + *	ata_ncq_prio_supported - Check if device supports NCQ Priority
+> > + *	@ap: ATA port of the target device
+> > + *	@sdev: SCSI device
+> > + *
+> > + *	Helper to check if device supports NCQ Priority feature,
+> > + *	usable with both libsas and libata.
+> > + */
+> > +int ata_ncq_prio_supported(struct ata_port *ap, struct scsi_device *sdev)
+> > +{
+> > +	struct ata_device *dev;
+> > +	unsigned long flags;
+> > +	int rc;
+> > +
+> > +	spin_lock_irqsave(ap->lock, flags);
+> > +	dev = ata_scsi_find_dev(ap, sdev);
+> > +	rc = dev ? !!(dev->flags & ATA_DFLAG_NCQ_PRIO) : -ENODEV;
+> 
+> Please expand this to make it more readable:
+> 
+> 	if (!dev)
+> 		rc = -ENODEV;
+> 	else
+> 		rc = !!(dev->flags & ATA_DFLAG_NCQ_PRIO);
+> 
+> > +	spin_unlock_irqrestore(ap->lock, flags);
+> > +	return rc;
+> > +}
+> > +EXPORT_SYMBOL_GPL(ata_ncq_prio_supported);
+> > +
+> >  static ssize_t ata_ncq_prio_supported_show(struct device *device,
+> >  					   struct device_attribute *attr,
+> >  					   char *buf)
+> >  {
+> >  	struct scsi_device *sdev = to_scsi_device(device);
+> >  	struct ata_port *ap = ata_shost_to_port(sdev->host);
+> > -	struct ata_device *dev;
+> > -	bool ncq_prio_supported;
+> > -	int rc = 0;
+> > -
+> > -	spin_lock_irq(ap->lock);
+> > -	dev = ata_scsi_find_dev(ap, sdev);
+> > -	if (!dev)
+> > -		rc = -ENODEV;
+> > -	else
+> > -		ncq_prio_supported = dev->flags & ATA_DFLAG_NCQ_PRIO;
+> > -	spin_unlock_irq(ap->lock);
+> > +	int rc = ata_ncq_prio_supported(ap, sdev);
+> >  
+> > -	return rc ? rc : sysfs_emit(buf, "%u\n", ncq_prio_supported);
+> > +	return (rc < 0) ? rc : sysfs_emit(buf, "%u\n", rc);
+> 
+> Same here, please expand:
+> 
+> 	if (rc < 0)
+> 		return rc;
+> 	return sysfs_emit(buf, "%d\n", rc);
+> 
+> And please not the change %u -> %d
+> 
+> >  }
+> > -
+> 
+> whiteline change. Please keep the white line.
+> 
+> >  DEVICE_ATTR(ncq_prio_supported, S_IRUGO, ata_ncq_prio_supported_show, NULL);
+> >  EXPORT_SYMBOL_GPL(dev_attr_ncq_prio_supported);
+> >  
+> > +/**
+> > + *	ata_ncq_prio_enabled - Check if NCQ Priority is enabled
+> > + *	@ap: ATA port of the target device
+> > + *	@sdev: SCSI device
+> > + *
+> > + *	Helper to check if NCQ Priority feature is enabled,
+> > + *	usable with both libsas and libata.
+> > + */
+> > +int ata_ncq_prio_enabled(struct ata_port *ap, struct scsi_device *sdev)
+> > +{
+> > +	struct ata_device *dev;
+> > +	unsigned long flags;
+> > +	int rc;
+> > +
+> > +	spin_lock_irqsave(ap->lock, flags);
+> > +	dev = ata_scsi_find_dev(ap, sdev);
+> > +	rc = dev ? !!(dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED) : -ENODEV;
+> 
+> same comment as above. Please expand.
+> 
+> > +	spin_unlock_irqrestore(ap->lock, flags);
+> > +	return rc;
+> > +}
+> > +EXPORT_SYMBOL_GPL(ata_ncq_prio_enabled);
+> > +
+> >  static ssize_t ata_ncq_prio_enable_show(struct device *device,
+> >  					struct device_attribute *attr,
+> >  					char *buf)
+> >  {
+> >  	struct scsi_device *sdev = to_scsi_device(device);
+> >  	struct ata_port *ap = ata_shost_to_port(sdev->host);
+> > -	struct ata_device *dev;
+> > -	bool ncq_prio_enable;
+> > -	int rc = 0;
+> > -
+> > -	spin_lock_irq(ap->lock);
+> > -	dev = ata_scsi_find_dev(ap, sdev);
+> > -	if (!dev)
+> > -		rc = -ENODEV;
+> > -	else
+> > -		ncq_prio_enable = dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLED;
+> > -	spin_unlock_irq(ap->lock);
+> > +	int rc = ata_ncq_prio_enabled(ap, sdev);
+> >  
+> > -	return rc ? rc : sysfs_emit(buf, "%u\n", ncq_prio_enable);
+> > +	return (rc < 0) ? rc : sysfs_emit(buf, "%u\n", rc);
+> 
+> same comment as above.
+> 
+> >  }
+> >  
+> > -static ssize_t ata_ncq_prio_enable_store(struct device *device,
+> > -					 struct device_attribute *attr,
+> > -					 const char *buf, size_t len)
+> > +/**
+> > + *	ata_ncq_prio_enable - Enable/disable NCQ Priority
+> > + *	@ap: ATA port of the target device
+> > + *	@sdev: SCSI device
+> > + *	@enable: true - enable NCQ Priority, false - disable NCQ Priority
+> > + *
+> > + *	Helper to enable/disable NCQ Priority feature, usable with both
+> > + *	libsas and libata.
+> > + */
+> > +int ata_ncq_prio_enable(struct ata_port *ap, struct scsi_device *sdev,
+> > +			bool enable)
+> >  {
+> > -	struct scsi_device *sdev = to_scsi_device(device);
+> > -	struct ata_port *ap;
+> >  	struct ata_device *dev;
+> > -	long int input;
+> > +	unsigned long flags;
+> >  	int rc = 0;
+> >  
+> > -	rc = kstrtol(buf, 10, &input);
+> > -	if (rc)
+> > -		return rc;
+> > -	if ((input < 0) || (input > 1))
+> > -		return -EINVAL;
+> > +	spin_lock_irqsave(ap->lock, flags);
+> 
+> Any reason to not use spin_lock_irq() ?
+
+In the future someone might call these helper functions when interrupts
+are disabled. spin_unlock_irq() might re-enable interrupts prematurely.
+spin_unlock_irqrestore() will restore the same interrupts state that was
+before the call to spin_lock_irqsave().
 
 > 
-> Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
-> ---
->  .../devicetree/bindings/ata/imx-pata.txt      | 16 ---------
->  .../devicetree/bindings/ata/imx-pata.yaml     | 34 +++++++++++++++++++
-
-Filename like compatible, so fsl,imx27-pata.yaml
-
->  2 files changed, 34 insertions(+), 16 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/imx-pata.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/imx-pata.yaml
+> >  
+> > -	ap = ata_shost_to_port(sdev->host);
+> >  	dev = ata_scsi_find_dev(ap, sdev);
+> > -	if (unlikely(!dev))
+> > -		return  -ENODEV;
+> > -
+> > -	spin_lock_irq(ap->lock);
+> > +	if (unlikely(!dev)) {
+> > +		rc = -ENODEV;
+> > +		goto unlock;
+> > +	}
+> >  
+> >  	if (!(dev->flags & ATA_DFLAG_NCQ_PRIO)) {
+> >  		rc = -EINVAL;
+> >  		goto unlock;
+> >  	}
+> >  
+> > -	if (input) {
+> > +	if (enable) {
+> >  		if (dev->flags & ATA_DFLAG_CDL_ENABLED) {
+> >  			ata_dev_err(dev,
+> >  				"CDL must be disabled to enable NCQ priority\n");
+> > @@ -934,9 +958,27 @@ static ssize_t ata_ncq_prio_enable_store(struct device *device,
+> >  	}
+> >  
+> >  unlock:
+> > -	spin_unlock_irq(ap->lock);
+> > +	spin_unlock_irqrestore(ap->lock, flags);
+> > +	return rc;
+> > +}
+> > +EXPORT_SYMBOL_GPL(ata_ncq_prio_enable);
+> > +
+> > +static ssize_t ata_ncq_prio_enable_store(struct device *device,
+> > +					 struct device_attribute *attr,
+> > +					 const char *buf, size_t len)
+> > +{
+> > +	struct scsi_device *sdev = to_scsi_device(device);
+> > +	struct ata_port *ap = ata_shost_to_port(sdev->host);
+> > +	long input;
+> > +	int rc = 0;
+> > +
+> > +	rc = kstrtol(buf, 10, &input);
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/imx-pata.txt b/Documentation/devicetree/bindings/ata/imx-pata.txt
-> deleted file mode 100644
-> index f1172f00188a..000000000000
-> --- a/Documentation/devicetree/bindings/ata/imx-pata.txt
-> +++ /dev/null
-> @@ -1,16 +0,0 @@
-> -* Freescale i.MX PATA Controller
-> -
-> -Required properties:
-> -- compatible: "fsl,imx27-pata"
-> -- reg: Address range of the PATA Controller
-> -- interrupts: The interrupt of the PATA Controller
-> -- clocks: the clocks for the PATA Controller
-> -
-> -Example:
-> -
-> -	pata: pata@83fe0000 {
-> -		compatible = "fsl,imx51-pata", "fsl,imx27-pata";
-> -		reg = <0x83fe0000 0x4000>;
-> -		interrupts = <70>;
-> -		clocks = <&clks 161>;
-> -	};
-> diff --git a/Documentation/devicetree/bindings/ata/imx-pata.yaml b/Documentation/devicetree/bindings/ata/imx-pata.yaml
-> new file mode 100644
-> index 000000000000..78a562587fb5
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/imx-pata.yaml
-> @@ -0,0 +1,34 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/imx-pata.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Freescale i.MX PATA Controller
-> +
-> +maintainers:
-> +  - Animesh Agarwal <animeshagarwal28@gmail.com>
-> +
-> +properties:
-> +  compatible: 
-> +    enum:
-> +      - fsl,imx27
-
-What are you documenting here?
-
-> +  reg:
-> +    maxItems: 1
-
-Blank line
-
-> +  interrupts:
-> +    items:
-> +      - description: PATA Controller interrupts
-
-Blank line... just open example-schema or any other recent bindings
-which were reviewed. Don't create entirely different style, but learn
-from recent code.
-
-> +  clocks:
-> +    items:
-> +      - description: PATA Controller clocks
-> +
-> +additionalProperties: false
-> +
-> +examples:
-> +  - |
-> +    pata: pata@83fe0000 {
-> +        compatible = "fsl,imx51-pata", "fsl,imx27-pata";
-
-And now please tell me how does it make sense with respect to your
-compatible in this binding?
-
-> +        reg = <0x83fe0000 0x4000>;
-> +        interrupts = <70>;
-> +        clocks = <&clks 161>;
-> +    };
-
-Best regards,
-Krzysztof
-
+> Please use kstrtobool().
+> 
+> > +	if (rc)
+> > +		return rc;
+> > +	if ((input < 0) || (input > 1))
+> > +		return -EINVAL;
+> >  
+> > -	return rc ? rc : len;
+> > +	return ata_ncq_prio_enable(ap, sdev, input) ? : len;
+> >  }
+> >  
+> >  DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+> > diff --git a/include/linux/libata.h b/include/linux/libata.h
+> > index 26d68115afb8..f3ff2bf3ec6b 100644
+> > --- a/include/linux/libata.h
+> > +++ b/include/linux/libata.h
+> > @@ -1157,6 +1157,10 @@ extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+> >  				       int queue_depth);
+> >  extern int ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+> >  				  int queue_depth);
+> > +extern int ata_ncq_prio_supported(struct ata_port *ap, struct scsi_device *sdev);
+> > +extern int ata_ncq_prio_enabled(struct ata_port *ap, struct scsi_device *sdev);
+> > +extern int ata_ncq_prio_enable(struct ata_port *ap, struct scsi_device *sdev,
+> > +			       bool enable);
+> >  extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+> >  extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+> >  extern void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap);
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
+> 
