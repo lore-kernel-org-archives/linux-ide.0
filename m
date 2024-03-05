@@ -1,72 +1,64 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from mail.vexlyvector.com (mail.vexlyvector.com [141.95.160.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4482A18032;
-	Tue,  5 Mar 2024 02:47:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2E524D5B5
+	for <linux-ide@vger.kernel.org>; Tue,  5 Mar 2024 08:41:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.95.160.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709606837; cv=none; b=FXZvZtq/gYHUC0IId6RhH3NTeq/9z5r6cG48UsSzNbJQZ7+4O3bbypC5UDBY2+ylt4r/0NCwu8w9iKUB4FT3ZxgwT45RYbLAfQ8tYe4z/WqPVr86DzXY7eIHP9dUvaL2ck4Y0EGEjJx398Gx+VD526s+7Ty2QJUJdBxJ3wgXtzQ=
+	t=1709628071; cv=none; b=a1Q1RbT1KaLJPsXKck0cxAlO7f70YeeTfMPUkNZ3eAuKdFPeBrC2NKU9gS1iwOc6EhBhY/sK7s5T/Sgj838ov8+RFy8eAtFSpi0Jkn8eYL72kpKAs020m5eUaW6CHNW4tXouYZITiKwfJV/uIPm9BQLutJPHKRix1I0ZnFiQ8FU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709606837; c=relaxed/simple;
-	bh=MuUyikP68WHPsllS/AZLIjAw7kG0ypfYkfKatNE3yQU=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=diPh5GlA/y9dPHpCBWOqIQz8Z7Q2INiIZsro8t3xOxbixmONtp6iZjBJRJRcirVRkdj2gOr4WEqHHeI8FIUcui5d4DgQODBnPPx2+/dtURYs8pm6DLCNmCapvazXi6zwH5UMhjTxua19kj2a2SucVU7YCl9XXKkFy18maRESHH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Tpg0b3WPYzNlt3;
-	Tue,  5 Mar 2024 10:45:35 +0800 (CST)
-Received: from canpemm100003.china.huawei.com (unknown [7.192.104.85])
-	by mail.maildlp.com (Postfix) with ESMTPS id 32BF114011A;
-	Tue,  5 Mar 2024 10:47:12 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100003.china.huawei.com (7.192.104.85) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 10:47:12 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 10:47:11 +0800
-Subject: Re: [PATCH v5 7/7] scsi: isci: Add libsas SATA sysfs attributes group
-To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, "Hannes
- Reinecke" <hare@suse.de>, Xiang Chen <chenxiang66@hisilicon.com>, "Artur
- Paszkiewicz" <artur.paszkiewicz@intel.com>, Bart Van Assche
-	<bvanassche@acm.org>
-CC: TJ Adams <tadamsjr@google.com>, <linux-ide@vger.kernel.org>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20240305005103.1849325-1-ipylypiv@google.com>
- <20240305005103.1849325-8-ipylypiv@google.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <070e02e9-4250-4a19-4673-dd307121da86@huawei.com>
-Date: Tue, 5 Mar 2024 10:47:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1709628071; c=relaxed/simple;
+	bh=Ibg6t/KsO79dA6JdOMxJeQwgNQaMbtNQ81uW1fPYdsQ=;
+	h=Message-ID:Date:From:To:Subject:MIME-Version:Content-Type; b=LnwknMxCSdOii/zaRQAmOUCnVN/1rabBu5Mny7g3Cpk4jtjqJl0zJuYXhasf8AQuR+vHsVywtB2+wqlJaqDyA323D+THBrOtMoNQH3WPXjTfinTaLpEA7q/UxA9KM2w5LjimL4idPDWTommjKRjNmWpm9QdGsKn/dxnacSfxJpw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=vexlyvector.com; spf=pass smtp.mailfrom=vexlyvector.com; dkim=pass (2048-bit key) header.d=vexlyvector.com header.i=@vexlyvector.com header.b=D+HXkJm1; arc=none smtp.client-ip=141.95.160.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=vexlyvector.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vexlyvector.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=vexlyvector.com header.i=@vexlyvector.com header.b="D+HXkJm1"
+Received: by mail.vexlyvector.com (Postfix, from userid 1002)
+	id 2F023A2B3C; Tue,  5 Mar 2024 08:41:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=vexlyvector.com;
+	s=mail; t=1709628064;
+	bh=Ibg6t/KsO79dA6JdOMxJeQwgNQaMbtNQ81uW1fPYdsQ=;
+	h=Date:From:To:Subject:From;
+	b=D+HXkJm1NUwN3c13g+P23/mVXTDu5zWAedUu6xMfL5kJ1Ya4JTWl6V77/pQY9R1cy
+	 NqQxt2hcDjFIlX/HgybJMQmZywEBayKrqvk4/3NVnVsSBwgpm4f48P1Yttu0f2S79l
+	 rcrfknL+5/6GGO9gTWNhEkFxshk8CJXF0lRK/M2L3+PM8XBollA4tCQm/3GpG9oeTP
+	 a+guuaP2T9ptB37P0zqmx5MK2nQ64RXDCIFxZm+LNk6RprAbtDwZAwvmVnFPdJdO1v
+	 YBuu8BA0Zs/SK7nOXj2o0LkFBhNdXOSJz8V3m4zTzpVlc3iYwuaU6TOSVBlqTgtZWd
+	 N2JWSEam77dcQ==
+Received: by mail.vexlyvector.com for <linux-ide@vger.kernel.org>; Tue,  5 Mar 2024 08:41:00 GMT
+Message-ID: <20240305074500-0.1.ce.r3rx.0.4jajk945fa@vexlyvector.com>
+Date: Tue,  5 Mar 2024 08:41:00 GMT
+From: "Ray Galt" <ray.galt@vexlyvector.com>
+To: <linux-ide@vger.kernel.org>
+Subject: How to increase conversions on your website?
+X-Mailer: mail.vexlyvector.com
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240305005103.1849325-8-ipylypiv@google.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500004.china.huawei.com (7.192.104.92)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2024/3/5 8:51, Igor Pylypiv wrote:
-> The added sysfs attributes group enables the configuration of NCQ Priority
-> feature for HBAs that rely on libsas to manage SATA devices.
-> 
-> Reviewed-by: John Garry<john.g.garry@oracle.com>
-> Reviewed-by: Damien Le Moal<dlemoal@kernel.org>
-> Signed-off-by: Igor Pylypiv<ipylypiv@google.com>
-> ---
->   drivers/scsi/isci/init.c | 6 ++++++
->   1 file changed, 6 insertions(+)
+Hi there!
 
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+Are you interested in increasing your customer base through your company'=
+s website?
+
+We're transforming the virtual world into tangible profits by creating fu=
+nctional, responsive websites and profitable online stores, optimized for=
+ search engine rankings.
+
+Whether you need a simple website or a complex web application, our team =
+of experts utilizes advanced tools to deliver fast and user-friendly prod=
+ucts.
+
+Would you be interested in hearing more about what we can do for you in t=
+his regard?
+
+
+Best regards
+Ray Galt
