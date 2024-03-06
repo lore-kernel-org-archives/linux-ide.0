@@ -1,113 +1,150 @@
-Received: from mail-yb1-f202.google.com (mail-yb1-f202.google.com [209.85.219.202])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 921AF1BC22
-	for <linux-ide@vger.kernel.org>; Wed,  6 Mar 2024 01:22:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA775BAF8;
+	Wed,  6 Mar 2024 07:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709688167; cv=none; b=ezryq9A1RQ84ebZaVrLSs9Rep+TC5Ja/zHhy6i6FFpNO7PNoL401Kqub3R4rQCZOY5V8GyIiJEUlSeBKzdITset9TgPO6yhykVqAdH6+drja+KXmdK6XLD9uivU8nMGpxRHUUq3isGnPN7MJmT3oWeYi7Wn7IgUFQt2TH5XOMNE=
+	t=1709709096; cv=none; b=cyq2CDrmOolBX9ZMdpY00SIgaJESpHyriFyIsnCar4ScGvYYe+QZJcReeq4ZsJp6E1XyvtUMdhuFn59VuGFdai1rHEkPZYgfYpUez0h+vRas7QSfd51D0J74p+oGvnoMWu40M3iyT+AtcTD33zLUmuLSUN5ah1H5bjMYr+RMlzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709688167; c=relaxed/simple;
-	bh=ZQgGWVSWytcgK5MJZ6jggoBjQfFJugefhTJSzcVcgYk=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=MQvPTq24EpMH0mLjVNSbLuPMWEmLf+WHQS+jGw/u+8piL0IUK0aoyF12a+UBxLUrTF9K++5m7T6gaX4alHRrTmMFmQeJ4qc8W2asL1M0eecrTP1kV2sz7DOu/DLlpCvkriVdhSwhAY4llOVt58MMYkix4n4l0Wl43LSNm9o2zos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=k8jNQqeK; arc=none smtp.client-ip=209.85.219.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+	s=arc-20240116; t=1709709096; c=relaxed/simple;
+	bh=YhKrPy/amOquheLL9RdFMgbTUqIlmhJ/77D3H9BnFw0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rJQabm0xCDuG+u3cmZAzthLqQjKPobBBdRmCoOfTBx5r5woQbn5O3DqAUdrK8KnsttXcwJFXeqzWFKg9Eebqb0Fqz+tEjZUFlCDxwlkcgeOdzojIWjo3uatHpA83TpjUS25Tifjo7VTggn69ydPvrxhX3yndEg+0EiXm5qSPJC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YwbY9gqP; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=FS6jH7WG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=AR0fqbZ9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=g+1MZxUs; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="k8jNQqeK"
-Received: by mail-yb1-f202.google.com with SMTP id 3f1490d57ef6-dc6ceade361so10563008276.0
-        for <linux-ide@vger.kernel.org>; Tue, 05 Mar 2024 17:22:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709688164; x=1710292964; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=iW4+YjuNAKvAoJg+NmQ5C96xY/u5WzV8UruESW/Bs4M=;
-        b=k8jNQqeK7gQKIbzMge/onFNDkBDQoWlKZc9e1Yu5CHgqUsTYSSqY8AvFKi/KUny4DT
-         eopA1+krKRaFD23m9rv6jQF0VejsCHmxr5u0R4oLH64/KmvAcIQjvVSnFCrglueIk5rE
-         +811v4ySFHjV5W/G5zybxXKbGN0RpuM7A38KXr+KiDdgsOLYSVDgsScifR4XuFNE/Ofe
-         fR2HaeDOz1SeyUQvp1ZJTkm1mPCMLLlTWozsmEswBw3jTw0VlgxDspSE6qhgysp/RktO
-         u8X9t2eA4dFH37vUCJ8LIM+t+2ck2ck3LO5L1Yc3Yl86HRj1EiYR+uMWrGhWMAau+QtH
-         BaYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709688164; x=1710292964;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=iW4+YjuNAKvAoJg+NmQ5C96xY/u5WzV8UruESW/Bs4M=;
-        b=UBiYDojLYmsIfjU4kcB46zXg5cyALA27Ld9/dX3iEPC/e5W65QCP94sJtuvop1jZhS
-         Y4Em9nn3C7rDJViMFQJncxFGRafPt/q5DXdfvcmO96WOlER8QJ999NNKfK86Hbj/zigv
-         8qa0rr0kLa+tmtIscWjZIdXBEXEi7hM6+9MxfVoqUT3DQBYCAlf9A6lhYdqU6FkwO33E
-         1f+AtgaINUqvG//J7wMO+n4EeyznMxA9ARkvEWM6XRiDCPurAWhQTv74uHCFpEZ6X+st
-         bdCj2tJMgb2XTzcLtf1saGwfGodfOYXszNE7kHBbEutNhV7PawMNGmzPa5ypP7EoKNnT
-         Josw==
-X-Forwarded-Encrypted: i=1; AJvYcCXbf/sAUKJdeikbRN4tuDHy6fN2AXy5l6GIcb4Oq8ChYMK4wy7hwDBefAgR10q9ZfKqO4Or3fVbFbfqfeeX/Gis2MKociSFeX+z
-X-Gm-Message-State: AOJu0YyeH1cyNczwAZbWE9x8XUjyWLptBYHJ3fo1jim7vMvvP7Ul5ekJ
-	nwVyhtlezc19S/UlorshBZodMqbswvqZ1BPFaRhzGJis/u56TQI3jIQgw/VkJ0sHCJ8f4wZbFbO
-	IwzNmzuJm5Q==
-X-Google-Smtp-Source: AGHT+IHdUO0CSTTXSxP9RMH2G/OtJPNDHKSmhMwQ7efvIbVrkR+X7rTKxQ+kI29DRE6cGTrNY3Jc+MzpCV3TDQ==
-X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:69ff:df2c:aa81:7b74])
- (user=ipylypiv job=sendgmr) by 2002:a05:6902:728:b0:dc2:1f34:fac4 with SMTP
- id l8-20020a056902072800b00dc21f34fac4mr3554574ybt.2.1709688164688; Tue, 05
- Mar 2024 17:22:44 -0800 (PST)
-Date: Tue,  5 Mar 2024 17:22:26 -0800
-In-Reply-To: <20240306012226.3398927-1-ipylypiv@google.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YwbY9gqP";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="FS6jH7WG";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="AR0fqbZ9";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="g+1MZxUs"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id E9B1166F62;
+	Wed,  6 Mar 2024 07:11:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1709709092; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PCM33cwCiRF+38cxXq/6hPmIFbdWfDRcdcEpot4stXM=;
+	b=YwbY9gqPgI+FE0NM7enknD/ivY+BYsy42C6uqcby0GLz9oYs0gJ3jRrGze8V0/gMNVqr34
+	ZWGJbxM/j8b9dZafXfwnB4XDfv6h+7SN+q9AHQmE3O1fKXDGJloIiPXtUNirbmzZgOq3aU
+	4RV6r+4IASdnqfwg7rRkzw7/D3QEH40=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1709709092;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PCM33cwCiRF+38cxXq/6hPmIFbdWfDRcdcEpot4stXM=;
+	b=FS6jH7WGT6px/bHJdmbbh9TDQvCu29rcvcCZfYlqaIaEQQq8CpsV5wsLHmoms7zkzNSCws
+	hJ5FWxnsSN6dfFBQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1709709091; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PCM33cwCiRF+38cxXq/6hPmIFbdWfDRcdcEpot4stXM=;
+	b=AR0fqbZ99NaUKR/CJngoI2dK1ex1/I+oe0z7D06qmY4/yJyi0tGvY6hMYOKxOxfI48p0iN
+	YIGr0Ar7P/6JxjTvLv7NgE69zsic4fCQXNhInXcT0IFWI1IEPhX99RD/3ram4JQUnvOJMQ
+	pTlZeaj2SqiCH/A2lynzCgGmcMLNxbo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1709709091;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PCM33cwCiRF+38cxXq/6hPmIFbdWfDRcdcEpot4stXM=;
+	b=g+1MZxUszRYJgrbarQOvRlbdBpM9VM42hQIy/rmJkz40Sj5DkqaGIr6I1Pwkwwpj6FgAL6
+	iRei5r30Un1/UFCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 49FDF13A9C;
+	Wed,  6 Mar 2024 07:11:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id hfIxECMX6GUIVgAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 06 Mar 2024 07:11:31 +0000
+Message-ID: <e1a6c678-77a0-480c-8b7a-73e78198fbcd@suse.de>
+Date: Wed, 6 Mar 2024 08:11:30 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20240306012226.3398927-1-ipylypiv@google.com>
-X-Mailer: git-send-email 2.44.0.278.ge034bb2e1d-goog
-Message-ID: <20240306012226.3398927-8-ipylypiv@google.com>
-Subject: [PATCH v7 7/7] scsi: isci: Add libsas SATA sysfs attributes group
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>, 
-	Xiang Chen <chenxiang66@hisilicon.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, 
-	Bart Van Assche <bvanassche@acm.org>
-Cc: TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/7] ata: libata-sata: Factor out NCQ Priority
+ configuration helpers
+Content-Language: en-US
+To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
+ Jason Yan <yanaijie@huawei.com>, "James E.J. Bottomley"
+ <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jack Wang <jinpu.wang@cloud.ionos.com>,
+ Xiang Chen <chenxiang66@hisilicon.com>,
+ Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+ Bart Van Assche <bvanassche@acm.org>
+Cc: TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240305235823.3308225-1-ipylypiv@google.com>
+ <20240305235823.3308225-2-ipylypiv@google.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240305235823.3308225-2-ipylypiv@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Authentication-Results: smtp-out2.suse.de;
+	none
+X-Spam-Level: 
+X-Spam-Score: -2.20
+X-Spamd-Result: default: False [-2.20 / 50.00];
+	 ARC_NA(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 XM_UA_NO_VERSION(0.01)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 BAYES_HAM(-0.91)[86.12%];
+	 MIME_GOOD(-0.10)[text/plain];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 NEURAL_HAM_SHORT(-0.20)[-0.984];
+	 RCPT_COUNT_TWELVE(0.00)[15];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 RCVD_TLS_ALL(0.00)[];
+	 MID_RHS_MATCH_FROM(0.00)[]
+X-Spam-Flag: NO
 
-The added sysfs attributes group enables the configuration of NCQ Priority
-feature for HBAs that rely on libsas to manage SATA devices.
+On 3/6/24 00:58, Igor Pylypiv wrote:
+> Export libata NCQ Priority configuration helpers to be reused
+> for libsas managed SATA devices.
+> 
+> Acked-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Jason Yan <yanaijie@huawei.com>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> ---
+>   drivers/ata/libata-sata.c | 140 +++++++++++++++++++++++++++-----------
+>   include/linux/libata.h    |   6 ++
+>   2 files changed, 107 insertions(+), 39 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
- drivers/scsi/isci/init.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Cheers,
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 6277162a028b..8658dcd61b87 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -149,6 +149,11 @@ static struct attribute *isci_host_attrs[] = {
- 
- ATTRIBUTE_GROUPS(isci_host);
- 
-+static const struct attribute_group *isci_sdev_groups[] = {
-+	&sas_ata_sdev_attr_group,
-+	NULL
-+};
-+
- static const struct scsi_host_template isci_sht = {
- 
- 	.module				= THIS_MODULE,
-@@ -176,6 +181,7 @@ static const struct scsi_host_template isci_sht = {
- 	.compat_ioctl			= sas_ioctl,
- #endif
- 	.shost_groups			= isci_host_groups,
-+	.sdev_groups			= isci_sdev_groups,
- 	.track_queue_depth		= 1,
- };
- 
+Hannes
 -- 
-2.44.0.278.ge034bb2e1d-goog
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
