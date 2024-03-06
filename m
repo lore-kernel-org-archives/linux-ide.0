@@ -1,147 +1,168 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B6EC5BACE;
-	Wed,  6 Mar 2024 07:17:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id EA3FE5DF13;
+	Wed,  6 Mar 2024 08:55:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709709474; cv=none; b=CO7g1O6W+dsT0oURD/BHydpUQln9FSt9YZbCGawECgEKXuIJMb+IcpghuPKs74CGwiRXxrKvA76s/WPmM5vS/SsLiAF3PxtHy/wmi4n81iZq0hylDmJhyAZODFIiIWYImTe7ueuyAYbdIC5K50UZ/N8jmxauutAmaXoAK0bTkKY=
+	t=1709715337; cv=none; b=CMjEGW/ygG3DJa+NqAFiVCpU29C5qmpgbXt87wcCTWfkrMGFN26NYjsqwimq3dOwr30ZqIpbWkKXzqkHmNgD5XouYCxDGr4IezQB/7g4vHoAsn7VB3x186lDGSFPOz9fRIFFd0ITohVrSePALpEgLTIF3WAVT+wAltZcTx1oXoY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709709474; c=relaxed/simple;
-	bh=T1CttnZSDGmKuWPpromEDnWe206fs9Nwcvgae8axOTM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=srTubcUG/3FCotCxczOF9g3X7kfq/MPSHJ4rwFvQ9dLC9uPUdGvWdRZrkIdNN63pLmlx4FadPZYmzdNLlImZUkP4Vlq78kUmsHPS2kgBfHLoRJVCMjVRnIYzk0YCxL3q6i0nsQXo7PVf1wA5Ij6s8lVQujlDqAlMyp5TCyD8VIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=akGFVTsK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=CHrZSVgV; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=akGFVTsK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=CHrZSVgV; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="akGFVTsK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="CHrZSVgV";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="akGFVTsK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="CHrZSVgV"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id AFF294D855;
-	Wed,  6 Mar 2024 07:17:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1709709470; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0T/kF77pZuuzjSWamLZYWPGh44WSivUZSdo80F+Xlgk=;
-	b=akGFVTsK+J63SPHFios6Oh0QQHTZQGKA0SfDYMvt24bT96SlziYQscMDyNFdFifh4L5/eC
-	neYrKUrye4kou1eMYnitUs9GhC56jvVaBIOAF7j5wxodxs6dxhCvPhI0cb4951Jpwf6CC7
-	uysmZAIS7vx8/uTOuP0hEs2g4J4qooE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1709709470;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0T/kF77pZuuzjSWamLZYWPGh44WSivUZSdo80F+Xlgk=;
-	b=CHrZSVgVNZZDyYC+B5gX/8uBLDRv6RSp927AUF/aKFy2VfkP4uwXD/IKhoBNVoMld63Pcc
-	A3aq7eyurrW4iFBQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1709709470; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0T/kF77pZuuzjSWamLZYWPGh44WSivUZSdo80F+Xlgk=;
-	b=akGFVTsK+J63SPHFios6Oh0QQHTZQGKA0SfDYMvt24bT96SlziYQscMDyNFdFifh4L5/eC
-	neYrKUrye4kou1eMYnitUs9GhC56jvVaBIOAF7j5wxodxs6dxhCvPhI0cb4951Jpwf6CC7
-	uysmZAIS7vx8/uTOuP0hEs2g4J4qooE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1709709470;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0T/kF77pZuuzjSWamLZYWPGh44WSivUZSdo80F+Xlgk=;
-	b=CHrZSVgVNZZDyYC+B5gX/8uBLDRv6RSp927AUF/aKFy2VfkP4uwXD/IKhoBNVoMld63Pcc
-	A3aq7eyurrW4iFBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EFBCF13A9C;
-	Wed,  6 Mar 2024 07:17:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id EKaAN50Y6GWbVgAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 06 Mar 2024 07:17:49 +0000
-Message-ID: <702392fa-72f5-439d-9ffe-fc2caf91afeb@suse.de>
-Date: Wed, 6 Mar 2024 08:17:49 +0100
+	s=arc-20240116; t=1709715337; c=relaxed/simple;
+	bh=3z6wcnzZigmy1AnwKW6EWYXgb3eqsvFGY6rKaYlxPHE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=uVGNqhyMifgx+jLPRRr4X8o5EB8IC8Cv+IkGW2bwWbHugjjsGvFCDRik2ralUXslF7/nTe+Fq9KEgDaTgKBTOHUJVPMTQQz11e/drIsgWeoLtoR8uKs2WSay79qyWHTHfwr0A97stSKhrM+Sy9jq2Rk+PRvWdk6E2A4ATr/3tiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
+X-AuditID: a67dfc5b-d85ff70000001748-38-65e82f7c082d
+From: Byungchul Park <byungchul@sk.com>
+To: linux-kernel@vger.kernel.org
+Cc: kernel_team@skhynix.com,
+	torvalds@linux-foundation.org,
+	damien.lemoal@opensource.wdc.com,
+	linux-ide@vger.kernel.org,
+	adilger.kernel@dilger.ca,
+	linux-ext4@vger.kernel.org,
+	mingo@redhat.com,
+	peterz@infradead.org,
+	will@kernel.org,
+	tglx@linutronix.de,
+	rostedt@goodmis.org,
+	joel@joelfernandes.org,
+	sashal@kernel.org,
+	daniel.vetter@ffwll.ch,
+	duyuyang@gmail.com,
+	johannes.berg@intel.com,
+	tj@kernel.org,
+	tytso@mit.edu,
+	willy@infradead.org,
+	david@fromorbit.com,
+	amir73il@gmail.com,
+	gregkh@linuxfoundation.org,
+	kernel-team@lge.com,
+	linux-mm@kvack.org,
+	akpm@linux-foundation.org,
+	mhocko@kernel.org,
+	minchan@kernel.org,
+	hannes@cmpxchg.org,
+	vdavydov.dev@gmail.com,
+	sj@kernel.org,
+	jglisse@redhat.com,
+	dennis@kernel.org,
+	cl@linux.com,
+	penberg@kernel.org,
+	rientjes@google.com,
+	vbabka@suse.cz,
+	ngupta@vflare.org,
+	linux-block@vger.kernel.org,
+	josef@toxicpanda.com,
+	linux-fsdevel@vger.kernel.org,
+	jack@suse.cz,
+	jlayton@kernel.org,
+	dan.j.williams@intel.com,
+	hch@infradead.org,
+	djwong@kernel.org,
+	dri-devel@lists.freedesktop.org,
+	rodrigosiqueiramelo@gmail.com,
+	melissa.srw@gmail.com,
+	hamohammed.sa@gmail.com,
+	42.hyeyoo@gmail.com,
+	chris.p.wilson@intel.com,
+	gwan-gyeong.mun@intel.com,
+	max.byungchul.park@gmail.com,
+	boqun.feng@gmail.com,
+	longman@redhat.com,
+	hdanton@sina.com,
+	her0gyugyu@gmail.com
+Subject: [PATCH v13 01/27] llist: Move llist_{head,node} definition to types.h
+Date: Wed,  6 Mar 2024 17:54:47 +0900
+Message-Id: <20240306085513.41482-2-byungchul@sk.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240306085513.41482-1-byungchul@sk.com>
+References: <20240306085513.41482-1-byungchul@sk.com>
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSf0zMcRjHfT7fn3dz9t2x+cqIM7/ph8kem9H8wfcPrMk/+IObvtNRx+5U
+	smxxlZ+VkMg5d1dOKpWrJtTtZMpJV3LqUI00aq6yuOiH4y788+y153k/rz1/PCwhr6aCWJX6
+	iKhRK+MUtJSUDkw1rUwJ7RPD0vuWQs75MPB+P02CvryUhtayEgSlVScw9D/dDB0jHgTjzS0E
+	5OW2IjB96CKgqqEbQV3RSRpe9U4Dl3eIBkfuORp0BeU0vPwygaHzykUMJdat0HTBjME++pmE
+	vH4arufpsL/0YRi1FDNgSV0IPUX5DEx8CAdHdzsFdW+XwzVDJw21dQ4SGmp6MLx6qKehu/Q3
+	BU0Nz0hozcmk4O6gmYYvIxYCLN4hBtrsRgwVaX5RxjcfBY2ZdgwZhfcwuN48QmA7/R6DtbSd
+	hideD4ZKay4BY7efIujJGmAg/fwoA9dPZCE4l36FhLTOCBj/qacj1wpPPEOEkFaZJNSNGEnh
+	uZkXHuR3MUKa7S0jGK0JQmXRMqGgth8LpmEvJViLz9CCdfgiI5wdcGFh0OlkhGdXx0mh15WH
+	o4J2SdfFiHGqRFETun6vNDbDaWAO35AeNd6qplORjT2LJCzPreabcrqY/3y3rYAKMM0t5t3u
+	USLAM7h5fGXmp8k+wXmkfKFzU4Cnc9t4Z+6byV2SW8i/KDOjAMu4CN5w34P/OoP5kgr7pEfC
+	reGzB7PpAMv9mWadyc9Sf+Yny5vtLf+OmMU/LnKTF5DMiKYUI7lKnRivVMWtDolNVquOhuw7
+	FG9F/meyHJ/YXYOGW6PrEccixVRZpOSzKKeUidrk+HrEs4RihixlrFeUy2KUycdEzaE9moQ4
+	UVuPZrOkYqZs1UhSjJzbrzwiHhTFw6Lm/xSzkqBUJAlll/yOd3y1Xf5xM6Ukq1zbsaisW/da
+	krTv1m5fVNeWOYamtWEbfmUHGwoz5Y13DhRH5+/95HxXtcDXQQ3pdwZXu+eeyh9bUBv9+nZE
+	SMNWn06vvhkud0Xe275xPmFzG8/UmDpXNF+61ubYEeKLUqf3i96v69ujG2+c+jieoGmpUJDa
+	WGX4MkKjVf4BXK6NJEgDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAAzXSa0hTYRgH8N73nPOe42hxmlKH+lAsJLJSuxgPdiWiDlERQVRC1KGOuZqr
+	NrOMEu+UOs1orovK1Fqmlja1q5poWitblsMurFEmLXEqmLNMqVzRl4cfz//h/+nhKJWZmcFp
+	dHGyXidp1URBK7YsT114KuyrHF5xQQV52eHgGz5DQ0FVJYGOWxUIKmuTMfS2boA3I14EYy9e
+	UmA2dSAo/vSBgto2N4KGshQCnT1TwOkbJGA3ZRFILa0i8KpvHIMr/zyGCttmeH6uBEPTqIcG
+	cy+BK+ZUPDG+Yhi1lrNgTQqG7rLLLIx/WgR2dxcDLYV2Bhrez4dLRS4C9Q12GtrudWPofFBA
+	wF35m4HnbU9p6MgzMnBzoIRA34iVAqtvkIXXTRYM1WkTbRnffjHwxNiEIePqbQzOdw8RNJ75
+	iMFW2UWgxefFUGMzUfDzeiuC7px+FtKzR1m4kpyDICs9n4Y0VwSM/SggayLFFu8gJabVHBcb
+	Riy0+KxEEO9f/sCKaY3vWdFiOybWlIWIpfW9WCwe8jGirfwsEW1D51kxs9+JxQGHgxWfXhyj
+	xR6nGW+dGaVYsV/WauJlfdiqvYqYDEcRe6RQccJyrY4koUYuEwVwAr9UuPm6lPGb8HOFt29H
+	Kb+D+NlCjfHL3z3FexXCVcd6vwP5LYLD9I71m+aDhfZbJchvJR8hFN314n+ds4SK6qa/PQH8
+	MiF3IJf4rZq4eZFaTM4hhQVNKkdBGl18rKTRRoQaDsUk6DQnQvcdjrWhiXexnh7Pu4eGOzc0
+	I55D6snKNQEeWcVI8YaE2GYkcJQ6SHnqZ4+sUu6XEk7K+sN79Me0sqEZzeRo9XTlxh3yXhV/
+	QIqTD8nyEVn/P8VcwIwk5L6z2zCttSinw7vrV2RidF92VLUHO92bLO3Xt//gIzqjjVTstMdC
+	+sl1L135VnvX4sIbkWvrAo/Wrs5NmX86dImkO/jRE8lqjVGthsxHgceFRFPgPOwa2bY9LDEd
+	L7iYklg2uZ2bY26XZu2M84Tos6Z+7mkOVVUFb7w/aeX3nClq2hAjLQqh9AbpD3/EcVYqAwAA
+X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 7/7] scsi: isci: Add libsas SATA sysfs attributes group
-Content-Language: en-US
-To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
- Jason Yan <yanaijie@huawei.com>, "James E.J. Bottomley"
- <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jack Wang <jinpu.wang@cloud.ionos.com>,
- Xiang Chen <chenxiang66@hisilicon.com>,
- Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
- Bart Van Assche <bvanassche@acm.org>
-Cc: TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240305235823.3308225-1-ipylypiv@google.com>
- <20240305235823.3308225-8-ipylypiv@google.com>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240305235823.3308225-8-ipylypiv@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spamd-Result: default: False [-1.10 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 XM_UA_NO_VERSION(0.01)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-1.01)[87.32%];
-	 MIME_GOOD(-0.10)[text/plain];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 RCPT_COUNT_TWELVE(0.00)[15];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[huawei.com:email,oracle.com:email,suse.de:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spam-Score: -1.10
 
-On 3/6/24 00:58, Igor Pylypiv wrote:
-> The added sysfs attributes group enables the configuration of NCQ Priority
-> feature for HBAs that rely on libsas to manage SATA devices.
-> 
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Jason Yan <yanaijie@huawei.com>
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> ---
->   drivers/scsi/isci/init.c | 6 ++++++
->   1 file changed, 6 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+llist_head and llist_node can be used by very primitives. For example,
+Dept for tracking dependency uses llist things in its header. To avoid
+header dependency, move those to types.h.
 
-Cheers,
+Signed-off-by: Byungchul Park <byungchul@sk.com>
+---
+ include/linux/llist.h | 8 --------
+ include/linux/types.h | 8 ++++++++
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Hannes
+diff --git a/include/linux/llist.h b/include/linux/llist.h
+index 2c982ff7475a..3ac071857612 100644
+--- a/include/linux/llist.h
++++ b/include/linux/llist.h
+@@ -53,14 +53,6 @@
+ #include <linux/stddef.h>
+ #include <linux/types.h>
+ 
+-struct llist_head {
+-	struct llist_node *first;
+-};
+-
+-struct llist_node {
+-	struct llist_node *next;
+-};
+-
+ #define LLIST_HEAD_INIT(name)	{ NULL }
+ #define LLIST_HEAD(name)	struct llist_head name = LLIST_HEAD_INIT(name)
+ 
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 253168bb3fe1..10d94b7f9e5d 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -199,6 +199,14 @@ struct hlist_node {
+ 	struct hlist_node *next, **pprev;
+ };
+ 
++struct llist_head {
++	struct llist_node *first;
++};
++
++struct llist_node {
++	struct llist_node *next;
++};
++
+ struct ustat {
+ 	__kernel_daddr_t	f_tfree;
+ #ifdef CONFIG_ARCH_32BIT_USTAT_F_TINODE
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.17.1
 
