@@ -1,55 +1,55 @@
 Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF9DDDB1
-	for <linux-ide@vger.kernel.org>; Wed,  6 Mar 2024 01:22:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75CF9134B6
+	for <linux-ide@vger.kernel.org>; Wed,  6 Mar 2024 01:22:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709688157; cv=none; b=kk8fLMF0CEcXtswhR/b3fD95+B1c08kpYPUdnfCmO74PSePxk4W1hrRCkmWTh53rQbtJKCz5ZTHdrl0sEmonpZkj6b5Xz3U81Lsb5xkwWdU5c12oYGiPxZk8Cbl5LJoD1XLN7whJVxtTkBb940FN6D6JuwHnqaJN7POuHdhvMLI=
+	t=1709688159; cv=none; b=T1K0Zvato9rbrMIRGY5YlGx4Nn/JiNu2hZ+cMOVenaU6MCwbULvZBnTDDFKF9zWdI01xIV17T4OLB+QE1nPr2KqUyBXYxxgjzBZuwiWJmQY2YkD/D32+TFqYrKP1dUgvzKtFfUj7vHbCA3nP9j5aRla0ZFY+IAEdrsitBt78O2Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709688157; c=relaxed/simple;
-	bh=n4LxPfG7AS9Lalbw6aTzUiw335yJJpF6kZEovqNpXTU=;
+	s=arc-20240116; t=1709688159; c=relaxed/simple;
+	bh=eNWF6foC4RAjM/7mIBIDm6Ws+q1aoKRiMrqNZ34dkrM=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=kK9jhtdHYKYmQZQL2n4xDqguAmaTyVX1GtRXqBSL0h0YAlDPh0JdE5e1a6KOqstINno4VJQ1LxYOSL8wEVasC3cgDYQbM5Aozihy57rue8gaxgsk4chGM6hz0rReRwOIGhMaukQLgke8q/Ru9h7/W1IOynMbPDOa0KeDiVteeCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LlQ3keOV; arc=none smtp.client-ip=209.85.128.202
+	 To:Cc:Content-Type; b=W2RbdFbcHzNyT5TEJC4jaznuHWIjPK1UXzM8/+dHjxWg66miJa9ISxdP9lFEJaXmo81qUHVDhXpNZ+Iy8oERNn8F+S26rro09oNxl4LoiPE4KsdVfhfJ1Mv7b/6uJE7STbrbcQJyHiwjdKJFpJPQjl49hc1XxTxj4rizA1ZoeQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=rh1Aqv4e; arc=none smtp.client-ip=209.85.128.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LlQ3keOV"
-Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-60966f363c1so92662397b3.3
-        for <linux-ide@vger.kernel.org>; Tue, 05 Mar 2024 17:22:35 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rh1Aqv4e"
+Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-608ad239f8fso102617377b3.0
+        for <linux-ide@vger.kernel.org>; Tue, 05 Mar 2024 17:22:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709688154; x=1710292954; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1709688156; x=1710292956; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=FSTiKWyL/nnmXNuU8GslZSbybClSIgn/PnMeem+fE3I=;
-        b=LlQ3keOVH1NiKBPBhsf5A6vyC8eD6hnFfuv0bBkDPnuXWYgqztQh54V6SIZUWLfTQ3
-         PzbsRCqTjYVW+93+1QAiOGofnAPiybsek0FzmCfFv7WEPZth4Zj/ZWOLFZ/XHh18Jfp8
-         WmHGE+4IEb4MB8BrAiUT1IqLGWz/mAGFHzbHuAiQDuJF/bgLXP0yl2NPzlhxz3vLP4+h
-         4dpk0/urSBvTM7mjW9OXC3kCyHLsFdjj/MfmoLasQR/HhvkGXwoCBtx744wMndxkRXqH
-         QHExQyfixRfYIvJ18Tb46A5Bj40QgTIssmQNyafQNHRA/ssiCNK4vtN3/AfcxnZvkd0x
-         /g8w==
+        bh=djrkg2o6GYfOpuFfrfroOSUyfmqyZMD72kLam/QnMds=;
+        b=rh1Aqv4eXPnrUGTyaL7W06vu5m5oG0CNiB3SW4g44mFwWDT14P5qotLkk5hmi/D6z6
+         Nlr3btXAN0858M79zia9hPseaUzkmPo6xGgb6hHgzKAOU4H4OC5UdUf5hWRaWy4ijF+D
+         NvjZN5J6okVSrUPOrFgqHJ10dCXQnZ+6ruAOCYPkrDPf+SSNkFNd8HLcLuI7J8pFMweQ
+         bgPylctqGzYrUle3WYoWv1VJYzCNWoNRCvy06bJtmUzlk/QmyZYL2IyCr5xKBt2VCSbZ
+         3hZioJJloYy1cSdQJjPp/97h+zH1ViB9+tJjiZzCPCsheG6fDEatEnEl87B7zq3iITW8
+         EZuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709688154; x=1710292954;
+        d=1e100.net; s=20230601; t=1709688156; x=1710292956;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FSTiKWyL/nnmXNuU8GslZSbybClSIgn/PnMeem+fE3I=;
-        b=RKBa8HdxnvxCybqknEpy9F1VREbGM6BWlrvhqDbDUJPxn9iGtIprnulscZE6awsuTC
-         AErj74qVgLw1a+Die3SV8oBy+e3Emzm8cMtc06ca2Y0QCXwrCOwVN+LYH513JYRuSv5u
-         dw5XVMVFIUDg6DiEJ3tdls4vg6bkmwKmrpEXVoa4kMW3hE/saN/yECzy8C8G27/+aK/d
-         HKgHghlhqASu1jZ5IPP8HrZDi6I4QyKaxeEiRYCO5TEv0o6HQrVXv6CEzLtQtr0ydj27
-         hMuYq0+h0iHeOWDIi/+UfxvjJm2PmnaohHXJwuV9RvYtaiXdMV7lgYqd+8+hfG3yTo4c
-         aj8w==
-X-Forwarded-Encrypted: i=1; AJvYcCX2SVPOZJPFERllJ0mMNwTL822a2YDL0QfoEPXWDrcMGxXSKlroe3dmlpQnREtykFvTsJolGyZBhFU8NEzwCrcom2gz9BP7Bi3j
-X-Gm-Message-State: AOJu0YyGOB/CW3T9bPJc7meViLI6ShnKu+R6DYNs1kEW03VSkNioGrf8
-	ZTwJWn6HEVh85xjO/xfce5r+6B/zLyCuhmQLYe/sk/wNqCAeD//d4e2RPcw37rxzm5bhc+m252X
-	xVU7btDNTig==
-X-Google-Smtp-Source: AGHT+IGDgdAZaaUbvgWkTXP+6EFmj00+0ikeM9JhzpBpk4U5EIlsiZ7KKpZ+KsZUT+sILS7ZtWuHFzRcgbReHA==
+        bh=djrkg2o6GYfOpuFfrfroOSUyfmqyZMD72kLam/QnMds=;
+        b=SRlHoS1SzmUzRem040Q7UJgue3TH8eGZ2iopzk4VCQQFNHtlhpgt7sjB3BdeqXyPFK
+         c+SpNNxp1j9zxPCL0fqzRuCHZDfUFHsCcrPmA9tM7zuOIjE7qu96tDlkPvEFcM2poMHS
+         xL7G2w6M32jhUMvYVMECzxckn/uSqFbk+ajg8ME7m4MK6Zda1N0DbNlvIQxZYrbOGIrq
+         kGKvs2K4gtV8fp7fjRmAe1VSoZCUOdTk0snnOqx1v4Z4uTURszbUgNevOi31JYrEUE5j
+         69poe1AXuu/0Wz30f+Iz/FxIoookiUzZJ110A3kC6T2L65V5xhPzvmWRxZ1ppkOMeC3w
+         224Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUg45zKt3zlgU8STG54S6zHa2InZP7/AlDvhxhf/KvP++gCT17KS9MdmismDrtHsrc+xHcc0nxCAgPjqZ4TRiWRu/rDq8xqxc3c
+X-Gm-Message-State: AOJu0YwoKhBvdpreOSjNlFR1TtdCy33T+9dgAcd4WTpu4Cxg/eT3EYAJ
+	NjOM2qqLzCemEg+dGLqRvKeRAIQ3RhcEf+M3GC/Xd/Rdc7O2t6JlYN1MzuIfVMkYMn2YK8uqiIM
+	UQr51MNVZSA==
+X-Google-Smtp-Source: AGHT+IEghJ9PK/cUoNltMVXmRLwQJyqnNza3sX0GvOvMSKx9Y/m0pcuh+FPl6LfR7gKE5mmkr4x2Cht5mrrCRw==
 X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:69ff:df2c:aa81:7b74])
- (user=ipylypiv job=sendgmr) by 2002:a05:690c:3386:b0:609:2570:f06f with SMTP
- id fl6-20020a05690c338600b006092570f06fmr3759250ywb.0.1709688154461; Tue, 05
- Mar 2024 17:22:34 -0800 (PST)
-Date: Tue,  5 Mar 2024 17:22:21 -0800
+ (user=ipylypiv job=sendgmr) by 2002:a81:9958:0:b0:609:1fd9:bbf with SMTP id
+ q85-20020a819958000000b006091fd90bbfmr3386990ywg.3.1709688156555; Tue, 05 Mar
+ 2024 17:22:36 -0800 (PST)
+Date: Tue,  5 Mar 2024 17:22:22 -0800
 In-Reply-To: <20240306012226.3398927-1-ipylypiv@google.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -59,9 +59,8 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20240306012226.3398927-1-ipylypiv@google.com>
 X-Mailer: git-send-email 2.44.0.278.ge034bb2e1d-goog
-Message-ID: <20240306012226.3398927-3-ipylypiv@google.com>
-Subject: [PATCH v7 2/7] scsi: libsas: Define NCQ Priority sysfs attributes for
- SATA devices
+Message-ID: <20240306012226.3398927-4-ipylypiv@google.com>
+Subject: [PATCH v7 3/7] scsi: pm80xx: Add libsas SATA sysfs attributes group
 From: Igor Pylypiv <ipylypiv@google.com>
 To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
 	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
@@ -71,154 +70,60 @@ To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>
 Cc: TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org, 
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>
+	Igor Pylypiv <ipylypiv@google.com>, Jack Wang <jinpu.wang@ionos.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Libata sysfs attributes cannot be used for libsas managed SATA devices
-because the ata_port location is different for libsas.
+The added sysfs attributes group enables the configuration of NCQ Priority
+feature for HBAs that rely on libsas to manage SATA devices.
 
-Defined sysfs attributes (visible for SATA devices only):
-- /sys/block/sda/device/ncq_prio_enable
-- /sys/block/sda/device/ncq_prio_supported
-
-The newly defined attributes will pass the correct ata_port to libata
-helper functions.
-
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
 Reviewed-by: John Garry <john.g.garry@oracle.com>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Jason Yan <yanaijie@huawei.com>
 Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 ---
- drivers/scsi/libsas/sas_ata.c | 94 +++++++++++++++++++++++++++++++++++
- include/scsi/sas_ata.h        |  6 +++
- 2 files changed, 100 insertions(+)
+ drivers/scsi/pm8001/pm8001_ctl.c  | 5 +++++
+ drivers/scsi/pm8001/pm8001_init.c | 1 +
+ drivers/scsi/pm8001/pm8001_sas.h  | 1 +
+ 3 files changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 12e2653846e3..04b0bd9a4e01 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -964,3 +964,97 @@ int sas_execute_ata_cmd(struct domain_device *device, u8 *fis, int force_phy_id)
- 			       force_phy_id, &tmf_task);
- }
- EXPORT_SYMBOL_GPL(sas_execute_ata_cmd);
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index 5c26a13ffbd2..9ffe1a868d0f 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -1039,3 +1039,8 @@ const struct attribute_group *pm8001_host_groups[] = {
+ 	&pm8001_host_attr_group,
+ 	NULL
+ };
 +
-+static ssize_t sas_ncq_prio_supported_show(struct device *device,
-+					   struct device_attribute *attr,
-+					   char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-+	bool supported;
-+	int rc;
-+
-+	/* This attribute shall be visible for SATA devices only */
-+	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
-+		return -EINVAL;
-+
-+	rc = ata_ncq_prio_supported(ddev->sata_dev.ap, sdev, &supported);
-+	if (rc)
-+		return rc;
-+
-+	return sysfs_emit(buf, "%d\n", supported);
-+}
-+
-+DEVICE_ATTR(ncq_prio_supported, S_IRUGO, sas_ncq_prio_supported_show, NULL);
-+
-+static ssize_t sas_ncq_prio_enable_show(struct device *device,
-+					struct device_attribute *attr,
-+					char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-+	bool enabled;
-+	int rc;
-+
-+	/* This attribute shall be visible for SATA devices only */
-+	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
-+		return -EINVAL;
-+
-+	rc = ata_ncq_prio_enabled(ddev->sata_dev.ap, sdev, &enabled);
-+	if (rc)
-+		return rc;
-+
-+	return sysfs_emit(buf, "%d\n", enabled);
-+}
-+
-+static ssize_t sas_ncq_prio_enable_store(struct device *device,
-+					 struct device_attribute *attr,
-+					 const char *buf, size_t len)
-+{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-+	bool enable;
-+	int rc;
-+
-+	/* This attribute shall be visible for SATA devices only */
-+	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
-+		return -EINVAL;
-+
-+	rc = kstrtobool(buf, &enable);
-+	if (rc)
-+		return rc;
-+
-+	rc = ata_ncq_prio_enable(ddev->sata_dev.ap, sdev, enable);
-+	if (rc)
-+		return rc;
-+
-+	return len;
-+}
-+
-+DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
-+	    sas_ncq_prio_enable_show, sas_ncq_prio_enable_store);
-+
-+static struct attribute *sas_ata_sdev_attrs[] = {
-+	&dev_attr_ncq_prio_supported.attr,
-+	&dev_attr_ncq_prio_enable.attr,
++const struct attribute_group *pm8001_sdev_groups[] = {
++	&sas_ata_sdev_attr_group,
 +	NULL
 +};
-+
-+static umode_t sas_ata_attr_is_visible(struct kobject *kobj,
-+				       struct attribute *attr, int i)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-+
-+	if (!dev_is_sata(ddev))
-+		return 0;
-+
-+	return attr->mode;
-+}
-+
-+const struct attribute_group sas_ata_sdev_attr_group = {
-+	.attrs = sas_ata_sdev_attrs,
-+	.is_visible = sas_ata_attr_is_visible,
-+};
-+EXPORT_SYMBOL_GPL(sas_ata_sdev_attr_group);
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index 2f8c719840a6..92e27e7bf088 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -39,6 +39,9 @@ int smp_ata_check_ready_type(struct ata_link *link);
- int sas_discover_sata(struct domain_device *dev);
- int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *phy,
- 		    struct domain_device *child, int phy_id);
-+
-+extern const struct attribute_group sas_ata_sdev_attr_group;
-+
- #else
- 
- static inline void sas_ata_disabled_notice(void)
-@@ -123,6 +126,9 @@ static inline int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *p
- 	sas_ata_disabled_notice();
- 	return -ENODEV;
- }
-+
-+#define sas_ata_sdev_attr_group ((struct attribute_group) {})
-+
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index ed6b7d954dda..e6b1108f6117 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -134,6 +134,7 @@ static const struct scsi_host_template pm8001_sht = {
+ 	.compat_ioctl		= sas_ioctl,
  #endif
+ 	.shost_groups		= pm8001_host_groups,
++	.sdev_groups		= pm8001_sdev_groups,
+ 	.track_queue_depth	= 1,
+ 	.cmd_per_lun		= 32,
+ 	.map_queues		= pm8001_map_queues,
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 3ccb7371902f..ced6721380a8 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -717,6 +717,7 @@ int pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha);
+ void pm8001_free_dev(struct pm8001_device *pm8001_dev);
+ /* ctl shared API */
+ extern const struct attribute_group *pm8001_host_groups[];
++extern const struct attribute_group *pm8001_sdev_groups[];
  
- #endif /* _SAS_ATA_H_ */
+ #define PM8001_INVALID_TAG	((u32)-1)
+ 
 -- 
 2.44.0.278.ge034bb2e1d-goog
 
