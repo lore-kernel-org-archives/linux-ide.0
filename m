@@ -1,403 +1,263 @@
-Received: from JPN01-OS0-obe.outbound.protection.outlook.com (mail-os0jpn01olkn2030.outbound.protection.outlook.com [40.92.98.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9187386621;
-	Wed,  6 Mar 2024 12:40:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.98.30
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709728846; cv=fail; b=E2gTKKNgMioPw+kYXuNkIT1kS+k9PhATlHvQg/SG9vPSPdPXh0CU++AErrUp5wsHuhXnwMaqo0izCQ8QJ+xo0dMQ+oDTx9iRiiK0gjftko/EJYijlEhakQyEQwDEivbp683muSyKDlOQaHMVwFxtlIP9ugvdSFDcegnpiqUOeKk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709728846; c=relaxed/simple;
-	bh=0DIT8vRGbkFn4fFXdPdOaI/B43qMJw0kpX/v8gDJZf4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=sIy8IThQVtiAJofKkvEWmGKJVSxwd50f6YBUeMTPHAXyF3X1WQzYMUBE03v5Y1zAMg62LT7NITCg/KgqVpjEJyLNdN6fye7qMFbinSZJZu0NPaDdCJ1hfZn9Fuh7pxC3WoeFu1+3qNrm7OhP31obD4OB/inJnG2AW2H6MAzSpvk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=fail (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=JUv8NE9P reason="signature verification failed"; arc=fail smtp.client-ip=40.92.98.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEF4F13F426
+	for <linux-ide@vger.kernel.org>; Wed,  6 Mar 2024 19:28:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1709753332; cv=none; b=JuamCMmYypP2rY802h93q2CmI7vGDHD61sClZnyUiNWQn4UcfX6AfzWvRoZOZWVyY0iXLydBqUEAL/yaGigf1dxWIakFj37AE6BWQPUA1Bd3tcbDpiskhrwH39g9str7d0KGzJnpGih/DAYUDfocLud/fODku9gMHlDt80HMu+Y=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1709753332; c=relaxed/simple;
+	bh=oVbP8h99GUK9lOc/Amw1op4GHOhWRRASuthXoAH1gbE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GWqT6K8bY1AdynbfNUDw2v2A/x+q85w+QYIRdkuYCbTmIfkmwZwZdzTm9FQxmE2lJfR8oZ+xBWwUaLMKvE236B6za9426zkH+0V7OfvsOmEnBXDVW6qFiGr7UtMcd6DgbqR8D1D3lomWNql19gxzhIiQlFzGYvZ52noSwYFaZ40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=R+iKghyo; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="JUv8NE9P"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iahnpr9nu8xXlAgDMRjcJbf/tpW4u1N42cN9Pub+sy2UAtpbMaCfPqcczpQSqs1zO16kYIv44UJvOlio7BQgNXTd3ouixMfiUnD8hFi45yHCmhiNBCo2JERcuDRWHjDgqwDXpDDeMnTfV+r/qHiSnweRAnmGjRX/bLs6pfShndVV53zx32PF+S9w6S6HvzpQAlXNM6rNQw4BtaWjcCyT6crWHqcXNRCenwSwKK1gOgacPtJqiuq5C//jlB2ODJU5ZdPwN6yTsTBsem3h+O4v2Jf+KQDu/wr1UeGqAVPbCmW08eP6AhjbzcOldlRLX/QWG7iTTgzu6BxxWjvLUOov7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=noGfxLvPbxnLpweiggOKmItIhD1pkDaIxw+XTK+txfs=;
- b=B+kZ2riVHA4zNthp4Zd3f9zpKQDcPfF0dittCohn34uhACNERnk0kxUVtIZct4+v3t5PFURcG65ZfeB8zFPjYAKLKSmCtXIBsfsigFQxteOslBWRRbrjsT4Ahj2gb107Q+K78pCV1NAbRIb5dJxvwn+AnuFVWoYmprCBSub640Hp6WuDGrDkEGVsBZiDeXOrVzGlql+wt3WbnJumkoadQO1TrHkWHIzIkFkPnABmKNrDgn64KcIboDQ15Ehpps/OoSG79VH0RaQaK4DsAd6rojJ9sQfPIwrt1VR0wpNUqwFCe779zdKkuIh6qFEF2C1lEgIW9NTWQ+6vurEudefmng==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=noGfxLvPbxnLpweiggOKmItIhD1pkDaIxw+XTK+txfs=;
- b=JUv8NE9PAr63q9zXlRzBBSX78JZDrAA1GuvqKtVMvmlkkwe4oePg5egBVwSMdIaOUl1dJKo2wxrDV/F0UkSdc27DYjB/53kxOLh9KBsicmCt1wOwvw/I+FcbNCpbL2n9wyaRAY4RY8S3K5vDX8osZafqdR6KtNF0cDDXQ+DJzZlWGmASVWUCH2XZmsZf9nyT7ToM5wHn9zEwqgSEq0ZdTOxGMugn52aH5tBDLiLtlfe2UnlyeRrggJ4lZEcb3EuLSv7W+VScVxl8qmBiViJf/di2DNkcaimGwZEG4Zv3YkoIqKEYSGHDrDu5SdYHjtNP1LAdrviz9xSw9XedGN+W9Q==
-Received: from TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:39d::8)
- by TYCP286MB2880.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:307::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7362.24; Wed, 6 Mar
- 2024 12:40:40 +0000
-Received: from TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM
- ([fe80::8e48:6e1:f641:32b1]) by TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM
- ([fe80::8e48:6e1:f641:32b1%7]) with mapi id 15.20.7362.019; Wed, 6 Mar 2024
- 12:40:40 +0000
-Date: Wed, 6 Mar 2024 20:40:37 +0800
-From: Dawei Li <set_pte_at@outlook.com>
-To: Christophe Leroy <christophe.leroy@csgroup.eu>
-Cc: "mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"npiggin@gmail.com" <npiggin@gmail.com>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-	"alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] powerpc: macio: Make remove callback of macio driver
- void returned
-Message-ID:
- <TYTP286MB356472357994D5EA49E2F5E3CA212@TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM>
-References: <TYCP286MB232391520CB471E7C8D6EA84CAD19@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
- <3dc29701-239f-4a3b-b571-b9732975bd73@csgroup.eu>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3dc29701-239f-4a3b-b571-b9732975bd73@csgroup.eu>
-X-TMN: [Nh3sQUEUbpxaXXOwSoNdFxws6+REaLee]
-X-ClientProxiedBy: SI2PR02CA0040.apcprd02.prod.outlook.com
- (2603:1096:4:196::6) To TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:39d::8)
-X-Microsoft-Original-Message-ID: <20240306124037.GA2466@wendao-VirtualBox>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="R+iKghyo"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-5e4613f2b56so40613a12.1
+        for <linux-ide@vger.kernel.org>; Wed, 06 Mar 2024 11:28:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1709753330; x=1710358130; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=m9++UoKpeeQiFQPK2S6XtFoDKlxqW5vdVso25F8fqUo=;
+        b=R+iKghyoQDh5a92Rgy8ermZReGcTEAJKdfigKeXwTapaAMM65j3r/8br9CS0da04mK
+         G42Wly5B14AX2d4IKQwm57XqpOlWHzQr59zUMqsBZq4obsf/m4t+ddbP5VvBFQBRbNn6
+         wudyd+zRPUZi5zH+ZKi7qaD1g+FemIfgFM76uZnk26aaHHwdrUEYUT9DD54+eGXnLBWL
+         Tytber+V+3spP7Q02UNIODHt47VPM7KFlAvDGcYhtiQ8gDLowaymlBzZfjxsZXCl1rdN
+         N2TWVPQ8oPOuF2rY5CDX766wdf3hF970igQD31DSN/aHOwdqIbvLSp1xWBrULWA/iWGf
+         yxAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709753330; x=1710358130;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=m9++UoKpeeQiFQPK2S6XtFoDKlxqW5vdVso25F8fqUo=;
+        b=h9Y1NWlqG1bH9flgO9otvLZKrH70RNZ2PkTEqAL57Sjg0SSJ6FBNWuwY1EFGy7E0f7
+         SFLUTbXZ4LOfoZ3TeiC77SDZu0EaCNXOL1imUV62O3xpUYTNLklIjzMNUg4CjYwDDOxz
+         gdNe7ePL5Lbrtotnns1csongIy/MGWEY5JaIjZ+jlVVoqrtn+nmTrg77hrwwxltjxvaI
+         LTAy+g4/ucB12I3tzMP7CKbE08I2GFqJu3PuxtJluPCm+3M7g/HtYI87oRhlgzlKn7Jk
+         +3dDYD7vT5XlfZSdoEh4vwZfNI0o73xrcBKPb3+usspKVhdDzYQNitFJX62mVne6+5GW
+         Bp8w==
+X-Forwarded-Encrypted: i=1; AJvYcCU/a87TF28o93520vsf8NvuYDQijIJs/cfumxlD4Q7n8cpOyMu6Yu6GbxyTHDjuLWm3/QPBAf46g7SWqD3G9Jc6Fop1pv/oVbl4
+X-Gm-Message-State: AOJu0YzEqJ9euB54jMpcCC/V9iiBgploquRyuRgTIEefXYdmskrJ3hOW
+	oOP+aI/oGcvxWUfcoabI2GYlusQuj9TuDz1nifnQKY/ExvqPOG6syLceQvOVBQ==
+X-Google-Smtp-Source: AGHT+IGakAHWNMkzUL4cVU+huFc20UjAENCfOhUHpM8bWIsR6IZeSjD2XDwSligdYZMB5iErYVB1qg==
+X-Received: by 2002:a05:6a20:3d19:b0:1a1:6ee9:336 with SMTP id y25-20020a056a203d1900b001a16ee90336mr137360pzi.15.1709753330036;
+        Wed, 06 Mar 2024 11:28:50 -0800 (PST)
+Received: from google.com ([2620:15c:2c5:13:9a91:c17:53d9:d156])
+        by smtp.gmail.com with ESMTPSA id p41-20020a056a000a2900b006e641fee598sm3260316pfh.141.2024.03.06.11.28.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Mar 2024 11:28:49 -0800 (PST)
+Date: Wed, 6 Mar 2024 11:28:42 -0800
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+	Hannes Reinecke <hare@suse.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 2/7] scsi: libsas: Define NCQ Priority sysfs
+ attributes for SATA devices
+Message-ID: <ZejD6mYBhYFQ5Xq8@google.com>
+References: <20240306012226.3398927-1-ipylypiv@google.com>
+ <20240306012226.3398927-3-ipylypiv@google.com>
+ <ZehLfEjfOTs2wGZe@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYTP286MB3564:EE_|TYCP286MB2880:EE_
-X-MS-Office365-Filtering-Correlation-Id: e92084cb-eb20-4297-f73d-08dc3ddaa149
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	mNc3gDI7HEWYdy9uSOU+QAsWz8a8yzdnHZUuW0hgIEFIhZdB1s9jv26Oq0ZqmY5ZLARFZwg04jDk1WGNH8NkJEld29lX9gd5eLAAVOuWNNG7fdCxIrVgT3/JCZst3sipPGfokCSOM7jaZMfGJKQlr1NzLkp32am3M8boXDQwgjZz49dnO62sDWrhlWfpkhM7h00NL4kw+lGuK9Xm93TLWY8WEEId5u4iXH+LDIzFyaz8YHr1L4yt1sIr8SutLJVsz9DJJStLYuDZJW5T/nve5zh3ocTXqzUG1AWfB63WQj2V3wlQ8IEh//ShvaJVPwBPsIoZYcUZ/zvBNTBSunLX0cJZ5gitHmg2kFJ/hqFMtPmQ/ibbYzAYSeB6l6DQyTECnhKFGmmanHFaLqwHm4hMU9cBB6qzwBjVF6xjhzh6zoXoMb2SIpQ/O+4RkpgYynMQ2MPePT0C5c9JKUQoSby4LydssNGeDYAEfTrlTiOCqM+SHO4oxzGOyDcTMc12NDj+3CTO2VxbRpZZ/2zv4gQ6np4tDXdMNI7uJ7LWlT12rLfTIodgsoSzwgsIr8kQoi+N2tJkj4dH8Yj7rvf3w7SD9ruQvxMs8HInTgoqSsJwa6g=
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?iso-8859-1?Q?T3Bo20pNCVM2OdvWX1Y++BEykzr2r0JSnpquix8IRRlylEZKyKslXMz3Dh?=
- =?iso-8859-1?Q?l7ZqGjwcL+MYCZACLmjxL+XKAQ/XoviitNZNqVUvrXP69maYJ5ldANjjUp?=
- =?iso-8859-1?Q?++4YADg+7Cqf6JPDiIjon8rOA5pHUphKaSPkx9GPZh/rLs38yipE8fkoor?=
- =?iso-8859-1?Q?zJJdbdlJkSkekolM4LJ5BO+gSxs2iTsP3kyFZpSStHaDQCx0E8BTNv5ACj?=
- =?iso-8859-1?Q?F1YN9WKsYlxSjmaXo7VIrBq5DnHbiPCSmGfkg9UOA+5j+wZNkX7w8t6pT2?=
- =?iso-8859-1?Q?crWl4/3XgurxpygHqt9y2zczfAnp9NZRIr45V9b+C8Ih39VOQtmbhzq7Gh?=
- =?iso-8859-1?Q?fRNvFrUZAWU2wVflo06HLS5Qpk/xhwkMI5/3rWi/oMgioa3z5X8mf73BsK?=
- =?iso-8859-1?Q?kbxHAY0vRL/JEROEiO2UDoIxykU88cGOHanNqszWD6uofEmkcrGAM8m4PB?=
- =?iso-8859-1?Q?7otg6a1vGrNarOcbS76vvtNVaNjo09Cl7Qw7pL+AZLPxyIH/EqAUqR89Bf?=
- =?iso-8859-1?Q?HQl0vOfS2zReuq9/FsdCQZeK6zXoIs0u7lo7iFYQ+bR4WkjUE6Mq8Aab6g?=
- =?iso-8859-1?Q?pGShwur+nivRhHVxNEhQXawbd1z8vyrN5quEFYKM3csatteI47HFVNql/q?=
- =?iso-8859-1?Q?7mHHcdariX+awiuQ4BAPE4B77uAJQtX648PON79sl+w1ut4/9kpKX8shQV?=
- =?iso-8859-1?Q?gban8X7jSh8Keeut+VnR3ulE3lfk1lPbmIFeSr3lKxHEm4PETSTM2ZZK+v?=
- =?iso-8859-1?Q?fqtCHBul6Grdv4JPE+0NuB/cMrcsEVcvKDwm30hwBKgYxLNqZ+jWWDPvYn?=
- =?iso-8859-1?Q?SuF0/CE+J54+FQsqeM6iASN2DLhQ/UFW3RqalQNc89tCSGbjCnqh+uhklN?=
- =?iso-8859-1?Q?rUglgKqfTMqxK4paxyTABCqdfdifbqZ3cYBen0RuGRdJZn34zPO6jZDbXF?=
- =?iso-8859-1?Q?/qsZijOAPafP/I3vXmWeCOpOFMX/UOeAdyUxaeYstd0Hx9ZHX7fIh9msRL?=
- =?iso-8859-1?Q?CJ9XuSctLnYpI0utaadlrciAtyFULAYTIiEXG+DxB2fwqCRvfgae3YV1dd?=
- =?iso-8859-1?Q?mHJ9G3WW8FynLgqU99AEXGSLXVkJFjNbbVfFIiVvZoWGTbU6jYHTHHFtML?=
- =?iso-8859-1?Q?YmhEKlebmYaQav4vv5uTtfC++eO+BreSW2q2oaTYB6KahwgAleswsMtA34?=
- =?iso-8859-1?Q?b08Bii8M4pDE3o7LjS2H/t6YND1T5Pwi7pBsEVMkTFJbR7cb/YaoBxSSgR?=
- =?iso-8859-1?Q?YkgcLS2e5+Wbwa1p78NkwRvmE7q3GbFdtp2gym+V0=3D?=
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e92084cb-eb20-4297-f73d-08dc3ddaa149
-X-MS-Exchange-CrossTenant-AuthSource: TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2024 12:40:40.2608
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2880
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZehLfEjfOTs2wGZe@ryzen>
 
-Hi Christophe,
-
-On Tue, Feb 20, 2024 at 04:12:17PM +0000, Christophe Leroy wrote:
-> Hi Michael,
-> 
-> ping ?
-> 
-> Le 01/02/2023 à 15:36, Dawei Li a écrit :
-> > Commit fc7a6209d571 ("bus: Make remove callback return void") forces
-> > bus_type::remove be void-returned, it doesn't make much sense for any
-> > bus based driver implementing remove callbalk to return non-void to
-> > its caller.
+On Wed, Mar 06, 2024 at 11:54:52AM +0100, Niklas Cassel wrote:
+> On Tue, Mar 05, 2024 at 05:22:21PM -0800, Igor Pylypiv wrote:
+> > Libata sysfs attributes cannot be used for libsas managed SATA devices
+> > because the ata_port location is different for libsas.
 > > 
-> > This change is for macio bus based drivers.
+> > Defined sysfs attributes (visible for SATA devices only):
+> > - /sys/block/sda/device/ncq_prio_enable
+> > - /sys/block/sda/device/ncq_prio_supported
 > > 
-> > Signed-off-by: Dawei Li <set_pte_at@outlook.com>
-> 
-> This patch is Acked , any special reason for not applying it ?
-> 
-> Note that it now conflicts with commit 1535d5962d79 ("wifi: remove 
-> orphaned orinoco driver") but resolution is trivial, just drop the 
-> changes to that file.
-
-Thanks for picking it up, hardly believe that it's been one year.
-
-Michael,
-
-I will respin V4 if it's needed.
-
-Thanks,
-
-   Dawei
-
-> 
-> Christophe
-> 
+> > The newly defined attributes will pass the correct ata_port to libata
+> > helper functions.
+> > 
+> > Reviewed-by: John Garry <john.g.garry@oracle.com>
+> > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> > Reviewed-by: Jason Yan <yanaijie@huawei.com>
+> > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 > > ---
-> > v2 -> v3
-> > - Rebased on latest powerpc/next.
-> > - cc' to relevant subsysem lists.
+> >  drivers/scsi/libsas/sas_ata.c | 94 +++++++++++++++++++++++++++++++++++
+> >  include/scsi/sas_ata.h        |  6 +++
+> >  2 files changed, 100 insertions(+)
 > > 
-> > v1 -> v2
-> > - Revert unneeded changes.
-> > - Rebased on latest powerpc/next.
+> > diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> > index 12e2653846e3..04b0bd9a4e01 100644
+> > --- a/drivers/scsi/libsas/sas_ata.c
+> > +++ b/drivers/scsi/libsas/sas_ata.c
+> > @@ -964,3 +964,97 @@ int sas_execute_ata_cmd(struct domain_device *device, u8 *fis, int force_phy_id)
+> >  			       force_phy_id, &tmf_task);
+> >  }
+> >  EXPORT_SYMBOL_GPL(sas_execute_ata_cmd);
+> > +
+> > +static ssize_t sas_ncq_prio_supported_show(struct device *device,
+> > +					   struct device_attribute *attr,
+> > +					   char *buf)
+> > +{
+> > +	struct scsi_device *sdev = to_scsi_device(device);
+> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
+> > +	bool supported;
+> > +	int rc;
+> > +
+> > +	/* This attribute shall be visible for SATA devices only */
+> > +	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
+> > +		return -EINVAL;
+> 
+> Like Hannes commented, I don't believe this is needed.
+> 
+
+The intention for the check is to serve as a fail-safe in case 'is_visible()'
+callback gets incorrectly modified and stops hiding the sysfs attributes
+for non-SATA devices.
+
+Just want to clarify should I remove the WARN_ON_ONCE and keep the fail-safe
+check or should I get rid of the check completely and trust 'is_visible()'
+to always hide the sysfs attributes for non-SATA devices? 
+
+> 
+> > +
+> > +	rc = ata_ncq_prio_supported(ddev->sata_dev.ap, sdev, &supported);
+> > +	if (rc)
+> > +		return rc;
+> > +
+> > +	return sysfs_emit(buf, "%d\n", supported);
+> > +}
+> > +
+> 
+> While this is a bit different depending on file, the most common way is to
+> have no blank link before the DEVICE_ATTR().
+>
+
+In "[PATCH 1/3] ata: libata-sata: Factor out NCQ Priority configuration helpers"
+Damien asked to keep the blank link before the DEVICE_ATTR() in libata-sata.c.
+
+Non-prio sysfs attributes in libata-sata.c don't have blank lines
+before DEVICE_ATTR() so I'm more inclined to remove the lines.
+
+I'm fine with either of ways, just want to get a consensus and make it 
+consistent for both libata-sata.c and sas_ata.c.
+ 
+> 
+> > +DEVICE_ATTR(ncq_prio_supported, S_IRUGO, sas_ncq_prio_supported_show, NULL);
+> > +
+> > +static ssize_t sas_ncq_prio_enable_show(struct device *device,
+> > +					struct device_attribute *attr,
+> > +					char *buf)
+> > +{
+> > +	struct scsi_device *sdev = to_scsi_device(device);
+> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
+> > +	bool enabled;
+> > +	int rc;
+> > +
+> > +	/* This attribute shall be visible for SATA devices only */
+> > +	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
+> > +		return -EINVAL;
+> > +
+> > +	rc = ata_ncq_prio_enabled(ddev->sata_dev.ap, sdev, &enabled);
+> > +	if (rc)
+> > +		return rc;
+> > +
+> > +	return sysfs_emit(buf, "%d\n", enabled);
+> > +}
+> > +
+> > +static ssize_t sas_ncq_prio_enable_store(struct device *device,
+> > +					 struct device_attribute *attr,
+> > +					 const char *buf, size_t len)
+> > +{
+> > +	struct scsi_device *sdev = to_scsi_device(device);
+> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
+> > +	bool enable;
+> > +	int rc;
+> > +
+> > +	/* This attribute shall be visible for SATA devices only */
+> > +	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
+> > +		return -EINVAL;
+> > +
+> > +	rc = kstrtobool(buf, &enable);
+> > +	if (rc)
+> > +		return rc;
+> > +
+> > +	rc = ata_ncq_prio_enable(ddev->sata_dev.ap, sdev, enable);
+> > +	if (rc)
+> > +		return rc;
+> > +
+> > +	return len;
+> > +}
+> > +
+> > +DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+> > +	    sas_ncq_prio_enable_show, sas_ncq_prio_enable_store);
+> > +
+> > +static struct attribute *sas_ata_sdev_attrs[] = {
+> > +	&dev_attr_ncq_prio_supported.attr,
+> > +	&dev_attr_ncq_prio_enable.attr,
+> > +	NULL
+> > +};
+> > +
+> > +static umode_t sas_ata_attr_is_visible(struct kobject *kobj,
+> > +				       struct attribute *attr, int i)
+> > +{
+> > +	struct device *dev = kobj_to_dev(kobj);
+> > +	struct scsi_device *sdev = to_scsi_device(dev);
+> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
+> > +
+> > +	if (!dev_is_sata(ddev))
+> > +		return 0;
+> > +
+> > +	return attr->mode;
+> > +}
+> > +
+> > +const struct attribute_group sas_ata_sdev_attr_group = {
+> > +	.attrs = sas_ata_sdev_attrs,
+> > +	.is_visible = sas_ata_attr_is_visible,
+> > +};
+> > +EXPORT_SYMBOL_GPL(sas_ata_sdev_attr_group);
+> > diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+> > index 2f8c719840a6..92e27e7bf088 100644
+> > --- a/include/scsi/sas_ata.h
+> > +++ b/include/scsi/sas_ata.h
+> > @@ -39,6 +39,9 @@ int smp_ata_check_ready_type(struct ata_link *link);
+> >  int sas_discover_sata(struct domain_device *dev);
+> >  int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *phy,
+> >  		    struct domain_device *child, int phy_id);
+> > +
+> > +extern const struct attribute_group sas_ata_sdev_attr_group;
+> > +
+> >  #else
+> >  
+> >  static inline void sas_ata_disabled_notice(void)
+> > @@ -123,6 +126,9 @@ static inline int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *p
+> >  	sas_ata_disabled_notice();
+> >  	return -ENODEV;
+> >  }
+> > +
+> > +#define sas_ata_sdev_attr_group ((struct attribute_group) {})
+> > +
+> >  #endif
+> >  
+> >  #endif /* _SAS_ATA_H_ */
+> > -- 
+> > 2.44.0.278.ge034bb2e1d-goog
 > > 
-> > v1
-> > - https://lore.kernel.org/all/TYCP286MB2323FCDC7ECD87F8D97CB74BCA189@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM/
-> > ---
-> >   arch/powerpc/include/asm/macio.h                | 2 +-
-> >   drivers/ata/pata_macio.c                        | 4 +---
-> >   drivers/macintosh/rack-meter.c                  | 4 +---
-> >   drivers/net/ethernet/apple/bmac.c               | 4 +---
-> >   drivers/net/ethernet/apple/mace.c               | 4 +---
-> >   drivers/net/wireless/intersil/orinoco/airport.c | 4 +---
-> >   drivers/scsi/mac53c94.c                         | 5 +----
-> >   drivers/scsi/mesh.c                             | 5 +----
-> >   drivers/tty/serial/pmac_zilog.c                 | 7 ++-----
-> >   sound/aoa/soundbus/i2sbus/core.c                | 4 +---
-> >   10 files changed, 11 insertions(+), 32 deletions(-)
-> > 
-> > diff --git a/arch/powerpc/include/asm/macio.h b/arch/powerpc/include/asm/macio.h
-> > index ff5fd82d9ff0..cb9c386dacf8 100644
-> > --- a/arch/powerpc/include/asm/macio.h
-> > +++ b/arch/powerpc/include/asm/macio.h
-> > @@ -125,7 +125,7 @@ static inline struct pci_dev *macio_get_pci_dev(struct macio_dev *mdev)
-> >   struct macio_driver
-> >   {
-> >   	int	(*probe)(struct macio_dev* dev, const struct of_device_id *match);
-> > -	int	(*remove)(struct macio_dev* dev);
-> > +	void	(*remove)(struct macio_dev *dev);
-> >   
-> >   	int	(*suspend)(struct macio_dev* dev, pm_message_t state);
-> >   	int	(*resume)(struct macio_dev* dev);
-> > diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-> > index 9ccaac9e2bc3..653106716a4b 100644
-> > --- a/drivers/ata/pata_macio.c
-> > +++ b/drivers/ata/pata_macio.c
-> > @@ -1187,7 +1187,7 @@ static int pata_macio_attach(struct macio_dev *mdev,
-> >   	return rc;
-> >   }
-> >   
-> > -static int pata_macio_detach(struct macio_dev *mdev)
-> > +static void pata_macio_detach(struct macio_dev *mdev)
-> >   {
-> >   	struct ata_host *host = macio_get_drvdata(mdev);
-> >   	struct pata_macio_priv *priv = host->private_data;
-> > @@ -1202,8 +1202,6 @@ static int pata_macio_detach(struct macio_dev *mdev)
-> >   	ata_host_detach(host);
-> >   
-> >   	unlock_media_bay(priv->mdev->media_bay);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> >   #ifdef CONFIG_PM_SLEEP
-> > diff --git a/drivers/macintosh/rack-meter.c b/drivers/macintosh/rack-meter.c
-> > index c28893e41a8b..f2f83c4f3af5 100644
-> > --- a/drivers/macintosh/rack-meter.c
-> > +++ b/drivers/macintosh/rack-meter.c
-> > @@ -523,7 +523,7 @@ static int rackmeter_probe(struct macio_dev* mdev,
-> >   	return rc;
-> >   }
-> >   
-> > -static int rackmeter_remove(struct macio_dev* mdev)
-> > +static void rackmeter_remove(struct macio_dev *mdev)
-> >   {
-> >   	struct rackmeter *rm = dev_get_drvdata(&mdev->ofdev.dev);
-> >   
-> > @@ -558,8 +558,6 @@ static int rackmeter_remove(struct macio_dev* mdev)
-> >   
-> >   	/* Get rid of me */
-> >   	kfree(rm);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> >   static int rackmeter_shutdown(struct macio_dev* mdev)
-> > diff --git a/drivers/net/ethernet/apple/bmac.c b/drivers/net/ethernet/apple/bmac.c
-> > index 9e653e2925f7..292b1f9cd9e7 100644
-> > --- a/drivers/net/ethernet/apple/bmac.c
-> > +++ b/drivers/net/ethernet/apple/bmac.c
-> > @@ -1591,7 +1591,7 @@ bmac_proc_info(char *buffer, char **start, off_t offset, int length)
-> >   }
-> >   #endif
-> >   
-> > -static int bmac_remove(struct macio_dev *mdev)
-> > +static void bmac_remove(struct macio_dev *mdev)
-> >   {
-> >   	struct net_device *dev = macio_get_drvdata(mdev);
-> >   	struct bmac_data *bp = netdev_priv(dev);
-> > @@ -1609,8 +1609,6 @@ static int bmac_remove(struct macio_dev *mdev)
-> >   	macio_release_resources(mdev);
-> >   
-> >   	free_netdev(dev);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> >   static const struct of_device_id bmac_match[] =
-> > diff --git a/drivers/net/ethernet/apple/mace.c b/drivers/net/ethernet/apple/mace.c
-> > index fd1b008b7208..e6350971c707 100644
-> > --- a/drivers/net/ethernet/apple/mace.c
-> > +++ b/drivers/net/ethernet/apple/mace.c
-> > @@ -272,7 +272,7 @@ static int mace_probe(struct macio_dev *mdev, const struct of_device_id *match)
-> >   	return rc;
-> >   }
-> >   
-> > -static int mace_remove(struct macio_dev *mdev)
-> > +static void mace_remove(struct macio_dev *mdev)
-> >   {
-> >   	struct net_device *dev = macio_get_drvdata(mdev);
-> >   	struct mace_data *mp;
-> > @@ -296,8 +296,6 @@ static int mace_remove(struct macio_dev *mdev)
-> >   	free_netdev(dev);
-> >   
-> >   	macio_release_resources(mdev);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> >   static void dbdma_reset(volatile struct dbdma_regs __iomem *dma)
-> > diff --git a/drivers/net/wireless/intersil/orinoco/airport.c b/drivers/net/wireless/intersil/orinoco/airport.c
-> > index a890bfa0d5cc..276a06cdd1f5 100644
-> > --- a/drivers/net/wireless/intersil/orinoco/airport.c
-> > +++ b/drivers/net/wireless/intersil/orinoco/airport.c
-> > @@ -85,7 +85,7 @@ airport_resume(struct macio_dev *mdev)
-> >   	return err;
-> >   }
-> >   
-> > -static int
-> > +static void
-> >   airport_detach(struct macio_dev *mdev)
-> >   {
-> >   	struct orinoco_private *priv = dev_get_drvdata(&mdev->ofdev.dev);
-> > @@ -111,8 +111,6 @@ airport_detach(struct macio_dev *mdev)
-> >   
-> >   	macio_set_drvdata(mdev, NULL);
-> >   	free_orinocodev(priv);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> >   static int airport_hard_reset(struct orinoco_private *priv)
-> > diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
-> > index f75928f7773e..42648ca9b8ed 100644
-> > --- a/drivers/scsi/mac53c94.c
-> > +++ b/drivers/scsi/mac53c94.c
-> > @@ -508,7 +508,7 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
-> >   	return rc;
-> >   }
-> >   
-> > -static int mac53c94_remove(struct macio_dev *mdev)
-> > +static void mac53c94_remove(struct macio_dev *mdev)
-> >   {
-> >   	struct fsc_state *fp = (struct fsc_state *)macio_get_drvdata(mdev);
-> >   	struct Scsi_Host *host = fp->host;
-> > @@ -526,11 +526,8 @@ static int mac53c94_remove(struct macio_dev *mdev)
-> >   	scsi_host_put(host);
-> >   
-> >   	macio_release_resources(mdev);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> > -
-> >   static struct of_device_id mac53c94_match[] =
-> >   {
-> >   	{
-> > diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
-> > index 84b541a57b7b..cd2575b88c85 100644
-> > --- a/drivers/scsi/mesh.c
-> > +++ b/drivers/scsi/mesh.c
-> > @@ -1986,7 +1986,7 @@ static int mesh_probe(struct macio_dev *mdev, const struct of_device_id *match)
-> >   	return -ENODEV;
-> >   }
-> >   
-> > -static int mesh_remove(struct macio_dev *mdev)
-> > +static void mesh_remove(struct macio_dev *mdev)
-> >   {
-> >   	struct mesh_state *ms = (struct mesh_state *)macio_get_drvdata(mdev);
-> >   	struct Scsi_Host *mesh_host = ms->host;
-> > @@ -2013,11 +2013,8 @@ static int mesh_remove(struct macio_dev *mdev)
-> >   	macio_release_resources(mdev);
-> >   
-> >   	scsi_host_put(mesh_host);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> > -
-> >   static struct of_device_id mesh_match[] =
-> >   {
-> >   	{
-> > diff --git a/drivers/tty/serial/pmac_zilog.c b/drivers/tty/serial/pmac_zilog.c
-> > index 13668ffdb1e7..d4640479c338 100644
-> > --- a/drivers/tty/serial/pmac_zilog.c
-> > +++ b/drivers/tty/serial/pmac_zilog.c
-> > @@ -1507,12 +1507,12 @@ static int pmz_attach(struct macio_dev *mdev, const struct of_device_id *match)
-> >    * That one should not be called, macio isn't really a hotswap device,
-> >    * we don't expect one of those serial ports to go away...
-> >    */
-> > -static int pmz_detach(struct macio_dev *mdev)
-> > +static void pmz_detach(struct macio_dev *mdev)
-> >   {
-> >   	struct uart_pmac_port	*uap = dev_get_drvdata(&mdev->ofdev.dev);
-> >   	
-> >   	if (!uap)
-> > -		return -ENODEV;
-> > +		return;
-> >   
-> >   	uart_remove_one_port(&pmz_uart_reg, &uap->port);
-> >   
-> > @@ -1523,11 +1523,8 @@ static int pmz_detach(struct macio_dev *mdev)
-> >   	dev_set_drvdata(&mdev->ofdev.dev, NULL);
-> >   	uap->dev = NULL;
-> >   	uap->port.dev = NULL;
-> > -	
-> > -	return 0;
-> >   }
-> >   
-> > -
-> >   static int pmz_suspend(struct macio_dev *mdev, pm_message_t pm_state)
-> >   {
-> >   	struct uart_pmac_port *uap = dev_get_drvdata(&mdev->ofdev.dev);
-> > diff --git a/sound/aoa/soundbus/i2sbus/core.c b/sound/aoa/soundbus/i2sbus/core.c
-> > index 51ed2f34b276..35f39727994d 100644
-> > --- a/sound/aoa/soundbus/i2sbus/core.c
-> > +++ b/sound/aoa/soundbus/i2sbus/core.c
-> > @@ -364,15 +364,13 @@ static int i2sbus_probe(struct macio_dev* dev, const struct of_device_id *match)
-> >   	return 0;
-> >   }
-> >   
-> > -static int i2sbus_remove(struct macio_dev* dev)
-> > +static void i2sbus_remove(struct macio_dev *dev)
-> >   {
-> >   	struct i2sbus_control *control = dev_get_drvdata(&dev->ofdev.dev);
-> >   	struct i2sbus_dev *i2sdev, *tmp;
-> >   
-> >   	list_for_each_entry_safe(i2sdev, tmp, &control->list, item)
-> >   		soundbus_remove_one(&i2sdev->sound);
-> > -
-> > -	return 0;
-> >   }
-> >   
-> >   #ifdef CONFIG_PM
