@@ -1,192 +1,149 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 401D11D6BD;
-	Sun, 10 Mar 2024 17:53:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C93439FFE
+	for <linux-ide@vger.kernel.org>; Sun, 10 Mar 2024 20:25:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710093191; cv=none; b=Vc93tiArdlXlAoRR/bSXADTH3vqh6OAsH1LMsaqXUbP8In8LcOoXm/XI9ah8TEOv/M9Wmbf5h1P8KlcdjPQFoC1ZXrqejaW6Lgg7J6KvPlT1v5eTvHbfkwBOt+O2Zqad/44Qu1auMMNeLXMgOIPh0k/mw1PruUKyKnCoQyVWpfE=
+	t=1710102355; cv=none; b=BNEOXYxSDEEB46Wzm2lopLaXYHUk59dLHybqSgt1RNnLAiZg56ZbNeAHAjKfT4zz9/JAyxA19CsGY8+u9XzPAfcUOij2JFiZFrgC2p0ZjC9N1ZbqKowE0yoRUS5xWroc3W0C43VcD4/PwiYJ2kxt4UMNL+8+6HToKDM+cLGRqHY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710093191; c=relaxed/simple;
-	bh=PAEPg+/maxDYsnqqpjNNlC7+pfvlYT8sZpuckOLX2Pk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JEfEmE3348Xyk3+qvvn9AmtiVjpAgE3o60A/SfYxOxdXvbdtURQr/DC9hvzRba7WUIRH0BChPPreznmVvdurOGgMqDnSW2MWifz3SpQAHJ24TYYStjcqGY7AO9YjaUqE2gpdf8uyTMDU1qaZ4v/BPR8rsSRmAA+EoYyQUr/FVO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jeO3Gz6E; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1710102355; c=relaxed/simple;
+	bh=EYjGNNG8efHsMEdoHDZT6FK9wsbSPSnLAW4TfAbv0fA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kaQlJgLJyRN1v0j1lA0vVN+nRIXURe5XLMk/mMQ4qwcFZsFsuT/QYGkt5KE1ENSL6iovhqUV63NPnYTHRwcU+8zZxyZPD76NCdhcpErm9V1l/vz8ZsLWpG3X/cq3U75EyOC9gSnGDPdMViWbnNA9bO25tbEwQvStHFUg/VdVHgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=OZLyaMJz; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jeO3Gz6E"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1dd10a37d68so30672575ad.2;
-        Sun, 10 Mar 2024 10:53:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="OZLyaMJz"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4132ab0c302so748705e9.3
+        for <linux-ide@vger.kernel.org>; Sun, 10 Mar 2024 13:25:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1710093189; x=1710697989; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=tS9N1ruJVI0BmOAihQAk3F4D+Z/MUY8XwkjThKFRoCU=;
-        b=jeO3Gz6EqrCgTL2c9vylGkQXfCGgm4u3RKIxiG8UwmOS9ziJvXL31VA5htIn2msOpa
-         u64Q1GV5Emc+GYmmiwbxBbQNPZCIZUGN71PGLttvhwQ9z/kbPbuxWO7F4HTh0HyjsUck
-         dDMEAnG2hl8K9HD2rqPPUcLmL+vAWgIg1qSJc+j4r37kAgpd8tbyk63kOiOX+qups4bB
-         Wr6iek/OufdSCNgEfM81Vxz4AccJGZy8OszHBsF5FgSTW7H1XGMd7tgsjlvj9sKa2hAX
-         t7DcJcUZDLRJ5UDGvkHTjeuCR1bp4LQnVoRcwFMeIZeyqn5CJr09bcLh88VBpaq29BBI
-         d6dQ==
+        d=linaro.org; s=google; t=1710102352; x=1710707152; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=EYjGNNG8efHsMEdoHDZT6FK9wsbSPSnLAW4TfAbv0fA=;
+        b=OZLyaMJz8QX5LSj+DykDQ5tgRwsKFiSoK2qbzTyB0hlAuKsWIs6dBA9nphuVdtHF9y
+         Gut2wx2yJOQBU4kqj41hu1Woc7alIHLYdn/9L449KRUIZ4mamB9D6IIIf+XGnUog3NSc
+         APQppyQhVbha66s+IQnWUTNAZupEdVb+r/WLpiAlF9eo5U+5/Dhq9ub7c8VIkXOpluQz
+         RUnyRop/FreEkWlblfRJGlWRO3tsyr/NdUWIfBc88E8Cq+tK+1OIiKke29u03GOo9q6U
+         wTUb7/tqsquRujdtd8MfzV6fkxe2G5zk+uqhHxzpPR5oGJJgqvqahxUN+FmwTQmZMxVi
+         sAJQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710093189; x=1710697989;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tS9N1ruJVI0BmOAihQAk3F4D+Z/MUY8XwkjThKFRoCU=;
-        b=r/SQTXli/126AWR+R92U8cdXT9/zwFQGRIvN3/kkyXzb5zPib7DDbIUZ/SDSta6QJJ
-         g/yWQRhRw/RH6ax6Ee+Uj+VWjgskEsvwEa43QeV5aDh18Q0Y727XeoVK/oxkb59U6btS
-         YAej2ZL7J9vJWm7bK4TX62GBEw+WzLxuuv7kxWtqrX+gXPTDky4RTDoy/ZMHQEIkVhbA
-         2kJw+FVF8/YYj7AnhqeDRtrVrEducbMlObYsqfUvl1kR75N1PMpsXwSS5eowreNRidyk
-         ZX2TIiJdjH6fO9eVQWgPRhXZlQNxXMZAEiqbpuNuEp87+Un1K6GlYB20X3Qw5ABZex/D
-         5s2g==
-X-Forwarded-Encrypted: i=1; AJvYcCXLk5uCDEpSjqHT2ft14OPHTgtPFfSqkF0J1pzSl+wWh1gZxPZdQaqC6nvXLYqrjQAUB06b/b7AJnoYYRT2+fauRcXnySLhnxS2/2vob2ThwTBuDngfDrlWSU63pnqTZQ3Yazze4mpMkqYSBVX+tiT8VS9Wb/3ryoeZYSvDXbL+XhUh3A==
-X-Gm-Message-State: AOJu0YyXSmoMkLYhKk4kP0682PdvlfWmEXr+nFi+EFGkwoBIrWIjRAmZ
-	hW8nYnG4kEiAOEooxsiyVKZnVev0RE2N9L0dJUvzcEdScF1N0UyB
-X-Google-Smtp-Source: AGHT+IHHarjmbSJAfp4+wX7aP9GbwqCXzb3OwiyyKq/kCEzWGSJ0ZTZGva24e7VBNgg2V0JnOm1v0w==
-X-Received: by 2002:a17:903:22c5:b0:1d8:f072:ec9f with SMTP id y5-20020a17090322c500b001d8f072ec9fmr5859755plg.28.1710093189412;
-        Sun, 10 Mar 2024 10:53:09 -0700 (PDT)
-Received: from fedora.. ([2409:40f4:12:62d1:ef0e:a60d:25ad:394c])
-        by smtp.gmail.com with ESMTPSA id g22-20020a1709029f9600b001dd61965137sm2902050plq.304.2024.03.10.10.53.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Mar 2024 10:53:09 -0700 (PDT)
-From: Animesh Agarwal <animeshagarwal28@gmail.com>
-To: 
-Cc: animeshagarwal28@gmail.com,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	NXP Linux Team <linux-imx@nxp.com>,
-	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v6] dt-bindings: imx-pata: Convert to dtschema
-Date: Sun, 10 Mar 2024 23:22:13 +0530
-Message-ID: <20240310175217.20981-1-animeshagarwal28@gmail.com>
-X-Mailer: git-send-email 2.44.0
+        d=1e100.net; s=20230601; t=1710102352; x=1710707152;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EYjGNNG8efHsMEdoHDZT6FK9wsbSPSnLAW4TfAbv0fA=;
+        b=VRquzcEkOY0IVBkxyLETABpr6jk8vidiHKlUIjGpHjih5Iz9jhrH80PoJJh8hV7Hjy
+         P1+C3GQLrPDKETV5GH80gLRT74EQzpsz6v9rNjeyRyPRJ8uYZ1zHHdWXVvKlObiHvmQr
+         vE+dTwcltgDnOr/3rI+a7aP8heeoeB8HKkiwa85iQ/MPNxGiK+efWgRlEJ/FYD9z/s5t
+         reCwJWO0f6hzbwFwtGJqSArD1EkgifEK1pKjnqN4SDa7ADJDgpoafuQ6/Oets8oGHT4p
+         X9E0tG87i2m/V3m5zLUJq1diIgCTTIlQgdkvMfwxtv2OaZjGbrcOqwz027E5wr+MXpgg
+         pKHA==
+X-Forwarded-Encrypted: i=1; AJvYcCVdTLt3G6egMsW/VYK4hEblI/JKzPlU5GVkMc2L+yQpozY/b28LSb5eQeELzuNF8bUsp4wxle5ICN7Mro149Q2Qxw1PESlUC3Rn
+X-Gm-Message-State: AOJu0YxuHldx/rDDs4p5Lj0KgHriyFYITeSWu+NV7eNJDs9j2tzJ63ZQ
+	i89FKtLKNa9nEBf8dzci8Sr5DVVYeKa1UnxnHWxabEbvvXrDDR1psH4hveDwvHE=
+X-Google-Smtp-Source: AGHT+IFGrgq6LscZC8VYgp6hL5B+n1n+xj7P5oW/LKOqa2kOw9GOFPl1TOg/HdruezS77OMunL1OZQ==
+X-Received: by 2002:a05:600c:4515:b0:413:1319:a37 with SMTP id t21-20020a05600c451500b0041313190a37mr4485706wmo.41.1710102352225;
+        Sun, 10 Mar 2024 13:25:52 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.222.97])
+        by smtp.gmail.com with ESMTPSA id v9-20020a05600c470900b0041312e8ef2bsm6745898wmo.26.2024.03.10.13.25.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 10 Mar 2024 13:25:51 -0700 (PDT)
+Message-ID: <ba834984-d0d7-4b46-81f6-5a2df8e74944@linaro.org>
+Date: Sun, 10 Mar 2024 21:25:49 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5] dt-bindings: imx-pata: Convert to dtschema
+Content-Language: en-US
+To: Animesh Agarwal <animeshagarwal28@gmail.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
+ Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Fabio Estevam <festevam@gmail.com>, NXP Linux Team <linux-imx@nxp.com>,
+ linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <20240310171958.96388-1-animeshagarwal28@gmail.com>
+ <2b939f61-c8b9-4b41-a319-3bf7be42ba3e@linaro.org>
+ <CAE3Oz82coV5RgcRE=Lj5mm2kjdzh3iFJGpMBBw_OfZppfWAHfg@mail.gmail.com>
+ <d609c172-2bb3-479a-b5f2-841aed455bff@linaro.org>
+ <CAE3Oz80zrnLvpo=YdBA-3PAtJFP8KK4LGHpEpQaMCacFFG13Qg@mail.gmail.com>
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <CAE3Oz80zrnLvpo=YdBA-3PAtJFP8KK4LGHpEpQaMCacFFG13Qg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This patchset converts imx-pata bindings to DT schema.
-file name is changed to fsl,imx-pata to follow vendor,device scheme
-imx31-pata and imx51-pata are added in compatible to ensure this node compiles to
-imx31-pata.dtsi or imx51-pata.dtsi
-oneOf is also added to allow the usage of imx27 alone.
-Cleanups are done in patch 6
+On 10/03/2024 18:51, Animesh Agarwal wrote:
+> On Sun, Mar 10, 2024 at 11:08 PM Krzysztof Kozlowski
+> <krzysztof.kozlowski@linaro.org> wrote:
+>> I did not say about subject, but about commit message.
+> Ok, I'll add commit message above the change log.
 
-Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
+What changelog? Read carefully what I asked you few versions ago:
 
----
-Changes in v6:
-- removed items before const due to single element.
+"Please explain the differences done during conversion in the commit
+msg. There was no imx51 compatible in the binding before."
 
-Changes in v5:
-- added oneOf in compatible property to allow the usage of imx27 alone.
 
-Changes in v4:
-- added fsl,imx31-pata in compatible property as enum
-- imx31-pata was not listed in compatible in original txt binding
-- adding imx31-pata in enum ensures the node compiles to imx31.dtsi
+The differences from conversion. There was some binding in TXT and you
+convert to different format. You introduce changes beyond pure
+conversion, so this must be explained. Again: explain what changes are
+you making *to the binding*, which are not pure conversion, and why you
+are making them.
 
-Changes in v3:
-- added fsl,imx51-pata in compatible property as enum
-- imx51-pata was not listed in compatible in original txt binding
-- adding imx51-pata in enum ensures the node compiles to imx31.dtsi
-- fsl,imx27-pata is added as a const to ensure it is present always
-
-Changes in v2:
-- fixed style issues
-- compatible property now matches the examples
-- fixed yamllint warnings/errors
----
- .../devicetree/bindings/ata/fsl,imx-pata.yaml | 43 +++++++++++++++++++
- .../devicetree/bindings/ata/imx-pata.txt      | 16 -------
- 2 files changed, 43 insertions(+), 16 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml
- delete mode 100644 Documentation/devicetree/bindings/ata/imx-pata.txt
-
-diff --git a/Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml b/Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml
-new file mode 100644
-index 000000000000..c108a4b6636a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml
-@@ -0,0 +1,43 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/fsl,imx-pata.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Freescale i.MX PATA Controller
-+
-+maintainers:
-+  - Animesh Agarwal <animeshagarwal28@gmail.com>
-+
-+properties:
-+  compatible:
-+    oneOf:
-+      - items:
-+          - enum:
-+              - fsl,imx31-pata
-+              - fsl,imx51-pata
-+          - const: fsl,imx27-pata
-+      - const: fsl,imx27-pata
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    items:
-+      - description: PATA Controller interrupts
-+
-+  clocks:
-+    items:
-+      - description: PATA Controller clocks
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    pata: pata@83fe0000 {
-+        compatible = "fsl,imx51-pata","fsl,imx27-pata";
-+        reg = <0x83fe0000 0x4000>;
-+        interrupts = <70>;
-+        clocks = <&clks 161>;
-+    };
-+
-diff --git a/Documentation/devicetree/bindings/ata/imx-pata.txt b/Documentation/devicetree/bindings/ata/imx-pata.txt
-deleted file mode 100644
-index f1172f00188a..000000000000
---- a/Documentation/devicetree/bindings/ata/imx-pata.txt
-+++ /dev/null
-@@ -1,16 +0,0 @@
--* Freescale i.MX PATA Controller
--
--Required properties:
--- compatible: "fsl,imx27-pata"
--- reg: Address range of the PATA Controller
--- interrupts: The interrupt of the PATA Controller
--- clocks: the clocks for the PATA Controller
--
--Example:
--
--	pata: pata@83fe0000 {
--		compatible = "fsl,imx51-pata", "fsl,imx27-pata";
--		reg = <0x83fe0000 0x4000>;
--		interrupts = <70>;
--		clocks = <&clks 161>;
--	};
--- 
-2.44.0
+Best regards,
+Krzysztof
 
