@@ -1,71 +1,73 @@
-Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
+Received: from mail-oa1-f41.google.com (mail-oa1-f41.google.com [209.85.160.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D7B9381AA;
-	Mon, 11 Mar 2024 11:07:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 837B52F55;
+	Mon, 11 Mar 2024 11:11:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710155270; cv=none; b=bMHtb6pg0/urjs8YPa2gFCZF3Q9+gLn/MsOWbVMRmbXOXilewC7OQLaL0Vp6cvzziKw1WAnhtl63MnHJBdmi3RCikoIQ91IU4RJQZ6xjInM0ww0rTi+DG7POlODommyP344uhHj5hNBhQzl0ts017LklLwahnvYkMDFhIDB85C8=
+	t=1710155486; cv=none; b=MhOsQ+jYtgBj4gqw9NVbsI/MmYk7e/uU/1gha5UbzahrdzP3IHcIERGatCkSRb6onbrQcyv9MkpbYDQvTnFKlOOMMvhJOQnmaNComxvQDIVScmKwrnLXa+WFd0asrkgZmc6N2MvVHECEoee/AB6Us5pneeqI4Uhp8XhwZUHDWlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710155270; c=relaxed/simple;
-	bh=u9d1JzSR66zNZVrsrBQoXqaf0LOJADaj132DQ7l374M=;
+	s=arc-20240116; t=1710155486; c=relaxed/simple;
+	bh=XRuEb5oNxuILVmXpDBJ4dFKyOTuSJjmVSc84Jl5hgzk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=g5IFrPZI1w3Tq+iEL4Ek+ekKf8tQilBZTBu8iC1rnmy83fThsS4XZ79g5Mew6FCsqTyZ2VNXDly0uAs3ZGy8AwGhIapNfh9jMCoCvL/x/0qUIZS2BRXf7JRTpGSzKgkCBeaDao43cSa2efHGegSA5Tp9/4hsRv/wfotwsOhQ3ZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kKUbQ/gy; arc=none smtp.client-ip=209.85.210.42
+	 To:Cc:Content-Type; b=gIn+OzvHynbPQb70JB6tMWeyKOUGvPkpclqOKmZhjG17ueBEnFMKwZRc7Cn9Z1nIi6HJhMXMKtZzb4Cw3utmcfRn1M86OSJYROGqD3Y0N97h/7Ygv4f3FpLCBVDQWR7xWZwktaoxn2tomPv+hKSP9iJwXyExCgLsZkxYnXl+lK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ljewefZt; arc=none smtp.client-ip=209.85.160.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kKUbQ/gy"
-Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-6e4d88b93e8so1360076a34.0;
-        Mon, 11 Mar 2024 04:07:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ljewefZt"
+Received: by mail-oa1-f41.google.com with SMTP id 586e51a60fabf-21eea6aab5eso2684380fac.0;
+        Mon, 11 Mar 2024 04:11:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1710155268; x=1710760068; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1710155483; x=1710760283; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=u9d1JzSR66zNZVrsrBQoXqaf0LOJADaj132DQ7l374M=;
-        b=kKUbQ/gyfR0e6VqjCQciMwtX/dDi7Dc2wpbH+ig1mRVj1VmFaNFdbVfPyr3uyRu3Ng
-         tZJa17sUkHzTbs18Z5CHdOnBpAiZxI28yrTcsdhsYrPzz3LnL1P5qzmtcmV4AnYM2Q7m
-         unjiA9Z3WouU5tJRwHT/GwrNHAX83ZE/rN/SnmaY5i+YWtp3YCLjYmDQvHln1ZMQzEdK
-         D31sr4lWm1LSPdyn/9yXqM/dQR8X3WWm4jGh/P+7Sw7cHmElMy6c1Db5yr6Wlig/c8dS
-         yWjXeZ+Eeu0n+OaxpL9ePb1FY/p1oreG2kTV6gs13HpU+HIbTvc5bgkh8YaIob+WR10d
-         mPyg==
+        bh=XRuEb5oNxuILVmXpDBJ4dFKyOTuSJjmVSc84Jl5hgzk=;
+        b=ljewefZtk2U9D95KFotdcn3wBtn9Xm106wLA3BZxnChK6eOW1oNocOF88GHR2xRnCO
+         VW0mM34msQEzLGeEcLti4yNSqqbsv4pPJqWWH8vuDoJ+Gh2evl7WjDP9AMGiKKTYtRia
+         ofQdBHTzGurkisqsf2Qm1NKgZGeEIp3GDUKmo3vOEW+c91NUuggvIdO0Wdy0rBTNd2Si
+         CQ7G33CO7R0qqE5RTo3lI3kSrSN9Y1X/4Y2hxTxsERs14zH2Ad5a5dtgmYy4l1Ksz9qL
+         ojWDGTsA1uo9nuByAZD/AuGmeXR4M1zfzZcRrxaxRQJfrfPdeoWlzhvMKHdxkTtnsqUl
+         HliQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710155268; x=1710760068;
+        d=1e100.net; s=20230601; t=1710155483; x=1710760283;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=u9d1JzSR66zNZVrsrBQoXqaf0LOJADaj132DQ7l374M=;
-        b=aH+Y/pYn882hDkYqxhAD6zsYbigUb+cBXFleTHa50y15NtzMSn3a73MnSNeeRwJAMJ
-         vKWCauA+6ylybW0Gdscgw3PH5M02BFXK9IeBNi2I/axNkSt58ibzHNRnHtsIJg42VFRl
-         xsEO+7nn9SWNIy3Ibdc3gMKkqglOVmXz+ll+2uJgoxPlX7V2cNEUaD69NfE1jHQd4M2u
-         VX1ZtD+y3qt4oIulE3EXo8GtxbgKjvtgM3KAnSFmBp41hj3JOAWsP2sPdyDc+bpnJRlF
-         4R2jpOOyW9QEXBaq5Ix0rAX064HNAObkf9LfQFVfZlAuPMWVNTA3eBXEFZxyXYQ98/8x
-         xBCg==
-X-Forwarded-Encrypted: i=1; AJvYcCXJ/kEd378WU0fIIZbZ2hwuV+wWpLmR6Oy9vp2mrEQ8bU0uOIiQNPJWwEQQnsTJ63wzbwNW/lbihKXpHxZwkgxwom/s1bZYXosDXMNwUQqWMGkfTDi6aSM0f9VcHGMQ9cXRhos6txgaFqgf4PZWgikb9N/rKVORwrJ0sHunpzP3Xr6Ggw==
-X-Gm-Message-State: AOJu0YzOM8iTZpoaZ47ukQ4LgKlEAqzu88nuvEC7p6WzScdiEksQzJp3
-	7rv08q1qJO9aloTo31H06IMi44vVjN7lBpNS8PZtLnUeW/uWhY1tybBA0ZOjZ5rjvCVD0wYuwSO
-	7UWUy8Fz8GOt/DjrzSg/xwQzAacQ=
-X-Google-Smtp-Source: AGHT+IFWQlDG5Q9QZvHc/TFMFGK3Mj4QuHhayOL/c+lQnUCCmF1z3P59KJBls0b5yIanAR4KNRYJnGoF6xtPYH7dHXk=
-X-Received: by 2002:a05:6870:b149:b0:220:9eeb:b4a2 with SMTP id
- a9-20020a056870b14900b002209eebb4a2mr6371067oal.29.1710155267993; Mon, 11 Mar
- 2024 04:07:47 -0700 (PDT)
+        bh=XRuEb5oNxuILVmXpDBJ4dFKyOTuSJjmVSc84Jl5hgzk=;
+        b=nlnsi/7q6Z1ffgljbZWypNyok+W53GgeN+S0iT52mURyQqoWaFIOaZKUK1wIw6czil
+         TtfyhC6BM5Uqj/msMkBoESCpJceKX+yAi0SB9K6eioc2XcDTsitT8ManzAxuAnVbrNHE
+         wrD88bW8XqVwIcNZj70aqQ8+Vv4utHSCK2v/scABn0iU7rhS333DdTmkxrEo8WlJ2uOw
+         +JnF38/Ra4yxhV7b+FTIpyEwxOBY8EcTHCZGP6GgIlQMVBjFC/v1RgkTy/80qknYDpyK
+         /4aEkrJUD+61sQVXVj1vn3jfELRwjDe5Ti4RwITvC/zrh3WGrw6MfQiHmqeIE5/gM0fG
+         pb0Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVwUpLVCVUx89SdyBHTUgOz+nG6lBYQ2F9qY/LrpP0T5gUkX9tL8t1j6QpH9QVmRgwEm7gWWQhtQpzh2vWjn/HCcEWxa0kZD7OHVuOaGo5TPj9498kjqdpdcQ04JVpWL1juP3c49xjtyIQHoJTqkmznXo85teCk7qEZ4A5zgaq0RgPQFQ==
+X-Gm-Message-State: AOJu0Yx1F0yQXdzqjJiC9kKe4zyG+F2HsiI2pgMp8o3XVBHlyzXo5ttU
+	s29scERh5eark6lq12mCzDS2hYNXIkMBqxAQYYV4dC6gf3jysrZNCf98HxgWDTZDCIU6+ujzhhk
+	rw72occ4Atw7fU353TJ7SVCsNLk4=
+X-Google-Smtp-Source: AGHT+IF5qAv1n52u00gXfBUnq2QedRPjSj70WqgOJ4BzIfWghECDI12o/fvb5ZR8KcnPDxHErA9r/dG3Sb6SJ7xxJXs=
+X-Received: by 2002:a05:6870:78a:b0:221:7b5e:4efa with SMTP id
+ en10-20020a056870078a00b002217b5e4efamr7512574oab.13.1710155483484; Mon, 11
+ Mar 2024 04:11:23 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240310175217.20981-1-animeshagarwal28@gmail.com>
- <448f9d20-8b45-4794-9440-89d6a6888aee@linaro.org> <011b7c4c-ae44-41eb-b7eb-1a71da669f26@linaro.org>
- <CAE3Oz82ZC5Vz125iLzjsdvZd1YLd4YgQsrGPgTRJ=ugEc=e=Ow@mail.gmail.com> <087db56b-13c3-4624-b3a3-f02989aa5409@kernel.org>
-In-Reply-To: <087db56b-13c3-4624-b3a3-f02989aa5409@kernel.org>
+References: <20240310171958.96388-1-animeshagarwal28@gmail.com>
+ <2b939f61-c8b9-4b41-a319-3bf7be42ba3e@linaro.org> <CAE3Oz82coV5RgcRE=Lj5mm2kjdzh3iFJGpMBBw_OfZppfWAHfg@mail.gmail.com>
+ <d609c172-2bb3-479a-b5f2-841aed455bff@linaro.org> <CAE3Oz80zrnLvpo=YdBA-3PAtJFP8KK4LGHpEpQaMCacFFG13Qg@mail.gmail.com>
+ <ba834984-d0d7-4b46-81f6-5a2df8e74944@linaro.org> <CAE3Oz8353cPXgZa3BhtjyfdFfu+XPUhHXf=qWxWQ7sbvVK7gcg@mail.gmail.com>
+ <6597b720-4b8f-4034-8f0b-b67949ef5feb@linaro.org>
+In-Reply-To: <6597b720-4b8f-4034-8f0b-b67949ef5feb@linaro.org>
 From: Animesh Agarwal <animeshagarwal28@gmail.com>
-Date: Mon, 11 Mar 2024 16:37:44 +0530
-Message-ID: <CAE3Oz80ef3ESw3cus9wyGy2RrMfJWDAd7zkokUPZkTgLR3m5WQ@mail.gmail.com>
-Subject: Re: [PATCH v6] dt-bindings: imx-pata: Convert to dtschema
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Rob Herring <robh+dt@kernel.org>, 
+Date: Mon, 11 Mar 2024 16:41:20 +0530
+Message-ID: <CAE3Oz82m_xEnar2YWGuN4ncRWh1hs+KGfRLCqC8a1vCNp+fqHQ@mail.gmail.com>
+Subject: Re: [PATCH v5] dt-bindings: imx-pata: Convert to dtschema
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
 	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
 	Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
 	Pengutronix Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, 
@@ -74,31 +76,22 @@ Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Rob Herring <robh+dt@k
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 11, 2024 at 9:39=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org>=
- wrote:
-> It is simple: the commit message should always explain *WHAT* you did and
-> *WHY*. This is to give some context to reviewers and to help with checkin=
-g that
-> your code actually does what you explained. This also helps with potentia=
-l
-> future issues with a change as the commit message remains in the git log =
-history.
->
-> Regardless of the version of your patch, always have the what & why expla=
-ined
-> in your commit message. This implies that the commit message must change =
-if the
-> patch content changes between versions. Keep in mind that the changelog a=
-dded
-> to a patch is lost when the patch is applied, but the commit message rema=
-ins.
+On Mon, Mar 11, 2024 at 11:56=E2=80=AFAM Krzysztof Kozlowski
+<krzysztof.kozlowski@linaro.org> wrote:
+> This is changelog, not commit msg. I did not ask to explain differences
+> from pure conversion in changelog.
 
-Thank you for your feedback and guidance.
-Your advice regarding the necessity of explaining both the *WHAT* and
-*WHY* behind each change is duly noted. Moving forward, I will ensure
-that my commit messages provide comprehensive context to facilitate
-smoother reviewing processes and to maintain a clear log history for
-potential future issues.
+Thank you for clarifying your expectations regarding the commit
+message and changelog distinction. I apologize for the confusion.
+I understand now that the information provided in the changelog
+regarding the differences between versions does not suffice as a
+replacement for a comprehensive explanation within the commit message
+itself.
 
-Thanks & regards,
+Moving forward, I will ensure that the commit messages contain
+detailed explanations of the changes made during the pure conversion.
+
+Thank you for your patience and continued guidance.
+
+Best regards,
 Animesh
