@@ -1,97 +1,148 @@
-Received: from mail-oa1-f41.google.com (mail-oa1-f41.google.com [209.85.160.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 837B52F55;
-	Mon, 11 Mar 2024 11:11:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F18243B79F
+	for <linux-ide@vger.kernel.org>; Mon, 11 Mar 2024 12:19:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710155486; cv=none; b=MhOsQ+jYtgBj4gqw9NVbsI/MmYk7e/uU/1gha5UbzahrdzP3IHcIERGatCkSRb6onbrQcyv9MkpbYDQvTnFKlOOMMvhJOQnmaNComxvQDIVScmKwrnLXa+WFd0asrkgZmc6N2MvVHECEoee/AB6Us5pneeqI4Uhp8XhwZUHDWlU=
+	t=1710159579; cv=none; b=Aqy+Q4CMzsY82xHh34nhI2a9Y6LnvfquIgGoSNF7fVqmaApwx68bP+Cyn7LnsJsqMIT8LcvYdYdvQdfiQjO8Zim/zMft0MoowPWexLRYvhnxsolXjkxv26rQWv8MWd2H1wgHAs+5SBbmYX6KwWuek4O3JEXYVuEUA3GgGqMeiUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710155486; c=relaxed/simple;
-	bh=XRuEb5oNxuILVmXpDBJ4dFKyOTuSJjmVSc84Jl5hgzk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gIn+OzvHynbPQb70JB6tMWeyKOUGvPkpclqOKmZhjG17ueBEnFMKwZRc7Cn9Z1nIi6HJhMXMKtZzb4Cw3utmcfRn1M86OSJYROGqD3Y0N97h/7Ygv4f3FpLCBVDQWR7xWZwktaoxn2tomPv+hKSP9iJwXyExCgLsZkxYnXl+lK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ljewefZt; arc=none smtp.client-ip=209.85.160.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1710159579; c=relaxed/simple;
+	bh=uGRRZiMOIPDAKyWfCXomSlRkxvqemxkL/GRJkEQpvw8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JQPB4VVSgPEe4tKoti0vA4gRCWMLt4xGWHzpslJOZCCBwKnRh1kyqk8DfV+6/zHKfHzy0sTZaH1n6efNsi4gRtQu01UOBTbUy1MboGQeH8+JZ1ru5VhdoumQlnC+UfhVs0JdD7/t564pCQa473duHbwVCD0cGGPQXbsPwRQdnOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eV8qDbBZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ljewefZt"
-Received: by mail-oa1-f41.google.com with SMTP id 586e51a60fabf-21eea6aab5eso2684380fac.0;
-        Mon, 11 Mar 2024 04:11:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1710155483; x=1710760283; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XRuEb5oNxuILVmXpDBJ4dFKyOTuSJjmVSc84Jl5hgzk=;
-        b=ljewefZtk2U9D95KFotdcn3wBtn9Xm106wLA3BZxnChK6eOW1oNocOF88GHR2xRnCO
-         VW0mM34msQEzLGeEcLti4yNSqqbsv4pPJqWWH8vuDoJ+Gh2evl7WjDP9AMGiKKTYtRia
-         ofQdBHTzGurkisqsf2Qm1NKgZGeEIp3GDUKmo3vOEW+c91NUuggvIdO0Wdy0rBTNd2Si
-         CQ7G33CO7R0qqE5RTo3lI3kSrSN9Y1X/4Y2hxTxsERs14zH2Ad5a5dtgmYy4l1Ksz9qL
-         ojWDGTsA1uo9nuByAZD/AuGmeXR4M1zfzZcRrxaxRQJfrfPdeoWlzhvMKHdxkTtnsqUl
-         HliQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710155483; x=1710760283;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XRuEb5oNxuILVmXpDBJ4dFKyOTuSJjmVSc84Jl5hgzk=;
-        b=nlnsi/7q6Z1ffgljbZWypNyok+W53GgeN+S0iT52mURyQqoWaFIOaZKUK1wIw6czil
-         TtfyhC6BM5Uqj/msMkBoESCpJceKX+yAi0SB9K6eioc2XcDTsitT8ManzAxuAnVbrNHE
-         wrD88bW8XqVwIcNZj70aqQ8+Vv4utHSCK2v/scABn0iU7rhS333DdTmkxrEo8WlJ2uOw
-         +JnF38/Ra4yxhV7b+FTIpyEwxOBY8EcTHCZGP6GgIlQMVBjFC/v1RgkTy/80qknYDpyK
-         /4aEkrJUD+61sQVXVj1vn3jfELRwjDe5Ti4RwITvC/zrh3WGrw6MfQiHmqeIE5/gM0fG
-         pb0Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVwUpLVCVUx89SdyBHTUgOz+nG6lBYQ2F9qY/LrpP0T5gUkX9tL8t1j6QpH9QVmRgwEm7gWWQhtQpzh2vWjn/HCcEWxa0kZD7OHVuOaGo5TPj9498kjqdpdcQ04JVpWL1juP3c49xjtyIQHoJTqkmznXo85teCk7qEZ4A5zgaq0RgPQFQ==
-X-Gm-Message-State: AOJu0Yx1F0yQXdzqjJiC9kKe4zyG+F2HsiI2pgMp8o3XVBHlyzXo5ttU
-	s29scERh5eark6lq12mCzDS2hYNXIkMBqxAQYYV4dC6gf3jysrZNCf98HxgWDTZDCIU6+ujzhhk
-	rw72occ4Atw7fU353TJ7SVCsNLk4=
-X-Google-Smtp-Source: AGHT+IF5qAv1n52u00gXfBUnq2QedRPjSj70WqgOJ4BzIfWghECDI12o/fvb5ZR8KcnPDxHErA9r/dG3Sb6SJ7xxJXs=
-X-Received: by 2002:a05:6870:78a:b0:221:7b5e:4efa with SMTP id
- en10-20020a056870078a00b002217b5e4efamr7512574oab.13.1710155483484; Mon, 11
- Mar 2024 04:11:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eV8qDbBZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72416C433F1;
+	Mon, 11 Mar 2024 12:19:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710159578;
+	bh=uGRRZiMOIPDAKyWfCXomSlRkxvqemxkL/GRJkEQpvw8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=eV8qDbBZykbF/UCwwq11EGW0NoDcw9Wj4+RCykMzBkON7ZMcEwD1fG5uBpzEx8cuo
+	 TswkvrhFqdC+DAaFQv7mcKUOn4edv+r10RZFmmH8SrCA42w1ioEgumHWS7QCOyABvF
+	 8ouvQCzbSPTCjZENcFOiY3JXXa3uyM/Kfz0fkanMRQVQZO3/xeywuO3Wh3UH50Y+GK
+	 Im2PD4JYjfpDi2aCDSH8eBHSKriwPk1BK5VjPZOMGlUroL/WdBeWUpMT7Rbm65sV2k
+	 RIy9jGJJblfAQKQAKhWwqXNEEYH4SZ94LuQkk5MBtuqn0LuFQL2TTajk786sqwJmjK
+	 EJMAZEdL/MDfw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata changes for 6.9-rc1
+Date: Mon, 11 Mar 2024 13:19:27 +0100
+Message-ID: <20240311121929.3420655-1-cassel@kernel.org>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240310171958.96388-1-animeshagarwal28@gmail.com>
- <2b939f61-c8b9-4b41-a319-3bf7be42ba3e@linaro.org> <CAE3Oz82coV5RgcRE=Lj5mm2kjdzh3iFJGpMBBw_OfZppfWAHfg@mail.gmail.com>
- <d609c172-2bb3-479a-b5f2-841aed455bff@linaro.org> <CAE3Oz80zrnLvpo=YdBA-3PAtJFP8KK4LGHpEpQaMCacFFG13Qg@mail.gmail.com>
- <ba834984-d0d7-4b46-81f6-5a2df8e74944@linaro.org> <CAE3Oz8353cPXgZa3BhtjyfdFfu+XPUhHXf=qWxWQ7sbvVK7gcg@mail.gmail.com>
- <6597b720-4b8f-4034-8f0b-b67949ef5feb@linaro.org>
-In-Reply-To: <6597b720-4b8f-4034-8f0b-b67949ef5feb@linaro.org>
-From: Animesh Agarwal <animeshagarwal28@gmail.com>
-Date: Mon, 11 Mar 2024 16:41:20 +0530
-Message-ID: <CAE3Oz82m_xEnar2YWGuN4ncRWh1hs+KGfRLCqC8a1vCNp+fqHQ@mail.gmail.com>
-Subject: Re: [PATCH v5] dt-bindings: imx-pata: Convert to dtschema
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
-	Pengutronix Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, 
-	NXP Linux Team <linux-imx@nxp.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Mar 11, 2024 at 11:56=E2=80=AFAM Krzysztof Kozlowski
-<krzysztof.kozlowski@linaro.org> wrote:
-> This is changelog, not commit msg. I did not ask to explain differences
-> from pure conversion in changelog.
+Linus,
 
-Thank you for clarifying your expectations regarding the commit
-message and changelog distinction. I apologize for the confusion.
-I understand now that the information provided in the changelog
-regarding the differences between versions does not suffice as a
-replacement for a comprehensive explanation within the commit message
-itself.
+The following changes since commit 54be6c6c5ae8e0d93a6c4641cb7528eb0b6ba478:
 
-Moving forward, I will ensure that the commit messages contain
-detailed explanations of the changes made during the pure conversion.
+  Linux 6.8-rc3 (2024-02-04 12:20:36 +0000)
 
-Thank you for your patience and continued guidance.
+are available in the Git repository at:
 
-Best regards,
-Animesh
+  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc1
+
+for you to fetch changes up to 13ec4098d8032b0e8d2b2548803002df80d7f9c6:
+
+  ahci: print the number of implemented ports (2024-02-21 19:13:43 +0100)
+
+----------------------------------------------------------------
+ata changes for 6.9-rc1
+
+ - Do not enable LPM for external ports (hotplug-capable ports or eSATA
+   ports), as the HBA will not be able to detect hot plug removal events
+   when LPM is enabled. (from me)
+
+ - Drop the board type board_ahci_low_power. Now when we make sure that we
+   won't enable LPM for external ports, we can always set the LPM policy to
+   CONFIG_SATA_MOBILE_LPM_POLICY for internal ports. There is thus no
+   longer any need for the board type board_ahci_low_power, so it can be
+   removed. (As before, LPM features not supported by the HBA and/or the
+   device will not be enabled, regardless of the LPM policy Kconfig.)
+   (from Mario Limonciello)
+
+   Note that the default CONFIG_SATA_MOBILE_LPM_POLICY value is still 0
+   (which will not try to enable any LPM features), however, most Linux
+   distributions override this and set it to 3 (Medium power with DIPM).
+   We intend to change the default to 3 in the coming cycles, but we will
+   wait a cycle or two.
+
+ - Add board type board_ahci_pcs_quirk and make all legacy Intel platforms
+   use it. The Intel PCS quirk was being applied to basically all Intel
+   platforms, which caused some issues (the device failing to come back
+   after a reset), when being applied to newer Intel platforms where it
+   shouldn't have been applied. Add board type board_ahci_pcs_quirk and
+   make legacy Intel platforms use it. New platforms can be added using
+   board type board_ahci (which will not have the quirk applied).
+   (from me)
+
+ - Rename board_ahci_nosntf to board_ahci_pcs_quirk_no_sntf to more clearly
+   highlight that it applies two different quirks. (from me)
+
+ - Modify the ahci_broken_devslp() quirk to be implemented like all the
+   other quirks (i.e. define a board type for the quirk). (from me)
+
+ - Drop unused board_ahci_noncq board type. (from me)
+
+ - Rename board_ahci_nomsi to board_ahci_no_msi to match the other board
+   types. (from me)
+
+ - Make pata_parport_bus_type const. (from Ricardo B. Marliere)
+
+ - Remove at91 compact flash device tree binding. (The binding is not used
+   by any driver.) (from Hari Prasath Gujulan Elango)
+
+ - Convert MediaTek device tree binding to json-schema.
+   (from Rafał Miłecki)
+
+ - At boot, print the number of implemented ports, instead of printing the
+   maximum number of ports supported by the HBA silicon. (from me)
+
+----------------------------------------------------------------
+Hari Prasath Gujulan Elango (1):
+      dt-bindings: ata: atmel: remove at91 compact flash documentation
+
+Mario Limonciello (1):
+      ata: ahci: Drop low power policy board type
+
+Niklas Cassel (10):
+      ata: ahci: move marking of external port earlier
+      ata: ahci: a hotplug capable port is an external port
+      ata: ahci: drop hpriv param from ahci_update_initial_lpm_policy()
+      ata: ahci: do not enable LPM on external ports
+      ahci: clean up intel_pcs_quirk
+      ahci: rename board_ahci_nosntf
+      ahci: clean up ahci_broken_devslp quirk
+      ahci: drop unused board_ahci_noncq
+      ahci: rename board_ahci_nomsi
+      ahci: print the number of implemented ports
+
+Rafał Miłecki (1):
+      dt-bindings: ata: convert MediaTek controller to the json-schema
+
+Ricardo B. Marliere (1):
+      ata: pata_parport: make pata_parport_bus_type const
+
+ Documentation/devicetree/bindings/ata/ahci-mtk.txt |  51 ---
+ .../devicetree/bindings/ata/atmel-at91_cf.txt      |  19 -
+ .../devicetree/bindings/ata/mediatek,mtk-ahci.yaml |  98 +++++
+ drivers/ata/Kconfig                                |   5 +-
+ drivers/ata/ahci.c                                 | 434 ++++++++++-----------
+ drivers/ata/ahci.h                                 |  10 +-
+ drivers/ata/libahci.c                              |  21 +-
+ drivers/ata/pata_parport/pata_parport.c            |   2 +-
+ 8 files changed, 329 insertions(+), 311 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
+ delete mode 100644 Documentation/devicetree/bindings/ata/atmel-at91_cf.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/mediatek,mtk-ahci.yaml
