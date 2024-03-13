@@ -1,55 +1,63 @@
-Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E94A43AA4;
-	Wed, 13 Mar 2024 13:28:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF5660DFB
+	for <linux-ide@vger.kernel.org>; Wed, 13 Mar 2024 17:04:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710336485; cv=none; b=dSOuWcjmkgIbRtph9/TU+s+1fwxUr+pqz9KW8o00hbdORYlNPKF7xYgWuTFuVKbanYwM+XFzEtvROlwUeG12mkpVpH49Mgazj8tv6m29NFy/bfnjrbrfagdno8GzIuIgn+6rRGjSBfY7FXoh+WYtp6OvdwiIMPapJu0pPiT0PCQ=
+	t=1710349469; cv=none; b=KgrWuAD7mSfhZgKl93j3JTr0nbmPnpwarkiQId7yR64A/FFy6OJwICtn9HhEtlkGYOfNAOpI78yZdXbPnGXGZfkrqlngt19523E8mHLgdLz/rXN/jClbchyTdAqcGsuvqjCbFciQ2Dm8yjZl3noxvGQXbRUjRHked0SbMo4aJCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710336485; c=relaxed/simple;
-	bh=CHtNAQTIT1rvRWPPhR3rIHeiRbGPnmXiD2gTyBFLaGs=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=byF4RuIMTWcCErhOkBA3Q0uIphiz3X9oxe2UDzfK6Es6eAKKDuuzv95ahGbMlFUPC53+/HqtfE3XZGUGV4jyhRwapYYlKg5PHZZmeSOheeRn+mwVZ1kwQhTnVdqle/mi0kolXvjf9q4mg16J8BakWHygG2Jqi1uylunumszfqtc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Tvrt96D1qz4x4T;
-	Thu, 14 Mar 2024 00:28:01 +1100 (AEDT)
-From: Michael Ellerman <patch-notifications@ellerman.id.au>
-To: Dawei Li <set_pte_at@outlook.com>
-Cc: npiggin@gmail.com, christophe.leroy@csgroup.eu, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
-In-Reply-To: <TYCP286MB232391520CB471E7C8D6EA84CAD19@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
-References: <TYCP286MB232391520CB471E7C8D6EA84CAD19@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
-Subject: Re: [PATCH v3] powerpc: macio: Make remove callback of macio driver void returned
-Message-Id: <171033598348.517247.10069683831844972530.b4-ty@ellerman.id.au>
-Date: Thu, 14 Mar 2024 00:19:43 +1100
+	s=arc-20240116; t=1710349469; c=relaxed/simple;
+	bh=kf3bo3/CHCagHnC+CoBJT/qIt1zEiNSE2yq9fQkZiGY=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=KAoIAv5AV9wZl5saj5Aon+UbBy19KZxuF3B42mYVDTfr6aYnrP3NwIA/f2J4imTlJg1kBooXHZI64tc7fP6i7fx5H4fP+ZhPmAPkTDmvOIfyzX4KXr0ODudy0AEETSrdk+M9np2EEBoYl90Nj1ppotjUPfQyCM2u98y2OEX+Zy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sQWpHg59; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sQWpHg59"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 21928C433F1;
+	Wed, 13 Mar 2024 17:04:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710349469;
+	bh=kf3bo3/CHCagHnC+CoBJT/qIt1zEiNSE2yq9fQkZiGY=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=sQWpHg59w5TKH/8riBBNR/uNtXL1R+bEYjNIqyDQ/+8QqcueAxx9nBz1KaBHJefIN
+	 KLZdcKFtUVzfwkcJuVKCL0RrGih4Xk3HNeizPtkY2QOMzBhm57qSXTnziilZqTjpa4
+	 rD5nkyw1suSu0rwgkg/JgcpgoFNsxwdKhPMaohIusG8wNcSl/8II9wMtfQibDUekVN
+	 LFZxvlr5hF3UPDh/qZybahu68L2BDSdP9G3yj5D/wCaFIkOxXUGt/+aFGJO0dNsxCP
+	 eVztF1GLtgWUWFMXGgJOFoxdi6P3Htn6tHzsar9GJMhFNVVNHMafOVTfZje5tghlHh
+	 WPPe1d7HZb/0A==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 0632AD95054;
+	Wed, 13 Mar 2024 17:04:29 +0000 (UTC)
+Subject: Re: [GIT PULL] ata changes for 6.9-rc1
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20240311121929.3420655-1-cassel@kernel.org>
+References: <20240311121929.3420655-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20240311121929.3420655-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc1
+X-PR-Tracked-Commit-Id: 13ec4098d8032b0e8d2b2548803002df80d7f9c6
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 57aaf9134c033dc5caaaf70facac529bb9d3d20b
+Message-Id: <171034946902.7471.9638546631583727814.pr-tracker-bot@kernel.org>
+Date: Wed, 13 Mar 2024 17:04:29 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 
-On Wed, 01 Feb 2023 22:36:19 +0800, Dawei Li wrote:
-> Commit fc7a6209d571 ("bus: Make remove callback return void") forces
-> bus_type::remove be void-returned, it doesn't make much sense for any
-> bus based driver implementing remove callbalk to return non-void to
-> its caller.
-> 
-> This change is for macio bus based drivers.
-> 
-> [...]
+The pull request you sent on Mon, 11 Mar 2024 13:19:27 +0100:
 
-Applied to powerpc/next.
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc1
 
-[1/1] powerpc: macio: Make remove callback of macio driver void returned
-      https://git.kernel.org/powerpc/c/9db2235326c4b868b6e065dfa3a69011ee570848
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/57aaf9134c033dc5caaaf70facac529bb9d3d20b
 
-cheers
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
