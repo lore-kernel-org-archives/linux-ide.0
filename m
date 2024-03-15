@@ -1,225 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 281BA6EB74
-	for <linux-ide@vger.kernel.org>; Thu, 14 Mar 2024 15:58:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DBDC63AC
+	for <linux-ide@vger.kernel.org>; Fri, 15 Mar 2024 05:44:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710431924; cv=none; b=sc9OEFxRPHCRa4FH+7mzilgtVdq5KkOg9PkwMoCba3bfR+/QPdYoK+TcV9vmhgt/gA0LY8yma7LmjqcShyYwuh0UTR7IuY+1jWyjv5SUZL9gKEP8YsIahTy/xKDLS1vaRqR0Lu9KlxEArKUyoIX5KWX1a4RRSj9NyfCqJhwlVeI=
+	t=1710481477; cv=none; b=rBggy48d888tEY3u6Me3WhtXJnDqz93bo8zwA1l+IfT7QQw9eMNDObgerFcxB3EgD5cjykbEqjSsTP1V9KVlsTmzq/Enf2wU1p0u3HEZLh9pBd4+I2piDRZ2s2O+uWNjRtXy1mlCCvjDR4Dopur9Os8PsmiPxjTdu/4FCCKAjXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710431924; c=relaxed/simple;
-	bh=oCFirtwhxvWtqP4B3zbRKTVRfzOF6/0s+0xxOvl/64U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lXXoZedEPjn4RYkv0d9galaQ8xO/8X+j/qCkS982Rr5zrqxPb+wNNnR4GB7B7KnHwxNMkRRklkIzRItadqbj0OgtiWxC1WP3Jg5R6WXhL9vPw83zrraobCJglvtE4jrNEqBPPfH23AMUmPluanmiWy5JoZBB4YdDskDLldpOkjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bqd6HUVu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710481477; c=relaxed/simple;
+	bh=xSvuzFkjmF9aooRjcPPSfvCRrSJj3NAMBQdxCcSx/Bo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ny+KpzaJhFTwJuZ7KeUCdEbfbDJ0iI8Kh6M7W+2v6U/We2CSwBqktU0/1wJYPv1ugl732Ebi8jWgS8rWyOE9ENRcV76aEMM0EqeDQWtL42JGJXWhSEO7XHU+DpFt0MRejxrOe4/oGpB/HuXsPyg9YyH+8zrTqdi6wURXJbaQBbQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=J7jMnAUp; arc=none smtp.client-ip=67.231.148.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bqd6HUVu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8955C433F1;
-	Thu, 14 Mar 2024 15:58:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710431923;
-	bh=oCFirtwhxvWtqP4B3zbRKTVRfzOF6/0s+0xxOvl/64U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Bqd6HUVuWAsqdsE0UZvc6Vz4XrUWuNnagkcAzkcFJulkh/AeoQe6aSfIbubs6U6sT
-	 AyKFK2Hhaa5buBZQFv4R1XLrjdGm9J1FlBXMrTd3WQjE4G2e4No8a+ClrkH6Ts1aix
-	 dOn0qhHteikKucsMXR1iYc3dKAM2eqvYuSSEup8+0s4AC9+GkVqOILtSF1IkBuruKZ
-	 COhby0XJ/iQSb7adxzovKkBOhiXX2K3mJVjI4LbaZ7VGMwZ6Oc+TdyfmlZdJhrrnST
-	 w5Vr+zrMDZt697DSwORJmWyPLHEns8g9MCF9nKcYvCGlYoJ20rOEyb17I/1a59GGKE
-	 gXSxJxA5eo/QQ==
-Date: Thu, 14 Mar 2024 16:58:38 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Cryptearth <cryptearth@googlemail.com>
-Cc: Andrey Melnikov <temnota.am@gmail.com>, linux-ide@vger.kernel.org,
-	conikost@gentoo.org, hdegoede@redhat.com
-Subject: Re: ASMedia ASM1166/ASM1064 port restrictions will break cards with
- port-multipliers
-Message-ID: <ZfMerqAmWoyu66/5@x1-carbon>
-References: <CAFDm6W19R3KHDO09c94Uwry9mdG+whAVy=u4Sdpt30A2MK1KPA@mail.gmail.com>
- <CA+PODjqxYcBMc=R792uOava1u0EYZtrWTOw9HvKUBG4=zYbzcg@mail.gmail.com>
- <CAFDm6W2dWu5+Dz2DiWG_9L-VatM6Wj=pMHM2th74Wh144kvqvg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="J7jMnAUp"
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42EMJPOv032499;
+	Thu, 14 Mar 2024 22:44:31 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	from:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding:content-type; s=pfpt0220; bh=4r4Rr122
+	sMq4QiXotLXTHeEIbu1sjDlA0ngQ2BbV/T8=; b=J7jMnAUpZhZ7HLx77hQ3sNcG
+	L018LYGEOn+ovNnWBlz1DwA+GZJVcH4LDC3Tt+/HcFZD/yfUlrOw2GMKian/gDgW
+	J/d/WeTAXhHu8mUO6wlm529oDZLtD1KrfLTIbVGON7v7E7LBvhQrRJjCv/YJipp9
+	0FsJaOz8NiHGbcGSbgUdbpkGJn1rzg0qKrVQUtnP+EMG2kMog1MNqBHdkRRyJRPv
+	Slk2M2AvzkPUSQj7NFmS/TmVr+oXfXx6IGOZicj6Qult0O/loNAIKzWsCV+mJVAf
+	g205PTKP/8bbMxAZoL82J8kgpwMO8vajp/ATa1qptA2lp1aBsEAJEKdy07wWTw==
+Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3wv9xa12qk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 14 Mar 2024 22:44:31 -0700 (PDT)
+Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
+ DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.12; Thu, 14 Mar 2024 22:44:29 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
+ (10.76.176.209) with Microsoft SMTP Server id 15.2.1258.12 via Frontend
+ Transport; Thu, 14 Mar 2024 22:44:29 -0700
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
+	by maili.marvell.com (Postfix) with ESMTP id A08653F706A;
+	Thu, 14 Mar 2024 22:44:27 -0700 (PDT)
+From: Saurav Kashyap <skashyap@marvell.com>
+To: <dlemoal@kernel.org>, <cassel@kernel.org>
+CC: <linux-ide@vger.kernel.org>, <skashyap@marvell.com>, <soochon@google.com>,
+        Manoj Phadtare <mphadtare@marvell.com>
+Subject: [PATCH v2] libata-sata: Check SDB_FIS for completion of DMA transfer before completing the commands.
+Date: Fri, 15 Mar 2024 11:14:14 +0530
+Message-ID: <20240315054414.27954-1-skashyap@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="OVLE9cSqenZ7yC7n"
-Content-Disposition: inline
-In-Reply-To: <CAFDm6W2dWu5+Dz2DiWG_9L-VatM6Wj=pMHM2th74Wh144kvqvg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: aRdNItsob19rtypz4njkOKx-y_L4rg5M
+X-Proofpoint-GUID: aRdNItsob19rtypz4njkOKx-y_L4rg5M
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-14_13,2024-03-13_01,2023-05-22_02
 
+This issue is seen on Marvell Controller with device ids 0x9215 and 0x9235.
+Its reproduced within a minute with block size of 64K, 100 threads,
+100 jobs and  512 iodepth on AMD platform. With decreased work load it
+takes 8-9 hrs.
 
---OVLE9cSqenZ7yC7n
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Sequence leading to an issue as per PCIe trace
+- PxSact is read with slots 7 and 24 being cleared.
+- Host starts processing these commands while data is not in system
+  memory yet.
+- Last pkt of 512B was sent to host.
+- SDB.FIS is copied, telling host command slot 24 is done.
 
-Hello Matt,
+Reading SDB.FIS confirms the transfer is complete.
 
-On Wed, Mar 13, 2024 at 06:37:56PM +0100, Cryptearth wrote:
-> 
-> As for why the ASM chips report 30+ ports: A wild guess in the blue:
-> They were designed with port multipliers in mind and likely report the
-> max number of drives they can handle when combined with multipliers.
-> From what I get the "fix" is supposed to reduce boot time - well, from
-> my logs I see it's not the enumeration of the empty ports which takes
-> time but of course the initialization of the detected drives.
-> To me the initial report that lead to this changed just should had
-> been marked as won't fix or even as invalid - as looking thru the
-> history of ahci.c litterally noone seem to have bothered about it
-> since the ASM IDs were added.
-
-Well, that is simply not how PMP works.
-
-For PMP to be supported the HBA needs to set CAP.SPM (Supports Port Muliplier).
-(This also implies Command-based switching is supported.)
-
-The HBA can additionally set CAP.FBSS (FIS-based Switching Supported),
-if CAP.SPM is set.
-
-If CAP.SPM is set, you can plug in a PMP to each of the ports.
-Each PMP can support a max of 15 ports.
-
-If PMP is enabled, you fill in the port number behind the port when
-queuing the command:
-https://github.com/torvalds/linux/blob/v6.8/drivers/ata/libahci.c#L1424
-https://github.com/torvalds/linux/blob/v6.8/drivers/ata/libata-sata.c#L154
-
-
-Looking at your SATA HBA:
-> [    0.608537] ahci 0000:04:00.0: AHCI 0001.0301 32 slots 24 ports 6 Gbps 0xffff0f impl SATA mode
-> [    0.608540] ahci 0000:04:00.0: flags: 64bit ncq sntf stag pm led only pio sxs deso sadm sds apst
-
-We can see that it does not support PMP at all.
-There is no "pmp" in print, which means that CAP.SPM was not set.
-
-So your HBA does not support PMP, sorry.
-
-
-Yes, we can see that it claims that it has 24 ports from the print, so it
-appears that they have implemented their own version of PMP that is not
-compatible with AHCI. Lovely :)
-
-
-
-I think this brings more questions than answers...
-
-What is the PCI device and vendor ID for this device?
-
-You said that this is a PCIe card with a ASM1064 and two port multipliers
-on the same PCIe card?
-
-From what we've heard before, a ASMedia card with 4 physical slots,
-like this card:
-https://www.newegg.com/p/17Z-0061-000B5
-
-Has PCIe device and vendor ID:
-{ PCI_VDEVICE(ASMEDIA, 0x1064), board_ahci },   /* ASM1064 */
-
-But you have a PCIe card with the same device and vendor ID,
-but your card also has 2 port multipliers with 4 ports each?
-
-Well, I guess it should be fine to use the PCI device and vendor ID
-for the underlying HBA... considering that devices connected to the
-ports are supposed to be discoverable...
-
-If they only claimed that the HBA supported PMP, the Linux device
-driver would try to enumerate the devices behind the PMP according
-to the standard.
-
-See AHCI 1.3.1, section 9.2 Port Multiplier Enumeration.
-Or
-SATA-IO - Port Multiplier 1.0, 7.4.2 Device Enumeration.
-
-The PMP standard also describes how you read the device and vendor
-ID of the PMP.
-
-
-Right now, they AMedia? seem to have their own home-made PMP implementation.
-
-
-Could you try the attached patch on top of v6.8, to see if Linux
-can detect the devices behind the two JMB575 PMPs?
-
-If that works, we could still support PMP (according to the standard),
-and people with a ASM1064 PCIe card that does not have any port multipliers
-on the PCIe card would not suffer from significantly increased boot times.
-
-I guess a second step would be to see if ASM1064 also supports
-FIS-based switching.
-
-https://www.asmedia.com.tw/product/A58yQC9Sp5qg6TrF/58dYQ8bxZ4UR9wG5
-
-Simply says "Supported port multiplier command based switching",
-it doesn't seem to mention FIS-based switching... so I guess not?
-(If it did, libata already has a AHCI_HFLAG_YES_FBS for other broken HBAs.)
-
-
-Kind regards,
-Niklas
-
---OVLE9cSqenZ7yC7n
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment;
-	filename="0001-add-hflag-to-force-PMP-cap-on.patch"
-
-From a5001fd7b19d3a6a9abd42a19b58e2aaee1b83e2 Mon Sep 17 00:00:00 2001
-From: Niklas Cassel <cassel@kernel.org>
-Date: Thu, 14 Mar 2024 16:36:34 +0100
-Subject: [PATCH] add hflag to force PMP cap on
-
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Cc: Soochon Radee <soochon@google.com>
+Tested-by: Manoj Phadtare <mphadtare@marvell.com>
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 ---
- drivers/ata/ahci.c    | 2 ++
- drivers/ata/ahci.h    | 1 +
- drivers/ata/libahci.c | 5 +++++
- 3 files changed, 8 insertions(+)
+v1->v2:
+Added workload and platform related details in the description.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 682ff550ccfb9..a99de94075a1a 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -676,10 +676,12 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 		case 0x1166:
- 			dev_info(&pdev->dev, "ASM1166 has only six ports\n");
- 			hpriv->saved_port_map = 0x3f;
-+			hpriv->flags |= AHCI_HFLAG_YES_PMP;
- 			break;
- 		case 0x1064:
- 			dev_info(&pdev->dev, "ASM1064 has only four ports\n");
- 			hpriv->saved_port_map = 0xf;
-+			hpriv->flags |= AHCI_HFLAG_YES_PMP;
- 			break;
- 		}
- 	}
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index df8f8a1a3a34c..f9cae26848480 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -230,6 +230,7 @@ enum {
- 						      error-handling stage) */
- 	AHCI_HFLAG_NO_DEVSLP		= BIT(17), /* no device sleep */
- 	AHCI_HFLAG_NO_FBS		= BIT(18), /* no FBS */
-+	AHCI_HFLAG_YES_PMP		= BIT(19), /* force PMP cap on */
+ drivers/ata/libata-sata.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 0fb1934875f2..7cdeb0a38c5b 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -14,9 +14,11 @@
+ #include <scsi/scsi_eh.h>
+ #include <linux/libata.h>
+ #include <asm/unaligned.h>
++#include <linux/pci.h>
  
- #ifdef CONFIG_PCI_MSI
- 	AHCI_HFLAG_MULTI_MSI		= BIT(20), /* per-port MSI(-X) */
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 1a63200ea437b..9a1d10205de85 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -493,6 +493,11 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		cap |= HOST_CAP_NCQ;
- 	}
+ #include "libata.h"
+ #include "libata-transport.h"
++#include "ahci.h"
  
-+	if (!(cap & HOST_CAP_PMP) && (hpriv->flags & AHCI_HFLAG_YES_PMP)) {
-+		dev_info(dev, "controller can do PMP, turning on CAP_PMP\n");
-+		cap |= HOST_CAP_PMP;
-+	}
+ /* debounce timing parameters in msecs { interval, duration, timeout } */
+ const unsigned int sata_deb_timing_normal[]		= {   5,  100, 2000 };
+@@ -649,6 +651,7 @@ EXPORT_SYMBOL_GPL(sata_link_hardreset);
+ int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active)
+ {
+ 	u64 done_mask, ap_qc_active = ap->qc_active;
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int nr_done = 0;
+ 
+ 	/*
+@@ -677,7 +680,30 @@ int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active)
+ 		unsigned int tag = __ffs64(done_mask);
+ 
+ 		qc = ata_qc_from_tag(ap, tag);
+-		if (qc) {
++		if (pdev->vendor == PCI_VENDOR_ID_MARVELL_EXT &&
++		    (pdev->device == 0x9215 || pdev->device == 0x9235)) {
++			struct ahci_port_priv *pp = ap->private_data;
++			u8 *rx_fis = pp->rx_fis;
 +
- 	if ((cap & HOST_CAP_PMP) && (hpriv->flags & AHCI_HFLAG_NO_PMP)) {
- 		dev_info(dev, "controller can't do PMP, turning off CAP_PMP\n");
- 		cap &= ~HOST_CAP_PMP;
++			if (pp->fbs_enabled)
++				rx_fis += ap->link.pmp * AHCI_RX_FIS_SZ;
++
++			if (!qc)
++				continue;
++
++			if (ata_is_ncq(qc->tf.protocol)) {
++				u32 *fis = (u32 *)(rx_fis + RX_FIS_SDB);
++				u32 fis_active = fis[1];
++
++				if ((fis_active & (1 << tag))) {
++					ata_qc_complete(qc);
++					nr_done++;
++				}
++			} else {
++				ata_qc_complete(qc);
++				nr_done++;
++			}
++		} else if (qc) {
+ 			ata_qc_complete(qc);
+ 			nr_done++;
+ 		}
 -- 
-2.44.0
+2.23.1
 
-
---OVLE9cSqenZ7yC7n--
