@@ -1,105 +1,97 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F285221
-	for <linux-ide@vger.kernel.org>; Sun, 17 Mar 2024 01:35:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87C8FDF5B
+	for <linux-ide@vger.kernel.org>; Sun, 17 Mar 2024 09:36:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710639310; cv=none; b=TZXuqhpRoDo6ehTdR9yOENGe4ZNLoBHv/zjdb0/vDYwcbbvvOpc695xS9m4388jyjPWHI0KsZuo4Sa0zCnoQ6G5Zv66q8qMlfbXxfXDl18/l/btknuiNNv41YNaMXUMbfwBFqPL0FopsTb/96FRAW+6KYCte6g+1mdbBO/qR+FA=
+	t=1710668176; cv=none; b=Z1B+gq2hwcRRTLqv4Hh8Kj5D63SJUsy+aCZicRtzQ01zaW2MYGFB3M9m0O1pn2ci+ex8ZZ5k4cU1ENadKBRcJYQDDls3VQiZZ9zpLmCMh+UgJvGQzdZ12pNmZkNMKQT9FDzwJHwmU9xHEpEuS/mbaO2pwB+qdfHvbwYIIgBSBc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710639310; c=relaxed/simple;
-	bh=/IkTJJ788751RF9XCGSc1fxJ0Mxm2r6cR7dhxSiBh2A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PvpHw8unN2WOJLAos2bv2G8kBwhGGwj5yVgZBzM5qdMZXz0MgN3zFpNye4OeodjxHueXdHmy/s1RXKGTlJ8XuytJszz/B9XbwOdm888SHLqt5KsdGc5nUC/QHtx1hg32I2GBdgLqiRQEhtPRAJgegAZyzh/bEpAqyFSxhbvCcjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=LDvDCKcA; arc=none smtp.client-ip=209.85.160.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
+	s=arc-20240116; t=1710668176; c=relaxed/simple;
+	bh=6Fm8Osmhm2BoH/WOqWmIyxnJRcBxThUjWrLV8kYsYYo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Yh2ofdZ2ha5oX4m6PJXaWSuOfK3tNw6ySqDJPp3NwzGIBUCv14O99ahffqZw2oPU3Rd9GEMSwPrGQbcaV1n3uu0LijW/r/irxydzpdKGPzS2Vx+IInBk4OMunesFsQ5OdqrFpm6xVn1JsezYijxG5aRtVXAOVbXBYvz5Zx/tMC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MbMjS2WR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="LDvDCKcA"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-430a8592d38so16697321cf.0
-        for <linux-ide@vger.kernel.org>; Sat, 16 Mar 2024 18:35:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20230601; t=1710639307; x=1711244107; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=8tKPGXVDbIO5JZQ6owbVtNl3e9nJCOWbo6OL1/p52B8=;
-        b=LDvDCKcAn2sc21u+0GTsqcrc0QhLv1w4nzE+EAHfy5sQgIGXlF4s9VTsPqWilqU4pV
-         t2tsZdB5TNXqv8wPVvvCZ+D9ObRoLVLWc1zkVLp2mqpdM7/cLPJfAqzcaYR9FE9r6PHg
-         Cmi4F56fJ7comICcZCpr7VJvfWfJwNO73nerkQlJzlIiYKc7GtB9HXER5b/2QguuXyzF
-         +8CIHj1HP6dOxOtqfhWvhSAh8uuNsLdlrOFDO+dO4ibK3gUtAdeUzK/H0qKpHGxzasxz
-         amymB5xFV2dK/aJB0+ssf94x//QnvW5U16g6LsAch8UucKdtrGIgllWZzd1saN2sCnlB
-         nNbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710639307; x=1711244107;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8tKPGXVDbIO5JZQ6owbVtNl3e9nJCOWbo6OL1/p52B8=;
-        b=xIlBdqwc4Eu1LrzXBQofFwRv5xjliZS3Fh9qGMXFDWZQ9wRFeZQtTFGnzJKXTp5z3o
-         /86WZsj9PN09H12FaImvz9vEBnJfvnZ+CHQiubX6ZFeRTUNZyO4CRg2DllpjX3ht931P
-         wQUIepIhk2jMPqeHC4mpL8fGQrKW3I6Vf8TlhdjhdXPsDAoxKB7Vn7+dPYgnbbPRKaya
-         YHuGp3ktPzVP5aIdC+pczDAsWS/QI0pKxinBt1d5JDHCYplDdyb671hprDAt5IufaV3u
-         rGY4S5xEOWG5k89uwZcEm3Z5IyAJwNh3lMHwerMnuS3eRSIgr7HPiiLNFmjzSEea+NM2
-         HYrA==
-X-Forwarded-Encrypted: i=1; AJvYcCVXLg4aB+tEnUX8LPdT1mXXACxypBvRlOlfNLqsBfnaB+91+kbGUnhbtJ7LZmB0dywfl2zvuYeln9lJ42q+vppOLrGn+B1XrfYU
-X-Gm-Message-State: AOJu0YwqLeJDoCLMDBODakKCtVHAvfSlnE3c+s9ypxtKr9UURJ2pCadJ
-	qJUJ6kQEtI9xpYBlm8aKOsIphsRQHV/IGJVdH72CYTghJ+eM6DXhsP/dY++lmbb8I5h+5gGbkqX
-	4EB9YygVK8mlHP9yOlQI6lZNA92I=
-X-Google-Smtp-Source: AGHT+IE2ShkOAvpeiRaG2BwIzjejpoJrj6NU8h6fccuC5hraEr/yX9vf2pCax5tp7GCpGNcFbiuJlu1mz/u2UDaceZQ=
-X-Received: by 2002:a05:622a:15d5:b0:430:9744:2253 with SMTP id
- d21-20020a05622a15d500b0043097442253mr9797044qty.13.1710639307202; Sat, 16
- Mar 2024 18:35:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MbMjS2WR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3645C433C7;
+	Sun, 17 Mar 2024 09:36:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710668175;
+	bh=6Fm8Osmhm2BoH/WOqWmIyxnJRcBxThUjWrLV8kYsYYo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=MbMjS2WRk+Xw9e0FP0zi+QzgnacegBCe7boP9XWgVNpi5cteF7EtcjcQVcDWXQUkD
+	 7Fneb9b0VorkP1W4lzThmk/w7Bv3LkIw1zIFqBmliJVJTZdpbBmBEwMZjmjtwjWRJx
+	 4SMB9+dim8LMIAGLbIVIOSUVQKymxkDaia/OqWuIiLB1NGijdhe2pk05gY6BAw4TkE
+	 9lODkozPNB96UOhyBXBs6vRPRux7Du1Uv7sAlcJV2dEpEZSdyE+5vCv22STmB50w6h
+	 qhDRfpblkz9fa+PmGEXlOjFEJ0LhIeY2ge6yroKC69XJKdcHr9gX5/uCKaT4pTc+fs
+	 7mgrF4hK12Eag==
+Date: Sun, 17 Mar 2024 10:36:11 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Cryptearth <cryptearth@googlemail.com>,
+	Andrey Melnikov <temnota.am@gmail.com>, linux-ide@vger.kernel.org,
+	conikost@gentoo.org
+Subject: Re: ASMedia ASM1166/ASM1064 port restrictions will break cards with
+ port-multipliers
+Message-ID: <Zfa5iylgKrtrKH8H@ryzen>
+References: <CAFDm6W19R3KHDO09c94Uwry9mdG+whAVy=u4Sdpt30A2MK1KPA@mail.gmail.com>
+ <CA+PODjqxYcBMc=R792uOava1u0EYZtrWTOw9HvKUBG4=zYbzcg@mail.gmail.com>
+ <CAFDm6W2dWu5+Dz2DiWG_9L-VatM6Wj=pMHM2th74Wh144kvqvg@mail.gmail.com>
+ <ZfMerqAmWoyu66/5@x1-carbon>
+ <2e471c2b-8432-4501-b093-4295529a4d38@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAFDm6W19R3KHDO09c94Uwry9mdG+whAVy=u4Sdpt30A2MK1KPA@mail.gmail.com>
- <CA+PODjqxYcBMc=R792uOava1u0EYZtrWTOw9HvKUBG4=zYbzcg@mail.gmail.com>
- <CAFDm6W2dWu5+Dz2DiWG_9L-VatM6Wj=pMHM2th74Wh144kvqvg@mail.gmail.com>
- <066b051d-f092-4ba2-9a26-1c73f3df4252@redhat.com> <emd39240ba-840a-4d09-a992-7a4b15cd8189@588c6196.com>
- <e09f1db6-2720-4fbc-ac64-2be498be8e4d@redhat.com> <yje3amxvq6is5padpzd27krlatyn5j7qxfwejmbankkuq3xjt7@5zqxlw2xyuyz>
-In-Reply-To: <yje3amxvq6is5padpzd27krlatyn5j7qxfwejmbankkuq3xjt7@5zqxlw2xyuyz>
-From: Cryptearth <cryptearth@googlemail.com>
-Date: Sun, 17 Mar 2024 02:34:56 +0100
-Message-ID: <CAFDm6W0uuu7y-6=P=_ZSEnti-Dx2Q8j2_n74wMra9qqaeJKzTw@mail.gmail.com>
-Subject: Re: ASMedia ASM1166/ASM1064 port restrictions will break cards with port-multipliers
-To: "Andrey Jr. Melnikov" <temnota.am@gmail.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, Conrad Kostecki <conikost@gentoo.org>, linux-ide@vger.kernel.org, 
-	cassel@kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2e471c2b-8432-4501-b093-4295529a4d38@redhat.com>
 
-Hi there,
+Hello Hans,
 
-this is just a quick follow up as Arch just released the 6.8.1 kernel.
-I tested it and as it includes the change it didn't work out of the
-box.
-I ended up to rebuild both the kernel and ZFS from source (as I
-figured out one can not use the standard zfs package built for the
-standard kernel with a self-compiled package - and I don't want to use
-DKMS). I added the simplest fix I could come up with and commented out
-the entire ASMedia block. And although it took me several hours
-(roughly 3h) now it all works without issues.
+On Fri, Mar 15, 2024 at 04:01:07PM +0100, Hans de Goede wrote:
+> > 
+> > If they only claimed that the HBA supported PMP, the Linux device
+> > driver would try to enumerate the devices behind the PMP according
+> > to the standard.
+> > 
+> > See AHCI 1.3.1, section 9.2 Port Multiplier Enumeration.
+> > Or
+> > SATA-IO - Port Multiplier 1.0, 7.4.2 Device Enumeration.
+> > 
+> > The PMP standard also describes how you read the device and vendor
+> > ID of the PMP.
+> > 
+> > 
+> > Right now, they AMedia? seem to have their own home-made PMP implementation.
+> 
+> Ah, ok so I think you did see my reply? Checking if we can ignore
+> the builtin PMP support and uses Linux PMP support instead is
+> indeed an option.
 
-> Non-standard vendor extensions should be enabled with user attention, so - invert logic and param name:
->
->        if (!enable_transparent_pmp_ports && pdev->vendor == PCI_VENDOR_ID_ASMEDIA) {
->                  switch (pdev->device) {
->                  case 0x1166:
->                          dev_info(&pdev->dev, "Limiting ASM1166 to its six physical ports\n");
->                          hpriv->saved_port_map = 0x3f;
->                          break;
+Yes, I saw your reply.
 
-I agree with Andrey on this one: As the number of users like me are
-likely not that much the override should work like he mentioned:
-default to limit the port count with the override to not limit them.
-Nice solution - would love to see that get merged soon into upstream
-as compile the kernel and zfs from source just takes quite a long
-time.
+I wouldn't call it "Linux PMP support", I would simply call it "PMP",
+since how you enumerate a PMP is decribed in AHCI and SATA-IO specs.
 
-Have a nice weekend everyone.
+The "builtin PMP support" is not PMP, since it doesn't follow the specs.
+I would rather call it "non-standard vendor extension" or "pseudo-PMP".
 
-Greetings from Germany
 
-Matt
+> I think we should still merge the revert / dropping of the quirk
+> while we figure this out though, because not finding people's disks
+> anymore is a clear regression.
+
+I was hoping that someone could try the patch I sent out on Thursday,
+which sets the PMP supported bit in the CAP register, as that could
+potentially solve both problems here.
+
+I guess if no one has tested it by Monday or Tuesday, we will have
+no choice but to revert.
+
+
+Kind regards,
+Niklas
