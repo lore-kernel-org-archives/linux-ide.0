@@ -1,86 +1,110 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D2F61CD13
-	for <linux-ide@vger.kernel.org>; Tue, 19 Mar 2024 11:38:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5046B1CD13;
+	Tue, 19 Mar 2024 11:45:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710848286; cv=none; b=hXoHbMAFdVI+pfGRN6cMAnT1DAdoKVfn3Xy6VWTlEJR0xfhfauYn8DlZdDhc9LU/uQ5CCMSyyMzcRyAaPjAje3IUtig7E589iKDjYaIrhCk8VgdJFF7GeSOhjMKoYJqx0cyj1YsMQEXDGx0zPhSSAmuHRike8F2fnoeJ5WeYueg=
+	t=1710848706; cv=none; b=jI4LUcwpQNUnBlRTINzPfP+s+1WIZRi7oyQTSkIGhoxFlD7sf6C2xPCbaT7rpn7+agYxFJQ96WRhSkv/6R0+jkzbD50L9iSAnmHdaDHZWwATDBTqqhAwEtuh0ZeDcDOnK4OikUsIGToB3tsU1x0oIQMx/SSrArfVAqq97z+igWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710848286; c=relaxed/simple;
-	bh=LwuHaoaIjrxvC2XvRWrxpMnUkiae5ssuymoDyHsHXnw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EECo6f7K1EopPrlVR2reTCA6Dvi0jG0KvxhA/2T7udqcc726/M4CLYbi5rgpFCTg4sffejJPug78WiqsyW3Mt1TqlfIf15f8zZXs5JxLQNzeuCVfHqw/srNzq/6ISXCpjw3oWgm/pUwHt2f04A6YKJtHGWN4P+vWV0lMHBdsxlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uXKgYrM/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710848706; c=relaxed/simple;
+	bh=AxeUdPNBYbJRx9HhDpzLSa8ehsc5hQeqodbcV9lhIAc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NipV6QAOrOX1TT1AWxn01Wth7VaOIeeOY5Q8Nv+TcHjoA/HzAmpbkivlSa+CdQHtpCKmMK8np1FIHC7b7lWOmLuErw/OB1YfYS2+Fe17paJd45y2Ci9fK22NZgYES3jcF8CkZ1SLoWk5EkbW34tOlpfk1nR3wBDySuWcpjHqyC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ffo2jhky; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uXKgYrM/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0FACC433C7;
-	Tue, 19 Mar 2024 11:38:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ffo2jhky"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A28A5C433C7;
+	Tue, 19 Mar 2024 11:45:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710848286;
-	bh=LwuHaoaIjrxvC2XvRWrxpMnUkiae5ssuymoDyHsHXnw=;
-	h=From:To:Cc:Subject:Date:From;
-	b=uXKgYrM/JyC544wFQcW8akoqQkmbLNrlLagBOPqH4bzHA2gYspDqYnSPtgaGi9Ns3
-	 Uk8TTSGrVHrunkS0Q0noYFLI+yYHgxRs4LKLMIWnMoMIEX6dyaT5YPPmcDjQ3B3EIx
-	 DvRrmlMLx+yfGqcJ/qk3OOHUR8pspmAKpunEeoY4pPs5bPGDAkNeM55xohuMqQemkB
-	 wITiAwVq0iwsleehKcJInOJ+80DRrrFDrhpIeKOluTlq1Rd9lZn6oB6ff/yoE+CeR2
-	 L+CeF3tYEfaFMxSQfu8MPAEvtsLj++085HZzYpeTnjLuTr5XgbIp4G7cuM/0/Y7z6h
-	 kWXK5loxao+5w==
+	s=k20201202; t=1710848706;
+	bh=AxeUdPNBYbJRx9HhDpzLSa8ehsc5hQeqodbcV9lhIAc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ffo2jhkyfV9prHAtrirt0gjJCvn0tvOAo6ghM0orDW42E4rKJNCgHhdZCJpk8PB/X
+	 alUe5f1yLMv08OzLRokbVIsa2J2U6Ja8MzoQTpzvKmtlYZkI5IWOl/B7wD/KhTg23o
+	 MYgtoVHrOxWQ9IYH+sfxtw8KMM/s7RDW8sdw4VPKJM8Rp5+kuNZs5Mw/59a02ZmREL
+	 JkQYmCG3pxsE+7pleApScDFLb0EcyjSvZAvrtme76JNejc3Sxzq5Wu71ocHMe3/nkn
+	 y8utWiPxwFOStbWoFchjIyFHqYiQAHrsZNaK04bZgb+k93lpT1N1wew0AMNdeceR4j
+	 U5RN34DwsUBaQ==
+Date: Tue, 19 Mar 2024 12:45:01 +0100
 From: Niklas Cassel <cassel@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata fixes for 6.9-rc1
-Date: Tue, 19 Mar 2024 12:37:58 +0100
-Message-ID: <20240319113758.197709-1-cassel@kernel.org>
-X-Mailer: git-send-email 2.44.0
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	dlemoal@kernel.org, hdegoede@redhat.com, cryptearth@googlemail.com
+Subject: Re: [PATCH] ahci: asm1064: asm1166: don't limit reported ports
+Message-ID: <Zfl6vVKtGpC7-z1w@ryzen>
+References: <20240313214650.2165-1-conikost@gentoo.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240313214650.2165-1-conikost@gentoo.org>
 
-Linus,
+On Wed, Mar 13, 2024 at 10:46:50PM +0100, Conrad Kostecki wrote:
+> Previously, patches have been added to limit the reported count of SATA
+> ports for asm1064 and asm1166 SATA controllers, as those controllers do
+> report more ports than physical having.
+> 
+> Unfortunately, this causes trouble for users, which are using SATA
+> controllers, which provide more ports through SATA PMP
+> (Port-MultiPlier) and are now not any more recognized.
+> 
+> This happens, as asm1064 and 1166 are handling SATA PMP transparently,
+> so all non-physical ports needs to be enabled to use that feature.
+> 
+> This patch reverts both patches for asm1064 and asm1166, so old
+> behavior is restored and SATA PMP will work again, so all physical and
+> non-physical ports will work again.
+> 
+> Fixes: 0077a504e1a4 ("ahci: asm1166: correct count of reported ports")
+> Fixes: 9815e3961754 ("ahci: asm1064: correct count of reported ports")
+> Cc: stable@vger.kernel.org
+> Reported-by: Matt <cryptearth@googlemail.com>
+> Signed-off-by: Conrad Kostecki <conikost@gentoo.org>
+> ---
+>  drivers/ata/ahci.c | 13 -------------
+>  1 file changed, 13 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 78570684ff68..562302e2e57c 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -669,19 +669,6 @@ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
+>  static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+>  					 struct ahci_host_priv *hpriv)
+>  {
+> -	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA) {
+> -		switch (pdev->device) {
+> -		case 0x1166:
+> -			dev_info(&pdev->dev, "ASM1166 has only six ports\n");
+> -			hpriv->saved_port_map = 0x3f;
+> -			break;
+> -		case 0x1064:
+> -			dev_info(&pdev->dev, "ASM1064 has only four ports\n");
+> -			hpriv->saved_port_map = 0xf;
+> -			break;
+> -		}
+> -	}
+> -
+>  	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
+>  		dev_info(&pdev->dev, "JMB361 has only one port\n");
+>  		hpriv->saved_port_map = 1;
+> -- 
+> 2.44.0
+> 
 
-The following changes since commit b3603fcb79b1036acae10602bffc4855a4b9af80:
+I took the liberty to add additional information in the commit message.
 
-  Merge tag 'dlm-6.9' of git://git.kernel.org/pub/scm/linux/kernel/git/teigland/linux-dlm (2024-03-18 15:39:48 -0700)
+Applied:
+https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/commit/?id=6cd8adc3e18960f6e59d797285ed34ef473cc896
 
-are available in the Git repository at:
+...and already sent to Linus:
+https://lore.kernel.org/linux-ide/20240319113758.197709-1-cassel@kernel.org/T/#u
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc1-2
 
-for you to fetch changes up to 6cd8adc3e18960f6e59d797285ed34ef473cc896:
-
-  ahci: asm1064: asm1166: don't limit reported ports (2024-03-19 12:06:54 +0100)
-
-----------------------------------------------------------------
-ata fixes for 6.9-rc1
-
- - A single fix for ASMedia HBAs.
-   These HBAs do not indicate that they support SATA Port Multipliers
-   CAP.SPM (Supports Port Multiplier) is not set.
-
-   Likewise, they do not allow you to probe the devices behind an
-   attached PMP, as defined according to the SATA-IO PMP specification.
-
-   Instead, they have decided to implement their own version of PMP,
-   and because of this, plugging in a PMP actually works, even if the
-   HBA claims that it does not support PMP.
-
-   Revert a recent quirk for these HBAs, as that breaks ASMedia's own
-   implementation of PMP.
-
-   Unfortunately, this will once again give some users of these HBAs
-   significantly increased boot time. However, a longer boot time for
-   some, is the lesser evil compared to some other users not being able
-   to detect their drives at all.
-
-----------------------------------------------------------------
-Conrad Kostecki (1):
-      ahci: asm1064: asm1166: don't limit reported ports
-
- drivers/ata/ahci.c | 13 -------------
- 1 file changed, 13 deletions(-)
+Kind regards,
+Niklas
