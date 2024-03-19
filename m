@@ -1,115 +1,279 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17AE5F861
-	for <linux-ide@vger.kernel.org>; Mon, 18 Mar 2024 23:59:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC6550A67;
+	Tue, 19 Mar 2024 07:12:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710806362; cv=none; b=HJwUzdFJJ2DX9Zk0Ut31gxHR9h4bRCZ22rH4Cq6zs30s5pPc+NiLzH/zeyJocLzxqBI4gSat0GfPr7gPbeebJGCT6zfuXt66PI1o/COF0v2tGDnejeqgvV9L/PwcwN1nFBjfd52rCXckjCLBWCaAxFU7UF0joH/aZax9S3eUdEk=
+	t=1710832333; cv=none; b=tI+YsWkMDFgzF6J+E7NGRLQk3z0KPWn1NIOPFtE3PenDOzvpikpOOYPCJhOlQJeDaYi1wdnT+UulseJeCqB6WzjN0giqKzzZGqpDZ7h7zCWBEnoZZemLbtKNw6zkBnNoZ/6OSEp2PamYjyZF3NX+zh/7WgBtjmJ7aw572ENDFi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710806362; c=relaxed/simple;
-	bh=mCeKIA0rcsjEmHiy9yspIAYxJCWRESIV725m1K9X3Yk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fk0hURlJZ8AToPuKNrE1hB906WNtj1LB5oZZlCnCYhg6qgUGcXkKHAsTKDUITshVoN8x8pdEKi7IDAdwthP4QK5DbMXRz2g70RGfwYmR6k1kaZmMBisUR8X/Hb5jv08UIXHKTABfqxjhBlujSTNKqBqaeDQCY9qaNiS2cmjjWig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fAgK+CJC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710832333; c=relaxed/simple;
+	bh=P6dv7ZJYNZSpHjoI+V+tD8KMVwQ6xbrIQm3h9JQ1Vxc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uTlyahdcIGDYXlTeFTZGM5f29ji079GLAM0O1OfdDwK9YGkoazBfNSw/WvgCFjpTe/MuK9IYuzIZASJsElvtafdwklYrRdi6dFwiMj6utwfBlJUxKhJFPUCKJ52YrAz84Ytv2kYq8LrkH0w/61ppG5b43kB2Y3hDtgQmLRor934=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qh1GlINA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fAgK+CJC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 408EDC433C7;
-	Mon, 18 Mar 2024 23:59:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qh1GlINA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 958E1C433C7;
+	Tue, 19 Mar 2024 07:12:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710806362;
-	bh=mCeKIA0rcsjEmHiy9yspIAYxJCWRESIV725m1K9X3Yk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=fAgK+CJCfaUJ1rsiyKK8Jq66fkMl/FTrReiCl+mqIYGitWTE+kZv8aNZc2Zs4Gzoe
-	 EEUXvTBDvXI6PceiENKNTKaTwW81dqN2YMZp2JFqPJW+eZU8WnMwde45BpB6URHtv1
-	 poJCFS8EHn1ICev2EdfPGX9Y9MBGfbuJKP4hPhvYemEeDdqzV3eQt8MTWNQ4glqh08
-	 lR2ltGnefdJjAqktjBF/bRi9y7q7cPh86U9QEEfXjPlzWrsrZGa+TfIPrJTSvG//Wm
-	 7sGHogIU0uY6ziPHEZQZsFAlvPMhG8pMd739TksMju91wi6BU9l+blbiyeUAR4p/4o
-	 2Ng+9I8JRiS9w==
-Message-ID: <921f2ef8-7afb-4ae3-9f3a-e5b412f590a8@kernel.org>
-Date: Tue, 19 Mar 2024 08:59:19 +0900
+	s=k20201202; t=1710832332;
+	bh=P6dv7ZJYNZSpHjoI+V+tD8KMVwQ6xbrIQm3h9JQ1Vxc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=qh1GlINAcfAyZx2RGqDjtBTgqvmcRwU32pRiS2WigoifhSlgYj2+kfFIjifx85gAd
+	 3bAaV+oi6zQPUzdh2kwEgwVVt9Zv3f1zcX4iojn21QJvPfXhSwwERN6xuNLu2z3kIb
+	 qMwDu4XYlr08/iTUn8cGee4oI1LPF7rhYisxCbiQlFTeG6SV7SOu+w61yai352i7XQ
+	 /AtT71PquC1qwikVmDeRgYFE7ZZZPrt1+Lsi8++Arxtj6Ox/EY5id6AaVCLKh9OO71
+	 3+B57wJPokxRZAip+mY/mLckDGoNxcccEWuWaSdjlachGFoboemCtP/Br7NL3+bU7c
+	 cQ79YN7xfLxSA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>,
+	desgua@gmail.com
+Subject: [PATCH] scsi: sd: Fix TCG OPAL unlock on system resume
+Date: Tue, 19 Mar 2024 16:12:09 +0900
+Message-ID: <20240319071209.1179257-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Fwd: Re[2]: ASMedia ASM1166/ASM1064 port restrictions will break
- cards with port-multipliers
-To: Hans de Goede <hdegoede@redhat.com>, Niklas Cassel <cassel@kernel.org>,
- Cryptearth <cryptearth@googlemail.com>
-Cc: temnota.am@gmail.com, linux-ide@vger.kernel.org, conikost@gentoo.org
-References: <CAFDm6W19R3KHDO09c94Uwry9mdG+whAVy=u4Sdpt30A2MK1KPA@mail.gmail.com>
- <CA+PODjqxYcBMc=R792uOava1u0EYZtrWTOw9HvKUBG4=zYbzcg@mail.gmail.com>
- <CAFDm6W2dWu5+Dz2DiWG_9L-VatM6Wj=pMHM2th74Wh144kvqvg@mail.gmail.com>
- <ZfMerqAmWoyu66/5@x1-carbon>
- <2e471c2b-8432-4501-b093-4295529a4d38@redhat.com>
- <CAFDm6W0zP=Yw_OA9_qJ17Np=px=sR69m9hGF3D96A9gyS5PLTQ@mail.gmail.com>
- <em260ca711-2dd7-490f-b401-eeac6c172e98@c8aae956.com>
- <CAFDm6W2nCj+qw=-7Sb9xcJTYZ8sitwUriR+Qdh9fo9+ET1Oo=g@mail.gmail.com>
- <CAFDm6W3c7UUHRVG_WzEUK+pmHQNUywFpJZtkeWVVxrX-oBKpqw@mail.gmail.com>
- <Zfgd4gjQS0Cmexeq@ryzen> <65cd50b1-4f54-4f47-89d8-65b4ef2c0549@redhat.com>
- <db682ed0-3ccf-46f0-bdbc-e9d694f48e6d@kernel.org>
- <b318971e-4748-49e0-a2ae-a1fba9267d82@redhat.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <b318971e-4748-49e0-a2ae-a1fba9267d82@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/18/24 23:21, Hans de Goede wrote:
->>> But can we please drop the problematic quirk to lower the number
->>> of ports for now, to avoid more people getting bitten by this
->>> regression ?
->>
->> I am strongly against reverting that fix/improvement because of a problem with a
->> badly broken hardware that does not respect the AHCI specifications. Such
->> regression was bound to happen with such hardware and likely will happen again
->> in the future if we touch anything that does not fit with the adapters weird use
->> of PMP or other feature. I do not want libata code to be stuck as it is for fear
->> of breaking support for adapters that are already broken in the first place...
->>
->> So let's go the other way around and add a libata.force parameter that allows
->> disabling the port count fix, or allows specifying a port mask. That will allow
->> users of these broken adapters to get them running again. Ideally, we would use
->> a quirk but it seems that the same controller chip is used in both correct
->> setups and broken-PMP setups. So unless ASMedia indicates some black-magic
->> register we can look at to know what to do, it will have to be a "manual" module
->> parameter.
-> 
-> The kernel has a clear no regressions policy and there is ample documented
-> cases where needing to set a module option to undo the regression was
-> considered not acceptable.
-> 
-> So there really is no discussion here. We must not regress and thus the default
-> behavior must be behavior which works out of the box on the boards with
-> the PMP chips on them.
+Commit 3cc2ffe5c16d introduced the manage_system_start_stop scsi device
+flag to allow libata to indicate to the scsi disk driver that nothing
+should be done when resuming a disk on system resume. This change turned
+the execution of sd_resume() into a no-op for ATA devices on system
+resume. While this solved deadlock issues during device resume, this
+change also wrongly removed the execution of opal_unlock_from_suspend().
+As a result, devices with TCG OPAL locking enabled remain locked and
+inaccessible after a system resume from sleep.
 
-I am well aware of this policy and always work hard to not introduce any
-regression or to address them with the highest priority when they happen. It is
-however very unfortunate that such policy must be followed even when the
-regression is due to some bad hardware that does not correctly follow
-specifications and just happen to "work" by chance before a change. I do not
-feel that is right, especially considering that in this case, the revert will
-cause users with correct hardware to again see very long boot time (minutes order).
+To fix this issue, introduce the scsi driver resume method and implement
+it with the sd_resume() function calling opal_unlock_from_suspend(). The
+former sd_resume() function is renamed to sd_resume_common() and
+modified to call the new sd_resume() function. For non-ata devices, this
+result in no functional changes.
 
-> Also we really want Linux to "just work" having to set a module option
-> just to make things work very much goes against that.
+Inorder for libata to explicitly execute sd_resume() when a device is
+resumed during system re-start, the function scsi_resume_device() is
+introduced. libata calls this function from the revalidation work
+executed on devie resume, a state that is indicated with the new device
+flag ATA_DFLAG_RESUMING. Doing so, locked TCG OPAL enabled devices are
+unlocked on resume, allowing normal operation.
 
-Sure, but then avoiding the long boot time will still need a module parameter to
-force applying a port mask. So it is one or the other here... I vote to support
-well good hardware.
+Fixes: 3cc2ffe5c16d ("scsi: sd: Differentiate system and runtime start/stop management")
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=218538
+Cc: stable@vger.kernel.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/libata-eh.c    |  5 ++++-
+ drivers/ata/libata-scsi.c  |  9 +++++++++
+ drivers/scsi/scsi_scan.c   | 34 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c          | 23 +++++++++++++++++++----
+ include/linux/libata.h     |  1 +
+ include/scsi/scsi_driver.h |  1 +
+ include/scsi/scsi_host.h   |  1 +
+ 7 files changed, 69 insertions(+), 5 deletions(-)
 
-Anyway, I am not going to fight this and go with the revert for now. But if we
-do not get anything from ASMedia to help resolve this, these broken adapters are
-likely to cause issues again in the future. And because of that, I would very
-much like to just blacklist them unless someone write a special driver for these
-that does not pretend to be AHCI compliant. Because they are not.
-
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b0d6e69c4a5b..214b935c2ced 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -712,8 +712,10 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
+ 				ehc->saved_ncq_enabled |= 1 << devno;
+ 
+ 			/* If we are resuming, wake up the device */
+-			if (ap->pflags & ATA_PFLAG_RESUMING)
++			if (ap->pflags & ATA_PFLAG_RESUMING) {
++				dev->flags |= ATA_DFLAG_RESUMING;
+ 				ehc->i.dev_action[devno] |= ATA_EH_SET_ACTIVE;
++			}
+ 		}
+ 	}
+ 
+@@ -3169,6 +3171,7 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 	return 0;
+ 
+  err:
++	dev->flags &= ~ATA_DFLAG_RESUMING;
+ 	*r_failed_dev = dev;
+ 	return rc;
+ }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0a0f483124c3..2f4c58837641 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4730,6 +4730,7 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+ 	unsigned long flags;
++	bool do_resume;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&ap->scsi_scan_mutex);
+@@ -4751,7 +4752,15 @@ void ata_scsi_dev_rescan(struct work_struct *work)
+ 			if (scsi_device_get(sdev))
+ 				continue;
+ 
++			do_resume = dev->flags & ATA_DFLAG_RESUMING;
++
+ 			spin_unlock_irqrestore(ap->lock, flags);
++			if (do_resume) {
++				ret = scsi_resume_device(sdev);
++				if (ret == -EWOULDBLOCK)
++					goto unlock;
++				dev->flags &= ~ATA_DFLAG_RESUMING;
++			}
+ 			ret = scsi_rescan_device(sdev);
+ 			scsi_device_put(sdev);
+ 			spin_lock_irqsave(ap->lock, flags);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 8d06475de17a..ffd7e7e72933 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1642,6 +1642,40 @@ int scsi_add_device(struct Scsi_Host *host, uint channel,
+ }
+ EXPORT_SYMBOL(scsi_add_device);
+ 
++int scsi_resume_device(struct scsi_device *sdev)
++{
++	struct device *dev = &sdev->sdev_gendev;
++	int ret = 0;
++
++	device_lock(dev);
++
++	/*
++	 * Bail out if the device or its queue are not running. Otherwise,
++	 * the rescan may block waiting for commands to be executed, with us
++	 * holding the device lock. This can result in a potential deadlock
++	 * in the power management core code when system resume is on-going.
++	 */
++	if (sdev->sdev_state != SDEV_RUNNING ||
++	    blk_queue_pm_only(sdev->request_queue)) {
++		ret = -EWOULDBLOCK;
++		goto unlock;
++	}
++
++	if (dev->driver && try_module_get(dev->driver->owner)) {
++		struct scsi_driver *drv = to_scsi_driver(dev->driver);
++
++		if (drv->resume)
++			ret = drv->resume(dev);
++		module_put(dev->driver->owner);
++	}
++
++unlock:
++	device_unlock(dev);
++
++	return ret;
++}
++EXPORT_SYMBOL(scsi_resume_device);
++
+ int scsi_rescan_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2cc73c650ca6..7a5ad9b25ab7 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4003,7 +4003,21 @@ static int sd_suspend_runtime(struct device *dev)
+ 	return sd_suspend_common(dev, true);
+ }
+ 
+-static int sd_resume(struct device *dev, bool runtime)
++static int sd_resume(struct device *dev)
++{
++	struct scsi_disk *sdkp = dev_get_drvdata(dev);
++
++	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
++
++	if (opal_unlock_from_suspend(sdkp->opal_dev)) {
++		sd_printk(KERN_NOTICE, sdkp, "OPAL unlock failed\n");
++		return -EIO;
++	}
++
++	return 0;
++}
++
++static int sd_resume_common(struct device *dev, bool runtime)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+ 	int ret;
+@@ -4019,7 +4033,7 @@ static int sd_resume(struct device *dev, bool runtime)
+ 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+ 	ret = sd_start_stop_device(sdkp, 1);
+ 	if (!ret) {
+-		opal_unlock_from_suspend(sdkp->opal_dev);
++		sd_resume(dev);
+ 		sdkp->suspended = false;
+ 	}
+ 
+@@ -4038,7 +4052,7 @@ static int sd_resume_system(struct device *dev)
+ 		return 0;
+ 	}
+ 
+-	return sd_resume(dev, false);
++	return sd_resume_common(dev, false);
+ }
+ 
+ static int sd_resume_runtime(struct device *dev)
+@@ -4065,7 +4079,7 @@ static int sd_resume_runtime(struct device *dev)
+ 				  "Failed to clear sense data\n");
+ 	}
+ 
+-	return sd_resume(dev, true);
++	return sd_resume_common(dev, true);
+ }
+ 
+ static const struct dev_pm_ops sd_pm_ops = {
+@@ -4088,6 +4102,7 @@ static struct scsi_driver sd_template = {
+ 		.pm		= &sd_pm_ops,
+ 	},
+ 	.rescan			= sd_rescan,
++	.resume			= sd_resume,
+ 	.init_command		= sd_init_command,
+ 	.uninit_command		= sd_uninit_command,
+ 	.done			= sd_done,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 26d68115afb8..324d792e7c78 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -107,6 +107,7 @@ enum {
+ 
+ 	ATA_DFLAG_NCQ_PRIO_ENABLED = (1 << 20), /* Priority cmds sent to dev */
+ 	ATA_DFLAG_CDL_ENABLED	= (1 << 21), /* cmd duration limits is enabled */
++	ATA_DFLAG_RESUMING	= (1 << 22),  /* Device is resuming */
+ 	ATA_DFLAG_DETACH	= (1 << 24),
+ 	ATA_DFLAG_DETACHED	= (1 << 25),
+ 	ATA_DFLAG_DA		= (1 << 26), /* device supports Device Attention */
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index 4ce1988b2ba0..f40915d2ecee 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -12,6 +12,7 @@ struct request;
+ struct scsi_driver {
+ 	struct device_driver	gendrv;
+ 
++	int (*resume)(struct device *);
+ 	void (*rescan)(struct device *);
+ 	blk_status_t (*init_command)(struct scsi_cmnd *);
+ 	void (*uninit_command)(struct scsi_cmnd *);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index b259d42a1e1a..129001f600fc 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -767,6 +767,7 @@ scsi_template_proc_dir(const struct scsi_host_template *sht);
+ #define scsi_template_proc_dir(sht) NULL
+ #endif
+ extern void scsi_scan_host(struct Scsi_Host *);
++extern int scsi_resume_device(struct scsi_device *sdev);
+ extern int scsi_rescan_device(struct scsi_device *sdev);
+ extern void scsi_remove_host(struct Scsi_Host *);
+ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
 -- 
-Damien Le Moal
-Western Digital Research
+2.44.0
 
