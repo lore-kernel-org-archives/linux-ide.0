@@ -1,205 +1,149 @@
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2053.outbound.protection.outlook.com [40.107.92.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C4F87E761;
-	Wed, 20 Mar 2024 18:51:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.92.53
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710960688; cv=fail; b=PxZUIcKKG3eh5+MoDYQSMhBwJMgqvlg7q7f+ZzIZtow17Trl14MCX8rp4QaGE8UCW15wUXlQnIKl3Xn/++gJRebI6xsOr1iNbtLOC+cDKdEX3NSu+m0+RcWb9RniYrPE8qLgxhrULUM32sftQ7ag1+NN1tvtdlDfrHNq3zw7ZXU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710960688; c=relaxed/simple;
-	bh=QL6LUfGbBvqM2VmpMbNIGzG4RZldo7wnzry4JqknHHQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=H6hzArDvarqOoIk5J1YmEOFbcAGKNnUWSg7wR3ED2NVUCr7xV3pRj7AlnLoZ/4PNDIHuPYcmbXeo6Bq2801YbdvBeBGNAcHBBP886A5ms+DOH3gZjNNo1hQoP/n2ScTzKWEDybK3zOzqNExe1QLjc00I0Kp4cNoHu328c6qiJzo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=cNcTsD6B; arc=fail smtp.client-ip=40.107.92.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90FB18564F
+	for <linux-ide@vger.kernel.org>; Wed, 20 Mar 2024 19:35:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.177
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1710963353; cv=none; b=i89UIWCrtln5O6LH3MXmWZBjoIzM0QrMMS9ODN9u7QE/y0VtNykE4dcwlVyng2W5q2EWGSuN67mvFOq+U44wnaVrd6Omhh+htHcVvdtHtyaPGk4TFjT2RfiEQegUvpvJTN8lttvztjQpu74QA7TPtFFmHCYJD5I7N9gQroHvLtE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1710963353; c=relaxed/simple;
+	bh=NcLf08k6VGnmwzm369I3UVj+8pZ9CShbrgOVWDPyyXA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=tveKC7rT2pKfTkCW6JlVzG9l5b/z85x3QTrHgnGAg7U0l0WLuzr1639aLxfaTznOMrizLq6hBTzLnkBFVk2DcRmcEqSGLeocmdq4OkOOSizY8hFGQsfIPYzWtj6/8fYitRaPVrVrK1my3cTWRozU3FftNSmBoBPOjYk7msjAhns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=N+tGtNVY; arc=none smtp.client-ip=209.85.219.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="cNcTsD6B"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lp5Z1YWAndcTNw8r8xuAgZNZW5hjQBkfgroG9FEX8meX3NUDNMcx0bgLPFRIoU0KKCYJGz0TKk2zXqFeOmZNaFXH3jAo8OKpSTM6gqlUgMig3vneB+iKswMwUu1o5UST5yq0hC1VuZtxqbECtmuPNs+7E4EanEmtcdGGksBUmXYB2JusmllR3zcjhzS2UOrTo99igIrxOPaBj3WlPuNiPrv6Snc+TXdV4MFwSBVMjI+1DZA86pOvWQFnbfdNTUPDMUigEGgjQ7uWRr8NFHKX6K1puDuG821s2FBS0xQhgzXAE+rL7jdh6ITm+zo5XyGdB3Sc4BrgkQYc5rPkHD+PTA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ma8YFtmZnEaob7U2yh3b0TZ/t+JLsnMIydYBktWEgaU=;
- b=fj0FjShV+fbl2zVZBh+10Ba8JDJ2bHDO3GpaxtPbpO2HvzeE8O0E1GqJihSoEZCTwLyjoWu1FIRXscp5sngdkg9MrXpSQO+WNrPDxGPAjVPNjsEvvuEjezlg8OEYiufCm3v4HovxyySjQkHbm0Jd4+LY3Dco9YiKcJdnD2U5Tm4GjG9VaEYU2KohM831HG+QRi8foJDQFo6JJlUDODjRQrBHLWk5A+Xjs3bISaiqbFGmBirUOApc7LEWHK+LfJWunTamRvH6f6eGorDPvUkHcYqKtzU5LtnK/0hQ/ufpu+U+2e5AApwe3oDq8E4WMqIaphfnUVqAKS6guHhAwv4nUQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ma8YFtmZnEaob7U2yh3b0TZ/t+JLsnMIydYBktWEgaU=;
- b=cNcTsD6BWMQ0+QrLtXY+Yy0Cdvl1iTwj0kzM/L0WCrUNwDoXBp0DuKChiqmXgohFBXiN+ygkN567K04242XQAWLYdSHYtwJvcHs+oRSIcRs86yC/aeCYIxJc4UoLW/WUVgtt1AnaktCyJW/LrcR5Jc4DW3v/V+mZIjMewGbQ8zg=
-Received: from PH8PR15CA0020.namprd15.prod.outlook.com (2603:10b6:510:2d2::20)
- by MW4PR12MB5627.namprd12.prod.outlook.com (2603:10b6:303:16a::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7386.19; Wed, 20 Mar
- 2024 18:51:23 +0000
-Received: from SA2PEPF000015CD.namprd03.prod.outlook.com
- (2603:10b6:510:2d2:cafe::5d) by PH8PR15CA0020.outlook.office365.com
- (2603:10b6:510:2d2::20) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7386.28 via Frontend
- Transport; Wed, 20 Mar 2024 18:51:23 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- SA2PEPF000015CD.mail.protection.outlook.com (10.167.241.203) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.7409.10 via Frontend Transport; Wed, 20 Mar 2024 18:51:23 +0000
-Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Wed, 20 Mar
- 2024 13:51:22 -0500
-Received: from xhdradheys41.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
- Transport; Wed, 20 Mar 2024 13:51:20 -0500
-From: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
-To: <dlemoal@kernel.org>, <cassel@kernel.org>, <Markus.Elfring@web.de>
-CC: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<git@amd.com>, Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
-Subject: [PATCH] ata: ahci_ceva: return of_property_read_u8_array() error code
-Date: Thu, 21 Mar 2024 00:21:05 +0530
-Message-ID: <1710960665-1391654-1-git-send-email-radhey.shyam.pandey@amd.com>
-X-Mailer: git-send-email 2.1.1
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="N+tGtNVY"
+Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-dd10ebcd702so144836276.2
+        for <linux-ide@vger.kernel.org>; Wed, 20 Mar 2024 12:35:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20230601; t=1710963350; x=1711568150; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=NcLf08k6VGnmwzm369I3UVj+8pZ9CShbrgOVWDPyyXA=;
+        b=N+tGtNVYYYmYuG+UWayLgqGXaYPeSqLeaQ/moHFTNhRb0eSiRl2gaTZgAeOlB0ntsf
+         IKEmGZ3/R6o7Y6D608gaAV5P7ZKEHpcM2NBowo8oxDR7Ua3FVDEPOfS+tn9Z4IFkIwoz
+         XPd7pFgqtu+dWLqFnqaUVJk1pl2ZryJAdQ25FL/wNZ4FsF/07ob1K+zm9mVCc08ogP+D
+         mNbAv724z2x1iK/8pd2JNU9RUGdTlFjExPmyvNOzrK6WnVHv1EXz0zO5plLwKYIlP+NT
+         eslTsFF5lQbEBHRsStQuFvtV/P0UKWlEm6ABesoYzySmvMZ7BQpXRXfxus2UKApzsXy3
+         DXYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710963350; x=1711568150;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=NcLf08k6VGnmwzm369I3UVj+8pZ9CShbrgOVWDPyyXA=;
+        b=Kqqoe446PE+7R61FX3BkqbxqEn0WwMgBgakBG1vRs3fMfMURs4NdQiP3S2mMNFhlYS
+         gjX2M2flWa5Jq+83OxYW3E4TTENcxzLNwiDI9A5vh+s1fOrLe4Q8goKwqY8O3uu4Uw73
+         ja5DmUbMfLwkeqVdAdFTb681W3Vt5yZ9vv+hvez2KU6lnaTRVlua+mI8g12JztBIfPTp
+         l6bhRRnLsW+FvubnEPXHLuYBmlbReyN7eZOjDLgqkSGVs3Exk6NElvPZJr+7qeADronQ
+         p5yz8+kYJTvi2S4nLUS8yprKXEqG++zi7oN7/q+t4LGXTs9sdgxIVCEVf2y6qpQvyudq
+         X99w==
+X-Forwarded-Encrypted: i=1; AJvYcCW01oNSdl79kbqIyy+IABhro9qF195WqHw6qHp2rUkJMbI/SMASbhw9MuRcpKGr7nUdoycPAFv7oCQsOpP2gMLJW/DA1x7GVyt2
+X-Gm-Message-State: AOJu0YxGs76wVUZQtdUyiMqcD9bzWY0ZqOOx8tg76natR0KLfgWSHnPX
+	6rMrjoH0kKQg47fPVRIkSfstt16xfZ4gCXh2PpE2UO+OEaszuhrawW2s6KyV6GGFoetFG8yNZ0t
+	zhh2md43sjYQmj4Dl87PhcrldQuo=
+X-Google-Smtp-Source: AGHT+IHtqnsSPCnABXnqXPdk+AxmLHKg70KQ9FWHMmTBUgMWgeX/65e5/2weCYMNdlxVzQhbm0setvOjonr/HD06Ob8=
+X-Received: by 2002:a25:ac50:0:b0:dcb:b41c:77ef with SMTP id
+ r16-20020a25ac50000000b00dcbb41c77efmr2530453ybd.24.1710963350381; Wed, 20
+ Mar 2024 12:35:50 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Received-SPF: None (SATLEXMB04.amd.com: radhey.shyam.pandey@amd.com does not
- designate permitted sender hosts)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA2PEPF000015CD:EE_|MW4PR12MB5627:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5724e175-f00e-42c4-c735-08dc490ebd34
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	xgX8OEtWyeNHpvmZFO/LOnxfKBv//F6tOH37xeHeN9xu/9Kxt1kJJSOAtx5ByYQfJidBAINMuB79v9qgqNoHipSSayrzUweyMNhHH5EZ6TnVNpT/qehHA7LgB7k+Ij+pb5M8r6PJoAj1uJxlx77/04PKse+qSDtAl1oqd3FNho4U1J/qLGqH6j+KlZ7S687YmcXfzAZOKFTOtwfEWOepJdLz2H3OU3xB5qgke2eoI/oRHpZph5W3GN953ve8teYqzzxkPnam4ujFhKrfgfIV7JjE6BuGtfrMQlOZrkDHsNX4vnsZE1pO6rRRjCD6ahYIpU1yKJzwtvOdicMxS4cdKyrY9+7ROLYt9fFAqdmql9+pjsXKDV0mEd5JD/YTPemMPuVQIB3NclaIkoOw/EjKYTdC76IUYoXeBX6i8+xckssMCzDW81mpoJDXbmUY1UyG/Kb6B2XLCHVtFEWGV6hvMi8QpuopNiboXCGVqKdxi5Q9fuWv4tTCcjm985FmXtRcxDzgy1R87OoKr5xrgdbQ+CPCE8xNz1aFBvHWr7NEdKHLchOTXur5496MzezDeR0mIymkp91bqnnR2P1eVkJ/gZjLnhv6vXxhLXac7Gx41lMpkQJqGb4p2dNWtlk7A7LSWoh8ocPeKAAH7ZwdIRxSMQsbYWlTVrWjpq/LytD0ahPEVvbpt8880S7Ied5utddxM6zGnIiFp/meA2rJFABJvg==
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(82310400014)(36860700004)(376005)(1800799015);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2024 18:51:23.1865
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5724e175-f00e-42c4-c735-08dc490ebd34
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SA2PEPF000015CD.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB5627
+References: <20240319091322.10909-1-Chloe_Chen@asmedia.com.tw> <ZflnYu5W5WnnzDio@ryzen>
+In-Reply-To: <ZflnYu5W5WnnzDio@ryzen>
+From: Cryptearth <cryptearth@googlemail.com>
+Date: Wed, 20 Mar 2024 20:35:39 +0100
+Message-ID: <CAFDm6W3Q0u-uQ=EiOs4N5goi5-He7brRKK5xV3Jz9Z47NV--UQ@mail.gmail.com>
+Subject: Re: ASMedia PMP inquiry
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Szuying Chen <chensiying21@gmail.com>, dlemoal@kernel.org, linux-ide@vger.kernel.org, 
+	Jesse1_Chang@asmedia.com.tw, Richard_Hsu@asmedia.com.tw, 
+	Chloe_Chen@asmedia.com.tw, conikost@gentoo.org, temnota.am@gmail.com, 
+	hdegoede@redhat.com, jnyb.de@gmail.com
+Content-Type: text/plain; charset="UTF-8"
 
-In the ahci_ceva_probe() error path instead of returning -EINVAL for all
-of_property_read_u8_array() failure types return the actual error code.
-It removes the redundant -EINVAL assignment at multiple places and
-improves the error handling path.
+>
+> Hello Chloe,
+>
+> On Tue, Mar 19, 2024 at 05:13:22PM +0800, Szuying Chen wrote:
+> > Signed-off-by: Szuying Chen <Chloe_Chen@asmedia.com.tw>
+> > ---
+> >
+> > On 3/18/24 19:32, Niklas Cassel wrote:
+> > > A user plugging in an external PMP (so not a PMP embedded on the PCIe card).
+> > > We need to be able to read the PMP device and vendor ID, in order to apply
+> > > the correct PMP quirks, see sata_pmp_quirks(). So trying to hide which PMP
+> > > that is connected is bad, not only because it violates the specs, but also
+> > > because it stops us from providing the proper quirks for the connected PMP.
+> > >
+> > > Could you please tell us how we can communicate with the PMPs directly?
+> > > (Regardless if they are external PMPs or PMPs embedded on the PCIe card.)
+> > >
+> > Hello Niklas,
+> >
+> > Unfortunately, our design does not provide interface to communicate with
+> > the PMPs directly.
+> > When ASM1064 plugging in an external PMP, we will hide the PMP and map to
+> > the virtual port to run.
+>
+> Thank you for your reply!
+>
+> If you have any idea on how those users with a ASM1064 card that does not
+> have any PMPs on the PCIe cards, e.g. Delock 90073, can avoid the extra
+> 2-3 minutes delay during boot, we are open to suggestions.
+>
+> I guess you could send a new firmware to Delock that sets the PI register
+> (Ports Implemented) register to 0xf.
+>
+> However, from what I've understood from how you have decided to implement
+> PMP support on your HBAs, I assume that setting the PI register to 0xf
+> would also stop Delock 90073 from working with an externally connected
+> port multiplier, so that it probably not a good approach after all.
+>
+>
+> Kind regards,
+> Niklas
 
-Reported-by: Markus Elfring <Markus.Elfring@web.de>
-Closes: https://lore.kernel.org/all/9427c0fd-f48a-4104-ac7e-2929be3562af@web.de/
-Signed-off-by: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
----
- drivers/ata/ahci_ceva.c | 48 ++++++++++++++++++++---------------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+So, I guess the current conclusion is that there's no optimal solution
+due to hardware not following the standards?
+I also thought about the option to use override parameters like
+setting the port mask. But then I also thought about: How to handle a
+system with different HBAs?
+Like a system using one card with a pci-e multiplexer but also a card
+like mine with port multipliers. The result would be either the
+current behaviour - all ports working but long timeouts - or like with
+the change - no timeouts but not all ports working.
+An optimal solution would requite a per-HBA setting. To keep a
+consistent order the address path could be used, like "the first HBA
+is on pci-e_3, the second on pci-e_5". It would still be up to the
+user to correctly identify the correct ports and set up a working
+kernel command but at least it would be an option for mixed systems to
+set parameters per controller instead of applying the same setting
+global.
 
-diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index 11a2c199a7c2..b54ee80c068f 100644
---- a/drivers/ata/ahci_ceva.c
-+++ b/drivers/ata/ahci_ceva.c
-@@ -274,62 +274,62 @@ static int ceva_ahci_probe(struct platform_device *pdev)
- 		cevapriv->flags = CEVA_FLAG_BROKEN_GEN2;
- 
- 	/* Read OOB timing value for COMINIT from device-tree */
--	if (of_property_read_u8_array(np, "ceva,p0-cominit-params",
--					(u8 *)&cevapriv->pp2c[0], 4) < 0) {
-+	rc = of_property_read_u8_array(np, "ceva,p0-cominit-params",
-+				       (u8 *)&cevapriv->pp2c[0], 4);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p0-cominit-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
--	if (of_property_read_u8_array(np, "ceva,p1-cominit-params",
--					(u8 *)&cevapriv->pp2c[1], 4) < 0) {
-+	rc = of_property_read_u8_array(np, "ceva,p1-cominit-params",
-+				       (u8 *)&cevapriv->pp2c[1], 4);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p1-cominit-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
- 	/* Read OOB timing value for COMWAKE from device-tree*/
--	if (of_property_read_u8_array(np, "ceva,p0-comwake-params",
--					(u8 *)&cevapriv->pp3c[0], 4) < 0) {
-+	rc = of_property_read_u8_array(np, "ceva,p0-comwake-params",
-+				       (u8 *)&cevapriv->pp3c[0], 4);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p0-comwake-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
--	if (of_property_read_u8_array(np, "ceva,p1-comwake-params",
--					(u8 *)&cevapriv->pp3c[1], 4) < 0) {
-+	rc = of_property_read_u8_array(np, "ceva,p1-comwake-params",
-+				       (u8 *)&cevapriv->pp3c[1], 4);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p1-comwake-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
- 	/* Read phy BURST timing value from device-tree */
--	if (of_property_read_u8_array(np, "ceva,p0-burst-params",
--					(u8 *)&cevapriv->pp4c[0], 4) < 0) {
-+	rc = of_property_read_u8_array(np, "ceva,p0-burst-params",
-+				       (u8 *)&cevapriv->pp4c[0], 4);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p0-burst-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
--	if (of_property_read_u8_array(np, "ceva,p1-burst-params",
--					(u8 *)&cevapriv->pp4c[1], 4) < 0) {
-+	rc = of_property_read_u8_array(np, "ceva,p1-burst-params",
-+				       (u8 *)&cevapriv->pp4c[1], 4);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p1-burst-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
- 	/* Read phy RETRY interval timing value from device-tree */
--	if (of_property_read_u16_array(np, "ceva,p0-retry-params",
--					(u16 *)&cevapriv->pp5c[0], 2) < 0) {
-+	rc = of_property_read_u16_array(np, "ceva,p0-retry-params",
-+					(u16 *)&cevapriv->pp5c[0], 2);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p0-retry-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
--	if (of_property_read_u16_array(np, "ceva,p1-retry-params",
--					(u16 *)&cevapriv->pp5c[1], 2) < 0) {
-+	rc = of_property_read_u16_array(np, "ceva,p1-retry-params",
-+					(u16 *)&cevapriv->pp5c[1], 2);
-+	if (rc < 0) {
- 		dev_warn(dev, "ceva,p1-retry-params property not defined\n");
--		rc = -EINVAL;
- 		goto disable_resources;
- 	}
- 
--- 
-2.34.1
+I searched for both host controllers as well as port multipliers.
+Although most solutions end up with controllers from ASMedia, JMicron
+or even SLI there seem also way more lesser known chips out there.
+I also searched for more details around all that topic - and was able
+to find older forum threads from 2008 to 2013. So this seem to already
+going on for several years (hence I not really understood the initial
+report about the long boot timeout as I thought "well, people deal
+with it for over a decade now").
 
+Aside from the revert is in my favour I also see that there're some
+deeper issues that either have to be ignored potentially breaking
+hardware, tried to worked around with (would a separate driver be
+possible?) or to get in contact with major controller manufactures to
+get them to come up with changes for newer chips/firmware - this way
+at least new hardware can have a chance to work out of the box by
+following the standards.
+
+Quite a complicated topic.
+
+Matt
