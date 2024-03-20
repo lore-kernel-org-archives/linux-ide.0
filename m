@@ -1,63 +1,190 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f45.google.com (mail-oa1-f45.google.com [209.85.160.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E7623BB25
-	for <linux-ide@vger.kernel.org>; Tue, 19 Mar 2024 19:29:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CEE5381AC;
+	Wed, 20 Mar 2024 09:07:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710876582; cv=none; b=q++Utns5nsRdHeOgGT+ope74GIlJe3dKZsWd8FAdRxRLz/uUg2Ynoo7XL+dBziLynsOjnP9KZM643PBE5C6EwGuwmeQaZ9UQLAr5aMfoV8filxwL0TdCEqHBzPbxHR9ZsBGTRqvbpd8pgofB7NyQpwWF99k0/R7lWcXhiqwey7o=
+	t=1710925679; cv=none; b=TA4Nw5DHTl4/+YFvW4XUe54AlBog5NtyQcEVIuypljtkXeH3xxVcccxw6sNKduvVuNl1gD+JK/jN8m3mBp4oBtCRnred2/Fic/89fa2mTIWmxdbn7olQe+2qJaBW1MKmNz5oAjx8zniGHhnVv2rIC7UXMWGeKAHfgDW2vTm3nPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710876582; c=relaxed/simple;
-	bh=tvpo4+inSI4nqUbRitSu0lGRjn3jZMQDu8KbxBLioOY=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=TM544hMeyObH6cFyYgMjfxK69IMSZFEbrEBpSdvUXoqW9/roMHRnouHcaV9ax4PlE3x528qGUeqfv/jAj5bcAafp4Wo0jPE9fVnmAKyxBk6M82fYRw+DmCcqkP9v/zE0ikUDpZ8Xfts94L8GbK1qo98wXN1uR9dcES6U0aIATLQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BuMp2RqH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710925679; c=relaxed/simple;
+	bh=BVbpZjD8QaD7y17IHDhfMTdTYGJnFARN6zjQHua00eU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CY9WxADf8j0XzNRabqJZ9mV7CxZF3cTOIax3DDI8LS1pDj7X/mrPbMVuzELQ5UMZEx+2NVnulRvfb1RsHCmzSqgjfLy9z2YoKeKUV8wY52qawu7rA7xMBtJPbCvt8taG5rJ/CLbLXZ7yDuCSovXkEu+IOwcpyTF2pjWW3C10aJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VIh55/Jn; arc=none smtp.client-ip=209.85.160.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BuMp2RqH"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 0ADA6C43394;
-	Tue, 19 Mar 2024 19:29:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710876581;
-	bh=tvpo4+inSI4nqUbRitSu0lGRjn3jZMQDu8KbxBLioOY=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=BuMp2RqHpGNpzcE9/1oarbMuQ5Qz96FGphj26qGQbQvhm7omVHanwwPXgfBXe7w6Q
-	 HLXRUEi4lbeb1aRbYOT/UrwebRb7QBoewBnsYRAj/MLfFccFJ05V5NacKsnz6pPIyT
-	 9NjhZz7QbK/xMAMjbEleTZWnzOxErEAv4eW73JBal0PL5nUeD9HiplacYFuIZuZwTc
-	 CETUqDLDLcazgPwgrVSe5kByHYbfLTVT+JXv1I2iV+8Nu14CIm4gGjKmuf7nj85W1b
-	 O92ohme4TKxU1NOc3XqDs6+iH6xzZyg6lgCpaov8ruPIUAt5A3HO3W19GiAbD87R6Y
-	 wiBb1T5CguqEQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id E8C94D84BB3;
-	Tue, 19 Mar 2024 19:29:40 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.9-rc1
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20240319113758.197709-1-cassel@kernel.org>
-References: <20240319113758.197709-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20240319113758.197709-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc1-2
-X-PR-Tracked-Commit-Id: 6cd8adc3e18960f6e59d797285ed34ef473cc896
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 2f3c2b39768d2c0ccf0f6712a4b27453674e5de7
-Message-Id: <171087658094.21820.15365015832308818327.pr-tracker-bot@kernel.org>
-Date: Tue, 19 Mar 2024 19:29:40 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VIh55/Jn"
+Received: by mail-oa1-f45.google.com with SMTP id 586e51a60fabf-22963f0e12cso1227291fac.1;
+        Wed, 20 Mar 2024 02:07:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1710925677; x=1711530477; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6LYzgeSraIQWph2DLzGUmFCxbm6oNIHNvAA92fmfgfw=;
+        b=VIh55/Jnjr3X9VSUrwXc52Nv/LC69rtjbE5yBp8tKRC9RnNfvh9yG2M0bR079/2JuL
+         ngcCLca9FY4Rfj3eZZlhHitz9l6QIRMaE4AC6zh3H/peQBkLBoy/VvRPrz84dih8qUEW
+         mCLrBMgyu6CveGXJX+UoYXAaUEWvfBanmSANNIEZq56Y8xKhr7U4Hwhgh8w5i1GrKvkL
+         EguZQAtI85vmLJnSVKzRXFKkC5sKZjcSv3Hc+/rCBv9RIMKI8Iq9UpdGtRPvKEutSskT
+         xpxf5QVGiILGjN3OBsB9+u2xcDO5QMkMzfm39Si1OvjwgYthKS9g1fLXba6dhzm3/9ik
+         WRNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710925677; x=1711530477;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6LYzgeSraIQWph2DLzGUmFCxbm6oNIHNvAA92fmfgfw=;
+        b=DQtPjp50SeD6jT5P9K5YyVl+oeFZL+OGHrRyMXrxUYbXUwKyd/BmFstEKvblio932Q
+         GqeDN9QC1m2ohQoO2EmWjcFvJ5MP3oMaqkNJOt9ym/V2t0PwWUEaA0xaTDLSiNNx/rit
+         zcLKZT8pYmmI8kjEMgz5RPs5HZjHDX2+JaAXlQfgwtV/FIRaGy6oq4aJqm+btjCM+T+p
+         1X/qsZ7botjV6NRygVFljao8NXi0z3W0yHDrfnFir+2OWSDkBvdyHY4pE1eYECNx+Y5z
+         o93jfSA0xnmRjBFfCHkwJYz736Yzasm9JyvXbrQavfb2ESIquAfQMKYkCqzCw7lpeJVS
+         zE5w==
+X-Forwarded-Encrypted: i=1; AJvYcCVIeCna18B105Xw5XyzQW8U0B16l+t3xQ9489pXUma5lC8XgT4RGZS3bWxcF2Q8vqpO7L2W7YNtt3ehaGNQKKVBI5TKsy1O6IpAXzjJewwMF0qQEpngI7+CKyUyqTnINpISLMi2wG9pXIL40UrvDU3Z/DRIfn1qJRog1bgJNnTYqS9vrQ==
+X-Gm-Message-State: AOJu0YznFHxH+3u7aDvQaM8CfrtIh0QJbnSBPT2a8TAcLJxTVrJ1WIFV
+	rNhDWZ6kVhTh0SA6YrtLUSkunOO/virPOrXsIfrXLo6mrfQBqQNf
+X-Google-Smtp-Source: AGHT+IE2HShA9tzq7LK/MZr8vowvV1oJMzrwKIWizneyhfLiYWfkofVYT92Zz2xWszZIjg8lo9tqOw==
+X-Received: by 2002:a05:6871:a58d:b0:222:69b4:fccd with SMTP id wd13-20020a056871a58d00b0022269b4fccdmr5292748oab.24.1710925677036;
+        Wed, 20 Mar 2024 02:07:57 -0700 (PDT)
+Received: from localhost.localdomain ([2409:40f4:a4:a590:2a15:ea77:7177:18e3])
+        by smtp.gmail.com with ESMTPSA id k1-20020aa79981000000b006e6f96ecc30sm9021369pfh.2.2024.03.20.02.07.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Mar 2024 02:07:56 -0700 (PDT)
+From: Animesh Agarwal <animeshagarwal28@gmail.com>
+To: 
+Cc: animeshagarwal28@gmail.com,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	NXP Linux Team <linux-imx@nxp.com>,
+	linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v8] dt-bindings: ata: imx-pata: Convert to dtschema
+Date: Wed, 20 Mar 2024 14:37:30 +0530
+Message-ID: <20240320090733.96828-1-animeshagarwal28@gmail.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Tue, 19 Mar 2024 12:37:58 +0100:
+Convert the imx-pata bindings to DT schema.
+Add missing fsl,imx31-pata and fsl,imx51-pata compatibles during
+conversion, because they are already being used in existing DTS.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc1-2
+Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/2f3c2b39768d2c0ccf0f6712a4b27453674e5de7
+---
+Changes in v8:
+- added missing space after comma in examples' compatible property
 
-Thank you!
+Changes in v7:
+- removed blank space at the end of file.
 
+Changes in v6:
+- removed items before const due to single element.
+
+Changes in v5:
+- added oneOf in compatible property to allow the usage of imx27 alone.
+
+Changes in v4:
+- added fsl,imx31-pata in compatible property as enum.
+
+Changes in v3:
+- added fsl,imx51-pata in compatible property as enum
+- fsl,imx27-pata is added as a const to ensure it is present always
+
+Changes in v2:
+- fixed style issues
+- compatible property now matches the examples
+- fixed yamllint warnings/errors
+---
+ .../devicetree/bindings/ata/fsl,imx-pata.yaml | 42 +++++++++++++++++++
+ .../devicetree/bindings/ata/imx-pata.txt      | 16 -------
+ 2 files changed, 42 insertions(+), 16 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml
+ delete mode 100644 Documentation/devicetree/bindings/ata/imx-pata.txt
+
+diff --git a/Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml b/Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml
+new file mode 100644
+index 000000000000..324e2413bba8
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml
+@@ -0,0 +1,42 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/fsl,imx-pata.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Freescale i.MX PATA Controller
++
++maintainers:
++  - Animesh Agarwal <animeshagarwal28@gmail.com>
++
++properties:
++  compatible:
++    oneOf:
++      - items:
++          - enum:
++              - fsl,imx31-pata
++              - fsl,imx51-pata
++          - const: fsl,imx27-pata
++      - const: fsl,imx27-pata
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    items:
++      - description: PATA Controller interrupts
++
++  clocks:
++    items:
++      - description: PATA Controller clocks
++
++additionalProperties: false
++
++examples:
++  - |
++    pata: pata@83fe0000 {
++        compatible = "fsl,imx51-pata", "fsl,imx27-pata";
++        reg = <0x83fe0000 0x4000>;
++        interrupts = <70>;
++        clocks = <&clks 161>;
++    };
+diff --git a/Documentation/devicetree/bindings/ata/imx-pata.txt b/Documentation/devicetree/bindings/ata/imx-pata.txt
+deleted file mode 100644
+index f1172f00188a..000000000000
+--- a/Documentation/devicetree/bindings/ata/imx-pata.txt
++++ /dev/null
+@@ -1,16 +0,0 @@
+-* Freescale i.MX PATA Controller
+-
+-Required properties:
+-- compatible: "fsl,imx27-pata"
+-- reg: Address range of the PATA Controller
+-- interrupts: The interrupt of the PATA Controller
+-- clocks: the clocks for the PATA Controller
+-
+-Example:
+-
+-	pata: pata@83fe0000 {
+-		compatible = "fsl,imx51-pata", "fsl,imx27-pata";
+-		reg = <0x83fe0000 0x4000>;
+-		interrupts = <70>;
+-		clocks = <&clks 161>;
+-	};
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.44.0
+
