@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFF5D1DFD2;
-	Thu, 21 Mar 2024 23:53:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E470917745;
+	Thu, 21 Mar 2024 23:58:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711065188; cv=none; b=EzweBJBtSh+XcDvWEapGhmTseC/vi7eGP+h2KWp3s7Nk43wcmtQ1H3yagIdVF+Mu3rRUqLdInahdnTsFxxr+hVcV+6ojMdGT20RIPzQ3d7fH8Hg4tF3YDttRuzAF4aQSt301ko9XJ3hzrGkBn8LjqKg0Mn6UZrDMTPkwP75V9Dw=
+	t=1711065498; cv=none; b=TK3MH6c47BM0bBOY4JvTG1QTOFoDzEuOS2o5XYM2YcJGpKoOAgxOb+fI3nCfmuKAguG3naxRrX6Sx5Zbx6LfM8o2qVGb5q3WzN0bSDNELQr0hITptUvBB469SrGYgPImiqa209pErT/8XG4uNPB4YilKSYncpYxkj8oVCvCK+bk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711065188; c=relaxed/simple;
-	bh=KRlBfszq8wJPr+l3EMoQdukOyWe0TiNmQleRwmFZaDM=;
+	s=arc-20240116; t=1711065498; c=relaxed/simple;
+	bh=5byoxZjd92VRK0quOasxrtcb67LjRXgcowLPE2Mx+eQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f+nZeCUWzZHxa8dR5wXU4WIuw9fPGOjqnFMHVVaf9im+wACDDzdhqmA7o7MhRkRl4oSxFdB3aTg2LBtSwzmlvWj58j9j9VTpdIefYFuQ35BMCDjsiejv80nJBwqqMHFuEoA+E3AWHTtW7fBzFoP5MVOE1ytdY0f43nFycuIEC4g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dCCm2QrS; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=tMs9dP5wJlzLq1fFRdG294SEVxDGBoGZLn2cDTaF/Gi0gOho3nzZHqKP/fN9ZR3JJhdRUkbtxiRY1NG7FXBGxwpFJjsxZUuLZNHUyKbB37zforJJSjiYhfyUA89Ke+WJCqgfSlifJD6qL5kj4MulNTrsI+iUxzLYLtK3SVQRd9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m/6lmD7X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dCCm2QrS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3860AC433F1;
-	Thu, 21 Mar 2024 23:53:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m/6lmD7X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B198BC43390;
+	Thu, 21 Mar 2024 23:58:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711065187;
-	bh=KRlBfszq8wJPr+l3EMoQdukOyWe0TiNmQleRwmFZaDM=;
+	s=k20201202; t=1711065497;
+	bh=5byoxZjd92VRK0quOasxrtcb67LjRXgcowLPE2Mx+eQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=dCCm2QrSGzL/rVDaasXnkgUynntP7mmYHd+38zepdXZK7utT31tRlAZI+j+cfAmkC
-	 62QX8s2TMHdznqFe1D/mrPbAqz/PvXOVrx69qJ0QEzW+mKF7P6zSOW1MM+MweZnvog
-	 IMADa93sRzg4m8m/6dPhc6Ss9/lpWSTCc0mt7yR59ZhRnGaLzI3k3unM4QUIrMIAML
-	 KDrjPsBuzLiTK6v04/fZdoA/svHJLN7TGJOfApCTTvqDti4fw7crpjPWhIB/LGNls4
-	 6Tt84x32NMCdxZVOkkbCm41mBRhbIIpfU24ZujylB4nz+2fNuIBjwulkXlXIfuCXnn
-	 21LMD5a/XU6RQ==
-Message-ID: <0049877f-a6c0-4dc5-977f-13aa193cd38b@kernel.org>
-Date: Fri, 22 Mar 2024 08:53:04 +0900
+	b=m/6lmD7XXIKKrrK810YlPqYsme0bcE+TAoOeiuANEzorxT1afitg2YjE1kUuU3Gd0
+	 L5x6rWrFBBvEsqckWBd9tz6JMMPA1ygVDqsKhVBoaHqhvzc3K4DgTq4uMg4/t2UQIY
+	 ns0ztDWPDVpylWIe8xNbGQNzed7zxKc5EGzgDun+lItql2CIsFvpM20hBEPsjB57wV
+	 4ya3FOfaIbPtEhfaopvOAPHJIdPx4V2vyc0RtUczCCiNzGZZ4eC+RLKr/riT6wzRsz
+	 UvsHA9Re1OGurkrzqFnvVxYjeSiGO9gsO3Qph9f8/0vnETX3turPUzMv3QsMIMRMu9
+	 WJWUAaNyyn8uA==
+Message-ID: <565d1ac6-2cdc-4168-a8c6-355912a39d75@kernel.org>
+Date: Fri, 22 Mar 2024 08:58:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,63 +35,133 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5.10/5.15] scsi: add a length check for
- VARIABLE_LENGTH_CMD commands
-To: Mikhail Ukhin <mish.uxin2012@yandex.ru>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, Pavel Koshutin
- <koshutin.pavel@yandex.ru>, Artem Sadovnikov <ancowi69@gmail.com>,
- Mikhail Ivanov <iwanov-23@bk.ru>
-References: <20240321110229.9534-1-mish.uxin2012@yandex.ru>
+Subject: Re: [PATCH] ata: ahci_ceva: return of_property_read_u8_array() error
+ code
 Content-Language: en-US
+To: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, git@amd.com
+References: <1710960665-1391654-1-git-send-email-radhey.shyam.pandey@amd.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240321110229.9534-1-mish.uxin2012@yandex.ru>
+In-Reply-To: <1710960665-1391654-1-git-send-email-radhey.shyam.pandey@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/21/24 20:02, Mikhail Ukhin wrote:
-> Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
-> ata_scsi_pass_thru.
+On 3/21/24 03:51, Radhey Shyam Pandey wrote:
+> In the ahci_ceva_probe() error path instead of returning -EINVAL for all
+> of_property_read_u8_array() failure types return the actual error code.
+> It removes the redundant -EINVAL assignment at multiple places and
+> improves the error handling path.
 > 
-> The error is fixed in 5.18 by commit
-> ce70fd9a551af7424a7dace2a1ba05a7de8eae27.
-> Backporting this commit would require significant changes to the code so
-> it is bettter to use a simple fix for that particular error.
-> 
-> The problem is that the length of the received SCSI command is not
-> validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
-> reading if the user sends a request with SCSI command of length less than
-> 32.
-> 
-> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
-> 
-> Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
-> Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
-
-Looks OK to me, but the patch title prefix is incorrect since this is not a scsi
-patch. Please make that:
-
-ata: libata-scsi: check cdb length for VARIABLE_LENGTH_CMD commands
-
+> Reported-by: Markus Elfring <Markus.Elfring@web.de>
+> Closes: https://lore.kernel.org/all/9427c0fd-f48a-4104-ac7e-2929be3562af@web.de/
+> Signed-off-by: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
 > ---
->  drivers/ata/libata-scsi.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  drivers/ata/ahci_ceva.c | 48 ++++++++++++++++++++---------------------
+>  1 file changed, 24 insertions(+), 24 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index dfa090ccd21c..77589e911d3d 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -4065,6 +4065,9 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
+> diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+> index 11a2c199a7c2..b54ee80c068f 100644
+> --- a/drivers/ata/ahci_ceva.c
+> +++ b/drivers/ata/ahci_ceva.c
+> @@ -274,62 +274,62 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+>  		cevapriv->flags = CEVA_FLAG_BROKEN_GEN2;
 >  
->  	if (unlikely(!scmd->cmd_len))
->  		goto bad_cdb_len;
-> +
-> +	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
-> +		goto bad_cdb_len;
+>  	/* Read OOB timing value for COMINIT from device-tree */
+> -	if (of_property_read_u8_array(np, "ceva,p0-cominit-params",
+> -					(u8 *)&cevapriv->pp2c[0], 4) < 0) {
+> +	rc = of_property_read_u8_array(np, "ceva,p0-cominit-params",
+> +				       (u8 *)&cevapriv->pp2c[0], 4);
+> +	if (rc < 0) {
+>  		dev_warn(dev, "ceva,p0-cominit-params property not defined\n");
+> -		rc = -EINVAL;
+>  		goto disable_resources;
+>  	}
 >  
->  	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
->  		if (unlikely(scmd->cmd_len > dev->cdb_len))
+> -	if (of_property_read_u8_array(np, "ceva,p1-cominit-params",
+> -					(u8 *)&cevapriv->pp2c[1], 4) < 0) {
+> +	rc = of_property_read_u8_array(np, "ceva,p1-cominit-params",
+> +				       (u8 *)&cevapriv->pp2c[1], 4);
+> +	if (rc < 0) {
+
+This can be more simply "if (rc)"
+
+>  		dev_warn(dev, "ceva,p1-cominit-params property not defined\n");
+> -		rc = -EINVAL;
+
+Here, it may be better to do:
+
+		rc = dev_err_probe(dev, rc, "...");
+
+and remove the dev_warn, as that really should be a dev_err() anyway.
+Same pattern for all the other property reads below.
+
+>  		goto disable_resources;
+>  	}
+>  
+>  	/* Read OOB timing value for COMWAKE from device-tree*/
+> -	if (of_property_read_u8_array(np, "ceva,p0-comwake-params",
+> -					(u8 *)&cevapriv->pp3c[0], 4) < 0) {
+> +	rc = of_property_read_u8_array(np, "ceva,p0-comwake-params",
+> +				       (u8 *)&cevapriv->pp3c[0], 4);
+> +	if (rc < 0) {
+>  		dev_warn(dev, "ceva,p0-comwake-params property not defined\n");
+> -		rc = -EINVAL;
+>  		goto disable_resources;
+>  	}
+>  
+> -	if (of_property_read_u8_array(np, "ceva,p1-comwake-params",
+> -					(u8 *)&cevapriv->pp3c[1], 4) < 0) {
+> +	rc = of_property_read_u8_array(np, "ceva,p1-comwake-params",
+> +				       (u8 *)&cevapriv->pp3c[1], 4);
+> +	if (rc < 0) {
+>  		dev_warn(dev, "ceva,p1-comwake-params property not defined\n");
+> -		rc = -EINVAL;
+>  		goto disable_resources;
+>  	}
+>  
+>  	/* Read phy BURST timing value from device-tree */
+> -	if (of_property_read_u8_array(np, "ceva,p0-burst-params",
+> -					(u8 *)&cevapriv->pp4c[0], 4) < 0) {
+> +	rc = of_property_read_u8_array(np, "ceva,p0-burst-params",
+> +				       (u8 *)&cevapriv->pp4c[0], 4);
+> +	if (rc < 0) {
+>  		dev_warn(dev, "ceva,p0-burst-params property not defined\n");
+> -		rc = -EINVAL;
+>  		goto disable_resources;
+>  	}
+>  
+> -	if (of_property_read_u8_array(np, "ceva,p1-burst-params",
+> -					(u8 *)&cevapriv->pp4c[1], 4) < 0) {
+> +	rc = of_property_read_u8_array(np, "ceva,p1-burst-params",
+> +				       (u8 *)&cevapriv->pp4c[1], 4);
+> +	if (rc < 0) {
+>  		dev_warn(dev, "ceva,p1-burst-params property not defined\n");
+> -		rc = -EINVAL;
+>  		goto disable_resources;
+>  	}
+>  
+>  	/* Read phy RETRY interval timing value from device-tree */
+> -	if (of_property_read_u16_array(np, "ceva,p0-retry-params",
+> -					(u16 *)&cevapriv->pp5c[0], 2) < 0) {
+> +	rc = of_property_read_u16_array(np, "ceva,p0-retry-params",
+> +					(u16 *)&cevapriv->pp5c[0], 2);
+> +	if (rc < 0) {
+>  		dev_warn(dev, "ceva,p0-retry-params property not defined\n");
+> -		rc = -EINVAL;
+>  		goto disable_resources;
+>  	}
+>  
+> -	if (of_property_read_u16_array(np, "ceva,p1-retry-params",
+> -					(u16 *)&cevapriv->pp5c[1], 2) < 0) {
+> +	rc = of_property_read_u16_array(np, "ceva,p1-retry-params",
+> +					(u16 *)&cevapriv->pp5c[1], 2);
+> +	if (rc < 0) {
+>  		dev_warn(dev, "ceva,p1-retry-params property not defined\n");
+> -		rc = -EINVAL;
+>  		goto disable_resources;
+>  	}
+>  
 
 -- 
 Damien Le Moal
