@@ -1,90 +1,54 @@
-Received: from forward103c.mail.yandex.net (forward103c.mail.yandex.net [178.154.239.214])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A678358213;
-	Thu, 21 Mar 2024 11:05:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.214
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D65B0F516
+	for <linux-ide@vger.kernel.org>; Thu, 21 Mar 2024 23:24:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.211.166.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711019154; cv=none; b=RYjOQg9Gt989MEZzg/WmKvB4Hx9ObSYasz15Gu74LoJb8ONFpnNJE+mwB8/LTwok/suCG0iFia/S19ccUDvvOcL/SRTIfb9LNx0CMdZ1EtXEwkqvFkPPx3J6h6dJapu88r/vlfrJMnSwaY6SGY/D8Ne8sd66gm1P98w9agRgJN4=
+	t=1711063448; cv=none; b=qhkMNAM8NYkcUMYJ98DtBRkhzRhF4ubphLe/iyODPpzpLr+uZRIWlbDLtccwvY+9Gkc1Sm7jHbS1dov05I0KRkPYPXdqyeT3WPNg711bI7aS7oaFmUG19MftZx4v1n92u+23DTvkylf87B16q26+1RSFhmPwMXoMiZ04pW0qSlY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711019154; c=relaxed/simple;
-	bh=Rz/7QeGwGWVQ23cVl//CoUspDWwVdJjOPTplV8dC39E=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NgIkSseUpjJu3QdLf9EQToCKpzfrAMe2YnhktU/Q1HQF+91W7H2WnyRT1cl/1K+EzqFAXC6btvHNQgLbcliGhvO026Oj+mEvYM7kig6+AzWZehCqWLkKmlemWDoTbk8AJ+Zmrrg8XsR76GrmBagHKVCT9YMXbwRuh6R3tihrKaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=dcr67GiT; arc=none smtp.client-ip=178.154.239.214
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="dcr67GiT"
-Received: from mail-nwsmtp-smtp-production-main-38.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-38.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:4619:0:640:d09:0])
-	by forward103c.mail.yandex.net (Yandex) with ESMTPS id 78E3C60A8A;
-	Thu, 21 Mar 2024 14:05:42 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-38.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id D5EwJf8ZnW20-cjVk97x4;
-	Thu, 21 Mar 2024 14:05:41 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1711019141; bh=si9CmxfbTTi+fzS7ZgV1gg2/IENW5eLorkGc5P/t0aU=;
-	h=Message-Id:Date:Cc:Subject:To:From;
-	b=dcr67GiTKWsuoYVCZRSpl/qun0eAAaOuBKZKzi2EHDixj9XLJRPUeDgpyPvExYdKg
-	 VZHmGVfmvFhFeAoMUPEvWv6g+SeSk0hClHp5O3Ty4qC/Z1+i3w8i/laOqXOnRVfOYS
-	 denliSur7IfAyXRY3cRJa76KOekeR/6P57HDnUew=
-Authentication-Results: mail-nwsmtp-smtp-production-main-38.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Mikhail Ukhin <mish.uxin2012@yandex.ru>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Mikhail Ukhin <mish.uxin2012@yandex.ru>,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Pavel Koshutin <koshutin.pavel@yandex.ru>,
-	Artem Sadovnikov <ancowi69@gmail.com>,
-	Mikhail Ivanov <iwanov-23@bk.ru>
-Subject: [PATCH 5.10/5.15] scsi: add a length check for VARIABLE_LENGTH_CMD commands
-Date: Thu, 21 Mar 2024 14:02:29 +0300
-Message-Id: <20240321110229.9534-1-mish.uxin2012@yandex.ru>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1711063448; c=relaxed/simple;
+	bh=ep/O/yKkNVjDocgkDvj/tX/43GeYcXx38H3L9JOp/qE=;
+	h=From:To:Subject:Cc:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=MV/v7F45sTPbO4deybyMnfdzMe7uIs0hqLxrIwhanheZQd85gFY3fo+TtDX8jBjLMWJ+oiQ4egY2ZEoW9z4mtrds3QQbSDEMjibuc22BiAIXXmG88SKCAmY4UrkLF46aF2vYMlMuRUwcR9u1/F0FsbY9JaqrRnA5s6IqmY4Rt6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org; spf=pass smtp.mailfrom=gentoo.org; arc=none smtp.client-ip=140.211.166.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
+From: "Conrad Kostecki" <conikost@gentoo.org>
+To: "Niklas Cassel" <cassel@kernel.org>, "Szuying Chen" <chensiying21@gmail.com>
+Subject: Re[2]: ASMedia PMP inquiry
+Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org, Jesse1_Chang@asmedia.com.tw,
+ Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw,
+ cryptearth@googlemail.com, temnota.am@gmail.com, hdegoede@redhat.com,
+ jnyb.de@gmail.com
+Date: Thu, 21 Mar 2024 23:23:59 +0000
+Message-Id: <emd6ef2021-5996-41a5-97d9-9864d65bb534@e6a850b0.com>
+In-Reply-To: <ZflnYu5W5WnnzDio@ryzen>
+References: <20240319091322.10909-1-Chloe_Chen@asmedia.com.tw> <ZflnYu5W5WnnzDio@ryzen>
+Reply-To: "Conrad Kostecki" <conikost@gentoo.org>
+User-Agent: eM_Client/9.2.2230.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
-ata_scsi_pass_thru.
+Hi Niklas,
 
-The error is fixed in 5.18 by commit
-ce70fd9a551af7424a7dace2a1ba05a7de8eae27.
-Backporting this commit would require significant changes to the code so
-it is bettter to use a simple fix for that particular error.
+Am 19.03.2024 11:22:26, "Niklas Cassel" <cassel@kernel.org> schrieb:
 
-The problem is that the length of the received SCSI command is not
-validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
-reading if the user sends a request with SCSI command of length less than
-32.
+>However, from what I've understood from how you have decided to implement
+>PMP support on your HBAs, I assume that setting the PI register to 0xf
+>would also stop Delock 90073 from working with an externally connected
+>port multiplier, so that it probably not a good approach after all.
 
-Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+I can see, that you have now reverted the changes / merged my patch with=20
+additional description.
+Do you see any possibility for overriding saved_port_map as kernel=20
+parameter would be possibile for asm devices somehow?
+Of course only as opt-in.
 
-Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
-Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
----
- drivers/ata/libata-scsi.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index dfa090ccd21c..77589e911d3d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4065,6 +4065,9 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
- 
- 	if (unlikely(!scmd->cmd_len))
- 		goto bad_cdb_len;
-+
-+	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
-+		goto bad_cdb_len;
- 
- 	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
- 		if (unlikely(scmd->cmd_len > dev->cdb_len))
--- 
-2.25.1
-
+Conrad
