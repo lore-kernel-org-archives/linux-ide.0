@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E470917745;
-	Thu, 21 Mar 2024 23:58:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE071E534
+	for <linux-ide@vger.kernel.org>; Fri, 22 Mar 2024 00:00:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711065498; cv=none; b=TK3MH6c47BM0bBOY4JvTG1QTOFoDzEuOS2o5XYM2YcJGpKoOAgxOb+fI3nCfmuKAguG3naxRrX6Sx5Zbx6LfM8o2qVGb5q3WzN0bSDNELQr0hITptUvBB469SrGYgPImiqa209pErT/8XG4uNPB4YilKSYncpYxkj8oVCvCK+bk=
+	t=1711065606; cv=none; b=Za90Vl2Xz+XJb+2sPU/iA59NS97FbrV1WLCjkIPEChSYU8fSrwKUQbSgpxm9zevO42gKvxz2+KbSSJTz9H6hvJj2ja3LVQMPYqiGSyiGiOz6ukwwrbxS8oj06sAQIF7RJe7J9+j+dAzNpEz+6yfbVitLat5OvmrCEbXwnBq39gY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711065498; c=relaxed/simple;
-	bh=5byoxZjd92VRK0quOasxrtcb67LjRXgcowLPE2Mx+eQ=;
+	s=arc-20240116; t=1711065606; c=relaxed/simple;
+	bh=jcu39qVEH887pVeNWQXv3ez94IjvgYpj23AP6QWoSXI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tMs9dP5wJlzLq1fFRdG294SEVxDGBoGZLn2cDTaF/Gi0gOho3nzZHqKP/fN9ZR3JJhdRUkbtxiRY1NG7FXBGxwpFJjsxZUuLZNHUyKbB37zforJJSjiYhfyUA89Ke+WJCqgfSlifJD6qL5kj4MulNTrsI+iUxzLYLtK3SVQRd9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m/6lmD7X; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=uqK9Y/FAGVGGyUQWM+Emdkjquwm9qlj3NASDnsimgXKpWP/v2nZNWhnnfYUWShNvapfvIxhk8eWJPuqfKQ/7/y3Ntu69SJcq8eRLhdKieYW1kfxegBlUCgGrasXQGyTl/4ddKifBP9NGr1fNzFL23p7gBKjKODDWoHnr+m/aOdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tHLHi8Qe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m/6lmD7X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B198BC43390;
-	Thu, 21 Mar 2024 23:58:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tHLHi8Qe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25382C433C7;
+	Fri, 22 Mar 2024 00:00:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711065497;
-	bh=5byoxZjd92VRK0quOasxrtcb67LjRXgcowLPE2Mx+eQ=;
+	s=k20201202; t=1711065605;
+	bh=jcu39qVEH887pVeNWQXv3ez94IjvgYpj23AP6QWoSXI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=m/6lmD7XXIKKrrK810YlPqYsme0bcE+TAoOeiuANEzorxT1afitg2YjE1kUuU3Gd0
-	 L5x6rWrFBBvEsqckWBd9tz6JMMPA1ygVDqsKhVBoaHqhvzc3K4DgTq4uMg4/t2UQIY
-	 ns0ztDWPDVpylWIe8xNbGQNzed7zxKc5EGzgDun+lItql2CIsFvpM20hBEPsjB57wV
-	 4ya3FOfaIbPtEhfaopvOAPHJIdPx4V2vyc0RtUczCCiNzGZZ4eC+RLKr/riT6wzRsz
-	 UvsHA9Re1OGurkrzqFnvVxYjeSiGO9gsO3Qph9f8/0vnETX3turPUzMv3QsMIMRMu9
-	 WJWUAaNyyn8uA==
-Message-ID: <565d1ac6-2cdc-4168-a8c6-355912a39d75@kernel.org>
-Date: Fri, 22 Mar 2024 08:58:15 +0900
+	b=tHLHi8Qev61vJeDEOkHXdPbYKeJQ40/9uMuJHBYmKkzvQGW4KeUVAYZ+9WMRbKL2i
+	 VReUQZZQWaFdyZqP3BoGRWs+D27/wLxmzKf4i6X+haFaNmSCnsLeUdBCdCgGUX4EkS
+	 9GSreiB2KaCiIUPnTTzzGRQGArLl64cmH7x6D42bKz89g/c3/yAeCL6FqZrOacM5rD
+	 0a6gsx0hbW5aAv++qP4CIzSkDvdCSDD5mhk/N8Efcog3zcUonTD4TEKHsW/d2/P0EM
+	 h/D9kIxe0cCZ7RA9u1C6LflEjTVrcgxSQ6YEh/mMbsOK7L9skM/I8rnCi+quzZY6gy
+	 N0SycVepJCJXA==
+Message-ID: <07b6a6d4-a9b1-468f-916f-1d4e6b1f92e5@kernel.org>
+Date: Fri, 22 Mar 2024 09:00:02 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,133 +35,42 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ahci_ceva: return of_property_read_u8_array() error
- code
+Subject: Re: ASMedia PMP inquiry
 Content-Language: en-US
-To: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>, cassel@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, git@amd.com
-References: <1710960665-1391654-1-git-send-email-radhey.shyam.pandey@amd.com>
+To: Conrad Kostecki <conikost@gentoo.org>, Niklas Cassel <cassel@kernel.org>,
+ Szuying Chen <chensiying21@gmail.com>
+Cc: linux-ide@vger.kernel.org, Jesse1_Chang@asmedia.com.tw,
+ Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw,
+ cryptearth@googlemail.com, temnota.am@gmail.com, hdegoede@redhat.com,
+ jnyb.de@gmail.com
+References: <20240319091322.10909-1-Chloe_Chen@asmedia.com.tw>
+ <ZflnYu5W5WnnzDio@ryzen>
+ <emd6ef2021-5996-41a5-97d9-9864d65bb534@e6a850b0.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <1710960665-1391654-1-git-send-email-radhey.shyam.pandey@amd.com>
+In-Reply-To: <emd6ef2021-5996-41a5-97d9-9864d65bb534@e6a850b0.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/21/24 03:51, Radhey Shyam Pandey wrote:
-> In the ahci_ceva_probe() error path instead of returning -EINVAL for all
-> of_property_read_u8_array() failure types return the actual error code.
-> It removes the redundant -EINVAL assignment at multiple places and
-> improves the error handling path.
+On 3/22/24 08:23, Conrad Kostecki wrote:
+> Hi Niklas,
 > 
-> Reported-by: Markus Elfring <Markus.Elfring@web.de>
-> Closes: https://lore.kernel.org/all/9427c0fd-f48a-4104-ac7e-2929be3562af@web.de/
-> Signed-off-by: Radhey Shyam Pandey <radhey.shyam.pandey@amd.com>
-> ---
->  drivers/ata/ahci_ceva.c | 48 ++++++++++++++++++++---------------------
->  1 file changed, 24 insertions(+), 24 deletions(-)
+> Am 19.03.2024 11:22:26, "Niklas Cassel" <cassel@kernel.org> schrieb:
 > 
-> diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-> index 11a2c199a7c2..b54ee80c068f 100644
-> --- a/drivers/ata/ahci_ceva.c
-> +++ b/drivers/ata/ahci_ceva.c
-> @@ -274,62 +274,62 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  		cevapriv->flags = CEVA_FLAG_BROKEN_GEN2;
->  
->  	/* Read OOB timing value for COMINIT from device-tree */
-> -	if (of_property_read_u8_array(np, "ceva,p0-cominit-params",
-> -					(u8 *)&cevapriv->pp2c[0], 4) < 0) {
-> +	rc = of_property_read_u8_array(np, "ceva,p0-cominit-params",
-> +				       (u8 *)&cevapriv->pp2c[0], 4);
-> +	if (rc < 0) {
->  		dev_warn(dev, "ceva,p0-cominit-params property not defined\n");
-> -		rc = -EINVAL;
->  		goto disable_resources;
->  	}
->  
-> -	if (of_property_read_u8_array(np, "ceva,p1-cominit-params",
-> -					(u8 *)&cevapriv->pp2c[1], 4) < 0) {
-> +	rc = of_property_read_u8_array(np, "ceva,p1-cominit-params",
-> +				       (u8 *)&cevapriv->pp2c[1], 4);
-> +	if (rc < 0) {
+>> However, from what I've understood from how you have decided to implement
+>> PMP support on your HBAs, I assume that setting the PI register to 0xf
+>> would also stop Delock 90073 from working with an externally connected
+>> port multiplier, so that it probably not a good approach after all.
+> 
+> I can see, that you have now reverted the changes / merged my patch with 
+> additional description.
+> Do you see any possibility for overriding saved_port_map as kernel 
+> parameter would be possibile for asm devices somehow?
+> Of course only as opt-in.
 
-This can be more simply "if (rc)"
-
->  		dev_warn(dev, "ceva,p1-cominit-params property not defined\n");
-> -		rc = -EINVAL;
-
-Here, it may be better to do:
-
-		rc = dev_err_probe(dev, rc, "...");
-
-and remove the dev_warn, as that really should be a dev_err() anyway.
-Same pattern for all the other property reads below.
-
->  		goto disable_resources;
->  	}
->  
->  	/* Read OOB timing value for COMWAKE from device-tree*/
-> -	if (of_property_read_u8_array(np, "ceva,p0-comwake-params",
-> -					(u8 *)&cevapriv->pp3c[0], 4) < 0) {
-> +	rc = of_property_read_u8_array(np, "ceva,p0-comwake-params",
-> +				       (u8 *)&cevapriv->pp3c[0], 4);
-> +	if (rc < 0) {
->  		dev_warn(dev, "ceva,p0-comwake-params property not defined\n");
-> -		rc = -EINVAL;
->  		goto disable_resources;
->  	}
->  
-> -	if (of_property_read_u8_array(np, "ceva,p1-comwake-params",
-> -					(u8 *)&cevapriv->pp3c[1], 4) < 0) {
-> +	rc = of_property_read_u8_array(np, "ceva,p1-comwake-params",
-> +				       (u8 *)&cevapriv->pp3c[1], 4);
-> +	if (rc < 0) {
->  		dev_warn(dev, "ceva,p1-comwake-params property not defined\n");
-> -		rc = -EINVAL;
->  		goto disable_resources;
->  	}
->  
->  	/* Read phy BURST timing value from device-tree */
-> -	if (of_property_read_u8_array(np, "ceva,p0-burst-params",
-> -					(u8 *)&cevapriv->pp4c[0], 4) < 0) {
-> +	rc = of_property_read_u8_array(np, "ceva,p0-burst-params",
-> +				       (u8 *)&cevapriv->pp4c[0], 4);
-> +	if (rc < 0) {
->  		dev_warn(dev, "ceva,p0-burst-params property not defined\n");
-> -		rc = -EINVAL;
->  		goto disable_resources;
->  	}
->  
-> -	if (of_property_read_u8_array(np, "ceva,p1-burst-params",
-> -					(u8 *)&cevapriv->pp4c[1], 4) < 0) {
-> +	rc = of_property_read_u8_array(np, "ceva,p1-burst-params",
-> +				       (u8 *)&cevapriv->pp4c[1], 4);
-> +	if (rc < 0) {
->  		dev_warn(dev, "ceva,p1-burst-params property not defined\n");
-> -		rc = -EINVAL;
->  		goto disable_resources;
->  	}
->  
->  	/* Read phy RETRY interval timing value from device-tree */
-> -	if (of_property_read_u16_array(np, "ceva,p0-retry-params",
-> -					(u16 *)&cevapriv->pp5c[0], 2) < 0) {
-> +	rc = of_property_read_u16_array(np, "ceva,p0-retry-params",
-> +					(u16 *)&cevapriv->pp5c[0], 2);
-> +	if (rc < 0) {
->  		dev_warn(dev, "ceva,p0-retry-params property not defined\n");
-> -		rc = -EINVAL;
->  		goto disable_resources;
->  	}
->  
-> -	if (of_property_read_u16_array(np, "ceva,p1-retry-params",
-> -					(u16 *)&cevapriv->pp5c[1], 2) < 0) {
-> +	rc = of_property_read_u16_array(np, "ceva,p1-retry-params",
-> +					(u16 *)&cevapriv->pp5c[1], 2);
-> +	if (rc < 0) {
->  		dev_warn(dev, "ceva,p1-retry-params property not defined\n");
-> -		rc = -EINVAL;
->  		goto disable_resources;
->  	}
->  
+Yes. I will add a libata.force parameter to do that so that setups that do not
+use PMPs can avoid long boot times due to probing the broken "virtual ports".
+Will post a patch next week for that.
 
 -- 
 Damien Le Moal
