@@ -1,33 +1,58 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE071E534
-	for <linux-ide@vger.kernel.org>; Fri, 22 Mar 2024 00:00:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761142940B;
+	Sat, 23 Mar 2024 17:13:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711065606; cv=none; b=Za90Vl2Xz+XJb+2sPU/iA59NS97FbrV1WLCjkIPEChSYU8fSrwKUQbSgpxm9zevO42gKvxz2+KbSSJTz9H6hvJj2ja3LVQMPYqiGSyiGiOz6ukwwrbxS8oj06sAQIF7RJe7J9+j+dAzNpEz+6yfbVitLat5OvmrCEbXwnBq39gY=
+	t=1711214027; cv=none; b=hFMJ+nSjc1VUFQ+sgcoDmzUcBKZHVsq012F1PJCVobRoiRwP02ZRzupgjfhI4cn5KJGbxmL42OGSBeuivlvtnIdx43L3JoHIcUR7nunaHL00CNBc5dL8IX9FHB/pDAkEhG3DMEEkSdmihPLmNjLPMzD1Zk8MmS6sm0aMWg9nq/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711065606; c=relaxed/simple;
-	bh=jcu39qVEH887pVeNWQXv3ez94IjvgYpj23AP6QWoSXI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uqK9Y/FAGVGGyUQWM+Emdkjquwm9qlj3NASDnsimgXKpWP/v2nZNWhnnfYUWShNvapfvIxhk8eWJPuqfKQ/7/y3Ntu69SJcq8eRLhdKieYW1kfxegBlUCgGrasXQGyTl/4ddKifBP9NGr1fNzFL23p7gBKjKODDWoHnr+m/aOdI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tHLHi8Qe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711214027; c=relaxed/simple;
+	bh=PxKIofZrWqBFUcM6t4e3kShaErF3e90raCB2xpAlbBc=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=K1G0ONuT9noCTQnqPP6svp1hYMrXEGXHPAmiDwKh/WtGKCoyggcY4wDXA5MvNt7NZDrFR0ZDf+wZJ16MobIij42uEinZPYCmu6tCATMC9e2lrZghAP1tkw54Kppl/qbumjmg4LUzBQuKf9bUZxmIPKB8rN+Ka1tBlMJNYyr4Bxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QFpGoJ3s; arc=none smtp.client-ip=209.85.208.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tHLHi8Qe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25382C433C7;
-	Fri, 22 Mar 2024 00:00:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711065605;
-	bh=jcu39qVEH887pVeNWQXv3ez94IjvgYpj23AP6QWoSXI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=tHLHi8Qev61vJeDEOkHXdPbYKeJQ40/9uMuJHBYmKkzvQGW4KeUVAYZ+9WMRbKL2i
-	 VReUQZZQWaFdyZqP3BoGRWs+D27/wLxmzKf4i6X+haFaNmSCnsLeUdBCdCgGUX4EkS
-	 9GSreiB2KaCiIUPnTTzzGRQGArLl64cmH7x6D42bKz89g/c3/yAeCL6FqZrOacM5rD
-	 0a6gsx0hbW5aAv++qP4CIzSkDvdCSDD5mhk/N8Efcog3zcUonTD4TEKHsW/d2/P0EM
-	 h/D9kIxe0cCZ7RA9u1C6LflEjTVrcgxSQ6YEh/mMbsOK7L9skM/I8rnCi+quzZY6gy
-	 N0SycVepJCJXA==
-Message-ID: <07b6a6d4-a9b1-468f-916f-1d4e6b1f92e5@kernel.org>
-Date: Fri, 22 Mar 2024 09:00:02 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QFpGoJ3s"
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-56ba6c83805so3678156a12.0;
+        Sat, 23 Mar 2024 10:13:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1711214024; x=1711818824; darn=vger.kernel.org;
+        h=content-transfer-encoding:autocrypt:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UYgu3uaeGW2h2Z9AQf5DvW+0tjZIJEj/QOPLPY44QMY=;
+        b=QFpGoJ3srtiutaJXyXo5suItukJOykJrZhuDvzBgvsyU9gzCtPuVd00J2wVYRj0a0Y
+         Y6eq2jdJUOEStSLvtYyXXpxaj3PWAEGbOrxZiJLLBp6omV969r68Inn/ZGAfC3jcnHDr
+         N+kBBrwHmdC2dIwvzQneaoGx03bTnhqStHM5YOzG2bNWKfv9DxX3dEXxvUew+zeqftgs
+         jnDia7gZETjwxrv1Uk1lBblk6vXNJCNbSxqsB1+S5QHQCJs2UC/3kWsyNgaXApqdmOrn
+         RjXS/YVuy4qDi28Zni/Qs4SoN+tiDdA0Tj6T9z6p8iGEa2BYtGa6CNEY/rU1ZLt/cxpS
+         2X/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711214024; x=1711818824;
+        h=content-transfer-encoding:autocrypt:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UYgu3uaeGW2h2Z9AQf5DvW+0tjZIJEj/QOPLPY44QMY=;
+        b=KSqX24vkVBYGHroDa9/L+Q9XAxaFqOHaBlZ/AssEzEC+Cbg7LpiaXf9Re91ll1WPmV
+         eeLmI3OuoFBlIXcc4mzOlS1IxFgXe2A0r1cwCTiWdXIqQeFm70TERBm/w2wVv9ww2rQh
+         R15zvfgWJ2p7kaTCOn5sY27FeDN5IN5fJ+m978Q/leDpeHyj0ycfUpfkyZjvTE/rqRE0
+         q+npy6DRgFob4k4c0myHCcqPhiSaE+zQK3N15RgCE5SRq0xhw1HsPpyO/OkYeduG/aOz
+         317ez3Ei/r7+jMn5Ig/akzvtj7C/Ra1ya5UWlc+HqWwClMmf4Obib9ocWzdiG1Ry2R+T
+         n1uA==
+X-Forwarded-Encrypted: i=1; AJvYcCVLfvmhBrMCeUPwkXln8SY50qDWtPZucePBM5QIdRVY+4bKkHxAffA6YL3L7hLVXkMAnK9iKNqggDlzORteO5YCR5eWV1uJByw0
+X-Gm-Message-State: AOJu0YwzeiLhYo6Ig4gPDhTboQt9KXvUr4KXsQ3uqC/6CQN6lzLv7Dmt
+	GzbivuRymGpMcGcfRqhxzqrNvB4pjvTmIfS9ssTPwK6ZDyP3x6Ss
+X-Google-Smtp-Source: AGHT+IHqJAkIrzHxf+e0CwZ/ud+YkOI2FdiA1ehbJ40nk9KxQXoKgY4p+88PRVm4RrWADsR5E/k/zw==
+X-Received: by 2002:a50:d716:0:b0:56b:c32b:2dd1 with SMTP id t22-20020a50d716000000b0056bc32b2dd1mr1842057edi.33.1711214023501;
+        Sat, 23 Mar 2024 10:13:43 -0700 (PDT)
+Received: from ?IPV6:2a01:c23:bc38:af00:d7:3466:9e54:a813? (dynamic-2a01-0c23-bc38-af00-00d7-3466-9e54-a813.c23.pool.telefonica.de. [2a01:c23:bc38:af00:d7:3466:9e54:a813])
+        by smtp.googlemail.com with ESMTPSA id d13-20020a056402400d00b0056be1339ff3sm1074095eda.41.2024.03.23.10.13.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 23 Mar 2024 10:13:42 -0700 (PDT)
+Message-ID: <370ff61c-1ae0-41ca-95fc-6c45e1b8791d@gmail.com>
+Date: Sat, 23 Mar 2024 18:13:41 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,44 +60,74 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: ASMedia PMP inquiry
 Content-Language: en-US
-To: Conrad Kostecki <conikost@gentoo.org>, Niklas Cassel <cassel@kernel.org>,
- Szuying Chen <chensiying21@gmail.com>
-Cc: linux-ide@vger.kernel.org, Jesse1_Chang@asmedia.com.tw,
- Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw,
- cryptearth@googlemail.com, temnota.am@gmail.com, hdegoede@redhat.com,
- jnyb.de@gmail.com
-References: <20240319091322.10909-1-Chloe_Chen@asmedia.com.tw>
- <ZflnYu5W5WnnzDio@ryzen>
- <emd6ef2021-5996-41a5-97d9-9864d65bb534@e6a850b0.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <emd6ef2021-5996-41a5-97d9-9864d65bb534@e6a850b0.com>
+To: Sergey Shtylyov <s.shtylyov@omp.ru>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-ide@vger.kernel.org,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH 0/2] PCI: Remove pci_enable_device_io()
+Autocrypt: addr=hkallweit1@gmail.com; keydata=
+ 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
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/22/24 08:23, Conrad Kostecki wrote:
-> Hi Niklas,
-> 
-> Am 19.03.2024 11:22:26, "Niklas Cassel" <cassel@kernel.org> schrieb:
-> 
->> However, from what I've understood from how you have decided to implement
->> PMP support on your HBAs, I assume that setting the PI register to 0xf
->> would also stop Delock 90073 from working with an externally connected
->> port multiplier, so that it probably not a good approach after all.
-> 
-> I can see, that you have now reverted the changes / merged my patch with 
-> additional description.
-> Do you see any possibility for overriding saved_port_map as kernel 
-> parameter would be possibile for asm devices somehow?
-> Of course only as opt-in.
+The call to pci_enable_device_io() in cs5520 isn't needed and can be
+removed. This was the last user, so the function itself can be removed
+afterwards.
 
-Yes. I will add a libata.force parameter to do that so that setups that do not
-use PMPs can avoid long boot times due to probing the broken "virtual ports".
-Will post a patch next week for that.
+I'd propose to apply the series through the PCI tree.
+
+Heiner Kallweit (2):
+  ata: pata_cs5520: Remove not needed call to pci_enable_device_io
+  PCI: Remove pci_enable_device_io()
+
+ drivers/ata/pata_cs5520.c |  6 ------
+ drivers/pci/pci.c         | 14 --------------
+ include/linux/pci.h       |  1 -
+ 3 files changed, 21 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.44.0
 
