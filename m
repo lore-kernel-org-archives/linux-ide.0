@@ -1,93 +1,96 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7436A76049;
-	Mon, 25 Mar 2024 22:13:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B151CD20;
+	Tue, 26 Mar 2024 01:22:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711404817; cv=none; b=Pe7hiC9+TP1LnVjV9evkWq1t8QHhXSJZq6EXVckXwpEEdB2S0XldzoPzEMxPbED7UY7SiQIvxADit2palZSxfZAfdT/kLgzQ50h4azI5M9FR+u1p+T20wXJAgJtVGkU7F5q1/GxhOXiLCd6tshAk9SacexLJ/XibRLRPcFw8C1g=
+	t=1711416127; cv=none; b=FMivJCRjEirUCjDvZ+JVL4muGvVUK+LqE7BXxt+IlUIr/o2Zp3OY3uxiUV+IDJG/ZjxgEVgMNfpG4X5A3mmtGorv19y8SPwBK1RDvmB28OnJWyxBZkCOQMSXU1xZ3PRx3wtyuNeautIope5h/vsrzTsiZ3KN0m5kIFnLzT48KxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711404817; c=relaxed/simple;
-	bh=/aQ4e/dbCdS2itYvqCPdo8g2LXYfZKkrZB47BoXZEIg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BVWrvAX9d6fGDRWNyp3Tqpxe1V28J0Dz2hj7K85sFoMSYHA9aAG8QPCK7AB2PmkRqWdmAPDDdyBjiSVJyxzOJ7XOFnOe6/43o/hc0YC3019KIhfi3NJo2vrt+LBhNVkM95+rBsfYvfaCSaJM2PU5akc0fnoE/6EFLvJoLlnvjwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1dfff641d10so33199075ad.2;
-        Mon, 25 Mar 2024 15:13:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711404815; x=1712009615;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/aQ4e/dbCdS2itYvqCPdo8g2LXYfZKkrZB47BoXZEIg=;
-        b=AaZU0bb8r2Z1qf9JawTq3jTgbvgna/sjm4Njr+h/9fzBz62Cb6HrAyfdfYYXc0Z7mI
-         254eIX2TjwF3/Br3E2Ilhq88jS8FMHxqdrtDlxe2wd+KFO/AUEpzPpVAhBpV4QYoFx4y
-         RnZ9CdPqYS10dTemKZGYArPRGiMjrYhv8Xr/y1B7orOtw2kJHlZGtK8fNa+VDfiJpyoc
-         7QVsi4/Fj4U2yW0DDPVdf22+nZsF9vZmSC6HaVFAbCQn5oEXRZKERIS4pYsql1n5hqN4
-         O0qSwultMSpkylKiJZQxVMbBGW9asw1BSJ6y+GLiva0xZ2vwfSG+S7oD0QU7EQLAuEv2
-         mH3A==
-X-Forwarded-Encrypted: i=1; AJvYcCW/M/PHx5ZW93BPBiM3h05B7cbaf6PSE8qtaTvQXGbuHUZ2h8nkr4qhxJvCqrMwOYc29QEfkZCzCpTWpF8nkcVEMJTbs9bDdsux8QB1y2Og0kNXu4KUWopmdnN8dhQuFjYtWnyfudDyas0cyR1pZPPQqiIY0XbZj1PKhORLpG3ApHE+k00b2VW8SFJFTg9V0cdkiViB/Fswnjifnj5qxoUuRUCLjcrraDpWBJyTvBjmGlcmc7hO3m/chfzNl4ofSGc=
-X-Gm-Message-State: AOJu0YwZc2KHjJW2A5tWFs9B3FC6Waxf8iS1CZzg98a60W3Q7HQo80hW
-	wg7ME2WfJ9n7hvAh6zcYGbxehvyt5e/whtqmblw13m3KEawD3JZ7
-X-Google-Smtp-Source: AGHT+IGfB+WQv3DsfWzHC6sXgKWc3iOzsu5rHx4jJULxZaWi0a0lVRdY99x8OK5M+q8sweYiGRV5UA==
-X-Received: by 2002:a17:902:d650:b0:1e0:d579:91df with SMTP id y16-20020a170902d65000b001e0d57991dfmr956391plh.68.1711404815577;
-        Mon, 25 Mar 2024 15:13:35 -0700 (PDT)
-Received: from ?IPV6:2620:0:1000:8411:262:e41e:a4dd:81c6? ([2620:0:1000:8411:262:e41e:a4dd:81c6])
-        by smtp.gmail.com with ESMTPSA id s19-20020a170902989300b001dd67c8e108sm5195084plp.199.2024.03.25.15.13.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Mar 2024 15:13:35 -0700 (PDT)
-Message-ID: <a81db761-7ed2-4e4b-834f-7641f6199fcc@acm.org>
-Date: Mon, 25 Mar 2024 15:13:31 -0700
+	s=arc-20240116; t=1711416127; c=relaxed/simple;
+	bh=OlVzANSQ9am6E2FzboIgmxVeRzUn54+gnYTNEZ9zOOw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=k1QqB9h5KVWEMfW3WfiTXKr2txlRDkGBtmpZ4Egwnlbwa6YB9REQnT/T1yjwNjeQRGSzb5AamVabtm6X5MCXzRJNEmAI3LeuTOQOUr8evOZFfkIZsqsDIoZrLRFfZHn8XMUZO3XaOacA8+jSRyfWxUxUfS66InWrUQTbbHPnGxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=FYQ66HK3; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FYQ66HK3"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42PLG2fx002299;
+	Tue, 26 Mar 2024 01:22:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-11-20;
+ bh=/NinJEF5y+F8YOzQoRqHFtbkuS0aNAOkYsOP3Ok2leg=;
+ b=FYQ66HK3G9OtI56v3CPHWe6Nv7XDJwVzAoMRkcpYHhkh7rjUP/ceSIn4Xi2Zfo6+OuGE
+ aZFriW5IbbPprmLiwY8/nrv6IYMhZs8as0mcq8pVUyjX7I9TPGPmv2TQSpEfSUCgGqb2
+ z35hhe83rv4g/n9ZZNosmZmwLjar7zoxtDvLq4mSfeNbqOXxN+jVsBUqQUZmw5mYgTIG
+ lUKAk8DYAEmIOVwjrL8PHYhoK/PkK8WVWWoB7W0Wtg0VUVTkC9sTxtyS1gYPydiY+DAs
+ O6I25S27bWQE5kY+kqLT7hL+B/+EuHX5sj+lz8bHiZODN+tQcBN2iD3+nfa4iu9pU0Ku cA== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x1np2c0bs-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 26 Mar 2024 01:22:02 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42Q12Z0e024295;
+	Tue, 26 Mar 2024 01:22:01 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3x1nh6hfqm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 26 Mar 2024 01:22:01 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42Q1Lx4A002449;
+	Tue, 26 Mar 2024 01:22:00 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3x1nh6hfkw-2;
+	Tue, 26 Mar 2024 01:22:00 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Damien Le Moal <dlemoal@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Niklas Cassel <cassel@kernel.org>, desgua@gmail.com
+Subject: Re: [PATCH] scsi: sd: Fix TCG OPAL unlock on system resume
+Date: Mon, 25 Mar 2024 21:21:44 -0400
+Message-ID: <171141606210.2006662.1166110926534758734.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240319071209.1179257-1-dlemoal@kernel.org>
+References: <20240319071209.1179257-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/23] ufs-exynos: move setting the the dma alignment to
- the init method
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Takashi Sakamoto <o-takashi@sakamocchi.jp>,
- Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- "Juergen E. Fischer" <fischer@norbit.de>,
- Xiang Chen <chenxiang66@hisilicon.com>,
- HighPoint Linux Team <linux@highpoint-tech.com>,
- Tyrel Datwyler <tyreld@linux.ibm.com>, Brian King <brking@us.ibm.com>,
- Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
- Mike Christie <michael.christie@oracle.com>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- Jack Wang <jinpu.wang@cloud.ionos.com>, Nilesh Javali <njavali@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
- linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
- MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
- mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
- linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-9-hch@lst.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240324235448.2039074-9-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-25_26,2024-03-21_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
+ suspectscore=0 mlxlogscore=882 mlxscore=0 adultscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2403210000 definitions=main-2403260007
+X-Proofpoint-GUID: M9SS_9uBZBtELjlQFbia9VooYh_7F1ya
+X-Proofpoint-ORIG-GUID: M9SS_9uBZBtELjlQFbia9VooYh_7F1ya
 
-On 3/24/24 16:54, Christoph Hellwig wrote:
-> Use the SCSI host's dma_alignment field and set it in ->init and remove
-> the now unused config_scsi_dev method.
+On Tue, 19 Mar 2024 16:12:09 +0900, Damien Le Moal wrote:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Commit 3cc2ffe5c16d introduced the manage_system_start_stop scsi device
+> flag to allow libata to indicate to the scsi disk driver that nothing
+> should be done when resuming a disk on system resume. This change turned
+> the execution of sd_resume() into a no-op for ATA devices on system
+> resume. While this solved deadlock issues during device resume, this
+> change also wrongly removed the execution of opal_unlock_from_suspend().
+> As a result, devices with TCG OPAL locking enabled remain locked and
+> inaccessible after a system resume from sleep.
+> 
+> [...]
+
+Applied to 6.9/scsi-fixes, thanks!
+
+[1/1] scsi: sd: Fix TCG OPAL unlock on system resume
+      https://git.kernel.org/mkp/scsi/c/0c76106cb975
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
