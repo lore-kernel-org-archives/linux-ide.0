@@ -1,164 +1,138 @@
-Received: from flow2-smtp.messagingengine.com (flow2-smtp.messagingengine.com [103.168.172.137])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD56EAF6;
-	Tue, 26 Mar 2024 10:07:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE7C35CDD9;
+	Tue, 26 Mar 2024 10:16:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711447651; cv=none; b=bIUhYWSBSWyGgcqaBiP8vSCJC+Rwa0mryYroh5MLEfsdPrEzimjDU1UjKzfGk6UYAvHQ4QEBTIjD4xf8Zk9x+IBh42REGctJ+m86IlFb8YQWVZbLwyunjlKGFpVK7X/7z9+/9U52HtArloT3cV3F/FjbeyR929ix/TmNzicdvUI=
+	t=1711448177; cv=none; b=pGfcNRk2t8NYf+tE2HPD5FIRu+b25QgTdZ9nyVEDXk00Dv/eeN3GmiZe3/FWcWrqeBZwz3iolP/b+FcLLX0w54ElG8DpWG6M8HTo1MD491FatRjx2lOSJCSaaiPN/iLa/lfkGf55WNCMZzS6wuP9zjrg1E4de6pA4X/FJ1ESfVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711447651; c=relaxed/simple;
-	bh=MtysH8+9HAmIANTQD0du5b+w4USbcY1NMUiynk3OwAk=;
-	h=MIME-Version:Message-Id:In-Reply-To:References:Date:From:To:Cc:
-	 Subject:Content-Type; b=eoAnWnQ6EJEZ3+Fb1c+KZQASXqT4SjtOJZeivjuJQNLZdfBV05WwslcZ+epizG9lUW/k2UbNZigrPkciAZyOjEQQ3cIfFCt3bEmbJC4EGsrR1RWW0uE4dHz+IIt+Kg5s5s0PomSmTJe079f3E4KY1iOIqWjMq415KP/9Dj2wxkg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=PJFRJLsk; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=DvF0P3cz; arc=none smtp.client-ip=103.168.172.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="PJFRJLsk";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="DvF0P3cz"
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailflow.nyi.internal (Postfix) with ESMTP id 19AEF20063A;
-	Tue, 26 Mar 2024 06:07:29 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute5.internal (MEProxy); Tue, 26 Mar 2024 06:07:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm1; t=1711447649; x=1711454849; bh=LwutBSd20d
-	Y9F2mV05mJEYeO4BD3EduCXGrjUsQ79Ro=; b=PJFRJLskOPk2rK+iB7VvkPPP1e
-	SLERW5kzTADhItQdrbiFv7tHcH459/NpFcy9PVmm2d3OMZxaeh4ysJYYP5cZf3qj
-	6kjIVklsQy+lvoygejE+/OdIqRnqn7vhNuUyKcCouDezDB2zrzbQAcrOcG5wRx1Q
-	/hyrVAIthJ3IcKcUv70qLinqbc0/cuSq+lRcpEVPspAtrLBo049R/SlUmMrbdiGs
-	TArsa7RG1X/FxCSiLg57bN6iu/mWAPJTP7y/4UxfORaC+BlRTRVj1SlffpoHl5qi
-	pgcEbeW0r+BWpFJHnJbm98mW6OQYQt+6RUbF3F8dlyhbgvQAD4/6+EMJOgig==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-	fm2; t=1711447649; x=1711454849; bh=LwutBSd20dY9F2mV05mJEYeO4BD3
-	EduCXGrjUsQ79Ro=; b=DvF0P3czs1dT3R3uZ4D9WNdJ2Jvy5Q/+5INgRPqZyxK+
-	hkqBV3aCiIN+QgTQEUKV5qtqUGvod8DLhb4bQ4i/xDPexgDy/LVf/8n/SJG7rush
-	XEBrOGiQWpazHs9g1aNsGBmL9W7WKcnYtFoJnaylqiK3kyAaruyJHAEbhDFJEixz
-	5C4r3h9JlVJuv4pfz8arK6cd1bEtQT3q/wE5BJms9/xT6Cqp7CF1eewQzWbLj6CQ
-	kT+x1WrKGo7OqATRWp5uF+DNlqL9lnGL1Sxa/z3LB3DLbhM/+QCE+v7JbE1GfhI2
-	32FgJGmKdK/NrXqToufcvz/D0yB1o1nZjODsft/Oig==
-X-ME-Sender: <xms:X54CZuxNGYqpCrTpdkoMeYu7QHep-DtABIoilrdxkHD3sWQYbCebew>
-    <xme:X54CZqRRTk4BO6C0XUl_JYlUMa3bpBBaMeXDG4sLQi4OS4DrIkLZzvu8UfG_OQaS1
-    B-Yn9ExIQl6NTvvdyM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledruddufedguddvucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:X54CZgVzQidMIFZ5N9JpoYFGxrVx7337JziEMcVKsZMuJH165E0AZA>
-    <xmx:X54CZkjjIA4yhyjXlr5VojHurih3Ujo9_CVAICaJW8Ost8Vl5nVLqA>
-    <xmx:X54CZgA618J6_VWBxFs5t0RmjT9d4r6JLbi7Tkm1KxTbcEZMnccM0Q>
-    <xmx:X54CZlJOpkzdS_UtGHyqZuzem8YjLstkDNB3SMS9OX5-aGoBVoQ36w>
-    <xmx:YZ4CZvfWf4jPj0Z4AOpwXEiirjZXkASxh6SPn7mRGqleIMTKC6GJcUpzF9w>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-	id 717EEB6008D; Tue, 26 Mar 2024 06:07:27 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.11.0-alpha0-328-gc998c829b7-fm-20240325.002-gc998c829
+	s=arc-20240116; t=1711448177; c=relaxed/simple;
+	bh=NhGQTmGKSxv33TVHtEGQ4NQt1AfCFjbVawHdu4n5ipA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cYq0rYTk+xurYHVW07cnUvN/AmA4vfkj0kHClbKbNG9kfNMXROI8DD9QxJzcSRad1xDKPJXp50ysBp7LWdvnAxgyYXye00yyrHX1YaCdPRe27hX8k9kwKWjcXRiDxikxqJqJDtWGz+IMIpGT12xhwukYAIYdi7pVTFT5NQEHtYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-611248b4805so37000427b3.0;
+        Tue, 26 Mar 2024 03:16:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711448173; x=1712052973;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=yVHG0Rtzv117KVflCUzfWxkqshDT44uXGdbPYbWV2xU=;
+        b=uTzlyZRO685W8yT6yHh13129bfx1UsyT9jiUYrqgdIJ5FkVtXaB2H5+f3gplHU1erQ
+         +D6mUj9OVr2lYcs15vc4zTYZfR3mysAWjH3B/NEDngcVJhdvZPMWIXO1vjrT5duANR1O
+         0wI90a7JnpFfLYKALYTX8Wwuo38so81xHCLQ920RhgxQBmkqYx5WTSTPFuIzjy/jEXO+
+         VkK0d6+xmpbF8ZDXmmyk/Df4EMjrKQfi+vZXBpNflxSHWnv3AdU9lTNLsktbxeGmuGFk
+         wW5FbloDR5EcePv2b6MVbm2ELN5M9R9/z4CInO6jEHOEyVwj2F/FFZhK7Qqgu/LifHq2
+         waEQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXyt2cp75HgiCCspnIH5uKDysh5mNQr4Gab0bjabkzLw/upi8JbBcRtyuGuVKFGgLO2jTc8jjGI1030v+J3Gy5glGa3tAaltNwitz+iuu1FwYlTt5Ni6KYEJbzUlWKaxd4MBd7E/++I8N1V+Oo0LAbQD/GXyxU5i7GqOhqt/H/RXNBZ1A==
+X-Gm-Message-State: AOJu0Yyr3LXrjP0rJt4bIStZnkzqqFRu6rmAE6q99JrwRXHZntSXlRy9
+	IDtkDGLtNIpTKwJmXxiyGCskX+0rE/RK5DwFLLLAgLbEVV4nDeaYETo+4Y85UuI=
+X-Google-Smtp-Source: AGHT+IEZkV+EXitMUSg/u22YMdyhOSDnQvZVvWFotaGefLKKcClYoT+Uv43ScbsOigQFp5fxlUqIRQ==
+X-Received: by 2002:a81:4f02:0:b0:608:597b:bca with SMTP id d2-20020a814f02000000b00608597b0bcamr612705ywb.36.1711448173554;
+        Tue, 26 Mar 2024 03:16:13 -0700 (PDT)
+Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com. [209.85.219.175])
+        by smtp.gmail.com with ESMTPSA id n7-20020a81eb07000000b00610e03c9fe8sm1352566ywm.103.2024.03.26.03.16.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Mar 2024 03:16:12 -0700 (PDT)
+Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-dc236729a2bso5142017276.0;
+        Tue, 26 Mar 2024 03:16:12 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVmJ5qwS8P8cym4ZzMdEgCJm+2LMc/rHlkC7ygkTGzK2/xY52nrPwnDV2nV/llQMAenraJavP05DjxCRv38o4+VlDk79ocs9C9oQMGWB7FtB4Lrkiw9jlYqgu5KP0WL2aCf7zW9wnG/VG+6LmKbZlpoqrat46q9rkUnD0pzxnN1daQHNA==
+X-Received: by 2002:a25:b314:0:b0:dda:a608:54bf with SMTP id
+ l20-20020a25b314000000b00ddaa60854bfmr565254ybj.56.1711448172632; Tue, 26 Mar
+ 2024 03:16:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <66e1da99-5cf4-4506-b0bf-4bdf04959f41@app.fastmail.com>
-In-Reply-To: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
-References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
-Date: Tue, 26 Mar 2024 11:07:06 +0100
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Nikita Shubin" <nikita.shubin@maquefel.me>,
- "Hartley Sweeten" <hsweeten@visionengravers.com>,
- "Alexander Sverdlin" <alexander.sverdlin@gmail.com>,
- "Russell King" <linux@armlinux.org.uk>,
- "Lukasz Majewski" <lukma@denx.de>,
- "Linus Walleij" <linus.walleij@linaro.org>,
- "Bartosz Golaszewski" <brgl@bgdev.pl>,
- "Andy Shevchenko" <andy@kernel.org>,
- "Michael Turquette" <mturquette@baylibre.com>,
- "Stephen Boyd" <sboyd@kernel.org>, "Sebastian Reichel" <sre@kernel.org>,
- "Rob Herring" <robh+dt@kernel.org>,
- "Krzysztof Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
- "Conor Dooley" <conor+dt@kernel.org>, "Vinod Koul" <vkoul@kernel.org>,
- "Wim Van Sebroeck" <wim@linux-watchdog.org>,
- "Guenter Roeck" <linux@roeck-us.net>,
- "Thierry Reding" <thierry.reding@gmail.com>,
- =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
- "Mark Brown" <broonie@kernel.org>,
- "David S . Miller" <davem@davemloft.net>,
- "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
- "Paolo Abeni" <pabeni@redhat.com>,
- "Miquel Raynal" <miquel.raynal@bootlin.com>,
- "Richard Weinberger" <richard@nod.at>,
- "Vignesh Raghavendra" <vigneshr@ti.com>,
- "Damien Le Moal" <dlemoal@kernel.org>,
- "Sergey Shtylyov" <s.shtylyov@omp.ru>,
- "Dmitry Torokhov" <dmitry.torokhov@gmail.com>,
- "Liam Girdwood" <lgirdwood@gmail.com>,
- "Jaroslav Kysela" <perex@perex.cz>, "Takashi Iwai" <tiwai@suse.com>,
- "Ralf Baechle" <ralf@linux-mips.org>, "Aaron Wu" <Aaron.Wu@analog.com>,
- "Lee Jones" <lee@kernel.org>, "Olof Johansson" <olof@lixom.net>,
- "Niklas Cassel" <cassel@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
- linux-clk@vger.kernel.org, linux-pm@vger.kernel.org,
- devicetree@vger.kernel.org, dmaengine@vger.kernel.org,
- linux-watchdog@vger.kernel.org, linux-pwm@vger.kernel.org,
- linux-spi@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
- linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org,
- linux-input@vger.kernel.org, linux-sound@vger.kernel.org,
- "Bartosz Golaszewski" <bartosz.golaszewski@linaro.org>,
- "Krzysztof Kozlowski" <krzysztof.kozlowski@linaro.org>,
- "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
- "Andrew Lunn" <andrew@lunn.ch>, "Andy Shevchenko" <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH v9 00/38] ep93xx device tree conversion
-Content-Type: text/plain
+References: <20240307214418.3812290-1-ipylypiv@google.com> <20240307214418.3812290-3-ipylypiv@google.com>
+ <CAMuHMdWxVbT=f+kZ58urwGhYD9RfBnu7u8oLAyrx_riU8OGt0w@mail.gmail.com> <66ad274d-9890-411d-9fba-90fed2eb33f5@kernel.org>
+In-Reply-To: <66ad274d-9890-411d-9fba-90fed2eb33f5@kernel.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 26 Mar 2024 11:16:00 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdXA3dD=+oVgZ5cLdWdNHp+VdRCH0+L_kAPRQ0eaANAE+A@mail.gmail.com>
+Message-ID: <CAMuHMdXA3dD=+oVgZ5cLdWdNHp+VdRCH0+L_kAPRQ0eaANAE+A@mail.gmail.com>
+Subject: Re: [PATCH v8 2/7] scsi: libsas: Define NCQ Priority sysfs attributes
+ for SATA devices
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>, 
+	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>, 
+	Xiang Chen <chenxiang66@hisilicon.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, 
+	Bart Van Assche <bvanassche@acm.org>, TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Mar 26, 2024, at 10:18, Nikita Shubin via B4 Relay wrote:
-> The goal is to recieve ACKs for all patches in series to merge it via 
-> Arnd branch.
+Hi Damien,
 
-Thank you for the continued updates, I really hope we can merge
-it all for 6.10. I've looked through it again and I'm pretty much
-ready to just merge it, though I admit that the process is not
-working out that great, and it would probably have been quicker
-to add DT support to drivers individually through the subsystem
-trees.
-
-> Stephen Boyd, Vinod Koul PLEASE! give some comments on following, couse 
-> i hadn't one for a couple of iterations already:
+On Tue, Mar 26, 2024 at 11:07=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org=
+> wrote:
+> On 3/26/24 18:53, Geert Uytterhoeven wrote:
+> > On Thu, Mar 7, 2024 at 10:55=E2=80=AFPM Igor Pylypiv <ipylypiv@google.c=
+om> wrote:
+> >> Libata sysfs attributes cannot be used for libsas managed SATA devices
+> >> because the ata_port location is different for libsas.
+> >>
+> >> Defined sysfs attributes (visible for SATA devices only):
+> >> - /sys/block/sda/device/ncq_prio_enable
+> >> - /sys/block/sda/device/ncq_prio_supported
+> >>
+> >> The newly defined attributes will pass the correct ata_port to libata
+> >> helper functions.
+> >>
+> >> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> >> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> >> Reviewed-by: Jason Yan <yanaijie@huawei.com>
+> >> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> >
+> > Thanks for your patch, which is now commit b4d3ddd2df7531e3 ("scsi:
+> > libsas: Define NCQ Priority sysfs attributes for SATA devices")
+> > in scsi-mkp/for-next
+> >
+> >> --- a/drivers/scsi/libsas/sas_ata.c
+> >> +++ b/drivers/scsi/libsas/sas_ata.c
+> >
+> >> +
+> >> +DEVICE_ATTR(ncq_prio_supported, S_IRUGO, sas_ncq_prio_supported_show,=
+ NULL);
+> >> +
+> >
+> > [...]
+> >
+> >> +
+> >> +DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+> >> +           sas_ncq_prio_enable_show, sas_ncq_prio_enable_store);
+> >> +
+> >
+> > When both CONFIG_SCSI_SAS_ATA and CONFIG_SATA_HOST are enabled:
 >
-> Following patches require attention from Stephen Boyd, as they were 
-> converted to aux_dev as suggested:
->
-> - ARM: ep93xx: add regmap aux_dev
-> - clk: ep93xx: add DT support for Cirrus EP93xx
->
-> Following patches require attention from Vinod Koul:
->
-> - dma: cirrus: Convert to DT for Cirrus EP93xx
-> - dma: cirrus: remove platform code
+> I have both enabled in my config and I do not see any issue. What is spec=
+ial
+> with these on ARM ?
 
-I suspect that Stephen and Vinod may be missing this, as reviewing
-a 38 patch series tends to be a lot of work, and they may have
-missed that they are on the critical path here. I certainly
-tend to just ignore an entire thread when it looks like I'm not
-immediately going to be reviewing it all and other people are
-likely to have more comments first, so I'm not blaming them.
+Modular or built-in?
+I have them built-in, and it fails on arm64 (with renesas_defconfig,
+which is not upstream).
+It also fails with shmobile_defconfig on arm32, after manually adding
+CONFIG_SCSI_SAS_LIBSAS=3Dy and CONFIG_SCSI_SAS_ATA=3Dy.
 
-To better catch their attention, I would suggest you repost the
-two smaller sets of patches as a separate series, with only the
-relevant people on Cc. Please also include the respective
-bindings when you send send these patches to Stephen and
-Vinod.
+Gr{oetje,eeting}s,
 
-      Arnd
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
