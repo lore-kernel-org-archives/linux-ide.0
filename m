@@ -1,138 +1,179 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE7C35CDD9;
-	Tue, 26 Mar 2024 10:16:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AD986774E
+	for <linux-ide@vger.kernel.org>; Tue, 26 Mar 2024 10:20:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711448177; cv=none; b=pGfcNRk2t8NYf+tE2HPD5FIRu+b25QgTdZ9nyVEDXk00Dv/eeN3GmiZe3/FWcWrqeBZwz3iolP/b+FcLLX0w54ElG8DpWG6M8HTo1MD491FatRjx2lOSJCSaaiPN/iLa/lfkGf55WNCMZzS6wuP9zjrg1E4de6pA4X/FJ1ESfVw=
+	t=1711448403; cv=none; b=KyB4TcdJUA7kihI/vICFKoRbuyT/nN4IKpSfAM5/iV2pDvHe3cP5GtViNHedQAX+P0KI+pq3noPv26hZa8zn0H7E+rbBCJyAgMXuw8l94V/yJYRTj2FzyCfgQh/wM6pVAymIaSrKovfDthOeITUyA3VJP/DfOp8NKeyjRN7DgUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711448177; c=relaxed/simple;
-	bh=NhGQTmGKSxv33TVHtEGQ4NQt1AfCFjbVawHdu4n5ipA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cYq0rYTk+xurYHVW07cnUvN/AmA4vfkj0kHClbKbNG9kfNMXROI8DD9QxJzcSRad1xDKPJXp50ysBp7LWdvnAxgyYXye00yyrHX1YaCdPRe27hX8k9kwKWjcXRiDxikxqJqJDtWGz+IMIpGT12xhwukYAIYdi7pVTFT5NQEHtYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-611248b4805so37000427b3.0;
-        Tue, 26 Mar 2024 03:16:15 -0700 (PDT)
+	s=arc-20240116; t=1711448403; c=relaxed/simple;
+	bh=q5om1klt5Vblib09/KLSBK+RA4M8EjI0aAy/3rvo75o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=d6VDTr6CJQGESI2UoJAZzxNoGDIDusfiIgYfnMKpRn1MNl/70aKFIZh1dI9Cr24J97qe0S5ZWAEtgvBXn2On3VObFLehGxFaNivezK2O/KDaF9rzDwye9MNp9j7gZwwx6NV9h9QhECdXOpEAH6U9WUG2sDjN34Y7fqBihn+Zfnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=m/uPSkYp; arc=none smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="m/uPSkYp"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a466a27d30aso655726566b.1
+        for <linux-ide@vger.kernel.org>; Tue, 26 Mar 2024 03:20:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1711448400; x=1712053200; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=4RCPWhIUFPUN1OPlIQTyF7klcOBcvyvE4uNRkcfrCSQ=;
+        b=m/uPSkYpd3PoAGbjfXQT1+aFC1ynEXuKdz3dWrFZ9tcJD7lKi93f1OAmq+CIgAjRFs
+         fGV/CZ0/ijqRixzIvWBO80H/Puo25Q+dvSCx8wqJ13OXDckMJT7iQw2sunMCnRxHR/+P
+         fY2mia8inJeZ7gu2ba9Xqw2NyPhsBrtoX2uwsA7Vw3qmtWya/QIiJG66pWudELZz6pl7
+         Wz+b80CjWF1I1nt6cHSuy+cxwSOUShIHqNIYcjkVKh2eUQl0P/qNpJ6z77RwrDoNEN4p
+         mS9JAqNVdjjYM2gSHOU9cwut83Afbf70gbzn0GPhEknk+wucBh9vZ2cyJRIXhh4wv9pm
+         bdRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711448173; x=1712052973;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yVHG0Rtzv117KVflCUzfWxkqshDT44uXGdbPYbWV2xU=;
-        b=uTzlyZRO685W8yT6yHh13129bfx1UsyT9jiUYrqgdIJ5FkVtXaB2H5+f3gplHU1erQ
-         +D6mUj9OVr2lYcs15vc4zTYZfR3mysAWjH3B/NEDngcVJhdvZPMWIXO1vjrT5duANR1O
-         0wI90a7JnpFfLYKALYTX8Wwuo38so81xHCLQ920RhgxQBmkqYx5WTSTPFuIzjy/jEXO+
-         VkK0d6+xmpbF8ZDXmmyk/Df4EMjrKQfi+vZXBpNflxSHWnv3AdU9lTNLsktbxeGmuGFk
-         wW5FbloDR5EcePv2b6MVbm2ELN5M9R9/z4CInO6jEHOEyVwj2F/FFZhK7Qqgu/LifHq2
-         waEQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXyt2cp75HgiCCspnIH5uKDysh5mNQr4Gab0bjabkzLw/upi8JbBcRtyuGuVKFGgLO2jTc8jjGI1030v+J3Gy5glGa3tAaltNwitz+iuu1FwYlTt5Ni6KYEJbzUlWKaxd4MBd7E/++I8N1V+Oo0LAbQD/GXyxU5i7GqOhqt/H/RXNBZ1A==
-X-Gm-Message-State: AOJu0Yyr3LXrjP0rJt4bIStZnkzqqFRu6rmAE6q99JrwRXHZntSXlRy9
-	IDtkDGLtNIpTKwJmXxiyGCskX+0rE/RK5DwFLLLAgLbEVV4nDeaYETo+4Y85UuI=
-X-Google-Smtp-Source: AGHT+IEZkV+EXitMUSg/u22YMdyhOSDnQvZVvWFotaGefLKKcClYoT+Uv43ScbsOigQFp5fxlUqIRQ==
-X-Received: by 2002:a81:4f02:0:b0:608:597b:bca with SMTP id d2-20020a814f02000000b00608597b0bcamr612705ywb.36.1711448173554;
-        Tue, 26 Mar 2024 03:16:13 -0700 (PDT)
-Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com. [209.85.219.175])
-        by smtp.gmail.com with ESMTPSA id n7-20020a81eb07000000b00610e03c9fe8sm1352566ywm.103.2024.03.26.03.16.12
+        d=1e100.net; s=20230601; t=1711448400; x=1712053200;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4RCPWhIUFPUN1OPlIQTyF7klcOBcvyvE4uNRkcfrCSQ=;
+        b=ttd7TOgCEyLQITwM7EyPx2QY7WD+iBCOEjL13jeU8vpYeCYp5cv2H0ipIZpqez20vN
+         BZyFfZDqJ8m8MMCSLv6q0O/lWFM2vjm601VcmL4l5VhGSmSK/IouoFITpA6kC87jx79c
+         UKG8jOTD121IFzXRQyTkJ05YGNXxUNlEnDoyQya/m8rWmGDaRng31I/IofKvfKJxh6aV
+         tIrvTQP0IPKyjXCP4Yqnvf2kVdau94W0v/ucf8IC5FVY+4JjsBbcuCf5OrZ5m8vlMiqu
+         fHEr29Rr2gruz6CmFJFUW91CG7ftTwdb5GVl6NfeyVVPSQtiANNHRR/yKQXkjBICpQPN
+         eRmw==
+X-Forwarded-Encrypted: i=1; AJvYcCVZXCmTErR4u/m9r9sx408Yd5vHfaL1jcvIiROsOnFC84SaQMPpHJUFE8zYlLDIO68+t+UbmAeTWKeftrRIq3y2YsurUak3Mu9V
+X-Gm-Message-State: AOJu0YzTq/7ncWyKdm8LWLFNI7SSlA0X0+FOytWv9REqM+WRND6U3TTy
+	soYy1ajRgJU2VbULN3POpJ8En0UqH28loCN+StqmKq+POGQlB95wMzlOiGYKVJ4=
+X-Google-Smtp-Source: AGHT+IHqJmTV9fx0c6gDzeZ28VWO2ncjlRQQumCuqoIhZLOLhIufmQoAWrHWUAlkSONRG/VAPLaC/A==
+X-Received: by 2002:a17:906:2a10:b0:a46:e8c1:11ac with SMTP id j16-20020a1709062a1000b00a46e8c111acmr5996035eje.18.1711448399658;
+        Tue, 26 Mar 2024 03:19:59 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.222.44])
+        by smtp.gmail.com with ESMTPSA id wk15-20020a170907054f00b00a4a3600d2absm2067438ejb.172.2024.03.26.03.19.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Mar 2024 03:16:12 -0700 (PDT)
-Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-dc236729a2bso5142017276.0;
-        Tue, 26 Mar 2024 03:16:12 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVmJ5qwS8P8cym4ZzMdEgCJm+2LMc/rHlkC7ygkTGzK2/xY52nrPwnDV2nV/llQMAenraJavP05DjxCRv38o4+VlDk79ocs9C9oQMGWB7FtB4Lrkiw9jlYqgu5KP0WL2aCf7zW9wnG/VG+6LmKbZlpoqrat46q9rkUnD0pzxnN1daQHNA==
-X-Received: by 2002:a25:b314:0:b0:dda:a608:54bf with SMTP id
- l20-20020a25b314000000b00ddaa60854bfmr565254ybj.56.1711448172632; Tue, 26 Mar
- 2024 03:16:12 -0700 (PDT)
+        Tue, 26 Mar 2024 03:19:59 -0700 (PDT)
+Message-ID: <dc3e2cb4-f631-4611-8814-0dc04c5502f0@linaro.org>
+Date: Tue, 26 Mar 2024 11:19:54 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240307214418.3812290-1-ipylypiv@google.com> <20240307214418.3812290-3-ipylypiv@google.com>
- <CAMuHMdWxVbT=f+kZ58urwGhYD9RfBnu7u8oLAyrx_riU8OGt0w@mail.gmail.com> <66ad274d-9890-411d-9fba-90fed2eb33f5@kernel.org>
-In-Reply-To: <66ad274d-9890-411d-9fba-90fed2eb33f5@kernel.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 26 Mar 2024 11:16:00 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdXA3dD=+oVgZ5cLdWdNHp+VdRCH0+L_kAPRQ0eaANAE+A@mail.gmail.com>
-Message-ID: <CAMuHMdXA3dD=+oVgZ5cLdWdNHp+VdRCH0+L_kAPRQ0eaANAE+A@mail.gmail.com>
-Subject: Re: [PATCH v8 2/7] scsi: libsas: Define NCQ Priority sysfs attributes
- for SATA devices
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>, 
-	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>, 
-	Xiang Chen <chenxiang66@hisilicon.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, 
-	Bart Van Assche <bvanassche@acm.org>, TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 00/38] ep93xx device tree conversion
+To: nikita.shubin@maquefel.me, Hartley Sweeten
+ <hsweeten@visionengravers.com>,
+ Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>,
+ Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski
+ <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>,
+ Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
+ <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>,
+ Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+ Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck
+ <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>,
+ =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+ Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>,
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>, Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, Ralf Baechle <ralf@linux-mips.org>,
+ "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>,
+ Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+ linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-pm@vger.kernel.org, devicetree@vger.kernel.org,
+ dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org,
+ linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
+ netdev@vger.kernel.org, linux-mtd@lists.infradead.org,
+ linux-ide@vger.kernel.org, linux-input@vger.kernel.org,
+ linux-sound@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Andrew Lunn <andrew@lunn.ch>, Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
+Content-Language: en-US
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Damien,
+On 26/03/2024 10:18, Nikita Shubin via B4 Relay wrote:
+> The goal is to recieve ACKs for all patches in series to merge it via Arnd branch.
+> 
+> Some changes since last version (v8):
+> 
+> - Most important, fixed bug in Device Tree resulting in CS4271 not working by Alexander Sverdlin.
+> - added #interrupt-cells to gpio nodes with interrupts-controller
+> - fixed some EOF in dtsi files
+> - fixed identation and type in ep93xx-keypad thanks to Andy Shevchenko
+> 
+> Stephen Boyd, Vinod Koul PLEASE! give some comments on following, couse i hadn't one for a couple of iterations already:
+> 
+> Following patches require attention from Stephen Boyd, as they were converted to aux_dev as suggested:
+> 
+> - ARM: ep93xx: add regmap aux_dev
+> - clk: ep93xx: add DT support for Cirrus EP93xx
+> 
+> Following patches require attention from Vinod Koul:
+> 
+> - dma: cirrus: Convert to DT for Cirrus EP93xx
+> - dma: cirrus: remove platform code
 
-On Tue, Mar 26, 2024 at 11:07=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org=
-> wrote:
-> On 3/26/24 18:53, Geert Uytterhoeven wrote:
-> > On Thu, Mar 7, 2024 at 10:55=E2=80=AFPM Igor Pylypiv <ipylypiv@google.c=
-om> wrote:
-> >> Libata sysfs attributes cannot be used for libsas managed SATA devices
-> >> because the ata_port location is different for libsas.
-> >>
-> >> Defined sysfs attributes (visible for SATA devices only):
-> >> - /sys/block/sda/device/ncq_prio_enable
-> >> - /sys/block/sda/device/ncq_prio_supported
-> >>
-> >> The newly defined attributes will pass the correct ata_port to libata
-> >> helper functions.
-> >>
-> >> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> >> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> >> Reviewed-by: Jason Yan <yanaijie@huawei.com>
-> >> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> >
-> > Thanks for your patch, which is now commit b4d3ddd2df7531e3 ("scsi:
-> > libsas: Define NCQ Priority sysfs attributes for SATA devices")
-> > in scsi-mkp/for-next
-> >
-> >> --- a/drivers/scsi/libsas/sas_ata.c
-> >> +++ b/drivers/scsi/libsas/sas_ata.c
-> >
-> >> +
-> >> +DEVICE_ATTR(ncq_prio_supported, S_IRUGO, sas_ncq_prio_supported_show,=
- NULL);
-> >> +
-> >
-> > [...]
-> >
-> >> +
-> >> +DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
-> >> +           sas_ncq_prio_enable_show, sas_ncq_prio_enable_store);
-> >> +
-> >
-> > When both CONFIG_SCSI_SAS_ATA and CONFIG_SATA_HOST are enabled:
->
-> I have both enabled in my config and I do not see any issue. What is spec=
-ial
-> with these on ARM ?
+A lot of this could have been already merged if you split it... Just
+saying...
 
-Modular or built-in?
-I have them built-in, and it fails on arm64 (with renesas_defconfig,
-which is not upstream).
-It also fails with shmobile_defconfig on arm32, after manually adding
-CONFIG_SCSI_SAS_LIBSAS=3Dy and CONFIG_SCSI_SAS_ATA=3Dy.
+Best regards,
+Krzysztof
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
