@@ -1,182 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2EFED9;
-	Tue, 26 Mar 2024 14:47:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A32BED9;
+	Tue, 26 Mar 2024 14:49:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711464475; cv=none; b=PAfCurn4xudZRybbuD85+d1vw6LsFdeT7zqCxPDo39QLV7XhXMOJGm1k1yxRKqyi/JSfoG5+YLF4ugZ6nQjqqvREPql0L07GKtHxjbtZpDu9b+lkaM+lIs+RJpyd7A7k6CQ1yWwUuidiIwpPiYFOs/JkpbbCUNCgv3waKKlOwc8=
+	t=1711464567; cv=none; b=W5aRuY4FA+MFSwww+a9KSGBm6rjqxF/qS+LJFKNBU4hSPwhPIFxU2Jq1/l2LG5AczpGnyOXcEwvCrz/Q3NaPNqAwMPJKDzDYJJ1da4uSW1XH+h3VH+mdRZ4O2ERbQ09krA9hqDHEy8zJZYxtmOTIYcpbBICCxe2Qt3z18yuixBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711464475; c=relaxed/simple;
-	bh=2VRodtLYji0E2iO14KF37hDwen2VjVMAvwAcrcgPpT4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RP8DQWyViGOgZmbG2QgzfPgzfywKA/8kNopgnvNdc4T6EGj7lUY4r7gXw1Opte+0uc+fUuisIXtCDlUPqjnQW03IOAW28kHepgtmA8eSrcorHK9W+3xOlMOLutz9UQHP5vIMjzlkvWulGnlVHp5NSC5gpQjGL6gYvjuJAQ743BE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E4BQDDTk; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E4BQDDTk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C54DC433F1;
-	Tue, 26 Mar 2024 14:47:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711464475;
-	bh=2VRodtLYji0E2iO14KF37hDwen2VjVMAvwAcrcgPpT4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=E4BQDDTkgrdwdIkmMvielkRpTAsqHIEG3dNSrY21fnxwoLYvLOoCje+XGKi0Q6+lb
-	 vXFNIViLU9NTXcLVTR3XwdRIIouf6xWYpzwnmHI2t5ZxiCoyK5CtJGLAMaMQhP4GqM
-	 LFJItP61E8WSzWQOgV3iidHNLT5C63yxLkS/wCtha2CzziKBhSzJgJ8mdUJnDc4MsM
-	 mHMWnrCmz0M9BMr26mXQL/Ot8TdiiiLpbc7Z6ykNI9wEj4r4WuyvPMGjqE0R7U0B4a
-	 JYlh8463XR1dZ+1yi/iNsx2NnACkLOIgc70LBf5p2SbJ28JbOOieq3jHp29R//i1VX
-	 XyBZZot1G0W0w==
-From: Arnd Bergmann <arnd@kernel.org>
-To: linux-kbuild@vger.kernel.org,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>
-Cc: Nicolas Schier <nicolas@fjasle.eu>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bill Metzenthen <billm@melbpc.org.au>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	x86@kernel.org,
+	s=arc-20240116; t=1711464567; c=relaxed/simple;
+	bh=NjGYoZS9MYNf6KYedY89CIBd6GNJTkqJoAov7a2XKRo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PKa2GUP2mvNfmdnlyNeLbfnsCask9NEB4lp/RWBjl2d0U9X7MSBPz3S8LBcMRCJLBPg2ZLxsqT1391GskXnP9fC6P3xxTX/6E6DPlfevlCTKnIJjxYKl4YICDrwonkiLmXmCzDJBct5JO5U+vELkj+9bAOiu2XeEv2qMEhP4aN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=fail smtp.mailfrom=kernel.org; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=kernel.org
+X-CSE-ConnectionGUID: u4/HncuNQveTDgvADY/MsQ==
+X-CSE-MsgGUID: xKfSFc0eQ3Cp9nnBEl04Pw==
+X-IronPort-AV: E=McAfee;i="6600,9927,11025"; a="28999055"
+X-IronPort-AV: E=Sophos;i="6.07,156,1708416000"; 
+   d="scan'208";a="28999055"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2024 07:49:24 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,11025"; a="914882408"
+X-IronPort-AV: E=Sophos;i="6.07,156,1708416000"; 
+   d="scan'208";a="914882408"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmsmga002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2024 07:49:12 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.97)
+	(envelope-from <andy@kernel.org>)
+	id 1rp86t-0000000GKYj-43J8;
+	Tue, 26 Mar 2024 16:49:07 +0200
+Date: Tue, 26 Mar 2024 16:49:07 +0200
+From: Andy Shevchenko <andy@kernel.org>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: nikita.shubin@maquefel.me,
+	Hartley Sweeten <hsweeten@visionengravers.com>,
+	Alexander Sverdlin <alexander.sverdlin@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Lukasz Majewski <lukma@denx.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+	Wim Van Sebroeck <wim@linux-watchdog.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Mark Brown <broonie@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
 	Damien Le Moal <dlemoal@kernel.org>,
-	Jean Delvare <jdelvare@suse.com>,
-	Harry Wentland <harry.wentland@amd.com>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
 	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Andrew Jeffery <andrew@codeconstruct.com.au>,
-	"Manoj N. Kumar" <manoj@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org,
-	nouveau@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org,
-	netdev@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	bpf@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-mm@kvack.org,
-	llvm@lists.linux.dev
-Subject: [PATCH 00/12] kbuild: enable some -Wextra warnings by default
-Date: Tue, 26 Mar 2024 15:47:15 +0100
-Message-Id: <20240326144741.3094687-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.2
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>,
+	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+	linux-pm@vger.kernel.org, devicetree@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
+	netdev@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-ide@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-sound@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+	Andrew Lunn <andrew@lunn.ch>
+Subject: Re: [PATCH v9 00/38] ep93xx device tree conversion
+Message-ID: <ZgLgY11N8dkpTZJB@smile.fi.intel.com>
+References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
+ <dc3e2cb4-f631-4611-8814-0dc04c5502f0@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dc3e2cb4-f631-4611-8814-0dc04c5502f0@linaro.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Tue, Mar 26, 2024 at 11:19:54AM +0100, Krzysztof Kozlowski wrote:
+> On 26/03/2024 10:18, Nikita Shubin via B4 Relay wrote:
+> > The goal is to recieve ACKs for all patches in series to merge it via Arnd branch.
+> > 
+> > Some changes since last version (v8):
+> > 
+> > - Most important, fixed bug in Device Tree resulting in CS4271 not working by Alexander Sverdlin.
+> > - added #interrupt-cells to gpio nodes with interrupts-controller
+> > - fixed some EOF in dtsi files
+> > - fixed identation and type in ep93xx-keypad thanks to Andy Shevchenko
+> > 
+> > Stephen Boyd, Vinod Koul PLEASE! give some comments on following, couse i hadn't one for a couple of iterations already:
+> > 
+> > Following patches require attention from Stephen Boyd, as they were converted to aux_dev as suggested:
+> > 
+> > - ARM: ep93xx: add regmap aux_dev
+> > - clk: ep93xx: add DT support for Cirrus EP93xx
+> > 
+> > Following patches require attention from Vinod Koul:
+> > 
+> > - dma: cirrus: Convert to DT for Cirrus EP93xx
+> > - dma: cirrus: remove platform code
+> 
+> A lot of this could have been already merged if you split it... Just
+> saying...
 
-This is a follow-up on a couple of patch series I sent in the past,
-enabling -Wextra (aside from stuff that is explicitly disabled),
--Wcast-function-pointer-strict and -Wrestrict.
-
-I have tested these on 'defconfig' and 'allmodconfig' builds across
-all architectures, as well as many 'randconfig' builds on x86, arm and
-arm64. It would be nice to have all the Makefile.extrawarn changes in
-v6.10, hopefully with the driver fixes going in before that through
-the respective subsystem trees.
-
-     Arnd
-
-Arnd Bergmann (12):
-  kbuild: make -Woverride-init warnings more consistent
-  [v3] parport: mfc3: avoid empty-body warning
-  kbuild: turn on -Wextra by default
-  kbuild: remove redundant extra warning flags
-  firmware: dmi-id: add a release callback function
-  nouveau: fix function cast warning
-  cxlflash: fix function pointer cast warnings
-  x86: math-emu: fix function cast warnings
-  kbuild: enable -Wcast-function-type-strict unconditionally
-  sata: sx4: fix pdc20621_get_from_dimm() on 64-bit
-  [v4] kallsyms: rework symbol lookup return codes
-  kbuild: turn on -Wrestrict by default
-
- arch/x86/math-emu/fpu_etc.c                   |  9 +++--
- arch/x86/math-emu/fpu_trig.c                  |  6 ++--
- arch/x86/math-emu/reg_constant.c              |  7 +++-
- drivers/ata/sata_sx4.c                        |  6 ++--
- drivers/firmware/dmi-id.c                     |  7 +++-
- .../gpu/drm/amd/display/dc/dce110/Makefile    |  2 +-
- .../gpu/drm/amd/display/dc/dce112/Makefile    |  2 +-
- .../gpu/drm/amd/display/dc/dce120/Makefile    |  2 +-
- drivers/gpu/drm/amd/display/dc/dce60/Makefile |  2 +-
- drivers/gpu/drm/amd/display/dc/dce80/Makefile |  2 +-
- drivers/gpu/drm/i915/Makefile                 |  6 ++--
- .../drm/nouveau/nvkm/subdev/bios/shadowof.c   |  7 +++-
- drivers/gpu/drm/xe/Makefile                   |  4 +--
- drivers/net/ethernet/renesas/sh_eth.c         |  2 +-
- drivers/parport/parport_mfc3.c                |  3 +-
- drivers/pinctrl/aspeed/Makefile               |  2 +-
- drivers/scsi/cxlflash/lunmgt.c                |  4 +--
- drivers/scsi/cxlflash/main.c                  | 14 ++++----
- drivers/scsi/cxlflash/superpipe.c             | 34 +++++++++----------
- drivers/scsi/cxlflash/superpipe.h             | 11 +++---
- drivers/scsi/cxlflash/vlun.c                  |  7 ++--
- fs/proc/Makefile                              |  2 +-
- include/linux/filter.h                        | 14 ++++----
- include/linux/ftrace.h                        |  6 ++--
- include/linux/module.h                        | 14 ++++----
- kernel/bpf/Makefile                           |  2 +-
- kernel/bpf/core.c                             |  7 ++--
- kernel/kallsyms.c                             | 23 +++++++------
- kernel/module/kallsyms.c                      | 26 +++++++-------
- kernel/trace/ftrace.c                         | 13 +++----
- mm/Makefile                                   |  3 +-
- scripts/Makefile.extrawarn                    | 33 ++++--------------
- 32 files changed, 134 insertions(+), 148 deletions(-)
+But you able to apply DT schema patches if you wish.
+Just doing? :-)
 
 -- 
-2.39.2
+With Best Regards,
+Andy Shevchenko
 
-Cc: Bill Metzenthen <billm@melbpc.org.au>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: x86@kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>
-Cc: Jean Delvare <jdelvare@suse.com>
-Cc: Harry Wentland <harry.wentland@amd.com>
-Cc: Jani Nikula <jani.nikula@linux.intel.com>
-Cc: Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Andrew Jeffery <andrew@codeconstruct.com.au>
-Cc: "Manoj N. Kumar" <manoj@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alexei Starovoitov <ast@kernel.org>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Masahiro Yamada <masahiroy@kernel.org>
-Cc: Nathan Chancellor <nathan@kernel.org>
-Cc: Nicolas Schier <nicolas@fjasle.eu>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
-Cc: amd-gfx@lists.freedesktop.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: intel-gfx@lists.freedesktop.org
-Cc: nouveau@lists.freedesktop.org
-Cc: intel-xe@lists.freedesktop.org
-Cc: netdev@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org
-Cc: bpf@vger.kernel.org
-Cc: linux-trace-kernel@vger.kernel.org
-Cc: linux-modules@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: linux-kbuild@vger.kernel.org
-Cc: llvm@lists.linux.dev
+
