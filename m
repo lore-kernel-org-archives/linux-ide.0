@@ -1,120 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C5B6A8DE;
-	Tue, 26 Mar 2024 11:52:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1833812B6C;
+	Tue, 26 Mar 2024 12:17:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711453963; cv=none; b=iwi4UWVrdpFLnKkuKXQTBXUQgvenW0DnqRXqYLfPA1vaZMNAGBQBGmXgb5zaNvTRba3RMsm5VJZHnfphzI1eb4s/t2tl6VTS6MEf4Eqhz2RqmGBDlx4IKiXTye/duyHOvzzTVbgHF/U8cEO0jEuKAmWbvNSxjrwP3Q7/ySiX/s8=
+	t=1711455480; cv=none; b=rzM/wHkbadLdHtVfGJ+QNEnDrJwFLfeWxnVNq86NbP0eA2dVN3hMIybiu8JzBQV4wUePT5rUY4VQ1xIMvi3J9Fo6Ev7Dc6Q99mI4bVLSOlzwpE5Hpj/CH2tnnH35U+Xfggc61EAenPmDpT/20DAkQu2c3w3Zrn3fLamp0hjA23Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711453963; c=relaxed/simple;
-	bh=nYG+dP/QZk70U+XbmJJl1dpLEwmh2Q+q6qQlE/n2W4I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bs8g466YBWaEwqvoV26AV67cVBwom1DhmWprLyweAafO20yQ5Ff3IwzlRlJExy5Nn8NP9Rfh8dTI/ZGLDofCaK7NmyKSTFnSpDTnwqgSrtshkEhiXH2hVS6sWUlu0DMRCKIKqPcYVmWoeBFaOj67M+KSC/GlyeCZzGZjTH4gpLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SygXXOfk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711455480; c=relaxed/simple;
+	bh=SZpe6jdHkKyQfyGM2FX+SQHSwwtIaufimKkdrPF/nWc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=d56rHefKy56tqRxXeG12UNWtihlvQEUxz5Q/fS07Q/dkSHIHAS0faO37YZ1e7QyA7tCKbjup3pmJGDkMR2Vl7cXTugkLdoLfKmGStU96J8rDel7b30pivfvXwMLiiC1Hg9rAyKL9dIDj0ybFpFRtOPS1m9mP5vaepY+FuvlCUyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kd71Eoxp; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SygXXOfk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34CBEC433C7;
-	Tue, 26 Mar 2024 11:52:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711453962;
-	bh=nYG+dP/QZk70U+XbmJJl1dpLEwmh2Q+q6qQlE/n2W4I=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=SygXXOfkbDpSe7BF50lIgn3oe3ELQH9a+hI8VaUA+HqWMf8X90Zmn+0l+r75nDzRh
-	 +YGIheyFwuJPFoaykgrje2oVqYpt/eDlBeE6NPa622Uyhpu5pJ0cwoVFR7nS3wVd4v
-	 jaB0b1wzZhD5wx+cBV4C0jZjaKf2UjTviMJkgbVMgCVE70h58n+iwJ1fOsDtN32Rt1
-	 x0origrtdobdFQyPRrV8iwFhGWU6DA2GoJ1Uey8qZTtExHwo1NNuTTHpocoPKmheQo
-	 9nYoSUT8iudonnZHacmjrTCuH9rWBtiGFMZQDj9HSp9Igd+NyBp8PmaHrRV0YDTQKF
-	 OXuLo3czSohUA==
-Message-ID: <f05fa557-786c-46cf-a662-9f5b8dac8c8c@kernel.org>
-Date: Tue, 26 Mar 2024 20:52:39 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kd71Eoxp"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-29a8911d11cso2929658a91.1;
+        Tue, 26 Mar 2024 05:17:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1711455478; x=1712060278; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=oaT5m0Iyd7jZvLkszdxr7iHrfKjSWwXKGCm7ndW3Vt4=;
+        b=kd71Eoxpdca+bGq3W/DzBrddG+2cH+3qPHWBIfXb3zEW3yorrT6/L9SB0hLluE3I4Q
+         BAe07HCvb0EmWH695YHS2x2obemSIbrpUyAVndP3cYRxc7h7otuS4bO96/QUw8c1mjzj
+         CP+OZCw6v9EjPalXBzeVW3szJel9RqzWVEz/pJPR4Ekcs7iZn4oIoznk0wNgNxn7UZX8
+         gyJFVwpVNetckIKw2NtE3ZMJ7TgbwPdHQ/zNreERaNbo6vJMRPWrWB9iQUjIWfiMLmD5
+         5/iABOlQFb00uZRSltOJmIAdLYT6ttdZVZWDOONquCkTeplop5fJbtrFROKXdgPmM2LK
+         LC0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711455478; x=1712060278;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=oaT5m0Iyd7jZvLkszdxr7iHrfKjSWwXKGCm7ndW3Vt4=;
+        b=IPDzESRgM0CFWm1iacaaaoGWW+MmzqtsrrFbCAHtitba/0GOD77SbyWyk6f8/CroPV
+         jNEERWmDUy3WeAA/tXet77ljEV3T/TZoPgueQKB51qNdKlSrN9+p934nq8BD/KnAtL4A
+         GIFS/NQl0pB8Nsm2L/owVIjlrSmdjaegbleb6IbQ7c3XXV5CyXGHv4moK00QGnd+Iq+T
+         tvSPO5PG0xqk4U7CMHjRZ4aEo09IYuF/s1Z4Nywd/iJPOl75sV/I+WtFiK4CUG2Klf4k
+         e2MkI2oC3ggU+nXNR4/5JxOVrEXe8bSSaBkQOxK7zrCh/faS7GRAeEXYijF4IwcMDysm
+         N5Mg==
+X-Forwarded-Encrypted: i=1; AJvYcCVG8d7JVtBzAgKsHNwQV+GrPv21VxJNL6e+3rWbgFdosv/OKUXtNGrhjHF5oBfld1x4wHOBkcMQcSt07T7+4j82x5lh83esE71NkN08PP86UCguFJJ+URR5tAGuUCTeJ27siVvgJssVXV7yHOhvZKm8OzKM/AcHUyUrLmgzWrwcNlTzwg==
+X-Gm-Message-State: AOJu0Yzb7mrq8Qxh2K2xTGOIypEwBeC7T2Vw0amLKx7X8pDLmX4erAAP
+	N+FrRQTIak0AxMeh5ix+bYn0f22q0+u4+Ayq1+Fvl9x7oxao3tjc
+X-Google-Smtp-Source: AGHT+IE5JFg/XWOvPTK11xWkHEHl2w/Tu+A9xRm6qkMWdNt1u5Zw6ejbvsYMXP4A8Ks3uNz9qggv6g==
+X-Received: by 2002:a17:90a:5994:b0:2a0:8bba:f997 with SMTP id l20-20020a17090a599400b002a08bbaf997mr833325pji.32.1711455478320;
+        Tue, 26 Mar 2024 05:17:58 -0700 (PDT)
+Received: from localhost.localdomain ([122.187.117.179])
+        by smtp.gmail.com with ESMTPSA id t22-20020a17090ae51600b002a000f06db4sm11765779pjy.5.2024.03.26.05.17.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Mar 2024 05:17:58 -0700 (PDT)
+From: Animesh Agarwal <animeshagarwal28@gmail.com>
+To: 
+Cc: animeshagarwal28@gmail.com,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] dt-bindings: ata: ahci-da850: Convert to dtschema
+Date: Tue, 26 Mar 2024 17:47:28 +0530
+Message-ID: <20240326121735.11994-1-animeshagarwal28@gmail.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 2/7] scsi: libsas: Define NCQ Priority sysfs attributes
- for SATA devices
-Content-Language: en-US
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>,
- Xiang Chen <chenxiang66@hisilicon.com>,
- Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
- Bart Van Assche <bvanassche@acm.org>, TJ Adams <tadamsjr@google.com>,
- linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20240307214418.3812290-1-ipylypiv@google.com>
- <20240307214418.3812290-3-ipylypiv@google.com>
- <CAMuHMdWxVbT=f+kZ58urwGhYD9RfBnu7u8oLAyrx_riU8OGt0w@mail.gmail.com>
- <66ad274d-9890-411d-9fba-90fed2eb33f5@kernel.org>
- <CAMuHMdXA3dD=+oVgZ5cLdWdNHp+VdRCH0+L_kAPRQ0eaANAE+A@mail.gmail.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <CAMuHMdXA3dD=+oVgZ5cLdWdNHp+VdRCH0+L_kAPRQ0eaANAE+A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 3/26/24 19:16, Geert Uytterhoeven wrote:
-> Hi Damien,
-> 
-> On Tue, Mar 26, 2024 at 11:07 AM Damien Le Moal <dlemoal@kernel.org> wrote:
->> On 3/26/24 18:53, Geert Uytterhoeven wrote:
->>> On Thu, Mar 7, 2024 at 10:55 PM Igor Pylypiv <ipylypiv@google.com> wrote:
->>>> Libata sysfs attributes cannot be used for libsas managed SATA devices
->>>> because the ata_port location is different for libsas.
->>>>
->>>> Defined sysfs attributes (visible for SATA devices only):
->>>> - /sys/block/sda/device/ncq_prio_enable
->>>> - /sys/block/sda/device/ncq_prio_supported
->>>>
->>>> The newly defined attributes will pass the correct ata_port to libata
->>>> helper functions.
->>>>
->>>> Reviewed-by: John Garry <john.g.garry@oracle.com>
->>>> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
->>>> Reviewed-by: Jason Yan <yanaijie@huawei.com>
->>>> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
->>>
->>> Thanks for your patch, which is now commit b4d3ddd2df7531e3 ("scsi:
->>> libsas: Define NCQ Priority sysfs attributes for SATA devices")
->>> in scsi-mkp/for-next
->>>
->>>> --- a/drivers/scsi/libsas/sas_ata.c
->>>> +++ b/drivers/scsi/libsas/sas_ata.c
->>>
->>>> +
->>>> +DEVICE_ATTR(ncq_prio_supported, S_IRUGO, sas_ncq_prio_supported_show, NULL);
->>>> +
->>>
->>> [...]
->>>
->>>> +
->>>> +DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
->>>> +           sas_ncq_prio_enable_show, sas_ncq_prio_enable_store);
->>>> +
->>>
->>> When both CONFIG_SCSI_SAS_ATA and CONFIG_SATA_HOST are enabled:
->>
->> I have both enabled in my config and I do not see any issue. What is special
->> with these on ARM ?
-> 
-> Modular or built-in?
-> I have them built-in, and it fails on arm64 (with renesas_defconfig,
-> which is not upstream).
-> It also fails with shmobile_defconfig on arm32, after manually adding
-> CONFIG_SCSI_SAS_LIBSAS=y and CONFIG_SCSI_SAS_ATA=y.
+Convert the ahci-da850 bindings to DT schema
 
-Hmm... That must be it. I did a modular build.
-Will check that again and send a fix. Thanks.
+Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
+---
+ .../devicetree/bindings/ata/ahci-da850.txt    | 18 ----------
+ .../bindings/ata/ti,da850-ahci.yaml           | 36 +++++++++++++++++++
+ 2 files changed, 36 insertions(+), 18 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
 
-
+diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+deleted file mode 100644
+index 5f8193417725..000000000000
+--- a/Documentation/devicetree/bindings/ata/ahci-da850.txt
++++ /dev/null
+@@ -1,18 +0,0 @@
+-Device tree binding for the TI DA850 AHCI SATA Controller
+----------------------------------------------------------
+-
+-Required properties:
+-  - compatible: must be "ti,da850-ahci"
+-  - reg: physical base addresses and sizes of the two register regions
+-         used by the controller: the register map as defined by the
+-         AHCI 1.1 standard and the Power Down Control Register (PWRDN)
+-         for enabling/disabling the SATA clock receiver
+-  - interrupts: interrupt specifier (refer to the interrupt binding)
+-
+-Example:
+-
+-	sata: sata@218000 {
+-		compatible = "ti,da850-ahci";
+-		reg = <0x218000 0x2000>, <0x22c018 0x4>;
+-		interrupts = <67>;
+-	};
+diff --git a/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
+new file mode 100644
+index 000000000000..d54f58c12e78
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
+@@ -0,0 +1,36 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/ti,da850-ahci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: TI DA850 AHCI SATA Controller
++
++maintainers:
++  - Animesh Agarwal <animeshagarwal28@gmail.com>
++
++properties:
++  compatible:
++    const: ti,da850-ahci
++
++  reg:
++    minItems: 2
++    maxItems: 2
++
++  interrupts:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++  - interrupts
++
++additionalProperties: false
++
++examples:
++  - |
++    sata@218000 {
++        compatible = "ti,da850-ahci";
++        reg = <0x218000 0x2000>, <0x22c018 0x4>;
++        interrupts = <67>;
++    };
 -- 
-Damien Le Moal
-Western Digital Research
+2.44.0
 
