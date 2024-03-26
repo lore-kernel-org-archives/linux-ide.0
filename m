@@ -1,116 +1,85 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8931813C687;
-	Tue, 26 Mar 2024 14:53:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67FC71B59A;
+	Tue, 26 Mar 2024 18:14:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711464834; cv=none; b=fu+M3MivWYfTjKB0Z/pIG5p+ytzW+WaxYYdwXDSLfM8RqlsIpdB11oWKk6YgqXoxd6As+MmEh9vcA2WRee/oAUkdVg5dCKk2OvquSye1p7P09pAgd/hrRCdY2JH5j5lrxfveNAb/sjV9UPLGusAn3/qkNNLymayHARS3ZtPieRk=
+	t=1711476889; cv=none; b=tjfGsvKLN+7pD8PHH1qhNDQZNPzYJMBkxvzI//ElVuxahvRKby/mfye6zxGbyy+f32JBmOWMdf3UCtFiXH2I5rt8pXmFuLzRGiw8z9A5LBmKuZ+jxkwN6sRQPyC55++D+Ens/nhkt8BoOIih6GBNOirZffcaB3QjfkG2uuZ3Nxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711464834; c=relaxed/simple;
-	bh=jkUwCCs2ehDNVM/jmHEp5augAJwEF3YMSQWolNWMTfg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=q6p0IK1n+NFm4FxKfCykE6c5YZRbXAeYEgGL6uC3bK0Gh3TaenLGzS1IEYFw2i8kd8kE1/tGj5UCeYYAsSF32/947TNWc0ZhvxjdZPgKFKC0U8RX5tiJUtkF6SpCR1Ro3+DjnLec7EKJSx4trS5kkOhw+ujtnTEyZ2OTtJE35vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QXSi1TwM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711476889; c=relaxed/simple;
+	bh=X8a4b9n/2CO98Mv8FxoOR09KTzFb7RNSCqdYPkuQjlY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XQ6iMSPrWsmPxCBDGDw0wH+ad9k+3G4ufSnz0Qcm2gDFJcSZ+runepIRh1d9A9orrXnv1kTkASttkQV75Nc07iERYOrcOnIxoFbIzG1hiTK3Kbhmv/eF/x+vYFdpQu9eHymqJGAxZVcjZvPAIE5EAuBtrIWSzNTM8B6X47e8snc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EtFzhrlz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QXSi1TwM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89622C433F1;
-	Tue, 26 Mar 2024 14:53:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EtFzhrlz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 329CBC433F1;
+	Tue, 26 Mar 2024 18:14:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711464834;
-	bh=jkUwCCs2ehDNVM/jmHEp5augAJwEF3YMSQWolNWMTfg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=QXSi1TwM8UlBSQOOZ6bV0PCri437P+ddY42TMgKB9+d+xHoMGe6rj6ApVgAaPVOVf
-	 F7csm0GeCe0embSNPker9mie0sw55BK1KxYbjnq3O//uHZZoeU9SnHxGpQ6kLfb2fs
-	 mQfEbmIpi/0i56u1WMX+zAf0K0wxw/d+ORbq6ueii6LYDlNe/GXvABo/TNnhTL/NbV
-	 HT73L6fk8EDZ+bsmkXqcwSaAmxI4Uh48griGQieXPO9nkEBtCagKVPJSlE1w/PLO0h
-	 nt+5ZCPybbpit83cSMCG+6CEWXDM+WfXrJQjUBfami36qqByn1OoCeeKK807yc0Ph1
-	 P0tO+DJucITiw==
-From: Arnd Bergmann <arnd@kernel.org>
-To: linux-kbuild@vger.kernel.org,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Nicolas Schier <nicolas@fjasle.eu>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	John Garry <john.g.garry@oracle.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 10/12] sata: sx4: fix pdc20621_get_from_dimm() on 64-bit
-Date: Tue, 26 Mar 2024 15:53:37 +0100
-Message-Id: <20240326145348.3318887-1-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240326144741.3094687-1-arnd@kernel.org>
-References: <20240326144741.3094687-1-arnd@kernel.org>
+	s=k20201202; t=1711476888;
+	bh=X8a4b9n/2CO98Mv8FxoOR09KTzFb7RNSCqdYPkuQjlY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EtFzhrlzdRk+KbzyPgQCs5I4W4erYn2OQ0+vm1Vns6/fI8/eQmT5v+ngLFszeU+20
+	 NCR56RMTfme2yhNj1ECez8zXAUIRquZMWUfduQFVBIOrcbhTFvcc79HJX2odS5kKKa
+	 6oHGT0yDxNWPtiyXV6afOr09jfRtZIV3NBNAgPCNIPv+PKDOoWkS6ril5pQ7T8Njpn
+	 lxibVlEmWkk5FCFf4k5vEqFFh/nI8/YbZ/yXvfN6PIGe3Ojp2JAqPJd1R+lUDqptQK
+	 9CZPrDa8oQqnslT/86I5T1Elzs8jINTJINqKt2SfqvQD5gI2rCnLv8Ms+x1PSUppWh
+	 2n3VxGLUar2dw==
+Date: Tue, 26 Mar 2024 18:14:45 +0000
+From: Conor Dooley <conor@kernel.org>
+To: Animesh Agarwal <animeshagarwal28@gmail.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>, linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: ata: ahci-da850: Convert to dtschema
+Message-ID: <20240326-rerun-flap-6d827f654453@spud>
+References: <20240326121735.11994-1-animeshagarwal28@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="gspvcYe74748VKy0"
+Content-Disposition: inline
+In-Reply-To: <20240326121735.11994-1-animeshagarwal28@gmail.com>
 
-From: Arnd Bergmann <arnd@arndb.de>
 
-gcc warns about a memcpy() with overlapping pointers because of an
-incorrect size calculation:
+--gspvcYe74748VKy0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-In file included from include/linux/string.h:369,
-                 from drivers/ata/sata_sx4.c:66:
-In function 'memcpy_fromio',
-    inlined from 'pdc20621_get_from_dimm.constprop' at drivers/ata/sata_sx4.c:962:2:
-include/linux/fortify-string.h:97:33: error: '__builtin_memcpy' accessing 4294934464 bytes at offsets 0 and [16, 16400] overlaps 6442385281 bytes at offset -2147450817 [-Werror=restrict]
-   97 | #define __underlying_memcpy     __builtin_memcpy
-      |                                 ^
-include/linux/fortify-string.h:620:9: note: in expansion of macro '__underlying_memcpy'
-  620 |         __underlying_##op(p, q, __fortify_size);                        \
-      |         ^~~~~~~~~~~~~
-include/linux/fortify-string.h:665:26: note: in expansion of macro '__fortify_memcpy_chk'
-  665 | #define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,                  \
-      |                          ^~~~~~~~~~~~~~~~~~~~
-include/asm-generic/io.h:1184:9: note: in expansion of macro 'memcpy'
- 1184 |         memcpy(buffer, __io_virt(addr), size);
-      |         ^~~~~~
+On Tue, Mar 26, 2024 at 05:47:28PM +0530, Animesh Agarwal wrote:
 
-The problem here is the overflow of an unsigned 32-bit number to a
-negative that gets converted into a signed 'long', keeping a large
-positive number.
+> -  - compatible: must be "ti,da850-ahci"
+> -  - reg: physical base addresses and sizes of the two register regions
+> -         used by the controller: the register map as defined by the
+> -         AHCI 1.1 standard and the Power Down Control Register (PWRDN)
+> -         for enabling/disabling the SATA clock receiver
 
-Replace the complex calculation with a more readable min() variant
-that avoids the warning.
+> +  reg:
+> +    minItems: 2
+> +    maxItems: 2
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/ata/sata_sx4.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index b51d7a9d0d90..a482741eb181 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -957,8 +957,7 @@ static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
- 
- 	offset -= (idx * window_size);
- 	idx++;
--	dist = ((long) (window_size - (offset + size))) >= 0 ? size :
--		(long) (window_size - offset);
-+	dist = min(size, window_size - offset);
- 	memcpy_fromio(psource, dimm_mmio + offset / 4, dist);
- 
- 	psource += dist;
-@@ -1005,8 +1004,7 @@ static void pdc20621_put_to_dimm(struct ata_host *host, void *psource,
- 	readl(mmio + PDC_DIMM_WINDOW_CTLR);
- 	offset -= (idx * window_size);
- 	idx++;
--	dist = ((long)(s32)(window_size - (offset + size))) >= 0 ? size :
--		(long) (window_size - offset);
-+	dist = min(size, window_size - offset);
- 	memcpy_toio(dimm_mmio + offset / 4, psource, dist);
- 	writel(0x01, mmio + PDC_GENERAL_CTLR);
- 	readl(mmio + PDC_GENERAL_CTLR);
--- 
-2.39.2
+Could you make this an items list with a pair of text descriptions
+please? The original text binding's text for each can be reused.
 
+Thanks,
+Conor.
+
+--gspvcYe74748VKy0
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZgMQlQAKCRB4tDGHoIJi
+0kzNAQCvdiynFxfbTGd6T2pL7NC8T6GWa+FltXTVrKbv2NGymwEAlpLZIVPht5Vz
+5LIo1R6BiwZyyomefIWp4I0UNjMHmA8=
+=mmeI
+-----END PGP SIGNATURE-----
+
+--gspvcYe74748VKy0--
