@@ -1,247 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from wflow4-smtp.messagingengine.com (wflow4-smtp.messagingengine.com [64.147.123.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B965A73534;
-	Tue, 26 Mar 2024 09:20:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A997BAF9;
+	Tue, 26 Mar 2024 09:31:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711444843; cv=none; b=HuJYFl7kJXsrC2aTroaYF9NeYz3eLAWlwNmU/CrO3DynPWQbXus6BPzExNE9VGxjHJt7cie3xZypnmU2QPxDjlf6wnKdH073nyn7EnJxjJ5IXzK45CvbGOEtcYO0gQdgLse79SAiov/zadZ/V1igTs0DidG90oqJMZDFtDF36r8=
+	t=1711445467; cv=none; b=mcKGBiqr674ThQg6XEpwitnd/n6d/11hQJuvNchNxc7eeDu1Cg5I7sAT3ISaWFSFu3eWgXQV9zuA1pcdXnfmaTEEayM+KM2Oy4wdWaAy7ggLYYDYgR0IvPz7N5ANkJHb6TX+mxNVj0L4jkuqLol+HnqDlUzeq8E3a0cKWyTLOco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711444843; c=relaxed/simple;
-	bh=ej941G4SwXEoXOihGj99VwXEy6Zw3bZFrs7RkXckkj8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Pr9xirOURKHRbU9T9/U7gjTBXYNmCZoos1BS7QoUKa4OMHTVDG0Cm5278+MAmFKAZtGM/Hs+3dzNpHxpfc/vc0U2N2rAZlPY/bi35tu2tB28zM7e+XIRUERaPszZGQep2z7mrb4Kx+QWWlbZFNf5xyz7DLHctc1goiN5FD+G6pI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q9THfPFe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711445467; c=relaxed/simple;
+	bh=A385P8sstLom6kzL26rxDc9NxJPEN2ya79T0qMm//ek=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qe7RimVjhdg+JNchzlWhlpF7SIYo2P6BZlWPcqTVKtAMfHubotiq9uYtRaOh6ynwNp6IXqmwo7kVu9cfN5TKFgW/910YFjHIfo7JUWpezq5eBqNZ545sacYwkiOG6N5MnyxF423c3C8CV3P81f1mDJp00Rqg9k7U0Pv+p1FaQQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sakamocchi.jp; spf=pass smtp.mailfrom=sakamocchi.jp; dkim=pass (2048-bit key) header.d=sakamocchi.jp header.i=@sakamocchi.jp header.b=IYcHZRbd; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=bY6T7bCu; arc=none smtp.client-ip=64.147.123.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sakamocchi.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sakamocchi.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q9THfPFe"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D33AAC4E687;
-	Tue, 26 Mar 2024 09:20:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711444842;
-	bh=ej941G4SwXEoXOihGj99VwXEy6Zw3bZFrs7RkXckkj8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=q9THfPFe2YXbSu1hZfrcZ3vUXGWnQCkHUCog1X90SIq+KMM1sJ2anmi8br4dWvxk1
-	 OPaz++wFL7kw8DdWXvrlafvUjSM4IE0PJEFezDGluNWXRj2oasdwb3pxaJqKN5tl7x
-	 rZXR6tyQuQRHckcEyOM//sxUd9sJrd7VebRuYqvbNoKzVLFLHlwkSjlJ8XEQPJBYV6
-	 bv7r77xF1IBFqfNVPW0m9nk0GmZTlDSfowXMVA1cVJZrzS6sK7+4zh74WU9r7Fe6wE
-	 S6+mByiL6T44ypD3PG3iFaFqb6tfDwiyZPwPQ7D51dBX756MhyOEVyAeOR90DuhcJx
-	 THFMDSzkkQruA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C23F9C6FD1F;
-	Tue, 26 Mar 2024 09:20:42 +0000 (UTC)
-From: Nikita Shubin via B4 Relay <devnull+nikita.shubin.maquefel.me@kernel.org>
-Date: Tue, 26 Mar 2024 12:19:01 +0300
-Subject: [PATCH v9 34/38] ata: pata_ep93xx: remove legacy pinctrl use
+	dkim=pass (2048-bit key) header.d=sakamocchi.jp header.i=@sakamocchi.jp header.b="IYcHZRbd";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="bY6T7bCu"
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+	by mailflow.west.internal (Postfix) with ESMTP id 671F62CC0247;
+	Tue, 26 Mar 2024 05:31:00 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute6.internal (MEProxy); Tue, 26 Mar 2024 05:31:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sakamocchi.jp;
+	 h=cc:cc:content-type:content-type:date:date:from:from
+	:in-reply-to:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to; s=fm2; t=1711445459; x=
+	1711452659; bh=JsIYIdm4lfmTSisZZ/DXBUcj1A+T+HA65a7uJi4J4Ag=; b=I
+	YcHZRbd9sIqHicWGnTcnbloJibtoDxCJb1PAsLm0emFQ00jzFYEifmMbCFh0Otvs
+	lXluwz6G8n8zwkeLXhb3kBgLnFeAKfJX1uqRW8zLv+64GlO3xbTSLa4NUfMhFCEt
+	7+3d/oa1d7PJWNhAaDEEn9melllT1zZws8077/2fa0eQJmg/hxmy/IzDVwHUsp/J
+	d39UqieNanc/fas+7PD/0DV2Dgb/85rvu6xKHD6yVWJLc5RsAlYZD7Egob+G2WMj
+	+YqvJiwsckXS6iMXrm0lUUYcWNYyas1SYaXb1zqwr3EJTwYLwy4S7u9rEpSF8CKZ
+	EWKSoaLtKvg+q2UZbRm0A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm2; t=1711445459; x=1711452659; bh=JsIYIdm4lfmTSisZZ/DXBUcj1A+T
+	+HA65a7uJi4J4Ag=; b=bY6T7bCua+MtWTPA5KWjwHZJGaJziE/2KYz7fxj20W0q
+	If1MAampCvCny6OBHZOHF32y3Kn4INASY9MYgcWPloU9RzC5JhZgXACJJCOzzbiW
+	/omAae/qPOKlgipcJZ82q+o6szSvs3ct/aQhVAudZmjU8z6xqk/m8oufiOmPDVJ6
+	YF6CvwTEorC8Wxd1l59IAGGH3W82NS2cMdOpqLw+Ta3jj1GIdknH5Dv3ilEqdHKT
+	mKqhrk5Uuf2VkxqIu59mUzNvkU0PDH5U9YWz5zMlAvj+cKm+2OuZalJ5/GkFiGuD
+	sNpVjilapH+Lgsu11iLndOldjMUmnQckKHNPtrBN8Q==
+X-ME-Sender: <xms:0pUCZuTCEK_UZ1FIa04HDNbw09J1SP-yLjTPmiKJ7fcM9-9PLm5N5Q>
+    <xme:0pUCZjzvYUNp_6AUn1GhXmXL5M4uvpS0meVqI5xxToMHvEoigMtmYJ7j1_wA3I0Sp
+    HvgeEyM6lGYvNXn320>
+X-ME-Received: <xmr:0pUCZr0cUziTQhpAkvv_eqG_J-dYqPzZf0V1SUH3f-nNStBcAUp6EA4jUGzRJEBOwGQMJiJimKe5XTYumtIHgMhG_YMg7hmSTdk>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledruddufedgtdehucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvfevuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepvfgrkhgr
+    shhhihcuufgrkhgrmhhothhouceoohdqthgrkhgrshhhihesshgrkhgrmhhotggthhhird
+    hjpheqnecuggftrfgrthhtvghrnhephefhhfettefgkedvieeuffevveeufedtlefhjeei
+    ieetvdelfedtgfefuedukeeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpe
+    hmrghilhhfrhhomhepohdqthgrkhgrshhhihesshgrkhgrmhhotggthhhirdhjph
+X-ME-Proxy: <xmx:0pUCZqB2VFAGd4lCaBCxrik37ACK9ghaOvrLJuoQkMNILffyy2RCbg>
+    <xmx:0pUCZngGTm6NYZ66zzHGXj6ZOAhF1W15NGgU_1lQ7VVTb5-DzgKjDw>
+    <xmx:0pUCZmotj5j7QD4RQRHOqylb2bqFpvVFfCyUaWvVyWMamP166ANVEA>
+    <xmx:0pUCZqgjGdSeR-bNNxKjy_SJixp8QgiXMk2VyLNValuMMfRrKA7OQA>
+    <xmx:05UCZshvx_JveHrwhZignnPkPsX9dTUPRS4MjCrtEER4_LSUV7Gv69QHUMm5xSVi>
+Feedback-ID: ie8e14432:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 26 Mar 2024 05:30:48 -0400 (EDT)
+Date: Tue, 26 Mar 2024 18:30:45 +0900
+From: Takashi Sakamoto <o-takashi@sakamocchi.jp>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,	Niklas Cassel <cassel@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Juergen E. Fischer" <fischer@norbit.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,	Brian King <brking@us.ibm.com>,
+ Lee Duncan <lduncan@suse.com>,	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,	Jason Yan <yanaijie@huawei.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
+	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH 13/23] sbp2: switch to using ->device_configure
+Message-ID: <20240326093045.GA139274@workstation.local>
+Mail-Followup-To: Christoph Hellwig <hch@lst.de>,	Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,	Niklas Cassel <cassel@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Juergen E. Fischer" <fischer@norbit.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,	Brian King <brking@us.ibm.com>,
+ Lee Duncan <lduncan@suse.com>,	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,	Jason Yan <yanaijie@huawei.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
+	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+References: <20240324235448.2039074-1-hch@lst.de>
+ <20240324235448.2039074-14-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240326-ep93xx-v9-34-156e2ae5dfc8@maquefel.me>
-References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
-In-Reply-To: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
-To: Hartley Sweeten <hsweeten@visionengravers.com>, 
- Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
- Russell King <linux@armlinux.org.uk>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- Nikita Shubin <nikita.shubin@maquefel.me>, 
- Linus Walleij <linus.walleij@linaro.org>, 
- Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-X-Mailer: b4 0.13-dev-e3e53
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1711444837; l=5459;
- i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
- bh=qPkB8JbiJNaB7ZMkLQj7fBfz340c+I4CkSEkmdWNtuk=;
- b=bBf4+GrSV74qI6GgOhelXk5KKU/NAKNkXYlswJ6DNux/qq1GDEcWj5RHcirwPEUklatg4YkLh3Bg
- u9MwwLZwAYZJu4QIFTvIixnXXbbbCqfur5zfg07IN6AGmPBCUr27
-X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
- pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
-X-Endpoint-Received: by B4 Relay for nikita.shubin@maquefel.me/20230718
- with auth_id=65
-X-Original-From: Nikita Shubin <nikita.shubin@maquefel.me>
-Reply-To: nikita.shubin@maquefel.me
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240324235448.2039074-14-hch@lst.de>
 
-From: Nikita Shubin <nikita.shubin@maquefel.me>
+Hi,
 
-Drop legacy acquire/release since we are using pinctrl for this now.
+On Mon, Mar 25, 2024 at 07:54:38AM +0800, Christoph Hellwig wrote:
+> Switch to the ->device_configure method instead of ->slave_configure
+> and update the block limits on the passed in queue_limits instead
+> of using the per-limit accessors.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/firewire/sbp2.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-Acked-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
----
- arch/arm/mach-ep93xx/core.c       | 72 ---------------------------------------
- drivers/ata/pata_ep93xx.c         | 25 ++++----------
- include/linux/soc/cirrus/ep93xx.h |  4 ---
- 3 files changed, 6 insertions(+), 95 deletions(-)
-
-diff --git a/arch/arm/mach-ep93xx/core.c b/arch/arm/mach-ep93xx/core.c
-index 4ddf1a4cba33..9c6154bb37b5 100644
---- a/arch/arm/mach-ep93xx/core.c
-+++ b/arch/arm/mach-ep93xx/core.c
-@@ -779,78 +779,6 @@ void __init ep93xx_register_ide(void)
- 	platform_device_register(&ep93xx_ide_device);
- }
- 
--int ep93xx_ide_acquire_gpio(struct platform_device *pdev)
--{
--	int err;
--	int i;
--
--	err = gpio_request(EP93XX_GPIO_LINE_EGPIO2, dev_name(&pdev->dev));
--	if (err)
--		return err;
--	err = gpio_request(EP93XX_GPIO_LINE_EGPIO15, dev_name(&pdev->dev));
--	if (err)
--		goto fail_egpio15;
--	for (i = 2; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_E(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_e;
--	}
--	for (i = 4; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_G(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_g;
--	}
--	for (i = 0; i < 8; i++) {
--		err = gpio_request(EP93XX_GPIO_LINE_H(i), dev_name(&pdev->dev));
--		if (err)
--			goto fail_gpio_h;
--	}
--
--	/* GPIO ports E[7:2], G[7:4] and H used by IDE */
--	ep93xx_devcfg_clear_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
--				 EP93XX_SYSCON_DEVCFG_GONIDE |
--				 EP93XX_SYSCON_DEVCFG_HONIDE);
--	return 0;
--
--fail_gpio_h:
--	for (--i; i >= 0; --i)
--		gpio_free(EP93XX_GPIO_LINE_H(i));
--	i = 8;
--fail_gpio_g:
--	for (--i; i >= 4; --i)
--		gpio_free(EP93XX_GPIO_LINE_G(i));
--	i = 8;
--fail_gpio_e:
--	for (--i; i >= 2; --i)
--		gpio_free(EP93XX_GPIO_LINE_E(i));
--	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
--fail_egpio15:
--	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
--	return err;
--}
--EXPORT_SYMBOL(ep93xx_ide_acquire_gpio);
--
--void ep93xx_ide_release_gpio(struct platform_device *pdev)
--{
--	int i;
--
--	for (i = 2; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_E(i));
--	for (i = 4; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_G(i));
--	for (i = 0; i < 8; i++)
--		gpio_free(EP93XX_GPIO_LINE_H(i));
--	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
--	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
--
--
--	/* GPIO ports E[7:2], G[7:4] and H used by GPIO */
--	ep93xx_devcfg_set_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
--			       EP93XX_SYSCON_DEVCFG_GONIDE |
--			       EP93XX_SYSCON_DEVCFG_HONIDE);
--}
--EXPORT_SYMBOL(ep93xx_ide_release_gpio);
--
- /*************************************************************************
-  * EP93xx ADC
-  *************************************************************************/
-diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index 13246a92e29f..a8555f630097 100644
---- a/drivers/ata/pata_ep93xx.c
-+++ b/drivers/ata/pata_ep93xx.c
-@@ -922,28 +922,18 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
- 	void __iomem *ide_base;
- 	int err;
- 
--	err = ep93xx_ide_acquire_gpio(pdev);
--	if (err)
--		return err;
--
- 	/* INT[3] (IRQ_EP93XX_EXT3) line connected as pull down */
- 	irq = platform_get_irq(pdev, 0);
--	if (irq < 0) {
--		err = irq;
--		goto err_rel_gpio;
--	}
-+	if (irq < 0)
-+		return irq;
- 
- 	ide_base = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
--	if (IS_ERR(ide_base)) {
--		err = PTR_ERR(ide_base);
--		goto err_rel_gpio;
--	}
-+	if (IS_ERR(ide_base))
-+		return PTR_ERR(ide_base);
- 
- 	drv_data = devm_kzalloc(&pdev->dev, sizeof(*drv_data), GFP_KERNEL);
--	if (!drv_data) {
--		err = -ENOMEM;
--		goto err_rel_gpio;
--	}
-+	if (!drv_data)
-+		return -ENOMEM;
- 
- 	drv_data->pdev = pdev;
- 	drv_data->ide_base = ide_base;
-@@ -1002,8 +992,6 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
- 
- err_rel_dma:
- 	ep93xx_pata_release_dma(drv_data);
--err_rel_gpio:
--	ep93xx_ide_release_gpio(pdev);
- 	return err;
- }
- 
-@@ -1015,7 +1003,6 @@ static void ep93xx_pata_remove(struct platform_device *pdev)
- 	ata_host_detach(host);
- 	ep93xx_pata_release_dma(drv_data);
- 	ep93xx_pata_clear_regs(drv_data->ide_base);
--	ep93xx_ide_release_gpio(pdev);
- }
- 
- static const struct of_device_id ep93xx_pata_of_ids[] = {
-diff --git a/include/linux/soc/cirrus/ep93xx.h b/include/linux/soc/cirrus/ep93xx.h
-index f6376edc1b33..142c33a2d7db 100644
---- a/include/linux/soc/cirrus/ep93xx.h
-+++ b/include/linux/soc/cirrus/ep93xx.h
-@@ -37,15 +37,11 @@ struct ep93xx_regmap_adev {
- 	container_of((_adev), struct ep93xx_regmap_adev, adev)
- 
- #ifdef CONFIG_ARCH_EP93XX
--int ep93xx_ide_acquire_gpio(struct platform_device *pdev);
--void ep93xx_ide_release_gpio(struct platform_device *pdev);
- int ep93xx_i2s_acquire(void);
- void ep93xx_i2s_release(void);
- unsigned int ep93xx_chip_revision(void);
- 
- #else
--static inline int ep93xx_ide_acquire_gpio(struct platform_device *pdev) { return 0; }
--static inline void ep93xx_ide_release_gpio(struct platform_device *pdev) {}
- static inline int ep93xx_i2s_acquire(void) { return 0; }
- static inline void ep93xx_i2s_release(void) {}
- static inline unsigned int ep93xx_chip_revision(void) { return 0; }
-
--- 
-2.41.0
+I'm not good at any kind of storage protocol, thus execute me not to
+review it. My concern is which subsystem provides the change to mainline.
+I don't mind it is your subsystem.
 
 
+Thanks
+
+Takashi Sakamoto
