@@ -1,189 +1,159 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2027E568A
-	for <linux-ide@vger.kernel.org>; Wed, 27 Mar 2024 05:07:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 898E010949;
+	Wed, 27 Mar 2024 05:40:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711516059; cv=none; b=XQ2YLaCm8MHftDLAicXKlEYxGmGwbi3GMQhwYolmr5I6Y3BWmwWPEr2Wv0qL9gHe9ezC0qmWnnB11T7KW8UZ4bbrwHgN1XC5psnMZcDo8DJVbu/qHqoDo8MGq1MnTS6auh170WqNkXQop4nStVUkb3PnpnN3M9hyorJZ9lBFHAo=
+	t=1711518038; cv=none; b=XDZl2qTvrAyJXU4OAiVhOxaDnc4UStgT2/99m+9o+q6rh3w8qmxog+sU8jYZniN50Q4IeMR5jcwwYk44d9fqNOtWGSs73Zi1fgZikdCsnQhVODMab7z4F/phIir11RWIU0cqD2X1fu2687/AOW2Olfrklu52ZN5yp/t52jsoJGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711516059; c=relaxed/simple;
-	bh=6hRrPE77vMG9UB+u2FZ3N08FEfbvyAhJGxbSd6EuVlM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=u7Wtut6B61oUJvXioU3Czk/A+l0b48gtklcq1au3Ar1IPpVgRY8AckkTFLsz+ldYsVmIx+mDSjMfb/PH0lsHOFbw3coAheMzTNG0F5jRwaiLO8GvQUp7XxxH1AYpvk71bnmGInPk6YfpsZh4D0Bk0yCWMlSHmqnGns7+49AnNdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=nJ4cvSY6; arc=none smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1711518038; c=relaxed/simple;
+	bh=KKEp5sc6sFi1eq1upDmeSVzyDCa2sp6vUs9sPYMLjyc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FplMI7sffQLYvmR4GS1SXK9+gfuwCFEWDC43yfkz1qDizYoHHc7bntcqGzUQ0ZpDJ8K6bOpfJsq/TazUCjaaXKEQxTdI3eOr5GaVrx/3z0dsLLCGw2mV4csyqrjFy+QjwCJMbVkpjYgDLUgVy4Kr1WXjKg7VSvh2/M5pHVc2WM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E5bumHTB; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nJ4cvSY6"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-a46a7208eedso852840666b.0
-        for <linux-ide@vger.kernel.org>; Tue, 26 Mar 2024 22:07:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E5bumHTB"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-29ddfada0d0so3528544a91.3;
+        Tue, 26 Mar 2024 22:40:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1711516054; x=1712120854; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=/j/wkfnU1VMtlD/kDo+x6lLCbpnn8+R/4k1WBBOkFIQ=;
-        b=nJ4cvSY6gnVf4RRHoeSMIHgnar5jPBgsCwbnnW6oSdwx6NrcvEb3w50No93GB2LVhf
-         /PlRabLRgZV5JZz1QhBJgs66UDJidTrOe2S86AanQ3O+meXq5lOY+06eQvicBhRpKyCR
-         kiqERp/I2widroPubgcF508ITqKMzG/TzXxwBKEVIa2ftAZTcoD6PgD/VhZ+v2TTV1tA
-         WirLlFulCjEX4/cMMsw6waqIzAh/Jo9GpCRmhsRxVGOhRF7lW9SwGz0P+MSgkW05suEe
-         jv+JKIdzG+S0oTXVXL5iybsv7XdoEzDTFkjr82ORR0Rkl3HkMmHx0DptNcGA+R9MArEC
-         wbdQ==
+        d=gmail.com; s=20230601; t=1711518036; x=1712122836; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=tZcOrIhJIFiQ3b0HbHJAkzbepauO6QKGgBvXuK2i+pE=;
+        b=E5bumHTB1K3lkjysaMPWhzEFIJ+VQSmXGoInE33TPFLTiT2GMh1FYXXoLtyL3/3+em
+         d6M3exVi2oW7ypO46lvTQo1vwhPVvhfJVTx4Q7SQDPldWREv21BfGjcVTMav+Ll9fuyv
+         D95BV0P/q/Gm+d0uyqgyZtVkniZArCHIStK7Tyq3yCaNbUur0lHgpsaI8FBEuC5MGbel
+         ZIsZYWlK5hakVCiWg+ovqHPeUTEWWkKkeFJjZxrwNMFfJVde5pS9fWUaZofesJO+xYMa
+         Emd3NS4t3FVJmQrdml5punmrvg8xX+alRLUb/uCU8a1ZXPLJAh0fEwvp1Q3gDK7BhkeT
+         NNKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711516054; x=1712120854;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/j/wkfnU1VMtlD/kDo+x6lLCbpnn8+R/4k1WBBOkFIQ=;
-        b=Wt9wJA8ViTIZV6jwWnw/UOyHYM5curlkaomHGlb10MYUFjTZXAy5FjuTYPvTY4lwv0
-         2fphA9YvpX7v985ARzAmcOQ1bhyusvzpi45+72Ld+aTlbdv76IxLX6opq1a01PNvGX6K
-         Ews+Td4sRLXEk42edVatMZLTQ3bxFJGNFhBq9KZCtUW8h4hIbcJDOROjfB7mIUx0DgHR
-         U/9wDU2nP0AcIATktcJIJzfPVinPsS8yS3aSikpPVeymAMI5thw+vwvAnCKuFqgei1AR
-         UskS6kQEQ9TdxpQA0WgK0joiTpjz8WgBi+5T00iO8yu1lkBNHVMciSIcxQaCpWj1mIju
-         VQMw==
-X-Forwarded-Encrypted: i=1; AJvYcCVG9nNLqxQb1IqM2mVAtPX2DtacvE/xgqv7cK+vtG4n2Yo7n9JA1wivXGssD7pDSbiS1mtCVyllKyDP2JaYAkxLeEzT6dSm5+rc
-X-Gm-Message-State: AOJu0YwgaVxkNMFO/lOUeq6NPu+f/3gjmjiZROBIS6YwIogkR/X6OyPP
-	guPypUOyzhVeLVgxT9VZR3QprnbS5WBUeYpkPBLkrezYZunQllt99reR/jmt6QM=
-X-Google-Smtp-Source: AGHT+IHlo+FYMJRDViGKDBKHGZt4C85CAdTPEoXLJs8oiXtdIa99YCUHjkKw6jicrE8R7Bo7TiFa/A==
-X-Received: by 2002:a17:906:7cd:b0:a4d:f2d9:cf1a with SMTP id m13-20020a17090607cd00b00a4df2d9cf1amr1965395ejc.63.1711516054468;
-        Tue, 26 Mar 2024 22:07:34 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.222.44])
-        by smtp.gmail.com with ESMTPSA id l19-20020a17090612d300b00a46cffe6d06sm4950533ejb.42.2024.03.26.22.07.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Mar 2024 22:07:33 -0700 (PDT)
-Message-ID: <a16f45c9-747c-4a19-98a3-aa5f47ee5c4d@linaro.org>
-Date: Wed, 27 Mar 2024 06:07:30 +0100
+        d=1e100.net; s=20230601; t=1711518036; x=1712122836;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=tZcOrIhJIFiQ3b0HbHJAkzbepauO6QKGgBvXuK2i+pE=;
+        b=C7FRoYQO90yyyq0cdjRt7JhFQq0pi8OQDl7QqrHKWCA8/Af8RIYQ6Ko+MqcH+8RTfH
+         a3X38dtIHeAsHBnRUfgyJlmNb1OIILkIW0gi0wbqkp29jPI4dunA8KoEi4ZYU+ZiZsfn
+         rpoZPpDRIF37PDrvHg0ct1e4gANgWhnOG7M2x2dYMAjbg8B0ms9n/9xUHApK6ASTCvei
+         ByCfcxgFATWTj5gdjYhbmZLfwVpfPQbeMiXXryDdGOcm2pZ4uqYKNZxJCpwvF4I1Wz+3
+         c11vRGcMPoJV4EAEt7J9QRuc4htcAKKiM+wLfWdPb8Pr03MhhrjFxR2SPMawmU1WzDl7
+         xLIQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV1wHYK8flyQW6Q4LqGuSxYpVYo3J7gP2ADDP1q2xsCM9xFJoKnnf1wCwVllAw4qcnl1G3QkQoeNDWUVzvksYCLbhdddW4+gpLx7bB6ZKsVH6nDuIRk9/HKyPo9HoGuM7cz4IwMasbAWdp+CmuPCBPFBpgc9QGSQOxbVqC5iqh1x7cbPg==
+X-Gm-Message-State: AOJu0Yz4ZXyY7Yg1hzkSdO/F5E0HKop05pbE50FviZiOl2HKWkHCKCjL
+	l1mDEPjlVTrfittq6Kpgdxcelq7YeNmSq+WhM7k8OCUw6i68izRdEGaJjuI1Gcjl+TXs
+X-Google-Smtp-Source: AGHT+IGOaG0gpfwiSadNSvtanAIQa1+D3zFUjfTLN9tDaL+YwYO90R+YQMEzTRrI0qcTfNjTzhrssA==
+X-Received: by 2002:a17:90b:2d83:b0:29c:720b:5f95 with SMTP id sj3-20020a17090b2d8300b0029c720b5f95mr4290548pjb.30.1711518035855;
+        Tue, 26 Mar 2024 22:40:35 -0700 (PDT)
+Received: from fedora.. ([2409:40f4:37:3d1f:3a25:2b3d:10de:3da2])
+        by smtp.gmail.com with ESMTPSA id y12-20020a17090a8b0c00b0029baf24ee51sm649437pjn.48.2024.03.26.22.40.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Mar 2024 22:40:35 -0700 (PDT)
+From: Animesh Agarwal <animeshagarwal28@gmail.com>
+To: 
+Cc: animeshagarwal28@gmail.com,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	linux-ide@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] dt-bindings: ata: ahci-da850: Convert to dtschema
+Date: Wed, 27 Mar 2024 11:10:10 +0530
+Message-ID: <20240327054014.36864-1-animeshagarwal28@gmail.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 00/38] ep93xx device tree conversion
-To: Andy Shevchenko <andy@kernel.org>
-Cc: nikita.shubin@maquefel.me, Hartley Sweeten
- <hsweeten@visionengravers.com>,
- Alexander Sverdlin <alexander.sverdlin@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>,
- Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski
- <brgl@bgdev.pl>, Michael Turquette <mturquette@baylibre.com>,
- Stephen Boyd <sboyd@kernel.org>, Sebastian Reichel <sre@kernel.org>,
- Rob Herring <robh+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, Vinod Koul <vkoul@kernel.org>,
- Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck
- <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>,
- =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
- Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>,
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
- Paolo Abeni <pabeni@redhat.com>, Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>,
- Dmitry Torokhov <dmitry.torokhov@gmail.com>,
- Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>,
- Takashi Iwai <tiwai@suse.com>, Ralf Baechle <ralf@linux-mips.org>,
- "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>,
- Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
- linux-pm@vger.kernel.org, devicetree@vger.kernel.org,
- dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org,
- linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org,
- netdev@vger.kernel.org, linux-mtd@lists.infradead.org,
- linux-ide@vger.kernel.org, linux-input@vger.kernel.org,
- linux-sound@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
- Andrew Lunn <andrew@lunn.ch>
-References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
- <dc3e2cb4-f631-4611-8814-0dc04c5502f0@linaro.org>
- <ZgLgY11N8dkpTZJB@smile.fi.intel.com>
-Content-Language: en-US
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <ZgLgY11N8dkpTZJB@smile.fi.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 26/03/2024 15:49, Andy Shevchenko wrote:
-> On Tue, Mar 26, 2024 at 11:19:54AM +0100, Krzysztof Kozlowski wrote:
->> On 26/03/2024 10:18, Nikita Shubin via B4 Relay wrote:
->>> The goal is to recieve ACKs for all patches in series to merge it via Arnd branch.
->>>
->>> Some changes since last version (v8):
->>>
->>> - Most important, fixed bug in Device Tree resulting in CS4271 not working by Alexander Sverdlin.
->>> - added #interrupt-cells to gpio nodes with interrupts-controller
->>> - fixed some EOF in dtsi files
->>> - fixed identation and type in ep93xx-keypad thanks to Andy Shevchenko
->>>
->>> Stephen Boyd, Vinod Koul PLEASE! give some comments on following, couse i hadn't one for a couple of iterations already:
->>>
->>> Following patches require attention from Stephen Boyd, as they were converted to aux_dev as suggested:
->>>
->>> - ARM: ep93xx: add regmap aux_dev
->>> - clk: ep93xx: add DT support for Cirrus EP93xx
->>>
->>> Following patches require attention from Vinod Koul:
->>>
->>> - dma: cirrus: Convert to DT for Cirrus EP93xx
->>> - dma: cirrus: remove platform code
->>
->> A lot of this could have been already merged if you split it... Just
->> saying...
-> 
-> But you able to apply DT schema patches if you wish.
-> Just doing? :-)
+Convert the ahci-da850 bindings to DT schema.
 
-Me? Why? DT bindings are supposed to go via subsystem maintainers, not
-DT tree. Plus, I do not apply any bindings patches, except for managed
-subsystems and none of them are touched here.
+Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
 
-Best regards,
-Krzysztof
+---
+Changes in v2:
+- Added description for reg property items.
+---
+ .../devicetree/bindings/ata/ahci-da850.txt    | 18 ---------
+ .../bindings/ata/ti,da850-ahci.yaml           | 38 +++++++++++++++++++
+ 2 files changed, 38 insertions(+), 18 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+deleted file mode 100644
+index 5f8193417725..000000000000
+--- a/Documentation/devicetree/bindings/ata/ahci-da850.txt
++++ /dev/null
+@@ -1,18 +0,0 @@
+-Device tree binding for the TI DA850 AHCI SATA Controller
+----------------------------------------------------------
+-
+-Required properties:
+-  - compatible: must be "ti,da850-ahci"
+-  - reg: physical base addresses and sizes of the two register regions
+-         used by the controller: the register map as defined by the
+-         AHCI 1.1 standard and the Power Down Control Register (PWRDN)
+-         for enabling/disabling the SATA clock receiver
+-  - interrupts: interrupt specifier (refer to the interrupt binding)
+-
+-Example:
+-
+-	sata: sata@218000 {
+-		compatible = "ti,da850-ahci";
+-		reg = <0x218000 0x2000>, <0x22c018 0x4>;
+-		interrupts = <67>;
+-	};
+diff --git a/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
+new file mode 100644
+index 000000000000..b8f31187f34b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
+@@ -0,0 +1,38 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/ti,da850-ahci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: TI DA850 AHCI SATA Controller
++
++maintainers:
++  - Animesh Agarwal <animeshagarwal28@gmail.com>
++
++properties:
++  compatible:
++    const: ti,da850-ahci
++
++  reg:
++    items:
++      - description: Address and size of the register map as defined by the AHCI 1.1 standard.
++      - description: |
++        Address and size of Power Down Control Register (PWRDN) for enabling/disabling the SATA clock receiver.
++
++  interrupts:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++  - interrupts
++
++additionalProperties: false
++
++examples:
++  - |
++    sata@218000 {
++        compatible = "ti,da850-ahci";
++        reg = <0x218000 0x2000>, <0x22c018 0x4>;
++        interrupts = <67>;
++    };
+-- 
+2.44.0
 
