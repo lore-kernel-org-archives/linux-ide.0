@@ -1,77 +1,109 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from fout6-smtp.messagingengine.com (fout6-smtp.messagingengine.com [103.168.172.149])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC16B14EC64;
-	Wed, 27 Mar 2024 18:28:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C1E32C96;
+	Wed, 27 Mar 2024 20:22:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711564092; cv=none; b=AT/P85IQalmVUoSVM38KIURixzsCSF3P+OueMH8EgQfAB2p+d09bUs8dJJS+hTVKIY5lyH81QYZzrvpPB+8+9BECSPZ546+jRSgYwl8lp0rNIipkRvjpuDYNLaNXRjeiTsSkAvYQBlUwt4nMMlBL55YAmHwnsqndUpaankSQyD4=
+	t=1711570935; cv=none; b=lYHTEkkXI5Ik5oWHzitCSG8mz+Bhh1vSLIozJjXpOcHF5mUte6/bu5zDPPuAOvwQYPieL+Vbq+CBwf0jktNRkZzLUvb3ZAL1ue2Ft2eClRVPczaHyhHNL75fBJbtwy589rWPS0uDaNdWt2OU5CgJ58GKy2CGrWYDmyWgvVv4JhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711564092; c=relaxed/simple;
-	bh=V/9V12yNo/giq/Rx+/426uZy/tUNa6L35feV63U/BC4=;
-	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=lz2XyVqXxmI5AUq4fTt73ZGk/BagLwpoNpJiHxEkMFFavfpqSqjqrlbBZo1xJd6ovLluzcb3YdVv6dJM4/uJoM/O1pXKo4G19IzbIRFytH/dO8a3tF3ha5siHflAKoSDyuTB/lnMuY30SbhCjb72o/GIYvKBVz1rOr8Oun/1wy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.1.105] (31.173.86.12) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Wed, 27 Mar
- 2024 21:28:06 +0300
-Subject: Re: [PATCH] ata: pata_macio: drop driver owner assignment
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Damien Le Moal
-	<dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	<linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20240327174936.519861-1-krzysztof.kozlowski@linaro.org>
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <ed7f0b72-5592-e1ff-aab3-28703de7307e@omp.ru>
-Date: Wed, 27 Mar 2024 21:28:05 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+	s=arc-20240116; t=1711570935; c=relaxed/simple;
+	bh=ox9saau7I4d3lcNRbvzhI0S5aT9bYAoOR85d/CDfRzc=;
+	h=MIME-Version:Message-Id:In-Reply-To:References:Date:From:To:Cc:
+	 Subject:Content-Type; b=Ubvo2sLhkEHBkrdASohMFjDEuEDUhUQzwsDLqXVJYHrcrqDKQujdhnDFWo3QvvuWvbwuTcCebuyxjUfH1IRWtV/PtgSgmpf7f9gzlzTXHKB0Z+e8tJXqLMKbpbmJ8ADbvXZUvafVvlYUv0UwtKTi2LbkYZOrrYVAbzhslUEP6Fw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=EkdbuNyE; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=tkxJ3E0C; arc=none smtp.client-ip=103.168.172.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="EkdbuNyE";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="tkxJ3E0C"
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailfout.nyi.internal (Postfix) with ESMTP id 2485413800AE;
+	Wed, 27 Mar 2024 16:22:12 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute5.internal (MEProxy); Wed, 27 Mar 2024 16:22:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:subject
+	:subject:to:to; s=fm1; t=1711570932; x=1711657332; bh=Hlo09VbbHI
+	++Ia41R+Oy/QfjK63GWjPxLHm+eujyF9k=; b=EkdbuNyEZzA9QsAi3mPl7twUPJ
+	aNw4VGDcSh1aDD8sZP8qzpv44AczSWBqTO0G53hf4Oleb18sYKY4NhuwuN6RvAdq
+	fByNV9QrW6oxQtozJTk5zJ1Av0Fb8P1/7v78VmGoAz+9GdE+b0/ZztRWgN2rLjeN
+	sjhKajkQSa+HdAxU892qoqrwHEc/p3gVa90G9TQ+ms/xjTZS/NPj0xlsDSNH7eK5
+	fWEowUWT7MUxrZ/wWG1d0qJ2Jpn2QFzVAzhrbug7y80t0sETJhTEMGS4CUNaEl8C
+	Uju7rJEoDq5001fAxTRJYkZeYjqYSmMIkHI01bFbuuIMz7v/VH6SjFk3Nxnw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm2; t=1711570932; x=1711657332; bh=Hlo09VbbHI++Ia41R+Oy/QfjK63G
+	WjPxLHm+eujyF9k=; b=tkxJ3E0CYEYoADARnYDWw3+10+NwGtVi1xi79FXCMwXw
+	iM4X9mYHpU5Q/IiQLYtb4suDZm1sWwIqo7dkbwjBeaAWwbKoqpz6CuKrThch65Cb
+	aWfR07PiV6OlSghU56JKzPElIC8ox6q4mkgFZB+p4abkPWf/R7raMkYx++KRk7zG
+	hnQJ6tRN9Ag3zPbo4lwZS0I825DgSR5FpqP5nTYVgGfg7rBRPlYTQJLcuTkprPTi
+	yRi1AKSAZjI73PiRotLhIi807tlRyKMkZtYHgALhAfkJ9ypXb9WE3+zfTk5LdcT4
+	5uTz5byIbxdpyPnyr1yeuR09vy9rgFgcMPpRTdQZkA==
+X-ME-Sender: <xms:838EZuM6bat550SgvA6a7Vb9GP0JucCylN0IiQdVWv3CEoHftznDwg>
+    <xme:838EZs8gpIutMszJM4nZORF_vjHoGR8BFDsi5b_kxwry-P9In5mHvnaEW42HqIEfS
+    -vM4an7e8dQmeBz-ZQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrudduiedgudduudcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdet
+    rhhnugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrg
+    htthgvrhhnpeffheeugeetiefhgeethfejgfdtuefggeejleehjeeutefhfeeggefhkedt
+    keetffenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grrhhnugesrghrnhgusgdruggv
+X-ME-Proxy: <xmx:838EZlRKkKKouC5OZEExwZ-EDOA0VgN57ELv4VPYmeq0ShGf4w4p5w>
+    <xmx:838EZuuJinxSit7CVt36OAgF8kGcvkEF9dS2gGm4stx0w8SY4iEmyg>
+    <xmx:838EZmefzanIFh0b-GKrO7MHuFy_lmIa5UfPE-LPibGwoiWfjM-Ofw>
+    <xmx:838EZi0Fns-0ivYI83BP-BXZ3gj8daBMfrd65rByx-6Ln-766C25fg>
+    <xmx:9H8EZi29I2rkPBRThRTCgMusvgHZmsVE3Q4UWqPbVoSJh2y-_bfIAA>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+	id 72A35B60092; Wed, 27 Mar 2024 16:22:11 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.11.0-alpha0-328-gc998c829b7-fm-20240325.002-gc998c829
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240327174936.519861-1-krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 03/27/2024 18:10:06
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 184451 [Mar 27 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 13 0.3.13
- 9d58e50253d512f89cb08f71c87c671a2d0a1bca
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info:
-	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.86.12
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 03/27/2024 18:13:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 3/27/2024 3:07:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Message-Id: <019b81ac-6ecb-44f4-b878-7a6f734010e7@app.fastmail.com>
+In-Reply-To: <d7fd5998-8813-4f29-a8d2-b82adbdec11c@kernel.org>
+References: <20240326144741.3094687-1-arnd@kernel.org>
+ <20240326145348.3318887-1-arnd@kernel.org>
+ <d7fd5998-8813-4f29-a8d2-b82adbdec11c@kernel.org>
+Date: Wed, 27 Mar 2024 21:21:50 +0100
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Damien Le Moal" <dlemoal@kernel.org>, "Arnd Bergmann" <arnd@kernel.org>,
+ linux-kbuild@vger.kernel.org, "Masahiro Yamada" <masahiroy@kernel.org>,
+ "Niklas Cassel" <cassel@kernel.org>
+Cc: "Nicolas Schier" <nicolas@fjasle.eu>,
+ "Nathan Chancellor" <nathan@kernel.org>,
+ "John Garry" <john.g.garry@oracle.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 10/12] sata: sx4: fix pdc20621_get_from_dimm() on 64-bit
+Content-Type: text/plain
 
-Well, strictly speaking, it's initializer, not assignment...
+On Wed, Mar 27, 2024, at 02:36, Damien Le Moal wrote:
+> On 3/26/24 23:53, Arnd Bergmann wrote:
+>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> Looks good to me. I can take the patch through libata tree, unless you prefer
+> taking the whole series ?
 
-MBR, Sergey
+Please merge it through your tree.
+
+> In case it is the latter:
+>
+> Acked-by: Damien Le Moal <dlemoal@kernel.org>
+>
+
+Thanks,
+
+    Arnd
