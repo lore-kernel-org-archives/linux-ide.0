@@ -1,85 +1,101 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67FC71B59A;
-	Tue, 26 Mar 2024 18:14:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A43020323;
+	Wed, 27 Mar 2024 01:36:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711476889; cv=none; b=tjfGsvKLN+7pD8PHH1qhNDQZNPzYJMBkxvzI//ElVuxahvRKby/mfye6zxGbyy+f32JBmOWMdf3UCtFiXH2I5rt8pXmFuLzRGiw8z9A5LBmKuZ+jxkwN6sRQPyC55++D+Ens/nhkt8BoOIih6GBNOirZffcaB3QjfkG2uuZ3Nxc=
+	t=1711503392; cv=none; b=C5cp8VO+fCLXMGqkheHTBDWX84BXjOhvdVQW8cTp1G0colh40QMKzxpiHczBf6TUIr+8l2rYYdlEaUMwKNbMMRCQW/7LaqG89jYha2zo470aAi39bdETAhuiRA3PTVV+lpnzAPHLK6LowmmK55rY2wHiXLusRevWZK2h5IhMzww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711476889; c=relaxed/simple;
-	bh=X8a4b9n/2CO98Mv8FxoOR09KTzFb7RNSCqdYPkuQjlY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XQ6iMSPrWsmPxCBDGDw0wH+ad9k+3G4ufSnz0Qcm2gDFJcSZ+runepIRh1d9A9orrXnv1kTkASttkQV75Nc07iERYOrcOnIxoFbIzG1hiTK3Kbhmv/eF/x+vYFdpQu9eHymqJGAxZVcjZvPAIE5EAuBtrIWSzNTM8B6X47e8snc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EtFzhrlz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711503392; c=relaxed/simple;
+	bh=G5CnkT5QVDuAxX6bjBrkXtiKlaXMp79BcaVPmAi2WQQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n8lDb4FaxxX6AsL7dn89nKOJgWZM678nFfsL0aNdEC7gnvJISZadcVq4RQbyU9VPmlUOrCTYK0QR84p1oTAPEYKQ5sCy2gABEAUyh+wrwLZMf/pmPtNespn3e3y/Pm6kJ3EcctGq/x/HMR0S1vZXqxDxw3dacvB4qe6doRIdnnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PNzvh2g5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EtFzhrlz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 329CBC433F1;
-	Tue, 26 Mar 2024 18:14:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PNzvh2g5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 289CAC433C7;
+	Wed, 27 Mar 2024 01:36:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711476888;
-	bh=X8a4b9n/2CO98Mv8FxoOR09KTzFb7RNSCqdYPkuQjlY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=EtFzhrlzdRk+KbzyPgQCs5I4W4erYn2OQ0+vm1Vns6/fI8/eQmT5v+ngLFszeU+20
-	 NCR56RMTfme2yhNj1ECez8zXAUIRquZMWUfduQFVBIOrcbhTFvcc79HJX2odS5kKKa
-	 6oHGT0yDxNWPtiyXV6afOr09jfRtZIV3NBNAgPCNIPv+PKDOoWkS6ril5pQ7T8Njpn
-	 lxibVlEmWkk5FCFf4k5vEqFFh/nI8/YbZ/yXvfN6PIGe3Ojp2JAqPJd1R+lUDqptQK
-	 9CZPrDa8oQqnslT/86I5T1Elzs8jINTJINqKt2SfqvQD5gI2rCnLv8Ms+x1PSUppWh
-	 2n3VxGLUar2dw==
-Date: Tue, 26 Mar 2024 18:14:45 +0000
-From: Conor Dooley <conor@kernel.org>
-To: Animesh Agarwal <animeshagarwal28@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: ata: ahci-da850: Convert to dtschema
-Message-ID: <20240326-rerun-flap-6d827f654453@spud>
-References: <20240326121735.11994-1-animeshagarwal28@gmail.com>
+	s=k20201202; t=1711503391;
+	bh=G5CnkT5QVDuAxX6bjBrkXtiKlaXMp79BcaVPmAi2WQQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=PNzvh2g5NC3x8OmCPQmNFGAXaVUpQVkEa8BeyO11NScvIdjLTpTGry+Ww3O/SeT7/
+	 5Ym80jU058K3n7+BoSOm0FCC7j3dtwpF63ff0X4xsojFcVNPa82YpDLNFlXOvEAOTX
+	 zpSZLIIyFpGkLleRylvT1mc6AnXj/UmG1b6OiyT2Mz9ACnlAhSwCLUY1aVNuhfbUQp
+	 3t4TgXcgTsdi8AuGf3p+mXGJ3ryHRd/qdIMUrCJDX7bqg40OsYLuQCADxmCVP/Qo3l
+	 Uqpc/E26crc48fh4sequ3zRbAZIqvVAcuG8zc9CWwN5kpAsQG3lkYniq9KHHsPTYEl
+	 b/1AUvahum7lg==
+Message-ID: <d7fd5998-8813-4f29-a8d2-b82adbdec11c@kernel.org>
+Date: Wed, 27 Mar 2024 10:36:28 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="gspvcYe74748VKy0"
-Content-Disposition: inline
-In-Reply-To: <20240326121735.11994-1-animeshagarwal28@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 10/12] sata: sx4: fix pdc20621_get_from_dimm() on 64-bit
+To: Arnd Bergmann <arnd@kernel.org>, linux-kbuild@vger.kernel.org,
+ Masahiro Yamada <masahiroy@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: Nicolas Schier <nicolas@fjasle.eu>, Nathan Chancellor
+ <nathan@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ John Garry <john.g.garry@oracle.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240326144741.3094687-1-arnd@kernel.org>
+ <20240326145348.3318887-1-arnd@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240326145348.3318887-1-arnd@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 3/26/24 23:53, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> gcc warns about a memcpy() with overlapping pointers because of an
+> incorrect size calculation:
+> 
+> In file included from include/linux/string.h:369,
+>                  from drivers/ata/sata_sx4.c:66:
+> In function 'memcpy_fromio',
+>     inlined from 'pdc20621_get_from_dimm.constprop' at drivers/ata/sata_sx4.c:962:2:
+> include/linux/fortify-string.h:97:33: error: '__builtin_memcpy' accessing 4294934464 bytes at offsets 0 and [16, 16400] overlaps 6442385281 bytes at offset -2147450817 [-Werror=restrict]
+>    97 | #define __underlying_memcpy     __builtin_memcpy
+>       |                                 ^
+> include/linux/fortify-string.h:620:9: note: in expansion of macro '__underlying_memcpy'
+>   620 |         __underlying_##op(p, q, __fortify_size);                        \
+>       |         ^~~~~~~~~~~~~
+> include/linux/fortify-string.h:665:26: note: in expansion of macro '__fortify_memcpy_chk'
+>   665 | #define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,                  \
+>       |                          ^~~~~~~~~~~~~~~~~~~~
+> include/asm-generic/io.h:1184:9: note: in expansion of macro 'memcpy'
+>  1184 |         memcpy(buffer, __io_virt(addr), size);
+>       |         ^~~~~~
+> 
+> The problem here is the overflow of an unsigned 32-bit number to a
+> negative that gets converted into a signed 'long', keeping a large
+> positive number.
+> 
+> Replace the complex calculation with a more readable min() variant
+> that avoids the warning.
+> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 
---gspvcYe74748VKy0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+That is old :)
 
-On Tue, Mar 26, 2024 at 05:47:28PM +0530, Animesh Agarwal wrote:
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-> -  - compatible: must be "ti,da850-ahci"
-> -  - reg: physical base addresses and sizes of the two register regions
-> -         used by the controller: the register map as defined by the
-> -         AHCI 1.1 standard and the Power Down Control Register (PWRDN)
-> -         for enabling/disabling the SATA clock receiver
+Looks good to me. I can take the patch through libata tree, unless you prefer
+taking the whole series ?
 
-> +  reg:
-> +    minItems: 2
-> +    maxItems: 2
+In case it is the latter:
 
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 
-Could you make this an items list with a pair of text descriptions
-please? The original text binding's text for each can be reused.
+-- 
+Damien Le Moal
+Western Digital Research
 
-Thanks,
-Conor.
-
---gspvcYe74748VKy0
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZgMQlQAKCRB4tDGHoIJi
-0kzNAQCvdiynFxfbTGd6T2pL7NC8T6GWa+FltXTVrKbv2NGymwEAlpLZIVPht5Vz
-5LIo1R6BiwZyyomefIWp4I0UNjMHmA8=
-=mmeI
------END PGP SIGNATURE-----
-
---gspvcYe74748VKy0--
