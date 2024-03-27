@@ -1,99 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f52.google.com (mail-oo1-f52.google.com [209.85.161.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E6D11CA87;
-	Wed, 27 Mar 2024 06:21:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E25249F9;
+	Wed, 27 Mar 2024 06:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711520486; cv=none; b=t992qUxcDnTwoA2HlWy4jzOWJdLCsoPgQ/4aHoJG6JKUKd04omq0DM7CZJCylU856l2EOH5bPgqe5s6BdnWKvjvSsGxE36OX+D5zeFgjoEDEDG7+ZDYo5CdRHG3JQJv2yO86sPE26nE+wjZMQs5zapdEVNYUinK3IA/qS0i8uHs=
+	t=1711521687; cv=none; b=cjBFLJkhiuEI+1sYGcNjiULBebJZ3hQ0qbWZWlfviFPchSW7lIwNG4X+Qrn4NT3fz7PnjE/PjzsFAq8uxE3p0q9CvlU8al+wh+5wvxV92Pgm+eBgnrDAufdqllCi1l9IKN7qSj1asxbtMPe1vkrLqI6xbSIiIadBTJO3PtlzB5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711520486; c=relaxed/simple;
-	bh=Q6c9wsY1u6FOsRL7X5jbUPnPFupmDKYBAc9xSo3Qfss=;
-	h=Date:Content-Type:MIME-Version:From:To:Cc:In-Reply-To:References:
-	 Message-Id:Subject; b=XbZH5J+UXbCVMsMHdZTUurHYWZomAxp361AL3BegwbY8in7wduvkrcgzMeRubRdVJOY6obWFvVdnhkIXnNpDnMnem7jg+d7twRRnmdIGDSWCadXFCLR4bXFQ3F/5/P6P1hrOrlqKZaLCoLhFlTsIv7yDlVy9FTEKrnWeYQlop7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G2LdcKbb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711521687; c=relaxed/simple;
+	bh=Veuy1m8uxACdlf5PxY31xxr+35oOGhJJBwn68nyJ7qQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cyZJTwiDrJibGGLajlFlXjIaY6Krr6vKDdwanO9q3HEKZapvizhCAP4OmN/cP34zrg31kTTFzGbupduHf5dPElkRc2nHvOayrPPdI/AVmDPDFQAH7XSH6s9yZiiFocHTzaUetVBrH/29oLxDXBT1uvEufbls94EMuknja+O7F10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UqhmHbfT; arc=none smtp.client-ip=209.85.161.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G2LdcKbb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B24E2C43390;
-	Wed, 27 Mar 2024 06:21:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711520485;
-	bh=Q6c9wsY1u6FOsRL7X5jbUPnPFupmDKYBAc9xSo3Qfss=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=G2LdcKbbWzlXrdk59OdDLGGF5ts9yKVVZp7OO3HjTjzRgbIeaLbw58leN3Decp/Iw
-	 ZKnOxfxm5yQWxwLcs05Ui3q5U3jV0uYuZZGbqZWdQMCafSicNEVNLownxcd3HOULz8
-	 hUvGwzBKM4invS+r1Bilb69Elcq7qWyBteRYnQNCpsqpAVXLRFbvRzQhhtVfhiTxJv
-	 UxdAU0cI/NUWwSMpDooc6yK8VlHT1IcwQwZTJQhvmLgzzzk4uSk79yuQ4pOB9tamnJ
-	 FotDQDuvPwPr5cB6D5FB3UrG6WoE8GfDwYMIDye6AyBpc6x/Zu+peY6Obj58QhOEYx
-	 Ose4qIIUaGRuQ==
-Date: Wed, 27 Mar 2024 01:21:24 -0500
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UqhmHbfT"
+Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-5a4a2d99598so2922314eaf.2;
+        Tue, 26 Mar 2024 23:41:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1711521685; x=1712126485; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Veuy1m8uxACdlf5PxY31xxr+35oOGhJJBwn68nyJ7qQ=;
+        b=UqhmHbfTtpFSORuRzSP6vYEtJ33VuxU4aFreq3glSVQg5sl0HOyMceh5USYkrdKcQT
+         vRE25UUIqHucp1OmMNX5se9dw/lUfI7sku6vnccLLcUXB5rcUrSxVMPjk/Lr0BcAHb3H
+         bdNfTpuwyo3qgwYJS7oCqWoT7YMsVzUGm9kTZoYV69uLwcJji7VkBnq4fxmHFEVjnyi2
+         UCRGm/AS8YJ4qn9LB/c7r3Ga9omsdmvZ/RvVJOoZj2DcfEK4dYkaan2YKolYL10Cfuy6
+         9eCn4VIIGKUyWLKDRF5O/ggDsFxHfJdeqpDCdE8QeM4q+xWKFECPo/8lGpyK5qussK4p
+         Df/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711521685; x=1712126485;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Veuy1m8uxACdlf5PxY31xxr+35oOGhJJBwn68nyJ7qQ=;
+        b=YBAdwDtzdKyJAEO4hTLENuZknfIlTRIn4SN6NNMEjI1II6FOtnHpSZAFwduj0crI5x
+         hH7IzuH2VorVqozqRdr/EZQ29aeqexI9vQA4Y33wyY/sI4xsSwn01M/eizjA73DICLVE
+         WSoOgesFJKVHk22adIlAtPSjH+7XEvbBPZiEuCPPy8fB/i2DGSy+VUTTQD2Sp6v/faHy
+         x92w0HPJkFpdRl8es5q40Unz9sslO1UfDOwvfo6bgzvF5/sl+sk81qHTIEZsKFwE1ZX4
+         HbFme5GaTjjkJX1P9yLKd9eF3vM8Vd3GkBWcnfHckH030Y7edgWH+tnzQE8v983EEGA5
+         EnPg==
+X-Forwarded-Encrypted: i=1; AJvYcCVzzPqc+wBYeA+ms3dFx1Sfvl4cMNieA8jm2JLMKDNzpXi2A9M3NUtEod/IXJneQYbUDzzuz+IDXSd0OkrukHfCmSiOGTtP/HKVmiHP5zz6GbaV+q8c1Yt4A8FCJUSJhYaH9tkd75qYotkrPOVUS4NVeOtpPKj+HgiUBlkx2YQYQUtniw==
+X-Gm-Message-State: AOJu0Yy4Iy7RSxds2mSh9LDOeDHqrgRnlPzkh8R9vPJypT/H1/PIkT9C
+	yLEaItpP3XV2FqrrVgOMFlCg0HGfTvTO2h7x2Zll9KQ8gJfciw3bXh12LiaIJ0eDK58mnF8XgKe
+	NFtCRsKpdeTiFwgq8lGaiTmpr0zI=
+X-Google-Smtp-Source: AGHT+IF8vDHk6Q1MwxoTL2+6tFKjhcI/muzpbx+Te0ONd18hgyVPNKFYdO09+0hEVm1IVvQjzt1TR0Sry4UYUnsMeHQ=
+X-Received: by 2002:a05:6870:5488:b0:222:d6a:9ae8 with SMTP id
+ f8-20020a056870548800b002220d6a9ae8mr1751114oan.35.1711521685119; Tue, 26 Mar
+ 2024 23:41:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Rob Herring <robh@kernel.org>
-To: Animesh Agarwal <animeshagarwal28@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
- Conor Dooley <conor+dt@kernel.org>, Rob Herring <robh+dt@kernel.org>
-In-Reply-To: <20240327054014.36864-1-animeshagarwal28@gmail.com>
-References: <20240327054014.36864-1-animeshagarwal28@gmail.com>
-Message-Id: <171152048362.993925.5771433856261368802.robh@kernel.org>
+References: <20240327054014.36864-1-animeshagarwal28@gmail.com> <171152048362.993925.5771433856261368802.robh@kernel.org>
+In-Reply-To: <171152048362.993925.5771433856261368802.robh@kernel.org>
+From: Animesh Agarwal <animeshagarwal28@gmail.com>
+Date: Wed, 27 Mar 2024 12:11:14 +0530
+Message-ID: <CAE3Oz82AgokcQWJXJVvxYQZzqUURyv=2h=-uCgX4tbLu6Z2jLA@mail.gmail.com>
 Subject: Re: [PATCH v2] dt-bindings: ata: ahci-da850: Convert to dtschema
+To: Rob Herring <robh@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Rob Herring <robh+dt@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Mar 27, 2024 at 11:51=E2=80=AFAM Rob Herring <robh@kernel.org> wrot=
+e:
+> My bot found errors running 'make DT_CHECKER_FLAGS=3D-m dt_binding_check'
+> on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-On Wed, 27 Mar 2024 11:10:10 +0530, Animesh Agarwal wrote:
-> Convert the ahci-da850 bindings to DT schema.
-> 
-> Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
-> 
-> ---
-> Changes in v2:
-> - Added description for reg property items.
-> ---
->  .../devicetree/bindings/ata/ahci-da850.txt    | 18 ---------
->  .../bindings/ata/ti,da850-ahci.yaml           | 38 +++++++++++++++++++
->  2 files changed, 38 insertions(+), 18 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
-> 
-
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
-
-yamllint warnings/errors:
-./Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml:20:111: [warning] line too long (111 > 110 characters) (line-length)
-./Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml:22:3: [error] syntax error: could not find expected ':' (syntax)
-
-dtschema/dtc warnings/errors:
-make[2]: *** Deleting file 'Documentation/devicetree/bindings/ata/ti,da850-ahci.example.dts'
-Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml:22:3: could not find expected ':'
-make[2]: *** [Documentation/devicetree/bindings/Makefile:26: Documentation/devicetree/bindings/ata/ti,da850-ahci.example.dts] Error 1
-make[2]: *** Waiting for unfinished jobs....
-./Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml:22:3: could not find expected ':'
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml: ignoring, error parsing file
-make[1]: *** [/builds/robherring/dt-review-ci/linux/Makefile:1430: dt_binding_check] Error 2
-make: *** [Makefile:240: __sub-make] Error 2
-
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20240327054014.36864-1-animeshagarwal28@gmail.com
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
-
+Sorry about the issue, I am fixing it now.
