@@ -1,163 +1,124 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C5B92577A;
-	Wed, 27 Mar 2024 06:44:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C200535A0;
+	Wed, 27 Mar 2024 11:00:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711521869; cv=none; b=Z5W1s7LiLl2wTzMBMUmiIlqvHh8xTqYqJk0Y/lqMHIrTRvoco4rqU8cAmlDuuxJ7jzeDLhbBgEy021ZkEdQOgQy+C94L9f0FqbZxIBbgt2P6F3JeBD+98wXzdF3mURntgPXgqa07GIoHMG6lKoVUZdFH5MN11bXghsEWFhY5SI0=
+	t=1711537228; cv=none; b=bfmYehkuRglLB+xTS4i6cACdNrwgE603voAQWRwvrA5N31UzkVgETrEeUvvg1DQnQpxfiTLceQbgibjXp3dtl7asjIcb0h1sEifw7cKW74aSGMmMir7UmLeol8TKbkH6XHSY2ffi1CqfOE7ReBuBSzsrlOsXaN8y7L0bjqzpce0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711521869; c=relaxed/simple;
-	bh=gaY4uxUtw/VyYyckWAO5Sda2ZlYWBVwNlEmKIyc4jbA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BeVpFl/YG9YoSEflDgQ8xH+QpVv/JWQLefrfcVnR/ev64rmIUakEvj3F31bQfOAQv0gVW2d/68I/9xEnXnIPUn8SsIGW5vcZxJcCi2YHVn5N6dkp3x9bfowPJaqnQ4VKMlHu9y/60u52J3HzbqyxGHY57NQVmDTnZ8ryfsNboxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V/syqnZj; arc=none smtp.client-ip=209.85.210.182
+	s=arc-20240116; t=1711537228; c=relaxed/simple;
+	bh=Ju32kgFLniZCS7dOELnk78OlOgWmgFWMWc/+6Cau/QE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iKIFWkquiivFLKjFyw/v2sL8+K5CyRUue/32R+6ZPI+1aeeZCiYEfGRpa/DoNIAzahdTXBfqY+SI8u3m2GndxSKU6qoYsBcbn3qOMMva7m2APedx0vaMVHYlv1GDAFTSfNwr2ZcyW8QZFih2bWDeM/HXSvZyIgei4t6Kf5+Yr/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eRRxfm6U; arc=none smtp.client-ip=209.85.218.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V/syqnZj"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6e6b3dc3564so4516719b3a.2;
-        Tue, 26 Mar 2024 23:44:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eRRxfm6U"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a4702457ccbso836072666b.3;
+        Wed, 27 Mar 2024 04:00:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1711521867; x=1712126667; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=r6dZugYqHLKD48hNBCyfJRW1Kclovt4nu1MkauiHbJ8=;
-        b=V/syqnZjk4fQBpWZCfFHCRgSxANpkxm0BlsAS4pATVJx75bGehFCjbJw5cTIPWkEgC
-         KENk3OA/afUtJyq19te5I4RGBVEZYRORs9ce1mcLOsiewUVi7UtMS+xBMzH3K1E47FAB
-         URpjdrwGDKU3W0T/pGAKIwUEvux3PF/3vbd5qKY7yVTt0rLI2AzvmoSc9xUHTuQBdT6C
-         iNDYQNUicO5HuC/FswLkFdUzJVaIFUVLGb6RUJcGvDM/ci/WxEzAtm48gGFveigdNK5Z
-         fr8gkgrFwc/Y0qwSHnx2wXMA/jEEmZWk+2YbaWokMu3eUIMRQtb3AS+CnQCwIvC7vj9E
-         D0GQ==
+        d=gmail.com; s=20230601; t=1711537225; x=1712142025; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Ju32kgFLniZCS7dOELnk78OlOgWmgFWMWc/+6Cau/QE=;
+        b=eRRxfm6ULxXicwNpUD4yD25kTvEweHiT/Q8W5sFaTIwC9pvEKcpccYAsxglQ00rjtU
+         4XCUJuGZW+LMrxDdCMAQ+aT8K0znkduayMLOge8pH0kufFVYPNR84nz66sgmoCtKQPvn
+         9cw/XQzCL+5wqP2WZEi3p9j+MreeGsFpLIwmjCAvH34jR2AWxARItZ1gibRdCHGITZ+B
+         jGypmhoPkNxkK5OEu6B9ajYv5tyjAivlf7FcHxd9YZG0dTHjrjKmuRbzMoA4rlAPJ+Br
+         n/AtqK6CDmnTIErZgvx4edG64YieBo2iN0nxvoUxkVw8PnHt1Q4cCeaNJKhpG4NA3ftx
+         Z++g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711521867; x=1712126667;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=r6dZugYqHLKD48hNBCyfJRW1Kclovt4nu1MkauiHbJ8=;
-        b=CIg7OD/vPCh+Y448XWG8Loz+4NSug/VBUpcQ+yKMYyZhLYnDps/RgPXcEBVyDNfbml
-         qkS1uD5yM4TmTNFgxYeijV+64lkD+vF1s2t3YS9Vk5ROxLTDmxPi8e/8Jk3Q3FWQHKQ8
-         3HG4ijaCKcpW5ZZf0h8CPZeTSWBJ3ursKfEP2eeamZiX02frmcR3gcf8rMdcUqWdIWP1
-         hVtI7gtM7yLvWXEV8A3EcSvs6J8VFfUTrujWKh/gYIMEMDS9gqO/bw0NHFktuxJkeR8e
-         dhMYKAoK0L5JT5rrGU/tPBkTQQuQDMxoOe5WCQcVhl/uTeSlUWi8qPymabuutXFAfOFc
-         dxBA==
-X-Forwarded-Encrypted: i=1; AJvYcCXHwlBkEcaKvhCfShIOAN7ZXDVta3l0+ZFfusMQpPwtn6koCem4XSZXeC4C+PZdnk55A/hg8f+YlIz0lj48//GcaBhFT40jay7KB9O8pBbQ1VSD7jBAupxl2uY+d76CZO72su0wDJa86uCJdisJzglkJR60MgA5qG9cu4DAIITZ+z3hRA==
-X-Gm-Message-State: AOJu0YwFlXUWgs8vafsWMDUgsfBPg9iC8oJASI7HqgVWCPEBBvHtyzN1
-	6BWRblArROV6MvYJmDYcbJBVWlKn7FPUMMt4wt+fMBmayTUnR7JR
-X-Google-Smtp-Source: AGHT+IELbG/lC0SlpK0hEcU3eD3jc67RaNLZQPnP6YvgN6qsnMrfI47ZjrXTHm4QnvLMRVLz1nnsJQ==
-X-Received: by 2002:a05:6a20:8409:b0:1a3:c3e1:6a23 with SMTP id c9-20020a056a20840900b001a3c3e16a23mr3536644pzd.43.1711521867452;
-        Tue, 26 Mar 2024 23:44:27 -0700 (PDT)
-Received: from localhost.localdomain ([122.187.117.179])
-        by smtp.gmail.com with ESMTPSA id v13-20020a170902f0cd00b001e09c35e058sm8074962pla.195.2024.03.26.23.44.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Mar 2024 23:44:27 -0700 (PDT)
-From: Animesh Agarwal <animeshagarwal28@gmail.com>
-To: 
-Cc: animeshagarwal28@gmail.com,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3] dt-bindings: ata: ahci-da850: Convert to dtschema
-Date: Wed, 27 Mar 2024 12:13:51 +0530
-Message-ID: <20240327064354.17384-1-animeshagarwal28@gmail.com>
-X-Mailer: git-send-email 2.44.0
+        d=1e100.net; s=20230601; t=1711537225; x=1712142025;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Ju32kgFLniZCS7dOELnk78OlOgWmgFWMWc/+6Cau/QE=;
+        b=MWjPYLsja431Jh9WJk3g3ZH2/NYmx36uuSvZW0xGGqmBiai7KifAKKbXrAe8ospOzQ
+         eBLEz9f0VSKrXWGkISWPdQrR0DsE7PCs+H4y+UD7Dc97cyXiwzT6M6j9dLqTngxKaZxq
+         0KTHpgLDpOtEY8AKXkmkS/JwnZrfAUs9NV8+Hrez5uFhNR91qvnQxP68LnY5VGXTNdYY
+         5RmJppfagpo0c3FwGm7n2WFmhdRhSjB6ER4N1mPl28GHstT2647MeBn7620Vme02oeVG
+         AkEfj1NjMcYrBNLqqSdnuk4TqsXCfvQhgD0D4al2wN0DmwIXngn0Mk4dfykXY6+sghwe
+         ccPA==
+X-Forwarded-Encrypted: i=1; AJvYcCX2vuGUhFcUU31sEHQLwaikBQSe0rLjNsEwFGwBOOwIaZDJZQdPcNbe46TNfq0G528FiFSGoMgU0CimtEHKB+6jCWRPWrCp5sRK9UT5HdsaU1tYdnVH7bsTluw98ntH0RZcqRcPsUohbilSFqPRsFmEMFTNiXCEz/0XDhpiGMX8uLkoCPGv67ez3rqpFM4/j8uJPyIrApTAT2SLSbt5H8JnUVMPDlmyGK+mRyLWF4/iM8cMwwMv9DITnuBqf19zQ3aVv0a/VAQvCLpo1SVRoA168vYG+wQhjERKEEVnsXT7hiWTcRfjEN+aWFbwPGEkT+Tzo7rHVs7nWNW00Qnmx5DvXAv940NyNBHrLL1E9bk/W8/1tEJO6aZbs68v+GlGg1+i4BcLCk0aXIu980hC5Iiw8Y808TAC7rNVHbORsPpgqmESugKDuvKxnghpRaCY9d05kZJrdgrk/6BKPNN4gebsekUAA41isaXqgp9fLd+xUGljSKgBgOvH1Z2cD8a4NQ8zStssHyKx9J/MD5PHsdg7JvRykIUEbg==
+X-Gm-Message-State: AOJu0YyHbhkLC5p5YmSwAjMSsLyUSprRWOHKsmNw4LNPzh4vwqYLC9U3
+	Yf54EpplH/u/TcDgrzlvaiD8qG1N1iFrAugyWNcF+S3KnNWUGl2WTQnqreY0weC8JNfOab1CP34
+	LvSgUGQiALjN0g9xlV9Pzp7gn79M=
+X-Google-Smtp-Source: AGHT+IFELlWWydcIPiZzRfNkNJ0aiBtjYHAQu2rRkgw6Ipxw5ipMsk32+2Jcyp9P3eYXGgeptSDoDh0kCNzfCJ8MD0U=
+X-Received: by 2002:a17:906:2998:b0:a49:dfe7:834f with SMTP id
+ x24-20020a170906299800b00a49dfe7834fmr616671eje.59.1711537225336; Wed, 27 Mar
+ 2024 04:00:25 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
+ <dc3e2cb4-f631-4611-8814-0dc04c5502f0@linaro.org> <ZgLgY11N8dkpTZJB@smile.fi.intel.com>
+ <a16f45c9-747c-4a19-98a3-aa5f47ee5c4d@linaro.org>
+In-Reply-To: <a16f45c9-747c-4a19-98a3-aa5f47ee5c4d@linaro.org>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 27 Mar 2024 12:59:49 +0200
+Message-ID: <CAHp75VfdsRkGiJCUsiTj0p7SMaSkJqQeojNWT3tGz2W7JhwMmQ@mail.gmail.com>
+Subject: Re: [PATCH v9 00/38] ep93xx device tree conversion
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: Andy Shevchenko <andy@kernel.org>, nikita.shubin@maquefel.me, 
+	Hartley Sweeten <hsweeten@visionengravers.com>, 
+	Alexander Sverdlin <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
+	Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Vinod Koul <vkoul@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>, 
+	Guenter Roeck <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>, 
+	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+	Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Sergey Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
+	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org, 
+	devicetree@vger.kernel.org, dmaengine@vger.kernel.org, 
+	linux-watchdog@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-spi@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org, 
+	linux-input@vger.kernel.org, linux-sound@vger.kernel.org, 
+	Arnd Bergmann <arnd@arndb.de>, Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+	Andrew Lunn <andrew@lunn.ch>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Convert the ahci-da850 bindings to DT schema.
+On Wed, Mar 27, 2024 at 7:07=E2=80=AFAM Krzysztof Kozlowski
+<krzysztof.kozlowski@linaro.org> wrote:
+> On 26/03/2024 15:49, Andy Shevchenko wrote:
+> > On Tue, Mar 26, 2024 at 11:19:54AM +0100, Krzysztof Kozlowski wrote:
+> >> On 26/03/2024 10:18, Nikita Shubin via B4 Relay wrote:
 
-Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
+...
 
----
-Changes in v3:
-- Fixed line length issue on line 20
-- Removed unneccessary '|' character
-Changes in v2:
-- Added description for reg property items.
----
- .../devicetree/bindings/ata/ahci-da850.txt    | 18 ---------
- .../bindings/ata/ti,da850-ahci.yaml           | 39 +++++++++++++++++++
- 2 files changed, 39 insertions(+), 18 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
- create mode 100644 Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
+> >> A lot of this could have been already merged if you split it... Just
+> >> saying...
+> >
+> > But you able to apply DT schema patches if you wish.
+> > Just doing? :-)
+>
+> Me? Why? DT bindings are supposed to go via subsystem maintainers, not
+> DT tree.
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-deleted file mode 100644
-index 5f8193417725..000000000000
---- a/Documentation/devicetree/bindings/ata/ahci-da850.txt
-+++ /dev/null
-@@ -1,18 +0,0 @@
--Device tree binding for the TI DA850 AHCI SATA Controller
-----------------------------------------------------------
--
--Required properties:
--  - compatible: must be "ti,da850-ahci"
--  - reg: physical base addresses and sizes of the two register regions
--         used by the controller: the register map as defined by the
--         AHCI 1.1 standard and the Power Down Control Register (PWRDN)
--         for enabling/disabling the SATA clock receiver
--  - interrupts: interrupt specifier (refer to the interrupt binding)
--
--Example:
--
--	sata: sata@218000 {
--		compatible = "ti,da850-ahci";
--		reg = <0x218000 0x2000>, <0x22c018 0x4>;
--		interrupts = <67>;
--	};
-diff --git a/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
-new file mode 100644
-index 000000000000..ce13c76bdffb
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
-@@ -0,0 +1,39 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/ti,da850-ahci.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: TI DA850 AHCI SATA Controller
-+
-+maintainers:
-+  - Animesh Agarwal <animeshagarwal28@gmail.com>
-+
-+properties:
-+  compatible:
-+    const: ti,da850-ahci
-+
-+  reg:
-+    items:
-+      - description: Address and size of the register map as defined by the AHCI 1.1 standard.
-+      - description:
-+          Address and size of Power Down Control Register (PWRDN) for enabling/disabling the SATA clock
-+          receiver.
-+
-+  interrupts:
-+    maxItems: 1
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    sata@218000 {
-+        compatible = "ti,da850-ahci";
-+        reg = <0x218000 0x2000>, <0x22c018 0x4>;
-+        interrupts = <67>;
-+    };
--- 
-2.44.0
+Okay, I never remembered this rule, thank you for clarifying.
 
+> Plus, I do not apply any bindings patches, except for managed
+> subsystems and none of them are touched here.
+
+Good to know!
+
+--=20
+With Best Regards,
+Andy Shevchenko
