@@ -1,66 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40FA513BC0A;
-	Thu, 28 Mar 2024 22:13:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 713778F6B;
+	Thu, 28 Mar 2024 23:00:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711664025; cv=none; b=NQkHmiwnrL2T21ucePKDwjGzL/W3UVt59fH7B2JKPeLtOf4g6CBFlLH6PaMdcawMJKNmRgNwi5aEcPlRoOjtrPVfYpaW+yHiOwvIhnrqSv8swTzlkSbnZ6pOGt10g+HoxMT+ElGvHrCaHnXO7Ga2wDiuocsXDCQDQYZvDfRTsik=
+	t=1711666803; cv=none; b=hj2RaJi+gQVJrwLaTCyIW75HI/qVZN+zrKbDUzxCDtEWAfjcdFqyxtp0e02RbPWqihklYx9nKrdnb4bysgWopGGrFWFJl5xnQLlUAJ4dUsL+ZvxN0BmDZsRu/3xOAnsm3EzPMl8xd7/Tb3dS93+6ROOA/w0IBDYvpizswmfrcpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711664025; c=relaxed/simple;
-	bh=aUT/2zntFjPZMTidVRv4uKwagyYx/qsW2TY3mo6y1n0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=GhqzohmKfMSYnymza6CjmfRtklXdyQFjFim7qcLdWGMlg7c3G/d3hIuPqWk5VYvbapDg3OA0vJ/qTv1JW37LFjLUJHIW5sluJzOeedBuxP6fTwrI5XnLB2QV8aMWGTARleuCMCBItOterBSD/XT8waEgU0iBCdGLCOLyeJBBxuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VVkc9Lv0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711666803; c=relaxed/simple;
+	bh=QwcIs7KpIAiawzl4YLtzgEKHBecDVCX3HkOsrjsohvo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MJv3vWyaOzOW7C/YjH+06uynVfTbKPuMtHtx6KZ4amJWCbNb5suXtuAnMBDtetBWVBQOItWai7EP3SfdH4hgxIgW8knevAx2MxRwRLiWUqb+Zw3HImXj0VgHWlVHvNooNABjhrwZG7kHcpePGRqT/dCkvf7fkd0gmLkzfuFSBwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mVkDgH17; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VVkc9Lv0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8697BC433C7;
-	Thu, 28 Mar 2024 22:13:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mVkDgH17"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4966C433F1;
+	Thu, 28 Mar 2024 23:00:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711664024;
-	bh=aUT/2zntFjPZMTidVRv4uKwagyYx/qsW2TY3mo6y1n0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=VVkc9Lv0dyYr5XeAEbJahZcheClxn2kthhsGjLjp+0AYtMfuRfs/yffNcsknBh1l3
-	 f45gs/sNHKp7jXgvG+pOG66UyInzqx+4kpxDDC/oJFcZhrOQ945fb0BXYrjJSoyDc1
-	 hcNkYybZStKExgX+Pf4k1gKOyo/xcAbp0xbI1Ux5CX2J7FV3MOzIIBvZ2ZXgTcnCcp
-	 VEEWASWgyxsCZpXcTdItS/OiA/eIlCqpFw8hL7mDcnk5sy4yHvuncpAANpVlXWuPke
-	 VKMqxvLy9Bl6ax8x8iPgvGIVi3GR3+p1bCF3tS1b+6m9dIjB0u0V4KRWJsTvwDxStb
-	 LlRbGASVea+3g==
-Date: Thu, 28 Mar 2024 17:13:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 0/2] PCI: Remove pci_enable_device_io()
-Message-ID: <20240328221342.GA1615567@bhelgaas>
+	s=k20201202; t=1711666803;
+	bh=QwcIs7KpIAiawzl4YLtzgEKHBecDVCX3HkOsrjsohvo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=mVkDgH17hEkiKBZzXZvp5iPHCr2I7ihxDPFounV7hMMz4PHmPo8UvcdatNny5Vf9+
+	 aibO8eQ8yMfIKLREj6PK71qnh1kzlQrRRn2imbuGlzq39QJZ495vAJA7TCDtF09uJM
+	 fwTr5t38cUNv0UAfygrEXgRN6wa/nED8lK3k2D7Y9uZxWPvaLBmh+g5mFxrLx/wwL7
+	 xfUu4kgpOukgyv/DkqtLfpKsTRAyqgkSg5cvoKMDHzQGKKWjK6bht4GRHPIgHy+XFl
+	 6RsqLQtWlxwMmrEetOM2AVmle9uRzHsrDF1O6FdfUfFXd6efGXXjmGclbPmXjnG45/
+	 sF3OPTs5GrOvw==
+Message-ID: <595a03f6-e93a-4f2c-bf0a-01e428897c15@kernel.org>
+Date: Fri, 29 Mar 2024 08:00:00 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <370ff61c-1ae0-41ca-95fc-6c45e1b8791d@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 5.10/5.15] ata: libata-scsi: check cdb length for
+ VARIABLE_LENGTH_CMD commands
+To: Mikhail Ukhin <mish.uxin2012@yandex.ru>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, Pavel Koshutin
+ <koshutin.pavel@yandex.ru>, Artem Sadovnikov <ancowi69@gmail.com>,
+ Mikhail Ivanov <iwanov-23@bk.ru>
+References: <20240328150026.9129-1-mish.uxin2012@yandex.ru>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240328150026.9129-1-mish.uxin2012@yandex.ru>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, Mar 23, 2024 at 06:13:41PM +0100, Heiner Kallweit wrote:
-> The call to pci_enable_device_io() in cs5520 isn't needed and can be
-> removed. This was the last user, so the function itself can be removed
-> afterwards.
+On 3/29/24 00:00, Mikhail Ukhin wrote:
+> Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
+> ata_scsi_pass_thru.
 > 
-> I'd propose to apply the series through the PCI tree.
+> The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
+> cmd field from struct scsi_request").
+> Backporting this commit would require significant changes to the code so
+> it is bettter to use a simple fix for that particular error.
 > 
-> Heiner Kallweit (2):
->   ata: pata_cs5520: Remove not needed call to pci_enable_device_io
->   PCI: Remove pci_enable_device_io()
+> The problem is that the length of the received SCSI command is not
+> validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
+> reading if the user sends a request with SCSI command of length less than
+> 32.
 > 
->  drivers/ata/pata_cs5520.c |  6 ------
->  drivers/pci/pci.c         | 14 --------------
->  include/linux/pci.h       |  1 -
->  3 files changed, 21 deletions(-)
+> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+> 
+> Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
+> Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
 
-Applied to pci/enumeration with acks/reviewed-by from Damien and
-Sergey, thank you!
+This looks OK to me, but:
+1) Please stop using the wrong email address for me. Use
+scripts/get_maintainer.pl to see the correct email address (the one I am using
+now). And maintainers & main list should not be on cc but part of the "to:"
+addressing.
+2) Please read Documentation/process/stable-kernel-rules.rst and see Option 3. I
+cannot take this patch. It needs to go through the stable tree after I Ack it.
+
+> ---
+>  drivers/ata/libata-scsi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index dfa090ccd21c..77589e911d3d 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -4065,6 +4065,9 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
+>  
+>  	if (unlikely(!scmd->cmd_len))
+>  		goto bad_cdb_len;
+> +
+> +	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
+> +		goto bad_cdb_len;
+>  
+>  	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
+>  		if (unlikely(scmd->cmd_len > dev->cdb_len))
+
+-- 
+Damien Le Moal
+Western Digital Research
+
