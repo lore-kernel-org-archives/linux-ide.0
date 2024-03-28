@@ -1,90 +1,66 @@
-Received: from forward100b.mail.yandex.net (forward100b.mail.yandex.net [178.154.239.147])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9B0E12F59C;
-	Thu, 28 Mar 2024 15:00:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40FA513BC0A;
+	Thu, 28 Mar 2024 22:13:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711638050; cv=none; b=MG+WVrEv/OySqbpaGcf1Dz79evrAgfX/ysL0wsBqRc/cF0HRCcp5xx3vo4X/IgB0KgeoIvyaGKQz7DXT9jy3xSDPKMzEty16ohQVvJUL55OzXefABtJL7hS5XAALJ49ZsZizZqBW1ziuNeRPrE8YIefrLzqaS7uY0vktM7a4XIY=
+	t=1711664025; cv=none; b=NQkHmiwnrL2T21ucePKDwjGzL/W3UVt59fH7B2JKPeLtOf4g6CBFlLH6PaMdcawMJKNmRgNwi5aEcPlRoOjtrPVfYpaW+yHiOwvIhnrqSv8swTzlkSbnZ6pOGt10g+HoxMT+ElGvHrCaHnXO7Ga2wDiuocsXDCQDQYZvDfRTsik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711638050; c=relaxed/simple;
-	bh=RPApgADsKlI29chKvdFy7O12Bng/LmzDghTbECdn9Sg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hO6h4aJEtPPkDNIPDl9nNuRfcL1kuRz8V0jiguTj/5jWgmOpm8bVVAF3qoqJsYDsejPe81K7WUuLKIhf0jlc+qI8v0zcFvbq2VRxnAx6uI/YKCVLbG7pVFhG/U7bZyzYbyfbJHPH5spsG4Tvx9vvTxsn7NgqyWqoySuIoeDwWLQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=FdWvpB8g; arc=none smtp.client-ip=178.154.239.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1711664025; c=relaxed/simple;
+	bh=aUT/2zntFjPZMTidVRv4uKwagyYx/qsW2TY3mo6y1n0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=GhqzohmKfMSYnymza6CjmfRtklXdyQFjFim7qcLdWGMlg7c3G/d3hIuPqWk5VYvbapDg3OA0vJ/qTv1JW37LFjLUJHIW5sluJzOeedBuxP6fTwrI5XnLB2QV8aMWGTARleuCMCBItOterBSD/XT8waEgU0iBCdGLCOLyeJBBxuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VVkc9Lv0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="FdWvpB8g"
-Received: from mail-nwsmtp-smtp-production-main-44.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-44.sas.yp-c.yandex.net [IPv6:2a02:6b8:c24:a33:0:640:d837:0])
-	by forward100b.mail.yandex.net (Yandex) with ESMTPS id 4A4E260B30;
-	Thu, 28 Mar 2024 18:00:44 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-44.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id W0PPosAetiE0-QIB3q1ZZ;
-	Thu, 28 Mar 2024 18:00:43 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1711638043; bh=EhuReZ9ZlrI84XoRVD7915LFMz58XbYYesStZiY24qI=;
-	h=Message-Id:Date:Cc:Subject:To:From;
-	b=FdWvpB8gA8a2Kh3dRx5zF7roYDfXz6QoaoH/oQ0RRs7FnSwQeF1fLGnilBQrD1I7/
-	 62j/erUwvTIPDN9sIx603VpSAooEQe1p6AKzOXKYQi9rAXN6/AFyBqnEckY54Pqira
-	 l+5ufyhOxqPesjMjr0QIHxbSoIeuu7uxsQ62kwUs=
-Authentication-Results: mail-nwsmtp-smtp-production-main-44.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Mikhail Ukhin <mish.uxin2012@yandex.ru>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Mikhail Ukhin <mish.uxin2012@yandex.ru>,
-	linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VVkc9Lv0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8697BC433C7;
+	Thu, 28 Mar 2024 22:13:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711664024;
+	bh=aUT/2zntFjPZMTidVRv4uKwagyYx/qsW2TY3mo6y1n0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=VVkc9Lv0dyYr5XeAEbJahZcheClxn2kthhsGjLjp+0AYtMfuRfs/yffNcsknBh1l3
+	 f45gs/sNHKp7jXgvG+pOG66UyInzqx+4kpxDDC/oJFcZhrOQ945fb0BXYrjJSoyDc1
+	 hcNkYybZStKExgX+Pf4k1gKOyo/xcAbp0xbI1Ux5CX2J7FV3MOzIIBvZ2ZXgTcnCcp
+	 VEEWASWgyxsCZpXcTdItS/OiA/eIlCqpFw8hL7mDcnk5sy4yHvuncpAANpVlXWuPke
+	 VKMqxvLy9Bl6ax8x8iPgvGIVi3GR3+p1bCF3tS1b+6m9dIjB0u0V4KRWJsTvwDxStb
+	 LlRbGASVea+3g==
+Date: Thu, 28 Mar 2024 17:13:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	Pavel Koshutin <koshutin.pavel@yandex.ru>,
-	Artem Sadovnikov <ancowi69@gmail.com>,
-	Mikhail Ivanov <iwanov-23@bk.ru>
-Subject: [PATCH 5.10/5.15] ata: libata-scsi: check cdb length for VARIABLE_LENGTH_CMD commands
-Date: Thu, 28 Mar 2024 18:00:26 +0300
-Message-Id: <20240328150026.9129-1-mish.uxin2012@yandex.ru>
-X-Mailer: git-send-email 2.25.1
+	Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 0/2] PCI: Remove pci_enable_device_io()
+Message-ID: <20240328221342.GA1615567@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <370ff61c-1ae0-41ca-95fc-6c45e1b8791d@gmail.com>
 
-Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
-ata_scsi_pass_thru.
+On Sat, Mar 23, 2024 at 06:13:41PM +0100, Heiner Kallweit wrote:
+> The call to pci_enable_device_io() in cs5520 isn't needed and can be
+> removed. This was the last user, so the function itself can be removed
+> afterwards.
+> 
+> I'd propose to apply the series through the PCI tree.
+> 
+> Heiner Kallweit (2):
+>   ata: pata_cs5520: Remove not needed call to pci_enable_device_io
+>   PCI: Remove pci_enable_device_io()
+> 
+>  drivers/ata/pata_cs5520.c |  6 ------
+>  drivers/pci/pci.c         | 14 --------------
+>  include/linux/pci.h       |  1 -
+>  3 files changed, 21 deletions(-)
 
-The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
-cmd field from struct scsi_request").
-Backporting this commit would require significant changes to the code so
-it is bettter to use a simple fix for that particular error.
-
-The problem is that the length of the received SCSI command is not
-validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
-reading if the user sends a request with SCSI command of length less than
-32.
-
-Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
-
-Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
-Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
----
- drivers/ata/libata-scsi.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index dfa090ccd21c..77589e911d3d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4065,6 +4065,9 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
- 
- 	if (unlikely(!scmd->cmd_len))
- 		goto bad_cdb_len;
-+
-+	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
-+		goto bad_cdb_len;
- 
- 	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
- 		if (unlikely(scmd->cmd_len > dev->cdb_len))
--- 
-2.25.1
-
+Applied to pci/enumeration with acks/reviewed-by from Damien and
+Sergey, thank you!
