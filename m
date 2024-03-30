@@ -1,102 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 713778F6B;
-	Thu, 28 Mar 2024 23:00:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675BE22093;
+	Sat, 30 Mar 2024 18:41:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711666803; cv=none; b=hj2RaJi+gQVJrwLaTCyIW75HI/qVZN+zrKbDUzxCDtEWAfjcdFqyxtp0e02RbPWqihklYx9nKrdnb4bysgWopGGrFWFJl5xnQLlUAJ4dUsL+ZvxN0BmDZsRu/3xOAnsm3EzPMl8xd7/Tb3dS93+6ROOA/w0IBDYvpizswmfrcpM=
+	t=1711824088; cv=none; b=EL88rkLOf99TIqCmuF175D7x+dPrOOecbRW/QP2mmvDWTdXSA5BGCYceNxbUQM4RZbc9yxnuGMKstrLO+HP+0Adefv3N3Y01y74RYWQQ/M0dKpdJ0+AtDgDMwxclsTaHL8am0NCETvNwQib9QM/kKuFWSjSRbGMAbG/dfSV01pw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711666803; c=relaxed/simple;
-	bh=QwcIs7KpIAiawzl4YLtzgEKHBecDVCX3HkOsrjsohvo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MJv3vWyaOzOW7C/YjH+06uynVfTbKPuMtHtx6KZ4amJWCbNb5suXtuAnMBDtetBWVBQOItWai7EP3SfdH4hgxIgW8knevAx2MxRwRLiWUqb+Zw3HImXj0VgHWlVHvNooNABjhrwZG7kHcpePGRqT/dCkvf7fkd0gmLkzfuFSBwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mVkDgH17; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mVkDgH17"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4966C433F1;
-	Thu, 28 Mar 2024 23:00:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711666803;
-	bh=QwcIs7KpIAiawzl4YLtzgEKHBecDVCX3HkOsrjsohvo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=mVkDgH17hEkiKBZzXZvp5iPHCr2I7ihxDPFounV7hMMz4PHmPo8UvcdatNny5Vf9+
-	 aibO8eQ8yMfIKLREj6PK71qnh1kzlQrRRn2imbuGlzq39QJZ495vAJA7TCDtF09uJM
-	 fwTr5t38cUNv0UAfygrEXgRN6wa/nED8lK3k2D7Y9uZxWPvaLBmh+g5mFxrLx/wwL7
-	 xfUu4kgpOukgyv/DkqtLfpKsTRAyqgkSg5cvoKMDHzQGKKWjK6bht4GRHPIgHy+XFl
-	 6RsqLQtWlxwMmrEetOM2AVmle9uRzHsrDF1O6FdfUfFXd6efGXXjmGclbPmXjnG45/
-	 sF3OPTs5GrOvw==
-Message-ID: <595a03f6-e93a-4f2c-bf0a-01e428897c15@kernel.org>
-Date: Fri, 29 Mar 2024 08:00:00 +0900
+	s=arc-20240116; t=1711824088; c=relaxed/simple;
+	bh=a0TJZoH9QyqE52H2Bq488jfPcOZuj7Ya8OYwWGibDRM=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=mUm7oSkurLP5NEQTBtyDuIrydrTCRTqZYMdx0PdqTQVcYFDM2J7wyc92qxvtoSH8JmvLyuSEOyKlZtwwvpeLTG4XmcO+H0KVI+dUYjGyTUfjjxb8HwL4p1QOnxfAYTeMkJZm8d0TOymB1rwWtyJuv1oEMVQ6HQt087TofjA8JcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.1.105] (178.176.75.214) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Sat, 30 Mar
+ 2024 21:41:13 +0300
+Subject: Re: [PATCH v9 21/38] ata: pata_ep93xx: add device tree support
+To: <nikita.shubin@maquefel.me>, Damien Le Moal <dlemoal@kernel.org>, Niklas
+ Cassel <cassel@kernel.org>
+CC: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Arnd Bergmann
+	<arnd@arndb.de>
+References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
+ <20240326-ep93xx-v9-21-156e2ae5dfc8@maquefel.me>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <bebf7c70-bd40-0382-211f-6ee9bd9f72b9@omp.ru>
+Date: Sat, 30 Mar 2024 21:41:12 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5.10/5.15] ata: libata-scsi: check cdb length for
- VARIABLE_LENGTH_CMD commands
-To: Mikhail Ukhin <mish.uxin2012@yandex.ru>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>, Pavel Koshutin
- <koshutin.pavel@yandex.ru>, Artem Sadovnikov <ancowi69@gmail.com>,
- Mikhail Ivanov <iwanov-23@bk.ru>
-References: <20240328150026.9129-1-mish.uxin2012@yandex.ru>
+In-Reply-To: <20240326-ep93xx-v9-21-156e2ae5dfc8@maquefel.me>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240328150026.9129-1-mish.uxin2012@yandex.ru>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 03/30/2024 18:24:56
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 184500 [Mar 29 2024]
+X-KSE-AntiSpam-Info: Version: 6.1.0.4
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 14 0.3.14
+ 5a0c43d8a1c3c0e5b0916cc02a90d4b950c01f96
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info:
+	omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.75.214
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 03/30/2024 18:32:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 3/30/2024 4:36:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On 3/29/24 00:00, Mikhail Ukhin wrote:
-> Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
-> ata_scsi_pass_thru.
-> 
-> The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
-> cmd field from struct scsi_request").
-> Backporting this commit would require significant changes to the code so
-> it is bettter to use a simple fix for that particular error.
-> 
-> The problem is that the length of the received SCSI command is not
-> validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
-> reading if the user sends a request with SCSI command of length less than
-> 32.
-> 
-> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
-> 
-> Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
-> Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
+On 3/26/24 12:18 PM, Nikita Shubin via B4 Relay wrote:
 
-This looks OK to me, but:
-1) Please stop using the wrong email address for me. Use
-scripts/get_maintainer.pl to see the correct email address (the one I am using
-now). And maintainers & main list should not be on cc but part of the "to:"
-addressing.
-2) Please read Documentation/process/stable-kernel-rules.rst and see Option 3. I
-cannot take this patch. It needs to go through the stable tree after I Ack it.
-
-> ---
->  drivers/ata/libata-scsi.c | 3 +++
->  1 file changed, 3 insertions(+)
+> From: Nikita Shubin <nikita.shubin@maquefel.me>
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index dfa090ccd21c..77589e911d3d 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -4065,6 +4065,9 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
->  
->  	if (unlikely(!scmd->cmd_len))
->  		goto bad_cdb_len;
-> +
-> +	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
-> +		goto bad_cdb_len;
->  
->  	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
->  		if (unlikely(scmd->cmd_len > dev->cdb_len))
+> - add OF ID match table
+> - drop platform DMA and filters
+> - change DMA setup to OF, so we can defer probe
+> 
+> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> Acked-by: Damien Le Moal <dlemoal@kernel.org>
+> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
 
--- 
-Damien Le Moal
-Western Digital Research
+   You normally add the R-b and A-b tags after your signoff, not before.
+I know b4 gets it wrong... :-/
 
+[...]
+
+MBR, Sergey
