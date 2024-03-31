@@ -1,94 +1,156 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675BE22093;
-	Sat, 30 Mar 2024 18:41:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C31E19463
+	for <linux-ide@vger.kernel.org>; Sun, 31 Mar 2024 19:29:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711824088; cv=none; b=EL88rkLOf99TIqCmuF175D7x+dPrOOecbRW/QP2mmvDWTdXSA5BGCYceNxbUQM4RZbc9yxnuGMKstrLO+HP+0Adefv3N3Y01y74RYWQQ/M0dKpdJ0+AtDgDMwxclsTaHL8am0NCETvNwQib9QM/kKuFWSjSRbGMAbG/dfSV01pw=
+	t=1711913368; cv=none; b=KHlFQtd6ILEJ/4w2fYdU+Qm3u9cty/VX+X/bV2MawUdtr5ukx39dFDUPGPSs9UlUvQMS2ilqEldcav5h8MHcHyY4Ij6sFK5123Mm8B+J4fR054/vFszhMSxnLL8XfKh0rbe5aZoEET7aNTndb0Uknm14/l+NPbWPPh9lpBYusPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711824088; c=relaxed/simple;
-	bh=a0TJZoH9QyqE52H2Bq488jfPcOZuj7Ya8OYwWGibDRM=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=mUm7oSkurLP5NEQTBtyDuIrydrTCRTqZYMdx0PdqTQVcYFDM2J7wyc92qxvtoSH8JmvLyuSEOyKlZtwwvpeLTG4XmcO+H0KVI+dUYjGyTUfjjxb8HwL4p1QOnxfAYTeMkJZm8d0TOymB1rwWtyJuv1oEMVQ6HQt087TofjA8JcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.1.105] (178.176.75.214) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Sat, 30 Mar
- 2024 21:41:13 +0300
-Subject: Re: [PATCH v9 21/38] ata: pata_ep93xx: add device tree support
-To: <nikita.shubin@maquefel.me>, Damien Le Moal <dlemoal@kernel.org>, Niklas
- Cassel <cassel@kernel.org>
-CC: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Arnd Bergmann
-	<arnd@arndb.de>
-References: <20240326-ep93xx-v9-0-156e2ae5dfc8@maquefel.me>
- <20240326-ep93xx-v9-21-156e2ae5dfc8@maquefel.me>
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <bebf7c70-bd40-0382-211f-6ee9bd9f72b9@omp.ru>
-Date: Sat, 30 Mar 2024 21:41:12 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+	s=arc-20240116; t=1711913368; c=relaxed/simple;
+	bh=f5ljg/Wc7ME7G04qzot3/0WoJ9Z5hK3QSpk2j3B01do=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=dLRlL1suh/S/GZJ6JbIZtIBlevw4vB/qQXveR3KTWLIT++HHc6UPCYmTbVe4Gu7IkBQA6xb9MQWJDQLxLOLVcZLvXlhEYI5E0tB8MkZ5fWvLhujHr7HzeoJD0c3DclVYDVT3a6b2Qq3iKL48OfZm8R9XXROCt0tzIIRArI69qQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-7cc7a6a043bso441161839f.0
+        for <linux-ide@vger.kernel.org>; Sun, 31 Mar 2024 12:29:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711913366; x=1712518166;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=X8E6BccGg7QBRqyiJt5ld5mepNqMnMyoDuErjNXyThI=;
+        b=db1XyYITitH6V0JVqfXNZxWYcpGhUoJ7DWphxrC6qNXr4Xxw7D/Il2+fm5eNLdIuAY
+         5QVLj3+cQDX2+HHSINduri0siKEk8BFM6WAHgWVbDzO2KpAtQUX+ezM+DnxOhkJFD+AC
+         0JAolsKE34yfXQ8z3IZkRYgnYSyrJSEGwlE/bpKP8AfnnxksceX9pjuq8eTmG2WicciR
+         0G1aqlyHfX1L8gnJcjOYI7mXUgObbX+HBBPXMKrGUjPFEqx2hGb1gF6heBkIl9nPPLmB
+         xQRgguSqE5M8ZESkRBhGkdUigtORfroogkdhO17Aibv1BXtPw+KrC6z323plw+lgqKeH
+         lnVA==
+X-Forwarded-Encrypted: i=1; AJvYcCWCpo2SnOu4+kPaKx5iDgguX+cQE/LSih6b9hIKL5fFw3BFwCx8j7FAi7uIuQkq5RZtWMLCENYMDd1+qxTaAAFOv6g4yLHo7/bW
+X-Gm-Message-State: AOJu0Yykw4Jq/2oY8dgXOyKELH1cftiq+9auvLmnNvC4rlUGEDlSXn27
+	PaHClXGv/XkW5TYt9QlYgF+yqnZ2NEek5Nj80WHBaux4PJI/flbdm9CqYXRcaDyUqzdCYAvicE0
+	9s7RdsH56WtbYozMfOb1E5boHoCRU7PZTLLLaKT7BEuWbxkmkGwj7Rx4=
+X-Google-Smtp-Source: AGHT+IGptXJRZnPSMNtiqp2ps1An8cGZzR2w0P6ZXD4+BiSBlp68VHmHUT+vbOVPbNeH3HqDQk/bPFK0BzRSVKy84IiUnumV00ZI
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240326-ep93xx-v9-21-156e2ae5dfc8@maquefel.me>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 03/30/2024 18:24:56
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 0
-X-KSE-AntiSpam-Info: Lua profiles 184500 [Mar 29 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 14 0.3.14
- 5a0c43d8a1c3c0e5b0916cc02a90d4b950c01f96
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info:
-	omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.75.214
-X-KSE-AntiSpam-Info: Rate: 0
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 03/30/2024 18:32:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 3/30/2024 4:36:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+X-Received: by 2002:a05:6602:3422:b0:7cc:ea7:4f0f with SMTP id
+ n34-20020a056602342200b007cc0ea74f0fmr373025ioz.3.1711913366042; Sun, 31 Mar
+ 2024 12:29:26 -0700 (PDT)
+Date: Sun, 31 Mar 2024 12:29:26 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000011ce560614f9e4a6@google.com>
+Subject: [syzbot] [ide?] WARNING in ata_scsi_queuecmd
+From: syzbot <syzbot+5a834bc6771dddfa994e@syzkaller.appspotmail.com>
+To: cassel@kernel.org, dlemoal@kernel.org, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 3/26/24 12:18 PM, Nikita Shubin via B4 Relay wrote:
+Hello,
 
-> From: Nikita Shubin <nikita.shubin@maquefel.me>
-> 
-> - add OF ID match table
-> - drop platform DMA and filters
-> - change DMA setup to OF, so we can defer probe
-> 
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Acked-by: Damien Le Moal <dlemoal@kernel.org>
-> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
+syzbot found the following issue on:
 
-   You normally add the R-b and A-b tags after your signoff, not before.
-I know b4 gets it wrong... :-/
+HEAD commit:    962490525cff Merge tag 'probes-fixes-v6.9-rc1' of git://gi..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11171735180000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f64ec427e98bccd7
+dashboard link: https://syzkaller.appspot.com/bug?extid=5a834bc6771dddfa994e
+compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
 
-[...]
+Unfortunately, I don't have any reproducer for this issue yet.
 
-MBR, Sergey
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7bc7510fe41f/non_bootable_disk-96249052.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/c5a4f1f7db02/vmlinux-96249052.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/ea148b99c50a/bzImage-96249052.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+5a834bc6771dddfa994e@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+raw_local_irq_restore() called with IRQs enabled
+WARNING: CPU: 0 PID: 1166 at kernel/locking/irqflag-debug.c:10 warn_bogus_irq_restore+0x29/0x30 kernel/locking/irqflag-debug.c:10
+Modules linked in:
+CPU: 0 PID: 1166 Comm: kworker/u32:9 Not tainted 6.9.0-rc1-syzkaller-00021-g962490525cff #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+Workqueue: writeback wb_workfn (flush-8:0)
+RIP: 0010:warn_bogus_irq_restore+0x29/0x30 kernel/locking/irqflag-debug.c:10
+Code: 90 f3 0f 1e fa 90 80 3d 6c e3 ec 04 00 74 06 90 c3 cc cc cc cc c6 05 5d e3 ec 04 01 90 48 c7 c7 c0 c2 2c 8b e8 28 2c 72 f6 90 <0f> 0b 90 90 eb df 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90
+RSP: 0018:ffffc9000467e9d8 EFLAGS: 00010286
+RAX: 0000000000000000 RBX: ffff888022a70400 RCX: ffffffff814fe149
+RDX: ffff88802384a440 RSI: ffffffff814fe156 RDI: 0000000000000001
+RBP: 0000000000000246 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000000 R11: 000000002d2d2d2d R12: ffff8880232f2680
+R13: 0000000000000246 R14: ffff8880232f0010 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88806b000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000020000040 CR3: 000000002fd56000 CR4: 0000000000350ef0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ __raw_spin_unlock_irqrestore include/linux/spinlock_api_smp.h:151 [inline]
+ _raw_spin_unlock_irqrestore+0x74/0x80 kernel/locking/spinlock.c:194
+ spin_unlock_irqrestore include/linux/spinlock.h:406 [inline]
+ ata_scsi_queuecmd+0xda/0x160 drivers/ata/libata-scsi.c:4204
+ scsi_dispatch_cmd drivers/scsi/scsi_lib.c:1610 [inline]
+ scsi_queue_rq+0x12af/0x36a0 drivers/scsi/scsi_lib.c:1852
+ blk_mq_dispatch_rq_list+0x452/0x2030 block/blk-mq.c:2058
+ __blk_mq_do_dispatch_sched block/blk-mq-sched.c:170 [inline]
+ blk_mq_do_dispatch_sched block/blk-mq-sched.c:184 [inline]
+ __blk_mq_sched_dispatch_requests+0xcdf/0x1620 block/blk-mq-sched.c:309
+ blk_mq_sched_dispatch_requests+0xd4/0x150 block/blk-mq-sched.c:331
+ blk_mq_run_hw_queue+0x645/0x9a0 block/blk-mq.c:2273
+ blk_mq_dispatch_plug_list block/blk-mq.c:2774 [inline]
+ blk_mq_flush_plug_list.part.0+0x611/0x1d90 block/blk-mq.c:2822
+ blk_mq_flush_plug_list block/blk-mq.c:1296 [inline]
+ blk_add_rq_to_plug+0x117/0x540 block/blk-mq.c:1299
+ blk_mq_submit_bio+0x1602/0x20f0 block/blk-mq.c:3014
+ __submit_bio+0xfd/0x310 block/blk-core.c:619
+ __submit_bio_noacct_mq block/blk-core.c:698 [inline]
+ submit_bio_noacct_nocheck+0x98a/0xd50 block/blk-core.c:727
+ submit_bio_noacct+0x746/0x1ba0 block/blk-core.c:837
+ ext4_io_submit+0xa6/0x140 fs/ext4/page-io.c:378
+ ext4_do_writepages+0xf0f/0x3250 fs/ext4/inode.c:2699
+ ext4_writepages+0x303/0x730 fs/ext4/inode.c:2768
+ do_writepages+0x1a3/0x7f0 mm/page-writeback.c:2612
+ __writeback_single_inode+0x163/0xf90 fs/fs-writeback.c:1650
+ writeback_sb_inodes+0x5a6/0x10d0 fs/fs-writeback.c:1941
+ __writeback_inodes_wb+0xff/0x2e0 fs/fs-writeback.c:2012
+ wb_writeback+0x7db/0xb30 fs/fs-writeback.c:2119
+ wb_check_start_all fs/fs-writeback.c:2245 [inline]
+ wb_do_writeback fs/fs-writeback.c:2271 [inline]
+ wb_workfn+0x9fb/0xf40 fs/fs-writeback.c:2304
+ process_one_work+0x9a9/0x1ac0 kernel/workqueue.c:3254
+ process_scheduled_works kernel/workqueue.c:3335 [inline]
+ worker_thread+0x6c8/0xf70 kernel/workqueue.c:3416
+ kthread+0x2c1/0x3a0 kernel/kthread.c:388
+ ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:243
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
