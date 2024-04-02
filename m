@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC8656760;
-	Mon,  1 Apr 2024 23:40:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 737E616415;
+	Tue,  2 Apr 2024 03:29:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712014814; cv=none; b=NQuM6kuL7yYHvj1FY+hlzpBKlv6/aCGhUCjAJYzxVkV5fB7daozclq6eowKwEEnVRphfmqiZ6pVlgBZN7JcbGGqlcJiR+p6y+cNJ0FIXIo1w+P5VaajnCpmdNRDWuzPI53oiN6L7tBM739XsYhqq6JWOmwc6F0H+gh89btb5d0A=
+	t=1712028554; cv=none; b=lmxUX2Hu1bm2U54SGdl01Dr5+Z/DV6iq8GP0elEHTxVhM6nqmXwLxJ0dwRhbfVo6pPGG+J33hIzXGonkBRR2a+zhWlbGM+rSSHKMYTrmE0FY0D5blSJLp2BUrj8+/eyZlA/XsjcauqrQTtWFxbHF/e0M2mR665bdCjxp4hvi4oE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712014814; c=relaxed/simple;
-	bh=7ZzuN0E5FJAIusgfFsV6NIYO/Dp9pbGAoWrIo0VHKN4=;
+	s=arc-20240116; t=1712028554; c=relaxed/simple;
+	bh=y6RYKuOQsgSxbPHP3Ik43Hn/qaEJ4mSoNkkT+W333oE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gZCzH61aurB5Dce9b0+9ojJdCP4BdptV2O3vTRiR9ZBdMl3BvsX6toJSdmmY70tm6HVvQOW5Z9jz7+LbkMzEkHtGLmTyGJxIx1jMekEmEFdiuZeD4t5JyY1BaoKxCblZ9YrG12huZth1njnZNp1AMpsY1W8X+twweTEb6GfX+sg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WsmTklMs; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=HzeZxCESZGXCWHInDnb5mJ6MOzx3oI1OI5ZE0qzbRiUHH4vr2s0li9z6L7AEtpA/wTDwisQy5EGGFKFj8flEDkw0qjn32mO6inXnU/tGx/X/XQMdKoGDHret6/jef22AHOi8Asbqhyt/mLlk/KjHqNr5i5bYOli/pyjdf6sE9Xo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YLmgLhra; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WsmTklMs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9F42C433F1;
-	Mon,  1 Apr 2024 23:40:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YLmgLhra"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E307C433F1;
+	Tue,  2 Apr 2024 03:29:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712014813;
-	bh=7ZzuN0E5FJAIusgfFsV6NIYO/Dp9pbGAoWrIo0VHKN4=;
+	s=k20201202; t=1712028554;
+	bh=y6RYKuOQsgSxbPHP3Ik43Hn/qaEJ4mSoNkkT+W333oE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=WsmTklMsOOFb6FOOI7d+qMoyUjFrdfhPMc2XYpW9zvfgomkDzk3iijWjXP4+YX9wO
-	 A8pd8mDnAsy7u1GKgaR2OcxqEuqJj8AjxuEfNeUNI3+nSwbKT5YtUx33d2Ad6KXf3X
-	 FJDZHZnHUBr3os4zRbT4mBp0T5U7GXIFF2MoYrOlOTLH+xxy2pL/lQNGE4ug1e8XMN
-	 rn9QqtS+0N4CyOJ9lqvbDUsvXrl14JIsieQ5CQUpfxHy6DfkYiDQ80Ii5iHY57w59/
-	 CT04eNIXUHy646qvwGsW1v32rFrA43JFTUjMauMTw98ZQolLodIM3FNQ1qYP15DCNV
-	 ocDgkx8RWB+yQ==
-Message-ID: <d5429736-8305-4afe-89a8-fe62907616e1@kernel.org>
-Date: Tue, 2 Apr 2024 08:40:11 +0900
+	b=YLmgLhraq5I3uEJEtbnWPBq3NDfVPbIDoyovNUtPb8KG23IzTJmGk8CC40XmPpzN8
+	 LXD8yRQ+9oSBXpXsIvg+4Irq0zq0cS/FUYahKzrs763gTbLSt201gJZQLcjf3x7s0j
+	 16N9flHliBV6pqeY6SDWY3BGuiFO1rVX0CA2ozXbYyc5X1JvENl65qQbzdu9ZksuLl
+	 2MnLUi3oNHxlgZuELOB8TiNuDbd1anL5i791iQ2E1TtwcwXRLHJZn6xuxTaq8Js/wO
+	 5XJQrFrO1mUCOeaR5EU39K2AYA/a9ZO7DfguQzIgCYPV9c6oX/nt2r5MgOWw7k3DLj
+	 gGJ1ApEEoBQrw==
+Message-ID: <b786c895-692f-4485-affd-97d78b786546@kernel.org>
+Date: Tue, 2 Apr 2024 12:29:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,112 +35,30 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] dt-bindings: ata: ahci-da850: Convert to dtschema
-To: Animesh Agarwal <animeshagarwal28@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, linux-ide@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240327064354.17384-1-animeshagarwal28@gmail.com>
+Subject: Re: [PATCH] ata: ahci_st: Remove an unused field in struct
+ st_ahci_drv_data
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+ Patrice Chotard <patrice.chotard@foss.st.com>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+References: <f1804954a746e93382429cf38e4f1f9fb46bb578.1711975449.git.christophe.jaillet@wanadoo.fr>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240327064354.17384-1-animeshagarwal28@gmail.com>
+In-Reply-To: <f1804954a746e93382429cf38e4f1f9fb46bb578.1711975449.git.christophe.jaillet@wanadoo.fr>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/27/24 15:43, Animesh Agarwal wrote:
-> Convert the ahci-da850 bindings to DT schema.
+On 4/1/24 21:44, Christophe JAILLET wrote:
+> In "struct st_ahci_drv_data", the 'ahci' field is unused.
+> Remove it.
 > 
-> Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
-
-Krzysztof, Rob,
-
-Are you OK with this patch ?
-
+> Found with cppcheck, unusedStructMember.
 > 
-> ---
-> Changes in v3:
-> - Fixed line length issue on line 20
-> - Removed unneccessary '|' character
-> Changes in v2:
-> - Added description for reg property items.
-> ---
->  .../devicetree/bindings/ata/ahci-da850.txt    | 18 ---------
->  .../bindings/ata/ti,da850-ahci.yaml           | 39 +++++++++++++++++++
->  2 files changed, 39 insertions(+), 18 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-> deleted file mode 100644
-> index 5f8193417725..000000000000
-> --- a/Documentation/devicetree/bindings/ata/ahci-da850.txt
-> +++ /dev/null
-> @@ -1,18 +0,0 @@
-> -Device tree binding for the TI DA850 AHCI SATA Controller
-> ----------------------------------------------------------
-> -
-> -Required properties:
-> -  - compatible: must be "ti,da850-ahci"
-> -  - reg: physical base addresses and sizes of the two register regions
-> -         used by the controller: the register map as defined by the
-> -         AHCI 1.1 standard and the Power Down Control Register (PWRDN)
-> -         for enabling/disabling the SATA clock receiver
-> -  - interrupts: interrupt specifier (refer to the interrupt binding)
-> -
-> -Example:
-> -
-> -	sata: sata@218000 {
-> -		compatible = "ti,da850-ahci";
-> -		reg = <0x218000 0x2000>, <0x22c018 0x4>;
-> -		interrupts = <67>;
-> -	};
-> diff --git a/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
-> new file mode 100644
-> index 000000000000..ce13c76bdffb
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
-> @@ -0,0 +1,39 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/ti,da850-ahci.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: TI DA850 AHCI SATA Controller
-> +
-> +maintainers:
-> +  - Animesh Agarwal <animeshagarwal28@gmail.com>
-> +
-> +properties:
-> +  compatible:
-> +    const: ti,da850-ahci
-> +
-> +  reg:
-> +    items:
-> +      - description: Address and size of the register map as defined by the AHCI 1.1 standard.
-> +      - description:
-> +          Address and size of Power Down Control Register (PWRDN) for enabling/disabling the SATA clock
-> +          receiver.
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +
-> +additionalProperties: false
-> +
-> +examples:
-> +  - |
-> +    sata@218000 {
-> +        compatible = "ti,da850-ahci";
-> +        reg = <0x218000 0x2000>, <0x22c018 0x4>;
-> +        interrupts = <67>;
-> +    };
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+
+Applied to for-6.9-fixes. Thanks !
 
 -- 
 Damien Le Moal
