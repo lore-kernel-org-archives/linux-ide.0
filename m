@@ -1,62 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 258092C689;
-	Tue,  2 Apr 2024 07:25:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE2D018635;
+	Tue,  2 Apr 2024 07:38:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712042757; cv=none; b=qUXhhf09f3yopJrl7ZEF2ZG51N/PlVMthPohwdpraxu6vktEd7OIOdtS7TED3HxazVLntlNqIACcwn0z5AJqlLoZU+qVb3TUFSW77n+8YsEH375IuSF8R0U6ac0pliOoHMvoL5xS7bMGpxhBC11Zfl2fDu2usNA25gNmfGaYhiA=
+	t=1712043492; cv=none; b=UIJVEhAf8XtGZlTb3oZmTIKjMmZg+hZOPm7/qU1ppM3nMsVzSSQUCJjb1BTUuhgqlVqMQgdpZYNZgtCLjaXIF/NvmIRcFDhD1L4z4ne5dYhmn7Pu+cKhXhT7jN9CcpIEEOCpMrp9iFa4FDuMskxhrdGGRlHYmafUcsSF1kNVwjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712042757; c=relaxed/simple;
-	bh=KQMf4VtPzd84hyGt6kCsCtQ12pBU4FXg9c014tnmT4w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mW/rwP/eKDITyjq5GFTRbP4nDielN6qxwUpmSQfbhJsz6pgrYb3DA1l38ryTf+L+oGLSRDk5EgiUvSLy4D3xWJcjlNtZWk1S8h1FKS7iWncYRPj0srfnYEUJGB7W0WaAAUEbRa0Mig+3DV4AnwN2jnR0RPOtV3l4xxqQzTH6W84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eflhh8zE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712043492; c=relaxed/simple;
+	bh=bkEud1DS4CmuqdIWJhXjEm5+cYQ8btjvsByQdn3Q/kw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DRpydU7zB7/1EZs6WAowa3aI1+vfeRalt/3mJOFXP6hZOVevU51zKOtMGWxiNEYgc2QExvG5AEjg8V3m4raYb/WpSBdCYxlots+/dYvJkYLRJloaij82P7YDT/DmKFC2fh+WwMrNkEc7SDo43FzsUq3y6lMwe6p9Rs1R2313bDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lHRfOE9W; arc=none smtp.client-ip=209.85.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eflhh8zE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2C63C433C7;
-	Tue,  2 Apr 2024 07:25:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712042757;
-	bh=KQMf4VtPzd84hyGt6kCsCtQ12pBU4FXg9c014tnmT4w=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Eflhh8zE6J2yENSOcXythi7o+kKM6iTUQPj060dc139attEsMbhY2FExIvFEXS13w
-	 2Sk0rJ8BhUpisj7tcIUGn6hRRc1WV/Sd5pUvw+7elD33lZv4Dw+6khRaIiCYPA8gPc
-	 itbrJIaemcJxN87yr5jWbj8MYbkwM22S5C5evnlpZwoRm9w+eskcmQHbZGhX4XMyrL
-	 3c/6tg203ePz4vTlKDJDoaZ+7Orivcu2wE7Za5vV/fYM1cwJ0AG9H7AW7KGD6vcwL/
-	 CSxf5g1O0I3rVZEG31ItAHSZ35/kt/obFGajU5mUwaY6j7rdPS3kNJ6c3KppK8x4vV
-	 QB0Ae4hUdiPaA==
-Message-ID: <24c917f6-9ff8-4bca-8cc2-5c14c64c2c9b@kernel.org>
-Date: Tue, 2 Apr 2024 16:25:54 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lHRfOE9W"
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-6e6db4dfd7aso3609592a34.2;
+        Tue, 02 Apr 2024 00:38:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712043489; x=1712648289; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bkEud1DS4CmuqdIWJhXjEm5+cYQ8btjvsByQdn3Q/kw=;
+        b=lHRfOE9WTB76EJl99JCYzWTeOcboRSL59u9vO7QpcfNB5TqntwXe8+W0sYnHz6Z9eN
+         CPxvc6AKxzHWotYqSqS7Xzio4FPS8YIHX7tRjP22AwjAQpCSL/f+aNGnkKETtg+oCkJA
+         r7wzTIxenFsvRl7T/TMidzVnxR/ZYBsg7VHVwWklsC+7viXCcUWfkNszQywRsu11fCWd
+         5R9C3+B/WkPJ5eQdtQdU2wcVHIVls842tr6ZBwnUc4rionlV1Itk6P5Zxe+o5kAacGSH
+         DPNJYbMvk8hmYctGiNrIORlrqbuFQE+9rwBA5MB3MzOCj6qDxAUeyxSLsCDGoB60APu+
+         QI2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712043489; x=1712648289;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=bkEud1DS4CmuqdIWJhXjEm5+cYQ8btjvsByQdn3Q/kw=;
+        b=LiVoOlyln+kM/4wNDvvYr248J918edZ+PhceVlYRYgN8p7JgyOFYou4XdjkAsnv6RO
+         y+J4tFKafJIKV0e2pB3Totj0gQR8OMvJOO3uY7BpBxPSLuWLSOQvdVndR096U5G3adKz
+         x5jrz8dpNfcW1A51AxC1qTbVDn12I3l/b0OLr9C5WQAPc0VJY0TWLS567zIqQRFjTw2r
+         1js+hdkfiUnfy+m8Fw5quIK3PprtCADN9eRY/WdfiN071ruK32TFDW8z8gOGGuxsv6sK
+         VcwgADHB1usd10x7ad/JVGHxv3V21WLemtpx4FH6mGDYOPDo57BUSJ1SySbrXFWVmJDV
+         zQIw==
+X-Forwarded-Encrypted: i=1; AJvYcCX76yBLszg8CKmWqh+lB9mHOVlLlLw6H8BubrR4IrZK2gEAYIdk3BzyoYbTqKe+4gzmOCDN75MUswsW1i+mxtY072d7Kr8DnZrQhtNjCH4YqbgRi8xdaaoq7lYLGds8PP+xT8lktKKNpb6oCWZZLXC9URoIHL4psJ8iGOcgHr8xLcAuKg==
+X-Gm-Message-State: AOJu0Ywv/hdFe0sTIiC30h9t1ailBkBrta4vUtSicGmtUTVlZRbSP0Au
+	Yu+Iy9ZYhmTfbHK1ZFj9qWXNDL37ZEgvHuLTbqt1UC+EczhEQ3G3yIR/wQrN7XuwjeePUWOeqpg
+	yA6ri9sZX77lWPtuczCBNpms6rlUm3pGi+Io=
+X-Google-Smtp-Source: AGHT+IHFLzeDLtGBIrYzgAQS6Hr7ee2/zi63uWsWiVsWTsp8sYSdFbDkTWxYLCjcmaUXCC9pMG2W4IDG6fh2rivYgz8=
+X-Received: by 2002:a05:6870:bb12:b0:229:e49f:8dbe with SMTP id
+ nw18-20020a056870bb1200b00229e49f8dbemr12661006oab.4.1712043489569; Tue, 02
+ Apr 2024 00:38:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <20240327064354.17384-1-animeshagarwal28@gmail.com> <24c917f6-9ff8-4bca-8cc2-5c14c64c2c9b@kernel.org>
+In-Reply-To: <24c917f6-9ff8-4bca-8cc2-5c14c64c2c9b@kernel.org>
+From: Animesh Agarwal <animeshagarwal28@gmail.com>
+Date: Tue, 2 Apr 2024 13:07:58 +0530
+Message-ID: <CAE3Oz82qNnUau5JeFBViGYgn4+n988NNFMwg3f8AczVcRVdj8w@mail.gmail.com>
 Subject: Re: [PATCH v3] dt-bindings: ata: ahci-da850: Convert to dtschema
-To: Animesh Agarwal <animeshagarwal28@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, linux-ide@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240327064354.17384-1-animeshagarwal28@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240327064354.17384-1-animeshagarwal28@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 3/27/24 15:43, Animesh Agarwal wrote:
-> Convert the ahci-da850 bindings to DT schema.
-> 
-> Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
+On Tue, Apr 2, 2024 at 12:55=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+> Applied to for-6.10. Thanks !
 
-Applied to for-6.10. Thanks !
+Thanks for your time Damien.
 
--- 
-Damien Le Moal
-Western Digital Research
-
+---
+Animesh Agarwal
