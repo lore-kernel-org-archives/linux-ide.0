@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA9D25575;
-	Tue,  2 Apr 2024 06:42:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 258092C689;
+	Tue,  2 Apr 2024 07:25:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712040154; cv=none; b=H3/fU9sIfOqKLZHs/aGoAmJQuMyBnEkp7O1VfKFY8J7x+jqDQPnV2e2/cQqNnYzmgALlPb+8Z7KpWwwE29YefnomDRoFu04AR+9AXl7JzvI0KubGwjGKJ/jsqLxVFyFt0iA69FIpPyeyBoBE5C0ksZ/wJ3QMOUqYXhZG0ES4SYU=
+	t=1712042757; cv=none; b=qUXhhf09f3yopJrl7ZEF2ZG51N/PlVMthPohwdpraxu6vktEd7OIOdtS7TED3HxazVLntlNqIACcwn0z5AJqlLoZU+qVb3TUFSW77n+8YsEH375IuSF8R0U6ac0pliOoHMvoL5xS7bMGpxhBC11Zfl2fDu2usNA25gNmfGaYhiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712040154; c=relaxed/simple;
-	bh=UuMVNu47ABLBwufUz8vcoU7JSIfgVrnEYBWKR50X9fY=;
+	s=arc-20240116; t=1712042757; c=relaxed/simple;
+	bh=KQMf4VtPzd84hyGt6kCsCtQ12pBU4FXg9c014tnmT4w=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kMdOCiAyIaSTX56mj0vy6dmTmoeCehMDSivfo+odMC1opjN2QPLB0U53sVCuZz/xCqAMpKQBf09XniU7WCQBB+MsL2KsY4cx5GCgoeLteEErFtqCW2By/H0bvhpoVKPu3UbKxpa2ylc7AD/sStJtgCYS+Bazats0N76bgohGlmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=shjh6Jig; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=mW/rwP/eKDITyjq5GFTRbP4nDielN6qxwUpmSQfbhJsz6pgrYb3DA1l38ryTf+L+oGLSRDk5EgiUvSLy4D3xWJcjlNtZWk1S8h1FKS7iWncYRPj0srfnYEUJGB7W0WaAAUEbRa0Mig+3DV4AnwN2jnR0RPOtV3l4xxqQzTH6W84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eflhh8zE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="shjh6Jig"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BE9AC433C7;
-	Tue,  2 Apr 2024 06:42:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eflhh8zE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2C63C433C7;
+	Tue,  2 Apr 2024 07:25:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712040153;
-	bh=UuMVNu47ABLBwufUz8vcoU7JSIfgVrnEYBWKR50X9fY=;
+	s=k20201202; t=1712042757;
+	bh=KQMf4VtPzd84hyGt6kCsCtQ12pBU4FXg9c014tnmT4w=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=shjh6Jig+ZoH1RaX8rAd1oLwZc3beqCbk06d2YrjhZZakbSRaOaCcUkdS2Jk33a4r
-	 74wNJPLvApWAIDkyM4ShU/RLTeE2tKDOaKQlS2AhAxgzbXylB76aw2TLfxT6tAHEVv
-	 /kI0kBkN2FSZqLRo3o7nUrNqtRVvVnvhzUf6/TLb8ufmkeAF+KRJ2vpvRQ/Un1GFAn
-	 At8sY8yfxlLN7DAateOcrZAhX+z3gT2r7lMv6sMVH1EjOCZGNZE+Rn1fJA+Pfy+lNj
-	 yZCvx5S8d5YGW7KSrOrmN4+0DThR6ebFxM3poAdEji+RX46Xx78V2fXu1cu9on6IXu
-	 WGmpi6blQof7Q==
-Message-ID: <d62656e8-adc1-4e29-9b79-7322eacba980@kernel.org>
-Date: Tue, 2 Apr 2024 15:42:31 +0900
+	b=Eflhh8zE6J2yENSOcXythi7o+kKM6iTUQPj060dc139attEsMbhY2FExIvFEXS13w
+	 2Sk0rJ8BhUpisj7tcIUGn6hRRc1WV/Sd5pUvw+7elD33lZv4Dw+6khRaIiCYPA8gPc
+	 itbrJIaemcJxN87yr5jWbj8MYbkwM22S5C5evnlpZwoRm9w+eskcmQHbZGhX4XMyrL
+	 3c/6tg203ePz4vTlKDJDoaZ+7Orivcu2wE7Za5vV/fYM1cwJ0AG9H7AW7KGD6vcwL/
+	 CSxf5g1O0I3rVZEG31ItAHSZ35/kt/obFGajU5mUwaY6j7rdPS3kNJ6c3KppK8x4vV
+	 QB0Ae4hUdiPaA==
+Message-ID: <24c917f6-9ff8-4bca-8cc2-5c14c64c2c9b@kernel.org>
+Date: Tue, 2 Apr 2024 16:25:54 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -36,42 +36,25 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v3] dt-bindings: ata: ahci-da850: Convert to dtschema
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Animesh Agarwal <animeshagarwal28@gmail.com>
+To: Animesh Agarwal <animeshagarwal28@gmail.com>
 Cc: Rob Herring <robh+dt@kernel.org>,
  Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
  Conor Dooley <conor+dt@kernel.org>, linux-ide@vger.kernel.org,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20240327064354.17384-1-animeshagarwal28@gmail.com>
- <d5429736-8305-4afe-89a8-fe62907616e1@kernel.org>
- <971be9ec-44a2-48cb-8d67-a4d4ce3b7d46@linaro.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <971be9ec-44a2-48cb-8d67-a4d4ce3b7d46@linaro.org>
+In-Reply-To: <20240327064354.17384-1-animeshagarwal28@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 4/2/24 15:41, Krzysztof Kozlowski wrote:
-> On 02/04/2024 01:40, Damien Le Moal wrote:
->> On 3/27/24 15:43, Animesh Agarwal wrote:
->>> Convert the ahci-da850 bindings to DT schema.
->>>
->>> Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
->>
->> Krzysztof, Rob,
->>
->> Are you OK with this patch ?
+On 3/27/24 15:43, Animesh Agarwal wrote:
+> Convert the ahci-da850 bindings to DT schema.
 > 
-> You got Conor's review, who is DT maintainer.
+> Signed-off-by: Animesh Agarwal <animeshagarwal28@gmail.com>
 
-I missed the fact that Conor is a maintainer. I should have checked :)
-Thanks !
-
-> 
-> Best regards,
-> Krzysztof
-> 
+Applied to for-6.10. Thanks !
 
 -- 
 Damien Le Moal
