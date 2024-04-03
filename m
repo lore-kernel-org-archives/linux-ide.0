@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ED0E6EB46;
-	Wed,  3 Apr 2024 08:29:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A48D6FE13;
+	Wed,  3 Apr 2024 08:32:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712132994; cv=none; b=Hz66Ka/o23Aqq8F3NU1fbAO1IU0YvpowjepipqSF0zet6/Gzus9XwCqij8Tpha9KUvdt1TSmrfWj/fRijzMHKBFfrAO/AkJunVRSA69e+fVjvEW0/p2E54duaC3bR6XqIlRwQP2pt8cvlFoTQLnfDf2Zu+Ni60HqpEayp2m2T78=
+	t=1712133146; cv=none; b=rNR8Wdp+2/08NisqBZyI8cKxb11w9wcTsFunY7Jcm2f3K9EoffcYpsQKIQP8/uDMjGQFcP1Btpe441SA1DZYbB7Z7mHn3zs7JOBuGjnZDMX+okjV8GwKRC4xSV7Jf8WRWMjRwfRbAwsgQfdROg3CCUVNML0354RdnFAmFHUkdXM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712132994; c=relaxed/simple;
-	bh=V7hshp8YwdyzWcNiPKdPqCT3ijnrNapazFii9glTbP4=;
+	s=arc-20240116; t=1712133146; c=relaxed/simple;
+	bh=aGhiiMNbyThJXm/os2JFdWTJxH/5Ik748muQ/oIJTBs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V2KJiybwMFC1opsejq3nEQwITxws0VYhPBdw40wXUHI0W1dDzPWXuXPrG7nbZ/dMhKQgX7lP3Ha6/RV8gmfa7GS2MSOb9HK9YnH+Tzsbok/vV+QEW6ZZdE5jat5WqqWOxA64OHACSqT5a3CwOsJYXZy/ufGH+WJvhnu9yFiifJc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lgxLatbc; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=kVTVta4IV+opAFljvoie/KTeE5+zVdZSauhjH0P9sFRCH0ezKRgE1syfxqprU/95ptcklx/ZJPc6lUr7re4Mg3F/SVVNvppWLMYKkui0XVt2kITOtKNN5pNeYjx8ZpGnkZsXjrKpcQvqO0REzJIY+uGSC8C1nUjDyyaU9tph9TI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gFWcNKqg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lgxLatbc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E684CC433C7;
-	Wed,  3 Apr 2024 08:29:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gFWcNKqg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC60C43330;
+	Wed,  3 Apr 2024 08:32:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712132993;
-	bh=V7hshp8YwdyzWcNiPKdPqCT3ijnrNapazFii9glTbP4=;
+	s=k20201202; t=1712133145;
+	bh=aGhiiMNbyThJXm/os2JFdWTJxH/5Ik748muQ/oIJTBs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lgxLatbcHdnbPBulu02mDhoeYzX6ORMNeRanf8a3GGozNvQJV7TIBMp6XJgK39DtT
-	 CpkwECroNXIPfB7GbvZ0ssBYr1ynP1dZa9rzNI/L3hCiPlnqtDLj0g4JCzLxcNUE00
-	 2qq5e85qykfWkuKkep888hWyGo8gRrVYZNS7/fl4pEd98rUA72R8LYYeIwg3Km45Zb
-	 I5/RedOCMSyGm4cI2fjEVPrONG50ELSblLPZIYWPWBOKsQkz94ndCWgUE4Ne+wBqyf
-	 YMiNvv8SctFeIn7W8/IzQ45F2L0wILzHt7S+mLjvJ/TC5AKKeM2SvoOrTHuIgK3HpA
-	 4oH8rfwBirifQ==
-Message-ID: <53e6b7af-1db3-439a-8085-9f0a3be1c3b6@kernel.org>
-Date: Wed, 3 Apr 2024 17:29:50 +0900
+	b=gFWcNKqgMGhVcvPHrJu3LUr9vw9tGvcC+8FZUCcllgrlMOwbjZ21bZsZS6rbSrZD6
+	 z1nl6uE1SWxMeQkuJwWBWTqI+CqyFJlzjSOcNjLxhFbvRWwsz3d7gk50Q30W06gGUN
+	 ZE8oNF46LDq68Ktr5D/nN07eq7zVnFju6KUhMUTz3tZIj+kWzAtbD3+D3a4EqAs+U2
+	 twcQQBz7/sbkCjmy/ZZthmnZ0OMCrhd/S2fiXiyksXOg8cegGNVLL6Tm2TE4hEUSV+
+	 jlujWEJPveb3a7DgazHcD85f5ZC++b/XLFNyh6xGulqhLDAAJfhOkJmiFstQB3GObP
+	 BMGGQNLI6gx9Q==
+Message-ID: <a1ca8aa3-d122-4ec9-b239-8180a02106e1@kernel.org>
+Date: Wed, 3 Apr 2024 17:32:23 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -58,24 +58,23 @@ On 4/3/24 17:06, Arnd Bergmann wrote:
 > 
 > Building with W=1 shows a warning for an unused variable when CONFIG_PCI
 > is diabled:
-
-s/diabled/disabled
-
+> 
 > drivers/ata/sata_mv.c:790:35: error: unused variable 'mv_pci_tbl' [-Werror,-Wunused-const-variable]
 > static const struct pci_device_id mv_pci_tbl[] = {
 > 
 > Move the table into the same block that containsn the pci_driver
 > definition.
-
-s/containsn/contains
-
-But no need to resend, I will fix that when applying.
-
-Thanks !
-
 > 
 > Fixes: 7bb3c5290ca0 ("sata_mv: Remove PCI dependency")
 > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+The patch title is also not describing what the patch does.
+Are you OK with changing that to:
+
+ata: sata_mv: Fix PCI device ID table declaration warning
+
+?
+
 > ---
 >  drivers/ata/sata_mv.c | 64 +++++++++++++++++++++----------------------
 >  1 file changed, 32 insertions(+), 32 deletions(-)
