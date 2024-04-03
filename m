@@ -1,81 +1,84 @@
-Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E01D544C87;
-	Wed,  3 Apr 2024 03:43:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902411C280;
+	Wed,  3 Apr 2024 03:56:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712115828; cv=none; b=p3Fo07ZnyBkabxYeuVohnZD8SI0REMz+5omgB/3mKNZ1TJib2iHNc/3W3QJKOvLCA5lruwDPuxnrGQkpkLg/tAoV2ehjuLyvZ+0L6PHhrmgw5DZoT82PFL/5eTYh/bYmMVAHr8q3vyWO7BKUOFU/ruASkboHtcqB6v8GtMQbiYU=
+	t=1712116579; cv=none; b=rHCVK9kHatdv6V8Uvb3a6eoFbJ6UPdohvtFVU7x4BB07ai0p2MMCEiXzFpq7/RIhQoYu7VIAouum2oqv7fooXP1E8NyesTWyCOAyqglHYtF22KyLgWCeLV62Df+kGyKpDnc5c00RGyv1KXv15YBm1MQxgo3vdHHfPiMp7ZzB1R4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712115828; c=relaxed/simple;
-	bh=cCZHvqKkhlOhXtkzMr3sHyNUhpsIPdpG23hP2ekDxno=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=F40tHsOy6o43/UpYhPKLM8O6PjQY87sCysoJLaPdnaXqVy8O+eO0fSRORLAPduHtHAjOVFT3pPiOWw/o0ju/nbrgT3ch2vWRwBzXc415QRCbFQARGvgyiK6JTGeaee5DQgX6S0R3n9fHGqQ8gApFy0VCux5uvnIGYausvBInzq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost (unknown [124.16.138.129])
-	by APP-05 (Coremail) with SMTP id zQCowAC3RBJr0Axm87geAQ--.6190S2;
-	Wed, 03 Apr 2024 11:43:40 +0800 (CST)
-From: Chen Ni <nichen@iscas.ac.cn>
-To: linus.walleij@linaro.org,
-	dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chen Ni <nichen@iscas.ac.cn>
-Subject: [PATCH] ata: sata_gemini: Add check for clk_enable
-Date: Wed,  3 Apr 2024 03:43:14 +0000
-Message-Id: <20240403034314.3623830-1-nichen@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1712116579; c=relaxed/simple;
+	bh=WuzYYKykOS0ZsBeI47G9ftWcl9HjzB1r6T6Fa6/H5+k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JTUKU9sqP5epI7xHMRC3i2aMZg+FmcxTvKMEoXKcJzBx+Wt4PqypJI8d6PJoy3adQQQeaqLPxxArclW9lG5cbG2fAoYRpEF5JpE6HRVhtkp1AktxuersbEQFK0YG5J3kWcI+kN9CAXzB+aCEC+N+SBuWFy8qWYaD0yZPdfIyl/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gt2LcNSI; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gt2LcNSI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64608C433C7;
+	Wed,  3 Apr 2024 03:56:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712116579;
+	bh=WuzYYKykOS0ZsBeI47G9ftWcl9HjzB1r6T6Fa6/H5+k=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=gt2LcNSIW6JpbxCaWbs9H5hLH+Z+zjBigamxsQo/KFhCI8OAuc61Q5LqgGV3rZsBz
+	 But37YNhmVg9akYJIEY8uAeyB2tVZhsyLCPXuwRXVYqZN/ztErx/bd0ehshlkKfgxq
+	 OnUoeKlFY9NKVemgfFFe4+gqnPrOe9lR0QdsSXsVffZ1VqAYquanuWYlM2Dzr/OB11
+	 fexy08fJutDJNXkjzrhuLLKM5t5Ss1RuFmPIenUHsDDYdEhD0iznE6cMD+dNcrxlpT
+	 MYxX+NA7qiqThHnpZpZHWNlgO39ow2tevwEu5WFSILRjSJizXgB7K/10R5xRcAChzt
+	 m4D7Ya8GpEfvg==
+Message-ID: <679e665c-73cf-4dfb-ad86-efc799b3f8e3@kernel.org>
+Date: Wed, 3 Apr 2024 12:56:17 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAC3RBJr0Axm87geAQ--.6190S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Xr47tF1xGF13Gw4UArWrXwb_yoW3Grc_Ca
-	y7XwnavryYgr4UK3W7Wry5ZFy0kw4vvrn7ua4IgFZxt3yUJr4kXrWjvwn8Aw1qgr18Wr9I
-	yF4DJ3sYkryfujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbz8FF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
-	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-	14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU5WlkUUUUU
-X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: sata_gemini: Add check for clk_enable
+To: Chen Ni <nichen@iscas.ac.cn>, linus.walleij@linaro.org, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240403034314.3623830-1-nichen@iscas.ac.cn>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240403034314.3623830-1-nichen@iscas.ac.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-As the potential failure of the clk_enable(), it should be better to
-check it and return error if fails.
+On 4/3/24 12:43, Chen Ni wrote:
+> As the potential failure of the clk_enable(), it should be better to
+> check it and return error if fails.
 
-Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
----
- drivers/ata/sata_gemini.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Simplify please:
 
-diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
-index 400b22ee99c3..4c270999ba3c 100644
---- a/drivers/ata/sata_gemini.c
-+++ b/drivers/ata/sata_gemini.c
-@@ -200,7 +200,10 @@ int gemini_sata_start_bridge(struct sata_gemini *sg, unsigned int bridge)
- 		pclk = sg->sata0_pclk;
- 	else
- 		pclk = sg->sata1_pclk;
--	clk_enable(pclk);
-+	ret = clk_enable(pclk);
-+	if (ret)
-+		return ret;
-+
- 	msleep(10);
- 
- 	/* Do not keep clocking a bridge that is not online */
+The call to clk_enable() in gemini_sata_start_bridge() can fail. Add a check to
+detect such failure.
+
+> 
+> Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
+> ---
+>  drivers/ata/sata_gemini.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+> index 400b22ee99c3..4c270999ba3c 100644
+> --- a/drivers/ata/sata_gemini.c
+> +++ b/drivers/ata/sata_gemini.c
+> @@ -200,7 +200,10 @@ int gemini_sata_start_bridge(struct sata_gemini *sg, unsigned int bridge)
+>  		pclk = sg->sata0_pclk;
+>  	else
+>  		pclk = sg->sata1_pclk;
+> -	clk_enable(pclk);
+> +	ret = clk_enable(pclk);
+> +	if (ret)
+> +		return ret;
+> +
+>  	msleep(10);
+>  
+>  	/* Do not keep clocking a bridge that is not online */
+
 -- 
-2.25.1
+Damien Le Moal
+Western Digital Research
 
