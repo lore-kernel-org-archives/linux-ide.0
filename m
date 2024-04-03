@@ -1,124 +1,104 @@
-Received: from fhigh2-smtp.messagingengine.com (fhigh2-smtp.messagingengine.com [103.168.172.153])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C92F6E2BE;
-	Wed,  3 Apr 2024 08:51:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.153
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E80D70CC5;
+	Wed,  3 Apr 2024 09:11:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712134291; cv=none; b=Kwy2IvJsTmI3A60a43je0J3Qbo6s8MAaIxnmgJcao16Z4bxLBZXzVPjdUOGe1FwpYrNjDvtICZiQI6C5MPQvblob/bQhlqTNs3szJh3NzUess7z8fQn2BAm4+ffX8zJJiMAWALtFUVJPRR1TEHGsuPhVxP3/lK055AxUUdZGr3M=
+	t=1712135487; cv=none; b=rSt8eYXxioxQp+gCtktgoHN66wlgLSc/NiWwV50PTYRTV+EaaT+HXq20wAktqJnXwECyKPsrLO8Tz+q62ly1teJmj36kVbpkuc56fN+uk33cxLmrazaH1CqvK0pI+LL1uKpC9GgBSs4XFSVXvCGJ98uEepwdmz02+v8z402BhzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712134291; c=relaxed/simple;
-	bh=P1cwV2YXIakKbwCYEURhjXiCMMQo/OuU51t31+urNz8=;
-	h=MIME-Version:Message-Id:In-Reply-To:References:Date:From:To:Cc:
-	 Subject:Content-Type; b=EsaJoWVrAnFKJypGMKl/u/u6isb07il9U+//9Orw7AvsW3BBQMWzy/Nw+PAyruHu+G1bKOMNQxKeanvL18TjOGUFAEd/bVA7B0CieEDePuw3iW233EFJ2wH/BZY/11p4Jt5nIwVOKgXESoPp/i2DHGfrilnICEWCSeQ58F4kyHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=LGR2quk6; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Cjwd4uNr; arc=none smtp.client-ip=103.168.172.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	s=arc-20240116; t=1712135487; c=relaxed/simple;
+	bh=IA1OJw345hlCGqk0ccmAtp6JLPgEQh8BAaZtKS7cgWU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AiJ0o3IuhbC9Xp/jl90+mnIKwNt86DoKoTLoLAOPO+nSTirxegYaNqVCQsL5wm+88VyS6p4Ek2qJpQSD3KnyQZYC/fcZyt5gVjvZN/cjA+1qwoA5vPdxPhOr8PX2Mm8c4Qxl9MuvZsj6Z9uN/VCNl86ct+ZmxK8KPWbXoMTXnpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NYfmfX8S; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="LGR2quk6";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Cjwd4uNr"
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailfhigh.nyi.internal (Postfix) with ESMTP id 71FE91140094;
-	Wed,  3 Apr 2024 04:51:28 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute5.internal (MEProxy); Wed, 03 Apr 2024 04:51:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm1; t=1712134288; x=1712220688; bh=IDm9a9kuZK
-	Gr8VNhzI80ELq/9SON+I1L85BL3jH3M48=; b=LGR2quk6JYv7Fnxq/DHuNB2s1l
-	6Ys8LLJKriPHlHTWOxFB9RsOvILxcS/KYYwjrIGkGBfhIuC6uJxiMQywv0+g1Aqi
-	8FYEiccMNVK/JM+9/wvFtP5Fw1F8kgaiZ6gliWPO1A6/eOeKOJLqvcUF3ylLAAlv
-	zwl1mP7HPfWIKsePCNEMejjKQxudWNwarD9rLsx0koyjvFwDf/honupj9EX9XCjy
-	bNtk0jDvVnb/Sz0cSkLE5K7XZ2/agL3OccZ2Mc0uvhAkMZaWp7AXYNG4koim1/JO
-	NWrCRHyNlg3Ew+NUDtI2loKoT+PAc519YKeQkoNdJP594Qu6z51d5uFo9lYQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-	fm2; t=1712134288; x=1712220688; bh=IDm9a9kuZKGr8VNhzI80ELq/9SON
-	+I1L85BL3jH3M48=; b=Cjwd4uNr7CNtFCTbVUASdb/gpU8laqnra9RJirerO12G
-	5SOUnLJXyFizzdU931oTSlEXaZ0BkAg60Baud6Aj/II0MKvLDLlSYr2oJBrvT07G
-	+41EN83FkxhBNyCusJQyF0Hwit7nA3+A7ni28b/dAWW0S2T/fi7/3JLNiwWI6FoM
-	YlAJWV4vEHbP5nGTTmFZ15WoWraZadPrWUGtI7m/NHC7urjFsHeHkIwB8EZOLTct
-	1GrnBaR/+9Aw4G6lbtigODY6AK3nVq5QtixWUZ0iFYpkvPsWxvRW1PEUrhe7hs5X
-	XZ7rx4ckokuvMkOPVe83besvIx+NGyfZTgpqQOR2Pg==
-X-ME-Sender: <xms:hhgNZtXvNOjkAzXlKU2S-mCW9u3j5wLIVQfd5wC8qQmSq_qnAnwCQg>
-    <xme:hhgNZtmXVYTJFf-Tmxh3x3SMEs7vMRyTW6prvF-Gfft6gVtGtUbGPSiOOrBngiLDr
-    mmjTcWDG7DgKC58IiM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrudefgedgtdelucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:hhgNZpb1SmAvdwDtaADdU7RCPeYtj3G-cjcl8MCqc_LXkz2OARytAw>
-    <xmx:hhgNZgXBuhcrfqmG4oNJ2oFuxNGGyBa9wI4cai7SSYjP1L2zioJT4A>
-    <xmx:hhgNZnlxzmaOiuIsGolQHygyhiSevEVET7FbwOtq09HTP5LYdMRPNA>
-    <xmx:hhgNZteiS0q-w0Bl5BoF7ggzLACbmrTGyhZP_YKTekkOW1XRrD78cw>
-    <xmx:kBgNZszUXsOXBABkIH0w079vQIq-Q6q7U_daNQWZ5wEu3CUNv6LzgMn7>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-	id 2F269B6008F; Wed,  3 Apr 2024 04:51:18 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.11.0-alpha0-333-gbfea15422e-fm-20240327.001-gbfea1542
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NYfmfX8S"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1712135485; x=1743671485;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=IA1OJw345hlCGqk0ccmAtp6JLPgEQh8BAaZtKS7cgWU=;
+  b=NYfmfX8SsRlLodVW/UT/NSE2oHtOkSjtM73lxJ7+jtXVkZ3akWpyWVXJ
+   i1rCLgA8+KeHMFFy+jE4BoryMqZYmLf3jo/cGHK7qJ5AKeWJ4lZNnAtM4
+   GeK43295JUZCd0Y8i/WIMRvgOLF4Rec3yTdMASAaD/cFiNFGl0T9wtzwP
+   POHcrR9QpgTZp/QaaHe9RHQerMyzMcUVfCczvdEqxQ+1nXrkeQpl4Wjh3
+   M860Z+nswh1RBTYtTtdip27z9rfV8xNhLMGjySjNNNmxM0lvmpD0RXthb
+   B40mgJGqWVKYIKbYzIIP9Gbu8zaAsreQ+o1IQ+ilr1LvAQ/zCNpQ8y0sj
+   A==;
+X-CSE-ConnectionGUID: QIEIIAZFRIWqK2kl2F3UOA==
+X-CSE-MsgGUID: RT5m7VNLToSqBZoliyJY7g==
+X-IronPort-AV: E=McAfee;i="6600,9927,11032"; a="7480963"
+X-IronPort-AV: E=Sophos;i="6.07,177,1708416000"; 
+   d="scan'208";a="7480963"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2024 02:11:25 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,11032"; a="915175196"
+X-IronPort-AV: E=Sophos;i="6.07,177,1708416000"; 
+   d="scan'208";a="915175196"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.72.54])
+  by fmsmga002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Apr 2024 02:11:21 -0700
+Received: from andy by smile with local (Exim 4.97)
+	(envelope-from <andriy.shevchenko@intel.com>)
+	id 1rrwe9-000000014Qk-0z2Q;
+	Wed, 03 Apr 2024 12:11:05 +0300
+Date: Wed, 3 Apr 2024 12:10:50 +0300
+From: Andy Shevchenko <andriy.shevchenko@intel.com>
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Saeed Bishara <saeed@ubuntu-saeed.il.marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>, Ma Ke <make_ruc2021@163.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH 30/34] sata: mv: drop unnecessary #ifdef checks
+Message-ID: <Zg0dGmVC9AFYY_RH@smile.fi.intel.com>
+References: <20240403080702.3509288-1-arnd@kernel.org>
+ <20240403080702.3509288-31-arnd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <78731619-58a3-406b-9112-5eb991bc6e7e@app.fastmail.com>
-In-Reply-To: <a1ca8aa3-d122-4ec9-b239-8180a02106e1@kernel.org>
-References: <20240403080702.3509288-1-arnd@kernel.org>
- <20240403080702.3509288-31-arnd@kernel.org>
- <a1ca8aa3-d122-4ec9-b239-8180a02106e1@kernel.org>
-Date: Wed, 03 Apr 2024 10:50:57 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Damien Le Moal" <dlemoal@kernel.org>, "Arnd Bergmann" <arnd@kernel.org>,
- linux-kernel@vger.kernel.org, "Niklas Cassel" <cassel@kernel.org>,
- "Saeed Bishara" <saeed@ubuntu-saeed.il.marvell.com>
-Cc: "Ma Ke" <make_ruc2021@163.com>,
- =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
- "Sergey Shtylyov" <s.shtylyov@omp.ru>,
- "Christophe JAILLET" <christophe.jaillet@wanadoo.fr>,
- "Jeff Garzik" <jeff@garzik.org>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH 30/34] sata: mv: drop unnecessary #ifdef checks
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240403080702.3509288-31-arnd@kernel.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-On Wed, Apr 3, 2024, at 10:32, Damien Le Moal wrote:
-> On 4/3/24 17:06, Arnd Bergmann wrote:
->> From: Arnd Bergmann <arnd@arndb.de>
->> 
->> Building with W=1 shows a warning for an unused variable when CONFIG_PCI
->> is diabled:
->> 
->> drivers/ata/sata_mv.c:790:35: error: unused variable 'mv_pci_tbl' [-Werror,-Wunused-const-variable]
->> static const struct pci_device_id mv_pci_tbl[] = {
->> 
->> Move the table into the same block that containsn the pci_driver
->> definition.
->> 
->> Fixes: 7bb3c5290ca0 ("sata_mv: Remove PCI dependency")
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->
-> The patch title is also not describing what the patch does.
-> Are you OK with changing that to:
->
-> ata: sata_mv: Fix PCI device ID table declaration warning
->
-> ?
+On Wed, Apr 03, 2024 at 10:06:48AM +0200, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Building with W=1 shows a warning for an unused variable when CONFIG_PCI
+> is diabled:
+> 
+> drivers/ata/sata_mv.c:790:35: error: unused variable 'mv_pci_tbl' [-Werror,-Wunused-const-variable]
+> static const struct pci_device_id mv_pci_tbl[] = {
+> 
+> Move the table into the same block that containsn the pci_driver
+> definition.
 
-Yes, please do, thanks!
+...
 
-I had first tried to remove all the #ifdef checks and just
-rely on dead-code-elimination doing the same when
-pci_register_driver() is stubbed out and IS_ENABLED(CONFIG_OF)
-checks turn off the rest. Unfortunately, the include/linux/pci.h
-interfaces are not all stubbed out here and cause compile-time
-failures without CONFIG_PCI, so that didn't work out.
+> +	{ }			/* terminate list */
+> +};
 
-     Arnd
+> +
+
+Too many blank lines now.
+
+>  
+>  static struct pci_driver mv_pci_driver = {
+>  	.name			= DRV_NAME,
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
