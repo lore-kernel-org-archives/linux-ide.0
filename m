@@ -1,41 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEFF78F7D;
-	Thu,  4 Apr 2024 10:05:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0504C1E4A2;
+	Thu,  4 Apr 2024 13:01:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712225148; cv=none; b=C/IWY81nn1TQHarU+i/JVK8OO4nJVjt54JTTG6GcJ8NgonizG2ClIL8Rp9CUp0fVmuLwZWDMqklxWoPq28/nqNeWpsgQLvnBLxsQ35Ufaa+wiiv6IfzxmsBSH8LTQ1egMtMHB1PZedPiUObiGx7fXhxbBtQ6MI4kSPbwB7o0gYM=
+	t=1712235693; cv=none; b=dd+PqNSlBpVQL2O/I9DFg1ycK+uPDEZYA9mwMu1FsKMq+htvssuJn/15+8/k2kQA4btTYfwMMhwG0Z5R2kFvoAfoFXYXlsAMXOsXT8nEU11+mM5qrnU8UTbkLKc+Rb/SbbrxklqGY+cG0IQvWRscmpkIJjIlb46I+iz/Jym0E5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712225148; c=relaxed/simple;
-	bh=SMwANtbw6TFtzOiI5CiblchYkN5X389DW6eKfwxQnJ0=;
+	s=arc-20240116; t=1712235693; c=relaxed/simple;
+	bh=ahPv2aISO6mwkEDr+g7AhXKh7nD0iQvZKFDvKrjlLnE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MWFCLrifvZgu2QRHsiWPnTWJw8Yn+P9rYYGLYH3kORGtRxeJH1lEzt3FijaDo2UjR9r3GlGjx/dSw2feIGxDYqhFCM/qSDb0oRplnUbfEN2OuDXIgFBwFvb86E3/OV3LlV5W6rnzQ1OsI/td7afIhX7aZoi1LI0a7qgV7lCOj2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rtdcZlin; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=lzTaQx4w0vqGN5xez61hVHedwX/nyHJ3mx/bu/qe0bsqTH5V8X9PDKQV+Of7nhpOtR6u4iGltlldQOjfYpH1DwY2ETtWhcuezW4k2Bt+OCC5FvHbNgsH1hICogPVeHMGLo4M1jJuKYJ9HzVrIGfhYGY1slPvqLyOV+TFvJdiI2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=ZdKmzqsq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rtdcZlin"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8BD4C433C7;
-	Thu,  4 Apr 2024 10:05:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712225148;
-	bh=SMwANtbw6TFtzOiI5CiblchYkN5X389DW6eKfwxQnJ0=;
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="ZdKmzqsq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43D6CC433C7;
+	Thu,  4 Apr 2024 13:01:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1712235692;
+	bh=ahPv2aISO6mwkEDr+g7AhXKh7nD0iQvZKFDvKrjlLnE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rtdcZling1hQuYen2XhnKeoF694hLs82lIdwA2ENczGAp3LdK8gd9t47ogsQDIOnx
-	 ApM6/Ntd3ldW+Vyh5d9GQ6ikgZoVY31nJ8hZ7F8mba+Xc7X2DGqE14wtPiyGv5aHCv
-	 RURw76iXbMCu7G5ali4J3CirPgsRaMNy7G5JNm6JwtZ7p5gtIWEepi7rSGsK7wNiCV
-	 pp3DTmlqoXh3Bo40mocAkvEqBv/9FIsqUugRrTNrjYq/Sxw75T0XAIev+EAk3ZS7mP
-	 cgmrxN7gXxGbVpVC/+hRlauSnY2I/vTtCLk09xwQ8Qfew4J+teIY77lrEsMHvVQaUJ
-	 n5GUujhjCniLA==
-Date: Thu, 4 Apr 2024 12:05:43 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Niklas Schnelle <schnelle@linux.ibm.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	Arnd Bergmann <arnd@kernel.org>, Heiko Carstens <hca@linux.ibm.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] ata: add HAS_IOPORT dependencies
-Message-ID: <Zg57dww6ap9zEwy7@ryzen>
-References: <20240404092936.3127972-1-schnelle@linux.ibm.com>
- <20240404092936.3127972-2-schnelle@linux.ibm.com>
+	b=ZdKmzqsqsd9SZw520Qu8YgIgS0NDnyZXU3FV3KZiW/sen/MPZWNYwZEVu54qwCyEq
+	 bvmed3ixm6wbYMKfm7GX2PSBVE3kEzxZdtH7Y86qBGgvveFk03zXJft18HS9Nhq6DD
+	 Mwcm4yMvmlNVJrmiXJgGF2YHRfbHh/lgZ56aRKoY=
+Date: Thu, 4 Apr 2024 15:01:29 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Takashi Sakamoto <o-takashi@sakamocchi.jp>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Juergen E. Fischer" <fischer@norbit.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Brian King <brking@us.ibm.com>, Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH 22/23] uas: switch to using ->device_configure to
+ configure queue limits
+Message-ID: <2024040422-justify-portfolio-4a66@gregkh>
+References: <20240402130645.653507-1-hch@lst.de>
+ <20240402130645.653507-23-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -44,17 +73,21 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240404092936.3127972-2-schnelle@linux.ibm.com>
+In-Reply-To: <20240402130645.653507-23-hch@lst.de>
 
-On Thu, Apr 04, 2024 at 11:29:36AM +0200, Niklas Schnelle wrote:
-> In a future patch HAS_IOPORT=n will disable inb()/outb() and friends at
-> compile time. We thus need to add HAS_IOPORT as dependency for those
-> drivers using them.
+On Tue, Apr 02, 2024 at 03:06:44PM +0200, Christoph Hellwig wrote:
+> Switch to the ->device_configure method instead of ->slave_alloc
+> and update the block limits on the passed in queue_limits instead
+> of using the per-limit accessors.
 > 
-> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> Note that uas was the only driver setting these size limits from
+> ->slave_alloc and not ->slave_configure and this makes it match
+> everyone else.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
+>  drivers/usb/storage/uas.c | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
