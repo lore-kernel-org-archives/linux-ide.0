@@ -1,123 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37B935B1F6;
-	Thu,  4 Apr 2024 07:45:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9342874438;
+	Thu,  4 Apr 2024 09:29:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712216753; cv=none; b=ouZu7hph2kN0yLB9wOU1LNCqG8inih8id23lXkx2L1NQkxhRp0ZpQVY+WVZo5cdiR83FOYn8kOv6OsybtlcSdgnIDx4D8f8rRGIzACmN1SXlXTgNegKMHK/l+vZpwEqG+zuNtvGnJFRiUnHuGXSx8QyzZzk3ZdU+nG6tJMo9czA=
+	t=1712222989; cv=none; b=X5dgYehKmJ3erKlztiNQP0cPzwA7ohofw0BUOxG7UwbzUo/4k0Wjxg+d9g1WEhZO9PgKCq/etJqAupj2DPkoox/sWX+6a3eFjP0GO+mvCLMu3rtpQ27yZxYBI/Kdu/mGCKp49pS8ejLitffTDjfN56cqXvG8wlM7dqzgMN8eg5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712216753; c=relaxed/simple;
-	bh=vcETtOrVy9bTRvDJ6u7ogSjCKNt7NXEhds5NARQGbPY=;
-	h=Date:Content-Type:MIME-Version:From:To:Cc:In-Reply-To:References:
-	 Message-Id:Subject; b=cAZ4eJJecI/TZQEysaTarMoXp+vAzdB+usGAnFAGiSCfHpORW84txP0OZH4IK/38mhR41MtKD7vI0thnZApjXoY1E/53vjB6blU1TtplkKStEQm5mmO+PWaQi/SfKijUt3aVnGMV1DfUcUxqcpPM1WvHWpxFvfHWP3W3hmUmY5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ahmcg0O/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712222989; c=relaxed/simple;
+	bh=2QnvXzbebQJrGbHL7BZuZLKSyvtQ0R8V8+Jj4+BLYXA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=sx3YOrQyxlsET/3KgnqaYfgfVH5ALyTCuqUxKXVkL2IHcAtrWoTj6yXWxQ8S7vWBZ7Ri0ne4S1hRVlustkYcvYS607R+7nUjZ6lgMmmxsgKKgIG6KfFQqqhZUvjpoItNQ+xV1j4ts1FRj24DnbtFy0FGE5Phe7fpQMqLejanGmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=OzZ8xerE; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ahmcg0O/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5535EC433F1;
-	Thu,  4 Apr 2024 07:45:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712216752;
-	bh=vcETtOrVy9bTRvDJ6u7ogSjCKNt7NXEhds5NARQGbPY=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=ahmcg0O/wVgUSHDmaLqFtCVQppeFQLHTQcwLUR3ZoemzEiydJLq5n65V+ZZF4U3Z/
-	 iZTZ2dGWs5n/xGsr2C9Ro8bxdpCo0mryC+/NJ293dDVVrTasGOJjky78rF1l0Vh5Cj
-	 ewN+vdhM+Vk7MvaEXrP9a5f9hvvIhXjlvvkp5fjW6hQf8tlH5S2zNXD299vhN6PNvh
-	 Y5zEUTiauyseC4AumRqKYaxCMkjyr8HU9RPqz7Q7M32OkZevScqGC8ldR1pXRVNnPN
-	 lCtMqbIda7OLCc5vYYCtjdUg0R4nqeFderQtkQlFlCIFJl63TPR9JxYni0ko+ATY12
-	 3JVV8cyIjyi9Q==
-Date: Thu, 04 Apr 2024 02:45:51 -0500
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="OzZ8xerE"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4349NQ05024591;
+	Thu, 4 Apr 2024 09:29:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : content-transfer-encoding : mime-version; s=pp1;
+ bh=fTBgcB7azCZbQ/QcIvc9v9Z7pd/0bT6XdzC9MEtuYIE=;
+ b=OzZ8xerE7bCc5MUis66sswg8vhlwFUH0gyHDdnUck+jHzcpLhoLa/ZwirZw3ynIbvBKQ
+ hI6aooyZ/r2765IG8Jo7Ot5cPH9OT2l0w468mg2MH2yP/Ug9pvkyNFtbgFPlT1YEw9Oi
+ EiaXEnP52EwrFqMqPG9J6cW52K9AObZWVPFmBIm9zSR0pz/qDYT0mQ+kAoq/pBBrQDXG
+ THkbiVhR/XRFu2OwXyxi5f15rWPThBnsrRDFD6elpWF4NXqmNBttfHTWnWD54ulRIUCb
+ czRZqotXDbTSYzWyHZhsXSQb+Q2LOlO6YkFTyVYN0Uz8lDmpur9dody/RzV2UEqMEHue SA== 
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3x9sh9g0jr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Apr 2024 09:29:43 +0000
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 43470nnx009109;
+	Thu, 4 Apr 2024 09:29:42 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3x9epxu9rj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Apr 2024 09:29:42 +0000
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 4349Tac648431362
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 4 Apr 2024 09:29:38 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 812992004B;
+	Thu,  4 Apr 2024 09:29:36 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 54BD520043;
+	Thu,  4 Apr 2024 09:29:36 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu,  4 Apr 2024 09:29:36 +0000 (GMT)
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Heiko Carstens <hca@linux.ibm.com>, linux-kernel@vger.kernel.org,
+        Niklas Schnelle <schnelle@linux.ibm.com>
+Subject: [PATCH 0/1] ata: Handle HAS_IOPORT dependencies
+Date: Thu,  4 Apr 2024 11:29:35 +0200
+Message-Id: <20240404092936.3127972-1-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.40.1
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: h6slJHewhCna2YVjds5j_qF08PVAV7jj
+X-Proofpoint-GUID: h6slJHewhCna2YVjds5j_qF08PVAV7jj
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Rob Herring <robh@kernel.org>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
- Michael Turquette <mturquette@baylibre.com>, 
- Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, 
- linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
- Lee Jones <lee@kernel.org>, linux-kernel@vger.kernel.org, 
- Sam Ravnborg <sam@ravnborg.org>, Stephen Boyd <sboyd@kernel.org>, 
- linux-sh@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
- Thomas Gleixner <tglx@linutronix.de>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
- Linus Walleij <linus.walleij@linaro.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- devicetree@vger.kernel.org, Helge Deller <deller@gmx.de>, 
- dri-devel@lists.freedesktop.org, Jonathan Corbet <corbet@lwn.net>, 
- Biju Das <biju.das.jz@bp.renesas.com>, Guenter Roeck <linux@roeck-us.net>, 
- Daniel Lezcano <daniel.lezcano@linaro.org>, 
- Damien Le Moal <dlemoal@kernel.org>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
- Anup Patel <apatel@ventanamicro.com>, Maxime Ripard <mripard@kernel.org>, 
- Chris Morgan <macromorgan@hotmail.com>, Jiri Slaby <jirislaby@kernel.org>, 
- =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
- Thomas Zimmermann <tzimmermann@suse.de>, 
- Javier Martinez Canillas <javierm@redhat.com>, 
- David Rientjes <rientjes@google.com>, 
- Azeem Shaikh <azeemshaikh38@gmail.com>, Conor Dooley <conor+dt@kernel.org>, 
- Arnd Bergmann <arnd@arndb.de>, Rich Felker <dalias@libc.org>, 
- linux-fbdev@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, 
- John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
- Daniel Vetter <daniel@ffwll.ch>, linux-serial@vger.kernel.org, 
- linux-pci@vger.kernel.org, Niklas Cassel <cassel@kernel.org>, 
- Sebastian Reichel <sre@kernel.org>, Max Filippov <jcmvbkbc@gmail.com>, 
- Manikanta Guntupalli <manikanta.guntupalli@amd.com>, 
- Guo Ren <guoren@kernel.org>, Jacky Huang <ychuang3@nuvoton.com>, 
- linux-clk@vger.kernel.org, David Airlie <airlied@gmail.com>, 
- Magnus Damm <magnus.damm@gmail.com>, 
- Geert Uytterhoeven <geert+renesas@glider.be>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Herve Codina <herve.codina@bootlin.com>, Vlastimil Babka <vbabka@suse.cz>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Shawn Guo <shawnguo@kernel.org>, Heiko Stuebner <heiko.stuebner@cherry.de>, 
- Baoquan He <bhe@redhat.com>, Kefeng Wang <wangkefeng.wang@huawei.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>
-In-Reply-To: <8d8dec2d75890f3a14632c9606c332fb11d89a95.1712207606.git.ysato@users.sourceforge.jp>
-References: <cover.1712207606.git.ysato@users.sourceforge.jp>
- <8d8dec2d75890f3a14632c9606c332fb11d89a95.1712207606.git.ysato@users.sourceforge.jp>
-Message-Id: <171221675032.1570606.17195739558800384053.robh@kernel.org>
-Subject: Re: [RESEND v7 19/37] dt-bindings: interrupt-controller:
- renesas,sh7751-irl-ext: Add json-schema
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-04_05,2024-04-04_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
+ priorityscore=1501 clxscore=1011 mlxscore=0 lowpriorityscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 impostorscore=0 spamscore=0
+ phishscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2404010000 definitions=main-2404040063
 
+Hi Damien, Niklas,
 
-On Thu, 04 Apr 2024 14:14:30 +0900, Yoshinori Sato wrote:
-> Renesas SH7751 external interrupt encoder json-schema.
-> 
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
-> ---
->  .../renesas,sh7751-irl-ext.yaml               | 57 +++++++++++++++++++
->  1 file changed, 57 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
-> 
+This is a follow up in my ongoing effort of making inb()/outb() and
+similar I/O port accessors compile-time optional. Previously I sent this
+as a treewide series titled "treewide: Remove I/O port accessors for
+HAS_IOPORT=n" with the latest being its 5th version[0]. With a significant
+subset of patches merged I've changed over to per-subsystem series. These
+series are stand alone and should be merged via the relevant tree such
+that with all subsystems complete we can follow this up with the final
+patch that will make the I/O port accessors compile-time optional.
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
+The current state of the full series with changes to the remaining
+subsystems and the aforementioned final patch can be found for your
+convenience on my git.kernel.org tree in the has_ioport_v6 branch[1] with
+signed tags. As for compile-time vs runtime see Linus' reply to my first
+attempt[2].
 
-yamllint warnings/errors:
+Thanks,
+Niklas
 
-dtschema/dtc warnings/errors:
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.example.dtb: interrupt-controller@a4000000: #interrupt-cells:0:0: 2 was expected
-	from schema $id: http://devicetree.org/schemas/interrupt-controller/renesas,sh7751-irl-ext.yaml#
+[0] https://lore.kernel.org/all/20230522105049.1467313-1-schnelle@linux.ibm.com/
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/niks/linux.git/log/?h=has_ioport_v6
+[2] https://lore.kernel.org/lkml/CAHk-=wg80je=K7madF4e7WrRNp37e3qh6y10Svhdc7O8SZ_-8g@mail.gmail.com/
 
-doc reference errors (make refcheckdocs):
+Niklas Schnelle (1):
+  ata: add HAS_IOPORT dependencies
 
-See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/8d8dec2d75890f3a14632c9606c332fb11d89a95.1712207606.git.ysato@users.sourceforge.jp
+ drivers/ata/Kconfig      | 28 ++++++++++++++--------------
+ drivers/ata/libata-sff.c |  4 ++++
+ 2 files changed, 18 insertions(+), 14 deletions(-)
 
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
+-- 
+2.40.1
 
