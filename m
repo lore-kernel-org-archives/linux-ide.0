@@ -1,193 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86138F7D
-	for <linux-ide@vger.kernel.org>; Thu,  4 Apr 2024 09:50:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49CEC8F7D
+	for <linux-ide@vger.kernel.org>; Thu,  4 Apr 2024 09:51:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712224231; cv=none; b=JGwOiVNOfZ64WSXKNB8Oap+sa1inzs1c+s7Df9Fsy+nk+PkM8twKru7R5Ox2YBlcUo5r68n1V3fTXGPak1eQWFCq8EvwGYSEN/W645ndX8opVC3HGDyAXTm88Y8102X/QBeZjwc0efEg8ZlUredS1tZ07Joxp0Qo1r04L7SUHnE=
+	t=1712224277; cv=none; b=Rlq40J1W/JIrWiUqbmLqOouxYTEbALpEcxKusEKJhbixy7aOL2eAl5lBmSoDc1Y5pOIYjV97FUCR0B19f8DEXRi4Al0sU/BUfo4BVEI9eK5cMH33sofh9vQ9OT0ddzjNmQR8MrBL/9z7UUpWLeBAP0zAFhj4fLAAl1O61hTb86E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712224231; c=relaxed/simple;
-	bh=8khoyiX9jCM3/LmrShGv6HE92NYti8InqH9MISpUFyM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Shr82HUyEc1rAh0z/76i4SzNBuoBmjJIsfubY88bDnKxDfmYfVdnXV8AhzQdou86dcpvXg9rO2qMiJ2VHwvAq+uLB870n7KH7kdQBnEgAVYJCt3KubnO1OB9yX0xLD7lhwCq8NbwGuKpumJtqbZtPSKPkoxLdiXP1R18pUA0zD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jo47Fk7N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712224277; c=relaxed/simple;
+	bh=trdOpF0eV4LAyvSfOQhPU89Mn5gnk0bAwY91a6gTKZs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I2HYd2DZGSx0TOlwxh8QeUWHTIxvS8UWO61N69Dx/MHyjgCJJpxZHwMWwxK/nwC6QTDZJu/lNtn3sXDtzLkMAoCJYE0SumK0RFsxW7DYGSK+ETPI1Ku6a7sR2Bvvb7EBpI+wla7wuOPXxiRWv+wtLJ+owrBBqrPYly+JU25CwkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HR66Lflh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jo47Fk7N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7275C433C7;
-	Thu,  4 Apr 2024 09:50:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HR66Lflh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E049C433F1;
+	Thu,  4 Apr 2024 09:51:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712224231;
-	bh=8khoyiX9jCM3/LmrShGv6HE92NYti8InqH9MISpUFyM=;
-	h=From:To:Cc:Subject:Date:From;
-	b=jo47Fk7NvKAinFNJXXBlHRyxMIUmh+oESc4yagIrkLs/ScAeI1/2qzDanw+DngeNo
-	 pgQ/RUP2iv6dmcCeqEIBU/12g38AoavJ33QvaDLi0XR1wJRXBXcu6n3DVdaevz1l5M
-	 SMAfLNnOfAOLQ7G9vm3UPcJn5UcaV6fXgEcRy00JnnGhExZzczG5kyQtN95hOGVZnO
-	 Ot2ns6aMBuv4YYEMIXtGpRKiJoeWYmhez+6bWhTly/Uzhy+wMDyb0WUK3RdcWT4cRG
-	 L9tE+aSJ2dAmQeY+FgYmT3wMLpQgpJp9Xb0AFPZ4WlwSp9kzm26ciI5bNUdHJK+3Nx
-	 ybm1R3D/1wDyQ==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Conrad Kostecki <conikost@gentoo.org>,
-	Szuying Chen <chensiying21@gmail.com>,
-	Jesse1_Chang@asmedia.com.tw,
-	Richard_Hsu@asmedia.com.tw,
-	Chloe_Chen@asmedia.com.tw
-Subject: [PATCH] ata: ahci: Add mask_port_map module parameter
-Date: Thu,  4 Apr 2024 18:50:26 +0900
-Message-ID: <20240404095026.929491-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.44.0
+	s=k20201202; t=1712224276;
+	bh=trdOpF0eV4LAyvSfOQhPU89Mn5gnk0bAwY91a6gTKZs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=HR66Lflhgyy5XQETP8LNx3amjxFCtCJ3JUO1LBRophycTZuThj3CX1nibZ4gyWtqk
+	 zpEYFAMVztLM7tRUfTth+TUjCU2xurDcE2RRXV5e6vu49V/cS6M2r2t+qYfRqBFhyc
+	 5KGPt7qGWfHav1JP0iKdT9JRy9/HJLi3CuPdTTKL8o2kzFY5UG6z06D8vJbMMjD7Cy
+	 imziefTfehby+1ir9fpdzZ020jr1pcBgYHWV9JxxaI+VJt5mOIu3vfUac/pV+IuWrQ
+	 pe6a05QbC7xMFHdWKyGjClL821IILz0Mmx9A+UPnu7eNBQchBNo1O3Hj+qDwp1CXhO
+	 HBMAFFH74GrSg==
+Message-ID: <21694429-e65c-4f4d-a770-cd450d5ce7e8@kernel.org>
+Date: Thu, 4 Apr 2024 18:51:13 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: ASMedia PMP inquiry
+To: Conrad Kostecki <conikost@gentoo.org>, Niklas Cassel <cassel@kernel.org>,
+ Szuying Chen <chensiying21@gmail.com>
+Cc: linux-ide@vger.kernel.org, Jesse1_Chang@asmedia.com.tw,
+ Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw,
+ cryptearth@googlemail.com, temnota.am@gmail.com, hdegoede@redhat.com,
+ jnyb.de@gmail.com
+References: <20240319091322.10909-1-Chloe_Chen@asmedia.com.tw>
+ <ZflnYu5W5WnnzDio@ryzen>
+ <emd6ef2021-5996-41a5-97d9-9864d65bb534@e6a850b0.com>
+ <07b6a6d4-a9b1-468f-916f-1d4e6b1f92e5@kernel.org>
+ <em1188b33c-20bf-4a1b-87a4-626abdf11c3d@acf693bc.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <em1188b33c-20bf-4a1b-87a4-626abdf11c3d@acf693bc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Commits 0077a504e1a4 ("ahci: asm1166: correct count of reported ports")
-and 9815e3961754 ("ahci: asm1064: correct count of reported ports")
-attempted to limit the ports of the ASM1166 and ASM1064 AHCI controllers
-to avoid long boot times caused by the fact that these adapters report
-a port map larger than the number of physical ports. The excess ports
-are "virtual" to hide port multiplier devices and probing these ports
-takes time. However, these commits caused a regression for user that do
-use PMP devices, as the ATA devices connected to the PMP cannot be
-scanned. These commits have thus been reverted by commit 6cd8adc3e18
-("ahci: asm1064: asm1166: don't limit reported ports") to allow the
-discovery of devices connected through a port multiplier. But this
-revert re-introduced the long boot times for users that do not use a
-port multiplier setup.
+On 4/3/24 03:31, Conrad Kostecki wrote:
+> Hello Damien,
+> 
+> Am 22.03.2024 01:00:02, "Damien Le Moal" <dlemoal@kernel.org> schrieb:
+> 
+>> Yes. I will add a libata.force parameter to do that so that setups that do not
+>> use PMPs can avoid long boot times due to probing the broken "virtual ports".
+>> Will post a patch next week for that.
+> any news for the patch?
 
-This patch adds the mask_port_map ahci module parameter to allow users
-to manually specify port map masks for controllers. In the case of the
-ASMedia 1166 and 1064 controllers, users that do not have port
-multiplier devices can mask the excess virtual ports exposed by the
-controller to speedup port scanning, thus reducing boot time.
+I just sent one, you are on cc.
+If you could test, that would be great. Thanks.
 
-The mask_port_map parameter accepts 2 different format:
- - mask_port_map=<mask>
-   This applies the same mask to all AHCI controllers
-   present in the system. This format is convenient for small systems
-   that have only a single AHCI controller.
- - mask_port_map=<dev name>=<mask>,<dev name>=mask,...
-   This applies the specified masks only to the device listed. The
-   device name correspond to the string following "ahci" in probe
-   kernel messages. E.g. for:
-   ahci 0000:01:00.0: 2/2 ports implemented (port mask 0x3)
-   the device name is "0000:01:00.0".
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/ahci.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 88 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 562302e2e57c..3bc8626f3ba9 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -666,6 +666,90 @@ static int mobile_lpm_policy = -1;
- module_param(mobile_lpm_policy, int, 0644);
- MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
- 
-+static char *ahci_mask_port_map;
-+module_param_named(mask_port_map, ahci_mask_port_map, charp, 0444);
-+MODULE_PARM_DESC(mask_port_map,
-+		 "Provide 32-bit port map masks to ignore controllers ports. "
-+		 "Valid values are: "
-+		 "<mask> to apply the same mask to all controller devices, "
-+		 "<dev0_name>=<mask0>,<dev1_name>=<mask1>,...' to specify a "
-+		 "different mask per controller, where <dev_name> is the "
-+		 "controller host name as printed in the messages "
-+		 "\"ahci xxxx:bus:dev.func: ...\"");
-+
-+static void ahci_apply_port_map_mask(struct device *dev,
-+				     struct ahci_host_priv *hpriv, char *mask_s)
-+{
-+	unsigned int mask;
-+
-+	if (kstrtouint(mask_s, 0, &mask)) {
-+		dev_err(dev, "Invalid port map mask\n");
-+		return;
-+	}
-+
-+	if (mask) {
-+		dev_warn(dev, "Forcing port map mask 0x%x\n", mask);
-+		hpriv->mask_port_map = mask;
-+	}
-+}
-+
-+static void ahci_get_port_map_mask(struct device *dev,
-+				   struct ahci_host_priv *hpriv)
-+{
-+	char *param, *end, *str, *mask_s;
-+	char *name;
-+
-+	if (!strlen(ahci_mask_port_map))
-+		return;
-+
-+	str = kstrdup(ahci_mask_port_map, GFP_KERNEL);
-+	if (!str)
-+		return;
-+
-+	if (!strchr(str, '=')) {
-+		/* Single mask case */
-+		ahci_apply_port_map_mask(dev, hpriv, str);
-+		goto free;
-+	}
-+
-+	/*
-+	 * Mask list case: parse the parameter to apply the mask only if
-+	 * the device name matches.
-+	 */
-+	param = str;
-+	end = param + strlen(param);
-+	while (param && param < end && *param) {
-+		name = param;
-+		param = strchr(name, '=');
-+		if (!param)
-+			break;
-+
-+		*param = '\0';
-+		param++;
-+		if (param >= end)
-+			break;
-+
-+		if (strcmp(dev_name(dev), name) != 0) {
-+			param = strchr(param, ',');
-+			if (param)
-+				param++;
-+			continue;
-+		}
-+
-+		mask_s = param;
-+		param = strchr(mask_s, ',');
-+		if (param) {
-+			*param = '\0';
-+			param++;
-+		}
-+
-+		ahci_apply_port_map_mask(dev, hpriv, mask_s);
-+	}
-+
-+free:
-+	kfree(str);
-+}
-+
- static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 					 struct ahci_host_priv *hpriv)
- {
-@@ -688,6 +772,10 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 			  "Disabling your PATA port. Use the boot option 'ahci.marvell_enable=0' to avoid this.\n");
- 	}
- 
-+	/* Handle port map masks passed as module parameter. */
-+	if (ahci_mask_port_map)
-+		ahci_get_port_map_mask(&pdev->dev, hpriv);
-+
- 	ahci_save_initial_config(&pdev->dev, hpriv);
- }
- 
 -- 
-2.44.0
+Damien Le Moal
+Western Digital Research
 
