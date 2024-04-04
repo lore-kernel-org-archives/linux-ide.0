@@ -1,70 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2043E82869;
-	Thu,  4 Apr 2024 13:02:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ED27128361;
+	Thu,  4 Apr 2024 13:46:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712235745; cv=none; b=bSrRQlD/mnER1GhKJhbkbFglOtWUsJJm5CXbAzjA1P3zoXizPuppmNfhqNnFJLpZNC75YknE61fI5e7ALi/NXUPJqNa5EiV+nzh9S5DYc1iiTlvUT+yuvYMk3dRNCLBRN6JUY69ZbPV4TrFL1Uwsy/KWSf+zjsyEQ6lg8nbHsfk=
+	t=1712238417; cv=none; b=bnytUXYrkLF8TEnKPTVNAULtaewnQ85u/nwo5buacL+b3f5gCr3/RELDfEv7QtVwhEZHXbXRF9kC2qStzOaITs0vUs41/bMBFQ24VIRmwdkmtL4LDlorRcwfJBvwEVwocEfsnDESv5qDe6e1GscQU7vVU47YpYtbrO9QarM4NPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712235745; c=relaxed/simple;
-	bh=7pnNVobmpgyZTe16jRV/6bw4ZMlQxfeaW6/ZyW0OS5c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TcIq2o6sGhawTXqFmZ2eBcinhLl8NwBso3uHGPM5mdm6h7WsTUwZiqJoagil6oMuH6RVDQ4mDEs39eXuyjwTaEZImx4uhASnfChUVPkoRSrUdhZgr85UOm0sC+iZgHzIfwLuRXK26uXnV7vf4eDCiJj6V45iDbPcHDKXxjKQbnU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=wRPZ06sw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712238417; c=relaxed/simple;
+	bh=YTmuV8AU6ijpWFJ9qUSeRqsG7ZkPrskWPB28srSjA4g=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=dB6E5vWxVy+SQFKQyRh8NdF9CoDH4CnuxN7ICy5dDluRnOmsB1khMHZoknJyNiLk4sGUGvUXFpd6CGQgKM0cl1qqJrpwiBHOT2fxxEQ5Hx3RTLBBwzXtLTHJIkCGNcNtmw08lKUBZEgEPQHHwjlqB7OtGtDY2lFjaOd2wyfbQDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iN6HA0FF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="wRPZ06sw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AD9BC43390;
-	Thu,  4 Apr 2024 13:02:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1712235744;
-	bh=7pnNVobmpgyZTe16jRV/6bw4ZMlQxfeaW6/ZyW0OS5c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=wRPZ06swiOXGDkR5LDGhbTD20vCpQJRXl6GUgJisu04HDven1EMqzQhKeLlNydPYe
-	 m91DWRZCw18Q1/WgUgG3uH0YVrazdLvWibeMaEB2ReM3pIxevp+5nk2oICuGedqMDh
-	 nANzmhxQGUMdF0RS86bEWHacFsWW9l2RhKSi4llw=
-Date: Thu, 4 Apr 2024 15:02:21 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Takashi Sakamoto <o-takashi@sakamocchi.jp>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"Juergen E. Fischer" <fischer@norbit.de>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
-	HighPoint Linux Team <linux@highpoint-tech.com>,
-	Tyrel Datwyler <tyreld@linux.ibm.com>,
-	Brian King <brking@us.ibm.com>, Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net
-Subject: Re: [PATCH 07/23] scsi: add a dma_alignment field to the host and
- host template
-Message-ID: <2024040412-reacquire-wrangle-3e1e@gregkh>
-References: <20240402130645.653507-1-hch@lst.de>
- <20240402130645.653507-8-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iN6HA0FF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5D52C433F1;
+	Thu,  4 Apr 2024 13:46:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712238417;
+	bh=YTmuV8AU6ijpWFJ9qUSeRqsG7ZkPrskWPB28srSjA4g=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=iN6HA0FFgz90MtiQnEAgWRdCm8zcts9f45Sxg2VSsHNeMEL//kXdgXBkuFCxtsMOp
+	 X0y2UQ2sBs5OHeOqlgIbYuJM/b/jHyoWp39lX5Edh6zGWMT45nZw7x9YCR/aXpAaYu
+	 eMsZjAU9wsTUkb16TrzpthEStk7WoiiiYvpnAMO7mNgtSPSrLUA6a9ZjOh+cHkPDor
+	 VLvFgnj76quaNpHeaOIJBKszW0wvwkaa64/OKfiXhxW26b6XWQI2o4aIMrPbyzSfP6
+	 XzMA3Be72lk7jigxbkFuwJDK5o6KLLHNbV3pMsrlxi4bNEYo8p6SRThJsQJ1fgG+nd
+	 AqfZgrH4ZWYDw==
+Date: Thu, 4 Apr 2024 08:46:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
+	Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
+	Heiko Stuebner <heiko.stuebner@cherry.de>,
+	Shawn Guo <shawnguo@kernel.org>, Sebastian Reichel <sre@kernel.org>,
+	Chris Morgan <macromorgan@hotmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>, David Rientjes <rientjes@google.com>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kefeng Wang <wangkefeng.wang@huawei.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Guo Ren <guoren@kernel.org>, Azeem Shaikh <azeemshaikh38@gmail.com>,
+	Max Filippov <jcmvbkbc@gmail.com>, Jonathan Corbet <corbet@lwn.net>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Manikanta Guntupalli <manikanta.guntupalli@amd.com>,
+	Anup Patel <apatel@ventanamicro.com>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [PATCH v7 00/37] Device Tree support for SH7751 based board
+Message-ID: <20240404134652.GA1910402@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -73,32 +89,15 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240402130645.653507-8-hch@lst.de>
+In-Reply-To: <cover.1712205900.git.ysato@users.sourceforge.jp>
 
-On Tue, Apr 02, 2024 at 03:06:29PM +0200, Christoph Hellwig wrote:
-> Get drivers out of the business of having to call the block layer
-> dma alignment limits helpers themselves.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/firewire/sbp2.c           |  6 ------
->  drivers/message/fusion/mptfc.c    |  1 +
->  drivers/message/fusion/mptsas.c   |  1 +
->  drivers/message/fusion/mptscsih.c |  2 --
->  drivers/message/fusion/mptspi.c   |  1 +
->  drivers/scsi/hosts.c              |  6 ++++++
->  drivers/scsi/iscsi_tcp.c          |  2 +-
->  drivers/scsi/qla2xxx/qla_os.c     |  6 +++---
->  drivers/scsi/scsi_lib.c           | 11 ++---------
->  drivers/staging/rts5208/rtsx.c    | 24 ++++++++++++------------
->  drivers/usb/image/microtek.c      |  8 +-------
->  drivers/usb/storage/scsiglue.c    | 11 +++++------
->  drivers/usb/storage/uas.c         | 13 ++++++-------
->  include/scsi/scsi_host.h          |  3 +++
->  14 files changed, 42 insertions(+), 53 deletions(-)
-> 
+On Thu, Apr 04, 2024 at 01:59:25PM +0900, Yoshinori Sato wrote:
+> This is an updated version of something I wrote about 7 years ago.
+> Minimum support for R2D-plus and LANDISK.
+> I think R2D-1 will work if you add AX88796 to dts.
+> And board-specific functions and SCI's SPI functions are not supported.
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+My comments/questions from
+https://lore.kernel.org/r/20231120181600.GA205977@bhelgaas
+https://lore.kernel.org/r/20231016172742.GA1215127@bhelgaas
+still apply.
