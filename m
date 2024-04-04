@@ -1,60 +1,60 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0AA245945
-	for <linux-ide@vger.kernel.org>; Thu,  4 Apr 2024 06:07:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA12C1AAC4
+	for <linux-ide@vger.kernel.org>; Thu,  4 Apr 2024 06:08:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712210857; cv=none; b=mstsHAcfsV7QVGoYvgcq3k3m5y/E9zkyXbRDkmBtcY5G4DbyJiS0/JUIyQyeGwqZPSMMisgd8SpuWeTrG3hujnKMaSiq4dhR0dp/dzqkB4Ca+oCDYeJ0MQYXPDqTx7OZIil+eJLTWeadS4wy8f5Kuh53AzaDbCyAfn507Cbuwmg=
+	t=1712210906; cv=none; b=PsNpuH5PdCuO0scvxK9TudbUpDua1dZM3hc6/zfes6Om1ZBRRcks9zGMK6w9Z1AEe9gkt0I/RfI9OBKDm4yjROhYKRVPWF81nKDRnoMnQt+4iYuBVQUwoF+rYrmEk7Eog2eimZ4+mM3xqgVU/DiuF/eNtjh1FlKdrlLRFMLa8vM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712210857; c=relaxed/simple;
-	bh=gfCnLzL12inyto+TdH+4+k3GgVvpCiH7kAxG32upfzQ=;
+	s=arc-20240116; t=1712210906; c=relaxed/simple;
+	bh=ck5HlJSGfEIktIG5FSqBkHcuiI35GZ/YtcLCexW15Ng=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oUx0x/y8/3d011RYQvYAQqNE0CvJIwsg7KJPEDLu3u6BP2bPmI5gFtnt+irH/aoi6M7iMHgTgVO+rJfGxchVKaP6Y9fjezQR5rLBy6MufuKLwqjBmi8x7xQS4JhHeXF+DduN7VKkbvdTJYXYYX8GwXxibf/UHIO+1h3JfNUuG0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=NL5ld8zL; arc=none smtp.client-ip=209.85.218.53
+	 In-Reply-To:Content-Type; b=CC1qEQmaxvvdhNdMqCxe+yDQAuUiOswLOmyfFtiGR/d0KqxsJMAO6A2o6IqaULclwxYD9N4OOyvCwV3iRDvqLhF6bklWZiVo9DZckPvXyu9HIivLWZv5YDL0VR3OgcQxnq/c9p8M+VF6IMf9Xa+xrq2s+ggFkAHI1qnfQDUmlX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=L9n4cMxJ; arc=none smtp.client-ip=209.85.218.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="NL5ld8zL"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-a46ea03c2a5so98720766b.1
-        for <linux-ide@vger.kernel.org>; Wed, 03 Apr 2024 23:07:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="L9n4cMxJ"
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a44665605f3so61686866b.2
+        for <linux-ide@vger.kernel.org>; Wed, 03 Apr 2024 23:08:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1712210853; x=1712815653; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1712210902; x=1712815702; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=xMtZcKYGgjiZL9uAifFaCLqOJkhjnHenZoPTiVcaqdY=;
-        b=NL5ld8zLkrdDJEpaGVMUoXOZn+a+6Vb2whKaok4wJg+aTFLkaNi4PIUm6hnZ6USO7j
-         dpVf19JF9qkBtnPLMAUHHw/rZKR00KKlhfigkQFCHYiO8zwWyAYSxY3btFGXRhNWwD7d
-         qv+DCr7VE3HvfbWi6NlLBd6TGoJbK93kMNGVHvwnWdX/lGox83ncY02zM8EiqNVoF8+7
-         s4JKIOhMM34YdhlTfGV3ygpZVYYI5t9Pt4VE3KR+bcwoXXZuwz4ZISwBXOg1zrVjIqp7
-         vAOMGwCTDQGxSxOwwzMCuVfJe0iVVHuDdpvNzyjujvo/ey+OMTuHXoBSDuntSl5XD2np
-         Mayg==
+        bh=rxTZ85unwyVpbZ07p+2JFJ30WK5iCDVvonlCXKZGiyE=;
+        b=L9n4cMxJQe5qz0Hxe/fWe2WOKF2mfQiqAfdge1PC5bSmf7WEG05O3aqy2NOlA/gNqg
+         4D+BW4mStGYPpGjTQHCvd72SUftzuLTXp3iYu3APlbwBxUNEwNUHIvrmH+NO/QcsnvtI
+         s4Z06FvNY/vuxHiwlgdwsEZmdElONLolx84oP6yCId7rGqtTEBwJO9BV/uLUTrRRoIyy
+         w+LW/oOuMGV8OrnabxDnnBUtKtyO8uaGfaAaqcFazljtdWf51d6YsI5//M+4n8Gab5TI
+         NOExZLGeIBekQAw6wYssWREdwBA0o2/4H6Dc7NzFza2MTywWZ12Uiu3sOiutAf6UR1iR
+         b9RA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712210853; x=1712815653;
+        d=1e100.net; s=20230601; t=1712210902; x=1712815702;
         h=content-transfer-encoding:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=xMtZcKYGgjiZL9uAifFaCLqOJkhjnHenZoPTiVcaqdY=;
-        b=a8y/KILmY1avM5m0qW7QBlYxvHwAlOHkjttw6Fr09sLZFpQWT1zkWYX+Urf6wGmqM+
-         TIwS4Nn6jFVX4FbF5NTbjxkV18IVakgw+tNpp1NM4uUsyGIap+KFdyAPmILME5QOE9TT
-         xkPSeQONnpDMCdxj5ULvLs78YjxAchZNWUiRO1qG1WFU2DT/ZLmA9lNC7NVZD49NdteD
-         ibZUJF1gz+8+L/wYNqYPTRYLq+SZjwzEYQ/0HnoZbsRBRkBmuhqm84v8aXzFijhmwayG
-         dKTzYTAM7Ed8WEYRVEJ8M3rKS1xG2RFBYaOeOC8mPBg+Kr3K9WVXr2xjYyYSlOZzH3HO
-         +VhA==
-X-Forwarded-Encrypted: i=1; AJvYcCXnFq+FxhVV04F6iMbsJ8LJIz3dtDpF215cz8QkyMTqp+R1O6ShcDha7Ss+lEoGUPw0ceaL7svK/7t9AQbIthZWqScor5HYdiwX
-X-Gm-Message-State: AOJu0Yw6ff3A3DL4NCST+rr6jKG2fb2/4Wq+r+Ruybj+hRy4U9SfLmY1
-	tQgE/bz/1TsbikPU5dqCdjXTqwXKmwYdOUxHGdl3U98zDwElJTiTQcoa4sGg7Dg=
-X-Google-Smtp-Source: AGHT+IGFHCJtoawYrBDiWZZNwxa2eQXZi+iM69s8H12jzVA3GvmJLPQ4N58uQ3FvqaJdTGe3oHxhyw==
-X-Received: by 2002:a17:906:518:b0:a51:89f0:10ee with SMTP id j24-20020a170906051800b00a5189f010eemr544124eja.37.1712210852993;
-        Wed, 03 Apr 2024 23:07:32 -0700 (PDT)
+        bh=rxTZ85unwyVpbZ07p+2JFJ30WK5iCDVvonlCXKZGiyE=;
+        b=fyzwRcVs2GySLcTob3TSXgCVL3cCkfiIFUUUz9bWhtQ/c8tn1snj3sB3GjlSZPzw2A
+         DZGdRJ0tN9pTCUHhDKrcYViSvqkgXidIwiGZO8NNDF1Cbd5YXbDbCzaH2PzbU7umyWKC
+         T9tiyru7SaaNmO+fBZRGUgpVMT5Fl57dx4qR8mqjKYvfNHWkMEzNDZerq9Z5CdF/mI75
+         hvyIIE5iDB5Vq+o6NCkeUJ6jus/Vl8vaMmnO0PGNP3movsNdLQiRL7mMm9Oi30UFbANF
+         BaauoaxeZH9ZCbuD6kSGensXZxPMrJQ3434S5eceI50KCYQshg1pUXXmJG9jrKx6xzhb
+         e/KQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWnGhhpm7gkURD8b+RCZKyLJXe3s1331sOYBbHnKety2UrrA4iDW26Q7N99TIxVVqxPGqSBi83lcosYH48gR3kq1F7kwdDh+W3G
+X-Gm-Message-State: AOJu0YwIIMiIB54wUOnurMAtsffZ3dWX30OKw915OX3RsdF+GcGMAZbV
+	wJYmS9r5KTFAn/T4Fy4/GPupFltP3ZETSStPAe3zx+By4AOnJvYgV/jZdy/Y2WA=
+X-Google-Smtp-Source: AGHT+IFI/qIkJNXTS6UHJf3srgzvcentyDoh5xx2aALaAXZXdTsCp8+U/4aUbwmbKXwuQRzaZ/XKDQ==
+X-Received: by 2002:a17:906:6607:b0:a4e:207e:b71 with SMTP id b7-20020a170906660700b00a4e207e0b71mr909877ejp.6.1712210902408;
+        Wed, 03 Apr 2024 23:08:22 -0700 (PDT)
 Received: from [192.168.1.20] ([178.197.223.16])
-        by smtp.gmail.com with ESMTPSA id v18-20020a170906339200b00a4df78425dbsm8545445eja.36.2024.04.03.23.07.29
+        by smtp.gmail.com with ESMTPSA id w17-20020a170906185100b00a4e9359fbe8sm2307025eje.44.2024.04.03.23.08.18
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Apr 2024 23:07:32 -0700 (PDT)
-Message-ID: <e96ae1c6-a1cf-4f42-82ef-057e7ec5edc5@linaro.org>
-Date: Thu, 4 Apr 2024 08:07:28 +0200
+        Wed, 03 Apr 2024 23:08:21 -0700 (PDT)
+Message-ID: <f73c3130-3121-4339-8f7a-8870a841005c@linaro.org>
+Date: Thu, 4 Apr 2024 08:08:17 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -62,7 +62,7 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 04/37] dt-bindings: interrupt-controller: Add header
+Subject: Re: [RESEND v7 04/37] dt-bindings: interrupt-controller: Add header
  for Renesas SH3/4 INTC.
 To: Yoshinori Sato <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org
 Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
@@ -105,8 +105,8 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
  linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
  linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
  linux-fbdev@vger.kernel.org
-References: <cover.1712205900.git.ysato@users.sourceforge.jp>
- <d50827196f7e1201bb9a62656fb04223a8989f1d.1712205900.git.ysato@users.sourceforge.jp>
+References: <cover.1712207606.git.ysato@users.sourceforge.jp>
+ <d50827196f7e1201bb9a62656fb04223a8989f1d.1712207606.git.ysato@users.sourceforge.jp>
 Content-Language: en-US
 From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
@@ -153,16 +153,18 @@ Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
  KQ06ztUMRrj8eVtpImjsWCd0bDWRaaR4vqhCHvAG9iWXZu4qh3ipie2Y0oSJygcZT7H3UZxq
  fyYKiqEmRuqsvv6dcbblD8ZLkz1EVZL6djImH5zc5x8qpVxlA0A0i23v5QvN00m6G9NFF0Le
  D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <d50827196f7e1201bb9a62656fb04223a8989f1d.1712205900.git.ysato@users.sourceforge.jp>
+In-Reply-To: <d50827196f7e1201bb9a62656fb04223a8989f1d.1712207606.git.ysato@users.sourceforge.jp>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 04/04/2024 06:59, Yoshinori Sato wrote:
+On 04/04/2024 07:14, Yoshinori Sato wrote:
 > Renesas SH7751 Interrupt controller priority register define.
 > 
 > Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 
-Nothing improved, still NAK.
+I got two 37-patchsets...
+
+Anyway, this also did not improve. NAK.
 
 This is a friendly reminder during the review process.
 
