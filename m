@@ -1,74 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49CEC8F7D
-	for <linux-ide@vger.kernel.org>; Thu,  4 Apr 2024 09:51:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEFF78F7D;
+	Thu,  4 Apr 2024 10:05:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712224277; cv=none; b=Rlq40J1W/JIrWiUqbmLqOouxYTEbALpEcxKusEKJhbixy7aOL2eAl5lBmSoDc1Y5pOIYjV97FUCR0B19f8DEXRi4Al0sU/BUfo4BVEI9eK5cMH33sofh9vQ9OT0ddzjNmQR8MrBL/9z7UUpWLeBAP0zAFhj4fLAAl1O61hTb86E=
+	t=1712225148; cv=none; b=C/IWY81nn1TQHarU+i/JVK8OO4nJVjt54JTTG6GcJ8NgonizG2ClIL8Rp9CUp0fVmuLwZWDMqklxWoPq28/nqNeWpsgQLvnBLxsQ35Ufaa+wiiv6IfzxmsBSH8LTQ1egMtMHB1PZedPiUObiGx7fXhxbBtQ6MI4kSPbwB7o0gYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712224277; c=relaxed/simple;
-	bh=trdOpF0eV4LAyvSfOQhPU89Mn5gnk0bAwY91a6gTKZs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I2HYd2DZGSx0TOlwxh8QeUWHTIxvS8UWO61N69Dx/MHyjgCJJpxZHwMWwxK/nwC6QTDZJu/lNtn3sXDtzLkMAoCJYE0SumK0RFsxW7DYGSK+ETPI1Ku6a7sR2Bvvb7EBpI+wla7wuOPXxiRWv+wtLJ+owrBBqrPYly+JU25CwkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HR66Lflh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712225148; c=relaxed/simple;
+	bh=SMwANtbw6TFtzOiI5CiblchYkN5X389DW6eKfwxQnJ0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MWFCLrifvZgu2QRHsiWPnTWJw8Yn+P9rYYGLYH3kORGtRxeJH1lEzt3FijaDo2UjR9r3GlGjx/dSw2feIGxDYqhFCM/qSDb0oRplnUbfEN2OuDXIgFBwFvb86E3/OV3LlV5W6rnzQ1OsI/td7afIhX7aZoi1LI0a7qgV7lCOj2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rtdcZlin; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HR66Lflh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E049C433F1;
-	Thu,  4 Apr 2024 09:51:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rtdcZlin"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8BD4C433C7;
+	Thu,  4 Apr 2024 10:05:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712224276;
-	bh=trdOpF0eV4LAyvSfOQhPU89Mn5gnk0bAwY91a6gTKZs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=HR66Lflhgyy5XQETP8LNx3amjxFCtCJ3JUO1LBRophycTZuThj3CX1nibZ4gyWtqk
-	 zpEYFAMVztLM7tRUfTth+TUjCU2xurDcE2RRXV5e6vu49V/cS6M2r2t+qYfRqBFhyc
-	 5KGPt7qGWfHav1JP0iKdT9JRy9/HJLi3CuPdTTKL8o2kzFY5UG6z06D8vJbMMjD7Cy
-	 imziefTfehby+1ir9fpdzZ020jr1pcBgYHWV9JxxaI+VJt5mOIu3vfUac/pV+IuWrQ
-	 pe6a05QbC7xMFHdWKyGjClL821IILz0Mmx9A+UPnu7eNBQchBNo1O3Hj+qDwp1CXhO
-	 HBMAFFH74GrSg==
-Message-ID: <21694429-e65c-4f4d-a770-cd450d5ce7e8@kernel.org>
-Date: Thu, 4 Apr 2024 18:51:13 +0900
+	s=k20201202; t=1712225148;
+	bh=SMwANtbw6TFtzOiI5CiblchYkN5X389DW6eKfwxQnJ0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rtdcZling1hQuYen2XhnKeoF694hLs82lIdwA2ENczGAp3LdK8gd9t47ogsQDIOnx
+	 ApM6/Ntd3ldW+Vyh5d9GQ6ikgZoVY31nJ8hZ7F8mba+Xc7X2DGqE14wtPiyGv5aHCv
+	 RURw76iXbMCu7G5ali4J3CirPgsRaMNy7G5JNm6JwtZ7p5gtIWEepi7rSGsK7wNiCV
+	 pp3DTmlqoXh3Bo40mocAkvEqBv/9FIsqUugRrTNrjYq/Sxw75T0XAIev+EAk3ZS7mP
+	 cgmrxN7gXxGbVpVC/+hRlauSnY2I/vTtCLk09xwQ8Qfew4J+teIY77lrEsMHvVQaUJ
+	 n5GUujhjCniLA==
+Date: Thu, 4 Apr 2024 12:05:43 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Niklas Schnelle <schnelle@linux.ibm.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	Arnd Bergmann <arnd@kernel.org>, Heiko Carstens <hca@linux.ibm.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] ata: add HAS_IOPORT dependencies
+Message-ID: <Zg57dww6ap9zEwy7@ryzen>
+References: <20240404092936.3127972-1-schnelle@linux.ibm.com>
+ <20240404092936.3127972-2-schnelle@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: ASMedia PMP inquiry
-To: Conrad Kostecki <conikost@gentoo.org>, Niklas Cassel <cassel@kernel.org>,
- Szuying Chen <chensiying21@gmail.com>
-Cc: linux-ide@vger.kernel.org, Jesse1_Chang@asmedia.com.tw,
- Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw,
- cryptearth@googlemail.com, temnota.am@gmail.com, hdegoede@redhat.com,
- jnyb.de@gmail.com
-References: <20240319091322.10909-1-Chloe_Chen@asmedia.com.tw>
- <ZflnYu5W5WnnzDio@ryzen>
- <emd6ef2021-5996-41a5-97d9-9864d65bb534@e6a850b0.com>
- <07b6a6d4-a9b1-468f-916f-1d4e6b1f92e5@kernel.org>
- <em1188b33c-20bf-4a1b-87a4-626abdf11c3d@acf693bc.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <em1188b33c-20bf-4a1b-87a4-626abdf11c3d@acf693bc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240404092936.3127972-2-schnelle@linux.ibm.com>
 
-On 4/3/24 03:31, Conrad Kostecki wrote:
-> Hello Damien,
+On Thu, Apr 04, 2024 at 11:29:36AM +0200, Niklas Schnelle wrote:
+> In a future patch HAS_IOPORT=n will disable inb()/outb() and friends at
+> compile time. We thus need to add HAS_IOPORT as dependency for those
+> drivers using them.
 > 
-> Am 22.03.2024 01:00:02, "Damien Le Moal" <dlemoal@kernel.org> schrieb:
-> 
->> Yes. I will add a libata.force parameter to do that so that setups that do not
->> use PMPs can avoid long boot times due to probing the broken "virtual ports".
->> Will post a patch next week for that.
-> any news for the patch?
+> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+> Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> ---
 
-I just sent one, you are on cc.
-If you could test, that would be great. Thanks.
-
-
--- 
-Damien Le Moal
-Western Digital Research
-
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
