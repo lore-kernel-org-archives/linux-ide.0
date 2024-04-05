@@ -1,207 +1,298 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D3D1DFE4
-	for <linux-ide@vger.kernel.org>; Fri,  5 Apr 2024 12:51:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8B2B16D4D3;
+	Fri,  5 Apr 2024 12:57:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712321507; cv=none; b=o6aAz9fLS5mUTEgCdGc8j+mPVQxqyjybd3pk87RmmF3rV6G172qDA7IuVNRxqBeB8o8q1T1tXELqbQip6bSgbd9bS1sezdIyyvCfhgKV3IN4Y8PZsJmtdhd3ctyBHZT2u/skPczsFbZgMItDtzJ7qXxM3xtqjeClqS8u1FXtE7E=
+	t=1712321835; cv=none; b=XfO0x/mLj3a3ADgFas4CsP4LXnC3XaWQi3C8qe6me27HLJRzchAd8C7M0qT82xhAUQf+KrjOWk5FhlCaFUbO3DAy+TIz8fD3mZ4c1JRC6wnNNFoYanUmKNGxh4XFvjbU2VhkpBz1JCvOYga5jU0hcjw/hanAozOppkyjwU/XNSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712321507; c=relaxed/simple;
-	bh=eJsqu/B0DnKxPdcP/B8nZ4fNfWRHaxyj5Xrg2TBjXV4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WjwWNXGvxMz72df4qI/81hVfABsuL3OKNmtyEYymkVC8EuTLuZCq6FU5A9ufNm1sAmTigd9cHjbwFj1WUuvL7LdC9TTC05ndVeXwpd8EgEqH9AEL20dB9niIkTKlozpVU7/C+NX145BtgwO0RMgBagVNTlPETfgeG4HRkPqO21g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KkOopfbi; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KkOopfbi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1A1AC433F1;
-	Fri,  5 Apr 2024 12:51:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712321505;
-	bh=eJsqu/B0DnKxPdcP/B8nZ4fNfWRHaxyj5Xrg2TBjXV4=;
-	h=From:To:Cc:Subject:Date:From;
-	b=KkOopfbiGAK0RfKVTdQeyFwhkJX/2950E+Sa0fdO+SEjYIPsp8S6HvFepPPfsBYCO
-	 18DJOSjv86A3RyaWKXg81bLkQ02eR0B4nlf2PMLRTCAfGADLqY15UKUZXi0wdVths8
-	 Ddi9bdyMJl8HQjdP2xdb6zZL20z3+uJph1n/kupknmauN9osfpmf4am7iLchy79zAc
-	 Enq9rGB+w35zDdZSGB3fXrbSn+hNcAP//bPS0VCslMtb+kH8ppzSPMb9o6c+HlpEaF
-	 +FBGuD/NGdgV3EW4Q2Mlwh0Eiu0Cz9kvYhZYFSfi0WEorB0otDOIobbx1D0HFNymqY
-	 lZUpH0jsrjHtA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Cc: Conrad Kostecki <conikost@gentoo.org>,
-	Szuying Chen <chensiying21@gmail.com>,
-	Jesse1_Chang@asmedia.com.tw,
-	Richard_Hsu@asmedia.com.tw,
-	Chloe_Chen@asmedia.com.tw
-Subject: [PATCH v2] ata: ahci: Add mask_port_map module parameter
-Date: Fri,  5 Apr 2024 21:51:43 +0900
-Message-ID: <20240405125143.1134539-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.44.0
+	s=arc-20240116; t=1712321835; c=relaxed/simple;
+	bh=2YtxCtIfHL+1+HO+ks+D6RthwuzyQBykWodO082NqcQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=nKQJdYZBXtvqv0oh9JI3aMAScbTV5sJuHV3OgU40LrfcjpIZUPG6bXSRUiDOmSLb5cmcyBHx2iV4uNl4HBE1RNKxfKBDp9zQh2Lx/lBC3nNLFGXQQOaTP7unp3Am/9NaQCcgL8bJURazOcPy0ChQnRTND8SCSkD8TdkLH3HB2fM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-dcc6fc978ddso1759262276.0;
+        Fri, 05 Apr 2024 05:57:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712321829; x=1712926629;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=IrYQalnHLpNlFPtXNRcvWmXwt3g+egtwV8d+Fjl7XAg=;
+        b=lWaScKyTMPjDLZlXlZXd8hC5e/C0F8CMRpvEE7Wndpe9XyY1AGivuOd4soOCAJ3Sca
+         zv7jTm80IOPceLWvrhds8RJ5cDIBXyda74r3qiJK4U4MVRBaXOWyfDnNWg3RIiJbGp1d
+         Iva2FO+zJsBPgicaD6u9fYhk/Ju7BpaZsmRTvYTOEyV3uf+7l59lQzn+NhyW0XJnGRlz
+         ZvB5OV7AjSpgdZK/vPaFwQA5TcnrJgW8zEa40ER6GiHCNcKICjIchHpBkPCfIB4PON6x
+         PNqPApUrovXQ6J1mY7deja4OHKnugaIPkUlicvX6a6WXDfJuuMIJEJfCJqMhh0u9rytl
+         3ELA==
+X-Forwarded-Encrypted: i=1; AJvYcCU/WkinzxD1N7Oe8jTXZnse5TLsLglAFNt5gEFe3j01EJJ0Zh/cghOBJkXuNqI8yE1HR7rts4+w9kONd0GSyyK5MC9LCZu6cKjk/wpbN1p+A0/0En5TvD1XkusEYD919vDa5ZDIzRiUV4RP3oN87giRLCmJKSJGNUafTwQs/C6ltLuALkITGOcHgFuYjgd55lyNWzxS+ybIa9fmNMH07Jh7jhwXfEPO9MdCaAS69tSzmeHiWW5K9pC/X3Czj45DoNEoHii2eL/+65rjdwZFvLYPb2YrfE5hnCu439qjFwm1lye1cm0pl1b3QvEd3tppXOJB4YcFj3PxHEGYngdmHgsygjVgBzWl+RWEoVFBHanJcClugS59HIU=
+X-Gm-Message-State: AOJu0Yy48WtO/yikFldb1xSDBkxcvJp4wgFAk4+NYc7wH/Y4HWmJUxd/
+	kyBsHcOQJNuqpBzH5kX//grO1cRqZ7uvTLXP4eoXK7bzf5b4D9TdQCaSfDohKq4=
+X-Google-Smtp-Source: AGHT+IEr1cWRfbRnWqwooGaruYL1olqIXbBlkHEnD+nK0QdasKLy/60NBLixdP9lFuE8mI19MpfUAw==
+X-Received: by 2002:a5b:ed0:0:b0:dc6:f0ac:6b53 with SMTP id a16-20020a5b0ed0000000b00dc6f0ac6b53mr866097ybs.15.1712321829314;
+        Fri, 05 Apr 2024 05:57:09 -0700 (PDT)
+Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com. [209.85.219.180])
+        by smtp.gmail.com with ESMTPSA id 133-20020a25198b000000b00dc2328c28ebsm296209ybz.51.2024.04.05.05.57.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 Apr 2024 05:57:08 -0700 (PDT)
+Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-dc6cbe1ac75so1595520276.1;
+        Fri, 05 Apr 2024 05:57:08 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCW7omlBOIn7yssfNTnAvTG1djrkeJ4J6Yq/4eSM44Jd5SMBECoXwPcXZdsItin1OGLxarVqxwoEn7Oqa/d4jCkwtorvWZtc1IsPX3Y4LG9xyFT2C8PRVYyLaarZwQxDkm1wYQTNZVzYj9/xGhbAWewoRuAurPNDWfirVUsQnA7LFRHDMl+PeFecj6dglK2pNjb4mqMmeDNyUg4wCuf99+aT9/uSKqib3sXVO50zAs7Vs4zXVm5m/+n/R+A0Dno6cpqpbxnO64W/ngKt4SLRsbme1SX8mt4viWZ6FqfXALgPbGuyOs2AoJOPj1kbumDdVIzsfKfKIHGF+k1oV+qp99f0lSxiyTB3E76n2NPhHB08H0O8v2IGBOU=
+X-Received: by 2002:a05:6902:2b10:b0:dcd:b806:7446 with SMTP id
+ fi16-20020a0569022b1000b00dcdb8067446mr1084419ybb.1.1712321827974; Fri, 05
+ Apr 2024 05:57:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <cover.1712207606.git.ysato@users.sourceforge.jp> <9c1d56d37f5d3780d3c506ae680133b6bdaa5fdc.1712207606.git.ysato@users.sourceforge.jp>
+In-Reply-To: <9c1d56d37f5d3780d3c506ae680133b6bdaa5fdc.1712207606.git.ysato@users.sourceforge.jp>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 5 Apr 2024 14:56:55 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVXvPW+3-sY2XPQ2aMcTZkK9zoMnxWeZ+PRB+VRgGszdQ@mail.gmail.com>
+Message-ID: <CAMuHMdVXvPW+3-sY2XPQ2aMcTZkK9zoMnxWeZ+PRB+VRgGszdQ@mail.gmail.com>
+Subject: Re: [RESEND v7 14/37] clk: Compatible with narrow registers
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
+	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Magnus Damm <magnus.damm@gmail.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, 
+	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>, 
+	Heiko Stuebner <heiko.stuebner@cherry.de>, Shawn Guo <shawnguo@kernel.org>, 
+	Sebastian Reichel <sre@kernel.org>, Chris Morgan <macromorgan@hotmail.com>, 
+	Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, 
+	David Rientjes <rientjes@google.com>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
+	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
+	Kefeng Wang <wangkefeng.wang@huawei.com>, Stephen Rothwell <sfr@canb.auug.org.au>, 
+	Javier Martinez Canillas <javierm@redhat.com>, Guo Ren <guoren@kernel.org>, 
+	Azeem Shaikh <azeemshaikh38@gmail.com>, Max Filippov <jcmvbkbc@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Jacky Huang <ychuang3@nuvoton.com>, 
+	Herve Codina <herve.codina@bootlin.com>, 
+	Manikanta Guntupalli <manikanta.guntupalli@amd.com>, Anup Patel <apatel@ventanamicro.com>, 
+	Biju Das <biju.das.jz@bp.renesas.com>, 
+	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+	Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Commits 0077a504e1a4 ("ahci: asm1166: correct count of reported ports")
-and 9815e3961754 ("ahci: asm1064: correct count of reported ports")
-attempted to limit the ports of the ASM1166 and ASM1064 AHCI controllers
-to avoid long boot times caused by the fact that these adapters report
-a port map larger than the number of physical ports. The excess ports
-are "virtual" to hide port multiplier devices and probing these ports
-takes time. However, these commits caused a regression for users that do
-use PMP devices, as the ATA devices connected to the PMP cannot be
-scanned. These commits have thus been reverted by commit 6cd8adc3e18
-("ahci: asm1064: asm1166: don't limit reported ports") to allow the
-discovery of devices connected through a port multiplier. But this
-revert re-introduced the long boot times for users that do not use a
-port multiplier setup.
+Hi Sato-san,
 
-This patch adds the mask_port_map ahci module parameter to allow users
-to manually specify port map masks for controllers. In the case of the
-ASMedia 1166 and 1064 controllers, users that do not have port
-multiplier devices can mask the excess virtual ports exposed by the
-controller to speedup port scanning, thus reducing boot time.
+On Thu, Apr 4, 2024 at 7:15=E2=80=AFAM Yoshinori Sato
+<ysato@users.sourceforge.jp> wrote:
+> divider and gate only support 32-bit registers.
+> Older hardware uses narrower registers, so I want to be able to handle
+> 8-bit and 16-bit wide registers.
+>
+> Seven clk_divider flags are used, and if I add flags for 8bit access and
+> 16bit access, 8bit will not be enough, so I expanded it to u16.
+>
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 
-The mask_port_map parameter accepts 2 different formats:
- - mask_port_map=<mask>
-   This applies the same mask to all AHCI controllers
-   present in the system. This format is convenient for small systems
-   that have only a single AHCI controller.
- - mask_port_map=<pci_dev>=<mask>,<pci_dev>=mask,...
-   This applies the specified masks only to the PCI device listed. The
-   <pci_dev> field is a regular PCI device ID (domain:bus:dev.func).
-   This ID can be seen following "ahci" in the kernel messages. E.g.
-   for "ahci 0000:01:00.0: 2/2 ports implemented (port mask 0x3)", the
-   <pci_dev> field is "0000:01:00.0".
+Thanks for the update!
 
-When used, the kerenl messages indicate that a port map mask was forced.
-E.g.: without a mask:
-modrpobe ahci
-dmesg | grep ahci
-...
-ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
-ahci 0000:00:17.0: (0000:00:17.0) 8/8 ports implemented (port mask 0xff)
+> --- a/drivers/clk/clk-divider.c
+> +++ b/drivers/clk/clk-divider.c
+> @@ -26,20 +26,38 @@
+>   * parent - fixed parent.  No clk_set_parent support
+>   */
+>
+> -static inline u32 clk_div_readl(struct clk_divider *divider)
+> -{
+> -       if (divider->flags & CLK_DIVIDER_BIG_ENDIAN)
+> -               return ioread32be(divider->reg);
+> -
+> -       return readl(divider->reg);
+> +static inline u32 clk_div_read(struct clk_divider *divider)
+> +{
+> +       if (divider->flags & CLK_DIVIDER_REG_8BIT)
 
-With a mask:
+When you need curly braces in one branch of an if/else statement,
+please use curly braces in all branches (everywhere).
 
-modrpobe ahci mask_port_map=0000:00:17.0=0x1
-dmesg | grep ahci
-...
-ahci 0000:00:17.0: masking port_map 0xff -> 0x1
-ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
-ahci 0000:00:17.0: (0000:00:17.0) 1/8 ports implemented (port mask 0x1)
+> +               return readb(divider->reg);
+> +       else if (divider->flags & CLK_DIVIDER_REG_16BIT) {
+> +               if (divider->flags & CLK_DIVIDER_BIG_ENDIAN)
+> +                       return ioread16be(divider->reg);
+> +               else
+> +                       return readw(divider->reg);
+> +       } else {
+> +               if (divider->flags & CLK_DIVIDER_BIG_ENDIAN)
+> +                       return ioread32be(divider->reg);
+> +               else
+> +                       return readl(divider->reg);
+> +       }
+>  }
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/ahci.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 85 insertions(+)
+> --- a/drivers/clk/clk-gate.c
+> +++ b/drivers/clk/clk-gate.c
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 562302e2e57c..6548f10e61d9 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -666,6 +666,87 @@ static int mobile_lpm_policy = -1;
- module_param(mobile_lpm_policy, int, 0644);
- MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
- 
-+static char *ahci_mask_port_map;
-+module_param_named(mask_port_map, ahci_mask_port_map, charp, 0444);
-+MODULE_PARM_DESC(mask_port_map,
-+		 "32-bits port map masks to ignore controllers ports. "
-+		 "Valid values are: "
-+		 "\"<mask>\" to apply the same mask to all AHCI controller "
-+		 "devices, and \"<pci_dev>=<mask>,<pci_dev>=<mask>,...\" to "
-+		 "specify different masks for the controllers specified, "
-+		 "where <pci_dev> is the PCI ID of an AHCI controller in the "
-+		 "form \"domain:bus:dev.func\"");
-+
-+static void ahci_apply_port_map_mask(struct device *dev,
-+				     struct ahci_host_priv *hpriv, char *mask_s)
-+{
-+	unsigned int mask;
-+
-+	if (kstrtouint(mask_s, 0, &mask)) {
-+		dev_err(dev, "Invalid port map mask\n");
-+		return;
-+	}
-+
-+	hpriv->mask_port_map = mask;
-+}
-+
-+static void ahci_get_port_map_mask(struct device *dev,
-+				   struct ahci_host_priv *hpriv)
-+{
-+	char *param, *end, *str, *mask_s;
-+	char *name;
-+
-+	if (!strlen(ahci_mask_port_map))
-+		return;
-+
-+	str = kstrdup(ahci_mask_port_map, GFP_KERNEL);
-+	if (!str)
-+		return;
-+
-+	/* Handle single mask case */
-+	if (!strchr(str, '=')) {
-+		ahci_apply_port_map_mask(dev, hpriv, str);
-+		goto free;
-+	}
-+
-+	/*
-+	 * Mask list case: parse the parameter to apply the mask only if
-+	 * the device name matches.
-+	 */
-+	param = str;
-+	end = param + strlen(param);
-+	while (param && param < end && *param) {
-+		name = param;
-+		param = strchr(name, '=');
-+		if (!param)
-+			break;
-+
-+		*param = '\0';
-+		param++;
-+		if (param >= end)
-+			break;
-+
-+		if (strcmp(dev_name(dev), name) != 0) {
-+			param = strchr(param, ',');
-+			if (param)
-+				param++;
-+			continue;
-+		}
-+
-+		mask_s = param;
-+		param = strchr(mask_s, ',');
-+		if (param) {
-+			*param = '\0';
-+			param++;
-+		}
-+
-+		ahci_apply_port_map_mask(dev, hpriv, mask_s);
-+	}
-+
-+free:
-+	kfree(str);
-+}
-+
- static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 					 struct ahci_host_priv *hpriv)
- {
-@@ -688,6 +769,10 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 			  "Disabling your PATA port. Use the boot option 'ahci.marvell_enable=0' to avoid this.\n");
- 	}
- 
-+	/* Handle port map masks passed as module parameter. */
-+	if (ahci_mask_port_map)
-+		ahci_get_port_map_mask(&pdev->dev, hpriv);
-+
- 	ahci_save_initial_config(&pdev->dev, hpriv);
- }
- 
--- 
-2.44.0
+> @@ -137,12 +155,30 @@ struct clk_hw *__clk_hw_register_gate(struct device=
+ *dev,
+>         struct clk_init_data init =3D {};
+>         int ret =3D -EINVAL;
+>
+> +       /* validate register size option and bit_idx */
+>         if (clk_gate_flags & CLK_GATE_HIWORD_MASK) {
+>                 if (bit_idx > 15) {
+>                         pr_err("gate bit exceeds LOWORD field\n");
+>                         return ERR_PTR(-EINVAL);
+>                 }
+>         }
+> +       if (clk_gate_flags & CLK_GATE_REG_16BIT) {
+> +               if (bit_idx > 15) {
+> +                       pr_err("gate bit exceeds 16 bits\n");
+> +                       return ERR_PTR(-EINVAL);
+> +               }
+> +       }
+> +       if (clk_gate_flags & CLK_GATE_REG_8BIT) {
+> +               if (bit_idx > 7) {
+> +                       pr_err("gate bit exceeds 8 bits\n");
+> +                       return ERR_PTR(-EINVAL);
+> +               }
+> +       }
+> +       if ((clk_gate_flags & CLK_GATE_HIWORD_MASK) &&
 
+If you use parentheses around "a & b" here...
+
+> +           clk_gate_flags & (CLK_GATE_REG_8BIT | CLK_GATE_REG_16BIT)) {
+
+please add parentheses here, too.
+
+> +               pr_err("HIWORD_MASK required 32-bit register\n");
+> +               return ERR_PTR(-EINVAL);
+> +       }
+>
+>         /* allocate the gate */
+>         gate =3D kzalloc(sizeof(*gate), GFP_KERNEL);
+> diff --git a/include/linux/clk-provider.h b/include/linux/clk-provider.h
+> index 4a537260f655..eaa6ff1d0b2e 100644
+> --- a/include/linux/clk-provider.h
+> +++ b/include/linux/clk-provider.h
+> @@ -508,12 +508,16 @@ void of_fixed_clk_setup(struct device_node *np);
+>   * CLK_GATE_BIG_ENDIAN - by default little endian register accesses are =
+used for
+>   *     the gate register.  Setting this flag makes the register accesses=
+ big
+>   *     endian.
+> + * CLK_GATE_REG_8BIT - by default 32bit register accesses are used for
+> + *     the gate register.  Setting this flag makes the register accesses=
+ 8bit.
+> + * CLK_GATE_REG_16BIT - by default 32bit register accesses are used for
+> + *     the gate register.  Setting this flag makes the register accesses=
+ 16bit.
+>   */
+>  struct clk_gate {
+>         struct clk_hw hw;
+>         void __iomem    *reg;
+>         u8              bit_idx;
+> -       u8              flags;
+> +       u32             flags;
+
+(from my comments on v6)
+There is no need to increase the size of the flags field for the gate clock=
+.
+
+
+>         spinlock_t      *lock;
+>  };
+>
+
+> @@ -675,13 +681,17 @@ struct clk_div_table {
+>   * CLK_DIVIDER_BIG_ENDIAN - By default little endian register accesses a=
+re used
+>   *     for the divider register.  Setting this flag makes the register a=
+ccesses
+>   *     big endian.
+> + * CLK_DIVIDER_REG_8BIT - by default 32bit register accesses are used fo=
+r
+> + *     the gate register.  Setting this flag makes the register accesses=
+ 8bit.
+> + * CLK_DIVIDER_REG_16BIT - by default 32bit register accesses are used f=
+or
+> + *     the gate register.  Setting this flag makes the register accesses=
+ 16bit.
+>   */
+>  struct clk_divider {
+>         struct clk_hw   hw;
+>         void __iomem    *reg;
+>         u8              shift;
+>         u8              width;
+> -       u8              flags;
+> +       u16             flags;
+>         const struct clk_div_table      *table;
+>         spinlock_t      *lock;
+>  };
+
+> @@ -726,18 +738,18 @@ struct clk_hw *__clk_hw_register_divider(struct dev=
+ice *dev,
+>                 struct device_node *np, const char *name,
+>                 const char *parent_name, const struct clk_hw *parent_hw,
+>                 const struct clk_parent_data *parent_data, unsigned long =
+flags,
+> -               void __iomem *reg, u8 shift, u8 width, u8 clk_divider_fla=
+gs,
+> +               void __iomem *reg, u8 shift, u8 width, u32 clk_divider_fl=
+ags,
+
+"u16 clk_divider_flags", to match clk_divider.flags.
+
+>                 const struct clk_div_table *table, spinlock_t *lock);
+>  struct clk_hw *__devm_clk_hw_register_divider(struct device *dev,
+>                 struct device_node *np, const char *name,
+>                 const char *parent_name, const struct clk_hw *parent_hw,
+>                 const struct clk_parent_data *parent_data, unsigned long =
+flags,
+> -               void __iomem *reg, u8 shift, u8 width, u8 clk_divider_fla=
+gs,
+> +               void __iomem *reg, u8 shift, u8 width, u32 clk_divider_fl=
+ags,
+
+Likewise.
+
+>                 const struct clk_div_table *table, spinlock_t *lock);
+>  struct clk *clk_register_divider_table(struct device *dev, const char *n=
+ame,
+>                 const char *parent_name, unsigned long flags,
+>                 void __iomem *reg, u8 shift, u8 width,
+> -               u8 clk_divider_flags, const struct clk_div_table *table,
+> +               u32 clk_divider_flags, const struct clk_div_table *table,
+
+Likewise.
+
+>                 spinlock_t *lock);
+>  /**
+>   * clk_register_divider - register a divider clock with the clock framew=
+ork
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
