@@ -1,103 +1,63 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89B5B16F8E7;
-	Fri,  5 Apr 2024 15:24:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA6D117556F
+	for <linux-ide@vger.kernel.org>; Fri,  5 Apr 2024 20:10:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712330695; cv=none; b=qYMmtMCRgelW85vhBodfBVCE6JlSiKZ3z8Bq3haQ90T9PUIgOsOH9FlQ1EhwAmGb07t0NLLovZVRymwAyhb4L9DdEZd7DLW5IzdE0NdWCD4ecPeRt/VIWnr9cL+CxZo4reKhsN/keoP0xUTv4cPGwCeZLyKU0oPuDIKEvYuzYyo=
+	t=1712347821; cv=none; b=U1nDvbNaZn1FK0n3s13YFB2DVkjk2iMuxNagrd3SwA0R9gmXWVT9J8YjAej3DV+sjtli0gBhhLwFVYGGwlBluEPcZnnw64S29+3AnhjlFbFCw2CPltVCnyvMtrAZIE0ru/8DmENLfSCoI04GDmdFzB1aEdxHKxokjXXA7SSw40A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712330695; c=relaxed/simple;
-	bh=GyDxE2CA81kKBR9d6tCMtIF9rih/K6NKJd4/EhB1CNE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IzXBjZiQZ329PtHIZq60QxbKVxih2JWe7cSXc+sAAhl1GTu69U3gsChd4+0NnSrzeTFhklL+K02qGGgBxnlQtLe1DK8xnruh/SR2npo1wHcX4zztkQLLhVwjPYD+JrpY1QOcjhUN4egJitahNp30EnaKchbExK+hHd3kIknk5xA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l13UVQis; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1712347821; c=relaxed/simple;
+	bh=oxvcS9XzsYrjX2TkloKfjrZsYMuMiS4eD5cpsYNsZvE=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=bsPueAXJQ03wD/sLxcE9MHQqDjw21Hp0R7YwtlUBozhONfZ2LDEYJV1OtTzkVGfMiqpaAjhNXQxKu53F9lCLpZopBzf+JorH7HLrxo4536/fXUvdym3fAgx87wcfu1e8fETTs/sLWdGpZJ+gKIMxF1ewHUANyK7lduy6aF7BFck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hh9rqph4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l13UVQis"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1712330695; x=1743866695;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=GyDxE2CA81kKBR9d6tCMtIF9rih/K6NKJd4/EhB1CNE=;
-  b=l13UVQiszEgnkWzs3Ya7fRqvxN3lSXRae1nLPW6bwXs2c1Mz6REegBKJ
-   1Qm5UE5K6ZZx08lH02uCoVhsAa1jWgZK5E34OvU8EP2Y12TLm+xcYJ89J
-   XEt9P83CEt17CMorjS1LI6JCrll5s6baRl/sUgEi1cR4VNhrnZLb4NKWm
-   fWmKyNGImMBWc1npHyuO9A6rcXhjm8l5DfaskO7towSzA9kHSSVV98gfY
-   5oJNFzIhoAZqGde3enacuGZPVak/8YPeYQffcL07nKqF9erGJKnicWqL9
-   uer73xilQnIniNGzw5qsygl2Gt3fAMG5QXTOZSJ/Yf/yn6+2MVrM68zd7
-   g==;
-X-CSE-ConnectionGUID: gn7YmV2nR3apEaGvWLms7w==
-X-CSE-MsgGUID: uGW8Z3lCQmO72K89ReDolw==
-X-IronPort-AV: E=McAfee;i="6600,9927,11035"; a="18274770"
-X-IronPort-AV: E=Sophos;i="6.07,181,1708416000"; 
-   d="scan'208";a="18274770"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2024 08:24:54 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,11035"; a="915256912"
-X-IronPort-AV: E=Sophos;i="6.07,181,1708416000"; 
-   d="scan'208";a="915256912"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.72.54])
-  by fmsmga002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2024 08:24:51 -0700
-Received: from andy by smile with local (Exim 4.97)
-	(envelope-from <andriy.shevchenko@linux.intel.com>)
-	id 1rslQv-00000001ma2-21xQ;
-	Fri, 05 Apr 2024 18:24:49 +0300
-Date: Fri, 5 Apr 2024 18:24:49 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hh9rqph4"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7C77BC43399;
+	Fri,  5 Apr 2024 20:10:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712347820;
+	bh=oxvcS9XzsYrjX2TkloKfjrZsYMuMiS4eD5cpsYNsZvE=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=Hh9rqph4DiVuN/xSZVluNkZtVpYmXaEtKOBi60rBmQzJMo/5WUCg9TwQR3Fj/iI5o
+	 6nNVeC0HevzasFaPSRW1aowXstHpmjjK443fjY28oikt2/O8QOUNHsz+mCQvryi3ok
+	 vClXZsaHgFeMWioB0+dJWdjnU5pHZb/mIx48S3PgvTbcKbE+XNxHHToBM3xabZB18v
+	 D4V+4C/H/tRpItsw7LkMrJvTK2xJUk4vjUoj5YWHrpSKAzyXP4CcPYCp3srVb01LYj
+	 +GGsTpqb+yVIPm3Mf0cDzEuEQSDOln5i44mTc3vRAbzgU02v4l30tFbPPNGoofbHt4
+	 w7MHDeBa51Ovw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 6A7D9D8A100;
+	Fri,  5 Apr 2024 20:10:20 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.9-rc3
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20240405130548.1135183-1-dlemoal@kernel.org>
+References: <20240405130548.1135183-1-dlemoal@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20240405130548.1135183-1-dlemoal@kernel.org>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc3
+X-PR-Tracked-Commit-Id: e85006ae7430aef780cc4f0849692e266a102ec0
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 4c3fc3459b4a48281b79f66d3ba01f6d8324282a
+Message-Id: <171234782042.2800.17336880640944351543.pr-tracker-bot@kernel.org>
+Date: Fri, 05 Apr 2024 20:10:20 +0000
 To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH v1 1/1] ata: libata: Move inclusion to where it belongs
-Message-ID: <ZhAXwWtA8ASDG89x@smile.fi.intel.com>
-References: <20240404192111.3580578-1-andriy.shevchenko@linux.intel.com>
- <8e37f392-1ddd-4c8e-87df-acb3bb5bdf0b@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8e37f392-1ddd-4c8e-87df-acb3bb5bdf0b@kernel.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-On Fri, Apr 05, 2024 at 08:16:29AM +0900, Damien Le Moal wrote:
-> On 4/5/24 04:21, Andy Shevchenko wrote:
+The pull request you sent on Fri,  5 Apr 2024 22:05:48 +0900:
 
-...
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.9-rc3
 
-> >  /* libata-acpi.c */
-> > +
-> > +#include <linux/acpi.h>
-> 
-> I am really not a big fan of including files in the middle of a header file.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/4c3fc3459b4a48281b79f66d3ba01f6d8324282a
 
-I'm fine to place it at the top.
-
-...
-
-> > -#include <linux/acpi.h>
-> 
-> Why not:
-> 
-> #ifdef CONFIG_ATA_ACPI
-> #include <linux/acpi.h>
-> #endif
-> 
-> Which avoids the union forward declaration below.
-
-The point is to reduce dependency hell. The header does NOT dependent on
-ACPI guts, that's why I really prefer forward declaration over including
-a monstrous acpi.h.
+Thank you!
 
 -- 
-With Best Regards,
-Andy Shevchenko
-
-
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
