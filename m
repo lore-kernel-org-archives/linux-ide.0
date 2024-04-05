@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F5F61649DF
-	for <linux-ide@vger.kernel.org>; Fri,  5 Apr 2024 13:10:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD4216FE09
+	for <linux-ide@vger.kernel.org>; Fri,  5 Apr 2024 13:14:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712322656; cv=none; b=aZAUzp+ydQz9synEM2ZNA9Dym9j9Mx4J/JTXSuKUB9FpjgkeLFfLeRVT95rkIg9uAJDrmaaULUBH6W2usH6r0xoUXnp0P+mRSKgfvtLwIN7ZdDUzN7Td1h3ABLWXfk8yAB6XwKlb/5pBNX8YpPgqzqEPWHe1WimKBSAm/Ej7kew=
+	t=1712322862; cv=none; b=LTtiDXPRCT5t+izgkUNtTY/PKB1u3DA9v1E5TLg1kfNm1sV91+ESMxU4LfQMIxn9B4KM6U/B0Y6ETNaM6Ydle/Bp1B/p3elACLyH5uf6raOdTXu+OE+E+kw/YIi6hq4kU/hSaWRl//POf/xbxKAZipR+pD8R21QqZNE4ipvKBHU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712322656; c=relaxed/simple;
-	bh=T6t0TqfnNLCG7KHws+r38BU0FcKvJYp984jXdF83t3U=;
+	s=arc-20240116; t=1712322862; c=relaxed/simple;
+	bh=3Qbj5FiAmLSmxUZq74d+xFUIwyGp0dMe204tXXS+NEE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fBIB6ekUAlt6v/NdNz4v7mH+CyNgNdbzwelSyl8/I8EQzm3fjSN5iW6bEZl/4tWo+oMffbjorjdhaTO6EPYcXpMGdLpVOOFgulggw42rbEp/rhQ5I0kd3jSUnuaDbIXqrcrf202avFGb7nsRk31j780WwLHWeUiPbQr6cE+p10U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Toerd6lG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TmkJtpABt/PtSNZ+7NsOkWxdFIqx5iVIiG8VX3xU4Wf+SB+Pt33+web5hfpnHM3LaPNgznTDyLdRYl7pPz3QlksndPYuT7ULA+pXYKehI6KsTzaaNvIXzAeRpLE91aSl5JRlTskXTcrewZmyFoyGbSepWTZX71d1FYoBw9MDLd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O4BUIpqy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Toerd6lG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86CABC433C7;
-	Fri,  5 Apr 2024 13:10:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O4BUIpqy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80665C433F1;
+	Fri,  5 Apr 2024 13:14:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712322656;
-	bh=T6t0TqfnNLCG7KHws+r38BU0FcKvJYp984jXdF83t3U=;
+	s=k20201202; t=1712322862;
+	bh=3Qbj5FiAmLSmxUZq74d+xFUIwyGp0dMe204tXXS+NEE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Toerd6lG+82j9mPow2ih4VHVNkdOp+wZxdQdhXzLjlr8HSYDUZz7onH0k0Kjm64aq
-	 5uJdX+J3qvo+oLM3pYrv0mXrWZfsHsGhnJbZfzSauco0YUDsyxs5dfAnjlfRy4YUes
-	 4B+gFjEHnoqLHz9QG37jrwrNbx5KXUzP0eU7Tvs5VqJLb3cXmxbJi4/ABt26XchKrM
-	 7ehtTinRB0fWsd4PHTW9BNNPISiceNkhgkDLLuehbVb/qbUUgHpBwaJMZDMr8Wuhhx
-	 qeuA9ohBp2BSERRL8tGK+hddoqFCGkWRsIiMOOD8fXZozv0Jcy4d9qI18c0cyiToC4
-	 7ULhz5XQCVypw==
-Date: Fri, 5 Apr 2024 15:10:51 +0200
+	b=O4BUIpqyzbRQNkDXBCQ4NSvAMHalWaxv51mwtO0xUQVTtv6JAvIhl32bT6fVEC+7L
+	 47D5m5E4fhGrhRv7Zq3cWXyHkl3CRP9SoitmEEf36v9JBwt3WFb2ORY3QoQbGCk9GB
+	 Irzotb//23lcQGoI9ZzrK0GL6CyS7uIKSL9H9ks5X1+cRiG1nqEnxYhDNLolg9HgTz
+	 j56Jz+QDRkN6q4g9oQGNUx6ylY4X8d49MVN60HlXFSYe6dvreC2i+B0RJ7VVhamzH6
+	 pyduIJoWQ8w1UxS9l84z/XADh7dDLR7BeYoLUoUT0heXbWjcIBxiH9v4SIg1dKZAWY
+	 FyDfh9ysWKyZA==
+Date: Fri, 5 Apr 2024 15:14:17 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-ide@vger.kernel.org, Conrad Kostecki <conikost@gentoo.org>,
 	Szuying Chen <chensiying21@gmail.com>, Jesse1_Chang@asmedia.com.tw,
 	Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw
 Subject: Re: [PATCH v2] ata: ahci: Add mask_port_map module parameter
-Message-ID: <Zg_4W7dD_SwPseAB@ryzen>
+Message-ID: <Zg_5KSv-_qKn0Yio@ryzen>
 References: <20240405125143.1134539-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -79,14 +79,8 @@ On Fri, Apr 05, 2024 at 09:51:43PM +0900, Damien Le Moal wrote:
 >    <pci_dev> field is "0000:01:00.0".
 > 
 > When used, the kerenl messages indicate that a port map mask was forced.
-
-Nit: s/kerenl/kernel/
-
 > E.g.: without a mask:
 > modrpobe ahci
-
-Nit: s/modrpobe/modprobe/
-
 > dmesg | grep ahci
 > ...
 > ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
@@ -94,7 +88,17 @@ Nit: s/modrpobe/modprobe/
 > 
 > With a mask:
 > 
+
+Perhaps drop this empty line.
+
 > modrpobe ahci mask_port_map=0000:00:17.0=0x1
+
+s/modrpobe/modprobe/
+
+here as well.
+
+(My R-b from previous email still applies of course.)
+
 > dmesg | grep ahci
 > ...
 > ahci 0000:00:17.0: masking port_map 0xff -> 0x1
@@ -103,6 +107,3 @@ Nit: s/modrpobe/modprobe/
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
-
-With nits fixed:
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
