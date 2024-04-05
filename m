@@ -1,165 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E160161B43
-	for <linux-ide@vger.kernel.org>; Fri,  5 Apr 2024 12:24:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9450316DEA5;
+	Fri,  5 Apr 2024 12:32:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712319852; cv=none; b=KLvVskakcTV70qo0jm53Kj4h9X4K8oiy5p7EZz48DRfDx5qg7wZ029ZepoTyOWQZKN7strsxdr/1bvnVeN2gLR4ANliX4EfBIX7rVra3nqulaU3gZhNh09QmVonr9RNu6ZmjB8qm+TNV7g+rhq/i9VE4fEFO2MgCpJJEQeW+EkM=
+	t=1712320332; cv=none; b=oin4xQYxqoesX1p7kEm88v1LcIh7REm/H1Rzpb9u+5UluRhArQVu0C6F+EwJ4U5jRNnSUQA5wFLx+QDL2gItMyysVApvupI2zBKHch2nkVx9Qe3zwHJRr294onE7ngZYvGsvxvzuo7ktMiwi1BHNkjXxsUkwxu4NmzDKUeCOCSM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712319852; c=relaxed/simple;
-	bh=FEwVdsil0gLkn1bNWIZW/CMErvuJXQVhepcYuPhWVh0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Vj0oeMnQ7yNr8V/0qR4ofF7tVX4aqQN0WN2nx+TYjet5LRm39bd3vs5RGX48np+rxCSqfrn0TnIGCgvmh8ks80aIUsuzs1jQ3dPhsyf627nUq/as1YuqOKD0Wos4qZ4N6mc2bktn7h3HixgydCLxI0lmqSrcdVgdJn0dXiXJ9UQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SwjSKMfA; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SwjSKMfA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02FCEC433F1;
-	Fri,  5 Apr 2024 12:24:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712319852;
-	bh=FEwVdsil0gLkn1bNWIZW/CMErvuJXQVhepcYuPhWVh0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=SwjSKMfAUT8tEWzcFMHBuLuzqFgfYRf0Kk/WpgLwWcjllvqY2OwHZxl4ccyzMsg/L
-	 jAN02DVlNH91tZNI5biGIY+FelsHrKUkz0qZYtorL+ZOSDSbPWh6mc035LfI5SRJYc
-	 ErHo/csz9KEbHkOHWWbSA2HEThJBCYPYSv3GxjiNS/my5edy7vJTlPpURqKKt+NkDW
-	 G7yD96dFd42zzMhIRO90bhIQYrqc9ZqKLR8WgK/5GciNXTTD4PH7i9PPdqgCslL2dj
-	 RmaaQZr3gU9kPlF6xriQIjmxpRiglJbtfUcAMWPTfvXqkJpoPYzsaV+uWM7aZkyyet
-	 v+M89BdkFHA3g==
-Message-ID: <9e016f41-8df3-458d-91df-f3795d3a4628@kernel.org>
-Date: Fri, 5 Apr 2024 21:24:09 +0900
+	s=arc-20240116; t=1712320332; c=relaxed/simple;
+	bh=RB1Wd/l8LoElaNdtvFRK6lkrvSeTO+EqCHYvOY2uo9k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Vcd53BblRdWhkH3/OY2IylBbqdArQoDEDQAU89QBqfVv7YYdWsINkBCHusfKJcP3zgsQdZ2CCr85kOcRGLKq4Aw9se/dtPDwa1lwgpJqEJZXS/2eeMzDv2PUpKSeP7dzunik+V5eB0QO5QZVfX5OsvxsbEI7/fJu/cmUEWwciws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-dcc71031680so2104444276.2;
+        Fri, 05 Apr 2024 05:32:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712320328; x=1712925128;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/bPulDFyqKcNHOqZbTas5oGwjflVlb0IvXxADWNRbac=;
+        b=MPlvI2s8USkd0KUwDLyzT+44IipyacqoM3eSrOXEnaE+gq/5eri1jvCAFInTymt60z
+         REU/Xv5JsI4t7qr17Xnw+FIDmUxaLz7gsDwdCATDwL4saADckMYtHthVLdhZjH4WnVkI
+         HNmDc5maAvcDHpP8QIc+gi4SIJ7qQHSvwOpCpAw14M34yvFCdM4lTsL//m/wELHt3DrF
+         xCzxk0tHygg8yKgui6SNjP9VEBw9MCjbiZR9HYwoxG9s1tsg1f3UKX2ja26i2NdU7l6K
+         IF6LPaov4qX7thKBssjGWuISdK8f4InaEyHqbsyt6dnrBeG3EEVVFTShBlccg7+s9F3F
+         AZVQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWL5nURRwxemR+6FpvigBrmySRwBvKpTecJEy/+pr7a/EPAndTOjR1HayG/9Cwqlxk1bQHM9EH6lT/rfRGBLnCz1SSwBQ03t9FaEezpmkYkReHuLJhfU93oj3ltN6sRC0VvGpnpDpeqITVL8H3noqnNYVa7xvMWbD8HbQA0geo9wf9XXi30uxCvWsVdrgft6rHgcKw/6kreLrVOWUp0Zj7Ww+cJNduKmoj9PlChpSP6qyq+Yvwt4/i9VTAbDYg1js+vlRnsdYmQaXBe2BEK6VrEXkOIVoX48ghA6ij+LwxKLjzxYsUo9NLl9GydVMZRYi0SIQA0UqQ8fDy/6FdrKGj7Qx59s7lf0Ovu443QwAKZhY05OJRpi2g=
+X-Gm-Message-State: AOJu0YzEmVMQJ17wtrOGRxANtnDxvTZ4n3IIxa58hBJWlw07SqnqyyIe
+	Vhmkx6r/UINMq4po4OpwPVcvZiW/5XlcYCRpEU6lwQK/5/+1wIQOtr6wJq+Az4k=
+X-Google-Smtp-Source: AGHT+IGgevHEpkwMOS5F8pl4dvxc5ZuXVYL1BPsil8rGe3AWrEo/ncgGoEdKh0U9XNWHI/dLAToN5Q==
+X-Received: by 2002:a5b:ac6:0:b0:dc6:d457:ac92 with SMTP id a6-20020a5b0ac6000000b00dc6d457ac92mr984772ybr.31.1712320327715;
+        Fri, 05 Apr 2024 05:32:07 -0700 (PDT)
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com. [209.85.128.181])
+        by smtp.gmail.com with ESMTPSA id h4-20020a25b184000000b00dcf35be9f51sm284055ybj.24.2024.04.05.05.32.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 Apr 2024 05:32:07 -0700 (PDT)
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-6151d2489b4so23214527b3.0;
+        Fri, 05 Apr 2024 05:32:06 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCWCCz7fA2Scgs08FC+THMGTgCJv9gl18fLbu1NXBD3XzOowX1J9JcPetsrnxejSXGejHF+zEgnxKFVCryqhlpXFJLiq8yL9Ok95qeT9dVG16h9hICUfo2sOC80D4xpJv5saikGuc+5vBPGB+DmhdCAI044MiNxsoco8Ipre4i6/Er5NMsFq5TejWgZ2ESX8iTy19C+7OO8WOuJHYlCQwAujhrufjL8tccWpg7TajjzsOoIJty+1t8QPiM4CJwBktcNvAvplAFecd2lTEZ8bE1bpEpqLs9jcitN5ETCzEYTVp5luw4SM0BwiTPXmMp8SZwD8F/oGc02IUWHwYVhgsbMX3G+BhIwkQGWfTox/izi0nC6dt/xETRw=
+X-Received: by 2002:a5b:4ca:0:b0:dcd:19ba:10df with SMTP id
+ u10-20020a5b04ca000000b00dcd19ba10dfmr1040280ybp.56.1712320326217; Fri, 05
+ Apr 2024 05:32:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ahci: Add mask_port_map module parameter
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Conrad Kostecki <conikost@gentoo.org>,
- Szuying Chen <chensiying21@gmail.com>, Jesse1_Chang@asmedia.com.tw,
- Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw
-References: <20240404095026.929491-1-dlemoal@kernel.org>
- <Zg+51NstivN/215M@x1-carbon>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <Zg+51NstivN/215M@x1-carbon>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <cover.1712207606.git.ysato@users.sourceforge.jp> <4ac65d0f311e890c1ca92bf057c70954ec7ac351.1712207606.git.ysato@users.sourceforge.jp>
+In-Reply-To: <4ac65d0f311e890c1ca92bf057c70954ec7ac351.1712207606.git.ysato@users.sourceforge.jp>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 5 Apr 2024 14:31:54 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdXvL0fWGrn+KNDvXcioYnY-=3WmGtcdFkC82L7tL__+wA@mail.gmail.com>
+Message-ID: <CAMuHMdXvL0fWGrn+KNDvXcioYnY-=3WmGtcdFkC82L7tL__+wA@mail.gmail.com>
+Subject: Re: [RESEND v7 09/37] dt-binding: Add compatible SH7750 SoC
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Michael Turquette <mturquette@baylibre.com>, 
+	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Magnus Damm <magnus.damm@gmail.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, 
+	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>, 
+	Heiko Stuebner <heiko.stuebner@cherry.de>, Shawn Guo <shawnguo@kernel.org>, 
+	Sebastian Reichel <sre@kernel.org>, Chris Morgan <macromorgan@hotmail.com>, 
+	Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, 
+	David Rientjes <rientjes@google.com>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
+	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
+	Kefeng Wang <wangkefeng.wang@huawei.com>, Stephen Rothwell <sfr@canb.auug.org.au>, 
+	Javier Martinez Canillas <javierm@redhat.com>, Guo Ren <guoren@kernel.org>, 
+	Azeem Shaikh <azeemshaikh38@gmail.com>, Max Filippov <jcmvbkbc@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Jacky Huang <ychuang3@nuvoton.com>, 
+	Herve Codina <herve.codina@bootlin.com>, 
+	Manikanta Guntupalli <manikanta.guntupalli@amd.com>, Anup Patel <apatel@ventanamicro.com>, 
+	Biju Das <biju.das.jz@bp.renesas.com>, 
+	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+	Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 4/5/24 17:44, Niklas Cassel wrote:
->> +static char *ahci_mask_port_map;
->> +module_param_named(mask_port_map, ahci_mask_port_map, charp, 0444);
->> +MODULE_PARM_DESC(mask_port_map,
->> +		 "Provide 32-bit port map masks to ignore controllers ports. "
->> +		 "Valid values are: "
-> 
-> Looking at other MODULE_PARM_DESC, it appears that you can use \n in the string.
-> So perhaps "Valid values are:\n"
-> 
-> 
->> +		 "<mask> to apply the same mask to all controller devices, "
->> +		 "<dev0_name>=<mask0>,<dev1_name>=<mask1>,...' to specify a "
-> 
-> Perhaps add a \n after describing the first format.
+On Thu, Apr 4, 2024 at 7:15=E2=80=AFAM Yoshinori Sato
+<ysato@users.sourceforge.jp> wrote:
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 
-Yes, I saw that in many places the description string is split using "\n".
-However, with that, the print of the parameter description with "modinfo ahci"
-is rather weird, with the parameter type (charp) ending up on its own line. I
-did not like it so I did not add any "\n".
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
->> +static void ahci_apply_port_map_mask(struct device *dev,
->> +				     struct ahci_host_priv *hpriv, char *mask_s)
->> +{
->> +	unsigned int mask;
->> +
->> +	if (kstrtouint(mask_s, 0, &mask)) {
->> +		dev_err(dev, "Invalid port map mask\n");
->> +		return;
->> +	}
->> +
->> +	if (mask) {
->> +		dev_warn(dev, "Forcing port map mask 0x%x\n", mask);
->> +		hpriv->mask_port_map = mask;
-> 
-> I think this should use saved_port_map instead of mask_port_map, see:
-> https://lore.kernel.org/linux-ide/uu2exwldqvbdjus6t4r3cxuto5jpeqtjfvc7qiikulfwiyntf3@j4btf2bt23ld/
-> 
-> ""
-> 1. saved_port_map defines the ports actually available on the host
-> controller.
-> 2. mask_port_map masks out the unused ports if it's initialized,
-> otherwise all available ports will be initialized and utilized.
-> "">
-> (We don't want to initialize them at all.)
+Gr{oetje,eeting}s,
 
-Correct, and they do not. The masked ports are using the dummy ops. So it works
-exactly as intended. This module argument defines a *mask* for a port map, not
-the port map to use.
-> Also, if you use saved_port_map, you don't need any print.
-> There will already be a print:
-> https://github.com/torvalds/linux/blob/v6.9-rc1/drivers/ata/libahci.c#L537
+                        Geert
 
-Hmm... Checking the code in ahci_save_initial_config(), we have:
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
 
-	/* Override the HBA ports mapping if the platform needs it */
-	port_map = readl(mmio + HOST_PORTS_IMPL);
-	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
-		dev_info(dev, "forcing port_map 0x%lx -> 0x%x\n",
-			 port_map, hpriv->saved_port_map);
-		port_map = hpriv->saved_port_map;
-	} else {
-		hpriv->saved_port_map = port_map;
-	}
-
-	if (hpriv->mask_port_map) {
-		dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
-			port_map,
-			port_map & hpriv->mask_port_map);
-		port_map &= hpriv->mask_port_map;
-	}
-
-So by setting the mask_port_map, we *always* mask the port map, be it a forced
-one defined by saved_port_map, or the hardware reported one.
-
-The patch results in this:
-
-modrpobe ahci mask_port_map=0000:00:17.0=0x1
-dmesg | grep ahci
-...
-ahci 0000:00:17.0: Forcing port map mask 0x1
-ahci 0000:00:17.0: masking port_map 0xff -> 0x1
-ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
-ahci 0000:00:17.0: (0000:00:17.0) 1/8 ports implemented (port mask 0x1)
-
-So I could remove the message I added I guess...
-
-I prefer that this module parameter defines a mask rather than a map as it is
-more general: it can be used for testing to override saved_port_map or masks
-already set for some controllers.
-
-> A mask of 0 is valid, so I don't think that you can do
-
-A mask of 0 would mean "no ports". So better off completely ignoring the
-controller for that case :) So no, I do not want that value to be valid.
-
-> 
-> if (mask)
-> 
-> Perhaps just:
-> 
->      if (kstrtouint(mask_s, 0, &mask)) {
->              dev_err(dev, "Invalid port map mask\n");
->              return;
->      }
-> 
->      hpriv->saved_port_map = mask;
-
-See above. That is not necessarily better.
-
--- 
-Damien Le Moal
-Western Digital Research
-
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
