@@ -1,119 +1,207 @@
-Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2F716190F;
-	Fri,  5 Apr 2024 12:45:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D3D1DFE4
+	for <linux-ide@vger.kernel.org>; Fri,  5 Apr 2024 12:51:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712321140; cv=none; b=cqoK3Vn3cthf4wgyVx+G16OhrKRJx26KsnVl11/vYV1Ah4joCuQM7grOI1QlEi0ILvF4wUFXGehS3/WXs3wq9UaPh7bh++LP24KvqmW+BBP2w3kuYQFnIGK4eK6I9/60xSIl4PZXxGh7JCHj/YPc9qpO9Bu9E1ixg38bv5H3W6Y=
+	t=1712321507; cv=none; b=o6aAz9fLS5mUTEgCdGc8j+mPVQxqyjybd3pk87RmmF3rV6G172qDA7IuVNRxqBeB8o8q1T1tXELqbQip6bSgbd9bS1sezdIyyvCfhgKV3IN4Y8PZsJmtdhd3ctyBHZT2u/skPczsFbZgMItDtzJ7qXxM3xtqjeClqS8u1FXtE7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712321140; c=relaxed/simple;
-	bh=j7niycHsewkLOazgR0DVKBVw1hjefOkEoL7LF7COgjE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XBTFQJM+/WNdZn6WUYGKB4n1GmmqTq/SHlomuKdNKZrwfnXklisPQrDksOvTerWigIqlK2x9ydQWPl+wQF2imyGw/R2kZX0yheoLLv8/5TzEm1cz7Km/uFvwJ8ZuehBJzKyIBeePlYpL1780bQuCS+OKYyDnCuk8QZEnQ+e+fDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-dcc84ae94c1so2292956276.1;
-        Fri, 05 Apr 2024 05:45:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712321138; x=1712925938;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=GdcVr7Wy695cSZ73yuRES73pueUgVfr2wxBNFBTwOGo=;
-        b=JTc1SImGjelKkssF4JuXDdnJbuJvNS9xBqs6g4XbeX8YWinAySTcUjmjdryeRlhs8r
-         JeO8LitqfhCBm/V5sGmp9WVnbQzb/akytI0uAGAVaYjCFQ0ONmkaIguyV2j2eiqDmvr8
-         UwVx0Mf6Cy62jE8b6ho5rLNAksGgnTFxLbXbKajvXGd36FwyiEZPE4QUlggY5wr6Jeew
-         KULjzF9nIFWZgtQ6KY+0q7lh6JsvYYawgIyVl1sXdP+IMypVb5ZYIgVc0wkaA07+tsg2
-         H9+EshXj027uA2B/tvqOU8cHp76eqcAU+F1jPy18iqTm2Jo60pwcw9292rUS9kGWRytF
-         suZQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXJ7XFpODefODsLrS9JL6NucrbIrEK9COrrOW178oK1nTcLlo0C3wvdVKeF1HhVEJZ8RMD5XIMfQTPNveLF2P8WiDN3fkRmSN4XufpdIzamHPiHKP5NWuAGUwlx4krT9UjYT8C6LYa9gsu6wIZt0Ueb07jwhIrhoXD1w/vcFrAKlr+WMbzTkOkmyRA4gNJ0D/GcKOSmu0p/Pi4pO+UzRnq2VPDbtgjEUIOpuleLdQhyMwtXIWG3mIM2Uo/WtwpH9O8HeQmG0ktt7SBUotOTY3CkdxS2LRz3zJHSye3mCm5awbFHqLxZ/G40kfgR4lv3Mq3L3jrzArpjGjAfy8o1NS/SgW702UsqPRsDtN7CyaOmmSOd0Vswp6c=
-X-Gm-Message-State: AOJu0Yxbbg5oVaR0YSEttEbAHDP9mTAbqwpdANhTuiX3I4B6GTdZYIQx
-	5MRJox1JVRQz+oyifoyPR4Lchey1IJlK97y85dbFw6zLURFj+yhm3265QuY5Kbw=
-X-Google-Smtp-Source: AGHT+IGYPzylN5KlA3Jwu/5NAPCzU9sq7Lj5p0GGnvOX0mjegvjHrF0knBzTd+bX98KxfScxfvmliQ==
-X-Received: by 2002:a25:a4c9:0:b0:dc7:423c:b8aa with SMTP id g67-20020a25a4c9000000b00dc7423cb8aamr1015353ybi.12.1712321138324;
-        Fri, 05 Apr 2024 05:45:38 -0700 (PDT)
-Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com. [209.85.219.175])
-        by smtp.gmail.com with ESMTPSA id fs1-20020a0569020c0100b00dc73705ec59sm290041ybb.0.2024.04.05.05.45.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 Apr 2024 05:45:38 -0700 (PDT)
-Received: by mail-yb1-f175.google.com with SMTP id 3f1490d57ef6-dcc84ae94c1so2292937276.1;
-        Fri, 05 Apr 2024 05:45:38 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUikQZ3ifbkWHIZBuTR6d3G/Bjqjuczg/ffLmGIc5w3jRFw9cXpL2DhlyJW14FuHrrLqHCTWg/TWMlsbZx5/LYgriFAoXA1+kAdXoZMB+bJzPLslOTLSRn4vL5XSie7/VLwP0a5zczlW5KqXYj5H/XFdI7EOT521L9QDF7OD6qMu7fSwyz/IZ6Gwz5PeaZlRLSDFKJzl6s1HgAnIA0mpDXuXJiTxa8kOaMbfuGv3QmOseHmmBz51JExyaL1Aw5QKz5Megg5/b3KCqNaHXmP64HBkSoAhskD4v8bvEOILFzGiQzFdjx9cH4rfPxqfw/UASjsgPz7DL38YLjJ0uFelQROfEIdCml3f2dQyeIJdnrKdqUpD9k/DxI=
-X-Received: by 2002:a25:ad03:0:b0:db9:9537:2c39 with SMTP id
- y3-20020a25ad03000000b00db995372c39mr1198273ybi.2.1712321137914; Fri, 05 Apr
- 2024 05:45:37 -0700 (PDT)
+	s=arc-20240116; t=1712321507; c=relaxed/simple;
+	bh=eJsqu/B0DnKxPdcP/B8nZ4fNfWRHaxyj5Xrg2TBjXV4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WjwWNXGvxMz72df4qI/81hVfABsuL3OKNmtyEYymkVC8EuTLuZCq6FU5A9ufNm1sAmTigd9cHjbwFj1WUuvL7LdC9TTC05ndVeXwpd8EgEqH9AEL20dB9niIkTKlozpVU7/C+NX145BtgwO0RMgBagVNTlPETfgeG4HRkPqO21g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KkOopfbi; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KkOopfbi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1A1AC433F1;
+	Fri,  5 Apr 2024 12:51:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712321505;
+	bh=eJsqu/B0DnKxPdcP/B8nZ4fNfWRHaxyj5Xrg2TBjXV4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=KkOopfbiGAK0RfKVTdQeyFwhkJX/2950E+Sa0fdO+SEjYIPsp8S6HvFepPPfsBYCO
+	 18DJOSjv86A3RyaWKXg81bLkQ02eR0B4nlf2PMLRTCAfGADLqY15UKUZXi0wdVths8
+	 Ddi9bdyMJl8HQjdP2xdb6zZL20z3+uJph1n/kupknmauN9osfpmf4am7iLchy79zAc
+	 Enq9rGB+w35zDdZSGB3fXrbSn+hNcAP//bPS0VCslMtb+kH8ppzSPMb9o6c+HlpEaF
+	 +FBGuD/NGdgV3EW4Q2Mlwh0Eiu0Cz9kvYhZYFSfi0WEorB0otDOIobbx1D0HFNymqY
+	 lZUpH0jsrjHtA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Conrad Kostecki <conikost@gentoo.org>,
+	Szuying Chen <chensiying21@gmail.com>,
+	Jesse1_Chang@asmedia.com.tw,
+	Richard_Hsu@asmedia.com.tw,
+	Chloe_Chen@asmedia.com.tw
+Subject: [PATCH v2] ata: ahci: Add mask_port_map module parameter
+Date: Fri,  5 Apr 2024 21:51:43 +0900
+Message-ID: <20240405125143.1134539-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1712207606.git.ysato@users.sourceforge.jp> <f0e220fc338a3dac27f31d7ca871e2ceecad2874.1712207606.git.ysato@users.sourceforge.jp>
-In-Reply-To: <f0e220fc338a3dac27f31d7ca871e2ceecad2874.1712207606.git.ysato@users.sourceforge.jp>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Fri, 5 Apr 2024 14:45:26 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUZSFbfihn2udTW9ufK_+7i6y4FWT29bzCPS129Lgdrkw@mail.gmail.com>
-Message-ID: <CAMuHMdUZSFbfihn2udTW9ufK_+7i6y4FWT29bzCPS129Lgdrkw@mail.gmail.com>
-Subject: Re: [RESEND v7 34/37] sh: Add dtbs target support.
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Magnus Damm <magnus.damm@gmail.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, 
-	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
-	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>, 
-	Heiko Stuebner <heiko.stuebner@cherry.de>, Shawn Guo <shawnguo@kernel.org>, 
-	Sebastian Reichel <sre@kernel.org>, Chris Morgan <macromorgan@hotmail.com>, 
-	Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, 
-	David Rientjes <rientjes@google.com>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
-	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Kefeng Wang <wangkefeng.wang@huawei.com>, Stephen Rothwell <sfr@canb.auug.org.au>, 
-	Javier Martinez Canillas <javierm@redhat.com>, Guo Ren <guoren@kernel.org>, 
-	Azeem Shaikh <azeemshaikh38@gmail.com>, Max Filippov <jcmvbkbc@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Jacky Huang <ychuang3@nuvoton.com>, 
-	Herve Codina <herve.codina@bootlin.com>, 
-	Manikanta Guntupalli <manikanta.guntupalli@amd.com>, Anup Patel <apatel@ventanamicro.com>, 
-	Biju Das <biju.das.jz@bp.renesas.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Thu, Apr 4, 2024 at 7:16=E2=80=AFAM Yoshinori Sato
-<ysato@users.sourceforge.jp> wrote:
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+Commits 0077a504e1a4 ("ahci: asm1166: correct count of reported ports")
+and 9815e3961754 ("ahci: asm1064: correct count of reported ports")
+attempted to limit the ports of the ASM1166 and ASM1064 AHCI controllers
+to avoid long boot times caused by the fact that these adapters report
+a port map larger than the number of physical ports. The excess ports
+are "virtual" to hide port multiplier devices and probing these ports
+takes time. However, these commits caused a regression for users that do
+use PMP devices, as the ATA devices connected to the PMP cannot be
+scanned. These commits have thus been reverted by commit 6cd8adc3e18
+("ahci: asm1064: asm1166: don't limit reported ports") to allow the
+discovery of devices connected through a port multiplier. But this
+revert re-introduced the long boot times for users that do not use a
+port multiplier setup.
 
-My
+This patch adds the mask_port_map ahci module parameter to allow users
+to manually specify port map masks for controllers. In the case of the
+ASMedia 1166 and 1064 controllers, users that do not have port
+multiplier devices can mask the excess virtual ports exposed by the
+controller to speedup port scanning, thus reducing boot time.
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+The mask_port_map parameter accepts 2 different formats:
+ - mask_port_map=<mask>
+   This applies the same mask to all AHCI controllers
+   present in the system. This format is convenient for small systems
+   that have only a single AHCI controller.
+ - mask_port_map=<pci_dev>=<mask>,<pci_dev>=mask,...
+   This applies the specified masks only to the PCI device listed. The
+   <pci_dev> field is a regular PCI device ID (domain:bus:dev.func).
+   This ID can be seen following "ahci" in the kernel messages. E.g.
+   for "ahci 0000:01:00.0: 2/2 ports implemented (port mask 0x3)", the
+   <pci_dev> field is "0000:01:00.0".
 
-on v6 is still valid.
+When used, the kerenl messages indicate that a port map mask was forced.
+E.g.: without a mask:
+modrpobe ahci
+dmesg | grep ahci
+...
+ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
+ahci 0000:00:17.0: (0000:00:17.0) 8/8 ports implemented (port mask 0xff)
 
-Gr{oetje,eeting}s,
+With a mask:
 
-                        Geert
+modrpobe ahci mask_port_map=0000:00:17.0=0x1
+dmesg | grep ahci
+...
+ahci 0000:00:17.0: masking port_map 0xff -> 0x1
+ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
+ahci 0000:00:17.0: (0000:00:17.0) 1/8 ports implemented (port mask 0x1)
 
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/ata/ahci.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 85 insertions(+)
 
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 562302e2e57c..6548f10e61d9 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -666,6 +666,87 @@ static int mobile_lpm_policy = -1;
+ module_param(mobile_lpm_policy, int, 0644);
+ MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
+ 
++static char *ahci_mask_port_map;
++module_param_named(mask_port_map, ahci_mask_port_map, charp, 0444);
++MODULE_PARM_DESC(mask_port_map,
++		 "32-bits port map masks to ignore controllers ports. "
++		 "Valid values are: "
++		 "\"<mask>\" to apply the same mask to all AHCI controller "
++		 "devices, and \"<pci_dev>=<mask>,<pci_dev>=<mask>,...\" to "
++		 "specify different masks for the controllers specified, "
++		 "where <pci_dev> is the PCI ID of an AHCI controller in the "
++		 "form \"domain:bus:dev.func\"");
++
++static void ahci_apply_port_map_mask(struct device *dev,
++				     struct ahci_host_priv *hpriv, char *mask_s)
++{
++	unsigned int mask;
++
++	if (kstrtouint(mask_s, 0, &mask)) {
++		dev_err(dev, "Invalid port map mask\n");
++		return;
++	}
++
++	hpriv->mask_port_map = mask;
++}
++
++static void ahci_get_port_map_mask(struct device *dev,
++				   struct ahci_host_priv *hpriv)
++{
++	char *param, *end, *str, *mask_s;
++	char *name;
++
++	if (!strlen(ahci_mask_port_map))
++		return;
++
++	str = kstrdup(ahci_mask_port_map, GFP_KERNEL);
++	if (!str)
++		return;
++
++	/* Handle single mask case */
++	if (!strchr(str, '=')) {
++		ahci_apply_port_map_mask(dev, hpriv, str);
++		goto free;
++	}
++
++	/*
++	 * Mask list case: parse the parameter to apply the mask only if
++	 * the device name matches.
++	 */
++	param = str;
++	end = param + strlen(param);
++	while (param && param < end && *param) {
++		name = param;
++		param = strchr(name, '=');
++		if (!param)
++			break;
++
++		*param = '\0';
++		param++;
++		if (param >= end)
++			break;
++
++		if (strcmp(dev_name(dev), name) != 0) {
++			param = strchr(param, ',');
++			if (param)
++				param++;
++			continue;
++		}
++
++		mask_s = param;
++		param = strchr(mask_s, ',');
++		if (param) {
++			*param = '\0';
++			param++;
++		}
++
++		ahci_apply_port_map_mask(dev, hpriv, mask_s);
++	}
++
++free:
++	kfree(str);
++}
++
+ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ 					 struct ahci_host_priv *hpriv)
+ {
+@@ -688,6 +769,10 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ 			  "Disabling your PATA port. Use the boot option 'ahci.marvell_enable=0' to avoid this.\n");
+ 	}
+ 
++	/* Handle port map masks passed as module parameter. */
++	if (ahci_mask_port_map)
++		ahci_get_port_map_mask(&pdev->dev, hpriv);
++
+ 	ahci_save_initial_config(&pdev->dev, hpriv);
+ }
+ 
+-- 
+2.44.0
+
