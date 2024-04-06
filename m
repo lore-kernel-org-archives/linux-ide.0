@@ -1,88 +1,124 @@
-Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DD432E65B
-	for <linux-ide@vger.kernel.org>; Fri,  5 Apr 2024 22:54:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.211.166.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94EB218E02;
+	Sat,  6 Apr 2024 05:20:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712357643; cv=none; b=gxKiqn3EK0eCQylS2J3o/qLzXco9qEpg4HQICd767w+3VrYxjJxDKHf9qePHZwbdBH95MRca5u7NW4NP3iKYsZ1G242OszlYlzRP5b2hfJvDYIRZpvkWtKL1+HCyhbGxz0dgi7ldgMfpxNrHfyoK0nH/qiwX9hULYSPuq0GIUnI=
+	t=1712380829; cv=none; b=YzbEaLpkY1uVjsGwaQO1u+GcmshnUnFAxY+GcJB8z7/W6G5GIZGCcfBcDEjXLvGBv0crdz8VkQIxs2kmrhvOykKr6zmbeQjKDQT+1V+GgFc8+UV9n4BO280BecUa/nF1cCe8vrCw/5HIHacvrFdeEATQ6v+RiMCvinEcdNzAKq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712357643; c=relaxed/simple;
-	bh=pTMroX4s13hfUkh/tIyws5Zail8xxrKa/qfvKX3LKqs=;
-	h=From:To:Subject:Cc:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=W6eN77OidPbXBT5/Ur83ELH5mzXUY0EZvn791MV+95ZdFikd81YKrVDRbKcmTYrdWHDLrtYEqSg+MQimktBRYxsLCEwhhAygwcANClrt3j5G0aD64wZ7aOno3BAKMBZwU0pI+LcLQRRLSOigUYI5GazaJ4IrAxN8u0ysK7hcZWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org; spf=pass smtp.mailfrom=gentoo.org; arc=none smtp.client-ip=140.211.166.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
-From: "Conrad Kostecki" <conikost@gentoo.org>
-To: "Damien Le Moal" <dlemoal@kernel.org>, linux-ide@vger.kernel.org, "Niklas
- Cassel" <cassel@kernel.org>
-Subject: Re: [PATCH v2] ata: ahci: Add mask_port_map module parameter
-Cc: "Szuying Chen" <chensiying21@gmail.com>, Jesse1_Chang@asmedia.com.tw,
- Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw
-Date: Fri, 05 Apr 2024 22:53:55 +0000
-Message-Id: <em6045942b-7739-40b7-8c9d-ad047918cdb8@a351f4b0.com>
-In-Reply-To: <20240405125143.1134539-1-dlemoal@kernel.org>
-References: <20240405125143.1134539-1-dlemoal@kernel.org>
-Reply-To: "Conrad Kostecki" <conikost@gentoo.org>
-User-Agent: eM_Client/9.2.2230.0
+	s=arc-20240116; t=1712380829; c=relaxed/simple;
+	bh=TBj/hcnPrvS19ZOluMZ12evt8AeDaDrUTBeM5kaTuKY=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=CZ8xfNFOwOwbOw+X7MQ2mypw2+89BHGbOVaiv57GMPQkzoP+kTI3Of0iGuMzFOUzREJ/5HG1uwWjOnb/738qFydKIOLZPWRcq+fRpVC2c83ScQZah+i6XKs06F3D3U/JknTPeBdxqgBUOHgAXMUknabfbbQJoG8FBKB5p8UrXSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HYazYNyp; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HYazYNyp"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3C5A9C433C7;
+	Sat,  6 Apr 2024 05:20:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712380828;
+	bh=TBj/hcnPrvS19ZOluMZ12evt8AeDaDrUTBeM5kaTuKY=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=HYazYNypOS+iPe/PmwIZVgrP0OAjOmuWcCZaXmQBd5/DF3DU2Cm7HK1KTLKVM8W2j
+	 EfdrhznuDsHvbEh7NeV1r2EDMVkxTqo+hmKt5MdFIcqj68UTB4u7gvHG6geAe3ArfV
+	 cYxb7yc2nqhO3pPj8ToTFIgL78NntzPlzi3tNk1u8F7N5z7SqSGJ1Z/QhHbUaQaR1j
+	 GTv/7bDPNNXqFXoXNMGCl3bjIAtmML/lX++bgYkRjXumLNf6dEzpQPrpxdPeyVgSKh
+	 czfxRuHIWxcuBJ6wGSXEzVfHmRCYmRJdToESEDFulu3u4HF5IZUSSU3tkxxLhyQRAI
+	 TbkNIwkM8MMRA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 19C9BD84BAC;
+	Sat,  6 Apr 2024 05:20:28 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH 00/34] address all -Wunused-const warnings
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <171238082809.31617.17365732495689756509.git-patchwork-notify@kernel.org>
+Date: Sat, 06 Apr 2024 05:20:28 +0000
+References: <20240403080702.3509288-1-arnd@kernel.org>
+In-Reply-To: <20240403080702.3509288-1-arnd@kernel.org>
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: linux-kernel@vger.kernel.org, arnd@arndb.de, mpe@ellerman.id.au,
+ christophe.leroy@csgroup.eu, dlemoal@kernel.org, jikos@kernel.org,
+ gregkh@linuxfoundation.org, minyard@acm.org, peterhuewe@gmx.de,
+ jarkko@kernel.org, kristo@kernel.org, sboyd@kernel.org, abbotti@mev.co.uk,
+ hsweeten@visionengravers.com, srinivas.pandruvada@linux.intel.com,
+ lenb@kernel.org, rafael@kernel.org, john.allen@amd.com,
+ herbert@gondor.apana.org.au, vkoul@kernel.org, ardb@kernel.org,
+ andersson@kernel.org, mdf@kernel.org, liviu.dudau@arm.com,
+ benjamin.tissoires@redhat.com, andi.shyti@kernel.org,
+ michael.hennerich@analog.com, peda@axentia.se, lars@metafoo.de,
+ jic23@kernel.org, dmitry.torokhov@gmail.com, markuss.broks@gmail.com,
+ alexandre.torgue@foss.st.com, lee@kernel.org, kuba@kernel.org,
+ Shyam-sundar.S-k@amd.com, iyappan@os.amperecomputing.com,
+ yisen.zhuang@huawei.com, stf_xl@wp.pl, kvalo@kernel.org, sre@kernel.org,
+ tony@atomide.com, broonie@kernel.org, alexandre.belloni@bootlin.com,
+ chenxiang66@hisilicon.com, martin.petersen@oracle.com,
+ neil.armstrong@linaro.org, heiko@sntech.de, krzysztof.kozlowski@linaro.org,
+ hvaibhav.linux@gmail.com, elder@kernel.org, jirislaby@kernel.org,
+ ychuang3@nuvoton.com, deller@gmx.de, hch@lst.de, robin.murphy@arm.com,
+ rostedt@goodmis.org, mhiramat@kernel.org, akpm@linux-foundation.org,
+ keescook@chromium.org, trond.myklebust@hammerspace.com, anna@kernel.org,
+ masahiroy@kernel.org, nathan@kernel.org, tiwai@suse.com,
+ linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org,
+ openipmi-developer@lists.sourceforge.net, linux-integrity@vger.kernel.org,
+ linux-omap@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org,
+ dmaengine@vger.kernel.org, linux-efi@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-fpga@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org,
+ linux-i2c@vger.kernel.org, linux-iio@vger.kernel.org,
+ linux-stm32@st-md-mailman.stormreply.com,
+ linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+ linux-leds@vger.kernel.org, linux-wireless@vger.kernel.org,
+ linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-spi@vger.kernel.org, linux-amlogic@lists.infradead.org,
+ linux-rockchip@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
+ greybus-dev@lists.linaro.org, linux-staging@lists.linux.dev,
+ linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-fbdev@vger.kernel.org, iommu@lists.linux.dev,
+ linux-trace-kernel@vger.kernel.org, kasan-dev@googlegroups.com,
+ linux-hardening@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-kbuild@vger.kernel.org, alsa-devel@alsa-project.org,
+ linux-sound@vger.kernel.org
 
-Hi Damien,
+Hello:
 
-Am 05.04.2024 14:51:43, "Damien Le Moal" <dlemoal@kernel.org> schrieb:
+This series was applied to netdev/net-next.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
 
-><PATCH v2>
-i did run a test on my hardware.
-It seems to work and adjusting the port_map. But I noticed a difference,=20
-that those virtual hostXY ports are not marked as DUMMY.
-With the previous patch, only six ports reported "ahci" and rest=20
-"DUMMY".
-I am not sure, if that should also not happen with your patch?
-Conrad
-[   13.365573] ahci 0000:09:00.0: masking port_map 0xffffff3f -> 0x3f
-[   13.376511] ahci 0000:09:00.0: SSS flag set, parallel bus scan=20
-disabled
-[   13.395670] ahci 0000:09:00.0: AHCI 0001.0301 32 slots 32 ports 6=20
-Gbps 0x3f impl SATA mode
-[   13.397111] ahci 0000:09:00.0: flags: 64bit ncq sntf stag pm led only=20
-pio sxs deso sadm sds apst
-[   13.593757] scsi host9: ahci
-[   13.597362] scsi host10: ahci
-[   13.600949] scsi host11: ahci
-[   13.604548] scsi host12: ahci
-[   13.612459] scsi host13: ahci
-[   13.616027] scsi host14: ahci
-[   13.616437] scsi host15: ahci
-[   13.616745] scsi host16: ahci
-[   13.617039] scsi host17: ahci
-[   13.617415] scsi host18: ahci
-[   13.617723] scsi host19: ahci
-[   13.637158] scsi host20: ahci
-[   13.640666] scsi host21: ahci
-[   13.651760] scsi host22: ahci
-[   13.652311] scsi host23: ahci
-[   13.652850] scsi host24: ahci
-[   13.656374] scsi host25: ahci
-[   13.664120] scsi host26: ahci
-[   13.664570] scsi host27: ahci
-[   13.686567] scsi host28: ahci
-[   13.690179] scsi host29: ahci
-[   13.697603] scsi host30: ahci
-[   13.698083] scsi host31: ahci
-[   13.698518] scsi host32: ahci
-[   13.701855] scsi host33: ahci
-[   13.702323] scsi host34: ahci
-[   13.702745] scsi host35: ahci
-[   13.721520] scsi host36: ahci
-[   13.725157] scsi host37: ahci
-[   13.736948] scsi host38: ahci
-[   13.737383] scsi host39: ahci
-[   13.748518] scsi host40: ahci
+On Wed,  3 Apr 2024 10:06:18 +0200 you wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Compilers traditionally warn for unused 'static' variables, but not
+> if they are constant. The reason here is a custom for C++ programmers
+> to define named constants as 'static const' variables in header files
+> instead of using macros or enums.
+> 
+> [...]
+
+Here is the summary with links:
+  - [05/34] 3c515: remove unused 'mtu' variable
+    https://git.kernel.org/netdev/net-next/c/17b35355c2c6
+  - [19/34] sunrpc: suppress warnings for unused procfs functions
+    (no matching commit)
+  - [26/34] isdn: kcapi: don't build unused procfs code
+    https://git.kernel.org/netdev/net-next/c/91188544af06
+  - [28/34] net: xgbe: remove extraneous #ifdef checks
+    https://git.kernel.org/netdev/net-next/c/0ef416e045ad
+  - [33/34] drivers: remove incorrect of_match_ptr/ACPI_PTR annotations
+    (no matching commit)
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
