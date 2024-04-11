@@ -1,140 +1,95 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+Received: from mail-yb1-f201.google.com (mail-yb1-f201.google.com [209.85.219.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CA814EC58
-	for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2024 13:30:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB42817756
+	for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2024 20:12:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712842215; cv=none; b=svWAMv0NWmWNzOueBoI6dcV6PLRSCalq3fP2bmuZI9WUVmMsGJ8djNAnAxx69QrbHolmR3penkK/oMel26wbWf1UPT1FmjG+eBpMC8SPZwV2Yp9nqOOFXig6fSuFcYwZcjY/pADJgZrih6ALytrf7qawmf7t9nSgIUWFsvgIHMc=
+	t=1712866353; cv=none; b=K7A+Dzf7ZHfguDfsUtw+MwSCsX9ZW0glIhHtQWzPcrrDEvAdCwAKZJwUT9rujMgIHQls5cvduplADXdRfKE8vlKjyJpeLgES1ICyei284rJb/44CdNkz5RuzNKQnnmumTQ/QhwkwywvfIENKAPfMQPdnJJGdodX/wbM1FPa/Mpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712842215; c=relaxed/simple;
-	bh=84ZlPVJ9GuWhaAAUpyL0a0GhYGA3HeUh0ZP/VRFIRjQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=U9g4B7JNfg5fR49XEwMeNN78h1EvL1Ec3zqKVdr1eZtfZTXnqu5MHQRuW3om7KlA5IwtsQqA/+wUX06UVlPhQOnhWUwWrXaCUefcKNmkBwbgyFlnjip18iLEGnyfMFkiCPE1RB7bZ7RTnc2XWzZRjIVN58GPUicu01ny+oCbDBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; arc=none smtp.client-ip=209.85.218.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a52223e004dso69268966b.2
-        for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2024 06:30:13 -0700 (PDT)
+	s=arc-20240116; t=1712866353; c=relaxed/simple;
+	bh=IOzWZkywOwA2ndhPjHmzQHWJ3c7dhd0+FGx+Rn/xt1s=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=FzvVUJ5DXp1/y3CWDqUqc0h9U96WlEzQUs6oBXHB13RJIy4X516KFNM9Va/gNT19Z8ScYMzON1yhSN2R8jYZYVc9EGHHwwpJKJczE/YdNrxrbmGlYxeA/XPL8VA9aHxjPnjUvbECFAHLuBh3H2FEBhFwo6FOo8F5eHbDYOE9HWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LSunOtQC; arc=none smtp.client-ip=209.85.219.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LSunOtQC"
+Received: by mail-yb1-f201.google.com with SMTP id 3f1490d57ef6-dbf216080f5so327749276.1
+        for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2024 13:12:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1712842211; x=1713447011; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=AG7gXI0/dWYxV6NY+c7hOksU5O3hWdPCPHZeuwYXcc8=;
-        b=JK/Dll39BHzn39KVMvOTjf2Mal/brRJYssuvo4yu6SlN7im8KCm9skxHhDq9b8lIuc
-         1u7DJGqqu/bqPX+5jxoJtKaDLUqRBV2dFq7S4OTul2kmLNqPa8uOHSGKtdLZ2feZNUHl
-         EfTTuH5RGn3uMQZeR4TTRv3WCE7FHcTEltSUnaLeUGobdFgNqhi5x1EGmm3tB/bYdMXf
-         zK1okwyxsSfdDW8dkUo5+qzT+5ODwEwKJ2d/P0VmTpUk7E0IolfChW6Aytlf2GO/edgC
-         Ij8xP0sueeD2X/4KMO/BmU+ncbV9f4qFVR77wl2XIDXrzVDPO2n0zvGK/1K5LvalPcIN
-         jUGQ==
+        d=google.com; s=20230601; t=1712866351; x=1713471151; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=z2BoP91YkDa6Qt/uP+LjX8R6BByP1pkp+j1WZvkyP9c=;
+        b=LSunOtQCeDJXWRMpWM0I9BZDPudqJhateHSTyy5LiNMp5LRgOi2UsqoZ7Rs0dg4QFP
+         IQou8hmjncJR+3z1NMq31bFDRND0/+rDL72LZeBopzHnVOoYJvwi31u7V2idB1cyd9Bx
+         e7hctJf6RcMTc8IEKlGV3shp1DKN9ic1Ii6YDq7id05dgRZdkrTzTdA5TlQfQ0+LO6jd
+         r1LCUTit1XPtwJn6vmLhKmuleRtK5+3NaJH1AFbCrHOvXIJoGERVSLrFPYMILmM0uHH8
+         r60VUq4+vgePfQCoKU0TEQkSXJPd74K9ITA9jcKKQkB4vUnKW4lj9bDpQO36WIPMhoX2
+         JREg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712842211; x=1713447011;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AG7gXI0/dWYxV6NY+c7hOksU5O3hWdPCPHZeuwYXcc8=;
-        b=ANyQzPjl0Ij0h9Y5llJY5bASw19ksTt0jEOaFDQ9/qAEYczXunLd1Iw4Owsi3m3PkI
-         t4QhuepBrVGiQs/KAbo7jWg54vDfbF6crKm8WE7X6iq35mwGtQyjq5gBtmNxlb3YgAg+
-         iiPou5pL2kaHEbk9EmiXFaU1NWZsz5J+0nz4ID2b7Tj6W0IIaKPXvvx0g4qDqs79GdQ/
-         w9v+T5AX5fMbZbWPWCkd4TzG4+QSzTCZAFJPdgQe8/9pmCgxeGLTsUOvMfeEd+9J5wzj
-         DktIdmeCZbl/2Kskqi4Jwel9j660kOPGp9LYEt6aglodxXaXUaiK02t3oQXE4yi9lvZo
-         DCQQ==
-X-Gm-Message-State: AOJu0Yy7sE07s0OJzw+jYhavSvfzp+MeBCtpJ8w0KqshdCF8+wqQlIoQ
-	I0qP7lnpwahfDQk7+XwHh9TBVKqZhZedNZq2NGgFCeG4nl36+9YAug4o5qqG4Fk=
-X-Google-Smtp-Source: AGHT+IFSSWu3W17NWPDPyBWqEbbNhJ3G99Nv1HAf4zs5coZ3qGflezfGyEXbuPW8ZtEnxjr9UTQ80Q==
-X-Received: by 2002:a17:906:b24a:b0:a52:129d:ca66 with SMTP id ce10-20020a170906b24a00b00a52129dca66mr2926975ejb.21.1712842211290;
-        Thu, 11 Apr 2024 06:30:11 -0700 (PDT)
-Received: from localhost ([102.222.70.76])
-        by smtp.gmail.com with ESMTPSA id hd13-20020a170907968d00b00a5217964308sm750703ejc.218.2024.04.11.06.30.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Apr 2024 06:30:10 -0700 (PDT)
-Date: Thu, 11 Apr 2024 16:30:06 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: dlemoal@kernel.org
-Cc: linux-ide@vger.kernel.org
-Subject: [bug report] scsi: sd: Fix TCG OPAL unlock on system resume
-Message-ID: <1c19822c-5622-4073-bc91-16523bb14302@moroto.mountain>
+        d=1e100.net; s=20230601; t=1712866351; x=1713471151;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=z2BoP91YkDa6Qt/uP+LjX8R6BByP1pkp+j1WZvkyP9c=;
+        b=squ3ziAZ7dV1FRncoREuwb9A+HhRSTYfMH3AMnjjmB4Bw2CfUxeQL6y/ssNPmRAAWP
+         +O4zHTjsLMO1uc+J1J1qHUdtZETyNdAxZ6QFDch2cIX5lHRJgcWoael3ZD6BFIt9Gdqg
+         6uibZ/Q8bVB2fz43OG9nKAtBN1zof9r+YXLh77Z8r2FOgWGnkTeUKnr9+Wt+ZEo6Or2E
+         sE7H9v07msJ49gCdb4nqQQ4m+PUy8M1lW23S8a78pmVcIbv67YxGdi7iBGIEqTnooq16
+         cNKdxJmbSECbWOwMHOV3o48VLKE1viXUmcFqXbEAHiYvVq5kr61LMqSkvf2XBhWlYixH
+         +tpA==
+X-Gm-Message-State: AOJu0Yz1zAMToSoWvMoaa4nzMYgOALScDOzKH/yoBjP1KBvJQFiEByS/
+	EzbvsfVA1bIVUe6w1lUhYvcnVPTds1h/eecQRfOTG4uiEy6PeZ+hvqd2uMIhf9VU+Ugeujp8fwp
+	r7Sa1Wo4ckA==
+X-Google-Smtp-Source: AGHT+IHP35EiL8Z/ThcjwbVilIgOWIx7kty8BvrtYfdYdh6PolWqYRFhau0jCfMJznCy7ffkzl2wn12Va+2G0A==
+X-Received: from ip.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:57f3])
+ (user=ipylypiv job=sendgmr) by 2002:a05:6902:100b:b0:dcc:f01f:65e1 with SMTP
+ id w11-20020a056902100b00b00dccf01f65e1mr157365ybt.8.1712866350713; Thu, 11
+ Apr 2024 13:12:30 -0700 (PDT)
+Date: Thu, 11 Apr 2024 20:12:24 +0000
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.44.0.683.g7961c838ac-goog
+Message-ID: <20240411201224.1311198-1-ipylypiv@google.com>
+Subject: [PATCH] ata: libata-core: Allow command duration limits detection for
+ ACS-4 drives
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hello Damien Le Moal,
+Even though the command duration limits (CDL) feature was first added
+in ACS-5 (major version 12), there are some ACS-4 (major version 11)
+drives that implement CDL as well.
 
-Commit 0c76106cb975 ("scsi: sd: Fix TCG OPAL unlock on system
-resume") from Mar 19, 2024 (linux-next), leads to the following
-Smatch static checker warning:
+IDENTIFY_DEVICE, SUPPORTED_CAPABILITIES, and CURRENT_SETTINGS log pages
+are mandatory in the ACS-4 standard so it should be safe to read these
+log pages on older drives implementing the ACS-4 standard.
 
-	drivers/ata/libata-scsi.c:4774 ata_scsi_dev_rescan()
-	error: double unlocked 'ap->lock' (orig line 4757)
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-drivers/ata/libata-scsi.c
-    4726 void ata_scsi_dev_rescan(struct work_struct *work)
-    4727 {
-    4728         struct ata_port *ap =
-    4729                 container_of(work, struct ata_port, scsi_rescan_task.work);
-    4730         struct ata_link *link;
-    4731         struct ata_device *dev;
-    4732         unsigned long flags;
-    4733         bool do_resume;
-    4734         int ret = 0;
-    4735 
-    4736         mutex_lock(&ap->scsi_scan_mutex);
-    4737         spin_lock_irqsave(ap->lock, flags);
-    4738 
-    4739         ata_for_each_link(link, ap, EDGE) {
-    4740                 ata_for_each_dev(dev, link, ENABLED) {
-    4741                         struct scsi_device *sdev = dev->sdev;
-    4742 
-    4743                         /*
-    4744                          * If the port was suspended before this was scheduled,
-    4745                          * bail out.
-    4746                          */
-    4747                         if (ap->pflags & ATA_PFLAG_SUSPENDED)
-    4748                                 goto unlock;
-    4749 
-    4750                         if (!sdev)
-    4751                                 continue;
-    4752                         if (scsi_device_get(sdev))
-    4753                                 continue;
-    4754 
-    4755                         do_resume = dev->flags & ATA_DFLAG_RESUMING;
-    4756 
-    4757                         spin_unlock_irqrestore(ap->lock, flags);
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index be3412cdb22e..c449d60d9bb9 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2539,7 +2539,7 @@ static void ata_dev_config_cdl(struct ata_device *dev)
+ 	bool cdl_enabled;
+ 	u64 val;
+ 
+-	if (ata_id_major_version(dev->id) < 12)
++	if (ata_id_major_version(dev->id) < 11)
+ 		goto not_supported;
+ 
+ 	if (!ata_log_supported(dev, ATA_LOG_IDENTIFY_DEVICE) ||
+-- 
+2.44.0.683.g7961c838ac-goog
 
-    4758                         if (do_resume) {
-    4759                                 ret = scsi_resume_device(sdev);
-    4760                                 if (ret == -EWOULDBLOCK)
-    4761                                         goto unlock;
-                                                 ^^^^^^^^^^^^
-
-    4762                                 dev->flags &= ~ATA_DFLAG_RESUMING;
-    4763                         }
-    4764                         ret = scsi_rescan_device(sdev);
-    4765                         scsi_device_put(sdev);
-    4766                         spin_lock_irqsave(ap->lock, flags);
-    4767 
-    4768                         if (ret)
-    4769                                 goto unlock;
-    4770                 }
-    4771         }
-    4772 
-    4773 unlock:
---> 4774         spin_unlock_irqrestore(ap->lock, flags);
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Double unlock
-
-    4775         mutex_unlock(&ap->scsi_scan_mutex);
-    4776 
-    4777         /* Reschedule with a delay if scsi_rescan_device() returned an error */
-    4778         if (ret)
-    4779                 schedule_delayed_work(&ap->scsi_rescan_task,
-    4780                                       msecs_to_jiffies(5));
-    4781 }
-
-regards,
-dan carpenter
