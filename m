@@ -1,185 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E9F147C7E
-	for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2024 11:54:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CA814EC58
+	for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2024 13:30:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712836464; cv=none; b=U7BxNvAvWAHwx9SyzLJDLWFYPBNh+0ur910vnbVfk2JjHJfIVytIox59TsbAGZZKrXh1+5Z+0G5zwvvW1M2uJRgji1cwSFQnzxKgvj3KsYxdP+5pMQWHJSDyEF4mDYFkvZW+BV8fWgbU2wlmafHcEABsT6pPt24njlO4W59iCcE=
+	t=1712842215; cv=none; b=svWAMv0NWmWNzOueBoI6dcV6PLRSCalq3fP2bmuZI9WUVmMsGJ8djNAnAxx69QrbHolmR3penkK/oMel26wbWf1UPT1FmjG+eBpMC8SPZwV2Yp9nqOOFXig6fSuFcYwZcjY/pADJgZrih6ALytrf7qawmf7t9nSgIUWFsvgIHMc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712836464; c=relaxed/simple;
-	bh=XzE6yzPe2bNAjFwthdRxZZzLKN1C49eNd52wBJv8kz4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=onW6jp1B5cjN52J2HeDrJhvXf/fIV0kDCDBex6C7M80X64bFfRyuupx5JNZJZO7+xcTmiwYcU3/NXd6U8TWIEoQRXL+ls/BOe46COSVqNoc074Eas88dnw9XOBlZiyrZT1hIaSKN4Ev4f5U7Q/IiSdXEDs2GD0Ij2FMjx/WktXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MsawKjzX; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MsawKjzX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2180C433F1;
-	Thu, 11 Apr 2024 11:54:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712836464;
-	bh=XzE6yzPe2bNAjFwthdRxZZzLKN1C49eNd52wBJv8kz4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=MsawKjzXCAA1u5CLvi4p9q8e2j3a0ivPgR+enDsdne/p88r4MOlcuQK//J7ALf/S7
-	 Im/vk7SUDxHDkwEQNjATs2MTIaoU1Q2ZmYBhHh/IoPItb9hY0zzhlf0CVAcrGnjF2I
-	 PUVah48aHXKvV8YLi4ZmCsu18DId3+oDFlpGIjwSy+M416czJLvgH/rTfubEWKU5Xg
-	 gOv951VNk7FuExTN1qjQrSxht3/ZDkbeJXQxghKzOnmM+c/SQ5Nd3Tfw4d4UAqAzM3
-	 fNDTlt14dOA9lXJmm9iR6ASmk/A7u11V9su1DO0c5fnS6LBABhKaVPYCHbYeHOTID2
-	 hh09duXzSueAQ==
-Message-ID: <51091e44-7cca-42c0-93c5-8f4d99e55fa8@kernel.org>
-Date: Thu, 11 Apr 2024 20:54:22 +0900
+	s=arc-20240116; t=1712842215; c=relaxed/simple;
+	bh=84ZlPVJ9GuWhaAAUpyL0a0GhYGA3HeUh0ZP/VRFIRjQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=U9g4B7JNfg5fR49XEwMeNN78h1EvL1Ec3zqKVdr1eZtfZTXnqu5MHQRuW3om7KlA5IwtsQqA/+wUX06UVlPhQOnhWUwWrXaCUefcKNmkBwbgyFlnjip18iLEGnyfMFkiCPE1RB7bZ7RTnc2XWzZRjIVN58GPUicu01ny+oCbDBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; arc=none smtp.client-ip=209.85.218.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a52223e004dso69268966b.2
+        for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2024 06:30:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1712842211; x=1713447011; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=AG7gXI0/dWYxV6NY+c7hOksU5O3hWdPCPHZeuwYXcc8=;
+        b=JK/Dll39BHzn39KVMvOTjf2Mal/brRJYssuvo4yu6SlN7im8KCm9skxHhDq9b8lIuc
+         1u7DJGqqu/bqPX+5jxoJtKaDLUqRBV2dFq7S4OTul2kmLNqPa8uOHSGKtdLZ2feZNUHl
+         EfTTuH5RGn3uMQZeR4TTRv3WCE7FHcTEltSUnaLeUGobdFgNqhi5x1EGmm3tB/bYdMXf
+         zK1okwyxsSfdDW8dkUo5+qzT+5ODwEwKJ2d/P0VmTpUk7E0IolfChW6Aytlf2GO/edgC
+         Ij8xP0sueeD2X/4KMO/BmU+ncbV9f4qFVR77wl2XIDXrzVDPO2n0zvGK/1K5LvalPcIN
+         jUGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712842211; x=1713447011;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=AG7gXI0/dWYxV6NY+c7hOksU5O3hWdPCPHZeuwYXcc8=;
+        b=ANyQzPjl0Ij0h9Y5llJY5bASw19ksTt0jEOaFDQ9/qAEYczXunLd1Iw4Owsi3m3PkI
+         t4QhuepBrVGiQs/KAbo7jWg54vDfbF6crKm8WE7X6iq35mwGtQyjq5gBtmNxlb3YgAg+
+         iiPou5pL2kaHEbk9EmiXFaU1NWZsz5J+0nz4ID2b7Tj6W0IIaKPXvvx0g4qDqs79GdQ/
+         w9v+T5AX5fMbZbWPWCkd4TzG4+QSzTCZAFJPdgQe8/9pmCgxeGLTsUOvMfeEd+9J5wzj
+         DktIdmeCZbl/2Kskqi4Jwel9j660kOPGp9LYEt6aglodxXaXUaiK02t3oQXE4yi9lvZo
+         DCQQ==
+X-Gm-Message-State: AOJu0Yy7sE07s0OJzw+jYhavSvfzp+MeBCtpJ8w0KqshdCF8+wqQlIoQ
+	I0qP7lnpwahfDQk7+XwHh9TBVKqZhZedNZq2NGgFCeG4nl36+9YAug4o5qqG4Fk=
+X-Google-Smtp-Source: AGHT+IFSSWu3W17NWPDPyBWqEbbNhJ3G99Nv1HAf4zs5coZ3qGflezfGyEXbuPW8ZtEnxjr9UTQ80Q==
+X-Received: by 2002:a17:906:b24a:b0:a52:129d:ca66 with SMTP id ce10-20020a170906b24a00b00a52129dca66mr2926975ejb.21.1712842211290;
+        Thu, 11 Apr 2024 06:30:11 -0700 (PDT)
+Received: from localhost ([102.222.70.76])
+        by smtp.gmail.com with ESMTPSA id hd13-20020a170907968d00b00a5217964308sm750703ejc.218.2024.04.11.06.30.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 11 Apr 2024 06:30:10 -0700 (PDT)
+Date: Thu, 11 Apr 2024 16:30:06 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: dlemoal@kernel.org
+Cc: linux-ide@vger.kernel.org
+Subject: [bug report] scsi: sd: Fix TCG OPAL unlock on system resume
+Message-ID: <1c19822c-5622-4073-bc91-16523bb14302@moroto.mountain>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: libata-core: Remove ata_exec_internal_sg()
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-References: <20240411083158.723212-1-dlemoal@kernel.org>
- <ZhfC5+R2wB3I2bwp@x1-carbon>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <ZhfC5+R2wB3I2bwp@x1-carbon>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 4/11/24 20:00, Niklas Cassel wrote:
-> On Thu, Apr 11, 2024 at 05:31:58PM +0900, Damien Le Moal wrote:
->> ata_exec_internal() is the only caller of ata_exec_internal_sg() and
->> always calls this function with a single element scattergather list.
->> Remove ata_exec_internal_sg() and code it directly in
->> ata_exec_internal(), simplifying a little the sgl handling for the
->> command.
->>
->> While at it, cleanup comments (capitalization) and change the variable
->> auto_timeout type to a boolean.
->>
->> No functional change.
->>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> ---
->>  drivers/ata/libata-core.c | 105 ++++++++++++--------------------------
->>  1 file changed, 34 insertions(+), 71 deletions(-)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index be3412cdb22e..ec7e57a0f684 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -1480,19 +1480,19 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
->>  }
->>  
->>  /**
->> - *	ata_exec_internal_sg - execute libata internal command
->> + *	ata_exec_internal - execute libata internal command
->>   *	@dev: Device to which the command is sent
->>   *	@tf: Taskfile registers for the command and the result
->>   *	@cdb: CDB for packet command
->>   *	@dma_dir: Data transfer direction of the command
->> - *	@sgl: sg list for the data buffer of the command
->> - *	@n_elem: Number of sg entries
->> + *	@buf: Data buffer of the command
->> + *	@buflen: Length of data buffer
->>   *	@timeout: Timeout in msecs (0 for default)
->>   *
->> - *	Executes libata internal command with timeout.  @tf contains
->> - *	command on entry and result on return.  Timeout and error
->> - *	conditions are reported via return value.  No recovery action
->> - *	is taken after a command times out.  It's caller's duty to
->> + *	Executes libata internal command with timeout. @tf contains
->> + *	the command on entry and the result on return. Timeout and error
->> + *	conditions are reported via the return value. No recovery action
->> + *	is taken after a command times out. It is the caller's duty to
->>   *	clean up after timeout.
->>   *
->>   *	LOCKING:
->> @@ -1501,34 +1501,37 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
->>   *	RETURNS:
->>   *	Zero on success, AC_ERR_* mask on failure
->>   */
->> -static unsigned ata_exec_internal_sg(struct ata_device *dev,
->> -				     struct ata_taskfile *tf, const u8 *cdb,
->> -				     int dma_dir, struct scatterlist *sgl,
->> -				     unsigned int n_elem, unsigned int timeout)
->> +unsigned int ata_exec_internal(struct ata_device *dev,
->> +			       struct ata_taskfile *tf, const u8 *cdb,
->> +			       int dma_dir, void *buf, unsigned int buflen,
->> +			       unsigned int timeout)
->>  {
->>  	struct ata_link *link = dev->link;
->>  	struct ata_port *ap = link->ap;
->>  	u8 command = tf->command;
->> -	int auto_timeout = 0;
->>  	struct ata_queued_cmd *qc;
->>  	unsigned int preempted_tag;
->>  	u32 preempted_sactive;
->>  	u64 preempted_qc_active;
->>  	int preempted_nr_active_links;
->> +	bool auto_timeout = false;
->>  	DECLARE_COMPLETION_ONSTACK(wait);
->>  	unsigned long flags;
->>  	unsigned int err_mask;
->>  	int rc;
->>  
->> +	if (WARN_ON(dma_dir != DMA_NONE && !buf))
->> +		return AC_ERR_INVALID;
->> +
->>  	spin_lock_irqsave(ap->lock, flags);
->>  
->> -	/* no internal command while frozen */
->> +	/* No internal command while frozen */
->>  	if (ata_port_is_frozen(ap)) {
->>  		spin_unlock_irqrestore(ap->lock, flags);
->>  		return AC_ERR_SYSTEM;
->>  	}
->>  
->> -	/* initialize internal qc */
->> +	/* Initialize internal qc */
->>  	qc = __ata_qc_from_tag(ap, ATA_TAG_INTERNAL);
->>  
->>  	qc->tag = ATA_TAG_INTERNAL;
->> @@ -1547,12 +1550,12 @@ static unsigned ata_exec_internal_sg(struct ata_device *dev,
->>  	ap->qc_active = 0;
->>  	ap->nr_active_links = 0;
->>  
->> -	/* prepare & issue qc */
->> +	/* Prepare and issue qc */
->>  	qc->tf = *tf;
->>  	if (cdb)
->>  		memcpy(qc->cdb, cdb, ATAPI_CDB_LEN);
->>  
->> -	/* some SATA bridges need us to indicate data xfer direction */
->> +	/* Some SATA bridges need us to indicate data xfer direction */
->>  	if (tf->protocol == ATAPI_PROT_DMA && (dev->flags & ATA_DFLAG_DMADIR) &&
->>  	    dma_dir == DMA_FROM_DEVICE)
->>  		qc->tf.feature |= ATAPI_DMADIR;
->> @@ -1560,13 +1563,10 @@ static unsigned ata_exec_internal_sg(struct ata_device *dev,
->>  	qc->flags |= ATA_QCFLAG_RESULT_TF;
->>  	qc->dma_dir = dma_dir;
->>  	if (dma_dir != DMA_NONE) {
->> -		unsigned int i, buflen = 0;
->> -		struct scatterlist *sg;
->> +		struct scatterlist sgl;
-> 
-> Here you stack allocate a sgl, and save that stack allocated address
-> for sgl in in qc->sg (using ata_sg_init()), however, a stack allocated
-> variable is only valid until the scope ends.
-> (See my comment at the end of this email.)
-> 
-> So by having the stack allocated variable here (instead of at e.g. the
-> top of the function), when __ata_qc_complete() calls ata_sg_clean(),
-> or when ata_qc_issue() uses qc->sg, the value that they access might
-> be something else, since this variable has already went out of scope,
-> and some other variable might have been allocated at that stack address.
+Hello Damien Le Moal,
 
-Oh, crap. How did I not see crashes with that... Embarassing :)
-I will move the declaration of sg at the top of the function.
+Commit 0c76106cb975 ("scsi: sd: Fix TCG OPAL unlock on system
+resume") from Mar 19, 2024 (linux-next), leads to the following
+Smatch static checker warning:
 
+	drivers/ata/libata-scsi.c:4774 ata_scsi_dev_rescan()
+	error: double unlocked 'ap->lock' (orig line 4757)
 
--- 
-Damien Le Moal
-Western Digital Research
+drivers/ata/libata-scsi.c
+    4726 void ata_scsi_dev_rescan(struct work_struct *work)
+    4727 {
+    4728         struct ata_port *ap =
+    4729                 container_of(work, struct ata_port, scsi_rescan_task.work);
+    4730         struct ata_link *link;
+    4731         struct ata_device *dev;
+    4732         unsigned long flags;
+    4733         bool do_resume;
+    4734         int ret = 0;
+    4735 
+    4736         mutex_lock(&ap->scsi_scan_mutex);
+    4737         spin_lock_irqsave(ap->lock, flags);
+    4738 
+    4739         ata_for_each_link(link, ap, EDGE) {
+    4740                 ata_for_each_dev(dev, link, ENABLED) {
+    4741                         struct scsi_device *sdev = dev->sdev;
+    4742 
+    4743                         /*
+    4744                          * If the port was suspended before this was scheduled,
+    4745                          * bail out.
+    4746                          */
+    4747                         if (ap->pflags & ATA_PFLAG_SUSPENDED)
+    4748                                 goto unlock;
+    4749 
+    4750                         if (!sdev)
+    4751                                 continue;
+    4752                         if (scsi_device_get(sdev))
+    4753                                 continue;
+    4754 
+    4755                         do_resume = dev->flags & ATA_DFLAG_RESUMING;
+    4756 
+    4757                         spin_unlock_irqrestore(ap->lock, flags);
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+    4758                         if (do_resume) {
+    4759                                 ret = scsi_resume_device(sdev);
+    4760                                 if (ret == -EWOULDBLOCK)
+    4761                                         goto unlock;
+                                                 ^^^^^^^^^^^^
+
+    4762                                 dev->flags &= ~ATA_DFLAG_RESUMING;
+    4763                         }
+    4764                         ret = scsi_rescan_device(sdev);
+    4765                         scsi_device_put(sdev);
+    4766                         spin_lock_irqsave(ap->lock, flags);
+    4767 
+    4768                         if (ret)
+    4769                                 goto unlock;
+    4770                 }
+    4771         }
+    4772 
+    4773 unlock:
+--> 4774         spin_unlock_irqrestore(ap->lock, flags);
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Double unlock
+
+    4775         mutex_unlock(&ap->scsi_scan_mutex);
+    4776 
+    4777         /* Reschedule with a delay if scsi_rescan_device() returned an error */
+    4778         if (ret)
+    4779                 schedule_delayed_work(&ap->scsi_rescan_task,
+    4780                                       msecs_to_jiffies(5));
+    4781 }
+
+regards,
+dan carpenter
