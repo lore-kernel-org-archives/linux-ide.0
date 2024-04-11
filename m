@@ -1,105 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B2181E86C;
-	Thu, 11 Apr 2024 23:47:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63E6347A5D;
+	Thu, 11 Apr 2024 23:58:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712879254; cv=none; b=gNllT8hJlJ36vm7Wg83erDdRJxiTKIahDHn7d6kGbooZoD5XRgOS+VNR1wvL/oJmsCtvM3T1SsRWbVMDKMaz3j1ilGdxVF4SsycgHWsB2T0TPhtAGn8zPYx4c/SKpZP/EYEs4s7TtF8wS2AF4jFZg5DUqsZnqTYS0zFp0XqMrmI=
+	t=1712879926; cv=none; b=jzS+ceuTc8g6XVolEbSj583kmMEtWSsOLyv7ggGQkPNyRLTTKiG+YURC0oQFs6hlFZXAE2WIKy0NMSvDrVYEas/3tgoX5OaWQsSpCesDRz+DJ8IH82HvdudX6UUPunu/sNQJVqr1WmmPkKQoVrMkIbI/AW7bxi3eSaP/33wkbsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712879254; c=relaxed/simple;
-	bh=WYWIOF4+UKBux37fzbwdxrl6iRDTQmh3x094K2FkBDs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CuCHjGFRIkrRswydAm8qV1W1ZOp6nYTrg0tXaTS+5Q5OvxzwvmPGX8iCcjMETkeF6Uir7MM/ucYB+a7WgfCwzQehYwEjYzrem4r40+egZkCBF/ZLt4xIJdoncr/Q5+SOX9f0KuvVmj87DrrXR1B95Yad+MaXHIJj1iBpteIKWvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TlOAgRlN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712879926; c=relaxed/simple;
+	bh=Rvrx5bIocVoHhqzlQ8FUwZ0hV15oMlthb4VvYCnIU/Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=p1fiTk9N4+WtILP+l6qtY5dVfF07shnIxJJM9woAFRWUIF+6iXR5qg+leliuSxrkX0EId2SKVlIUN5cXA05bsHXxP7S1s1BMKuYLue6016ZNQ9XkBB23cBmF1amai5MmtK0tw8iUysVDkiylAKUFLYK/UKAIlPooH2SuCkTHNBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TmungXsz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TlOAgRlN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE2E9C072AA;
-	Thu, 11 Apr 2024 23:47:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TmungXsz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7166CC072AA;
+	Thu, 11 Apr 2024 23:58:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712879253;
-	bh=WYWIOF4+UKBux37fzbwdxrl6iRDTQmh3x094K2FkBDs=;
-	h=From:To:Cc:Subject:Date:From;
-	b=TlOAgRlNpvL/4QDY0VRF2QHw2MRWGsOjo6cKKdVEAvcWndLFX1uC5nWe+isUTA+SD
-	 NREHUQVcgKBmFWVtMYuSa0s2DhnFC5pyK15a6AwDXBjklpRa1ICDn97jY1dymAx9TQ
-	 gMcy6GI8QtuNUbLHXJE4KvZyCb5Wmwrpxv/Qqmr+32W/EaH/iuB6i7bzwatMqVpjjF
-	 yVwKw9TAd2Pz4jGT5D3ZlvCf4CN+fULYHngH91KWS++T6ceXwfZSD749eSDO1fKVV+
-	 F6QUpB+FNRQKkgPYflM9aIXbskxN+Td4RSvAirXhCJHCNMbyWlt6DJbnuhLHdMq1xo
-	 kA1mGsEgoAHgA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Dan Carpenter <dan.carpenter@linaro.org>
-Subject: [PATCH] ata: libata-scsi: Fix ata_scsi_port_error_handler() error path
-Date: Fri, 12 Apr 2024 08:47:31 +0900
-Message-ID: <20240411234731.810968-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.44.0
+	s=k20201202; t=1712879926;
+	bh=Rvrx5bIocVoHhqzlQ8FUwZ0hV15oMlthb4VvYCnIU/Q=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=TmungXszWLiOZYvkGczuGKN3KtOLrN2pGFzQyi8Puk4Ctie2iAzXuJkRLXMaNCVjl
+	 /kzYCjkvIeCLQrL3HxwxMRlfO8nPqijfxt0LiwRoQ/ykurW1NfTIOInCiwwdQDi0Vg
+	 euZwhbSNvrSG3w9jdeBEQZmrOXwqa8EZAUKJNMUqJVYg2YY36lAGfyexFg7VPFeRF5
+	 bw1Uwi/8OzY09cc/jSldM7byXOrs1IxXPPnIuXidNk9Izf9juIN3uKbVTdCVFEJ3kV
+	 wDKyTCzztW/vEVN9an3Riee94rg53JKY4GW0JjwjDtgApT/kebR8MpUMDWC9j7KZZk
+	 QtbMexSUEo5Bw==
+Message-ID: <a5cc609b-5e96-4e72-aaad-7ee5cf0e6364@kernel.org>
+Date: Fri, 12 Apr 2024 08:58:42 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 5.10/5.15] ata: libata-scsi: check cdb length for
+ VARIABLE_LENGTH_CMD commands
+To: Mikhail Ukhin <mish.uxin2012@yandex.ru>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe <axboe@kernel.dk>
+Cc: stable@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Pavel Koshutin <koshutin.pavel@yandex.ru>,
+ lvc-project@linuxtesting.org, Artem Sadovnikov <ancowi69@gmail.com>,
+ Mikhail Ivanov <iwanov-23@bk.ru>
+References: <20240411103013.5547-1-mish.uxin2012@yandex.ru>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20240411103013.5547-1-mish.uxin2012@yandex.ru>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Commit 0c76106cb975 ("scsi: sd: Fix TCG OPAL unlock on system resume")
-incorrectly handles scsi_resume_device() errors, leading to a double
-call to spin_unlock_irqrestore() to unlock a device port. Fix this by
-redefining the goto labels used in case of error and only unlock the
-port scsi_scan_mutex when scsi_resume_device() fails.
+On 4/11/24 19:30, Mikhail Ukhin wrote:
+> No upstream commit exists for this patch.
+> 
+> Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
+> ata_scsi_pass_thru.
+> 
+> The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
+> cmd field from struct scsi_request") upstream.
+> Backporting this commit would require significant changes to the code so
+> it is bettter to use a simple fix for that particular error.
+> 
+> The problem is that the length of the received SCSI command is not
+> validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
+> reading if the user sends a request with SCSI command of length less than
+> 32.
+> 
+> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+> 
+> Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
+> Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
+> Signed-off-by: Mikhail Ukhin <mish.uxin2012@yandex.ru>
+> ---
+>  v2: The new addresses were added and the text was updated. 
+>  drivers/ata/libata-scsi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index dfa090ccd21c..77589e911d3d 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -4065,6 +4065,9 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
+>  
+>  	if (unlikely(!scmd->cmd_len))
+>  		goto bad_cdb_len;
+> +
+> +	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
+> +		goto bad_cdb_len;
 
-Bug found with the Smatch static checker warning:
+This check should really be in ata_scsi_var_len_cdb_xlat(). Please move it to
+that function.
 
-	drivers/ata/libata-scsi.c:4774 ata_scsi_dev_rescan()
-	error: double unlocked 'ap->lock' (orig line 4757)
+>  
+>  	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
+>  		if (unlikely(scmd->cmd_len > dev->cdb_len))
 
-Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-Fixes: 0c76106cb975 ("scsi: sd: Fix TCG OPAL unlock on system resume")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/ata/libata-scsi.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2f4c58837641..e954976891a9 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4745,7 +4745,7 @@ void ata_scsi_dev_rescan(struct work_struct *work)
- 			 * bail out.
- 			 */
- 			if (ap->pflags & ATA_PFLAG_SUSPENDED)
--				goto unlock;
-+				goto unlock_ap;
- 
- 			if (!sdev)
- 				continue;
-@@ -4758,7 +4758,7 @@ void ata_scsi_dev_rescan(struct work_struct *work)
- 			if (do_resume) {
- 				ret = scsi_resume_device(sdev);
- 				if (ret == -EWOULDBLOCK)
--					goto unlock;
-+					goto unlock_scan;
- 				dev->flags &= ~ATA_DFLAG_RESUMING;
- 			}
- 			ret = scsi_rescan_device(sdev);
-@@ -4766,12 +4766,13 @@ void ata_scsi_dev_rescan(struct work_struct *work)
- 			spin_lock_irqsave(ap->lock, flags);
- 
- 			if (ret)
--				goto unlock;
-+				goto unlock_ap;
- 		}
- 	}
- 
--unlock:
-+unlock_ap:
- 	spin_unlock_irqrestore(ap->lock, flags);
-+unlock_scan:
- 	mutex_unlock(&ap->scsi_scan_mutex);
- 
- 	/* Reschedule with a delay if scsi_rescan_device() returned an error */
 -- 
-2.44.0
+Damien Le Moal
+Western Digital Research
 
