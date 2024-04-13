@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160A24C7D;
-	Sat, 13 Apr 2024 00:29:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D5F9FBE8;
+	Sat, 13 Apr 2024 00:57:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712968157; cv=none; b=HUyFMFb9bdT5OOKr3dhr9LSHUAHd2e8X6sKglYyxVLY21pfnMOwbere71lmkCocdjg/rcVBfCQlC26QUWW48q+07x4/eceH/g/N+aCSKgJZ68Ppz+5KeAa1NTQDfy6j6Bx2K06YbLazQA4ua+EyjhL3HPKt5wmDav5qGt2wtMwk=
+	t=1712969879; cv=none; b=rZRZlWevszcJIct7TyEIemJod0N5aHQQqorh/I9GerMgdKlktDpwaBmfs6+vr2cTya+INtty1zZBg91oPepwSFGmX/Ynn5ABzeagO2TFTGdy5BiGQDZQrWdT+e0NgPYl7DDbWXhWy11ySsyfxPwu4cL1WVlSrJOrjgmelVax+V8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712968157; c=relaxed/simple;
-	bh=YPNNZcGO4R2DMHObIt70evDXCGNHt0rGwdZD3wv0q2M=;
+	s=arc-20240116; t=1712969879; c=relaxed/simple;
+	bh=iKwV1siHHETSufd441N7QeNvqbceqVeJJKDGHwjTtjg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KGx/ZU9sx7t0vcBxS7oxOp3mOekfic077NNBgqM4K5SJIkaxj5CvEG58ucRz7G0R5vmhAzPGvmBIc4K4jvKIqXxXUL8kKpnbRN+2ZfILRrsmfU2PRdQM7M4+auko7DbHN8qnv9GNNAGV87ySCShvEQBbJJluVMwYFm34mpS02NU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ayE24+QD; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=AqAdrkqVr0TpJwGFuWOw94soleAHqmXSl15HoeoeBuWSORAvMDD9NwxeYzKSzd1pnX9vEvPYmqxRwCRRoK3N0L51ds4aweD8XokHKfCkPcJ0svy9+/5vVofxFbNZdsSOOQMUAGwxPyE6UYbjv5t8zVLuGc0R3XDHaktDPLfBcyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PRkoCYnM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ayE24+QD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FE47C2BD10;
-	Sat, 13 Apr 2024 00:29:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PRkoCYnM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76322C113CC;
+	Sat, 13 Apr 2024 00:57:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712968156;
-	bh=YPNNZcGO4R2DMHObIt70evDXCGNHt0rGwdZD3wv0q2M=;
+	s=k20201202; t=1712969879;
+	bh=iKwV1siHHETSufd441N7QeNvqbceqVeJJKDGHwjTtjg=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ayE24+QDoEvkEgu/Cbsu3cgbGiFpzbfO6+X0XHUzR2Zw30UYlbjk9dFOOMuUzi6tQ
-	 NCLiaXER9eAM+4xqr/iOZ3tU3JJpi3KxbGJTGaYtIRu5keB6fHu2JNyr1wALB0+oUh
-	 krlaJfaPaE7Sk89FjGRpq0L66HPJU+796Sy4qGZcbSXOpCetuBX6sbjYoC5FasssBI
-	 gIuf4EmRlyPOIN2vVWtGCELHFtgd7udAvsEwkW5QZ6P9zWoQEDKyc9iuayOoCv+uYJ
-	 ybMZqV6/Qf0d2O8X4d3OW0SGdN7NEcsmpMcm78vQW+iHjfd6K6zC3fcaD44WOpB3bd
-	 +UvhcA8EgGf3A==
-Message-ID: <4e5c88f1-1b24-4f6d-8c11-d7029329ba7a@kernel.org>
-Date: Sat, 13 Apr 2024 09:29:13 +0900
+	b=PRkoCYnMMwrYOVcgec4yvAzkvpd2yEzuCYLPPdtlhbsprxdZs1wkRgu1ytpuN9df7
+	 hyoPmKJNaGrgx3ooEOh1eWrl9dkG3hIF0ljlbkreJKZ5jA7PmiKTtBSRvJmm8ZNvSG
+	 y4yjd2MgP5ENJmf268Et1oXsKYvBTiGIQYSsw3QF2xtXC1vB5tdjCNP4QEPw1tva1w
+	 yL6VypUIm6xKgh310WMxNHIIKCtAnxrSDeod/LQ4xpjAq9kkNqVezRTMedIR/ZklfO
+	 V76AF6J0HhgyCA6HNUTVTrFXtwH45TBUx8+bYg+lJy3s23oD7dKLQBY+8A6CKWbqYx
+	 VvhLWX9pi6efQ==
+Message-ID: <b42edf62-b423-4293-a5dd-eafa9e405bf0@kernel.org>
+Date: Sat, 13 Apr 2024 09:57:57 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,56 +35,55 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: Add sdev attribute to lower link speed in runtime
-To: Gustav Ekelund <gustav.ekelund@axis.com>, cassel@kernel.org,
- hare@suse.de, martin.petersen@oracle.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel@axis.com
-References: <20240412134838.788502-1-gustav.ekelund@axis.com>
+Subject: Re: [PATCH] ata: libata-core: Allow command duration limits detection
+ for ACS-4 drives
+To: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240411201224.1311198-1-ipylypiv@google.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20240412134838.788502-1-gustav.ekelund@axis.com>
+In-Reply-To: <20240411201224.1311198-1-ipylypiv@google.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 4/12/24 22:48, Gustav Ekelund wrote:
-> Expose a new sysfs attribute to userspace that gives root the ability to
-> lower the link speed in a scsi_device at runtime. The handle enables
-> programs to, based on external circumstances that may be unbeknownst to
-> the kernel, determine if a link should slow down to perhaps achieve a
-> stabler signal. External circumstances could include the mission time
-> of the connected hardware or observations to temperature trends.
+On 4/12/24 05:12, Igor Pylypiv wrote:
+> Even though the command duration limits (CDL) feature was first added
+> in ACS-5 (major version 12), there are some ACS-4 (major version 11)
+> drives that implement CDL as well.
+> 
+> IDENTIFY_DEVICE, SUPPORTED_CAPABILITIES, and CURRENT_SETTINGS log pages
+> are mandatory in the ACS-4 standard so it should be safe to read these
+> log pages on older drives implementing the ACS-4 standard.
+> 
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 
-may, perhaps, could... This does not sound very deterministic. Do you have an
-actual practical use case where this patch is useful and solve a real problem ?
+Looks good, but I think this needs:
 
-Strictly speaking, if you are seeing link stability issues due to temperature or
-other environmental factors (humidity, altitude), then either you are operating
-your hardware (board and/or HDD) outside of their environmental specifications,
-or you have some serious hardware issues (which can be a simple as a bad SATA
-cable or an inappropriate power supply). In both cases, I do not think that this
-patch will be of any help.
+Fixes: 62e4a60e0cdb ("scsi: ata: libata: Detect support for command duration
+limits")
+Cc: stable.vger.kernel.org
 
-Furthermore, libata already lowers a link speed automatically at runtime if it
-sees too many NCQ errors. Isn't that enough ? And we also have the horkage flags
-to force a maximum link speed for a device/adapter, which can also be specified
-as a libata module argument (libata.force).
+so that we have 6.6 LTS also getting this fix and accepting the same devices as
+mainline. I will add that when applying.
 
-> Writing 1 to /sys/block/*/device/down_link_spd signals the kernel to
-> first lower the link speed one step with sata_down_spd_limit and then
-> finish off with sata_link_hardreset.
-
-We already have "/sys/class/ata_link/*/hw_sata_spd_limit", which is read-only
-for now. So if you can really justify this manual link speed tuning for an
-actual use case (not a hypothetical one), then the way to go would be to make
-that attribute RW and implement its store() method to lower the link speed at
-runtime.
-
-And by the way, looking at what that attribute says, I always get:
-<unknown>
-
-So it looks like there is an issue with it that went unnoticed (because no one
-is using it...). This needs some fixing.
+> ---
+>  drivers/ata/libata-core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index be3412cdb22e..c449d60d9bb9 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2539,7 +2539,7 @@ static void ata_dev_config_cdl(struct ata_device *dev)
+>  	bool cdl_enabled;
+>  	u64 val;
+>  
+> -	if (ata_id_major_version(dev->id) < 12)
+> +	if (ata_id_major_version(dev->id) < 11)
+>  		goto not_supported;
+>  
+>  	if (!ata_log_supported(dev, ATA_LOG_IDENTIFY_DEVICE) ||
 
 -- 
 Damien Le Moal
