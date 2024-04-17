@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0F112DD94;
-	Wed, 17 Apr 2024 09:56:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42781327E0;
+	Wed, 17 Apr 2024 10:14:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713347788; cv=none; b=AWcBrLxhlA4/etj4NAaJuWbsoP8nvzwicFjhwDxXdaPeeVdBLH4+XMQge+VyfvPwaf+N3e7G8omUNbcNXg3feCGHoWnp6MzMYzuUWfi9V8X0QkpENhq31kDsBAyoqWttJwGLCGvvJOsuZUNKssHsUAx6eLzjPi0yhw7RYBaceJE=
+	t=1713348870; cv=none; b=roa8gm6HRy9veBKcXDfyqi0mEpD2Ao4kn/4lNaTZLBDFV3aRDksxCynl07nbjMjhQjKnxssjnn9dxjL5ywoixQWDkufMFghDYAkYh4abXgtJQENIGgMfysoJSKQwwjARrlk9JzkiRtsy7hdAR3SqeCNbQb+b+Nf4InPwnraRsmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713347788; c=relaxed/simple;
-	bh=zZ7v7PQp0DDEHhoo/bYInJ8iPIZtAFy1cxCwkUCT9gU=;
+	s=arc-20240116; t=1713348870; c=relaxed/simple;
+	bh=uqTux5BTqNidcvCVoro4kFIdtrbsx5D1uzrP63oND7M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V2rWEh0hfu1Ek3i1yIaCtISFXbSbFs5l77XSCxP5OKj4t3So/URAFMIu1kOW1TCKCE+tjohs+fSAflwHhqST3u48bP8vy5l5VoE/806BXa8GXSoGcLkDm9Zdlu4AadHdbJsqYBxUOK5zAyC585Pz70RVNHABZms6O4p9aoAcgBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fVpm9K00; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q/Z30QuiUuTPhwutUf0/fcZtObgnKc3fFnKHbzhXIC2jjTQ+lqzM5j8YeSUPlipV3kSpR5JUf9kvxrEbO4z9itVyRaack1nLh+yNhM0j5zXGxqm56yTS2nXtu92gVTGYPhkG21wRGwFnCmrhIXVl3xJh+BKglj9MqXc78PtvXlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hh+9nV4K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fVpm9K00"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 603B1C072AA;
-	Wed, 17 Apr 2024 09:56:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hh+9nV4K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE307C072AA;
+	Wed, 17 Apr 2024 10:14:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713347788;
-	bh=zZ7v7PQp0DDEHhoo/bYInJ8iPIZtAFy1cxCwkUCT9gU=;
+	s=k20201202; t=1713348870;
+	bh=uqTux5BTqNidcvCVoro4kFIdtrbsx5D1uzrP63oND7M=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fVpm9K00ZdOv8mpz9I/gPJjSj4ALSYKsJ2JHp7KFwbtTU8SOxycZhvYqXCUt9u8L/
-	 1+gURGur7NOqehJoZfKnYmeCxhI1JNZ1tqTamFpjrPVPIZMYJm2Y04Bdn9XuVsH24I
-	 C6AbRRvfOpNOe/vCPTaR6U0OzO5aM8JADqEwsdBkbJzEGk60xb4LjaikdFc5R6OC8J
-	 WvNLkF3bPCrfggPF49hTZDmNWXgYMhhoQ1/kd1bJ6F71M6hOy8t4HbprmWLSHlBw+P
-	 00VCnT8v/pWZ0wZ9ZOMfl1WVhl7mBxjwW3r/D4Aw00EjTpyMkFVDhhHmHTPb+PgXS2
-	 hJledh2aYAfTw==
-Date: Wed, 17 Apr 2024 11:56:23 +0200
+	b=Hh+9nV4K8q7rWXefDX5J2ndsQMC6AahShC5P+5AzThF5xYCY8gxZuZaulKRlRWq1a
+	 CGd1nB6oUrJnpyS10YmNrEhUgLkWvjSU5PcV9WFcwmJTJ61pibz4qgs10EMls0ffDp
+	 /fAvFA7MAC8Ef1Me57h9VG03rCKtVyn2vVnEciGHItJgQRrbOeZtBatz4tRVXDjV/A
+	 TQZGpYV5MfI1dLmII194BgVeImCwpAjszZswPkuY5nwAWORnubcuXpRD5fx0+xhldC
+	 nXDSs62dNywce2tJanrDeLCnAZws5m5e0O2nH9FdYYUYl5ZuxZWTkiWjytbqzA0aAZ
+	 f51kPp9nposVg==
+Date: Wed, 17 Apr 2024 12:14:25 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Gustav Ekelund <gustaek@axis.com>,
+To: Gustav Ekelund <gustaek@axis.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Gustav Ekelund <gustav.ekelund@axis.com>, hare@suse.de,
 	martin.petersen@oracle.com, linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org, kernel@axis.com
 Subject: Re: [PATCH] ata: Add sdev attribute to lower link speed in runtime
-Message-ID: <Zh-cx_KGK_M_qUGq@ryzen>
+Message-ID: <Zh-hASYS4XkyNJc9@ryzen>
 References: <20240412134838.788502-1-gustav.ekelund@axis.com>
  <4e5c88f1-1b24-4f6d-8c11-d7029329ba7a@kernel.org>
  <7e6eb387-5a0e-460c-af08-eff070fa35ca@axis.com>
- <898497f0-d279-4d01-be8d-aad4048df95d@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -47,55 +46,69 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <898497f0-d279-4d01-be8d-aad4048df95d@kernel.org>
+In-Reply-To: <7e6eb387-5a0e-460c-af08-eff070fa35ca@axis.com>
 
-On Wed, Apr 17, 2024 at 08:59:27AM +1000, Damien Le Moal wrote:
+On Mon, Apr 15, 2024 at 04:49:46PM +0200, Gustav Ekelund wrote:
+> On 4/13/24 02:29, Damien Le Moal wrote:
+> > On 4/12/24 22:48, Gustav Ekelund wrote:
+> >> Expose a new sysfs attribute to userspace that gives root the ability to
+> >> lower the link speed in a scsi_device at runtime. The handle enables
+> >> programs to, based on external circumstances that may be unbeknownst to
+> >> the kernel, determine if a link should slow down to perhaps achieve a
+> >> stabler signal. External circumstances could include the mission time
+> >> of the connected hardware or observations to temperature trends.
+> > 
+> > may, perhaps, could... This does not sound very deterministic. Do you have an
+> > actual practical use case where this patch is useful and solve a real problem ?
+> > 
+> > Strictly speaking, if you are seeing link stability issues due to temperature or
+> > other environmental factors (humidity, altitude), then either you are operating
+> > your hardware (board and/or HDD) outside of their environmental specifications,
+> > or you have some serious hardware issues (which can be a simple as a bad SATA
+> > cable or an inappropriate power supply). In both cases, I do not think that this
+> > patch will be of any help.
+> > 
+> > Furthermore, libata already lowers a link speed automatically at runtime if it
+> > sees too many NCQ errors. Isn't that enough ? And we also have the horkage flags
+> > to force a maximum link speed for a device/adapter, which can also be specified
+> > as a libata module argument (libata.force).
+> > 
+> >> Writing 1 to /sys/block/*/device/down_link_spd signals the kernel to
+> >> first lower the link speed one step with sata_down_spd_limit and then
+> >> finish off with sata_link_hardreset.
+> > 
+> > We already have "/sys/class/ata_link/*/hw_sata_spd_limit", which is read-only
+> > for now. So if you can really justify this manual link speed tuning for an
+> > actual use case (not a hypothetical one), then the way to go would be to make
+> > that attribute RW and implement its store() method to lower the link speed at
+> > runtime.
+> > 
+> > And by the way, looking at what that attribute says, I always get:
+> > <unknown>
+> > 
+> > So it looks like there is an issue with it that went unnoticed (because no one
+> > is using it...). This needs some fixing.
+> > 
+> Hello Damien and Niklas,
 > 
-> Can you send examples of the errors you are seeing ? That needs to be
-> investigated first before going the (drastic) route of allowing to manually
-> lower link speed at run-time.
+> Thank you for the feedback.
+> 
+> I have a hotplug system, where the links behave differently depending
+> on the disk model connected. For some models the kernel emits a lot of
+> bus errors, but mostly not enough errors for it to automatically lower
+> the link speed, except during high workloads. I have not observed any
+> data-loss regarding the errors, but the excessive logging becomes a problem.
 
-Gustav, is it possible for you to share the error messages that you are
-seeing? Preferably a whole kernel boot.
+It might be interesting to compare the output of:
+$ hdparm -I
 
-Since you are talking hot plug, there is a bunch of libata hot-plug related
-in v6.9.x (which turns off LPM if your external port is hotplug capable).
+for a drive that you can hot plug insert without errors, against a drive
+that gives you errors on hot plug insertion, to see if this can give you
+a hint of why they behave differently.
 
-So it would be interesting to see if you still get these errors on v6.9-rc4
-(we will see if you have LPM enabled), and if so, what errors you are seeing.
-
-You could also try booting with: libata.force=nolpm on the kernel command line.
-(This will explicitly set lpm-policy to MAX_POWER, which is different from
-lpm-policy=0 (which is the default) - which means keep firmware settings.)
+(e.g. certain features, e.g. DevSleep, is only enabled if there is support
+in the HBA, the port, and the drive.)
 
 
 Kind regards,
 Niklas
-
-> 
-> > 
-> > So I want to adapt the link, depending on the connected model, in a
-> > running system because I know that some particular models in this case
-> > will operate better in SATA2 in this system.
-> > 
-> > Can I use the libata.force module to make changes to a particular link
-> > in runtime?
-> 
-> Nope, libata.force is a module parameter so you can specify it as a kernel boot
-> parameter, or if you compile libata as a module when loading (modprobe) libata.
-> At run time, you need to rmmod+modprobe again libata, and so the ahci driver as
-> well (because of dependencies).
-> 
-> As I mentioned, if a run-time knob really is necessary (it should not be), using
-> the ata_link hw_sata_spd_limit would be a better approach. But again, that
-> really should not be necessary at all.
-> 
-> > 
-> > Best regards
-> > Gustav
-> > 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
-> 
