@@ -1,122 +1,169 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 669C341C6C
-	for <linux-ide@vger.kernel.org>; Sat,  4 May 2024 20:27:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B42335280
+	for <linux-ide@vger.kernel.org>; Sun,  5 May 2024 19:43:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.211.166.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714854474; cv=none; b=ooTuyGMYQa7CyBHmaHgZj6DgeImQ8j7ILU9tOLSJV2EEWNB5KN6ePppq69ibwWL3gfILMI+LBF0uUMlKTu65Pn4aj/0JPlRJqZY5ryIMPgsVD2xKuKuodftN1OpK4X5pGw+gBuYoQUQlWkIuSmxb54REEYFGUM+jcS1jGDZ0pYc=
+	t=1714938183; cv=none; b=cNqGjzVkgCCVECd0Y14BVz+fJaFEGjn0xWtpoaGgp1dCnjL6n2ZNNCzR39+5ksSlcDxXmftfr/C6KOnUI6dDKAOi4PAKe8nX5gNDRLrcUnA9/7uyo026Ub06HhoJyG5tbz9iK/CgeMbwvvDxj7f+vWa07T8ecWQwTXj9UTxMw9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714854474; c=relaxed/simple;
-	bh=tX3KTxFyuRQKhiTsSKTCWMhh/vqtUMAM71naPIKg3eg=;
-	h=From:Subject:To:CC:Message-ID:Date:MIME-Version:Content-Type; b=f8C36sRXNUzosS/XCbX8mobS+vmigp0horgWov493pdBFg58i8GZPyk6H7/I2QzJ0/0YwBVckvoOlMQ1zr/vVI26EKNLYV/RIp5BKhEk6xVYES1e/FD8C9jC9Ej69bN/bjqOp26fOuKV51NRyrh5J7QwIgNuPJ6H3cgIOcag3aw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.1.105] (178.176.78.178) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Sat, 4 May
- 2024 23:27:26 +0300
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH] ata: pata_legacy: make legacy_exit() work again
-To: <linux-ide@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas
- Cassel <cassel@kernel.org>
-CC: <lvc-project@linuxtesting.org>
-Organization: Open Mobile Platform
-Message-ID: <c6ad7d07-4dc8-7087-4018-6ebdf93d6580@omp.ru>
-Date: Sat, 4 May 2024 23:27:25 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+	s=arc-20240116; t=1714938183; c=relaxed/simple;
+	bh=4X6+lREUNZljDig+yJsOlfKV/Rb/birnR5zYZZoTkDo=;
+	h=From:To:Subject:Cc:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=adscUQmcR4NALjAxa08t8F2Na2ES2E09Oyd0shUyUeyjmjvnJ5tnrFwpqpPwcEaUL/PnJyV7AWsjJ62JVcuaGlj9fIyPBPtiKkKK6zYIkOq6wKCIQnJOoybmOrq2GyfIt/r+NBy/D8olNNI1oolsKDAEi/n1FBnOXrniuHAzNII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org; spf=pass smtp.mailfrom=gentoo.org; arc=none smtp.client-ip=140.211.166.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
+From: "Conrad Kostecki" <conikost@gentoo.org>
+To: "Niklas Cassel" <cassel@kernel.org>
+Subject: Re[2]: [PATCH v2] ata: ahci: Add mask_port_map module parameter
+Cc: "Damien Le Moal" <dlemoal@kernel.org>, linux-ide@vger.kernel.org, "Szuying
+ Chen" <chensiying21@gmail.com>, Jesse1_Chang@asmedia.com.tw,
+ Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw
+Date: Sun, 05 May 2024 19:42:55 +0000
+Message-Id: <em49d72564-1852-432d-b066-eca899af6c2a@806cd47e.com>
+In-Reply-To: <ZiAFEbDnwuqYWaAU@ryzen>
+References: <20240405125143.1134539-1-dlemoal@kernel.org>
+ <em6045942b-7739-40b7-8c9d-ad047918cdb8@a351f4b0.com> <ZiAFEbDnwuqYWaAU@ryzen>
+Reply-To: "Conrad Kostecki" <conikost@gentoo.org>
+User-Agent: eM_Client/10.0.1495.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 05/04/2024 20:04:41
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 185057 [May 04 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 19 0.3.19
- 07c7fa124d1a1dc9662cdc5aace418c06ae99d2b
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.78.178 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info:
-	127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.78.178
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 05/04/2024 20:10:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 5/4/2024 6:17:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Commit defc9cd826e4 ("pata_legacy: resychronize with upstream changes and
-resubmit") missed to update legacy_exit(), so that it now fails to do any
-cleanup -- the loop body there can never be entered.  Fix that and finally
-remove now useless nr_legacy_host variable...
+Hello Niklas,
+please forgive me, I wasn't able to answer earlier. I have to roll back=20
+here :-)
+I don't know, what I exactly did wrong, but I did now tested again PATCH=20
+v2 and can confirm, it just works as it should.
+Tested on 6.8.9 and also 6.9-rc6 (with has PATCH v2 applied).
 
-Found by Linux Verification Center (linuxtesting.org) with the Svace static
-analysis tool.
+My ports are being correct masked and DUMMY is being correctly shown.
+So all fine and I am happy with the patch as it is now.
 
-Fixes: defc9cd826e4 ("pata_legacy: resychronize with upstream changes and resubmit")
-Cc: stable@vger.kernel.org
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Sorry for the noise, I am really not sure, what I did wrong during first=20
+testing.
 
----
-This patch is against the master branch of the LibATA Group's linux.git repo.
-It's only been build-tested...
+Conrad
 
- drivers/ata/pata_legacy.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Am 17.04.2024 19:21:21, "Niklas Cassel" <cassel@kernel.org> schrieb:
 
-Index: linux/drivers/ata/pata_legacy.c
-===================================================================
---- linux.orig/drivers/ata/pata_legacy.c
-+++ linux/drivers/ata/pata_legacy.c
-@@ -173,8 +173,6 @@ static int legacy_port[NR_HOST] = { 0x1f
- static struct legacy_probe probe_list[NR_HOST];
- static struct legacy_data legacy_data[NR_HOST];
- static struct ata_host *legacy_host[NR_HOST];
--static int nr_legacy_host;
--
- 
- /**
-  *	legacy_probe_add	-	Add interface to probe list
-@@ -1276,9 +1274,11 @@ static __exit void legacy_exit(void)
- {
- 	int i;
- 
--	for (i = 0; i < nr_legacy_host; i++) {
-+	for (i = 0; i < NR_HOST; i++) {
- 		struct legacy_data *ld = &legacy_data[i];
--		ata_host_detach(legacy_host[i]);
-+
-+		if (legacy_host[i])
-+			ata_host_detach(legacy_host[i]);
- 		platform_device_unregister(ld->platform_dev);
- 	}
- }
+>Hello Conrad,
+>
+>On Fri, Apr 05, 2024 at 10:53:55PM +0000, Conrad Kostecki wrote:
+>>  Hi Damien,
+>>
+>>  Am 05.04.2024 14:51:43, "Damien Le Moal" <dlemoal@kernel.org> schrieb:
+>>
+>>  > <PATCH v2>
+>>  i did run a test on my hardware.
+>>  It seems to work and adjusting the port_map. But I noticed a difference=
+,
+>>  that those virtual hostXY ports are not marked as DUMMY.
+>>  With the previous patch, only six ports reported "ahci" and rest "DUMMY=
+".
+>>  I am not sure, if that should also not happen with your patch?
+>>  Conrad
+>>  [   13.365573] ahci 0000:09:00.0: masking port_map 0xffffff3f -> 0x3f
+>>  [   13.376511] ahci 0000:09:00.0: SSS flag set, parallel bus scan disab=
+led
+>>  [   13.395670] ahci 0000:09:00.0: AHCI 0001.0301 32 slots 32 ports 6 Gb=
+ps
+>>  0x3f impl SATA mode
+>
+>This print above suggests that you are testing on a v6.8 based kernel.
+>(The print has been improved in v6.9)
+>
+>I do not understand why things are not working for you.
+>
+>
+>Could you please test with v6.9-rc4 + the attached debug patch.
+>
+>Please make sure that you don't have any other changes on top of v6.9-rc4
+>other than the debug patch. (mask_port_map is already included in v6.9-rc4=
+.)
+>
+>
+>
+>Here is a how v6.9-rc4 + the attached debug patch looks for me with
+>ahci.mask_port_map=3D0000:00:03.0=3D0xf
+>added to the kernel command line.
+>
+>(If you use a /etc/modprobe.d/ahci.conf file instead, I assume that should
+>look something like:
+>options ahci mask_port_map=3D0000:00:03.0=3D0xf
+>)
+>
+>
+>[    0.538102] ahci 0000:00:03.0: masking port_map 0x3f -> 0xf
+>[    0.539063] ahci 0000:00:03.0: port 1/6 is implemented (port_map 0xf)
+>[    0.539933] ahci 0000:00:03.0: port 2/6 is implemented (port_map 0xf)
+>[    0.540750] ahci 0000:00:03.0: port 3/6 is implemented (port_map 0xf)
+>[    0.541663] ahci 0000:00:03.0: port 4/6 is implemented (port_map 0xf)
+>[    0.542990] ahci 0000:00:03.0: port 5/6 not implemented, mark as dummy=
+ (port_map 0xf)
+>[    0.544121] ahci 0000:00:03.0: port 6/6 not implemented, mark as dummy=
+ (port_map 0xf)
+>[    0.545766] ahci 0000:00:03.0: port 1/6 is implemented, calling init (p=
+ort_map 0xf)
+>[    0.546718] ahci 0000:00:03.0: port 2/6 is implemented, calling init (p=
+ort_map 0xf)
+>[    0.547642] ahci 0000:00:03.0: port 3/6 is implemented, calling init (p=
+ort_map 0xf)
+>[    0.548399] ahci 0000:00:03.0: port 4/6 is implemented, calling init (p=
+ort_map 0xf)
+>[    0.549418] ahci 0000:00:03.0: port 5/6 is not implemented, skipping in=
+it (port_map 0xf)
+>[    0.550650] ahci 0000:00:03.0: port 6/6 is not implemented, skipping in=
+it (port_map 0xf)
+>[    0.551306] ahci 0000:00:03.0: AHCI vers 0001.0000, 32 command slots, 1=
+.5 Gbps, SATA mode
+>[    0.551947] ahci 0000:00:03.0: 4/6 ports implemented (port mask 0xf)
+>[    0.552444] ahci 0000:00:03.0: flags: 64bit ncq only
+>[    0.553652] scsi host0: ahci
+>[    0.554138] scsi host1: ahci
+>[    0.554535] scsi host2: ahci
+>[    0.555332] scsi host3: ahci
+>[    0.555806] scsi host4: ahci
+>[    0.556212] scsi host5: ahci
+>[    0.556502] ata1: SATA max UDMA/133 abar m4096@0xfebd1000 port 0xfebd11=
+00 irq 43 lpm-pol 3
+>[    0.557146] ata2: SATA max UDMA/133 abar m4096@0xfebd1000 port 0xfebd11=
+80 irq 43 lpm-pol 3
+>[    0.557791] ata3: SATA max UDMA/133 abar m4096@0xfebd1000 port 0xfebd12=
+00 irq 43 lpm-pol 3
+>[    0.558429] ata4: SATA max UDMA/133 abar m4096@0xfebd1000 port 0xfebd12=
+80 irq 43 lpm-pol 3
+>[    0.559064] ata5: DUMMY
+>[    0.559260] ata6: DUMMY
+>
+>Please post your whole log, including both lines prefixed with "scsi" and
+>"ata".
+>
+>As you can see, you should see, with your configuration,
+>32 "scsi: hostX: ahci" prints,
+>6  "ataX: SATA max ..." prints,
+>26 "ataX: DUMMY" prints.
+>
+>
+>If your operating system is using systemd (considering your gentoo address=
+,
+>this is not a given), you could run:
+>
+>$ systemd-analyze
+>
+>both with and without the kernel module option.
+>
+>You should be able to see a difference.
+>
+>Or if you don't have systemd, please just upload the full dmesg with and
+>without the kernel module option, so that we can look at the timestamps.
+>
+>
+>Kind regards,
+>Niklas
