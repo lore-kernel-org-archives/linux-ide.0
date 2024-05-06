@@ -1,74 +1,175 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7048156991
-	for <linux-ide@vger.kernel.org>; Mon,  6 May 2024 16:46:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E20927269;
+	Mon,  6 May 2024 21:49:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715013984; cv=none; b=i/x6E3VxySKj69x+SLj9uObFB45bgDTR3aqEY3QubffGZ4Bxu8RwHQxhZacGPr7G4Mke0mVe0IW9Djk0Y7O9sIghrOhpszUpDEz+E64r4EDkf25WjCX7TuTO4EWMkHJeGUp1eJpIyVfw47uQc+Zq/Aqhso38ctOMDgvhNYY6b40=
+	t=1715032156; cv=none; b=XkHcCSi+iE3xDK7CzqpePWcKA9cA4vkyzPnybE+nsIxIWIsaIQhEdtSPoWaMsPNuTdBQi1lGijxUS2iiouoZ/H/fja14frIEy6I909EcOEbSk7NoDXNidxztXPdMJivL1XaHCYTBryb3Fg6B4WFk3TohmXWmvOwoyitA2kb1eHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715013984; c=relaxed/simple;
-	bh=NpqeFzMmrXRgWx8lVOk5rCUY84O3BWGZr2oT1JwoTdM=;
+	s=arc-20240116; t=1715032156; c=relaxed/simple;
+	bh=u+eITQHQHdhh+dX08SWoFvr9lO3rL7WYHSTk19LFs/k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EAL940t+kVfs5ULICWTm6zdKtUQmFzGRRFF2la+CiWelsuv7k0pxffRRGBle+wNzqWDHBkfWWxh50e+0jthzb8cF4bSEUNJNGBaxgZtjnZW2oD8fDg9ZD1tiG70NfeenltTyTbNKwt0UbfO3AF4H8GAvsUR6JZ7LvO4D6zFJOCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RctLJ4Z/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mdAlJXOuGU+Fi2UvAorhVSh4wtIYhA19P1aUxroCYynPlt6XxQFcz0RcpTWxSryWqc9CnI3XCZuDO9kTmFbLNyFm8COjtMrtw8nn7rBkMBwc42rYErCaqDKzH/KOKV0+AyBYX1p22zzUmq3q4He2NRcT69SFlmoK8JC0QnGbehA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OO5o155L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RctLJ4Z/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73389C4AF68;
-	Mon,  6 May 2024 16:46:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OO5o155L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE0F0C116B1;
+	Mon,  6 May 2024 21:49:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715013984;
-	bh=NpqeFzMmrXRgWx8lVOk5rCUY84O3BWGZr2oT1JwoTdM=;
+	s=k20201202; t=1715032156;
+	bh=u+eITQHQHdhh+dX08SWoFvr9lO3rL7WYHSTk19LFs/k=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RctLJ4Z/L13K3ru2bT/FgxLlYE9cSWYDI0mPfH69xju8U680XSDEOD2pyK++TZoXv
-	 mlztjRnnZQNBc9H28JqZYXP5MY1Bd73M4ut5QqxVkYZowv+x49bd3wM2rw0J6Eh6Ad
-	 gJQ4mVpHuCLrOEFGdlel+p0ThJZV05Me6Lz8ra2r07w2lfoXkgahsgoml3Y95zGGvl
-	 nnelrl/r8+drC7iYYnyeO0HF4USosd6FqB1t17XOzWLcFl+nm4AG+yUUjYDXyYnQht
-	 uelE5mhChslEkcWQTsioJrojAZnh0ZzltN5UQJFUykTc/FBn6o5rQhHStZa6OANw40
-	 LaVFn8lY4cnGA==
-Date: Mon, 6 May 2024 18:46:19 +0200
+	b=OO5o155LP4rLCcNEBcZaU+qa85QnZOB/kBeEpysVRGeth4CnmqvFoVl8/K4sANJ1p
+	 68v8Il/Xe8kCz3/6Q9Rs2FSUmCF8kvn59ePOapWqLOSTg915fVXYrdZswtPCAFGR4Y
+	 tqRvZ5apx+1LDCsgUf7rStM+DMWRwnwybN/0gc429ApU15nKNYb80gUVzO2+xjpQy+
+	 NGJq0F00wnPDdblGdEDGHEP+0gB5yrsJdaSS5o2epHOYgS6OscRVzUk4D/Z3a+Ec8S
+	 D5fBF/IqnSVc8IikuQVBTF8WW0xw87Fw7N6BXKTrCyU0BG67mTI5HDAY6UQH5Z/SfW
+	 NFDVimNluPeiA==
+Date: Mon, 6 May 2024 23:49:11 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Conrad Kostecki <conikost@gentoo.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	Szuying Chen <chensiying21@gmail.com>, Jesse1_Chang@asmedia.com.tw,
-	Richard_Hsu@asmedia.com.tw, Chloe_Chen@asmedia.com.tw
-Subject: Re: [PATCH v2] ata: ahci: Add mask_port_map module parameter
-Message-ID: <ZjkJW_zx338tHmo_@ryzen.lan>
-References: <20240405125143.1134539-1-dlemoal@kernel.org>
- <em6045942b-7739-40b7-8c9d-ad047918cdb8@a351f4b0.com>
- <ZiAFEbDnwuqYWaAU@ryzen>
- <em49d72564-1852-432d-b066-eca899af6c2a@806cd47e.com>
+To: Krzysztof =?utf-8?Q?Ol=C4=99dzki?= <ole@ans.pl>
+Cc: Hannes Reinecke <hare@suse.de>,
+	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+	IDE/ATA development list <linux-ide@vger.kernel.org>,
+	stable@vger.kernel.org
+Subject: Re: "ata: libata: move ata_{port,link,dev}_dbg to standard pr_XXX()
+ macros" - 742bef476ca5352b16063161fb73a56629a6d995 changed logging behavior
+ and disabled a number of messages
+Message-ID: <ZjlQV-6dEgwhf-vc@ryzen.lan>
+References: <fd285ecd-597f-4770-b9ac-8e9f6ca37587@ans.pl>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <em49d72564-1852-432d-b066-eca899af6c2a@806cd47e.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <fd285ecd-597f-4770-b9ac-8e9f6ca37587@ans.pl>
 
-On Sun, May 05, 2024 at 07:42:55PM +0000, Conrad Kostecki wrote:
-> Hello Niklas,
-> please forgive me, I wasn't able to answer earlier. I have to roll back here
-> :-)
+Hello Krzysztof,
 
-No worries :)
-
-
-> I don't know, what I exactly did wrong, but I did now tested again PATCH v2
-> and can confirm, it just works as it should.
-> Tested on 6.8.9 and also 6.9-rc6 (with has PATCH v2 applied).
+On Sun, May 05, 2024 at 01:06:28PM -0700, Krzysztof Olędzki wrote:
+> Hi,
 > 
-> My ports are being correct masked and DUMMY is being correctly shown.
-> So all fine and I am happy with the patch as it is now.
+> I noticed that since https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=742bef476ca5352b16063161fb73a56629a6d995 (which also got backported to -stable kernels) several of messages from dmesg regarding the ATA subsystem are no longer logged.
 > 
-> Sorry for the noise, I am really not sure, what I did wrong during first
-> testing.
+> For example, on my Dell PowerEdge 840 which has only one PATA port I used to get:
+> 
+> scsi host1: ata_piix
+> ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00 irq 14
+> ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xfc08 irq 15
+> ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+> ata2: port disabled--ignoring
+> ata1.01: NODEV after polling detection
+> ata1.00: ATAPI: SAMSUNG CD-R/RW SW-248F, R602, max UDMA/33
+> 
+> After that commit, the following two log entries are missing:
+> ata2: port disabled--ignoring
+> ata1.01: NODEV after polling detection
+> 
+> Note that these are just examples, there are many more messages impacted by that.
+> 
+> Looking at the code, these messages are logged via ata_link_dbg / ata_dev_dbg:
+> ata_link_dbg(link, "port disabled--ignoring\n");	[in drivers/ata/libata-eh.c]
+> ata_dev_dbg(dev, "NODEV after polling detection\n");	[in drivers/ata/libata-core.c]
+> 
+> The commit change how the logging is called - ata_dev_printk function which was calling printk() directly got replaced with the following macro:
+> 
+> +#define ata_dev_printk(level, dev, fmt, ...)			\
+> +        pr_ ## level("ata%u.%02u: " fmt,			\
+> +               (dev)->link->ap->print_id,			\
+> +	       (dev)->link->pmp + (dev)->devno,			\
+> +	       ##__VA_ARGS__)
+> (...)
+>  #define ata_link_dbg(link, fmt, ...)				\
+> -	ata_link_printk(link, KERN_DEBUG, fmt, ##__VA_ARGS__)
+> +	ata_link_printk(debug, link, fmt, ##__VA_ARGS__)
+> (...)
+>  #define ata_dev_dbg(dev, fmt, ...)				\
+> -	ata_dev_printk(dev, KERN_DEBUG, fmt, ##__VA_ARGS__)
+> +	ata_dev_printk(debug, dev, fmt, ##__VA_ARGS__
+> 
+> So, instead of printk(..., level == KERN_DEBUG, ) we now call pr_debug(...). This is a problem as printk(msg, KERN_DEBUG) != pr_debug(msg).
+> 
+> pr_debug is defined as:
+> /* If you are writing a driver, please use dev_dbg instead */
+> #if defined(CONFIG_DYNAMIC_DEBUG) || \
+> 	(defined(CONFIG_DYNAMIC_DEBUG_CORE) && defined(DYNAMIC_DEBUG_MODULE))
+> #include <linux/dynamic_debug.h>
+> 
+> /**
+>  * pr_debug - Print a debug-level message conditionally
+>  * @fmt: format string
+>  * @...: arguments for the format string
+>  *
+>  * This macro expands to dynamic_pr_debug() if CONFIG_DYNAMIC_DEBUG is
+>  * set. Otherwise, if DEBUG is defined, it's equivalent to a printk with
+>  * KERN_DEBUG loglevel. If DEBUG is not defined it does nothing.
+>  *
+>  * It uses pr_fmt() to generate the format string (dynamic_pr_debug() uses
+>  * pr_fmt() internally).
+>  */
+> #define pr_debug(fmt, ...)			\
+> 	dynamic_pr_debug(fmt, ##__VA_ARGS__)
+> #elif defined(DEBUG)
+> #define pr_debug(fmt, ...) \
+> 	printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+> #else
+> #define pr_debug(fmt, ...) \
+> 	no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+> #endif
+> 
+> Without CONFIG_DYNAMIC_DEBUG and if no CONFIG_DEBUG is enabled, the end result is calling no_printk which means nothing gets logged.
+> 
+> Looking at the code, there are more impacted calls, like for example ata_dev_dbg(dev, "disabling queued TRIM support\n") for ATA_HORKAGE_NO_NCQ_TRIM, which also seems like an important information to log, and there are more.
+> 
+> Was this change done intentionally? Note that most of the "debug" printks in libata code seem to be guarded by ata_msg_info / ata_msg_probe / ATA_DEBUG which was sufficient to prevent excess debug information logging.
+> One of the cases like this was covered in the patch:
+> -#ifdef ATA_DEBUG
+>         if (status != 0xff && (status & (ATA_BUSY | ATA_DRQ)))
+> -               ata_port_printk(ap, KERN_DEBUG, "abnormal Status 0x%X\n",
+> -                               status);
+> -#endif
+> +               ata_port_dbg(ap, "abnormal Status 0x%X\n", status);
+> 
+> Assuming this is the intended direction, would it make sense for now to at promote "unconditionally" logged messages from ata_link_dbg/ata_dev_dbg to ata_link_info/ata_dev_info?
+> 
+> Longer term, perhaps we want to revisit ata_msg_info/ata_msg_probe/ATA_DEBUG/ATA_VERBOSE_DEBUG vs ata_dev_printk/ata_link_printk/pr_debug (and maybe also pr_devel), especially that DYNAMIC_DEBUG is available these days...
 
-I'm glad that the patch/kernel module param works for you.
-(Even if we can all agree that we would prefer not needing a kernel module
-param at all :) )
+The change to the dynamic debug model was very much intentional.
+
+CONFIG_ATA_DEBUG/CONFIG_ATA_VERBOSE_DEBUG (and ata_msg_info/ata_msg_probe)
+was replaced with dynamic debug.
+
+So the reason why you saw the messages before was most likely because you
+built your kernel with CONFIG_ATA_DEBUG / CONFIG_ATA_VERBOSE_DEBUG.
+If you want to see the same error messages, you are now expected to use
+dynamic debug for the file which you want debug messages enabled.
+
+
+I do agree that the debug prints that were NOT guarded by CONFIG_ATA_DEBUG
+do now work differently, as they are no longer printed to dmesg at all.
+I'm not sure if this part was intentional. I'm guessing that it wasn't.
+
+Looking at these three prints specifically:
+ata_link_dbg(link, "port disabled--ignoring\n");
+ata_dev_dbg(dev, "NODEV after polling detection\n");
+ata_dev_dbg(dev, "disabling queued TRIM support\n");
+
+None of them were protected with CONFIG_ATA_DEBUG/CONFIG_ATA_VERBOSE_DEBUG
+before the series converting to dynamic debug was merged.
+
+
+The best way forward is probably to look at all debug prints before the
+series converting to dynamic debug was merged, and see if any print NOT
+guarded by CONFIG_ATA_DEBUG/CONFIG_ATA_VERBOSE_DEBUG should be considered
+to promoted to an info print instead.
+(The prints that were guarded are not relevant, for those you really are
+expected to need to use dynamic debug in order to actually get them
+printed to dmesg.)
 
 
 Kind regards,
