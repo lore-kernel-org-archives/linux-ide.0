@@ -1,17 +1,17 @@
 Received: from invmail4.hynix.com (exvmail4.hynix.com [166.125.252.92])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 597707E57C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4F0BD7E0EB;
 	Wed,  8 May 2024 10:02:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=166.125.252.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715162582; cv=none; b=cJFHO0nJfDLJAgSzIWFbPGBmfLGwAMmn00+Tyq09YVCDOAhgbM1hvtLab98EJQ1+lMZV8dS2KgvbcydUB88SPNCYYEE32DRuIeYw8KPmopAIT8LJIs0Q59/jlhYsPdSu/VJyA2cToXcwp9vVqUrAIFZFklQ7SCLJOCycfoEIiPE=
+	t=1715162583; cv=none; b=RiXjqj7Dr0WbENu+J1owW4MARGVRBwS1UaUSmhvR5uCx6eemT+kZKgzT401wvlWZsocareg4iU5byVtdqlO3NSKumNNUFgTAliSfZKxls5bqMaOELo1iVbLKMP6INnvd0HkysK9rQAOPL5L0vKVazst7QWBXu0twlvYoTXZ+PDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715162582; c=relaxed/simple;
-	bh=9o9SI0ONdb1WbiIWXrCSb5nX53qir4UGX5Gt0IQgpYM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=O09DQzIyBfQnzDHXmskR6qPmZfE/oGKzirAsbzBOTj68voDNmB6NGTtSeim6JaKPkj6gAS9btekjvPGF1KMeBUMPpEqCSL4ejyYPD5JEcr2g8uopv6K74fNOvwTeX9Lu2KHTp2gvBhG75SEhhvNb8/YF41N2vCjTFzQn2/1rjE4=
+	s=arc-20240116; t=1715162583; c=relaxed/simple;
+	bh=ZnDomY68etRURkOftpc7pgxDDdwCW9QdH8k+FPh35/w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=cAPrh9HMm8DWdSs2tBIzTHDEexUEq24Xmh5b5TThhEbTB1a23ymZ9MuGH7pEiEUg8qxHkWaRFi6G9lLDcTLL+Ju7koEImVzXM2Qa+0xYQeL32We7C8r/Z0qC23nEfVHp9irf1i14XN1xmqT/AcydpBKHdZbfBHvFJ4xfAeKy4uE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com; spf=pass smtp.mailfrom=sk.com; arc=none smtp.client-ip=166.125.252.92
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sk.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sk.com
-X-AuditID: a67dfc5b-d85ff70000001748-38-663b4a3a04a0
+X-AuditID: a67dfc5b-d85ff70000001748-55-663b4a39ddb3
 From: Byungchul Park <byungchul@sk.com>
 To: linux-kernel@vger.kernel.org
 Cc: kernel_team@skhynix.com,
@@ -71,43 +71,44 @@ Cc: kernel_team@skhynix.com,
 	longman@redhat.com,
 	hdanton@sina.com,
 	her0gyugyu@gmail.com
-Subject: [PATCH v14 18/28] dept: Apply timeout consideration to swait
-Date: Wed,  8 May 2024 18:47:15 +0900
-Message-Id: <20240508094726.35754-19-byungchul@sk.com>
+Subject: [PATCH v14 04/28] dept: Add lock dependency tracker APIs
+Date: Wed,  8 May 2024 18:47:01 +0900
+Message-Id: <20240508094726.35754-5-byungchul@sk.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20240508094726.35754-1-byungchul@sk.com>
 References: <20240508094726.35754-1-byungchul@sk.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSe0hTcRTH+93H715Hi8sMd5uFNYhKKS2sTg8iguoSFEVBLypHXnM0LeY7
-	qDTnKkszQ1emMR8tUUvdIiwfLcU32apRFmplZklOYbXV0rSt6J/Dh/M9389fhyVlFlrBqmPj
-	RW2sSqPEEkrimFm8dN22dVFhmbU0XL0cBq7vFygorK7CYLtXiaDqfhoBI61b4bV7FMHE02ck
-	GPJsCIo/9JNwv20AQWP5OQwvh2aB3TWOoTPvEob00moMz79OEtCXn0tApXk7dOeUEGD1fKbA
-	MILhpiGd8I4vBHhMFQyYUhfCYHkBA5MflkPnwCsaGt+GwI1bfRgaGjspaKsbJODlo0IMA1XT
-	NHS3dVBgu5pFw92xEgxf3SYSTK5xBl5YjQTU6Lwi/bcpGtqzrAToy2oJsL+pR9B04T0B5qpX
-	GFpcowRYzHkk/LrTimAw28FAxmUPAzfTshFcysinQNe3EiZ+FuKNa4SW0XFS0FmShEa3kRK6
-	SnjhYUE/I+ia3jKC0ZwgWMqDhdKGEUIodrpowVxxEQtmZy4jZDrshDDW08MIHdcnKGHIbiB2
-	Kg5I1keKGnWiqA3dECGJrh5KQye/4WRDaxmdirroTMSyPBfOX7txNhP5/cWxB0+wjzG3iO/t
-	9ZA+ns3N5y1Zw7SPSW5Uwpf1bPGxP7eZ1/82Mz6muIV83zk98iml3CrecS3inzKIr6yx/tX4
-	eddvPo8hH8u4lXx9eoG3KvHe/GT5K7VW/K8wh39S3kvlIKkRzahAMnVsYoxKrQlfFp0Sq05e
-	dvREjBl5X8l0evJgHXLadjcjjkXKmVKrfG2UjFYlxqXENCOeJZWzpa3nV0fJpJGqlFOi9sQR
-	bYJGjGtGgSyllEtXuJMiZdwxVbx4XBRPitr/KcH6KVLRXkd9x9S8oIC2jw1Yv2R6j/8h/x+F
-	zhXy/sXZ85uMcpOyPX5HSX5gfbdNHxo0d1I90qXYUBTY3rL/h9O9JOhU6D6m1L67Z+B8Z8Vh
-	9sz06Zze5E8ft3Wr3w3f3sVq1mp+p4QpXeGVAUUBLlnHguE6T35Lul2hk2fUhuUGhmyaeqyk
-	4qJVy4NJbZzqD+MpKRhGAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0hTcRjG+5/L/xxHi8MUOtWHaiCB3RRcvWS3L9VBSkqiO+SqY47mkq0s
-	I0GbmrmMVHRqs7y1RC3rWGHqbDm2UslWmllMM5FM8tJtpmkXV/Tl5cfzPPw+vSypyKPnsxrd
-	CVGvU2uVWEbJIsKMy9eEh0UHf24LgqyLweD9lk6BpaYag/tWFYLqu8kEDDm3wKvxYQRTT5+R
-	YM51Iyh510PCXVcvAlvFOQwdA3Og0zuGoSXXhMFYVoPh+cdpAjx52QRUSdug7XIpAfbJQQrM
-	QxiumI3EzPlAwKS1kgFrUiD0VxQyMP0uBFp6u2hwFLXQYHuzFAquejA02loocNX1E9BRb8HQ
-	W/2bhjbXEwrcWZk03BwtxfBx3EqC1TvGwAt7MQG3U2ZsaV9/0fA4005AWvkdAjpfNyBoSu8j
-	QKruwuDwDhNQK+WS8OOGE0H/pREGUi9OMnAl+RICU2oeBSkeFUxNWPDGNYJjeIwUUmpPCbbx
-	YkpoLeWFB4U9jJDS9IYRiqWTQm1FkFDWOEQIJV+8tCBVXsCC9CWbETJGOglhtL2dEZ7kT1HC
-	QKeZ2L5gn2ztEVGriRf1K9dHyWJqBpJR3Fd82uwsp5NQK52B/FieC+VH7z/CPsbcEr67e5L0
-	cQC3iK/NfP93Q3LDMr68fbOP/blNfNpPifExxQXynnNpKAOxrJxbxY/kRP1TLuSrbtv/avxm
-	4teDo8jHCk7FNxgLmctIVoxmVaIAjS4+Vq3RqlYYjsUk6DSnVxw+HiuhmW+xJk5n1aFvHVua
-	Ecci5Wy5G4dFK2h1vCEhthnxLKkMkDvPr45WyI+oE86I+uMH9Se1oqEZLWAp5Vx5+G4xSsEd
-	VZ8Qj4linKj/3xKs3/wkZCpIDPsRGnjPPhBRsa13YiXvGryefqNn3lmrbjq7qwjfi4vsa6xL
-	3aXdsde8zHHIKFetY6XDiSGefJO79KV8/8YRJyN2601NZVmK+ri94d8jI8/WG3YfKLu2s+Ch
-	a09AnmUhMvjbcuasXvZ2bkFrvkq2uGhig8nhb9na9/RTfbCSMsSoQ4JIvUH9ByryI5cpAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSa0hTcRjG+//P2TlztDjMyJNRxsAsK9Our92oPughioryS9HlkEc3vCSb
+	l4wCzdllplmkM5OYZlO8pG1FN2dTcXkhW7VKRVeKeMmpYc0yJZtGX15+vO/zPDwfXjEheyzy
+	Fitj4wVVLB8tpySkZGR+4drgvdsiArsqPeHGtUBw/bhCQkFVBQW2B+UIKh6lYhhqDIVPE04E
+	U6/fEKDLsSEo7Okm4JHVgcBcepGC930LwO4ao6A5J4OCtHtVFLwdnsbQlXsTQ7lxP7RmF2Gw
+	TA6QoBui4I4uDbvHIIZJQxkNhhRf6C3Np2G6JwiaHR9FYO5cDbfvdlFQY24mwfq0F8P75wUU
+	OCpmRNBqbSLBdiNTBJWjRRQMTxgIMLjGaHhn0WOo1riDLn3/I4JXmRYMl4ofYrB3vEBQe+UL
+	BmPFRwoaXE4MJmMOAb9LGhH0Zo3QkH5tkoY7qVkIMtJzSdB0bYKpXwXUrmCuwTlGcBpTEmee
+	0JNcSxHLPcvvpjlNbSfN6Y0JnKnUn7tXM4S5wnGXiDOWXaU44/hNmtOO2DE32tZGc015UyTX
+	Z9fhg95HJdvDhWhloqBat/OURKFxF4sb9Dp735KCUlC5TIs8xCyzkXVZRsj//DN3QDTLFOPH
+	trdPErO8kFnOmjL75/YE45SwxW0hs+zJ7GZrcv7MeUnGl3V8GUSzLGU2sfqZ6/hfpg9bXm2Z
+	y/FgNrMdA6NzGplb8yItn9YiiVszI2YfWlvQP8Nitq60ncxGUj2aV4ZkytjEGF4ZvTFAkRyr
+	PBtw+kyMEbmfyXBh+thTNG47XI8YMZLPl1q8tkbIRHyiOjmmHrFiQr5Q2nh5S4RMGs4nnxNU
+	Z06qEqIFdT1aIiblXtL1E0nhMiaSjxeiBCFOUP2/YrGHdwoKSt8aFh51yKvzm1Z3pDI44GWf
+	vehTCO/Zn6YO6F0a4mdaUbJP0XrqZJD/Kp8ntq/K4yeSTh/20WYcEM6HDPRlf/7qPWj1K67j
+	SxQf4l/XOe3DO+I8arKizJZlRHzH7dCmhoQ9jOBLtYQ1rJCF3U+95djQrele1Pgrck1P/4/I
+	vJVyUq3gg/wJlZr/C/69brJIAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAAzWSfUzMcRzHfb+/p+vm7OdkfjLLbszz06Z8yBrN+C0P6x9r8w9Hv6tTd9pd
+	xdlY6YSeKK4j4Qqn1REX5qFrp3QVeqCkqKMW1To16SKl3GX++ey1z+e91z5/vEWE1Ej5iZTq
+	OEGjlsfIaDEp3h2UvBJCgxRrrjs2QFb6GnAPnyEhr8RCQ+PdYgSWB0kY+qq2w/sRF4KxugYC
+	jIZGBPmdHQQ8cDgR2ApP0tDUPQOa3YM01BrSaEi+UULDm/5xDO052RiKrbvg1fkCDPbRHhKM
+	fTRcMSZjz+jFMGouYsCcuAi6CnMZGO9cC7XOFgoqr9ZSYPuwHC5fa6ehzFZLguNxF4amp3k0
+	OC2TFLxy1JDQmJVBwZ2BAhr6R8wEmN2DDLy1mzDc03tsKT8mKKjOsGNIuXkfQ3PbMwTlZz5j
+	sFpaaKh0uzCUWg0E/L5dhaAr8xsDp9JHGbiSlIkg7VQOCfr2ABj7lUdv3shXugYJXl96hLeN
+	mEj+ZQHHP8ntYHh9+QeGN1nj+dLCZfyNsj7M5w+5Kd5adJbmrUPZDJ/6rRnzA/X1DF9zaYzk
+	u5uNOGzeXvGmCCFGmSBoVgfvF0fpPY/F9s45esueiBJRsTQV+Yg4dh33M6eH8jLNLuZaW0cJ
+	L/uyC7jSjK9Te4J1ibmb9du8PIvdwpUZJkgvk+wizvm5F3lZwgZwpslz+J/Tnyu+Z5/y+LCB
+	XFvPwFRG6sk8S85lziOxCU0rQr5KdYJKrowJWKWNjtKplUdXHTyssiJPXczHx7Meo+Gm7RWI
+	FSHZdEkjHaSQUvIErU5VgTgRIfOVVJ1er5BKIuS6Y4Lm8D5NfIygrUDzRKRsjiQ0XNgvZSPl
+	cUK0IMQKmv9XLPLxS0TzU+Mz2yJ3q3dInoc9igy+tLh17gVX9C+V0+/hurDw6tklNUtXH/z+
+	8d2T7ukvst8+HRhO+ap4/V434Y6YDE173rGgLbbhnMJf6W/7w/osXFG+YX3gp5kh9Z2Gh6qK
+	QMnWyiXGL/kndHvs4TmO6iHZiZ2KQ7K6Ax1ESHRCfvBFC4qQykhtlHztMkKjlf8FVpLjJyoD
+	AAA=
 X-CFilter-Loop: Reflected
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -115,28 +116,97 @@ List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 
-Now that CONFIG_DEPT_AGGRESSIVE_TIMEOUT_WAIT was introduced, apply the
-consideration to swait, assuming an input 'ret' in ___swait_event()
-macro is used as a timeout value.
+Wrapped the base APIs for easier annotation on typical lock.
 
 Signed-off-by: Byungchul Park <byungchul@sk.com>
 ---
- include/linux/swait.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/dept_ldt.h | 77 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 77 insertions(+)
+ create mode 100644 include/linux/dept_ldt.h
 
-diff --git a/include/linux/swait.h b/include/linux/swait.h
-index 277ac74f61c3..233acdf55e9b 100644
---- a/include/linux/swait.h
-+++ b/include/linux/swait.h
-@@ -162,7 +162,7 @@ extern void finish_swait(struct swait_queue_head *q, struct swait_queue *wait);
- 	struct swait_queue __wait;					\
- 	long __ret = ret;						\
- 									\
--	sdt_might_sleep_start(NULL);					\
-+	sdt_might_sleep_start_timeout(NULL, __ret);			\
- 	INIT_LIST_HEAD(&__wait.task_list);				\
- 	for (;;) {							\
- 		long __int = prepare_to_swait_event(&wq, &__wait, state);\
+diff --git a/include/linux/dept_ldt.h b/include/linux/dept_ldt.h
+new file mode 100644
+index 000000000000..062613e89fc3
+--- /dev/null
++++ b/include/linux/dept_ldt.h
+@@ -0,0 +1,77 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Lock Dependency Tracker
++ *
++ * Started by Byungchul Park <max.byungchul.park@gmail.com>:
++ *
++ *  Copyright (c) 2020 LG Electronics, Inc., Byungchul Park
++ */
++
++#ifndef __LINUX_DEPT_LDT_H
++#define __LINUX_DEPT_LDT_H
++
++#include <linux/dept.h>
++
++#ifdef CONFIG_DEPT
++#define LDT_EVT_L			1UL
++#define LDT_EVT_R			2UL
++#define LDT_EVT_W			1UL
++#define LDT_EVT_RW			(LDT_EVT_R | LDT_EVT_W)
++#define LDT_EVT_ALL			(LDT_EVT_L | LDT_EVT_RW)
++
++#define ldt_init(m, k, su, n)		dept_map_init(m, k, su, n)
++#define ldt_lock(m, sl, t, n, i)					\
++	do {								\
++		if (n)							\
++			dept_ecxt_enter_nokeep(m);			\
++		else if (t)						\
++			dept_ecxt_enter(m, LDT_EVT_L, i, "trylock", "unlock", sl);\
++		else {							\
++			dept_wait(m, LDT_EVT_L, i, "lock", sl);		\
++			dept_ecxt_enter(m, LDT_EVT_L, i, "lock", "unlock", sl);\
++		}							\
++	} while (0)
++
++#define ldt_rlock(m, sl, t, n, i, q)					\
++	do {								\
++		if (n)							\
++			dept_ecxt_enter_nokeep(m);			\
++		else if (t)						\
++			dept_ecxt_enter(m, LDT_EVT_R, i, "read_trylock", "read_unlock", sl);\
++		else {							\
++			dept_wait(m, q ? LDT_EVT_RW : LDT_EVT_W, i, "read_lock", sl);\
++			dept_ecxt_enter(m, LDT_EVT_R, i, "read_lock", "read_unlock", sl);\
++		}							\
++	} while (0)
++
++#define ldt_wlock(m, sl, t, n, i)					\
++	do {								\
++		if (n)							\
++			dept_ecxt_enter_nokeep(m);			\
++		else if (t)						\
++			dept_ecxt_enter(m, LDT_EVT_W, i, "write_trylock", "write_unlock", sl);\
++		else {							\
++			dept_wait(m, LDT_EVT_RW, i, "write_lock", sl);	\
++			dept_ecxt_enter(m, LDT_EVT_W, i, "write_lock", "write_unlock", sl);\
++		}							\
++	} while (0)
++
++#define ldt_unlock(m, i)		dept_ecxt_exit(m, LDT_EVT_ALL, i)
++
++#define ldt_downgrade(m, i)						\
++	do {								\
++		if (dept_ecxt_holding(m, LDT_EVT_W))			\
++			dept_map_ecxt_modify(m, LDT_EVT_W, NULL, LDT_EVT_R, i, "downgrade", "read_unlock", -1);\
++	} while (0)
++
++#define ldt_set_class(m, n, k, sl, i)	dept_map_ecxt_modify(m, LDT_EVT_ALL, k, 0UL, i, "lock_set_class", "(any)unlock", sl)
++#else /* !CONFIG_DEPT */
++#define ldt_init(m, k, su, n)		do { (void)(k); } while (0)
++#define ldt_lock(m, sl, t, n, i)	do { } while (0)
++#define ldt_rlock(m, sl, t, n, i, q)	do { } while (0)
++#define ldt_wlock(m, sl, t, n, i)	do { } while (0)
++#define ldt_unlock(m, i)		do { } while (0)
++#define ldt_downgrade(m, i)		do { } while (0)
++#define ldt_set_class(m, n, k, sl, i)	do { } while (0)
++#endif
++#endif /* __LINUX_DEPT_LDT_H */
 -- 
 2.17.1
 
