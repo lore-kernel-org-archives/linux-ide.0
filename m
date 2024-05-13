@@ -1,38 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D144915218D
-	for <linux-ide@vger.kernel.org>; Mon, 13 May 2024 13:25:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF0C314EC7A
+	for <linux-ide@vger.kernel.org>; Mon, 13 May 2024 13:53:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715606713; cv=none; b=kO0vNiZwe5VXXfXPitjVxHqe4KJXEbOEfJedaQEPYc84bQa6DLLyZ9Oer7gzjF/ezbUFhdy42WUfk9nz/QB3NMqNjfCHTZlZjIQAcGjCE7+VeX4JtH9RAExDHhjvkLKI3JjvWmDhFJdvadMRnj41fFLWJ4ZPH6miRj/oRiwhnhc=
+	t=1715608395; cv=none; b=MwaxA2czOQU4U0TWr4KoInev0rW+Js8uaY3Q4Rs0CWozTuH/GF4nI92M5M2wr7hHj8ReQksV1IiZ0o4UgaYtmT78aV1Al8kfiZDTXgpx2e8Ts2Gdz+q4VvuEyBuLaI+pg+PtABI4mO9R/ONGq0CC3wlFbGCj9sA7sokBXsW1ydo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715606713; c=relaxed/simple;
-	bh=hFsR+PlJT+Ki9pX/K52Ew72eB/KGhug7N/SpL4S+QMs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ak6bcKsKYEZaUbhQ3OwS6WHSX9/cmutT2bn69VBUtFZReLF4lTMTQ2wVssDc7aKuv4M0mDZKwuYmCFYd4rCjTEVDpdKBRYMUHXe7VJQV3O7cogFzxO8Piml+EQ8gMY2CCT1eOJhDB1TBjBLsxURQyyEMBl0ATG4o58xbkN9SHkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=avLyT21+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1715608395; c=relaxed/simple;
+	bh=nKCtgVqnuVwYGwE44693TwDYxtDt7TZTYPBAiMrDCxw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=srhFpyH33VbIiheTMZXMWI1UrJjnogFzv3pLWw5ePHiTHu4zkYnHhnDFCzONJBucKEpEqIrPDdx17xE1W2azDMruimE4ppgGFXk66pqzrE/uF34ESf1QCiZNfpH1Ppv3AMtyQkYa9Mig7MIa99j4RFYRC6wdpRfQ10IvedKDLRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kayoway.com; spf=pass smtp.mailfrom=kayoway.com; dkim=pass (1024-bit key) header.d=kayoway.com header.i=@kayoway.com header.b=a7o5lJcv; arc=none smtp.client-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kayoway.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kayoway.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="avLyT21+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3867DC113CC;
-	Mon, 13 May 2024 13:25:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715606713;
-	bh=hFsR+PlJT+Ki9pX/K52Ew72eB/KGhug7N/SpL4S+QMs=;
-	h=From:To:Cc:Subject:Date:From;
-	b=avLyT21+albx0mOHM4B2pW+GUzB/43LmSm7lQi1UULVcU8WjQf1RdOjLuz9glXldS
-	 gt4B2Z7/wUr9EQK7xIaVFxkAU5lB8IC+3WcADRJiJeK9ceD+RhYjb1RytIVCytKNaz
-	 FCKbW2enBP3CbdHmInBY9UBxjF8UNKgQUxkeg5qKBCZNjy33s6wETaFprHdoo3SjXn
-	 W096H1mZtGWT33PUjYHq+7At3bwgyzg7sIo95joewbX3TnaAv1eNNjKPj/1Dzd7zpN
-	 HKAzrZ3UP8ymtW7/WidODFU0y2h/oFLt5bEiOdwEGRcTExR3BbyPTSmSrg3G6wqQG9
-	 xQtN1eArENgwg==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata changes for 6.10-rc1
-Date: Mon, 13 May 2024 22:25:11 +0900
-Message-ID: <20240513132512.159143-1-dlemoal@kernel.org>
+	dkim=pass (1024-bit key) header.d=kayoway.com header.i=@kayoway.com header.b="a7o5lJcv"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-6f490b5c23bso3656951b3a.3
+        for <linux-ide@vger.kernel.org>; Mon, 13 May 2024 06:53:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kayoway.com; s=google; t=1715608393; x=1716213193; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=udVn4LZw64M3seB+IwLN3PdqbZ+w/sTwgfjJfmGjScc=;
+        b=a7o5lJcvjvFNch3xfelL/B2pqGg4IOkUCqaNBlYbXKbOBvCu/QEU7SkAhVaqCXMjnS
+         F5+WbBr4osaaa16PR86zKQLzoAp2tNQ6+RZzP+oaBIch1U0XhcqjM/2j4YuQvWkmz+ex
+         qd2bMZRa+4BRbxvZRIWp/B14VNZXiaq/2intY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715608393; x=1716213193;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=udVn4LZw64M3seB+IwLN3PdqbZ+w/sTwgfjJfmGjScc=;
+        b=VGM/c78Cz1tkQ4OxJpPrsuhwsHGktYLQGJ9JqPqGiDWio7iGNtUZAZ1SMTwezwK5lF
+         7lZc6rsAUu3hPPT1R5ZI3Bnb8SQ/tEu1UIIecU9yxgtZw4G+eJZpS+RONID0h56OgT8U
+         42KnKNLxuOurvu1IzgAwW5SYkmp+O3GpQhAlWNwKRWQRBxHpAuQKophzMq3twmE2aB1B
+         bzL9P0mpVTiNcuUR5Ytq/gu/Zzdz/nbGHGb/glfVupMc/czJc3Ih/1+zNIyLxPRnxklo
+         B+099hESVeHX1BRT4AkfAGycron4iD0pT/fXm4YtNt/XXPLo9a5/5nIcqsLlJKl4kd1G
+         7i4g==
+X-Gm-Message-State: AOJu0YxYFZ52H8dGbmBzyPljd/qvuNbEy3tcXmgbm1PBY0+xra4RWwNK
+	9klZ7rtuq7Z7D6plEol3kubpzaiS0dSo0eEKiVYP/rKtC54WhSNeCDdTkxrdWkhrAQshhftdxe0
+	jPxw=
+X-Google-Smtp-Source: AGHT+IFyU7PCnj1fH8qDM7VMqA76E0sy5xErr1LCXa1BK52ZIqXfU9cxG6ectpxu+TT/zkTLoOJ1MA==
+X-Received: by 2002:a05:6a00:13a6:b0:6ed:5f64:2fef with SMTP id d2e1a72fcca58-6f4e02cec14mr11729614b3a.17.1715608393081;
+        Mon, 13 May 2024 06:53:13 -0700 (PDT)
+Received: from minidesk.. (101-142-33-202f1.hyg2.eonet.ne.jp. [101.142.33.202])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-6f4d2a66476sm7373778b3a.28.2024.05.13.06.53.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 May 2024 06:53:12 -0700 (PDT)
+From: dev@kayoway.com
+To: dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: linux-ide@vger.kernel.org
+Subject: [PATCH 1/1] ata: ahci: Revert "ata: ahci: Add Intel Alder Lake-P AHCI controller to  low power chipsets list"
+Date: Mon, 13 May 2024 22:53:02 +0900
+Message-ID: <20240513135302.1869084-2-dev@kayoway.com>
 X-Mailer: git-send-email 2.45.0
+In-Reply-To: <20240513135302.1869084-1-dev@kayoway.com>
+References: <20240513135302.1869084-1-dev@kayoway.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -41,60 +67,31 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Linus,
+From: Jason Nader <dev@kayoway.com>
 
-The following changes since commit 4cece764965020c22cff7665b18a012006359095:
+Commit b8b8b4e0c052b2c06e1c4820a8001f4e0f77900f ("ata: ahci: Add Intel
+Alder Lake-P AHCI controller to low power chipsets list") enabled low
+power mode for Alder Lake-P AHCI adaptors in order to reduce idle power
+consumption, however this introduced a regression on at least one system.
+Revert the patch until a better solution is found.
 
-  Linux 6.9-rc1 (2024-03-24 14:10:05 -0700)
+Signed-off-by: Jason Nader <dev@kayoway.com>
+---
+ drivers/ata/ahci.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-are available in the Git repository at:
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6548f10e61d9..07d66d2c5f0d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -429,7 +429,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_pcs_quirk }, /* Comet Lake PCH RAID */
+ 	/* Elkhart Lake IDs 0x4b60 & 0x4b62 https://sata-io.org/product/8803 not tested yet */
+ 	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci_pcs_quirk }, /* Elkhart Lake AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x7ae2), board_ahci_pcs_quirk }, /* Alder Lake-P AHCI */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-- 
+2.45.0
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.10-rc1
-
-for you to fetch changes up to d4a89339f17c87c4990070e9116462d16e75894f:
-
-  ata: pata_legacy: make legacy_exit() work again (2024-05-07 07:23:31 +0900)
-
-----------------------------------------------------------------
-ata changes for 6.10-rc1
-
- - Convert the bindings for the imx-pata and ahci-da850 drivers to DT
-   schemas (from Animesh).
-
- - Correct the code to handle HAS_IOPORT dependencies and conditionally
-   compile drivers as needed (From Niklas).
-
- - Correct the legacy_exit() function in the pata_legacy driver to
-   properly handle cleanups on driver exit (From Serget).
-
- - Small code simplification removing the ata_exec_internal_sg()
-   function and folding it into its only caller (From me).
-
-----------------------------------------------------------------
-Animesh Agarwal (2):
-      dt-bindings: ata: imx-pata: Convert to dtschema
-      dt-bindings: ata: ahci-da850: Convert to dtschema
-
-Damien Le Moal (1):
-      ata: libata-core: Remove ata_exec_internal_sg()
-
-Niklas Schnelle (1):
-      ata: add HAS_IOPORT dependencies
-
-Sergey Shtylyov (1):
-      ata: pata_legacy: make legacy_exit() work again
-
- .../devicetree/bindings/ata/ahci-da850.txt         |  18 ----
- .../devicetree/bindings/ata/fsl,imx-pata.yaml      |  42 ++++++++
- Documentation/devicetree/bindings/ata/imx-pata.txt |  16 ---
- .../devicetree/bindings/ata/ti,da850-ahci.yaml     |  39 ++++++++
- drivers/ata/Kconfig                                |  28 +++---
- drivers/ata/libata-core.c                          | 108 ++++++---------------
- drivers/ata/libata-sff.c                           |   4 +
- drivers/ata/libata.h                               |   8 +-
- drivers/ata/pata_legacy.c                          |   8 +-
- 9 files changed, 139 insertions(+), 132 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
- create mode 100644 Documentation/devicetree/bindings/ata/fsl,imx-pata.yaml
- delete mode 100644 Documentation/devicetree/bindings/ata/imx-pata.txt
- create mode 100644 Documentation/devicetree/bindings/ata/ti,da850-ahci.yaml
