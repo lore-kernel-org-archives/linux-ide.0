@@ -1,66 +1,75 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB6B3DDCD
-	for <linux-ide@vger.kernel.org>; Fri, 17 May 2024 05:40:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36B035231;
+	Fri, 17 May 2024 21:32:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715924441; cv=none; b=cHxxJk6B8IgFv/YoNVfIyOUhvqiYjrOD/djhECuAXxMc5wBeS/2Qb/czA9ksKwY5zYoSe58suMvj+t3VWK7qglZCEpCHvquYlhbAy+AcCm/Vxlt5o8TczFIRnVY/PsQEmpDrb3TnVkcVSCsmbX7vA4+QZ0QSc9W3tODTU5iUYbc=
+	t=1715981560; cv=none; b=RY1GXDGHCGjiXTtjii4dyjj0GFJJV+RV9ZCiYPuuoBr80mVHrKgLq4bdkQDvaGcn0zAFRGjxgndB5qSK8hM1+BFoQsMFaJXUxXr5C+lK9FttLX7mn2FimObg917lC6DSpCnmU4y1yQYGSmKx9COdZuapVD46jDzcMf86Z9eP+s8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715924441; c=relaxed/simple;
-	bh=Lmx+3oDHv+b7PgvBascSGQgkiVdlyeTdBAzDi7r3cYU=;
+	s=arc-20240116; t=1715981560; c=relaxed/simple;
+	bh=7TdUGU59lM5Y68qE55hDQHQuzdkvVUf7N0kWoeZdMSs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LHF7AcHBqgBKDpOa1RNAzKpOgozR5mi761P7x5ALunH0GA9kP4by38Bo5toNXSrzsAX9jQX3oe3PhEvHgdW8qFFXP5o9OI7vAx93pmYoVtM1AOtOslyuYNcWp6dzvSete8rdRkDROpjBUYPNhX65LuMT1+rFY1lpfFiZO2cEOR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kayoway.com; spf=pass smtp.mailfrom=kayoway.com; dkim=pass (1024-bit key) header.d=kayoway.com header.i=@kayoway.com header.b=sVXkN2zf; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kayoway.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kayoway.com
+	 MIME-Version; b=K7RkIH829JjTFwvor5iD1A88Wj2UPZgCc7nE8Cp4NBFXqaIxwmP/PvtPVw6df5m4hmTYuR5VDiBlTYww76mii1McIUW1DeWlnRtjHtFAqFdhwxMgN/ym9/NNVTighpSmBWdlUqE2GreFHJKuMgzLurKJ2GUAteCnX9WJSrDe9N4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S9vMkJd8; arc=none smtp.client-ip=209.85.216.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=kayoway.com header.i=@kayoway.com header.b="sVXkN2zf"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6f4472561f1so1030625b3a.0
-        for <linux-ide@vger.kernel.org>; Thu, 16 May 2024 22:40:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S9vMkJd8"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-2b33d011e5dso456857a91.0;
+        Fri, 17 May 2024 14:32:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kayoway.com; s=google; t=1715924438; x=1716529238; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1715981558; x=1716586358; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=55UtSevslBEiBwmsUoC7VIcUm6g1mhkBdh+kW3p2rE8=;
-        b=sVXkN2zfloyG7Eiulfeg+w2TtqLvxnawIYyoiKiB1n/KgCMAVYD/UpWnUPXhZKzRcN
-         On83RgZv0iUVk2p/nwINYPJVi6GdMwXbhH/41TlTN+H3TUApmYrbkWCPpS7SNf1RtEDM
-         +xMgnWqDzIFdJ8E1L8VhruLhYA83bj6chorrE=
+        bh=cyrneMtT2roM/mXv9xc7jF6yRyXUeDAQ1aSOo1P0c+s=;
+        b=S9vMkJd89imnOHeCgIiY9IV0YKWSbrONZDKiIsQCKLezFEAxoYYVVgmI1B9OMWcEUF
+         Y1Y/pWQfXbI+dwJM/o5cqNH8c2ScuDQcQzShPtNMNZWou0CKAQg/RZg7rbV0d8zV1UMp
+         1cjqbNJn7DUYsEGH0AmemdEVEAzfbklh9piSs34XB3Cuw30YYWZP+IIUBRJXzuJQnGnc
+         gmpqg7BxszmAQ5qFIt8K2Nk3MGAOwzxH37uHNGUgKii/1O37ll6dsNZjgUSS2aFsYlyX
+         8Wnanh/p55uHLg/NzGpoSO/JLfFTDPA9aZNjvkW7xZzdSmZ9WEnxHLvKnLH3G3W8NGZC
+         UhUw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715924438; x=1716529238;
+        d=1e100.net; s=20230601; t=1715981558; x=1716586358;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=55UtSevslBEiBwmsUoC7VIcUm6g1mhkBdh+kW3p2rE8=;
-        b=PQE7S0K7KEi68GquE8IptARfOcgV4J8PS1Pqap3IIrWKroKSmGrrnZYzkUPlLkAvQ2
-         xFqy6jit75/bDU6aGSNgu1D71ox9lvTgQAZfPjhEoEJQCG7OyJqZ8LXY8wRL8H2InB1p
-         bjPDNz7AFb4Ab/UL+GDzDqWXTahlJ6nZDLO6BffSaWtZUKG6ODDfyh8RHrsMmOExE0F+
-         tzQgD0QtkW2cgoDJYRjgCpRot2wukI4T0mpah7YmVL2cB+Yu21wtLQ0fFM5XPoKogc6u
-         d+Gy/8eKn8N8Ewy5OetCsM51JDTopQvsoHzYy9tp441JYq4oaJOQ11n4Vhpkty4ToJks
-         ZoIQ==
-X-Gm-Message-State: AOJu0YyrNbZ+T0xzzSyOE6tA1ydxnRX5WemhS9K+1D4TA4RLx5akF9s5
-	aqzMsq/f1X5anIefwXt6gDDucDTbsTxwIEqkjvd/wYgF//htcjH6Iz4efhtA23xjTw4mhEp+6i/
-	H
-X-Google-Smtp-Source: AGHT+IE6qosdd7e8oNFWMQ4Uld1N2J10aMJGCtJL/Q/PQgcypP4dZu8NLS7IRWMcJV3w7fpmjM9joQ==
-X-Received: by 2002:a05:6a00:4902:b0:6f4:f898:6741 with SMTP id d2e1a72fcca58-6f4f8986751mr18028308b3a.20.1715924438248;
-        Thu, 16 May 2024 22:40:38 -0700 (PDT)
-Received: from minidesk.. (101-142-33-202f1.hyg2.eonet.ne.jp. [101.142.33.202])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-6f4d2a665a6sm13944770b3a.2.2024.05.16.22.40.36
+        bh=cyrneMtT2roM/mXv9xc7jF6yRyXUeDAQ1aSOo1P0c+s=;
+        b=ZUPIH4RF0nCaOY6bOYd9oiBP8xJBaXnZ2h0AMbQU2fiWznTjVr4dOE3tT2hAlH5dgf
+         nCk/91hlqUbkNt9irSu9V5xv60l2Ux102cjWHqJIkJ2LbRrHymR2suKki7Kv0btMHGJM
+         c1CH93IgMfCCzeFcpVfa8er6dc5Q9pX8mTxXUvhQ+CyQrHJLNlQNT5eJUjRvYST6P6Eh
+         bJZngicjbXb4z8auH7dQNgtSNOWb5UsfLm2fgx+cSsWYehz3kFGffqYhHjCPKa60XCk2
+         Ecb+zXNUaeDW+pnjs4WrW14Eu2fmBGLDJMEEMDhSPm/gg1PFSNk+bbUIklyxufO18yxV
+         wXsw==
+X-Forwarded-Encrypted: i=1; AJvYcCVH1Jz+L+xyeLoxUcL4RlNw8XU7F/GmmVwKggGMqnT/TVVgl6+BFF8g0WlypnuhGBl1BgSUIZtEPjgFd1vrsOo16W2fiu7W7kaKisPWZn6VGGI90hgOkoszSG0I3JFOulTLV/E9mo/RMAl3d236SUxX9nud/cCUVcABHEHC30XX/RnGj/OZokhEVGt24na4CPwgm+rbXATzSYZBoNdQjK3oRw==
+X-Gm-Message-State: AOJu0YyjahJvbGI3dpI7fuAHVPwFoszvy7EBIH4Yqu/eTSdMWtVo4/Ex
+	4uDOhiXcRyKgyQRxU1jXqe28NLn8fhh/gdE4l6Zb28IYlj0v2fR5
+X-Google-Smtp-Source: AGHT+IFXyePfAU6GysoFIX/3SNu/9wWzEv6Uf6hwUK7S74vkedQQo6HP3kvP2IJec5JbP/nPkQmlFg==
+X-Received: by 2002:a17:90a:68c9:b0:2b3:6898:d025 with SMTP id 98e67ed59e1d1-2bd6038cdabmr402648a91.9.1715981558358;
+        Fri, 17 May 2024 14:32:38 -0700 (PDT)
+Received: from nvdcloudtop.c.googlers.com.com (32.39.145.34.bc.googleusercontent.com. [34.145.39.32])
+        by smtp.googlemail.com with ESMTPSA id 98e67ed59e1d1-2b5e02bcf6asm15563186a91.1.2024.05.17.14.32.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 May 2024 22:40:37 -0700 (PDT)
-From: dev@kayoway.com
-To: dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: linux-ide@vger.kernel.org,
-	Jason Nader <dev@kayoway.com>
-Subject: [PATCH v2 1/1] ata: ahci: Revert "ata: ahci: Add Intel Alder Lake-P AHCI controller to  low power chipsets list"
-Date: Fri, 17 May 2024 14:39:02 +0900
-Message-ID: <20240517053902.44622-2-dev@kayoway.com>
-X-Mailer: git-send-email 2.45.1
-In-Reply-To: <20240517053902.44622-1-dev@kayoway.com>
-References: <20240513135302.1869084-1-dev@kayoway.com>
- <20240517053902.44622-1-dev@kayoway.com>
+        Fri, 17 May 2024 14:32:37 -0700 (PDT)
+From: Navid <navid.emamdoost@gmail.com>
+To: willy@infradead.org
+Cc: bpf@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	lsf-pc@lists.linux-foundation.org,
+	navid.emamdoost@gmail.com,
+	yuzhao@google.com
+Subject: Re: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
+Date: Fri, 17 May 2024 21:32:31 +0000
+Message-ID: <20240517213231.2934591-1-navid.emamdoost@gmail.com>
+X-Mailer: git-send-email 2.45.0.rc1.225.g2a3ae87e7f-goog
+In-Reply-To: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
+References: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -69,48 +78,50 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Jason Nader <dev@kayoway.com>
+On Mon, 2024-01-29 at 04:32 +0000, Matthew Wilcox wrote:
+> Our documentation of the current page flags is ... not great.  I think
+> I can improve it for the page cache side of things; I understand the
+> meanings of locked, writeback, uptodate, dirty, head, waiters, slab,
+> mlocked, mappedtodisk, error, hwpoison, readahead, anon_exclusive,
+> has_hwpoisoned, hugetlb and large_remappable.
+> 
+> Where I'm a lot more shaky is the meaning of the more "real MM" flags,
+> like active, referenced, lru, workingset, reserved, reclaim, swapbacked,
+> unevictable, young, idle, swapcache, isolated, and reported.
+> 
+> Perhaps we could have an MM session where we try to explain slowly and
+> carefully to each other what all these flags actually mean, talk about
+> what combinations of them make sense, how we might eliminate some of
+> them to make more space in the flags word, and what all this looks like
+> in a memdesc world.
+> 
+> And maybe we can get some documentation written about it!  Not trying
+> to nerd snipe Jon into attending this session, but if he did ...
+> 
+> [thanks to Amir for reminding me that I meant to propose this topic]
+> 
 
-Commit b8b8b4e0c052 ("ata: ahci: Add Intel Alder Lake-P AHCI controller
-to low power chipsets list") added Intel Alder Lake to the ahci_pci_tbl.
+On the "Reclaiming" part of this thread, we might consider this:
 
-Because of the way that the Intel PCS quirk was implemented, having
-an explicit entry in the ahci_pci_tbl caused the Intel PCS quirk to
-be applied. (The quirk was not being applied if there was no explicit
-entry.)
+Optimizing Page Flags: Reclaiming Bits in page->flags via folio->lru
 
-Thus, entries that were added to the ahci_pci_tbl also got the Intel
-PCS quirk applied.
+Limited bit space in the Linux kernel's page->flags field, especially on 32-bit
+architectures, is a source of challenge [1]. This proposal aims to free up bits
+by relocating flags like PG_active and PG_unevictable to the lower bits of
+folio->lru as they are always unset. It helps with encoding zone, numa node,
+and sparsemem section [2].
 
-The quirk was cleaned up in commit 7edbb6059274 ("ahci: clean up
-intel_pcs_quirk"), such that it is clear which entries that actually
-applies the Intel PCS quirk.
+Proposed Process:
 
-Newer Intel AHCI controllers do not need the Intel PCS quirk,
-and applying it when not needed actually breaks some platforms.
+Candidate Evaluation: Assess flags for relocation suitability based on usage,
+dependencies, and functional impact.
+Impact Assessment: Evaluate the impact on kernel code to ensure correct behavior
+and compatibility.
+Relocation Implementation: Modify code to read/write flags from folio->lru and
+adjust related macros/functions.
+Thoroughly test changes.
 
-Do not apply the Intel PCS quirk for Intel Alder Lake.
-This is in line with how things worked before commit b8b8b4e0c052 ("ata:
-ahci: Add Intel Alder Lake-P AHCI controller to low power chipsets list"),
-such that certain platforms using Intel Alder Lake will work once again.
+[1] https://lwn.net/Articles/335768/
+[2] https://blogs.oracle.com/linux/post/struct-page-the-linux-physical-page-frame-data-structure
 
-Signed-off-by: Jason Nader <dev@kayoway.com>
----
- drivers/ata/ahci.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 6548f10e61d9..07d66d2c5f0d 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -429,7 +429,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_pcs_quirk }, /* Comet Lake PCH RAID */
- 	/* Elkhart Lake IDs 0x4b60 & 0x4b62 https://sata-io.org/product/8803 not tested yet */
- 	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci_pcs_quirk }, /* Elkhart Lake AHCI */
--	{ PCI_VDEVICE(INTEL, 0x7ae2), board_ahci_pcs_quirk }, /* Alder Lake-P AHCI */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--- 
-2.45.1
 
