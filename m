@@ -1,116 +1,76 @@
-Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 32032A2D;
-	Mon, 20 May 2024 13:11:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8E9D27A;
+	Mon, 20 May 2024 15:15:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716210689; cv=none; b=Hr8SipDM7Vh7HJDDEMqorTDIO2Y48HgvT6hxCGV66pyb4cFGGRD8funkpcfKUGBfElo473lwC2bS6UtQ20EwE6YaJ4AUc/CdIbFiTF3XTtj5JQQ2K82UT1sycA9UJrcTJei0kfLD4DKB9tsu95LOfEVPdge6tqIEfVMYqtxhBhU=
+	t=1716218143; cv=none; b=cDtZR+FkHK3HyNrqNB13wl/EgF58hSvilkxuMTQmmqRK0CeJHGjtEdYIxMDu6HAm+Ig97AEIi1wknME5oC7Syv52LK2HPRLxMJX93fwAOkXD8pEsGRUQ1HaBpmnCQly1tBAYKTumz/a6r1XUtYXU7rnXNbEAXXSCRYZn9qDGW8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716210689; c=relaxed/simple;
-	bh=a9Beq8MfnmXvgVrRFuX5+jQqyI2S3FJbw4QgKto9ElA=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RYGxZmAiWdbSCI1SrWJsI89ERH3yfNPPyBQZ4VU06WKRPFgykhURjPiX+BTveRCb/42h42NPG5FNocAGSqDJMo3VHp9G6DtHZVmZJMQaBdwvj4AJo5ecv6DToGTYtJ87xde6M2z1XQAgdcxE9J+Ovr8pkFRw6DLBlrsBNFK/FSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
-Received: from SIOS1075.ysato.ml (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 770791C00F9;
-	Mon, 20 May 2024 22:06:04 +0900 (JST)
-Date: Mon, 20 May 2024 22:06:03 +0900
-Message-ID: <87fruc8wg4.wl-ysato@users.sourceforge.jp>
-From: Yoshinori Sato <ysato@users.sourceforge.jp>
-To: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Cc: linux-sh@vger.kernel.org,	Damien Le Moal <dlemoal@kernel.org>,	Niklas
- Cassel <cassel@kernel.org>,	Rob Herring <robh@kernel.org>,	Krzysztof
- Kozlowski <krzysztof.kozlowski+dt@linaro.org>,	Conor Dooley
- <conor+dt@kernel.org>,	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Michael Turquette <mturquette@baylibre.com>,	Stephen Boyd
- <sboyd@kernel.org>,	David Airlie <airlied@gmail.com>,	Daniel Vetter
- <daniel@ffwll.ch>,	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,	Thomas Zimmermann
- <tzimmermann@suse.de>,	Thomas Gleixner <tglx@linutronix.de>,	Bjorn Helgaas
- <bhelgaas@google.com>,	Lorenzo Pieralisi <lpieralisi@kernel.org>,	Krzysztof
- =?ISO-8859-2?Q?Wilczy=F1ski?= <kw@linux.com>,	Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,	Jiri Slaby <jirislaby@kernel.org>,	Magnus
- Damm <magnus.damm@gmail.com>,	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Rich Felker <dalias@libc.org>,	Lee Jones <lee@kernel.org>,	Helge Deller
- <deller@gmx.de>,	Heiko Stuebner <heiko.stuebner@cherry.de>,	Shawn Guo
- <shawnguo@kernel.org>,	Sebastian Reichel <sre@kernel.org>,	Chris Morgan
- <macromorgan@hotmail.com>,	Linus Walleij <linus.walleij@linaro.org>,	Arnd
- Bergmann <arnd@arndb.de>,	David Rientjes <rientjes@google.com>,	Hyeonggon
- Yoo <42.hyeyoo@gmail.com>,	Vlastimil Babka <vbabka@suse.cz>,	Baoquan He
- <bhe@redhat.com>,	Andrew Morton <akpm@linux-foundation.org>,	Guenter Roeck
- <linux@roeck-us.net>,	Kefeng Wang <wangkefeng.wang@huawei.com>,	Stephen
- Rothwell <sfr@canb.auug.org.au>,	Javier Martinez Canillas
- <javierm@redhat.com>,	Guo Ren <guoren@kernel.org>,	Azeem Shaikh
- <azeemshaikh38@gmail.com>,	Max Filippov <jcmvbkbc@gmail.com>,	Jonathan
- Corbet <corbet@lwn.net>,	Jacky Huang <ychuang3@nuvoton.com>,	Herve Codina
- <herve.codina@bootlin.com>,	Manikanta Guntupalli
- <manikanta.guntupalli@amd.com>,	Anup Patel <apatel@ventanamicro.com>,	Biju
- Das <biju.das.jz@bp.renesas.com>,	Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?=
- <u.kleine-koenig@pengutronix.de>,	Sam Ravnborg <sam@ravnborg.org>,	Sergey
- Shtylyov <s.shtylyov@omp.ru>,	Laurent Pinchart
- <laurent.pinchart+renesas@ideasonboard.com>,	linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,	linux-clk@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,	linux-pci@vger.kernel.org,
-	linux-serial@vger.kernel.org,	linux-fbdev@vger.kernel.org
-Subject: Re: [RESEND v7 00/37] Device Tree support for SH7751 based board
-In-Reply-To: <455e40c03314294f9c2e64480aa69f8261a3f2d5.camel@physik.fu-berlin.de>
-References: <cover.1712205900.git.ysato@users.sourceforge.jp>
-	<455e40c03314294f9c2e64480aa69f8261a3f2d5.camel@physik.fu-berlin.de>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?ISO-8859-4?Q?Goj=F2?=) APEL-LB/10.8 EasyPG/1.0.0
- Emacs/28.2 (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	s=arc-20240116; t=1716218143; c=relaxed/simple;
+	bh=qNzvvr/egYIqxDFMWzX9Y/DNoTmf4i3vbl+lIDIrBJM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=FlT7Z8afzKHmmO23M8Zl1Cy0wxZhe5WjyAa5MOt+8+GKp87Jz422meLVwaw3gTEZVhxIjG6w6eoVrSaD1zwmU1HlYsv+leF55X1Zc7jul36WIG+GwRjTtOpylAW4rAoVZkypCIY0ZknaX9hARYEvSj8R6GiGsCZOwMrKz/RtXMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1542168AFE; Mon, 20 May 2024 17:15:37 +0200 (CEST)
+Date: Mon, 20 May 2024 17:15:36 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>,
+	Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
+ allocating the queue
+Message-ID: <20240520151536.GA32532@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <08beb913-f525-49e2-8ef2-f62e9d466e53@roeck-us.net>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Sat, 18 May 2024 18:08:30 +0900,
-John Paul Adrian Glaubitz wrote:
-> 
-> Hi Yoshinori,
-> 
-> On Thu, 2024-04-04 at 14:14 +0900, Yoshinori Sato wrote:
-> > Sorry. previus mail is thread broken.
-> > 
-> > This is an updated version of something I wrote about 7 years ago.
-> > Minimum support for R2D-plus and LANDISK.
-> > I think R2D-1 will work if you add AX88796 to dts.
-> > And board-specific functions and SCI's SPI functions are not supported.
-> > 
-> > You can get it working with qemu found here.
-> > https://gitlab.com/yoshinori.sato/qemu/-/tree/landisk
-> > 
-> > v7 changes.
-> > - sh/kernel/setup.c: fix kernel parameter handling.
-> > - clk-sh7750.c: cleanup.
-> > - sh_tmu.c: cleanup.
-> > - irq-renesas-sh7751.c: IPR definition move to code.
-> > - irq-renesas-sh7751irl.c: update register definition.
-> > - pci-sh7751.c: Register initialization fix. 
-> > - sm501 and sm501fb: Re-design Device Tree properties.
-> 
-> Could you push your v7 version to your Gitlab [1] repository so I can fetch
-> it from there?
+Adding ben and the linuxppc list.
 
-updated it.
-I'll be posting v8 soon.
+Context: pata_macio initialization now fails as we enforce that the
+segment size is set properly.
 
-> Thanks,
-> Adrian
-> 
-> > [1] https://gitlab.com/yoshinori.sato/linux
-> 
-> -- 
->  .''`.  John Paul Adrian Glaubitz
-> : :' :  Debian Developer
-> `. `'   Physicist
->   `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
-> 
+On Wed, May 15, 2024 at 04:52:29PM -0700, Guenter Roeck wrote:
+> pata_macio_common_init() Calling ata_host_activate() with limit 65280
+> ...
+> max_segment_size is 65280; PAGE_SIZE is 65536; BLK_MAX_SEGMENT_SIZE is 65536
+> WARNING: CPU: 0 PID: 12 at block/blk-settings.c:202 blk_validate_limits+0x2d4/0x364
+> ...
+>
+> This is with PPC_BOOK3S_64 which selects a default page size of 64k.
 
--- 
-Yosinori Sato
+Yeah.  Did you actually manage to use pata macio previously?  Or is
+it just used because it's part of the pmac default config?
+
+> Looking at the old code, I think it did what you suggested above,
+
+> but assuming that the driver requested a lower limit on purpose that
+> may not be the best solution.
+
+> Never mind, though - I updated my test configuration to explicitly
+> configure the page size to 4k to work around the problem. With that,
+> please consider this report a note in case someone hits the problem
+> on a real system (and sorry for the noise).
+
+Yes, the idea behind this change was to catch such errors.  So far
+most errors have been drivers setting lower limits than what the
+hardware can actually handle, but I'd love to track this down.
+
+If the hardware can't actually handle the lower limit we should
+probably just fail the probe gracefully with a well comment if
+statement instead.
