@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCBDD770E2
-	for <linux-ide@vger.kernel.org>; Tue, 21 May 2024 12:55:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5691B757F7
+	for <linux-ide@vger.kernel.org>; Tue, 21 May 2024 13:13:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716296151; cv=none; b=HWm5yox9YO742s0+JEmnxPoRSvi/K6fu9ceOCQ/zABuv0Odce8hsog423itdkab1cp6sg0H5CUSJ3z/MPpTXiq4PvRjlxFFYoF0nTY6Q6PDOHRCGpE66Ve9e34GGuN/CKu/0Yj0f2S0nsjRJ09HwBhINZup4vnyS3ntU6OcGsI4=
+	t=1716297210; cv=none; b=q2wC/4wegUNTbvn34YDOzvP8YDhuCXc8pF8Z11QClyPvA6ogeyNWpOURhjG4FM/EmpM67KbwRhyCuNYZiXohC4coZvVRb/Hi54WXMj/0vagagyRb8suZQdsZuWEdgDQ4ebYgdh4rGcLv7ztj2MlKWU5w4fCyMpWtXjqRmK16wVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716296151; c=relaxed/simple;
-	bh=SDVX0iUnE/9/V4ApZTS7ExA6B4huv4qG1DBu/8Ugdec=;
+	s=arc-20240116; t=1716297210; c=relaxed/simple;
+	bh=AMGWsIZdicuL56ZBuf2ZunHH4PYgLcUCCngq/d+Z144=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W8m+gcBSEdRKrWYgL6mXZE2mhUOKsLJIZ2paeKMpFDTKcjXlvi6y3yBEc7LPoYr73IWq1eaGlR5J65Mt96/X1IefTNU1GGY3Gd0FZwlooFFrvfVMFUSTiUKvP5fV1OTzIEMye25TplPmAqlu2r9Dicgz01J2x4KckMYueIgrSIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KnhPYNOO; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=leTtq48WLrEnn5n32qny62oWS8w0uBj8pVfQjXZMhvZT5+g/WnV002O8prSQKSHPyBW/jqrO6WYY7Pl9/RDuVrdQePPt9UrLJCqIJEP0xRcuwiNWJqpahEzWGfqMsq9ksUEP2AiNJ4efKpgSebSgdCm7DB5HbLaCwPz3cx/hCO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lDn4P0/M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KnhPYNOO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE0FC32789;
-	Tue, 21 May 2024 12:55:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lDn4P0/M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3D66C2BD11;
+	Tue, 21 May 2024 13:13:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716296151;
-	bh=SDVX0iUnE/9/V4ApZTS7ExA6B4huv4qG1DBu/8Ugdec=;
+	s=k20201202; t=1716297210;
+	bh=AMGWsIZdicuL56ZBuf2ZunHH4PYgLcUCCngq/d+Z144=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KnhPYNOOY93zzkPm2gRwbazeLNunGwmIvphl3WwW7oZwRcSzweb0/CLY2IEMVuqhv
-	 yx6y5TjwRoRkrAHyvzUVz24Sq23aEOVL4uaGxY2eMXsNCefpqwerFozIp6SIZ1Bwh4
-	 kiCjEtScIN7R3VAfKqeH7txq7pnVpbPNMG2fqo9+/33fThS5+a3/8iU6M/UOk9jJlz
-	 h+iRKJ5eEmemKaqG3mGv1lhiuJbNv96dNEBI9bEMBKsu2/vk2PuEPYIcEpVdRRGzPQ
-	 +sE8UKNQX1yKqx2F0YHcnJPbJ4wmSFKkvtAGHyy1QRtM5fPS5vGVKSex0D5BKfR3DX
-	 SR7SMP+e8/f5A==
-Date: Tue, 21 May 2024 14:55:47 +0200
+	b=lDn4P0/MQWJWP7cpb0OjnxfOXFfT/MgxdNfpsnQWjD1+tMvI0KvdtpD0nILh5MDBP
+	 seIwtw/qXjj3W92W6zN2AwGckNdxsukfnhMsaOq5aQlpWxPc0RFuPQKbkIp07AqAwH
+	 5Tvogyk75Up31r4G6UxtsuD/iG0V9tb5b3L/uHN5fATyBRGcN78ly+hrubrtDYvLyq
+	 nnFTydR71OYgrhyBkwjIaNl7dMNG+lpLJt4ztbCxAerusjN7qoZNGKWKFUBaNrQ63M
+	 wRBwdtdh9xzo0OKXJ0W1VUYMBbMvTAasgxfBrTlWbKmMKLCW0HRpf6ee8op8KW4rPq
+	 /2fLt+ijd/mjQ==
+Date: Tue, 21 May 2024 15:13:25 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: dev@kayoway.com
 Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
 Subject: Re: [PATCH v2 1/1] ata: ahci: Revert "ata: ahci: Add Intel Alder
  Lake-P AHCI controller to  low power chipsets list"
-Message-ID: <ZkyZ0zeJZ8sM9liP@ryzen.lan>
+Message-ID: <Zkyd9Uw3IrQBRfvB@x1-carbon.wireless.wdc>
 References: <20240513135302.1869084-1-dev@kayoway.com>
  <20240517053902.44622-1-dev@kayoway.com>
  <20240517053902.44622-2-dev@kayoway.com>
@@ -93,7 +93,12 @@ On Fri, May 17, 2024 at 02:39:02PM +0900, dev@kayoway.com wrote:
 > 2.45.1
 > 
 
-The patch looks good, I will queue it up once 6.10-rc1 is out!
+Thinking more about this, could you please send a v3 with:
+Cc: stable@vger.kernel.org # 6.7
+Fixes: b8b8b4e0c052 ("ata: ahci: Add Intel Alder Lake-P AHCI controller to low power chipsets list")
+
+and change the subject to something like:
+ata: ahci: Do not apply Intel PCS quirk on Intel Alder Lake
 
 
 Kind regards,
