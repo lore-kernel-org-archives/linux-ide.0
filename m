@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3A4F770E4
-	for <linux-ide@vger.kernel.org>; Tue, 21 May 2024 12:54:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCBDD770E2
+	for <linux-ide@vger.kernel.org>; Tue, 21 May 2024 12:55:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716296079; cv=none; b=DQh6qBI1QD5Cnusr/brWmyU35cXG2hETuXKOjPDHcuawoTkp+fnCzDt7NlXWHVO0VBoJWCrTXv4wqSf5oV1ENpmNc6HeqmI496uEgalgCCGMZrvsDY7e9Yfd3X/RZB7I3eCtuHQehW7KRZOaH7al+0EjIsW8S+OjyvG0YoSFY/A=
+	t=1716296151; cv=none; b=HWm5yox9YO742s0+JEmnxPoRSvi/K6fu9ceOCQ/zABuv0Odce8hsog423itdkab1cp6sg0H5CUSJ3z/MPpTXiq4PvRjlxFFYoF0nTY6Q6PDOHRCGpE66Ve9e34GGuN/CKu/0Yj0f2S0nsjRJ09HwBhINZup4vnyS3ntU6OcGsI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716296079; c=relaxed/simple;
-	bh=SFKtFuFUcqmuebqDcXN/4IxV1Y68c1RAaWtNxGcD+/g=;
+	s=arc-20240116; t=1716296151; c=relaxed/simple;
+	bh=SDVX0iUnE/9/V4ApZTS7ExA6B4huv4qG1DBu/8Ugdec=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rIi1/hq6TqNxw2//x4N6gySTG0r08W2Av4HKCglKFihAqqYCzRztokZl2sNsE+McZ0zsEaE1U+kgbxRMPQzmtJTiHwLJ/OmFCJPhDOd8h6aSZJFDNUYqb2tB4LLYDq2q+fa93We6MM4gP823Wk8384OBGzXsXnUYDt+Y59iGFiw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=It4G1qdy; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=W8m+gcBSEdRKrWYgL6mXZE2mhUOKsLJIZ2paeKMpFDTKcjXlvi6y3yBEc7LPoYr73IWq1eaGlR5J65Mt96/X1IefTNU1GGY3Gd0FZwlooFFrvfVMFUSTiUKvP5fV1OTzIEMye25TplPmAqlu2r9Dicgz01J2x4KckMYueIgrSIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KnhPYNOO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="It4G1qdy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8856DC2BD11;
-	Tue, 21 May 2024 12:54:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KnhPYNOO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE0FC32789;
+	Tue, 21 May 2024 12:55:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716296078;
-	bh=SFKtFuFUcqmuebqDcXN/4IxV1Y68c1RAaWtNxGcD+/g=;
+	s=k20201202; t=1716296151;
+	bh=SDVX0iUnE/9/V4ApZTS7ExA6B4huv4qG1DBu/8Ugdec=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=It4G1qdyw/Xb/GRIkND+nugKW+e6sNz8ifQRPnQRH0ALI3g+LT73eH4LGxg22XGl7
-	 MzaU+t3PesSAKi5F/aynThHD6nsvONnEqt0HIETiBiV8DFhPHQQwJrnCa0ma3ADLYj
-	 0h7Xvk0tpD3UHfJrRf5UEOStvde1I333fiozHYD3d8+r3Bi9zGSb807kjEj2gkiM30
-	 ydCslcWIe4DbRCKz50SQ1+eP78gCdUnJF0+6bvLMtyGjVk+AqPrw7ljkfCcp1E/q0M
-	 M7pYx3HWXkE43STi3TUnk1SuOKz4iTobg6VEll3mgUWKu499xzo3mx6kWeniQsjjm2
-	 JrVd+O2KCNnIw==
-Date: Tue, 21 May 2024 14:54:34 +0200
+	b=KnhPYNOOY93zzkPm2gRwbazeLNunGwmIvphl3WwW7oZwRcSzweb0/CLY2IEMVuqhv
+	 yx6y5TjwRoRkrAHyvzUVz24Sq23aEOVL4uaGxY2eMXsNCefpqwerFozIp6SIZ1Bwh4
+	 kiCjEtScIN7R3VAfKqeH7txq7pnVpbPNMG2fqo9+/33fThS5+a3/8iU6M/UOk9jJlz
+	 h+iRKJ5eEmemKaqG3mGv1lhiuJbNv96dNEBI9bEMBKsu2/vk2PuEPYIcEpVdRRGzPQ
+	 +sE8UKNQX1yKqx2F0YHcnJPbJ4wmSFKkvtAGHyy1QRtM5fPS5vGVKSex0D5BKfR3DX
+	 SR7SMP+e8/f5A==
+Date: Tue, 21 May 2024 14:55:47 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: dev@kayoway.com
 Cc: dlemoal@kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 0/1] ata: ahci: Revert "ata: ahci: Add Intel Alder
+Subject: Re: [PATCH v2 1/1] ata: ahci: Revert "ata: ahci: Add Intel Alder
  Lake-P AHCI controller to  low power chipsets list"
-Message-ID: <ZkyZiodz16XQO32_@ryzen.lan>
+Message-ID: <ZkyZ0zeJZ8sM9liP@ryzen.lan>
 References: <20240513135302.1869084-1-dev@kayoway.com>
  <20240517053902.44622-1-dev@kayoway.com>
+ <20240517053902.44622-2-dev@kayoway.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -43,61 +44,57 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240517053902.44622-1-dev@kayoway.com>
+In-Reply-To: <20240517053902.44622-2-dev@kayoway.com>
 
-On Fri, May 17, 2024 at 02:39:01PM +0900, dev@kayoway.com wrote:
+On Fri, May 17, 2024 at 02:39:02PM +0900, dev@kayoway.com wrote:
 > From: Jason Nader <dev@kayoway.com>
 > 
-> Changes - updated commit message as per the kind guidance from Niklas.
+> Commit b8b8b4e0c052 ("ata: ahci: Add Intel Alder Lake-P AHCI controller
+> to low power chipsets list") added Intel Alder Lake to the ahci_pci_tbl.
 > 
-> I was not sure whether to cc stable, but if so it would allow affected
-> users to start to be able to use kernel versions > 6.6.10.
+> Because of the way that the Intel PCS quirk was implemented, having
+> an explicit entry in the ahci_pci_tbl caused the Intel PCS quirk to
+> be applied. (The quirk was not being applied if there was no explicit
+> entry.)
 > 
-> Below are logs including the extra logging asked for by Niklas.
+> Thus, entries that were added to the ahci_pci_tbl also got the Intel
+> PCS quirk applied.
 > 
-> Kernel logs with this patch:
-> >journalctl --boot 0 | rg 'Linux version|SATA|external port'
-> Linux version linux6.9.disableAlderLakequirk@archlinux
-> ata4294967295: external port, not enabling LPM
-> ata4294967295: external port, not enabling LPM
-> ata4294967295: external port, not enabling LPM
-> ata4294967295: external port, not enabling LPM
+> The quirk was cleaned up in commit 7edbb6059274 ("ahci: clean up
+> intel_pcs_quirk"), such that it is clear which entries that actually
+> applies the Intel PCS quirk.
+> 
+> Newer Intel AHCI controllers do not need the Intel PCS quirk,
+> and applying it when not needed actually breaks some platforms.
+> 
+> Do not apply the Intel PCS quirk for Intel Alder Lake.
+> This is in line with how things worked before commit b8b8b4e0c052 ("ata:
+> ahci: Add Intel Alder Lake-P AHCI controller to low power chipsets list"),
+> such that certain platforms using Intel Alder Lake will work once again.
+> 
+> Signed-off-by: Jason Nader <dev@kayoway.com>
+> ---
+>  drivers/ata/ahci.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 6548f10e61d9..07d66d2c5f0d 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -429,7 +429,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_pcs_quirk }, /* Comet Lake PCH RAID */
+>  	/* Elkhart Lake IDs 0x4b60 & 0x4b62 https://sata-io.org/product/8803 not tested yet */
+>  	{ PCI_VDEVICE(INTEL, 0x4b63), board_ahci_pcs_quirk }, /* Elkhart Lake AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x7ae2), board_ahci_pcs_quirk }, /* Alder Lake-P AHCI */
+>  
+>  	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+>  	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> -- 
+> 2.45.1
+> 
 
-Since the prints below are for ata5-ata8, that most likely means that the
-"external port, not enabling LPM" prints above are for port ata1-ata4,
-so they are not really relevant and might even belong to a different SATA
-controller.
-
-Anyway, lpm-policy for ata5-ata8 is the same before and after this patch,
-so everything looks fine.
+The patch looks good, I will queue it up once 6.10-rc1 is out!
 
 
 Kind regards,
 Niklas
-
-> ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
-> ata5: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802300 irq 125 lpm-pol 3
-> ata6: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802380 irq 125 lpm-pol 3
-> ata7: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802400 irq 125 lpm-pol 3
-> ata8: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802480 irq 125 lpm-pol 3
-> ata5: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> ata8: SATA link down (SStatus 0 SControl 300)
-> ata6: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> ata7: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> 
-> Kernel logs without this patch: 
-> >journalctl --boot 0 | rg 'Linux version|SATA|external port'
-> Linux version linux6.9.enableAlderLakequirk@archlinux
-> ata4294967295: external port, not enabling LPM
-> ata4294967295: external port, not enabling LPM
-> ata4294967295: external port, not enabling LPM
-> ata4294967295: external port, not enabling LPM
-> ahci 0000:00:17.0: AHCI vers 0001.0301, 32 command slots, 6 Gbps, SATA mode
-> ata5: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802300 irq 125 lpm-pol 3
-> ata6: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802380 irq 125 lpm-pol 3
-> ata7: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802400 irq 125 lpm-pol 3
-> ata8: SATA max UDMA/133 abar m2048@0x80802000 port 0x80802480 irq 125 lpm-pol 3
-> ata8: SATA link down (SStatus 4 SControl 300)
-> ata5: SATA link down (SStatus 4 SControl 300)
-> ata6: SATA link down (SStatus 4 SControl 300)
-> ata7: SATA link down (SStatus 4 SControl 300)
