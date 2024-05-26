@@ -1,182 +1,318 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B626BA20;
-	Sun, 26 May 2024 08:56:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0922C15D;
+	Sun, 26 May 2024 22:24:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716713801; cv=none; b=pHm3LPV9AwuoOaIkgTT4tug5S645y4OhDJc+wMPEaLMS5CAD+tW5RQkNgTDroCgPIEgHtmI9ADOpMELS7hHlkKtnsUUEnrBWcVB5cte5OnlL39Szrd5LARfCDzVCHpfDWbxFGJWPbh4IvyYOM97SsgeCtkSNMZ4+N8ibl1CWJ7A=
+	t=1716762253; cv=none; b=Y97tAvilU9C4PwDfaolxa9K74wi+TuMgsOlqK1bavyes+wh2Q6IA1/rlNYsreFRk+se+NPx9z6Fw0nv9XVsrnTd9OKyJscipB+FXdjuHswp5A5ByrMGHlIp6Emnv87RwDFWiwEBrOPOyaA/TEOIJD0cTa22m/08EQN4vXaYbI80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716713801; c=relaxed/simple;
-	bh=a3Z2lIyQHv6RVR13FbDdXSavIt5v6Q8PcXicKfBLD54=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ETrlg6v7nQxA/5GCIpBt/7Vsjh50I1Lto0YmL6tpvUuvQqGIq+q0cCjCk2S4oJnT5Dz3zexw3Pps9WgonROdZ9cJGV8LfLMKUxq9MVGTjSsRenr7oBY9kqyvPnXtcbpgZ0XGq3tyfE962LXOvxWvPFMwncHQfusWDSyWyLQtUfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AMTk+WaS; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1716762253; c=relaxed/simple;
+	bh=zwKstD3lioMVt2D17H5ZgaYpuRrgTkKfoVAlPT6ZOr0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=q2P6z0BbqrGZv6C0glmBGTuu9iz0tXHVIWvr+Y4Q33M9fXhvTbsIPNRS2KvyjtBtf/CkPUiLLlJi98H2lj47omKQnBKiLvcJlDcpYQi+UH8XtkKQ0chL8OtzsL5Wpurc3vLmEZI93Clm22HrCEZqpLo9oSxYa8rfJHQZHZyWywU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JAoPWJ6/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AMTk+WaS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1716713800; x=1748249800;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=a3Z2lIyQHv6RVR13FbDdXSavIt5v6Q8PcXicKfBLD54=;
-  b=AMTk+WaS+lx52NOG2he2wZy2WO/8HsDlPQA3hNZOMLHU2nk8NrNwLkd+
-   cNV/4B6ClBFNPDYe55dwg6WqHmdiwQ0RZ3omphSD+KGCDpRWfWFjcYV3m
-   l9tNntBCLA8+1pWZSoqCEiwADyiLVGP3eEqrQmXLn8ZTweL+CulfOU1SM
-   40Mos+fWCqn1+ELDgtq+pi7WwjDJ7G6Vl+ZPbAYAyiKPxGaDj9L5pZPO5
-   Mw7nO+UbIHHDZdso8gfXgIDaZSspPt57bquN+iUPVPQ9KoDwhLCyp7Sng
-   nBc1Il1GM7Y6nPqXj6lyj3p3Ruobp+NjMyXDLN3Q5IHdTVMCn5BhOjyYA
-   g==;
-X-CSE-ConnectionGUID: UE3hiTIcSJKIDWm2qUnuhg==
-X-CSE-MsgGUID: GcCzBpFDTm6paf5KyW9lgQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11083"; a="12820566"
-X-IronPort-AV: E=Sophos;i="6.08,190,1712646000"; 
-   d="scan'208";a="12820566"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2024 01:56:39 -0700
-X-CSE-ConnectionGUID: y4bDb+1VT5+gMyZdUzGv2w==
-X-CSE-MsgGUID: LwOk/7U5T9aptSILfyuosw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,190,1712646000"; 
-   d="scan'208";a="34534036"
-Received: from unknown (HELO 0610945e7d16) ([10.239.97.151])
-  by fmviesa010.fm.intel.com with ESMTP; 26 May 2024 01:56:37 -0700
-Received: from kbuild by 0610945e7d16 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sB9g9-0007vt-1A;
-	Sun, 26 May 2024 08:56:33 +0000
-Date: Sun, 26 May 2024 16:55:42 +0800
-From: kernel test robot <lkp@intel.com>
-To: Krzysztof =?utf-8?Q?Ol=C4=99dzki?= <ole@ans.pl>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: oe-kbuild-all@lists.linux.dev, Hannes Reinecke <hare@suse.de>,
-	IDE/ATA development list <linux-ide@vger.kernel.org>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] ata: libata: restore visibility of important messages
-Message-ID: <202405261642.ya8nqExt-lkp@intel.com>
-References: <a116c331-530e-4d45-a32c-37c57542724a@ans.pl>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JAoPWJ6/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EEF3C2BD10;
+	Sun, 26 May 2024 22:24:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1716762252;
+	bh=zwKstD3lioMVt2D17H5ZgaYpuRrgTkKfoVAlPT6ZOr0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=JAoPWJ6/UWwscZxI+qeg8ORPwqQK5SBkp4usvIOkvdcBHtj8IXPm5EaJBckl7Bjzz
+	 Vq+SR12ri2euZT+bbrueXy3sa/8wnTw4jMVNXP0NlcPSC/GkGnaRhu8MWBF8eUz5Ln
+	 gGKydBZyYDI8mk79sislpfmdMD+uo7sCeR7rF56cDwRRoKh+1D71yNuiDKxvxIsQYY
+	 nhTAiqQGkdqx8yngbQbVmzj/e7VKpQoxzUETLmPP9FDs74YKkHBWFwaROZQ/q9OMDf
+	 pCFwrH+nv0WhKKvf6RcMd2gXdwK9L6OaNLZ1szhcOsnXk/q6BUUFUNwsUaV3dpoPCU
+	 gQhpu/VHKikXQ==
+Message-ID: <addf0f96-68f2-40e1-992a-7c63cf66425e@kernel.org>
+Date: Mon, 27 May 2024 07:24:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: "ata: libata: move ata_{port,link,dev}_dbg to standard pr_XXX()
+ macros" - 742bef476ca5352b16063161fb73a56629a6d995 changed logging behavior
+ and disabled a number of messages
+To: =?UTF-8?Q?Krzysztof_Ol=C4=99dzki?= <ole@ans.pl>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>,
+ IDE/ATA development list <linux-ide@vger.kernel.org>, stable@vger.kernel.org
+References: <fd285ecd-597f-4770-b9ac-8e9f6ca37587@ans.pl>
+ <ZjlQV-6dEgwhf-vc@ryzen.lan>
+ <9140fb43-8c58-4a01-85ab-08d179a6cb59@kernel.org>
+ <d7a8ca73-3625-4d13-8ece-fc38519594d6@ans.pl>
+ <81f19ca4-bb63-4d72-a197-c27f1bb7d381@kernel.org>
+ <a116c331-530e-4d45-a32c-37c57542724a@ans.pl>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
 In-Reply-To: <a116c331-530e-4d45-a32c-37c57542724a@ans.pl>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi Krzysztof,
+On 5/26/24 3:39 PM, Krzysztof Olędzki wrote:
+> Thank you. How about the following patch? I'm sure I missed something
+> but it should bring us close to where we were before the logging cleanup.
+> 
+> If something like this is acceptable, perpahs it would be also possible
+> to include it in the -stable kernels, I think up to and including 5.15?
 
-kernel test robot noticed the following build warnings:
+Please send a proper patch with afixes tag and cc-stable tag instead of
+something as a reply to this thread. We will do the review of that.
 
-[auto build test WARNING on linus/master]
-[also build test WARNING on v6.9 next-20240523]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> From b1f93347828a3d8c52ae4a73f9fb48341d0c2afb Mon Sep 17 00:00:00 2001
+> From: Krzysztof Piotr Oledzki <ole@ans.pl>
+> Date: Sat, 25 May 2024 22:35:58 -0700
+> Subject: [PATCH] ata: libata: restore visibility of important messages
+> 
+> With the recent cleanup and migration to standard
+> pr_{debug,info,notice,warn,err} macros instead of the
+> hand-crafted printk helpers some important messages
+> disappeared from dmesg unless dynamic debug is enabled.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Krzysztof-Ol-dzki/ata-libata-restore-visibility-of-important-messages/20240526-144120
-base:   linus/master
-patch link:    https://lore.kernel.org/r/a116c331-530e-4d45-a32c-37c57542724a%40ans.pl
-patch subject: [PATCH] ata: libata: restore visibility of important messages
-config: alpha-defconfig (https://download.01.org/0day-ci/archive/20240526/202405261642.ya8nqExt-lkp@intel.com/config)
-compiler: alpha-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240526/202405261642.ya8nqExt-lkp@intel.com/reproduce)
+Very short lines. Please format this up to 72 chars per line.
+And instead of using the very subjective "recent" term for the message changes,
+please reference the commit that did it.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202405261642.ya8nqExt-lkp@intel.com/
+> 
+> Restore their visibility by promoting them to info or err (when
+> appropriate).
+> 
+> Also, improve or add information about features disabled due to
+> ATA_HORKAGE workarounds like NONCQ, NO_NCQ_ON_ATI and NO_FUA.
 
-All warnings (new ones prefixed by >>):
+This part should be a different patch as it is not "fixing" the previous
+changes but adds new messages.
 
-   drivers/ata/libata-core.c: In function 'ata_dev_config_ncq.constprop':
->> drivers/ata/libata-core.c:2345:74: warning: 'NCQ (not used - known buggy ...' directive output truncated writing 48 bytes into a region of size 32 [-Wformat-truncation=]
-    2345 |                 snprintf(desc, desc_sz, "NCQ (not used - known buggy device/host adapter)");
-         |                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
-   drivers/ata/libata-core.c:2345:17: note: 'snprintf' output 49 bytes into a destination of size 32
-    2345 |                 snprintf(desc, desc_sz, "NCQ (not used - known buggy device/host adapter)");
-         |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   drivers/ata/libata-core.c:2339:74: warning: 'NCQ (not used - known buggy ...' directive output truncated writing 35 bytes into a region of size 32 [-Wformat-truncation=]
-    2339 |                 snprintf(desc, desc_sz, "NCQ (not used - known buggy device)");
-         |                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
-   drivers/ata/libata-core.c:2339:17: note: 'snprintf' output 36 bytes into a destination of size 32
-    2339 |                 snprintf(desc, desc_sz, "NCQ (not used - known buggy device)");
-         |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> For ATA_HORKAGE_DIAGNOSTIC and ATA_HORKAGE_FIRMWARE_WARN convert the
+> message to a single line and update the ata.wiki.kernel.org link.
 
+Hmmm... I have no idea who created that wiki nor if it is maintained at all...
+We (the libata maintainers) are for sure not maintaining it. So I would prefer
+to entirely remove that link as I am not sure the information there is correct
+at all. If anything needs to be documented, then add a note in
+Documentation/./driver-api/libata.rst". (note that I have actually never looked
+at this doc file either since taking on libata maintainership. Its content may
+not be up-to-date. Will need to review it.).
 
-vim +2345 drivers/ata/libata-core.c
+> Signed-off-by: Krzysztof Piotr Oledzki <ole@ans.pl>
+> ---
+>  drivers/ata/libata-core.c | 49 +++++++++++++++++++++------------------
+>  drivers/ata/libata-eh.c   |  2 +-
+>  2 files changed, 28 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4f35aab81a0a..0603849692ae 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1793,7 +1793,7 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+>  
+>  	if (err_mask) {
+>  		if (err_mask & AC_ERR_NODEV_HINT) {
+> -			ata_dev_dbg(dev, "NODEV after polling detection\n");
+> +			ata_dev_err(dev, "NODEV after polling detection\n");
 
-  2323	
-  2324	static int ata_dev_config_ncq(struct ata_device *dev,
-  2325				       char *desc, size_t desc_sz)
-  2326	{
-  2327		struct ata_port *ap = dev->link->ap;
-  2328		int hdepth = 0, ddepth = ata_id_queue_depth(dev->id);
-  2329		unsigned int err_mask;
-  2330		char *aa_desc = "";
-  2331	
-  2332		if (!ata_id_has_ncq(dev->id)) {
-  2333			desc[0] = '\0';
-  2334			return 0;
-  2335		}
-  2336		if (!IS_ENABLED(CONFIG_SATA_HOST))
-  2337			return 0;
-  2338		if (dev->horkage & ATA_HORKAGE_NONCQ) {
-  2339			snprintf(desc, desc_sz, "NCQ (not used - known buggy device)");
-  2340			return 0;
-  2341		}
-  2342	
-  2343		if (dev->horkage & ATA_HORKAGE_NO_NCQ_ON_ATI &&
-  2344		    ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI)) {
-> 2345			snprintf(desc, desc_sz, "NCQ (not used - known buggy device/host adapter)");
-  2346			return 0;
-  2347		}
-  2348	
-  2349		if (ap->flags & ATA_FLAG_NCQ) {
-  2350			hdepth = min(ap->scsi_host->can_queue, ATA_MAX_QUEUE);
-  2351			dev->flags |= ATA_DFLAG_NCQ;
-  2352		}
-  2353	
-  2354		if (!(dev->horkage & ATA_HORKAGE_BROKEN_FPDMA_AA) &&
-  2355			(ap->flags & ATA_FLAG_FPDMA_AA) &&
-  2356			ata_id_has_fpdma_aa(dev->id)) {
-  2357			err_mask = ata_dev_set_feature(dev, SETFEATURES_SATA_ENABLE,
-  2358				SATA_FPDMA_AA);
-  2359			if (err_mask) {
-  2360				ata_dev_err(dev,
-  2361					    "failed to enable AA (error_mask=0x%x)\n",
-  2362					    err_mask);
-  2363				if (err_mask != AC_ERR_DEV) {
-  2364					dev->horkage |= ATA_HORKAGE_BROKEN_FPDMA_AA;
-  2365					return -EIO;
-  2366				}
-  2367			} else
-  2368				aa_desc = ", AA";
-  2369		}
-  2370	
-  2371		if (hdepth >= ddepth)
-  2372			snprintf(desc, desc_sz, "NCQ (depth %d)%s", ddepth, aa_desc);
-  2373		else
-  2374			snprintf(desc, desc_sz, "NCQ (depth %d/%d)%s", hdepth,
-  2375				ddepth, aa_desc);
-  2376	
-  2377		if ((ap->flags & ATA_FLAG_FPDMA_AUX)) {
-  2378			if (ata_id_has_ncq_send_and_recv(dev->id))
-  2379				ata_dev_config_ncq_send_recv(dev);
-  2380			if (ata_id_has_ncq_non_data(dev->id))
-  2381				ata_dev_config_ncq_non_data(dev);
-  2382			if (ata_id_has_ncq_prio(dev->id))
-  2383				ata_dev_config_ncq_prio(dev);
-  2384		}
-  2385	
-  2386		return 0;
-  2387	}
-  2388	
+The "NODEV" mention here makes no sense given that we return -ENOENT. Let's
+instead print the error mask with the usual format.
+
+>  			return -ENOENT;
+>  		}
+>  
+> @@ -1825,8 +1825,8 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+>  			 * both flavors of IDENTIFYs which happens
+>  			 * sometimes with phantom devices.
+>  			 */
+> -			ata_dev_dbg(dev,
+> -				    "both IDENTIFYs aborted, assuming NODEV\n");
+> +			ata_dev_info(dev,
+> +				     "both IDENTIFYs aborted, assuming NODEV\n");
+
+This is not really normal, so let's make this a "warn". And replace "NODEV"
+with "no device present.".
+
+>  			return -ENOENT;
+>  		}
+>  
+> @@ -1857,9 +1857,9 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+>  	if (class == ATA_DEV_ATA || class == ATA_DEV_ZAC) {
+>  		if (!ata_id_is_ata(id) && !ata_id_is_cfa(id))
+>  			goto err_out;
+> -		if (ap->host->flags & ATA_HOST_IGNORE_ATA &&
+> -							ata_id_is_ata(id)) {
+> -			ata_dev_dbg(dev,
+> +		if ((ap->host->flags & ATA_HOST_IGNORE_ATA) &&
+> +		    ata_id_is_ata(id)) {
+> +			ata_dev_info(dev,
+>  				"host indicates ignore ATA devices, ignored\n");
+
+Let's improve the wording here as "host" has a meaning (e.g. scsi host). Let's
+make this something like:
+
+		 ata_dev_info(dev,
+			"ATA_HOST_IGNORE_ATA set: ignoring device.\n");
+
+>  			return -ENOENT;
+>  		}
+> @@ -2247,7 +2247,8 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
+>  		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
+>  
+>  		if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
+> -			ata_dev_dbg(dev, "disabling queued TRIM support\n");
+> +			ata_dev_info(dev, "disabling queued TRIM - "
+> +					  "known buggy device\n");
+
+There is no need to change the message text here: it is clear. And because this
+is a horkage, let's use ata_dev_warn() and capitalize the first letter of the
+message:
+
+			ata_dev_warn(dev, "Disabling NCQ TRIM support\n");
+
+Note that we could define a common format for all horkage related messages. E.g.:
+		
+ata_dev_warn(dev,
+	"ATA_HORKAGE_NO_NCQ_TRIM set: Disabling queued TRIM support\n");
+
+But I am not sure that is really useful as long as the same message text is not
+repeated for a different reason. That will avoid the long lines :)
+
+>  			cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
+>  				~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
+>  		}
+> @@ -2335,13 +2336,13 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+>  	if (!IS_ENABLED(CONFIG_SATA_HOST))
+>  		return 0;
+>  	if (dev->horkage & ATA_HORKAGE_NONCQ) {
+> -		snprintf(desc, desc_sz, "NCQ (not used)");
+> +		snprintf(desc, desc_sz, "NCQ (not used - known buggy device)");
+
+I think we should replace this snprintf() with a ata_dev_warn() message similar
+to the above NCQ TRIM. E.g.:
+
+		ata_dev_warn(dev, "Disabling NCQ support\n");
+
+>  		return 0;
+>  	}
+>  
+>  	if (dev->horkage & ATA_HORKAGE_NO_NCQ_ON_ATI &&
+>  	    ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI)) {
+> -		snprintf(desc, desc_sz, "NCQ (not used)");
+> +		snprintf(desc, desc_sz, "NCQ (not used - known buggy device/host adapter)");
+
+Same as above.
+
+>  		return 0;
+>  	}
+>  
+> @@ -2397,7 +2398,7 @@ static void ata_dev_config_sense_reporting(struct ata_device *dev)
+>  
+>  	err_mask = ata_dev_set_feature(dev, SETFEATURE_SENSE_DATA, 0x1);
+>  	if (err_mask) {
+> -		ata_dev_dbg(dev,
+> +		ata_dev_err(dev,
+>  			    "failed to enable Sense Data Reporting, Emask 0x%x\n",
+>  			    err_mask);
+>  	}
+> @@ -2479,7 +2480,7 @@ static void ata_dev_config_trusted(struct ata_device *dev)
+>  
+>  	trusted_cap = get_unaligned_le64(&ap->sector_buf[40]);
+>  	if (!(trusted_cap & (1ULL << 63))) {
+> -		ata_dev_dbg(dev,
+> +		ata_dev_err(dev,
+>  			    "Trusted Computing capability qword not valid!\n");
+
+I think this fits in one line. So let's drop the line break.
+
+>  		return;
+>  	}
+> @@ -2688,9 +2689,15 @@ static void ata_dev_config_fua(struct ata_device *dev)
+>  	if (!(dev->flags & ATA_DFLAG_LBA48) || !ata_id_has_fua(dev->id))
+>  		goto nofua;
+>  
+> -	/* Ignore known bad devices and devices that lack NCQ support */
+> -	if (!ata_ncq_supported(dev) || (dev->horkage & ATA_HORKAGE_NO_FUA))
+> +	/* Ignore devices that lack NCQ support */
+> +	if (!ata_ncq_supported(dev))
+> +		goto nofua;
+> +
+> +	/* Finally, ignore buggy devices */
+> +	if (dev->horkage & ATA_HORKAGE_NO_FUA) {
+> +		ata_dev_info(dev, "disabling FUA - known buggy device");
+
+Use ata_dev_warn():
+
+		ata_dev_warn(dev, "Disabling FUA support.\n");
+
+>  		goto nofua;
+> +	}
+>  
+>  	dev->flags |= ATA_DFLAG_FUA;
+>  
+> @@ -3060,24 +3067,22 @@ int ata_dev_configure(struct ata_device *dev)
+>  	if (ap->ops->dev_config)
+>  		ap->ops->dev_config(dev);
+>  
+> -	if (dev->horkage & ATA_HORKAGE_DIAGNOSTIC) {
+> +	if ((dev->horkage & ATA_HORKAGE_DIAGNOSTIC) && print_info) {
+>  		/* Let the user know. We don't want to disallow opens for
+>  		   rescue purposes, or in case the vendor is just a blithering
+>  		   idiot. Do this after the dev_config call as some controllers
+>  		   with buggy firmware may want to avoid reporting false device
+>  		   bugs */
+
+While at it, please fix this comment block format.
+
+>  
+> -		if (print_info) {
+> -			ata_dev_warn(dev,
+> -"Drive reports diagnostics failure. This may indicate a drive\n");
+> -			ata_dev_warn(dev,
+> -"fault or invalid emulation. Contact drive vendor for information.\n");
+> -		}
+> +		ata_dev_warn(dev, "Drive reports diagnostics failure."
+> +				  " This may indicate a drive fault or invalid emulation."
+> +				  " Contact drive vendor for information.\n");
+>  	}
+>  
+>  	if ((dev->horkage & ATA_HORKAGE_FIRMWARE_WARN) && print_info) {
+> -		ata_dev_warn(dev, "WARNING: device requires firmware update to be fully functional\n");
+> -		ata_dev_warn(dev, "         contact the vendor or visit http://ata.wiki.kernel.org\n");
+> +		ata_dev_warn(dev, "WARNING: device requires firmware update to be"
+> +				  " fully functional contact the vendor or visit"
+> +				  " http://ata.wiki.kernel.org/index.php/Known_issues\n");
+
+As mentioned, I think we shoud drop the wiki link. It is not maintained.
+
+>  	}
+>  
+>  	return 0;
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 214b935c2ced..5b9382ef261c 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2667,7 +2667,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  
+>  		if (rc) {
+>  			if (rc == -ENOENT) {
+> -				ata_link_dbg(link, "port disabled--ignoring\n");
+> +				ata_link_info(link, "port disabled--ignoring\n");
+
+I think ata_link_warn() is better here. And let's reformat the message:
+
+				ata_link_warn(link,
+					      "Ignoring disabled port\n");
+
+>  				ehc->i.action &= ~ATA_EH_RESET;
+>  
+>  				ata_for_each_dev(dev, link, ALL)
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Damien Le Moal
+Western Digital Research
+
