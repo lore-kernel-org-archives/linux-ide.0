@@ -1,40 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FB592232A
-	for <linux-ide@vger.kernel.org>; Mon, 27 May 2024 09:44:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70CCB155C83
+	for <linux-ide@vger.kernel.org>; Mon, 27 May 2024 16:13:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716803071; cv=none; b=eOs/8KJK9yDC+lPNun5Bdjs5cwXAC5ObsVNygmRfgGn7u9kxJWHkbwyCUZ/STQibldD6KNt1mUUVUN+2mTNgj5Zyjezd8c64vtYxGFb6vz57ZGb/ON59KHcdcvcMNa1iDY7MHI5rbYrN/n0SinykM4BopVxSvgB+xD2K5TDwwxk=
+	t=1716826385; cv=none; b=dwySMz95onUqkUPwiW1Lcef4CrscbwJB1bTdD0bMwwbsUyJrhl7hObClTokxuPCCOpGX1Y24RFxpgmfnFT76chG255QzKstR5QlVh5U9wtLq8NCvjo46qsaYHlMwiK2CjYEZzFTLVXHM2yHRh9c71xFLMtxiyMoNYIvWCubeGcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716803071; c=relaxed/simple;
-	bh=KgNmO0mJrfHNDVtZGZQX6MgHfj4t6+w+Qo9f11cu3/w=;
+	s=arc-20240116; t=1716826385; c=relaxed/simple;
+	bh=YPdNfpK8wJ1YI3z6lscOiv6kdr3LeFfSR+bOeB+xSMk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I6ZMT1ZWgt1U92CPUJ7u9sa0PQcnFO5sfseKxfGxQQfo6wJ60doiqqxdYcn8JvVnPO0uoTpJshTKFEcHt4rihBcwUQyHJA0o4vSp66rApVb5Qhf84WrUZATasJcrwqC189mGmec8iAdIDxgODyYGdJRAkmatjWKnrv9cQcyyHtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MubZ+Z1A; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=n8OWUN4KigJAgclQfjP6q6cP2IC++3L3BpTEKvlIhq1jaBB2qJ8Kt2D7rP+3vfwQ3nHOZcL9Gq3B0OlzP7QRllyOQjeH06YyXBJnRf1AgcnEven90JafKmsTjhpmKNLk3NW87mCHuHDaWZEjW7VENcQ1/yfYDoIQaue2qfbGQac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RJBDIcR5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MubZ+Z1A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6D8BC2BBFC;
-	Mon, 27 May 2024 09:44:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RJBDIcR5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 633ACC32789;
+	Mon, 27 May 2024 16:13:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716803070;
-	bh=KgNmO0mJrfHNDVtZGZQX6MgHfj4t6+w+Qo9f11cu3/w=;
+	s=k20201202; t=1716826385;
+	bh=YPdNfpK8wJ1YI3z6lscOiv6kdr3LeFfSR+bOeB+xSMk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MubZ+Z1A2gueKBNwsSxP0Uup+3dDkiiZNuI05/1jdyPGBQqE11OUdXR2CAFwX016o
-	 tYMR2GRYsVxGQM2ig+xVvRRy0cvnPE8iPjNVEWi1HW3bt91eyUDIvEknshDEf8fGt1
-	 RA1uCDcoQXzbp60F4RrKmpNIJ6srkqCHqzUdXpcaEvuxcC1EPGCgF2cPBivvxAQEXW
-	 VI9McKJlpg+wTtC5W7pGYozq7w6V0XudOVsq5azDgIQtAWL4OY3ztM9+bhjHEdwRMA
-	 hdgwO82ymFVgTonZUkubeaLnPNKzVQSWibU1kMWz0V01sz1nCpFrVTYBzdMg9RPl/+
-	 J1+79qscltbUA==
-Date: Mon, 27 May 2024 11:44:26 +0200
+	b=RJBDIcR5ag+5hny5KVsEQIF3nrVfM4Gmd+Tq812nVIjhNp7ZB6oDuhsWGBzS6clU0
+	 ek5mEWaPEHoves67znYofnuaAagM6p8CZGW+4fMwFvRcfN/0Zrl7EAWz4QIhjT4iji
+	 obIzN459VT9zE31FJ0eZb75k24yFjkjhxrVWqZNXnCrA/4kRgN7ywFlCnbbpDb/1SI
+	 Er0EUsLBI3koGU4EAENDak2JwzQN6BRTPcVB4ZuZChDRfy2ehOjFAgDTZKso1PZUc9
+	 9dMyQbh6pvoNq5+78bE110/xH21EDEVvaaGwllfb879NpoDRIzhD90B7uP6OWSFKIa
+	 QSFQob1y1z2fA==
+Date: Mon, 27 May 2024 18:13:00 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Mario Limonciello <mario.limonciello@amd.com>,
+To: Tasos Sahanidis <tasos@tasossah.com>
+Cc: dlemoal@kernel.org, jhp@endlessos.org, hch@lst.de,
+	mario.limonciello@amd.com, mika.westerberg@linux.intel.com,
 	linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: Kconfig: Update SATA_MOBILE_LPM_POLICY default to
- med_power_with_dipm
-Message-ID: <ZlRV-jA1ARtVGrpa@ryzen.lan>
-References: <20240502092652.450831-2-cassel@kernel.org>
+Subject: Re: AHCI hotplug no longer functions on ICH7
+Message-ID: <ZlSxDCS_pllymUxQ@ryzen.lan>
+References: <c41c5bf8-9ed8-49c8-a9f4-431d523fffbf@tasossah.com>
+ <Zkyl/RuvygEpVW26@x1-carbon.wireless.wdc>
+ <a32a43a4-c482-4689-9852-85da4d936641@tasossah.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -43,48 +45,76 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240502092652.450831-2-cassel@kernel.org>
+In-Reply-To: <a32a43a4-c482-4689-9852-85da4d936641@tasossah.com>
 
-On Thu, May 02, 2024 at 11:26:53AM +0200, Niklas Cassel wrote:
-> From: Mario Limonciello <mario.limonciello@amd.com>
+On Mon, May 27, 2024 at 11:59:44AM +0300, Tasos Sahanidis wrote:
+> Hi Niklas,
 > 
-> Historically this was set to "keep_firmware_settings" to prevent problems
-> with power management on very old drives. However it's been observed that
-> almost all modern Linux distributions either set the policy to
-> "med_power_with_dipm" in the kernel configuration or update it to this via
-> userspace policy changes. Update the policy default in the kernel to
-> "med_power_with_dipm" to match that behavior as well.
+> Thank you kindly for your response.
 > 
-> Changing the default was previously not a good idea, because LPM disables
-> detection of hot plug removals, however, since commit ae1f3db006b7 ("ata:
-> ahci: do not enable LPM on external ports"), a port marked as external
-> will always be initialized to "keep_firmware_settings", regardless of the
-> SATA_MOBILE_LPM_POLICY Kconfig value. Therefore, changing the default is
-> now considered safe (external ports included).
+> On 2024-05-21 16:47, Niklas Cassel wrote:
+> > If your port is external or hot plug capable, then your platform firmware/BIOS
+> > should set either the "PORT_CMD_ESP and HOST_CAP_SXS" bits or the
+> > "PORT_CMD_HPCP" bit.
+> > 
+> > See:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/ata?id=45b96d65ec68f625ad26ee16d2f556e29f715005
 > 
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> [cassel: rebased and reworded commit message]
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Understood. I had looked at that commit, but did not look into those
+> bits in detail. They were obviously not set correctly, thus the port was 
+> not marked external.
 > 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index b595494ab9b4..e00536b49552 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -118,7 +118,7 @@ config SATA_AHCI
->  config SATA_MOBILE_LPM_POLICY
->  	int "Default SATA Link Power Management policy"
->  	range 0 4
-> -	default 0
-> +	default 3
->  	depends on SATA_AHCI
->  	help
->  	  Select the Default SATA Link Power Management (LPM) policy to use
-> -- 
-> 2.44.0
+> > Is there any option in your BIOS to mark the port as external or hot plug
+> > capable?
+> > 
+> > 
+> > If not, then your platform firmware is broken and needs to be quirked.
+> > 
+> > Please provde the output from
+> > # dmidecode
+> > so that we can apply a quirk for your broken platform.
 > 
+> I went through again and checked for any "hotplug" or "external" options
+> and found nothing. I was ready to try to make a quirk for it, but then I
+> noticed the option "ALPE and ASP" under IDE Configuration (section 
+> 4.3.6, page 4-17 of the user's manual [0]). It was set to enabled, so I 
+> disabled it. That did the trick and the ports are now marked as 
+> external.
 
-Applied:
-https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-6.11
+Great!
+
+Even if the platform implementation is not that great in my opinion...
+I mean, a port is either "external"/"hotplug capable" or it isn't :)
+(It shouldn't matter if ALPE (or SALP) is enabled or not.)
+
+Aggressive Link Power Management Enable (ALPE) is simply the enable bit
+corresponding to the Supports Aggressive Link Power Management (SALP) bit.
+
+So the expectation would be that setting "ALPE" to false simply changes
+the bootup value of the "ALPE" bit to false.
+
+However, I'm guessing that your platform implementation probably toggles
+"SALP" instead of toggling "ALPE".
+
+Regardless, we can clearly see that setting "ALPE" to false also changes
+either the "PORT_CMD_ESP and HOST_CAP_SXS" bits or the "PORT_CMD_HPCP" bit
+as well...
+
+
+> Thank you for your time, and apologies for not noticing this earlier.
+> Perhaps this helps someone in the future with the same issue.
+
+No need to apologize!
+
+Thank you for reporting the regression on the mailing list.
+
+Now we know that some platform implementations toggle either the
+"PORT_CMD_ESP and HOST_CAP_SXS" bits or the "PORT_CMD_HPCP" bit,
+when "Aggressive Link Power Management" is toggled in the BIOS.
+
+Perhaps some other platform implementations do the same, so this
+information might be helpful to others in the future.
+
+
+Kind regards,
+Niklas
