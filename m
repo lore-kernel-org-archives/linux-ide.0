@@ -1,155 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC5271836E0;
-	Wed, 29 May 2024 16:27:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C0015B990;
+	Wed, 29 May 2024 18:33:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717000040; cv=none; b=T8fvT86fxgb20IgHqJXk06dJ/DRfndBvXUzayMQfu7EEWiAd0o6sOAMnlnH7NtqQw5EH3HvUeJ6Xihkne3+j6tNJ7vyR2ZDsCEHjX3b6/DT2X39diOUN1Y17r/iFuLhL8zIiBZcn+Nm9OTmj+38Us6dpbUsx1EYCqPRYXua2CPY=
+	t=1717007590; cv=none; b=kuDLMLsN8RAJkrnIYAQBRGH3G7W9E9jjL8iGjCzWwpPyTct3pB+yz/9BMeFAel952QHUrr3gGpj+M1hob796VEWePt/ivvxaSZeFtEeyzGjR4+wAMEn91Iz/WV/B7Gcce4YuF6czSw2D6itz7LLEUofZiU17wGibCrG1cwnhKAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717000040; c=relaxed/simple;
-	bh=lgIJYBj3mBkbZaZC1FImJA04nZav55O5a7FH5lk9I50=;
+	s=arc-20240116; t=1717007590; c=relaxed/simple;
+	bh=xSGo4qhJT8Vc7QZwuMSfPbFgntWQs7o0u+3tkSo/IjQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CCBOJtvBLvzkSTPccjbu77L558+5frvtreMmfzSBBC+Bb90q1HrFVLxQ8bTrDH5PreSXYPIs3BlFgewSOZ/Q1O0rG1ZFl4WjkgFQeOpJXfh4BgorJHbJYRy3DS+L/O+sYTXVRBpqdFbSpnpo+80V9PHsuHYwbmadcqwsv6FaFYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mCXHerGs; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HgMbOqbblx3rJBiVybtY1a+f1saTqdCX6Eo+nT5xT6Xp2Oy0DXJYXzh+aZ45RmJdy2/t6u9o0nqaUdPlMCQWfNi/s2gOItEHvurJMXxMKJZ+9Ra8yoGwEi3xeNkZDzliFd+3dmQ+zXJa8+t/twsQSgtrvIaXplliXsPafJ/qP9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xsct1ZJ2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mCXHerGs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2504EC116B1;
-	Wed, 29 May 2024 16:27:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xsct1ZJ2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E277C113CC;
+	Wed, 29 May 2024 18:33:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717000039;
-	bh=lgIJYBj3mBkbZaZC1FImJA04nZav55O5a7FH5lk9I50=;
+	s=k20201202; t=1717007590;
+	bh=xSGo4qhJT8Vc7QZwuMSfPbFgntWQs7o0u+3tkSo/IjQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mCXHerGs2ObtKn0UKLsAM9dZ6g3iQSxtf2PHTMzQ7jpFipnk4lGi6y+aQeci5BT6H
-	 Hyg1ZNDENMzfs+rf53B8MQqEfSK0Y3cvLpgU8604ks0bob/T7pw5BNUSkKAtJ1ub46
-	 h4RDaSf1jAHDYbq4UI5M767YQRxU4H9cYkUXJWND0cg33K7Jdhavo3x2/ZUYKY4yGh
-	 ounh4lSRrj9cO41BDPp1M7Be6cJyJwa3dQehMnlfX+Hp+vGTQexILTBHCkrVlqRusv
-	 hYkNogzfo5A2FdJX8+Jigeugpxc9jUMAAbBKsAE1/RiZV4X70frvNpx9trbO8i/D9z
-	 FPF3KIPFcVV3Q==
-Date: Wed, 29 May 2024 17:27:06 +0100
-From: Conor Dooley <conor@kernel.org>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Rich Felker <dalias@libc.org>,
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
-	Heiko Stuebner <heiko.stuebner@cherry.de>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Chris Morgan <macromorgan@hotmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Masahiro Yamada <masahiroy@kernel.org>, Baoquan He <bhe@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Kefeng Wang <wangkefeng.wang@huawei.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Azeem Shaikh <azeemshaikh38@gmail.com>, Guo Ren <guoren@kernel.org>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Anup Patel <apatel@ventanamicro.com>,
-	Jacky Huang <ychuang3@nuvoton.com>,
-	Hugo Villeneuve <hvilleneuve@dimonoff.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Wolfram Sang <wsa+renesas@sang-engineering.com>,
-	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	Javier Martinez Canillas <javierm@redhat.com>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	linux-fbdev@vger.kernel.org
-Subject: Re: [DO NOT MERGE v8 25/36] dt-bindings: vendor-prefixes: Add iodata
-Message-ID: <20240529-cobweb-styling-2f4dafd8b2bc@spud>
-References: <cover.1716965617.git.ysato@users.sourceforge.jp>
- <a84653d4c369a57a00011c8c86447096026a0330.1716965617.git.ysato@users.sourceforge.jp>
+	b=Xsct1ZJ296mVzd5Bx2cjuJH+KC5VHKNKvXSF1wEc4SNTk55CVKQxfbhbKI8WobVEL
+	 Jp5dgoDnZjuzokdATQJfHv9efrAFrrct21tOPDb4iVHehHfa1M1vC8VxlxwibZAFTe
+	 aU2A0YE/3DyrJxncovGEgDxzeHTkFOSTO/5BRTsFiowbhauPwVWUUaYoEqiIubVgPb
+	 XWFgVaNgCliYHmIcGnqO66qrSBmpX1Z30SIOxlC8xpbNoi7Cqyv4Aih3aP2gqAvZg8
+	 pjNwwI7/SfUzxHTfXquHl7HkpSYjbK9+mYuhKr2tpYlinkyXz8gDxSVSrlE056CHzm
+	 cTM3Sf2SFWozA==
+Date: Wed, 29 May 2024 20:33:00 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Tim Teichmann <teichmanntim@outlook.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Christian Heusel <christian@heusel.eu>, regressions@lists.linux.dev,
+	x86@kernel.org, stable@vger.kernel.org,
+	Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [REGRESSION][BISECTED] Scheduling errors with the AMD FX 8300 CPU
+Message-ID: <Zld03FTNQ5q5uQyN@ryzen.lan>
+References: <87h6ejd0wt.ffs@tglx>
+ <PR3PR02MB6012CB03006F1EEE8E8B5D69B3F02@PR3PR02MB6012.eurprd02.prod.outlook.com>
+ <874jajcn9r.ffs@tglx>
+ <PR3PR02MB6012EDF7EBA8045FBB03C434B3F02@PR3PR02MB6012.eurprd02.prod.outlook.com>
+ <87msobb2dp.ffs@tglx>
+ <PR3PR02MB6012D4B2D513F6FA9D29BE5EB3F12@PR3PR02MB6012.eurprd02.prod.outlook.com>
+ <87bk4pbve8.ffs@tglx>
+ <f3b909f3-de1d-4781-aa7a-1967abe24125@kernel.dk>
+ <ZlY8SbGVMHho-dLz@ryzen.lan>
+ <PR3PR02MB60127B753B3B4BA69A737BBDB3F22@PR3PR02MB6012.eurprd02.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="HZu5E32Wqoezu/cY"
-Content-Disposition: inline
-In-Reply-To: <a84653d4c369a57a00011c8c86447096026a0330.1716965617.git.ysato@users.sourceforge.jp>
-
-
---HZu5E32Wqoezu/cY
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <PR3PR02MB60127B753B3B4BA69A737BBDB3F22@PR3PR02MB6012.eurprd02.prod.outlook.com>
 
-Hey,
+On Wed, May 29, 2024 at 03:02:45PM +0200, Tim Teichmann wrote:
+> Hello Niklas,
+> 
+> > ata3 (TOSHIBA HDWD110) appears to work correctly.
+> > 
+> > ata2 (Apacer AS340 120GB) results in command timeouts and
+> > "a change in device presence has been detected" being set in PxSERR.DIAG.X.
+> > 
+> > > >> [    2.964262] ata2.00: exception Emask 0x10 SAct 0x80 SErr 0x40d0002 action 0xe frozen
+> > > >> [    2.964274] ata2.00: irq_stat 0x00000040, connection status changed
+> > > >> [    2.964279] ata2: SError: { RecovComm PHYRdyChg CommWake 10B8B DevExch }
+> > > >> [    2.964288] ata2.00: failed command: READ FPDMA QUEUED
+> > > >> [    2.964291] ata2.00: cmd 60/08:38:80:ff:f1/00:00:0d:00:00/40 tag 7 ncq dma 4096 in
+> > > >>                         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x10 (ATA bus error)
+> > > >> [    2.964307] ata2.00: status: { DRDY }
+> > > >> [    2.964318] ata2: hard resetting link
+> > 
+> > 
+> > Could you please try the following patch (quirk):
+> > 
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index c449d60d9bb9..24ebcad65b65 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -4199,6 +4199,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+> >                                                 ATA_HORKAGE_ZERO_AFTER_TRIM |
+> >                                                 ATA_HORKAGE_NOLPM },
+> >  
+> > +       /* Apacer models with LPM issues */
+> > +       { "Apacer AS340*",              NULL,   ATA_HORKAGE_NOLPM },
+> > +
+> >         /* These specific Samsung models/firmware-revs do not handle LPM well */
+> >         { "SAMSUNG MZMPC128HBFU-000MV", "CXM14M1Q", ATA_HORKAGE_NOLPM },
+> >         { "SAMSUNG SSD PM830 mSATA *",  "CXM13D1Q", ATA_HORKAGE_NOLPM },
+> > 
+> > 
+> > 
+> > Kind regards,
+> > Niklas
+> 
+> I've just tested the patch you've provided [0] and it works without
+> throwing ATA exceptions.
+> 
+> The full dmesg output is attached below.
+> 
 
-On Wed, May 29, 2024 at 05:01:11PM +0900, Yoshinori Sato wrote:
-> Add IO DATA DEVICE INC.
-> https://www.iodata.com/
->=20
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Thank you Tim.
 
-This one is missing an ack:
-https://lore.kernel.org/all/20240109-frying-robin-e0f3e83966eb@spud/
 
-Thanks,
-Conor.
+I intend to send out a real patch for this,
+but before I do could you please run:
 
-> ---
->  Documentation/devicetree/bindings/vendor-prefixes.yaml | 2 ++
->  1 file changed, 2 insertions(+)
->=20
-> diff --git a/Documentation/devicetree/bindings/vendor-prefixes.yaml b/Doc=
-umentation/devicetree/bindings/vendor-prefixes.yaml
-> index fbf47f0bacf1..66cf68139f07 100644
-> --- a/Documentation/devicetree/bindings/vendor-prefixes.yaml
-> +++ b/Documentation/devicetree/bindings/vendor-prefixes.yaml
-> @@ -716,6 +716,8 @@ patternProperties:
->      description: Inventec
->    "^inversepath,.*":
->      description: Inverse Path
-> +  "^iodata,.*":
-> +    description: IO DATA DEVICE Inc.
->    "^iom,.*":
->      description: Iomega Corporation
->    "^irondevice,.*":
-> --=20
-> 2.39.2
->=20
+$ hdparm -I /dev/sdX
 
---HZu5E32Wqoezu/cY
-Content-Type: application/pgp-signature; name="signature.asc"
+against both your SATA drives and paste the output.
 
------BEGIN PGP SIGNATURE-----
+(I just want to make sure that the device actually advertizes
+some kind of power management support.)
 
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZldXWQAKCRB4tDGHoIJi
-0hWFAP9m/SQUazFt1Tlt8RyErIrj9VApLRgBd8L2vfvH/pp05gD/Yb0fItGZbPj5
-XKV9AI6qjNwnstXymMs1/xs/YbPrcg0=
-=xYYk
------END PGP SIGNATURE-----
 
---HZu5E32Wqoezu/cY--
+Kind regards,
+Niklas
