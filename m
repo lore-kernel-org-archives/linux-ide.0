@@ -1,109 +1,167 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76F0715920F;
-	Wed, 29 May 2024 14:37:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D44141836DA;
+	Wed, 29 May 2024 16:25:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716993427; cv=none; b=VGnLlTNt6wLweVPpdamdVs2caNs3YpcjJwVDxWLCJSw19p5lyYmqXG9ytYSjYVkBZvQnGx6ZXVvCIuDhg6745N+5EC0u2gWIvnseYSyEY3n3u0E3m1KlrTGVNDII5cNqDjErjaSZ4blHGbH0SVCZnucGdtJWd3RvYa8iGxgfTzU=
+	t=1716999934; cv=none; b=DyF1RvSsLXtZwRvtjzWb4vn8raCKXpd+KoKrD1ZIoUzcLrVjeujIAI0tbBD8w91iBJRQAREjLkIeKluSmlEuw9to8pXE5Bn8pHfIsttw2eN7IpuJazX40UIvs2yE2h8wQhmmolmZXsrWfprfBmeuYQrGbZN2BxUtMAPc9lhzOOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716993427; c=relaxed/simple;
-	bh=pYrTtkOBQOYeyXCIy27DWA6GTTCSA3OpaXyqB8Pa86U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fSO45P+nKBPEIblN4wWRroYLI09EQQ4AnaCyv0bqDVnzdqPoy5YpuVlCrfXhQkC7WuXOpn5/pLCriYDiaN0jmkJcRN/jhQ5Y9WGgUYpXzmTkjmPp+P3Ufi8op1T3GLv9J2JKH0dCKasiH3N9Y0xEA4B8Bvgg+MQkzdKEYhLq94E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=ZveWQ6Dr; arc=none smtp.client-ip=80.237.130.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1716999934; c=relaxed/simple;
+	bh=XWTvgOpa/ROLa55P7YiVGDQAHxuXZkHUHPhWeWr2A8M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hurRMpza75ysobGAbTsou1ieVHn/j7FD/qTr7BZUNgYtb51X/vqdefAS7j3y4uV0VUDri8n7jiyqDkXWBeNvuPuxzNnWVD4uX7a10cRJzdAZkv4DZn7poJ3bcK+HsEWqP/nnxEY5V1s1M/jC9niLqedETXizUX6AzkHY6+KvmIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ns2ZIr6V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="ZveWQ6Dr"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=leemhuis.info; s=he214686; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:Reply-To:MIME-Version:Date:
-	Message-ID:From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:
-	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
-	In-Reply-To:References; bh=B7XB8qUIcTmB1ehnipB+Kf3z1BPRYE36ZBSUE8NS1go=;
-	t=1716993425; x=1717425425; b=ZveWQ6Dr3LUYuVdUNOPo0tAZkO5ChVyME/VbLMP1uqSiRaE
-	yzbEOROreEYOY8mROeCiqHYK/bj/Zrtbeb66pNlA15L0rCy5o1xhVFuTkEzifskJhrzOhg3Aat1/x
-	JHFkgSCVLfdWVLAVgq1eMHiE4tki9j15sZGcGfe9pckoXaURMBFNnODVdNP29WAH8L8BFf4S2BfvE
-	3+pGS1l0eqgUsTjU6ga2iIPLjOIZfYgKFkHogihuqkeuYcHkUKhHc9r51fRhRWU9whiw4WMxtmzQa
-	NgIISdJBWUeB/D5ALf/lnvaEEbuMKfGQyk7lQaVoN8XbMg3ZcerYk2RxItMp2Pig==;
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1sCKQF-0003Dv-Nj; Wed, 29 May 2024 16:36:59 +0200
-Message-ID: <fc6a2243-6982-45e9-a640-9d98c29a8f53@leemhuis.info>
-Date: Wed, 29 May 2024 16:36:58 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ns2ZIr6V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B79A2C116B1;
+	Wed, 29 May 2024 16:25:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1716999933;
+	bh=XWTvgOpa/ROLa55P7YiVGDQAHxuXZkHUHPhWeWr2A8M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Ns2ZIr6VvO8DHPaypxlYrKfLH9G+32HhMEMwz/5JSbWg0D6qa4LfRSxhqKONCYa0R
+	 El5E2QewPGDcyBtgrGO4tkwMqTN+3Jkp4f7g57lV1+0mb/SSgaRIoCQ0TsIOuUugUv
+	 ee7i9V20WwHOmybWFY2JFqFiSMTAyw+jyguINTU0H+RDKDomlq1x0YEdX6wZy8B4I6
+	 U/brKIm/WxSoAKYHXNsoKaALvFcMjVN4mVCG5tfctZ17jIFlgw/Yf0EGjkDtN0V9I+
+	 9uwDykhAK3o4VunkJZ0BSmHGUaZSSqaHLNkYzJ96Vojh+b/yogx4ZSvfnX4gpTEa5j
+	 rxXvfmWYGvmqA==
+Date: Wed, 29 May 2024 17:25:19 +0100
+From: Conor Dooley <conor@kernel.org>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
+	Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
+	Heiko Stuebner <heiko.stuebner@cherry.de>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Chris Morgan <macromorgan@hotmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Masahiro Yamada <masahiroy@kernel.org>, Baoquan He <bhe@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kefeng Wang <wangkefeng.wang@huawei.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Azeem Shaikh <azeemshaikh38@gmail.com>, Guo Ren <guoren@kernel.org>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Anup Patel <apatel@ventanamicro.com>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Hugo Villeneuve <hvilleneuve@dimonoff.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [DO NOT MERGE v8 26/36] dt-bindings: ata: ata-generic: Add new
+ targets
+Message-ID: <20240529-arise-small-f3277feee4e4@spud>
+References: <cover.1716965617.git.ysato@users.sourceforge.jp>
+ <8ff46a90c7be5eea45984f60b9b0db99219c82e6.1716965617.git.ysato@users.sourceforge.jp>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
- allocating the queue
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: John Garry <john.g.garry@oracle.com>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org, benh@kernel.crashing.org,
- linuxppc-dev@lists.ozlabs.org, Guenter Roeck <linux@roeck-us.net>,
- Christoph Hellwig <hch@lst.de>,
- Linux kernel regressions list <regressions@lists.linux.dev>
-References: <20240520151536.GA32532@lst.de>
-From: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>
-Content-Language: en-US, de-DE
-In-Reply-To: <20240520151536.GA32532@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1716993425;08490132;
-X-HE-SMSGID: 1sCKQF-0003Dv-Nj
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="EwaFJRsUcMIAwW3R"
+Content-Disposition: inline
+In-Reply-To: <8ff46a90c7be5eea45984f60b9b0db99219c82e6.1716965617.git.ysato@users.sourceforge.jp>
 
-[CCing the regression list, as it should be in the loop for regressions:
-https://docs.kernel.org/admin-guide/reporting-regressions.html]
 
-On 20.05.24 17:15, Christoph Hellwig wrote:
-> Adding ben and the linuxppc list.
+--EwaFJRsUcMIAwW3R
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hmm, no reply and no other progress to get this resolved afaics. So lets
-bring Michael into the mix, he might be able to help out.
+Hey,
 
-BTW TWIMC: a PowerMac G5 user user reported similar symptoms here
-recently: https://bugzilla.kernel.org/show_bug.cgi?id=218858
+On Wed, May 29, 2024 at 05:01:12PM +0900, Yoshinori Sato wrote:
+> Added new ata-generic target.
+> - iodata,usl-5p-ata
+> - renesas,rts7751r2d-ata
+>=20
+> Each boards have simple IDE Interface. Use ATA generic driver.
+>=20
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 
-Ciao, Thorsten
+Why do you keep dropping tags? Damien and I acked this back in v6 and
+Krzysztof reminded you in v7:
+https://lore.kernel.org/all/06fdb2cf7927681acf3099b826390ef75ba321af.170478=
+8539.git.ysato@users.sourceforge.jp/
+https://lore.kernel.org/all/53f85cc2e124d1c2e7394458b73293d797817d6d.171220=
+7606.git.ysato@users.sourceforge.jp/
 
-> Context: pata_macio initialization now fails as we enforce that the
-> segment size is set properly.
-> 
-> On Wed, May 15, 2024 at 04:52:29PM -0700, Guenter Roeck wrote:
->> pata_macio_common_init() Calling ata_host_activate() with limit 65280
->> ...
->> max_segment_size is 65280; PAGE_SIZE is 65536; BLK_MAX_SEGMENT_SIZE is 65536
->> WARNING: CPU: 0 PID: 12 at block/blk-settings.c:202 blk_validate_limits+0x2d4/0x364
->> ...
->>
->> This is with PPC_BOOK3S_64 which selects a default page size of 64k.
-> 
-> Yeah.  Did you actually manage to use pata macio previously?  Or is
-> it just used because it's part of the pmac default config?
-> 
->> Looking at the old code, I think it did what you suggested above,
-> 
->> but assuming that the driver requested a lower limit on purpose that
->> may not be the best solution.
-> 
->> Never mind, though - I updated my test configuration to explicitly
->> configure the page size to 4k to work around the problem. With that,
->> please consider this report a note in case someone hits the problem
->> on a real system (and sorry for the noise).
-> 
-> Yes, the idea behind this change was to catch such errors.  So far
-> most errors have been drivers setting lower limits than what the
-> hardware can actually handle, but I'd love to track this down.
-> 
-> If the hardware can't actually handle the lower limit we should
-> probably just fail the probe gracefully with a well comment if
-> statement instead.
+Dropping the tags just leads to wasted time re-reviewing patches that
+already got approved. I don't see any valid reason to drop them on a
+trivial patch like this :/ Please check back to previous revisions and
+make sure that you picked up applicable tags.
+
+Thanks,
+Conor.
+
+> ---
+>  Documentation/devicetree/bindings/ata/ata-generic.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/Documentation/devicetree/bindings/ata/ata-generic.yaml b/Doc=
+umentation/devicetree/bindings/ata/ata-generic.yaml
+> index 0697927f3d7e..1025b3b351d0 100644
+> --- a/Documentation/devicetree/bindings/ata/ata-generic.yaml
+> +++ b/Documentation/devicetree/bindings/ata/ata-generic.yaml
+> @@ -18,6 +18,8 @@ properties:
+>        - enum:
+>            - arm,vexpress-cf
+>            - fsl,mpc8349emitx-pata
+> +          - iodata,usl-5p-ata
+> +          - renesas,rts7751r2d-ata
+>        - const: ata-generic
+> =20
+>    reg:
+> --=20
+> 2.39.2
+>=20
+
+--EwaFJRsUcMIAwW3R
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZldW7wAKCRB4tDGHoIJi
+0rICAP9V1iNf3aedUZq4py3MAFbhxEMXF2XlH0Il+KuD+J/ZuAD9Eti+5ySYfFAX
+cxCmNqYe51qJCuNdyoXp6/hLh6B1JwY=
+=l0ak
+-----END PGP SIGNATURE-----
+
+--EwaFJRsUcMIAwW3R--
