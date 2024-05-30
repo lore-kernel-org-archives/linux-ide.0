@@ -1,90 +1,112 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C021558B8;
-	Thu, 30 May 2024 14:28:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DABED46B83;
+	Thu, 30 May 2024 17:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717079307; cv=none; b=ZoVrDsBl0gcFYlXCZOp09nUCA8edR2krUCg4cZwiQhTKIyqv65xIRLAtTDkhvyKHem7nqDGXh0ciVUq8S1z0kH8OoYwEkJ68FwSfPaGcKTI8WWOU5TwRNJxpPau3JU4NXe0I1g4S3XDdgOFTG6Irhd7DpclAJjtXLYpM2X3cVnc=
+	t=1717089307; cv=none; b=O9PuDTxAynvSCMvCASyaYo1I3RecJtwTgVkpc1WmGIn52TdB8+JAU+wIF44SrGb+qE7zc93+E+boOwjL9uzO4/MMUhEIVcO4l4/yjMsMOwj4J5BNjbFTbXxnhmNfVL6VJ//ZuUT4Ifhxtr8sZ/Eu80ucEUqJ12Xk5s0t4Qt1kT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717079307; c=relaxed/simple;
-	bh=TepJdMu5Kgqt4hFWQ/knF8KsMyDM2pCe5l3NAhbAlr0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=rcJRKpULeaPItAlhIfJQzkbMadeOVDNIXP32MeJ2FKNZYCeYPHobWpaG/+BM7cSp4CgLdV77TUOI4OQ+wTwZ/K14mGPUkaxFIaIkZtcgOpMrf1Qhgje4twQkeYAJ+XEQDqLPF265mqqoykvv9JSgy4g8JK+2rYaSLXJO0Mz2nyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=Gq9AAZ2u; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+	s=arc-20240116; t=1717089307; c=relaxed/simple;
+	bh=URqPQnPy5FP44S2DmmqfTAsVuS00f5pQbyJiST5YKkM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=r1JkxNiOKNdJKCu1HHPrc48g0xt8DByT/2s2sk8nE8PMwKSPg/9BShmVGoB9XdtKkeqi2milVLBGy55aYG6PEu+bPSipYu2XBKLMgXmkVWMhatz3kUJoGouJN5rys4EinJkzfQLY3KIoJDjmYo6FmlLeWj5n8dZOPQK2lEbtjjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M+fVHIQp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="Gq9AAZ2u"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1717079303;
-	bh=TepJdMu5Kgqt4hFWQ/knF8KsMyDM2pCe5l3NAhbAlr0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=Gq9AAZ2u93VW1D0x6Na4RcZUHk90fmGkZEWk8KeWCfGT4bL493v8+w0tcTJ9hsRkM
-	 4XDO0HcsykkcEpCJdlsHn8IcqCapHKhg3S8aluPMzfsmu2wtre70g04ccbHxsqlKfx
-	 C4cqvFpr/umZfy9AnM6SmI/NdUQ+q8oLGNvbALKhHqY83jJI6xkA2LwnPuh21keJ22
-	 LlU1LoJ0GcAzcYfDUhR1TB49I6xrk3V6xFU+rqyCAF4HK6bTrCm3nUrys+1upui+ze
-	 mXbO3gkQecvwBuSOjmSecncOMEgipu1oC1HgQkrjIy0dSNoyFcs2Z4Z6PLRsNJOq6u
-	 x12ptIkbo4bhw==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4VqpWp35Nwz4wcC;
-	Fri, 31 May 2024 00:28:22 +1000 (AEST)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: "Linux regression tracking (Thorsten Leemhuis)" <regressions@leemhuis.info>
-Cc: John Garry <john.g.garry@oracle.com>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>, Damien Le Moal
- <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org, benh@kernel.crashing.org,
- linuxppc-dev@lists.ozlabs.org, Guenter Roeck <linux@roeck-us.net>,
- Christoph Hellwig <hch@lst.de>, Linux kernel regressions list
- <regressions@lists.linux.dev>
-Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
- allocating the queue
-In-Reply-To: <8734pz4gdh.fsf@mail.lhotse>
-References: <20240520151536.GA32532@lst.de>
- <fc6a2243-6982-45e9-a640-9d98c29a8f53@leemhuis.info>
- <8734pz4gdh.fsf@mail.lhotse>
-Date: Fri, 31 May 2024 00:28:21 +1000
-Message-ID: <87wmnb2x2y.fsf@mail.lhotse>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M+fVHIQp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8289C32782;
+	Thu, 30 May 2024 17:15:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717089306;
+	bh=URqPQnPy5FP44S2DmmqfTAsVuS00f5pQbyJiST5YKkM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=M+fVHIQpg0T/3eHcd7tocoywDYwP17uK8cfkJ9zDeNZG04tV2jk609zvJsgA4Hw5k
+	 JWHPG8Rl9ABZDwBSelkCaspwJo+IzT70B44yyNeUkgNAcbfkvtnET3NeL2SpjlSA1F
+	 hHBHeenJ3skGKNDm2yi5jpgB37DFn2OOSXSyx5TQy8VZIEfoVo195wBfpt5pQKaklJ
+	 HWffN+mjUuHC0vpZiAQsmgeW2cNOaLYDhsqv0Gl3kRlhQ75j5lF3kjyN0p+zZ2LykL
+	 8JZbuS9JYpvHpH2Ms4zZSpwAOi2BnRmi0dEEztlj2vh8seGJcK1FRaLwKJspFOkLwL
+	 5ATVzGSbzf5sA==
+Date: Thu, 30 May 2024 12:15:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
+	Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
+	Heiko Stuebner <heiko.stuebner@cherry.de>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Chris Morgan <macromorgan@hotmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Masahiro Yamada <masahiroy@kernel.org>, Baoquan He <bhe@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kefeng Wang <wangkefeng.wang@huawei.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Azeem Shaikh <azeemshaikh38@gmail.com>, Guo Ren <guoren@kernel.org>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Anup Patel <apatel@ventanamicro.com>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Hugo Villeneuve <hvilleneuve@dimonoff.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>,
+	Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [DO NOT MERGE v8 00/36] Device Tree support for SH7751 based
+ board
+Message-ID: <20240530171503.GA551834@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1716965617.git.ysato@users.sourceforge.jp>
 
-Michael Ellerman <mpe@ellerman.id.au> writes:
-> "Linux regression tracking (Thorsten Leemhuis)" <regressions@leemhuis.info> writes:
->> [CCing the regression list, as it should be in the loop for regressions:
->> https://docs.kernel.org/admin-guide/reporting-regressions.html]
->>
->> On 20.05.24 17:15, Christoph Hellwig wrote:
->>> Adding ben and the linuxppc list.
->>
->> Hmm, no reply and no other progress to get this resolved afaics. So lets
->> bring Michael into the mix, he might be able to help out.
->
-> Sorry I didn't see the original forward for some reason.
->
-> I haven't seen this on my G5, but it's hard drive is on SATA. I think
-> the CDROM is pata_macio, but there isn't a disk in the drive to test
-> with.
->
->> BTW TWIMC: a PowerMac G5 user user reported similar symptoms here
->> recently: https://bugzilla.kernel.org/show_bug.cgi?id=218858
->
-> AFAICS that report is from a 4K page size kernel (Page orders: ...
-> virtual = 12), so there must be something else going on?
+On Wed, May 29, 2024 at 05:00:46PM +0900, Yoshinori Sato wrote:
+> This is an updated version of something I wrote about 7 years ago.
+> Minimum support for R2D-plus and LANDISK.
+> I think R2D-1 will work if you add AX88796 to dts.
+> And board-specific functions and SCI's SPI functions are not supported.
 
-No that's wrong. The actual hardware page size is 4K, but
-CONFIG_PAGE_SIZE and PAGE_SHIFT etc. is 64K.
+I don't understand the point of this.  It's marked "DO NOT MERGE", so
+what do you want me to do?  I've posted comments several times and
+they've never been addressed, so I don't think there's any point in
+looking at this again:
 
-So at least for this user the driver used to work with 64K pages, and
-now doesn't.
+  https://lore.kernel.org/r/20240404134652.GA1910402@bhelgaas
 
-cheers
+Bjorn
