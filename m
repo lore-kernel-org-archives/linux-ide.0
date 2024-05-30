@@ -1,112 +1,119 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DABED46B83;
-	Thu, 30 May 2024 17:15:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E9C317DE23;
+	Thu, 30 May 2024 21:27:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717089307; cv=none; b=O9PuDTxAynvSCMvCASyaYo1I3RecJtwTgVkpc1WmGIn52TdB8+JAU+wIF44SrGb+qE7zc93+E+boOwjL9uzO4/MMUhEIVcO4l4/yjMsMOwj4J5BNjbFTbXxnhmNfVL6VJ//ZuUT4Ifhxtr8sZ/Eu80ucEUqJ12Xk5s0t4Qt1kT8=
+	t=1717104445; cv=none; b=kgb5O23FTP2eSkKPEeMej9C8fedklh1nITvOhFvx1buPle408vGXaoJstuALxS13lcnVv+7VzBt0B33glYytPjSDq4uJeVApAxNN/urhiaatXWQUEEbB3hfR2d3zdYU9LVEC6Xgs1/8VTS8MzsrwEPPr6Z2hJJJ2LKhz8e6gxF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717089307; c=relaxed/simple;
-	bh=URqPQnPy5FP44S2DmmqfTAsVuS00f5pQbyJiST5YKkM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=r1JkxNiOKNdJKCu1HHPrc48g0xt8DByT/2s2sk8nE8PMwKSPg/9BShmVGoB9XdtKkeqi2milVLBGy55aYG6PEu+bPSipYu2XBKLMgXmkVWMhatz3kUJoGouJN5rys4EinJkzfQLY3KIoJDjmYo6FmlLeWj5n8dZOPQK2lEbtjjM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M+fVHIQp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717104445; c=relaxed/simple;
+	bh=z3EFeAVFEvon7UNZm7t0dEY75VpCgY2+r8WzPLjUNms=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ba8G2Ltp/1g1V1P/9KGvGVRfT1zJMuh4UxA3+dsdgrsZ+rV25QvuIO1TOq1wr0/rv5J0Dr/+fgLYYMnbCj8VuvIMm8f2G6ZU38mwP0SuerN+8VnuNRoo6z8pX65ijlIG6Kw2SHueIi+acjB269HEOSu5L3rfYYIDxV1GNra8HbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TtccERbN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M+fVHIQp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8289C32782;
-	Thu, 30 May 2024 17:15:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TtccERbN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50391C2BBFC;
+	Thu, 30 May 2024 21:27:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717089306;
-	bh=URqPQnPy5FP44S2DmmqfTAsVuS00f5pQbyJiST5YKkM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=M+fVHIQpg0T/3eHcd7tocoywDYwP17uK8cfkJ9zDeNZG04tV2jk609zvJsgA4Hw5k
-	 JWHPG8Rl9ABZDwBSelkCaspwJo+IzT70B44yyNeUkgNAcbfkvtnET3NeL2SpjlSA1F
-	 hHBHeenJ3skGKNDm2yi5jpgB37DFn2OOSXSyx5TQy8VZIEfoVo195wBfpt5pQKaklJ
-	 HWffN+mjUuHC0vpZiAQsmgeW2cNOaLYDhsqv0Gl3kRlhQ75j5lF3kjyN0p+zZ2LykL
-	 8JZbuS9JYpvHpH2Ms4zZSpwAOi2BnRmi0dEEztlj2vh8seGJcK1FRaLwKJspFOkLwL
-	 5ATVzGSbzf5sA==
-Date: Thu, 30 May 2024 12:15:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Rich Felker <dalias@libc.org>,
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
-	Heiko Stuebner <heiko.stuebner@cherry.de>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Chris Morgan <macromorgan@hotmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Masahiro Yamada <masahiroy@kernel.org>, Baoquan He <bhe@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Kefeng Wang <wangkefeng.wang@huawei.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Azeem Shaikh <azeemshaikh38@gmail.com>, Guo Ren <guoren@kernel.org>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Anup Patel <apatel@ventanamicro.com>,
-	Jacky Huang <ychuang3@nuvoton.com>,
-	Hugo Villeneuve <hvilleneuve@dimonoff.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Wolfram Sang <wsa+renesas@sang-engineering.com>,
-	Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	Javier Martinez Canillas <javierm@redhat.com>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	linux-fbdev@vger.kernel.org
-Subject: Re: [DO NOT MERGE v8 00/36] Device Tree support for SH7751 based
- board
-Message-ID: <20240530171503.GA551834@bhelgaas>
+	s=k20201202; t=1717104445;
+	bh=z3EFeAVFEvon7UNZm7t0dEY75VpCgY2+r8WzPLjUNms=;
+	h=From:To:Cc:Subject:Date:From;
+	b=TtccERbNFibTFDA+4WXIYXXCnyuXMcNbn6rKgoYAr2MAIrsjA1N0/Ig4K8V68sLWw
+	 VlR0t84wmBDk2orjuDQo244U1iwxISit9SnRjpJ134ufFc8ROSQPqpcQ7TrTdEnDHk
+	 p9lGgZR1wokem6K7aQobf8eOMgIu86IlAtRrtg0vtqrVh0LiWAawKAefWwyqVeXvxj
+	 QNVTqKvK2WVFGtaWhzlH1EpGh4o0wVu3rNQV84gvJ13hS0S6HomVhEC2RL8oHfkDXM
+	 FFGm3ExpnI8vm8N8G9z4LT1hLRIGIczVHy1c8MfjMAobe8wXbxs5MIAePyx1Px91Uo
+	 KcJFQ/aqaAreg==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Jian-Hong Pan <jhp@endlessos.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: stable@vger.kernel.org,
+	Tim Teichmann <teichmanntim@outlook.de>,
+	linux-ide@vger.kernel.org
+Subject: [PATCH] ata: libata-core: Add ATA_HORKAGE_NOLPM for Apacer AS340
+Date: Thu, 30 May 2024 23:27:04 +0200
+Message-ID: <20240530212703.561517-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.45.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1716965617.git.ysato@users.sourceforge.jp>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3191; i=cassel@kernel.org; h=from:subject; bh=z3EFeAVFEvon7UNZm7t0dEY75VpCgY2+r8WzPLjUNms=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNIi3qvrO7QsFd8t/6+KqcH0w5oo6xuNevN79v9wn+ksW qjJV2vbUcrCIMbFICumyOL7w2V/cbf7lOOKd2xg5rAygQxh4OIUgIkweDH8U8p+eyyxtkzHQP7W xBPiO1/0Ln3IXHxq/Yr8tpmbeBMM9jMyLF7+bIZ89tf/En93XHG8a7Y5/EnBTF9TF/3m34f0X3w JYwUA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 29, 2024 at 05:00:46PM +0900, Yoshinori Sato wrote:
-> This is an updated version of something I wrote about 7 years ago.
-> Minimum support for R2D-plus and LANDISK.
-> I think R2D-1 will work if you add AX88796 to dts.
-> And board-specific functions and SCI's SPI functions are not supported.
+Commit 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+dropped the board_ahci_low_power board type, and instead enables LPM if:
+-The AHCI controller reports that it supports LPM (Partial/Slumber), and
+-CONFIG_SATA_MOBILE_LPM_POLICY != 0, and
+-The port is not defined as external in the per port PxCMD register, and
+-The port is not defined as hotplug capable in the per port PxCMD
+ register.
 
-I don't understand the point of this.  It's marked "DO NOT MERGE", so
-what do you want me to do?  I've posted comments several times and
-they've never been addressed, so I don't think there's any point in
-looking at this again:
+Partial and Slumber LPM states can either be initiated by HIPM or DIPM.
 
-  https://lore.kernel.org/r/20240404134652.GA1910402@bhelgaas
+For HIPM (host initiated power management) to get enabled, both the AHCI
+controller and the drive have to report that they support HIPM.
 
-Bjorn
+For DIPM (device initiated power management) to get enabled, only the
+drive has to report that it supports DIPM. However, the HBA will reject
+device requests to enter LPM states which the HBA does not support.
+
+The problem is that Apacer AS340 drives do not handle low power modes
+correctly. The problem was most likely not seen before because no one
+had used this drive with a AHCI controller with LPM enabled.
+
+Add a quirk so that we do not enable LPM for this drive, since we see
+command timeouts if we do (even though the drive claims to support DIPM).
+
+Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+Cc: stable@vger.kernel.org
+Reported-by: Tim Teichmann <teichmanntim@outlook.de>
+Closes: https://lore.kernel.org/linux-ide/87bk4pbve8.ffs@tglx/
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+On the system reporting this issue, the HBA supports SALP (HIPM) and
+LPM states Partial and Slumber.
+
+This drive only supports DIPM but not HIPM, however, that should not
+matter, as a DIPM request from the device still has to be acked by the
+HBA, and according to AHCI 1.3.1, section 5.3.2.11 P:Idle, if the link
+layer has negotiated to low power state based on device power management
+request, the HBA will jump to state PM:LowPower.
+
+In PM:LowPower, the HBA will automatically request to wake the link
+(exit from Partial/Slumber) when a new command is queued (by writing to
+PxCI). Thus, there should be no need for host software to request an
+explicit wakeup (by writing PxCMD.ICC to 1).
+
+Therefore, even with only DIPM supported/enabled, we shouldn't see command
+timeouts with the current code. Also, only enabling only DIPM (by
+modifying the AHCI driver) with another drive (which support both DIPM
+and HIPM), shows no errors. Thus, it seems like the drive is the problem.
+
+ drivers/ata/libata-core.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4f35aab81a0a..25b400f1c3de 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4155,6 +4155,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM |
+ 						ATA_HORKAGE_NOLPM },
+ 
++	/* Apacer models with LPM issues */
++	{ "Apacer AS340*",		NULL,	ATA_HORKAGE_NOLPM },
++
+ 	/* These specific Samsung models/firmware-revs do not handle LPM well */
+ 	{ "SAMSUNG MZMPC128HBFU-000MV", "CXM14M1Q", ATA_HORKAGE_NOLPM },
+ 	{ "SAMSUNG SSD PM830 mSATA *",  "CXM13D1Q", ATA_HORKAGE_NOLPM },
+-- 
+2.45.1
+
