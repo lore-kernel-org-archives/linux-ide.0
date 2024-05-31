@@ -1,53 +1,56 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61061183089;
-	Thu, 30 May 2024 21:55:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E87312BD0F;
+	Fri, 31 May 2024 00:00:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717106111; cv=none; b=lot/FR9SnBI06MwAzDlQp0T5EzaGy0gHG6eSenrArsJfzAtISbD4Hn3lWWuUmvh8HxIpTH+4UrzqgWTWGNXP/IqpqS80qX4gz4tryXzpEbV/vx8wE9wIctK6v4JioDKXfwWHOvE50loPSKggisHZ1W38DjMKoL4zhCnmxIZyxlw=
+	t=1717113613; cv=none; b=f+QOSHuTCFZ41c0Gd24UNUg5upi9NfuhkygL+FgVB2A7O6arJqs1LH6RxsXYuRiB25aLDSsF8JwBOk3SOCoex+59zGXSzX5lXBTAIZxBlLy9OH/U/3I/amyx3EwWNxWw+NVXbjx72ki/OhgiwFu0PM8wRznl8gE/KmfXd/3rWUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717106111; c=relaxed/simple;
-	bh=AioVk8wkm7HveOl09BKYM+zAseZQ8CtD7sxKMh1BGsE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hmvJzkOVl8496W5hAZlUiGaWr/cOiXbFZ4jEQdOzA8Bgog/Mxuxq8VQepPpJPQ0qKCzxOlrDtK16H3nzgbYcKgz5WHF2snbRMpSc7Tqjy9QJUog4QnuUUukSsXClDnj7FhZut14O/+Go5Vx+fdsf5ZA3WlkyBei78m9Hfbx3+2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZhCgVx6/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717113613; c=relaxed/simple;
+	bh=VtCMaBcbV0Wr/asaqBEHQdJ9OUYxT1etF8QWfK79Yos=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Q28oFPjF1F5vuOqUiRlWUbxIx+vlBbjKPwRnXHFmdap/QppUq47tmQy6JrKg4B+3RHd0nix//66zqKv7qdTMK+u3qPLRv9u6pb8ap/uEurRLFcGC5ieeKPOByXPVM8a2f1p8q27AI+sqtjlY6QkkGoaXYBcYLBguAIJklK6uu0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SalGgp5/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZhCgVx6/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C599C32786;
-	Thu, 30 May 2024 21:55:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SalGgp5/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EF3FC2BBFC;
+	Fri, 31 May 2024 00:00:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717106109;
-	bh=AioVk8wkm7HveOl09BKYM+zAseZQ8CtD7sxKMh1BGsE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZhCgVx6/A/uTKPQcNtolL25HFesohR9o/HJ/osjwz0KifrK58iVlCHOrk0YDumNf5
-	 jKrZNMIoDElpJCDKCW8352wtPuEtFtzEmZLkAiAwUL41Mnk+6IFn48tpwkUnzcKR3u
-	 cQ/y8kvhe1aNIFqwYxvFW2dB47nssFTBUKpe7/Fb/F9I/RionDqBrugYDZMmmbsPv2
-	 IDX/yyk59YTmP3aEmjG6nule79Xig0d2SbK06vumun2j5EGY1m9fAB3yKE7NIWAKVF
-	 Jk6B5LemWNjxW0I2rL52ZYjh4ypUrjMwLA0asOGBRRlOQq+XmzKHGZWwg8Ank3/zvl
-	 CQ3rzyffbr/tw==
-Date: Thu, 30 May 2024 23:55:05 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	Jian-Hong Pan <jhp@endlessos.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: stable@vger.kernel.org, Tim Teichmann <teichmanntim@outlook.de>,
-	linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata-core: Add ATA_HORKAGE_NOLPM for Apacer AS340
-Message-ID: <Zlj1uc9FcLaSPoOX@ryzen.lan>
-References: <20240530212703.561517-2-cassel@kernel.org>
+	s=k20201202; t=1717113612;
+	bh=VtCMaBcbV0Wr/asaqBEHQdJ9OUYxT1etF8QWfK79Yos=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=SalGgp5/cWk/EjhaZWN8yy89nMFqH8Tbd7nGgy+AmrRy1m2dRGE/eSJjQW7nLRled
+	 WPejVG3MzdGF+D2bZ/gOrOOAbP1pt2Mhb8YWRiX3Dmv0wyU74rsViCSsM+yFDB1YfH
+	 6fEAcdo49CfJ42yxEfH+p1lV/ZEGk9SS0tnjyl13A78L+UoqiOSkezBVGT94rvHNvf
+	 iQ5+CvZbzVHC+/6hqGj5ZbuQhHi0GUJhZU0iGCSOby1lQU7KhAMBhbKCXfgqM/XUBr
+	 JaI0wdExq64EXx0zCnhkR1dj8w03AATGalp+E1NXwGQKL5c1jcE15+AL8C57fn1Obv
+	 02EnAVE/GdNFA==
+Message-ID: <b7e8b2df-7cfc-415c-99e7-f3fcd953d26d@kernel.org>
+Date: Fri, 31 May 2024 09:00:09 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-core: Add ATA_HORKAGE_NOLPM for Apacer AS340
+To: Niklas Cassel <cassel@kernel.org>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Jian-Hong Pan <jhp@endlessos.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: stable@vger.kernel.org, Tim Teichmann <teichmanntim@outlook.de>,
+ linux-ide@vger.kernel.org
+References: <20240530212703.561517-2-cassel@kernel.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
 In-Reply-To: <20240530212703.561517-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, May 30, 2024 at 11:27:04PM +0200, Niklas Cassel wrote:
+On 5/31/24 6:27 AM, Niklas Cassel wrote:
 > Commit 7627a0edef54 ("ata: ahci: Drop low power policy board type")
 > dropped the board_ahci_low_power board type, and instead enables LPM if:
 > -The AHCI controller reports that it supports LPM (Partial/Slumber), and
@@ -77,56 +80,10 @@ On Thu, May 30, 2024 at 11:27:04PM +0200, Niklas Cassel wrote:
 > Reported-by: Tim Teichmann <teichmanntim@outlook.de>
 > Closes: https://lore.kernel.org/linux-ide/87bk4pbve8.ffs@tglx/
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
-> On the system reporting this issue, the HBA supports SALP (HIPM) and
-> LPM states Partial and Slumber.
-> 
-> This drive only supports DIPM but not HIPM, however, that should not
-> matter, as a DIPM request from the device still has to be acked by the
-> HBA, and according to AHCI 1.3.1, section 5.3.2.11 P:Idle, if the link
-> layer has negotiated to low power state based on device power management
-> request, the HBA will jump to state PM:LowPower.
-> 
-> In PM:LowPower, the HBA will automatically request to wake the link
-> (exit from Partial/Slumber) when a new command is queued (by writing to
-> PxCI). Thus, there should be no need for host software to request an
-> explicit wakeup (by writing PxCMD.ICC to 1).
-> 
-> Therefore, even with only DIPM supported/enabled, we shouldn't see command
-> timeouts with the current code. Also, only enabling only DIPM (by
-> modifying the AHCI driver) with another drive (which support both DIPM
-> and HIPM), shows no errors. Thus, it seems like the drive is the problem.
-> 
->  drivers/ata/libata-core.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 4f35aab81a0a..25b400f1c3de 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4155,6 +4155,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  						ATA_HORKAGE_ZERO_AFTER_TRIM |
->  						ATA_HORKAGE_NOLPM },
->  
-> +	/* Apacer models with LPM issues */
-> +	{ "Apacer AS340*",		NULL,	ATA_HORKAGE_NOLPM },
-> +
->  	/* These specific Samsung models/firmware-revs do not handle LPM well */
->  	{ "SAMSUNG MZMPC128HBFU-000MV", "CXM14M1Q", ATA_HORKAGE_NOLPM },
->  	{ "SAMSUNG SSD PM830 mSATA *",  "CXM13D1Q", ATA_HORKAGE_NOLPM },
-> -- 
-> 2.45.1
-> 
 
-One interesting fact which:
-Apacer AS340, CT240BX500SSD1, and R3SL240G all have in common:
-their SSD controller is made by Silicon Motion:
-https://smarthdd.com/database/Apacer-AS340-120GB/U1014A0/
-https://smarthdd.com/database/CT240BX500SSD1/M6CR013/
-https://smarthdd.com/database/R3SL240G/P0422C/
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-Not sure if that is relevant or not...
+-- 
+Damien Le Moal
+Western Digital Research
 
-
-Kind regards,
-Niklas
