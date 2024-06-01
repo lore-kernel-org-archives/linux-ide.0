@@ -1,73 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35405158A18;
-	Fri, 31 May 2024 13:17:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD87AF9CC;
+	Sat,  1 Jun 2024 05:20:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717161447; cv=none; b=T0a/CAk+0A2QFEgPKQOuOJ4M3zHoj5mlQ23R+I4upPN0AfkFxUq9aOIGgml7wnrJDj9gJ78ZwYye4V1jd6dess+T8a8qFCKy+Jq7nMMQz8GvOFefeBNGknqK++mBmc015LBlkH8/N1UynOFDR8efMBqejeb4hiPEZotMx9CAeq8=
+	t=1717219211; cv=none; b=JnIwwX+6PN8S8AQ5zORXg3AeUm/chPkXd7J92lGWqWCg0ChdrSj9VxfsDOO4MUc1vMwSp1NPeSJMtJ8KkR4ZPKEVaFzZrQXX9G5rjWd5RFoeJKp9kheBvxQVCHVYMnAm0gTSaqqPu/XC4YquV3QcxGHVitKJSXH5p99xlxJEmZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717161447; c=relaxed/simple;
-	bh=gFC1l1cuepLndJfwbQhjy5RLRVn0vVdYXl4e+lDoOZM=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=eICfiFLIC8Ofl/mg278P7m6fD85bCeFwSLmdPkmxWAFZYjdA3lP2WMPZcmr/FTOz7Cx5JZtNdRfzy7vnDVM2BWUkEa4RYh01rdL5V7RIUNNwg24XdI20pUZ0pEFMv0i340qxQHIWdlHjSRbHGB6bEDJUd4yv+PSc7t9aN6wnMWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kE16L+he; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717219211; c=relaxed/simple;
+	bh=F37TZpHVwLcm3fW7tNFu6Jl5Qzq7pHJIpm3FmoVNQZo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ERuV/Ehq8lmOUgAk1fVHePGGfeAYsX/yxYSChLqPFJvwC+QQq4QnEMBTEeIdz7bfDdzkB7nXEKENksyPYSOigEP5D+WAqveMMW84MJKD07oGbvFMLNRB3+gfMoleIe4ewV/cp7h71Z0ykX6DI1wCt43AHYfXQuyWwAc6o1ETu8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=M/mDr8e2; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kE16L+he"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29304C116B1;
-	Fri, 31 May 2024 13:17:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717161446;
-	bh=gFC1l1cuepLndJfwbQhjy5RLRVn0vVdYXl4e+lDoOZM=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=kE16L+heEzZMwhZSFBDj07TOG6h0SH2hYH10k84CpHwpO3BNDk5cVVdJvyjBVW7Jk
-	 I0Oy+d0E0HRcF8HBi/GIBYJSCp47J5JWJ8LZmd/RslujzCARCD+pMkf6v21iur0bqN
-	 0gt/TN3Yn2AdKtIY+n5HI/BqoQCLuptZt3URPM8P5Cx3k65XXOTRG2zwP6P3ZR4RpH
-	 NjzczFtuVlGINZb+NSUeNPotS+FC5c8g4Mc9Je1r1F2t//2s3EtQoDtydlTug/qF8g
-	 2gBINcrfRo+linG7pk8tAUk0fO9Nd3LyIb+gXrT7Aqlnkdzf6cRi7rWZNJYfOjmsXr
-	 TeL1jRzLc3s0A==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, 
- Mario Limonciello <mario.limonciello@amd.com>, 
- Jian-Hong Pan <jhp@endlessos.org>, 
- Mika Westerberg <mika.westerberg@linux.intel.com>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: stable@vger.kernel.org, Tim Teichmann <teichmanntim@outlook.de>, 
- linux-ide@vger.kernel.org
-In-Reply-To: <20240530212703.561517-2-cassel@kernel.org>
-References: <20240530212703.561517-2-cassel@kernel.org>
-Subject: Re: [PATCH] ata: libata-core: Add ATA_HORKAGE_NOLPM for Apacer
- AS340
-Message-Id: <171716144488.860385.18377345070341018457.b4-ty@kernel.org>
-Date: Fri, 31 May 2024 15:17:24 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="M/mDr8e2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1717219210; x=1748755210;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=F37TZpHVwLcm3fW7tNFu6Jl5Qzq7pHJIpm3FmoVNQZo=;
+  b=M/mDr8e2+/n/BmTKSNjYv12FxGMbUU9OLPohG7SpvsCtEo9tXSzuoDTr
+   ZdYHH0+4g16URGhoNCkTU1aZdAT44z3kV+VxZPCRSl8PP2EiVhP/TWtfp
+   NkbOle04NfPeK8/m47zPkNuNo8Jg3x2ar9DSQpS+0BcAoGFI05Okxk8mi
+   k4i/EmRHOgf3VpdvAxkzueQmDllluvGCqrqjo7j3uZM7KAAR6XtXumC9w
+   jEWz2HW9MsBtl3OYZQVdlc/j/N16BCIXzxvg/FFRFy67h3WEcNVbrYYvP
+   VjUWuhXs30qtw/cdgRumftEICOCNLvbzVgXNuNOVddwet9ef0DLW6ijgo
+   w==;
+X-CSE-ConnectionGUID: njX/XrvWTvG4iTKts9NIlg==
+X-CSE-MsgGUID: u3tX4qfOSRGCiuSGvTPm+A==
+X-IronPort-AV: E=McAfee;i="6600,9927,11089"; a="13618126"
+X-IronPort-AV: E=Sophos;i="6.08,206,1712646000"; 
+   d="scan'208";a="13618126"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2024 22:20:10 -0700
+X-CSE-ConnectionGUID: TQcw1yjrSeWxR1JKsJDeMA==
+X-CSE-MsgGUID: I6KDIsNISyOatKivwMuAPQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,206,1712646000"; 
+   d="scan'208";a="41288006"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orviesa005.jf.intel.com with ESMTP; 31 May 2024 22:20:08 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+	id 5D3AB128; Sat, 01 Jun 2024 08:20:06 +0300 (EEST)
+Date: Sat, 1 Jun 2024 08:20:06 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Jian-Hong Pan <jhp@endlessos.org>, stable@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: ahci: Do not enable LPM if no LPM states are
+ supported by the HBA
+Message-ID: <20240601052006.GG1421138@black.fi.intel.com>
+References: <20240531120711.660691-2-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20240531120711.660691-2-cassel@kernel.org>
 
-
-On Thu, 30 May 2024 23:27:04 +0200, Niklas Cassel wrote:
-> Commit 7627a0edef54 ("ata: ahci: Drop low power policy board type")
-> dropped the board_ahci_low_power board type, and instead enables LPM if:
-> -The AHCI controller reports that it supports LPM (Partial/Slumber), and
-> -CONFIG_SATA_MOBILE_LPM_POLICY != 0, and
-> -The port is not defined as external in the per port PxCMD register, and
-> -The port is not defined as hotplug capable in the per port PxCMD
->  register.
+On Fri, May 31, 2024 at 02:07:11PM +0200, Niklas Cassel wrote:
+> LPM consists of HIPM (host initiated power management) and DIPM
+> (device initiated power management).
 > 
-> [...]
+> ata_eh_set_lpm() will only enable HIPM if both the HBA and the device
+> supports it.
+> 
+> However, DIPM will be enabled as long as the device supports it.
+> The HBA will later reject the device's request to enter a power state
+> that it does not support (Slumber/Partial/DevSleep) (DevSleep is never
+> initiated by the device).
+> 
+> For a HBA that doesn't support any LPM states, simply don't set a LPM
+> policy such that all the HIPM/DIPM probing/enabling will be skipped.
+> 
+> Not enabling HIPM or DIPM in the first place is safer than relying on
+> the device following the AHCI specification and respecting the NAK.
+> (There are comments in the code that some devices misbehave when
+> receiving a NAK.)
+> 
+> Performing this check in ahci_update_initial_lpm_policy() also has the
+> advantage that a HBA that doesn't support any LPM states will take the
+> exact same code paths as a port that is external/hot plug capable.
+> 
+> Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+> We have not received any bug reports with this.
+> The devices that were quirked recently all supported both Partial and
+> Slumber.
+> This is more a defensive action, as it seems unnecessary to enable DIPM
+> in the first place, if the HBA doesn't support any LPM states.
+> 
+>  drivers/ata/ahci.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 07d66d2c5f0d..214de08de642 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1735,6 +1735,12 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
+>  	if (ap->pflags & ATA_PFLAG_EXTERNAL)
+>  		return;
+>  
+> +	/* If no LPM states are supported by the HBA, do not bother with LPM */
+> +	if ((ap->host->flags & ATA_HOST_NO_PART) &&
+> +	    (ap->host->flags & ATA_HOST_NO_SSC) &&
+> +	    (ap->host->flags & ATA_HOST_NO_DEVSLP))
 
-Applied, thanks!
+For debugging purposes in case of potential issues, perhaps add a debug
+log here so it is visible that we don't enable LPM?
 
-[1/1] ata: libata-core: Add ATA_HORKAGE_NOLPM for Apacer AS340
-      commit: 3cb648c4dd3e8dde800fb3659250ed11f2d9efa5
-
-Best regards,
--- 
-Niklas Cassel <cassel@kernel.org>
-
+> +		return;
+> +
+>  	/* user modified policy via module param */
+>  	if (mobile_lpm_policy != -1) {
+>  		policy = mobile_lpm_policy;
+> -- 
+> 2.45.1
