@@ -1,84 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 871402A1B0
-	for <linux-ide@vger.kernel.org>; Sun,  2 Jun 2024 17:38:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B55A21
+	for <linux-ide@vger.kernel.org>; Sun,  2 Jun 2024 22:52:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717349916; cv=none; b=n4GYn2o7RwIlNBXA11TKCoL3wQIIJslxwWPpUL8ZMJJINnwMTmYm0L6KtictPxQBswbwboh5YYbhgwAjTm3bIEDj1o47wk5/NuEBV1IvgnyMQwAPMpFgGmevwNYkFCUdl0ffPbYMc8bpdKEOt7htqzvSjZmrJ0N0GeEzlEscYww=
+	t=1717368745; cv=none; b=HrNTjVuh/+zZZeOm/ujqtUroPGlx0TiY8sILr6iobee8GA95oF4iPDXhoizmWpAy1R0uxdIzeDtRSpnIh2Uk9u7f6smkQNkFqBgemX9X7HG1Dqebyx6D7sW+rJ3tTHa55z7xl/bmzcWU7INkbgXSCLUeeVXdwhLdAe61vIUV/lE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717349916; c=relaxed/simple;
-	bh=onNudQVPiPYbZsGy+MnmVURtE3eUg+c724hi/emL0Iw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ctqGhDCNjsUXfLf8CWZqNwirLd9KAygFkunUJWji6nmXwSPouV69umTjWT9h5jrNGyFoOiTd1uvQzA5aZ8ZQaTr2Y4D8q7MGsN9raxy1uE/5IuqtBDLPP1sE+vI8kvBUZbXh2yqhuI3RJ63F9mRYjAzD+Y73uz9qDnYC7jjMhl4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kDb4YXAQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717368745; c=relaxed/simple;
+	bh=Rgj/eN1avGIL0yONxmhNJxQP7vEHJx8XIU/d3JwwN5Q=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=ikm/5eaVNC037T1t4+TMR3VkzEGSFM2S6jKESMzfurDb5nF3CZqO0ezJC1wB4YlD0VSqxCrlsJW1o8De0SHX8oXqenRq6/3fKMuMdxU4aqTEINUAv6p871KX4qS9GVXtKXHuCar9sPzh20USVMNbFhZOH3hhWJjpgeFK4q49kBk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TYJiDZHN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kDb4YXAQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F067FC32781;
-	Sun,  2 Jun 2024 17:38:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TYJiDZHN"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 99F0EC2BBFC;
+	Sun,  2 Jun 2024 22:52:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717349916;
-	bh=onNudQVPiPYbZsGy+MnmVURtE3eUg+c724hi/emL0Iw=;
-	h=From:To:Cc:Subject:Date:From;
-	b=kDb4YXAQcrGli9mDtt1x96YdyA+1ZtXFG8svivwqfurkGJUL048HDlK2psQI4kpBv
-	 +UWqN6c02vvNLbaUzIbXIs0xKKz7XWAi6Lo4AL3Z1CqAPrHcqxoYHlFnXjJLx4FZ4b
-	 WlTmDVy3Y1KtQJiY6HO5+iqrGG+vxBe0iMF+HVgEW8o9jYAahpVvC0FnRACw1dvpqm
-	 BBRQT05P08oEOrHzLh4Gpq8gRNyZCz/e95Ca3QNHEvn99LXQy+VAZtZY0IJEAkley9
-	 P0pqn99bh1GWUYJC/DbrChe6DkGrOCvqgAAFTN6WJ6QsvGn7rW00lpykql1JNzSPLE
-	 4VLjMqyMp2zgA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata fixes for 6.10-rc2
-Date: Sun,  2 Jun 2024 19:38:29 +0200
-Message-ID: <20240602173829.886553-1-cassel@kernel.org>
-X-Mailer: git-send-email 2.45.1
+	s=k20201202; t=1717368743;
+	bh=Rgj/eN1avGIL0yONxmhNJxQP7vEHJx8XIU/d3JwwN5Q=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=TYJiDZHN0EDWz+rkUXRfSYIRzyFXbYodepXa2rU2zZfr7I1XL1lwMVCo4oyBsybZ8
+	 SYWw54W319LegsaCSSMMK2hIGDYwKjX0psWb/NWsWeqOUmh6DOpCZ0IZP5P7kRQm6B
+	 fALjO2sv4qyBflKd6+d37hsaIEPDNpsl0l90Dn7tDhF7KdDe0b+zlI9q0g+cek7IWE
+	 ZwSQI2tc5jQK6AJe65WI7G0pYdudgu0vVh73mWp6+MkBZUZI1qfAEepN5wO3IQVXlB
+	 8++APEPmyO9NZesacxqffLfCS47PRG45t9iP/n0eNDoze2C5C3NoQtImArMqZeu9EG
+	 KAChG0XiQ+6cw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7B373C4361B;
+	Sun,  2 Jun 2024 22:52:23 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 6.10-rc2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20240602173829.886553-1-cassel@kernel.org>
+References: <20240602173829.886553-1-cassel@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20240602173829.886553-1-cassel@kernel.org>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.10-rc2
+X-PR-Tracked-Commit-Id: 3cb648c4dd3e8dde800fb3659250ed11f2d9efa5
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 58d89ee81a0b264db6249a374b1264a475aef4ca
+Message-Id: <171736874346.1822.4675445132379388653.pr-tracker-bot@kernel.org>
+Date: Sun, 02 Jun 2024 22:52:23 +0000
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Linus,
+The pull request you sent on Sun,  2 Jun 2024 19:38:29 +0200:
 
-The following changes since commit 1613e604df0cd359cf2a7fbd9be7a0bcfacfabd0:
+> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.10-rc2
 
-  Linux 6.10-rc1 (2024-05-26 15:20:12 -0700)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/58d89ee81a0b264db6249a374b1264a475aef4ca
 
-are available in the Git repository at:
+Thank you!
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.10-rc2
-
-for you to fetch changes up to 3cb648c4dd3e8dde800fb3659250ed11f2d9efa5:
-
-  ata: libata-core: Add ATA_HORKAGE_NOLPM for Apacer AS340 (2024-05-31 15:14:06 +0200)
-
-----------------------------------------------------------------
-ata fixes for 6.10-rc2
-
- - Add a quirk for three different devices that have shown issues with
-   LPM (link power management). These devices appear to not implement LPM
-   properly, since we see command timeouts when enabling LPM. The quirk
-   disables LPM for these problematic devices. (Me)
-
- - Do not apply the Intel PCS quirk on Alder Lake. The quirk is not needed
-   and was originally added by mistake when LPM support was enabled for
-   this AHCI controller. Enabling the quirk when not needed causes the
-   the controller to not be able to detect the connected devices on some
-   platforms.
-
-----------------------------------------------------------------
-Jason Nader (1):
-      ata: ahci: Do not apply Intel PCS quirk on Intel Alder Lake
-
-Niklas Cassel (3):
-      ata: libata-core: Add ATA_HORKAGE_NOLPM for Crucial CT240BX500SSD1
-      ata: libata-core: Add ATA_HORKAGE_NOLPM for AMD Radeon S3 SSD
-      ata: libata-core: Add ATA_HORKAGE_NOLPM for Apacer AS340
-
- drivers/ata/ahci.c        | 1 -
- drivers/ata/libata-core.c | 9 ++++++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
