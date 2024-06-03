@@ -1,63 +1,185 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B55A21
-	for <linux-ide@vger.kernel.org>; Sun,  2 Jun 2024 22:52:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEC06131182;
+	Mon,  3 Jun 2024 15:54:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717368745; cv=none; b=HrNTjVuh/+zZZeOm/ujqtUroPGlx0TiY8sILr6iobee8GA95oF4iPDXhoizmWpAy1R0uxdIzeDtRSpnIh2Uk9u7f6smkQNkFqBgemX9X7HG1Dqebyx6D7sW+rJ3tTHa55z7xl/bmzcWU7INkbgXSCLUeeVXdwhLdAe61vIUV/lE=
+	t=1717430089; cv=none; b=d8idxIkEnsMeCpYHwkr7SrWAztcbcSHcl0PffJkyU5n7Nbri4kaDh7MvtE7MRTDHfXYT74oK35unDupsIQLfyNfPi3kbyRwKwXy9RNQdNP2T5TkY0rgsCXHuUcy9+b64Oa9LdquwuAKySyNaQTUN+ymFYDeIVALiXX0cfs3ILDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717368745; c=relaxed/simple;
-	bh=Rgj/eN1avGIL0yONxmhNJxQP7vEHJx8XIU/d3JwwN5Q=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=ikm/5eaVNC037T1t4+TMR3VkzEGSFM2S6jKESMzfurDb5nF3CZqO0ezJC1wB4YlD0VSqxCrlsJW1o8De0SHX8oXqenRq6/3fKMuMdxU4aqTEINUAv6p871KX4qS9GVXtKXHuCar9sPzh20USVMNbFhZOH3hhWJjpgeFK4q49kBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TYJiDZHN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717430089; c=relaxed/simple;
+	bh=/mqwg4w9jJOykMYUTyLRSt9g531pR70Ydsxqn4u/d+o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=T0OGUMOEjNw+VmgXurlJuA7BDLIHJjGx+81Qaox/AB37XGuRu4IH7GxMQ/QkAFBbucC/DKNKZ6yirTLmNUgABknqC3ZNMq3621a3xWSqQdZjhtsBXoE3sJDboTNS9mxIJh7BJjVKX9mqxb7HQzhW+g6SYmv7XixV+oZpMKanF6Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SKCKUK+6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TYJiDZHN"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 99F0EC2BBFC;
-	Sun,  2 Jun 2024 22:52:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SKCKUK+6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9B30C2BD10;
+	Mon,  3 Jun 2024 15:54:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717368743;
-	bh=Rgj/eN1avGIL0yONxmhNJxQP7vEHJx8XIU/d3JwwN5Q=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=TYJiDZHN0EDWz+rkUXRfSYIRzyFXbYodepXa2rU2zZfr7I1XL1lwMVCo4oyBsybZ8
-	 SYWw54W319LegsaCSSMMK2hIGDYwKjX0psWb/NWsWeqOUmh6DOpCZ0IZP5P7kRQm6B
-	 fALjO2sv4qyBflKd6+d37hsaIEPDNpsl0l90Dn7tDhF7KdDe0b+zlI9q0g+cek7IWE
-	 ZwSQI2tc5jQK6AJe65WI7G0pYdudgu0vVh73mWp6+MkBZUZI1qfAEepN5wO3IQVXlB
-	 8++APEPmyO9NZesacxqffLfCS47PRG45t9iP/n0eNDoze2C5C3NoQtImArMqZeu9EG
-	 KAChG0XiQ+6cw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7B373C4361B;
-	Sun,  2 Jun 2024 22:52:23 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 6.10-rc2
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20240602173829.886553-1-cassel@kernel.org>
-References: <20240602173829.886553-1-cassel@kernel.org>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20240602173829.886553-1-cassel@kernel.org>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.10-rc2
-X-PR-Tracked-Commit-Id: 3cb648c4dd3e8dde800fb3659250ed11f2d9efa5
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 58d89ee81a0b264db6249a374b1264a475aef4ca
-Message-Id: <171736874346.1822.4675445132379388653.pr-tracker-bot@kernel.org>
-Date: Sun, 02 Jun 2024 22:52:23 +0000
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+	s=k20201202; t=1717430088;
+	bh=/mqwg4w9jJOykMYUTyLRSt9g531pR70Ydsxqn4u/d+o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=SKCKUK+6SCKeWy0UyNbLs+BB50UwRzhJv4efMVYn6OgVCU8qKZOoOpikzAgyrDe1O
+	 c4yv7tSWwpos/H3uofzMHk3UaF+4OmLwFpp1u5SQZwX++JqcvFKzrN05AwuXi8pwiv
+	 l3OcNKpTom+E1RJSLQlmWM821dK+GFMnMb3xAiZ0CgSOXYuEjCMHNczULBEfDw6rFU
+	 6gL3Bl5JsihcjAqCZXhoGKU3e8X27voOnp9v0TqxQX3FKdnFAthexAWnpBGY29zyKJ
+	 GBUKCdxh3msMwIIQB/IY/VIEyArSMLRvKmyPeHrKA3Nmh3jHArbXt61pSR6XGaMBej
+	 70tQt7QWPZM7A==
+Date: Mon, 3 Jun 2024 10:54:45 -0500
+From: Rob Herring <robh@kernel.org>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>,
+	Daniel Vetter <daniel@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Rich Felker <dalias@libc.org>,
+	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>,
+	Heiko Stuebner <heiko.stuebner@cherry.de>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Chris Morgan <macromorgan@hotmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Masahiro Yamada <masahiroy@kernel.org>, Baoquan He <bhe@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Kefeng Wang <wangkefeng.wang@huawei.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Azeem Shaikh <azeemshaikh38@gmail.com>, Guo Ren <guoren@kernel.org>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Jernej Skrabec <jernej.skrabec@gmail.com>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Anup Patel <apatel@ventanamicro.com>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Hugo Villeneuve <hvilleneuve@dimonoff.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	Javier Martinez Canillas <javierm@redhat.com>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+	linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	linux-fbdev@vger.kernel.org
+Subject: Re: [DO NOT MERGE v8 19/36] dt-bindings: interrupt-controller:
+ renesas,sh7751-irl-ext: Add json-schema
+Message-ID: <20240603155445.GA501876-robh@kernel.org>
+References: <cover.1716965617.git.ysato@users.sourceforge.jp>
+ <e35aa188e5176544c6884f2d1d7aa1b242a51acf.1716965617.git.ysato@users.sourceforge.jp>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e35aa188e5176544c6884f2d1d7aa1b242a51acf.1716965617.git.ysato@users.sourceforge.jp>
 
-The pull request you sent on Sun,  2 Jun 2024 19:38:29 +0200:
+On Wed, May 29, 2024 at 05:01:05PM +0900, Yoshinori Sato wrote:
+> Renesas SH7751 external interrupt encoder json-schema.
+> 
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+> ---
+>  .../renesas,sh7751-irl-ext.yaml               | 57 +++++++++++++++++++
+>  1 file changed, 57 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml b/Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
+> new file mode 100644
+> index 000000000000..ff70d57b86cd
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
+> @@ -0,0 +1,57 @@
+> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/interrupt-controller/renesas,sh7751-irl-ext.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Renesas SH7751 external interrupt encoder with enable regs.
+> +
+> +maintainers:
+> +  - Yoshinori Sato <ysato@users.sourceforge.jp>
+> +
+> +description:
+> +  This is the generally used external interrupt encoder on SH7751 based boards.
+> +
+> +properties:
+> +  compatible:
+> +    items:
+> +      - const: renesas,sh7751-irl-ext
+> +
+> +  reg: true
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.10-rc2
+Needs to define how many and what they are.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/58d89ee81a0b264db6249a374b1264a475aef4ca
+> +
+> +  interrupt-controller: true
+> +
+> +  '#interrupt-cells':
+> +    const: 2
+> +
+> +  '#address-cells':
+> +    const: 0
+> +
+> +  renesas,set-to-disable:
+> +    $ref: /schemas/types.yaml#/definitions/flag
+> +    description: Invert enable registers. Setting the bit to 0 enables interrupts.
+> +
+> +  renesas,enable-reg:
+> +    $ref: /schemas/types.yaml#/definitions/uint32-array
+> +    description: |
 
-Thank you!
+Don't need '|'.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+> +      IRQ enable register bit mapping
+
+This needs a better description and constraints? Number of entries in 
+the array or values of the entries.
+
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupt-controller
+> +  - '#interrupt-cells'
+> +  - renesas,enable-reg
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    r2dintc: interrupt-controller@a4000000 {
+> +        compatible = "renesas,sh7751-irl-ext";
+> +        reg = <0xa4000000 0x02>;
+> +        interrupt-controller;
+> +        #address-cells = <0>;
+> +        #interrupt-cells = <2>;
+> +        renesas,enable-reg = <12 9 10 3 0 4 1 2 8 5 6 7 15 15 15 11>;
+> +    };
+> -- 
+> 2.39.2
+> 
