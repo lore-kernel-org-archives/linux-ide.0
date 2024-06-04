@@ -1,190 +1,245 @@
-Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com [209.85.167.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EFFC149C6A
-	for <linux-ide@vger.kernel.org>; Tue,  4 Jun 2024 18:43:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B738213E8BF;
+	Tue,  4 Jun 2024 20:17:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717526599; cv=none; b=lE9QUe6v+h0ka1VxDJwWFMDQUCuOrP2e/HsNqowiTKHSEkEK8A6y4Kc5D5lm+2NmD/Qfnb7eYVUy4FltUWsDCPHN1R4nNFgt8Lmievz+R85Gx1LZ6zK9I/JqIxwPSHMwJt4kpOY51L0YzbMQNh375h2uQAQPTtszrhfjkpraQ7c=
+	t=1717532246; cv=none; b=FMuaU3aG4N1GL5WlTSFW000Lt4T+t6DqU5ddZFamk5YkPJbuIfQfa3S72hlHWrMzhzCkaqlxPAGPWQ9Xnx8NiMqgKYg4irbgyRsK+x78Pef8Y9LYq3DkoEwrhnUAEO33jcfLixNQ5ia2v1qyfa07IymRuYAs6ET8J1pzqaCJKlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717526599; c=relaxed/simple;
-	bh=grQASJp14Bt7fZYtPF/BOiWWydFpPjbo/cl/eIyN7Yw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=P2zj/Vh97sFRZn1GGl6dfmFYmOL/F1gmFpEBe4luw65azoXoLpjOjVU8mkBjem7pL2xW+vI51mJWAspktae0jgmjhgFhz0/OkToAlpLlcVy+khmPCbp1UhBaV+OguSX8hfWRUD8KSsjtcPCvlgceLo4XOEHW2LNwzZRgH5Y5358=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=D+Dn9pjz; arc=none smtp.client-ip=209.85.167.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="D+Dn9pjz"
-Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-52b9af7a01bso3189330e87.0
-        for <linux-ide@vger.kernel.org>; Tue, 04 Jun 2024 11:43:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1717526595; x=1718131395; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=3Iay1wNfKZ5p2yKYQUB8UE9csohQVR6x64V5CAu9ZDo=;
-        b=D+Dn9pjzYyPe1Rb7YGr00UzU4jXPUPhzf588Vw3LRrXDtEUrWHMyJFgBFHSzDt9SvD
-         4Jb0EebP/31mDzPYeCNS26IGloGjQLhKU3I/uOwmwzdeIvqPQCBNDBsUOqgO7pcUROe7
-         gYktqDIa3QoCsBMrLMUc5KPupFSaiN9T4jBVQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717526595; x=1718131395;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3Iay1wNfKZ5p2yKYQUB8UE9csohQVR6x64V5CAu9ZDo=;
-        b=RkXHz0kDlwUyjLPzkjMIAfZRttXQ15UC6zkQ6TluiGb+n9dFFLjfZBlzCFaUoXJBDm
-         a++nzBYqtDhQUobD+PmRwR0hQt6LG751UheZMfN44fjdGZ1YSIu772JiP5J4KTN836mG
-         QrkKwpdnFvEcmiJ2I7gPsNepzpbPnuBlEtftUAxJ/tcjBA5xCtgLzLKcR1VeMgEDeG6U
-         l7w3HOUQfuUOPjo5tUg9LtVK/h2EgSwI5blEuQ5Dvvzu6GMUy2/DhLQXhXEbnyQ7ohVW
-         ZbOUfRpY0pgpA4rItFtzbMR7jyG/7r5WsN+kDMCBAO0799yx4OQ9Bc1Au2TgzkQSNYZ+
-         iX8w==
-X-Forwarded-Encrypted: i=1; AJvYcCU9ZsKhLSlvjIBI09+jeVSY7OmihpSLtDzxxbdykUr2RVqAKKeSoZ6k0YZx9dL+dfnMuFg8ZqCpO3ajfqnvSv5pychGQGW3iItX
-X-Gm-Message-State: AOJu0YyOrsd+lfY3aqwZEjSqCPb5/ET7LHzQ7UeL5NojyVG7yMEVtdTA
-	TLu3XnRyInlYdNbzyVEAuQ9VcO7URBRx9lqQpO2k4yvkbktc+mKTuYmlByktZkJNPBWxwuH3Zzw
-	//tUcIIpL
-X-Google-Smtp-Source: AGHT+IFUuadPZHMBBQ5z7amlxfMej+oVkMikb1cfp3M7KiY3dwStjUgyp2kzXsffzXoGsgkqvTUbOQ==
-X-Received: by 2002:a05:6512:e99:b0:51d:3f07:c93c with SMTP id 2adb3069b0e04-52bab4b80c7mr311419e87.3.1717526595362;
-        Tue, 04 Jun 2024 11:43:15 -0700 (PDT)
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com. [209.85.221.47])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a68a552c902sm541677766b.191.2024.06.04.11.43.15
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Jun 2024 11:43:15 -0700 (PDT)
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-356c4e926a3so4867120f8f.1
-        for <linux-ide@vger.kernel.org>; Tue, 04 Jun 2024 11:43:15 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVN6umCTQvcenNVNQ0O6SEou54b2eu7g/wK0tHaSIuyk1f4dL2+fp/ayjZiTez4J23oqLgqA/ySL4vJq/WnwhqINLkK1MwO2rY0
-X-Received: by 2002:a17:906:54b:b0:a62:2cae:c02 with SMTP id
- a640c23a62f3a-a69a024ce40mr20818866b.61.1717526574326; Tue, 04 Jun 2024
- 11:42:54 -0700 (PDT)
+	s=arc-20240116; t=1717532246; c=relaxed/simple;
+	bh=Rae1lQHqGHsOD8fTcik48b495suxjyvSUpsD0bTw8RM=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=kBoIK3lUXMMW2GmOZFP+BaI4es+BKvS8mSKkGq75G609ML7YomhY6XAOmkNEPcajVdfjEkQUEEt0wFWDMF1+fKOBFJpBlkH7rSbE2zf89M+BDzLKeJNI6kYPfAPQy7bCpqBJTj+KQQwWeE/vG0z0DfiI6nZxt+iUeVkhNjI4Jv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.1.105] (178.176.78.182) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Tue, 4 Jun
+ 2024 23:17:11 +0300
+Subject: Re: [PATCH] ata: pata_buddha: pata_gayle: consolidate .sff_data_xfer
+ around libata::ata_sff_data_xfer()
+To: Paolo Pisati <p.pisati@gmail.com>, Damien Le Moal <dlemoal@kernel.org>
+CC: <linux-m68k@lists.linux-m68k.org>, <linux-ide@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+References: <20240604162217.484789-1-p.pisati@gmail.com>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <eebb2da9-1253-8404-1f79-50a95679df03@omp.ru>
+Date: Tue, 4 Jun 2024 23:17:11 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240603211538.289765-1-andriy.shevchenko@linux.intel.com> <Zl9b_Wh_Lx7Aln1q@intel.com>
-In-Reply-To: <Zl9b_Wh_Lx7Aln1q@intel.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 4 Jun 2024 11:42:36 -0700
-X-Gmail-Original-Message-ID: <CAHk-=whAnzrovfD8MtpRwfbkVxi-W61CqKxYdX+94r_uJeCT7w@mail.gmail.com>
-Message-ID: <CAHk-=whAnzrovfD8MtpRwfbkVxi-W61CqKxYdX+94r_uJeCT7w@mail.gmail.com>
-Subject: Re: [PATCH v1 1/1] treewide: Align match_string() with sysfs_match_string()
-To: Rodrigo Vivi <rodrigo.vivi@intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Corey Minyard <minyard@acm.org>, 
-	Allen Pais <apais@linux.microsoft.com>, 
-	Sebastian Reichel <sebastian.reichel@collabora.com>, Perry Yuan <perry.yuan@amd.com>, 
-	Giovanni Cabiddu <giovanni.cabiddu@intel.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	Nuno Sa <nuno.sa@analog.com>, Guenter Roeck <linux@roeck-us.net>, 
-	Randy Dunlap <rdunlap@infradead.org>, Andi Shyti <andi.shyti@kernel.org>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Lee Jones <lee@kernel.org>, 
-	Samuel Holland <samuel@sholland.org>, Elad Nachman <enachman@marvell.com>, 
-	Arseniy Krasnov <AVKrasnov@sberdevices.ru>, Johannes Berg <johannes.berg@intel.com>, 
-	Gregory Greenman <gregory.greenman@intel.com>, Benjamin Berg <benjamin.berg@intel.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Robert Richter <rrichter@amd.com>, Vinod Koul <vkoul@kernel.org>, 
-	Chunfeng Yun <chunfeng.yun@mediatek.com>, Linus Walleij <linus.walleij@linaro.org>, 
-	Hans de Goede <hdegoede@redhat.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	Nikita Kravets <teackot@gmail.com>, Jiri Slaby <jirislaby@kernel.org>, 
-	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, 
-	Stanley Chang <stanley_chang@realtek.com>, 
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>, Abdel Alkuor <abdelalkuor@geotab.com>, 
-	Kent Overstreet <kent.overstreet@linux.dev>, Eric Biggers <ebiggers@google.com>, 
-	Kees Cook <keescook@chromium.org>, Ingo Molnar <mingo@kernel.org>, 
-	"Steven Rostedt (Google)" <rostedt@goodmis.org>, Daniel Bristot de Oliveira <bristot@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, 
-	Abel Wu <wuyun.abel@bytedance.com>, John Johansen <john.johansen@canonical.com>, 
-	Mimi Zohar <zohar@linux.ibm.com>, Stefan Berger <stefanb@linux.ibm.com>, 
-	Roberto Sassu <roberto.sassu@huawei.com>, Eric Snowberg <eric.snowberg@oracle.com>, 
-	Takashi Iwai <tiwai@suse.de>, Takashi Sakamoto <o-takashi@sakamocchi.jp>, 
-	Jiapeng Chong <jiapeng.chong@linux.alibaba.com>, Mark Brown <broonie@kernel.org>, 
-	Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, linuxppc-dev@lists.ozlabs.org, 
-	linux-kernel@vger.kernel.org, keyrings@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-ide@vger.kernel.org, openipmi-developer@lists.sourceforge.net, 
-	linux-clk@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, 
-	linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, 
-	linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org, qat-linux@intel.com, 
-	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
-	intel-xe@lists.freedesktop.org, nouveau@lists.freedesktop.org, 
-	linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org, 
-	linux-leds@vger.kernel.org, linux-sunxi@lists.linux.dev, 
-	linux-omap@vger.kernel.org, linux-mmc@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, netdev@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org, 
-	linux-gpio@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-	linux-staging@lists.linux.dev, linux-usb@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	linux-hardening@vger.kernel.org, cgroups@vger.kernel.org, 
-	linux-trace-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org, 
-	linux-integrity@vger.kernel.org, alsa-devel@alsa-project.org, 
-	linux-sound@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, 
-	"Naveen N. Rao" <naveen.n.rao@linux.ibm.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, David Howells <dhowells@redhat.com>, 
-	"David S. Miller" <davem@davemloft.net>, "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Sergey Shtylyov <s.shtylyov@omp.ru>, Damien Le Moal <dlemoal@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, Daniel Scally <djrscally@gmail.com>, 
-	Sakari Ailus <sakari.ailus@linux.intel.com>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Florian Fainelli <florian.fainelli@broadcom.com>, 
-	Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, 
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, Heiko Stuebner <heiko@sntech.de>, 
-	Peter De Schrijver <pdeschrijver@nvidia.com>, Prashant Gaikwad <pgaikwad@nvidia.com>, 
-	Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>, 
-	Huang Rui <ray.huang@amd.com>, "Gautham R. Shenoy" <gautham.shenoy@amd.com>, 
-	Mario Limonciello <mario.limonciello@amd.com>, Viresh Kumar <viresh.kumar@linaro.org>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Jani Nikula <jani.nikula@linux.intel.com>, 
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, 
-	Karol Herbst <kherbst@redhat.com>, Lyude Paul <lyude@redhat.com>, 
-	Danilo Krummrich <dakr@redhat.com>, Jean Delvare <jdelvare@suse.com>, 
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>, Pavel Machek <pavel@ucw.cz>, 
-	Chen-Yu Tsai <wens@csie.org>, Jernej Skrabec <jernej.skrabec@gmail.com>, 
-	Tony Lindgren <tony@atomide.com>, Adrian Hunter <adrian.hunter@intel.com>, Hu Ziji <huziji@marvell.com>, 
-	Ulf Hansson <ulf.hansson@linaro.org>, Miquel Raynal <miquel.raynal@bootlin.com>, 
-	Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
-	Potnuri Bharat Teja <bharat@chelsio.com>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>, Kalle Valo <kvalo@kernel.org>, 
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>, "Oliver O'Halloran" <oohall@gmail.com>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, JC Kuo <jckuo@nvidia.com>, 
-	Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@bootlin.com>, 
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Sebastian Reichel <sre@kernel.org>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Zhang Rui <rui.zhang@intel.com>, 
-	Lukasz Luba <lukasz.luba@arm.com>, Thinh Nguyen <Thinh.Nguyen@synopsys.com>, 
-	Helge Deller <deller@gmx.de>, Brian Foster <bfoster@redhat.com>, 
-	Zhihao Cheng <chengzhihao1@huawei.com>, Tejun Heo <tj@kernel.org>, 
-	Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, 
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, 
-	Daniel Bristot de Oliveira <bristot@redhat.com>, Valentin Schneider <vschneid@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, 
-	Jason Baron <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>, 
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>, 
-	"Serge E. Hallyn" <serge@hallyn.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, 
-	Clemens Ladisch <clemens@ladisch.de>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Liam Girdwood <lgirdwood@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20240604162217.484789-1-p.pisati@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 06/04/2024 19:51:05
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 185716 [Jun 04 2024]
+X-KSE-AntiSpam-Info: Version: 6.1.0.4
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 20 0.3.20
+ 743589a8af6ec90b529f2124c2bbfc3ce1d2f20f
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.78.182 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.78.182 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info:
+	omp.ru:7.1.1;178.176.78.182:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.78.182
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/04/2024 19:55:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 6/4/2024 4:23:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On Tue, 4 Jun 2024 at 11:25, Rodrigo Vivi <rodrigo.vivi@intel.com> wrote:
->
-> (I believe that the new _match_string(str1, size, str2) deserves a better name,
-> but since I'm bad with naming stuff, I don't have any good suggestion)
+Hello!
 
-I hated the enormous cc list, so I didn't reply to all. But clearly
-everybody else is just doing so.
+  Please do 2 separate patches (for each driver), or at last name the
+patch s/th like "ata: pata_{buddha,gayle}: consolidate .sff_data_xfer around libata-sff.c::ata_sff_data_xfer()"...
 
-Anyway, here's my NAK for this patch with explanation:
+On 6/4/24 7:22 PM, Paolo Pisati wrote:
 
-    https://lore.kernel.org/all/CAHk-=wg5F99-GZPETsasJd0JB0JGcdmmPeHRxCtT4_i83h8avg@mail.gmail.com/
+> pata_buddha_data_xfer(), pata_gayle_data_xfer() and ata_sff_data_xfer() are the
+> same function, consolidate around libata::ata_sff_data_xfer().
+> 
+> Signed-off-by: Paolo Pisati <p.pisati@gmail.com>
+> ---
+>  drivers/ata/pata_buddha.c | 40 ++-------------------------------------
+>  drivers/ata/pata_gayle.c  | 40 ++-------------------------------------
+>  2 files changed, 4 insertions(+), 76 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_buddha.c b/drivers/ata/pata_buddha.c
+> index c36ee991d5e5..234278eb26e1 100644
+> --- a/drivers/ata/pata_buddha.c
+> +++ b/drivers/ata/pata_buddha.c
+> @@ -60,42 +60,6 @@ static const struct scsi_host_template pata_buddha_sht = {
+>  	ATA_PIO_SHT(DRV_NAME),
+>  };
+>  
+> -/* FIXME: is this needed? */
+> -static unsigned int pata_buddha_data_xfer(struct ata_queued_cmd *qc,
+> -					 unsigned char *buf,
+> -					 unsigned int buflen, int rw)
+> -{
+> -	struct ata_device *dev = qc->dev;
+> -	struct ata_port *ap = dev->link->ap;
+> -	void __iomem *data_addr = ap->ioaddr.data_addr;
+> -	unsigned int words = buflen >> 1;
+> -
+> -	/* Transfer multiple of 2 bytes */
+> -	if (rw == READ)
+> -		raw_insw((u16 *)data_addr, (u16 *)buf, words);
+> -	else
+> -		raw_outsw((u16 *)data_addr, (u16 *)buf, words);
 
-and part of it was the naming, but there were other oddities there too.
+   Hm, are you sure these calls are equivalent to io{read,write}16_rep()?
 
-           Linus
+> -
+> -	/* Transfer trailing byte, if any. */
+> -	if (unlikely(buflen & 0x01)) {
+> -		unsigned char pad[2] = { };
+> -
+> -		/* Point buf to the tail of buffer */
+> -		buf += buflen - 1;
+> -
+> -		if (rw == READ) {
+> -			raw_insw((u16 *)data_addr, (u16 *)pad, 1);
+> -			*buf = pad[0];
+> -		} else {
+> -			pad[0] = *buf;
+> -			raw_outsw((u16 *)data_addr, (u16 *)pad, 1);
+> -		}
+> -		words++;
+> -	}
+> -
+> -	return words << 1;
+> -}
+> -
+>  /*
+>   * Provide our own set_mode() as we don't want to change anything that has
+>   * already been configured..
+> @@ -131,7 +95,7 @@ static void pata_xsurf_irq_clear(struct ata_port *ap)
+>  
+>  static struct ata_port_operations pata_buddha_ops = {
+>  	.inherits	= &ata_sff_port_ops,
+> -	.sff_data_xfer	= pata_buddha_data_xfer,
+> +	.sff_data_xfer	= ata_sff_data_xfer,
+
+   There should be no need -- this method is preperly init'ed in ata_sff_port_ops...
+
+>  	.sff_irq_check	= pata_buddha_irq_check,
+>  	.cable_detect	= ata_cable_unknown,
+>  	.set_mode	= pata_buddha_set_mode,
+> @@ -139,7 +103,7 @@ static struct ata_port_operations pata_buddha_ops = {
+>  
+>  static struct ata_port_operations pata_xsurf_ops = {
+>  	.inherits	= &ata_sff_port_ops,
+> -	.sff_data_xfer	= pata_buddha_data_xfer,
+> +	.sff_data_xfer	= ata_sff_data_xfer,
+
+   Here as well...
+
+>  	.sff_irq_check	= pata_buddha_irq_check,
+>  	.sff_irq_clear	= pata_xsurf_irq_clear,
+>  	.cable_detect	= ata_cable_unknown,
+> diff --git a/drivers/ata/pata_gayle.c b/drivers/ata/pata_gayle.c
+> index 3bdbe2b65a2b..febffc36a18f 100644
+> --- a/drivers/ata/pata_gayle.c
+> +++ b/drivers/ata/pata_gayle.c
+> @@ -38,42 +38,6 @@ static const struct scsi_host_template pata_gayle_sht = {
+>  	ATA_PIO_SHT(DRV_NAME),
+>  };
+>  
+> -/* FIXME: is this needed? */
+> -static unsigned int pata_gayle_data_xfer(struct ata_queued_cmd *qc,
+> -					 unsigned char *buf,
+> -					 unsigned int buflen, int rw)
+> -{
+> -	struct ata_device *dev = qc->dev;
+> -	struct ata_port *ap = dev->link->ap;
+> -	void __iomem *data_addr = ap->ioaddr.data_addr;
+> -	unsigned int words = buflen >> 1;
+> -
+> -	/* Transfer multiple of 2 bytes */
+> -	if (rw == READ)
+> -		raw_insw((u16 *)data_addr, (u16 *)buf, words);
+> -	else
+> -		raw_outsw((u16 *)data_addr, (u16 *)buf, words);
+> -
+> -	/* Transfer trailing byte, if any. */
+> -	if (unlikely(buflen & 0x01)) {
+> -		unsigned char pad[2] = { };
+> -
+> -		/* Point buf to the tail of buffer */
+> -		buf += buflen - 1;
+> -
+> -		if (rw == READ) {
+> -			raw_insw((u16 *)data_addr, (u16 *)pad, 1);
+> -			*buf = pad[0];
+> -		} else {
+> -			pad[0] = *buf;
+> -			raw_outsw((u16 *)data_addr, (u16 *)pad, 1);
+> -		}
+> -		words++;
+> -	}
+> -
+> -	return words << 1;
+> -}
+> -
+
+   Same question as above here...
+
+>  /*
+>   * Provide our own set_mode() as we don't want to change anything that has
+>   * already been configured..
+> @@ -110,7 +74,7 @@ static void pata_gayle_irq_clear(struct ata_port *ap)
+>  
+>  static struct ata_port_operations pata_gayle_a1200_ops = {
+>  	.inherits	= &ata_sff_port_ops,
+> -	.sff_data_xfer	= pata_gayle_data_xfer,
+> +	.sff_data_xfer	= ata_sff_data_xfer,
+>  	.sff_irq_check	= pata_gayle_irq_check,
+>  	.sff_irq_clear	= pata_gayle_irq_clear,
+>  	.cable_detect	= ata_cable_unknown,
+> @@ -119,7 +83,7 @@ static struct ata_port_operations pata_gayle_a1200_ops = {
+>  
+>  static struct ata_port_operations pata_gayle_a4000_ops = {
+>  	.inherits	= &ata_sff_port_ops,
+> -	.sff_data_xfer	= pata_gayle_data_xfer,
+> +	.sff_data_xfer	= ata_sff_data_xfer,
+>  	.cable_detect	= ata_cable_unknown,
+>  	.set_mode	= pata_gayle_set_mode,
+>  };
+> 
+
+    Same comments as to pata_buddha.c here...
+
+MBR, Sergey
