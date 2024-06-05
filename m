@@ -1,152 +1,102 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from forward204b.mail.yandex.net (forward204b.mail.yandex.net [178.154.239.153])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5525C192B62;
-	Wed,  5 Jun 2024 12:38:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36CCF15F3FF;
+	Wed,  5 Jun 2024 21:37:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.153
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717591083; cv=none; b=DXzWq+gZq6hsriCN3jO0Gp/go4RNh+V/Cc+NnnPhNwdnqPg6m2L9cLcdaMMBY1/NsqiFvcabYFeE936rG7Bg5FMTkhRCvQz+R8agzerQesdYP2INBf/fIXCfXXPFWo4214JRn0cefezOPJYncyUblzpaygDuT4lAAxy2OOD3C2s=
+	t=1717623441; cv=none; b=ZBGaXM0907G1wkSt6gaeoHpmvW4bdEHRngrTEsObmGlkvmCtdV3leSEoeuzAe/dtMsqVUmp2qU8l/RGPueKF2xS2EvxeUDHRWGGxSa7J4TN3YbWwVRgQTXk/cRkjNRUY4Ti7C7ZHd0SZz246yWkRtgEPezvY/mineK+0ahUi774=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717591083; c=relaxed/simple;
-	bh=fOdt3Fytv6HQI3+mzylm/2AcpvWV0Ln/zAUcHTb4EVQ=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=oQ7P0W1u7FTQEOY+3nXA3+Kl8rqRpXcwg4VbvJJ+lum2jkFo3bCb59KedAhItZQF+eSUjL5Qy3qApRB20wQPiIWad0sHk34kk/tPklU5tZER5KfNGKYqBgg73aXMgvKG9ectVbO+MqYx69ICv1OtGWrRv6zxl0o3ysKwjJuq1hw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=QVtEtJEa; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+	s=arc-20240116; t=1717623441; c=relaxed/simple;
+	bh=I1MC/J9J5wZTsyCTVV7/Js6exyl5QJIVotMGCkz7gHE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gCysgjTVeTLTHcxCvECj/7+XNDkwmVdsc5Hjh9iZPlJfn0rZ12RsIPDZGvXzwYInCObAxnM0yYbUmHlmvW/fs2gY4UFoPLqhRnMeKXXnEuJYFtTFh8iI3J8y5Q5jDq5dJcR2RfEBL8mJtVoGx4oKJHVl1fwYPtcqwYyMSiOg120=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=eEGbfY6F; arc=none smtp.client-ip=178.154.239.153
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="QVtEtJEa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1717591078;
-	bh=tXmul2YvdKxY1b4BfQmztqVfezCv2YwMW6gaWIjxWyc=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=QVtEtJEaETyY3TIJz+BqxEhlpdsOyG+VD8ca4zr1Re2bJfG7/+4yVtUM+6dcSadla
-	 5Qile4iLRhEqKbrsOhvW7fDiPMV9wt7m6K1qWQOEm7y8YiAqk0RVI3THBKvcaEZk6B
-	 LsOyox3Y9MQXLVnsNFw59VKkvUJ+dxJkKGHCfOt7iw/s3CeoYOAXCNC9q9vc0MySDw
-	 kvzBhAXul9CmIBSiGC52nN/nCaNaqPh27jwkulmNwxccTxSuwJv3lptjJdlv9uZiKW
-	 PJz2OCXxqIW6D/4ezjqnN+5+sMHLJRgU4jV1w80ofUcOp5JwLLa+ZKUfi5O9q2EodR
-	 +de6MFfeZauYA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4VvRnb3wLZz4wc3;
-	Wed,  5 Jun 2024 22:37:54 +1000 (AEST)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>, John Garry <john.g.garry@oracle.com>, Jens
- Axboe <axboe@kernel.dk>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Damien Le Moal <dlemoal@kernel.org>, Niklas
- Cassel <cassel@kernel.org>, linux-block@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org, Guenter Roeck
- <linux@roeck-us.net>, Christoph Hellwig <hch@lst.de>, Linux kernel
- regressions list <regressions@lists.linux.dev>, doru.iorgulescu1@gmail.com
-Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
- allocating the queue
-In-Reply-To: <87sexy2yny.fsf@mail.lhotse>
-References: <20240520151536.GA32532@lst.de>
- <fc6a2243-6982-45e9-a640-9d98c29a8f53@leemhuis.info>
- <8734pz4gdh.fsf@mail.lhotse> <87wmnb2x2y.fsf@mail.lhotse>
- <20240531060827.GA17723@lst.de> <87sexy2yny.fsf@mail.lhotse>
-Date: Wed, 05 Jun 2024 22:37:53 +1000
-Message-ID: <87wmn3pntq.fsf@mail.lhotse>
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="eEGbfY6F"
+Received: from forward103c.mail.yandex.net (forward103c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d103])
+	by forward204b.mail.yandex.net (Yandex) with ESMTPS id A7FF36677C;
+	Thu,  6 Jun 2024 00:34:42 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:4486:0:640:b366:0])
+	by forward103c.mail.yandex.net (Yandex) with ESMTPS id 56F26608E1;
+	Thu,  6 Jun 2024 00:34:34 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id VYgH11SMo8c0-8YgXmBOX;
+	Thu, 06 Jun 2024 00:34:33 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1717623273; bh=JvVC7BaTilq9Ww7g4mw3O5T4PPv3xf2DesSD7h+cHxQ=;
+	h=Message-Id:Date:Cc:Subject:To:From;
+	b=eEGbfY6FDHA/a4AYVa9egz65CoedLqMAD0KicAFtGcohEDS7vLrVtcIBYSa1d/o64
+	 KYw/NwsCGJzEocE9uqbi4vYJRCUoFJYqt6F7edcUSidRwinI52zL3WLD3gh3BOtjL3
+	 +tEI8vrLVZ81XoHSrRIfr4Gh262osk7RrVhiZ71s=
+Authentication-Results: mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Mikhail Ukhin <mish.uxin2012@yandex.ru>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>
+Cc: Mikhail Ukhin <mish.uxin2012@yandex.ru>,
+	stable@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Pavel Koshutin <koshutin.pavel@yandex.ru>,
+	lvc-project@linuxtesting.org,
+	Artem Sadovnikov <ancowi69@gmail.com>,
+	Mikhail Ivanov <iwanov-23@bk.ru>
+Subject: [PATCH v3 5.10/5.15] ata: libata-scsi: check cdb length for VARIABLE_LENGTH_CMD commands
+Date: Thu,  6 Jun 2024 00:34:28 +0300
+Message-Id: <20240605213428.4040-1-mish.uxin2012@yandex.ru>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-Michael Ellerman <mpe@ellerman.id.au> writes:
-> Christoph Hellwig <hch@lst.de> writes:
->> On Fri, May 31, 2024 at 12:28:21AM +1000, Michael Ellerman wrote:
->>> No that's wrong. The actual hardware page size is 4K, but
->>> CONFIG_PAGE_SIZE and PAGE_SHIFT etc. is 64K.
->>> 
->>> So at least for this user the driver used to work with 64K pages, and
->>> now doesn't.
->>
->> Which suggested that the communicated max_hw_sectors is wrong, and
->> previously we were saved by the block layer increasing it to
->> PAGE_SIZE after a warning.  Should we just increment it to 64k?
->
-> It looks like that user actually only has the CDROM hanging off
-> pata_macio, so it's possible it has been broken previously and they
-> didn't notice. I'll see if they can confirm the CDROM has been working
-> up until now.
->
-> I can test the CDROM on my G5 next week.
+No upstream commit exists for this patch.
 
-I can confirm that the driver does work with 64K pages prior to the
-recent changes. I'm able to boot and read CDs with no errors.
+Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
+ata_scsi_pass_thru.
 
-However AFAICS that's because the driver splits large requests in
-pata_macio_qc_prep():
+The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
+cmd field from struct scsi_request") upstream.
+Backporting this commit would require significant changes to the code so
+it is bettter to use a simple fix for that particular error.
 
-static enum ata_completion_errors pata_macio_qc_prep(struct ata_queued_cmd *qc)
-{
-       ...
-       for_each_sg(qc->sg, sg, qc->n_elem, si) {
-              u32 addr, sg_len, len;
-              ...
-              addr = (u32) sg_dma_address(sg);
-              sg_len = sg_dma_len(sg);
+The problem is that the length of the received SCSI command is not
+validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
+reading if the user sends a request with SCSI command of length less than
+32.
 
-              while (sg_len) {
-                     ...
-                     len = (sg_len < MAX_DBDMA_SEG) ? sg_len : MAX_DBDMA_SEG;
-                     table->command = cpu_to_le16(write ? OUTPUT_MORE: INPUT_MORE);
-                     table->req_count = cpu_to_le16(len);
-                     ...
-                     addr += len;
-                     sg_len -= len;
-                     ++table;
-              }
-  }
+Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
 
+Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
+Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
+Signed-off-by: Mikhail Ukhin <mish.uxin2012@yandex.ru>
+---
+ v2: The new addresses were added and the text was updated.
+ v3: Checking has been moved to the function ata_scsi_var_len_cdb_xlat at
+ the request of Damien Le Moal
+ drivers/ata/libata-scsi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index dfa090ccd21c..38488bd813d1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3948,7 +3948,11 @@ static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
+ 	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	const u8 *cdb = scmd->cmnd;
+ 	const u16 sa = get_unaligned_be16(&cdb[8]);
++	u8 scsi_op = scmd->cmnd[0];
  
-If I increase MAX_DBMA_SEG from 0xff00 to 64K I see IO errors at boot:
++	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
++        	return 1;
++	
+ 	/*
+ 	 * if service action represents a ata pass-thru(32) command,
+ 	 * then pass it to ata_scsi_pass_thru handler.
+-- 
+2.25.1
 
-  [   24.989755] sr 4:0:0:0: [sr0] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=6s
-  [   25.007310] sr 4:0:0:0: [sr0] tag#0 Sense Key : Medium Error [current]
-  [   25.020502] sr 4:0:0:0: [sr0] tag#0 ASC=0x10 <<vendor>>ASCQ=0x90
-  [   25.032655] sr 4:0:0:0: [sr0] tag#0 CDB: Read(10) 28 00 00 00 00 00 00 00 20 00
-  [   25.047232] I/O error, dev sr0, sector 0 op 0x0:(READ) flags 0x80700 phys_seg 1 prio class 0
-
-
-On the other hand increasing max_segment_size to 64K while leaving MAX_DBDMA_SEG
-at 0xff00 seems to work fine. And that's effectively what's been happening on
-existing kernels until now.
-
-The only question is whether that violates some assumption elsewhere in the
-SCSI layer?
-
-Anyway patch below that works for me on v6.10-rc2.
-
-cheers
-
-
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 817838e2f70e..3cb455a32d92 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -915,10 +915,13 @@ static const struct scsi_host_template pata_macio_sht = {
- 	.sg_tablesize		= MAX_DCMDS,
- 	/* We may not need that strict one */
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	/* Not sure what the real max is but we know it's less than 64K, let's
--	 * use 64K minus 256
-+	/*
-+	 * The SCSI core requires the segment size to cover at least a page, so
-+	 * for 64K page size kernels this must be at least 64K. However the
-+	 * hardware can't handle 64K, so pata_macio_qc_prep() will split large
-+	 * requests.
- 	 */
--	.max_segment_size	= MAX_DBDMA_SEG,
-+	.max_segment_size	= SZ_64K,
- 	.device_configure	= pata_macio_device_configure,
- 	.sdev_groups		= ata_common_sdev_groups,
- 	.can_queue		= ATA_DEF_QUEUE,
