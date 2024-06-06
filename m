@@ -1,106 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61D7613DB8D;
-	Thu,  6 Jun 2024 08:38:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765991953B5;
+	Thu,  6 Jun 2024 11:15:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717663088; cv=none; b=F6wS1meRTNzU6a38xI9K1hB0DRNgzAK20yGdIcIGW8876d3Nt6w0BcQ+WaH7yF1uT1gJKGXnWmAM37sfH/66SXhGPAEW/0fnkHnDCbrRwnQvDVrj3sFtU7xbwcEoRSRmPHfwIQaLm+N+1/n7PWKAwa0loVulSer50V6qdEwM85A=
+	t=1717672505; cv=none; b=AO7sJ2fAhCjkvg6RgMH/VaqopSfKX07wDiqd44rapuUcXAmHYykjVf8g+1ur0niHcstSSiDu73lyhlBtHwTkQJ1PfgUC1qkL2vOkEptAu9yGov9wEF4EAn/ydYQ3NPy+gwyMzlTLTq6cPZ9H8/tWxI14GD7ZXlPFKC+vHUL4xi8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717663088; c=relaxed/simple;
-	bh=eZpkYN1My8L0alqfBripkdov+U6NwJDEvmRjW7H7TrM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hC+NsjHFEuH/wn9bEqply7gffMTOydT8RhN+PdIc1M4ZGhbV0wSBE+7Z55SLqnAt84VayEfhgpLf2QKcNbsvKboZSZiIhcHZcvYBrw2F5rHlMopRvR+sBpruCDaNBWNyebekCnw1H0BzTaXANmCjP3yO6hWrM9/OSXdlSVphHMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z0ssImOx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717672505; c=relaxed/simple;
+	bh=P8r1tAkblITJ7kuGQyJFOBAGEE7nFQZlWfQQ9+/eIbM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kMBSXaP3+HAAusg3KYYJObShm+fQ/lWIGFGJU5ueDgbPSVdbI+ZqKV8rBE0OO0nQDQBrCIVe5mPVSth3UNggw9LNSNC1EOrotHDvF5D/Sg5V1pS69LUgVCwYSKK5/CVKlLKC+HWadOUAekRypfd+9Fy87wX51TT5RV1By2eZUkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=nXEUUmHi; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z0ssImOx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B43C2C4AF08;
-	Thu,  6 Jun 2024 08:38:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717663087;
-	bh=eZpkYN1My8L0alqfBripkdov+U6NwJDEvmRjW7H7TrM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Z0ssImOxCls3XktDCYRtinxWEpufX07d73sxQPBmsmiSTJdiqog1pXPRBfXvJAE1F
-	 /qV1iyYYBd1CY7imDXH3RWCvRWB/JfVVUlLVPh8oLYsH7gtq1HQ8WTAzFRINBL1WIG
-	 Lm+pluRreSS29ZCs4j0bc7d6RB0E2KUq1/eosEqEb2vOxTiRSDsEe0iJW4x9y94ieq
-	 nGhVzqP1kdEp/nrXw5g3dUWiLA0+v7mrcg1i0T8TokYrma3NLYGFKsDyKsT9qu1Bf9
-	 aARw43yl5+4xEQ+ZmQuK3nOMf9Jl3X6m/n1xX6j+FUyPg5e4xoaiZAN5t9VjX7NmyY
-	 1o02QNKsrzcmg==
-Message-ID: <610ee49c-e936-43d4-991e-c39dd0f439d3@kernel.org>
-Date: Thu, 6 Jun 2024 17:38:05 +0900
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="nXEUUmHi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+	s=201909; t=1717672496;
+	bh=JkMBHpq5K4ie+dfHpGJjCUD7zTfjKpLevGsS4Gkp3Mo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=nXEUUmHiHHZhMfTLqAfWPU4HerXeYWMJtunn0PvlF4di3y67hn37mGLFF9awnrkD5
+	 qrk328KUcQi/8DamBIXcYuQd6sgdPo4ymjWbEFwQ7jZxB4FUU/pYmDGCpefnb3/b6g
+	 6RA9fwnz+RYxkkAgont6xbe5h1sdAz1jb26tUuYY7TNJjq12YSpSbhDRg3WcbZkwEw
+	 Jxkqg+sPV9K9klXKYv2gvf3mJCQwniM/M3LmM3qEjb/zEnwvpEHQmZP+ziCzT9RurX
+	 1hrepvtq0dkhjBwWMt6cfpVQDD2nrcqQ60qkK1391r8vAfoh9SUYwWXA2XIJ5Hikso
+	 tR9/WQv+MKAPA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Vw1vM4l74z4wc5;
+	Thu,  6 Jun 2024 21:14:55 +1000 (AEST)
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: martin.petersen@oracle.com,
+	dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: hch@lst.de,
+	john.g.garry@oracle.com,
+	linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	<linuxppc-dev@lists.ozlabs.org>,
+	regressions@lists.linux.dev,
+	doru.iorgulescu1@gmail.com
+Subject: [PATCH] ata: pata_macio: Fix max_segment_size with PAGE_SIZE == 64K
+Date: Thu,  6 Jun 2024 21:14:45 +1000
+Message-ID: <20240606111445.400001-1-mpe@ellerman.id.au>
+X-Mailer: git-send-email 2.45.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 5.10/5.15] ata: libata-scsi: check cdb length for
- VARIABLE_LENGTH_CMD commands
-To: Mikhail Ukhin <mish.uxin2012@yandex.ru>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jens Axboe <axboe@kernel.dk>
-Cc: stable@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, Pavel Koshutin <koshutin.pavel@yandex.ru>,
- lvc-project@linuxtesting.org, Artem Sadovnikov <ancowi69@gmail.com>,
- Mikhail Ivanov <iwanov-23@bk.ru>
-References: <20240605213428.4040-1-mish.uxin2012@yandex.ru>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240605213428.4040-1-mish.uxin2012@yandex.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 6/6/24 6:34 AM, Mikhail Ukhin wrote:
-> No upstream commit exists for this patch.
-> 
-> Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
-> ata_scsi_pass_thru.
-> 
-> The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
-> cmd field from struct scsi_request") upstream.
-> Backporting this commit would require significant changes to the code so
-> it is bettter to use a simple fix for that particular error.
-> 
-> The problem is that the length of the received SCSI command is not
-> validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
-> reading if the user sends a request with SCSI command of length less than
-> 32.
-> 
-> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
-> 
-> Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
-> Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
-> Signed-off-by: Mikhail Ukhin <mish.uxin2012@yandex.ru>
-> ---
->  v2: The new addresses were added and the text was updated.
->  v3: Checking has been moved to the function ata_scsi_var_len_cdb_xlat at
->  the request of Damien Le Moal
->  drivers/ata/libata-scsi.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index dfa090ccd21c..38488bd813d1 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3948,7 +3948,11 @@ static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
->  	struct scsi_cmnd *scmd = qc->scsicmd;
->  	const u8 *cdb = scmd->cmnd;
->  	const u16 sa = get_unaligned_be16(&cdb[8]);
-> +	u8 scsi_op = scmd->cmnd[0];
->  
-> +	if (scsi_op == VARIABLE_LENGTH_CMD && scmd->cmd_len < 32)
+The pata_macio driver advertises a max_segment_size of 0xff00, because
+the hardware doesn't cope with requests >= 64K.
 
-This functions is called only when the opcode is VARIABLE_LENGTH_CMD. So there
-is no need to check that again.
+However the SCSI core requires max_segment_size to be at least
+PAGE_SIZE, which is a problem for pata_macio when the kernel is built
+with 64K pages.
 
-> +        	return 1;
-> +	
->  	/*
->  	 * if service action represents a ata pass-thru(32) command,
->  	 * then pass it to ata_scsi_pass_thru handler.
+In older kernels the SCSI core would just increase the segment size to
+be equal to PAGE_SIZE, however since the commit tagged below it causes a
+warning and the device fails to probe:
 
+  WARNING: CPU: 0 PID: 26 at block/blk-settings.c:202 .blk_validate_limits+0x2f8/0x35c
+  CPU: 0 PID: 26 Comm: kworker/u4:1 Not tainted 6.10.0-rc1 #1
+  Hardware name: PowerMac7,2 PPC970 0x390202 PowerMac
+  ...
+  NIP .blk_validate_limits+0x2f8/0x35c
+  LR  .blk_alloc_queue+0xc0/0x2f8
+  Call Trace:
+    .blk_alloc_queue+0xc0/0x2f8
+    .blk_mq_alloc_queue+0x60/0xf8
+    .scsi_alloc_sdev+0x208/0x3c0
+    .scsi_probe_and_add_lun+0x314/0x52c
+    .__scsi_add_device+0x170/0x1a4
+    .ata_scsi_scan_host+0x2bc/0x3e4
+    .async_port_probe+0x6c/0xa0
+    .async_run_entry_fn+0x60/0x1bc
+    .process_one_work+0x228/0x510
+    .worker_thread+0x360/0x530
+    .kthread+0x134/0x13c
+    .start_kernel_thread+0x10/0x14
+  ...
+  scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
+
+Although the hardware can't cope with a 64K segment, the driver
+already deals with that internally by splitting large requests in
+pata_macio_qc_prep(). That is how the driver has managed to function
+until now on 64K kernels.
+
+So fix the driver to advertise a max_segment_size of 64K, which avoids
+the warning and keeps the SCSI core happy.
+
+Fixes: afd53a3d8528 ("scsi: core: Initialize scsi midlayer limits before allocating the queue")
+Reported-by: Guenter Roeck <linux@roeck-us.net>
+Closes: https://lore.kernel.org/all/ce2bf6af-4382-4fe1-b392-cc6829f5ceb2@roeck-us.net/
+Reported-by: Doru Iorgulescu <doru.iorgulescu1@gmail.com>
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218858
+Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/ata/pata_macio.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 817838e2f70e..3cb455a32d92 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -915,10 +915,13 @@ static const struct scsi_host_template pata_macio_sht = {
+ 	.sg_tablesize		= MAX_DCMDS,
+ 	/* We may not need that strict one */
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	/* Not sure what the real max is but we know it's less than 64K, let's
+-	 * use 64K minus 256
++	/*
++	 * The SCSI core requires the segment size to cover at least a page, so
++	 * for 64K page size kernels this must be at least 64K. However the
++	 * hardware can't handle 64K, so pata_macio_qc_prep() will split large
++	 * requests.
+ 	 */
+-	.max_segment_size	= MAX_DBDMA_SEG,
++	.max_segment_size	= SZ_64K,
+ 	.device_configure	= pata_macio_device_configure,
+ 	.sdev_groups		= ata_common_sdev_groups,
+ 	.can_queue		= ATA_DEF_QUEUE,
 -- 
-Damien Le Moal
-Western Digital Research
+2.45.1
 
