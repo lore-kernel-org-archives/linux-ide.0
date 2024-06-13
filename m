@@ -1,161 +1,50 @@
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2072.outbound.protection.outlook.com [40.107.93.72])
+Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF4BF149C74
-	for <linux-ide@vger.kernel.org>; Thu, 13 Jun 2024 17:35:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.93.72
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718300164; cv=fail; b=g4dzscMx384Ew0NRSqZPx3ur3bzT7FIZ/6eU5iK/1u474wiiQsqwEwkJFLBictyeTpYDrJf64v4HxfPY04WIt/0rhmE8I94H6LTgZUaC0MKYz+E2pev9zpiuJ4kY/fcExavmqVGlgKQX7Rx088/2O81QCM3EBRMjPTUotrZpeK0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718300164; c=relaxed/simple;
-	bh=gawKh8jxwV3FyDJyKqHTV8XCbzcOsg8jcAFCRuMBiGQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=UeFrtHDY8KSnLyISa7Cf7lgLCRrqNoHAUZM8FFSY3rh6bWNQI8VH7JCMM4KMVx6za9RQKQQQp1hVjOf0NkKJnKDbk6EN+K5vCtpAJpcCUPgUXfeknpJHNlA4nGUjv+RMRxzp0UQqgfIPE6W5FbOxI7WQaY45Kc4jeQEfzZ3MeGE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=3T9ynj1J; arc=fail smtp.client-ip=40.107.93.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD7BA433A4
+	for <linux-ide@vger.kernel.org>; Thu, 13 Jun 2024 17:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1718300413; cv=none; b=rtfqoUTtx7rQHzIiyU/qQmw/BUEK2HkWCH3wdoTCq3+0ZCft7skVruhSVO4RNPHqLDZ18PE9qY1LlQ/lPiF0R+uWJO/y7oR3xj5C1HGwALgM7eXbmvTAri0XYaW1R3wauL0uzMpoBwbs8GE9VyQ/aciYLAVFyjLAiPu5YmTqCD8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1718300413; c=relaxed/simple;
+	bh=CKOeGsnphk2JM4+P8aJq68qr0oSxPNicLmFzaSnPGXQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rfxyFY6vFSGu2wWp8kkkQM8zOFz80Ph3Tn2/taPHl7S0NX/8QrQsnweByeDozgIOuRc4wXkSQJKsuCgM7ldVEJx2+iJZvLQLhUWsOuZNvFrF73UtUvWDTtjXt3mwBsKQownXjW4cINIckxQvqOS/XV2XIH73m9zE5S1R1oH4LOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=fu9f2h6/; arc=none smtp.client-ip=159.69.126.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="3T9ynj1J"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fnz7xqPHPIEgxbpTMoUtKYSdGNLt0Am4NhuZoddHspOLBWUkyhEgZWEtGlI2akJxlBBxgVxjK8wVBl1wule7TTh1xpu8okiDZaauPLZVEZ8UIIlrO7b30nSDI93ViXQsBuGpZKeELBt4tTqUCwdWT/7GEBDnkSGO0R4kbDLkN8/7GKRLOtohzRUbKqY3XQ5y9pl4JTpbzjt/p9+eVI9aNURjpRM3JiKlm5659gPsYaM3TXaKFZFvRx7gx7Au6mseoXXdjnKIisfwAeW8XtS5PHfqLGnFPPl1XkOKwBnQG7i0DRWjhKF3QCQPPaSXPnZ0XRUjbcgw/ty0gsytGRxr3g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ne3Fg6IxMHALpinbMRUWnigY1aqiuxJP84gPP+hGki8=;
- b=UXdx5qMp4i5A17ZpOKr23AK0mNcoOcOsWzYGLqh1bh5D9zRyMjkw6GcgdELennofXkPmUxjby7Fn1Q/2g219vZvdvkpMQVB7fpUbh014mUEIcOJJ/Ml8qPrnmKK+d9l/QquPJdgaPJw0+2HFoK1EePX8Q3M3OGREKVafqbhzRe5LxgcEWiPf0Fn5peXuLyPAf3WYiTOBYdOEcygHiAUZXwQZJiA0mvo3TiZA9nzBRjAwMwF/qZIKD+BL7wf+jLTdyK0Ml5R7/JsGwUYJYGzFrCNqFHG0tA6Hoex1X0dSLRez8TOvs4tNMYSwIQzZK7fz8KVoOw2SfcZ2Vb7NBjnKsw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ne3Fg6IxMHALpinbMRUWnigY1aqiuxJP84gPP+hGki8=;
- b=3T9ynj1JX01xKh9oNh9EKdunvkWRUCft8bj9o7XNmafBSLR3N86i3s6R2Yz85BGWvIBSF9HnN3pin7nYP1ewHg45ukP5zXkTpH+1a7Mv9u2UEeusFTjrhCx2gYEInpH3lfn4elxTUA7dF387ejPX7BDkZrz7e75FyfrIF+yPiI0=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from MN0PR12MB6101.namprd12.prod.outlook.com (2603:10b6:208:3cb::10)
- by CH3PR12MB7593.namprd12.prod.outlook.com (2603:10b6:610:141::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7677.25; Thu, 13 Jun
- 2024 17:35:56 +0000
-Received: from MN0PR12MB6101.namprd12.prod.outlook.com
- ([fe80::37ee:a763:6d04:81ca]) by MN0PR12MB6101.namprd12.prod.outlook.com
- ([fe80::37ee:a763:6d04:81ca%4]) with mapi id 15.20.7677.024; Thu, 13 Jun 2024
- 17:35:56 +0000
-Message-ID: <d3a495f6-b7d3-4a5c-b326-f594dbca936e@amd.com>
-Date: Thu, 13 Jun 2024 12:35:54 -0500
-User-Agent: Mozilla Thunderbird
+	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="fu9f2h6/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
+	s=mail; t=1718300409;
+	bh=CKOeGsnphk2JM4+P8aJq68qr0oSxPNicLmFzaSnPGXQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fu9f2h6/GDnp+v+sXS1cCGe2XVFW35RSIzJ+IpciC7tkFjbM2w3YuYyRFX4Vhh9MG
+	 i/QmU91v7OtG3xjZfTJoAmdd1zcMHnKQWrLmRHUOjcKJW1fc+Wgj8Ln2MCBGqunif4
+	 FBzlAw+XcZje4qGcZc+hWEraAzgiNC6BV+K8aYeE=
+Date: Thu, 13 Jun 2024 19:40:09 +0200
+From: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, 
+	Mika Westerberg <mika.westerberg@linux.intel.com>, Mario Limonciello <mario.limonciello@amd.com>, 
+	Manuel Lauss <manuel.lauss@gmail.com>, linux-ide@vger.kernel.org
 Subject: Re: [PATCH] ata: libata-scsi: Set the RMB bit only for removable
  media devices
-To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Manuel Lauss <manuel.lauss@gmail.com>,
- =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
- linux-ide@vger.kernel.org
+Message-ID: <e9718314-8963-4d53-b4a6-8e10bca3f1a1@t-8ch.de>
 References: <20240613173352.1557847-2-cassel@kernel.org>
-Content-Language: en-US
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20240613173352.1557847-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: DS7PR03CA0048.namprd03.prod.outlook.com
- (2603:10b6:5:3b5::23) To MN0PR12MB6101.namprd12.prod.outlook.com
- (2603:10b6:208:3cb::10)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN0PR12MB6101:EE_|CH3PR12MB7593:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3bb0ed91-dae3-4c7a-4cf5-08dc8bcf4825
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230035|376009|1800799019|366011;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Wk1zMURMNm5kQTJHVHF1ZG9iRGp1aGlnNGpUYnlEaGJ0M3VBaHVSODNvTzFW?=
- =?utf-8?B?cjJJS3BtNEpDak5RWCtPZGZIQldIb3dwV1ZOZ1BNNjFsWGZsSzk1Y1VsL1VV?=
- =?utf-8?B?MjNYcURHcllMQVExZ3QzYWhGUVVLR0t2UFl3WFE5VGk3MXVFL29yd21JOVpa?=
- =?utf-8?B?b3lDdTBGdDZDY3d5cC81YnF4N3RMeWk5YzFScnFBUVF3NGpDSUFSdWt0UGp1?=
- =?utf-8?B?MWNtZnd6bWZpalhHcm02TFQ4MldER3MrdGdLSmxMN2lQRGptY09yY2dQakR6?=
- =?utf-8?B?bHZ2UXNzcnNBZFRWSFFhSEhubWo2dnJpV09vampLU29UNmdKRG0xTW5jaUMx?=
- =?utf-8?B?UlQwdHhITkx1ZzdWL2ttU0RqWHJ5NFZqREpranpQdW9lcVhSVCttb2lWeFlQ?=
- =?utf-8?B?OERQNk9BS0dwM2FWMTBnMVo1Zzd5WUgrY244N0ZGcGg1KzAvOEZWeTZOM0Fu?=
- =?utf-8?B?THlBRE9zMjQzMTRyY0RkamhIU0NaWm5TbFZSZDQ2RHREOWVmK0x3c0JBZnhx?=
- =?utf-8?B?VExUenJXdFNsaE5xTXVpL2U3SGcwREgvNktIRTVaQXdrVSszb3NrWm93dDhi?=
- =?utf-8?B?Mjdsa0REN1JCeitLdFVWT1RLb0ZCSlZHRG9CMVUrdHA2SWc1Q09WR2RuUUxu?=
- =?utf-8?B?dDFvRGxHMi9SNFM5dG91RWVoSmFSYmJoNUdDTkhrdUhpOFlGcWhINGRLVU43?=
- =?utf-8?B?MXh6ZXlHVmhnV281VmRWd0NQS0hQUTQ5MWpxaURia2lmSm5rdm1QV1poOC9v?=
- =?utf-8?B?emRNanNBVzNZNDNwbGlZNjhhdFViN0JMNldYT2ZEQWVURW85QTZET0N3Y2RZ?=
- =?utf-8?B?SGNCcE56d0ZNNncyN29waTJYL3dQMjcrZGZRSVZQL0RTQUhKNE1sWGhPTTk3?=
- =?utf-8?B?emt4N3ZYWnVzdE5pVVdIREw1NnRXOXJsWWUvTE82QmdzdldGSE9VRDFTQUlr?=
- =?utf-8?B?SFFseGFZNk9BbEp0eWlSTE03clp4WEZ5OVpaSUhQSGU2M0x2NGk3WC9waWxE?=
- =?utf-8?B?bldEdlllQnRrVDZzNGVNMnNtelBheEp6d0NXOHdGSm1aQU04dmlYTUtmMTBZ?=
- =?utf-8?B?TDVpNHNWSVF2OTNJamY0eDJ5QmVZb2QzUU9wWFVzb0F0MzJQNkxaOUZmS0Rx?=
- =?utf-8?B?Zk81RGZQT1IvL21nTWp2Q0VrcmRwcng1dTJGN1kxVi9SNHNqWjlRTUIzL3NC?=
- =?utf-8?B?WEdhRWRtTG9PU09Hd2JtTWJwdGVSTStoQ25Yb21BRVF6SzZNVk1OMzJCeHA4?=
- =?utf-8?B?UmZ6dlV3cDk3SWpMNTVPZVdyNHNoSW1Sd0E1dVdWTnpnMlE3a1dYUk5Ha3Z2?=
- =?utf-8?B?ZTNVSzJsU1RRQTFNZ1g0VVhKdldpNFdsTU5YSTEwZ0cwUUY2WHZUOThEZy81?=
- =?utf-8?B?WXdUQWlOTVBML0FZSVJWdkZpWFQ1WnlnbkNWK3c1NTNxcC9Nam1YT0VzUGUw?=
- =?utf-8?B?M3JselppRGUzTFJtenVVTFV1MWw2cUZtazNuM0M2LzhwTjJ1Y2JKeklrcmY5?=
- =?utf-8?B?bTN4SEhaUDlKazZkK3lpcml2NlFRUWFpY2t2ZldmVWRBNkF3Z3dudmhLUGtV?=
- =?utf-8?B?dHBHYTR0ZXlVQmoraGdHaUcxMC9DcHZYZlYzMHJaMVRxaWtUYnh2eUNSWW1y?=
- =?utf-8?B?SFdrbVFIRWFScEFwdHRSZGZ1QmRaSkpPRGJBZ1hWZUcrNVJDYjBLeFJvL0Y4?=
- =?utf-8?B?aEcrMkM4TmFTSlJKT1ZMZkdBRXJrSmdGT2IxRFBHdlcwYnJjQ2dMU0NvK1VN?=
- =?utf-8?Q?JtE/Z+VBW/fAJFUaNh46MYA5F6cZFyXeZ19Eq6Y?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN0PR12MB6101.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230035)(376009)(1800799019)(366011);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dGdWZ2IxK3hrZVhJNXVXNzVRWmNRMW11d014S1RiVWRLZmVndVVnL09NODh6?=
- =?utf-8?B?Yld4MWV4aEdoR3Z4TUllcEhZWTdtL09wOEF4KzZZdTB2UTNvTUR3MDRsM2NQ?=
- =?utf-8?B?cVRsOXhPRWphdHRIWWIydnVPcVlDcDgvYldtQXJsaWZMTDNWNlUyOHdBRlg5?=
- =?utf-8?B?Z2JoRHhFeDRiOWYwWDB1cU1tNUFuNk83ZGxmZmNJaXkvQWRxMk9KTHp1T1dy?=
- =?utf-8?B?b3loZzlnUU95U0w1VFVmd1hBVmJXMWNQQ21DVDkxSGM4RXUxa211MzBiaU1C?=
- =?utf-8?B?ZzNJLzloN0YxRVFrZ0ZWUzdFNy9FLzNTT2FWNWtBcmw5WnNsc1JKaTEwR0tm?=
- =?utf-8?B?VFQ3a2pzMDdTcDJJVDdRbzJ2dFVTMjYxQ2hyUHRnbkExaWozcmlOVzJVM2ZF?=
- =?utf-8?B?NHZ0RlVFdHIzeVl5ckpBQ1RFWVFmaDZySEw3aW4zam5oSzhMOWRGR2MxNFV0?=
- =?utf-8?B?YmVZSDNxaTMzaTE5VUh3SGRWRXZCYmp4QjdlZ1VoeTUwdTFJa2tZWXp5cHNW?=
- =?utf-8?B?ekkvaGtIYUdwbWFXN3hKbWorM05wUUlSdkwxM3Z5UUViYXVzYkp3UUdGU1VQ?=
- =?utf-8?B?dGdXamtxUG9pZENuSkVra3FPd3Q4cE5iMlF0Y2hpM3d5K3N2UHBCTmRiQUsv?=
- =?utf-8?B?TXMwdnNmdlpoQjBRb1YxWUR3OW1nTlRLeTJSdEdYbVJza09LWjdrM1BOQm9C?=
- =?utf-8?B?YXV4MzRQeGVJL3o0eFVPalA3TVVyQU8yd0pDYmQ3UU9iVVJTWXE1Y250NzZB?=
- =?utf-8?B?UUk0R1pma1pYUW9WR3VxOVJ6YVNDU0JrWlJJWXN0Mm9vTTJidk5FVFRVS1Ra?=
- =?utf-8?B?dCtpSnFlMGxtTnRBVW1CaHRMaG8vTkN5bDBxTnMwVnVkaURZeXdoMW4vUlJt?=
- =?utf-8?B?QjBuRW5nV1Z0QXc2UFBBSDZPU05jSXRLdFF2dEdJeXdsNDFNOUI1NnhoNFRw?=
- =?utf-8?B?RGcyMFJXRnBtRS9udnVWWEpXdDcxNlhNbFh5bVJjekM3MUZ4Sml1bjdXRHMx?=
- =?utf-8?B?dWVSUXpJSW5DYU1NaXM5ZWJqT3VGZHF0YVBzcmluQnlNc1E1eUFJaTBFUFBa?=
- =?utf-8?B?aHM5QVhWS2RJVnVmZjZ5QWplcVpUNDNXNnlnVzhTSjRrd3k1M3RwTis2b3Nz?=
- =?utf-8?B?V3Z5Tm5ZVnBwMWNzWUpIQS9QalpsWGs3aGx1bGhIMmZQVUR1alp2N1NTYzV0?=
- =?utf-8?B?R0RLeEF0eVBpckVXVmZucCtNY3dwS0hCZnRpYW5YVjZmQTBSWFFGMm11bUZ4?=
- =?utf-8?B?SzNyMFFFcnFQZGxBV3d1LzhqWk5Lam1kMmxoQkF2WW9WYmNLUHhmakM0alEz?=
- =?utf-8?B?UU9tYXh1ekhjbEt4REdITVMxa3dQR1BtUjVsSE9aSnZieHROZFhRUSsyNHhG?=
- =?utf-8?B?RjJmV2pZUFErMGxJemVaNW5UbVZVRSt4ejhuc01sZmV6Y0hNbXhLZktCVlpD?=
- =?utf-8?B?bU5uUkwrMTA3MnJSRURGbWNGY3cvMStBck9sSGcyUEFkbWNrOVcyRk5iTGli?=
- =?utf-8?B?NngzK2tKUi9kY2Y1QmRPRFdOTEJ3UnhxeW1lZFBpVkd5bmpoOW1iajg4b2Ur?=
- =?utf-8?B?REVqMkdQQkxhdHpWQjFNZ1oycTh1Z0YzODZWZFdhZlBuR2VKNUtEVm1DLzF0?=
- =?utf-8?B?dXhUSC9vc0czbGhaZm9vRW1LbDIwNFBJcmpwcS9KcXhtZzFWQUR2NSt0YUp3?=
- =?utf-8?B?QzhSeU1DL3QxR1IzKzdhSDQzd0MvSUFyNU8zbHg0U2g2eFNRUXp3V2ZhV0Fn?=
- =?utf-8?B?OXVwWmd3eDVPRGYraVBUYzdGNGNWdlZMamlwcStNUUtpb292YW5DRjE5dVZj?=
- =?utf-8?B?YnJmWmZnNzlMa1hwK3ZabXN3UFpMS0FlNHR2clozUnA3cS83a3dvWHd4QUZx?=
- =?utf-8?B?OStHZHdFS2hqcXAzb1d1WUkxRmlRTmcxZ1dsbENlV0RVeHp4UkNTbXBYSEYr?=
- =?utf-8?B?V1VDZ2czN0ozNGcxZkJITmdLS3FIbnZtekNPWTFDUEVLZ2U2eHhvQnRFOXVK?=
- =?utf-8?B?UkNGRWZoMWFmZkduVGx2VkZhdEdhU29HVEVLeXpSMGNUVUlpZ0J4NFpJN3Iv?=
- =?utf-8?B?aXVMK3R0L3B1ODhIdGNUckZzZmdjWnVxcUpPMnZIWnZyU1lBdldwY09WMEdv?=
- =?utf-8?Q?zfMzgJrSPXo8FEsG/EB4/Sq4o?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3bb0ed91-dae3-4c7a-4cf5-08dc8bcf4825
-X-MS-Exchange-CrossTenant-AuthSource: MN0PR12MB6101.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jun 2024 17:35:56.6077
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zAEL/ujgxQ8z7Btm4JevS9Q3n5eH5vd9jJDJzJqrH/b3iVafOsSXe9vYsGIdbCIvpPjPL7PhDT+y+TjiYGyr5Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7593
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240613173352.1557847-2-cassel@kernel.org>
 
-On 6/13/2024 12:33, Niklas Cassel wrote:
+On 2024-06-13 19:33:53+0000, Niklas Cassel wrote:
 > From: Damien Le Moal <dlemoal@kernel.org>
 > 
 > The SCSI Removable Media Bit (RMB) should only be set for removable media,
@@ -198,7 +87,7 @@ On 6/13/2024 12:33, Niklas Cassel wrote:
 > reports of SATA devices were being automounted by udisks. However,
 > treating eSATA and hot-plug capable ports differently is not correct.
 > 
->  From the AHCI 1.3.1 spec:
+> From the AHCI 1.3.1 spec:
 > Hot Plug Capable Port (HPCP): When set to '1', indicates that this port's
 > signal and power connectors are externally accessible via a joint signal
 > and power connector for blindmate device hot plug.
@@ -221,30 +110,36 @@ On 6/13/2024 12:33, Niklas Cassel wrote:
 > [cassel: wrote commit message]
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
+While I would prefer a simple revert at this point in the release cycle:
+
+Reviewed-by: Thomas Weißschuh <linux@weissschuh.net>
+
+This patch should also have a "Cc: stable@vger.kernel.org".
 
 > ---
->   drivers/ata/libata-scsi.c | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/ata/libata-scsi.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
 > index cdf29b178ddc..e231ad22f88a 100644
 > --- a/drivers/ata/libata-scsi.c
 > +++ b/drivers/ata/libata-scsi.c
 > @@ -1831,11 +1831,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
->   		2
->   	};
->   
+>  		2
+>  	};
+>  
 > -	/* set scsi removable (RMB) bit per ata bit, or if the
 > -	 * AHCI port says it's external (Hotplug-capable, eSATA).
 > +	/*
 > +	 * Set the SCSI Removable Media Bit (RMB) if the ATA removable media
 > +	 * device bit (which is only defined in the CFA specification) is set.
->   	 */
+>  	 */
 > -	if (ata_id_removable(args->id) ||
 > -	    (args->dev->link->ap->pflags & ATA_PFLAG_EXTERNAL))
 > +	if (ata_id_removable(args->id))
->   		hdr[1] |= (1 << 7);
->   
->   	if (args->dev->class == ATA_DEV_ZAC) {
-
+>  		hdr[1] |= (1 << 7);
+>  
+>  	if (args->dev->class == ATA_DEV_ZAC) {
+> -- 
+> 2.45.2
+> 
