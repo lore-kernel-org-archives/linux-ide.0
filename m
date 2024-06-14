@@ -1,57 +1,55 @@
-Received: from mail-yw1-f201.google.com (mail-yw1-f201.google.com [209.85.128.201])
+Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B7731A3BA7
-	for <linux-ide@vger.kernel.org>; Fri, 14 Jun 2024 19:18:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A5351AB525
+	for <linux-ide@vger.kernel.org>; Fri, 14 Jun 2024 19:18:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718392732; cv=none; b=ieIolhVFfYrqTN/waB6EYjfRfi4ze5fBEXtUkHitlMcUm51l+xP2CENeYKamfmFXJs2155UQvGX+VgbbY1tc/J3Oq9qeIJJgsG+auRLSnZJNE1IvBfR/MkLDSM1+bdT+i3NZf3s3yNYFYOOTvuVDbCpnx1Qs7EW+IfG5asB3JtY=
+	t=1718392734; cv=none; b=XUeicco9J40cpeMzRYTgORbrBPD95ilWcsGaVclq1SGqi4rNWHsPKS0L1AQjc0QulcxVPn15a+r+mON4xUMiib2gxRBowZLYjdr0L20HkTVhCfceOM1l3iAevKuNKudJvXWoV+xAutkxkE7/tJkuVaQBs62dI8U6hMgRI3sfg6g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718392732; c=relaxed/simple;
-	bh=OXTK3gM4Pr8t3G/JNhWI9HNDMuZTEBhK+WvzY4WWxdI=;
+	s=arc-20240116; t=1718392734; c=relaxed/simple;
+	bh=OsE7aRRVqh2vPXKdIi6uRApNlBEwCqMLvrna3Rqbvuw=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=J7/g/bDEfNxwrhMw1V4RnUVBvDKn1+NIejdhRCKNYHUvtTzev05OIBzLWrqxRGbVb4h1VMFmERzRlTssEqICTx0YTh1R63A7rT2hNUNhp9/myQg13DTNRNyaatuAfNEdNBUnGfHCGIP713BCysrvcE/aa4kxTtSNs0zKJlhGgkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=3iA6cSmg; arc=none smtp.client-ip=209.85.128.201
+	 To:Cc:Content-Type; b=feT3OYRu62lxcMa4Cp8pjSJKHGDSVqCjV72t2JBTFrkfwhphvM6uxbsAnWbC78hLllb6gOZtt44YMVu2WGLe2MYSNVuyWKv51zyZ8/odxAyMnXBd7DZqNaKTAJMk2bJFevhvU8tNBLzn6N3Nt/B8Pfp0BBO9CV23NKScxzWuN98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DBOPVBvU; arc=none smtp.client-ip=209.85.128.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="3iA6cSmg"
-Received: by mail-yw1-f201.google.com with SMTP id 00721157ae682-62a3dec382eso27184367b3.1
-        for <linux-ide@vger.kernel.org>; Fri, 14 Jun 2024 12:18:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DBOPVBvU"
+Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-627f43bec13so42599257b3.0
+        for <linux-ide@vger.kernel.org>; Fri, 14 Jun 2024 12:18:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1718392730; x=1718997530; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=U+A9L+Row2dnJmZ3QpC1oG5yWdVfX7wPmeHXsPZEOds=;
-        b=3iA6cSmgYmEBTuAgmjE3+BsFfK1KRTliplTZ7NlVWdBBZBovwI0cTZ5q8F43rizXy/
-         Artx1iqvVwlwgpPxw+rJ8r5w9x8qAU+VYmod7v3tQuBNBPkp0NHqQp6xyo2zQ4d1MFLn
-         k8TBdh71DQwG24lcmDAwS6z470rPqSWjsPcaCi+aG94irDaAIYZ9e5Mp1h6PPO6JVWTJ
-         TTXFsL13IbOmK33I1LiWsNN0+WtPVLIycowaoTj8HFnms4W6KrDd7CZh9VjoTFnXqi5n
-         a1OuAih5hDOrWfZEHfPb1WZE8bw6RhGkUJvZWfCNDMOfYhKiUNG7MSqqUWjPmeZf7q7j
-         m/bA==
+        d=google.com; s=20230601; t=1718392732; x=1718997532; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=N5Y8Q6R7VHhS5DlEz/CEIrnOSJXapU1igMdb8ysJrOY=;
+        b=DBOPVBvU3EXdWiCghMmclltYGpzQ260xnSnXIqsRnLQk8eY2XQbWaRUzX5pv/w3COX
+         iDhHNFDnx8gg6vedSdPF2l1LpJCBcb1ef1geKqNRsRFSA9mHU/ZFE00JhwfN7F5X+tOo
+         rIYOPR3YeRwYSOvJbO93F3ybna1DbI4yjpf+bMPHT4eC+jvucMAJ8Ohi/rGZ6GvkhNge
+         ZvqMAuhpUG7okfesfQLSVtmyfThCFIlSXs9T/aRWZZmMTLe5cKEi0jMjip0ArrVeLvd4
+         TAZ+FYzGmmAbNpbwpzqlj6xhs//8qCa4a4Gud6cPxbchM56ooebaRN7WdPZk99OjcoxQ
+         Bklg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718392730; x=1718997530;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=U+A9L+Row2dnJmZ3QpC1oG5yWdVfX7wPmeHXsPZEOds=;
-        b=Ov1ttTIdteXfImU1knDfy6X3QnLBxnKkQ1u+n0kdNr5yI70AmA6l4repROsxbviask
-         VnFp328OYmoqP0rUKN3qBLLvCy8cowXeAAV9AQKbs5m5FsuUI6nK5cA3OJneE1UHeTYF
-         5N9YpZkwsncbyqRe7LM+R7FaPlwm5Zfen7jfG/XE3P95/DgjSDEzRwKyllH6JN31byoa
-         nijHWRh6kyhzUKh2jXGSOEX8WXmyBvKm4j4J2CPR9/545TK/m0LejcP0APuJ7cFkw6WL
-         y/sFEnkw5/zehqTjqLYFT1/dzkNBgkDmpRT4ICfbeRuow3UqPTBbYgnunc5fAden2Phg
-         5mqA==
-X-Forwarded-Encrypted: i=1; AJvYcCWAW/Qw6CRS3bJ8SIfJmexfPEDl1Kgn3/DblPWb1ERT7uGQaNuYRZS7viwz1OztmrorWl9HbheNvqrusjXWi059hc1ybIoU+3lb
-X-Gm-Message-State: AOJu0YynMYc1MCclwfP/3ldegpmVz5seAhdv5AnpclcM0k8L6WeBhKK3
-	g/eMDZqLsbBnRjJQ45NVHB8s+U2UlUssEfUkc9h9ix8lKrzUcHTYQNGpluWy1Gep/ubf2tPGsrV
-	AtDGz7EDSDw==
-X-Google-Smtp-Source: AGHT+IEgr36e43Ztcq9blL3xwno/d+31kbeTYxCB2shQPDd8Hlpao0W3TzB2dN5UT4kq97FW/dtEczVMQBa9BA==
+        d=1e100.net; s=20230601; t=1718392732; x=1718997532;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=N5Y8Q6R7VHhS5DlEz/CEIrnOSJXapU1igMdb8ysJrOY=;
+        b=C4kJzhOR5WEwTDauDZBPyPkneSvKmut7Q2xaC8isPNEnebWfuapzAbJadwee8Jw2oK
+         tez+lK7sMuniBebyo7y22koD4guPa+ZyMa1x7MFX569ZYK8IDcemBw9t6KW+CmYXASfK
+         j2AxwGZqq3DfEedqG4sIQrYLtE9ETW/AyRRzBtuyOx1sBEGU2nbvXRDNd6AQGVMfXgMB
+         k1NwQogUE2HEi3qEqz/Fzw2bhG72MrmlQbl3Udz7T2Wli7YjZGGqJZAwczdUd4wKZoc0
+         BI4GRO3/TGdmKXaFnEQH41zQ5z0Rsu6LwwvsYN5znyq4DLkYMIJzaZfShaMf8sdsLW7j
+         /0wA==
+X-Forwarded-Encrypted: i=1; AJvYcCUVoEOgaiTrQ4VCmrcUO1DBkzXQWFlGrqzWZmmC3rvKpMcS0wCKzoJFZv/Lu04M5suw06296yWbXPpK4d5Xx21roZBcY1qu6cq2
+X-Gm-Message-State: AOJu0Yz0oiAQ0xdKX3gki3pVK62hWMMSe9cVZcfBv0xmWb9SVcvE8802
+	VPiKyOWJNT0EHVnekOeeMzHOJKzYINIH1mTfqjJW4dbRXf6KO3eHDWNnkDilDP7M13t5Ywf6gUB
+	X5ffN56xt/Q==
+X-Google-Smtp-Source: AGHT+IFAQcSwFKGcNCpGx6cDExUUokRstHtgNipOk4oYaWFz9OzYHZCeAbLOqEXX5BK7k/s00LnS2IvikgPe7Q==
 X-Received: from ip.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:57f3])
- (user=ipylypiv job=sendgmr) by 2002:a05:690c:6e0a:b0:618:5009:cb71 with SMTP
- id 00721157ae682-632072d3bb5mr9083077b3.5.1718392730342; Fri, 14 Jun 2024
- 12:18:50 -0700 (PDT)
-Date: Fri, 14 Jun 2024 19:18:33 +0000
+ (user=ipylypiv job=sendgmr) by 2002:a05:690c:398:b0:62d:a29:537e with SMTP id
+ 00721157ae682-63222565d7emr10233367b3.4.1718392732108; Fri, 14 Jun 2024
+ 12:18:52 -0700 (PDT)
+Date: Fri, 14 Jun 2024 19:18:34 +0000
 In-Reply-To: <20240614191835.3056153-1-ipylypiv@google.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
@@ -61,65 +59,51 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20240614191835.3056153-1-ipylypiv@google.com>
 X-Mailer: git-send-email 2.45.2.627.g7a2c4fd464-goog
-Message-ID: <20240614191835.3056153-3-ipylypiv@google.com>
-Subject: [PATCH v1 2/4] ata: libata-scsi: Generate ATA PT sense data when ATA
- ERR/DF are set
+Message-ID: <20240614191835.3056153-4-ipylypiv@google.com>
+Subject: [PATCH v1 3/4] ata: libata-scsi: Report valid sense data for ATA PT
+ if present
 From: Igor Pylypiv <ipylypiv@google.com>
 To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-SCSI/ATA Translation-5 (SAT-5) Table 209 =E2=80=94 "ATA command results"
-specifies that SATL shall generate sense data for ATA PASS-THROUGH
-commands when either CK_COND is set or when ATA_ERR or ATA_DF status
-bits are set.
-
-ata_eh_analyze_tf() sets AC_ERR_DEV bit in qc->err_mask when ATA_ERR
-or ATA_DF bits are set. It looks like qc->err_mask can be used as
-an error indicator but ata_eh_link_autopsy() clears AC_ERR_DEV bit
-when ATA_QCFLAG_SENSE_VALID is set. This effectively clears the error
-indication if no other bits were set in qc->err_mask.
-
-ata_scsi_qc_complete() should not use qc->err_mask for ATA PASS-THROUGH
-commands because qc->err_mask can be zero (i.e. "no error") even when
-the corresponding command has failed with ATA_ERR/ATA_DF bits set.
-
-Additionally, the presence of valid sense data (ATA_QCFLAG_SENSE_VALID)
-should not prevent SATL from generating sense data for ATA PASS-THROUGH.
+Do not generate sense data from ATA status/error registers
+if valid sense data is already present.
 
 Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 ---
- drivers/ata/libata-scsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/libata-scsi.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 032cf11d0bcc..79e8103ef3a9 100644
+index 79e8103ef3a9..4bfe47e7d266 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -1632,8 +1632,8 @@ static void ata_scsi_qc_complete(struct ata_queued_cm=
-d *qc)
- 		!(qc->flags & ATA_QCFLAG_SENSE_VALID);
-=20
- 	/* For ATA pass thru (SAT) commands, generate a sense block if
--	 * user mandated it or if there's an error.  Note that if we
--	 * generate because the user forced us to [CK_COND =3D1], a check
-+	 * user mandated it or if ATA_ERR or ATA_DF bits are set. Note that
-+	 * if we generate because the user forced us to [CK_COND=3D1], a check
- 	 * condition is generated and the ATA register values are returned
- 	 * whether the command completed successfully or not. If there
- 	 * was no error, we use the following sense data:
-@@ -1641,7 +1641,7 @@ static void ata_scsi_qc_complete(struct ata_queued_cm=
-d *qc)
- 	 * asc,ascq =3D ATA PASS-THROUGH INFORMATION AVAILABLE
- 	 */
- 	if (((cdb[0] =3D=3D ATA_16) || (cdb[0] =3D=3D ATA_12)) &&
--	    ((cdb[2] & 0x20) || need_sense))
-+	    ((cdb[2] & 0x20) || (qc->result_tf.status & (ATA_ERR | ATA_DF))))
- 		ata_gen_passthru_sense(qc);
- 	else if (need_sense)
- 		ata_gen_ata_sense(qc);
---=20
+@@ -858,12 +858,17 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+ 	unsigned char *desc = sb + 8;
+ 	u8 sense_key, asc, ascq;
+ 
+-	/*
+-	 * Use ata_to_sense_error() to map status register bits
+-	 * onto sense key, asc & ascq.
+-	 */
+-	if (qc->err_mask ||
+-	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
++	if (qc->flags & ATA_QCFLAG_SENSE_VALID) {
++		/*
++		 * Do not generate sense data from ATA status/error
++		 * registers if valid sense data is already present.
++		 */
++	} else if (qc->err_mask ||
++		   tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
++		/*
++		 * Use ata_to_sense_error() to map status register bits
++		 * onto sense key, asc & ascq.
++		 */
+ 		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
+ 				   &sense_key, &asc, &ascq);
+ 		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
+-- 
 2.45.2.627.g7a2c4fd464-goog
 
