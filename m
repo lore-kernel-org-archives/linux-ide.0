@@ -1,209 +1,154 @@
-Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B6661AB8EF
-	for <linux-ide@vger.kernel.org>; Fri, 14 Jun 2024 19:18:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD5E178CCB;
+	Sun, 16 Jun 2024 08:54:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718392735; cv=none; b=AoR2K1VE8Wa/zWIeg/FVh9Kugut18R3V4WrNvCUBxQWM8NDJupjBumb+xL+mO5R1SqCKDX9UNb3rOCOE8EIc+oVC5v/DoQEuZ59oAVnOfUmAJ4AZcDaAHTp7x+MFQxWqH2PoC9ikJ1iOOueI0bFmb/n1sLhe41WhLIiMIjryIgw=
+	t=1718528090; cv=none; b=Lcz++MU78/d3DTdHcMLAkjcBWcLepr0fbueC9+fuwqabJhYGgK2xpZrINGLyPZ9QUfrK5LlQ4xdEkIflKWFSId3BYovNm1gKoAuvPPaMDkheyk6lnQBE2DfJ24ZtoG8zxjdw3nQf82uNuu1hRxaOHNmBWkRsFdbDB8Q1fdUzR+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718392735; c=relaxed/simple;
-	bh=qgmtNL4k97jHCwRfQqDmBVh7jd6+0c78XagNpSAyDsc=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=f1fEvT7OPTmA3McVBdl/nmhogiGd6lCZAdXrw7nbW4CkhTP/XshDTI6FXm88FT8COQG8UsfbggRe+Ix3ral9tM9Gq9JiM0w2+WO/hoZquifq2rpiuxCX49rOCb+b8nEl0s+YHQdDcdJdcCFEfrk6Z10/olok9eESaoBwshuPn20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=B6Yo+ktA; arc=none smtp.client-ip=209.85.215.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+	s=arc-20240116; t=1718528090; c=relaxed/simple;
+	bh=9u4X1h8+dSS2gV6fwWQ884huIkcSEjbT36eujB2qUg0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XebR/iVpcGInQlCwzGFDy+MoplvzyiuZSl7P45yXEFs4OMXq8eElcfvGKZ8FYpQ/BlUFild3ElDiUvr6zs+qjQz92sOrgnyZxn+q7HvCxe/LeXkJqrqw5E1/BoB8v3Q3l+NABgSB4GXJoGPEJr34w+SKf852MfHPUBuChtKCoeg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rKiBg/U0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="B6Yo+ktA"
-Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-6cebd09196bso1602425a12.2
-        for <linux-ide@vger.kernel.org>; Fri, 14 Jun 2024 12:18:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1718392734; x=1718997534; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/4AyfSTdpu6N2Lo5b6nZ4La1DDoSqqNXNC9AYdKo6X0=;
-        b=B6Yo+ktA4Y6r0pnzTunJVbAAVCggpn02WJlQah7rNLepgOF10Ue7B9hbbDHeNi7Sff
-         um9ZhtjPxHctqi4rM1PiBTV76aZksTMo7WhKDr+/9VFuY/3XSpIzmj6JCix2hslAV258
-         ePiqhnQd3WtakFp0EqYdtrqnPkCJLnXh+xZ8n9licsks2I5uaws8Gd1lP9p5hK8vMVt0
-         YLKsnZFUXagyci6m77TSRQC68AGLEJmaZMDgfqKYkvRmTb4C7N/HvXXLOme0jOI0dpKo
-         a7Ye4bfKLypEV9dxmSQUUY5bwYpmTyLVPS2tw085zPtGWseih0JJ6UKT64ChrRd+andL
-         ehRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718392734; x=1718997534;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=/4AyfSTdpu6N2Lo5b6nZ4La1DDoSqqNXNC9AYdKo6X0=;
-        b=SxhscAd9fg9lZxzt8wYNMqt2kbFzYS1VTPr+HEMnvGlOscy8smeFcGJ5CklcxyiLRI
-         vwZTOHompufAijgmIDTrmIsd2eId89KZC0e8230OBXQm7LbVFWLV/Cz8cy4gIV1keKPw
-         jHdCe4hcvG7b3YlFhEoaP2HFaGZO6xA9mxeg11heQGHT4VgwVXvrO1zN5uDhW2Nhkhej
-         gGGPHpfQq6Eh+tucxcM9QYqSkdKUxZJX60qTttrDoBOzgMwlPMJQgJnQv53hyI6jH+yG
-         HjEQYKGBUiQVPYDMDT/k0DiWv/BVwLd69VSGXIXuJhZbPwltc+oX8EcoK6blPsAFSXvC
-         EDoA==
-X-Forwarded-Encrypted: i=1; AJvYcCWF5lWRYQ6eLQSMxlCdgtPDOdewQEOm7dab93lZueBxP/tdXp3NKKvBHKiB6Vd3gOEWddnze+a08360avaErCC+k83pQJUHuHUn
-X-Gm-Message-State: AOJu0YxN6J8IeZyglxgFQl4iWQC76vR/LNQ50Eb01EROP6dsa/rSnVix
-	izG57Sb9B7Nsx+uc+iBOdc2yq5e/elVCbUZcT1ZI43Sl1LVh8iWm9q2mA6i4vAwcmFVFh4v7Nzu
-	CUBACgr7Fgw==
-X-Google-Smtp-Source: AGHT+IFhH0CY+7Imr4D7VPghy++YvEZgaw5IeIxH2RrSR71z103r+UyBHoV1Cf87mIAHSR19WF+ZEMhiq4U01Q==
-X-Received: from ip.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:57f3])
- (user=ipylypiv job=sendgmr) by 2002:a63:4c04:0:b0:6ea:87eb:9493 with SMTP id
- 41be03b00d2f7-7019504fd99mr9226a12.2.1718392733536; Fri, 14 Jun 2024 12:18:53
- -0700 (PDT)
-Date: Fri, 14 Jun 2024 19:18:35 +0000
-In-Reply-To: <20240614191835.3056153-1-ipylypiv@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rKiBg/U0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ACEBC2BBFC;
+	Sun, 16 Jun 2024 08:54:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718528089;
+	bh=9u4X1h8+dSS2gV6fwWQ884huIkcSEjbT36eujB2qUg0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rKiBg/U0oYM/+rbqSE4t7XhD+nWBQtsfKJ80bua+B8tH77U2po6miIqmPMcBWFPAx
+	 I3UtCsVF7SBJZ+Mr5MRBjmp08QhraAqM8FtiB56HhfbWI4kYSKUdkLBXjENvh/KLCo
+	 cEHQEgQCOS2rt2X4L9Klqxfu4lyhUpsnR4CtcTxMCPYYyIXygM5SJVQJ9zWaSifv5h
+	 2aWSnUqeWvoNBP8SDn59SLsN1YrK3YKlND59Y9WSE+uNrBGrTx3WWwuETQcudz7tzx
+	 fCGiTXmtUofQFC+FjISoHRlwsaK2sHFly1k0M3SEgubn0QDJ4AyxJvcZy24ryfp1lT
+	 aFigZ2lFOSWoQ==
+Date: Sun, 16 Jun 2024 10:54:45 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Mario Limonciello <mario.limonciello@amd.com>
+Cc: Manuel Lauss <manuel.lauss@gmail.com>, stable@vger.kernel.org,
+	Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2] ata: libata-scsi: Set the RMB bit only for removable
+ media devices
+Message-ID: <Zm6oVbQqY3Uckl4P@ryzen.lan>
+References: <20240614122344.1577261-2-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20240614191835.3056153-1-ipylypiv@google.com>
-X-Mailer: git-send-email 2.45.2.627.g7a2c4fd464-goog
-Message-ID: <20240614191835.3056153-5-ipylypiv@google.com>
-Subject: [PATCH v1 4/4] ata: libata-scsi: Fix offsets for the fixed format
- sense data
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>, 
-	Akshat Jain <akshatzen@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240614122344.1577261-2-cassel@kernel.org>
 
-Correct the ATA PASS-THROUGH fixed format sense data offsets to conform
-to SPC-6 and SAT-5 specifications. Additionally, set the VALID bit to
-indicate that the INFORMATION field contains valid information.
+On Fri, Jun 14, 2024 at 02:23:45PM +0200, Niklas Cassel wrote:
+> From: Damien Le Moal <dlemoal@kernel.org>
+> 
+> The SCSI Removable Media Bit (RMB) should only be set for removable media,
+> where the device stays and the media changes, e.g. CD-ROM or floppy.
+> 
+> The ATA removable media device bit is obsoleted since ATA-8 ACS (2006),
+> but before that it was used to indicate that the device can have its media
+> removed (while the device stays).
+> 
+> Commit 8a3e33cf92c7 ("ata: ahci: find eSATA ports and flag them as
+> removable") introduced a change to set the RMB bit if the port has either
+> the eSATA bit or the hot-plug capable bit set. The reasoning was that the
+> author wanted his eSATA ports to get treated like a USB stick.
+> 
+> This is however wrong. See "20-082r23SPC-6: Removable Medium Bit
+> Expectations" which has since been integrated to SPC, which states that:
+> 
+> """
+> Reports have been received that some USB Memory Stick device servers set
+> the removable medium (RMB) bit to one. The rub comes when the medium is
+> actually removed, because... The device server is removed concurrently
+> with the medium removal. If there is no device server, then there is no
+> device server that is waiting to have removable medium inserted.
+> 
+> Sufficient numbers of SCSI analysts see such a device:
+> - not as a device that supports removable medium;
+> but
+> - as a removable, hot pluggable device.
+> """
+> 
+> The definition of the RMB bit in the SPC specification has since been
+> clarified to match this.
+> 
+> Thus, a USB stick should not have the RMB bit set (and neither shall an
+> eSATA nor a hot-plug capable port).
+> 
+> Commit dc8b4afc4a04 ("ata: ahci: don't mark HotPlugCapable Ports as
+> external/removable") then changed so that the RMB bit is only set for the
+> eSATA bit (and not for the hot-plug capable bit), because of a lot of bug
+> reports of SATA devices were being automounted by udisks. However,
+> treating eSATA and hot-plug capable ports differently is not correct.
+> 
+> From the AHCI 1.3.1 spec:
+> Hot Plug Capable Port (HPCP): When set to '1', indicates that this port's
+> signal and power connectors are externally accessible via a joint signal
+> and power connector for blindmate device hot plug.
+> 
+> So a hot-plug capable port is an external port, just like commit
+> 45b96d65ec68 ("ata: ahci: a hotplug capable port is an external port")
+> claims.
+> 
+> In order to not violate the SPC specification, modify the SCSI INQUIRY
+> data to only set the RMB bit if the ATA device can have its media removed.
+> 
+> This fixes a reported problem where GNOME/udisks was automounting devices
+> connected to hot-plug capable ports.
+> 
+> Fixes: 45b96d65ec68 ("ata: ahci: a hotplug capable port is an external port")
+> Cc: stable@vger.kernel.org
+> Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
+> Reviewed-by: Thomas Weißschuh <linux@weissschuh.net>
+> Tested-by: Thomas Weißschuh <linux@weissschuh.net>
+> Reported-by: Thomas Weißschuh <linux@weissschuh.net>
+> Closes: https://lore.kernel.org/linux-ide/c0de8262-dc4b-4c22-9fac-33432e5bddd3@t-8ch.de/
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> [cassel: wrote commit message]
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+> Changes since v1:
+> -Added Cc: stable.
+> -Updated comment and commit message to correctly state that the
+>  ATA removable media device bit is obsoleted since ATA-8 ACS.
+> 
+>  drivers/ata/libata-scsi.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index cdf29b178ddc..bb4d30d377ae 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1831,11 +1831,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+>  		2
+>  	};
+>  
+> -	/* set scsi removable (RMB) bit per ata bit, or if the
+> -	 * AHCI port says it's external (Hotplug-capable, eSATA).
+> +	/*
+> +	 * Set the SCSI Removable Media Bit (RMB) if the ATA removable media
+> +	 * device bit (obsolete since ATA-8 ACS) is set.
+>  	 */
+> -	if (ata_id_removable(args->id) ||
+> -	    (args->dev->link->ap->pflags & ATA_PFLAG_EXTERNAL))
+> +	if (ata_id_removable(args->id))
+>  		hdr[1] |= (1 << 7);
+>  
+>  	if (args->dev->class == ATA_DEV_ZAC) {
+> -- 
+> 2.45.2
+> 
 
-INFORMATION
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-SAT-5 Table 212 =E2=80=94 "Fixed format sense data INFORMATION field for th=
-e ATA
-PASS-THROUGH commands" defines the following format:
-
-+------+------------+
-| Byte |   Field    |
-+------+------------+
-|    0 | ERROR      |
-|    1 | STATUS     |
-|    2 | DEVICE     |
-|    3 | COUNT(7:0) |
-+------+------------+
-
-SPC-6 Table 48 - "Fixed format sense data" specifies that the INFORMATION
-field starts at byte 3 in sense buffer resulting in the following offsets
-for the ATA PASS-THROUGH commands:
-
-+------------+-------------------------+
-|   Field    |  Offset in sense buffer |
-+------------+-------------------------+
-| ERROR      |  3                      |
-| STATUS     |  4                      |
-| DEVICE     |  5                      |
-| COUNT(7:0) |  6                      |
-+------------+-------------------------+
-
-COMMAND-SPECIFIC INFORMATION
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D
-
-SAT-5 Table 213 - "Fixed format sense data COMMAND-SPECIFIC INFORMATION
-field for ATA PASS-THROUGH" defines the following format:
-
-+------+-------------------+
-| Byte |        Field      |
-+------+-------------------+
-|    0 | FLAGS | LOG INDEX |
-|    1 | LBA (7:0)         |
-|    2 | LBA (15:8)        |
-|    3 | LBA (23:16)       |
-+------+-------------------+
-
-SPC-6 Table 48 - "Fixed format sense data" specifies that
-the COMMAND-SPECIFIC-INFORMATION field starts at byte 8
-in sense buffer resulting in the following offsets for
-the ATA PASS-THROUGH commands:
-
-Offsets of these fields in the fixed sense format are as follows:
-
-+-------------------+-------------------------+
-|       Field       |  Offset in sense buffer |
-+-------------------+-------------------------+
-| FLAGS | LOG INDEX |  8                      |
-| LBA (7:0)         |  9                      |
-| LBA (15:8)        |  10                     |
-| LBA (23:16)       |  11                     |
-+-------------------+-------------------------+
-
-Reported-by: Akshat Jain <akshatzen@google.com>
-Fixes: 11093cb1ef56 ("libata-scsi: generate correct ATA pass-through sense"=
-)
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
- drivers/ata/libata-scsi.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 4bfe47e7d266..8588512f5975 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -855,7 +855,6 @@ static void ata_gen_passthru_sense(struct ata_queued_cm=
-d *qc)
- 	struct scsi_cmnd *cmd =3D qc->scsicmd;
- 	struct ata_taskfile *tf =3D &qc->result_tf;
- 	unsigned char *sb =3D cmd->sense_buffer;
--	unsigned char *desc =3D sb + 8;
- 	u8 sense_key, asc, ascq;
-=20
- 	if (qc->flags & ATA_QCFLAG_SENSE_VALID) {
-@@ -880,8 +879,9 @@ static void ata_gen_passthru_sense(struct ata_queued_cm=
-d *qc)
- 		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
- 	}
-=20
--	if ((cmd->sense_buffer[0] & 0x7f) >=3D 0x72) {
-+	if ((sb[0] & 0x7f) >=3D 0x72) {
- 		u8 len;
-+		unsigned char *desc;
-=20
- 		/* descriptor format */
- 		len =3D sb[7];
-@@ -919,21 +919,21 @@ static void ata_gen_passthru_sense(struct ata_queued_=
-cmd *qc)
- 		}
- 	} else {
- 		/* Fixed sense format */
--		desc[0] =3D tf->error;
--		desc[1] =3D tf->status;
--		desc[2] =3D tf->device;
--		desc[3] =3D tf->nsect;
--		desc[7] =3D 0;
-+		sb[0] |=3D 0x80;
-+		sb[3] =3D tf->error;
-+		sb[4] =3D tf->status;
-+		sb[5] =3D tf->device;
-+		sb[6] =3D tf->nsect;
- 		if (tf->flags & ATA_TFLAG_LBA48)  {
--			desc[8] |=3D 0x80;
-+			sb[8] |=3D 0x80;
- 			if (tf->hob_nsect)
--				desc[8] |=3D 0x40;
-+				sb[8] |=3D 0x40;
- 			if (tf->hob_lbal || tf->hob_lbam || tf->hob_lbah)
--				desc[8] |=3D 0x20;
-+				sb[8] |=3D 0x20;
- 		}
--		desc[9] =3D tf->lbal;
--		desc[10] =3D tf->lbam;
--		desc[11] =3D tf->lbah;
-+		sb[9] =3D tf->lbal;
-+		sb[10] =3D tf->lbam;
-+		sb[11] =3D tf->lbah;
- 	}
- }
-=20
---=20
-2.45.2.627.g7a2c4fd464-goog
-
+Applied:
+https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-6.10-fixes
