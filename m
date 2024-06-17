@@ -1,100 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 462D21946C6;
-	Mon, 17 Jun 2024 10:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC5B75025E;
+	Mon, 17 Jun 2024 10:59:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718621392; cv=none; b=GXrcOAHovYqmQv/z3njS6rA8WQFi97nZA+lrsBxFDZMJV8VfsBnYwgpElAzN/R5A7c1lJobIZJDqNpvOSo1q/bLmD/byl8eKZAwKRSrASTyeTyF7Ex1orU2KtY/d2TR99k5vAS1T6jTMezFLyx5z9FLhHVxh0+toRmTlOdlXIAA=
+	t=1718621942; cv=none; b=PhyG4e9Chl10awX8ElTvOukSpto5d+MZqRORWtKBIcwnUIuxBPld6lmHRExnhwcwI+frz8ogbbMC2lVQXjtlQIT1BbPBB2rcVnXrTXhRNFpfkvOFbzQqeEZJSCaJPY+wMEGwAz3CjEuMIdtaH4c1fYHi2S0E8QiM22tavY1ilIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718621392; c=relaxed/simple;
-	bh=a6YoxnKL1CWw5PUUrVcCqwtW5thmWAEkDVBS1cGdVVU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BxDl79gZvGCvxqUE0QokIEcXyMe1FAb5G40xdr72VSEBOWJC1zg5hJ6nt5WU0WjFIwy6djL3TrlS1LCrLmGRiTkSc//5TDGWTk8c/6+SjoiaJjPHdCzN6uaZ9WG262a3L0qMNwjgm4c6EHqVLr3zV61A1pqBmjjLeR6z3JZJuRU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dFpjbsFp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718621942; c=relaxed/simple;
+	bh=8wB8dLUWtRHRl79UEIYwwpGcoRPP7LZqthPrT0xkjS0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=tmSL8pHWP7tXChYqmQ4L9lut8TUNjQJA7qNleqICbF9gXTry/4g98x9EgrAmdRwXRZtVzNyNXgOGXh0UQuT/OLhcjz347ixgqKgfOrvQnmOPwB/Y7m7OMGrDufCbMgqHuk4O0JofMDXafhWZXcNpRtDTRtYgywjH/U1HmAJjI4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G3ddtES0; arc=none smtp.client-ip=209.85.218.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dFpjbsFp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A8ADC2BD10;
-	Mon, 17 Jun 2024 10:49:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718621391;
-	bh=a6YoxnKL1CWw5PUUrVcCqwtW5thmWAEkDVBS1cGdVVU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dFpjbsFpgGuubiLET71nx7yc5YcY1Q6euKyffum5zOBNSSSwJdWZ0eBNKDv7rgLqq
-	 opnyTHXCdjtGoLof9/OIIdwQfKbSIlM/l3L6VMCdbuyE2jWN8UGJVqU0XoFXx+ErEI
-	 IbJ2ZuHnW7Q4Q7laFZnDO7nFKYlp1oXZ0imkuSw2lAKcw7y4sXULstKazUozJaC/xr
-	 7JIwvzjkIOewfGPqoVA+0leHle8/a4as8iCIUDy47tf6t3mRiKchYmXL7wycMEunBn
-	 wn2U4gLqy9CkPBDPv0qX/XP3GbWddow7xCBaaIz1HaBSWBRF7JeUTy2/ZmMz4u5j2A
-	 2Wb+7M0CAMekQ==
-Date: Mon, 17 Jun 2024 12:49:47 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Igor Pylypiv <ipylypiv@google.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 3/4] ata: libata-scsi: Report valid sense data for ATA
- PT if present
-Message-ID: <ZnAUy5C-DXEuliSm@ryzen.lan>
-References: <20240614191835.3056153-1-ipylypiv@google.com>
- <20240614191835.3056153-4-ipylypiv@google.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G3ddtES0"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-a6efae34c83so526291566b.0;
+        Mon, 17 Jun 2024 03:59:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718621939; x=1719226739; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8wB8dLUWtRHRl79UEIYwwpGcoRPP7LZqthPrT0xkjS0=;
+        b=G3ddtES05KBngq6UHWH+bLeDVjHVfJjrer71x1oClPjFqQBWo5q9UMK1VfJW6kJjJq
+         F4PZsQestdbLeUKH8unSqie5VDD7EagbCBXSZaSHuKvJxjTFA/00cMjlFbvezuyidolY
+         8IJb1AK6waFkrjIHxm7K2jDf6tFJR0iyUq90OZ/4DYyR6qbWKG66yZWTuedKtIqlm8W5
+         z4+SG4bxj3pYqXnzunZrkvLOprES3JCkbQ5t/523EXHIeWZN+QHdYZwKrt/L9C8QlQPV
+         PqKllIoFKQiOiLgDsIpjcCywPn+fn1M61OU6KA6imYIqeZ1vynt+cI/1YCXgPb1rWNm9
+         QYdg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718621939; x=1719226739;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8wB8dLUWtRHRl79UEIYwwpGcoRPP7LZqthPrT0xkjS0=;
+        b=Cem9PGTanUq25o7phJ/RZGVY6Fpz35uWfNYKsGpdnXX0rElhFVmgGP6Rrbje9nyAtx
+         NE54dUSFZtoOAJa5sj9dDnNckeTkqQ8/kk6MQUeNvSPggSXKCRYVClQaZ7hk458B2v2b
+         GLOcjRAvV+53S8o1kDhSdBCs3m+FS23qVsf0umL7PczsUqqdK/Agg899XxTdVZr5un84
+         AoH5wT4ZNz6tOzfnptMPeISwSWBiphVQohjan6l0x7LDYKpIIZn0VvDYDCkHD6FuyRMe
+         YlfXnzfqlGgFUZZNP7aY4G/UvmOpnx4P6z0MqxjjyVcqS71crNSmCMU/7Z5RJTK8EMf9
+         cx1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXAoM7IbF4e2rcIclY5h762jyQSucTNkLrD1Euq0cJADoK/mEztSfuiQ78x0JeizEcchdTzju5NKh3G9SaF+VGrSV/rK7krkENH2e7qRK5DavQ4pVAevFe8x0Mn3jB7Hg2kiq43LmavSpsdjDh07LxqqNde3hqzi1dr3zeXkuBeZeH/2BZ9+0lRqvc3tQOzfU94er3VowrZ75uV8sr9HiYAOHJ4qDqQzyEtvEFaTb7DqC5WzsZv4IUfnuQHOdORpeTNxsKSynsSyEOyMg5Moxi9xMaXkXKDCw1r3C3S/gcbSQyBCU6J02FbV4/bRkDFvCOBPyOpM1xXnRbB03w5+O7BauI+6ZATcO6orxmdmRNVG5Q/7wrcDhuSFxlAdtv3w1Zr23MPqM2kCzjanP/BNourXGHl23JmDSvhdAIh4f208KUpeEosZ3LvPokFg9xO9A23MYBYQMtCvey1Hx/dqcAEiGbId9RB2JWBvaVgwzSkjgwOV8mJcwE8U+NwTETTrg9F7ilwpITU22TB4or+sYQJ17CnWqGdcw==
+X-Gm-Message-State: AOJu0YwDIXeuRJwaLI4H401MKf5j+cAUX/r4xUQja9OxSvnLuZ9M+2WY
+	dtJO0KPQnet/MhpGT+GXwov5CXnBDWDEF09Fcua+E1aLv53pVi3/mLPFrs35TGOr+BtRwrdybUu
+	xjNN4gi2Cdat2K5oceKxYGXHsoi0=
+X-Google-Smtp-Source: AGHT+IFLQNwGHlc2x1pJKtfDQbxygWK6Gf7QAcGKtHzYeiun/g/cbs2h4qNhFprWOgm/WKjClpcVLvXhnCvHBWIHCLQ=
+X-Received: by 2002:a17:906:f8c6:b0:a6f:d1d:b523 with SMTP id
+ a640c23a62f3a-a6f60d430e6mr561654166b.36.1718621938822; Mon, 17 Jun 2024
+ 03:58:58 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240614191835.3056153-4-ipylypiv@google.com>
+References: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
+In-Reply-To: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 17 Jun 2024 12:58:22 +0200
+Message-ID: <CAHp75VfSC9gAD9ipeWRPdQOxUp4FXqYYei-cJTs38nbz0cHpkg@mail.gmail.com>
+Subject: Re: [PATCH v10 00/38] ep93xx device tree conversion
+To: nikita.shubin@maquefel.me
+Cc: Arnd Bergmann <arnd@arndb.de>, Hartley Sweeten <hsweeten@visionengravers.com>, 
+	Alexander Sverdlin <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
+	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
+	Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Vinod Koul <vkoul@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>, 
+	Guenter Roeck <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>, 
+	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+	Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Sergey Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
+	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org, 
+	devicetree@vger.kernel.org, dmaengine@vger.kernel.org, 
+	linux-watchdog@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-spi@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org, 
+	linux-input@vger.kernel.org, linux-sound@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jun 14, 2024 at 07:18:34PM +0000, Igor Pylypiv wrote:
-> Do not generate sense data from ATA status/error registers
-> if valid sense data is already present.
-> 
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> ---
->  drivers/ata/libata-scsi.c | 17 +++++++++++------
->  1 file changed, 11 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 79e8103ef3a9..4bfe47e7d266 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -858,12 +858,17 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
->  	unsigned char *desc = sb + 8;
->  	u8 sense_key, asc, ascq;
+On Mon, Jun 17, 2024 at 11:38=E2=80=AFAM Nikita Shubin via B4 Relay
+<devnull+nikita.shubin.maquefel.me@kernel.org> wrote:
+>
+> The goal is to recieve ACKs for all patches in series to merge it via Arn=
+d branch.
 
-Like I suggested in the earlier patch,
+'receive'
 
-can't you do a:
+> Unfortunately, CLK subsystem suddenly went silent on clk portion of serie=
+s V2 reroll,
+> tried to ping them for about a month but no luck.
+>
+> Link: https://lore.kernel.org/r/20240408-ep93xx-clk-v2-1-adcd68c13753@maq=
+uefel.me
+>
+> Some changes since last version (v9) - see "Changes in v10", mostly
+> cosmetic.
 
-if (qc->flags & ATA_QCFLAG_SENSE_VALID)
-	return;
+...
 
-here instead?
+> Patches should be formated with '--histogram'
+
+'formatted'
+
+...
+
+> Changes in v10:
+>
+> Reordered SoB tags to make sure they appear before Rb and Acked tags.
+
+This is not required. The importance is only the order of SoBs
+themselves. If they are interleaved with other tags, it's fine.
+
+...
 
 
->  
-> -	/*
-> -	 * Use ata_to_sense_error() to map status register bits
-> -	 * onto sense key, asc & ascq.
-> -	 */
-> -	if (qc->err_mask ||
-> -	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-> +	if (qc->flags & ATA_QCFLAG_SENSE_VALID) {
-> +		/*
-> +		 * Do not generate sense data from ATA status/error
-> +		 * registers if valid sense data is already present.
-> +		 */
-> +	} else if (qc->err_mask ||
-> +		   tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-> +		/*
-> +		 * Use ata_to_sense_error() to map status register bits
-> +		 * onto sense key, asc & ascq.
-> +		 */
->  		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
->  				   &sense_key, &asc, &ascq);
->  		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
-> -- 
-> 2.45.2.627.g7a2c4fd464-goog
-> 
+Hopefully to see this series being eventually applied soon.
+Arnd? (Do we have all necessary subsystem maintainers' tags, btw?)
+
+
+--=20
+With Best Regards,
+Andy Shevchenko
