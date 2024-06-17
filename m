@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9808C194AE0;
-	Mon, 17 Jun 2024 09:38:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65EA1190053;
+	Mon, 17 Jun 2024 09:38:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718617105; cv=none; b=RlwdqScH0lP0KRE8YNNzWxpOKvp3Qc/w3YL+i/mVxUp8pQRWzCbGt/I0mCVsMsRhX/pNgvkbVGvPebKZ9YOG/rNTTjvobM+ZHsmHMW60Q5lOqy4AGDGjcMNnEcmAhVcL7250XCLSwqog+qF2yKPNr/NMBXXMbYL+rnNvNzssYpU=
+	t=1718617106; cv=none; b=eD09WsQsoKThiaCZQiQfMYq6fMGzu7Q4qX8YCZhpen0apDeDR3F926LrbxjkcBp3Mvq0UiA5FtLEDqXBJRejbqakNHhFc3AtIIqSLXRbtkgfSSWWW8pz2rPgkGBzbEE55Ie+cQjV0YzHlyJOcXugdUkHEwluPUx4JhRieAHZMTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718617105; c=relaxed/simple;
-	bh=TWeaRg+noW1lFeYfIFR9lOmT7O43s2anpkkQpN+Euww=;
+	s=arc-20240116; t=1718617106; c=relaxed/simple;
+	bh=IGDL7TCw3qE/6D71M2VQnONYc78JmMSPNcwHqz/RuM8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=eJ/lMjhb0N7pV1apLEtPgA4l8ya7ljTlivzzibBc2TnZw/X33CQoSY0A0v7C5q0PDY5PNv0hI4k7m/A1uCqnx29McCJJO/sgnkXClcwE6n+vtTr6zUIZ6P1D80kZBj2p2Rq+XuFx92/ZxmeUZYDAl+NqR+nG1HUqMyMRubUsTrs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kUmyb7gv; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=USl+g/O54y1iNsmBtzJMujUkZumjogMWnZCC4r/xZMQIGi6Asfa3idbiYOJVntiztBlEmgAl7v1cC8Z3pwd2SxrYs5W2+9JiO85TMMpY3yyYaWKRngZLCt52J+exrKmqO8vB9FU2/KNvFGG03OpLMc6puiZItYdaFyCAq/qSQy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FhCaQiBy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kUmyb7gv"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BE662C4AF48;
-	Mon, 17 Jun 2024 09:38:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FhCaQiBy"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C58A7C4DE12;
+	Mon, 17 Jun 2024 09:38:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718617104;
-	bh=TWeaRg+noW1lFeYfIFR9lOmT7O43s2anpkkQpN+Euww=;
+	s=k20201202; t=1718617105;
+	bh=IGDL7TCw3qE/6D71M2VQnONYc78JmMSPNcwHqz/RuM8=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=kUmyb7gvPcsmQtZBvZc2JGn/ntOpL2ap5U5GNHFgb8Z0crd9YKVUzIBmtzIPMXIxo
-	 mMJ7wuk7T8G+Xsf6DFMRLKFLQTZRb+e3JqJR0M/zqpnsCZmIAMPKoAhD0Kl+a4x0L8
-	 Qat7bMWJOQ7kMwey7U/DyvhLxl1s9SNKQR7TPZg8nCBplI4xZ4/bmAHrApBLXN5S5X
-	 0RSArN+1JqC09AyVeb69K8zx9XSmRvJPETzLtpO9EdWgMOY7U1tcvp95UX2RYoxfmL
-	 h5xKDpLcKfSlEcs/400Ljdrimpz4Ia9R1mKFSuL+dVDlunUOJI91jf5u2yr7jvEtIx
-	 I7b8eJGcfNuNA==
+	b=FhCaQiByYY2UNsmCuH/ZdrduVWFKKo0B8HKSyuiAFI3Tt6k4cxcjMLDK9zxJtSjlN
+	 pdU0ZkP1qW9vMRVEz2IliH3mzKLGrw2cju+MN2edb4Fm99Zb+sRKX+ZqOT7zvjcyXf
+	 C0NCFZbARG8soKuyYOQ7x0nfk09of9Gw7JwwaqzH5OQqnSxpGatnKOqpBLtdNV2u+E
+	 fM0+AjpOXZoRtgrn8POqsDI5xbkEy4C4OCVs+af/lwTbkSRVStVAI2/kf59MDd+G1Q
+	 yVyRiH4bFbdfe7ln+/Qs7juixMPP+DwcAGRtljTfbaAXwvlw+nS1u+NDKEZSO86OLK
+	 LrSHHaEqHymNQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B435BC2BA1A;
-	Mon, 17 Jun 2024 09:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9EBCC2BA1A;
+	Mon, 17 Jun 2024 09:38:25 +0000 (UTC)
 From: Nikita Shubin via B4 Relay <devnull+nikita.shubin.maquefel.me@kernel.org>
-Date: Mon, 17 Jun 2024 12:36:55 +0300
-Subject: [PATCH v10 21/38] ata: pata_ep93xx: add device tree support
+Date: Mon, 17 Jun 2024 12:37:08 +0300
+Subject: [PATCH v10 34/38] ata: pata_ep93xx: remove legacy pinctrl use
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -40,19 +40,27 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240617-ep93xx-v10-21-662e640ed811@maquefel.me>
+Message-Id: <20240617-ep93xx-v10-34-662e640ed811@maquefel.me>
 References: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
 In-Reply-To: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
-To: Sergey Shtylyov <s.shtylyov@omp.ru>, 
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Arnd Bergmann <arnd@arndb.de>
+To: Hartley Sweeten <hsweeten@visionengravers.com>, 
+ Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
+ Russell King <linux@armlinux.org.uk>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ Nikita Shubin <nikita.shubin@maquefel.me>, 
+ Linus Walleij <linus.walleij@linaro.org>, Stephen Boyd <sboyd@kernel.org>, 
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+ =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+Cc: Thierry Reding <thierry.reding@gmail.com>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
 X-Mailer: b4 0.13-dev-e3e53
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1718617100; l=5839;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1718617100; l=5459;
  i=nikita.shubin@maquefel.me; s=20230718; h=from:subject:message-id;
- bh=NFhw+S6yqjvbTLxtqXwJdogYQOJyOLBy6lAMN4VNI8U=;
- b=3nO74gngnJiXwXnH9VnsmGNcu8UeVjH3QgvogKD1yobG/mouCyZM5wNFQ9Ryih17wvOsqHOsv9WH
- ukr5nGbeAMN4+aa6EjsUt7vuDnl8R7zliFMXd76YxfiLZzstbGLY
+ bh=JKdRtMOxmJOigA+HsuRSo4me4xtHq4Wfii+aJcJbkDg=;
+ b=NuBRbh2XpqpgCm+IuOWT3wbVax0tH8AkeagUIFqfnJ5QEnC64Hw8EkoqK0x4dw5ZzEVb5Ksqc1gp
+ VgCNlNfkBLK0pS00Eh9PxheS0eJYe3IrdSO3ES+DJxoMx6myLsl/
 X-Developer-Key: i=nikita.shubin@maquefel.me; a=ed25519;
  pk=vqf5YIUJ7BJv3EJFaNNxWZgGuMgDH6rwufTLflwU9ac=
 X-Endpoint-Received: by B4 Relay for nikita.shubin@maquefel.me/20230718
@@ -62,174 +70,178 @@ Reply-To: nikita.shubin@maquefel.me
 
 From: Nikita Shubin <nikita.shubin@maquefel.me>
 
-- add OF ID match table
-- drop platform DMA and filters
-- change DMA setup to OF, so we can defer probe
+Drop legacy acquire/release since we are using pinctrl for this now.
 
 Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
 Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 Acked-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ata/pata_ep93xx.c | 80 +++++++++++++++++++++++++----------------------
- 1 file changed, 42 insertions(+), 38 deletions(-)
+ arch/arm/mach-ep93xx/core.c       | 72 ---------------------------------------
+ drivers/ata/pata_ep93xx.c         | 25 ++++----------
+ include/linux/soc/cirrus/ep93xx.h |  4 ---
+ 3 files changed, 6 insertions(+), 95 deletions(-)
 
+diff --git a/arch/arm/mach-ep93xx/core.c b/arch/arm/mach-ep93xx/core.c
+index 4ddf1a4cba33..9c6154bb37b5 100644
+--- a/arch/arm/mach-ep93xx/core.c
++++ b/arch/arm/mach-ep93xx/core.c
+@@ -779,78 +779,6 @@ void __init ep93xx_register_ide(void)
+ 	platform_device_register(&ep93xx_ide_device);
+ }
+ 
+-int ep93xx_ide_acquire_gpio(struct platform_device *pdev)
+-{
+-	int err;
+-	int i;
+-
+-	err = gpio_request(EP93XX_GPIO_LINE_EGPIO2, dev_name(&pdev->dev));
+-	if (err)
+-		return err;
+-	err = gpio_request(EP93XX_GPIO_LINE_EGPIO15, dev_name(&pdev->dev));
+-	if (err)
+-		goto fail_egpio15;
+-	for (i = 2; i < 8; i++) {
+-		err = gpio_request(EP93XX_GPIO_LINE_E(i), dev_name(&pdev->dev));
+-		if (err)
+-			goto fail_gpio_e;
+-	}
+-	for (i = 4; i < 8; i++) {
+-		err = gpio_request(EP93XX_GPIO_LINE_G(i), dev_name(&pdev->dev));
+-		if (err)
+-			goto fail_gpio_g;
+-	}
+-	for (i = 0; i < 8; i++) {
+-		err = gpio_request(EP93XX_GPIO_LINE_H(i), dev_name(&pdev->dev));
+-		if (err)
+-			goto fail_gpio_h;
+-	}
+-
+-	/* GPIO ports E[7:2], G[7:4] and H used by IDE */
+-	ep93xx_devcfg_clear_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
+-				 EP93XX_SYSCON_DEVCFG_GONIDE |
+-				 EP93XX_SYSCON_DEVCFG_HONIDE);
+-	return 0;
+-
+-fail_gpio_h:
+-	for (--i; i >= 0; --i)
+-		gpio_free(EP93XX_GPIO_LINE_H(i));
+-	i = 8;
+-fail_gpio_g:
+-	for (--i; i >= 4; --i)
+-		gpio_free(EP93XX_GPIO_LINE_G(i));
+-	i = 8;
+-fail_gpio_e:
+-	for (--i; i >= 2; --i)
+-		gpio_free(EP93XX_GPIO_LINE_E(i));
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
+-fail_egpio15:
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
+-	return err;
+-}
+-EXPORT_SYMBOL(ep93xx_ide_acquire_gpio);
+-
+-void ep93xx_ide_release_gpio(struct platform_device *pdev)
+-{
+-	int i;
+-
+-	for (i = 2; i < 8; i++)
+-		gpio_free(EP93XX_GPIO_LINE_E(i));
+-	for (i = 4; i < 8; i++)
+-		gpio_free(EP93XX_GPIO_LINE_G(i));
+-	for (i = 0; i < 8; i++)
+-		gpio_free(EP93XX_GPIO_LINE_H(i));
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO15);
+-	gpio_free(EP93XX_GPIO_LINE_EGPIO2);
+-
+-
+-	/* GPIO ports E[7:2], G[7:4] and H used by GPIO */
+-	ep93xx_devcfg_set_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
+-			       EP93XX_SYSCON_DEVCFG_GONIDE |
+-			       EP93XX_SYSCON_DEVCFG_HONIDE);
+-}
+-EXPORT_SYMBOL(ep93xx_ide_release_gpio);
+-
+ /*************************************************************************
+  * EP93xx ADC
+  *************************************************************************/
 diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index c84a20892f1b..13246a92e29f 100644
+index 13246a92e29f..a8555f630097 100644
 --- a/drivers/ata/pata_ep93xx.c
 +++ b/drivers/ata/pata_ep93xx.c
-@@ -44,8 +44,8 @@
- #include <linux/delay.h>
- #include <linux/dmaengine.h>
- #include <linux/ktime.h>
-+#include <linux/mod_devicetable.h>
- 
--#include <linux/platform_data/dma-ep93xx.h>
- #include <linux/soc/cirrus/ep93xx.h>
- 
- #define DRV_NAME	"ep93xx-ide"
-@@ -126,7 +126,7 @@ enum {
- };
- 
- struct ep93xx_pata_data {
--	const struct platform_device *pdev;
-+	struct platform_device *pdev;
+@@ -922,28 +922,18 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
  	void __iomem *ide_base;
- 	struct ata_timing t;
- 	bool iordy;
-@@ -135,9 +135,7 @@ struct ep93xx_pata_data {
- 	unsigned long udma_out_phys;
+ 	int err;
  
- 	struct dma_chan *dma_rx_channel;
--	struct ep93xx_dma_data dma_rx_data;
- 	struct dma_chan *dma_tx_channel;
--	struct ep93xx_dma_data dma_tx_data;
- };
- 
- static void ep93xx_pata_clear_regs(void __iomem *base)
-@@ -637,20 +635,13 @@ static void ep93xx_pata_release_dma(struct ep93xx_pata_data *drv_data)
- 	}
- }
- 
--static bool ep93xx_pata_dma_filter(struct dma_chan *chan, void *filter_param)
-+static int ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- {
--	if (ep93xx_dma_chan_is_m2p(chan))
--		return false;
+-	err = ep93xx_ide_acquire_gpio(pdev);
+-	if (err)
+-		return err;
 -
--	chan->private = filter_param;
--	return true;
--}
--
--static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
--{
--	const struct platform_device *pdev = drv_data->pdev;
-+	struct platform_device *pdev = drv_data->pdev;
-+	struct device *dev = &pdev->dev;
- 	dma_cap_mask_t mask;
- 	struct dma_slave_config conf;
-+	int ret;
+ 	/* INT[3] (IRQ_EP93XX_EXT3) line connected as pull down */
+ 	irq = platform_get_irq(pdev, 0);
+-	if (irq < 0) {
+-		err = irq;
+-		goto err_rel_gpio;
+-	}
++	if (irq < 0)
++		return irq;
  
- 	dma_cap_zero(mask);
- 	dma_cap_set(DMA_SLAVE, mask);
-@@ -660,22 +651,16 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	 * to request only one channel, and reprogram it's direction at
- 	 * start of new transfer.
- 	 */
--	drv_data->dma_rx_data.port = EP93XX_DMA_IDE;
--	drv_data->dma_rx_data.direction = DMA_DEV_TO_MEM;
--	drv_data->dma_rx_data.name = "ep93xx-pata-rx";
--	drv_data->dma_rx_channel = dma_request_channel(mask,
--		ep93xx_pata_dma_filter, &drv_data->dma_rx_data);
--	if (!drv_data->dma_rx_channel)
--		return;
-+	drv_data->dma_rx_channel = dma_request_chan(dev, "rx");
-+	if (IS_ERR(drv_data->dma_rx_channel))
-+		return dev_err_probe(dev, PTR_ERR(drv_data->dma_rx_channel),
-+				     "rx DMA setup failed\n");
+ 	ide_base = devm_platform_get_and_ioremap_resource(pdev, 0, &mem_res);
+-	if (IS_ERR(ide_base)) {
+-		err = PTR_ERR(ide_base);
+-		goto err_rel_gpio;
+-	}
++	if (IS_ERR(ide_base))
++		return PTR_ERR(ide_base);
  
--	drv_data->dma_tx_data.port = EP93XX_DMA_IDE;
--	drv_data->dma_tx_data.direction = DMA_MEM_TO_DEV;
--	drv_data->dma_tx_data.name = "ep93xx-pata-tx";
--	drv_data->dma_tx_channel = dma_request_channel(mask,
--		ep93xx_pata_dma_filter, &drv_data->dma_tx_data);
--	if (!drv_data->dma_tx_channel) {
--		dma_release_channel(drv_data->dma_rx_channel);
--		return;
-+	drv_data->dma_tx_channel = dma_request_chan(&pdev->dev, "tx");
-+	if (IS_ERR(drv_data->dma_tx_channel)) {
-+		ret = dev_err_probe(dev, PTR_ERR(drv_data->dma_tx_channel),
-+				    "tx DMA setup failed\n");
-+		goto fail_release_rx;
- 	}
+ 	drv_data = devm_kzalloc(&pdev->dev, sizeof(*drv_data), GFP_KERNEL);
+-	if (!drv_data) {
+-		err = -ENOMEM;
+-		goto err_rel_gpio;
+-	}
++	if (!drv_data)
++		return -ENOMEM;
  
- 	/* Configure receive channel direction and source address */
-@@ -683,10 +668,10 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	conf.direction = DMA_DEV_TO_MEM;
- 	conf.src_addr = drv_data->udma_in_phys;
- 	conf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
--	if (dmaengine_slave_config(drv_data->dma_rx_channel, &conf)) {
--		dev_err(&pdev->dev, "failed to configure rx dma channel\n");
--		ep93xx_pata_release_dma(drv_data);
--		return;
-+	ret = dmaengine_slave_config(drv_data->dma_rx_channel, &conf);
-+	if (ret) {
-+		dev_err_probe(dev, ret, "failed to configure rx dma channel");
-+		goto fail_release_dma;
- 	}
- 
- 	/* Configure transmit channel direction and destination address */
-@@ -694,10 +679,20 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	conf.direction = DMA_MEM_TO_DEV;
- 	conf.dst_addr = drv_data->udma_out_phys;
- 	conf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
--	if (dmaengine_slave_config(drv_data->dma_tx_channel, &conf)) {
--		dev_err(&pdev->dev, "failed to configure tx dma channel\n");
--		ep93xx_pata_release_dma(drv_data);
-+	ret = dmaengine_slave_config(drv_data->dma_tx_channel, &conf);
-+	if (ret) {
-+		dev_err_probe(dev, ret, "failed to configure tx dma channel");
-+		goto fail_release_dma;
- 	}
-+
-+	return 0;
-+
-+fail_release_rx:
-+	dma_release_channel(drv_data->dma_rx_channel);
-+fail_release_dma:
-+	ep93xx_pata_release_dma(drv_data);
-+
-+	return ret;
- }
- 
- static void ep93xx_pata_dma_start(struct ata_queued_cmd *qc)
-@@ -954,7 +949,9 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 	drv_data->pdev = pdev;
  	drv_data->ide_base = ide_base;
- 	drv_data->udma_in_phys = mem_res->start + IDEUDMADATAIN;
- 	drv_data->udma_out_phys = mem_res->start + IDEUDMADATAOUT;
--	ep93xx_pata_dma_init(drv_data);
-+	err = ep93xx_pata_dma_init(drv_data);
-+	if (err)
-+		return err;
+@@ -1002,8 +992,6 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
  
- 	/* allocate host */
- 	host = ata_host_alloc(&pdev->dev, 1);
-@@ -1021,9 +1018,16 @@ static void ep93xx_pata_remove(struct platform_device *pdev)
- 	ep93xx_ide_release_gpio(pdev);
+ err_rel_dma:
+ 	ep93xx_pata_release_dma(drv_data);
+-err_rel_gpio:
+-	ep93xx_ide_release_gpio(pdev);
+ 	return err;
  }
  
-+static const struct of_device_id ep93xx_pata_of_ids[] = {
-+	{ .compatible = "cirrus,ep9312-pata" },
-+	{ /* sentinel */ }
-+};
-+MODULE_DEVICE_TABLE(of, ep93xx_pata_of_ids);
-+
- static struct platform_driver ep93xx_pata_platform_driver = {
- 	.driver = {
- 		.name = DRV_NAME,
-+		.of_match_table = ep93xx_pata_of_ids,
- 	},
- 	.probe = ep93xx_pata_probe,
- 	.remove_new = ep93xx_pata_remove,
+@@ -1015,7 +1003,6 @@ static void ep93xx_pata_remove(struct platform_device *pdev)
+ 	ata_host_detach(host);
+ 	ep93xx_pata_release_dma(drv_data);
+ 	ep93xx_pata_clear_regs(drv_data->ide_base);
+-	ep93xx_ide_release_gpio(pdev);
+ }
+ 
+ static const struct of_device_id ep93xx_pata_of_ids[] = {
+diff --git a/include/linux/soc/cirrus/ep93xx.h b/include/linux/soc/cirrus/ep93xx.h
+index f6376edc1b33..142c33a2d7db 100644
+--- a/include/linux/soc/cirrus/ep93xx.h
++++ b/include/linux/soc/cirrus/ep93xx.h
+@@ -37,15 +37,11 @@ struct ep93xx_regmap_adev {
+ 	container_of((_adev), struct ep93xx_regmap_adev, adev)
+ 
+ #ifdef CONFIG_ARCH_EP93XX
+-int ep93xx_ide_acquire_gpio(struct platform_device *pdev);
+-void ep93xx_ide_release_gpio(struct platform_device *pdev);
+ int ep93xx_i2s_acquire(void);
+ void ep93xx_i2s_release(void);
+ unsigned int ep93xx_chip_revision(void);
+ 
+ #else
+-static inline int ep93xx_ide_acquire_gpio(struct platform_device *pdev) { return 0; }
+-static inline void ep93xx_ide_release_gpio(struct platform_device *pdev) {}
+ static inline int ep93xx_i2s_acquire(void) { return 0; }
+ static inline void ep93xx_i2s_release(void) {}
+ static inline unsigned int ep93xx_chip_revision(void) { return 0; }
 
 -- 
 2.43.2
