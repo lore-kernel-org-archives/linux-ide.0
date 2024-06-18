@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD006BFAA;
-	Tue, 18 Jun 2024 07:42:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20569139588;
+	Tue, 18 Jun 2024 07:42:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718696530; cv=none; b=KcsOUO0cJR+8lG0++zNwhCnq2ATp3kx4/ijLisq9UZWRPL0HbM7DtUjVDjZoWCS9bZWfOhLbgNyAvgtNCkPBPMkQ3RIY4upuG+tECZKH8ZwgtUBNTBPi7jRUjhpkJgI35K6aZHGccOcXqOfyG2Bu/bxOSWF3sfxns9H7UScSWn0=
+	t=1718696560; cv=none; b=X0O3dnbwHPHYFWwjZBRKMU5eBUEBerT9y8KfGgvjSNcveNgc8b0cm0fUUP0BEBLorDOdLdEQHDTHaY3XgrjKFxcfadDCU8Dily3sgr9HEgrXdfsClpCuWmVahh7pt/h7R4enBNYc5C4DU8l0fmtFTMH70Og8Y5PNMh8xr+Qs3Rw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718696530; c=relaxed/simple;
-	bh=Mi+kVekcAzBTPD5ha6hVU0QuderYw/GSxBKoq0hfG/o=;
+	s=arc-20240116; t=1718696560; c=relaxed/simple;
+	bh=xblx0jLMc0mKBqKqru0UvnYkkN9m3GEewo6EDQw+eYM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=O30TW9HG2GiBF6kpPCfBDkZUjHcfkWQYTNfImR8NWfjKva03kmgf4d/ENfW5PN5No21d/GFcXrPdYFqoANCV2/ER0eLBCk+QR45k2LxIqsWLfotKMlzdvSPVk+aHT7fQLLfGZzVEDhfku7O1bjcv5FzoynF69z+HL7WecsLbQn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dwwo65PA; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=dKC1d6Co9hL2nhKmmHCid9hZya1GMM1FLwOHLm+8GfYhk60fzaBaEVSvds+YoBuUk7m7RWikLkesshuxIPzVMDJrrOsNb0xteruX5y1Qd9S0z2JffJL/uqNj4mEohTCAObKgXu+p9lvUyYqv+V64D3ffFZ6Tvx7taFAK5ATeiPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mpmxQMI1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dwwo65PA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8B60C4AF1C;
-	Tue, 18 Jun 2024 07:42:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mpmxQMI1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21BF4C3277B;
+	Tue, 18 Jun 2024 07:42:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718696529;
-	bh=Mi+kVekcAzBTPD5ha6hVU0QuderYw/GSxBKoq0hfG/o=;
+	s=k20201202; t=1718696559;
+	bh=xblx0jLMc0mKBqKqru0UvnYkkN9m3GEewo6EDQw+eYM=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=dwwo65PAtJcy6BofKQWeL/iYS1mIO4VlzU7GTPTnUOM5fkx2hC/9tpu6oXwI21kES
-	 jc+F+pix6L+0Loe47euQXuA05ELepwc8uSnO++iSOv0TTqrmR6X0ZmF8ZnfMt+Gf6z
-	 SzJiKsraW07aOFtblNp02Q5ecZ86zl/+Z+nK2tLH99lqnTwsJF1yDz1pkPA49df0op
-	 8nMdH+Qk2r8Q0D8qlnstHY/E36ZKqVcUpWwBn1/prL3K9tbeeGY1WWRkukhyxrXsi/
-	 p5UxSSBBXaQ8tpfqWzWimjvLsyvA2r8AZFMjodaO1fV3FF6CGcO+nP27DjVXwR99Bo
-	 QUO3WUby1Ml5A==
-Message-ID: <09fad8cc-ff9e-48b4-b954-4f84c61f3ffc@kernel.org>
-Date: Tue, 18 Jun 2024 09:42:03 +0200
+	b=mpmxQMI1bmrv86NnpJIey63icRsZ3lAABTR/SyThGtP3Gg6Rdw2J8IuAY1ZFXJPSE
+	 auJc+YESAsOXU5Ew5X2OLeGSgp/NHil+PngACAZhCG+ElBeiANrCXS+7eqPi7xoXqn
+	 3g3O3wI3BXQiWchI3WkkU2FxExcKVhpHabVzQMuv2Mfu2/GMG075b5I99FhThD31Ce
+	 kh+ea1AbZ7nvWWgGeGVWtGdeKIsmUJ51RG9XYDTSV5IfT8ZnoogkTpQpunaTjCSFL8
+	 R9eRxBGxjey4hxNOxOhcaeogDl26Fztxz7+9BWvAdXycflJaw7xKtYwnbqGEp6RINt
+	 EPG6o/FuQhrdQ==
+Message-ID: <98cb57d6-bf2f-4383-9354-b1d32cd3646d@kernel.org>
+Date: Tue, 18 Jun 2024 09:42:33 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -37,17 +37,16 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 1/1] dt-bindings: ata: ahci-fsl-qoriq: convert to yaml
  format
-To: Niklas Cassel <cassel@kernel.org>, Frank Li <Frank.Li@nxp.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh@kernel.org>,
+To: Frank Li <Frank.Li@nxp.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
  Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
  <conor+dt@kernel.org>,
  "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
  <linux-ide@vger.kernel.org>,
  "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
- imx@lists.linux.dev
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: imx@lists.linux.dev
 References: <20240617180241.901377-1-Frank.Li@nxp.com>
- <ZnCKlj_Gp60_2otI@ryzen.lan>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -93,32 +92,19 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <ZnCKlj_Gp60_2otI@ryzen.lan>
+In-Reply-To: <20240617180241.901377-1-Frank.Li@nxp.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 17/06/2024 21:12, Niklas Cassel wrote:
-> On Mon, Jun 17, 2024 at 02:02:40PM -0400, Frank Li wrote:
->> Convert ahci-fsl-qoirq DT binding to yaml format.
->>
->> Additional changes:
->> - Add reg-names list, ahci and sata-ecc
->> - Add fsl,ls1028a-ahci and fsl,lx2060a-ahci
->>
->> Signed-off-by: Frank Li <Frank.Li@nxp.com>
->> ---
->>  .../bindings/ata/ahci-fsl-qoriq.txt           | 21 -------
->>  .../devicetree/bindings/ata/fsl,ahci.yaml     | 58 +++++++++++++++++++
->>  2 files changed, 58 insertions(+), 21 deletions(-)
->>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
->>  create mode 100644 Documentation/devicetree/bindings/ata/fsl,ahci.yaml
+On 17/06/2024 20:02, Frank Li wrote:
+> Convert ahci-fsl-qoirq DT binding to yaml format.
 > 
-> Should this file perhaps be called:
-> fsl,qoriq-ahci.yaml ?
+> Additional changes:
+> - Add reg-names list, ahci and sata-ecc
+> - Add fsl,ls1028a-ahci and fsl,lx2060a-ahci
 > 
-> Would be nice with some input from DT maintainers on this.
 
-This should be rather compatible.
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
 Best regards,
 Krzysztof
