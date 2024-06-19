@@ -1,124 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E115A1CFAF
-	for <linux-ide@vger.kernel.org>; Wed, 19 Jun 2024 04:56:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732C212FB37;
+	Wed, 19 Jun 2024 10:13:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718772987; cv=none; b=hFS/jXhF0KhZdEeh/K7ZtpQkjgNl6u1A73FygVVuhptilPg4dlhIf0KMYjxp853NbWfP80qaZtpn+86HGsnkkR0XVYXmCTP0YfwBAM3EymsZdpgpaQ6DhxDEx2MmMtkIFipfk5d0zLWjWtc5JBVO5sfUmx7sYxlhRqI8iTYW7xY=
+	t=1718791988; cv=none; b=EjQHbnhD3xbsIRmu2aRWcSJ3EjhfYr7rxz7m0H3ugu36mKTx0YmqPqrlkzleCmy7OvFkNliMlQnjzZrIhrRE+EmQsWqhbGhvLy/tyCB5wk7U5Eg6/RJwpD5SFfM3CGkmT44e8FR8ibFbSU5kJ7u25sHKhUPViWn6KUAc7B2A8DM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718772987; c=relaxed/simple;
-	bh=pkJch1TRLpNVFMe6bSx7/goPxC2BXInbhneMeqPbhss=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NYb+2Qu7yhTQpaKteHbPCgD1jVTwB9rijPume/aMPAxPSRN5VU/cqRIPXvrIxbTUXQvpU5fXEF6AD+Fk/Eozl08dgSjDSski1Nf4Fp50vj5lCqdhUQlAz02bar2OTrPfgPx8tOh8DVahiQ94y8qqy8ZzLeZQNll8Xf93XNu3Bk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kbCSb3qJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718791988; c=relaxed/simple;
+	bh=NP0B7SlSGUBGAul8qyE+Revon1rkLfT8ghClH9lPF1c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AmGsuGaBtSUFsdyS7GI9kv/21i0fy5I+P/bI53CKuzaICZZ0iEz3LbcQ1e8QMtPedHj7ZHRRXVIZDIeS7JAnNfjDiYbnH3kFpQTuFm0KYOBYjkkF/ONUgoO6RAFvGFHFRZ/jzlkdeMCEromstmtOrqb+Vag2yZgloGJV7fKFkLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WrNv3JH1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kbCSb3qJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC084C2BBFC;
-	Wed, 19 Jun 2024 04:56:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WrNv3JH1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F8B7C2BBFC;
+	Wed, 19 Jun 2024 10:13:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718772986;
-	bh=pkJch1TRLpNVFMe6bSx7/goPxC2BXInbhneMeqPbhss=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kbCSb3qJKn3jItSTOWfmCkPkBhynNTMbdVxj3Zce1UyvdnSrIHldKe5n9pQvzlYHq
-	 5XuUFhINtaNHdk/XoWwC4h+9TyqqDY8qjxV4v8M9OjbPX9NVWgaK50Ls240NNH3GxA
-	 p+dZ8XTInB3GIKSNlo85rdi02MeQyqs8gb9dtomIov8zPwkvfaceflKR2YnSyOUcNw
-	 QgAbEXHCPVJnsUTKQN8MztFkKyVTtvML3Trldlv7VP6r0deSI/7Tly+unwPl7mgI2D
-	 KkjU+16nxmJ7pakqnt4lujBViZpP3RlXwN4saRXrlQbRbyfUVyqFR55Z0OXs1329ZQ
-	 ahh+DZpkLraNA==
-Message-ID: <c610acce-8828-4158-97fa-11bbd2ffc591@kernel.org>
-Date: Wed, 19 Jun 2024 13:56:24 +0900
+	s=k20201202; t=1718791988;
+	bh=NP0B7SlSGUBGAul8qyE+Revon1rkLfT8ghClH9lPF1c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WrNv3JH1lllExsc3t32OY99tM90JR8LS6TVTyXasgjuSKAiOakdZ1VycpBjqTvcwd
+	 qjc/d/bR7WodhYycVLJhDQqUDSugEz7KfJfORm0rN6wdsEI+dk6VEWdHOTsa0M5Toc
+	 JNYHAkCTGzaZs7eZy0Lu/SiRWxzeLp1sFIi7VQFtngIFtSJAT1tEs+bJdTniAcoACA
+	 BoAOG84TLsqQ/r129n97i/wF3ownkpQEVjdb20IywKVS+qw+0rjUBpghwbG8f5DhYU
+	 4/eKd5x3ju/vtE3khIzAGDSBXjlrS6uvYDHG+YiV7oGwlsZnT4jZ5o8ip3RKD42yJJ
+	 ilqyj/Bwxx45w==
+Date: Wed, 19 Jun 2024 12:13:03 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Mario Limonciello <mario.limonciello@amd.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Jian-Hong Pan <jhp@endlessos.org>, stable@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2] ata: ahci: Do not enable LPM if no LPM states are
+ supported by the HBA
+Message-ID: <ZnKvLy4_a3U6835Q@ryzen.lan>
+References: <20240618152828.2686771-2-cassel@kernel.org>
+ <4522f403-8419-4c59-b28b-9d460780c389@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/5] ata: libata: Assign print_id at port allocation time
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-ide@vger.kernel.org
-References: <20240618153537.2687621-7-cassel@kernel.org>
- <20240618153537.2687621-10-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20240618153537.2687621-10-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4522f403-8419-4c59-b28b-9d460780c389@kernel.org>
 
-On 6/19/24 00:35, Niklas Cassel wrote:
-> While the assignment of ap->print_id could have been moved to
-> ata_host_alloc(), let's simply move it to ata_port_alloc().
+On Wed, Jun 19, 2024 at 12:45:51PM +0900, Damien Le Moal wrote:
+> On 6/19/24 00:28, Niklas Cassel wrote:
+> > LPM consists of HIPM (host initiated power management) and DIPM
+> > (device initiated power management).
+> > 
+> > ata_eh_set_lpm() will only enable HIPM if both the HBA and the device
+> > supports it.
+> > 
+> > However, DIPM will be enabled as long as the device supports it.
+> > The HBA will later reject the device's request to enter a power state
+> > that it does not support (Slumber/Partial/DevSleep) (DevSleep is never
+> > initiated by the device).
+> > 
+> > For a HBA that doesn't support any LPM states, simply don't set a LPM
+> > policy such that all the HIPM/DIPM probing/enabling will be skipped.
+> > 
+> > Not enabling HIPM or DIPM in the first place is safer than relying on
+> > the device following the AHCI specification and respecting the NAK.
+> > (There are comments in the code that some devices misbehave when
+> > receiving a NAK.)
+> > 
+> > Performing this check in ahci_update_initial_lpm_policy() also has the
+> > advantage that a HBA that doesn't support any LPM states will take the
+> > exact same code paths as a port that is external/hot plug capable.
+> > 
+> > Side note: the port in ata_port_dbg() has not been given a unique id yet,
+> > but this is not overly important as the debug print is disabled unless
+> > explicitly enabled using dynamic debug. A follow-up series will make sure
+> > that the unique id assignment will be done earlier. For now, the important
+> > thing is that the function returns before setting the LPM policy.
+> > 
+> > Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> > ---
+> > Changes since v1: Add debug print as suggested by Mika.
+> > 
+> >  drivers/ata/ahci.c | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> > 
+> > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> > index 07d66d2c5f0d..5eb38fbbbecd 100644
+> > --- a/drivers/ata/ahci.c
+> > +++ b/drivers/ata/ahci.c
+> > @@ -1735,6 +1735,14 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
+> >  	if (ap->pflags & ATA_PFLAG_EXTERNAL)
+> >  		return;
+> >  
+> > +	/* If no LPM states are supported by the HBA, do not bother with LPM */
+> > +	if ((ap->host->flags & ATA_HOST_NO_PART) &&
+> > +	    (ap->host->flags & ATA_HOST_NO_SSC) &&
+> > +	    (ap->host->flags & ATA_HOST_NO_DEVSLP)) {
 > 
-> If you allocate a port, you want to give it a unique name that can be used
-> for printing.
+> Nit: Maybe:
 > 
-> By moving the ap->print_id assignment to ata_port_alloc(), means that we
-> can also remove the ap->print_id assignment from ata_sas_port_alloc().
+> #define ATA_HOST_NO_LPM		\
+> 	(ATA_HOST_NO_PART | ATA_HOST_NO_SSC | ATA_HOST_NO_DEVSLP)
 > 
-> This will allow a LLD to use the ata_port_*() print functions before
-> ata_host_register() has been called.
-
-By the way, shouldn't we replace the ata_print_id atomic with an IDA ?
-
-static DEFINE_IDA(ata_ida);
-
-And then use:
-
-	ap->print_id = ida_alloc(&ata_ida, GFP_KERNEL);
-	ida_free(&ata_ida, ap->print_id);
-
-That would avoid the print IDs to constantly increase when doing e.g.
-rmmod ahci+modprobe ahci.
-
+> and then the if becomes:
 > 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/libata-core.c | 6 ++----
->  drivers/ata/libata-sata.c | 1 -
->  2 files changed, 2 insertions(+), 5 deletions(-)
+> 	if ((ap->host->flags & ATA_HOST_NO_LPM) == ATA_HOST_NO_LPM) {
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 0dc6e18bf492..fb4835c2ba2d 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5463,7 +5463,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
->  
->  	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
->  	ap->lock = &host->lock;
-> -	ap->print_id = -1;
-> +	ap->print_id = atomic_inc_return(&ata_print_id);
->  	ap->local_port_no = -1;
->  	ap->host = host;
->  	ap->dev = host->dev;
-> @@ -5903,10 +5903,8 @@ int ata_host_register(struct ata_host *host, const struct scsi_host_template *sh
->  		WARN_ON(host->ports[i]);
->  
->  	/* give ports names and add SCSI hosts */
-> -	for (i = 0; i < host->n_ports; i++) {
-> -		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
-> +	for (i = 0; i < host->n_ports; i++)
->  		host->ports[i]->local_port_no = i + 1;
-> -	}
->  
->  	/* Create associated sysfs transport objects  */
->  	for (i = 0; i < host->n_ports; i++) {
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index c564eac9d430..def0026188f7 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -1234,7 +1234,6 @@ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
->  	ap->flags |= port_info->flags;
->  	ap->ops = port_info->port_ops;
->  	ap->cbl = ATA_CBL_SATA;
-> -	ap->print_id = atomic_inc_return(&ata_print_id);
->  
->  	return ap;
->  }
+> But no strong feelings about it. So:
+> 
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
--- 
-Damien Le Moal
-Western Digital Research
+Thank you for the R-b and your suggestion.
 
+Personally, I do not think that your suggestion is significantly easier to
+read than what is already there (especially with the comment to give
+context).
+
+My brain always has to read a:
+if ((foo & bar) == bar)
+twice anyway.
+
+I guess a:
+if (!ata_host_has_lpm(ap->host))
+would be clearer, but considering that we wouldn't be able to use this
+helper function anywhere else in the libata subsystem, I'm not sure if
+it is worth it, so I will just apply this patch as is.
+
+
+Kind regards,
+Niklas
