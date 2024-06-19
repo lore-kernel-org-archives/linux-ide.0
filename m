@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 054BF1E878
-	for <linux-ide@vger.kernel.org>; Wed, 19 Jun 2024 04:04:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E115A1CFAF
+	for <linux-ide@vger.kernel.org>; Wed, 19 Jun 2024 04:56:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718769887; cv=none; b=aACAipOui3C7KyURxIonTp/ME3S7qNQmac/wsmt85V3jlixsrZuAXY9QbXO3U8/YMAuQM9s+CHfE96xZNISuZKKIhrhpqmDF4k1GEQn1kVhT2qNMzoZubDGZ46BJVDnNkrlQ+esUHlsqeDHrSD5w8Va5MnGdyAZpf01jaVFKzPY=
+	t=1718772987; cv=none; b=hFS/jXhF0KhZdEeh/K7ZtpQkjgNl6u1A73FygVVuhptilPg4dlhIf0KMYjxp853NbWfP80qaZtpn+86HGsnkkR0XVYXmCTP0YfwBAM3EymsZdpgpaQ6DhxDEx2MmMtkIFipfk5d0zLWjWtc5JBVO5sfUmx7sYxlhRqI8iTYW7xY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718769887; c=relaxed/simple;
-	bh=mC+Pkb3o7FydREWd0pNHaZE4c85mPnUvreH4ni45otQ=;
+	s=arc-20240116; t=1718772987; c=relaxed/simple;
+	bh=pkJch1TRLpNVFMe6bSx7/goPxC2BXInbhneMeqPbhss=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oTOarYwBlXY6d7GUdhIBx9Mw+Rot+1I8/F8lK5QmCG0XD7DaVf2fYm+lfzapyp8bLfQPvV8w2aqkMuk6I8Z3o/JnI3Zq84RVP5aXuk1rZEdx2H7kJeECP/I8sgY2N0AlXQmSAqYc/esUyd/4+6+Qo8vk0SIL0EspqfniQvcDYdk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JqjdzDxx; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=NYb+2Qu7yhTQpaKteHbPCgD1jVTwB9rijPume/aMPAxPSRN5VU/cqRIPXvrIxbTUXQvpU5fXEF6AD+Fk/Eozl08dgSjDSski1Nf4Fp50vj5lCqdhUQlAz02bar2OTrPfgPx8tOh8DVahiQ94y8qqy8ZzLeZQNll8Xf93XNu3Bk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kbCSb3qJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JqjdzDxx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F41BFC2BBFC;
-	Wed, 19 Jun 2024 04:04:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kbCSb3qJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC084C2BBFC;
+	Wed, 19 Jun 2024 04:56:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718769886;
-	bh=mC+Pkb3o7FydREWd0pNHaZE4c85mPnUvreH4ni45otQ=;
+	s=k20201202; t=1718772986;
+	bh=pkJch1TRLpNVFMe6bSx7/goPxC2BXInbhneMeqPbhss=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=JqjdzDxx5P9fiHiMZHjuyOkhl7G0GU4wuo2jrI9yaIBozSWjpmAMnkf5jzhmauMFX
-	 bdxOVJEki63sz924w+mCXUbl4X92x7VSz4tkOKiAM+9fa/GvmoPd+fn/k9kmfdMU78
-	 Qb/JxpdKf+wLud1lbYbXQIzZdj0DIIsG2nna5T/oYZOxxSK6r/2GXx2p2M1zVsNTlK
-	 Sr1m7127Aa26Mt08YSDfcwhyEAV4dhChGsC4LDoQJUXNVHVrNxV40MYKygRdVrr/Lm
-	 7gCrCq8tt/9LMRXuLvMfKPG9ppKVJWpzaLpfSTdSg5QZrmKLZ8sSMvoawbjnU8A4rh
-	 PbdTyRt/39oHg==
-Message-ID: <9d1b6c33-3bf0-4df2-b1f0-bb589b701698@kernel.org>
-Date: Wed, 19 Jun 2024 13:04:44 +0900
+	b=kbCSb3qJKn3jItSTOWfmCkPkBhynNTMbdVxj3Zce1UyvdnSrIHldKe5n9pQvzlYHq
+	 5XuUFhINtaNHdk/XoWwC4h+9TyqqDY8qjxV4v8M9OjbPX9NVWgaK50Ls240NNH3GxA
+	 p+dZ8XTInB3GIKSNlo85rdi02MeQyqs8gb9dtomIov8zPwkvfaceflKR2YnSyOUcNw
+	 QgAbEXHCPVJnsUTKQN8MztFkKyVTtvML3Trldlv7VP6r0deSI/7Tly+unwPl7mgI2D
+	 KkjU+16nxmJ7pakqnt4lujBViZpP3RlXwN4saRXrlQbRbyfUVyqFR55Z0OXs1329ZQ
+	 ahh+DZpkLraNA==
+Message-ID: <c610acce-8828-4158-97fa-11bbd2ffc591@kernel.org>
+Date: Wed, 19 Jun 2024 13:56:24 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,103 +35,88 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/5] ata: libata-scsi: Assign local_port_no at host
- allocation time
+Subject: Re: [PATCH 3/5] ata: libata: Assign print_id at port allocation time
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
  linux-ide@vger.kernel.org
 References: <20240618153537.2687621-7-cassel@kernel.org>
- <20240618153537.2687621-11-cassel@kernel.org>
+ <20240618153537.2687621-10-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20240618153537.2687621-11-cassel@kernel.org>
+In-Reply-To: <20240618153537.2687621-10-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 6/19/24 00:35, Niklas Cassel wrote:
-> Now when we have removed support for decreasing the number of ports,
-> the most logical thing is to assign local_port_no at the same location(s)
-> where we assign port_no.
+> While the assignment of ap->print_id could have been moved to
+> ata_host_alloc(), let's simply move it to ata_port_alloc().
 > 
-> Note that we cannot move the local_port_no assignment to ata_port_alloc(),
-> because not all users of ata_port_alloc() assigns local_port_no
-> (i.e. ata_sas_port_alloc()).
+> If you allocate a port, you want to give it a unique name that can be used
+> for printing.
 > 
-> I have no idea what local_port_no is actually used for, but at least
-> there should be no functional changes caused by this commit.
+> By moving the ap->print_id assignment to ata_port_alloc(), means that we
+> can also remove the ap->print_id assignment from ata_sas_port_alloc().
+> 
+> This will allow a LLD to use the ata_port_*() print functions before
+> ata_host_register() has been called.
 
-It used as the sysfs "port_no" attribute to show the port number relative to the
-adapter.
+By the way, shouldn't we replace the ata_print_id atomic with an IDA ?
 
-E.g. on my test box which has 2 adapters:
+static DEFINE_IDA(ata_ida);
 
-# find /sys -name port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata1/ata_port/ata1/port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata8/ata_port/ata8/port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata6/ata_port/ata6/port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata4/ata_port/ata4/port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata2/ata_port/ata2/port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata7/ata_port/ata7/port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata5/ata_port/ata5/port_no
-/sys/devices/pci0000:00/0000:00:17.0/ata3/ata_port/ata3/port_no
-/sys/devices/pci0000:00/0000:00:1c.0/0000:01:00.0/ata9/ata_port/ata9/port_no
-/sys/devices/pci0000:00/0000:00:1c.0/0000:01:00.0/ata10/ata_port/ata10/port_no
+And then use:
 
-For the first adapter:
+	ap->print_id = ida_alloc(&ata_ida, GFP_KERNEL);
+	ida_free(&ata_ida, ap->print_id);
 
-# cat /sys/devices/pci0000:00/0000:00:17.0/ata1/ata_port/ata1/port_no
-1
-# cat /sys/devices/pci0000:00/0000:00:17.0/ata2/ata_port/ata2/port_no
-2
-...
-
-And for the second adapter:
-
-# cat /sys/devices/pci0000:00/0000:00:1c.0/0000:01:00.0/ata9/ata_port/ata9/port_no
-1
-#cat /sys/devices/pci0000:00/0000:00:1c.0/0000:01:00.0/ata10/ata_port/ata10/port_no
-2
-
-So the confusion here is the naming: ap->print_id is an ID increasing for all
-adapters, ap->port_no is the index of the port in the host (adapter) array of
-ports and local_port_no is the same + 1...
-
-So I think we can get rid of local_port_no by simply rewriting:
-
-ata_port_simple_attr(local_port_no, port_no, "%u\n", unsigned int);
-
-in libata-transport.c. That will avoid this useless and confusing code.
+That would avoid the print IDs to constantly increase when doing e.g.
+rmmod ahci+modprobe ahci.
 
 > 
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > ---
->  drivers/ata/libata-core.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+>  drivers/ata/libata-core.c | 6 ++----
+>  drivers/ata/libata-sata.c | 1 -
+>  2 files changed, 2 insertions(+), 5 deletions(-)
 > 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index fb4835c2ba2d..ee1a75bc0466 100644
+> index 0dc6e18bf492..fb4835c2ba2d 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
-> @@ -5591,6 +5591,7 @@ struct ata_host *ata_host_alloc(struct device *dev, int n_ports)
->  			goto err_out;
+> @@ -5463,7 +5463,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
 >  
->  		ap->port_no = i;
-> +		ap->local_port_no = i + 1;
->  		host->ports[i] = ap;
->  	}
->  
-> @@ -5902,10 +5903,6 @@ int ata_host_register(struct ata_host *host, const struct scsi_host_template *sh
->  	for (i = host->n_ports; host->ports[i]; i++)
+>  	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
+>  	ap->lock = &host->lock;
+> -	ap->print_id = -1;
+> +	ap->print_id = atomic_inc_return(&ata_print_id);
+>  	ap->local_port_no = -1;
+>  	ap->host = host;
+>  	ap->dev = host->dev;
+> @@ -5903,10 +5903,8 @@ int ata_host_register(struct ata_host *host, const struct scsi_host_template *sh
 >  		WARN_ON(host->ports[i]);
 >  
-> -	/* give ports names and add SCSI hosts */
-> -	for (i = 0; i < host->n_ports; i++)
-> -		host->ports[i]->local_port_no = i + 1;
-> -
+>  	/* give ports names and add SCSI hosts */
+> -	for (i = 0; i < host->n_ports; i++) {
+> -		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
+> +	for (i = 0; i < host->n_ports; i++)
+>  		host->ports[i]->local_port_no = i + 1;
+> -	}
+>  
 >  	/* Create associated sysfs transport objects  */
 >  	for (i = 0; i < host->n_ports; i++) {
->  		rc = ata_tport_add(host->dev,host->ports[i]);
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index c564eac9d430..def0026188f7 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -1234,7 +1234,6 @@ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
+>  	ap->flags |= port_info->flags;
+>  	ap->ops = port_info->port_ops;
+>  	ap->cbl = ATA_CBL_SATA;
+> -	ap->print_id = atomic_inc_return(&ata_print_id);
+>  
+>  	return ap;
+>  }
 
 -- 
 Damien Le Moal
