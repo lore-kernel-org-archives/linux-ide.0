@@ -1,99 +1,201 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 812D043ABC
-	for <linux-ide@vger.kernel.org>; Thu, 20 Jun 2024 23:25:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A2A3482ED
+	for <linux-ide@vger.kernel.org>; Thu, 20 Jun 2024 23:34:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718925905; cv=none; b=hI8ntbEpClcyflhe+Z86Liygh1JP8fnAp3GklMsE8DfPWXgDVBCdVbIpkOQcQvbfSvI2PyFGfal+Gxji574TfbbGWWwSrYQs0yUZsu8gFVdDPjyCnCGWq2+w8OtWMM2Oqi5awS+LR1RTO+3tBk+Si6jB+EZl5t3v1KgBSntyBsI=
+	t=1718926458; cv=none; b=Isth+f2exXZxnPd5a+nrgkiY1pSX+9VbXV0wW7fKI0w0c2E0vxKu8VlXg5OG+3ii6kPeHeoWI8CLawwlzFvBVmtgkQoOizE7MQZS0fahfzlm79bmlHoaYdlKWEZBugIYHnd8cZt1QmHwVu/7aSZBpvAG3vsxz/etZPAv5Oe4DSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718925905; c=relaxed/simple;
-	bh=XpnCDdCtFgwhKYViq+paZ/4p0x6bnKXUvWUEofljj9c=;
+	s=arc-20240116; t=1718926458; c=relaxed/simple;
+	bh=YzCAiEQpfg/g/kJuQO+uwqiy6/kqbKxaI1i2Ujvp+5E=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LWQn5Uvl07AgL7JHmMztuAe+b2/DXd1y2C/TjzJyVRpRcqkt7Xm35+JFGT+AwEsb56Yb48XaZ2RsZ2GfuDqXeMjRbefNdeqPSZ5xSD+uoBXwosxcjgMoXga3dPcuGWiospFLuZ4NAZUmbZuiPBdl8fxh5Nfb3lJZHBmFUgkVqPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=nthJo7P/; arc=none smtp.client-ip=209.85.214.180
+	 Content-Type:Content-Disposition:In-Reply-To; b=U9bTi+BbtsRNjCLRImMnsRbRDg4RVY9k/6Fyhmd4uNO+NlatlJD8K0zkO/NeU2LQJRGT0xdl2F10Ti4ZFiBkkGGamddyy2wLDgcgItHufrPUQ8kT/2k8ioXdEqxRRLCvgv9nkAeU5ffH0L2fmhmIVrMASr15y+fMkIc0kP8ps+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UW5s1Egy; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nthJo7P/"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1f44b441b08so11326395ad.0
-        for <linux-ide@vger.kernel.org>; Thu, 20 Jun 2024 16:25:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UW5s1Egy"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-705c0115192so1209008b3a.1
+        for <linux-ide@vger.kernel.org>; Thu, 20 Jun 2024 16:34:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1718925904; x=1719530704; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=x3SPHHE27gYahsWkwlMaZaH2ZmSYr9KZMF6ALpWQofo=;
-        b=nthJo7P/wgF0jfynJf7ijefrEcjhDhTv0XbiDdA8FXJeW1maEzqooXUvTimDH6WLoG
-         VS2j8vlXGreNauFr5JCsI4zzJ2EPxx4N9OZRPXYN7rM0bKS0yeXqIo/Cqkgirm8XctM2
-         2kqgGr2F1JG/1zcUNg0XQV35dk/9g/E0OPIcwEm/GAuA9W2LalV28aDc9uN5350txgDe
-         hDHM9SwflBQ8Jo9OocgFx3+hIXqVE9BJcNoSbNZVT4ZCwtQQL+GS8li9cG/TzgnGyCQi
-         4M1bmraqTT/cjnfcSISnMNqWghktUPUKnAM37YIvb5FMULtfl6aBc5Yzqq5e0uUbSRDW
-         MKtg==
+        d=google.com; s=20230601; t=1718926456; x=1719531256; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=7XfksNSVifcZsxGv6eaETaFbtJmM8Uyclp22FAxA2lE=;
+        b=UW5s1EgyWjUFxPhvDD/oxPOf3CaXhaJAew7OeBrGXL8OuSYOgQg8UhEo5OGFxn0558
+         AFSN1PI18xurbHKMb4otFbjDglrr0OUhppLrXNwLw3oHGAl6CQT5yj8lur1TG7uRK5mc
+         22zsZNJSlMt31MSYz9qrRTII4JLYW5Ewbcthbr9VelBd8oaUlEagz8Z4NFO4xHqBFbdC
+         Uvs5DINlUG1Gno5AW+EMjNdcWlNlq0eQi2CArHvpTwLx2lUxYju3i1ofbLStgIc9SKVL
+         IW/RKKJAhuR8hd53sqmS6vqTihOwqok/rRT6ezIi1WscOnX7nS174976iZknTEbOU4sO
+         SbkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718925904; x=1719530704;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=x3SPHHE27gYahsWkwlMaZaH2ZmSYr9KZMF6ALpWQofo=;
-        b=oLEZv+9/OHu25QS2E6txcMa8xJPwZwqsBQyRBpk2gUcWN+TVff8ADLuYLiwrW/DLtE
-         4Rtzi2Zyby6qcxDtTor3IZIMvwSI/PqNcJTeri3OHDWovajgYqSLqxdQGJoPC0pXQ/7x
-         YPQqHAQF806VJ5h865B127PefETN7iK+fE4sDe3j02UTQ4/MdTDdfh8RQWsysyVKXA0s
-         VXaJsT0r/tMKtlkmsO+71JqTeyUAzCX8pM/sqQ/zAvuLCAa8nzUj8rDOeUABHpI7dqFI
-         OGlUbu+ttqL35Ykj+9j7UAoroE5pM7McsCLlhXOm+cki7ULb2kA51480l2XH4Zf1E1Fw
-         2oAg==
-X-Forwarded-Encrypted: i=1; AJvYcCVVK8Tkd3kIvoeJegNqa9Vji+NKjZurka3gVjjmNrpHx36VAJ3wVGp0gTfjOfr5k8wCxnNBDNrdrKAhA9yjk9Afh/hHT0NVOSv0
-X-Gm-Message-State: AOJu0YzMpTFp1NHFkaqfwur6zHZrgK4CtrVUKtBu4jM+iQuVLhO+ShjN
-	l6xpYb6GIVgdzez55CNPzchdjFmsD6y6Ow5Ei5wv7dpmnvWd7HzvZ0RwCeDj8g==
-X-Google-Smtp-Source: AGHT+IEzZ/EZAxsNNZtlJ7tILFRqDfO8mcw4qYmbN5kVCzF1Rb+x/lYh8a2Fo4yZHpTcSsSEoqwpqw==
-X-Received: by 2002:a17:902:db0d:b0:1f9:d930:85d7 with SMTP id d9443c01a7336-1f9d9308697mr21606745ad.20.1718925903442;
-        Thu, 20 Jun 2024 16:25:03 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1718926456; x=1719531256;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7XfksNSVifcZsxGv6eaETaFbtJmM8Uyclp22FAxA2lE=;
+        b=Vfx/SPIUfpkjJY4Pck4ndf9rtrCRiZ6V+psdqPfGQ5IbIEKg2UDPjyAWaiKzxnFrYW
+         w3YIBvbTFc+0qW7p+msdsykGL0PagkWTK/y0Hp5lle6UIUaJEgB7ezhihhEYpgpP8DxX
+         Dpf1bnqhIO0TkQWJ3KORd773MU9ygvKt5zpgpgEjo+2i7QsFsUIN2aa0JZKj0g84VwUq
+         IrSTtCIa8hdMafdkE+0Rlt0rXY+plSq4p0gDJHYxfcFZtLJKKA6WZTqDjEuCfM+HSAAN
+         PEdbaRRypxm8AYyQBjC8QGb9H2U7vfWWcJP0ssPKDfjLpHcs+Y4FUYiLB7luWUubA/S3
+         a+yg==
+X-Forwarded-Encrypted: i=1; AJvYcCVe9JaCRJB5E2UUmOaQUqz/jFm1nTnsTeTOkN9ie+KdGrJWdObbYLRcOKyV+akGHWO13GdeAwdVs5FVov3D7lmjXPOKrcNn5Q/r
+X-Gm-Message-State: AOJu0YyJn9fDOEKvO4wbwDAujiFXhxcqGggktm4BPa7mFLQc7bVURYH4
+	PV+1HiI4OQ9E0Ab2Q489npnRLwqR/U+4xrExB7hXm1B3eces4V7EEOy7T/aDpA==
+X-Google-Smtp-Source: AGHT+IE7kWnNs02QXbSIStlmhOJow1svDh0NpTLzx34/evD0hCRr64S7MEEV3tkbVh+cTtvFamswSw==
+X-Received: by 2002:a05:6a20:3ba9:b0:1b2:be25:b5b0 with SMTP id adf61e73a8af0-1bcbb4190famr7404322637.20.1718926455516;
+        Thu, 20 Jun 2024 16:34:15 -0700 (PDT)
 Received: from google.com (148.98.83.34.bc.googleusercontent.com. [34.83.98.148])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9eb3205f3sm1664945ad.76.2024.06.20.16.25.02
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7065126563esm191150b3a.101.2024.06.20.16.34.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Jun 2024 16:25:02 -0700 (PDT)
-Date: Thu, 20 Jun 2024 23:24:59 +0000
+        Thu, 20 Jun 2024 16:34:14 -0700 (PDT)
+Date: Thu, 20 Jun 2024 23:34:11 +0000
 From: Igor Pylypiv <ipylypiv@google.com>
 To: Niklas Cassel <cassel@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
 	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 2/4] ata: libata-scsi: Generate ATA PT sense data when
- ATA ERR/DF are set
-Message-ID: <ZnS6S1fukhGVWZY2@google.com>
+Subject: Re: [PATCH v1 3/4] ata: libata-scsi: Report valid sense data for ATA
+ PT if present
+Message-ID: <ZnS8c3qN21NAkrOy@google.com>
 References: <20240614191835.3056153-1-ipylypiv@google.com>
- <20240614191835.3056153-3-ipylypiv@google.com>
- <b87d51d8-5a89-480e-b229-7750c241aa6f@kernel.org>
- <ZnDfNLBwsG6zFJ4-@google.com>
- <ZnQqxTgSTDHCBDNJ@ryzen.lan>
+ <20240614191835.3056153-4-ipylypiv@google.com>
+ <ZnAUy5C-DXEuliSm@ryzen.lan>
+ <ZnDHZWZQFtUmwtwE@google.com>
+ <ZnQ7i0D4syhhI_hO@ryzen.lan>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZnQqxTgSTDHCBDNJ@ryzen.lan>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZnQ7i0D4syhhI_hO@ryzen.lan>
 
-On Thu, Jun 20, 2024 at 03:12:37PM +0200, Niklas Cassel wrote:
-> On Tue, Jun 18, 2024 at 01:13:24AM +0000, Igor Pylypiv wrote:
+On Thu, Jun 20, 2024 at 04:24:11PM +0200, Niklas Cassel wrote:
+> On Mon, Jun 17, 2024 at 11:31:49PM +0000, Igor Pylypiv wrote:
+> > On Mon, Jun 17, 2024 at 12:49:47PM +0200, Niklas Cassel wrote:
+> > > On Fri, Jun 14, 2024 at 07:18:34PM +0000, Igor Pylypiv wrote:
+> > > > Do not generate sense data from ATA status/error registers
+> > > > if valid sense data is already present.
+> > > > 
+> > > > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> > > > ---
+> > > >  drivers/ata/libata-scsi.c | 17 +++++++++++------
+> > > >  1 file changed, 11 insertions(+), 6 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> > > > index 79e8103ef3a9..4bfe47e7d266 100644
+> > > > --- a/drivers/ata/libata-scsi.c
+> > > > +++ b/drivers/ata/libata-scsi.c
+> > > > @@ -858,12 +858,17 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+> > > >  	unsigned char *desc = sb + 8;
+> > > >  	u8 sense_key, asc, ascq;
+> > > 
+> > > Like I suggested in the earlier patch,
+> > > 
+> > > can't you do a:
+> > > 
+> > > if (qc->flags & ATA_QCFLAG_SENSE_VALID)
+> > > 	return;
+> > > 
+> > > here instead?
+> > > 
 > > 
-> > Any failed ATA PASS-THROUGH command with CK_COND=1 has this issue. For example,
-> > Sending READ SECTOR(S) EXT via ATA PASS-THROUGH with CK_COND=1 to an lba
-> > that was previously corrupted by WRITE UNCORRECTABLE EXT is supposed to
-> > return "READ ERROR - LBA MARKED BAD BY APPLICATION CLIENT" but instead it
-> > returns generated "UNRECOVERED READ ERROR - AUTO REALLOCATE FAILED".
+> > We need to populate the "ATA Status Return sense data descriptor" as per SAT-5
+> > "Table 209 — ATA command results". By returning early we are skipping the code
+> > that copies ATA output fields into descriptor/fixed sense data buffer.
 > 
-> I assume that the drive generated correct sense data, but that
-> ata_gen_passthru_sense() overwrites/overwrote the sense data with
-> generated sense data based on taskfile registers?
+> We might get sense data from the drive.
+> If we use REQUEST SENSE DATA EXT, we will get SK/ASC/ASCQ,
+> we will then call scsi_build_sense_buffer() which will generate
+> sense data in either the descriptor format or the fixed format,
+> based on the D_SENSE bit, which is set in the control mode page.
+> 
+> The user can toggle this bit, see:
+> https://github.com/torvalds/linux/blob/v6.10-rc4/drivers/ata/libata-scsi.c#L3691-L3694
+> 
+> But by default it is 0:
+> https://github.com/torvalds/linux/blob/v6.10-rc4/drivers/ata/libata-scsi.c#L86
+> which means fixed format.
+> 
+> This all seems to be in accordance with
+> "Table 209 — Returned sense data with the CK_COND bit set to one"
+> in sat6r1.
+> 
+> 
+> 
+> When calling scsi_build_sense_buffer(), we supply:
+> scsi_build_sense_buffer(dev->flags & ATA_DFLAG_D_SENSE,
+>                         cmd->sense_buffer, tf.lbah,
+>                         tf.lbam, tf.lbal);
+> 
+> so we do not supply the STATUS and ERROR fields when building the sense data.
+> 
+> This seems fine, since SCSI has no knowledge of ATA status or ATA error.
+> 
+> 
+> However, for ATA-passthrough commands, ATA status and ATA error fields
+> are part of either the COMMAND-SPECIFIC information in the fixed format
+> case, or part for the descriptor format, in case of the descriptor type
+> being ATA Status Return sense data descriptor.
+> 
+> 
+> So what I think we should do:
+> 1) Keep the sense data if it exists, and fill in
+>    the ATA status and ATA error at the correct offset (depending on if
+>    the existing sense data is in fixed format or descriptor format).
+> 2) If there doesn't exist any sense data, generate it, including the
+>    ATA passthru command specific fields (ATA status and ATA error).
+>    This is basically what ata_gen_passthru_sense() does today.
 >
 
-Yes, that is correct.
+Yes! That's exactly what I was trying to do with the horrible empty if in
+ata_gen_passthru_sense(). Factoring out ATA status and ATA error population
+into a separate function makes the code more readable and less error-prone.
 
-Thanks,
+I'll make the change in v2.
+
+Thank you!
 Igor
- 
+
+> 
+> So something like this:
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index bb4d30d377ae..a0687eb28ff7 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1645,9 +1645,17 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>          * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
+>          */
+>         if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
+> -           ((cdb[2] & 0x20) || need_sense))
+> -               ata_gen_passthru_sense(qc);
+> -       else if (need_sense)
+> +           ((cdb[2] & 0x20) || need_sense)) {
+> +               if ((qc->flags & ATA_QCFLAG_SENSE_VALID)) {
+> +                       /*
+> +                        * ATA PASS-THROUGH commands also need to fill in the
+> +                        * command specific ATA status and ATA error fields.
+> +                        */
+> +                       ata_fill_passthru_specific_sense_fields(qc);
+> +               } else {
+> +                       ata_gen_passthru_sense(qc);
+> +               }
+> +       } else if (need_sense)
+>                 ata_gen_ata_sense(qc);
+>         else
+>                 /* Keep the SCSI ML and status byte, clear host byte. */
+> 
 > 
 > Kind regards,
 > Niklas
+> 
+> 
+> 
+> 
