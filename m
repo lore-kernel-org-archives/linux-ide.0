@@ -1,124 +1,163 @@
-Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA5041A2FDA
-	for <linux-ide@vger.kernel.org>; Mon, 24 Jun 2024 22:12:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33CF713A416;
+	Tue, 25 Jun 2024 06:19:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719267163; cv=none; b=fCVMm0iB3uDBgGnA9LfL7msOoL/+Jv6rxjAisQy9miB/TdlPPVtLkogqywaJgmKIFWOdGwwzfa8tL9I5Igj5DAIa8fqoKh1ZGiiV6suQwUzHrMZ5sEbNJVyo37CRnXiCL/lUydtw2afBIpfNuXd48jBdc88KH1e3hTbCRl/tFOg=
+	t=1719296380; cv=none; b=HEIxub3bdK1PQw9i+n7Vz/JHkvbPfjLg1px7x4jmR3ZOK+r0yWPy4KqNKJaWWWXpBcrVmCr3uwESgadzpSnAgVWyLblrjxrxq881xrfl8jZg7aFE2JcLggfZb5oZCLfaIbsBneApz2np4FCn3fbAY55I9OJD/kKSZ9+dlVlAlrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719267163; c=relaxed/simple;
-	bh=pfz7uu+jOOwMjwmY/w6sU4kNgauq6UsTyFTXS6nG/Ww=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=fvK4LHPKAjhEo5F+5YNCGtMM3QmYX5wFnMx5X+ldCGZDVcuXQCxzvbUppJD5n93VrrxagVM1NlVXsdDXLxEk52pwNHKn9PMGB8RwPul1H1nb5tdlUt1ed59t/74nA6ewRMuVfCmrjPLNPInjAqmtYnAhGubpdFPIubWHpUZip3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PCTXrJ4+; arc=none smtp.client-ip=209.85.128.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+	s=arc-20240116; t=1719296380; c=relaxed/simple;
+	bh=msRoBibW4fqIvLPDck5BFgKWyJm9F3UElLNz3bzP4i8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fiak84dvh2p2Dp5ZXLHGDQou6N5SgVtpXI3dNtNyPNfN2fPLJGWD09BlZbiZHBIOpGOG7pBWCVwQma3P0KdKegzJaAK4+LBJZ3o88jg2xh3ADrIdKw2FfaXU5UxmdUEj4l8dRGUAUNAD8yXuA2ISvnDtrWLtaovBLolg5ZYl5ZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=akwTeQPT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=prVLv3hW; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=akwTeQPT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=prVLv3hW; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PCTXrJ4+"
-Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-643acc141cbso21745757b3.1
-        for <linux-ide@vger.kernel.org>; Mon, 24 Jun 2024 15:12:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1719267161; x=1719871961; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PD3uQGUFz5zxx7acHrfAbDYiKppPlFoCwrVRy3QI4Ug=;
-        b=PCTXrJ4+c3s1wYTJ0jMJH4fTwET79Uc9+6+YyBtiSPJgLwGpHxF+0yhgh+Eah7FLKH
-         KOisIfdMC82DaUkW0+v6+VVP50+xLmkmphu8+JZA8FueYtbnFZndRTAj0y26pzY/a59G
-         Fy126dxHyAFHRU7DlAOgrY0A8kr/diZFlFDCwzXTbby4FRPHcJQzjtrg0K3hpuyEt/CU
-         a9lwZ1APRIkREOw7+/gaEc26/SZghVK6Im+lW8ev0pKACC1mbif6/s04ALG/t+oyZgmP
-         ZiWyjVbL9h0XY7rgU0rVs6VdRgtwfscv4gYrHazLDZ/A4Ef/nJEFQVqLj2YuxAvetdRU
-         CHGw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719267161; x=1719871961;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PD3uQGUFz5zxx7acHrfAbDYiKppPlFoCwrVRy3QI4Ug=;
-        b=YMnR/KRB4AaouNmyViwC6PkUk/YuXZuOJSH1dAbjHuIZOq4BJ2lD+TyU74Fn44OQvf
-         6iMDaELHGeMyO0/81G5XL9TQ4IwgZFqpq0Qi9qLSalYoF2gVZEUJ3o5QnqP09tr5g9Wa
-         5V0pywkVk11PeIwhuNwb7q12l+7HJjZ8/g/Kzu7DQN6I+zrWhKjgC/Mna3dkFqMZM4/W
-         j0UlRwnOBjydifhQgRROWz02rtfKrqGeoxRdRrZiKXFPZqirJJzs/Zg6i7HJ4YqERehY
-         g73hxz0/JcR9zcaOM3A+FM5FhwN2X9SrucjGysTghJ77UzFnNnqtzEAoCRy55+/QzFay
-         C7Yw==
-X-Forwarded-Encrypted: i=1; AJvYcCXyc6Zul80de8SZtWbvV1HJtviZ4j3GiYydShIxIiMWYtn4S6ynvRXODYwREYFndyTIe0Wi1NA4PnygEAP309faF3a53tCZrO07
-X-Gm-Message-State: AOJu0YyLTG7w12jV7UU4plYGbI9IMr3zurcmxvNANacJ381M2c0HnCIs
-	972oH+CMbU4W19kYpq/ukIFqdawDBwRnov/e79zbMPIS+o9LP0RrSC5uIjeFVPokvTJ8AwQSA7E
-	81SHpD8m5Gw==
-X-Google-Smtp-Source: AGHT+IG855a4XCLpwisoxKNjnI+nzvVm5c+AAl7kfh4POpZN1c2KNve/pvrtKYJHgwmNI/LedE7U9ADzvsbazw==
-X-Received: from ip.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:57f3])
- (user=ipylypiv job=sendgmr) by 2002:a81:9208:0:b0:631:4588:4acc with SMTP id
- 00721157ae682-64242491f26mr370887b3.0.1719267160788; Mon, 24 Jun 2024
- 15:12:40 -0700 (PDT)
-Date: Mon, 24 Jun 2024 22:12:10 +0000
-In-Reply-To: <20240624221211.2593736-1-ipylypiv@google.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="akwTeQPT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="prVLv3hW";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="akwTeQPT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="prVLv3hW"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id C1FF01F84F;
+	Tue, 25 Jun 2024 06:19:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719296372; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5e0/4cJzzROCJLbTOZ3ywMCSw35ZD3sbRO990xPbywI=;
+	b=akwTeQPTuw7/0gPxtBUnfRppm1J/2br1+zBSU9XcCeb9OrJ9eFHnT81AxAoOflaEB+VV3U
+	oqtF3rrFjDGP3ncezN1aLUT8FbsMGsDBesPA2mctF30RHqAj2rKMXTvBBWJCEA6C+pZvlK
+	hD/C/6pxubcgKGoYa3JP5E5AbPBhA3w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719296372;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5e0/4cJzzROCJLbTOZ3ywMCSw35ZD3sbRO990xPbywI=;
+	b=prVLv3hWuzXZCunXhgLV59FCUUfmRBWDBvtKSuxLm3Vqi+ru3gmfFYfSJyq2Uy3MxVtEN1
+	jMfTPe45/UWyPrCQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=akwTeQPT;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=prVLv3hW
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719296372; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5e0/4cJzzROCJLbTOZ3ywMCSw35ZD3sbRO990xPbywI=;
+	b=akwTeQPTuw7/0gPxtBUnfRppm1J/2br1+zBSU9XcCeb9OrJ9eFHnT81AxAoOflaEB+VV3U
+	oqtF3rrFjDGP3ncezN1aLUT8FbsMGsDBesPA2mctF30RHqAj2rKMXTvBBWJCEA6C+pZvlK
+	hD/C/6pxubcgKGoYa3JP5E5AbPBhA3w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719296372;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5e0/4cJzzROCJLbTOZ3ywMCSw35ZD3sbRO990xPbywI=;
+	b=prVLv3hWuzXZCunXhgLV59FCUUfmRBWDBvtKSuxLm3Vqi+ru3gmfFYfSJyq2Uy3MxVtEN1
+	jMfTPe45/UWyPrCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4F7B713A9A;
+	Tue, 25 Jun 2024 06:19:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id v7iTD3Rhema2CgAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 25 Jun 2024 06:19:32 +0000
+Message-ID: <d51930d9-c0c8-4d0b-8131-bce278c24db8@suse.de>
+Date: Tue, 25 Jun 2024 08:19:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/6] ata: libata-scsi: Do not overwrite valid sense
+ data when CK_COND=1
+Content-Language: en-US
+To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
 References: <20240624221211.2593736-1-ipylypiv@google.com>
-X-Mailer: git-send-email 2.45.2.741.gdbec12cfda-goog
-Message-ID: <20240624221211.2593736-7-ipylypiv@google.com>
-Subject: [PATCH v2 6/6] ata: libata-scsi: Check ATA_QCFLAG_RTF_FILLED before
- using result_tf
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="UTF-8"
+ <20240624221211.2593736-2-ipylypiv@google.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240624221211.2593736-2-ipylypiv@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	XM_UA_NO_VERSION(0.01)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: C1FF01F84F
+X-Spam-Flag: NO
+X-Spam-Score: -4.50
+X-Spam-Level: 
 
-qc->result_tf contents are only valid when the ATA_QCFLAG_RTF_FILLED flag
-is set. The ATA_QCFLAG_RTF_FILLED flag should be always set for commands
-that failed or for commands that have the ATA_QCFLAG_RESULT_TF flag set.
+On 6/25/24 00:12, Igor Pylypiv wrote:
+> Current ata_gen_passthru_sense() code performs two actions:
+> 1. Generates sense data based on the ATA 'status' and ATA 'error' fields.
+> 2. Populates "ATA Status Return sense data descriptor" / "Fixed format
+>     sense data" with ATA taskfile fields.
+> 
+> The problem is that #1 generates sense data even when a valid sense data
+> is already present (ATA_QCFLAG_SENSE_VALID is set). Factoring out #2 into
+> a separate function allows us to generate sense data only when there is
+> no valid sense data (ATA_QCFLAG_SENSE_VALID is not set).
+> 
+> As a bonus, we can now delete a FIXME comment in atapi_qc_complete()
+> which states that we don't want to translate taskfile registers into
+> sense descriptors for ATAPI.
+> 
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> ---
+>   drivers/ata/libata-scsi.c | 158 +++++++++++++++++++++-----------------
+>   1 file changed, 86 insertions(+), 72 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-For ATA errors and ATA PASS-THROUGH commands the ATA_QCFLAG_RTF_FILLED
-flag should be always set. Added WARN_ON_ONCE() checks to generate
-a warning when ATA_QCFLAG_RTF_FILLED is not set and libata needs to
-generate sense data.
+Cheers,
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
- drivers/ata/libata-scsi.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e5669a296d81..7a8a08692ce9 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -246,6 +246,9 @@ static void ata_scsi_set_passthru_sense_fields(struct ata_queued_cmd *qc)
- 	struct ata_taskfile *tf = &qc->result_tf;
- 	unsigned char *sb = cmd->sense_buffer;
- 
-+	if (WARN_ON_ONCE(!(qc->flags & ATA_QCFLAG_RTF_FILLED)))
-+		return;
-+
- 	if ((sb[0] & 0x7f) >= 0x72) {
- 		unsigned char *desc;
- 		u8 len;
-@@ -928,6 +931,9 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
- 	unsigned char *sb = cmd->sense_buffer;
- 	u8 sense_key, asc, ascq;
- 
-+	if (WARN_ON_ONCE(!(qc->flags & ATA_QCFLAG_RTF_FILLED)))
-+		return;
-+
- 	/*
- 	 * Use ata_to_sense_error() to map status register bits
- 	 * onto sense key, asc & ascq.
-@@ -971,6 +977,10 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
- 		ata_scsi_set_sense(dev, cmd, NOT_READY, 0x04, 0x21);
- 		return;
- 	}
-+
-+	if (WARN_ON_ONCE(!(qc->flags & ATA_QCFLAG_RTF_FILLED)))
-+		return;
-+
- 	/* Use ata_to_sense_error() to map status register bits
- 	 * onto sense key, asc & ascq.
- 	 */
+Hannes
 -- 
-2.45.2.741.gdbec12cfda-goog
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
