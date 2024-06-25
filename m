@@ -1,41 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 441AA6E614
-	for <linux-ide@vger.kernel.org>; Tue, 25 Jun 2024 08:36:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42871487EF;
+	Tue, 25 Jun 2024 08:52:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719304600; cv=none; b=b9z4sHqDH2lrVh+6rZg6wnlLi0zuhY3kbao6zklhdZ2EM/7v1c8b6e8X+K97AqFRc61sv2ksxgw0roLIa3pbfHZFfH2RneV34Lcl6RAVUhbcDkC9S01FDS/il6HJ2m9WMxEBmVnIPclrrHGsoCh2j+kbat+fH9gc85mZB6/JxZI=
+	t=1719305527; cv=none; b=KFngzeUEbrdhCpA2UpofXPQ5a+XhWK+jE8ZvALaZhJAQZ7Zh5E13Tw0Qm19wXX2VmDuTeyd/4pMv5sjpVWWmJVToBfUVL06I6ozWIamTKFF3/RNukiqo5QLl+GscPkcIEwlOpRJbvvKimhnUfOgcm4WrL74UO8hoai+WVgcMtF4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719304600; c=relaxed/simple;
-	bh=sh7X2Vgvv3PxowRN5xfnBxlTKFwz4fTUhmmNCAjOwsg=;
+	s=arc-20240116; t=1719305527; c=relaxed/simple;
+	bh=4pe60kbKwrC7TGbA702p6mSSM0WZeEPXA2cJPlqiBy4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S7wvCSx1HVZGXwNl120iAOK6DUEazkuKPcQXTXDkBPJ3Qt0kE0hKS6jMKBwJ27LYnp2P1qCqa79reZwHnn1WOW34vSKy6DWD7FOKyPnktDKUjHRcpXdkjVokYOz8WKhSRsMPiuJT69Xakfknqw9bavAqhd91RcdS/IPxLFCy8EA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGG0hM5Y; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=MLCgYR09IGlK1fZaxzWvuojXENZUhCefbt4u1HTdxNW38tVesxDTNKuCqZ0UEWz+P9Hc8PRQ0WOjSiA6dvNwy92tGrRiYMNRrNQESnftR6pDZnG00X/HV5tFNYGe61CCSMBxi5ECkeqR/cM4rOg9gW9hWLjW8rnJ5uD0K/CUjfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OX8WRsVh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGG0hM5Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88829C32786;
-	Tue, 25 Jun 2024 08:36:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OX8WRsVh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E638BC32781;
+	Tue, 25 Jun 2024 08:52:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719304599;
-	bh=sh7X2Vgvv3PxowRN5xfnBxlTKFwz4fTUhmmNCAjOwsg=;
+	s=k20201202; t=1719305527;
+	bh=4pe60kbKwrC7TGbA702p6mSSM0WZeEPXA2cJPlqiBy4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HGG0hM5YzFsf83/bYTz4eT6w/eFemKxzqhtjmPLTfVJF1Z8iVBb1qhMQhbeVoLcqO
-	 J4gtVzWsHmA4DkSc8LpXjcEl2x6pCYHulenO3DVD4ILa+ZkrXPXzPVf4ecR9lexaOv
-	 hHY/yDEUlbxFD9UwCoSwMejWO/GT2pMUZ7XMmuN35uDRbm8ItIQD9g3RonsXBcjE3D
-	 CbDnkSWL53SRFV3/WwwK/EJOjdgpC24cJKtKom8hxtliltKidcxlqWLdJxJ0K+Fs7p
-	 HfT01uCNpG0OL/ZJAp1zy3C0csOjX72vHZjuBdOxebBto2isczsTefZwY8YKXXaPCF
-	 mXImAhvbGTgSw==
-Date: Tue, 25 Jun 2024 10:36:35 +0200
+	b=OX8WRsVhci9jQbvXFHSbvGlv3mJIhsSBJvYsoMBm6z5QxQW8eiePKH1rTrnmV5C7K
+	 Dl+TA2ei98RusxmsYRVQFGd2Z1B1YC5Ywv8A0UGzPMzgjfRiPj9lALo0GWOaUuxxeX
+	 5j2iE/SihoZQBvT3lZhnDkF8OvWCNQ7YFDk2n/uO0Ch8ml2wu7l+cvnDoWcs8D2fL5
+	 mZGUxFa3qo3cv6944qyrlS79hqNHmNL4AqCD8w1AV0KF0TtX2SL4tvP5lugXcMngiF
+	 iQ8Oj7IvrAxMAPJgtaWFQy1RMYQGRj/oDxqcrTF43G//UTiemwvpzIBv66EH/ahYTK
+	 suquxkZiYAaVw==
+Date: Tue, 25 Jun 2024 10:52:03 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Alessandro Maggio <alex.tkd.alex@gmail.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, lp610mh@gmail.com, stable@vger.kernel.org,
+	Tkd-Alex <alex.tkd.alex@gmail.com>
 Subject: Re: [PATCH] ata: libata-core: Add ATA_HORKAGE_NOLPM for all Crucial
  BX SSD1 models
-Message-ID: <ZnqBkyxPp5IPARvl@x1-carbon.wireless.wdc>
+Message-ID: <ZnqFM9oulPGKqytO@ryzen.lan>
 References: <20240624132729.3001688-2-cassel@kernel.org>
  <82e310a4-5668-4edf-b3a8-2c7898a7c4cb@kernel.org>
- <CAOHHr1_3rigY3vM03uVkfpvbmNbvcPbxYyKBdktXkKsQBnS_8Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -44,15 +44,38 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOHHr1_3rigY3vM03uVkfpvbmNbvcPbxYyKBdktXkKsQBnS_8Q@mail.gmail.com>
+In-Reply-To: <82e310a4-5668-4edf-b3a8-2c7898a7c4cb@kernel.org>
 
-On Tue, Jun 25, 2024 at 08:52:45AM +0200, Alessandro Maggio wrote:
-> Hello guys, I've updated my full name on bugzilla.kernel.org, thank you for
-> the patch.
-> There's anything else that I can do?
+On Tue, Jun 25, 2024 at 06:47:32AM +0900, Damien Le Moal wrote:
+> On 2024/06/24 22:27, Niklas Cassel wrote:
+> > We got another report that CT1000BX500SSD1 does not work with LPM.
+> > 
+> > If you look in libata-core.c, we have six different Crucial devices that
+> > are marked with ATA_HORKAGE_NOLPM. This model would have been the seventh.
+> > (This quirk is used on Crucial models starting with both CT* and
+> > Crucial_CT*)
+> > 
+> > It is obvious that this vendor does not have a great history of supporting
+> > LPM properly, therefore, add the ATA_HORKAGE_NOLPM quirk for all Crucial
+> > BX SSD1 models.
+> > 
+> > Fixes: 7627a0edef54 ("ata: ahci: Drop low power policy board type")
+> > Cc: stable@vger.kernel.org
+> > Reported-by: Tkd-Alex <alex.tkd.alex@gmail.com>
+> 
+> We need a real full name here, not a user name... So if Alex is not willing to
+> send his full name, please remove this.
 
-If you know how to compile your own kernel, it would be very appreciated
-if you could test that the patch actually solves your problem.
+I disagree.
+
+The Signed-off-by tag needs a real name, but if you take a dig through the
+git log, you will see that the Reported-by tag is not always a real name.
+
+E.g. the benevolent dictator for life used a non-real name for Reported-by
+here:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=6022f210461fef67e6e676fd8544ca02d1bcfa7a
+
+Anyway, now when we have a real name, I will send a V2.
 
 
 Kind regards,
