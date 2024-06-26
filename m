@@ -1,78 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from forward205a.mail.yandex.net (forward205a.mail.yandex.net [178.154.239.88])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDB0812E40;
-	Wed, 26 Jun 2024 19:31:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E44016A928;
+	Wed, 26 Jun 2024 21:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.88
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719430261; cv=none; b=fwpIZSOGPww0cPPdJh0K/ogOWSYOxhWX+JqHEAsVLM11RUC3nOUh5ShaqIRDs4IYuhOV3fFovWxZrdcTNPQKEAeAqletCgA49ytQLIaC++g0Tw8FAICDj192xbaQMxEnJQZ4XPuNqsjw5tEdM72FJBSVYOna7GERRHXktM7d/Ag=
+	t=1719436823; cv=none; b=muBHW+roUSNXi6/0T98KqdRzE7mkQq2vMKa/eqYw/bh8kaPQIPXcGSPnw3spyjCOPt9VPMhqOu2q/gW8yqjBjyTeRnNEWVXsxz5gUSKdk6ddd8I/D6PBzs6J938zGk7kaMCM+ej2lV7qjZdhv0sa9g2ztHKBNZg6fe8mjzN7X7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719430261; c=relaxed/simple;
-	bh=gfuDKbZMtEaInwEhR5RxgMY1M2sRvFao35EHuUk7Lpk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gUFKDqswnEKWVZuCsCqNO56EQ9U8KU86fop91khwngq6P0wPlXrbzRQ5QoQw9kDNaNHtXqqNBIzmpd1zeSokNIDnqem4Kn9y4lXYlDyV7RqAIAQf1YAzpNHETZ/NVbXmE8jpNXExfUGEG39ozAagT+t23KwKBF4tNKUyIyUgdfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AaHBCa1m; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719436823; c=relaxed/simple;
+	bh=SIDe4m7k4he3g8/b/GoPMpMXk5vUpHz1qP3f4e8/Kds=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=aqbQfhli13FLd4g7uhjEbZ3BbtVRwuZJeGG+/pTu8wKW5Ig1zh9t56QvnYSiMZ7aY37vaH3k9KoqXWyJZkwD9TMXyXNhQwQW698btveeUGYGwhR+b3nm7A9cvu9tfJ2XywVEKYcv0EgqqdgZuHDV6rJy6v0yVv40Wi86B5nJoTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=W7Dm6rYw; arc=none smtp.client-ip=178.154.239.88
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AaHBCa1m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B16DDC116B1;
-	Wed, 26 Jun 2024 19:30:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719430260;
-	bh=gfuDKbZMtEaInwEhR5RxgMY1M2sRvFao35EHuUk7Lpk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AaHBCa1mTG8jbfTFjPjgL3Ahiezt4eW0bTpEV+Y1TBpLe30GwxRRfO9PgcL5vAHq5
-	 9b2UnbBDEPXt8evhJjIJoq+9RONHUxfWd2Hoi4qJkXor8Al5RfoV92mANWpVlEa5re
-	 hh+GbWXIGjEcuAPe1/SN4Bl7JbJZ+8oGKMOJqdUzN/MKbmOrMYW1OU8F5HrdTROtSQ
-	 dzprGsJ9W0lSUNMibzEDhvMzlvuRjLzCfEHlZ3EMacJ8VwKrYRnsrpPK8auOjYHJ4P
-	 6v9VY+R0ECDJr8psix8PEhYUXZCL5XQFFFmilY+86VCWdEp8YB71Wb8uxrffClkvgt
-	 s7Y69Z2lnKhDw==
-Date: Wed, 26 Jun 2024 21:30:52 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 07/13] ata: libata-core: Remove support for decreasing
- the number of ports
-Message-ID: <ZnxsbCA6BgQti3tb@ryzen.lan>
-References: <20240626180031.4050226-15-cassel@kernel.org>
- <20240626180031.4050226-22-cassel@kernel.org>
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="W7Dm6rYw"
+Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d100])
+	by forward205a.mail.yandex.net (Yandex) with ESMTPS id 835336986D;
+	Thu, 27 Jun 2024 00:14:18 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-78.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-78.myt.yp-c.yandex.net [IPv6:2a02:6b8:c00:27aa:0:640:9471:0])
+	by forward100a.mail.yandex.net (Yandex) with ESMTPS id 8CF6F46C7A;
+	Thu, 27 Jun 2024 00:14:09 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-78.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id wDYBEa1MdOs0-gY2WGPwU;
+	Thu, 27 Jun 2024 00:14:09 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1719436449; bh=7/sJn937goh/sUopg6CvXF8yyAafNE/SwUIKRZRjxnA=;
+	h=Message-Id:Date:Cc:Subject:To:From;
+	b=W7Dm6rYw5pQTacv0r/jaH/SCoU/Sv4UpxWkUbdSIWcq6KB6a4BlgM4On3eMDX9ApR
+	 oj2hfXQMG7e1tjcb1xMlE2znXYuU4v0mVMvhcwz9egI9uxGAVIhDH3hBTX3Qxi8PBM
+	 gT0fOTZhF1fb1QWRw7yW1MJKUmqayh7FlFCmbwzs=
+Authentication-Results: mail-nwsmtp-smtp-production-main-78.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Mikhail Ukhin <mish.uxin2012@yandex.ru>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>
+Cc: Mikhail Ukhin <mish.uxin2012@yandex.ru>,
+	stable@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Pavel Koshutin <koshutin.pavel@yandex.ru>,
+	lvc-project@linuxtesting.org
+Subject: [PATCH v4 5.10/5.15] ata: libata-scsi: check cdb length for VARIABLE_LENGTH_CMD commands
+Date: Thu, 27 Jun 2024 00:13:58 +0300
+Message-Id: <20240626211358.148625-1-mish.uxin2012@yandex.ru>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240626180031.4050226-22-cassel@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 26, 2024 at 08:00:37PM +0200, Niklas Cassel wrote:
-> @@ -5908,12 +5903,13 @@ int ata_host_register(struct ata_host *host, const struct scsi_host_template *sh
->  		return -EINVAL;
->  	}
->  
-> -	/* Blow away unused ports.  This happens when LLD can't
-> -	 * determine the exact number of ports to allocate at
-> -	 * allocation time.
-> +	/*
-> +	 * For a driver using ata_host_register(), the ports are allocated by
-> +	 * ata_host_alloc(), which also allocates the host->ports array.
-> +	 * The number of array elements must match host->n_ports.
->  	 */
->  	for (i = host->n_ports; host->ports[i]; i++)
-> -		kfree(host->ports[i]);
-> +		WARN_ON(host->ports[i]);
+Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
+ata_scsi_pass_thru.
 
-Nit:
-Even though we replace the kfree() with a WARN_ON() here, the strictly
-correct thing would have been for the earlier patch in this series:
-"ata,scsi: libata-core: Add ata_port_free()" to have replaced the kfree()
-with ata_port_free(), and then for this patch to replace the ata_port_free()
-with a WARN_ON().
+The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
+cmd field from struct scsi_request") upstream.
+Backporting this commit would require significant changes to the code so
+it is bettter to use a simple fix for that particular error.
 
+The problem is that the length of the received SCSI command is not
+validated if scsi_op == VARIABLE_LENGTH_CMD. It can lead to out-of-bounds
+reading if the user sends a request with SCSI command of length less than
+32.
 
-Kind regards,
-Niklas
+Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+
+Signed-off-by: Artem Sadovnikov <ancowi69@gmail.com>
+Signed-off-by: Mikhail Ivanov <iwanov-23@bk.ru>
+Signed-off-by: Mikhail Ukhin <mish.uxin2012@yandex.ru>
+---
+ v2: The new addresses were added and the text was updated.
+ v3: Checking has been moved to the function ata_scsi_var_len_cdb_xlat at
+ the request of Damien Le Moal.
+ v4: Extra opcode check removed.
+ drivers/ata/libata-scsi.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index dfa090ccd21c..38488bd813d1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3948,7 +3948,11 @@ static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
+ 	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	const u8 *cdb = scmd->cmnd;
+ 	const u16 sa = get_unaligned_be16(&cdb[8]);
+
++	if (scmd->cmd_len < 32)
++		return 1;
++
+ 	/*
+ 	 * if service action represents a ata pass-thru(32) command,
+ 	 * then pass it to ata_scsi_pass_thru handler.
+--
+2.25.1
