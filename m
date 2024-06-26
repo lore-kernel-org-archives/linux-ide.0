@@ -1,158 +1,144 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC8C1113
-	for <linux-ide@vger.kernel.org>; Wed, 26 Jun 2024 00:30:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE21613C8F5;
+	Wed, 26 Jun 2024 04:45:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719361842; cv=none; b=O8N/xVgXh2aEZdlLxb0yrnpKdB77jxeYiKExZAQkYHpcc0HHJuP82+2Tj4psVl4WbgnScJpxAap5A/IgCZUkLSkayA7B1DZZdzz7VWpO3vQuPCnTmqrO5HjX925T/xnXdJw6kFIWLeiWzQYhad7ZeYMqiG0DYgQ2mWvCMZcaLCM=
+	t=1719377106; cv=none; b=uLtjx9o9qpEWCmQTqSw64o2nxF5KqwLzFETlNcWybMfjzPCbXkqGsM9yqwM5F+dGHmEFrnzY+XdE5lHg4Eb1EVQByqeV0G7N4yZbfrnBDLuS+O0KjW980mVsZRL7WXvf8bvj0tFRdZyGsfTO8OQJOFg+FvZfA+Zz2qqCzT2xlHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719361842; c=relaxed/simple;
-	bh=//lbaRqY5eoLuH4cVGLi2EsZ7aNqiiSDMS7zZVy2wIo=;
+	s=arc-20240116; t=1719377106; c=relaxed/simple;
+	bh=b4tjB3Gz4106Xs25MV5roiwYoTYKxMda4kHvApCkAxg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QM9jltv2yTND5j+mPEGmiCre79llOQ7rwWeyXe0bZA7qJe5M+msNQLGR509x+Axs/V7myjheV88r65A0aUSh/6zNvdH/oD6luGmd82Dma4wQuVO/d1YNB2vBpbc7Mcu//DGCmvD9Y0O5Ah6xiVvmVIPokqn+yGqv8R5GZYGYEp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HVhVmB4n; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=K91Dn+lh5phkKKWNXWtrtiWbAxhmMnSvtd4jfXN2NhiAbXUSKttkh/xQo9b239Rkgvo6XdVmuqcAm1aQJhGNZzmk5IMPYuG+bsQV7DHlP+ywCykHBdndwutbZSdSfu4qM209L7jEYMcwFJY6AxduXsWpWtVVr5ZfBO7K7OxQbOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CxTzITJE; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HVhVmB4n"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2c7dd54d3d2so4934538a91.2
-        for <linux-ide@vger.kernel.org>; Tue, 25 Jun 2024 17:30:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1719361841; x=1719966641; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=i23/JHna8Kw5DlU8qzmRWS+LzRQQ+oAyxg9Kg6RIE+I=;
-        b=HVhVmB4nMUueVIppBPYhu3oj2poxdny/dxItr7vGadnFfT7Vs9vDkpXjfwf8L99qhT
-         D4lo9VXkZ6z48bWMUI8BcWzGwaW+HN8seLhz0g68GFqK2jwRapmrrCXgpY/wa8hQpJ1P
-         I4XwZxgVbxbZEnfk0Cy9S810GcEzOfSfvje6tddHHN9nZRiuCKAFrVkvh0Y/Rft1VPEN
-         9h2JbJeTtO6qA/ZBW40qtk9acmL2gBuOpfQFpQblO3+RpZMdFvHBmiVvejHLZFj4Ekbu
-         B5ZxOjnfH/IbwdCiUWAivZMyyNfGD7Cq/rDrbfsZXvka8FN4jxmy2Lzvw9Mm3Lc55ILs
-         EckQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719361841; x=1719966641;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=i23/JHna8Kw5DlU8qzmRWS+LzRQQ+oAyxg9Kg6RIE+I=;
-        b=P7/1/F0b2ZRqfUp33/8gupMmWUZ3dITebZ+3J2U7mGLhrD9dZHGHWg/9QISwg4CSW5
-         0ZWttmS5kr5D27OeGU5kk7Px+1RtcZKiLMdKW4RU52mehO7o9T8Kna28rPoS1S9JCPbL
-         veViDhhQNXRB+tbVeix8oTWJJFD5qdxnQllKX6jQSnKGT5DwlZYXuXxXRP00C44Oo7HU
-         qyHgUogt2EWHyEZOp4HUD3B6yeatUzG+g/+4VIaUUjET/TGZWtyEMeftt+2Hj9zBcnI+
-         Cm2yZ+KScKYkZ1TBBqvHWSQ/ZJ4HxuytpYvDziiNajCWd84hIcHLpCklmuZ9t9ztBLLp
-         XHpg==
-X-Forwarded-Encrypted: i=1; AJvYcCUkX8XakB44T9uJCI6lyGnIQ+FRIKZcP+rELjgBfvzB4GroPZAIMX7EYlm1aV2leiOqPIuQhIwozz7aNORfPyKNT7t6k/+nF5pH
-X-Gm-Message-State: AOJu0YwD4EtxqgXr2GnqCqZPpNr6PjbIrFHGJ/aVWaRPH0DKz+jgyy0p
-	Q8CKyTd5UNYya9SRNrzMnyK61Sm/4jJ0FlXFCsoUmu1k12tI8zqJ2mfmDE4wAA==
-X-Google-Smtp-Source: AGHT+IFx/AHTzD88KwcwaUMpPa/wWT49rpSS1KTboIK2UJ56CegkPm+jg5af9OdvUO9x64xl23dIbw==
-X-Received: by 2002:a17:90b:4f8c:b0:2c7:aafb:8e3c with SMTP id 98e67ed59e1d1-2c861246c21mr8421073a91.18.1719361840450;
-        Tue, 25 Jun 2024 17:30:40 -0700 (PDT)
-Received: from google.com (148.98.83.34.bc.googleusercontent.com. [34.83.98.148])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c8d81d29desm234795a91.53.2024.06.25.17.30.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Jun 2024 17:30:39 -0700 (PDT)
-Date: Wed, 26 Jun 2024 00:30:35 +0000
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CxTzITJE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1719377105; x=1750913105;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=b4tjB3Gz4106Xs25MV5roiwYoTYKxMda4kHvApCkAxg=;
+  b=CxTzITJEkmhy8zH6EyxzKyhizGz5X0tlpq7dQPSnPwCjmaxffx49Lc3j
+   kBlO7w9L9RBT36rFjYhJLCMZ3cpDYShm9Dc26dGgh+R5Vg0334lmkW0UU
+   FeadkJ4bmwO8fpxB9kXWb4MFGATa62bply/ghSryXSGGsDKVrs3iySc9a
+   GeHYdJs2Lqi2iYqcr6UlpqpvooBnVe4Tfvj4ZYREAH9IZucxmRseuRFKI
+   YN5uGHCZC7WAp5Il1E9HFdmFVxqCCaTySGI4MTv8pKAlpIKquRSGCkw08
+   0Yxuu72ic+6u5vkTzCphOAcGvsv6DYWIdR4Hh+OLhu/1NEzux9+992IZ+
+   Q==;
+X-CSE-ConnectionGUID: W8suKS/3SHaexdEmMc04zA==
+X-CSE-MsgGUID: JT9+FKQIRmCWmwqWxuPUIw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11114"; a="33883200"
+X-IronPort-AV: E=Sophos;i="6.08,265,1712646000"; 
+   d="scan'208";a="33883200"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jun 2024 21:45:04 -0700
+X-CSE-ConnectionGUID: Cp96gcJZR5i9gExEGaZ0NQ==
+X-CSE-MsgGUID: j952p+kxQmOGT5gLSUN1yA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,265,1712646000"; 
+   d="scan'208";a="48456313"
+Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
+  by fmviesa004.fm.intel.com with ESMTP; 25 Jun 2024 21:45:00 -0700
+Received: from kbuild by 68891e0c336b with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sMKWf-000Ezu-2k;
+	Wed, 26 Jun 2024 04:44:57 +0000
+Date: Wed, 26 Jun 2024 12:44:23 +0800
+From: kernel test robot <lkp@intel.com>
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: oe-kbuild-all@lists.linux.dev, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 6/6] ata: libata-scsi: Check ATA_QCFLAG_RTF_FILLED
- before using result_tf
-Message-ID: <ZnthK-NjkSgIiGiE@google.com>
-References: <20240624221211.2593736-1-ipylypiv@google.com>
- <20240624221211.2593736-7-ipylypiv@google.com>
- <7d085940-2ad1-4f44-83bb-33d852e80da0@suse.de>
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 7/7] block: move dma_pad_mask into queue_limits
+Message-ID: <202406261229.rnOxqhqJ-lkp@intel.com>
+References: <20240625110603.50885-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7d085940-2ad1-4f44-83bb-33d852e80da0@suse.de>
+In-Reply-To: <20240625110603.50885-8-hch@lst.de>
 
-On Tue, Jun 25, 2024 at 08:26:59AM +0200, Hannes Reinecke wrote:
-> On 6/25/24 00:12, Igor Pylypiv wrote:
-> > qc->result_tf contents are only valid when the ATA_QCFLAG_RTF_FILLED flag
-> > is set. The ATA_QCFLAG_RTF_FILLED flag should be always set for commands
-> > that failed or for commands that have the ATA_QCFLAG_RESULT_TF flag set.
-> > 
-> > For ATA errors and ATA PASS-THROUGH commands the ATA_QCFLAG_RTF_FILLED
-> > flag should be always set. Added WARN_ON_ONCE() checks to generate
-> > a warning when ATA_QCFLAG_RTF_FILLED is not set and libata needs to
-> > generate sense data.
-> > 
-> > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> > ---
-> >   drivers/ata/libata-scsi.c | 10 ++++++++++
-> >   1 file changed, 10 insertions(+)
-> > 
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index e5669a296d81..7a8a08692ce9 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -246,6 +246,9 @@ static void ata_scsi_set_passthru_sense_fields(struct ata_queued_cmd *qc)
-> >   	struct ata_taskfile *tf = &qc->result_tf;
-> >   	unsigned char *sb = cmd->sense_buffer;
-> >
-> > +	if (WARN_ON_ONCE(!(qc->flags & ATA_QCFLAG_RTF_FILLED)))
-> > +		return;
-> > +
-> >   	if ((sb[0] & 0x7f) >= 0x72) {
-> >   		unsigned char *desc;
-> >   		u8 len;
-> > @@ -928,6 +931,9 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
-> >   	unsigned char *sb = cmd->sense_buffer;
-> >   	u8 sense_key, asc, ascq;
-> > +	if (WARN_ON_ONCE(!(qc->flags & ATA_QCFLAG_RTF_FILLED)))
-> > +		return;
-> > +
-> >   	/*
-> >   	 * Use ata_to_sense_error() to map status register bits
-> >   	 * onto sense key, asc & ascq.
-> > @@ -971,6 +977,10 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
-> >   		ata_scsi_set_sense(dev, cmd, NOT_READY, 0x04, 0x21);
-> >   		return;
-> >   	}
-> > +
-> > +	if (WARN_ON_ONCE(!(qc->flags & ATA_QCFLAG_RTF_FILLED)))
-> > +		return;
-> > +
-> >   	/* Use ata_to_sense_error() to map status register bits
-> >   	 * onto sense key, asc & ascq.
-> >   	 */
-> 
-> Hmm. Not sure if we really need the WARN_ON() here or whether a simple
-> logging message wouldn't be sufficient; after all, we continue fine here.
-> 
+Hi Christoph,
 
-My worry about adding a simple log statement is that it might cause a log
-spam if things go wrong for some reason.
+kernel test robot noticed the following build warnings:
 
-This code is more like a "this should never happen" comment and we always
-expect ATA_QCFLAG_RTF_FILLED to be present when generating sense data
-based on ATA registers.
+[auto build test WARNING on axboe-block/for-next]
+[also build test WARNING on next-20240625]
+[cannot apply to linus/master v6.10-rc5]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-If WARN_ON_ONCE() is too much for this case I guess we can just remove it
-and silently return?
+url:    https://github.com/intel-lab-lkp/linux/commits/Christoph-Hellwig/block-correctly-report-cache-type/20240626-012117
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+patch link:    https://lore.kernel.org/r/20240625110603.50885-8-hch%40lst.de
+patch subject: [PATCH 7/7] block: move dma_pad_mask into queue_limits
+config: i386-buildonly-randconfig-002-20240626 (https://download.01.org/0day-ci/archive/20240626/202406261229.rnOxqhqJ-lkp@intel.com/config)
+compiler: gcc-8 (Ubuntu 8.4.0-3ubuntu2) 8.4.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240626/202406261229.rnOxqhqJ-lkp@intel.com/reproduce)
 
-Damien, Niklas, what are your thoughts on this?
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202406261229.rnOxqhqJ-lkp@intel.com/
 
-Thanks,
-Igor
+All warnings (new ones prefixed by >>):
 
-> Cheers,
-> 
-> Hannes
-> -- 
-> Dr. Hannes Reinecke                  Kernel Storage Architect
-> hare@suse.de                                +49 911 74053 688
-> SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-> HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
-> 
+>> drivers/ufs/core/ufshcd.c:5203: warning: Function parameter or struct member 'lim' not described in 'ufshcd_device_configure'
+
+
+vim +5203 drivers/ufs/core/ufshcd.c
+
+4264fd613a6a4b drivers/scsi/ufs/ufshcd.c Sujit Reddy Thumma 2014-06-29  5194  
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5195  /**
+95ea953ed86260 drivers/ufs/core/ufshcd.c Christoph Hellwig  2024-06-25  5196   * ufshcd_device_configure - adjust SCSI device configurations
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5197   * @sdev: pointer to SCSI device
+fd4bffb54dc0f6 drivers/ufs/core/ufshcd.c Bart Van Assche    2023-07-27  5198   *
+fd4bffb54dc0f6 drivers/ufs/core/ufshcd.c Bart Van Assche    2023-07-27  5199   * Return: 0 (success).
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5200   */
+95ea953ed86260 drivers/ufs/core/ufshcd.c Christoph Hellwig  2024-06-25  5201  static int ufshcd_device_configure(struct scsi_device *sdev,
+95ea953ed86260 drivers/ufs/core/ufshcd.c Christoph Hellwig  2024-06-25  5202  		struct queue_limits *lim)
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01 @5203  {
+49615ba144a092 drivers/scsi/ufs/ufshcd.c Stanley Chu        2019-09-16  5204  	struct ufs_hba *hba = shost_priv(sdev->host);
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5205  	struct request_queue *q = sdev->request_queue;
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5206  
+95ea953ed86260 drivers/ufs/core/ufshcd.c Christoph Hellwig  2024-06-25  5207  	lim->dma_pad_mask = PRDT_DATA_BYTE_COUNT_PAD - 1;
+858231bdb22391 drivers/ufs/core/ufshcd.c Bart Van Assche    2023-09-21  5208  
+b294ff3e34490f drivers/scsi/ufs/ufshcd.c Asutosh Das        2021-04-23  5209  	/*
+b294ff3e34490f drivers/scsi/ufs/ufshcd.c Asutosh Das        2021-04-23  5210  	 * Block runtime-pm until all consumers are added.
+b294ff3e34490f drivers/scsi/ufs/ufshcd.c Asutosh Das        2021-04-23  5211  	 * Refer ufshcd_setup_links().
+b294ff3e34490f drivers/scsi/ufs/ufshcd.c Asutosh Das        2021-04-23  5212  	 */
+b294ff3e34490f drivers/scsi/ufs/ufshcd.c Asutosh Das        2021-04-23  5213  	if (is_device_wlun(sdev))
+b294ff3e34490f drivers/scsi/ufs/ufshcd.c Asutosh Das        2021-04-23  5214  		pm_runtime_get_noresume(&sdev->sdev_gendev);
+b294ff3e34490f drivers/scsi/ufs/ufshcd.c Asutosh Das        2021-04-23  5215  	else if (ufshcd_is_rpm_autosuspend_allowed(hba))
+49615ba144a092 drivers/scsi/ufs/ufshcd.c Stanley Chu        2019-09-16  5216  		sdev->rpm_autosuspend = 1;
+71bb9ab6e3511b drivers/scsi/ufs/ufshcd.c Adrian Hunter      2022-02-28  5217  	/*
+71bb9ab6e3511b drivers/scsi/ufs/ufshcd.c Adrian Hunter      2022-02-28  5218  	 * Do not print messages during runtime PM to avoid never-ending cycles
+71bb9ab6e3511b drivers/scsi/ufs/ufshcd.c Adrian Hunter      2022-02-28  5219  	 * of messages written back to storage by user space causing runtime
+71bb9ab6e3511b drivers/scsi/ufs/ufshcd.c Adrian Hunter      2022-02-28  5220  	 * resume, causing more messages and so on.
+71bb9ab6e3511b drivers/scsi/ufs/ufshcd.c Adrian Hunter      2022-02-28  5221  	 */
+71bb9ab6e3511b drivers/scsi/ufs/ufshcd.c Adrian Hunter      2022-02-28  5222  	sdev->silence_suspend = 1;
+49615ba144a092 drivers/scsi/ufs/ufshcd.c Stanley Chu        2019-09-16  5223  
+cb77cb5abe1f4f drivers/scsi/ufs/ufshcd.c Eric Biggers       2021-10-18  5224  	ufshcd_crypto_register(hba, q);
+df043c745ea149 drivers/scsi/ufs/ufshcd.c Satya Tangirala    2020-07-06  5225  
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5226  	return 0;
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5227  }
+eeda47499f0187 drivers/scsi/ufs/ufshcd.c Akinobu Mita       2014-07-01  5228  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
