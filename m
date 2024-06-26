@@ -1,81 +1,64 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE32B18A93E;
-	Wed, 26 Jun 2024 18:02:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6107E6E611;
+	Wed, 26 Jun 2024 18:34:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719424929; cv=none; b=Hw9tcDeVd7ssHLt1L3oBdQCn+Hs6/NPERoSTiVhb9yVMaEkY9t1zGGvjXaCRfyRo3H0hk8TaoXecsd1ksUFKClxr4aGjsWoaViORwxrUo1C1v34ypXI0pYk2eiAsd/8UgtHWiBrpS/nqqlkZ8lyteZzLoU2o/oM+BIh+dTP4cmk=
+	t=1719426869; cv=none; b=O0xhuu1TXMqlzwUNY1EqA4gFoJMwn/bldkQNLG5icQ6gp8f4L62O/b0UiWnfjTPnV4CIQvNZNKAIstUcG4nGyvLgNZlGJDdHmkoAbssN31RVuof88AVDcsv+g5U+db+B6HmVY3LMqZGfmtrgJMexmWOUycCngk/dkY/8yK5LrAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719424929; c=relaxed/simple;
-	bh=UAY0ldpH6pilPESHp2oE7IoyK/F1c5egr25Iq7TAGmE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sPMfXB4ZvEN0Ib3ZzWaXk89X4vMwGFKYl44koU1fAsKmmGWAJznzbkoAwn3HMBgQqGsuWzb++K3a9HRDrhlFv4CfUMt4DTplg25NwSj/xqw+VTXmieyAQIk5qAQUta14i+OAyAtDB6GPPvvfEkU+XarbMO7lkfy0OmRRLQxInDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CAUuHnyb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719426869; c=relaxed/simple;
+	bh=3yRDMMKMNncuYzsdnB9q9Wa3ZtQxVjiUH3bfWc2ch6M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qRgvjKq+4ATKLubc7sIUisI/fPFvwYRgvfRPBWcxXMKq5KPP3ryYjodnnOwcF1O0KTp99E4HcX0VQBj3J9CGAT1KqB/a1EM+2wDbQY4ZZerqO755IZm3G59hZKcmDxTHUx9sgKsA2rwoYERjufaUhtTiAarX+IIMT0h73IRzyzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g5kIggxe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CAUuHnyb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D3B6C32782;
-	Wed, 26 Jun 2024 18:02:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g5kIggxe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25DF7C116B1;
+	Wed, 26 Jun 2024 18:34:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719424928;
-	bh=UAY0ldpH6pilPESHp2oE7IoyK/F1c5egr25Iq7TAGmE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CAUuHnyb3lHfF2pinK95cNgCDa+TSZD/v9fDNzi1boJ6GR6h4G4tKIFUXi00fo0oY
-	 apIDyjLV86iCVvU8Gq7COf7R0Qqx3FzioIza2CbllnD7DZAVqBYD25gmcKPwHunnQi
-	 jX5VO/VLTdvSi7TqOX54LfdcZ8jT9yXatpKl89dROmQloISgZmpL6CSYDSvKGwo896
-	 7uZ65eAVplObuuwIr7719/Cdb0iG/xRVkTyXBFOq0FGUOstsgSs5Bqeh9kSv1KD/M0
-	 xJGQ5T/jYOCiNsVp54RBJmLX3we38yDqGEtbQJiTT+tYI3uuQHYKqOn71jTJOfgXSf
-	 eOH0HJewIo2zQ==
+	s=k20201202; t=1719426868;
+	bh=3yRDMMKMNncuYzsdnB9q9Wa3ZtQxVjiUH3bfWc2ch6M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=g5kIggxeGmKhWe7XAwXmjcNMqbaEHxo85kZhD/WLawen7YH6griu5GM6nfza9yykS
+	 CcRbgPqThP2dmjlphE+/5qPlNunRtVdPcb61/Nq71HTItICRZoGpQzJsJfUr3iBT5d
+	 OFMHuiejTP/w9PP4KVOHKtzq9Fm8GksCgznd6LsgScB9/vRAfkm1S4y/MbcAtUSzgO
+	 Kv8efzjSYcwcnuFc4b1bifU/1NbCLJwsVScBmmbELd3yOLgzXWMDZLkZ9Z4RYkvaCK
+	 L4xuD1UY+mXDBJur2bC3u4LVjQiazYQtxz+i+Q2qKm5VJhAA+YZb/GL8FOPUpJHHbJ
+	 pmvoRLuB402cQ==
+Date: Wed, 26 Jun 2024 20:34:19 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	Jens Axboe <axboe@kernel.dk>
+Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
 	Jason Yan <yanaijie@huawei.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH v2 13/13] ata: ahci: Add debug print for external port
-Date: Wed, 26 Jun 2024 20:00:43 +0200
-Message-ID: <20240626180031.4050226-28-cassel@kernel.org>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240626180031.4050226-15-cassel@kernel.org>
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	stable@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 03/13] ata: ahci: Clean up sysfs file on error
+Message-ID: <ZnxfK0a0pQrR4gxH@ryzen.lan>
 References: <20240626180031.4050226-15-cassel@kernel.org>
+ <20240626180031.4050226-18-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=950; i=cassel@kernel.org; h=from:subject; bh=UAY0ldpH6pilPESHp2oE7IoyK/F1c5egr25Iq7TAGmE=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJqwl0OKmSze751+e/3x2OW45fo++U8PUn/r+2cLM76c jObWVRIRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACayoIqRYeLnFv2rLQZfwyyE c33m9u+/tnWJZGeC2eGU1ec3Xr3hL87wzyR/kwqzdOmqf10Jux9uXF9X/OrB3oJ3t+adzXhccCJ 9GRsA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240626180031.4050226-18-cassel@kernel.org>
 
-Add a debug print that tells us if LPM is not getting enabled because the
-port is external.
+On Wed, Jun 26, 2024 at 08:00:33PM +0200, Niklas Cassel wrote:
+> .probe() (ahci_init_one()) calls sysfs_add_file_to_group(), however,
+> if probe() fails after this call, we currently never call
+> sysfs_remove_file_from_group().
+> 
+> (The sysfs_remove_file_from_group() call in .remove() (ahci_remove_one())
+> does not help, as .remove() is not called on .probe() error.)
+> 
+> Thus, if probe() fails after the sysfs_add_file_to_group() call, we get:
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index fc6fd583faf8..a05c17249448 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1732,8 +1732,10 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
- 	 * Management Interaction in AHCI 1.3.1. Therefore, do not enable
- 	 * LPM if the port advertises itself as an external port.
- 	 */
--	if (ap->pflags & ATA_PFLAG_EXTERNAL)
-+	if (ap->pflags & ATA_PFLAG_EXTERNAL) {
-+		ata_port_dbg(ap, "external port, not enabling LPM\n");
- 		return;
-+	}
- 
- 	/* If no LPM states are supported by the HBA, do not bother with LPM */
- 	if ((ap->host->flags & ATA_HOST_NO_PART) &&
--- 
-2.45.2
-
+Nit:
+s/we get/the next time we insmod the module we will get/
