@@ -1,117 +1,133 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4294318C33F
-	for <linux-ide@vger.kernel.org>; Wed, 26 Jun 2024 15:37:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E0C5190079;
+	Wed, 26 Jun 2024 18:00:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719416276; cv=none; b=eYHJrTFhKTnE7ZzqIr7QUguNf5Yymji7PzfGDM/SXPMvPb3/UYkcv9BEaTWJCNpV+VlhHJnYtBsAoMGn5+DEaX5O+X64mvuHXYqiKA+4cfdefeE8EuyYXhcczC3CIUX2BJoKpd7Dd9d+22k8WwHN1lPDcWKxrU8aJFHj2s+905g=
+	t=1719424854; cv=none; b=tc6gWi3iUt2EfF6HkoikJfcqBgrQsrycOOhfM+bFxtam08cTk0h3W7zNiW/Hq8Cf6at7hAJ4p7QoFDL24SBvbkjdsbuSC+8D6fKuVCJVZxD1kdBhl99Y4QhQRmv2ehhWvZomkBznBCTgyworTNwdD+9YT76E19VgngQHAR0SXTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719416276; c=relaxed/simple;
-	bh=qswXWhuzIZ+h28u39X/TbxoZXcqH/jfAdkbI/EQrJp8=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=k7lrAQz1Hrfyiejj3CJwnrW6Geh/Puk28snZ2IDh41ol9tpJkhOgPYnARbzr18ZJnj6xDbY1dAtROg+ugnqw69PnbEKm97zoaIXrwANvOfOXJyCrRw7ebrCizAnaKycIG9bOnIyNx63higIbMaibTjl+exk4p0YRQ5vvTVMf+0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=h/BAZk0+; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1719424854; c=relaxed/simple;
+	bh=q1CZG9hxYfrvOGAzm7i9i2PwdocdoYIv+geXRGkL1Qg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dGy9q7gloxgo0BKR4hqq8SI3Grfn/N7X+aI2uWSq4ZCXyX4r2ESgpTn1yNunCmCN2moJYcbrNqqahJ58FH4gJWTj/oc9Bjr7SV88L7rw8+9aDHQoUyRRRM1LxP+Oks8/AgnO+SrJRHyy/UHVVch+bWPuY3+VxbGoChrnHPkk+Pc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZXSoQX9x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="h/BAZk0+"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-70675c617e7so167813b3a.0
-        for <linux-ide@vger.kernel.org>; Wed, 26 Jun 2024 08:37:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1719416274; x=1720021074; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8625LYB5aaVg0lsF/zrXcJOla9BjQc91ZD1HdTRXaQc=;
-        b=h/BAZk0+ipeRczd8YfGYreu3scYDtUUB0/+ovRSG061NGdQMfWvvh8VWm2ieG9IHl6
-         7SJ6IFPU19Y7rRYxvoyn8FFJMPfyWLBGJ52EFkngH4OfzE2FGIsRpzs4G1pycnCyaWrW
-         E1NMaZ0LVKbcTSvz3bbcfdRJsfkfPAsR33QIlsqIM4uY67ZiPhAHgw5GBxs305KKVmfx
-         qBu7mKFjtKEMtsGFFcjtlSI1hhq+fpmqiXDTv+YLpezCIsiTSk8a7dP5D7fYdiaoXqAj
-         1T/tGZhcyKEuFCHgNJER+q/9QKrkx5Mjj3hMM84sBXlfMDad1rmK5zIIWFXmQxZrFzej
-         e4Jg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719416274; x=1720021074;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=8625LYB5aaVg0lsF/zrXcJOla9BjQc91ZD1HdTRXaQc=;
-        b=vrGLgooOdAXawaqFQkmiopW8YVd/6+avihnYFKhAq8ql2kqxxxiOExIFBdgFut2NFT
-         9VX6t2EVqAJpbGEU3+3ju7JMxpMLZaGD3CGr0qoDpkibfUlzeUCZaBRwlu637cjnm+D1
-         zAeC2IbnVXX5FqDEaBo5wLvZUR5u4ZQIpZuN+JLGcRZPxzALxIEKNeQbaVGgeN+gl6WY
-         UQoWGI29O4w36juZwbamnsZXTWzbl+gtWPsPk60jSH2HTbVnQn8mjhXtFSj3CA8u5XJ/
-         u4otHCwB3WWHCNxlnbs9hxYxjGxuZP+7VMLHaWUHoMi0XaFJvOLDLX0RFBh7GyMboamT
-         6AHg==
-X-Forwarded-Encrypted: i=1; AJvYcCVy28hP0F7Fi3vFRuJXfUog9bxNAPtDBLxkktGdwL7Mtmte0+as6d3XBqQWxvYXB3XU92HZZpVx/hwHpAWIscXVhga2IT9O8dFu
-X-Gm-Message-State: AOJu0YytiJa+tHXAeXxj8xRa+gfLp1crtlFBndCjRWCvauPGcAsh7ot5
-	RfydDXelTPMnc1aolvmCfaXc3RvkrXYWXRNb3AERCPqtG/qGQJ8epCNgsjXb2yo=
-X-Google-Smtp-Source: AGHT+IE1B3Foc1AGbVxgYLJqURuiVuiq4RlkiwEooUHzwNaoAi0MxEgooHMiiE1u87mf4aGEOgty8g==
-X-Received: by 2002:a05:6a20:158e:b0:1bc:eebe:cc82 with SMTP id adf61e73a8af0-1bceebecd89mr13899066637.3.1719416274580;
-        Wed, 26 Jun 2024 08:37:54 -0700 (PDT)
-Received: from [127.0.0.1] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-706a9842478sm1340538b3a.117.2024.06.26.08.37.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jun 2024 08:37:53 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
- Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org, 
- linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, 
- linux-scsi@vger.kernel.org
-In-Reply-To: <20240626142637.300624-1-hch@lst.de>
-References: <20240626142637.300624-1-hch@lst.de>
-Subject: Re: queue_limits fixups and tidyups v3
-Message-Id: <171941627257.837674.361966910045628144.b4-ty@kernel.dk>
-Date: Wed, 26 Jun 2024 09:37:52 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZXSoQX9x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 514F6C116B1;
+	Wed, 26 Jun 2024 18:00:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719424853;
+	bh=q1CZG9hxYfrvOGAzm7i9i2PwdocdoYIv+geXRGkL1Qg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ZXSoQX9xGtJ74o4hdOMSaGUskMmGHJ+iwKn5/QXiZ1fNAHcXr5zc3Dt3mAcwA14gr
+	 4BV7hbNAbSs0AdDnQD32u1sNorjht9qPVlgz7qLi029H25rPdEo3qvcVexa8+aK5HS
+	 nQCESKhvPhm1Xhcvmrh6EP2MpNfE0NGsAvPsX1EudC+dPVZsr6My9RXm7uQV88lpw5
+	 G/dHbKrHOo1hvkXtCq/pQJ8I2qI8NziIwbSDEeCEMUhEusJYnHR5KQQTEdhP5EsKd5
+	 P2nP1OMUAXUJhghc7F9dPVBCDAlfd6umTiePMI897oN0UdZrWdSGr2uioQy2WoRTxL
+	 EabMQoYZM6/RA==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Tejun Heo <htejun@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>,
+	Colin Ian King <colin.i.king@gmail.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: [PATCH v2 00/13] ata,libsas: Assign the unique id used for printing earlier
+Date: Wed, 26 Jun 2024 20:00:30 +0200
+Message-ID: <20240626180031.4050226-15-cassel@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3445; i=cassel@kernel.org; h=from:subject; bh=q1CZG9hxYfrvOGAzm7i9i2PwdocdoYIv+geXRGkL1Qg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJqwu1XHIp51LGP73DKTIuF1rtF4rqCau8uLJrgsORy+ naVmgDnjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEwkcz7DX0GdF3V5TUmXGcM6 xNVK2k56dFzd2qakfHbmFbvqmxMunmNkuP38pQjzgdbHsbUd9fdOPov9URsaw1woa3vDcfPj9/1 xjAA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
+
+Hello all,
+
+This patch series was orginally meant to simply assign a unique id used
+for printing earlier (ap->print_id), but has since grown to also include
+cleanups related to ata_port_alloc() (since ap->print_id is now assigned
+in ata_port_alloc()).
+
+Patch 1-3 fixes incorrect cleanups in the error paths.
+Patch 4,12 removes a useless libata wrappers only used for libsas.
+Patch 5 introduces a ata_port_free(), in order to avoid duplicated code.
+Patch 6 removes a unused function declaration in include/linux/libata.h.
+Patch 7 remove support for decreasing the number of ports, as it is never
+        used by any libata driver (including libsas and ipr).
+Patch 8 removes a superfluous assignment in ata_sas_port_alloc().
+Patch 9 removes the unnecessary local_port_no struct member in ata_port.
+Patch 10 performs the ata_port print_id assignment earlier, so that the
+         ata_port_* print functions can be used even before the ata_host
+	 has been registered.
+Patch 11 changes the print_id assignment to use an ida_alloc(), such that
+         we will reuse IDs that are no longer in use, rather than keep
+	 increasing the print_id forever.
+Patch 13 adds a debug print in case the port is marked as external, this
+         code runs before the ata_host has been registered, so it depends
+	 on patch 10.
 
 
-On Wed, 26 Jun 2024 16:26:21 +0200, Christoph Hellwig wrote:
-> this series has a few fixes for the queue_limits conversion in the first
-> few patches and then has a bunch more cleanups and improvements in that
-> area.
-> 
-> Changes since v2:
->  - export md_init_stacking_limits
->  - use blk_queue_write_cache instead of open coding it
->  - various spelling fixes
->  - document a new paramter in ufshcd
-> 
-> [...]
+Martin, how do you want us to coordinate libsas changes?
 
-Applied, thanks!
+You don't seem to have any libsas changes staged for 6.11 so far,
+and the libsas changes in this series are quite isolated (and small),
+so perhaps we can simply queue them via the libata tree?
 
-[1/8] md: set md-specific flags for all queue limits
-      commit: 573d5abf3df00c879fbd25774e4cf3e22c9cabd0
-[2/8] block: correctly report cache type
-      commit: 78887d004fb2bb03233122a048eaf46e850dabf4
-[3/8] block: rename BLK_FEAT_MISALIGNED
-      commit: ec9b1cf0b0ebfb52274971a8a0e74e0a133f64fb
-[4/8] block: convert features and flags to __bitwise types
-      commit: fcf865e357f80285af12c0c9a49f89d71acb7f4b
-[5/8] block: conding style fixup for blk_queue_max_guaranteed_bio
-      commit: 3302f6f09052274945f877beeb83f74641de2418
-[6/8] block: remove disk_update_readahead
-      commit: 73781b3b81e76583708a652c853d54d03dce031d
-[7/8] block: remove the fallback case in queue_dma_alignment
-      commit: abfc9d810926dfbf5645c7755c8d5ab96273f27d
-[8/8] block: move dma_pad_mask into queue_limits
-      commit: e94b45d08b5d1c230c0f59c3eed758d28658851e
+Kind regards,
+Niklas
 
-Best regards,
+
+Changes since v1:
+-Added patches that fixes incorrect cleanups in the error paths.
+-Added patches to remove useless libata wrappers only used for libsas.
+-Added patch that introduces ata_port_free().
+-Added patch that removes a unused function declaration in libata.h.
+-Added patch that removes local_port_no (Damien).
+-Added patch that assigns the print_id using ida_alloc() (Damien).
+-Picked up tags.
+
+Link to v1:
+https://lore.kernel.org/linux-ide/20240618153537.2687621-7-cassel@kernel.org/
+
+Niklas Cassel (13):
+  ata: libata-core: Fix null pointer dereference on error
+  ata: libata-core: Fix double free on error
+  ata: ahci: Clean up sysfs file on error
+  ata,scsi: Remove useless wrappers ata_sas_tport_{add,delete}()
+  ata,scsi: libata-core: Add ata_port_free()
+  ata: libata: Remove unused function declaration for ata_scsi_detect()
+  ata: libata-core: Remove support for decreasing the number of ports
+  ata: libata-sata: Remove superfluous assignment in
+    ata_sas_port_alloc()
+  ata: libata-core: Remove local_port_no struct member
+  ata: libata: Assign print_id at port allocation time
+  ata: libata-core: Reuse available ata_port print_ids
+  ata,scsi: Remove useless ata_sas_port_alloc() wrapper
+  ata: ahci: Add debug print for external port
+
+ drivers/ata/ahci.c                 | 21 +++++++---
+ drivers/ata/libata-core.c          | 66 ++++++++++++++++--------------
+ drivers/ata/libata-sata.c          | 49 ----------------------
+ drivers/ata/libata-transport.c     |  5 ++-
+ drivers/ata/libata-transport.h     |  3 --
+ drivers/ata/libata.h               |  1 -
+ drivers/scsi/libsas/sas_ata.c      | 14 +++++--
+ drivers/scsi/libsas/sas_discover.c |  4 +-
+ include/linux/libata.h             | 12 +++---
+ 9 files changed, 71 insertions(+), 104 deletions(-)
+
 -- 
-Jens Axboe
-
-
+2.45.2
 
