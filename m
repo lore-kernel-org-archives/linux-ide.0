@@ -1,68 +1,68 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02E4619AD51
-	for <linux-ide@vger.kernel.org>; Thu, 27 Jun 2024 21:54:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C19C19FA7B
+	for <linux-ide@vger.kernel.org>; Thu, 27 Jun 2024 22:03:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719525253; cv=none; b=W6+rNVjyfCi83Xs+TVlaYP6fLsT9ahYyDy6Z9xgZisVWiwUf2hv4AKIWUmmf2+E6Loba3/M2dIJWv3gDRRyrq6xlsayoH63HrKN9HGLjUTpja31lYQHFTebtt6Xv5PVDa8LQ3fdieowsALUJbFfUDgtLLMZN4qiwLcM5CgCzj58=
+	t=1719525813; cv=none; b=r0W7kaaQD8BMXZEDXgul4xzh5Y4j6SQVzidSG9UApJN4fUddep2X5ADy+rK+CU9cbm6+GH8e1y/St0MMECGqzDh8TqGh3qJxoOaca1cQVvXuUxYckuVhrYEV2dGklFlNDExTBztYK8IifGIUw32vm5BEKVVVoL1qfGVv7efZq28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719525253; c=relaxed/simple;
-	bh=CghmMDbzets4Pf3n0am8nQpiHR6bdQ7IAq5JZA9dFbs=;
+	s=arc-20240116; t=1719525813; c=relaxed/simple;
+	bh=ruVGYcvYTiFY7ob3kFKyWPd5pTS6/tfHCvKSvwJN6o0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RD1WCx4QV6zW42RZKLE3LER5bFKgEW5uM5ZZgffCuUogbaJ5j53+/gvQh1jJ6bZ70tYu0/RjxteTyFtv/eKGNcpZyS8G4HbsXGnY7nt0+YXnTW/F7juXw4dXIDAD47lJq4+SJ5rCL2hIDQ4UVBVm/DDTfkAYr9oez7ze5AlVKsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IXBB3l0J; arc=none smtp.client-ip=209.85.216.45
+	 Content-Type:Content-Disposition:In-Reply-To; b=GVZEz9Hx3qw7lS+jCg2LEkDHfBuXebIT1y9lHjBLLKFqrZqWBgJmJ/s93cllNyec8c4JYGYACj6WQKYplBHswHAmBlnjFlL7M3OLGPP7noY0CjzcmzcqmmuLOcgSxu18CFc6HP+OrNl7PTUedjxTLBBIIocDBlyDscuEMinVdlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=OrZgkI3V; arc=none smtp.client-ip=209.85.215.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IXBB3l0J"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2bfdae7997aso6439038a91.2
-        for <linux-ide@vger.kernel.org>; Thu, 27 Jun 2024 14:54:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="OrZgkI3V"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-7180308e90bso4618810a12.1
+        for <linux-ide@vger.kernel.org>; Thu, 27 Jun 2024 15:03:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1719525251; x=1720130051; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1719525811; x=1720130611; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=CwFU0+Ve1D1RlgQdsso7JBd7Ory/Gowu+D/c2nfTVjU=;
-        b=IXBB3l0JPICE6pdto3gOWaOUmtml2PViEsM1nhHMVvwm+nsT4RHVe5RFaQKeVw807o
-         stjA4LGIEzemmgR3GJljsyv/rNbjSNO6uT7zmPIADNOCwIOlT9faX96dblzJ/gHOGoqg
-         +pGLfSm9f5XY/GNKNGThDMJ/h2GjFBdJ2aW3Go2gZeKr2ruPupxG6soQGheGyc8rmq+G
-         RpxLPkMM7phdVR3vDgP4f2S2D7NQKLOCq7OScLxoZ/4Aud7t7T5c/z3Uv59PxnFp//kQ
-         WPXsUGp+3UT7DssJlm1fi7xEH3gUJZnoY21QQA6LM5wSptz9VecowKANKPeYsPR9NCNv
-         ZUhw==
+        bh=vhvq8eSOHACbnB6DnMnFlIUUAp+10Kb7/uut0w6GZhk=;
+        b=OrZgkI3Vx8YLlcDRNAMszykWdqgrWRh8RM28KWsVhqTMKd6h7zhw9skRigNwmkEa6z
+         wYSN/jbBuDlwJoekdF4ReMuYX5gj3G1SnsjWXASsat4j2602iMcW/gKdIfSmf5zCTXtL
+         TCVP97cYRbjOFdGJuIAHtwbuxXSTOTkGTo26ytR/raeyBMtLJcN36yWGoXE9dZEnQ8bQ
+         dBIKvxwQ/kKdTgxzfNcdKWxy6+3NCNkP25EVRixhgZ9mxNXbaeNCyADl5t1FLu40Ofwi
+         gQODmt6II+QamVIK3HfrLlvEErkrEgbITS8ZzgJF878qRTA51I4aTxAtGKAEbqQ0iKAG
+         GmaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719525251; x=1720130051;
+        d=1e100.net; s=20230601; t=1719525811; x=1720130611;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=CwFU0+Ve1D1RlgQdsso7JBd7Ory/Gowu+D/c2nfTVjU=;
-        b=f5v9zcLUbK+es2yRXKy6Lr9bk/SpAM4oQR9JQi03V4S1Za7JR1JbtudeUNoDYtZbOO
-         gXYt7HkLJWQkiXEpKK2g1qLvo1+uvShgYP19apJAZgmxX9f0o85p8K59ZXeaFR0uwCcR
-         Q7BsGsrouSao4G29XF7ePL0YP2brQ/avsatJWtxcgcCqr0oy/yLOWc/gGnFqcbirARjQ
-         xhWGFzUkmWoSGZAMmSRkY5PWljfNamipHbPPa9+OLz96TxevPjWYahmFL1CgWWhIDyHV
-         euhUu1xvOYl13oraNWl3FEoi9J9RjDOLFMWaXywKZXwxBJHsqGnQULd5t96R7AAu/A8r
-         CwTQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUSl4N4px+LstvTMt7nz31UkbVZceaphIn/LPVDCRjA0AvvgqcLD248ZO1B8eLWoP+tBDPH2dnvZMhNxbDv9+Nnvv3u4K9EZuky
-X-Gm-Message-State: AOJu0YzDhpuVvnlB57MVdtCB20NT24Ru+oUEaXs4D/jNibB3F57XZbiu
-	kKNi2dvrq6MBC2w1bgIG6CgOK/QZdplCphNgBrvsncKD+vJWgIaecOcV9VeYXw==
-X-Google-Smtp-Source: AGHT+IEspPlGkcO6wFPv5PNakjMX5qZwsfh3/7Srf+ZM9ZcIiJeq555N/wrwUE0R3xfRuF5eQN0t+A==
-X-Received: by 2002:a17:90a:1fc7:b0:2c7:700e:e2bf with SMTP id 98e67ed59e1d1-2c861250e64mr12555490a91.20.1719525250914;
-        Thu, 27 Jun 2024 14:54:10 -0700 (PDT)
+        bh=vhvq8eSOHACbnB6DnMnFlIUUAp+10Kb7/uut0w6GZhk=;
+        b=dC4ApMguRb1HwpSr7iINGsnDh6PiA5UX13s8QDPlFfeT/weDWeik0uNgG4Q0FAIulR
+         WRh6FBfs5BP87b8noSkNufBGxvqqZdddwYyF8ubs/6js3/SYegN2lPZ6LNuH+UwaF28Y
+         NGqHLDTwirx1QpvxS8mb8WWaQYkhjR0C6Ue1YF474+QIlLUnK6beK6+V/6yzb2+jkl5h
+         haw6amnJLB8M+JHraX/AqXmWKhWqVGun9XemRoLPuIwe96JPESE1wjIzXgtuNLh231IU
+         mftio6on9SU43SpNZ47fYeN1D6rjN01d6BQcW9jxpWEUOxH/8bDyZbTNOtlXsbde+d7D
+         UoDA==
+X-Forwarded-Encrypted: i=1; AJvYcCXZpeHZFwc2JLsnJrVyozxaGEW2A7DXQTyIV8YvwdmBU697OkFSbfCF2VQ0gNTAu+QNCUean68A1URVrCWJpd0i9bX0gfYpfKIk
+X-Gm-Message-State: AOJu0YxG8TUBpuOjsANPuBQSeMh68I4eOJqMxzxAUnPZTiawM0TfQgDn
+	VkJTqDONsW8Y7OE9HMNY3sWyskIEca8dHCaWSOczDU14dNnuTR3CVY8dz1pRlA==
+X-Google-Smtp-Source: AGHT+IHuylOPpfQrS8FFXZXu4vWvJgTlwjrp3ySkFGvDcPmmxbmb1NWqcNURsPWRzP4vQLioXX96aQ==
+X-Received: by 2002:a05:6a20:bf08:b0:1bd:22fe:fca2 with SMTP id adf61e73a8af0-1bd22fefd92mr8274941637.18.1719525810345;
+        Thu, 27 Jun 2024 15:03:30 -0700 (PDT)
 Received: from google.com (148.98.83.34.bc.googleusercontent.com. [34.83.98.148])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c91ce466f8sm286359a91.21.2024.06.27.14.54.09
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c91c7df8b0sm308591a91.0.2024.06.27.15.03.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jun 2024 14:54:09 -0700 (PDT)
-Date: Thu, 27 Jun 2024 21:54:06 +0000
+        Thu, 27 Jun 2024 15:03:29 -0700 (PDT)
+Date: Thu, 27 Jun 2024 22:03:26 +0000
 From: Igor Pylypiv <ipylypiv@google.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>, Tejun Heo <tj@kernel.org>,
 	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 2/6] ata: libata-scsi: Do not overwrite valid sense
- data when CK_COND=1
-Message-ID: <Zn3ffnqsN4pVZA4m@google.com>
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 6/6] ata: libata-scsi: Check ATA_QCFLAG_RTF_FILLED
+ before using result_tf
+Message-ID: <Zn3hrlF2VW3dWH1f@google.com>
 References: <20240626230411.3471543-1-ipylypiv@google.com>
- <20240626230411.3471543-3-ipylypiv@google.com>
- <Zn1zsaTLE3hYbSsK@ryzen.lan>
+ <20240626230411.3471543-7-ipylypiv@google.com>
+ <9c8d751c-8d38-40f4-a88d-cfc39c7b6967@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -71,326 +71,88 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zn1zsaTLE3hYbSsK@ryzen.lan>
+In-Reply-To: <9c8d751c-8d38-40f4-a88d-cfc39c7b6967@kernel.org>
 
-On Thu, Jun 27, 2024 at 04:14:09PM +0200, Niklas Cassel wrote:
-> On Wed, Jun 26, 2024 at 11:04:07PM +0000, Igor Pylypiv wrote:
-> > Current ata_gen_passthru_sense() code performs two actions:
-> > 1. Generates sense data based on the ATA 'status' and ATA 'error' fields.
-> > 2. Populates "ATA Status Return sense data descriptor" / "Fixed format
-> >    sense data" with ATA taskfile fields.
+On Thu, Jun 27, 2024 at 09:19:17AM +0900, Damien Le Moal wrote:
+> On 6/27/24 08:04, Igor Pylypiv wrote:
+> > qc->result_tf contents are only valid when the ATA_QCFLAG_RTF_FILLED flag
+> > is set. The ATA_QCFLAG_RTF_FILLED flag should be always set for commands
+> > that failed or for commands that have the ATA_QCFLAG_RESULT_TF flag set.
 > > 
-> > The problem is that #1 generates sense data even when a valid sense data
-> > is already present (ATA_QCFLAG_SENSE_VALID is set). Factoring out #2 into
-> > a separate function allows us to generate sense data only when there is
-> > no valid sense data (ATA_QCFLAG_SENSE_VALID is not set).
-> > 
-> > As a bonus, we can now delete a FIXME comment in atapi_qc_complete()
-> > which states that we don't want to translate taskfile registers into
-> > sense descriptors for ATAPI.
-> > 
-> > Cc: stable@vger.kernel.org
-> > Reviewed-by: Hannes Reinecke <hare@suse.de>
-> > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> 
+> Please change "RTF" to "result TF" in the messages below, to be clear (RTF is
+> not). Feel free to split the ata_dev_dbg() lines after "dev," to avoid long lines.
+
+Thanks Damien! I wrote "result taskfile" first, then changed it to "result TF",
+and then to "RTF" to shorten the lines :)
+
+I'll change it to "result TF" with the line split in v3.
+
+> 
+> With that:
+> 
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> 
 > > ---
-> >  drivers/ata/libata-scsi.c | 158 +++++++++++++++++++++-----------------
-> >  1 file changed, 86 insertions(+), 72 deletions(-)
+> >  drivers/ata/libata-scsi.c | 18 ++++++++++++++++++
+> >  1 file changed, 18 insertions(+)
 > > 
 > > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index a9e44ad4c2de..26b1263f5c7c 100644
+> > index 02af4d5d5799..d5874d4b9253 100644
 > > --- a/drivers/ata/libata-scsi.c
 > > +++ b/drivers/ata/libata-scsi.c
-> > @@ -230,6 +230,80 @@ void ata_scsi_set_sense_information(struct ata_device *dev,
-> >  				   SCSI_SENSE_BUFFERSIZE, information);
-> >  }
-> >  
-> > +/**
-> > + *	ata_scsi_set_passthru_sense_fields - Set ATA fields in sense buffer
-> > + *	@qc: ATA PASS-THROUGH command.
-> > + *
-> > + *	Populates "ATA Status Return sense data descriptor" / "Fixed format
-> > + *	sense data" with ATA taskfile fields.
-> > + *
-> > + *	LOCKING:
-> > + *	None.
-> > + */
-> > +static void ata_scsi_set_passthru_sense_fields(struct ata_queued_cmd *qc)
-> > +{
-> > +	struct scsi_cmnd *cmd = qc->scsicmd;
-> > +	struct ata_taskfile *tf = &qc->result_tf;
-> > +	unsigned char *sb = cmd->sense_buffer;
-> > +
-> > +	if ((sb[0] & 0x7f) >= 0x72) {
-> > +		unsigned char *desc;
-> > +		u8 len;
-> > +
-> > +		/* descriptor format */
-> > +		len = sb[7];
-> > +		desc = (char *)scsi_sense_desc_find(sb, len + 8, 9);
-> > +		if (!desc) {
-> > +			if (SCSI_SENSE_BUFFERSIZE < len + 14)
-> > +				return;
-> > +			sb[7] = len + 14;
-> > +			desc = sb + 8 + len;
-> > +		}
-> > +		desc[0] = 9;
-> > +		desc[1] = 12;
-> > +		/*
-> > +		 * Copy registers into sense buffer.
-> > +		 */
-> > +		desc[2] = 0x00;
-> > +		desc[3] = tf->error;
-> > +		desc[5] = tf->nsect;
-> > +		desc[7] = tf->lbal;
-> > +		desc[9] = tf->lbam;
-> > +		desc[11] = tf->lbah;
-> > +		desc[12] = tf->device;
-> > +		desc[13] = tf->status;
-> > +
-> > +		/*
-> > +		 * Fill in Extend bit, and the high order bytes
-> > +		 * if applicable.
-> > +		 */
-> > +		if (tf->flags & ATA_TFLAG_LBA48) {
-> > +			desc[2] |= 0x01;
-> > +			desc[4] = tf->hob_nsect;
-> > +			desc[6] = tf->hob_lbal;
-> > +			desc[8] = tf->hob_lbam;
-> > +			desc[10] = tf->hob_lbah;
-> > +		}
-> > +	} else {
-> > +		/* Fixed sense format */
-> > +		sb[0] |= 0x80;
-> > +		sb[3] = tf->error;
-> > +		sb[4] = tf->status;
-> > +		sb[5] = tf->device;
-> > +		sb[6] = tf->nsect;
-> > +		if (tf->flags & ATA_TFLAG_LBA48)  {
-> > +			sb[8] |= 0x80;
-> > +			if (tf->hob_nsect)
-> > +				sb[8] |= 0x40;
-> > +			if (tf->hob_lbal || tf->hob_lbam || tf->hob_lbah)
-> > +				sb[8] |= 0x20;
-> > +		}
-> > +		sb[9] = tf->lbal;
-> > +		sb[10] = tf->lbam;
-> > +		sb[11] = tf->lbah;
-> > +	}
-> > +}
-> > +
-> >  static void ata_scsi_set_invalid_field(struct ata_device *dev,
-> >  				       struct scsi_cmnd *cmd, u16 field, u8 bit)
+> > @@ -242,10 +242,16 @@ void ata_scsi_set_sense_information(struct ata_device *dev,
+> >   */
+> >  static void ata_scsi_set_passthru_sense_fields(struct ata_queued_cmd *qc)
 > >  {
-> > @@ -837,10 +911,8 @@ static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk,
-> >   *	ata_gen_passthru_sense - Generate check condition sense block.
-> >   *	@qc: Command that completed.
-> >   *
-> > - *	This function is specific to the ATA descriptor format sense
-> > - *	block specified for the ATA pass through commands.  Regardless
-> > - *	of whether the command errored or not, return a sense
-> > - *	block. Copy all controller registers into the sense
-> > + *	This function is specific to the ATA pass through commands.
-> > + *	Regardless of whether the command errored or not, return a sense
-> >   *	block. If there was no error, we get the request from an ATA
-> >   *	passthrough command, so we use the following sense data:
-> >   *	sk = RECOVERED ERROR
-> > @@ -875,63 +947,6 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
-> >  		 */
-> >  		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
+> > +	struct ata_device *dev = qc->dev;
+> >  	struct scsi_cmnd *cmd = qc->scsicmd;
+> >  	struct ata_taskfile *tf = &qc->result_tf;
+> >  	unsigned char *sb = cmd->sense_buffer;
+> >  
+> > +	if (!(qc->flags & ATA_QCFLAG_RTF_FILLED)) {
+> > +		ata_dev_dbg(dev, "Missing RTF: cannot set ATA PT sense fields.\n");
+> > +		return;
+> > +	}
+> > +
+> >  	if ((sb[0] & 0x7f) >= 0x72) {
+> >  		unsigned char *desc;
+> >  		u8 len;
+> > @@ -923,10 +929,16 @@ static void ata_to_sense_error(u8 drv_stat, u8 drv_err, u8 *sk, u8 *asc,
+> >   */
+> >  static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+> >  {
+> > +	struct ata_device *dev = qc->dev;
+> >  	struct scsi_cmnd *cmd = qc->scsicmd;
+> >  	struct ata_taskfile *tf = &qc->result_tf;
+> >  	u8 sense_key, asc, ascq;
+> >  
+> > +	if (!(qc->flags & ATA_QCFLAG_RTF_FILLED)) {
+> > +		ata_dev_dbg(dev, "Missing RTF: cannot generate ATA PT sense data.\n");
+> > +		return;
+> > +	}
+> > +
+> >  	/*
+> >  	 * Use ata_to_sense_error() to map status register bits
+> >  	 * onto sense key, asc & ascq.
+> > @@ -970,6 +982,12 @@ static void ata_gen_ata_sense(struct ata_queued_cmd *qc)
+> >  		ata_scsi_set_sense(dev, cmd, NOT_READY, 0x04, 0x21);
+> >  		return;
 > >  	}
-> > -
-> > -	if ((sb[0] & 0x7f) >= 0x72) {
-> > -		unsigned char *desc;
-> > -		u8 len;
-> > -
-> > -		/* descriptor format */
-> > -		len = sb[7];
-> > -		desc = (char *)scsi_sense_desc_find(sb, len + 8, 9);
-> > -		if (!desc) {
-> > -			if (SCSI_SENSE_BUFFERSIZE < len + 14)
-> > -				return;
-> > -			sb[7] = len + 14;
-> > -			desc = sb + 8 + len;
-> > -		}
-> > -		desc[0] = 9;
-> > -		desc[1] = 12;
-> > -		/*
-> > -		 * Copy registers into sense buffer.
-> > -		 */
-> > -		desc[2] = 0x00;
-> > -		desc[3] = tf->error;
-> > -		desc[5] = tf->nsect;
-> > -		desc[7] = tf->lbal;
-> > -		desc[9] = tf->lbam;
-> > -		desc[11] = tf->lbah;
-> > -		desc[12] = tf->device;
-> > -		desc[13] = tf->status;
-> > -
-> > -		/*
-> > -		 * Fill in Extend bit, and the high order bytes
-> > -		 * if applicable.
-> > -		 */
-> > -		if (tf->flags & ATA_TFLAG_LBA48) {
-> > -			desc[2] |= 0x01;
-> > -			desc[4] = tf->hob_nsect;
-> > -			desc[6] = tf->hob_lbal;
-> > -			desc[8] = tf->hob_lbam;
-> > -			desc[10] = tf->hob_lbah;
-> > -		}
-> > -	} else {
-> > -		/* Fixed sense format */
-> > -		sb[0] |= 0x80;
-> > -		sb[3] = tf->error;
-> > -		sb[4] = tf->status;
-> > -		sb[5] = tf->device;
-> > -		sb[6] = tf->nsect;
-> > -		if (tf->flags & ATA_TFLAG_LBA48)  {
-> > -			sb[8] |= 0x80;
-> > -			if (tf->hob_nsect)
-> > -				sb[8] |= 0x40;
-> > -			if (tf->hob_lbal || tf->hob_lbam || tf->hob_lbah)
-> > -				sb[8] |= 0x20;
-> > -		}
-> > -		sb[9] = tf->lbal;
-> > -		sb[10] = tf->lbam;
-> > -		sb[11] = tf->lbah;
-> > -	}
-> >  }
-> >  
-> >  /**
-> > @@ -1634,6 +1649,8 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
-> >  	u8 *cdb = cmd->cmnd;
-> >  	int need_sense = (qc->err_mask != 0) &&
-> >  		!(qc->flags & ATA_QCFLAG_SENSE_VALID);
-> > +	int need_passthru_sense = (qc->err_mask != 0) ||
-> > +		(qc->flags & ATA_QCFLAG_SENSE_VALID);
-> >  
-> >  	/* For ATA pass thru (SAT) commands, generate a sense block if
-> >  	 * user mandated it or if there's an error.  Note that if we
-> > @@ -1645,13 +1662,16 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
-> >  	 * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
+> > +
+> > +	if (!(qc->flags & ATA_QCFLAG_RTF_FILLED)) {
+> > +		ata_dev_dbg(dev, "Missing RTF: cannot generate sense data.\n");
+> > +		return;
+> > +	}
+> > +
+> >  	/* Use ata_to_sense_error() to map status register bits
+> >  	 * onto sense key, asc & ascq.
 > >  	 */
-> >  	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
-> > -	    ((cdb[2] & 0x20) || need_sense))
-> > -		ata_gen_passthru_sense(qc);
-> > -	else if (need_sense)
-> > +	    ((cdb[2] & 0x20) || need_passthru_sense)) {
-> > +		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
-> > +			ata_gen_passthru_sense(qc);
-> > +		ata_scsi_set_passthru_sense_fields(qc);
 > 
-> This whole logic looks too complicated to me.
+> -- 
+> Damien Le Moal
+> Western Digital Research
 > 
-> Can't we do something to make it easier to read, e.g. something like:
-> 
-> 
-> {
-> 	if (command_is_ata_passthru(cdb)) {
-> 		handle_passthru_completion(qc);
-> 		ata_qc_done();
-> 		return;
-> 	}
-> 
-> 	if (need_sense)
-> 		ata_gen_ata_sense(qc);
-> 	else
-> 		/* Keep the SCSI ML and status byte, clear host byte. */ 
-> 		cmd->result &= 0x0000ffff;
-> 
-> 	ata_qc_done();
-> }
-> 
-> And then put the complicated logic in handle_passthru_command() ?
-> 
-> /* CASES:
-> * a) IF error command (ERROR or DF set) and ATA_QCFLAG_SENSE_VALID (SK+ASC+ASCQ) set:
-> *    - don't touch SK/ASC/ASCQ in sense_buffer
-> *    - set ATA registers in fixed format or descriptor format (based on dev->flags ATA_DFLAG_D_SENSE)
-> * b) IF error command (ERROR or DF set) and ATA_QCFLAG_SENSE_VALID (SK+ASC+ASCQ) not set:
-> *    - generate the SK+ASC+ASCQ from ATA status and ATA error, and
-> *    - set CHECK_CONDITION in cmd->result (scsi_build_sense() does this)
-> *    - set ATA registers in fixed format or descriptor format (based on dev->flags ATA_DFLAG_D_SENSE)
-> * c) IF success command (ERROR and DF not set), and ATA_QCFLAG_SENSE_VALID set, CK_COND set:
-> *    - don't touch SK/ASC/ASCQ in sense_buffer
-> *    - set ATA registers in fixed format or descriptor format (based on dev->flags ATA_DFLAG_D_SENSE)
-> *    - we should probably set CHECK_CONDITION status byte in cmd->result here.... but not sure...
-> * d) IF success command (ERROR and DF not set), and ATA_QCFLAG_SENSE_VALID set, CK_COND not set:
-> *    - don't touch SK/ASC/ASCQ in sense_buffer
-> *    - don't fill ATA registers
-> *    - keep the SCSI ML and status byte, clear host byte, in cmd->result
-> * e) IF success command (ERROR and DF not set), and ATA_QCFLAG_SENSE_VALID not set, CK_COND set:
-> *    - set SK to "RECOVERED ERROR" ASCQ to "ATA PASS-THROUGH INFORMATION AVAILABLE", ASC to 0.
-> *    - set ATA registers in fixed format or descriptor format (based on dev->flags ATA_DFLAG_D_SENSE)
-> *    - set CHECK_CONDITION status byte in cmd->result
-> * f) IF success command (ERROR and DF not set), and ATA_QCFLAG_SENSE_VALID not set, CK_COND not set:
-> *    - keep the SCSI ML and status byte, clear host byte, in cmd->result
-> */
-> static void ata_handle_passthru_completion(struct ata_queued_cmd *qc);
->
-> So we should only copy the ATA registers when CK_COND is set, or if ERROR bit
-> or DF bit was set. CK_COND being set in the cdb (input command) basically means
-> that the user requested that the ATA registers should be copied into the sense
-> buffer (in the result).
-> 
-> The only tricky case is if we should set CHECK_CONDITION in case c) or not.
-> All other cases seems quite clear by looking at the SAT spec.
-> 
-
-Thank you, Niklas! I agree that this code is too complicated and should be
-simplified. I don't think we should change the code too much in this patch
-since it is going to be backported to stable releases.
-
-Would you mind sending a patch for the proposed simplifications following
-this patch series?
-
-I think there are some additional simplifications that can be made,
-e.g. both ata_gen_passthru_sense() and ata_gen_ata_sense() contain
-the same exact code:
-
-        /*                                                                      
-         * Use ata_to_sense_error() to map status register bits                 
-         * onto sense key, asc & ascq.                                          
-         */                                                                     
-        if (qc->err_mask ||                                                     
-            tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {             
-                ata_to_sense_error(tf->status, tf->error,                       
-                                   &sense_key, &asc, &ascq);                    
-                ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);         
-        } else {
-
-Perhaps it can be moved into a separate function, etc.
-
 Thanks,
 Igor
-
-> 
-> > +	} else if (need_sense) {
-> >  		ata_gen_ata_sense(qc);
-> > -	else
-> > +	} else {
-> >  		/* Keep the SCSI ML and status byte, clear host byte. */
-> >  		cmd->result &= 0x0000ffff;
-> > +	}
-> >  
-> >  	ata_qc_done(qc);
-> >  }
-> > @@ -2590,14 +2610,8 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
-> >  	/* handle completion from EH */
-> >  	if (unlikely(err_mask || qc->flags & ATA_QCFLAG_SENSE_VALID)) {
-> >  
-> > -		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID)) {
-> > -			/* FIXME: not quite right; we don't want the
-> > -			 * translation of taskfile registers into a
-> > -			 * sense descriptors, since that's only
-> > -			 * correct for ATA, not ATAPI
-> > -			 */
-> > +		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
-> >  			ata_gen_passthru_sense(qc);
-> > -		}
-> >  
-> >  		/* SCSI EH automatically locks door if sdev->locked is
-> >  		 * set.  Sometimes door lock request continues to
-> > -- 
-> > 2.45.2.803.g4e1b14247a-goog
-> > 
