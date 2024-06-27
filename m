@@ -1,64 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31FBD198A34;
-	Thu, 27 Jun 2024 15:15:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 871B745BE4;
+	Thu, 27 Jun 2024 20:08:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719501336; cv=none; b=tjdwDbuJEVY6zx6r23iOIr6I/QxAjUxy7e5XFEI2xdSygykBXrmZjOUclbVGMxVruTOmFFUocjV0HFIpbNFkT3rcbygpBW45K2UdKxkBdT4Izzhuf8+tE5nhn++vXo7KQZ+WNFkuR2DRYtfWG/Hpgl8XGTeIz1DN4u9ADGE4gWo=
+	t=1719518927; cv=none; b=EEEjpc8d5vGbWsDCD61+l4EtIdpqkgv4MVDvzj+YYk/pUYEUvDLlki4/MwgxU1ORrVOIhP9AY0DOEGCct4JQdlNLTCucD6qhFfIbwXYumpDBbYa8c6T8IqBhJ4bzI5eo50QowIVY9B4/Jm0Je2qxFDvDijb7hKogxcsh49RNuE8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719501336; c=relaxed/simple;
-	bh=q0A8hCYy5uZVhZ/NmrOR19SojhuSXvXU+Cvj3LoyMI4=;
+	s=arc-20240116; t=1719518927; c=relaxed/simple;
+	bh=zPmtd4MEhWY9TETQmtswO8F+vsKxoyJWAA+rkefKEks=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PtrToyfrfzPcPWhmQDsT9UBBuIamC7tkWQe4d/uxIKYeyWpjehCeMc5nE1bt2502geOT1NVrS/iQK0k9aAzuTLVqZOqcuhD8yM4BX9gLDHmW9yKRX2HovzoKsiG8ZCW6nGpa9uMEP5fW2IP+cwtKjjiTSda3dyU3VYIVEde1Ewc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bg1sfPer; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=OiC0IpsflsXqyCxfX03LT1UHy9/jlpfPUim4xQDdTnuMIGqVrbOXP+pBgoLRSVDZpuWx/PxxHWex3PBP4yNltg7cS09eEkUf5uu0g6ZKjk3Eimk5jVfN82UO6pVl0hRa9FAgAYnRulKdXOeve3dPqlmtGYLC1S94JkjpTCXByfo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hqznTP+S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bg1sfPer"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D0DAC32786;
-	Thu, 27 Jun 2024 15:15:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hqznTP+S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE650C2BBFC;
+	Thu, 27 Jun 2024 20:08:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719501335;
-	bh=q0A8hCYy5uZVhZ/NmrOR19SojhuSXvXU+Cvj3LoyMI4=;
+	s=k20201202; t=1719518927;
+	bh=zPmtd4MEhWY9TETQmtswO8F+vsKxoyJWAA+rkefKEks=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Bg1sfPerj2O75O7uXP6rq1G5VguVbZ8WxMjSRnAftOVV+MeIkSZq+VBh20TnGQ0aK
-	 hWxDQkJjRjVrXSjbyVEXGcHTRWDd7Bzk7DktVL587k8IPuupbtofcid+AHy3oK08js
-	 EREJt1uEyCuxU7IBr7hnl3x+pIUttcHJTRS50y9ajs/k9sKNwysEibKGhQ9TN80/2u
-	 cZ9IsKP3S/QO/nDF1pb/vnLbKMrLGFG/vQXL3bMXGq1gVX+Lz9zd6X3iRb+i0TyX8j
-	 zh+GOUG1YF7jyODghtEvW4yfVk00WC/1k0/T8RvJ6WR70Y7LK3CI1JQRRWX6jeJX6b
-	 ZwPfQ13KLuYjQ==
-Date: Thu, 27 Jun 2024 17:15:31 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Igor Pylypiv <ipylypiv@google.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 2/6] ata: libata-scsi: Do not overwrite valid sense
- data when CK_COND=1
-Message-ID: <Zn2CE-aFGj2x8qi2@ryzen.lan>
-References: <20240626230411.3471543-1-ipylypiv@google.com>
- <20240626230411.3471543-3-ipylypiv@google.com>
- <Zn1zsaTLE3hYbSsK@ryzen.lan>
+	b=hqznTP+SgiuHYipe56xG9UD/09R26f5re7yvytGwieB2RsBTbZEExewIVWRlHNyPT
+	 gZZ8IlJsJBjTyyhySgPC+WkoX8tyItiU8FtFdcs4rQuQ7oD4rOmc72f/a3zabrS3Ql
+	 /UR8Xrcj4BGG7bK3YN9jWNrGYR4t4Kom/CwKR7O1H45WDQ/Re9g6Qs3TkU/yllkAzX
+	 xw+NjR7KCStI0saHdmuakntiUW8KOD28L/DiXYWVMunFG8esJK64jr44gGji7TMnTr
+	 W2bSgC60LFHpeW+zY0VXX46yM9HkKvDdK7fHNdfzyOneoKqXftI+H17haD8lYaOigW
+	 MgYCjKKEA4J+Q==
+Date: Thu, 27 Jun 2024 16:08:45 -0400
+From: Sasha Levin <sashal@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Mikhail Ukhin <mish.uxin2012@yandex.ru>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jens Axboe <axboe@kernel.dk>, Niklas Cassel <cassel@kernel.org>,
+	stable@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Pavel Koshutin <koshutin.pavel@yandex.ru>,
+	lvc-project@linuxtesting.org
+Subject: Re: [PATCH v4 5.10/5.15] ata: libata-scsi: check cdb length for
+ VARIABLE_LENGTH_CMD commands
+Message-ID: <Zn3Gzc46q_gXoD59@sashalap>
+References: <20240626211358.148625-1-mish.uxin2012@yandex.ru>
+ <ab75136a-cdf5-4eb1-a09a-bc59beb6b8df@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <Zn1zsaTLE3hYbSsK@ryzen.lan>
+In-Reply-To: <ab75136a-cdf5-4eb1-a09a-bc59beb6b8df@kernel.org>
 
-On Thu, Jun 27, 2024 at 04:14:09PM +0200, Niklas Cassel wrote:
-> 
-> The only tricky case is if we should set CHECK_CONDITION in case c) or not.
-> All other cases seems quite clear by looking at the SAT spec.
+On Thu, Jun 27, 2024 at 11:02:23AM +0900, Damien Le Moal wrote:
+>On 6/27/24 06:13, Mikhail Ukhin wrote:
+>> Fuzzing of 5.10 stable branch reports a slab-out-of-bounds error in
+>> ata_scsi_pass_thru.
+>>
+>> The error is fixed in 5.18 by commit ce70fd9a551a ("scsi: core: Remove the
+>> cmd field from struct scsi_request") upstream.
+>> Backporting this commit would require significant changes to the code so
+>> it is bettter to use a simple fix for that particular error.
+>
+>This sentence is not needed in the commit message. That is a discussion to have
+>when applying (or not) the patch.
 
-I think we should set CHECK_CONDITION in case c),
-even if SK+ASCQ+ASC is not "ATA PASS-THROUGH INFORMATION AVAILABLE".
+It's good to have this reasoning in the commit message to, so that later
+when we look at the patch and try to understand why we needed something
+custom for the backport, the justification will be right there.
 
-That way we at least align CK_COND with CHECK_CONDITION, which is
-most likely what the user (and spec writers) expect.
-
-
-Kind regards,
-Niklas
+-- 
+Thanks,
+Sasha
