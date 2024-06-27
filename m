@@ -1,168 +1,164 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward501a.mail.yandex.net (forward501a.mail.yandex.net [178.154.239.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1875D7484;
-	Thu, 27 Jun 2024 06:40:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 098567C097;
+	Thu, 27 Jun 2024 08:38:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719470444; cv=none; b=RMr/VNxoZs/KEJPkZQJkUV6d+01nI1NFXasQms0bC+6Bf4J5UaVPPAxBPCCy6usHcOAQkjXrqwrqfnziXKpgGmUsE17UaLLwcz9LZM5qhd5445IxigD8rO+1wg10B2op+XUfYApO+/i43gioZd60K6qNIKaqXce6ve4h+rxbLMs=
+	t=1719477511; cv=none; b=XLNDhkbXr/dR4DMCd2JJCE0Qos3YV1HJSo9TwBxPLpIe8LHWu2abh5dEEi45PfsYzuS7kNyTBW2QHB7iDxizNypSUmTiDIfxGPCdifQT0w0TZjVEorG+8pAxXQLPg9s6cVDlMby6Jo5bz5Wra7zERwQ9HcvGLFo+JiF9kkLrjdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719470444; c=relaxed/simple;
-	bh=fdZw3UEcy/OqjOiM756U2pnRYYZxqnb2PwjDcf1hDWQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SlmCV/0tY3HIZHiOasQOgNpXzVqiHd6LcjKe5W7jFieAMMwBdbMpn6D6dZeXb9eaUeuWV2XRSwyrJQvIWS5ldpL0BSNBrKSRXvqAMCLDNktN+lMZXqQe2+Siuin8tqVhfEKVaJZei3ZPOmKTqyQ1exm9NyhjU4w0mlesb2Mw9y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=rlUccpjc; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zDnAaBxI; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=rlUccpjc; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=zDnAaBxI; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1719477511; c=relaxed/simple;
+	bh=sncecviZ4oVzyaqVg6LU/TKkhzMCJcCvnENYdLedhDQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=lCDDAcTYqAJfIwhLmscFk8xCyAW78PCjg/OoxkpdL++WvW/lVLcesjayHlKCKoa4pkxbpud7JcrwQZakAcKhWt4DSKa7DPLev6bpqsSraYWpficcmpSoHluYlKKsPP9D1+0knk07Mb5V2mNqZmeWPZNPVxLS704pF+/1M844NYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me; spf=pass smtp.mailfrom=maquefel.me; dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b=fYt77sep; arc=none smtp.client-ip=178.154.239.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maquefel.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="rlUccpjc";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zDnAaBxI";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="rlUccpjc";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="zDnAaBxI"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id D2A8721B70;
-	Thu, 27 Jun 2024 06:40:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719470439; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZyVLM4pG6jloZQ2CaGAYC23ZBr3dfxBr7YstfBlXXIM=;
-	b=rlUccpjc98gGIZuqeaojcTBLTqiGZvVHrb2gnfsNgTvdj4Oao26d5VHmmJI9iUKComnRHj
-	OGcIKM/XjFxSwdXzPvhfdOmmkmVL6do4H6LUujbfBa4ws/kBdliiI6CcdJsyefc2sK46rA
-	U5GDaJxW7wIvcGV5J9GIfMt5PdhX+2o=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719470439;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZyVLM4pG6jloZQ2CaGAYC23ZBr3dfxBr7YstfBlXXIM=;
-	b=zDnAaBxIWnAS4FsTMWa/uAIugJPOkY0SsAIVNm3vdrR+FqO/9vnJnot0AOSIEDi/BSVNHi
-	bfrB3KhLuLMZ1vCA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=rlUccpjc;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=zDnAaBxI
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719470439; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZyVLM4pG6jloZQ2CaGAYC23ZBr3dfxBr7YstfBlXXIM=;
-	b=rlUccpjc98gGIZuqeaojcTBLTqiGZvVHrb2gnfsNgTvdj4Oao26d5VHmmJI9iUKComnRHj
-	OGcIKM/XjFxSwdXzPvhfdOmmkmVL6do4H6LUujbfBa4ws/kBdliiI6CcdJsyefc2sK46rA
-	U5GDaJxW7wIvcGV5J9GIfMt5PdhX+2o=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719470439;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZyVLM4pG6jloZQ2CaGAYC23ZBr3dfxBr7YstfBlXXIM=;
-	b=zDnAaBxIWnAS4FsTMWa/uAIugJPOkY0SsAIVNm3vdrR+FqO/9vnJnot0AOSIEDi/BSVNHi
-	bfrB3KhLuLMZ1vCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 086141384C;
-	Thu, 27 Jun 2024 06:40:38 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 4HtNM2YJfWaAagAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 27 Jun 2024 06:40:38 +0000
-Message-ID: <ef01b28b-b671-478a-80e2-521b4099820e@suse.de>
-Date: Thu, 27 Jun 2024 08:40:38 +0200
+	dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b="fYt77sep"
+Received: from mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:6289:0:640:5fc6:0])
+	by forward501a.mail.yandex.net (Yandex) with ESMTPS id 62E6D62860;
+	Thu, 27 Jun 2024 11:29:53 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id hTMqF50OgeA0-419Dn7dc;
+	Thu, 27 Jun 2024 11:29:51 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail;
+	t=1719476991; bh=sncecviZ4oVzyaqVg6LU/TKkhzMCJcCvnENYdLedhDQ=;
+	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
+	b=fYt77sepJb6Dz5nNn3wvLM2BcROhwWdG7wRisBkqtF3/hXtLy8lIDdb5a9wki+xgj
+	 m+gfMLnWml2khZDKWnsANuhxBC4XcH3KBbc8wli7qPcKfOBKMiiokOznOQZASnsShb
+	 uhxbpxZgH1kBKx/Vy2qTDCDcjYAISNAwQklonyaU=
+Authentication-Results: mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
+Message-ID: <241a4cf9830b0118f01e8fcf2853c62527636049.camel@maquefel.me>
+Subject: Re: [PATCH v10 00/38] ep93xx device tree conversion
+From: Nikita Shubin <nikita.shubin@maquefel.me>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>, Arnd Bergmann
+ <arnd@arndb.de>,  Stephen Boyd <sboyd@kernel.org>
+Cc: Hartley Sweeten <hsweeten@visionengravers.com>, Alexander Sverdlin
+ <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>,
+ Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>,
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>,
+ Michael Turquette <mturquette@baylibre.com>, Sebastian Reichel
+ <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, Krzysztof Kozlowski
+ <krzysztof.kozlowski+dt@linaro.org>,  Conor Dooley <conor+dt@kernel.org>,
+ Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck
+ <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>, Uwe
+ =?ISO-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, Mark
+ Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,  Paolo
+ Abeni <pabeni@redhat.com>, Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, Liam Girdwood
+ <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai
+ <tiwai@suse.com>, Ralf Baechle <ralf@linux-mips.org>,  "Wu, Aaron"
+ <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, Olof Johansson
+ <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-pm@vger.kernel.org,  devicetree@vger.kernel.org,
+ dmaengine@vger.kernel.org,  linux-watchdog@vger.kernel.org,
+ linux-pwm@vger.kernel.org,  linux-spi@vger.kernel.org,
+ netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
+ linux-sound@vger.kernel.org, Bartosz Golaszewski
+ <bartosz.golaszewski@linaro.org>,  Krzysztof Kozlowski
+ <krzysztof.kozlowski@linaro.org>, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>, Vinod
+ Koul <vkoul@kernel.org>
+Date: Thu, 27 Jun 2024 11:29:44 +0300
+In-Reply-To: <48c242838c77034485a9e667dc0e867207c5beed.camel@maquefel.me>
+References: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
+	 <CAHp75VfSC9gAD9ipeWRPdQOxUp4FXqYYei-cJTs38nbz0cHpkg@mail.gmail.com>
+	 <48c242838c77034485a9e667dc0e867207c5beed.camel@maquefel.me>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 13/13] ata: ahci: Add debug print for external port
-Content-Language: en-US
-To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
- Jason Yan <yanaijie@huawei.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-ide@vger.kernel.org
-References: <20240626180031.4050226-15-cassel@kernel.org>
- <20240626180031.4050226-28-cassel@kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240626180031.4050226-28-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: D2A8721B70
-X-Spam-Score: -4.50
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.50 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-On 6/26/24 20:00, Niklas Cassel wrote:
-> Add a debug print that tells us if LPM is not getting enabled because the
-> port is external.
-> 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->   drivers/ata/ahci.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index fc6fd583faf8..a05c17249448 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1732,8 +1732,10 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
->   	 * Management Interaction in AHCI 1.3.1. Therefore, do not enable
->   	 * LPM if the port advertises itself as an external port.
->   	 */
-> -	if (ap->pflags & ATA_PFLAG_EXTERNAL)
-> +	if (ap->pflags & ATA_PFLAG_EXTERNAL) {
-> +		ata_port_dbg(ap, "external port, not enabling LPM\n");
->   		return;
-> +	}
->   
->   	/* If no LPM states are supported by the HBA, do not bother with LPM */
->   	if ((ap->host->flags & ATA_HOST_NO_PART) &&
+On Tue, 2024-06-18 at 19:20 +0300, Nikita Shubin wrote:
+> Hello Andy!
+> On Mon, 2024-06-17 at 12:58 +0200, Andy Shevchenko wrote:
+> > On Mon, Jun 17, 2024 at 11:38=E2=80=AFAM Nikita Shubin via B4 Relay
+> > <devnull+nikita.shubin.maquefel.me@kernel.org> wrote:
+> > >=20
+> > > The goal is to recieve ACKs for all patches in series to merge it
+> > > via Arnd branch.
+> >=20
+> > 'receive'
+> >=20
+> > > Unfortunately, CLK subsystem suddenly went silent on clk portion
+> > > of
+> > > series V2 reroll,
+> > > tried to ping them for about a month but no luck.
+> > >=20
+> > > Link:
+> > > https://lore.kernel.org/r/20240408-ep93xx-clk-v2-1-adcd68c13753@maque=
+fel.me
+> > >=20
+> > > Some changes since last version (v9) - see "Changes in v10",
+> > > mostly
+> > > cosmetic.
+> >=20
+> > ...
+> >=20
+> > > Patches should be formated with '--histogram'
+> >=20
+> > 'formatted'
+> >=20
+> > ...
+> >=20
+> > > Changes in v10:
+> > >=20
+> > > Reordered SoB tags to make sure they appear before Rb and Acked
+> > > tags.
+> >=20
+> > This is not required. The importance is only the order of SoBs
+> > themselves. If they are interleaved with other tags, it's fine.
+>=20
+> Ah - ok. Just saw someone was complaining about b4 reordering them.=20
+>=20
+> >=20
+> > ...
+> >=20
+> >=20
+> > Hopefully to see this series being eventually applied soon.
+> > Arnd? (Do we have all necessary subsystem maintainers' tags, btw?)
+> >=20
+> >=20
+>=20
+> As i see from my perspective only three left:
+>=20
+> Clk subsystem:
+>=20
+> - clk: ep93xx: add DT support for Cirrus EP93xx
+>=20
+> DMA subsystem (but the only request from Vinod, as far as i remember,
+> was fixing commits titles):
+>=20
+> - dmaengine: cirrus: Convert to DT for Cirrus EP93xx
+> - dmaengine: cirrus: remove platform code
+>=20
+> Beside that tags missing on platform code removal (which can be Acked
+> by Arnd himself i believe) and dtsi/dts files (same ?).
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Vinod acked the above two patches:
 
-Cheers,
+https://lore.kernel.org/all/ZnkIp8bOcZK3yVKP@matsya/
+https://lore.kernel.org/all/ZnkImp8BtTdxl7O3@matsya/
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+so only:
+
+- clk: ep93xx: add DT support for Cirrus EP93xx
+
+https://lore.kernel.org/all/20240617-ep93xx-v10-3-662e640ed811@maquefel.me/
+
+left.
+
+Hope Stephen will find some time for this one.
 
