@@ -1,66 +1,152 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 832381E53A;
-	Fri, 28 Jun 2024 14:37:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC3871DFFB;
+	Fri, 28 Jun 2024 15:49:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719585438; cv=none; b=VrlKjUTapirp+7fHUCXjqFajJ7FvCTrwub76+jFnD8PNPxST1xxzzxw7VJcqi26fGU6o4C507j2ow0ujdi1vWUEjHq22AQA+8dZgZ3nXzyzo7XqK9hXJzalch+mOVK6+6y29NWIvWOOduFZKtMKU/gsEvhw6RGEntdQ3e6PJl/0=
+	t=1719589768; cv=none; b=nuz95v3Y1uTb2PB+mFjEaZxw8Dh4OZHaUpSgQl9guqJxWnjr+qmY/L+SKKiGncd0lmrCBWPvqvjLyBKx23o9z8CpuJLjhS5AAtITPKrtyYCcHmbFlTjLQvLn9W7y3NSQUTgr4t91n07e352JhQNIkm+nx3IDLTqmfmJIOGk+DwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719585438; c=relaxed/simple;
-	bh=PZpO18EWZQ4Vy4o9Cad1oIdRUQC2DpqELeP5vseTrEg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=UQB/3jeDZOvSMCo0h413Wjrn8zELGUsIlAbGUe49tQvmvssIfEpr+x0+S1n+6qNaYGOLQmA/FAbVJWZMZN0nZZthMDEkxXCOOWwvj54NazSbL/uy5NSek23JqwnHCkJovFwoobIX16RjEli3INJbJnO6oEfaSo4mn+PvWwTZjOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oM24mVoM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719589768; c=relaxed/simple;
+	bh=ZWoGkvRBYm3yrCpfNumHr+jeYorOXA8KfCQtFdrxRto=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YE7OFauP9daPLBqBObCCztEsoll9HXInzyY137KF4Hi4SgxzdmtKjbpaWYJh5C3UN6Y8ZuGY1wsn27+Q4veaNrPVZOzxeVcDWK2rGipD2zIruKmbj/JZcw3wUH23ecZpU6fuUgd00ULeocq7h74jssmDhBTYKM5xVukGPnkm1nY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dE3fXaFx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oM24mVoM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB2A4C32786;
-	Fri, 28 Jun 2024 14:37:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dE3fXaFx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8394DC116B1;
+	Fri, 28 Jun 2024 15:49:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719585438;
-	bh=PZpO18EWZQ4Vy4o9Cad1oIdRUQC2DpqELeP5vseTrEg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=oM24mVoM4AABGUYVMpS58M26WrhcR1asBBHM1udWb9f6MUbtcUgqUsWS2S51yJFV2
-	 +5c5+1BeHHRnGPUBY+H6K2LYHv0gr+rxQ24+SBDbGpkZkojyMCwy8MmeBv/AE6QJuF
-	 MXpjJeX5MAVTRrGuAKQrjhlwmSfT2Mkkl6CFCBWZQ5oPb45RkVBQPohCO7wEo/mw2t
-	 oVUZXPx4ngynziSzGvC2BoKeAZOJWbfCLu1iYnwL6Bmwhkny2q9YX/Mm0Srt/2eiRA
-	 jFZxnzUPqEGUPJqidHX72F10X3oZ/JDz99iDZwC5jVPYG6qvKRCaXICDcoHjP+QKUO
-	 hRgFUAWWEYxmg==
+	s=k20201202; t=1719589767;
+	bh=ZWoGkvRBYm3yrCpfNumHr+jeYorOXA8KfCQtFdrxRto=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dE3fXaFx2mNsixe+U6jdMlDL61W8Nk4IFr2pIO8b/FxrrgR9ga30hkU9ShFVXOpBG
+	 cAlpmWBXgXPvOYzCajKBwBcGUTlnZYqJs3N84N41v4NmPUVH2vmrnxlB+GK9XKj1WJ
+	 CofTvM4pq09/HSqK5FukvkHHObuCximz2bRHIK+MpSkJO9F7pbOdVJ0BFLeXuR7dmg
+	 fybWtOuZdZelwNOYwPqHDnEDQahC/FuGjBAZbAe5V7sXHpYt5wHAVszfF2eQWALQf+
+	 CUPzW7JUMrS9kFPsm51mN8gB91qBcF7ZkM9hl4N0vWGp5OqoUoonq+VteYyatiTIUg
+	 /GIfGVbjVU6AA==
+Date: Fri, 28 Jun 2024 17:49:22 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: dlemoal@kernel.org, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, lp610mh@gmail.com, stable@vger.kernel.org, 
- Alessandro Maggio <alex.tkd.alex@gmail.com>
-In-Reply-To: <20240627105551.4159447-2-cassel@kernel.org>
-References: <20240627105551.4159447-2-cassel@kernel.org>
-Subject: Re: [PATCH v2] ata: libata-core: Add ATA_HORKAGE_NOLPM for all
- Crucial BX SSD1 models
-Message-Id: <171958543661.6159.6966596664105852496.b4-ty@kernel.org>
-Date: Fri, 28 Jun 2024 16:37:16 +0200
+To: Hannes Reinecke <hare@suse.de>
+Cc: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
+	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Akshat Jain <akshatzen@google.com>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v3 1/6] ata: libata-scsi: Fix offsets for the fixed
+ format sense data
+Message-ID: <Zn7bghgsMR062xbb@ryzen.lan>
+References: <20240626230411.3471543-1-ipylypiv@google.com>
+ <20240626230411.3471543-2-ipylypiv@google.com>
+ <Zn1WUhmLglM4iais@ryzen.lan>
+ <0fbf1756-5b97-44fc-9802-d481190d2bd8@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0fbf1756-5b97-44fc-9802-d481190d2bd8@suse.de>
 
-On Thu, 27 Jun 2024 12:55:52 +0200, Niklas Cassel wrote:
-> We got another report that CT1000BX500SSD1 does not work with LPM.
-> 
-> If you look in libata-core.c, we have six different Crucial devices that
-> are marked with ATA_HORKAGE_NOLPM. This model would have been the seventh.
-> (This quirk is used on Crucial models starting with both CT* and
-> Crucial_CT*)
-> 
-> [...]
+On Fri, Jun 28, 2024 at 08:47:03AM +0200, Hannes Reinecke wrote:
+> On 6/27/24 14:08, Niklas Cassel wrote:
+> > Hello Igor, Hannes,
+> > 
+> > The changes in this patch looks good, however, there is still one thing that
+> > bothers me:
+> > https://github.com/torvalds/linux/blob/v6.10-rc5/drivers/ata/libata-scsi.c#L873-L877
+> > 
+> > Specifically the code in the else statement below:
+> > 
+> > 	if (qc->err_mask ||
+> > 	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+> > 		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
+> > 				   &sense_key, &asc, &ascq);
+> > 		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
+> > 	} else {
+> > 		/*
+> > 		 * ATA PASS-THROUGH INFORMATION AVAILABLE
+> > 		 * Always in descriptor format sense.
+> > 		 */
+> > 		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
+> > 	}
+> > 
+> > Looking at sat6r01, I see that this is table:
+> > Table 217 — ATA command results
+> > 
+> > And this text:
+> > No error, successful completion or command in progress. The SATL
+> > shall terminate the command with CHECK CONDITION status with
+> > the sense key set to RECOVERED ERROR with the additional
+> > sense code set to ATA PASS-THROUGH INFORMATION
+> > AVAILABLE (see SPC-5). Descriptor format sense data shall include
+> > the ATA Status Return sense data descriptor (see 12.2.2.7).
+> > 
+> > However, I don't see anything in this text that says that the
+> > sense key should always be in descriptor format sense.
+> > 
+> > In fact, what will happen if the user has not set the D_SENSE bit
+> > (libata will default not set it), is that:
+> > 
+> > The else statement above will be executed, filling in sense key in
+> > descriptor format, after this if/else, we will continue checking
+> > if the sense buffer is in descriptor format, or fixed format.
+> > 
+> > Since the scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
+> > is called with (..., 1, ..., ..., ...) it will always generate
+> > the sense data in descriptor format, regardless of
+> > dev->flags ATA_DFLAG_D_SENSE being set or not.
+> > 
+> > Should perhaps the code in the else statement be:
+> > 
+> > } else {
+> > 	ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
+> > }
+> > 
+> > So that we actually respect the D_SENSE bit?
+> > 
+> > (We currently respect if when filling the sense data buffer with
+> > sense data from REQUEST SENSE EXT, so I'm not sure why we shouldn't
+> > respect it for successful ATA PASS-THROUGH commands.)
+> > 
+> I guess that we've misread the spec.
 
-Applied to libata/linux.git (for-6.10-fixes), thanks!
+I think I might have an idea where you got this from:
 
-[1/1] ata: libata-core: Add ATA_HORKAGE_NOLPM for all Crucial BX SSD1 models
-      https://git.kernel.org/libata/linux/c/1066fe82
+In sat5r06.pdf
+"""
+12.2.2.8 Fixed format sense data
+
+Table 212 shows the fields returned in the fixed format sense data (see SPC-5) for ATA PASS-THROUGH
+commands. SATLs compliant with ANSI INCITS 431-2007, SCSI/ATA Translation (SAT) return descriptor
+format sense data for the ATA PASS-THROUGH commands regardless of the setting of the D_SENSE bit.
+"""
+
+In sat6r01.pdf:
+"""
+12.2.2.8 Fixed format sense data
+
+Table 219 shows the fields returned in the fixed format sense data (see SPC-5)
+for ATA PASS-THROUGH
+commands.
+"""
+
+In SAT-6 there is no mention of compliance with ANSI INCITS 431-2007 should
+ignore D_SENSE bit and unconditionally return sense data in descriptor format.
+
+Anyway, considering that:
+1) I'm not sure how a SAT would expose that it is compliant with ANSI INCITS
+   431-2007.
+2) This text has been removed from SAT-6.
+3) We currently honour the D_SENSE bit when creating the sense buffer with the
+   SK/ASC/ASCQ that we get from the device.
+
+I think that it makes sense to honour the D_SENSE bit also when generating
+sense data for successful ATA PASS-THROUGH commands (from ATA registers).
+
 
 Kind regards,
 Niklas
-
