@@ -1,46 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 763841CCCD7;
-	Fri, 28 Jun 2024 18:25:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5167E1CE087;
+	Fri, 28 Jun 2024 18:44:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719599145; cv=none; b=jtN7jMEi9HFWf2gv7QcAGw0NA31tgki55FCXmHz3YSfk8klYOR9IEdEr6akKQWqctBRX76pSxItNRn02H8i6tGFIwt7ozM3PXNATl6VLfLHN0y1aCNW/CGZNze3fnGin/iXhv3VJ/NeXi8yj8+JuCzilrSR5n2S+mmTq32j1tJk=
+	t=1719600286; cv=none; b=ZvMdQHqHKyalz80Io6rMJjF4Nj1Vi42AwZ2JhNErq8xqJrq1NlPT7QqjtuJyNBeCoT/QdQriOnsvbVF4lQdUSNhu0M6Oyn5T4usxK9ENijoAIEZ8oL08Q1hSbP3NpiIN5mnn/1acPNRZPHA7ofUbRETHL4iILCZaL9kDj9Am8GI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719599145; c=relaxed/simple;
-	bh=fw7LUEm0VJhFKEe6LsJ1RGteKkItUj3kp0zZxdlvHws=;
+	s=arc-20240116; t=1719600286; c=relaxed/simple;
+	bh=TojJnQL9RaBjm4QgGb02q4GOqfk8aC6iXrl2HScJwXw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=R9bGXazBpTKy8PfP4nQEF7BSCAW0N9KSTVBkIwhPsGEyREXd6yUBwOP3uy0LxQ27uG7GohkIsGjMw2Qn53ekqOQeRKCNXOIVGMgeUej8gAXA29XME1DhzB8Kr757qBSoEj4kBWn/mSIjlZlL/C9hshhWRyaVfkgvhpTFtd+jyV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j1WY5Ykx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=J991ihSYEVIkVq8yTucv6la3gibVExfPqqCLbiwjOGDo6T36jThr3GP85DXMCOJR+3/VJXNl1qFe9SuWOUaw81Wvv/Ll5Mhf0yfcJtrjigpsREdwRtFwTRn54Nl7YWOkzkIRS5pAJj6hrMhmi5MElWGBsTlbc4BQbB5nJvyGod4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kQJx335b; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j1WY5Ykx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CF43C116B1;
-	Fri, 28 Jun 2024 18:25:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kQJx335b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46313C116B1;
+	Fri, 28 Jun 2024 18:44:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719599145;
-	bh=fw7LUEm0VJhFKEe6LsJ1RGteKkItUj3kp0zZxdlvHws=;
+	s=k20201202; t=1719600285;
+	bh=TojJnQL9RaBjm4QgGb02q4GOqfk8aC6iXrl2HScJwXw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=j1WY5Ykx4PkJyvKwLeBLi+IuVCeO24HXBeWIG2Ii3uKYd6PbiUhasTGJTU/5noUd1
-	 RlKI8POHXo/rUwo9pLAj2mEQSJXbPbH2XeZz2iQR0fdTTk3Wnm88CXPuh1Prpn+4EC
-	 ZjIerqowc0yMwcR4pmFlajIjLWZAoce0IDMqT4zoQ1dSy+rwpV6rL7txfym5f3cZzs
-	 nBqCH9JJNVeX5Ef0s3yBTH6mCvoEGHDWUDuy38SE4eyCVFEnn2jh7yIx0+VA3GQeoa
-	 I48FwdadTMHv+6nuK1n9lj3b2n8bgvUnvU6RuTHYwNVd+cX+k9xVRniq1tq9Hql+UV
-	 Rm95PyQf5kpPw==
-Date: Fri, 28 Jun 2024 20:25:40 +0200
+	b=kQJx335budzDjbxiJmgE8ap98NyXQ39VbGjrPcOUYHNg57UCVY1ot/cDtE0FMqjnU
+	 x+9hUpMZdwEP5LC4HnTo+yqOb1XNN8ELJtrvPo1zR44DlDpfM0T6zaozstVa3AWHGt
+	 qxye3+r3kT+BmY7/4OJazOhdlDZUErsaQHktHINxmzAOlOMbmf00mC42neGxAp95bu
+	 dj6kvVEblhVcJBKU+PwZdbguEMSMi/tI4J47SaoQ/Ni+vOJrZ2EaZyzjEJN+c2AOlg
+	 SOYBguHOmA4wykK86YpS6y+XizW7aMrfkMCBgIYtah0vkcdnsE+gY9xVs8Na6wECsf
+	 7Xrntfb4eJV5A==
+Date: Fri, 28 Jun 2024 20:44:41 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
-	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Akshat Jain <akshatzen@google.com>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/6] ata: libata-scsi: Fix offsets for the fixed
- format sense data
-Message-ID: <Zn8AJHdybqdQwsZs@ryzen.lan>
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
+	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v3 2/6] ata: libata-scsi: Do not overwrite valid sense
+ data when CK_COND=1
+Message-ID: <Zn8EmT1fefVzgy0F@ryzen.lan>
 References: <20240626230411.3471543-1-ipylypiv@google.com>
- <20240626230411.3471543-2-ipylypiv@google.com>
- <Zn1WUhmLglM4iais@ryzen.lan>
- <0fbf1756-5b97-44fc-9802-d481190d2bd8@suse.de>
- <Zn7bghgsMR062xbb@ryzen.lan>
+ <20240626230411.3471543-3-ipylypiv@google.com>
+ <Zn1zsaTLE3hYbSsK@ryzen.lan>
+ <Zn3ffnqsN4pVZA4m@google.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -49,56 +47,77 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zn7bghgsMR062xbb@ryzen.lan>
+In-Reply-To: <Zn3ffnqsN4pVZA4m@google.com>
 
-On Fri, Jun 28, 2024 at 05:49:22PM +0200, Niklas Cassel wrote:
-> On Fri, Jun 28, 2024 at 08:47:03AM +0200, Hannes Reinecke wrote:
-> > On 6/27/24 14:08, Niklas Cassel wrote:
+On Thu, Jun 27, 2024 at 09:54:06PM +0000, Igor Pylypiv wrote:
 > 
-> In SAT-6 there is no mention of compliance with ANSI INCITS 431-2007 should
-> ignore D_SENSE bit and unconditionally return sense data in descriptor format.
+> Thank you, Niklas! I agree that this code is too complicated and should be
+> simplified. I don't think we should change the code too much in this patch
+> since it is going to be backported to stable releases.
 > 
-> Anyway, considering that:
-> 1) I'm not sure how a SAT would expose that it is compliant with ANSI INCITS
->    431-2007.
-> 2) This text has been removed from SAT-6.
-> 3) We currently honour the D_SENSE bit when creating the sense buffer with the
->    SK/ASC/ASCQ that we get from the device.
+> Would you mind sending a patch for the proposed simplifications following
+> this patch series?
 > 
-> I think that it makes sense to honour the D_SENSE bit also when generating
-> sense data for successful ATA PASS-THROUGH commands (from ATA registers).
 
-Igor, I think you should add a new patch in your series that does:
+I would prefer if we changed it as part of this commit to be honest.
+
+
+I also re-read the SAT spec, and found that it says that:
+"""
+If the CK_COND bit is set to:
+a) one, then the SATL shall return a status of CHECK CONDITION upon ATA command completion,
+without interpreting the contents of the STATUS field and returning the ATA fields from the request
+completion in the sense data as specified in table 209; and
+b) zero, then the SATL shall terminate the command with CHECK CONDITION status only if an error
+occurs in processing the command. See clause 11 for a description of ATA error conditions.
+"""
+
+So it seems quite clear that if CK_COND == 1, we should set CHECK CONDITION,
+so that answers the question/uncertainty I asked/expressed in earlier emails.
+
+
+I think this patch (which should be applied on top of your v3 series),
+makes the code way easier to read/understand:
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
 index d5874d4b9253..5b211551ac10 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -949,11 +949,8 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
-                                   &sense_key, &asc, &ascq);
-                ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
+@@ -1659,26 +1656,27 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ {
+        struct scsi_cmnd *cmd = qc->scsicmd;
+        u8 *cdb = cmd->cmnd;
+-       int need_sense = (qc->err_mask != 0) &&
+-               !(qc->flags & ATA_QCFLAG_SENSE_VALID);
+-       int need_passthru_sense = (qc->err_mask != 0) ||
+-               (qc->flags & ATA_QCFLAG_SENSE_VALID);
++       bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
++       bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12;
++       bool is_ck_cond_request = cdb[2] & 0x20;
++       bool is_error = qc->err_mask != 0;
+ 
+        /* For ATA pass thru (SAT) commands, generate a sense block if
+         * user mandated it or if there's an error.  Note that if we
+-        * generate because the user forced us to [CK_COND =1], a check
++        * generate because the user forced us to [CK_COND=1], a check
+         * condition is generated and the ATA register values are returned
+         * whether the command completed successfully or not. If there
+-        * was no error, we use the following sense data:
++        * was no error, and CK_COND=1, we use the following sense data:
+         * sk = RECOVERED ERROR
+         * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
+         */
+-       if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
+-           ((cdb[2] & 0x20) || need_passthru_sense)) {
+-               if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
++       if (is_ata_passthru && (is_ck_cond_request || is_error || have_sense)) {
++               if (!have_sense)
+                        ata_gen_passthru_sense(qc);
+                ata_scsi_set_passthru_sense_fields(qc);
+-       } else if (need_sense) {
++               if (is_ck_cond_request)
++                       set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
++       } else if (is_error && !have_sense) {
+                ata_gen_ata_sense(qc);
         } else {
--               /*
--                * ATA PASS-THROUGH INFORMATION AVAILABLE
--                * Always in descriptor format sense.
--                */
--               scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
-+               /* ATA PASS-THROUGH INFORMATION AVAILABLE */
-+               ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
-        }
- }
-
-
-Feel free to copy my arguments above.
-
-I also checked VPD page 89h (ATA Information VPD page), and there are
-no bits there either to claim certain SAT version compliance.
-
-And since this text is not in SAT-6, I can only imagine that they decided
-that is was not a good idea to not always honor D_SENSE...
-
-(It does seem simpler to just always honor it...)
-
-
-Kind regards,
-Niklas
+                /* Keep the SCSI ML and status byte, clear host byte. */
