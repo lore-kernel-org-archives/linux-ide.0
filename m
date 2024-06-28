@@ -1,152 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC3871DFFB;
-	Fri, 28 Jun 2024 15:49:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A430E154420;
+	Fri, 28 Jun 2024 16:33:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719589768; cv=none; b=nuz95v3Y1uTb2PB+mFjEaZxw8Dh4OZHaUpSgQl9guqJxWnjr+qmY/L+SKKiGncd0lmrCBWPvqvjLyBKx23o9z8CpuJLjhS5AAtITPKrtyYCcHmbFlTjLQvLn9W7y3NSQUTgr4t91n07e352JhQNIkm+nx3IDLTqmfmJIOGk+DwU=
+	t=1719592383; cv=none; b=C6HubA9AH7HK6MT+QZH0bOTnoCLVm9seYdbK6IgP6pprEjnjJVVQiIVuy8xGq+QbUAaIZmNlmQ4XcKZ7R86XbCQ2uhEQC71FebI4l7gagtunVuRmOkKLbWo0O3SaNGtfcf/qbKUcU7bo7qZfUHUJKWjTE3LSeLRHWYCnp57XiGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719589768; c=relaxed/simple;
-	bh=ZWoGkvRBYm3yrCpfNumHr+jeYorOXA8KfCQtFdrxRto=;
+	s=arc-20240116; t=1719592383; c=relaxed/simple;
+	bh=UziAVxGIMxKimVIvWEEoSCI3IvuFy9O2kjXtnQXXDzM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YE7OFauP9daPLBqBObCCztEsoll9HXInzyY137KF4Hi4SgxzdmtKjbpaWYJh5C3UN6Y8ZuGY1wsn27+Q4veaNrPVZOzxeVcDWK2rGipD2zIruKmbj/JZcw3wUH23ecZpU6fuUgd00ULeocq7h74jssmDhBTYKM5xVukGPnkm1nY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dE3fXaFx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GL4cROj3Rkho8Tn0Zxu0uUSrlzzKlkmoC2YN32c4zoJvvpWOXeJ2c29JC0glKPhlfP4vJrtzm2yaaqhUuUdv76S6ryqSZG5Y6+MQXJ3QKzBfWyeW3G5c4I9IHy/bWbVEI+NJXHl0K4dihAPHYwvRzevZMSPo193EDKxvMWLsE/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qm81/sWK; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dE3fXaFx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8394DC116B1;
-	Fri, 28 Jun 2024 15:49:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719589767;
-	bh=ZWoGkvRBYm3yrCpfNumHr+jeYorOXA8KfCQtFdrxRto=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dE3fXaFx2mNsixe+U6jdMlDL61W8Nk4IFr2pIO8b/FxrrgR9ga30hkU9ShFVXOpBG
-	 cAlpmWBXgXPvOYzCajKBwBcGUTlnZYqJs3N84N41v4NmPUVH2vmrnxlB+GK9XKj1WJ
-	 CofTvM4pq09/HSqK5FukvkHHObuCximz2bRHIK+MpSkJO9F7pbOdVJ0BFLeXuR7dmg
-	 fybWtOuZdZelwNOYwPqHDnEDQahC/FuGjBAZbAe5V7sXHpYt5wHAVszfF2eQWALQf+
-	 CUPzW7JUMrS9kFPsm51mN8gB91qBcF7ZkM9hl4N0vWGp5OqoUoonq+VteYyatiTIUg
-	 /GIfGVbjVU6AA==
-Date: Fri, 28 Jun 2024 17:49:22 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
-	Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Akshat Jain <akshatzen@google.com>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/6] ata: libata-scsi: Fix offsets for the fixed
- format sense data
-Message-ID: <Zn7bghgsMR062xbb@ryzen.lan>
-References: <20240626230411.3471543-1-ipylypiv@google.com>
- <20240626230411.3471543-2-ipylypiv@google.com>
- <Zn1WUhmLglM4iais@ryzen.lan>
- <0fbf1756-5b97-44fc-9802-d481190d2bd8@suse.de>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qm81/sWK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1719592382; x=1751128382;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=UziAVxGIMxKimVIvWEEoSCI3IvuFy9O2kjXtnQXXDzM=;
+  b=Qm81/sWKrmFsBaHzgE2p8fLGmd87Od+LY4LUEmdS76vFyTaHu8Eskjmf
+   Rz10fJQ21Vvq+n/ceSBXGG4B0mLFCDJtF0v+xhjnIy84zQfpY8STppKdd
+   4oS3NdeOIsyJMRvD+lQzxghKclb2PufvS8VyRk9YUn971vlWRr6lyKK22
+   DB+hQZ1mP1+vi6snOTuZRjWowbjOt1cxCCynSgkNh3NeyGFKK/eI3HD5y
+   wD003dC/SIOuc1kVEfYhf9s2rEnIQSMRMyWzr/mylvT9QERRXERYwn0Tl
+   1YXKPuVpAojDHjtLbjiex5CBIH27lU72cZevrH/xHqIYuP3mqoQcR7Wiu
+   Q==;
+X-CSE-ConnectionGUID: f395nVZXQW28M7ZbLZYshw==
+X-CSE-MsgGUID: LZtZ+9KdTtm2m+AC0I8r5w==
+X-IronPort-AV: E=McAfee;i="6700,10204,11117"; a="16457624"
+X-IronPort-AV: E=Sophos;i="6.09,169,1716274800"; 
+   d="scan'208";a="16457624"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2024 09:33:01 -0700
+X-CSE-ConnectionGUID: PjH0WufYSg2TMeOvv/BMKA==
+X-CSE-MsgGUID: iBTfl+UnRi+7HD2djoy5ng==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,169,1716274800"; 
+   d="scan'208";a="44904378"
+Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
+  by orviesa009.jf.intel.com with ESMTP; 28 Jun 2024 09:32:58 -0700
+Received: from kbuild by 68891e0c336b with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sNEWu-000HOn-1c;
+	Fri, 28 Jun 2024 16:32:56 +0000
+Date: Sat, 29 Jun 2024 00:31:57 +0800
+From: kernel test robot <lkp@intel.com>
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 11/13] ata: libata-core: Reuse available ata_port
+ print_ids
+Message-ID: <202406290027.cdgsPQAF-lkp@intel.com>
+References: <20240626180031.4050226-26-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <0fbf1756-5b97-44fc-9802-d481190d2bd8@suse.de>
+In-Reply-To: <20240626180031.4050226-26-cassel@kernel.org>
 
-On Fri, Jun 28, 2024 at 08:47:03AM +0200, Hannes Reinecke wrote:
-> On 6/27/24 14:08, Niklas Cassel wrote:
-> > Hello Igor, Hannes,
-> > 
-> > The changes in this patch looks good, however, there is still one thing that
-> > bothers me:
-> > https://github.com/torvalds/linux/blob/v6.10-rc5/drivers/ata/libata-scsi.c#L873-L877
-> > 
-> > Specifically the code in the else statement below:
-> > 
-> > 	if (qc->err_mask ||
-> > 	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-> > 		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
-> > 				   &sense_key, &asc, &ascq);
-> > 		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
-> > 	} else {
-> > 		/*
-> > 		 * ATA PASS-THROUGH INFORMATION AVAILABLE
-> > 		 * Always in descriptor format sense.
-> > 		 */
-> > 		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
-> > 	}
-> > 
-> > Looking at sat6r01, I see that this is table:
-> > Table 217 — ATA command results
-> > 
-> > And this text:
-> > No error, successful completion or command in progress. The SATL
-> > shall terminate the command with CHECK CONDITION status with
-> > the sense key set to RECOVERED ERROR with the additional
-> > sense code set to ATA PASS-THROUGH INFORMATION
-> > AVAILABLE (see SPC-5). Descriptor format sense data shall include
-> > the ATA Status Return sense data descriptor (see 12.2.2.7).
-> > 
-> > However, I don't see anything in this text that says that the
-> > sense key should always be in descriptor format sense.
-> > 
-> > In fact, what will happen if the user has not set the D_SENSE bit
-> > (libata will default not set it), is that:
-> > 
-> > The else statement above will be executed, filling in sense key in
-> > descriptor format, after this if/else, we will continue checking
-> > if the sense buffer is in descriptor format, or fixed format.
-> > 
-> > Since the scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
-> > is called with (..., 1, ..., ..., ...) it will always generate
-> > the sense data in descriptor format, regardless of
-> > dev->flags ATA_DFLAG_D_SENSE being set or not.
-> > 
-> > Should perhaps the code in the else statement be:
-> > 
-> > } else {
-> > 	ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
-> > }
-> > 
-> > So that we actually respect the D_SENSE bit?
-> > 
-> > (We currently respect if when filling the sense data buffer with
-> > sense data from REQUEST SENSE EXT, so I'm not sure why we shouldn't
-> > respect it for successful ATA PASS-THROUGH commands.)
-> > 
-> I guess that we've misread the spec.
+Hi Niklas,
 
-I think I might have an idea where you got this from:
+kernel test robot noticed the following build warnings:
 
-In sat5r06.pdf
-"""
-12.2.2.8 Fixed format sense data
+[auto build test WARNING on linus/master]
+[also build test WARNING on v6.10-rc5 next-20240627]
+[cannot apply to mkp-scsi/for-next jejb-scsi/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Table 212 shows the fields returned in the fixed format sense data (see SPC-5) for ATA PASS-THROUGH
-commands. SATLs compliant with ANSI INCITS 431-2007, SCSI/ATA Translation (SAT) return descriptor
-format sense data for the ATA PASS-THROUGH commands regardless of the setting of the D_SENSE bit.
-"""
+url:    https://github.com/intel-lab-lkp/linux/commits/Niklas-Cassel/ata-libata-core-Fix-null-pointer-dereference-on-error/20240627-123023
+base:   linus/master
+patch link:    https://lore.kernel.org/r/20240626180031.4050226-26-cassel%40kernel.org
+patch subject: [PATCH v2 11/13] ata: libata-core: Reuse available ata_port print_ids
+config: i386-randconfig-141-20240628 (https://download.01.org/0day-ci/archive/20240629/202406290027.cdgsPQAF-lkp@intel.com/config)
+compiler: gcc-8 (Ubuntu 8.4.0-3ubuntu2) 8.4.0
 
-In sat6r01.pdf:
-"""
-12.2.2.8 Fixed format sense data
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202406290027.cdgsPQAF-lkp@intel.com/
 
-Table 219 shows the fields returned in the fixed format sense data (see SPC-5)
-for ATA PASS-THROUGH
-commands.
-"""
+smatch warnings:
+drivers/ata/libata-core.c:5467 ata_port_alloc() warn: unsigned 'ap->print_id' is never less than zero.
 
-In SAT-6 there is no mention of compliance with ANSI INCITS 431-2007 should
-ignore D_SENSE bit and unconditionally return sense data in descriptor format.
+vim +5467 drivers/ata/libata-core.c
 
-Anyway, considering that:
-1) I'm not sure how a SAT would expose that it is compliant with ANSI INCITS
-   431-2007.
-2) This text has been removed from SAT-6.
-3) We currently honour the D_SENSE bit when creating the sense buffer with the
-   SK/ASC/ASCQ that we get from the device.
+  5443	
+  5444	/**
+  5445	 *	ata_port_alloc - allocate and initialize basic ATA port resources
+  5446	 *	@host: ATA host this allocated port belongs to
+  5447	 *
+  5448	 *	Allocate and initialize basic ATA port resources.
+  5449	 *
+  5450	 *	RETURNS:
+  5451	 *	Allocate ATA port on success, NULL on failure.
+  5452	 *
+  5453	 *	LOCKING:
+  5454	 *	Inherited from calling layer (may sleep).
+  5455	 */
+  5456	struct ata_port *ata_port_alloc(struct ata_host *host)
+  5457	{
+  5458		struct ata_port *ap;
+  5459	
+  5460		ap = kzalloc(sizeof(*ap), GFP_KERNEL);
+  5461		if (!ap)
+  5462			return NULL;
+  5463	
+  5464		ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
+  5465		ap->lock = &host->lock;
+  5466		ap->print_id = ida_alloc_min(&ata_ida, 1, GFP_KERNEL);
+> 5467		if (ap->print_id < 0) {
+  5468			kfree(ap);
+  5469			return NULL;
+  5470		}
+  5471		ap->host = host;
+  5472		ap->dev = host->dev;
+  5473	
+  5474		mutex_init(&ap->scsi_scan_mutex);
+  5475		INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
+  5476		INIT_DELAYED_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
+  5477		INIT_LIST_HEAD(&ap->eh_done_q);
+  5478		init_waitqueue_head(&ap->eh_wait_q);
+  5479		init_completion(&ap->park_req_pending);
+  5480		timer_setup(&ap->fastdrain_timer, ata_eh_fastdrain_timerfn,
+  5481			    TIMER_DEFERRABLE);
+  5482	
+  5483		ap->cbl = ATA_CBL_NONE;
+  5484	
+  5485		ata_link_init(ap, &ap->link, 0);
+  5486	
 
-I think that it makes sense to honour the D_SENSE bit also when generating
-sense data for successful ATA PASS-THROUGH commands (from ATA registers).
-
-
-Kind regards,
-Niklas
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
