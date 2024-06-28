@@ -1,33 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA3836AFE;
-	Fri, 28 Jun 2024 03:48:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40F6C13212E;
+	Fri, 28 Jun 2024 06:47:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719546525; cv=none; b=W7Z9APsJHTvSrjMEEMlH0z4C6HmsqMXg7Omfut/bkiZq3vZWuTVUPofYfwwV4x91FtpFLxNUQCbZeAJdkCBsLHt8WfSUomPA/BkHK8t7l/VAYxpzTWmcktG7txhsf6X56De4kCQjdxnJAfwVNSjD1P7vHGHHe8Yu2C5ZJW9boKE=
+	t=1719557229; cv=none; b=nH3Z6NVPZenAlVblEKbB0RRyiH67/kUpjUTJ+1NmOqZrDfmu5nBzU9tfyLLcNY2pS9XXBeDrdl++IqHepgx8RuiUj1mduHvx87enOEW2qXJN/oCYYPzNGQK5fM4FLxdeZZm9BN75XIfDjgFrFY1RV0WZAakVZuBn8o/xcoxJUy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719546525; c=relaxed/simple;
-	bh=miZ+emwkg1RNLjiDVvPKsQyljnBI+eqFccb7s8arH8I=;
+	s=arc-20240116; t=1719557229; c=relaxed/simple;
+	bh=0J96qKAEDd/h8VrJnW4J277OL5HIXy7QqDMtTkoapoU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hbUQXNvqIR1BTgbJrADY7flmXHWjlC4U/qWGOEC212SkcAJX78XGg163Zs7+pG/FeqMGZEZkb4HOSFT+dN3lmtEjGXsgHZ5WAJuphVw5ZZmrSVvHo/WYAKPrS4YPNzXzC0dV99X/rbTR35TayD56gpG7QL6KprqFqJVpRweP/L4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=shdHHfxZ; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Gtxo4DvD6hN11KwY6ZPE8hmMh0onABo8sgNRDHWqillxlNJYOz6B+IBNIp+Q5bQur+/nISRwMhtqpMEanStQpCSrrH1Ay78R13MIa6KU4LduV/FUI1ltmwTYtr3V3RydaKWQMY+ZqN2RR2fc/WfYIPDIxVfh2pn2qG3p21WkGYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=CW8O+Ywc; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IDqriNwh; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=S+V/gfO7; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Z3ce36HF; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="shdHHfxZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA32AC2BBFC;
-	Fri, 28 Jun 2024 03:48:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719546524;
-	bh=miZ+emwkg1RNLjiDVvPKsQyljnBI+eqFccb7s8arH8I=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=shdHHfxZkqUafXehPtkdL4tbunl8j/oyYzmdwTU2lzHhuvDT11fEPEbu92LREbSFR
-	 U6wCIUCe55OJnTdKqE/QIq+kmsxb6nU401hQAWPi9o8Sqo24SR+Uacxzy1zOK+5qjR
-	 skVnoMgot8yOX+IAPnmr9bIPCmLBOIqRoM46fZ66uOWGdAQnnxVk8/tGYuW3tSo5T0
-	 eh1s1dc3esVUjyr5kKwYOLsvYHYPnYy2/d8sd679/PuHgybNWR4cH8DXEQ4hrwCqiM
-	 jGgPJffcoh2j5kDX1LgEp/irLAxVhN6epEVv6TyEBQzUY5tDIkOBoq94TSBPxF08bJ
-	 XI81hc1xivdqw==
-Message-ID: <97d8fdb9-7477-4eef-a570-10a229eb48be@kernel.org>
-Date: Fri, 28 Jun 2024 12:48:42 +0900
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="CW8O+Ywc";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IDqriNwh";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="S+V/gfO7";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Z3ce36HF"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 1C35521BB1;
+	Fri, 28 Jun 2024 06:47:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719557225; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/NyMKB4vbEkOX9JP/G0gqTNXDgdRRXPcyqgszdS/lb8=;
+	b=CW8O+Ywc4p4Iez7o9OsIEadtdzPmuzki5Kq6EZjhFKhTPTqlGDRrSUF42L6+S7K7PkISAI
+	P2dpGM+Ke0ZkdYECQwSCFW7LFnWvq1yJexOp7uXWvBqwWM5cSN4e65Y3C0jdt0RsHC7DJL
+	2ZfXSJCgqNqengZshE8yptD8VuZW0LY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719557225;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/NyMKB4vbEkOX9JP/G0gqTNXDgdRRXPcyqgszdS/lb8=;
+	b=IDqriNwhRcdj/dixZ33zW/IcX0Ss2vVwTrm2qS0vwGwmXmuD6mKX9lGlVHZKttxBGH++ix
+	6pnBxRfSBQT5TPBw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="S+V/gfO7";
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=Z3ce36HF
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719557224; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/NyMKB4vbEkOX9JP/G0gqTNXDgdRRXPcyqgszdS/lb8=;
+	b=S+V/gfO7O8eSWnn+3JNfqgipivkSMKOy4uhTbWM1k1CskbyFn37hHUV9IwxyWuuJF5QJq8
+	nVNDdNl0kCMlWWq6cMY9GnBuEQupWlPdxfiXzX+JO3xA6qA+a1UWw1kT1sWtDoLyIm2Ixo
+	dpzk0HdxPPSS2g0LRagG4fRiZUekMjY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719557224;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/NyMKB4vbEkOX9JP/G0gqTNXDgdRRXPcyqgszdS/lb8=;
+	b=Z3ce36HFqUsoQ35cVZei+za8nUS7Ympl6d2TqE6OEIV2/ngrW2QP66M9Xrw/+2bZmsZSZs
+	3KLArUt/04Fx3RAg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 961211373E;
+	Fri, 28 Jun 2024 06:47:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id +0/aIWdcfmY2AwAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 28 Jun 2024 06:47:03 +0000
+Message-ID: <0fbf1756-5b97-44fc-9802-d481190d2bd8@suse.de>
+Date: Fri, 28 Jun 2024 08:47:03 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,68 +83,133 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/6] ata: libata-scsi: Do not overwrite valid sense
- data when CK_COND=1
-To: Igor Pylypiv <ipylypiv@google.com>
-Cc: Niklas Cassel <cassel@kernel.org>, Tejun Heo <tj@kernel.org>,
- Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20240626230411.3471543-1-ipylypiv@google.com>
- <20240626230411.3471543-3-ipylypiv@google.com>
- <785a0460-36d5-4e4a-99ea-114081c55bc7@kernel.org>
- <Zn3R3R_xJFvyNJU-@google.com>
+Subject: Re: [PATCH v3 1/6] ata: libata-scsi: Fix offsets for the fixed format
+ sense data
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <Zn3R3R_xJFvyNJU-@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Niklas Cassel <cassel@kernel.org>, Igor Pylypiv <ipylypiv@google.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Akshat Jain <akshatzen@google.com>, stable@vger.kernel.org
+References: <20240626230411.3471543-1-ipylypiv@google.com>
+ <20240626230411.3471543-2-ipylypiv@google.com> <Zn1WUhmLglM4iais@ryzen.lan>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <Zn1WUhmLglM4iais@ryzen.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 1C35521BB1
+X-Spam-Score: -4.50
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	XM_UA_NO_VERSION(0.01)[];
+	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-On 6/28/24 5:55 AM, Igor Pylypiv wrote:
-> On Thu, Jun 27, 2024 at 09:16:09AM +0900, Damien Le Moal wrote:
->> On 6/27/24 08:04, Igor Pylypiv wrote:
->>> Current ata_gen_passthru_sense() code performs two actions:
->>> 1. Generates sense data based on the ATA 'status' and ATA 'error' fields.
->>> 2. Populates "ATA Status Return sense data descriptor" / "Fixed format
->>>    sense data" with ATA taskfile fields.
->>>
->>> The problem is that #1 generates sense data even when a valid sense data
->>> is already present (ATA_QCFLAG_SENSE_VALID is set). Factoring out #2 into
->>> a separate function allows us to generate sense data only when there is
->>> no valid sense data (ATA_QCFLAG_SENSE_VALID is not set).
->>>
->>> As a bonus, we can now delete a FIXME comment in atapi_qc_complete()
->>> which states that we don't want to translate taskfile registers into
->>> sense descriptors for ATAPI.
->>>
->>> Cc: stable@vger.kernel.org
->>> Reviewed-by: Hannes Reinecke <hare@suse.de>
->>> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
->>> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
->>
->> I wonder if we can find the patch that introduced the bug in the first place so
->> that we can add a Fixes tag. I have not checked. This may have been wrong since
->> a long time ago...
+On 6/27/24 14:08, Niklas Cassel wrote:
+> Hello Igor, Hannes,
 > 
-> This code was first introduced in 2005 in commit b095518ef51c3 ("[libata]
-> ATA passthru (arbitrary ATA command execution)").
+> The changes in this patch looks good, however, there is still one thing that
+> bothers me:
+> https://github.com/torvalds/linux/blob/v6.10-rc5/drivers/ata/libata-scsi.c#L873-L877
 > 
-> ATA_QCFLAG_SENSE_VALID was introduced a year later in commit 9ec957f2002b
-> ("[PATCH] libata-eh-fw: add flags and operations for new EH").
+> Specifically the code in the else statement below:
 > 
-> IIUC, ATA_QCFLAG_SENSE_VALID has not been set for ATA drives until 2016
-> when the support for fetching the sense data was added in 5b01e4b9efa0
-> ("libata: Implement NCQ autosense") and commit e87fd28cf9a2d ("libata:
-> Implement support for sense data reporting").
+> 	if (qc->err_mask ||
+> 	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
+> 		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
+> 				   &sense_key, &asc, &ascq);
+> 		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
+> 	} else {
+> 		/*
+> 		 * ATA PASS-THROUGH INFORMATION AVAILABLE
+> 		 * Always in descriptor format sense.
+> 		 */
+> 		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
+> 	}
 > 
-> To me none of the commits looks like a good candidate for the Fixes tag.
-> What are your thoughts on this?
+> Looking at sat6r01, I see that this is table:
+> Table 217 — ATA command results
+> 
+> And this text:
+> No error, successful completion or command in progress. The SATL
+> shall terminate the command with CHECK CONDITION status with
+> the sense key set to RECOVERED ERROR with the additional
+> sense code set to ATA PASS-THROUGH INFORMATION
+> AVAILABLE (see SPC-5). Descriptor format sense data shall include
+> the ATA Status Return sense data descriptor (see 12.2.2.7).
+> 
+> However, I don't see anything in this text that says that the
+> sense key should always be in descriptor format sense.
+> 
+> In fact, what will happen if the user has not set the D_SENSE bit
+> (libata will default not set it), is that:
+> 
+> The else statement above will be executed, filling in sense key in
+> descriptor format, after this if/else, we will continue checking
+> if the sense buffer is in descriptor format, or fixed format.
+> 
+> Since the scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
+> is called with (..., 1, ..., ..., ...) it will always generate
+> the sense data in descriptor format, regardless of
+> dev->flags ATA_DFLAG_D_SENSE being set or not.
+> 
+> Should perhaps the code in the else statement be:
+> 
+> } else {
+> 	ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
+> }
+> 
+> So that we actually respect the D_SENSE bit?
+> 
+> (We currently respect if when filling the sense data buffer with
+> sense data from REQUEST SENSE EXT, so I'm not sure why we shouldn't
+> respect it for successful ATA PASS-THROUGH commands.)
+> 
+I guess that we've misread the spec.
 
-Then let's just mark which LTS version need the patch.
-E.g. Cc: stable@vger.kernel.org # X.Y +
+The sentence:
 
+"Descriptor format sense data shall include the ATA Status Return
+  Descriptor"
 
+should be interpreted as:
+
+  _If_ the sense code is formatted in descriptor format _then_ the
+  ATA Status Return Descriptor should be included.
+
+IE if the sense code is not in descriptor format then the ATA Status
+Return Descriptor shouldn't be included (kinda obvious, really).
+But of course the D_SENSE bit should be honoured.
+
+Cheers,
+
+Hannes
 -- 
-Damien Le Moal
-Western Digital Research
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
