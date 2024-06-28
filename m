@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03F952914;
-	Fri, 28 Jun 2024 03:46:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA3836AFE;
+	Fri, 28 Jun 2024 03:48:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719546390; cv=none; b=YsI7RHGB5VVpPdMPqLNWg5cJ1cUdholYuWEtNz3YRA/bbZVPwlRTS611PAD952ntd626Uo0aRd9/1mNah84KBwX0YG4hLN1cAnBZJCO9Y8NcV8mYKkeDhjwNsJk5SMo+83j2YgJUH+Z7rYYCpHMiQ0ys6MlrPpfMBLfuwJXJhkc=
+	t=1719546525; cv=none; b=W7Z9APsJHTvSrjMEEMlH0z4C6HmsqMXg7Omfut/bkiZq3vZWuTVUPofYfwwV4x91FtpFLxNUQCbZeAJdkCBsLHt8WfSUomPA/BkHK8t7l/VAYxpzTWmcktG7txhsf6X56De4kCQjdxnJAfwVNSjD1P7vHGHHe8Yu2C5ZJW9boKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719546390; c=relaxed/simple;
-	bh=eV8HMRdVSoL2xrsydq+Vlau9g9kha6184GSXwRBvOuI=;
+	s=arc-20240116; t=1719546525; c=relaxed/simple;
+	bh=miZ+emwkg1RNLjiDVvPKsQyljnBI+eqFccb7s8arH8I=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OyGd6uBXGxlpLRM41y2lzptcad0Q1t9EFWnjNYOkQp3OxiYNr4N3rtMParCSkhRzJqQongWPMIJq/vzLxuUqyia0zBEsMMLpr9Qu/gKOB0+nvK5I74oZe5XH30UMGYasLUdKFXL5qh24nMx0f2xqpBh1Jda9STMc9KOOh2a0QP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d+rJ5oNL; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=hbUQXNvqIR1BTgbJrADY7flmXHWjlC4U/qWGOEC212SkcAJX78XGg163Zs7+pG/FeqMGZEZkb4HOSFT+dN3lmtEjGXsgHZ5WAJuphVw5ZZmrSVvHo/WYAKPrS4YPNzXzC0dV99X/rbTR35TayD56gpG7QL6KprqFqJVpRweP/L4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=shdHHfxZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d+rJ5oNL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A74FC116B1;
-	Fri, 28 Jun 2024 03:46:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="shdHHfxZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA32AC2BBFC;
+	Fri, 28 Jun 2024 03:48:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719546389;
-	bh=eV8HMRdVSoL2xrsydq+Vlau9g9kha6184GSXwRBvOuI=;
+	s=k20201202; t=1719546524;
+	bh=miZ+emwkg1RNLjiDVvPKsQyljnBI+eqFccb7s8arH8I=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=d+rJ5oNLY+revW55fa8ZqsPEaiitjQ3qiUnnZPKIk9XMyxdyqwBNtNAzWJPejcM9u
-	 x+Cq/tbWRjZ+QMaQMCdLjgxeX/TLyha2ts9b25gjYLwZZ/1JrgEezns8nKQQ87t7EC
-	 CQfJ68yCRKG2DWJeD05iTHgpMf48JgZdWPH6L3irCjq2w4EJoyQXu5hyXanA00ygIZ
-	 /m/o+C1o4tP9FWgDfAvyzVt862JSbZsKXMfT3I4c3/28m5LO9YqnzMbkkAI2G/LBDL
-	 gDRo4lq47NmEhDulcCairKVNfSltfdO2nnXguFBFK/NAOjHTzvQraT9IUjfSxjnLqO
-	 GJ/Ip7OxcMTxg==
-Message-ID: <2dcbc221-ff0f-4bfe-94f3-9266c980abb2@kernel.org>
-Date: Fri, 28 Jun 2024 12:46:25 +0900
+	b=shdHHfxZkqUafXehPtkdL4tbunl8j/oyYzmdwTU2lzHhuvDT11fEPEbu92LREbSFR
+	 U6wCIUCe55OJnTdKqE/QIq+kmsxb6nU401hQAWPi9o8Sqo24SR+Uacxzy1zOK+5qjR
+	 skVnoMgot8yOX+IAPnmr9bIPCmLBOIqRoM46fZ66uOWGdAQnnxVk8/tGYuW3tSo5T0
+	 eh1s1dc3esVUjyr5kKwYOLsvYHYPnYy2/d8sd679/PuHgybNWR4cH8DXEQ4hrwCqiM
+	 jGgPJffcoh2j5kDX1LgEp/irLAxVhN6epEVv6TyEBQzUY5tDIkOBoq94TSBPxF08bJ
+	 XI81hc1xivdqw==
+Message-ID: <97d8fdb9-7477-4eef-a570-10a229eb48be@kernel.org>
+Date: Fri, 28 Jun 2024 12:48:42 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,31 +35,65 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 12/13] ata,scsi: Remove useless ata_sas_port_alloc()
- wrapper
-To: Niklas Cassel <cassel@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-References: <20240626180031.4050226-15-cassel@kernel.org>
- <20240626180031.4050226-27-cassel@kernel.org>
- <83125236-7d07-4b62-b86a-5a70f3ca578e@kernel.org>
- <Zn01XqPMga6aG1nL@ryzen.lan>
+Subject: Re: [PATCH v3 2/6] ata: libata-scsi: Do not overwrite valid sense
+ data when CK_COND=1
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: Niklas Cassel <cassel@kernel.org>, Tejun Heo <tj@kernel.org>,
+ Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20240626230411.3471543-1-ipylypiv@google.com>
+ <20240626230411.3471543-3-ipylypiv@google.com>
+ <785a0460-36d5-4e4a-99ea-114081c55bc7@kernel.org>
+ <Zn3R3R_xJFvyNJU-@google.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <Zn01XqPMga6aG1nL@ryzen.lan>
+In-Reply-To: <Zn3R3R_xJFvyNJU-@google.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 6/27/24 6:48 PM, Niklas Cassel wrote:
-> You will see that far from all libata functions have ata_sas_*() wrapper,
-> so all the ata_* functions that do not not have ata_sas_*() wrapper are
-> already exported using EXPORT_SYMBOL_GPL(), i.e.:
+On 6/28/24 5:55 AM, Igor Pylypiv wrote:
+> On Thu, Jun 27, 2024 at 09:16:09AM +0900, Damien Le Moal wrote:
+>> On 6/27/24 08:04, Igor Pylypiv wrote:
+>>> Current ata_gen_passthru_sense() code performs two actions:
+>>> 1. Generates sense data based on the ATA 'status' and ATA 'error' fields.
+>>> 2. Populates "ATA Status Return sense data descriptor" / "Fixed format
+>>>    sense data" with ATA taskfile fields.
+>>>
+>>> The problem is that #1 generates sense data even when a valid sense data
+>>> is already present (ATA_QCFLAG_SENSE_VALID is set). Factoring out #2 into
+>>> a separate function allows us to generate sense data only when there is
+>>> no valid sense data (ATA_QCFLAG_SENSE_VALID is not set).
+>>>
+>>> As a bonus, we can now delete a FIXME comment in atapi_qc_complete()
+>>> which states that we don't want to translate taskfile registers into
+>>> sense descriptors for ATAPI.
+>>>
+>>> Cc: stable@vger.kernel.org
+>>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>>> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+>>> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+>>
+>> I wonder if we can find the patch that introduced the bug in the first place so
+>> that we can add a Fixes tag. I have not checked. This may have been wrong since
+>> a long time ago...
+> 
+> This code was first introduced in 2005 in commit b095518ef51c3 ("[libata]
+> ATA passthru (arbitrary ATA command execution)").
+> 
+> ATA_QCFLAG_SENSE_VALID was introduced a year later in commit 9ec957f2002b
+> ("[PATCH] libata-eh-fw: add flags and operations for new EH").
+> 
+> IIUC, ATA_QCFLAG_SENSE_VALID has not been set for ATA drives until 2016
+> when the support for fetching the sense data was added in 5b01e4b9efa0
+> ("libata: Implement NCQ autosense") and commit e87fd28cf9a2d ("libata:
+> Implement support for sense data reporting").
+> 
+> To me none of the commits looks like a good candidate for the Fixes tag.
+> What are your thoughts on this?
 
-OK. I thought things where a little more consistent than that.
-Let's kill the wrappers then. Keep your patch as it is !
+Then let's just mark which LTS version need the patch.
+E.g. Cc: stable@vger.kernel.org # X.Y +
 
 
 -- 
