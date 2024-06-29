@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA8A91CF90;
-	Sat, 29 Jun 2024 03:09:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 147993F9F9;
+	Sat, 29 Jun 2024 12:09:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719630600; cv=none; b=SM+DOd+gmYITGrQo11qq+9P7Xl3izYkMUEmXboX40/fTYKNA0RSNcJtvwZNuHKDeotmhjAi8L7pvEYJDTfHDgX764blFCjG+9/adTZiZsDKigsvWEPd7U24K2JpHlhGTpIsDMXhfsfTWB/P+20P3SwGsDD/uq1vnr+uU6Mhpyig=
+	t=1719662991; cv=none; b=CDy81nmfFJpTmx2SOhK5MIH9tG8ZXuRrpRKQWtlPJKRpRU1/JsXIkLiQOV3lv+tkLxHR2RuFHA/5KQZkoX8cC3qcOtahifm70iYsMQF5ztko9qUMI0e1lLu3NfRlZZ6q4IhNwaEGF4DK+4/S+z49iNC4zsZOeasI0/Iej7h5I0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719630600; c=relaxed/simple;
-	bh=f3l1q+6TnZPwqbHcnPQ46pla6sNSv0vzO2Ms+sBmZVY=;
+	s=arc-20240116; t=1719662991; c=relaxed/simple;
+	bh=ts+Uxe4L0bZIoIgpiJ9xP8rIlcc8SP6g7dVg9bhl8gA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nDht9S1MHfGbK5zjDWB1jqJwfOnqKp1m5FMtDHdeF0axP2jHGG1YaIl5VLIpE20NGx8dOk1ndwAdSmG2+GMmi34D/z+ksgAlJGxRHZqB90/Dc6D7PyWbM2tuyWsrBqbIwLovCTrHHD5bPzU35mwMbsvLhBvM6Ks0pQ3J86TJZsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zi+zLacS; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ds7SeomkBcUfkywwYTiUzVNapQyqXZcPFdIgz/iwBNry30Sx72w4UEpqjjYM+HM2WOuyb/cgWU+6lb+4vO3JfLuM2gmgj8RDAM30F3DnEJtQ02SKOmYxCPBzY0+EhHncLeThvw9WX4O8FRJvInJxGSwuKgUdXNqqa7TM96A4YoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VANeUdnc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zi+zLacS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DADABC116B1;
-	Sat, 29 Jun 2024 03:09:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VANeUdnc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21830C2BBFC;
+	Sat, 29 Jun 2024 12:09:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719630599;
-	bh=f3l1q+6TnZPwqbHcnPQ46pla6sNSv0vzO2Ms+sBmZVY=;
+	s=k20201202; t=1719662990;
+	bh=ts+Uxe4L0bZIoIgpiJ9xP8rIlcc8SP6g7dVg9bhl8gA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Zi+zLacSovRHGT4+Eu6tPTB1T3KOx2Iv4Pxf6M+/VKoPuBplriWdmczVXieIlsAF9
-	 1qyuE1ipCkRu3i5ZgcN540sVJu29JecR4lE+8hVZQUDF2AvoMuFjwgSCIveKTLzkQM
-	 FGPYCyzLDXJKNys9uUoeMP0SQ3UrbFIuONjV+G7783yacjYlYPSf7bqgincdJYs3+u
-	 xQ3BuJ9c5NhM4xxF/ftdHLc98/F5PnjIXBE7x7dX9eWkKKSyoyuwQbFDwiGwWxY5TW
-	 QaObChfThuAA6atbSOqktMdEwJ9WW8pALLrlLORt9jzS6sNev0fvQokH+Z0JIvzLG2
-	 HuW7ZW8HU1iCg==
-Date: Sat, 29 Jun 2024 05:09:54 +0200
+	b=VANeUdncAiSm00tYmxbJlFaqAvWC7q293Kwsq8sjZJ+WU5jnJ+5QRojUdn7GWuAoq
+	 J8/JojN7Y7nIZyqryy8oWlbKat7CfqWqhWe+P92cRL4e+lcpnNuE7RI5rzQfrUOWM/
+	 Or5ZpCx7ZtYTaswRjqmDUNNIwfXceaElhRr7T5vntahO+rUa8IS5M6UhaDmumMzzNN
+	 S7JCsvf94QksVgWhzfmgHYPNcAVoiwIorQtXwbqLao9YwL4mZr+iFCC7x34C1NoUJX
+	 FrKbLsIHyiFLrxKYorPt0OjcpY/59bomG+YmiurWg8V6fFjtPFabgsawTVIqkDK5dz
+	 iXWy7J3qtuNrg==
+Date: Sat, 29 Jun 2024 14:09:45 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Igor Pylypiv <ipylypiv@google.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 2/6] ata: libata-scsi: Do not overwrite valid sense
- data when CK_COND=1
-Message-ID: <Zn97AtP4IC7T1NoO@ryzen.lan>
-References: <20240626230411.3471543-1-ipylypiv@google.com>
- <20240626230411.3471543-3-ipylypiv@google.com>
- <Zn1zsaTLE3hYbSsK@ryzen.lan>
- <Zn3ffnqsN4pVZA4m@google.com>
- <Zn8EmT1fefVzgy0F@ryzen.lan>
- <Zn9H17FoDDg9hpUr@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 05/13] ata,scsi: libata-core: Add ata_port_free()
+Message-ID: <Zn_5ifLxcF9JCGH6@ryzen.lan>
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <20240626180031.4050226-20-cassel@kernel.org>
+ <ec3be157-4096-4817-885b-1cb90ca032b2@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -49,111 +46,93 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Zn9H17FoDDg9hpUr@google.com>
+In-Reply-To: <ec3be157-4096-4817-885b-1cb90ca032b2@kernel.org>
 
-On Fri, Jun 28, 2024 at 11:31:35PM +0000, Igor Pylypiv wrote:
-> On Fri, Jun 28, 2024 at 08:44:41PM +0200, Niklas Cassel wrote:
-> > On Thu, Jun 27, 2024 at 09:54:06PM +0000, Igor Pylypiv wrote:
-> > > 
-> > > Thank you, Niklas! I agree that this code is too complicated and should be
-> > > simplified. I don't think we should change the code too much in this patch
-> > > since it is going to be backported to stable releases.
-> > > 
-> > > Would you mind sending a patch for the proposed simplifications following
-> > > this patch series?
-> > > 
+On Thu, Jun 27, 2024 at 10:15:37AM +0900, Damien Le Moal wrote:
+> On 6/27/24 03:00, Niklas Cassel wrote:
+> > Add a function, ata_port_free(), that is used to free a ata_port.
+> > It makes sense to keep the code related to freeing a ata_port in its own
+> > function, which will also free all the struct members of struct ata_port.
 > > 
-> > I would prefer if we changed it as part of this commit to be honest.
-> > 
-> > 
-> > I also re-read the SAT spec, and found that it says that:
-> > """
-> > If the CK_COND bit is set to:
-> > a) one, then the SATL shall return a status of CHECK CONDITION upon ATA command completion,
-> > without interpreting the contents of the STATUS field and returning the ATA fields from the request
-> > completion in the sense data as specified in table 209; and
-> > b) zero, then the SATL shall terminate the command with CHECK CONDITION status only if an error
-> > occurs in processing the command. See clause 11 for a description of ATA error conditions.
-> > """
-> > 
-> > So it seems quite clear that if CK_COND == 1, we should set CHECK CONDITION,
-> > so that answers the question/uncertainty I asked/expressed in earlier emails.
-> > 
-> > 
-> > I think this patch (which should be applied on top of your v3 series),
-> > makes the code way easier to read/understand:
-> > 
+> > libsas is currently not freeing all the struct ata_port struct members,
+> > e.g. ncq_sense_buf for a driver supporting Command Duration Limits (CDL).
 > 
-> Agree, having self-explanatory variable names makes the code much more
-> readable. I'll add the patch in v4.
+> This part should be a separate fix patch and sent out this cycle.
 > 
-> Do you mind if I set you as the author of the patch with the corresponding
-> Signed-off-by tag?
-
-I still think that you are the author.
-
-But if you want, feel free to add me as: Co-developed-by
-(which would also require you to add my Signed-off-by), see:
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#when-to-use-acked-by-cc-and-co-developed-by
-
-
+> > 
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
 > 
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index d5874d4b9253..5b211551ac10 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -1659,26 +1656,27 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
-> >  {
-> >         struct scsi_cmnd *cmd = qc->scsicmd;
-> >         u8 *cdb = cmd->cmnd;
-> > -       int need_sense = (qc->err_mask != 0) &&
-> > -               !(qc->flags & ATA_QCFLAG_SENSE_VALID);
-> > -       int need_passthru_sense = (qc->err_mask != 0) ||
-> > -               (qc->flags & ATA_QCFLAG_SENSE_VALID);
-> > +       bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
-> > +       bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12;
-> > +       bool is_ck_cond_request = cdb[2] & 0x20;
-> > +       bool is_error = qc->err_mask != 0;
+> > @@ -5518,12 +5530,7 @@ static void ata_host_release(struct kref *kref)
+> >  	for (i = 0; i < host->n_ports; i++) {
+> >  		struct ata_port *ap = host->ports[i];
 > >  
-> >         /* For ATA pass thru (SAT) commands, generate a sense block if
-> >          * user mandated it or if there's an error.  Note that if we
-> > -        * generate because the user forced us to [CK_COND =1], a check
-> > +        * generate because the user forced us to [CK_COND=1], a check
-> >          * condition is generated and the ATA register values are returned
-> >          * whether the command completed successfully or not. If there
-> > -        * was no error, we use the following sense data:
-> > +        * was no error, and CK_COND=1, we use the following sense data:
-> >          * sk = RECOVERED ERROR
-> >          * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
-> >          */
-> > -       if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
-> > -           ((cdb[2] & 0x20) || need_passthru_sense)) {
-> > -               if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
-> > +       if (is_ata_passthru && (is_ck_cond_request || is_error || have_sense)) {
-> > +               if (!have_sense)
-> >                         ata_gen_passthru_sense(qc);
-> >                 ata_scsi_set_passthru_sense_fields(qc);
-> > -       } else if (need_sense) {
-> > +               if (is_ck_cond_request)
-> > +                       set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
+> > -		if (ap) {
+> > -			kfree(ap->pmp_link);
+> > -			kfree(ap->slave_link);
+> > -			kfree(ap->ncq_sense_buf);
+> > -			kfree(ap);
+> > -		}
+> > +		ata_port_free(ap);
 > 
-> SAM_STAT_CHECK_CONDITION will be set by ata_gen_passthru_sense(). Perhaps we
-> can move the SAM_STAT_CHECK_CONDITION setting into else if?
+> The variable "ap" can be removed too.
+> 
+> >  		host->ports[i] = NULL;
+> >  	}
+> >  	kfree(host);
+> 
+> > diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+> > index 6e01ddec10c9..951bdc554a10 100644
+> > --- a/drivers/scsi/libsas/sas_discover.c
+> > +++ b/drivers/scsi/libsas/sas_discover.c
+> > @@ -301,7 +301,7 @@ void sas_free_device(struct kref *kref)
+> >  
+> >  	if (dev_is_sata(dev) && dev->sata_dev.ap) {
+> >  		ata_tport_delete(dev->sata_dev.ap);
+> > -		kfree(dev->sata_dev.ap);
+> > +		ata_port_free(dev->sata_dev.ap);
+> 
+> Why not have this inside ata_tport_delete() ?
 
-I think it is fine that:
-if (is_ck_cond_request)
-	set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
+In the current code, the allocating and freeing of the ports
+are done separately from adding and deleting a transport.
 
-might set SAM_STAT_CHECK_CONDITION even if it is already set.
+The tport_del will be called by:
+ahci_remove_one()
 
-Personally, I think that my suggestion is slightly clearer when it comes
-to highlight the behavior of CK_COND. (CK_COND will set CHECK_CONDITION,
-regardless if successful command or error command, and regardless if
-we already had sense or not.)
+drivers/base/dd.c:__device_release_driver() will call
+device_remove() which will call ahci_remove_one().
 
-And considering that we finally make this hard to read code slightly more
-readable than it was to start off with, I would prefer my alternative.
+ahci_remove_one() (.remove()), will call ata_host_detach(), which calls
+ata_port_detach(), which calls ata_tport_delete().
+
+This will not free the port however. That is instead done even later, by:
+ata_host_release() will be called even later:
+drivers/base/dd.c:__device_release_driver() will call
+device_unbind_cleanup(), which will call ata_host_release().
+
+We could evaluate if we want to change this, since ALL libata driver do
+call tport_add()/tport_delete(), but since this is a fix patch, I would
+rather not do fundamental changes like that in this patch.
 
 
-Kind regards,
-Niklas
+> 
+> >  		ata_host_put(dev->sata_dev.ata_host);
+> >  		dev->sata_dev.ata_host = NULL;
+> >  		dev->sata_dev.ap = NULL;
+> > diff --git a/include/linux/libata.h b/include/linux/libata.h
+> > index 581e166615fa..586f0116d1d7 100644
+> > --- a/include/linux/libata.h
+> > +++ b/include/linux/libata.h
+> > @@ -1249,6 +1249,7 @@ extern int ata_slave_link_init(struct ata_port *ap);
+> >  extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+> >  					   struct ata_port_info *, struct Scsi_Host *);
+> >  extern void ata_port_probe(struct ata_port *ap);
+> > +extern void ata_port_free(struct ata_port *ap);
+> >  extern int ata_tport_add(struct device *parent, struct ata_port *ap);
+> >  extern void ata_tport_delete(struct ata_port *ap);
+> >  int ata_sas_device_configure(struct scsi_device *sdev, struct queue_limits *lim,
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
+> 
