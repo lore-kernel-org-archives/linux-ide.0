@@ -1,165 +1,157 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB092158878
-	for <linux-ide@vger.kernel.org>; Tue,  2 Jul 2024 10:21:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C5214D42C;
+	Tue,  2 Jul 2024 15:43:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719915668; cv=none; b=ooObMZDoxpWO9QDxM3kzJMYaJCNnxkcBymdPNEsq5xyoYvRhvM7g9zp2xiLcNZtFWH6aCfFhPRvTu3gcLxguNh6+vv4h6+gD9pEBCHtUIT3+4kmu0ZtobKgITIZr88HU9RMgPGd7ap76eKtwt0Ji/vI5NHp0gANvmeiPI1E2X+0=
+	t=1719934992; cv=none; b=ePgBZ+fSfxECEP22MelbA5OKbFUEzHtbo3vWnuDMNAjVcSwIzr82ZPuVHmhpWUyhfRrQZzdJ4lG9G8LP6kr0wRJOWa77kbak1c5OZvHFRi1sgrD6Hd1i24Z+HytucdKJc+xhTWA49r7uaUZQcud/tjdMxccoLXK1czOAKJMdMrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719915668; c=relaxed/simple;
-	bh=Fx2me8bPO/xJndh6DxXz4L7RU2HwuW5ogn40qSHv3f4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ESw8ZHM/L1UyL+vYNCVXyq/eVyXjItomw2kNqWE0oFkfL4tqZgFUEbhNCPp2Hc0XALbEMs+9ht2rBQuBaURF6QuoUSAP3sQRBX3eKFc3SeO9ye8CbBJnbMIU8b5E1p9O43VPzi1BAXTM7KZ/YTUEl/1bFFMDfhxAmvUTOi9zJFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pu1kGDER; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719934992; c=relaxed/simple;
+	bh=HLjNTwA5AGcDBz3W47x5Ip7RjCeGD9o3Yb5T6CcTeoc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OAVssTikZU01ZFfrcENj53hwTf8SB4xjXmLJ3RlIhCEtP/4seGDw9w5636eoHpj2dPMt/13BdGHUGhfjarUVy0Isi6PuWwH6dPbEvdQCu8Yfav7sO78hWs2wb1S5nZt7EGNSz3ATCay4bwq2nQzJ0Dijhqpq7fExIr0iswX1wKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GAyju344; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pu1kGDER"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92F50C4AF0C;
-	Tue,  2 Jul 2024 10:21:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GAyju344"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE6F2C116B1;
+	Tue,  2 Jul 2024 15:43:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719915668;
-	bh=Fx2me8bPO/xJndh6DxXz4L7RU2HwuW5ogn40qSHv3f4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pu1kGDERL8tjvntH9NxyZwZOXh1VoBh0v7U7KVm7sjgE5l09pylo8hBHEgU2zWran
-	 4RYrK3Uq0uBhxL7xWmtn9kDbxITm03wRWiE5Ob1T/+AVcYYtovrem2a/3iDnU29+ZW
-	 b0QL3Gi0bC6VlsZPZOG3C2fqMFReALJedzweexWjgxle6NTzyBgoTyZ+nObriV01rA
-	 JM4HGPby2cpb/GRpBUInT/NGMoh/kdOAKhclGcavULT21rzRYOg89JM/Wa6TnxcEH2
-	 ekzRctwxBJv/HlzLagygSWmdWxKewntRMs5t41Kg2NfdlU8qIRFE6gvoOHQ3vHDghP
-	 YaYnqO/xmgWzA==
-Message-ID: <0d097346-c990-4c48-bab4-ab4259ee242f@kernel.org>
-Date: Tue, 2 Jul 2024 19:21:06 +0900
+	s=k20201202; t=1719934991;
+	bh=HLjNTwA5AGcDBz3W47x5Ip7RjCeGD9o3Yb5T6CcTeoc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GAyju344UvASfv2CnkS8dGTogNw5pdE1hbleGcEpU0vSSHK9wc7dcSS0kvtodE6eA
+	 0xBMExhKxpyQ6UWptTJIYKFhhr2UGz2kRmpb32JwQroGYSikYPIitUjePCVrCfn8Vq
+	 +Owm2JpVXXuPoaQpTtZtRT03RXHb+itp6eHIBu7xAb5BlD+gLU5NSpVDCSRQg7iWpA
+	 txuuXAZWCiAxEiJ2Y7Zs0CpK+vxiT+0asC0XNDJUGiT509jHdQvRFXltMWG4qTnagC
+	 lxonxbbvY8/gRgSi/aoUjs2rEf9syrwHT/4DzA/QV9fWYw4ZswpyGjj39EzuxIt15G
+	 TIUGgkLwGPOUQ==
+Date: Tue, 2 Jul 2024 17:43:05 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
+	Colin Ian King <colin.i.king@gmail.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 00/13] ata,libsas: Assign the unique id used for
+ printing earlier
+Message-ID: <ZoQgCUL0H4Qzhvow@ryzen.lan>
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <14397cfc-c73a-4046-aca8-527b065f65d9@oracle.com>
+ <Zn1bxRbAml-HjWKb@ryzen.lan>
+ <cd7ff1a0-c73b-4638-be51-2a6d9de4b324@oracle.com>
+ <Zn2AP6J_RGlYExw9@ryzen.lan>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Marvel 88SE6121 fails with SATA-2/3 HDDs
-To: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>, linux-ide@vger.kernel.org
-Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, risc4all@yahoo.com
-References: <db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de>
- <930a0685-c741-110e-40c2-660754301e5a@opensource.wdc.com>
- <a248857e-991c-16d7-496c-9dc692186ead@noerenberg.de>
- <b4a515f6-e11c-756b-ff90-114836f919f9@noerenberg.de>
- <341397a1-9da5-466d-a738-cad79e8d2390@opensource.wdc.com>
- <53372f11-1d97-5310-32e7-6368a653115f@noerenberg.de>
- <b02e3814-16a0-9bc6-01be-d53fa81d99c2@opensource.wdc.com>
- <29b60f42-45ba-4c39-9e30-1dd4811b181d@noerenberg.de>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <29b60f42-45ba-4c39-9e30-1dd4811b181d@noerenberg.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zn2AP6J_RGlYExw9@ryzen.lan>
 
-On 7/2/24 18:32, Hajo Noerenberg wrote:
-> On 13.02.2023 at 02:28 Damien Le Moal wrote:
->> On 2/1/23 19:02, Hajo Noerenberg wrote:
->>> Am 31.01.2023 um 03:34 schrieb Damien Le Moal:
->>>> On 1/30/23 22:40, Hajo Noerenberg wrote
->>>>> Summary: With U-Boot and kernels <3.16 the drives work, even without jumper.
->>>>> I wonder if there is a way to get the drives working with up to date kernels.
->>>>> This would have the benefit of a.) no need to set jumpers and b.) getting
->>>>> bigger/newer drives like the WD30EFRX to work which probably do not have a
->>>>> downgrade-jumper.
->>>>
+On Thu, Jun 27, 2024 at 05:07:43PM +0200, Niklas Cassel wrote:
+> On Thu, Jun 27, 2024 at 01:54:34PM +0100, John Garry wrote:
+> > On 27/06/2024 13:32, Niklas Cassel wrote:
+> > > On Thu, Jun 27, 2024 at 01:26:04PM +0100, John Garry wrote:
+> > > > On 26/06/2024 19:00, Niklas Cassel wrote:
+> > > > > Hello all,
+> > > > > 
+> > > > > This patch series was orginally meant to simply assign a unique id used
+> > > > > for printing earlier (ap->print_id), but has since grown to also include
+> > > > > cleanups related to ata_port_alloc() (since ap->print_id is now assigned
+> > > > > in ata_port_alloc()).
+> > > > > 
+> > > > 
+> > > > There's no real problem statement wrt print_id, telling how and why things
+> > > > are like they are, how it is a problem, and how it is improved in this
+> > > > series.
+> > > 
+> > > You are right, it is missing from the cover-letter.
+> > > 
+> > > It was there in v1:
+> > > https://lore.kernel.org/linux-ide/20240618153537.2687621-7-cassel@kernel.org/
+> > > 
+> > > """
+> > > This series moves the assignment of ap->print_id, which is used as a
+> > > unique id for each port, earlier, such that we can use the ata_port_*
+> > > print functions even before the ata_host has been registered.
+> > > """
+> > 
+> > OK, fine.
+> > 
+> > I see code which checks vs ap->print_id, like:
+> > 
+> > static void ata_force_link_limits(struct ata_link *link)
+> > {
+> > ...
+> > 		if (fe->port != -1 && fe->port != link->ap->print_id)
+> > 			continue;
+> > 
+> > 
+> > Is this all ok to deal with this print_id assignment change?
+> > 
+> > To me, it seems natural to assign a valid print_id from the alloc time, so I
+> > can't help but wonder it was done the current way.
 > 
-> Sorry to reactivate this old thread, but it took me a really long time to
-> find out anything of substance.
+> ap->print_id was assigned after calling ata_host_register(), because libata
+> allowed a driver that did not know how many ports it had, to initially call
+> ata_alloc_host() with a big number of ports, and then reduce the host->n_ports
+> variable once it knew the actually number of ports, before calling
+> ata_host_register(), which would then free the "excess" ports.
 > 
-> Just to summerize again: Gen2/3 HDDs only work with the 88SE6121 controller
-> in the Seagate Blackarmor NAS 440 [1] if they are jumpered to Gen1 (1.5 Gbit/s).
-> This is unsatisfactory because they correctly work with the U-Boot bootloader
-> without any jumpers at Gen2 speed (3 Gbit/s).
+> This feature has actually never been used by and driver, and I remove support
+> for this in this series:
+> https://lore.kernel.org/linux-ide/20240626180031.4050226-22-cassel@kernel.org/
 > 
 > 
->>> I forgot to mention the main benefit: Without the "downgrade-jumper" the drives are able to run at SATA-2 speed (the 88SE6121 is a SATA-2 controller). At least with kernel 2.6.x (ahci module) one can see the ST3500418AS running at 3Gbps:
->>>
->>> [  151.957573] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>> [  151.958713] ata1.00: ATA-8: ST3500418AS, CC38, max UDMA/133
->>> [  151.958726] ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
->>> [  151.960062] ata1.00: configured for UDMA/133
->>> [  151.960397] scsi 0:0:0:0: Direct-Access     ATA      ST3500418AS      CC38 PQ: 0 ANSI: 5
->>>
->>> And with kernel 2.6.x even the SATA-3 WD30EFRX runs at 3Gbps as well (no jumper, no kernel option) and has full 3TB accessible:
->>>
->>> [  100.497589] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>> [  100.498145] ata1.00: HPA detected: current 5860531055, native 5860533168
->>> [  100.498165] ata1.00: ATA-9: WDC WD30EFRX-68EUZN0, 80.00A80, max UDMA/133
->>> [  100.498177] ata1.00: 5860531055 sectors, multi 0: LBA48 NCQ (depth 0/32)
->>> [  100.498853] ata1.00: configured for UDMA/133
->>> [  100.499187] scsi 0:0:0:0: Direct-Access     ATA      WDC WD30EFRX-68E 80.0 PQ: 0 ANSI: 5
->>>
->>>> Can you try with libata.force=nolpm ? A lot of old WD drives have broken LPM.
->>>>
->>>
->>> libata.force=nolpm slightly changes the kernel log: the drive is basically detected (the model name and drive geometry show up), but in the end it fails:
->>>
+> However, you do raise a good point...
+> ap->print_id is just supposed to be used for printing, but it appears that
+> ata_force_link_limits() and some other ata_force_*() functions make use of
+> it for other things... sigh...
 > 
-> After many many tests I can say that no kernel option I tried (e.g. libata.force with
-> nolpm, noncq, nodma, 1.5Gbps and almost all others) helps to mitigate the problem.
+> Hopefully I can just change them from:
+> 	if (fe->port != -1 && fe->port != link->ap->print_id)
+> to
+> 	if (fe->port != -1)
 > 
-> By chance I saw an old Debian kernel patch [2], which, when applied make Gen2
-> HDDs reproducibly work with 3.x kernels. After some more investigation
-> I figured out that similarly commenting out some lines in the interrupt handler in
-> libahci.c causes them to be recognized with kernel 6.x as well:
-> 
-> /*      if (sata_lpm_ignore_phy_events(&ap->link)) {
->                 status &= ~PORT_IRQ_PHYRDY;
->                 ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
->         }
-> */
-> 
-> Interestingly, sata_lpm_ignore_phy_events() returns false in my setup. So, as far as
-> I can tell, it is not a question of the ahci_scr_write() being executed. Rather, it
-> is the CPU cycles that are saved by the absence of this section in the interrupt
-> handler. At first it was very hard for me to believe that it was due to commenting
-> out the section, but I have compiled several kernels that differ
-> only in this section: yes, it makes a difference.
+> but I will need to look in to this further...
 
-That is very odd. sata_lpm_ignore_phy_events() is only a couple of "if"
-statements and there are no register accesses in there. So if the few CPU cycles
-that takes make a difference, I would suspect that there is something odd going
-on with the marvell adapter interrupts.
+So, looking more closely at this, the code is actually not abusing print_id.
 
-> To summerize, with sata_lpm_ignore_phy_events() commented out:
-> 
-> - with kernel 3.x HDDs are recognized (IDENTIFY 0xEC) and one can write large
->   amounts of data to them without any problems.
-> - for kernel 6.x identifying and writing data works "almost" every time but not
->   perfectly stable.
+Looking at libata.force in Documentation/admin-guide/kernel-parameters.txt:
 
-So commenting out that "if (sata_lpm_ignore_phy_events)" hunk is not enough to
-fix your issue then. This hunk may not be directly related to the issue and
-commenting it out simply changes the timing making things better.
+[LIBATA] Force configurations.  The format is a comma-
+                        separated list of "[ID:]VAL" where ID is PORT[.DEVICE].
+                        PORT and DEVICE are decimal numbers matching port, link
+                        or device.  Basically, it matches the ATA ID string
+                        printed on console by libata.
 
-> - for both 3.x and 6.x kernels, when I execute certain special commands
->   (e.g. "hdparm -I"), the drive connection is reset but usually works afterwards.
-> - with kernel 2.x the hard disks always worked, which is reasonable, because there
->   the interrupt handler never included a sata_lpm_ignore_phy_events() call.
 
-But above, you said that things are not completely stable with 6.x. So there is
-likely something else going on.
+While this seems a bit fragile, since it relies on the probe ordering
+of the SATA controller drivers, which could change, it does still work
+as designed after this series:
 
-> I would be thankful if you could tell me whether and how this problem can be
-> solved sustainably.
+I added the following to my kernel command line:
+"libata.force=5:nolpm"
 
-First things first: can you please test with the latest mainline 6.10-rc6 kernel
-and send a dmesg output after boot and any other relevant output showing
-problems when doing IOs ?
+which yielded:
+[    1.811464] ata3.00: FORCE: horkage modified (nolpm)
+[    1.811466] ata3.00: LPM support broken, forcing max_power
+[    1.811468] ata3.00: ATA-7: QEMU HARDDISK, 2.5+, max UDMA/100
+[    1.811470] ata3.00: 2097152 sectors, multi 16: LBA48 NCQ (depth 32)
+[    1.811474] ata3.00: applying bridge limits
+[    1.811535] ata3.00: LPM support broken, forcing max_power
+[    1.811537] ata3.00: configured for UDMA/100
 
-> 
-> Hajo
-> 
-> 
-> [1] https://github.com/hn/seagate-blackarmor-nas?tab=readme-ov-file#nas-440-patch-details
-> [2] https://salsa.debian.org/kernel-team/linux/-/blob/debian/3.16.39-1_bpo70+1/debian/patches/debian/revert-libata-ignore-spurious-phy-event-on-lpm-polic.patch?ref_type=tags
-> 
-> 
+And considering that all checks against ap->print_id is for libata.force
+related parameters, I think that we are all good.
 
--- 
-Damien Le Moal
-Western Digital Research
 
+Kind regards,
+Niklas
