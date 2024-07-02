@@ -1,81 +1,25 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx.bauer-kirch.de (mx.bauer-kirch.de [89.238.71.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6066A342;
-	Tue,  2 Jul 2024 06:02:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 843B21514E3
+	for <linux-ide@vger.kernel.org>; Tue,  2 Jul 2024 09:52:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.238.71.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719900156; cv=none; b=e+uK60TUSCIGztcHPQDjBDQRdJ0ETBuhJCcybxze/+9l7y6UKNsfeEUVRFnMJJ1vLybOcEV5V8bcRPP6Sn2kxHeiyHli2aFhYhmw9wNvjHZ89O4bNVltZkiOBlMowF01PTWEMmKnwKwxMsnRyWVqQtPY1hOaJT2ItNhsLSwYmmM=
+	t=1719913956; cv=none; b=KYmB84Jdo7mY7If9Td7qb5LppcoKb7D7YpsdjyKIazB3uvqliJ1sBxidheM9KUlJyFaSVJyxkxojCywxwQeJnZSq8Ruo7ST5wEdO81hCUdchtdAni/N37Fset1QcUzBJCnM4Pma6L5pIopaC+vaX2wKbN4HFO/hgrHmrxxrWcjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719900156; c=relaxed/simple;
-	bh=kGvkyIJchibKQwsRixensZtOji8fEHU+wBr15WUN4rA=;
+	s=arc-20240116; t=1719913956; c=relaxed/simple;
+	bh=OTrmjTfUAM7mg5JqmG+0hXlK9L/PVrqd3zDbaLrbIdg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IlV8JLXaiZj9PUKgTGS19olg00dKPmfYy5crQAgx72aC84PYNRViA7071i+/wari104GqIgZiJEKOa898NG+Pa0C9xgZLkabqMVzXKjPZ7jadA6SIKKQzrXAsLICHD+ds3jVhzEAGoiae3N7uu4T4NPP+kwb73zfzgiDOBIi8ro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ia6Wdthh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QNbMJsVZ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ia6Wdthh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QNbMJsVZ; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ia6Wdthh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QNbMJsVZ";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ia6Wdthh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QNbMJsVZ"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id AA1A11FB84;
-	Tue,  2 Jul 2024 06:02:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719900136; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
-	b=ia6WdthhZxnuf0zzE8iw3tHplSmY+zsIsUR/hgKA+vxPH2FNKAYOrC9yX0M+YIj5/cJ18t
-	8zGyXziKILCqOCTpQxIUSbfw/o+7pzMhe2XyQhXzekK7WyUxCdJRknSCBr1hPyQzOA12Kf
-	nXLdtdcpCN7ey+xvOj3sv2Xg4P2wRrc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719900136;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
-	b=QNbMJsVZnqU3O+ZLbWky7BRI6nwiOkQZl5v1Zo6N6/E+VRKAio3/JuRt+00nMeaKT7OlSq
-	MGxyg5sAkwWoJkAw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=ia6Wdthh;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=QNbMJsVZ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719900136; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
-	b=ia6WdthhZxnuf0zzE8iw3tHplSmY+zsIsUR/hgKA+vxPH2FNKAYOrC9yX0M+YIj5/cJ18t
-	8zGyXziKILCqOCTpQxIUSbfw/o+7pzMhe2XyQhXzekK7WyUxCdJRknSCBr1hPyQzOA12Kf
-	nXLdtdcpCN7ey+xvOj3sv2Xg4P2wRrc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719900136;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
-	b=QNbMJsVZnqU3O+ZLbWky7BRI6nwiOkQZl5v1Zo6N6/E+VRKAio3/JuRt+00nMeaKT7OlSq
-	MGxyg5sAkwWoJkAw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 12ACA13A9A;
-	Tue,  2 Jul 2024 06:02:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Gl/fN+eXg2YmagAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 02 Jul 2024 06:02:15 +0000
-Message-ID: <a78246f8-635f-4718-8190-5147a03495ea@suse.de>
-Date: Tue, 2 Jul 2024 08:02:15 +0200
+	 In-Reply-To:Content-Type; b=o7ByrnD8tV2JSPfHdEQBZ4CX6GRUOwgqAwvfHRCGH18Px8gCQ49X5eKPnkXNA7nmtJoYY0k87CqA1p9ynMAEWNG9D60xLyqDh+Z3z6pnNBHZyWHoz+AsRF4puMc/ykeDuzJlw2uAQ2+RgmJxHM5143u9okcOdYFPuscU58NRBlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; arc=none smtp.client-ip=89.238.71.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
+Received: by mail.bauer-kirch.de with ESMTPSA id 1sOZwr-00000007w6V-0djW
+	authenticated id <420001312>
+	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128);
+	Tue, 02 Jul 2024 11:37:17 +0200
+Message-ID: <29b60f42-45ba-4c39-9e30-1dd4811b181d@noerenberg.de>
+Date: Tue, 2 Jul 2024 11:32:21 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,112 +27,104 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 3/7] ata: libata-scsi: Honor the D_SENSE bit for
- CK_COND=1 and no error
-Content-Language: en-US
-To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
- Niklas Cassel <cassel@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20240702024735.1152293-1-ipylypiv@google.com>
- <20240702024735.1152293-4-ipylypiv@google.com>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240702024735.1152293-4-ipylypiv@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.50 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	MX_GOOD(-0.01)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	ARC_NA(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[7];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim]
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: AA1A11FB84
-X-Spam-Flag: NO
-X-Spam-Score: -4.50
-X-Spam-Level: 
+Subject: Re: Marvel 88SE6121 fails with SATA-2/3 HDDs
+To: Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ linux-ide@vger.kernel.org
+Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, risc4all@yahoo.com
+References: <db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de>
+ <930a0685-c741-110e-40c2-660754301e5a@opensource.wdc.com>
+ <a248857e-991c-16d7-496c-9dc692186ead@noerenberg.de>
+ <b4a515f6-e11c-756b-ff90-114836f919f9@noerenberg.de>
+ <341397a1-9da5-466d-a738-cad79e8d2390@opensource.wdc.com>
+ <53372f11-1d97-5310-32e7-6368a653115f@noerenberg.de>
+ <b02e3814-16a0-9bc6-01be-d53fa81d99c2@opensource.wdc.com>
+From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+In-Reply-To: <b02e3814-16a0-9bc6-01be-d53fa81d99c2@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 7/2/24 04:47, Igor Pylypiv wrote:
-> SAT-5 revision 8 specification removed the text about the ANSI INCITS
-> 431-2007 compliance which was requiring SCSI/ATA Translation (SAT) to
-> return descriptor format sense data for the ATA PASS-THROUGH commands
-> regardless of the setting of the D_SENSE bit.
-> 
-> Let's honor the D_SENSE bit for ATA PASS-THROUGH commands while
-> generating the "ATA PASS-THROUGH INFORMATION AVAILABLE" sense data.
-> 
-> SAT-5 revision 7
-> ================
-> 
-> 12.2.2.8 Fixed format sense data
-> 
-> Table 212 shows the fields returned in the fixed format sense data
-> (see SPC-5) for ATA PASS-THROUGH commands. SATLs compliant with ANSI
-> INCITS 431-2007, SCSI/ATA Translation (SAT) return descriptor format
-> sense data for the ATA PASS-THROUGH commands regardless of the setting
-> of the D_SENSE bit.
-> 
-> SAT-5 revision 8
-> ================
-> 
-> 12.2.2.8 Fixed format sense data
-> 
-> Table 211 shows the fields returned in the fixed format sense data
-> (see SPC-5) for ATA PASS-THROUGH commands.
-> 
-> Cc: stable@vger.kernel.org # 4.19+
-> Reported-by: Niklas Cassel <cassel@kernel.org>
-> Closes: https://lore.kernel.org/linux-ide/Zn1WUhmLglM4iais@ryzen.lan
-> Reviewed-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> ---
->   drivers/ata/libata-scsi.c | 7 ++-----
->   1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index b59cbb5ce5a6..076fbeadce01 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -941,11 +941,8 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
->   				   &sense_key, &asc, &ascq);
->   		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
->   	} else {
-> -		/*
-> -		 * ATA PASS-THROUGH INFORMATION AVAILABLE
-> -		 * Always in descriptor format sense.
-> -		 */
-> -		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
-> +		/* ATA PASS-THROUGH INFORMATION AVAILABLE */
-> +		ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
->   	}
->   }
->   
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On 13.02.2023 at 02:28 Damien Le Moal wrote:
+> On 2/1/23 19:02, Hajo Noerenberg wrote:
+>> Am 31.01.2023 um 03:34 schrieb Damien Le Moal:
+>>> On 1/30/23 22:40, Hajo Noerenberg wrote
+>>>> Summary: With U-Boot and kernels <3.16 the drives work, even without jumper.
+>>>> I wonder if there is a way to get the drives working with up to date kernels.
+>>>> This would have the benefit of a.) no need to set jumpers and b.) getting
+>>>> bigger/newer drives like the WD30EFRX to work which probably do not have a
+>>>> downgrade-jumper.
+>>>
 
-Cheers,
+Sorry to reactivate this old thread, but it took me a really long time to
+find out anything of substance.
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Just to summerize again: Gen2/3 HDDs only work with the 88SE6121 controller
+in the Seagate Blackarmor NAS 440 [1] if they are jumpered to Gen1 (1.5 Gbit/s).
+This is unsatisfactory because they correctly work with the U-Boot bootloader
+without any jumpers at Gen2 speed (3 Gbit/s).
+
+
+>> I forgot to mention the main benefit: Without the "downgrade-jumper" the drives are able to run at SATA-2 speed (the 88SE6121 is a SATA-2 controller). At least with kernel 2.6.x (ahci module) one can see the ST3500418AS running at 3Gbps:
+>>
+>> [  151.957573] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>> [  151.958713] ata1.00: ATA-8: ST3500418AS, CC38, max UDMA/133
+>> [  151.958726] ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+>> [  151.960062] ata1.00: configured for UDMA/133
+>> [  151.960397] scsi 0:0:0:0: Direct-Access     ATA      ST3500418AS      CC38 PQ: 0 ANSI: 5
+>>
+>> And with kernel 2.6.x even the SATA-3 WD30EFRX runs at 3Gbps as well (no jumper, no kernel option) and has full 3TB accessible:
+>>
+>> [  100.497589] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>> [  100.498145] ata1.00: HPA detected: current 5860531055, native 5860533168
+>> [  100.498165] ata1.00: ATA-9: WDC WD30EFRX-68EUZN0, 80.00A80, max UDMA/133
+>> [  100.498177] ata1.00: 5860531055 sectors, multi 0: LBA48 NCQ (depth 0/32)
+>> [  100.498853] ata1.00: configured for UDMA/133
+>> [  100.499187] scsi 0:0:0:0: Direct-Access     ATA      WDC WD30EFRX-68E 80.0 PQ: 0 ANSI: 5
+>>
+>>> Can you try with libata.force=nolpm ? A lot of old WD drives have broken LPM.
+>>>
+>>
+>> libata.force=nolpm slightly changes the kernel log: the drive is basically detected (the model name and drive geometry show up), but in the end it fails:
+>>
+
+After many many tests I can say that no kernel option I tried (e.g. libata.force with
+nolpm, noncq, nodma, 1.5Gbps and almost all others) helps to mitigate the problem.
+
+By chance I saw an old Debian kernel patch [2], which, when applied make Gen2
+HDDs reproducibly work with 3.x kernels. After some more investigation
+I figured out that similarly commenting out some lines in the interrupt handler in
+libahci.c causes them to be recognized with kernel 6.x as well:
+
+/*      if (sata_lpm_ignore_phy_events(&ap->link)) {
+                status &= ~PORT_IRQ_PHYRDY;
+                ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
+        }
+*/
+
+Interestingly, sata_lpm_ignore_phy_events() returns false in my setup. So, as far as
+I can tell, it is not a question of the ahci_scr_write() being executed. Rather, it
+is the CPU cycles that are saved by the absence of this section in the interrupt
+handler. At first it was very hard for me to believe that it was due to commenting
+out the section, but I have compiled several kernels that differ
+only in this section: yes, it makes a difference.
+
+To summerize, with sata_lpm_ignore_phy_events() commented out:
+
+- with kernel 3.x HDDs are recognized (IDENTIFY 0xEC) and one can write large
+  amounts of data to them without any problems.
+- for kernel 6.x identifying and writing data works "almost" every time but not
+  perfectly stable.
+- for both 3.x and 6.x kernels, when I execute certain special commands
+  (e.g. "hdparm -I"), the drive connection is reset but usually works afterwards.
+- with kernel 2.x the hard disks always worked, which is reasonable, because there
+  the interrupt handler never included a sata_lpm_ignore_phy_events() call.
+
+
+I would be thankful if you could tell me whether and how this problem can be
+solved sustainably.
+
+Hajo
+
+
+[1] https://github.com/hn/seagate-blackarmor-nas?tab=readme-ov-file#nas-440-patch-details
+[2] https://salsa.debian.org/kernel-team/linux/-/blob/debian/3.16.39-1_bpo70+1/debian/patches/debian/revert-libata-ignore-spurious-phy-event-on-lpm-polic.patch?ref_type=tags
 
