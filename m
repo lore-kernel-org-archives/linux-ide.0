@@ -1,166 +1,194 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 060018F72
-	for <linux-ide@vger.kernel.org>; Tue,  2 Jul 2024 02:50:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F6066A342;
+	Tue,  2 Jul 2024 06:02:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719888661; cv=none; b=BB4QQ9JzzbKoJWjRngLAw+MyEPrvnpgdTZqUd0v2ObKnCFuZICQ13UXdQ92HjJUf+nL4umvQ7tAQUo391TWSG0YxDP1kdta9QWIy0/bDgN/fGtVpkfIKsFyZm0wuVyl2JSxMD9HExEL4Kpyh3TmMKM0mwVhZuV6tS37Y00Opo+M=
+	t=1719900156; cv=none; b=e+uK60TUSCIGztcHPQDjBDQRdJ0ETBuhJCcybxze/+9l7y6UKNsfeEUVRFnMJJ1vLybOcEV5V8bcRPP6Sn2kxHeiyHli2aFhYhmw9wNvjHZ89O4bNVltZkiOBlMowF01PTWEMmKnwKwxMsnRyWVqQtPY1hOaJT2ItNhsLSwYmmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719888661; c=relaxed/simple;
-	bh=dI4FUUfMjl69PrOL983cIvqHwtYC/LP2jgUv1UMPb4A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aOmmfDcZK+iEKU4JncuX69tI3JDo6Qt0OoXgNnpjxLMVcMLj84ahkQeAMNTBhbOaLLRwYYGU1GhIcdeip558TB+YWq6lT5DQB9WJaJFK+6WiANoIx6fvSTzj4sFFwGIHS+d32ImUV8ddutbUyTh92XDNBhd+EeCJWhePGwTBBXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=KEOQkZXb; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1719900156; c=relaxed/simple;
+	bh=kGvkyIJchibKQwsRixensZtOji8fEHU+wBr15WUN4rA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IlV8JLXaiZj9PUKgTGS19olg00dKPmfYy5crQAgx72aC84PYNRViA7071i+/wari104GqIgZiJEKOa898NG+Pa0C9xgZLkabqMVzXKjPZ7jadA6SIKKQzrXAsLICHD+ds3jVhzEAGoiae3N7uu4T4NPP+kwb73zfzgiDOBIi8ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ia6Wdthh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QNbMJsVZ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ia6Wdthh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QNbMJsVZ; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KEOQkZXb"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-7065a2f4573so2450050b3a.2
-        for <linux-ide@vger.kernel.org>; Mon, 01 Jul 2024 19:50:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1719888659; x=1720493459; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=nBp88gZrUa2YS7lo6hEmRMUQenqjZqceKeedcGibfdc=;
-        b=KEOQkZXbdHMQKAMmA8s+fZDUnapasIIQlXOqJRuy7fE2l4u/1FnOLd5oy/0splC6oV
-         B1ScMcNB1auB2GuQWE148z6cXritZM3BxCsHuX0cOyDhN7lmW9jFwTI377Nc/g4QY+eU
-         HOAEHM7Qj++eK++Gaxhz6B97ReKVU+GkghOtlnOTdEQs2de9EdV6K0uRWQ3JLmQsQEnT
-         cpVm0eC+OviBuUVwaElc3CtdD7c5djEiJiKmS1NltdrQbPDKr558M0TBS8IcqnLUAxzN
-         jhNLQsybPmAObbOchbpRS/XzOK7OojEHOqvosB23PwzBETnRLfKcrqgaJi9oCQ2rmYrg
-         3/0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719888659; x=1720493459;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=nBp88gZrUa2YS7lo6hEmRMUQenqjZqceKeedcGibfdc=;
-        b=DJ57lIwmZHNBTo8lgr1kQD5oLUgZWb1FpaxMiiijGL1pxpmkoqwqKQ6cp00TV+5Mrt
-         70DuCG0qWUtf3WUbb1n4Ru739/eThAjQQv/ZVEXHLOCcpRnOvdSz1RLJ2uTUoeg1adfF
-         XfpDABhYl01uGcdpyUGZn4MxEDjBrf1YVuF5mHd8aMyYLWZPxOkfeYu8WoM/Qts6KJMe
-         5gKkh2lxdOdCoGL8hQkt24zw5fZKCDA6N4vc+Iuj+HXD7f7OVSuLhOTx23AJiPltPURN
-         Wu6oq7e2szmiKDXXNunJLL0L56+b/cxZHwsbNovXLd91fBNIZvsahbnnkF3woHHQ118B
-         rkGw==
-X-Forwarded-Encrypted: i=1; AJvYcCV1UyDpKXuY8E8ACw2lrV5IRxTShtNSEiPc/G2KUyCiAji04Ash2O+NO3jVljhJVj7GOrpQS8bjAaSz0P0noJatw3k11OxVclN3
-X-Gm-Message-State: AOJu0Yw2b+1hw5tnVlrtrDGeermEUbO+PR1a1bvrZuVwZH+KX6j9DJxt
-	Zvqs6NsAgFwWLf/gqN5tgzktGkrcyCQtwkaFwStU4JRSK2EVn8JQkP6HbpJUpA==
-X-Google-Smtp-Source: AGHT+IFf88EVVdjFfdu2f1Xd7SqqWlpsU+fSNzdJfNG3fiH6hUTe+nsB4Eh7rlvmYm98E6DkS52y3w==
-X-Received: by 2002:a05:6a00:4b4c:b0:706:705f:313a with SMTP id d2e1a72fcca58-70aaad3add2mr5320365b3a.12.1719888658875;
-        Mon, 01 Jul 2024 19:50:58 -0700 (PDT)
-Received: from google.com (148.98.83.34.bc.googleusercontent.com. [34.83.98.148])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70801e57aa0sm7300844b3a.28.2024.07.01.19.50.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Jul 2024 19:50:58 -0700 (PDT)
-Date: Tue, 2 Jul 2024 02:50:54 +0000
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 8/8] ata: libata-scsi: Make ata_scsi_qc_complete()
- more readable
-Message-ID: <ZoNrDo0HIISlBMdX@google.com>
-References: <20240701195758.1045917-1-ipylypiv@google.com>
- <20240701195758.1045917-9-ipylypiv@google.com>
- <ZoMciql1lQcj5MbM@ryzen.lan>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ia6Wdthh";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QNbMJsVZ";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ia6Wdthh";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QNbMJsVZ"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id AA1A11FB84;
+	Tue,  2 Jul 2024 06:02:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719900136; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
+	b=ia6WdthhZxnuf0zzE8iw3tHplSmY+zsIsUR/hgKA+vxPH2FNKAYOrC9yX0M+YIj5/cJ18t
+	8zGyXziKILCqOCTpQxIUSbfw/o+7pzMhe2XyQhXzekK7WyUxCdJRknSCBr1hPyQzOA12Kf
+	nXLdtdcpCN7ey+xvOj3sv2Xg4P2wRrc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719900136;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
+	b=QNbMJsVZnqU3O+ZLbWky7BRI6nwiOkQZl5v1Zo6N6/E+VRKAio3/JuRt+00nMeaKT7OlSq
+	MGxyg5sAkwWoJkAw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=ia6Wdthh;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=QNbMJsVZ
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719900136; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
+	b=ia6WdthhZxnuf0zzE8iw3tHplSmY+zsIsUR/hgKA+vxPH2FNKAYOrC9yX0M+YIj5/cJ18t
+	8zGyXziKILCqOCTpQxIUSbfw/o+7pzMhe2XyQhXzekK7WyUxCdJRknSCBr1hPyQzOA12Kf
+	nXLdtdcpCN7ey+xvOj3sv2Xg4P2wRrc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719900136;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=vCyFo7qTaIUmUWUVVm7e2zEuFe/h+LUUA4eXNYgfnWE=;
+	b=QNbMJsVZnqU3O+ZLbWky7BRI6nwiOkQZl5v1Zo6N6/E+VRKAio3/JuRt+00nMeaKT7OlSq
+	MGxyg5sAkwWoJkAw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 12ACA13A9A;
+	Tue,  2 Jul 2024 06:02:15 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Gl/fN+eXg2YmagAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 02 Jul 2024 06:02:15 +0000
+Message-ID: <a78246f8-635f-4718-8190-5147a03495ea@suse.de>
+Date: Tue, 2 Jul 2024 08:02:15 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZoMciql1lQcj5MbM@ryzen.lan>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 3/7] ata: libata-scsi: Honor the D_SENSE bit for
+ CK_COND=1 and no error
+Content-Language: en-US
+To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20240702024735.1152293-1-ipylypiv@google.com>
+ <20240702024735.1152293-4-ipylypiv@google.com>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240702024735.1152293-4-ipylypiv@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: AA1A11FB84
+X-Spam-Flag: NO
+X-Spam-Score: -4.50
+X-Spam-Level: 
 
-On Mon, Jul 01, 2024 at 11:15:54PM +0200, Niklas Cassel wrote:
-> On Mon, Jul 01, 2024 at 07:57:58PM +0000, Igor Pylypiv wrote:
-> > The ATA PASS-THROUGH handling logic in ata_scsi_qc_complete() is hard
-> > to read/understand. Improve the readability of the code by moving checks
-> > into self-explanatory boolean variables.
-> > 
-> > Additionally, always set SAM_STAT_CHECK_CONDITION when CK_COND=1 because
-> > SAT specification mandates that SATL shall return CHECK CONDITION if
-> > the CK_COND bit is set.
-> > 
-> > Co-developed-by: Niklas Cassel <cassel@kernel.org>
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> > ---
-> >  drivers/ata/libata-scsi.c | 21 +++++++++++----------
-> >  1 file changed, 11 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index a66c177b6087..8f21b3b0bc75 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -1659,26 +1659,27 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
-> >  {
-> >  	struct scsi_cmnd *cmd = qc->scsicmd;
-> >  	u8 *cdb = cmd->cmnd;
-> > -	int need_sense = (qc->err_mask != 0) &&
-> > -		!(qc->flags & ATA_QCFLAG_SENSE_VALID);
-> > -	int need_passthru_sense = (qc->err_mask != 0) ||
-> > -		(qc->flags & ATA_QCFLAG_SENSE_VALID);
-> > +	bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
-> > +	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12;
-> > +	bool is_ck_cond_request = cdb[2] & 0x20;
-> > +	bool is_error = qc->err_mask != 0;
-> >  
-> >  	/* For ATA pass thru (SAT) commands, generate a sense block if
-> >  	 * user mandated it or if there's an error.  Note that if we
-> > -	 * generate because the user forced us to [CK_COND =1], a check
-> > +	 * generate because the user forced us to [CK_COND=1], a check
-> >  	 * condition is generated and the ATA register values are returned
-> >  	 * whether the command completed successfully or not. If there
-> > -	 * was no error, we use the following sense data:
-> > +	 * was no error, and CK_COND=1, we use the following sense data:
-> >  	 * sk = RECOVERED ERROR
-> >  	 * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
-> >  	 */
-> > -	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
-> > -	    ((cdb[2] & 0x20) || need_passthru_sense)) {
-> > -		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
-> > +	if (is_ata_passthru && (is_ck_cond_request || is_error || have_sense)) {
-> > +		if (!have_sense)
-> >  			ata_gen_passthru_sense(qc);
-> >  		ata_scsi_set_passthru_sense_fields(qc);
-> > -	} else if (need_sense) {
-> > +		if (is_ck_cond_request)
-> > +			set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
-> > +	} else if (is_error && !have_sense) {
-> >  		ata_gen_ata_sense(qc);
-> >  	} else {
-> >  		/* Keep the SCSI ML and status byte, clear host byte. */
-> > -- 
-> > 2.45.2.803.g4e1b14247a-goog
-> > 
+On 7/2/24 04:47, Igor Pylypiv wrote:
+> SAT-5 revision 8 specification removed the text about the ANSI INCITS
+> 431-2007 compliance which was requiring SCSI/ATA Translation (SAT) to
+> return descriptor format sense data for the ATA PASS-THROUGH commands
+> regardless of the setting of the D_SENSE bit.
 > 
+> Let's honor the D_SENSE bit for ATA PASS-THROUGH commands while
+> generating the "ATA PASS-THROUGH INFORMATION AVAILABLE" sense data.
+> 
+> SAT-5 revision 7
+> ================
+> 
+> 12.2.2.8 Fixed format sense data
+> 
+> Table 212 shows the fields returned in the fixed format sense data
+> (see SPC-5) for ATA PASS-THROUGH commands. SATLs compliant with ANSI
+> INCITS 431-2007, SCSI/ATA Translation (SAT) return descriptor format
+> sense data for the ATA PASS-THROUGH commands regardless of the setting
+> of the D_SENSE bit.
+> 
+> SAT-5 revision 8
+> ================
+> 
+> 12.2.2.8 Fixed format sense data
+> 
+> Table 211 shows the fields returned in the fixed format sense data
+> (see SPC-5) for ATA PASS-THROUGH commands.
+> 
+> Cc: stable@vger.kernel.org # 4.19+
+> Reported-by: Niklas Cassel <cassel@kernel.org>
+> Closes: https://lore.kernel.org/linux-ide/Zn1WUhmLglM4iais@ryzen.lan
 > Reviewed-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+> ---
+>   drivers/ata/libata-scsi.c | 7 ++-----
+>   1 file changed, 2 insertions(+), 5 deletions(-)
 > 
-> However: I really think that this patch should be squashed with patch 2/8.
-> 
-> Sure, the changes in this patch will make it harder to backport...
-> but, even patch 2/8 will be a pain to backport...
-> 
-> And this patch will need to have CC: stable and be backported as well...
-> (such that we always set CHECK_CONDITION when CK_COND=1), so I strongly
-> suggest that we should squash these, since it will probably be way simpler
-> to backport the patch that is "patch 2/8 squashed with this patch",
-> compared to backporting patch 2/8, and then backporting this patch.
-> (That would just give two patches that will need manual backport, rather
-> than one patch that needs manual backport.)
-> 
-> Both of these are fixing incorrect sense data for ATA passthough commands
-> anyway.
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index b59cbb5ce5a6..076fbeadce01 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -941,11 +941,8 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+>   				   &sense_key, &asc, &ascq);
+>   		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
+>   	} else {
+> -		/*
+> -		 * ATA PASS-THROUGH INFORMATION AVAILABLE
+> -		 * Always in descriptor format sense.
+> -		 */
+> -		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
+> +		/* ATA PASS-THROUGH INFORMATION AVAILABLE */
+> +		ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
+>   	}
+>   }
+>   
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Agreed, it makes more sense to squash. Squashed the patches in v5.
+Cheers,
 
-I really appreciate your thorough reviews and feedback, Niklas! Thank you!
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
-Best,
-Igor
-> 
-> 
-> Kind regards,
-> Niklas
