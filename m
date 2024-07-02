@@ -1,132 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f201.google.com (mail-pg1-f201.google.com [209.85.215.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68B7D2BB05;
-	Mon,  1 Jul 2024 21:15:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8326C15AE0
+	for <linux-ide@vger.kernel.org>; Tue,  2 Jul 2024 02:47:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719868559; cv=none; b=qapSCDUJvMZLEYdqjZblrZ9Qk+cKN9nXEmwu+lEK9nYSwPkg2Hca+xuV0oUiZ7bm23YXQiG7qiimpUr5DpwxhDehcgdOJhg1ZPZRO8L5JGoetl6BiE6H25STtPsA6LNq7dT3WxJLTTkZ7528CIc4MdHrMswRZVpAN1CISRFdBdo=
+	t=1719888461; cv=none; b=EdIfJrtlV91v8jnLiS7iVBlF0RgySa2gASxrxCXRRG8/dwf0iGRB91chAFFxNuHhLJsdteM61ODXChW/M5zoVg2RY1NVF3JYCxZZ0W88Ya1NR4KIclvY31QyOf1af/U9R3SIcv8ftLYaEs5t2t7+pQO+U5z4qT1f9MlPPL96d0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719868559; c=relaxed/simple;
-	bh=h1IhBGf8UYCEd0sZEKyQ+4tiVcw/QbYUeV4K7LDSHzg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JPA2VFgoO+l6XWQpXgtAS6XOH03WMNQXDyTciVEq/aK8LQ6fSjfB/p/iNYMqiaxEKiqlRNwLD10spmcDy4oJFzgydlLxqdax/Uq5YHMbPgMjl4dVrI9MUk61WJNPbPLYCXA7JE2QyQYlFotbhOfznt3djWxOAQLq1yApdbaxKz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mMw+brKj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719888461; c=relaxed/simple;
+	bh=k9pupan21Drc/e6jgEWT1G9ZEMIGQVh7LEPKoAd7n2A=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=CtCo9GcGYd12hZiCE5a1/Ez+ImslrT2BDB3FhWwKOyPBjzMeo0Ns1fnsk66vjxps7KVwzjMRQqmLaqYQJWgcB60rp0A0mMOenmKf8pneI5sQBR/n5O9mJ9JKg29hl8vV6mNt7rm7rQGaTXXTsAXBa6T7A84XgfQvRgz/3lFAUh0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fYnrvcGB; arc=none smtp.client-ip=209.85.215.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mMw+brKj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C64BC116B1;
-	Mon,  1 Jul 2024 21:15:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719868559;
-	bh=h1IhBGf8UYCEd0sZEKyQ+4tiVcw/QbYUeV4K7LDSHzg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mMw+brKjO98pABwU982xNOMBmiqGSdKy2CJmPzvbgbpa1jIahQ5wmPui4VJ2RRw/9
-	 Nq7b31vyPZnLr/bReN6Oz+E4c1DHMrnJ8pXAKWKPcacIUQlz2Sh1G7Tt6GuuOemC7K
-	 WcrHSxX7AFemJrFMs6+SiC8PdwJlUNEf89cSUr0bYt1bwz1IWii4Q0yBA/p2Bd9M4B
-	 RJputxI/JwMRTgxa7GYIgNC08WfS3hQpY0AMmZrvRExq0XgDXhtMcFoVOetCD757tW
-	 uG9of8iar7ddlfzzC3mNVtj9bdM/C4W5Z3AqUobzMm/Xzyizk2+Ha0Ltz1sc6ksYPx
-	 /Y0uiJV0uN5Fw==
-Date: Mon, 1 Jul 2024 23:15:54 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Igor Pylypiv <ipylypiv@google.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 8/8] ata: libata-scsi: Make ata_scsi_qc_complete()
- more readable
-Message-ID: <ZoMciql1lQcj5MbM@ryzen.lan>
-References: <20240701195758.1045917-1-ipylypiv@google.com>
- <20240701195758.1045917-9-ipylypiv@google.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fYnrvcGB"
+Received: by mail-pg1-f201.google.com with SMTP id 41be03b00d2f7-715e59afb63so2520760a12.2
+        for <linux-ide@vger.kernel.org>; Mon, 01 Jul 2024 19:47:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1719888460; x=1720493260; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=YEaY1ZnCNnC7h9zQIpxFUoesJp0R+GOwbf2vIhB2fmc=;
+        b=fYnrvcGB//JD/hFkP/rNdaPFJndffAztknwOhb4Yq3smwUDU2K60hfduRH9y75S5lB
+         nU9j2Hwa2L2T6YbuQrQdqg6eYZCrp+nVfufTskdwDA6SmL/riE74HU0gXn8Rh7VAcI0k
+         d8EpNkP4ABRhc+GEwF0BNr+QMeEdCoYVQ9TXt5quJGvY2o98+n46wYp5XiaA97txwIia
+         cTCtaw+DWYTO367n0PJ/OZUE/F7lzyL3EO49t0+YREzaowsCdhc94Jt6bB/1IIXgxCMb
+         j+S7KVrhF7kee1/Gh3BAPSg1pEdEhs/f0bP7AdXVneg1myLBOHnOVY3JdQ2alRney6rG
+         MpXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719888460; x=1720493260;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=YEaY1ZnCNnC7h9zQIpxFUoesJp0R+GOwbf2vIhB2fmc=;
+        b=mqQxi4WqruS8tTVBDmzNU7OL7cVFpOrP64kzBOBNdthbRfZYvnPp61DfI26TSD7xaN
+         GiSdEj8B3pWMlCi5JJQFiDfAtxSxoFjPpp67dnLk/IPA7hxwWyPUnsqiXdAi8ff6PLAi
+         LXvcWAiU5HGlRl4blwurv+fwkv/0YiHRJzmHupEyOIUP7vgGlT3K3jrlygkIKyTdyD3X
+         iPVuWuQiGSqXnaXK/F6izyCsXK14qTPdEGbGaCRQHpVChl8Hydry647vyxxIyiu8V0m8
+         AYy8YMyqxlPNG2PYE3SYCDBXaXcstxvs045A0o/Kx1/OkCe2hWkiWLNR9NArWFnLbkXy
+         6qEQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVVU2GohYPEo1F3ZMR21U8Gr/RFzABxJtY2VfGgYJ+7JcpQapjIz7UKrdxQkxBVdJk1BLIgseOCM8HVJiRHKXnqIah6U/Sl1H+M
+X-Gm-Message-State: AOJu0Yx8wkx0dDvmoTi6d4/AtNieEUO8xp0Lqo2Oq5n72VvzftFfrxwI
+	UdsxBBlS6p1UJlqaCl9308JPaqTPcCKts7nFw956fCAEwL1GbGtKaodL3Hvm0vQUF369zSt39ja
+	hVcEq6FUxCQ==
+X-Google-Smtp-Source: AGHT+IFDdXGdPHoTE2h1ApM7Y6u9hPK8eCu25r+Hv9Q2Sc5IVTFNykQuJYWzhZEv2kTZ22mTuA0CWyxmC4NSWA==
+X-Received: from ip.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:57f3])
+ (user=ipylypiv job=sendgmr) by 2002:a05:6a02:fda:b0:6e6:e207:1d14 with SMTP
+ id 41be03b00d2f7-73cff859cf6mr15652a12.12.1719888459582; Mon, 01 Jul 2024
+ 19:47:39 -0700 (PDT)
+Date: Tue,  2 Jul 2024 02:47:28 +0000
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240701195758.1045917-9-ipylypiv@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
+Message-ID: <20240702024735.1152293-1-ipylypiv@google.com>
+Subject: [PATCH v5 0/7] ATA PASS-THROUGH sense data fixes
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jul 01, 2024 at 07:57:58PM +0000, Igor Pylypiv wrote:
-> The ATA PASS-THROUGH handling logic in ata_scsi_qc_complete() is hard
-> to read/understand. Improve the readability of the code by moving checks
-> into self-explanatory boolean variables.
-> 
-> Additionally, always set SAM_STAT_CHECK_CONDITION when CK_COND=1 because
-> SAT specification mandates that SATL shall return CHECK CONDITION if
-> the CK_COND bit is set.
-> 
-> Co-developed-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-> ---
->  drivers/ata/libata-scsi.c | 21 +++++++++++----------
->  1 file changed, 11 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index a66c177b6087..8f21b3b0bc75 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1659,26 +1659,27 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
->  {
->  	struct scsi_cmnd *cmd = qc->scsicmd;
->  	u8 *cdb = cmd->cmnd;
-> -	int need_sense = (qc->err_mask != 0) &&
-> -		!(qc->flags & ATA_QCFLAG_SENSE_VALID);
-> -	int need_passthru_sense = (qc->err_mask != 0) ||
-> -		(qc->flags & ATA_QCFLAG_SENSE_VALID);
-> +	bool have_sense = qc->flags & ATA_QCFLAG_SENSE_VALID;
-> +	bool is_ata_passthru = cdb[0] == ATA_16 || cdb[0] == ATA_12;
-> +	bool is_ck_cond_request = cdb[2] & 0x20;
-> +	bool is_error = qc->err_mask != 0;
->  
->  	/* For ATA pass thru (SAT) commands, generate a sense block if
->  	 * user mandated it or if there's an error.  Note that if we
-> -	 * generate because the user forced us to [CK_COND =1], a check
-> +	 * generate because the user forced us to [CK_COND=1], a check
->  	 * condition is generated and the ATA register values are returned
->  	 * whether the command completed successfully or not. If there
-> -	 * was no error, we use the following sense data:
-> +	 * was no error, and CK_COND=1, we use the following sense data:
->  	 * sk = RECOVERED ERROR
->  	 * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
->  	 */
-> -	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
-> -	    ((cdb[2] & 0x20) || need_passthru_sense)) {
-> -		if (!(qc->flags & ATA_QCFLAG_SENSE_VALID))
-> +	if (is_ata_passthru && (is_ck_cond_request || is_error || have_sense)) {
-> +		if (!have_sense)
->  			ata_gen_passthru_sense(qc);
->  		ata_scsi_set_passthru_sense_fields(qc);
-> -	} else if (need_sense) {
-> +		if (is_ck_cond_request)
-> +			set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
-> +	} else if (is_error && !have_sense) {
->  		ata_gen_ata_sense(qc);
->  	} else {
->  		/* Keep the SCSI ML and status byte, clear host byte. */
-> -- 
-> 2.45.2.803.g4e1b14247a-goog
-> 
+This patch series is fixing a few ATA PASS-THROUGH issues:
+1. Not reporting "ATA Status Return sense data descriptor" / "Fixed format
+   sense data" when ATA_QCFLAG_SENSE_VALID is set.
+2. Generating "fake" sk/asc/ascq based on ATA status/error registers when
+   ATA_QCFLAG_SENSE_VALID is set and CK_COND=1.
+3. Fixed format sense data was using incorrect field offsets for ATA
+   PASS-THROUGH commands.
+4. Using qc->result_tf in ATA sense data generation functions without
+   checking if qc->result_tf contains a valid data.
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Changes since v1:
+Thanks Damien and Niklas for the reviews!
 
-However: I really think that this patch should be squashed with patch 2/8.
+- Squashed two v1 patches 2/4 and 3/4 into one patch with a different
+  implementation.
+- Added 'Cc: stable@vger.kernel.org' tags to patches that are fixing bugs.
+- Reordered patches with the 'Cc: stable@vger.kernel.org' tag to be applied
+  first in order to simplify backports to stable releases.
+- Restored the buffer memset in atapi_eh_request_sense().
+- Updated declaration order in v1 patch 4/4.
+- Added a patch to cleanup unused ATA device id in ata_to_sense_error().
+- Updated fill_result_tf() to set ATA_QCFLAG_RTF_FILLED after populating
+  the result taskfile. Removed now redundant flag sets/checks from ahci.
+- Updated ATA sense data generation functions to return early if result_tf
+  is not filled. Added WARN_ON_ONCE checks to generate a warning when
+  ATA_QCFLAG_RTF_FILLED is not set and libata needs to generate sense data.
 
-Sure, the changes in this patch will make it harder to backport...
-but, even patch 2/8 will be a pain to backport...
+Changes since v2:
+- Moved v2 2/6 patch (fixed ATA PT offsets) to be the first one in v3.
+- Removed unused variable 'sb' from ata_gen_passthru_sense().
+- Removed WARN_ON_ONCE checks and added ata_dev_dbg() logs instead.
+- Removed the Fixes tag from v2 4/6 patch because the patch is doing
+  a cleanup and is not fixing any bugs.
 
-And this patch will need to have CC: stable and be backported as well...
-(such that we always set CHECK_CONDITION when CK_COND=1), so I strongly
-suggest that we should squash these, since it will probably be way simpler
-to backport the patch that is "patch 2/8 squashed with this patch",
-compared to backporting patch 2/8, and then backporting this patch.
-(That would just give two patches that will need manual backport, rather
-than one patch that needs manual backport.)
+Changes since v3:
+- Changed "RTF" to "result TF" in the log messages to make it more clear.
+  Removed capitalization and punctuation to be consistent with existing logs.
+- Marked the stable tag of the v3 2/6 patch with the 4.19+ LTS version.
+- Added a patch to honour the D_SENSE bit for CK_COND=1 and no error commands.
+- Fixed a bug in the v3 5/6 patch which caused the qc->result_tf.flags field
+  assignment to be skipped if ahci_qc_ncq_fill_rtf() was executed.
+- Added a patch proposed by Niklas to improve the readability of the complex
+  ATA PASS-THROUGH handling in ata_scsi_qc_complete().
 
-Both of these are fixing incorrect sense data for ATA passthough commands
-anyway.
+Changes since v4:
+- Squashed v4 2/8 and 8/8 patches into one. Both patches modified the same
+  function. Combining these related patches makes it easier to backport
+  the changes to stable releases.
+- Reworded the commit message in v4 3/8 to make it more clear.
 
+Igor Pylypiv (7):
+  ata: libata-scsi: Fix offsets for the fixed format sense data
+  ata: libata-scsi: Do not overwrite valid sense data when CK_COND=1
+  ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error
+  ata: libata-scsi: Remove redundant sense_buffer memsets
+  ata: libata-scsi: Do not pass ATA device id to ata_to_sense_error()
+  ata: libata-core: Set ATA_QCFLAG_RTF_FILLED in fill_result_tf()
+  ata: libata-scsi: Check ATA_QCFLAG_RTF_FILLED before using result_tf
 
-Kind regards,
-Niklas
+ drivers/ata/libahci.c     |  12 +--
+ drivers/ata/libata-core.c |   8 ++
+ drivers/ata/libata-scsi.c | 209 +++++++++++++++++++++-----------------
+ 3 files changed, 128 insertions(+), 101 deletions(-)
+
+-- 
+2.45.2.803.g4e1b14247a-goog
+
