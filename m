@@ -1,217 +1,150 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx.bauer-kirch.de (mx.bauer-kirch.de [89.238.71.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18941146598
-	for <linux-ide@vger.kernel.org>; Fri,  5 Jul 2024 09:21:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A88EC14430E
+	for <linux-ide@vger.kernel.org>; Fri,  5 Jul 2024 12:02:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.238.71.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720171290; cv=none; b=oIPjlc8hu37am1BkO+bydHKJoFOEAKsSochDeVbPv8yIE/bUasEX9Fwm3rKoC+FGplmtzE8pYweK6Y0UCQPIJczmeRTuok2ZIRlHLBXEGeSMX6YVuu6fD3gQn3Xn8WkoWbSfDUWJD5/2FXPJJFI9wyLsnmmFTV/XFt3rCNmFilw=
+	t=1720180958; cv=none; b=Na2kSMBFHrYL1W8vyJxOBTXOsfuf4E4Cl7+R+NlPR2LqTh2gSOiWuia2H48A7rGl3fSRNPMd4PJetxMrKLdk6pg4Dz0E+5AVPBfcZ/mJ86mD/sxrYCjofhJjhjiLXWNu4lrXUabc4Y/lqKOseyyc5YQadj2MFbp1vhV8vNSAzAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720171290; c=relaxed/simple;
-	bh=DAsvD8/mLkcQAkkYRWz+VC5gPXf282xVyAGgndXBPhk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eKsUP/fbdIak/oHCopZET/OFbuuKBWXLnHsulp/3gNh2eSsIoEQxgxEHwtV7wjC5jS885eNqfVk9Hwrfs9gms9V7heHh15TGMsT+eGh+Zwh0ZgOEtHsXSrPhCe152Ib9ZzNIT2qNDQmXVqo0hgpbBs+qP4B2Q0y+kXtoRA/GaHY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=BHxXWldj; arc=none smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="BHxXWldj"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-58ba3e38028so1875094a12.0
-        for <linux-ide@vger.kernel.org>; Fri, 05 Jul 2024 02:21:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1720171286; x=1720776086; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=DAsvD8/mLkcQAkkYRWz+VC5gPXf282xVyAGgndXBPhk=;
-        b=BHxXWldj+hHqE2ns8S7/HAU42Z7MkYBmemSuhBWSrNKLJElFlh+Q7FcO+aA+P9LbaA
-         EAYq1RdO44rOCVBQIN7NgVzw5+vw9GZXvknaG0YFg/JZExIY6Ex6YAvsSbvIyrCbT1Fk
-         SymdVF1FI8op/8C6GBynndXKuBvrUlCd7+Orq+SdWWRrmREve0aOYgn+m9F7lNz8pCmy
-         FX7mtN7hJUMBz7mmYMIbddHt6ohOM24jP83x4BCkktmhK91m4j7HsLvHwH7jy1VI5k4S
-         M7Qyb+ARd26QRITXmUIfMXUvfuVm+MhhkaFkNiZglCxndpvv5En9S08MJPo8WpnSxewy
-         oRRQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720171286; x=1720776086;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DAsvD8/mLkcQAkkYRWz+VC5gPXf282xVyAGgndXBPhk=;
-        b=D76bMrNOxsvl1qkqL6cncHCxN5sTLHMJy7hJfORPCuSEJnXdWNXYlbpotjRjwgZDfe
-         vZg7jmNW+EVUjgLNCEIDefiBnp4jR1WMV7P3JddwolO3eaEb64vf7QpK1lk7McemrnSn
-         AuemNU1Sdc9KU7uhRr5J2lyhFMi5CKYg2QDhpV1p1cXQmS8uhsFC9+UMIhJ2cFTDOqLM
-         t20ZbbOcOnHBEOF/J+ynpOmRoHew/mLG3Lz49ryIIP/YI62qQJ1ziooNlGtFZn8wD01o
-         6848n0uGo/KxmZB+NASdoqP7HSZpTX/HUcJVtFkZ649MSURDMAnS97lGpz7CMXSyYj7j
-         gB6A==
-X-Forwarded-Encrypted: i=1; AJvYcCV5TEKOyx1a4JvJk6ZTSZcnXPgJ2HIqBBCgBH3nLAy3ez2X6GvzripcrSJChBxCZl3kNcDBn0TEmbAn+SZC2Pl/XG77gArpzlrs
-X-Gm-Message-State: AOJu0YwtY330glAug9DDL2iineHRDKjB6slPLPJFtPlGH91zm/j8Pjff
-	7QVi7DNfHphaS6OZuAXQfXixaAy4hSdovOhg84g7JCli97ZfvjnklGwQZsQT2i8=
-X-Google-Smtp-Source: AGHT+IH5GBzifj2YL+uV1tph7kmD/UU37Fput+e22tUxmHwQFDW0cLo/eN2fRQ1OiC6xRmZjvtbAaw==
-X-Received: by 2002:a17:906:fb95:b0:a6f:b400:4751 with SMTP id a640c23a62f3a-a77ba46ccffmr181755366b.22.1720171286291;
-        Fri, 05 Jul 2024 02:21:26 -0700 (PDT)
-Received: from localhost (p50915e7b.dip0.t-ipconnect.de. [80.145.94.123])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a77d9cdf337sm10855266b.53.2024.07.05.02.21.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Jul 2024 02:21:25 -0700 (PDT)
-Date: Fri, 5 Jul 2024 11:21:25 +0200
-From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
-To: Nikita Shubin <nikita.shubin@maquefel.me>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, 
-	Arnd Bergmann <arnd@arndb.de>, Stephen Boyd <sboyd@kernel.org>, 
-	Hartley Sweeten <hsweeten@visionengravers.com>, Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
-	Russell King <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>, 
-	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Andy Shevchenko <andy@kernel.org>, Michael Turquette <mturquette@baylibre.com>, 
-	Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Thierry Reding <thierry.reding@gmail.com>, Mark Brown <broonie@kernel.org>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
-	Vignesh Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, 
-	Sergey Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
-	Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
-	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org, 
-	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org, devicetree@vger.kernel.org, 
-	dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org, linux-pwm@vger.kernel.org, 
-	linux-spi@vger.kernel.org, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
-	linux-ide@vger.kernel.org, linux-input@vger.kernel.org, linux-sound@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>, Vinod Koul <vkoul@kernel.org>
-Subject: Re: [PATCH v10 00/38] ep93xx device tree conversion
-Message-ID: <jyvlqfvqn5bp3jmvxvwyrcqmihjohuq3o757mfph7x37kbwvtq@gtgyh4fca4fq>
-References: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
- <CAHp75VfSC9gAD9ipeWRPdQOxUp4FXqYYei-cJTs38nbz0cHpkg@mail.gmail.com>
- <48c242838c77034485a9e667dc0e867207c5beed.camel@maquefel.me>
- <241a4cf9830b0118f01e8fcf2853c62527636049.camel@maquefel.me>
+	s=arc-20240116; t=1720180958; c=relaxed/simple;
+	bh=wUhv3+kdCxOmo8OqCc+iROD6UtPvcZZ0YFbV6JNFtW4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LgBn7Q0Yw0aRpmsU9agZHoSoLl0zEQtPPm0KuUbsgwawx3LqvGErKmA2aPy9Oq3XGezEAGQytkZya1GcBKfOy9skscrPaIbWKfeOCEUV9XTmxBa7SDz6B7/AX+kw2iuTwHWSb/qnrX9byag7hpxGrzqen4hD6ksArTxC3QfoKik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; arc=none smtp.client-ip=89.238.71.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
+Received: by mail.bauer-kirch.de with ESMTPSA id 1sPhdy-0000000AIqw-2FIO
+	authenticated id <420001312>
+	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128);
+	Fri, 05 Jul 2024 14:02:26 +0200
+Message-ID: <e0d05674-d894-4a38-ac36-5a0ad3fcb3c8@noerenberg.de>
+Date: Fri, 5 Jul 2024 14:02:25 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="icynwgj6p72h37hs"
-Content-Disposition: inline
-In-Reply-To: <241a4cf9830b0118f01e8fcf2853c62527636049.camel@maquefel.me>
+User-Agent: Mozilla Thunderbird
+Subject: Re: Marvel 88SE6121 fails with SATA-2/3 HDDs
+To: Damien Le Moal <dlemoal@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>, linux-ide@vger.kernel.org
+Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, risc4all@yahoo.com,
+ helgaas@kernel.org, kw@linux.com
+References: <db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de>
+ <930a0685-c741-110e-40c2-660754301e5a@opensource.wdc.com>
+ <a248857e-991c-16d7-496c-9dc692186ead@noerenberg.de>
+ <b4a515f6-e11c-756b-ff90-114836f919f9@noerenberg.de>
+ <341397a1-9da5-466d-a738-cad79e8d2390@opensource.wdc.com>
+ <53372f11-1d97-5310-32e7-6368a653115f@noerenberg.de>
+ <b02e3814-16a0-9bc6-01be-d53fa81d99c2@opensource.wdc.com>
+ <29b60f42-45ba-4c39-9e30-1dd4811b181d@noerenberg.de>
+ <0d097346-c990-4c48-bab4-ab4259ee242f@kernel.org>
+From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
+In-Reply-To: <0d097346-c990-4c48-bab4-ab4259ee242f@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Am 02.07.2024 um 12:21 schrieb Damien Le Moal:
+>>
+>> Just to summerize again: Gen2/3 HDDs only work with the 88SE6121 controller
+>> in the Seagate Blackarmor NAS 440 [1] if they are jumpered to Gen1 (1.5 Gbit/s).
+>> This is unsatisfactory because they correctly work with the U-Boot bootloader
+>> without any jumpers at Gen2 speed (3 Gbit/s).
+>>
+>>
+>>>>> Can you try with libata.force=nolpm ? A lot of old WD drives have broken LPM.
+>>>>>
+>>>>
+>>>> libata.force=nolpm slightly changes the kernel log: the drive is basically detected (the model name and drive geometry show up), but in the end it fails:
+>>>>
+>>
+>> After many many tests I can say that no kernel option I tried (e.g. libata.force with
+>> nolpm, noncq, nodma, 1.5Gbps and almost all others) helps to mitigate the problem.
+>>
+>> By chance I saw an old Debian kernel patch [2], which, when applied make Gen2
+>> HDDs reproducibly work with 3.x kernels. After some more investigation
+>> I figured out that similarly commenting out some lines in the interrupt handler in
+>> libahci.c causes them to be recognized with kernel 6.x as well:
+>>
+>> /*      if (sata_lpm_ignore_phy_events(&ap->link)) {
+>>                 status &= ~PORT_IRQ_PHYRDY;
+>>                 ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
+>>         }
+>> */
+>>
+>> Interestingly, sata_lpm_ignore_phy_events() returns false in my setup. So, as far as
+>> I can tell, it is not a question of the ahci_scr_write() being executed. Rather, it
+>> is the CPU cycles that are saved by the absence of this section in the interrupt
+>> handler. At first it was very hard for me to believe that it was due to commenting
+>> out the section, but I have compiled several kernels that differ
+>> only in this section: yes, it makes a difference.
+> 
+> That is very odd. sata_lpm_ignore_phy_events() is only a couple of "if"
+> statements and there are no register accesses in there. So if the few CPU cycles
+> that takes make a difference, I would suspect that there is something odd going
+> on with the marvell adapter interrupts.
+> 
+
+I completely agree that this is very strange, but on the NAS440 those few lines make a difference.
+
+There was doubt whether the PCI-MVEBU driver was working correctly, which is why I
+created the bug https://bugzilla.kernel.org/show_bug.cgi?id=216094 some time ago.
+
+Unfortunately, no significant progress could be made there. I'm CC-ing 
+Bjorn Helgaas and Krzysztof Wilczyński with the kind wish to draw attention to this issue.
 
 
---icynwgj6p72h37hs
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hello,
+>> To summerize, with sata_lpm_ignore_phy_events() commented out:
+>>
+>> - with kernel 3.x HDDs are recognized (IDENTIFY 0xEC) and one can write large
+>>   amounts of data to them without any problems.
+>> - for kernel 6.x identifying and writing data works "almost" every time but not
+>>   perfectly stable.
+> 
+> So commenting out that "if (sata_lpm_ignore_phy_events)" hunk is not enough to
+> fix your issue then. This hunk may not be directly related to the issue and
+> commenting it out simply changes the timing making things better.
+> 
+>> - for both 3.x and 6.x kernels, when I execute certain special commands
+>>   (e.g. "hdparm -I"), the drive connection is reset but usually works afterwards.
+>> - with kernel 2.x the hard disks always worked, which is reasonable, because there
+>>   the interrupt handler never included a sata_lpm_ignore_phy_events() call.
+> 
+> But above, you said that things are not completely stable with 6.x. So there is
+> likely something else going on.
+> 
+>> I would be thankful if you could tell me whether and how this problem can be
+>> solved sustainably.
+> 
+> First things first: can you please test with the latest mainline 6.10-rc6 kernel
+> and send a dmesg output after boot and any other relevant output showing
+> problems when doing IOs ?
+> 
 
-On Thu, Jun 27, 2024 at 11:29:44AM +0300, Nikita Shubin wrote:
-> On Tue, 2024-06-18 at 19:20 +0300, Nikita Shubin wrote:
-> > Hello Andy!
-> > On Mon, 2024-06-17 at 12:58 +0200, Andy Shevchenko wrote:
-> > > On Mon, Jun 17, 2024 at 11:38=E2=80=AFAM Nikita Shubin via B4 Relay
-> > > <devnull+nikita.shubin.maquefel.me@kernel.org> wrote:
-> > > >=20
-> > > > The goal is to recieve ACKs for all patches in series to merge it
-> > > > via Arnd branch.
-> > >=20
-> > > 'receive'
-> > >=20
-> > > > Unfortunately, CLK subsystem suddenly went silent on clk portion
-> > > > of
-> > > > series V2 reroll,
-> > > > tried to ping them for about a month but no luck.
-> > > >=20
-> > > > Link:
-> > > > https://lore.kernel.org/r/20240408-ep93xx-clk-v2-1-adcd68c13753@maq=
-uefel.me
-> > > >=20
-> > > > Some changes since last version (v9) - see "Changes in v10",
-> > > > mostly
-> > > > cosmetic.
-> > >=20
-> > > ...
-> > >=20
-> > > > Patches should be formated with '--histogram'
-> > >=20
-> > > 'formatted'
-> > >=20
-> > > ...
-> > >=20
-> > > > Changes in v10:
-> > > >=20
-> > > > Reordered SoB tags to make sure they appear before Rb and Acked
-> > > > tags.
-> > >=20
-> > > This is not required. The importance is only the order of SoBs
-> > > themselves. If they are interleaved with other tags, it's fine.
-> >=20
-> > Ah - ok. Just saw someone was complaining about b4 reordering them.=20
-> >=20
-> > >=20
-> > > ...
-> > >=20
-> > >=20
-> > > Hopefully to see this series being eventually applied soon.
-> > > Arnd? (Do we have all necessary subsystem maintainers' tags, btw?)
-> > >=20
-> > >=20
-> >=20
-> > As i see from my perspective only three left:
-> >=20
-> > Clk subsystem:
-> >=20
-> > - clk: ep93xx: add DT support for Cirrus EP93xx
-> >=20
-> > DMA subsystem (but the only request from Vinod, as far as i remember,
-> > was fixing commits titles):
-> >=20
-> > - dmaengine: cirrus: Convert to DT for Cirrus EP93xx
-> > - dmaengine: cirrus: remove platform code
-> >=20
-> > Beside that tags missing on platform code removal (which can be Acked
-> > by Arnd himself i believe) and dtsi/dts files (same ?).
->=20
-> Vinod acked the above two patches:
->=20
-> https://lore.kernel.org/all/ZnkIp8bOcZK3yVKP@matsya/
-> https://lore.kernel.org/all/ZnkImp8BtTdxl7O3@matsya/
->=20
-> so only:
->=20
-> - clk: ep93xx: add DT support for Cirrus EP93xx
->=20
-> https://lore.kernel.org/all/20240617-ep93xx-v10-3-662e640ed811@maquefel.m=
-e/
->=20
-> left.
->=20
-> Hope Stephen will find some time for this one.
+I added the full boot log as attachment to the bug report above:
+https://bugzilla.kernel.org/attachment.cgi?id=306531&action=edit
 
-As we're approaching the merge window and this is still unclear, I
-applied the pwm bits (i.e. patches 12, 13). If I understand correctly,
-patch 33 isn't suitable for application yet as it has a dependency on
-pinctrl changes in that series.
+Please do not get confused by the number of hard disks: The relevant HDD
+is the Gen2 WDC WD5000AADS in slot 1, all other disks are only for double-checking
+things (Gen1 HDD for cross-testing in slot 2, slot 3+4 are always working
+with sata_mv driver).
 
-(side note: Your patches are signed, but that doesn't bring any benefit
-if the receivers don't have your key. I didn't find it neither on
-keys.openpgp.org nor in the kernel pgp key collection.)
+Sections in the log:
 
-Best regards
-Uwe
+1. After system boot and "modprobe pci-mvebu" the AHCI driver fails to
+detect the Gen2 HDD in slot 1 (id ata3)
 
---icynwgj6p72h37hs
-Content-Type: application/pgp-signature; name="signature.asc"
+2. After "rmmod && insmod"-ing libahci.ko with (only) sata_lpm_ignore_phy_events()
+commented out, the Gen2 HDD is detected (id ata6 with 3Gbps).
 
------BEGIN PGP SIGNATURE-----
+3. Some interrupt und lspci info.
 
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmaHuxIACgkQj4D7WH0S
-/k63agf/ctyXHUSwirhdvMJNeHEME1eqwJPf8P71cxUigi0cvcf0NrTT4jEqglzC
-BqT8dRZCw6LKUShZlhwO7ymRXcAjNYTvFLuJKQYOGuVQZQEtoK7PDa80NeQjFhZP
-r0CwuOQfcg2ovACIA1T/iSX2APqGatvsO4Ke7h2u5kawsGxQIu2TZnfPDhwTIdqj
-Ib33BChvzlU45YrMZrQUHKE3/3XOHyxVvZSutJmaHLtSdIOE/fPr/U5anDzjdWFS
-gxrbDGE0Z3LyDIb0OB8iZiVIeyXDjysmlTdYpfPQi3/4JT+ohaNXgpSC5dmYo/s+
-R6QHGSe+ahTTQGyCjdYkOM/hMh/CiQ==
-=1/WB
------END PGP SIGNATURE-----
+4. Temporary ata6 connection problem ("qc timeout") but survives, still able to
+mount a vfat partition. No more problems after this (at least for ~24 hours).
 
---icynwgj6p72h37hs--
+Please let me know if I can help with other things.
+
+Hajo
