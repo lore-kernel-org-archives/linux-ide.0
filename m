@@ -1,173 +1,217 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86EBC33C7;
-	Fri,  5 Jul 2024 06:06:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18941146598
+	for <linux-ide@vger.kernel.org>; Fri,  5 Jul 2024 09:21:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720159584; cv=none; b=FtnDrXWgprZBlK/dJeiyogqrV1d1f2tTR/qujFySMO8tTYjnBQBV2Zupums6iwl3D1XsOeQZsHeLwMlayMQpCTvGEdluhSS2wgNTYrwOG5R0Zhsz5GgPfaoyXs8xeo3O8aQ7qGB3xjFjJUXDSA3OMOetG/Eu5tOWmTyOLD9oVzk=
+	t=1720171290; cv=none; b=oIPjlc8hu37am1BkO+bydHKJoFOEAKsSochDeVbPv8yIE/bUasEX9Fwm3rKoC+FGplmtzE8pYweK6Y0UCQPIJczmeRTuok2ZIRlHLBXEGeSMX6YVuu6fD3gQn3Xn8WkoWbSfDUWJD5/2FXPJJFI9wyLsnmmFTV/XFt3rCNmFilw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720159584; c=relaxed/simple;
-	bh=JHjJXgeFD4Xw598iJ1pU814GZrbgzmFYVDC3qSP0ffg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Uzr0IWXbVQdo3JnA2UEqq7Ktwjaz28JRGfDFaI7h8oj0nN0PyNCN9ZQ/jTpU23RPVA2taY+Q9aY5B5mR4ePyHR1rzmOiKkc2n5tmU1R9V5jNaWHV0iqBPeI5NzkMRR9uqGoNmFEEGHS8cG1JvgZnfTCc8zCMm5g/lxCwPDu+3i8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TM+/1P+V; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720171290; c=relaxed/simple;
+	bh=DAsvD8/mLkcQAkkYRWz+VC5gPXf282xVyAGgndXBPhk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eKsUP/fbdIak/oHCopZET/OFbuuKBWXLnHsulp/3gNh2eSsIoEQxgxEHwtV7wjC5jS885eNqfVk9Hwrfs9gms9V7heHh15TGMsT+eGh+Zwh0ZgOEtHsXSrPhCe152Ib9ZzNIT2qNDQmXVqo0hgpbBs+qP4B2Q0y+kXtoRA/GaHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=BHxXWldj; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TM+/1P+V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E44DFC116B1;
-	Fri,  5 Jul 2024 06:06:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720159584;
-	bh=JHjJXgeFD4Xw598iJ1pU814GZrbgzmFYVDC3qSP0ffg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=TM+/1P+V9EVr2L1mvrYPYWC1z9d5FYFHJ6t6FHHRcx8z9gEILMAakenipcWOR5Z1Z
-	 MFkw/L1IS7WiZ4js8WDKWGOjuxR0Yw33cORIE8R0u6dSUDf/ZtEs2pemXUGGMJ/Mjl
-	 Gv698Ao1Bbq+ukWDh7zAZfZqd0YGrDHsmM2ISq9feoCkE0jGbOF8syzUqdXIRRBOCr
-	 BO8+zBCJXXelrrjhwhO/WuLrn5DnyWKjtiM7moyDmQ+kBDDuMTQ212ociGTNUFfS8k
-	 rCH2KzCTOmAUiuXQ/BJ0wxOSu9kJTuCSyZK7Dpjw2G2X1j/1uLtUK5vcJHh4iWDpRG
-	 +01ynyGcxHllw==
-Message-ID: <e6e72e16-9304-40f3-99b2-cd4a53e5f8f3@kernel.org>
-Date: Fri, 5 Jul 2024 08:06:18 +0200
+	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="BHxXWldj"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-58ba3e38028so1875094a12.0
+        for <linux-ide@vger.kernel.org>; Fri, 05 Jul 2024 02:21:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1720171286; x=1720776086; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=DAsvD8/mLkcQAkkYRWz+VC5gPXf282xVyAGgndXBPhk=;
+        b=BHxXWldj+hHqE2ns8S7/HAU42Z7MkYBmemSuhBWSrNKLJElFlh+Q7FcO+aA+P9LbaA
+         EAYq1RdO44rOCVBQIN7NgVzw5+vw9GZXvknaG0YFg/JZExIY6Ex6YAvsSbvIyrCbT1Fk
+         SymdVF1FI8op/8C6GBynndXKuBvrUlCd7+Orq+SdWWRrmREve0aOYgn+m9F7lNz8pCmy
+         FX7mtN7hJUMBz7mmYMIbddHt6ohOM24jP83x4BCkktmhK91m4j7HsLvHwH7jy1VI5k4S
+         M7Qyb+ARd26QRITXmUIfMXUvfuVm+MhhkaFkNiZglCxndpvv5En9S08MJPo8WpnSxewy
+         oRRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720171286; x=1720776086;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DAsvD8/mLkcQAkkYRWz+VC5gPXf282xVyAGgndXBPhk=;
+        b=D76bMrNOxsvl1qkqL6cncHCxN5sTLHMJy7hJfORPCuSEJnXdWNXYlbpotjRjwgZDfe
+         vZg7jmNW+EVUjgLNCEIDefiBnp4jR1WMV7P3JddwolO3eaEb64vf7QpK1lk7McemrnSn
+         AuemNU1Sdc9KU7uhRr5J2lyhFMi5CKYg2QDhpV1p1cXQmS8uhsFC9+UMIhJ2cFTDOqLM
+         t20ZbbOcOnHBEOF/J+ynpOmRoHew/mLG3Lz49ryIIP/YI62qQJ1ziooNlGtFZn8wD01o
+         6848n0uGo/KxmZB+NASdoqP7HSZpTX/HUcJVtFkZ649MSURDMAnS97lGpz7CMXSyYj7j
+         gB6A==
+X-Forwarded-Encrypted: i=1; AJvYcCV5TEKOyx1a4JvJk6ZTSZcnXPgJ2HIqBBCgBH3nLAy3ez2X6GvzripcrSJChBxCZl3kNcDBn0TEmbAn+SZC2Pl/XG77gArpzlrs
+X-Gm-Message-State: AOJu0YwtY330glAug9DDL2iineHRDKjB6slPLPJFtPlGH91zm/j8Pjff
+	7QVi7DNfHphaS6OZuAXQfXixaAy4hSdovOhg84g7JCli97ZfvjnklGwQZsQT2i8=
+X-Google-Smtp-Source: AGHT+IH5GBzifj2YL+uV1tph7kmD/UU37Fput+e22tUxmHwQFDW0cLo/eN2fRQ1OiC6xRmZjvtbAaw==
+X-Received: by 2002:a17:906:fb95:b0:a6f:b400:4751 with SMTP id a640c23a62f3a-a77ba46ccffmr181755366b.22.1720171286291;
+        Fri, 05 Jul 2024 02:21:26 -0700 (PDT)
+Received: from localhost (p50915e7b.dip0.t-ipconnect.de. [80.145.94.123])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a77d9cdf337sm10855266b.53.2024.07.05.02.21.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Jul 2024 02:21:25 -0700 (PDT)
+Date: Fri, 5 Jul 2024 11:21:25 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
+To: Nikita Shubin <nikita.shubin@maquefel.me>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, 
+	Arnd Bergmann <arnd@arndb.de>, Stephen Boyd <sboyd@kernel.org>, 
+	Hartley Sweeten <hsweeten@visionengravers.com>, Alexander Sverdlin <alexander.sverdlin@gmail.com>, 
+	Russell King <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>, 
+	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
+	Andy Shevchenko <andy@kernel.org>, Michael Turquette <mturquette@baylibre.com>, 
+	Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck <linux@roeck-us.net>, 
+	Thierry Reding <thierry.reding@gmail.com>, Mark Brown <broonie@kernel.org>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Sergey Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
+	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org, devicetree@vger.kernel.org, 
+	dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-spi@vger.kernel.org, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+	linux-ide@vger.kernel.org, linux-input@vger.kernel.org, linux-sound@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>, Vinod Koul <vkoul@kernel.org>
+Subject: Re: [PATCH v10 00/38] ep93xx device tree conversion
+Message-ID: <jyvlqfvqn5bp3jmvxvwyrcqmihjohuq3o757mfph7x37kbwvtq@gtgyh4fca4fq>
+References: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
+ <CAHp75VfSC9gAD9ipeWRPdQOxUp4FXqYYei-cJTs38nbz0cHpkg@mail.gmail.com>
+ <48c242838c77034485a9e667dc0e867207c5beed.camel@maquefel.me>
+ <241a4cf9830b0118f01e8fcf2853c62527636049.camel@maquefel.me>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/1] dt-bindings: ata: ahci-fsl-qoriq: add
- fsl,ls1046a-ahci and fsl,ls1012a-ahci
-To: Damien Le Moal <dlemoal@kernel.org>, Frank Li <Frank.li@nxp.com>
-Cc: Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>,
- "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)"
- <linux-ide@vger.kernel.org>,
- "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
- imx@lists.linux.dev
-References: <20240625205752.4007067-1-Frank.Li@nxp.com>
- <327d6dd1-3f31-4b49-96f0-afd754eae086@kernel.org>
- <ZoRm/Lwqb4KGCeUx@lizhi-Precision-Tower-5810>
- <cce2627f-c02f-4699-81a2-3cd9a1f2d74b@kernel.org>
-Content-Language: en-US
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <cce2627f-c02f-4699-81a2-3cd9a1f2d74b@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="icynwgj6p72h37hs"
+Content-Disposition: inline
+In-Reply-To: <241a4cf9830b0118f01e8fcf2853c62527636049.camel@maquefel.me>
 
-On 05/07/2024 02:20, Damien Le Moal wrote:
-> On 7/3/24 05:45, Frank Li wrote:
->> On Wed, Jun 26, 2024 at 10:17:55AM +0200, Krzysztof Kozlowski wrote:
->>> On 25/06/2024 22:57, Frank Li wrote:
->>>> Add compatible string 'fsl,ls1046a-ahci' and 'fsl,ls1012a-ahci' compatible
->>>> string. Allow 'fsl,ls1012a-ahci' fallback to 'fsl,ls1043a-ahci'.
->>>>
->>>> ls1046a ahci ecc disable bit is difference with other chips.
->>>>
->>>> Signed-off-by: Frank Li <Frank.Li@nxp.com>
->>>> ---
->>>>  .../devicetree/bindings/ata/fsl,ahci.yaml     | 19 ++++++++++++-------
->>>>  1 file changed, 12 insertions(+), 7 deletions(-)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml b/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
->>>> index 162b3bb5427ed..a244bc603549d 100644
->>>> --- a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
->>>> +++ b/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
->>>> @@ -11,13 +11,18 @@ maintainers:
->>>>  
->>>>  properties:
->>>>    compatible:
->>>> -    enum:
->>>> -      - fsl,ls1021a-ahci
->>>> -      - fsl,ls1043a-ahci
->>>> -      - fsl,ls1028a-ahci
->>>> -      - fsl,ls1088a-ahci
->>>> -      - fsl,ls2080a-ahci
->>>> -      - fsl,lx2160a-ahci
->>>> +    oneOf:
->>>> +      - items:
->>>> +          - const: fsl,ls1012a-ahci
->>>> +          - const: fsl,ls1043a-ahci
->>>> +      - enum:
->>>> +          - fsl,ls1021a-ahci
->>>> +          - fsl,ls1043a-ahci
->>>> +          - fsl,ls1046a-ahci
->>>
->>> Where is the driver change for this?
->>>
->>> Your commit does not explain why you are doing it and without driver
->>> change adding new support it is not obvious. This probably applies to
->>> all your patches.
->>
->> I think I missed ls1012a and ls1021a.  Commit message is wrong. This is
->> for legancy platorm. 
->>
->> Basic try to eliminate the CHECK_DTBS warning. ls1012a use
->>
->> "fsl,ls1012a-ahci", "fsl,ls1043a-ahci". There are two methods, 
->> 1. change binding doc to allow "fsl,ls1012a-ahci", "fsl,ls1043a-ahci"
-> 
-> But then shouldn't you also change the drivers/ata/ahci_qoriq.c to add ls1012a
-> as a compatible ?
 
-The fallback will be used by the driver, so there is no need to add
-front compatibles to of_device_id table.
+--icynwgj6p72h37hs
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
->> 2. remove "fsl,ls1012a-ahci".
-> 
-> I am not sure if that is acceptable since there is one device tree using it out
-> there already.
-> 
-> I am no DT expert, but I think (1) with the driver change is the right approach.
-> Krzysztof ?
+Hello,
 
-Yep, this cannot be removed.
+On Thu, Jun 27, 2024 at 11:29:44AM +0300, Nikita Shubin wrote:
+> On Tue, 2024-06-18 at 19:20 +0300, Nikita Shubin wrote:
+> > Hello Andy!
+> > On Mon, 2024-06-17 at 12:58 +0200, Andy Shevchenko wrote:
+> > > On Mon, Jun 17, 2024 at 11:38=E2=80=AFAM Nikita Shubin via B4 Relay
+> > > <devnull+nikita.shubin.maquefel.me@kernel.org> wrote:
+> > > >=20
+> > > > The goal is to recieve ACKs for all patches in series to merge it
+> > > > via Arnd branch.
+> > >=20
+> > > 'receive'
+> > >=20
+> > > > Unfortunately, CLK subsystem suddenly went silent on clk portion
+> > > > of
+> > > > series V2 reroll,
+> > > > tried to ping them for about a month but no luck.
+> > > >=20
+> > > > Link:
+> > > > https://lore.kernel.org/r/20240408-ep93xx-clk-v2-1-adcd68c13753@maq=
+uefel.me
+> > > >=20
+> > > > Some changes since last version (v9) - see "Changes in v10",
+> > > > mostly
+> > > > cosmetic.
+> > >=20
+> > > ...
+> > >=20
+> > > > Patches should be formated with '--histogram'
+> > >=20
+> > > 'formatted'
+> > >=20
+> > > ...
+> > >=20
+> > > > Changes in v10:
+> > > >=20
+> > > > Reordered SoB tags to make sure they appear before Rb and Acked
+> > > > tags.
+> > >=20
+> > > This is not required. The importance is only the order of SoBs
+> > > themselves. If they are interleaved with other tags, it's fine.
+> >=20
+> > Ah - ok. Just saw someone was complaining about b4 reordering them.=20
+> >=20
+> > >=20
+> > > ...
+> > >=20
+> > >=20
+> > > Hopefully to see this series being eventually applied soon.
+> > > Arnd? (Do we have all necessary subsystem maintainers' tags, btw?)
+> > >=20
+> > >=20
+> >=20
+> > As i see from my perspective only three left:
+> >=20
+> > Clk subsystem:
+> >=20
+> > - clk: ep93xx: add DT support for Cirrus EP93xx
+> >=20
+> > DMA subsystem (but the only request from Vinod, as far as i remember,
+> > was fixing commits titles):
+> >=20
+> > - dmaengine: cirrus: Convert to DT for Cirrus EP93xx
+> > - dmaengine: cirrus: remove platform code
+> >=20
+> > Beside that tags missing on platform code removal (which can be Acked
+> > by Arnd himself i believe) and dtsi/dts files (same ?).
+>=20
+> Vinod acked the above two patches:
+>=20
+> https://lore.kernel.org/all/ZnkIp8bOcZK3yVKP@matsya/
+> https://lore.kernel.org/all/ZnkImp8BtTdxl7O3@matsya/
+>=20
+> so only:
+>=20
+> - clk: ep93xx: add DT support for Cirrus EP93xx
+>=20
+> https://lore.kernel.org/all/20240617-ep93xx-v10-3-662e640ed811@maquefel.m=
+e/
+>=20
+> left.
+>=20
+> Hope Stephen will find some time for this one.
 
-Best regards,
-Krzysztof
+As we're approaching the merge window and this is still unclear, I
+applied the pwm bits (i.e. patches 12, 13). If I understand correctly,
+patch 33 isn't suitable for application yet as it has a dependency on
+pinctrl changes in that series.
 
+(side note: Your patches are signed, but that doesn't bring any benefit
+if the receivers don't have your key. I didn't find it neither on
+keys.openpgp.org nor in the kernel pgp key collection.)
+
+Best regards
+Uwe
+
+--icynwgj6p72h37hs
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmaHuxIACgkQj4D7WH0S
+/k63agf/ctyXHUSwirhdvMJNeHEME1eqwJPf8P71cxUigi0cvcf0NrTT4jEqglzC
+BqT8dRZCw6LKUShZlhwO7ymRXcAjNYTvFLuJKQYOGuVQZQEtoK7PDa80NeQjFhZP
+r0CwuOQfcg2ovACIA1T/iSX2APqGatvsO4Ke7h2u5kawsGxQIu2TZnfPDhwTIdqj
+Ib33BChvzlU45YrMZrQUHKE3/3XOHyxVvZSutJmaHLtSdIOE/fPr/U5anDzjdWFS
+gxrbDGE0Z3LyDIb0OB8iZiVIeyXDjysmlTdYpfPQi3/4JT+ohaNXgpSC5dmYo/s+
+R6QHGSe+ahTTQGyCjdYkOM/hMh/CiQ==
+=1/WB
+-----END PGP SIGNATURE-----
+
+--icynwgj6p72h37hs--
