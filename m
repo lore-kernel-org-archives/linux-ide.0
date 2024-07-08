@@ -1,240 +1,203 @@
-Received: from mx.bauer-kirch.de (mx.bauer-kirch.de [89.238.71.182])
+Received: from forward500d.mail.yandex.net (forward500d.mail.yandex.net [178.154.239.208])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30D4718EBF
-	for <linux-ide@vger.kernel.org>; Mon,  8 Jul 2024 07:18:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.238.71.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 522F5381B9;
+	Mon,  8 Jul 2024 07:42:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.208
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720423084; cv=none; b=Eyb+N9BvQYdvfos62m1iwTWBafn1FYxn0yCcCtrLFTbiNosghi2XbNfmsrL/eNI7Xfcmh4tNC/qcJvCHDfJ1pNsRGmX32BQtqg1lXo460My5praeozPQkye13ACu/mJK90e9bybK44AiLumcr2p+0JNXd3qXyfU3jqrDNdIsAts=
+	t=1720424534; cv=none; b=aCBRDhC+fQSIyKfGLvD9JovgMnyrTTrcT41pG4eHKAsC+PtnC9yiEwGk1TJGLyOHu9SPG8OE+8yUp0qBunhRnZeaJZabqH+nHO7A2lnyMB9+8ckJHPzSQbggwQD+A3SP+mVWLgZnR46JIl0sBGIf44o9j+s/n+JWVn/0V7Efhwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720423084; c=relaxed/simple;
-	bh=KUWLBYVQTgA55Y8RtGnnvEnmn9I0+DII4yZHd6A9OcQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=liWZhLaNSp+aQprSoONFiSEmzC6hzbi9rHIKdRYf+SulfXxgEWQ+Ga8x2bwwPSYhpWsVJxumSWQuRBgdFSSmxjw4uBidMCLTbF0QsylvYRE1YoptlkZF851JeOX3CDJt+ndvUlBhL0uWCaKKYDmhYi8+xZoDKqGVijJ9VWcaWC0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de; spf=pass smtp.mailfrom=noerenberg.de; arc=none smtp.client-ip=89.238.71.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=noerenberg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=noerenberg.de
-Received: by mail.bauer-kirch.de with ESMTPSA id 1sQidF-0000000C83X-0wcI
-	authenticated id <420001312>
-	(TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128);
-	Mon, 08 Jul 2024 09:17:53 +0200
-Message-ID: <fa8835de-22ab-4a2b-bcd7-d394f2fe03dc@noerenberg.de>
-Date: Mon, 8 Jul 2024 09:17:51 +0200
+	s=arc-20240116; t=1720424534; c=relaxed/simple;
+	bh=O9RoOO9HvF5SuUCeDg6vUA4wVmtzSSul9Xm5/s61R6Y=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=GZvza9XF6nJILN6gLmoEHqQ9x8nje2HC//JgXX1onsz18q0bmZF87ZXtK401h6yLmsqZlTjYumbt54CpIWxqOvPMdhOIdd+9tu5rPaAtPegM8g7CQ2Z4dejZltQLbRzPUlvLaRHsYodxcKvQYCvqnD1gCliZs5P7kLaOUFGUk7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me; spf=pass smtp.mailfrom=maquefel.me; dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b=VhLZU4xm; arc=none smtp.client-ip=178.154.239.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maquefel.me
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b="VhLZU4xm"
+Received: from mail-nwsmtp-smtp-production-main-24.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-24.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:7dca:0:640:d4d9:0])
+	by forward500d.mail.yandex.net (Yandex) with ESMTPS id C5DDC60A3F;
+	Mon,  8 Jul 2024 10:34:32 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-24.klg.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 6YW3mBQe3W20-qUQtuv72;
+	Mon, 08 Jul 2024 10:34:30 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail;
+	t=1720424070; bh=O9RoOO9HvF5SuUCeDg6vUA4wVmtzSSul9Xm5/s61R6Y=;
+	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
+	b=VhLZU4xmXX2w4OBfMMBdLTuYfNHiVS81wr+5BeazZfJVOu+yyXSQdoaO60cjQziKc
+	 M0uTvIyCbbrFj9TBj/klf6qeczg17/a4YJiSE0dCEH6yKJCldgKqcd4qvfnukuaDOU
+	 WcbQbDv7ImiZUeCsbYrO017QDF3uXjKDnJWXQ9oc=
+Authentication-Results: mail-nwsmtp-smtp-production-main-24.klg.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
+Message-ID: <663b1749afeb5cec281149fdb445ed36fdcbc68e.camel@maquefel.me>
+Subject: Re: [PATCH v10 00/38] ep93xx device tree conversion
+From: Nikita Shubin <nikita.shubin@maquefel.me>
+To: Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>, 
+	Arnd Bergmann
+	 <arnd@arndb.de>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Stephen Boyd
+ <sboyd@kernel.org>,  Hartley Sweeten <hsweeten@visionengravers.com>,
+ Alexander Sverdlin <alexander.sverdlin@gmail.com>, Russell King
+ <linux@armlinux.org.uk>, Lukasz Majewski <lukma@denx.de>, Linus Walleij
+ <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, Andy
+ Shevchenko <andy@kernel.org>, Michael Turquette <mturquette@baylibre.com>,
+ Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley
+ <conor+dt@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter
+ Roeck <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>, Mark
+ Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
+ Abeni <pabeni@redhat.com>, Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, Liam Girdwood
+ <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>,  Takashi Iwai
+ <tiwai@suse.com>, Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron"
+ <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, Olof Johansson
+ <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, 
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-pm@vger.kernel.org,  devicetree@vger.kernel.org,
+ dmaengine@vger.kernel.org,  linux-watchdog@vger.kernel.org,
+ linux-pwm@vger.kernel.org,  linux-spi@vger.kernel.org,
+ netdev@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
+ linux-sound@vger.kernel.org, Bartosz Golaszewski
+ <bartosz.golaszewski@linaro.org>,  Krzysztof Kozlowski
+ <krzysztof.kozlowski@linaro.org>, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>, Vinod
+ Koul <vkoul@kernel.org>
+Date: Mon, 08 Jul 2024 10:34:05 +0300
+In-Reply-To: <jyvlqfvqn5bp3jmvxvwyrcqmihjohuq3o757mfph7x37kbwvtq@gtgyh4fca4fq>
+References: <20240617-ep93xx-v10-0-662e640ed811@maquefel.me>
+	 <CAHp75VfSC9gAD9ipeWRPdQOxUp4FXqYYei-cJTs38nbz0cHpkg@mail.gmail.com>
+	 <48c242838c77034485a9e667dc0e867207c5beed.camel@maquefel.me>
+	 <241a4cf9830b0118f01e8fcf2853c62527636049.camel@maquefel.me>
+	 <jyvlqfvqn5bp3jmvxvwyrcqmihjohuq3o757mfph7x37kbwvtq@gtgyh4fca4fq>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Marvel 88SE6121 fails with SATA-2/3 HDDs
-To: Damien Le Moal <dlemoal@kernel.org>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>, linux-ide@vger.kernel.org
-Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>, risc4all@yahoo.com,
- helgaas@kernel.org, kw@linux.com
-References: <db6b48b7-d69a-564b-24f0-75fbd6a9e543@noerenberg.de>
- <930a0685-c741-110e-40c2-660754301e5a@opensource.wdc.com>
- <a248857e-991c-16d7-496c-9dc692186ead@noerenberg.de>
- <b4a515f6-e11c-756b-ff90-114836f919f9@noerenberg.de>
- <341397a1-9da5-466d-a738-cad79e8d2390@opensource.wdc.com>
- <53372f11-1d97-5310-32e7-6368a653115f@noerenberg.de>
- <b02e3814-16a0-9bc6-01be-d53fa81d99c2@opensource.wdc.com>
- <29b60f42-45ba-4c39-9e30-1dd4811b181d@noerenberg.de>
- <0d097346-c990-4c48-bab4-ab4259ee242f@kernel.org>
- <e0d05674-d894-4a38-ac36-5a0ad3fcb3c8@noerenberg.de>
- <4a378f93-7f4e-4787-adaf-0012bb78f029@kernel.org>
-From: Hajo Noerenberg <hajo-linux-ide@noerenberg.de>
-In-Reply-To: <4a378f93-7f4e-4787-adaf-0012bb78f029@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Am 08.07.2024 um 05:29 schrieb Damien Le Moal:
-> On 7/5/24 21:02, Hajo Noerenberg wrote:
->> Am 02.07.2024 um 12:21 schrieb Damien Le Moal:
->>>>
->>>> Just to summerize again: Gen2/3 HDDs only work with the 88SE6121 controller
->>>> in the Seagate Blackarmor NAS 440 [1] if they are jumpered to Gen1 (1.5 Gbit/s).
->>>> This is unsatisfactory because they correctly work with the U-Boot bootloader
->>>> without any jumpers at Gen2 speed (3 Gbit/s).
->>>>
->>>>
->>>>>>> Can you try with libata.force=nolpm ? A lot of old WD drives have broken LPM.
->>>>>>>
->>>>>>
->>>>>> libata.force=nolpm slightly changes the kernel log: the drive is basically detected (the model name and drive geometry show up), but in the end it fails:
->>>>>>
->>>>
->>>> After many many tests I can say that no kernel option I tried (e.g. libata.force with
->>>> nolpm, noncq, nodma, 1.5Gbps and almost all others) helps to mitigate the problem.
->>>>
->>>> By chance I saw an old Debian kernel patch [2], which, when applied make Gen2
->>>> HDDs reproducibly work with 3.x kernels. After some more investigation
->>>> I figured out that similarly commenting out some lines in the interrupt handler in
->>>> libahci.c causes them to be recognized with kernel 6.x as well:
->>>>
->>>> /*      if (sata_lpm_ignore_phy_events(&ap->link)) {
->>>>                 status &= ~PORT_IRQ_PHYRDY;
->>>>                 ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
->>>>         }
->>>> */
->>>>
->>>> Interestingly, sata_lpm_ignore_phy_events() returns false in my setup. So, as far as
->>>> I can tell, it is not a question of the ahci_scr_write() being executed. Rather, it
->>>> is the CPU cycles that are saved by the absence of this section in the interrupt
->>>> handler. At first it was very hard for me to believe that it was due to commenting
->>>> out the section, but I have compiled several kernels that differ
->>>> only in this section: yes, it makes a difference.
->>>
->>> That is very odd. sata_lpm_ignore_phy_events() is only a couple of "if"
->>> statements and there are no register accesses in there. So if the few CPU cycles
->>> that takes make a difference, I would suspect that there is something odd going
->>> on with the marvell adapter interrupts.
->>>
->>
->> I completely agree that this is very strange, but on the NAS440 those few lines make a difference.
->>
->> There was doubt whether the PCI-MVEBU driver was working correctly, which is why I
->> created the bug https://bugzilla.kernel.org/show_bug.cgi?id=216094 some time ago.
->>
->> Unfortunately, no significant progress could be made there. I'm CC-ing 
->> Bjorn Helgaas and Krzysztof Wilczyński with the kind wish to draw attention to this issue.
->>
->>
->>
->>>> To summerize, with sata_lpm_ignore_phy_events() commented out:
->>>>
->>>> - with kernel 3.x HDDs are recognized (IDENTIFY 0xEC) and one can write large
->>>>   amounts of data to them without any problems.
->>>> - for kernel 6.x identifying and writing data works "almost" every time but not
->>>>   perfectly stable.
->>>
->>> So commenting out that "if (sata_lpm_ignore_phy_events)" hunk is not enough to
->>> fix your issue then. This hunk may not be directly related to the issue and
->>> commenting it out simply changes the timing making things better.
->>>
->>>> - for both 3.x and 6.x kernels, when I execute certain special commands
->>>>   (e.g. "hdparm -I"), the drive connection is reset but usually works afterwards.
->>>> - with kernel 2.x the hard disks always worked, which is reasonable, because there
->>>>   the interrupt handler never included a sata_lpm_ignore_phy_events() call.
->>>
->>> But above, you said that things are not completely stable with 6.x. So there is
->>> likely something else going on.
->>>
->>>> I would be thankful if you could tell me whether and how this problem can be
->>>> solved sustainably.
->>>
->>> First things first: can you please test with the latest mainline 6.10-rc6 kernel
->>> and send a dmesg output after boot and any other relevant output showing
->>> problems when doing IOs ?
->>>
->>
->> I added the full boot log as attachment to the bug report above:
->> https://bugzilla.kernel.org/attachment.cgi?id=306531&action=edit
->>
->> Please do not get confused by the number of hard disks: The relevant HDD
->> is the Gen2 WDC WD5000AADS in slot 1, all other disks are only for double-checking
->> things (Gen1 HDD for cross-testing in slot 2, slot 3+4 are always working
->> with sata_mv driver).
->>
->> Sections in the log:
->>
->> 1. After system boot and "modprobe pci-mvebu" the AHCI driver fails to
->> detect the Gen2 HDD in slot 1 (id ata3)
-> 
-> I am super confused now... The system boots fine and 2 disks (sda and sdb) are
-> properly detected and initialized using the sata_mv driver. This is a PCI driver
-> which supports these devices:
-> 
-> static const struct pci_device_id mv_pci_tbl[] = {
->         { PCI_VDEVICE(MARVELL, 0x5040), chip_504x },
->         { PCI_VDEVICE(MARVELL, 0x5041), chip_504x },
->         { PCI_VDEVICE(MARVELL, 0x5080), chip_5080 },
->         { PCI_VDEVICE(MARVELL, 0x5081), chip_508x },
->         /* RocketRAID 1720/174x have different identifiers */
->         { PCI_VDEVICE(TTI, 0x1720), chip_6042 },
->         { PCI_VDEVICE(TTI, 0x1740), chip_6042 },
->         { PCI_VDEVICE(TTI, 0x1742), chip_6042 },
-> 
->         { PCI_VDEVICE(MARVELL, 0x6040), chip_604x },
->         { PCI_VDEVICE(MARVELL, 0x6041), chip_604x },
->         { PCI_VDEVICE(MARVELL, 0x6042), chip_6042 },
->         { PCI_VDEVICE(MARVELL, 0x6080), chip_608x },
->         { PCI_VDEVICE(MARVELL, 0x6081), chip_608x },
-> 
->         { PCI_VDEVICE(ADAPTEC2, 0x0241), chip_604x },
-> 
->         /* Adaptec 1430SA */
->         { PCI_VDEVICE(ADAPTEC2, 0x0243), chip_7042 },
-> 
->         /* Marvell 7042 support */
->         { PCI_VDEVICE(MARVELL, 0x7042), chip_7042 },
-> 
->         /* Highpoint RocketRAID PCIe series */
->         { PCI_VDEVICE(TTI, 0x2300), chip_7042 },
->         { PCI_VDEVICE(TTI, 0x2310), chip_7042 },
-> 
->         { }                     /* terminate list */
-> };
-> 
-> Given that sata_mv is a PCI device, I fail to see how this can even work before
-> you load pci-mvebu, which if I am not mistaken is the PCI controller driver for
-> Marvell SoCs.
-> 
+Arnd,=20
 
-Sorry for the confusion.
+Are we continuing this patch series ?
 
-The sata_mv driver is (only) responsible for the SoC-Sata-II adapter. As far as I know,
-however, this is _not_ connected via PCI(-E). I can't tell you exactly how, but in 
-the product brief of the SoC it says that it is realized via a "System Crossbar".
+You are silent since last version submit, which makes me a bit worried.
 
-88F6281 SoC Block diagram on page very first page:
-https://web.archive.org/web/20160428131639/http://www.marvell.com/embedded-processors/kirkwood/assets/88F6192-003_ver1.pdf
-
-The 88SE6121 controller _is_ connected via PCIE.
+If you suddenly changed your mind please let us know, cause anyway we
+have no possibility to merge these series without you.
 
 
->> 2. After "rmmod && insmod"-ing libahci.ko with (only) sata_lpm_ignore_phy_events()
->> commented out, the Gen2 HDD is detected (id ata6 with 3Gbps).
-> 
-> sata_mv is NOT an ahci driver... So I suspect that doing the "modprobe
-> pci-mvebu" loaded another ata driver, which uses libahci or is the generic ahci
-> driver. And we also have the pata_marvell driver which handles the pata port,
-> but I assume that you do not have that one compiled, right ?
+On Fri, 2024-07-05 at 11:21 +0200, Uwe Kleine-K=C3=B6nig wrote:
+> Hello,
+>=20
+> On Thu, Jun 27, 2024 at 11:29:44AM +0300, Nikita Shubin wrote:
+> > On Tue, 2024-06-18 at 19:20 +0300, Nikita Shubin wrote:
+> > > Hello Andy!
+> > > On Mon, 2024-06-17 at 12:58 +0200, Andy Shevchenko wrote:
+> > > > On Mon, Jun 17, 2024 at 11:38=E2=80=AFAM Nikita Shubin via B4 Relay
+> > > > <devnull+nikita.shubin.maquefel.me@kernel.org> wrote:
+> > > > >=20
+> > > > > The goal is to recieve ACKs for all patches in series to
+> > > > > merge it
+> > > > > via Arnd branch.
+> > > >=20
+> > > > 'receive'
+> > > >=20
+> > > > > Unfortunately, CLK subsystem suddenly went silent on clk
+> > > > > portion
+> > > > > of
+> > > > > series V2 reroll,
+> > > > > tried to ping them for about a month but no luck.
+> > > > >=20
+> > > > > Link:
+> > > > > https://lore.kernel.org/r/20240408-ep93xx-clk-v2-1-adcd68c13753@m=
+aquefel.me
+> > > > >=20
+> > > > > Some changes since last version (v9) - see "Changes in v10",
+> > > > > mostly
+> > > > > cosmetic.
+> > > >=20
+> > > > ...
+> > > >=20
+> > > > > Patches should be formated with '--histogram'
+> > > >=20
+> > > > 'formatted'
+> > > >=20
+> > > > ...
+> > > >=20
+> > > > > Changes in v10:
+> > > > >=20
+> > > > > Reordered SoB tags to make sure they appear before Rb and
+> > > > > Acked
+> > > > > tags.
+> > > >=20
+> > > > This is not required. The importance is only the order of SoBs
+> > > > themselves. If they are interleaved with other tags, it's fine.
+> > >=20
+> > > Ah - ok. Just saw someone was complaining about b4 reordering
+> > > them.=20
+> > >=20
+> > > >=20
+> > > > ...
+> > > >=20
+> > > >=20
+> > > > Hopefully to see this series being eventually applied soon.
+> > > > Arnd? (Do we have all necessary subsystem maintainers' tags,
+> > > > btw?)
+> > > >=20
+> > > >=20
+> > >=20
+> > > As i see from my perspective only three left:
+> > >=20
+> > > Clk subsystem:
+> > >=20
+> > > - clk: ep93xx: add DT support for Cirrus EP93xx
+> > >=20
+> > > DMA subsystem (but the only request from Vinod, as far as i
+> > > remember,
+> > > was fixing commits titles):
+> > >=20
+> > > - dmaengine: cirrus: Convert to DT for Cirrus EP93xx
+> > > - dmaengine: cirrus: remove platform code
+> > >=20
+> > > Beside that tags missing on platform code removal (which can be
+> > > Acked
+> > > by Arnd himself i believe) and dtsi/dts files (same ?).
+> >=20
+> > Vinod acked the above two patches:
+> >=20
+> > https://lore.kernel.org/all/ZnkIp8bOcZK3yVKP@matsya/
+> > https://lore.kernel.org/all/ZnkImp8BtTdxl7O3@matsya/
+> >=20
+> > so only:
+> >=20
+> > - clk: ep93xx: add DT support for Cirrus EP93xx
+> >=20
+> > https://lore.kernel.org/all/20240617-ep93xx-v10-3-662e640ed811@maquefel=
+.me/
+> >=20
+> > left.
+> >=20
+> > Hope Stephen will find some time for this one.
+>=20
+> As we're approaching the merge window and this is still unclear, I
+> applied the pwm bits (i.e. patches 12, 13). If I understand
+> correctly,
+> patch 33 isn't suitable for application yet as it has a dependency on
+> pinctrl changes in that series.
+>=20
+> (side note: Your patches are signed, but that doesn't bring any
+> benefit
+> if the receivers don't have your key. I didn't find it neither on
+> keys.openpgp.org nor in the kernel pgp key collection.)
+>=20
+> Best regards
+> Uwe
 
-I tried the pata_marvell driver for all kernels (2.x, 3.x, 6.x) but it never
-succeeded to find the drives. It immediately exits (no "fail to IDENTIFY", just nothing).
-
-The U-Boot bootloader successfully starts the drives with the AHCI driver:
-https://bugzilla.kernel.org/attachment.cgi?id=301124&action=edit
-
-
->> 3. Some interrupt und lspci info.
-> 
-> I did not see lspci information in the bugzilla, and I wanted to look at it to
-> understand the ATA adapters present. What you attached is the output of (ls
-> /sys/bus/pci/devices/*/). Can you please send the output of "lspci" and "lspci -n" ?
-> 
-
-lspci output starts at line 609 of the file I linked the last time:
-https://bugzilla.kernel.org/attachment.cgi?id=306531&action=edit
-
-The bug report (https://bugzilla.kernel.org/show_bug.cgi?id=216094) also has other
-logs, e.g. /sys/bus/pci/devices/*/ Linux 6.2.0-rc5:
-https://bugzilla.kernel.org/attachment.cgi?id=304373&action=edit
-
-
->> 4. Temporary ata6 connection problem ("qc timeout") but survives, still able to
->> mount a vfat partition. No more problems after this (at least for ~24 hours).
-> 
-> It looks like 2 drivers are conflicting trying to manage the same thing... But I
-
-I do not think that two drivers are conflicting here.
-
-
-> need first to better understand the hardware setup. Can you also send the
-> relevant source pieces of the nas440.dtb device tree ?
-> 
-
-DTS diff is here: https://github.com/hn/seagate-blackarmor-nas/blob/master/u-boot-2022.04-nas440.diff
-
-Hajo
