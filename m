@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29DD157E93;
-	Thu, 11 Jul 2024 10:08:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0BAD14F9E5;
+	Thu, 11 Jul 2024 10:22:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720692491; cv=none; b=rj6TP6RPs7utmITChqPdxaIlqIbS5oLr8EOJoqCwBETnnb6apSOGFHn6D68cJYYQ9oy1AkaeRon9nlV7wDvMu7EfYIJfGX0xezuQNxW6SrBX5SfVr92ZAPV4lW5q3k5a4pFvGfYtWQcrspF+I8vMoLr6eju5tI4QzQy1ovYn5RE=
+	t=1720693346; cv=none; b=rUFvWRExDe0ZT5NWlSG8GWdLviEgOPCFbMRGWoa25wclJRlOuNQxSaMKMe8ldlB19wxzuzcAcjcioW7vk88b8V6o71CPd4/HbGatTRiEierCwwNyRzPEjncF8VQT3pwsU0pu3zOqn7OvT3twT/L/c/qUW6vqvGvUtKfCSw3yLQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720692491; c=relaxed/simple;
-	bh=IE7Jm2h3fvmnUl3/nVlvbq8s6bGeaVicXQrKPfE1cSs=;
+	s=arc-20240116; t=1720693346; c=relaxed/simple;
+	bh=EyWzKZsfMO/99Gx/qMNlFvM30nWMnlAjusAD8RQXwQ4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=k2H3lqmuI8uGtwQiarFdHYMXSf9gAkEkdJcJk/2DOdNIitWVoaBM+TOggc26s/eSF9OY21PkM2xxerudEe7xFL2kDhbl3SwSDP6bjkyAc5mv/pzbIwuegwQOgw9ScDcQ9fZmlfhumNDD5961e09OWXRMgGUjlMAWnKYuzy2T8XE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NvqPdDVK; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=eDq0pvE3JxH8Hyl9K6kfLSygsIOi8t92EwBxzha3FVzXttTswCbUt1pwhwZnFNoCbaAefDH/nnc25EkWgKvW29GXmJK7ZERjOR8BTzk2Fw4zYv8Ty6+FmrKF/hE+e/KYW3Svo6HecfZsyYCKvzWZXeFu9miAs6cgkEuRSz3IUkU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kl5jJqhB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NvqPdDVK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59B5DC116B1;
-	Thu, 11 Jul 2024 10:08:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kl5jJqhB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65D39C116B1;
+	Thu, 11 Jul 2024 10:22:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720692491;
-	bh=IE7Jm2h3fvmnUl3/nVlvbq8s6bGeaVicXQrKPfE1cSs=;
+	s=k20201202; t=1720693346;
+	bh=EyWzKZsfMO/99Gx/qMNlFvM30nWMnlAjusAD8RQXwQ4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=NvqPdDVKwO19QqGj4Nfk9FXIzAOoZ3mMzj8HyRzSI1wKSx9N0uthK3aO+F+ODt7A9
-	 zdwoU35pkkMO0XJfiLGHmJn39xwSUBVJ+PaoTf56vt6qKoiTUe+Ohw8Yahs4+LdkD+
-	 rC0lv5xXJjd3cjd6SwxsCghWO/V5jb8r9UgCgcVFT26Gk3hGFv4IiBgpZYB4yxdYcg
-	 nUvusoBvU71YRXLzGJm7VozNVj9UqeI+bsgVigDvW2VxlrdJoWc1bYybBZTj3YS6Ce
-	 X2drBuHrKbHA0jvJFstNVpvuWeWquJt+1bOYS1krqvP+pJ+ZrxRIZQDhg2jqyLlCHu
-	 rJ3f1ElzAHnrg==
-Message-ID: <52cefeb5-49c4-4446-813f-df9c1b99ca55@kernel.org>
-Date: Thu, 11 Jul 2024 19:08:08 +0900
+	b=Kl5jJqhBhTHW8QtePtDMuRT5zxJ2kzc1klnKTdYZpbVnH93KJqizGC8IHB4fLYonk
+	 Hcmxe9EbfMcVTXyfN9xStZT3SxFPWXfQCLincHnAo6UKR0x4zttXieN5Cds8EFn4RY
+	 k4h2gorWjKoFE71dg4PWRTtmE03daranfhvXJbuELRmXA5AUNVp/l3ZCXbzYsSc20D
+	 7h4AfDaIKZBdfjDB7FdLp44qqypw7+SPHMlh3Wg1eeWshnxQQbyY5svIYVv9MjWOmq
+	 1eNvDnbDAY0kXSKA6f4og6HrI3ooMXKYEtNcB2bnLRQZCMEc7EluBRTjFhtvOFoe8/
+	 dvpbSnoGuLyng==
+Message-ID: <e6b1c275-9a56-4b1b-becd-89a01cfb51c5@kernel.org>
+Date: Thu, 11 Jul 2024 19:22:23 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 3/4] ata: ahci_imx: Enlarge RX water mark for i.MX8QM
- SATA
+Subject: Re: [PATCH v1 2/4] ata: ahci_imx: Clean up code by using i.MX8Q HSIO
+ PHY driver
 To: Richard Zhu <hongxing.zhu@nxp.com>, tj@kernel.org, cassel@kernel.org,
  robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
  shawnguo@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com
@@ -44,70 +44,171 @@ Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
  linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
  imx@lists.linux.dev, kernel@pengutronix.de
 References: <1720685518-20190-1-git-send-email-hongxing.zhu@nxp.com>
- <1720685518-20190-4-git-send-email-hongxing.zhu@nxp.com>
+ <1720685518-20190-3-git-send-email-hongxing.zhu@nxp.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <1720685518-20190-4-git-send-email-hongxing.zhu@nxp.com>
+In-Reply-To: <1720685518-20190-3-git-send-email-hongxing.zhu@nxp.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/11/24 17:11, Richard Zhu wrote:
-> The RXWM(RxWaterMark) sets the minimum number of free location within
-> the RX FIFO before the watermark is exceeded which in turn will cause
-> the Transport Layer to instruct the Link Layer to transmit HOLDS to
-> the transmitting end.
-> 
-> Based on the default RXWM vaulue 0x20, RX FIFO overflow might be
-> observed on i.MX8QM MEK board, when some Gen3 SATA disks are used.
-> 
-> The FIFO overflow will result in CRC error, internal error and protocol
-> error, then the SATA link is not stable anymore.
-> 
-> To fix this issue, enlarge RX water mark setting from 0x20 to 0x29.
-
-2 remarks:
-
-1) this seems to be a bug/problem fix, so this likely needs a backport to stable
-(Cc: stable tag) and a Fixes tag.
-
-2) What are these magic values 0x20 and 0x29 ? Where are they defined (SoC
-specs) ? Can you define the new value using a macro with a self-descriptive name ?
-
+> Clean up code by using PHY interface.
 > 
 > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 > ---
->  drivers/ata/ahci_imx.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> index 0e9fddd02ee5f..9147cd14f587e 100644
-> --- a/drivers/ata/ahci_imx.c
-> +++ b/drivers/ata/ahci_imx.c
-> @@ -45,6 +45,10 @@ enum {
->  	/* Clock Reset Register */
->  	IMX_CLOCK_RESET				= 0x7f3f,
->  	IMX_CLOCK_RESET_RESET			= 1 << 0,
-> +	/* IMX8QM SATA specific control registers */
-> +	IMX8QM_SATA_AHCI_VEND_PTC			= 0xc8,
-> +	IMX8QM_SATA_AHCI_VEND_PTC_RXWM_MASK		= 0x7f,
-> +	IMX8QM_SATA_AHCI_VEND_PTC_RXWM			= 0x29,
->  };
+
+
+> +	ret = phy_init(imxpriv->cali_phy0);
+> +	if (ret) {
+> +		dev_err(dev, "cali PHY init failed\n");
+>  		return ret;
+>  	}
+> -	ret = clk_prepare_enable(imxpriv->phy_pclk1);
+> -	if (ret < 0) {
+> -		dev_err(dev, "can't enable phy_pclk1.\n");
+> -		goto disable_phy_pclk0;
+> +	ret = phy_power_on(imxpriv->cali_phy0);
+> +	if (ret) {
+> +		dev_err(dev, "cali PHY power on failed\n");
+> +		goto err_cali_phy0_power_on;
+
+Very confusing lable name. "goto err_phy_exit;" would be better.
+
+>  	}
+> -	ret = clk_prepare_enable(imxpriv->epcs_tx_clk);
+> -	if (ret < 0) {
+> -		dev_err(dev, "can't enable epcs_tx_clk.\n");
+> -		goto disable_phy_pclk1;
+> +	ret = phy_init(imxpriv->cali_phy1);
+> +	if (ret) {
+> +		dev_err(dev, "cali PHY1 init failed\n");
+> +		goto err_cali_phy1_init;
+
+Same here. The usual thing to do is to have a label name descriptive of what is
+going to be done at the label definition, so phy1 power off in this case. That
+also corresponds to undoing the previous operation, which makes reading the code
+and checking it less confusing.
+
+>  	}
+> -	ret = clk_prepare_enable(imxpriv->epcs_rx_clk);
+> -	if (ret < 0) {
+> -		dev_err(dev, "can't enable epcs_rx_clk.\n");
+> -		goto disable_epcs_tx_clk;
+> +	ret = phy_power_on(imxpriv->cali_phy1);
+> +	if (ret) {
+> +		dev_err(dev, "cali PHY1 power on failed\n");
+> +		goto err_cali_phy1_power_on;
+
+same here.
+
+>  	}
+> -	ret = clk_prepare_enable(imxpriv->phy_apbclk);
+> -	if (ret < 0) {
+> -		dev_err(dev, "can't enable phy_apbclk.\n");
+> -		goto disable_epcs_rx_clk;
+> +	ret = phy_init(imxpriv->sata_phy);
+> +	if (ret) {
+> +		dev_err(dev, "sata PHY init failed\n");
+> +		goto err_sata_phy_init;
+
+And here too. And many other labels after that.
+
+[...]
+
+> -	imxpriv->phy_apbclk = devm_clk_get(dev, "phy_apbclk");
+> -	if (IS_ERR(imxpriv->phy_apbclk)) {
+> -		dev_err(dev, "can't get phy_apbclk clock.\n");
+> -		return PTR_ERR(imxpriv->phy_apbclk);
+> +	if (!(dev->bus_dma_limit)) {
+> +		dev->bus_dma_limit = DMA_BIT_MASK(32);
+> +		dev_dbg(dev, "imx8qm sata only supports 32bit dma.\n");
+
+I do not think this is a useful debug message.
+
+>  	}
 >  
->  enum ahci_imx_type {
-> @@ -466,6 +470,12 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
->  	phy_power_off(imxpriv->cali_phy0);
->  	phy_exit(imxpriv->cali_phy0);
->  
-> +	/* RxWaterMark setting */
-> +	val = readl(hpriv->mmio + IMX8QM_SATA_AHCI_VEND_PTC);
-> +	val &= ~IMX8QM_SATA_AHCI_VEND_PTC_RXWM_MASK;
-> +	val |= IMX8QM_SATA_AHCI_VEND_PTC_RXWM;
-> +	writel(val, hpriv->mmio + IMX8QM_SATA_AHCI_VEND_PTC);
+> -	/* Fetch GPIO, then enable the external OSC */
+> -	imxpriv->clkreq_gpiod = devm_gpiod_get_optional(dev, "clkreq",
+> -				GPIOD_OUT_LOW | GPIOD_FLAGS_BIT_NONEXCLUSIVE);
+> -	if (IS_ERR(imxpriv->clkreq_gpiod))
+> -		return PTR_ERR(imxpriv->clkreq_gpiod);
+> -	if (imxpriv->clkreq_gpiod)
+> -		gpiod_set_consumer_name(imxpriv->clkreq_gpiod, "SATA CLKREQ");
+> -
+> +	imxpriv->sata_phy = devm_phy_get(dev, "sata-phy");
+> +	if (IS_ERR(imxpriv->sata_phy))
+> +		return dev_err_probe(dev, PTR_ERR(imxpriv->sata_phy),
+> +				     "failed to get sata_phy\n");
 > +
+> +	imxpriv->cali_phy0 = devm_phy_get(dev, "cali-phy0");
+> +	if (IS_ERR(imxpriv->cali_phy0))
+> +		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy0),
+> +				     "failed to get cali_phy0\n");
+> +	imxpriv->cali_phy1 = devm_phy_get(dev, "cali-phy1");
+> +	if (IS_ERR(imxpriv->cali_phy1))
+> +		return dev_err_probe(dev, PTR_ERR(imxpriv->cali_phy1),
+> +				     "failed to get cali_phy1\n");
 >  	return 0;
+>  }
 >  
->  err_sata_phy_power_on:
+> @@ -1077,12 +877,6 @@ static int imx_ahci_probe(struct platform_device *pdev)
+>  		return PTR_ERR(imxpriv->sata_ref_clk);
+>  	}
+>  
+> -	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
+> -	if (IS_ERR(imxpriv->ahb_clk)) {
+> -		dev_err(dev, "can't get ahb clock.\n");
+
+s/can't/Failed to/
+
+and drop the period.
+
+> -		return PTR_ERR(imxpriv->ahb_clk);
+> -	}
+> -
+>  	if (imxpriv->type == AHCI_IMX6Q || imxpriv->type == AHCI_IMX6QP) {
+>  		u32 reg_value;
+>  
+> @@ -1142,11 +936,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
+>  		goto disable_clk;
+>  
+>  	/*
+> -	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
+> -	 * and IP vendor specific register IMX_TIMER1MS.
+> -	 * Configure CAP_SSS (support stagered spin up).
+> -	 * Implement the port0.
+> -	 * Get the ahb clock rate, and configure the TIMER1MS register.
+> +	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL.
+> +	 * Set CAP_SSS (support stagered spin up) and Implement the port0.
+>  	 */
+>  	reg_val = readl(hpriv->mmio + HOST_CAP);
+>  	if (!(reg_val & HOST_CAP_SSS)) {
+> @@ -1159,8 +950,19 @@ static int imx_ahci_probe(struct platform_device *pdev)
+>  		writel(reg_val, hpriv->mmio + HOST_PORTS_IMPL);
+>  	}
+>  
+> -	reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
+> -	writel(reg_val, hpriv->mmio + IMX_TIMER1MS);
+> +	if (imxpriv->type != AHCI_IMX8QM) {
+> +		/*
+> +		 * Get AHB clock rate and configure the vendor specified
+> +		 * TIMER1MS register on i.MX53, i.MX6Q and i.MX6QP only.
+> +		 */
+> +		imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
+> +		if (IS_ERR(imxpriv->ahb_clk)) {
+> +			dev_err(dev, "can't get ahb clock.\n");
+
+Same here.
+
+> +			goto disable_sata;
+> +		}
+> +		reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
+> +		writel(reg_val, hpriv->mmio + IMX_TIMER1MS);
+> +	}
+>  
+>  	ret = ahci_platform_init_host(pdev, hpriv, &ahci_imx_port_info,
+>  				      &ahci_platform_sht);
 
 -- 
 Damien Le Moal
