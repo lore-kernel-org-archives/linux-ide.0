@@ -1,76 +1,115 @@
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B78E158877;
-	Thu, 11 Jul 2024 08:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B29DD157E93;
+	Thu, 11 Jul 2024 10:08:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720686618; cv=none; b=sdQGN+0nHugZD/OYVHtOiC9kjXMGYsaOm83UvT5uQTjOChvfAzU1ajPYoKRz+nW9ORTY0l/ow4ctQ9irH/Zga0q0LZWrS4d8VomQ0uAq+24uByQfjcMy4cdmLd9glWs4ltemMaSXjdTWtrnqqQrtYHx0sRXgkmdO0iAUWKCe0hs=
+	t=1720692491; cv=none; b=rj6TP6RPs7utmITChqPdxaIlqIbS5oLr8EOJoqCwBETnnb6apSOGFHn6D68cJYYQ9oy1AkaeRon9nlV7wDvMu7EfYIJfGX0xezuQNxW6SrBX5SfVr92ZAPV4lW5q3k5a4pFvGfYtWQcrspF+I8vMoLr6eju5tI4QzQy1ovYn5RE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720686618; c=relaxed/simple;
-	bh=O/3ZVknaEDRf9FzsUJCjc+R3UBIFyGWcjetg4gOyhmw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=idKBT92rhvHjTPrkKNglsyC23hliREVobE5bA5qhROsJUYQva71euw7X+Kav6vuAeen3YVZHl5IjLP7B96s9PQ649acmbGZfOxECHK+tJhK11MfWGBc4hhRo9q9yahk+aMhtZidgi3L4t1Eu/w0rgGskUsPfAQ+mPG6qL9MWD5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id B632F201B53;
-	Thu, 11 Jul 2024 10:30:14 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 87166201B42;
-	Thu, 11 Jul 2024 10:30:14 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 97EC71820F57;
-	Thu, 11 Jul 2024 16:30:12 +0800 (+08)
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: tj@kernel.org,
-	dlemoal@kernel.org,
-	cassel@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	shawnguo@kernel.org,
-	s.hauer@pengutronix.de,
-	festevam@gmail.com
-Cc: linux-ide@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,
-	kernel@pengutronix.de,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v1 4/4] ata: ahci_imx: Correct the email address
-Date: Thu, 11 Jul 2024 16:11:58 +0800
-Message-Id: <1720685518-20190-5-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1720685518-20190-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1720685518-20190-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+	s=arc-20240116; t=1720692491; c=relaxed/simple;
+	bh=IE7Jm2h3fvmnUl3/nVlvbq8s6bGeaVicXQrKPfE1cSs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=k2H3lqmuI8uGtwQiarFdHYMXSf9gAkEkdJcJk/2DOdNIitWVoaBM+TOggc26s/eSF9OY21PkM2xxerudEe7xFL2kDhbl3SwSDP6bjkyAc5mv/pzbIwuegwQOgw9ScDcQ9fZmlfhumNDD5961e09OWXRMgGUjlMAWnKYuzy2T8XE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NvqPdDVK; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NvqPdDVK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59B5DC116B1;
+	Thu, 11 Jul 2024 10:08:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720692491;
+	bh=IE7Jm2h3fvmnUl3/nVlvbq8s6bGeaVicXQrKPfE1cSs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=NvqPdDVKwO19QqGj4Nfk9FXIzAOoZ3mMzj8HyRzSI1wKSx9N0uthK3aO+F+ODt7A9
+	 zdwoU35pkkMO0XJfiLGHmJn39xwSUBVJ+PaoTf56vt6qKoiTUe+Ohw8Yahs4+LdkD+
+	 rC0lv5xXJjd3cjd6SwxsCghWO/V5jb8r9UgCgcVFT26Gk3hGFv4IiBgpZYB4yxdYcg
+	 nUvusoBvU71YRXLzGJm7VozNVj9UqeI+bsgVigDvW2VxlrdJoWc1bYybBZTj3YS6Ce
+	 X2drBuHrKbHA0jvJFstNVpvuWeWquJt+1bOYS1krqvP+pJ+ZrxRIZQDhg2jqyLlCHu
+	 rJ3f1ElzAHnrg==
+Message-ID: <52cefeb5-49c4-4446-813f-df9c1b99ca55@kernel.org>
+Date: Thu, 11 Jul 2024 19:08:08 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1 3/4] ata: ahci_imx: Enlarge RX water mark for i.MX8QM
+ SATA
+To: Richard Zhu <hongxing.zhu@nxp.com>, tj@kernel.org, cassel@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ shawnguo@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ imx@lists.linux.dev, kernel@pengutronix.de
+References: <1720685518-20190-1-git-send-email-hongxing.zhu@nxp.com>
+ <1720685518-20190-4-git-send-email-hongxing.zhu@nxp.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <1720685518-20190-4-git-send-email-hongxing.zhu@nxp.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Correct the email address of driver author.
+On 7/11/24 17:11, Richard Zhu wrote:
+> The RXWM(RxWaterMark) sets the minimum number of free location within
+> the RX FIFO before the watermark is exceeded which in turn will cause
+> the Transport Layer to instruct the Link Layer to transmit HOLDS to
+> the transmitting end.
+> 
+> Based on the default RXWM vaulue 0x20, RX FIFO overflow might be
+> observed on i.MX8QM MEK board, when some Gen3 SATA disks are used.
+> 
+> The FIFO overflow will result in CRC error, internal error and protocol
+> error, then the SATA link is not stable anymore.
+> 
+> To fix this issue, enlarge RX water mark setting from 0x20 to 0x29.
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- drivers/ata/ahci_imx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+2 remarks:
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 9147cd14f587e..f3b89a7df062c 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -1041,6 +1041,6 @@ static struct platform_driver imx_ahci_driver = {
- module_platform_driver(imx_ahci_driver);
- 
- MODULE_DESCRIPTION("Freescale i.MX AHCI SATA platform driver");
--MODULE_AUTHOR("Richard Zhu <Hong-Xing.Zhu@freescale.com>");
-+MODULE_AUTHOR("Richard Zhu <hongxing.zhu@nxp.com>");
- MODULE_LICENSE("GPL");
- MODULE_ALIAS("platform:" DRV_NAME);
+1) this seems to be a bug/problem fix, so this likely needs a backport to stable
+(Cc: stable tag) and a Fixes tag.
+
+2) What are these magic values 0x20 and 0x29 ? Where are they defined (SoC
+specs) ? Can you define the new value using a macro with a self-descriptive name ?
+
+> 
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> ---
+>  drivers/ata/ahci_imx.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index 0e9fddd02ee5f..9147cd14f587e 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -45,6 +45,10 @@ enum {
+>  	/* Clock Reset Register */
+>  	IMX_CLOCK_RESET				= 0x7f3f,
+>  	IMX_CLOCK_RESET_RESET			= 1 << 0,
+> +	/* IMX8QM SATA specific control registers */
+> +	IMX8QM_SATA_AHCI_VEND_PTC			= 0xc8,
+> +	IMX8QM_SATA_AHCI_VEND_PTC_RXWM_MASK		= 0x7f,
+> +	IMX8QM_SATA_AHCI_VEND_PTC_RXWM			= 0x29,
+>  };
+>  
+>  enum ahci_imx_type {
+> @@ -466,6 +470,12 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
+>  	phy_power_off(imxpriv->cali_phy0);
+>  	phy_exit(imxpriv->cali_phy0);
+>  
+> +	/* RxWaterMark setting */
+> +	val = readl(hpriv->mmio + IMX8QM_SATA_AHCI_VEND_PTC);
+> +	val &= ~IMX8QM_SATA_AHCI_VEND_PTC_RXWM_MASK;
+> +	val |= IMX8QM_SATA_AHCI_VEND_PTC_RXWM;
+> +	writel(val, hpriv->mmio + IMX8QM_SATA_AHCI_VEND_PTC);
+> +
+>  	return 0;
+>  
+>  err_sata_phy_power_on:
+
 -- 
-2.37.1
+Damien Le Moal
+Western Digital Research
 
