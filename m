@@ -1,113 +1,180 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B4417837A;
-	Fri, 12 Jul 2024 17:16:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03FF517579;
+	Fri, 12 Jul 2024 17:16:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720804583; cv=none; b=SoShUMmBeykCUfeD1B5RIYKgUCJrx4bTJgf5itQ6RTFsw6OvxjgOIX26ge3xJCjr9OY2Z9OwtMYg63YXoJ/o1D/tzrOjGozD/heW1AyK/jz2r90gKeBy1C6EIrFBooosmytiOKWHb8UVKxaFT1xAgoZaYUfXMlnPxo9NHek6oV0=
+	t=1720804611; cv=none; b=tUXyqPiGiTtoKFSJr4itqo42asN1oNUcMxsCJ5AODK/dOqeRWDj15lUMyvakcX9OUcW/jKbDw08TpRzWNSJDmvOiuAU7bsjAKjiiN3VPF8w1ErmnC25hva3cmRoEK/0dD0LRZH7qufLExvRH2UrAh5+7NcGFCbumd65v87btnfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720804583; c=relaxed/simple;
-	bh=e1JohCgdoWt7bnHXXWLqvSqn02YJNNfdCgktKON80Cs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=j558H/iwDp3cO4ayQd+9YckiVm+XXuFloFY9iAFcNWblPfEWTo4w+RFwIh5GLMVMMGIOPImf5jBXEfm2yQ4kp4IBPqhmSkEdhDwq9ZGOt7X/81fNutVPvvlJdkVHzTLG6TV+Sjiw9BlZrx5MznY027Y8TynH8J12dw+gO9GBMCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=anUjeaHL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720804611; c=relaxed/simple;
+	bh=1HMKtHrbTRqVh0VC6CZwij+dHqjPZkIs46totRtmgzk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=g7qIj2I25XlEv/P9LFDUpRCNUy+g5pinoIR2qnV+8ZX+BQS52KnKpQ8DxQNfCIp06sLRZIyITr5uKd2XIVLAomRsWyuAOlCkPgf4OupH/zpPlxV6kZ2KWpDU6DU9cXBTcjtk8beUFY6oq1/6qGVghYuxGYph1EVJkPLyeET9AsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IysmM+IT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="anUjeaHL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EBE3C4AF0B;
-	Fri, 12 Jul 2024 17:16:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IysmM+IT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DD71C32782;
+	Fri, 12 Jul 2024 17:16:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720804583;
-	bh=e1JohCgdoWt7bnHXXWLqvSqn02YJNNfdCgktKON80Cs=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=anUjeaHLiIcjuCEA0RK2iJiUDekCJP4B4VejwyOZfckJlGhZspeNdscGmEST3JLUl
-	 a4KgwKNuhOO52nfu2GO0zvyBxS7fhnBzBAiReEvAIx2G4GJoRsvzreOEwze2U+TKUU
-	 Glux4mFEPiuaoPf3tAu1uMmreLKoImunThB+Y1ARlXK8k6QG91HM9plPY9TGY/wep2
-	 2Ku8s9aROpbWdp07FNyzWcubtY/V/Uqphe5rtr6lcQQIIibZVsdRBdBbo5qzBv/qFj
-	 0uGcuMzXpAGu8GlnT6jTxNK4Rqt5NBoedQAA0gL+fm9k3KX8oUm+ZxUvSGbjOoKWXF
-	 Y1MmPbrV4L7Cw==
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-52ea79e689eso3134719e87.1;
-        Fri, 12 Jul 2024 10:16:23 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCV7c8LPLhTfhpIC+sLoOJqeL5FCeCZZzYTIyLnc+nCI1wabox14v0cLeG7vUe7DZdYV7AZSfGubGm3sVKKm/k+sxkeK0CFXyfe7sWA0sU6Ei+kbnJaLilEBI9R1AoDrQxVuX3xNnMkUWzp+ZD/vZX1SWlJEhxfU/OeDfITnOZHypUw7bQ==
-X-Gm-Message-State: AOJu0YwWCpdgYMC43UpPXiD7ya8fciFZKKQshRFOmgQV2xSoyXTKd5ax
-	Qd0EpKB/veKDkurqBY8fSEsW4yRvcCE8FX52R9SRY8EXMr9+2CPODkqzan/qRM5KWSuK0x5Y6xv
-	/itfbsZCs9ofu3azK+I8mwSZaxg==
-X-Google-Smtp-Source: AGHT+IFhplp4Uk4SiEUD3xdCB/kGSfWY0kalgJIt/Cc/nX5GEuFiYpWEY6VoVzM0DFoEJrAzMmv/wrJPUj3kEJNLMo4=
-X-Received: by 2002:a05:6512:3091:b0:52c:e119:7f1 with SMTP id
- 2adb3069b0e04-52eb99d2776mr10435520e87.51.1720804581626; Fri, 12 Jul 2024
- 10:16:21 -0700 (PDT)
+	s=k20201202; t=1720804610;
+	bh=1HMKtHrbTRqVh0VC6CZwij+dHqjPZkIs46totRtmgzk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IysmM+ITUnx8j944Fj1MNfy9GOr8CVZFuUkD7v9Y84X5wZz6423UunaadvlNPFZv0
+	 MEt33EJEeSsDRV1rpkffUIMbxr70PAedldRsdd+IeOz4JCxil3VoaBUAfx1EpwENhZ
+	 LQ2M3qiDrRegebSSwsu37AEAi6BaYmmcfQH1FqekZoKTVaaKV54pJTRqPU2LrvQr8H
+	 fWGth+jOg+ta5EbYKpX6eEoFJLzXG+ktVBaSlAiFhHMWfZVAFDd3xXbmWMyemRxLzt
+	 9ZCv27Hem0NH2ksveb1GYhp1v7br/vIkrBjUNfrmishdqmhgFBJOnJLQAHpwW8clBY
+	 f6Hx1mNPpEK4w==
+Date: Fri, 12 Jul 2024 19:16:45 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Frank Li <Frank.li@nxp.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>,
+	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>, imx@lists.linux.dev
+Subject: Re: [PATCH v2 1/1] dt-bindings: ata: ahci-fsl-qoriq: add
+ fsl,ls1046a-ahci and fsl,ls1012a-ahci
+Message-ID: <ZpFk_aypJG1PAB_7@ryzen.lan>
+References: <20240712142922.3292722-1-Frank.Li@nxp.com>
+ <ZpFJhk_HgQhGAQMU@ryzen.lan>
+ <ZpFT8mdkQTrixIvA@lizhi-Precision-Tower-5810>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240712142922.3292722-1-Frank.Li@nxp.com>
-In-Reply-To: <20240712142922.3292722-1-Frank.Li@nxp.com>
-From: Rob Herring <robh@kernel.org>
-Date: Fri, 12 Jul 2024 11:16:06 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+6h5ozT==E5qkZS-uoqwYMwEE+ybHrDNzUP3emHnPuyQ@mail.gmail.com>
-Message-ID: <CAL_Jsq+6h5ozT==E5qkZS-uoqwYMwEE+ybHrDNzUP3emHnPuyQ@mail.gmail.com>
-Subject: Re: [PATCH v2 1/1] dt-bindings: ata: ahci-fsl-qoriq: add
- fsl,ls1046a-ahci and fsl,ls1012a-ahci
-To: Frank Li <Frank.Li@nxp.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	"open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, 
-	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
-	imx@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZpFT8mdkQTrixIvA@lizhi-Precision-Tower-5810>
 
-On Fri, Jul 12, 2024 at 8:29=E2=80=AFAM Frank Li <Frank.Li@nxp.com> wrote:
->
-> Add missing documented compatible strings 'fsl,ls1046a-ahci' and
-> 'fsl,ls1012a-ahci'. Allow 'fsl,ls1012a-ahci' to fallback to
-> 'fsl,ls1043a-ahci'.
->
-> Fix below CHECK_DTB warnings
-> arch/arm64/boot/dts/freescale/fsl-ls1012a-frwy.dtb: /soc/sata@3200000: fa=
-iled to match any schema with compatible: ['fsl,ls1012a-ahci', 'fsl,ls1043a=
--ahci']
->
-> Signed-off-by: Frank Li <Frank.Li@nxp.com>
-> ---
-> Change from v1 to v2
-> - rework commit message to show fix CHECK_DTB warning.
-> ---
->  .../devicetree/bindings/ata/fsl,ahci.yaml     | 19 ++++++++++++-------
->  1 file changed, 12 insertions(+), 7 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml b/Docume=
-ntation/devicetree/bindings/ata/fsl,ahci.yaml
-> index 162b3bb5427ed..a244bc603549d 100644
-> --- a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
-> +++ b/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
-> @@ -11,13 +11,18 @@ maintainers:
->
->  properties:
->    compatible:
-> -    enum:
-> -      - fsl,ls1021a-ahci
-> -      - fsl,ls1043a-ahci
-> -      - fsl,ls1028a-ahci
-> -      - fsl,ls1088a-ahci
-> -      - fsl,ls2080a-ahci
-> -      - fsl,lx2160a-ahci
-> +    oneOf:
-> +      - items:
-> +          - const: fsl,ls1012a-ahci
-> +          - const: fsl,ls1043a-ahci
-> +      - enum:
-> +          - fsl,ls1021a-ahci
-> +          - fsl,ls1043a-ahci
-> +          - fsl,ls1046a-ahci
-> +          - fsl,ls1028a-ahci
+On Fri, Jul 12, 2024 at 12:04:02PM -0400, Frank Li wrote:
+> On Fri, Jul 12, 2024 at 05:19:34PM +0200, Niklas Cassel wrote:
+> > On Fri, Jul 12, 2024 at 10:29:22AM -0400, Frank Li wrote:
+> > > Add missing documented compatible strings 'fsl,ls1046a-ahci' and
+> > > 'fsl,ls1012a-ahci'. Allow 'fsl,ls1012a-ahci' to fallback to
+> > > 'fsl,ls1043a-ahci'.
+> > > 
+> > > Fix below CHECK_DTB warnings
+> > > arch/arm64/boot/dts/freescale/fsl-ls1012a-frwy.dtb: /soc/sata@3200000: failed to match any schema with compatible: ['fsl,ls1012a-ahci', 'fsl,ls1043a-ahci']
+> > > 
+> > > Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> > > ---
+> > > Change from v1 to v2
+> > > - rework commit message to show fix CHECK_DTB warning.
+> > > ---
+> > >  .../devicetree/bindings/ata/fsl,ahci.yaml     | 19 ++++++++++++-------
+> > >  1 file changed, 12 insertions(+), 7 deletions(-)
+> > > 
+> > > diff --git a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml b/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
+> > > index 162b3bb5427ed..a244bc603549d 100644
+> > > --- a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
+> > > +++ b/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
+> > > @@ -11,13 +11,18 @@ maintainers:
+> > >  
+> > >  properties:
+> > >    compatible:
+> > > -    enum:
+> > > -      - fsl,ls1021a-ahci
+> > > -      - fsl,ls1043a-ahci
+> > > -      - fsl,ls1028a-ahci
+> > > -      - fsl,ls1088a-ahci
+> > > -      - fsl,ls2080a-ahci
+> > > -      - fsl,lx2160a-ahci
+> > > +    oneOf:
+> > > +      - items:
+> > > +          - const: fsl,ls1012a-ahci
+> > > +          - const: fsl,ls1043a-ahci
+> > > +      - enum:
+> > > +          - fsl,ls1021a-ahci
+> > > +          - fsl,ls1043a-ahci
+> > > +          - fsl,ls1046a-ahci
+> > > +          - fsl,ls1028a-ahci
+> > > +          - fsl,ls1088a-ahci
+> > > +          - fsl,ls2080a-ahci
+> > > +          - fsl,lx2160a-ahci
+> > 
+> > I think that you should add the following Fixes-tag:
+> > Fixes: e58e12c5c34c ("dt-bindings: ata: ahci-fsl-qoriq: convert to yaml format")
+> 
+> I am not sure if need it because e58e12c5c34c still not release yet.
+> Needn't backport. You may squash into e58e12c5c34c if you like.
 
-Fix the alpha-numeric order while you're changing it.
+Fixes tags are used to indicate that the commit Fixes another commit that
+introduced a bug. e58e12c5c34c introduced a bug that wasn't there before,
+namely a CHECK_DTB warning.
 
-> +          - fsl,ls1088a-ahci
-> +          - fsl,ls2080a-ahci
-> +          - fsl,lx2160a-ahci
+Cc: stable@vger.kernel.org
+is used to indicate that the patch should be backported.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+In your case, I would use Fixes:, but without Cc: stable.
+
+Anyway, I could add the Fixes tag if we get a R-b tag from a DT maintainer.
+
+
+> 
+> > 
+> > Considering that the commit that your are fixing is only in libata for-6.11,
+> > and has thus never been in a released kernel version, perhaps the following
+> > patch would be better (if it also solves the warnings):
+> > 
+> > diff --git a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml b/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
+> > index 162b3bb5427e..8953b1847305 100644
+> > --- a/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
+> > +++ b/Documentation/devicetree/bindings/ata/fsl,ahci.yaml
+> > @@ -12,8 +12,10 @@ maintainers:
+> >  properties:
+> >    compatible:
+> >      enum:
+> > +      - fsl,ls1012a-ahci
+> >        - fsl,ls1021a-ahci
+> >        - fsl,ls1043a-ahci
+> > +      - fsl,ls1046a-ahci
+> >        - fsl,ls1028a-ahci
+> >        - fsl,ls1088a-ahci
+> >        - fsl,ls2080a-ahci
+> 
+> driver have not support "fsl,ls1012a-ahci", which have to fall back to
+> "fsl,ls1043a-ahci". and DTS already use 
+>      compatible = "fsl,ls1012a-ahci", "fsl,ls1046a-ahci".
+> 
+> It can't fix 1012's warning. Only fix 1046's warning.
+> DT team also don't want to remove fsl,ls1012a-ahci in dts file.
+
+That is not fully true.
+
+Before my proposed patch:
+$ ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make CHECK_DTBS=y freescale/fsl-ls1012a-qds.dtb
+arch/arm64/boot/dts/freescale/fsl-ls1012a-qds.dtb: sata@3200000: compatible:0: 'fsl,ls1012a-ahci' is not one of ['fsl,ls1021a-ahci', 'fsl,ls1043a-ahci', 'fsl,ls1028a-ahci', 'fsl,ls1088a-ahci', 'fsl,ls2080a-ahci', 'fsl,lx2160a-ahci']
+        from schema $id: http://devicetree.org/schemas/ata/fsl,ahci.yaml#
+arch/arm64/boot/dts/freescale/fsl-ls1012a-qds.dtb: sata@3200000: compatible: ['fsl,ls1012a-ahci', 'fsl,ls1043a-ahci'] is too long
+        from schema $id: http://devicetree.org/schemas/ata/fsl,ahci.yaml#
+
+
+After my proposed patch:
+$ ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make CHECK_DTBS=y freescale/fsl-ls1012a-qds.dtb
+arch/arm64/boot/dts/freescale/fsl-ls1012a-qds.dtb: sata@3200000: compatible: ['fsl,ls1012a-ahci', 'fsl,ls1043a-ahci'] is too long
+        from schema $id: http://devicetree.org/schemas/ata/fsl,ahci.yaml#
+
+
+So it would only fix one of the two warnings for fsl-ls1012a platforms. I see.
+Perhaps you should add this additional warning to your commit message.
+
+So the patch has to look like your suggested patch.
+
+You could possible add '- description: PCIe controller in ls1012a'
+in front of:
++      - items:
++          - const: fsl,ls1012a-ahci
++          - const: fsl,ls1043a-ahci
+
+Too make it even clearer that this ugly item-list is only needed for ls1012a,
+see e.g.:
+https://github.com/torvalds/linux/blob/v6.10-rc7/Documentation/devicetree/bindings/pci/ti%2Cj721e-pci-host.yaml#L18-L21
+
+
+Kind regards,
+Niklas
