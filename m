@@ -1,123 +1,119 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FBC1EAE7;
-	Mon, 15 Jul 2024 20:46:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFAD31CA9E;
+	Mon, 15 Jul 2024 22:01:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721076365; cv=none; b=h5v9cHEEX37flV2iRMF0mWFC2/qiNWp8EP4i9guNqy6OMU89jW2yGOumWR3OD/Nz8D2qaIKd6+aBQrpnpq474Y5JT1ldoUe0/QAVKZxbDN1/nvbcfTzEzNqrb+wLot2oARJIHkwosRrdqdI9D00TFkFrWtZVsxo0yaB4RLfbquE=
+	t=1721080885; cv=none; b=MIQhNINiuca3n/HUuVwsM4zvtaIbIpN+QEXKlBJJwT9L6PYSW6kx7vf2SSy8cCJMjP0cr1m5jR6AtC3Wpj3gXrgNdq+QInDa2GHYBRYvW0IT0ixX8Uola+EqlpCzBSlUDuDrO/VrFXrqoHZvlGJmSm0F5D1EjbRGQkoEnNnH5jE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721076365; c=relaxed/simple;
-	bh=pyID40vVKswGidkaN4WhWHKgSgKubU8Ytrc3zgyQIzA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=b+xGZLW1nLRyppQT2B46yP+WvImzzRJmVOXTGZytcuym8DVwcVYqI7o/P3rEt7O3GDFBeZg5esJxZ6RZtz9F2yes4S02qWexitfEi0wA8ywEo/BOt90g8tVI6lGajAM1YIQ8jRE159vWcswtL1VTpd+fz3eVfJzGpFh4TBuaeqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OHa5vIWE; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1721080885; c=relaxed/simple;
+	bh=AcdgatVBHWM0VAUnJX01KgS6GcKNZn6AlCQiWYVI2uw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MbN6gPIkXwfZlqgUxQqBC+lKCGOQRUZHNde8qQ6ppMi3wx6vNZwMB4i3U6Nag05uc0tid5AGzcSmMiOEFhy84P5NS+Fb+1ek+7g5XmXJtttraTxUNF2KvXA0HbPIKKfOlQ56nnO3OTixAI1LhiwPoUUe7H4Yux4LlDlQCFmBkks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CkV/Ayz2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OHa5vIWE"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-58b447c513aso5254040a12.2;
-        Mon, 15 Jul 2024 13:46:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1721076362; x=1721681162; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=pyID40vVKswGidkaN4WhWHKgSgKubU8Ytrc3zgyQIzA=;
-        b=OHa5vIWEXxzyHXKqqoP9PYQGzYD1ecRI/3e3snuws82NE5UQ79FDYiB/pOHuiFPryN
-         MJYQYmy3Fh10xZDsajNlYCb4uFRq+/ufS8OoqSCBSVEpjhWGmWsfp54l/NkeQOnUs0I1
-         ShtJjTZEkLzihUVDf002/0WL9hMbECeuQumMgP69HCs8XvgmZyHO66k8TQHTxkj5yIFN
-         PTynY1OR4ZDo5NmLEqoxL65LdFXubh1mI1MreZxz/N0bvxnLCeL6MQ7U8lcmwpv8Og+k
-         5cYokb2ui3eOAxRfp3zq3TfbVFthC/El3qfCBZ436XLoGhJZWLpGpmymw8BxBYalKnoV
-         C+3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721076362; x=1721681162;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=pyID40vVKswGidkaN4WhWHKgSgKubU8Ytrc3zgyQIzA=;
-        b=BJTkvlJfhF5RoHAzc0IN07daqmw6waORavq/QAIuxHJAWEwm4ZZGT+mAAMo/lnuN9W
-         6WAWpNWgDySogFKpUn4tEs/z0sSIAwYlm9Jmjn9ltDUX6+njQF3eYks5ESD+p1vVicw1
-         DkKTY6rumpF6BUIqk2Icv+Dyia1foggmiV4YMSrJ9BgFY8y56t5K3mNNo4NuK6p3Ibiu
-         zUGNCgJlubuE98LStBpR9XHzBTgOWoGPxZZm3vRADpznOekTd7YY35f0vWrxnXi2fCbJ
-         Fy2n57VBU5IE1LMAupL1dPgg0Yu5iw1M9DI9A2KvQ8ZuY2uCYufcqEZ00P8fKFrRbe+y
-         IXwQ==
-X-Forwarded-Encrypted: i=1; AJvYcCURrBDqXuvgwdXyss97WSuG+2fN/jyDhB1oz554i1TvIpKykLIGO6JWaAI5JLW/EpOg8rd+itZCraMb/qQEtOLBXmUSgipXmY8XpZZoF9DuCUWqpRIKMs0H49zH1UQ5f3+c1f0V+EwT1Ux0xGCy++1SNo1PH4/1ojXqvmGGN8EXv824dvsYnB72I5EHt57qKU6czdBF9FucP80r9k6s4HgliJxmkJvtyy+Jp79D4Qevcak/w/lB5ltsm/eG7cVYe9tEmvadZkzNuaQJjV4M7Hs0Q7VsMRn11dFOv4prJ32iNpb/8FXu7LVXfKt0gRICRLM0qbLK/lXritMwxEdXnLWEK37bHNiVjbs/Hh14g+s/crg1LA==
-X-Gm-Message-State: AOJu0YwiKRFm/IaULVCU9XP7Xe/x3ucRvUmIXSbh73mZKkpgml0E8NeR
-	V9BOe5HiGLPVvOPydB8aWyo3LBES7z9b72TjC/5Z3Tm/4Y1WWUuu
-X-Google-Smtp-Source: AGHT+IHZpaZWcXFCjRZBArLC0Q4QIJCZB151JdU+pruJeqzfFvKL2FYuoiEW53znBItBXa8q8c0m1w==
-X-Received: by 2002:a05:6402:270b:b0:59a:aa54:4e23 with SMTP id 4fb4d7f45d1cf-59eee833f0amr46280a12.3.1721076362036;
-        Mon, 15 Jul 2024 13:46:02 -0700 (PDT)
-Received: from giga-mm.home ([2a02:1210:860a:c700:82ee:73ff:feb8:99e3])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-59b24a770dbsm3829880a12.4.2024.07.15.13.46.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jul 2024 13:46:01 -0700 (PDT)
-Message-ID: <f68b628c3978a4fb0e5989e3b6918c756da1fefb.camel@gmail.com>
-Subject: Re: [PATCH v11 00/38] ep93xx device tree conversion
-From: Alexander Sverdlin <alexander.sverdlin@gmail.com>
-To: "Rob Herring (Arm)" <robh@kernel.org>, Nikita Shubin
-	 <nikita.shubin@maquefel.me>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org, 
- linux-watchdog@vger.kernel.org, Wim Van Sebroeck <wim@linux-watchdog.org>, 
- Miquel Raynal <miquel.raynal@bootlin.com>, Damien Le Moal
- <dlemoal@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Thierry
- Reding <thierry.reding@gmail.com>,  Vignesh Raghavendra <vigneshr@ti.com>,
- linux-pwm@vger.kernel.org, Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?=
- <u.kleine-koenig@pengutronix.de>, Ralf Baechle <ralf@linux-mips.org>, 
- Sebastian Reichel <sre@kernel.org>, Krzysztof Kozlowski
- <krzysztof.kozlowski+dt@linaro.org>,  linux-ide@vger.kernel.org, Stephen
- Boyd <sboyd@kernel.org>, Krzysztof Kozlowski
- <krzysztof.kozlowski@linaro.org>, linux-spi@vger.kernel.org, Andy
- Shevchenko <andriy.shevchenko@linux.intel.com>, Mark Brown
- <broonie@kernel.org>,  Hartley Sweeten <hsweeten@visionengravers.com>,
- linux-kernel@vger.kernel.org, Takashi Iwai <tiwai@suse.com>,  Andrew Lunn
- <andrew@lunn.ch>, Richard Weinberger <richard@nod.at>, Eric Dumazet
- <edumazet@google.com>,  linux-sound@vger.kernel.org, Arnd Bergmann
- <arnd@arndb.de>,  linux-input@vger.kernel.org, Jaroslav Kysela
- <perex@perex.cz>, Sergey Shtylyov <s.shtylyov@omp.ru>, Lukasz Majewski
- <lukma@denx.de>
-Date: Mon, 15 Jul 2024 22:46:01 +0200
-In-Reply-To: <172104541245.3725513.13547524352291855487.robh@kernel.org>
-References: <20240715-ep93xx-v11-0-4e924efda795@maquefel.me>
-	 <172104541245.3725513.13547524352291855487.robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.2 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CkV/Ayz2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B3B5C32782;
+	Mon, 15 Jul 2024 22:01:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1721080884;
+	bh=AcdgatVBHWM0VAUnJX01KgS6GcKNZn6AlCQiWYVI2uw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=CkV/Ayz2yhg6ag2sARQHD1D0lt4D9jgd05mJ78kGJSs7vBPUqWkq5/smtDYDqD4QD
+	 RJFHDWsHos+HcwepThoMYVi79y4RyamYR/WhZxPu8jNLFjbprNxJT+/OFBrTAzrE9c
+	 6g/AHQT+JCXkP9bNHM+tfkhJJO71s1ZZU+NWMtuPiXT06/+MH6TMB2hpm76Nu//Js3
+	 9cUBDL73w73+o4n83ln9VU26gQ5/gjlAawCISehhirK8gydyAROAzGo8w+VBv7eP3Z
+	 4eClTUY14WPgoQv1DkCKPPKvljqnIldtVLoyPnhyH9koszfZ1wPkDduet5Z1C8rORw
+	 y3lBIurUaN1sA==
+Message-ID: <96d89d2f-0ecf-4c15-9a8a-146aa587d246@kernel.org>
+Date: Tue, 16 Jul 2024 07:01:21 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/4] ata: ahci_imx: Enlarge RX water mark for i.MX8QM
+ SATA
+To: Richard Zhu <hongxing.zhu@nxp.com>, tj@kernel.org, cassel@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ shawnguo@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+ kernel@pengutronix.de
+References: <1721008436-24288-1-git-send-email-hongxing.zhu@nxp.com>
+ <1721008436-24288-4-git-send-email-hongxing.zhu@nxp.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <1721008436-24288-4-git-send-email-hongxing.zhu@nxp.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Rob,
+On 7/15/24 10:53, Richard Zhu wrote:
+> The RXWM(RxWaterMark) sets the minimum number of free location within
+> the RX FIFO before the watermark is exceeded which in turn will cause
+> the Transport Layer to instruct the Link Layer to transmit HOLDS to
+> the transmitting end.
+> 
+> Based on the default RXWM value 0x20, RX FIFO overflow might be
+> observed on i.MX8QM MEK board, when some Gen3 SATA disks are used.
+> 
+> The FIFO overflow will result in CRC error, internal error and protocol
+> error, then the SATA link is not stable anymore.
+> 
+> To fix this issue, enlarge RX water mark setting from 0x20 to 0x29.
+> 
+> Fixes: 027fa4dee935 ("ahci: imx: add the imx8qm ahci sata support")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> ---
+>  drivers/ata/ahci_imx.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index e94c0fdea2260..12d69a6429b6a 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -45,6 +45,10 @@ enum {
+>  	/* Clock Reset Register */
+>  	IMX_CLOCK_RESET				= 0x7f3f,
+>  	IMX_CLOCK_RESET_RESET			= 1 << 0,
+> +	/* IMX8QM SATA specific control registers */
+> +	IMX8QM_SATA_AHCI_VEND_PTC		= 0xc8,
+> +	IMX8QM_SATA_AHCI_VEND_PTC_RXWM_MASK	= 0x7f,
 
-On Mon, 2024-07-15 at 06:12 -0600, Rob Herring (Arm) wrote:
-> My bot found new DTB warnings on the .dts files added or changed in this
-> series.
->=20
-> Some warnings may be from an existing SoC .dtsi. Or perhaps the warnings
-> are fixed by another series. Ultimately, it is up to the platform
-> maintainer whether these warnings are acceptable or not. No need to reply
-> unless the platform maintainer has comments.
->=20
-> If you already ran DT checks and didn't see these error(s), then
-> make sure dt-schema is up to date:
->=20
-> =C2=A0 pip3 install dtschema --upgrade
->=20
->=20
-> New warnings running 'make CHECK_DTBS=3Dy cirrus/ep93xx-bk3.dtb cirrus/ep=
-93xx-edb9302.dtb cirrus/ep93xx-ts7250.dtb' for 20240715-ep93xx-v11-0-4e924e=
-fda795@maquefel.me:
->=20
-> arch/arm/boot/dts/cirrus/ep93xx-edb9302.dtb: /soc/spi@808a0000/codec@0: f=
-ailed to match any schema with compatible: ['cirrus,cs4271']
+Please use GENMASK() macro to define this.
 
-well, this seems to come from the fact is still documented in a .txt file
-(Documentation/devicetree/bindings/sound/cs4271.txt), which is not really
-the scope of this series. Hope it's OK to ignore it for the series.
+> +	IMX8QM_SATA_AHCI_VEND_PTC_NEWRXWM	= 0x29,
 
---=20
-Alexander Sverdlin.
+Here too. And I do not see the point of the "NEW" in the macro name.
+
+Also, what is "_VEND_" supposed to mean in the macro names ? "Vendor" ?
+If that is the case, remove that too, which will give you shorter macro names.
+If not, then spell it out because that is not clear.
+
+>  };
+>  
+>  enum ahci_imx_type {
+> @@ -466,6 +470,12 @@ static int imx8_sata_enable(struct ahci_host_priv *hpriv)
+>  	phy_power_off(imxpriv->cali_phy0);
+>  	phy_exit(imxpriv->cali_phy0);
+>  
+> +	/* RxWaterMark setting */
+> +	val = readl(hpriv->mmio + IMX8QM_SATA_AHCI_VEND_PTC);
+> +	val &= ~IMX8QM_SATA_AHCI_VEND_PTC_RXWM_MASK;
+> +	val |= IMX8QM_SATA_AHCI_VEND_PTC_NEWRXWM;
+> +	writel(val, hpriv->mmio + IMX8QM_SATA_AHCI_VEND_PTC);
+> +
+>  	return 0;
+>  
+>  err_sata_phy_exit:
+
+-- 
+Damien Le Moal
+Western Digital Research
 
