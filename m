@@ -1,146 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAC95196438
-	for <linux-ide@vger.kernel.org>; Tue, 16 Jul 2024 12:32:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E079C4687;
+	Tue, 16 Jul 2024 19:46:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721133128; cv=none; b=l2TLmLbTKBXoTt6Ci5ooLTveNQ6hwjzX7efDi3fYF6OyMuw5pXZaSCq0Pdgt7Pk+GtYUqYLdOtQNfv7yx5gulWGh7G6YsyS+531c4+P3LqQjJYYANRk8yXdTnXm3D3nSsODOpNK+M7sFigWdc1kDKsJrYmbfsS71qOButrT5ecA=
+	t=1721159200; cv=none; b=OZthExdzwwTWPI/WvmVRj66OaSo02m4iioBD6Jt6pMfDjKBkY0ly7tU3iqG46ptsq6ynCSGeVV08Xt3iTLvwjTObDczcHGYZbziIP0BjrghDih7Hs93KFQQmTgbVbdHqabLee9rQinozbZa2C7MVR/p1tDQje9rkzKFeHbis6t8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721133128; c=relaxed/simple;
-	bh=NREwO0/4qSBCP4RaEhpacbGoODw+w55RyQ8E3gWrX74=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mBqSwrqzfNc7Lahgqkj9hFktT1xQZc2MIqzk80c7G0B/GxUCzynXOYr58ieT/qmJ5h4OSbaHXnCdYW0NaRctQog8NqsP0om8Yvde+oE86dhg/JVUpCVG0z06oPxpODsXZlieibOqwPcPonTLGhFlMUdcgiIlPnS3vcm1SyqSNVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SqIobzUS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721159200; c=relaxed/simple;
+	bh=+QzOgsrxtQCBGg7h5Qpl0PleJ/JoElCpfu1zRH75tLA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Z6wCeeCCaFtaqJlrxE+1oUlgIvOuqoFifDBWWNSavdDJ7YWBWnZS0vTF6gN4ahIK6GA9O4gZSX8jo7YuLNM+5dlWVxV5sVKiUrwfoTbqeuhv1vUL2N9WRzAdkrQAkV7UOg8DJbcKi5poQP7jzgA1cw2lEvpKp40FzLcgwTKONlw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JuLFkbm0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SqIobzUS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23886C4AF0D;
-	Tue, 16 Jul 2024 12:32:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JuLFkbm0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4402C116B1;
+	Tue, 16 Jul 2024 19:46:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721133128;
-	bh=NREwO0/4qSBCP4RaEhpacbGoODw+w55RyQ8E3gWrX74=;
-	h=From:To:Cc:Subject:Date:From;
-	b=SqIobzUSX9Lxxji26xzYwdSd3xDF8zg4C99nvZ0vIMrZZxifSZdZn+znr0jKSs4Dm
-	 tbYV5m4i+VVo09knOOw54zGQXXx6ElHcaTFOenCk5+JTTLs45MhOUijSvYoTCdZ1um
-	 eO7OUTzBxbAnqJiL+6w/GSC8bEc9Bm09kJ4r4oHS5bFMxi7/DqUURndXAaFx4tfNPG
-	 /VruvRY0eKDLVYmz2UWBANkek24KbuSSY26brjSF4ypXmPRlf8QOKGrdEj4LJSflbK
-	 3Bujcxu9XIHmc04GriR0u5V/eF20iB2JafRf2Dbn+SrnpRfbocPOuWF1IyvxY9aBYZ
-	 cmTT3LYW+wEnQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata changes for 6.11-rc1
-Date: Tue, 16 Jul 2024 14:32:01 +0200
-Message-ID: <20240716123201.145960-1-cassel@kernel.org>
-X-Mailer: git-send-email 2.45.2
+	s=k20201202; t=1721159199;
+	bh=+QzOgsrxtQCBGg7h5Qpl0PleJ/JoElCpfu1zRH75tLA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=JuLFkbm0DVDQt9D22pdG+xXhYKWSH+5qJQsswbH8sJORytH98zGqECLAtTbmFs4OZ
+	 ZNaCNH9b83ETekimE3/DUJI1CfumSV1m3Q5Q8jTlxcM1k7FBQ0joub4EmTHsj9qCM9
+	 r25a/980zP+1VNRQGVRJCGVVPccLJS01TUfo3eiWCrl/hS4l5s3cy4jJvUVXH8gQsr
+	 X+wGJ2JAyTd7YWGJaffACZBGQU+KiJLSrSDf7XnzINuL2Ct/Rvp8PIlOvKYZPoidAu
+	 WOb2HFrAxJn8sFE86yu0VUVe7UJPRyVyQ/Fh/E8H5rJ7WMuHNKp18jLOZdvZ5bgqUp
+	 vlHvJgcihlSrw==
+Message-ID: <94572710-f90e-4ac6-a0f8-02d93404fb92@kernel.org>
+Date: Tue, 16 Jul 2024 21:46:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] dt-bindings: ata: qcom,ipq806x-ahci: use dtschema
+To: Rayyan Ansari <rayyan.ansari@linaro.org>, devicetree@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org
+Cc: Bjorn Andersson <andersson@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+ Konrad Dybcio <konrad.dybcio@linaro.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+ Rob Herring <robh@kernel.org>
+References: <20240716105245.49549-1-rayyan.ansari@linaro.org>
+ <20240716105245.49549-3-rayyan.ansari@linaro.org>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20240716105245.49549-3-rayyan.ansari@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Linus,
+On 16/07/2024 12:46, Rayyan Ansari wrote:
+> Remove old text bindings and add ipq806x AHCI compatible to
+> ahci-common.yaml, as well as its required properties.
+> 
 
-The following changes since commit eeb25a09c5e0805d92e4ebd12c4b0ad0df1b0295:
+>  
+>  allOf:
+>    - $ref: ahci-common.yaml#
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - qcom,ipq806x-ahci
+> +    then:
+> +      properties:
+> +        clocks:
+> +          minItems: 5
+> +        clock-names:
+> +          items:
+> +            - const: slave_iface
+> +            - const: iface
+> +            - const: core
+> +            - const: rxoob
+> +            - const: pmalive
+> +        assigned-clocks:
+> +          minItems: 2
+> +          maxItems: 2
+> +        assigned-clock-rates:
 
-  ata: ahci: Clean up sysfs file on error (2024-06-30 22:23:39 +0200)
 
-are available in the Git repository at:
+assigned* should not be needed in the binding. You can drop these.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.11-rc1
+> +          items:
+> +            - const: 100000000
+> +            - const: 100000000
+> +      required:
+> +        - phys
+> +        - phy-names
+> +        - clocks
+> +        - clock-names
+> +        - assigned-clocks
+> +        - assigned-clock-rates
 
-for you to fetch changes up to 6739fad42af2e5eb87417283278a13a57f69c0de:
+Also from here.
 
-  dt-bindings: ata: ahci-fsl-qoriq: add fsl,ls1046a-ahci and fsl,ls1012a-ahci (2024-07-12 22:54:33 +0200)
 
-----------------------------------------------------------------
-ata changes for 6.11-rc1
+Best regards,
+Krzysztof
 
- - ATA PASS-THROUGH sense data cleanups and fixes. (from Igor Pylypiv)
-   Highlights:
-
-   Store the sense data for ATA PASS-THROUGH commands at the correct offset
-   in the sense buffer when using fixed format sense data.
-
-   Cleanup the logic related to generating sense data for PASS-THROUGH
-   commands. Generating sense data for PASS-THROUGH commands would
-   overwrite any eventual (real) sense data received from the device.
-
-   Honor the D_SENSE bit when generating sense data for PASS-THROUGH
-   commands. (The D_SENSE bit can be set by the user, and determines if
-   the returned sense data should be in fixed format or descriptor format.)
-
- - ata port allocation cleanups. (from me)
-   Highlights:
-
-   Assign the ata port print_id at port allocation time, such that the
-   ata_port_* print functions can be used earlier in the init call chain.
-
-   Change the ata port port print_id to use ida_alloc(), such that
-   print_ids will get reused on rmmod + modprobe, instead of being
-   incremented indefinitely.
-
-   Remove wrappers that only existed in order to export the internal libata
-   functions which they wrapped, and instead export the libata functions
-   directly.
-
- - Update SATA_MOBILE_LPM_POLICY Kconfig default to med_power_with_dipm.
-   Using this default was not always a good idea before, because it would
-   break hot plug support. However, with LPM changes in recent kernels,
-   a port marked as external will not enable LPM (in order to not break hot
-   plug), so it is now safe to change the default value of this Kconfig.
-   All major Linux distros have had SATA_MOBILE_LPM_POLICY set to
-   med_power_with_dipm for quite a long time. (from Mario Limonciello)
-
- - Convert ahci-fsl-qoriq device tree binding to yaml format.
-   (from Frank Li)
-
-----------------------------------------------------------------
-Frank Li (2):
-      dt-bindings: ata: ahci-fsl-qoriq: convert to yaml format
-      dt-bindings: ata: ahci-fsl-qoriq: add fsl,ls1046a-ahci and fsl,ls1012a-ahci
-
-Igor Pylypiv (7):
-      ata: libata-scsi: Fix offsets for the fixed format sense data
-      ata: libata-scsi: Do not overwrite valid sense data when CK_COND=1
-      ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error
-      ata: libata-scsi: Remove redundant sense_buffer memsets
-      ata: libata-scsi: Do not pass ATA device id to ata_to_sense_error()
-      ata: libata-core: Set ATA_QCFLAG_RTF_FILLED in fill_result_tf()
-      ata: libata-scsi: Check ATA_QCFLAG_RTF_FILLED before using result_tf
-
-Mario Limonciello (1):
-      ata: Kconfig: Update SATA_MOBILE_LPM_POLICY default to med_power_with_dipm
-
-Niklas Cassel (10):
-      Merge remote-tracking branch 'libata/for-6.10-fixes' into for-6.11
-      ata,scsi: Remove wrappers ata_sas_tport_{add,delete}()
-      ata: libata: Remove unused function declaration for ata_scsi_detect()
-      ata: libata-core: Remove support for decreasing the number of ports
-      ata: libata-sata: Remove superfluous assignment in ata_sas_port_alloc()
-      ata: libata-core: Remove local_port_no struct member
-      ata: libata: Assign print_id at port allocation time
-      ata: libata-core: Reuse available ata_port print_ids
-      ata,scsi: Remove wrapper ata_sas_port_alloc()
-      ata: ahci: Add debug print for external port
-
- .../devicetree/bindings/ata/ahci-fsl-qoriq.txt     |  21 ---
- .../devicetree/bindings/ata/fsl,ahci.yaml          |  64 +++++++
- drivers/ata/Kconfig                                |   2 +-
- drivers/ata/ahci.c                                 |   4 +-
- drivers/ata/libahci.c                              |  12 +-
- drivers/ata/libata-core.c                          |  49 +++--
- drivers/ata/libata-sata.c                          |  49 -----
- drivers/ata/libata-scsi.c                          | 209 ++++++++++++---------
- drivers/ata/libata-transport.c                     |   5 +-
- drivers/ata/libata-transport.h                     |   3 -
- drivers/ata/libata.h                               |   2 -
- drivers/scsi/libsas/sas_ata.c                      |  22 +--
- drivers/scsi/libsas/sas_discover.c                 |   2 +-
- include/linux/libata.h                             |  11 +-
- 14 files changed, 230 insertions(+), 225 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
- create mode 100644 Documentation/devicetree/bindings/ata/fsl,ahci.yaml
