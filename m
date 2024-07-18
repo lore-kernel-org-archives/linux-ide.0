@@ -1,132 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58FA948CCD;
-	Wed, 17 Jul 2024 23:43:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F5B484DE4
+	for <linux-ide@vger.kernel.org>; Thu, 18 Jul 2024 09:53:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721259801; cv=none; b=QidCxD26tq7FkcxyXPShDRBBpMX3QcaC18+teAbxRaKsQKlgUg/aQKTzrZt+J7IM6jImZckRNdSEDPqpkV47ruo+M9dypgkwCcJBCOlPtwvoU56nIsrKC858Pxknml6yuj61pCACKE6PqUMnLgb+Y8tDQY5B2IfFYTLl9vsReHc=
+	t=1721296392; cv=none; b=dNGVFQEs9PwiE0J7AeKVNt0ZcQcFOodHH4Lp8fBNTbORWMmWNRDjnnzgV0Y+4nvpgMhLMsZuQ5Ul4ttiZxtpgoMEE0N8b84uB/58cXjs79ISvW15wz0F7RniGULioG/4ua24f1OY7t/JqRum3o4s5vW5xGWxQwqHMLFLda8KVz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721259801; c=relaxed/simple;
-	bh=0SzqE6acgChptScakbVHZAGE65kPCaxYYa36nc5MtF0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Iu7T/CbVIMRQhESD5GcCXqTLf9vSI/mD2Ng5kR37guxFnsLniEK+Q677mD3nb0pju9ERd1uRCCdkr/su45PVtbVi6yhf43wyn2kQc/XZP5VxhR/leGCdIl24/ECcmfNdg1qRswLhRZrZ60nhAirv009WS6AY9TiI+pTChCA29ZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mZxRf+ku; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721296392; c=relaxed/simple;
+	bh=R4Md4kPFItH0Tl4QBtrjbH6eZcIh6DqR2RdLEFqdqc8=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=uIO0jtfTqQde/IpZrWRw6Tuj4cS7pu0kgyKIzFyDn9VFtWIuKp1nSEfw9XslOt6jXb3VwIeAvrO02xyEDwJhOUriMrKX8vJ4qBJcQwQeLxVhDaTp+yF/FHfhKe3hofxV/bAcseE2U9ERY/zWkKSjjK/9CKqQhxmzba1tsr05nLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZXC45svj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mZxRf+ku"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19B61C2BD10;
-	Wed, 17 Jul 2024 23:43:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZXC45svj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 518B5C116B1;
+	Thu, 18 Jul 2024 09:53:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721259800;
-	bh=0SzqE6acgChptScakbVHZAGE65kPCaxYYa36nc5MtF0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=mZxRf+ku72/5+0Ss1CsbzU8f5+EnZcYo6kPyRsA/FGKPCLlWx1rTjlXcSORXsYDEU
-	 P/PUC94hPfK56AdsaJjpjrDaO4ZivMqyMadaOWjNJ8TzAIUO03AOT+br3Ouey1SmYm
-	 Pcvpz+lB1qA9sg2x/kS/Wa+cowo16YAiaXdrSxBL463HjEMsUETerp4GeLdnOjvh2x
-	 ensqj+AlNzia/H0EuHrW4/2xe/U4ZaS3zO97TIY5oS0fI4WsyjX09dYND8NhlXM6iA
-	 7hP3gXlCGsqiG7IA3nSkgLECVluZ26aci+26ic9oEu8byJUkfVDNxEZGj8IedDzp6n
-	 alTWHeegfaaNg==
-Message-ID: <daf86dec-9c35-49a5-ab81-ee667074f503@kernel.org>
-Date: Thu, 18 Jul 2024 08:43:16 +0900
+	s=k20201202; t=1721296391;
+	bh=R4Md4kPFItH0Tl4QBtrjbH6eZcIh6DqR2RdLEFqdqc8=;
+	h=From:To:Subject:Date:From;
+	b=ZXC45svjjpuHSdfp5asu+CZF893eNZB6i8a2aBGQFCLkxWXvwNZ7zRCx/zZEzl18w
+	 faZC5U2/2rCTQz9h6rn4PVE/uWIEKzMEtzEXJ4H92b0vMcUJEPggnOe5Y41WxYe63I
+	 JzK+/OPV3MrtGx9JaV56v/DJj6/ZKfsd+BCjXTOSKoHtQABID8Qnd8sZw2B8+hlgIH
+	 S8DK3ZrY9P2MtyFCxgXuCQuVGXgN37SHii9C3v9xRUu26eO53UMLsd1WK4oIBhelX3
+	 8itrPFghgoAnK8s7tZsEaBfUPncnph5cchqIUD58+eqTT4/4DXVQtMr4DwtjDteaV9
+	 V+NROS7oMvSvg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 0/3] Some renaming and horkage improvements
+Date: Thu, 18 Jul 2024 18:53:07 +0900
+Message-ID: <20240718095310.152254-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/4] ata: ahci_imx: Enlarge RX water mark for i.MX8QM
- SATA
-To: Niklas Cassel <cassel@kernel.org>, Richard Zhu <hongxing.zhu@nxp.com>
-Cc: tj@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- shawnguo@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com,
- linux-ide@vger.kernel.org, stable@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
- kernel@pengutronix.de
-References: <1721099895-26098-1-git-send-email-hongxing.zhu@nxp.com>
- <1721099895-26098-4-git-send-email-hongxing.zhu@nxp.com>
- <ZpgKxwziGXqNYLfc@ryzen.lan>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZpgKxwziGXqNYLfc@ryzen.lan>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 7/18/24 3:17 AM, Niklas Cassel wrote:
-> Hello Richard,
-> 
-> On Tue, Jul 16, 2024 at 11:18:14AM +0800, Richard Zhu wrote:
->> The RXWM(RxWaterMark) sets the minimum number of free location within
->> the RX FIFO before the watermark is exceeded which in turn will cause
->> the Transport Layer to instruct the Link Layer to transmit HOLDS to
->> the transmitting end.
->>
->> Based on the default RXWM value 0x20, RX FIFO overflow might be
->> observed on i.MX8QM MEK board, when some Gen3 SATA disks are used.
->>
->> The FIFO overflow will result in CRC error, internal error and protocol
->> error, then the SATA link is not stable anymore.
->>
->> To fix this issue, enlarge RX water mark setting from 0x20 to 0x29.
->>
->> Fixes: 027fa4dee935 ("ahci: imx: add the imx8qm ahci sata support")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
->> ---
-> 
-> Looking at the title of this patch:
-> "ahci_imx: Enlarge RX water mark for i.MX8QM SATA"
-> 
-> This suggests that this fix is only needed for i.MX8QM.
-> 
-> Support for i.MX8QM was added to the device tree binding in patch 1/4 in
-> this series.
-> 
-> Doing a git grep in linux-next gives the following result:
-> 
-> $ git grep fsl,imx8qm-ahci linux-next/master
-> linux-next/master:drivers/ata/ahci_imx.c:       { .compatible = "fsl,imx8qm-ahci", .data = (void *)AHCI_IMX8QM },
-> 
-> 
-> This is interesting for two reasons:
-> 1) drivers/ata/ahci_imx.c already has support for this compatible string,
-> even though this compatible string does not exist in any DT binding
-> (in linux-next).
-> 
-> 2) There is not a single in-tree device tree (DTS) that uses this compatible
-> string ....and we do not care about out of tree device trees.
-> 
-> 
-> Considering 2) I do NOT think that we should have
-> Cc: stable@vger.kernel.org on this... we shouldn't just backport random driver
-> fixes is there are no in-tree users of this compatible string.
-> 
-> So I suggest that:
-> -Drop the CC: stable.
-> -I actually think that it is better that you drop the Fixes tag too, because if
-> you keep it, the stable bots will automatically select this for backporting,
-> and then we will need to reply and say that this should not be backported, so
-> better to avoid adding the Fixes tag in the first place.
-> (Since there are no users of this compatible string, there is nothing that is
-> broken, so there is nothing to fix.)
-> 
-> 
-> Damien, when applying this patch, I suggest that we apply it to for-6.12
-> together with the rest of the series (instead of applying it to
-> for-6.11-fixes).
+The first 2 patches removes the use of the term "blacklist" from
+libata-core.
 
-It was me who asked for the Fixes and Cc-stable tags, but I had not checked
-that the compatible is not being used in any DT. So good catch.
-I will apply everything to for-6.12.
+The third patch adds printing on device scan of the horkage flags that
+will be applied to the device to help with debugging.
 
-> 
-> 
-> Kind regards,
-> Niklas
+Damien Le Moal (3):
+  ata: libata: Rename ata_dma_blacklisted()
+  ata: libata: Rename ata_dev_blacklisted()
+  ata: libata: Print horkages applied to devices
+
+ drivers/ata/libata-core.c | 111 +++++++++++++++++++++++++++++++-------
+ include/linux/libata.h    | 108 ++++++++++++++++++++++++-------------
+ 2 files changed, 163 insertions(+), 56 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.45.2
 
