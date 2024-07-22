@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A963610C
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jul 2024 01:34:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A759748D
+	for <linux-ide@vger.kernel.org>; Mon, 22 Jul 2024 01:34:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721612054; cv=none; b=JOuK9paAunU3s0ovkpu8/3yTIXL/gCXX5eo5lI0LZyESd4tBOo3+WDb9s16FhZe23LaqKKWbDhN6QmbSta+52k90mrd2cBcuf1+z/Cg9cYMsfa7gH4DBYhOSxL8v7WpjlX5EK8bd45n4rMIddg0TPVK0/30d6KC6Bh+nj6fnFAg=
+	t=1721612055; cv=none; b=TpQvbao2u5TF4gC8K02DNd3c2hvysQgQJeEVJ1WoPH6zsTUTXkOJSu/ISqoHh6MNX6ogKduUT1xUv0IE+J5uEL0PBvpMTf9ot5BO58PHcxVRWQrm8UO4UA5qk5DBshqckuk+pIUIvojQUqaUT2sOiEbXuknYMIxV/WIlUQ7h5BI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721612054; c=relaxed/simple;
-	bh=zqlhIfR9tgS+7BpN1qeueG8UiS0NA1KmqQg1GW0+wlQ=;
+	s=arc-20240116; t=1721612055; c=relaxed/simple;
+	bh=oDCOVbbnCTH3ChHzR7fuuqioWy05iWEvPv7tGC3aBo4=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pM3HF+fIUpqZ+Zcv2c93ZMQS2/X56Dhrpo8ow+y+CUqwJMfL2ebrfP45wFQvSbC1CCzm1Rz5aYBWP8B8P9GdLu+AmBYrpuSYgy1iejhOQ7Hx7bZxwspXlc18Nct3/UwM8W3AmNXBf5bgPsFOYqfH32ixsJDH7Iu2xJarba73tYE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cjaOBxPa; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=aK4AWrVGc8AJE62p+BUg0FkFMB1VUJaBTujPiYEy8j8pkMMnPHI7y6e0bsv6/i8ILbvEZjKaK0cRhnkvY20sDKJ6h3PPXigjYuB/QofyxJbxcjI7J+7Bf8/XNrl8+xI1S0rpAomsXwh84xR4cPr1yjKIkEtbDRSjWWaW7Wvnvos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rkEwHboD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cjaOBxPa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9AA1C4AF0E;
-	Mon, 22 Jul 2024 01:34:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rkEwHboD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E2ACC4AF09;
+	Mon, 22 Jul 2024 01:34:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721612054;
-	bh=zqlhIfR9tgS+7BpN1qeueG8UiS0NA1KmqQg1GW0+wlQ=;
+	s=k20201202; t=1721612055;
+	bh=oDCOVbbnCTH3ChHzR7fuuqioWy05iWEvPv7tGC3aBo4=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=cjaOBxPahX1e1B0ZVn5uf+Yzxm6wcZ/ivzVoFsjtrd2/ionwvf7tV0ST3IyFg3j5O
-	 1+7Idc+KlVEvrVWUnxJctIIxh76KdHqPcqyzqEyGpbA+kDcOrmkm6pbOx3ufzQZr7L
-	 dabxsYQlFJO+freqN5xEQJb26jhDiVlwZiRH5F542tvbtayH9olzdhxp3kgNvgBQfM
-	 yynllHRU6PRzPv0LlLxiP4x1e4xqb/zO9SER8BufvclxfotT+HHtT9wsMvBpNfKBhV
-	 CkwpY6mQe3w3BfMlsxVCrozaOM1/XCXIWGJd8pE7ICtquCpQnEfjouv8HsQlaf4bwi
-	 6Qpv25lO4eIgQ==
+	b=rkEwHboDZLrfg/4X694zh49QmhD1IV8ALsX65M0Wt05H2WVDsU/C5RTJcjr79EwRc
+	 8Qoc6oMBbT3U4DIZobNJ9PKhaklbIxWoeioCaovuwIBqpzd3kv6gra30ZCpyfR6dXn
+	 g9jWba8KtCz+dZ8z13f4wR9TlgZtxwbVVuZ+9DITmkRzKlIj5cpkl/OuIA0fnlWAJF
+	 TAlzwRzw0JKk/XiFcPlEyyreQ/fcg+irGqsowzuLyYELZ69TUwxMgaw3JzANztxuyB
+	 6GMBDWQMa0eTMKVqHPxmCat+HKWiN5irnNXb28bTycnZzNkLBkdl9/s6ZGdrJdKVTb
+	 1ZwCQCHm0Lk2A==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 1/3] ata: libata: Rename ata_dma_blacklisted()
-Date: Mon, 22 Jul 2024 10:34:10 +0900
-Message-ID: <20240722013412.274267-2-dlemoal@kernel.org>
+Subject: [PATCH v3 2/3] ata: libata: Rename ata_dev_blacklisted()
+Date: Mon, 22 Jul 2024 10:34:11 +0900
+Message-ID: <20240722013412.274267-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240722013412.274267-1-dlemoal@kernel.org>
 References: <20240722013412.274267-1-dlemoal@kernel.org>
@@ -43,52 +43,98 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Rename the function ata_dma_blacklisted() to ata_dev_nodma() as this new
-name is more neutral. The function signature is also changed to return a
-boolean instead of an int.
+Rename the function ata_dev_blacklisted() to ata_dev_horkage() as this
+new name:
+1) Does not use an expression that can be considered as negatively loaded.
+2) The name does not reflect what the function actually does, which is
+   returning a set of horkage flag for the device, of which only one
+   flag will completely disable the device.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/libata-core.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/ata/libata-core.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c7752dc80028..286e1bc02540 100644
+index 286e1bc02540..ee958d2893e6 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4287,16 +4287,17 @@ static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
- 	return 0;
- }
+@@ -84,7 +84,7 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
+ 					u16 heads, u16 sectors);
+ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
+ static void ata_dev_xfermask(struct ata_device *dev);
+-static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
++static unsigned long ata_dev_horkage(const struct ata_device *dev);
  
--static int ata_dma_blacklisted(const struct ata_device *dev)
-+static bool ata_dev_nodma(const struct ata_device *dev)
+ static DEFINE_IDA(ata_ida);
+ 
+@@ -2223,7 +2223,7 @@ static inline u8 ata_dev_knobble(struct ata_device *dev)
  {
--	/* We don't support polling DMA.
--	 * DMA blacklist those ATAPI devices with CDB-intr (and use PIO)
--	 * if the LLDD handles only interrupts in the HSM_ST_LAST state.
-+	/*
-+	 * We do not support polling DMA. Deny DMA for those ATAPI devices
-+	 * with CDB-intr (and use PIO) if the LLDD handles only interrupts in
-+	 * the HSM_ST_LAST state.
- 	 */
- 	if ((dev->link->ap->flags & ATA_FLAG_PIO_POLLING) &&
- 	    (dev->flags & ATA_DFLAG_CDB_INTR))
--		return 1;
--	return (dev->horkage & ATA_HORKAGE_NODMA) ? 1 : 0;
-+		return true;
-+	return !!(dev->horkage & ATA_HORKAGE_NODMA);
- }
+ 	struct ata_port *ap = dev->link->ap;
  
- /**
-@@ -4404,7 +4405,7 @@ static void ata_dev_xfermask(struct ata_device *dev)
- 		xfer_mask &= ~(0x03 << (ATA_SHIFT_MWDMA + 3));
+-	if (ata_dev_blacklisted(dev) & ATA_HORKAGE_BRIDGE_OK)
++	if (ata_dev_horkage(dev) & ATA_HORKAGE_BRIDGE_OK)
+ 		return 0;
+ 
+ 	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
+@@ -2830,7 +2830,7 @@ int ata_dev_configure(struct ata_device *dev)
  	}
  
--	if (ata_dma_blacklisted(dev)) {
-+	if (ata_dev_nodma(dev)) {
- 		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
- 		ata_dev_warn(dev,
- 			     "device is on DMA blacklist, disabling DMA\n");
+ 	/* set horkage */
+-	dev->horkage |= ata_dev_blacklisted(dev);
++	dev->horkage |= ata_dev_horkage(dev);
+ 	ata_force_horkage(dev);
+ 
+ 	if (dev->horkage & ATA_HORKAGE_DISABLE) {
+@@ -3987,13 +3987,13 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+ 	return rc;
+ }
+ 
+-struct ata_blacklist_entry {
++struct ata_dev_horkage_entry {
+ 	const char *model_num;
+ 	const char *model_rev;
+ 	unsigned long horkage;
+ };
+ 
+-static const struct ata_blacklist_entry ata_device_blacklist [] = {
++static const struct ata_dev_horkage_entry ata_dev_horkages[] = {
+ 	/* Devices with DMA related problems under Linux */
+ 	{ "WDC AC11000H",	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "WDC AC22100H",	NULL,		ATA_HORKAGE_NODMA },
+@@ -4111,7 +4111,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 
+ 	/* Devices which get the IVB wrong */
+ 	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB },
+-	/* Maybe we should just blacklist TSSTcorp... */
++	/* Maybe we should just add all TSSTcorp devices... */
+ 	{ "TSSTcorp CDDVDW SH-S202[HJN]", "SB0[01]",  ATA_HORKAGE_IVB },
+ 
+ 	/* Devices that do not need bridging limits applied */
+@@ -4266,11 +4266,11 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ }
+ };
+ 
+-static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
++static unsigned long ata_dev_horkage(const struct ata_device *dev)
+ {
+ 	unsigned char model_num[ATA_ID_PROD_LEN + 1];
+ 	unsigned char model_rev[ATA_ID_FW_REV_LEN + 1];
+-	const struct ata_blacklist_entry *ad = ata_device_blacklist;
++	const struct ata_dev_horkage_entry *ad = ata_dev_horkages;
+ 
+ 	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
+ 	ata_id_c_string(dev->id, model_rev, ATA_ID_FW_REV, sizeof(model_rev));
+@@ -4372,8 +4372,7 @@ static int cable_is_40wire(struct ata_port *ap)
+  *
+  *	Compute supported xfermask of @dev and store it in
+  *	dev->*_mask.  This function is responsible for applying all
+- *	known limits including host controller limits, device
+- *	blacklist, etc...
++ *	known limits including host controller limits, device horkages, etc...
+  *
+  *	LOCKING:
+  *	None.
 -- 
 2.45.2
 
