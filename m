@@ -1,182 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D243B7347D
-	for <linux-ide@vger.kernel.org>; Thu, 25 Jul 2024 22:56:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9EBAFC19
+	for <linux-ide@vger.kernel.org>; Fri, 26 Jul 2024 03:19:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721948160; cv=none; b=LOc8gBOBCKi+jo1RkBS/0C0/LnhOvuT5AgFr9AUBHat9Lbxyl8SDJrlRYOxiPZE6eyvFF2HboAXjqk9d4Aj8nPDxC+I4dKh3g2z67HIsDwgJuKI+z/am8I9sggCegCVr9us20TKJcrsV9E9/NkzRHQKG+qB9ba7TcOzdp5ZKwg0=
+	t=1721963996; cv=none; b=WNloQpTEkDeo85LUcVtZdXKeQGClkK6olLG5ugXCtOju33dzmdFBrsqxS6bHmKrz9pmwvFKn+pssCBFhbxbuSCcAlEK2ts2gJXZZkkg6rjrzddTaXHY9hKVQt31stZc3gS1yu4S1n82CewVJ6uCwSCvw+JsxqbVpncXL8+4zoaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721948160; c=relaxed/simple;
-	bh=hR8epoPJUmHmFjZJcdojJ8OritykpWUFdgrNW1pdl+s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s++jtOojnJsq01fRwT0sw3muW2B5AYOWbkZnpEvOlx5sJfxGbKntXg+59O2oe5pDtHAzZg7C9SDIC1z/Q+XdxRHSGMLiHP2Addm6zmNIyrjR/mxoqZsJ1rnz6/dhZvZdzYFqhQd+dkh7tYUXCb+fyql/EuIU9BAw5aNYQY/iZvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eqlEvNj7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721963996; c=relaxed/simple;
+	bh=aP3dROZRjb33gXmM0lY43ecHyN7uI9gtC8OFdd3+tYg=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=G0o6ohD/8KIGgU+9ybTCXA2upDT93Df9vFdG6YDreYm69P+czqfebKXv/FZHEeSyn3QCT2xp4BObnhF3vcaSJq2SGVfh54ltypX/+zmn9XPPxpXDuAbxQ+gJvDbzWx9pE8CTUpX7x3p9lCpYpU+zJKuAp6kjHNHIa5u/75Z5Yhk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B2BZXACB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eqlEvNj7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21315C116B1;
-	Thu, 25 Jul 2024 22:56:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B2BZXACB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD494C32782;
+	Fri, 26 Jul 2024 03:19:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721948160;
-	bh=hR8epoPJUmHmFjZJcdojJ8OritykpWUFdgrNW1pdl+s=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=eqlEvNj7DLaBAlHx60zI07Ufqs+GKRrtAzvaGpkvJ7181nAu9lDXloSKDAgVg10oH
-	 Sk+/ykqAEyq/e6eg5cPvnXkosKI/ezuAarZktR3pojWTkTt7Y3FLoPu+RjolFnvNms
-	 DXqPr9yGouRiB+KoIdscHlAUD5GYN9vC2U3tMD0yhUvAZq94Rji6HDnapaerRBZ9WT
-	 CFRWuF8N63fSaKqA9p5tBoym7eaA9e2gkujwDufeotW0LJRor8wymgJwhpAjyplg+y
-	 6IWGrJKiMvFHDo0xpeA9zZMcw4Bp4iJdJj+X4XAiy5ZvNw/mxtYKdLkebLQgLWCM9m
-	 JVNM+qkhFc7EQ==
-Message-ID: <4c397fc3-5d6d-4eb2-afa3-5e445bad2320@kernel.org>
-Date: Fri, 26 Jul 2024 07:55:59 +0900
+	s=k20201202; t=1721963996;
+	bh=aP3dROZRjb33gXmM0lY43ecHyN7uI9gtC8OFdd3+tYg=;
+	h=From:To:Subject:Date:From;
+	b=B2BZXACB9YlhDphu5PBnjrwY1q9Mu3yp3EyyqLcGQpesnmS/NhwHAx0KCcKqOyU8d
+	 ADuIAkzfAHomb6RN9lanlA/0vUvDL9sG884T/GJeyyUi0gFZBFlKgcYh3zhBVBFC+U
+	 vl3PLjAeEqOLYRd7YFSalh9Bh6+zi5NNxE/VFhJxI+fPQlx3m+XBuSM9EpnZXH64Ei
+	 J76vqg5kQ0yLVIe8EddKC2iXMAyiMu0Yma6h9BZOqcCvjU0VIDqhQgdiHA+5Zr6gpI
+	 7FPJSry66zu7GbBZ8DmsZHU2SJqLNmpSis6xPY1miB9Kuc4MbuNB+fDqEYEXI21YWu
+	 a4Ck2Pt38chyw==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v6 0/4] Some cleanup, renaming and horkage improvements
+Date: Fri, 26 Jul 2024 12:19:43 +0900
+Message-ID: <20240726031954.566882-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/4] ata: libata: Rename ata_dev_blacklisted()
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-References: <20240724054539.182655-1-dlemoal@kernel.org>
- <20240724054539.182655-3-dlemoal@kernel.org> <ZqKAqMqq11fO1exb@ryzen.lan>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <ZqKAqMqq11fO1exb@ryzen.lan>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 7/26/24 01:43, Niklas Cassel wrote:
-> On Wed, Jul 24, 2024 at 02:45:37PM +0900, Damien Le Moal wrote:
->> Rename the function ata_dev_blacklisted() to ata_dev_horkage() as this
->> new name:
->> 1) Does not use an expression that can be considered as negatively loaded.
->> 2) The name does not reflect what the function actually does, which is
->>    returning a set of horkage flag for the device, of which only one
->>    flag will completely disable the device.
->>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
->> ---
->>  drivers/ata/libata-core.c | 19 +++++++++----------
->>  1 file changed, 9 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index a35bce4236d3..272770f09609 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -84,7 +84,7 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
->>  					u16 heads, u16 sectors);
->>  static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
->>  static void ata_dev_xfermask(struct ata_device *dev);
->> -static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
->> +static unsigned long ata_dev_horkage(const struct ata_device *dev);
->>  
->>  static DEFINE_IDA(ata_ida);
->>  
->> @@ -2223,7 +2223,7 @@ static inline u8 ata_dev_knobble(struct ata_device *dev)
->>  {
->>  	struct ata_port *ap = dev->link->ap;
->>  
->> -	if (ata_dev_blacklisted(dev) & ATA_HORKAGE_BRIDGE_OK)
->> +	if (ata_dev_horkage(dev) & ATA_HORKAGE_BRIDGE_OK)
->>  		return 0;
->>  
->>  	return ((ap->cbl == ATA_CBL_SATA) && (!ata_id_is_sata(dev->id)));
->> @@ -2830,7 +2830,7 @@ int ata_dev_configure(struct ata_device *dev)
->>  	}
->>  
->>  	/* set horkage */
->> -	dev->horkage |= ata_dev_blacklisted(dev);
->> +	dev->horkage |= ata_dev_horkage(dev);
->>  	ata_force_horkage(dev);
->>  
->>  	if (dev->horkage & ATA_HORKAGE_DISABLE) {
->> @@ -3987,13 +3987,13 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
->>  	return rc;
->>  }
->>  
->> -struct ata_blacklist_entry {
->> +struct ata_dev_horkage_entry {
->>  	const char *model_num;
->>  	const char *model_rev;
->>  	unsigned long horkage;
->>  };
->>  
->> -static const struct ata_blacklist_entry ata_device_blacklist [] = {
->> +static const struct ata_dev_horkage_entry ata_dev_horkages[] = {
->>  	/* Devices with DMA related problems under Linux */
->>  	{ "WDC AC11000H",	NULL,		ATA_HORKAGE_NODMA },
->>  	{ "WDC AC22100H",	NULL,		ATA_HORKAGE_NODMA },
->> @@ -4111,7 +4111,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->>  
->>  	/* Devices which get the IVB wrong */
->>  	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB },
->> -	/* Maybe we should just blacklist TSSTcorp... */
->> +	/* Maybe we should just add all TSSTcorp devices... */
->>  	{ "TSSTcorp CDDVDW SH-S202[HJN]", "SB0[01]",  ATA_HORKAGE_IVB },
->>  
->>  	/* Devices that do not need bridging limits applied */
->> @@ -4266,11 +4266,11 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->>  	{ }
->>  };
->>  
->> -static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
->> +static unsigned long ata_dev_horkage(const struct ata_device *dev)
-> 
-> So it turns that the term "horkage" is only used by libata:
-> $ git grep -i horkage
-> 
-> See also:
-> https://unix.stackexchange.com/questions/752755/what-is-horkage
-> 
-> I have mixed emotions about this. In one way I want to preserve the legacy,
-> but in one way, the term quirk/quirks is used everywhere else in the kernel,
-> so it is way more intuitive for other kernel developers to understand what
-> this is if we just use the common terminology.
-> 
-> I do think that the name ata_dev_horkage() is not good because it sounds
-> like you can just have a single horkage, but in fact a devices can have
-> serveral quirks. So should the name be ata_dev_horkages() ?
-> 
-> Search the kernel tree gives zero results for this before your patch:
-> $ git grep -i horkages origin/master  | wc -l
-> 0
-> 
-> So maybe the plural of horkage is horkage???
-> 
-> To me, this again suggests that quirk/quirks is way clearer.
-> (And we do also use the term quirk in libata:
-> $ git grep -i quirk drivers/ata
-> so in one way renaming would also make us more consistent...)
-> 
-> I do see that you have used "horkages" in this patch however.
-> 
-> So either migrate to quirk/quirks, or we continue to make up our own words.
-> 
-> I prefer the former.
-> dev->quirks |= ata_dev_quirks(dev);
-> 
-> 
-> If we choose the latter, may I suggest that we change this line:
-> dev->horkage |= ata_dev_horkage(dev);
-> to:
-> dev->horkages |= ata_dev_horkages(dev);
-> 
-> to make it clearer that we can have several *whatever the plural of horkage*.
-> 
-> see e.g. how nvme does it:
-> ctrl->quirks = quirks;
-> and
-> if (ns->ctrl->quirks & NVME_QUIRK_DEALLOCATE_ZEROES)
+Patch 1 cleanups the function ata_dev_knobble() and patch 2 renames the
+function ata_dma_blacklisted(). Patch 3 does a larger cleanup, changing
+the use of the term horkage to the more common quirk term. All 3 patches
+do not introduce any functional change.
 
-Yep, when writing these patches, I thought about doing such renaming but end
-choosing the lazy path :)
+Patch 4 adds printing on device scan of the quirk flags that will be
+applied to the device,. This is to help with debugging any issue with
+devices.
 
-I completely agree about it, so will add patches to do that.
+Finally, patches 5 to 11 do some additional renaming and comment
+cleanups in various drivers to remove the use of the term blacklist,
+replacing it with more descriptive comments and names. Of note is that
+many of the "broken" device handling in these driver should probably be
+moved to libata quirk handling so that any controller seeing one of the
+broken device listed can get similar quirks. But it is unclear if the
+quirks handled are controller specific or not.
+
+Changes from v5:
+ - Moved patch 3 as patch 1
+ - Changed patch 2 to do the horkage renaming, including renaming of
+   ata_dev_blacklisted(). That is now patch 3.
+ - Changed patch 4 to be compatible with the changes introduced in
+   patch 3.
+ - Added patch 5 to 11
+
+Changes from v4:
+ - Removed the useless !! in patch 1
+ - Added Igor's review tags to patch 1 and 2
+ - Added patch 3
+ - In patch 4, corrected comment about __ATA_HORKAGE_MAX, added missing
+   newline for the horkage warning message and corrected the commit
+   message.
+
+Changes from v3:
+ - Corrected the BUILD_BUG_ON() call in patch 3
+ - Corrected alignment of horkage definition comments in patch 3
+
+Changes from v2:
+ - Simplified ata_dev_print_horkage() to always print the device
+   revision (patch 3)
+ - Simplified ata_dev_horkage() to having 2 different calls to
+   ata_dev_print_horkage() and to always print the device revision
+   (patch 3)
+ - Added a BUILD_BUG_ON() check in patch 3 to ensure that the horkage
+   flags all fit within an unsigned int.
+
+Changes from v1:
+ - Remove unused macro definition in patch 3
+ - Use unsigned int for horkage flags (patch 3)
+
+Damien Le Moal (11):
+  ata: libata: Change ata_dev_knobble() to return a bool
+  ata: libata: Rename ata_dma_blacklisted()
+  ata: libata: Use QUIRK instead of HORKAGE
+  ata: libata: Print quirks applied to devices
+  ata: pata_serverworks: Do not use the term blacklist
+  ata: ahci: Rephrase comment to not use the term blacklist
+  ata: sata_sil: Rename sil_blacklist to sil_quirks
+  ata: ata_piix: Remove useless comment in piix_init_sidpr()
+  ata: pata_cs5520: Rephrase file header comment
+  ata: pata_hpt366: Rename hpt_dma_blacklisted()
+  ata: pata_hpt37x: Rename hpt_dma_blacklisted()
+
+ drivers/ata/ahci.c             |   2 +-
+ drivers/ata/ata_piix.c         |   1 -
+ drivers/ata/libata-core.c      | 581 ++++++++++++++++++---------------
+ drivers/ata/libata-sata.c      |   2 +-
+ drivers/ata/libata-scsi.c      |   9 +-
+ drivers/ata/libata-sff.c       |  10 +-
+ drivers/ata/libata-transport.c |   6 +-
+ drivers/ata/pata_cs5520.c      |   6 +-
+ drivers/ata/pata_hpt366.c      |  10 +-
+ drivers/ata/pata_hpt37x.c      |  10 +-
+ drivers/ata/pata_it821x.c      |   4 +-
+ drivers/ata/pata_serverworks.c |  16 +-
+ drivers/ata/sata_sil.c         |  14 +-
+ include/linux/libata.h         | 115 ++++---
+ 14 files changed, 446 insertions(+), 340 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.45.2
 
