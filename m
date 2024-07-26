@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C63701DFD1
-	for <linux-ide@vger.kernel.org>; Fri, 26 Jul 2024 03:20:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB26FC19
+	for <linux-ide@vger.kernel.org>; Fri, 26 Jul 2024 03:20:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721964000; cv=none; b=R00mB/HeNrLhzGRo47EV94fOt56c7dOJxSGKYwR4VGA9X/V6HufE0hD+vmP9Y6PHay3chmkyolo5r5XjUSVpSoiusWWwb+l7O6MRGL9ucmZheORl1PCi8NwEyCID4/GanD4Nap0PPREYZY/+Pey1iWToZk3lmhekFAM6ZTY4XMo=
+	t=1721964001; cv=none; b=WP3UGZqgHmiCAT/u8rl84JgHsv7SKOgpx6EdzrBrZrYzGOs8IUWN07KO4bANQSzPZHbExPfnssMHh8lCYI1TlFe60uWHW1wPLZoORScCx8JAfWn/FiOsbHj319mOjnk85y0QTT/I1Ty2MS4y0jJrJV0i779C3EFbcWueuFXL2ec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721964000; c=relaxed/simple;
-	bh=Mst5mEWP8p7QHy5FjPTkDLDE5YiS/ytBqpoLPi6Q7lk=;
+	s=arc-20240116; t=1721964001; c=relaxed/simple;
+	bh=fRt1WkFsV8v3M6WRmgFEmGXYVZAHldRtaY5PYMN1d6s=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bzhC2jN6j/6h7Q/eajZh29SVTNpsE5lHVNACmdN3HQpS0bXwQcNQoVkb9ljUZoOx3IRvsUab9VKLTXw7BRcaMR2chgHbwyZqgnJe6R9yjlFMHvFRBf18DG8Z0yiHfSyrHvvgnKKLBuwGvO+LO4VfjKA92Cp5pDWlsfEA/oLlu6c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u1YL7GBH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=nYdk2F2CBmR5xnCnTEFIZ0oVQqGrciL+MOE0CGEhtgYHXbg1Jp6WxgAzsBIw8sScvvzFHV6IqNPIGVPdNJbejJV6/jyKLolOMMYYqrywKxWlH9D6ofcCZdsHKbfUfHR6Sq+NeqJfDzWHsNVb9HT58d578wbLpHXJC+q4imtNUCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sOYIW6G3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u1YL7GBH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5439FC4AF0C;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sOYIW6G3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0F5EC32786;
 	Fri, 26 Jul 2024 03:20:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721964000;
-	bh=Mst5mEWP8p7QHy5FjPTkDLDE5YiS/ytBqpoLPi6Q7lk=;
+	s=k20201202; t=1721964001;
+	bh=fRt1WkFsV8v3M6WRmgFEmGXYVZAHldRtaY5PYMN1d6s=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=u1YL7GBHolzE3FcDvc8Gag42ZMjNtGgYFlFswvkXFBXFoMPM9OM+0qOHEKMToE4yb
-	 zGhCItw1ExgjvonfqU/IcJiEnTzRUU7mna5UmqBQA0KA9xJqVWQQ5foZWWtyaaHIpr
-	 B6rQ+syMDvKJ9ngh/X791mAzM2ppvOcOi/4WXGFRtmQqpk29QR3rxUemUT5nIO/I+E
-	 p04gPWtFsXPSWQVsyJJIcpRAszzCJ1gUO+LPcKOHTZhxE7LriB9aEJcakRwdTYRvZJ
-	 TiUjITrfoze9B2o5UXCF6iTgRNkvno2DyfHu7ZvOJV+B4h4MGW51l7vFSE1cZaRgUW
-	 ogPjYF0xsV8Sg==
+	b=sOYIW6G3eFxUKt1GP43E4cMh6rZZGxykHP7aiXBkQ5+EeIyMkTdCiVU94KMw7cUgL
+	 G8u4nGcAeWijSkt/xVeEQI/B+9ArHtx3TKhWUIUpVCiUIOyWYStuharzcT8yRr2pzo
+	 flrjOcfAmiOQ+KPtN/it2wa+xKBlOf1iEoRTnyPG2GZFrGwmweTRtULpaeqML9gjWE
+	 u/+QkWB69nh5oMlMkQwqPud9Hu2Xrtxgmy1uWlUHiiuK7OCerRxsnT253h+zqraBnI
+	 z5QpL+fm/dz3WODbKiJ7TbPAAUAwp4kUh8Yeikf+ejs06gMuow4/shdK4fDXZnRd7x
+	 WH4qkOY93C8DA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v6 07/11] ata: sata_sil: Rename sil_blacklist to sil_quirks
-Date: Fri, 26 Jul 2024 12:19:50 +0900
-Message-ID: <20240726031954.566882-8-dlemoal@kernel.org>
+Subject: [PATCH v6 08/11] ata: ata_piix: Remove useless comment in piix_init_sidpr()
+Date: Fri, 26 Jul 2024 12:19:51 +0900
+Message-ID: <20240726031954.566882-9-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240726031954.566882-1-dlemoal@kernel.org>
 References: <20240726031954.566882-1-dlemoal@kernel.org>
@@ -43,51 +43,26 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Rename the array sil_blacklist to sil_quirks as this name is more
-neutral and is also consistent with how this driver define quirks with
-the SIL_QUIRK_XXX flags.
+Remove the comment using the term "blacklist" from piix_init_sidpr().
+That comment is useless given that the function piix_no_sidpr() name is
+clear about what is being checked.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/ata/sata_sil.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/ata/ata_piix.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 354b68ef91bc..3a99f66198a9 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -128,7 +128,7 @@ static const struct pci_device_id sil_pci_tbl[] = {
- static const struct sil_drivelist {
- 	const char *product;
- 	unsigned int quirk;
--} sil_blacklist [] = {
-+} sil_quirks[] = {
- 	{ "ST320012AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST330013AS",		SIL_QUIRK_MOD15WRITE },
- 	{ "ST340017AS",		SIL_QUIRK_MOD15WRITE },
-@@ -600,8 +600,8 @@ static void sil_thaw(struct ata_port *ap)
-  *	list, and apply the fixups to only the specific
-  *	devices/hosts/firmwares that need it.
-  *
-- *	20040111 - Seagate drives affected by the Mod15Write bug are blacklisted
-- *	The Maxtor quirk is in the blacklist, but I'm keeping the original
-+ *	20040111 - Seagate drives affected by the Mod15Write bug are quirked
-+ *	The Maxtor quirk is in sil_quirks, but I'm keeping the original
-  *	pessimistic fix for the following reasons...
-  *	- There seems to be less info on it, only one device gleaned off the
-  *	Windows	driver, maybe only one is affected.  More info would be greatly
-@@ -620,9 +620,9 @@ static void sil_dev_config(struct ata_device *dev)
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ec3c5bd1f813..093b940bc953 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1446,7 +1446,6 @@ static int piix_init_sidpr(struct ata_host *host)
+ 		if (hpriv->map[i] == IDE)
+ 			return 0;
  
- 	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
- 
--	for (n = 0; sil_blacklist[n].product; n++)
--		if (!strcmp(sil_blacklist[n].product, model_num)) {
--			quirks = sil_blacklist[n].quirk;
-+	for (n = 0; sil_quirks[n].product; n++)
-+		if (!strcmp(sil_quirks[n].product, model_num)) {
-+			quirks = sil_quirks[n].quirk;
- 			break;
- 		}
+-	/* is it blacklisted? */
+ 	if (piix_no_sidpr(host))
+ 		return 0;
  
 -- 
 2.45.2
