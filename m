@@ -1,39 +1,30 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE3B179211
-	for <linux-ide@vger.kernel.org>; Fri, 26 Jul 2024 11:13:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E065E15B14C
+	for <linux-ide@vger.kernel.org>; Mon, 29 Jul 2024 14:35:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721992431; cv=none; b=CcpKKX7aPEmTxOTubp7A50yL4wfsMzAxLA6JSvkU0RNHcbFq39uFCn+ufYN2DBjtC0c/ObSgGBYOD0sMgIGQLFXGYhivG7ylCTmsdUZ1+0wHUQn/zTFc0FLnrexsH2Hbaq1GCcXDRtuXYOKEVYJ/X6LD7pIGOf4h3g4CBqJ5x34=
+	t=1722263724; cv=none; b=fsaiTCWfH/4KntXdNLuhAERK32nZsDaCbTSuAFJoG510ESzda4+Y5uQr4GFgI1gPXPx2k/W0DTM7kVD7JivH/+NyeAeKuuNPNgu/lHdhPWVp0/3S8rZgSdEqV0Q8e5RRZZ2dLKod+eim7ysYiBuXWaKxPheT+g+TaJ9xHE3B7ME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721992431; c=relaxed/simple;
-	bh=M6eACe/V++Irublbdd5Aq+/z8kVA1dmvWQSBxCIo/Ew=;
+	s=arc-20240116; t=1722263724; c=relaxed/simple;
+	bh=1m/iHnY596PqItA68AiGUlkHlFhLXFBV/A2Ovmejxi8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WNXIiaC/q9V/msPxlbsX3m6edBJxQmEIG7Ji9U5IfByx/cs8vvhW4qRLvC9QgOQmAajIdDF2xV2VZ+mf7kKM2YeTbdqZMAzORJUYZBzRwq9afZTFugGwi9yIPNdmZlO8Ouu690lxvC7Fnp/DqNgeMEO4QWsdoSMw9bHT79nqwsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KLa0BEXf; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KLa0BEXf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2F56C32782;
-	Fri, 26 Jul 2024 11:13:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721992431;
-	bh=M6eACe/V++Irublbdd5Aq+/z8kVA1dmvWQSBxCIo/Ew=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KLa0BEXfRXUMaTzRT5YK6bsg8RhhZ7xsTSIDOIOJ7GVvKoyVgiG17R5J68gezra1e
-	 GXkqbtFx59dqGibMWgW2cA4P7XXc3QmXc6luLV63IN/SDl9K9SLHhh3ixUV08uCeKJ
-	 LH/eq5bl2QOJsyPtU3AwKuSdgPEewAj+kW3glFnD1qg08eI4zvHLU+SgsijV14+N8G
-	 h+ltRdTkRjxuuisoUK6z/9bqetTEMCclHE6Cg+SqKenPz7RIfsR7q29u9VbvgHo7o0
-	 soMMaXqF7BJhbZ4OZqDkciRH25tY3vNoyqEhZQO17JIFB46XJ9NfQnn8UYdpi9AZCa
-	 50piTlbiSeysg==
-Date: Fri, 26 Jul 2024 13:13:47 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Subject: Re: [PATCH v6 11/11] ata: pata_hpt37x: Rename hpt_dma_blacklisted()
-Message-ID: <ZqOE6_lioZywrUyj@ryzen.lan>
-References: <20240726031954.566882-1-dlemoal@kernel.org>
- <20240726031954.566882-12-dlemoal@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=UFfpABbeVYu5Z0Oe7Zppr+BnRurv6phIT5qRJXnN7/B0wbln4IhepJjP9UfA6wMOx8jerSPmoI1juM/cs2AKvy00Offi68HT/jGi4hz/kGd4WZsCpEPKWqK7MalYLfnCGRvZlI5sxQK+4+wllhOQnlhmuQvnkFCNkSTlgom1DxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 411AA68D05; Mon, 29 Jul 2024 16:35:19 +0200 (CEST)
+Date: Mon, 29 Jul 2024 16:35:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Lamparter <chunkeey@gmail.com>
+Cc: axboe@kernel.dk, Niklas Cassel <cassel@kernel.org>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH 04/15] block: add an API to atomically update queue
+ limits
+Message-ID: <20240729143519.GA28235@lst.de>
+References: <20240213073425.1621680-5-hch@lst.de> <2011786.tdWV9SEqCh@shift>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -42,55 +33,32 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240726031954.566882-12-dlemoal@kernel.org>
+In-Reply-To: <2011786.tdWV9SEqCh@shift>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Jul 26, 2024 at 12:19:54PM +0900, Damien Le Moal wrote:
-> Rename the function hpt_dma_blacklisted() to the more neutral
-> hpt_dma_broken().
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/ata/pata_hpt37x.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-> index c0329cf01135..4af22b819416 100644
-> --- a/drivers/ata/pata_hpt37x.c
-> +++ b/drivers/ata/pata_hpt37x.c
-> @@ -218,8 +218,8 @@ static u32 hpt37x_find_mode(struct ata_port *ap, int speed)
->  	return 0xffffffffU;	/* silence compiler warning */
->  }
->  
-> -static int hpt_dma_blacklisted(const struct ata_device *dev, char *modestr,
-> -			       const char * const list[])
-> +static int hpt_dma_broken(const struct ata_device *dev, char *modestr,
-> +			  const char * const list[])
->  {
->  	unsigned char model_num[ATA_ID_PROD_LEN + 1];
->  	int i;
-> @@ -281,9 +281,9 @@ static const char * const bad_ata100_5[] = {
->  static unsigned int hpt370_filter(struct ata_device *adev, unsigned int mask)
->  {
->  	if (adev->class == ATA_DEV_ATA) {
-> -		if (hpt_dma_blacklisted(adev, "UDMA", bad_ata33))
-> +		if (hpt_dma_broken(adev, "UDMA", bad_ata33))
->  			mask &= ~ATA_MASK_UDMA;
-> -		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
-> +		if (hpt_dma_broken(adev, "UDMA100", bad_ata100_5))
->  			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
->  	}
->  	return mask;
-> @@ -300,7 +300,7 @@ static unsigned int hpt370_filter(struct ata_device *adev, unsigned int mask)
->  static unsigned int hpt370a_filter(struct ata_device *adev, unsigned int mask)
->  {
->  	if (adev->class == ATA_DEV_ATA) {
-> -		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
-> +		if (hpt_dma_broken(adev, "UDMA100", bad_ata100_5))
->  			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
->  	}
->  	return mask;
-> -- 
-> 2.45.2
-> 
+[switching Cc lists to be more relevant]
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Hi Christian,
+
+this is another case where the block layer previously warned about
+somethign that it enforces now.  Switch the dma_boundary in
+sata_dwc_sht to 16k (patch below) will "fix" this, but it directly
+contradicts the comment next to that field.
+
+---
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 52f5168e4db542..4c182694ba51d1 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1089,8 +1089,10 @@ static const struct scsi_host_template sata_dwc_sht = {
+ 	 * boundary. If the block spans such a FIS boundary, there is a chance
+ 	 * that a DMA burst will cross that boundary -- this results in an
+ 	 * error in the host controller.
++	 *
++	 * XXX
+ 	 */
+-	.dma_boundary		= 0x1fff /* ATA_DMA_BOUNDARY */,
++	.dma_boundary		= SZ_16K - 1,
+ };
+ 
+ static struct ata_port_operations sata_dwc_ops = {
