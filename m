@@ -1,125 +1,150 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cantor.telenet-ops.be (cantor.telenet-ops.be [195.130.132.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3053183084
-	for <linux-ide@vger.kernel.org>; Mon, 29 Jul 2024 18:47:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E0E208DA
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jul 2024 10:15:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.132.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722278841; cv=none; b=P2hOdOiHIPE1IJYqFFkySzvn6xCCL4P6ES0xaOOP/JtHqB9hQkxXBYhb5JYxuTVboFOoJyrJ/SxZUJXhe+PDauDqgmOZtMMg/Q/D+j+53Ue3t9n8UBoJmIuSk+O63K60KB7SedHsu6gOfSvjwfqmgSs7FCeMdVxjZBpsAdLu/5c=
+	t=1722334528; cv=none; b=ZegZBNeShUf22hxgxXGuD4LDPnzlkPBur6j5xa8v/VhFzV/6pANx3eVu83lItB0b177TjBBhVgm4UO07usbLOldZMC0ViG6GlIsJUgBriWxpqO5VtbGKk1s/8C+lhSdyWOiFcm8zvlhP0BF6EAIgK/8xlXpE5f4DdO4NcVLq+kA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722278841; c=relaxed/simple;
-	bh=3kfybPHSqcm/nfsLdwG9NqxZBh0N3LbSvgvKW3FepII=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XvGLzEhKX2xaJNoL5sfD8CjsukUvpU7g17k5jNVxxN8sopGsX4DVjMtclfSg9p7jyXvMlph1t8McwH9fQBPYGOB3VYp+Mu1/7CNk37PRWQtV786WwCYrfAgrwwsW791Akc1D1JSYPgz0S67TRyBZunxAFSEACccqJqzC2YNJiFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=I2S1y5f9; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="I2S1y5f9"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-70d1c8d7d95so2192652b3a.2
-        for <linux-ide@vger.kernel.org>; Mon, 29 Jul 2024 11:47:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1722278839; x=1722883639; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RnnfBPyGM8nc3PRKVbDGUt6onMAdNtDeFLqCS/V5ty4=;
-        b=I2S1y5f9FcGbeBqaUSP2Lx2ybFuiQdof5oE7VrrA9gi0uspwuwcjH4g+P7Eqdl8Qsx
-         LlJZlFMpt1sofskc+O44WwVUOguQxIrqpq9bO8yc1ZJMX3RBxSk2t8ohGjGwQ4wxTigZ
-         JWBQ2XhMq6bqaiZif9cOPH5Shbv8cDTJ++lIqmdU99XwtIzCJlJYPm9rbro+LYfVRO/Y
-         jcSDS4qRQ6bpMRYaT3hVc2Sy9zVxBeaV/JVHhgPdAJWaPULbbnutuq3DsaxWcuLZbjij
-         +iL1rZxd37yzy5jcx3gTGB+7NGsgh9QPrOMen9M52JdtKwCq0J3NhfaoaxNivpjT2Nun
-         Ykug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722278839; x=1722883639;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RnnfBPyGM8nc3PRKVbDGUt6onMAdNtDeFLqCS/V5ty4=;
-        b=YoiHzqtYnpNzk65Ae7vRJsgoWVJuIzVYh3Wr1iD2TbtdO1xDZ7xnAj3DS/BKx6EBWP
-         iRaI6T9vLoQAwEjOqB8ISV9W69Hm+oKLkXtFS1kMkqBF4GVoy1u2QsRjKo5Ohx1OXmeO
-         df2JgU5ypzwbmFHKdXZJ3LywKl67WZMCUDCKfL1DFdkb32FwPYZKx/nONbd5rcPbHdNw
-         n9iTpb0JmkZU61l5Fs8pxQFMAFQ9BKEixUF2sdKT2sbvsDq47vhOtA+iaIKmi1jUo5Sv
-         1DXXy1oZCBCZMzeY877L/EJg/VGS4W38EXIbdGFrwSusXmMZhX2jXCEte//9k9ThPKEG
-         /LFA==
-X-Gm-Message-State: AOJu0YxNuQbhOdsUdZl4zuNhZMfYWbCa6OFeGofktlMCVELsG/UMv5oG
-	TSvHy0BY1acXGa8ysSlrwGna4542/wsROT+zMOfA7sgIuoGvKT7ymYUA3cSGsA==
-X-Google-Smtp-Source: AGHT+IHAlxjzQqRabn+43bPsB4ibmYVdpSTAAqu3BRzOHkn4xFvI2OgqGToXvSlYFStM6MK6C1C+bg==
-X-Received: by 2002:a05:6a00:21d5:b0:70d:2fb5:f996 with SMTP id d2e1a72fcca58-70ecea294d2mr6467215b3a.11.1722278838582;
-        Mon, 29 Jul 2024 11:47:18 -0700 (PDT)
-Received: from google.com (55.212.185.35.bc.googleusercontent.com. [35.185.212.55])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70ead71592bsm7100442b3a.86.2024.07.29.11.47.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jul 2024 11:47:18 -0700 (PDT)
-Date: Mon, 29 Jul 2024 18:47:14 +0000
-From: Igor Pylypiv <ipylypiv@google.com>
+	s=arc-20240116; t=1722334528; c=relaxed/simple;
+	bh=5rZldLzBZKTaYenwnBubSp1KM2qU5SHl7r593Su2qMU=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=jvnty/jmUwHhqYqyqASJFwJ7d+8LkNFZ1wiu0YuUeXEe5buMegNWQTRN0m+6X1ji4Md+MQ544hfY2atGI85cb3ShTj5VJMRwDtF4cPXd1GQVxFrM5qaBk1z9DL9U6jgPklIvcfObZX6vRbK+lr2E21C8rJJbgY2bWD05/zb9YAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.132.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+Received: from albert.telenet-ops.be (albert.telenet-ops.be [IPv6:2a02:1800:110:4::f00:1a])
+	by cantor.telenet-ops.be (Postfix) with ESMTPS id 4WY9tx2BXXz4wyWQ
+	for <linux-ide@vger.kernel.org>; Tue, 30 Jul 2024 12:09:29 +0200 (CEST)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed80:520d:93ad:ff6d:335e])
+	by albert.telenet-ops.be with bizsmtp
+	id tm9N2C00330Ayot06m9Nd4; Tue, 30 Jul 2024 12:09:22 +0200
+Received: from geert (helo=localhost)
+	by ramsan.of.borg with local-esmtp (Exim 4.95)
+	(envelope-from <geert@linux-m68k.org>)
+	id 1sYjnG-0046rp-1R;
+	Tue, 30 Jul 2024 12:09:22 +0200
+Date: Tue, 30 Jul 2024 12:09:22 +0200 (CEST)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH v6 11/11] ata: pata_hpt37x: Rename hpt_dma_blacklisted()
-Message-ID: <ZqfjsqZKrQfNNNCd@google.com>
-References: <20240726031954.566882-1-dlemoal@kernel.org>
- <20240726031954.566882-12-dlemoal@kernel.org>
+cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+    Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH v6 04/11] ata: libata: Print quirks applied to devices
+In-Reply-To: <20240726031954.566882-5-dlemoal@kernel.org>
+Message-ID: <df29e7c5-778e-ec11-3276-a6c87da2ec2f@linux-m68k.org>
+References: <20240726031954.566882-1-dlemoal@kernel.org> <20240726031954.566882-5-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240726031954.566882-12-dlemoal@kernel.org>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-On Fri, Jul 26, 2024 at 12:19:54PM +0900, Damien Le Moal wrote:
-> Rename the function hpt_dma_blacklisted() to the more neutral
-> hpt_dma_broken().
-> 
+ 	Hi Damien,
+
+On Fri, 26 Jul 2024, Damien Le Moal wrote:
+> Introduce the function ata_dev_print_quirks() to print the quirk flags
+> that will be applied to a scanned device. This new function is called
+> from ata_dev_quirks() when a match on a device model or device model
+> and revision is found for a device in the __ata_dev_quirks array.
+>
+> To implement this function, the ATA_QUIRK_ flags are redefined using
+> the new enum ata_quirk which defines the bit shift for each quirk
+> flag. The array of strings ata_quirk_names is used to define the name
+> of each flag, which are printed by ata_dev_print_quirks().
+>
+> Example output for a device listed in the __ata_dev_quirks array and
+> which has the ATA_QUIRK_DISABLE flag applied:
+>
+> [10193.461270] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> [10193.469190] ata1.00: Model 'ASMT109x- Config', rev '2143 5', applying quirks: disable
+> [10193.469195] ata1.00: unsupported device, disabling
+> [10193.481564] ata1.00: disable device
+>
+> enum ata_quirk also defines the __ATA_QUIRK_MAX value as one plus the
+> last quirk flag defined. This value is used in ata_dev_quirks() to add a
+> build time check that all quirk flags fit within the unsigned int
+> (32-bits) quirks field of struct ata_device.
+>
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+Thanks for your patch, which is now commit 58157d607aecb4e0 ("ata:
+libata: Print quirks applied to devices") in libata/for-next.
 
-Thanks,
-Igor
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4273,15 +4336,18 @@ static unsigned int ata_dev_quirks(const struct ata_device *dev)
+> 	unsigned char model_rev[ATA_ID_FW_REV_LEN + 1];
+> 	const struct ata_dev_quirks_entry *ad = __ata_dev_quirks;
+>
+> +	/* dev->quirks is an unsigned int. */
+> +	BUILD_BUG_ON(__ATA_QUIRK_MAX > 32);
+> +
+> 	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
+> 	ata_id_c_string(dev->id, model_rev, ATA_ID_FW_REV, sizeof(model_rev));
+>
+> 	while (ad->model_num) {
+> -		if (glob_match(ad->model_num, model_num)) {
+> -			if (ad->model_rev == NULL)
+> -				return ad->quirks;
+> -			if (glob_match(ad->model_rev, model_rev))
+> -				return ad->quirks;
+> +		if (glob_match(ad->model_num, model_num) &&
+> +		    (!ad->model_rev || glob_match(ad->model_rev, model_rev))) {
+> +			ata_dev_print_quirks(dev, model_num, model_rev,
+> +					     ad->quirks);
+> +			return ad->quirks;
+> 		}
+> 		ad++;
+> 	}
 
-> ---
->  drivers/ata/pata_hpt37x.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-> index c0329cf01135..4af22b819416 100644
-> --- a/drivers/ata/pata_hpt37x.c
-> +++ b/drivers/ata/pata_hpt37x.c
-> @@ -218,8 +218,8 @@ static u32 hpt37x_find_mode(struct ata_port *ap, int speed)
->  	return 0xffffffffU;	/* silence compiler warning */
->  }
->  
-> -static int hpt_dma_blacklisted(const struct ata_device *dev, char *modestr,
-> -			       const char * const list[])
-> +static int hpt_dma_broken(const struct ata_device *dev, char *modestr,
-> +			  const char * const list[])
->  {
->  	unsigned char model_num[ATA_ID_PROD_LEN + 1];
->  	int i;
-> @@ -281,9 +281,9 @@ static const char * const bad_ata100_5[] = {
->  static unsigned int hpt370_filter(struct ata_device *adev, unsigned int mask)
->  {
->  	if (adev->class == ATA_DEV_ATA) {
-> -		if (hpt_dma_blacklisted(adev, "UDMA", bad_ata33))
-> +		if (hpt_dma_broken(adev, "UDMA", bad_ata33))
->  			mask &= ~ATA_MASK_UDMA;
-> -		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
-> +		if (hpt_dma_broken(adev, "UDMA100", bad_ata100_5))
->  			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
->  	}
->  	return mask;
-> @@ -300,7 +300,7 @@ static unsigned int hpt370_filter(struct ata_device *adev, unsigned int mask)
->  static unsigned int hpt370a_filter(struct ata_device *adev, unsigned int mask)
->  {
->  	if (adev->class == ATA_DEV_ATA) {
-> -		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
-> +		if (hpt_dma_broken(adev, "UDMA100", bad_ata100_5))
->  			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
->  	}
->  	return mask;
-> -- 
-> 2.45.2
-> 
-> 
+During boot-up on Salvator-XS (using rcar-sata), the quirk info is
+printed not once, but four times.  Is that intentional?
+
+     ata1: link resume succeeded after 1 retries
+    +rcar-du feb00000.display: [drm] fb0: rcar-dudrmfb frame buffer device
+     input: keys as /devices/platform/keys/input/input0
+     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+     ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
+     ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+     ata1.00: configured for UDMA/133
+     scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L160M0   1G10 PQ: 0 ANSI: 5
+     sd 0:0:0:0: [sda] 320173056 512-byte logical blocks: (164 GB/153 GiB)
+     sd 0:0:0:0: [sda] Write Protect is off
+     sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+     sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+     sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+      sda: sda1
+     sd 0:0:0:0: [sda] Attached SCSI disk
+
+During resume from s2idle or s2ram, the same info is printed again,
+fourfold:
+
+     ata1: link resume succeeded after 1 retries
+     ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+    +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
+     ata1.00: configured for UDMA/133
+     ata1.00: Entering active power mode
+
+Thanks!
+
+Gr{oetje,eeting}s,
+
+ 						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+ 							    -- Linus Torvalds
