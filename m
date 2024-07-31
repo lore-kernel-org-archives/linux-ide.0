@@ -1,170 +1,254 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6485A18CC03;
-	Tue, 30 Jul 2024 23:39:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 343081A4F08;
+	Wed, 31 Jul 2024 07:27:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722382783; cv=none; b=uxhjbAFILsf3xGX1Ln4Myie9S7rEPZf3y1W9O7tjo5VvISamNy8MdXEZVb88k5UGuQ4cWTQg6Rn8pgR8Mi7ZCRcVnbbRznRdRNGhGZiXEoXYvfFCZ8OEBoQzzxuNmMQvMpTPOgWuPDzTPP8qTFzxPeSYLaaGp7EMuZxK5XZWl6c=
+	t=1722410873; cv=none; b=U35p7VwpzPXO+guJ452LUed0TNBbj5ZgxwhdmpbBF0jU5t14egBinbdR37ZCtsxNNViFx791ccFHZVtL0SQj9rbBcotzH9UuRP8Nf5YrNf9ZdqdotPioT9ZHqX82DWZ5sRBDuiGJsoaoBLVFAq3KeCQ/4oll1Eoiu6deoIbEbWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722382783; c=relaxed/simple;
-	bh=LTX4ZW4++FE12B+IopXtz43Rn45KZi/DoAxG/MPN6E0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=M1qzio9AheVj7zCNrDkjn3w7hm+KgHf1ZH2mDITKdN06RNxwpZvOq6QimxmhLvQIdZs8EIKQYz4ggtOagWjfXFhcTibx12HNlQBbvBHbNFDZ7nMQoybWl4rS5epghNsR/a9QeGAk6OGwW7akDElsswjAV23GowYiOFO0hZ5v7A8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DPRqO0Yc; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DPRqO0Yc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D187C32782;
-	Tue, 30 Jul 2024 23:39:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722382782;
-	bh=LTX4ZW4++FE12B+IopXtz43Rn45KZi/DoAxG/MPN6E0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=DPRqO0YcTZSgszVfej0THFUJaqTjMjdW42AiTLDdr+vowee3JIRanEt/b/aPGgsAD
-	 vMVb9On6+SzDjYLXlMuTtgzGT60Knu47AE1bWuMN5iENgJx87l+yS7yqUCHEL7+jvA
-	 qakR8hnNufkcr7it91odzHsj2rOx9m5PffLGzt0hULrJlauVY9EN8cOMwSt/Z4hA7f
-	 dP1n4X1XEkqipDF3lkCh9rpxt670LGOCR6BfTEqwWft9uNSJsUxlKRU2SwQDVQWMJ4
-	 kI4pCKA3fp7ko1/OHel+/zUfxFn59PgSA9KY/fb910OWtll+TTBi1S8/7urpDoKE0/
-	 Rr/d9q6YpOsjw==
-Message-ID: <5ee6820d-8253-4208-8b99-dee78acb0f71@kernel.org>
-Date: Wed, 31 Jul 2024 08:39:41 +0900
+	s=arc-20240116; t=1722410873; c=relaxed/simple;
+	bh=SHKR7ZHpf7qpgBELk85zr7mKl3n//7nlezfIgnjhzMk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=kA1x4TasCi2oJuZCmWmOrQhKjiH2U81riVHra5FXp//N1nJoJW+aTrPK7+fQhMyp2ZDihHuiH8sk3ZGnsvxQMzeyw7xY8R+LbxbdyF/tNczBqpIw7qJNju4pAwUGFDmwIUw6L7VifCxxZH2ioSE4gkbJCWH8/9uwHcSLZQtXu5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-661d7e68e89so5733847b3.0;
+        Wed, 31 Jul 2024 00:27:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1722410869; x=1723015669;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Efl1bAY5jd1ro6+P+ADsXCEREKQIw+S15gw1lpjEg/g=;
+        b=AhSBRMxbgvlB+BTxG4EviTzHxWVsCad7NHxm/FgxFKh3WSY7oEI/ocRG8tdelOE0WE
+         hNu1esiezuE3Y5fMUQfLAP9+oPiqUrzVD6b4quWRDxFUgOnI5me/CkeQ+qiWbHg9gSuH
+         LR4B3AKiqZWE835ZN4Vl4L/v5OLot55w+yNLhbL7Fi5mtWjyaoyRyvD7tgz6owri6mvD
+         E3mwIUrcKKHEVYvIjQ5JrTI3b57jG1Q83mx+5EQFS7QZnMTYwC3Shz93jugLCngHD52j
+         s5IvnlJp/JO3w39Es4RTizdRnsEiiz6i5i5AmIFvev5pRLMi3mUesxJjnI7Cg56tAIey
+         zJ5Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVBFygY63g5XfAvxTaXOzmoyrd50KfhObkf73IW1u3A+zz3Qhu6RWaa89IXJaExL2DDkamrP+zTi/84tbAWoZc1mf9ZTWxpa2vryBVCZncwKe4=
+X-Gm-Message-State: AOJu0YxVzw3Va3K4hkYzMvkuyhygCJcDZhJcRebtTDnhAEF426xnCVe5
+	CM6XGPjZlr58rVCDW4XEfrmckQJmr6G4pkO+SO1UX4OZgZ2S+FCPJEb0ffgx
+X-Google-Smtp-Source: AGHT+IGwSWkq4RRj16OcZyLHKJGpmYKTFjLIS7NmFwi8DxxNzmSiSeYgg1ZZm2XBKpj8hqJcbgwJpw==
+X-Received: by 2002:a05:690c:6b86:b0:62f:206e:c056 with SMTP id 00721157ae682-6826a0e3268mr51157617b3.5.1722410869422;
+        Wed, 31 Jul 2024 00:27:49 -0700 (PDT)
+Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com. [209.85.128.178])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-6756b9bec64sm28231187b3.107.2024.07.31.00.27.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 31 Jul 2024 00:27:49 -0700 (PDT)
+Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-664b4589b1aso5311997b3.1;
+        Wed, 31 Jul 2024 00:27:49 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXiMOLMiRSBJh7UaLLkx8oAV4ZO8HYE8giar2ZO0+tfU6yeE4YqvAuIBzv+EXy4chlQiIfc1QZQxRibdSYedIxF38Z4eAvdpbchjiQrZCEYe7k=
+X-Received: by 2002:a0d:f287:0:b0:651:ee07:76c with SMTP id
+ 00721157ae682-6826ef4c499mr41180647b3.15.1722410868909; Wed, 31 Jul 2024
+ 00:27:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <20240726031954.566882-1-dlemoal@kernel.org> <20240726031954.566882-5-dlemoal@kernel.org>
+ <df29e7c5-778e-ec11-3276-a6c87da2ec2f@linux-m68k.org> <5ee6820d-8253-4208-8b99-dee78acb0f71@kernel.org>
+In-Reply-To: <5ee6820d-8253-4208-8b99-dee78acb0f71@kernel.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 31 Jul 2024 09:27:37 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdX1WrK_QRiyq+BfFW=ZFgXkxFTBsw0fJoRH0+znUOh2tg@mail.gmail.com>
+Message-ID: <CAMuHMdX1WrK_QRiyq+BfFW=ZFgXkxFTBsw0fJoRH0+znUOh2tg@mail.gmail.com>
 Subject: Re: [PATCH v6 04/11] ata: libata: Print quirks applied to devices
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-References: <20240726031954.566882-1-dlemoal@kernel.org>
- <20240726031954.566882-5-dlemoal@kernel.org>
- <df29e7c5-778e-ec11-3276-a6c87da2ec2f@linux-m68k.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <df29e7c5-778e-ec11-3276-a6c87da2ec2f@linux-m68k.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	Niklas Cassel <cassel@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 7/30/24 19:09, Geert Uytterhoeven wrote:
->  	Hi Damien,
-> 
-> On Fri, 26 Jul 2024, Damien Le Moal wrote:
->> Introduce the function ata_dev_print_quirks() to print the quirk flags
->> that will be applied to a scanned device. This new function is called
->> from ata_dev_quirks() when a match on a device model or device model
->> and revision is found for a device in the __ata_dev_quirks array.
->>
->> To implement this function, the ATA_QUIRK_ flags are redefined using
->> the new enum ata_quirk which defines the bit shift for each quirk
->> flag. The array of strings ata_quirk_names is used to define the name
->> of each flag, which are printed by ata_dev_print_quirks().
->>
->> Example output for a device listed in the __ata_dev_quirks array and
->> which has the ATA_QUIRK_DISABLE flag applied:
->>
->> [10193.461270] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->> [10193.469190] ata1.00: Model 'ASMT109x- Config', rev '2143 5', applying quirks: disable
->> [10193.469195] ata1.00: unsupported device, disabling
->> [10193.481564] ata1.00: disable device
->>
->> enum ata_quirk also defines the __ATA_QUIRK_MAX value as one plus the
->> last quirk flag defined. This value is used in ata_dev_quirks() to add a
->> build time check that all quirk flags fit within the unsigned int
->> (32-bits) quirks field of struct ata_device.
->>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
-> 
-> Thanks for your patch, which is now commit 58157d607aecb4e0 ("ata:
-> libata: Print quirks applied to devices") in libata/for-next.
-> 
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -4273,15 +4336,18 @@ static unsigned int ata_dev_quirks(const struct ata_device *dev)
->> 	unsigned char model_rev[ATA_ID_FW_REV_LEN + 1];
->> 	const struct ata_dev_quirks_entry *ad = __ata_dev_quirks;
->>
->> +	/* dev->quirks is an unsigned int. */
->> +	BUILD_BUG_ON(__ATA_QUIRK_MAX > 32);
->> +
->> 	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
->> 	ata_id_c_string(dev->id, model_rev, ATA_ID_FW_REV, sizeof(model_rev));
->>
->> 	while (ad->model_num) {
->> -		if (glob_match(ad->model_num, model_num)) {
->> -			if (ad->model_rev == NULL)
->> -				return ad->quirks;
->> -			if (glob_match(ad->model_rev, model_rev))
->> -				return ad->quirks;
->> +		if (glob_match(ad->model_num, model_num) &&
->> +		    (!ad->model_rev || glob_match(ad->model_rev, model_rev))) {
->> +			ata_dev_print_quirks(dev, model_num, model_rev,
->> +					     ad->quirks);
->> +			return ad->quirks;
->> 		}
->> 		ad++;
->> 	}
-> 
-> During boot-up on Salvator-XS (using rcar-sata), the quirk info is
-> printed not once, but four times.  Is that intentional?
+Hi Damien,
 
-Not at all. I tested on x86 with AHCI and see this message only once. So it
-could be that different drivers may need some tweaks to avoid this spamming.
-Though it is strange that the initialization or resume path takes this path 4
-times, meaning that the quirks are applied 4 times. Need to look into that.
-What is the driver for rcar-sata ? Compatible string for it would be fine.
+On Wed, Jul 31, 2024 at 1:39=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+> On 7/30/24 19:09, Geert Uytterhoeven wrote:
+> > On Fri, 26 Jul 2024, Damien Le Moal wrote:
+> >> Introduce the function ata_dev_print_quirks() to print the quirk flags
+> >> that will be applied to a scanned device. This new function is called
+> >> from ata_dev_quirks() when a match on a device model or device model
+> >> and revision is found for a device in the __ata_dev_quirks array.
+> >>
+> >> To implement this function, the ATA_QUIRK_ flags are redefined using
+> >> the new enum ata_quirk which defines the bit shift for each quirk
+> >> flag. The array of strings ata_quirk_names is used to define the name
+> >> of each flag, which are printed by ata_dev_print_quirks().
+> >>
+> >> Example output for a device listed in the __ata_dev_quirks array and
+> >> which has the ATA_QUIRK_DISABLE flag applied:
+> >>
+> >> [10193.461270] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> >> [10193.469190] ata1.00: Model 'ASMT109x- Config', rev '2143 5', applyi=
+ng quirks: disable
+> >> [10193.469195] ata1.00: unsupported device, disabling
+> >> [10193.481564] ata1.00: disable device
+> >>
+> >> enum ata_quirk also defines the __ATA_QUIRK_MAX value as one plus the
+> >> last quirk flag defined. This value is used in ata_dev_quirks() to add=
+ a
+> >> build time check that all quirk flags fit within the unsigned int
+> >> (32-bits) quirks field of struct ata_device.
+> >>
+> >> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> >> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+> >
+> > Thanks for your patch, which is now commit 58157d607aecb4e0 ("ata:
+> > libata: Print quirks applied to devices") in libata/for-next.
+> >
+> > During boot-up on Salvator-XS (using rcar-sata), the quirk info is
+> > printed not once, but four times.  Is that intentional?
+>
+> Not at all. I tested on x86 with AHCI and see this message only once. So =
+it
+> could be that different drivers may need some tweaks to avoid this spammi=
+ng.
+> Though it is strange that the initialization or resume path takes this pa=
+th 4
+> times, meaning that the quirks are applied 4 times. Need to look into tha=
+t.
+> What is the driver for rcar-sata ? Compatible string for it would be fine=
+.
 
-> 
->      ata1: link resume succeeded after 1 retries
->     +rcar-du feb00000.display: [drm] fb0: rcar-dudrmfb frame buffer device
->      input: keys as /devices/platform/keys/input/input0
->      ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->      ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
->      ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->      ata1.00: configured for UDMA/133
->      scsi 0:0:0:0: Direct-Access     ATA      Maxtor 6L160M0   1G10 PQ: 0 ANSI: 5
->      sd 0:0:0:0: [sda] 320173056 512-byte logical blocks: (164 GB/153 GiB)
->      sd 0:0:0:0: [sda] Write Protect is off
->      sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
->      sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->      sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
->       sda: sda1
->      sd 0:0:0:0: [sda] Attached SCSI disk
-> 
-> During resume from s2idle or s2ram, the same info is printed again,
-> fourfold:
-> 
->      ata1: link resume succeeded after 1 retries
->      ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->     +ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
->      ata1.00: configured for UDMA/133
->      ata1.00: Entering active power mode
-> 
-> Thanks!
-> 
-> Gr{oetje,eeting}s,
-> 
->  						Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->  							    -- Linus Torvalds
+drivers/ata/sata_rcar.c, using renesas,rcar-gen3-sata.
 
--- 
-Damien Le Moal
-Western Digital Research
+I added a WARN() to ata_dev_quirks() to show backtraces:
 
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0x74/0x12d8
+ ata_eh_recover+0x8d8/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0xf34/0x12d8
+ ata_eh_recover+0x8d8/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0x74/0x12d8
+ ata_dev_revalidate+0xb4/0x1b8
+ ata_do_set_mode+0x534/0x6bc
+ ata_set_mode+0xc8/0x128
+ ata_eh_recover+0x944/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0xf34/0x12d8
+ ata_dev_revalidate+0xb4/0x1b8
+ ata_do_set_mode+0x534/0x6bc
+ ata_set_mode+0xc8/0x128
+ ata_eh_recover+0x944/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+The backtraces seen during s2idle are slightly different:
+
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0x74/0x12d8
+ ata_dev_revalidate+0xb4/0x1b8
+ ata_eh_recover+0x7b4/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0xf34/0x12d8
+ ata_dev_revalidate+0xb4/0x1b8
+ ata_eh_recover+0x7b4/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0x74/0x12d8
+ ata_dev_revalidate+0xb4/0x1b8
+ ata_do_set_mode+0x534/0x6bc
+ ata_set_mode+0xc8/0x128
+ ata_eh_recover+0x944/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+Call trace:
+ ata_dev_quirks+0x98/0x19c
+ ata_dev_configure+0xf34/0x12d8
+ ata_dev_revalidate+0xb4/0x1b8
+ ata_do_set_mode+0x534/0x6bc
+ ata_set_mode+0xc8/0x128
+ ata_eh_recover+0x944/0xd08
+ ata_do_eh+0x50/0xa8
+ ata_sff_error_handler+0xd0/0xec
+ ata_bmdma_error_handler+0x7c/0x12c
+ ata_scsi_port_error_handler+0xc8/0x5f8
+ ata_scsi_error+0x90/0xcc
+ scsi_error_handler+0x148/0x308
+ kthread+0xe4/0xf4
+ ret_from_fork+0x10/0x20
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
