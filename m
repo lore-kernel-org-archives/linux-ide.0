@@ -1,167 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 071AE1CF93;
-	Wed, 31 Jul 2024 09:08:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B5E01AE84F
+	for <linux-ide@vger.kernel.org>; Wed, 31 Jul 2024 12:35:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722416894; cv=none; b=A13CZ8J6kGIA7bxanR0sKsjVkldB34ZlAW+TX7kZA+KotWSufbnqEWDl8WDnQu3wHHQwaR3DSUL7vOXbvWwWMhu6blEoAu0rddo2sBuL7GRJ2pyuDWPJ3Tqa6P/K5Ru61l3Zr5RjbbajXuNeyxnL3b09Dhedq1x21yMK9Gyhssg=
+	t=1722429329; cv=none; b=SLseO1AKFSpqu3lefukhuB4BMsFOxsEOXdL4i57/xMEzG1h1g6D1VXnLepq3SjMKFlxhr1dPJ31VyWa202/eWiU6VUfJPnz73XY8FKz+24NmMi7+Czi4fjFnhnNXVWQclv/hb5LMrtQJLtsETHxLh/n0tOYM5A/h/zF36FwNTn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722416894; c=relaxed/simple;
-	bh=AGsjYo3462TR1zkoYQnDrPHs7h6EYDj56rV91Fv5MJU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qrxhkfA6q7emOvhqOqek4qvVQ1txg64prQ35OrU1hqQgICCkYK9GDPnq+8wTyf82hBmT+d0FBSZayQiQwrLMRX/Mwirq+U6Sqgd6bVPAzGL6kiluzyKLs1Nn0Ufjo2ckjvaJQL5aux2xzK0/DuuDOyaJBvF4BavmQ5AO/fj2TsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kjiER/Cj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722429329; c=relaxed/simple;
+	bh=4GsXkzyF1zXnnVccFMmH9MHA6OoXOba9lWFScuAVpNA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cI7kEmSiTfsUFUzzM1o7W9C0JQlQ0WPdZaO0YrLQUtVimCxW6ChXxsQ169+E20TWvTieUWZc19GMWcQCAjDsxYL7uTpy3hwozC9PzXHFDAAzf4+VDTUHuIcf0jTO4z5XIKViIMsfvz+CLLhzX+qV2LStZir7SXm6nfHWBVhV1Ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bljPUN0+; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kjiER/Cj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48A6EC116B1;
-	Wed, 31 Jul 2024 09:08:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722416893;
-	bh=AGsjYo3462TR1zkoYQnDrPHs7h6EYDj56rV91Fv5MJU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kjiER/Cj9uwoNgqonllkD6UHnkgYIcOWbTmP5T3cwCtSOMSC6UUGhu57NmYjcx2Yu
-	 F0L46KLldnOxJYJjX7EcxXmkk8P0Pok1NFvTAYROz9fUUeyBQ73HUVN4kgSzmYxno8
-	 ItazmmeSAU83TXMVIL8tPECkhtVYLGBakV/MxfezdqRZElabCGjJkgPnHKERhLIVC6
-	 3Yg4ZytpInec2brefi6yiGOEau6VdVYOQ/jvzld3FT6D1D82AkkoVC+qDAIBzVoDEe
-	 hpgCOO2ljWakSFeMbYVZsZlfHQTguhe6V9sgNi2gXievBJcyuFPelQUaNKRYFX23Qe
-	 bFI/VA1jAPbrQ==
-Message-ID: <5700ac9c-0f7e-40c2-b969-ad67b0ee96ba@kernel.org>
-Date: Wed, 31 Jul 2024 18:08:12 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bljPUN0+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1722429326;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=t0H3lAj8yc7c4WzJFe947fa0IqEnSWxptGsCiAxUCV8=;
+	b=bljPUN0+7A3a8sUv/LsiUhumGN+voMGsoL7aHlHhCpMXG1zYE5kRdkb1gylVqebXxxrFhj
+	g72ckXILXxtmEHqTZOrO3AVng5mE9yeHpNIP33ztwQxN+ictKcKo4UGDD7bZd5NfwQWdAq
+	OG7Xwzg1JMF2DgX2z+z0CQKI9Fd1oG0=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-460--_AMwmCxOta0SOw95mcqQg-1; Wed, 31 Jul 2024 08:35:25 -0400
+X-MC-Unique: -_AMwmCxOta0SOw95mcqQg-1
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4280b24ec7bso4289345e9.3
+        for <linux-ide@vger.kernel.org>; Wed, 31 Jul 2024 05:35:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1722429324; x=1723034124;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=t0H3lAj8yc7c4WzJFe947fa0IqEnSWxptGsCiAxUCV8=;
+        b=db9gOO3Iwgot+NfIeXoj01UXtpL2chMyEb1tdZe3XaHZ2fg1U5rIQvcnbzArZBzF5m
+         vfbilUWPpmx8/cRQBA4qLsG1rJqW43CYGOXpCu8VKQ53AB3ORlj6cluopDdzDMYngGNi
+         B/kimt5/gGfJKPddSOM8TuKDXiC8sd2fBFgnT6EmcqoUYw/GpiWjdaiFaMJ+PcDM8SES
+         cd1qEySLqNQKDy7Z/dtXX9LhUmh2Zy1uV3k6hnwx3GhqXC8zVsdbKFBF7Y4ZHGaZmndz
+         7f8LnA7/A/o9eyy6jMqS5uWiBE67qpDlqOG/64ntAGbPkdl8WXHJ1fQDWmv0lENp1/ks
+         D8MA==
+X-Gm-Message-State: AOJu0YxNePRs8nPcgwmf1PuzaNgbgLKqM9JOpkokLXuUeLEKQZqu7Br5
+	AyKwO071eq5Qqf1cVEQUchJUsOKMmktVhGY3OpJD/hsfXfa51RdBes7HRVjaeS2/7D2NdfIc4ix
+	6NcIgLaUZbAMpdCmtKpiBGNn9H64B69ptQ78euhDmc2j3TTjYU2JpGaawU0RAp37SRw==
+X-Received: by 2002:a05:600c:1c12:b0:426:5dd5:f245 with SMTP id 5b1f17b1804b1-428056ff97fmr91893015e9.2.1722429323706;
+        Wed, 31 Jul 2024 05:35:23 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHfOvupbs8UN9EJ8k6ZFAunCkUlCgJVCS0HdMLmdtgm1szKAcCpadESixN42bMPQ5/HJrVDGQ==
+X-Received: by 2002:a05:600c:1c12:b0:426:5dd5:f245 with SMTP id 5b1f17b1804b1-428056ff97fmr91892875e9.2.1722429323157;
+        Wed, 31 Jul 2024 05:35:23 -0700 (PDT)
+Received: from eisenberg.muc.redhat.com (nat-pool-muc-t.redhat.com. [149.14.88.26])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-36b367c0829sm16925976f8f.17.2024.07.31.05.35.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 31 Jul 2024 05:35:22 -0700 (PDT)
+From: Philipp Stanner <pstanner@redhat.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Philipp Stanner <pstanner@redhat.com>
+Subject: [PATCH 1/2] PCI: Make pcim_request_all_regions() a public function
+Date: Wed, 31 Jul 2024 14:34:54 +0200
+Message-ID: <20240731123454.22780-2-pstanner@redhat.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 04/11] ata: libata: Print quirks applied to devices
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-References: <20240726031954.566882-1-dlemoal@kernel.org>
- <20240726031954.566882-5-dlemoal@kernel.org>
- <df29e7c5-778e-ec11-3276-a6c87da2ec2f@linux-m68k.org>
- <5ee6820d-8253-4208-8b99-dee78acb0f71@kernel.org>
- <CAMuHMdX1WrK_QRiyq+BfFW=ZFgXkxFTBsw0fJoRH0+znUOh2tg@mail.gmail.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <CAMuHMdX1WrK_QRiyq+BfFW=ZFgXkxFTBsw0fJoRH0+znUOh2tg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 7/31/24 16:27, Geert Uytterhoeven wrote:
-> Hi Damien,
-> 
-> On Wed, Jul 31, 2024 at 1:39 AM Damien Le Moal <dlemoal@kernel.org> wrote:
->> On 7/30/24 19:09, Geert Uytterhoeven wrote:
->>> On Fri, 26 Jul 2024, Damien Le Moal wrote:
->>>> Introduce the function ata_dev_print_quirks() to print the quirk flags
->>>> that will be applied to a scanned device. This new function is called
->>>> from ata_dev_quirks() when a match on a device model or device model
->>>> and revision is found for a device in the __ata_dev_quirks array.
->>>>
->>>> To implement this function, the ATA_QUIRK_ flags are redefined using
->>>> the new enum ata_quirk which defines the bit shift for each quirk
->>>> flag. The array of strings ata_quirk_names is used to define the name
->>>> of each flag, which are printed by ata_dev_print_quirks().
->>>>
->>>> Example output for a device listed in the __ata_dev_quirks array and
->>>> which has the ATA_QUIRK_DISABLE flag applied:
->>>>
->>>> [10193.461270] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>>> [10193.469190] ata1.00: Model 'ASMT109x- Config', rev '2143 5', applying quirks: disable
->>>> [10193.469195] ata1.00: unsupported device, disabling
->>>> [10193.481564] ata1.00: disable device
->>>>
->>>> enum ata_quirk also defines the __ATA_QUIRK_MAX value as one plus the
->>>> last quirk flag defined. This value is used in ata_dev_quirks() to add a
->>>> build time check that all quirk flags fit within the unsigned int
->>>> (32-bits) quirks field of struct ata_device.
->>>>
->>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->>>> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
->>>
->>> Thanks for your patch, which is now commit 58157d607aecb4e0 ("ata:
->>> libata: Print quirks applied to devices") in libata/for-next.
->>>
->>> During boot-up on Salvator-XS (using rcar-sata), the quirk info is
->>> printed not once, but four times.  Is that intentional?
->>
->> Not at all. I tested on x86 with AHCI and see this message only once. So it
->> could be that different drivers may need some tweaks to avoid this spamming.
->> Though it is strange that the initialization or resume path takes this path 4
->> times, meaning that the quirks are applied 4 times. Need to look into that.
->> What is the driver for rcar-sata ? Compatible string for it would be fine.
-> 
-> drivers/ata/sata_rcar.c, using renesas,rcar-gen3-sata.
-> 
-> I added a WARN() to ata_dev_quirks() to show backtraces:
-> 
-> Call trace:
->  ata_dev_quirks+0x98/0x19c
->  ata_dev_configure+0x74/0x12d8
->  ata_eh_recover+0x8d8/0xd08
->  ata_do_eh+0x50/0xa8
->  ata_sff_error_handler+0xd0/0xec
->  ata_bmdma_error_handler+0x7c/0x12c
->  ata_scsi_port_error_handler+0xc8/0x5f8
->  ata_scsi_error+0x90/0xcc
->  scsi_error_handler+0x148/0x308
->  kthread+0xe4/0xf4
->  ret_from_fork+0x10/0x20
+In order to remove the deprecated function
+pcim_iomap_regions_request_all(), a few drivers need an interface to
+request all BARs a PCI-Device offers.
 
-OK. So it is ata_dev_configure() being called many times from EH. Weird.
-But I have not a lot of experience with the bmdma drivers.
-Need to look into that.
+Make pcim_request_all_regions() a public interface.
 
-In the meantime, can you try this ?
+Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+---
+ drivers/pci/devres.c | 3 ++-
+ include/linux/pci.h  | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 10d61c7523f0..24344de57428 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -76,7 +76,7 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
-                                        u16 heads, u16 sectors);
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
- static void ata_dev_xfermask(struct ata_device *dev);
--static unsigned int ata_dev_quirks(const struct ata_device *dev);
-+static unsigned int ata_dev_quirks(struct ata_device *dev);
- 
- static DEFINE_IDA(ata_ida);
- 
-@@ -4079,7 +4079,7 @@ static const char * const ata_quirk_names[] = {
-        [__ATA_QUIRK_NO_FUA]            = "nofua",
- };
- 
--static void ata_dev_print_quirks(const struct ata_device *dev,
-+static void ata_dev_print_quirks(struct ata_device *dev,
-                                 const char *model, const char *rev,
-                                 unsigned int quirks)
+diff --git a/drivers/pci/devres.c b/drivers/pci/devres.c
+index 3780a9f9ec00..0ec2b23e6cac 100644
+--- a/drivers/pci/devres.c
++++ b/drivers/pci/devres.c
+@@ -932,7 +932,7 @@ static void pcim_release_all_regions(struct pci_dev *pdev)
+  * desired, release individual regions with pcim_release_region() or all of
+  * them at once with pcim_release_all_regions().
+  */
+-static int pcim_request_all_regions(struct pci_dev *pdev, const char *name)
++int pcim_request_all_regions(struct pci_dev *pdev, const char *name)
  {
-@@ -4087,7 +4087,7 @@ static void ata_dev_print_quirks(const struct ata_device *dev,
-        size_t sz;
-        char *str;
+ 	int ret;
+ 	int bar;
+@@ -950,6 +950,7 @@ static int pcim_request_all_regions(struct pci_dev *pdev, const char *name)
  
--       if (!quirks)
-+       if (!ata_dev_print_info(dev) || !quirks)
-                return;
+ 	return ret;
+ }
++EXPORT_SYMBOL(pcim_request_all_regions);
  
-        sz = 64 + ARRAY_SIZE(ata_quirk_names) * 16;
-@@ -4388,7 +4388,7 @@ static const struct ata_dev_quirks_entry __ata_dev_quirks[] = {
-        { }
- };
+ /**
+  * pcim_iomap_regions_request_all - Request all BARs and iomap specified ones
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4cf89a4b4cbc..5b5856ba63e1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2289,6 +2289,7 @@ static inline void pci_fixup_device(enum pci_fixup_pass pass,
+ 				    struct pci_dev *dev) { }
+ #endif
  
--static unsigned int ata_dev_quirks(const struct ata_device *dev)
-+static unsigned int ata_dev_quirks(struct ata_device *dev)
- {
-        unsigned char model_num[ATA_ID_PROD_LEN + 1];
-        unsigned char model_rev[ATA_ID_FW_REV_LEN + 1];
-
-That should remove the multiple prints.
-
++int pcim_request_all_regions(struct pci_dev *pdev, const char *name);
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
+ void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr);
+ void __iomem * const *pcim_iomap_table(struct pci_dev *pdev);
 -- 
-Damien Le Moal
-Western Digital Research
+2.45.2
 
