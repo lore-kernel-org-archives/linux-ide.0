@@ -1,242 +1,171 @@
-Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F3D130A47;
-	Thu,  1 Aug 2024 15:04:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A586F1B9B26
+	for <linux-ide@vger.kernel.org>; Thu,  1 Aug 2024 17:46:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722524660; cv=none; b=jrvXfnHkJatOtXvhLn/P5jN/+TW3kau4DSXFJiiX5MkpF8Sl4oLYGI2ytgb92NqIuSvB8cLdVzG2GxZEy4tT63fO2JgzNy0V8cP5kX68B/TI3qGL7ToHwP8E6l8kuPfOQM85ULCjLpopB1drcpQm7gzXKJc1o0uThtVG+Qm+D+s=
+	t=1722534391; cv=none; b=rINmW9wH1wQeHALVhTg1hUPYHmJoEdt6HhEnFqseoaKcSlogM5YdCkKmmHcCl49SmrhSeMBR8RACOxaI7TBncZWrxqtj4pGJRaGxraOPOnBnHlD+WJOY58tBGwxFQnFbjsy9belpN7gD3c3eQHJ3cTjn4cj+tVLv2Nph1irAqJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722524660; c=relaxed/simple;
-	bh=Tjf521G/AlPvcwe92gKEgwLzoei4fPVNKjrAyLUBxgU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tTAcFkVC+CYGHfAEX6WSPJtMkSnWrBzzBqQAH20W5ZTcKeYwq6uNV1jC5alIRq7htM9MPG/HR46NNEWe8cxDwbipym9mOplTRa0VjAf/SkoynVq5w2R4/Id1BLERZrKneLQhq40Dhu93zfGGzv+j6Ptudvo+5zwjwgeV4q+ewKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-e0878971aa9so1800041276.0;
-        Thu, 01 Aug 2024 08:04:18 -0700 (PDT)
+	s=arc-20240116; t=1722534391; c=relaxed/simple;
+	bh=lqUBCglzn3f4G/USTNUZWIqwmTKyh9NTx5PNNci0oUk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gDKolvPcQGGH2+33B0p2Bsmzvf2uXol/sJGHggzQ4AEIUkK1kEaX1c/qZ1qQoLTpF3Q6R4wFG3dsWI+e96bWozeEJvWTcP0j0RM2egtl3KlbhgT4rOvFXvft2jZ9WbT0jCEthNz95JXgiJouATu7n41Qu9FC/hB5uhMuY10l0h0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dRFX/tPV; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dRFX/tPV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1722534388;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=IdydxZIGJr3ghOK2fEzH68i3FlzUyX1ZkiOar1Iub4w=;
+	b=dRFX/tPV4f6iP2XtdCy/ukBmKmFOsf/rz/SADRumAgOr9H0HCnPfxlO8rMHOHyWKe2DVq4
+	oJV5GKZfQuaEs9mmtcbiQCHYJd/XGP27CxQF99lvzoHUB+J0i1v44Ev4HuMtnSTuDtgKQv
+	5h8YN/oHMfra7PxVEG8DAwmFm7wX5kA=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-686-GBxU_1KuNIOhAldq8qbNuA-1; Thu, 01 Aug 2024 13:46:27 -0400
+X-MC-Unique: GBxU_1KuNIOhAldq8qbNuA-1
+Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-5a10a3517b7so1096376a12.0
+        for <linux-ide@vger.kernel.org>; Thu, 01 Aug 2024 10:46:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722524657; x=1723129457;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=WxUAxr4GoMo80LJex8VF+rjOD0aybhsuz+CMjk4XlD0=;
-        b=QE5YAflnFI/T7LLhl+h8fD+YbOpjsnZ0Xo8XlTIfSaDPzT5DrzL6H0z4vXWMNrBIYC
-         047qE2/jKfwa79+thwUKMWAoYQOd8NAAzgGNChuLX/XWLf2TWCsOtprxzEhMSyGP8NxH
-         hdMuUgNPtkQSEpe4dKBN0hbvqp3wq5Uv8u7cKrbGI7Dh1qfLm+OEC1AfEJ62xuZTk40U
-         U7jkRnvJ6WUdPc5wCcAxU4WiHJWEd1AqNNjW8FdcLjWDVZTr9QQgNVl7qNnAdX+mq8Do
-         BAdkZfHwnWABxJD8fe3nisdDWbYoDn5c+ill24VQv7l+DGT40zbGaAdrP4ucrKHvrCBE
-         MADA==
-X-Forwarded-Encrypted: i=1; AJvYcCXm6FYfOby+y7UM/vsb3oBJr9/liyFhso6Y3eSTU+eesZacqGxc5etp9/87QMYzTZC2JY5cQBnJnXQbpil48xKwDNBE2qZqGqjuzQVl9Z13p/c=
-X-Gm-Message-State: AOJu0YymZkZwmOyfe1jHBrEdm92Cn2OZBqttSKybT2P7pBslR9MqOBj8
-	dJnEWfmACPZ70X8FDNwyP+ZlSOuX40Z4E+sqC0co0rA+cI0R+PVImT+jF2w+
-X-Google-Smtp-Source: AGHT+IGdCRVcN3EjXMXbkL78oAxQ44nRPjBSD2sotXwZXPf7BXPP1UKBe4NEi3V6rAtEO8ew00xlsg==
-X-Received: by 2002:a25:ce10:0:b0:e0b:d2e3:4da7 with SMTP id 3f1490d57ef6-e0bd5afaa73mr1219377276.18.1722524656647;
-        Thu, 01 Aug 2024 08:04:16 -0700 (PDT)
-Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com. [209.85.219.169])
-        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e0b2a177e0esm3239422276.32.2024.08.01.08.04.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Aug 2024 08:04:16 -0700 (PDT)
-Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e0878971aa9so1800011276.0;
-        Thu, 01 Aug 2024 08:04:16 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUhGpt7phJpW+dLRbGBGwdn3gKhBP1C9IbBwa4XhOQ3ZYDXnPxCe//q34Pw/GpKdfVtOrx7zHWrYSlcijOBnu3wbxq3HtOz1TsW0IweWITJGGo=
-X-Received: by 2002:a05:6902:1144:b0:e02:c458:c70f with SMTP id
- 3f1490d57ef6-e0bdeaf3d8amr243829276.22.1722524656198; Thu, 01 Aug 2024
- 08:04:16 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1722534386; x=1723139186;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=IdydxZIGJr3ghOK2fEzH68i3FlzUyX1ZkiOar1Iub4w=;
+        b=o0JeUDK8rvLI0TyUVEqJdW0616MOva0+hXLm0BJ3ViwQ0Xy/ZTJKvFy23b16+1lIk3
+         xHDoLLBU74A+JeO/D6qJ7ttgJhNX/p3zNvWZAmj0xuy5IdyTbdNvUCONUOn5u3v80vgr
+         ucLO4UUPyIaUdDvu0K6OVS8mcQNYqLISrwsKzcDlEKbUtXmux+m5DylRN59/+ExGs0vh
+         Ifa8O1WWOAWkfIkzKK2fur5bHSEZGLFQdBz70bVSUtb81r82ydwLu7F7wE4KMynkKFPk
+         oqlZvaS3qcnP3d0qprjq/KlpUciNWhFEO0VoJqdNK5RDJElgCwEr7cQjqre6kWZt3lva
+         PfEQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXIJ23g65DCCI0cvwtW5i4SMPm5u4zbJBXI4A2Ar2ZbHdBIsqIIzYOnJQiqZpAil7wPQBRAf9m3AXE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzmjet7wv3+Aw7RKfPYDGazDLY9vi+eX1Q3ZxhEGJ7W2iHgrEsd
+	TE85XkS2JgEIP/M1j+njS+uPJBs7cQRJ1Eavp0U3CpW2tHnxsGBNsYhwXqH9sZrOrqUqYchbdcn
+	CPpbZOyZWs3fwFEulsVr5/xb9s6O2ze27MkH3qMQh6dicdy/WiiBYsD7M8w==
+X-Received: by 2002:a17:907:3da7:b0:a7d:a4d2:a2a7 with SMTP id a640c23a62f3a-a7dc4e50c01mr44425066b.3.1722534386297;
+        Thu, 01 Aug 2024 10:46:26 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH5Km5jd9cOTYruluysPjH0y6sNbWlr0amJSpmaneqU1ki99pbWjXrxV2Pr+1gBC+OPuM4UGw==
+X-Received: by 2002:a17:907:3da7:b0:a7d:a4d2:a2a7 with SMTP id a640c23a62f3a-a7dc4e50c01mr44419866b.3.1722534385669;
+        Thu, 01 Aug 2024 10:46:25 -0700 (PDT)
+Received: from eisenberg.fritz.box ([2001:16b8:3d4b:3000:1a1d:18ca:1d82:9859])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a7dc9e83848sm5339066b.177.2024.08.01.10.46.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Aug 2024 10:46:25 -0700 (PDT)
+From: Philipp Stanner <pstanner@redhat.com>
+To: Jonathan Corbet <corbet@lwn.net>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	Boris Brezillon <bbrezillon@kernel.org>,
+	Arnaud Ebalard <arno@natisbad.org>,
+	Srujana Challa <schalla@marvell.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Serge Semin <fancer.lancer@gmail.com>,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Jaroslav Kysela <perex@perex.cz>,
+	Takashi Iwai <tiwai@suse.com>,
+	Mark Brown <broonie@kernel.org>,
+	David Lechner <dlechner@baylibre.com>,
+	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Philipp Stanner <pstanner@redhat.com>,
+	Jie Wang <jie.wang@intel.com>,
+	Adam Guerin <adam.guerin@intel.com>,
+	Shashank Gupta <shashank.gupta@intel.com>,
+	Damian Muszynski <damian.muszynski@intel.com>,
+	Nithin Dabilpuram <ndabilpuram@marvell.com>,
+	Bharat Bhushan <bbhushan2@marvell.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Yedidya Benshimol <yedidya.ben.shimol@intel.com>,
+	Breno Leitao <leitao@debian.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	John Ogness <john.ogness@linutronix.de>,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	qat-linux@intel.com,
+	linux-crypto@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ntb@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-sound@vger.kernel.org
+Subject: [PATCH 00/10] Remove pcim_iomap_regions_request_all()
+Date: Thu,  1 Aug 2024 19:45:58 +0200
+Message-ID: <20240801174608.50592-1-pstanner@redhat.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240726031954.566882-1-dlemoal@kernel.org> <20240726031954.566882-5-dlemoal@kernel.org>
- <df29e7c5-778e-ec11-3276-a6c87da2ec2f@linux-m68k.org> <5ee6820d-8253-4208-8b99-dee78acb0f71@kernel.org>
- <CAMuHMdX1WrK_QRiyq+BfFW=ZFgXkxFTBsw0fJoRH0+znUOh2tg@mail.gmail.com>
- <5700ac9c-0f7e-40c2-b969-ad67b0ee96ba@kernel.org> <CAMuHMdVbkeeQy_WBcBhKhOzWv=MsCUjsVEBDrEi0b+g_-RKCOQ@mail.gmail.com>
- <0f9d26c0-e79e-4913-862a-3df642177415@kernel.org> <CAMuHMdWduj2CeB=dqzHPNgHxTXgpWD18H_ew1zp_rc6OwyqHQw@mail.gmail.com>
- <daeda931-7b82-42e6-af8e-49d9d6e8eb20@kernel.org>
-In-Reply-To: <daeda931-7b82-42e6-af8e-49d9d6e8eb20@kernel.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Thu, 1 Aug 2024 17:04:04 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdXv6mTryGX-ozZeLiH1yX2Bw14ykMtOJaVHmryHX+KHKw@mail.gmail.com>
-Message-ID: <CAMuHMdXv6mTryGX-ozZeLiH1yX2Bw14ykMtOJaVHmryHX+KHKw@mail.gmail.com>
-Subject: Re: [PATCH v6 04/11] ata: libata: Print quirks applied to devices
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	Niklas Cassel <cassel@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi Damien,
+Hi all,
 
-On Thu, Aug 1, 2024 at 12:42=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org>=
- wrote:
-> On 8/1/24 7:05 PM, Geert Uytterhoeven wrote:
-> > On Thu, Aug 1, 2024 at 11:25=E2=80=AFAM Damien Le Moal <dlemoal@kernel.=
-org> wrote:
-> >> On 8/1/24 6:07 PM, Geert Uytterhoeven wrote:
-> >>> On Wed, Jul 31, 2024 at 11:08=E2=80=AFAM Damien Le Moal <dlemoal@kern=
-el.org> wrote:
-> >>>> On 7/31/24 16:27, Geert Uytterhoeven wrote:
-> >>>>> On Wed, Jul 31, 2024 at 1:39=E2=80=AFAM Damien Le Moal <dlemoal@ker=
-nel.org> wrote:
-> >>>>>> On 7/30/24 19:09, Geert Uytterhoeven wrote:
-> >>>>>>> On Fri, 26 Jul 2024, Damien Le Moal wrote:
-> >>>>>>>> Introduce the function ata_dev_print_quirks() to print the quirk=
- flags
-> >>>>>>>> that will be applied to a scanned device. This new function is c=
-alled
-> >>>>>>>> from ata_dev_quirks() when a match on a device model or device m=
-odel
-> >>>>>>>> and revision is found for a device in the __ata_dev_quirks array=
-.
-> >>>>>>>>
-> >>>>>>>> To implement this function, the ATA_QUIRK_ flags are redefined u=
-sing
-> >>>>>>>> the new enum ata_quirk which defines the bit shift for each quir=
-k
-> >>>>>>>> flag. The array of strings ata_quirk_names is used to define the=
- name
-> >>>>>>>> of each flag, which are printed by ata_dev_print_quirks().
-> >>>>>>>>
-> >>>>>>>> Example output for a device listed in the __ata_dev_quirks array=
- and
-> >>>>>>>> which has the ATA_QUIRK_DISABLE flag applied:
-> >>>>>>>>
-> >>>>>>>> [10193.461270] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl=
- 300)
-> >>>>>>>> [10193.469190] ata1.00: Model 'ASMT109x- Config', rev '2143 5', =
-applying quirks: disable
-> >>>>>>>> [10193.469195] ata1.00: unsupported device, disabling
-> >>>>>>>> [10193.481564] ata1.00: disable device
-> >>>>>>>>
-> >>>>>>>> enum ata_quirk also defines the __ATA_QUIRK_MAX value as one plu=
-s the
-> >>>>>>>> last quirk flag defined. This value is used in ata_dev_quirks() =
-to add a
-> >>>>>>>> build time check that all quirk flags fit within the unsigned in=
-t
-> >>>>>>>> (32-bits) quirks field of struct ata_device.
-> >>>>>>>>
-> >>>>>>>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> >>>>>>>> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
-> >>>>>>>
-> >>>>>>> Thanks for your patch, which is now commit 58157d607aecb4e0 ("ata=
-:
-> >>>>>>> libata: Print quirks applied to devices") in libata/for-next.
-> >>>>>>>
-> >>>>>>> During boot-up on Salvator-XS (using rcar-sata), the quirk info i=
-s
-> >>>>>>> printed not once, but four times.  Is that intentional?
-> >>>>>>
-> >>>>>> Not at all. I tested on x86 with AHCI and see this message only on=
-ce. So it
-> >>>>>> could be that different drivers may need some tweaks to avoid this=
- spamming.
-> >>>>>> Though it is strange that the initialization or resume path takes =
-this path 4
-> >>>>>> times, meaning that the quirks are applied 4 times. Need to look i=
-nto that.
-> >>>>>> What is the driver for rcar-sata ? Compatible string for it would =
-be fine.
-> >>>>>
-> >>>>> drivers/ata/sata_rcar.c, using renesas,rcar-gen3-sata.
-> >>>>>
-> >>>>> I added a WARN() to ata_dev_quirks() to show backtraces:
-> >>>>>
-> >>>>> Call trace:
-> >>>>>  ata_dev_quirks+0x98/0x19c
-> >>>>>  ata_dev_configure+0x74/0x12d8
-> >>>>>  ata_eh_recover+0x8d8/0xd08
-> >>>>>  ata_do_eh+0x50/0xa8
-> >>>>>  ata_sff_error_handler+0xd0/0xec
-> >>>>>  ata_bmdma_error_handler+0x7c/0x12c
-> >>>>>  ata_scsi_port_error_handler+0xc8/0x5f8
-> >>>>>  ata_scsi_error+0x90/0xcc
-> >>>>>  scsi_error_handler+0x148/0x308
-> >>>>>  kthread+0xe4/0xf4
-> >>>>>  ret_from_fork+0x10/0x20
-> >>>>
-> >>>> OK. So it is ata_dev_configure() being called many times from EH. We=
-ird.
-> >>>> But I have not a lot of experience with the bmdma drivers.
-> >>>> Need to look into that.
-> >>>>
-> >>>> In the meantime, can you try this ?
-> >>>>
-> >>>> --- a/drivers/ata/libata-core.c
-> >>>> +++ b/drivers/ata/libata-core.c
-> >>>
-> >>>> @@ -4087,7 +4087,7 @@ static void ata_dev_print_quirks(const struct =
-ata_device *dev,
-> >>>>         size_t sz;
-> >>>>         char *str;
-> >>>>
-> >>>> -       if (!quirks)
-> >>>> +       if (!ata_dev_print_info(dev) || !quirks)
-> >>>>                 return;
-> >>>>
-> >>>>         sz =3D 64 + ARRAY_SIZE(ata_quirk_names) * 16;
-> >>>
-> >>> Thanks, that reduces the number of quirk prints from 4 to 2 during
-> >>> boot-up, and from 4 to 0 when resuming from s2idle/s2ram.
-> >>
-> >> 2 times on boot... Hmm.. So that means that you are seeing all the pro=
-be
-> >> messages twice (and not just the quirk message), right ?
-> >
-> > No, I do not see all probe messages twice.
-> >
-> > $ grep ^ata dmesg:
-> >
-> > ata1: SATA max UDMA/133 irq 128 lpm-pol 0
-> > ata1: link resume succeeded after 1 retries
-> > ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> > ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
-> > ata1.00: ATA-7: Maxtor 6L160M0, BANC1G10, max UDMA/133
-> > ata1.00: 320173056 sectors, multi 0: LBA48 NCQ (not used)
-> > ata1.00: Model 'Maxtor 6L160M0', rev 'BANC1G10', applying quirks: noncq
-> > ata1.00: configured for UDMA/133
->
-> OK. This path should get rid of the useless extra print:
+the PCI subsystem is currently working on cleaning up its devres API. To
+do so, a few functions will be replaced with better alternatives.
 
-Unsurprisingly, it does ;-)
+This series removes pcim_iomap_regions_request_all(), which has been
+deprecated already, and accordingly replaces the calls to
+pcim_iomap_table() (which were only necessary because of
+pcim_iomap_regions_request_all() in the first place) with calls to
+pcim_iomap().
 
->
-> commit 3c65fcbf942c26ece6d1efef7ad1405c0163575f
-> Author: Damien Le Moal <dlemoal@kernel.org>
-> Date:   Thu Aug 1 18:04:22 2024 +0900
->
->     ata: libata: Print device quirks only once
->
->     In ata_dev_print_quirks(), return early if ata_dev_print_info() retur=
-ns
->     false or if we already printed quirk information. This is to avoid
->     printing a device quirks multiple times (that is, each time
->     ata_dev_revalidate() is called).
->
->     To remember if ata_dev_print_quirks() was already executed, define th=
-e
->     EH context flag ATA_EHI_DID_QUIRK_PRINT and set this flag in
->     ata_dev_print_quirks().
->
->     Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
->     Fixes: 58157d607aec ("ata: libata: Print quirks applied to devices")
->     Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Would be great if you can take a look whether this behaves as you
+intended for your respective component.
 
-    Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Cheers,
+Philipp
 
-Gr{oetje,eeting}s,
+Philipp Stanner (10):
+  PCI: Make pcim_request_all_regions() a public function
+  ata: ahci: Replace deprecated PCI functions
+  crypto: qat - replace deprecated PCI functions
+  crypto: marvell - replace deprecated PCI functions
+  intel_th: pci: Replace deprecated PCI functions
+  wifi: iwlwifi: replace deprecated PCI functions
+  ntb: idt: Replace deprecated PCI functions
+  serial: rp2: Remove deprecated PCI functions
+  ALSA: korg1212: Replace deprecated PCI functions
+  PCI: Remove pcim_iomap_regions_request_all()
 
-                        Geert
+ .../driver-api/driver-model/devres.rst        |  1 -
+ drivers/ata/acard-ahci.c                      |  6 +-
+ drivers/ata/ahci.c                            |  6 +-
+ drivers/crypto/intel/qat/qat_420xx/adf_drv.c  | 11 +++-
+ drivers/crypto/intel/qat/qat_4xxx/adf_drv.c   | 11 +++-
+ .../marvell/octeontx2/otx2_cptpf_main.c       | 14 +++--
+ .../marvell/octeontx2/otx2_cptvf_main.c       | 13 ++--
+ drivers/hwtracing/intel_th/pci.c              |  9 ++-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 16 ++---
+ drivers/ntb/hw/idt/ntb_hw_idt.c               | 13 ++--
+ drivers/pci/devres.c                          | 59 +------------------
+ drivers/tty/serial/rp2.c                      | 12 ++--
+ include/linux/pci.h                           |  3 +-
+ sound/pci/korg1212/korg1212.c                 |  6 +-
+ 14 files changed, 76 insertions(+), 104 deletions(-)
 
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
+-- 
+2.45.2
 
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
