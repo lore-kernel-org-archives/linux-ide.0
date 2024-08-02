@@ -1,66 +1,105 @@
-Received: from forward500d.mail.yandex.net (forward500d.mail.yandex.net [178.154.239.208])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E15FC482EF;
-	Fri,  2 Aug 2024 07:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.208
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CDF91BE87D
+	for <linux-ide@vger.kernel.org>; Fri,  2 Aug 2024 07:39:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722584187; cv=none; b=sr+K7eGaIPS75Gkr4OlmaudDkNAMetEupwf2eFd//k4eBKtAHMY0g8Ki5wYLp0p7zlmZC43s/Z9F+9cBrkCwQ1eXNdISsmT474YhAwR7k+ZKhXTBr8wxXg2mBNLfMWz1TPC023zb2gujoHMXKr0r6Cu1rsdylwE6O7vUReu2cbY=
+	t=1722584360; cv=none; b=tmLFj2TTpCNxUKldet36YefDlN4PLbEZWMO86/ixED/cyWABiCMU1fjsvgWDudmWtJ5pslfQIQlBLFKpehTrmx/H0N4ec0ZzB/uBMWn+UCSSZKvxmo8DFccVI4KDBSJYictode/j7gdQuJ5InWeJKK7X1xxGxzHDxBZ8zA1Bfvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722584187; c=relaxed/simple;
-	bh=xFfFI1VUxM96WEW9h09vMDS1bRrM3Fk2qt43Z+ICuZ8=;
+	s=arc-20240116; t=1722584360; c=relaxed/simple;
+	bh=XyoAsjYXR6vlNnAFOtS7SDp80nop+IcyYDiUz8xV5lU=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=uKMlx82TRvia6UWp4OhrxgBHFAjpXbHsmXLTKdxQt2nkyAneXWR0UJfnM2ufRgniRuORF05wQI7wF+PM0mc+EQCJxDoGGqeYTi5neBtTEbepFAXc6YTkOhNueFnNdGMYaL0lEzqQJtktPvBikksAi7Jl25CUH1a4OwWgnBuPcQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me; spf=pass smtp.mailfrom=maquefel.me; dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b=B+gbkflc; arc=none smtp.client-ip=178.154.239.208
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maquefel.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maquefel.me
+	 Content-Type:MIME-Version; b=Tdu5RwsysxXIVIriYTzvhorKpE7AXAGFVLsQU1Fg/Z3Uq0cWnCbB1BXewPOW7Uwg/ImacL56kMOHxy9LSzaia9mOo4tqzBRtKGr8n8R3T6nAJV8BDPjHCCfn9GZF3R1s448RYMiKRjhq4q0t27KCNRK6D5Cu5z94TPBX/9acWOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BedV4qwT; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=maquefel.me header.i=@maquefel.me header.b="B+gbkflc"
-Received: from mail-nwsmtp-smtp-production-main-84.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-84.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:3ca5:0:640:b181:0])
-	by forward500d.mail.yandex.net (Yandex) with ESMTPS id D54DA614BA;
-	Fri,  2 Aug 2024 10:36:14 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-84.klg.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 6aS9oj3g9Gk0-oGKazRiT;
-	Fri, 02 Aug 2024 10:36:13 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maquefel.me; s=mail;
-	t=1722584173; bh=xFfFI1VUxM96WEW9h09vMDS1bRrM3Fk2qt43Z+ICuZ8=;
-	h=References:Date:In-Reply-To:Cc:To:From:Subject:Message-ID;
-	b=B+gbkflcsamzsGcKQTG4gVtLeiw5V77vFyRCXGV32y02UNz0jqZWx/MHlr09NS+AF
-	 H/nuqOh4suJapcpzsjCr0oA+GzqaB3O/j3B06JXBVCF/TWiGCMWTOk55v0lhknim05
-	 7duSEm+DNJsbKzrqYeFrO89AuJ66z0aYIFrJU63c=
-Authentication-Results: mail-nwsmtp-smtp-production-main-84.klg.yp-c.yandex.net; dkim=pass header.i=@maquefel.me
-Message-ID: <a1a27117725305dcd6135df193fe2b74646a9e26.camel@maquefel.me>
-Subject: Re: [PATCH v11 00/38] ep93xx device tree conversion
-From: Nikita Shubin <nikita.shubin@maquefel.me>
-To: "Rob Herring (Arm)" <robh@kernel.org>, Alexander Sverdlin
-	 <alexander.sverdlin@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org, 
- linux-watchdog@vger.kernel.org, Wim Van Sebroeck <wim@linux-watchdog.org>, 
- Miquel Raynal <miquel.raynal@bootlin.com>, Damien Le Moal
- <dlemoal@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Thierry
- Reding <thierry.reding@gmail.com>,  Vignesh Raghavendra <vigneshr@ti.com>,
- linux-pwm@vger.kernel.org, Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?=
- <u.kleine-koenig@pengutronix.de>, Ralf Baechle <ralf@linux-mips.org>, 
- Sebastian Reichel <sre@kernel.org>, Krzysztof Kozlowski
- <krzysztof.kozlowski+dt@linaro.org>,  linux-ide@vger.kernel.org, Stephen
- Boyd <sboyd@kernel.org>, Krzysztof Kozlowski
- <krzysztof.kozlowski@linaro.org>, linux-spi@vger.kernel.org, Andy
- Shevchenko <andriy.shevchenko@linux.intel.com>, Mark Brown
- <broonie@kernel.org>,  Hartley Sweeten <hsweeten@visionengravers.com>,
- linux-kernel@vger.kernel.org, Takashi Iwai <tiwai@suse.com>,  Andrew Lunn
- <andrew@lunn.ch>, Richard Weinberger <richard@nod.at>, Eric Dumazet
- <edumazet@google.com>,  linux-sound@vger.kernel.org, Arnd Bergmann
- <arnd@arndb.de>,  linux-input@vger.kernel.org, Jaroslav Kysela
- <perex@perex.cz>, Sergey Shtylyov <s.shtylyov@omp.ru>, Lukasz Majewski
- <lukma@denx.de>
-Date: Fri, 02 Aug 2024 10:36:06 +0300
-In-Reply-To: <f68b628c3978a4fb0e5989e3b6918c756da1fefb.camel@gmail.com>
-References: <20240715-ep93xx-v11-0-4e924efda795@maquefel.me>
-	 <172104541245.3725513.13547524352291855487.robh@kernel.org>
-	 <f68b628c3978a4fb0e5989e3b6918c756da1fefb.camel@gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BedV4qwT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1722584357;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XyoAsjYXR6vlNnAFOtS7SDp80nop+IcyYDiUz8xV5lU=;
+	b=BedV4qwT1Ebraxcmp08denCVQ5m+jWUwcyROQZ5hVOA8aTv8UJrD9tqIzUg++bIls79sHt
+	IkwT+hh8NDWmrBz9G+C8YGEyxWwzDCQWTkcrc1rOXlF6juFnyqjmNVOgqKZVKE0cNUSgI7
+	/OyrLT/VYCWdqTrwc2w4bu7fPUJbLxI=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-185-oh54UF4LMIutomj05lOfag-1; Fri, 02 Aug 2024 03:39:16 -0400
+X-MC-Unique: oh54UF4LMIutomj05lOfag-1
+Received: by mail-ed1-f70.google.com with SMTP id 4fb4d7f45d1cf-5a2b8c44b48so2124301a12.0
+        for <linux-ide@vger.kernel.org>; Fri, 02 Aug 2024 00:39:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1722584355; x=1723189155;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=XyoAsjYXR6vlNnAFOtS7SDp80nop+IcyYDiUz8xV5lU=;
+        b=qgnI+4EJFJtfDe0uKK83h7tXaNwEvX0zmFpRBTTow1NSHimg0djeXbXX7tNtZet7Ob
+         /FfCyCHChe8rMZZH6sIo1ukAdPvox8lE8AtV6LFjJL5iqiPKj/wWJXC1zBNKTJrFRnU7
+         LOK8q33LrPIlPNfmkB+vKhbt84NzEJJw8RCVE5W6BQCx8laIVAm35UBC3la+XBHF7IfQ
+         01Vcu/nSd4bqPgHGWXE8IDKFQYyaMwnpyFhnrQBvQa1/46KvA6kokNW5wThhulufmAbM
+         +PLpKjx/ezMvxinuofIk/ll9P9XsTdSjFqd4xyUpCrKCuMeSm6Qdjx3o8KQEnGL6DS30
+         i0PA==
+X-Forwarded-Encrypted: i=1; AJvYcCWP+cHnTVg58XZieCREduEQUD5AI2OmOmXB9qoPJFYe7Ks2Tc36NCdhrDOzgPJEhTtpC4UVzRHVqG22PSY6T7xF7LAjhh7Wk0dm
+X-Gm-Message-State: AOJu0Yx/jLkN+PQE3DfZqeOzE2rVokbrXCiJ6UThIVxDZ2BHuga9d5yQ
+	ayjt1zojbP91+W9iC/adg+uve8Ly/xLna4F4om2WtQpWsV0ggEIZ0c4Ch9FR/ttItROT9Ml7Mk8
+	wQWs+P/axCadJOQGfvTSNs256qreRuanh79jLvXlRCN2wE16KfduKSKc/uQ==
+X-Received: by 2002:a17:907:d8e:b0:a7a:a4be:2f8f with SMTP id a640c23a62f3a-a7dc4b2ed0fmr130671666b.0.1722584354331;
+        Fri, 02 Aug 2024 00:39:14 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEFONH/seRIPn55nxoXB3Ih6iDe58gzFUv6VfG3nc8IISoWvXI/jL74Kj1p+wvKOnC3k+pqpQ==
+X-Received: by 2002:a17:907:d8e:b0:a7a:a4be:2f8f with SMTP id a640c23a62f3a-a7dc4b2ed0fmr130665366b.0.1722584353684;
+        Fri, 02 Aug 2024 00:39:13 -0700 (PDT)
+Received: from eisenberg.fritz.box ([2001:16b8:3d6c:8e00:43f3:8884:76fa:d218])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a7dc9e80eb6sm66892066b.174.2024.08.02.00.39.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Aug 2024 00:39:13 -0700 (PDT)
+Message-ID: <6eb427a501499273b39439dd6514fef399c3b55f.camel@redhat.com>
+Subject: Re: [PATCH 08/10] serial: rp2: Remove deprecated PCI functions
+From: Philipp Stanner <pstanner@redhat.com>
+To: Jiri Slaby <jirislaby@kernel.org>, Jonathan Corbet <corbet@lwn.net>, 
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Giovanni Cabiddu <giovanni.cabiddu@intel.com>, Herbert Xu
+ <herbert@gondor.apana.org.au>,  "David S. Miller" <davem@davemloft.net>,
+ Boris Brezillon <bbrezillon@kernel.org>, Arnaud Ebalard
+ <arno@natisbad.org>,  Srujana Challa <schalla@marvell.com>, Alexander
+ Shishkin <alexander.shishkin@linux.intel.com>, Miri Korenblit
+ <miriam.rachel.korenblit@intel.com>, Kalle Valo <kvalo@kernel.org>, Serge
+ Semin <fancer.lancer@gmail.com>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
+ <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Kevin Cernekee <cernekee@gmail.com>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Jaroslav Kysela
+ <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Mark Brown
+ <broonie@kernel.org>, David Lechner <dlechner@baylibre.com>, Uwe
+ =?ISO-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, Jonathan
+ Cameron <Jonathan.Cameron@huawei.com>,  Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Jie Wang <jie.wang@intel.com>, Adam
+ Guerin <adam.guerin@intel.com>, Shashank Gupta <shashank.gupta@intel.com>,
+ Damian Muszynski <damian.muszynski@intel.com>, Nithin Dabilpuram
+ <ndabilpuram@marvell.com>, Bharat Bhushan <bbhushan2@marvell.com>, Johannes
+ Berg <johannes.berg@intel.com>, Gregory Greenman
+ <gregory.greenman@intel.com>, Emmanuel Grumbach
+ <emmanuel.grumbach@intel.com>, Yedidya Benshimol
+ <yedidya.ben.shimol@intel.com>, Breno Leitao <leitao@debian.org>, Ilpo
+ =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, John Ogness
+ <john.ogness@linutronix.de>, Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-ide@vger.kernel.org, qat-linux@intel.com,
+ linux-crypto@vger.kernel.org,  linux-wireless@vger.kernel.org,
+ ntb@lists.linux.dev, linux-pci@vger.kernel.org, 
+ linux-serial@vger.kernel.org, linux-sound@vger.kernel.org
+Date: Fri, 02 Aug 2024 09:39:11 +0200
+In-Reply-To: <8d2e03ac-2a08-4a25-9929-dad375afb738@kernel.org>
+References: <20240801174608.50592-1-pstanner@redhat.com>
+	 <20240801174608.50592-9-pstanner@redhat.com>
+	 <8d2e03ac-2a08-4a25-9929-dad375afb738@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 
+User-Agent: Evolution 3.52.3 (3.52.3-1.fc40) 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -68,54 +107,37 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Hi Rob,
-
-On Mon, 2024-07-15 at 22:46 +0200, Alexander Sverdlin wrote:
-> Hi Rob,
+On Fri, 2024-08-02 at 07:18 +0200, Jiri Slaby wrote:
+> On 01. 08. 24, 19:46, Philipp Stanner wrote:
+> > pcim_iomap_table() and pcim_iomap_regions_request_all() have been
+> > deprecated by the PCI subsystem in commit e354bb84a4c1 ("PCI:
+> > Deprecate
+> > pcim_iomap_table(), pcim_iomap_regions_request_all()").
+> >=20
+> > Replace these functions with their successors, pcim_iomap() and
+> > pcim_request_all_regions()
 >=20
-> On Mon, 2024-07-15 at 06:12 -0600, Rob Herring (Arm) wrote:
-> > My bot found new DTB warnings on the .dts files added or changed in
-> > this
-> > series.
-> >=20
-> > Some warnings may be from an existing SoC .dtsi. Or perhaps the
-> > warnings
-> > are fixed by another series. Ultimately, it is up to the platform
-> > maintainer whether these warnings are acceptable or not. No need to
-> > reply
-> > unless the platform maintainer has comments.
-> >=20
-> > If you already ran DT checks and didn't see these error(s), then
-> > make sure dt-schema is up to date:
-> >=20
-> > =C2=A0 pip3 install dtschema --upgrade
-> >=20
-> >=20
-> > New warnings running 'make CHECK_DTBS=3Dy cirrus/ep93xx-bk3.dtb
-> > cirrus/ep93xx-edb9302.dtb cirrus/ep93xx-ts7250.dtb' for
-> > 20240715-ep93xx-v11-0-4e924efda795@maquefel.me:
-> >=20
-> > arch/arm/boot/dts/cirrus/ep93xx-edb9302.dtb:
-> > /soc/spi@808a0000/codec@0: failed to match any schema with
-> > compatible: ['cirrus,cs4271']
+> Reviewed-by: Jiri Slaby <jirislaby@kernel.org>
+
+Thank you for the review.
+
+I have to provide a v2 for a small bug in one of the other patches.
+While I'm at it, I would rename the title of this patch =E2=84=968 here so =
+that
+it's "Replace" instead of "Remove", making it consistent with the other
+ones.
+
+I'd assume that keeping your RB then would be alright. Please tell me
+if not.
+
+Cheers,
+P.
+
 >=20
-> well, this seems to come from the fact is still documented in a .txt
-> file
-> (Documentation/devicetree/bindings/sound/cs4271.txt), which is not
-> really
-> the scope of this series. Hope it's OK to ignore it for the series.
+> > Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> > ---
+> > =C2=A0 drivers/tty/serial/rp2.c | 12 +++++++-----
+> > =C2=A0 1 file changed, 7 insertions(+), 5 deletions(-)
 >=20
-
-Indeed it resides in
-Documentation/devicetree/bindings/sound/cs4271.txt.
-
-Can we slip for the series ?
-
-Actually i found this one on mail lists:
-
-https://lore.kernel.org/lkml/20240709184231.125207-1-animeshagarwal28@gmail=
-.com/
-
-Conversion of cs4270.txt, Alexander isn't it almost the same thing as
-cs4271 ?
+> thanks,
 
