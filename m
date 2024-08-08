@@ -1,125 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B97FF84037;
-	Wed,  7 Aug 2024 22:35:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F34165228
+	for <linux-ide@vger.kernel.org>; Thu,  8 Aug 2024 01:42:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723070108; cv=none; b=XCnzPEfbbKSmE0FYqOCQHyXwbMCn28AsvM0J3px/m8XWLSt0kWYb/I2detg3cRCrE34Vs/BcM25TUONSj0JqcbczJh+3MkF8UngQZEKzqBLRF3bAbV2d5e66uQeob9wCuujiXedgv1Sbd6uGp2+n1dabASveplxG02D1FtgRM2k=
+	t=1723081368; cv=none; b=IPS6GoSHQ4jn3UPlfHJ8SML/0tSOByayttXiWA6Mvjj/7jwydL4+6HREU/jsfP4xHABy3sz7cNWNcUtjdxZJ+iPJS/eeTMprD2CTj4X/SIGX4ldmFvGjs3dIZt7WUWtzlz0EOvhAw2mjn5thnQyELY4GM8kDyopBqeqvkwF7olg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723070108; c=relaxed/simple;
-	bh=4SW2koNLSR3UGJDCQ4tfaSCI1PPYQl+YNGBqJggCxkI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ilraU9e/cz3fYtA6PfXDaJc3wMJnj3TIe90njjQU1nbiPyxhezSoc+LrrJ+4EdTuKKOwD3sE8arkZxHwf3To27iRdbbXMoIUTvHQhUjJHk1ETTfohBMOdmZ/gx2F11VyVBjYXrfS8HHU2WZngxcM+EdpbPMs5RzGTHHPlpsVB/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gEGa2nht; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gEGa2nht"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2001FC4AF0D;
-	Wed,  7 Aug 2024 22:35:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723070108;
-	bh=4SW2koNLSR3UGJDCQ4tfaSCI1PPYQl+YNGBqJggCxkI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gEGa2nhtWx0OmR2n5WPnJGF7lXEYDWPQbd9goc340or6vClcv7BK8g+LXX5K7zMbm
-	 7gTaJJ8GueY/qPpqV3LI6rPdh1sb9V818kNypu3NDb1MlunXw+/i98worzpGRUUy4O
-	 jhpHTyuOR3zUiKUoKU+DTQyGfnVKaLlWHXaKl8V2bNClU9NDY/s89LdDt0qOZo8oNF
-	 BLTgshL4skQl6QHFdslAxXtOFGYUfB0DpczeDbwAn5ciEjMXyfNDVhMO9DMFeQWF4e
-	 eRlSqLrTFOFFnwckjRICPqfoFNnUC744CAYuS2wtbHhxTCynLgeVJSLPWTvdHVWZLF
-	 RdiqgOdEPYXCA==
-Date: Thu, 8 Aug 2024 00:35:01 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc: "tj@kernel.org" <tj@kernel.org>,
-	"dlemoal@kernel.org" <dlemoal@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-	"conor+dt@kernel.org" <conor+dt@kernel.org>,
-	"shawnguo@kernel.org" <shawnguo@kernel.org>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>
-Subject: Re: [PATCH v4 4/6] ata: ahci_imx: Add 32bits DMA limit for i.MX8QM
- AHCI SATA
-Message-ID: <ZrP2lUjTAazBlUVO@x1-carbon.lan>
-References: <1721367736-30156-1-git-send-email-hongxing.zhu@nxp.com>
- <1721367736-30156-5-git-send-email-hongxing.zhu@nxp.com>
- <Zp/Uh/mavwo+755Q@x1-carbon.lan>
- <AS8PR04MB867612E75A6C08983F7031528CB32@AS8PR04MB8676.eurprd04.prod.outlook.com>
+	s=arc-20240116; t=1723081368; c=relaxed/simple;
+	bh=CnnQshXe0X72q2///Hc/nhRcgpz1ln6q+L8fY2PsJMs=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JFlNFcVTRUhEa+wxjuvZqnsYPFk+Usl7UJUzIvZV4BNwE90S6EP3AWSHfhp/B0AOlQUTlZyQQEUd+11WbOBbN1XsXj/e+QIgM2lK0opinFCqNQi6CrJs43UZHFt7Gv8e2is36KoBcm2MY6huCtSqsU9Dw9jN6SSmsGLKUu9IHsw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4WfV6Y3yplz1j6N0;
+	Thu,  8 Aug 2024 09:37:57 +0800 (CST)
+Received: from kwepemf500003.china.huawei.com (unknown [7.202.181.241])
+	by mail.maildlp.com (Postfix) with ESMTPS id 263951402CC;
+	Thu,  8 Aug 2024 09:42:41 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by kwepemf500003.china.huawei.com
+ (7.202.181.241) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Thu, 8 Aug
+ 2024 09:42:40 +0800
+From: Zhang Zekun <zhangzekun11@huawei.com>
+To: <hdegoede@redhat.com>, <axboe@kernel.dk>, <dlemoal@kernel.org>,
+	<cassel@kernel.org>, <linux-ide@vger.kernel.org>
+CC: <zhangzekun11@huawei.com>
+Subject: [PATCH v2] ata: libahci_platform: Simplify code with for_each_child_of_node_scoped()
+Date: Thu, 8 Aug 2024 09:30:03 +0800
+Message-ID: <20240808013003.116211-1-zhangzekun11@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <AS8PR04MB867612E75A6C08983F7031528CB32@AS8PR04MB8676.eurprd04.prod.outlook.com>
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemf500003.china.huawei.com (7.202.181.241)
 
-On Fri, Aug 02, 2024 at 02:30:45AM +0000, Hongxing Zhu wrote:
-> >
-> > Does this solve your problem:
-> > diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> > index 581704e61f28..fc86e2c8c42b 100644
-> > --- a/drivers/ata/libahci_platform.c
-> > +++ b/drivers/ata/libahci_platform.c
-> > @@ -747,12 +747,11 @@ int ahci_platform_init_host(struct platform_device
-> > *pdev,
-> >                         ap->ops = &ata_dummy_port_ops;
-> >         }
-> >
-> > -       if (hpriv->cap & HOST_CAP_64) {
-> > -               rc = dma_coerce_mask_and_coherent(dev,
-> > DMA_BIT_MASK(64));
-> > -               if (rc) {
-> > -                       dev_err(dev, "Failed to enable 64-bit DMA.\n");
-> > -                       return rc;
-> > -               }
-> > +       rc = dma_coerce_mask_and_coherent(dev,
-> > +                       DMA_BIT_MASK((hpriv->cap & HOST_CAP_64) ? 64 :
-> > 32));
-> > +       if (rc) {
-> > +               dev_err(dev, "DMA enable failed\n");
-> > +               return rc;
-> >         }
-> >
-> >         rc = ahci_reset_controller(host);
-> >
-> Hi Niklas:
-> I'm so sorry to reply late.
-> About the 32bit DMA limitation of i.MX8QM AHCI SATA.
-> It's seems that one "dma-ranges" property in the DT can let i.MX8QM SATA
->  works fine in my past days tests without this commit.
-> How about drop these driver changes, and add "dma-ranges" for i.MX8QM SATA?
-> Thanks a lot for your kindly help.
+for_each_child_of_node_scoped() can put the device_node
+automaticlly. So, using it to make the code logic more simple
+and remove the device_node clean up code.
 
-Hello Richard,
+Signed-off-by: Zhang Zekun <zhangzekun11@huawei.com>
+---
+v2: Improve the patch subject 
 
-did you try my suggested patch above?
+ drivers/ata/libahci_platform.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 581704e61f28..7a8064520a35 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -410,7 +410,6 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+ static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
+ 				      struct device *dev)
+ {
+-	struct device_node *child;
+ 	u32 port;
+ 
+ 	if (!of_property_read_u32(dev->of_node, "hba-cap", &hpriv->saved_cap))
+@@ -419,14 +418,12 @@ static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
+ 	of_property_read_u32(dev->of_node,
+ 			     "ports-implemented", &hpriv->saved_port_map);
+ 
+-	for_each_child_of_node(dev->of_node, child) {
++	for_each_child_of_node_scoped(dev->of_node, child) {
+ 		if (!of_device_is_available(child))
+ 			continue;
+ 
+-		if (of_property_read_u32(child, "reg", &port)) {
+-			of_node_put(child);
++		if (of_property_read_u32(child, "reg", &port))
+ 			return -EINVAL;
+-		}
+ 
+ 		if (!of_property_read_u32(child, "hba-port-cap", &hpriv->saved_port_cap[port]))
+ 			hpriv->saved_port_cap[port] &= PORT_CMD_CAP;
+@@ -460,7 +457,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 	int child_nodes, rc = -ENOMEM, enabled_ports = 0;
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+-	struct device_node *child;
+ 	u32 mask_port_map = 0;
+ 
+ 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+@@ -579,7 +575,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 	}
+ 
+ 	if (child_nodes) {
+-		for_each_child_of_node(dev->of_node, child) {
++		for_each_child_of_node_scoped(dev->of_node, child) {
+ 			u32 port;
+ 			struct platform_device *port_dev __maybe_unused;
+ 
+@@ -588,7 +584,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 
+ 			if (of_property_read_u32(child, "reg", &port)) {
+ 				rc = -EINVAL;
+-				of_node_put(child);
+ 				goto err_out;
+ 			}
+ 
+@@ -606,18 +601,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 			if (port_dev) {
+ 				rc = ahci_platform_get_regulator(hpriv, port,
+ 								&port_dev->dev);
+-				if (rc == -EPROBE_DEFER) {
+-					of_node_put(child);
++				if (rc == -EPROBE_DEFER)
+ 					goto err_out;
+-				}
+ 			}
+ #endif
+ 
+ 			rc = ahci_platform_get_phy(hpriv, port, dev, child);
+-			if (rc) {
+-				of_node_put(child);
++			if (rc)
+ 				goto err_out;
+-			}
+ 
+ 			enabled_ports++;
+ 		}
+-- 
+2.17.1
 
-If you look at dma-ranges:
-https://devicetree-specification.readthedocs.io/en/latest/chapter2-devicetree-basics.html#dma-ranges
-
-"dma-ranges" property should be used on a bus device node
-(such as PCI host bridges).
-
-It does not seem correct to add this property (describing the DMA limit
-of the AHCI controller, a PCI endpoint) on the PCI host bridge/controller.
-
-This property belongs to the AHCI controller, not the upstream PCI
-host bridge/controller.
-
-AHCI has a specific register to describe if the hardware can support
-64-bit DMA addresses or not, so if my suggested patch works for you,
-it seems like a more elegant solution (which also avoids having to
-abuse device tree properties).
-
-
-Kind regards,
-Niklas
