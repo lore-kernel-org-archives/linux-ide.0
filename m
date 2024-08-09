@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB43198E6D;
-	Fri,  9 Aug 2024 15:21:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A70174EE4
+	for <linux-ide@vger.kernel.org>; Fri,  9 Aug 2024 15:25:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723216886; cv=none; b=f44ZW+QvgCfxeIHU3PdbPEwUbqO64wS77lnFwVoPqnuC3uwowP3dsmMMgqcLR1EoSmei9jhjDU5QWHJjs0+2nBIG5ePi+QTlGr9ViQZZorYvuDJm3bOvGMGrm66zaP8ajXGNKlA4nOhQmDsuWQ9w6MYTLw6dzOmSA10kqgZI4/I=
+	t=1723217131; cv=none; b=V7WUZUwq6+bP5Zll32isxQI00vQDCzWhzfhoE8xDx9/Tb62TRd7//J47MHgUxZIgO0zoxDlEQOqcuW87z0L3i+m4oGDYvGhhnrb81C35qLFIqaZz+o4NLSVmPnlJZMaklV7Fyjbj7djijgAJ5EQG08Fd37K/LKgDMd3Uh6b8Jz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723216886; c=relaxed/simple;
-	bh=2D0UJ9CPvkXheq8AuRIAqUI7JO96fv77PhT9a5EEqBk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Mgl4+NuMcMlavWkooTIMGaVOXDgmm2vRfHF183Yd4xwLTOLrJFcgVgNLEI1qoyp1VduWuRBDFgKP1y11ndoFnw7DTxdnbKnruzerU72nmz1U1IbZueW7Ow3xBI4KDAsicpxU3MxGF5x0AcomcpegdiXxCl1n0iyAiHxBBTw17+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NKnN2ail; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723217131; c=relaxed/simple;
+	bh=SFHmEof4R2t0kVGYMl2CPsCNGwhtVA9ARVbLm40Gu0I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ESu2jmij8eWNQ53sIoaPw+u1vZgzSHGOuFSFnEiKyOaCt/ZLLMyZMGcMM8QCfVlNuAlwd20HEkA2gVFPH4Ul1wTGb9tMWa6Nx1WMy7S/8Kqq42IqQBrgrkK+z2FYzMO6P8HinsLE+DM047eC3qmmPowE8wszk5KAjGjkC8v1RGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=teXUxV+P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NKnN2ail"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9C83C32782;
-	Fri,  9 Aug 2024 15:21:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="teXUxV+P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 198A6C32782;
+	Fri,  9 Aug 2024 15:25:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723216886;
-	bh=2D0UJ9CPvkXheq8AuRIAqUI7JO96fv77PhT9a5EEqBk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=NKnN2ailXGRJUG8fDp3X703mPXgBpsdt4BPIhOoq6utEKFmD6oJY7wtTN7yaVui27
-	 9z9SRQaKHEz5OW50JA7cxUYFWDv1IiroibC30XgUzTbgchFqTse0d9x6MqNiUbskfI
-	 dI2m0SxpRnLanXnoMwBTuRnsV8oCJu6zE6J8LB3sOQKEgwvvM1DDSX8DoWpvj0T6Ct
-	 D6neMHdrKRYiptjowBe+Q+geho0y3xY2GuZwJE5V1m9sFzTuoM5AZez6zxaARflhyw
-	 27qmLth4ZkAALz7M/uN3S8PFXBhp5/X6GrXaDWuY0fS9KBHZhAupvAdANqJSUFKdg1
-	 vuEdmJRdNhB3Q==
-Message-ID: <c2334dc1-d036-434f-8632-6583138f9176@kernel.org>
-Date: Fri, 9 Aug 2024 08:21:25 -0700
+	s=k20201202; t=1723217131;
+	bh=SFHmEof4R2t0kVGYMl2CPsCNGwhtVA9ARVbLm40Gu0I=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=teXUxV+PSzux0itQ3GH2fuXFcjHcjVTWdqcPTHBlpBd2Y+0h3LcHS58DKv1qpM6NN
+	 pFP473Wt63AD00IP5wQaQ1jBdJHD1Scu9Nh4vr/O/nA/u6TvdNezy3an2j8BRpQJ2f
+	 eOb4uDNlFtXR56oo3dfgm3Yl+XGYSZp+QbyYqnYkJg16pmuVI2cqRyZ9lyNrHi9VPS
+	 8vKEHsUZRBrSIV5FDcgl49FHIfuJwZMI+Zi3GwJiqshfYNYH7MlwBf/8Qpu16QSHmb
+	 /yAV2v9nX+YUh52lLDkQF3TaEnL8WqiOtZgpns5ewEsUG15khTMdT+qsI/v0UUBkSu
+	 3b0qd38aQoAzw==
+Message-ID: <5c5f5501-1b91-4c83-87dc-db0ce8513b8d@kernel.org>
+Date: Fri, 9 Aug 2024 08:25:30 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,52 +35,112 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION][BISECTED][STABLE] hdparm errors since 28ab9769117c
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Christian Heusel <christian@heusel.eu>, Igor Pylypiv
- <ipylypiv@google.com>, linux-ide@vger.kernel.org,
- Hannes Reinecke <hare@suse.de>, regressions@lists.linux.dev,
- stable@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <0bf3f2f0-0fc6-4ba5-a420-c0874ef82d64@heusel.eu>
- <45cdf1c2-9056-4ac2-8e4d-4f07996a9267@kernel.org>
- <ZrPw5m9LwMH5NQYy@x1-carbon.lan> <ZrYn9CL1uLJEwpdT@ryzen.lan>
+Subject: Re: [PATCH v2] ata: libahci_platform: Simplify code with
+ for_each_child_of_node_scoped()
+To: Zhang Zekun <zhangzekun11@huawei.com>, hdegoede@redhat.com,
+ axboe@kernel.dk, cassel@kernel.org, linux-ide@vger.kernel.org
+References: <20240808013003.116211-1-zhangzekun11@huawei.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <ZrYn9CL1uLJEwpdT@ryzen.lan>
+In-Reply-To: <20240808013003.116211-1-zhangzekun11@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2024/08/09 7:30, Niklas Cassel wrote:
-> Hello Damien,
-> 
-> If we want to no longer respect the D_SENSE bit for successful ATA-passthrough
-> commands, e.g. by replacing the ata_scsi_set_sense() call with a
-> scsi_build_sense() call in the else clause:
-> https://github.com/torvalds/linux/blob/v6.11-rc2/drivers/ata/libata-scsi.c#L955
-> 
-> ...then I think that we should also replace the ata_scsi_set_sense() call with
-> a scsi_build_sense() call for failed ATA-passthrough commands too
-> (in the non-else clause):
-> https://github.com/torvalds/linux/blob/v6.11-rc2/drivers/ata/libata-scsi.c#L952
-> 
-> ..however, that does not sound like a very nice solution IMO.
-> 
-> 
-> Another option, if there are a lot of user space programs that incorrectly
-> assume that the sense data (for both successful and failed commands) is in
-> descriptor format, without bothering to check the sense data type, one option
-> might be to change the default value of D_SENSE in the control mode page to 1
-> in libata's SATL, i.e. set ATA_DFLAG_D_SENSE in dev->flags by default.
-> 
-> That way, we will still respect D_SENSE while generating the sense data
-> (in case the user issues a mode select to modify the bit), and the default
-> will be to generate the sense data in descriptor format, as it has been
-> since 11093cb1ef56 ("libata-scsi: generate correct ATA pass-through sense").
+On 2024/08/07 18:30, Zhang Zekun wrote:
+> for_each_child_of_node_scoped() can put the device_node
+> automaticlly. So, using it to make the code logic more simple
+> and remove the device_node clean up code.
 
-That indeed should be acceptable. And we should also patch hdparm to properly
-look at the sense format and not assume descriptor format by default.
 
+s/automaticlly/automatically
+
+And in my previous email, I did suggest a change to the second sentence. Please
+pick that up as well.
+
+> 
+> Signed-off-by: Zhang Zekun <zhangzekun11@huawei.com>
+> ---
+> v2: Improve the patch subject 
+> 
+>  drivers/ata/libahci_platform.c | 19 +++++--------------
+>  1 file changed, 5 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 581704e61f28..7a8064520a35 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -410,7 +410,6 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+>  static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
+>  				      struct device *dev)
+>  {
+> -	struct device_node *child;
+>  	u32 port;
+>  
+>  	if (!of_property_read_u32(dev->of_node, "hba-cap", &hpriv->saved_cap))
+> @@ -419,14 +418,12 @@ static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
+>  	of_property_read_u32(dev->of_node,
+>  			     "ports-implemented", &hpriv->saved_port_map);
+>  
+> -	for_each_child_of_node(dev->of_node, child) {
+> +	for_each_child_of_node_scoped(dev->of_node, child) {
+>  		if (!of_device_is_available(child))
+>  			continue;
+>  
+> -		if (of_property_read_u32(child, "reg", &port)) {
+> -			of_node_put(child);
+> +		if (of_property_read_u32(child, "reg", &port))
+>  			return -EINVAL;
+> -		}
+>  
+>  		if (!of_property_read_u32(child, "hba-port-cap", &hpriv->saved_port_cap[port]))
+>  			hpriv->saved_port_cap[port] &= PORT_CMD_CAP;
+> @@ -460,7 +457,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+>  	int child_nodes, rc = -ENOMEM, enabled_ports = 0;
+>  	struct device *dev = &pdev->dev;
+>  	struct ahci_host_priv *hpriv;
+> -	struct device_node *child;
+>  	u32 mask_port_map = 0;
+>  
+>  	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+> @@ -579,7 +575,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+>  	}
+>  
+>  	if (child_nodes) {
+> -		for_each_child_of_node(dev->of_node, child) {
+> +		for_each_child_of_node_scoped(dev->of_node, child) {
+>  			u32 port;
+>  			struct platform_device *port_dev __maybe_unused;
+>  
+> @@ -588,7 +584,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+>  
+>  			if (of_property_read_u32(child, "reg", &port)) {
+>  				rc = -EINVAL;
+> -				of_node_put(child);
+>  				goto err_out;
+>  			}
+>  
+> @@ -606,18 +601,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+>  			if (port_dev) {
+>  				rc = ahci_platform_get_regulator(hpriv, port,
+>  								&port_dev->dev);
+> -				if (rc == -EPROBE_DEFER) {
+> -					of_node_put(child);
+> +				if (rc == -EPROBE_DEFER)
+>  					goto err_out;
+> -				}
+>  			}
+>  #endif
+>  
+>  			rc = ahci_platform_get_phy(hpriv, port, dev, child);
+> -			if (rc) {
+> -				of_node_put(child);
+> +			if (rc)
+>  				goto err_out;
+> -			}
+>  
+>  			enabled_ports++;
+>  		}
 
 -- 
 Damien Le Moal
