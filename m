@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A70174EE4
-	for <linux-ide@vger.kernel.org>; Fri,  9 Aug 2024 15:25:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44E56168DC;
+	Fri,  9 Aug 2024 15:34:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723217131; cv=none; b=V7WUZUwq6+bP5Zll32isxQI00vQDCzWhzfhoE8xDx9/Tb62TRd7//J47MHgUxZIgO0zoxDlEQOqcuW87z0L3i+m4oGDYvGhhnrb81C35qLFIqaZz+o4NLSVmPnlJZMaklV7Fyjbj7djijgAJ5EQG08Fd37K/LKgDMd3Uh6b8Jz4=
+	t=1723217685; cv=none; b=DIDpLLN1+tpQM9ulyBOyPlZ4fp3dWuE0ibke7Ivg8E1kEFpXUUxos2nrszLjNwP9Uz0FzSp24kkOqnU2uQG1KEry0XdpgH1zlqeFWyngXNO6+leDe3vcROg+uo3wMkCnB8kxJbOV9rcgO1MO6W0AZ7ddOgTPLmDe/MezSMl897Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723217131; c=relaxed/simple;
-	bh=SFHmEof4R2t0kVGYMl2CPsCNGwhtVA9ARVbLm40Gu0I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ESu2jmij8eWNQ53sIoaPw+u1vZgzSHGOuFSFnEiKyOaCt/ZLLMyZMGcMM8QCfVlNuAlwd20HEkA2gVFPH4Ul1wTGb9tMWa6Nx1WMy7S/8Kqq42IqQBrgrkK+z2FYzMO6P8HinsLE+DM047eC3qmmPowE8wszk5KAjGjkC8v1RGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=teXUxV+P; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723217685; c=relaxed/simple;
+	bh=xOeajoTbjJnSdAiPass/Rpyu0Kl8NAn33BDrrQ9U+bo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=U15/c73NePkuqlpQ1m/qC7qU/4Pt/FIuvpJ6H/V80oiGE9OVZLg8YH1R2fBNeBqL1usYns7HOZMdyql3TOx+05cli5KgtXlGJ+e1n9a/HBQv7tEOwyUx0xwwWl7rcdMgNrxQR7dZ+1X/TCCR4xMf4TYESgAE1CRK9pT1S4WrxOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=juuqxxgu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="teXUxV+P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 198A6C32782;
-	Fri,  9 Aug 2024 15:25:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="juuqxxgu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87FB0C32782;
+	Fri,  9 Aug 2024 15:34:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723217131;
-	bh=SFHmEof4R2t0kVGYMl2CPsCNGwhtVA9ARVbLm40Gu0I=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=teXUxV+PSzux0itQ3GH2fuXFcjHcjVTWdqcPTHBlpBd2Y+0h3LcHS58DKv1qpM6NN
-	 pFP473Wt63AD00IP5wQaQ1jBdJHD1Scu9Nh4vr/O/nA/u6TvdNezy3an2j8BRpQJ2f
-	 eOb4uDNlFtXR56oo3dfgm3Yl+XGYSZp+QbyYqnYkJg16pmuVI2cqRyZ9lyNrHi9VPS
-	 8vKEHsUZRBrSIV5FDcgl49FHIfuJwZMI+Zi3GwJiqshfYNYH7MlwBf/8Qpu16QSHmb
-	 /yAV2v9nX+YUh52lLDkQF3TaEnL8WqiOtZgpns5ewEsUG15khTMdT+qsI/v0UUBkSu
-	 3b0qd38aQoAzw==
-Message-ID: <5c5f5501-1b91-4c83-87dc-db0ce8513b8d@kernel.org>
-Date: Fri, 9 Aug 2024 08:25:30 -0700
+	s=k20201202; t=1723217684;
+	bh=xOeajoTbjJnSdAiPass/Rpyu0Kl8NAn33BDrrQ9U+bo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=juuqxxguEpFZcSZ1aLZdWapJYMqubUZHPSLyVJyEIpio7ySRM7dvSR6ydu3UgHYcT
+	 LHZd1Vrz3OUy1mBudOj2xbHw4J+PxfV01irOVxAFYUNQVE/MsWp7Ktkw5yoBxd05tr
+	 QgcPsUAmikkzZgCHNSim17Ga7O/quLgU8zV+rysSRtUghP7HvNSvBIiAMh/gbIGpz2
+	 dR26SQbyeMaDc13ncfb7Nuq+aXfRw95k5cOxhoTy6S27DCGzIMUdDrgZXxfYZ8hxm+
+	 sEDk2Nc0ySSwf5quibaZUQEmXPQU6mZG/PVY77909E00qeZtEz5HqgNlPJL1L+gGe5
+	 1eahcJpc9af4g==
+Message-ID: <1376f541-bc8a-4162-a814-a9146ebaf4eb@kernel.org>
+Date: Fri, 9 Aug 2024 08:34:44 -0700
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,112 +35,178 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ata: libahci_platform: Simplify code with
- for_each_child_of_node_scoped()
-To: Zhang Zekun <zhangzekun11@huawei.com>, hdegoede@redhat.com,
- axboe@kernel.dk, cassel@kernel.org, linux-ide@vger.kernel.org
-References: <20240808013003.116211-1-zhangzekun11@huawei.com>
+Subject: Re: [REGRESSION][BISECTED][STABLE] hdparm errors since 28ab9769117c
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Christian Heusel <christian@heusel.eu>, Igor Pylypiv
+ <ipylypiv@google.com>, linux-ide@vger.kernel.org,
+ Hannes Reinecke <hare@suse.de>, regressions@lists.linux.dev,
+ stable@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <0bf3f2f0-0fc6-4ba5-a420-c0874ef82d64@heusel.eu>
+ <45cdf1c2-9056-4ac2-8e4d-4f07996a9267@kernel.org>
+ <ZrPw5m9LwMH5NQYy@x1-carbon.lan>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240808013003.116211-1-zhangzekun11@huawei.com>
+In-Reply-To: <ZrPw5m9LwMH5NQYy@x1-carbon.lan>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2024/08/07 18:30, Zhang Zekun wrote:
-> for_each_child_of_node_scoped() can put the device_node
-> automaticlly. So, using it to make the code logic more simple
-> and remove the device_node clean up code.
+On 2024/08/07 15:10, Niklas Cassel wrote:
+> On Wed, Aug 07, 2024 at 11:26:46AM -0700, Damien Le Moal wrote:
+>> On 2024/08/07 10:23, Christian Heusel wrote:
+>>> Hello Igor, hello Niklas,
+>>>
+>>> on my NAS I am encountering the following issue since v6.6.44 (LTS),
+>>> when executing the hdparm command for my WD-WCC7K4NLX884 drives to get
+>>> the active or standby state:
+>>>
+>>>     $ hdparm -C /dev/sda
+>>>     /dev/sda:
+>>>     SG_IO: bad/missing sense data, sb[]:  f0 00 01 00 50 40 ff 0a 00 00 78 00 00 1d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>>>      drive state is:  unknown
+>>>
+>>>
+>>> While the expected output is the following:
+>>>
+>>>     $ hdparm -C /dev/sda
+>>>     /dev/sda:
+>>>      drive state is:  active/idle
+>>>
+>>> I did a bisection within the stable series and found the following
+>>> commit to be the first bad one:
+>>>
+>>>     28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error")
+>>>
+>>> According to kernel.dance the same commit was also backported to the
+>>> v6.10.3 and v6.1.103 stable kernels and I could not find any commit or
+>>> pending patch with a "Fixes:" tag for the offending commit.
+>>>
+>>> So far I have not been able to test with the mainline kernel as this is
+>>> a remote device which I couldn't rescue in case of a boot failure. Also
+>>> just for transparency it does have the out of tree ZFS module loaded,
+>>> but AFAIU this shouldn't be an issue here, as the commit seems clearly
+>>> related to the error. If needed I can test with an untainted mainline
+>>> kernel on Friday when I'm near the device.
+>>>
+>>> I have attached the output of hdparm -I below and would be happy to
+>>> provide further debug information or test patches.
+>>
+>> I confirm this, using 6.11-rc2. The problem is actually hdparm code which
+>> assumes that the sense data is in descriptor format without ever looking at the
+>> D_SENSE bit to verify that. So commit 28ab9769117c reveals this issue because as
+>> its title explains, it (correctly) honors D_SENSE instead of always generating
+>> sense data in descriptor format.
+> 
+> You mean: the user space application is using the sense buffer without first
+> checking if the returned sense buffer is in descriptor or fixed format.
 
+Yes. The code looks like:
 
-s/automaticlly/automatically
+desc = sb + 8;
+if (io_hdr.driver_status != SG_DRIVER_SENSE) {
+	...
+} else if (sb[0] != 0x72 || sb[7] < 14 || desc[0] != 0x09 || desc[1] < 0x0c) {
+	if (verbose || tf->command != ATA_OP_IDENTIFY)
+		dump_bytes("SG_IO: bad/missing sense data, sb[]",
+			   sb, sizeof(sb));
+}
 
-And in my previous email, I did suggest a change to the second sentence. Please
-pick that up as well.
+So clearly it assumes descrip@tor format.
+
+> This seems like a fundamentally flawed assumption by the user space program.
+> If it doesn't even bother checking the first field in the sense buffer, sb[0],
+> perhaps it shouldn't bother trying to use the sense buffer at all.
+
+> (Yes, the D_SENSE bit can be configured by the user, but that doesn't change
+> the fact that a user space program must check the format of the returned buffer
+> before trying to use it.)
+
+Yep. I agree.
 
 > 
-> Signed-off-by: Zhang Zekun <zhangzekun11@huawei.com>
-> ---
-> v2: Improve the patch subject 
 > 
->  drivers/ata/libahci_platform.c | 19 +++++--------------
->  1 file changed, 5 insertions(+), 14 deletions(-)
+>> Hmm... This is annoying. The kernel is fixed to be spec compliant but that
+>> breaks old/non-compliant applications... We definitely should fix hdparm code,
+>> but I think we still need to revert 28ab9769117c...
 > 
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 581704e61f28..7a8064520a35 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -410,7 +410,6 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
->  static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
->  				      struct device *dev)
->  {
-> -	struct device_node *child;
->  	u32 port;
->  
->  	if (!of_property_read_u32(dev->of_node, "hba-cap", &hpriv->saved_cap))
-> @@ -419,14 +418,12 @@ static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
->  	of_property_read_u32(dev->of_node,
->  			     "ports-implemented", &hpriv->saved_port_map);
->  
-> -	for_each_child_of_node(dev->of_node, child) {
-> +	for_each_child_of_node_scoped(dev->of_node, child) {
->  		if (!of_device_is_available(child))
->  			continue;
->  
-> -		if (of_property_read_u32(child, "reg", &port)) {
-> -			of_node_put(child);
-> +		if (of_property_read_u32(child, "reg", &port))
->  			return -EINVAL;
-> -		}
->  
->  		if (!of_property_read_u32(child, "hba-port-cap", &hpriv->saved_port_cap[port]))
->  			hpriv->saved_port_cap[port] &= PORT_CMD_CAP;
-> @@ -460,7 +457,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->  	int child_nodes, rc = -ENOMEM, enabled_ports = 0;
->  	struct device *dev = &pdev->dev;
->  	struct ahci_host_priv *hpriv;
-> -	struct device_node *child;
->  	u32 mask_port_map = 0;
->  
->  	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-> @@ -579,7 +575,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->  	}
->  
->  	if (child_nodes) {
-> -		for_each_child_of_node(dev->of_node, child) {
-> +		for_each_child_of_node_scoped(dev->of_node, child) {
->  			u32 port;
->  			struct platform_device *port_dev __maybe_unused;
->  
-> @@ -588,7 +584,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->  
->  			if (of_property_read_u32(child, "reg", &port)) {
->  				rc = -EINVAL;
-> -				of_node_put(child);
->  				goto err_out;
->  			}
->  
-> @@ -606,18 +601,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->  			if (port_dev) {
->  				rc = ahci_platform_get_regulator(hpriv, port,
->  								&port_dev->dev);
-> -				if (rc == -EPROBE_DEFER) {
-> -					of_node_put(child);
-> +				if (rc == -EPROBE_DEFER)
->  					goto err_out;
-> -				}
->  			}
->  #endif
->  
->  			rc = ahci_platform_get_phy(hpriv, port, dev, child);
-> -			if (rc) {
-> -				of_node_put(child);
-> +			if (rc)
->  				goto err_out;
-> -			}
->  
->  			enabled_ports++;
->  		}
+> Well.. if we look at commit:
+> 11093cb1ef56 ("libata-scsi: generate correct ATA pass-through sense")
+> https://github.com/torvalds/linux/commit/11093cb1ef56147fe33f5750b1eab347bdef30db
+> 
+> We can see that before that commit, the kernel used to call
+> ata_scsi_set_sense().
+> 
+> Back then ata_scsi_set_sense() was defined as:
+> https://github.com/torvalds/linux/blob/11093cb1ef56147fe33f5750b1eab347bdef30db/drivers/ata/libata-scsi.c#L280
+> scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
+> 
+> Where the first argument to scsi_build_sense_buffer() is if the generated sense
+> buffer should be fixed or desc format (0 == fixed format), so we used to
+> generate the sense buffer in fixed format:
+> https://github.com/torvalds/linux/blob/11093cb1ef56147fe33f5750b1eab347bdef30db/drivers/scsi/scsi_common.c#L231
+> 
+> However, as we can see, the kernel then used to incorrectly just
+> change sb[0} to say that the buffer was in desc format,
+> without updating the other fields, e.g. sb[2]:
+> https://github.com/torvalds/linux/blob/11093cb1ef56147fe33f5750b1eab347bdef30db~/drivers/ata/libata-scsi.c#L1026
+> so the format was really in some franken format...
+> following neither fixed or descriptor format.
+> 
+> 11093cb1ef56 ("libata-scsi: generate correct ATA pass-through sense")
+> did change so that successful ATA-passthrough commands always generated
+> the sense data in descriptor format. However, that commit also managed to
+> mess up the offsets for fixed format sense...
+> 
+> The commit that later changed ata_scsi_set_sense() to honor D_SENSE
+> was commit: 06dbde5f3a44 ("libata: Implement control mode page to select
+> sense format")
+> 
+> So basically:
+> Before commit 11093cb1ef56 ("libata-scsi: generate correct ATA pass-through
+> sense"), we generated sense data in some franken format for both successful
+> and failed ATA-passthrough commands.
+> 
+> After commit 11093cb1ef56 ("libata-scsi: generate correct ATA pass-through
+> sense") we generate sense data for sucessful ATA-passthrough commands in
+> descriptor format unconditionally, but still in franken format for failed
+> ATA-passthrough commands.
+> 
+> After commit 06dbde5f3a44 ("libata: Implement control mode page to select
+> sense format") we generate sense data for sucessful ATA-passthrough commands
+> in descriptor format unconditionally, but for failed commands we actually
+> honored D_SENSE to generate it either in fixed format or descriptor format.
+> (However, because of a bug in 11093cb1ef56, if using fixed format, the
+> offsets were wrong...)
+> 
+> 
+> The incorrect offsets for fixed format was fixed recently, in commit
+> 38dab832c3f4 ("ata: libata-scsi: Fix offsets for the fixed format sense data")
+> 
+> Commit 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and
+> no error") fixed so that we actually honor D_SENSE not only for failed
+> ATA-passthrough commands, but also for successfull ATA-passthrough commands.
+> 
+> TL;DR: it is very hard to say that we have introduced a regression, because
+> this crap has basically been broken in one way or another since it was
+> introduced... Personally, I would definitely want all the patches that are in
+> mainline in the kernel running on my machine, since that is the only thing
+> that is consistent.
+> 
+> However, that assumes that user space programs that are trying to parse the
+> sense data actually bothers to check the first field in the sense data,
+> to see which format the returned sense data is in... Applications that
+> do not even both with that will have problems on a lot of (historic) kernel
+> versions.
+
+Yes, indeed. I do not want to revert any of these recent patches, because as you
+rightly summarize here, these fix something that has been broken for a long
+time. We were just lucky that we did not see more application failures until
+now, or rather unlucky that we did not as that would have revealed these
+problems earlier.
+
+So I think we will have some patching to do to hdparm at least to fix the
+problems there.
+
 
 -- 
 Damien Le Moal
