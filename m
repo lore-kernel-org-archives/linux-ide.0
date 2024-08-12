@@ -1,123 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CE8D450F2;
-	Mon, 12 Aug 2024 15:15:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DC813A3F2;
+	Mon, 12 Aug 2024 17:41:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723475726; cv=none; b=YtwK55XZhhN0WwKEQwmj/f6rLWNTAEjFH9ZuQe1Tx5H7nsk1EFbpsUKk4lY8+R41cQfXHrBJehPBe3lETI6krVjUcbOyq8D3GkszdcsfrOobCBP9X+h1Ve0/juIu2Ei3k9MuemhswupzhaVHPk7S6F5ax2RjaUcH0mo1Dc9CkW0=
+	t=1723484475; cv=none; b=jjuBXQM6x2e7g73N1K3D38hiTa1jx4heKeN0P0xTl3qIZRllQFPJXwNYDUbZHaNPg3FA0cJvoHsG3MizOUtXdqUPkunn3RI0r+KASftaPZY95rqgJr1vuSFte4GApBMB+EzafcrEtpv4nUS+g+8PF07t5Pzllz0MXVaT+mWyuv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723475726; c=relaxed/simple;
-	bh=kn457Ewsy8AA119t2bKO1YiwRsCbIJH8Cmg6w7Ro4ZQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=go+HYmSMj1SPxQUBKRatCgSK5rw+waz+2ZHu/K8IoDS6utySCBAE6zSA5hBmO3XVeUMnOmDGScwLVnhyV1gio0FYq3fdlO+m7uiYNNuYMBt3pP59IVAORSz0OJ2cWOn8fweVgvuv/+DgRTM3x1F+5FteHpAZ6BZPePbd/5jqvN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=noxVX+S1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723484475; c=relaxed/simple;
+	bh=VakPXC2M+vociIzuEJDlY2TRNwMRMDXnlBvDoQY/Ah4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ezjsja6ksjrOHEBPhddl97sw4jduUZ+3KdmTKZ5JOHpNQdoUuStJhV8YsiuTe2UZlkq0SKXqlzPBE2qGF91MwLzR33J6duMmfeAUpQfzMWtCVoCuKCPKyI3/4UwkGzR3sWxbU3aHyLE2WFNEQSQvkzg7vN7E4euZk42Y23kuggI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=heusel.eu; spf=pass smtp.mailfrom=heusel.eu; dkim=pass (2048-bit key) header.d=heusel.eu header.i=christian@heusel.eu header.b=AAPz6e+F; arc=none smtp.client-ip=212.227.17.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=heusel.eu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=heusel.eu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="noxVX+S1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A31FC32782;
-	Mon, 12 Aug 2024 15:15:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723475726;
-	bh=kn457Ewsy8AA119t2bKO1YiwRsCbIJH8Cmg6w7Ro4ZQ=;
-	h=From:To:Cc:Subject:Date:From;
-	b=noxVX+S1vESBSCamSwIfUVgUD+jXE1W64LmLKxoB9fCI3d7qBHLDBTAHEQC8wRXZb
-	 wWJxzSQICfc7NxVt2zhAywINl6MrD3aoBfJBi/JieTeuIIkx1E7pnDOa3MJkmW8XPY
-	 8iC2IVyCDcHkrdzmoVu0NNjFqhtNO9SJw58ewlvzk0NQ7tWXH1QsgKhreSxF6aeWrO
-	 UDgkjIXS44h65K24dfV62fS7XlEWFHYQxz1IbXgtVjpSWcVpvw1mSAkldMJPShj1Wu
-	 C092g7qyqw2Y7/2Iv5HaJ2Y4mMGsdPb0sIdwjlmHywEx9bHAB+Hb0ZAc1qP+hQE51k
-	 MnKmH6EHcVQsQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Hannes Reinecke <hare@suse.de>,
-	Igor Pylypiv <ipylypiv@google.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	stable@vger.kernel.org,
-	Stephan Eisvogel <eisvogel@seitics.de>,
-	Christian Heusel <christian@heusel.eu>,
+	dkim=pass (2048-bit key) header.d=heusel.eu header.i=christian@heusel.eu header.b="AAPz6e+F"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=heusel.eu;
+	s=s1-ionos; t=1723484442; x=1724089242; i=christian@heusel.eu;
+	bh=VakPXC2M+vociIzuEJDlY2TRNwMRMDXnlBvDoQY/Ah4=;
+	h=X-UI-Sender-Class:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:In-Reply-To:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=AAPz6e+Fxp6UBdJ8wQysLBuzhBKyprpcyNtDJIoGln6tmRWDPpj5GnOXszI9Gb28
+	 NIJa18LVQt129fO9aVYr8URgXLuBlsWjiSveCDdbjiNJHzI+HogV+tGIV2dmmzfj9
+	 10BEa7MuSKbUur4KTNKVlJLqE9sd/eli5DfoJs9t242ymCboS5u4etWRmFria3R9y
+	 1Nif7B/RBljgRWMjyCImux+Sr3ujaufwhpctpF8afQ0t0NdDBUB08FzMzQBo3U5kB
+	 aBl/aSUv3UjNBJm9xxBMehxMHtXqiYoL1vZaVsS/8aKvRufypANGkyRUPsQSVA6np
+	 4XGnsiSmhMcaM4IW0w==
+X-UI-Sender-Class: 55c96926-9e95-11ee-ae09-1f7a4046a0f6
+Received: from localhost ([84.170.80.33]) by mrelayeu.kundenserver.de
+ (mreue109 [212.227.15.183]) with ESMTPSA (Nemesis) id
+ 1MTiHb-1slV0p0Dc5-00YOIC; Mon, 12 Aug 2024 19:40:42 +0200
+Date: Mon, 12 Aug 2024 19:40:40 +0200
+From: Christian Heusel <christian@heusel.eu>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>, 
+	Igor Pylypiv <ipylypiv@google.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	stable@vger.kernel.org, Stephan Eisvogel <eisvogel@seitics.de>, 
 	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: libata-core: Return sense data in descriptor format by default
-Date: Mon, 12 Aug 2024 17:15:18 +0200
-Message-ID: <20240812151517.1162241-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.46.0
+Subject: Re: [PATCH] ata: libata-core: Return sense data in descriptor format
+ by default
+Message-ID: <e87e8463-acd8-4cbd-af87-3d65a179ee7f@heusel.eu>
+References: <20240812151517.1162241-2-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3233; i=cassel@kernel.org; h=from:subject; bh=kn457Ewsy8AA119t2bKO1YiwRsCbIJH8Cmg6w7Ro4ZQ=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJ2qbMG5307s731B+fnZO6oliOlPWolE5e7TJ19o7/c2 +8y02bOjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEyk9Cwjw23VPc//F92VWet9 6nhK0aF9pyInebvp5HzOyHry1KkklJHhv3/zyw2HPGb8bsmpE40tYdwlOu3mVpF9EzstXtrF//d cwAAA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="coeursx6zvw2qoic"
+Content-Disposition: inline
+In-Reply-To: <20240812151517.1162241-2-cassel@kernel.org>
+X-Provags-ID: V03:K1:SN7P2BJzN5ENTj0f8ZH4NNOxyMy9tv4E2gH61LKnPY6QLjKOu3P
+ O16mZAuAl7uyrKZ49x9Jkv2annr8GHzWc+fWPRCck8l1U4A4uUAicUUC2gjG4zfPbxdXGWm
+ xXX0Yxqs5suol/75nFpYhJ0llMVwq57nk/5YRC41R26q85bm59OLNairJ+5dhREjh2kViIi
+ itzMDs6Tqbuy4Kd+gqJ4w==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:lxiJOM4Bl7U=;HiCloJ2PmtYqdS0IBF2qTBaxYXM
+ mp/Wz/rbGaiwgNYDRCKKM+IcC/I34EhAAsjgBb/8Wi8v0kFTBbEv8NByO5Kb1AP4Esy4WiSn1
+ dQifKqn9Mj1x58DtehQ3lfzL23DUSVrnGMnzGOR/1d8xuIoAaN7k2hDoE/NB222X4bVT2B4Uf
+ K4TdMrkSLNZTlyUKgG0c6HklK7fH73cbQAVC/KG4ZmftpNYyGqx3deVICKlvsQOkO57xkS4PG
+ k2Jn7B94orFqeT4Y5pvuj+9xUtmDgUQppsyI8+nR3BmoU25E1AC/RH+F1Tp4TrDYNxBI7Q/Ei
+ b8BGcMlDTUiAMsTbMs2ClyFcygLN53zvqNMyHONgAthbFKhlI4BqVqoAo5If0wN9R6+XM2asn
+ c/SgeoZ+UGJLoR7+Iqo1L37mxoKvXql/ry93HAFxlfFOAGZgC1n8N9/LC1ARGEGltESypM0hC
+ ZKrE9eOFPxhyOsALx9EU+HX7Q/hWn9/SL85rLjn2Fp2NXSXYd0UAPkAEVPNsU00/YBsSRJ4WE
+ a3b+8Mds9Z9WbI7MKHtxUfoaRwIHclAXh5dYKZcxIE1jpx5TZU+blYP378zfNZmEZZdmhbEQI
+ m3sJl9X8I3oPryyz4HY0qv79rK7iA4JxF7X1bnlUyxsQ/dRA7b8jt+Ha9X5lRqZni7IdKANU9
+ MYCQsyo2ghcPknOTtyIyC9XCttfYo0iwMngKDiUVu9jrLDe29evnbX4FEvbgWT3k0FRDjoQW+
+ U2ybzG/dZjLc/yXoqbqPBi9wHvRxMZG7g==
 
-Sense data can be in either fixed format or descriptor format.
 
-SAT-6 revision 1, 10.4.6 Control mode page, says that if the D_SENSE bit
-is set to zero (i.e., fixed format sense data), then the SATL should
-return fixed format sense data for ATA PASS-THROUGH commands.
+--coeursx6zvw2qoic
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-A lot of user space programs incorrectly assume that the sense data is in
-descriptor format, without checking the RESPONSE CODE field of the
-returned sense data (to see which format the sense data is in).
+On 24/08/12 05:15PM, Niklas Cassel wrote:
+> Sense data can be in either fixed format or descriptor format.
+>=20
+> SAT-6 revision 1, 10.4.6 Control mode page, says that if the D_SENSE bit
+> is set to zero (i.e., fixed format sense data), then the SATL should
+> return fixed format sense data for ATA PASS-THROUGH commands.
+>=20
+> A lot of user space programs incorrectly assume that the sense data is in
+> descriptor format, without checking the RESPONSE CODE field of the
+> returned sense data (to see which format the sense data is in).
+>=20
 
-The libata SATL has always kept D_SENSE set to zero by default.
-(It is however possible to change the value using a MODE SELECT command.)
+Tested-by: Christian Heusel <christian@heusel.eu>
 
-For failed ATA PASS-THROUGH commands, we correctly generated sense data
-according to the D_SENSE bit. However, because of a bug, sense data for
-successful ATA PASS-THROUGH commands was always generated in the
-descriptor format.
+--coeursx6zvw2qoic
+Content-Type: application/pgp-signature; name="signature.asc"
 
-This was fixed to consistently respect D_SENSE for both failed and
-successful ATA PASS-THROUGH commands in commit 28ab9769117c ("ata:
-libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error").
+-----BEGIN PGP SIGNATURE-----
 
-After commit 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for
-CK_COND=1 and no error"), we started receiving bug reports that we broke
-these user space programs (these user space programs must never have
-encountered a failing command, as the sense data for failing commands has
-always correctly respected D_SENSE, which by default meant fixed format).
+iQIzBAABCAAdFiEEb3ea3iR6a4oPcswTwEfU8yi1JYUFAma6SQ0ACgkQwEfU8yi1
+JYX5cQ/+NhGdxHEqx4Ga2VuNPVXIQvICXOEUKRQl3mjvWFgyT6EUSsi0oAi/wDDG
+P6+G9BWP0x5XAQGSO7ZcImDdDoy4LG/Y+PvyAj9CWB1fPViyG1PsnlUUfaUwU9kC
+qPgehvPDYYgh3PlEJEC1kqJ3/VV2S8/zFPEhmfz0bZAyoul2o88BHpwZrfCS7jJy
+n5HWI3iEUb1MGWy/2ov6vGjR3S0PyprLgA6LeqKg7D2S/7UUS1NcFEcoKkcmd5Wx
+Ln1YtbuOepIfnw449yMGEs3fiCTrdCzdkSjoVtLtX1Yl/cJuaG+3dDpgQ58g+t6P
+mRjbSuR4d2BgM/JE3sYS5fRg3iphNBT4hKkzaoGUM2OEB/wSX7f38rSTjdUGStI6
++hb5ytRofPvg95acu1M3bC7MPix4XytOR9akoYxgFc6I2zgkzfpVJTi/I1uUCXCF
+JLFDtfdy3pSnM3LHuab5LbJtf3BBP3qlg/1K7k83lyOO8AncHRkNA894UAYwneQa
+Hc1aydKC6nQxjVQfCemDtUYstsrfKTYcBS81kaWyFTBqXKKABdLLC4JN/NHwyULo
+D/In/Yzo8QnAJjShtW/zBBnOr2mMzZPq6IvUYboX8h9L8maX1un0xGLrVAsS2zYk
+W3umhFfyOoeff+pD9BZq8OlHcGMnYSc/vqbpYpTInKko8CRUe68=
+=xqEI
+-----END PGP SIGNATURE-----
 
-Since a lot of user space programs seem to assume that the sense data is
-in descriptor format (without checking the type), let's simply change the
-default to have D_SENSE set to one by default.
-
-That way:
--Broken user space programs will see no regression.
--Both failed and successful ATA PASS-THROUGH commands will respect D_SENSE,
- as per SAT-6 revision 1.
--Apparently it seems way more common for user space applications to assume
- that the sense data is in descriptor format, rather than fixed format.
- (A user space program should of course support both, and check the
- RESPONSE CODE field to see which format the returned sense data is in.)
-
-Cc: stable@vger.kernel.org # 4.19+
-Reported-by: Stephan Eisvogel <eisvogel@seitics.de>
-Reported-by: Christian Heusel <christian@heusel.eu>
-Closes: https://lore.kernel.org/linux-ide/0bf3f2f0-0fc6-4ba5-a420-c0874ef82d64@heusel.eu/
-Fixes: 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-core.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c7752dc80028..590bebe1354d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5368,6 +5368,13 @@ void ata_dev_init(struct ata_device *dev)
- 	 */
- 	spin_lock_irqsave(ap->lock, flags);
- 	dev->flags &= ~ATA_DFLAG_INIT_MASK;
-+
-+	/*
-+	 * A lot of user space programs incorrectly assume that the sense data
-+	 * is in descriptor format, without checking the RESPONSE CODE field of
-+	 * the returned sense data (to see which format the sense data is in).
-+	 */
-+	dev->flags |= ATA_DFLAG_D_SENSE;
- 	dev->horkage = 0;
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
--- 
-2.46.0
-
+--coeursx6zvw2qoic--
