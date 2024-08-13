@@ -1,123 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA5619AD6E;
-	Tue, 13 Aug 2024 13:19:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5647119AD71;
+	Tue, 13 Aug 2024 13:27:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723555146; cv=none; b=bzdPXqzcsbUEG5wYDYNJ+neKQKcf6sA2HflaO/5GitcJQ7p6PhrhWTT1OJixCFX+XgzNalL5j3hc1rpXktxowG+pzXNwZa/pcpR7mFPbsF1LJWdC6LIyaCt3n6ZAi5xsW94o5OT08JpOYjCvBihYeQRkDBxRrgjcN6+dKOjETD8=
+	t=1723555624; cv=none; b=PmoJrcT5nFqP2Zis/SSkC+R+TcjKwhzZt79CXWLgW4pPCFSSKxeGk+F+50XlBTwY0v06s9piKm3k6TF6NUB6KBl7DmyJgzjXzGCsTsnLtNJiaFsVA3w4W0wPBMmxekFKDQD0n0EGedSfJxhXR0jHKCLSDAQEqi5g3tPpl/OGkS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723555146; c=relaxed/simple;
-	bh=k6UmuWWU+5OWpY/TlzGbBpOY05z+pfvzbhKtMvZXl8Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kWwK2yJdeDTh1DXaXKWkpj+yhFm8MO+XXkR+I4X6BCPW0bjrM8NEoCtqTvaPv8AHp9ATCYGWChdFsoS9flZXGoH6upueyINIfCg6R/Knxiu+V/q0KW7GknYMp65H7ErsIPiXcmQBBZyWpmSX9vxcg8tw2IOkTAH/PtdX92aG7Cc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A54MgT4M; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723555624; c=relaxed/simple;
+	bh=fITbtuklCwcsaCKDkShmi5DkAoTerFbU1OvG8olep4s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LBHbj1sveFWA0TBMTbKMISf6oJdjb/mQtH9UXcjmuO5UosoM12tkoGO6m62OZ5mfWpr7BJdKQxOVmuISdZVkmIYqnE8SUrlYtO5BC4UjW4qop/Kfh1aI+dO/h8UI/G9vT23915Anpj7bW3mPQotLy7qPJp2LhPLY3HDmL//1LJ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nWF9T/xI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A54MgT4M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1871FC4AF12;
-	Tue, 13 Aug 2024 13:19:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nWF9T/xI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE48BC4AF0B;
+	Tue, 13 Aug 2024 13:27:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723555146;
-	bh=k6UmuWWU+5OWpY/TlzGbBpOY05z+pfvzbhKtMvZXl8Y=;
-	h=From:To:Cc:Subject:Date:From;
-	b=A54MgT4M/2Az7iWALCzHuDsIf9jTu8C3bRwzpy/+VEPhuZQWBLVofbN2HYQvpTfGa
-	 bCjg8Wnmq3t6vf/HKgrniAdkiKeOsobx1qkBlq0U+tT+qt1yicuecvpZogKR3PBExF
-	 OZ6TjMFdsQRFH20KYaJCspsejgdP2N77jIOUAlRBuLhbUiK+7S2OlH6LPT0I09Rw4F
-	 c8NAevThN23ANtFLRUsaWwhf3mOnODgRAmUftlcnoL2s4/JOSnzoMZdgc60j5KltjE
-	 LD3oDhOTNuHUMNBgPlxXWbkfWKff9ltbPCnR4gSL9jmCfqmKk2/jHFmDND88iTMurH
-	 5KylqTeD4Eilw==
+	s=k20201202; t=1723555624;
+	bh=fITbtuklCwcsaCKDkShmi5DkAoTerFbU1OvG8olep4s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nWF9T/xI7V/NCOISreHzxWnyqPY30USDQWW7cfddP8gUDIy46Ycbtxq44HeTkxzqV
+	 03c9ihFWJ9tdNCVtvwWxcQsw46eB9ztv8TtcWXgax9UEZvHW+6f723G2oP0hyszP0j
+	 EQVTdGFEn3tl7Xi1arhBxeQrSwt7y+bwT672wFmFrflieZxsmZVYRa7IlCSa628NQ+
+	 97KDFJpsHMUa29MsCbXC6LrjR/zZ5Wh9CgVrXyc0fBKOSj2ebAcM4DkNj4d05QERWv
+	 fhoFVwlb1IgCYVYiyDpKBpTrrOejjf5ZMbu7/cKYUlHMmWG23upEO7RzV4l9NFdC2i
+	 RNIHmlNv053Nw==
+Date: Tue, 13 Aug 2024 15:26:58 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
+To: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>, Damien Le Moal <dlemoal@kernel.org>,
 	Igor Pylypiv <ipylypiv@google.com>,
-	Hannes Reinecke <hare@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>,
-	stable@vger.kernel.org,
-	Stephan Eisvogel <eisvogel@seitics.de>,
-	Christian Heusel <christian@heusel.eu>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] Revert "ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error"
-Date: Tue, 13 Aug 2024 15:19:01 +0200
-Message-ID: <20240813131900.1285842-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.46.0
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	stable@vger.kernel.org, Stephan Eisvogel <eisvogel@seitics.de>,
+	Christian Heusel <christian@heusel.eu>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ata: libata-core: Return sense data in descriptor format
+ by default
+Message-ID: <ZrtfIg174_vS58Wf@ryzen.lan>
+References: <20240812151517.1162241-2-cassel@kernel.org>
+ <ZrpXu_vfI-wpCFVc@ryzen.lan>
+ <3d3beb8d-4c93-4eef-b3ee-c92eb9df9009@suse.de>
+ <ZrsqSA7P30vss6b9@x1-carbon.wireless.wdc>
+ <20240813121549.GB4559@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3145; i=cassel@kernel.org; h=from:subject; bh=k6UmuWWU+5OWpY/TlzGbBpOY05z+pfvzbhKtMvZXl8Y=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJ2x7ooRnscTSgN7E95VW+y8Ew8b3qVDt+PZT3yLifW9 mkrfa7sKGVhEONikBVTZPH94bK/uNt9ynHFOzYwc1iZQIYwcHEKwESitBj+SkizeBwpfJk0M/nO vMSFxRmdkp95DLi3XOp/0iKXnCGty8iw89daMSuxJ7NqxTf9nV51Mu+8vUbXB4dZl99XGrdxbWh nAwA=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240813121549.GB4559@lst.de>
 
-This reverts commit 28ab9769117ca944cb6eb537af5599aa436287a4.
+On Tue, Aug 13, 2024 at 02:15:49PM +0200, Christoph Hellwig wrote:
+> On Tue, Aug 13, 2024 at 11:41:28AM +0200, Niklas Cassel wrote:
+> > Perhaps we could re-visit this code to be spec compliant again in the
+> > future (after the bad programs have been fixed).
+> 
+> I doubt it.  They are part of the core low-level userspace suite and
+> even when they are fixed the old version will be around roughly forever.
+> So I think we are (unfortunately) stuck here.
 
-Sense data can be in either fixed format or descriptor format.
+Agreed... even if it makes me a bit sad to intentionally not be spec
+compliant...
 
-SAT-6 revision 1, "10.4.6 Control mode page", defines the D_SENSE bit:
-"The SATL shall support this bit as defined in SPC-5 with the following
-exception: if the D_ SENSE bit is set to zero (i.e., fixed format sense
-data), then the SATL should return fixed format sense data for ATA
-PASS-THROUGH commands."
+Sent a patch that replaces the patch in $subject:
+https://lore.kernel.org/linux-ide/20240813131900.1285842-2-cassel@kernel.org/T/#u
 
-The libata SATL has always kept D_SENSE set to zero by default. (It is
-however possible to change the value using a MODE SELECT SG_IO command.)
 
-Failed ATA PASS-THROUGH commands correctly respected the D_SENSE bit,
-however, successful ATA PASS-THROUGH commands incorrectly returned the
-sense data in descriptor format (regardless of the D_SENSE bit).
-
-Commit 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for
-CK_COND=1 and no error") fixed this bug for successful ATA PASS-THROUGH
-commands.
-
-However, after commit 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE
-bit for CK_COND=1 and no error"), there were bug reports that hdparm,
-hddtemp, and udisks were no longer working as expected.
-
-These applications incorrectly assume the returned sense data is in
-descriptor format, without even looking at the RESPONSE CODE field in the
-returned sense data (to see which format the returned sense data is in).
-
-Considering that there will be broken versions of these applications around
-roughly forever, we are stuck with being bug compatible with older kernels.
-
-Cc: stable@vger.kernel.org # 4.19+
-Reported-by: Stephan Eisvogel <eisvogel@seitics.de>
-Reported-by: Christian Heusel <christian@heusel.eu>
-Closes: https://lore.kernel.org/linux-ide/0bf3f2f0-0fc6-4ba5-a420-c0874ef82d64@heusel.eu/
-Fixes: 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error")
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-scsi.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d6f5e25e1ed8..473e00a58a8b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -951,8 +951,19 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
- 				   &sense_key, &asc, &ascq);
- 		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
- 	} else {
--		/* ATA PASS-THROUGH INFORMATION AVAILABLE */
--		ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
-+		/*
-+		 * ATA PASS-THROUGH INFORMATION AVAILABLE
-+		 *
-+		 * Note: we are supposed to call ata_scsi_set_sense(), which
-+		 * respects the D_SENSE bit, instead of unconditionally
-+		 * generating the sense data in descriptor format. However,
-+		 * because hdparm, hddtemp, and udisks incorrectly assume sense
-+		 * data in descriptor format, without even looking at the
-+		 * RESPONSE CODE field in the returned sense data (to see which
-+		 * format the returned sense data is in), we are stuck with
-+		 * being bug compatible with older kernels.
-+		 */
-+		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
- 	}
- }
- 
--- 
-2.46.0
-
+Kind regards,
+Niklas
