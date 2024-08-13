@@ -1,216 +1,240 @@
-Received: from ufal-mail.mff.cuni.cz (ufal-mail.mff.cuni.cz [195.113.20.158])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0EDF36AFE;
-	Tue, 13 Aug 2024 05:55:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.113.20.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F06C446AC;
+	Tue, 13 Aug 2024 06:37:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723528524; cv=none; b=GKNV1Mtt1vYWK/PjYN0w/EqEur1wBM5oQpIl49IcXtE3ml5vGYDmw7gAR+lmBJ2FELD9rLCjoV73KP9o472IerukRjzlE9/xa6TM/tHAbbG4GK5RizseFanpAIM7XUiZcenVRK6xsrhn3OguvOedwp4w1KxbPxfvuygYv3vQk/g=
+	t=1723531067; cv=none; b=tVLS4bZRIO/8gcpNAvHReLaohbFlHnQ8Ybr3K24xoOa5cp4ZqULWxKVhN3/c74t9oviE7OUODn57/vi+Ie8Rx876QS9Og/Z7VVcWuhUxxymSStXsTPdRv7KPldExcmkJdhaAj7EGOVlAA2VNlfj0tvHpj79BjQj+mNBacIDk3f4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723528524; c=relaxed/simple;
-	bh=iAVIEQAhWPDzY21DHkmExc2LBQqx5cirQIOnN4kA5bQ=;
-	h=From:To:Cc:Subject:Date:MIME-Version:Message-ID:In-Reply-To:
-	 References:Content-Type; b=VJgkOigdek96t7uIzrNIeFdKrrZiboORufaT4Zn/WgGSisi9EhQ2XU6GG6glFLT+67iV24BukVXnopJGWgcLHvDYzka/9jI/FuCQCUJvkoGr1fz5fi+5hBeVuly4kZ8aT21U8Ja3iZl0/jPP6RFewVZg67rC4hTRULKHVIggBEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ufal.mff.cuni.cz; spf=fail smtp.mailfrom=ufal.mff.cuni.cz; dkim=pass (2048-bit key) header.d=ufal.mff.cuni.cz header.i=@ufal.mff.cuni.cz header.b=QArkieaa; arc=none smtp.client-ip=195.113.20.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ufal.mff.cuni.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=ufal.mff.cuni.cz
+	s=arc-20240116; t=1723531067; c=relaxed/simple;
+	bh=QHR9RFxhpBK0vD9dN13r8p1jl/KFtC86FRnfcArIgr0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=anewoiYDJcs8zYLcFZgc5b5rIL7hZ0Z6WpvVp/DbDGj0jo51j/ijC4ndMw1ywfs6eMaYs3sF9jzN0o5EFGK8wkYGJXuQSVqMiKcXCerXEhI37TOg+yLiPIF1s59quStvVjC/JbMwWWydDHuKNaITdbQOKDERj1Eo3STCO7yFxdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GowQ6281; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NuvAkG0M; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GowQ6281; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NuvAkG0M; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ufal.mff.cuni.cz header.i=@ufal.mff.cuni.cz header.b="QArkieaa"
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by ufal-mail.mff.cuni.cz (Postfix) with ESMTP id 760B3466DA3;
-	Tue, 13 Aug 2024 07:49:35 +0200 (CEST)
-Received: from ufal-mail.mff.cuni.cz ([127.0.0.1])
- by localhost (ufal-mail.mff.cuni.cz [127.0.0.1]) (amavis, port 10032)
- with ESMTP id FzvFRP1vahuu; Tue, 13 Aug 2024 07:49:35 +0200 (CEST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by ufal-mail.mff.cuni.cz (Postfix) with ESMTP id 45C8E466DA2;
-	Tue, 13 Aug 2024 07:49:35 +0200 (CEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 ufal-mail.mff.cuni.cz 45C8E466DA2
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ufal.mff.cuni.cz;
-	s=9D3691E2-3533-11E9-988E-D2516E4D0B60; t=1723528175;
-	bh=9Qo3RBNfQlfYKO/iSyaYd7ScNV7xgdfPamMg9nqfVeA=;
-	h=From:To:Date:MIME-Version:Message-ID;
-	b=QArkieaaSx21qiWbVSshDwjKsmfLTWDUFQLFBVO8QKedYbiPGjYKMmMyuGPnwjJw+
-	 1RIaguISIOemaJymPN9STGKIMoMlYKSQF1ogbQAG7Zw5cjTdrO9kdxl3dKmz3arzqB
-	 mNm7q7usjruejlAo9bhaaUc/4yo0wAglGsIQpLEO1xT5mSEBaI5xMp5c3GNFtLtneG
-	 j35lQpRhWQDfU3IQ2/bPI06A9lRS+XczdVIJe0ElKZbtKzeaTY2SwOmDgU4eeOEPUA
-	 QIlaQjOX18NAZuu9TQ4a9EXCFYmdWMrBvbVfPlpgF7PXJ4uqKj6IjV9JmgFnJCGSSc
-	 NGcmTfBXqsj4A==
-X-Virus-Scanned: amavis at ufal.mff.cuni.cz
-Received: from ufal-mail.mff.cuni.cz ([127.0.0.1])
- by localhost (ufal-mail.mff.cuni.cz [127.0.0.1]) (amavis, port 10026)
- with ESMTP id J8qxn1nIJEyT; Tue, 13 Aug 2024 07:49:35 +0200 (CEST)
-Received: from localhost (snat-16.cgn.sat-an.net [176.222.226.16])
-	by ufal-mail.mff.cuni.cz (Postfix) with ESMTPSA id 158AF466DA1;
-	Tue, 13 Aug 2024 07:49:35 +0200 (CEST)
-From: =?utf-8?B?Sm9uw6HFoSBWaWRyYQ==?= <vidra@ufal.mff.cuni.cz>
-To: =?iso-8859-1?Q?Kolbj=F8rn_Barmen?= <linux-ppc@kolla.no>
-Cc: <linuxppc-dev@lists.ozlabs.org>,
- <linux-kernel@vger.kernel.org>,
- <linux-ide@vger.kernel.org>,
- <mpe@ellerman.id.au>,
- <cassel@kernel.org>,
- <linux@roeck-us.net>
-Subject: Re: Since 6.10 - kernel oops/panics on G4 macmini due to change in =?iso-8859-1?Q?drivers/ata/pata=5Fmacio.c?=
-Date: Tue, 13 Aug 2024 07:49:34 +0200
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GowQ6281";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NuvAkG0M";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GowQ6281";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NuvAkG0M"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id A50292271D;
+	Tue, 13 Aug 2024 06:37:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723531063; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VtcsQP50M+SyqiRobCTEbdbc8sXyaH7I1S6C1UBBr88=;
+	b=GowQ6281RwEl7DBBHsoFTg+5l+tPwC1HU8DIVx0lgVJYdl5pH8X9t/nCR1G2QMtXFpc7uw
+	6SLR10F0B+d8NJuvU58q+wRWp/BO8Rzw87WrLYtITHcqa9YOTzVdbycTT0DVE4UzksKBwO
+	0CRVY2qgN0O8hAw4PIjRgXPeBnlI784=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723531063;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VtcsQP50M+SyqiRobCTEbdbc8sXyaH7I1S6C1UBBr88=;
+	b=NuvAkG0MLyEeL5WK8AhRl+kHToAOgEPKq31Q3OadNDkfrNnCvZyfe2SPTL4QFlzmf4HR3m
+	OrQoZX7/+yEvekDg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723531063; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VtcsQP50M+SyqiRobCTEbdbc8sXyaH7I1S6C1UBBr88=;
+	b=GowQ6281RwEl7DBBHsoFTg+5l+tPwC1HU8DIVx0lgVJYdl5pH8X9t/nCR1G2QMtXFpc7uw
+	6SLR10F0B+d8NJuvU58q+wRWp/BO8Rzw87WrLYtITHcqa9YOTzVdbycTT0DVE4UzksKBwO
+	0CRVY2qgN0O8hAw4PIjRgXPeBnlI784=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723531063;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VtcsQP50M+SyqiRobCTEbdbc8sXyaH7I1S6C1UBBr88=;
+	b=NuvAkG0MLyEeL5WK8AhRl+kHToAOgEPKq31Q3OadNDkfrNnCvZyfe2SPTL4QFlzmf4HR3m
+	OrQoZX7/+yEvekDg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 68E4713983;
+	Tue, 13 Aug 2024 06:37:43 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id j3d0Fzf/umb0EwAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 13 Aug 2024 06:37:43 +0000
+Message-ID: <3d3beb8d-4c93-4eef-b3ee-c92eb9df9009@suse.de>
+Date: Tue, 13 Aug 2024 08:37:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <3b6441b8-06e6-45da-9e55-f92f2c86933e@ufal.mff.cuni.cz>
-In-Reply-To: <62d248bb-e97a-25d2-bcf2-9160c518cae5@kolla.no>
-References: <62d248bb-e97a-25d2-bcf2-9160c518cae5@kolla.no>
-User-Agent: Trojita/v0.7-596-g21dfb8c3; Qt/5.15.14; xcb; Linux; Gentoo Linux
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: libata-core: Return sense data in descriptor format
+ by default
+Content-Language: en-US
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ Igor Pylypiv <ipylypiv@google.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ stable@vger.kernel.org, Stephan Eisvogel <eisvogel@seitics.de>,
+ Christian Heusel <christian@heusel.eu>, linux-ide@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>
+References: <20240812151517.1162241-2-cassel@kernel.org>
+ <ZrpXu_vfI-wpCFVc@ryzen.lan>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <ZrpXu_vfI-wpCFVc@ryzen.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On Tue 13. Aug 2024 0:32:37 CEST, Kolbj=C3=B8rn Barmen wrote:
-> Ever since 6.10, my macmini G4 behaved unstable when dealing with lots of
-> I/O activity, such as sync'ing of Gentoo portage tree, unpacking kernel
-> source tarball, building large software packages (or kernel) etc.
->
-> After a bit of testing, and patient kernel rebuilding (while crashing) I
-> found the cuplit to be this commit/change
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/diff/?id=3D=
-09fe2bfa6b83f865126ce3964744863f69a4a030
+On 8/12/24 20:43, Niklas Cassel wrote:
+> On Mon, Aug 12, 2024 at 05:15:18PM +0200, Niklas Cassel wrote:
+>> Sense data can be in either fixed format or descriptor format.
+>>
+>> SAT-6 revision 1, 10.4.6 Control mode page, says that if the D_SENSE bit
+>> is set to zero (i.e., fixed format sense data), then the SATL should
+>> return fixed format sense data for ATA PASS-THROUGH commands.
+>>
+>> A lot of user space programs incorrectly assume that the sense data is in
+>> descriptor format, without checking the RESPONSE CODE field of the
+>> returned sense data (to see which format the sense data is in).
+>>
+>> The libata SATL has always kept D_SENSE set to zero by default.
+>> (It is however possible to change the value using a MODE SELECT command.)
+>>
+>> For failed ATA PASS-THROUGH commands, we correctly generated sense data
+>> according to the D_SENSE bit. However, because of a bug, sense data for
+>> successful ATA PASS-THROUGH commands was always generated in the
+>> descriptor format.
+>>
+>> This was fixed to consistently respect D_SENSE for both failed and
+>> successful ATA PASS-THROUGH commands in commit 28ab9769117c ("ata:
+>> libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error").
+>>
+>> After commit 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for
+>> CK_COND=1 and no error"), we started receiving bug reports that we broke
+>> these user space programs (these user space programs must never have
+>> encountered a failing command, as the sense data for failing commands has
+>> always correctly respected D_SENSE, which by default meant fixed format).
+>>
+>> Since a lot of user space programs seem to assume that the sense data is
+>> in descriptor format (without checking the type), let's simply change the
+>> default to have D_SENSE set to one by default.
+>>
+>> That way:
+>> -Broken user space programs will see no regression.
+>> -Both failed and successful ATA PASS-THROUGH commands will respect D_SENSE,
+>>   as per SAT-6 revision 1.
+>> -Apparently it seems way more common for user space applications to assume
+>>   that the sense data is in descriptor format, rather than fixed format.
+>>   (A user space program should of course support both, and check the
+>>   RESPONSE CODE field to see which format the returned sense data is in.)
+>>
+>> Cc: stable@vger.kernel.org # 4.19+
+>> Reported-by: Stephan Eisvogel <eisvogel@seitics.de>
+>> Reported-by: Christian Heusel <christian@heusel.eu>
+>> Closes: https://lore.kernel.org/linux-ide/0bf3f2f0-0fc6-4ba5-a420-c0874ef82d64@heusel.eu/
+>> Fixes: 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error")
+>> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+>> ---
+>>   drivers/ata/libata-core.c | 7 +++++++
+>>   1 file changed, 7 insertions(+)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index c7752dc80028..590bebe1354d 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -5368,6 +5368,13 @@ void ata_dev_init(struct ata_device *dev)
+>>   	 */
+>>   	spin_lock_irqsave(ap->lock, flags);
+>>   	dev->flags &= ~ATA_DFLAG_INIT_MASK;
+>> +
+>> +	/*
+>> +	 * A lot of user space programs incorrectly assume that the sense data
+>> +	 * is in descriptor format, without checking the RESPONSE CODE field of
+>> +	 * the returned sense data (to see which format the sense data is in).
+>> +	 */
+>> +	dev->flags |= ATA_DFLAG_D_SENSE;
+>>   	dev->horkage = 0;
+>>   	spin_unlock_irqrestore(ap->lock, flags);
+>>   
+>> -- 
+>> 2.46.0
+>>
+> 
+> This patch will change so that the sense data will be generated in descriptor
+> format (by default) for passthrough (SG_IO) commands, not just SG_IO ATA
+> PASS-THROUGH commands.
+> 
+> Non-passthrough (SG_IO) commands are not relavant, as they will go via
+> scsi_finish_command(), which calls scsi_normalize_sense() before interpreting
+> the sense data, and for non-passthrough commands, the sense data is not
+> propagated to the user. (The SK/ASC/ASCQ is only printed to the log, and this
+> print will be the same as before.)
+> 
+> However, it is possible to send any command as passthrough (SG_IO), not only
+> ATA PASS-THROUGH (ATA-16 / ATA-12 commands).
+> 
+> So there will be a difference (by default) for SG_IO (passthrough) commands
+> that are not ATA PASS-THROUGH commands (ATA-16 / ATA-12 commands).
+> (E.g. if you send a regular SCSI read/write command via SG_IO to an ATA device,
+> and if that command generates sense data, the default sense data format would
+> be different.)
+> 
+> Is this a concern?
+> 
+> I have a feeling that some user space program that blindly assumes that the
+> sense data will be in fixed format (for e.g. a command that does an invalid
+> read) using SG_IO will start to complain because of a "regression".
+> 
+I really hate it when people start generalising which in fact was an 
+occurrence with a single program, namely hdparm.
 
-I've been able to reproduce this pata_macio bug on a desktop PowerMac G4
-with the 6.10.3 kernel version. Reverting the linked change
-("ata: pata_macio: Fix max_segment_size with PAGE_SIZE =3D=3D 64K") makes
-the errors go away.
+Which indeed is ancient, and I'm only slightly surprised that things
+broke here.
 
-CCing linux-ide and the authors of that patch; I hope this is OK with
-you guys.
+But all other programs I know of do attempt to handle sense codes, so
+really I don't have an issue with this change.
 
+Cheers,
 
-> Exampe of what a opps/panic looks like (and they all look very much alike)
->
-> https://share.icloud.com/photos/042BHRkrXqPO-fllvpxMFl2CA
-
-Textual form for easier searching:
-
-
-------------[ cut here ]------------
-kernel BUG at drivers/ata/pata_macio.c:544!
-Oops: Exception in kernel mode, sig: 5 [#1]
-BE PAGE_SIZE=3D4K MMU=3DHash SMP NR_CPUS=3D2 DEBUG_PAGEALLOC PowerMac
-Modules linked in: ipv6 binfmt_misc b43 mac80211 radeon libarc4 cfg80211=20
-snd_aoa_codec_tas snd_aoa_fabric_layout snd_aoa rfkill snd_aoa_i2sbus hwmon=20=
-
-drm_suballoc_helper snd_aoa_soundbus i2c_algo_bit snd_pcm backlight=20
-drm_ttm_helper ttm xhci_pci pmac_zilog therm_windtunnel xhci_hcd=20
-drm_display_helper firewire_ohci snd_timer snd firewire_core serial_base=20
-ssb soundcore crc_itu_t
-CPU: 1 PID: 1870 Comm: kworker/u10:4 Tainted: G                T =20
-6.10.3-gentoo #1
-Hardware name: PowerMac3,6 7455 0x80010303 PowerMac
-Workqueue: btrfs-worker btrfs_work_helper
-NIP:  c0719670 LR: c0719678 CTR: 00000001
-REGS: f2db9bf0 TRAP: 0700   Tainted: G                T   (6.10.3-gentoo)
-MSR:  00021032 <ME,IR,DR,RI>  CR: 44008408  XER: 20000000
-
-GPR00: c06fc28c f2db9cb0 c10d8020 c12d28cc 00000000 00000000 00000000=20
-c109cff4=20
-GPR08: 69fd0000 00000100 00010000 00000000 00000000 00000000 c007801c=20
-c40c1980=20
-GPR16: 00000000 00000000 00000000 00000000 00000000 00000100 00000122=20
-c11377c8=20
-GPR24: 000000ff 00000008 0000ff00 00000000 c14200a8 00000101 00000000=20
-c109d000=20
-NIP [c0719670] pata_macio_qc_prep+0xf4/0x190
-LR [c0719678] pata_macio_qc_prep+0xfc/0x190
-Call Trace:
-[f2db9cb0] [c1421660] 0xc1421660 (unreliable)
-[f2db9ce0] [c06fc28c] ata_qc_issue+0x14c/0x2d4
-[f2db9d00] [c0707c5c] __ata_scsi_queuecmd+0x200/0x53c
-[f2db9d20] [c0707fe8] ata_scsi_queuecmd+0x50/0xe0
-[f2db9d40] [c06e2644] scsi_queue_rq+0x788/0xb1c
-[f2db9d80] [c0492464] __blk_mq_issue_directly+0x58/0xf4
-[f2db9db0] [c0497828] blk_mq_plug_issue_direct+0x8c/0x1b4
-[f2db9de0] [c0498074] blk_mq_flush_plug_list.part.0+0x584/0x5e0
-[f2db9e30] [c0485a40] __blk_flush_plug+0xf8/0x194
-[f2db9e70] [c0485f88] __submit_bio+0x1b8/0x2e0
-[f2db9ec0] [c04862e0] submit_bio_noacct_nocheck+0x230/0x304
-[f2db9f00] [c03aaf30] btrfs_work_helper+0x200/0x338
-[f2db9f40] [c006cae0] process_one_work+0x1a8/0x338
-[f2db9f70] [c006d79c] worker_thread+0x364/0x4c0
-[f2db9fc0] [c007811c] kthread+0x100/0x104
-[f2db9ff0] [c001b304] start_kernel_thread+0x10/0x14
-Code: 38ff0004 b37f0002 7d20ff2c 3bff0010 7d003d2c 7d084a14 93dffff8=20
-b3dffffe b3dffffc 41820010 3bbd0001 4200ffc0 <0fe00000> 4bdcbb01 813c0044=20
-3b180001=20
----[ end trace 0000000000000000 ]---
-
-note: kworker/u10:4[1870] exited with irqs disabled
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 1870 at kernel/exit.c:825 do_exit+0x854/0x9ec
-Modules linked in: ipv6 binfmt_misc b43 mac80211 radeon libarc4 cfg80211=20
-snd_aoa_codec_tas snd_aoa_fabric_layout snd_aoa rfkill snd_aoa_i2sbus hwmon=20=
-
-drm_suballoc_helper snd_aoa_soundbus i2c_algo_bit snd_pcm backlight=20
-drm_ttm_helper ttm xhci_pci pmac_zilog therm_windtunnel xhci_hcd=20
-drm_display_helper firewire_ohci snd_timer snd firewire_core serial_base=20
-ssb soundcore crc_itu_t
-CPU: 1 PID: 1870 Comm: kworker/u10:4 Tainted: G      D         T =20
-6.10.3-gentoo #1
-Hardware name: PowerMac3,6 7455 0x80010303 PowerMac
-Workqueue: btrfs-worker btrfs_work_helper
-NIP:  c004f09c LR: c004e8a4 CTR: 00000000
-REGS: f2db9a80 TRAP: 0700   Tainted: G      D         T   (6.10.3-gentoo)
-MSR:  00029032 <EE,ME,IR,DR,RI>  CR: 88db92e2  XER: 00000000
-
-GPR00: c004f2c4 f2db9b40 c10d8020 00000000 00002710 00000000 00000000=20
-00000000=20
-GPR08: 00000000 f2db9e88 00000004 00000000 28db92e2 00000000 c007801c=20
-c40c1980=20
-GPR16: 00000000 00000000 00000000 00000000 00000000 00000100 00000122=20
-c11377c8=20
-GPR24: 000000ff c0db0000 00001032 c0a21000 c138d520 00000005 c10d8020=20
-c1447220=20
-NIP [c004f09c] do_exit+0x854/0x9ec
-LR [c004e8a4] do_exit+0x5c/0x9ec
-Call Trace:
-[f2db9b40] [c00b0c38] _printk+0x78/0xc4 (unreliable)
-[f2db9b90] [c004f2c4] make_task_dead+0x90/0x174
-[f2db9bb0] [c0010b9c] die+0x324/0x32c
-[f2db9be0] [c0004828] ProgramCheck_virt+0x108/0x158
---- interrupt: 700 at pata_macio_qc_prep+0xf4/0x190
-NIP:  c0719670 LR: c0719678 CTR: 00000001
-REGS: f2db9bf0 TRAP: 0700   Tainted: G      D         T   (6.10.3-gentoo)
-MSR:  00021032 <ME,IR,DR,RI>  CR: 44008408  XER: 20000000
-
-GPR00: c06fc28c f2db9cb0 c10d8020 c12d28cc 00000000 00000000 00000000=20
-c109cff4=20
-GPR08: 69fd0000 00000100 00010000 00000000 00000000 00000000 c007801c=20
-c40c1980=20
-GPR16: 00000000 00000000 00000000 00000000 00000000 00000100 00000122=20
-c11377c8=20
-GPR24: 000000ff 00000008 0000ff00 00000000 c14200a8 00000101 00000000=20
-c109d000=20
-NIP [c0719670] pata_macio_qc_prep+0xf4/0x190
-LR [c0719678] pata_macio_qc_prep+0xfc/0x190
---- interrupt: 700
-[f2db9cb0] [c1421660] 0xc1421660 (unreliable)
-[f2db9ce0] [c06fc28c] ata_qc_issue+0x14c/0x2d4
-[f2db9d00] [c0707c5c] __ata_scsi_queuecmd+0x200/0x53c
-[f2db9d20] [c0707fe8] ata_scsi_queuecmd+0x50/0xe0
-[f2db9d40] [c06e2644] scsi_queue_rq+0x788/0xb1c
-[f2db9d80] [c0492464] __blk_mq_issue_directly+0x58/0xf4
-[f2db9db0] [c0497828] blk_mq_plug_issue_direct+0x8c/0x1b4
-[f2db9de0] [c0498074] blk_mq_flush_plug_list.part.0+0x584/0x5e0
-[f2db9e30] [c0485a40] __blk_flush_plug+0xf8/0x194
-[f2db9e70] [c0485f88] __submit_bio+0x1b8/0x2e0
-[f2db9ec0] [c04862e0] submit_bio_noacct_nocheck+0x230/0x304
-[f2db9f00] [c03aaf30] btrfs_work_helper+0x200/0x338
-[f2db9f40] [c006cae0] process_one_work+0x1a8/0x338
-[f2db9f70] [c006d79c] worker_thread+0x364/0x4c0
-[f2db9fc0] [c007811c] kthread+0x100/0x104
-[f2db9ff0] [c001b304] start_kernel_thread+0x10/0x14
-Code: 915e02fc 81410014 912a0004 915e03c0 939e03c4 91210014 813e04cc=20
-4bfffcec 807e0370 38800000 4bffe195 4bfffc9c <0fe00000> 4bfff848 0fe00000=20
-4bfff7ec=20
----[ end trace 0000000000000000 ]---
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
