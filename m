@@ -1,166 +1,123 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C8BE199E93;
-	Tue, 13 Aug 2024 12:32:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFA5619AD6E;
+	Tue, 13 Aug 2024 13:19:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723552363; cv=none; b=mnVSYzc4vGpC84w6A34kPGlpF5JWuN0xrLUZcL2QFyx+euEedkhxVynN5/CTFlv28JDYcBOLEUfdb1zcVw+ks5stwx34B708lFb65ua41NVw0ggK7wxla9hts3l1wSR8QSKAn3gcm9nrxtZ1ZcgrNg+bRclQaVexq1GKxceomCA=
+	t=1723555146; cv=none; b=bzdPXqzcsbUEG5wYDYNJ+neKQKcf6sA2HflaO/5GitcJQ7p6PhrhWTT1OJixCFX+XgzNalL5j3hc1rpXktxowG+pzXNwZa/pcpR7mFPbsF1LJWdC6LIyaCt3n6ZAi5xsW94o5OT08JpOYjCvBihYeQRkDBxRrgjcN6+dKOjETD8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723552363; c=relaxed/simple;
-	bh=gE0ZYFPD+0rjYYUfTXTkptg3LDSOZxo9b0+1h/Rdcns=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=MA6SvBdyjkQRj+r9JjwzGboe/VyV+pA3MjqBT7Lxouo90OK5zXfRp0LdolMPdx7KZ0layvF9KLgLGnD0tNXsZp9jV2SZvqt62x4flk/xBVIO2nZkw5pw2G+c3B9ggxeYL6X75QYxx3L5HhQ/dThSIIcXGt6OhFdqyYdllaLRz7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=Lw8i0X7Y; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+	s=arc-20240116; t=1723555146; c=relaxed/simple;
+	bh=k6UmuWWU+5OWpY/TlzGbBpOY05z+pfvzbhKtMvZXl8Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kWwK2yJdeDTh1DXaXKWkpj+yhFm8MO+XXkR+I4X6BCPW0bjrM8NEoCtqTvaPv8AHp9ATCYGWChdFsoS9flZXGoH6upueyINIfCg6R/Knxiu+V/q0KW7GknYMp65H7ErsIPiXcmQBBZyWpmSX9vxcg8tw2IOkTAH/PtdX92aG7Cc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A54MgT4M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="Lw8i0X7Y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1723552358;
-	bh=k474NsT/hKGeKvuNMaZrdo5+Fa1c4TN5fkh3uTGeTZw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=Lw8i0X7Ys1rzFFGNLZf515xcM/EcWHWC1DxmbUymthE87tHCGx/WgfcnJXG5ESg0j
-	 eP7HCCMu/Zziu/4nRu1DZbFrGWprDTIqPewyCDudnYFLcIdvb+Phu++ftbLjTC36Js
-	 mpd1NWEfJmDfpK3fUuHuyd092E+DQkOU4cWqzgWxGTYcnDIcmOgnker29j5vxgw6aS
-	 jSZoOesbn9XjdyoUn2HwXRH4FgADnzY6z+suRcIF1hp7pX6yZPWGrw1ol99R669VmY
-	 g5JbeiHddUV5Gr95vNUq54o1gXiMCyHaO0ex8PiIbi728Q2zugJsSFlbEKxMOg9kDb
-	 mShQV5joPctHA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4WjrPd5sjWz4xCV;
-	Tue, 13 Aug 2024 22:32:37 +1000 (AEST)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: =?utf-8?Q?Kolbj=C3=B8rn?= Barmen <linux-ppc@kolla.no>,
- linuxppc-dev@lists.ozlabs.org,
- linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, =?utf-8?B?Sm9u?=
- =?utf-8?B?w6HFoQ==?= Vidra
- <vidra@ufal.mff.cuni.cz>, Christoph Hellwig <hch@lst.de>,
- linux@roeck-us.net
-Subject: Re: Since 6.10 - kernel oops/panics on G4 macmini due to change in
- drivers/ata/pata_macio.c
-In-Reply-To: <Zrstcei9WN9sRfdX@x1-carbon.wireless.wdc>
-References: <62d248bb-e97a-25d2-bcf2-9160c518cae5@kolla.no>
- <3b6441b8-06e6-45da-9e55-f92f2c86933e@ufal.mff.cuni.cz>
- <Zrstcei9WN9sRfdX@x1-carbon.wireless.wdc>
-Date: Tue, 13 Aug 2024 22:32:36 +1000
-Message-ID: <87sev81u3f.fsf@mail.lhotse>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A54MgT4M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1871FC4AF12;
+	Tue, 13 Aug 2024 13:19:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723555146;
+	bh=k6UmuWWU+5OWpY/TlzGbBpOY05z+pfvzbhKtMvZXl8Y=;
+	h=From:To:Cc:Subject:Date:From;
+	b=A54MgT4M/2Az7iWALCzHuDsIf9jTu8C3bRwzpy/+VEPhuZQWBLVofbN2HYQvpTfGa
+	 bCjg8Wnmq3t6vf/HKgrniAdkiKeOsobx1qkBlq0U+tT+qt1yicuecvpZogKR3PBExF
+	 OZ6TjMFdsQRFH20KYaJCspsejgdP2N77jIOUAlRBuLhbUiK+7S2OlH6LPT0I09Rw4F
+	 c8NAevThN23ANtFLRUsaWwhf3mOnODgRAmUftlcnoL2s4/JOSnzoMZdgc60j5KltjE
+	 LD3oDhOTNuHUMNBgPlxXWbkfWKff9ltbPCnR4gSL9jmCfqmKk2/jHFmDND88iTMurH
+	 5KylqTeD4Eilw==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Igor Pylypiv <ipylypiv@google.com>,
+	Hannes Reinecke <hare@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	stable@vger.kernel.org,
+	Stephan Eisvogel <eisvogel@seitics.de>,
+	Christian Heusel <christian@heusel.eu>,
+	linux-ide@vger.kernel.org
+Subject: [PATCH] Revert "ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error"
+Date: Tue, 13 Aug 2024 15:19:01 +0200
+Message-ID: <20240813131900.1285842-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3145; i=cassel@kernel.org; h=from:subject; bh=k6UmuWWU+5OWpY/TlzGbBpOY05z+pfvzbhKtMvZXl8Y=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJ2x7ooRnscTSgN7E95VW+y8Ew8b3qVDt+PZT3yLifW9 mkrfa7sKGVhEONikBVTZPH94bK/uNt9ynHFOzYwc1iZQIYwcHEKwESitBj+SkizeBwpfJk0M/nO vMSFxRmdkp95DLi3XOp/0iKXnCGty8iw89daMSuxJ7NqxTf9nV51Mu+8vUbXB4dZl99XGrdxbWh nAwA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-Niklas Cassel <cassel@kernel.org> writes:
-> Hello Jon=C3=A1=C5=A1, Kolbj=C3=B8rn,
->
-> thank you for the report.
->
-> On Tue, Aug 13, 2024 at 07:49:34AM +0200, Jon=C3=A1=C5=A1 Vidra wrote:
->> On Tue 13. Aug 2024 0:32:37 CEST, Kolbj=C3=B8rn Barmen wrote:
->> > Ever since 6.10, my macmini G4 behaved unstable when dealing with lots=
- of
->> > I/O activity, such as sync'ing of Gentoo portage tree, unpacking kernel
->> > source tarball, building large software packages (or kernel) etc.
->> >=20
->> > After a bit of testing, and patient kernel rebuilding (while crashing)=
- I
->> > found the cuplit to be this commit/change
->> >=20
->> > https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/diff/=
-?id=3D09fe2bfa6b83f865126ce3964744863f69a4a030
->>=20
->> I've been able to reproduce this pata_macio bug on a desktop PowerMac G4
->> with the 6.10.3 kernel version. Reverting the linked change
->> ("ata: pata_macio: Fix max_segment_size with PAGE_SIZE =3D=3D 64K") makes
->> the errors go away.
->
-> Michael, as the author of the this commit, could you please look into
-> this issue?
+This reverts commit 28ab9769117ca944cb6eb537af5599aa436287a4.
 
-I can. My commit was really just working around the warning in the SCSI
-core which appeared after afd53a3d8528, it was supposed to just fix the
-warning without changing behaviour. Though obviously it did for 4KB
-PAGE_SIZE kernels.
+Sense data can be in either fixed format or descriptor format.
 
-I don't have easy access to my mac-mini so it would be helpful if you
-can test changes Jon=C3=A1=C5=A1 and/or Kolbj=C3=B8rn.
+SAT-6 revision 1, "10.4.6 Control mode page", defines the D_SENSE bit:
+"The SATL shall support this bit as defined in SPC-5 with the following
+exception: if the D_ SENSE bit is set to zero (i.e., fixed format sense
+data), then the SATL should return fixed format sense data for ATA
+PASS-THROUGH commands."
 
-> We could revert your patch, which appears to work for some users,
-> but that would again break setups with PAGE_SIZE =3D=3D 64K.
-> (I assume that Jon=C3=A1=C5=A1 and Kolbj=C3=B8rn are not building with PA=
-GE_SIZE =3D=3D 64K.)
+The libata SATL has always kept D_SENSE set to zero by default. (It is
+however possible to change the value using a MODE SELECT SG_IO command.)
 
-Yes they are using 4K, it says so in the oops.
+Failed ATA PASS-THROUGH commands correctly respected the D_SENSE bit,
+however, successful ATA PASS-THROUGH commands incorrectly returned the
+sense data in descriptor format (regardless of the D_SENSE bit).
 
->> ------------[ cut here ]------------
->> kernel BUG at drivers/ata/pata_macio.c:544!
->
-> https://github.com/torvalds/linux/blob/v6.11-rc3/drivers/ata/pata_macio.c=
-#L544
->
-> It seems that the
-> while (sg_len) loop does not play nice with the new .max_segment_size.
+Commit 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for
+CK_COND=1 and no error") fixed this bug for successful ATA PASS-THROUGH
+commands.
 
-Right, but only for 4KB kernels for some reason. Is there some limit
-elsewhere that prevents the bug tripping on 64KB kernels, or is it just
-luck that no one has hit it?
+However, after commit 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE
+bit for CK_COND=1 and no error"), there were bug reports that hdparm,
+hddtemp, and udisks were no longer working as expected.
 
-I wonder if the best solution is something like below. It effectively
-reverts to the old behaviour for 4KB page size, and should avoid the
-same bug happening on 64KB page size kernels.
+These applications incorrectly assume the returned sense data is in
+descriptor format, without even looking at the RESPONSE CODE field in the
+returned sense data (to see which format the returned sense data is in).
 
-cheers
+Considering that there will be broken versions of these applications around
+roughly forever, we are stuck with being bug compatible with older kernels.
 
+Cc: stable@vger.kernel.org # 4.19+
+Reported-by: Stephan Eisvogel <eisvogel@seitics.de>
+Reported-by: Christian Heusel <christian@heusel.eu>
+Closes: https://lore.kernel.org/linux-ide/0bf3f2f0-0fc6-4ba5-a420-c0874ef82d64@heusel.eu/
+Fixes: 28ab9769117c ("ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error")
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+ drivers/ata/libata-scsi.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 1b85e8bf4ef9..eaffa510de49 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -208,6 +208,19 @@ static const char* macio_ata_names[] =3D {
- /* Don't let a DMA segment go all the way to 64K */
- #define MAX_DBDMA_SEG		0xff00
-=20
-+#ifdef CONFIG_PAGE_SIZE_64KB
-+/*
-+ * The SCSI core requires the segment size to cover at least a page, so
-+ * for 64K page size kernels it must be at least 64K. However the
-+ * hardware can't handle 64K, so pata_macio_qc_prep() will split large
-+ * requests. To handle the split requests the tablesize must be halved.
-+ */
-+#define MAX_SEGMENT_SIZE SZ_64K
-+#define SG_TABLESIZE (MAX_DCMDS / 2)
-+#else
-+#define MAX_SEGMENT_SIZE MAX_DBDMA_SEG
-+#define SG_TABLESIZE MAX_DCMDS
-+#endif
-=20
- /*
-  * Wait 1s for disk to answer on IDE bus after a hard reset
-@@ -912,16 +925,10 @@ static int pata_macio_do_resume(struct pata_macio_pri=
-v *priv)
-=20
- static const struct scsi_host_template pata_macio_sht =3D {
- 	__ATA_BASE_SHT(DRV_NAME),
--	.sg_tablesize		=3D MAX_DCMDS,
-+	.sg_tablesize		=3D SG_TABLESIZE,
- 	/* We may not need that strict one */
- 	.dma_boundary		=3D ATA_DMA_BOUNDARY,
--	/*
--	 * The SCSI core requires the segment size to cover at least a page, so
--	 * for 64K page size kernels this must be at least 64K. However the
--	 * hardware can't handle 64K, so pata_macio_qc_prep() will split large
--	 * requests.
--	 */
--	.max_segment_size	=3D SZ_64K,
-+	.max_segment_size	=3D MAX_SEGMENT_SIZE,
- 	.device_configure	=3D pata_macio_device_configure,
- 	.sdev_groups		=3D ata_common_sdev_groups,
- 	.can_queue		=3D ATA_DEF_QUEUE,
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d6f5e25e1ed8..473e00a58a8b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -951,8 +951,19 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+ 				   &sense_key, &asc, &ascq);
+ 		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
+ 	} else {
+-		/* ATA PASS-THROUGH INFORMATION AVAILABLE */
+-		ata_scsi_set_sense(qc->dev, cmd, RECOVERED_ERROR, 0, 0x1D);
++		/*
++		 * ATA PASS-THROUGH INFORMATION AVAILABLE
++		 *
++		 * Note: we are supposed to call ata_scsi_set_sense(), which
++		 * respects the D_SENSE bit, instead of unconditionally
++		 * generating the sense data in descriptor format. However,
++		 * because hdparm, hddtemp, and udisks incorrectly assume sense
++		 * data in descriptor format, without even looking at the
++		 * RESPONSE CODE field in the returned sense data (to see which
++		 * format the returned sense data is in), we are stuck with
++		 * being bug compatible with older kernels.
++		 */
++		scsi_build_sense(cmd, 1, RECOVERED_ERROR, 0, 0x1D);
+ 	}
+ }
+ 
+-- 
+2.46.0
 
