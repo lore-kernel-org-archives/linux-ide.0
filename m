@@ -1,72 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99301394;
-	Wed, 14 Aug 2024 13:53:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20641B32A1;
+	Wed, 14 Aug 2024 14:06:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723643581; cv=none; b=YTSK4rIOKvpjwMZcQGO6dHfRfLfmVxoA1ibvhfQIc27zt1F42qGGNHvzEA0ZlWUml8BKdaYmhxI/oYJK7oboTBFja6mSeNCDNKnCts5emvoyy98Owbvntmonx+9BevV9Re6zSQBxAYE0R/Rp2cbz6vHn6vnYveZPAN6gragFXFI=
+	t=1723644407; cv=none; b=SsotddxmvsXUJotjIOI8HIXb2BMVZQIaXvgOMXFqEYGdlYnlurchvLR6UqHZCCkSgEHXZ7f/QCGb3JOs3vbSWxiNNahK2Al8O9DA8C1KxEnF6kp7vOq6nTjGsmM56nmxJnZqsV1EVKL1YXQfd20FVB9uvypCrYSBAKg+3ODKBF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723643581; c=relaxed/simple;
-	bh=S6ETUwJhJjtOyU8fyiCYNEKaNec6h6IICgYODC0gkb4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=fOdo1Y4fuKtpKyXEJreKrQDm5YAOC2ZiBGscQApl2fbimjiGjTElgMurOKM4tRx0bpF24ZbNr7+D6KoVTQAorJX9ycoigOOExy6vhpzpUyRG6tNty0VjjxBV8GfoSg6kMyLcerAz1tHponR2DV7K89morXvGj8EHRNx8sFJlaA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iAOxceuX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723644407; c=relaxed/simple;
+	bh=AGZAKlecmLZEHhHdoIyuP0KBetIGYeA3xA2HQiMjzTw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=K9ihIMroTwwUEIep5oy8EOfMNiRXY1QMNU84EBueZmeCkt6R1Obo7kEwF2RU2YAc2mw4Ylf72VekwASL0ML98QL83GuQkXhmBT3PwS4xaq45qy2+7I1lnYE6iMAHaZbdrS1X5VrrCTSctW2t02F/h9tM8vGhQlf1VKs7MUiDpBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g2QHk+DR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iAOxceuX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22F0AC116B1;
-	Wed, 14 Aug 2024 13:52:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g2QHk+DR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66242C116B1;
+	Wed, 14 Aug 2024 14:06:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723643581;
-	bh=S6ETUwJhJjtOyU8fyiCYNEKaNec6h6IICgYODC0gkb4=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=iAOxceuXz2wLgjEhv9kDzU3q33Ye7VR2mcDFNLkwsnVHMmmIk4fOaKckwDT8xCGOZ
-	 TPBf61R9fAbIW+t5Di6QG+wsP6dW75sGw1JKNmaTqMPriNV8tQN5x4dSY7FGzLpL0Q
-	 j4ERYem+PR4oek0ZJyxisKY+C12j8vnCn3HpWN8bFlw6doctJTeUg3Cx4vVZe9V35b
-	 XumNK/ONgBhEw4k8gl/Qc6++6jg+jlladjB9fTgkYxtNvkhuGO2nCZ3QnKNla1yBXy
-	 92G2ioK4BM8xJi5k3tIbWfve3/pozmAC/MAz5iq5Ak4Px+0PEuHt9IFm7nnfBnlXW8
-	 gRjTlUCOoa6fg==
+	s=k20201202; t=1723644407;
+	bh=AGZAKlecmLZEHhHdoIyuP0KBetIGYeA3xA2HQiMjzTw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=g2QHk+DRt80uEPNhETIusk1gqul5VFfpYKmiwNTv/2DSjRyOqW8VwzEYXb7fKYxF9
+	 JZ+KIvwRoiy7xp6WFksJqrGJndtiHUHHytT09pVvb9yFsvg8xkDnt4ta+V6mVmuD1l
+	 yBTs/sm9UMaP7ODoPV7JkCEOf7TepnO0APbnd7dVCp4EUpGHfPIaIU1RLUtbwqlgnt
+	 ohDdOzHsLGc6H1ffnQhwkaSGg5nwoWpIWUSXgeTwW0nkMK5yBcc7JljkQB3LskKBLa
+	 IVnjIu2fGvxOFWXKwDuvfq1b99Vte6IGI0xfAufOXfJkEYry93JSae+1iFEO2/QaA9
+	 Ck5+tS4eyQLLA==
+Date: Wed, 14 Aug 2024 16:06:42 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Igor Pylypiv <ipylypiv@google.com>, 
- Hannes Reinecke <hare@suse.de>, Niklas Cassel <cassel@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
- Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org, 
- Stephan Eisvogel <eisvogel@seitics.de>, 
- Christian Heusel <christian@heusel.eu>, linux-ide@vger.kernel.org
-In-Reply-To: <20240813131900.1285842-2-cassel@kernel.org>
-References: <20240813131900.1285842-2-cassel@kernel.org>
-Subject: Re: [PATCH] Revert "ata: libata-scsi: Honor the D_SENSE bit for
- CK_COND=1 and no error"
-Message-Id: <172364357883.1303881.1790276895537620446.b4-ty@kernel.org>
-Date: Wed, 14 Aug 2024 15:52:58 +0200
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: =?utf-8?B?S29sYmrDuHJu?= Barmen <linux-ppc@kolla.no>,
+	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	=?utf-8?B?Sm9uw6HFoQ==?= Vidra <vidra@ufal.mff.cuni.cz>,
+	Christoph Hellwig <hch@lst.de>, linux@roeck-us.net
+Subject: Re: Since 6.10 - kernel oops/panics on G4 macmini due to change in
+ drivers/ata/pata_macio.c
+Message-ID: <Zry58qB80V80uS38@ryzen.lan>
+References: <62d248bb-e97a-25d2-bcf2-9160c518cae5@kolla.no>
+ <3b6441b8-06e6-45da-9e55-f92f2c86933e@ufal.mff.cuni.cz>
+ <Zrstcei9WN9sRfdX@x1-carbon.wireless.wdc>
+ <87sev81u3f.fsf@mail.lhotse>
+ <Zrt028rSVT5hVPbU@ryzen.lan>
+ <87jzgj1ejc.fsf@mail.lhotse>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87jzgj1ejc.fsf@mail.lhotse>
 
-On Tue, 13 Aug 2024 15:19:01 +0200, Niklas Cassel wrote:
-> This reverts commit 28ab9769117ca944cb6eb537af5599aa436287a4.
+On Wed, Aug 14, 2024 at 10:20:55PM +1000, Michael Ellerman wrote:
+> Niklas Cassel <cassel@kernel.org> writes:
+> > On Tue, Aug 13, 2024 at 10:32:36PM +1000, Michael Ellerman wrote:
+> >> Niklas Cassel <cassel@kernel.org> writes:
+> >> > On Tue, Aug 13, 2024 at 07:49:34AM +0200, Jonáš Vidra wrote:
+> ...
+> >> >> ------------[ cut here ]------------
+> >> >> kernel BUG at drivers/ata/pata_macio.c:544!
+> >> >
+> >> > https://github.com/torvalds/linux/blob/v6.11-rc3/drivers/ata/pata_macio.c#L544
+> >> >
+> >> > It seems that the
+> >> > while (sg_len) loop does not play nice with the new .max_segment_size.
+> >> 
+> >> Right, but only for 4KB kernels for some reason. Is there some limit
+> >> elsewhere that prevents the bug tripping on 64KB kernels, or is it just
+> >> luck that no one has hit it?
+> >
+> > Have your tried running fio (flexible I/O tester), with reads with a very
+> > large block sizes?
+> >
+> > I would be surprised if it isn't possible to trigger the same bug with
+> > 64K page size.
+> >
+> > max segment size = 64K
+> > MAX_DCMDS = 256
+> > 256 * 64K = 16 MiB
+> > What happens if you run fio with a 16 MiB blocksize?
+> >
+> > Something like:
+> > $ sudo fio --name=test --filename=/dev/sdX --direct=1 --runtime=60 --ioengine=io_uring --rw=read --iodepth=4 --bs=16M
 > 
-> Sense data can be in either fixed format or descriptor format.
+> Nothing interesting happens, fio succeeds.
 > 
-> SAT-6 revision 1, "10.4.6 Control mode page", defines the D_SENSE bit:
-> "The SATL shall support this bit as defined in SPC-5 with the following
-> exception: if the D_ SENSE bit is set to zero (i.e., fixed format sense
-> data), then the SATL should return fixed format sense data for ATA
-> PASS-THROUGH commands."
+> The largest request that comes into pata_macio_qc_prep() is 1280KB,
+> which results in 40 DMA list entries.
 > 
-> [...]
+> I tried with a larger block size but it doesn't change anything. I guess
+> there's some limit somewhere else in the stack?
+> 
+> That was testing on qemu, but I don't think it should matter?
+> 
+> I guess there's no way to run the fio test against a file, ie. without a
+> raw partition? My real G5 doesn't have any spare disks/partitions in it.
 
-Applied to libata/linux.git (for-6.11-fixes), thanks!
 
-[1/1] Revert "ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error"
-      https://git.kernel.org/libata/linux/c/fa0db8e5
+You can definitely run fio against a file.
+
+e.g.
+$ dd if=/dev/random of=/tmp/my_file bs=1M count=1024
+
+$ sudo fio --name=test --filename=/tmp/my_file --direct=1 --runtime=60 --ioengine=io_uring --rw=read --iodepth=4 --bs=16M
+
+
+Perhaps try with 32M block size, so that it is larger than
+max segment size = 64K
+MAX_DCMDS = 256
+256 * 64K = 16 MiB
+
+Perhaps also try with and without --direct.
+It could be interesting to use the page cache if you do --rw=readwrite
+that might possibly result in larger bios.
+
 
 Kind regards,
 Niklas
-
