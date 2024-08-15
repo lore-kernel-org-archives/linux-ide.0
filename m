@@ -1,99 +1,62 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EBE87DA80
-	for <linux-ide@vger.kernel.org>; Thu, 15 Aug 2024 11:25:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CAC17DA7A
+	for <linux-ide@vger.kernel.org>; Thu, 15 Aug 2024 11:36:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723721123; cv=none; b=HQd+08DKSQEjfJ1FSKpP6MnohO7VIbzHd6+EaJrcVfrSHzYIK0tWuQaKbl8qYGFMAEPyOL0veMoCYj0KDdJjIa3sTWqxygrCnTYJuZXWQ/0UYAKL+JSjNHzmAUNWwqqyN0EsEo/gjY5gyA7HNyFE/lcycELBzJ5j0BgCS4+JZHM=
+	t=1723721771; cv=none; b=dVsUdvucgBBFtzwksowhBCOJQmCMIKugH5+DBSwMBGjNSK/vU9rdEWVZNAhv1TP4sTzWqiSKrMhfyEzBI3f2qgCHv9vxmRopN1YM8YccQzlIoFNKattjZmzkw8JbZDD0exzyKHxb5ZdhWB7XOqilEn1X6w3ie0EZl00KBnCWz1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723721123; c=relaxed/simple;
-	bh=9r69U4+Vlyv0XEbqFBAdBfxH7OVJ2VXkioo1Q5babH8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=r5S0GzOiwmDAP3pgW6EksDL62hRyboiiCvVF5CYrAGWSOZxyxX6EwXNkPtZ7UycWCWRA5pCk1MNW60nLO2ueH3Hz0NrbX2eBR0s6KxvgjF25QWkmmsykYj/SYIA/doxPjBj8znLjP8BMZ2YpWjBbT3CcU7+PuFi0k452b1XIhzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=nqnjnnJf; arc=none smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1723721771; c=relaxed/simple;
+	bh=nETnvhLKr0IDMnBcfu+qe89910Zuhb7j+NRXnq33lIA=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=ECHOO+tDbo14lU2WrXlnep14yc9ePzvel+RxLbWwGZzhTRAmsprvSpxVC26jYIPty6tUPzUDnqupdZPknkICQHIoPozivpFa2pmQuh23suCzJhRfyyxKAR2SzzGBllJbq4Pt46b/Cxes2EO+RgnSMOyiCdBeoJhtqSCKREfAfxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fuAwcvvz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nqnjnnJf"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5a15692b6f6so1144344a12.0
-        for <linux-ide@vger.kernel.org>; Thu, 15 Aug 2024 04:25:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1723721121; x=1724325921; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=qswmFLJc+rRJnvMK5o1RhUuE0PL9fCewlpe2LTSF+JQ=;
-        b=nqnjnnJf1rHF/uJZn/spsnW74eBXGyx7YH9gvunkPJUwrsWFb+eglQrIXF6ACVucY3
-         WAxYb7UHO4uJUFMaiASIx4AonUjmgQdA5yDOjm0jTaHl5iFc5yw9HWNWbqTkkkSr2BUz
-         LZHStdI41ipF4c1OHTL/G1dodqC/u1TwmQHbvREf3piAWFUcJ2M4j3ycWvpiKRw4QXSm
-         5SkwevxcA+yGdpbrB7w1pNUKQ3aalop59RXyBRwAODkeNb60eOhm7cQ9pHYTWLLdCypl
-         Ugd4zSSmDpqFRUjlByl6zkpJRpj2/2GUrxKj5rhCNi5lKSNSSFLCRfCfaDDe3Urjc+Cj
-         yQtA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723721121; x=1724325921;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qswmFLJc+rRJnvMK5o1RhUuE0PL9fCewlpe2LTSF+JQ=;
-        b=fDwAuE1QWwgChd2BxDchBTvrTKWBx1ZI70sWt52K9BSICpcwIh+7qTLbPtsGgVgBAD
-         ntSuFcG2+qaKD2Qnr1ZyGUS/YzDZ3gxlKr1asb4c0V6BLUxjvBa0RmFxYP87vPYWH4Ma
-         ZtItxix4ezes+z2Yrf4LVEmTbyI5sOZ9dEEzC6ymzToWzxCLxvGL0E2RBORCH3OhWNai
-         ISx7l+Zl3TykCwKmfG0paHQdsXiM4Np/TyU7hA97S/T35hiORQey/KSIpopCH0Iy58jl
-         1nL0LUbqsPwFf3qwk9lmPLkudey5Mfian25juSYiiQ4QQ8y88MME9ZJ7PBRYFAIR+zka
-         k1bQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV8kmtW4tMtlUfVk0xvoDJCFaaN8jyS/4tKMbDx/LDHbOXuH0YmZVqjBFB751+7X2Cf1hoEZ7KZbXKPr8sNBySR147SewEMiWY+
-X-Gm-Message-State: AOJu0YxPvvb+MINrJ9DbYxCDMqKlBQxb5w+REW5Ly3V5kAeC4DvY0xf8
-	fpluptAeiwhj6un53BD3l7z5WDk5hsqeqBL2apKy5KATujHmP4W47uo2h1qPPsk=
-X-Google-Smtp-Source: AGHT+IE04IYzhOFDEe/StHeMv+I9KreAuEIMLJabn0MgWVsiJJeJsCqyh9XE5pP5z25EACFGgtwnLA==
-X-Received: by 2002:a17:907:f1d4:b0:a77:e1fb:7de9 with SMTP id a640c23a62f3a-a8366c0f0e2mr501782366b.5.1723721120636;
-        Thu, 15 Aug 2024 04:25:20 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a838396ce0asm85941166b.206.2024.08.15.04.25.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Aug 2024 04:25:20 -0700 (PDT)
-Date: Thu, 15 Aug 2024 14:25:08 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>,
-	linux-ide@vger.kernel.org, imx@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] ata: ahci_imx: Fix error code in probe()
-Message-ID: <cbcbdfc2-ddc7-4684-8ad4-018227823546@stanley.mountain>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fuAwcvvz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0174C32786;
+	Thu, 15 Aug 2024 11:36:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723721770;
+	bh=nETnvhLKr0IDMnBcfu+qe89910Zuhb7j+NRXnq33lIA=;
+	h=From:To:In-Reply-To:References:Subject:Date:From;
+	b=fuAwcvvz8Os3axm4zGwHtO5uNxPxsTldOd+p+DbkUrE7I1t0aVEtDeueBsKCMpmuV
+	 15vYVEkNBSoqAYNSU40OdEQea9wTA91AYwtiiSLYAWbb44cswyF84NokCiMgeQMmW6
+	 5mltt43+heKcduZfK8IgXrRPJaC1PQI4hOtnLbm8TWeHcCiubtMipsiLAOtoXYvdPZ
+	 BYcpn9p1YzoXMYCPPimLjGIKkgklsHf6gShLMy7jkwvI5vVVGmM7PEQRBjEmQD8UYR
+	 bJmQ4+gTjvYVNW5GWO2Pq1jufT9CWF+lnGvDNLk3lyMA1IYE9MFvRl3B9hTAsT2BE9
+	 rQfeUgngPQqcw==
+From: Niklas Cassel <cassel@kernel.org>
+To: hdegoede@redhat.com, axboe@kernel.dk, dlemoal@kernel.org, 
+ linux-ide@vger.kernel.org, Zhang Zekun <zhangzekun11@huawei.com>
+In-Reply-To: <20240810023426.110624-1-zhangzekun11@huawei.com>
+References: <20240810023426.110624-1-zhangzekun11@huawei.com>
+Subject: Re: [PATCH v3] ata: libahci_platform: Simplify code with
+ for_each_child_of_node_scoped()
+Message-Id: <172372176937.1341946.4797767283291778580.b4-ty@kernel.org>
+Date: Thu, 15 Aug 2024 13:36:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.0
 
-Return a negative error code if devm_clk_get() fails.  Don't return
-success.
+On Sat, 10 Aug 2024 10:34:26 +0800, Zhang Zekun wrote:
+> for_each_child_of_node_scoped() can put the device_node automatically.
+> So let's use it to make the code simpler by avoiding the need to
+> explicitly call of_node_put().
+> 
+> 
 
-Fixes: 3156e1b2c071 ("ata: ahci_imx: AHB clock rate setting is not required on i.MX8QM AHCI SATA")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
- drivers/ata/ahci_imx.c | 1 +
- 1 file changed, 1 insertion(+)
+Applied to libata/linux.git (for-6.12), thanks!
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 65f98e8fdf07..6f955e9105e8 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -963,6 +963,7 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 		imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
- 		if (IS_ERR(imxpriv->ahb_clk)) {
- 			dev_err(dev, "Failed to get ahb clock\n");
-+			ret = PTR_ERR(imxpriv->ahb_clk);
- 			goto disable_sata;
- 		}
- 		reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
--- 
-2.43.0
+[1/1] ata: libahci_platform: Simplify code with for_each_child_of_node_scoped()
+      https://git.kernel.org/libata/linux/c/aa3ca1fa
+
+Kind regards,
+Niklas
 
