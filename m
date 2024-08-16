@@ -1,63 +1,63 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 659C714A4E1
-	for <linux-ide@vger.kernel.org>; Fri, 16 Aug 2024 07:47:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22A1F1D69E
+	for <linux-ide@vger.kernel.org>; Fri, 16 Aug 2024 08:38:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723794459; cv=none; b=WuzsKYluuYS7KX3J+kbrxP/U4x26MuVSzfY6H2EHMjnmp6Eqzp8MkSfB/Zy9WGVewPnaCJQsoFCWCG2ywfjhNhqmWM2359jOU/k4H1p4vQl9NMx6MDHulrN0W/3V+FYv+iQPyffMiFFCrlOBaHyoYgbkdvtKH+GScNTcjay+rmI=
+	t=1723797487; cv=none; b=unVOHTbDV43rNf4K/ZSgQMr7Zg/buf7w3GBJy/ekixVJ5buJ9qBP/nte0EqMt7SDUk8DcGgQufxMlkg0NRmfHtiSyTLoobcUciwH+2rDP8wfnHqHZ6rYI8uuBv0UQ+0OFsDTVwGG6RSBLBUCBPR858TFpwpHv/oBHgVm4LRDdWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723794459; c=relaxed/simple;
-	bh=qD1OFtO/qJnrvrml5wouhVG92sWSwTSTNw43wCV9uTI=;
+	s=arc-20240116; t=1723797487; c=relaxed/simple;
+	bh=JnIZUSSP9N1PiBEdjQpAZAkKB6LaVkL1kLF1vqwhXI0=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=rtVCBDsYDcZuyKxan+AZ9pl8/WM3CgnZS2SXY6IQdMS1W8BqdDpzJCLaYVR2GC2BXLPnGbPxXXVgXj+ht502+a9MyWdY/xywdi+97qxJMUXbyP1HmEU5FIopjW7OUIxFTGXRbycWgErOyk9KPMvC653/WgIdHnXAxN9R4VPHsHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=S0BJthpU; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:MIME-Version; b=EdlE0D7IloHa/Twj7h634RWutNKANxYcxBnztehNOyjfx/Q/0UpoVrP6IY/LUKhn2p/LnZncYnz88nDA9v6wgMYaZjTKPTMIhbofUDUoSvjTsrUVf4i0CldK9DvPzBCHPPaX+puhUoc8vcPzOPNxqvOFQLkA1opA1T0vMldZw0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JuMdpbLA; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S0BJthpU"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JuMdpbLA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1723794455;
+	s=mimecast20190719; t=1723797485;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=p3+oGBurxqhUAn+LlCI73zSVN83RLmsnyOF7xPiqQ+Q=;
-	b=S0BJthpULQMIN5oV52yutXh6vJd/N/NnH3VdyIlN1b9Yf6HixciZ058peWMaR3xsYhDD1k
-	+fzmwQ+Q1JHCU8eqGR7RAc8ExIOEDwAPoBMrALvAqcp77OuB76LivUDvQD/N6kreNYHiDf
-	4wPplR7ZLupfuXjTVjbxwCmHLmfOUCA=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=9hPy+ljvcwg8eCsFrqW3cI/bGJbalTNBOH48MWMLXiA=;
+	b=JuMdpbLAK5pWMP4X9l66Tu42FPNVOtvPpoTvQNWK5JkscFUEJhe6v2/7+qlNEC3zmxfyzj
+	jWrlqJvoCT1Om1lSaVvPxaVeA7IPHCsj+hRWjnNbFOedJ8JAAMDy6vh+Ck3wkjbUYxrPWm
+	GYcdOUI7YjzNEHGXXzQxypYM3t/bDVA=
+Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com
+ [209.85.161.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-177-NqCiQl7EMYGw4JfLHwrngg-1; Fri, 16 Aug 2024 03:47:33 -0400
-X-MC-Unique: NqCiQl7EMYGw4JfLHwrngg-1
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-427feed9c71so2914455e9.0
-        for <linux-ide@vger.kernel.org>; Fri, 16 Aug 2024 00:47:33 -0700 (PDT)
+ us-mta-574-yIwTfBWNOaO6jeQyEIUZ_w-1; Fri, 16 Aug 2024 04:38:02 -0400
+X-MC-Unique: yIwTfBWNOaO6jeQyEIUZ_w-1
+Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-5d5d0612dbdso331385eaf.2
+        for <linux-ide@vger.kernel.org>; Fri, 16 Aug 2024 01:38:02 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723794452; x=1724399252;
+        d=1e100.net; s=20230601; t=1723797482; x=1724402282;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=p3+oGBurxqhUAn+LlCI73zSVN83RLmsnyOF7xPiqQ+Q=;
-        b=N6zd0p5Hc//+RrrE3h6S+SDHIy+aWmk/uTcoqTCShtUqkAWhu/wOB8QTeorE0iBqu6
-         CbcQXK2HLmDhXnaP9C3Dkm+3cIM+9GmbyeYgfB3kfLr/wfuohcGZb8k93/sszMs9wvR8
-         4PCVsdx1I2ZXBXcTUKMuleNMlKMx7TFwodeVVvea1dnXd3gW1sYRDmvxVAkgcthKPntw
-         LMxmGfUodaYMkhGByCO4dvLTZR77A/RtpVcpN3tNFZJX41QiueA0dp0zzmF8N5EqXqmy
-         Rpbg7eSBx9kj8KwtnxzlWmf3Dcka4jpxHU2eMKXMmnnspjg0I+gEkZCbflWS+abIgMBc
-         AZPg==
-X-Gm-Message-State: AOJu0YxKoDRMVmPc767CYIGXkzbUNwbNpOy+QC9o6AgsIFPKzyDIThoe
-	ZYw9J6Id0xONl5yRnJCOfMkHliAaqusb9Pv16Ev5ayT/Jt86UEeFnKiwr9gYc5NXuSWFoAB8UrZ
-	2D89dI8j82OVJG5VbKuoT3qx3X9SqrLnmQJkKF9b0Wyu2TLHyrhInONAxlQ==
-X-Received: by 2002:a5d:5984:0:b0:367:4d9d:56a6 with SMTP id ffacd0b85a97d-3719431dfc0mr769778f8f.1.1723794451953;
-        Fri, 16 Aug 2024 00:47:31 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEC4ozEjfAOD0QEHHeHPcUnNdfIQxp3r757L0yb57BkQvFFuPL+ahHJVAq23k76NL2WjLdZVw==
-X-Received: by 2002:a5d:5984:0:b0:367:4d9d:56a6 with SMTP id ffacd0b85a97d-3719431dfc0mr769766f8f.1.1723794451492;
-        Fri, 16 Aug 2024 00:47:31 -0700 (PDT)
+        bh=9hPy+ljvcwg8eCsFrqW3cI/bGJbalTNBOH48MWMLXiA=;
+        b=gDzZaH/On6mxs0L49LuA9zkDzPIVJkQqBk9GnHa+/4Nu1p2gkbLbARhnt3MZO43bTG
+         +HNud13NhTGLSJ2votaN/g8okzSYsdfsIGyfKgsuPxiDSYlZM6GJBhbCot4Z/5wArnoH
+         mhjcWsIjXyiX3tPCnBOK0DIM78I4Sf7kDFYOBjA0PwpMxnwNt7RlYxsA23lhayuB0+hm
+         amndR6HeIhiDmPQ2RtdRyY9uNTh21KusThXCkf6z+RNR9KuKrIK1KiFtARTUY5AuNGk3
+         Xr9NfA4cIONtKhy+Cn3Hl1ySf5jO9mIpmco5yLcNIrtnti4jyPJItdbi1KaTvPkgX9En
+         SS4w==
+X-Gm-Message-State: AOJu0YwttZF20tFnmKDJRK0w1wwk9W6tkC03PCZvsGA/XCZMxzQX7pXG
+	uv/keULuRmlBZZ6uxSR/7H7dJ1fXr7/K9TmNSKIvjBlqnN7R1Eu7gfsjgji3Ai3yTQwRDQX6mIq
+	jgXvyJ/6+ZddIPiROlGkHHRjvXPFoBa2/WD5pXzLVQG6by+5SN1GB1ht/6w==
+X-Received: by 2002:a05:6358:6384:b0:1ac:a26c:a07a with SMTP id e5c5f4694b2df-1b3964509fbmr127149055d.4.1723797481951;
+        Fri, 16 Aug 2024 01:38:01 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHpDb53mgYIMHYZSfcJGbvbsHrNkMIY4fub/ey6krOIiquG9r7isTihjikCrI9uLfVjd3+QGQ==
+X-Received: by 2002:a05:6358:6384:b0:1ac:a26c:a07a with SMTP id e5c5f4694b2df-1b3964509fbmr127148155d.4.1723797481514;
+        Fri, 16 Aug 2024 01:38:01 -0700 (PDT)
 Received: from dhcp-64-16.muc.redhat.com (nat-pool-muc-t.redhat.com. [149.14.88.26])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3718985a35fsm3034918f8f.59.2024.08.16.00.47.30
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7a4ff06c517sm148335785a.58.2024.08.16.01.38.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Aug 2024 00:47:31 -0700 (PDT)
-Message-ID: <94a378e6c2d442e0e7ae06fbd496d02983f9baaa.camel@redhat.com>
+        Fri, 16 Aug 2024 01:38:01 -0700 (PDT)
+Message-ID: <9c2aeec1c3f97bcebb3596b5b7c87140bc29b72e.camel@redhat.com>
 Subject: Re: [PATCH] ata: Replace deprecated PCI devres functions
 From: Philipp Stanner <pstanner@redhat.com>
 To: Sergey Shtylyov <s.shtylyov@omp.ru>, Damien Le Moal
@@ -65,7 +65,7 @@ To: Sergey Shtylyov <s.shtylyov@omp.ru>, Damien Le Moal
  <mikpelinux@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	pstanner@redhat.com
-Date: Fri, 16 Aug 2024 09:47:29 +0200
+Date: Fri, 16 Aug 2024 10:37:58 +0200
 In-Reply-To: <c2d21da0-7fe1-f995-5562-7ff04e9f1b8b@omp.ru>
 References: <20240812084839.37580-2-pstanner@redhat.com>
 	 <c2d21da0-7fe1-f995-5562-7ff04e9f1b8b@omp.ru>
@@ -112,9 +112,6 @@ On Wed, 2024-08-14 at 20:32 +0300, Sergey Shtylyov wrote:
 > =C2=A0=C2=A0 Besides, I'm not seeing pcim_request_region() anywhere in th=
 is
 > patch...
-
-Ah, typo. pcim_iomap_regionS() is being replaced.
-
 >=20
 > > Remove all calls to pcim_iomap_table().
 > >=20
@@ -157,9 +154,6 @@ Ah, typo. pcim_iomap_regionS() is being replaced.
 > > =C2=A021 files changed, 163 insertions(+), 102 deletions(-)
 >=20
 > =C2=A0=C2=A0 I did review all the changes, not just PATA drivers.
-
-Thx
-
 >=20
 > [...]
 > > diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
@@ -217,29 +211,6 @@ Thx
 > =C2=A0=C2=A0 Ugh... Why you couldn't keep using base (or just i * 2) and =
 avoid
 > such code duplication?
-
-I mean, this would at least make it perfectly readable what's being
-done.
-
-I guess we could do something like this, maybe with a comment explining
-what is going on:
-
-for_each_set_bit(j, 0x3 << base, PCI_STD_NUM_BARS) {
-	host->iomap[j] =3D pcim_iomap_region(pdev, j, drv_name);
-	if (IS_ERR(host->iomap[j])) {
-		rc =3D PTR_ERR(host->iomap[j]);
-		break;
-	}
-}
-
-if (rc) {
-	dev_warn(gdev,
-
-
-Unless you've got a better idea?
-
-Tell me which version you'd prefer.
-
 >=20
 > [...]
 > > diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
@@ -261,6 +232,29 @@ Tell me which version you'd prefer.
 > =C2=A0=C2=A0		goto use_ioports;
 >=20
 > =C2=A0=C2=A0 The code under that label ignores rc, no?
+
+Oh, forgot to address this.
+
+Yes, it does ignore it, but it behaves as the existing code does. The
+existing version jumps into ata_pci_bmdma_init_one() if it cannot
+request or ioremap the BAR.
+
+	/* Try to acquire MMIO resources and fallback to PIO if
+	 * that fails
+	 */
+	rc =3D pcim_iomap_regions(pdev, 1 << SIL680_MMIO_BAR, DRV_NAME);
+	if (rc)
+		goto use_ioports;
+
+
+Is that a bug in the existing version, too?
+The comment hints to me that this is fine and intended.
+
+Otherwise we want to remain consistent with the pre-existing behavior.
+
+
+P.
+
 >=20
 > [...]
 > > diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
@@ -301,14 +295,6 @@ Tell me which version you'd prefer.
 > > +	void __iomem *iomem;
 >=20
 > =C2=A0=C2=A0 Here as well...
-
-ACK, will provide better naming in v2.
-
-
-Regards,
-P.
-
-
 >=20
 > [...]
 >=20
