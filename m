@@ -1,130 +1,161 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2579F288B5;
-	Mon, 19 Aug 2024 01:17:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BECCC2900;
+	Mon, 19 Aug 2024 10:18:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724030255; cv=none; b=TgoYred5dagNOvp2ltlCP+5Xosf8HHqQqSiyRS8ELapP20qdqqz6kC8tBYaQvjTwsYIzuqQJXBSmnl9J/FUEIPlZrva9DxYxw41ltiDfM90MPkUIaH+Y0SbeDwU47IYrLe62xFAQoB5ofcValnTdSgjmlMaobqHKcAlBTTzK6sU=
+	t=1724062699; cv=none; b=JDz1xPTS2fBxg4Q2xl1ZoJIWsfZG+/awhg7zLkByrxcH0PfgkHRMJrygLArF0+6O+8t6Qdor62tw4bl5H4ZGmUi+4jem0XYl38axTGo6DieQPt9nSeQj9z2dZ9tB4HFrz8TWH1k+GLDUGVuOEQP6AA3u+Tf7IfDZj0WCUVBx1Wo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724030255; c=relaxed/simple;
-	bh=Kraybv2bM05Jkd47FisOuLQyJOdH9jsHsaPE0M0zjsU=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=uRPzv8ARObqoQ3PwE8BTo6mp6vrXv8UMZTgVAtUDXXPamlujX3JkrMg2Am2jDnXcH4+LkBhvAaNPzfhEGAtFN6NWyPv3eLWBXi5efVhfIAcDinuZnsfFmyyfKY2LWQJ042+HUONT6qUSdttBX1oDpYF+9InEP2XblXdvg/JGRTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4WnF7Y18Jcz4f3jQv;
-	Mon, 19 Aug 2024 09:17:13 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 308591A018D;
-	Mon, 19 Aug 2024 09:17:27 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgBnj4UlncJmGj5YCA--.46393S3;
-	Mon, 19 Aug 2024 09:17:27 +0800 (CST)
-Subject: Re: [PATCH -next] ata: libata: Fix memory leak for error path in
- ata_host_alloc()
-To: Damien Le Moal <dlemoal@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>,
- Zheng Qixing <zhengqixing@huawei.com>, cassel@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20240816035820.2055747-1-zhengqixing@huawei.com>
- <3dfa5352-01d3-dc16-5a75-0b38e5893246@huaweicloud.com>
- <5949965e-0155-4ad1-a019-df220140b085@kernel.org>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <ad59e599-9d6e-211a-957b-410a43eccbdb@huaweicloud.com>
-Date: Mon, 19 Aug 2024 09:17:25 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	s=arc-20240116; t=1724062699; c=relaxed/simple;
+	bh=4/iJmbpXu4ug9b+VJ7mrmeUQj5bgy/Syl41CJVA/kvA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=H5Ntk/eSTK4rP7RS4yy89Bbn9cTOcUg6qKwkBZ9SaMXbAU/JUvbP6mX9Taxtun+8RrWq/R4yBrxZxHsu3/18JqZwPK4APLkgNyC0w0JC4Xy1dIzuOlwdLh7vS5tHtk8OuA/spb3MrKldhsdb8hAm+KaXwAsv4MCZCYc5TXbHhjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=C0GX8mMM; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="C0GX8mMM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+	s=201909; t=1724062687;
+	bh=mpZOcZghaATkINZgHYKogiq38L86o5NZCksImbrz8Mc=;
+	h=From:To:Cc:Subject:Date:From;
+	b=C0GX8mMMe7U3Hx+eHAeBMkFVaqmFh2RslDNgnpfJx3boSvq6JOnVCx8ncT2pw6Xgq
+	 UK38zNQnoVooly7zBveuj+K0B00AduiS5/fr08+oRVirT3KSU5uJ+RTgZ99aoO1M1M
+	 Nz8GPJAasKV9r+AeaUUlkJKiCQKUtFjlG+MhVZ4GpszCGaxmicOi1JyAnBUHAvddzD
+	 LNIqmu8OJY92D2Td+HO1j4A0ms/k7w4yPOuh9DCdLCKtKZIMmtFVspGR9hVPO462Af
+	 xADSlLDr/z2ST3HT6kIHRyttCwCgPNXBx6hh+edTI8d8pASoRNRKWeRq95webWdPz+
+	 NzmyEGy5NNazg==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4WnT7c1J6qz4w2N;
+	Mon, 19 Aug 2024 20:18:04 +1000 (AEST)
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: cassel@kernel.org
+Cc: dlemoal@kernel.org,
+	linux-ide@vger.kernel.org,
+	<linux-kernel@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<hch@lst.de>,
+	linux-ppc@kolla.no,
+	vidra@ufal.mff.cuni.cz
+Subject: [PATCH] ata: pata_macio: Fix DMA table overflow
+Date: Mon, 19 Aug 2024 20:17:55 +1000
+Message-ID: <20240819101755.489078-1-mpe@ellerman.id.au>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <5949965e-0155-4ad1-a019-df220140b085@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBnj4UlncJmGj5YCA--.46393S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7trW5ZF4kCF15Ar43Ary5Arb_yoW8Cry5pF
-	srWa1UCFWDGrn7uwnFg3W8ZF1rKa18Kr15ury8t34fZrnxtrn5GrZxCas8uFn0kr1kWF1j
-	qFW8KryfCFyDZa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7I2V7IY0VAS07AlzVAY
-	IcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbV
-	WUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF
-	67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42
-	IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF
-	0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2Kf
-	nxnUUI43ZEXa7VUbGQ6JUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi,
+Kolbjørn and Jonáš reported that their 32-bit PowerMacs were crashing
+in pata-macio since commit 09fe2bfa6b83 ("ata: pata_macio: Fix
+max_segment_size with PAGE_SIZE == 64K").
 
-在 2024/08/16 18:32, Damien Le Moal 写道:
-> On 8/16/24 15:42, Yu Kuai wrote:
->> 在 2024/08/16 11:58, Zheng Qixing 写道:
->>> In ata_host_alloc(), if ata_port_alloc(host) fails to allocate memory
->>> for a port, the allocated 'host' structure is not freed before returning
->>> from the function. This results in a potential memory leak.
->>>
->>> This patch adds a kfree(host) before the error handling code is executed
->>> to ensure that the 'host' structure is properly freed in case of an
->>> allocation failure.
->>>
->>> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
-> 
-> I did not receive this patch and I do not see it on the list either. Something
-> went wrong...
-> Can you resend please ? Thanks.
-> 
->>> ---
->>>    drivers/ata/libata-core.c | 4 +++-
->>>    1 file changed, 3 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index e4023fc288ac..f27a18990c38 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -5663,8 +5663,10 @@ struct ata_host *ata_host_alloc(struct device *dev, int n_ports)
->>>    	}
->>>    
->>>    	dr = devres_alloc(ata_devres_release, 0, GFP_KERNEL);
->>> -	if (!dr)
->>> +	if (!dr) {
->>> +		kfree(host);
->>>    		goto err_out;
->>> +	}
->>
->> Looks correct, dev_set_drvdata(dev, host) is not called yet.
->> ata_devres_release won't free host in this case.
->>
->> I'll suggest to return NULL directly here, and then the 'err_out'
->> tag can be removed as well.
-> 
-> I do not think so. Since devres_open_group() was called, need to call either
-> devres_remove_group() or devres_release_group().
+For example:
 
-Yes, you're right.
+  kernel BUG at drivers/ata/pata_macio.c:544!
+  Oops: Exception in kernel mode, sig: 5 [#1]
+  BE PAGE_SIZE=4K MMU=Hash SMP NR_CPUS=2 DEBUG_PAGEALLOC PowerMac
+  ...
+  NIP pata_macio_qc_prep+0xf4/0x190
+  LR  pata_macio_qc_prep+0xfc/0x190
+  Call Trace:
+    0xc1421660 (unreliable)
+    ata_qc_issue+0x14c/0x2d4
+    __ata_scsi_queuecmd+0x200/0x53c
+    ata_scsi_queuecmd+0x50/0xe0
+    scsi_queue_rq+0x788/0xb1c
+    __blk_mq_issue_directly+0x58/0xf4
+    blk_mq_plug_issue_direct+0x8c/0x1b4
+    blk_mq_flush_plug_list.part.0+0x584/0x5e0
+    __blk_flush_plug+0xf8/0x194
+    __submit_bio+0x1b8/0x2e0
+    submit_bio_noacct_nocheck+0x230/0x304
+    btrfs_work_helper+0x200/0x338
+    process_one_work+0x1a8/0x338
+    worker_thread+0x364/0x4c0
+    kthread+0x100/0x104
+    start_kernel_thread+0x10/0x14
 
-Thanks,
-Kuai
+That commit increased max_segment_size to 64KB, with the justification
+that the SCSI core was already using that size when PAGE_SIZE == 64KB,
+and that there was existing logic to split over-sized requests.
 
-> 
->>
->> Anyway, with or without the cleanup:
->> Reviewed-by: Yu Kuai <yukuai3@huawei.com>>
->> Thanks!
->>>    
->>>    	devres_add(dev, dr);
->>>    	dev_set_drvdata(dev, host);
->>>
->>
-> 
+However with a sufficiently large request, the splitting logic causes
+each sg to be split into two commands in the DMA table, leading to
+overflow of the DMA table, triggering the BUG_ON().
+
+With default settings the bug doesn't trigger, because the request size
+is limited by max_sectors_kb == 1280, however max_sectors_kb can be
+increased, and apparently some distros do that by default using udev
+rules.
+
+Fix the bug for 4KB kernels by reverting to the old max_segment_size.
+
+For 64KB kernels the sg_tablesize needs to be halved, to allow for the
+possibility that each sg will be split into two.
+
+Fixes: 09fe2bfa6b83 ("ata: pata_macio: Fix max_segment_size with PAGE_SIZE == 64K")
+Cc: stable@vger.kernel.org # v6.10+
+Reported-by: Kolbjørn Barmen <linux-ppc@kolla.no>
+Closes: https://lore.kernel.org/all/62d248bb-e97a-25d2-bcf2-9160c518cae5@kolla.no/
+Reported-by: Jonáš Vidra <vidra@ufal.mff.cuni.cz>
+Closes: https://lore.kernel.org/all/3b6441b8-06e6-45da-9e55-f92f2c86933e@ufal.mff.cuni.cz/
+Tested-by: Kolbjørn Barmen <linux-ppc@kolla.no>
+Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+---
+ drivers/ata/pata_macio.c | 23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 1b85e8bf4ef9..eaffa510de49 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -208,6 +208,19 @@ static const char* macio_ata_names[] = {
+ /* Don't let a DMA segment go all the way to 64K */
+ #define MAX_DBDMA_SEG		0xff00
+ 
++#ifdef CONFIG_PAGE_SIZE_64KB
++/*
++ * The SCSI core requires the segment size to cover at least a page, so
++ * for 64K page size kernels it must be at least 64K. However the
++ * hardware can't handle 64K, so pata_macio_qc_prep() will split large
++ * requests. To handle the split requests the tablesize must be halved.
++ */
++#define MAX_SEGMENT_SIZE SZ_64K
++#define SG_TABLESIZE (MAX_DCMDS / 2)
++#else
++#define MAX_SEGMENT_SIZE MAX_DBDMA_SEG
++#define SG_TABLESIZE MAX_DCMDS
++#endif
+ 
+ /*
+  * Wait 1s for disk to answer on IDE bus after a hard reset
+@@ -912,16 +925,10 @@ static int pata_macio_do_resume(struct pata_macio_priv *priv)
+ 
+ static const struct scsi_host_template pata_macio_sht = {
+ 	__ATA_BASE_SHT(DRV_NAME),
+-	.sg_tablesize		= MAX_DCMDS,
++	.sg_tablesize		= SG_TABLESIZE,
+ 	/* We may not need that strict one */
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	/*
+-	 * The SCSI core requires the segment size to cover at least a page, so
+-	 * for 64K page size kernels this must be at least 64K. However the
+-	 * hardware can't handle 64K, so pata_macio_qc_prep() will split large
+-	 * requests.
+-	 */
+-	.max_segment_size	= SZ_64K,
++	.max_segment_size	= MAX_SEGMENT_SIZE,
+ 	.device_configure	= pata_macio_device_configure,
+ 	.sdev_groups		= ata_common_sdev_groups,
+ 	.can_queue		= ATA_DEF_QUEUE,
+-- 
+2.46.0
 
