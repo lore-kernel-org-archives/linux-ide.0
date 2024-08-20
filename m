@@ -1,134 +1,155 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67C4026AD3;
-	Mon, 19 Aug 2024 18:46:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18ED0446D1;
+	Tue, 20 Aug 2024 02:28:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724093163; cv=none; b=gkrdc27kMokjiPSPGsUJ62d5Wu+Z4hv584aUonfBAA7/GBGwsum6iQeIFci5Bf/7hE2cW1IsCY05tOpHp0wGbv8AksCMtqW2Vvqk2OqTfTewAZOj9gOc5pf5vTQxCwX1LJ+UI51g2zyRn/suxMzNVzVXCyz3M5iIfr6kI0/gpHs=
+	t=1724120927; cv=none; b=UCXCrui5U/za0Vk7BPberQNh+9Vpi3j9nNL/cMnnfQb/dE+lSPDR6cTJNkqhlzO3i3sYgLyNBNn+2lDt9BhyZkV3ZRepR4PH0NC6v2umuM+GkL98GQy6iybKhRDxgKThlsKPWXjak2enjHlAIw0g2fLyG0bXBxgBsYPZe0D8nNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724093163; c=relaxed/simple;
-	bh=HdIJY01lHoLxaZGedoCASwrrmQVvme3IbQCYk3XtDxs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uPy/naceQg+wB3AoE5j276zAEz22HRZgMiXZ70bsyigeEQswLmxRGO8Hb9IqroF82a97u1Ied1db6Fvnx9AeFLcPHsU8Ej+zB9LBNMJLB02wSUeUgUTmaMaY3gBpYHSTx+zvcvLTOW+tR1v7SwQpftB6xuuG7BLwxsB/m38N//I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gam7KhGo; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1724120927; c=relaxed/simple;
+	bh=0RKsF157o3bKHtD19lzHYvs8hnVPCOMSKVn1abKcUyM=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=gTYSC5UMFcforAsA84m7cLCjyIqzKnKM2nhImWe7qdCKaIWuMZn2a8t+FpxpO/9qfY1Q70csFKJMRKajs7Bl8GA3laT2/Jjo6eg0XPMcLaXd9uEWfF+7Inlu3Qgz3dsfsRCm1u33uzhcYcG5YlQBJggUQUnjFBaiXKTWhXTHNW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=gwj4wl/0; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gam7KhGo"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4280b3a7efaso36697855e9.0;
-        Mon, 19 Aug 2024 11:46:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724093160; x=1724697960; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=83RS5Bq76bBQeFMijiRLgaOeMKTh/8Mb3G8iVoR5aBw=;
-        b=gam7KhGofNpYIjdvZsILa8FkqXRX9YwEHV+ltLdr7DGsFzmM/ELFyxA7T4v1GVBOC2
-         tiIWrV5275yfwe6RWTWia/9nHeBPGqjNo4wn3Utgx5ZoOh1yjELrq+mHczOGNVDRjvTS
-         gzULpOp2X82wQE6DpZKM1gPk9mu90m83/ZSo0zNAdnh+eDrsvbsp+bE/SltUO7K56dtw
-         sja+W5hbj/L3VKwHOwnIEXZCbaXvGL9P73w7TcHINVwtOFj8iw9DwUOIyO3ONlZ05WHH
-         aiN69aCuwS+XRP1gUv8GrIFmWPnmqCH2/2i8YvlxmVol7wwmgXmbUFJdvU14tLhI1cS1
-         7mTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724093160; x=1724697960;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=83RS5Bq76bBQeFMijiRLgaOeMKTh/8Mb3G8iVoR5aBw=;
-        b=PRndKsuF58qFN48U7ZcwsT8qLYwDzNWPMXsS/Pi7RhqFxyxvy6KKjPb/EQEQ4562W0
-         dd02oMb+MGTsEXrGbsE+wl+QSgT1iZZUM5+REgQvTOCuQAQ/HK5mUjZRGF7V1BwE54c7
-         61fQECReCGJjyp+bK/IAYwKewsACyQxPK9xIHeGjEGXpLtGPDP7VKWfW4LgvxdQ5/nLp
-         L+9UnmTMBEGfPOpmgM3qwMnph/UMxXdGoqTEd2oJSg6CspQdzV9MolmXlbTZJw+OZcqj
-         D2zVw5+s7LPbNcA5HDTCECrTaej0ajh1UmcsQS7xIlSRTZvfSZqUyyDbcv5E5lLnzeB8
-         BpYA==
-X-Forwarded-Encrypted: i=1; AJvYcCUs/Xn4lDCP8Hiax3kreL1K1qFOQPqE8s3FZJw/s2NzP7IbpBVwnyygskF52BZ32CHEO3IXYTZiuTOraHEq@vger.kernel.org, AJvYcCViwoxg+fLtAFTQrhxka4qCRWmPJpOrJiPGX7HAIPJs4RF2XHE8E0x/JUDa7tjzRilPGiO5nR0i@vger.kernel.org, AJvYcCVwMvt8nGRdQJzC4nhMvGI4Tm2q30ymZdr/pLwsWhQbRjdqoTP86JKNxVP0eOqAMvDdxvJjjtSf0hs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxHqnYtqVrnWqV4qzsTcaXaul2ToIQorX8R0gj9Nqcz+q2tqEwW
-	UIraZs5IWJn/hNvcXm0BcgF51bjQXNWwmVEJpIXAG6ZIx3jn9fbHzmLD7nB/
-X-Google-Smtp-Source: AGHT+IHgkMerOvxIAQnbhWE5dSxXyVexmF7ZW1KYRom0PSEE9yi2Aci3kgKxAUs6+3AAUS3kSUNC/g==
-X-Received: by 2002:a05:600c:a45:b0:426:627e:37af with SMTP id 5b1f17b1804b1-429ed77d75amr72399195e9.3.1724093159268;
-        Mon, 19 Aug 2024 11:45:59 -0700 (PDT)
-Received: from eldamar.lan (c-82-192-242-114.customer.ggaweb.ch. [82.192.242.114])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-429eea70115sm113922805e9.36.2024.08.19.11.45.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Aug 2024 11:45:57 -0700 (PDT)
-Sender: Salvatore Bonaccorso <salvatore.bonaccorso@gmail.com>
-Received: by eldamar.lan (Postfix, from userid 1000)
-	id 61A00BE2EE7; Mon, 19 Aug 2024 20:45:56 +0200 (CEST)
-Date: Mon, 19 Aug 2024 20:45:56 +0200
-From: Salvatore Bonaccorso <carnil@debian.org>
-To: Linux regressions mailing list <regressions@lists.linux.dev>
-Cc: Christian Heusel <christian@heusel.eu>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Igor Pylypiv <ipylypiv@google.com>, linux-ide@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [REGRESSION][BISECTED][STABLE] hdparm errors since 28ab9769117c
-Message-ID: <ZsOS5DmRnS3ab_9W@eldamar.lan>
-References: <0bf3f2f0-0fc6-4ba5-a420-c0874ef82d64@heusel.eu>
- <45cdf1c2-9056-4ac2-8e4d-4f07996a9267@kernel.org>
- <ZrPw5m9LwMH5NQYy@x1-carbon.lan>
- <1376f541-bc8a-4162-a814-a9146ebaf4eb@kernel.org>
- <df43ed14-9762-4193-990a-daec1a320288@heusel.eu>
- <e206181e-d9d7-421b-af14-2a70a7f83006@heusel.eu>
- <d224b165-14dd-4131-b923-1ef5bdf3fb7f@leemhuis.info>
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="gwj4wl/0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+	s=201909; t=1724120922;
+	bh=NPiOhm8IKIaayb+OQ2mU0VwOhYGdB0lFQCCi2+TtTDo=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=gwj4wl/0Bl/hBHPv0AaRenGTc2wAJ0PB2CWQTbbuRiAG6ydYttXtHs6zpWfnP2yt5
+	 KxztHLxRMaADnlMjFNT9evJ6SzPHI/pxBuk30e9m56MDIP3ZcoWjMW1dLT3QhkoUZu
+	 yMHAhbj/lrAx0oN/dZNtG7RRN10vYZ/THx8ELK8rSuHtDqXtu5C/47tid3OiTdARyN
+	 ySoYRo+oyjlU2G6B1NoRt3R/bFWEYf+IcqJHEg8w7benhsA0xNoQxnDKI75h1hNUY6
+	 c7dXfcq1YofE33pC9IIfIDoC644BcGfmY3JPPERzZX5fMQtdUdVEejMuiYoviWlyxO
+	 ijcQBEjBm17Mg==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4WntgW4MYRz4wcl;
+	Tue, 20 Aug 2024 12:28:39 +1000 (AEST)
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Damien Le Moal <dlemoal@kernel.org>, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, hch@lst.de, linux-ppc@kolla.no,
+ vidra@ufal.mff.cuni.cz
+Subject: Re: [PATCH] ata: pata_macio: Fix DMA table overflow
+In-Reply-To: <b651ae17-0d60-46b5-9571-cf82769ab07c@kernel.org>
+References: <20240819101755.489078-1-mpe@ellerman.id.au>
+ <b651ae17-0d60-46b5-9571-cf82769ab07c@kernel.org>
+Date: Tue, 20 Aug 2024 12:28:38 +1000
+Message-ID: <87ed6kszah.fsf@mail.lhotse>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d224b165-14dd-4131-b923-1ef5bdf3fb7f@leemhuis.info>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Damien Le Moal <dlemoal@kernel.org> writes:
+> On 8/19/24 19:17, Michael Ellerman wrote:
+>> Kolbj=C3=B8rn and Jon=C3=A1=C5=A1 reported that their 32-bit PowerMacs w=
+ere crashing
+>> in pata-macio since commit 09fe2bfa6b83 ("ata: pata_macio: Fix
+>> max_segment_size with PAGE_SIZE =3D=3D 64K").
+>>=20
+>> For example:
+>>=20
+>>   kernel BUG at drivers/ata/pata_macio.c:544!
+>>   Oops: Exception in kernel mode, sig: 5 [#1]
+>>   BE PAGE_SIZE=3D4K MMU=3DHash SMP NR_CPUS=3D2 DEBUG_PAGEALLOC PowerMac
+>>   ...
+>>   NIP pata_macio_qc_prep+0xf4/0x190
+>>   LR  pata_macio_qc_prep+0xfc/0x190
+>>   Call Trace:
+>>     0xc1421660 (unreliable)
+>>     ata_qc_issue+0x14c/0x2d4
+>>     __ata_scsi_queuecmd+0x200/0x53c
+>>     ata_scsi_queuecmd+0x50/0xe0
+>>     scsi_queue_rq+0x788/0xb1c
+>>     __blk_mq_issue_directly+0x58/0xf4
+>>     blk_mq_plug_issue_direct+0x8c/0x1b4
+>>     blk_mq_flush_plug_list.part.0+0x584/0x5e0
+>>     __blk_flush_plug+0xf8/0x194
+>>     __submit_bio+0x1b8/0x2e0
+>>     submit_bio_noacct_nocheck+0x230/0x304
+>>     btrfs_work_helper+0x200/0x338
+>>     process_one_work+0x1a8/0x338
+>>     worker_thread+0x364/0x4c0
+>>     kthread+0x100/0x104
+>>     start_kernel_thread+0x10/0x14
+>>=20
+>> That commit increased max_segment_size to 64KB, with the justification
+>> that the SCSI core was already using that size when PAGE_SIZE =3D=3D 64K=
+B,
+>> and that there was existing logic to split over-sized requests.
+>>=20
+>> However with a sufficiently large request, the splitting logic causes
+>> each sg to be split into two commands in the DMA table, leading to
+>> overflow of the DMA table, triggering the BUG_ON().
+>>=20
+>> With default settings the bug doesn't trigger, because the request size
+>> is limited by max_sectors_kb =3D=3D 1280, however max_sectors_kb can be
+>> increased, and apparently some distros do that by default using udev
+>> rules.
+>>=20
+>> Fix the bug for 4KB kernels by reverting to the old max_segment_size.
+>>=20
+>> For 64KB kernels the sg_tablesize needs to be halved, to allow for the
+>> possibility that each sg will be split into two.
+>>=20
+>> Fixes: 09fe2bfa6b83 ("ata: pata_macio: Fix max_segment_size with PAGE_SI=
+ZE =3D=3D 64K")
+>> Cc: stable@vger.kernel.org # v6.10+
+>> Reported-by: Kolbj=C3=B8rn Barmen <linux-ppc@kolla.no>
+>> Closes: https://lore.kernel.org/all/62d248bb-e97a-25d2-bcf2-9160c518cae5=
+@kolla.no/
+>> Reported-by: Jon=C3=A1=C5=A1 Vidra <vidra@ufal.mff.cuni.cz>
+>> Closes: https://lore.kernel.org/all/3b6441b8-06e6-45da-9e55-f92f2c86933e=
+@ufal.mff.cuni.cz/
+>> Tested-by: Kolbj=C3=B8rn Barmen <linux-ppc@kolla.no>
+>> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+>> ---
+>>  drivers/ata/pata_macio.c | 23 +++++++++++++++--------
+>>  1 file changed, 15 insertions(+), 8 deletions(-)
+>>=20
+>> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+>> index 1b85e8bf4ef9..eaffa510de49 100644
+>> --- a/drivers/ata/pata_macio.c
+>> +++ b/drivers/ata/pata_macio.c
+>> @@ -208,6 +208,19 @@ static const char* macio_ata_names[] =3D {
+>>  /* Don't let a DMA segment go all the way to 64K */
+>>  #define MAX_DBDMA_SEG		0xff00
+>>=20=20
+>> +#ifdef CONFIG_PAGE_SIZE_64KB
+>> +/*
+>> + * The SCSI core requires the segment size to cover at least a page, so
+>> + * for 64K page size kernels it must be at least 64K. However the
+>> + * hardware can't handle 64K, so pata_macio_qc_prep() will split large
+>> + * requests. To handle the split requests the tablesize must be halved.
+>> + */
+>> +#define MAX_SEGMENT_SIZE SZ_64K
+>> +#define SG_TABLESIZE (MAX_DCMDS / 2)
+>> +#else
+>> +#define MAX_SEGMENT_SIZE MAX_DBDMA_SEG
+>> +#define SG_TABLESIZE MAX_DCMDS
+>> +#endif
+>
+> These names are rather generic and could clash with some core layer ditio=
+ns. So
+> maybe prefix the macro names with PATA_MACIO_ ?
+> Also please tab-align the values to make this a little easier to read.
+=20
+OK.
 
-On Mon, Aug 12, 2024 at 11:26:53AM +0200, Linux regression tracking (Thorsten Leemhuis) wrote:
-> On 09.08.24 22:13, Christian Heusel wrote:
-> > On 24/08/09 08:42PM, Christian Heusel wrote:
-> >> On 24/08/09 08:34AM, Damien Le Moal wrote:
-> >>> On 2024/08/07 15:10, Niklas Cassel wrote:
-> >>>> On Wed, Aug 07, 2024 at 11:26:46AM -0700, Damien Le Moal wrote:
-> >>>>> On 2024/08/07 10:23, Christian Heusel wrote:
-> >>>>>>
-> >>>>>> on my NAS I am encountering the following issue since v6.6.44 (LTS),
-> >>>>>> when executing the hdparm command for my WD-WCC7K4NLX884 drives to get
-> >>>>>> the active or standby state:
-> >>> [...]
-> >>> Yes, indeed. I do not want to revert any of these recent patches, because as you
-> >>> rightly summarize here, these fix something that has been broken for a long
-> >>> time. We were just lucky that we did not see more application failures until
-> >>> now, or rather unlucky that we did not as that would have revealed these
-> >>> problems earlier.
-> >>
-> >> It seems like this does not only break hdparm but also hddtemp, which
-> >> does not use hdparm as dep as far as I can tell:
-> > 
-> > As someone on the same thread has pointed out, this also seems to affect
-> > udiskd:
-> > 
-> > https://github.com/storaged-project/udisks/issues/732
-> 
-> For the record, three more people reported similar symptoms in the past
-> few days:
-> 
-> https://lore.kernel.org/all/e620f887-a674-f007-c17b-dc16f9a0a588@web.de/
-> https://bugzilla.kernel.org/show_bug.cgi?id=219144
-> 
-> Ciao, Thorsten
-> 
-> P.S.: I for the tracking for now assume those are indeed the same problem:
-> 
-> #regzbot dup:
-> https://lore.kernel.org/all/e620f887-a674-f007-c17b-dc16f9a0a588@web.de/
-> #regzbot dup: https://bugzilla.kernel.org/show_bug.cgi?id=219144
+> Other than this, looks good to me.
 
-AFAICS, this has now been reverted upstream with fa0db8e56878 ("Revert
-"ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error"")
-in 6.11-rc4 and the revert was as well backported to stable releases
-(5.15.165, 6.1.106, 6.6.47 and 6.10.6)
+OK thanks, will send a v2.
 
-Regards,
-Salvatore
+cheers
