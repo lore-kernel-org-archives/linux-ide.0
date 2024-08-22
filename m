@@ -1,108 +1,100 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CEB317588;
-	Thu, 22 Aug 2024 03:37:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E4241D0DED;
+	Thu, 22 Aug 2024 20:39:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724297835; cv=none; b=JE5GvmkvEQduHAJel3e7R2QKfaIAkJGtcgoviKFblkE1ys2boRJxa6X/bY2RDBVXlYA0mOtCW2NrJ8ATmF1c3hBn1gteZUPGgwxaB/d5QCfg6RT6oHgMPI4zBSl9tsLDHx0O73syFmwVQXDWYwp2FxXJ21zGQwNy8AOfgiQw2SM=
+	t=1724359159; cv=none; b=MVqzE4qwrUozrRRKDK2CpmM3lInLHAS+go4wgYHXkhKEhpGxCSocxq3WVHjEULl4EH65KK8Wsaqy0Z+sg19lI6gHY975b1XoHI3WRVQUNyoOpchJuUoYGH7LgJ+z8gl6/FdgiEGKDlf2lzsei4iHdB+8AwzIhPhqKbnD/Ls2KlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724297835; c=relaxed/simple;
-	bh=rP92DGTqflMdiBVbknq9dEhhUqls0pzOWymDC0At810=;
+	s=arc-20240116; t=1724359159; c=relaxed/simple;
+	bh=AQjV6ehQmbvNgyTGaLfWJdq63F7rPiXDtiyi9bGvcBA=;
 	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=AQJdU/SrDcdRwkg/mB/tudrdG5kJnBsdYjF6F5zBe1b99pVVbQp+SW1d6QNRYCjOUcRRjppvzL8NMKVQ1fdVpOTvGBrtoCdIQ0bRGBUw6SbTWPo4VdXhVp+KFA/Mpy+JriA3875XlusbE1WjYIMu0HJxKHdlXKFJgZZlMy3cVog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Wq85S2fDZz4f3jtS;
-	Thu, 22 Aug 2024 11:37:00 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 119681A0359;
-	Thu, 22 Aug 2024 11:37:10 +0800 (CST)
-Received: from [10.174.176.73] (unknown [10.174.176.73])
-	by APP4 (Coremail) with SMTP id gCh0CgBHboRkssZmnXJ5CQ--.39865S3;
-	Thu, 22 Aug 2024 11:37:09 +0800 (CST)
-Subject: Re: [PATCH v2] ata: libata: Fix memory leak for error path in
- ata_host_alloc()
-To: Zheng Qixing <zhengqixing@huaweicloud.com>, dlemoal@kernel.org,
- cassel@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- yi.zhang@huawei.com, yangerkun@huawei.com, zhengqixing@huawei.com,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20240822033050.2909195-1-zhengqixing@huaweicloud.com>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <517c5178-bbc8-3496-49e6-5c26d9c1aaf9@huaweicloud.com>
-Date: Thu, 22 Aug 2024 11:37:08 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+	 In-Reply-To:Content-Type; b=YRG1dihua5OTxWe+Iy5JjHnyJZFbN0z7jvtjdmFAzW8xC4fsaozzgyrVsZklV6umv2geQjlZFSO5LsbxkJqSczwTvTyckaAg6Mnd1E6d5JkXGeyyXHWTGz/rTMh8qay2Cbeb7M7lfK3HGlKgnO/Sg68xxu0juoG4pUOhiCBSJKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gXzlJ3mp; arc=none smtp.client-ip=209.85.167.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gXzlJ3mp"
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-533de5a88f8so623058e87.3;
+        Thu, 22 Aug 2024 13:39:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1724359156; x=1724963956; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OkFn0AdhVgyDSLEmCSbk7UuIUs0dBVqwRiVvtrDuc3Y=;
+        b=gXzlJ3mpdIg0Sqk/a61hpcNazhrnqLSM7egAoYnn8siPSza1n2f+MW3FqlBdpoyKiY
+         PgX/sa51wuVhTke6uUwJDIYRbiggO1/vXOO2PWbEjtbAuOuroOinv0ZFu5TyknpR8Izw
+         xCNIpRrRv6YbQ2fAlH9L6IbEYRgbSh36yUi7b5WLTVz8x+h+uyOEXwcVRCIAPxKtaPF/
+         bP+T1H7kT+dMecXMjJT+L/syVd3Q5y+RZojDAxzHAXrOsSxr+GU83WD61+i5jfPm1mr8
+         BZ+rGixRuh3ttjOTSf48tUwXkFl/rx+nUnpRZE8IZNmDge4IPZKXo9w/g9qvLYnBTJee
+         8VQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724359156; x=1724963956;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:cc:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=OkFn0AdhVgyDSLEmCSbk7UuIUs0dBVqwRiVvtrDuc3Y=;
+        b=iT8T4q9pwxmm231DmjLJO4er2oVBNmznbC4Lkt9VhegLrp3oh4JchfD8+uHumNFXtF
+         eK5lOrFZsOB+CLQpW3oNIchMTidJo4vcn2lyGVEQcXVANZZZnRWk/tYVoulRIOBlpMlY
+         XWjTyNIqDnUURSfPn3piDko7mc3soHx1LKV2mtouQkVZTxYjhq0BdOTAwpS7fv8oASz8
+         fDirA1B5Z8MsoNvdoDnkrWnSKy9iNDRgbT/N3b9V0kkjw+kzfa2+OCfs+nRxwXUC1/hM
+         GeCRuZJ354kQwqjRLX7oxqDgKYSPvuu2gg6u/uClSa7dadkm1d8toi5HU/OhVLak4qM2
+         vZrA==
+X-Forwarded-Encrypted: i=1; AJvYcCUDdph/6OtOcm7G6ZAU0SThgHMQMXQwVudSYgNSvRkEv2Ju00efvyD1W8utUNDqzd4wF9rIGR/yffM=@vger.kernel.org, AJvYcCVHMjVht+hX1HFIBrwTgNVt7zPC3nJPUzNhsRXa6SVFyHRgY410C/gaEehbobX2HJVdjKqyTt62XgWoCc+I@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywcl0kIrXEtFfn+RClm7CAxRNDrAICUsHm9hV6T4r3dCq6K71MR
+	AMhCmr39xoc7AiSIH/3WS/EeBkIl8qh/H8qFvbN08WJYtHvQ5rRJ
+X-Google-Smtp-Source: AGHT+IG7aXm73Ndu+NiqWPAkccFpdhVsfBo5sgR8yeluU7T/U/g51mQZyz4I6LQ6xQXtCJpg3cjjSg==
+X-Received: by 2002:a05:6512:224a:b0:52c:d626:77aa with SMTP id 2adb3069b0e04-534387c290dmr71446e87.58.1724359155604;
+        Thu, 22 Aug 2024 13:39:15 -0700 (PDT)
+Received: from [192.168.1.105] ([31.173.84.20])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5334ea59415sm356805e87.120.2024.08.22.13.39.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Aug 2024 13:39:15 -0700 (PDT)
+Subject: Re: [PATCH v2] ata: pata_macio: Use WARN instead of BUG
+To: Christoph Hellwig <hch@lst.de>
+Cc: Michael Ellerman <mpe@ellerman.id.au>, cassel@kernel.org,
+ dlemoal@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-ppc@kolla.no, vidra@ufal.mff.cuni.cz
+References: <20240820030407.627785-1-mpe@ellerman.id.au>
+ <6b2208d1-c18f-14d5-e6d0-acd5c82b4db1@gmail.com>
+ <20240822025952.GA32067@lst.de>
+From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <95c3cc5d-17e3-d19b-22f6-6a519f480143@gmail.com>
+Date: Thu, 22 Aug 2024 23:39:13 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240822033050.2909195-1-zhengqixing@huaweicloud.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgBHboRkssZmnXJ5CQ--.39865S3
-X-Coremail-Antispam: 1UD129KBjvJXoWruw18WF4DGF47KF1kCr43trb_yoW8Jr1Upa
-	nrWa18CrZ8Grn7uw1Du3WxAFWfKa1UGr48urW8K34Svr4ayr18Kwn8Aas8X3W29r48Wa43
-	JFy8try8CFWUZ37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21lc7CjxVAaw2AF
-	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8
-	JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
-	7KsUUUUUU==
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+In-Reply-To: <20240822025952.GA32067@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 
-ÔÚ 2024/08/22 11:30, Zheng Qixing Ð´µÀ:
-> From: Zheng Qixing <zhengqixing@huawei.com>
-> 
-> In ata_host_alloc(), if ata_port_alloc(host) fails to allocate memory
-> for a port, the allocated 'host' structure is not freed before returning
-> from the function. This results in a potential memory leak.
-> 
-> This patch adds a kfree(host) before the error handling code is executed
-> to ensure that the 'host' structure is properly freed in case of an
-> allocation failure.
-> 
-> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+On 8/22/24 5:59 AM, Christoph Hellwig wrote:
+[...]
 
-LGTM
-Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+>>> The overflow/underflow conditions in pata_macio_qc_prep() should never
+>>> happen. But if they do there's no need to kill the system entirely, a
+>>> WARN and failing the IO request should be sufficient and might allow the
+>>> system to keep running.
+>>
+>>    WARN*() can kill your system with panic_on_warn -- Android is particularly
+>> fond of this kernel parameter but I guess it's not your case... :-)
+>>    Greg KH usually advices against using these macros. :-)
+> 
+> And in this case he is simply totally wrong.  The whole poing of WARN_ON
 
-Thanks.
-> ---
-> Changes in v2:
->   - error path is wrong in v1
-> 
->   drivers/ata/libata-core.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index e4023fc288ac..f27a18990c38 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5663,8 +5663,10 @@ struct ata_host *ata_host_alloc(struct device *dev, int n_ports)
->   	}
->   
->   	dr = devres_alloc(ata_devres_release, 0, GFP_KERNEL);
-> -	if (!dr)
-> +	if (!dr) {
-> +		kfree(host);
->   		goto err_out;
-> +	}
->   
->   	devres_add(dev, dr);
->   	dev_set_drvdata(dev, host);
-> 
+   Greg does have a point: on billions of Linux systems (Android phones) that
+all use panic_on_warn=1, WARN*() is pretty much equivalent to panic()... :-/
 
+> is to have a standardized way to assert conditions.
+
+   Hm, makes me remember assert() in C aborts a program... :-)
+
+MBR, Sergey
