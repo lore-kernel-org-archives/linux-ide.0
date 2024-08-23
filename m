@@ -1,75 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B561512E7F
-	for <linux-ide@vger.kernel.org>; Fri, 23 Aug 2024 00:37:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F7041CD13;
+	Fri, 23 Aug 2024 01:10:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724373445; cv=none; b=LwkFnZ+iPdkRtfFQqdRX/WVJd4nwaSDwURldE3g8KiM9vlgbHxpaqz2g3s3ZkDcQEClPQUKW5nz1O1CRQZ6xn+ptlkXkPG+zrHZA5gSSXqhauEwDeaDMgOhPERpXx8KM2EouyrHTkXC4hYvVgIe43ucX8HamQe9yAEIgD+Xwaow=
+	t=1724375456; cv=none; b=sMdrFzsASIMi5nmY2b15uzT/4c1nA14fz3MWHFhnCL9H7ujDuhk0ibFqyQ+l05IbBzWRBQTcBUNNpo2nWGEYOR0GWjIHkspEjDGZq6wbc1YYbQ0EhZeFc8wAoRuH5H5hu3vQd2m/glinjvVOjEOcSXcPCZ6hnD3hFYgD1jKWEMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724373445; c=relaxed/simple;
-	bh=vvwtb0RzH7xabC7onAiV+fk30Zurr1kLoRpc9dW8cX0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OVzypWGqQ+U0LhOy5NDDVzrN9/iDd5QJ/hQIMccaUzwR7p9rFdAvx+IWw36h7imM+SJTH1ionFbAUGSXlYB45Bb+6oIbdqxm/o1KwxE8vOp2MjxuZfMHqLDtXJ9fp1+Gp2HpAIIF6Gl4I3UzTvKUCNdVWXojV7r0D7kqavbmowY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gWuDBigI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724375456; c=relaxed/simple;
+	bh=rit7npx25RybEEmpv6nSk9bwANItY8yC0gDusXkIcZ4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Q9M3lHFrap/oX64t7vc166QZx2a7uEzeKmC3m7bU2o2C5qejrIxFuCZy6wGp5D2aEXB0ZtXbeGmNRBtGP7ZvKNQqiVhvnIUl9ixBW2vM4DV5355QmtlCITmNeEzHdNQ9e2PrVzFuhf3RQGibrvA4kD7xjPU0JooLvrprsIBASic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JM3nrP5W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gWuDBigI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47CAC32782;
-	Fri, 23 Aug 2024 00:37:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JM3nrP5W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D2CC32782;
+	Fri, 23 Aug 2024 01:10:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724373445;
-	bh=vvwtb0RzH7xabC7onAiV+fk30Zurr1kLoRpc9dW8cX0=;
-	h=From:To:Cc:Subject:Date:From;
-	b=gWuDBigIH0gG5wyf1IclfRSIrxftEyAivpd7UaEUrdLDMr5nyCaq7f4muWoy56Pff
-	 d7wogbJ0EiX3trd9Wi9Sdixacn16IS/Sravc2nSxuYu3Fp31t5U6l/XJXApEPCTd1z
-	 7rHKTEuqW76JsrIkIEzhIgUK2LZP16hNYxkoB5bi+1nf8azNbEkwg3szlOKjWxU1zQ
-	 rq0xM7bcpWBmWQ1hzHcDXuWfv7fYhTx+U+AcRMTP20BMIofB8u8Jmv60sxE8vnIne3
-	 A5/pv0nNvL6JjR0orJFOYm4wICKYdHqSzbX0FBlUDmskJeJExuqrQu929K7q0ZPiDE
-	 BYYmevE5/2OYw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-ide@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>
-Subject: [GIT PULL] ata fixes for 6.11-rc5
-Date: Fri, 23 Aug 2024 09:37:23 +0900
-Message-ID: <20240823003723.89539-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.46.0
+	s=k20201202; t=1724375455;
+	bh=rit7npx25RybEEmpv6nSk9bwANItY8yC0gDusXkIcZ4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=JM3nrP5WAjMm09pppTC+OVjjlgqx0fS+8noDZYuPfWwcZTlCBpC8aaYicl0xTUcfo
+	 AoIMhl5h4q05KZlcdHiwxDpUxxNYDM7VOe1a7BkSx0ZtZ9khyHLUQGnslWlFx7fGd6
+	 u7FGqU1lZckiFDUell5Voqed5pQn91pSS3mu/57ZMK2ANaWl6EFwYOrCDlT4HdmHMH
+	 z/+cz0TIXTz8s0kkL2FaYZWUp4XOA1OZpdBDmOcapLATEvD/4pWL6m/+w2mVTPB4e2
+	 Q/tcE2jG84h6dygDqBtcfw/1iIq37AwI0LSJmH+spjTTTc+pTzI9qZHsF4Cl23hUH7
+	 tnM801vHCj6GQ==
+Message-ID: <e5862d36-6f16-469c-9d03-e7681bfb5bf5@kernel.org>
+Date: Fri, 23 Aug 2024 10:10:53 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ata: libata: Fix memory leak for error path in
+ ata_host_alloc()
+To: Zheng Qixing <zhengqixing@huaweicloud.com>, cassel@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+ yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com,
+ zhengqixing@huawei.com
+References: <20240822033050.2909195-1-zhengqixing@huaweicloud.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20240822033050.2909195-1-zhengqixing@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Linus,
+On 8/22/24 12:30 PM, Zheng Qixing wrote:
+> From: Zheng Qixing <zhengqixing@huawei.com>
+> 
+> In ata_host_alloc(), if ata_port_alloc(host) fails to allocate memory
+> for a port, the allocated 'host' structure is not freed before returning
+> from the function. This results in a potential memory leak.
+> 
+> This patch adds a kfree(host) before the error handling code is executed
+> to ensure that the 'host' structure is properly freed in case of an
+> allocation failure.
+> 
+> Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
 
-The following changes since commit fa0db8e568787c665384430eaf2221b299b85367:
+This needs a Fixes tag. So I added:
 
-  Revert "ata: libata-scsi: Honor the D_SENSE bit for CK_COND=1 and no error" (2024-08-14 15:49:37 +0200)
+Fixes: 2623c7a5f279 ("libata: add refcounting to ata_host")
+Cc: stable@vger.kernel.org>
 
-are available in the Git repository at:
+and applied to for-6.11-fixes. Thanks.
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.11-rc5
+> ---
+> Changes in v2:
+>  - error path is wrong in v1
+> 
+>  drivers/ata/libata-core.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index e4023fc288ac..f27a18990c38 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5663,8 +5663,10 @@ struct ata_host *ata_host_alloc(struct device *dev, int n_ports)
+>  	}
+>  
+>  	dr = devres_alloc(ata_devres_release, 0, GFP_KERNEL);
+> -	if (!dr)
+> +	if (!dr) {
+> +		kfree(host);
+>  		goto err_out;
+> +	}
+>  
+>  	devres_add(dev, dr);
+>  	dev_set_drvdata(dev, host);
 
-for you to fetch changes up to d4bc0a264fb482b019c84fbc7202dd3cab059087:
+-- 
+Damien Le Moal
+Western Digital Research
 
-  ata: pata_macio: Use WARN instead of BUG (2024-08-21 14:33:23 +0900)
-
-----------------------------------------------------------------
-ata fixes for 6.11-rc5
-
- - Fix the max segment size and max number of segments supported by the
-   pata_macio driver to fix issues with BIO splitting leading to an
-   overflow of the adapter DMA table (from Michael).
-
- - Related to the previous fix, change BUG_ON() calls for incorrect
-   command buffer segmentation into WARN_ON() and an error return (from
-   Michael).
-
-----------------------------------------------------------------
-Michael Ellerman (2):
-      ata: pata_macio: Fix DMA table overflow
-      ata: pata_macio: Use WARN instead of BUG
-
- drivers/ata/pata_macio.c | 30 ++++++++++++++++++++----------
- 1 file changed, 20 insertions(+), 10 deletions(-)
