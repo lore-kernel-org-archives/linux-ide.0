@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D917E129E93
-	for <linux-ide@vger.kernel.org>; Mon, 26 Aug 2024 22:07:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78B6180027
+	for <linux-ide@vger.kernel.org>; Mon, 26 Aug 2024 23:27:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724710046; cv=none; b=PzkNKAmFjJkzrRaiXLHfkDZwFFlVv/Cfm8qtljuVZ+HGDsT+NhVYOxV9P6GH962G2rajNf0vGDuxJsvKY1NtyjniDv4B2I97298tz1k6OBFdWgjlFd8p+INgUEr/M/IQSrSagJem9vxcycOKCED0AfkLkIt4ibSEutB0mrB76bc=
+	t=1724714830; cv=none; b=qtKLKEpB9JaAEnSriDG5uUevJXPavJuiKzD/DETIGSoxUZwRN0v2MjA2uWnXzg/VY1xPNmftpudBb+Z+1AQimjivGuV9APRSsHgCImf2gwxIUNqBOMB9f627sBy3JUJxkK+OufWy/SCIqkfj0nHqdlLhY9PP8UCI53+yDekV280=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724710046; c=relaxed/simple;
-	bh=WtJhbqjDA3aKIIj4jqNtzwxAzDyc95yUlBeqcEbD2fk=;
+	s=arc-20240116; t=1724714830; c=relaxed/simple;
+	bh=YefWLqiKAATFoEGjFcBq9d+GAJOF3ui2f6kVN2t8ZNw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B3NU4QfaOC+st8CAKT8CwOcbxnBJJLHMRvKCE0JXWClxHCg58j+izmexp7QOlSMQyddydvDRhgJhZ24QfKvrZkZMSFqtEA8HXfTuVKpg9uPEsYXhs61xHcYNjvrnBwAPnXbFot6k9j5UFGvFMAwCTAXEphA6j+HfML//77IJbAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p8TIr7BO; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=ZSG0wG8RQTMaavRsPaWYEyfFQZK0PHLUDFNQCKpqS0BHO9Nt2ji9GEVcVbmlzGh79tdNf0l8ywr/al7oQh4wRrnIGAF90lYEx0bbOg+WkDvmE802FbVgC/dqqxf8msmQxtKP4dlL6s+TtWW0blSj0Pe9UpxnCGJeRKnm56wn/aE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vEO5H8Ru; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p8TIr7BO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28613C8B7AB;
-	Mon, 26 Aug 2024 22:07:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vEO5H8Ru"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DD7DC8B7AF;
+	Mon, 26 Aug 2024 23:27:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724710045;
-	bh=WtJhbqjDA3aKIIj4jqNtzwxAzDyc95yUlBeqcEbD2fk=;
+	s=k20201202; t=1724714830;
+	bh=YefWLqiKAATFoEGjFcBq9d+GAJOF3ui2f6kVN2t8ZNw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=p8TIr7BOd7/RVbLfmuEN9FL2dI2JmBV6vMsxc+kiCGamQkyHq5SzqCyrY3agQaXpm
-	 K1yCdeIYMNRw5TwPILEiB/q6gxwCJYZ3zN4/YzWpBZUKXMhbySmWodpk8A2+pCZUVM
-	 dinbCfblsCQvh8cVcPJG8If0rWLSDrkpvwCMjWXpKugYTDZp9TF+kchiHK6bw/Bbis
-	 St7iqhcp2/k1SJwaKnHkGSG8u4BAn36xlZaKR3H7yuEMgnxrGOBCBOi9Qb1Be6ZYCE
-	 dnipjIKx6VAD8sb7muTW3N2WV0gGKA4H2SjnTT5pXHMmzIbugvwPxBnoK33/C52zaJ
-	 tXdvckzJhLWXw==
-Message-ID: <289b6005-3cbb-4b52-8845-edaefb728404@kernel.org>
-Date: Tue, 27 Aug 2024 07:07:24 +0900
+	b=vEO5H8Ruj7CGoBfRvbXBQVe9lG4i7UuEhJCovLiOyfavRVXN7rMAbzvxtnl9BJNe0
+	 le9YqD+NOxF14N3Ndng6FkMzXJGIPcQDkx2oIIxTQ5YxSbn+dx9txVkdLkss7EntsM
+	 POJrg73hQFibcgD/TyyoQAT5AXMdEBpaEqMgTHBKSW3XqxRGWq9RinBxVAHLB2ZuBm
+	 cgp5qfb2AR/Cucf1LTvW8ZWnxHruJjyX7ckHKne7o3YqiT3pLBz7brxzLn2yz8PlcL
+	 XqUw49bJgKIFt4H0UQomVSHf4Fmzq0mMos34H/hSpjSkBdx0h568qJZSxOlUn+K/LS
+	 QQCdq0yfgbrUQ==
+Message-ID: <bd3b12fd-a6f6-4ad9-86b1-7e770237b56e@kernel.org>
+Date: Tue, 27 Aug 2024 08:27:08 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,55 +35,32 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 7/7] ata: libata: Improve CDL resource management
-To: Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH -next,v2] ata: libata: Remove obsoleted function
+ declarations
+To: Gaosheng Cui <cuigaosheng1@huawei.com>, cassel@kernel.org
 Cc: linux-ide@vger.kernel.org
-References: <20240826073106.56918-1-dlemoal@kernel.org>
- <20240826073106.56918-8-dlemoal@kernel.org> <ZsyhMdG_Z1o5EbFv@ryzen.lan>
+References: <20240826063242.4132493-1-cuigaosheng1@huawei.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <ZsyhMdG_Z1o5EbFv@ryzen.lan>
+In-Reply-To: <20240826063242.4132493-1-cuigaosheng1@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 8/27/24 00:37, Niklas Cassel wrote:
-> On Mon, Aug 26, 2024 at 04:31:06PM +0900, Damien Le Moal wrote:
->> The command duration limits (CDL) log buffer of struct ata_device is
->> needed only if a device actually supports CDL. The same applies to the
->> ncq_sense_log buffer.
->>
->> Group these 2 buffers into a new structure ata_cdl defining both buffers
->> as embedded buffers (no allocation needed) and allocate this structure
->> from ata_dev_config_cdl() only for devices that support CDL.
->>
->> The functions ata_dev_init_cdl_resources() and
->> ata_dev_cleanup_cdl_resources() are defined to manage this new structure
->> allocation, initialization and cleanup when a device is removed.
->> ata_dev_cleanup_cdl_resources() is called from ata_tdev_free().
->>
->> Note that the cdl log buffer name is changed to desc_log_buf to make it
->> clearer what it is.
->>
->> This change reduces the size of struct ata_device and reduces memory
->> usage for ATA devices that do not support CDL.
->>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+On 8/26/24 15:32, Gaosheng Cui wrote:
+> The function ata_schedule_scsi_eh() was removed with
+> commit f8bbfc247efb("[PATCH] SCSI: make scsi_implement_eh() generic
+> API for SCSI transports").
 > 
-> Like previous comment, as long as sector_buf belongs to struct ata_port,
-> it seems a bit weird to keep this in struct ata_device.
+> And the function ata_sff_irq_clear() was removed with
+> commit 37f65b8bc262("libata-sff: ata_sff_irq_clear() is BMDMA specific").
 > 
-> Perhaps we can move sector_buf to struct ata_device?
-> (and modify the ata_read_log() functions to not take a buffer,
-> as the buffer would not be in the struct ata_device, which we already
-> supply to the ata_read_log() functions as the first argument.)
+> Remove the now useless declarations of these functions in
+> drivers/ata/libata.h and include/linux/libata.h.
 > 
-> 
-> If we do that, then I think it is okay to keep a struct ata_cdl
-> in struct ata_device. Although I still don't like cleaning this
-> up in ata_tdev_() functions.
+> Signed-off-by: Gaosheng Cui <cuigaosheng1@huawei.com>
 
-OK. Let me rework this.
+Applied to for-6.12 with some tweaks to the commit title and message. Thanks !
 
 -- 
 Damien Le Moal
