@@ -1,100 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E6A76056
-	for <linux-ide@vger.kernel.org>; Tue, 27 Aug 2024 09:21:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C84155CBD
+	for <linux-ide@vger.kernel.org>; Tue, 27 Aug 2024 11:11:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724750467; cv=none; b=OlQ+V3jbRMLMGJqd7whNsrm13eN4u+TZedffmDBsCFO5EW7o3JnG50hq05qAHZu9MvfWwnzIT80melhsX1/O4MdL16zzSuU26B/GyrYgv6zcYNsPqqem1wVD0JHsuGmi7tLPAafKEiKohfSJJ13nzIO9RUPNw5kwVdXJe+mSllQ=
+	t=1724757105; cv=none; b=HXOHU0dXG9jcSfu1MnrDJBULecBLg3ecUKyWvc3Y3HOhFVdhQM6ZV98ycrLZEYztZHaDCEcWwwSY+M+tmUPWlVv/NjHEUYGKPfam74q+ePZ6ilaADLtY3AUgvcx8cTtrMyn0h87hZ2U6ulD1UwxO4gTUQ8a5iDvYozksisbrZIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724750467; c=relaxed/simple;
-	bh=ORjUxBAxE6n6Otau6MRXK2vZQNW5VVzsdI95kyRFVRM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I88eCqR3LV/M6Six/gSQki9GvSOKuObno+lMdwhlMNASd/oSClKbZ8fYADlgmTJPedP9VqNQbEaw904q1B0dkkCTFmYPTp/1/AvYY/2NDaAO5aGJW0au/CtXqW07uWgGFw/w3IbDTrGkDaLS5Hc7/uqKHk5Itd7C9+41meSyRz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tzfYlnxJ; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tzfYlnxJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6F83C8B7A0;
-	Tue, 27 Aug 2024 09:21:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724750466;
-	bh=ORjUxBAxE6n6Otau6MRXK2vZQNW5VVzsdI95kyRFVRM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tzfYlnxJbcNk+CSz8pwZRdXdweUycXq1i6ZOvEH7QnqzH37xywpsjPRreNLfM0dJ5
-	 niY51mgUxNIYEhjeheR1p5tpgrcEsBLnZg8mXWMKs4PeLvtzTHNkyMXTCF8PncmvJP
-	 GcfzeaA202rbLs5WUYJHycHee9Ck2cIL0hjZHTQ0Boi1q6WBxS3F6qx2StJeSJ06Fs
-	 j3G8f2dfZ8J+02Az+FvcUkkoQymj59NGz/RBxxM8PEk9DsXz+Z+vk8873p+fGem6AW
-	 xUrmELZCUv/HV1aFwC1jjZKJgXr0i/rmfH8MVJ0QWANxPNI9DZokDt7oPYlHhbR84m
-	 fSDdz+594pt4g==
-Date: Tue, 27 Aug 2024 11:21:03 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Subject: Re: [PATCH 6/7] ata: libata: Move ncq_sense_buf to struct ata_device
-Message-ID: <Zs2afyKxAtLp1xcw@x1-carbon.wireless.wdc>
-References: <20240826073106.56918-1-dlemoal@kernel.org>
- <20240826073106.56918-7-dlemoal@kernel.org>
- <ZsyVqTYDDNwGDCoo@ryzen.lan>
- <b0f21e36-d29b-489a-9df8-83493d3992bc@kernel.org>
+	s=arc-20240116; t=1724757105; c=relaxed/simple;
+	bh=G4fItn41FQRQFGVZye/ph8QonhQ79tRGp9RovTABixo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eqPPjiU3gqjdoeuZgrbyQbi5I3RfpwBj2P2/9LHNxvQQF49VzGTrNh2LhMY9A1Q7mGrNrHT1HOUUX63LXnwKy13lfTqNy194gU1eKKCb3FVfW+uUw1bRndZggfhk96gDNNCDyH2qJvp7gPhkYnYIc7I2eVbMUhK/ZZQKW2FQqMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.44])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WtPxZ3JLHz2CnWb;
+	Tue, 27 Aug 2024 19:11:30 +0800 (CST)
+Received: from kwepemf500003.china.huawei.com (unknown [7.202.181.241])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7EFC0140136;
+	Tue, 27 Aug 2024 19:11:40 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by kwepemf500003.china.huawei.com
+ (7.202.181.241) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 27 Aug
+ 2024 19:11:39 +0800
+From: Zhang Zekun <zhangzekun11@huawei.com>
+To: <dlemoal@kernel.org>, <cassel@kernel.org>, <linux-ide@vger.kernel.org>
+CC: <zhangzekun11@huawei.com>
+Subject: [PATCH v2] ata: ahci_brcm: Use devm_platform_ioremap_resource_byname() helper function
+Date: Tue, 27 Aug 2024 18:58:23 +0800
+Message-ID: <20240827105823.36193-1-zhangzekun11@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b0f21e36-d29b-489a-9df8-83493d3992bc@kernel.org>
+Content-Type: text/plain
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemf500003.china.huawei.com (7.202.181.241)
 
-Hello Damien,
+platform_get_resource_byname() and devm_ioremap_resource() can be
+replaced by devm_platform_ioremap_resource_byname(), which can
+simplify the code logic a bit, No functional change here.
 
-On Tue, Aug 27, 2024 at 04:50:14PM +0900, Damien Le Moal wrote:
-> On 8/26/24 23:48, Niklas Cassel wrote:
-> > On Mon, Aug 26, 2024 at 04:31:05PM +0900, Damien Le Moal wrote:
-> >> The ncq_sense_buf buffer field of struct ata_port is allocated and used
-> >> only for devices that support command duration limits. So move this
-> >> field out of struct ata_port and into struct ata_device together with
-> >> the CDL log buffer.
-> > 
-> > The ncq_sense_buf buf is currently only allocated if the device supports CDL,
-> > so the currently extra space that we take up in struct ata_port, for non-CDL
-> > devices is just an empty pointer.
-> 
-> No, we have cdl descriptor log page buffer (ap->cdl) which takes
-> ATA_LOG_CDL_SIZE (512 B). Furthermore, thinking of this some more, having that
-> buffer attached to the port is totally wrong if we are dealing with a pmp
-> attached device: we can have multiple devices supporting CDL that will all end
-> up overwriting that buffer. So this is actually a bug: either we move the cdl
-> log buffer to ata_device, or we must not probe for CDL in the case of a PMP
-> attached device. The latter is fine I think as CDL is really an enterprise
-> feature that is very unlikely to be used with consumer PMP. But the former is
-> more logical.
+Signed-off-by: Zhang Zekun <zhangzekun11@huawei.com>
+---
+v2: Improve the patch subject 
 
-I think you are mixing things up, we don't have any ap->cdl.
+ drivers/ata/ahci_brcm.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-We have:
-1) ap->ncq_sense_buf	(u8 *ncq_sense_buf)
-2) dev->cdl		(u8 cdl[ATA_LOG_CDL_SIZE])
-3) ap->sector_buf	(u8 sector_buf[ATA_SECT_SIZE])
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 70c3a33eee6f..2f16524c2526 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -437,7 +437,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct brcm_ahci_priv *priv;
+ 	struct ahci_host_priv *hpriv;
+-	struct resource *res;
+ 	int ret;
+ 
+ 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+@@ -451,8 +450,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	priv->version = (unsigned long)of_id->data;
+ 	priv->dev = dev;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "top-ctrl");
+-	priv->top_ctrl = devm_ioremap_resource(dev, res);
++	priv->top_ctrl = devm_platform_ioremap_resource_byname(pdev, "top-ctrl");
+ 	if (IS_ERR(priv->top_ctrl))
+ 		return PTR_ERR(priv->top_ctrl);
+ 
+-- 
+2.17.1
 
-I do not think there is any bug in having ap->ncq_sense_buf in struct ata_port,
-like the code currently does, because like you say, we currently only fetch the
-Successful NCQ Commands log from EH context, so this should be safe even when
-using PMPs.
-
-For dev->cdl, it is currently in struct ata_device, which is correct, because
-as you say, caching the CDL descriptor log page in the ata_port would not be
-correct, since it could then get overwritten by another device if using a PMP.
-(Changing this to be dynamically allocated would be a nice optimization.)
-
-For ap->sector_buf, I suggested to perhaps move this to ata_device, such that
-the ata_read_log() functions (which already take a ata_device as first
-argument) do no longer need to take a "buffer" argument, the buffer could be
-derived from the ata_device if we move the buffer there.
-
-If we move ap->sector_buf to struct ata_device, then I think that it makes
-sense to also move ap->ncq_sense_buf to struct ata_device.
-
-
-Kind regards,
-Niklas
