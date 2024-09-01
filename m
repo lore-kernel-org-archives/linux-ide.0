@@ -1,82 +1,69 @@
-Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6751139CFA
-	for <linux-ide@vger.kernel.org>; Sun,  1 Sep 2024 22:17:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E235F4EB
+	for <linux-ide@vger.kernel.org>; Sun,  1 Sep 2024 23:04:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725229030; cv=none; b=Y2wNlaFiCkJzszPNAx5kzDAT3vKVytpYXfOZ+10K0GYE6E323sf/JaqhZ06M+nzbKKVymLLrmcnzBfawochpqTJsdTdEtZ6EYmm+VDowiLfKtUgEjnLvG+7nI0QiQNbNaao0VimfGgSRx7Ejc9Ennrd4fFjYNUXFCc5SwSKWCfM=
+	t=1725231875; cv=none; b=DDkNN51P4dyIyt2dBDBP2hF32fwtdird3HBCC6cekbZP46AcE6I7sVbupfwMzjbzfUbMlbMm3YJuEGcrQZOLJlLeX7b3fhZQHYA1t7mH2KnJU9zLoz6hXi0WSrbz+1bOlWuLpBTtGhVV2Xr9QbW6Vz9nh4SL/YgDHOqaWFK7sEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725229030; c=relaxed/simple;
-	bh=A9KquY+Xq9HYGt1l9PNrkt9cxTRdMnsMxi8cD3m9plc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HOBl7+uqZLbxBknDeDN5jyXlBLWMzfc5FzL4Pgmw69kZH/oIVUgSwkXV3pEgtU7VXcSwhH1EYMj/yxIaryDUG4zCE6pjuuRruGnmUOlhFDLbL6FJZNodpQhjIZCPI9c0jENWQBjFg0lV8DjOqGvHZDp8LmVUbQOb9HFgF+VTZXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=QQeKyTa1; arc=none smtp.client-ip=209.85.208.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1725231875; c=relaxed/simple;
+	bh=0pLsfBnuR6LRd7bhMg8Sd+DY6pE+qHVPhfH5I42NC7k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RkmmWrpgvN/CvUSL6AdRLkE+jiTzfAkeJ9ie0KcfSpHjY/QriEJiHZjDlpEbhcwxR0Pk8FMd4tRJeU5xWPjQn/TR0kgsdGNe5EyXLkgI0fp10EcxFPjLTOkKobG1cziuv51EiC+u455yW2PkWHtBogNynbBe26RM9NlU7uxcJdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cqIwIxLR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QQeKyTa1"
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2f3ffc7841dso33335531fa.0
-        for <linux-ide@vger.kernel.org>; Sun, 01 Sep 2024 15:17:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1725229027; x=1725833827; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=A9KquY+Xq9HYGt1l9PNrkt9cxTRdMnsMxi8cD3m9plc=;
-        b=QQeKyTa1ZHOmdeLtfJQ08oELr7R+lfjvt5DWUSh590msEz57AUPas1fkl/8ZGMqRgl
-         0Iu0opmnDjxtg91FlE9g3nLLVZIYs50mxBV5jwuLKOjV3UYlQireUyT2TB0yDh4uiyY9
-         sFtNWX0fLiMvj9AeZrRxEqrF+bKgbpxgM33j4hZyIe0Z03WMeeSWO1kFXH6F/j/FpT+O
-         LPbqPI5pFhod6fbBZohITmA2zN+58+S9hduNR5fIkbonsuvPHo90j6DzcN3Ur9pvP2n7
-         HJ3t8xY12Wz/oB/4ZwZ99EeBsVnJwZOg+nfyyYIZRdOCq879DzKlIyBArjAGBEukeuSe
-         yKrA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725229027; x=1725833827;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=A9KquY+Xq9HYGt1l9PNrkt9cxTRdMnsMxi8cD3m9plc=;
-        b=hriWiwMLjdIFxKM1nlT+St7CuObcNbadAtRAoA8Ry424K73CNINixeIRnJkNCZE77E
-         3hbJMmWYk8fS1IJyzVyUnYUzVcbWJI1s/9Y2Ftq194EqBi64kCvQsrtE/ANIGC1JcWPe
-         S1ukpJFBGFdrEv1MAEhpnhIeC9+sJ6/ZDpvlvkwC4LrreoqKzK6JlEpUwBY/VKilOuCP
-         P3xoyueM5f5PndO+59jSA+B92kVfa7UuET+pLHEQfLrg+ROr1dZbrtS0XtuQnxyrd3kB
-         EmeHckKGR0S4578LrVUFMxomfRJmd/spcff5A+8qVXWf1+3VDAEXBaF3WV5yTXkPvU1u
-         lLyQ==
-X-Gm-Message-State: AOJu0YwZa5UeHTOnmbVtiGHSMQNRlcgoF0pDqGNokPWUVZGx9lFI4uFh
-	CZ2UEzu731AzvySiMOMLPdlYMkKvajwNUito4w3K3EqHG2SLHB54CcpKotq3dKnOdshOLLRMNCf
-	JeBp2CvjLXRTn+gpIFH3dox0kJkJhUFcAODfG16L1tfKg2Du+GwE=
-X-Google-Smtp-Source: AGHT+IELtYHgrwEdRxYDgxD8aHpOX0/GHHaDJQOuj7XAGfQNHkEYFfltRh55fb3ghPbg2gbymDF7rNGgW5udWeVIpUM=
-X-Received: by 2002:a2e:be87:0:b0:2f5:a29:5a42 with SMTP id
- 38308e7fff4ca-2f6108a0ed0mr86585481fa.14.1725229026305; Sun, 01 Sep 2024
- 15:17:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cqIwIxLR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BACEC4CEC3;
+	Sun,  1 Sep 2024 23:04:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725231875;
+	bh=0pLsfBnuR6LRd7bhMg8Sd+DY6pE+qHVPhfH5I42NC7k=;
+	h=From:To:Cc:Subject:Date:From;
+	b=cqIwIxLRtAUOQyffaTEuQWIihJLPFnIBqQ7BCs0Re119tv+85P98psQZtSSwWYU2Y
+	 I91OlzZyrO6nXACsg2XeHvd7LjAaBJ1mjMZDu6DcrO4a3PWC+HZprmtFj5GWqUFUUX
+	 IjslacHoT5ufgbKuqxLfi4tEkeEMMU+hVRia1YPMJDnKjUhc7BpXwe0wrVv1bHPfgb
+	 v+qr3Z6Rgtj5un3OQ3drCjwi7CL6pDx9bj7pegOu73AeG2kb9KHTZE2ZOvmKOKJmxQ
+	 XDlkjfFUMTgMA82VIi3pmEB9O5zoJM+gzOFIqwf4aQoA+PJu2zQqmadOwdOv/juYO6
+	 QuSJD9c+BU9+A==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-ide@vger.kernel.org
+Cc: Niklas Cassel <cassel@kernel.org>
+Subject: [GIT PULL] ata fixes for 6.11-rc7
+Date: Mon,  2 Sep 2024 08:04:31 +0900
+Message-ID: <20240901230431.35937-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240831072158.789419-1-liaochen4@huawei.com> <20240831072158.789419-3-liaochen4@huawei.com>
-In-Reply-To: <20240831072158.789419-3-liaochen4@huawei.com>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Mon, 2 Sep 2024 00:16:55 +0200
-Message-ID: <CACRpkdYv5bcDM6B42_pmkEtaiFNQ-mqZzHOPW4UZ-AsPiwuBDA@mail.gmail.com>
-Subject: Re: [PATCH -next v2 2/3] ata: pata_ixp4xx: Enable module autoloading
-To: Liao Chen <liaochen4@huawei.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, s.shtylyov@omp.ru, 
-	dlemoal@kernel.org, cassel@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Sat, Aug 31, 2024 at 9:30=E2=80=AFAM Liao Chen <liaochen4@huawei.com> wr=
-ote:
+Linus,
 
-> Add MODULE_DEVICE_TABLE(), so modules can be properly autoloaded based
-> on the alias from of_device_id table.
->
-> Signed-off-by: Liao Chen <liaochen4@huawei.com>
-> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+The following changes since commit d4bc0a264fb482b019c84fbc7202dd3cab059087:
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+  ata: pata_macio: Use WARN instead of BUG (2024-08-21 14:33:23 +0900)
 
-Yours,
-Linus Walleij
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.11-rc7
+
+for you to fetch changes up to 284b75a3d83c7631586d98f6dede1d90f128f0db:
+
+  ata: libata: Fix memory leak for error path in ata_host_alloc() (2024-08-27 06:54:36 +0900)
+
+----------------------------------------------------------------
+ata fixes for 6.11-rc7
+
+ - Fix a potential memory leak in the ata host initialization code (from
+   Zheng).
+
+----------------------------------------------------------------
+Zheng Qixing (1):
+      ata: libata: Fix memory leak for error path in ata_host_alloc()
+
+ drivers/ata/libata-core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
