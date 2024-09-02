@@ -1,314 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E55AC1D6C73
-	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 11:54:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 664BF19E96F
+	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 12:32:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725278048; cv=none; b=pJOFkwoXtgDfZ6WPqMeu19l+2PzmorZgNI9kBmdtOz0/9PsHqshZ0uRY0E4+bRQIbxsJbHzlnpgSsjelmVO6elyBU5cS0BCt3yQtF420yjB4vj8kRs44Bi37ximXRqXGDrro6NEYGmGbdbXnQki+jHV0jCar9MZ3j3mzvwFasVE=
+	t=1725280372; cv=none; b=PDCnO9wo7KPGTsEf4QUZZuUO0knE5Bx7Pb4AsduN6pejtW+K9yphmrHej9FeqJIEa1mjm3457z/Yuj+V5siK3ZvgRN5F//Qllya/x5KTYD3tjwHA6MKIrMICfSjIbakcD2SZBwkeYGs48cGgaLhvsVuAotM0mpUNf21w5HhFUhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725278048; c=relaxed/simple;
-	bh=CT/s4Y+c3dPpLuyce3hqF/2gsxqEeGjyA7jDS0JmQIQ=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y4b7FJMe7052Uvfb32aXErhUSuCL3oufaS4VkhAxapxwmrYnPX7/uZq5bPcw/ZnbEVfxYmrbaim2xKBjkoMMbzzG9Wogg0mXA15HLxji5il5egS4bg684OcObYKnQLbhGf7NC2dEZwgwkwFdGO4QXEtyZyhzxV5PulwhXrzfpDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jREfYTQp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725280372; c=relaxed/simple;
+	bh=2SXkug7r9A1TXZQN2aGOLPk7r+iIbuDqK+BtPaLI+o8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=QkbcKnuXwF+/1y3GKLKENYEQ/AgLVS8nB5rI9Q9ZYbtb9t31mOF2qlli+84njMNGfs9HxXLM6u8jFsW1A6lLvshVIWrVZWQeuM5aF8zSXdOYHbFmq+E7E/m0/8oUqnalxn0r5NglSPnjf0NvllVXGk0dDuTecAKrJzBVduxkxCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=EASbwTKn; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=OBwg1APk; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=r8TPQUH/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=se8shCSF; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jREfYTQp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22594C4CEC8;
-	Mon,  2 Sep 2024 11:54:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725278047;
-	bh=CT/s4Y+c3dPpLuyce3hqF/2gsxqEeGjyA7jDS0JmQIQ=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=jREfYTQpBZyEJI6OjP4LcL4dJTNt0anUQ9bi5MqUpVM4l4gMYPREe2hE12+qrmtFu
-	 csuVEnWI5ak3TxO9v4anMqP0KqKT5Uw4mLQyydmFc4usjuXhz0tp1KT8H/bHHrwSHS
-	 235u7DQ4TPKg+0XMTyyjSoM6aH590RkEZwFM5TncopHDvDeDcoie02AocRCveYRpIG
-	 kJuCMMGfHNPUGHfl7hh28VuvMcM0mN2jYJPDqBOIbpQRgP7lwZUFwxHnBcKkkoDvl/
-	 nRqADFgSNdhP0KQRmyaM+ISMpzcV7KyH5queYERb2R7BS2GCt3bF9rvYVzKowb1cuM
-	 uIaQa5ExdgDfA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 7/7] ata: libata: Improve CDL resource management
-Date: Mon,  2 Sep 2024 20:54:00 +0900
-Message-ID: <20240902115400.166881-8-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20240902115400.166881-1-dlemoal@kernel.org>
-References: <20240902115400.166881-1-dlemoal@kernel.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="EASbwTKn";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="OBwg1APk";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="r8TPQUH/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="se8shCSF"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 7781E1FBAC;
+	Mon,  2 Sep 2024 12:32:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1725280369; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dTlE6M5tnPx/BUj4652DBs546B/4e4LcwrNvKqF21Bo=;
+	b=EASbwTKnEdlZze9hs8pTnspflTMAjFESQCneBwevSJgdZDyTWk+/OY9w65AqRZfiwXlZ3Y
+	9JVEpXpEqJAQEiCjiHWxjMvZHfNPWCKrKJuaL62imp/hCJ6XZRJGVRsg2MeOhCOzgpKNVF
+	CGX9xG8dWhJBFz8enUo10UyMdShUHhI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1725280369;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dTlE6M5tnPx/BUj4652DBs546B/4e4LcwrNvKqF21Bo=;
+	b=OBwg1APkUT3Io45p+B6faSQ9ItVMwWNILFc7eiQhgcVKgPByibQtQgILQvM7WIAH+DlcPS
+	6qFyinR3IQW9J3AQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1725280368; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dTlE6M5tnPx/BUj4652DBs546B/4e4LcwrNvKqF21Bo=;
+	b=r8TPQUH/JVqYe4doGq+lNP0hHVEjTcYJ+7Otp6lnH+qwkT7gdsDf4O6OZghyyMY5vlQkNE
+	7ew/jg25zo71yEmVCXlK3ju2hJWFJiFOSsYzZWfNMOBs6nvHg1UR/G1rS/LqkJ59hAjFHB
+	JwyIw6tGeFlI1xmy6Etu4ttkGkQez4g=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1725280368;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dTlE6M5tnPx/BUj4652DBs546B/4e4LcwrNvKqF21Bo=;
+	b=se8shCSFQmpaXlnVBfLy/6Ho7UHrm55/u8RrSxlLlbI3UUDmCmkHw1beltQgHNQj4ohhnf
+	GtD7i3aT7ZOnx2AA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 59E3013AE0;
+	Mon,  2 Sep 2024 12:32:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ENx5FXCw1Wb2EAAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 02 Sep 2024 12:32:48 +0000
+Message-ID: <d0f0f75b-5daf-4abf-973b-2329a9bd8dbd@suse.de>
+Date: Mon, 2 Sep 2024 14:32:47 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/7] ata: libata: Cleanup libata-transport
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
+References: <20240902115400.166881-1-dlemoal@kernel.org>
+ <20240902115400.166881-2-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240902115400.166881-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
 
-The ncq_sense_buf buffer field of struct ata_port is allocated and used
-only for devices that support the Command Duration Limits (CDL) feature.
-However, the cdl buffer of struct ata_device, which is used to cache the
-command duration limits log page for devices supporting CDL is always
-allocated as part of struct ata_device, which is wasteful of memory for
-devices that do not support this feature.
-
-Clean this up by defining both buffers as part of the new ata_cdl
-structure and allocating this structure only for devices that support
-the CDL feature. This new structure is attached to struct ata_device
-using the cdl pointer.
-
-The functions ata_dev_init_cdl_resources() and
-ata_dev_cleanup_cdl_resources() are defined to manage this new structure
-allocation, initialization and cleanup when a port is removed or a
-device disabled. ata_dev_init_cdl_resources() is called from
-ata_dev_config_cdl() only for devices that support CDL.
-ata_dev_cleanup_cdl_resources() is called from ata_port_free() and
-ata_eh_dev_disable() to free the ata_cdl structure when a device is
-being disabled by EH or its port being removed.
-
-Note that the name of the former cdl log buffer of struct ata_device is
-changed to desc_log_buf to make it clearer that it is a buffer for the
-limit descriptors log page.
-
-This change reduces the size of struct ata_device, thus reducing memory
-usage for ATA devices that do not support the CDL feature.
-
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+On 9/2/24 13:53, Damien Le Moal wrote:
+> Move the ATA link transport device related functions after the ATA
+> transport device related functions to avoid the need for forward
+> declaring ata_tdev_add() and ata_tdev_delete().
+> 
+> And while at it, do the following:
+> 1) Change ata_is_ata_dev() and ata_is_link() to return a boolean
+> 2) Fix a pointer declaration style in ata_is_ata_dev()
+> 3) Improve the kdoc comments for ata_tdev_free(), ata_tdev_delete(),
+>     ata_tdev_add(), ata_tlink_delete() and ata_tlink_add()
+> 
+> No functional changes are introduced by this cleanup.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/ata/libata-transport.c | 299 ++++++++++++++++-----------------
+>   1 file changed, 147 insertions(+), 152 deletions(-)
+> 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/ata/libata-core.c | 74 ++++++++++++++++++++++++++-------------
- drivers/ata/libata-eh.c   |  2 ++
- drivers/ata/libata-sata.c |  2 +-
- drivers/ata/libata-scsi.c |  2 +-
- drivers/ata/libata.h      |  1 +
- include/linux/libata.h    | 21 ++++++++---
- 6 files changed, 72 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 32325a1c07af..428931a0cb8d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2464,12 +2464,40 @@ static void ata_dev_config_trusted(struct ata_device *dev)
- 		dev->flags |= ATA_DFLAG_TRUSTED;
- }
- 
-+static int ata_dev_init_cdl_resources(struct ata_device *dev)
-+{
-+	struct ata_cdl *cdl = dev->cdl;
-+	unsigned int err_mask;
-+
-+	if (!cdl) {
-+		cdl = kzalloc(sizeof(struct ata_cdl), GFP_KERNEL);
-+		if (!cdl)
-+			return -ENOMEM;
-+		dev->cdl = cdl;
-+	}
-+
-+	err_mask = ata_read_log_page(dev, ATA_LOG_CDL, 0, cdl->desc_log_buf,
-+				     ATA_LOG_CDL_SIZE / ATA_SECT_SIZE);
-+	if (err_mask) {
-+		ata_dev_warn(dev, "Read Command Duration Limits log failed\n");
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+void ata_dev_cleanup_cdl_resources(struct ata_device *dev)
-+{
-+	kfree(dev->cdl);
-+	dev->cdl = NULL;
-+}
-+
- static void ata_dev_config_cdl(struct ata_device *dev)
- {
--	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
- 	bool cdl_enabled;
- 	u64 val;
-+	int ret;
- 
- 	if (ata_id_major_version(dev->id) < 11)
- 		goto not_supported;
-@@ -2564,37 +2592,20 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 		}
- 	}
- 
--	/*
--	 * Allocate a buffer to handle reading the sense data for successful
--	 * NCQ Commands log page for commands using a CDL with one of the limit
--	 * policy set to 0xD (successful completion with sense data available
--	 * bit set).
--	 */
--	if (!ap->ncq_sense_buf) {
--		ap->ncq_sense_buf = kmalloc(ATA_LOG_SENSE_NCQ_SIZE, GFP_KERNEL);
--		if (!ap->ncq_sense_buf)
--			goto not_supported;
--	}
--
--	/*
--	 * Command duration limits is supported: cache the CDL log page 18h
--	 * (command duration descriptors).
--	 */
--	err_mask = ata_read_log_page(dev, ATA_LOG_CDL, 0, dev->sector_buf, 1);
--	if (err_mask) {
--		ata_dev_warn(dev, "Read Command Duration Limits log failed\n");
-+	/* CDL is supported: allocate and initialize needed resources. */
-+	ret = ata_dev_init_cdl_resources(dev);
-+	if (ret) {
-+		ata_dev_warn(dev, "Initialize CDL resources failed\n");
- 		goto not_supported;
- 	}
- 
--	memcpy(dev->cdl, dev->sector_buf, ATA_LOG_CDL_SIZE);
- 	dev->flags |= ATA_DFLAG_CDL;
- 
- 	return;
- 
- not_supported:
- 	dev->flags &= ~(ATA_DFLAG_CDL | ATA_DFLAG_CDL_ENABLED);
--	kfree(ap->ncq_sense_buf);
--	ap->ncq_sense_buf = NULL;
-+	ata_dev_cleanup_cdl_resources(dev);
- }
- 
- static int ata_dev_config_lba(struct ata_device *dev)
-@@ -5446,12 +5457,19 @@ EXPORT_SYMBOL_GPL(ata_port_alloc);
- 
- void ata_port_free(struct ata_port *ap)
- {
-+	struct ata_device *dev;
-+	struct ata_link *link;
-+
- 	if (!ap)
- 		return;
- 
-+	ata_for_each_link(link, ap, HOST_FIRST) {
-+		ata_for_each_dev(dev, link, ALL)
-+			ata_dev_cleanup_cdl_resources(dev);
-+	}
-+
- 	kfree(ap->pmp_link);
- 	kfree(ap->slave_link);
--	kfree(ap->ncq_sense_buf);
- 	ida_free(&ata_ida, ap->print_id);
- 	kfree(ap);
- }
-@@ -6000,11 +6018,19 @@ static void ata_port_detach(struct ata_port *ap)
- 	ata_port_wait_eh(ap);
- 
- 	mutex_lock(&ap->scsi_scan_mutex);
-+
-+	/* Cleanup CDL device resources */
-+	ata_for_each_link(link, ap, HOST_FIRST) {
-+		ata_for_each_dev(dev, link, ALL)
-+			ata_dev_cleanup_cdl_resources(dev);
-+	}
-+
- 	spin_lock_irqsave(ap->lock, flags);
- 
- 	/* Remove scsi devices */
- 	ata_for_each_link(link, ap, HOST_FIRST) {
- 		ata_for_each_dev(dev, link, ALL) {
-+			ata_dev_cleanup_cdl_resources(dev);
- 			if (dev->sdev) {
- 				spin_unlock_irqrestore(ap->lock, flags);
- 				scsi_remove_device(dev->sdev);
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index ed535e1b4225..41f1bee0b434 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -500,6 +500,8 @@ static void ata_eh_dev_disable(struct ata_device *dev)
- 	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
- 	dev->class++;
- 
-+	ata_dev_cleanup_cdl_resources(dev);
-+
- 	/* From now till the next successful probe, ering is used to
- 	 * track probe failures.  Clear accumulated device error info.
- 	 */
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 498430db86f7..c8b119a06bb2 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1505,7 +1505,7 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
- {
- 	struct ata_device *dev = link->device;
- 	struct ata_port *ap = dev->link->ap;
--	u8 *buf = ap->ncq_sense_buf;
-+	u8 *buf = dev->cdl->ncq_sense_log_buf;
- 	struct ata_queued_cmd *qc;
- 	unsigned int err_mask, tag;
- 	u8 *sense, sk = 0, asc = 0, ascq = 0;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a3ffce4b218d..7fed924d6561 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2259,7 +2259,7 @@ static inline u16 ata_xlat_cdl_limit(u8 *buf)
- static unsigned int ata_msense_control_spgt2(struct ata_device *dev, u8 *buf,
- 					     u8 spg)
- {
--	u8 *b, *cdl = dev->cdl, *desc;
-+	u8 *b, *cdl = dev->cdl->desc_log_buf, *desc;
- 	u32 policy;
- 	int i;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 2a9d1bbf2482..0f4c6e26fe50 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -89,6 +89,7 @@ extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern const char *sata_spd_string(unsigned int spd);
- extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 				      u8 page, void *buf, unsigned int sectors);
-+void ata_dev_cleanup_cdl_resources(struct ata_device *dev);
- 
- #define to_ata_port(d) container_of(d, struct ata_port, tdev)
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index aac38dcd2230..9b4a6ff03235 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -700,6 +700,21 @@ struct ata_cpr_log {
- 	struct ata_cpr		cpr[] __counted_by(nr_cpr);
- };
- 
-+struct ata_cdl {
-+	/*
-+	 * Buffer to cache the CDL log page 18h (command duration descriptors)
-+	 * for SCSI-ATA translation.
-+	 */
-+	u8			desc_log_buf[ATA_LOG_CDL_SIZE];
-+
-+	/*
-+	 * Buffer to handle reading the sense data for successful NCQ Commands
-+	 * log page for commands using a CDL with one of the limits policy set
-+	 * to 0xD (successful completion with sense data available bit set).
-+	 */
-+	u8			ncq_sense_log_buf[ATA_LOG_SENSE_NCQ_SIZE];
-+};
-+
- struct ata_device {
- 	struct ata_link		*link;
- 	unsigned int		devno;		/* 0 or 1 */
-@@ -762,8 +777,8 @@ struct ata_device {
- 	/* Concurrent positioning ranges */
- 	struct ata_cpr_log	*cpr_log;
- 
--	/* Command Duration Limits log support */
--	u8			cdl[ATA_LOG_CDL_SIZE];
-+	/* Command Duration Limits support */
-+	struct ata_cdl		*cdl;
- 
- 	/* error history */
- 	int			spdn_cnt;
-@@ -917,8 +932,6 @@ struct ata_port {
- #ifdef CONFIG_ATA_ACPI
- 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
- #endif
--	/* owned by EH */
--	u8			*ncq_sense_buf;
- };
- 
- /* The following initializer overrides a method to NULL whether one of
+Cheers,
+
+Hannes
 -- 
-2.46.0
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
