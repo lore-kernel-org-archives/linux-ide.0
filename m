@@ -1,162 +1,94 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505A72D057
-	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 06:28:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 391DA17F394
+	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 11:54:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725258505; cv=none; b=D9Z85LDWbl4grwUJyot8UV3dOD6iTS/Q9EjV3a9bxadl+fWHa7YFM9jN/BcXSmC5Oou8wZvz8OpnJttcIxkWuaC67TUl+A0Nqe6gvPRKS+bsd3MP0ZVin++/pStdWnqO5jr2+F+MEaUz/qRymIwxK9hpmCpqDnQeeG3o0Lf8VSo=
+	t=1725278043; cv=none; b=HN07dYHKl62N56TZSWQvsD/s8ITAntzPLRbs/HWUIROYc836rl4OSwJvAJ8nWuXX1Npg6qUksoGsHs/IpA/NJ7sI5f/2dXoCDodmc+ag1RBTCo+Z1PDxcKMLg/TPtZKoEtL23K+Tli+2dvpNLCoZMfN/WcAItHpFP+r9RmvXG1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725258505; c=relaxed/simple;
-	bh=La4NA5nzZoK8ZLOPTZ5VD4AYsUitr3E3/I6u06udmoA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=RdN7NC2lidVbRFmJ0LyEKEaOv4KEIt370CYCGQzbZEucvE0OGQGMI1YxaPPs50w/8M2ylQOadpKzxPZgkoTubPyvX/D07l2CeHEoibJdrhf/c5s3fynlTpnaWAPqs/KhfnAMvJ7A5nWaF7a8CntNNQ75Vcc48W7w9lVXQaQ5g/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=btatrcjc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725278043; c=relaxed/simple;
+	bh=iczuvAVid6K1VTQg+5QTqNcDN2JNqKERO2DGM8kXFSE=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=cE9GjAm+2a/3PgBXGXBI+Kgx33/RR6UvHShJJiCQiQUo17dhmeNL7GdoM42I3ldiVRciRwcTCnh/6m1Kyu7UyDrww3iWyGbbwjdwyp74W7cREzmHBoWCcmPfqWlTP8qZF3zmkHVFlqvH5iqZpJe6vnUjCduh/Tn/rhIQp51FkcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B2woZe7A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="btatrcjc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A855C4CEC2;
-	Mon,  2 Sep 2024 06:28:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B2woZe7A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 520C0C4CEC2;
+	Mon,  2 Sep 2024 11:54:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725258504;
-	bh=La4NA5nzZoK8ZLOPTZ5VD4AYsUitr3E3/I6u06udmoA=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=btatrcjc+XaGHbtr3/aPxjhEcqfSMO7ugXuA9fzZeNJ5jhfbHh7EAIO+iYFOGLA8u
-	 hjYj4/0AhSzFBWG3LtUNkIsOsdwdWFFvbNLUisRh9fUEXmkSSfHCaCI9Qv3UBc8MJg
-	 jGN+9EavSFTDX2E7y2lA+2fkJJ/X5nZGaFTYDIhh0pYUQj247XLLC/MxI0qn+g867p
-	 0Sja7nWH0I2UCV8n5wNOhb5uZ3jNyjrAcVwR2MSEDbWg/G9Squ/6vgJNRQzaetDcE6
-	 ngRCfTRIbYmxIF7MQC4G0zSYxMxnhAwss+Biltuf4/iZCjlaWqOIsVo3LtLjK5vuT5
-	 CjTIqTUfHnhMg==
-Message-ID: <4f5521a2-b3cb-48ba-b51a-51db62ff1902@kernel.org>
-Date: Mon, 2 Sep 2024 15:28:21 +0900
+	s=k20201202; t=1725278042;
+	bh=iczuvAVid6K1VTQg+5QTqNcDN2JNqKERO2DGM8kXFSE=;
+	h=From:To:Subject:Date:From;
+	b=B2woZe7AKduGo2Tm4Uqmgp7yYVkBex01ev2qQjJVMVcow9bIOYxNHKtYp9Y+LaKi3
+	 nOlGVqkELJcKggpq5DIJJIL5HEbmQAnibVUVQyNJE4yH7Ej0UOVJ1aWeyQxvFEte3I
+	 MHPLkhnRBZ18LKJzfyPeEciPvpB9PzqE5Zo2HJOBmGqn88uL7cthprIA9Cqv5mWayg
+	 WRHf4Zhq4Zg6vm1UtJyECjGcBRmXIa3Fo40M9IugZHFzUovlo+s1eDA+IpE3HgtXLb
+	 tql0ztNNHoNHSTYzPLWQ2s2LA9OqFcj2gHk2pptA4pDi+eHPoG6cwK33ed5i0MWigo
+	 lkuefFhktbHDw==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v3 0/7] Code cleanup and memory usage reduction
+Date: Mon,  2 Sep 2024 20:53:53 +0900
+Message-ID: <20240902115400.166881-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/7] ata: libata: Cleanup libata-transport
-To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-References: <20240902000043.155495-1-dlemoal@kernel.org>
- <20240902000043.155495-2-dlemoal@kernel.org>
- <e34aded2-c0f4-44f1-8941-4eb8c3818bc2@suse.de>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <e34aded2-c0f4-44f1-8941-4eb8c3818bc2@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/2/24 15:16, Hannes Reinecke wrote:
->>   /*
->>    * ATA device attributes
->>    */
->> @@ -660,14 +525,14 @@ static int ata_tdev_match(struct attribute_container *cont,
->>   }
->>   
->>   /**
->> - * ata_tdev_free  --  free a ATA LINK
->> - * @dev:	ATA PHY to free
->> + * ata_tdev_free  --  free a transport ATA device structure
-> 
-> Odd wording; maybe 'ATA transport device' ?
+Patch 1 of this series cleans up libata-transport (avoid forward
+declarations and improved kdoc comments).
 
-Indeed.
+Patch 2 introduces a small simplification/improvement of
+__ata_qc_complete().
 
-> 
->> + * @dev:	target ATA device
-> 
-> Why 'target ATA device'? Wouldn't 'ATA transport device' be better?
+Patches 3 and 4 move code that is SATA specific from libata-core.c to
+libata-sata.c, without any functional change. The benefits of this code
+reorganization is a smaller libata binary size for hosts that do not
+support SATA.
 
-Because that function really takes a pointer to struct ata_dev, not to struct
-ata_dev->tdev...
+Patch 5 renames some functions to make it clearer what the functions do.
 
-> 
->>    *
->> - * Frees the specified ATA PHY.
->> + * Free the transport ATA device structure for the specified ATA device.
-> 
-> Same here.
-> 
->>    *
->>    * Note:
->> - *   This function must only be called on a PHY that has not
->> - *   successfully been added using ata_tdev_add().
->> + *   This function must only be called on a device that has not successfully
-> 
-> 'device'? Shouldn't we not use the same wording as in the description?
+Finally, patch 6 and 7 reduce memory usage of libata by:
+ - Moving the sector_buf buffer from struct ata_port to struct
+   ata_device
+ - Agregating CDL related buffers together into a new ata_cdl structure
+   and referencing this new structure from struct ata_device only for
+   devices that support CDL.
 
-Not really. Here the reference is to the struct ata_device. Will clarify that.
+Changes from V2:
+ - Reworked patch 1 to address Hannes' comments
+ - Added Hannes' review tags
 
-> 
->> + *   been added using ata_tdev_add().
->>    */
->>   static void ata_tdev_free(struct ata_device *dev)
->>   {
->> @@ -676,10 +541,10 @@ static void ata_tdev_free(struct ata_device *dev)
->>   }
->>   
->>   /**
->> - * ata_tdev_delete  --  remove ATA device
->> - * @ata_dev:	ATA device to remove
->> + * ata_tdev_delete  --  remove an ATA device sysfs entry
->> + * @ata_dev:	target ATA device
->>    *
-> 
-> And here we should be consistent with whatever wording we've been using
-> in ata_tdev_free().
+Changes from V1:
+ - Reworked patch 1 to do more cleanups
+ - Added patch 6. The former patch 6 of v1 is now squashed into patch 7
+ - Added Niklas review tags
 
-Yep, will fix.
+Damien Le Moal (7):
+  ata: libata: Cleanup libata-transport
+  ata: libata: Improve __ata_qc_complete()
+  ata: libata: Move sata_down_spd_limit() to libata-sata.c
+  ata: libata: Move sata_std_hardreset() definition to libata-sata.c
+  ata: libata: Rename ata_eh_read_sense_success_ncq_log()
+  ata: libata: Move sector_buf from struct ata_port to struct ata_device
+  ata: libata: Improve CDL resource management
 
->> +/**
->> + * ata_is_link --  check if a struct device represents a ATA link
->> + * @dev:	device to check
->> + *
->> + * Returns:
->> + *	%1 if the device represents a ATA link, %0 else
->> + */
->> +static int ata_is_link(const struct device *dev)
-> 
-> Why is this not a boolean ?
-
-It was like that. I can make it a boolean.
-
-> 
->> +{
->> +	return dev->release == ata_tlink_release;
->> +}
->> +
->> +static int ata_tlink_match(struct attribute_container *cont,
->> +			   struct device *dev)
->> +{
->> +	struct ata_internal *i = to_ata_internal(ata_scsi_transport_template);
->> +
->> +	if (!ata_is_link(dev))
->> +		return 0;
->> +	return &i->link_attr_cont.ac == cont;
->> +}
->> +
->> +/**
->> + * ata_tlink_delete  --  remove ATA LINK
->> + * @link:	ATA LINK to remove
-> 
-> Why is the 'link' in capital letters?
-
-No idea. It was like that. Will clean that up as well.
-
->> + *
->> + * Initialize an ATA LINK structure for sysfs.  It will be added in the
->> + * device tree below the ATA PORT it belongs to.
->> + *
->> + * Returns %0 on success
-> 
-> And what on failure?
-
-Another one that I did not touch but clearly needs cleanup too :)
-
+ drivers/ata/libata-core.c      | 265 +++++++++--------------------
+ drivers/ata/libata-eh.c        |  10 +-
+ drivers/ata/libata-pmp.c       |   3 +-
+ drivers/ata/libata-sata.c      | 127 +++++++++++++-
+ drivers/ata/libata-scsi.c      |   2 +-
+ drivers/ata/libata-transport.c | 299 ++++++++++++++++-----------------
+ drivers/ata/libata-zpodd.c     |   2 +-
+ drivers/ata/libata.h           |  23 ++-
+ include/linux/libata.h         |  39 +++--
+ 9 files changed, 407 insertions(+), 363 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.46.0
 
