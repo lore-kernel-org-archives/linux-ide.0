@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A7481D6C73
-	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 11:54:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E55AC1D6C73
+	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 11:54:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725278047; cv=none; b=C5N25xankM7gzJOpDn2WGqY62C0QTy98ps92tr6+Jsh2K9KUS2RuYxuGZYLpnYA/5oPGzHULIy3qbRK46kZyL2cCVZdVhJ0zPDOcMTN8E0szyvAxQdfP1nEqSDZLOsBotEBXBLk2PEn8C8JyzP7IHuIqKk5y8cKULF4YZ8qcU/0=
+	t=1725278048; cv=none; b=pJOFkwoXtgDfZ6WPqMeu19l+2PzmorZgNI9kBmdtOz0/9PsHqshZ0uRY0E4+bRQIbxsJbHzlnpgSsjelmVO6elyBU5cS0BCt3yQtF420yjB4vj8kRs44Bi37ximXRqXGDrro6NEYGmGbdbXnQki+jHV0jCar9MZ3j3mzvwFasVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725278047; c=relaxed/simple;
-	bh=hZbmEJYl64Vlou/jRlrL6lrEp/f48jtXN+8WLvEkcTM=;
+	s=arc-20240116; t=1725278048; c=relaxed/simple;
+	bh=CT/s4Y+c3dPpLuyce3hqF/2gsxqEeGjyA7jDS0JmQIQ=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=njBGj1yeuMbR/xb37gav6pQzZA3sMDtXHkKTyT3IrswSVRBAU3sRpS093Uqsd/SxdY99SN5GHp8yPvLoUu81QLn5mwSCGNiA5Yx0q0/pY8t+qge/zvbBswwZfSErkwz9PCG3cr9yStqA/MHNd04zAWUW2ZvXC4+bd/WA9Xwx1C0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tzzpBaUB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Y4b7FJMe7052Uvfb32aXErhUSuCL3oufaS4VkhAxapxwmrYnPX7/uZq5bPcw/ZnbEVfxYmrbaim2xKBjkoMMbzzG9Wogg0mXA15HLxji5il5egS4bg684OcObYKnQLbhGf7NC2dEZwgwkwFdGO4QXEtyZyhzxV5PulwhXrzfpDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jREfYTQp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tzzpBaUB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70980C4CEC2;
-	Mon,  2 Sep 2024 11:54:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jREfYTQp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22594C4CEC8;
+	Mon,  2 Sep 2024 11:54:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725278046;
-	bh=hZbmEJYl64Vlou/jRlrL6lrEp/f48jtXN+8WLvEkcTM=;
+	s=k20201202; t=1725278047;
+	bh=CT/s4Y+c3dPpLuyce3hqF/2gsxqEeGjyA7jDS0JmQIQ=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=tzzpBaUBX9reOkWIDthup0lSJs+dmWzBJSz9yAA3k/2t7hsQKe7uqNoZDYqfbqdnp
-	 RzIWtBP/vbSPOiT75JEJ7MVznPXxTqvX59Dn+lIJxpXyD11mwR76E4WdpY1Cd8/GIa
-	 al1uVTuo7a0P7JMrVD7Qp+/wkqFeRAjnmTzbglb9vEppC739NW2N/FTyCN0r4T69Bd
-	 YFYvXug/L6HjcwX3kEuel62jSoQEJc1JxpbWLHnPlNh+Ws55R97HUJLssF5s+Un1Py
-	 u4twN0eaMrSNQ/bTyrsPL8kFhoHxpXhpKtSYiJX6FvDqjDeOiC/YN9+3zX5nMbXPTG
-	 pcs0r83Znyw6w==
+	b=jREfYTQpBZyEJI6OjP4LcL4dJTNt0anUQ9bi5MqUpVM4l4gMYPREe2hE12+qrmtFu
+	 csuVEnWI5ak3TxO9v4anMqP0KqKT5Uw4mLQyydmFc4usjuXhz0tp1KT8H/bHHrwSHS
+	 235u7DQ4TPKg+0XMTyyjSoM6aH590RkEZwFM5TncopHDvDeDcoie02AocRCveYRpIG
+	 kJuCMMGfHNPUGHfl7hh28VuvMcM0mN2jYJPDqBOIbpQRgP7lwZUFwxHnBcKkkoDvl/
+	 nRqADFgSNdhP0KQRmyaM+ISMpzcV7KyH5queYERb2R7BS2GCt3bF9rvYVzKowb1cuM
+	 uIaQa5ExdgDfA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v3 6/7] ata: libata: Move sector_buf from struct ata_port to struct ata_device
-Date: Mon,  2 Sep 2024 20:53:59 +0900
-Message-ID: <20240902115400.166881-7-dlemoal@kernel.org>
+Subject: [PATCH v3 7/7] ata: libata: Improve CDL resource management
+Date: Mon,  2 Sep 2024 20:54:00 +0900
+Message-ID: <20240902115400.166881-8-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <20240902115400.166881-1-dlemoal@kernel.org>
 References: <20240902115400.166881-1-dlemoal@kernel.org>
@@ -43,322 +43,269 @@ List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The 512B buffer sector_buf field of struct ata_port is used for scanning
-devices as well as during error recovery with ata EH. This buffer is
-thus useless if a port does not have a device connected to it.
-And also given that commands using this buffer are issued to devices,
-and not to ports, move this buffer definition from struct ata_port to
-struct ata_device.
+The ncq_sense_buf buffer field of struct ata_port is allocated and used
+only for devices that support the Command Duration Limits (CDL) feature.
+However, the cdl buffer of struct ata_device, which is used to cache the
+command duration limits log page for devices supporting CDL is always
+allocated as part of struct ata_device, which is wasteful of memory for
+devices that do not support this feature.
 
-This change slightly increases system memory usage for systems using a
-port-multiplier as in that case we do not need a per-device buffer for
-scanning devices (PMP does not allow parallel scanning) nor for EH (as
-when entering EH we are guaranteed that all commands to all devices
-connected to the PMP have completed or have been aborted). However,
-this change reduces memory usage on systems that have many ports with
-only few devices rives connected, which is a much more common use case
-than the PMP use case.
+Clean this up by defining both buffers as part of the new ata_cdl
+structure and allocating this structure only for devices that support
+the CDL feature. This new structure is attached to struct ata_device
+using the cdl pointer.
+
+The functions ata_dev_init_cdl_resources() and
+ata_dev_cleanup_cdl_resources() are defined to manage this new structure
+allocation, initialization and cleanup when a port is removed or a
+device disabled. ata_dev_init_cdl_resources() is called from
+ata_dev_config_cdl() only for devices that support CDL.
+ata_dev_cleanup_cdl_resources() is called from ata_port_free() and
+ata_eh_dev_disable() to free the ata_cdl structure when a device is
+being disabled by EH or its port being removed.
+
+Note that the name of the former cdl log buffer of struct ata_device is
+changed to desc_log_buf to make it clearer that it is a buffer for the
+limit descriptors log page.
+
+This change reduces the size of struct ata_device, thus reducing memory
+usage for ATA devices that do not support the CDL feature.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c  | 63 ++++++++++++++++----------------------
- drivers/ata/libata-eh.c    |  2 +-
- drivers/ata/libata-pmp.c   |  3 +-
- drivers/ata/libata-sata.c  |  2 +-
- drivers/ata/libata-zpodd.c |  2 +-
- include/linux/libata.h     |  4 ++-
- 6 files changed, 33 insertions(+), 43 deletions(-)
+ drivers/ata/libata-core.c | 74 ++++++++++++++++++++++++++-------------
+ drivers/ata/libata-eh.c   |  2 ++
+ drivers/ata/libata-sata.c |  2 +-
+ drivers/ata/libata-scsi.c |  2 +-
+ drivers/ata/libata.h      |  1 +
+ include/linux/libata.h    | 21 ++++++++---
+ 6 files changed, 72 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b5a051bbb01f..32325a1c07af 100644
+index 32325a1c07af..428931a0cb8d 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2125,19 +2125,16 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 
- static int ata_log_supported(struct ata_device *dev, u8 log)
- {
--	struct ata_port *ap = dev->link->ap;
--
- 	if (dev->quirks & ATA_QUIRK_NO_LOG_DIR)
- 		return 0;
- 
--	if (ata_read_log_page(dev, ATA_LOG_DIRECTORY, 0, ap->sector_buf, 1))
-+	if (ata_read_log_page(dev, ATA_LOG_DIRECTORY, 0, dev->sector_buf, 1))
- 		return 0;
--	return get_unaligned_le16(&ap->sector_buf[log * 2]);
-+	return get_unaligned_le16(&dev->sector_buf[log * 2]);
+@@ -2464,12 +2464,40 @@ static void ata_dev_config_trusted(struct ata_device *dev)
+ 		dev->flags |= ATA_DFLAG_TRUSTED;
  }
  
- static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
- {
--	struct ata_port *ap = dev->link->ap;
- 	unsigned int err, i;
- 
- 	if (dev->quirks & ATA_QUIRK_NO_ID_DEV_LOG)
-@@ -2160,13 +2157,13 @@ static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
- 	 * Read IDENTIFY DEVICE data log, page 0, to figure out if the page is
- 	 * supported.
- 	 */
--	err = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE, 0, ap->sector_buf,
--				1);
-+	err = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE, 0,
-+				dev->sector_buf, 1);
- 	if (err)
- 		return false;
- 
--	for (i = 0; i < ap->sector_buf[8]; i++) {
--		if (ap->sector_buf[9 + i] == page)
-+	for (i = 0; i < dev->sector_buf[8]; i++) {
-+		if (dev->sector_buf[9 + i] == page)
- 			return true;
- 	}
- 
-@@ -2218,7 +2215,6 @@ static inline bool ata_dev_knobble(struct ata_device *dev)
- 
- static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
- {
--	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
- 
- 	if (!ata_log_supported(dev, ATA_LOG_NCQ_SEND_RECV)) {
-@@ -2226,12 +2222,12 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
- 		return;
- 	}
- 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_SEND_RECV,
--				     0, ap->sector_buf, 1);
-+				     0, dev->sector_buf, 1);
- 	if (!err_mask) {
- 		u8 *cmds = dev->ncq_send_recv_cmds;
- 
- 		dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
--		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
-+		memcpy(cmds, dev->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
- 
- 		if (dev->quirks & ATA_QUIRK_NO_NCQ_TRIM) {
- 			ata_dev_dbg(dev, "disabling queued TRIM support\n");
-@@ -2243,7 +2239,6 @@ static void ata_dev_config_ncq_send_recv(struct ata_device *dev)
- 
- static void ata_dev_config_ncq_non_data(struct ata_device *dev)
++static int ata_dev_init_cdl_resources(struct ata_device *dev)
++{
++	struct ata_cdl *cdl = dev->cdl;
++	unsigned int err_mask;
++
++	if (!cdl) {
++		cdl = kzalloc(sizeof(struct ata_cdl), GFP_KERNEL);
++		if (!cdl)
++			return -ENOMEM;
++		dev->cdl = cdl;
++	}
++
++	err_mask = ata_read_log_page(dev, ATA_LOG_CDL, 0, cdl->desc_log_buf,
++				     ATA_LOG_CDL_SIZE / ATA_SECT_SIZE);
++	if (err_mask) {
++		ata_dev_warn(dev, "Read Command Duration Limits log failed\n");
++		return -EIO;
++	}
++
++	return 0;
++}
++
++void ata_dev_cleanup_cdl_resources(struct ata_device *dev)
++{
++	kfree(dev->cdl);
++	dev->cdl = NULL;
++}
++
+ static void ata_dev_config_cdl(struct ata_device *dev)
  {
 -	struct ata_port *ap = dev->link->ap;
  	unsigned int err_mask;
+ 	bool cdl_enabled;
+ 	u64 val;
++	int ret;
  
- 	if (!ata_log_supported(dev, ATA_LOG_NCQ_NON_DATA)) {
-@@ -2252,17 +2247,14 @@ static void ata_dev_config_ncq_non_data(struct ata_device *dev)
- 		return;
+ 	if (ata_id_major_version(dev->id) < 11)
+ 		goto not_supported;
+@@ -2564,37 +2592,20 @@ static void ata_dev_config_cdl(struct ata_device *dev)
+ 		}
  	}
- 	err_mask = ata_read_log_page(dev, ATA_LOG_NCQ_NON_DATA,
--				     0, ap->sector_buf, 1);
--	if (!err_mask) {
--		u8 *cmds = dev->ncq_non_data_cmds;
--
--		memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_NON_DATA_SIZE);
+ 
+-	/*
+-	 * Allocate a buffer to handle reading the sense data for successful
+-	 * NCQ Commands log page for commands using a CDL with one of the limit
+-	 * policy set to 0xD (successful completion with sense data available
+-	 * bit set).
+-	 */
+-	if (!ap->ncq_sense_buf) {
+-		ap->ncq_sense_buf = kmalloc(ATA_LOG_SENSE_NCQ_SIZE, GFP_KERNEL);
+-		if (!ap->ncq_sense_buf)
+-			goto not_supported;
 -	}
-+				     0, dev->sector_buf, 1);
-+	if (!err_mask)
-+		memcpy(dev->ncq_non_data_cmds, dev->sector_buf,
-+		       ATA_LOG_NCQ_NON_DATA_SIZE);
- }
- 
- static void ata_dev_config_ncq_prio(struct ata_device *dev)
- {
--	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
- 
- 	if (!ata_identify_page_supported(dev, ATA_LOG_SATA_SETTINGS))
-@@ -2271,12 +2263,11 @@ static void ata_dev_config_ncq_prio(struct ata_device *dev)
- 	err_mask = ata_read_log_page(dev,
- 				     ATA_LOG_IDENTIFY_DEVICE,
- 				     ATA_LOG_SATA_SETTINGS,
--				     ap->sector_buf,
--				     1);
-+				     dev->sector_buf, 1);
- 	if (err_mask)
- 		goto not_supported;
- 
--	if (!(ap->sector_buf[ATA_LOG_NCQ_PRIO_OFFSET] & BIT(3)))
-+	if (!(dev->sector_buf[ATA_LOG_NCQ_PRIO_OFFSET] & BIT(3)))
- 		goto not_supported;
- 
- 	dev->flags |= ATA_DFLAG_NCQ_PRIO;
-@@ -2392,9 +2383,8 @@ static void ata_dev_config_sense_reporting(struct ata_device *dev)
- 
- static void ata_dev_config_zac(struct ata_device *dev)
- {
--	struct ata_port *ap = dev->link->ap;
- 	unsigned int err_mask;
--	u8 *identify_buf = ap->sector_buf;
-+	u8 *identify_buf = dev->sector_buf;
- 
- 	dev->zac_zones_optimal_open = U32_MAX;
- 	dev->zac_zones_optimal_nonseq = U32_MAX;
-@@ -2446,7 +2436,6 @@ static void ata_dev_config_zac(struct ata_device *dev)
- 
- static void ata_dev_config_trusted(struct ata_device *dev)
- {
--	struct ata_port *ap = dev->link->ap;
- 	u64 trusted_cap;
- 	unsigned int err;
- 
-@@ -2460,11 +2449,11 @@ static void ata_dev_config_trusted(struct ata_device *dev)
- 	}
- 
- 	err = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE, ATA_LOG_SECURITY,
--			ap->sector_buf, 1);
-+				dev->sector_buf, 1);
- 	if (err)
- 		return;
- 
--	trusted_cap = get_unaligned_le64(&ap->sector_buf[40]);
-+	trusted_cap = get_unaligned_le64(&dev->sector_buf[40]);
- 	if (!(trusted_cap & (1ULL << 63))) {
- 		ata_dev_dbg(dev,
- 			    "Trusted Computing capability qword not valid!\n");
-@@ -2492,12 +2481,12 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 
- 	err_mask = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE,
- 				     ATA_LOG_SUPPORTED_CAPABILITIES,
--				     ap->sector_buf, 1);
-+				     dev->sector_buf, 1);
- 	if (err_mask)
- 		goto not_supported;
- 
- 	/* Check Command Duration Limit Supported bits */
--	val = get_unaligned_le64(&ap->sector_buf[168]);
-+	val = get_unaligned_le64(&dev->sector_buf[168]);
- 	if (!(val & BIT_ULL(63)) || !(val & BIT_ULL(0)))
- 		goto not_supported;
- 
-@@ -2510,7 +2499,7 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 	 * We must have support for the sense data for successful NCQ commands
- 	 * log indicated by the successful NCQ command sense data supported bit.
- 	 */
--	val = get_unaligned_le64(&ap->sector_buf[8]);
-+	val = get_unaligned_le64(&dev->sector_buf[8]);
- 	if (!(val & BIT_ULL(63)) || !(val & BIT_ULL(47))) {
- 		ata_dev_warn(dev,
- 			"CDL supported but Successful NCQ Command Sense Data is not supported\n");
-@@ -2530,11 +2519,11 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 	 */
- 	err_mask = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE,
- 				     ATA_LOG_CURRENT_SETTINGS,
--				     ap->sector_buf, 1);
-+				     dev->sector_buf, 1);
- 	if (err_mask)
- 		goto not_supported;
- 
--	val = get_unaligned_le64(&ap->sector_buf[8]);
-+	val = get_unaligned_le64(&dev->sector_buf[8]);
- 	cdl_enabled = val & BIT_ULL(63) && val & BIT_ULL(21);
- 	if (dev->flags & ATA_DFLAG_CDL_ENABLED) {
- 		if (!cdl_enabled) {
-@@ -2591,13 +2580,13 @@ static void ata_dev_config_cdl(struct ata_device *dev)
- 	 * Command duration limits is supported: cache the CDL log page 18h
- 	 * (command duration descriptors).
- 	 */
--	err_mask = ata_read_log_page(dev, ATA_LOG_CDL, 0, ap->sector_buf, 1);
-+	err_mask = ata_read_log_page(dev, ATA_LOG_CDL, 0, dev->sector_buf, 1);
- 	if (err_mask) {
- 		ata_dev_warn(dev, "Read Command Duration Limits log failed\n");
+-
+-	/*
+-	 * Command duration limits is supported: cache the CDL log page 18h
+-	 * (command duration descriptors).
+-	 */
+-	err_mask = ata_read_log_page(dev, ATA_LOG_CDL, 0, dev->sector_buf, 1);
+-	if (err_mask) {
+-		ata_dev_warn(dev, "Read Command Duration Limits log failed\n");
++	/* CDL is supported: allocate and initialize needed resources. */
++	ret = ata_dev_init_cdl_resources(dev);
++	if (ret) {
++		ata_dev_warn(dev, "Initialize CDL resources failed\n");
  		goto not_supported;
  	}
  
--	memcpy(dev->cdl, ap->sector_buf, ATA_LOG_CDL_SIZE);
-+	memcpy(dev->cdl, dev->sector_buf, ATA_LOG_CDL_SIZE);
+-	memcpy(dev->cdl, dev->sector_buf, ATA_LOG_CDL_SIZE);
  	dev->flags |= ATA_DFLAG_CDL;
  
  	return;
-@@ -2689,7 +2678,7 @@ static void ata_dev_config_fua(struct ata_device *dev)
  
- static void ata_dev_config_devslp(struct ata_device *dev)
+ not_supported:
+ 	dev->flags &= ~(ATA_DFLAG_CDL | ATA_DFLAG_CDL_ENABLED);
+-	kfree(ap->ncq_sense_buf);
+-	ap->ncq_sense_buf = NULL;
++	ata_dev_cleanup_cdl_resources(dev);
+ }
+ 
+ static int ata_dev_config_lba(struct ata_device *dev)
+@@ -5446,12 +5457,19 @@ EXPORT_SYMBOL_GPL(ata_port_alloc);
+ 
+ void ata_port_free(struct ata_port *ap)
  {
--	u8 *sata_setting = dev->link->ap->sector_buf;
-+	u8 *sata_setting = dev->sector_buf;
- 	unsigned int err_mask;
- 	int i, j;
++	struct ata_device *dev;
++	struct ata_link *link;
++
+ 	if (!ap)
+ 		return;
  
-@@ -3759,7 +3748,7 @@ static int ata_dev_same_device(struct ata_device *dev, unsigned int new_class,
- int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags)
- {
- 	unsigned int class = dev->class;
--	u16 *id = (void *)dev->link->ap->sector_buf;
-+	u16 *id = (void *)dev->sector_buf;
- 	int rc;
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		ata_for_each_dev(dev, link, ALL)
++			ata_dev_cleanup_cdl_resources(dev);
++	}
++
+ 	kfree(ap->pmp_link);
+ 	kfree(ap->slave_link);
+-	kfree(ap->ncq_sense_buf);
+ 	ida_free(&ata_ida, ap->print_id);
+ 	kfree(ap);
+ }
+@@ -6000,11 +6018,19 @@ static void ata_port_detach(struct ata_port *ap)
+ 	ata_port_wait_eh(ap);
  
- 	/* read ID data */
+ 	mutex_lock(&ap->scsi_scan_mutex);
++
++	/* Cleanup CDL device resources */
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		ata_for_each_dev(dev, link, ALL)
++			ata_dev_cleanup_cdl_resources(dev);
++	}
++
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+ 	/* Remove scsi devices */
+ 	ata_for_each_link(link, ap, HOST_FIRST) {
+ 		ata_for_each_dev(dev, link, ALL) {
++			ata_dev_cleanup_cdl_resources(dev);
+ 			if (dev->sdev) {
+ 				spin_unlock_irqrestore(ap->lock, flags);
+ 				scsi_remove_device(dev->sdev);
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index d2747a0d684c..ed535e1b4225 100644
+index ed535e1b4225..41f1bee0b434 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -3284,7 +3284,7 @@ static int atapi_eh_clear_ua(struct ata_device *dev)
- 	int i;
+@@ -500,6 +500,8 @@ static void ata_eh_dev_disable(struct ata_device *dev)
+ 	ata_down_xfermask_limit(dev, ATA_DNXFER_FORCE_PIO0 | ATA_DNXFER_QUIET);
+ 	dev->class++;
  
- 	for (i = 0; i < ATA_EH_UA_TRIES; i++) {
--		u8 *sense_buffer = dev->link->ap->sector_buf;
-+		u8 *sense_buffer = dev->sector_buf;
- 		u8 sense_key = 0;
- 		unsigned int err_mask;
- 
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index e2e9cbd405fa..d5d189328ae6 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -648,8 +648,7 @@ static int sata_pmp_same_pmp(struct ata_device *dev, const u32 *new_gscr)
- static int sata_pmp_revalidate(struct ata_device *dev, unsigned int new_class)
- {
- 	struct ata_link *link = dev->link;
--	struct ata_port *ap = link->ap;
--	u32 *gscr = (void *)ap->sector_buf;
-+	u32 *gscr = (void *)dev->sector_buf;
- 	int rc;
- 
- 	ata_eh_about_to_do(link, NULL, ATA_EH_REVALIDATE);
++	ata_dev_cleanup_cdl_resources(dev);
++
+ 	/* From now till the next successful probe, ering is used to
+ 	 * track probe failures.  Clear accumulated device error info.
+ 	 */
 diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 4e063cb42018..498430db86f7 100644
+index 498430db86f7..c8b119a06bb2 100644
 --- a/drivers/ata/libata-sata.c
 +++ b/drivers/ata/libata-sata.c
-@@ -1448,7 +1448,7 @@ EXPORT_SYMBOL_GPL(sata_async_notification);
- static int ata_eh_read_log_10h(struct ata_device *dev,
- 			       int *tag, struct ata_taskfile *tf)
+@@ -1505,7 +1505,7 @@ int ata_eh_get_ncq_success_sense(struct ata_link *link)
  {
--	u8 *buf = dev->link->ap->sector_buf;
-+	u8 *buf = dev->sector_buf;
- 	unsigned int err_mask;
- 	u8 csum;
+ 	struct ata_device *dev = link->device;
+ 	struct ata_port *ap = dev->link->ap;
+-	u8 *buf = ap->ncq_sense_buf;
++	u8 *buf = dev->cdl->ncq_sense_log_buf;
+ 	struct ata_queued_cmd *qc;
+ 	unsigned int err_mask, tag;
+ 	u8 *sense, sk = 0, asc = 0, ascq = 0;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a3ffce4b218d..7fed924d6561 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2259,7 +2259,7 @@ static inline u16 ata_xlat_cdl_limit(u8 *buf)
+ static unsigned int ata_msense_control_spgt2(struct ata_device *dev, u8 *buf,
+ 					     u8 spg)
+ {
+-	u8 *b, *cdl = dev->cdl, *desc;
++	u8 *b, *cdl = dev->cdl->desc_log_buf, *desc;
+ 	u32 policy;
  	int i;
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index eefda51f97d3..4b83b517caec 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -112,7 +112,7 @@ static bool zpready(struct ata_device *dev)
- 	if (!ret || sense_key != NOT_READY)
- 		return false;
  
--	sense_buf = dev->link->ap->sector_buf;
-+	sense_buf = dev->sector_buf;
- 	ret = atapi_eh_request_sense(dev, sense_buf, sense_key);
- 	if (ret)
- 		return false;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 2a9d1bbf2482..0f4c6e26fe50 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -89,6 +89,7 @@ extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
+ extern const char *sata_spd_string(unsigned int spd);
+ extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 				      u8 page, void *buf, unsigned int sectors);
++void ata_dev_cleanup_cdl_resources(struct ata_device *dev);
+ 
+ #define to_ata_port(d) container_of(d, struct ata_port, tdev)
+ 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 55a6b57742bc..aac38dcd2230 100644
+index aac38dcd2230..9b4a6ff03235 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -769,6 +769,9 @@ struct ata_device {
- 	int			spdn_cnt;
- 	/* ering is CLEAR_END, read comment above CLEAR_END */
- 	struct ata_ering	ering;
-+
-+	/* For EH */
-+	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
+@@ -700,6 +700,21 @@ struct ata_cpr_log {
+ 	struct ata_cpr		cpr[] __counted_by(nr_cpr);
  };
  
- /* Fields between ATA_DEVICE_CLEAR_BEGIN and ATA_DEVICE_CLEAR_END are
-@@ -916,7 +919,6 @@ struct ata_port {
++struct ata_cdl {
++	/*
++	 * Buffer to cache the CDL log page 18h (command duration descriptors)
++	 * for SCSI-ATA translation.
++	 */
++	u8			desc_log_buf[ATA_LOG_CDL_SIZE];
++
++	/*
++	 * Buffer to handle reading the sense data for successful NCQ Commands
++	 * log page for commands using a CDL with one of the limits policy set
++	 * to 0xD (successful completion with sense data available bit set).
++	 */
++	u8			ncq_sense_log_buf[ATA_LOG_SENSE_NCQ_SIZE];
++};
++
+ struct ata_device {
+ 	struct ata_link		*link;
+ 	unsigned int		devno;		/* 0 or 1 */
+@@ -762,8 +777,8 @@ struct ata_device {
+ 	/* Concurrent positioning ranges */
+ 	struct ata_cpr_log	*cpr_log;
+ 
+-	/* Command Duration Limits log support */
+-	u8			cdl[ATA_LOG_CDL_SIZE];
++	/* Command Duration Limits support */
++	struct ata_cdl		*cdl;
+ 
+ 	/* error history */
+ 	int			spdn_cnt;
+@@ -917,8 +932,6 @@ struct ata_port {
+ #ifdef CONFIG_ATA_ACPI
+ 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
  #endif
- 	/* owned by EH */
- 	u8			*ncq_sense_buf;
--	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
+-	/* owned by EH */
+-	u8			*ncq_sense_buf;
  };
  
  /* The following initializer overrides a method to NULL whether one of
