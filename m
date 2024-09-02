@@ -1,81 +1,33 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E276E2AE99
-	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 06:23:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505A72D057
+	for <linux-ide@vger.kernel.org>; Mon,  2 Sep 2024 06:28:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725258199; cv=none; b=QDm+pY2dhHwYEePfXLSeT+SACj2a0Bh/okwYA/XcKf9ujfcZ98rg4uD+VXo7yGG+/1eoK+/BhGVhKCikSieIVbfgkwfYZJVv7xzJo8RNxmQDX8Xa8yyzBBkQ9lnxslpZ1xPex4xyD7J2R7mWqGuOWZQNKC7UZcfV4ra9EaioPig=
+	t=1725258505; cv=none; b=D9Z85LDWbl4grwUJyot8UV3dOD6iTS/Q9EjV3a9bxadl+fWHa7YFM9jN/BcXSmC5Oou8wZvz8OpnJttcIxkWuaC67TUl+A0Nqe6gvPRKS+bsd3MP0ZVin++/pStdWnqO5jr2+F+MEaUz/qRymIwxK9hpmCpqDnQeeG3o0Lf8VSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725258199; c=relaxed/simple;
-	bh=jUf62lIeo2I7k2753rI9eTi8J6+xLFvMd5KOhwbD8OA=;
+	s=arc-20240116; t=1725258505; c=relaxed/simple;
+	bh=La4NA5nzZoK8ZLOPTZ5VD4AYsUitr3E3/I6u06udmoA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=XPPIbjpo7QwsqqaX3sWtNT4zT0SCuIW0qqfpD3LRJ+zC95JRs57WG0IL0GiU4q1Jlo6i8k0CAGHnVCGKDS+C9DVuE0bkdqQOAGlPgv/ehVvjhaiVggmHTWGYJn0JTnzMJXQxcVncTeld2PNIWGshwQQiBazv6s3SEhff8ifLE1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JLmDib7w; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Iq701eZ4; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JLmDib7w; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Iq701eZ4; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 In-Reply-To:Content-Type; b=RdN7NC2lidVbRFmJ0LyEKEaOv4KEIt370CYCGQzbZEucvE0OGQGMI1YxaPPs50w/8M2ylQOadpKzxPZgkoTubPyvX/D07l2CeHEoibJdrhf/c5s3fynlTpnaWAPqs/KhfnAMvJ7A5nWaF7a8CntNNQ75Vcc48W7w9lVXQaQ5g/M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=btatrcjc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JLmDib7w";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Iq701eZ4";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JLmDib7w";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Iq701eZ4"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 268491FB97;
-	Mon,  2 Sep 2024 06:23:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1725258196; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bjfNuD09NnAxXHi1djAQKpaZc5goTYTPcElkOybQAZA=;
-	b=JLmDib7wF2N2HU9AXBQeAuNDkuPusZ5/OZvAoP+lNoEx6iT03tpHOSi3wyljuK5+9OEw0Z
-	iMeuhUZ2JRGQz5NfpasfKOeL8GzCJ1vqS9pcOs96dnmUH4ImrDj4q2zv51DfZnLM5ZKpjt
-	uplcj0GjJ5gRFppLZ7xqaNYSM5eU8Ak=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1725258196;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bjfNuD09NnAxXHi1djAQKpaZc5goTYTPcElkOybQAZA=;
-	b=Iq701eZ4iWK4fps+PHRnBPOk+2xMXSwjpG8yEQl+sfW/oxJ+hH9gMNyFYkDBFg4N4rZUrb
-	U99zHOnejceoqnCw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=JLmDib7w;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=Iq701eZ4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1725258196; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bjfNuD09NnAxXHi1djAQKpaZc5goTYTPcElkOybQAZA=;
-	b=JLmDib7wF2N2HU9AXBQeAuNDkuPusZ5/OZvAoP+lNoEx6iT03tpHOSi3wyljuK5+9OEw0Z
-	iMeuhUZ2JRGQz5NfpasfKOeL8GzCJ1vqS9pcOs96dnmUH4ImrDj4q2zv51DfZnLM5ZKpjt
-	uplcj0GjJ5gRFppLZ7xqaNYSM5eU8Ak=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1725258196;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bjfNuD09NnAxXHi1djAQKpaZc5goTYTPcElkOybQAZA=;
-	b=Iq701eZ4iWK4fps+PHRnBPOk+2xMXSwjpG8yEQl+sfW/oxJ+hH9gMNyFYkDBFg4N4rZUrb
-	U99zHOnejceoqnCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DABD513AE5;
-	Mon,  2 Sep 2024 06:23:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id cPLoMdNZ1Wa8GQAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 02 Sep 2024 06:23:15 +0000
-Message-ID: <16db3823-fac9-4b68-a2cc-d692abdb4015@suse.de>
-Date: Mon, 2 Sep 2024 08:23:15 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="btatrcjc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A855C4CEC2;
+	Mon,  2 Sep 2024 06:28:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725258504;
+	bh=La4NA5nzZoK8ZLOPTZ5VD4AYsUitr3E3/I6u06udmoA=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=btatrcjc+XaGHbtr3/aPxjhEcqfSMO7ugXuA9fzZeNJ5jhfbHh7EAIO+iYFOGLA8u
+	 hjYj4/0AhSzFBWG3LtUNkIsOsdwdWFFvbNLUisRh9fUEXmkSSfHCaCI9Qv3UBc8MJg
+	 jGN+9EavSFTDX2E7y2lA+2fkJJ/X5nZGaFTYDIhh0pYUQj247XLLC/MxI0qn+g867p
+	 0Sja7nWH0I2UCV8n5wNOhb5uZ3jNyjrAcVwR2MSEDbWg/G9Squ/6vgJNRQzaetDcE6
+	 ngRCfTRIbYmxIF7MQC4G0zSYxMxnhAwss+Biltuf4/iZCjlaWqOIsVo3LtLjK5vuT5
+	 CjTIqTUfHnhMg==
+Message-ID: <4f5521a2-b3cb-48ba-b51a-51db62ff1902@kernel.org>
+Date: Mon, 2 Sep 2024 15:28:21 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,96 +35,128 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 7/7] ata: libata: Improve CDL resource management
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+Subject: Re: [PATCH v2 1/7] ata: libata: Cleanup libata-transport
+To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
  Niklas Cassel <cassel@kernel.org>
 References: <20240902000043.155495-1-dlemoal@kernel.org>
- <20240902000043.155495-8-dlemoal@kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240902000043.155495-8-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 268491FB97
-X-Spam-Level: 
-X-Spamd-Result: default: False [-6.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	DWL_DNSWL_MED(-2.00)[suse.de:dkim];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim,suse.de:mid];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -6.51
-X-Spam-Flag: NO
+ <20240902000043.155495-2-dlemoal@kernel.org>
+ <e34aded2-c0f4-44f1-8941-4eb8c3818bc2@suse.de>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <e34aded2-c0f4-44f1-8941-4eb8c3818bc2@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 9/2/24 02:00, Damien Le Moal wrote:
-> The ncq_sense_buf buffer field of struct ata_port is allocated and used
-> only for devices that support the Command Duration Limits (CDL) feature.
-> However, the cdl buffer of struct ata_device, which is used to cache the
-> command duration limits log page for devices supporting CDL is always
-> allocated as part of struct ata_device, which is wasteful of memory for
-> devices that do not support this feature.
+On 9/2/24 15:16, Hannes Reinecke wrote:
+>>   /*
+>>    * ATA device attributes
+>>    */
+>> @@ -660,14 +525,14 @@ static int ata_tdev_match(struct attribute_container *cont,
+>>   }
+>>   
+>>   /**
+>> - * ata_tdev_free  --  free a ATA LINK
+>> - * @dev:	ATA PHY to free
+>> + * ata_tdev_free  --  free a transport ATA device structure
 > 
-> Clean this up by defining both buffers as part of the new ata_cdl
-> structure and allocating this structure only for devices that support
-> the CDL feature. This new structure is attached to struct ata_device
-> using the cdl pointer.
-> 
-> The functions ata_dev_init_cdl_resources() and
-> ata_dev_cleanup_cdl_resources() are defined to manage this new structure
-> allocation, initialization and cleanup when a port is removed or a
-> device disabled. ata_dev_init_cdl_resources() is called from
-> ata_dev_config_cdl() only for devices that support CDL.
-> ata_dev_cleanup_cdl_resources() is called from ata_port_free() and
-> ata_eh_dev_disable() to free the ata_cdl structure when a device is
-> being disabled by EH or its port being removed.
-> 
-> Note that the name of the former cdl log buffer of struct ata_device is
-> changed to desc_log_buf to make it clearer that it is a buffer for the
-> limit descriptors log page.
-> 
-> This change reduces the size of struct ata_device, thus reducing memory
-> usage for ATA devices that do not support the CDL feature.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/ata/libata-core.c | 74 ++++++++++++++++++++++++++-------------
->   drivers/ata/libata-eh.c   |  2 ++
->   drivers/ata/libata-sata.c |  2 +-
->   drivers/ata/libata-scsi.c |  2 +-
->   drivers/ata/libata.h      |  1 +
->   include/linux/libata.h    | 21 ++++++++---
->   6 files changed, 72 insertions(+), 30 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Odd wording; maybe 'ATA transport device' ?
 
-Cheers,
+Indeed.
 
-Hannes
+> 
+>> + * @dev:	target ATA device
+> 
+> Why 'target ATA device'? Wouldn't 'ATA transport device' be better?
+
+Because that function really takes a pointer to struct ata_dev, not to struct
+ata_dev->tdev...
+
+> 
+>>    *
+>> - * Frees the specified ATA PHY.
+>> + * Free the transport ATA device structure for the specified ATA device.
+> 
+> Same here.
+> 
+>>    *
+>>    * Note:
+>> - *   This function must only be called on a PHY that has not
+>> - *   successfully been added using ata_tdev_add().
+>> + *   This function must only be called on a device that has not successfully
+> 
+> 'device'? Shouldn't we not use the same wording as in the description?
+
+Not really. Here the reference is to the struct ata_device. Will clarify that.
+
+> 
+>> + *   been added using ata_tdev_add().
+>>    */
+>>   static void ata_tdev_free(struct ata_device *dev)
+>>   {
+>> @@ -676,10 +541,10 @@ static void ata_tdev_free(struct ata_device *dev)
+>>   }
+>>   
+>>   /**
+>> - * ata_tdev_delete  --  remove ATA device
+>> - * @ata_dev:	ATA device to remove
+>> + * ata_tdev_delete  --  remove an ATA device sysfs entry
+>> + * @ata_dev:	target ATA device
+>>    *
+> 
+> And here we should be consistent with whatever wording we've been using
+> in ata_tdev_free().
+
+Yep, will fix.
+
+>> +/**
+>> + * ata_is_link --  check if a struct device represents a ATA link
+>> + * @dev:	device to check
+>> + *
+>> + * Returns:
+>> + *	%1 if the device represents a ATA link, %0 else
+>> + */
+>> +static int ata_is_link(const struct device *dev)
+> 
+> Why is this not a boolean ?
+
+It was like that. I can make it a boolean.
+
+> 
+>> +{
+>> +	return dev->release == ata_tlink_release;
+>> +}
+>> +
+>> +static int ata_tlink_match(struct attribute_container *cont,
+>> +			   struct device *dev)
+>> +{
+>> +	struct ata_internal *i = to_ata_internal(ata_scsi_transport_template);
+>> +
+>> +	if (!ata_is_link(dev))
+>> +		return 0;
+>> +	return &i->link_attr_cont.ac == cont;
+>> +}
+>> +
+>> +/**
+>> + * ata_tlink_delete  --  remove ATA LINK
+>> + * @link:	ATA LINK to remove
+> 
+> Why is the 'link' in capital letters?
+
+No idea. It was like that. Will clean that up as well.
+
+>> + *
+>> + * Initialize an ATA LINK structure for sysfs.  It will be added in the
+>> + * device tree below the ATA PORT it belongs to.
+>> + *
+>> + * Returns %0 on success
+> 
+> And what on failure?
+
+Another one that I did not touch but clearly needs cleanup too :)
+
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Damien Le Moal
+Western Digital Research
 
