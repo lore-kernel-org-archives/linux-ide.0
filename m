@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24291B0107;
-	Mon,  9 Sep 2024 09:52:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B43D71EA6F
+	for <linux-ide@vger.kernel.org>; Mon,  9 Sep 2024 12:52:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725875578; cv=none; b=YRQWalqVE1I/nCoFSCB6Qedin4RY9OB9UCHkw5az38NehCDrAg/m/lYrFlJDjHNLGFbQT9LaqOZwkoABEBO8zlRRqha8397hHywfxqoEA32RTnC+7heP7yiDeSD5cJB1rB09YcASXW2xn8WMTgKgxxjidZ6UwjN2sB4mrJr583s=
+	t=1725886375; cv=none; b=HR+7HFQaOKfR+ueOn0TE7KMPGoJCj/hqE+6KdU1y6UG+3w56dcAEN5J3RFOaOOmzSQYGbG2l85O2xE1SffDGpjgrIQdLTtZX9ZDHaSc5TtXWj6NCXvRgYatXXVRNFkE63S53EBOCyRsSG6wciToAR56usCdjFA431kbu8FDpVYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725875578; c=relaxed/simple;
-	bh=G/JUPv3rEh3rb+RiMrBmN0vvDLmI826vdPTHpi2hYYw=;
+	s=arc-20240116; t=1725886375; c=relaxed/simple;
+	bh=TZlZh9bRHb0y5vhlPbUK8MfVKoGAq0S1f+3xw1F18vE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G9/GliQ0NeYoUhHpD/lbSHBtSNO01YtSOuGE9OkaEbGwtAONyg2QRUcjZXF/w27lbzH30GZBQ7jK3jUu2mXoZNOrRNFTZPv084eIy6cD/Wk+X7bR89XrqurRYO79+t2d2mgKW8+z7SM6d8pakli6rjVK1hsW8CcH5sgmy/o8Opo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rNIymLqN; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=qpYhPZTpm5HhQoySD0JCz6Y/oIyz3r+6SCdGNF30lvEz6ukWmZrBklHVtOku3H2Yp8vjAjNiETK40HrXcti/DQ5hhHP/OLwHwWTCUGZ2xDSyXEApvm/Y1YREzf2K40u5E1zRqfDU/6hko2Ty1YctfJXMBa7eY2OVJ/nSl5ppEVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m2H4X4+T; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rNIymLqN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6F39C4CEC6;
-	Mon,  9 Sep 2024 09:52:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m2H4X4+T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E94FC4CEC6;
+	Mon,  9 Sep 2024 12:52:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725875577;
-	bh=G/JUPv3rEh3rb+RiMrBmN0vvDLmI826vdPTHpi2hYYw=;
+	s=k20201202; t=1725886375;
+	bh=TZlZh9bRHb0y5vhlPbUK8MfVKoGAq0S1f+3xw1F18vE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=rNIymLqNKfKVrZoWsJf9wcMVH/05uvQFME7JFyTeqZblc7qKv2miGg3FCtcb0AwG7
-	 teyQ3w+Tf7Ue2g0NojT5KYhRu68QJVhnSQNDR8vPQTN1W0LI6GDkbVffdgb01im4dL
-	 HDkJfnlFQNSTf9fAU56OF2q7vQK3MdWbA5ui2hyEag3EN30sYmAoo/dcYgUsQzxkmk
-	 6az7LXElhkpWOsRC3aUGAvpVZJ+ygubBNEACyzs7Rl/AG4p3VBSPDH8aE0Xxz13L9D
-	 vDOBjPZhccLU4MzdicGquhdnKkiEMSUKbte/Ub8diKNAIrCuiy0XIhU3leIxJiFrWZ
-	 9MAzrV7U+Q3Og==
-Message-ID: <a9554e75-a297-4ba1-b3a4-e1b8ed4f887d@kernel.org>
-Date: Mon, 9 Sep 2024 11:52:50 +0200
+	b=m2H4X4+TkdZa/xoUZe+FaWisRgJbbKfsaZpgIElOGT7jYcqnGhgIJfVxZsR8CmkWA
+	 4O6sxLufa6T1vWxRsw5rKXd557eYBpovxpwcsvYcK+sQr9KH5Lyl/o3R2IZP5Vurd5
+	 280P0r/XzzxX+Q/ZvjwCEZXqeu1EdabOswlbaT/fCoBQEgjh8by3Uun517aQAo2X6k
+	 b85Kti+Ku6ewyLjk7bD34BGFdmy+F02ciduj1a2f7T16ObVwahoYgUJCDT81E21j50
+	 E8uIK1+j4mKsFZhCCavSOH5JKYEmQw30M9CrHWUcsKyBm0EuSpNTovODfdeZll+IcR
+	 Oi6zPup3DM0Ew==
+Message-ID: <bd4d7454-2b34-46d8-9b88-0811bd478551@kernel.org>
+Date: Mon, 9 Sep 2024 21:52:53 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,114 +35,127 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 20/38] dt-bindings: ata: Add Cirrus EP93xx
-To: Niklas Cassel <cassel@kernel.org>, "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Nikita Shubin <nikita.shubin@maquefel.me>, linux-kernel@vger.kernel.org,
- Damien Le Moal <dlemoal@kernel.org>, devicetree@vger.kernel.org,
- Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- linux-ide@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>
-References: <20240909-ep93xx-v12-0-e86ab2423d4b@maquefel.me>
- <20240909-ep93xx-v12-20-e86ab2423d4b@maquefel.me>
- <172587510301.3289247.9336315361343642952.robh@kernel.org>
- <Zt7ENCkvBfoX3OVn@ryzen.lan>
-From: Krzysztof Kozlowski <krzk@kernel.org>
+Subject: Re: [PATCH v2] ata: libata: Clear DID_TIME_OUT for ATA PT commands
+ with sense data
+To: Niklas Cassel <cassel@kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>
+Cc: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel
+ <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
+References: <20240909084745.2029818-2-cassel@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <Zt7ENCkvBfoX3OVn@ryzen.lan>
+Organization: Western Digital Research
+In-Reply-To: <20240909084745.2029818-2-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 09/09/2024 11:47, Niklas Cassel wrote:
-> On Mon, Sep 09, 2024 at 04:45:13AM -0500, Rob Herring (Arm) wrote:
->>
->> On Mon, 09 Sep 2024 11:10:45 +0300, Nikita Shubin wrote:
->>> Add YAML bindings for ep93xx SoC PATA.
->>>
->>> Signed-off-by: Nikita Shubin <nikita.shubin@maquefel.me>
->>> Acked-by: Damien Le Moal <dlemoal@kernel.org>
->>> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
->>> ---
->>>  .../bindings/ata/cirrus,ep9312-pata.yaml           | 42 ++++++++++++++++++++++
->>>  1 file changed, 42 insertions(+)
->>>
->>
->> My bot found errors running 'make dt_binding_check' on your patch:
->>
->> yamllint warnings/errors:
->>
->> dtschema/dtc warnings/errors:
->>
->>
->> doc reference errors (make refcheckdocs):
->>
->> See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20240909-ep93xx-v12-20-e86ab2423d4b@maquefel.me
->>
->> The base for the series is generally the latest rc1. A different dependency
->> should be noted in *this* patch.
->>
->> If you already ran 'make dt_binding_check' and didn't see the above
->> error(s), then make sure 'yamllint' is installed and dt-schema is up to
->> date:
->>
->> pip3 install dtschema --upgrade
->>
->> Please check and re-submit after running the above command yourself. Note
->> that DT_SCHEMA_FILES can be set to your schema file to speed up checking
->> your schema. However, it must be unset to test all examples with your schema.
->>
+On 9/9/24 17:47, Niklas Cassel wrote:
+> When ata_qc_complete() schedules a command for EH using
+> ata_qc_schedule_eh(), blk_abort_request() will be called, which leads to
+> req->q->mq_ops->timeout() / scsi_timeout() being called.
 > 
-> Hello Rob,
+> scsi_timeout(), if the LLDD has no abort handler (libata has no abort
+> handler), will set host byte to DID_TIME_OUT, and then call
+> scsi_eh_scmd_add() to add the command to EH.
 > 
-> The list of warnings/errors is empty,
-> so I believe that you have a bug in your bot/scripts.
+> Thus, when commands first enter libata's EH strategy_handler, all the
+> commands that have been added to EH will have DID_TIME_OUT set.
+> 
+> libata has its own flag (AC_ERR_TIMEOUT), that it sets for commands that
+> have not received a completion at the time of entering EH.
+> 
+> Thus, libata doesn't really care about DID_TIME_OUT at all, and currently
+> clears the host byte at the end of EH, in ata_scsi_qc_complete(), before
+> scsi_eh_finish_cmd() is called.
+> 
+> However, this clearing in ata_scsi_qc_complete() is currently only done
+> for commands that are not ATA passthrough commands.
+> 
+> Since the host byte is visible in the completion that we return to user
+> space for ATA passthrough commands, for ATA passthrough commands that got
+> completed via EH (commands with sense data), the user will incorrectly see:
+> ATA pass-through(16): transport error: Host_status=0x03 [DID_TIME_OUT]
+> 
+> Fix this by moving the clearing of the host byte (which is currently only
+> done for commands that are not ATA passthrough commands) from
+> ata_scsi_qc_complete() to the start of EH (regardless if the command is
+> ATA passthrough or not).
+> 
+> This will make sure that we:
+> -Correctly clear DID_TIME_OUT for both ATA passthrough commands and
+>  commands that are not ATA passthrough commands.
+> -Do not needlessly clear the host byte for commands that did not go via EH.
+>  ata_scsi_qc_complete() is called both for commands that are completed
+>  normally (without going via EH), and for commands that went via EH,
+>  however, only commands that went via EH will have DID_TIME_OUT set.
+> 
+> Fixes: 24aeebbf8ea9 ("scsi: ata: libata: Change ata_eh_request_sense() to not set CHECK_CONDITION")
+> Reported-by: Igor Pylypiv <ipylypiv@google.com>
+> Closes: https://lore.kernel.org/linux-ide/ZttIN8He8TOZ7Lct@google.com/
+> Tested-by: Igor Pylypiv <ipylypiv@google.com>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+> Changes since v1:
+> -Picked up tags from Igor.
+> -Added Fixes tag.
+> -Improved the commit message to clearly state that this is currently a
+>  real bug for ATA PT commands with sense data.
+> 
+>  drivers/ata/libata-eh.c   | 9 +++++++++
+>  drivers/ata/libata-scsi.c | 3 ---
+>  2 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 7de97ee8e78b..450e9bd96c97 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -630,6 +630,15 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+>  	list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
+>  		struct ata_queued_cmd *qc;
+>  
+> +		/*
+> +		 * If the scmd was added to EH, via ata_qc_schedule_eh() ->
+> +		 * scsi_timeout() -> scsi_eh_scmd_add(), scsi_timeout() will
+> +		 * have set DID_TIME_OUT (since libata does not have an abort
+> +		 * handler). Thus to clear the DID_TIME_OUT, we clear the host
+> +		 * byte (but keep the SCSI ML and status byte).
+> +		 */
+> +		scmd->result &= 0x0000ffff;
 
-Yeah, I think all patches pass test, just something first patch did not
-get applied leading to further issues. Including this a bit weird one -
-empty warnings.
+I know it was like that, but why not:
 
-Best regards,
-Krzysztof
+		set_host_byte(scmd, 0);
+or
+		set_host_byte(scmd, DID_OK);
+
+?
+
+set_host_byte() uses the mask 0xff00ffff, since the upper 8 bits seem to be
+ignored: bits [0..7] are the status byte, [16..23] are the host byte and bits
+[8..15] are the message byte but that is unused.
+		
+
+> +
+>  		ata_qc_for_each_raw(ap, qc, i) {
+>  			if (qc->flags & ATA_QCFLAG_ACTIVE &&
+>  			    qc->scsicmd == scmd)
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 3a442f564b0d..6a90062c8b55 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1680,9 +1680,6 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>  			set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
+>  	} else if (is_error && !have_sense) {
+>  		ata_gen_ata_sense(qc);
+> -	} else {
+> -		/* Keep the SCSI ML and status byte, clear host byte. */
+> -		cmd->result &= 0x0000ffff;
+>  	}
+>  
+>  	ata_qc_done(qc);
+
+-- 
+Damien Le Moal
+Western Digital Research
 
