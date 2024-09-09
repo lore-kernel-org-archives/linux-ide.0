@@ -1,141 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E285176246
-	for <linux-ide@vger.kernel.org>; Mon,  9 Sep 2024 08:48:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC2B01B1515;
+	Mon,  9 Sep 2024 08:50:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725871690; cv=none; b=iv7WuFBALDajC69uVavS/1uoWbjG08gvlZUMN2Mt1zKbgpde/UgoUOOPtAJWMaBNyq1Pgt74okG0omhme6y/Dzc1QainxCzTzrKItjKJUyXsqIl9SIpKCRc9qUFATK6cyjOzQAhW+yTUhutfgA7wVsNFD8ieSLqAe++cbtGDPXo=
+	t=1725871835; cv=none; b=Mlp4mKVjn+pmtHpMd3XjHAwbRhBvSvJT2K6cdtHWnIkZvZnTkoCw0tfkj4WkeZuHxH0uwokE2oWGZARY5QuJkXVr0KxQZ2qoOxtKIipjDXTRpiK9+pei4r+Tjm+8sih7vpN6h5FktLfNVvxa/qaGXdFGPbZmHWQk4sr0wuPRjvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725871690; c=relaxed/simple;
-	bh=0Z/5NsxXgLfkTLHW7dGZI0Lcn3mlC2+R0gov0+HJM6s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=efSq27bm65i68N6fbkyRmhQ01GRXKDMWcBmu3NjFs8a7TQCK59XhFeQvvxrDmXDrJZ2uDWyVxMBUqHdw0qV6g77AieACa5FE/Gw3yw+Kb4/rdoqWxJPNAZk4Sj6aIiZfADUqpK+LC8AZW15qZNaG6De1plwQM6q8xAJdbi2ruXI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=djyDoLPh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725871835; c=relaxed/simple;
+	bh=UExkI6GiOyg9fq7gq7e9415xYQTdFebhf5cMaTDpOac=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=No9uvi03izYkHLV/KxNvTZw0uuY3csSCeRxaEHiy6/O0gQdH1yciw6LarJgMs94mRQyqn7u0QnawnzX/iQzYQ4HchBHyLBXSuzQrAGbFV1zl0miwKyxBojFUGE4NIcKveYbKp9Zs1NMjVeWFSQEsJnYTECW6UpRo/l0ebJKCbAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S+q5e+Mi; arc=none smtp.client-ip=209.85.167.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="djyDoLPh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47699C4CEC5;
-	Mon,  9 Sep 2024 08:48:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725871689;
-	bh=0Z/5NsxXgLfkTLHW7dGZI0Lcn3mlC2+R0gov0+HJM6s=;
-	h=From:To:Cc:Subject:Date:From;
-	b=djyDoLPh7XOmiDbQY6ehDjyvvtadUDNufv870oJNrCaZkh2KpdTExlPYeTMhP0KNR
-	 JcTUIxJXKoHCa7rXDJquNdcGzx+ybfs4kIlp4TFRHd6LDRUh8srnseAE+MDDStkkDE
-	 pujbom0HGcfg7WxYGYrJ2KC0JJsNe6S91hVD/9xps2b7ue7YpPsINYDKq5f0EdvuSk
-	 g54mNIXJ/SWbYXt17UXPRzt3EUoE5YnCKfjAiAMJRZoi1oEn/NzdDrk0rsXaNMEzKu
-	 s0II4gAUlJgBwdgS7GFrWBcinTcFgVvh4jsn09t45wTknIQu3f3h6LknAqvuwajGp5
-	 C4ONrNJZLwTaw==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>
-Cc: Igor Pylypiv <ipylypiv@google.com>,
-	Niklas Cassel <niklas.cassel@wdc.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH v2] ata: libata: Clear DID_TIME_OUT for ATA PT commands with sense data
-Date: Mon,  9 Sep 2024 10:47:46 +0200
-Message-ID: <20240909084745.2029818-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S+q5e+Mi"
+Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-5365aa568ceso3341838e87.0;
+        Mon, 09 Sep 2024 01:50:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1725871832; x=1726476632; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qMJgZ9pgfiljRe+M72ZqUEaho/KQ7dkzOtNSpn7FOBk=;
+        b=S+q5e+MipOaJkFm6hsiB6NN0IOHTbPaHgjv4/SN7yeuHg2SPP53T7v3DFVVdvE20xF
+         BTxGN3X/ho6TGWYEqEJVJmdIeh1LiiuU5WHYKIwSY7NmtaybwkscOZBhQNUY2HMnrRM5
+         ghJxt/nCCZ+9bQJZPmc6YsIx4t6OYE4CXTUbqFTN5CaWWJGClFa2LwnQbzHLNFlB6i0U
+         ejdW9JT3rfLnQoJClpWElwQqUksJlZRSaILE980xjGliZY8s2Ql/ftA29nnw6V8bJf5Q
+         gRG7CPg8jBsjAcVnhIRQxKn4faVC/MHOdFwD3iLQYL6jaRop5lTLbtYuu00/WKP45Q4E
+         +2TA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725871832; x=1726476632;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=qMJgZ9pgfiljRe+M72ZqUEaho/KQ7dkzOtNSpn7FOBk=;
+        b=mrKjzx+L+WrZJeIF/k4gE7/1rwHpke3KyEQtKvruYTv5qZxRm29V6LvNcbMw55dw7i
+         zyyY9lLLqENoiNQl17mS2F/CclP9h4hQ4GKGWB4j/TblFaNeQf4Au/t2OrvMwswT5EXP
+         Ms5cXsZQC1lnE1Nj29bCza26GQB3nV3Wn4U8Ly9h2R+a8zA54wzsHj+VK7AP2ZwbLbJz
+         SRsfSJc1O+avKpVYMFVZi9rEufT1eHfZAxgRdrCHaiC2J/XLBUCx2a9dOgddtwieSj+/
+         zJB7xiFij/o6diq/RYJXKhVL/k8IvdmmYTZOjzxQyjHDwh5JT+nbfHNIuqNapO9glGkk
+         VDCg==
+X-Forwarded-Encrypted: i=1; AJvYcCUtpZwjw4AliwUr2Ly4NtdWc1206fUbRSJALbr8fjg9HYXiiOm95tW1++2hiqZrhUMc+omo1eCrZFHf@vger.kernel.org, AJvYcCV2KOpkQW14fNqmzGbFCh/juqxBgqLb/F6njDNsfXTejsDU6SomLSbCJrZKkLfii2WVe+hoara5520Z@vger.kernel.org, AJvYcCVjqvKthfPfBDICcjuCzxVHI+fPaw2cEX1HRUOttRGG8mW7kver96a72S5Bx3Ur4LMDEnW2f3OE2RuWQas=@vger.kernel.org, AJvYcCVpRoHKD8wfsgQKJ74NNYcWsuZU9TeKU5cRD+cYgfdyZZuYo0CJt9jDrbTI81jzsTNHAxO0TxQny6P8ncA=@vger.kernel.org, AJvYcCVzX+utP2+R0gPNtKj4Q8jurtFGBYNqfJOHsAr04Y4V7F1RRHoILB5ySP8ghNAD95hxbXyyj3aZrZqH@vger.kernel.org, AJvYcCW1b3lU+DGSuffo/6kXRxDg8FhIxkcI9rCCqBoB1mowiOM6msqOeiCN2f/4YiIdYK6SxuFDbZLMaHJy@vger.kernel.org, AJvYcCWq1gU/rGWULCcafKjqSkHZzlW+pFp/tfbwYZZNdYXzKC8Un/Rweip4yUbp13euWZMDoTzzJ+0/Txxfq7arxkw=@vger.kernel.org, AJvYcCWzNpg8f2GG8jUBSkHTxa8VF/Lfv/ELcaOPB7LjsEAZOhMEe90qTAPw9ku0mxKfKmu1RgzLZ3Gl/QZd@vger.kernel.org, AJvYcCX8vm0bSWbzrhQfa85++rE3jvYsldvfvDQ1a+jPLGqbLAt58evuuA07e6RrjVYxqj/apsKJmfLu@vger.kernel.org, AJvYcCXMcBBmaCMYZ+0DpZk6ggtL3XRfiqh+SbT8gW531k2le02MItrDTLHyIMYiw7UokuNpMdf+hoN+8S8BKA==@vger.kernel.org, AJvYcCXTk9BJBaa3oBZtHvGUdaqGs+4RmKI9fvc2ix6Kvcjew+ZR36CWbTKDbdOZ9HFSeoVEA9IQ0qQXQNDL@vger.kernel.org, AJvYcCXfBYWIJc1lM042B4AalZjxAjbQaNLN0mihj8KnuAeMjLKBinty3YGfGjRBz1xA3K608Q7rmPN+xJM=@vger.kernel.org, AJvYcCXtClLhTwJsUUPPzV2zkTAPfr3Is4MEXT3xBcTT9JM1EabLFCcY9RpVAYGWF73g76lpAaVA+obSVStK/N5o@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2+u7EhnODfDQLmMij6gUzFEYdIqUF67gmtUhkoxW26B4KLj9S
+	e540vUH54PEbaDWHfjYkF1Lpbsc+QrO+mWjhwlAX9dm9Z8xRAWy/piGTwX5hY2DGTURCAYzlP+n
+	IOzGJOZl5Mbvhv/2yLlCzkyuqvgw=
+X-Google-Smtp-Source: AGHT+IFcTF6tcgjMw6D6S0XG2rYkA0vJft71zEud+Bt80oehc9COujaTfpbyb07ODKbKRYsDsEFhP0R5k4x+NMVw2vM=
+X-Received: by 2002:a05:6512:1395:b0:536:555d:11ed with SMTP id
+ 2adb3069b0e04-536587a67d8mr8746687e87.12.1725871831380; Mon, 09 Sep 2024
+ 01:50:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3945; i=cassel@kernel.org; h=from:subject; bh=0Z/5NsxXgLfkTLHW7dGZI0Lcn3mlC2+R0gov0+HJM6s=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNLubTN8JFopd//4lumVR6fWnFPjib0xxf1pvObS6uCbf fcb5lwW6ShlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBEhBsYGdpKK2sOfk+Yv3jD p8I1x9ZzOt7K9DJ/o7Y8+8HMqjeN11sYGV5Mt1HwtW08fvmEqJLLDLF3TYppazhjUv63yhqVqTz j5gIA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+References: <20240909-ep93xx-v12-0-e86ab2423d4b@maquefel.me>
+In-Reply-To: <20240909-ep93xx-v12-0-e86ab2423d4b@maquefel.me>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 9 Sep 2024 11:49:54 +0300
+Message-ID: <CAHp75Veusv=f6Xf9-gL3ctoO5Njn7wiWMw-aMN45KbZ=YB=mQw@mail.gmail.com>
+Subject: Re: [PATCH v12 00/38] ep93xx device tree conversion
+To: nikita.shubin@maquefel.me
+Cc: Arnd Bergmann <arnd@arndb.de>, Hartley Sweeten <hsweeten@visionengravers.com>, 
+	Alexander Sverdlin <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
+	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
+	Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Vinod Koul <vkoul@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>, 
+	Guenter Roeck <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>, 
+	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+	Mark Brown <broonie@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
+	Vignesh Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Sergey Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Ralf Baechle <ralf@linux-mips.org>, "Wu, Aaron" <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
+	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, linux-gpio@vger.kernel.org, 
+	linux-clk@vger.kernel.org, linux-pm@vger.kernel.org, 
+	devicetree@vger.kernel.org, dmaengine@vger.kernel.org, 
+	linux-watchdog@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-spi@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-mtd@lists.infradead.org, linux-ide@vger.kernel.org, 
+	linux-input@vger.kernel.org, linux-sound@vger.kernel.org, 
+	20240904-devm_clk_hw_register_fixed_rate_parent_data-v1-1-7f14d6b456e5@maquefel.me, 
+	20240829-cs4271-yaml-v3-1-f1624cc838f6@maquefel.me, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-When ata_qc_complete() schedules a command for EH using
-ata_qc_schedule_eh(), blk_abort_request() will be called, which leads to
-req->q->mq_ops->timeout() / scsi_timeout() being called.
+On Mon, Sep 9, 2024 at 11:12=E2=80=AFAM Nikita Shubin via B4 Relay
+<devnull+nikita.shubin.maquefel.me@kernel.org> wrote:
+>
+> The goal is to recieve ACKs for all patches in series to merge it via Arn=
+d branch.
+>
+> It was decided from the very beginning of these series, mostly because
+> it's a full conversion of platform code to DT and it seemed not
+> convenient to maintain compatibility with both platform and DT.
+>
+> Following patches require attention from Stephen Boyd or clk subsystem:
 
-scsi_timeout(), if the LLDD has no abort handler (libata has no abort
-handler), will set host byte to DID_TIME_OUT, and then call
-scsi_eh_scmd_add() to add the command to EH.
+Does it mean you still have a few patches without tags?
+What are their respective numbers?
 
-Thus, when commands first enter libata's EH strategy_handler, all the
-commands that have been added to EH will have DID_TIME_OUT set.
+> - clk: ep93xx: add DT support for Cirrus EP93xx:
+>   - tristate
+>   - drop MFD_SYSCON/REGMAP
+>   - add AUXILIARY_BUS/REGMAP_MMIO
+>   - prefixed all static with ep9xx_
+>   - s/clk_hw_register_ddiv()/ep93xx_clk_register_ddiv()/
+>   - s/clk_register_div()/ep93xx_clk_register_div()/
+>   - dropped devm_ep93xx_clk_hw_register_fixed_rate_parent_data macro
+>   - s/devm_ep93xx_clk_hw_register_fixed_rate_parent_data()/devm_clk_hw_re=
+gister_fixed_rate_parent_data()/
 
-libata has its own flag (AC_ERR_TIMEOUT), that it sets for commands that
-have not received a completion at the time of entering EH.
-
-Thus, libata doesn't really care about DID_TIME_OUT at all, and currently
-clears the host byte at the end of EH, in ata_scsi_qc_complete(), before
-scsi_eh_finish_cmd() is called.
-
-However, this clearing in ata_scsi_qc_complete() is currently only done
-for commands that are not ATA passthrough commands.
-
-Since the host byte is visible in the completion that we return to user
-space for ATA passthrough commands, for ATA passthrough commands that got
-completed via EH (commands with sense data), the user will incorrectly see:
-ATA pass-through(16): transport error: Host_status=0x03 [DID_TIME_OUT]
-
-Fix this by moving the clearing of the host byte (which is currently only
-done for commands that are not ATA passthrough commands) from
-ata_scsi_qc_complete() to the start of EH (regardless if the command is
-ATA passthrough or not).
-
-This will make sure that we:
--Correctly clear DID_TIME_OUT for both ATA passthrough commands and
- commands that are not ATA passthrough commands.
--Do not needlessly clear the host byte for commands that did not go via EH.
- ata_scsi_qc_complete() is called both for commands that are completed
- normally (without going via EH), and for commands that went via EH,
- however, only commands that went via EH will have DID_TIME_OUT set.
-
-Fixes: 24aeebbf8ea9 ("scsi: ata: libata: Change ata_eh_request_sense() to not set CHECK_CONDITION")
-Reported-by: Igor Pylypiv <ipylypiv@google.com>
-Closes: https://lore.kernel.org/linux-ide/ZttIN8He8TOZ7Lct@google.com/
-Tested-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
-Changes since v1:
--Picked up tags from Igor.
--Added Fixes tag.
--Improved the commit message to clearly state that this is currently a
- real bug for ATA PT commands with sense data.
-
- drivers/ata/libata-eh.c   | 9 +++++++++
- drivers/ata/libata-scsi.c | 3 ---
- 2 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 7de97ee8e78b..450e9bd96c97 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -630,6 +630,15 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 	list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
- 		struct ata_queued_cmd *qc;
- 
-+		/*
-+		 * If the scmd was added to EH, via ata_qc_schedule_eh() ->
-+		 * scsi_timeout() -> scsi_eh_scmd_add(), scsi_timeout() will
-+		 * have set DID_TIME_OUT (since libata does not have an abort
-+		 * handler). Thus to clear the DID_TIME_OUT, we clear the host
-+		 * byte (but keep the SCSI ML and status byte).
-+		 */
-+		scmd->result &= 0x0000ffff;
-+
- 		ata_qc_for_each_raw(ap, qc, i) {
- 			if (qc->flags & ATA_QCFLAG_ACTIVE &&
- 			    qc->scsicmd == scmd)
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3a442f564b0d..6a90062c8b55 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1680,9 +1680,6 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 			set_status_byte(qc->scsicmd, SAM_STAT_CHECK_CONDITION);
- 	} else if (is_error && !have_sense) {
- 		ata_gen_ata_sense(qc);
--	} else {
--		/* Keep the SCSI ML and status byte, clear host byte. */
--		cmd->result &= 0x0000ffff;
- 	}
- 
- 	ata_qc_done(qc);
--- 
-2.46.0
-
+--=20
+With Best Regards,
+Andy Shevchenko
