@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A2681A4B84
-	for <linux-ide@vger.kernel.org>; Tue, 10 Sep 2024 22:22:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE59819EEC8
+	for <linux-ide@vger.kernel.org>; Tue, 10 Sep 2024 23:06:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726006926; cv=none; b=rqcEY95XwdH54unfeZUMTM1p3Ht1s/DICYpXGxg2ZmJ6rEMQXHpyc9OCYs1UQWxwpF1HlmpcOC0N83EeYuFDUMXRFxmsuLg+P6A/XF3mGWccyLKpxJz7pM7idB5LoK38WhOxPxt+La2lUs09alfRmwtUUL5WBZS9P5penSJLo7c=
+	t=1726009598; cv=none; b=WNuKVgC6Pq/ZxYVOVr39mCpql5pMgYLxfML6agp4odeof8UH1qo8+rRJombE5Gn4pUvDchVqT3uJ9+bI1AGVZciagKj6OiwLSztMfo7etOV9kr9fpvN/FY/W55jeS0c/Vpbp+x40aU6/OnEujDIoRsWoGL2yOnf8Y2Cdh/ZrziE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726006926; c=relaxed/simple;
-	bh=yFI8t+vnipKHLmuT5hZf3Rb/2SGsG1z1WoNKlE0mBMk=;
+	s=arc-20240116; t=1726009598; c=relaxed/simple;
+	bh=vL28SahHB156QS6nlaVC4Nqaos7HBWAVLujMV6jbeSs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MKsZKKvWuEqJEzAE2QZvI7f11CCzPoiEcyygwDJOCjXijGhKE99in3QKjXJbjbhLgDVLydAiah7IU2NJs5uanxxQKh7uv9ma5KVVeiQhhuIet7ZBAn7mStiU4meU6J/6FlrhEIctWiwvHHYlOXe6Pa4QOR9BMC+YLlPEaeukpL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WmFeM5wc; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=X1CvBcWfDN/0N8FxZiFA10FlcTOVeU9lJoATHJDZ++fIArsSywoQv7+/rRySKluMfqVVrIyFxmhuqm1FLyuN8OL2h83ljrT39x36GG9u2tcrshIzZw1Y6nZVgNsuC9LUMnaG6btYK/tvhZEko2cJPzp7BjnIUXgNx3GF2bP1AnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h5g3WELG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WmFeM5wc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37CDBC4CECC;
-	Tue, 10 Sep 2024 22:22:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h5g3WELG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90682C4CEC3;
+	Tue, 10 Sep 2024 23:06:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1726006925;
-	bh=yFI8t+vnipKHLmuT5hZf3Rb/2SGsG1z1WoNKlE0mBMk=;
+	s=k20201202; t=1726009597;
+	bh=vL28SahHB156QS6nlaVC4Nqaos7HBWAVLujMV6jbeSs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=WmFeM5wcvAyrTtKG194EVLIb6JKFDbo1c9kZTEvVMekXoAQILjhO15LrRfs8sqZKO
-	 u8e0+RmQjUpDJVuzLsRoVKZgS+wsgxoTP2im/RYNF2KnOTTeXqJfI1EHN5gjyBJCI4
-	 ReSUS/7xVxj41mnF1+VM/JVcBiDEoLinBqFttuktG7Un9vyfnOpnEacHv1r77QCpXP
-	 CAzrIoZF0SCKhpZfYTNbS0baKUxmMVl/Xb1h88H2y9uw++Ek/hh+kdU4on9q5pDAa/
-	 03fj0GhRwm4A6I171Olpc+2LFzr7vgiknTAUHVSNWqgBRhZgBoT6ngQti7IGe8bk5J
-	 wTnRKexnLQ1+w==
-Message-ID: <9d7e0d4f-1445-4729-9e4d-9058c35db1b2@kernel.org>
-Date: Wed, 11 Sep 2024 07:22:04 +0900
+	b=h5g3WELGgMJ2QFDVcAWeZX3Grv/sol/MPU+jWgYBL2eBmjNeUVAqdJIi3gKFAH+Tp
+	 aYp2jZDJzVgpyIJs21K6GUIBK9lCss77Mc+Ic4s43X1Y/+B8K9FYAyYYtpAZKcBuaK
+	 LMl46QoeTOAPdgdt7+hPHfvKTsTgW8OanK/wNRDpq5hZd/JHCBkUThSjdd3s2I+09j
+	 8YtUpc9SxG0qBVebg5TDoLVe+9q8YgwuL/wZl/K12V4TzXXkJwv458rNlrzFLt9nod
+	 7EoQJVK5943QL5QQ5PjUX5EzXaBh/2Q3+IhHEK10U9H41NmHiveAVVXd8QcnmXzUbm
+	 eVujRQHM0EBMA==
+Message-ID: <361b6d8d-316f-4fa7-b761-1f98e317935a@kernel.org>
+Date: Wed, 11 Sep 2024 08:06:35 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,91 +35,69 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ata_generic: use IS_ENABLED() macro
-To: Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-Cc: lvc-project@linuxtesting.org
-References: <d9c0acab-909e-da06-decf-be5de59d23bf@omp.ru>
- <87f85704-656d-4c08-b729-87c9b2e6d686@kernel.org>
- <4414c20f-7e0e-de47-8311-4a8948f2504d@omp.ru>
- <f5209cc3-a0c6-4722-92b7-533c0b244527@kernel.org>
- <65e70327-62e1-3b1a-7b69-eae765241b5c@omp.ru>
+Subject: Re: [PATCH v3] ata: libata: Clear DID_TIME_OUT for ATA PT commands
+ with sense data
+To: Niklas Cassel <cassel@kernel.org>, Hannes Reinecke <hare@suse.de>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel
+ <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
+References: <20240909154237.3656000-2-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <65e70327-62e1-3b1a-7b69-eae765241b5c@omp.ru>
+In-Reply-To: <20240909154237.3656000-2-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 9/10/24 23:36, Sergey Shtylyov wrote:
-> [Resending after adding the missed test, please ignore the previus reply.)
+On 9/10/24 00:42, Niklas Cassel wrote:
+> When ata_qc_complete() schedules a command for EH using
+> ata_qc_schedule_eh(), blk_abort_request() will be called, which leads to
+> req->q->mq_ops->timeout() / scsi_timeout() being called.
 > 
-> On 9/10/24 4:09 PM, Damien Le Moal wrote:
-> [...]
+> scsi_timeout(), if the LLDD has no abort handler (libata has no abort
+> handler), will set host byte to DID_TIME_OUT, and then call
+> scsi_eh_scmd_add() to add the command to EH.
 > 
->>>>> Replace now gone out of fashion defined(CONFIG_PATA_TOSHIBA[_MODULE])
+> Thus, when commands first enter libata's EH strategy_handler, all the
+> commands that have been added to EH will have DID_TIME_OUT set.
 > 
->    I'll probably rephrase this a bit in v2...
+> libata has its own flag (AC_ERR_TIMEOUT), that it sets for commands that
+> have not received a completion at the time of entering EH.
 > 
->>>>> with the new-fangled IS_ENABLED() macro in the ata_generic[] definition.
->>>>
->>>> Please mention that CONFIG_PATA_TOSHIBA_MODULE actually does not exist at all
->>>> and so can be removed.
->>>
->>>    Huh? =)
->>>    CONFIG_PATA_TOSHIBA is a tristate option, so CONFIG_PATA_TOSHIBA_MODULE
->>> does exist; else there would be no point in using IS_ENABLED() at all...
->>
->> Oops... Indeed. Got confused with something else :)
+> Thus, libata doesn't really care about DID_TIME_OUT at all, and currently
+> clears the host byte at the end of EH, in ata_scsi_qc_complete(), before
+> scsi_eh_finish_cmd() is called.
 > 
->    There's something to be confused about this driver vs its Kconfig option
-> naming: the driver is called pata_piccolo.c and its option CONFIG_PATA_TOSHIBA.
-> However, Toshiba seemingly has more than one family of the PATA controllers:
-> there's also TC86C001 PCI multi-function chip (dubbed GOKU-S by Toshiba) which
-> supports up to UDMA66 and doesn't seem compatible with Piccolo, judging by the
-> driver code and Toshiba GOKU-S datasheet I have: the timing regs are mapped @
-> AR5 and not in the PCI config space, like with the Piccolo chips.
->    If somebody like me (it was me who submitted the reworked Toshiba's TC86C001
-> driver for drivers/ide/ back in 2007) added TC86C001 libata driver, the confusion
-> would probably worsen... :-/ Luckily, the chip is a bit tricky (I had to somewhat
-> abuse drivers/ide/ to work around some "limitations", as Toshiba calls their errata)
-> and I don't have access to the chip to properly test the driver anymore.  Obviously, there should be a little interest now in adding the "new" PATA drivers... :-)
->    Any thoughts on the naming confusion?
+> However, this clearing in ata_scsi_qc_complete() is currently only done
+> for commands that are not ATA passthrough commands.
+> 
+> Since the host byte is visible in the completion that we return to user
+> space for ATA passthrough commands, for ATA passthrough commands that got
+> completed via EH (commands with sense data), the user will incorrectly see:
+> ATA pass-through(16): transport error: Host_status=0x03 [DID_TIME_OUT]
+> 
+> Fix this by moving the clearing of the host byte (which is currently only
+> done for commands that are not ATA passthrough commands) from
+> ata_scsi_qc_complete() to the start of EH (regardless if the command is
+> ATA passthrough or not).
+> 
+> While at it, use the proper helper function to clear the host byte, rather
+> than open coding the clearing.
+> 
+> This will make sure that we:
+> -Correctly clear DID_TIME_OUT for both ATA passthrough commands and
+>  commands that are not ATA passthrough commands.
+> -Do not needlessly clear the host byte for commands that did not go via EH.
+>  ata_scsi_qc_complete() is called both for commands that are completed
+>  normally (without going via EH), and for commands that went via EH,
+>  however, only commands that went via EH will have DID_TIME_OUT set.
+> 
+> Fixes: 24aeebbf8ea9 ("scsi: ata: libata: Change ata_eh_request_sense() to not set CHECK_CONDITION")
+> Reported-by: Igor Pylypiv <ipylypiv@google.com>
+> Closes: https://lore.kernel.org/linux-ide/ZttIN8He8TOZ7Lct@google.com/
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Maybe rename the option to CONFIG_PATA_TOSHIBA_PICCCOLO ?
-
-> 
->>>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>>
->>> [...[
->>>
->>>>> Index: linux/drivers/ata/ata_generic.c
->>>>> ===================================================================
->>>>> --- linux.orig/drivers/ata/ata_generic.c
->>>>> +++ linux/drivers/ata/ata_generic.c
->>>>> @@ -220,7 +220,7 @@ static struct pci_device_id ata_generic[
->>>>>  	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
->>>>>  	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
->>>>>  	  .driver_data = ATA_GEN_FORCE_DMA },
->>>>> -#if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
->>>>> +#if !IS_ENABLED(CONFIG_PATA_TOSHIBA)
->>>>
->>>> I do not understand the negation here... It seems very wrong. If the driver is
->>>> indeed enabled, we need to add its PCI ID, no ? and the reverse when not defined...
->>>
->>>    The separate driver was added by Alan Cox in 2009, before that
->>> Toshiba Piccolo controllers were handled by this generic driver...
->>
->> OK, makes sense now. Maybe we should add a comment above that IS_ENABLED() to
->> say so ?
-> 
->    Makes sense, indeed. Do you think this is acceptable to be done in v2 of this
-> patch?
-
-Yep, that is fine and would fit with the config option renaming.
-
-> 
-> MBR, Sergey
+Applied to for-6.12. Thanks !
 
 -- 
 Damien Le Moal
