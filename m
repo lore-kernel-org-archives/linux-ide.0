@@ -1,147 +1,154 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E81418EFF9
-	for <linux-ide@vger.kernel.org>; Tue, 10 Sep 2024 14:36:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5940D15FA7E;
+	Tue, 10 Sep 2024 14:49:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725978999; cv=none; b=XgZ3azSoZMJeBlcWkosmg1VE3veUW4egWhcxkm+YNjmccjPiByQKpGul2ylElQQqrPRXowrEd9NScwtTZ2o16ZVFV7M3lOLeF7/OT7gvsUJPx2tkw6VI3k/Yh0pyqcWAkB4cEbU6u5Wf76n1duYOJOP6WcxtvNk65H1hEK16qZM=
+	t=1725979763; cv=none; b=HhCt5Ngafp2Yhw0ak107wMoJlRYsoHtRG9BXckYhWRRmQHx39sapHad5JWXWz9Ev1gv7eafpmSGdelOyqNgCwKHTlLY6LOw7Une4UolLHkAaXHSOBMCL6JZlGW/DFuCl9fKaPatl8w53UGydoBLg+rwhGy6ThnV2s58CAmGDDZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725978999; c=relaxed/simple;
-	bh=I+uyPh+b0VPgOThc4tWKy6V8KWslEVHtvYAlcrTutcg=;
-	h=From:Subject:To:CC:References:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=UdWeymBk+UQ6uP55FKlbGbu7lYKizB0KytYJg3TGXA7MEV7BHhBkAQIZeq7NY159dPn51Ga0dEHIjXHbSmwWjdWv6Q63DLJKh+tbLocGGfGJIkyD9xRYe6G0+c3fXPxBdik1SHLkC23aceup512pJKiJEhLnxDXqFN6OgCZCV34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.1.106] (31.173.81.148) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Tue, 10 Sep
- 2024 17:36:27 +0300
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH] ata: ata_generic: use IS_ENABLED() macro
-To: Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, Niklas
- Cassel <cassel@kernel.org>
-CC: <lvc-project@linuxtesting.org>
-References: <d9c0acab-909e-da06-decf-be5de59d23bf@omp.ru>
- <87f85704-656d-4c08-b729-87c9b2e6d686@kernel.org>
- <4414c20f-7e0e-de47-8311-4a8948f2504d@omp.ru>
- <f5209cc3-a0c6-4722-92b7-533c0b244527@kernel.org>
-Organization: Open Mobile Platform
-Message-ID: <65e70327-62e1-3b1a-7b69-eae765241b5c@omp.ru>
-Date: Tue, 10 Sep 2024 17:36:26 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+	s=arc-20240116; t=1725979763; c=relaxed/simple;
+	bh=XWaMFbokrzRtCfofNCMQm6vxq7D5SaoYO1/HXlHXoUM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Jz8ceQsfZ+z88AZBxNXHa863r3KaSaxTLTeFX8ebhhiY27UnVqdOR9b55Ox/QHdt3++kSpdhCRiphukjC4OxrIFG5GPpQCr5OVlgJwZJeCOxljwGXFN+boSROkFPFV2mx0pR9ey9K9yQSBCsqVKDqXy7I2tpBGARxnWD5ilhPoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QRfobcFL; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QRfobcFL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DD40C4CEC3;
+	Tue, 10 Sep 2024 14:49:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725979762;
+	bh=XWaMFbokrzRtCfofNCMQm6vxq7D5SaoYO1/HXlHXoUM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=QRfobcFLI9GtjTDx7WiDr9f548doOS/YbQvR5TiY3pchFbRnIlg/d8YKaZdnnrCvj
+	 j3v4tLK+rgkX9UauqoOD7JZsmoIg6TB7FmxJt4c858Y0Vo7zC/o4OYwSlgT7geuJhW
+	 WbS695wKRRyPhcgvR0C6wHTje4nbOEvzBeVMWWO7mj1lSqIACq1Kwn+6uywbXU2G5j
+	 H2Ic6oeXSBSxbuk6tTm0VJgzIZvHd6nCtLei5SwShTbZn/b4975VTM4GHQLJgda00a
+	 mPwx57gkmqy8kWnvGeH9mBaN/Qpt4pYnnPx8nuH+FTJ0B/5JSzkdtlxGCWlVKlJhxC
+	 6jzjuoET8e/yA==
+Message-ID: <ee565fda-b230-4fb3-8122-e0a9248ef1d1@kernel.org>
+Date: Tue, 10 Sep 2024 16:49:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <f5209cc3-a0c6-4722-92b7-533c0b244527@kernel.org>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: Regression v6.11 booting cannot mount harddisks (xfs)
+To: Damien Le Moal <dlemoal@kernel.org>,
+ Linus Torvalds <torvalds@linuxfoundation.org>,
+ LKML <linux-kernel@vger.kernel.org>
+Cc: Netdev <netdev@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-ide@vger.kernel.org, cassel@kernel.org, handan.babu@oracle.com,
+ djwong@kernel.org, Linux-XFS <linux-xfs@vger.kernel.org>,
+ hdegoede@redhat.com, "David S. Miller" <davem@davemloft.net>,
+ Jakub Kicinski <kuba@kernel.org>, kernel-team <kernel-team@cloudflare.com>
+References: <0a43155c-b56d-4f85-bb46-dce2a4e5af59@kernel.org>
+ <d2c82922-675e-470f-a4d3-d24c4aecf2e8@kernel.org>
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 09/10/2024 14:18:55
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 187664 [Sep 10 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.1.5
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 32 0.3.32
- 766319f57b3d5e49f2c79a76e7d7087b621090df
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.148 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.148 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.148
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/10/2024 14:23:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 9/10/2024 11:54:00 AM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+From: Jesper Dangaard Brouer <hawk@kernel.org>
+In-Reply-To: <d2c82922-675e-470f-a4d3-d24c4aecf2e8@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-[Resending after adding the missed test, please ignore the previus reply.)
 
-On 9/10/24 4:09 PM, Damien Le Moal wrote:
-[...]
 
->>>> Replace now gone out of fashion defined(CONFIG_PATA_TOSHIBA[_MODULE])
-
-   I'll probably rephrase this a bit in v2...
-
->>>> with the new-fangled IS_ENABLED() macro in the ata_generic[] definition.
->>>
->>> Please mention that CONFIG_PATA_TOSHIBA_MODULE actually does not exist at all
->>> and so can be removed.
+On 10/09/2024 15.06, Damien Le Moal wrote:
+> On 2024/09/10 21:19, Jesper Dangaard Brouer wrote:
+>> Hi Linus,
 >>
->>    Huh? =)
->>    CONFIG_PATA_TOSHIBA is a tristate option, so CONFIG_PATA_TOSHIBA_MODULE
->> does exist; else there would be no point in using IS_ENABLED() at all...
+>> My testlab kernel devel server isn't booting correctly on v6.11 branches
+>> (e.g. net-next at 6.11.0-rc5)
+>> I just confirmed this also happens on your tree tag: v6.11-rc7.
+>>
+>> The symptom/issue is that harddisk dev names (e.g /dev/sda, /dev/sdb,
+>> /dev/sdc) gets reordered.  I switched /etc/fstab to use UUID's instead
+>> (which boots on v6.10) but on 6.11 it still cannot mount harddisks and
+>> doesn't fully boot.
 > 
-> Oops... Indeed. Got confused with something else :)
-
-   There's something to be confused about this driver vs its Kconfig option
-naming: the driver is called pata_piccolo.c and its option CONFIG_PATA_TOSHIBA.
-However, Toshiba seemingly has more than one family of the PATA controllers:
-there's also TC86C001 PCI multi-function chip (dubbed GOKU-S by Toshiba) which
-supports up to UDMA66 and doesn't seem compatible with Piccolo, judging by the
-driver code and Toshiba GOKU-S datasheet I have: the timing regs are mapped @
-AR5 and not in the PCI config space, like with the Piccolo chips.
-   If somebody like me (it was me who submitted the reworked Toshiba's TC86C001
-driver for drivers/ide/ back in 2007) added TC86C001 libata driver, the confusion
-would probably worsen... :-/ Luckily, the chip is a bit tricky (I had to somewhat
-abuse drivers/ide/ to work around some "limitations", as Toshiba calls their errata)
-and I don't have access to the chip to properly test the driver anymore.  Obviously, there should be a little interest now in adding the "new" PATA drivers... :-)
-   Any thoughts on the naming confusion?
-
->>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
->>
->> [...[
->>
->>>> Index: linux/drivers/ata/ata_generic.c
->>>> ===================================================================
->>>> --- linux.orig/drivers/ata/ata_generic.c
->>>> +++ linux/drivers/ata/ata_generic.c
->>>> @@ -220,7 +220,7 @@ static struct pci_device_id ata_generic[
->>>>  	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
->>>>  	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
->>>>  	  .driver_data = ATA_GEN_FORCE_DMA },
->>>> -#if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
->>>> +#if !IS_ENABLED(CONFIG_PATA_TOSHIBA)
->>>
->>> I do not understand the negation here... It seems very wrong. If the driver is
->>> indeed enabled, we need to add its PCI ID, no ? and the reverse when not defined...
->>
->>    The separate driver was added by Alan Cox in 2009, before that
->> Toshiba Piccolo controllers were handled by this generic driver...
+> Parallel SCSI device scanning has been around for a long time... This is
+> controlled with CONFIG_SCSI_SCAN_ASYNC. And yes, that can cause disk names to
+> change, which is why it is never a good idea to rely on them but instead use
+> /dev/disk/by-* names. Disabling CONFIG_SCSI_SCAN_ASYNC will likely not guarantee
+> that disk names will be constant, given that you seem to have 2 AHCI adapters on
+> your host and PCI device scanning is done in parallel.
 > 
-> OK, makes sense now. Maybe we should add a comment above that IS_ENABLED() to
-> say so ?
+>> E.g. errors:
+>>     systemd[1]: Expecting device
+>> dev-disk-by\x2duuid-0c2b348d\x2de013\x2d482b\x2da91c\x2d029640ec427a.device
+>> - /dev/disk/by-uuid/0c2b348d-e013-482b-a91c-029640ec42
+>> 7a...
+>>     [DEPEND] Dependency failed for var-lib.mount - /var/lib.
+>>     [...]
+>>     [ TIME ] Timed out waiting for device
+>> dev-d…499e46-b40d-4067-afd4-5f6ad09fcff2.
+>>     [DEPEND] Dependency failed for boot.mount - /boot.
+>>
+>> That corresponds to fstab's:
+>>    - UUID=8b499e46-b40d-4067-afd4-5f6ad09fcff2 /boot     xfs defaults 0 0
+>>    - UUID=0c2b348d-e013-482b-a91c-029640ec427a /var/lib/ xfs defaults 0 0
+>>
+>> It looks like disk controller initialization happens in *parallel* on
+>> these newer kernels as dmesg shows init printk's overlapping:
+>>
+>>    [    5.683393] scsi 5:0:0:0: Direct-Access     ATA      SAMSUNG
+>> MZ7KM120 003Q PQ: 0 ANSI: 5
+>>    [    5.683641] scsi 7:0:0:0: Direct-Access     ATA      SAMSUNG
+>> MZ7KM120 003Q PQ: 0 ANSI: 5
+>>    [    5.683797] scsi 8:0:0:0: Direct-Access     ATA      Samsung SSD
+>> 840  BB0Q PQ: 0 ANSI: 5
+>>    [...]
+>>    [    7.057376] sd 5:0:0:0: [sda] 234441648 512-byte logical blocks:
+>> (120 GB/112 GiB)
+>>    [    7.062279] sd 7:0:0:0: [sdb] 234441648 512-byte logical blocks:
+>> (120 GB/112 GiB)
+>>    [    7.070628] sd 5:0:0:0: [sda] Write Protect is off
+>>    [    7.070701] sd 8:0:0:0: [sdc] 488397168 512-byte logical blocks:
+>> (250 GB/233 GiB)
+>>
+>> Perhaps this could be a hint to what changed?
+> 
+> See above. The disk /dev/sdX names not being reliable is rather normal.
+> Are you sure you have the correct UUIDs of your FSes on the disks ? You can
+> check them with "blkid /dev/sdX[n]"
+> 
 
-   Makes sense, indeed. Do you think this is acceptable to be done in v2 of this
-patch?
+I have checked that I use the correct UUIDs.
 
-MBR, Sergey
+I checked my /etc/fstab have the UUID entries under /dev/disk/by-uuid/
+via this oneliner, which needs to have a /etc/fstab entry under each
+UUID. We can see I have one partition that I'm not using
+(0fd3bc38-6496-401f-87f2-87e09532de53), which is expected.
+
+$ for UUID in $(ls /dev/disk/by-uuid/); do echo $UUID; grep -H $UUID 
+/etc/fstab; done
+09e8c15f-80d2-47e3-8e73-d3fdfcf33eef
+/etc/fstab:UUID=09e8c15f-80d2-47e3-8e73-d3fdfcf33eef / 
+     xfs     defaults        0 0
+0c2b348d-e013-482b-a91c-029640ec427a
+/etc/fstab:UUID=0c2b348d-e013-482b-a91c-029640ec427a	/var/lib/		xfs 
+defaults 0 0
+0fd3bc38-6496-401f-87f2-87e09532de53
+581920da-1ccb-4b25-856c-036310032a74
+/etc/fstab:UUID=581920da-1ccb-4b25-856c-036310032a74	/nix			xfs	defaults 0 0
+8b499e46-b40d-4067-afd4-5f6ad09fcff2
+/etc/fstab:UUID=8b499e46-b40d-4067-afd4-5f6ad09fcff2 /boot 
+     xfs     defaults        0 0
+cd409a50-0371-47ca-9213-49a2bc7b9317
+/etc/fstab:UUID=cd409a50-0371-47ca-9213-49a2bc7b9317 swap 
+     swap    defaults        0 0
+
+
+>> Any hints what commit I should try to test revert?
+>> Or good starting point for bisecting?
+> 
+> You said that 6.10 works, so maybe start from there ?
+
+I tested I could boot tag v6.10, and have started bisection.
+
+I've not tried to deselect CONFIG_SCSI_SCAN_ASYNC as the kernel that
+worked on tag v6.10 also had this CONFIG_SCSI_SCAN_ASYNC enabled. So, it
+is likely not related to the async controller init.
+
+--Jesper
