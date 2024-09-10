@@ -1,60 +1,33 @@
-Received: from mail-io1-f54.google.com (mail-io1-f54.google.com [209.85.166.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A9221A76A0
-	for <linux-ide@vger.kernel.org>; Tue, 10 Sep 2024 19:43:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A2681A4B84
+	for <linux-ide@vger.kernel.org>; Tue, 10 Sep 2024 22:22:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725997411; cv=none; b=FPV9UUHxpBLU9pMH2xsMmYf8EO9WApoUdApQVlyKFUhf0IsGJnrdufe4xfie2mCSg/iAXWgi7YD7DUO2Zp15SvZ22eE1cSbIaCRxp8HoQ4VEBqevK9AecSrEB+qvsf2Vh4Mid1KEW3L9eoxQLt3zefxtpHY/Qz1Dek9u7jNUIUY=
+	t=1726006926; cv=none; b=rqcEY95XwdH54unfeZUMTM1p3Ht1s/DICYpXGxg2ZmJ6rEMQXHpyc9OCYs1UQWxwpF1HlmpcOC0N83EeYuFDUMXRFxmsuLg+P6A/XF3mGWccyLKpxJz7pM7idB5LoK38WhOxPxt+La2lUs09alfRmwtUUL5WBZS9P5penSJLo7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725997411; c=relaxed/simple;
-	bh=fUauvFk9xm6PdY0fYMcea9vaRdvrdV/33sTG48bpAVM=;
+	s=arc-20240116; t=1726006926; c=relaxed/simple;
+	bh=yFI8t+vnipKHLmuT5hZf3Rb/2SGsG1z1WoNKlE0mBMk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MSXwMCTd2P+gKWS8pKLbIiE0pbNJvE8wicbxsSou8agVTvSMMVa3WUGhKDPPjvGKb9ntuJFMVtVcAGtTJlWg1DdZw6BAJBm3XIZOKBN9e4+fAMVLtlQW4Wp+6R/erK+hexlLsWBPx2Gr0+6AI0DvlQE4GhWIT2MCzEV4vp7cE04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=oDDJlilN; arc=none smtp.client-ip=209.85.166.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	 In-Reply-To:Content-Type; b=MKsZKKvWuEqJEzAE2QZvI7f11CCzPoiEcyygwDJOCjXijGhKE99in3QKjXJbjbhLgDVLydAiah7IU2NJs5uanxxQKh7uv9ma5KVVeiQhhuIet7ZBAn7mStiU4meU6J/6FlrhEIctWiwvHHYlOXe6Pa4QOR9BMC+YLlPEaeukpL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WmFeM5wc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="oDDJlilN"
-Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-82aa7c3b498so6823139f.1
-        for <linux-ide@vger.kernel.org>; Tue, 10 Sep 2024 12:43:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1725997407; x=1726602207; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GIUkVijX/obmO81YZ0hDppAp+m8ygO6cINoJy3iHW4A=;
-        b=oDDJlilNWhQos8DgLZzfwFFfZliEMS9G0zVBFIVf5JBENN0hSdM9+lBRtesczg2x8B
-         2ga3OOK8Arf4/R2VOXodZ9XsT4U3XeFmjgsdsVOwLyDJonvu8pHKfKd5Ow/7rA4F1mcp
-         dqDWvWOHu4js2EahTbwUYLebEBtVj9gt2xBic4xAklbRgoTEssjdQVkyz8H2huG48N3V
-         zEBE2cX2J1fotidfKE7GJcnjEizTtpC/o+6Gxd9a5ao2y4RDxGsEAJRn9Pc2lvDG8EE0
-         +4xMYQK4JXHimR4VLU8+WvinveIZXBNflattqZntklrumlkgaexc+SJgib8wqJZ67h4H
-         QKeQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725997407; x=1726602207;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GIUkVijX/obmO81YZ0hDppAp+m8ygO6cINoJy3iHW4A=;
-        b=XmRFLlB5oIAau6+Z369+lZwU59udthwjojSTl/D3eHhSQI/BdOcN7fpBY5mlRfZmV4
-         lgYDpqVNpGRZoNEPDkUNvKAi5cwaDqcglKGbQ/9q5gca9IFW3H+A3pe9a2ihYL3x3GKB
-         RRxQwLO0yRgPxZn0ONsplW2B0qrzkbVrJJRtbL+f4jwNVGccxNEWFhpuoEieep2NsW8I
-         LU8BFDe07ozv+45fFPWUXmsEimdb6zA/1BVWQLYK94fA7IraLAC1PWff8Ujqcv8I4XuZ
-         P66U6gOEw82ZD9HytBKW/eDMHrVA2YZl5EYp77RhJtHu/9leJOOGn2UK6jprI4qOlJ9f
-         vveg==
-X-Forwarded-Encrypted: i=1; AJvYcCW1cHJWJeFGpjxICgMoyTF+d+G6vxL464KGwPqMfxhLal2DG87Cn6cJkLcDCWzVanr5+qeifHRgEyE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSOuqbLaFnP+WQomETrarvMNP/IisXNO/TVIao0X63jbWEf4vg
-	PY2ZQ/smKNGfFtrYoyVSCtru93Vf8P8+jpa4K9X68D6PeUVydsxyMgJQmrO3Tb8kZEfMBYHNfFK
-	7
-X-Google-Smtp-Source: AGHT+IHIko6wrr+sFUfNKE96zD/bA6pVDBoyLufvdJCHIMMC8sNiJfBBEk0IrGQr8l+j/w6VextyQA==
-X-Received: by 2002:a6b:7843:0:b0:82c:ec0f:a081 with SMTP id ca18e2360f4ac-82cfb078a0dmr393887839f.4.1725997407264;
-        Tue, 10 Sep 2024 12:43:27 -0700 (PDT)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4d09451dc68sm1742786173.3.2024.09.10.12.43.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Sep 2024 12:43:26 -0700 (PDT)
-Message-ID: <64ab096c-c493-42b1-945e-ba3547723720@kernel.dk>
-Date: Tue, 10 Sep 2024 13:43:25 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WmFeM5wc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37CDBC4CECC;
+	Tue, 10 Sep 2024 22:22:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1726006925;
+	bh=yFI8t+vnipKHLmuT5hZf3Rb/2SGsG1z1WoNKlE0mBMk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=WmFeM5wcvAyrTtKG194EVLIb6JKFDbo1c9kZTEvVMekXoAQILjhO15LrRfs8sqZKO
+	 u8e0+RmQjUpDJVuzLsRoVKZgS+wsgxoTP2im/RYNF2KnOTTeXqJfI1EHN5gjyBJCI4
+	 ReSUS/7xVxj41mnF1+VM/JVcBiDEoLinBqFttuktG7Un9vyfnOpnEacHv1r77QCpXP
+	 CAzrIoZF0SCKhpZfYTNbS0baKUxmMVl/Xb1h88H2y9uw++Ek/hh+kdU4on9q5pDAa/
+	 03fj0GhRwm4A6I171Olpc+2LFzr7vgiknTAUHVSNWqgBRhZgBoT6ngQti7IGe8bk5J
+	 wTnRKexnLQ1+w==
+Message-ID: <9d7e0d4f-1445-4729-9e4d-9058c35db1b2@kernel.org>
+Date: Wed, 11 Sep 2024 07:22:04 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -62,112 +35,93 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: Regression v6.11 booting cannot mount harddisks (xfs)
-To: Jesper Dangaard Brouer <hawk@kernel.org>,
- Damien Le Moal <dlemoal@kernel.org>,
- Linus Torvalds <torvalds@linuxfoundation.org>,
- LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
-Cc: Netdev <netdev@vger.kernel.org>, linux-ide@vger.kernel.org,
- cassel@kernel.org, handan.babu@oracle.com, djwong@kernel.org,
- Linux-XFS <linux-xfs@vger.kernel.org>, hdegoede@redhat.com,
- "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>,
- kernel-team <kernel-team@cloudflare.com>, rjones@redhat.com
-References: <0a43155c-b56d-4f85-bb46-dce2a4e5af59@kernel.org>
- <d2c82922-675e-470f-a4d3-d24c4aecf2e8@kernel.org>
- <ee565fda-b230-4fb3-8122-e0a9248ef1d1@kernel.org>
- <7fedb8c2-931f-406b-b46e-83bf3f452136@kernel.org>
- <c9096ee9-0297-4ae3-9d15-5d314cb4f96f@kernel.dk>
- <0ad933b9-9df5-4acc-aa72-d291aa7d7f4d@kernel.org>
- <894a9361-d232-41c5-8090-89fd61fadb28@kernel.dk>
- <3d87bdde-4800-4a8b-9b34-ba7998f503c3@kernel.org>
+Subject: Re: [PATCH] ata: ata_generic: use IS_ENABLED() macro
+To: Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
+Cc: lvc-project@linuxtesting.org
+References: <d9c0acab-909e-da06-decf-be5de59d23bf@omp.ru>
+ <87f85704-656d-4c08-b729-87c9b2e6d686@kernel.org>
+ <4414c20f-7e0e-de47-8311-4a8948f2504d@omp.ru>
+ <f5209cc3-a0c6-4722-92b7-533c0b244527@kernel.org>
+ <65e70327-62e1-3b1a-7b69-eae765241b5c@omp.ru>
+From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <3d87bdde-4800-4a8b-9b34-ba7998f503c3@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <65e70327-62e1-3b1a-7b69-eae765241b5c@omp.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 9/10/24 1:40 PM, Jesper Dangaard Brouer wrote:
+On 9/10/24 23:36, Sergey Shtylyov wrote:
+> [Resending after adding the missed test, please ignore the previus reply.)
 > 
+> On 9/10/24 4:09 PM, Damien Le Moal wrote:
+> [...]
 > 
-> On 10/09/2024 21.21, Jens Axboe wrote:
->> On 9/10/24 1:19 PM, Jesper Dangaard Brouer wrote:
->>>
->>>
->>> On 10/09/2024 20.38, Jens Axboe wrote:
->>>> On 9/10/24 11:53 AM, Jesper Dangaard Brouer wrote:
->>>>> Hi Hellwig,
->>>>>
->>>>> I bisected my boot problem down to this commit:
->>>>>
->>>>> $ git bisect good
->>>>> af2814149883e2c1851866ea2afcd8eadc040f79 is the first bad commit
->>>>> commit af2814149883e2c1851866ea2afcd8eadc040f79
->>>>> Author: Christoph Hellwig <hch@lst.de>
->>>>> Date:   Mon Jun 17 08:04:38 2024 +0200
->>>>>
->>>>>       block: freeze the queue in queue_attr_store
->>>>>
->>>>>       queue_attr_store updates attributes used to control generating I/O, and
->>>>>       can cause malformed bios if changed with I/O in flight.  Freeze the queue
->>>>>       in common code instead of adding it to almost every attribute.
->>>>>
->>>>>       Signed-off-by: Christoph Hellwig <hch@lst.de>
->>>>>       Reviewed-by: Bart Van Assche <bvanassche@acm.org>
->>>>>       Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
->>>>>       Reviewed-by: Hannes Reinecke <hare@suse.de>
->>>>>       Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
->>>>>       Link: https://lore.kernel.org/r/20240617060532.127975-12-hch@lst.de
->>>>>       Signed-off-by: Jens Axboe <axboe@kernel.dk>
->>>>>
->>>>>    block/blk-mq.c    | 5 +++--
->>>>>    block/blk-sysfs.c | 9 ++-------
->>>>>    2 files changed, 5 insertions(+), 9 deletions(-)
->>>>>
->>>>> git describe --contains af2814149883e2c1851866ea2afcd8eadc040f79
->>>>> v6.11-rc1~80^2~66^2~15
+>>>>> Replace now gone out of fashion defined(CONFIG_PATA_TOSHIBA[_MODULE])
+> 
+>    I'll probably rephrase this a bit in v2...
+> 
+>>>>> with the new-fangled IS_ENABLED() macro in the ata_generic[] definition.
 >>>>
->>>> Curious, does your init scripts attempt to load a modular scheduler
->>>> for your root drive?
+>>>> Please mention that CONFIG_PATA_TOSHIBA_MODULE actually does not exist at all
+>>>> and so can be removed.
 >>>
->>> I have no idea, this is just a standard Fedora 40.
+>>>    Huh? =)
+>>>    CONFIG_PATA_TOSHIBA is a tristate option, so CONFIG_PATA_TOSHIBA_MODULE
+>>> does exist; else there would be no point in using IS_ENABLED() at all...
+>>
+>> Oops... Indeed. Got confused with something else :)
+> 
+>    There's something to be confused about this driver vs its Kconfig option
+> naming: the driver is called pata_piccolo.c and its option CONFIG_PATA_TOSHIBA.
+> However, Toshiba seemingly has more than one family of the PATA controllers:
+> there's also TC86C001 PCI multi-function chip (dubbed GOKU-S by Toshiba) which
+> supports up to UDMA66 and doesn't seem compatible with Piccolo, judging by the
+> driver code and Toshiba GOKU-S datasheet I have: the timing regs are mapped @
+> AR5 and not in the PCI config space, like with the Piccolo chips.
+>    If somebody like me (it was me who submitted the reworked Toshiba's TC86C001
+> driver for drivers/ide/ back in 2007) added TC86C001 libata driver, the confusion
+> would probably worsen... :-/ Luckily, the chip is a bit tricky (I had to somewhat
+> abuse drivers/ide/ to work around some "limitations", as Toshiba calls their errata)
+> and I don't have access to the chip to properly test the driver anymore.  Obviously, there should be a little interest now in adding the "new" PATA drivers... :-)
+>    Any thoughts on the naming confusion?
+
+Maybe rename the option to CONFIG_PATA_TOSHIBA_PICCCOLO ?
+
+> 
+>>>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 >>>
+>>> [...[
+>>>
+>>>>> Index: linux/drivers/ata/ata_generic.c
+>>>>> ===================================================================
+>>>>> --- linux.orig/drivers/ata/ata_generic.c
+>>>>> +++ linux/drivers/ata/ata_generic.c
+>>>>> @@ -220,7 +220,7 @@ static struct pci_device_id ata_generic[
+>>>>>  	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
+>>>>>  	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
+>>>>>  	  .driver_data = ATA_GEN_FORCE_DMA },
+>>>>> -#if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
+>>>>> +#if !IS_ENABLED(CONFIG_PATA_TOSHIBA)
 >>>>
->>>> Reference: https://git.kernel.dk/cgit/linux/commit/?h=for-6.12/block&id=3c031b721c0ee1d6237719a6a9d7487ef757487b
+>>>> I do not understand the negation here... It seems very wrong. If the driver is
+>>>> indeed enabled, we need to add its PCI ID, no ? and the reverse when not defined...
 >>>
-> 
-> [1] https://git.kernel.dk/cgit/linux/commit/?h=for-6.12/block&id=3c031b721c0ee1d6237719a6a9d7487ef757487b
-> 
->>> The commit doesn't apply cleanly on top of af2814149883e2c185.
->>>
->>> $ patch --dry-run -p1 < ../block-jens/block-jens-bootfix.patch
->>> checking file block/blk-sysfs.c
->>> Hunk #1 FAILED at 23.
->>> Hunk #2 succeeded at 469 (offset 56 lines).
->>> Hunk #3 succeeded at 484 (offset 56 lines).
->>> Hunk #4 succeeded at 723 with fuzz 1 (offset 45 lines).
->>> 1 out of 4 hunks FAILED
->>> checking file block/elevator.c
->>> Hunk #1 FAILED at 698.
->>> 1 out of 1 hunk FAILED
->>> checking file block/elevator.h
->>> Hunk #1 FAILED at 148.
->>> 1 out of 1 hunk FAILED
->>>
->>> I will try to apply and adjust manually.
+>>>    The separate driver was added by Alan Cox in 2009, before that
+>>> Toshiba Piccolo controllers were handled by this generic driver...
 >>
->> Just apply it on top of current -git, doesn't have to be your bisection
->> point.
->>
+>> OK, makes sense now. Maybe we should add a comment above that IS_ENABLED() to
+>> say so ?
 > 
-> I applied it manually and now my testlab server boots :-)
+>    Makes sense, indeed. Do you think this is acceptable to be done in v2 of this
+> patch?
 
-Excellent! I'll get it staged for 6.11 instead. Thank for reporting and
-testing.
+Yep, that is fine and would fit with the config option renaming.
 
-> Just with the patch[1] on top of bisection point
-> ... as it was faster to recompile this way ;-)
-
-That's a pathetic excuse for a test box then ;-)
+> 
+> MBR, Sergey
 
 -- 
-Jens Axboe
+Damien Le Moal
+Western Digital Research
+
