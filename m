@@ -1,102 +1,88 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 915CD17D34D
-	for <linux-ide@vger.kernel.org>; Mon,  9 Sep 2024 20:51:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98B633C2F
+	for <linux-ide@vger.kernel.org>; Tue, 10 Sep 2024 04:50:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725915100; cv=none; b=qOeH2hHztCBPtZJ6xjTxOF7jeO7qGnwyPtUZXccwEAzhde/QE8HX5+UmawuN/PQRwB7QdKBouiHIJiRHNUD2nN0AENxSqq7f1IaToz44VHWYNLO4UnvE7NcfUXhXsQSfuWKUl60BG1Kf/9kVPieHuVz8dEblz1WN7HQtMYSHcf4=
+	t=1725943816; cv=none; b=GPwB1m5xQ/EwCk4xoHu3WZdyXilN4JZDQ/fTV7iDJ23PTcuzR7Ajj46ZEnIV5F28gzjkVHc+Xac/LnbGPxq5zSVAsguusEExA8htBBc4fHQHdqNniF1SyBswFTuYRkKl4D/4+QXk9SY20KvBEraSyvCnkT+oisXM0sT/XodXE54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725915100; c=relaxed/simple;
-	bh=3r1C7BcIfj4tg0QOgwViGh7AT73+wHN1Ro/lGksF0yQ=;
-	h=From:Subject:To:CC:Message-ID:Date:MIME-Version:Content-Type; b=cEtcT2Vm925t8pQtzfh5NUqGM4CaWMocELY+ypCpBZ51XWjUJkNQ6wfssDzYclAM1T0ANHgf61oRoVdTFQ5hgWu7ujOSX9pNbACQLvwNtLV27BGRdZnF+beM7gSYumMOzgDykXqO0hRkNgKBsapyixwG64IdIazYTOd8R1inneI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.1.106] (31.173.81.96) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Mon, 9 Sep
- 2024 23:51:26 +0300
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH] ata: ata_generic: use IS_ENABLED() macro
-To: <linux-ide@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas
- Cassel <cassel@kernel.org>
-CC: <lvc-project@linuxtesting.org>
-Organization: Open Mobile Platform
-Message-ID: <d9c0acab-909e-da06-decf-be5de59d23bf@omp.ru>
-Date: Mon, 9 Sep 2024 23:51:25 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+	s=arc-20240116; t=1725943816; c=relaxed/simple;
+	bh=HNkhCENF5Wt6jYupzI0UofhelB4+8l95Bsx6YouuRdc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MViEwTyPlSbKCI5/C7VRG7j3+FchHOV1zRCQzVegbOSdrE229lWGfH38+/vQJQfWRvkSb2Fgi+5pih4OKU6As5mf/pDfU9yqn0lGXW3vXChApb8gJPoTZRRFZlkxTdYngib5x2CyEOczHMOpyKNwpp9KNMOY9DAv7s7HjWP3JJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GRJuItwK; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GRJuItwK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E8A2C4CEC3;
+	Tue, 10 Sep 2024 04:50:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725943816;
+	bh=HNkhCENF5Wt6jYupzI0UofhelB4+8l95Bsx6YouuRdc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=GRJuItwKL/DS7Pc9Caeh5ffDaUzPTIIu7hy8k5THrMJbBnCorFAGIy0EWLHWYy/BO
+	 a7yZxNMJFGfCuSGTRUa/HDVBwvfVbVk4arbiB51HQsfVs7tbsTGch4Hn/5vXdlpaFy
+	 R1eC6u96KllX6YOYHAtC9SQwYAiG4qb5Xoc82ZWxXevGDw7a9uuPzSp8OvlPo4iZCM
+	 98iYaCdL0NI4sxmB/tdU4uQRvJ834isgzmOCWI4Mel7Hw7iVtzGTrm9aIzoVVJpoD4
+	 +D70TPEKWc0PLoh26Gb/04ShtsTMMRXCgsEHXl0fFu+Tl1E9xIOhxD5mNITFg7rGYG
+	 o33hKpLNGAWkg==
+Message-ID: <87f85704-656d-4c08-b729-87c9b2e6d686@kernel.org>
+Date: Tue, 10 Sep 2024 13:50:14 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ata: ata_generic: use IS_ENABLED() macro
+To: Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
+Cc: lvc-project@linuxtesting.org
+References: <d9c0acab-909e-da06-decf-be5de59d23bf@omp.ru>
+From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <d9c0acab-909e-da06-decf-be5de59d23bf@omp.ru>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 09/09/2024 20:21:48
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 187640 [Sep 09 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.1.5
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 32 0.3.32
- 766319f57b3d5e49f2c79a76e7d7087b621090df
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.96 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.81.96 in (user) dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.81.96
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/09/2024 20:24:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 9/9/2024 4:30:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-Replace now gone out of fashion defined(CONFIG_PATA_TOSHIBA[_MODULE])
-with the new-fangled IS_ENABLED() macro in the ata_generic[] definition.
+On 9/10/24 5:51 AM, Sergey Shtylyov wrote:
+> Replace now gone out of fashion defined(CONFIG_PATA_TOSHIBA[_MODULE])
+> with the new-fangled IS_ENABLED() macro in the ata_generic[] definition.
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Please mention that CONFIG_PATA_TOSHIBA_MODULE actually does not exist at all
+and so can be removed.
 
----
-This patch is against the for-next branch of the LibATA Group's repo.
+> 
+> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> 
+> ---
+> This patch is against the for-next branch of the LibATA Group's repo.
+> 
+>  drivers/ata/ata_generic.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux/drivers/ata/ata_generic.c
+> ===================================================================
+> --- linux.orig/drivers/ata/ata_generic.c
+> +++ linux/drivers/ata/ata_generic.c
+> @@ -220,7 +220,7 @@ static struct pci_device_id ata_generic[
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
+>  	  .driver_data = ATA_GEN_FORCE_DMA },
+> -#if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
+> +#if !IS_ENABLED(CONFIG_PATA_TOSHIBA)
 
- drivers/ata/ata_generic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I do not understand the negation here... It seems very wrong. If the driver is
+indeed enabled, we need to add its PCI ID, no ? and the reverse when not defined...
 
-Index: linux/drivers/ata/ata_generic.c
-===================================================================
---- linux.orig/drivers/ata/ata_generic.c
-+++ linux/drivers/ata/ata_generic.c
-@@ -220,7 +220,7 @@ static struct pci_device_id ata_generic[
- 	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
- 	  .driver_data = ATA_GEN_FORCE_DMA },
--#if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
-+#if !IS_ENABLED(CONFIG_PATA_TOSHIBA)
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
+> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
