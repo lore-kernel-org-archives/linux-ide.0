@@ -1,142 +1,136 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975651AE038;
-	Wed, 11 Sep 2024 16:19:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 445A71B1429
+	for <linux-ide@vger.kernel.org>; Wed, 11 Sep 2024 17:14:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726071577; cv=none; b=DwareqghLs8ZCLBL2HVXbZlsNyZFD9XcutXMn3RYCUMm8wYzPmqUIVf74btP1agTmlbpAMkiVTUsjjtPtiX9TTxjSIrOOFW1fDdKeRh83eFv/mwenPlXImlfe9aCHvGS0U8oTUK6bUdNpLvw61DgswGQ4eK6v4L6rN5cI1tmdN4=
+	t=1726074881; cv=none; b=s0WTPhPS9FF0Kgz8GIVAgClUNqeHqUGHewTnafbMiM9+wOBHFSDcwc6GVJNf9/lGBaX5A3k+ihO7Nd3RVQ1/uPLaNvf/uXe2Ct9KnSheX5aIacmpXbG1CuaXdjYMU3AHzzkHOFRt3lUUx1mu4k5O2x+RVyffH1NBluMSQl61FqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726071577; c=relaxed/simple;
-	bh=lwlZJUmP9LcD4uQACLs3u1hgzJYRAuuAtfArazJJYQ8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UyerrgMSeXDAK+fCv4JTOcQ5E02VdQxUt8nHDJe9qEMLMguonm8uYfzOjsgRWAo2e4YWccMiTwF79Ukwl6kiQCII0qfq7FeYd0i2Czwr99ut+u+11CaKsYOhg+TPgKF1t6LJ6gp4qnif2OnYOAdWnQmOihIEowdre0Y/xMVCQJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iiSrTmDv; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iiSrTmDv"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-53661ac5ba1so2546354e87.2;
-        Wed, 11 Sep 2024 09:19:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1726071573; x=1726676373; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lwlZJUmP9LcD4uQACLs3u1hgzJYRAuuAtfArazJJYQ8=;
-        b=iiSrTmDv8zWDM8Ce73mbj+NyaBn86kLAblS5UiNGEoVmNOhBIONY27IztzWeZMxbqr
-         Ithukyn0UJu4g/kuETqapeg5ZRLo5Ppc+m070OAqOwarsuvcjCMGgKtmFJgwE9B//Ky7
-         iDGp2vTSo+Lcv9NMcitPDyWaW/1vene1DIBSUKeC4srHZhJZHTk/Mebabxi1I75/1qkD
-         MhYJ/TufTFnHhHLC2jPseOj+jp0PtzEzp8RbTU82K/TJgSOWQLmyNwGvYMLsRJcHxtQL
-         HdJJvOMknQdRTKb4Gt/CBZID3YAPB3Ryv8hru0Y7EvfRgPhr89cmUSZZb0kAiA7HLWb8
-         Co+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1726071573; x=1726676373;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=lwlZJUmP9LcD4uQACLs3u1hgzJYRAuuAtfArazJJYQ8=;
-        b=MCAjyhocAiHCTRtMSPk6GQg+qBG5D83yp6QQesc1GY5F87KPhBlAe4mp+ybmBx5jgv
-         qRkIY7JExLPmwkoH1BGBfedL36Xbvs2NXOjGc2BDeZau+4GiscTn9UOOYaCS54ZWX2iL
-         mTeneXAII6p5TuB9wEfo+yVweQWZeK4Ur4XDmlvIq2F4HBw12T1vnnhwJv0Az02XY+xT
-         y02Bl3jBVLFooSyXGHL0HZxvAEu/zQu++/2i1QLp1TraF5i1TXlu+HolymNENaW18xd6
-         XPTR0F+xguSqjaJB4MxHmLWGCQI4tUtF8KQHzycy4h/1Sl9WfbeqjcSFh1sm9dkrqbHp
-         6LJA==
-X-Forwarded-Encrypted: i=1; AJvYcCU8rkarfVLONkvil1WbvogxEGRPyeEywOdMoVFRF+riawz2LDh2KJX9hSc7OYpW+1EsF52uRGCtVrINRg==@vger.kernel.org, AJvYcCUxwGUFCLklMaxZreI47KDFTf2UTUA5uO4z16LCGlwZGmOydA9loUzwEn71JSUl4hdIzcrBy8I8mF5P53yl@vger.kernel.org, AJvYcCVKGify8M11hK1Ly6U6pnlAXzdx+6BY3W5qQnfRAzJbS911bvVF0YKknu+VJy1R3yU+zCj+ACRZhYDp@vger.kernel.org, AJvYcCVTq/+DINN7eoathAlwqUssl0RGIyHbCNoqTHkV649iCzq1DJq3hxezE1lsukSIflBXZHG2Xm+LxkwZ@vger.kernel.org, AJvYcCViGBGRIwRDtO53gtbBPLf9pnx4oMvOBMsyHSQP1lTLH9EDBlsmwwrDDgNCpbvvKRBEn821IkF/W7BL@vger.kernel.org, AJvYcCVoFGDFijezUCqEDKiYBOkzxr5LY8zg849EO3R1STLNb9WkcfcK23fJ8fm7UhRFvrImKdh0wG7iU44=@vger.kernel.org, AJvYcCW03NDG0TsX6ZLihBupK4TmIrIlPCufHgOxa8bFRTMSrdG1lvRZdSol991EPKDILAfcG1GBTcyqUBvvIsA=@vger.kernel.org, AJvYcCW8ZRFtXIp/aUawUB5qJL78+uCIL2rm742yO4lbso/GsgXS1vZ1bpKfTORD//EZR6hyBRu1SiNrFMC9@vger.kernel.org, AJvYcCWcVDfTCzZ3ELzePXhUVICP9RshYHigXXoICuWPV9Qgy1ghGEoo/1vefe32SVhpoIpTPO5kDkebXEDBbgjWEp8=@vger.kernel.org, AJvYcCX48OZS5U9iF9erUTOdWN2H/MeIYafbohTjAEdGwXQ7+2Esg5rjH+yqEy3rl2vVk6nge9IxMLtn@vger.kernel.org, AJvYcCXP551LEphZJwnn28J1Kvr3iaWsS45S9PifNrjd9mFrVBBUGqrHj28i8zXPFOJR6vHtdyEABRIsjHXW2Gs=@vger.kernel.org, AJvYcCXWCc9ImALnuuLTdRm0AxwBJu8S7DCnZJts2b+yLg/v7fD8AaACxAPelx1/skYadEcO93FIAK0dr7Dc@vger.kernel.org, AJvYcCXkrhJNRUyiNCOgpJ4m63v5C32O2ge3tlu76+dpHbI1R+7Ck1om8ODUzRunM9PJIhU+7Qs7zwfIhVs7@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBbdQw4f1RmKmDCsAdAeymkqq568iWSS/3rmoQaTU7el3Eugw5
-	5teNXOJSy1rqkEoa7yjoI5zhbpyEM06h2y05z4rkWmjjC5yS5YNPibbxGH31IV0SNHiA/COi85u
-	bD+I9osT1UPW5wEdWtfNbdXePy4U=
-X-Google-Smtp-Source: AGHT+IEfiqu9Tkr72UxQfCKwEwXNERhL9+EEF5iQAUfNY4YtEQqPnVlXr1xTzedLm0smIgh8R+iSdzkbG8ZOJ96JeDI=
-X-Received: by 2002:a05:6512:10d6:b0:52b:bf8e:ffea with SMTP id
- 2adb3069b0e04-53673c96a84mr2008337e87.40.1726071572960; Wed, 11 Sep 2024
- 09:19:32 -0700 (PDT)
+	s=arc-20240116; t=1726074881; c=relaxed/simple;
+	bh=V2v0XvrhwX6Q/lX6ACFDtSmuqTnyJoWHBH1KaSPP6Mk=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=rnYJEp11aRswiXEYBD9iyMLVFpmn7GpP+QX3fJSA9FFtj9um55tSMZEJexc3KqzZ6nS2GdYsRLKYUyVTIe2rgLnAt990UVvj3+mMn88mcc8b0p1xH2tmOYZQt0bvghdaA0wW/u+HOfsc9Rt1v2tJt+u6ttz6uAi/ABgZIFYzinA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.1.106] (31.173.82.153) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Wed, 11 Sep
+ 2024 20:14:33 +0300
+Subject: Re: [PATCH] ata: ata_generic: use IS_ENABLED() macro
+To: Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, Niklas
+ Cassel <cassel@kernel.org>
+CC: <lvc-project@linuxtesting.org>
+References: <d9c0acab-909e-da06-decf-be5de59d23bf@omp.ru>
+ <87f85704-656d-4c08-b729-87c9b2e6d686@kernel.org>
+ <4414c20f-7e0e-de47-8311-4a8948f2504d@omp.ru>
+ <f5209cc3-a0c6-4722-92b7-533c0b244527@kernel.org>
+ <65e70327-62e1-3b1a-7b69-eae765241b5c@omp.ru>
+ <9d7e0d4f-1445-4729-9e4d-9058c35db1b2@kernel.org>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <5bed15cf-b6c2-62e9-c23d-7a3c94f2dcc2@omp.ru>
+Date: Wed, 11 Sep 2024 20:14:32 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240909-ep93xx-v12-0-e86ab2423d4b@maquefel.me>
- <CAHp75Veusv=f6Xf9-gL3ctoO5Njn7wiWMw-aMN45KbZ=YB=mQw@mail.gmail.com>
- <0e3902c9a42b05b0227e767b227624c6fe8fd2bb.camel@maquefel.me> <cff6b9b6-6ede-435a-9271-829fde82550d@app.fastmail.com>
-In-Reply-To: <cff6b9b6-6ede-435a-9271-829fde82550d@app.fastmail.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 11 Sep 2024 19:18:56 +0300
-Message-ID: <CAHp75Vc2Dbj0GAua4b85L8jgcGzdBfMdRgnuTSWNiGj0zKHU7A@mail.gmail.com>
-Subject: Re: [PATCH v12 00/38] ep93xx device tree conversion
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Nikita Shubin <nikita.shubin@maquefel.me>, 
-	Hartley Sweeten <hsweeten@visionengravers.com>, 
-	Alexander Sverdlin <alexander.sverdlin@gmail.com>, Russell King <linux@armlinux.org.uk>, 
-	Lukasz Majewski <lukma@denx.de>, Linus Walleij <linus.walleij@linaro.org>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	Sebastian Reichel <sre@kernel.org>, Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Vinod Koul <vkoul@kernel.org>, Wim Van Sebroeck <wim@linux-watchdog.org>, 
-	Guenter Roeck <linux@roeck-us.net>, Thierry Reding <thierry.reding@gmail.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Mark Brown <broonie@kernel.org>, "David S . Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, 
-	Vignesh Raghavendra <vigneshr@ti.com>, Damien Le Moal <dlemoal@kernel.org>, 
-	Sergey Shtylyov <s.shtylyov@omp.ru>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
-	Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Ralf Baechle <ralf@linux-mips.org>, Aaron Wu <Aaron.Wu@analog.com>, Lee Jones <lee@kernel.org>, 
-	Olof Johansson <olof@lixom.net>, Niklas Cassel <cassel@kernel.org>, linux-arm-kernel@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, 
-	"open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>, linux-clk@vger.kernel.org, 
-	linux-pm@vger.kernel.org, devicetree@vger.kernel.org, 
-	dmaengine@vger.kernel.org, linux-watchdog@vger.kernel.org, 
-	linux-pwm@vger.kernel.org, linux-spi@vger.kernel.org, 
-	Netdev <netdev@vger.kernel.org>, linux-mtd@lists.infradead.org, 
-	linux-ide@vger.kernel.org, linux-input@vger.kernel.org, 
-	linux-sound@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Lunn <andrew@lunn.ch>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <9d7e0d4f-1445-4729-9e4d-9058c35db1b2@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 09/11/2024 16:54:56
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 0
+X-KSE-AntiSpam-Info: Lua profiles 187691 [Sep 11 2024]
+X-KSE-AntiSpam-Info: Version: 6.1.1.5
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 32 0.3.32
+ 766319f57b3d5e49f2c79a76e7d7087b621090df
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info:
+	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;elixir.bootlin.com:7.1.1;git.kernel.org:7.1.1
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.82.153
+X-KSE-AntiSpam-Info: Rate: 0
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/11/2024 16:57:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 9/11/2024 2:18:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On Wed, Sep 11, 2024 at 6:13=E2=80=AFPM Arnd Bergmann <arnd@arndb.de> wrote=
-:
->
-> On Mon, Sep 9, 2024, at 09:02, Nikita Shubin wrote:
-> > On Mon, 2024-09-09 at 11:49 +0300, Andy Shevchenko wrote:
-> >> On Mon, Sep 9, 2024 at 11:12=E2=80=AFAM Nikita Shubin via B4 Relay
-> >> <devnull+nikita.shubin.maquefel.me@kernel.org> wrote:
-> >> >
-> >> > The goal is to recieve ACKs for all patches in series to merge it
-> >> > via Arnd branch.
-> >> >
-> >> > It was decided from the very beginning of these series, mostly
-> >> > because
-> >> > it's a full conversion of platform code to DT and it seemed not
-> >> > convenient to maintain compatibility with both platform and DT.
-> >> >
-> >> > Following patches require attention from Stephen Boyd or clk
-> >> > subsystem:
-> >>
-> >> Does it mean you still have a few patches without tags?
-> >> What are their respective numbers?
-> >
-> > The clk is the last one as i think, all others can be ACKed by
-> > Alexander or by Arnd himself.
->
-> I've merged the series into the for-next branch of the arm-soc
-> tree now. The timing isn't great as I was still waiting for
-> that final Ack, but it seem better to have it done than to keep
-> respinning the series.
->
-> I won't send it with the initial pull requests this week
-> but hope to send this one once I get beck from LPC, provided
-> there are no surprises that require a rebase.
+On 9/11/24 1:22 AM, Damien Le Moal wrote:
+[...]
+>> [Resending after adding the missed test, please ignore the previus reply.)
 
-Thank you!
+   Oops, some more typos! :-)
 
-This, in particular, will move forward to the GPIO descriptor and
-getting rid of old legacy GPIO APIs.
+[...]
+>>>>>> with the new-fangled IS_ENABLED() macro in the ata_generic[] definition.
+>>>>>
+>>>>> Please mention that CONFIG_PATA_TOSHIBA_MODULE actually does not exist at all
+>>>>> and so can be removed.
+>>>>
+>>>>    Huh? =)
+>>>>    CONFIG_PATA_TOSHIBA is a tristate option, so CONFIG_PATA_TOSHIBA_MODULE
+>>>> does exist; else there would be no point in using IS_ENABLED() at all...
+>>>
+>>> Oops... Indeed. Got confused with something else :)
+>>
+>>    There's something to be confused about this driver vs its Kconfig option
+>> naming: the driver is called pata_piccolo.c and its option CONFIG_PATA_TOSHIBA.
+>> However, Toshiba seemingly has more than one family of the PATA controllers:
+>> there's also TC86C001 PCI multi-function chip (dubbed GOKU-S by Toshiba) which
+>> supports up to UDMA66 and doesn't seem compatible with Piccolo, judging by the
+>> driver code and Toshiba GOKU-S datasheet I have: the timing regs are mapped @
+>> AR5 and not in the PCI config space, like with the Piccolo chips.
 
---=20
-With Best Regards,
-Andy Shevchenko
+   I'm sure I typed BAR5 but apparently B went somewhere with further editing... :-)
+
+>>    If somebody like me (it was me who submitted the reworked Toshiba's TC86C001
+>> driver for drivers/ide/ back in 2007) added TC86C001 libata driver, the confusion
+>> would probably worsen... :-/ Luckily, the chip is a bit tricky (I had to somewhat
+
+   If you want to see the original patch:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=33dced2ea5ed03dda10e7f9f41f0910f32e02eaa
+
+   Some fragments of the patch lived thru the drivers/ide/ removal, see e.g.:
+
+https://elixir.bootlin.com/linux/v6.11-rc1/source/drivers/pci/quirks.c#L2319
+
+>> abuse drivers/ide/ to work around some "limitations", as Toshiba calls their errata)
+>> and I don't have access to the chip to properly test the driver anymore.  Obviously, there should be a little interest now in adding the "new" PATA drivers... :-)
+
+   The interesting fact is that the TC86C001 (GOUKU-S) USB device controller (PCI function #2) is still supported by its own driver (drivers/usb/gadget/udc/goku_udc.c), mereg back in 2004... :-)
+
+>>    Any thoughts on the naming confusion?
+> 
+> Maybe rename the option to CONFIG_PATA_TOSHIBA_PICCCOLO ?
+
+   Nah, that doesn't make much sense to me; if we rename it, we should match the driver's name, i.e. make it CONFIG_PATA_PICCOLO.  I'm mainly concerned about the
+Linux distros which would have to handle such rename somehow, IIUC...
+
+[...[
+
+MBR, Sergey
