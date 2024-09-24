@@ -1,81 +1,33 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DD5182A0
-	for <linux-ide@vger.kernel.org>; Tue, 24 Sep 2024 06:44:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 941BD80C1C;
+	Tue, 24 Sep 2024 07:31:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727160284; cv=none; b=CLMDvjCbnZHc/shiJQ8hkuZVCiTs7JyDv7j8xBP4FknTdrOdNLyZ4fNDZ14JAUIOSbICDHkylr3O0cOxfQrfVJO0H0XVDvNlf3kb4NPW6iKdQHenN+bSKi3SJS4MrBOt85YZwijFWmBOKBBCkHaJ1YvEoq76T+xKNoXVhIh7+pM=
+	t=1727163064; cv=none; b=FyRRGD04eVdT2DiW1qiP/iqDvecHZyg6encqkFJDXruDo6ZcFp09UaPm7JrO957mRuD7FhERBbgNgkxmW/uFHthKlCbU7Kpw80WMEj42KhXtcMiWP+NTrm5oGrulQbLKtnv0FXX1sjP9zOeTtwZBBC91GjC/W5CYghPT6AN+fwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727160284; c=relaxed/simple;
-	bh=bB8UBbcikaJYUZk9HLeSThDG+4qob58Zi561AgHYVPc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=hcQPI+XrHa2cni5D17muy9cUFrztBSEDliYo6+SHoEpQqQPvaPAm+U6vku7Iv42Jha4Pcz5NxLEwCB2bN3yhsOdGmCJ0V3SkFMuRhtB5sXu7O4uzgB4T3nb8gmHYKlDhe7JSGa0Ouuu+jb5yDObXBfhx4uQ6U4dONwKAtzQeO8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bQ/uARU3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N7aL6dyc; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bQ/uARU3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N7aL6dyc; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1727163064; c=relaxed/simple;
+	bh=EyklxDSHWsqQihh1ANwWlaC/jZPy1ZDYp8EVJWLOXVc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VaCK0erjjUxtMWbkls3Gae/+72ZGarEYHNm8VZUZ54cslJY/3onZdAAcuOWPEHdRk4u83WajHKW26acoYNmM3mKpnGfhkI5/2pMLrd6FwT8xgH5RO0r1ALJyDPpgI8+MQ5xgyVAFdTfkz43HlKb70Aofw4Nor5vklcEeR1QeSdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kzP+hQVW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bQ/uARU3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N7aL6dyc";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bQ/uARU3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N7aL6dyc"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 008CD1F78B;
-	Tue, 24 Sep 2024 06:44:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1727160281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
-	b=bQ/uARU3V5mk/4NMNqeVI9mZ2528Xfp1zH/UBiksy+v+/1sgvau9lO4wGImRyWpa6Lj92N
-	jrHdN+W7OKIT/BHBh1DixwRYCpY6IMV2+whX4vNp7hY//I2Smo9JZNXbPoCoRqLEbafsBb
-	c4lzcqqqJC92dqSOSoK8KIDUZVI/OMg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1727160281;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
-	b=N7aL6dycPsFWN4kxQn38gFG4YKgGJKtH8r8/ZecV+ajQGS7inrfmGZPd8Phb3GgzQQPQB6
-	YD9iXr+dUxGYhCDw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="bQ/uARU3";
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=N7aL6dyc
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1727160281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
-	b=bQ/uARU3V5mk/4NMNqeVI9mZ2528Xfp1zH/UBiksy+v+/1sgvau9lO4wGImRyWpa6Lj92N
-	jrHdN+W7OKIT/BHBh1DixwRYCpY6IMV2+whX4vNp7hY//I2Smo9JZNXbPoCoRqLEbafsBb
-	c4lzcqqqJC92dqSOSoK8KIDUZVI/OMg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1727160281;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
-	b=N7aL6dycPsFWN4kxQn38gFG4YKgGJKtH8r8/ZecV+ajQGS7inrfmGZPd8Phb3GgzQQPQB6
-	YD9iXr+dUxGYhCDw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AAF211386E;
-	Tue, 24 Sep 2024 06:44:40 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id NIlZJdhf8ma4VwAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 24 Sep 2024 06:44:40 +0000
-Message-ID: <a107b642-e187-4efa-872b-8e42733de337@suse.de>
-Date: Tue, 24 Sep 2024 08:44:40 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kzP+hQVW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3175FC4CEC4;
+	Tue, 24 Sep 2024 07:31:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727163064;
+	bh=EyklxDSHWsqQihh1ANwWlaC/jZPy1ZDYp8EVJWLOXVc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=kzP+hQVWRxfKO1OE8zemwAj3BYsmuVXecUfAZ9j1A4q6us9R5xZyB4L2vZhTTj3hV
+	 mW6B4wk+Qk8K5BMxV4ypbPE04ryI8iHtmF+mZnAjWJ5t5EO6Yd+A0Vv/18QDhJy+XJ
+	 hIya32WbfX4yxPD3/Hb1DRo218CTV22fnHyKIOSG14iZFzPU1agBXnDm2yA8+eZ4ll
+	 N2vbd2ieJpOaZ5hoAa+V7AhqQfp9HNz6qI6zuBSiZLa6PwIcBCZcPwIAf/VVcQPYxY
+	 eNpggIsx4VcVRxbssERIcgbaqWfCierOfkC3FXrWZR6/GJ5+D09NU8sWvATIRx0RLU
+	 DfdYHPvuwhhxQ==
+Message-ID: <c7880a6f-04d4-4572-9255-1575f6668b4e@kernel.org>
+Date: Tue, 24 Sep 2024 09:31:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,85 +35,136 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] ata: libata-scsi: Fix ata_msense_control() CDL page
- reporting
-To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Niklas Cassel <cassel@kernel.org>
-References: <20240923133949.286295-1-dlemoal@kernel.org>
- <20240923133949.286295-3-dlemoal@kernel.org>
+Subject: Re: libahci driver and power switching HDD on newer kernels
+To: Linux regressions mailing list <regressions@lists.linux.dev>,
+ W <linuxcdeveloper@gmail.com>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+References: <7882faa8-d5ec-4868-b158-0b942b669cc0@gmail.com>
+ <c4f1c690-6e97-44de-985f-dc9eadd18d23@leemhuis.info>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240923133949.286295-3-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 008CD1F78B
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_TLS_ALL(0.00)[];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.51
-X-Spam-Flag: NO
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <c4f1c690-6e97-44de-985f-dc9eadd18d23@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 9/23/24 15:39, Damien Le Moal wrote:
-> When the user requests the ALL_SUB_MPAGES mode sense page,
-> ata_msense_control() adds the CDL_T2A_SUB_MPAGE twice instead of adding
-> the CDL_T2A_SUB_MPAGE and CDL_T2B_SUB_MPAGE pages information. Correct
-> the second call to ata_msense_control_spgt2() to report the
-> CDL_T2B_SUB_MPAGE page.
+On 2024/09/24 7:20, Linux regression tracking (Thorsten Leemhuis) wrote:
+> Hi!
 > 
-> Fixes: 673b2fe6ff1d ("scsi: ata: libata-scsi: Add support for CDL pages mode sense")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/ata/libata-scsi.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> On 15.09.24 14:44, W wrote:
+>>
+>> I've got some problems with newer kernels during hibernation and
+>> waking up from hibernation.
+>> The symptom of the issue is that there is HDD power switching executed
+>> after I run pm-hibernate command and the same HDD power switching
+>> during the wake up process from hibernation.
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 97c84b0ec472..ea7d365fb7a9 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2350,7 +2350,7 @@ static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
->   	case ALL_SUB_MPAGES:
->   		n = ata_msense_control_spg0(dev, buf, changeable);
->   		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
-> -		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
-> +		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2B_SUB_MPAGE);
->   		n += ata_msense_control_ata_feature(dev, buf + n);
->   		return n;
->   	default:
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Thx for the report. I CCed Damien and Niklas (and the regressions list),
+> maybe they have an idea. If they do not reply you most likely need to
+> perform a bisection to raise interest in your report.
 
-Cheers,
+Thanks for that. Niklas and I will look at this (I thought we already had fixed
+that issue...). However, this week may be difficult as Niklas and I are
+attending a conference and we may not have time to do much. But this will be our
+highest priority next week.
 
-Hannes
+> 
+> And FWIW, there is one important info that afaics is missing from your
+> report: If the latest mainline kernel (e.g. 6.11) still affected?
+
+Yes, please check that.
+
+> 
+> Ciao, Thorsten
+> 
+>> As the HDD power switch process I mean: powering off my HDD and
+>> immediately after that powering on the HDD. This process in my case
+>> takes about 1 second.
+>>
+>> Here there are more details about both operations: hibernation and
+>> waking up:
+>>
+>> Hibernation process:
+>> 1. in shell I type: "pm-hibernate"
+>> 2. kernel is preparing system to hibernation
+>> 3. hdd is powered off and immediately powered on - it takes about one
+>> second or less to do the power switch
+
+I think that the issue is that this HDD power-off is done way too early as the
+mem image saving generates IOs which wake up the drive again. The 1s it takes
+for this is because the HDD started spinning down and needs to be spun up again.
+
+This is likely because the mem image must be prepared with the devices already
+suspended so that when restoring the image, the restarts sees the devices
+suspended (as they should be). For this case, libata (or scsi SD PM code, not
+sure which one) should suspend the device logically but not spin down the
+physical HDD...
+
+>> 4. kernel is saving mem image to swap partition with printing progress
+>> in percentage
+>> 5. PC and HDD are powered off
+
+... and the power off of the HDD should happen here.
+
+>>
+>> Waking up process:
+>> 1. my PC and HDD are powered off, I'm pressing any key on my keyboard
+>> so it is powering up my PC
+>> 2. kernel is starting, recognizes that there is mem image on swap and
+>> starting to load it - printing progress percentage
+>> 3. hdd is powered off and immediately powered on - it takes about one
+>> second or less to do the power switch
+
+That is a weird one, but again I think due to the IO activity that loading the
+mem image generates. Similarly, I think this is a mishandling of the device
+logical state vs physical power state...
+
+>> 4. system is ready to use and working fine
+>>
+>> So to sum up - in both processes described above the problematic step
+>> is the step 3.
+>>
+>> I noticed this issue when I switched kernel 6.4.12 to 6.7.5. So far I
+>> haven't used git bisect yet to find the exact offending commit so the
+>> change might be introduced somewhere between 6.4.12 and 6.7.5.
+
+It would really be helpful if you could bisect this !
+
+>> In 6.4.12 I have not such an issues with HDD power switching. The
+>> issues exist in 6.7.5 and newer ones and probably somewhere between
+>> 6.4.12 and 6.7.5.
+>>
+>> I noticed some errors in dmesg coming from ahci driver like these:
+>> Sep 11 15:49:30 localhost kernel: ahci 0000:00:17.0: port does not
+>> support device sleep
+
+This is relevant. This is not really an error but rather a statement that your
+device does not support sleep. This could be the reason for the behavior. (hence
+my request that if you could test with a different device, it would be help).
+
+>> and ACPI BIOS errors like these:
+>> Sep 11 15:49:30 localhost kernel: ACPI BIOS Error (bug): Could not
+>> resolve symbol [\_SB.PCI0.SAT0.PRT0._GTF.DSSP], AE_NOT_FOUND
+>> (20240322/psargs-330)
+
+Yeah... I see these all the time on different machines. That comes from the BIOS
+not being great :) Not sure if that one relates to SATA though ?
+
+>> Please take a look at included dmesg in the attachment.
+>>
+>> The mainboard I use is: Gigabyte Z370 HD3P with the newest available
+>> BIOS update.
+>>
+>> I'd like to ask if this is known issue and if yes how could I fix it?
+>> I'm not quite sure where exactly is the issue: in kernel or in my
+>> Gigabyte BIOS?
+
+Given that you had 6.4.12 working OK, it is likely some commit that introduced a
+regression. If you can git bisect it, we will have a better idea how to remove
+the regression.
+
+Best regards.
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
-
+Damien Le Moal
+Western Digital Research
