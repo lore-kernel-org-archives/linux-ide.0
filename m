@@ -1,81 +1,81 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3C073451
-	for <linux-ide@vger.kernel.org>; Tue, 24 Sep 2024 06:43:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DD5182A0
+	for <linux-ide@vger.kernel.org>; Tue, 24 Sep 2024 06:44:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727160226; cv=none; b=Ol2gXYzrhttlaA53ttMwVlK48FRld/nsTecRPR2pCiIzIPp7k1Ng+owouCoDNnlFSKKw4paezrtlIueTNs39UdYEGpI/pd5VFsoxtqcixHN2svgCwFuDI+DYdrWGxcvpGWH1QP8wQ1slowMpLP+auCEXlMa+W5lOMFCjLhIH8pU=
+	t=1727160284; cv=none; b=CLMDvjCbnZHc/shiJQ8hkuZVCiTs7JyDv7j8xBP4FknTdrOdNLyZ4fNDZ14JAUIOSbICDHkylr3O0cOxfQrfVJO0H0XVDvNlf3kb4NPW6iKdQHenN+bSKi3SJS4MrBOt85YZwijFWmBOKBBCkHaJ1YvEoq76T+xKNoXVhIh7+pM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727160226; c=relaxed/simple;
-	bh=eC0h1XfK90rTDNXtyl0F9lpZGxgxOq1z7Tj6gXmn5g4=;
+	s=arc-20240116; t=1727160284; c=relaxed/simple;
+	bh=bB8UBbcikaJYUZk9HLeSThDG+4qob58Zi561AgHYVPc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=V86YcYG3xWT1gXEcnsTxde/k4igaYWvjywJKV3GFoXwqfjB4acMDyec95BU6kNnTycv+fiuuQsoDpubOllve+ExEFOKi8iEQWkhKoOqa2ZHDY6fX9KtvPZgwtLgPzSwFQi2YYOk2IQCjqPMfWQSc7YXWFz/h1Who1Z/lpuimUoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=c0kx7NFN; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nrjA23ER; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=c0kx7NFN; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nrjA23ER; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=hcQPI+XrHa2cni5D17muy9cUFrztBSEDliYo6+SHoEpQqQPvaPAm+U6vku7Iv42Jha4Pcz5NxLEwCB2bN3yhsOdGmCJ0V3SkFMuRhtB5sXu7O4uzgB4T3nb8gmHYKlDhe7JSGa0Ouuu+jb5yDObXBfhx4uQ6U4dONwKAtzQeO8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bQ/uARU3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N7aL6dyc; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=bQ/uARU3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N7aL6dyc; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="c0kx7NFN";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nrjA23ER";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="c0kx7NFN";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nrjA23ER"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bQ/uARU3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N7aL6dyc";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="bQ/uARU3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N7aL6dyc"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 0553521AE1;
-	Tue, 24 Sep 2024 06:43:43 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 008CD1F78B;
+	Tue, 24 Sep 2024 06:44:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1727160223; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1727160281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=EuP3dvvgsHE9qvAO9s+KXQuzbAl0PDUJ1kFX523GDhI=;
-	b=c0kx7NFNpIaZo8FfvqOs8MbutSQTlujeOSTED293+cJgdr0IFbJE6Tu2TcsynlnhJdefjG
-	WLV3BVAW89Z8ZNiJGyPPyQhOo2WSwRDWMqWzO3btOZ4t5+thsVgpAV8kDZCYsJEdLmI1+1
-	EaKw+MdUuDcAfmP+EF9Pj8+ih7neDJo=
+	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
+	b=bQ/uARU3V5mk/4NMNqeVI9mZ2528Xfp1zH/UBiksy+v+/1sgvau9lO4wGImRyWpa6Lj92N
+	jrHdN+W7OKIT/BHBh1DixwRYCpY6IMV2+whX4vNp7hY//I2Smo9JZNXbPoCoRqLEbafsBb
+	c4lzcqqqJC92dqSOSoK8KIDUZVI/OMg=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1727160223;
+	s=susede2_ed25519; t=1727160281;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=EuP3dvvgsHE9qvAO9s+KXQuzbAl0PDUJ1kFX523GDhI=;
-	b=nrjA23ERRE/zC4gfQUhHmpLxNnXaICW5IYnRQWzmuike0/jLpATa9GTVuzEj0Ia32e+xPw
-	RZPsp5goyvL4gjBg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=c0kx7NFN;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=nrjA23ER
+	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
+	b=N7aL6dycPsFWN4kxQn38gFG4YKgGJKtH8r8/ZecV+ajQGS7inrfmGZPd8Phb3GgzQQPQB6
+	YD9iXr+dUxGYhCDw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b="bQ/uARU3";
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=N7aL6dyc
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1727160223; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1727160281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=EuP3dvvgsHE9qvAO9s+KXQuzbAl0PDUJ1kFX523GDhI=;
-	b=c0kx7NFNpIaZo8FfvqOs8MbutSQTlujeOSTED293+cJgdr0IFbJE6Tu2TcsynlnhJdefjG
-	WLV3BVAW89Z8ZNiJGyPPyQhOo2WSwRDWMqWzO3btOZ4t5+thsVgpAV8kDZCYsJEdLmI1+1
-	EaKw+MdUuDcAfmP+EF9Pj8+ih7neDJo=
+	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
+	b=bQ/uARU3V5mk/4NMNqeVI9mZ2528Xfp1zH/UBiksy+v+/1sgvau9lO4wGImRyWpa6Lj92N
+	jrHdN+W7OKIT/BHBh1DixwRYCpY6IMV2+whX4vNp7hY//I2Smo9JZNXbPoCoRqLEbafsBb
+	c4lzcqqqJC92dqSOSoK8KIDUZVI/OMg=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1727160223;
+	s=susede2_ed25519; t=1727160281;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=EuP3dvvgsHE9qvAO9s+KXQuzbAl0PDUJ1kFX523GDhI=;
-	b=nrjA23ERRE/zC4gfQUhHmpLxNnXaICW5IYnRQWzmuike0/jLpATa9GTVuzEj0Ia32e+xPw
-	RZPsp5goyvL4gjBg==
+	bh=+5oDQYzd4wV23qft3PGw38wstta/uf90eMnOMaBeHoc=;
+	b=N7aL6dycPsFWN4kxQn38gFG4YKgGJKtH8r8/ZecV+ajQGS7inrfmGZPd8Phb3GgzQQPQB6
+	YD9iXr+dUxGYhCDw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B2D471386E;
-	Tue, 24 Sep 2024 06:43:42 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AAF211386E;
+	Tue, 24 Sep 2024 06:44:40 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Cs+tJ55f8mZzVwAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 24 Sep 2024 06:43:42 +0000
-Message-ID: <6c6b139e-f941-4a46-a317-e45c4da4d886@suse.de>
-Date: Tue, 24 Sep 2024 08:43:38 +0200
+	id NIlZJdhf8ma4VwAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 24 Sep 2024 06:44:40 +0000
+Message-ID: <a107b642-e187-4efa-872b-8e42733de337@suse.de>
+Date: Tue, 24 Sep 2024 08:44:40 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -83,19 +83,19 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] ata: libata-scsi: Fix ata_msense_control_spgt2()
+Subject: Re: [PATCH 2/2] ata: libata-scsi: Fix ata_msense_control() CDL page
+ reporting
 To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
  Niklas Cassel <cassel@kernel.org>
 References: <20240923133949.286295-1-dlemoal@kernel.org>
- <20240923133949.286295-2-dlemoal@kernel.org>
+ <20240923133949.286295-3-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240923133949.286295-2-dlemoal@kernel.org>
+In-Reply-To: <20240923133949.286295-3-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 0553521AE1
-X-Spam-Score: -4.51
-X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: 008CD1F78B
+X-Spam-Level: 
 X-Spamd-Result: default: False [-4.51 / 50.00];
 	BAYES_HAM(-3.00)[99.99%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
@@ -117,58 +117,43 @@ X-Spamd-Result: default: False [-4.51 / 50.00];
 	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
 	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,suse.de:mid];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	FUZZY_BLOCKED(0.00)[rspamd.com];
 	DKIM_TRACE(0.00)[suse.de:+]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.51
 X-Spam-Flag: NO
-X-Spam-Level: 
 
 On 9/23/24 15:39, Damien Le Moal wrote:
-> ata_msense_control_spgt2() can be called even for devices that do not
-> support CDL when the user requests the ALL_SUB_MPAGES mode sense page,
-> but for such device, this will cause a NULL pointer dereference as
-> dev->cdl is NULL. Similarly, we should not return any data if
-> ata_msense_control_spgt2() is called when the user requested the
-> CDL_T2A_SUB_MPAGE or CDL_T2B_SUB_MPAGE pages for a device that does not
-> support CDL.
+> When the user requests the ALL_SUB_MPAGES mode sense page,
+> ata_msense_control() adds the CDL_T2A_SUB_MPAGE twice instead of adding
+> the CDL_T2A_SUB_MPAGE and CDL_T2B_SUB_MPAGE pages information. Correct
+> the second call to ata_msense_control_spgt2() to report the
+> CDL_T2B_SUB_MPAGE page.
 > 
-> Avoid this potential NULL pointer dereference by checking if the device
-> support CDL on entry to ata_msense_control_spgt2() and return 0 if it
-> does not support CDL.
-> 
-> Reported-by: syzbot+37757dc11ee77ef850bb@syzkaller.appspotmail.com
-> Tested-by: syzbot+37757dc11ee77ef850bb@syzkaller.appspotmail.com
-> Fixes: 602bcf212637 ("ata: libata: Improve CDL resource management")
+> Fixes: 673b2fe6ff1d ("scsi: ata: libata-scsi: Add support for CDL pages mode sense")
+> Cc: stable@vger.kernel.org
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ata/libata-scsi.c | 7 ++++++-
->   1 file changed, 6 insertions(+), 1 deletion(-)
+>   drivers/ata/libata-scsi.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 061fe63497bf..97c84b0ec472 100644
+> index 97c84b0ec472..ea7d365fb7a9 100644
 > --- a/drivers/ata/libata-scsi.c
 > +++ b/drivers/ata/libata-scsi.c
-> @@ -2245,10 +2245,15 @@ static inline u16 ata_xlat_cdl_limit(u8 *buf)
->   static unsigned int ata_msense_control_spgt2(struct ata_device *dev, u8 *buf,
->   					     u8 spg)
->   {
-> -	u8 *b, *cdl = dev->cdl->desc_log_buf, *desc;
-> +	u8 *b, *cdl, *desc;
->   	u32 policy;
->   	int i;
->   
-> +	if (!(dev->flags & ATA_DFLAG_CDL) || !dev->cdl)
-> +		return 0;
-> +
-> +	cdl = dev->cdl->desc_log_buf;
-> +
->   	/*
->   	 * Fill the subpage. The first four bytes of the T2A/T2B mode pages
->   	 * are a header. The PAGE LENGTH field is the size of the page
-
+> @@ -2350,7 +2350,7 @@ static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
+>   	case ALL_SUB_MPAGES:
+>   		n = ata_msense_control_spg0(dev, buf, changeable);
+>   		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
+> -		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2A_SUB_MPAGE);
+> +		n += ata_msense_control_spgt2(dev, buf + n, CDL_T2B_SUB_MPAGE);
+>   		n += ata_msense_control_ata_feature(dev, buf + n);
+>   		return n;
+>   	default:
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
