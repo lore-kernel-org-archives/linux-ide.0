@@ -1,110 +1,63 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39F34189BA3;
-	Fri, 27 Sep 2024 16:14:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 767C25234
+	for <linux-ide@vger.kernel.org>; Fri, 27 Sep 2024 16:35:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727453654; cv=none; b=QbluYsNADv2EkGUE7UX9jBFruzktImSVlgFpxS/QUgwfQyrWlXd0PokPFxRBeSg2gegw7OOlKvPt5/gJ3/eyqFiRWaslddoMSSAOv6aFHqOa3xMY3Sp9PokUu6KRS4XBpZHbprm+aQnow7F507y01pHCNfXjHO/TO3Yg1rT7Juk=
+	t=1727454927; cv=none; b=LJGNRXRNVZvwgXfPvnQrOwpJs7SouZiQ71hYZ73Hr+ATQPLFVCP3jjMzPlFiLOS64dxTJbM6MNDM7IR2/ArjqDdSfOThJbOAmUULvSbm80tVhlwSlRdo9utmtQCBRkguQuAQWkZntV4/RtfAD0h8ZdXsqRnyZxMPOSNCNHEMrOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727453654; c=relaxed/simple;
-	bh=uDO1NUAjf9ODQr7KxdKGhc4KiPgUk8HH/nhj3gNmwaY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=nDZOQGC257RM3NbVDEw2mYmSxGtMlN5YN6CsEN5YSLZWPen8793hH/3vRSRR58mxmdmSuazULDlOjuLKMJjX518poplATtW7B3ob6OVU3lHaodGWm3PLu8EMOohSxNm//df/a43DI4VBba14BuFGLigxns3fQwj+ue2jpT+fUOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.100] (213.87.153.225) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Fri, 27 Sep
- 2024 19:14:01 +0300
-Message-ID: <8e0119d7-5458-919d-df19-679a9392fcc7@omp.ru>
-Date: Fri, 27 Sep 2024 19:14:00 +0300
+	s=arc-20240116; t=1727454927; c=relaxed/simple;
+	bh=VjW+6+98nPLdshOAe1JnPJe7/dWepBRitZKyMDr6OCQ=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=l6ZegCMuUhrDTt3jfyosDN5M4byUsnq5Nhk1M+IJCPQwqGjrz6DW1MBEHvnuH2OqUEp+zY9dBuD2UPhrBrIwR9xIUTLBY5zN3sE3EZlmi6gp8G/asQWsJvCl/9G3AwBSGnw5QUk4nIfDSEo0KsHyFPczkLQxkLcrwPRciqhFvrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZpmT48HT; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZpmT48HT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56323C4CEC4;
+	Fri, 27 Sep 2024 16:35:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727454927;
+	bh=VjW+6+98nPLdshOAe1JnPJe7/dWepBRitZKyMDr6OCQ=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=ZpmT48HTwsFIoKTkGYgZn1CDUk5zcpF5zr90iuz7jhnLaNFSlYNFLfoKxUf/b+JCW
+	 yj6KDaxp1dtNih9Pf4734kyKUmSHMisDup/IMq/JjyvgWjhqsGDsSdrUlA6Oy1u2Qq
+	 b8speqaRWs+Fbjj+R+lRfYWU6aBtZYY3I2DCNxQlPXQp9pUgiLg47O4bJfvsiunbb6
+	 w6YDdS7mEe+8a7MZWW79Fnf4GdIVNdOvNRVGr0avCksTFoTUJDZGbPUL+wMLATCsBV
+	 ByufnW4m8DUnN4BaOpAhgEglTXtnkF9atr7IJ1O2VQvWaHAn5Y3D+LR1PoW3XdVCu0
+	 Mkr66FzM2xZcg==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 33C723809A80;
+	Fri, 27 Sep 2024 16:35:31 +0000 (UTC)
+Subject: Re: [GIT PULL] ata changes for 6.12-rc1-part2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <20240927122430.333750-1-dlemoal@kernel.org>
+References: <20240927122430.333750-1-dlemoal@kernel.org>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20240927122430.333750-1-dlemoal@kernel.org>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.12-rc1-part2
+X-PR-Tracked-Commit-Id: 0e9a2990a93f27daa643b6fa73cfa47b128947a7
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: b6c49fca9f810c7279ea59937dd3a01a2906d11a
+Message-Id: <172745492975.2017197.11617321950991278224.pr-tracker-bot@kernel.org>
+Date: Fri, 27 Sep 2024 16:35:29 +0000
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH v3] ata: Fix typos in the comment
-Content-Language: en-US
-To: Yan Zhen <yanzhen@vivo.com>, <dlemoal@kernel.org>, <cassel@kernel.org>,
-	<shawnguo@kernel.org>, <s.hauer@pengutronix.de>
-CC: <kernel@pengutronix.de>, <festevam@gmail.com>,
-	<linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<imx@lists.linux.dev>, <linux-arm-kernel@lists.infradead.org>,
-	<opensource.kernel@vivo.com>
-References: <20240927060056.221977-1-yanzhen@vivo.com>
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <20240927060056.221977-1-yanzhen@vivo.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 09/27/2024 16:01:09
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 188047 [Sep 27 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 34 0.3.34
- 8a1fac695d5606478feba790382a59668a4f0039
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.153.225 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.153.225 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.153.225
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/27/2024 16:04:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 9/27/2024 2:26:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-Hello!
+The pull request you sent on Fri, 27 Sep 2024 21:24:30 +0900:
 
-   Didn't spot the need to do s/comment/comments/ in the subject the 1st time... :-/
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/libata/linux tags/ata-6.12-rc1-part2
 
-On 9/27/24 09:00, Yan Zhen wrote:
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/b6c49fca9f810c7279ea59937dd3a01a2906d11a
 
-> Correctly spelled comments make it easier for the reader to understand
-> the code.
-> 
-> Fix typos:
-> 'multipe' ==> 'multiple',
-> 'Paremeters' ==> 'Parameters',
-> 'recieved' ==> 'received',
-> 'realted' ==> 'related',
-> 'evaulated' ==> 'evaluated',
-> 'programing' ==> 'programming',
-> 'coninue' ==> 'continue'.
+Thank you!
 
-> Signed-off-by: Yan Zhen <yanzhen@vivo.com>
-
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
-[...]
-
-MBR, Sergey
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
