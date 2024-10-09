@@ -1,96 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17C43176AB5
-	for <linux-ide@vger.kernel.org>; Wed,  9 Oct 2024 09:38:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27A4C18A92C;
+	Wed,  9 Oct 2024 09:38:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728466718; cv=none; b=WeziNXSpq2m94zaLxVjU+NFpkN0tlIe29308EqmPpShBgMYvSCttecpjKwmExwhz6gV1DymFVLcfUM3yiZWVPJAMAQ+u9nppoOzjt6ZwTcEE6wPm1qaNSESTbWMAR0F/rftzjmiadMfcvZzSODst1+/IfeAI/IiNPCrrUWG7Yx8=
+	t=1728466729; cv=none; b=prFeuXZjxjZBc93wv8edNPbqcUY1KofiAl5gt6F1U2olnTZJTVY7jBw0FAp1AH+Jtmz3qOitdoP5botYwkKbfXAtgai+BMC4YUUNhLYpkII8cQnbCd7JqpmMbACAT84AYuY6e30o/UgM0a2NpudWHZITDXhXhddnwoFDsVleVjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728466718; c=relaxed/simple;
-	bh=QqXwP3jZvaFubC+fTACKgHyFJT3M47LGPFUQ5CA5f/s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=k28gfN3owWA6O775LkGU3p+teIAA+C9Sw8PgeeQ88dzl1JktYolKp12OOpsjZtkw71iHkKtqxdUg20jsBRc9cRDRYot9xIm2enFeVxLdi3Av7pqTcE4HD3pmeyVxiv/CkvrVpCG4T2dj0cHNo7pbetSl8m6S/5NaES8MYHa04Js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s9pTqaFY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728466729; c=relaxed/simple;
+	bh=Jw9m9MFXObg+vZ7wq05G3wqyWtyj3AK1eBeQfJJK90U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FBlxEih2Csikk9VWf4y7W32fhYH4ScQE7t2bYKCeDP3giTH2VRNUpP9HVnbJmTsdAAEc1U9vteu+PNRk6E1rZBJsHb748tm6n5wVcPCDGwXrjBbuHGus/jVA863Kve8xMVKb3t9GLN7RA3XKnJ7MPKhq4ScYwVtTEUw39Ma8gGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AcLymq+h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s9pTqaFY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28EA9C4CEC5;
-	Wed,  9 Oct 2024 09:38:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728466717;
-	bh=QqXwP3jZvaFubC+fTACKgHyFJT3M47LGPFUQ5CA5f/s=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=s9pTqaFYNeguI1Sgdy8+bteUFOQ9HG+XVRx4czAt8NLOUeYhN5H7yd0kh1fIKDH8F
-	 1pDGKo2V4dp5hznNCu0cQGHd/uUYq4fZJwEgnxhB1YzJcW6+jPqQoh5pDs2Aj3eeQw
-	 Yy/YGFlf9KmZHAYIpT48otgbamOHzQ8gYbjevUZZBBgbGkYcz0iXL1zRjMStRm047A
-	 rxO94t+UJdl9ygc4tBYw63ArxFRxVi69cOJHIiUSx/xw1HQ3mod89dg5zCNA936goK
-	 ukfB3XugnSdK4hYtEpTUrtw6th0ye46cM+nYcxafYvoMBck7aXrlRPPr8LUp6YKWcd
-	 WuqFt3+M9oPTg==
-Message-ID: <1ed61e4d-300e-4f79-948a-5aa7dcc06a6d@kernel.org>
-Date: Wed, 9 Oct 2024 18:38:36 +0900
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AcLymq+h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B808BC4CEC5;
+	Wed,  9 Oct 2024 09:38:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1728466728;
+	bh=Jw9m9MFXObg+vZ7wq05G3wqyWtyj3AK1eBeQfJJK90U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AcLymq+hoDLhN3h3N8nHp58BgFOa4jDynBqk5dzipxHtlbGOU9EoJHZr1xWIGUvqd
+	 1/8BzU9GNB5AWykOOa82//nU/OkQpZ2Tl07ETsLRXZZMd4MYEMeaOwuFdvt3dbdEkn
+	 E0Fd5uSJFrxi3J4FjD1qWeIfBp1sHnDUf7i3tpjk=
+Date: Wed, 9 Oct 2024 11:38:45 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Philipp Stanner <pstanner@redhat.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Basavaraj Natikar <basavaraj.natikar@amd.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Alex Dubov <oakad@yahoo.com>,
+	Sudarsana Kalluru <skalluru@marvell.com>,
+	Manish Chopra <manishc@marvell.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
+	Igor Mitsyanko <imitsyanko@quantenna.com>,
+	Sergey Matyukevich <geomatsi@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Chen Ni <nichen@iscas.ac.cn>, Ricky Wu <ricky_wu@realtek.com>,
+	Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mostafa Saleh <smostafa@google.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Hannes Reinecke <hare@suse.de>,
+	John Garry <john.g.garry@oracle.com>,
+	Soumya Negi <soumya.negi97@gmail.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu <yi.l.liu@intel.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>,
+	Marek =?iso-8859-1?Q?Marczykowski-G=F3recki?= <marmarek@invisiblethingslab.com>,
+	Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Kai Vehmanen <kai.vehmanen@linux.intel.com>,
+	Peter Ujfalusi <peter.ujfalusi@linux.intel.com>,
+	Rui Salvaterra <rsalvaterra@gmail.com>,
+	Marc Zyngier <maz@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ntb@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-staging@lists.linux.dev, kvm@vger.kernel.org,
+	xen-devel@lists.xenproject.org, linux-sound@vger.kernel.org
+Subject: Re: [RFC PATCH 10/13] staging: rts5280: Use always-managed version
+ of pci_intx()
+Message-ID: <2024100936-brunette-flannels-0d82@gregkh>
+References: <20241009083519.10088-1-pstanner@redhat.com>
+ <20241009083519.10088-11-pstanner@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ahci_platform: Modify MAINTAINERS entry
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-References: <20241009081557.377035-1-dlemoal@kernel.org>
- <ZwZKW-KlUZR0UMDd@ryzen>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <ZwZKW-KlUZR0UMDd@ryzen>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241009083519.10088-11-pstanner@redhat.com>
 
-On 10/9/24 18:18, Niklas Cassel wrote:
-> On Wed, Oct 09, 2024 at 05:15:57PM +0900, Damien Le Moal wrote:
->> Modify the MAINTAINERS entry for the ahci_platform driver (LIBATA SATA
->> AHCI PLATFORM devices support) to remove Jens as maintainer.
->>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> ---
->>  MAINTAINERS | 1 -
->>  1 file changed, 1 deletion(-)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index c27f3190737f..d377e81ab2bc 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -12961,7 +12961,6 @@ F:	drivers/ata/sata_gemini.h
->>  
->>  LIBATA SATA AHCI PLATFORM devices support
->>  M:	Hans de Goede <hdegoede@redhat.com>
->> -M:	Jens Axboe <axboe@kernel.dk>
->>  L:	linux-ide@vger.kernel.org
->>  S:	Maintained
->>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
+On Wed, Oct 09, 2024 at 10:35:16AM +0200, Philipp Stanner wrote:
+> pci_intx() is a hybrid function which can sometimes be managed through
+> devres. To remove this hybrid nature from pci_intx(), it is necessary to
+> port users to either an always-managed or a never-managed version.
 > 
-> This entry, and other "LIBATA XXX" entries still mention
-> axboe/linux-block.git as the tree.
+> rts5208 enables its PCI-Device with pcim_enable_device(). Thus, it needs the
+> always-managed version.
 > 
-> Another "LIBATA YYY" entry mentions dlemoal/libata.git as the tree.
+> Replace pci_intx() with pcim_intx().
 > 
-> Anothe "LIBATA ZZZ" entry has no tree defined at all.
-> 
-> 
-> It would be nice if you could either:
-> -Update all entries to use libata/linux.git as the tree
-> or
-> -Remove the defined tree for all entries except "LIBATA SUBSYSTEM".
+> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> ---
+>  drivers/staging/rts5208/rtsx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-OK. Let me do that.
-
-> 
-> 
-> Kind regards,
-> Niklas
-
-
--- 
-Damien Le Moal
-Western Digital Research
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
