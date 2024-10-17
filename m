@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A378168BE;
-	Thu, 17 Oct 2024 00:32:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56A3B1F94D
+	for <linux-ide@vger.kernel.org>; Thu, 17 Oct 2024 00:34:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729125174; cv=none; b=Oa45lB8+KU+4n1uIEcFIoZKQjqFAn1uJSEXhjm7Brn5cjwd3yeMkMzK4F5b1fmY7V39A8DRCrwxJvJ50bvfJHhyaMydrIIMgN9VNbHl4ARn9xnzm/yY9xvIEiEjvBwgDhWFJKvKDTT085JQydUztjGGUxTV8eyJd/pz5BKgtVFM=
+	t=1729125289; cv=none; b=e2Zpo26DV3RhFLxvttPDU0eAQ3VzXyoMMKRqF92zSiGcllQ9rSSso9w/epQ1zlwolPBedd1cV7C1Enj0t0z3usxdqYGqCOtLm67jjGslQciDPt50P+Fvy2R7/SvNfa98/ZuOuJdMgzHck9gSNhFYK4fWvEe9hxtybGvZDvA17BY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729125174; c=relaxed/simple;
-	bh=Xn/lfNOB5CJcKFnlnJ2galW8yMDfxvqUwdmAzO2TVpo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=AcdPwlpu1IwsSa2KnUo9FrfrZl9zX0pBteojQ+aJdXQljmN1W7+KSU5dKSqtk/1AIZfZT2VzEGnCz8N4yQbW/Qehl9tKPbwCHJvdTq+imog/UkTcWUzjsMS7K8Vys66ZUHwmY5KAOFDQnYlasPnaU+OaVnazIPksXbJ4svv0wtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ln/i7zlG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729125289; c=relaxed/simple;
+	bh=atI4S3MFwSNfunvV8a9tb4aDrNp2cyinECWBkcRcfDI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IjvPtRSpGyxYYmQCOk3DAmBoRzXmq3BmcT22mv4zO+XDvp+DGhxPUBOFdJLRwyKzagZUeAlUE3uHagJx0rm+uCqPC+DC1IijF12KXShKAFCaWUnWIMzqq1ufBLhIAogX1II8jE35QLgN/TWlovItxvw23axmpEYi4rmcEBfsyDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nPdFtflL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ln/i7zlG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 337FAC4CEC5;
-	Thu, 17 Oct 2024 00:32:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nPdFtflL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B969C4CEC5;
+	Thu, 17 Oct 2024 00:34:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729125173;
-	bh=Xn/lfNOB5CJcKFnlnJ2galW8yMDfxvqUwdmAzO2TVpo=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=ln/i7zlGjoFZ143dK1GKxjB2MlW6XccLYImbRTcl8HjhqT0XSu6z0nyUPVS2wene3
-	 wcrw4mm5PZccqmFG6iv2V5flzQUrVHw7nJ4okRRYkmQALn1vc9Kg4X0fyUpvyahIIc
-	 HxV+5fvclC8/jtD7IlJIE7u5IduKziTDNgeIV30W18Ac9+CwT4v9hY3Uy3VHdmyX8x
-	 uNfEjD5C0BZ9aEN0J/LV+R/Awig4AAATXIM1hkqI7fUBUtdhwYy5bFkpY7cHZOSPMe
-	 Qtk2PXzwhd9MK3evbWC3dhn4j0w1LtrKdT+9qprqXYkYyW5AvdWbR4azfHO4yiYtIe
-	 onNgiUYQkCt+w==
-Message-ID: <12e4ea05-7a76-4bd0-bb86-1d71a94140e6@kernel.org>
-Date: Thu, 17 Oct 2024 09:32:51 +0900
+	s=k20201202; t=1729125288;
+	bh=atI4S3MFwSNfunvV8a9tb4aDrNp2cyinECWBkcRcfDI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=nPdFtflLWCN3X0rurOjX2BFvLpJwr+LVvuwtuSJYNwJFXH/Lx7/wMbZtL9DnUQl3o
+	 5iqBraHehzJS2A4V4cVen+vSPoPgXiZanyh4cmMGwMa9ZBlzEdB8vR+japakD/i3c6
+	 JZBqhNUknoexo7vKVGKlRIGJQF4ifyvEYED6Z2cZ085SXIfUZyBhG36K/RqiSO3l16
+	 IXOivi/+lrcgVel56GPlF3y5uEIFmtWcPwmy0/zipw1Bx+QUrpVFtjrIglFltxHpmS
+	 lKFywcPXTQhrT3/eTvr1RHKMbJvKzbcpYp2EQDtP7QVYOrBRA8OUQLOIbjXj4T2efM
+	 6vJqTwJMmPaug==
+Message-ID: <8854fd2e-c8d5-4308-893a-0cf14da03ffe@kernel.org>
+Date: Thu, 17 Oct 2024 09:34:47 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -35,24 +35,32 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 1/1] ata: libata-scsi: Refactor scsi_6_lba_len() with
- use of get_unaligned_be24()
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20241016131845.898632-1-andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH] ata: Switch back to struct platform_driver::remove()
+To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: linux-ide@vger.kernel.org
+References: <20241016141609.27329-2-u.kleine-koenig@baylibre.com>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20241016131845.898632-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20241016141609.27329-2-u.kleine-koenig@baylibre.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 10/16/24 22:18, Andy Shevchenko wrote:
-> Refactor scsi_6_lba_len() with use of get_unaligned_be24() to make it
-> consistent with other similar helper implementations.
+On 10/16/24 23:16, Uwe Kleine-König wrote:
+> After commit 0edb555a65d1 ("platform: Make platform_driver::remove()
+> return void") .remove() is (again) the right callback to implement for
+> platform drivers.
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Convert all platform drivers below drivers/ata/ to use .remove(), with
+> the eventual goal to drop struct platform_driver::remove_new(). As
+> .remove() and .remove_new() have the same prototypes, conversion is done
+> by just changing the structure member name in the driver initializer.
+> 
+> While touching these files, make indention of the struct initializer
+> consistent in several files.
+> 
+> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
 
 Looks good.
 
