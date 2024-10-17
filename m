@@ -1,71 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56A3B1F94D
-	for <linux-ide@vger.kernel.org>; Thu, 17 Oct 2024 00:34:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F4671B81CC;
+	Thu, 17 Oct 2024 07:51:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729125289; cv=none; b=e2Zpo26DV3RhFLxvttPDU0eAQ3VzXyoMMKRqF92zSiGcllQ9rSSso9w/epQ1zlwolPBedd1cV7C1Enj0t0z3usxdqYGqCOtLm67jjGslQciDPt50P+Fvy2R7/SvNfa98/ZuOuJdMgzHck9gSNhFYK4fWvEe9hxtybGvZDvA17BY=
+	t=1729151477; cv=none; b=rINgb2ge31/2/kagIYNBLaP1TzrUm5MtV3Blq/TBMor0gns2MZyQkHl3rGBi/O8HEmrtbugIBKfuvmQ8+G+Miy17063D6nCz3hAxMNGHCwofJUZ9zgANle+jWCKCatv1rrIKGo0jF7p55LMeQYOc+GgXvYfm8ivO60uqddpXYu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729125289; c=relaxed/simple;
-	bh=atI4S3MFwSNfunvV8a9tb4aDrNp2cyinECWBkcRcfDI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IjvPtRSpGyxYYmQCOk3DAmBoRzXmq3BmcT22mv4zO+XDvp+DGhxPUBOFdJLRwyKzagZUeAlUE3uHagJx0rm+uCqPC+DC1IijF12KXShKAFCaWUnWIMzqq1ufBLhIAogX1II8jE35QLgN/TWlovItxvw23axmpEYi4rmcEBfsyDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nPdFtflL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729151477; c=relaxed/simple;
+	bh=S7jKXDCTV0a7mjHjenpVgcs/7uJFTwTY0Mo7sljId2E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QxtspXTxzLbQXZ2mnOYWzLKQX7p3BEDU1tdGN6esBT1HtxghZ9N1e8bMkJm9Of2c0WlhBiWa6M4+lwr6D922xnIFgPiBemwjHWgJE8DKjAVAN+j12uQ6SaUd5l4k2keHbB0Naffttrtfod6Rp9xL4xoNbLJomx1TGUDWnEsvnDU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nnuHR7jw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nPdFtflL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B969C4CEC5;
-	Thu, 17 Oct 2024 00:34:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nnuHR7jw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65243C4CEC3;
+	Thu, 17 Oct 2024 07:51:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729125288;
-	bh=atI4S3MFwSNfunvV8a9tb4aDrNp2cyinECWBkcRcfDI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=nPdFtflLWCN3X0rurOjX2BFvLpJwr+LVvuwtuSJYNwJFXH/Lx7/wMbZtL9DnUQl3o
-	 5iqBraHehzJS2A4V4cVen+vSPoPgXiZanyh4cmMGwMa9ZBlzEdB8vR+japakD/i3c6
-	 JZBqhNUknoexo7vKVGKlRIGJQF4ifyvEYED6Z2cZ085SXIfUZyBhG36K/RqiSO3l16
-	 IXOivi/+lrcgVel56GPlF3y5uEIFmtWcPwmy0/zipw1Bx+QUrpVFtjrIglFltxHpmS
-	 lKFywcPXTQhrT3/eTvr1RHKMbJvKzbcpYp2EQDtP7QVYOrBRA8OUQLOIbjXj4T2efM
-	 6vJqTwJMmPaug==
-Message-ID: <8854fd2e-c8d5-4308-893a-0cf14da03ffe@kernel.org>
-Date: Thu, 17 Oct 2024 09:34:47 +0900
+	s=k20201202; t=1729151476;
+	bh=S7jKXDCTV0a7mjHjenpVgcs/7uJFTwTY0Mo7sljId2E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=nnuHR7jwc5IT9MUnpqTkftP717SgFq2tdbzrAXLJr0NNXMPwkfDRz0DOmpmLKdpfB
+	 vI3dj/r0aj6unSib+Ajn75Z/dVWMfwwAZLpYTqgTPN94WoXpHKZzvx4BCkQqYmF+E5
+	 sR1NtbnU+Y91mNgozQBJkBSYpH9pnxU2CjcuXGV01SwAIff4HHp3dH6d6CsWINCYJa
+	 EKqLVtbTJ61f/74WcKhy8To0jm0Hrduf43nC2norZ95y8fry4OQV6dQexDDbgqGFHD
+	 h/Ylk92vVrLZrg8kZjQAjS9wRS6OBoMYHYqrTeVcuOx4jHmwdkCBhDaUoptKso9F4D
+	 3rAyz4IDimhmg==
+Date: Thu, 17 Oct 2024 09:51:01 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Philipp Stanner <pstanner@redhat.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Basavaraj Natikar <basavaraj.natikar@amd.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alex Dubov <oakad@yahoo.com>,
+	Sudarsana Kalluru <skalluru@marvell.com>,
+	Manish Chopra <manishc@marvell.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
+	Igor Mitsyanko <imitsyanko@quantenna.com>,
+	Sergey Matyukevich <geomatsi@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Chen Ni <nichen@iscas.ac.cn>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Ricky Wu <ricky_wu@realtek.com>, Al Viro <viro@zeniv.linux.org.uk>,
+	Breno Leitao <leitao@debian.org>, Kevin Tian <kevin.tian@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Mostafa Saleh <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Yi Liu <yi.l.liu@intel.com>, Christian Brauner <brauner@kernel.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Eric Auger <eric.auger@redhat.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Ye Bin <yebin10@huawei.com>,
+	Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>,
+	Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>,
+	Peter Ujfalusi <peter.ujfalusi@linux.intel.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Kai Vehmanen <kai.vehmanen@linux.intel.com>,
+	Rui Salvaterra <rsalvaterra@gmail.com>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ntb@lists.linux.dev, linux-pci@vger.kernel.org, kvm@vger.kernel.org,
+	xen-devel@lists.xenproject.org, linux-sound@vger.kernel.org
+Subject: Re: [PATCH 09/13] ata: Use always-managed version of pci_intx()
+Message-ID: <ZxDB5TOb-sgiZfXg@ryzen.lan>
+References: <20241015185124.64726-1-pstanner@redhat.com>
+ <20241015185124.64726-10-pstanner@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: Switch back to struct platform_driver::remove()
-To: =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>,
- Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org
-References: <20241016141609.27329-2-u.kleine-koenig@baylibre.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20241016141609.27329-2-u.kleine-koenig@baylibre.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241015185124.64726-10-pstanner@redhat.com>
 
-On 10/16/24 23:16, Uwe Kleine-König wrote:
-> After commit 0edb555a65d1 ("platform: Make platform_driver::remove()
-> return void") .remove() is (again) the right callback to implement for
-> platform drivers.
+On Tue, Oct 15, 2024 at 08:51:19PM +0200, Philipp Stanner wrote:
+> pci_intx() is a hybrid function which can sometimes be managed through
+> devres. To remove this hybrid nature from pci_intx(), it is necessary to
+> port users to either an always-managed or a never-managed version.
 > 
-> Convert all platform drivers below drivers/ata/ to use .remove(), with
-> the eventual goal to drop struct platform_driver::remove_new(). As
-> .remove() and .remove_new() have the same prototypes, conversion is done
-> by just changing the structure member name in the driver initializer.
+> All users in ata enable their PCI-Device with pcim_enable_device(). Thus,
+> they need the always-managed version.
 > 
-> While touching these files, make indention of the struct initializer
-> consistent in several files.
+> Replace pci_intx() with pcim_intx().
 > 
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
+> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> ---
 
-Looks good.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
--- 
-Damien Le Moal
-Western Digital Research
+Acked-by: Niklas Cassel <cassel@kernel.org>
