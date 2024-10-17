@@ -1,25 +1,33 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6949A210C38;
-	Wed, 16 Oct 2024 19:49:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A378168BE;
+	Thu, 17 Oct 2024 00:32:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729108167; cv=none; b=Hiz8s5/ICdMMxDk6V9ri3x90i1jf3rs5l48LYJvNoweU44gB7kNo//tjdsCl3uRsm1lY2bQhJMT5dXtdO/NyNfQIwwN9fOLMTXOYp6goPPaOlW2Ciw063vuRSFUyy1nH/YaEfHUdejrxYViIDLiRngaOSByTXAv952wTmc8TJg0=
+	t=1729125174; cv=none; b=Oa45lB8+KU+4n1uIEcFIoZKQjqFAn1uJSEXhjm7Brn5cjwd3yeMkMzK4F5b1fmY7V39A8DRCrwxJvJ50bvfJHhyaMydrIIMgN9VNbHl4ARn9xnzm/yY9xvIEiEjvBwgDhWFJKvKDTT085JQydUztjGGUxTV8eyJd/pz5BKgtVFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729108167; c=relaxed/simple;
-	bh=+hjBrFzvOL6xiMBUlSJ3Kdsp5Thqjo/zuLD5y0FAQBc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=MfJiEO57BgMH1vOP9kbkhdyE6wVYRNA0EAChCwmOrJMsesA+1rN+3V/ISIlkVSX+qX2yhT6qRUwVfbAgxBZhTSman6HK2653d4D5eE5WuU0Qx1a4txdWdMmFVEKnywr2j889Wy5NJUUN+mc29A8ewGg4UplwNz4eg3oFXaRkjzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.102] (213.87.153.89) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Wed, 16 Oct
- 2024 22:49:04 +0300
-Message-ID: <a32f0891-936b-4cce-a874-78b1865717ae@omp.ru>
-Date: Wed, 16 Oct 2024 22:49:02 +0300
+	s=arc-20240116; t=1729125174; c=relaxed/simple;
+	bh=Xn/lfNOB5CJcKFnlnJ2galW8yMDfxvqUwdmAzO2TVpo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=AcdPwlpu1IwsSa2KnUo9FrfrZl9zX0pBteojQ+aJdXQljmN1W7+KSU5dKSqtk/1AIZfZT2VzEGnCz8N4yQbW/Qehl9tKPbwCHJvdTq+imog/UkTcWUzjsMS7K8Vys66ZUHwmY5KAOFDQnYlasPnaU+OaVnazIPksXbJ4svv0wtQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ln/i7zlG; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ln/i7zlG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 337FAC4CEC5;
+	Thu, 17 Oct 2024 00:32:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729125173;
+	bh=Xn/lfNOB5CJcKFnlnJ2galW8yMDfxvqUwdmAzO2TVpo=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=ln/i7zlGjoFZ143dK1GKxjB2MlW6XccLYImbRTcl8HjhqT0XSu6z0nyUPVS2wene3
+	 wcrw4mm5PZccqmFG6iv2V5flzQUrVHw7nJ4okRRYkmQALn1vc9Kg4X0fyUpvyahIIc
+	 HxV+5fvclC8/jtD7IlJIE7u5IduKziTDNgeIV30W18Ac9+CwT4v9hY3Uy3VHdmyX8x
+	 uNfEjD5C0BZ9aEN0J/LV+R/Awig4AAATXIM1hkqI7fUBUtdhwYy5bFkpY7cHZOSPMe
+	 Qtk2PXzwhd9MK3evbWC3dhn4j0w1LtrKdT+9qprqXYkYyW5AvdWbR4azfHO4yiYtIe
+	 onNgiUYQkCt+w==
+Message-ID: <12e4ea05-7a76-4bd0-bb86-1d71a94140e6@kernel.org>
+Date: Thu, 17 Oct 2024 09:32:51 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -27,109 +35,29 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 09/13] ata: Use always-managed version of pci_intx()
-To: Philipp Stanner <pstanner@redhat.com>, Damien Le Moal
-	<dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Basavaraj Natikar
-	<basavaraj.natikar@amd.com>, Jiri Kosina <jikos@kernel.org>, Benjamin
- Tissoires <bentiss@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Alex Dubov <oakad@yahoo.com>,
-	Sudarsana Kalluru <skalluru@marvell.com>, Manish Chopra
-	<manishc@marvell.com>, "David S. Miller" <davem@davemloft.net>, Eric Dumazet
-	<edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
-	<pabeni@redhat.com>, Rasesh Mody <rmody@marvell.com>,
-	<GR-Linux-NIC-Dev@marvell.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
-	Sergey Matyukevich <geomatsi@gmail.com>, Kalle Valo <kvalo@kernel.org>,
-	Sanjay R Mehta <sanju.mehta@amd.com>, Shyam Sundar S K
-	<Shyam-sundar.S-k@amd.com>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
-	<dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, Bjorn Helgaas
-	<bhelgaas@google.com>, Alex Williamson <alex.williamson@redhat.com>, Juergen
- Gross <jgross@suse.com>, Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>, Jaroslav Kysela
-	<perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Chen Ni
-	<nichen@iscas.ac.cn>, Mario Limonciello <mario.limonciello@amd.com>, Ricky Wu
-	<ricky_wu@realtek.com>, Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao
-	<leitao@debian.org>, Kevin Tian <kevin.tian@intel.com>, Thomas Gleixner
-	<tglx@linutronix.de>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?=
-	<ilpo.jarvinen@linux.intel.com>, Andy Shevchenko
-	<andriy.shevchenko@linux.intel.com>, Mostafa Saleh <smostafa@google.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu <yi.l.liu@intel.com>, Christian
- Brauner <brauner@kernel.org>, Ankit Agrawal <ankita@nvidia.com>, Eric Auger
-	<eric.auger@redhat.com>, Reinette Chatre <reinette.chatre@intel.com>, Ye Bin
-	<yebin10@huawei.com>, =?UTF-8?Q?Marek_Marczykowski-G=C3=B3recki?=
-	<marmarek@invisiblethingslab.com>, Pierre-Louis Bossart
-	<pierre-louis.bossart@linux.dev>, Peter Ujfalusi
-	<peter.ujfalusi@linux.intel.com>, Maarten Lankhorst
-	<maarten.lankhorst@linux.intel.com>, Kai Vehmanen
-	<kai.vehmanen@linux.intel.com>, Rui Salvaterra <rsalvaterra@gmail.com>
-CC: <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-input@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <ntb@lists.linux.dev>,
-	<linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>,
-	<xen-devel@lists.xenproject.org>, <linux-sound@vger.kernel.org>
-References: <20241015185124.64726-1-pstanner@redhat.com>
- <20241015185124.64726-10-pstanner@redhat.com>
+Subject: Re: [PATCH v1 1/1] ata: libata-scsi: Refactor scsi_6_lba_len() with
+ use of get_unaligned_be24()
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Niklas Cassel <cassel@kernel.org>, linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20241016131845.898632-1-andriy.shevchenko@linux.intel.com>
+From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <20241015185124.64726-10-pstanner@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Organization: Western Digital Research
+In-Reply-To: <20241016131845.898632-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 10/16/2024 19:30:03
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 188488 [Oct 16 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 39 0.3.39
- e168d0b3ce73b485ab2648dd465313add1404cce
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.153.89 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.153.89 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;127.0.0.199:7.1.2
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.153.89
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/16/2024 19:34:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 10/16/2024 5:04:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On 10/15/24 9:51 PM, Philipp Stanner wrote:
-
-> pci_intx() is a hybrid function which can sometimes be managed through
-> devres. To remove this hybrid nature from pci_intx(), it is necessary to
-> port users to either an always-managed or a never-managed version.
+On 10/16/24 22:18, Andy Shevchenko wrote:
+> Refactor scsi_6_lba_len() with use of get_unaligned_be24() to make it
+> consistent with other similar helper implementations.
 > 
-> All users in ata enable their PCI-Device with pcim_enable_device(). Thus,
-> they need the always-managed version.
-> 
-> Replace pci_intx() with pcim_intx().
-> 
-> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Looks good.
 
-[...]
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-MBR, Sergey
-
+-- 
+Damien Le Moal
+Western Digital Research
