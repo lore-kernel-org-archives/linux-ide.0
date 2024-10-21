@@ -1,96 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA37839EB;
-	Mon, 21 Oct 2024 15:20:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC44131182;
+	Mon, 21 Oct 2024 15:40:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729524018; cv=none; b=HDG6h61csYMQ9OuEazWPNw0WgHFqhP9x/pDJxvwyJ1uO0+bn87F7tYKhegLC/BTUSH/myMscDTmb6Pe6j0AMvnkx8rH++GXt3RGF7nJo4b2leK3drIkuLbrGzXOoa6DCBG8dcGtFkTN4CPQRLuDRBxH0DwAhU/Py7wN/DYktJ1Y=
+	t=1729525245; cv=none; b=F1rVvFtnyqJKU5qL0RtVSV0g9yhGjB5vImFkRC9Am7YW2nOjsYZnJ23N7waLWwAXVFU5W1hWs0DNFC29GRwVP9PWXdQK/LRaN+yKRCkowwdNxZxjm2dRGXmDDXhal4uAaRTuLH9Vg5uVC9PAccHpxvhDXf+GqAjLD5NBJlAgBKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729524018; c=relaxed/simple;
-	bh=RavReSX2R+y8sjDIaSr5xuC8/7DPGyL/PZkXGUjWQVw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pG8ptarRfEaJmqqRJC6dASlloWLWD2qmvRBH5zZejiMgyV4Ryc0qzY6EE51Elx9Bo/C1jhYZbMBdi1ptprm4JMU/iZ6nDwa21HwqzR5NR9E3dCRp3x+ML1hPdyH5Ds1WuALQVuuJCi4sm8yi5j4CMhA+6Imwo75DK1lDzouJIYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pmhpHZ76; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729525245; c=relaxed/simple;
+	bh=ifLaVKX5f4pjIkahfUVbVfbWhI693YQo3t5omuqgSrg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Uld2efJgr+wz9/wKoUkJ5ENiJD7Od54FkAsExypu/maCrfCKcn+8L98G6iOPY65O8mA5YB7O0bdnhhf+Zd4yA8j+w6Tl6+T42+3eW80A52hF2O5T4Q+RReybkWfRUAQXHAD68IR8DdFnjTPxhDytiBfX0yjgX+xW1M3KrzRwl3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=crN4GJzR; arc=none smtp.client-ip=209.85.208.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pmhpHZ76"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BC68C4CEC3;
-	Mon, 21 Oct 2024 15:20:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729524017;
-	bh=RavReSX2R+y8sjDIaSr5xuC8/7DPGyL/PZkXGUjWQVw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pmhpHZ76WDX3Cl6P6yjNDmStEyFyI0VipaHFzpxzl3uIqxpvpdCIr1KAelqXms9N1
-	 vYf0grGEm/fE4dxTTMa8XzSvXF7Q9qQiTyaXSj0gTS39zx8/rQs/XELobkpMFEAHDa
-	 BIXnh6bHqKf1RuGV3QtbsC+HMw14hNFmdvDyqUTSyhZt4JzKSPY7HX/pHBf4qk7Den
-	 oamJHH90d6RsurSO2HDoMQANGrh3b4Z8Z5o5MQqNkpT/gK7Qc2Ve3GfNuqwoVb+QTr
-	 pBrtsEjb1Cfm12NCnO6PtYRyUhq8Pr2xRDfSfM24nNgDLVd5bc2s/sSFyiNjnd06S1
-	 dMEDwAsb8YUiw==
-Date: Mon, 21 Oct 2024 17:20:12 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: "Lai, Yi" <yi1.lai@linux.intel.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Igor Pylypiv <ipylypiv@google.com>,
-	Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org,
-	yi1.lai@intel.com, syzkaller-bugs@googlegroups.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] ata: libata: Clear DID_TIME_OUT for ATA PT commands
- with sense data
-Message-ID: <ZxZxLK7eSQ_bwkLe@ryzen.lan>
-References: <20240909154237.3656000-2-cassel@kernel.org>
- <ZxYz871I3Blsi30F@ly-workstation>
- <ZxZD-doogmnZGfRI@ryzen.lan>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="crN4GJzR"
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2fb3110b964so40579041fa.1;
+        Mon, 21 Oct 2024 08:40:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1729525241; x=1730130041; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Kv5UT6mtcpe+cnb4k9m/wVUK0gKv8OfPDi6E9+ZSQzA=;
+        b=crN4GJzRmMhRb0cwNbbtntzmSaMrDdpRBzDDGZLXRi1FB0IK1z3T3po6G3jTZU6Gtf
+         GXid8DqM1p6NSjKpefxt/X7w4OBIdtuTdBOzm8WMnFCwAqY4fJdUvcXvSGO4/s6MehBQ
+         YEWKMwiH02iOT5pb1f9bl0OZpp7sWnz24AUmcKLqoWtmGpMfBUEDOiFZzALBY/THaix5
+         P6dpQ92w+Cbq/XAkQhyW2OYZW8FCMF8jRRqdDYBIhtuiEvQ7oEAPCuPT6Fre+CoPD9Mn
+         sBawzPccDdH3bfX0wgKPd4CpC1kfMdbzDIVsfgLeN0RYzBfmvKGNa8JwRLlQmxi0qyog
+         aRyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729525241; x=1730130041;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kv5UT6mtcpe+cnb4k9m/wVUK0gKv8OfPDi6E9+ZSQzA=;
+        b=p3KGqgD76Oej5kvu+6+CX77DyopDwtObxFaJ1LZzBJFSNgo3JmQ8WzYsZ1xnMaLZe6
+         ZGZPtFprASh1emBvQsjBKEYLhXPECGPI200nFkNQgyw09ldAySDLszsi7zY5UzwV6GQS
+         nB2/rOayUlpnbiAS0ciqGoiNIUS8coWou9HAKeIWETBi/5srmiNo5kQlU2ZQK65zq1yk
+         McxVHoB4fhf2tVxblgglKNigya18NGTKr5Kt0+D37efsDK/VOCuZs/n4taNRw7LRLB0A
+         KAqNX3JLHj/gYFcoGvN1HD3b97GeZhTmzPWvmM1bcss7qC9PEgB/BPrBYh+dYAeL/LwL
+         jPfg==
+X-Forwarded-Encrypted: i=1; AJvYcCVD2GJ+bhtCFTr6Gt3+Kic6XSdypPwo5UcP5J6+5DDYnBFOkC8f0oJKYmOBwPbOuqasMy+ToQclzBI=@vger.kernel.org, AJvYcCVNIhl4FcoAoAEvJUYV5njKavwQ2VsmnILwRdKwuiq5BO9NpAvJqyfSb3gXpCaaqhYnln/3FZa1fiw6j7YgkZ21/JM=@vger.kernel.org, AJvYcCVz2EInZg/sbml2FfFgxHYY8gQ96MWASxIOta/+G9P1EQg9V/0Qrm0p7NVkGuKBixnT/eyTi89c@vger.kernel.org, AJvYcCXL+uCYV3lYjyUZr8w9bB4N7HSctXn+NruB+EKXkOM7l086/XOO64cgS+gLE4OM6o21YdRQsAp9VtY=@vger.kernel.org, AJvYcCXXxDNwk7bxVhb6IiGV6pxNvI55TUawgg0lUlo2X8LAs9ND1r355SsmHFm9TIpfSswuvSF1maRjYvnopinA@vger.kernel.org
+X-Gm-Message-State: AOJu0YzzeH1tihXGA7VDx3gHnyUfhromGW0umIz8ell9pUUrKF1zVVPJ
+	K3wl2f+UEcFYOrm/tSfPO0C4GVa05ONI6WDch4XV/y6uXx6m4mOU8BS0og==
+X-Google-Smtp-Source: AGHT+IFkQVd4FvCnjeIZN1QcmBJUx78OKRBL8umpe0S6Nsvo84HcjKcLxgJwz2/j/IsIFpL/2Eq0jg==
+X-Received: by 2002:a05:651c:1541:b0:2f7:65c5:c92 with SMTP id 38308e7fff4ca-2fb82eaf006mr44503811fa.20.1729525241030;
+        Mon, 21 Oct 2024 08:40:41 -0700 (PDT)
+Received: from ?IPV6:2a00:1fa0:4321:8ef5:e514:855b:c891:f732? ([2a00:1fa0:4321:8ef5:e514:855b:c891:f732])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-2fb9ae12273sm5218741fa.115.2024.10.21.08.40.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Oct 2024 08:40:39 -0700 (PDT)
+Message-ID: <2b8dc3a4-5017-4028-89a0-7267ff3b48a1@gmail.com>
+Date: Mon, 21 Oct 2024 18:40:38 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZxZD-doogmnZGfRI@ryzen.lan>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH/RFC] MAINTAINERS: Re-add cancelled Renesas driver sections
+To: =?UTF-8?Q?Niklas_S=C3=B6derlund?=
+ <niklas.soderlund+renesas@ragnatech.se>,
+ Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+ Paul Barker <paul.barker.ct@bp.renesas.com>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ linux-renesas-soc@vger.kernel.org, netdev@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-sh@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <0a189e2c4090a1b308e18005d2552e335bac354f.1729511337.git.geert+renesas@glider.be>
+ <20241021150447.GC4176464@ragnatech.se>
+Content-Language: en-US
+From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
+In-Reply-To: <20241021150447.GC4176464@ragnatech.se>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Oct 21, 2024 at 02:07:21PM +0200, Niklas Cassel wrote:
-> Hello Yi Lai,
+On 10/21/24 6:04 PM, Niklas Söderlund wrote:
+[...]
+
+>> Removing full driver sections also removed mailing list entries, causing
+>> submitters of future patches to forget CCing these mailing lists.
+>>
+>> Fixes: 6e90b675cf942e50 ("MAINTAINERS: Remove some entries due to various compliance requirements.")
+>> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+>> ---
+>> Anyone who wants to take over maintenance for these drivers?
 > 
-> On Mon, Oct 21, 2024 at 06:58:59PM +0800, Lai, Yi wrote:
-> > Hi Niklas Cassel,
-> > 
-> > Greetings!
-> > 
-> > I used Syzkaller and found that there is INFO: task hung in blk_mq_get_tag in v6.12-rc3
-> > 
-> > After bisection and the first bad commit is:
-> > "
-> > e5dd410acb34 ata: libata: Clear DID_TIME_OUT for ATA PT commands with sense data
-> > "
-> 
-> It might be that your bisection results are accurate.
-> 
-> However, after looking at the stacktraces, I find it way more likely that
-> bisection has landed on the wrong commit.
-> 
-> See this series that was just queued (for 6.13) a few days ago that solves a
-> similar starvation:
-> https://lore.kernel.org/linux-block/20241014092934.53630-1-songmuchun@bytedance.com/
-> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/log/?h=for-6.13/block
-> 
-> You could perhaps run with v6.14-rc4 (which should be able to trigger the bug)
-> and then try v6.14-rc4 + that series applied, to see if you can still trigger
-> the bug?
+> In case Sergei is not interested to keep looking after the RAVB and/or 
+> SUPERH Ethernet drivers I would be happy to do so.
 
-Another patch that might be relevant:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e972b08b91ef48488bae9789f03cfedb148667fb
+   I am still interested, of course... but looks like I'm not allowed to anymore. :-/
 
-Which fixes a use after delete in rq_qos_wake_function().
-(We can see that the stack trace has rq_qos_wake_function() before
-getting stuck forever in rq_qos_wait())
+> In either case should not the maintainer entry in the bindings documents
+> also be updated?
 
-Who knows what could go wrong when accessing a deleted entry, in the
-report there was a crash, but I could image other surprises :)
-The fix was first included in v6.12-rc4.
+   These still have my Gmail address... I'm not sure yet what to do with it...
 
+[...]
 
-Kind regards,
-Niklas
+MBR, Sergey
+
