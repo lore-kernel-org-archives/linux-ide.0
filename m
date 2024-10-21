@@ -1,25 +1,33 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D3A6AA7
-	for <linux-ide@vger.kernel.org>; Sun, 20 Oct 2024 16:50:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64D5913FFC
+	for <linux-ide@vger.kernel.org>; Mon, 21 Oct 2024 00:48:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729443027; cv=none; b=XUSyak6XruX5TLFluFIOYD9XOo/MjW0gn95eK0VKrZwYxnXcc5ruxzzTM/DDmHbcdPWevKT8CiH1CRcpeKearuzaazSf6fx9v0X1E+wJHMpvCLASYK4WKHJQJ4JQAoiWX1X4FjspgNytijemFlD2KHWzSoY16NCzjpV+5lWfAI4=
+	t=1729471716; cv=none; b=Q1k/YzmNgmUaYJcU/hz41hjayke1KEROJb0rs1x7DUV9q4qu04K1YygYEUlF8RwVLhQqoDKV1/1YJJYns/s+IgNgnJMHZiLqx1iHKA77W4XnX4RjLMZ/AQ+SfvEe7TAvDVjYU0wdZSsEoOhUKzIPpbQzrKJlQ57QUkPPH8dQ99w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729443027; c=relaxed/simple;
-	bh=QmKP0EvUxYhq4U/0hqG8nrIoP1JJ88c2FSFbRHhW/5A=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
-	 In-Reply-To:Content-Type; b=BWLuaWwFLC23AlchS7deCrolT/OlmSLOSGMpzNpB48gpfYo9nzlky+8cNvPFpEkUwGWBRNOUitls4XWegc5E4l6VULIXeW1gWAPnebQJkgZzinycw+u+WhT1fjan+7EAyuCgH8LtGd/LXUnvADcxcJF++KJYA6/Uk9455ROp0Xs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.102] (213.87.152.29) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Sun, 20 Oct
- 2024 19:50:18 +0300
-Message-ID: <4ea0407c-46f5-4744-8642-1c7da52a7d7e@omp.ru>
-Date: Sun, 20 Oct 2024 19:50:17 +0300
+	s=arc-20240116; t=1729471716; c=relaxed/simple;
+	bh=K/TJJKjKQkv3ba3bvDmC17cnz+rzsya6pw0aZIlmAX0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=QQYhZaL3UeLs7hRl01jcA+rquAHjk/dcVWo4B5+XTgO1a4ToLKYmjqXt5Apg+g+iPN/NVcw8MVqMfDikzVgePrmz7EL43q+mnV7DQn1SM/oD6ccSNERVhZOWX6rtsakaakG5MIN0aLhaNA++bxXK+px5gRzp4U8c7vERkh8I8DM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EVoC9GmA; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EVoC9GmA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73538C4CEC7;
+	Mon, 21 Oct 2024 00:48:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729471716;
+	bh=K/TJJKjKQkv3ba3bvDmC17cnz+rzsya6pw0aZIlmAX0=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=EVoC9GmAbXDLutk9TUp16l7gjMyq+MuFiMGLqs49qdwM6Y7qDXb68+7eKa5jOi6O/
+	 5f7xHnGtI8aGh9RBco+ercdyGdn6LxSSK1CGbYMW24EbCE4lZnAWUyU2Vd3u56QQ6K
+	 8HFu8qGZNrgxzEJT7/Dmc7H67WtOAdJqxkNSagV34jt1fo8UoKLYVoInC9A1iqf8+9
+	 B5UYFqdLauL8oW0wBO5Ryib1NGBBEJL/H+hZxAqzzhLrnbuy/eDOlUhWAqVJeVrEW3
+	 NhCtZ2wYDF49prjbHw1TdvxupslsYGgbsIC2+TISjTWy6KuD4zR/bMTdeXLXAl5Lb1
+	 mBGIB54bzZRUg==
+Message-ID: <23f2e1d5-eec0-4886-8fcb-760ed81c672a@kernel.org>
+Date: Mon, 21 Oct 2024 09:48:33 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -27,82 +35,57 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH v2 2/2] ata: ata_generic: use IS_ENABLED() macro
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-To: <linux-ide@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas
- Cassel <cassel@kernel.org>
+Subject: Re: [PATCH v2 1/2] ata: ata_generic: add comment about Toshiba
+ Piccolo
+To: Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>
 References: <c1b91a7a-74a9-46bf-914a-b8dfc669849e@omp.ru>
+ <7d8a58b7-dbc9-474c-8996-6218aa89d0be@omp.ru>
+From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
-Organization: Open Mobile Platform
-In-Reply-To: <c1b91a7a-74a9-46bf-914a-b8dfc669849e@omp.ru>
-Content-Type: text/plain; charset="UTF-8"
+Organization: Western Digital Research
+In-Reply-To: <7d8a58b7-dbc9-474c-8996-6218aa89d0be@omp.ru>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 10/20/2024 16:33:12
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 188560 [Oct 20 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 40 0.3.40
- cefee68357d12c80cb9cf2bdcf92256b1d238d22
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.152.29 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.152.29 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	127.0.0.199:7.1.2;omp.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.152.29
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/20/2024 16:36:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 10/20/2024 2:01:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-Replace the explicit defined(CONFIG_PATA_TOSHIBA[_MODULE]) checks with
-the new-fangled IS_ENABLED() check in the ata_generic[] definition...
+On 10/21/24 01:49, Sergey Shtylyov wrote:
+> Before the dedicated Toshiba Piccolo driver was written by Alan Cox,
+> these chips were handled by the generic driver; in case the dedicated
+> driver isn't enabled, the generic driver keeps claiming these chips --
+> add a comment clarifying that...
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Nice. But this really does not need to be a separate patch. Please squash 1/2
+and 2/2 together.
 
----
-Changes in version 2:
-- refreshed atop of the newly added patch #1;
-- rephrased the patch description.
+> 
+> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> 
+> ---
+> Changes in version 2:
+> - new patch.
+> 
+>  drivers/ata/ata_generic.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+> index 2f57ec00ab82..d6c210510c36 100644
+> --- a/drivers/ata/ata_generic.c
+> +++ b/drivers/ata/ata_generic.c
+> @@ -220,6 +220,11 @@ static struct pci_device_id ata_generic[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
+>  	  .driver_data = ATA_GEN_FORCE_DMA },
+> +	/*
+> +	 * Before the dedicated Toshiba Piccolo driver was written,
+> +	 * these chips were handled by the generic driver; keep the
+> +	 * old behavior if the dedicated driver is not enabled...
+> +	 */
+>  #if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
 
- drivers/ata/ata_generic.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index d6c210510c36..d5b2fa2ba6ad 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -225,7 +225,7 @@ static struct pci_device_id ata_generic[] = {
- 	 * these chips were handled by the generic driver; keep the
- 	 * old behavior if the dedicated driver is not enabled...
- 	 */
--#if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
-+#if !IS_ENABLED(CONFIG_PATA_TOSHIBA)
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
 -- 
-2.47.0
-
+Damien Le Moal
+Western Digital Research
