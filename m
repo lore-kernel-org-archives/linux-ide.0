@@ -1,88 +1,61 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E711E6DFC;
-	Mon, 21 Oct 2024 12:34:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AAD8193427;
+	Mon, 21 Oct 2024 13:40:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729514100; cv=none; b=RiA87lxEtjqU4TCusPFuafCENnCHktN5D01oqorUygJFLHKqtFNLMLiShYkc6f1q2H35v4BySO+enUTSe76IQOK9H6AJfhJZxcIooU7QhCv3XOQ/O3Eu774YAEwVTDDFEMRPch4TcqgQLPSSSoluva6VbwxWl0wKLAiUydBpltM=
+	t=1729518049; cv=none; b=DF98TD08tKsSazVCGIxtswFqcpviz2ufy4tQwcmQGOnkdo01oKarCit/I2rZL/obu5T8/uNlkp9iLuXH0UFq3VerQ1sSAW6kEfnqbpPROtj78sl6lMtlVsGZFczfBeJtWFlfc4wLomE2O21iQhK4ZtoZiyQBSQAQ8+zKnPfkHhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729514100; c=relaxed/simple;
-	bh=VZOZCsa7qmUi1UJAs2g6UE5vKe3qppCZnU+/JmMs3MM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YqSQLJgO8GKKYKpX5o1TiKeMNO8aXO7aBn9XcxAlSMAjWi+KiwfOvyW6/Rsu1R6rnQmqdTnMW0+iI5lJGdPSoK130r1CK6l4j6LajXJBrOyJldkmk230BusSlZqNAe28/f8ItGXklMGgWaCwwXF/ysGzxiPBnJBxilU8GPDq7uo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ir1E01Hk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729518049; c=relaxed/simple;
+	bh=//TuR2vpQb/x+53X9SqEKAr6hKvU49CnnUVsXV92/a0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TbQrVzVp/JwnET/uOcoyeegdDRkAg989yfCVz4+6bJHKEoksz+yFZa+2Dy2wDpYayiv0Fg6QoXbt48LxFL6EPZ/8886B6Rxfr8X/TJU2Wc0yPan3yby7mJHBvud2nKxqFvg1vIkhgSQyV9xc3f+1EMKgsvtbZ1F6CBfhFvhtiPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WptIpH63; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ir1E01Hk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2609EC4CEC3;
-	Mon, 21 Oct 2024 12:34:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WptIpH63"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE076C4CEC3;
+	Mon, 21 Oct 2024 13:40:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729514099;
-	bh=VZOZCsa7qmUi1UJAs2g6UE5vKe3qppCZnU+/JmMs3MM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ir1E01Hk4ahjBe1tmsfx5Gf2r2s8a23b73oDLRtW8dM4ZpsNVVSH/LHHWTLYEH2wX
-	 QQqAFDsITMAlDpiHa96cI9PRGxWcfBIcdT0kT/RNR9eYnM15jhQvbEyEmgCMdP0Sb9
-	 7SMvrp7LApAfACXBVCeaVppnQThqHx//jvk3Mw9Yc/rwbG2er2IT+cIMAh25BdTp9t
-	 JGCkLHcM8n4wJNkk7GiQEf6wWlmJ8twc1XrTDa7hjlE9rLqHqpRRX+R6xrpiutR5d8
-	 Tq4QnGUviSZAClOLyyLrSMtwHlmoLUj1Ych5UnvSYwP+vtsN1EsxbFiTTRtlAMp/Uf
-	 aWZynCA/UBeug==
-Message-ID: <6cda84ae-c07a-4905-9cf8-12622dab33ee@kernel.org>
-Date: Mon, 21 Oct 2024 21:34:56 +0900
+	s=k20201202; t=1729518049;
+	bh=//TuR2vpQb/x+53X9SqEKAr6hKvU49CnnUVsXV92/a0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=WptIpH63WTgdNfwWrAxEoEKr6/OClNVz0YvpB4l3PMREqCWKxzk7DHmvC9DsEbuSs
+	 eQdNp8ho9IJQpgOhdlTIRdRtir5nNjqGy0ElIlEX+LNBj2g2cMgICpnAoqzBhoSSRL
+	 TSPCv0cOc1vRk7C+gmcMSYqwep3zxGXjwiyNOw67AAR6xz70t/VM3JNIUiTCsnFNdn
+	 r9K2L74wj2ivu3nGKITGeeM9tyduPkkL0kzrafudFr2O0U0scFYe9blEh6wy2Bq+mD
+	 0iBvwpbOVAON89Hd627HumTN0yE6Zh/clPzYBoiSBHhh6M9fcWjZzKav6OjY2+hlzs
+	 In3wipGli9R7A==
+Date: Mon, 21 Oct 2024 14:40:44 +0100
+From: Simon Horman <horms@kernel.org>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	Paul Barker <paul.barker.ct@bp.renesas.com>,
+	Niklas =?utf-8?Q?S=C3=B6derlund?= <niklas.soderlund+renesas@ragnatech.se>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-renesas-soc@vger.kernel.org, netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH/RFC] MAINTAINERS: Re-add cancelled Renesas driver sections
+Message-ID: <20241021134044.GJ402847@kernel.org>
+References: <0a189e2c4090a1b308e18005d2552e335bac354f.1729511337.git.geert+renesas@glider.be>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] ata: libata: Clear DID_TIME_OUT for ATA PT commands
- with sense data
-To: Niklas Cassel <cassel@kernel.org>, "Lai, Yi" <yi1.lai@linux.intel.com>
-Cc: Hannes Reinecke <hare@suse.de>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <niklas.cassel@wdc.com>,
- linux-ide@vger.kernel.org, yi1.lai@intel.com,
- syzkaller-bugs@googlegroups.com, linux-kernel@vger.kernel.org
-References: <20240909154237.3656000-2-cassel@kernel.org>
- <ZxYz871I3Blsi30F@ly-workstation> <ZxZD-doogmnZGfRI@ryzen.lan>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <ZxZD-doogmnZGfRI@ryzen.lan>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0a189e2c4090a1b308e18005d2552e335bac354f.1729511337.git.geert+renesas@glider.be>
 
-On 10/21/24 21:07, Niklas Cassel wrote:
-> Hello Yi Lai,
+On Mon, Oct 21, 2024 at 01:56:51PM +0200, Geert Uytterhoeven wrote:
+> Removing full driver sections also removed mailing list entries, causing
+> submitters of future patches to forget CCing these mailing lists.
 > 
-> On Mon, Oct 21, 2024 at 06:58:59PM +0800, Lai, Yi wrote:
->> Hi Niklas Cassel,
->>
->> Greetings!
->>
->> I used Syzkaller and found that there is INFO: task hung in blk_mq_get_tag in v6.12-rc3
->>
->> After bisection and the first bad commit is:
->> "
->> e5dd410acb34 ata: libata: Clear DID_TIME_OUT for ATA PT commands with sense data
->> "
-> 
-> It might be that your bisection results are accurate.
-> 
-> However, after looking at the stacktraces, I find it way more likely that
-> bisection has landed on the wrong commit.
-> 
-> See this series that was just queued (for 6.13) a few days ago that solves a
-> similar starvation:
-> https://lore.kernel.org/linux-block/20241014092934.53630-1-songmuchun@bytedance.com/
-> https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/log/?h=for-6.13/block
-> 
-> You could perhaps run with v6.14-rc4 (which should be able to trigger the bug)
-> and then try v6.14-rc4 + that series applied, to see if you can still trigger
-> the bug?
+> Fixes: 6e90b675cf942e50 ("MAINTAINERS: Remove some entries due to various compliance requirements.")
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-s/6.14/6.13 in this paragraph :)
+Reviewed-by: Simon Horman <horms@kernel.org>
 
--- 
-Damien Le Moal
-Western Digital Research
