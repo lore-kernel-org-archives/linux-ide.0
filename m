@@ -1,59 +1,25 @@
-Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC44131182;
-	Mon, 21 Oct 2024 15:40:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8ED47A73
+	for <linux-ide@vger.kernel.org>; Mon, 21 Oct 2024 16:53:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729525245; cv=none; b=F1rVvFtnyqJKU5qL0RtVSV0g9yhGjB5vImFkRC9Am7YW2nOjsYZnJ23N7waLWwAXVFU5W1hWs0DNFC29GRwVP9PWXdQK/LRaN+yKRCkowwdNxZxjm2dRGXmDDXhal4uAaRTuLH9Vg5uVC9PAccHpxvhDXf+GqAjLD5NBJlAgBKQ=
+	t=1729529628; cv=none; b=hEfhiZtj+Z/eE9FP7K6sfeI+1v21yEeVFyakkITuZd1QZnYVBpVyV9/lMApKjJRtmx7OZx+QoxZzwjpTXaRGL4kyG6yVSVYOtyk9+6+AW81ZXP5CxQQ8CJtN/5CdAqU8MuCs9YeTkLPamSqFXpI6oydYjXiyZoGBmpXzsRFuFiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729525245; c=relaxed/simple;
-	bh=ifLaVKX5f4pjIkahfUVbVfbWhI693YQo3t5omuqgSrg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Uld2efJgr+wz9/wKoUkJ5ENiJD7Od54FkAsExypu/maCrfCKcn+8L98G6iOPY65O8mA5YB7O0bdnhhf+Zd4yA8j+w6Tl6+T42+3eW80A52hF2O5T4Q+RReybkWfRUAQXHAD68IR8DdFnjTPxhDytiBfX0yjgX+xW1M3KrzRwl3I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=crN4GJzR; arc=none smtp.client-ip=209.85.208.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="crN4GJzR"
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2fb3110b964so40579041fa.1;
-        Mon, 21 Oct 2024 08:40:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729525241; x=1730130041; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Kv5UT6mtcpe+cnb4k9m/wVUK0gKv8OfPDi6E9+ZSQzA=;
-        b=crN4GJzRmMhRb0cwNbbtntzmSaMrDdpRBzDDGZLXRi1FB0IK1z3T3po6G3jTZU6Gtf
-         GXid8DqM1p6NSjKpefxt/X7w4OBIdtuTdBOzm8WMnFCwAqY4fJdUvcXvSGO4/s6MehBQ
-         YEWKMwiH02iOT5pb1f9bl0OZpp7sWnz24AUmcKLqoWtmGpMfBUEDOiFZzALBY/THaix5
-         P6dpQ92w+Cbq/XAkQhyW2OYZW8FCMF8jRRqdDYBIhtuiEvQ7oEAPCuPT6Fre+CoPD9Mn
-         sBawzPccDdH3bfX0wgKPd4CpC1kfMdbzDIVsfgLeN0RYzBfmvKGNa8JwRLlQmxi0qyog
-         aRyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729525241; x=1730130041;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Kv5UT6mtcpe+cnb4k9m/wVUK0gKv8OfPDi6E9+ZSQzA=;
-        b=p3KGqgD76Oej5kvu+6+CX77DyopDwtObxFaJ1LZzBJFSNgo3JmQ8WzYsZ1xnMaLZe6
-         ZGZPtFprASh1emBvQsjBKEYLhXPECGPI200nFkNQgyw09ldAySDLszsi7zY5UzwV6GQS
-         nB2/rOayUlpnbiAS0ciqGoiNIUS8coWou9HAKeIWETBi/5srmiNo5kQlU2ZQK65zq1yk
-         McxVHoB4fhf2tVxblgglKNigya18NGTKr5Kt0+D37efsDK/VOCuZs/n4taNRw7LRLB0A
-         KAqNX3JLHj/gYFcoGvN1HD3b97GeZhTmzPWvmM1bcss7qC9PEgB/BPrBYh+dYAeL/LwL
-         jPfg==
-X-Forwarded-Encrypted: i=1; AJvYcCVD2GJ+bhtCFTr6Gt3+Kic6XSdypPwo5UcP5J6+5DDYnBFOkC8f0oJKYmOBwPbOuqasMy+ToQclzBI=@vger.kernel.org, AJvYcCVNIhl4FcoAoAEvJUYV5njKavwQ2VsmnILwRdKwuiq5BO9NpAvJqyfSb3gXpCaaqhYnln/3FZa1fiw6j7YgkZ21/JM=@vger.kernel.org, AJvYcCVz2EInZg/sbml2FfFgxHYY8gQ96MWASxIOta/+G9P1EQg9V/0Qrm0p7NVkGuKBixnT/eyTi89c@vger.kernel.org, AJvYcCXL+uCYV3lYjyUZr8w9bB4N7HSctXn+NruB+EKXkOM7l086/XOO64cgS+gLE4OM6o21YdRQsAp9VtY=@vger.kernel.org, AJvYcCXXxDNwk7bxVhb6IiGV6pxNvI55TUawgg0lUlo2X8LAs9ND1r355SsmHFm9TIpfSswuvSF1maRjYvnopinA@vger.kernel.org
-X-Gm-Message-State: AOJu0YzzeH1tihXGA7VDx3gHnyUfhromGW0umIz8ell9pUUrKF1zVVPJ
-	K3wl2f+UEcFYOrm/tSfPO0C4GVa05ONI6WDch4XV/y6uXx6m4mOU8BS0og==
-X-Google-Smtp-Source: AGHT+IFkQVd4FvCnjeIZN1QcmBJUx78OKRBL8umpe0S6Nsvo84HcjKcLxgJwz2/j/IsIFpL/2Eq0jg==
-X-Received: by 2002:a05:651c:1541:b0:2f7:65c5:c92 with SMTP id 38308e7fff4ca-2fb82eaf006mr44503811fa.20.1729525241030;
-        Mon, 21 Oct 2024 08:40:41 -0700 (PDT)
-Received: from ?IPV6:2a00:1fa0:4321:8ef5:e514:855b:c891:f732? ([2a00:1fa0:4321:8ef5:e514:855b:c891:f732])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-2fb9ae12273sm5218741fa.115.2024.10.21.08.40.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Oct 2024 08:40:39 -0700 (PDT)
-Message-ID: <2b8dc3a4-5017-4028-89a0-7267ff3b48a1@gmail.com>
-Date: Mon, 21 Oct 2024 18:40:38 +0300
+	s=arc-20240116; t=1729529628; c=relaxed/simple;
+	bh=Oo2EL6xDfwKWeTke31YqvNS/ARjvUUIqQncfCOtwjO8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=YdC1g/q7YS3+CCuOVswDLtwDB2WqMZzKJ/9kNIaxLGNZiFpuLn+SkR3LM5y0UV35+EQqbO5MXetsnMSXDiRDnr6N0tE3kQ9N+Kt360F9UtUyonk95WoC2gSJ11kbk2a+KRGV+BK7aufuGL5xogTQBp7aedsl0X+yw/BKuod6ldA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.2.102] (213.87.162.141) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Mon, 21 Oct
+ 2024 19:53:28 +0300
+Message-ID: <c3ffd07d-b1ac-4c67-a7be-0047261e8301@omp.ru>
+Date: Mon, 21 Oct 2024 19:53:28 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -61,46 +27,80 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH/RFC] MAINTAINERS: Re-add cancelled Renesas driver sections
-To: =?UTF-8?Q?Niklas_S=C3=B6derlund?=
- <niklas.soderlund+renesas@ragnatech.se>,
- Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
- Paul Barker <paul.barker.ct@bp.renesas.com>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- linux-renesas-soc@vger.kernel.org, netdev@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-sh@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <0a189e2c4090a1b308e18005d2552e335bac354f.1729511337.git.geert+renesas@glider.be>
- <20241021150447.GC4176464@ragnatech.se>
+Subject: Re: [PATCH v2 1/2] ata: ata_generic: add comment about Toshiba
+ Piccolo
+To: Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, Niklas
+ Cassel <cassel@kernel.org>
+References: <c1b91a7a-74a9-46bf-914a-b8dfc669849e@omp.ru>
+ <7d8a58b7-dbc9-474c-8996-6218aa89d0be@omp.ru>
+ <23f2e1d5-eec0-4886-8fcb-760ed81c672a@kernel.org>
 Content-Language: en-US
-From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
-In-Reply-To: <20241021150447.GC4176464@ragnatech.se>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+In-Reply-To: <23f2e1d5-eec0-4886-8fcb-760ed81c672a@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 10/21/2024 16:36:26
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 19
+X-KSE-AntiSpam-Info: Lua profiles 188594 [Oct 21 2024]
+X-KSE-AntiSpam-Info: Version: 6.1.0.4
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 40 0.3.40
+ cefee68357d12c80cb9cf2bdcf92256b1d238d22
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_arrow_text}
+X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.162.141 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info:
+	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;lore.kernel.org:7.1.1
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.162.141
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 19
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 10/21/2024 16:39:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 10/21/2024 3:10:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On 10/21/24 6:04 PM, Niklas Söderlund wrote:
-[...]
-
->> Removing full driver sections also removed mailing list entries, causing
->> submitters of future patches to forget CCing these mailing lists.
->>
->> Fixes: 6e90b675cf942e50 ("MAINTAINERS: Remove some entries due to various compliance requirements.")
->> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
->> ---
->> Anyone who wants to take over maintenance for these drivers?
+On 10/21/24 3:48 AM, Damien Le Moal wrote:
+> On 10/21/24 01:49, Sergey Shtylyov wrote:
+>> Before the dedicated Toshiba Piccolo driver was written by Alan Cox,
+>> these chips were handled by the generic driver; in case the dedicated
+>> driver isn't enabled, the generic driver keeps claiming these chips --
+>> add a comment clarifying that...
 > 
-> In case Sergei is not interested to keep looking after the RAVB and/or 
-> SUPERH Ethernet drivers I would be happy to do so.
+> Nice. But this really does not need to be a separate patch.
 
-   I am still interested, of course... but looks like I'm not allowed to anymore. :-/
+   It does. I don't want to break the basic rule "do one thing per patch".
 
-> In either case should not the maintainer entry in the bindings documents
-> also be updated?
+> Please squash 1/2 and 2/2 together.
 
-   These still have my Gmail address... I'm not sure yet what to do with it...
+   Sorry, I'm not going to re-spin this once more.
+   Besides, I've forewarned you that the comment will be added in a separate
+patch, and you didn't protest:
 
+https://lore.kernel.org/all/09af52c9-542f-b920-6ff1-e0b624300947@omp.ru/
+
+>> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 [...]
 
 MBR, Sergey
