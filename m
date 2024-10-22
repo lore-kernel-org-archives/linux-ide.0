@@ -1,107 +1,64 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8ED47A73
-	for <linux-ide@vger.kernel.org>; Mon, 21 Oct 2024 16:53:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2BEC2C8
+	for <linux-ide@vger.kernel.org>; Tue, 22 Oct 2024 02:45:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729529628; cv=none; b=hEfhiZtj+Z/eE9FP7K6sfeI+1v21yEeVFyakkITuZd1QZnYVBpVyV9/lMApKjJRtmx7OZx+QoxZzwjpTXaRGL4kyG6yVSVYOtyk9+6+AW81ZXP5CxQQ8CJtN/5CdAqU8MuCs9YeTkLPamSqFXpI6oydYjXiyZoGBmpXzsRFuFiI=
+	t=1729565140; cv=none; b=Ai20BKgEVPNXnfA7CenwF/rV4Ln5vTGeE69ow2vrKmCNC5vL/tfxgPRvJbRMCoyslIGwGDsz5Co79yGsEsZmxZ9wXMn2ziYYGMTC83I9Zl/ZbOgOHE4DkwYAW9dysELIVnHIWDgQJcCrJiF1rG0KbcV8JD2gQ3MRxzkncdThDb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729529628; c=relaxed/simple;
-	bh=Oo2EL6xDfwKWeTke31YqvNS/ARjvUUIqQncfCOtwjO8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=YdC1g/q7YS3+CCuOVswDLtwDB2WqMZzKJ/9kNIaxLGNZiFpuLn+SkR3LM5y0UV35+EQqbO5MXetsnMSXDiRDnr6N0tE3kQ9N+Kt360F9UtUyonk95WoC2gSJ11kbk2a+KRGV+BK7aufuGL5xogTQBp7aedsl0X+yw/BKuod6ldA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.102] (213.87.162.141) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Mon, 21 Oct
- 2024 19:53:28 +0300
-Message-ID: <c3ffd07d-b1ac-4c67-a7be-0047261e8301@omp.ru>
-Date: Mon, 21 Oct 2024 19:53:28 +0300
+	s=arc-20240116; t=1729565140; c=relaxed/simple;
+	bh=F2zdvhmGCqFa0ysShZJzAt9UNZAHCxPaOw8nllgu95I=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=mSEzZBkG+GVvzOql3VezLjFQlTojoyh3pVGvJRrf08U0ka/5pYTkfhx4QDBovEHBq1I0MCLqerl+9H6z3C/TRfXjN/gloBGiVNMQXF5NksjYD2EBQJnhDAiKrmBoxXMEiq3koV6p3lvB6RQT/DfwT0fdZP4CHT8Q6JRZU+Te6qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LY1TWT4n; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LY1TWT4n"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14C35C4CECD;
+	Tue, 22 Oct 2024 02:45:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729565139;
+	bh=F2zdvhmGCqFa0ysShZJzAt9UNZAHCxPaOw8nllgu95I=;
+	h=From:To:Subject:Date:From;
+	b=LY1TWT4nk99JqHCXRoBB2TS+xObPndSnzJ7i0OsjCX5VV28/HhtF/QGHLktC5KB73
+	 71fZYo8EcIX9JojOUcE9W/5OZmIgyTGfM6SzDJLHDWCH2IEu0khpTRSBxsKifI/vNq
+	 CiiNVGDpdxhP9tAgInyHNp2eodzZeu6Dlc9HhhfylZTfdR22dodxYqkwUpf1ZhC612
+	 QiP8TC7Zc3bqvxve27x30P1zGStnqmbGFVyk6vg50V3Q2ejgAAj9NKky4CCS0cj6Hq
+	 Qxfu5KFfOjblIQOrJQg8RVPFmE0J2NwNH0M97YkDSBZ3hzFRpViSvWEbfFOhHS9w4J
+	 I6JpQghO2dvZQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-ide@vger.kernel.org,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH 0/6] Cleanup and improve libata-scsi command emulation
+Date: Tue, 22 Oct 2024 11:45:31 +0900
+Message-ID: <20241022024537.251905-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] ata: ata_generic: add comment about Toshiba
- Piccolo
-To: Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, Niklas
- Cassel <cassel@kernel.org>
-References: <c1b91a7a-74a9-46bf-914a-b8dfc669849e@omp.ru>
- <7d8a58b7-dbc9-474c-8996-6218aa89d0be@omp.ru>
- <23f2e1d5-eec0-4886-8fcb-760ed81c672a@kernel.org>
-Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <23f2e1d5-eec0-4886-8fcb-760ed81c672a@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 10/21/2024 16:36:26
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 188594 [Oct 21 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 40 0.3.40
- cefee68357d12c80cb9cf2bdcf92256b1d238d22
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_arrow_text}
-X-KSE-AntiSpam-Info: {Tracking_uf_ne_domains}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.162.141 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1;lore.kernel.org:7.1.1
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.162.141
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 10/21/2024 16:39:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 10/21/2024 3:10:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Transfer-Encoding: 8bit
 
-On 10/21/24 3:48 AM, Damien Le Moal wrote:
-> On 10/21/24 01:49, Sergey Shtylyov wrote:
->> Before the dedicated Toshiba Piccolo driver was written by Alan Cox,
->> these chips were handled by the generic driver; in case the dedicated
->> driver isn't enabled, the generic driver keeps claiming these chips --
->> add a comment clarifying that...
-> 
-> Nice. But this really does not need to be a separate patch.
+The first 5 patches of this series refactor and cleanup the libata-scsi
+code handling command emulation. There are no functional changes
+introduced by these patches.
 
-   It does. I don't want to break the basic rule "do one thing per patch".
+The last patch of the series (patch 6) improves the command emulation
+by accurately handling the scsi command residual and transferring back
+to the requester only the relevant data of a command reply.
 
-> Please squash 1/2 and 2/2 together.
+Damien Le Moal (6):
+  ata: libata-scsi: Refactor ata_scsi_simulate()
+  ata: libata-scsi: Refactor ata_scsiop_read_cap()
+  ata: libata-scsi: Refactor ata_scsiop_maint_in()
+  ata: libata-scsi: Document all VPD page inquiry actors
+  ata: libata-scsi: Remove struct ata_scsi_args
+  ata: libata-scsi: Return residual for emulated SCSI commands
 
-   Sorry, I'm not going to re-spin this once more.
-   Besides, I've forewarned you that the comment will be added in a separate
-patch, and you didn't protest:
+ drivers/ata/libata-scsi.c | 503 +++++++++++++++++++++++---------------
+ 1 file changed, 305 insertions(+), 198 deletions(-)
 
-https://lore.kernel.org/all/09af52c9-542f-b920-6ff1-e0b624300947@omp.ru/
-
->> Suggested-by: Damien Le Moal <dlemoal@kernel.org>
->> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-[...]
-
-MBR, Sergey
+-- 
+2.47.0
 
