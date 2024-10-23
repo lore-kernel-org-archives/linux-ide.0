@@ -1,114 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-40132.protonmail.ch (mail-40132.protonmail.ch [185.70.40.132])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0AC1BDDF;
-	Wed, 23 Oct 2024 10:56:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22CFE1A4F22;
+	Wed, 23 Oct 2024 10:56:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.40.132
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729680962; cv=none; b=DLQAn68WsavngjlMYjzH4gh/WOho9t0hQphp4HhGFtK+qBjObv/vwVgROmpf2OFXSuZh/s9fSh5ihNjxjsgGBiZKGlPIS0qC9s2Tvk4x636gYnN8b0tyGGaL1AWY2EXdgR42EEoRu3u8/DUDcXnp6w5IyrE4rSeddGEo5lYXeZY=
+	t=1729680966; cv=none; b=cWzCiNCFWQi/N+vLId4d9e84PKcwhCiJwNp2dlNLOjSRpfPdPHzU4hGemTQ4VFh9JIFWnGIkWYmZogspo/WXhcJVmSwFLJDBDvauRVQrk3zuF3GprMz20hRAxvkx6v65XowCjVPEQOnDOB8ndbKsy5sYY+jdWy13fGNA0XyWynk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729680962; c=relaxed/simple;
-	bh=fC2catyz7cbZkwaC1w48J9i0xFFtTIHz/wPLMMNszBU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jN0+Fwh2fZbgtGPHLBHW/7hGBLl3vyQJrWhC0fUt7QkyBIAHHgsKUI1EvKJR5SLNHDmAMj44GOpwFD7J9c2DshbAeipaRXVzI8h7PMojcGba6PJBZ0eOln1IGC/Dx5+wtVjkdy1VX0zhNh8U0tZqYe33AeTgmo53JBWD8dEiz6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OXIO8vPh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729680966; c=relaxed/simple;
+	bh=2uZmCdan2XO0Cl6IjNWW2Vbysd7BOfysAd/eGyKtjho=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=RYnzOOkL0B3xf6czTm9BcMBiSUvOzWvRLUvmrNSirSxgtrZBAHyqVndMmG/MuflA3BA+tRvupQpKgkfdR/I3ES4ZjZy/nRC/amGXwsuWTSv+gwQo9EQjt+gPFXT2QxTlvtfY5UBIqAHG81tFsZNL6ss5XHYBT+dAGLVdIksgp5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=nU7UGMDK; arc=none smtp.client-ip=185.70.40.132
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OXIO8vPh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B20B1C4CEC6;
-	Wed, 23 Oct 2024 10:56:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729680962;
-	bh=fC2catyz7cbZkwaC1w48J9i0xFFtTIHz/wPLMMNszBU=;
-	h=From:To:Cc:Subject:Date:From;
-	b=OXIO8vPhIlxz5TtyZ3G1g/LIJX8FkqTjpzHzcQVTMZRMazPvywqHCiNRUVIMy3C8v
-	 /nKpTc5+iVzWEdcdP4joDe4Kydyq2UBMnj+EnczoiKUYNGnvWdieYt4zqc20yAuaId
-	 fp/n/hMNxmGHW73fnPB7tqLPVMVyCdge++FAA/JZoFruQ7rs2dVIdZX3vcuciuyTgS
-	 S/2h2ZJBh5y00SdANwnXUy9wbMLxfQN+GCSf6kKALks5X9u40e+/v41xV7Fo1mjD34
-	 O8HRvCMq3UfHnz7/QEeQav2Rf2GSxfW0ZEBqcXR28lG40+1pXUI7ai7hxq3WegCDAu
-	 CNWj6msFEoQxQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Hannes Reinecke <hare@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	Igor Pylypiv <ipylypiv@google.com>,
-	stable@vger.kernel.org,
-	"Lai, Yi" <yi1.lai@linux.intel.com>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH] ata: libata: Set DID_TIME_OUT for commands that actually timed out
-Date: Wed, 23 Oct 2024 12:55:41 +0200
-Message-ID: <20241023105540.1070012-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.47.0
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="nU7UGMDK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=protonmail; t=1729680956; x=1729940156;
+	bh=2uZmCdan2XO0Cl6IjNWW2Vbysd7BOfysAd/eGyKtjho=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=nU7UGMDK8WFIn/KVA5W9N1NEqSwT8UQE0fS8bECjDpD2ZiPAzyyljte+fEi4gpSeP
+	 MnGDOCFdknAj583jHSX7ECsALTfg66OszSBNofUJpIsZYnJleMB2UhPiz0fh/hN1Gg
+	 t9UQCpjJv+3WmXZTYUKzsNwZU++PSa/pdsuU92YQbbk+YNmprbZQ5ORoIl89u1y1Fv
+	 tA+09hbvn4vMvOsPCG+oDWCAxwiQ/fwwYYlrmQfFKs/7bbxnvek/Vo91SXoeMEkPuG
+	 xM1psDgryCSiA474uepaqdbzVyWeBaXpXhxEjg0SlqU14v/WvQHco5bRMaBHD/gEHJ
+	 Mjp/mmDmcMg2Q==
+Date: Wed, 23 Oct 2024 10:55:51 +0000
+To: "patches@lists.linux.dev" <patches@lists.linux.dev>
+From: jisralbasha <jisralbasha@proton.me>
+Cc: "linux-alpha@vger.kernel.org" <linux-alpha@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-fpga@vger.kernel.org" <linux-fpga@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-iio@vger.kernel.org" <linux-iio@vger.kernel.org>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>, "linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>, "linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "ntb@lists.linux.dev" <ntb@lists.linux.dev>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "wangyuli@uniontech.com" <wangyuli@uniontech.com>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] MAINTAINERS: Remove some entries due to various compliance requirements
+Message-ID: <CpPiTF0xZwq_zhrYVO2pCA9TxAmJi_zwVBmyl9Z1RHKCjgf332fcmsc86C_1CMaZPNLlIDcvqOIWa1vR2lr2qMaZpcyIisxLqL1IVvq9ZNQ=@proton.me>
+Feedback-ID: 94463129:user:proton
+X-Pm-Message-ID: 5a8ecfa1aba099d9d2341478826b3c35ab4c778b
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2839; i=cassel@kernel.org; h=from:subject; bh=fC2catyz7cbZkwaC1w48J9i0xFFtTIHz/wPLMMNszBU=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNIlrumc2XL5YEaE5ONTD39GVMuHzQ9NbnaVDj1xd1pC2 D+DmfmaHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjI235GhvNhxVNeLewRbP5s qWr/f1oN99Uj17/M003cFHx0VmfpwzhGhlt7P7wUmM4UcfDKtcXrVv7ot5jMMjevL+64xtruvb+ +sLABAA==
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-When ata_qc_complete() schedules a command for EH using
-ata_qc_schedule_eh(), blk_abort_request() will be called, which leads to
-req->q->mq_ops->timeout() / scsi_timeout() being called.
+Dear Greg and other LF members,
 
-scsi_timeout(), if the LLDD has no abort handler (libata has no abort
-handler), will set host byte to DID_TIME_OUT, and then call
-scsi_eh_scmd_add() to add the command to EH.
+I'm writing to express my serious concerns about the recent removal of entr=
+ies from the MAINTAINERS file without proper explanation. While I understan=
+d the statement cited "various compliance requirements," this vague justifi=
+cation is deeply troubling.
 
-Thus, when commands first enter libata's EH strategy_handler, all the
-commands that have been added to EH will have DID_TIME_OUT set.
+Blindly complying with demands for obscure changes sets a dangerous precede=
+nt. What happens next time? Will we see further removals, modifications, or=
+ even additions driven by external pressures rather than the best interests=
+ of the project and its community?
 
-Commit e5dd410acb34 ("ata: libata: Clear DID_TIME_OUT for ATA PT commands
-with sense data") clears this bogus DID_TIME_OUT flag for all commands
-that reached libata's EH strategy_handler.
+This incident raises fundamental questions about the autonomy and integrity=
+ of our open-source project. =C2=A0Should we be at the mercy of unspecified=
+ "compliance requirements" that could potentially lead to harmful actions, =
+such as:
 
-libata has its own flag (AC_ERR_TIMEOUT), that it sets for commands that
-have not received a completion at the time of entering EH.
+"Update some entries due to various compliance requirements." (and explode =
+some Russian laptops like pagers in Lebanon, or disable all intel processor=
+s in sanctioned countries).
 
-ata_eh_worth_retry() has no special handling for AC_ERR_TIMEOUT, so by
-default timed out commands will get flag ATA_QCFLAG_RETRY set and will be
-retried after the port has been reset (ata_eh_link_autopsy() always
-triggers a port reset if any command has AC_ERR_TIMEOUT set).
+I strongly urge the LF to reconsider this approach and prioritize transpare=
+ncy and community engagement in all decision-making processes. This include=
+s providing detailed explanations for any future changes to critical projec=
+t files like MAINTAINERS. Additionally, we should explore strategies to mit=
+igate external pressures and ensure the long-term health and independence o=
+f our project.
 
-For commands that have ATA_QCFLAG_RETRY set, but also has an error flag
-set (e.g. AC_ERR_TIMEOUT), ata_eh_finish() will not increment
-scmd->allowed, so the command will at most be retried (scmd->allowed
-number of times, which by default is set to 3).
-
-However, scsi_eh_flush_done_q() will only retry commands for which
-scsi_noretry_cmd() returns false.
-
-For commands that has DID_TIME_OUT set, if the command is either
-has FAILFAST or if the command is a passthrough command, scsi_noretry_cmd()
-will return true. Thus, such commands will never be retried.
-
-Thus, make sure that libata sets SCSI's DID_TIME_OUT flag for commands that
-actually timed out (libata's AC_ERR_TIMEOUT flag), such that timed out
-commands will once again not be retried if they are also a FAILFAST or
-passthrough command.
-
-Cc: stable@vger.kernel.org
-Fixes: e5dd410acb34 ("ata: libata: Clear DID_TIME_OUT for ATA PT commands with sense data")
-Reported-by: Lai, Yi <yi1.lai@linux.intel.com>
-Closes: https://lore.kernel.org/linux-ide/ZxYz871I3Blsi30F@ly-workstation/
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/libata-eh.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index fa41ea57a978..3b303d4ae37a 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -651,6 +651,7 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 			/* the scmd has an associated qc */
- 			if (!(qc->flags & ATA_QCFLAG_EH)) {
- 				/* which hasn't failed yet, timeout */
-+				set_host_byte(scmd, DID_TIME_OUT);
- 				qc->err_mask |= AC_ERR_TIMEOUT;
- 				qc->flags |= ATA_QCFLAG_EH;
- 				nr_timedout++;
--- 
-2.47.0
-
+P.S. Keep communications public
