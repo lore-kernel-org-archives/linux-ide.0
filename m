@@ -1,52 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63FFB19D075;
-	Wed, 23 Oct 2024 11:01:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08ABE156F28;
+	Wed, 23 Oct 2024 11:47:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729681270; cv=none; b=BFZCgw/nEeGZ8B3MR7eZuPCzD9hWBvHNQeMhW2HYe/cjnVnPreq32GCEqTatNJG28+WV9yQGmbrN71NtC1opkPhHzSU+e3D/QsWtdHV6aSqFauVKdlZ2pBc6LylGYof8SdWqRsOznqMP3oN+PutvASdvHALu0FSKRVLcMSdoKHs=
+	t=1729684039; cv=none; b=tMS6NEkGMkgoafxUsz3AnWkxdvg3kYe4SihDQl2h2mmyZB9RxwUbacEC0b3P1YIoPO3pzHf+aDF8flsHp/H54liSiR/IleXqTV45eqXGUdpStSf+955/tEGytzIbQ0yeZKxua0AGBkOzZ4OIG3c/q23DIm/eUH8+kVZrlqSncug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729681270; c=relaxed/simple;
-	bh=y/IT6jMjg+YMellE79DidjA7dGQm7oRdSPloo0dXCJ8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pY9P47aqE1C0NSO3ZDBY8GuY/FA5GluYaZNmEf+6Nlua/trcscQPAgJoL8YvWRAyl1X+BmKbSpYLoML6Q+Eh6dci5JlD+wegsd7BW4fBPbEcBZkGomVFNzZ2jPrsRAnd4bD8070nGsBRZVcrGw6AQ66giD5TYe2S8GD/GyX7dK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FfwG1xO3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729684039; c=relaxed/simple;
+	bh=9kTC8LDj7LFenRbZOOHgmqPR2KFGUyQiIpPsHo8Adso=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=cUh0HI8Pz/O9Xl5dt8A/niA1yPAevJmyQnFaH7JRpYMbawkgUWZy3MkGNwCEbJuQ7PGEircCv7UEflakcseFaQecpXd6+0tqMHN4s/RLHBp7YTHcPyos2W4NatbQnaC3SLJ2Bid2CeOqnWp4DCHxnHhkxgpjWSPdLyeOKIz3YNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bw2ZaQuy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FfwG1xO3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EACDC4CEC6;
-	Wed, 23 Oct 2024 11:01:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bw2ZaQuy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 956E4C4CEC6;
+	Wed, 23 Oct 2024 11:47:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729681269;
-	bh=y/IT6jMjg+YMellE79DidjA7dGQm7oRdSPloo0dXCJ8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FfwG1xO36emSutGFtVdSCOJkaftuw5SxNRQDlGas4TE0xmvyGFWnRr27vXcwpnN2c
-	 bvzbcDqoncQH9EhTKD8Sr0Lgf+txltYVyeHhJ+3XF0g+3nj1+nsYZZJzXzw0Q+EGGq
-	 dMpaKU0z4pAZrUdQ7w2beBjg7NeZXXWReJqrveIbHz3ovNsyD+e+wWUsopcrps0TZr
-	 xe2n8fmMEDVdaxhIPWsjWSF5n4EAfnu28vR0RNiRkegi5SNCA/C6HBVCF4Fb2+lt6x
-	 6o0hEic+XACFm8wxIggeZmeuGmfA+qHXoeWO9M/gUx37E9n/s2zJtJwlT88FDtRn6t
-	 G+VQlmzu1qo8w==
-Date: Wed, 23 Oct 2024 13:01:05 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	Igor Pylypiv <ipylypiv@google.com>, stable@vger.kernel.org,
-	"Lai, Yi" <yi1.lai@linux.intel.com>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata: libata: Set DID_TIME_OUT for commands that actually
- timed out
-Message-ID: <ZxjXcR3lvReq8fuj@ryzen>
-References: <20241023105540.1070012-2-cassel@kernel.org>
+	s=k20201202; t=1729684038;
+	bh=9kTC8LDj7LFenRbZOOHgmqPR2KFGUyQiIpPsHo8Adso=;
+	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
+	b=Bw2ZaQuyRI04DVoDdTBjxobVftPsPwWA7oVddQjok/UlT4IT7kSoraT3uccL+Ma0B
+	 0gq14WPZPPiGEZuS0onkS1pcsNaVqwiqKf/Ki2UbHyZAwbGTWnWGeknjQrQ5oJ8ja4
+	 Xe99fd+W93v/kSR2kr3q5WMOPKINo9oZLnMmXotjsf3s5FMKmRIPQIddezJM5yFuyd
+	 oO705o0GhEHGtgOUldkNCfsJn7bUsmHj2QVhR5dHzJQRTZJ5ZDkZ9AXhZvXH9eaA54
+	 PCI+/I/WDwUbnFdmD8ekT+3GhsiCSmyVNObdMxN3UlQl+DkmF2XAmnLH22gp6doiTX
+	 XcdbHYziu+aXw==
+Message-ID: <048a435c-367e-45fd-a00d-56c79870b9b7@kernel.org>
+Date: Wed, 23 Oct 2024 20:47:16 +0900
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+From: Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH] ata: libata: Set DID_TIME_OUT for commands that actually
+ timed out
+To: Niklas Cassel <cassel@kernel.org>, Hannes Reinecke <hare@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Igor Pylypiv <ipylypiv@google.com>, stable@vger.kernel.org,
+ "Lai, Yi" <yi1.lai@linux.intel.com>, linux-ide@vger.kernel.org
+References: <20241023105540.1070012-2-cassel@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
 In-Reply-To: <20241023105540.1070012-2-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 23, 2024 at 12:55:41PM +0200, Niklas Cassel wrote:
+On 10/23/24 19:55, Niklas Cassel wrote:
 > When ata_qc_complete() schedules a command for EH using
 > ata_qc_schedule_eh(), blk_abort_request() will be called, which leads to
 > req->q->mq_ops->timeout() / scsi_timeout() being called.
@@ -80,12 +83,6 @@ On Wed, Oct 23, 2024 at 12:55:41PM +0200, Niklas Cassel wrote:
 > 
 > For commands that has DID_TIME_OUT set, if the command is either
 > has FAILFAST or if the command is a passthrough command, scsi_noretry_cmd()
-
-"if the command has either FAILFAST flag set or if ..."
-
-I could fix up this sentence when applying.
-
-
 > will return true. Thus, such commands will never be retried.
 > 
 > Thus, make sure that libata sets SCSI's DID_TIME_OUT flag for commands that
@@ -98,6 +95,11 @@ I could fix up this sentence when applying.
 > Reported-by: Lai, Yi <yi1.lai@linux.intel.com>
 > Closes: https://lore.kernel.org/linux-ide/ZxYz871I3Blsi30F@ly-workstation/
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+
+Looks good.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+
 > ---
 >  drivers/ata/libata-eh.c | 1 +
 >  1 file changed, 1 insertion(+)
@@ -114,6 +116,8 @@ I could fix up this sentence when applying.
 >  				qc->err_mask |= AC_ERR_TIMEOUT;
 >  				qc->flags |= ATA_QCFLAG_EH;
 >  				nr_timedout++;
-> -- 
-> 2.47.0
-> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
