@@ -1,99 +1,112 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 856F21AB522
-	for <linux-ide@vger.kernel.org>; Thu, 24 Oct 2024 07:32:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB3491AC445
+	for <linux-ide@vger.kernel.org>; Thu, 24 Oct 2024 08:03:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729755183; cv=none; b=dPnUOd9UOdqTZrfty/0KbANlhWFx5pP0I0ihlmxXLz9tDK/ZwTYl4aDjMjH2lpy0G9a0k6uCNHcJABOV+3YYNWAGDOGsJ4DkSuAhXrC4BD3fEnvMowxnvF+tVSTL2V8nfGoEYFtmODjkDR+t3QyxVRchQ20yj6PbjYNWlb9f6Ts=
+	t=1729757000; cv=none; b=QtYb7aQ/LhFSQB1ldO2ArJExD01f5kQ6fSTMdg5ibWbyG8cGuAjXoAItbnPOUP229KU7kxMb6x6LvjOPpvKTw40EweigC7vasYKligxw33XQRq9y7NEP9jC0oRteO5MPmRcMz4f0DWAsCsyyofr+q7jpm798Ka4VZpayjeoXSq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729755183; c=relaxed/simple;
-	bh=xJk9DEO+3X/GcCNVC4idOyP3Q8DzjJsvWHkQBNNuUiI=;
+	s=arc-20240116; t=1729757000; c=relaxed/simple;
+	bh=Q1kfe1t0sp4jY5sNXXPh9kCYnsSIp6kXPNBXZwj0GiI=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=HxuOcmOd5YgjlUqrDmeqnSj+5/AOjM8ujWrEBHEQ8YN9ZqavnvbGxyHuvhgMTvIE01cHX640mJj1GM40jB75VAhcmNDnCBOfBN2XVs89g0YEomWxadQS8bhRcEFBJNia6RSyf4UimRp4+CTe1YjMspkkGl1uxS3IussR5MxzeBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NPYBlPus; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:MIME-Version; b=cxL3DJD4r/ib2a0X7V7DniqY94EPh8GxPQCysP2/IfJL0ywdXMwLw9yn/n4FtZC0I+vSyWlZXwxC+xd0FQclQfQcIBdxmcVFVxQyFO6XWHokQjKvu+P6sK8pQ7BFk6HL15g2qRcfPjBfLl5O/+3tAIq1x6qL+1NrQh3rrrPEJ7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=DAWh/hQk; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NPYBlPus"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DAWh/hQk"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1729755177;
+	s=mimecast20190719; t=1729756992;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=6QtnlkYe/1PnWLS5Ii6raZ83O0JHoz7C7QG5MqJpjr0=;
-	b=NPYBlPus2ErWhnfc5pjFKNkzb04Mij/NUKYpingANTTyjfd8F2sZtyToBjKi4+VCoCUcOn
-	D97Ffl5OhPC8DCSLkZvtg42uPcner62C5jIUEhYrpjuRx/63sDT1vj06tGhrt+F1dTpG6p
-	M6+2Ot0UMofKiqq/CVqPK7OgHDS3fGA=
-Received: from mail-yw1-f197.google.com (mail-yw1-f197.google.com
- [209.85.128.197]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=eCHAxEtiIjB9/eMXdwm4L84xFlQFaCf3ZNV6cwdqU9g=;
+	b=DAWh/hQkLYixjlBwgOo+dDn6feqML1opewPtY1waQA8RUq83yylOsXcVRdFamezniO0URN
+	buGBpXnRRE+YFr7ykvuorxO8v3Y94XJNfTNeKDeu+63pUW3yuAI50vszQg4rpYtoRN+Egk
+	pxLJQPGIBGkv9vYd1HzjKJRKd7gIvgM=
+Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com
+ [209.85.210.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-609-onJ-XGe1N0e04ypoxZJAJA-1; Thu, 24 Oct 2024 03:32:55 -0400
-X-MC-Unique: onJ-XGe1N0e04ypoxZJAJA-1
-Received: by mail-yw1-f197.google.com with SMTP id 00721157ae682-6e370139342so11661687b3.3
-        for <linux-ide@vger.kernel.org>; Thu, 24 Oct 2024 00:32:55 -0700 (PDT)
+ us-mta-219-AlQAIpKmN5CAoFuWC03utw-1; Thu, 24 Oct 2024 04:03:10 -0400
+X-MC-Unique: AlQAIpKmN5CAoFuWC03utw-1
+Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-7181c09565eso625952a34.1
+        for <linux-ide@vger.kernel.org>; Thu, 24 Oct 2024 01:03:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729755175; x=1730359975;
+        d=1e100.net; s=20230601; t=1729756989; x=1730361789;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=6QtnlkYe/1PnWLS5Ii6raZ83O0JHoz7C7QG5MqJpjr0=;
-        b=tOJ8XBleD5o3Gk9FmNOZXkANSBRXmPHtC2mNs1c3pIvmEctnsMaH5OENDcpO4C2tRY
-         NgfpsZnvtpjctEqP8MWblJj2GXGabanz+qhCYOsw+mR0icxivkxYptvbQ/OXo08M5QO8
-         1DjmFRBmZl07/IS9syBJTgIH/00K8hTihDbXGAj5xP0Ot316iUwqqkKF83t3jKHt6Sgy
-         rth2vpXAQbZmUPyqwRpD9JGBP+FsfGvzdMxeJKZmDEnNSwvQCkoZeucNAWbIQKdCScEq
-         WN7eGHemnuYTeREbPGEQyLsggbyJ4JyCCY9aYoLYhqR3pp+9/qsbpp/dndrGPnnGRZ/F
-         g21w==
-X-Forwarded-Encrypted: i=1; AJvYcCX2qE+GcN4FAo4ulhs6XwX1am2jqb42+14lkNed/3v9PU1/eP79ZyNbuMLuJB8Epvxo1daawFSRkHA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz75GXdvB0tjFiOxLJUY93bmrsWXoH5L/GJ1c4Rme/jOJrCvHUZ
-	eBKfabOxbOHjXHz+EJ2jMfLes12TLa29RKg9pGVfBcT9h2IroFPEzfW4bTF7HF8VoVgtyt9EM6Z
-	X9ChvlEZf8Gbt0u7FCfMbvKWX8nYNwYJxOV8K11OqTkmJhSBl7iD5XerDDw==
-X-Received: by 2002:a05:690c:6e03:b0:6db:cf6c:a7c4 with SMTP id 00721157ae682-6e866331c20mr10690287b3.45.1729755174515;
-        Thu, 24 Oct 2024 00:32:54 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFwjzENxysw+j7YRfDKeQxYY43g6inqzMz9Yd8c7a5bPrsRFqYGaOrxa6Un2MKjvPM7S1dLyw==
-X-Received: by 2002:a05:690c:6e03:b0:6db:cf6c:a7c4 with SMTP id 00721157ae682-6e866331c20mr10690047b3.45.1729755174061;
-        Thu, 24 Oct 2024 00:32:54 -0700 (PDT)
+        bh=eCHAxEtiIjB9/eMXdwm4L84xFlQFaCf3ZNV6cwdqU9g=;
+        b=rgarMK4gErfjnpfbZ4H5CNfa8Gxx99i81+61mA+bk9ynOuM+3nIXL2wRUSkyvQR7cj
+         3a+dWv0e/b4EqQq3OSMp0zzeUFAOfgfzNwfRDyI85WKi2/6H0iYFQnsUdGUX7DaVQNFP
+         C87nUfSxc+Sd0V3ags3+SanMbLA6wzzYLeWCD5hftKmuYQMJQDcxDGp4MT0R/8XjuobN
+         2bi3qsXylU/OCb4Ebm6uSnCEWAkxPs/JnecEYcwKkUUaT8kD5qFPzI6F3WANf9lJNhTw
+         RWnM/+Ji1Jk5naSrdSSN6y/dVyHJUYjFHdyc0NgYYvk8iwNF/PyWPZWg7/0kBYCttulA
+         hE/w==
+X-Forwarded-Encrypted: i=1; AJvYcCUv/Bxn08pCeUL7T4Z+/jyC6xjnNsa9+v+9vVc7QB1NBVgqWMjvkEqo2FFBff209wZH/mCPftZVzlc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YywVfo6tP95Y077TYuCIg5a9Jt+YZM80IhuUfvl1jG9lu+dFjFM
+	3g7yCyYLf+AZHiGKM5fDqLld1nVLdShvUL2kRUt8qoo/mCzffqIp6m7eKJUX2GVxs/FwQsyHaKt
+	5ypL0wVgeSONu2Jbf7cDSIMEzjlDoEED1AnHsxyl2TMxpYsDxp1oI52qI6w==
+X-Received: by 2002:a05:6830:6dc7:b0:718:c0d:6bdb with SMTP id 46e09a7af769-718598599b9mr736352a34.20.1729756989536;
+        Thu, 24 Oct 2024 01:03:09 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHVwKg5C+Tp+G04yjB73N1UyaDqsdgqmmyDICp7Nqm80mYC6tnNIzWvedx2PALg7dJ9abA7Jw==
+X-Received: by 2002:a05:6830:6dc7:b0:718:c0d:6bdb with SMTP id 46e09a7af769-718598599b9mr736305a34.20.1729756989132;
+        Thu, 24 Oct 2024 01:03:09 -0700 (PDT)
 Received: from dhcp-64-16.muc.redhat.com (nat-pool-muc-t.redhat.com. [149.14.88.26])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6ce008ac8f1sm47141046d6.26.2024.10.24.00.32.47
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6ce0099a79fsm47100376d6.90.2024.10.24.01.03.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Oct 2024 00:32:53 -0700 (PDT)
-Message-ID: <7be870fc2b2fa01b89708208c78cc041029252aa.camel@redhat.com>
-Subject: Re: linux: Goodbye from a Linux community volunteer
+        Thu, 24 Oct 2024 01:03:08 -0700 (PDT)
+Message-ID: <aec23bb79b9ff7dd7f13eb67460e0605eac22912.camel@redhat.com>
+Subject: Re: [PATCH 02/13] ALSA: hda_intel: Use always-managed version of
+ pcim_intx()
 From: Philipp Stanner <pstanner@redhat.com>
-To: Serge Semin <fancer.lancer@gmail.com>, Jon Mason <jdmason@kudzu.us>, 
- Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
- ntb@lists.linux.dev, Andy Shevchenko <andy@kernel.org>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Kory Maincent
- <kory.maincent@bootlin.com>, Cai Huoqing <cai.huoqing@linux.dev>, 
- dmaengine@vger.kernel.org, Mark Brown <broonie@kernel.org>, 
- linux-spi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
- linux-ide@vger.kernel.org, Paul Burton <paulburton@kernel.org>, Thomas
- Bogendoerfer <tsbogend@alpha.franken.de>, Arnd Bergmann <arnd@arndb.de>,
- Jiaxun Yang <jiaxun.yang@flygoat.com>,  linux-mips@vger.kernel.org, Bjorn
- Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, Yoshihiro Shimoda
- <yoshihiro.shimoda.uh@renesas.com>,  linux-pci@vger.kernel.org, "David S.
- Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo
- Abeni <pabeni@redhat.com>, Andrew Lunn <andrew@lunn.ch>, Russell King
- <linux@armlinux.org.uk>, Vladimir Oltean <olteanv@gmail.com>, Keguang Zhang
- <keguang.zhang@gmail.com>, Yanteng Si <siyanteng@loongson.cn>, 
- netdev@vger.kernel.org, Rob Herring <robh@kernel.org>, Krzysztof Kozlowski
- <krzk@kernel.org>, Guenter Roeck <linux@roeck-us.net>, 
- linux-hwmon@vger.kernel.org, Borislav Petkov <bp@alien8.de>, 
- linux-edac@vger.kernel.org, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,  linux-serial@vger.kernel.org
-Cc: Andrew Halaney <ajhalaney@gmail.com>, Nikita Travkin <nikita@trvn.ru>, 
- Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Alexander Shiyan
- <shc_work@mail.ru>, Dmitry Kozlov <xeb@mail.ru>,  Sergey Shtylyov
- <s.shtylyov@omp.ru>, Evgeniy Dushistov <dushistov@mail.ru>, Geert
- Uytterhoeven <geert@linux-m68k.org>, Sergio Paracuellos
- <sergio.paracuellos@gmail.com>,  Nikita Shubin <nikita.shubin@maquefel.me>,
- linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 24 Oct 2024 09:32:46 +0200
-In-Reply-To: <2m53bmuzemamzc4jzk2bj7tli22ruaaqqe34a2shtdtqrd52hp@alifh66en3rj>
-References: 
-	<2m53bmuzemamzc4jzk2bj7tli22ruaaqqe34a2shtdtqrd52hp@alifh66en3rj>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ Sergey Shtylyov <s.shtylyov@omp.ru>, Basavaraj Natikar
+ <basavaraj.natikar@amd.com>, Jiri Kosina <jikos@kernel.org>,  Benjamin
+ Tissoires <bentiss@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Alex Dubov <oakad@yahoo.com>,
+ Sudarsana Kalluru <skalluru@marvell.com>, Manish Chopra
+ <manishc@marvell.com>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
+ Abeni <pabeni@redhat.com>, Rasesh Mody <rmody@marvell.com>,
+ GR-Linux-NIC-Dev@marvell.com, Igor Mitsyanko <imitsyanko@quantenna.com>,
+ Sergey Matyukevich <geomatsi@gmail.com>, Kalle Valo <kvalo@kernel.org>,
+ Sanjay R Mehta <sanju.mehta@amd.com>, Shyam Sundar S K
+ <Shyam-sundar.S-k@amd.com>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
+ <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Alex Williamson <alex.williamson@redhat.com>,
+ Juergen Gross <jgross@suse.com>, Stefano Stabellini
+ <sstabellini@kernel.org>, Oleksandr Tyshchenko
+ <oleksandr_tyshchenko@epam.com>, Jaroslav Kysela <perex@perex.cz>, Takashi
+ Iwai <tiwai@suse.com>, Chen Ni <nichen@iscas.ac.cn>, Mario Limonciello
+ <mario.limonciello@amd.com>, Ricky Wu <ricky_wu@realtek.com>, Al Viro
+ <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>, Kevin Tian
+ <kevin.tian@intel.com>, Thomas Gleixner <tglx@linutronix.de>, Ilpo
+ =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, Andy
+ Shevchenko <andriy.shevchenko@linux.intel.com>, Mostafa Saleh
+ <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu
+ <yi.l.liu@intel.com>,  Christian Brauner <brauner@kernel.org>, Ankit
+ Agrawal <ankita@nvidia.com>, Eric Auger <eric.auger@redhat.com>, Reinette
+ Chatre <reinette.chatre@intel.com>, Ye Bin <yebin10@huawei.com>, Marek
+ =?ISO-8859-1?Q?Marczykowski-G=F3recki?= <marmarek@invisiblethingslab.com>,
+ Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>, Peter Ujfalusi
+ <peter.ujfalusi@linux.intel.com>, Maarten Lankhorst
+ <maarten.lankhorst@linux.intel.com>, Kai Vehmanen
+ <kai.vehmanen@linux.intel.com>,  Rui Salvaterra <rsalvaterra@gmail.com>,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-input@vger.kernel.org, netdev@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
+ linux-pci@vger.kernel.org,  kvm@vger.kernel.org,
+ xen-devel@lists.xenproject.org, linux-sound@vger.kernel.org
+Date: Thu, 24 Oct 2024 10:02:59 +0200
+In-Reply-To: <87ttd2276j.wl-tiwai@suse.de>
+References: <20241015185124.64726-1-pstanner@redhat.com>
+	 <20241015185124.64726-3-pstanner@redhat.com> <87v7xk2ps5.wl-tiwai@suse.de>
+	 <6f3db65fe9a5dcd1a7a8d9bd5352ecb248ef57b1.camel@redhat.com>
+	 <87ttd2276j.wl-tiwai@suse.de>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
@@ -104,301 +117,178 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Thu, 2024-10-24 at 07:27 +0300, Serge Semin wrote:
-> Hello Linux-kernel community,
+On Wed, 2024-10-23 at 17:03 +0200, Takashi Iwai wrote:
+> On Wed, 23 Oct 2024 15:50:09 +0200,
+> Philipp Stanner wrote:
+> >=20
+> > On Tue, 2024-10-22 at 16:08 +0200, Takashi Iwai wrote:
+> > > On Tue, 15 Oct 2024 20:51:12 +0200,
+> > > Philipp Stanner wrote:
+> > > >=20
+> > > > pci_intx() is a hybrid function which can sometimes be managed
+> > > > through
+> > > > devres. To remove this hybrid nature from pci_intx(), it is
+> > > > necessary to
+> > > > port users to either an always-managed or a never-managed
+> > > > version.
+> > > >=20
+> > > > hda_intel enables its PCI-Device with pcim_enable_device().
+> > > > Thus,
+> > > > it needs
+> > > > the always-managed version.
+> > > >=20
+> > > > Replace pci_intx() with pcim_intx().
+> > > >=20
+> > > > Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> > > > ---
+> > > > =C2=A0sound/pci/hda/hda_intel.c | 2 +-
+> > > > =C2=A01 file changed, 1 insertion(+), 1 deletion(-)
+> > > >=20
+> > > > diff --git a/sound/pci/hda/hda_intel.c
+> > > > b/sound/pci/hda/hda_intel.c
+> > > > index b4540c5cd2a6..b44ca7b6e54f 100644
+> > > > --- a/sound/pci/hda/hda_intel.c
+> > > > +++ b/sound/pci/hda/hda_intel.c
+> > > > @@ -786,7 +786,7 @@ static int azx_acquire_irq(struct azx
+> > > > *chip,
+> > > > int do_disconnect)
+> > > > =C2=A0	}
+> > > > =C2=A0	bus->irq =3D chip->pci->irq;
+> > > > =C2=A0	chip->card->sync_irq =3D bus->irq;
+> > > > -	pci_intx(chip->pci, !chip->msi);
+> > > > +	pcim_intx(chip->pci, !chip->msi);
+> > > > =C2=A0	return 0;
+> > > > =C2=A0}
+> > > > =C2=A0
+> > >=20
+> > > Hm, it's OK-ish to do this as it's practically same as what
+> > > pci_intx()
+> > > currently does.=C2=A0 But, the current code can be a bit inconsistent
+> > > about
+> > > the original intx value.=C2=A0 pcim_intx() always stores !enable to
+> > > res->orig_intx unconditionally, and it means that the orig_intx
+> > > value
+> > > gets overridden at each time pcim_intx() gets called.
+> >=20
+> > Yes.
+> >=20
+> > >=20
+> > > Meanwhile, HD-audio driver does release and re-acquire the
+> > > interrupt
+> > > after disabling MSI when something goes wrong, and pci_intx()
+> > > call
+> > > above is a part of that procedure.=C2=A0 So, it can rewrite the
+> > > res->orig_intx to another value by retry without MSI.=C2=A0 And after
+> > > the
+> > > driver removal, it'll lead to another state.
+> >=20
+> > I'm not sure that I understand this paragraph completely. Still,
+> > could
+> > a solution for the driver on the long-term just be to use
+> > pci_intx()?
 >=20
-> I am sure you have already heard the news caused by the recent Greg'
-> commit
-> 6e90b675cf942e ("MAINTAINERS: Remove some entries due to various
-> compliance
-> requirements."). As you may have noticed the change concerned some of
-> the
-> Ru-related developers removal from the list of the official kernel
-> maintainers,
-> including me.
+> pci_intx() misses the restore of the original value, so it's no
+> long-term solution, either.
+
+Sure that is missing =E2=80=93 I was basically asking whether the driver co=
+uld
+live without that feature.
+
+Consider that point obsolete, see below
+
 >=20
-> The community members rightly noted that the _quite_ short commit log
-> contained
-> very vague terms with no explicit change justification. No matter how
-> hard I
-> tried to get more details about the reason, alas the senior
-> maintainer I was
-> discussing the matter with haven't given an explanation to what
-> compliance
-> requirements that was. I won't cite the exact emails text since it
-> was a private
-> messaging, but the key words are "sanctions", "sorry", "nothing I can
-> do", "talk
-> to your (company) lawyer"... I can't say for all the guys affected by
-> the
-> change, but my work for the community has been purely _volunteer_ for
-> more than
-> a year now (and less than half of it had been payable before that).
-> For that
-> reason I have no any (company) lawyer to talk to, and honestly after
-> the way the
-> patch has been merged in I don't really want to now. Silently, behind
-> everyone's
-> back, _bypassing_ the standard patch-review process, with no affected
-> developers/subsystem notified - it's indeed the worse way to do what
-> has been
-> done. No gratitude, no credits to the developers for all these years
-> of the
-> devoted work for the community. No matter the reason of the situation
-> but
-> haven't we deserved more than that? Adding to the GREDITS file at
-> least, no?..
+> What I meant is that pcim_intx() blindly assumes the negative of the
+> passed argument as the original state, which isn't always true.=C2=A0 e.g=
+.
+> when the driver calls it twice with different values, a wrong value
+> may be remembered.
+
+Ah, I see =E2=80=93 thoguh the issue is when it's called several times with=
+ the
+*same* value, isn't it?
+
+E.g.
+
+pcim_intx(pdev, 1); // 0 is remembered as the old value
+pcim_intx(pdev, 1); // 0 is falsely remembered as the old value
+
+Also, it would seem that calling the function for the first time like
+that:
+
+pcim_intx(pdev, 0); // old value: 1
+
+is at least incorrect, because INTx should be 0 per default, shouldn't
+it? Could then even be a 1st class bug, because INTx would end up being
+enabled despite having been disabled all the time.
+
 >=20
-> I can't believe the kernel senior maintainers didn't consider that
-> the patch
-> wouldn't go unnoticed, and the situation might get out of control
-> with
-> unpredictable results for the community, if not straight away then in
-> the middle
-> or long term perspective. I am sure there have been plenty ways to
-> solve the
-> problem less harmfully, but they decided to take the easiest path.
-> Alas what's
-> done is done. A bifurcation point slightly initiated a year ago has
-> just been
-> fully implemented. The reason of the situation is obviously in the
-> political
-> ground which in this case surely shatters a basement the community
-> has been built
-> on in the first place. If so then God knows what might be next (who
-> else might
-> be sanctioned...), but the implemented move clearly sends a bad
-> signal to the
-> Linux community new comers, to the already working volunteers and
-> hobbyists like
-> me.
+> That said, I thought of something like below.
 
-I'm also quite shocked and even baffled about how this has been
-handled. This is not how leaders should communicate difficult or big
-decisions. It's the most disappointing event I have witnessed in the
-project.
+At first glance that looks like a good idea to me, thanks for working
+this out!
 
-There is the form and there is the content =E2=80=93 about the content one
-cannot do much, when the state he or his organization resides in gives
-an order.
+IMO you can submit that as a patch so we can discuss it separately.
 
-But about the form one can indeed do much. No "Thank you!", no "I hope
-we can work together again once the world has become sane(r)"... srsly,
-what the hell.
-
-No idea why they felt the need to do it that way, but it certainly is
-not the open source way, neither is it decent or honorable.
-
-
-That said, thank you for all your work, Serge!
-
-I believe that nothing that has been accomplished with a candid mindset
-and decent intentions is ever done for nothing, although it often pays
-off way differently than expected.
-So I hope this will be the case for you, too.
-
-Take care,
+Greetings,
 Philipp
 
-
 >=20
-> Thus even if it was still possible for me to send patches or perform
-> some
-> reviews, after what has been done my motivation to do that as a
-> volunteer has
-> simply vanished. (I might be doing a commercial upstreaming in future
-> though).
-> But before saying goodbye I'd like to express my gratitude to all the
-> community
-> members I have been lucky to work with during all these years.
-> Specifically:
 >=20
-> NTB-folks, Jon, Dave, Allen. NTB was my starting point in the kernel
-> upstream
-> work. Thanks for the initial advices and despite of very-very-very
-> tough reviews
-> with several complete patchset refactorings, I learned a lot back
-> then. That
-> experience helped me afterwards. Thanks a lot for that. BTW since
-> then I've got
-> several thank-you letters for the IDT NTB and IDT EEPROM drivers. If
-> not for you
-> it wouldn't have been possible.
+> thanks,
 >=20
-> Andy, it's hard to remember who else would have given me more on my
-> Linux kernel
-> journey as you have. We first met in the I2C subsystem review of my
-> DW I2C
-> driver patches. Afterwards we've got to be frequently meeting here
-> and there -
-> GPIO, SPI, TTY, DMA, NET, etc, clean/fixes/features patch(set)s.
-> Quite heat
-> discussions in your first reviews drove me crazy really. But all the
-> time we
-> managed to come up with some consensus somehow. And you never quit
-> the
-> discussions calmly explaining your point over and over. You never
-> refused to
-> provide more detailed justification to your requests/comments even
-> though you
-> didn't have to. Thanks to that I learned how to be patient to
-> reviewers
-> and reviewees. And of course thank you for the Linux-kernel
-> knowledges and all
-> the tips and tricks you shared.
+> Takashi
 >=20
-> * Andy, please note due to the situation I am not going to work on my
-> DW DMAC
-> fixes patchset anymore. So if you ever wish to have DW UART stably
-> working with the
-> DW DMA-engine driver, then feel free to pick the series up:
-> Link:
-> https://lore.kernel.org/dmaengine/20240911184710.4207-1-fancer.lancer@gma=
-il.com/
->=20
-> Linus (Walleij), after you merged one of my pretty much heavy
-> patchset in you
-> suggested to me to continue the DW APB GPIO driver maintaining. It
-> was a first
-> time I was asked to maintain a not-my driver. Thank you for the
-> trust. I'll
-> never forget that.
->=20
-> Mark, thank you very much for entrusting the DW APB SSI driver
-> maintenance to
-> me. I've put a lot of efforts into making it more generic and less
-> errors-prune,
-> especially when it comes working under a DMA-engine control or
-> working in the
-> mem-ops mode. I am sure the results have been beneficial to a lot of
-> DW
-> SPI-controller users since then.
->=20
-> Damien, our first and last meeting was at my generic AHCI-platform
-> and DW AHCI
-> SATA driver patches review. You didn't make it a quick and easy path.
-> But still
-> all the reviews comments were purely on the technical basis, and the
-> patches
-> were eventually merged in. Thank you for your time and experience
-> I've got from
-> the reviews.
->=20
-> Paul, Thomas, Arnd, Jiaxun, we met several times in the mailing list
-> during my
-> MIPS P5600 patches and just generic MIPS patches review. It was
-> always a
-> pleasure to discuss the matters with such brilliant experts in the
-> field. Alas
-> I've spent too much time working on the patches for another
-> subsystems and
-> failed to submit all the MIPS-related bits. Sorry I didn't keep my
-> promise, but
-> as you can see the circumstances have suddenly drawn its own
-> deadline.
->=20
-> Bjorn, Mani, we were working quite a lot with you in the framework of
-> the DW
-> PCIe RC drivers. You reviewed my patches. I helped you to review
-> another patches
-> for some time. Despite of some arguing it was always a pleasure to
-> work with
-> you.=C2=A0 Mani, special thanks for the cooperative DW eDMA driver
-> maintenance. I
-> think we were doing a great work together.
->=20
-> Paolo, Jakub, David, Andrew, Vladimir, Russell. The network subsystem
-> and
-> particularly the STMMAC driver (no doubt the driver sucks) have
-> turned to be a
-> kind of obstacle on which my current Linux-kernel activity has
-> stopped. I really
-> hope that at least in some way my help with the incoming STMMAC and
-> DW XPCS
-> patches reviews lightened up your maintainance duty. I know Russell
-> might
-> disagree, but I honestly think that all our discussions were useful
-> after all,
-> at least for me. I also think we did a great work working together
-> with Russell
-> on the DW GMAC/QoS ETH PCS patches. Hopefully you'll find a time to
-> finish it up
-> after all.=20
->=20
-> Rob, Krzysztof, from your reviews I've learned a lot about the most
-> hardwary part
-> of the kernel - DT sources and DT-bindings. All your comments have
-> been laconic
-> and straight to the point. That made reviews quick and easy. Thank
-> you very
-> much for that.
->=20
-> Guenter, special thanks for reviewing and accepting my patches to the
-> hwmon and
-> watchdog subsystems. It was pleasure to be working with you.
->=20
-> Borislav, we disagreed and argued a lot. So my DW uMCTL2 DDRC EDAC
-> patches even
-> got stuck in limbo for quite a long time. Anyway thank you for the
-> time
-> you spent reviewing my patches and trying to explain your point.
->=20
-> * Borislav, it looks like I won't be able to work on my Synopsys EDAC
-> patchsets
-> anymore. If you or somebody else could pick them up and finish up the
-> work it
-> would be great (you can find it in the lore archive). The patches
-> convert the
-> mainly Zynq(MP)-specific Synopsys EDAC driver to supporting the
-> generic DW
-> uMCTL2 DDRC. It would be very beneficial for each platform based on
-> that
-> controller.
->=20
-> Greg, we met several times in the mailing lists. You reviewed my
-> patches sent
-> for the USB and TTY subsystems, and all the time the process was
-> straight,
-> highly professional, and simpler than in the most of my other case.
-> Thank you very much for that.
->=20
-> Yoshihiro, Keguang, Yanteng, Kory, Cai and everybody I was lucky to
-> meet in the
-> kernel mailing lists, but forgot to mention here. Thank you for the
-> time spent
-> for our cooperative work on making the Linux kernel better. It was a
-> pleasure to
-> meet you here.
->=20
-> I also wish to say huge thanks to the community members trying to
-> defend the kicked off maintainers and for support you expressed in
-> these days. It means a lot.
->=20
-> A little bit statics of my kernel-work at the end:
->=20
-> Signed-off patches:		518
-> Reviewed and Acked patches:	253
-> Tested patches:			80
->=20
-> You might say not the greatest achievement for seven years comparing
-> to some
-> other developers. Perhaps. But I meant each of these tags, be sure.
->=20
-> I guess that's it. If you ever need some info or consultation
-> regarding the
-> drivers I used to maintain or the respective hardware or the Synopsys
-> IP-cores
-> (about which I've got quite comprehensive knowledge by this time),
-> feel free to
-> reach me out via this email. I am always willing to help to the
-> community
-> members.
->=20
-> Hope we'll meet someday in more pleasant circumstances and drink a
-> couple or more beers together. But now it's time to say good bye.
-> Sorry for a long-read text. I wish good luck on your Linux-way.
->=20
-> Best Regards,
-> -Serge(y)
+> -- 8< --
+> --- a/drivers/pci/devres.c
+> +++ b/drivers/pci/devres.c
+> @@ -438,8 +438,17 @@ static void pcim_intx_restore(struct device
+> *dev, void *data)
+> =C2=A0	__pcim_intx(pdev, res->orig_intx);
+> =C2=A0}
+> =C2=A0
+> -static struct pcim_intx_devres *get_or_create_intx_devres(struct
+> device *dev)
+> +static void save_orig_intx(struct pci_dev *pdev)
+> =C2=A0{
+> +	u16 pci_command;
+> +
+> +	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+> +	res->orig_intx =3D !(pci_command & PCI_COMMAND_INTX_DISABLE);
+> +}
+> +
+> +static struct pcim_intx_devres *get_or_create_intx_devres(struct
+> pci_dev *pdev)
+> +{
+> +	struct device *dev =3D &pdev->dev;
+> =C2=A0	struct pcim_intx_devres *res;
+> =C2=A0
+> =C2=A0	res =3D devres_find(dev, pcim_intx_restore, NULL, NULL);
+> @@ -447,8 +456,10 @@ static struct pcim_intx_devres
+> *get_or_create_intx_devres(struct device *dev)
+> =C2=A0		return res;
+> =C2=A0
+> =C2=A0	res =3D devres_alloc(pcim_intx_restore, sizeof(*res),
+> GFP_KERNEL);
+> -	if (res)
+> +	if (res) {
+> +		save_orig_intx(pdev);
+> =C2=A0		devres_add(dev, res);
+> +	}
+> =C2=A0
+> =C2=A0	return res;
+> =C2=A0}
+> @@ -467,11 +478,10 @@ int pcim_intx(struct pci_dev *pdev, int enable)
+> =C2=A0{
+> =C2=A0	struct pcim_intx_devres *res;
+> =C2=A0
+> -	res =3D get_or_create_intx_devres(&pdev->dev);
+> +	res =3D get_or_create_intx_devres(pdev);
+> =C2=A0	if (!res)
+> =C2=A0		return -ENOMEM;
+> =C2=A0
+> -	res->orig_intx =3D !enable;
+> =C2=A0	__pcim_intx(pdev, enable);
+> =C2=A0
+> =C2=A0	return 0;
 >=20
 
