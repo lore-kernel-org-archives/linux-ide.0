@@ -1,74 +1,305 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99CDC18A94C
-	for <linux-ide@vger.kernel.org>; Fri, 25 Oct 2024 08:15:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA31A1D2F4A
+	for <linux-ide@vger.kernel.org>; Fri, 25 Oct 2024 08:38:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729844106; cv=none; b=nsw2Rvy0NNe6dDIa0XbinZVhvlHS6o+TUC8YHuoX0Uofgg7GcbDln7ErT9PZcl7hu1hFxl8lQxb2imZxLiKPRyq0Loq1I4hnnOozzaMRZEVB831xIF3Xaow3zZc5BICk8rJs+NtcPxGgecE//FnAgvvsu/svBwmorThgH6x+bSc=
+	t=1729845490; cv=none; b=K24/MZBGeqxkSGab7UhS2n5pEAgUOteDXaINZ3kxyGbcI8aXOKxUAmgxi49UNz86w8/IhMOnAalZGj5it2hqu0+Cjef41nRDPPvotoc5S/O87KRhYeMU9coS4CzuRDpR9pN72UwPeSl6lWxq9yyHrqYvXIUg70qyuYrvKnoDE1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729844106; c=relaxed/simple;
-	bh=WolqRln6HOgOQh+1kafBCgWkLPta6LJD2Il4PnCXzJM=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=aFXRB3qi09zxpTKR8f3FRS4Jvc+DiO1cuf/mCrNUXKZ9cw2XNNpIXgwdesFi6GZNKnlBK6h8kz21CxHDdXtjxuhTQcERVy2MjZON3+IAYV9yOkc9lxjkgtTnKaZ4VLbpUi+9wfW3twtP52vJTxyJKsp8oqN6nQmwrm24KhZOdIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q/1zNg+Z; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729845490; c=relaxed/simple;
+	bh=Kj+t7bUL5B0QKM5IwQHw3NNDOxblEb5Nefz9XwGv6eA=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=IL1WRmWE2/YutkXVdJ8kJ6xPCLhhM6gdULTGvy14fmedz8GATdKt1/HKlynanquaBumxJ93dxmDtfyQ2D6K+q4fxzBQmL9pO0E30/Cv2u/lAToMGUW7eqjPJ5F+rzyuitxPoRZpBaGtjmHhnq9b84OfQSL+SAaF9NBtjtlbYTRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bTMd15cy; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/1zNg+Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D776C4CEC3;
-	Fri, 25 Oct 2024 08:15:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729844106;
-	bh=WolqRln6HOgOQh+1kafBCgWkLPta6LJD2Il4PnCXzJM=;
-	h=From:To:In-Reply-To:References:Subject:Date:From;
-	b=q/1zNg+ZhwOGSQd1EJR6OkiB8klCp4ZKilWqHI8PVkRZV/mAySpegwtbOSGyVXp1j
-	 wSNzDOT31LbavZFMVkcu6LWHiB5qssUcg5G83sC7V3PwKxFZQYtTTN+V7YVvRIR/Jh
-	 zDDg/pdcm8ZxyY3Qb6g1bWxuZFz174f2MvWoyjCNTkPWg138VX/kg657EHmt1pfc1a
-	 p8tPcv1eGuxOHERpdKc6JG/k/T8C1R7byxFbszgM/a4i/9oMduvjWml5AIAnpkXcqQ
-	 Y+O+QhDaAag+r5Zorbpg8MmTM1GgbFudBQb0TZtKbsF8Kp0vtsI+VKJDnW+tVRFKxR
-	 PixXBmXqYBaaw==
-From: Niklas Cassel <cassel@kernel.org>
-To: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
-In-Reply-To: <20241022024537.251905-1-dlemoal@kernel.org>
-References: <20241022024537.251905-1-dlemoal@kernel.org>
-Subject: Re: [PATCH 0/6] Cleanup and improve libata-scsi command emulation
-Message-Id: <172984410533.3954535.14529122270469558816.b4-ty@kernel.org>
-Date: Fri, 25 Oct 2024 10:15:05 +0200
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bTMd15cy"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1729845486;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=t5SfsCaa6OQtbrocW2yvj8So2+UMhrgJURtFbTDl4+U=;
+	b=bTMd15cyaumcZs7yiqSSFssbLbFe3lwJbfb3swzHJFfThqpY/zjNVxlSWpP67iKvTxd2Ub
+	8goW/INV3g/KxxheIVctAKjzz3spRoJ9zDecZpvXCBfdN7Il6qgECkIe7DsdqAFNBcNZ3W
+	q8wTr9EOLOJ5ZZoK/w/ZuGdX+CKVaQs=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-70-0k2eUnjtNOi1MN_aoTT39w-1; Fri, 25 Oct 2024 04:38:02 -0400
+X-MC-Unique: 0k2eUnjtNOi1MN_aoTT39w-1
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-37d563a1af4so885848f8f.2
+        for <linux-ide@vger.kernel.org>; Fri, 25 Oct 2024 01:38:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729845481; x=1730450281;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=t5SfsCaa6OQtbrocW2yvj8So2+UMhrgJURtFbTDl4+U=;
+        b=SPqwuIH0ErfBUG6eWtOvnU4xoucexuWtb0BtczmyiXeovLXHKEnWhUTa6sKz44yios
+         ydI8dUU0LoRNZt5F11B2UTdR8CN0UvsJi2rbdkCTB+Xy2YmJ8TBN9iNDU56ddVK29XpX
+         S0RzpYOHvTEpu0o9GTHZCGZmFSPLBTs4/tvtknWETItTgFhRQeVBxowvpicoq4x8kAwp
+         +9yRsMttOJYwDy+uMX2LMiN8vzFP01yeE4GZXIN+7sr3DeKtZlHAfhO14rNxRbnhwtto
+         fZ8vF4M+ByosGFXAtf3KxvFW+djhg0yT+NUqt9VCq9fISox7IF6af/C0v9Ns7MVJ/kUR
+         wopw==
+X-Forwarded-Encrypted: i=1; AJvYcCW33zNrNk9IEEAzpH8nbAIj8tW+peiDaoSuga/9mxT+LPN7JUY55LUXj4Nafl4ydXFD2W+MVKlUoQs=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPZB2B4iTaRqLSyCqu9ea6tSKiFKOgkzc3VSpmckm62QpjT2VC
+	jPhOoVBDmu8IMnt7hbVlmr/TWqaSlvlk2kfAXdrYVWv2cmjNNPZRizds8wgjYmP+l4ue/7lCvP6
+	cR5qshk5f89nUjD8hYInO+NVUmtftBbxSAaixQU6xBBy7AE+ofKpCfbWsNQ==
+X-Received: by 2002:a5d:45d2:0:b0:37d:5103:8894 with SMTP id ffacd0b85a97d-37efcf78dadmr5976831f8f.42.1729845481111;
+        Fri, 25 Oct 2024 01:38:01 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGcYWpz+kQZdr3vU0ccyDv2e4lUiNEwepdTyBtEeS9wkTJkf/x/0hfBIa/kJv59+/PzqJJV1A==
+X-Received: by 2002:a5d:45d2:0:b0:37d:5103:8894 with SMTP id ffacd0b85a97d-37efcf78dadmr5976745f8f.42.1729845480512;
+        Fri, 25 Oct 2024 01:38:00 -0700 (PDT)
+Received: from ?IPv6:2001:16b8:2de5:ba00:738a:c8da:daac:7543? (200116b82de5ba00738ac8dadaac7543.dip.versatel-1u1.de. [2001:16b8:2de5:ba00:738a:c8da:daac:7543])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38058b70c44sm932452f8f.80.2024.10.25.01.37.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Oct 2024 01:38:00 -0700 (PDT)
+Message-ID: <ae081c36c49733b007a8946dceeec0af94fc449a.camel@redhat.com>
+Subject: Re: [PATCH 02/13] ALSA: hda_intel: Use always-managed version of
+ pcim_intx()
+From: Philipp Stanner <pstanner@redhat.com>
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ Sergey Shtylyov <s.shtylyov@omp.ru>, Basavaraj Natikar
+ <basavaraj.natikar@amd.com>, Jiri Kosina <jikos@kernel.org>,  Benjamin
+ Tissoires <bentiss@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Alex Dubov <oakad@yahoo.com>,
+ Sudarsana Kalluru <skalluru@marvell.com>, Manish Chopra
+ <manishc@marvell.com>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo
+ Abeni <pabeni@redhat.com>, Rasesh Mody <rmody@marvell.com>,
+ GR-Linux-NIC-Dev@marvell.com, Igor Mitsyanko <imitsyanko@quantenna.com>,
+ Sergey Matyukevich <geomatsi@gmail.com>, Kalle Valo <kvalo@kernel.org>,
+ Sanjay R Mehta <sanju.mehta@amd.com>, Shyam Sundar S K
+ <Shyam-sundar.S-k@amd.com>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
+ <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Alex Williamson <alex.williamson@redhat.com>,
+ Juergen Gross <jgross@suse.com>, Stefano Stabellini
+ <sstabellini@kernel.org>, Oleksandr Tyshchenko
+ <oleksandr_tyshchenko@epam.com>, Jaroslav Kysela <perex@perex.cz>, Takashi
+ Iwai <tiwai@suse.com>, Chen Ni <nichen@iscas.ac.cn>, Mario Limonciello
+ <mario.limonciello@amd.com>, Ricky Wu <ricky_wu@realtek.com>, Al Viro
+ <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>, Kevin Tian
+ <kevin.tian@intel.com>, Thomas Gleixner <tglx@linutronix.de>, Ilpo
+ =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, Andy
+ Shevchenko <andriy.shevchenko@linux.intel.com>, Mostafa Saleh
+ <smostafa@google.com>, Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu
+ <yi.l.liu@intel.com>,  Christian Brauner <brauner@kernel.org>, Ankit
+ Agrawal <ankita@nvidia.com>, Eric Auger <eric.auger@redhat.com>, Reinette
+ Chatre <reinette.chatre@intel.com>, Ye Bin <yebin10@huawei.com>, Marek
+ =?ISO-8859-1?Q?Marczykowski-G=F3recki?= <marmarek@invisiblethingslab.com>,
+ Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>, Peter Ujfalusi
+ <peter.ujfalusi@linux.intel.com>, Maarten Lankhorst
+ <maarten.lankhorst@linux.intel.com>, Kai Vehmanen
+ <kai.vehmanen@linux.intel.com>,  Rui Salvaterra <rsalvaterra@gmail.com>,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-input@vger.kernel.org, netdev@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
+ linux-pci@vger.kernel.org,  kvm@vger.kernel.org,
+ xen-devel@lists.xenproject.org, linux-sound@vger.kernel.org
+Date: Fri, 25 Oct 2024 10:37:57 +0200
+In-Reply-To: <875xphzeun.wl-tiwai@suse.de>
+References: <20241015185124.64726-1-pstanner@redhat.com>
+	 <20241015185124.64726-3-pstanner@redhat.com> <87v7xk2ps5.wl-tiwai@suse.de>
+	 <6f3db65fe9a5dcd1a7a8d9bd5352ecb248ef57b1.camel@redhat.com>
+	 <87ttd2276j.wl-tiwai@suse.de>
+	 <aec23bb79b9ff7dd7f13eb67460e0605eac22912.camel@redhat.com>
+	 <875xphzeun.wl-tiwai@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
 
-On Tue, 22 Oct 2024 11:45:31 +0900, Damien Le Moal wrote:
-> The first 5 patches of this series refactor and cleanup the libata-scsi
-> code handling command emulation. There are no functional changes
-> introduced by these patches.
-> 
-> The last patch of the series (patch 6) improves the command emulation
-> by accurately handling the scsi command residual and transferring back
-> to the requester only the relevant data of a command reply.
-> 
-> [...]
+On Thu, 2024-10-24 at 17:43 +0200, Takashi Iwai wrote:
+> On Thu, 24 Oct 2024 10:02:59 +0200,
+> Philipp Stanner wrote:
+> >=20
+> > On Wed, 2024-10-23 at 17:03 +0200, Takashi Iwai wrote:
+> > > On Wed, 23 Oct 2024 15:50:09 +0200,
+> > > Philipp Stanner wrote:
+> > > >=20
+> > > > On Tue, 2024-10-22 at 16:08 +0200, Takashi Iwai wrote:
+> > > > > On Tue, 15 Oct 2024 20:51:12 +0200,
+> > > > > Philipp Stanner wrote:
+> > > > > >=20
+> > > > > > pci_intx() is a hybrid function which can sometimes be
+> > > > > > managed
+> > > > > > through
+> > > > > > devres. To remove this hybrid nature from pci_intx(), it is
+> > > > > > necessary to
+> > > > > > port users to either an always-managed or a never-managed
+> > > > > > version.
+> > > > > >=20
+> > > > > > hda_intel enables its PCI-Device with pcim_enable_device().
+> > > > > > Thus,
+> > > > > > it needs
+> > > > > > the always-managed version.
+> > > > > >=20
+> > > > > > Replace pci_intx() with pcim_intx().
+> > > > > >=20
+> > > > > > Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> > > > > > ---
+> > > > > > =C2=A0sound/pci/hda/hda_intel.c | 2 +-
+> > > > > > =C2=A01 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > >=20
+> > > > > > diff --git a/sound/pci/hda/hda_intel.c
+> > > > > > b/sound/pci/hda/hda_intel.c
+> > > > > > index b4540c5cd2a6..b44ca7b6e54f 100644
+> > > > > > --- a/sound/pci/hda/hda_intel.c
+> > > > > > +++ b/sound/pci/hda/hda_intel.c
+> > > > > > @@ -786,7 +786,7 @@ static int azx_acquire_irq(struct azx
+> > > > > > *chip,
+> > > > > > int do_disconnect)
+> > > > > > =C2=A0	}
+> > > > > > =C2=A0	bus->irq =3D chip->pci->irq;
+> > > > > > =C2=A0	chip->card->sync_irq =3D bus->irq;
+> > > > > > -	pci_intx(chip->pci, !chip->msi);
+> > > > > > +	pcim_intx(chip->pci, !chip->msi);
+> > > > > > =C2=A0	return 0;
+> > > > > > =C2=A0}
+> > > > > > =C2=A0
+> > > > >=20
+> > > > > Hm, it's OK-ish to do this as it's practically same as what
+> > > > > pci_intx()
+> > > > > currently does.=C2=A0 But, the current code can be a bit
+> > > > > inconsistent
+> > > > > about
+> > > > > the original intx value.=C2=A0 pcim_intx() always stores !enable
+> > > > > to
+> > > > > res->orig_intx unconditionally, and it means that the
+> > > > > orig_intx
+> > > > > value
+> > > > > gets overridden at each time pcim_intx() gets called.
+> > > >=20
+> > > > Yes.
+> > > >=20
+> > > > >=20
+> > > > > Meanwhile, HD-audio driver does release and re-acquire the
+> > > > > interrupt
+> > > > > after disabling MSI when something goes wrong, and pci_intx()
+> > > > > call
+> > > > > above is a part of that procedure.=C2=A0 So, it can rewrite the
+> > > > > res->orig_intx to another value by retry without MSI.=C2=A0 And
+> > > > > after
+> > > > > the
+> > > > > driver removal, it'll lead to another state.
+> > > >=20
+> > > > I'm not sure that I understand this paragraph completely.
+> > > > Still,
+> > > > could
+> > > > a solution for the driver on the long-term just be to use
+> > > > pci_intx()?
+> > >=20
+> > > pci_intx() misses the restore of the original value, so it's no
+> > > long-term solution, either.
+> >=20
+> > Sure that is missing =E2=80=93 I was basically asking whether the drive=
+r
+> > could
+> > live without that feature.
+> >=20
+> > Consider that point obsolete, see below
+> >=20
+> > >=20
+> > > What I meant is that pcim_intx() blindly assumes the negative of
+> > > the
+> > > passed argument as the original state, which isn't always true.=C2=A0
+> > > e.g.
+> > > when the driver calls it twice with different values, a wrong
+> > > value
+> > > may be remembered.
+> >=20
+> > Ah, I see =E2=80=93 thoguh the issue is when it's called several times =
+with
+> > the
+> > *same* value, isn't it?
+> >=20
+> > E.g.
+> >=20
+> > pcim_intx(pdev, 1); // 0 is remembered as the old value
+> > pcim_intx(pdev, 1); // 0 is falsely remembered as the old value
+> >=20
+> > Also, it would seem that calling the function for the first time
+> > like
+> > that:
+> >=20
+> > pcim_intx(pdev, 0); // old value: 1
+> >=20
+> > is at least incorrect, because INTx should be 0 per default,
+> > shouldn't
+> > it? Could then even be a 1st class bug, because INTx would end up
+> > being
+> > enabled despite having been disabled all the time.
+>=20
+> Yeah, and the unexpected restore can happen even with a single call
+> of
+> pcim_intx(), if the driver calls it unnecessarily.
+>=20
+> > > That said, I thought of something like below.
+> >=20
+> > At first glance that looks like a good idea to me, thanks for
+> > working
+> > this out!
+> >=20
+> > IMO you can submit that as a patch so we can discuss it separately.
+>=20
+> Sure, I'm going to submit later.
 
-Applied to libata/linux.git (for-6.13), thanks!
+I just took a look into the old implementation of pci_intx() (there was
+no pcim_intx() back then), before I started cleaning up PCI's devres.
+This what it looked like before
+25216afc9db53d85dc648aba8fb7f6d31f2c8731:
 
-[1/6] ata: libata-scsi: Refactor ata_scsi_simulate()
-      https://git.kernel.org/libata/linux/c/b055e3be
-[2/6] ata: libata-scsi: Refactor ata_scsiop_read_cap()
-      https://git.kernel.org/libata/linux/c/44bdde15
-[3/6] ata: libata-scsi: Refactor ata_scsiop_maint_in()
-      https://git.kernel.org/libata/linux/c/4ab7bb97
-[4/6] ata: libata-scsi: Document all VPD page inquiry actors
-      https://git.kernel.org/libata/linux/c/47000e84
-[5/6] ata: libata-scsi: Remove struct ata_scsi_args
-      https://git.kernel.org/libata/linux/c/2365278e
-[6/6] ata: libata-scsi: Return residual for emulated SCSI commands
-      https://git.kernel.org/libata/linux/c/5251ae22
+void pci_intx(struct pci_dev *pdev, int enable)
+{
+	u16 pci_command, new;
 
-Kind regards,
-Niklas
+	pci_read_config_word(pdev, PCI_COMMAND, &pci_command);
+
+	if (enable)
+		new =3D pci_command & ~PCI_COMMAND_INTX_DISABLE;
+	else
+		new =3D pci_command | PCI_COMMAND_INTX_DISABLE;
+
+	if (new !=3D pci_command) {
+		struct pci_devres *dr;
+
+		pci_write_config_word(pdev, PCI_COMMAND, new);
+
+		dr =3D find_pci_dr(pdev);
+		if (dr && !dr->restore_intx) {
+			dr->restore_intx =3D 1;
+			dr->orig_intx =3D !enable;
+		}
+	}
+}
+EXPORT_SYMBOL_GPL(pci_intx);
+
+If I'm not mistaken the old version did not have the problem because
+the value to be restored only changed if new !=3D pci_command.
+
+That should always be correct, what do you think?
+
+If so, only my commit 25216afc9db53d85dc648aba8fb7f6d31f2c8731 needs to
+be fixed.
+
+Thanks,
+P.
+
+
+>=20
+>=20
+> thanks,
+>=20
+> Takashi
+>=20
 
