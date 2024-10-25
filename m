@@ -1,225 +1,74 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D153170A1C;
-	Fri, 25 Oct 2024 08:00:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99CDC18A94C
+	for <linux-ide@vger.kernel.org>; Fri, 25 Oct 2024 08:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729843206; cv=none; b=Z0/HCLoboPmDTFXc4UYOP9EtiJl+NxxJNwJpFcJjQFjDxsq5ozrZElkXqj0QlLzinMo8TAYKos5LwoSotfvqls1TQAxViqXOU+LpFVBC8EZFmNDPmTHLkhh52qZK3zgiYyLC0CVm5ZVGP0JPjsTsOxf+oRAWYVJBbiFaJ2bQyms=
+	t=1729844106; cv=none; b=nsw2Rvy0NNe6dDIa0XbinZVhvlHS6o+TUC8YHuoX0Uofgg7GcbDln7ErT9PZcl7hu1hFxl8lQxb2imZxLiKPRyq0Loq1I4hnnOozzaMRZEVB831xIF3Xaow3zZc5BICk8rJs+NtcPxGgecE//FnAgvvsu/svBwmorThgH6x+bSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729843206; c=relaxed/simple;
-	bh=pDKoYNWc5esSfmM2VKEvc47EU0gOkj8FOL8qQDFJZYk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M3yUSWnigy60bFbw7c6IRgfHlXshTyd+aONOTTjV3D1AbMfwNKn0aQb2NHlMtGeQctlI7kpE9ubJuzrLZF7HqKOHOhkHuLUw03rkIrlWFsAIiBC0c5ZS+2bng8wJeEfmMvrE9x1td4JrOkqiFV6t8pqJWbe/GUXp8AG3qhP0VLk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Q3bpuJkx; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=iSm5PcWT; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Q3bpuJkx; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=iSm5PcWT; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1729844106; c=relaxed/simple;
+	bh=WolqRln6HOgOQh+1kafBCgWkLPta6LJD2Il4PnCXzJM=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=aFXRB3qi09zxpTKR8f3FRS4Jvc+DiO1cuf/mCrNUXKZ9cw2XNNpIXgwdesFi6GZNKnlBK6h8kz21CxHDdXtjxuhTQcERVy2MjZON3+IAYV9yOkc9lxjkgtTnKaZ4VLbpUi+9wfW3twtP52vJTxyJKsp8oqN6nQmwrm24KhZOdIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q/1zNg+Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Q3bpuJkx";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="iSm5PcWT";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Q3bpuJkx";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="iSm5PcWT"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 6FE8821E1F;
-	Fri, 25 Oct 2024 08:00:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1729843202; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Gt4eKGHTaDKGDIpEe7BbcCU3OPOhB5+NbtQhvob/2u0=;
-	b=Q3bpuJkxSkOVve5uvDfli9jz2KlAsWAiPZucR6NpoGrjTSqrlZ9/qm3XU/eT9vQVnbET3I
-	TTAAXXZP+7z0PHH0dA3MZuiTGQ2TFSNvfRJuCAYA+pc5kGIbuwT5wE/GSeonj4dnHxaqqc
-	Fg6YV45j4Ieg70gSybwep693JDKmHFw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1729843202;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Gt4eKGHTaDKGDIpEe7BbcCU3OPOhB5+NbtQhvob/2u0=;
-	b=iSm5PcWTohwwYs+NwSceqzvMUzvEepB2n1+Qq0val4EWG9nqyrd/iHlwKVqznKHhda8xxm
-	Jc1ZYwjEHHsRlQDQ==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1729843202; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Gt4eKGHTaDKGDIpEe7BbcCU3OPOhB5+NbtQhvob/2u0=;
-	b=Q3bpuJkxSkOVve5uvDfli9jz2KlAsWAiPZucR6NpoGrjTSqrlZ9/qm3XU/eT9vQVnbET3I
-	TTAAXXZP+7z0PHH0dA3MZuiTGQ2TFSNvfRJuCAYA+pc5kGIbuwT5wE/GSeonj4dnHxaqqc
-	Fg6YV45j4Ieg70gSybwep693JDKmHFw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1729843202;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Gt4eKGHTaDKGDIpEe7BbcCU3OPOhB5+NbtQhvob/2u0=;
-	b=iSm5PcWTohwwYs+NwSceqzvMUzvEepB2n1+Qq0val4EWG9nqyrd/iHlwKVqznKHhda8xxm
-	Jc1ZYwjEHHsRlQDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C94FB132D3;
-	Fri, 25 Oct 2024 07:59:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 1OmFJ/9PG2coWQAAD6G6ig
-	(envelope-from <aherrmann@suse.de>); Fri, 25 Oct 2024 07:59:59 +0000
-Date: Fri, 25 Oct 2024 09:59:53 +0200
-From: Andreas Herrmann <aherrmann@suse.de>
-To: Jiaxun Yang <jiaxun.yang@flygoat.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Serge Semin <fancer.lancer@gmail.com>, Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
-	ntb@lists.linux.dev, Andy Shevchenko <andy@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Kory Maincent <kory.maincent@bootlin.com>,
-	Cai Huoqing <cai.huoqing@linux.dev>, dmaengine@vger.kernel.org,
-	Mark Brown <broonie@kernel.org>, linux-spi@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
-	"paulburton@kernel.org" <paulburton@kernel.org>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Andrew Lunn <andrew@lunn.ch>, Russell King <linux@armlinux.org.uk>,
-	Vladimir Oltean <olteanv@gmail.com>,
-	Kelvin Cheung <keguang.zhang@gmail.com>,
-	Yanteng Si <siyanteng@loongson.cn>, netdev@vger.kernel.org,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>, linux-hwmon@vger.kernel.org,
-	Borislav Petkov <bp@alien8.de>, linux-edac@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-serial@vger.kernel.org, Andrew Halaney <ajhalaney@gmail.com>,
-	Nikita Travkin <nikita@trvn.ru>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Alexander Shiyan <shc_work@mail.ru>, Dmitry Kozlov <xeb@mail.ru>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Evgeniy Dushistov <dushistov@mail.ru>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Sergio Paracuellos <sergio.paracuellos@gmail.com>,
-	Nikita Shubin <nikita.shubin@maquefel.me>,
-	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: linux: Goodbye from a Linux community volunteer
-Message-ID: <20241025075953.GA3559@alberich>
-References: <2m53bmuzemamzc4jzk2bj7tli22ruaaqqe34a2shtdtqrd52hp@alifh66en3rj>
- <e7d548a7fc835f9f3c9cb2e5ed97dfdfa164813f.camel@HansenPartnership.com>
- <753d203a-a008-4cd3-b053-38b5ce31281b@app.fastmail.com>
- <f90bba20e86dac698472d686be7ec565736adca0.camel@HansenPartnership.com>
- <2f203b14-be13-4eef-bcb1-743dd9e9e9bd@app.fastmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/1zNg+Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D776C4CEC3;
+	Fri, 25 Oct 2024 08:15:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729844106;
+	bh=WolqRln6HOgOQh+1kafBCgWkLPta6LJD2Il4PnCXzJM=;
+	h=From:To:In-Reply-To:References:Subject:Date:From;
+	b=q/1zNg+ZhwOGSQd1EJR6OkiB8klCp4ZKilWqHI8PVkRZV/mAySpegwtbOSGyVXp1j
+	 wSNzDOT31LbavZFMVkcu6LWHiB5qssUcg5G83sC7V3PwKxFZQYtTTN+V7YVvRIR/Jh
+	 zDDg/pdcm8ZxyY3Qb6g1bWxuZFz174f2MvWoyjCNTkPWg138VX/kg657EHmt1pfc1a
+	 p8tPcv1eGuxOHERpdKc6JG/k/T8C1R7byxFbszgM/a4i/9oMduvjWml5AIAnpkXcqQ
+	 Y+O+QhDaAag+r5Zorbpg8MmTM1GgbFudBQb0TZtKbsF8Kp0vtsI+VKJDnW+tVRFKxR
+	 PixXBmXqYBaaw==
+From: Niklas Cassel <cassel@kernel.org>
+To: linux-ide@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+In-Reply-To: <20241022024537.251905-1-dlemoal@kernel.org>
+References: <20241022024537.251905-1-dlemoal@kernel.org>
+Subject: Re: [PATCH 0/6] Cleanup and improve libata-scsi command emulation
+Message-Id: <172984410533.3954535.14529122270469558816.b4-ty@kernel.org>
+Date: Fri, 25 Oct 2024 10:15:05 +0200
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2f203b14-be13-4eef-bcb1-743dd9e9e9bd@app.fastmail.com>
-X-Spam-Score: -2.30
-X-Spamd-Result: default: False [-2.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MISSING_XM_UA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TO_DN_EQ_ADDR_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com,mail.ru];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[hansenpartnership.com,gmail.com,kudzu.us,intel.com,lists.linux.dev,kernel.org,linux.intel.com,bootlin.com,linux.dev,vger.kernel.org,alpha.franken.de,arndb.de,google.com,linaro.org,renesas.com,davemloft.net,redhat.com,lunn.ch,armlinux.org.uk,loongson.cn,roeck-us.net,alien8.de,linuxfoundation.org,trvn.ru,jurassic.park.msu.ru,mail.ru,omp.ru,linux-m68k.org,maquefel.me];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[53];
-	R_RATELIMIT(0.00)[to_ip_from(RL9za9u4kxnfaar3549n6tyhyx)]
-X-Spam-Flag: NO
-X-Spam-Level: 
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-On Thu, Oct 24, 2024 at 05:58:45PM +0100, Jiaxun Yang wrote:
+On Tue, 22 Oct 2024 11:45:31 +0900, Damien Le Moal wrote:
+> The first 5 patches of this series refactor and cleanup the libata-scsi
+> code handling command emulation. There are no functional changes
+> introduced by these patches.
 > 
+> The last patch of the series (patch 6) improves the command emulation
+> by accurately handling the scsi command residual and transferring back
+> to the requester only the relevant data of a command reply.
 > 
-> 在2024年10月24日十月 下午5:27，James Bottomley写道：
-> > On Thu, 2024-10-24 at 16:59 +0100, Jiaxun Yang wrote:
 > [...]
-> 
-> Hi James,
-> 
-> >
-> > It's Linux, so no official capacity at all.  However, I am expressing
-> > the views of a number of people I talked to but it's not fair of me to
-> > name them.
-> 
-> Fair enough, I was hoping that it's from Linux Foundation but it's still
-> good news to me that it do represent some respectful individuals.
-> 
-> >
-> [...]
-> >> How should we handle it?
-> >
-> > A big chunk of the reason it's taken so long just to get the above is
-> > that the Lawyers (of which I'm not one) are still discussing the
-> > specifics and will produce a much longer policy document later, so they
-> > don't want to be drawn into questions like this.  However, my non-
-> > legal-advice rule of thumb that I'm applying until I hear otherwise is
-> > not on the SDN list, not a problem.
-> 
-> Thank you for sharing your insights. I'm looking forward to the document.
 
-+1
+Applied to libata/linux.git (for-6.13), thanks!
 
-> While I remain quite upset about how things were handled, your message has
-> helped restore some of my confidence in the community.
+[1/6] ata: libata-scsi: Refactor ata_scsi_simulate()
+      https://git.kernel.org/libata/linux/c/b055e3be
+[2/6] ata: libata-scsi: Refactor ata_scsiop_read_cap()
+      https://git.kernel.org/libata/linux/c/44bdde15
+[3/6] ata: libata-scsi: Refactor ata_scsiop_maint_in()
+      https://git.kernel.org/libata/linux/c/4ab7bb97
+[4/6] ata: libata-scsi: Document all VPD page inquiry actors
+      https://git.kernel.org/libata/linux/c/47000e84
+[5/6] ata: libata-scsi: Remove struct ata_scsi_args
+      https://git.kernel.org/libata/linux/c/2365278e
+[6/6] ata: libata-scsi: Return residual for emulated SCSI commands
+      https://git.kernel.org/libata/linux/c/5251ae22
 
-+1
+Kind regards,
+Niklas
 
-> I agree with Peter Cai's earlier comment that steps should be taken to address
-> the harm caused by the initial reckless actions, particularly to those who were
-> humiliated.
-
-+1
-
-> It is also important to put measures in place to prevent such drama from recurring.
-> A formal procedure for handling urgent compliance requests may be a sensible step
-> forward.
-
-+1
-
-> I hold our community in high regard and would be heartbreaking to see the reputation
-> of the Linux Kernel undermined in such an unfortunate manner. I would appreciate it
-> if you could convey those thoughts to the relevant individuals.
-
-+1
-
--- 
-Regards,
-Andreas
-
-PS: What people also tend to forget. No matter how worse it gets in
-world affairs there always will come a time after a conflict. And
-people with brains should look forward to such times and how they can
-continue to work together then.
