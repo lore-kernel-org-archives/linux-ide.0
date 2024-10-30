@@ -1,64 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1449F190049;
-	Mon, 28 Oct 2024 22:43:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E771C13A27D;
+	Wed, 30 Oct 2024 01:50:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730155426; cv=none; b=jbcJ9FBNyOUfwxPmGz5KlcbY+Eag7LZ6+wJ8IwMDmhbhtu3Jayi3r3MRgvnPNdVNuWROQLgky1B+buAhX4u/FkoYEgq9PMtpWSuouQBv/g1Mslb10DgQdkt09AyyMk9/6hyE6Sv8H19zTRME9ZuKtq3zQSob5cyJeFI8ZuKyCyY=
+	t=1730253011; cv=none; b=u2lqapOBkuY0XJ2TumJbkQk5QDos0qy7vjzRKJF6eTeHfWTNQpeMyjUUCie3U9sbi2JAYh0v8qEFmgBQP+v9bP13IHkkhh056wsz8eGFc+4GpdU7s2r+UHxEGWdypy2S4Fs/2xW8G4b1wRmkHTeONn6p9yQdkFTWpY8KHwaVWkw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730155426; c=relaxed/simple;
-	bh=SE+WE1kudze4FGAujRK2AgdkGJ912lqkZsyRAZy3qIg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V34bH9IQKzu8Y5sQYh8ajpAqs7wCTY+nIHzxH2XKbzMj/51HvSvH5SQ52/10DNFKbmP6zNYS7f+j38Uezpq1gD3RkGXQYBc0VHd4ts+aGiUZVp0Y5LAzXjRj4HRGiBaS0o8a3l15XYvk2KQJip9MQiKtJ2inLXjkgdEiVzBloow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ovzZMX+s; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730253011; c=relaxed/simple;
+	bh=y6+bM0zEOiH5MPMkoFS9BwHieAQZ9fNfXnP4ex+lu34=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=M8m10SkqFqkZvApdlxUdBWGJN3s1XxIB3Rl3tqJxqz2aqMh2wKrMVZpIEP9NvYhduc/YPFCmL5i45w2lHEiW34BU+sQaGD8eS2EjjUw4wHqrWVOEDKGKSMVzelxKnd/s+ERLtPlndLBU1Rq+f5VkNs4f0DLYtIc8eXZsOhkDYa8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=R311AVpD; arc=none smtp.client-ip=91.218.175.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ovzZMX+s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3159FC4CECD;
-	Mon, 28 Oct 2024 22:43:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730155425;
-	bh=SE+WE1kudze4FGAujRK2AgdkGJ912lqkZsyRAZy3qIg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=ovzZMX+sUeINz5iM91hL0ZfK2ZB7ootK0QPt+N0mI+R0jey50P885nc58m37sP0WX
-	 fM3paqdkbkQOG6foAiWrqmNk6WWnI1ynE8WZ+leS8o58PDm0sQPzipZyLlhR3Z8XV0
-	 EBAErzdmzgRc/JazZ6D7flAAFddc4kSKj70dsmd3Wcp8X07f8X7RmS4znZ0pJkzhH9
-	 oyAQOJWPE65wnWLRuh8cHWq2aotjQagU4uR0xcwGOaI4fjLOpiDxmZIQ16ycmIl7mJ
-	 VNEpwPKUTjxv8d9Xct/0oKd3t2AuoZegdn5EQPkSIPM+cYjXlSwT5AqX/q2yxnZzQr
-	 2wiazXu8Nhaqw==
-Date: Mon, 28 Oct 2024 15:43:44 -0700
-From: Jakub Kicinski <kuba@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Claudiu Beznea
- <claudiu.beznea.uj@bp.renesas.com>, Paul Barker
- <paul.barker.ct@bp.renesas.com>, Niklas =?UTF-8?B?U8O2ZGVybHVuZA==?=
- <niklas.soderlund+renesas@ragnatech.se>, Yoshihiro Shimoda
- <yoshihiro.shimoda.uh@renesas.com>, linux-renesas-soc@vger.kernel.org,
- netdev@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH/RFC] MAINTAINERS: Re-add cancelled Renesas driver
- sections
-Message-ID: <20241028154344.70a92853@kernel.org>
-In-Reply-To: <ZxZvL37ZdKg1P-QE@ryzen.lan>
-References: <0a189e2c4090a1b308e18005d2552e335bac354f.1729511337.git.geert+renesas@glider.be>
-	<ZxZvL37ZdKg1P-QE@ryzen.lan>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="R311AVpD"
+Message-ID: <b545a75b-868b-4238-94c9-d647b4da27e2@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1730253006;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5fASV8AOO8/1SMF1wEDZo6V3RiSsMj7qVwz3D1JJ4NY=;
+	b=R311AVpD6h39kuoBfQMZcou/TW+9M7Ha6QZbtAoMphNYN9MH0oXmGkIAvOKWCM9ZOrcPEF
+	Gjpnl216h1Ku7/fV2KC4gZvBBmk93nr+2pKh6BY8jFhAuGTUWBDpHQruAvfuy8/XQ9eypr
+	pGzGw+jnfvbeLMUijB0Y0hpPbqejZRQ=
+Date: Wed, 30 Oct 2024 09:49:44 +0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Subject: Re: linux: Goodbye from a Linux community volunteer
+To: Serge Semin <fancer.lancer@gmail.com>, Jon Mason <jdmason@kudzu.us>,
+ Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+ ntb@lists.linux.dev, Andy Shevchenko <andy@kernel.org>,
+ Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Kory Maincent <kory.maincent@bootlin.com>,
+ Cai Huoqing <cai.huoqing@linux.dev>, dmaengine@vger.kernel.org,
+ Mark Brown <broonie@kernel.org>, linux-spi@vger.kernel.org,
+ Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Paul Burton <paulburton@kernel.org>,
+ Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+ Arnd Bergmann <arnd@arndb.de>, Jiaxun Yang <jiaxun.yang@flygoat.com>,
+ linux-mips@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ linux-pci@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Andrew Lunn <andrew@lunn.ch>, Russell King <linux@armlinux.org.uk>,
+ Vladimir Oltean <olteanv@gmail.com>, Keguang Zhang
+ <keguang.zhang@gmail.com>, Yanteng Si <siyanteng@loongson.cn>,
+ netdev@vger.kernel.org, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk@kernel.org>, Guenter Roeck <linux@roeck-us.net>,
+ linux-hwmon@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
+ linux-edac@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ linux-serial@vger.kernel.org
+Cc: Andrew Halaney <ajhalaney@gmail.com>, Nikita Travkin <nikita@trvn.ru>,
+ Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Alexander Shiyan <shc_work@mail.ru>, Dmitry Kozlov <xeb@mail.ru>,
+ Sergey Shtylyov <s.shtylyov@omp.ru>, Evgeniy Dushistov <dushistov@mail.ru>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Sergio Paracuellos <sergio.paracuellos@gmail.com>,
+ Nikita Shubin <nikita.shubin@maquefel.me>,
+ linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <2m53bmuzemamzc4jzk2bj7tli22ruaaqqe34a2shtdtqrd52hp@alifh66en3rj>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Yanteng Si <si.yanteng@linux.dev>
+In-Reply-To: <2m53bmuzemamzc4jzk2bj7tli22ruaaqqe34a2shtdtqrd52hp@alifh66en3rj>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Mon, 21 Oct 2024 17:11:43 +0200 Niklas Cassel wrote:
-> > +RENESAS R-CAR SATA DRIVER
-> > +L:	linux-ide@vger.kernel.org
-> > +L:	linux-renesas-soc@vger.kernel.org
-> > +S:	Supported  
-> 
-> Seems a bit weird to keep the "S: Supported" line, if there is no
-> "M: " or "R: " entry. I suggest you kill it.
 
-Agreed, I think they should all be (temporarily?) designated as Orphans.
+
+
+在 2024/10/24 12:27, Serge Semin 写道:
+> Yoshihiro, Keguang, Yanteng, Kory, Cai and everybody I was lucky to meet in the
+> kernel mailing lists, but forgot to mention here. Thank you for the time spent
+> for our cooperative work on making the Linux kernel better. It was a pleasure to
+> meet you here.
+I am also deeply delighted to meet you here. In the process of 
+collaborating with you,
+I have gained a lot and am really full of gratitude.
+>
+> Hope we'll meet someday in more pleasant circumstances and drink a
+> couple or more beers together. But now it's time to say good bye.
+Let's spend more of our spare time on enjoying life.
+
+Thanks,
+Yanteng
+>
+> Best Regards,
+> -Serge(y)
+>
+
