@@ -1,137 +1,154 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.19])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B3301C8FD6;
-	Wed, 30 Oct 2024 18:34:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7772A14F90;
+	Wed, 30 Oct 2024 21:11:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730313257; cv=none; b=B0KTBEc4E62GdwM7/Up6MXTpJoc1AU4/ArAVkSaWzlR6F2pua3xnNXQSJZVvX4uUnkK0a8IEhs6gCOjX/MJpzrCoipq6OcF2GXl8dfXoi3/MDDz6/xok48hyUBEYRP1xo6o9jLp24oLIZyHZ4z7DxWaiymeHtxc5S2iSEo65xEk=
+	t=1730322663; cv=none; b=btWfmSMr/y/PexnDcYKHsXtpXNtvOoMcmH7dgHgxrKly+fMraUK6qrpxsWQ313DbTQMV5OALmVP0x83nwoalXy3KJjQjwLfy4/HuLM/nNpLdOq9np4X3wU7q0UG+A6Vvs9Vp9kxEpKadfk2HM7DfXIQI6kp0bVMugfl3HGZ/uxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730313257; c=relaxed/simple;
-	bh=qVSlmDSlEDWcfpve3SDrSeg/8UVEvUP9GHMSIPm116o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pUgiykXD8ZYfHcNKWjA03W96/5PVfA1CbEW4W/CmMvBKPAQuowXgHTTjKYT620nVQN2XXyxrMmc2667x27n9GX47FU3S7/E+9GzaTIucjPxq9qh9AwFRL0WDBYb9uQEEd0uvHGI2CahOPapHrUAGwor3MY6mXKESB7shde+IHMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=metux@gmx.de header.b=PxEy5NXZ; arc=none smtp.client-ip=212.227.15.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
+	s=arc-20240116; t=1730322663; c=relaxed/simple;
+	bh=49YpfPgybjyunYRlnfXehdPEI1xELY9QE5/uJT2eRPQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=OKdXsIS+svbrCFi7nUIkBnbKoaGi7E13i1aa1umAF0RR/uqCBe5bCk9ZqMOqoyWQecBz7Nm09ymc5GW6juw/Q3fF9w2GsLeWihun5XJXkr/vDMJs2cyJHpRCr/q2cFSqQOhS3rpF3Ev6t+VTd0xSju95xYR+tas00Vn9LY+dPyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pkEQfGIc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=metux@gmx.de header.b="PxEy5NXZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
-	s=s31663417; t=1730313146; x=1730917946; i=metux@gmx.de;
-	bh=qVSlmDSlEDWcfpve3SDrSeg/8UVEvUP9GHMSIPm116o=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=PxEy5NXZPnL/khf+ZM27BR9NEpxVSB3HZ/B8yIFsHo+4hMZE6ntqAJmMaxw7Xseo
-	 gaIIZIwwVO9VT8D2ZAyDVhi2PZiaScE1eknfpKrAKCIAemHMxOAxaoyTqpoE6Jeu7
-	 2U5iwP9MNWVVH34yc3A/eCCC2GfvO3KMgzMKRz4LtjlKhERpzpOUHDIyJEVFIhMaJ
-	 3r3mGdjZDZfdrTPKDAPGxgg+EXB4TEBE4sp9lE0/MkWyfyC3o93hE/PEShWUOIUZS
-	 sq3039eZOOaH0CEL5pPa8D+gdQAgjz3j5h71lTqlNcOunuwf9c5sdbaOcoAZ/KV7z
-	 GdU/W9tMEPE+WiJERw==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from [192.168.1.178] ([77.2.112.201]) by mail.gmx.net (mrgmx004
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1Mr9Bk-1tbeU32akI-00j5Eb; Wed, 30
- Oct 2024 19:32:25 +0100
-Message-ID: <2cf94b06-fbaf-4c04-941a-4de052a5c484@gmx.de>
-Date: Wed, 30 Oct 2024 19:32:59 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pkEQfGIc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB149C4CECE;
+	Wed, 30 Oct 2024 21:11:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730322663;
+	bh=49YpfPgybjyunYRlnfXehdPEI1xELY9QE5/uJT2eRPQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=pkEQfGIccHm/wjiCrCCWe/fH7mfNqtwdKRguI2XyD+0KsDUZwN+Z3GEyLkB72KLSy
+	 ulaBG27WfSdkBPsSCq9Yjp/3JTK5hLojfRSklS9RUiQPlAcnN7CviYKk/XyzFK0ByX
+	 Ip+k/evjUE7lioJxM7T4DzxFai1kidYxX7YiT7IXRP34r0U25bFA99l8ZHQOmfqDpU
+	 1YHV4iYYti/4gl4juv7KbZgDYPOhzdN4tgMBXwvF191SrIvWNuZizINVQBdIJ1KUlB
+	 zAB3Bq3cuJ15LzgOUrz0K+qEuKnNH6URIYvoC6qQ0lGtlTrzqYvfrsPzuyf4NmCutU
+	 +Q30d8ivn5xlA==
+Date: Wed, 30 Oct 2024 16:11:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Philipp Stanner <pstanner@redhat.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	Boris Brezillon <bbrezillon@kernel.org>,
+	Arnaud Ebalard <arno@natisbad.org>,
+	Srujana Challa <schalla@marvell.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Kalle Valo <kvalo@kernel.org>, Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>, Jaroslav Kysela <perex@perex.cz>,
+	Takashi Iwai <tiwai@suse.com>, Mark Brown <broonie@kernel.org>,
+	David Lechner <dlechner@baylibre.com>,
+	Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+	Jie Wang <jie.wang@intel.com>,
+	Michal Witwicki <michal.witwicki@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Adam Guerin <adam.guerin@intel.com>,
+	Damian Muszynski <damian.muszynski@intel.com>,
+	Bharat Bhushan <bbhushan2@marvell.com>,
+	Nithin Dabilpuram <ndabilpuram@marvell.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Benjamin Berg <benjamin.berg@intel.com>,
+	Breno Leitao <leitao@debian.org>,
+	Yedidya Benshimol <yedidya.ben.shimol@intel.com>,
+	Serge Semin <fancer.lancer@gmail.com>,
+	zhang jiao <zhangjiao2@cmss.chinamobile.com>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org, qat-linux@intel.com,
+	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ntb@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-serial@vger.kernel.org, linux-sound@vger.kernel.org
+Subject: Re: [PATCH v6 00/10] Remove pcim_iomap_regions_request_all()
+Message-ID: <20241030211100.GA1220400@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Kernel maintainer *CENSORED* on LKML [WAS: linux: Goodbye from a
- Linux community volunteer]
-To: =?UTF-8?Q?Dragan_Milivojevi=C4=87?= <d.milivojevic@gmail.com>,
- metux <metux@gmx.de>
-Cc: "Enrico Weigelt, metux IT consult" <info@metux.net>,
- Peter Cai <peter@typeblog.net>, phoronix@phoronix.com, Goran
- <g@odyss3us.net>, James Bottomley <James.Bottomley@hansenpartnership.com>,
- Serge Semin <fancer.lancer@gmail.com>, Jon Mason <jdmason@kudzu.us>,
- Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
- ntb@lists.linux.dev, Andy Shevchenko <andy@kernel.org>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Kory Maincent <kory.maincent@bootlin.com>,
- Cai Huoqing <cai.huoqing@linux.dev>, dmaengine@vger.kernel.org,
- Mark Brown <broonie@kernel.org>, linux-spi@vger.kernel.org,
- Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- Paul Burton <paulburton@kernel.org>,
- Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
- Arnd Bergmann <arnd@arndb.de>, Jiaxun Yang <jiaxun.yang@flygoat.com>,
- linux-mips@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- linux-pci@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Andrew Lunn <andrew@lunn.ch>, Russell King <linux@armlinux.org.uk>,
- Vladimir Oltean <olteanv@gmail.com>, Keguang Zhang
- <keguang.zhang@gmail.com>, Yanteng Si <siyanteng@loongson.cn>,
- netdev@vger.kernel.org, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk@kernel.org>, Guenter Roeck <linux@roeck-us.net>,
- linux-hwmon@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Andrew Halaney <ajhalaney@gmail.com>, Nikita Travkin <nikita@trvn.ru>,
- Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Alexander Shiyan <shc_work@mail.ru>, Dmitry Kozlov <xeb@mail.ru>,
- Sergey Shtylyov <s.shtylyov@omp.ru>, Evgeniy Dushistov <dushistov@mail.ru>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Sergio Paracuellos <sergio.paracuellos@gmail.com>,
- Nikita Shubin <nikita.shubin@maquefel.me>,
- linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- Kexy Biscuit <kexybiscuit@aosc.io>, jeffbai@aosc.io,
- Linus Torvalds <torvalds@linux-foundation.org>, "[DNG]"
- <dng@lists.dyne.org>, redaktion@golem.de, dev mail list <dev@suckless.org>
-References: <2m53bmuzemamzc4jzk2bj7tli22ruaaqqe34a2shtdtqrd52hp@alifh66en3rj>
- <e7d548a7fc835f9f3c9cb2e5ed97dfdfa164813f.camel@HansenPartnership.com>
- <6beb4070-1946-4387-bd0e-34608a76b19e@typeblog.net>
- <CALtW_agj1rurb3DRrPd9o2mkfku5fq_M3CEKY5sW+Zz7shKYHA@mail.gmail.com>
- <6d37175d-1b0b-4b82-80f0-c5b4e61badbf@metux.net>
- <2f12ee89-af9f-4af1-8ec8-ede1d5256592@metux.net>
- <CALtW_agiJyX3sTaBKgwPF7X920=+fFrRgXMPt4x_GCDOMfZy_w@mail.gmail.com>
- <CALtW_aimN531aZKSSG4hVLeQDk6bUoujopkhCh57xsaxfJrYgA@mail.gmail.com>
- <b410a7fb-58c0-4d17-b818-54ec3476833a@gmx.de>
- <CALtW_ah07h7h6eNHHGNNeKzVkNi7hVOG3q4Pv9DNacpXgve5Sw@mail.gmail.com>
-Content-Language: tl
-From: metux <metux@gmx.de>
-In-Reply-To: <CALtW_ah07h7h6eNHHGNNeKzVkNi7hVOG3q4Pv9DNacpXgve5Sw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:RwtMXzTkBDRWvHmp0Kk6XRNw8KkUfi9Grj7L3bmCj6cM8b4QBRJ
- nNQyNDflw/d6PbexIox9ShCoDZ/pcYmmDaszMMRbbihXY91rMPHcT/ve1uP86sxKdRx1g1E
- LMIpkJ9atodTw+nhg14XzBrSVxLSAAYObFblsohBrRQc7SmScMKCDm1cN4U3B+pQtjnpw4U
- MI13I3wb6wItEr6vDq2pA==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Ui1bpSsuH8A=;dfPECkdyGYjzvQovpk1mLrv2yHW
- Y6UHJ1D/kuELphaY3MXcMXRxjPPUeT4qliBwr9JiO9sSSiMATtjINoXzJwb//1wKiimLswgG4
- KDUFZoy+92BvMG+CVaIbYt4kN50oREhek7P4SWst1Gq32A+C0vNGj1E/0w6PCHq9Io9ZJfO1Q
- bDgdGgHMkRQP4TDh16fgjvk9XLm73lW1IiLywMwb+NAnzND/V6i9u73hcpclC4sKmB42YfOUP
- 3TDY4n8NPogsIMw+oAxoN3FAdnXbRgR+hiZfdYQdFrgyZNt69oCItyIphSgp9NNsaLpsDQbcd
- sOt72shhxR7lF3e8Pmsrc0osdQVDieXS1+Tf0Tf6tFeVvczmApP8pGBIXdDZe7KHQ0TaIDrSS
- hIa9kkTXO+J03hOC2vgze0XupDmJLEo6lzAXydh63tJyp4+B4Wvw11KH8YG5b09K/aeEMFNIA
- kbjVNCObPDtDfmcW8DVNFkVRzOGX3NgE2DGCtMdkjDXXTlE7C8gwDxeTiHZpfTyRh/ze0/wSh
- 43GBM3VR3f7DfeMf3FYyeUtAIjiLAbpeFjFvY0+0jcuf9YT8kiq6D3OEOkdMZWuirHh11f0Im
- EFP4HsracvNPaXIJAhWnNfwipO+FqRgiOoN5QRpQ/7JREIE5DlZC5k0p5HvwJlNjZpn1En4nH
- rgh9PWpEFZO48or7kZK4TJ4pUAje+KBL4bUX6rqdeVCJI1LGKwf5v9Kcw3fs56EuwMx/T6UBv
- hwxLAiR8QA7f+DL5wb9rPG+vvGcKkAh12qDvjGHGPER7zTudE+IvVxJamN3IX2COy9jQrLqUN
- Z0+GnYzHGDOFp8mvjBuCZmEA==
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241030112743.104395-1-pstanner@redhat.com>
 
-On 30.10.24 14:57, Dragan Milivojevi=C4=87 wrote:
-> On Wed, 30 Oct 2024 at 14:48, metux <metux@gmx.de> wrote:
->
->> Do you have some evidence that Devuan's mail server is really blocking
->> us ?
->>
->> If so, I'd be exceptionally surprised.
->
-> Well it's blocking me that's for sure. Reject message attached.
+On Wed, Oct 30, 2024 at 12:27:33PM +0100, Philipp Stanner wrote:
+> Changes in v6:
+>   - Add Ilpo's RB to patch #1
+>   - Rephrase error log messages in patch #6. (Ilpo)
+> 
+> Changes in v5:
+>   - Add Acked-by's from Alexander and Bharat (the latter sent off-list,
+>     because of some issue with receiving the previous patch sets).
+> 
+> Changes in v4:
+>   - Add Acked-by's from Giovanni and Kalle.
+> 
+> Changes in v3:
+>   - Add missing full stops to commit messages (Andy).
+> 
+> Changes in v2:
+>   - Fix a bug in patch №4 ("crypto: marvell ...") where an error code
+>     was not set before printing it. (Me)
+>   - Apply Damien's Reviewed- / Acked-by to patches 1, 2 and 10. (Damien)
+>   - Apply Serge's Acked-by to patch №7. (Serge)
+>   - Apply Jiri's Reviewed-by to patch №8. (Jiri)
+>   - Apply Takashi Iwai's Reviewed-by to patch №9. (Takashi)
+> 
+> 
+> Hi all,
+> 
+> the PCI subsystem is currently working on cleaning up its devres API. To
+> do so, a few functions will be replaced with better alternatives.
+> 
+> This series removes pcim_iomap_regions_request_all(), which has been
+> deprecated already, and accordingly replaces the calls to
+> pcim_iomap_table() (which were only necessary because of
+> pcim_iomap_regions_request_all() in the first place) with calls to
+> pcim_iomap().
+> 
+> Would be great if you can take a look whether this behaves as you
+> intended for your respective component.
+> 
+> Cheers,
+> Philipp
+> 
+> Philipp Stanner (10):
+>   PCI: Make pcim_request_all_regions() a public function
+>   ata: ahci: Replace deprecated PCI functions
+>   crypto: qat - replace deprecated PCI functions
+>   crypto: marvell - replace deprecated PCI functions
+>   intel_th: pci: Replace deprecated PCI functions
+>   wifi: iwlwifi: replace deprecated PCI functions
+>   ntb: idt: Replace deprecated PCI functions
+>   serial: rp2: Replace deprecated PCI functions
+>   ALSA: korg1212: Replace deprecated PCI functions
+>   PCI: Remove pcim_iomap_regions_request_all()
+> 
+>  .../driver-api/driver-model/devres.rst        |  1 -
+>  drivers/ata/acard-ahci.c                      |  6 +-
+>  drivers/ata/ahci.c                            |  6 +-
+>  drivers/crypto/intel/qat/qat_420xx/adf_drv.c  | 11 +++-
+>  drivers/crypto/intel/qat/qat_4xxx/adf_drv.c   | 11 +++-
+>  .../marvell/octeontx2/otx2_cptpf_main.c       | 14 +++--
+>  .../marvell/octeontx2/otx2_cptvf_main.c       | 13 ++--
+>  drivers/hwtracing/intel_th/pci.c              |  9 ++-
+>  .../net/wireless/intel/iwlwifi/pcie/trans.c   | 16 ++---
+>  drivers/ntb/hw/idt/ntb_hw_idt.c               | 13 ++--
+>  drivers/pci/devres.c                          | 59 +------------------
+>  drivers/tty/serial/rp2.c                      | 12 ++--
+>  include/linux/pci.h                           |  3 +-
+>  sound/pci/korg1212/korg1212.c                 |  6 +-
+>  14 files changed, 76 insertions(+), 104 deletions(-)
 
-Are you subscribed to this list ?
-
-I recall something like it's subscribers-only (once fell into the trap
-and tried to post w/ wrong address).
-
-
-=2D-mtx
+Applied to pci/devm for v6.13, thanks!
