@@ -1,130 +1,81 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C001F19EEC0;
-	Thu, 31 Oct 2024 13:45:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3EEF7483
+	for <linux-ide@vger.kernel.org>; Thu, 31 Oct 2024 14:07:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730382307; cv=none; b=PO4c+rpmqDEgR8okCGeIDGu7cg7rnsGaDYDVIgQSozUWTcH5kVYg55ZuEVZ0cP1TI8KBvIkiGJj5U5xaxQ64rIfTC4ajjhKKnR+fpk/DZwE9p4LU5bS/aSUve2t/y4AQhBTBZ38A1tFlpnXj8UjQFf6OiOzXvOCCwcpipiRRI9k=
+	t=1730383667; cv=none; b=GMXCw2Ip1PrK++F6kqUgiCEhiT3Tb9aDgB+WKrsxVCmdhXYNB3KWu4gsFTF2XIq7M3NpmTJw4IvLE+4pFLH9ul8cy0yGworTqo6iL0FtTOlZ18mg3AxLJ/A1xNbI5kVSOijJ7xREaJNel2Ay5TwRslCkJm/RejRAdEmcZcA0iwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730382307; c=relaxed/simple;
-	bh=SyiKIQDNVRhU2dYWC7KpnbYi2u+O8MurNHCaNdwZdao=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Jysb6iqz23lag5IlsmQUOz7/rXCj016mYBLVGtEpVA8Wj6unrULdgSB0vBvxgouO4TqAm4uM9ZpDYRPj8dKhlzEMYggkvKDY1hM89DZNMJANo+GWYNUjsnfqRcSuZ+oL+gmrex/V1utaUwUkf/cTdPbtN++bMDPCwmScGdR1Osc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=yoCNsTYA; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=tnv8I/cO; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1730383667; c=relaxed/simple;
+	bh=3PPuCyi/R1tgTyEIL++gAaFxVEpQcE9DJ41plQlag40=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HaTAb1DJe4s1lQQxnnZeD5wTXow+x4HPVAXC8zp+ZAw7+RLYgOWFde3g+SoqpaEm/pfihi14w7d+aPfrrGd1/+jE1BeYOZLDn3R/0wahO4imRt7i8MYIvtESNhhZj4907IKc8mueecCLR1cKc381SO4Uv8/dMxhlnVimtbz5dVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HlxevHWs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="yoCNsTYA";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="tnv8I/cO"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1730382304;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eEO4GUXIuQTW+sY+/WiYJk1PjJtbzNP/nS0HeFEOI6A=;
-	b=yoCNsTYAFyyFk5pGSYkD1piEjw8MOo53vDo2YkXW02EDMHDlaOfzFQIBgvw62YeQnStj0R
-	qkY5Ky9UOyVC1w3OVKBzXSwejc99F3AGpf5zUOBwsDyJSVfTnZWMWet1KTbQJOfOLCVNhV
-	cy7TVNur5FmVBVRh+KOvfZ/CNyLR8SNv9i7yqNqrq5kD5xMENaMe0V6OpvokmfW/Ob9QM/
-	5un8Zwrlq9QRR3JPr7QuSkLpK98KMG43mFh0DMvW9yQHq+GuztrjGuFKrW+m4h5GhCy/Ac
-	kp1SwmKR/ksHOOv6R90FQYE4O+PRPlazUvlT9/6ThYdYhTcp0TO69X6RMhaPYQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1730382304;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eEO4GUXIuQTW+sY+/WiYJk1PjJtbzNP/nS0HeFEOI6A=;
-	b=tnv8I/cOG9O9Bmuz6A4PtC/V6UOPd//2+oyqsIznzxGGzis4KZd76yQ3kxGFswkP13hKpV
-	nr8ioE+FYr3wlOBw==
-To: Philipp Stanner <pstanner@redhat.com>, Damien Le Moal
- <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Sergey Shtylyov
- <s.shtylyov@omp.ru>, Basavaraj Natikar <basavaraj.natikar@amd.com>, Jiri
- Kosina <jikos@kernel.org>, Benjamin Tissoires <bentiss@kernel.org>, Arnd
- Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Alex Dubov <oakad@yahoo.com>, Sudarsana Kalluru <skalluru@marvell.com>,
- Manish Chopra <manishc@marvell.com>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski
- <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Rasesh Mody
- <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com, Igor Mitsyanko
- <imitsyanko@quantenna.com>, Sergey Matyukevich <geomatsi@gmail.com>, Kalle
- Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>, Shyam
- Sundar S K <Shyam-sundar.S-k@amd.com>, Jon Mason <jdmason@kudzu.us>, Dave
- Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, Bjorn
- Helgaas <bhelgaas@google.com>, Alex Williamson
- <alex.williamson@redhat.com>, Juergen Gross <jgross@suse.com>, Stefano
- Stabellini <sstabellini@kernel.org>, Oleksandr Tyshchenko
- <oleksandr_tyshchenko@epam.com>, Jaroslav Kysela <perex@perex.cz>, Takashi
- Iwai <tiwai@suse.com>, Chen Ni <nichen@iscas.ac.cn>, Mario Limonciello
- <mario.limonciello@amd.com>, Philipp Stanner <pstanner@redhat.com>, Ricky
- Wu <ricky_wu@realtek.com>, Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao
- <leitao@debian.org>, Kevin Tian <kevin.tian@intel.com>, Ilpo =?utf-8?Q?J?=
- =?utf-8?Q?=C3=A4rvinen?=
- <ilpo.jarvinen@linux.intel.com>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Mostafa Saleh <smostafa@google.com>,
- Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu <yi.l.liu@intel.com>, Christian
- Brauner <brauner@kernel.org>, Ankit Agrawal <ankita@nvidia.com>, Eric
- Auger <eric.auger@redhat.com>, Reinette Chatre
- <reinette.chatre@intel.com>, Ye Bin <yebin10@huawei.com>, Marek
- =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>,
- Pierre-Louis
- Bossart <pierre-louis.bossart@linux.dev>, Peter Ujfalusi
- <peter.ujfalusi@linux.intel.com>, Maarten Lankhorst
- <maarten.lankhorst@linux.intel.com>, Kai Vehmanen
- <kai.vehmanen@linux.intel.com>, Rui Salvaterra <rsalvaterra@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-input@vger.kernel.org, netdev@vger.kernel.org,
- linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
- linux-pci@vger.kernel.org, kvm@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-sound@vger.kernel.org
-Subject: Re: [PATCH 01/13] PCI: Prepare removing devres from pci_intx()
-In-Reply-To: <20241015185124.64726-2-pstanner@redhat.com>
-References: <20241015185124.64726-1-pstanner@redhat.com>
- <20241015185124.64726-2-pstanner@redhat.com>
-Date: Thu, 31 Oct 2024 14:45:03 +0100
-Message-ID: <87cyjgwfmo.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HlxevHWs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 009ECC4CED3;
+	Thu, 31 Oct 2024 14:07:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730383667;
+	bh=3PPuCyi/R1tgTyEIL++gAaFxVEpQcE9DJ41plQlag40=;
+	h=From:To:Cc:Subject:Date:From;
+	b=HlxevHWszQx4Bj4tiCWdVmaJr/WKwhyvFJ1KUR6tEVZVzirLCywxxcwqWpJCMwELq
+	 TXmlSJqdfU2FaTwr1RV7xhtqFue8Mivkn8IgOja+a0wUIbEJFLU8LJTX9GcvDFvTOI
+	 PEH5W3FWLt78uJBEaGALl7QV8flgQVuPhhyXnCFtUdV6enu/DOVSTefLAEX/gmN9QC
+	 YkTRcvCcUr4hDOwn7Vu5rJeCJCyOsVufe3CtHQwm8rei8Yl+rLbiHFCi3wN2mzkU/1
+	 d1y4TYbIoXmE6crVyGEAGNYCNMrFeK37wWRlts+5OUWmXWolxqe+2AUHg5nXFyjQBz
+	 CnPGLGcrovAmg==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>,
+	Xingui Yang <yangxingui@huawei.com>,
+	Yu Kuai <yukuai1@huaweicloud.com>,
+	linux-ide@vger.kernel.org
+Subject: [PATCH 0/2] Issue non-NCQ command via EH when NCQ commands in-flight
+Date: Thu, 31 Oct 2024 15:07:31 +0100
+Message-ID: <20241031140731.224589-4-cassel@kernel.org>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-Developer-Signature: v=1; a=openpgp-sha256; l=962; i=cassel@kernel.org; h=from:subject; bh=3PPuCyi/R1tgTyEIL++gAaFxVEpQcE9DJ41plQlag40=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNKV+5WfT/2UGiC2cPruWb0nV9TXb9w7rzJk5bW2de9S5 wku2rGfvaOUhUGMi0FWTJHF94fL/uJu9ynHFe/YwMxhZQIZwsDFKQATyd7HyLBEICnG3zO1qHJm /+K6pOfcHBIHLmsw2nc4JsaUxjTIfWb4K3/737282B3bZV7ovTWynfZy16VwxdsBaQJiS1Ny17/ ZzAYA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Tue, Oct 15 2024 at 20:51, Philipp Stanner wrote:
-> +/**
-> + * pci_intx - enables/disables PCI INTx for device dev, unmanaged version
+Hello all,
 
-mismatch vs. actual function name.
+There is a problem when an application is continuously submitting NCQ
+commands (e.g. fio with a queue depth greater than 1), this can completely
+starve out another application that is sending a non-NCQ command (because
+the non-NCQ command will be deferred forever).
 
-> + * @pdev: the PCI device to operate on
-> + * @enable: boolean: whether to enable or disable PCI INTx
-> + *
-> + * Enables/disables PCI INTx for device @pdev
-> + *
-> + * This function behavios identically to pci_intx(), but is never managed with
-> + * devres.
-> + */
-> +void pci_intx_unmanaged(struct pci_dev *pdev, int enable)
+Xingui Yang reported this problem here:
+https://lore.kernel.org/linux-block/eef1e927-c9b2-c61d-7f48-92e65d8b0418@huawei.com/
 
-This is a misnomer. The function controls the INTX_DISABLE bit of a
-PCI device. Something like this:
+This series addresses the reported problem.
 
-void __pci_intx_control()
-{
-}
+Please test!
 
-static inline void pci_intx_enable(d)
-{
-        __pci_intx_control(d, true);
-}
 
-.....
+Kind regards,
+Niklas
 
-makes it entirely clear what this is about.
 
-Hmm?
+Niklas Cassel (2):
+  ata: libata: Introduce new helper ata_qc_complete_success()
+  ata: libata: Issue non-NCQ command via EH when NCQ commands in-flight
 
-Thanks,
+ drivers/ata/libata-core.c | 274 ++++++++++++++++++++++++++++++--------
+ drivers/ata/libata-eh.c   |  60 ++++++++-
+ drivers/ata/libata-scsi.c |  16 ++-
+ drivers/ata/libata.h      |   1 +
+ include/linux/libata.h    |   8 +-
+ 5 files changed, 297 insertions(+), 62 deletions(-)
 
-        tglx
+-- 
+2.47.0
+
