@@ -1,140 +1,135 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F6B156C72;
-	Fri,  1 Nov 2024 22:38:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 280601C32
+	for <linux-ide@vger.kernel.org>; Mon,  4 Nov 2024 04:01:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730500742; cv=none; b=bnUapHNFKNnyz+QKMQSfMWDSNGHHB67sfjd5HpHnqvhpq4CyO/WYSPBvknC+XnEDPUwKw8rXYihvK+9nTRbz0C5hhVlr6HlojmXNzO8bUq1zIkm7SmrLecqJSjbaQj7toOd/K9lXjrR3hF5yuqp3fx5PZhbmQHRJaRzeFWtt0k0=
+	t=1730692892; cv=none; b=fwRifvAwp1ICMFrpaFmPNKBbVKCE8wi511PKtZr5wFs2xZL/JaspjzHpHwZxj++Ss85JHYVmsf+HVBzQl1PUSKKBA8CU2XuumvrnFZixMqckzxisMoHpqAihZr6qHTKVYtTtMHQrFAXURHbLgnyw6NpBuGbHRNk++g5urDzXx7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730500742; c=relaxed/simple;
-	bh=LF83NpTBISvCUQQ2CJXUJ+sDViphiKS6mopJnv2la8U=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=Agv/Gng+IBEQd+yPu4Acj3VG3hourVTiGWlvC9a/SGqfGIb3UvSQHDLcoGrQlqpOdhG+dT153mO6kbukeQFOXXPq7UzFFfdOfU0g8TYGEd//JkgI3y7QJoTcRvVDjytjczQPWCFduANNbFtyNUaw7gLELbsJJT4pJE997WMOz8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OCfDFB8i; arc=none smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OCfDFB8i"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5cec9609303so312193a12.1;
-        Fri, 01 Nov 2024 15:38:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730500735; x=1731105535; darn=vger.kernel.org;
-        h=content-transfer-encoding:autocrypt:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=nycZu6YGXSNeQTzCTTBCZ0HE7t0bOKmaepNiacR9Vzs=;
-        b=OCfDFB8iNaTo6rsb7QxwX++GqUvdzjzgvlzVK+nnAlBpKFW9R7xowqexbt9XTPNlJO
-         nQGRHcqanppb27SziCjsSSv/LXJoVrcNLHXjXeHAxpsRoJcqRR/tuPjIHxzg0fFra8NO
-         +FNu7d2GzZZq2aRdb+Nzjmsn9OsJJv8w6SlwOwDSA1oAkGx0aTSZ4x+fBQBj0ZyXYIlc
-         0VSudJqNabuD+D3jAOVuITZodLTpi0FkQng5kyIRMCny5jGcNrzwmYnDlJ1Ds5FNVi5b
-         4jdvHZ1Lgvp/70w4dqEqp+fwGbqAF6kLHeZGRIABcwo0GU3o7srzFtDm17MZA5m7X9r6
-         L6tw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730500735; x=1731105535;
-        h=content-transfer-encoding:autocrypt:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nycZu6YGXSNeQTzCTTBCZ0HE7t0bOKmaepNiacR9Vzs=;
-        b=A2RUQDGISTSg2OGeTzDPTdeyH+tnFv0+7voM0CET6FMTyaCRekn+xDfhZOAal7kJq/
-         bPoxBOto+JLIDohTKhAGim9sS2q+rYMwbXzcXCJcIj6VEop2/9kgvG0nxana67gvZLQy
-         u0MtoAEYBSNzvrvxPqYfUKndrJQa4Dp92e2nx+K3GuVLAoRRdt7jaEizK2ZW9aQE8qQJ
-         23Hx5xuRFrXZaBiOfDs6dhQhnKnLTHhLaFJmJB6H3OvAVqYrnoJZ4APVH7NgocqbFdRp
-         2HnMZZtOhqfH3jtZ+rZt5HpJpx9qiAWv9HrRB4PFzGZLmpvpfT9UogzpAdB9OgHP38YR
-         7LOA==
-X-Forwarded-Encrypted: i=1; AJvYcCXqtPeE6m3nL41Fh+/njdia9+j/IBXN7ww2R6T926YXZr8gv7D7kezpby/HqXD2dhW8U0d6Ak1Gn7w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxlxcjHKQ/TWKPv7JAwIZPSm4Bweaw9skOOfOHCXn232ydtBLU5
-	7VuMcvsWoErgkthegXuWrNuDcn1k20jszS5lpdy+TuSgCQ5YOwxQ
-X-Google-Smtp-Source: AGHT+IGep/zpIFBbnVybUTwHuIayPWxRFWxgvdULCxCYyrRy1CgntyhWbZzM/Mc4QvvQka8efeVPJw==
-X-Received: by 2002:a05:6402:42c4:b0:5ca:14fa:dc87 with SMTP id 4fb4d7f45d1cf-5cbbf8ca0d4mr20387979a12.15.1730500735173;
-        Fri, 01 Nov 2024 15:38:55 -0700 (PDT)
-Received: from ?IPV6:2a02:3100:9dbc:bd00:c5db:e5ed:512d:1904? (dynamic-2a02-3100-9dbc-bd00-c5db-e5ed-512d-1904.310.pool.telefonica.de. [2a02:3100:9dbc:bd00:c5db:e5ed:512d:1904])
-        by smtp.googlemail.com with ESMTPSA id 4fb4d7f45d1cf-5ceac7c8ba8sm1932408a12.69.2024.11.01.15.38.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Nov 2024 15:38:53 -0700 (PDT)
-Message-ID: <c604a8ac-8025-4078-ab90-834d95872e31@gmail.com>
-Date: Fri, 1 Nov 2024 23:38:53 +0100
+	s=arc-20240116; t=1730692892; c=relaxed/simple;
+	bh=xpF6iu04ICW0+Uaa7l793nzTnrz7TJgikBkzA1T2a9o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=mAtj6F7cQ3Wu10oqEL6LxbQU7pSvQC5QpzpJzgGbYuu1156/DnWQrkkPJzPBrVQIJFQv+7L4o5SCpnCsMBAWxR714cjUXllwGqJHauIbBi9C9iPNvQsYDJE1VG7qCXggJGhXihdu35l6K6PewEitvL2Afw+djU/6zMGr3pz1xDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Xhd4l0TWkz10PX2;
+	Mon,  4 Nov 2024 11:59:03 +0800 (CST)
+Received: from kwepemg100017.china.huawei.com (unknown [7.202.181.58])
+	by mail.maildlp.com (Postfix) with ESMTPS id 55D1618007C;
+	Mon,  4 Nov 2024 12:01:20 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemg100017.china.huawei.com (7.202.181.58) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 4 Nov 2024 12:01:19 +0800
+Message-ID: <baceec65-ad60-f8e5-f417-0316c19a0234@huawei.com>
+Date: Mon, 4 Nov 2024 12:01:19 +0800
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Philipp Stanner <pstanner@redhat.com>
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH] ata: ahci: Don't call pci_intx() directly
-Autocrypt: addr=hkallweit1@gmail.com; keydata=
- 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
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH 2/2] ata: libata: Issue non-NCQ command via EH when NCQ
+ commands in-flight
+Content-Language: en-CA
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>
+CC: Hannes Reinecke <hare@suse.de>, Yu Kuai <yukuai1@huaweicloud.com>,
+	<linux-ide@vger.kernel.org>
+References: <20241031140731.224589-4-cassel@kernel.org>
+ <20241031140731.224589-6-cassel@kernel.org>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <20241031140731.224589-6-cassel@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepemh100015.china.huawei.com (7.202.181.101) To
+ kwepemg100017.china.huawei.com (7.202.181.58)
 
-pci_intx() should be called by PCI core and some virtualization code
-only. In PCI device drivers use the appropriate pci_alloc_irq_vectors()
-call.
+Hi, Niklas
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/ata/ahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 2024/10/31 22:07, Niklas Cassel wrote:
+> libata is responsible to ensure that NCQ and non-NCQ commands are not mixed
+> in the command list for the same device.
+> 
+> This is handled using the .qc_defer callback (ata_std_qc_defer()), which
+> will defer a non-NCQ command as long as there are NCQ commands in flight.
+> 
+> The problem is that if an application is continuously submitting NCQ
+> commands (e.g. fio with a queue depth greater than 1), this can completely
+> starve out another application that is sending a non-NCQ command (because
+> the non-NCQ command will be deferred forever).
+> 
+> Solve this by triggering EH if there are NCQ commands in flight when a
+> non-NCQ is submitted. If EH is scheduled, no new commands will be accepted,
+> and EH will wake up when there are no commands in flight. We will then
+> submit the non-NCQ command from EH context, and synchronously wait for the
+> completion. When EH is finished, libata will continue to accept new
+> commands like normal.
+> 
+> Reported-by: Xingui Yang <yangxingui@huawei.com>
+> Closes: https://lore.kernel.org/linux-block/eef1e927-c9b2-c61d-7f48-92e65d8b0418@huawei.com/
+> Suggested-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>   drivers/ata/libata-core.c | 169 +++++++++++++++++++++++++++++++++++---
+>   drivers/ata/libata-eh.c   |  60 +++++++++++++-
+>   drivers/ata/libata-scsi.c |  16 +++-
+>   drivers/ata/libata.h      |   1 +
+>   include/linux/libata.h    |   7 +-
+>   5 files changed, 237 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 2b7d265e4a7b..c53de1d3baba 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1633,6 +1633,134 @@ unsigned int ata_exec_internal(struct ata_device *dev, struct ata_taskfile *tf,
+>   	return err_mask;
+>   }
+>   
+> +/**
+> + *	ata_issue_via_eh - issue non-NCQ command via EH synchronously
+> + *	@qc: command to issue to device
+> + *
+> + *	Issues a non-NCQ command via EH and waits for completion. @qc contains
+> + *	the command on entry and the result on return. Timeout and error
+> + *	conditions are reported via the return value. No recovery action is
+> + *	needed, since flag ATA_QCFLAG_EH is set on entry and on exit, so in case
+> + *	of error, EH will clean it up during ata_eh_finish().
+> + *
+> + *	LOCKING:
+> + *	None.  Should be called with kernel context, might sleep.
+> + *
+> + *	RETURNS:
+> + *	Zero on success, AC_ERR_* mask on failure
+> + */
+> +unsigned int ata_issue_via_eh(struct ata_queued_cmd *qc)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 2d3d3d67b..09090294c 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1985,7 +1985,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	if (ahci_init_msi(pdev, n_ports, hpriv) < 0) {
- 		/* legacy intx interrupts */
--		pci_intx(pdev, 1);
-+		pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_INTX);
- 	}
- 	hpriv->irq = pci_irq_vector(pdev, 0);
- 
--- 
-2.47.0
+After testing, the issues we encountered were resolved.
 
+But the kernel prints the following log:
+
+[246993.392832] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
+[246993.392839] sas: ata5: end_device-4:0: cmd error handler
+[246993.392855] sas: ata5: end_device-4:0: dev error handler
+[246993.392860] sas: ata6: end_device-4:3: dev error handler
+[246993.392863] sas: ata7: end_device-4:4: dev error handler
+[246993.606491] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 1 
+tries: 1
+
+And because the current EH will set the host to the recovery state, when 
+we test and execute the smartctl command, it will affect the performance 
+of all other disks under the same host.
+
+Perhaps we can continue to improve the EH mechanism that Wenchao tried 
+to do before, and implement EH for a single disk. After a single disk 
+enters EH, it may not affect other disks under the same host.
+
+https://lore.kernel.org/linux-scsi/20230901094127.2010873-1-haowenchao2@huawei.com/
+
+Thanks，
+
+Xingui
