@@ -1,60 +1,26 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3500C1CB9F4;
-	Mon,  4 Nov 2024 19:40:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 64D531CFEDB;
+	Mon,  4 Nov 2024 19:59:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730749239; cv=none; b=iqTqE3jJOXI+SgR0nyaH9yKIiNEQhd5CJk7OvbsvehY37cSKtTMS9IW3j6SRyD99dblTQsDN4mjC2c6lgsJNkajpM4Ysbyzh0LOCX7j8ZnfdBeBhPSyb2jETnNG+BC/vOj8Lab5KGgkObzvSgLuzo/BjPI8jtB6xpqo4KZm+t7k=
+	t=1730750393; cv=none; b=ryqy0OYUwEOlQNP7EPRMlL8zAUkmG0B3isHLYcai2C9uf/GlyFzVQ0Gp82KB2ZYnj/bC20rm8ItJnqRUz9hSTcRm5b2FadCXG1o3EC77r0r3YcikWog6L8zYObit8eO40JyR34NgepT9mYKIEsKim3zsUu8oiH1qEFp2s9OCjqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730749239; c=relaxed/simple;
-	bh=HshDG9cwpCUdjoLqNUKdEZ2Vt0um+DYEdKwUucQCB6w=;
+	s=arc-20240116; t=1730750393; c=relaxed/simple;
+	bh=jbjOKVANvclpUTixXs2kQAQDzLiGZTAn32T4/xyTNtk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W5X/RaiQDR2UOBU5XVgKo8MsFUdg94gp/Y134aS4ipmPi0NQYCqg8XEyPiVTfkMQHKEq80qx0NK5FpbmSY+KCi2JiONO6gVwDFCcGUcUljy5Rewr2/fH5LdsFyRA/eeYx/sqf9Ekl3tGWnriKWVShVSKTwuGeFZlC/jFJD1imhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wh9asJzO; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wh9asJzO"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a9e8522c10bso330382366b.1;
-        Mon, 04 Nov 2024 11:40:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730749236; x=1731354036; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=W4oXHflC0Jl7Q8WHg624vJhar0ZcwoESY/4D6gZdnsI=;
-        b=Wh9asJzOAh4yv4zowLpPz++RrLHIC65DNC06ciSAjgsbRrT+jcSQWkKE9FC4Doe/h6
-         eRXF28/OeptoITEHgd8RhPi4/MdXEOyTrm6d7dllHdQpUSKWDfPdyZUyQzEhN7NLdkzU
-         vnKhhIOl3w4tv9olV0qr4aAknf8fmBk/BDOoiazY4y5jajluNrDl5jpAGxMOp/Ix9KGQ
-         Vt9yBd0sS7pMhturC2v4mIK6V5vhkuzx8YMLmbWlPZu00Waq8L/gU0LqrX49pewKUZu0
-         /YpAPm2Ijq+AwHZ5GU7SaTAKXFu8BpNOp2XAvCbM4hgOKybGTF09WSWiukqgvVbVBvWj
-         RbBQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730749236; x=1731354036;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=W4oXHflC0Jl7Q8WHg624vJhar0ZcwoESY/4D6gZdnsI=;
-        b=HTaO/VrhvPKQusdAqT98KBmBM+LKzL4ExjN0Qnprx2TU7rO6dV1CQIEVZZ6gMAErq8
-         4fVCUMSnkM5Ehxygt8NwcXxsJHYP4uvtueKHfcsdeAoXWgk01Q8Dghv0rtbFgELtt5Eh
-         xYaHLqPuryWHiRjHO4g5K+0qRcRe4HK/8E97WHiVQ9PjpFfh3KMH73/9XcNuwVtNlHZf
-         ksVmYF32gxFnjy+fSyGD2nAPREEykV7dxfk2DenGp8V9g0RaByCFJPVrfBghWPWyWJYf
-         MogCdl1i8b7VCtkf/ob0EluYFKIhrDXOJUgLhUuEeqvEntmemwLC2NQ6HDhfw4lCz8PL
-         hq5w==
-X-Forwarded-Encrypted: i=1; AJvYcCUeqDz1VS5nrVcbNxpzy0RLUNN/RTmpgvWKqBSuP4ISTD+4uhZlRsWFk4rfLXsCMYCPZ/wB2C6N3D75@vger.kernel.org, AJvYcCWI4wZCgdcydykdf8TkA9jK8rxdxhHDPDA2KNsBN9M0jkHnoz7erJ+GHz66kIL9wOVw6aQzV30W9wg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwaU7aSdU0m3VlJpi1rjSqKuHUuQFo/CbtG1i5yeiHPIt7RGSu0
-	pKxudjjRf46pFX+wE+k8mjkusRN1Lhh/J1NhzWgZarbmbPUaYalbd0RZGA==
-X-Google-Smtp-Source: AGHT+IED7Ffhj2HbnFtfLIZV7cbjU1sQHdSY3PSLJKc59rG/6GedDgeV+4G0TgAIqD+1u709b/e2Lg==
-X-Received: by 2002:a17:907:74d:b0:a93:a664:a23f with SMTP id a640c23a62f3a-a9e559df7ffmr1371135466b.5.1730749236187;
-        Mon, 04 Nov 2024 11:40:36 -0800 (PST)
-Received: from ?IPV6:2a02:3100:9c2b:eb00:5887:d6c2:d681:2735? (dynamic-2a02-3100-9c2b-eb00-5887-d6c2-d681-2735.310.pool.telefonica.de. [2a02:3100:9c2b:eb00:5887:d6c2:d681:2735])
-        by smtp.googlemail.com with ESMTPSA id a640c23a62f3a-a9eb17cf8eesm21359966b.92.2024.11.04.11.40.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 Nov 2024 11:40:34 -0800 (PST)
-Message-ID: <6ccdfa6a-1e04-4e6f-93d5-821f4f38d06f@gmail.com>
-Date: Mon, 4 Nov 2024 20:40:34 +0100
+	 In-Reply-To:Content-Type; b=kE2M8O0RESiK9wzeUdgq6uKVkwz07bRWVpkLgaGXQ3zMTK4kr7G42N0iZ6OawUbvS4Vr/UyjRA5JNYDiXHNnp5C6zZKUu0OREk5BvajRfAGlt+l5t1HGAnrkuRu4PqVv7YMg9Mz9JRXz7/V+BnngL6AlLj1Q75J8pz+62AoR+QY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; arc=none smtp.client-ip=210.160.252.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+X-IronPort-AV: E=Sophos;i="6.11,257,1725289200"; 
+   d="asc'?scan'208";a="227829294"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie6.idc.renesas.com with ESMTP; 05 Nov 2024 04:59:47 +0900
+Received: from [10.226.93.217] (unknown [10.226.93.217])
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 40B2C400618A;
+	Tue,  5 Nov 2024 04:59:42 +0900 (JST)
+Message-ID: <f4a34b8a-5d3f-41da-a2f0-7fc9d808d790@bp.renesas.com>
+Date: Mon, 4 Nov 2024 19:59:41 +0000
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -62,111 +28,231 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ahci: Don't call pci_intx() directly
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Philipp Stanner <pstanner@redhat.com>, Damien Le Moal
- <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <c604a8ac-8025-4078-ab90-834d95872e31@gmail.com>
- <ZyiGNtLMSY1vTQH7@ryzen> <8acdd01c-1744-4545-9cc7-0a60e83a5d4d@gmail.com>
- <ZykUO31aOfnCIkUH@ryzen>
-Content-Language: en-US
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Autocrypt: addr=hkallweit1@gmail.com; keydata=
- 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
-In-Reply-To: <ZykUO31aOfnCIkUH@ryzen>
+Subject: Re: [PATCH/RFC v2] MAINTAINERS: Re-add cancelled Renesas driver
+ sections
+Content-Language: en-GB
+To: Sergey Shtylyov <sergei.shtylyov@gmail.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund+renesas@ragnatech.se>,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ James Bottomley <James.Bottomley@hansenpartnership.com>,
+ Arnd Bergmann <arnd@arndb.de>
+Cc: linux-renesas-soc@vger.kernel.org, netdev@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-sh@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Simon Horman <horms@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+References: <90447fa332b6f73bffcb486ccfe2515c59546253.1730717649.git.geert+renesas@glider.be>
+ <e7123fcb-048c-4415-adb5-97b9f032e6ff@gmail.com>
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+In-Reply-To: <e7123fcb-048c-4415-adb5-97b9f032e6ff@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------lfaRTfq7xxgxfR59uiOdt40i"
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------lfaRTfq7xxgxfR59uiOdt40i
+Content-Type: multipart/mixed; boundary="------------bF3mpbBUAzRevzt3a8G0dNGT";
+ protected-headers="v1"
+From: Paul Barker <paul.barker.ct@bp.renesas.com>
+To: Sergey Shtylyov <sergei.shtylyov@gmail.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund+renesas@ragnatech.se>,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ James Bottomley <James.Bottomley@hansenpartnership.com>,
+ Arnd Bergmann <arnd@arndb.de>
+Cc: linux-renesas-soc@vger.kernel.org, netdev@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-sh@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Simon Horman <horms@kernel.org>,
+ Niklas Cassel <cassel@kernel.org>
+Message-ID: <f4a34b8a-5d3f-41da-a2f0-7fc9d808d790@bp.renesas.com>
+Subject: Re: [PATCH/RFC v2] MAINTAINERS: Re-add cancelled Renesas driver
+ sections
+References: <90447fa332b6f73bffcb486ccfe2515c59546253.1730717649.git.geert+renesas@glider.be>
+ <e7123fcb-048c-4415-adb5-97b9f032e6ff@gmail.com>
+In-Reply-To: <e7123fcb-048c-4415-adb5-97b9f032e6ff@gmail.com>
+
+--------------bF3mpbBUAzRevzt3a8G0dNGT
+Content-Type: multipart/mixed; boundary="------------b6Br0Rk0b0pvfc4JazypEaPi"
+
+--------------b6Br0Rk0b0pvfc4JazypEaPi
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 04.11.2024 19:36, Niklas Cassel wrote:
-> On Mon, Nov 04, 2024 at 02:23:43PM +0100, Heiner Kallweit wrote:
->> On 04.11.2024 09:30, Niklas Cassel wrote:
->>> On Fri, Nov 01, 2024 at 11:38:53PM +0100, Heiner Kallweit wrote:
->>>> pci_intx() should be called by PCI core and some virtualization code
->>>> only. In PCI device drivers use the appropriate pci_alloc_irq_vectors()
->>>> call.
->>>
->>> Hello Heiner,
->>>
->>> as you might or might not know, this patch conflicts with a Philipp's
->>> already acked patch:
->>> https://lore.kernel.org/linux-ide/20241015185124.64726-10-pstanner@redhat.com/
->>>
->> I know, therefore he's on cc. Fully migrating PCI device drivers to the
->> pci_alloc_irq_vectors() should be done anyway and is the cleaner
->> alternative to changing pci_intx(). However for some drivers this is a rather
->> complex task, therefore I understand Philipp's approach to adjust pci_intx()
->> first. He's incorporating other review feedback in his series, so with the
->> next re-spin he could remove the ahci patch from his series.
-> 
-> Well, if you look at Philipp's patch it:
-> 
-> 1) Doesn't only update drivers/ata/ahci.c,
-> it also updates:
-> drivers/ata/ata_piix.c
-> drivers/ata/pata_rdc.c
-> drivers/ata/sata_sil24.c
-> drivers/ata/sata_sis.c
-> drivers/ata/sata_uli.c
-> drivers/ata/sata_vsc.c
-> 
-> Why don't you update the other drivers in drivers/ata/* ?
-> 
-Because I don't have hw for testing the changes and usually I'm
-somewhat reluctant to submit patches which are compile-tested only.
+On 04/11/2024 19:29, Sergey Shtylyov wrote:
+> On 11/4/24 2:05 PM, Geert Uytterhoeven wrote:
+>=20
+>> Removing full driver sections also removed mailing list entries, causi=
+ng
+>> submitters of future patches to forget CCing these mailing lists.
+>>
+>> Hence re-add the sections for the Renesas Ethernet AVB, R-Car SATA, an=
+d
+>> SuperH Ethernet drivers.  Add people who volunteered to maintain these=
 
-> 
-> 2) Doesn't just bother to fix a single subsystem (drivers/ata/),
-> it is actually part of a series that fixes all affected subsystems.
-> 
-> Why don't you send out this fix as part of a series that fixes all the
-> affected subsystems?
-> 
-Because for some drivers it's complex (e.g. bnx2x) and I don't have
-hw to test the changes.
+>> drivers (thanks a lot!).
+>>
+>> Fixes: 6e90b675cf942e50 ("MAINTAINERS: Remove some entries due to vari=
+ous compliance requirements.")
+>> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Reviewed-by: Simon Horman <horms@kernel.org>
+>> Acked-by: Niklas Cassel <cassel@kernel.org>
+> [...]
+>=20
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index 13f4c23281f89332..b04d678240e80ec9 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -19578,6 +19578,16 @@ S:	Supported
+>>  F:	Documentation/devicetree/bindings/i2c/renesas,iic-emev2.yaml
+>>  F:	drivers/i2c/busses/i2c-emev2.c
+>> =20
+>> +RENESAS ETHERNET AVB DRIVER
+>> +M:	Paul Barker <paul.barker.ct@bp.renesas.com>
+>> +M:	Niklas S=C3=B6derlund <niklas.soderlund+renesas@ragnatech.se>
+>=20
+>    M:, not R:?
 
-> 
-> Kind regards,
-> Niklas
+I would prefer these to be M: regardless of which of us is listed
+(always send patches to this person, not just should "should be Cc'd",
+as explained at the top of the file).
 
+>=20
+> [...]
+>> @@ -19627,6 +19637,14 @@ F:	Documentation/devicetree/bindings/i2c/rene=
+sas,rmobile-iic.yaml
+>>  F:	drivers/i2c/busses/i2c-rcar.c
+>>  F:	drivers/i2c/busses/i2c-sh_mobile.c
+>> =20
+>> +RENESAS R-CAR SATA DRIVER
+>> +M:	Geert Uytterhoeven <geert+renesas@glider.be>
+>=20
+>    M:, not R:?
+>=20
+>> +L:	linux-ide@vger.kernel.org
+>> +L:	linux-renesas-soc@vger.kernel.org
+>> +S:	Supported
+>> +F:	Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+>> +F:	drivers/ata/sata_rcar.c
+>> +
+>>  RENESAS R-CAR THERMAL DRIVERS
+>>  M:	Niklas S=C3=B6derlund <niklas.soderlund@ragnatech.se>
+>>  L:	linux-renesas-soc@vger.kernel.org
+>> @@ -19702,6 +19720,16 @@ S:	Supported
+>>  F:	Documentation/devicetree/bindings/i2c/renesas,rzv2m.yaml
+>>  F:	drivers/i2c/busses/i2c-rzv2m.c
+>> =20
+>> +RENESAS SUPERH ETHERNET DRIVER
+>> +M:	Niklas S=C3=B6derlund <niklas.soderlund+renesas@ragnatech.se>
+>=20
+>    M:, not R:?
+>=20
+>> +L:	netdev@vger.kernel.org
+>> +L:	linux-renesas-soc@vger.kernel.org
+>> +F:	Documentation/devicetree/bindings/net/renesas,ether.yaml
+>> +F:	drivers/net/ethernet/renesas/Kconfig
+>> +F:	drivers/net/ethernet/renesas/Makefile
+>> +F:	drivers/net/ethernet/renesas/sh_eth*
+>> +F:	include/linux/sh_eth.h
+>> +
+>>  RENESAS USB PHY DRIVER
+>>  M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+>>  L:	linux-renesas-soc@vger.kernel.org
+>=20
+>    Niklas, Paul, I hope you won't mind me re-joining the sh_eth/ravb
+> entries as a reviewer when the fog clears a bit?
+>    (Besides, I'm still on vacation -- till 11/11...)
+
+I don't mind at all, I hope things get cleared up soon so that you can
+be re-added. And, enjoy the rest of your vacation!
+
+Thanks,
+
+--=20
+Paul Barker
+--------------b6Br0Rk0b0pvfc4JazypEaPi
+Content-Type: application/pgp-keys; name="OpenPGP_0x27F4B3459F002257.asc"
+Content-Disposition: attachment; filename="OpenPGP_0x27F4B3459F002257.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+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3D
+=3DsIIN
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------b6Br0Rk0b0pvfc4JazypEaPi--
+
+--------------bF3mpbBUAzRevzt3a8G0dNGT--
+
+--------------lfaRTfq7xxgxfR59uiOdt40i
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+wnsEABYIACMWIQSiu8gv1Xr0fIw/aoLbaV4Vf/JGvQUCZyknrQUDAAAAAAAKCRDbaV4Vf/JGvQN0
+AQDet76+lYzutHWgrX1iBIIypTRLdh8wyTec9YaYQE2rhgEA0/cs0J8X2UaOM8ni7d3NF+AsknhG
+J7/8uKWLvvi4OAM=
+=hrTr
+-----END PGP SIGNATURE-----
+
+--------------lfaRTfq7xxgxfR59uiOdt40i--
