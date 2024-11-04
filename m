@@ -1,142 +1,138 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50FBDAD24;
-	Mon,  4 Nov 2024 13:23:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33B881CD1F;
+	Mon,  4 Nov 2024 13:34:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730726627; cv=none; b=VfNPRL4sbrjOvR3DhQY8Nk5WJVUVvV063CcgWt97yQy0ZYImDjSU9vZOWAhoQgjHNnriygdxEd1bgUWLwjPh6NnyvPkANJz3OPaNCAWe8QnKJobZrFOwn8pdCcVi0KALD4LDdqasLKoVNK88crLimCTTPNIPuVeLMDtj1i0FT38=
+	t=1730727257; cv=none; b=Djh8KRKNfDNKAfrPj7kE6g/QhfV690J/j+iOWxQcpn8nic5oA6PaslztlDDc+zcOEbhbkK5xZ+9kH5J5jS+EU6NzagzGl9vvVlktd5zECsxVpGw6kBIujDuMJbY8k4AVEOPZQ6yeu/Sz/ZyJC20QmC/UnmqcUomWnJ/pdMA34sw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730726627; c=relaxed/simple;
-	bh=P7QI57CxAQa9VU4sqby7gvOGAsA/VumFML+UImnGOhY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sZvnnO1BqwzxXVEIIbSTFcl7Kd5flWrPVeZxysjZ8BAwZgbqZl/S1hYAgCUPGcXSSb4yDmjPsRaQNgpaI5ZvEbMLmcDCGJec2CQG8er5jGJ4Ve4kne81EfmL4HI9mgTrFIy11TUp7zgnJrUDnX01q6qTHtVvHvzj4NYlB1/CdxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ORBwIKq4; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+	s=arc-20240116; t=1730727257; c=relaxed/simple;
+	bh=XmXYw6RrLQ3a3/X8FTlqFJFX68ul7wsZuBA7DQCuNvs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HAcTJ2xzF0HvtvW9dh5YeqhzJGs6OiYfo30CnCzToW7t0pj0/a/GiaOtju4b7Nv4ZOpdGZTzVmcDQHI5OctrxD5RyWsD2fsEy8cWeAYz8GAxuEHn8F3b3nqXppRHJbg/FodU4PTi5Qn1VlM+JBcOxU+N+uebMSzwFqW5Jnd8GAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ORBwIKq4"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a9a68480164so665676866b.3;
-        Mon, 04 Nov 2024 05:23:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1730726624; x=1731331424; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=lcm9hg8ZlLTpzsLKubtK2dBr2x4blOaIQS8RO6R+HCA=;
-        b=ORBwIKq4rwZdRV0oC+QRaBNYAXtqa6YN8/FWfQNsMz6O0ozn8jHimbzsAYoxUUYwIn
-         vxU8hqEKlcGJn7UY0xboScvPZ855/Xjqx9lcjMA4BR/cLEbzULCpLfriY5ez/zcNrdjO
-         BtneCRcXKZiwzahr1QTrGH1emFnSrp3fGuldZBjmTa3HZJLJ2LmozApBoFBsCOyoTfo2
-         8MHwheOpsgmXCNJIecdd+a/+X5j6olh7rcPHOt/Ql6SqmCodLkHJ4h1SJi+zk4wknLvn
-         juDzcN4X1aVWzc12vCIlUJSGy707bSwcGQNWVgrpd8G/+C0V78aRw8UOipUqX3bWtvwl
-         fr1Q==
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-6ea0b25695dso32980947b3.2;
+        Mon, 04 Nov 2024 05:34:15 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730726624; x=1731331424;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lcm9hg8ZlLTpzsLKubtK2dBr2x4blOaIQS8RO6R+HCA=;
-        b=dg3trlsZLzDayWcBhIaAs17Tl6WUou2S5itUHtBcq4fC4+57wpPRansCdR8QV4sZng
-         s4Q6T1kKkHDG8Ynr/TUYTqEFYSxsHNRu5jJayZJ7c+aENDWdTp+hu9DCG0dhR8v1vMfK
-         co9S0kCUecaelTr4dO+k/4k9Mkls87zh4og87NWYAXh9JXhWnHuxiF8jdd0KvD+YahPJ
-         T5Mj/4vgA0YV8tALf7zpbPe3trYlXD1zKBtEflye+ZJynhvpktvx7Mvw2/G7i7OcHY0f
-         9FzEsXvlYSfMTH95hKlJEFwlzYzX3MFgTOH7MxoUqzgrYHdsaKBb4IiuwqUraH9d8+kS
-         94+Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUtW6u8nfyrTaqWr/wid0gG5HUwVU9TBJw0ISV+LPxfne0LsFeobCTAYYOhMgkFOhg0L75BQkSIJ6/5@vger.kernel.org, AJvYcCX8HBdjesS3v/gxsbiN4we5wKHdmWo4OFYJfs3NnMfQJ7DnPTSg2zHwGMTGRmzXaY6k73XMaR+2d5w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YweOTsbYI9EcSWL7NQ9GxMghO9vuORrCYNJ/uXJz0R1ziCPm7m4
-	XITqncNgg7+s6LM20WjvcL/bTs7vnoRDmdLuxH/DSpm29TNf5JmWJJB/MQ==
-X-Google-Smtp-Source: AGHT+IGMXs/OhsmrYuF/kyOzYOK/S6N747FR2p9b9/DU2tBkpzp+QumUjXeOOESSlWG+h2vKrIBFnA==
-X-Received: by 2002:a17:907:944f:b0:a9a:825:4c39 with SMTP id a640c23a62f3a-a9de5d00e3emr3517928866b.20.1730726624239;
-        Mon, 04 Nov 2024 05:23:44 -0800 (PST)
-Received: from ?IPV6:2a02:3100:9c2b:eb00:5887:d6c2:d681:2735? (dynamic-2a02-3100-9c2b-eb00-5887-d6c2-d681-2735.310.pool.telefonica.de. [2a02:3100:9c2b:eb00:5887:d6c2:d681:2735])
-        by smtp.googlemail.com with ESMTPSA id a640c23a62f3a-a9e56498413sm551066066b.32.2024.11.04.05.23.43
+        d=1e100.net; s=20230601; t=1730727253; x=1731332053;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ICXWnlOb8EHMCdZ7pVFvRDFwjWsJuSEHx1eFi7sR6n8=;
+        b=GHusjSgIL2cz75AQ6NRgZQ2qA7ijrPQrrqR4V71c8emWQvvILDRCoBuIXVdL8xleD9
+         vu1ji6Mecmjch0VDNjfEguW/DCfABroMW7Un1D9GG3mXu0JraePo8q64L5O5N2uU2Rj8
+         rLlxQD6gIFNmdHng6/BFHa2ofKsBEpH4a1DJP1WFbCb2RoA2ejaT7JCZ6aAixGCG4TZG
+         c1Q5v8gb592XEfqhJz6RuVDfNb5alTdlKPWvWdqoHR8nml2+Gxf0AjT2edbt9sOZtjVg
+         MYWOM7wemtlJhS8RGH8y/Per685yEckq/y5lW58MdxZbvURtLU+4pmH8/OPx1kLn+zHG
+         YLzA==
+X-Forwarded-Encrypted: i=1; AJvYcCUjCsI+Nk2VLJGXe7B/X6YlQ037rmLg/6Evnd7hRZJlhw+kIirqwSV3iPulY0Gfo0PasVPWeZarUJ8=@vger.kernel.org, AJvYcCVxqxqhopfDhNWVVWgnUhujtcKy+GyX4HKEt6m44DZwOo/iuyu8zXkErntL+l9l8wNgesuGhGVfvyw=@vger.kernel.org, AJvYcCWYiiC5crjScJ8QNHyq4PeHBmmMUuZXARl4j6BWKeFo33SI/ffjOfWdyKiZAMG9YKAxTWjeHOZ/t9pbQjJgputzcQ8=@vger.kernel.org, AJvYcCWq5xGw7l7R0F6FPZQ9ItVbfYW2EkiXQbfX5vd0bmnT/mFy2rH7LKubSp1ei/0ZCj4D8gVRSRdXIbJi12+O@vger.kernel.org, AJvYcCXPvhfWWAShv7iZQEr+cY8ziaX52JZX06edz6Lb64zpRyBFpqQQCZPyj4E+YrKZ3cf9t6aYaTyz@vger.kernel.org
+X-Gm-Message-State: AOJu0YwmkKSIZ1vl0+UqPwKjHYRw7LNnnkh3qIDpdOniJHbzGuZXpe1N
+	rf5I4dBzDArRZYhE0VyQMzEhhKQkA/Ow4E5XxtxHIshqhBLlytv+KJwhG3KV
+X-Google-Smtp-Source: AGHT+IFvdZ3Y3/uygfVJNNX/pu37Mb5hwxjrDaF2FDvU7vorala9rwqXhj/0PsU0+s0r7X1WQ0goqA==
+X-Received: by 2002:a05:690c:620a:b0:6ea:85ee:b5e3 with SMTP id 00721157ae682-6ea85eec048mr49306017b3.5.1730727253213;
+        Mon, 04 Nov 2024 05:34:13 -0800 (PST)
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com. [209.85.128.171])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-6ea55b10748sm17910627b3.32.2024.11.04.05.34.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 Nov 2024 05:23:43 -0800 (PST)
-Message-ID: <8acdd01c-1744-4545-9cc7-0a60e83a5d4d@gmail.com>
-Date: Mon, 4 Nov 2024 14:23:43 +0100
+        Mon, 04 Nov 2024 05:34:12 -0800 (PST)
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-6ea0b25695dso32980387b3.2;
+        Mon, 04 Nov 2024 05:34:11 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUDTkKpj6gyTzvDRRZFczmlQYAqC6z2kS84b9bJNrfXkI9uXZblWDXTQMTI1F5utJx9bpxNilgM@vger.kernel.org, AJvYcCUhVMvLQVou4TJhNstA1+zPeIrJ9NNtLhZbFG89mLVNd8rko9OFGc3iiYz1K9Xtsrex7G0bm8DKxLoT9+LINAIfBF8=@vger.kernel.org, AJvYcCVXRA/KbOp/i7fjysGRVIstXiLeJa9PpZ9+f5s4l4fB+elWb0plxQRoZFGWUh1BbECH4MG2ypZwe4N6kx1n@vger.kernel.org, AJvYcCVkmxUmITZNhSbn8V1V2zswUkAEpThPPpMpWhtL2r0AYqxo5MyxCgBaIj50r2O4ins6Ly59HPFWz/I=@vger.kernel.org, AJvYcCVwlKMV+yP2a+EK7bZPmHZ00EemAVrxwTvTA4CXtf7S/y/0F0rHMLAS45dB7Y/3wIMKLbAkoXI2eG4=@vger.kernel.org
+X-Received: by 2002:a05:690c:dd3:b0:6e2:3f8c:8fe2 with SMTP id
+ 00721157ae682-6e9d88ea600mr193765787b3.4.1730727251574; Mon, 04 Nov 2024
+ 05:34:11 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ata: ahci: Don't call pci_intx() directly
-To: Niklas Cassel <cassel@kernel.org>, Philipp Stanner <pstanner@redhat.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <c604a8ac-8025-4078-ab90-834d95872e31@gmail.com>
- <ZyiGNtLMSY1vTQH7@ryzen>
-Content-Language: en-US
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Autocrypt: addr=hkallweit1@gmail.com; keydata=
- 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
-In-Reply-To: <ZyiGNtLMSY1vTQH7@ryzen>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <90447fa332b6f73bffcb486ccfe2515c59546253.1730717649.git.geert+renesas@glider.be>
+ <20241104114007.GA1412590@ragnatech.se>
+In-Reply-To: <20241104114007.GA1412590@ragnatech.se>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 4 Nov 2024 14:33:59 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdW49dFp=-HDC4w8peQA+8phbJOsJZLE1OJtJ6tpTmAuLA@mail.gmail.com>
+Message-ID: <CAMuHMdW49dFp=-HDC4w8peQA+8phbJOsJZLE1OJtJ6tpTmAuLA@mail.gmail.com>
+Subject: Re: [PATCH/RFC v2] MAINTAINERS: Re-add cancelled Renesas driver sections
+To: =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund+renesas@ragnatech.se>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Paul Barker <paul.barker.ct@bp.renesas.com>, 
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+	James Bottomley <James.Bottomley@hansenpartnership.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Sergei Shtylyov <sergei.shtylyov@gmail.com>, linux-renesas-soc@vger.kernel.org, 
+	netdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Simon Horman <horms@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 04.11.2024 09:30, Niklas Cassel wrote:
-> On Fri, Nov 01, 2024 at 11:38:53PM +0100, Heiner Kallweit wrote:
->> pci_intx() should be called by PCI core and some virtualization code
->> only. In PCI device drivers use the appropriate pci_alloc_irq_vectors()
->> call.
-> 
-> Hello Heiner,
-> 
-> as you might or might not know, this patch conflicts with a Philipp's
-> already acked patch:
-> https://lore.kernel.org/linux-ide/20241015185124.64726-10-pstanner@redhat.com/
-> 
-I know, therefore he's on cc. Fully migrating PCI device drivers to the
-pci_alloc_irq_vectors() should be done anyway and is the cleaner
-alternative to changing pci_intx(). However for some drivers this is a rather
-complex task, therefore I understand Philipp's approach to adjust pci_intx()
-first. He's incorporating other review feedback in his series, so with the
-next re-spin he could remove the ahci patch from his series.
-> 
-> Kind regards,
-> Niklas
+Hi Niklas,
 
-Heiner
+On Mon, Nov 4, 2024 at 12:40=E2=80=AFPM Niklas S=C3=B6derlund
+<niklas.soderlund+renesas@ragnatech.se> wrote:
+> On 2024-11-04 12:05:07 +0100, Geert Uytterhoeven wrote:
+> > Removing full driver sections also removed mailing list entries, causin=
+g
+> > submitters of future patches to forget CCing these mailing lists.
+> >
+> > Hence re-add the sections for the Renesas Ethernet AVB, R-Car SATA, and
+> > SuperH Ethernet drivers.  Add people who volunteered to maintain these
+> > drivers (thanks a lot!).
+> >
+> > Fixes: 6e90b675cf942e50 ("MAINTAINERS: Remove some entries due to vario=
+us compliance requirements.")
+> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Reviewed-by: Simon Horman <horms@kernel.org>
+> > Acked-by: Niklas Cassel <cassel@kernel.org>
+> > ---
+> > To be applied to renesas-fixes for v6.12 after v6.12-rc7, unless a
+> > better solution is found.
+> >
+> > v2:
+> >   - Add Acked-by, Reviewed-by,
+> >   - Add M:-entries.
+> > ---
+> >  MAINTAINERS | 28 ++++++++++++++++++++++++++++
+> >  1 file changed, 28 insertions(+)
+> >
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index 13f4c23281f89332..b04d678240e80ec9 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -19578,6 +19578,16 @@ S:   Supported
+> >  F:   Documentation/devicetree/bindings/i2c/renesas,iic-emev2.yaml
+> >  F:   drivers/i2c/busses/i2c-emev2.c
+> >
+> > +RENESAS ETHERNET AVB DRIVER
+> > +M:   Paul Barker <paul.barker.ct@bp.renesas.com>
+> > +M:   Niklas S=C3=B6derlund <niklas.soderlund+renesas@ragnatech.se>
+>
+> I'm happy to look after the RAVB driver together with Paul. However
+> please don't add my +renesas tag email for new entries in the
+> MAINTAINERS file.
+>
+> With this fixed for RAVB and SUPERH ETHERNET,
+>
+> Acked-by: Niklas S=C3=B6derlund <niklas.soderlund+renesas@ragnatech.se>
+
+Thank you, I will make that change.
+Are you OK with marking both entries "S: Supported"?
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
