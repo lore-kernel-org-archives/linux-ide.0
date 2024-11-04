@@ -1,181 +1,92 @@
-Received: from fhigh-b2-smtp.messagingengine.com (fhigh-b2-smtp.messagingengine.com [202.12.124.153])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590B88BEE;
-	Mon,  4 Nov 2024 13:52:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.153
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C8551CB9E9;
+	Mon,  4 Nov 2024 18:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730728361; cv=none; b=TIYkhlEziDW+bRhVTZXFkHNChkScaEXbtAiWMyupb3zrtxD8Zc385xOAX8J9ArIMYkV3t3BHNbuPHzDvVwCBfdLhB9Ca3Wjz3ybQn+bQVhnEKi0nrcxdS9F0ScO/itc9TjRgfFgXxJhU8gImNgkIoxKLW6tNtkT/rrEtC76lDwM=
+	t=1730745407; cv=none; b=nkuV8wEnp0EkY2PMaYGFnT3L4Dpb7DzVwUuv6LwDJ0mm5OqTjUFAmXrfG/tVHIKLV8+tRvKxC7cpDYum6zXWXwGPZn5ndyDSlefFKuyfPuiGjLhAyA9GP1CQHpZYqPSYEGFK4soN42Dl2i2UBTkJkbZnMpOHoHW/57lCEBdc6zU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730728361; c=relaxed/simple;
-	bh=J22m2dLEM2JGyWrp4WebPPffap8OOMB8riKgDP5fgac=;
+	s=arc-20240116; t=1730745407; c=relaxed/simple;
+	bh=vPRT5Ok0iatDoQ8sYX0E41DsuqQx7MZ4e798ogKn4/k=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hiWMUe81NojejeUGgwKxMmVod8+OVGaMkqC2ZOCYNQGVasfqOZrX2pIHEmg1v5iL6MV0s3okAtQ0eIrUABNb2y9VpsZNhZ8UPJmD8gCG0CPcs4ufDeyOwUQYkggxdoo0e9vY3Yb7gmWVyJqIzgv2FAskxBnfVogdAIzPB3Sz3+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ragnatech.se; spf=pass smtp.mailfrom=ragnatech.se; dkim=pass (2048-bit key) header.d=ragnatech.se header.i=@ragnatech.se header.b=WK1qZUBl; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=N3mxGdu7; arc=none smtp.client-ip=202.12.124.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ragnatech.se
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ragnatech.se
+	 Content-Type:Content-Disposition:In-Reply-To; b=PaTuR2q0Jq0wK+QeNT2qM7lIHYYy3w1H5zsAn7gDlhVNbk1iMKayexmuPhITHEE/UcwviRLhjFZyJMoq/hay1sLHrs06BQvxESEwFGG5dKlFYuNugp+KSRV7fIB/z4D/rB01oDoEeH4lxFchcDw6t2lya7oEA4l2V29Mh8xHj48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jVgmsW2B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ragnatech.se header.i=@ragnatech.se header.b="WK1qZUBl";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="N3mxGdu7"
-Received: from phl-compute-06.internal (phl-compute-06.phl.internal [10.202.2.46])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id D37E72540128;
-	Mon,  4 Nov 2024 08:52:36 -0500 (EST)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Mon, 04 Nov 2024 08:52:37 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ragnatech.se; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1730728356;
-	 x=1730814756; bh=t3hv5FyYoK/FoE76EWjkfZ5QNQpmqNitzCQSghPf7Po=; b=
-	WK1qZUBleEqrByBVM2YO0riZGuhv+1GED5ZkKXYTREoXL+g43LbiiS6/N0Rek1eK
-	lFSuIGmdmsVbRbSqbE8/+kv/uH0rLfNyuGU8Vwl21B6PMhxsM2OLYQyT6V3GSAI/
-	ZDputWGo4CqLvuSqMSP/spsg1n2gH9ETVO2pliw6z9MPGwWop3vrvlE5hDFn3RRs
-	aNeJqn6R5XMbUQMUdqdnpcy9a+m/YCarhc6GZHMdYysTAG+QWLWk1JvqhtSgXi/G
-	i3lm05S24HQ/SNaGd5UtYcvOULYJimcCei2n7rlUU4Jyw7bFGHqosyRB2qVFLiVN
-	u4MJYnOUJVm8im08of8wIA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1730728356; x=
-	1730814756; bh=t3hv5FyYoK/FoE76EWjkfZ5QNQpmqNitzCQSghPf7Po=; b=N
-	3mxGdu7IQMmiAbUQXBUHYOXWTNHqk3OqKkWWKEZgwMtYUdWcf3GEpantFguCx7Vp
-	fZzdshJLWwnM1Hz1It9DwAR/gr+iUEw90pB51UvDYyVBTGMTn2YVaKRKcNthYfuR
-	RtAKdGaYezcfzZAnKpuBo0EQQDDtaLfvJSgjFd6trjKPt9urm4OnAynggKbaMZTF
-	VGAsKtBabRelp9oCYUfU1kRcFng6eFfYhApZDYQDFqGxQV0p64Hnq3h4IsaxhmkC
-	TXBJEe5XBmwcskT0uS1YZbN0Xl7g9198f29dRhfBzqKm8TS4jYpI+I9tLtEMjqP5
-	Daq+Ix4NEQAUo390egWtg==
-X-ME-Sender: <xms:o9EoZzzojBFRkjS0Z5uTvL7liO38I1TTH8axlDIt75ONdtDTe_PfBQ>
-    <xme:o9EoZ7Tl6ni9am858tfZEkDnAHXY2zFnecTXSAPASX82kFsUcsCPR9QDU8O_PrgKc
-    8LqwBKr89OvFAXlfhA>
-X-ME-Received: <xmr:o9EoZ9Xds1dc2b20h0Enl1ulrS1N2VQhTeiU5vf3m4Ugcq2AfMDHDcMEO81AedBKobRWiWmvyuMDMMzX-2t80XjK7QRew_jf7Q>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrvdeliedgheeiucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggvpdfu
-    rfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnh
-    htshculddquddttddmnecujfgurhepfffhvfevuffkfhggtggugfgjsehtkeertddttdej
-    necuhfhrohhmpefpihhklhgrshcuufpnuggvrhhluhhnugcuoehnihhklhgrshdrshhoug
-    gvrhhluhhnugdorhgvnhgvshgrshesrhgrghhnrghtvggthhdrshgvqeenucggtffrrght
-    thgvrhhnpeefhfellefhffejgfefudfggeejlefhveehieekhfeulefgtdefueehffdtvd
-    elieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehn
-    ihhklhgrshdrshhouggvrhhluhhnugdorhgvnhgvshgrshesrhgrghhnrghtvggthhdrsh
-    gvpdhnsggprhgtphhtthhopeduhedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohep
-    ghgvvghrtheslhhinhhugidqmheikehkrdhorhhgpdhrtghpthhtohepghhrvghgkhhhse
-    hlihhnuhigfhhouhhnuggrthhiohhnrdhorhhgpdhrtghpthhtohepphgruhhlrdgsrghr
-    khgvrhdrtghtsegsphdrrhgvnhgvshgrshdrtghomhdprhgtphhtthhopegtlhgruhguih
-    hurdgsvgiinhgvrgdruhhjsegsphdrrhgvnhgvshgrshdrtghomhdprhgtphhtthhopeih
-    ohhshhhihhhirhhordhshhhimhhouggrrdhuhhesrhgvnhgvshgrshdrtghomhdprhgtph
-    htthhopehjrghmvghsrdgsohhtthhomhhlvgihsehhrghnshgvnhhprghrthhnvghrshhh
-    ihhprdgtohhmpdhrtghpthhtoheprghrnhgusegrrhhnuggsrdguvgdprhgtphhtthhope
-    hsvghrghgvihdrshhhthihlhihohhvsehgmhgrihhlrdgtohhmpdhrtghpthhtoheplhhi
-    nhhugidqrhgvnhgvshgrshdqshhotgesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:o9EoZ9g9Imy5zpkaamTBldUakMTK9wCE6gASpAUZ_fXyxRsybZ5eLQ>
-    <xmx:o9EoZ1ApiF35blTJnIZoLcnBj_c3EPYAPAXThN8yGfcnew1hhQ77bA>
-    <xmx:o9EoZ2ITvh6v8O-2-cESy9qn_KOFWKllHtuY2ny9bee8wu792-DLIg>
-    <xmx:o9EoZ0DeTSmHvNTkWJwuxgfP9LkcEhaPxEYD13hh6kyDcGB3_Z0tTw>
-    <xmx:pNEoZ_T-8K6bRs6tP-ccbwflyo9rJ3qmfyRmmQQG73je8WJcvre1J90T>
-Feedback-ID: i80c9496c:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 4 Nov 2024 08:52:35 -0500 (EST)
-Date: Mon, 4 Nov 2024 14:52:33 +0100
-From: Niklas =?utf-8?Q?S=C3=B6derlund?= <niklas.soderlund+renesas@ragnatech.se>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Paul Barker <paul.barker.ct@bp.renesas.com>,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Sergei Shtylyov <sergei.shtylyov@gmail.com>,
-	linux-renesas-soc@vger.kernel.org, netdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Simon Horman <horms@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: Re: [PATCH/RFC v2] MAINTAINERS: Re-add cancelled Renesas driver
- sections
-Message-ID: <20241104135232.GB1412590@ragnatech.se>
-References: <90447fa332b6f73bffcb486ccfe2515c59546253.1730717649.git.geert+renesas@glider.be>
- <20241104114007.GA1412590@ragnatech.se>
- <CAMuHMdW49dFp=-HDC4w8peQA+8phbJOsJZLE1OJtJ6tpTmAuLA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jVgmsW2B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0225EC4CECE;
+	Mon,  4 Nov 2024 18:36:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730745407;
+	bh=vPRT5Ok0iatDoQ8sYX0E41DsuqQx7MZ4e798ogKn4/k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jVgmsW2Byap2nnAfgufOvQ6Dpy7iyqqiToopnq65zidrTpwXgwtIVPK0ml8Iu6GCx
+	 stpnzW9oUHh5kee4Yu9lJVNGX5YTebI4svUGRjAQxjt5lq//OQ8Vpyh3MhwyNizZS5
+	 /grbqBTU7Kz2x8xB9NSkwSBxEPh+aup6JP+Zy+3RjhKf4Yk6EPVbFeL4wjkhIsFlKP
+	 /6AwfvMevgm15vuacpc6arPHEx2dVpHdOGGyI9fPcxkO8+HgeFJenejfE+vywh/qjS
+	 SIeE11M9rNMaYK3ClW0Ymbpl5k+m7f+z6f7kV9jFb/GoOFWLlz4Ut2yOkrQutU0GN5
+	 +iHIsuyT4n8mw==
+Date: Mon, 4 Nov 2024 19:36:43 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Philipp Stanner <pstanner@redhat.com>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] ata: ahci: Don't call pci_intx() directly
+Message-ID: <ZykUO31aOfnCIkUH@ryzen>
+References: <c604a8ac-8025-4078-ab90-834d95872e31@gmail.com>
+ <ZyiGNtLMSY1vTQH7@ryzen>
+ <8acdd01c-1744-4545-9cc7-0a60e83a5d4d@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMuHMdW49dFp=-HDC4w8peQA+8phbJOsJZLE1OJtJ6tpTmAuLA@mail.gmail.com>
+In-Reply-To: <8acdd01c-1744-4545-9cc7-0a60e83a5d4d@gmail.com>
 
-Hi Geert,
+On Mon, Nov 04, 2024 at 02:23:43PM +0100, Heiner Kallweit wrote:
+> On 04.11.2024 09:30, Niklas Cassel wrote:
+> > On Fri, Nov 01, 2024 at 11:38:53PM +0100, Heiner Kallweit wrote:
+> >> pci_intx() should be called by PCI core and some virtualization code
+> >> only. In PCI device drivers use the appropriate pci_alloc_irq_vectors()
+> >> call.
+> > 
+> > Hello Heiner,
+> > 
+> > as you might or might not know, this patch conflicts with a Philipp's
+> > already acked patch:
+> > https://lore.kernel.org/linux-ide/20241015185124.64726-10-pstanner@redhat.com/
+> > 
+> I know, therefore he's on cc. Fully migrating PCI device drivers to the
+> pci_alloc_irq_vectors() should be done anyway and is the cleaner
+> alternative to changing pci_intx(). However for some drivers this is a rather
+> complex task, therefore I understand Philipp's approach to adjust pci_intx()
+> first. He's incorporating other review feedback in his series, so with the
+> next re-spin he could remove the ahci patch from his series.
 
-On 2024-11-04 14:33:59 +0100, Geert Uytterhoeven wrote:
-> Hi Niklas,
-> 
-> On Mon, Nov 4, 2024 at 12:40 PM Niklas Söderlund
-> <niklas.soderlund+renesas@ragnatech.se> wrote:
-> > On 2024-11-04 12:05:07 +0100, Geert Uytterhoeven wrote:
-> > > Removing full driver sections also removed mailing list entries, causing
-> > > submitters of future patches to forget CCing these mailing lists.
-> > >
-> > > Hence re-add the sections for the Renesas Ethernet AVB, R-Car SATA, and
-> > > SuperH Ethernet drivers.  Add people who volunteered to maintain these
-> > > drivers (thanks a lot!).
-> > >
-> > > Fixes: 6e90b675cf942e50 ("MAINTAINERS: Remove some entries due to various compliance requirements.")
-> > > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > Reviewed-by: Simon Horman <horms@kernel.org>
-> > > Acked-by: Niklas Cassel <cassel@kernel.org>
-> > > ---
-> > > To be applied to renesas-fixes for v6.12 after v6.12-rc7, unless a
-> > > better solution is found.
-> > >
-> > > v2:
-> > >   - Add Acked-by, Reviewed-by,
-> > >   - Add M:-entries.
-> > > ---
-> > >  MAINTAINERS | 28 ++++++++++++++++++++++++++++
-> > >  1 file changed, 28 insertions(+)
-> > >
-> > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > index 13f4c23281f89332..b04d678240e80ec9 100644
-> > > --- a/MAINTAINERS
-> > > +++ b/MAINTAINERS
-> > > @@ -19578,6 +19578,16 @@ S:   Supported
-> > >  F:   Documentation/devicetree/bindings/i2c/renesas,iic-emev2.yaml
-> > >  F:   drivers/i2c/busses/i2c-emev2.c
-> > >
-> > > +RENESAS ETHERNET AVB DRIVER
-> > > +M:   Paul Barker <paul.barker.ct@bp.renesas.com>
-> > > +M:   Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
-> >
-> > I'm happy to look after the RAVB driver together with Paul. However
-> > please don't add my +renesas tag email for new entries in the
-> > MAINTAINERS file.
-> >
-> > With this fixed for RAVB and SUPERH ETHERNET,
-> >
-> > Acked-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
-> 
-> Thank you, I will make that change.
-> Are you OK with marking both entries "S: Supported"?
+Well, if you look at Philipp's patch it:
 
-Sure, no problem.
+1) Doesn't only update drivers/ata/ahci.c,
+it also updates:
+drivers/ata/ata_piix.c
+drivers/ata/pata_rdc.c
+drivers/ata/sata_sil24.c
+drivers/ata/sata_sis.c
+drivers/ata/sata_uli.c
+drivers/ata/sata_vsc.c
 
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> -- 
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
+Why don't you update the other drivers in drivers/ata/* ?
 
--- 
-Kind Regards,
-Niklas Söderlund
+
+2) Doesn't just bother to fix a single subsystem (drivers/ata/),
+it is actually part of a series that fixes all affected subsystems.
+
+Why don't you send out this fix as part of a series that fixes all the
+affected subsystems?
+
+
+Kind regards,
+Niklas
