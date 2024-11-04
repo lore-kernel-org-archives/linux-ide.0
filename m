@@ -1,177 +1,136 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from albert.telenet-ops.be (albert.telenet-ops.be [195.130.137.90])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E7091AD3F5
-	for <linux-ide@vger.kernel.org>; Mon,  4 Nov 2024 09:27:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A821D0950
+	for <linux-ide@vger.kernel.org>; Mon,  4 Nov 2024 11:05:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.137.90
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730712430; cv=none; b=rTGhr9bbB3w/RvXmNJWygmR49AAzt57690pw0OX6Rhq/zPjSf6LPx0aCPA3VH1kMbiwNzjf12ad7vGI0C6mF3FpkGhahdCmoMZ+W/OdGzOSQYathcTMznwYS1r1QuJE3mUBpRBbKK3sfJYx48d2apBFLsvaIvXZfqBv9S+UhrIw=
+	t=1730718332; cv=none; b=Oz5j57e8g+Nq9WjHJBRobIRURYdaBkN2YMMM1+sHFCft0elg7xM/b3udceVWE9DtSWaQWoeCjW0AlN7+3aPMxA7SL30OUFOsrtDzCXEt1L5jywAuxvBprxBSrkreuGaDhmNwmrpBFwfXdoMfVrj7D/FveDJP3QBehuAUr/dpC4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730712430; c=relaxed/simple;
-	bh=M7ueN/LQ529FLGouL/3BXVgrjx8tY87847WIrlhrom4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=aj2VFHgtEfBbzXiKn31HxG805Qm38JjvCT8pZUc0x+UNw5P2Ct+3+H8tOHKRqUBYNEktXJt692iuOOTAfUJRewt46e3AzaePL602Su67KK+1MnYFWdnZYEntkEJ4advfqUffeqaWReCVwVYWrFLt811u7QrI3fAnKL1xkDsmybg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CS+/sPzX; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CS+/sPzX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1730712428;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M7ueN/LQ529FLGouL/3BXVgrjx8tY87847WIrlhrom4=;
-	b=CS+/sPzXh1mV9lC5ab3Yx6U4bXIdpqD8G+MfUAIwGT7krBbkM5YaTKx990ONiy6IiokdlF
-	LMjoveda6hXsGqzhNWIoT3Tdm1X8iSJR1mAq3djw3G7HHg2AZEDVBOzygB32NJDK7KaxnN
-	+VDlOhmoejlHzpQenYD4l16Pr6eWO+Q=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-680-DxMkFtd6NdCv8ZRSXzXEUg-1; Mon, 04 Nov 2024 04:27:07 -0500
-X-MC-Unique: DxMkFtd6NdCv8ZRSXzXEUg-1
-Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-2fb652f40f1so19894071fa.2
-        for <linux-ide@vger.kernel.org>; Mon, 04 Nov 2024 01:27:06 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730712425; x=1731317225;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=M7ueN/LQ529FLGouL/3BXVgrjx8tY87847WIrlhrom4=;
-        b=R2J1MsAwhRDpvfiqq+N7Ae2FIwLcaqdpe9F3I1J/uuqSlM9TuQ1DhPSO5mrRVh0xm5
-         Wfr2nYl2zWDeizWHse+i6b8YHLRv9kVQmanJY5/JEFd7EG1PHEzZS5IEwOpdvcKNhWox
-         fq2XSrRdP4zR9gD7VStwqL08fo02e3WFq9c+kCObIy0FRa63sgF3CmsQAyOluVBld+Zc
-         HAW7CXusKGL27OAzB+iWkyrytfdy3R9Upwt8iJXY5qbINKekaWfzKu363FLFzKF4AZq4
-         F3ieiX5f+HMiR8+qo5ZvtAOssoPhmEylgi8rUG2GKIhVpNanBqaxuDzNX3MemZxJpXZI
-         r3Iw==
-X-Gm-Message-State: AOJu0Yx8C6WIgE4rwtEOH7iMwefaYUMXZBsCrpvtYouaXRGfTzkocA05
-	2GUmT+A0a8j68XDwnJYu/m1XmTwJPczxYTmCzuR0RhVCb3pNNMA2o0gLekghwW0ih+BNeFP3LKn
-	mbe1+DNb+t1T+Xke9OrGPHy/Rulg9mKLfEX6mJDHqW3ttQ1gplS2LLDJtfQ==
-X-Received: by 2002:a5d:5f54:0:b0:37d:373c:ed24 with SMTP id ffacd0b85a97d-381c7a3a49cmr8192689f8f.4.1730712414714;
-        Mon, 04 Nov 2024 01:26:54 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHUG4i3r4RT/0mDz+U1cY7m40dZcu2ijC6eEouX1uNQBldOHTZd5hoduIq2TUsnjYO3wLrnew==
-X-Received: by 2002:a5d:5f54:0:b0:37d:373c:ed24 with SMTP id ffacd0b85a97d-381c7a3a49cmr8192628f8f.4.1730712414212;
-        Mon, 04 Nov 2024 01:26:54 -0800 (PST)
-Received: from ?IPv6:2001:16b8:2d7f:e400:7f8:722c:bb2e:bb7f? (200116b82d7fe40007f8722cbb2ebb7f.dip.versatel-1u1.de. [2001:16b8:2d7f:e400:7f8:722c:bb2e:bb7f])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-381c10b7d20sm12817150f8f.7.2024.11.04.01.26.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Nov 2024 01:26:53 -0800 (PST)
-Message-ID: <a8d9f32f60f55c58d79943c4409b8b94535ff853.camel@redhat.com>
-Subject: Re: [PATCH 01/13] PCI: Prepare removing devres from pci_intx()
-From: Philipp Stanner <pstanner@redhat.com>
-To: Thomas Gleixner <tglx@linutronix.de>, Damien Le Moal
- <dlemoal@kernel.org>,  Niklas Cassel <cassel@kernel.org>, Sergey Shtylyov
- <s.shtylyov@omp.ru>, Basavaraj Natikar <basavaraj.natikar@amd.com>, Jiri
- Kosina <jikos@kernel.org>, Benjamin Tissoires <bentiss@kernel.org>, Arnd
- Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Alex Dubov <oakad@yahoo.com>, Sudarsana Kalluru <skalluru@marvell.com>,
- Manish Chopra <manishc@marvell.com>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski
- <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Rasesh Mody
- <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com, Igor Mitsyanko
- <imitsyanko@quantenna.com>, Sergey Matyukevich <geomatsi@gmail.com>, Kalle
- Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>, Shyam Sundar
- S K <Shyam-sundar.S-k@amd.com>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
- <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Alex Williamson <alex.williamson@redhat.com>,
- Juergen Gross <jgross@suse.com>, Stefano Stabellini
- <sstabellini@kernel.org>, Oleksandr Tyshchenko
- <oleksandr_tyshchenko@epam.com>, Jaroslav Kysela <perex@perex.cz>, Takashi
- Iwai <tiwai@suse.com>, Chen Ni <nichen@iscas.ac.cn>, Mario Limonciello
- <mario.limonciello@amd.com>, Ricky Wu <ricky_wu@realtek.com>, Al Viro
- <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>, Kevin Tian
- <kevin.tian@intel.com>, Ilpo =?ISO-8859-1?Q?J=E4rvinen?=
- <ilpo.jarvinen@linux.intel.com>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Mostafa Saleh <smostafa@google.com>, 
- Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu <yi.l.liu@intel.com>, Christian
- Brauner <brauner@kernel.org>, Ankit Agrawal <ankita@nvidia.com>, Eric Auger
- <eric.auger@redhat.com>, Reinette Chatre <reinette.chatre@intel.com>, Ye
- Bin <yebin10@huawei.com>, Marek =?ISO-8859-1?Q?Marczykowski-G=F3recki?=
- <marmarek@invisiblethingslab.com>, Pierre-Louis Bossart
- <pierre-louis.bossart@linux.dev>, Peter Ujfalusi
- <peter.ujfalusi@linux.intel.com>, Maarten Lankhorst
- <maarten.lankhorst@linux.intel.com>, Kai Vehmanen
- <kai.vehmanen@linux.intel.com>,  Rui Salvaterra <rsalvaterra@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-input@vger.kernel.org, netdev@vger.kernel.org, 
- linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
- linux-pci@vger.kernel.org,  kvm@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-sound@vger.kernel.org
-Date: Mon, 04 Nov 2024 10:26:51 +0100
-In-Reply-To: <87cyjgwfmo.ffs@tglx>
-References: <20241015185124.64726-1-pstanner@redhat.com>
-	 <20241015185124.64726-2-pstanner@redhat.com> <87cyjgwfmo.ffs@tglx>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-2.fc40) 
+	s=arc-20240116; t=1730718332; c=relaxed/simple;
+	bh=hPLn67jJGh8npK+Nrh+oowlYDEbl4/LjLbYe7hgNHvE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=DzMxQXkTTzlMCKYLWx85/FOKLkjVmo7UtlLk1rYHsqJuTvogura0VjqTFLWBkUgX1dfV5RqHkrvbqdU0XWch6W1ixA9LGZ4QeHZdvXHnK+v4epj6SP1K0f+Y2Fpy78IuPc5+EQzD+0f0cYK5ejCfmdnGMY6oje3pnVMQpPTBYL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.137.90
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=glider.be
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed80:cff2:a4e4:667a:351c])
+	by albert.telenet-ops.be with cmsmtp
+	id Yb5F2D0012b9NYg06b5FEf; Mon, 04 Nov 2024 12:05:22 +0100
+Received: from rox.of.borg ([192.168.97.57])
+	by ramsan.of.borg with esmtp (Exim 4.95)
+	(envelope-from <geert@linux-m68k.org>)
+	id 1t7utD-006FYY-3n;
+	Mon, 04 Nov 2024 12:05:14 +0100
+Received: from geert by rox.of.borg with local (Exim 4.95)
+	(envelope-from <geert@linux-m68k.org>)
+	id 1t7utW-00E1Vx-Pi;
+	Mon, 04 Nov 2024 12:05:14 +0100
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Paul Barker <paul.barker.ct@bp.renesas.com>,
+	=?UTF-8?q?Niklas=20S=C3=B6derlund?= <niklas.soderlund+renesas@ragnatech.se>,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Cc: linux-renesas-soc@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Simon Horman <horms@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH/RFC v2] MAINTAINERS: Re-add cancelled Renesas driver sections
+Date: Mon,  4 Nov 2024 12:05:07 +0100
+Message-Id: <90447fa332b6f73bffcb486ccfe2515c59546253.1730717649.git.geert+renesas@glider.be>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
 List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Thu, 2024-10-31 at 14:45 +0100, Thomas Gleixner wrote:
-> On Tue, Oct 15 2024 at 20:51, Philipp Stanner wrote:
-> > +/**
-> > + * pci_intx - enables/disables PCI INTx for device dev, unmanaged
-> > version
->=20
-> mismatch vs. actual function name.
+Removing full driver sections also removed mailing list entries, causing
+submitters of future patches to forget CCing these mailing lists.
 
-ACK, will fix
+Hence re-add the sections for the Renesas Ethernet AVB, R-Car SATA, and
+SuperH Ethernet drivers.  Add people who volunteered to maintain these
+drivers (thanks a lot!).
 
->=20
-> > + * @pdev: the PCI device to operate on
-> > + * @enable: boolean: whether to enable or disable PCI INTx
-> > + *
-> > + * Enables/disables PCI INTx for device @pdev
-> > + *
-> > + * This function behavios identically to pci_intx(), but is never
-> > managed with
-> > + * devres.
-> > + */
-> > +void pci_intx_unmanaged(struct pci_dev *pdev, int enable)
->=20
-> This is a misnomer. The function controls the INTX_DISABLE bit of a
-> PCI device. Something like this:
->=20
-> void __pci_intx_control()
-> {
-> }
->=20
-> static inline void pci_intx_enable(d)
-> {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __pci_intx_control(d, true);
-> }
->=20
-> .....
->=20
-> makes it entirely clear what this is about.
+Fixes: 6e90b675cf942e50 ("MAINTAINERS: Remove some entries due to various compliance requirements.")
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Acked-by: Niklas Cassel <cassel@kernel.org>
+---
+To be applied to renesas-fixes for v6.12 after v6.12-rc7, unless a
+better solution is found.
 
-Well, I would agree if it were about writing a 'real' new function. But
-this is actually about creating a _temporary_ function which is added
-here and removed again in patch 12 of this same series.
+v2:
+  - Add Acked-by, Reviewed-by,
+  - Add M:-entries.
+---
+ MAINTAINERS | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-It wouldn't even be needed; the only reason why it exists is to make it
-easy for the driver maintainers concerned by patches 2-11 to review the
-change and understand what's going on. Hence it is
-"pci_intx_unmanaged()" =3D=3D "Attention, we take automatic management away
-from your driver"
-
-pci_intx() is then fully restored after patch 12 and it keeps its old
-name.
-
-Gr=C3=BC=C3=9Fe,
-Philipp
-
-
->=20
-> Hmm?
->=20
-> Thanks,
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 tglx
->=20
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 13f4c23281f89332..b04d678240e80ec9 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19578,6 +19578,16 @@ S:	Supported
+ F:	Documentation/devicetree/bindings/i2c/renesas,iic-emev2.yaml
+ F:	drivers/i2c/busses/i2c-emev2.c
+ 
++RENESAS ETHERNET AVB DRIVER
++M:	Paul Barker <paul.barker.ct@bp.renesas.com>
++M:	Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
++L:	netdev@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
++F:	Documentation/devicetree/bindings/net/renesas,etheravb.yaml
++F:	drivers/net/ethernet/renesas/Kconfig
++F:	drivers/net/ethernet/renesas/Makefile
++F:	drivers/net/ethernet/renesas/ravb*
++
+ RENESAS ETHERNET SWITCH DRIVER
+ R:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+ L:	netdev@vger.kernel.org
+@@ -19627,6 +19637,14 @@ F:	Documentation/devicetree/bindings/i2c/renesas,rmobile-iic.yaml
+ F:	drivers/i2c/busses/i2c-rcar.c
+ F:	drivers/i2c/busses/i2c-sh_mobile.c
+ 
++RENESAS R-CAR SATA DRIVER
++M:	Geert Uytterhoeven <geert+renesas@glider.be>
++L:	linux-ide@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
++F:	drivers/ata/sata_rcar.c
++
+ RENESAS R-CAR THERMAL DRIVERS
+ M:	Niklas Söderlund <niklas.soderlund@ragnatech.se>
+ L:	linux-renesas-soc@vger.kernel.org
+@@ -19702,6 +19720,16 @@ S:	Supported
+ F:	Documentation/devicetree/bindings/i2c/renesas,rzv2m.yaml
+ F:	drivers/i2c/busses/i2c-rzv2m.c
+ 
++RENESAS SUPERH ETHERNET DRIVER
++M:	Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
++L:	netdev@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
++F:	Documentation/devicetree/bindings/net/renesas,ether.yaml
++F:	drivers/net/ethernet/renesas/Kconfig
++F:	drivers/net/ethernet/renesas/Makefile
++F:	drivers/net/ethernet/renesas/sh_eth*
++F:	include/linux/sh_eth.h
++
+ RENESAS USB PHY DRIVER
+ M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+ L:	linux-renesas-soc@vger.kernel.org
+-- 
+2.34.1
 
