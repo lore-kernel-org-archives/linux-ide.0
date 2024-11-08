@@ -1,25 +1,25 @@
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6917D192D66
-	for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2024 20:17:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D077A1AA1FA
+	for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2024 20:20:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731097068; cv=none; b=W2Ed49G8od9lH69bliQH46RnUjUWzOOexe3I66oJYvXATES6FPT9++516mD3gqo8IzMGkGvTOjOekiLfUbb6/OXZuLbY0qy4jfAkOzI7CpPg1IDy8+ic9GZo1XUP77qDzbwpfQvC8YKwInGc+WU4cNzWZSd1OvKRM/8DtaqAbH0=
+	t=1731097233; cv=none; b=JNUj3kfLAjdTfkYaZuLnT68dX6EGx/KLADJ8xko/6WtxZXorDHf51NHdm0DCIWn2XWAaiqHDD1IHvwLMGMpCNpkqD9eNSMZs44Ogj9O2a6/V/Baj4GtvAfM+vcHs+rsEuhoQg9L961eaHQIaWYPCGJBW6yABKYPpv2WQNLm4mlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731097068; c=relaxed/simple;
-	bh=XDc+n/QnjCXyO4JyYO6BSKvNGdZvMsp2rLdXw2Drffs=;
+	s=arc-20240116; t=1731097233; c=relaxed/simple;
+	bh=9rLXCgqH2DB3/C6H3+VEQ70BUSpc/UD39RnwDpTLzVc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:CC:From:
-	 In-Reply-To:Content-Type; b=rfipeVGlf0gi94VR7LpkuVhyfMi8j0Ssd/mAP5Kjt/17rwvFftJVSWOl6jwIpLTfsbzbzKgVSGI6GC6J43/BcJblcSccPwin58tYDFF5WzLptsmnm6gE5JjbEVMU2c5o54BAMlafGSri8HoB4Z7me/1CIxVAEFxsRyatNFU+G+I=
+	 In-Reply-To:Content-Type; b=VS/U8Bln7EOcYSD2TvhyyIsVfzzIYpFFHc95WMh7wvVmJVpEaxn9QBpafJTkupu+aVIVfAaEKvpeby6UvOiEIvIQQ7/x9yJSNEVt/sXrRD47r1Jv9QDUritjG8agFH6gt74Vmba/WHoX+Qrf+VFibfNh09nPCamo8vrHR8eNX+8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
 Received: from [192.168.2.102] (213.87.154.171) by msexch01.omp.ru
  (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Fri, 8 Nov
- 2024 23:17:35 +0300
-Message-ID: <98cac57e-de28-48f2-99a8-a6d1afae1610@omp.ru>
-Date: Fri, 8 Nov 2024 23:17:35 +0300
+ 2024 23:20:21 +0300
+Message-ID: <813b22ec-a16d-4598-8c61-6522ced1116e@omp.ru>
+Date: Fri, 8 Nov 2024 23:20:20 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -27,12 +27,13 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH 2/6] ata: ahci: use dev_info() instead of printk(KERN_INFO)
+Subject: [PATCH 3/6] ata: libata-core: use pr_warn() instead of
+ printk(KERN_WARNING)
 To: <linux-ide@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas
  Cassel <cassel@kernel.org>
 References: <6cf8979c-c50d-4ef0-b1df-281d932d92b6@omp.ru>
 Content-Language: en-US
-CC: Sergey Shtylyov <sergei.shtylyov@gmail.com>
+CC: Sergey Shtylyov <s.shtylyov@omp.ru>
 From: Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
 In-Reply-To: <6cf8979c-c50d-4ef0-b1df-281d932d92b6@omp.ru>
@@ -78,44 +79,48 @@ X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-The AHCI PCI device driver still calls printk(KERN_INFO, ...) in
-ahci_mcp89_apple_enable() and ahci_init_msi() -- convert them to
-calling dev_info(), somewhat rewording the messages themselves...
+ata_parse_force_param() still calls printk(KERN_WARNING, ...) -- convert
+it to calling pr_warn(), also joining the broken up message strings...
 
-This helpfully fixes the following complaint from scripts/checkpatch.pl:
+This helpfully fixes the following complaints from scripts/checkpatch.pl:
 
-WARNING: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then
-dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+WARNING: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then
+dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
 
-Signed-off-by: Sergey Shtylyov <sergei.shtylyov@gmail.com>
+WARNING: quoted string split across lines
+
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
 ---
- drivers/ata/ahci.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 2d3d3d67b4d9..32c79b41ddea 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1141,7 +1141,7 @@ static void ahci_mcp89_apple_enable(struct pci_dev *pdev)
- {
- 	u32 val;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cdb20a700b55..47f652981043 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6443,8 +6443,7 @@ static void __init ata_parse_force_param(void)
  
--	printk(KERN_INFO "ahci: enabling MCP89 AHCI mode\n");
-+	dev_info(&pdev->dev, "enabling MCP89 AHCI mode\n");
- 
- 	pci_read_config_dword(pdev, 0xf8, &val);
- 	val |= 1 << 0x1b;
-@@ -1692,8 +1692,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 			 * Fallback to single MSI mode if the controller
- 			 * enforced MRSM mode.
- 			 */
--			printk(KERN_INFO
--				"ahci: MRSM is on, fallback to single MSI\n");
-+			dev_info(&pdev->dev, "AHCI MRSM is on, fallback to single MSI\n");
- 			pci_free_irq_vectors(pdev);
- 		}
+ 	ata_force_tbl = kcalloc(size, sizeof(ata_force_tbl[0]), GFP_KERNEL);
+ 	if (!ata_force_tbl) {
+-		printk(KERN_WARNING "ata: failed to extend force table, "
+-		       "libata.force ignored\n");
++		pr_warn("ata: failed to extend force table, libata.force ignored\n");
+ 		return;
  	}
+ 
+@@ -6455,9 +6454,8 @@ static void __init ata_parse_force_param(void)
+ 
+ 		next = cur;
+ 		if (ata_parse_force_one(&next, &te, &reason)) {
+-			printk(KERN_WARNING "ata: failed to parse force "
+-			       "parameter \"%s\" (%s)\n",
+-			       cur, reason);
++			pr_warn("ata: failed to parse force parameter \"%s\" (%s)\n",
++				cur, reason);
+ 			continue;
+ 		}
+ 
 -- 
 2.47.0
 
