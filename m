@@ -1,25 +1,25 @@
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64AB5192D66
-	for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2024 20:16:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6917D192D66
+	for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2024 20:17:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731096996; cv=none; b=Bt5Nt0+uD92kaTTiig6QWsXWMsNXiHIDMyfrCbO44KrvS4dguUwg6FljCT8sUP65dtRfa0bXgAqtGxaOG7+cT3s3ZyJXl8OVuxhpPtVkG7hgQfaScGMhnNeA3VJuFMoh8VNjzNIbR+5Mvk8wd6GyG/dEzhhZm3pL4Ar53Umfiso=
+	t=1731097068; cv=none; b=W2Ed49G8od9lH69bliQH46RnUjUWzOOexe3I66oJYvXATES6FPT9++516mD3gqo8IzMGkGvTOjOekiLfUbb6/OXZuLbY0qy4jfAkOzI7CpPg1IDy8+ic9GZo1XUP77qDzbwpfQvC8YKwInGc+WU4cNzWZSd1OvKRM/8DtaqAbH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731096996; c=relaxed/simple;
-	bh=mVDphxO+zyUtym2hKfPTvKbkaFDjaTbSLPOVsFtJawU=;
+	s=arc-20240116; t=1731097068; c=relaxed/simple;
+	bh=XDc+n/QnjCXyO4JyYO6BSKvNGdZvMsp2rLdXw2Drffs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:CC:From:
-	 In-Reply-To:Content-Type; b=bfFH3kUjs/JavzE535ZHPXZ/OtyAq/tNpfX7NHVtXkLAA1vOMZSO2wXGBDRVt75Y371y8ofr7L9nJ8sg2IUmuJ4bjZVLwxlBEYRgN1J4m7SZUc1gCBGJvP0DTMKtfRJ+gN9uzuFRe5NjJjha8X9A1WsNoovZqxOxQH12vUbnVbM=
+	 In-Reply-To:Content-Type; b=rfipeVGlf0gi94VR7LpkuVhyfMi8j0Ssd/mAP5Kjt/17rwvFftJVSWOl6jwIpLTfsbzbzKgVSGI6GC6J43/BcJblcSccPwin58tYDFF5WzLptsmnm6gE5JjbEVMU2c5o54BAMlafGSri8HoB4Z7me/1CIxVAEFxsRyatNFU+G+I=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
 Received: from [192.168.2.102] (213.87.154.171) by msexch01.omp.ru
  (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Fri, 8 Nov
- 2024 23:16:18 +0300
-Message-ID: <ca23d30e-7444-4490-a7f2-7020e8cf6fb9@omp.ru>
-Date: Fri, 8 Nov 2024 23:16:17 +0300
+ 2024 23:17:35 +0300
+Message-ID: <98cac57e-de28-48f2-99a8-a6d1afae1610@omp.ru>
+Date: Fri, 8 Nov 2024 23:17:35 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -27,13 +27,12 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH 1/6] ata: acard-ahci: use dev_info() instead of,
- printk(KERN_INFO)
+Subject: [PATCH 2/6] ata: ahci: use dev_info() instead of printk(KERN_INFO)
 To: <linux-ide@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas
  Cassel <cassel@kernel.org>
 References: <6cf8979c-c50d-4ef0-b1df-281d932d92b6@omp.ru>
 Content-Language: en-US
-CC: Sergey Shtylyov <s.shtylyov@omp.ru>
+CC: Sergey Shtylyov <sergei.shtylyov@gmail.com>
 From: Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
 In-Reply-To: <6cf8979c-c50d-4ef0-b1df-281d932d92b6@omp.ru>
@@ -79,34 +78,44 @@ X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-The ACard AHCI PCI device driver still calls printk(KERN_INFO, ...) in its
-probe() method -- convert it to calling dev_info(), also somewhat rewording
-the message itself...
+The AHCI PCI device driver still calls printk(KERN_INFO, ...) in
+ahci_mcp89_apple_enable() and ahci_init_msi() -- convert them to
+calling dev_info(), somewhat rewording the messages themselves...
 
 This helpfully fixes the following complaint from scripts/checkpatch.pl:
 
 WARNING: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then
 dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Signed-off-by: Sergey Shtylyov <sergei.shtylyov@gmail.com>
 
 ---
- drivers/ata/acard-ahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/ahci.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
-index 547f56341705..0e16e64d1c5d 100644
---- a/drivers/ata/acard-ahci.c
-+++ b/drivers/ata/acard-ahci.c
-@@ -415,7 +415,7 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
- 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
- 		host->flags |= ATA_HOST_PARALLEL_SCAN;
- 	else
--		printk(KERN_INFO "ahci: SSS flag set, parallel bus scan disabled\n");
-+		dev_info(&pdev->dev, "AHCI SSS flag set, parallel bus scan disabled\n");
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 2d3d3d67b4d9..32c79b41ddea 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1141,7 +1141,7 @@ static void ahci_mcp89_apple_enable(struct pci_dev *pdev)
+ {
+ 	u32 val;
  
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
+-	printk(KERN_INFO "ahci: enabling MCP89 AHCI mode\n");
++	dev_info(&pdev->dev, "enabling MCP89 AHCI mode\n");
+ 
+ 	pci_read_config_dword(pdev, 0xf8, &val);
+ 	val |= 1 << 0x1b;
+@@ -1692,8 +1692,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 			 * Fallback to single MSI mode if the controller
+ 			 * enforced MRSM mode.
+ 			 */
+-			printk(KERN_INFO
+-				"ahci: MRSM is on, fallback to single MSI\n");
++			dev_info(&pdev->dev, "AHCI MRSM is on, fallback to single MSI\n");
+ 			pci_free_irq_vectors(pdev);
+ 		}
+ 	}
 -- 
 2.47.0
 
