@@ -1,25 +1,25 @@
 Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC441C1F36
-	for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2024 20:26:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A4C1C1F15
+	for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2024 20:27:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731097577; cv=none; b=D4pjrJhhpSbhvRXjMoI3seVTqPHiw+3nWXOAQTjxuAHO/itLqux0512UPBT2CUK6laUz0FQp6Zdib8xt+GJwYXw/08U/yVeLAsshh1ec404FNkG77vsSJXszHDDDdaYrWFn8m4tcya1BmfWgKtH8h50dl2BEV8ZjQunVv3H6HDY=
+	t=1731097636; cv=none; b=itPTVOHFwWUCzl4b3C/uM7XCD5RsivgTTmN6rJpQe+RHbe1huFeeoCO6+IB1he5iPROvJqF0OdUTlauuVHv7rnevvO7JtMLxsuB85raWtM6tg0S94FrUDy6BqsKCaqZwcO8puck3NSswqixFOcTvrDSx+Iv3KCu2thDROjeA4CI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731097577; c=relaxed/simple;
-	bh=7euJUJUlk/doFkTeZIJrt9klOozZXTqjnqNgUYaqDkA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:CC:From:
-	 In-Reply-To:Content-Type; b=gQHL4Zz4zi0sD4WFuDFcQ1LzzIq0pv4aHjvf5rwrtp9igV4dcFK2JIvjjvkdOCUDamLAVR8BJZ2f2Icjrrri4dCD0LWbVaIpCQP89IklKvmcQGGZNoD21SewXM1t+OHEMzBe7/QLfkHJfBGwv2Fpw5Xf0wzpvUJwrXSe+TKrGhE=
+	s=arc-20240116; t=1731097636; c=relaxed/simple;
+	bh=SekP8nxikPqtcWBPMHK2qYaLk6VkuHGawtteLhCQsTA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=sg01dJYfG//h67ncru+g7Ij3sQclfk5cwYzJ7kJpJIOeBz/gK2rffgZf1uKd3Ns9Hul26kSkQJCkYX+VmnQCxQejzsPZq42PJca7x8gLeAWyjDBsOUG3no3LaQ75dDQIE5FzjEsVREy5OFOmcuyLJNtx6xsdU/jHMsUHmMWTaaQ=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
 Received: from [192.168.2.102] (213.87.154.171) by msexch01.omp.ru
  (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Fri, 8 Nov
- 2024 23:26:13 +0300
-Message-ID: <0a19e2e7-b33c-4fb2-9183-33855337097d@omp.ru>
-Date: Fri, 8 Nov 2024 23:26:12 +0300
+ 2024 23:27:03 +0300
+Message-ID: <7121a72f-4094-4575-a313-9a1d849e7d19@omp.ru>
+Date: Fri, 8 Nov 2024 23:27:03 +0300
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -27,16 +27,16 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH 6/6] ata: pata_optidma: use dev_warn() instead of
- printk(KERN_WARNING)
+Subject: Re: [PATCH 1/6] ata: acard-ahci: use dev_info() instead of,
+ printk(KERN_INFO)
 To: <linux-ide@vger.kernel.org>, Damien Le Moal <dlemoal@kernel.org>, Niklas
  Cassel <cassel@kernel.org>
 References: <6cf8979c-c50d-4ef0-b1df-281d932d92b6@omp.ru>
+ <ca23d30e-7444-4490-a7f2-7020e8cf6fb9@omp.ru>
 Content-Language: en-US
-CC: Sergey Shtylyov <s.shtylyov@omp.ru>
 From: Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-In-Reply-To: <6cf8979c-c50d-4ef0-b1df-281d932d92b6@omp.ru>
+In-Reply-To: <ca23d30e-7444-4490-a7f2-7020e8cf6fb9@omp.ru>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
@@ -73,33 +73,9 @@ X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-The OPTi PCI device driver still calls printk(KERN_WARNING, ...) in
-optiplus_with_udma() -- convert it to calling pr_warn()...
+Hello!
 
-This helpfully fixes the following complaints from scripts/checkpatch.pl:
+   Oops, stray char after "of" in the subject... :-/
 
-WARNING: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then
-dev_warn(dev, ... then pr_info(...  to printk(KERN_WARNING ...
-
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-
----
- drivers/ata/pata_optidma.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
-index dfc36b4ec9c6..23e2326ce31e 100644
---- a/drivers/ata/pata_optidma.c
-+++ b/drivers/ata/pata_optidma.c
-@@ -390,7 +390,7 @@ static int optiplus_with_udma(struct pci_dev *pdev)
- 	if (r & 0x80)	/* IDEDIR disabled */
- 		ret = 1;
- done:
--	printk(KERN_WARNING "UDMA not supported in this configuration.\n");
-+	dev_warn(&pdev->dev, "UDMA not supported in this configuration.\n");
- done_nomsg:		/* Wrong chip revision */
- 	pci_dev_put(dev1);
- 	return ret;
--- 
-2.47.0
+MBR, Sergey
 
