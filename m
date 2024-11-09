@@ -1,37 +1,35 @@
 Received: from mxout2.routing.net (mxout2.routing.net [134.0.28.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EDEC11C83;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE3913C9A9;
 	Sat,  9 Nov 2024 09:53:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.0.28.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731145985; cv=none; b=AIY5G05U0+5c/6bZHum/yi0HzbssXflX8A0y7v2Jvhd4h4nfUW0IT2aVP9gh90h2XohWor9obf4XTyMEwu3fSiYhR1fWEoP2x3rT/j5+D6AV/P2UrjqxlhSC/6B1WdO2gdFv1XVZkGyb9cDFmBV7pA+1zCGJUcYcL7IPi3U5SQQ=
+	t=1731145986; cv=none; b=pqkAjB6qoglEHzv0r2b5MJdo/x0KIFUFmFZxJyfc9QnTdk4tHKOQgtO2Yql8EbJU7HubCeBP/P5Ob4UDTzjb4WxzIBi0MHqThSxhMuBEU4ehHAifUB0Svbh6uUHBz1jXpXC4qs39OQ2Hv9tZ2uXGoLC0WImz0MFO4BkmzO4pqD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731145985; c=relaxed/simple;
-	bh=LM2YrStHhWfImTBkjTG5bNjXWuyyGFfj1FQgnTM2HpA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kNlikmfxCxiXQzE7ui8/PPSB7GrEA87ho5glDmd1qroxwFsU5Lpd6HUaraI9ywuth64xHeYYMsS8k/bDratWI0InJ85rAXJ2RbkXDiNm9HqNZJvRqNBR5sSQhvcKfbjkB7uD4Uz3OmvKpdvofH3TbdjW9vzH29Q6a5Jq2Q8ZhG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fw-web.de; spf=pass smtp.mailfrom=fw-web.de; dkim=pass (1024-bit key) header.d=mailerdienst.de header.i=@mailerdienst.de header.b=GlB6r8Co; arc=none smtp.client-ip=134.0.28.12
+	s=arc-20240116; t=1731145986; c=relaxed/simple;
+	bh=uetHf+iaauHsvvFyqaeBI8Pvow7MD+zXLMtwQwX88T8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ak+WD8hXaE8mE2jnurPBt2Wzd4vfgNymmQK5ETnmrXA8VP8eYcufqicXqBkegFtELQa6SCVzRTEH/pSW0sR7vNTd0fSLD5BmFcracqsZaS/RZjm35DIbPvaAOFaj0vDxkTy49bjWQifGdsFz1YwpRcab9a+NNT6NycBFv3dfB2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fw-web.de; spf=pass smtp.mailfrom=fw-web.de; dkim=pass (1024-bit key) header.d=mailerdienst.de header.i=@mailerdienst.de header.b=AtfRjeoB; arc=none smtp.client-ip=134.0.28.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fw-web.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fw-web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mailerdienst.de header.i=@mailerdienst.de header.b="GlB6r8Co"
+	dkim=pass (1024-bit key) header.d=mailerdienst.de header.i=@mailerdienst.de header.b="AtfRjeoB"
 Received: from mxbox1.masterlogin.de (unknown [192.168.10.88])
-	by mxout2.routing.net (Postfix) with ESMTP id 4FF73603CF;
-	Sat,  9 Nov 2024 09:46:44 +0000 (UTC)
+	by mxout2.routing.net (Postfix) with ESMTP id CD35F5FBA0;
+	Sat,  9 Nov 2024 09:46:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-	s=20200217; t=1731145604;
+	s=20200217; t=1731145600;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+69KJK3zrl6PpqAifiS8qjg8S5oJH80PJf+IyWPC+S8=;
-	b=GlB6r8CotjkQXfveXfLsZZSZtBqONyb1qwOYtpPE1to6m3N2tSGpxvi+PHqEybyZh3q020
-	2EpmHJfojRfFYGAcP4FYcXzyM1B7WA3tS/fAPp3bFx3X3XohByixBOIessxnYPlQnaUWZ3
-	3h2cs3YgXMB8e5eo/4MBsdPaABl4CFs=
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=dsnVBnJzrSx3yR3uTwKq3fiPk27Oe3tF24NPbK3S3f0=;
+	b=AtfRjeoBXaxX0QVh6lNi7ebs5xVtIpkYALRoS7d9z2A4l0leJ+/RAQ5xT/2G5TjgtT9Var
+	867U9y7JVUkUdm2TCe3S4PDV8IbbSqt/VgCg8QvpSyHgP3y8pBuZiz7NZVhlZXPjfjjXyX
+	jm52nxek12xq5YkfaIVno+MkOVAWiYI=
 Received: from frank-u24.. (fttx-pool-157.180.226.68.bambit.de [157.180.226.68])
-	by mxbox1.masterlogin.de (Postfix) with ESMTPSA id 6E2C14028F;
-	Sat,  9 Nov 2024 09:46:43 +0000 (UTC)
+	by mxbox1.masterlogin.de (Postfix) with ESMTPSA id AE44840044;
+	Sat,  9 Nov 2024 09:46:38 +0000 (UTC)
 From: Frank Wunderlich <linux@fw-web.de>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
@@ -49,12 +47,10 @@ Cc: Frank Wunderlich <frank-w@public-files.de>,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v1 3/3] dt-bindings: ata: ahci-platform: add missing iommus property
-Date: Sat,  9 Nov 2024 10:46:21 +0100
-Message-ID: <20241109094623.37518-4-linux@fw-web.de>
+Subject: [PATCH v1 0/3] fix some binding check errors for marvell
+Date: Sat,  9 Nov 2024 10:46:18 +0100
+Message-ID: <20241109094623.37518-1-linux@fw-web.de>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20241109094623.37518-1-linux@fw-web.de>
-References: <20241109094623.37518-1-linux@fw-web.de>
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -62,42 +58,34 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Mail-ID: fc86e688-7b61-4350-916f-198d8262f45c
+X-Mail-ID: 15871758-9287-4eb9-b486-392be61ec69a
 
 From: Frank Wunderlich <frank-w@public-files.de>
 
-fix dtbs_check errors in following files:
+Thies series fixes some Errors reported by dtbs_check. First part is taken
+from my old series [1] where i converted sata-platform txt binding to yaml
+because it wasn't picked up.
 
-arch/arm64/boot/dts/marvell/armada-7040-db.dtb: sata@540000:
-arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dtb: sata@540000:
-arch/arm64/boot/dts/marvell/armada-8040-db.dtb: sata@540000:
-arch/arm64/boot/dts/marvell/armada-8040-mcbin.dtb: sata@540000:
-arch/arm64/boot/dts/marvell/armada-8040-puzzle-m801.dtb: sata@540000:
-  Unevaluated properties are not allowed ('iommus' was unexpected)
+[1] https://lore.kernel.org/linux-arm-kernel/20220311210357.222830-1-linux@fw-web.de/
 
-Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
----
-iommus seems to be added with
-83a3545d9c37 ("arm64: dts: marvell: add SMMU support")
-which seems not be documented in txt before i converted the binding.
----
- Documentation/devicetree/bindings/ata/ahci-platform.yaml | 3 +++
- 1 file changed, 3 insertions(+)
+Frank Wunderlich (3):
+  arm64: dts: marvell: Fix anyOf conditional failed
+  arm64: dts: marvell: drop additional phy-names for sata
+  dt-bindings: ata: ahci-platform: add missing iommus property
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-index ef19468e3022..cc35cdc02840 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-@@ -84,6 +84,9 @@ properties:
-     minItems: 1
-     maxItems: 3
- 
-+  iommus:
-+    maxItems: 1
-+
- patternProperties:
-   "^sata-port@[0-9a-f]+$":
-     $ref: /schemas/ata/ahci-common.yaml#/$defs/ahci-port
+ Documentation/devicetree/bindings/ata/ahci-platform.yaml   | 3 +++
+ arch/arm64/boot/dts/marvell/armada-7040-db.dts             | 1 +
+ arch/arm64/boot/dts/marvell/armada-7040-mochabin.dts       | 2 ++
+ arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts | 1 +
+ arch/arm64/boot/dts/marvell/armada-8040-db.dts             | 5 +++--
+ arch/arm64/boot/dts/marvell/armada-8040-mcbin.dtsi         | 3 +--
+ arch/arm64/boot/dts/marvell/armada-8040-puzzle-m801.dts    | 2 ++
+ arch/arm64/boot/dts/marvell/armada-cp11x.dtsi              | 2 ++
+ arch/arm64/boot/dts/marvell/cn9130-crb-B.dts               | 1 +
+ arch/arm64/boot/dts/marvell/cn9131-db.dtsi                 | 1 +
+ arch/arm64/boot/dts/marvell/cn9132-db.dtsi                 | 1 +
+ 11 files changed, 18 insertions(+), 4 deletions(-)
+
 -- 
 2.43.0
 
