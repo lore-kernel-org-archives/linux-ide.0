@@ -1,80 +1,80 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96A2020B22
-	for <linux-ide@vger.kernel.org>; Mon, 11 Nov 2024 10:00:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9031813BAEE
+	for <linux-ide@vger.kernel.org>; Mon, 11 Nov 2024 10:01:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731319257; cv=none; b=UnGlXM8EmecpjBZzqwAZgzPcdhnuD/mycsRaMbAiyaA+Um3J3cxjLDJ+6P0mWEC0Bnbaj6jiqMQokeQBhoPm57d2Y/+jgEaArTWqs90RXut2fYVeBk1EjkPbm9rnaKl5wu9hHikkGi0DPhQkfnOTpHPvXCO0mEZGRvtzeQcXC6E=
+	t=1731319285; cv=none; b=gttoJ3ZuumVBNlBdgM99bS+rKrQ+KGdWIavvSs7yBkkhwCJfDXa1wilfT1MB3urnQ/MH6WhEIjn1WrIpOUwtP2vTr2HJE5eMroeVGqN/54ji13WxPgySWbTgOCf5bPAc4cTouSoWSnqJK9td7UmG0z6wJHobOEm+CCEpg8Z/axM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731319257; c=relaxed/simple;
-	bh=ix2g+FBOAdV00cCZjtTV0ChmS3JzXE6f6lqxFPQDi90=;
+	s=arc-20240116; t=1731319285; c=relaxed/simple;
+	bh=aklsb0FcICJvqRhYWVWmAaZCB8sGB+IFNizswaN+kXI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Fq7fjXDbtryQn45qmE5KtUnHYVcjLknpN7Eb+XTqNp+o31bVoZ7W5jQokdxNQjpzF6lpNM/b9j+0TfnmszGjKAOU8kfR1C0caxBLM6JqlojNxYR7iNVbbHrq7aCaMHEyCBg1uxr7wrVn99bGqMHeRzwEsMEhc3bFZ6wNJYYSEqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=h/QEvV5J; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=6vzbSw2s; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=h/QEvV5J; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=6vzbSw2s; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=Jg83ar2XABqwvor8w6BQu5DK1ulYlyL0rEzaTuj+eQJ9d8NfAuuCWYGHArvseYUQWtPKFIZ+VD6XDtABXuSc8pnyOuoRS+FG9DnzfqWqRUzffml1MU6C6Gmapcyq0lXWb17SEwHJUKIbG7+S+VEAkrqT3C63QyhynUx5EzwRzK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kYG2w1FT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JKGpB4Lo; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kYG2w1FT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JKGpB4Lo; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="h/QEvV5J";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="6vzbSw2s";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="h/QEvV5J";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="6vzbSw2s"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kYG2w1FT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JKGpB4Lo";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kYG2w1FT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JKGpB4Lo"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 0C16D1F38F;
-	Mon, 11 Nov 2024 10:00:54 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id E4F181F38E;
+	Mon, 11 Nov 2024 10:01:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1731319254; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1731319281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=DSSCWbNx3vcgj938fd/u8OwqXuuvX/BA+xEvv69CFhc=;
-	b=h/QEvV5JM//RwEPg/43kYLmKEmptFoVGG41OwIexCTPR3iI1g2hTpM2GNeHKI/hcQPlquk
-	AxkpbEcXlA01lQBYYMVUxbWVhc4O5JVaDC//WTvc/uLaENpSahrgYeX4TPgTazJ7L61eKv
-	gu9gu2WCWt8QfDw6+SNdYLPRI/V1cMg=
+	bh=bBi0JrjZprabeQM3O2jgdQIzrQgPeJQF2K25sEb0+pc=;
+	b=kYG2w1FTSSAS2sqKEcycI0EVp/28XLGmkrR6Gb5QmInEy73RAyuN+//SvQCEPY+zzGi8nW
+	nxNLsW6T94lHWguBEqEgQpU8w3EvUaGq6jxBcao9YirG3MUx1gFJLHXgy0zDJgxFLb7+f9
+	pPqcAs4e1IEGSu1XmnDCa0+Rxmc0RY4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1731319254;
+	s=susede2_ed25519; t=1731319281;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=DSSCWbNx3vcgj938fd/u8OwqXuuvX/BA+xEvv69CFhc=;
-	b=6vzbSw2s01Gwm+TtShMukAifyl+mdL6o7C0qpdIjohk57jOV5+y3njInFoSP3mQuWcNbKr
-	9rys5XTLgd2rNcBg==
+	bh=bBi0JrjZprabeQM3O2jgdQIzrQgPeJQF2K25sEb0+pc=;
+	b=JKGpB4LowI30o7TQJQCf7+OZ4k4r3//GxHNF1uGYPz+KAUhWlmCVaM0+W6D1Su8f11MRcK
+	+crR94KnBO9BnYBw==
 Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1731319254; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1731319281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=DSSCWbNx3vcgj938fd/u8OwqXuuvX/BA+xEvv69CFhc=;
-	b=h/QEvV5JM//RwEPg/43kYLmKEmptFoVGG41OwIexCTPR3iI1g2hTpM2GNeHKI/hcQPlquk
-	AxkpbEcXlA01lQBYYMVUxbWVhc4O5JVaDC//WTvc/uLaENpSahrgYeX4TPgTazJ7L61eKv
-	gu9gu2WCWt8QfDw6+SNdYLPRI/V1cMg=
+	bh=bBi0JrjZprabeQM3O2jgdQIzrQgPeJQF2K25sEb0+pc=;
+	b=kYG2w1FTSSAS2sqKEcycI0EVp/28XLGmkrR6Gb5QmInEy73RAyuN+//SvQCEPY+zzGi8nW
+	nxNLsW6T94lHWguBEqEgQpU8w3EvUaGq6jxBcao9YirG3MUx1gFJLHXgy0zDJgxFLb7+f9
+	pPqcAs4e1IEGSu1XmnDCa0+Rxmc0RY4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1731319254;
+	s=susede2_ed25519; t=1731319281;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=DSSCWbNx3vcgj938fd/u8OwqXuuvX/BA+xEvv69CFhc=;
-	b=6vzbSw2s01Gwm+TtShMukAifyl+mdL6o7C0qpdIjohk57jOV5+y3njInFoSP3mQuWcNbKr
-	9rys5XTLgd2rNcBg==
+	bh=bBi0JrjZprabeQM3O2jgdQIzrQgPeJQF2K25sEb0+pc=;
+	b=JKGpB4LowI30o7TQJQCf7+OZ4k4r3//GxHNF1uGYPz+KAUhWlmCVaM0+W6D1Su8f11MRcK
+	+crR94KnBO9BnYBw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E74FF13301;
-	Mon, 11 Nov 2024 10:00:53 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D300413301;
+	Mon, 11 Nov 2024 10:01:21 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id r3WhN9XVMWenDwAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 11 Nov 2024 10:00:53 +0000
-Message-ID: <61c90192-9d67-4588-8ce8-00796e5f5891@suse.de>
-Date: Mon, 11 Nov 2024 11:00:53 +0100
+	id naCJMfHVMWfIDwAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 11 Nov 2024 10:01:21 +0000
+Message-ID: <42a81ca2-01b5-42b6-b441-42b0a552b0ca@suse.de>
+Date: Mon, 11 Nov 2024 11:01:21 +0100
 Precedence: bulk
 X-Mailing-List: linux-ide@vger.kernel.org
 List-Id: <linux-ide.vger.kernel.org>
@@ -82,15 +82,15 @@ List-Subscribe: <mailto:linux-ide+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-ide+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/6] ata: libata-core: use pr_warn() instead of
- printk(KERN_WARNING)
+Subject: Re: [PATCH 4/6] ata: pata_cs5530: use pr_*() instead of
+ printk(KERN_*)
 To: Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
  Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>
 References: <6cf8979c-c50d-4ef0-b1df-281d932d92b6@omp.ru>
- <813b22ec-a16d-4598-8c61-6522ced1116e@omp.ru>
+ <0d4048ed-8256-4c5f-9b6d-7e68786fa7cd@omp.ru>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <813b22ec-a16d-4598-8c61-6522ced1116e@omp.ru>
+In-Reply-To: <0d4048ed-8256-4c5f-9b6d-7e68786fa7cd@omp.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spam-Level: 
@@ -116,48 +116,51 @@ X-Spamd-Result: default: False [-4.30 / 50.00];
 X-Spam-Score: -4.30
 X-Spam-Flag: NO
 
-On 11/8/24 21:20, Sergey Shtylyov wrote:
-> ata_parse_force_param() still calls printk(KERN_WARNING, ...) -- convert
-> it to calling pr_warn(), also joining the broken up message strings...
+On 11/8/24 21:21, Sergey Shtylyov wrote:
+> The CS5530 PCI device driver still calls printk(KERN_INFO, ...) in
+> cs5530_is_palmax() and printk(KERN_ERR, ...) in cs5530_init_chip() --
+> convert them to calling pr_info() and pr_err() respectively...
 > 
 > This helpfully fixes the following complaints from scripts/checkpatch.pl:
 > 
-> WARNING: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then
-> dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+> WARNING: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then
+> dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
 > 
-> WARNING: quoted string split across lines
+> WARNING: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then
+> dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
 > 
 > Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 > 
 > ---
->   drivers/ata/libata-core.c | 8 +++-----
->   1 file changed, 3 insertions(+), 5 deletions(-)
+>   drivers/ata/pata_cs5530.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index cdb20a700b55..47f652981043 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -6443,8 +6443,7 @@ static void __init ata_parse_force_param(void)
->   
->   	ata_force_tbl = kcalloc(size, sizeof(ata_force_tbl[0]), GFP_KERNEL);
->   	if (!ata_force_tbl) {
-> -		printk(KERN_WARNING "ata: failed to extend force table, "
-> -		       "libata.force ignored\n");
-> +		pr_warn("ata: failed to extend force table, libata.force ignored\n");
->   		return;
+> diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+> index 1e67b0f8db43..4ff98c4722e9 100644
+> --- a/drivers/ata/pata_cs5530.c
+> +++ b/drivers/ata/pata_cs5530.c
+> @@ -177,7 +177,7 @@ static const struct dmi_system_id palmax_dmi_table[] = {
+>   static int cs5530_is_palmax(void)
+>   {
+>   	if (dmi_check_system(palmax_dmi_table)) {
+> -		printk(KERN_INFO "Palmax PD1100: Disabling DMA on docking port.\n");
+> +		pr_info("Palmax PD1100: Disabling DMA on docking port.\n");
+>   		return 1;
 >   	}
->   
-> @@ -6455,9 +6454,8 @@ static void __init ata_parse_force_param(void)
->   
->   		next = cur;
->   		if (ata_parse_force_one(&next, &te, &reason)) {
-> -			printk(KERN_WARNING "ata: failed to parse force "
-> -			       "parameter \"%s\" (%s)\n",
-> -			       cur, reason);
-> +			pr_warn("ata: failed to parse force parameter \"%s\" (%s)\n",
-> +				cur, reason);
->   			continue;
+>   	return 0;
+> @@ -206,11 +206,11 @@ static int cs5530_init_chip(void)
 >   		}
+>   	}
+>   	if (!master_0) {
+> -		printk(KERN_ERR DRV_NAME ": unable to locate PCI MASTER function\n");
+> +		pr_err(DRV_NAME ": unable to locate PCI MASTER function\n");
+>   		goto fail_put;
+>   	}
+>   	if (!cs5530_0) {
+> -		printk(KERN_ERR DRV_NAME ": unable to locate CS5530 LEGACY function\n");
+> +		pr_err(DRV_NAME ": unable to locate CS5530 LEGACY function\n");
+>   		goto fail_put;
+>   	}
 >   
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
